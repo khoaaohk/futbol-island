@@ -15,7 +15,7 @@
  *   pf:<format>                    a Paths lesson launched, by format
  *   gr:<format> gr:finale          a graduation earned (or the Matchday Ferry final finished) in this session
  *   rv:q rv:ok rv:done             warm-up review questions answered (first try), right first time, warm-ups finished
- *   st: sg: sp:                    the /start title screen, its For grown-ups and Privacy sheets (startIds.ts, Oct 9 2026)
+ *   st: sg: sp:                    the title screen (at `/`), its For grown-ups and Privacy sheets (startIds.ts, Oct 9 2026)
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  */

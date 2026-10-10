@@ -30,7 +30,8 @@ export function resendProvider(apiKey:string,from:string,fetchImpl:typeof fetch=
 /** Local test mode: the email's text with the code masked. The address is never printed. */
 export function logProvider(print:(line:string)=>void=line=>console.log(line)):EmailProvider{
  return {kind:'log',async send(mail){
-  const text=mail.secret?mail.text.split(mail.secret).join('«code»'):mail.text.replace(/^ {4}\S.*$/m,'    «code»');
+  // The code (and its picture line, which spells the same words) are the indented lines: every one is masked.
+  const text=(mail.secret?mail.text.split(mail.secret).join('«code»'):mail.text).replace(/^ {4}\S.*$/gm,'    «code»');
   print(`[save-email] log mode, not sent. Subject: ${mail.subject}\n${text.replace(/^/gm,'  | ')}`);
   return true;
  }};
@@ -49,12 +50,14 @@ export function validEmail(s:unknown):s is string{
 }
 
 export const EMAIL_SUBJECT='Your Futbol Island save code';
-/** The whole email. `display` is the code as kids see it ("striker · volley · corner · 427"). */
-export function emailText(display:string):string{
+/** The whole email. `display` is the code as kids see it ("striker · volley · corner · 427"); `pictures` (optional) is the same
+ *  code with each word's picture ("⚽ striker · 🏐 volley · 🚩 corner · 🔢 427", code.ts pictureLine), on its own line below. */
+export function emailText(display:string,pictures=''):string{
  return [
   'Here is the Futbol Island save code you asked for:',
   '',
   `    ${display}`,
+  ...(pictures?[`    ${pictures}`]:[]),
   '',
   'Type it into Futbol Island ("I have a save code") to open this island on any phone, tablet or computer. Keep it safe, like a key.',
   '',

@@ -26,7 +26,7 @@ import type {LearningReport} from './learning';
 import type {StartReport} from './startReport';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
-/** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the /start
+/** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
  *  traffic subset in the day's rollup) (public.analytics_schema_version()). */
 export const SCHEMA_VERSION=4;
 export const EVENT_TYPES=['start','beat'] as const;
@@ -55,7 +55,8 @@ export const BOUNCE_MS=10_000;
 export const AREAS=['island','paths','arcade','museum','konbini','controller','other'] as const;
 export type Area=typeof AREAS[number];
 /** The only paths that are stored. Anything else becomes "/other". */
-/** '/start' (Oct 9 2026): the landing page (app/start), counted as its own entry page. */
+/** '/start' (Oct 9 2026): the old landing page, kept so its past sessions still show; the title screen is at `/` now and /start
+ *  was removed (a session that saw the title screen carries st:view). */
 export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee','/start'] as const;
 
 export type Utm={source?:string;medium?:string;campaign?:string};
@@ -287,15 +288,15 @@ export type DailyRollup={
  /** Oct 9 2026 (absent in rollups frozen before, or computed by SQL functions from before 20261009_analytics_counts.sql):
   *  learning counter sums, sessions with each counter ≥ 1, and sessions per start-flag value (flagTallyKeys). */
  counts?:Record<string,number>;countSessions?:Record<string,number>;flags?:Record<string,number>;
- /** Oct 9 2026 (20261009_analytics_start.sql; absent before): the same visitor totals and dims, for sessions that entered on
-  *  /start or viewed it (isStartSession). */
+ /** Oct 9 2026 (20261009_analytics_start.sql; absent before): the same visitor totals and dims, for sessions that saw the title
+  *  screen or entered on the old /start (isStartSession). */
  start?:StartRollup;
 };
-/** The dims the /start subset keeps (no region or entry: the start page is the entry). */
+/** The dims the start-page subset keeps (no region or entry: the start page is the entry). */
 export const START_DIMS=['country','source','referrer','campaign','device'] as const;
 export type StartDim=typeof START_DIMS[number];
 export type StartRollup={visitors:number;sessions:number;pageviews:number;dims:Record<StartDim,Record<string,Counts>>};
-/** A session counts as start-page traffic when it entered on /start or viewed it later (the st:view counter). */
+/** A session counts as start-page traffic when it saw the title screen (the st:view counter), or entered on the old /start. */
 export const isStartSession=(s:Pick<SessionRow,'entryPath'|'counts'>)=>s.entryPath==='/start'||(s.counts?.['st:view']||0)>0;
 
 /** Fine session-length buckets in seconds (bucket i is [EDGES[i], EDGES[i+1]); the last is open). Used for the median. */
@@ -352,7 +353,7 @@ export function rollupDay(day:string,sessions:SessionRow[]):DailyRollup{
  return r;
 }
 
-/** The /start subset of one day's sessions: visitors (distinct hashes), sessions, page views and the START_DIMS. */
+/** The start-page subset of one day's sessions: visitors (distinct hashes), sessions, page views and the START_DIMS. */
 function startRollup(sessions:SessionRow[]):StartRollup{
  const out:StartRollup={visitors:new Set(sessions.map(s=>s.visitorHash)).size,sessions:sessions.length,pageviews:0,dims:Object.fromEntries(START_DIMS.map(d=>[d,{}])) as StartRollup['dims']};
  const seen=new Map<string,Set<string>>();
@@ -390,7 +391,7 @@ export type Merged={totals:Totals;hist:number[];dims:Record<Dim,Row[]>;areas:{ar
  places:PlaceRow[];activities:ActivityRow[];cells:[number,number][];
  /** Learning totals over the range (raw; lib/analytics/learning.ts suppresses small cells before anything leaves the server). */
  counts:Record<string,number>;countSessions:Record<string,number>;flags:Record<string,number>;
- /** Oct 9 2026: the /start subset summed over the days that carry it (`days`: how many of the range's rollups had it). */
+ /** Oct 9 2026: the start-page subset summed over the days that carry it (`days`: how many of the range's rollups had it). */
  start:{visitors:number;sessions:number;pageviews:number;dims:Record<StartDim,Row[]>;days:number}};
 
 export function mergeRollups(rollups:DailyRollup[]):Merged{

@@ -40,44 +40,48 @@
   ]
  },
  "trick-boy": {
-  "width": 517,
-  "height": 681,
+  "width": 563,
+  "height": 899,
   "sm": [
-   259,
-   341
+   282,
+   450
   ],
   "frames": 4,
   "frameMs": 300,
   "strip": {
-   "frames": 16,
-   "fps": 13.33,
+   "frames": 70,
+   "fps": 12.069,
+   "cols": 10,
+   "rows": 7,
    "cell": [
-    517,
-    681
+    282,
+    450
    ],
    "smCell": [
-    259,
-    341
+    197,
+    315
    ]
   }
  },
  "trick-girl": {
   "width": 558,
-  "height": 656,
+  "height": 649,
   "sm": [
    279,
-   328
+   325
   ],
   "strip": {
-   "frames": 16,
-   "fps": 16.67,
+   "frames": 90,
+   "fps": 11.905,
+   "cols": 10,
+   "rows": 9,
    "cell": [
-    558,
-    656
+    279,
+    325
    ],
    "smCell": [
-    279,
-    328
+    195,
+    227
    ]
   }
  }

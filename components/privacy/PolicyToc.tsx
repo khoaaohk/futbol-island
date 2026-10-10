@@ -1,7 +1,7 @@
 'use client';
 import type {MouseEvent,ReactNode} from 'react';
 
-/** Table-of-contents link that smooth-scrolls to its section in whatever is scrolling (the /start sheet or the /privacy page). */
+/** Table-of-contents link that smooth-scrolls to its section in whatever is scrolling (the title screen's sheet or the /privacy page). */
 export default function PolicyToc({href,children}:{href:string;children:ReactNode}){
  const go=(e:MouseEvent<HTMLAnchorElement>)=>{
   const target=document.getElementById(href.slice(1));if(!target)return;

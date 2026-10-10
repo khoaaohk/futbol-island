@@ -26,6 +26,8 @@
 /* The riso grain over the whole print, under the type and buttons (as on the loading screen). */
 .screen::after{content:'';position:absolute;inset:0;z-index:1;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none}
 @media(min-width:900px){.screen{--isle-h:min(40svh,calc(60vw / 1.415));--isle-top:max(19svh,160px);--cast-w:calc(var(--isle-w) * 1.05);--cast-top:calc(var(--isle-top) + var(--isle-h) * .72)}}
+/* Shorter laptop screens (≤ 860px tall): lift the cast so the feet clear the Start button (Oct 9 2026). */
+@media(min-width:900px) and (max-height:860px){.screen{--cast-top:calc(var(--isle-top) + var(--isle-h) * .6)}}
 
 .scene{position:absolute;inset:0;z-index:0;pointer-events:none}
 .layer{position:absolute}
@@ -43,7 +45,7 @@
 .farHills .bandIn svg{height:100%}
 /* The pink hill: its SVG spans 2100 units with headroom above the crest (see TitleArt), so no flat clip at the sides or top;
    -90px overscan covers the largest parallax shift (34px). */
-.nearHills{left:-90px;right:-90px;top:calc(var(--isle-top) + var(--isle-h) * .68);bottom:-80px}
+.nearHills{left:-90px;right:-90px;top:calc(var(--isle-top) + var(--isle-h) * .6);bottom:-80px}
 .nearHills svg{flex:none;height:calc(var(--isle-h) * .64)}
 .pinkFloor{flex:1;margin-top:-1px;background:var(--pink)}
 .isleBox{left:50%;top:var(--isle-top);width:var(--isle-w);height:var(--isle-h);margin-left:calc(var(--isle-w) / -2)}
@@ -55,21 +57,25 @@
 .castLife{display:block;transform-origin:50% 100%}
 /* The trick cast on the shared px-per-metre scale (trick-boy ≈24 %, trick-girl ≈25.5 % of the box), feet on one ground line. */
 .boy{left:14%;bottom:4%}
-.girl{right:13%;bottom:3.3%}
-/* Trick loops as CSS sprites (when cast.json has a strip): one strip image slides in steps() across an overflow-hidden box the size
-   of one cell; the still sits under it and stays for reduced motion. Compositor-only; paused when calm / hidden. */
+.girl{right:13%;bottom:4%}
+/* Trick loops as CSS sprites (when cast.json has a strip): a grid sheet (--cols × --rows cells) behind an overflow-hidden box the size
+   of one cell. Two steps() transforms: the picture moves down one row per --dur/--rows, the img moves across one column per
+   --dur/(--rows × --cols), so every frame shows exactly one whole cell (a one-row strip is --rows 1). The still sits under it until
+   the sheet has decoded and stays for reduced motion. Compositor-only; paused when calm / hidden. */
 .castStill{visibility:visible}
 .spriteBox{position:absolute;left:0;right:0;bottom:0;overflow:hidden;display:block}
-.sprite{position:absolute;left:0;top:0;bottom:0;display:block}
+.sprite{position:absolute;left:0;top:0;display:block}
 .sprite img{display:block;width:100%;height:100%}
 @media(prefers-reduced-motion:no-preference){
  .castMember:has(.spriteBox[data-ready]) .castStill{visibility:hidden}
  .spriteBox:not([data-ready]){visibility:hidden}
- .spriteBox[data-ready] .sprite{animation:spriteRun var(--dur) steps(var(--frames)) infinite}
+ .spriteBox[data-ready] .sprite{animation:spriteRows var(--dur) steps(var(--rows)) infinite}
+ .spriteBox[data-ready] .sprite img{animation:spriteRun calc(var(--dur) / var(--rows)) steps(var(--cols)) infinite}
 }
 @media(prefers-reduced-motion:reduce){.spriteBox{display:none}}
 .spriteBox{flex:none}
 @keyframes spriteRun{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@keyframes spriteRows{from{transform:translateY(0)}to{transform:translateY(-100%)}}
 .props{left:50%;top:var(--cast-top);width:var(--cast-w);aspect-ratio:1200/640;margin-left:calc(var(--cast-w) / -2)}
 .propsIn{position:absolute;inset:0}
 .ballA{position:absolute;left:31%;bottom:4%;width:8%;height:auto}
@@ -146,7 +152,13 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .sheetContent{position:relative;min-height:0;max-height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 20px);overflow:auto;overscroll-behavior:contain;padding:14px 18px 20px}
 .sheetHeader{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:center;gap:8px;margin-bottom:4px}
 .sheetHeader h2{margin:0;text-align:center;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:24px;line-height:1.1;outline:none}
-.mark{justify-self:end;width:44px;height:44px;border:3px solid var(--btn-rim);border-radius:14px;background:var(--btn-gold) url('/stories/paths/island-mark.svg') center/34px 34px no-repeat;box-shadow:0 4px 0 var(--btn-gold-edge)}
+/* The new code ("New island" → "Your secret code", Oct 9 2026): a taller sheet that keeps the Futbol Island title in view, its parts
+   spaced out (SaveCode.module.css .shown) and Back moved into the code's footer row. */
+.sheetWrap[data-save-sheet=create] .sheetContent{display:flex;flex-direction:column;min-height:min(700px,calc(100svh - 190px));padding-bottom:22px}
+.sheetWrap[data-save-sheet=create] .sheetHeader{margin-bottom:clamp(6px,1.6svh,16px)}
+.sheetWrap[data-save-sheet=create] .sheetBody{flex:1;display:flex;flex-direction:column}
+@media(min-width:900px){.sheetWrap[data-save-sheet=create] .sheetContent{min-height:min(560px,calc(100svh - 190px))}}
+.sheetWrap[data-code-footer] .sheetHeader{grid-template-columns:minmax(0,1fr)}
 @media(min-width:900px){.sheetWrap{align-items:center}}
 /* The code words flip in like cards (the real CodeTiles, [data-save-code]). */
 .sheetBody [data-save-code]{perspective:700px}
@@ -191,7 +203,7 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
  .glint{animation:glint 2.6s 1.4s ease-in-out infinite alternate}
  .ballB{animation:float 2s 2s ease-in-out infinite alternate}
  .sun{animation:breathe 4s 1.6s ease-in-out infinite alternate}
- .screen:is([data-calm],[data-hidden]) :is(.palm,.palmB,.flag,.glint,.castLife,.ballA,.ballB,.sun,.sprite){animation-play-state:paused}
+ .screen:is([data-calm],[data-hidden]) :is(.palm,.palmB,.flag,.glint,.castLife,.ballA,.ballB,.sun,.sprite,.sprite img){animation-play-state:paused}
 }
 @keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
 @keyframes flap{from{transform:skewY(-6deg) scaleX(.94)}to{transform:skewY(5deg) scaleX(1.04)}}

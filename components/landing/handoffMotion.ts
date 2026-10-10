@@ -1,6 +1,6 @@
 'use client';
 /**
- * /start → game hand-off (Oct 9 2026; user: "blend what we have to make it more seamless").
+ * Title screen → game hand-off (Oct 9 2026; user: "blend what we have to make it more seamless").
  *
  * When Play is pressed, the title screen turns INTO the game's island loading screen, then the route switches to `/`, whose loader
  * starts in that very state:
@@ -11,7 +11,7 @@
  *      a hidden, already-settled <IslandLoading/> mounted behind the screen); leftover props hop away;
  *   5. that hidden loader cross-fades in over ~250 ms (only the hill shapes and the loader-only cast differ by then), and the
  *      route switches. Town's <IslandLoading/> mounts in the same settled state (the `data-island-handoff` flag on <html>, read by
- *      IslandLoading), with its track synced to the same timeline, so the first game frame equals the last /start frame.
+ *      IslandLoading), with its track synced to the same timeline, so the first game frame equals the last title-screen frame.
  * Compositor-only: transform and opacity through the Web Animations API, run once; nothing loops; the flag is removed when the
  * game's loader starts its own exit. Reduced motion: one quick cross-fade.
  */

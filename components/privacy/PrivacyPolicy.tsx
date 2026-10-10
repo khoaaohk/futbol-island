@@ -3,7 +3,7 @@ import styles from './PrivacyPolicy.module.css';
 
 /**
  * Futbol Island privacy policy (Oct 9 2026). One source of truth, rendered by /privacy (app/privacy/page.tsx) and by the
- * full-screen Privacy sheet on /start (components/landing/LegalSheets.tsx). Written from what the code actually does:
+ * full-screen Privacy sheet on the title screen (components/landing/LegalSheets.tsx). Written from what the code actually does:
  * lib/analytics/* (visit counts), lib/saves/* + app/api/save/* (save codes, grown-up email), lib/coaches/idp/* (plan + QR links),
  * components/OfficialClipPlayer.tsx (YouTube privacy-enhanced clips on tap), app/coffee/* (Stripe donations behind the grown-up check).
  * COPPA 2025 notice items: internal operations (§312.5(c)(7)), retention policy (§312.10), security program summary (§312.8).

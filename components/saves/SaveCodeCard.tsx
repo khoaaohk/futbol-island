@@ -7,7 +7,7 @@ import {useEffect,useState} from 'react';
 import {SAVE_CHANGED,SAVE_CONFLICT,getLocalCode,saveStatus,savingStatus,swapBackup,undoSwap,type SaveStatus} from '@/lib/saves/client';
 import ParentGate from '../ParentGate';
 import CodeTiles from './CodeTiles';
-import SaveCodeCreate,{CodeShown} from './SaveCodeCreate';
+import SaveCodeCreate,{CodeShown,SAVE_CODE_WHAT} from './SaveCodeCreate';
 import SaveCodeRestore from './SaveCodeRestore';
 import {DeleteSave,EmailCode} from './SaveActions';
 import styles from './SaveCode.module.css';
@@ -33,12 +33,13 @@ export default function SaveCodeCard({grownups=false}:{grownups?:boolean}){
   if(view==='gate-email')return <ParentGate reason="Sending the code by email is for a parent, carer or coach." onCancel={back} onPass={()=>setView('email')}/>;
   if(view==='email')return <EmailCode onDone={back}/>;
   if(!code)return <>
-   <p className={styles.copy}>Get a secret save code to keep your coins, cards and lessons on another phone or tablet. No name or email.</p>
+   <p className={styles.copy} data-save-explainer>A save code is the key to your island. Get one to keep your coins, cards and lessons on another phone or tablet. No name or email.</p>
    <div className={styles.row}><button type="button" className={styles.primary} data-get-code onClick={()=>setView('create')}>Get my code</button>
     <button type="button" className={styles.secondary} data-have-code onClick={()=>setView('restore')}>I have a save code</button></div>
    {backup&&<UndoSwap/>}
   </>;
   return <>
+   <p className={styles.copy} data-save-explainer>{SAVE_CODE_WHAT}</p>
    <CodeTiles code={code} masked/>
    <p className={`${styles.saved} ${status==='saved'?'':styles.off}`} role="status" data-save-status={status}>{STATUS[status]}</p>
    {status==='conflict'&&<div className={styles.row}><button type="button" className={styles.primary} onClick={()=>window.dispatchEvent(new Event(SAVE_CONFLICT))}>Choose an island</button></div>}

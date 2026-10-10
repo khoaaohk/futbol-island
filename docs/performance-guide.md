@@ -123,7 +123,23 @@ Validation: `tests/game-saves.cjs` (12 groups, including a two-device client flo
 pixel-7 against the production build with saving switched on. This is reduced, bounded work measured in desktop emulation, not
 iPhone temperature evidence.
 
-## Landing page /start — October 9, 2026 (local, not deployed)
+## Title screen at `/` — October 9, 2026 (local, not deployed)
+
+User: "the start screen must be at https://futbolisland.app/ (the root), not /start". /start was then removed outright (no redirect: it 404s like any unknown path). The section below describes the title screen itself; this one is how `/` now serves both it and the game.
+
+- **One static page, two screens.** `app/page.tsx` prerenders the title screen (`components/landing/Landing`) and a plain-HTML island loader (`components/IslandLoadingStatic.tsx`, no JS, the cast in `lite` mode: no head preloads, no inline data-URI stills). An inline script at the top of the page (`ROOT_VIEW_BOOT`, `lib/rootView.ts`) sets `<html data-root-view="landing|game">` before first paint, and `globals.css` shows one of the two. No request-time data; `○ /` stays static.
+- **The rule.** Game if this tab has entered the game this session (`sessionStorage fi2-in-game`, set by Town on mount and by Play): reloads, a restored save's reload, Settings reloads, back-navigations to `/`. Also game for links the game itself makes: `?from=` (normally rewritten to /island-return before it gets here) and `?panel=` (Settings → About, incl. a donation's Stripe return, which opens in a new tab). Everything else, incl. a new tab and the title screen's own donation return `/?coffee=thanks`: the title screen, where a save code is required.
+- **Play** (`WaterPill`): water fill (loads the game's code), tan exit, then `enterGame()`. `components/root/RootSwitch.tsx` drops the title screen and mounts the game in the same synchronous commit; Town's loader starts as the same tan sheet (`data-island-handoff="tan"`: no 3 s minimum, the earlier fade). No navigation: the URL stays `/` and `history.length` is unchanged.
+- **Reload in the game.** The static loader paints from the first frame; when the game's chunk arrives, Town's `IslandLoading` replaces it in one commit and continues its CSS animations (`continueLoaderFrom`: every animation gets the placeholder's start time), so nothing restarts.
+- **Code split.** The game is its own chunk (`components/root/Game.tsx` → Town, DevUnlock, SaveSync; `gameLoader.ts`), loaded only by the water fill or by a tab that is in the game. Nothing loads it on idle.
+- **Measured** (production build, gzip): first-load JS for a new visitor at `/` **130 KB** (the game at `/` was 981 KB; the old /start was 129 KB); `/` HTML 19.4 KB (old /start 16.8 KB: +2.6 KB for the static loader). Title screen at rest: 0 rAF in 2.5 s (390×844 touch and 1440×900).
+- **Analytics.** Start-page taps count while `/` shows the title screen (VisitTracker mounts `watchStart` for `pathname==='/'` and view `landing`; `trackStart` counts only while it is mounted). A start-page session is one with `st:view`; `'/start'` stays a known path key only for sessions recorded before the move.
+- **Validation.** `tests/landing.cjs` §10 runs the boot rule (fresh → title screen; in-game tab, `?from=arcade`, `?panel=` → game; `?coffee=thanks` → title screen; storage blocked → title screen), checks the static imports keep the game out of the first load, and that no code links to /start. Playwright on a production build (390×844 touch, 1440×900, reduced motion): no frame shows the game before the title screen; Play → water → tan → island with the URL still `/`; at the swap Town's loader is the same opaque tan sheet; a reload paints the island loader from the first frame; a fresh context shows the title screen again; `/?from=arcade` goes straight in; `/start` 404s; the mocked save API's code-creation path and a returning code both reach the game; no console errors or hydration warnings.
+- **Dev scripts.** Ad-hoc browser scripts that open `/` expecting the island now see the title screen first; start them in the game with `sessionStorage.setItem('fi2-in-game','1')` in an init script (tests/e2e/helpers.ts `openIsland` does).
+
+## Landing page (was /start) — October 9, 2026 (local, not deployed)
+
+*Moved to `/` the same day (section above); /start no longer exists. Route-specific notes below (`app/start/page.tsx`, `○ /start`, "the route switches") are historical.*
 
 `/start` is a one-screen title page: the title, one line, a layered parallax island, and the save-code actions (`app/start/page.tsx`, `components/landing/*`). The game stays at `/`, and the `/?from=` rewrite is unchanged.
 

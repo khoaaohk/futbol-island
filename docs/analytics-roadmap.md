@@ -51,6 +51,9 @@ Research only; nothing below is built yet. Privacy rules: fixed ids, totals only
 This is not legal advice. The 2025 COPPA text and the UK commencement date were checked from secondary sources only.
 
 ## Start page tracking (Oct 9 2026)
+- **Oct 9 2026 update:** the title screen moved from /start to `/` (/start was removed). The taps count while `/` shows the title
+  screen (VisitTracker: `pathname==='/'` and the root view is `landing`, lib/rootView.ts); the Stripe return is `/?coffee=thanks`;
+  "Began on /start" now only covers sessions recorded before the move. The notes below are as first written.
 - **What:** /admin → "Start page" (after the headline numbers): visitors and sessions to /start, its countries / sources /
   referrers / campaigns / devices, the title-screen funnels (Start → code made → code check → Play; I have a save code →
   restored / failed → Play; returning → Play; saving break → Play), For grown-ups (each link, Donate → grown-up check → $5/$10/$15/$25,

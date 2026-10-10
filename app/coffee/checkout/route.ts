@@ -54,9 +54,10 @@ export async function GET(req: Request) {
           adjustable_quantity: { enabled: true, minimum: 1, maximum: 999 }, // bump / multiply at checkout
         },
       ],
-      // return=start (the /start For grown-ups sheet, Oct 9 2026) goes back to the start page; return=about to the game's About.
-      success_url: `${url.origin}${url.searchParams.get('return')==='start'?'/start?coffee=thanks':'/?panel=about&coffee=thanks'}`,
-      cancel_url: `${url.origin}${url.searchParams.get('return')==='about'?'/?panel=about':url.searchParams.get('return')==='start'?'/start':'/coffee'}`,
+      // return=start (the title screen's For grown-ups sheet) goes back to the title screen at `/` (a new tab shows it; one
+      // already in the game shows the game; lib/rootView.ts); return=about to the game's About (?panel= opens the game).
+      success_url: `${url.origin}${url.searchParams.get('return')==='start'?'/?coffee=thanks':'/?panel=about&coffee=thanks'}`,
+      cancel_url: `${url.origin}${url.searchParams.get('return')==='about'?'/?panel=about':url.searchParams.get('return')==='start'?'/':'/coffee'}`,
     });
 
     if (!session.url) throw new Error("no session url");

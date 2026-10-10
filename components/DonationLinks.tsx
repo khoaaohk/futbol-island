@@ -11,7 +11,7 @@ import styles from './IslandSettings.module.css';
  * Also used by /coffee (app/coffee/CoffeeGate.tsx wraps its tiers the same way).
  */
 export const DONATION_AMOUNTS=[5,10,15,25] as const;
-/** The local non-profits donations go to (shared with the /start For grown-ups sheet). */
+/** The local non-profits donations go to (shared with the title screen's For grown-ups sheet). */
 export const NONPROFITS=[{name:'FC YAP',href:'https://www.instagram.com/fc_yap/'},{name:'Street Soccer San Diego',href:'https://www.instagram.com/streetsoccersd/'},{name:'Ronin Futsal',href:'https://www.instagram.com/roninfutsal/'}] as const;
 export default function DonationLinks(){
  const [step,setStep]=useState<'closed'|'gate'|'open'>('closed');

@@ -5,7 +5,7 @@ import {LegalLinks} from './GrownUps';
 import styles from './Title.module.css';
 
 /**
- * The Futbol Island title screen (/start, Oct 9 2026): one screen, like a game's title. The title, one line, the layered island and
+ * The Futbol Island title screen (at `/` since Oct 9 2026; /start was removed): one screen, like a game's title. The title, one line, the layered island and
  * the save-code actions. A save code is required to play (TitleActions); a saving outage never locks a kid out.
  * A server component: static HTML and CSS. Client code: TitleScene (parallax + calm), TitleActions (save flow), PlayButton.
  * No WebGL, canvas, video or audio.

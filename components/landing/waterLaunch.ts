@@ -1,19 +1,21 @@
 'use client';
 /**
- * /start → game: the water-loader hand-off (user, Oct 9 2026: "a loading button that fills up like water", then the pink slides
+ * Title screen → game: the water-loader hand-off (user, Oct 9 2026: "a loading button that fills up like water", then the pink slides
  * down, the island items shrink, the tan sand expands to fill the screen, and the game appears from that tan; no second loader).
  *
  *  1. TitleActions fades the links and other buttons (CSS, [data-launch] on the screen) and the gold pill fills with water.
- *  2. waitForGame(): real loading. The game's code (components/Town and its whole module graph: the same chunks `/` needs) is
+ *  2. waitForGame(): real loading. The game's code (components/root/gameLoader.ts: Town and its whole module graph) is
  *     imported now, so the water rises while it downloads and evaluates, and is full when it is done. Until then the level follows
  *     a believable eased curve that never reaches the top; a slow network keeps it rising slowly, never stalling at a fake 100 %.
  *  3. runTanExit(): pill out, pink slides down, island items / characters / props hop away (the loader's own exit motions), then the
  *     island's sand expands to cover the screen (the loader's tan-wipe maths).
- *  4. The caller marks <html data-island-handoff="tan"> (or sessionStorage for a full reload) and switches the route. The game's
+ *  4. The caller marks <html data-island-handoff="tan"> (or sessionStorage for a full reload) and `/` switches to the game in place
+ *     (enterGame, lib/rootView.ts). The game's
  *     IslandLoading starts as that same plain tan sheet and fades into the island when it is ready (components/IslandLoading.*).
  * Heat: nothing runs before Play; while loading, one rAF loop moves the water (it ends when full) and one CSS wave loop runs
  * (removed with the button); the exit is one-shot WAAPI (transform/opacity); nothing is left running after the hand-off.
  */
+import {loadGame} from '../root/gameLoader';
 export const TAN='#dfc587';
 export const HANDOFF_KEY='fi2-island-handoff';
 export const markTanHandoff=()=>{document.documentElement.dataset.islandHandoff='tan';};
@@ -27,11 +29,10 @@ export function nextLevel(level:number,ms:number,dt:number,ready:boolean,minMs=1
  return Math.min(1,level+(target-level)*Math.min(1,dt*5));
 }
 
-let gamePromise:Promise<unknown>|null=null;
-/** Load the game's code (shared with the `/` route). Resolves when it is downloaded and evaluated, or after `timeoutMs`. */
+/** Load the game's code (shared with RootSwitch, which renders it). Resolves when it is downloaded and evaluated, or after
+ *  `timeoutMs` (RootSwitch then shows the island loader until it arrives). */
 export function waitForGame(timeoutMs=20000):Promise<void>{
- gamePromise??=import('../Town').catch(()=>null);
- return Promise.race([gamePromise.then(()=>undefined),new Promise<void>(r=>setTimeout(r,timeoutMs))]);
+ return Promise.race([loadGame().then(()=>undefined),new Promise<void>(r=>setTimeout(r,timeoutMs))]);
 }
 
 /** Rise the water in `fill` (translateY from 100 % to 0) until the game is ready. Resolves when full. */

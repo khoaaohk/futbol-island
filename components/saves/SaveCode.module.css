@@ -9,6 +9,16 @@
 .note svg{flex:none;color:var(--btn-ink)}
 .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .stack{display:grid;gap:10px}
+/* The title screen's "Your secret code" (CodeShown with onBack): fills the sheet's height and spaces its parts out, footer last. */
+.shown{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:clamp(10px,2.2svh,24px)}
+/* Short phones (a small iPhone is 667 px tall): tighter so the sheet fits under the Futbol Island title without scrolling. */
+@media(max-height:720px){.shown{gap:10px}.shown .tile{min-height:64px;padding-block:6px}.shown .tile i{font-size:22px;min-height:25px}
+ .shown .copy{font-size:14px;line-height:1.42}.shown .chip{min-height:42px}}
+/* One footer row: Back left, "Print code" centred, "I saved it" right; fits a 320 px phone without wrapping. */
+.footer{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px}
+.footer>.secondary{justify-self:center}
+.footer>.secondary,.footer>.primary{white-space:nowrap}
+@media(max-width:360px){.footer{gap:6px}.footer>.secondary,.footer>.primary{padding-inline:12px;font-size:14px}}
 
 .primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s;box-sizing:border-box}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-green-edge)}
@@ -40,6 +50,7 @@
 @media(max-width:480px){.boxes{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .field{display:grid;gap:4px;min-width:0}
 .field label{font:700 11px/1.2 system-ui;color:#5c6b58}
+.field label i{font-style:normal;font-size:13px}
 .input{width:100%;min-height:48px;box-sizing:border-box;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:var(--btn-ink);font:700 17px/1.2 var(--btn-font);padding:8px 10px;text-transform:lowercase}
 .input[aria-invalid=true]{border-color:#c9806c}
 .input.good{border-color:#3f8f66;background:#f2fbf4}

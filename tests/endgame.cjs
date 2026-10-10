@@ -122,14 +122,14 @@ const finishPath=(format,skipLast=false)=>{const quiz=at('lib/town/quizProgress.
  const X=at('lib/endgame/museum.ts');const zero={balls:0,cards:0,books:0,graduations:0};
  assert.equal(new Set(X.EXHIBITS.map(e=>e.id)).size,X.EXHIBITS.length,'unique ids');
  same(X.GALLERIES.map(g=>g.unlock),['balls','cards','books','graduations'],'one gallery per collection');
- same(X.openExhibits(zero).map(e=>e.id),['laws-1863'],'fresh save: the first case is open, the building is never a dead end');
+ // Every exhibit is free to see (user, Oct 9 2026): a fresh save opens every case.
+ same(X.openExhibits(zero).map(e=>e.id),X.EXHIBITS.map(e=>e.id),'fresh save: every case is open');
+ assert.ok(X.EXHIBITS.every(e=>e.need===0),'no exhibit needs a collection');
  for(const e of X.EXHIBITS){const g=X.galleryOf(e.gallery);assert.ok(g,e.id);assert.ok(e.facts.length>=2&&e.forYourGame.length>10,e.id);if(e.gallery!=='hall')assert.ok(e.sources.length>=1&&e.sources.every(s=>/^https:\/\//.test(s.url)&&s.title),`${e.id}: sourced`);
   const need={...zero,[g.unlock]:e.need};assert.equal(X.exhibitState(e,need).open,true,`${e.id} opens at ${e.need}`);
   if(e.need>0){const s=X.exhibitState(e,{...zero,[g.unlock]:e.need-1});assert.equal(s.open,false);assert.match(s.lockText,/Collect 1 more/);assert.ok(s.how.length>20,'says how to unlock');}}
- assert.equal(X.exhibitState(X.EXHIBITS.find(e=>e.id==='cards-1970'),{...zero,balls:25}).open,true,'balls open the Laws gallery');
- assert.equal(X.exhibitState(X.EXHIBITS.find(e=>e.id==='cards-1970'),{...zero,cards:500}).open,false,'…not cards');
- assert.equal(X.openExhibits({balls:100,cards:450,books:40,graduations:4}).length,X.EXHIBITS.length,'a complete save opens every case');
- console.log('PASS museum: first case free, every case sourced, opens by its collection with how-to-unlock copy');
+  assert.equal(X.openExhibits({balls:100,cards:450,books:40,graduations:4}).length,X.EXHIBITS.length,'a complete save opens every case');
+ console.log('PASS museum: every case free, every case sourced, opens by its collection with how-to-unlock copy');
 }
 
 // ---- 6. Certificates and the Trophy shelf -------------------------------------------------------------------------------

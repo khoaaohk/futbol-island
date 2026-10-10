@@ -33,7 +33,9 @@ function morph(el:HTMLElement,from:DOMRect,{reverse=false,duration=460}={}):Prom
 
 export default function TitleActions(){
  const [saves,setSaves]=useState<Saves|null>(null),[state,setState]=useState<TitleState>('boot'),[code,setCode]=useState<string|null>(null);
- const [sheet,setSheet]=useState<Sheet|null>(null),[celebrate,setCelebrate]=useState(false),[busy,setBusy]=useState(false);
+   const [sheet,setSheet]=useState<Sheet|null>(null),[celebrate,setCelebrate]=useState(false),[busy,setBusy]=useState(false);
+ // The new code's own footer carries Back (bottom left) once the code shows; the header keeps it before that (Oct 9 2026).
+ const [createPhase,setCreatePhase]=useState('');
  const applyRestore=useRef<(()=>void)|null>(null);
  const surface=useRef<HTMLDivElement>(null),content=useRef<HTMLDivElement>(null),backdrop=useRef<HTMLDivElement>(null),landing=useRef<HTMLDivElement>(null);
  // Start-page analytics: the returning and saving-break cards are counted when they appear (lib/analytics/startEvents.ts).
@@ -80,10 +82,11 @@ export default function TitleActions(){
   // The "saved" moment (stamp + riso confetti), then the sheet folds into Play.
   setTimeout(()=>{setCelebrate(false);void leave('ready');},reduced()?400:1150);
  };
- const onCreatePhase=(p:string)=>{if(p==='unavailable'||p==='error')void leave('break');};
+ const onCreatePhase=(p:string)=>{setCreatePhase(p);if(p==='unavailable'||p==='error')void leave('break');};
  const onRestorePhase=(p:string)=>{if(p==='unavailable')void leave('break');};
  useEffect(()=>{if(!sheet)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();void leave(null);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[sheet,leave]);
 
+ const codeFooter=sheet?.mode==='create'&&createPhase==='code';
  return <div className={styles.actions} data-title-state={state} aria-live="polite">
   {state==='new'&&<div className={styles.choices} data-enter="actions">
    <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={!saves||busy} onClick={e=>void open('create',e.currentTarget)}>
@@ -108,19 +111,19 @@ export default function TitleActions(){
    <WaterPill card="break" label="Play"/>
   </div>}
 
-  {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode}>
+  {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={codeFooter||undefined}>
    <div ref={backdrop} className={styles.backdrop} onClick={()=>void leave(null)} aria-hidden="true"/>
    <div className={styles.sheet} role="dialog" aria-modal="true" aria-labelledby="save-sheet-title">
     <div ref={surface} className={styles.surface}/>
     <div ref={content} className={styles.sheetContent}>
      <header className={styles.sheetHeader}>
-      <BackButton onBack={()=>void leave(null)}/>
+      {!codeFooter&&<BackButton onBack={()=>void leave(null)}/>}
       <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='create'?'New island':'My save code'}</h2>
-      <span className={styles.mark} aria-hidden="true"/>
+      {!codeFooter&&<span aria-hidden="true"/>}
      </header>
      <div className={styles.sheetBody} data-save-flow={sheet.mode}>
       {sheet.mode==='create'
-       ?<saves.SaveCodeCreate onDone={created} onPhase={onCreatePhase} onHaveCode={()=>setSheet(s=>s&&{...s,mode:'restore'})}/>
+       ?<saves.SaveCodeCreate onDone={created} onPhase={onCreatePhase} onBack={()=>void leave(null)} onHaveCode={()=>setSheet(s=>s&&{...s,mode:'restore'})}/>
        :<saves.SaveCodeRestore onDone={restored=>{if(!restored)void leave('break');}} onPhase={onRestorePhase} onCancel={()=>setSheet(s=>s&&{...s,mode:'create'})}
          onPlay={apply=>{applyRestore.current=apply;void leave('restored');}}/>}
      </div>

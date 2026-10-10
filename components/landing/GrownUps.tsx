@@ -29,7 +29,7 @@ function Sheet({open,onClose,title,id,children}:{open:boolean;onClose:()=>void;t
 }
 
 /**
- * The /start bottom row: "For grown-ups" and "Privacy" each open a full-screen sheet (user, Oct 9 2026). The privacy text is the
+ * The title screen's bottom row: "For grown-ups" and "Privacy" each open a full-screen sheet (user, Oct 9 2026). The privacy text is the
  * shared policy (components/privacy/PrivacyPolicy.tsx), the same one /privacy shows. Without JavaScript, Privacy still links to /privacy.
  */
 export function LegalLinks(){

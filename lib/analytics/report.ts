@@ -14,7 +14,7 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  const byDay=new Map<string,DailyRollup>((await store.rollups(days[0],days[days.length-1])).map(r=>[r.day,r]));
  const missing=days.filter(d=>!byDay.has(d)&&d>=oldestRaw&&d<=today);
  // Storage check (Oct 9 2026): the installed SQL version, and whether a live-computed day with visits came back without the
- // learning keys (the SQL functions predate 20261009_analytics_counts.sql) or the /start subset (20261009_analytics_start.sql). Either one shows the "storage needs update" banner.
+ // learning keys (the SQL functions predate 20261009_analytics_counts.sql) or the start-page subset (20261009_analytics_start.sql). Either one shows the "storage needs update" banner.
  let stale=false;
  if(missing.length)for(const r of await store.computeDays(missing[0],missing[missing.length-1],now)){if(r.sessions>0&&(!('counts' in r)||!('start' in r)))stale=true;if(!byDay.has(r.day))byDay.set(r.day,r);}
  const schema=await store.schemaVersion();

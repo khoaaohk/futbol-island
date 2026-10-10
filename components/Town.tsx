@@ -43,6 +43,8 @@ import {goalFinish} from '@/lib/town/goalFinish';
 import {sweepGoalFrame,type FrameHit} from '@/lib/town/goalCollisions';
 import IslandSettingsHost from './IslandSettings';
 import IslandLoading from './IslandLoading';
+import {rememberInGame} from '@/lib/rootView';
+import {bootMark} from '@/lib/boot/perfMarks';
 import IslandReturnLoading from './IslandReturnLoading';
 import {isDrinkMachine} from '@/lib/town/drinkMachines';
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
@@ -336,7 +338,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
   // The loading screen starts sliding away 1.55 s after loadingComplete (IslandLoading .exiting delay): start the arrival as it departs.
   useEffect(()=>{if(!loadingComplete||returningFromArcade)return;const timer=window.setTimeout(()=>arrivalRestartRef.current(),window.matchMedia('(prefers-reduced-motion: reduce)').matches?80:1500);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
-  // /start's water-loader hand-off (<html data-island-handoff="tan">, components/landing/waterLaunch.ts): the loader is a plain tan
+  // This tab is in the game now: a reload or a later visit to `/` in this tab skips the title screen (lib/rootView.ts).
+  useEffect(()=>{rememberInGame();},[]);
+  // The title screen's water-loader hand-off (<html data-island-handoff="tan">, components/landing/waterLaunch.ts): the loader is a plain tan
   // sheet with no artwork to show, so the 3 s minimum (there for the loader art) is skipped; the island appears once it is ready.
   useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),document.documentElement.dataset.islandHandoff==='tan'?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
   useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
@@ -379,6 +383,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const go=(to:District|'square'|'coaches'|'store'|'cay'|'museum')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);setHint(false);};
   useEffect(()=>{
     const parent=host.current;if(!parent)return;
+    bootMark('town:effect');
     const departure=returningFromArcade?readIslandReturnPosition():null;
     const sceneSpawn=departure?{x:departure.x,z:departure.z}:initialSpawn;
     if(departure){rideRef.current=departure.ride;setRideMode(departure.ride);positionStore.publish(sceneSpawn);const zone=zoneAt(sceneSpawn.x,sceneSpawn.z);zoneRef.current=zone;setLocationZone(zone);}
@@ -414,6 +419,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const learningView=createLearningView();let wasLearning=false;
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
     const LEARNING_HIDE=['vending-machines','fishing-spots','fishing-spot-selection','market-stand-selection','fishing-live','fishing-shore-foam'];let learningHidden:[T.Object3D,boolean][]|null=null;
+    bootMark('town:scene-start');
     const world=buildTown(scene),vending=createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles,...fishingKioskObstacles());vendingRef.current=vending;
     const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const fieldBump=createFieldCollision();
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
@@ -861,7 +867,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     let dailyX=location.x,dailyZ=location.z;
     const exploreZones=createExploreZones(exploreActivityNow(),kind=>recordExploreActivity(kind));// Coral Cay / East Jetty checklist items (G-13)
     function animate(now:number){
-      loopSleeping=false;
+      loopSleeping=false;if(firstFrame)bootMark('town:frame0-start');
       if(disposed||isVideoPlaying()){last=now;accumulator=0;return;}frame=requestAnimationFrame(animate);
       if(document.hidden){last=now;return;}
       const paused=(mapRef.current||settingsRef.current)&&!(onboardingRef.current&&onboardingNpcStep.current),quiz=fieldSession.current,quizWaiting=!paused&&Boolean(quiz?.quiz&&(quiz.answer===null||!teachingPoseAdvances(quiz,quizOutcomeStep(quiz))));
@@ -1262,7 +1268,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(resolution){renderer.setPixelRatio(resolution);renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);}
       heat.beforeRender(location,Boolean(learning&&!quiz?.quiz)||(!learning&&!viewMoved&&Math.hypot(velocity.x,velocity.z)<.05&&games.stats.visiblePlayers>0));renderer.render(scene,camera);renderStats.rendered++;heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,learning??'');positionStore.frame(location.x,location.z);emitIslandFrame(now);islandFrameAt.current=performance.now();if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}// minimap and thumb move on this frame (heat pass 3)
       cameraMoving=camera.position.distanceToSquared(lastCameraPosition)>1e-8||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-10||camera.zoom!==lastCameraZoom;lastCameraPosition.copy(camera.position);lastCameraQuaternion.copy(camera.quaternion);lastCameraZoom=camera.zoom;
-      if(firstFrame){firstFrame=false;setSceneReady(true);}
+      if(firstFrame){firstFrame=false;bootMark('town:frame0-end');setSceneReady(true);}
     }
     if(new URLSearchParams(window.location.search).get('lesson')==='space'){rideRef.current='walk';setRideMode('walk');previousRide='walk';lessonCommand.current='intro';}
     const hiddenTransforms=createHiddenTransformGate(scene);
@@ -1272,6 +1278,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       cancelAnimationFrame(frame);last=performance.now();accumulator=0;
       if(playing)resetInputs();else if(!disposed)frame=requestAnimationFrame(animate);
     });
+    bootMark('town:built');
     camera.position.set(sceneSpawn.x+(initialFlying?16:18),23+initialHeight,sceneSpawn.z+(initialFlying?33:30));if(departure?.camera)camera.position.set(departure.camera.x,departure.camera.y,departure.camera.z);camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
     return()=>{idleInput.abort();saveArcadeDeparture.current=()=>{};clearTimeout(pierNoteTimer);pierTarget.dispose();fishing.dispose();heat.dispose();hiddenMarker.dispose();propReactions.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();viewGate.dispose();shadowVisibility.dispose();shadowBatches.dispose();npcShadows.dispose();characterArrival.dispose();coinHunt.dispose();offJobView();offJobEvents();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vendingKick.dispose();vending.dispose();vendingRef.current=null;ferryGlow.dispose();window.removeEventListener(GRADUATIONS_CHANGED,showFerryLock);jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
   },[]);

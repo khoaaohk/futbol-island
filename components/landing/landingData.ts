@@ -1,5 +1,5 @@
 /**
- * Build-time facts for the /start title screen (Oct 9 2026). The page is prerendered static, so this runs once per build.
+ * Build-time facts for the title screen at `/` (Oct 9 2026). The page is prerendered static, so this runs once per build.
  */
 import fs from 'node:fs';
 import path from 'node:path';

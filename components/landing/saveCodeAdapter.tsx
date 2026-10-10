@@ -6,25 +6,25 @@ import {markReloadHandoff} from './handoffMotion';
 import {HANDOFF_ENABLED} from './PlayButton';
 
 /**
- * The ONE place the /start title screen gets save codes from (Oct 9 2026). It uses the save-code agent's real API
+ * The ONE place the title screen (`/`) gets save codes from (Oct 9 2026). It uses the save-code agent's real API
  * (lib/saves/client.ts and components/saves/*, docs/accounts-design.md) in its REQUIRED mode (a code is needed to play) and holds
  * no save logic of its own. Loaded on demand by TitleActions.
  *  - <SaveCodeCreate>: makes the code at once (autoStart: the title screen's Start was the tap), shows it with the photo / print
  *    prompts and the "Which word comes first?" check, then "I saved it" → onDone(code). Saving down → onDone(null) / phase.
- *  - <SaveCodeRestore>: word boxes → "Welcome back!" → its Play applies the save and reloads THIS page. On /start that reload must
- *    land in the game, so the address is moved to `/` first (history.replaceState); the reload then loads the restored island, and
- *    the game's loader starts settled (markReloadHandoff → IslandLoading). The restore's Play reloads at once, so the animated
- *    hand-off (handoffMotion.ts) cannot run first; that needs a deferred-play option on SaveCodeRestore (asked of the save agent).
+ *  - <SaveCodeRestore>: word boxes → "Welcome back!" → its Play applies the save and reloads THIS page (`/`). The reload lands in
+ *    the game (WaterPill marks the tab as in the game first, lib/rootView.ts). The address is reset to a bare `/` before it
+ *    (history.replaceState), so a ?coffee=thanks is not counted again.
  */
 export {isSavingAvailable,getLocalCode} from '@/lib/saves/client';
 import {startCreatePhase,startRestorePhase,trackStart} from '@/lib/analytics/startEvents';
 type CreateProps=ComponentProps<typeof RealCreate>;type RestoreProps=ComponentProps<typeof RealRestore>;
-export function SaveCodeCreate({onDone,onPhase,onHaveCode}:Pick<CreateProps,'onDone'|'onPhase'|'onHaveCode'>){
- return <RealCreate required autoStart onDone={c=>{if(c)trackStart('st:saved');onDone(c);}} onPhase={p=>{startCreatePhase(p);onPhase?.(p);}} onHaveCode={onHaveCode}/>;
+/** onBack (Oct 9 2026): the code's footer row carries Back (bottom left), "Print code" and "I saved it". */
+export function SaveCodeCreate({onDone,onPhase,onHaveCode,onBack}:Pick<CreateProps,'onDone'|'onPhase'|'onHaveCode'|'onBack'>){
+ return <RealCreate required autoStart onBack={onBack} onDone={c=>{if(c)trackStart('st:saved');onDone(c);}} onPhase={p=>{startCreatePhase(p);onPhase?.(p);}} onHaveCode={onHaveCode}/>;
 }
 /** onPlay (Oct 9 2026): the restore's Play hands `apply` to the title screen, which runs the water loader first; apply() then
- *  applies the save, whose reload lands in the game (the address already moved to `/` on Play). Without onPlay: the old immediate
- *  reload. */
+ *  applies the save, whose reload lands in the game. Counted first, then the address is reset to `/`. Without onPlay: the old
+ *  immediate reload. */
 export function SaveCodeRestore({onDone,onPhase,onCancel,onPlay}:Pick<RestoreProps,'onDone'|'onPhase'|'onCancel'|'onPlay'>){
  return <RealRestore required onPhase={p=>{startRestorePhase(p);onPhase?.(p);}} onCancel={onCancel}
   onPlay={onPlay}

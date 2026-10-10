@@ -10,12 +10,13 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
 
 // 1. Content and unlocks preserved exactly (the Sep 30 table).
 {const needs=Object.fromEntries(X.EXHIBITS.map(e=>[e.id,[e.gallery,e.need]]));
- assert.deepEqual(needs,{'laws-1863':['laws',0],'penalty-1891':['laws',10],'cards-1970':['laws',25],'backpass-1992':['laws',50],'var-2018':['laws',80],
-  'worldcup-1930':['worldcup',10],'wwc-1991':['worldcup',30],'futsal-1989':['worldcup',60],'laced-leather':['kit',2],'telstar-1970':['kit',3],'shirts':['kit',4],'hall-of-fame':['hall',1]});
+ // Every case is free (user, Oct 9 2026).
+ assert.deepEqual(needs,{'laws-1863':['laws',0],'penalty-1891':['laws',0],'cards-1970':['laws',0],'backpass-1992':['laws',0],'var-2018':['laws',0],
+  'worldcup-1930':['worldcup',0],'wwc-1991':['worldcup',0],'futsal-1989':['worldcup',0],'laced-leather':['kit',0],'telstar-1970':['kit',0],'shirts':['kit',0],'hall-of-fame':['hall',0]});
  assert.deepEqual(X.GALLERIES.map(g=>[g.id,g.unlock]),[['laws','balls'],['worldcup','cards'],['kit','books'],['hall','graduations']]);
  const zero={balls:0,cards:0,books:0,graduations:0};
- assert.equal(X.exhibitState(X.EXHIBITS[1],{...zero,balls:3}).lockText,'Collect 7 more hidden balls to open this case (3/10).');
- console.log('PASS content: 12 cases, same galleries, thresholds and lock copy');}
+ assert.ok(X.EXHIBITS.every(e=>X.exhibitState(e,zero).open&&X.exhibitState(e,zero).lockText===''),'every case open on a fresh save, no lock copy');
+ console.log('PASS content: 12 cases, same galleries, every case free');}
 
 // 2. Hands-on exhibits: config only, every quote copied from that case's own facts / take-it-to-your-game line.
 {const norm=s=>s.toLowerCase().replace(/[’']/g,"'");
@@ -33,9 +34,9 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
   const lv=o=>S.ambienceLevel({soundOn:true,musicOn:true,musicVolume:.04,soundVolume:.5,...o});assert.equal(lv({soundOn:false}),0,'sound muted → silent');assert.equal(lv({musicOn:false}),0,'music off → silent');
   assert.ok(lv({musicVolume:1})*.6<=.022*.5*2*.5+1e-9,'never above half the footsteps\u2019 peak');assert.ok(lv({})>0);}
  const order=X.timelineOrder().map(e=>e.year);assert.equal(order[0],'1863');assert.equal(order.at(-1),'Today');assert.ok(order.indexOf('Before the 1960s')<order.indexOf('1970'));assert.equal(order.length,12);
- const zero={balls:0,cards:0,books:0,graduations:0};assert.equal(X.nextExhibitToOpen({...zero,books:1}).id,'laced-leather','the guide points at the nearest case');
+ const zero={balls:0,cards:0,books:0,graduations:0};assert.equal(X.nextExhibitToOpen(zero),null,'every case is free: nothing left to open');
  assert.equal(X.nextExhibitToOpen({balls:100,cards:100,books:9,graduations:4}),null,'all open: nothing next');
- console.log('PASS exhibits: 7 hands-on kinds, quotes match their cases, timeline in date order, guide picks the nearest case');}
+ console.log('PASS exhibits: 7 hands-on kinds, quotes match their cases, timeline in date order, nothing locked');}
 
 // 3. Floor plan: every case placed once, no overlaps, every look-at spot reachable from the door.
 {const obstacles=L.museumObstacles(),blocked=(x,z)=>L.museumBlocked(x,z,obstacles);

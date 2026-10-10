@@ -11,7 +11,7 @@ import {createPreviewDriver,type PreviewMoveId,type PreviewProbe} from '@/lib/gr
 import {DEFAULT_CUSTOMIZATION,BEAN_PRESETS,beanLookFor,playerOutfit,type CharacterCustomization} from '@/lib/town/customization';
 import {matchPlayerDress} from '@/lib/town/beanLooks';
 import type {BeanExpression,BeanLook,Outfit} from '@/lib/graphics/beanLook';
-import {CLASSIC_GROUND,createTrickCtx,createTrickFrame,sampleTrick,trickById} from '@/lib/graphics/freestyleTricks';
+import {CLASSIC_GROUND,createTrickCtx,createTrickFrame,sampleTrick,trickById,type TrickBeat,type TrickDef} from '@/lib/graphics/freestyleTricks';
 
 export type SplashSpec={
  /** Main-character builder look (plus an optional club costume), or a match player (team side + keeper). */
@@ -22,6 +22,9 @@ export type SplashSpec={
  azimuth?:number;height?:number;px?:number;ball?:boolean;
  /** Optional island freestyle trick (lib/graphics/freestyleTricks.ts id) posed instead of the preview `move`; `at` = seconds into the trick. */
  trick?:{id:string;side?:-1|1;
+  /** A medley instead of one trick: these beats (freestyleTricks.ts TrickBeat data, e.g. the cores of several tricks chained through
+   *  laces touches) played `repeat` times back to back (default 1), so the last beat flies into the first. */
+  beats?:readonly TrickBeat[];repeat?:number;
   /** Loop sampling: [t0, period] = one cycle of the trick. The rig plays to t0, then repeats that cycle `warm` times (default 6) so
    *  its smoothing settles, then plays `at` seconds further (0 ≤ at < period): frames sampled this way tile seamlessly. */
   cycle?:readonly [number,number];warm?:number};
@@ -61,7 +64,10 @@ export default function SplashLab(){
    const dt=1/60;let f=driver.step(0,probe),el=0;
    const apply=()=>{r.update(f.x,f.z,dt,el,false,f.motion);if(f.celebrate>=0)applyCelebrationArms(r.root,f.celebrate);};
    apply();
-   const trick=spec.trick?trickById(spec.trick.id):undefined;
+   const medley=(t:NonNullable<SplashSpec['trick']>):TrickDef=>{
+    const beats=Array.from({length:t.repeat??1},()=>t.beats!).flat(),starts:number[]=[];let T=0;for(const b of beats){starts.push(T);T+=b.d;}
+    return {id:t.id,label:t.id,purpose:'',category:'lower',beats,seconds:T,starts,pair:false,followSt:'stand'};};
+   const trick=spec.trick?(spec.trick.beats?medley(spec.trick):trickById(spec.trick.id)):undefined;
    if(trick){
     // Same drive as /skill-lab?skill=<trick>: the trick pose rides PlayerMotion.trick, the ball follows the trick's frame.
     const sd=spec.trick!.side??1,tf=createTrickFrame(),sc=()=>Math.abs(r.root.scale.y)||1;

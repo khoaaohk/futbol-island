@@ -58,7 +58,7 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.routeWebSocket(/webpack-hmr|_next\/.*hmr/, () => {});
-  await page.addInitScript(m => { if (sessionStorage.getItem('gap-seeded')) return; sessionStorage.setItem('gap-seeded', '1'); localStorage.clear(); for (const [k, v] of Object.entries(m)) localStorage.setItem(k, v as string); }, MUTED);
+  await page.addInitScript(m => { sessionStorage.setItem('fi2-in-game', '1'); /* `/` = title screen first; start in the game */ if (sessionStorage.getItem('gap-seeded')) return; sessionStorage.setItem('gap-seeded', '1'); localStorage.clear(); for (const [k, v] of Object.entries(m)) localStorage.setItem(k, v as string); }, MUTED);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   const welcome = page.locator('dialog[data-onboarding-step][open]');
   await expect(welcome).toBeVisible({ timeout: 150_000 });

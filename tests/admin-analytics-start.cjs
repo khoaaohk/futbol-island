@@ -6,7 +6,7 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm'),ts=require('typescript'),os=require('os'),cp=require('child_process');
 const ROOT=path.resolve(__dirname,'..');process.chdir(ROOT);
-const G={location:{pathname:'/start',search:''}};// the page the browser modules think they are on
+const G={location:{pathname:'/',search:''}};// the page the browser modules think they are on (the title screen is at `/`)
 const loaded=new Map();
 function resolve(from,id){
  const base=id.startsWith('@/')?path.join(ROOT,id.slice(2)):path.resolve(path.dirname(from),id);
@@ -32,7 +32,7 @@ const ingest=(store,body,now)=>I.handleIngest({body:JSON.stringify(body),headers
 // Fake browser (manual clock), as in tests/admin-analytics-learning.cjs.
 function env(){
  const listeners={},timers=new Map(),store={};let id=0,t=0,seed=0;const sent=[];
- const w={location:{hostname:'futbolisland.app',pathname:'/start',search:''},addEventListener:(k,f,o)=>{(listeners[k]??=[]).push({f,o});},removeEventListener:(k,f)=>{listeners[k]=(listeners[k]||[]).filter(x=>x.f!==f);},
+ const w={location:{hostname:'futbolisland.app',pathname:'/',search:''},addEventListener:(k,f,o)=>{(listeners[k]??=[]).push({f,o});},removeEventListener:(k,f)=>{listeners[k]=(listeners[k]||[]).filter(x=>x.f!==f);},
   setTimeout:(f,ms)=>{timers.set(++id,{f,at:t+ms});return id;},clearTimeout:i=>{timers.delete(i);}};
  const d={visibilityState:'visible',referrer:'',addEventListener:w.addEventListener,removeEventListener:w.removeEventListener};
  const n={sendBeacon:(u,b)=>{sent.push({raw:b,...JSON.parse(b)});return true;},maxTouchPoints:0};
@@ -84,7 +84,7 @@ await ok('delegated listener',()=>{
  assert.equal(SE.clickId(el({'data-track':'st:view'},el({'data-track':'sg:open'}))),'st:view');
  assert.equal(SE.clickId(el({})),null);assert.equal(SE.clickId(null),null);assert.equal(SE.clickId({}),null);
  // With a running tracker: the view, ?coffee=thanks, clicks, one listener, then a beat carrying the totals.
- const x=env();x.w.location.search='?coffee=thanks';const tr=T.startTracker(x.e);tr.pageview('/start');
+ const x=env();x.w.location.search='?coffee=thanks';const tr=T.startTracker(x.e);tr.pageview('/');
  const stop=SE.watchStart(x.w);
  const clicks=x.listeners.click;assert.equal(clicks.length,1,'one click listener');assert.deepEqual(J(clicks[0].o),{capture:true,passive:true});
  assert.equal(x.listeners.scroll,undefined);
@@ -93,36 +93,39 @@ await ok('delegated listener',()=>{
  x.fire('pointerdown');x.advance(20_000);x.hide();
  const beat=x.sent.filter(b=>b.t==='beat').pop();assert.deepEqual(J(beat.k),{'sg:open':2,'st:view':1,'sg:paid':1,'sp:retention':1,'st:play_ready':1});
  assert.equal(C.validateEvent(beat.raw).ok,true);
- stop();assert.equal(x.listeners.click.length,0,'removed when leaving /start');tr.stop();
+ stop();assert.equal(x.listeners.click.length,0,'removed when the title screen goes (Play, or leaving /)');tr.stop();
  // Tracker off (DNT, bots, preview…): watchStart and trackStart change nothing.
  const y=env();y.e.navigator.doNotTrack='1';assert.equal(T.startTracker(y.e),null);SE.trackStart('st:start');
- const z=env(),t2=T.startTracker(z.e);t2.pageview('/start');assert.deepEqual(J(t2.state().counts),{},'nothing left over from the off tracker');
- // VisitTracker mounts it on /start only, after the tracker started.
- const vt=read('components/VisitTracker.tsx');assert(/useEffect\(\(\)=>\{if\(pathname!=='\/start'\|\|!tracker\.current\)return;return watchStart\(window\);\},\[pathname\]\)/.test(vt));
+ const z=env(),t2=T.startTracker(z.e);t2.pageview('/');assert.deepEqual(J(t2.state().counts),{},'nothing left over from the off tracker');
+ // VisitTracker mounts it while `/` shows the title screen (not the game: lib/rootView.ts), after the tracker started.
+ const vt=read('components/VisitTracker.tsx');assert(/useEffect\(\(\)=>\{if\(pathname!=='\/'\|\|view!=='landing'\|\|!tracker\.current\)return;return watchStart\(window\);\},\[pathname,view\]\)/.test(vt));
+ assert(/const pathname=usePathname\(\),view=useRootView\(\);/.test(vt));
  // No timers, frames, requests or page reads in the listener module.
  const src=strip(read('lib/analytics/startEvents.ts'));
  assert(!/setTimeout|setInterval|requestAnimationFrame|fetch\(|sendBeacon|localStorage|textContent|innerText|\.value\b|getAttribute\('href'\)|MutationObserver/.test(src),'map increments only');
  t2.stop();
 });
 
-// 3. Outcome hooks: phases count on a real change only, and only on /start.
+// 3. Outcome hooks: phases count on a real change only, and only while the title screen shows (watchStart mounted).
 await ok('outcome hooks',()=>{
- const x=env(),tr=T.startTracker(x.e);tr.pageview('/start');
+ const x=env(),tr=T.startTracker(x.e);tr.pageview('/');
+ SE.trackStart('st:start');assert.deepEqual(J(tr.state().counts),{},'before the title screen shows: nothing');
+ const stop=SE.watchStart(x.w);
  for(const p of ['checking','making','making','code','code'])SE.startCreatePhase(p);// re-renders repeat a phase
  SE.startCreatePhase('checking');SE.startCreatePhase('code');// a code that already existed: not "created"
  for(const p of ['checking','enter','loading','enter','loading','grownup','enter','loading','welcome','welcome'])SE.startRestorePhase(p);
  SE.startWordPick(true);SE.startWordPick(false);SE.startTitleState('returning');SE.startTitleState('break');SE.startTitleState('ready');
- assert.deepEqual(J(tr.state().counts),{'st:created':1,'st:restore_fail':2,'st:restored':1,'st:word':2,'st:word_ok':1,'st:returning':1,'st:break':1});
- G.location={pathname:'/',search:''};SE.startWordPick(true);SE.trackStart('sg:paid');// CodeShown inside the game: not counted
- assert.equal(tr.state().counts['st:word'],2);G.location={pathname:'/start',search:''};tr.stop();
+ assert.deepEqual(J(tr.state().counts),{'st:view':1,'st:created':1,'st:restore_fail':2,'st:restored':1,'st:word':2,'st:word_ok':1,'st:returning':1,'st:break':1});
+ stop();SE.startWordPick(true);SE.trackStart('sg:paid');// Play → the game at the same `/`: CodeShown inside the game is not counted
+ assert.equal(tr.state().counts['st:word'],2);assert.equal(tr.state().counts['sg:paid'],undefined);tr.stop();
  // The wiring at each moment.
  const ad=read('components/landing/saveCodeAdapter.tsx');
  assert(/onPhase=\{p=>\{startCreatePhase\(p\);onPhase\?\.\(p\);\}\}/.test(ad)&&/onPhase=\{p=>\{startRestorePhase\(p\);onPhase\?\.\(p\);\}\}/.test(ad));
- assert(/if\(c\)trackStart\('st:saved'\)/.test(ad)&&/if\(restored\)trackStart\('st:play_restored'\);if\(restored\)\{window\.history\.replaceState/.test(ad),'counted before the address moves to /');
+ assert(/if\(c\)trackStart\('st:saved'\)/.test(ad)&&/if\(restored\)trackStart\('st:play_restored'\);if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/'\)/.test(ad),'counted first, then the address is reset to a bare / (a ?coffee=thanks is not counted again after the reload)');
  assert(/useEffect\(\(\)=>\{startTitleState\(state\);\},\[state\]\)/.test(read('components/landing/TitleActions.tsx')));
  assert(/onCancel=\{\(\)=>\{trackStart\('sg:gate_no'\);setStep\('closed'\);\}\} onPass=\{\(\)=>\{trackStart\('sg:gate_ok'\);setStep\('open'\);\}\}/.test(read('components/landing/Donate.tsx')));
  assert(/if\(picked===null\)startWordPick\(w===c\.words\[0\]\)/.test(read('components/saves/SaveCodeCreate.tsx')),'a boolean, never the word');
- assert(/return=\$\{returnTo\}/.test(read('components/landing/Donate.tsx'))&&/donateReturn="start"/.test(read('components/landing/GrownUps.tsx'))&&/'\/start\?coffee=thanks'/.test(read('app/coffee/checkout/route.ts')),'Stripe success returns to /start?coffee=thanks');
+ assert(/return=\$\{returnTo\}/.test(read('components/landing/Donate.tsx'))&&/donateReturn="start"/.test(read('components/landing/GrownUps.tsx'))&&/'start'\?'\/\?coffee=thanks'/.test(read('app/coffee/checkout/route.ts')),'Stripe success returns to the title screen at /?coffee=thanks');
  assert(/start page are tapped \(for example Start, For grown-ups or Donate\), counted as totals/.test(read('components/privacy/PrivacyPolicy.tsx')),'privacy policy §7');
  assert(/admin-analytics-start\.cjs/.test(read('package.json')),'part of npm test');
 });
@@ -184,7 +187,7 @@ await ok('suppression',()=>{
 
 // 7. No free text reaches a beat: only allowlisted ids, whatever the page puts in data-track; sources read attributes only.
 await ok('no free text',async()=>{
- const x=env(),tr=T.startTracker(x.e);tr.pageview('/start');const stop=SE.watchStart(x.w);
+ const x=env(),tr=T.startTracker(x.e);tr.pageview('/');const stop=SE.watchStart(x.w);
  for(const t of ['striker-volley-corner-427','<img src=x>','mum@example.com','st:view; drop table','sg:amt_10 ','x'.repeat(200)])x.fire('click',{target:el({'data-track':t})});
  T.count('st:not_an_id');T.count('Hello');
  x.fire('pointerdown');x.advance(5000);x.hide();stop();tr.stop();

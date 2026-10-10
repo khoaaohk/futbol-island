@@ -15,7 +15,8 @@ const id=()=>crypto.randomBytes(16).toString('base64url').slice(0,22);
 const countries=[[['US','CA'],22],[['US','TX'],12],[['US','NY'],9],[['US','FL'],6],[['US','WA'],4],[['US','IL'],3],[['US','MA'],2],[['US','CO'],2],[['CA','BC'],3],[['CA','QC'],2],[['GB','WLS'],2],[['AU','VIC'],3],[['GB','ENG'],16],[['GB','SCT'],3],[['CA','ON'],6],[['AU','NSW'],5],[['IE','D'],3],[['MX','CMX'],4],[['ES','MD'],3],[['DE','BE'],2],[['BR','SP'],3],[['JP','13'],2],[['NG','LA'],2],[[null,null],1]];
 const sources=[[['direct',null,null],46],[['search','google.com',null],22],[['search','duckduckgo.com',null],3],[['search','bing.com',null],2],[['social','youtube.com',null],7],[['social','instagram.com',null],4],[['social','facebook.com',null],3],[['referral','myclubschool.org',null],4],[['referral','coachesforum.net',null],2],[['campaign',null,['newsletter','email','autumn-term']],5],[['campaign',null,['club-flyer','qr','u10-league']],3]];
 const devices=[['phone',48],['tablet',30],['desktop',22]];
-const entries=[['/start',40],['/',82],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
+// The title screen is at `/` since Oct 9 2026 (/start was removed): about a third of `/` entries are title-screen sessions.
+const entries=[['/',122],['/arcade',8],['/museum',5],['/konbini',2],['/controller',3]];
 const lengths=[[[2,9],18],[[10,30],10],[[30,60],9],[[60,180],15],[[180,600],22],[[600,1800],19],[[1800,3600],5],[[3600,5400],2]];
 const now=Date.now(),data={salts:{},starts:{},beats:[],rollups:{}};
 // Learning (Oct 9 2026): FAKE lesson funnels, first-try answers, walkthrough steps, Paths, warm-ups and start flags, using the
@@ -70,7 +71,7 @@ for(let d=DAYS-1;d>=0;d--){
   if(left>0)areaMs.island=(areaMs.island||0)+left;
   data.starts[sid]={id:sid,day,visitorHash:hash,startedAt:new Date(start).toISOString(),entryPath:entry,
    country,region:country?region:null,device:pick(devices),source,referrerHost:ref,utmSource:utm?utm[0]:null,utmMedium:utm?utm[1]:null,utmCampaign:utm?utm[2]:null,flags:startFlags()};
-  const lc=learningCounts();if(entry==='/start'||rnd()<0.05)startCounts(lc);
+  const lc=learningCounts();if((entry==='/'&&rnd()<0.33)||rnd()<0.05)startCounts(lc);
   // Where on the island (Oct 8 2026): FAKE place / activity / heat-map splits for the island share of each beat.
 const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31};
 const SPOTS=[['island_square',85,-35,18,14],['arcade',103,-48,6,6],['konbini',71,-55,6,5],['field_11v11',135,100,28,13],['field_7v7',11,-80,16,8],['field_9v9',160,-110,20,7],

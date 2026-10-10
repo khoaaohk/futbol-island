@@ -14,7 +14,7 @@
  */
 import {createHash,createHmac,randomInt as cryptoRandomInt} from 'crypto';
 import {gunzipSync} from 'zlib';
-import {CODE_VERSION,displayCode,formatCode,generateCode,isNormalCode,parseCode} from './code';
+import {CODE_VERSION,displayCode,formatCode,generateCode,isNormalCode,parseCode,pictureLine} from './code';
 import {MAX_GZIP_BYTES,MAX_SNAPSHOT_BYTES,readSnapshot,type Snapshot} from './snapshot';
 import {LIMITS,utcDay,type SaveStore} from './store';
 import {EMAIL_SUBJECT,emailText,validEmail,type EmailProvider} from './email';
@@ -110,7 +110,7 @@ export async function handleSave(route:SaveRoute,req:{bytes:Uint8Array;contentTy
   const r=await store.lookup(hash,bucket,true,false,t);
   if(!r.ok||!parsed)return padded({status:200,body:{ok:true}});
   const display=displayCode(parsed);
-  const sent=await deps.email!.send({to:body.email as string,subject:EMAIL_SUBJECT,text:emailText(display),secret:display});
+  const sent=await deps.email!.send({to:body.email as string,subject:EMAIL_SUBJECT,text:emailText(display,pictureLine(parsed)),secret:display});
   return padded({status:200,body:sent?{ok:true}:{ok:false,failed:true}});
  }catch{
   // No error detail ever leaves (or is logged): it could hold a hash or an address.

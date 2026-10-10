@@ -1,6 +1,6 @@
 'use client';
 /**
- * "Start page" (Oct 9 2026): who visits the /start title screen and what they tap there. Everything comes from report.start,
+ * "Start page" (Oct 9 2026): who sees the title screen (at `/`; the old /start was removed) and what they tap there. Everything comes from report.start,
  * built and small-number-suppressed on the server (lib/analytics/startReport.ts): a null cell rests on fewer than 5 sessions in
  * the range and shows as "<5". Funnels are sessions per step (a step chart: one series in slot 1, bars scaled to the first
  * step, the drop from the step before printed beside each bar). Same cards, bars, tooltip and Table twins as the rest of /admin.
@@ -46,7 +46,7 @@ export default function StartSection({report,countryName}:{report:Report;country
  const S=report.start,empty=!S||!S.hasData;
  const head=<div className={styles.sectionHead}>
   <h2 id="start-heading">Start page</h2>
-  <p>Visitors to the /start title screen (sessions that began there or opened it later) and what they tap: Start and the save code, “I have a save code”, For grown-ups and its links, Donate and Privacy. Totals per button only: no typed text, no codes, no order of taps.</p>
+  <p>Visitors who saw the title screen at futbolisland.app/ (sessions that showed it; before Oct 9 2026 also sessions that began on the old /start) and what they tap: Start and the save code, “I have a save code”, For grown-ups and its links, Donate and Privacy. Totals per button only: no typed text, no codes, no order of taps.</p>
   {S&&S.hidden>0&&<p className={styles.suppressNote}>Small numbers are hidden: {fmtInt(S.hidden)} {S.hidden===1?'cell rests':'cells rest'} on fewer than {S.min} sessions in this range and {S.hidden===1?'shows':'show'} as “&lt;{S.min}”.</p>}
  </div>;
  if(empty)return <section className={styles.island} aria-labelledby="start-heading">{head}
@@ -58,8 +58,8 @@ export default function StartSection({report,countryName}:{report:Report;country
   {head}
   <div className={styles.startTiles} aria-label="Start-page totals">
    <div><span>Visitors</span><b>{v.available?fmtInt(v.visitors):'—'}</b><small>{v.available?'unique per day, added up':'needs the storage update'}</small></div>
-   <div><span>Sessions</span><b>{v.available?fmtInt(v.sessions):'—'}</b><small>began on /start or opened it</small></div>
-   <div><span>Began on /start</span><b>{fmtInt(v.entered.sessions)}</b><small>{fmtInt(v.entered.visitors)} visitors</small></div>
+   <div><span>Sessions</span><b>{v.available?fmtInt(v.sessions):'—'}</b><small>saw the title screen</small></div>
+   <div><span>Began on the old /start</span><b>{fmtInt(v.entered.sessions)}</b><small>{fmtInt(v.entered.visitors)} visitors</small></div>
    <div><span>Title screen views</span><b>{show(v.viewed)}</b><small>sessions that saw it</small></div>
   </div>
   {v.partial&&<p className={styles.note}>Some days in this range were saved before the start-page split, so its visitors, countries, sources and devices undercount those days.</p>}
@@ -100,7 +100,7 @@ export default function StartSection({report,countryName}:{report:Report;country
     <p className={styles.note}>Cancelled the grown-up check: <b>{show(g.gateNo)}</b>. A grown-up who passed the check in the last few minutes goes straight to the amounts.</p>
     <p className={styles.miniHead}>Amount chosen</p>
     <BarList rows={g.amounts.map(a=>bar('a'+a.amount,`$${a.amount}`,a.sessions,a.clicks===null?undefined:`${fmtInt(a.clicks)} taps`))} unit="sessions" limit={g.amounts.length}/>
-    <div className={styles.lengthStats}><span>Donations completed <b>{paidNote}</b></span><span className={styles.note}>sessions back from Stripe on /start</span></div>
+    <div className={styles.lengthStats}><span>Donations completed <b>{paidNote}</b></span><span className={styles.note}>sessions back from Stripe on the title screen</span></div>
    </ChartCard>
 
    <ChartCard title="Privacy" subtitle="Sessions that opened the privacy policy, and the sections they jumped to from its contents"

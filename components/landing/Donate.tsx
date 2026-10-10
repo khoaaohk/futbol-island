@@ -8,8 +8,8 @@ import {trackStart} from '@/lib/analytics/startEvents';
 import {nonprofitSlug} from '@/lib/analytics/startIds';
 
 /**
- * /start For grown-ups → "Local non-profits" (user, Oct 9 2026): the same non-profits and Stripe tiers as Settings → About
- * (components/DonationLinks.tsx), behind the shared grown-up check because donations use real money. Returns to /start.
+ * Title screen For grown-ups → "Local non-profits" (user, Oct 9 2026): the same non-profits and Stripe tiers as Settings → About
+ * (components/DonationLinks.tsx), behind the shared grown-up check because donations use real money. Returns to the title screen (`/?coffee=thanks`).
  */
 export default function Donate({returnTo='start'}:{returnTo?:'start'|'about'}={}){
  const [step,setStep]=useState<'closed'|'gate'|'open'>('closed');

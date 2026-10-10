@@ -6,7 +6,8 @@
  * Normal form (the only thing ever hashed): `striker-volley-corner-427`. Typing is forgiving: any case, spaces, dots or
  * hyphens; a word may be typed as its first 4 letters (they are unique), and a small typo snaps to the one nearest word.
  */
-import {PICTURES,WORDS} from './words';
+import {NUMBER_PICTURE,PICTURES,WORDS} from './words';
+export {NUMBER_PICTURE};
 
 /** Word-list version stored with each save (game_saves.code_version). The list only ever grows. */
 export const CODE_VERSION=1;
@@ -19,7 +20,10 @@ export const CODE_BITS=Math.log2(CODE_SPACE);
 export type SaveCode={words:[string,string,string];number:number};
 const INDEX=new Map(WORDS.map((w,i)=>[w,i]));
 export const isWord=(w:string)=>INDEX.has(w);
+/** The word's picture (every listed word has one; null only for a word not in the list). Never part of the secret. */
 export const pictureFor=(w:string):string|null=>PICTURES[w]??null;
+/** "🤝 buddy · ⚽ striker · 🥅 goal · 🔢 427": the code with its pictures, for places that show a code as plain text. */
+export const pictureLine=(c:SaveCode)=>`${c.words.map(w=>`${pictureFor(w)??''} ${w}`.trim()).join(' · ')} · ${NUMBER_PICTURE} ${c.number}`;
 
 /**
  * Adjacent pairs that read badly together (either order). Single words are already clean; this stops a random draw from

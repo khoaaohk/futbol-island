@@ -13,18 +13,17 @@ import styles from './Title.module.css';
  *  px-per-metre scale: trick-boy's 513 px canvas is 24 % of the cast box wide, so every canvas is w/513 × 24 %. Feet sit at the
  *  bottom of each canvas, so a shorter or taller canvas keeps the same ground line. When an entry has `strip`, its trick loop
  *  plays as a CSS sprite (steps(), compositor-only; paused when calm or hidden; the still under reduced motion). */
-type CastSize={width:number;height:number;sm:number[];strip?:{frames:number;fps:number;cell:number[];smCell:number[]}};
+/** `strip` = the trick sprite sheet: `frames` cells of `cell` px (-sm: `smCell`), `cols` per row over `rows` rows (a grid keeps every image
+ *  ≤ 16384 px; a one-row strip when cols/rows are absent), played at `fps`. */
+type CastSize={width:number;height:number;sm:number[];strip?:{frames:number;fps:number;cols?:number;rows?:number;cell:number[];smCell:number[]}};
 const SIZES=CAST_SIZES as unknown as Record<string,CastSize>;
 const SLOTS=[{id:'trick-boy',cls:'boy'},{id:'trick-girl',cls:'girl'}] as const;
-const CAST=SLOTS.filter(c=>SIZES[c.id]).map(c=>({...c,w:SIZES[c.id].width,h:SIZES[c.id].height,pct:SIZES[c.id].width/513*24,strip:SIZES[c.id].strip}));
-
-function Ball({className}:{className?:string}){
- return <svg className={className} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-  <circle cx="20" cy="20" r="17" fill="#fff2d3" stroke="#163f37" strokeWidth="2.5"/>
-  <path d="M20 13l6.2 4.5-2.4 7.3h-7.6l-2.4-7.3Z" fill="#163f37"/>
-  <path d="M20 13V5M26.2 17.5l7-2.6M23.8 24.8l4.6 6.4M16.2 24.8l-4.6 6.4M13.8 17.5l-7-2.6" stroke="#163f37" strokeWidth="2"/>
- </svg>;
-}
+const sheet=(s:CastSize['strip'])=>s&&{...s,cols:s.cols??s.frames,rows:s.rows??1};
+const CAST=SLOTS.filter(c=>SIZES[c.id]).map(c=>({...c,w:SIZES[c.id].width,h:SIZES[c.id].height,pct:SIZES[c.id].width/513*24,strip:sheet(SIZES[c.id].strip)}));
+/** Cache-busting: /splash files are cached for a day under fixed names, so a re-render with a new shape (canvas size, grid) must
+ *  get a new URL, or a cached old image is drawn with the new layout (squashed slivers). The tag changes whenever the shape does. */
+const stillV=(c:{w:number;h:number})=>`?v=${c.w}x${c.h}`;
+const sheetV=(t:{frames:number;cols:number;rows:number;cell:number[]})=>`?v=${t.frames}-${t.cols}x${t.rows}-${t.cell[0]}`;
 
 export default function TitleArt(){
  return <>
@@ -88,21 +87,25 @@ export default function TitleArt(){
    {CAST.map((c,i)=><div key={c.id} className={`${styles.castMember} ${styles[c.cls]}`} data-enter="cast" data-x="cast" data-cast-id={c.id}
      style={{'--i':i,width:`${c.pct.toFixed(2)}%`} as React.CSSProperties}>
     <picture className={`${styles.castLife} ${c.strip?styles.castStill:''}`}>
-     <source type="image/avif" srcSet={`/splash/${c.id}-sm.avif 1x, /splash/${c.id}.avif 2x`}/>
-     <img src={`/splash/${c.id}-sm.webp`} srcSet={`/splash/${c.id}-sm.webp 1x, /splash/${c.id}.webp 2x`} width={Math.round(c.w/2)} height={Math.round(c.h/2)} alt="" decoding="async" draggable={false}/>
+     <source type="image/avif" srcSet={`/splash/${c.id}-sm.avif${stillV(c)} 1x, /splash/${c.id}.avif${stillV(c)} 2x`}/>
+     <img src={`/splash/${c.id}-sm.webp${stillV(c)}`} srcSet={`/splash/${c.id}-sm.webp${stillV(c)} 1x, /splash/${c.id}.webp${stillV(c)} 2x`} width={Math.round(c.w/2)} height={Math.round(c.h/2)} alt="" decoding="async" draggable={false}/>
     </picture>
     {c.strip&&<span className={styles.spriteBox} data-sprite style={{aspectRatio:`${c.strip.cell[0]}/${c.strip.cell[1]}`} as React.CSSProperties} aria-hidden="true">
-     <picture className={styles.sprite} style={{'--frames':c.strip.frames,'--dur':`${(c.strip.frames/c.strip.fps).toFixed(3)}s`,width:`${c.strip.frames*100}%`} as React.CSSProperties}>
-      <source type="image/avif" srcSet={`/splash/${c.id}-strip-sm.avif 1x, /splash/${c.id}-strip.avif 2x`}/>
-      <img src={`/splash/${c.id}-strip-sm.webp`} srcSet={`/splash/${c.id}-strip-sm.webp 1x, /splash/${c.id}-strip.webp 2x`} width={Math.round(c.strip.smCell[0]*c.strip.frames)} height={c.strip.smCell[1]} alt="" decoding="async" loading="lazy" draggable={false}/>
+     {/* Grid sheet: the picture steps down the rows (--rows over the whole loop), the img steps across the columns (--cols per row). */}
+     <picture className={styles.sprite} style={{'--cols':c.strip.cols,'--rows':c.strip.rows,'--dur':`${(c.strip.frames/c.strip.fps).toFixed(3)}s`,width:`${c.strip.cols*100}%`,height:`${c.strip.rows*100}%`} as React.CSSProperties}>
+      {/* Phones always take the -sm sheet: the full sheets decode to ~35 MB each, the -sm ones to about half, and -sm is still
+          sharp at a phone's character size (user, Oct 9 2026). */}
+      <source media="(max-width: 600px)" type="image/avif" srcSet={`/splash/${c.id}-strip-sm.avif${sheetV(c.strip)}`}/>
+      <source media="(max-width: 600px)" type="image/webp" srcSet={`/splash/${c.id}-strip-sm.webp${sheetV(c.strip)}`}/>
+      <source type="image/avif" srcSet={`/splash/${c.id}-strip-sm.avif${sheetV(c.strip)} 1x, /splash/${c.id}-strip.avif${sheetV(c.strip)} 2x`}/>
+      <img src={`/splash/${c.id}-strip-sm.webp${sheetV(c.strip)}`} srcSet={`/splash/${c.id}-strip-sm.webp${sheetV(c.strip)} 1x, /splash/${c.id}-strip.webp${sheetV(c.strip)} 2x`} width={c.strip.smCell[0]*c.strip.cols} height={c.strip.smCell[1]*c.strip.rows} alt="" decoding="async" loading="lazy" draggable={false}/>
      </picture>
     </span>}
    </div>)}
   </div>
-  {/* Foreground props: balls and a wave mark (nearest). */}
+  {/* Foreground props: a wave mark (nearest). The floating ball was removed (user, Oct 9 2026). */}
   <div className={`${styles.layer} ${styles.props}`} data-depth="60">
    <div className={styles.propsIn} data-enter="props" data-x="props">
-    <Ball className={styles.ballB}/>
     <svg className={styles.waves} viewBox="755 535 110 62" aria-hidden="true" focusable="false"><path d="M762 565C802 539 831 543 857 564M779 591C811 572 839 578 858 590" stroke="#F9D55D" strokeWidth="10" strokeLinecap="round" fill="none"/></svg>
    </div>
   </div>

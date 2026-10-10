@@ -3,9 +3,9 @@ import Donate from '../landing/Donate';
 import styles from '../landing/Title.module.css';
 
 /**
- * "For grown-ups" content, shared by the /start sheet (components/landing/GrownUps.tsx) and the game's Settings → About panel
- * (components/IslandSettings.tsx), so both always say the same thing (user, Oct 9 2026). data-track ids count only on /start.
- * Privacy: /start opens its Privacy sheet (onOpenPrivacy); the game links to /privacy in a new tab.
+ * "For grown-ups" content, shared by the title screen's sheet (components/landing/GrownUps.tsx) and the game's Settings → About panel
+ * (components/IslandSettings.tsx), so both always say the same thing (user, Oct 9 2026). data-track ids count only while the title screen shows.
+ * Privacy: the title screen opens its Privacy sheet (onOpenPrivacy); the game links to /privacy in a new tab.
  */
 export default function AboutGrownUps({onOpenPrivacy,donateReturn}:{onOpenPrivacy?:()=>void;donateReturn:'start'|'about'}){
  return <div className={styles.grownInner}>

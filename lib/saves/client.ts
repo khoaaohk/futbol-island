@@ -1,7 +1,7 @@
 /**
  * Save codes in the browser (docs/accounts-design.md, docs/save-codes.md; Oct 10 2026).
  *
- * ── Public API (for any page, e.g. app/start) ─────────────────────────────────────────────────────────────────────────
+ * ── Public API (for any page, e.g. the title screen) ─────────────────────────────────────────────────────────────────────────
  *   import {isSavingAvailable,createSave,restoreSave,applyRestoredSave,getLocalCode} from '@/lib/saves/client';
  *     isSavingAvailable(): Promise<boolean>        false until Supabase, SAVE_CODE_PEPPER and the migration are all in place
  *     createSave(): Promise<{ok:true;code} | {ok:false;reason:'unavailable'|'busy'|'error'}>

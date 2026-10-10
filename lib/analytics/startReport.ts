@@ -1,6 +1,6 @@
 /**
  * The "Start page" section of the admin report (Oct 9 2026), built on the SERVER from the range's merged totals (core.ts
- * mergeRollups: the /start subset, counts, countSessions). Small-number suppression happens here, as in learning.ts: every cell
+ * mergeRollups: the start-page subset, counts, countSessions). Small-number suppression happens here, as in learning.ts: every cell
  * resting on fewer than MIN_SESSIONS sessions in the range is sent as null (shown as "<5"), and `hidden` says how many.
  * Funnels are sessions per step (countSessions: sessions whose counter for that id is ≥ 1), so no per-session id is needed;
  * a step can exceed the one before it (e.g. a Play after a code made in an earlier session), and the share is then capped.
@@ -14,7 +14,7 @@ export type StartStep={id:string;label:string;sessions:Cell};
 export type StartFunnel={id:'new'|'restore'|'returning'|'break';title:string;steps:StartStep[];side:StartStep[]};
 export type StartReport={
  hasData:boolean;min:number;hidden:number;
- /** visitors / sessions of the /start subset (null when the storage update is missing, `partial` when some days lack it). */
+ /** visitors / sessions of the start-page subset (null when the storage update is missing, `partial` when some days lack it). */
  visits:{visitors:number;sessions:number;pageviews:number;available:boolean;partial:boolean;entered:{visitors:number;sessions:number};viewed:Cell};
  dims:Record<StartDim,Row[]>|null;
  funnels:StartFunnel[];
@@ -40,7 +40,7 @@ export function funnelMath(steps:Cell[]):{ofFirst:number|null;drop:number|null}[
  });
 }
 
-/** `rangeDays`: days in the range (some may be frozen before the storage update and carry no /start subset → `partial`). */
+/** `rangeDays`: days in the range (some may be frozen before the storage update and carry no start-page subset → `partial`). */
 export function buildStart(m:Pick<Merged,'counts'|'countSessions'|'start'|'dims'>,schema:number,rangeDays:number,storageNeeded=4):StartReport{
  const sessions=m.countSessions,counts=m.counts;let hidden=0;
  const cell=(n:number|undefined):Cell=>{const v=n||0;if(v>=MIN_SESSIONS)return v;if(v>0){hidden++;return null;}return 0;};

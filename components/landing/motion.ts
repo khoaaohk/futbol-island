@@ -1,7 +1,7 @@
 /**
- * Motion maths for the /start title screen (Oct 9 2026). Pure functions, no DOM, so tests/landing.cjs runs them in Node.
+ * Motion maths for the title screen (Oct 9 2026). Pure functions, no DOM, so tests/landing.cjs runs them in Node.
  *
- * Heat rules (AGENTS.md, docs/performance-guide.md "Landing page /start"):
+ * Heat rules (AGENTS.md, docs/performance-guide.md "Landing page (was /start)" and "Title screen at /"):
  *  - the parallax spring runs a frame loop ONLY while it is moving; settled() ends it, so the page sits at 0 rAF at rest;
  *  - ambient CSS loops calm (pause) after CALM_MS without input, and pause while the tab is hidden;
  *  - device tilt is read only after a user gesture, ignores tiny changes (TILT_DEADBAND) and is dropped when calm.

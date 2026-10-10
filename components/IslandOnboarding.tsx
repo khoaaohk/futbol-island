@@ -146,7 +146,7 @@ export default function IslandOnboarding({open,onClose,value,onChange}:Props){
  </div>}
  {current.note&&<div className={styles.note}><Icon name={current.id==='learn'?'book':current.id==='paths'?'flag':current.id==='balls'?'star':'target'} size={28}/><span>{current.note}</span></div>}
  </div>}</div>
- <footer className={styles.footer}>{saveLocked?<span aria-hidden="true"/>:save?<BackButton key={`back-${save}`} onBack={()=>leaveSave(false)}/>:step>0?<BackButton key={step} onBack={()=>setStep(n=>n-1)}/>:<span aria-hidden="true"/>}<div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div>{save==='restore'||noCodeYet?<span aria-hidden="true"/>:<NavigationButton key={`next-${step}-${save??''}`} label={last?'Explore':'Next'} onNavigate={next}/>}</footer>
+ <footer className={styles.footer}>{saveLocked?<span aria-hidden="true"/>:save?<BackButton key={`back-${save}`} onBack={()=>leaveSave(false)}/>:step>0?<BackButton key={step} onBack={()=>setStep(n=>n-1)}/>:<BackButton key="back-first" disabled onBack={()=>{}}/>}<div className={styles.progress} role="status" aria-label={`Welcome step ${step+1} of ${steps.length}`}>{steps.map((s,i)=><span key={s.id} className={i===step?styles.current:undefined} aria-hidden="true"/>)}</div>{save==='restore'||noCodeYet?<span aria-hidden="true"/>:<NavigationButton key={`next-${step}-${save??''}`} label={last?'Explore':'Next'} onNavigate={next}/>}</footer>
  </section>
  </dialog>;
 }

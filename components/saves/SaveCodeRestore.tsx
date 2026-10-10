@@ -6,7 +6,7 @@
  *   <SaveCodeRestore onDone={restored=>…} initialCode="striker-volley-corner-427" onCancel={…} headless onPhase={…}/>
  *     onDone(true)   the player tapped Play: the island is swapped and the page reloads right after this call
  *     onDone(false)  "Keep this one" (this device's island stays)
- *     onPlay(apply)  optional (Oct 9 2026, /start): Play hands `apply` to the host instead of applying + reloading at once; the host
+ *     onPlay(apply)  optional (Oct 9 2026, the title screen): Play hands `apply` to the host instead of applying + reloading at once; the host
  *                    runs its own transition and then calls apply() (which applies the save and reloads). Without it: unchanged.
  *     onCancel       shows a "Go back" link on the first screen (in required mode the host takes it back to "Get my code")
  *     required       a code is needed before playing (Oct 9 2026): "Keep this one" becomes "Keep this one, get a new code" (onCancel);
@@ -16,7 +16,7 @@
  */
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {applyRestoredSave,deviceHasProgress,restoreGate,restoreSave,savingStatus,type RestoreResult} from '@/lib/saves/client';
-import {matchWord,parseCode,parseNumber,pictureFor,suggestWords} from '@/lib/saves/code';
+import {NUMBER_PICTURE,matchWord,parseCode,parseNumber,pictureFor,suggestWords} from '@/lib/saves/code';
 import {summaryLine} from '@/lib/saves/summary';
 import ParentGate from '../ParentGate';
 import styles from './SaveCode.module.css';
@@ -85,14 +85,14 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
  const busy=phase==='loading';
  return <form className={styles.box} data-save-restore="enter" onSubmit={e=>{e.preventDefault();void submit();}}>
   {title('Type your save code')}
-  <p className={styles.small}>Three words and a number. Tap a word when it pops up.</p>
+  <p className={styles.small} data-save-explainer>Your save code brings your island to this device. Three words and a number. Tap a word when it pops up.</p>
   <div className={styles.boxes}>
    {[0,1,2].map(i=><div key={i} className={styles.field}>
-    <label htmlFor={`save-word-${i}`}>Word {i+1}</label>
+    <label htmlFor={`save-word-${i}`}>Word {i+1}{matched[i]&&<i aria-hidden="true" data-word-picture> {pictureFor(matched[i]!)}</i>}</label>
     <input id={`save-word-${i}`} ref={el=>{inputs.current[i]=el;}} className={`${styles.input} ${matched[i]?styles.good:''}`} data-save-word={i} value={words[i]} autoComplete="off" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="next" maxLength={40} disabled={busy}
      onFocus={()=>setFocus(i)} onChange={e=>setWord(i,e.target.value)} onBlur={()=>{const m=matchWord(words[i]);if(m&&m!==words[i])setWords(ws=>ws.map((x,j)=>j===i?m:x));}}/>
    </div>)}
-   <div className={styles.field}><label htmlFor="save-number">Number</label>
+   <div className={styles.field}><label htmlFor="save-number">Number{number!==null&&<i aria-hidden="true" data-word-picture> {NUMBER_PICTURE}</i>}</label>
     <input id="save-number" className={`${styles.input} ${number!==null?styles.good:''}`} data-save-number value={num} inputMode="numeric" pattern="[0-9]*" maxLength={3} autoComplete="off" enterKeyHint="go" disabled={busy}
      onFocus={()=>setFocus(3)} onChange={e=>{setNum(e.target.value.replace(/\D/g,'').slice(0,3));setMsg('');}}/></div>
   </div>

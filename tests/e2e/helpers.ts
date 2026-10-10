@@ -53,6 +53,8 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   page.on('requestfailed', r => issues.http.push(`failed (${r.failure()?.errorText ?? '?'}) ${r.url().slice(0, 200)}`));
   await freezeHmr(page);
   await page.addInitScript(seed => {
+    // `/` shows the title screen first (Oct 9 2026, lib/rootView.ts); these tests start in the game, as a tab that pressed Play.
+    sessionStorage.setItem('fi2-in-game', '1');
     localStorage.setItem('fi2-welcome-v1', 'completed');
     // Save codes are required before play (Oct 9 2026). A device whose save a grown-up deleted is not asked again, which keeps
     // the "Save your island" prompt out of specs about other things when they run against a server with saving switched on.

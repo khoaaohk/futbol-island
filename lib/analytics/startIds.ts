@@ -1,5 +1,5 @@
 /**
- * Start-page counters (Oct 9 2026): the ONLY ids the /start title screen may put on the beat's counter channel (`k:{id:n}`,
+ * Start-page counters (Oct 9 2026): the ONLY ids the title screen may put on the beat's counter channel (`k:{id:n}`,
  * lib/analytics/countIds.ts). Fixed buckets, totals only: which button or link was tapped, never typed text, a code, an order of
  * taps or an id of anyone. Pure and tiny: the tracker bundle (countIds.ts), the click listener (startEvents.ts), the server
  * report (startReport.ts) and the tests import it. Labels live on the server (startReport.ts).

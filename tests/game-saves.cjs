@@ -85,8 +85,28 @@ await ok('words and entropy',()=>{
  const BAD=/^(ass|butt|poo|pee|fart|sex|kill|dead|die|gun|bomb|blood|hell|damn|crap|dick|cock|tit|bum|nazi|drug|beer|wine|ghost|skull)$/;
  for(const w of words)assert(!BAD.test(w),'clean word '+w);
  for(const w of ['sea','see','pear','pair','bear','night','knight','flower','flour','tail','tale','red','read','blue','one','won','pea','reed','write','right','root'])assert(!words.includes(w),'no homophone-prone word: '+w);
- const pics=Object.entries(W.PICTURES);assert(pics.length>=300,'pictures for many words');for(const [w] of pics)assert(words.includes(w),'picture for a list word '+w);
- assert.equal(new Set(pics.map(p=>p[1])).size,pics.length,'each picture is used once');
+ // Pictures (Oct 9 2026): every word has one; one emoji each, Unicode/Emoji 13.0 or earlier, no flags / skin tones / gender / ZWJ.
+ const pics=Object.entries(W.PICTURES);for(const [w] of pics)assert(words.includes(w),'picture for a list word '+w);
+ for(const w of words)assert(typeof W.PICTURES[w]==='string'&&W.PICTURES[w].length>0,'every word has a picture: '+w);
+ // Code points assigned after Emoji 13.0 (13.1–17 single code points), which older phones draw as a box.
+ const AFTER13=cp=>(cp>=0x1F6D8&&cp<=0x1F6DF)||cp===0x1F7F0||cp===0x1F979||cp===0x1F9CC||(cp>=0x1FA70&&cp<=0x1FAFF&&!((cp>=0x1FA70&&cp<=0x1FA74)||
+  (cp>=0x1FA78&&cp<=0x1FA7A)||(cp>=0x1FA80&&cp<=0x1FA86)||(cp>=0x1FA90&&cp<=0x1FAA8)||(cp>=0x1FAB0&&cp<=0x1FAB6)||(cp>=0x1FAC0&&cp<=0x1FAC2)||(cp>=0x1FAD0&&cp<=0x1FAD6)));
+ for(const [w,p] of [...pics,['(number)',W.NUMBER_PICTURE]]){
+  assert(/^\p{Extended_Pictographic}\uFE0F?$/u.test(p),`one emoji, nothing else: ${w} ${p}`);
+  assert(/\p{Emoji_Presentation}/u.test(p)||p.endsWith('\uFE0F'),`a text-style symbol carries U+FE0F so it draws as emoji: ${w}`);
+  for(const ch of p){const cp=ch.codePointAt(0);assert(!AFTER13(cp),`Emoji 13.0 or earlier: ${w} ${p}`);
+   assert(cp!==0x200D&&!(cp>=0x1F3FB&&cp<=0x1F3FF)&&!(cp>=0x1F1E6&&cp<=0x1F1FF)&&cp!==0x2640&&cp!==0x2642,`no ZWJ, skin tone, flag or gender sign: ${w}`);}
+  assert(!/[💀☠👻🧟🧛👹👺🔪🗡🔫💣⚰🪦🩸💊💉🍺🍷🍸🚬💩🖕⛪🕌🛕🕍✝☪🕉☸✡🔯🕎☯☦🛐📿🧿🪔👼😇🎄🎅🤡🕷]/u.test(p),`nothing scary, rude or religious: ${w} ${p}`);}
+ // Unique where possible: a picture is shared only by close relatives (fish, birds, trees…), never by many words.
+ const uses=new Map();for(const [,p] of pics)uses.set(p,(uses.get(p)??0)+1);
+ assert(uses.size>=650,`mostly unique pictures (${uses.size} distinct for ${pics.length} words)`);
+ assert(Math.max(...uses.values())<=16,'no picture is shared by more than 16 words');
+ assert(!pics.some(([,p])=>p===W.NUMBER_PICTURE),'the number picture is the number tile\'s alone');
+ // The picture is never part of the secret: the normal form, the hash input and parsing are words and digits only.
+ const pc=C.generateCode(m=>crypto.randomInt(m));const pn=C.formatCode(pc);assert.match(pn,/^[a-z]+-[a-z]+-[a-z]+-\d{3}$/,'normal form has no pictures');
+ const line=C.pictureLine(pc);for(const w of pc.words)assert(line.includes(`${W.PICTURES[w]} ${w}`),'picture line shows each word with its picture');
+ assert(line.endsWith(`${W.NUMBER_PICTURE} ${pc.number}`));
+ assert.equal(C.normaliseCode(C.displayCode(pc)),pn,'the plain code parses back');
  assert(C.CODE_BITS>=39.7&&C.CODE_BITS<40,`≈39.8 bits (${C.CODE_BITS.toFixed(2)})`);
  const counts=new Map(),seen=new Set();const N=20000;
  for(let i=0;i<N;i++){const c=C.generateCode(m=>crypto.randomInt(m));const n=C.formatCode(c);
@@ -255,6 +275,7 @@ await ok('email never kept',async()=>{
   let r=await call(deps,'email',{code,email:ADDR});assert.deepEqual(r.body,{ok:true});
   assert.equal(sent.length,1);assert.equal(sent[0].url,'https://api.resend.com/emails');assert.deepEqual(sent[0].body.to,[ADDR]);
   const text=sent[0].body.text;assert(text.includes(C.displayCode(C.parseCode(code))),'the code is in the email');
+  assert(text.includes(C.pictureLine(C.parseCode(code))),'with each word\'s picture on the line below');
   assert(!/https?:\/\//.test(text)&&!('html' in sent[0].body),'plain text, no links, no pixel');
   assert(!('secret' in sent[0].body),'the provider sends only from/to/subject/text');
   assert(/delete/i.test(text)&&text.split('\n').filter(Boolean).length<=6,'code, a line about it and how to delete');
@@ -275,6 +296,7 @@ await ok('email never kept',async()=>{
   code4=(await call(logDeps,'create',{snapshot:snap({})})).body.code;
   await call(logDeps,'email',{code:code4,email:ADDR});
   assert.equal(printed.length,1);assert(!printed[0].includes(ADDR)&&!printed[0].includes(C.displayCode(C.parseCode(code4)))&&printed[0].includes('«code»'),'log mode: no address, code masked');
+  for(const w of C.parseCode(code4).words)assert(!printed[0].includes(w)&&!printed[0].includes(W.PICTURES[w]),'log mode masks the picture line too: '+w);
   // The default log provider (as the server wires it) masks the code too.
   const printed2=[];await EM.logProvider(l=>printed2.push(l)).send({to:ADDR,subject:'s',text:EM.emailText('kite · goal · lion · 123')});
   assert(!printed2[0].includes('kite · goal')&&printed2[0].includes('«code»')&&!printed2[0].includes(ADDR));
@@ -306,6 +328,16 @@ await ok('ui hidden without setup',async()=>{
  assert(/const mustSave=\(\)=>saving&&!fallback&&codeRequired\(\)/.test(onb)&&/if\(step===0&&mustSave\(\)\)/.test(onb),'the save step only when saving is set up');
  for(const f of [card,create,restore])assert(/Saving isn’t ready yet — you can still play\./.test(f),'friendly unavailable state');
  assert(/avail\.email&&<button[^>]*data-email-code/.test(card),'the email option is hidden without a provider');
+ // The title screen's sheet (Oct 9 2026): one footer row, Back · Print code · I saved it.
+ assert(/onBack=\{onBack\}/.test(read('components/landing/saveCodeAdapter.tsx'))&&/<BackButton onBack=\{onBack\}\/>/.test(create)&&/>Print code<\/button>/.test(create)&&/data-saved-it onClick=\{onDone\}/.test(create),'create sheet footer');
+ // What a save code is, said where codes are shown, made and typed.
+ assert(/data-save-explainer>\{SAVE_CODE_WHAT\}/.test(card)&&/data-save-explainer>\{SAVE_CODE_NEW\}/.test(create)&&/data-save-explainer/.test(restore),'the save-code explainer');
+ // Masked tiles hide the picture as well as the word (a picture would give the word away); the number tile shows 🔢.
+ const tiles=read('components/saves/CodeTiles.tsx');
+ assert(/<i data-tile-picture>\{hide\?'':pictureFor\(w\)/.test(tiles)&&/<i data-tile-picture>\{masked\?'':NUMBER_PICTURE\}/.test(tiles),'masked tiles show no picture');
+ const PC=load('lib/saves/printCard.ts');const card1=PC.codeCardHtml('buddy-striker-goal-427',null);
+ for(const w of ['buddy','striker','goal'])assert(card1.includes(`<div class="pic">${W.PICTURES[w]}</div><b>${w}</b>`),'print card picture: '+w);
+ assert(card1.includes(`<div class="pic">${W.NUMBER_PICTURE}</div><b>427</b>`)&&/key to your island/.test(card1),'print card: number picture and what a code is');
  // Required code (user decision, Oct 9 2026): no way past the save step without a code, unless saving is down.
  assert(/if\(mustSave\(\)&&!getLocalCode\(\)\)\{if\(!save\)setSave\('offer'\);return;\}/.test(onb),'Skip / Escape lead to the code step, not past it');
  assert(/const noCodeYet=!!save&&saveStage!=='code'&&mustSave\(\)/.test(onb)&&/saveLocked\|\|noCodeYet\?<span aria-hidden="true"\/>:<NavigationButton className=\{styles\.skip\}/.test(onb)&&/save==='restore'\|\|noCodeYet\?<span/.test(onb),'no Skip and no Next on the save step until a code exists');
@@ -525,7 +557,8 @@ await ok('sql',async()=>{
 // 12. Wiring.
 await ok('wiring',()=>{
  assert(/node tests\/game-saves\.cjs/.test(read('package.json')),'part of npm test');
- for(const f of ['app/page.tsx','app/island-return/page.tsx'])assert(/<SaveSync\/>/.test(read(f))&&/from '@\/components\/saves\/LazySaveSync'/.test(read(f)),'boot check on '+f+', loaded after hydration');
+ // `/` renders the game through components/root/Game.tsx (the title screen comes first, Oct 9 2026).
+ for(const f of ['components/root/Game.tsx','app/island-return/page.tsx'])assert(/<SaveSync\/>/.test(read(f))&&/from '@\/components\/saves\/LazySaveSync'/.test(read(f)),'boot check on '+f+', loaded after hydration');
  for(const f of ['app/arcade/page.tsx','app/konbini/page.tsx','app/museum/page.tsx'])assert(/<SaveSync boot=\{false\}\/>/.test(read(f)),'hide-save on '+f);
  assert(/SaveCodeCard/.test(read('components/IslandSettings.tsx'))&&/dynamicImport\(\(\)=>import\('\.\/saves\/SaveCodeCard'\)/.test(read('components/IslandSettings.tsx')),'Settings card, lazy');
  const g=read('components/GrownUps.tsx');assert(/Saving progress/.test(g)&&!/Vercel Web Analytics/.test(g),'grown-ups card; stale analytics wording gone');

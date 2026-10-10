@@ -219,7 +219,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
     <p className={styles.small}>{EXHIBITS.filter(e=>exhibitState(e,counts).open).length} of {EXHIBITS.length} cases open · {pass.seen} of {pass.total} exhibits visited{pass.all?'. You’re a Museum Explorer!':''}</p>
     {nextCase?<><h3>Next to open</h3><p data-museum-next-case={nextCase.id}><b>{nextCase.title}</b> ({nextCase.year}). {exhibitState(nextCase,counts).lockText}</p>
      <button type="button" className={styles.gold} data-museum-show-me onClick={()=>{setGuideOpen(false);room.current?.walkTo(nextCase.id);}}>Show me</button></>
-     :<p>Every case is open. You’ve seen the whole story of football!</p>}
+     :<p>Every case is open. Step inside any exhibit to explore!</p>}
     <div className={styles.row}><button type="button" className={styles.mint} data-museum-guide-timeline onClick={()=>{setGuideOpen(false);room.current?.walkTo('timeline');}}>Walk me to the timeline</button>
      <button type="button" className={styles.mint} data-museum-guide-collection onClick={()=>{setGuideOpen(false);room.current?.walkTo('my-balls');}}>Your Collection wing</button></div>
    </GuidePanel></div>}

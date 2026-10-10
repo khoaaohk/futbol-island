@@ -15,7 +15,7 @@ const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'7d',la
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',controller:'Phone controller',other:'Other pages'};
-const PAGE_LABEL:Record<string,string>={'/':'Island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/controller':'Phone controller','/coffee':'Support page','/start':'Landing page (/start)','/other':'Other'};
+const PAGE_LABEL:Record<string,string>={'/':'Title screen and island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/controller':'Phone controller','/coffee':'Support page','/start':'Old landing page (/start, removed Oct 9 2026)','/other':'Other'};
 
 let regionNames:Intl.DisplayNames|null=null;
 function countryName(code:string){

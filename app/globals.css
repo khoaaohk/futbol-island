@@ -686,3 +686,7 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
 /* Wall rebounds: points to the off-screen shooting circle (placed on the HUD tick by Town.tsx). */
 .job-spot-arrow{position:absolute;left:0;top:0;z-index:5;width:44px;height:44px;margin:-22px 0 0 -22px;display:grid;place-items:center;border-radius:50%;background:#ffd36c;color:#294f43;border:2px solid #fff0c4;box-shadow:0 3px 0 #173e3459;pointer-events:none;}
 .job-spot-arrow[hidden]{display:none;}
+/* `/` (Oct 9 2026, components/root/RootSwitch.tsx, lib/rootView.ts): the prerendered page holds the title screen AND the island
+   loader; the pre-paint <html data-root-view> flag shows one. No flag (no JS): the title screen. */
+[data-root-landing],[data-root-game]{display:contents}
+html[data-root-view=game] [data-root-landing],html:not([data-root-view=game]) [data-root-game]{display:none}
