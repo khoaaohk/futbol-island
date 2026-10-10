@@ -103,7 +103,7 @@ export function CodeShown({code,onDone,headless=false,doneLabel='I saved it',onB
  *  both steps are exactly the same height and the sheet doesn't jump between them (user, Oct 10 2026). */
 export function CodeGhost(){
  return <div aria-hidden="true" inert style={{visibility:'hidden',pointerEvents:'none'}} data-code-ghost>
-  <CodeShown code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-888`} onDone={()=>{}} headless onBack={()=>{}}/></div>;
+  <CodeShown code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-8888`} onDone={()=>{}} headless onBack={()=>{}}/></div>;
 }
 
 /** "Before you start" in the very same frame as "Your secret code" (user, Oct 10 2026): `top` sits over an invisible copy of the
@@ -111,7 +111,7 @@ export function CodeGhost(){
  *  between the two steps. */
 export function IntroShown({top,copy,onBack,go}:{top:ReactNode;copy:string;onBack:()=>void;go:ReactNode}){
  return <div className={`${styles.box} ${styles.shown}`} data-save-intro>
-  <div className={styles.introTop}><div aria-hidden="true" inert style={{visibility:'hidden'}}><CodeTiles code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-888`} labelled/></div>
+  <div className={styles.introTop}><div aria-hidden="true" inert style={{visibility:'hidden'}}><CodeTiles code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-8888`} labelled/></div>
    <div className={styles.introOver}>{top}</div></div>
   <p className={styles.copy} data-save-explainer>{copy}</p>
   <div className={styles.footer} data-save-footer><BackButton onBack={onBack}/>{go}</div>

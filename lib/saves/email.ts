@@ -50,8 +50,8 @@ export function validEmail(s:unknown):s is string{
 }
 
 export const EMAIL_SUBJECT='Your Futbol Island save code';
-/** The whole email. `display` is the code as kids see it ("striker · volley · corner · 427"); `pictures` (optional) is the same
- *  code with each word's picture ("⚽ striker · 🏐 volley · 🚩 corner · 🔢 427", code.ts pictureLine), on its own line below. */
+/** The whole email. `display` is the code as kids see it ("striker · volley · corner · 4271"); `pictures` (optional) is the same
+ *  code with each word's picture ("⚽ striker · 🏐 volley · 🚩 corner · 🔢 4271", code.ts pictureLine), on its own line below. */
 export function emailText(display:string,pictures=''):string{
  return [
   'Here is the Futbol Island save code you asked for:',

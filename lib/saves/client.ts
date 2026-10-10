@@ -9,7 +9,7 @@
  *     restoreSave(typed:string, {grownup?}): Promise<RestoreResult>
  *                                                 downloads the island for a typed code; changes nothing yet
  *     applyRestoredSave(result, {reload=true})     swaps this device to it (a 7-day backup of the old one is kept) and reloads
- *     getLocalCode(): string|null                  this device's code, e.g. 'striker-volley-corner-427'
+ *     getLocalCode(): string|null                  this device's code, e.g. 'striker-volley-corner-4271'
  *     codeRequired(): boolean                      no code here yet (and no grown-up deleted one): ask for one before play
  *   A code is REQUIRED before playing (user decision, Oct 9 2026): render both components with `required`. If saving is down
  *   they say "Saving is taking a break — you can still play today" and hand back null/false: let the kid play.
@@ -53,7 +53,7 @@ const emit=()=>{if(typeof window!=='undefined')window.dispatchEvent(new Event(SA
  * deleted its save (that choice is respected). Hosts also check isSavingAvailable(): when saving is down, kids still play.
  */
 export function codeRequired():boolean{return !getLocalCode()&&read(SAVE_OPTOUT_KEY)===null;}
-export function getLocalCode():string|null{const c=read(SAVE_CODE_KEY);return c&&/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2}$/.test(c)?c:null;}
+export function getLocalCode():string|null{const c=read(SAVE_CODE_KEY);return c&&/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}$/.test(c)?c:null;}
 export function getSyncState():SyncState|null{try{const s=JSON.parse(read(SAVE_SYNC_KEY)??'null');return s&&Number.isInteger(s.rev)&&s.rev>=0&&typeof s.hash==='string'?s:null;}catch{return null;}}
 const setSyncState=(s:SyncState|null)=>{write(SAVE_SYNC_KEY,s?JSON.stringify(s):null);emit();};
 let status:SaveStatus='none';
@@ -270,7 +270,7 @@ export async function sendCodeToGrownup(email:string):Promise<'sent'|'failed'|'b
 let pendingCode:string|null=null;
 export function takeSaveFragment():string|null{
  if(typeof location==='undefined')return null;
- const m=/^#save=([a-z-]{8,40}\d{3})$/i.exec(location.hash);
+ const m=/^#save=([a-z-]{8,40}\d{3,4})$/i.exec(location.hash);
  if(!m)return null;
  try{history.replaceState(history.state,'',location.pathname+location.search);}catch{}
  pendingCode=m[1].toLowerCase();return pendingCode;

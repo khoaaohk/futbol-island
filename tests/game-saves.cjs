@@ -27,7 +27,7 @@ function makeLoader(globals={}){
  return load;
 }
 const load=makeLoader();
-const W=load('lib/saves/words.ts'),C=load('lib/saves/code.ts'),S=load('lib/saves/snapshot.ts'),WC=load('lib/saves/walletCompact.ts'),SUM=load('lib/saves/summary.ts');
+const W=load('lib/saves/words.ts'),L=load('lib/saves/legacyWords.ts'),C=load('lib/saves/code.ts'),S=load('lib/saves/snapshot.ts'),WC=load('lib/saves/walletCompact.ts'),SUM=load('lib/saves/summary.ts');
 const ST=load('lib/saves/store.ts'),SV=load('lib/saves/server.ts'),EM=load('lib/saves/email.ts'),AW=load('lib/arcade/arcadeWalletCore.ts'),IDP=load('lib/coaches/idp.ts');
 
 let passed=0;const skipped=[];
@@ -71,20 +71,27 @@ function fullDevice(){
   'fi2-arcade-record-runner-v1':'{"best":12}','fi.game.runner.best':'40',
   // device, session, dev and save-system keys: never synced
   'fi2-music-volume':'0.4','fi2-battery-saver':'1','fi2-last-visit-day-v1':'2026-10-09','fi2-parent-gate-lock-v1':'1','fi2-cards-dev-v1':'x','fi-visit':'abc',
-  'fi2-save-code-v1':'striker-volley-corner-427','fi2-save-sync-v1':'{"rev":1,"hash":"x","at":1}','fi2-new-feature-v1':'unknown key',
+  'fi2-save-code-v1':'striker-volley-corner-4271','fi2-save-sync-v1':'{"rev":1,"hash":"x","at":1}','fi2-new-feature-v1':'unknown key',
  };
 }
 
 (async()=>{
 // 1. The word list and code generation.
 await ok('words and entropy',()=>{
- const words=W.WORDS;assert.equal(words.length,1024,'exactly 1,024 words (10 bits each)');
- assert.equal(new Set(words).size,1024,'no duplicates');
- for(const w of words)assert.match(w,/^[a-z]{3,9}$/,w);
+ // The easy list (Oct 10 2026): short, common words for kids aged 6–12; the number has 4 digits to make up the entropy.
+ const words=W.WORDS,NW=words.length;assert(NW>=768&&NW<=1024,`an easy list of 768–1,024 words (${NW})`);
+ assert.equal(new Set(words).size,NW,'no duplicates');
+ for(const w of words)assert.match(w,/^[a-z]{3,7}$/,'3–7 lowercase letters: '+w);
+ for(const w of ['striker','volley','corner','goal','kick','ball','banana','kite','lion','buddy','frog','cake','star','boat','tiger','apple','robot'])assert(words.includes(w),'easy word kept: '+w);
+ for(const w of ['haddock','caboose','fjord','quartz','lychee','mackerel','rosemary','meerkat','platypus'])assert(!words.includes(w),'hard word gone: '+w);
+ assert.deepEqual(J(words.slice(0,3)),['goal','kick','ball'],'football words first');
  const pre=new Map();for(const w of words){const p=w.slice(0,4);assert(!pre.has(p),`unique first 4 letters: ${w} vs ${pre.get(p)}`);pre.set(p,w);}
  const BAD=/^(ass|butt|poo|pee|fart|sex|kill|dead|die|gun|bomb|blood|hell|damn|crap|dick|cock|tit|bum|nazi|drug|beer|wine|ghost|skull)$/;
  for(const w of words)assert(!BAD.test(w),'clean word '+w);
- for(const w of ['sea','see','pear','pair','bear','night','knight','flower','flour','tail','tale','red','read','blue','one','won','pea','reed','write','right','root'])assert(!words.includes(w),'no homophone-prone word: '+w);
+ for(const w of ['sea','see','pear','pair','bear','night','knight','flower','flour','tail','tale','red','read','blue','one','won','pea','reed','write','right','root','sun','son','bee','deer','hare','hair','rain','rose','plane','mail','meat','toe','nose','sail','bean','berry','pie','hour','ant','flea','ferry','fairy','tide'])assert(!words.includes(w),'no homophone-prone word: '+w);
+ // Old words (legacy codes only): never in WORDS, never generated, each with an old picture.
+ assert(L.LEGACY_WORDS.length>0);for(const w of L.LEGACY_WORDS)assert(!words.includes(w)&&!(w in W.PICTURES),'an old word is not in the new list: '+w);
+ for(const w of L.LEGACY_WORDS)assert(typeof L.LEGACY_PICTURES[w]==='string','old word keeps a picture: '+w);
  // Pictures (Oct 9 2026): every word has one; one emoji each, Unicode/Emoji 13.0 or earlier, no flags / skin tones / gender / ZWJ.
  const pics=Object.entries(W.PICTURES);for(const [w] of pics)assert(words.includes(w),'picture for a list word '+w);
  for(const w of words)assert(typeof W.PICTURES[w]==='string'&&W.PICTURES[w].length>0,'every word has a picture: '+w);
@@ -99,22 +106,23 @@ await ok('words and entropy',()=>{
   assert(!/[💀☠👻🧟🧛👹👺🔪🗡🔫💣⚰🪦🩸💊💉🍺🍷🍸🚬💩🖕⛪🕌🛕🕍✝☪🕉☸✡🔯🕎☯☦🛐📿🧿🪔👼😇🎄🎅🤡🕷]/u.test(p),`nothing scary, rude or religious: ${w} ${p}`);}
  // Unique where possible: a picture is shared only by close relatives (fish, birds, trees…), never by many words.
  const uses=new Map();for(const [,p] of pics)uses.set(p,(uses.get(p)??0)+1);
- assert(uses.size>=650,`mostly unique pictures (${uses.size} distinct for ${pics.length} words)`);
+ assert(uses.size>=Math.ceil(pics.length*0.6),`mostly unique pictures (${uses.size} distinct for ${pics.length} words; at least 60%)`);
  assert(Math.max(...uses.values())<=16,'no picture is shared by more than 16 words');
  assert(!pics.some(([,p])=>p===W.NUMBER_PICTURE),'the number picture is the number tile\'s alone');
  // The picture is never part of the secret: the normal form, the hash input and parsing are words and digits only.
- const pc=C.generateCode(m=>crypto.randomInt(m));const pn=C.formatCode(pc);assert.match(pn,/^[a-z]+-[a-z]+-[a-z]+-\d{3}$/,'normal form has no pictures');
+ const pc=C.generateCode(m=>crypto.randomInt(m));const pn=C.formatCode(pc);assert.match(pn,/^[a-z]+-[a-z]+-[a-z]+-\d{4}$/,'normal form has no pictures, and a new code has 4 digits');
  const line=C.pictureLine(pc);for(const w of pc.words)assert(line.includes(`${W.PICTURES[w]} ${w}`),'picture line shows each word with its picture');
  assert(line.endsWith(`${W.NUMBER_PICTURE} ${pc.number}`));
  assert.equal(C.normaliseCode(C.displayCode(pc)),pn,'the plain code parses back');
- assert(C.CODE_BITS>=39.7&&C.CODE_BITS<40,`≈39.8 bits (${C.CODE_BITS.toFixed(2)})`);
+ assert(C.CODE_BITS>=41.5,`at least the old list's 39.8 bits, ≈42 (${C.CODE_BITS.toFixed(2)})`);
  const counts=new Map(),seen=new Set();const N=20000;
  for(let i=0;i<N;i++){const c=C.generateCode(m=>crypto.randomInt(m));const n=C.formatCode(c);
-  assert.equal(new Set(c.words).size,3,'distinct words');assert(c.number>=100&&c.number<=999);assert(!C.blockedPair(c.words));
+  assert.equal(new Set(c.words).size,3,'distinct words');assert(c.number>=1000&&c.number<=9999,'a new code has a 4-digit number');assert(!C.blockedPair(c.words));
   assert(C.isNormalCode(n),n);assert.equal(C.normaliseCode(n),n);assert.equal(C.normaliseCode(C.displayCode(c)),n,'the kid-facing form parses back');
   seen.add(n);for(const w of c.words)counts.set(w,(counts.get(w)??0)+1);}
  assert(seen.size>=N-2,'practically no repeats in 20k codes');
- const exp=N*3/1024,vals=[...counts.values()];assert.equal(counts.size,1024,'every word is used');
+ for(const w of counts.keys())assert(words.includes(w)&&!L.LEGACY_WORDS.includes(w),'codes are made from new words only: '+w);
+ const exp=N*3/NW,vals=[...counts.values()];assert.equal(counts.size,NW,'every word is used');
  assert(Math.min(...vals)>exp*0.35&&Math.max(...vals)<exp*1.9,`roughly uniform (${Math.min(...vals)}–${Math.max(...vals)}, expected ${exp.toFixed(1)})`);
  // A forced draw that hits a blocked pair is redrawn.
  const seq=[W.WORDS.indexOf('black'),W.WORDS.indexOf('monkey'),W.WORDS.indexOf('goal'),W.WORDS.indexOf('kite'),W.WORDS.indexOf('goal'),W.WORDS.indexOf('lion'),7];
@@ -123,29 +131,51 @@ await ok('words and entropy',()=>{
 
 // 2. Forgiving input.
 await ok('parsing',()=>{
- assert.equal(C.normaliseCode('Striker volley-CORNER 427'),'striker-volley-corner-427');
- assert.equal(C.normaliseCode(' striker · volley · corner · 427 '),'striker-volley-corner-427');
- assert.equal(C.normaliseCode('stri voll corn 427'),'striker-volley-corner-427','first 4 letters are enough');
+ assert.equal(C.normaliseCode('Striker volley-CORNER 4271'),'striker-volley-corner-4271');
+ assert.equal(C.normaliseCode(' striker · volley · corner · 4271 '),'striker-volley-corner-4271');
+ assert.equal(C.normaliseCode('stri voll corn 4271'),'striker-volley-corner-4271','first 4 letters are enough');
  assert.equal(C.matchWord('strker'),'striker','a small typo snaps to the nearest word');
  assert.equal(C.matchWord('voley'),'volley');
  assert.equal(C.matchWord('zzzzzz'),null);
- assert.equal(C.normaliseCode('striker volley corner 99'),null);assert.equal(C.normaliseCode('striker volley corner 1000'),null);assert.equal(C.normaliseCode('striker volley 427'),null);
- assert.equal(C.normaliseCode({words:['STRIKER','volley','corner'],number:'427'}),'striker-volley-corner-427');
+ assert.equal(C.normaliseCode('striker volley corner 99'),null);assert.equal(C.normaliseCode('striker volley corner 10000'),null);assert.equal(C.normaliseCode('striker volley 4271'),null);
+ assert.equal(C.normaliseCode('striker volley corner 0999'),null,'no leading zero');
+ assert.equal(C.normaliseCode({words:['STRIKER','volley','corner'],number:'4271'}),'striker-volley-corner-4271');
  assert.deepEqual(J(C.suggestWords('str')).slice(0,1),['striker']);assert.deepEqual(J(C.suggestWords('st')),[]);
  assert(C.suggestWords('ban').includes('banana'));
- assert.equal(C.isNormalCode('striker-volley-corner-427'),true);assert.equal(C.isNormalCode('striker-volley-qqqq-427'),false);assert.equal(C.isNormalCode('striker-volley-corner-099'),false);
+ assert.equal(C.isNormalCode('striker-volley-corner-4271'),true);assert.equal(C.isNormalCode('striker-volley-qqqq-4271'),false);assert.equal(C.isNormalCode('striker-volley-corner-0999'),false);
+ assert.equal(C.isNormalCode('striker-volley-corner-427'),true,'an old 3-digit code is still a code');
+ // Old codes (Oct 9 2026 list, 3-digit numbers) still parse to the same normal form, so they hash the same and restore.
+ assert(C.isLegacyWord('haddock')&&!C.isWord('haddock'));
+ assert.equal(C.normaliseCode('Haddock caboose fjord 427'),'haddock-caboose-fjord-427');
+ assert.equal(C.isNormalCode('haddock-caboose-fjord-427'),true,'a code stored on a device with old words is accepted');
+ assert.equal(C.pictureFor('haddock'),'🐡','old words keep their picture');
+ assert.equal(C.normaliseCode('hadd cabo fjor 427'),'haddock-caboose-fjord-427','an old word by its first 4 letters when no new word starts so');
+ // New words win ties: a prefix or typo that fits a new word means the new word, even when an old word fits too.
+ assert(L.LEGACY_WORDS.includes('cross')&&L.LEGACY_WORDS.includes('kitten')===false);
+ assert.equal(C.matchWord('pitc'),'pitch');assert.equal(C.matchWord('bana'),'banana');
+ for(const w of L.LEGACY_WORDS)if(w.length>=5){const p=w.slice(0,4),n=W.WORDS.find(x=>x.startsWith(p));if(n)assert.equal(C.matchWord(p),n,`new word wins the prefix ${p}: ${n} over ${w}`);}
+ for(const w of L.LEGACY_WORDS)assert.equal(C.matchWord(w),w,'an old word typed in full still matches: '+w);
+ for(const n of W.WORDS)assert.equal(C.matchWord(n),n);
+ assert.equal(C.suggestWords('cro')[0],'croc','new words come first in the autocomplete');
+ // Typos: a near miss of a new word goes to it even if an old word is equally near.
+ for(const n of W.WORDS){const t=n+'x';const m=C.matchWord(t);if(m!==null)assert(W.WORDS.includes(m),`a typo of ${n} (${t}) snaps to a new word, not ${m}`);}
 });
 
 // 3. Keyed hash: no raw code anywhere on the server side.
 await ok('hmac',async()=>{
- const h=SV.codeHash(PEPPER,'striker-volley-corner-427');assert.match(h,/^[0-9a-f]{64}$/);
- assert.equal(h,crypto.createHmac('sha256',PEPPER).update('v1:striker-volley-corner-427').digest('hex'));
- assert.notEqual(h,SV.codeHash(PEPPER+'2','striker-volley-corner-427'),'depends on the pepper');
+ const h=SV.codeHash(PEPPER,'striker-volley-corner-4271');assert.match(h,/^[0-9a-f]{64}$/);
+ assert.equal(h,crypto.createHmac('sha256',PEPPER).update('v1:striker-volley-corner-4271').digest('hex'));
+ assert.notEqual(h,SV.codeHash(PEPPER+'2','striker-volley-corner-4271'),'depends on the pepper');
  const deps=memDeps();const r=await call(deps,'create',{snapshot:snap({'fi2-welcome-v1':'completed'})});
  assert.equal(r.status,200);const code=r.body.code;assert(C.isNormalCode(code));
  const dump=JSON.stringify(deps.store.data);
  for(const w of code.split('-'))assert(!dump.includes(`"${w}"`)&&!dump.includes(code),'no code word stored');
  assert(deps.store.data.saves[SV.codeHash(PEPPER,code)],'stored under the HMAC');
+ // A save made with an OLD code (pre-Oct 10 2026 words, 3-digit number) still restores, typed loosely, and still syncs.
+ {const old='haddock-caboose-fjord-427',row=deps.store.data.saves[SV.codeHash(PEPPER,code)];
+  deps.store.data.saves[SV.codeHash(PEPPER,old)]={...J(row),hash:SV.codeHash(PEPPER,old)};
+  const rr=await call(deps,'restore',{code:'Haddock · caboose · fjord · 427'});assert.equal(rr.body.ok,true,'an old code restores');
+  assert.equal((await call(deps,'check',{code:old})).body.ok,true,'an old stored code still checks');}
  assert.equal((await call({...deps,pepper:'short'},'check',{code})).status,503,'a weak pepper turns saving off');
  const route=read('app/api/save/[route]/route.ts'),server=read('lib/saves/server.ts'),client=read('lib/saves/client.ts');
  assert(!/console\./.test(route)&&!/console\./.test(server),'the routes never log');

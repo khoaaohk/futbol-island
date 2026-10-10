@@ -46,7 +46,7 @@ export default function PrivacyPolicy(){
   <section id="pp-short"><h2 tabIndex={-1}>1. The short version</h2><ul>
    <li><b>No accounts and no personal details.</b> We never ask a child for a name, age, birthday, email, phone number, photo, voice, school or location.</li>
    <li><b>No ads, no chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b></li>
-   <li><b>A save code instead of an account.</b> Three football words and a number (for example <i>striker · volley · corner · 427</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
+   <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We count visits without identifying anyone.</b> Totals only, with a scrambled visitor code that changes every day.</li>
    <li><b>Links that leave the game, donations and grown-up tools sit behind a grown-up check.</b></li>
    <li><b>We never sell or rent information,</b> and we do not use it for advertising or to build profiles of children.</li>

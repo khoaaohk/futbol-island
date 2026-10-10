@@ -3,7 +3,7 @@
  * "I have a save code" (docs/accounts-design.md §3.3; Oct 10 2026): three word boxes that autocomplete with pictures after 3
  * letters, a number box with a number pad, then "Welcome back!" with the island's summary. Reusable (lib/saves/client.ts).
  *
- *   <SaveCodeRestore onDone={restored=>…} initialCode="striker-volley-corner-427" onCancel={…} headless onPhase={…}/>
+ *   <SaveCodeRestore onDone={restored=>…} initialCode="striker-volley-corner-4271" onCancel={…} headless onPhase={…}/>
  *     onDone(true)   the player tapped Play: the island is swapped and the page reloads right after this call
  *     onDone(false)  "Keep this one" (this device's island stays)
  *     onPlay(apply)  optional (Oct 9 2026, the title screen): Play hands `apply` to the host instead of applying + reloading at once; the host
@@ -96,8 +96,8 @@ export default function SaveCodeRestore({onDone,initialCode,onCancel,required=fa
      onFocus={()=>setFocus(i)} onChange={e=>setWord(i,e.target.value)} onBlur={()=>{const m=matchWord(words[i]);if(m&&m!==words[i])setWords(ws=>ws.map((x,j)=>j===i?m:x));}}/>
    </div>)}
    <div className={styles.field}><label htmlFor="save-number">Number{number!==null&&<i aria-hidden="true" data-word-picture> {NUMBER_PICTURE}</i>}</label>
-    <input id="save-number" className={`${styles.input} ${number!==null?styles.good:''}`} data-save-number value={num} inputMode="numeric" pattern="[0-9]*" maxLength={3} autoComplete="off" enterKeyHint="go" disabled={busy}
-     onFocus={()=>setFocus(3)} onChange={e=>{setNum(e.target.value.replace(/\D/g,'').slice(0,3));setMsg('');}}/></div>
+    <input id="save-number" className={`${styles.input} ${number!==null?styles.good:''}`} data-save-number value={num} inputMode="numeric" pattern="[0-9]*" maxLength={4} autoComplete="off" enterKeyHint="go" disabled={busy}
+     onFocus={()=>setFocus(3)} onChange={e=>{setNum(e.target.value.replace(/\D/g,'').slice(0,4));setMsg('');}}/></div>
   </div>
   {focus>=0&&focus<3&&<Suggestions typed={words[focus]} chosen={matched[focus]} onPick={w=>pick(focus,w)}/>}
   <p className={`${styles.status} ${msg?styles.warn:''}`} role="status" data-restore-status>{busy?'Looking for your island…':msg}</p>

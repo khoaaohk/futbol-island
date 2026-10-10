@@ -1,7 +1,7 @@
 # Save codes: setup and operations (Oct 10 2026)
 
 Built from [accounts-design.md](accounts-design.md) (phase 1 + phase 2a). A player taps **Get my code** and gets three football
-words plus a number (`striker · volley · corner · 427`). Typing the code on any device loads that island. We keep no name,
+words plus a number (`striker · volley · corner · 4271`). Typing the code on any device loads that island. We keep no name,
 email, IP or the code itself: only `HMAC-SHA256(SAVE_CODE_PEPPER, "v1:" + code)` and the allowlisted progress.
 
 **A code is required before playing (user decision, Oct 9 2026).** New players make or type one in the welcome (no Skip past
@@ -49,7 +49,7 @@ Local testing: `SAVE_LOCAL_FILE=/some/file.json` (a JSON-file store, ignored on 
 
 | Piece | File |
 |---|---|
-| Words (1,024, unique first 4 letters, pictures) | `lib/saves/words.ts` |
+| Words (781 easy words, unique first 4 letters, pictures; old words for old codes) | `lib/saves/words.ts`, `lib/saves/legacyWords.ts` |
 | Code making, forgiving parsing, rude-pair check | `lib/saves/code.ts` |
 | Allowlist, coach-plan text stripping, apply, 7-day backup | `lib/saves/snapshot.ts` |
 | Wallet compaction before upload (balances exact) | `lib/saves/walletCompact.ts` |

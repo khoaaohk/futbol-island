@@ -84,7 +84,7 @@ Scores: ✅ good · ⚠️ workable with care · ❌ poor.
 ### Option 1: Save code (recommended)
 
 How it works:
-- The server makes the code from a curated list of 1,024 easy words and a number from 100 to 999.
+- The server makes the code from a curated list of 1,024 easy words and a number from 100 to 999. (Oct 10 2026: replaced by 781 easier words and a number from 1000 to 9999, about 42.0 bits; old codes still restore. See lib/saves/words.ts.)
 - It stores only `HMAC-SHA256(pepper, normalised code)` with the save.
 - Restoring means typing the code. The words autocomplete after 3 letters, and the number uses a number pad.
 
