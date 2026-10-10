@@ -139,11 +139,7 @@ function loadPreload(env,game){
   assert.match(fs.readFileSync('components/root/gamePrefetch.ts','utf8'),/import\(\/\* webpackPrefetch: true \*\/ '\.\/Game'\)/);
   assert.doesNotMatch(fs.readFileSync('components/root/RootSwitch.tsx','utf8'),/islandPreload|warmIsland/,'an in-game tab never warms');}
 
- // 6. The tan sheet's wait cue: tan mode only, late, transform/opacity only, still under reduced motion.
- {const css=fs.readFileSync('components/IslandLoading.module.css','utf8');
-  assert.match(css,/\.tanCue\{display:none\}/);
-  assert.match(css,/:global\(html\[data-island-handoff=tan\]\) \.screen>\.tanCue\{display:block;[^}]*animation:tanCueIn \.45s \.9s/,'shown only in tan mode, after 0.9 s');
-  for(const k of css.matchAll(/@keyframes tanCue\w+\{([\s\S]*?)\}\}/g))assert.doesNotMatch(k[1],/(width|height|top|left|background|margin)\s*:/,'cue keyframes: transform/opacity only');
-  assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{[^\n]*\.tanCueBall,\.tanCueShadow\{animation:none\}/);}
+ // 6. No wait cue on the tan sheet (user, Oct 10 2026: "remove the soccer ball when loading from the tan to the island").
+ {assert.doesNotMatch(fs.readFileSync('components/IslandLoading.module.css','utf8'),/tanCue/);assert(!fs.existsSync('components/LoadingTanCue.tsx'));}
  console.log('island preload ok');
 })().catch(e=>{console.error(e);process.exit(1);});

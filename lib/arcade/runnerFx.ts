@@ -5,6 +5,7 @@ import {skillBall,skillFrame,type SkillMove} from '../graphics/skillMoves';
 import {sideGameDress} from '../town/beanLooks';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {readRunnerProgress,runnerBallFor} from './runnerMissions';
+import {readArcadeRecord} from './arcadeRecords';
 import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
 import {createRunnerTrack} from './runnerTrack';
 
@@ -25,7 +26,7 @@ export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
  let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0;
- const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,state:null as RunnerGame|null};
+ const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,state:null as RunnerGame|null};
 
  /* ---------- speed lines: one quad buffer, side streaks only ---------- */
  const linePos=new Float32Array(LINES*12),lineSeed=new Float32Array(LINES*4);
@@ -144,6 +145,15 @@ export function createRunnerFx(stage:ArcadeStage){
   stage.box(-2.4,2.6,-.05,2.5,.12,.12,'#7ff0e2',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.12,.12,'#ff7aa8',fork).castShadow=false;
   fork.children.forEach(c=>{if(c.parent!==fork){c.parent?.remove(c);fork.add(c);}});
  }
+ // Back line (boss): gold chevrons painted in the lane the line leaves open. The boss is the run's biggest test (a
+ // kid-like bot lost ~80% of its chances there) and its lesson is "attack the side they leave open", so show the side.
+ // One plane + one canvas texture drawn once; hidden (no draw call) unless a back line is ahead. Fades while it shifts.
+ const openSide=new T.Mesh(new T.PlaneGeometry(2.1,5.4),new T.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,toneMapped:false}));
+ openSide.name='runner-open-side';openSide.rotation.x=-Math.PI/2;openSide.position.y=.05;openSide.renderOrder=1;openSide.visible=false;scene.add(openSide);
+ if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=128;c.height=240;const g=c.getContext('2d');
+  if(g){g.lineJoin='round';g.lineCap='round';for(const [y,a] of[[70,1],[140,.75],[210,.5]] as const){g.globalAlpha=a;g.strokeStyle='#1a1036';g.lineWidth=30;g.beginPath();g.moveTo(18,y);g.lineTo(64,y-46);g.lineTo(110,y);g.stroke();g.strokeStyle='#ffe07a';g.lineWidth=18;g.stroke();}}
+  const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;openSide.material.map=t;}
+ let openX=0;
  const skillOut={x:0,y:0,z:0},frameOut={x:0,z:0,heading:0};
  const skillMotion={type:'stepover' as SkillMove,progress:0,side:1 as -1|1};
  /** Skill moves and the one-two on the runner: rig skill pose and the ball's path. */
@@ -182,6 +192,14 @@ export function createRunnerFx(stage:ArcadeStage){
   // Puddles
   let n=0;for(const o of s.objects){if(o.kind!=='mud'||n>=MUD)continue;const len=o.length??2.6;if(o.z-len>4)continue;dummy.position.set(o.lane*2.4,.035,o.z-len/2);dummy.rotation.set(-Math.PI/2,0,0);dummy.scale.set(1.05,len/2,1);dummy.updateMatrix();mud.setMatrixAt(n++,dummy.matrix);}
   mud.count=n;mud.visible=n>0;if(n)mud.instanceMatrix.needsUpdate=true;
+  // Back line open side (nearest unpassed line ahead).
+  let line:RunnerObject|undefined;for(const o of s.objects)if(o.boss&&!o.passed&&!o.beaten&&o.z<-1.5&&(!line||o.z>line.z))line=o;
+  openSide.visible=!!line&&s.lives>0;
+  if(line){const shifting=line.z<-18&&((line.lineClock??0)%1.7)>1.25,target=(line.openLane||1)*2.4;
+   openX+=(target-openX)*(1-Math.exp(-dt*(reduced?40:9)));openSide.position.set(openX,.05,line.z+1.2);
+   const want=shifting?.25:.95;openSide.material.opacity+=(want-openSide.material.opacity)*(1-Math.exp(-dt*12));
+   openSide.scale.setScalar(reduced?1:1+Math.sin(elapsed*6)*.05);}
+  else{openSide.material.opacity=0;openX=0;}
   // Fork
   const f=s.objects.find(o=>o.kind==='fork'&&o.z<4);fork.visible=!!f;if(f)fork.position.z=f.z;
  }
@@ -192,15 +210,15 @@ export function createRunnerFx(stage:ArcadeStage){
  const wordMaterial=new T.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,toneMapped:false,side:T.DoubleSide});
  const word=new T.Mesh(new T.PlaneGeometry(1,WORD_H/WORD_W),wordMaterial);word.name='runner-pop-word';word.visible=false;word.renderOrder=20;word.frustumCulled=false;word.rotation.x=-.32;scene.add(word);
  if(typeof document!=='undefined'){wordCanvas=document.createElement('canvas');wordCanvas.width=WORD_W;wordCanvas.height=WORD_H;wordCtx=wordCanvas.getContext('2d');wordTexture=new T.CanvasTexture(wordCanvas);wordTexture.colorSpace=T.SRGBColorSpace;wordMaterial.map=wordTexture;}
- let wordAge=0,wordLife=0,wordSize=1,wordX=0,wordText='';
+ let wordAge=0,wordLife=0,wordSize=1,wordX=0,wordText='',wordLift=0;
  /** Show a word (and an optional short line under it). `size` is the world width at full scale. */
- function pop(text:string,fill:string,size:number,life:number,sub=''){
+ function pop(text:string,fill:string,size:number,life:number,sub='',lift=0){
   if(!wordCtx||!wordTexture)return;
   const g=wordCtx;g.clearRect(0,0,WORD_W,WORD_H);g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
   let px=118;g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;const fit=WORD_W-40;const w=g.measureText(text).width;if(w>fit){px=Math.floor(px*fit/w);g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;}
   const y=sub?72:WORD_H/2;g.lineWidth=Math.max(8,px*.16);g.strokeStyle='#1a1036';g.strokeText(text,WORD_W/2,y);g.fillStyle=fill;g.fillText(text,WORD_W/2,y);
   if(sub){g.font='bold 30px Arial, sans-serif';g.lineWidth=8;g.strokeText(sub,WORD_W/2,148,WORD_W-24);g.fillStyle='#ffffff';g.fillText(sub,WORD_W/2,148,WORD_W-24);}
-  wordTexture.needsUpdate=true;wordText=text;wordAge=0;wordLife=life;wordSize=size*(stage.mobile?1:1.3);word.visible=true;
+  wordTexture.needsUpdate=true;wordText=text;wordLift=lift;wordAge=0;wordLife=life;wordSize=size*(stage.mobile?1:1.3);word.visible=true;
  }
  function stepWord(dt:number,s:RunnerGame){
   if(!word.visible)return;wordAge+=dt;if(wordAge>=wordLife){word.visible=false;wordMaterial.opacity=0;return;}
@@ -208,18 +226,20 @@ export function createRunnerFx(stage:ArcadeStage){
   // Ease-out-back pop, then a slow drift up; the word follows the runner a little so it stays readable.
   const back=1+2.2*Math.pow(inT-1,3)+1.2*Math.pow(inT-1,2),k=reduced?1:.35+.65*back;
   wordX+=(s.x*.45-wordX)*(1-Math.exp(-dt*6));
-  word.scale.set(wordSize*k,wordSize*k,1);word.position.set(wordX,(stage.mobile?3.1:2.7)+(reduced?0:t*.5),-7);
+  word.scale.set(wordSize*k,wordSize*k,1);word.position.set(wordX,(stage.mobile?3.1:2.7)+wordLift+(reduced?0:t*.5),-7);
   wordMaterial.opacity=Math.min(reduced?clamp01(wordAge/.12):1,fade);
  }
  /* ---------- per-frame ---------- */
  function update(dt:number,s:RunnerGame){
   elapsed+=dt;
-  if(seen.state!==s){seen.state=s;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;}
+  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;}
   // Counters → one-shot juice. Nothing here allocates.
   if(s.cuts!==seen.cuts){seen.cuts=s.cuts;puff(s.x-s.cutDir*.25,.1,3,.9,.45);}
   if(s.landings!==seen.landings){seen.landings=s.landings;puff(s.x,0,4,1.1,.5);}
   if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;lineFlash=1;hitstop=.11;hitstopScale=.45;pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
   if(s.hurdles!==seen.hurdles){seen.hurdles=s.hurdles;pop('HURDLED!','#7ff0e2',3.4,.8);}
+  // First-run coach: the one action, in one big word, while time slows (runnerCoach.ts).
+  if(s.coachCount!==seen.coach){seen.coach=s.coachCount;if(s.coachWord)pop(s.coachWord,'#ffe07a',4.4,1.8,'Time slows down. You try!',1.5);}
   depth(dt,s);
   if(s.event!==seen.event){seen.event=s.event;const kind=s.eventKind;
    if(kind==='skillmove'){lineFlash=Math.max(lineFlash,.7);hitstop=.08;hitstopScale=.4;puff(s.x,-.4,4,1.2,.5);if(s.skill&&s.skill!=='chipShot')pop(`${RUNNER_SKILLS[s.skill].label.toUpperCase()}!`,s.skillPerfect?'#ffe07a':'#ffffff',3.8,1,s.skillPerfect?'PERFECT TIMING':'');}
@@ -238,6 +258,7 @@ export function createRunnerFx(stage:ArcadeStage){
    else if(kind==='boss'&&s.boss===0&&s.lives>0&&/BEATEN/.test(s.message))pop('BACK LINE BEATEN!','#ffe07a',4.6,1.2);
    else if(kind==='shield')pop('RODE IT!','#9ff6ff',3.4,.9);
    else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
+   else if(kind==='best'){pop('NEW BEST!','#7ff0e2',4.6,1.4,'Keep going!');hype=1;lineFlash=Math.max(lineFlash,.8);}
    else if(kind==='shot'&&s.lastBlast>=.8)trauma=Math.min(1,trauma+.28);
   }
   if(s.slide>.15&&s.lives>0){slideDust-=dt;if(slideDust<=0){slideDust=.07;puff(s.x+.2,.25,1,.5,.35);}}
@@ -270,8 +291,10 @@ export function createRunnerFx(stage:ArcadeStage){
   track.update(dt,s,hype);
  }
  function reset(s:RunnerGame){
+  // Replay hook: the record to beat is read once per run (no per-frame storage reads).
+  s.bestToBeat=typeof localStorage==='undefined'?0:readArcadeRecord('runner').best;s.newBest=false;
   trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
-  shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=false;for(const m of mates)m.rig.root.visible=false;
+  shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;
   for(const stand of stands){stand.z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;stand.mesh.position.z=stand.z;fillStand(stand,s.distance,false);}
  }
  /** Applied after the shared camera beat (which restores the home pose each frame). */

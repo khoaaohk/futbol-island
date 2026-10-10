@@ -114,6 +114,9 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const dangerArrows=Array.from({length:3},()=>{const g=new T.Group(),shaft=new T.Mesh(arrowShaftGeo,dangerMat),head=new T.Mesh(arrowHeadGeo,dangerMat);shaft.rotation.x=-Math.PI/2;head.scale.setScalar(.7);g.add(shaft,head);g.visible=false;g.name='puzzle-danger-arrow';g.renderOrder=3;scene.add(g);return{g,shaft,head};});
  const placeDanger=(i:number,from:Vec2|null,to:Vec2|null,near=false)=>{const a=dangerArrows[i];if(!a)return;if(!from||!to){a.g.visible=false;return;}const dx=to.x-from.x,dz=to.z-from.z,len=Math.hypot(dx,dz);if(len<.5){a.g.visible=false;return;}
   const m=near?nearMat:dangerMat;a.shaft.material=m;a.head.material=m;a.g.visible=true;a.g.position.set(from.x,.06,from.z);a.g.rotation.set(0,Math.atan2(dx,dz),0);a.shaft.scale.set(.6,Math.max(.1,len-.6),1);a.shaft.position.set(0,0,(len-.6)/2);a.head.position.set(0,.02,len-.32);};
+ // Where the move broke down (set once on a failed attempt): the cross / out mark pops in and the camera eases toward it
+ // during the beat before the result card, so the child SEES the interception instead of reading about it.
+ let stop:{at:T.Vector3;age:number;mark:T.Object3D}|null=null;const stopAt=new T.Vector3();const STOP_PUSH=.55;
  const cutMark=new T.Group();{const m=new T.MeshBasicMaterial({color:'#ff6a4d',depthWrite:false,transparent:true});for(const a of [1,-1]){const bar=new T.Mesh(new T.BoxGeometry(1.25,.05,.26),m);bar.rotation.y=a*Math.PI/4;cutMark.add(bar);}}cutMark.visible=false;cutMark.name='puzzle-cut-mark';cutMark.renderOrder=5;scene.add(cutMark);
  // Hint spot: where the next pass of the coach's route goes (tier-2 hint), with its run arrow when one is needed.
  const hintRing=flatRing(.78,1,'#70fff0',.95);hintRing.name='puzzle-hint-spot';const hintDot=flatRing(0,.32,'#70fff0',.7);hintDot.name='puzzle-hint-dot';let hint:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null=null;
@@ -180,7 +183,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  }
 
  function load(s:Scenario){
-  scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hint=null;hintRing.visible=hintDot.visible=false;setScan(null);goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
+  stop=null;cutMark.scale.setScalar(1);endOut.scale.setScalar(1);cutMark.visible=endOut.visible=false;scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hint=null;hintRing.visible=hintDot.visible=false;setScan(null);goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
   for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.root.removeFromParent();
   attackers=s.attackers.map((_,i)=>newActor(rigFor('attack',i)));defenders=s.defenders.map((_,i)=>newActor(rigFor('defend',i)));keeper=s.keeper?newActor(rigFor('keeper',0)):null;
   for(const t of scene.children.filter(o=>o instanceof T.Sprite&&o.name==='puzzle-tag'))scene.remove(t);
@@ -244,7 +247,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   const carrier=state.attackers[state.carrier];carrierRing.visible=state.phase==='aiming';if(carrier)carrierRing.position.set(carrier.p.x,.035,carrier.p.z);
   for(const a of attackers)a.called=0;dotMat.color.set('#ffe36e');
   flagged=p?.offside?.slice(0,3)??[];placeFlags(state);(receiverRing.material as T.MeshBasicMaterial).color.set(p?.end==='offside'?'#ffb347':'#fff3d2');
-  for(let i=0;i<dangerArrows.length;i++)placeDanger(i,null,null);cutMark.visible=false;
+  for(let i=0;i<dangerArrows.length;i++)placeDanger(i,null,null);cutMark.visible=false;if(stop)stop.mark.visible=true;/* the failure mark stays until the next try */
   if(!view||!p){return;}
   const status=view.status??'clear';dotMat.color.set(LANE_COLOR[status]);
   // Who can reach it, and where: arrows from the threat defenders, plus a cross where the ball is stopped.
@@ -266,8 +269,13 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
 
  /** First-time window: a ring around the carrier that shrinks to nothing as the one-touch chance runs out. */
  function setClock(fraction:number|null,state:PuzzleState){const c=state.attackers[state.carrier];clockRing.visible=fraction!==null&&!!c;if(clockRing.visible&&c){clockRing.position.set(c.p.x,.04,c.p.z);clockRing.scale.setScalar(.75+fraction!*.75);(clockRing.material as T.MeshBasicMaterial).opacity=.35+.5*fraction!;}}
- function resetActors(){clockRing.visible=false;reactAge.fill(-1);prevMode.length=0;calledOffside=-1;flagged=[];goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailCount=trailHead=trailLife=0;liveTrail.count=0;for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.dive=undefined;a.motion.skill=undefined;a.rig.root.position.y=0;a.motion.resumePose=true;a.rig.root.rotation.z=0;}}
+ function resetActors(){clearStop();clockRing.visible=false;reactAge.fill(-1);prevMode.length=0;calledOffside=-1;flagged=[];goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailCount=trailHead=trailLife=0;liveTrail.count=0;for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.dive=undefined;a.motion.skill=undefined;a.rig.root.position.y=0;a.motion.resumePose=true;a.rig.root.rotation.z=0;}}
  function react(actor:Actor|undefined,kind:NonNullable<PlayerMotion['reaction']>,squash=0){if(!actor)return;actor.motion.reaction=kind;actor.reactionTotal=actor.reactionLeft=REACTION_SECONDS[kind];if(squash){actor.motion.squash=squash;actor.motion.squashSerial=(actor.motion.squashSerial??0)+1;}}
+ /** Mark where the attempt was stopped (null clears it). kind picks the mark; the camera push eases in update(). */
+ function showStop(at:Vec2|null,kind:'cut'|'out'|'save'|'offside'='cut'){clearStop();if(!at)return;
+  const mark=kind==='out'?endOut:cutMark;if(kind!=='offside'){mark.visible=true;mark.position.set(at.x,kind==='out'?.05:.07,at.z);mark.scale.setScalar(stage.reduced?1:1.7);}
+  stop={at:stopAt.set(at.x,0,at.z),age:stage.reduced?STOP_PUSH:0,mark};if(stage.reduced)mark.scale.setScalar(1);}
+ function clearStop(){if(!stop)return;stop.mark.scale.setScalar(1);stop=null;cutMark.visible=endOut.visible=false;setReplayFocus(null);}
  /** Event → action layer: every touch type looks different. */
  function onEvent(e:PuzzleEvent){
   const att=e.attacker!==undefined?attackers[e.attacker]:undefined,def=e.defender!==undefined?defenders[e.defender]:undefined;
@@ -326,6 +334,8 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   for(let i=0;i<goalRings.length;i++){const ring=goalRings[i],age=goalAge-i*.12;ring.visible=!reduced&&goalAge>=0&&age>=0&&age<.9;if(ring.visible){ring.scale.setScalar(1+age*5);ring.material.opacity=(1-age/.9)*.8;busy=true;}}
   if(net&&(net.hit>0)){net.hit=Math.max(0,net.hit-dt*.9);const t=1-net.hit,amount=net.hit>0?Math.sin(t*14)*Math.exp(-t*3.8)*.4:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],fall=Math.exp(-((x-(-net.x))**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*fall:0));}net.attribute.needsUpdate=true;busy=true;}
   stage.effects(dt);if(stage.effectsActive())busy=true;
+  // The failure beat: the stop mark settles from a pop and the broadcast camera leans in (none with reduced motion).
+  if(stop&&dt>0&&stop.age<STOP_PUSH){stop.age=Math.min(STOP_PUSH,stop.age+dt);const u=stop.age/STOP_PUSH,e=u*u*(3-2*u);stop.mark.scale.setScalar(1+.7*(1-u)*(1-u));setReplayFocus({x:stop.at.x,z:stop.at.z},e*.7);busy=true;}
   if(state.phase!=='aiming'){carrierRing.visible=false;}
   // The line shows while the pass is being chosen and struck (defenders shift during the wind-up).
   const line=scenario?.require.offside&&(state.phase==='aiming'||state.phase==='windup')?lineOf(state):-1;
@@ -343,11 +353,11 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const projected=new T.Vector3();
  function toScreen(x:number,y:number,z:number){const r=canvas.getBoundingClientRect();projected.set(x,y,z).project(camera);return{x:(projected.x+1)/2*r.width,y:(1-projected.y)/2*r.height};}
  /** Test/inspection hook: what the aim overlay is showing right now. */
- function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom,dangerArrows:dangerArrows.filter(a=>a.g.visible).length,cut:cutMark.visible,hint:hintRing.visible,scan:scanLanes.filter(l=>l.g.visible).length,pathColor:'#'+dotMat.color.getHexString()};}
+ function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom,dangerArrows:dangerArrows.filter(a=>a.g.visible).length,cut:cutMark.visible,hint:hintRing.visible,stop:stop?{x:+stop.at.x.toFixed(2),z:+stop.at.z.toFixed(2),age:+stop.age.toFixed(2)}:null,scan:scanLanes.filter(l=>l.g.visible).length,pathColor:'#'+dotMat.color.getHexString()};}
  function dispose(){stripeMaterials.forEach(m=>m.dispose());new Set(Object.values(scanMats)).forEach(m=>m.dispose());scanRingGeo.dispose();Object.values(intentTextures).forEach(t=>t.dispose());Object.values(intentMaterials).forEach(m=>m.dispose());arrowMat.dispose();arrowHeadGeo.dispose();arrowShaftGeo.dispose();dangerMat.dispose();nearMat.dispose();dashTexture.dispose();flagTexture.dispose();flagMaterial.dispose();tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});
  // The stage first, while the pooled rigs are still in the scene: its walk then releases their shared bean geometries from this
  // renderer (a rig's dispose detaches its meshes; disposed after, they kept this game's WebGL context alive, one per visit).
  stage.dispose();for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();}
- return{stage,debug,load,fit,update,setAim,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
+ return{stage,debug,load,fit,update,setAim,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,showStop,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
 }
 export type PassPuzzleScene=ReturnType<typeof createPassPuzzleScene>;

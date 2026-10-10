@@ -1119,7 +1119,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Player-development centre is an exterior destination; IDP and tactics tools
   // will live inside in a future update. The marked wall supports the shared drill.
   house(161,-43,22,12,7.5,'PLAYER DEVELOPMENT',0);
-  sign('COACHES',12,1.35,161,5.2,-36.82,'#244d49');
+  // The small COACHES board over the door was removed (user, Oct 10 2026): the large lit sign on top already names it.
   for(const dx of [-5,5])box(.16,2.1,.18,'#385a4e',161+dx,8.55,-36.9);
   box(14.2,2.4,.3,'#294f43',161,9.7,-36.8);
   const coachesSign=sign('COACHES',13.7,2.1,161,9.7,-36.63,'#294f43','#f4cc7c');coachesSign.name='coaches-sign';

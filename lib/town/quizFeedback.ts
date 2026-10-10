@@ -5,6 +5,6 @@
  * the "why": "The deeper fixo offers a clear supporting route."). The quiz card scrolls on short phones.
  */
 export function quizFeedbackText(text:string|undefined|null):string{
- const t=String(text??'').trim().replace(/^(?:yes|right|correct|exactly)\s*[,.!:;—–-]+\s*/i,'');
+ const t=String(text??'').trim().replace(/^(?:yes|right|correct|exactly|look again)\s*[,.!:;—–-]+\s*/i,'');
  return t?t[0].toUpperCase()+t.slice(1):'';
 }

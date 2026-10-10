@@ -204,7 +204,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    // Readable intent: called receiver, ready marker, reactions and the squash spring (choreo.ts).
    e.choreo.apply(token.id,motion,pace);
    e.comboView.apply(token.id,motion,rig.root.rotation.y);e.comboView.settle(motion); // [combos] skill moves (skillMoves.ts / lane B moves) timed to the sim's touch
-   motion.keeper=live.isGK?1:0;motion.keeperReach=live.isGK?(e.sim.ball.owner===token.id?.65:!e.sim.ball.owner&&ballDistance<3?Math.max(0,1-ballDistance/3):0):0;
+   motion.keeper=live.isGK?1:0;motion.keeperReach=live.isGK?(e.sim.ball.owner===token.id?(e.sim.keeperHands?.65:0)/* 7v7 back pass: at his feet */:!e.sim.ball.owner&&ballDistance<3?Math.max(0,1-ballDistance/3):0):0;
    if((e.sim.ball.target===token.id||approachId===token.id)&&!reception){if(!approachPlan)motion.facing=liveWorldYaw(v,e.sim.ball.x-live.x,e.sim.ball.y-live.y);motion.scanYaw=Math.sin(Math.PI*Math.min(1,Math.max(0,(ballDistance-3)/8)))*.35*(motion.kickSide??1);}
    if(motion.dribbling){const travelled=rig.root.userData.wasDribbling?Math.min(.5,Math.hypot(px-rig.root.position.x,pz-rig.root.position.z)):0;rig.root.userData.dribbleDistance=(rig.root.userData.dribbleDistance??0)+travelled;}else rig.root.userData.dribbleDistance=0;
    rig.root.userData.wasDribbling=motion.dribbling;
@@ -276,7 +276,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    // A turn or a shield in this step: the ball follows the move's authored path at the boot, then hands back.
    const sk=teachingPose.skill;if(sk?.ball&&sk.weight>0)e.ball.position.lerp(skillBallPoint.set(sk.ball.x,sk.ball.y,sk.ball.z),sk.weight);}
   teaching.renderedBall={x:e.ball.position.x,z:e.ball.position.z,landed:teachingPose.landed};if(visualSession)visualSession.renderedBall=teaching.renderedBall;
- }else if(e.sim.ball.owner&&e.sim.players[e.sim.ball.owner]?.isGK){const keeper=e.rigs.get(e.sim.ball.owner);if(keeper){keeper.handPositions(keeperLeft,keeperRight);e.ball.position.copy(keeperLeft).lerp(keeperRight,.5);e.ball.position.y-=v.elevation??0;
+ }else if(e.sim.ball.owner&&e.sim.players[e.sim.ball.owner]?.isGK&&e.sim.keeperHands){const keeper=e.rigs.get(e.sim.ball.owner);if(keeper){keeper.handPositions(keeperLeft,keeperRight);e.ball.position.copy(keeperLeft).lerp(keeperRight,.5);e.ball.position.y-=v.elevation??0;
  // [combos] a throw, roll-out or punt carries the ball on the move's authored hand path (one hand for the throw).
  if(e.comboView.holds(e.sim.ball.owner))e.comboView.ball(e.sim.ball.owner,e.ball.position,keeper.root.position,keeper.root.scale.x,.295);}}
  else if(e.sim.ball.owner){const ownerRig=e.rigs.get(e.sim.ball.owner),owner=e.sim.players[e.sim.ball.owner];if(ownerRig){

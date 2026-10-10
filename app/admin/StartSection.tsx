@@ -22,7 +22,7 @@ const rowsBars=(rows:Row[],label:(k:string)=>string):BarRow[]=>rows.map(r=>({key
 const rowsTable=(rows:Row[],label:(k:string)=>string)=>({columns:['Name','Visitors','Sessions','Page views'],rows:rows.map(r=>[label(r.key),r.visitors,r.sessions,r.pageviews])});
 
 /** Step chart: one row per step, the bar's length is its share of the first step, the drop from the previous step beside it. */
-function Steps({steps,unit='sessions'}:{steps:StartStep[];unit?:string}){
+export function Steps({steps,unit='sessions'}:{steps:StartStep[];unit?:string}){
  const [wrap,width]=useWidth<HTMLDivElement>();const [tip,setTip]=useState<TipState>(null);
  const math=funnelMath(steps.map(s=>s.sessions));
  const showTip=(el:HTMLElement,i:number)=>{if(!wrap.current)return;const box=wrap.current.getBoundingClientRect(),b=el.getBoundingClientRect(),m=math[i];

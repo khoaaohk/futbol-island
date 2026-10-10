@@ -66,11 +66,17 @@ assert.match(html,/Kids, ask a grown-up/);
  assert.equal((comp.match(/setInterval\(/g)||[]).length,1,'no other interval');}
 
 // Where the gate is used.
+function grownSrc(){return fs.readFileSync(path.join(ROOT,'components/GrownUps.tsx'),'utf8');}
 const coaches=fs.readFileSync(path.join(ROOT,'components/CoachesCentre.tsx'),'utf8');
 assert.match(coaches,/export const IDP_ENABLED=true;/,'IDP is on');
-assert.match(coaches,/<ParentGate\.Guard[^\n]*?><IdpPlan /,'IDP sits behind the gate');
-assert.equal((coaches.match(/<IdpPlan /g)||[]).length,1,'no ungated IdpPlan');
-const grown=fs.readFileSync(path.join(ROOT,'components/GrownUps.tsx'),'utf8');
+// User decision (Oct 10 2026): the kid's plan opens WITHOUT the gate; only "For grown-ups and coaches" is gated.
+assert.doesNotMatch(coaches,/<ParentGate|import ParentGate/,'the kid\'s plan is not gated in the Coaches Centre');
+assert.equal((coaches.match(/<IdpPlan /g)||[]).length,1,'one IdpPlan');
+const idp=fs.readFileSync(path.join(ROOT,'components/IdpPlan.tsx'),'utf8');
+assert.match(idp,/audience==='player'\?<ParentGate\.Guard [^>]*onCancel=\{\(\)=>toPlayer\(\)\}>\{hub\}<\/ParentGate\.Guard>:hub/,'the grown-up tools ask the gate from the kid\'s plan');
+assert.equal((idp.match(/<GrownUpHub /g)||[]).length,1,'one GrownUpHub, built once and only rendered through that branch');
+assert.match(grownSrc(),/<IdpPlan audience="grownup"/,'For grown-ups opens the tools (behind its own gate)');
+const grown=grownSrc();
 assert.match(grown,/\{!unlocked\?<ParentGate\.Guard/,'grown-ups area opens on the gate');
 assert.doesNotMatch(grown,/href="http/,'no external links in the grown-ups area');
-console.log('PASS parent gate: word questions, blocks wrong/odd input, unblocks the answer, in-memory expiry, Guard hides content; IDP on and gated; grown-ups gated');
+console.log('PASS parent gate: word questions, blocks wrong/odd input, unblocks the answer, in-memory expiry, Guard hides content; IDP on, kid plan open, grown-up tools gated; grown-ups gated');

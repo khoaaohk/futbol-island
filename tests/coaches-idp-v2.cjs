@@ -199,14 +199,14 @@ ok('language',()=>{
  const kid=[];for(const g of IDP.IDP_GOALS)kid.push(g.ican,g.title,g.why,g.tryIt,g.parentCue);
  for(const id of SK.SKILL_IDS){const s=SK.SKILLS[id];kid.push(s.kid,s.grownWhy,s.diagram.caption,...s.askAbout,s.avoid,...s.cues);for(const m of s.missions)kid.push(m.title,...m.steps);}
  for(const o of [SK.STICKERS,SK.FEELS])for(const v of Object.values(o))kid.push(v.kid,v.grown);kid.push(...Object.values(SK.CHEERS),...Object.values(SK.PLACES),...SK.SAY_INSTEAD);
- const ui=['components/idp/PlayerStory.tsx','components/idp/PlanBuilder.tsx','components/idp/Celebrate.tsx','components/idp/GrownUpWeek.tsx','components/idp/CoachTools.tsx','components/idp/PlanLink.tsx','components/IdpPlan.tsx','lib/coaches/idp/fridge.ts']
+ const ui=['components/idp/PlayerPlan.tsx','components/idp/Review.tsx','components/idp/GrownUpHub.tsx','components/idp/Nav.tsx','components/idp/PlanBuilder.tsx','components/idp/Celebrate.tsx','components/idp/GrownUpWeek.tsx','components/idp/CoachTools.tsx','components/idp/PlanLink.tsx','components/IdpPlan.tsx','lib/coaches/idp/fridge.ts']
   .map(f=>read(f).replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,''));
  const BANNED=[/\brank(s|ed|ing)?\b/i,/\bleaderboards?\b/i,/\bstreaks?\b/i,/\b(better|faster|smarter|stronger) than\b/i,/\bbest (player|in|on the)\b/i,/\bworst\b/i,/\btop \d+\b/i,/\blevel ?up\b/i,/\b(talented|gifted)\b/i,/\b(my|your|their|high|low|total|skill|ability|player) scores?\b/i,/\bscor(e|ed|ing) (you|them|the child|players|kids|children)\b/i,/\b\d+ points?\b/i,/\bpoints? (for|to) (you|them)\b/i,/\bearn(ed)? (stars|points)\b/i,/\d+ ?%/,/\bpercent/i,/\bxp\b/i,/\bbehind (the others|everyone|your teammates)\b/i,/\bthan (your )?(teammates|friends|others)\b/i];
  for(const t of [...kid,...ui])for(const re of BANNED)assert.ok(!re.test(t),`ranking/score language ${re} in: ${String(t).slice(0,90)}`);
  // Coach session drills may count points in a game, but never rank players.
  for(const id of SK.SKILL_IDS)for(const t of Object.values(SK.SKILLS[id].session))for(const re of [/\brank/i,/\bbest player/i,/\bworst/i,/leaderboard/i])assert.ok(!re.test(t),t);
  // Growth language is present where it matters.
- const story=read('components/idp/PlayerStory.tsx');assert.match(story,/only grows/);assert.match(read('components/idp/GrownUpWeek.tsx'),/aren’t a score, and there’s nothing to compare/);
+ const story=read('components/idp/PlayerPlan.tsx');assert.match(story,/only grows/);assert.match(read('components/idp/GrownUpWeek.tsx'),/aren’t a score, and there’s nothing to compare/);
  assert.ok(SK.AVOID_ALWAYS.some(a=>/Comparing/.test(a))&&SK.AVOID_ALWAYS.some(a=>/car home/.test(a)),'parents are told not to compare and about the car ride home');
 });
 
@@ -239,7 +239,7 @@ ok('heat',()=>{
   assert.ok(!/\binfinite\b/.test(src),f+': no infinite animation');
   assert.ok(!/fetch\(|sendBeacon|XMLHttpRequest|navigator\.share/.test(src),f+': sends nothing');}
  const css=read('components/idp/Idp.module.css');assert.match(css,/prefers-reduced-motion:reduce/);assert.ok(!/::view-transition/.test(css),'no global view-transition rules');
- assert.match(read('components/IdpPlan.tsx'),/dynamicImport\(\(\)=>import\('\.\/idp\/GrownUpWeek'\)/,'grown-up view is lazy');
+ assert.match(read('components/IdpPlan.tsx'),/dynamicImport\(\(\)=>import\('\.\/idp\/GrownUpHub'\)/,'grown-up tools are lazy');
  assert.match(read('components/CoachesCentre.tsx'),/const IdpPlan=dynamicImport\(\(\)=>import\('\.\/IdpPlan'\)/,'the plan loads with the Coaches Centre, on demand');
  const F=load('lib/coaches/idp/fridge.ts');
  let s=ST.startPlan(ST.emptyIdp2(),['7-look'],'together',NOW);s=ST.addProud(s,'brave',Date.now());
@@ -248,4 +248,28 @@ ok('heat',()=>{
  assert.ok(!/<script|https?:\/\//i.test(html),'no scripts or links');assert.match(F.fridgeCardHtml(s,{firstName:'Sam<script>',printedAt:NOW}),/Samscript’s football plan/,'name cleaned to letters');
  assert.match(F.fridgeCardHtml(ST.emptyIdp2(),{printedAt:NOW}),/No goal right now/);
 });
-console.log(`PASS IDP v2: ${passed} groups (catalogue + mission links, v1 migration, reducers, journey, save allowlist, QR round trips, no-ranking language, analytics, board contract, heat/privacy)`);
+// 11. The simplified flow (docs/idp/DESIGN.md §10): one loop, one footer pattern, plain words, transform/opacity motion only.
+ok('simple',()=>{
+ const plan=read('components/IdpPlan.tsx'),player=read('components/idp/PlayerPlan.tsx'),nav=read('components/idp/Nav.tsx'),builder=read('components/idp/PlanBuilder.tsx');
+ assert.ok(!fs.existsSync(path.join(ROOT,'components/idp/PlayerStory.tsx')),'the five-beat story is gone');
+ assert.ok(!/role="tab"/.test(plan),'no audience tabs: grown-up tools sit behind one button');
+ assert.match(player,/data-idp-grownups/,'one clear entry to the grown-up and coach tools');
+ assert.match(nav,/NavigationButton back/,'Back is the shared NavigationButton');assert.match(nav,/className=\{s\.footer\}/);
+ // Every screen ends with the one footer (Back bottom left, main action bottom right).
+ for(const f of ['PlayerPlan.tsx','PlanBuilder.tsx','Review.tsx','GrownUpHub.tsx','GrownUpWeek.tsx','CoachTools.tsx']){const src=read('components/idp/'+f);
+  const screens=(src.match(/<Screen /g)||[]).length,footers=(src.match(/<Footer[ >\/]/g)||[]).length;assert.ok(screens>0&&footers>=screens,`${f}: every screen has a footer (${screens}/${footers})`);}
+ // The core loop: Practise → "I did it!" goes straight to the check-in; the check-in can keep a device-only note.
+ assert.match(player,/onDid=\{\(id,goalId\)=>setScreen\(\{kind:'checkin'/);assert.match(player,/addText\(text,'player'/);assert.match(player,/countIdp\('note'\)/);
+ // Picking a goal is two taps: the goal, then who helped (that tap saves).
+ assert.match(builder,/onClick=\{\(\)=>setPicked\(g\)\}/);assert.match(builder,/onClick=\{\(\)=>finish\(src\)\}/);
+ // Plain words: no "IDP" or "development plan" jargon anywhere a child or grown-up reads.
+ const strip=f=>read(f).replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,'').replace(/import[^\n]*\n/g,'');
+ for(const f of ['components/idp/PlayerPlan.tsx','components/idp/PlanBuilder.tsx','components/idp/Review.tsx','components/idp/GrownUpHub.tsx','components/idp/GrownUpWeek.tsx','components/idp/CoachTools.tsx','components/IdpPlan.tsx'])
+  {const t=strip(f).replace(/<[^>]*>/g,m=>m.replace(/"[^"]*"|\{[^}]*\}/g,''));assert.ok(!/>[^<]*\b(IDP|Development Plan|development plan)\b/.test(t),f+': no IDP jargon in visible copy');}
+ assert.match(read('components/CoachesCentre.tsx'),/<h3>Football plan<\/h3>/,'the Coaches Centre card says what it is');
+ // Motion: keyframes animate transform and opacity only.
+ const css=read('components/idp/Idp.module.css');
+ for(const m of css.matchAll(/@keyframes\s+\w+\{([^@]*?)\}\s*(?=@keyframes|\n)/g)){const props=[...m[1].matchAll(/([a-z-]+):/g)].map(x=>x[1]);for(const p of props)assert.ok(['opacity','transform'].includes(p),'keyframes animate '+p);}
+ assert.ok(!/stroke-dashoffset[^;]*;[^}]*animation|animation[^}]*idpDraw/.test(css),'no stroke draw-ons');
+});
+console.log(`PASS IDP v2: ${passed} groups (catalogue + mission links, v1 migration, reducers, journey, save allowlist, QR round trips, no-ranking language, analytics, board contract, heat/privacy, the simplified flow)`);

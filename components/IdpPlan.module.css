@@ -1,10 +1,3 @@
-/* IDP v2 entry (Oct 9 2026): the three-view switch (My plan · Grown-ups · Coach) and the device note. The views themselves are
-   styled in components/idp/Idp.module.css. Shared tokens only (docs/ui/BUTTONS.md, tests/ui-spec.cjs). */
+/* Football plan (IDP v2, simplified Oct 10 2026): the frame only. The screens are styled in components/idp/Idp.module.css.
+   Shared tokens only (docs/ui/BUTTONS.md, tests/ui-spec.cjs). */
 .plan{display:grid;gap:14px;color:#244d40;min-width:0}
-.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:4px;border-radius:999px;background:#e9e1c4}
-.tab{min-height:44px;padding:8px 10px;border:0;border-radius:999px;background:transparent;color:var(--btn-ink);font-family:var(--btn-font);font-size:14px;font-weight:800;cursor:pointer;transition:background .2s,box-shadow .2s,translate .16s}
-.tab[aria-selected=true]{background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
-.tab:active{translate:0 var(--btn-press)}
-.tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-.local{margin:0;padding:12px 16px;border-radius:18px;background:#fff1d3;font-size:12px;line-height:1.5;color:#48604c}
-@media(prefers-reduced-motion:reduce){.tab{transition:none}}

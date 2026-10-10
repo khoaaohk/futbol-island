@@ -20,9 +20,17 @@ const P:Record<string,string>={
  copy:'M8 8h11v11H8V8Zm-3 8H4V5a1 1 0 0 1 1-1h11v1',
  steps:'M5 12h14M5 12a1.5 1.5 0 1 0 0 .01M12 12a1.5 1.5 0 1 0 0 .01M19 12a1.5 1.5 0 1 0 0 .01',
  select:'M4 4h4M4 4v4M20 4h-4M20 4v4M4 20h4M4 20v-4M20 20h-4M20 20v-4M9 12h6',
+ ball:'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-13.2 3.6 2.6-1.4 4.2H9.8l-1.4-4.2L12 7.8ZM12 3v4.8m3.6 2.6 4.8-1.6m-6.2 5.8 2.8 3.9m-7.2-3.9-2.8 3.9m1.4-8.1L3.6 8.8',
+ player:'M12 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6.5 9a6.5 6.5 0 0 1 13 0',
+ fit:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5M9 12h6',
+ zoomOut:'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13ZM20 20l-4.8-4.8M7.5 10.5h6',
+ more:'M5 12h.01M12 12h.01M19 12h.01',
+ badge:'M12 15a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11Zm-3.5 3.5L7 22l5-2 5 2-1.5-3.5',
+ chevL:'M14 6l-6 6 6 6',chevR:'M10 6l6 6-6 6',chevU:'M6 14l6-6 6 6',chevD:'M6 10l6 6 6-6',
+ lasso:'M12 15c5 0 8-2 8-5s-3.6-5-8-5-8 2.2-8 5c0 1.4.8 2.6 2 3.4M6 13.4c-1 .8-1.4 1.8-1 3 .6 1.6 2.6 2 3.6 3.6',
  left:'M15 6l-6 6 6 6',right:'M9 6l6 6-6 6',
  loop:'M17 2l3 3-3 3M4 11V9a4 4 0 0 1 4-4h12M7 22l-3-3 3-3M20 13v2a4 4 0 0 1-4 4H4',
 };
 export function BoardIcon({name,size=22}:{name:string;size?:number}){
- return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={P[name]??''} fill={name==='play'?'currentColor':'none'}/></svg>;
+ return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={P[name]??''} fill={name==='play'?'currentColor':'none'} strokeWidth={name==='more'?3.4:2}/></svg>;
 }

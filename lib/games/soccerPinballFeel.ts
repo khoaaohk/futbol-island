@@ -199,8 +199,8 @@ function timingMessage(s:PinballState):string|null{
 /** One short line for the playfield features; null leaves the base HUD copy. */
 export function pinballTableMessage(s:PinballState):string|null{
  const t=s.table,m=pinballModeInfo(t);
- if(s.phase==='over')return `Full time${s.fullTimeBonus>0?` · +${s.fullTimeBonus.toLocaleString('en-US')} for balls kept`:''} · ${pinballTakeaway(s)}`;
- if(s.phase==='ready'){if(s.cue==='rescue')return null;if(s.plunger>.02){const pull=plungerPull(s.plunger);return `Power ${Math.round(pull*100)}% · ${ladderRung(pull)===t.skillBand?'LET GO NOW!':'let go on the blue light for a perfect first touch'}`;}const d=t.stars[s.level-1];if(t.assist)return 'Coach: extra help this ball. The saver is on!';const div=pinballDivision(s);return `${pinballMinute(s)} · ${stars(d)} ${m?`${m.name} · ${m.goal}`:t.mode==='final'?'CUP FINAL · launch!':`${div.name} · ${div.objective}`}`;}
+ if(s.phase==='over')return `${s.stoppage<0?`Out of balls at ${pinballMinute(s)}`:'Full time'}${s.fullTimeBonus>0?` · +${s.fullTimeBonus.toLocaleString('en-US')} for balls kept`:''} · ${pinballTakeaway(s)}`;
+ if(s.phase==='ready'){if(s.cue==='rescue')return null;if(s.plunger>.02){const pull=plungerPull(s.plunger);return `Power ${Math.round(pull*100)}% · ${ladderRung(pull)===t.skillBand?'LET GO NOW!':'let go on the blue light for a perfect first touch'}`;}if(s.clock===0&&s.score===0)return 'KICK-OFF! Hold LAUNCH, then let go.';const d=t.stars[s.level-1];if(t.assist)return 'Coach: extra help this ball. The saver is on!';const div=pinballDivision(s);return `${pinballMinute(s)} · ${stars(d)} ${m?`${m.name} · ${m.goal}`:t.mode==='final'?'CUP FINAL · launch!':`${div.name} · ${div.objective}`}`;}
  if(s.phase!=='playing')return null;
  if(s.cueTime>0)switch(s.cue){
   case 'sling':return 'KICKBOARD! Read the rebound: same angle out.';
@@ -233,6 +233,8 @@ export function pinballTableMessage(s:PinballState):string|null{
   case 'stoppage':return 'STOPPAGE TIME! Last chance with this ball.';
  }
  {const tm=timingMessage(s);if(tm)return tm;}
+ // First touches of a run: one plain instruction until the first real strike.
+ if(s.sfx.flipper===0&&s.goals===0&&s.balls===3)return 'Kick it back up just as the ball reaches your flipper!';
  if(s.extraLive)return `2v1 BREAKAWAY · two balls · goals count double${s.mbSave>0?` · save ${Math.ceil(s.mbSave)}s`:''}`;
  if(s.stoppage>=0)return `STOPPAGE TIME · ${pinballMinute(s)} · score with this ball!`;
  if(t.mode==='final')return `CUP FINAL · ${Math.ceil(t.modeTime)}s · every goal counts double!`;

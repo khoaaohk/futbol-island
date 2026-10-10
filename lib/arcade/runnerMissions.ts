@@ -66,9 +66,11 @@ export function resetRunnerProgress(p?:RunnerProgress){cache=p?{...p,done:[...p.
 export const runnerMissionSet=(set:number)=>RUNNER_MISSION_SETS[set%RUNNER_MISSION_SETS.length];
 /** Ball unlocked count: one per completed set, capped at the catalogue. */
 export const runnerBallFor=(p:RunnerProgress)=>RUNNER_BALLS[Math.min(RUNNER_BALLS.length-1,p.set)];
-type RunState={set:number;ids:readonly RunnerMissionId[];earned:RunnerMissionId[]};
+type RunState={runId:number;set:number;ids:readonly RunnerMissionId[];earned:RunnerMissionId[]};
 const runs=new WeakMap<RunnerGame,RunState>();
-function run(s:RunnerGame){let r=runs.get(s);if(!r){const p=readRunnerProgress();r={set:p.set,ids:runnerMissionSet(p.set),earned:[]};runs.set(s,r);}return r;}
+// Keyed by object AND run id: "Play again" resets the same object, which must start a fresh mission run
+// (the next set after a completed one, and a clean "this run" count).
+function run(s:RunnerGame){let r=runs.get(s);if(!r||r.runId!==s.runId){const p=readRunnerProgress();r={runId:s.runId,set:p.set,ids:runnerMissionSet(p.set),earned:[]};runs.set(s,r);}return r;}
 /** Called once per simulation frame. Completing a mission adds a star and a message;
  * finishing all three moves to the next set (used from the next run) and unlocks a ball. */
 export function tickRunnerMissions(s:RunnerGame){
@@ -88,6 +90,6 @@ export function tickRunnerMissions(s:RunnerGame){
 export function runnerMissionSummary(s:RunnerGame){const r=run(s),p=readRunnerProgress();const total=r.set===p.set?p.done.length:3;return `★ ${r.earned.length} this run · set ${r.set+1}: ${total}/3`;}
 /** Mission rows for the ready and full-time cards (true = done). */
 export function runnerMissionRows(s?:RunnerGame):{label:string;done:boolean;progress:string}[]{
- const p=readRunnerProgress(),r=s?runs.get(s):undefined,ids=r?.ids??runnerMissionSet(p.set),set=r?.set??p.set;
+ const p=readRunnerProgress(),r=s&&runs.get(s)?.runId===s.runId?runs.get(s):undefined,ids=r?.ids??runnerMissionSet(p.set),set=r?.set??p.set;
  return ids.map(id=>{const m=RUNNER_MISSIONS[id],done=set===p.set?p.done.includes(id):true,value=s?Math.min(m.target,m.value(s)):0;return{label:m.label,done,progress:m.target>1&&!done&&s?`${value}/${m.target}`:''};});
 }

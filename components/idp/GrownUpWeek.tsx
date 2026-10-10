@@ -1,22 +1,24 @@
 'use client';
 /**
- * The grown-up view (docs/idp/DESIGN.md §3): this week's story in a calm, plain voice. Information first, story second:
- *   what they're working on and why → what it looks like on the pitch (a play diagram that draws on once) → what they did this
- *   week and a moment they were proud of → "Ask about…" → 10 minutes at home tonight → what to avoid → leave a cheer →
- *   the fridge card. It is shown behind the ParentGate (Coaches Centre and For grown-ups). It never ranks or scores the child,
- *   and it is also what a grown-up sees on their own phone from the fridge card's QR (WeekStory, read-only).
+ * The grown-up screens (docs/idp/DESIGN.md §3, §10), each one screen with Back bottom left and its one action bottom right:
+ *  - WeekScreen    this week's story in a calm, plain voice (what they're working on, what it looks like on the pitch, what
+ *                  they did, "Ask about…", 10 minutes at home, what to avoid). WeekStory is also what a grown-up sees on their
+ *                  own phone from the fridge card's QR (/plan#p=…, read-only). It never ranks or scores the child.
+ *  - FridgeScreen  the one-page fridge card (Print) and this week's QR.
+ *  - NotesScreen   a preset cheer for the player, and private notes (device-only words, never synced).
  */
-import {useEffect,useState,type CSSProperties} from 'react';
+import {useState,type CSSProperties} from 'react';
 import {goalById,type IdpGoal} from '@/lib/coaches/idp';
 import {PRACTICES,PRACTICE_SAFETY} from '@/lib/grownups/practice';
 import {printHtml} from '@/lib/grownups/printHtml';
 import {AVOID_ALWAYS,CHEERS,CHEER_IDS,FEELS,SAY_INSTEAD,SKILLS,STICKERS,type CheerId,type FeelId,type StickerId} from '@/lib/coaches/idp/skills';
 import {weekMissions,weekSummary} from '@/lib/coaches/idp/journey';
-import {addCheer,addText,removeText,type IdpState2,type IdpText} from '@/lib/coaches/idp/store';
+import {addCheer,addText,removeText,type IdpState2,type IdpText,type TextKind} from '@/lib/coaches/idp/store';
 import {dayNumber,weekUrl,type WeekShare} from '@/lib/coaches/idp/share';
 import {fridgeCardHtml} from '@/lib/coaches/idp/fridge';
 import {countIdp} from '@/lib/coaches/idp/analytics';
 import {PlayDiagram,SkillGlyph,Sticker} from './Art';
+import {Footer,Screen} from './Nav';
 import s from './Idp.module.css';
 
 const v=(o:Record<string,string|number>)=>o as CSSProperties;
@@ -76,48 +78,63 @@ export function WeekStory({week,reviewAt,missionTitles}:{week:WeekShare;reviewAt
  </div>;
 }
 
-export default function GrownUpWeek({state,commit,text,commitText,now,onRebuild,onEnd}:{state:IdpState2;commit:(s:IdpState2)=>void;text:IdpText;commitText:(t:IdpText)=>void;now:number;onRebuild:()=>void;onEnd:()=>void}){
- useEffect(()=>{countIdp('grown');},[]);
- const plan=state.plan;
- const [cheered,setCheered]=useState<CheerId|null>(null),[helped,setHelped]=useState(false),[note,setNote]=useState(''),[name,setName]=useState(''),[confirmEnd,setConfirmEnd]=useState(false);
- const [qr,setQr]=useState<string|null>(null);
- if(!plan)return <div className={s.week}><p className={s.lead}>There’s no plan yet. Open “My plan” together and make one: it takes two minutes, and your player chooses.</p></div>;
- const week=weekShareOf(state,now),missions=weekMissions(plan,now).map(m=>({title:m.mission.title,where:m.mission.where}));
- const url=typeof window!=='undefined'?weekUrl(window.location.origin,week):'';
+export function WeekScreen({state,now,onBack}:{state:IdpState2;now:number;onBack:()=>void}){
+ const plan=state.plan,[helped,setHelped]=useState(false);
+ if(!plan)return null;
+ const missions=weekMissions(plan,now).map(m=>({title:m.mission.title,where:m.mission.where}));
+ return <Screen id="idp-week" kicker="For grown-ups" title="This week at home" data-grown-view>
+  <WeekStory week={weekShareOf(state,now)} reviewAt={plan.reviewAt} missionTitles={missions}/>
+  <div className={s.panel}>
+   {helped?<p className={s.savedNote} role="status">Thank you. That helps us make it better (we only count taps, nothing else).</p>
+   :<div className={s.row}><span className={s.small} style={{color:'var(--ink)',fontWeight:700}}>Was this useful?</span><button type="button" className={s.ghost} data-helped onClick={()=>{countIdp('helped');setHelped(true);}}>Yes, this helped</button></div>}
+  </div>
+  <Footer back={onBack}/>
+ </Screen>;
+}
+
+export function FridgeScreen({state,now,onBack}:{state:IdpState2;now:number;onBack:()=>void}){
+ const [name,setName]=useState(''),[qr,setQr]=useState<string|null>(null),[printed,setPrinted]=useState(false);
+ const week=weekShareOf(state,now),url=typeof window!=='undefined'?weekUrl(window.location.origin,week):'';
  const print=async()=>{let dataUrl:string|undefined;try{const {default:QR}=await import('qrcode');dataUrl=await QR.toDataURL(url,{width:240,margin:1,errorCorrectionLevel:'M'});}catch{}
-  printHtml(fridgeCardHtml(state,{firstName:name,printedAt:Date.now(),qrDataUrl:dataUrl}));countIdp('fridge');};
+  printHtml(fridgeCardHtml(state,{firstName:name,printedAt:Date.now(),qrDataUrl:dataUrl}));countIdp('fridge');setPrinted(true);};
  const showQr=async()=>{try{const {default:QR}=await import('qrcode');setQr(await QR.toDataURL(url,{width:440,margin:1,errorCorrectionLevel:'M'}));}catch{setQr('');}};
- const homeNotes=text.notes.filter(n=>n.kind==='home').slice(-3).reverse();
- return <div className={s.grown} data-grown-view>
-  <WeekStory week={week} reviewAt={plan.reviewAt} missionTitles={missions}/>
+ return <Screen id="idp-fridge" kicker="For grown-ups" title="The fridge card" data-fridge data-week-url={url.replace(/^https?:\/\/[^/]+/,'')}>
+  <div className={s.panel}>
+   <p className={s.lead}>One page for the kitchen: the goal, this week’s practices to tick, what to ask and what to avoid.</p>
+   <label className={s.field} htmlFor="idp-fridge-name">First name on the card <span className={s.small}>(optional, not saved)</span>
+    <input id="idp-fridge-name" value={name} maxLength={24} autoComplete="off" onChange={e=>setName(e.target.value)}/></label>
+   {printed&&<p className={s.savedNote} role="status">Sent to the printer.</p>}
+  </div>
+  <div className={s.panel}>
+   <h4>Open it on another phone</h4>
+   <p className={s.small}>The card’s QR opens this week’s plan on any phone, with no sign-in. It holds goal and practice ids only, never a name.</p>
+   {qr===null?<button type="button" className={s.ghost} style={{justifySelf:'start'}} data-week-qr-show onClick={showQr}>Show the QR here</button>:qr?<div className={s.qrBox} data-week-qr><img src={qr} width={220} height={220} alt="QR code: this week’s plan"/><p className={s.small}>Scan with another phone’s camera.</p></div>:<p className={s.small}>The QR couldn’t be made on this device. The printout still works.</p>}
+  </div>
+  <Footer back={onBack}><button type="button" className={s.primary} data-fridge-print onClick={print}>Print</button></Footer>
+ </Screen>;
+}
+
+export function NotesScreen({state,commit,text,commitText,onBack,kind='home'}:{state:IdpState2;commit:(s:IdpState2)=>void;text:IdpText;commitText:(t:IdpText)=>void;onBack:()=>void;kind?:Exclude<TextKind,'player'>}){
+ const [who,setWho]=useState<Exclude<TextKind,'player'>>(kind),[note,setNote]=useState(''),[cheered,setCheered]=useState<CheerId|null>(null),[saved,setSaved]=useState(false);
+ const goal=state.plan?.goals[0]?.goalId;
+ const notes=text.notes.filter(n=>n.kind!=='player').slice(-6).reverse();
+ const save=()=>{const next=addText(text,who,note,Date.now(),goal);if(next!==text){commitText(next);setNote('');setSaved(true);}};
+ return <Screen id="idp-notes" kicker="For grown-ups and coaches" title="Cheers and notes" data-notes>
   <section className={s.panel} data-cheer>
-   <h4>Leave a cheer</h4><p className={s.small}>It appears in their plan next time they open it. Pick one; no typing.</p>
-   <div className={s.chips} role="group" aria-label="Cheers">{CHEER_IDS.map(id=><button key={id} type="button" className={s.chip} aria-pressed={cheered===id} onClick={()=>{commit(addCheer(state,id,'home',Date.now()));countIdp('cheer');setCheered(id);}}>{CHEERS[id]}</button>)}</div>
+   <h4>Send a cheer</h4><p className={s.small}>It shows on their plan next time they open it. No typing.</p>
+   <div className={s.chips} role="group" aria-label="Cheers">{CHEER_IDS.map(id=><button key={id} type="button" className={s.chip} aria-pressed={cheered===id} onClick={()=>{commit(addCheer(state,id,who==='coach'?'coach':'home',Date.now()));countIdp('cheer');setCheered(id);}}>{CHEERS[id]}</button>)}</div>
    {cheered&&<p className={s.savedNote} role="status">Sent to their plan on this device.</p>}
   </section>
   <section className={s.panel}>
-   <h4>A note for yourself</h4><p className={s.small}>Private to this device. It is never uploaded, even with a save code.</p>
-   <form className={s.inline} onSubmit={e=>{e.preventDefault();const next=addText(text,'home',note,Date.now());if(next!==text){commitText(next);setNote('');}}}>
-    <label htmlFor="idp-home-note" className={s.srOnly}>Note</label><input id="idp-home-note" value={note} maxLength={280} placeholder="Like: ask about the keeper call" onChange={e=>setNote(e.target.value)}/>
-    <button type="submit" className={s.ghost} disabled={!note.trim()}>Save</button></form>
-   {homeNotes.length>0&&<ul className={s.notes}>{homeNotes.map(n=><li key={n.id}><time>{new Date(n.at).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</time><span>{n.text}</span><button type="button" aria-label="Delete note" onClick={()=>commitText(removeText(text,n.id))}>×</button></li>)}</ul>}
+   <h4>A private note</h4>
+   <div className={s.chips} role="group" aria-label="I am">{(['home','coach'] as const).map(k=><button key={k} type="button" className={s.chip} aria-pressed={who===k} onClick={()=>setWho(k)}>{k==='home'?'Grown-up at home':'Coach'}</button>)}</div>
+   <form id="idp-note-form" onSubmit={e=>{e.preventDefault();save();}}>
+    <label className={s.field} htmlFor="idp-home-note">Note<input id="idp-home-note" value={note} maxLength={280} placeholder={who==='coach'?'Like: checked shoulder twice at the goal kick':'Like: ask about the keeper call'} onChange={e=>{setNote(e.target.value);setSaved(false);}}/></label>
+   </form>
+   <p className={s.small}>Private to this device. It is never uploaded, even with a save code.</p>
+   {saved&&<p className={s.savedNote} role="status">Note saved on this device.</p>}
+   {notes.length>0&&<ul className={s.notes}>{notes.map(n=><li key={n.id}><time>{new Date(n.at).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</time><span>{n.kind==='coach'?'Coach: ':''}{n.text}</span><button type="button" aria-label="Delete note" onClick={()=>commitText(removeText(text,n.id))}>×</button></li>)}</ul>}
   </section>
-  <section className={s.panel} data-fridge data-week-url={url.replace(/^https?:\/\/[^/]+/,'')}>
-   <h4>The fridge card</h4>
-   <p className={s.small}>One page for the kitchen: the goal, this week’s missions to tick, what to ask and what to avoid. Its QR opens this week’s plan on any phone, with no sign-in. The QR holds goal and mission ids only, never a name.</p>
-   <div className={s.inline}><label htmlFor="idp-fridge-name" className={s.srOnly}>First name on the card (optional)</label><input id="idp-fridge-name" value={name} maxLength={24} autoComplete="off" placeholder="First name on the card (optional)" onChange={e=>setName(e.target.value)}/>
-    <button type="button" className={s.primary} data-fridge-print onClick={print}>Print the fridge card</button></div>
-   <p className={s.small}>The name is only used for this printout. It isn’t saved.</p>
-   {qr===null?<button type="button" className={s.ghost} onClick={showQr}>Show this week’s QR</button>:qr?<div className={s.qrBox} data-week-qr><img src={qr} width={220} height={220} alt="QR code: this week’s plan"/><p className={s.small}>Scan with another phone’s camera to open this week’s plan there.</p></div>:<p className={s.small}>The QR couldn’t be made on this device. The printout still works.</p>}
-  </section>
-  <section className={s.panel}>
-   <h4>Was this useful?</h4>
-   {helped?<p className={s.savedNote} role="status">Thank you. That helps us make it better (we only count taps, nothing else).</p>:<button type="button" className={s.ghost} data-helped onClick={()=>{countIdp('helped');setHelped(true);}}>Yes, this helped</button>}
-  </section>
-  <section className={s.panel}>
-   <h4>Change the plan</h4><p className={s.small}>Changing goals is best done together, with your player choosing.</p>
-   {confirmEnd?<div className={s.confirm} role="alertdialog" aria-labelledby="idp-end-q"><p id="idp-end-q"><b>End this plan?</b> The goals move to its history. Notes stay on this device.</p><div className={s.row}><button type="button" className={s.ghost} autoFocus onClick={()=>setConfirmEnd(false)}>Keep the plan</button><button type="button" className={s.primary} onClick={()=>{setConfirmEnd(false);onEnd();}}>End plan</button></div></div>
-   :<div className={s.row}><button type="button" className={s.ghost} onClick={onRebuild}>Change goals together</button><button type="button" className={s.textBtn} onClick={()=>setConfirmEnd(true)}>End plan</button></div>}
-  </section>
- </div>;
+  <Footer back={onBack}><button type="submit" form="idp-note-form" className={s.primary} data-note-save disabled={!note.trim()}>Save note</button></Footer>
+ </Screen>;
 }

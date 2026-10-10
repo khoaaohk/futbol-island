@@ -25,3 +25,6 @@
 .screen .gameCopy{top:42%;left:max(24px,env(safe-area-inset-left));right:max(24px,env(safe-area-inset-right));transform:translateY(-50%)}
 .screen .gameCopy h2{font-size:clamp(36px,7vw,76px);max-width:800px;margin:0 auto 28px;text-wrap:balance}
 @media(max-height:500px){.screen .gameCopy{top:45%}.screen .gameCopy h2{font-size:clamp(30px,6vw,52px);margin-bottom:20px}}
+
+/* The game loader's Back (QA Oct 10 2026): where the room's header puts its Exit, above the grain. */
+.gameBack{position:absolute;z-index:3;top:max(18px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left))}

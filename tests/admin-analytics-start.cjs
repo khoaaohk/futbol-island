@@ -124,7 +124,8 @@ await ok('outcome hooks',()=>{
  assert(/if\(c\)trackStart\('st:saved'\)/.test(ad)&&/if\(restored\)trackStart\('st:play_restored'\);if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/'\)/.test(ad),'counted first, then the address is reset to a bare / (a ?coffee=thanks is not counted again after the reload)');
  assert(/useEffect\(\(\)=>\{startTitleState\(state\);\},\[state\]\)/.test(read('components/landing/TitleActions.tsx')));
  assert(/onCancel=\{\(\)=>\{trackStart\('sg:gate_no'\);setStep\('closed'\);\}\} onPass=\{\(\)=>\{trackStart\('sg:gate_ok'\);setStep\('open'\);\}\}/.test(read('components/landing/Donate.tsx')));
- assert(/if\(picked===null\)startWordPick\(w===c\.words\[0\]\)/.test(read('components/saves/SaveCodeCreate.tsx')),'a boolean, never the word');
+ // The first-word check was removed (user, Oct 10 2026): st:word stays in the allowlist for past days but is no longer sent.
+ assert(!/startWordPick\(/.test(read('components/saves/SaveCodeCreate.tsx')),'the removed check sends nothing');
  assert(/return=\$\{returnTo\}/.test(read('components/landing/Donate.tsx'))&&/donateReturn="start"/.test(read('components/landing/GrownUps.tsx'))&&/'start'\?'\/\?coffee=thanks'/.test(read('app/coffee/checkout/route.ts')),'Stripe success returns to the title screen at /?coffee=thanks');
  assert(/start page are tapped \(for example Start, For grown-ups or Donate\), counted as totals/.test(read('components/privacy/PrivacyPolicy.tsx')),'privacy policy §7');
  assert(/admin-analytics-start\.cjs/.test(read('package.json')),'part of npm test');

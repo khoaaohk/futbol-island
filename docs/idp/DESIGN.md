@@ -3,6 +3,10 @@
 Evidence: [RESEARCH.md](RESEARCH.md) (§ numbers below point there). Board contract: [BOARD-LINK.md](BOARD-LINK.md).
 Status: **Phase 1 is built** (local; not committed or deployed). Phase 2 is a design only. Not legal advice: see §8.
 
+> **Simplified Oct 10 2026: see §10.** The five-beat story (§2.2), the three tabs (§1) and the long grown-up and coach pages
+> (§3, §4) were replaced by one loop (pick a goal → practise → check in) and one "For grown-ups and coaches" list. The data,
+> privacy rules, QR formats, fridge card and analytics below are unchanged unless §10 says otherwise.
+
 ## 0. What changes and why
 
 The P0/Lane-4 IDP was a form: one focus, a homework list, two text boxes. It was gated, adult-shaped and, in practice,
@@ -32,8 +36,9 @@ Design rules taken from the research (each enforced in code or tests):
 ## 1. Information architecture
 
 One component, three views (tabs), opened from **Coaches Centre → IDP** (player view first) and **For grown-ups → Development
-plan** (grown-up view first). Both entries sit behind the existing ParentGate, as before (decision kept; see §9 for the
-recommendation to ungate the player view).
+plan** (grown-up view first). **Gate (user decision, Oct 10 2026):** the player's plan opens WITHOUT the ParentGate; only
+"For grown-ups and coaches" (fridge card, notes, coach QR, week page, change / end plan) asks it first. For grown-ups stays
+behind its own gate (tests/parent-gate.cjs).
 
 ```
 IdpPlan ── My plan ──┬── PlanBuilder (no plan / "Change my plan")
@@ -251,3 +256,57 @@ is a follow-up (outside this lane). Qualitative validation (interviews in the 20
 - **Board listens for `BOARD_OPEN_PLAY` and registers plays** — the board agent's lane (BOARD-LINK.md).
 - **/admin IDP section** and `npm test` entry for `tests/coaches-idp-v2.cjs` — outside this lane's files.
 - **Real-device heat check** — headless shows zero work at rest; no iPhone thermal claim is made.
+
+## 10. Simplified flow (Oct 10 2026)
+
+Why: an audit at 390×844 (touch) and 1440×900 found the plan hard to use for a 7–12-year-old. "IDP" on the Coaches Centre
+card; five chapters with a rail, swipes and FLIPs before the child reached anything to do; chapter headings laid out in a row
+whose caption sat unreadable on the sheet's painted background; "Next" moving between chapters while the real actions (I did
+it!, Save my check-in, Talk it through now) were buried mid-page; three tabs (My plan · Grown-ups · Coach) shown to the child;
+grown-up and coach pages over 3,000 px tall on a phone with the fridge card and the note at the bottom; a check-in with four
+optional steps (where, help, proud sticker); "Change it a little" and "Pick a new goal" doing the same thing; and nowhere for
+the child to write a note although the card promised "note what you noticed".
+
+| Task | Before (taps · screens) | After (taps · screens) |
+|---|---|---|
+| Set a first goal (Coaches Centre, incl. gate) | 9 · 6 | 6 · 5 |
+| Practise + check in (the core loop, from the plan) | 5 · 2, on two chapters | 4 · 3 (Practise → I did it! → face → Save) |
+| Add a note (child) | not possible | in the check-in: +1 (type) |
+| Add a note (grown-up, from the plan) | 3 + ~2,000 px scroll | 4 (For grown-ups → Cheers and notes → type → Save) |
+| Do a review | 3 (rail → "Talk it through now" → Keep going) | 2 (Talk it through → Keep going) |
+| Print the fridge card (from the plan) | 2 + ~2,400 px scroll | 3 (For grown-ups → Print the fridge card → Print) |
+| Coach: give a goal by QR (from the plan) | 3 + scroll | 4 (For grown-ups → Coach → goal → Make the QR) |
+
+The flow:
+
+```
+IdpPlan ── player ── PlayerPlan: Home ─(Practise)→ Practise ─(I did it!)→ Check in ─(Save)→ Home
+         │                       Home ─(Talk it through)→ Review ─(Keep going | Pick a new goal)
+         │                       PlanBuilder: pick a goal (one tap) → who helped (one tap, saves)
+         │                       Celebrate ("I can do it now!" appears once there are 3 practice moments)
+         └── grown ── GrownUpHub (lazy): This week at home · Print the fridge card · Talk it through · Cheers and notes ·
+                                        Coach: give a goal by QR · Change the goal / End this plan
+```
+
+Rules: one main action per screen, bottom right (a green forward NavigationButton, or the screen's own action such as Print);
+Back bottom left (NavigationButton), as on the save-code sheets (components/idp/Nav.tsx). Headings sit on a paper tab, so they
+read on any sheet background. Kid copy is short and plain ("Football plan", "What do you want to get better at?", "How did
+it feel?", "Talk it through"); "IDP" and "development plan" no longer appear in any visible copy.
+
+Removed or merged: the five beats, the beat rail, swipe and arrow-key paging, the goal-badge FLIP, the journey path and the
+feel-line charts (the ring and "this week" dots carry progress); the "Start" chapter (the strength is an optional "I'm good
+at…" row on Home, no longer a builder step); multi-select in the builder (add a second goal from Home); "where" chips and proud
+stickers in the check-in (stored stickers still appear in the grown-up week story and the fridge card); "Change it a little"
+(stored `adapt` reviews stay valid); the audience tabs (grown-up tools are one button, "For grown-ups and coaches").
+Added: a device-only player note in the check-in (`fi2-idp-text-v1`, kind `player`; counted as `ip:note`), and "Oops, I didn't
+do it yet" (undo) after "I did it!".
+
+Data: the stored shapes are unchanged, so there is no migration; SYNC_KEYS (`fi2-idp-v2`, `fi2-idp-plan-v1`) and DEVICE_KEYS
+(`fi2-idp-text-v1`) are as before.
+
+Motion: one 0.24 s entry per screen (opacity + translateY), ring pieces fade in, the celebration is about 1.2 s of
+transform/opacity; no stroke draw-ons, no FLIP, nothing loops, 0 rAF at rest; reduced motion turns it all off
+(tests/coaches-idp-v2.cjs "simple", tests/coaches-idp-browser.cjs).
+
+Gate (updated Oct 10 2026, user decision): the §9 recommendation is in. The player's plan opens without the ParentGate and only
+"For grown-ups and coaches" is gated (components/IdpPlan.tsx; tests/parent-gate.cjs, tests/coaches-idp-browser.cjs).

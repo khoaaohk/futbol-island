@@ -83,7 +83,7 @@ const STORY_TOPIC:Record<string,string>={futsl:'loving futsal'};
 const ALL_STORIES=[...STORY_CARDS.map(card=>({id:card.id as string,title:card.title as string,topic:STORY_TOPIC[card.id]??(card.skill as string)})),...Object.values(UPCOMING_STORIES).flat().map(story=>({id:story.id,title:story.title,topic:story.theme}))];
 function storyRequest(id:string):EarnRequest|null{
  const story=ALL_STORIES.find(x=>x.id===id);if(!story)return null;
- return {kind:'story',id,reason:`You watched “${story.title}”.`,theme:/futsal/i.test(`${story.title} ${story.topic}`)?themeFromText('',true):undefined};
+ return {kind:'story',id,reason:`You watched “${story.title}”${/[.!?]$/.test(story.title)?'':'.'}`,theme:/futsal/i.test(`${story.title} ${story.topic}`)?themeFromText('',true):undefined};
 }
 /** A path story (life story or optional story) was watched to the end (QuestLearningPath). Once per story, ever. */
 export function earnForStory(id:string):EarnResult{const story=ALL_STORIES.find(x=>x.id===id);if(story)payLearning('story',id,`You watched ‘${story.title}’`);if(!cardRewardsActive())return 'off';const request=storyRequest(id);return request?earnCardOffer(request):'off';}

@@ -1,16 +1,14 @@
-/* Coaches Board → Tactics board (Oct 9 2026). The board itself is realistic (aluminium frame, green pitch, magnetic
-   counters, marker ink); the controls use the island's tokens: dark green trays, cream chips, pink when selected. */
+/* Coaches Board → Tactics board. Full screen since Oct 10 2026 (Miro/Figma style): the pitch is a canvas filling the screen,
+   with floating rails over it. Board look: green pitch, magnetic counters, marker ink. Controls use the island's tokens
+   (docs/ui/BUTTONS.md): cream buttons, pink when selected, dark green trays. Motion is transform/opacity only. */
+.fullscreen{position:fixed;inset:0;z-index:40;background:#2d6f39}
 .root:focus{outline:none}
-.root{position:relative;display:flex;flex-direction:column;gap:8px;color:var(--btn-ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.root[data-layout=side]{flex-direction:row;align-items:flex-start;gap:14px}
-.boardCol{display:flex;justify-content:center;min-width:0;flex:1 1 auto}
-.panel{position:relative;display:flex;flex-direction:column;gap:10px;flex:none;min-height:100%}
+.root{position:absolute;inset:0;overflow:hidden;color:var(--btn-ink);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:none;touch-action:none;
+ --rail-w:64px;--gap:12px;--sat:env(safe-area-inset-top,0px);--sar:env(safe-area-inset-right,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px)}
+.root[data-mode=thin]{--rail-w:52px;--gap:6px}
+.root[data-mode=dock]{--gap:8px}
+.safeProbe{position:absolute;visibility:hidden;pointer-events:none;padding:var(--sat) var(--sar) var(--sab) var(--sal)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-
-/* Top row: tabs (from CoachesBoard) and the play actions. */
-.top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px}
-.topActions{display:flex;align-items:center;gap:6px;margin-left:auto}
-
 /* Buttons. */
 .tool,.pill,.save{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;height:44px;padding:0;border:0;border-radius:var(--btn-radius);
  background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-cream-edge);font:700 14px/1 var(--btn-font);cursor:pointer;flex:none;
@@ -24,19 +22,93 @@
 .save{padding:0 16px;background:var(--btn-gold) var(--btn-grain) center/128px 128px;box-shadow:0 4px 0 var(--btn-gold-edge);white-space:nowrap}
 .save:active{box-shadow:0 1px 0 var(--btn-gold-edge)}
 
-/* Trays: dark green bars like a coach's kit tray. */
-.tools,.timeline,.ctxWrap,.banner{background:var(--btn-green);color:var(--btn-ink-on-dark);border-radius:22px;box-shadow:0 4px 0 var(--btn-green-edge)}
-.tools{display:flex;align-items:center;gap:4px;padding:6px 6px 10px}
-.toolTab{flex:1 1 0;min-width:40px;height:52px;flex-direction:column;gap:2px;border-radius:16px}
-.toolTab span{font-size:10px;font-weight:800;letter-spacing:.02em}
-.sep{width:2px;height:30px;background:#ffffff26;border-radius:2px;flex:none;margin:0 2px}
-.ctxWrap{min-height:52px;display:flex;align-items:center;padding:4px 8px 8px;overflow:hidden}
-.ctx{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:4px 2px 6px;width:100%}
-.ctx::-webkit-scrollbar{display:none}
-.ctx .pill{padding:0 11px}
-.ctxTitle{font:700 14px var(--btn-font);white-space:nowrap;padding:0 6px}
-.hint{margin:0;padding:0 6px;font:600 13px/1.3 var(--btn-font);flex:1 1 auto;min-width:120px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.note{-webkit-line-clamp:4;font-weight:700}
+.root button{touch-action:manipulation}
+/* The dialog lifts every button on hover (CoachesCentre.module.css): keep the board's controls still, they press instead. */
+.root.root button:not(.chip):hover,.root.root button:not(.chip):active{transform:none}
+
+/* ── floating chrome: rails, bars and cards share one tray look ── */
+.topBar,.rail .railStack,.dock,.timeline,.ctxWrap,.banner,.fitChip{background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge),0 10px 24px #0d2a2238}
+.topBar{position:absolute;z-index:6;left:calc(var(--gap) + var(--sal));right:calc(var(--gap) + var(--sar));top:calc(var(--gap) + var(--sat));display:flex;align-items:center;justify-content:space-between;gap:8px;
+ background:none;box-shadow:none;pointer-events:none}
+.topBar>.group{pointer-events:auto;display:flex;align-items:center;gap:6px;min-width:0;padding:4px;border-radius:999px;background:var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge),0 10px 24px #0d2a2238}
+.topBar>.group:first-child{flex:0 1 auto}
+.group{display:flex;align-items:center;gap:4px}
+.nameRow{display:flex;align-items:center;gap:6px;min-width:0;flex:0 1 auto;padding:0 4px}
+.back{flex:none}
+
+/* Rail buttons: icon first, a small label under it (full and dock), a tooltip and shortcut on hover. */
+.railBtn{position:relative;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:var(--rail-w);min-width:44px;height:52px;padding:0;border:0;border-radius:16px;
+ background:transparent;color:var(--btn-ink-on-dark);font:800 10px/1 var(--btn-font);letter-spacing:.02em;cursor:pointer;flex:none;transition:background-color .16s,color .16s,translate .16s}
+.railBtn svg{flex:none}
+.railBtn:not(:disabled):active{translate:0 2px}
+.railBtn[aria-pressed=true]{background:var(--btn-pink);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+.railBtn:disabled{opacity:.4;cursor:default}
+.railBtn:focus-visible{outline:var(--btn-focus);outline-offset:-2px}
+@media(hover:hover){.railBtn:not(:disabled):not([aria-pressed=true]):hover{background:#ffffff1f}}
+.railBtn .chipFace{width:26px;height:26px;--r:13px;font-size:16px;pointer-events:none}
+.railLabel{white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.kbd{position:absolute;top:4px;right:5px;margin:0;padding:0;border:0;background:none;box-shadow:none;color:inherit;font:700 9px/1 var(--btn-font);opacity:.6;letter-spacing:0}
+.railBtn[aria-pressed=true] .kbd{opacity:.75}
+.topBar .railBtn{width:44px;height:44px;border-radius:999px}
+.topBar .railBtn .railLabel,.topBar .railBtn .kbd{display:none}
+
+/* Left (tools) and right (actions) rails: vertical floating toolbars, centred on the side, collapsible. */
+.rail{position:absolute;z-index:5;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;gap:8px;pointer-events:none;padding:calc(76px + var(--sat)) 0 calc(80px + var(--sab))}
+.railLeft{left:calc(var(--gap) + var(--sal));align-items:flex-start}
+.railRight{right:calc(var(--gap) + var(--sar));align-items:flex-end}
+.railStack{pointer-events:auto;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px;border-radius:24px;max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;touch-action:pan-y}
+.railStack::-webkit-scrollbar{display:none}
+.rail .railStack [data-cb$=-toggle]{height:36px;opacity:.75}
+.rail .railStack [data-cb$=-toggle] .railLabel{display:none}
+.rail>.back{pointer-events:auto}
+/* Thin (phone landscape): Back and undo/redo sit on top of the rails; icons only. */
+.root[data-mode=thin] .rail{padding:calc(6px + var(--sat)) 0 calc(6px + var(--sab));justify-content:flex-start;gap:6px}
+.root[data-mode=thin] .railBtn{height:44px;width:44px}
+.root[data-mode=thin] .railLabel,.root[data-mode=thin] .kbd{display:none}
+.root[data-mode=thin] .railStack{padding:4px;gap:1px;border-radius:22px}
+.root[data-mode=thin] .back{--navigation-width:52px}
+.root[data-mode=thin] .rail [data-cb$=-toggle]{height:30px}
+
+/* Dock (phone portrait): the tools along the bottom, More opens the right rail's content as a sheet. */
+.dock{position:absolute;z-index:6;left:calc(8px + var(--sal));right:calc(8px + var(--sar));bottom:calc(8px + var(--sab));border-radius:24px;padding:5px}
+.dockStack{display:flex;justify-content:space-between;gap:2px}
+.dock .railBtn{flex:1 1 0;width:auto;min-width:44px;height:54px}
+.root[data-mode=dock] .topBar{top:calc(8px + var(--sat));left:calc(8px + var(--sal));right:calc(8px + var(--sar))}
+.root[data-mode=dock] .nameRow{flex:1 1 auto}
+
+/* Name tape, Save sticker, format and zoom preset: masking-tape labels, like a real board. */
+.tape{position:relative;height:28px;max-width:100%;min-width:0;padding:0 12px;border:0;border-radius:2px;background:#f2e6c2;color:#22283a;font:400 17px/28px IslandBrush,var(--btn-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ box-shadow:0 1px 2px #0003;rotate:-1.2deg;cursor:pointer;clip-path:polygon(2% 0,98% 4%,100% 50%,97% 100%,1% 96%,0 45%)}
+.tape::before{content:'';position:absolute;inset:-8px 0}
+.tape:focus-visible,.sticker:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.nameInput{cursor:text;width:min(60vw,240px);user-select:text;-webkit-user-select:text;font-size:16px;clip-path:none;rotate:none}
+.zoomTape{rotate:.8deg;padding:0 10px;flex:none;margin:0 4px}
+.sticker{position:relative;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:800 13px var(--btn-font);box-shadow:0 2px 0 var(--btn-gold-edge);cursor:pointer;flex:none;rotate:-2deg}
+.sticker::before{content:'';position:absolute;inset:-7px -4px}
+.formatTape{flex:none;rotate:1.4deg;padding:0 2px 0 6px;display:inline-flex;align-items:center}
+.formatTape select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:400 17px/28px IslandBrush,var(--btn-font);color:#22283a;padding:0 16px 0 2px;cursor:pointer;
+ background-image:linear-gradient(45deg,transparent 50%,#22283a 50%),linear-gradient(135deg,#22283a 50%,transparent 50%);background-position:calc(100% - 7px) 12px,calc(100% - 3px) 12px;background-size:4px 4px;background-repeat:no-repeat}
+.formatTape select:focus-visible{outline:var(--btn-focus);outline-offset:2px}
+/* The tape's enlarged hit area (::before) sat above the select, so a click hit the label and the menu never opened (Oct 10 2026). */
+.formatTape::before{display:none}.formatTape select{position:relative;z-index:1;min-height:44px;margin:-8px 0}
+
+/* Step bar (bottom centre; full width above the dock on phones; with the name on phone landscape). */
+.timeline{position:absolute;z-index:5;left:50%;bottom:calc(var(--gap) + var(--sab));translate:-50% 0;width:min(640px,calc(100% - 2 * (var(--rail-w) + 36px)));display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:999px}
+.root[data-mode=thin] .timeline{width:calc(100% - 2 * (var(--rail-w) + 30px) - var(--sal) - var(--sar));bottom:calc(5px + var(--sab));padding:3px 5px}
+.root[data-mode=dock] .timeline{left:calc(8px + var(--sal));right:calc(8px + var(--sar));width:auto;translate:none;bottom:calc(80px + var(--sab))}
+.root[data-mode=thin] .nameRow{max-width:34%;padding:0 2px}
+.playBtn{background:var(--btn-gold) var(--btn-grain) center/128px 128px;box-shadow:0 4px 0 var(--btn-gold-edge)}
+.addStep{padding:0 12px 0 8px;gap:2px}
+.track{position:relative;flex:1 1 auto;height:44px;margin:0 16px;touch-action:none;cursor:pointer;min-width:60px}
+.trackLine{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:4px;background:#ffffff40}
+.knobRail{position:absolute;inset:0;pointer-events:none;z-index:2}
+.knob{position:absolute;left:0;top:50%;width:6px;height:30px;margin:-15px 0 0 -3px;border-radius:3px;background:var(--btn-gold-bright);box-shadow:0 0 0 2px var(--btn-green);pointer-events:none;z-index:2}
+.dot{position:absolute;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;padding:0;border-radius:50%;border:3px solid var(--btn-rim);background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 12px/1 var(--btn-font);cursor:pointer;z-index:1}
+.dot::before{content:'';position:absolute;inset:-9px}
+.dot[aria-current=step]{background:var(--btn-pink);color:var(--btn-ink);z-index:3}
+
+
+/* Properties controls: shirt number, marker colours, the add tray. */
 .numField{display:inline-flex;align-items:center;gap:4px;height:44px;padding:0 4px 0 10px;border-radius:999px;background:var(--btn-cream);color:var(--btn-ink);font:800 13px var(--btn-font);box-shadow:0 4px 0 var(--btn-cream-edge);flex:none}
 .numField input{width:3.4em;height:34px;border:2px solid var(--btn-cream-edge);border-radius:999px;background:#fff;color:var(--btn-ink);font:800 16px var(--btn-font);text-align:center;padding:0}
 .numField input:focus-visible{outline:var(--btn-focus);outline-offset:1px}
@@ -49,50 +121,38 @@
 .trayChip .chipFace{width:30px;height:30px;font-size:17px;pointer-events:none}
 .trayChip:active .chipFace{scale:1.12}
 
-/* Timeline. */
-.timeline{display:flex;align-items:center;gap:8px;padding:6px 8px 10px}
-.playBtn{background:var(--btn-gold) var(--btn-grain) center/128px 128px;box-shadow:0 4px 0 var(--btn-gold-edge)}
-.addStep{padding:0 12px 0 8px;gap:2px}
-.track{position:relative;flex:1 1 auto;height:44px;margin:0 14px;touch-action:none;cursor:pointer;min-width:60px}
-.rail{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:4px;background:#ffffff40}
-.knobRail{position:absolute;inset:0;pointer-events:none;z-index:2}
-.knob{position:absolute;left:0;top:50%;width:6px;height:30px;margin:-15px 0 0 -3px;border-radius:3px;background:var(--btn-gold-bright);box-shadow:0 0 0 2px var(--btn-green);pointer-events:none;z-index:2}
-.dot{position:absolute;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;padding:0;border-radius:50%;border:3px solid var(--btn-rim);background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 12px/1 var(--btn-font);cursor:pointer;z-index:1}
-.dot::before{content:'';position:absolute;inset:-9px}
-.dot[aria-current=step]{background:var(--btn-pink);color:var(--btn-ink);z-index:3}
 
-/* Viewer banner (examples, shared links). */
-.banner{display:flex;align-items:center;gap:8px;padding:6px 8px 10px 14px;font:13px/1.3 var(--btn-font)}
-.banner>div{flex:1 1 auto;min-width:0}
+/* Properties: a card beside the right rail (full), a strip above the step bar (phones). */
+.ctxWrap{position:absolute;z-index:5;border-radius:22px;padding:6px 8px;display:flex;align-items:center}
+.root[data-mode=full] .ctxWrap{right:calc(var(--gap) + var(--sar) + var(--rail-w) + 30px);top:calc(76px + var(--sat));width:min(300px,40vw)}
+.root[data-mode=full] .ctx{flex-wrap:wrap;overflow:visible}
+.root[data-mode=thin] .ctxWrap{left:50%;translate:-50% 0;bottom:calc(58px + var(--sab));max-width:calc(100% - 2 * (var(--rail-w) + 40px))}
+.root[data-mode=thin] .ctxWrap:has(>.ctx>[data-cb=multi]:only-child){left:calc(var(--gap) + var(--sal) + var(--rail-w) + 16px);translate:none;max-width:none}
+.root[data-mode=dock] .ctxWrap{left:auto;right:calc(8px + var(--sar));max-width:calc(100% - 16px - var(--sal) - var(--sar));bottom:calc(138px + var(--sab))}
+.root[data-mode=dock] .ctxWrap:has([data-cb=chip-edit],[data-cb=arrow-edit],[data-cb=tray]){left:calc(8px + var(--sal))}
+.ctx{display:flex;align-items:center;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 6px;width:100%;touch-action:pan-x}
+.ctx::-webkit-scrollbar{display:none}
+.ctx .pill{padding:0 11px}
+.ctxTitle{font:700 14px var(--btn-font);white-space:nowrap;padding:0 6px}
+.hint{margin:0;padding:0 6px;font:600 13px/1.3 var(--btn-font);flex:1 1 auto;min-width:120px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Viewer banner (examples, shared links): the coaching point, top centre. */
+.banner{position:absolute;z-index:5;left:50%;translate:-50% 0;top:calc(70px + var(--sat));width:min(560px,calc(100% - 2 * (var(--rail-w) + 40px)));display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:22px;font:13px/1.35 var(--btn-font)}
+.banner>div:first-child{flex:1 1 auto;min-width:0}
 .banner b{display:block;font-size:14px}
+.banner p{margin:2px 0 0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.bannerBtns{display:flex;gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end}
+.root[data-mode=dock] .banner{top:calc(62px + var(--sat));width:calc(100% - 16px);flex-wrap:wrap}
+.root[data-mode=thin] .banner{top:calc(6px + var(--sat));padding:5px 6px 5px 12px}
+.root[data-mode=thin] .banner p{-webkit-line-clamp:1}
 
-/* The board: aluminium frame, clips and a hanging cord. */
-.frame{position:relative;padding:calc(var(--pad,10px) + 22px) var(--pad,10px) var(--pad,10px);margin-top:14px;border-radius:16px;width:fit-content;max-width:100%;
- background:linear-gradient(135deg,#f6f7f8 0%,#c9cfd4 36%,#eef0f2 52%,#b5bdc3 100%);
- box-shadow:inset 0 1px 0 #fff,inset 0 -2px 0 #0000002e,0 3px 0 #8d969d,0 14px 28px #0d2a2240}
-.deco{position:absolute;left:0;right:0;top:-14px;height:24px;pointer-events:none}
-.cord{position:absolute;left:20%;right:20%;top:-6px;width:60%;height:18px;overflow:visible}
-.clip{position:absolute;top:2px;width:26px;height:16px;margin-left:-13px;border-radius:3px 3px 5px 5px;background:linear-gradient(#3a3d44,#16181c);box-shadow:0 2px 2px #0005}
-.clip::before{content:'';position:absolute;left:5px;right:5px;top:-7px;height:9px;border:2px solid #9aa2a8;border-bottom:0;border-radius:6px 6px 0 0}
-.clip[style*=right]{margin-left:0;margin-right:-13px}
-.tapes{position:absolute;left:var(--pad,10px);right:var(--pad,10px);top:4px;height:24px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:2}
-.tapeGroup{display:flex;align-items:center;gap:6px;min-width:0}
-.tapeGroup:first-child .tape{flex:0 1 auto}
-.tapeGroup:first-child{flex:1 1 auto}
-.tape{position:relative;height:22px;max-width:100%;min-width:0;padding:0 12px;border:0;border-radius:2px;background:#f2e6c2;color:#22283a;font:400 15px/22px IslandBrush,var(--btn-font);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
- box-shadow:0 1px 2px #0003;rotate:-1.2deg;cursor:pointer;clip-path:polygon(2% 0,98% 4%,100% 50%,97% 100%,1% 96%,0 45%)}
-.tape::before{content:'';position:absolute;inset:-11px 0}
-.nameInput{cursor:text;width:min(62%,240px);user-select:text;-webkit-user-select:text;font-size:16px;clip-path:none}
-.zoomTape{display:inline-flex;align-items:center;gap:3px;rotate:.8deg;padding:0 8px;flex:none}
-.sticker{position:relative;height:24px;padding:0 10px;border:0;border-radius:999px;background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:800 12px var(--btn-font);box-shadow:0 2px 0 var(--btn-gold-edge);cursor:pointer;flex:none;rotate:-2deg}
-.sticker::before{content:'';position:absolute;inset:-10px -4px}
-.sticker:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-.formatTape{flex:none;rotate:1.4deg;padding:0 2px 0 6px;display:inline-flex;align-items:center}
-.formatTape select{appearance:none;-webkit-appearance:none;border:0;background:transparent;font:400 16px/22px IslandBrush,var(--btn-font);color:#22283a;padding:0 16px 0 2px;cursor:pointer;
- background-image:linear-gradient(45deg,transparent 50%,#22283a 50%),linear-gradient(135deg,#22283a 50%,transparent 50%);background-position:calc(100% - 7px) 9px,calc(100% - 3px) 9px;background-size:4px 4px;background-repeat:no-repeat}
-.formatTape select:focus-visible{outline:var(--btn-focus);outline-offset:2px}
+.fitChip{position:absolute;z-index:5;left:50%;translate:-50% 0;top:calc(62px + var(--sat));display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 16px;border:0;border-radius:999px;font:800 14px var(--btn-font);cursor:pointer}
+.root[data-mode=thin] .fitChip{top:calc(8px + var(--sat))}
+.root[data-viewing] .fitChip{top:auto;bottom:calc(140px + var(--sab))}
 
-.surface{position:relative;border-radius:5px;overflow:hidden;touch-action:none;box-shadow:0 0 0 2px #5b646b,inset 0 0 0 1px #0003;background:#2d6f39;contain:layout paint}
+/* The canvas: the whole screen; the pitch is drawn inside it. */
+.surface{position:absolute;inset:0;overflow:hidden;touch-action:none;background:#2d6f39;contain:strict}
+.world{position:absolute;inset:0;transform-origin:0 0}
 .surface::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;
  background:linear-gradient(115deg,#ffffff00 30%,#ffffff1f 44%,#ffffff08 52%,#ffffff00 64%),linear-gradient(#ffffff12,#ffffff00 18%)}
 .surface[data-tool=arrow],.surface[data-tool=marker]{cursor:crosshair}
@@ -136,10 +196,15 @@ path.picked{filter:drop-shadow(0 0 3px #ffe36e)}
 .dragGhost{position:absolute;left:0;top:0;width:40px;height:40px;pointer-events:none;z-index:20;--r:20px}
 .dragGhost .chipFace{box-shadow:0 10px 14px #0007}
 
-/* Sheets: plays, share, options, team shapes. */
-.sheet{position:absolute;left:0;right:0;bottom:0;max-height:min(80%,600px);overflow:auto;overscroll-behavior:contain;z-index:10;padding:10px 16px 18px;border-radius:24px 24px 18px 18px;
- background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 -6px 0 #183b3420,0 -10px 30px #0d2a2240}
-.panel .sheet{top:58px;bottom:auto;max-height:calc(100% - 58px);border-radius:22px}
+
+/* Sheets: plays, share, playback, team shapes (and More on phones). Beside the right rail on tablets and desktops; a
+   slide-up sheet on phones. */
+.sheet{position:absolute;z-index:8;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:10px 16px 18px;border-radius:24px;background:var(--btn-cream);color:var(--btn-ink);
+ box-shadow:0 -4px 0 #183b3420,0 14px 40px #0d2a2259;animation:sheetIn .22s cubic-bezier(.22,.7,.3,1) both;-webkit-user-select:text;user-select:text}
+.root[data-mode=full] .sheet{right:calc(var(--gap) + var(--sar) + var(--rail-w) + 30px);top:calc(76px + var(--sat));bottom:calc(84px + var(--sab));width:min(420px,calc(100% - 2 * var(--rail-w) - 80px));--from:12px 0}
+.root[data-mode=thin] .sheet{right:calc(var(--gap) + var(--sar) + var(--rail-w) + 20px);top:calc(6px + var(--sat));bottom:calc(6px + var(--sab));width:min(400px,calc(100% - 2 * var(--rail-w) - 60px));padding:8px 14px 14px;--from:12px 0}
+.root[data-mode=dock] .sheet{left:0;right:0;bottom:0;max-height:min(78%,640px);padding-bottom:calc(18px + var(--sab));border-radius:26px 26px 0 0;--from:0 40px}
+@keyframes sheetIn{from{opacity:0;translate:var(--from,0 20px)}}
 .sheetHead{display:flex;align-items:center;justify-content:space-between;gap:8px;position:sticky;top:-10px;background:var(--btn-cream);padding:4px 0 6px;z-index:1}
 .sheetHead h3{margin:0;font:400 clamp(22px,3vw,28px)/1.1 IslandBrush,var(--btn-font)}
 .sheetHead .tool{background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge)}
@@ -158,13 +223,15 @@ path.picked{filter:drop-shadow(0 0 3px #ffe36e)}
 .shapeBtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
 .linkBox{width:100%;height:44px;border-radius:14px;border:2px solid var(--btn-cream-edge);padding:0 12px;font:16px var(--btn-font);color:var(--btn-ink);background:#fff;-webkit-user-select:all;user-select:all}
-.toast{position:absolute;left:50%;bottom:132px;translate:-50% 0;z-index:30;padding:10px 16px;border-radius:999px;background:#183b34f2;color:var(--btn-ink-on-dark);font:700 14px var(--btn-font);box-shadow:0 6px 16px #0005;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;animation:toastIn .3s ease both}
+.thisPlay{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:18px;background:#fff9ea;box-shadow:0 3px 0 #183b3420}
+.thisPlay h4{margin:0!important}
+.thisPlay .tape{rotate:none}
+.menuGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.menuGrid .railBtn{width:auto;height:76px;border-radius:20px;background:var(--btn-green);color:var(--btn-ink-on-dark);font-size:12px;gap:6px;box-shadow:0 4px 0 var(--btn-green-edge)}
+.toast{position:absolute;left:50%;bottom:calc(96px + var(--sab));translate:-50% 0;z-index:30;padding:10px 16px;border-radius:999px;background:#183b34f2;color:var(--btn-ink-on-dark);font:700 14px var(--btn-font);box-shadow:0 6px 16px #0005;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis;animation:toastIn .3s ease both}
+.root[data-mode=dock] .toast{bottom:calc(196px + var(--sab))}
+.root[data-mode=thin] .toast{bottom:calc(60px + var(--sab))}
 @keyframes toastIn{from{opacity:0;translate:-50% 8px}}
 
-@media (max-width:420px){.zoomWord{display:none}.formatTape select{padding-right:14px}.tools{gap:2px;padding:5px 4px 9px}.timeline{gap:5px;padding:6px 6px 10px}.track{margin:0 12px}.addStep{padding:0 10px 0 6px}.topActions{gap:4px}}
-@media (prefers-reduced-motion:reduce){.chipFace,.tool,.pill,.save{transition:none}.chip[data-fresh] .chipFace,.toast{animation:none}}
-
-/* Beside the board (landscape, desktop): compact tabs so the top row fits the tray column. */
-.panel .top [role=tab]{padding:0 10px;font-size:13px}
-.panel .toolTab{min-width:36px}
-.panel .tools .tool:not(.toolTab){min-width:40px;width:40px}
+@media (max-width:420px){.timeline{gap:5px}.track{margin:0 12px}.addStep{padding:0 10px 0 6px}}
+@media (prefers-reduced-motion:reduce){.chipFace,.tool,.pill,.save,.railBtn{transition:none}.chip[data-fresh] .chipFace,.toast,.sheet{animation:none}}

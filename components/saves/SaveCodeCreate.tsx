@@ -15,18 +15,20 @@
  *                    middle, "I saved it" right. The host hides its own Back while the code shows (onPhase 'code').
  * When saving is not set up yet it says "Saving isn't ready yet — you can still play."
  */
-import {useEffect,useMemo,useRef,useState,type CSSProperties,type ReactNode} from 'react';
+import {useEffect,useRef,useState,type CSSProperties,type ReactNode} from 'react';
 import {createSave,getLocalCode,savingStatus} from '@/lib/saves/client';
-import {codeFromNormal,pictureFor} from '@/lib/saves/code';
+import {codeFromNormal} from '@/lib/saves/code';
 import {BackButton} from '../BackButton';
 import {NavigationButton} from '../DoneButton';
 import CodeTiles from './CodeTiles';
 import {WORDS} from '@/lib/saves/words';
 import styles from './SaveCode.module.css';
-import {startWordPick} from '@/lib/analytics/startEvents';
 
-export type CreatePhase='checking'|'unavailable'|'offer'|'making'|'code'|'error';
-export const CREATE_TITLES:Record<CreatePhase,string>={checking:'Save your island',unavailable:'Save your island',offer:'Save your island',making:'Save your island',code:'Your secret code',error:'Save your island'};
+/** 'working': still making the code after STILL_WORKING_MS; 'timeout': no answer within CREATE_TIMEOUT_MS (Try again / play). */
+export type CreatePhase='checking'|'unavailable'|'offer'|'making'|'working'|'timeout'|'code'|'error';
+export const CREATE_TITLES:Record<CreatePhase,string>={checking:'Save your island',unavailable:'Save your island',offer:'Save your island',making:'Save your island',working:'Save your island',timeout:'Save your island',code:'Your secret code',error:'Save your island'};
+/** "Get my code" says it is still working after this long (one timer, only while a code is being made). */
+export const STILL_WORKING_MS=5_000;
 export function LockGlyph({size=26}:{size?:number}){return <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>;}
 
 /** What a save code is, in plain words (Oct 9 2026). Settings' "My save code" card shows it under its title. */
@@ -41,7 +43,8 @@ export default function SaveCodeCreate({onDone,showNotNow=true,required=false,on
  const [phase,setPhase]=useState<CreatePhase>('checking'),[code,setCode]=useState<string|null>(null);
  useEffect(()=>{onPhase?.(phase);},[phase,onPhase]);
  // In required mode any failure (down, busy, unreachable) is the friendly outage message; in optional mode "not set up" keeps its own.
- const make=async()=>{setPhase('making');const r=await createSave();if(r.ok){setCode(r.code);setPhase('code');}else setPhase(r.reason==='unavailable'&&!required?'unavailable':'error');};
+ const make=async()=>{setPhase('making');const r=await createSave();if(r.ok){setCode(r.code);setPhase('code');}else setPhase(r.reason==='timeout'?'timeout':r.reason==='unavailable'&&!required?'unavailable':'error');};
+ useEffect(()=>{if(phase!=='making')return;const t=window.setTimeout(()=>setPhase(p=>p==='making'?'working':p),STILL_WORKING_MS);return()=>window.clearTimeout(t);},[phase]);
  useEffect(()=>{let live=true;const have=getLocalCode();if(have){setCode(have);setPhase('code');return;}
   savingStatus().then(s=>{if(!live)return;if(!s.saving)setPhase('unavailable');else if(autoStart)void make();else setPhase('offer');});return()=>{live=false;};
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,13 +58,20 @@ export default function SaveCodeCreate({onDone,showNotNow=true,required=false,on
   <p className={styles.copy} role="status">{required?SAVING_BREAK:'We can’t make a code right now. You can get one later in Settings.'}</p>
   {required&&<p className={styles.small}>We’ll ask for your save code next time.</p>}
   <div className={styles.row}><button type="button" className={required?styles.primary:styles.secondary} data-saving-break={required||undefined} onClick={()=>onDone(null)}>{required?'Play':'OK'}</button></div></div>;
- if(phase==='offer'||phase==='making')return <div className={styles.box} data-save-create="offer">
+ if(phase==='timeout')return <div className={styles.box} data-save-create="timeout">{title('Save your island')}
+  <p className={styles.copy} role="status">Making your code is taking too long. Check the internet, then try again.</p>
+  {required&&<p className={styles.small}>Or play now. We’ll ask for your save code next time.</p>}
+  <div className={styles.row}><button type="button" className={styles.primary} data-create-retry onClick={make}>Try again</button>
+  <button type="button" className={styles.secondary} data-saving-break={required||undefined} onClick={()=>onDone(null)}>{required?'Play now':'Not now'}</button></div></div>;
+ const busy=phase==='making'||phase==='working';
+ if(phase==='offer'||busy)return <div className={styles.box} data-save-create="offer">
   <p className={styles.eyebrow}>KEEP YOUR GAME SAFE</p>{title('Save your island')}
   <p className={styles.copy} data-save-explainer>A save code is the key to your island. Use it on another phone or tablet to keep your coins, cards and lessons.</p>
   <div className={styles.note}><LockGlyph/><span>No name or email. Just a code.</span></div>
-  <div className={styles.row}><button type="button" className={styles.primary} data-get-code disabled={phase==='making'} onClick={make}>{phase==='making'?'Making your code…':'Get my code'}</button>
-  {showNotNow&&!required&&<button type="button" className={styles.secondary} disabled={phase==='making'} onClick={()=>onDone(null)}>Not now</button>}
-  {onHaveCode&&<button type="button" className={styles.quiet} data-have-save-code disabled={phase==='making'} onClick={onHaveCode}>I have a save code</button>}</div>
+  <div className={styles.row}><button type="button" className={styles.primary} data-get-code disabled={busy} onClick={make}>{busy?'Making your code…':'Get my code'}</button>
+  {showNotNow&&!required&&<button type="button" className={styles.secondary} disabled={busy} onClick={()=>onDone(null)}>Not now</button>}
+  {onHaveCode&&<button type="button" className={styles.quiet} data-have-save-code disabled={busy} onClick={onHaveCode}>I have a save code</button>}</div>
+  {phase==='working'&&<p className={styles.small} role="status" data-still-working>Still working on your code…</p>}
  </div>;
  return <CodeShown code={code!} onDone={()=>onDone(code)} headless={headless} onBack={onBack}/>;
 }
@@ -71,38 +81,34 @@ export default function SaveCodeCreate({onDone,showNotNow=true,required=false,on
  * failing). With `onBack` the buttons are one footer row (Back · Print code · I saved it).
  */
 export function CodeShown({code,onDone,headless=false,doneLabel='I saved it',onBack}:{code:string;onDone:()=>void;headless?:boolean;doneLabel?:string;onBack?:()=>void}){
- const c=codeFromNormal(code);
- const [picked,setPicked]=useState<string|null>(null);
- const options=useMemo(()=>{if(!c)return [];const o=[...c.words];for(let i=o.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[o[i],o[j]]=[o[j],o[i]];}return o;},[code]);// eslint-disable-line react-hooks/exhaustive-deps
- if(!c)return null;
- const right=picked===c.words[0];
  // The print module and this code's QR are readied when the code shows, so Print opens the print sheet straight from the tap.
  const printMod=useRef<typeof import('@/lib/saves/printCard')|null>(null);
  useEffect(()=>{let live=true;void import('@/lib/saves/printCard').then(m=>{if(!live)return;printMod.current=m;void m.prepareCodeCard(code);});return()=>{live=false;};},[code]);
+ if(!codeFromNormal(code))return null;
  const print=()=>{const m=printMod.current;if(m)void m.printCodeCard(code);else void import('@/lib/saves/printCard').then(x=>x.printCodeCard(code));};
+ // One design everywhere the code shows (title screen, walkthrough, Settings; user, Oct 10 2026): Word 1/2/3/Number labels, the
+ // centred two-line note, no "which word comes first?" check, and "Print code".
  return <div className={`${styles.box} ${onBack?styles.shown:''}`} data-save-create="code">
   {!headless&&<h3 className={styles.title}>Your secret code</h3>}
-  <CodeTiles code={code} hint={picked&&!right?0:-1} labelled={!!onBack}/>
-  <p className={styles.copy} data-save-explainer>{SAVE_CODE_NEW}</p>
-  {/* The title screen's sheet drops the "which word comes first?" check (user, Oct 9 2026); the walkthrough keeps it. */}
-  {!onBack&&<div className={styles.stack}><p className={styles.small}>{picked===null?'Which word comes first?':right?'Yes! Great memory.':`It’s “${c.words[0]}”. Now you know!`}</p>
-   <div className={styles.chips}>{options.map(w=><button key={w} type="button" className={styles.chip} aria-pressed={picked===w} onClick={()=>{if(picked===null)startWordPick(w===c.words[0]);setPicked(w);}}><i aria-hidden="true">{pictureFor(w)??''}</i>{w}</button>)}</div></div>}
+  <CodeTiles code={code} labelled/>
+  <p className={`${styles.copy} ${styles.codeNote}`} data-save-explainer>{SAVE_CODE_NEW}</p>
   {onBack
    ?<div className={styles.footer} data-save-footer>
      <BackButton onBack={onBack}/>
      <span className={styles.footerCenter}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print code</button></span>
      {/* Shrinks to a check like Back shrinks to its arrow (user, Oct 10 2026); keeps the dark green. */}
      <NavigationButton label={doneLabel} className={styles.savedIt} data-saved-it onNavigate={onDone} style={{'--navigation-width':'104px'} as CSSProperties}/></div>
-   :<div className={styles.row}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print a code card</button>
-     {/* Shrinks to a check like Back shrinks to its arrow (user, Oct 10 2026); keeps the dark green. */}
-     <NavigationButton label={doneLabel} className={styles.savedIt} data-saved-it onNavigate={onDone} style={{'--navigation-width':'104px'} as CSSProperties}/></div>}
+   :<div className={styles.row}><button type="button" className={styles.secondary} data-print-code onClick={print}>Print code</button>
+     <NavigationButton label={doneLabel} className={styles.savedIt} data-saved-it onNavigate={onDone} style={{'--navigation-width':`${Math.max(104,doneLabel.length*9+40)}px`} as CSSProperties}/></div>}
  </div>;
 }
 
+/** React 18 has no boolean `inert` prop yet: `inert={true}` warns and is dropped. The empty string is the attribute's on value. */
+const INERT={inert:''} as Record<string,string>;
 /** An invisible, inert copy of the title screen's "Your secret code" layout (sample words), stacked under "Before you start" so
  *  both steps are exactly the same height and the sheet doesn't jump between them (user, Oct 10 2026). */
 export function CodeGhost(){
- return <div aria-hidden="true" inert style={{visibility:'hidden',pointerEvents:'none'}} data-code-ghost>
+ return <div aria-hidden="true" {...INERT} style={{visibility:'hidden',pointerEvents:'none'}} data-code-ghost>
   <CodeShown code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-8888`} onDone={()=>{}} headless onBack={()=>{}}/></div>;
 }
 
@@ -111,7 +117,7 @@ export function CodeGhost(){
  *  between the two steps. */
 export function IntroShown({top,copy,onBack,go}:{top:ReactNode;copy:string;onBack:()=>void;go:ReactNode}){
  return <div className={`${styles.box} ${styles.shown}`} data-save-intro>
-  <div className={styles.introTop}><div aria-hidden="true" inert style={{visibility:'hidden'}}><CodeTiles code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-8888`} labelled/></div>
+  <div className={styles.introTop}><div aria-hidden="true" {...INERT} style={{visibility:'hidden'}}><CodeTiles code={`${WORDS[0]}-${WORDS[1]}-${WORDS[2]}-8888`} labelled/></div>
    <div className={styles.introOver}>{top}</div></div>
   <p className={styles.copy} data-save-explainer>{copy}</p>
   <div className={styles.footer} data-save-footer><BackButton onBack={onBack}/>{go}</div>

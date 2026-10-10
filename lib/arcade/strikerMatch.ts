@@ -163,6 +163,8 @@ export function createStrikerMatch(){
  // Score passing lanes, not just the nearest teammate. The same choice drives
  // the receiver marker and actual pass, so the preview tells the truth.
  let laneCover=0;
+ /** Per-substep scratch (nearest chaser per team, Blue's cover defender): reused, no allocation in the 120 Hz loop. */
+ const closest=[0,4],cover=[-1,-1];
  function receiver(p:StrikerPlayer,ix:number,iz:number){let target:StrikerPlayer|undefined,best=-Infinity;const n=Math.hypot(ix,iz),forward=p.team===0?1:-1;laneCover=0;
   for(const q of players){if(q.team!==p.team||q===p||q.keeper||q.stun>0)continue;const dx=q.x-p.x,dz=q.z-p.z,d=Math.hypot(dx,dz)||1,alignment=n>.1?(dx*ix+dz*iz)/(d*n):dx*forward/d;let cover=0;
    for(const enemy of players){if(enemy.team===p.team)continue;const t=clamp(((enemy.x-p.x)*dx+(enemy.z-p.z)*dz)/(d*d),0,1);if(t>.08&&t<.94){const gap=Math.hypot(enemy.x-p.x-dx*t,enemy.z-p.z-dz*t);cover+=Math.max(0,2.1-gap)*3;}}
@@ -321,7 +323,7 @@ export function createStrikerMatch(){
    if(input.switchPlayer&&sp.kind)input.switchPlayer=false;}}
   state.queuedPass=Math.max(0,state.queuedPass-dt);state.queuedShot=Math.max(0,state.queuedShot-dt);state.passAge+=dt;
   const b=state.ball;if(input.switchPlayer){state.queuedPass=0;let best=Infinity,next=state.selected;const previous=state.selected;for(const p of players)if(p.team===0&&!p.keeper&&p.id!==previous){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<best){best=d;next=p.id;}}state.selected=next;}
-  const user=players[state.selected];state.aim=input.z;state.passTarget=b.owner===user.id?(receiver(user,input.x,input.z)?.id??-1):-1;state.passRisk=state.passTarget>=0?clamp(laneCover/2.4,0,1):0;state.charge=input.charge&&b.owner===user.id?Math.min(1,state.charge+dt*.95):0;
+  const user=players[state.selected];state.aim=state.setPiece.kind?input.z:strikerAim(input.z,user.x,user.z,players[7].x,players[7].z,state.goalHalf);/* set pieces: the player picks the corner */state.passTarget=b.owner===user.id?(receiver(user,input.x,input.z)?.id??-1):-1;state.passRisk=state.passTarget>=0?clamp(laneCover/2.4,0,1):0;state.charge=input.charge&&b.owner===user.id?Math.min(1,state.charge+dt*.95):0;
   if(b.owner===user.id)state.holdTime+=dt;
   // Scan markers: how open each Gold teammate is from the ball (lane clear and unmarked). Once per frame, 3 x 4 checks.
   for(const q of players){if(q.team!==0||q.keeper||q.id===b.owner){state.laneOpen[q.id]=0;continue;}let near=Infinity;for(const e of players)if(e.team===1&&!e.keeper)near=Math.min(near,Math.hypot(e.x-q.x,e.z-q.z));
@@ -334,7 +336,7 @@ export function createStrikerMatch(){
   if(input.call&&b.owner===user.id&&!state.setPiece.kind)callRun(user);
   // Aftertouch curl: for a moment after striking, holding up or down bends the ball (Sensible-style, gently capped).
   if(state.curlTime>0){state.curlTime-=dt;if(b.owner<0&&state.lastKicker===state.selected&&Math.abs(input.z)>.3){const bend=input.z*24*dt;b.vz=clamp(b.vz+bend,-16,16);if(!state.curled){state.curled=true;state.message='Curled it! Bend the ball away from the keeper.';}}}
-  if(input.shoot&&b.owner===user.id){if(input.sprint)chip(user,clamp(input.power,0,1),input.z);else if(state.spirit[0]>=1&&input.power>=.88&&!state.setPiece.kind)teamStrike(user,input.z);else shoot(user,clamp(input.power,0,1),input.z,false,true);}
+  if(input.shoot&&b.owner===user.id){if(input.sprint)chip(user,clamp(input.power,0,1),state.aim);else if(state.spirit[0]>=1&&input.power>=.88&&!state.setPiece.kind)teamStrike(user,state.aim);else shoot(user,clamp(input.power,0,1),state.aim,false,true);}
   // Shoot while a pass is on its way: a buffered first-time shot. Inside the window it is "perfect".
   else if(input.shoot&&b.owner<0&&state.lastPasser>=0&&players[state.lastPasser].team===0&&state.lastPasser!==user.id){state.queuedShot=.65;state.queuedPass=0;state.queuedShotPower=clamp(input.power>.3?input.power:.72,.45,.9);state.queuedPerfect=state.touchWindow>0;state.message='FIRST-TIME SHOT READY · meet it and strike!';}
   if(input.pass||input.through){if(b.owner===user.id)pass(user,input.x,input.z,input.through,-1,input.sprint);else if(b.owner<0&&state.lastPasser>=0&&players[state.lastPasser].team===0){state.queuedPass=.65;state.queuedShot=0;state.queuedThrough=input.through;state.queuedX=input.x;state.queuedZ=input.z;state.queuedPerfect=state.touchWindow>0;state.message='ONE-TOUCH READY · meet it and move it.';}else tackle(user);}
@@ -348,7 +350,7 @@ export function createStrikerMatch(){
   for(let tick=0;tick<count;tick++){
    b.lock=Math.max(0,b.lock-h);
    const owner=b.owner>=0?players[b.owner]:null;
-   const closest=[0,4];for(const team of [0,1]){let distance=Infinity;for(const p of players)if(p.team===team&&!p.keeper&&!(team===0&&p.id===state.selected)){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<distance){distance=d;closest[team]=p.id;}}}
+   closest[0]=0;closest[1]=4;for(let team=0;team<2;team++){let distance=Infinity;for(const p of players)if(p.team===team&&!p.keeper&&!(team===0&&p.id===state.selected)){const d=Math.hypot(p.x-b.x,p.z-b.z);if(d<distance){distance=d;closest[team]=p.id;}}}
    // A second defender presses the receiving lane only while a pass travels.
    // Keep the nearest defender on the ball and preserve a covering teammate.
    let receiverPress=-1;
@@ -356,9 +358,9 @@ export function createStrikerMatch(){
    // Pressure and cover: while Gold carries the ball, Blue's second defender
    // sits goal-side of the presser instead of following a mark (rounds 3-4).
    // Gold's AI teammates keep marking, so the player is never left 3v1.
-   const cover=[-1,-1];
-   if(owner&&!owner.keeper)for(const team of [1]){if(owner.team===team||!T.cover[lv()])continue;const goalX=team===0?-25:25,gx=goalX-b.x,gz=-b.z,gl=Math.hypot(gx,gz)||1,cx=b.x+gx/gl*4.5,cz=b.z+gz/gl*4.5;let best=Infinity;
-    for(const p of players)if(p.team===team&&!p.keeper&&p.id!==closest[team]&&p.id!==state.selected&&p.stun<=0){const d=Math.hypot(p.x-cx,p.z-cz);if(d<best){best=d;cover[team]=p.id;}}}
+   cover[0]=cover[1]=-1;
+   if(owner&&!owner.keeper){const team:number=1;if(owner.team!==team&&T.cover[lv()]){const goalX=team===0?-25:25,gx=goalX-b.x,gz=-b.z,gl=Math.hypot(gx,gz)||1,cx=b.x+gx/gl*4.5,cz=b.z+gz/gl*4.5;let best=Infinity;
+    for(const p of players)if(p.team===team&&!p.keeper&&p.id!==closest[team]&&p.id!==state.selected&&p.stun<=0){const d=Math.hypot(p.x-cx,p.z-cz);if(d<best){best=d;cover[team]=p.id;}}}}
    state.presser=owner&&owner.team===0?closest[1]:-1;state.cover=cover[1];
    // Read the pass lane. One defender per pass may step across it, after a
    // short read; they must actually beat the ball to the spot.
@@ -471,7 +473,7 @@ export function createStrikerMatch(){
        const n=Math.hypot(input.x,input.z);if(n>.5&&state.queuedPass<=0){p.vx+=input.x/n*2.6;p.vz+=input.z/n*2.6;p.receiveX+=input.x/n*.35;p.receiveZ+=input.z/n*.35;if(!habit)state.message='Good first touch, into space!';}
       }
       state.firstTime=false;state.quickPass=false;
-      if(completed&&p.team===0&&state.queuedShot>0){state.queuedShot=0;const perfect=state.queuedPerfect;state.queuedPerfect=false;if(perfect){state.perfect++;addSpirit(0,T2.perfect);}const headed=p.receiveHeight>1.15;if(headed)p.header=.4;shoot(p,headed?state.queuedShotPower*.6:state.queuedShotPower,input.z,true);if(headed){b.vy=-1.5;b.y=Math.max(.5,b.y);}state.message=headed?'HEADER! Attack the ball and nod it down.':perfect?'PERFECT first-time shot! No time for the keeper to set.':'FIRST-TIME SHOT! Hit it before the defence closes.';}
+      if(completed&&p.team===0&&state.queuedShot>0){state.queuedShot=0;const perfect=state.queuedPerfect;state.queuedPerfect=false;if(perfect){state.perfect++;addSpirit(0,T2.perfect);}const headed=p.receiveHeight>1.15;if(headed)p.header=.4;shoot(p,headed?state.queuedShotPower*.6:state.queuedShotPower,strikerAim(input.z,p.x,p.z,players[7].x,players[7].z,state.goalHalf),true);if(headed){b.vy=-1.5;b.y=Math.max(.5,b.y);}state.message=headed?'HEADER! Attack the ball and nod it down.':perfect?'PERFECT first-time shot! No time for the keeper to set.':'FIRST-TIME SHOT! Hit it before the defence closes.';}
       else if(completed&&p.team===0&&state.queuedPass>0){state.queuedPass=0;const perfect=state.queuedPerfect;state.queuedPerfect=false;const returnTo=Math.hypot(state.queuedX,state.queuedZ)<.12?passer:-1;pass(p,state.queuedX,state.queuedZ,state.queuedThrough,returnTo,input.sprint);state.firstTime=true;
        // Perfectly timed: a crisper ball that defenders read a beat later.
        if(perfect){state.perfect++;if(state.passChain<4)addSpirit(0,T2.perfect);if(state.passChain<3)state.passAge=-.15;b.vx*=1.1;b.vz*=1.1;}
@@ -503,6 +505,17 @@ export function strikerGoalStory(g:{chain:number;habit:boolean;firstTime:boolean
  * at the exact moment a Blue carrier's heavy touch leaves the ball off their foot. Pure and allocation-free. */
 export type StrikerHint=''|'pass'|'shoot'|'tackle';
 export const STRIKER_SHOOT_ZONE=12;
+/** Neutral-stick aim (Oct 10 2026 game-feel pass). Holding no up/down while shooting used to aim dead centre, straight at the
+ * keeper, so a young player running at goal kept shooting into the keeper's hands. Now a neutral stick picks the open side:
+ * of the two corners, the one whose path from the ball passes farthest from the keeper ("aim away from the keeper").
+ * The aim marker shows it before release; a held up/down still aims exactly where the stick says. Units match the stick. */
+export const STRIKER_AUTO_AIM=.4;
+export function strikerAim(stickZ:number,ballX:number,ballZ:number,keeperX:number,keeperZ:number,goalHalf=STRIKER_GOAL_HALF){
+ if(Math.abs(stickZ)>=.2)return stickZ;
+ let best=0,bestGap=-1;
+ for(let side=-1;side<=1;side+=2){const tz=side*STRIKER_AUTO_AIM*(goalHalf-.1),dx=25-ballX,dz=tz-ballZ,d2=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((keeperX-ballX)*dx+(keeperZ-ballZ)*dz)/d2)),gap=Math.hypot(ballX+dx*t-keeperX,ballZ+dz*t-keeperZ);
+  if(gap>bestGap+.01){bestGap=gap;best=side;}}
+ return best*STRIKER_AUTO_AIM;}
 export function strikerHint(s:{finished:boolean;goalPause:number;selected:number;holdTime:number;laneOpen:number[];setPiece:{kind:string};ball:{owner:number;x:number;z:number};players:{id:number;team:0|1;keeper:boolean;x:number;z:number;heavy:number}[]}):StrikerHint{
  if(s.finished||s.goalPause>0||s.setPiece.kind)return '';
  const user=s.players[s.selected],owner=s.ball.owner;

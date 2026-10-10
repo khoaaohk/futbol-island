@@ -210,3 +210,26 @@ Note: `components/games/BreakawayRun.tsx`, `runnerRig.ts` and `runnerScenery.ts`
 **Tests:**
 - `tests/runner-moves.mjs` (new; runs inside `tests/runner-feel.cjs`)
 - `tests/runner-depth.mjs`, `tests/runner-feel.mjs` and `scripts/check-arcade-runner.mjs`, updated for the fading trail, the 8-touch shield and the reading requirement from stage 2
+
+## Senior audit pass, October 10 2026 (round 3)
+
+**Audit findings (ranked):**
+1. Onboarding is a paragraph of help text; 7-12 year olds learn by doing. No in-game teaching moment for the four core decisions.
+2. Back line (boss) caused ~80% of lost chances for a kid-like bot (reader bot with 0.55 s reaction: 0/40 caught), so it is fair but unreadable: nothing showed the open side.
+3. Bug: a ball collected in the same tick as a tackle overwrote the hit event (message, hit-stop, shake, sound lost), ~1 in 12 kid-bot hits.
+4. Bug: "Play again" resets the same object (`Object.assign`), so mission run state keyed on the object leaked: the "this run" star count carried over, and after completing a set no missions counted until the arcade was re-mounted.
+5. Phone HUD pill wrapped into 3 ragged lines and swapped distance for the multiplier (jitter); the pill was `aria-live` with distance ticking 10×/s.
+6. Full-time card was one run-on sentence; no "new personal best" moment during a run.
+
+**Changes:**
+- `lib/arcade/runnerCoach.ts` (new): first-run coach. The first time each of lane / jump / skill / shoot comes up, time eases to 0.25-0.35×, a big 3D word and a yellow coaching line name the action, and the one button to press glows (`data-coach`). Learned only when done; offered in at most 2 runs; slow motion capped at 2.4 s real time. The jump beat opens at contact time 0.5 s (hurdle window is ~0.07-0.65 s), so a 0.9 s reaction still clears. Storage written only on offer/complete. Soundtrack: falling whoosh on a beat, tempo eases with the time scale.
+- Back line: gold chevrons painted in the open lane (one plane, hidden unless a back line is ahead, fades while the line shifts); HUD names the side.
+- `feedback()` priority: minor events never overwrite a major one in the same tick.
+- `runId` per run; missions and coach key on it.
+- HUD pill: two lines (have / where), distance always shown, shorter statuses; runner pill `aria-live` off.
+- Full-time card: one fact per line, "NEW PERSONAL BEST!" line; mid-run NEW BEST pop + crowd cue (once, never over a fresh teaching moment).
+- Per-frame closures in the runner sync loop replaced with loops.
+
+**Numbers (Playwright, real input, headless Chrome on a heavily loaded dev machine):** draw calls p50 74 / p95 92 before and after at 390×844 (desktop p50 75→74); +1 call only while a back line is ahead; triangles p50 ~35k unchanged; 0 frames at rest on the ready, pause and full-time cards. Kid-bot sim: hit events lost to same-tick overwrite 16 → 0 per 60 runs.
+
+**Tests:** `tests/runner-coach.mjs` (in `tests/runner-feel.cjs`).

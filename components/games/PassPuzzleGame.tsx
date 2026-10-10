@@ -18,6 +18,7 @@ import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene} from '@/lib/arcade/passPuzzleScene';
 import {laneStatus,laneWords,noteFor,explainSuccess,explainFail,replayCall,type LaneStatus,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
 import {isCall,type Step} from '@/lib/passPuzzle/packs';
+import {stopPoint,passProgress} from '@/lib/passPuzzle/feel';
 import {frameCapSlot} from '@/lib/town/frameCap';
 import {isSoundEnabled,getSoundVolume} from '@/lib/games/sound';
 import {useArcadeEntry} from '@/lib/arcade/useArcadeEntry';
@@ -137,7 +138,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    if(success)why=explainSuccess(kept,sc,nums,f,2);
    else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
   setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix});setView('result');stroke.current=null;
+  // The failure beat: mark where the move was stopped and lean the camera in before the card lands.
+  failStop.current=success?null:stopPoint(world,attemptEvents.current);if(failStop.current)sceneRef.current?.showStop(failStop.current.at,failStop.current.kind);
  },[]);
+ const failStop=useRef<ReturnType<typeof stopPoint>>(null);
 
  /** The scan of the current aim, cached: the Scan display and the release's takeaway share one set of predictions. */
  const scanCache=useRef<{key:string;world:PuzzleWorld|null;lanes:ReturnType<typeof scanLanes>}>({key:'',world:null,lanes:[]});
@@ -159,7 +163,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     const key=attemptEvents.current.filter(e=>e.type!=='kick'&&e.type!=='receive').at(-1)??attemptEvents.current.at(-1);
     if(playerView.current)scene.followPlayer(state,dt);
     else if(key&&!coachReplay.current){const lead=key.t-state.t,amount=Math.max(0,Math.min(1,1-lead/1.4));scene.setReplayFocus({x:key.at.x,z:key.at.z},amount*amount*(3-2*amount));}
-    busy=!rep.done||now<replayHold.current;if(rep.done&&now>=replayHold.current){replayRef.current=null;scene.setReplayRuns(false);scene.followPlayer(null,0);scene.setReplayFocus(null);setReplaying(false);state=world.state;scene.update(state,0);}
+    busy=!rep.done||now<replayHold.current;if(rep.done&&now>=replayHold.current){replayRef.current=null;scene.setReplayRuns(false);scene.followPlayer(null,0);scene.setReplayFocus(null);setReplaying(false);state=world.state;scene.update(state,0);reshowStop();}
    }else if(viewRef.current==='play'&&(state.phase==='windup'||state.phase==='flight')){world.step(now<hitStop.current?0:dt);for(const e of world.drain()){attemptEvents.current.push(e);handleEvent(e);}state=world.state;busy=true;
     if(state.phase==='aiming'){thinkingUntil=now+4000;aimSince.current=now;scene.setCalls(state,null);scene.setAim(null,state);applyHint.current();applyScan.current();syncHud();}
     if(state.phase==='success'||state.phase==='fail'){syncHud();settleUntil.current=now+900;finish();}
@@ -248,7 +252,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const watchCoach=()=>{const world=worldRef.current;if(!world)return;try{const run=coachRun(world.scenario,levelId.startsWith('daily-')?todaysDaily()?.solution??[]:routeFor(levelId,headingRef.current));if(!run.inputs.length)return;replayRef.current=replayAttempt(run.start,run.inputs,.6);coachReplay.current=true;replayInputs.current=run.inputs;}catch{return;}startReplay();setReplayKind('coach');setReplaying(true);setView('play');wake.current();};
  const startReplay=()=>{replayKicks.current=0;replayHold.current=0;setReplayLine('');sceneRef.current?.setHint(null);sceneRef.current?.setScan(null);sceneRef.current?.setReplayRuns(true);sceneRef.current?.resetActors();};
  const watchAgain=()=>{setReplayKind('mine');coachReplay.current=false;const world=worldRef.current;if(!world)return;try{replayRef.current=replayAttempt(world.attemptStart(),world.inputs(),REPLAY_SPEED);replayInputs.current=world.inputs();}catch{return;}startReplay();setReplaying(true);setView('play');wake.current();};
- const skipReplay=()=>{const rep=replayRef.current,world=worldRef.current;if(!rep||!world)return;replayRef.current=null;replayHold.current=0;sceneRef.current?.setReplayRuns(false);sceneRef.current?.followPlayer(null,0);sceneRef.current?.setReplayFocus(null);sceneRef.current?.update(world.state,0);setReplaying(false);setView('result');wake.current();};
+ const skipReplay=()=>{const rep=replayRef.current,world=worldRef.current;if(!rep||!world)return;replayRef.current=null;replayHold.current=0;sceneRef.current?.setReplayRuns(false);sceneRef.current?.followPlayer(null,0);sceneRef.current?.setReplayFocus(null);sceneRef.current?.update(world.state,0);setReplaying(false);setView('result');reshowStop();wake.current();};
+ /** Back on the result card after a replay: the stop mark returns where the move broke down. */
+ const reshowStop=()=>{const f=failStop.current;if(f&&worldRef.current?.state.result?.outcome==='fail')sceneRef.current?.showStop(f.at,f.kind);};
  /** Tier-2 hint: the next pass of the coach's route from here (and the run to call first), if the
   *  child's move still matches the route; otherwise null and the words say to start again. */
  const [hintNote,setHintNote]=useState('');
@@ -292,13 +298,15 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   if(s.defenders.some(d=>d.recover))m.push('Defenders sprint back');if(s.keeper?.sweeper)m.push('Keeper rushes out');return m;};
  const usesRuns=!!level&&(level.pack==='timing'||(ALL_SOLUTIONS[level.id]?.solution??[]).some(st=>'call' in st));
  const inPlay=view==='play'&&!replaying;
+ /** Progress toward the taught move, always on screen (the brief card is gone once play starts). */
+ const progressHud=passProgress(hud.passes,level?.require.minPasses??0);
 
  return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
-  <header className={`${arcade.header} ${styles.header}`}><BackButton label="Arcade" title="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}}/>{view!=='levels'?<div className={`${arcade.headerScore} ${styles.passScore}`} aria-live="polite"><strong>{hud.passes}</strong><span>passes · try {hud.attempt}/{hud.attempts}</span></div>:<span/>}
+  <header className={`${arcade.header} ${styles.header}`}><BackButton label="Arcade" title="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}}/>{view!=='levels'?<div className={`${arcade.headerScore} ${styles.passScore}`} aria-live="polite" data-met={progressHud.met||undefined}><strong>{progressHud.count}</strong><span>{progressHud.label} · try {hud.attempt}/{hud.attempts}</span></div>:<span/>}
    {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={showHint} data-hint-level={showHint?spotHint?2:1:0} aria-label={!showHint?'Show hint':!spotHint?'Show me where':'Hide hint'} data-tip={!showHint?'Hint':!spotHint?'Show me where':'Hide hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
   </header>
-  {inPlay&&hud.phase==='aiming'&&<p className={`${arcade.message} ${styles.tip}`} data-warn={aimWarn??undefined} data-lane={laneRead?.status}>{laneRead?laneRead.text:aimWarn==='offside'?'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.':showHint&&spotHint&&hintNote?hintNote:controlMode==='shoot'?'Choose height and power. Drag toward either corner, then release.':showHint?hintText:usesRuns&&hud.passes===0?'Drag from a teammate to send their run. Drag from the ball to pass.':scanOn&&hud.passes===0?'Scan is on: green lanes are open, red lanes are shut. Draw your pass.':hud.passes>0?'Nice touch. Draw the next one.':controlMode==='lift'?'Drag to a teammate or space. Your pass will lift over the ground.':controlMode==='ground'?'Drag into feet or space for a grounded pass.':'Drag to pass or shoot. Hold the tip to lift, or choose below.'}</p>}
+  {inPlay&&hud.phase==='aiming'&&<p className={`${arcade.message} ${styles.tip}`} data-warn={aimWarn??undefined} data-lane={laneRead?.status}>{laneRead?laneRead.text:aimWarn==='offside'?'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.':showHint&&spotHint&&hintNote?hintNote:controlMode==='shoot'?'Choose height and power. Drag toward either corner, then release.':showHint?hintText:usesRuns&&hud.passes===0?'Drag from a teammate to send their run. Drag from the ball to pass.':scanOn&&hud.passes===0?'Scan is on: green lanes are open, red lanes are shut. Draw your pass.':progressHud.met&&level?.require.finish==='goal'?'That’s the move! Now finish it: drag toward the goal.':hud.passes>0?'Nice touch. Draw the next one.':controlMode==='lift'?'Drag to a teammate or space. Your pass will lift over the ground.':controlMode==='ground'?'Drag into feet or space for a grounded pass.':'Drag to pass or shoot. Hold the tip to lift, or choose below.'}</p>}
   {inPlay&&modifiers(level).length>0&&<ul className={styles.modifiers} aria-label="This pitch">{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}
   {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls}>
    <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div>
@@ -326,26 +334,26 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
 
   {view==='brief'&&level&&<div className={`${arcade.overlay} ${styles.lowOverlay}`}><section className={arcade.card}>
    <span className={arcade.badge}>{format.toUpperCase()} BRIEF · {level.require.minPasses} PASS{level.require.minPasses===1?'':'ES'} IN THE ROUTE</span><h3>{level.title}</h3>{modifiers(level).length>0&&<ul className={styles.modifiers} data-inline>{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}<p>{briefText}</p>{level.require.finish==='goal'&&<p className={styles.directHint}>See a clear shooting lane? You can also score directly from the opening ball.</p>}
-   {showHint?<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>:<button className={arcade.exit} onClick={()=>setShowHint(true)}>Show a hint</button>}
+   {showHint?<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>:<button className={`${arcade.exit} ${styles.briefHint}`} onClick={()=>setShowHint(true)}>Show a hint</button>}
    <ul className={styles.goals} aria-label="Star goals">{goals(level).map((g,i)=><li key={g} data-on={!!((progress.masks?.[level.id]??0)&1<<i)}>{g}</li>)}</ul>
-   <p>Free to play · a first solve earns 5 coins, plus 1 per new best star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={arcade.primary} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>setView('levels')}>All puzzles</button>
-   <small>Drag to a teammate or open grass, then release. Curve your line to bend the pass. Hold the tip to lift it. Red rings warn of defenders.</small>
+   <p className={styles.coinNote}>Free to play · a first solve earns 5 coins, plus 1 per new best star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>setView('levels')}>All puzzles</button>
+   {(level.pack==='first-passes'||totalStars<6)&&<small>Drag to a teammate or open grass, then release. Curve your line to bend the pass. Hold the tip to lift it. Red rings warn of defenders.</small>}
   </section></div>}
 
-  {view==='result'&&outcome&&level&&<div className={`${arcade.overlay} ${styles.lowOverlay} ${outcome.success?styles.goalResult:''}`}><section className={arcade.card}>
+  {view==='result'&&outcome&&level&&<div className={`${arcade.overlay} ${styles.lowOverlay} ${outcome.success?styles.goalResult:styles.failResult}`}><section className={arcade.card}>
    <span className={arcade.badge}>{outcome.success?'PUZZLE SOLVED':outcome.attemptsLeft>0?`${outcome.attemptsLeft} ${outcome.attemptsLeft===1?'TRY':'TRIES'} LEFT`:'OUT OF TRIES'}</span>
    <h3>{outcome.success?(outcome.passes===0?'What a finish!':'That’s the move!'):'Not this time.'}</h3>
    {outcome.success?<><div className={styles.stars} aria-label={`${outcome.stars} of 3 stars`}>{[0,1,2].map(n=>star(n<outcome.stars,n))}</div>
     <ul className={styles.earned}>{goals(level).map((g,i)=>{const bit=1<<i;return <li key={g} data-on={!!(outcome.mask&bit)} data-new={!!(outcome.fresh&bit)||undefined}>{g}{outcome.fresh&bit?<b className={styles.newStar}> new</b>:null}</li>;})}</ul>
     {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.map(w=><li key={w}>{w}</li>)}</ul></div>}
     <p className={styles.lesson}>{!outcome.move?'You spotted a clear shooting lane. Now try the passing move for the next star.':level.lesson}</p></>
-   :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>{!spotHint&&outcome.attemptsLeft>0&&<button className={`pixel-btn ${styles.secondary} ${styles.spotHint}`} onClick={()=>{setShowHint(true);setSpotHint(true);}}><Icon name="book" size={16}/> Show me where next try</button>}</>}
+   :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}{/* the level's hint teaches the move, so it stays for move failures; a missed finish keeps just its specific fix */}{(!outcome.fix||outcome.reason==='intercept'||outcome.reason==='too-few-passes')&&<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>}</>}
    {outcome.success&&next&&'locked' in next&&<p className={styles.nextNote} role="status" data-next-locked>Next up: <b>{next.locked.title}</b>. Earn {next.need} more ★ to open it. Replay a puzzle for its missing stars.</p>}
    {outcome.success&&next&&'scenario' in next&&next.newPack&&<p className={styles.nextNote} data-next-pack>Pack complete! Next up: <b>{packInfo(next.scenario.pack)?.title}</b>.</p>}
-   {outcome.success?(nextLevel?<button className={arcade.primary} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)setPackId(next.locked.id);setView('levels');}}>All puzzles</button>)
-    :<button className={arcade.primary} disabled={entry.pending} onClick={retry}>{outcome.attemptsLeft>0?'Try again':'Start over'}</button>}
+   {outcome.success?(nextLevel?<button className={`${arcade.primary} ${styles.go}`} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)setPackId(next.locked.id);setView('levels');}}>All puzzles</button>)
+    :<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={retry}>{outcome.attemptsLeft>0?'Try again':'Start over'}</button>}
    {!outcome.success&&rewindPoint.current&&!rewound.current&&<><button className={styles.rewind} onClick={rewindPass}>Rewind last pass</button><small className={styles.rewindNote}>Try a different angle from that moment. One rewind per try.</small></>}
-   <div className={styles.row}><button className={`pixel-btn ${styles.secondary}`} onClick={watchAgain}><Icon name="play" size={16}/> Watch again</button>{(outcome.success||outcome.attemptsLeft===0)&&<button className={`pixel-btn ${styles.secondary}`} onClick={watchCoach}><Icon name="book" size={16}/> Coach’s route</button>}{outcome.success&&<button className={`pixel-btn ${styles.secondary}`} disabled={entry.pending} onClick={retry}><Icon name="reset" size={16}/> Replay level · 3 coins</button>}</div>
+   <div className={styles.row}><button className={`pixel-btn ${styles.secondary}`} onClick={watchAgain}><Icon name="play" size={16}/> Watch again</button>{!outcome.success&&!spotHint&&outcome.attemptsLeft>0&&<button className={`pixel-btn ${styles.secondary}`} data-spot-hint onClick={()=>{setShowHint(true);setSpotHint(true);}}><Icon name="target" size={16}/> Show me where</button>}{(outcome.success||outcome.attemptsLeft===0)&&<button className={`pixel-btn ${styles.secondary}`} onClick={watchCoach}><Icon name="book" size={16}/> Coach’s route</button>}{outcome.success&&<button className={`pixel-btn ${styles.secondary}`} disabled={entry.pending} onClick={retry}><Icon name="reset" size={16}/> Replay level · 3 coins</button>}</div>
    {entry.message&&view==='result'&&<p role="status">{entry.message}</p>}<button className={arcade.exit} onClick={()=>setView('levels')}>All puzzles</button>
   </section></div>}
 

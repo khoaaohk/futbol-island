@@ -34,7 +34,7 @@ export const SYNC_KEYS:readonly string[]=[
  // Jobs, fishing, food
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
- 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-tennis-stars-v1',
+ 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
  'fi2-pinball-stars-v1','fi2-pass-puzzles-v1','fi.game.runner.best',
  // Grown-ups & IDP (the IDP with its free text removed: stripIdpText). fi2-idp-v2 (Oct 9 2026) holds ids, dates and picture
  // choices only; its typed words live in the device key fi2-idp-text-v1 (DEVICE_KEYS), which never syncs.

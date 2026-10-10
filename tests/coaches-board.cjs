@@ -2,7 +2,8 @@
 /*
  * Coaches Board → Tactics board (Oct 9 2026): play schema and versioning, add/move/delete, arrows following chips,
  * sequence playback maths, undo/redo, share-link round trip, the built-in plays, chip physics, the plays library, and the
- * heat rule (the stage requests animation frames only while something moves: 0 at rest).
+ * heat rule (the stage requests animation frames only while something moves: 0 at rest), and the full-screen canvas (camera
+ * maths, rails and dock, shortcuts, touch rules; Oct 10 2026).
  *
  * Usage: node tests/coaches-board.cjs
  */
@@ -65,6 +66,34 @@ group('pitch formats and shapes',()=>{
  // Views: a portrait box stands the pitch up, a landscape box lays it across; screen ↔ pitch round trip.
  const r=PI.viewRect(PI.PITCHES['11v11'],'full');assert.equal(V.bestView(r,350,560).orient,'v');assert.equal(V.bestView(r,800,500).orient,'h');
  for(const o of ['h','v']){const v=V.fitView(r,500,500,o),m=[30,12],back=V.toModel(v,V.toScreen(v,m));near(back[0],30,1e-9);near(back[1],12,1e-9);}
+});
+
+group('full-screen canvas: camera, zoom and layout (Oct 10 2026)',()=>{
+ // The camera puts the zoom rectangle's centre at a screen point at any scale; screen ↔ pitch round trips; zooming 2× doubles distances.
+ for(const f of T.FORMATS){const spec=PI.PITCHES[f];for(const z of T.ZOOM_VIEWS){const base=PI.viewRect(spec,z);for(const [W,H] of [[390,844],[844,390],[1440,900]]){
+  const fit=V.bestView(base,W-40,H-120),v=V.cameraView(base,fit.orient,fit.s,W,H,W/2,H/2+10),mid=[(base.x0+base.x1)/2,(base.y0+base.y1)/2];
+  const c=V.toScreen(v,mid);near(c[0],W/2,1e-6,'centre x');near(c[1],H/2+10,1e-6,'centre y');assert.equal(v.w,W);assert.equal(v.h,H);
+  const m=[base.x0+3,base.y0+2],back=V.toModel(v,V.toScreen(v,m));near(back[0],m[0],1e-9);near(back[1],m[1],1e-9);
+  // The fitted camera shows the same pitch size as the old fitted board (same scale), so nothing is cut off.
+  const corner=V.toScreen(v,[base.x0,base.y0]),far=V.toScreen(v,[base.x1,base.y1]);for(const q of [corner,far])assert.ok(q[0]>=-1e-6&&q[0]<=W+1e-6&&q[1]>=-1e-6&&q[1]<=H+1e-6,'whole zoom view on screen');
+  const v2=V.cameraView(base,fit.orient,fit.s*2,W,H,W/2,H/2+10),a=V.toScreen(v2,mid),b=V.toScreen(v2,[mid[0]+1,mid[1]]);near(Math.hypot(b[0]-a[0],b[1]-a[1]),fit.s*2,1e-9,'2× zoom');}}}
+ const src=fs.readFileSync(path.join(ROOT,'components/coaches-board/TacticsBoard.tsx'),'utf8'),css=fs.readFileSync(path.join(ROOT,'components/coaches-board/TacticsBoard.module.css'),'utf8');
+ // Left rail tools, right rail actions, the slim bars and the phone dock (data-cb hooks kept for analytics and tests).
+ for(const id of ['tool-move','tool-add','tool-add-away','rail-ball','tool-arrow','tool-marker','tool-erase','multi','rail-shapes','options','share','undo','redo','zoom-in','zoom-out','fit','zoom','format','name','save','play','track','add-step','more','rail-left-toggle','rail-right-toggle','surface','properties','timeline'])
+  assert.ok(src.includes(`'${id}'`)||src.includes(`"${id}"`),'control '+id);
+ // Shortcuts (Figma-like): V P ⇧P B A M E, ⌘/Ctrl+Z / ⇧Z / Y, + − 0, Space, , .
+ for(const k of ["v:()=>setTool('move')","p:()=>pickAdd(","b:()=>addAt('ball'","a:()=>setTool('arrow')","m:()=>setTool('marker')","e:()=>setTool('erase')","mod&&k==='z'","mod&&k==='y'","k==='+'","k==='-'","k==='0'"])assert.ok(src.includes(k),'shortcut '+k);
+ assert.match(src,/aria-keyshortcuts/);
+ // Three arrangements; touch: no page scroll or zoom while drawing (touch-action), 44 px targets, safe areas, reduced motion.
+ for(const m of ['dock','thin','full'])assert.ok(css.includes(`[data-mode=${m}]`),'layout '+m);
+ assert.match(css,/\.surface\{[^}]*touch-action:none/);assert.match(css,/\.root\{[^}]*overflow:hidden[^}]*touch-action:none/);
+ assert.match(css,/\.railBtn\{[^}]*min-width:44px;height:52px/);assert.match(css,/safe-area-inset-bottom/);
+ assert.match(css,/prefers-reduced-motion:reduce\)\{[^}]*\.sheet\{animation:none\}|prefers-reduced-motion:reduce\)\{.*\.sheet\{animation:none/);
+ // Pinch moves the canvas layer by transform only (no React render, no loop), and the wheel listener can stop page zoom.
+ assert.match(src,/world\.current\.style\.transform=`translate3d/);assert.match(src,/addEventListener\('wheel',f,\{passive:false\}\)/);
+ // Full screen: portalled into the Coaches Centre dialog; the centre underneath is inert; Back returns to it.
+ const cb=fs.readFileSync(path.join(ROOT,'components/CoachesBoard.tsx'),'utf8');assert.match(cb,/createPortal\(/);assert.match(cb,/panel\.inert=true/);
+ assert.match(fs.readFileSync(path.join(ROOT,'components/CoachesCentre.tsx'),'utf8'),/<CoachesBoard onBack=\{/);
 });
 
 group('add, move, delete',()=>{
@@ -245,3 +274,8 @@ group('heat: frames only while something moves',()=>{
 
 console.log(`coaches-board: ${groups} groups passed`);
 })().catch(e=>{console.error(e);process.exit(1);});
+
+// Changing the pitch format lines up both teams in that format's first shape (user, Oct 10 2026).
+{const src=require('fs').readFileSync(require('path').join(__dirname,'../components/coaches-board/TacticsBoard.tsx'),'utf8');
+ require('assert').match(src,/const sh=formationsFor\(f\)\[0\];return sh\?loadFormation\(setFormat\(p,f\),sh\.id,'both'\)/,'format change loads the format\'s first shape for both teams');
+ console.log('PASS format change loads a lineup');}

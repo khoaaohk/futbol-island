@@ -39,6 +39,7 @@ function haptic(pattern:number|number[]){
  *  tennis:out (the incoming ball is flying out: let it go)
  *  tennis:bounce:<intensity>:<half> · tennis:net:<net|over|back>
  *  tennis:point:<winner>:<rally>:<kind> · tennis:match:<winner>:<rally>:<kind>
+ *  tennis:hold (a pressed kick waits for the ball) · tennis:coach (aim nudge)
  *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> · tennis:tire */
 export function tennisSound(ctx:AudioContext|null,cue:string){
  if(typeof document==='undefined'||document.hidden||!isSoundEnabled())return;
@@ -79,6 +80,8 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  if(kind==='out'){tone(ctx,t,'sine',660,520,.14,.04*v,.01);tone(ctx,t+.15,'sine',520,392,.18,.035*v,.01);return;} // a gentle 'uh-oh': it is going long
  if(kind==='tire'){noise(ctx,t,.7,.05*v,'bandpass',480,760,1,.2);tone(ctx,t+.05,'sine',392,262,.38,.03*v,.04);return;} // the crowd 'ooh' as the rival tires
  if(kind==='fake'){noise(ctx,t,.18,.05*v,'bandpass',600,1400,1.2,.02);return;} // a scuff of the sole on the ball
+ if(kind==='hold'){tone(ctx,t,'sine',210,150,.05,.05*v,.003);noise(ctx,t,.03,.025*v,'lowpass',900,500,.7);return;} // feet plant: the press is heard at once while the touch waits for the ball
+ if(kind==='coach'){tone(ctx,t,'triangle',659.25,659.25,.12,.035*v);tone(ctx,t+.1,'triangle',880,880,.16,.035*v);return;} // the coach's two-note 'look here'
  if(kind==='target'){tone(ctx,t,'triangle',880,880,.16,.06*v);tone(ctx,t+.08,'triangle',1318.5,1318.5,.22,.05*v);return;}
  if(kind==='tempo'){const step=Number(a)||1;if(musicOn())tone(ctx,t,'triangle',BASS[0]*(1+step*.25),BASS[0]*(1+step*.25),.3,.05*v,.02);noise(ctx,t+.05,.6,.04*v,'bandpass',500,800,.9,.2);return;}
  if(kind==='net'){

@@ -23,7 +23,9 @@ export interface TennisBall{
  last:TennisSide;bounces:number;crossed:boolean;
 }
 export interface TennisState{
- level:number;courtsWon:number;aiReadErrorX:number;aiReadErrorY:number;
+ level:number;courtsWon:number;
+ /** Missed Target Drill passes this session: each one lowers the pass mark by one (never below TENNIS_DRILL_MIN_PASS). */
+ drillTries:number;aiReadErrorX:number;aiReadErrorY:number;
  bounceAge:number;perfectTouches:number;perfectFlash:number;
  phase:TennisPhase;you:TennisPlayer;rival:TennisPlayer;ball:TennisBall;score:{you:number;rival:number};server:TennisSide;
  rally:number;bestRally:number;message:string;version:number;clock:number;phaseTime:number;queuedKick:number;aim:number|null;
@@ -39,8 +41,8 @@ export interface TennisState{
  rivalPlan:TennisShot|null;rivalPlanX:number;rivalPlanAt:number;
  /** Visible AI mistakes: wrong-footed stumble timer, a ball it chose to let go, and how often you beat it. */
  rivalStumble:number;rivalLetGo:boolean;wrongFooted:number;
- /** How long the pressed kick has been patiently held for a closer ball. */
- kickHold:number;
+ /** How long the pressed kick has been patiently held for a closer ball; pressCount counts accepted presses. */
+ kickHold:number;pressCount:number;
  /** Golden touch: perfect touches fill the meter (0–TENNIS_GOLD); a full meter powers your next shot. */
  gold:number;goldReady:boolean;goldenShot:boolean;goldenUsed:number;
  /** Two-touch courts: a cushioned trap sets the ball up on your own side for a stronger second touch. */
@@ -69,6 +71,8 @@ export interface TennisState{
  caught:number;
  /** Event counters + payloads for sound/visual layers (read-only outside the sim). */
  bounceEvents:number;netEvents:number;netKind:'net'|'over'|'back';netX:number;netPace:number;pointKind:TennisPointKind;
+ /** Your returns in a row sent down the middle (straight at the rival): drives the "aim into space" coach nudge. */
+ centerRun:number;
 }
 export type TennisGrade='perfect'|'good'|'heavy'|'early'|'late'|'stretched'|'';
 export type TennisPointKind='space'|'letgo'|'net'|'out'|'miss'|'target'|'';
@@ -111,26 +115,44 @@ export const tennisRivalTire=(s:Pick<TennisState,'rally'|'level'>)=>{const c=TEN
 /** The open space on the rival's court: -1 (your left), 1 (your right) or 0 when the rival is central.
  * Drives the "aim here" ring and the call-out, so placing the ball is a visible decision. */
 export const tennisOpenSide=(s:Pick<TennisState,'rival'>)=>s.rival.x>.7?-1:s.rival.x<-.7?1:0;
+/** The side to aim for, always: the open space if there is one, otherwise WIDE, away from where the rival is
+ * leaning (its position a moment from now), or cross-court from you when it stands dead centre. A rival in
+ * the middle still has to run to a wide ball: that is the lesson, so the cue never goes blank. */
+export function tennisAimSide(s:Pick<TennisState,'rival'|'you'>):-1|1{
+ const open=tennisOpenSide(s);if(open)return open;
+ const lean=s.rival.x+s.rival.vx*.3;return lean>.15?-1:lean<-.15?1:s.you.x>0?-1:1;
+}
 /** Perfect touches needed for a Golden Touch; a scrappy touch takes one back. */
 export const TENNIS_GOLD=5;
 export const TENNIS_DRILL={balls:15,radius:.85,stars:[6,9,12]};
+/** The drill is a gate to the match courts: a soft one. A missed pass lowers the mark (6 → 5 → 4), so the youngest
+ * players are never walled; stars still ask for 9 and 12. */
+export const TENNIS_DRILL_MIN_PASS=4;
+export const tennisDrillPass=(s:Pick<TennisState,'drillTries'>)=>Math.max(TENNIS_DRILL_MIN_PASS,TENNIS_DRILL.stars[0]-s.drillTries);
 export const TENNIS={halfWidth:5,halfLength:8,netHeight:1.1,ballRadius:.17,gravity:10.5,winningScore:7,humanSpeed:7.3,aiSpeed:4.1,drag:.018,magnus:.012,restitution:.68,kickDuration:.42};
 const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
 const other=(s:TennisSide):TennisSide=>s==='you'?'rival':'you';
 const player=(y:number):TennisPlayer=>({x:0,y,vx:0,vy:0,targetX:0,targetY:y,kick:0,stride:0,kickStyle:1,moveX:0,moveY:0,direct:false,kickFacing:y>0?Math.PI:0,kickSpan:TENNIS.kickDuration,kickContactX:0,kickContactZ:.65,kickHeight:.23,kickPower:.35,kickKind:'shot',down:0});
 const mkball=(x:number,y:number,last:TennisSide):TennisBall=>({x,y,z:.23,vx:0,vy:0,vz:0,wx:0,wy:0,wz:0,rot:0,squash:0,netHit:false,last,bounces:0,crossed:false});
-export function createTennis(seed=47,level=1):TennisState{return {level:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),courtsWon:0,aiReadErrorX:0,aiReadErrorY:0,bounceAge:99,perfectTouches:0,perfectFlash:0,phase:'ready',you:player(5.3),rival:player(-5.3),ball:mkball(.3,4.95,'you'),score:{you:0,rival:0},server:'you',rally:0,bestRally:0,message:'A little court. A good rally.',version:0,clock:0,phaseTime:0,queuedKick:0,aim:null,aiThink:0,aiReaction:0,seed:seed>>>0,winner:null,
+export function createTennis(seed=47,level=1):TennisState{return {level:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),courtsWon:0,drillTries:0,aiReadErrorX:0,aiReadErrorY:0,bounceAge:99,perfectTouches:0,perfectFlash:0,phase:'ready',you:player(5.3),rival:player(-5.3),ball:mkball(.3,4.95,'you'),score:{you:0,rival:0},server:'you',rally:0,bestRally:0,message:'A little court. A good rally.',version:0,clock:0,phaseTime:0,queuedKick:0,aim:null,aiThink:0,aiReaction:0,seed:seed>>>0,winner:null,
  queuedShot:'auto',lastShot:'auto',lastKicker:'you',kickCount:0,aiSlam:false,fxSlam:0,fxSlamX:0,fxSlamY:0,fxSlamZ:0,fxLand:0,fxLandX:0,fxLandY:0,fxLandI:0,pointWinner:null,shotAim:0,cleanReturns:0,cleanStreak:0,bestCleanStreak:0,rivalIntent:'Ready at the baseline',
- touchGrade:'',touchSide:'you',touchQuality:0,rivalPlan:null,rivalPlanX:0,rivalPlanAt:0,rivalStumble:0,rivalLetGo:false,wrongFooted:0,kickHold:0,gold:0,goldReady:false,goldenShot:false,goldenUsed:0,youTrapped:false,rivalTrapped:false,setBonus:0,trapEvents:0,trapSide:'you',trapGrade:'',rivalFake:false,fakeReads:0,fakeShown:false,habitWins:0,lastYouShot:'auto',assist:0,winRun:0,lossRun:0,drillLeft:0,drillHits:0,targetX:0,targetY:-4.6,targetEvents:0,stars:0,gradeCounts:{perfect:0,good:0,heavy:0,early:0,late:0,stretched:0},perfectStreak:0,touchVolley:false,aiHeader:false,rivalFinish:false,landX:0,landY:0,incomingOut:false,headSpot:false,headX:0,headY:0,outEvents:0,caught:0,bounceEvents:0,netEvents:0,netKind:'net',netX:0,netPace:0,pointKind:''};}
+ touchGrade:'',touchSide:'you',touchQuality:0,rivalPlan:null,rivalPlanX:0,rivalPlanAt:0,rivalStumble:0,rivalLetGo:false,wrongFooted:0,kickHold:0,pressCount:0,gold:0,goldReady:false,goldenShot:false,goldenUsed:0,youTrapped:false,rivalTrapped:false,setBonus:0,trapEvents:0,trapSide:'you',trapGrade:'',rivalFake:false,fakeReads:0,fakeShown:false,habitWins:0,lastYouShot:'auto',assist:0,winRun:0,lossRun:0,drillLeft:0,drillHits:0,targetX:0,targetY:-4.6,targetEvents:0,stars:0,gradeCounts:{perfect:0,good:0,heavy:0,early:0,late:0,stretched:0},perfectStreak:0,touchVolley:false,aiHeader:false,rivalFinish:false,landX:0,landY:0,incomingOut:false,headSpot:false,headX:0,headY:0,outEvents:0,caught:0,bounceEvents:0,netEvents:0,netKind:'net',netX:0,netPace:0,pointKind:'',centerRun:0};}
 /** The existing replay action advances a won court; a loss keeps its practice tier. */
-export function resetTennis(s:TennisState){const won=s.winner==='you',level=Math.min(TENNIS_COURTS.length,s.level+(won?1:0)),courtsWon=s.courtsWon+(won?1:0);Object.assign(s,createTennis(s.seed,level));s.courtsWon=courtsWon;}
+export function resetTennis(s:TennisState){const won=s.winner==='you',level=Math.min(TENNIS_COURTS.length,s.level+(won?1:0)),courtsWon=s.courtsWon+(won?1:0),
+ drillTries=isDrill(s)&&s.phase==='over'?(won?0:s.drillTries+1):s.drillTries;Object.assign(s,createTennis(s.seed,level));s.courtsWon=courtsWon;s.drillTries=drillTries;}
 function random(s:TennisState){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
 export function beginTennis(s:TennisState){s.phase='serve';s.phaseTime=0;const c=court(s);
  if(isDrill(s)){s.server='rival';s.drillLeft=TENNIS_DRILL.balls;s.drillHits=0;moveTarget(s);s.ball=mkball(s.rival.x+.3,s.rival.y+.35,'rival');}
  s.message=`COURT ${s.level} · ${c.name} · ${c.lesson}`;/* the rival's habit is on the court card and its call-out */s.version++;}
 /** Drill targets sit at the three depths your shots reach: short (Drop), middle (Kick), deep (Lob). */
 export const TENNIS_TARGET_DEPTHS=[-2.05,-5.15,-6.65];
-function moveTarget(s:TennisState){const depth=Math.floor(random(s)*3);s.targetY=TENNIS_TARGET_DEPTHS[depth];s.targetX=(random(s)<.5?-1:1)*(depth===0?.4+random(s)*1.8:.6+random(s)*2.6);}
+/** Drill rings sit where a full left/right aim lands for that depth (a Drop flies 70% as wide), so a 7-year-old
+ * with a thumb stick or arrow keys can line the yellow aim ring up on the gold one: side × depth, two choices. */
+export const TENNIS_DRILL_LANE=3.7;
+export const tennisAimX=(aim:number,shot:TennisShot)=>aim*TENNIS_DRILL_LANE*(shot==='drop'?.7:1);
+function moveTarget(s:TennisState){const depth=Math.floor(random(s)*3),side=random(s)<.5?-1:1,last=s.targetX;s.targetY=TENNIS_TARGET_DEPTHS[depth];s.targetX=tennisAimX(side,depth===0?'drop':'auto');if(s.targetX===last&&random(s)<.5)s.targetX=-s.targetX;}
+/** Drill: does the current aim send the touch that reaches the ring's depth onto the ring? (Lights the ring.) */
+export const tennisDrillLinedUp=(s:TennisState)=>Math.abs(tennisAimX(s.shotAim,tennisTargetShot(s))-s.targetX)<TENNIS_DRILL.radius*.6;
 /** Which shot reaches the current drill target's depth. */
 export const tennisTargetShot=(s:TennisState):TennisShot=>s.targetY>-3.5?'drop':s.targetY<-6?'lob':'auto';
 export function setTennisTarget(s:TennisState,x:number,y:number){if(Math.abs(x-s.you.x)>.25)s.shotAim=clamp((x-s.you.x)/2,-1,1);s.you.direct=false;s.you.targetX=clamp(x,-4.55,4.55);s.you.targetY=clamp(y,.95,7.45);}
@@ -142,7 +164,7 @@ export function setTennisMovement(s:TennisState,x:number,y:number){
  if(length>.001){p.direct=true;p.moveX=x*scale;p.moveY=y*scale;}
  else if(p.direct){p.moveX=p.moveY=0;p.targetX=p.x;p.targetY=p.y;}
 }
-export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=shot==='header'||shot==='scissor'?.48:shot==='trap'?.36:.32;s.kickHold=0;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}
+export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=shot==='header'||shot==='scissor'?.48:shot==='trap'?.36:.32;s.kickHold=0;s.pressCount++;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}
  if(shot==='trap'&&court(s).touches<2){s.queuedKick=0;s.message='One touch on this court. Two-touch courts allow a trap.';s.version++;}}
 /** drag + Magnus + gravity — the one acceleration model shared by the live sim and the predictor */
 function accel(b:{vx:number;vy:number;vz:number;wx:number;wy:number;wz:number}){
@@ -176,6 +198,9 @@ export const TENNIS_SWEET_REACH=.6;
  * coming closer, instead of lunging the instant it enters reach. Courts 1–3 also wait
  * for a falling ball to bounce. Pure read of the state. */
 export const TENNIS_KICK_HOLD=.42;
+/** How far ahead "it is still coming to you" looks. Longer than the hold, so the HUD never says KICK NOW at
+ * full stretch while the ball will still arrive at your body a beat later (the hold still caps at TENNIS_KICK_HOLD). */
+export const TENNIS_WAIT_LOOKAHEAD=.9;
 export function tennisShouldWait(s:TennisState){
  const p=s.you,b=s.ball,rx=b.x-p.x,ry=b.y-p.y,d=Math.hypot(rx,ry);
  // Courts 1–3 let a dropping ball bounce first (the lesson); later courts leave that timing to you.
@@ -183,7 +208,7 @@ export function tennisShouldWait(s:TennisState){
  if(court(s).tier<=2&&b.bounces===1&&s.bounceAge<.05)return true; // a beat after the bounce, as it rises
  if(d<=TENNIS_SWEET_REACH||canTennisPerfect(s))return false;
  const vx=b.vx-p.vx,vy=b.vy-p.vy,v2=vx*vx+vy*vy;if(v2<.04)return false;
- const tca=-(rx*vx+ry*vy)/v2;if(tca<=.01||tca>.4)return false;
+ const tca=-(rx*vx+ry*vy)/v2;if(tca<=.01||tca>TENNIS_WAIT_LOOKAHEAD)return false;
  const cx=rx+vx*tca,cy=ry+vy*tca;return Math.hypot(cx,cy)<d-.15;
 }
 /** Two-touch courts: a first touch that cushions the ball up on your own side (thigh or chest). */
@@ -335,6 +360,7 @@ function kick(s:TennisState,side:TennisSide){
  else if(side==='you'&&!serve&&q<.5&&!s.goldReady)s.gold=Math.max(0,s.gold-1);
  s.goldenShot=golden;
  if(side==='rival'){const cap=court(s).sharp-s.assist*.1-tennisRivalTire(s)*.3;q=Math.min(q,cap+random(s)*(1-cap));if(s.rivalTrapped)q=Math.min(1,q+.1);if(s.rivalFinish&&!serve)q=Math.max(.3,q-.12);} // the rival mixes sharp days and scrappy ones
+ if(side==='you'&&!serve&&!isDrill(s))s.centerRun=Math.abs(clamp(s.aim??s.shotAim,-1,1))*3.7<1.4&&shot!=='drop'&&shot!=='lob'?s.centerRun+1:0;
  if(side==='you'&&!serve){s.lastYouShot=shot;const clean=q>=.72;if(clean&&s.rivalFake&&s.fakeShown)s.fakeReads++;s.cleanReturns+=clean?1:0;s.cleanStreak=clean?s.cleanStreak+1:0;s.bestCleanStreak=Math.max(s.bestCleanStreak,s.cleanStreak);}
  if(!serve){const aerial=shot==='header'||shot==='scissor'||shot==='slam'||shot==='chest'||shot==='shark'||shot==='bicycle'||setStrike;
   const ground=!aerial&&shot!=='dive';
@@ -345,7 +371,7 @@ function kick(s:TennisState,side:TennisSide){
  else{s.touchGrade='';s.touchVolley=false;}
  const err=(1-q)*(shot==='slam'||shot==='scissor'||shot==='shark'?2.2:1.6);
  let tx=side==='you'
-  ?((s.aim??s.shotAim)*3.7)
+  ?tennisAimX(s.aim??s.shotAim,'auto')
   :s.rivalPlan&&!serve?s.rivalPlanX:clamp((s.you.x>.4?-1:s.you.x<-.4?1:random(s)<.5?-1:1)*(2.4+random(s)*.8),-3.6,3.6);
  // The final court sometimes disguises a committed shot and switches sides late.
  const disguised=side==='rival'&&!serve&&s.rivalFake&&s.fakeShown;if(disguised)tx=-tx;
@@ -472,7 +498,7 @@ function pointReason(s:TennisState,winner:TennisSide,kind:TennisPointKind){
 /** Stars for the court just finished: win, 4 perfect touches, and beating the rival's habit.
  * The drill awards stars by targets hit. Pure. */
 export function tennisStars(s:TennisState){const c=court(s);
- if(c.style==='drill')return TENNIS_DRILL.stars.filter(n=>s.drillHits>=n).length;
+ if(c.style==='drill')return s.drillHits<tennisDrillPass(s)?0:1+TENNIS_DRILL.stars.slice(1).filter(n=>s.drillHits>=n).length;
  if(s.winner!=='you')return 0;
  const third=c.style==='steady'?s.bestRally>=8:c.style==='trickster'?s.fakeReads>=2:c.style==='champion'?s.goldenUsed>=1:s.habitWins>=2;
  return 1+(s.perfectTouches>=4?1:0)+(third?1:0);}
@@ -483,8 +509,8 @@ function drillPoint(s:TennisState,hit:boolean,kind:TennisPointKind){
  s.you.direct=false;s.you.moveX=s.you.moveY=0;s.you.targetX=0;s.you.targetY=5.3;
  s.message=hit?`TARGET! ${s.drillHits} hit · ${s.drillLeft} balls left`:`${kind==='target'?'Close! Missed the ring':kind==='net'?'Into the net':kind==='out'?'Out':'Missed'} · ${s.drillLeft} balls left`;
  if(hit)moveTarget(s);s.phase='point';s.version++;
- if(s.drillLeft<=0){s.winner=s.drillHits>=TENNIS_DRILL.stars[0]?'you':'rival';s.phase='over';s.stars=tennisStars(s);s.you.vx=s.you.vy=0;
-  s.message=`DRILL DONE · ${s.drillHits} of ${TENNIS_DRILL.balls} targets${s.winner==='you'?'':` · hit ${TENNIS_DRILL.stars[0]} to pass`}`;}
+ if(s.drillLeft<=0){s.winner=s.drillHits>=tennisDrillPass(s)?'you':'rival';s.phase='over';s.stars=tennisStars(s);s.you.vx=s.you.vy=0;
+  s.message=`DRILL DONE · ${s.drillHits} of ${TENNIS_DRILL.balls} targets${s.winner==='you'?'':` · hit ${Math.max(TENNIS_DRILL_MIN_PASS,tennisDrillPass(s)-1)} to pass next time`}`;}
 }
 function point(s:TennisState,winner:TennisSide,kind:TennisPointKind){if(isDrill(s)){drillPoint(s,false,kind);return;}const reason=pointReason(s,winner,kind);s.pointKind=kind;s.rivalPlan=null;s.rivalStumble=0;s.score[winner]++;
  if(winner==='you'&&(kind==='space'||kind==='letgo')&&s.lastKicker==='you'&&s.lastYouShot===court(s).counter&&court(s).counter!=='auto')s.habitWins++;
@@ -617,7 +643,7 @@ export function tennisCourtTouches(level:number):TennisTouchGuide[]{
  if(c.touches>1)out.push({touch:'trap',when:'Waist-high ball: cushion it soft, then kick'});
  if(c.aerial&&c.style!=='drill')out.push({touch:'header',when:'High ball: stand under it and head it'});
  if(c.counter==='drop'||c.counter==='lob')out.push({touch:c.counter,when:c.counter==='drop'?'Rival stays deep: play it short':'Rival rushes the net: lob over'});
- else out.push({touch:'aim',when:c.style==='drill'?'Push the stick toward the gold ring':'Push the stick toward the open space'});
+ else out.push({touch:'aim',when:c.style==='drill'?'Aim at the gold ring: Drop short, Lob deep':'Push the stick toward the open space'});
  return out;
 }
 /** The one touch that fits the ball right now — drives the glowing button and the HUD cue, so a
@@ -628,10 +654,10 @@ export function tennisTouchCall(s:TennisState):TennisCall{
  if(s.incomingOut&&b.bounces===0)return 'letgo';
  if(!b.crossed)return 'move';
  if(canTennisPerfect(s))return 'perfect';
- const c=court(s);
- if(c.aerial&&canTennisBicycle(s))return 'bicycle';
- if(c.aerial&&canTennisHeader(s,'you'))return 'header';
- if(c.aerial&&canTennisScissor(s,'you'))return 'scissor';
+ const c=court(s),air=c.aerial&&c.style!=='drill'; // the drill is about control and placement: feet, not headers
+ if(air&&canTennisBicycle(s))return 'bicycle';
+ if(air&&canTennisHeader(s,'you'))return 'header';
+ if(air&&canTennisScissor(s,'you'))return 'scissor';
  // A waist-to-chest-high ball on a two-touch court: cushion it first (the futnet first touch).
  if(canTennisTrap(s)&&b.z>=.7&&!(b.bounces===1&&canTennisKick(s,'you')&&b.z<.85))return 'trap';
  if(canTennisSlam(s,'you'))return tennisSlamTooFar(s)?'drop':'volley';
@@ -640,11 +666,20 @@ export function tennisTouchCall(s:TennisState):TennisCall{
 }
 /** Which on-screen button the call lights up ('' = none: move, wait for it, or let it go). */
 export const tennisCallButton=(call:TennisCall):''|'kick'|'trap'|'header'|'scissor'=>call==='perfect'||call==='kick'||call==='volley'||call==='wait'?'kick':call==='trap'?'trap':call==='header'?'header':call==='scissor'||call==='bicycle'?'scissor':'';
+/** The glowing button, court-aware: on the Target Drill a ground touch lights the shot whose depth reaches the
+ * gold ring (Drop short, Kick middle, Lob deep), so the drill teaches choosing the touch for the distance. */
+export function tennisHudButton(s:TennisState,call:TennisCall=tennisTouchCall(s)):''|'kick'|'trap'|'header'|'scissor'|'lob'|'drop'{
+ const button=tennisCallButton(call);if(button!=='kick'||!isDrill(s)||call==='volley')return button;
+ const shot=tennisTargetShot(s);return shot==='drop'||shot==='lob'?shot:'kick';}
+/** Drill aim words: which way, and which touch reaches the ring's depth. */
+function drillAim(s:TennisState){const shot=tennisTargetShot(s),dir=s.targetX<-1?' ◀':s.targetX>1?' ▶':' straight';
+ return `${shot==='drop'?'DROP · short':shot==='lob'?'LOB · deep':'KICK · middle'}${dir} to the gold ring`;}
 /** Screen-direction arrow for the open space (the camera looks up the court: -x is screen-left). */
 const spaceArrow=(side:number)=>side<0?'◀':'▶';
 /** The HUD cue line: the touch to use, in kid words, plus where the open space is when you can strike. */
 export function tennisCallDetail(s:TennisState,call:TennisCall=tennisTouchCall(s)){
- const side=tennisOpenSide(s),aim=side?` · aim ${spaceArrow(side)} into space`:'';
+ const open=tennisOpenSide(s),side=tennisAimSide(s),aim=isDrill(s)?'':open?` · aim ${spaceArrow(side)} into space`:` · aim ${spaceArrow(side)} wide, away from it`;
+ if(isDrill(s)&&(call==='perfect'||call==='kick'||call==='wait'))return `${call==='perfect'?'PERFECT · ':call==='wait'?'LET IT COME · ':''}${drillAim(s)}`;
  switch(call){
   case 'perfect':return `PERFECT WINDOW · kick now!${aim}`;
   case 'kick':return `KICK NOW · plant & strike${aim}`;
@@ -662,7 +697,7 @@ export function tennisCallDetail(s:TennisState,call:TennisCall=tennisTouchCall(s
 }
 /** HUD status line while playing (court, rival personality, golden meter, drill count). */
 export function tennisStatus(s:TennisState){const c=court(s);
- if(c.style==='drill')return `Court ${s.level} · TARGET DRILL · ${s.drillLeft} balls left`;
+ if(c.style==='drill')return `Court ${s.level} · TARGET DRILL · ${s.drillHits}/${tennisDrillPass(s)} rings to pass · ${s.drillLeft} balls left`;
  const gold=s.goldReady?'GOLDEN READY':`Gold ${'●'.repeat(s.gold)}${'○'.repeat(TENNIS_GOLD-s.gold)}`;
  return `Court ${s.level} · ${c.rival} · Rally ${s.rally} · ${gold}`;}
 /** The coach's one-line takeaway after a court: the habit that cost the most touches, in kid words. */

@@ -58,6 +58,14 @@ export function beanPoint(s:BeanShape,u:number,a:number,out=new T.Vector3()){
  x+=s.leanX*uu*uu*span;z+=s.leanZ*uu*uu*span;
  return out.set(x,Y0+uu*span,z);
 }
+/** Neck bend (mirrors the GLSL beanSpineSetup/beanSpine): torso-space pivot height and the weight of the gaze rotation
+ *  at torso-space height y. 0 at the shoulders for every build (the arms never bend with the gaze), 1 over the face. */
+/** Metres below the face centre where the bend starts (also the pitch pivot) and where it is complete; never below the
+ *  shoulders (`floor`, torso space; the short build's face sits low) and never steeper than `min` metres. */
+export const BEAN_NECK={from:.19,to:.07,floor:.4,min:.06} as const;
+export function beanNeckWeight(s:BeanShape,y:number){
+ const faceY=Y0+FACE_U*(s.H-Y0),a=Math.max(faceY-BEAN_NECK.from,BEAN_NECK.floor),b=Math.max(faceY-BEAN_NECK.to,a+BEAN_NECK.min),t=Math.min(1,Math.max(0,(y-a)/(b-a)));return t*t*(3-2*t);
+}
 /** Head frame for hats and hair features: origin and radius R (torso space), as in the prototype. */
 export function beanHeadFrame(s:BeanShape){
  const uh=.84,span=s.H-Y0,R=beanRadius(s,uh)*1.06;
@@ -317,17 +325,21 @@ mat3 beanEuler(vec3 r){
  // three.js Euler 'XYZ' (Rx*Ry*Rz), column-major.
  return mat3(c*e,af+be*d,bf-ae*d, -c*f,ae-bf*d,be+af*d, d,-b*c,a*c);
 }
-mat3 beanRl,beanRc;
-void beanSpineSetup(){beanRl=beanEuler(bt(${BD.lumbar}).xyz);beanRc=beanEuler(bt(${BD.chest}).xyz);}
+mat3 beanRl,beanRc,beanRh;float beanNk0,beanNk1,beanNkY;
+// Neck (Oct 10 2026): lumbar.w / chest.w carry the rig's gaze pitch / yaw (player.ts beanGaze); the top of the bean
+// (face, hair, hat) bends by it about a pivot under the face, blended in over the lower face (BEAN_NECK, beanNeckWeight).
+void beanSpineSetup(){vec4 l=bt(${BD.lumbar}),c=bt(${BD.chest});beanRl=beanEuler(l.xyz);beanRc=beanEuler(c.xyz);beanRh=beanEuler(vec3(l.w,c.w,0.));
+ float faceY=${g(Y0)}+${g(FACE_U)}*(bt(${BD.shape0}).x-(${g(Y0)}));beanNk0=max(faceY-${g(BEAN_NECK.from)},${g(BEAN_NECK.floor)});beanNk1=max(faceY-${g(BEAN_NECK.to)},beanNk0+${g(BEAN_NECK.min)});beanNkY=beanNk0;}
 // Weighted lumbar/chest rotation (same weights as the jersey's spine morphs); exact joint rotation at the top.
 vec3 beanSpine(vec3 p,float y){
- float wl=beanEase((y-.025)/.22),wc=beanEase((y-.2)/.18);
+ float wl=beanEase((y-.025)/.22),wc=beanEase((y-.2)/.18),wh=beanEase((y-beanNk0)/(beanNk1-beanNk0));
+ p.y-=beanNkY;p=mix(p,beanRh*p,wh);p.y+=beanNkY;
  vec3 q=p-vec3(0.,${g(CHEST_HEIGHT)},0.);q=mix(q,beanRc*q,wc)+vec3(0.,${g(CHEST_HEIGHT-LUMBAR_HEIGHT)},0.);
  return mix(q,beanRl*q,wl)+vec3(0.,${g(LUMBAR_HEIGHT)},0.);
 }
 vec3 beanSpineN(vec3 n,float y){
- float wl=beanEase((y-.025)/.22),wc=beanEase((y-.2)/.18);
- n=mix(n,beanRc*n,wc);return normalize(mix(n,beanRl*n,wl));
+ float wl=beanEase((y-.025)/.22),wc=beanEase((y-.2)/.18),wh=beanEase((y-beanNk0)/(beanNk1-beanNk0));
+ n=mix(n,beanRh*n,wh);n=mix(n,beanRc*n,wc);return normalize(mix(n,beanRl*n,wl));
 }
 vec3 beanP;vec3 beanN;bool beanCollapse;
 void beanRow(){
@@ -928,6 +940,9 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
  hair.raycast=hat.raycast=raycastBase;
  // The number panel is shaded on the body: no separate draw, no shadow.
  const meshes=[body,limbs,hair,hat];
+ // A bean-fitted costume (beanCostumes.ts) swaps the body material and hangs rigid ears/horns on player-chest: the neck
+ // bend would part the hood from them, so the gaze bend is off while one is worn.
+ const bodyBase=body.material;
  let look:BeanLook=defaultBeanLookFor(id),outfit:Outfit=defaultOutfitForTeam(team),expression:BeanExpression='neutral',number:number|null=null,active=true,cell=0;
  const put=(k:number,x:number,y:number,z:number,w:number)=>{const o=k*4;data[o]=x;data[o+1]=y;data[o+2]=z;data[o+3]=w;};
  const colour=(k:number,hex:string,w=0)=>{_col.set(hex);put(k,_col.r,_col.g,_col.b,w);};
@@ -950,7 +965,8 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
  const rest=[[-1,LIMB_ARM],[1,LIMB_ARM],[-1,LIMB_LEG],[1,LIMB_LEG]] as const;
  const sync=()=>{
   _inv.copy(j.root.matrixWorld).invert();
-  put(BD.lumbar,j.lumbar.rotation.x,j.lumbar.rotation.y,j.lumbar.rotation.z,0);put(BD.chest,j.chest.rotation.x,j.chest.rotation.y,j.chest.rotation.z,0);
+  const gaze=body.material===bodyBase?j.head.userData.beanGaze as Float32Array|undefined:undefined;
+  put(BD.lumbar,j.lumbar.rotation.x,j.lumbar.rotation.y,j.lumbar.rotation.z,gaze?gaze[0]:0);put(BD.chest,j.chest.rotation.x,j.chest.rotation.y,j.chest.rotation.z,gaze?gaze[1]:0);
   const chestP=_w.setFromMatrixPosition(j.chest.matrixWorld).applyMatrix4(_inv).clone(),pelvisP=_v.setFromMatrixPosition(j.pelvis.matrixWorld).applyMatrix4(_inv).clone();
   for(let k=0;k<4;k++){
    const arm=k<2,side=k%2,[,spec]=rest[k],base=BD.limbs+4*k;

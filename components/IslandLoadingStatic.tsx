@@ -1,7 +1,6 @@
 import styles from './IslandLoading.module.css';
 import LoadingIslandArt from './LoadingIslandArt';
 import LoadingBeanCast from './LoadingBeanCast';
-import LoadingTanCue from './LoadingTanCue';
 import {HANDOFF_BOOT} from './islandLoadingBoot';
 
 /**
@@ -17,7 +16,6 @@ export default function IslandLoadingStatic(){
    <script dangerouslySetInnerHTML={{__html:HANDOFF_BOOT}}/>
    <div className={styles.art} aria-hidden="true"><LoadingIslandArt/></div>
    <LoadingBeanCast lite/>
-   <LoadingTanCue/>
    <div className={styles.copy}>
     <span className={styles.eyebrow}>PLAY · LEARN · GROW</span>
     <h2>Futbol Island</h2>

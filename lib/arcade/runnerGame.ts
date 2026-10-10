@@ -50,7 +50,10 @@ export type RunnerObject={lane:number;z:number;kind:'defender'|'cone'|'coin'|'go
  /** Keeper goal: keeper x, sway clock, rush (0..1 off the line), rush enabled, wing cross finish. */keeper?:boolean;kx?:number;kclock?:number;kout?:number;rush?:boolean;cross?:boolean;danger?:boolean;
  /** Bonus ball for brave skill takers. */bonus?:boolean};
 export type RunnerShot={active:boolean;x:number;z:number;age:number;power:boolean;height?:number;volley?:boolean;precision?:boolean;blast?:number;penetrations?:number;returner?:RunnerObject;returning?:boolean;windup?:number;vx?:number;aimX?:number;chip?:boolean};
-export function createRunnerGame(){return{time:0,distance:0,x:0,vx:0,lean:0,slidePose:0,jumpPrep:0,landing:0,stride:0,lane:0,y:0,vy:0,jumping:false,slide:0,boost:0,energy:0,balls:1,collected:0,charging:false,charge:0,queuedMove:'' as ''|'jump'|'slide',moveBuffer:0,shotBuffer:0,bufferedPower:0,lastBlast:0,lastVolley:false,kick:0,shotCooldown:0,celebrate:0,score:0,goals:0,streak:0,lives:3,hurt:0,spawn:0,nextGoal:90,seed:47,wave:0,level:1,stageName:RUNNER_STAGES[0].name as string,stageProgress:0,combo:0,bestCombo:0,readLane:0,pattern:'Follow the footballs',objects:[] as RunnerObject[],shots:Array.from({length:4},()=>({active:false,x:0,z:0,age:0,power:false} as RunnerShot)),event:0,eventKind:'touch',eventX:0,eventZ:0,eventAt:-9,message:'Collect footballs. Line up your lane, then shoot.',
+/** Each run gets its own id: the arcade resets a run with Object.assign on the SAME object, so per-run side
+ * tables (missions, coach) key on this, not on object identity. */
+let runSerial=0;
+export function createRunnerGame(){return{runId:++runSerial,time:0,distance:0,x:0,vx:0,lean:0,slidePose:0,jumpPrep:0,landing:0,stride:0,lane:0,y:0,vy:0,jumping:false,slide:0,boost:0,energy:0,balls:1,collected:0,charging:false,charge:0,queuedMove:'' as ''|'jump'|'slide',moveBuffer:0,shotBuffer:0,bufferedPower:0,lastBlast:0,lastVolley:false,kick:0,shotCooldown:0,celebrate:0,score:0,goals:0,streak:0,lives:3,hurt:0,spawn:0,nextGoal:90,seed:47,wave:0,level:1,stageName:RUNNER_STAGES[0].name as string,stageProgress:0,combo:0,bestCombo:0,readLane:0,pattern:'Follow the footballs',objects:[] as RunnerObject[],shots:Array.from({length:4},()=>({active:false,x:0,z:0,age:0,power:false} as RunnerShot)),event:0,eventKind:'touch',eventX:0,eventZ:0,eventAt:-9,message:'Collect footballs. Line up your lane, then shoot.',
  /* Feel/presentation state: read by the renderer and audio, never by collisions. */
  speed:13,prevLane:0,cutDir:0,cutAge:9,cuts:0,jumps:0,slides:0,landings:0,nearMisses:0,nearStreak:0,recover:0,outro:0,hits:0,
  /* Depth systems (Oct 4 2026, round 2). */
@@ -61,8 +64,14 @@ export function createRunnerGame(){return{time:0,distance:0,x:0,vx:0,lean:0,slid
  /* Winding route (Oct 9 2026): grade (+ uphill) and curvature (+ bends right) under the runner; the
   * current bend (direction, metres run, metres on the inside lane) and how many bends were cut inside. */
  grade:0,curve:0,bendDir:0,bendLen:0,bendIn:0,bends:0,insideCuts:0,downhillBeats:0,
+ /* First-run coach (runnerCoach.ts): the live beat, its prompt, the button it lights, the 3D word and the
+  * slow-motion time scale it asks for. Presentation only: tickRunner never reads them. */
+ /** Personal best to beat this run (set by the presentation layer from the arcade record; 0 = none yet) and
+  * whether it has been passed. */
+ bestToBeat:0,newBest:false,
+ coach:'' as ''|'lane'|'jump'|'skill'|'shoot',coachPrompt:'',coachButton:'' as ''|'left'|'right'|'jump'|'skill'|'shoot',coachWord:'',coachScale:1,coachCount:0,
  /* Mission counters. */
- skills:0,perfectSkills:0,beatScores:0,lastBeatAt:-99,cleanStage:1,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
+ skills:0,perfectSkills:0,beatScores:0,shotsFired:0,lastBeatAt:-99,cleanStage:1,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
 export type RunnerGame=ReturnType<typeof createRunnerGame>;
 /** Slope pace: slower up a climb, faster down a descent, within ±10 %. */
 export const RUNNER_SLOPE={gain:1.1,min:.9,max:1.1,laneGain:1.5,insideShare:.6,minBend:12};
@@ -164,7 +173,10 @@ export function spawnRunnerBoss(s:RunnerGame){
 /** The tackle volume matches the extended leg, not just the torso centre. */
 export const RUNNER_DEFENDER_REACH={rest:{x:.85,z:.9},jockey:{x:.92,z:1.2},tackler:{x:.94,z:2.1},sweeper:{x:1.15,z:1.55},presser:{x:.95,z:1.35},wall:{x:.95,z:1.1},pair:{x:.92,z:1.2},line:{x:.95,z:1.1}} as const;
 export function runnerDefenderReach(o:RunnerObject){return (o.tackle??0)>.08&&(o.tackle??0)<.7?RUNNER_DEFENDER_REACH[o.role??'jockey']:RUNNER_DEFENDER_REACH.rest;}
-function feedback(s:RunnerGame,kind:string,x:number,z:number,message:string){s.event++;s.eventAt=s.time;s.eventKind=kind;s.eventX=x;s.eventZ=z;s.message=message;}
+/** Big moments own their frame: a ball collected (or a small bonus) in the SAME tick as a tackle, goal or skill move
+ * must not overwrite it, or the hit's message, hit-stop, shake and sound are lost (seen in ~1 of 12 kid-bot hits). */
+const RUNNER_MAJOR_EVENTS=new Set(['hit','goal','save','shield','boss','skillmove','onetwo','best','early','close','return','block']);
+function feedback(s:RunnerGame,kind:string,x:number,z:number,message:string){if(s.eventAt===s.time&&RUNNER_MAJOR_EVENTS.has(s.eventKind)&&!RUNNER_MAJOR_EVENTS.has(kind))return;s.event++;s.eventAt=s.time;s.eventKind=kind;s.eventX=x;s.eventZ=z;s.message=message;}
 /** A defender was beaten (skill, dodge, hurdle, one-two, back line): opens the beat-then-score window. */
 function beat(s:RunnerGame){s.lastBeatAt=s.time;}
 /** One place for losing a chance: a short kind slow-down, then the full-time beat. */
@@ -212,7 +224,7 @@ export function runnerSkill(s:RunnerGame){
  if(!target){const goal=chipGoal(s);
   if(goal&&s.shotCooldown<=0){const shot=s.shots.find(p=>!p.active);if(!shot)return false;
    Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley:false,height:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:false,precision:false,blast:0,penetrations:0,chip:true});
-   s.balls--;s.kick=.3;s.shotCooldown=.3;s.skill='chipShot';s.skillT=0;s.skillSide=1;s.skillCooldown=.5;s.lastVolley=false;s.lastBlast=0;
+   s.balls--;s.shotsFired++;s.kick=.3;s.shotCooldown=.3;s.skill='chipShot';s.skillT=0;s.skillSide=1;s.skillCooldown=.5;s.lastVolley=false;s.lastBlast=0;
    feedback(s,'shot',shot.x,-.9,(goal.kout??0)>.3?'CHIP! Lift it over the keeper.':'Chip away! Best when the keeper rushes out.');return true;}
   s.message='Skill moves beat a defender right in front of you.';return false;}
  const move=RUNNER_SKILL_FOR[target.role??'jockey'],spec=RUNNER_SKILLS[move],time=runnerContactTime(s,target);
@@ -229,11 +241,11 @@ export function runnerShoot(s:RunnerGame){
  if(s.slide>0){s.message='Set your feet before you shoot.';return false;}
  // One-two: in a teammate's lane, the shot becomes a pass and the return comes back ahead.
  const mate=!s.jumping&&s.pass.phase===''&&s.objects.find(o=>o.kind==='mate'&&!o.passed&&o.z>-18&&o.z<-4&&s.lane===o.lane);
- if(mate){mate.passed=true;s.pass.phase='out';s.pass.t=0;s.pass.mateX=mate.x??mate.lane*4.3;s.pass.mateZ=mate.z;s.balls--;s.kick=.3;s.shotCooldown=.3;s.skill='';s.lastVolley=false;s.lastBlast=0;feedback(s,'pass',s.x,mate.z,'Pass! Now move: your teammate plays it back.');return true;}
+ if(mate){mate.passed=true;s.pass.phase='out';s.pass.t=0;s.pass.mateX=mate.x??mate.lane*4.3;s.pass.mateZ=mate.z;s.balls--;s.shotsFired++;s.kick=.3;s.shotCooldown=.3;s.skill='';s.lastVolley=false;s.lastBlast=0;feedback(s,'pass',s.x,mate.z,'Pass! Now move: your teammate plays it back.');return true;}
  const shot=s.shots.find(p=>!p.active);if(!shot)return false;
  const volley=s.jumping&&s.y>.45;
  const goal=s.objects.find(o=>o.kind==='goal'&&!o.passed&&o.z< -8&&o.z> -22&&(o.keeper||Math.abs(s.x-o.openLane*2.4)<.65));
- Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley,height:volley?s.y*.65+.4:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:s.boost>0||s.charge>=.8,precision:!!goal,blast:s.charge,penetrations:s.charge>=.8?2:0,chip:false});s.balls--;s.lastVolley=volley;s.lastBlast=s.charge;s.kick=.3;s.shotCooldown=.3;s.skill='';
+ Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley,height:volley?s.y*.65+.4:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:s.boost>0||s.charge>=.8,precision:!!goal,blast:s.charge,penetrations:s.charge>=.8?2:0,chip:false});s.balls--;s.shotsFired++;s.lastVolley=volley;s.lastBlast=s.charge;s.kick=.3;s.shotCooldown=.3;s.skill='';
  feedback(s,'shot',shot.x,-.9,volley?'AERIAL VOLLEY! Meet it in the air, then land balanced.':s.charge>=.8?'POWER BLAST! Drive through the defence.':'Shot away! Keep moving into space.');return true;
 }
 /** Keeper position at a given time: a readable sway along the line, or rushing at the runner. */
@@ -271,6 +283,8 @@ function shotAtGoal(s:RunnerGame,shot:RunnerShot,target:RunnerObject){
 }
 export function tickRunner(s:RunnerGame,dt:number){
  if(s.lives<=0)return;dt=Math.max(0,Math.min(dt,.05));s.time+=dt;s.moveBuffer=Math.max(0,s.moveBuffer-dt);s.shotBuffer=Math.max(0,s.shotBuffer-dt);if(s.charging)s.charge=Math.min(1,s.charge+dt/1.1);s.hurt=Math.max(0,s.hurt-dt);s.slide=Math.max(0,s.slide-dt);s.boost=Math.max(0,s.boost-dt);if(s.boost<=0)s.shield=false;s.kick=Math.max(0,s.kick-dt);s.shotCooldown=Math.max(0,s.shotCooldown-dt);s.celebrate=Math.max(0,s.celebrate-dt);s.recover=Math.max(0,s.recover-dt);s.cutAge+=dt;s.mud=Math.max(0,s.mud-dt);s.burst=Math.max(0,s.burst-dt);s.skillCooldown=Math.max(0,s.skillCooldown-dt);
+ // Personal best: announced once, never over a fresh teaching moment (a goal, a skill name), like missions.
+ if(s.bestToBeat>0&&!s.newBest&&s.score>s.bestToBeat&&s.time-s.eventAt>=1.3){s.newBest=true;feedback(s,'best',s.x,0,`NEW PERSONAL BEST! You beat ${s.bestToBeat}. Keep going!`);}
  if(s.skill){s.skillT+=dt;if(s.skillT>=RUNNER_SKILLS[s.skill].seconds){s.skill='';s.skillT=0;}}
  if(s.lane!==s.prevLane){s.cutDir=Math.sign(s.lane-s.prevLane);s.cutAge=0;s.cuts++;s.prevLane=s.lane;}
  // Exact critically damped spring: a lane cut accelerates and plants without

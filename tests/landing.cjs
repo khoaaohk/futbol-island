@@ -69,7 +69,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  for(const f of files)assert(!/localStorage|sessionStorage|indexedDB|sendBeacon|\/api\/save/.test(strip(read(f)).replace("sessionStorage.setItem(HANDOFF_STORAGE_KEY,'1')",'').replace("sessionStorage.setItem(HANDOFF_KEY,'tan')",'')),`${f}: no save logic or storage of its own`);
  assert.match(actions,/import\('\.\/saveCodeAdapter'\)/,'loaded on demand');
  const create=read('components/saves/SaveCodeCreate.tsx');assert.match(create,/required/,'the real create supports required mode');
- assert.match(create,/Which word comes first\?/,'the code screen has the first-word check');}
+ assert.doesNotMatch(create,/Which word comes first\?/,'no first-word check on any code screen (user, Oct 10 2026)');}
 
 // 4. Motion is heat-safe.
 {const M=load(`${DIR}/motion.ts`);

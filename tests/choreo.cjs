@@ -24,6 +24,9 @@ let out=touchActions(ev('receive','a',{height:1}),fake);assert.equal(out[0].reac
 out=touchActions(ev('receive','a',{height:.6}),fake);assert.equal(out[0].reaction,'thigh');
 out=touchActions(ev('receive','a',{height:1.7}),fake);assert.equal(out[0].reaction,'header');assert(out[0].squash>0,'a header stretches up');
 out=touchActions(ev('receive','a',{height:0}),fake);assert.equal(out[0].reaction,undefined,'a ground pass is an ordinary foot touch');
+// A keeper's catch squash only when the ball is in his hands: a 7v7 back pass taken with his feet is an outfield-style touch.
+{const k1=touchActions(ev('receive','k',{height:0}),fake);assert(k1[0].squash<0&&k1[0].reaction===undefined,'keeper catch');
+ const k2=touchActions(ev('receive','k',{height:1}),{...fake,keeperHands:false});assert.equal(k2[0].reaction,'chest','feet back pass: controlled like an outfield touch');}
 assert(touchActions(ev('receive','a',{heavy:true}),fake)[0].squash<touchActions(ev('receive','a'),fake)[0].squash,'a heavy touch squashes deeper');
 out=touchActions(ev('receive','k',{height:1}),fake);assert.equal(out[0].reaction,undefined,'keepers catch with their hands');
 out=touchActions(ev('intercept','b',{speed:150}),fake);assert.equal(out[0].reaction,'slide','a running defender slides to cut it out');

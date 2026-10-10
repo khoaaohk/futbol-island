@@ -132,6 +132,10 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  // Onboarding teaches learning (Paths, then the Ball hunt) before money.
  const order=[...onboarding.matchAll(/\{id:'(\w+)',eyebrow:/g)].map(m=>m[1]);
  same(order,['welcome','paths','balls','earn','learn'],'onboarding: player → Paths → Ball hunt → coins');
+ // The "Earn coins" step rings the coin pocket, so the pocket must not be hidden while the welcome is open (QA, Oct 10 2026).
+ assert(/tour:'\[data-job-wallet\]'/.test(onboarding),'the Earn coins step rings the pocket');
+ const islandJobs=read('components/Town.tsx').match(/<IslandJobs [^\n]*? blocked=\{(.*?)\} holdToasts/);
+ assert(islandJobs&&/settingsRef\.current&&!onboardingOpen/.test(islandJobs[1]),'the coin pocket stays visible behind the welcome');
 }
 
 // ---- 3. Quiz: full feedback, no doubled praise, resume keeps the first-try run (G-04, G-05, G-21) ---------------------------
@@ -141,6 +145,7 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
  assert.equal(Q.quizFeedbackText('Yes. Two at the back, three in the middle and one ahead, plus the keeper.'),'Two at the back, three in the middle and one ahead, plus the keeper.');
  assert.equal(Q.quizFeedbackText('The pivot remains ahead, but the lane is covered. The deeper fixo offers a clear supporting route.'),'The pivot remains ahead, but the lane is covered. The deeper fixo offers a clear supporting route.','the full "why", not the first sentence');
  assert.equal(Q.quizFeedbackText('Correct positioning wins the ball.'),'Correct positioning wins the ball.','a real first word is kept');
+assert.equal(Q.quizFeedbackText('Look again: the defender has moved toward the ball.'),'The defender has moved toward the ball.','no "Look again. Look again:" on a wrong answer');
  const learning=read('components/FieldLearning.tsx');
  assert(!/\.split\(\/\(\?<=\[\.!\?\]\)\\s\/\)\[0\]/.test(learning),'no first-sentence cut in FieldLearning');
  assert(/quizFeedbackText\(/.test(learning),'FieldLearning uses quizFeedbackText');

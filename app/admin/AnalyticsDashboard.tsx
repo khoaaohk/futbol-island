@@ -7,11 +7,15 @@ import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRo
 import IslandSection from './IslandSection';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
+import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
+import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
 import styles from './admin.module.css';
 
-type Preset='today'|'7d'|'30d'|'custom';
-const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'custom',label:'Custom'}];
+type Preset='today'|'7d'|'30d'|'90d'|'custom';
+const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'custom',label:'Custom'}];
+/** Oct 11 2026: the dashboard order, most important for investors first. */
+const SECTIONS:[string,string][]=[['sec-headline','Headline'],['sec-engagement','Engagement'],['sec-acquisition','Acquisition'],['sec-product','Product usage'],['sec-health','Save health'],['sec-detail','Detail']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',controller:'Phone controller',other:'Other pages'};
@@ -66,6 +70,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const rangeText=report.from===report.to?dayLabel(report.from,false):`${dayLabel(report.from,false)} – ${dayLabel(report.to,false)}`;
  const sources=Object.keys(SOURCE_LABEL).map(k=>d.source.find(r=>r.key===k)??{key:k,visitors:0,sessions:0,pageviews:0});
  const areaTotal=report.areas.reduce((a,r)=>a+r.ms,0);
+ const sd=saveData(report);
 
  return <main className={styles.page}>
   {/* Corners as in the main app and the museum exhibits: Back top left, Log out top right (24/20 px, 16/16 on phones). */}
@@ -74,7 +79,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
   <div className={styles.wrap}>
    <header className={styles.header}>
     <span aria-hidden="true"/>
-    <h1><small>Admin</small>Island visitors</h1>
+    <h1><small>Admin</small>Futbol Island at a glance</h1>
    </header>
 
    <div className={styles.filters} role="group" aria-label="Date range">
@@ -87,7 +92,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <span className={styles.spacer}/>
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
    </div>
-   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}{saves&&<p className={styles.utc} data-save-status>{saves}</p>}</div>
+   <div className={styles.utcRow}><p className={styles.utc}>{rangeText} · days and hours in UTC{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>
@@ -111,71 +116,104 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
    </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
 
+   <nav aria-label="Sections"><ol className={styles.toc}>{SECTIONS.map(([id,label],i)=><li key={id}><a href={'#'+id}>{i+1}. {label}</a></li>)}</ol></nav>
+
+   {/* Oct 11 2026: ordered for investors, most important first (headline → engagement → acquisition → product → save health → detail). */}
    <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading}>
-    <section className={styles.kpis} aria-label="Totals">
-     <div className={`${styles.tile} ${styles.hero}`}><span>Visitors</span><b>{fmtInt(t.visitors)}</b><small>unique per day, added up over the range</small></div>
-     <div className={styles.tile}><span>Sessions</span><b>{fmtInt(t.sessions)}</b><small>one per browser tab visit</small></div>
-     <div className={styles.tile}><span>Page views</span><b>{fmtInt(t.pageviews)}</b><small>{t.sessions?(t.pageviews/t.sessions).toFixed(1):'0'} per session</small></div>
-     <div className={styles.tile}><span>Median visit</span><b>{fmtDuration(t.medianMs)}</b><small>average {fmtDuration(t.avgMs)}</small></div>
-     <div className={styles.tile}><span>Bounce rate</span><b>{fmtPct(t.bounceRate)}</b><small>one page and under 10 s</small></div>
+    <section className={styles.island} aria-labelledby="sec-headline">
+     <div className={styles.sectionHead}><h2 id="sec-headline"><span className={styles.sectionNum}>1</span>Headline</h2>
+      <p>Players, save codes and growth for {rangeText}, each compared with the same number of days just before. Save-code counts (active, returning, retention, stored) are as of today.</p></div>
+     <HeadlineTiles report={report}/>
+     <ChartCard wide title="Visitors, sessions and page views" subtitle={hourly?'By hour (UTC)':'By day (UTC)'} empty={empty}
+      table={{columns:[hourly?'Hour':'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[labels[i],p.visitors,p.sessions,p.pageviews])}}>
+      <ul className={styles.legend}>
+       <li><i style={{'--key':'var(--s1)'} as CSSProperties}/>Visitors</li>
+       <li><i style={{'--key':'var(--s2)'} as CSSProperties}/>Sessions</li>
+       <li><i style={{'--key':'var(--s3)'} as CSSProperties}/>Page views</li>
+      </ul>
+      <LineChart labels={labels} values={values} ariaLabel={`Visitors, sessions and page views, ${rangeText}`}
+       series={[{key:'visitors',label:'Visitors',color:'var(--s1)'},{key:'sessions',label:'Sessions',color:'var(--s2)'},{key:'pageviews',label:'Page views',color:'var(--s3)'}]}/>
+     </ChartCard>
+     <div className={styles.grid}>
+      <WeeklyCodesCard d={sd} saves={report.saves}/>
+      <RetentionCard d={sd} saves={report.saves}/>
+     </div>
     </section>
 
-    <StartSection report={report} countryName={countryName}/>
+    <section className={styles.island} aria-labelledby="sec-engagement">
+     <div className={styles.sectionHead}><h2 id="sec-engagement"><span className={styles.sectionNum}>2</span>Engagement</h2>
+      <p>How long and how often they play, what they learn, and which save codes keep coming back.</p></div>
+     <EngagementTiles report={report}/>
+     <div className={styles.grid}>
+      <ComingBackCard d={sd} saves={report.saves}/>
+      <RestoresCard report={report}/>
+      <ChartCard wide title="Time on site" subtitle="Foreground time per session (hidden tabs and 10+ idle minutes don't count)" empty={empty}
+       table={{columns:['Length','Sessions'],rows:report.distribution.map(b=>[b.label,b.sessions])}}>
+       <div className={styles.lengthStats}><span>Median <b>{fmtDuration(t.medianMs)}</b></span><span>Average <b>{fmtDuration(t.avgMs)}</b></span><span>Bounce <b>{fmtPct(t.bounceRate)}</b></span></div>
+       <Columns rows={report.distribution.map(b=>({label:b.label,value:b.sessions}))} unit="sessions"/>
+      </ChartCard>
+     </div>
+    </section>
 
-    <ChartCard wide title="Visitors, sessions and page views" subtitle={hourly?'By hour (UTC)':'By day (UTC)'} empty={empty}
-     table={{columns:[hourly?'Hour':'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[labels[i],p.visitors,p.sessions,p.pageviews])}}>
-     <ul className={styles.legend}>
-      <li><i style={{'--key':'var(--s1)'} as CSSProperties}/>Visitors</li>
-      <li><i style={{'--key':'var(--s2)'} as CSSProperties}/>Sessions</li>
-      <li><i style={{'--key':'var(--s3)'} as CSSProperties}/>Page views</li>
-     </ul>
-     <LineChart labels={labels} values={values} ariaLabel={`Visitors, sessions and page views, ${rangeText}`}
-      series={[{key:'visitors',label:'Visitors',color:'var(--s1)'},{key:'sessions',label:'Sessions',color:'var(--s2)'},{key:'pageviews',label:'Page views',color:'var(--s3)'}]}/>
-    </ChartCard>
+    <section className={styles.island} aria-labelledby="sec-acquisition">
+     <div className={styles.sectionHead}><h2 id="sec-acquisition"><span className={styles.sectionNum}>3</span>Acquisition</h2>
+      <p>From the title screen to a code that comes back, and where visitors come from.</p></div>
+     <InvestorFunnel report={report}/>
+     <div className={styles.grid}>
+      <NewCodesCard d={sd} saves={report.saves}/>
+      <ChartCard title="Where they come from" subtitle="Visitors by source" empty={empty}
+       table={{columns:['Source','Visitors','Sessions','Page views'],rows:sources.map(r=>[SOURCE_LABEL[r.key],r.visitors,r.sessions,r.pageviews])}}>
+       <BarList rows={barsOf(sources,k=>SOURCE_LABEL[k]||k)} unit="visitors"/>
+      </ChartCard>
+      <ChartCard title="Countries" subtitle="Visitors by country" empty={empty} table={tableOf(d.country,countryName)}>
+       <BarList rows={barsOf(d.country,countryName)} unit="visitors"/>
+      </ChartCard>
+      <RegionCard report={report} empty={empty} countryName={countryName}/>
+      <ChartCard title="Referring sites" subtitle="Visitors by referrer (host only)" empty={empty||!d.referrer.length} table={tableOf(d.referrer,k=>k)}>
+       <BarList rows={barsOf(d.referrer,k=>k)} unit="visitors"/>
+      </ChartCard>
+      <ChartCard title="Campaigns" subtitle="utm_campaign · source / medium" empty={empty||!d.campaign.length} table={tableOf(d.campaign,k=>k)}>
+       <BarList rows={barsOf(d.campaign,k=>k)} unit="visitors"/>
+      </ChartCard>
+      <ChartCard title="Devices" subtitle="Visitors by device class" empty={empty} table={tableOf(d.device,k=>DEVICE_LABEL[k]||k)}>
+       <BarList rows={barsOf(d.device,k=>DEVICE_LABEL[k]||k)} unit="visitors"/>
+      </ChartCard>
+      <ChartCard title="Entry pages" subtitle="Sessions by the page they started on" empty={empty} table={tableOf(d.entry,k=>PAGE_LABEL[k]||k)}>
+       <BarList rows={barsOf(d.entry,k=>PAGE_LABEL[k]||k,'sessions')} unit="sessions"/>
+      </ChartCard>
+     </div>
+    </section>
 
-    <div className={styles.grid}>
-     <ChartCard title="Time on site" subtitle="Foreground time per session (hidden tabs and 10+ idle minutes don't count)" empty={empty}
-      table={{columns:['Length','Sessions'],rows:report.distribution.map(b=>[b.label,b.sessions])}}>
-      <div className={styles.lengthStats}><span>Median <b>{fmtDuration(t.medianMs)}</b></span><span>Average <b>{fmtDuration(t.avgMs)}</b></span><span>Bounce <b>{fmtPct(t.bounceRate)}</b></span></div>
-      <Columns rows={report.distribution.map(b=>({label:b.label,value:b.sessions}))} unit="sessions"/>
-     </ChartCard>
+    <section className={styles.island} aria-labelledby="sec-product">
+     <div className={styles.sectionHead}><h2 id="sec-product"><span className={styles.sectionNum}>4</span>Product usage</h2>
+      <p>Which parts of the game get used: places on the island (Coaches Board included), the arcade, the museum and the Football plan.</p></div>
+     <div className={styles.grid}>
+      <ChartCard title="Where they spend time" subtitle="Foreground minutes by area" empty={empty||!report.areas.length}
+       table={{columns:['Area','Minutes','Share'],rows:report.areas.map(a=>[AREA_LABEL[a.area]||a.area,Math.round(a.ms/60000),areaTotal?fmtPct(a.ms/areaTotal):'0%'])}}>
+       <BarList rows={report.areas.map(a=>({key:a.area,label:AREA_LABEL[a.area]||a.area,value:Math.round(a.ms/60000)}))} unit="minutes"/>
+      </ChartCard>
+      <PlanCard report={report}/>
+     </div>
+     <IslandSection report={report}/>
+    </section>
 
-     <ChartCard title="Countries" subtitle="Visitors by country" empty={empty} table={tableOf(d.country,countryName)}>
-      <BarList rows={barsOf(d.country,countryName)} unit="visitors"/>
-     </ChartCard>
+    <section className={styles.island} aria-labelledby="sec-health">
+     <div className={styles.sectionHead}><h2 id="sec-health"><span className={styles.sectionNum}>5</span>Save health and operations</h2>
+      <p>Rate limits, the breaker, the saving-break card, storage and the 12-month expiry pipeline.</p>
+      {saves&&<p className={styles.note} data-save-status>{saves}</p>}</div>
+     <SaveMetricsBanner saves={report.saves}/>
+     <div className={styles.grid}>
+      <SaveHealthCard report={report}/>
+      <SaveStorageCard d={sd} saves={report.saves}/>
+     </div>
+    </section>
 
-     <ChartCard title="Where they come from" subtitle="Visitors by source" empty={empty}
-      table={{columns:['Source','Visitors','Sessions','Page views'],rows:sources.map(r=>[SOURCE_LABEL[r.key],r.visitors,r.sessions,r.pageviews])}}>
-      <BarList rows={barsOf(sources,k=>SOURCE_LABEL[k]||k)} unit="visitors"/>
-     </ChartCard>
-
-     <ChartCard title="Referring sites" subtitle="Visitors by referrer (host only)" empty={empty||!d.referrer.length} table={tableOf(d.referrer,k=>k)}>
-      <BarList rows={barsOf(d.referrer,k=>k)} unit="visitors"/>
-     </ChartCard>
-
-     <ChartCard title="Campaigns" subtitle="utm_campaign · source / medium" empty={empty||!d.campaign.length} table={tableOf(d.campaign,k=>k)}>
-      <BarList rows={barsOf(d.campaign,k=>k)} unit="visitors"/>
-     </ChartCard>
-
-     <ChartCard title="Devices" subtitle="Visitors by device class" empty={empty} table={tableOf(d.device,k=>DEVICE_LABEL[k]||k)}>
-      <BarList rows={barsOf(d.device,k=>DEVICE_LABEL[k]||k)} unit="visitors"/>
-     </ChartCard>
-
-     <ChartCard title="Entry pages" subtitle="Sessions by the page they started on" empty={empty} table={tableOf(d.entry,k=>PAGE_LABEL[k]||k)}>
-      <BarList rows={barsOf(d.entry,k=>PAGE_LABEL[k]||k,'sessions')} unit="sessions"/>
-     </ChartCard>
-
-     <ChartCard title="Where they spend time" subtitle="Foreground minutes by area" empty={empty||!report.areas.length}
-      table={{columns:['Area','Minutes','Share'],rows:report.areas.map(a=>[AREA_LABEL[a.area]||a.area,Math.round(a.ms/60000),areaTotal?fmtPct(a.ms/areaTotal):'0%'])}}>
-      <BarList rows={report.areas.map(a=>({key:a.area,label:AREA_LABEL[a.area]||a.area,value:Math.round(a.ms/60000)}))} unit="minutes"/>
-     </ChartCard>
-
-     <RegionCard report={report} empty={empty} countryName={countryName}/>
-    </div>
-
-    <IslandSection report={report}/>
-
-    <LearningSection report={report}/>
+    <section className={styles.island} aria-labelledby="sec-detail">
+     <div className={styles.sectionHead}><h2 id="sec-detail"><span className={styles.sectionNum}>6</span>Detail</h2>
+      <p>The full title-screen breakdown (every funnel, For grown-ups, donations, privacy) and the learning detail (lesson funnels, question analysis, settings).</p></div>
+     <StartSection report={report} countryName={countryName}/>
+     <LearningSection report={report}/>
+    </section>
    </div>
   </div>
  </main>;

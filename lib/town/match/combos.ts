@@ -57,7 +57,7 @@ interface Host{
  windup:KickWindup|null;windupScale:number;frameContact:MatchSim['frameContact'];combination:{runner:string;wall:string;team:Team;x:number;y:number;expires:number}|null;
  tacticalReason:string;msg:string;msgT:number;fatigue:number;userId:string|null;
  trapT:number;trapDur:number;trapVX:number;trapVY:number;touchX:number;touchY:number;recv:MatchSim['recv'];
- T:{shotRange:number;finish:number;laneReq:number};goalVenue:{id:string};passMul:number;useOffside:boolean;groundFriction:number;
+ T:{shotRange:number;finish:number;laneReq:number};ai?:{manMark:number};goalVenue:{id:string};passMul:number;useOffside:boolean;groundFriction:number;
  persona:Record<Team,{carry:number;width:number}>;
  isOffside(t:Team,y:number):boolean;offsideLine(t:Team):number;nearestFoe(id:string,x:number,y:number):{p:SimPlayer;d:number}|null;
  atkGoalY(t:Team):number;ownGoalY(t:Team):number;dirY(t:Team):number;mates(t:Team):string[];foes(t:Team):string[];depth(t:Team,y:number):number;lastManRisk(id:string):boolean;
@@ -135,6 +135,9 @@ export class Combos{
  }
  private get now(){return this.h.stats.time;}
  private futsal(){return this.h.goalVenue.id==='futsal';}
+ /** Futsal man-oriented marking (formatAI manMark) puts a defender square in front of a receiver far more often, so each
+  *  1v1 meeting is a little less likely to become a skill: the take-on / flick showpieces keep their designed frequency. */
+ private duelScale(){return 1/(1+.6*(this.h.ai?.manMark??0));}
  /** Beach soccer: the ball is played in the air (flick-ups, flick volleys, chipped kick-ins). */
  private sand(){return this.h.goalVenue.id==='beach';}
  private get tune(){return TUNE[this.h.goalVenue.id]??TUNE['11v11'];}
@@ -310,7 +313,7 @@ export class Combos{
   if(foeD>3&&foeD<9&&ahead>.6){
    const land={x:clamp(f.x+ux*2,20,250),y:clamp(f.y+dir*10,16,384)};
    let covered=false;for(const fid of h.foes(o.team)){if(fid===foeId)continue;const q=h.players[fid];if(dist(q.x,q.y,land.x,land.y)<(q.isGK?9:12)){covered=true;break;}}
-   if(!covered&&this.rng()<(fut?.17:sand?.15:.012)*this.urgency(o.team)){
+   if(!covered&&this.rng()<(fut?.17*this.duelScale():sand?.15:.012)*this.urgency(o.team)){
     // The rainbow only works on a flat-footed defender (skillMoves: "a defender who is standing still"); a lunging one gets the flick-up.
     const closing=((o.x-f.x)*f.vx+(o.y-f.y)*f.vy)/(foeD||1),flat=closing<14,rainbow=flat&&speed>24&&this.rng()<(fut?(comboSettings.futsalCreative?.45:.3):.25);
     this.startLob(o,f,rainbow?'rainbow':'flickUp',land);return true;
@@ -320,7 +323,7 @@ export class Combos{
   // elastico, croqueta, scissors against a square defender; roulette, pull-back or Cruyff turn against one at his side),
   // standing over it until the touch and then going the way the move exits. Nothing is decided here: after the touch
   // the defender can still tackle him (the sim's own duel), exactly as after a sole roll.
-  if(fut&&comboSettings.futsalCreative&&!comboSettings.off.takeOn&&foeD>3.5&&foeD<11&&ahead>-.3&&this.rng()<TAKE_ON_RATE*this.urgency(o.team))return this.startTakeOn(o,f,foeD,ahead);
+  if(fut&&comboSettings.futsalCreative&&!comboSettings.off.takeOn&&foeD>3.5&&foeD<11&&ahead>-.3&&this.rng()<TAKE_ON_RATE*this.duelScale()*this.urgency(o.team))return this.startTakeOn(o,f,foeD,ahead);
   // Futsal sole roll: shield the ball under the sole and roll it across, away from the presser.
   if(fut&&foeD<9&&speed<40&&this.rng()<.2*this.urgency(o.team)){
    const side=(o.x-f.x)>=0?1:-1,lead=skillLead('soleRoll',h.windupScale);

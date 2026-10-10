@@ -35,7 +35,7 @@ function morph(el:HTMLElement,from:DOMRect,{reverse=false,duration=460}={}):Prom
 }
 
 export default function TitleActions(){
- const [saves,setSaves]=useState<Saves|null>(null),[state,setState]=useState<TitleState>('boot'),[code,setCode]=useState<string|null>(null);
+ const [saves,setSaves]=useState<Saves|null>(null),[state,setState]=useState<TitleState>('boot'),[,setCode]=useState<string|null>(null);
    const [sheet,setSheet]=useState<Sheet|null>(null),[celebrate,setCelebrate]=useState(false),[busy,setBusy]=useState(false);
  // The new code's own footer carries Back (bottom left) once the code shows; the header keeps it before that (Oct 9 2026).
  const [createPhase,setCreatePhase]=useState('');
@@ -44,7 +44,8 @@ export default function TitleActions(){
  const [intro,setIntro]=useState(false),[making,setMaking]=useState(false);
  // "Get my code" makes the code behind the intro (the intro stays up, its button says so) and swaps to it only once it's ready:
  // no flash of SaveCodeCreate's own "Save your island" screen in between (user, Oct 10 2026).
- useEffect(()=>{if(createPhase==='code')setIntro(false);},[createPhase]);
+ // It also swaps when making the code is slow ("Still working…") or timed out (Try again / Play now), so the kid is told.
+ useEffect(()=>{if(createPhase==='code'||createPhase==='working'||createPhase==='timeout')setIntro(false);},[createPhase]);
  const applyRestore=useRef<(()=>void)|null>(null);
  const surface=useRef<HTMLDivElement>(null),content=useRef<HTMLDivElement>(null),backdrop=useRef<HTMLDivElement>(null),landing=useRef<HTMLDivElement>(null);
  // Start-page analytics: the returning and saving-break cards are counted when they appear (lib/analytics/startEvents.ts).
@@ -113,7 +114,8 @@ export default function TitleActions(){
    <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={!saves||busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
   </div>}
   {state==='returning'&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions">
-   <WaterPill card="returning" label="Play" sub={code?`Welcome back, ${code.split('-')[0]}!`:'Welcome back!'}/>
+   {/* Never part of the code on screen: its first word is a third of the key (QA, Oct 10 2026). */}
+   <WaterPill card="returning" label="Play" sub="Welcome back!"/>
    <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>Use a different code</button>
   </div>}
   {state==='ready'&&<div ref={landing} className={styles.choices} data-title-card="ready">
@@ -136,7 +138,7 @@ export default function TitleActions(){
     <div ref={content} className={styles.sheetContent}>
      <header className={styles.sheetHeader}>
       {!footerBack&&<BackButton onBack={()=>void leave(null)}/>}
-      <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='create'?(intro?'Before you start':'Your secret code'):'My save code'}</h2>
+      <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='create'?(intro?'Before you start':createPhase==='working'||createPhase==='timeout'?'Save your island':'Your secret code'):'My save code'}</h2>
       {!footerBack&&<span aria-hidden="true"/>}
      </header>
      <div className={styles.sheetBody} data-save-flow={sheet.mode}>

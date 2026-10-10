@@ -652,3 +652,11 @@ Details are in `docs/player-moves/MOVES.md` ("Futsal: the creative game"). All c
 | Shots per game | 27.2 | 26.7 | |
 
 Grass formats are byte-identical (tested in `match-combos`).
+
+## Body pass: bean neck + idle breath (Oct 10 2026, local, nothing committed or deployed)
+
+Closes lane A's follow-up "the face ignores player-head rotation".
+- `player.ts` writes `head.userData.beanGaze = [pitch, yaw]` each update (preallocated Float32Array): `.4 × head pitch` and `.7 × head yaw` (ball attention, looks into turns, scans, header nods), plus a neck overlap spring (`NECK_STIFFNESS 140`, `NECK_DAMPING 9.5`, ζ ≈ .4) that lags back on a start, tips forward on a brake/plant and nods after a landing squash, and a small footfall nod at running pace. The spring sleeps once settled; reduced motion, rides, seeks and authored samples keep it still.
+- `beanSkin.ts` carries it in the spare `lumbar.w` / `chest.w` texels (no new texels, uniforms, draws or uploads). `beanSpine`/`beanSpineN` bend the top of the bean (face, hair, hat) about a pivot under the face, weighted by `beanNeckWeight` (`BEAN_NECK`): 0 at shoulder height for every build, 1 over the face. Zero while a bean-fitted costume is worn (its ears/horns are rigid on player-chest).
+- Idle breathing: a ±1 % volume-preserving swell of the bean meshes only (body, hair, hat; never a joint, so joint goldens and foot locks are unchanged), in phase with the pelvis breath, gone once moving.
+- API unchanged. Test: `tests/bean-neck.cjs` (in `npm test`). Draws/triangles unchanged (22 batched rigs: 10 calls, 118,844 triangles before and after).

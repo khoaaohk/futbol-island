@@ -27,3 +27,6 @@ __pycache__/
 *.swp
 *.swo
 .local-saves.json
+
+# Agent screenshots and scripts (never committed)
+/scratchpad/

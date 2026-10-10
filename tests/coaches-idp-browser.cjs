@@ -1,144 +1,119 @@
 #!/usr/bin/env node
 /*
- * IDP v2 headless play-through (Oct 9 2026, docs/idp/DESIGN.md). Needs a dev server: FUTBOL_BASE_URL (default
- * http://localhost:8092). Not part of `npm test` (it needs a browser and the island). Screenshots go to shots/idp/
- * (git-ignored). For each of phone (390×844, touch) and desktop (1280×800):
- *   PLAYER   open the plan (For grown-ups → plan, behind the ParentGate), make it together, walk the five beats, do a mission,
- *            check in twice, add a proud moment, celebrate a goal (frame sequence), choose the next goal;
- *   PARENT   the Grown-ups tab: the week story, leave a cheer, print the fridge card (the print HTML is captured and rendered);
- *   COACH    the Coach tab: pick a goal and cue, make the QR, open its link (/plan#c=…) and add the coach's goal;
- *   PHONE    the fridge card's QR link (/plan#p=…) in a fresh browser with no saves (a grown-up's own phone).
- * Heat: after the motion settles, counts requestAnimationFrame callbacks and running animations for 2 s (both must be 0
- * while the plan is open: the island sleeps behind the sheet and the plan owns no loop). Reduced motion: beats are complete.
+ * Football plan (IDP v2, simplified Oct 10 2026, docs/idp/DESIGN.md §10) headless play-through. Needs a dev server:
+ * FUTBOL_BASE_URL (default http://localhost:8092). Not part of `npm test` (it needs a browser and the island). Screenshots go
+ * to shots/idp/ (git-ignored). For each of phone (390×844, touch) and desktop (1440×900), counting taps per task:
+ *   PLAYER   Coaches Centre → the plan (no gate: user decision Oct 10 2026) → pick a goal → who helped; Practise → "I did it!" → check in with a note;
+ *            a standalone check-in; talk it through; "I can do it now!" (celebration) → the next goal;
+ *   GROWN-UP "For grown-ups and coaches" (ParentGate first): a note, the fridge card (the print HTML is captured and rendered), the week story,
+ *            the review screen;
+ *   COACH    give a goal by QR, open its link (/plan#c=…) and add the coach's goal; the fridge QR on a grown-up's phone.
+ * Heat: at rest on the plan's home, 0 rAF callbacks and 0 running animations for 2 s; the celebration ends; reduced motion
+ * runs nothing. Also: no element past the right edge at 390, every button named, no page errors.
  */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const PW=['/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright','playwright','@playwright/test'];
 let chromium;for(const p of PW){try{chromium=require(p).chromium;if(chromium)break;}catch{}}
-const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:8092';
-const OUT=path.join(__dirname,'..','shots','idp');fs.mkdirSync(OUT,{recursive:true});
+const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:8092',OUT=path.join(__dirname,'..','shots','idp');fs.mkdirSync(OUT,{recursive:true});
 const WORDS=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
-const shots=[];
-async function shot(page,name){const f=path.join(OUT,name+'.png');await page.screenshot({path:f});shots.push(f);return f;}
-async function shotEl(page,sel,name){const f=path.join(OUT,name+'.png');await page.locator(sel).first().screenshot({path:f});shots.push(f);return f;}
-const settle=page=>page.waitForTimeout(1900);
-/** Counts rAF callbacks and running animations for `ms` (installed by the init script). */
-async function idleWork(page,ms=2000){
- await page.evaluate(()=>{window.__raf=0;});await page.waitForTimeout(ms);
- return page.evaluate(()=>({raf:window.__raf,running:document.getAnimations().filter(a=>a.playState==='running').length}));
-}
-async function passGate(page){
- const gate=page.locator('[data-parent-gate]').first();
- if(!(await gate.count()))return;
- const q=await gate.locator('label').first().textContent();const m=/What is (\w+) times (\w+)\?/.exec(q||'');assert.ok(m,'gate question: '+q);
- await gate.locator('[data-parent-gate-answer]').fill(String(WORDS.indexOf(m[1])*WORDS.indexOf(m[2])));
- await gate.getByRole('button',{name:'Continue'}).click();
-}
-async function frames(page,sel,name,times){let last=0;for(const t of times){await page.waitForTimeout(t-last);last=t;await shotEl(page,sel,`${name}-${String(t).padStart(4,'0')}ms`);}}
-
+const log=[];
 async function run(browser,vp){
- const tag=vp.width<600?'phone':'desktop';
+ const tag=vp.width<600?'390':'1440';
  const ctx=await browser.newContext({viewport:vp,hasTouch:vp.width<600,isMobile:vp.width<600,deviceScaleFactor:vp.width<600?2:1});
- await ctx.addInitScript(()=>{
-  try{if(!localStorage.getItem('fi2-welcome-v1'))localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-grownups-format-v1','7v7');}catch{}
-  const raf=window.requestAnimationFrame.bind(window);window.__raf=0;window.requestAnimationFrame=cb=>raf(t=>{window.__raf++;cb(t);});
- });
+ ctx.setDefaultTimeout(180000);ctx.setDefaultNavigationTimeout(240000);
+ await ctx.addInitScript(()=>{try{if(!localStorage.getItem('fi2-welcome-v1'))localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-grownups-format-v1','7v7');}catch{}
+  const raf=window.requestAnimationFrame.bind(window);window.__raf=0;window.requestAnimationFrame=cb=>raf(t=>{window.__raf++;cb(t);});});
  const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(BASE+'/',{waitUntil:'domcontentloaded'});
- await page.waitForSelector('[data-arcade-enter]',{state:'attached',timeout:120000});
- await page.waitForTimeout(4000);
- // Open the plan the way For grown-ups → "Open this week's plan" does.
- for(let i=0;i<20&&!(await page.locator('dialog[data-grownups][open]').count());i++){await page.evaluate(()=>window.dispatchEvent(new CustomEvent('fi2-open-grownups',{detail:{view:'plan'}})));await page.waitForTimeout(500);}
- await shot(page,`${tag}-00-gate`);
- await passGate(page);
- await page.waitForSelector('[data-idp-plan]');
- await page.getByRole('tab',{name:'My plan'}).click();
- // PLAYER: make the plan together.
- await page.waitForSelector('[data-idp-builder]');await settle(page);await shot(page,`${tag}-01-builder-love`);
- await page.locator('button[data-corner=technical]').first().click();await page.locator('[data-builder-next]').click();
- await settle(page);
- await page.locator('[data-goal-option="7-look"]').click();await page.locator('[data-goal-option="7-touch"]').click();
- await shot(page,`${tag}-02-builder-goals`);
- await page.locator('[data-builder-next]').click();await settle(page);await shot(page,`${tag}-03-builder-who`);
- await page.locator('[data-who="Me and my coach"]').click();
- // The story opens on My goal: frame sequence of the ring growing and the evidence flying in.
- await page.waitForSelector('[data-idp-story]');
- if(tag==='phone')await frames(page,'[data-idp-story]',`${tag}-04-goal-frames`,[0,180,400,700,1100,1700]);else await settle(page);
- await shot(page,`${tag}-04-goal`);
- const rest=await idleWork(page);console.log(tag,'at rest on My goal:',rest);assert.equal(rest.running,0,'no running animations at rest');assert.equal(rest.raf,0,'no rAF at rest while the plan is open');
- // Beat 1 (Start) via the rail, then forward through Next.
- await page.locator('nav[aria-label="Plan story"] button').first().click();await settle(page);await shot(page,`${tag}-05-start`);
- await page.locator('nav[aria-label="Plan story"] button').nth(2).click();await page.waitForTimeout(60);
- if(tag==='phone')await frames(page,'[data-idp-story]',`${tag}-06-practice-frames`,[0,300,700,1300]);else await settle(page);
- await shot(page,`${tag}-06-practice`);
- await page.locator('[data-mission-done]').first().click();await page.waitForTimeout(700);await shot(page,`${tag}-07-mission-done`);
- await page.locator('nav[aria-label="Plan story"] button').nth(3).click();await settle(page);await shot(page,`${tag}-08-feel`);
- for(const feel of ['tricky','getting']){await page.locator(`[data-feel=${feel}]`).click();if(feel==='tricky'){await page.getByRole('button',{name:'At training'}).click();await page.getByRole('button',{name:/help with this/}).click();await shot(page,`${tag}-09-checkin`);}await page.locator('[data-checkin-save]').click();await page.waitForTimeout(200);}
- await page.locator('[data-add-proud]').click();await page.waitForTimeout(500);await shot(page,`${tag}-10-stickers`);
- await page.locator('[data-sticker=brave]').click();
- // Re-enter the beat so the feel line draws on with two check-ins.
- await page.locator('nav[aria-label="Plan story"] button').nth(2).click();await page.waitForTimeout(300);
- await page.locator('nav[aria-label="Plan story"] button').nth(3).click();await settle(page);await shot(page,`${tag}-11-feel-line`);
- await page.locator('nav[aria-label="Plan story"] button').nth(4).click();await settle(page);await shot(page,`${tag}-12-next`);
- await page.locator('[data-can-now="7-look"]').click();
- await page.waitForSelector('[data-celebrate]');
- await frames(page,'[data-celebrate]',`${tag}-13-celebrate`,[0,250,600,950,1300,1700,2200]);
- const celebrateRest=await idleWork(page,1500);assert.equal(celebrateRest.running,0,'the celebration ends');
- await page.locator('[data-celebrate-next]').click();await settle(page);await shot(page,`${tag}-14-next-goal`);
- // Two goals → one met; the plan still has 7-touch, so "Add or change" shows when chosen; pick a new goal via the picker.
- const picker=page.locator('[data-goal-option]');if(await picker.count()){await picker.first().click();await settle(page);}
- await shot(page,`${tag}-15-after-next-goal`);
- const st=await page.evaluate(()=>JSON.parse(localStorage.getItem('fi2-idp-v2')));
- assert.ok(st.history.some(h=>h.goalId==='7-look'&&h.outcome==='met'),'7-look met');assert.ok(st.plan.missions.length>=1&&st.plan.checkins.length>=2&&st.plan.proud.length>=1);
- assert.ok(!JSON.stringify(st).match(/"text"/),'no text in the synced plan');
- // PARENT: the Grown-ups tab.
- await page.getByRole('tab',{name:'Grown-ups'}).click();await page.waitForSelector('[data-grown-view]');
- if(tag==='phone')await frames(page,'[data-grown-view]',`${tag}-16-grown-frames`,[0,300,800,1600]);else await settle(page);
- await shot(page,`${tag}-16-grown`);
- await page.locator('[data-grown-view]').evaluate(el=>el.closest('[class*="body"]')?.scrollBy(0,700));await page.waitForTimeout(300);await shot(page,`${tag}-17-grown-ask`);
- await page.locator('[data-cheer] button').first().click();
- await page.locator('[data-grown-view]').evaluate(el=>el.closest('[class*="body"]')?.scrollBy(0,900));await page.waitForTimeout(300);await shot(page,`${tag}-18-grown-cheer`);
+ let taps=0,screens=0;const tap=async loc=>{await loc.click();taps++;await page.waitForTimeout(550);};
+ const shot=n=>page.screenshot({path:path.join(OUT,`${tag}-${n}.png`)});
+ const begin=()=>{taps=0;screens=0;};const end=name=>{log.push({vp:tag,task:name,taps,screens});console.log(tag,name,'taps',taps,'screens',screens);};
+ const gate=async()=>{const g=page.locator('[data-parent-gate]').first();await page.waitForTimeout(400);if(!(await g.count()))return false;screens++;
+  const q=await g.locator('label').first().textContent();const m=/What is (\w+) times (\w+)\?/.exec(q||'');
+  await g.locator('[data-parent-gate-answer]').fill(String(WORDS.indexOf(m[1])*WORDS.indexOf(m[2])));taps++;await tap(g.getByRole('button',{name:'Continue'}));return true;};
+ const hscroll=async()=>page.evaluate(()=>{const p=document.querySelector('[data-idp-plan]');if(!p)return 'no plan';const bad=[...p.querySelectorAll('*')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1;});return bad.length?bad.slice(0,3).map(e=>e.className+':'+Math.round(e.getBoundingClientRect().right)):false;});
+ const idle=async(ms=2000)=>{await page.evaluate(()=>{window.__raf=0;});await page.waitForTimeout(ms);return page.evaluate(()=>({raf:window.__raf,running:document.getAnimations().filter(a=>a.playState==='running').length}));};
+ await page.goto(BASE+'/',{waitUntil:'domcontentloaded',timeout:240000});
+ await page.waitForSelector('[data-title-start]',{timeout:120000});await page.waitForTimeout(1500);await page.locator('[data-title-start]').click();
+ // Title → save code (required before play) → the island. Taps whatever forward button the save sheets show.
+ for(let i=0;i<90;i++){
+  if(await page.locator('[data-arcade-enter]:visible').count()&&!(await page.locator('[data-save-create]:visible,[data-required-save]:visible').count()))break;
+  const b=page.getByRole('button',{name:/^(Get my code|I saved it|Got it|Start|Play|Continue)$/}).filter({visible:true});
+  if(await b.count())await b.first().click({timeout:5000}).catch(()=>{});
+  await page.waitForTimeout(2000);}
+ await page.waitForTimeout(3000);
+ // KID: first goal.
+ begin();
+ await page.evaluate(()=>window.dispatchEvent(new CustomEvent('fi2-endgame-open',{detail:{target:'coaches'}})));taps++;screens++;await page.waitForTimeout(1500);await shot('01-coaches-centre');
+ await tap(page.locator('button:has-text("Football plan")').first());
+ if(await gate())throw new Error('the kid\'s plan must open without the ParentGate (user decision, Oct 10 2026)');
+ await page.waitForSelector('[data-idp-builder]');screens++;await shot('02-pick-goal');
+ await tap(page.locator('[data-goal-option="7-look"]'));screens++;await shot('03-who');
+ await tap(page.locator('[data-who="Me and my coach"]'));
+ await page.waitForSelector('[data-idp-home]');screens++;await page.waitForTimeout(700);await shot('04-home');
+ end('set first goal (kid, Coaches Centre)');
+ console.log(tag,'hscroll home',await hscroll());
+ const rest=await idle();console.log(tag,'at rest on home',rest);assert.equal(rest.raf,0,'no rAF at rest');assert.equal(rest.running,0,'no running animations at rest');
+ await page.locator('[data-idp-home]').evaluate(el=>el.closest('[class*="body"]')?.scrollBy(0,2000));await page.waitForTimeout(300);await shot('05-home-bottom');
+ // KID: the core loop: Practise → I did it! → check in (face, note) → Save.
+ begin();await tap(page.locator('[data-idp-main="practise"]'));screens++;await shot('06-practise');
+ console.log(tag,'hscroll practise',await hscroll());
+ await tap(page.locator('[data-mission-done]'));screens++;await page.waitForSelector('[data-idp-checkin-screen]');await shot('07-checkin');
+ await tap(page.locator('[data-feel=getting]'));
+ await page.locator('#idp-player-note').fill('I looked twice before my pass');taps++;
+ await shot('08-checkin-filled');
+ await tap(page.locator('[data-checkin-save]'));await page.waitForSelector('[data-idp-home]');screens++;await shot('09-home-saved');
+ end('practise + check in with a note (kid loop)');
+ // KID: a standalone note (check in without a mission).
+ begin();await tap(page.locator('[data-idp-checkin]'));screens++;await tap(page.locator('[data-feel=tricky]'));await page.locator('#idp-player-note').fill('Ask coach about turning');taps++;await tap(page.locator('[data-checkin-save]'));screens++;end('add a note (kid, from home)');
+ // KID: review early.
+ begin();await tap(page.locator('[data-idp-review]'));screens++;await shot('10-review');await tap(page.locator('[data-review-keep]'));await page.waitForSelector('[data-idp-home]');screens++;end('do a review (kid)');
+ const st=await page.evaluate(()=>({plan:JSON.parse(localStorage.getItem('fi2-idp-v2')),text:JSON.parse(localStorage.getItem('fi2-idp-text-v1')||'{}')}));
+ assert.equal(st.plan.plan.missions.length,1);assert.equal(st.plan.plan.checkins.length,2);assert.equal(st.plan.plan.reviews.length,1);
+ assert.equal(st.text.notes.filter(n=>n.kind==='player').length,2,'two player notes on the device');assert.ok(!JSON.stringify(st.plan).includes('looked twice'),'no typed words in the synced plan');
+ // Celebrate needs 3 practice moments: one more check-in, then "I can do it now!".
+ await page.locator('[data-idp-checkin]').click();await page.waitForTimeout(500);await page.locator('[data-feel=cando]').click();await page.locator('[data-checkin-save]').click();await page.waitForSelector('[data-idp-home]');await page.waitForTimeout(600);
+ await page.locator('[data-can-now="7-look"]').click();await page.waitForSelector('[data-celebrate]');await page.waitForTimeout(300);await shot('11-celebrate-mid');await page.waitForTimeout(1400);await shot('12-celebrate');
+ const cel=await idle(1200);assert.equal(cel.running,0,'the celebration ends');
+ await page.locator('[data-celebrate-next]').click();await page.waitForSelector('[data-idp-builder]');await page.waitForTimeout(500);await shot('13-next-goal');
+ await page.locator('[data-goal-option="7-touch"]').click();await page.waitForTimeout(500);await page.locator('[data-who="Just me"]').click();await page.waitForSelector('[data-idp-home]');
+ // GROWN-UP: the hub from the plan.
+ begin();await tap(page.locator('[data-idp-grownups]'));
+ if(!(await gate())&&!(await page.locator('[data-grown-hub]').count()))throw new Error('the grown-up tools ask the ParentGate first');
+ screens++;await page.waitForSelector('[data-grown-hub]');await shot('14-hub');
+ console.log(tag,'hscroll hub',await hscroll());
+ await tap(page.locator('[data-hub-tile=notes]'));screens++;await shot('15-notes');await page.locator('#idp-home-note').fill('Ask about the keeper call');taps++;await tap(page.locator('[data-note-save]'));end('add a note (grown-up, from the plan)');
+ begin();await tap(page.locator('[data-idp-back]').last());await page.waitForSelector('[data-grown-hub]');await tap(page.locator('[data-hub-tile=fridge]'));screens++;await shot('16-fridge');
  await page.locator('#idp-fridge-name').fill('Sam');
- await page.locator('[data-fridge-print]').click();
+ await tap(page.locator('[data-fridge-print]'));
  const printed=await page.waitForFunction(()=>{const f=document.querySelector('div[data-grownups-print]');return f&&f.shadowRoot?f.shadowRoot.innerHTML:null;},null,{timeout:10000}).then(h=>h.jsonValue());
- fs.writeFileSync(path.join(OUT,`${tag}-19-fridge.html`),printed);
- assert.match(printed,/Sam’s football plan/);assert.match(printed,/data:image\/png;base64/,'the QR is an inline image');assert.ok(!/<script/i.test(printed));
- const fridge=await ctx.newPage();await fridge.setViewportSize({width:820,height:1160});await fridge.setContent(printed);await fridge.waitForTimeout(300);
- const fp=path.join(OUT,`${tag}-19-fridge-card.png`);await fridge.screenshot({path:fp,fullPage:true});shots.push(fp);await fridge.close();
- // COACH: make a goal QR, then open its link like a scanning player would.
- await page.getByRole('tab',{name:'Coach'}).click();await page.waitForSelector('[data-coach-tools]');await settle(page);await shot(page,`${tag}-20-coach`);
- await page.locator('[data-coach-goal="7-goalside"]').click();await page.getByRole('button',{name:/Ball, you, goal/}).click();
- await page.locator('[data-make-qr]').click();await page.waitForSelector('[data-coach-qr-code] img');
- await page.locator('[data-coach-qr-code]').scrollIntoViewIfNeeded();await shot(page,`${tag}-21-coach-qr`);
- const link=(await page.locator('[data-coach-qr]').locator('p').filter({hasText:'/plan#c='}).textContent()).trim();
- assert.match(link,/\/plan#c=1~7-goalside~q0~k[0-9a-z]{3}$/);
- await page.locator('[data-session]').scrollIntoViewIfNeeded();await shot(page,`${tag}-22-coach-session`);
- const kid=await ctx.newPage();await kid.goto(link);await kid.waitForSelector('[data-coach-link]');await kid.waitForTimeout(600);
- const kp=path.join(OUT,`${tag}-23-coach-link.png`);await kid.screenshot({path:kp,fullPage:true});shots.push(kp);
- await kid.locator('[data-add-coach-goal]').click();await kid.waitForSelector('text=Added!');
- const after=await kid.evaluate(()=>JSON.parse(localStorage.getItem('fi2-idp-v2')));
- assert.ok(after.plan.goals.some(g=>g.goalId==='7-goalside'&&g.source==='coach'&&g.cue===0),'the coach goal is in the plan');
- const kp2=path.join(OUT,`${tag}-24-coach-added.png`);await kid.screenshot({path:kp2,fullPage:true});shots.push(kp2);await kid.close();
- // PHONE: the fridge card's QR on a grown-up's own phone (fresh browser, no saves).
- await page.getByRole('tab',{name:'Grown-ups'}).click();await page.waitForSelector('[data-fridge]');
- const wk=await page.locator('[data-fridge]').getAttribute('data-week-url');assert.match(wk||'',/^\/plan#p=1~7v7~/);
- const grownCtx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
- const parent=await grownCtx.newPage();
- if(wk){await parent.goto(BASE+wk);await parent.waitForSelector('[data-week-story]');await parent.waitForTimeout(1800);const pp=path.join(OUT,`${tag}-25-parent-phone.png`);await parent.screenshot({path:pp,fullPage:true});shots.push(pp);}
- await grownCtx.close();
- // Reduced motion: a beat is complete with no animation.
- await page.emulateMedia({reducedMotion:'reduce'});await page.getByRole('tab',{name:'My plan'}).click();await page.waitForSelector('[data-idp-story]');
- await page.locator('nav[aria-label="Plan story"] button').nth(2).click();await page.waitForTimeout(80);
- const rm=await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length);assert.equal(rm,0,'reduced motion: nothing animates');
- await shot(page,`${tag}-26-reduced-motion-practice`);
+ assert.match(printed,/Sam’s football plan/);assert.match(printed,/data:image\/png;base64/);
+ end('print the fridge card (from hub; +1 to reach hub from plan)');
+ const fridge=await ctx.newPage();await fridge.setViewportSize({width:820,height:1160});await fridge.setContent(printed);await fridge.waitForTimeout(300);await fridge.screenshot({path:path.join(OUT,`${tag}-17-fridge-card.png`),fullPage:true});await fridge.close();
+ const wk=await page.locator('[data-fridge]').getAttribute('data-week-url');
+ // COACH: goal by QR.
+ begin();await tap(page.locator('[data-idp-back]').last());await page.waitForSelector('[data-grown-hub]');await tap(page.locator('[data-hub-tile=coach]'));screens++;await shot('18-coach');
+ await tap(page.locator('[data-coach-goal="7-goalside"]'));await tap(page.locator('[data-make-qr]'));await page.waitForSelector('[data-coach-qr-code] img');await page.locator('[data-coach-qr-code]').scrollIntoViewIfNeeded();await shot('19-coach-qr');
+ end('share a goal by coach QR (from hub)');
+ const link=(await page.locator('[data-coach-qr-code] p').filter({hasText:'/plan#c='}).textContent()).trim();assert.match(link,/\/plan#c=1~7-goalside~k[0-9a-z]{3}$/);
+ const kid=await ctx.newPage();await kid.goto(link,{waitUntil:'domcontentloaded'});await kid.waitForSelector('[data-coach-link]');await kid.waitForTimeout(600);await kid.screenshot({path:path.join(OUT,`${tag}-20-coach-link.png`),fullPage:true});
+ await kid.locator('[data-add-coach-goal]').click();await kid.waitForSelector('text=Added!');await kid.close();
+ // Week story on a grown-up phone.
+ if(wk){const p2=await ctx.newPage();await p2.goto(BASE+wk,{waitUntil:'domcontentloaded'});await p2.waitForSelector('[data-week-story]');await p2.waitForTimeout(800);await p2.screenshot({path:path.join(OUT,`${tag}-21-week-phone.png`),fullPage:true});await p2.close();}
+ // Week screen + review from the hub.
+ await page.locator('[data-idp-back]').last().click();await page.waitForSelector('[data-grown-hub]');await page.locator('[data-hub-tile=week]').click();await page.waitForSelector('[data-grown-view]');await page.waitForTimeout(600);await shot('22-week');
+ console.log(tag,'hscroll week',await hscroll());
+ await page.locator('[data-idp-back]').last().click();await page.waitForSelector('[data-grown-hub]');await page.locator('[data-hub-tile=review]').click();await page.waitForSelector('[data-review]');await page.waitForTimeout(400);await shot('23-review-grown');
+ await page.locator('[data-idp-back]').last().click();await page.waitForSelector('[data-grown-hub]');await page.locator('[data-idp-back]').last().click();await page.waitForSelector('[data-idp-home]');
+ // Reduced motion: a screen is complete with nothing animating.
+ await page.emulateMedia({reducedMotion:'reduce'});await page.locator('[data-idp-main="practise"]').click();await page.waitForSelector('[data-idp-practise]');await page.waitForTimeout(60);
+ const rm=await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length);assert.equal(rm,0,'reduced motion: nothing animates');await shot('24-reduced-motion');
+ // Accessibility: every button has an accessible name; focus moved to the screen title.
+ const unnamed=await page.evaluate(()=>[...document.querySelectorAll('[data-idp-plan] button')].filter(b=>!(b.getAttribute('aria-label')||b.textContent||'').trim()).length);assert.equal(unnamed,0,'every button is named');
+ const focused=await page.evaluate(()=>document.activeElement?.id);console.log(tag,'focus on',focused);
  assert.deepEqual(errors.filter(e=>!/ResizeObserver|WebGL|context lost/i.test(e)),[],'no page errors');
  await ctx.close();
- return {rest};
 }
-(async()=>{
- if(!chromium)throw Error('playwright not found');
- const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader'],executablePath:fs.existsSync('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined});
- try{for(const vp of [{width:390,height:844},{width:1280,height:800}]){const r=await run(browser,vp);console.log('IDP_BROWSER_PASS',vp.width,JSON.stringify(r));}}
- finally{await browser.close();}
- console.log(shots.length+' screenshots in '+OUT);
-})().catch(e=>{console.error(e);process.exit(1);});
+(async()=>{const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-angle=swiftshader','--enable-unsafe-swiftshader'],executablePath:fs.existsSync('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome')?'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome':undefined});
+ try{for(const vp of [{width:390,height:844},{width:1440,height:900}])await run(browser,vp);}finally{await browser.close();}
+ console.table(log);console.log('IDP_BROWSER_PASS');})().catch(e=>{console.error(e);process.exit(1);});

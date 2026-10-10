@@ -183,6 +183,8 @@ export const REACT = {
 /** Torso squash spring: ω = 14 rad/s, damping ratio .6 (under critical: one soft ~1 % rebound). Integrated
  *  at ≤1/60 s substeps, a −3.5 receive squashes ~9 %, a +4 strike stretches ~10 %, settled in ~.75 s. */
 export const SQUASH_STIFFNESS = 196, SQUASH_DAMPING = 16.8;
+/** Bean neck overlap spring (ω ≈ 11.8 rad/s, ζ ≈ .4): the top of the bean lags a start and overshoots a stop once. */
+export const NECK_STIFFNESS = 140, NECK_DAMPING = 9.5;
 const bell = (p: number, rise: number, fall: number) => smooth(p/rise)*(1-smooth((p-fall)/(1-fall)));
 /** Adds `kind` at progress p (0→1) and weight w to `out`. `lead` is the reacting side (−1 left, +1 right). */
 export function reactionPose(kind: PlayerReaction, p: number, w: number, lead: -1|1, out: Float64Array) {
@@ -515,6 +517,12 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   let prevKind:PlayerReaction|undefined,prevP=0,prevSide:-1|1=1,prevFade=0,reacting=false;
   const react=new Float64Array(REACT.size);
   let squashX=0,squashV=0,squashSeen:number|undefined,squashActive=false;
+  // Bean neck (body pass, Oct 10 2026): the bean's face lives on the torso, so player-head rotation never showed.
+  // `beanGaze` = [pitch, yaw] the bean shader bends the top of the bean by (beanSkin.ts, lumbar.w / chest.w texels):
+  // the gaze (ball attention, look into turns, scans, header nods) plus a damped overlap spring that lags on a start,
+  // overshoots on a stop and nods with each footfall. Preallocated; the spring sleeps once settled.
+  const beanGaze=new Float32Array(2);head.userData.beanGaze=beanGaze;
+  let neckX=0,neckV=0,neckActive=false,breathOn=false,breathMeshes:T.Object3D[]|undefined;
   let truckPreviousSpeed=0,truckLean=0,truckSway=0,truckPhase=0,wasTruckRiding=false;
   // Keeper dive / jump (lane B, docs/bean-characters/CONTRACT.md): pose from progress, faded out over ~.15 s
   // when the host clears the field; `…Last` remembers the previous progress so the landing squash fires once.
@@ -1696,6 +1704,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     if(skilling){const q=skill.squash(discontinuity,dt);if(q){squashV+=q*(reduced?.4:1);squashActive=true;}} // skill moves lane
     if(diving||jumping||signing||skilling||tricking||reacting&&(reactKind==='slide'||reactKind==='stumble'||prevKind==='slide'||prevKind==='stumble'))groundGuard();
+    // Idle breathing (body pass, Oct 10 2026): a slow volume-preserving swell of the bean while standing (~.32 Hz, in phase with the pelvis rise, ±1 %),
+    // gone once moving or acting; reduced motion and seeks stay still. Bean meshes only (classic style has none).
+    const breath=flowingBody&&!sample?Math.sin(time*2+seed)*.011*(1-amount)*(1-action)*(1-receive):0;
     // Squash spring on the torso group: volume-preserving (1/√s, s, 1/√s) over the shape scale.
     // One impulse per squashSerial change, damping ratio .6, ≤60 Hz substeps, asleep once settled.
     if(squashActive&&discontinuity&&initialized){squashX=squashV=0;squashActive=false;torso.scale.copy(torsoBase);}
@@ -1704,6 +1715,13 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       const impulse=T.MathUtils.clamp(motion.squash??0,-6,6)*(reduced?.4:1);
       if(impulse!==0&&reactOK){squashV+=impulse;squashActive=true;}
     }
+    if(breath!==0||breathOn){
+      // The bean's own meshes (body, hair, hat; never a joint, so arms, limbs and foot locks are untouched).
+      if(!breathMeshes){breathMeshes=[];for(const child of torso.children){const part=child.userData.beanPart;if(part==='body'||part==='hair'||part==='hat')breathMeshes.push(child);}}
+      const s=1+breath,r=1/Math.sqrt(s);
+      for(let i=0;i<breathMeshes.length;i++){const m=breathMeshes[i];m.scale.set(r,s,r);m.updateMatrix();}
+      breathOn=breath!==0;
+    }
     if(squashActive){
       if(dt>0){
         const steps=Math.min(6,Math.ceil(dt*60-1e-9)),h=dt/steps;
@@ -1711,6 +1729,22 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       }
       if(Math.abs(squashX)<2e-4&&Math.abs(squashV)<3e-3){squashX=squashV=0;squashActive=false;torso.scale.copy(torsoBase);}
       else{const s=1+T.MathUtils.clamp(squashX,-.22,.25),r=1/Math.sqrt(s);torso.scale.set(torsoBase.x*r,torsoBase.y*s,torsoBase.z*r);}
+    }
+    // Bean neck: overlap spring (target = momentum: lag back accelerating, tip forward braking, nod after a landing
+    // squash), ζ ≈ .4 so a hard stop overshoots once and settles. Reduced motion, rides and seeks keep it still.
+    {
+      const springy=flowingBody&&!hardReset&&!frozen;
+      const neckTarget=springy?T.MathUtils.clamp(-.11*Math.max(0,drive)*smooth(speed/1.2)+.1*brake+.06*plantBlend-.5*Math.min(0,squashX),-.12,.16):0;
+      if(!springy){neckX=neckV=0;neckActive=false;}
+      else if(neckActive||Math.abs(neckTarget)>1e-3){
+        if(dt>0){const steps=Math.min(6,Math.ceil(dt*60-1e-9)),h=dt/steps;for(let i=0;i<steps;i++){neckV+=(NECK_STIFFNESS*(neckTarget-neckX)-NECK_DAMPING*neckV)*h;neckX+=neckV*h;}}
+        neckActive=!(Math.abs(neckX-neckTarget)<2e-4&&Math.abs(neckV)<3e-3&&Math.abs(neckTarget)<1e-3);
+        if(!neckActive)neckX=neckV=0;
+      }
+      // A small nod after each footfall (the round top follows through on the pelvis bob).
+      const bobble=springy?.035*Math.cos(phase*2-1.15)*effort*(1-brake):0;
+      beanGaze[0]=T.MathUtils.clamp(.4*head.rotation.x+neckX+bobble,-.4,.45);
+      beanGaze[1]=T.MathUtils.clamp(.7*head.rotation.y,-.5,.5);
     }
     root.position.set(x, 0, z); root.rotation.y = yaw;
     // A rolling ball follows a quiet forward lane; the feet meet that lane.

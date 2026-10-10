@@ -4,22 +4,24 @@ import {createGlassFloor} from './glassFloor';
 import {createArcadeStage} from './arcadeStage';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {sideGameDress,teamBodyColour,type BeanDress} from '../town/beanLooks';
-import {TENNIS,TENNIS_COURTS,createTennis,tennisNeedsFrames,beginTennis,resetTennis,tickTennis,setTennisTarget,setTennisMovement,canTennisKick,canTennisPerfect,canTennisSlam,canTennisHeader,canTennisScissor,tennisSweetPoint,tennisCourt,tennisOverDetail,canTennisTrap,requestTennisKick,tennisTouchCall,tennisCallButton,tennisCallDetail,type TennisShot} from '@/lib/games/soccerTennis';
+import {TENNIS,TENNIS_COURTS,createTennis,tennisNeedsFrames,beginTennis,resetTennis,tickTennis,setTennisTarget,setTennisMovement,canTennisKick,canTennisPerfect,canTennisSlam,canTennisHeader,canTennisScissor,tennisSweetPoint,tennisCourt,tennisOverDetail,canTennisTrap,requestTennisKick,tennisTouchCall,tennisHudButton,tennisCallDetail,tennisAimX,tennisTargetShot,type TennisShot} from '@/lib/games/soccerTennis';
 import {createTennisFeel} from './tennisFeel';
 import {createPinballState,stepPinball,launchPinball,nudgePinball,tapPinballFlipper,pinballDivision,pinballDefenders,pinballFlippers,pinballReadyFoot,plungerPull,pinballMinute} from '@/lib/games/soccerPinball';
 import {createPinballFeel,resetPinballFeel,stepPinballFeel,pinballTimeScale,pinballFeelActive,pinballFeelMessage} from '@/lib/games/soccerPinballFeel';
 import {createPinballFx} from '@/lib/games/soccerPinballFx';
 import {createPinballTableView} from '@/lib/games/soccerPinballTableView';
+import {mergePinballStatic} from '@/lib/games/soccerPinballMerge';
 import {pinballStarTotal} from '@/lib/games/soccerPinballTable';
 import {JUMP_V} from '../../components/games/runnerPhysics';
 import {createRunnerGame,tickRunner,runnerJump,runnerSlide,runnerShoot,runnerCharge,runnerRelease,runnerMultiplier,runnerOutro,runnerOver,runnerSkill,RUNNER_STRIKE_X,RUNNER_OUTRO,RUNNER_PRESS_SPEED} from './runnerGame';
 import {runnerHud} from './runnerHud';
 import {tickRunnerMissions} from './runnerMissions';
+import {tickRunnerCoach} from './runnerCoach';
 import {createRunnerFx} from './runnerFx';
 import {createRunnerSoundtrack} from '../../components/games/runnerAudio';
 export type ArcadeKind='tennis'|'pinball'|'runner';
 export type ArcadeInput={x:number;y:number;left:boolean;right:boolean;charge:boolean};
-export type ArcadeHUD={score:string;detail:string;message:string;over:boolean;ready:boolean;headerReady?:boolean;scissorReady?:boolean;tennisAerial?:boolean;tennisTrap?:boolean;trapReady?:boolean;bicycleReady?:boolean;tennisCall?:string;tennisButton?:string;leftReady?:boolean;rightReady?:boolean;nudgeReady?:boolean;nextLabel?:string;skillLabel?:string;skillReady?:boolean};
+export type ArcadeHUD={score:string;detail:string;message:string;over:boolean;ready:boolean;headerReady?:boolean;scissorReady?:boolean;tennisAerial?:boolean;tennisTrap?:boolean;trapReady?:boolean;bicycleReady?:boolean;tennisCall?:string;tennisButton?:string;leftReady?:boolean;rightReady?:boolean;nudgeReady?:boolean;nextLabel?:string;skillLabel?:string;skillReady?:boolean;coach?:string};
 export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSound:(goal:boolean,cue?:string)=>void,audioContext:()=>AudioContext|null=()=>null){
  const stage=createArcadeStage(canvas),tennis=createTennis(),pinball=createPinballState(),runner=createRunnerGame();
  const ball=stage.football(kind==='pinball'?7/30:kind==='tennis'?.3:.22);let elapsed=0,event=0;
@@ -35,7 +37,7 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
  let glassFloor:ReturnType<typeof createGlassFloor>|null=null;
  const strips:T.Mesh[]=[],flippers:T.Group[]=[],runnerObjects:T.Group[]=[],shadow=new T.Mesh(new T.CircleGeometry(.28,24),new T.MeshBasicMaterial({color:'#183f45',transparent:true,opacity:.25,depthWrite:false}));shadow.rotation.x=-Math.PI/2;stage.scene.add(shadow);
  let tennisGuide:T.Mesh|null=null,tennisContact:T.Mesh|null=null,tennisAim:T.Mesh|null=null,tennisCountdown:T.Mesh|null=null,tennisReadAt=0,tennisLandTime=0;const tennisAimMarks:T.Mesh[]=[];
- const tennisTrail:T.Mesh[]=[],tennisTrailPoints=new Float32Array(42);let tennisTrailHead=0,tennisTrailCount=0,tennisTrailClock=0,tennisPoseRest=0;const tennisPose:ArcadePoseOptions[]=[{vx:0,vz:0,anticipate:0,celebrate:0},{vx:0,vz:0,anticipate:0,celebrate:0}];const tennisVolley:Array<NonNullable<ArcadePoseOptions['move']>>=[{kind:'volley',progress:0,side:1,height:0},{kind:'volley',progress:0,side:1,height:0}];let tennisTrailColor='';let tennisImpact:T.Mesh|undefined;let tennisFeel:ReturnType<typeof createTennisFeel>|undefined,tennisStep=0;
+ let tennisTrail:T.InstancedMesh<T.SphereGeometry,T.MeshStandardMaterial>|undefined;const tennisTrailPoints=new Float32Array(42),tennisTrailM=new T.Matrix4(),tennisTrailP=new T.Vector3(),tennisTrailS=new T.Vector3(),tennisTrailQ=new T.Quaternion();let tennisTrailHead=0,tennisTrailCount=0,tennisTrailClock=0,tennisPoseRest=0;const tennisPose:ArcadePoseOptions[]=[{vx:0,vz:0,anticipate:0,celebrate:0},{vx:0,vz:0,anticipate:0,celebrate:0}];const tennisVolley:Array<NonNullable<ArcadePoseOptions['move']>>=[{kind:'volley',progress:0,side:1,height:0},{kind:'volley',progress:0,side:1,height:0}];let tennisTrailColor='';let tennisImpact:T.Mesh|undefined;let tennisFeel:ReturnType<typeof createTennisFeel>|undefined,tennisStep=0;
  let pinballFloor:T.InstancedMesh|null=null;const floorColor=new T.Color(),floorBase=new T.Color('#102b44'),floorCyan=new T.Color('#38ffee'),floorPink=new T.Color('#ff58c9'),floorGold=new T.Color('#ffe86d'),floorEnergy=new Float32Array(112);let floorWave=0,floorHitX=0,floorHitZ=0;
  const pinballGlow:T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>[]=[],flipperLights:T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>[]=[],flipperPivots:T.Mesh[]=[];
  const flipperPrevious=[0,0],flipperSnap=[0,0];
@@ -54,7 +56,9 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
   players[0].root.visible=players[1].root.visible=true;players[0].root.scale.setScalar(1.25);players[1].root.scale.setScalar(1.25);players[0].root.name='tennis-player-you';players[1].root.name='tennis-player-rival';
   tennisGuide=stage.ring(0,0,.68,'#fff0af');tennisGuide.name='tennis-landing';tennisContact=stage.ring(0,0,.9,'#ffe084');tennisContact.name='tennis-contact';tennisGuide.visible=tennisContact.visible=false;
   // A small fixed trail pool makes shot speed readable without runtime geometry.
-  for(let i=0;i<14;i++){const dot=stage.sphere(0,0,0,.065,'#ffe084');dot.castShadow=false;dot.visible=false;tennisTrail.push(dot);}
+  // One instanced draw (was 14 sphere meshes, up to 13 draws in flight) with its own material, so recolouring the
+  // trail per shot never touches the stage's shared '#ffe084' material.
+  tennisTrail=new T.InstancedMesh(new T.SphereGeometry(1,8,6),new T.MeshStandardMaterial({color:'#ffe084',roughness:.65}),14);tennisTrail.name='tennis-trail';tennisTrail.count=0;tennisTrail.frustumCulled=false;tennisTrail.castShadow=false;stage.scene.add(tennisTrail);
    tennisFeel=createTennisFeel(stage,tennis,cue=>onSound(false,cue)); // grades, telegraph, banners, hit-stop, tennis audio cues
  }else if(kind==='pinball'){
   ball.name='pinball-ball';pinballRolling.name='pinball-rolling';for(const child of [...ball.children])pinballRolling.add(child);ball.add(pinballRolling);
@@ -67,7 +71,8 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
   for(let row=0;row<14;row++)for(let col=0;col<8;col++){const index=row*8+col;tile.position.set(-.25+(col-3.5)*10.5/8,.018,-.1+(row-6.5)*18.5/14);tile.updateMatrix();pinballFloor.setMatrixAt(index,tile.matrix);pinballFloor.setColorAt(index,floorBase);}pinballFloor.instanceColor!.setUsage(T.DynamicDrawUsage);stage.scene.add(pinballFloor);
   const glass=new T.Mesh(new T.PlaneGeometry(10.5,18.5),new T.MeshStandardMaterial({color:'#b1cfff',transparent:true,opacity:.09,roughness:.15,metalness:.25,depthWrite:false}));glass.name='pinball-glass';glass.rotation.x=-Math.PI/2;glass.position.set(-.25,.02,-.1);stage.scene.add(glass);
   const walls=[[20,45,100,45],[260,45,318,45],[100,30,100,53],[260,30,260,53],[318,45,352,60],[352,60,366,108],[20,45,20,455],[366,108,366,599],[341,150,341,402],[341,455,341,594],[20,455,99,535],[338,458,261,535],[344,599,364,599]];
-  for(const [a,b,c,d]of walls)stage.bar(px(a),pz(b),px(c),pz(d),.18,.13,'#fff0cf');
+  // Static rails, inlane arrows and lamp bases are baked into two merged meshes (was 20 draw calls).
+  const pinballRails=walls.map(([a,b,c,d])=>stage.bar(px(a),pz(b),px(c),pz(d),.18,.13,'#fff0cf')),pinballLampBases:T.Mesh[]=[];
   stage.ring(-.3,0,1.8,'#e4edce');stage.bar(-5.3,0,5.3,0,.03,.025,'#e4edce');const goal=stage.goal(0,pz(45),160/30);goal.traverse(o=>{if(o instanceof T.LineSegments){pinballNet=o;o.name='pinball-net';pinballNetBase=new Float32Array(o.geometry.attributes.position.array);}});
   for(const side of[0,1]){const group=new T.Group();stage.scene.add(group);stage.box(1.05,0,0,2.1,.25,.46,side?'#ed9f87':'#eec55d',group);
    const light=stage.box(1.05,.135,0,1.85,.02,.13,'#fff0cf',group);light.castShadow=false;(light as T.Mesh).material=new T.MeshBasicMaterial({color:side?'#ffb4eb':'#fff6ac',transparent:true,opacity:.55});flipperLights.push(light as unknown as T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>);
@@ -77,10 +82,11 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
   for(const x of[118,242]){const target=stage.ring(px(x),pz(47),.43,'#ffe18b');target.geometry.dispose();target.geometry=new T.RingGeometry(.29,.43,32);pinballTargets.push(target);}
   for(let i=0;i<3;i++){const ring=stage.ring(0,0,(i?17:18)/30,'#edaa87');pinballBumpers.push(ring);}
   // Three inset lamps tell the build-up story on the playing surface.
-  for(let i=0;i<3;i++){stage.cylinder(px(148+i*32),.035,pz(396),.27,.035,'#245f59');pinballLamps.push(stage.cylinder(px(148+i*32),.06,pz(396),.18,.025,'#ffe28b'));}
+  for(let i=0;i<3;i++){pinballLampBases.push(stage.cylinder(px(148+i*32),.035,pz(396),.27,.035,'#245f59'));pinballLamps.push(stage.cylinder(px(148+i*32),.06,pz(396),.18,.025,'#ffe28b'));}
   // The launch lane has a physical power ladder, legible without a HUD meter.
   for(let i=0;i<7;i++)pinballCharge.push(stage.box(px(354),.055,pz(560-i*15),.3,.03,.21,'#ffe28b'));
-  for(const side of[-1,1]){const x=180+side*60;stage.bar(px(x),pz(472),px(x+side*22),pz(442),.026,.035,'#fff0cf');stage.bar(px(x+side*22),pz(442),px(x+side*9),pz(448),.026,.035,'#fff0cf');}
+  for(const side of[-1,1]){const x=180+side*60;pinballRails.push(stage.bar(px(x),pz(472),px(x+side*22),pz(442),.026,.035,'#fff0cf'),stage.bar(px(x+side*22),pz(442),px(x+side*9),pz(448),.026,.035,'#fff0cf'));}
+  mergePinballStatic(pinballRails,'pinball-rails');mergePinballStatic(pinballLampBases,'pinball-lamp-bases');
   // A visible drain mouth makes the failure boundary explicit.
   stage.bar(px(156),pz(606),px(204),pz(606),.04,.11,'#de947c');
   pinballPlunger=stage.box(px(354),.24,pz(585),.38,.3,.55,'#f9d275');
@@ -151,7 +157,7 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
    if(tennis.kickCount!==cinemaKick){cinemaKick=tennis.kickCount;if(!stage.reduced&&tennis.lastKicker==='you'&&['slam','scissor'].includes(tennis.lastShot))cinema=.62;}
    const points=tennis.score.you+tennis.score.rival;if(points!==pointSound){pointSound=points;if(!tennisFeel)onSound(tennis.pointWinner==='you',tennis.pointWinner==='you'?'goal':'miss');}
   }else if(kind==='pinball'){stepPinball(pinball,{left:input.left,right:input.right,charge:input.charge},dt*pinballTimeScale(pinballFeel));stepPinballFeel(pinballFeel,pinball,dt,onSound);}
-  else{if(input.x)runner.lane=T.MathUtils.clamp(Math.round(input.x),-1,1);tickRunner(runner,dt*(runnerFx?.timeScale()??1));tickRunnerMissions(runner);runnerOutro(runner,dt);runnerSoundtrack?.frame(dt,runner);}
+  else{if(input.x)runner.lane=T.MathUtils.clamp(Math.round(input.x),-1,1);tickRunnerCoach(runner,dt);tickRunner(runner,dt*(runnerFx?.timeScale()??1)*runner.coachScale);tickRunnerMissions(runner);runnerOutro(runner,dt);runnerSoundtrack?.frame(dt,runner);}
   const level=kind==='runner'?runner.level:kind==='pinball'?pinball.level:tennis.level;if(level>notedLevel)onSound(true,'level');notedLevel=level;
   const tone=kind==='runner'&&runner.charging?Math.floor(runner.charge*3):0;if(tone>chargeTone)onSound(false,'charge'+tone);chargeTone=tone;
   sync(kind==='tennis'?(cinema>0&&!stage.reduced?tennisStep*.32:tennisStep):dt);cameraBeat(dt);runnerFx?.camera(stage.camera,runner,dt,runnerBaseFov);stage.effects(dt);stage.lighting(elapsed);
@@ -169,7 +175,7 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
     const returnAngle=Math.atan2((i?(tennis.rivalPlan?tennis.rivalPlanX:0):tennis.shotAim*3.7)-p.x,(i?5.2:-5.2)-p.y),open=Math.max(i&&tennis.rivalPlan?.6:0,1-distance/2)*.8; // committed rival opens its hips toward its target
     const receiveFacing=looking+Math.atan2(Math.sin(returnAngle-looking),Math.cos(returnAngle-looking))*open;
     const facing=p.kick>0?p.kickFacing:receiving?receiveFacing:speed>.5?travel:home;
-    const pose=tennisPose[i];pose.vx=p.vx;pose.vz=p.vy;pose.anticipate=anticipate;pose.celebrate=tennis.phase==='point'&&tennis.pointWinner===(i?'rival':'you')?Math.max(0,1-tennis.phaseTime/.7):0;
+    const pose=tennisPose[i];pose.vx=p.vx;pose.vz=p.vy;pose.anticipate=!i&&tennis.queuedKick>0&&p.kick<=0?Math.max(anticipate,.9):anticipate;/* a pressed kick plants you at once: the press is seen before the held contact */pose.celebrate=tennis.phase==='point'&&tennis.pointWinner===(i?'rival':'you')?Math.max(0,1-tennis.phaseTime/.7):0;
     const scale=Math.max(.1,rig.root.scale.x);
     // Rig-local native reach: preserve lateral contact without overstretching
     // the planted leg for the arcade's generous edge-of-reach returns.
@@ -187,13 +193,15 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
    tennisPoseRest=Math.hypot(tennis.you.vx,tennis.you.vy,tennis.rival.vx,tennis.rival.vy)>.025||tennis.you.kick>0||tennis.rival.kick>0?.2:Math.max(0,tennisPoseRest-dt);
    glassFloor?.update(dt,ball.position.x,ball.position.z,tennisFeel?.heat()??0,Math.max(tennis.you.kick,tennis.rival.kick));
    const actionColor=tennis.goldenShot?'#ffc93c':tennis.perfectFlash>0?'#73fff1':tennis.lastShot==='scissor'?'#ff7659':tennis.lastShot==='header'?'#74d6f2':'#ffe084';
-   if(actionColor!==tennisTrailColor){tennisTrailColor=actionColor;for(const dot of tennisTrail)(dot.material as T.MeshStandardMaterial).color.set(actionColor);}
+   if(actionColor!==tennisTrailColor&&tennisTrail){tennisTrailColor=actionColor;tennisTrail.material.color.set(actionColor);}
    if(tennisImpact){tennisImpact.visible=!stage.reduced&&tennis.fxSlam>0;tennisImpact.position.set(tennis.fxSlamX,.05,tennis.fxSlamY);tennisImpact.scale.setScalar(1+(1-tennis.fxSlam/.65)*2);(tennisImpact.material as T.MeshBasicMaterial).color.set(actionColor);}
    ball.position.set(b.x,Math.max(.3,b.z+.13),b.y);ball.rotation.x=b.rot;ball.rotation.z+=b.wz*dt*.12;
    const squash=b.z<.5?Math.min(.22,b.squash*1.4):0;ball.scale.set(1+squash,1-squash,1+squash);
    if(tennis.kickCount!==event){event=tennis.kickCount;tennisTrailCount=0;tennisTrailClock=0;stage.burst(ball.position.x,ball.position.y,ball.position.z,tennis.lastShot==='slam'?1.5:tennis.lastShot==='drop'?.65:1);if(!tennisFeel)onSound(false,tennis.perfectFlash>0?'perfect':tennis.lastShot);}
    if(tennis.phase==='rally'&&dt>0){tennisTrailClock+=dt;if(tennisTrailClock>=1/30){tennisTrailClock%=1/30;const n=tennisTrailHead*3;tennisTrailPoints[n]=b.x;tennisTrailPoints[n+1]=b.z+.13;tennisTrailPoints[n+2]=b.y;tennisTrailHead=(tennisTrailHead+1)%14;tennisTrailCount=Math.min(14,tennisTrailCount+1);}}else if(tennis.phase!=='rally')tennisTrailCount=0;
-   for(let i=0;i<14;i++){const dot=tennisTrail[i];dot.visible=!stage.reduced&&i<tennisTrailCount-1&&Math.hypot(b.vx,b.vy,b.vz)>2;if(dot.visible){const index=((tennisTrailHead-2-i+28)%14)*3;dot.position.fromArray(tennisTrailPoints,index);dot.scale.setScalar(.1*(1-i/14)*(tennis.lastShot==='scissor'?2:tennis.lastShot==='header'?1.35:tennis.lastShot==='slam'?1.6:1));}}
+   if(tennisTrail){const show=!stage.reduced&&Math.hypot(b.vx,b.vy,b.vz)>2?Math.max(0,tennisTrailCount-1):0,big=tennis.lastShot==='scissor'?2:tennis.lastShot==='header'?1.35:tennis.lastShot==='slam'?1.6:1;
+    for(let i=0;i<show;i++){const index=((tennisTrailHead-2-i+28)%14)*3;tennisTrailP.fromArray(tennisTrailPoints,index);tennisTrailS.setScalar(.1*(1-i/14)*big);tennisTrail.setMatrixAt(i,tennisTrailM.compose(tennisTrailP,tennisTrailQ,tennisTrailS));}
+    if(show||tennisTrail.count){tennisTrail.count=show;tennisTrail.instanceMatrix.needsUpdate=true;}}
    if(tennisGuide&&tennisContact){
     tennisGuide.visible=tennis.phase==='rally'&&b.last==='rival';
     if(tennisGuide.visible&&tennis.clock>=tennisReadAt){const land=tennisSweetPoint(tennis);tennisReadAt=tennis.clock+.1;tennisLandTime=land.time;tennisGuide.position.set(land.x,.035,land.y);}
@@ -202,8 +210,12 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
     const aerial=canTennisScissor(tennis,'you'),heading=canTennisHeader(tennis,'you'),high=canTennisSlam(tennis,'you'),ready=high||canTennisKick(tennis,'you');tennisContact.visible=tennis.phase==='rally'&&b.last==='rival';tennisContact.position.set(tennis.you.x,.045,tennis.you.y);
     const perfect=canTennisPerfect(tennis);tennisContact.scale.setScalar(perfect?1.12:ready?1:.78);(tennisContact.material as T.MeshBasicMaterial).color.set(perfect?'#73fff1':aerial?'#ff7659':heading?'#74d6f2':high?'#ff8867':ready?'#ffe084':'#88b8a4');
     if(tennisCountdown){tennisCountdown.visible=tennisGuide.visible;tennisCountdown.position.copy(tennisGuide.position);tennisCountdown.position.y=.045;tennisCountdown.scale.setScalar(.25+Math.min(1,Math.max(0,tennisLandTime-(tennis.clock-tennisReadAt+.1)))*1.1);}
-    if(tennisAim){tennisAim.visible=tennis.phase==='serve'||tennis.phase==='rally'&&b.last==='rival';tennisAim.position.x=tennis.shotAim*3.7;tennisAim.scale.setScalar(ready?1.2:1);}
-    for(const mark of tennisAimMarks)mark.visible=tennis.phase!=='over';
+    // Drill: the yellow aim ring sits at the gold ring's depth and lands where the lit touch would send it, so the
+    // task reads as "put yellow on gold". Matches the shot whose depth reaches the ring.
+    const drill=tennisCourt(tennis).style==='drill';
+    if(tennisAim){tennisAim.visible=tennis.phase==='serve'||tennis.phase==='rally'&&b.last==='rival';tennisAim.position.x=drill?tennisAimX(tennis.shotAim,tennisTargetShot(tennis)):tennis.shotAim*3.7;tennisAim.position.z=drill?tennis.targetY:-5.2;tennisAim.scale.setScalar((ready?1.2:1)*(tennis.queuedKick>0&&!stage.reduced?1.12:1));}
+    // Lane marks: hidden on the drill (the gold ring is the target) and under the pink open-space ring (same spot): no extra draws.
+    const spaceMark=tennisFeel?.spaceSide()??0;for(let m=0;m<3;m++)tennisAimMarks[m].visible=tennis.phase!=='over'&&!drill&&!(spaceMark&&m===(spaceMark<0?0:2));
    }
    tennisFeel?.sync(dt,tennis.ball.z);
   }else if(kind==='pinball'){
@@ -302,7 +314,7 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
    }});
    if(runnerShotTrail&&runnerShotTrail.count)runnerShotTrail.instanceMatrix.needsUpdate=true;
    runnerObjects.forEach(g=>g.visible=false);used.clear();
-   for(const o of runner.objects){const g=runnerObjects.find(g=>!used.has(g)&&poolKinds.get(g)===o.kind);if(!g)continue;used.add(g);g.visible=true;g.rotation.set(0,0,0);g.scale.setScalar(1);g.position.set(o.x??o.lane*2.4,0,o.z);if(o.kind==='defender')runnerFx?.defender(g,o,runner);
+   for(const o of runner.objects){let g:T.Group|undefined;for(const c of runnerObjects)if(!used.has(c)&&poolKinds.get(c)===o.kind){g=c;break;}if(!g)continue;used.add(g);g.visible=true;g.rotation.set(0,0,0);g.scale.setScalar(1);g.position.set(o.x??o.lane*2.4,0,o.z);if(o.kind==='defender')runnerFx?.defender(g,o,runner);
     if(o.knock){const k=1-o.knock/.65,side=o.lane<0?-1:1;g.position.x+=side*k*4;g.position.y=Math.sin(k*Math.PI)*1.1;g.rotation.z=side*k*2.5;g.scale.setScalar(1-k*.6);}else if(o.passed&&o.kind!=='goal'&&!(o.kind==='defender'&&(o.tackle??0)>0&&(o.tackle??0)<1.05)){g.visible=false;continue;}
     if(o.kind==='coin'){g.rotation.y=elapsed*2;g.position.y=Math.sin(elapsed*4+o.z)*.07;}
     if(o.kind==='goal'&&o.z>1){g.visible=false;continue;}
@@ -314,7 +326,7 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
      // Front-load the foot extension into the collision tell, hold through its
      // active reach, then recover with the same .7–1.05 s simulation window.
      tackleSkill.progress=t<.08?t/.08*.34:t<.7?.34+(t-.08)/.62*.2:.54+Math.min(1,(t-.7)/.35)*.46;pose.skill=t>0&&t<1.05&&role!=='tackler'?tackleSkill:undefined;
-     const held=runner.shots.find(shot=>shot.active&&shot.returner===o);pose.charge=held?Math.min(1,1-(held.windup??0)/.3)*.55:0;pose.actionKind='pass';pose.shotPower=.6;pose.strikeX=.2;pose.strikeZ=.6;if(held||(o.returnKick??0)>0)pose.skill=undefined;
+     let held:typeof runner.shots[number]|undefined;for(const shot of runner.shots)if(shot.active&&shot.returner===o){held=shot;break;}pose.charge=held?Math.min(1,1-(held.windup??0)/.3)*.55:0;pose.actionKind='pass';pose.shotPower=.6;pose.strikeX=.2;pose.strikeZ=.6;if(held||(o.returnKick??0)>0)pose.skill=undefined;
      pose.vx=o.vx??0;pose.vz=(o.press??0)*RUNNER_PRESS_SPEED;pose.jockey=.8;pose.anticipate=(o.read??0)<(role==='tackler'?.65:.5)?(o.reaction??0)*.9:0;pose.slide=role==='tackler'?Math.max(attack*.95,pose.anticipate*.3):0;
      rig.pose(dt,Math.abs(o.vx??0)+(o.press??0)*RUNNER_PRESS_SPEED,(held||(o.returnKick??0)>0)?(o.returnAim??0):Math.atan2((runner.x-(o.x??o.lane*2.4))*.3,Math.max(4,-o.z)),(o.returnKick??0)/.46,0,(o.vx??0)*.2,pose);
      // The island slide solver now lowers the bean, extends its leading boot and
@@ -330,8 +342,8 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
   }
   shadow.visible=ball.visible;shadow.position.set(ball.position.x,.04,ball.position.z);const h=ball.position.y;shadow.scale.setScalar(1+h*.2);(shadow.material as T.MeshBasicMaterial).opacity=.3/(1+h*.4);
  }
- function hud():ArcadeHUD{if(kind==='tennis'){const call=tennisTouchCall(tennis);return{nextLabel:tennis.winner==='you'?(tennis.level<TENNIS_COURTS.length?'Next court':'Defend the title'):'Retry court',score:`${tennis.score.you} : ${tennis.score.rival}`,headerReady:canTennisHeader(tennis,'you'),scissorReady:canTennisScissor(tennis,'you'),tennisAerial:tennisCourt(tennis).aerial,tennisTrap:tennisCourt(tennis).touches>1,trapReady:canTennisTrap(tennis),bicycleReady:tennis.goldReady,tennisCall:call,tennisButton:tennisCallButton(call),detail:tennis.phase==='over'?tennisOverDetail(tennis):tennisCallDetail(tennis,call),message:tennis.message,over:tennis.phase==='over',ready:tennis.phase==='serve'&&tennis.server==='you'};}if(kind==='pinball')return{leftReady:pinballReadyFoot(pinball)===0,rightReady:pinballReadyFoot(pinball)===1,nudgeReady:pinball.phase==='playing'&&pinball.nudges>0&&pinball.nudgeCooldown<=0&&pinball.ball.x<341,score:String(pinball.score),detail:`${pinballMinute(pinball)} · DIV ${pinball.level} · ${pinball.goals} goal${pinball.goals===1?'':'s'} · ${pinball.phase==='over'?`${pinballStarTotal(pinball.table.stars)}/12 ★ · best ${pinballFeel.runBestCombo}× combo`:`${pinball.balls} ball${pinball.balls===1?'':'s'}`}`,message:pinballFeelMessage(pinballFeel,pinball)??(pinball.cue==='rescue'?'BALL SAVED · a fresh launch. Wait for the ball to reach your flipper.':pinball.phase==='ready'?(pinball.plunger>.02?`Launch power · ${Math.round(plungerPull(pinball.plunger)*100)}%`:`${pinballDivision(pinball).name} · ${pinballDivision(pinball).objective}`):pinball.phase==='goal'?`${pinball.lastChallengeBonus?`CHALLENGE +${pinball.lastChallengeBonus} · `:''}${pinball.lastGoalBonus?'MOVE COMPLETE':pinball.cue==='corner'?'CORNER FINISH':'GOAL'}! +${pinball.lastGoalPoints} · ${pinball.lastGoalBonus?'Both feet made that chance.':pinball.defs<3?'Another defender joins.':'You beat the back three!'}`:pinball.phase==='lost'?(pinball.cue==='concede'?'RIVAL GOAL · read the wind-up and time your return.':'Find your timing: let the ball reach the flipper before you strike.'):pinball.cue==='nudge'?'NUDGE! Switch flippers to earn another rescue.':pinball.cue==='dazed'?'DEFENDER DAZED · attack the open space!':pinball.cue==='block'?'FOOT BLOCK · switch the angle.':pinball.cue==='control'?'DEFENDER IN CONTROL · watch the next pass.':pinball.cue==='pass'?'ONE–TWO · get your flippers ready!':pinball.cue==='attack'?'COUNTER SHOT · time your return!':pinball.moveTime>0?`FINISH! ${Math.ceil(pinball.moveTime)}s · Lit goal +${750+Math.min(3,pinball.moves)*250} · Corners +150`:pinball.cue==='save'?'SAVED! Aim for the gold pockets beside the posts.':pinball.cue==='strike'?(pinball.combination>1?`${pinball.combination}× COMBINATION! +${pinball.combination*25} · Alternate feet to keep the move alive.`:'BUILD! Use the other flipper to light the goal.'):'BUILD → SWITCH → FINISH · Link both feet, then score.'),over:pinball.phase==='over',ready:pinball.phase==='ready'};return runnerHud(runner);}
+ function hud():ArcadeHUD{if(kind==='tennis'){const call=tennisTouchCall(tennis);return{nextLabel:tennis.winner==='you'?(tennis.level<TENNIS_COURTS.length?'Next court':'Defend the title'):'Retry court',score:`${tennis.score.you} : ${tennis.score.rival}`,headerReady:canTennisHeader(tennis,'you'),scissorReady:canTennisScissor(tennis,'you'),tennisAerial:tennisCourt(tennis).aerial,tennisTrap:tennisCourt(tennis).touches>1,trapReady:canTennisTrap(tennis),bicycleReady:tennis.goldReady,tennisCall:call,tennisButton:tennisHudButton(tennis,call),detail:tennis.phase==='over'?tennisOverDetail(tennis):tennisCallDetail(tennis,call),message:tennis.message,over:tennis.phase==='over',ready:tennis.phase==='serve'&&tennis.server==='you'};}if(kind==='pinball')return{leftReady:pinballReadyFoot(pinball)===0,rightReady:pinballReadyFoot(pinball)===1,nudgeReady:pinball.phase==='playing'&&pinball.nudges>0&&pinball.nudgeCooldown<=0&&pinball.ball.x<341,score:String(pinball.score),detail:`${pinballMinute(pinball)} · DIV ${pinball.level} · ${pinball.goals} goal${pinball.goals===1?'':'s'} · ${pinball.phase==='over'?`${pinballStarTotal(pinball.table.stars)}/12 ★${pinballFeel.runBestCombo>1?` · best ${pinballFeel.runBestCombo}× combo`:''}`:`${pinball.balls} ball${pinball.balls===1?'':'s'}`}`,message:pinballFeelMessage(pinballFeel,pinball)??(pinball.cue==='rescue'?'BALL SAVED · a fresh launch. Wait for the ball to reach your flipper.':pinball.phase==='ready'?(pinball.plunger>.02?`Launch power · ${Math.round(plungerPull(pinball.plunger)*100)}%`:`${pinballDivision(pinball).name} · ${pinballDivision(pinball).objective}`):pinball.phase==='goal'?`${pinball.lastChallengeBonus?`CHALLENGE +${pinball.lastChallengeBonus} · `:''}${pinball.lastGoalBonus?'MOVE COMPLETE':pinball.cue==='corner'?'CORNER FINISH':'GOAL'}! +${pinball.lastGoalPoints} · ${pinball.lastGoalBonus?'Both feet made that chance.':pinball.defs<3?'Another defender joins.':'You beat the back three!'}`:pinball.phase==='lost'?(pinball.cue==='concede'?'RIVAL GOAL · read the wind-up and time your return.':'Find your timing: let the ball reach the flipper before you strike.'):pinball.cue==='nudge'?'NUDGE! Switch flippers to earn another rescue.':pinball.cue==='dazed'?'DEFENDER DAZED · attack the open space!':pinball.cue==='block'?'FOOT BLOCK · switch the angle.':pinball.cue==='control'?'DEFENDER IN CONTROL · watch the next pass.':pinball.cue==='pass'?'ONE–TWO · get your flippers ready!':pinball.cue==='attack'?'COUNTER SHOT · time your return!':pinball.moveTime>0?`FINISH! ${Math.ceil(pinball.moveTime)}s · Lit goal +${750+Math.min(3,pinball.moves)*250} · Corners +150`:pinball.cue==='save'?'SAVED! Aim for the gold pockets beside the posts.':pinball.cue==='strike'?(pinball.combination>1?`${pinball.combination}× COMBINATION! +${pinball.combination*25} · Alternate feet to keep the move alive.`:'BUILD! Use the other flipper to light the goal.'):'BUILD → SWITCH → FINISH · Link both feet, then score.'),over:pinball.phase==='over',ready:pinball.phase==='ready'};return runnerHud(runner);}
  sync(0);fit();stage.render();return{needsFrames:()=>cinema>0||stage.effectsActive()||(kind==='tennis'?(tennisNeedsFrames(tennis)||tennis.phase==='serve'&&tennisPoseRest>0||!!tennisFeel?.active()):kind==='pinball'?(pinball.phase!=='ready'&&pinball.phase!=='over'||pinball.defJoin>0||pinball.defenderAI.some(ai=>ai.dazed>0)||pinball.flipperPulse[0]>0||pinball.flipperPulse[1]>0||pinball.plunger>.002||pinball.plungerSnap>.002||pinball.left>.004||pinball.right>.004||flipperSnap.some(value=>value>.005)||floorWave>0||floorEnergy.some(value=>value>.005)||pinballFeelActive(pinballFeel)||!!pinballTable?.active()):runner.lives>0||runner.outro>0||!!runnerFx?.active()),stage,update,reset,action,target,hud,fit,state:{tennis,pinball,runner},
   /** Tear down: game-specific module state first (runnerTrack's renderer hold), then the stage. */
-  dispose(){runnerFx?.dispose();stage.dispose();}};
+  dispose(){runnerFx?.dispose();tennisTrail?.dispose();stage.dispose();}};
 }

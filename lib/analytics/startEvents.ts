@@ -45,7 +45,7 @@ export function watchStart(w:Pick<Window,'addEventListener'|'removeEventListener
  *  change counts. A code is "created" on making → code; a restore "worked" on loading → welcome/swap and "failed" on
  *  loading → enter (wrong code or offline) / grownup / break (too many tries). */
 let createPhase='',restorePhase='';
-export function startCreatePhase(p:string){const prev=createPhase;if(p===prev)return;createPhase=p;if(prev==='making'&&p==='code')trackStart('st:created');}
+export function startCreatePhase(p:string){const prev=createPhase;if(p===prev)return;createPhase=p;if((prev==='making'||prev==='working')&&p==='code')trackStart('st:created');}
 export function startRestorePhase(p:string){
  const prev=restorePhase;if(p===prev)return;restorePhase=p;if(prev!=='loading')return;
  if(p==='welcome'||p==='swap')trackStart('st:restored');else if(p==='enter'||p==='grownup'||p==='break')trackStart('st:restore_fail');

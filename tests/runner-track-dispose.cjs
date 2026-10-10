@@ -9,7 +9,8 @@ assert.match(track,/function dispose\(\)\{if\(activeRenderer===stage\.renderer\)
 assert.match(track,/return\{update,pose,reset,dispose,/,'and is exposed');
 assert.match(read('lib/arcade/runnerFx.ts'),/dispose:track\.dispose/,'runnerFx forwards it');
 const games=read('lib/arcade/arcadeGames.ts');
-assert.match(games,/dispose\(\)\{runnerFx\?\.dispose\(\);stage\.dispose\(\);\}/,'the runtime disposes the runner layer, then the stage');
+// Other games may dispose their own layers in between (e.g. the tennis trail); the runner layer must still go before the stage.
+assert.match(games,/dispose\(\)\{runnerFx\?\.dispose\(\);[^}]*stage\.dispose\(\);\}/,'the runtime disposes the runner layer, then the stage');
 const comp=read('components/games/ArcadeGame3D.tsx');
 assert.match(comp,/release\(\);runtime\.dispose\(\);game\.current=null;/,'ArcadeGame3D tears down through the runtime');
 assert.ok(!/runtime\.stage\.dispose\(\)/.test(comp),'not the bare stage');

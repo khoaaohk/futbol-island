@@ -23,7 +23,9 @@ export const metadata:Metadata={
  twitter:{card:'summary_large_image',title,description,images:['/opengraph-image.png']},
 };
 
+import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function Page(){
+ preloadIslandBrush();
  return <>
   <script dangerouslySetInnerHTML={{__html:ROOT_VIEW_BOOT}}/>
   <RootSwitch landing={<Landing/>} loader={<IslandLoadingStatic/>}/>

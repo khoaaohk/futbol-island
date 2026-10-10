@@ -9,7 +9,7 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  *   with music on.
  * - Voices are capped; every node disconnects when it ends.
  */
-export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain';
+export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band';
 const MAX_VOICES=14;
 export function createStrikerAudio(){
  let ctx:AudioContext|null=null,out:GainNode|null=null,noise:AudioBuffer|null=null,voices=0;
@@ -59,7 +59,10 @@ export function createStrikerAudio(){
    case 'switch':tone(at,620*j,700,.05,v*.06,'triangle');break;
    case 'kickoff':whistle(at,.55,v*.1);break;
    case 'fulltime':whistle(at,.18,v*.1);whistle(at+.28,.18,v*.1);whistle(at+.56,.75,v*.1);hiss(at+.6,2.2,v*.12,'bandpass',600,900,.7,.4);break;
-   case 'charge':tone(at,260*j,520,.12,v*.05,'triangle');break;
+   // Charge (Oct 10 2026): power 0..1 sets the pitch, so the build tick (.3) and the overhit warning (1) sound different.
+   case 'charge':{const p=Math.max(0,Math.min(1,power));tone(at,(220+p*260)*j,(440+p*520),.12,v*(.05+p*.03),p>=1?'square':'triangle',p>=1?1800:0);break;}
+   // Entering the clean-strike band: a bright two-note "ting" that says release now (pairs with the cyan gauge zone).
+   case 'band':tone(at,1318,1322,.09,v*.08,'triangle');tone(at+.05,1976,1980,.16,v*.07,'sine');break;
    // Perfect first touch: a bright two-note sparkle on top of the contact.
    case 'perfect':tone(at,990,995,.1,v*.08,'triangle');tone(at+.06,1480,1490,.2,v*.07,'triangle');tone(at,220*j,120,.06,v*.18);break;
    // Skill move: a quick scuff-whoosh; "beat" adds the crowd's delighted rise when it beats a tackle.

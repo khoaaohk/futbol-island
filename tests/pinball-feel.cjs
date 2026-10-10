@@ -13,16 +13,16 @@ const run=(s,feel,seconds,input=idle,hz=60,cues=[])=>{for(let i=0;i<Math.round(s
 
 // 1. Every new ball gets a ball save; a rescued relaunch never gets another.
 {const s=p.createPinballState(),feel=f.createPinballFeel();
- p.launchPinball(s);assert.equal(s.launchGrace,3,'first ball is protected');
+ p.launchPinball(s);assert.equal(s.launchGrace,5,'first ball is protected');
  s.openingRescue=false;s.launchGrace=0;Object.assign(s.ball,{x:180,y:625,vx:0,vy:400});const cues=run(s,feel,.05);
  assert.equal(s.balls,2);assert.equal(s.phase,'lost');assert.ok(cues.includes('pb-drain'),'real drain plays the soft drain cue');
  assert.match(f.pinballFeelMessage(feel,s),/^Ball 1 · \+0 · 0 goals/,'end-of-ball summary appears');
  run(s,feel,1.1);assert.equal(s.phase,'ready');assert.ok(s.openingRescue,'next ball re-arms the save');
  assert.match(f.pinballFeelMessage(feel,s),/2 balls left/,'summary stays readable on the plunger');
- p.launchPinball(s);assert.equal(s.launchGrace,3);assert.equal(f.pinballFeelMessage(feel,s),null,'summary clears on launch');
+ p.launchPinball(s);assert.equal(s.launchGrace,5);assert.equal(f.pinballFeelMessage(feel,s),null,'summary clears on launch');
  Object.assign(s.ball,{x:180,y:625,vx:0,vy:400});run(s,feel,.05);assert.equal(s.balls,2,'second ball is saved too');assert.equal(s.cue,'rescue');
  run(s,feel,1.1);p.launchPinball(s);assert.equal(s.launchGrace,0,'rescue cannot be farmed by relaunching');
- assert.deepEqual([1,2,3,4].map(p.pinballBallSaveTime),[3,3,2.5,2],'ball save tightens with the division ramp');}
+ assert.deepEqual([1,2,3,4].map(p.pinballBallSaveTime),[5,4,3,2.5],'ball save tightens with the division ramp');}
 
 // 2. Goal: hit-stop freezes the sim, keeps a flipper tap buffered, pops a label.
 {const s=p.createPinballState(),feel=f.createPinballFeel();p.launchPinball(s);s.moveTime=0;Object.assign(s.ball,{x:180,y:47,vx:0,vy:-600});

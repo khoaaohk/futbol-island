@@ -169,7 +169,8 @@ await ok('hmac',async()=>{
  const deps=memDeps();const r=await call(deps,'create',{snapshot:snap({'fi2-welcome-v1':'completed'})});
  assert.equal(r.status,200);const code=r.body.code;assert(C.isNormalCode(code));
  const dump=JSON.stringify(deps.store.data);
- for(const w of code.split('-'))assert(!dump.includes(`"${w}"`)&&!dump.includes(code),'no code word stored');
+ // As a stored VALUE ("game" is both a code word and a snapshot key, which made this flaky before Oct 10 2026).
+ for(const w of code.split('-'))assert(!new RegExp(`"${w}"(?!:)`).test(dump)&&!dump.includes(code),'no code word stored');
  assert(deps.store.data.saves[SV.codeHash(PEPPER,code)],'stored under the HMAC');
  // A save made with an OLD code (pre-Oct 10 2026 words, 3-digit number) still restores, typed loosely, and still syncs.
  {const old='haddock-caboose-fjord-427',row=deps.store.data.saves[SV.codeHash(PEPPER,code)];
@@ -326,7 +327,11 @@ await ok('email never kept',async()=>{
   code4=(await call(logDeps,'create',{snapshot:snap({})})).body.code;
   await call(logDeps,'email',{code:code4,email:ADDR});
   assert.equal(printed.length,1);assert(!printed[0].includes(ADDR)&&!printed[0].includes(C.displayCode(C.parseCode(code4)))&&printed[0].includes('«code»'),'log mode: no address, code masked');
-  for(const w of C.parseCode(code4).words)assert(!printed[0].includes(w)&&!printed[0].includes(W.PICTURES[w]),'log mode masks the picture line too: '+w);
+  // The email's own text has words that can also be code words ("tablet", "dress" inside "address"), so a word search is flaky
+  // (Oct 10 2026). Instead: the masked email is the SAME for any code, so nothing of the code (words or pictures) can be in it.
+  {const other=[];const d2=memDeps({email:EM.logProvider(l=>other.push(l))});const c2=(await call(d2,'create',{snapshot:snap({})})).body.code;
+   await call(d2,'email',{code:c2,email:ADDR});assert.notEqual(c2,code4);
+   assert.equal(printed[0],other[0],'log mode masks the code and its picture line: the printed email does not depend on the code');}
   // The default log provider (as the server wires it) masks the code too.
   const printed2=[];await EM.logProvider(l=>printed2.push(l)).send({to:ADDR,subject:'s',text:EM.emailText('kite · goal · lion · 123')});
   assert(!printed2[0].includes('kite · goal')&&printed2[0].includes('«code»')&&!printed2[0].includes(ADDR));
@@ -436,7 +441,10 @@ await ok('client flow',async()=>{
  assert.equal(await A.client.syncNow('hide'),'saved');assert.equal(A.client.getSyncState().rev,2);
  // Device B restores with the code (typed sloppily) and gets the same island.
  const B=device('B',{'fi2-music-volume':'0.9'});
- const sloppy=made.code.split('-').map((p,i)=>i<3?p.toUpperCase().slice(0,5):p).join('  ');
+ // Typed loosely: capitals, double spaces, and words cut to 5 letters where that prefix is still unique (an ambiguous prefix
+ // can't restore by design; the random code made this flaky before Oct 10 2026).
+ const cut=w=>W.WORDS.filter(x=>x.startsWith(w.slice(0,5))).length===1?w.slice(0,5):w;
+ const sloppy=made.code.split('-').map((p,i)=>i<3?cut(p).toUpperCase():p).join('  ');
  const got=await B.client.restoreSave(sloppy);assert(got.ok,'restored');
  const wantSummary=SUM.summarise(S.buildSnapshot(A.ls,NOW).keys);
  assert.deepEqual(J(got.summary),J(wantSummary));assert(got.summary.coins>1000&&got.summary.cards===2,'summary: coins and cards '+JSON.stringify(got.summary));
@@ -496,6 +504,39 @@ await ok('client flow',async()=>{
  H.ls.setItem('fi2-garden-v1','{"beds":9}');assert.equal(await H.client.syncNow('manual'),'saved');
  G.ls.setItem('fi2-garden-v1','{"beds":4}');G.ctl.drop=true;await G.client.syncNow('hide');G.ctl.drop=false;
  const G2=device('G',Object.fromEntries(G.ls._m));assert.equal(await G2.client.bootCheck(),'conflict','two different islands: the player chooses');
+ // QA Oct 10 2026: visiting a room (Konbini, arcade, museum) and coming back never opens "Which island do you want?". The
+ // island's page-hide save lands but its page unloads before the answer; the room's own page-hide save is then sent from the
+ // same old rev and meets a conflict. Both were this device's: the next start adopts the server's island and saves on top.
+ {const I=device('I',base);await I.client.createSave();
+  I.ls.setItem('fi2-garden-v1','{"beds":5}');I.ctl.drop=true;assert.equal(await I.client.syncNow('hide'),'failed','the island unloads unanswered');I.ctl.drop=false;
+  assert.equal(I.client.getSyncState().sent.length,1,'what was sent is recorded before the request goes');
+  const room=device('I',Object.fromEntries(I.ls._m));room.ls.setItem('fi2-garden-v1','{"beds":6}');
+  assert.equal(await room.client.syncNow('hide'),'conflict','the room\'s save meets the island\'s');
+  const back=device('I',Object.fromEntries(room.ls._m));let bc=0;back.win.addEventListener('fi2-save-conflict',()=>bc++);
+  assert.equal(await back.client.bootCheck(),'same','back on the island: no chooser');assert.equal(bc,0,'no conflict event');
+  const st=back.client.getSyncState();assert.equal(st.conflict,undefined);assert.equal(st.rev,3,'the room\'s change is saved on top');
+  const J2=device('J2',{});const fromServer=await J2.client.restoreSave(I.ls.getItem('fi2-save-code-v1'));assert(fromServer.ok);
+  assert.equal(fromServer.snapshot.keys['fi2-garden-v1'],'{"beds":6}','the server has the latest island');
+  // The same inside a room that saves on a milestone: adopted on the spot, no chooser in the room either.
+  const K2=device('K2',base);await K2.client.createSave();K2.ls.setItem('fi2-garden-v1','{"beds":7}');K2.ctl.drop=true;await K2.client.syncNow('hide');K2.ctl.drop=false;
+  const room2=device('K2',Object.fromEntries(K2.ls._m));let rc=0;room2.win.addEventListener('fi2-save-conflict',()=>rc++);
+  room2.ls.setItem('fi2-garden-v1','{"beds":8}');assert.equal(await room2.client.syncNow('manual'),'saved');assert.equal(rc,0);assert.equal(room2.client.getSyncState().rev,3);
+  // A remembered chooser for a real second device still opens.
+  const M=device('M',Object.fromEntries(back.ls._m)),N=device('N',Object.fromEntries(back.ls._m));
+  N.ls.setItem('fi2-garden-v1','{"beds":1}');assert.equal(await N.client.syncNow('manual'),'saved');
+  M.ls.setItem('fi2-garden-v1','{"beds":2}');assert.equal(await M.client.syncNow('hide'),'conflict');
+  const M2=device('M',Object.fromEntries(M.ls._m));assert.equal(await M2.client.bootCheck(),'conflict','another device\'s island: the player chooses');}
+ // "Get my code" never hangs: no answer within the timeout → 'timeout' (the screen offers Try again or Play now).
+ {const ls=memStorage(base);ls.removeItem('fi2-save-code-v1');ls.removeItem('fi2-save-sync-v1');
+  const hang=(url,init={})=>url==='/api/save/status'?Promise.resolve(new Response('{"saving":true}')):new Promise((_,no)=>init.signal?.addEventListener('abort',()=>no(init.signal.reason)));
+  const win={addEventListener(){},removeEventListener(){},dispatchEvent(){return true;}};
+  const slow=makeLoader({localStorage:ls,fetch:hang,window:win,AbortSignal,location:{hash:'',pathname:'/',search:''}})('lib/saves/client.ts');
+  // (Node unrefs AbortSignal.timeout's timer, so this test holds the process open meanwhile; a browser tab needs nothing.)
+  const hold=setTimeout(()=>{},5000);const t0=Date.now();
+  assert.deepEqual(J(await slow.createSave({timeoutMs:30})),{ok:false,reason:'timeout'});assert(Date.now()-t0<2000);clearTimeout(hold);
+  assert.equal(ls.getItem('fi2-save-code-v1'),null,'no code is remembered');
+  const ui=read('components/saves/SaveCodeCreate.tsx');assert.match(ui,/data-still-working/);assert.match(ui,/data-create-retry/);
+  assert(!/<[a-z]+[^<>]*\sinert(?=[\s>]|=\{true\})/.test(ui)&&/\{inert:''\}/.test(ui),'no boolean inert prop (React 18 warns): the string form');}
  // Heat: no timers or loops in the always-mounted code.
  for(const f of ['lib/saves/client.ts','components/saves/SaveSync.tsx'])assert(!/setTimeout|setInterval|requestAnimationFrame/.test(read(f)),'no timers: '+f);
 });
@@ -517,9 +558,10 @@ await ok('sql',async()=>{
   psql('create role anon; create role authenticated; create role service_role bypassrls;');
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
-  assert.equal(files[files.length-1],'20261010_game_saves.sql','the save migration is last');
+  // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
+  assert.equal(files.filter(f=>f>'20261010_game_saves.sql').join(),'20261011_admin_save_metrics.sql','the save migration is last but for the admin metrics');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
-  assert.equal(results[results.length-1],'OK, game saves installed','self-check row');
+  assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');
   assert.equal(results[2],'OK, counts installed (analytics schema 3)','the earlier migrations still pass');
   const sql=read('supabase/migrations/20261010_game_saves.sql');

@@ -61,15 +61,16 @@ const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
 
 /** Pure mapping from one sim touch to the actions it causes (tested in tests/choreo.cjs).
  * `sim` supplies roles, positions and speeds at the moment the event is read. */
-export function touchActions(ev:TouchEvent,sim:Pick<MatchSim,'players'|'ids'>,out:TouchAction[]=[]):TouchAction[]{
+export function touchActions(ev:TouchEvent,sim:Pick<MatchSim,'players'|'ids'>&Partial<Pick<MatchSim,'keeperHands'>>,out:TouchAction[]=[]):TouchAction[]{
  out.length=0;
  const p=sim.players[ev.id];if(!p)return out;
  const pace=clamp(ev.speed/340,0,1),runner=Math.hypot(p.vx,p.vy);
  const push=(id:string,reaction:Reaction|undefined,squash:number,delay=0)=>{out.push({id,reaction,squash:clamp(squash,-3.5,4),delay});};
  switch(ev.kind){
   case 'receive':{
-   // Keepers take it in the hands: a small catch squash, no outfield body part.
-   if(p.isGK){push(ev.id,undefined,-1-pace);break;}
+   // Keepers take it in the hands: a small catch squash, no outfield body part. Not a 7v7 back pass taken with his FEET
+   // (sim.keeperHands false: the pass-back rule): that is controlled like any outfield touch (Oct 10 2026).
+   if(p.isGK&&sim.keeperHands!==false){push(ev.id,undefined,-1-pace);break;}
    const part=heightReaction(ev.height);
    // A header stretches up into the ball; every other control cushions down into it.
    push(ev.id,part,part==='header'?2.2+pace:-(1.1+pace*1.8+(ev.heavy?.8:0)));
@@ -188,6 +189,12 @@ export function createChoreo(yaw=0){
      if(best)startJump(best,contactIn,h-.1);
     }
    }
+   // A defender who will win the cross first (not just the nearest marker) goes up for it on his own timing (Oct 10 2026:
+   // the 11v11 recovery runs put more defenders in the box, and one headed a cross clear without leaving the ground).
+   // Only while a header cross is in the air, only opponents near the target: a few short predictions per frame.
+   for(const id of sim.ids){const q=sim.players[id];if(q.team===target.team||q.isGK||Math.hypot(q.x-target.x,q.y-target.y)>40)continue;
+    const c=predictClaim(sim,q,sim.receptionRadius),qIn=c.tC/rate;
+    if(c.tC>=0&&qIn<=JUMP_PEAK*JUMP_SECONDS&&(tC<0||c.tC<tC)&&c.hC>=TOUCH_HEIGHT.header&&c.hC<=2.3)startJump(id,qIn,c.hC);}
   }
  }
  let shotFrom:{x:number;y:number}|null=null,shotWas=false;

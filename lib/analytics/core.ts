@@ -24,6 +24,8 @@
 import {ACTIVITY_IDS,CELL_COUNT,MAX_BEAT_CELLS,PLACE_IDS,type ActivityId,type PlaceId} from './islandIds';
 import type {LearningReport} from './learning';
 import type {StartReport} from './startReport';
+import type {Overview} from './overview';
+import type {SaveMetricsReport} from '../saves/metrics';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -448,6 +450,10 @@ export type Report={
  start:StartReport|null;
  /** Database functions version (3 = 20261009_analytics_counts.sql installed); `needsUpdate` drives the /admin banner. */
  storage:{schema:number;needsUpdate:boolean};
+ /** Oct 11 2026: the investor overview (this range vs the one before it; lib/analytics/overview.ts). */
+ overview?:Overview|null;
+ /** Oct 11 2026: save-code metrics (lib/saves/metrics.ts), added by the admin page and route; aggregates only. */
+ saves?:SaveMetricsReport|null;
 };
 
 export function emptyReport(from:string,to:string,now:Date,configured:boolean):Report{
@@ -462,6 +468,7 @@ export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|
  switch(q.range){
   case 'today':return {from:today,to:today};
   case '30d':return {from:addDays(today,-29),to:today};
+  case '90d':return {from:addDays(today,-89),to:today};
   case 'custom':{
    let from=q.from&&day.test(q.from)&&!isNaN(Date.parse(q.from))?q.from:addDays(today,-6);
    let to=q.to&&day.test(q.to)&&!isNaN(Date.parse(q.to))?q.to:today;

@@ -170,3 +170,38 @@
 /* Short landscape: ArcadeGame3D.module.css hides every `.header>div` at max-height:520px (the title block); keep the Puzzles + hint
    strip, which is a div in that header (tests/pass-puzzle-arcade-header.cjs). */
 @media(max-height:520px){.header>.navigation{display:flex}}
+
+/* Oct 10: the failure beat. The card waits while the stop mark pops and the camera leans in (lib/arcade/passPuzzleScene.ts
+   showStop), so the child sees where the move broke down; hidden (not just transparent) until then, so no early taps.
+   The goal reveal gets the same no-tap guard. Reduced motion: no slide, just the short wait. */
+.failResult{animation:puzzleFailReveal .25s .6s both}
+@keyframes puzzleFailReveal{from{opacity:0;visibility:hidden;transform:translateY(16px)}to{opacity:1;visibility:visible;transform:none}}
+.goalResult{animation-name:puzzleGoalReveal2}
+@keyframes puzzleGoalReveal2{from{opacity:0;visibility:hidden;transform:translateY(12px)}to{opacity:1;visibility:visible;transform:none}}
+@media(prefers-reduced-motion:reduce){.failResult,.goalResult{animation:puzzleBeatWait .01s .45s both}}
+@keyframes puzzleBeatWait{from{visibility:hidden;opacity:0}to{visibility:visible;opacity:1}}
+/* HUD: the move's passes are done (the counter turns gold), the cue to finish. */
+.game .header>.passScore[data-met]{border-color:#ffe36e;box-shadow:0 0 14px #ffe36e40}
+.game .header>.passScore[data-met] strong{color:#ffe36e}
+/* Oct 10: a tighter brief on phones, so more of the frozen pitch shows above it (the brief is about that picture). */
+.game .coinNote{font-size:12px!important;line-height:1.4!important;color:#b5c7dc;margin:6px 0 0!important}
+.game .briefHint{margin:4px 0 6px;padding:10px 0;min-height:44px;color:#92e9df;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){
+ .lowOverlay>section h3{font-size:27px;margin:12px 0 6px}
+ .lowOverlay>section>p{font-size:14px;line-height:1.45;margin:6px 0}
+ .lowOverlay>section .goals{margin:4px 0 6px}
+ .lowOverlay>section small{font-size:11px;line-height:1.4;padding-top:8px}
+ .lowOverlay>section .exit{margin:8px auto}
+}
+/* Short landscape phones: the brief/result card sits to the right so the frozen pitch (and the stop mark) stays in view
+   on the left; the HUD counter steps aside instead of overlapping the card; paragraphs keep the card's left edge. */
+@media(max-height:520px) and (orientation:landscape){
+ .game .lowOverlay{place-items:start end;padding:66px max(16px,env(safe-area-inset-right)) 12px 16px}
+ .lowOverlay>section{width:min(430px,56%)}
+ .lowOverlay>section>p{margin-inline:0}
+ .game:is([data-view=result],[data-view=brief]) .header>.passScore{visibility:hidden}
+ /* The main action never scrolls out of reach: it sticks to the bottom of the scrolling overlay. */
+ .lowOverlay>section>.go{position:sticky;bottom:6px;z-index:1;box-shadow:0 5px 0 #a38a55,0 -10px 18px #151a30}
+}
+@media(prefers-reduced-motion:no-preference){.game .header>.passScore[data-met]{animation:puzzleMetPop .45s cubic-bezier(.3,1.6,.5,1) both}}
+@keyframes puzzleMetPop{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}

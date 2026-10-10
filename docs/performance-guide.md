@@ -37,6 +37,12 @@ It then stops.
 - Loaded with the Coaches Centre: a 31 KB / 10.7 KB gz chunk (the IDP link, examples, storage and the play schema).
 - Loaded when the Coaches Board opens: a 77.5 KB / 26.7 KB gz chunk (the board UI). No new dependencies; share links use the browser's CompressionStream.
 
+**Full-screen layout (Oct 10 2026, local, not deployed).** The board now covers the whole screen (portalled into the
+Coaches Centre dialog) with floating rails, like Miro/Figma. Runtime costs added:
+- Pinch zoom/pan moves one layer (`.world`) by `transform` while the fingers move (no React render, no loop); the camera is committed once on release (one pitch SVG re-render).
+- ⌘/Ctrl+wheel and trackpad pinch zoom, and the wheel pans when zoomed: one React render per wheel event, no rAF.
+- Still 0 rAF at rest (headless: phone 390×844 touch after drag, arrow, pinch and fit; desktop 1440×900 after shortcuts and wheel zoom). The stage remains the only loop.
+
 **Validation.**
 - `tests/coaches-board.cjs` (in `npm test`, 12 groups), including a fake-rAF stage test: 0 frames at rest, the glide stops, playback stops, and one frame request per frame.
 - Headless play-throughs at 390 portrait (touch), 844×390 landscape (touch), 1440 desktop (mouse) and WebKit (iPhone 15 profile).
@@ -4518,6 +4524,16 @@ Four cases became story exhibits (1863 meeting-table diorama, 1891 penalty "stan
 - **Measured** (headless Chromium, zoomed on each exhibit): 11–13 draw calls and ≈ 8.5k triangles.
 - **Reduced motion:** beats jump to their end state.
 
+### Museum hall as a modern gallery — October 10, 2026 (local, not deployed)
+
+The walk-in museum hall was restyled after MoMA (brief: `docs/museum-modern-style.md`): gallery white walls with a shadow-gap reveal, pale concrete floor with 2 m hairline joints, white plinths, Swiss wall labels on the atlas, and one abstract sculpture per case (`lib/museum/museumExhibits.ts`). The World Cup ball plinth and the ball gallery are unchanged.
+
+- **Sculptures share four instanced meshes.** Every moving piece of all twelve sculptures (boxes, icosphere spheres, cylinders and rings) is an instance of one of four `InstancedMesh`es on one Phong material. That is 4 draw calls for all twelve, down from the old riso stages (backdrop print mesh, bean sprite quads, per-machine meshes and particle meshes). Fixed parts join the room's one merged mesh. Matrices are rewritten only for the sculpture that is animating, and `update` is busy only while a beat plays or the back-pass ring coasts, so the loop still sleeps at rest.
+- **Removed:** the stage canvas (1024×2048), the bean cast sheet (`/museum/cast.webp`, no longer requested), `museumExhibits2.ts`, `museumStagePaint.ts`, the plank floor (one quad per plank), rugs, trim, stanchions and finials, the cloth covers, and the 100 peg cylinders (the peg grid is now printed on the atlas).
+- **Added:** one soft contact-shadow mesh (a 64² radial-gradient texture under plinths, the desk and sculptures; 1 draw call).
+- **Measured** with `renderer.info` in headless Chromium (SwiftShader), all cases open. The desktop is 1440×900 and the phone is 390×844 touch. Hall views at the entrance went from 45 to 18 draw calls and from 25.3k to 24.1k triangles. Hall views elsewhere went from 37–46 to 13–18 calls and from 16–25.7k to 15.5–24.1k triangles. Zoomed cases went from 8–13 to 9 calls, with 9.8–10.3k triangles before and 10.3k after. Geometries went from 45–58 to 16–18 and textures from 12–13 to 4–5. Phone hall views went from 15–33 to 13–18 calls. This is not an iPhone measurement, and no cooling claim is made.
+- Reduced motion: every beat jumps to its end pose (duration 0). Dispose frees the instanced meshes, the shadow texture and the atlas as before.
+
 ## Freestyle tricks for the island freestylers — October 4, 2026 (local, not deployed)
 
 24 named tricks for the 7 freestylers (docs/player-moves/MOVES.md § G): sit-downs, uppers, lowers, ground ball mastery and court pair tricks.
@@ -4791,3 +4807,21 @@ Implemented:
 - Tan mode: the fade starts as soon as the first frame is drawn (0.05 s, 0.5 s long); arrival at once, HUD at 0.6 s; a CSS-only bouncing ball cue appears on the tan after 0.9 s.
 
 Costs: warm island on the title ≈ JS heap of the built scene (~15–25 MB) and one WebGL context with ~23 programs (no geometry/textures uploaded); idle prefetch ≈ 1 MB of game JS + 97 kB atlas per title visit that reaches idle (not on Save-Data / 2G). Title first-load JS 130 → 132 kB (preload controller ≈ 1.4 kB gz). Remaining: NPC creation (~1 s at 4×) still runs after the tan; idle warm slices reach ~0.2–0.3 s long tasks at 4× while the code sheet is open. Not validated on a real iPhone (no thermal claim).
+
+## Bean neck and idle breath (Oct 10 2026, local, not deployed)
+
+- **What:** the rig's gaze (pitch/yaw) rides in the spare `.w` of the per-frame lumbar/chest texels; the bean vertex shader bends the face/hair/hat by it (one extra Euler matrix per vertex, no new texels, uniforms, textures, programs or draws). Idle breathing scales the three bean meshes of a standing rig (matrix refresh on 3 meshes that were already updated per frame).
+- **No new loops or allocations:** both run inside `rig.update`; the neck spring sleeps when settled (like the squash spring); nothing animates when the host loop sleeps. Reduced motion: no spring, no nod, no breath.
+- **Measured (headless Chrome, emulation, not iPhone heat):** 22 batched bean rigs, 390×844 @3x: 10 draw calls and 118,844 triangles before and after; frame 1.72–1.74 ms old shader vs 1.80 ms new (within run-to-run noise of ±0.15 ms); CPU pose+batch median 1.3–1.4 ms both.
+
+## Live 11v11 AI pass (Oct 10 2026, local, not deployed)
+
+- **What:** Eleven Park's AI now plays 11v11 football (`lib/town/match/elevenAI.ts`, wired into the shared `matchSim.ts`; every other format reads neutral values): recovery runs goal-side of the ball in our half (wingers track back into a 4-5-1, the striker stays up as the out-ball), a sweeper keeper, throw-ins instead of kick-ins, offside judged when the pass is struck (the passer re-reads a drifted run or the flag goes up, lofted balls included), and coaching lines for throw-ins, corners, goal kicks and offside in the live commentary. Tests: `tests/eleven-ai.cjs`; browser: `scripts/check-eleven-ai-browser.cjs`.
+- **Cost:** no new loops, no per-frame allocations, no render changes (same rigs, draw calls and triangles). The new checks are a few comparisons per player per step and one `safePass` read on the rare offside re-read.
+- **Saved:** `integrate()` separation rejects far pairs on squared distance before the `hypot` (462 pairs a step in 11v11), deciding the spacing exemption once per player. Bit-identical output (seeded hashes equal); node A/B, interleaved, same code otherwise: 11v11 0.628 → 0.433 ms per sim step (-31 %), 9v9 -12 %. Headless node on a loaded desktop, not a thermal claim.
+
+## Futbol Tennis teaching + feel pass (Oct 10 2026, local, not deployed)
+
+- **What:** the open-space cue never goes blank (`tennisAimSide`: a central rival still leaves the wide lane), a coach nudge after three straight-at-the-rival returns, KICK NOW waits while the ball will still reach the body (`TENNIS_WAIT_LOOKAHEAD`), the Target Drill lights the touch for the ring's depth, puts rings on full-aim lanes and lights the ring when the yellow aim ring is on it, a soft drill gate (6 → 5 → 4 after misses), and an immediate press acknowledgement (ready stance, aim-ring pulse, soft plant sound) while the patient touch holds.
+- **Cost / saved:** the 14 trail spheres are now one `InstancedMesh` with its own material (it also stops recolouring the stage's shared `#ffe084` material). Lane marks hide on the drill and under the pink space ring. Measured at 390×844, court 1, real touch input: draw calls 50.9 → 43.2 average (58 → 48 max), triangles 18.6k → 17.8k. No new loops; the serve still sleeps (0 rAF at rest); the drill ring colour swaps preallocated `Color`s only on change.
+- **Validation:** `tests/tennis-aim-drill.cjs` (new), the existing tennis suites, TypeScript, Playwright at 390×844 touch, 844×390 and 1440×900 with real input, reduced motion, exit disposal. Desktop emulation only: no iPhone thermal claim.

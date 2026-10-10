@@ -44,7 +44,7 @@ export default function SaveCodeCard({grownups=false}:{grownups?:boolean}){
    <p className={`${styles.saved} ${status==='saved'?'':styles.off}`} role="status" data-save-status={status}>{STATUS[status]}</p>
    {status==='conflict'&&<div className={styles.row}><button type="button" className={styles.primary} onClick={()=>window.dispatchEvent(new Event(SAVE_CONFLICT))}>Choose an island</button></div>}
    <div className={styles.row}><button type="button" className={styles.primary} data-show-code onClick={()=>setView('show')}>Show my code</button>
-    <button type="button" className={styles.secondary} data-print-code onClick={()=>{void import('@/lib/saves/printCard').then(m=>m.printCodeCard(code));}}>Print a code card</button></div>
+    <button type="button" className={styles.secondary} data-print-code onClick={()=>{void import('@/lib/saves/printCard').then(m=>m.printCodeCard(code));}}>Print code</button></div>
    <div className={styles.row}><button type="button" className={styles.secondary} data-use-other-code onClick={()=>setView('restore')}>Use a different code</button>
     {avail.email&&<button type="button" className={styles.secondary} data-email-code onClick={()=>setView(grownups?'email':'gate-email')}>Send my code to a grown-up</button>}
     <button type="button" className={styles.secondary} data-delete-save onClick={()=>setView(grownups?'delete':'gate-delete')}>Delete my save</button></div>

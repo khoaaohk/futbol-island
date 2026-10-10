@@ -209,10 +209,12 @@ export type PinballState = {
  *               always < the ball radius, so no tunneling ever.
  * DEAD_BOUNCE   below this approach speed a bounce is fully damped, which is
  *               what lets the ball settle and cradle on a flipper w/o jitter. */
-/** 90 match minutes = five minutes of live play (see the session-length note
- * in docs/performance-guide.md). After 90' the ball in play gets up to
- * STOPPAGE seconds of stoppage time, then the whistle goes. */
-export const PINBALL_MATCH_TIME = 300, PINBALL_STOPPAGE = 20, PINBALL_MULTIBALL_SAVE = 10, PINBALL_FULLTIME_BALL = 500;
+/** 90 match minutes = three minutes of live play. At five minutes no kid-bot
+ * profile ever heard the full-time whistle (sessions ended on drains at
+ * 20'-40'); at three the 90' is a reachable goal and a skilled run finishes
+ * with balls in hand (each one pays PINBALL_FULLTIME_BALL). After 90' the
+ * ball in play gets up to STOPPAGE seconds of stoppage time, then the whistle. */
+export const PINBALL_MATCH_TIME = 180, PINBALL_STOPPAGE = 20, PINBALL_MULTIBALL_SAVE = 10, PINBALL_FULLTIME_BALL = 500;
 /** The match minute shown on the scoreboard (0'..90', then 90+n'). */
 export function pinballMinute(s: Pick<PinballState, 'clock' | 'stoppage'>) { return s.stoppage >= 0 ? `90+${Math.max(1, Math.ceil(s.stoppage / (PINBALL_MATCH_TIME / 90)))}'` : `${Math.min(90, Math.floor(s.clock / (PINBALL_MATCH_TIME / 90)))}'`; }
 /* Keeper parry: a shot arriving faster than PARRY_MIN is punched out wide and
@@ -318,8 +320,10 @@ export function launchPinball(s: PinballState, power?: number) {
     return true;
 }
 /** Seconds of on-table ball save per new ball. Generous while learning, then
- * tighter as the divisions ramp up (it never disappears for kids). */
-export function pinballBallSaveTime(level:number){return level<=2?3:level===3?2.5:2;}
+ * tighter as the divisions ramp up (it never disappears for kids). Tuned on
+ * the kid-bot playtest (Oct 10 2026): at 3s over half of a 7-year-old's balls
+ * drained inside 10s, so Build Up now gives 5s and the ramp ends at 2.5s. */
+export function pinballBallSaveTime(level:number){return level<=1?5:level===2?4:level===3?3:2.5;}
 /** Rescue a falling ball; earn another nudge by switching flippers. */
 export function nudgePinball(s:PinballState){if(s.phase!=='playing'||s.nudges<=0||s.nudgeCooldown>0||s.ball.x>=LANE_WALL)return false;s.nudges--;s.nudgeCooldown=1.2;if(s.possession>=0)s.bumperCooldown[s.possession]=.4;s.possession=-1;s.passTarget=-1;s.attackPasses=0;s.counterAttack=false;s.ball.vy=Math.min(s.ball.vy,-240);s.ball.vx+=(180-s.ball.x)*1.1;s.cue='nudge';s.cueTime=1.2;s.hitX=s.ball.x;s.hitY=s.ball.y;s.hitId++;return true;}
 /** Active defender patrols. The squad grows with goals: slot 0 is the mid-

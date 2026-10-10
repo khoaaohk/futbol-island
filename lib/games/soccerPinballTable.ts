@@ -120,6 +120,10 @@ export function tableLaunch(s:PinballState,pull:number){
  if(ladderRung(pull)===t.skillBand){t.sfx.skill++;award(s,354,560-t.skillBand*15,500,'skill',2.2);}
  t.skillBand=SKILL_BANDS[(SKILL_BANDS.indexOf(t.skillBand as 5)+1)%SKILL_BANDS.length];
  if(t.assist){t.assist=false;s.openingRescue=true;s.launchGrace=Math.max(s.launchGrace,6);t.saver=true;}
+ // Build Up (division 1) starts every ball with the goal-line saver up: the centre gap is where most beginner balls
+ // drain (kid-bot playtest: 50-65% of drains), so the coach puts a defender on the line until the first promotion.
+ // From Find the Corner on it has to be earned by spelling G-O-A-L. One clearance per ball, as ever.
+ if(s.level===1&&!t.saverUsed)t.saver=true;
 }
 /** Real flipper strike. A strike that returns a defender's counter shot is a
  * GREAT BLOCK: points, a fast break (lit goal) and the goal-line saver. */

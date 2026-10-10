@@ -31,3 +31,14 @@ export function deltaToModel(v:View,dx:number,dy:number):[number,number]{return 
 export function svgMatrix(v:View):string{
  const {rect:r,s}=v;return v.orient==='h'?`matrix(${s} 0 0 ${s} ${-r.x0*s} ${-r.y0*s})`:`matrix(0 ${-s} ${s} 0 ${-r.y0*s} ${r.x1*s})`;
 }
+/**
+ * The full-screen board's camera (Oct 10 2026): the canvas is the whole screen (w×h px); the pitch's zoom rectangle
+ * `base` is drawn at scale `s` with its centre at screen point (cx,cy). The returned view's rect is the model area the
+ * whole canvas shows, so toScreen/toModel, the pitch SVG and the chip bounds all work unchanged; pinch and wheel zoom only
+ * change `s` and the centre.
+ */
+export function cameraView(base:Rect,orient:Orient,s:number,w:number,h:number,cx:number,cy:number):View{
+ const mx=(base.x0+base.x1)/2,my=(base.y0+base.y1)/2;
+ const rect:Rect=orient==='h'?{x0:mx-cx/s,y0:my-cy/s,x1:mx-cx/s+w/s,y1:my-cy/s+h/s}:{x0:mx+cy/s-h/s,y0:my-cx/s,x1:mx+cy/s,y1:my-cx/s+w/s};
+ return {orient,rect,s,w:Math.round(w),h:Math.round(h)};
+}

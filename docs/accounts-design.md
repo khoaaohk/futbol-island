@@ -296,7 +296,7 @@ are DOM event names (`fi2-path-cue`, `fi2-card-added`, `fi2-vending-cue` and so 
 | Coins & items | `fi2-arcade-wallet-v1` (the coin ledger: runs, spends, packs), `fi2-vending-v1`, `fi2-backpack-v1`, `fi2-home-decor-v1`, `fi2-ride-unlocks-v1`, `fi2-ride-unlock-announced-v1`, `fi2-costume-milestone-v1` |
 | Cards & books | `fi2-player-cards-v1`, `fi2-card-offers-v1`, `fi2-card-trade-v1`, `fi2-binder-layout-v1`, `fi2-player-books-v1`, `fi2-book-checks-v1`, `fi2-book-checks-answered-v1` |
 | Jobs, fishing, food | `fi2-island-jobs-v1`, `fi2-garden-v1`, `fi2-market-v1`, `fi2-fishbook-v1`, `fi2-konbini-v1`, `fi2-konbini-collection-v1`, `fi2-konbini-ball-v1` |
-| Arcade | `fi2-arcade-record-<game>-v1` (one per game), `fi2-strikers-stars-v1`, `fi2-strikers-cup-v1`, `fi2-strikers-shape-v1`, `fi2-runner-missions-v1`, `fi2-tennis-stars-v1`, `fi2-pinball-stars-v1`, `fi2-pass-puzzles-v1`, `fi.game.runner.best` |
+| Arcade | `fi2-arcade-record-<game>-v1` (one per game), `fi2-strikers-stars-v1`, `fi2-strikers-cup-v1`, `fi2-strikers-shape-v1`, `fi2-runner-missions-v1`, `fi2-runner-coach-v1`, `fi2-tennis-stars-v1`, `fi2-pinball-stars-v1`, `fi2-pass-puzzles-v1`, `fi.game.runner.best` |
 | Grown-ups & IDP | `fi2-grownups-format-v1`, `fi2-idp-plan-v1` **with free text removed** (see §4.6), `fi2-idp-v2` (IDP v2, Oct 9 2026: ids, dates and picture choices only; no text field exists; docs/idp/DESIGN.md §5) |
 
 **B. Device preferences: not synced** (each device keeps its own)

@@ -18,7 +18,7 @@
 /* One footer row: Back left, "Print code" centred, "I saved it" right; fits a 320 px phone without wrapping. */
 /* "Print code" is centred on the sheet itself, not on the space left over, so Back shrinking to its arrow never moves it (user). */
 .footer{position:relative;display:flex;justify-content:space-between;align-items:center;gap:10px}
-.shown [data-save-explainer]{text-align:center;white-space:pre-line;text-wrap:balance}
+.codeNote{text-align:center;white-space:pre-line;text-wrap:balance}
 .introTop{display:grid}.introTop>*{grid-area:1/1;min-width:0}
 .introOver{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.6svh,14px);text-align:center}
 .footerCenter{position:absolute;inset:0;display:flex;justify-content:center;align-items:center;pointer-events:none}

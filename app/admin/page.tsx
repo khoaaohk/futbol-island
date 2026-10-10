@@ -4,6 +4,7 @@ import {resolveRange} from '@/lib/analytics/core';
 import {buildReport} from '@/lib/analytics/report';
 import {getStore} from '@/lib/analytics/store';
 import {saveAdminLine} from '@/lib/saves/admin';
+import {loadSaveMetrics} from '@/lib/saves/metrics';
 import AdminLogin from './AdminLogin';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
@@ -17,5 +18,7 @@ export default async function AdminPage(){
  let report;
  try{report=await buildReport(getStore(),resolveRange({range:'7d'},now),now);}
  catch{const {emptyReport}=await import('@/lib/analytics/core');const r=resolveRange({range:'7d'},now);report={...emptyReport(r.from,r.to,now,true),notes:['The analytics store did not answer. The numbers below are empty until it does.']};}
+ // Save-code metrics (Oct 11 2026): aggregates only, after the session check; never throws (the status says what is missing).
+ report.saves=await loadSaveMetrics(report.from,report.to,now);
  return <AnalyticsDashboard initial={report} initialRange="7d" saves={await saveAdminLine()}/>;
 }

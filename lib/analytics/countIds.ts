@@ -35,7 +35,7 @@ export const COACH_VOICE_IDS=[['kokoro_af_bella','Coach Bella'],['kokoro_af_hear
 export const IDP_COUNT_EVENTS=[['open','Plan story opened'],['set','Plan made'],['goal','Next goal chosen'],['mission','Mission done'],
  ['checkin','Check-in'],['proud','Proud moment added'],['met','Goal celebrated'],['review','6-week review done'],['link','Island link opened from the plan'],
  ['grown','Grown-up view opened'],['fridge','Fridge card printed'],['coachqr','Coach goal QR made'],['coachadd','Coach goal added by a player'],
- ['week','Shared week plan opened'],['cheer','Cheer left for the player'],['helped','“This helped” tapped']] as const;
+ ['week','Shared week plan opened'],['cheer','Cheer left for the player'],['helped','“This helped” tapped'],['note','Player note written']] as const;
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',

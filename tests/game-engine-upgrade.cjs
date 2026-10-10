@@ -35,7 +35,8 @@ for(const v of VENUES)for(const team of ['gold','blue'])for(const kind of ['goal
  const shooter=Object.values(s.players).find(p=>p.team===team&&!p.isGK),gy=team==='gold'?8:392,end=team==='gold'?-1:1;
  for(const p of Object.values(s.players)){p.x=250;p.y=200;p.vx=p.vy=0;}
  Object.assign(shooter,{x:135,y:gy-end*60});s.ball.owner=shooter.id;
- const xg=Math.max(.05,.34-(60-28)*.0035)*s.T.finish;let n=0;
+ // The same xG doShot uses, including the per-format finishing multiplier (formatAI.ts finishMul, Oct 10 2026: futsal 1.08, 7v7 1.5).
+ const xg=Math.max(.05,.34-(60-28)*.0035)*s.T.finish*(s.ai?.finishMul??1);let n=0;
  s.rng=()=>n++===0?(kind==='goal'?.01:kind==='post'?xg+.03:xg+.09):.3;
  s.doShot(shooter.id);const timeScale=v.id==='futsal'?.48:.32,physics=createLiveBallPhysics(timeScale,v);let peak=0;
  for(let i=0;i<300&&s.goalHold===0&&s.frameContact.serial===0;i++){s.ballLogic(timeScale/120);peak=Math.max(peak,physics.step(s,timeScale/120,!s.ball.owner));}

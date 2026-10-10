@@ -49,6 +49,10 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
  const extra=source?source.clone(true):null,extraRoll=extra?.getObjectByName('pinball-rolling')??null;let extraSpin=0;
  if(extra){extra.name='pinball-ball-2';extra.visible=false;extra.scale.setScalar(1);scene.add(extra);}
  const green=new T.Color('#8dff9e'),coral=new T.Color('#ff7a6b'),gold=new T.Color('#ffe86d');
+ // Ball tracker: a bright floor ring under the main ball. On a 390px phone the ball is ~14px and white, the same as
+ // the players' boots and the rails; a gold ring makes it the one thing the eye can always find (1 draw call).
+ const haloMaterial=new T.MeshBasicMaterial({color:gold,transparent:true,opacity:.75,depthWrite:false,toneMapped:false});haloMaterial.userData.arcadeSpill=true;
+ const halo=new T.Mesh(new T.RingGeometry(.27,.37,28),haloMaterial);halo.name='pinball-ball-halo';halo.rotation.x=-Math.PI/2;halo.renderOrder=4;halo.visible=false;scene.add(halo);
  // Rebound read: 2 draw calls while visible, none otherwise.
  const READ_COLORS=[new T.Color('#ffe86d'),new T.Color('#ff62c2'),new T.Color('#ff7a6b')];
  const readMaterial=new T.MeshBasicMaterial({color:READ_COLORS[0],transparent:true,opacity:0,depthWrite:false,toneMapped:false,side:T.DoubleSide});
@@ -79,6 +83,9 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
    p.mesh.quaternion.copy(camera.quaternion);
    p.material.opacity=t<.6?1:1-(t-.6)/.4;
   }
+  // Ball tracker ring: follows the main ball while it is in play; coral while it is heading for the centre gap.
+  {const b=s.ball,on=s.phase==='playing'||s.phase==='ready';halo.visible=on;
+   if(on){halo.position.set(px(b.x),.045,pz(b.y));const danger=s.phase==='playing'&&s.read.live&&s.read.side<0&&b.vy>0;haloMaterial.color.copy(danger?coral:gold);haloMaterial.opacity=s.phase==='ready'?.45:.75;}}
   // Neon hit rings.
   if(f.ringSerial!==ringSerial){ringSerial=f.ringSerial;if(!reduced){const r=rings[ringCursor];ringCursor=(ringCursor+1)%rings.length;r.age=0;r.power=f.ringPower;r.mesh.position.set(px(f.ringX),.06,pz(f.ringY));}}
   for(const r of rings){

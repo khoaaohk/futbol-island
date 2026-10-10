@@ -28,7 +28,11 @@ const serve=t.createTennis(47,1);t.beginTennis(serve);assert.equal(t.tennisTouch
 const left=fixture(1,{x:.1,y:5.2,z:.3,vz:2},{bounceAge:.12});left.rival.x=1.6;
 assert.equal(t.tennisOpenSide(left),-1);assert.match(t.tennisCallDetail(left),/PERFECT WINDOW.*aim ◀ into space/);
 left.rival.x=-1.6;assert.equal(t.tennisOpenSide(left),1);assert.match(t.tennisCallDetail(left),/aim ▶/);
-left.rival.x=.2;assert.equal(t.tennisOpenSide(left),0);assert.doesNotMatch(t.tennisCallDetail(left),/aim/,'a central rival leaves no single open side');
+left.rival.x=.2;assert.equal(t.tennisOpenSide(left),0);
+// A central rival still has to run to a wide ball: the cue never goes blank, it names the wide lane away from its lean.
+assert.equal(t.tennisAimSide(left),-1);assert.match(t.tennisCallDetail(left),/aim ◀ wide, away from it/);
+left.rival.x=-.2;assert.equal(t.tennisAimSide(left),1,'leaning left: go right');left.rival.x=0;left.rival.vx=2;assert.equal(t.tennisAimSide(left),-1,'moving right: go left');
+left.rival.vx=0;left.you.x=-1;assert.equal(t.tennisAimSide(left),1,'dead centre: cross-court from you');left.you.x=0;
 
 // 3. The court guide names exactly the touches each court allows, and when to use them.
 const guide=l=>t.tennisCourtTouches(l).map(g=>g.touch).join();

@@ -6,6 +6,10 @@ import {firstTouchDirection} from "./firstTouch";
 import { laneAdjustment, screenPosition } from "./tacticalMovement";
 import { windupSeconds } from "./choreo";
 import { Combos, comboSettings } from "./combos"; // [combos]
+import { sevenOffside, sevenOnsideDepth, sevenWideX, SEVEN_NOTES } from "./sevenAI"; // 7v7 lane (formatAI "7v7")
+import { formatAI, sweeperOffset, onsideDepth, type FormatAI } from "./formatAI"; // per-format rules & coaching (9v9 lane)
+import { ringPush, markSpot, assignMarks, chanceQuality, laneFactor, isBetterChance, FUTSAL_NOTES, MARK_GAP, MARK_SAG } from "./futsalAI"; // futsal laws & habits (ai-futsal lane)
+import { ELEVEN_FORMAT_AI, defendAI, recoveryDepth, formatNotes, type DefendAI, type CoachNotes } from "./elevenAI"; // 11v11 lane
 /** Lane B: xG multiplier of an acrobatic first-time finish (volley, scissor, bicycle, diving header). */
 const ACRO_XG = 0.7;
 // Standalone two-way football match simulation (the "brain + body").
@@ -207,6 +211,9 @@ export function makeCageSim(seed: number): MatchSim {
 }
 
 const TEAMS: Team[] = ["gold", "blue"]; // hoisted — updateShape runs per frame, keep it allocation-free
+const NO_IDS: readonly string[] = []; // integrate(): a player exempt from spacing iterates nobody
+/** integrate() separation: squared-distance reject a touch beyond P.sepRadius (15 u), so the exact test still decides edge cases. */
+const SEP_REJECT2 = 15.01 * 15.01;
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const dist = (ax: number, ay: number, bx: number, by: number) => Math.hypot(ax - bx, ay - by);
 // distance from point p to segment a→b
@@ -295,6 +302,21 @@ export class MatchSim {
   private touchY = 0;
   private rng: () => number;
   private targets: Record<string, { x: number; y: number }> = {};
+  /** Write a steering target IN PLACE (one object per player for the whole match: no per-frame allocation). */
+  private setTarget(id: string, x: number, y: number) { const t = this.targets[id]; if (t) { t.x = x; t.y = y; } else this.targets[id] = { x, y }; }
+  private ownerPosS = { x: 0, y: 0 }; // computeTargets' carrier/ball point, reused every frame
+  private huggerIds: (string | null)[] = [null, null, null]; // goal celebration: the 3 team-mates nearest the scorer
+  // ---- futsal (formatAI knobs: restartRing / keeperBackPass / manMark / extraPass; neutral in every other format) ----
+  private gkPlayed: Record<Team, boolean> = { gold: false, blue: false }; // Law 12: the keeper released it and no opponent has touched it since
+  /** Man-oriented marking: each defender's attacker (read by tests and any view that wants to draw "buddy" lines). */
+  markOf: Record<string, string | null> = {};
+  private markTeam: Team | null = null;
+  private markNext = 0; // ~3 Hz think clock for the marking re-assignment
+  private mk = { ids: new Array<string>(11).fill(""), att: new Array<string>(11).fill(""), dx: new Array<number>(11).fill(0), dy: new Array<number>(11).fill(0), sx: new Array<number>(11).fill(0), sy: new Array<number>(11).fill(0), prev: new Array<number>(11).fill(-1), out: new Array<number>(11).fill(-1), used: new Array<boolean>(11).fill(false) };
+  private ringOut = { x: 0, y: 0 };
+  private markPt = { x: 0, y: 0 };
+  /** Futsal telemetry (tests / balance harness): 5 m ring corrections, back passes refused, extra passes, marking switches. */
+  futsalStats = { ringPushes: 0, backPassBlocked: 0, extraPasses: 0, markSwitches: 0 };
   private presserId: string | null = null;
   private defenseIntent = {cover:null as string|null,balance:null as string|null};
   private chaserIds = new Set<string>(); // players running onto a loose ball this frame
@@ -302,6 +324,16 @@ export class MatchSim {
   private allowLoft = false; // 11v11: allow lofted balls "over the top" (bigger field)
   private useBuildOut = false;
   private useOffside = false; // 11v11/9v9 only (futsal & 7v7 have no offside)
+  /** Per-format rules & coaching knobs (formatAI.ts); neutral = the engine's long-standing behaviour. */
+  readonly ai: FormatAI;
+  /** This format's coaching lines for the live feed (formatAI.ts formatNotes). */
+  private notes: CoachNotes;
+  /** Defending knobs beyond the shared table (elevenAI.ts; neutral for every format but 11v11). */
+  private defend: DefendAI;
+  /** Restart taker whose first pass cannot be offside (throw-in, goal kick, corner; Law 11). */
+  private offsideFree: string | null = null;
+  /** A pass released to a team-mate standing offside (the passer misread it): called when he receives it. */
+  private offsidePass: { id: string; x: number; y: number } | null = null;
   private loftDur = 0; // remaining flight time of a lofted ball (drives the height arc)
   private loftT = 0;
   private loftPeak = 0;
@@ -328,6 +360,8 @@ export class MatchSim {
     this.note.serial++; this.note.text = text; this.note.reason = reason;
   }
   get isBeach() { return this.beach; }
+  /** The dead-ball restart being set up, for the view: 'kickin' is a THROW-IN where ai.touchline says so (9v9, 11v11). */
+  get restartKind(): "kickoff" | "kickin" | "goalkick" | "corner" | null { return this.restart ? this.restart.kind : null; }
 
   // ---- phases & momentum ----
   private counterT = 0; // seconds left in the counter-attack window after winning the ball
@@ -560,6 +594,9 @@ export class MatchSim {
     this.T.finish *= WINDUP_FINISH[format];
     this.useBuildOut = format === "7v7";
     this.useOffside = format === "11v11" || format === "9v9"; // futsal & 7v7 don't play offside
+    this.ai = format === "11v11" ? { ...formatAI(format), ...ELEVEN_FORMAT_AI } : formatAI(format); // 11v11 row: elevenAI.ts
+    this.defend = defendAI(format);
+    this.notes = formatNotes(format); // this format's coaching lines (11v11 lane: Eleven Park explains its own laws)
     // deal the philosophy cards for this match (seeded → reproducible): two DISTINCT
     // styles from the deck, then `spice` sets how pronounced the identities are today
     const deck: StyleName[] = ["possession", "press", "counter", "direct"];
@@ -607,15 +644,20 @@ export class MatchSim {
   private depth(t: Team, y: number) { return t === "gold" ? 400 - y : y; }
   // the offside line: depth of the SECOND-LAST opponent (last defender in front of the GK).
   private offsideLine(t: Team) {
-    const ds = this.foes(t).map((id) => this.depth(t, this.players[id].y)).sort((a, b) => b - a);
-    return ds[1] ?? ds[0] ?? 400; // 2nd-deepest opponent up the pitch
+    // 2nd-deepest opponent up the pitch — a two-slot scan (same answer as sort-and-pick, no per-call arrays)
+    let a = -Infinity, b = -Infinity;
+    for (const id of this.foes(t)) { const d = this.depth(t, this.players[id].y); if (d > a) { b = a; a = d; } else if (d > b) b = d; }
+    return b > -Infinity ? b : a > -Infinity ? a : 400;
   }
   // a receiver is offside if, in the attacking half, they are CLEARLY beyond BOTH the
   // 2nd-last defender and the ball. Only enforced in 11v11/9v9 (futsal & youth 7v7 don't
   // play offside).
   private isOffside(t: Team, y: number) {
-    if (!this.useOffside) return false;
+    if (!this.useOffside && !this.ai.offsideZone) return false;
+    if (this.offsideFree !== null && this.ball.owner === this.offsideFree) return false; // restart's first pass (Law 11)
     const rd = this.depth(t, y);
+    // 7v7 (US Youth): offside counts only past the opponent's build-out line (sevenAI.ts, lesson next7_offsideboundary)
+    if (this.ai.offsideZone) return sevenOffside(rd, this.offsideLine(t), this.depth(t, this.ball.y));
     if (rd < 210) return false; // only past the halfway line, into the attacking half
     return rd > this.offsideLine(t) + 6 && rd > this.depth(t, this.ball.y) + 6;
   }
@@ -630,6 +672,9 @@ export class MatchSim {
     this.possession = def; this.protect = 0.6; this.passCd = 0.5; this.hold = 0.3;
     this.loftDur = 0; this.ball.height = 0; this.endTrap(); // whistle placement, no touch
     this.msg = "Offside!"; this.msgT = 1.8; this.stats.turnovers++; this.stats.offsideCalls++;
+    this.offsidePass = null; this.passIntended = null; this.carrying = false; this.combination = null; this.counterT = 0; this.counterTeam = null;
+    this.ball.lofted = false; this.ballIsShot = false; this.shotIsGoal = false; this.ballFlight = 0; this.lastFrom = null; this.passRelease = null;
+    if (this.ai.teach) this.teach(this.notes.offside[0], this.notes.offside[1]);
   }
 
   // ---- phases of play ----
@@ -902,12 +947,13 @@ export class MatchSim {
     }
     this.ball.x = r.x; this.ball.y = r.y;
     const near = dist(tk.x, tk.y, r.x, r.y) < 9;
-    const ready=(r.kind!=='goalkick'||!this.useBuildOut||this.buildOutReady(tk.team))&&(r.kind!=='kickoff'||this.ids.every(id=>{if(id===r.taker)return true;const p=this.players[id];return (p.team==='gold'?p.y>=201:p.y<=199)&&(p.team===tk.team||dist(p.x,p.y,135,200)>=25);}));
+    const ready=this.ringReady(r,tk.team)&&(r.kind!=='goalkick'||!this.useBuildOut||this.buildOutReady(tk.team))&&(r.kind!=='kickoff'||this.ids.every(id=>{if(id===r.taker)return true;const p=this.players[id];return (p.team==='gold'?p.y>=201:p.y<=199)&&(p.team===tk.team||dist(p.x,p.y,135,200)>=25);}));
     if (ready && ((r.t <= 0 && near) || (r.kind!=='kickoff'&&r.t < -4))) {
       this.ball.owner = r.taker;
       this.possession = tk.team;
       // Beach: the first kick of a kick-in or kick-off may not score directly (Laws 8 and 15).
       if (this.beach && (r.kind === "kickin" || r.kind === "kickoff")) this.noDirect = r.taker;
+      if (this.ai.restartOffsideFree && r.kind !== "kickoff") this.offsideFree = r.taker; // no offside from a throw-in, goal kick or corner
       this.endTrap(); // restart take is its own choreography — no trap (dribbleBall still eases the pickup)
       this.protect = 0.5; this.passCd = 0.35; this.lastFrom = null; this.hold = 0;
       this.counterT = 0; this.counterTeam = null; // a restart is never a counter
@@ -915,12 +961,40 @@ export class MatchSim {
     }
   }
 
+  /** Futsal: a kick-in / corner waits until every opponent is ~5 m away (1 m grace; after 3 s it goes anyway). */
+  private ringReady(r: { kind: string; t: number; x: number; y: number }, team: Team) {
+    const R = this.ai.restartRing;
+    if (R <= 0 || (r.kind !== "kickin" && r.kind !== "corner") || r.t < -3) return true;
+    const kx = this.goalVenue.width / 250, ky = this.goalVenue.length / 380;
+    for (const id of this.foes(team)) { const p = this.players[id]; if (!p.isGK && Math.hypot((p.x - r.x) * kx, (p.y - r.y) * ky) < R - 1) return false; }
+    return true;
+  }
   /** Retreat applies to keeper control / goal kicks, never a centre kickoff. */
   get buildOutTeam():Team|null {
     if(!this.useBuildOut)return null;
     if(this.restart)return this.restart.kind==='goalkick'?this.players[this.restart.taker].team:null;
     const owner=this.ball.owner?this.players[this.ball.owner]:null;
+    if(owner?.isGK&&this.gkFeetId===owner.id)return null; // 7v7: a back pass to his feet is open play (no retreat)
     return owner?.isGK?owner.team:null;
+  }
+  /** 7v7 (formatAI.handsBuildOut): the keeper who took a team-mate's pass with his FEET (pass-back rule: no hands, no
+   *  build-out retreat) until he releases it; null otherwise. */
+  private gkFeetId:string|null=null;
+  /** 7v7 telemetry (tests, audits): back passes to the keeper, his feet touches, onside waits held by off-ball attackers. */
+  seven={backPasses:0,keeperFeet:0,onsideWaits:0};
+  /** The keeper on the ball is holding it in his hands (false only for a 7v7 back pass to his feet). Read by the view. */
+  get keeperHands():boolean{return !(this.gkFeetId!==null&&this.ball.owner===this.gkFeetId);}
+  /** 7v7: the carrier's own keeper when he is a safe back pass (in range, unmarked, a clear lane), else null. */
+  private keeperRecycleTarget(fromId:string):string|null{
+    const from=this.players[fromId];
+    for(const id of this.mates(from.team)){
+      const g=this.players[id];if(!g.isGK)continue;
+      const d=dist(from.x,from.y,g.x,g.y);if(d<20||d>140)return null;
+      const nf=this.nearestFoe(id,g.x,g.y);if(nf&&nf.d<28)return null;
+      for(const fid of this.foes(from.team)){const f=this.players[fid];if(f.isGK||dist(f.x,f.y,from.x,from.y)<8)continue;if(segDist(f.x,f.y,from.x,from.y,g.x,g.y)<this.T.laneReq+2)return null;}
+      return id;
+    }
+    return null;
   }
   private buildOutReady(team:Team){return this.foes(team).every(id=>behindBuildOut(this.players[id].y,team,.5));}
 
@@ -957,7 +1031,9 @@ export class MatchSim {
       if (id === fromId || id === this.lastFrom) continue;
       const t = this.players[id];
       if (t.isGK) continue;
-      if (this.isOffside(from.team, t.y)) continue; // never play a team-mate into an offside position
+      // never play a team-mate into an offside position — unless (9v9 coaching) the passer misreads a forward who has
+      // drifted beyond the line: the pass goes, and the offside is called when he receives it (see offsidePass)
+      if (this.isOffside(from.team, t.y) && !(this.ai.offsideMisread > 0 && t.role === "fwd" && !from.isGK && this.rng() < this.ai.offsideMisread)) continue;
       const d = dist(from.x, from.y, t.x, t.y);
       if (d < 12 || d > 195) continue;
       const forward = Math.abs(from.y - gy) - Math.abs(t.y - gy);
@@ -1038,12 +1114,22 @@ export class MatchSim {
     let crowd = 0;
     for (const fid of this.foes(from.team)) { const f = this.players[fid]; if (!f.isGK && dist(f.x, f.y, from.x, from.y) < 80) crowd++; }
     const overloaded = crowd >= this.T.switchAt;
+    // 9v9 build-up: pressed in our own half → the keeper is the free player (formatAI.keeperOutlet)
+    let outlet = 0;
+    if (this.ai.keeperOutlet > 0 && !from.isGK && this.depth(from.team, from.y) < 200) { const pf = this.nearestFoe(fromId, from.x, from.y); if (pf && pf.d < P.pressDist) outlet = this.ai.keeperOutlet; }
     let best: string | null = null;
     let bestScore = -Infinity;
     for (const id of this.mates(from.team)) {
       if (id === fromId) continue;
       const t = this.players[id];
       if (this.isOffside(from.team, t.y)) continue; // don't recycle into an offside team-mate either
+      if (t.isGK && this.ai.keeperBackPass && this.gkPlayed[from.team] && this.depth(from.team, t.y) < 200) {
+        // futsal Law 12: the keeper already released it — he can't have it back in his half until an opponent touches it
+        this.futsalStats.backPassBlocked++;
+        const pf = this.deciding ? this.nearestFoe(fromId, from.x, from.y) : null;
+        if (pf && pf.d < P.pressDist) this.teach(FUTSAL_NOTES.backPass[0], FUTSAL_NOTES.backPass[1], "fbackpass", 90);
+        continue;
+      }
       const d = dist(from.x, from.y, t.x, t.y);
       if (d < 12 || d > 150) continue;
       const nf = this.nearestFoe(id, t.x, t.y);
@@ -1065,7 +1151,7 @@ export class MatchSim {
         d * 0.16 + // prefer a nearer team-mate (short build-up, not a long ball)
         (overloaded && Math.abs(t.x - from.x) > 78 ? 34 : 0) + // escape the overload — switch it
         (id === this.lastFrom ? -45 : 0) +
-        (t.isGK ? -50 : 0) + // only go back to the keeper as a last resort
+        (t.isGK ? -50 + outlet : 0) + // only go back to the keeper as a last resort (9v9: his outlet under pressure)
         this.rng() * 6;
       if (score > bestScore) { bestScore = score; best = id; }
     }
@@ -1077,6 +1163,8 @@ export class MatchSim {
     if(this.combination&&!(fromId===this.combination.wall&&target===this.combination.runner))this.combination=null;
     this.carrying=false;this.carryUntil=0;
     this.passRelease=target?{id:fromId,x:from.x,y:from.y,tx,ty,target}:null;
+    this.offsideFree = null; this.offsidePass = null; // any new kick ends a restart's offside exemption and a pending call
+    this.gkFeetId = null; // 7v7: the keeper's back-pass touch ends with his release
     this.windup = null; this.passIntended = null; this.headerBall = false; this.acro = null; this.saveRoll = -1;
     const dx = tx - from.x;
     const dy = ty - from.y;
@@ -1089,6 +1177,7 @@ export class MatchSim {
     this.ball.intBy = null;
     this.ballIsShot = false; this.shotIsGoal = false;
     this.lastFrom = fromId;
+    if (from.isGK && this.ai.keeperBackPass) this.gkPlayed[from.team] = true; // futsal Law 12: no back pass to him in his half now
     // Beach: a keeper's throw (all his distribution is from the hands) and the first kick of a kick-in or kick-off can
     // never score directly — if it goes straight in, it is a goal clearance for the other side.
     if (this.beach) { this.directBan = from.isGK || this.noDirect === fromId; this.noDirect = null; }
@@ -1102,12 +1191,24 @@ export class MatchSim {
     from.kick = 1;
     this.touch("kick", fromId, target, height + loft, speed);
   }
+  /** 11v11 lane (elevenAI.ts defendAI.releaseRead): the kick is being struck and the chosen receiver has drifted
+   *  offside during the wind-up. Most of the time the passer sees the flag-bait and switches to an onside team-mate
+   *  (returned); otherwise (null) the ball goes and the offside is called on his touch: a mistimed run, about once a
+   *  game, explained in the feed. Neutral (releaseRead 0) for every other format: no check, no rng draw. */
+  private reReadRun(fromId: string, toId: string): string | null {
+    const read = this.defend.releaseRead, t = this.players[toId];
+    if (read <= 0 || fromId === this.userId || !t || t.isGK || !this.isOffside(t.team, t.y) || this.rng() >= read) return null; // the human's pass is his own
+    const alt = this.safePass(fromId);
+    return alt && alt !== toId ? alt : null;
+  }
   // a lofted ball over the top — flies through the air (no ground interception), arcs down
   // to a forward runner. Used only in 11v11 (bigger field).
   private doLoft(fromId: string, toId: string,kind:'through'|'cross'|'switch'='through') {
     if (this.defer(fromId, "loft", toId, 1, kind)) return;
+    { const alt = this.reReadRun(fromId, toId); if (alt) { this.doPass(fromId, alt, 1.1); return; } } // 11v11: see reReadRun
     const from = this.players[fromId];
     const t = this.players[toId];
+    const offLoft = this.defend.releaseRead > 0 && !t.isGK && this.isOffside(from.team, t.y) ? t : null; // 11v11: a ball over the top to a man already beyond the line is flagged too
     const dir = this.dirY(from.team);
     const tx = clamp(t.x+(kind==='through'?0:t.vx*.18),15,255);
     const ty = clamp(t.y+(kind==='through'?dir*14:t.vy*.18),16,384);
@@ -1116,6 +1217,7 @@ export class MatchSim {
     // (beach: a small court and a light ball — flatter lifts, still over a defender's head)
     const peak=this.beach?(kind==='cross'?2.5:kind==='switch'?Math.min(3.2,2.2+D*.004):2.9):kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
     this.launch(fromId, tx, ty, speed, 0, toId, peak);
+    if (offLoft) this.offsidePass = { id: toId, x: offLoft.x, y: offLoft.y }; // whistled if he is the one who meets it
     this.passIntended = toId; this.headerBall = kind === "cross";
     // In range of goal a cross or ball over the top is sometimes met first time (acrobatic finish).
     // Beach: much more often (volleys and overhead kicks are the sand game's signature finishes), and a ball over the
@@ -1138,11 +1240,14 @@ export class MatchSim {
   // firm: pass pace multiplier — >1 is a driven/hard ball, <1 is a gentle roll-in.
   private doPass(fromId: string, toId: string, firm = 1) {
     if (this.defer(fromId, "pass", toId, firm)) return;
+    { const alt = this.reReadRun(fromId, toId); if (alt) { this.doPass(fromId, alt, firm); return; } } // 11v11: see reReadRun
     const from = this.players[fromId];
     const t = this.players[toId];
     const dir = this.dirY(from.team);
     // NB: offside is respected by NOT selecting offside receivers (bestPass/safePass filter) —
     // a turnover-call here proved too disruptive to balance, so the AI just plays onside.
+    // (9v9 opts in to rare, honest calls: only a pass the passer misread — the receiver visibly beyond the line now.)
+    const offAt = this.ai.offsideMisread > 0 && this.isOffside(from.team, t.y) ? t : null;
     // pressure at the moment of release — a pressured player can misplace the pass,
     // which is the main STEADY source of turnovers (self-limiting: no pressure → accurate)
     const nf = this.nearestFoe(fromId, from.x, from.y);
@@ -1206,6 +1311,9 @@ export class MatchSim {
       this.launch(fromId, tx, ty, speed, height, toId);
     }
     this.passIntended = toId;
+    if (offAt && !intercepted) this.offsidePass = { id: toId, x: offAt.x, y: offAt.y }; // whistled when he receives it
+    if (this.ai.teach && t.isGK && !from.isGK && !intercepted && pressure < P.pressDist) this.teach(this.notes.keeper[0], this.notes.keeper[1], "keeper", 70);
+    if (this.ai.coach7 && t.isGK && !from.isGK && !intercepted) { this.seven.backPasses++; this.teach(SEVEN_NOTES.backPass[0], SEVEN_NOTES.backPass[1], "keeper7", 60); } // 7v7: bld_7_usekeeper
     const prior=this.combination;
     this.combination=null;
     if(!intercepted&&prior?.wall===fromId&&prior.runner===toId){
@@ -1234,7 +1342,7 @@ export class MatchSim {
     // enough for a set keeper, a miss rolls just wide and restarts with the other team.
     const distGoal = dist(from.x, from.y, 135, gy);
     const angle = Math.abs(from.x - 135);
-    let xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul; // [combos] xgMul
+    let xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul * this.ai.finishMul; // [combos] xgMul
     // Beach: game state — a side two up protects its lead (fewer bodies forward, a worse chance), a side behind throws
     // everyone forward (the keeper included). Keeps the high-scoring sand game a contest instead of a runaway.
     if (this.beach) { const lead = from.team === "gold" ? this.score.gold - this.score.blue : this.score.blue - this.score.gold; xg *= lead >= 2 ? BEACH_LEAD_XG[0] : lead === 1 ? BEACH_LEAD_XG[1] : lead <= -1 ? BEACH_LEAD_XG[2] : 1; }
@@ -1358,14 +1466,17 @@ export class MatchSim {
       for (const id of this.ids) if (this.players[id].kick > 0) this.players[id].kick = Math.max(0, this.players[id].kick - dt / 0.45);
       const scoringTeam: Team = this.goalNet === "top" ? "gold" : "blue";
       const scorer = this.scorerId && this.players[this.scorerId]?.team === scoringTeam ? this.players[this.scorerId] : null;
-      // the 3 team-mates nearest the scorer run in to mob him
-      const huggers = new Set<string>();
+      // the 3 team-mates nearest the scorer run in to mob him (selected in place: no per-frame arrays)
+      const huggers = this.huggerIds; huggers[0] = huggers[1] = huggers[2] = null;
       if (scorer) {
-        this.mates(scoringTeam)
-          .filter((id) => id !== scorer.id && !this.players[id].isGK)
-          .sort((a, b) => dist(this.players[a].x, this.players[a].y, scorer.x, scorer.y) - dist(this.players[b].x, this.players[b].y, scorer.x, scorer.y))
-          .slice(0, 3)
-          .forEach((id) => huggers.add(id));
+        for (let k = 0; k < 3; k++) {
+          let bd = Infinity;
+          for (const mid of this.mates(scoringTeam)) {
+            if (mid === scorer.id || this.players[mid].isGK || mid === huggers[0] || mid === huggers[1]) continue;
+            const d = dist(this.players[mid].x, this.players[mid].y, scorer.x, scorer.y);
+            if (d < bd) { bd = d; huggers[k] = mid; }
+          }
+        }
       }
       const fade = clamp(this.goalHold / 1.8, 0, 1); // celebration run decays as the beat ends
       for (const id of this.ids) {
@@ -1375,11 +1486,11 @@ export class MatchSim {
           // wheel away toward the near touchline, decelerating as the beat closes
           tx = p.x + (p.x >= 135 ? 1 : -1) * 34 * fade;
           ty = p.y + (scoringTeam === "gold" ? 26 : -26) * fade;
-        } else if (scorer && huggers.has(id)) {
+        } else if (scorer && (id === huggers[0] || id === huggers[1] || id === huggers[2])) {
           tx = scorer.x + (p.x >= scorer.x ? 7 : -7);
           ty = scorer.y + (p.y >= scorer.y ? 5 : -5);
         }
-        this.targets[id] = { x: clamp(tx, 14, 256), y: clamp(ty, 12, 388) };
+        this.setTarget(id, clamp(tx, 14, 256), clamp(ty, 12, 388));
       }
       this.presserId = null; this.chaserIds.clear();
       this.integrate(dt);
@@ -1421,6 +1532,7 @@ export class MatchSim {
     for (const id of this.ids) if (this.players[id].kick > 0) this.players[id].kick = Math.max(0, this.players[id].kick - dt / 0.45);
 
     // hold timer
+    if (this.offsideFree !== null && this.ball.owner !== this.offsideFree && !this.restart) this.offsideFree = null; // taker lost it first
     if (this.ball.owner && this.ball.owner === this.lastOwner) this.hold += dt;
     else this.hold = 0;
     this.lastOwner = this.ball.owner;
@@ -1432,6 +1544,10 @@ export class MatchSim {
     this.passTargetId = this.userTeam && this.userId && this.ball.owner === this.userId
       ? (this.userPassTarget(this.userId) ?? this.bestPass(this.userId) ?? this.safePass(this.userId))
       : null;
+    if (this.ai.keeperBackPass) {
+      if (this.possession === "gold" || this.restart?.kind === "kickoff") this.gkPlayed.blue = false;
+      if (this.possession === "blue" || this.restart?.kind === "kickoff") this.gkPlayed.gold = false;
+    }
     if (this.restart) this.restartLogic(dt);
     else this.ballLogic(dt);
     this.combos?.step(dt); // [combos] plan bookkeeping, rebounds, pending skills
@@ -1492,6 +1608,74 @@ export class MatchSim {
       carrying:this.carrying,carryDirection:{...this.carryDirection},presser:this.presserId,
       defense:{...this.defenseIntent,reason:"First defender presses; goal-side cover protects the lane; remaining unit recovers compactly"},
       style:this.passMul>1?"futsal rotations and pivot links":"outdoor width and depth"};
+  }
+  /** Defenders standing in the shooting lane from (x, y) to the goal on y = gy (keepers excluded). */
+  private shotBlockers(team: Team, x: number, y: number, gy: number) {
+    let n = 0;
+    for (const fid of this.foes(team)) { const f = this.players[fid]; if (!f.isGK && segDist(f.x, f.y, x, y, 135, gy) < 7) n++; }
+    return n;
+  }
+  /** The extra pass: an open, onside team-mate in a clear lane whose chance clearly beats the shooter's (futsalAI). */
+  private extraPassTarget(ownerId: string): string | null {
+    if (this.rng() >= this.ai.extraPass) return null;
+    const o = this.players[ownerId], gy = this.atkGoalY(o.team);
+    const own = chanceQuality(o.x, o.y, gy) * laneFactor(this.shotBlockers(o.team, o.x, o.y, gy));
+    let best: string | null = null, bq = 0;
+    for (const id of this.mates(o.team)) {
+      if (id === ownerId) continue;
+      const t = this.players[id];
+      if (t.isGK || this.isOffside(o.team, t.y)) continue;
+      const d = dist(o.x, o.y, t.x, t.y);
+      if (d < 14 || d > 120) continue;
+      const nf = this.nearestFoe(id, t.x, t.y);
+      if (nf && nf.d < 10) continue; // he must be free to take it
+      let blocked = false;
+      for (const fid of this.foes(o.team)) {
+        const f = this.players[fid];
+        if (f.isGK || dist(f.x, f.y, o.x, o.y) < 8) continue;
+        if (segDist(f.x, f.y, o.x, o.y, t.x, t.y) < this.T.laneReq) { blocked = true; break; }
+      }
+      if (blocked) continue;
+      const q = chanceQuality(t.x, t.y, gy) * laneFactor(this.shotBlockers(o.team, t.x, t.y, gy)) * 0.9; // receiving costs a touch
+      if (q > bq) { bq = q; best = id; }
+    }
+    return best && isBetterChance(own, bq, 1.35) ? best : null;
+  }
+  /** Man-oriented marking (formatAI manMark): every defender but the presser picks up an outfield attacker other than
+   *  the carrier — cheapest goal-side spot first, sticky so pairs don't swap every beat. Re-picked ~3 Hz and the moment
+   *  the ball changes hands; allocation-free (preallocated scratch). */
+  private updateMarks(defTeam: Team, presser: string | null) {
+    if (this.restart?.kind === "kickoff") { // both teams are back in their halves: nobody is marking anybody
+      if (this.markTeam) { for (const id of this.ids) this.markOf[id] = null; this.markTeam = null; }
+      return;
+    }
+    const now = this.stats.time, fresh = defTeam !== this.markTeam;
+    if (!fresh && now < this.markNext) return;
+    if (fresh) for (const id of this.ids) this.markOf[id] = null; // the side that just won it stops marking
+    this.markTeam = defTeam; this.markNext = now + 0.3;
+    const k = this.mk, carrier = this.ball.owner, gy = this.ownGoalY(defTeam);
+    let nd = 0, na = 0;
+    for (const aid of this.foes(defTeam)) {
+      const a = this.players[aid];
+      if (a.isGK || aid === carrier) continue;
+      markSpot(this.markPt, a.x, a.y, gy, this.ball.x, this.ball.y, MARK_GAP, MARK_SAG);
+      k.att[na] = aid; k.sx[na] = this.markPt.x; k.sy[na] = this.markPt.y; na++;
+    }
+    for (const did of this.mates(defTeam)) {
+      const d = this.players[did];
+      if (d.isGK || (carrier && did === presser)) { this.markOf[did] = null; continue; }
+      const was = fresh ? null : this.markOf[did];
+      let pi = -1;
+      for (let j = 0; j < na; j++) if (k.att[j] === was) pi = j;
+      k.ids[nd] = did; k.dx[nd] = d.x; k.dy[nd] = d.y; k.prev[nd] = pi; nd++;
+    }
+    assignMarks(k.dx, k.dy, nd, k.sx, k.sy, na, k.prev, 30, k.out, k.used);
+    for (let i = 0; i < nd; i++) {
+      const id = k.ids[i], m = k.out[i] >= 0 ? k.att[k.out[i]] : null;
+      if (!fresh && m && this.markOf[id] && m !== this.markOf[id]) this.futsalStats.markSwitches++;
+      this.markOf[id] = m;
+    }
+    if (fresh && this.possession !== defTeam && this.ball.owner) this.teach(FUTSAL_NOTES.marking[0], FUTSAL_NOTES.marking[1], "fmark", 90);
   }
   private combinationReturn(owner:string):string|null {
     const c=this.combination;
@@ -1749,7 +1933,7 @@ export class MatchSim {
       // sight of goal (few defenders in the shot lane) → higher chance to shoot. This
       // is what actually produces shots against a compact block.
       let shootChance = 0;
-      const R = this.T.shotRange * this.persona[o.team].range; // small-sided games shoot from further out; the aggressor lets fly earlier
+      const R = this.T.shotRange * this.persona[o.team].range * this.ai.shotRange; // small-sided games shoot from further out; the aggressor lets fly earlier
       if (!o.isGK && distGoal < R && angle < 50) {
         let laneBlockers = 0;
         for (const fid of this.foes(o.team)) {
@@ -1760,6 +1944,7 @@ export class MatchSim {
         const closeF = clamp((R - distGoal) / R, 0, 1);
         const angleF = clamp((50 - angle) / 50, 0, 1);
         shootChance = (0.24 + closeF * 0.7 + angleF * 0.36) * (laneBlockers === 0 ? 1 : laneBlockers === 1 ? 0.62 : 0.18) * this.T.shoot * this.tempoMul; // arcs: eager early/late, shy in the lull
+        if (this.ai.shotPatience > 0 && laneBlockers > 0 && distGoal > R * 0.7) shootChance *= 1 - this.ai.shotPatience; // futsal: don't blast through a defender from range
       }
       // The composure beat already includes the shortest wind-up (a square-on kick), so the
       // decision comes that much earlier and the ball leaves the foot on the old rhythm.
@@ -1771,7 +1956,7 @@ export class MatchSim {
       // (or nobody safe short) → go long: a lofted ball over the top in 11v11, else a
       // driven kick up the pitch. The keeper never dribbles upfield or shoots.
       if (o.isGK) {
-        if(this.useBuildOut&&!this.buildOutReady(o.team))return;
+        if(this.useBuildOut&&this.gkFeetId!==owner&&!this.buildOutReady(o.team))return; // (7v7 back pass at his feet: no wait)
         if (this.beach) { if (canAct || this.hold > 3.2) this.beachKeeper(owner, o, pressured); return; }
         if (canAct) {
           this.carrying = false;
@@ -1806,7 +1991,14 @@ export class MatchSim {
       } else if (canAct && shootChance > 0 && this.rng() < shootChance) {
         // a sight of goal in the final third → shoot (comes before everything else)
         this.carrying = false;
-        this.doShot(owner);
+        // …unless a team-mate has a clearly better chance: the extra pass (futsal habit, formatAI extraPass)
+        const extra = this.ai.extraPass > 0 ? this.extraPassTarget(owner) : null;
+        if (extra) {
+          this.futsalStats.extraPasses++;
+          this.tacticalReason = "Extra pass: the team-mate had the better chance";
+          this.teach(FUTSAL_NOTES.extraPass[0], FUTSAL_NOTES.extraPass[1], "fextra", 45);
+          this.doPass(owner, extra, 1.12);
+        } else this.doShot(owner);
       } else if (canAct && this.protect > 0.12 && pressured && !clearChance) {
         // won it under pressure → deep in our own half, HOOF it clear to relieve the
         // press and push play back toward midfield (this is what breaks a team out of
@@ -1900,6 +2092,10 @@ export class MatchSim {
           this.tacticalReason="Carry into the open corridor until a defender engages";
           this.carrying = true; // TAKE the lane (integrate() gives the carry a gallop)
           this.passCd = 0.4; // decide again shortly — release when someone engages
+        } else if (this.ai.keeperRecycle > 0 && pressured && ph !== "counter" && this.depth(o.team, o.y) < 135 && this.keeperRecycleTarget(owner) !== null && this.rng() < this.ai.keeperRecycle) {
+          // 7v7 (bld_7_usekeeper): pressed in our own third with the keeper free → play back to his feet and start again
+          this.carrying = false;
+          this.doPass(owner, this.keeperRecycleTarget(owner)!, 0.95);
         } else if (ph === "counter" && fwd) {
           // COUNTER: the defence is out of shape — hit the fastest forward route NOW,
           // a driven vertical ball to a runner, before the block can recover.
@@ -1953,6 +2149,7 @@ export class MatchSim {
         this.startCounter(nf.p.team); // the tackle springs a counter the other way
         this.stats.turnovers++;
         this.msg = "Turnover!"; this.msgT = 0.9;
+        if (this.ai.teach && nf.p.id === this.presserId && this.defenseIntent.cover) this.teach(this.notes.cover[0], this.notes.cover[1], "cover", 90); // learn9_cover, seen live
       }
       // ---- keeper smother ----
       // the rushing keeper (see the breakaway charge in computeTargets) can dive on the
@@ -2083,7 +2280,14 @@ export class MatchSim {
         this.ball.lofted = false; this.loftDur = 0;
         this.counterT = 0; this.counterTeam = null; this.lastFrom = null; this.carrying = false;
         this.restart = { kind, t: 1.0 + this.rng() * 0.8, x: sx, y: sy, taker };
-        this.msg = kind === "corner" ? "Corner!" : kind === "goalkick" ? (this.beach ? "Goal clearance" : "Goal kick") : "Kick-in";
+        this.msg = kind === "corner" ? "Corner!" : kind === "goalkick" ? (this.beach || this.ai.goalClearance ? "Goal clearance" : "Goal kick") : this.ai.touchline;
+        if (this.ai.teach && kind === "kickin") { const n = this.notes.throwIn(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "throwin", 75); }
+        if (this.ai.restartRing > 0 && kind === "kickin") { const n = FUTSAL_NOTES.kickIn(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "fkickin", 60); }
+        if (this.ai.goalClearance && kind === "goalkick") this.teach(FUTSAL_NOTES.clearance[0], FUTSAL_NOTES.clearance[1], "fclear", 90);
+        // 11v11 lane: every restart explains itself (the optional lines only ELEVEN_NOTES carries; cooldown-limited)
+        if (this.ai.teach && kind === "corner" && this.notes.corner) { const n = this.notes.corner(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "corner", 60); }
+        if (this.ai.teach && kind === "goalkick" && this.notes.goalKick) { const n = this.notes.goalKick(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "goalkick", 90); }
+        if (this.ai.coach7 && kind === "goalkick") this.teach(SEVEN_NOTES.buildOut[0], SEVEN_NOTES.buildOut[1], "buildout7", 45); // 7v7: learn7_buildout
         if (this.beach && kind === "kickin") this.teach(`Kick-in for ${team === "gold" ? "Gold" : "Blue"}`, "On sand the taker chooses: kick it in or throw it in, within 4 seconds. It can't go straight in for a goal", "kickin", 35);
         this.msgT = this.restart.t + 0.6; // the feed line covers the WHOLE dead-ball beat — the restart is legible
         return;
@@ -2167,6 +2371,14 @@ export class MatchSim {
       }
       if (claimer) {
         const cp = this.players[claimer];
+        if (this.offsidePass) {
+          // 9v9: the receiver was beyond the line when the pass was played → free kick to the defence from that spot.
+          // Anyone else touching it first (an interception, a loose ball) means the call never comes.
+          const off = this.offsidePass; this.offsidePass = null;
+          if (claimVia === "recv" && claimer === off.id) { this.callOffside(cp.team, off.x, off.y); return; }
+        } else if (this.ai.teach && claimVia === "recv" && cp.role === "fwd" && this.passRelease && this.passRelease.target === claimer && this.depth(cp.team, cp.y) > this.offsideLine(cp.team) + 4 && this.depth(cp.team, cp.y) > 230) {
+          this.teach(this.notes.onside[0], this.notes.onside[1], "onside", 80); // in behind, legally: the run was timed
+        }
         // First-time acrobatic finish: the target strikes the dropping ball at once (no trap), from where he met it.
         // [combos] a planned first-time finish (rebound, cut-back, near/far post, lay-off, one-two): see combos.ts
         const comboFinish = this.combos ? this.combos.finishOnClaim(claimer, claimVia) : 0;
@@ -2239,6 +2451,13 @@ export class MatchSim {
         this.startTrap(claimer);
         this.touch(claimVia === "inter" ? "intercept" : "receive", claimer, null, touchHeight, sp, this.trapHeavy);
         this.passIntended = null;
+        if (this.ai.handsBuildOut && cp.isGK) {
+          // 7v7: a team-mate's pass is taken with the FEET (pass-back rule) and moved on quickly, with no retreat;
+          // a save or a claim is his hands → the other team retreats behind the build-out line (buildOutTeam)
+          this.gkFeetId = claimVia === "recv" && kept ? claimer : null;
+          if (this.gkFeetId) { this.passCd = Math.min(this.passCd, 0.45); this.seven.keeperFeet++; }
+          else if (this.ai.coach7) this.teach(SEVEN_NOTES.buildOut[0], SEVEN_NOTES.buildOut[1], "buildout7", 45);
+        }
         if(!cp.isGK&&claimer!==this.userId&&claimVia==='recv'){
           const returnTo=this.combinationReturn(claimer);
           const nearby=this.nearestFoe(claimer,cp.x,cp.y);
@@ -2363,7 +2582,7 @@ export class MatchSim {
     const defTeam: Team = poss === "gold" ? "blue" : "gold";
     const dir = this.dirY(poss);
     const ballOwner = this.ball.owner;
-    const ownerPos = ballOwner ? { x: this.players[ballOwner].x, y: this.players[ballOwner].y } : { x: this.ball.x, y: this.ball.y };
+    const ownerPos = this.ownerPosS; ownerPos.x = ballOwner ? this.players[ballOwner].x : this.ball.x; ownerPos.y = ballOwner ? this.players[ballOwner].y : this.ball.y;
     let presser = this.nearestOfTeam(defTeam, ownerPos.x, ownerPos.y);
     const previous=this.presserId?this.players[this.presserId]:null;
     if(previous&&previous.team===defTeam&&presser&&previous.id!==this.userId){
@@ -2394,6 +2613,7 @@ export class MatchSim {
       }
     }
     this.defenseIntent.cover=cover;this.defenseIntent.balance=balance;
+    if (this.ai.manMark > 0) this.updateMarks(defTeam, presser);
     const ph = this.phaseOf(poss); // one phase read per frame drives both teams' shape
 
     // ---- attacking support cast (passing triangle + third-man runner) ----
@@ -2429,7 +2649,7 @@ export class MatchSim {
     // closes it down too (contest). A truly loose ball (clearance/shot) is chased
     // by the nearest of each team so it never dies in open space.
     const loose = this.ball.owner === null && !rst; // a dead ball on a restart spot is not chased
-    const chasers = new Set<string>();
+    const chasers = this.chaserIds; chasers.clear(); // reused set: no per-frame allocation
     if (loose) {
       if (this.ball.intBy) {
         // ball is being played into an interceptor — they run onto it
@@ -2445,7 +2665,9 @@ export class MatchSim {
         if (b) chasers.add(b);
       }
     }
-    this.chaserIds = chasers; // integrate() exempts chasers from separation — they COMMIT
+    // Onside discipline (formatAI.onsideHold, 9v9): the deepest an off-ball attacker may stand — read once per frame.
+    const onsideCap = this.ai.onsideHold > 0 && !rst ? (this.ai.offsideZone ? sevenOnsideDepth(this.offsideLine(poss), this.depth(poss, this.ball.y), this.ai.onsideHold) /* 7v7: only past the build-out line */ : onsideDepth(this.offsideLine(poss), this.depth(poss, this.ball.y), this.ai.onsideHold)) : 0;
+    // (chasers IS this.chaserIds) integrate() exempts chasers from separation — they COMMIT
     // to the ball like the presser does, else mutual spacing forces can hold everyone in
     // an orbit just outside claim radius around a dead ball, freezing the match
 
@@ -2465,14 +2687,14 @@ export class MatchSim {
           // kickoff carry: first jog to the ball (still in the net), then bring it to the spot
           const gx = rst.carry === "fetch" ? this.ball.x : rst.x;
           const gy = rst.carry === "fetch" ? this.ball.y : rst.y;
-          this.targets[id] = { x: clamp(gx, 14, 256), y: clamp(gy, 12, 388) };
+          this.setTarget(id, clamp(gx, 14, 256), clamp(gy, 12, 388));
           continue;
         }
         if (rst.kind === "kickoff") {
           tx = p.hx; ty = p.team === 'gold' ? Math.max(214, p.hy) : Math.min(186, p.hy);
           // Keep the opposition outside the centre circle as well as in their half.
           if(p.team!==this.possession&&dist(tx,ty,135,200)<30)ty=p.team==='gold'?230:170;
-          this.targets[id]={x:tx,y:ty};
+          this.setTarget(id,tx,ty);
           continue;
         }
         // kick-in / corner / goal kick: both sides take up their normal shape around the
@@ -2480,13 +2702,16 @@ export class MatchSim {
       }
       if(retreat){
         if(p.team!==retreat){
-          this.targets[id]={x:p.hx,y:retreatBuildOutY(p.hy,retreat,8)};
+          this.setTarget(id,p.hx,retreatBuildOutY(p.hy,retreat,8));
           continue;
         }else if(!p.isGK&&id!==ballOwner){
           // Two wide short outlets plus staggered midfield options demonstrate a
           // buildup, rather than leaving teammates beyond the retreating press.
           const depth=p.role==='def'?42:p.role==='mid'?100:Math.abs(sevenBuildOutY(retreat)-this.ownGoalY(retreat))+12;
-          this.targets[id]={x:p.hx,y:clamp(this.ownGoalY(retreat)+this.dirY(retreat)*depth,18,382)};
+          // 7v7 (formatAI.buildOutSplit/attackWidth): the centre-backs split to the edges of the box and the wide
+          // midfielders hold the touchlines, so the keeper has a free first pass into the space the retreat left
+          const bx=this.ai.buildOutSplit>0&&p.role==='def'?135+Math.sign(p.hx-135)*this.ai.buildOutSplit:this.ai.attackWidth>0&&p.role==='mid'&&Math.abs(p.hx-135)>55?135+Math.sign(p.hx-135)*this.ai.attackWidth:p.hx;
+          this.setTarget(id,bx,clamp(this.ownGoalY(retreat)+this.dirY(retreat)*depth,18,382));
           continue;
         }
       }
@@ -2494,12 +2719,12 @@ export class MatchSim {
       if (loose && chasers.has(id)) {
         tx = this.ball.x + this.ball.vx * 0.16; // run onto the ball, leading it
         ty = this.ball.y + this.ball.vy * 0.16;
-        this.targets[id] = { x: clamp(tx, 14, 256), y: clamp(ty, 12, 388) };
+        this.setTarget(id, clamp(tx, 14, 256), clamp(ty, 12, 388));
         continue;
       }
       // [combos] planned runs: box runs, lay-off / through-ball runners, rebound racers, rotations, sole rolls
       const comboRun = this.combos ? this.combos.runTarget(id) : null;
-      if (comboRun) { this.targets[id] = comboRun; continue; }
+      if (comboRun) { this.setTarget(id, comboRun.x, comboRun.y); continue; }
       if (p.isGK) {
         const ogy = this.ownGoalY(p.team);
         // ...but only once the shot is inside his REACTION window (~0.5s of flight) — a
@@ -2556,6 +2781,12 @@ export class MatchSim {
             // Beach: with his team on the ball in the other half the keeper steps up as an extra outfield option
             // (beach keepers start attacks and support them), never further than ~6 m off his line.
             if (this.beach && p.team === poss && !rst) { const adv = clamp((this.depth(p.team, this.ball.y) - 170) * 0.45, 0, 64); ty += Math.sign(200 - ogy) * adv; tx = 135 + (tx - 135) * 0.6; }
+            // Sweeper keeper (formatAI.sweeper, 9v9): with the ball far away he steps up behind his back line to
+            // sweep balls in behind and offer a back pass, then retreats onto the angle line as play comes back.
+            if (this.ai.sweeper > 0 && !rst) {
+              const sw = sweeperOffset(this.ai.sweeper, danger, this.shape[p.team].line);
+              if (sw > off) { ty = ogy + Math.sign(200 - ogy) * sw; tx = 135 + (tx - 135) * (1 - 0.5 * sw / this.ai.sweeper); }
+            }
           }
         }
       } else if (p.team === poss) {
@@ -2629,6 +2860,7 @@ export class MatchSim {
             const wide = Math.abs(p.hx - 135) > 55 && ph !== "final";
             tx = p.hx + (this.ball.x - 135) * (wide ? 0.08 : 0.2);
             if (wide) tx += Math.sign(p.hx - 135) * (this.persona[p.team].width - 4) * 1.1;
+            if (wide && this.ai.attackWidth > 0) tx = sevenWideX(p.hx, this.ball.x, this.ai.attackWidth); // 7v7: make room — hug the touchline
             ty = clamp(p.hy + dir * prog * advance, 40, 360);
             // team-length budget (EFI compactness): through build/transition the front
             // never detaches from the back line — the team moves as one connected
@@ -2680,7 +2912,7 @@ export class MatchSim {
           tx = ownerPos.x * 0.3 + 135 * 0.7;
           ty = ownerPos.y - into * 32;
         } else {
-          tx = p.hx + shiftX + (b ? b.ox : 0); // slot + decision noise (never a robot grid)
+          tx = (this.ai.defendNarrow !== 1 ? 135 + (p.hx - 135) * this.ai.defendNarrow : p.hx) + shiftX + (b ? b.ox : 0); // slot + decision noise (never a robot grid); 7v7 squeezes narrow
           ty = lineY + into * (b ? b.oy : 0);
           const nf = this.nearestFoe(id, tx, ty);
           if (b && b.mode === 4 && nf && nf.d < 46) {
@@ -2695,6 +2927,13 @@ export class MatchSim {
             ty = (nf.p.y-into*7) * 0.45 + ty * 0.55;
           }
         }
+        // MAN-ORIENTED (futsal): blend toward the goal-side spot on this defender's own attacker
+        const markId = this.ai.manMark > 0 && !(id === presser && ballOwner) ? this.markOf[id] : null;
+        if (markId) {
+          const m = this.players[markId];
+          markSpot(this.markPt, m.x, m.y, ownY, this.ball.x, this.ball.y, MARK_GAP, MARK_SAG);
+          tx += (this.markPt.x - tx) * this.ai.manMark; ty += (this.markPt.y - ty) * this.ai.manMark;
+        }
       }
       } // end !staged (restart shape targets still get the wander layer below)
       // Purposeful adjustments replace perpetual outfield oscillation. Do not move
@@ -2706,6 +2945,15 @@ export class MatchSim {
           tx+=(brain.screen.x-tx)*.45;ty+=(brain.screen.y-ty)*.45;
         }
       }
+      // RECOVERY RUNS (elevenAI.ts defendAI.recover, 11v11 lane): with the ball in our half nobody defends from the wrong side of
+      // it. Every outfielder but the presser / cover / balance (already goal-side of the carrier) and the central
+      // striker (the out-ball for the counter) gets at least `recover` units goal-side of the ball: wingers track back
+      // into a 4-5-1, midfielders drop in front of the back four. Floors keep the shape when the ball is in a corner
+      // (back four on the six-yard line, midfield no deeper than the penalty spot).
+      if(this.defend.recover>0&&!rst&&p.team!==poss&&!p.isGK&&id!==presser&&id!==cover&&id!==balance&&id!==this.userId&&!chasers.has(id)&&!(p.role==='fwd'&&Math.abs(p.hx-135)<30)){
+        const own=this.ownGoalY(p.team),cap=recoveryDepth(this.defend.recover,Math.abs(this.ball.y-own),p.role==='def');
+        if(Math.abs(ty-own)>cap)ty=own+Math.sign(200-own)*cap;
+      }
       const w=this.wanderP[id];
       if(w&&p.isGK&&!rst&&!this.ballIsShot&&!gkSet&&id!==this.userId)
         tx+=Math.sin(this.stats.time*w.f1+w.p1)*1.2;
@@ -2713,6 +2961,15 @@ export class MatchSim {
       // "nearest foe" can flip frame-to-frame and the raw target teleports between two
       // spots — smoothing settles the player at the midpoint instead of jittering back
       // and forth. The ball carrier stays fully responsive so play still looks sharp.
+      // Stay onside: level with the last defender, never parked beyond him. The man a pass is being shaped for starts
+      // his run now (a timed run); a ball-watching lapse lets a forward drift offside (the misread pass is then called).
+      // 7v7 feed: a forward visibly waiting on the line (sevenAI SEVEN_NOTES.onside, lesson next7_offsideboundary)
+      if (this.ai.coach7 && onsideCap > 0 && p.role === "fwd" && p.team === poss && id !== ballOwner && this.windup?.to !== id && this.depth(poss, ty) > onsideCap + 6) { this.seven.onsideWaits++; this.teach(SEVEN_NOTES.onside[0], SEVEN_NOTES.onside[1], "onside7", 60); }
+      if (onsideCap > 0 && p.team === poss && !p.isGK && id !== ballOwner && id !== this.userId && (brain?.lapse ?? 0) <= 0) {
+        // the timed run may arrive LEVEL as the ball is struck (inside isOffside's +6 benefit of the doubt), never beyond
+        const cap = this.windup?.to === id ? onsideCap + this.ai.onsideHold + 4 : onsideCap;
+        if (this.depth(poss, ty) > cap) ty = poss === "gold" ? 400 - cap : cap;
+      }
       let nx = clamp(tx, 14, 256);
       let ny = clamp(ty, 12, 388);
       const prev = this.targets[id];
@@ -2725,7 +2982,9 @@ export class MatchSim {
         nx = prev.x + (nx - prev.x) * response;
         ny = prev.y + (ny - prev.y) * response;
       }
-      this.targets[id] = { x: nx, y: ny };
+      if (rst && this.ai.restartRing > 0 && (rst.kind === "kickin" || rst.kind === "corner") && id !== rst.taker && !p.isGK && p.team !== this.players[rst.taker].team
+        && ringPush(this.ringOut, nx, ny, rst.x, rst.y, this.ai.restartRing, this.goalVenue.width, this.goalVenue.length)) { nx = this.ringOut.x; ny = this.ringOut.y; this.futsalStats.ringPushes++; }
+      this.setTarget(id, nx, ny);
     }
   }
 
@@ -2836,12 +3095,17 @@ export class MatchSim {
       // deflecting the tackle attempt), and the carrier isn't pushed off the ball either
       let sx = 0;
       let sy = 0;
-      for (const oid of this.ids) {
+      // A legal build-out retreat must not deadlock against stationary outlets.
+      // (committed chase/retreat: spacing forces don't apply — decided once per player, not per pair)
+      const spaced = !(pressing || this.chaserIds.has(id) || (buildOut&&p.team!==buildOut));
+      for (const oid of spaced ? this.ids : NO_IDS) {
         if (oid === id) continue;
-        // A legal build-out retreat must not deadlock against stationary outlets.
-        if (pressing || this.chaserIds.has(id) || (buildOut&&p.team!==buildOut)) continue; // committed chase/retreat — spacing forces don't apply
         if (id === this.ball.owner && oid === this.presserId) continue; // carrier can't body the tackler away
         const o = this.players[oid];
+        // cheap reject first (11v11: 462 pairs a step): squared distance clearly outside the radius skips the hypot;
+        // anything near the edge still takes the exact test below, so the result is bit-identical
+        const ex = p.x - o.x, ey = p.y - o.y;
+        if (ex * ex + ey * ey > SEP_REJECT2) continue;
         const od = dist(p.x, p.y, o.x, o.y);
         if (od > 0.01 && od < P.sepRadius) {
           const f = (P.sepRadius - od) / P.sepRadius;

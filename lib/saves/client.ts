@@ -39,7 +39,12 @@ export const MILESTONE_GAP_MS=2*60_000;
 /** Client mirror of the server's limits, so a kid gets a friendly message (the server answers every failure the same way). */
 export const TRIES_WINDOW_MS=10*60_000,TRIES_ASK_GROWNUP=3,TRIES_BREAK=6;
 
-export type SyncState={rev:number;hash:string;at:number;conflict?:number};
+/**
+ * `sent`: hashes of saves sent from `rev` whose answer may never have arrived (a page-hide save: the page can unload before the
+ * reply). Written synchronously BEFORE the request, so a closing page still leaves the record. If the server later turns out
+ * to hold one of these islands, it is ours, not another device's: it is adopted instead of opening the chooser.
+ */
+export type SyncState={rev:number;hash:string;at:number;conflict?:number;sent?:string[]};
 export type SaveStatus='none'|'saved'|'saving'|'failed'|'conflict';
 export type RestoreResult={ok:true;code:string;rev:number;snapshot:Snapshot;summary:IslandSummary}|{ok:false;reason:'wrong'|'grownup'|'break'|'unavailable'|'newer'|'offline';until?:number};
 
@@ -54,7 +59,10 @@ const emit=()=>{if(typeof window!=='undefined')window.dispatchEvent(new Event(SA
  */
 export function codeRequired():boolean{return !getLocalCode()&&read(SAVE_OPTOUT_KEY)===null;}
 export function getLocalCode():string|null{const c=read(SAVE_CODE_KEY);return c&&/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}$/.test(c)?c:null;}
-export function getSyncState():SyncState|null{try{const s=JSON.parse(read(SAVE_SYNC_KEY)??'null');return s&&Number.isInteger(s.rev)&&s.rev>=0&&typeof s.hash==='string'?s:null;}catch{return null;}}
+export function getSyncState():SyncState|null{try{const s=JSON.parse(read(SAVE_SYNC_KEY)??'null');if(!(s&&Number.isInteger(s.rev)&&s.rev>=0&&typeof s.hash==='string'))return null;
+ if(s.sent!==undefined&&!(Array.isArray(s.sent)&&s.sent.every((h:unknown)=>typeof h==='string')))delete s.sent;return s;}catch{return null;}}
+/** At most this many unanswered hashes are remembered per base rev (island hide, room hide, a milestone…). */
+const SENT_MAX=4;
 const setSyncState=(s:SyncState|null)=>{write(SAVE_SYNC_KEY,s?JSON.stringify(s):null);emit();};
 let status:SaveStatus='none';
 export function saveStatus():SaveStatus{if(!getLocalCode())return 'none';if(getSyncState()?.conflict)return 'conflict';return status==='none'?(getSyncState()?'saved':'failed'):status;}
@@ -75,7 +83,9 @@ async function gzip(text:string):Promise<Uint8Array|null>{
  try{const stream=new Blob([text]).stream().pipeThrough(new CompressionStream('gzip'));return new Uint8Array(await new Response(stream).arrayBuffer());}catch{return null;}
 }
 type Answer={status:number;json:Record<string,unknown>};
-async function post(route:string,body:Record<string,unknown>,{keepalive=false,compress=false}={}):Promise<Answer|null>{
+async function post(route:string,body:Record<string,unknown>,opts?:{keepalive?:boolean;compress?:boolean}):Promise<Answer|null>;
+async function post(route:string,body:Record<string,unknown>,opts:{keepalive?:boolean;compress?:boolean;signal?:AbortSignal}):Promise<Answer|null|'timeout'>;
+async function post(route:string,body:Record<string,unknown>,{keepalive=false,compress=false,signal}:{keepalive?:boolean;compress?:boolean;signal?:AbortSignal}={}):Promise<Answer|null|'timeout'>{
  const text=JSON.stringify(body);
  let payload:BodyInit=text,type='application/json';
  // A page-hide save that already fits a keepalive request goes out synchronously: gzip is async, and a closing or reloading
@@ -85,10 +95,10 @@ async function post(route:string,body:Record<string,unknown>,{keepalive=false,co
  const size=typeof payload==='string'?new TextEncoder().encode(payload).length:(payload as unknown as Uint8Array).byteLength;
  if(keepalive&&size>KEEPALIVE_BYTES)return null; // too big for a page-hide request: it goes with the next visible save
  try{
-  const res=await fetch(`/api/save/${route}`,{method:'POST',headers:{'Content-Type':type},body:payload,keepalive,cache:'no-store',credentials:'same-origin'});
+  const res=await fetch(`/api/save/${route}`,{method:'POST',headers:{'Content-Type':type},body:payload,keepalive,cache:'no-store',credentials:'same-origin',...(signal?{signal}:{})});
   let json:Record<string,unknown>={};try{json=await res.json();}catch{}
   return {status:res.status,json};
- }catch{return null;}
+ }catch{return signal?.aborted?'timeout':null;}
 }
 
 /** This device's island as it would be uploaded: allowlisted keys, coach-plan text stripped, old wallet receipts folded. */
@@ -99,10 +109,15 @@ export function currentSnapshot(now=Date.now()):Snapshot|null{
 const localDirty=(state:SyncState|null)=>{const snap=currentSnapshot();return !!snap&&(!state||snapshotHash(snap)!==state.hash);};
 
 // ── Create ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-export async function createSave():Promise<{ok:true;code:string}|{ok:false;reason:'unavailable'|'busy'|'error'}>{
+/** How long "Get my code" waits before handing back 'timeout' (the screen offers Try again or playing without a code). */
+export const CREATE_TIMEOUT_MS=15_000;
+export async function createSave({timeoutMs=CREATE_TIMEOUT_MS}:{timeoutMs?:number}={}):Promise<{ok:true;code:string}|{ok:false;reason:'unavailable'|'busy'|'error'|'timeout'}>{
  const existing=getLocalCode();if(existing)return {ok:true,code:existing};
  const snap=currentSnapshot();if(!snap)return {ok:false,reason:'error'};
- const r=await post('create',{snapshot:snap},{compress:true});
+ // One user-initiated request, aborted by the platform's own timer signal (no timer of ours stays armed).
+ const signal=typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function'?AbortSignal.timeout(timeoutMs):undefined;
+ const r=await post('create',{snapshot:snap},{compress:true,signal});
+ if(r==='timeout')return {ok:false,reason:'timeout'};
  if(!r)return {ok:false,reason:'error'};
  if(r.status===503)return {ok:false,reason:'unavailable'};
  if(r.status===429)return {ok:false,reason:'busy'};
@@ -126,14 +141,37 @@ export function syncNow(reason:'hide'|'milestone'|'manual'='manual'):Promise<Sav
  const snap=currentSnapshot(now);if(!snap)return Promise.resolve(saveStatus());
  const hash=snapshotHash(snap);if(hash===state.hash)return Promise.resolve(saveStatus());
  lastAttempt=now;
+ // Remember what we are sending before we send it: a page-hide save can land on the server while its page unloads unanswered.
+ const sending:SyncState={...state,sent:[...(state.sent??[]).filter(h=>h!==hash),hash].slice(-SENT_MAX)};
+ write(SAVE_SYNC_KEY,JSON.stringify(sending));
  inFlight=(async():Promise<SaveStatus>=>{
   if(reason!=='hide')setStatus('saving');
-  const r=await post('sync',{code,baseRev:state.rev,snapshot:snap},{compress:true,keepalive:reason==='hide'});
-  if(r?.json.ok===true&&Number.isInteger(r.json.rev)){setSyncState({rev:r.json.rev as number,hash,at:Date.now()});setStatus('saved');return 'saved';}
-  if(r?.json.conflict===true&&Number.isInteger(r.json.rev)){setSyncState({...state,conflict:r.json.rev as number});setStatus('conflict');window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict';}
+  let st=sending;
+  for(let attempt=0;attempt<2;attempt++){
+   const r=await post('sync',{code,baseRev:st.rev,snapshot:snap},{compress:true,keepalive:reason==='hide'});
+   if(r?.json.ok===true&&Number.isInteger(r.json.rev)){setSyncState({rev:r.json.rev as number,hash,at:Date.now()});setStatus('saved');return 'saved';}
+   if(!(r?.json.conflict===true&&Number.isInteger(r.json.rev)))break;
+   // Usually our own earlier page-hide save (the island's, sent just before this room opened): adopt it and save on top.
+   // Not while this page is hiding: there is no time for a download, and the next start's check settles it.
+   if(reason!=='hide'&&attempt===0&&await adoptIfOurs(code,st,hash)==='ours'){
+    const adopted=getSyncState();if(!adopted)break;
+    if(adopted.hash===hash)return 'saved';
+    st={...adopted,sent:[hash]};write(SAVE_SYNC_KEY,JSON.stringify(st));continue;}
+   setSyncState({...st,conflict:r.json.rev as number});setStatus('conflict');window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict';
+  }
   setStatus('failed');return 'failed';
  })().finally(()=>{inFlight=null;});
  return inFlight;
+}
+/**
+ * Is the server's latest island one this device sent (its answer lost), or simply identical to this one? Then take its number
+ * and carry on: no chooser. 'theirs' leaves the downloaded island for the chooser (one download, not two).
+ */
+async function adoptIfOurs(code:string,state:SyncState|null,nowHash:string):Promise<'ours'|'theirs'|'failed'>{
+ const saved=await downloadOwn(code);if(!saved)return 'failed';
+ const h=snapshotHash(saved.snapshot);
+ if(h===nowHash||(state?.sent??[]).includes(h)){setSyncState({rev:saved.rev,hash:h,at:Date.now()});setStatus('saved');return 'ours';}
+ lastConflict=saved;return 'theirs';
 }
 
 /**
@@ -143,20 +181,24 @@ export function syncNow(reason:'hide'|'milestone'|'manual'='manual'):Promise<Sav
 export async function bootCheck():Promise<'none'|'same'|'reloading'|'conflict'|'failed'>{
  const code=getLocalCode();if(!code)return 'none';
  const state=getSyncState();
- if(state?.conflict){window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict';}
+ const now=currentSnapshot(),nowHash=now?snapshotHash(now):'';
+ // Same check before showing a remembered chooser: a room's page-hide save gets a conflict from the island's own page-hide
+ // save (sent from the same rev, its answer lost while the island unloaded). That is not another device: adopt it.
+ const conflictOrAdopt=async(st:SyncState|null)=>{
+  const got=await adoptIfOurs(code,st,nowHash);
+  if(got==='failed'){setStatus('failed');return 'failed' as const;}
+  if(got==='ours'){if(localDirty(getSyncState()))await syncNow('manual');return 'same' as const;}
+  setSyncState({...(st??{rev:0,hash:'',at:0}),conflict:lastConflict?.rev??st?.conflict??0});window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict' as const;
+ };
+ if(state?.conflict)return conflictOrAdopt(state);
  const r=await post('check',{code});
  if(!r||r.json.ok!==true||!Number.isInteger(r.json.rev)){setStatus('failed');return 'failed';}
  const rev=r.json.rev as number;
  if(state&&rev<=state.rev){setStatus('saved');return 'same';}
- const now=currentSnapshot(),nowHash=now?snapshotHash(now):'';
  // No record of the last save here (cleared state) but real progress on this device: never overwrite it quietly.
- if(state?localDirty(state):deviceHasProgress()){
-  // Both sides changed, unless the saved island is in fact the same as this one (typically our own page-hide save, whose
-  // answer never came back because the page closed): then just take its number.
-  const saved=await downloadOwn(code);if(!saved)return 'failed';
-  if(snapshotHash(saved.snapshot)===nowHash){setSyncState({rev:saved.rev,hash:nowHash,at:Date.now()});setStatus('saved');return 'same';}
-  lastConflict=saved;
-  setSyncState({...(state??{rev:0,hash:'',at:0}),conflict:rev});window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict';}
+ // Both sides changed, unless the saved island is in fact this one or one this device sent (typically our own page-hide
+ // save, whose answer never came back because the page closed): then just take its number.
+ if(state?localDirty(state):deviceHasProgress())return conflictOrAdopt(state);
  const got=await downloadOwn(code);if(!got)return 'failed';
  applyRestoredSave({ok:true,code,rev:got.rev,snapshot:got.snapshot,summary:summarise(got.snapshot.keys)},{backup:false});
  return 'reloading';

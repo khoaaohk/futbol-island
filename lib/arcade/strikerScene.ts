@@ -6,6 +6,7 @@ import type {SkillMotion} from '../graphics/skillMoves';
 import {matchPlayerDress} from '../town/beanLooks';
 import {neonColor} from './neonPalette';
 import {stripedPlaneGeometry} from '../graphics/pitchStripes';
+import {strikerGaugeZone,STRIKER_OVERHIT} from './strikerFeel';
 export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const stage=createArcadeStage(canvas);stage.scenery.visible=false;const nets:{side:number;attribute:T.BufferAttribute;rest:Float32Array;dirty:boolean}[]=[];
  stage.box(0,-.09,0,52,.16,30,'#427f6c').castShadow=false;
@@ -39,12 +40,24 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const passMaterial=new T.MeshBasicMaterial({color:'#fff3d2'}),receiverRing=stage.ring(0,0,1.1,'#fff3d2'),passLine=new T.Mesh(new T.BoxGeometry(1,1,1),passMaterial);passLine.scale.set(.09,.02,1);stage.scene.add(passLine);receiverRing.visible=passLine.visible=false;
  const ballShadow=new T.Mesh(new T.CircleGeometry(.4,20),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;stage.scene.add(ballShadow);
  const ringGold=new T.Color('#ffe36e'),ringReceive=new T.Color('#73fff1'),safeLane=new T.Color('#fff3d2'),riskyLane=new T.Color('#ff7a5c'),aimGood=new T.Color('#ffe36e'),aimOver=new T.Color('#ff5d73'),trailShot=new T.Color('#ffd25e'),trailPass=new T.Color('#7ff6ff');
- const axes={x:0,z:0};let portrait=false,focusAmount=0,shotFlash=0,goalFlash=0,punch=0,shake=0,clock=0,pop=0,lastSelected=-1,lastNearMiss=0;
+ const axes={x:0,z:0};let portrait=false,hold=0,focusAmount=0,shotFlash=0,goalFlash=0,punch=0,shake=0,clock=0,pop=0,lastSelected=-1,lastNearMiss=0;
  const cameraHome=new T.Vector3(),cameraFocus=new T.Vector3(),focusTarget=new T.Vector3(),followPan=new T.Vector3();
  // Follow cam: on while the match is live (setFollow); phones zoom a touch more because the rigs are smallest there.
  const FOLLOW_ZOOM=stage.mobile?1.28:1.14;let follow=false,followAmount=0;
- const powerRing=stage.ring(0,0,1.35,'#ffe36e');powerRing.visible=false;
- const releaseRing=stage.ring(0,0,1,'#9cecf2');releaseRing.visible=false;releaseRing.material.transparent=true;releaseRing.material.depthWrite=false;
+ // Shot gauge (Oct 10 2026, replaces the single power ring): a 270° arc on the grass round the shooter, opening toward the
+ // camera. The track paints the zones the coaching copy names (gold build-up, the cyan clean-strike band, red overhit) so
+ // "let go in the cyan band" points at something visible; the fill grows with the charge through drawRange (no rebuild) and
+ // takes the colour of the zone it is in. Plain basic materials (no vertex-colour shader variant, see tests/pitch-stripes).
+ // Four draws, only while charging (the old ring was one); hidden otherwise.
+ const GAUGE_SEG=54,gaugeZoneColor={build:new T.Color('#ffe36e'),clean:new T.Color('#73fff1'),hard:new T.Color('#ffe36e'),over:new T.Color('#ff5d73')};
+ function gaugeArc(inner:number,outer:number,f0:number,f1:number){const n=Math.max(1,Math.round((f1-f0)*GAUGE_SEG)),pos=new Float32Array(n*18),sweep=Math.PI*1.5;
+  for(let i=0;i<n;i++){const a0=-sweep/2+(f0+(f1-f0)*i/n)*sweep,a1=-sweep/2+(f0+(f1-f0)*(i+1)/n)*sweep,v=[[inner,a0],[outer,a0],[outer,a1],[inner,a0],[outer,a1],[inner,a1]];
+   for(let k=0;k<6;k++){const [r,a]=v[k],o=(i*6+k)*3;pos[o]=Math.sin(a)*r;pos[o+1]=0;pos[o+2]=-Math.cos(a)*r;}}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));return g;}
+ const gaugeLayer=(geometry:T.BufferGeometry,color:T.Color,opacity:number,order:number)=>{const m=new T.Mesh(geometry,new T.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:T.DoubleSide}));m.renderOrder=order;m.frustumCulled=false;return m;};
+ const gaugeScale=stage.mobile?1.12:1,gauge=new T.Group(),gaugeFillGeometry=gaugeArc(1.48,1.74,0,1),gaugeFill=gaugeLayer(gaugeFillGeometry,gaugeZoneColor.build.clone(),.95,5),gaugeFillMaterial=gaugeFill.material as T.MeshBasicMaterial;
+ gauge.add(gaugeLayer(gaugeArc(1.4,1.82,0,1),gaugeZoneColor.build,.28,3),gaugeLayer(gaugeArc(1.4,1.82,STRIKER_CLEAN[0],STRIKER_CLEAN[1]),gaugeZoneColor.clean,.7,4),gaugeLayer(gaugeArc(1.4,1.82,STRIKER_OVERHIT,1),gaugeZoneColor.over,.75,4),gaugeFill);gauge.visible=false;stage.scene.add(gauge);
+ const releaseRing=stage.ring(0,0,1,'#9cecf2'),releaseBase=releaseRing.material.color.clone();releaseRing.visible=false;releaseRing.material.transparent=true;releaseRing.material.depthWrite=false;
  // Interception read: the spot a defender is racing to, so a risky pass is visible as it happens.
  const interceptRing=stage.ring(0,0,.9,'#ff7a5c');interceptRing.visible=false;
  // One-touch window: an approach ring at the receiver's feet closes as the pass arrives (rhythm-game style).
@@ -113,10 +126,10 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   // Centre the actual pitch; controls sit at the edges of the screen.
   camera.updateProjectionMatrix();const fog=stage.scene.fog as T.Fog;fog.near=distance+35;fog.far=distance+115;
  }
- function update(dt:number){if(replay>=0){replay+=dt*.7;replayFrame(dt*.7);return;}const s=match.state,celebrating=s.goalPause>0,elapsed=STRIKER_GOAL_PAUSE-s.goalPause;
-  if(dt>0&&!celebrating&&!s.setPiece.kind)record(dt);
+ function update(dt:number){if(replay>=0){replay+=dt*.7;replayFrame(dt*.7);return;}const s=match.state,celebrating=s.goalPause>0,elapsed=STRIKER_GOAL_PAUSE-s.goalPause,held=hold>0;hold=Math.max(0,hold-dt);
+  if(dt>0&&!held&&!celebrating&&!s.setPiece.kind)record(dt);
   // Hit-stop: the goal frame holds still for a beat before the celebration plays.
-  const anim=s.hitStop>0?0:dt*s.timeScale;clock+=dt;
+  const anim=s.hitStop>0||held?0:dt*s.timeScale;clock+=dt;
   for(const p of s.players){const rig=rigs[p.id],warning=warnings[p.id],wedge=wedges[p.id],pose=poseOptions[p.id];warning.visible=p.windup>0&&!celebrating;warning.position.set(p.x,.07,p.z);warning.scale.setScalar(.7+Math.max(0,p.windup)/.26*.3);
    wedge.visible=warning.visible&&p.team===1;if(wedge.visible){const dx=p.tackleX-p.x,dz=p.tackleZ-p.z,length=Math.min(3.2,Math.hypot(dx,dz)+.8),grow=1-Math.max(0,p.windup)/.36;wedge.position.set(p.x,.08,p.z);wedge.rotation.set(0,Math.atan2(dx,dz),0);wedge.scale.set(1,1,length*(.45+grow*.55));}
    pose.keeper=p.keeper?1:0;pose.jockey=p.jockey*.8;pose.actionKind=p.strikeKind==='pass'?'pass':'shot';pose.shotPower=p.strikePower;
@@ -163,7 +176,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   const reader=s.interceptor>=0?s.players[s.interceptor]:null;interceptRing.visible=!!reader&&reader.team===1&&!celebrating;if(interceptRing.visible){interceptRing.position.set(s.interceptX,.07,s.interceptZ);interceptRing.scale.setScalar(1+(stage.reduced?0:Math.sin(clock*14)*.12));}
   {const incoming=s.ball.owner<0&&s.lastPasser>=0&&s.lastPasser<4&&s.lastPasser!==s.selected&&!celebrating,w=s.touchWindow;if(s.perfect!==lastPerfect){lastPerfect=s.perfect;perfectFlash=1;}perfectFlash=Math.max(0,perfectFlash-dt*3);
    touchRing.visible=incoming||perfectFlash>0;if(touchRing.visible){touchRing.position.set(p.x,.075,p.z);const queued=s.queuedPass>0||s.queuedShot>0;touchRing.scale.setScalar(perfectFlash>0?1+(1-perfectFlash)*1.6:1+Math.min(.7,Math.max(0,s.touchEta))/.7*1.8);touchRing.material.color.copy(touchIdle).lerp(touchHot,perfectFlash>0||queued?1:w);touchRing.material.opacity=perfectFlash>0?perfectFlash:w>0?.95:.5;}}
-  {const runner=s.players.find(q=>q.team===0&&q.callRun>0);runRing.visible=!!runner&&!celebrating;if(runner){runRing.position.set(runner.x,.07,runner.z);runRing.scale.setScalar(1+(stage.reduced?0:Math.sin(clock*9)*.15));}
+  {let runner:typeof s.players[number]|null=null;for(const q of s.players)if(q.team===0&&q.callRun>0){runner=q;break;}runRing.visible=!!runner&&!celebrating;if(runner){runRing.position.set(runner.x,.07,runner.z);runRing.scale.setScalar(1+(stage.reduced?0:Math.sin(clock*9)*.15));}
    for(const m of smallPosts)m.visible=s.mods.small;
    rain.visible=s.mods.rain&&!stage.reduced;if(rain.visible){rainY=(rainY+dt*16)%14;rain.position.y=-rainY;}
    // Team spirit full: the selected ring glows pink. Blue charging a Team Strike: its warning ring pulses.
@@ -172,8 +185,8 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   {const carrier=s.ball.owner>=4?s.players[s.ball.owner]:null;heavyRing.visible=!!carrier&&carrier.heavy>0&&!carrier.keeper&&!celebrating;if(heavyRing.visible){heavyRing.position.set(s.ball.x,.08,s.ball.z);heavyRing.scale.setScalar(1+Math.sin(carrier!.heavy/STRIKER_HEAVY_TOUCH*Math.PI)*.5);}}
   const presser=s.presser>=0?s.players[s.presser]:null,cover=s.cover>=0?s.players[s.cover]:null;coverLine.visible=!!presser&&!!cover&&s.level>=3&&!celebrating;if(presser&&cover&&coverLine.visible){const dx=cover.x-presser.x,dz=cover.z-presser.z;coverLine.position.set((cover.x+presser.x)/2,.05,(cover.z+presser.z)/2);coverLine.scale.z=Math.hypot(dx,dz);coverLine.rotation.y=Math.atan2(dx,dz);}
   ballShadow.position.set(bx,.055,bz);ballShadow.scale.setScalar(1+s.ball.y*.16);(ballShadow.material as T.MeshBasicMaterial).opacity=.4/(1+s.ball.y*.35);
-  if(anim>0){trailAge+=anim;if(trailAge>.035){trailAge=0;const dot=trail[cursor++%trail.length],speed=Math.hypot(s.ball.vx,s.ball.vz),shot=speed>27;dot.position.copy(ball.position);dot.scale.setScalar(s.ball.owner<0&&speed>12&&!stage.reduced?(shot?.2:.12):0);dot.visible=true;trailMaterial.color.copy(s.teamStrike&&shot?trailSpecial:shot?trailShot:trailPass);}for(const dot of trail)dot.scale.multiplyScalar(Math.exp(-anim*4));}
-  if(s.event!==lastEvent){lastEvent=s.event;if(s.eventKind==='shot'&&s.shotMoment>0){shotFlash=1;releaseRing.position.set(s.eventX,.08,s.eventZ);}if(['shot','goal','hit','post','save'].includes(s.eventKind))stage.burst(s.eventX,.6,s.eventZ,s.eventKind==='goal'?2:1);
+  if(anim>0){trailAge+=anim;if(trailAge>.035){trailAge=0;const dot=trail[cursor++%trail.length],speed=Math.hypot(s.ball.vx,s.ball.vz),shot=speed>27,size=s.ball.owner<0&&speed>12&&!stage.reduced?(shot?.2:.12):0;dot.position.copy(ball.position);dot.scale.setScalar(size);dot.visible=size>0;trailMaterial.color.copy(s.teamStrike&&shot?trailSpecial:shot?trailShot:trailPass);}for(const dot of trail)if(dot.visible){dot.scale.multiplyScalar(Math.exp(-anim*4));if(dot.scale.x<.012)dot.visible=false;}}
+  if(s.event!==lastEvent){lastEvent=s.event;if(s.eventKind==='shot'&&(s.shotMoment>0||s.cleanStrike)){shotFlash=1;releaseRing.position.set(s.eventX,.08,s.eventZ);releaseRing.material.color.copy(s.cleanStrike?cleanCyan:releaseBase);}if(['shot','goal','hit','post','save'].includes(s.eventKind))stage.burst(s.eventX,.6,s.eventZ,s.eventKind==='goal'?2:1);
    if(s.eventKind==='goal'){punch=1;shake=.9;goalFlash=1;throwConfetti(s.eventX,s.eventZ);}else if(s.eventKind==='save')punch=Math.max(punch,.25);else if(s.eventKind==='hit')shake=Math.max(shake,.3);}
   if(s.nearMiss!==lastNearMiss){lastNearMiss=s.nearMiss;punch=Math.max(punch,.4);shake=Math.max(shake,.35);}
   for(const net of nets){const active=celebrating&&Math.sign(s.eventX)===net.side&&!stage.reduced;if(!active&&!net.dirty)continue;const t=elapsed,amount=active?Math.sin(t*14)*Math.exp(-t*3.8)*.45:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],falloff=Math.exp(-((x-s.eventZ*net.side)**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*falloff:0));}net.attribute.needsUpdate=true;net.dirty=active;}
@@ -189,14 +202,15 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   // the ball read bigger on phones. It hands over to the charge focus, and snaps back to the whole pitch when play stops
   // (dt 0: ready, paused, full time). Reduced motion and the rotated portrait view keep the fixed full-pitch camera.
   const followOn=follow&&motion&&!portrait;followAmount=dt>0?followAmount+((followOn?1:0)-followAmount)*(1-Math.exp(-dt*2.5)):followOn?followAmount:0;
-  if(dt>0){const limX=27*(1-1/FOLLOW_ZOOM)+.6,limZ=14*(1-1/FOLLOW_ZOOM)+.4,k=1-Math.exp(-dt*2.2);followPan.x+=(Math.max(-limX,Math.min(limX,s.ball.x))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
+  if(dt>0){const limX=27*(1-1/FOLLOW_ZOOM)+.6,limZ=14*(1-1/FOLLOW_ZOOM)+.4,k=1-Math.exp(-dt*2.2);const carrier=s.ball.owner>=0?s.players[s.ball.owner]:null,ahead=carrier&&!carrier.keeper?(carrier.team===0?3.2:-2.2):0;followPan.x+=(Math.max(-limX,Math.min(limX,s.ball.x+ahead))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
   const lead=followAmount*(1-focus),offsetX=followPan.x*lead+cameraFocus.x*focus,offsetZ=followPan.z*lead+cameraFocus.z*focus;
   const zoom=1+(FOLLOW_ZOOM-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
   stage.camera.position.copy(cameraHome);stage.camera.position.x+=offsetX;stage.camera.position.z+=offsetZ;
   if(motion&&shake>0){stage.camera.position.x+=Math.sin(clock*53)*shake*.35;stage.camera.position.y+=Math.sin(clock*61)*shake*.2;}
   stage.camera.lookAt(offsetX,.8*focus,offsetZ);
   if(Math.abs(stage.camera.zoom-zoom)>.0001){stage.camera.zoom=zoom;stage.camera.updateProjectionMatrix();}
-  powerRing.visible=s.ball.owner===s.selected&&s.charge>.18;{const c=s.charge,clean=c>=STRIKER_CLEAN[0]&&c<=STRIKER_CLEAN[1];powerRing.material.color.copy(c>.93?aimOver:clean?cleanCyan:aimGood);if(aiming&&clean&&!(targetMaterial.color.equals(aimOver))){aimMaterial.color.copy(cleanCyan);targetMaterial.color.copy(cleanCyan);}}powerRing.position.set(p.x,.065,p.z);powerRing.scale.setScalar(1+s.charge*.5+(stage.reduced?0:Math.sin(s.time*22)*s.charge*.04));
+  gauge.visible=aiming&&!celebrating;{const c=s.charge,clean=c>=STRIKER_CLEAN[0]&&c<=STRIKER_CLEAN[1];if(aiming&&clean&&!(targetMaterial.color.equals(aimOver))){aimMaterial.color.copy(cleanCyan);targetMaterial.color.copy(cleanCyan);}
+   if(gauge.visible){gauge.position.set(p.x,.07,p.z);gauge.rotation.y=Math.atan2(stage.camera.position.x-p.x,stage.camera.position.z-p.z);gauge.scale.setScalar(gaugeScale*(1+(clean&&!stage.reduced?Math.sin(clock*18)*.035:0)));gaugeFillGeometry.setDrawRange(0,Math.min(GAUGE_SEG,Math.ceil(c*GAUGE_SEG))*6);gaugeFillMaterial.color.copy(gaugeZoneColor[strikerGaugeZone(c)]);}}
   shotFlash=Math.max(0,shotFlash-dt*2.8);releaseRing.visible=shotFlash>0&&!stage.reduced;releaseRing.scale.setScalar(1+(1-shotFlash)*7);releaseRing.material.opacity=shotFlash;
   goalFlash=Math.max(0,goalFlash-dt*.8);
   glassFloor.update(dt,s.ball.x,s.ball.z,s.charge,Math.max(shotFlash,stage.reduced?0:goalFlash));
@@ -204,6 +218,8 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   stage.effects(anim>0?dt:0);stage.lighting(s.time);
   // Portrait play attacks upward; controls are transformed into this view.
  }
- overlays.push(ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,powerRing,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
- fit();update(0);return{stage,fit,update,screenAxes,rigs,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;}};
+ overlays.push(ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,gauge,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
+ fit();update(0);return{stage,fit,update,screenAxes,rigs,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
+  /** Impact hit-stop (strikerFeel.strikerImpact): freeze the bodies for `seconds` and punch the camera by `kick`. */
+  impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;}};
 }

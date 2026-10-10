@@ -10,10 +10,11 @@ import {distToPolyline,pointInPolygon,sampleQuad,simplify,smoothPath,type P} fro
 import {copyOf,deletePlay,duplicatePlay,emptyLibrary,loadLibrary,saveLibrary,upsertPlay,type Library} from '@/lib/coaches/board/storage';
 import {decodePlay,encodePlay,readShareHash,shareUrl} from '@/lib/coaches/board/share';
 import {FORMATS,INKS,INK_NAMES,MAX_LABEL,ZOOM_VIEWS,type Arrow,type ArrowKind,type Chip,type End,type Format,type InkKind,type Play,type Team,type ZoomView} from '@/lib/coaches/board/types';
-import {bestView,deltaToModel,toScreen} from '@/lib/coaches/board/view';
+import {bestView,cameraView,deltaToModel,toScreen} from '@/lib/coaches/board/view';
 import {Stage,arrowScreen,type Scene} from './stage';
 import {PENDING_PLAY_EVENT,takePendingPlay} from '@/lib/coaches/board/link';
 import {BoardIcon} from './icons';
+import {BackButton} from '../BackButton';
 import s from './TacticsBoard.module.css';
 
 /**
@@ -21,9 +22,24 @@ import s from './TacticsBoard.module.css';
  * dribbles (wavy) with the marker, add steps and press Play to watch the move happen. Everything teaches a real idea:
  * the built-in examples carry a coaching point, and every counter's label names where it stands ("right wing, attacking
  * third"). Heat: React draws the structure; ./stage.ts moves chips and arrows and runs frames only while something moves.
+ *
+ * Full-screen layout (Oct 10 2026), like Miro and Figma: the pitch is a canvas that fills the screen edge to edge (pinch,
+ * Ctrl/⌘+wheel or the zoom buttons zoom it; two fingers or the wheel pan it); floating rails sit over it. Left rail: tools
+ * (select, home and away players, ball, arrows, marker, eraser). Right rail: the plays library, team shapes, playback,
+ * share and progress, with the selection's properties in a card beside it. A slim top bar has Back, the play's name,
+ * zoom and undo/redo; the step bar is at the bottom. Three arrangements by screen ('mode'):
+ *  - dock (phone portrait): the tools become a bottom dock, the right rail a "More" slide-up sheet;
+ *  - thin (phone landscape, short windows): thin icon rails on both sides, Back and undo/redo on top of them;
+ *  - full (tablet, desktop): labelled rails, top bar and step bar; keyboard shortcuts (V P B A M E, ⌘/Ctrl+Z/Y, +/−/0).
  */
 type Tool='move'|'arrow'|'marker'|'erase'|'add';
-type Sheet=null|'plays'|'share'|'options'|'shapes';
+type Sheet=null|'plays'|'share'|'options'|'shapes'|'menu';
+type LayoutMode='dock'|'thin'|'full';
+type Cam={z:number;px:number;py:number};
+const CAM0:Cam={z:1,px:0,py:0};
+const MAX_ZOOM=5;
+/** Space each arrangement keeps clear of floating chrome when it fits the pitch (px, before safe areas). */
+const INSETS:Record<LayoutMode,{t:number;r:number;b:number;l:number}>={dock:{t:60,r:6,b:130,l:6},thin:{t:6,r:66,b:56,l:66},full:{t:70,r:76,b:80,l:76}};
 type Mode={kind:'edit'}|{kind:'view';source:'example'|'shared';play:Play};
 type Opts={speed:number;loop:boolean;trails:boolean;next:boolean;snap:'off'|'grid'|'shape'};
 type Gesture=
@@ -33,7 +49,9 @@ type Gesture=
  |{k:'ink';pts:P[]}
  |{k:'erase';gone:Set<string>}
  |{k:'bend';id:string;base:Play}
- |{k:'add';team:Team;gk:boolean;start:P};
+ |{k:'add';team:Team;gk:boolean;start:P}
+ |{k:'pinch';ids:[number,number];o:P;d0:number;scale:number;t:P}
+ |{k:'none'};
 const TOOLS:{id:Tool;label:string;icon:string}[]=[{id:'move',label:'Move',icon:'move'},{id:'arrow',label:'Arrows',icon:'arrow'},{id:'marker',label:'Marker',icon:'marker'},{id:'erase',label:'Eraser',icon:'erase'},{id:'add',label:'Add',icon:'add'}];
 const KIND_LABEL:Record<ArrowKind,string>={pass:'Pass',run:'Run',dribble:'Dribble'};
 const KIND_HINT:Record<ArrowKind,string>={pass:'solid line: the ball travels',run:'dashed line: a player runs without the ball',dribble:'wavy line: a player runs with the ball'};
@@ -43,7 +61,7 @@ const chipName=(c:Chip)=>c.team==='ball'?'Ball':`${c.team==='home'?'Home':'Away'
 const isTyping=(t:EventTarget|null)=>t instanceof HTMLElement&&(t.tagName==='INPUT'||t.tagName==='SELECT'||t.tagName==='TEXTAREA'||t.isContentEditable);
 function storeOk(){try{const k='__cb';localStorage.setItem(k,'1');localStorage.removeItem(k);return true;}catch{return false;}}
 
-export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
+export default function TacticsBoard({onBack}:{onBack?:()=>void;onProgress?:()=>void}){
  const [lib,setLib]=useState<Library>(emptyLibrary);
  const [hist,setHist]=useState<History>(()=>startHistory(loadFormation(newPlay('7v7','My play'),'7v7-231','both')));
  const [mode,setMode]=useState<Mode>({kind:'edit'});
@@ -62,11 +80,14 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
  const [announce,setAnnounce]=useState('');
  const [toast,setToast]=useState<string|null>(null);
  const [fresh,setFresh]=useState<string[]>([]);
- const [box,setBox]=useState<{w:number;h:number}|null>(null);
+ const [box,setBox]=useState<{w:number;h:number;safe:{t:number;r:number;b:number;l:number}}|null>(null);
+ const [addTeam,setAddTeam]=useState<'home'|'away'>('home');
+ const [cam,setCam]=useState<Cam>(CAM0);
+ const [rails,setRails]=useState({left:true,right:true});
  const [ready,setReady]=useState(false);
- const root=useRef<HTMLDivElement>(null),surface=useRef<HTMLDivElement>(null),arrowLayer=useRef<SVGGElement>(null),inkLayer=useRef<SVGSVGElement>(null);
+ const root=useRef<HTMLDivElement>(null),surface=useRef<HTMLDivElement>(null),world=useRef<HTMLDivElement>(null),probe=useRef<HTMLDivElement>(null),arrowLayer=useRef<SVGGElement>(null),inkLayer=useRef<SVGSVGElement>(null);
  const live=useRef<SVGPathElement>(null),liveHead=useRef<SVGPathElement>(null),knob=useRef<HTMLDivElement>(null),ghostEl=useRef<HTMLDivElement>(null);
- const gesture=useRef<Gesture|null>(null),rect=useRef<DOMRect|null>(null),pointer=useRef<number|null>(null);
+ const gesture=useRef<Gesture|null>(null),rect=useRef<DOMRect|null>(null),pointer=useRef<number|null>(null),touches=useRef(new Map<number,P>());
  const stageRef=useRef<Stage|null>(null);if(!stageRef.current)stageRef.current=new Stage();const stage=stageRef.current;
  const viewing=mode.kind==='view';
  const play=viewing?mode.play:hist.now;
@@ -94,28 +115,40 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   const inLib=l.plays.some(p=>p.id===hist.now.id),next:Library=inLib?{...upsertPlayKeep(l,hist.now),open:hist.now.id}:{...l,draft:hist.now,open:null};
   saveLibrary(next);return next;});},350);return ()=>window.clearTimeout(t);},[hist.now,ready,viewing]);
 
- // ── layout: the board fits the space it has; portrait boxes stand the pitch up ──
+ // ── layout: the board is the whole screen; the pitch fits inside the space the floating chrome leaves clear ──
  useLayoutEffect(()=>{
-  const el=root.current;if(!el)return;let scroller:HTMLElement|null=el.parentElement;
-  while(scroller&&!/(auto|scroll)/.test(getComputedStyle(scroller).overflowY))scroller=scroller.parentElement;
-  const measure=()=>{const w=el.clientWidth,ch=scroller?scroller.clientHeight:window.innerHeight,top=scroller?parseFloat(getComputedStyle(scroller).paddingTop)+parseFloat(getComputedStyle(scroller).paddingBottom):0;
-   const h=Math.max(300,Math.min(ch-top,window.innerHeight));setBox(b=>b&&b.w===w&&b.h===h?b:{w,h});};
-  measure();const ro=new ResizeObserver(measure);ro.observe(el);if(scroller)ro.observe(scroller);window.addEventListener('resize',measure);
-  return ()=>{ro.disconnect();window.removeEventListener('resize',measure);};
+  const el=root.current;if(!el)return;
+  const measure=()=>{const w=el.clientWidth,h=el.clientHeight,cs=probe.current?getComputedStyle(probe.current):null,px=(v?:string)=>Math.round(parseFloat(v??'0')||0);
+   const safe={t:px(cs?.paddingTop),r:px(cs?.paddingRight),b:px(cs?.paddingBottom),l:px(cs?.paddingLeft)};
+   if(!w||!h)return;setBox(o=>o&&o.w===w&&o.h===h&&o.safe.t===safe.t&&o.safe.r===safe.r&&o.safe.b===safe.b&&o.safe.l===safe.l?o:{w,h,safe});};
+  measure();const ro=new ResizeObserver(measure);ro.observe(el);window.addEventListener('resize',measure);window.addEventListener('orientationchange',measure);
+  return ()=>{ro.disconnect();window.removeEventListener('resize',measure);window.removeEventListener('orientationchange',measure);};
  },[]);
+ const lmode:LayoutMode=!box?'full':box.w<640&&box.h>=box.w?'dock':box.h<540||box.w<640?'thin':'full';
+ const fitting=useMemo(()=>{
+  if(!box)return null;const i=INSETS[lmode],sf=box.safe,t=i.t+sf.t,b=i.b+sf.b,l=i.l+sf.l,r=i.r+sf.r;
+  const bw=Math.max(120,box.w-l-r),bh=Math.max(120,box.h-t-b),base=viewRect(spec,zoom),fit=bestView(base,bw,bh),whole=bestView(viewRect(spec,'full'),bw,bh);
+  return {base,orient:fit.orient,s0:fit.s,cx:l+bw/2,cy:t+bh/2,hw:fit.w/2,hh:fit.h/2,whole};
+ },[box,lmode,spec,zoom]);
+ /** Keeps the camera in range: 1× (fit) to MAX_ZOOM, and the pitch's centre never further off than its own half size. */
+ const clampCam=useCallback((c:Cam):Cam=>{if(!fitting)return CAM0;const z=Math.max(1,Math.min(MAX_ZOOM,c.z));if(z<1.02)return CAM0;
+  const mx=fitting.hw*z,my=fitting.hh*z;return {z,px:Math.max(-mx,Math.min(mx,c.px)),py:Math.max(-my,Math.min(my,c.py))};},[fitting]);
+ // A new pitch, zoom preset or arrangement starts from the fitted view.
+ useEffect(()=>{setCam(CAM0);},[play.format,zoom,lmode]);
  const layout=useMemo(()=>{
-  if(!box)return null;
-  // Two arrangements: board above the trays (portrait), or board beside a tray column (landscape). Pick the bigger pitch.
-  const fit=(side:boolean)=>{const panel=side?Math.round(Math.max(330,Math.min(370,box.w*.34))):0;
-   const bw=side?box.w-panel-14:box.w,bh=side?box.h-30:box.h-(viewing?246:276);
-   const pad=bw<460?8:14,pw=bw-pad*2,ph=Math.max(160,bh-pad*2-22-14);
-   return {side,panel,pad,view:bestView(viewRect(spec,zoom),pw,ph),whole:bestView(viewRect(spec,'full'),pw,ph)};};
-  const st=fit(false),sd=box.w>=600?fit(true):null,pick=sd&&sd.view.s>st.view.s*1.04?sd:st,view=pick.view;
+  if(!box||!fitting)return null;const c=clampCam(cam);
+  const view=cameraView(fitting.base,fitting.orient,fitting.s0*c.z,box.w,box.h,fitting.cx+c.px,fitting.cy+c.py);
   // Counters are sized from the whole pitch; zooming in makes them bigger (up to 1.6×), like leaning in to the board.
-  const k=spec.format==='futsal'?1.3:spec.format==='7v7'?1.14:spec.format==='9v9'?1.06:1,zk=Math.min(1.6,Math.max(1,view.s/pick.whole.s));
-  const r=Math.round(Math.max(9.5,Math.min(26,Math.min(pick.whole.w,pick.whole.h)*.034*k*zk))*2)/2;
-  return {...pick,r,ballR:Math.round(r*.62*2)/2};
- },[box,spec,zoom,viewing]);
+  const k=spec.format==='futsal'?1.3:spec.format==='7v7'?1.14:spec.format==='9v9'?1.06:1,zk=Math.min(1.6,Math.max(1,view.s/fitting.whole.s));
+  const r=Math.round(Math.max(lmode==='full'?11:10,Math.min(28,Math.min(fitting.whole.w,fitting.whole.h)*.034*k*zk))*2)/2;
+  return {view,r,ballR:Math.round(r*.62*2)/2,cam:c};
+ },[box,fitting,cam,clampCam,spec,lmode]);
+ /** Zooms by k about a screen point (px on the canvas), keeping that point still. */
+ const zoomAbout=useCallback((k:number,o:P,t:P=[0,0])=>{if(!fitting)return;setCam(c0=>{const c=clampCam(c0),z=Math.max(1,Math.min(MAX_ZOOM,c.z*k)),kk=z/c.z;
+  const cx=fitting.cx+c.px,cy=fitting.cy+c.py,nx=kk*(cx-o[0])+o[0]+t[0],ny=kk*(cy-o[1])+o[1]+t[1];return clampCam({z,px:nx-fitting.cx,py:ny-fitting.cy});});},[fitting,clampCam]);
+ const zoomStep=(dir:1|-1)=>{if(!box)return;zoomAbout(dir>0?1.4:1/1.4,[fitting?.cx??box.w/2,fitting?.cy??box.h/2]);};
+ const fitToScreen=()=>{setCam(CAM0);setAnnounce('Zoomed to fit');};
+ const zoomed=(layout?.cam.z??1)>1;
  const view=layout?.view??null;
  const slots=useMemo(()=>{const f=formationsFor(play.format)[0];return f?formationSlots(f).flatMap(x=>[toM(spec,x.at),toM(spec,mirror(x.at))]):[];},[play.format,spec]);
  const scene=useMemo<Scene|null>(()=>layout?{play,step:cur,spec,view:layout.view,r:layout.r,ballR:layout.ballR,snap:opts.snap,slots}:null,[play,cur,spec,layout,opts.snap,slots]);
@@ -127,7 +160,11 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   onFrame:t=>{if(knob.current)knob.current.style.transform=`translateX(${(play.steps.length>1?t/(play.steps.length-1):0)*100}%)`;},
  });},[stage,play.steps.length]);
  // Headless measurement hook (tests/coaches-board.cjs, docs/performance-guide.md): frames counted by the stage loop.
- useEffect(()=>{(window as unknown as {__coachBoard?:unknown}).__coachBoard={get frames(){return stage.frames;},get busy(){return stage.busy;}};},[stage]);
+ // Also the pitch's playing area on screen (px) and the camera, for the layout checks (scratch audits, docs/performance-guide.md).
+ const viewRef=useRef(view);viewRef.current=view;
+ useEffect(()=>{(window as unknown as {__coachBoard?:unknown}).__coachBoard={get frames(){return stage.frames;},get busy(){return stage.busy;},
+  get pitch(){const v=viewRef.current,sc=stage.scene;if(!v||!sc)return null;const a=toScreen(v,[0,0]),b=toScreen(v,[sc.spec.length,sc.spec.width]);
+   return {x:Math.min(a[0],b[0]),y:Math.min(a[1],b[1]),w:Math.abs(a[0]-b[0]),h:Math.abs(a[1]-b[1])};}};},[stage]);
 
  // ── edits ──
  const edit=useCallback((f:(p:Play)=>Play,key?:string)=>{if(viewing)return;setHist(h=>commit(h,f(h.now),key));},[viewing]);
@@ -139,6 +176,8 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   const i=toStep??Math.max(0,Math.min(play.steps.length-1,Math.round(t??cur)));setStep(i);stage.resync(i);
  },[stage,play.steps.length,cur]);
  const setTool=(t:Tool)=>{setToolState(t);setSel({chips:[],mark:null});setStepMenu(false);if(t!=='move')setMulti(false);};
+ /** The Home / Away player tools: tap the pitch to place a counter of that team (or drag one off the rail). */
+ const pickAdd=(team:'home'|'away')=>{setTool('add');setAddTeam(team);};
  const undo=()=>{if(playing)stopPlaying();setHist(h=>undoH(h));setSel({chips:[],mark:null});};
  const redo=()=>{if(playing)stopPlaying();setHist(h=>redoH(h));setSel({chips:[],mark:null});};
  useEffect(()=>{if(cur!==step)setStep(cur);},[cur,step]);
@@ -148,6 +187,8 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
  };
  const addAt=(team:Team,gk:boolean,at?:M)=>{
   if(viewing)return;let id:string|null=null;
+  // The canvas is bigger than the pitch: a counter dropped in the margin lands on the nearest edge of the board.
+  if(at&&stage.scene){const b=stage.bounds();at=[Math.max(b.x0,Math.min(b.x1,at[0])),Math.max(b.y0,Math.min(b.y1,at[1]))];}
   setHist(h=>{const r=addChip(h.now,team,at?toV(spec,at):undefined,{gk,step:cur});id=r.id;if(!r.id){return h;}return commit(h,r.play);});
   queueMicrotask(()=>{if(id){setFresh([id]);setSel({chips:team==='ball'?[]:[id],mark:null});setAnnounce(`${team==='ball'?'Ball':team==='home'?'Home player':'Away player'} added`);}else flash('The board is full (30 counters).');});
  };
@@ -180,13 +221,24 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
  };
 
  // ── pointer gestures on the board ──
+ /** Drops whatever one finger was doing (a second finger means pinch): a dragged counter stays where it is. */
+ const abandon=(t:number)=>{const g=gesture.current;gesture.current=null;showLive('');if(!g)return;
+  if(g.k==='chip'){const targets=stage.dragEnd(t,true);if(targets)edit(pl=>moveChips(pl,cur,Object.fromEntries(Object.entries(targets).map(([id,m])=>[id,toV(spec,m)]))));}
+  if(g.k==='erase')g.gone.forEach(id=>hideMark(id,false));
+  if(g.k==='bend'&&stage.scene&&scene)stage.sync(scene);};
  const onDown=(e:RPE<HTMLDivElement>)=>{
-  if(!view||!scene||pointer.current!==null||e.button>0)return;
+  if(!view||!scene||e.button>0)return;
   rect.current=surface.current!.getBoundingClientRect();const p=local(e),m=stage.toModel(p),now=e.timeStamp;
+  if(e.pointerType==='touch'){touches.current.set(e.pointerId,p);
+   // Two fingers: pinch to zoom and pan (also while drawing or viewing; whatever the first finger began is let go).
+   if(touches.current.size===2&&pointer.current!==null){const ids=[...touches.current.keys()] as [number,number],[a,b]=ids.map(i=>touches.current.get(i)!);
+    abandon(now);try{surface.current!.setPointerCapture(e.pointerId);}catch{/* gone */}
+    gesture.current={k:'pinch',ids,o:[(a[0]+b[0])/2,(a[1]+b[1])/2],d0:Math.max(20,Math.hypot(a[0]-b[0],a[1]-b[1])),scale:1,t:[0,0]};return;}}
+  if(pointer.current!==null)return;
   if(playing||stage.playing)stopPlaying();
   setStepMenu(false);if(sheet)setSheet(null);
   pointer.current=e.pointerId;surface.current!.setPointerCapture(e.pointerId);
-  if(viewing){gesture.current=null;return;}
+  if(viewing){gesture.current={k:'none'};return;}
   const chip=chipAt(p);
   if(tool==='move'||tool==='add'){
    if(sel.mark&&sel.mark===markAt(p,18)&&!chip){gesture.current={k:'bend',id:sel.mark,base:play};return;}
@@ -194,8 +246,8 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
     const inSel=sel.chips.includes(chip),ids=multi?(inSel?sel.chips:[...sel.chips,chip]):(inSel&&sel.chips.length>1?sel.chips:[chip]);
     if(!multi&&!inSel)setSel({chips:[chip],mark:null});else if(multi&&!inSel)setSel({chips:ids,mark:null});
     gesture.current={k:'chip',ids,hit:chip,start:p,moved:false,toggle:multi&&inSel};stage.dragStart(ids,m,now);return;}
-   const mark=markAt(p);if(mark){setSel({chips:[],mark});gesture.current=null;return;}
-   if(tool==='add'){gesture.current={k:'add',team:'home',gk:false,start:p};return;}
+   const mark=markAt(p);if(mark){setSel({chips:[],mark});gesture.current={k:'none'};return;}
+   if(tool==='add'){gesture.current={k:'add',team:addTeam,gk:false,start:p};return;}
    gesture.current={k:'lasso',pts:[p]};return;
   }
   if(tool==='arrow'){const from:End=chip?{c:chip}:{p:toV(spec,m)};gesture.current={k:'arrow',from,startM:chip?stage.at(chip)!:m,pts:[chip?stage.at(chip)!:m],startPx:p,hit:chip};return;}
@@ -204,6 +256,11 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
  };
  const onMove=(e:RPE<HTMLDivElement>)=>{
   const g=gesture.current;
+  if(e.pointerType==='touch'&&touches.current.has(e.pointerId)){touches.current.set(e.pointerId,local(e));
+   if(g?.k==='pinch'){const [a,b]=g.ids.map(i=>touches.current.get(i)),z=layout?.cam.z??1;if(!a||!b)return;
+    g.scale=Math.max(1/z,Math.min(MAX_ZOOM/z,Math.hypot(a[0]-b[0],a[1]-b[1])/g.d0));g.t=[(a[0]+b[0])/2-g.o[0],(a[1]+b[1])/2-g.o[1]];
+    // Compositor only while the fingers move (transform on the canvas layer); the board re-renders sharp on release.
+    if(world.current)world.current.style.transform=`translate3d(${(g.t[0]+g.o[0]*(1-g.scale)).toFixed(1)}px,${(g.t[1]+g.o[1]*(1-g.scale)).toFixed(1)}px,0) scale(${g.scale.toFixed(4)})`;return;}}
   if(!g||pointer.current!==e.pointerId){if(e.pointerType==='mouse'&&!g&&surface.current&&!viewing&&(tool==='move'||tool==='add')){rect.current=null;const p=local(e);surface.current.style.cursor=chipAt(p)?'grab':'';}return;}
   const events=typeof e.nativeEvent.getCoalescedEvents==='function'?e.nativeEvent.getCoalescedEvents():[];const list=events.length?events:[e.nativeEvent];
   const p=local(e),m=stage.toModel(p);
@@ -220,10 +277,15 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   if(g.k==='add'&&Math.hypot(p[0]-g.start[0],p[1]-g.start[1])>8){gesture.current={k:'lasso',pts:[g.start,p]};}
  };
  const onUp=(e:RPE<HTMLDivElement>)=>{
+  touches.current.delete(e.pointerId);
+  const pg=gesture.current;
+  if(pg?.k==='pinch'){if(!pg.ids.includes(e.pointerId))return;gesture.current=null;pointer.current=null;
+   for(const id of pg.ids)try{surface.current?.releasePointerCapture(id);}catch{/* released */}
+   if(world.current)world.current.style.transform='';zoomAbout(pg.scale,pg.o,pg.t);return;}
   if(pointer.current!==e.pointerId)return;pointer.current=null;const g=gesture.current;gesture.current=null;
   try{surface.current?.releasePointerCapture(e.pointerId);}catch{/* already released */}
   if(surface.current)surface.current.style.cursor='';
-  const cancel=e.type==='pointercancel';if(!g||!view||!scene){showLive('');return;}
+  const cancel=e.type==='pointercancel';if(!g||g.k==='none'||!view||!scene){showLive('');return;}
   const p=local(e);
   if(g.k==='chip'){const targets=stage.dragEnd(e.timeStamp,cancel);
    if(targets){const moves=Object.fromEntries(Object.entries(targets).map(([id,m])=>[id,toV(spec,m)]));edit(pl=>moveChips(pl,cur,moves));
@@ -234,7 +296,7 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   if(g.k==='lasso'){if(g.pts.length<4||Math.hypot(p[0]-g.pts[0][0],p[1]-g.pts[0][1])<6&&g.pts.length<8){if(!multi)setSel({chips:[],mark:null});return;}
    const ids=play.chips.filter(c=>{const m=stage.at(c.id);return m&&pointInPolygon(toScreen(view,m),g.pts);}).map(c=>c.id);
    setSel({chips:multi?[...new Set([...sel.chips,...ids])]:ids,mark:null});if(ids.length)setAnnounce(`${ids.length} selected`);return;}
-  if(g.k==='add'){addAt('home',false,stage.toModel(p));return;}
+  if(g.k==='add'){addAt(g.team,g.gk,stage.toModel(p));return;}
   if(g.k==='arrow'){if(cancel)return;const endM=stage.toModel(p),startM='c' in g.from?stage.at(g.from.c)??g.startM:g.startM;
    const len=Math.hypot(...(toScreen(view,endM).map((v,i)=>v-toScreen(view,startM)[i]) as [number,number]));
    if(len<16){if(g.hit){setSel({chips:[g.hit],mark:null});}return;}
@@ -247,15 +309,25 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   if(g.k==='bend'){const next=stage.scene?.play;if(next&&next!==g.base){const a=next.steps[cur].arrows.find(x=>x.id===g.id);if(a)edit(pl=>updateArrow(pl,cur,g.id,{bend:a.bend}));}}
  };
 
+ // ── wheel / trackpad: ⌘/Ctrl+wheel and trackpad pinch zoom about the pointer; the wheel pans once zoomed in (no page scroll) ──
+ const wheelRef=useRef<(e:WheelEvent)=>void>(()=>{});
+ wheelRef.current=(e:WheelEvent)=>{const el=surface.current;if(!el)return;e.preventDefault();const r=el.getBoundingClientRect(),o:P=[e.clientX-r.left,e.clientY-r.top];
+  const dy=e.deltaMode===1?e.deltaY*16:e.deltaY,dx=e.deltaMode===1?e.deltaX*16:e.deltaX;
+  if(e.ctrlKey||e.metaKey){zoomAbout(Math.exp(-dy*.01),o);return;}
+  if(!zoomed)return;
+  setCam(c=>clampCam({...c,px:c.px-(e.shiftKey?dy:dx),py:c.py-(e.shiftKey?0:dy)}));};
+ const hasSurface=!!layout;
+ useEffect(()=>{const el=surface.current;if(!el)return;const f=(e:WheelEvent)=>wheelRef.current(e);el.addEventListener('wheel',f,{passive:false});return ()=>el.removeEventListener('wheel',f);},[hasSurface]);
+
  // ── tray: tap to add, or drag a counter onto the pitch ──
- const trayDown=(team:Team,gk:boolean)=>(e:RPE<HTMLButtonElement>)=>{
+ const trayDown=(team:Team,gk:boolean,onTap?:()=>void)=>(e:RPE<HTMLButtonElement>)=>{
   if(viewing||e.button>0)return;const el=e.currentTarget,start:P=[e.clientX,e.clientY];el.setPointerCapture(e.pointerId);let dragging=false;
   const ghost=ghostEl.current,rootR=root.current!.getBoundingClientRect();
   const move=(ev:PointerEvent)=>{if(!dragging&&Math.hypot(ev.clientX-start[0],ev.clientY-start[1])>6){dragging=true;if(ghost){ghost.dataset.team=team==='ball'?'ball':team+(gk?'Gk':'');ghost.hidden=false;}}
    if(dragging&&ghost)ghost.style.transform=`translate3d(${ev.clientX-rootR.left-20}px,${ev.clientY-rootR.top-34}px,0)`;};
   const up=(ev:PointerEvent)=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);if(ghost)ghost.hidden=true;
    if(ev.type==='pointercancel')return;
-   if(!dragging){addAt(team,gk);return;}
+   if(!dragging){if(onTap)onTap();else addAt(team,gk);return;}
    const r=surface.current?.getBoundingClientRect();if(!r||!view)return;const x=ev.clientX-r.left,y=ev.clientY-r.top-14;
    if(x<-10||y<-10||x>r.width+10||y>r.height+10){setAnnounce('Dropped off the board');return;}
    addAt(team,gk,stage.toModel([Math.max(0,Math.min(r.width,x)),Math.max(0,Math.min(r.height,y))]));};
@@ -268,7 +340,20 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
   if(mod&&k==='z'){e.preventDefault();if(e.shiftKey)redo();else undo();return;}
   if(mod&&k==='y'){e.preventDefault();redo();return;}
   if((k==='delete'||k==='backspace')&&(sel.chips.length||sel.mark)&&!viewing){e.preventDefault();deleteSelection();return;}
-  if(k==='escape'&&(sheet||sel.chips.length||sel.mark||stepMenu||renaming)){e.preventDefault();e.stopPropagation();setSheet(null);setStepMenu(false);setSel({chips:[],mark:null});}
+  if(k==='escape'&&(sheet||sel.chips.length||sel.mark||stepMenu||renaming)){e.preventDefault();e.stopPropagation();setSheet(null);setStepMenu(false);setSel({chips:[],mark:null});return;}
+  if(e.altKey)return;
+  // Zoom (also with ⌘/Ctrl, like Figma): + in, − out, 0 or Shift+1 fit.
+  if(k==='+'||k==='='){e.preventDefault();zoomStep(1);return;}
+  if(k==='-'||k==='_'){e.preventDefault();zoomStep(-1);return;}
+  if((k==='0'&&!e.shiftKey)||(e.shiftKey&&(k==='!'||e.code==='Digit1'))){e.preventDefault();fitToScreen();return;}
+  if(mod)return;
+  // Tool shortcuts (Figma/Miro style). Not while a button would take the key itself.
+  const onButton=e.target instanceof HTMLButtonElement;
+  if(k===' '&&!onButton){e.preventDefault();if(playing)stopPlaying();else startPlay();return;}
+  if(k===','&&cur>0){goStep(cur-1);return;}if(k==='.'&&cur<n-1){goStep(cur+1);return;}
+  if(viewing)return;
+  const pick:Record<string,()=>void>={v:()=>setTool('move'),p:()=>pickAdd(e.shiftKey?'away':'home'),b:()=>addAt('ball',false),a:()=>setTool('arrow'),m:()=>setTool('marker'),d:()=>setTool('marker'),e:()=>setTool('erase')};
+  const f=pick[k];if(f){e.preventDefault();f();}
  };
  const onChipKey=(c:Chip)=>(e:RKE<HTMLButtonElement>)=>{
   const dirs:Record<string,[number,number]>={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};const d=dirs[e.key];
@@ -350,7 +435,7 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
  const swatches=<div className={s.swatches} role="group" aria-label="Marker colour">{INKS.map((c,i)=><button key={c} type="button" className={s.swatch} style={{'--ink':c} as CSSProperties} aria-label={`${INK_NAMES[i]} marker`} aria-pressed={ink===i} onClick={()=>{setInk(i);if(selArrow)edit(p=>updateArrow(p,cur,selArrow.id,{ink:i}));}}/>)}</div>;
 
  const context=(()=>{
-  if(viewing)return <p className={`${s.hint} ${s.note}`}>{mode.play.note??'Press play to watch the move.'}</p>;
+  if(viewing)return null;
   if(stepMenu)return <div className={s.ctx}><b className={s.ctxTitle}>Step {cur+1}</b>
    {tb('Move step earlier','left',()=>{edit(p=>moveStep(p,cur,cur-1));setStep(cur-1);},{disabled:cur===0})}
    {tb('Move step later','right',()=>{edit(p=>moveStep(p,cur,cur+1));setStep(cur+1);},{disabled:cur>=n-1})}
@@ -376,28 +461,23 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
    {([['home',false,'Home'],['away',false,'Away'],['home',true,'Keeper'],['ball',false,'Ball']] as [Team,boolean,string][]).map(([t,gk,label])=>
     <button key={label} type="button" className={s.trayChip} onPointerDown={trayDown(t,gk)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();addAt(t,gk);}}} aria-label={`Add ${label.toLowerCase()}${t==='ball'?'':' player'} (tap, or drag onto the pitch)`} data-cb={'tray-'+label.toLowerCase()}>
      <span className={s.chipFace} data-team={t==='ball'?'ball':t+(gk?'Gk':'')}>{t==='ball'?'':'+'}</span><small>{label}</small></button>)}
-   {tb('Team shapes','steps',()=>setSheet('shapes'),{text:true,data:'shapes'})}</div>;
-  return <div className={s.ctx}><p className={s.hint}>{multi?'Tap counters to pick them, then drag one to move them all.':'Drag a counter · tap to edit it · draw round several'}</p>
-   {chipBtn('Select several',multi,()=>{setMulti(m=>!m);setSel({chips:[],mark:null});},'multi')}</div>;
+   {tb('Team shapes','player',()=>setSheet('shapes'),{text:true,data:'shapes'})}</div>;
+  if(lmode==='full'&&!multi)return null;
+  // Phones: just the Select several toggle (the hint only while it is on), so the strip does not cover the pitch.
+  return <div className={s.ctx}>{multi&&<p className={s.hint}>Tap counters to pick them, then drag one to move them all.</p>}
+   {chipBtn(lmode==='thin'?'Several':'Select several',multi,()=>{setMulti(m=>!m);setSel({chips:[],mark:null});},'multi')}</div>;
  })();
 
- const zoomNext=()=>{const v=ZOOM_VIEWS[(ZOOM_VIEWS.indexOf(zoom)+1)%ZOOM_VIEWS.length];if(viewing)setMode({...mode,play:{...mode.play,view:v}});else edit(p=>({...p,view:v}),'view');setAnnounce(ZOOM_LABEL[v]);};
- const board=layout&&view?<div className={s.frame} style={{'--pad':`${layout.pad}px`,'--r':`${layout.r}px`,'--br':`${layout.ballR}px`,'--mw':`${markerW}px`} as CSSProperties}>
-  <div className={s.deco} aria-hidden="true"><svg className={s.cord} viewBox="0 0 200 22" preserveAspectRatio="none"><path d="M40 22 Q100 -6 160 22" fill="none" stroke="#6f5a3e" strokeWidth="1.6"/></svg><i className={s.clip} style={{left:'20%'}}/><i className={s.clip} style={{right:'20%'}}/></div>
-  <div className={s.tapes}>
-   <div className={s.tapeGroup}>
-    {renaming&&!viewing?<input className={`${s.tape} ${s.nameInput}`} autoFocus defaultValue={play.name} maxLength={32} aria-label="Play name"
-      onBlur={e=>{const v=e.target.value.trim();if(v&&v!==play.name)edit(p=>({...p,name:v.slice(0,32)}));setRenaming(false);}} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();if(e.key==='Escape'){e.stopPropagation();e.preventDefault();setRenaming(false);}}}/>
-     :<button type="button" className={s.tape} onClick={()=>!viewing&&setRenaming(true)} aria-label={viewing?play.name:`Play name: ${play.name}. Rename`} data-cb="name">{play.name}</button>}
-    {!viewing&&!saved&&!renaming&&<button type="button" className={s.sticker} onClick={saveCurrent} data-cb="save">Save</button>}
-   </div>
-   <div className={s.tapeGroup}>
-    <button type="button" className={`${s.tape} ${s.zoomTape}`} onClick={zoomNext} aria-label={`Zoom: ${ZOOM_LABEL[zoom]}. Change`} data-cb="zoom"><BoardIcon name="zoom" size={15}/><span className={s.zoomWord}>{zoom==='full'?'Full':zoom==='half'?'Half':'Box'}</span></button>
-    <label className={`${s.tape} ${s.formatTape}`}><span className={s.sr}>Pitch format</span>
-     <select value={play.format} disabled={viewing} onChange={e=>edit(p=>setFormat(p,e.target.value as Format))} data-cb="format">{FORMATS.map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>
-   </div>
-  </div>
-  <div ref={surface} className={s.surface} data-tool={viewing?'view':tool} data-cb="surface" style={{width:view.w,height:view.h}} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onContextMenu={e=>e.preventDefault()}>
+ const zoomNext=()=>{const v=ZOOM_VIEWS[(ZOOM_VIEWS.indexOf(zoom)+1)%ZOOM_VIEWS.length];setZoomPreset(v);};
+ const setZoomPreset=(v:ZoomView)=>{if(viewing)setMode({...mode,play:{...mode.play,view:v}});else edit(p=>({...p,view:v}),'view');setAnnounce(ZOOM_LABEL[v]);};
+ const toggleSheet=(k:Exclude<Sheet,null>)=>{setSheet(x=>x===k?null:k);setStepMenu(false);};
+ const backRef=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{backRef.current?.focus({preventScroll:true});},[]);
+
+ // ── the canvas: the whole screen; the pitch, ink and counters are one layer (pinch moves it by transform) ──
+ const canvas=layout&&view?<div ref={surface} className={s.surface} data-tool={viewing?'view':tool} data-cb="surface" style={{'--r':`${layout.r}px`,'--br':`${layout.ballR}px`,'--mw':`${markerW}px`} as CSSProperties}
+  onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onContextMenu={e=>e.preventDefault()}>
+  <div ref={world} className={s.world}>
    {pitchHtml&&<svg className={s.pitch} width={view.w} height={view.h} aria-hidden="true" dangerouslySetInnerHTML={pitchHtml}/>}
    <svg ref={inkLayer} className={s.ink} width={view.w} height={view.h} aria-hidden="true">
     <defs>{INKS.map((c,i)=><pattern key={c} id={`cb-hatch-${i}`} patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(35)"><rect width="9" height="9" fill={c} fillOpacity=".14"/><path d="M0 0V9" stroke={c} strokeWidth="3.2" strokeOpacity=".32"/></pattern>)}</defs>
@@ -421,45 +501,80 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
      <span className={s.chipFace}>{c.team==='ball'?null:c.label}</span></button>;})}
    </div>
   </div>
- </div>:<div className={s.frame} style={{minHeight:240}}/>;
+ </div>:null;
+
+ // ── chrome ──
+ const full=lmode==='full',dock=lmode==='dock',thin=lmode==='thin';
+ const railBtn=(o:{id:string;label:string;short?:string;icon?:string;team?:string;kbd?:string;pressed?:boolean;expanded?:boolean;disabled?:boolean;on:()=>void;down?:(e:RPE<HTMLButtonElement>)=>void})=>
+  <button key={o.id} type="button" className={s.railBtn} aria-label={o.label} title={o.kbd?`${o.label} (${o.kbd.replace('Mod+','⌘/Ctrl+')})`:o.label}
+   aria-keyshortcuts={o.kbd?.startsWith('Mod+')?`${o.kbd.replace('Mod+','Control+')} ${o.kbd.replace('Mod+','Meta+')}`:o.kbd} aria-pressed={o.pressed} aria-expanded={o.expanded} disabled={o.disabled}
+   onClick={o.down?e=>{if(e.detail===0)o.on();}:o.on} onPointerDown={o.down} style={o.down?{touchAction:'none'}:undefined} data-cb={o.id}>
+   {o.team?<span className={s.chipFace} data-team={o.team}>{o.team==='ball'?'':'+'}</span>:<BoardIcon name={o.icon??'add'}/>}
+   <span className={s.railLabel}>{o.short??o.label}</span>{o.kbd&&full&&<kbd className={s.kbd} aria-hidden="true">{o.kbd.replace('Shift+','⇧').replace('Mod+','⌘')}</kbd>}</button>;
+ const toolBtns=viewing?[]:[
+  railBtn({id:'tool-move',label:'Select and move: drag a counter, tap to edit it, draw round several',short:'Select',icon:'move',kbd:'V',pressed:tool==='move',on:()=>setTool('move')}),
+  ...(dock?[railBtn({id:'tool-add',label:'Add players and the ball',short:'Add',icon:'add',kbd:'P',pressed:tool==='add',on:()=>pickAdd('home')})]:[
+   railBtn({id:'tool-add',label:'Home player: tap the pitch to place one, or drag it on',short:'Home',team:'home',kbd:'P',pressed:tool==='add'&&addTeam==='home',on:()=>pickAdd('home'),down:trayDown('home',false,()=>pickAdd('home'))}),
+   railBtn({id:'tool-add-away',label:'Away player: tap the pitch to place one, or drag it on',short:'Away',team:'away',kbd:'Shift+P',pressed:tool==='add'&&addTeam==='away',on:()=>pickAdd('away'),down:trayDown('away',false,()=>pickAdd('away'))}),
+   ...(full?[railBtn({id:'rail-ball',label:'Add the ball (tap, or drag it on)',short:'Ball',team:'ball',kbd:'B',on:()=>addAt('ball',false),down:trayDown('ball',false)})]:[])]),
+  railBtn({id:'tool-arrow',label:'Arrows: passes, runs and dribbles',short:'Arrow',icon:'arrow',kbd:'A',pressed:tool==='arrow',on:()=>setTool('arrow')}),
+  railBtn({id:'tool-marker',label:'Marker: notes and zones',short:'Marker',icon:'marker',kbd:'M',pressed:tool==='marker',on:()=>setTool('marker')}),
+  railBtn({id:'tool-erase',label:'Eraser',short:'Eraser',icon:'erase',kbd:'E',pressed:tool==='erase',on:()=>setTool('erase')}),
+  ...(full?[railBtn({id:'multi',label:'Select several counters',short:'Several',icon:'lasso',pressed:multi,on:()=>{setTool('move');setMulti(m=>!m);setSel({chips:[],mark:null});}})]:[]),
+ ];
+ const actionBtns=[
+  // Plays was removed from the right rail (user, Oct 10 2026); a shared link to an unknown play still opens the plays sheet.
+  ...(viewing?[]:[railBtn({id:'rail-shapes',label:'Team shapes (formations)',short:'Shapes',icon:'player',pressed:sheet==='shapes',expanded:sheet==='shapes',on:()=>toggleSheet('shapes')})]),
+  railBtn({id:'options',label:'Playback and view',short:'Playback',icon:'gear',pressed:sheet==='options',expanded:sheet==='options',on:()=>toggleSheet('options')}),
+  railBtn({id:'share',label:'Share or save a picture',short:'Share',icon:'share',pressed:sheet==='share',expanded:sheet==='share',on:()=>toggleSheet('share')}),
+  // Progress was removed from the right rail (user, Oct 10 2026).
+ ];
+ const undoRedo=!viewing&&<>{railBtn({id:'undo',label:'Undo',icon:'undo',kbd:'Mod+Z',disabled:!hist.past.length,on:undo})}{railBtn({id:'redo',label:'Redo',icon:'redo',kbd:'Mod+Shift+Z',disabled:!hist.future.length,on:redo})}</>;
+ const backBtn=onBack&&<BackButton ref={backRef} onBack={onBack} className={s.back} data-cb="back"/>;
+ const nameEl=renaming&&!viewing?<input className={`${s.tape} ${s.nameInput}`} autoFocus defaultValue={play.name} maxLength={32} aria-label="Play name"
+   onBlur={e=>{const v=e.target.value.trim();if(v&&v!==play.name)edit(p=>({...p,name:v.slice(0,32)}));setRenaming(false);}} onKeyDown={e=>{if(e.key==='Enter')(e.target as HTMLInputElement).blur();if(e.key==='Escape'){e.stopPropagation();e.preventDefault();setRenaming(false);}}}/>
+  :<button type="button" className={s.tape} onClick={()=>!viewing&&setRenaming(true)} aria-label={viewing?play.name:`Play name: ${play.name}. Rename`} data-cb="name">{play.name}</button>;
+ const saveEl=!viewing&&!saved&&!renaming&&<button type="button" className={s.sticker} onClick={saveCurrent} data-cb="save">Save</button>;
+ // Changing the format also lines up both teams in that format's first shape (user, Oct 10 2026); Undo brings the old ones back.
+ const formatEl=<label className={`${s.tape} ${s.formatTape}`}><span className={s.sr}>Pitch format</span>
+  <select value={play.format} disabled={viewing} onChange={e=>{const f=e.target.value as Format;edit(p=>{if(p.format===f)return p;const sh=formationsFor(f)[0];return sh?loadFormation(setFormat(p,f),sh.id,'both'):setFormat(p,f);});}} data-cb="format">{FORMATS.map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>;
+ const zoomEl=<div className={s.group} role="group" aria-label="Zoom">
+  {railBtn({id:'zoom-out',label:'Zoom out',icon:'zoomOut',kbd:'-',disabled:!zoomed,on:()=>zoomStep(-1)})}
+  {railBtn({id:'zoom-in',label:'Zoom in',icon:'zoom',kbd:'+',disabled:(layout?.cam.z??1)>=MAX_ZOOM-.01,on:()=>zoomStep(1)})}
+  {railBtn({id:'fit',label:'Zoom to fit',icon:'fit',kbd:'0',disabled:!zoomed,on:fitToScreen})}
+  <button type="button" className={`${s.tape} ${s.zoomTape}`} onClick={zoomNext} aria-label={`Showing: ${ZOOM_LABEL[zoom]}. Change`} title="Whole pitch, attacking half or penalty box" data-cb="zoom"><span>{zoom==='full'?'Whole':zoom==='half'?'Half':'Box'}</span></button></div>;
 
  const pct=n>1?cur/(n-1)*100:0;
  const timeline=<div className={s.timeline} data-cb="timeline">
-  <button type="button" className={`${s.tool} ${s.playBtn}`} aria-label={playing?'Pause':'Play the steps'} onClick={()=>playing?stopPlaying():startPlay()} data-cb="play"><BoardIcon name={playing?'pause':'play'}/></button>
+  {thin&&<div className={s.nameRow}>{nameEl}{saveEl}{formatEl}</div>}
+  <button type="button" className={`${s.tool} ${s.playBtn}`} aria-label={playing?'Pause':'Play the steps'} title={playing?'Pause (Space)':'Play the steps (Space)'} onClick={()=>playing?stopPlaying():startPlay()} data-cb="play"><BoardIcon name={playing?'pause':'play'}/></button>
   <div className={s.track} onPointerDown={scrub} role="group" aria-label={`Steps: step ${cur+1} of ${n}`} data-cb="track">
-   <div className={s.rail}/>{n>1&&<div ref={knob} className={s.knobRail} style={{transform:`translateX(${pct}%)`}} aria-hidden="true"><i className={s.knob}/></div>}
+   <div className={s.trackLine}/>{n>1&&<div ref={knob} className={s.knobRail} style={{transform:`translateX(${pct}%)`}} aria-hidden="true"><i className={s.knob}/></div>}
    {play.steps.map((_,i)=><button key={i} type="button" className={s.dot} style={{left:n>1?`${i/(n-1)*100}%`:'50%'}} aria-label={`Step ${i+1}${i===cur?' (showing)':''}`} aria-current={i===cur?'step':undefined}
     onClick={()=>{if(scrubbed.current){scrubbed.current=false;return;}if(i===cur&&!viewing)setStepMenu(m=>!m);else{setStepMenu(false);goStep(i);}}} data-cb={`step-${i+1}`}>{i+1}</button>)}
   </div>
   {!viewing&&<button type="button" className={`${s.tool} ${s.withText} ${s.addStep}`} onClick={plusStep} aria-label="Add step" data-cb="add-step"><BoardIcon name="add"/><span>Step</span></button>}
-  {tb('Playback options','gear',()=>setSheet(sheet==='options'?null:'options'),{pressed:sheet==='options',data:'options'})}
  </div>;
 
- const top=<div className={s.top}>
-  {tabs}
-  <div className={s.topActions}>
-   {tb('Plays: yours, examples and new','plays',()=>setSheet(sheet==='plays'?null:'plays'),{pressed:sheet==='plays',data:'plays'})}
-   {tb('Share','share',()=>setSheet(sheet==='share'?null:'share'),{pressed:sheet==='share',data:'share'})}
-  </div>
- </div>;
- const banner=viewing&&<div className={s.banner} data-cb="viewer"><div><b>{mode.source==='example'?'Example':'Shared play'}: {mode.play.name}</b></div>
-  <button type="button" className={s.save} onClick={saveCopy} data-cb="save-copy">{mode.source==='example'?'Edit a copy':'Save a copy'}</button>
-  <button type="button" className={s.pill} onClick={()=>{setMode({kind:'edit'});setStep(0);}} data-cb="close-viewer">My board</button></div>;
- const tools=!viewing&&<div className={s.tools} role="toolbar" aria-label="Board tools">
-  {TOOLS.map(t=><button key={t.id} type="button" className={`${s.tool} ${s.toolTab}`} aria-pressed={tool===t.id} onClick={()=>setTool(t.id)} data-cb={'tool-'+t.id}><BoardIcon name={t.icon}/><span>{t.label}</span></button>)}
-  <span className={s.sep}/>
-  {tb('Undo','undo',undo,{disabled:!hist.past.length,data:'undo'})}{tb('Redo','redo',redo,{disabled:!hist.future.length,data:'redo'})}
- </div>;
+ const banner=viewing&&<div className={s.banner} data-cb="viewer"><div><b>{mode.source==='example'?'Example':'Shared play'}: {mode.play.name}</b><p>{mode.play.note??'Press play to watch the move.'}</p></div>
+  <div className={s.bannerBtns}><button type="button" className={s.save} onClick={saveCopy} data-cb="save-copy">{mode.source==='example'?'Edit a copy':'Save a copy'}</button>
+  <button type="button" className={s.pill} onClick={()=>{setMode({kind:'edit'});setStep(0);}} data-cb="close-viewer">My board</button></div></div>;
+ const ctxEl=context&&!sheet&&<div className={s.ctxWrap} role="region" aria-label="Properties" data-cb="properties">{context}</div>;
+ const fitChip=!full&&zoomed&&<button type="button" className={s.fitChip} onClick={fitToScreen} data-cb="fit"><BoardIcon name="fit" size={18}/>Fit</button>;
 
- const sheetEl=sheet&&<div className={s.sheet} role="dialog" aria-label={sheet==='plays'?'Plays':sheet==='share'?'Share':sheet==='options'?'Playback options':'Team shapes'} data-cb={'sheet-'+sheet}>
-  <div className={s.sheetHead}><h3>{sheet==='plays'?'Plays':sheet==='share'?'Share this play':sheet==='options'?'Playback':'Team shapes'}</h3><button type="button" className={s.tool} aria-label="Close" onClick={()=>setSheet(null)}><BoardIcon name="close"/></button></div>
+ const sheetEl=sheet&&<div className={s.sheet} role="dialog" aria-label={sheet==='plays'?'Plays':sheet==='share'?'Share':sheet==='options'?'Playback and view':sheet==='menu'?'More':'Team shapes'} data-cb={'sheet-'+sheet}>
+  <div className={s.sheetHead}><h3>{sheet==='plays'?'Plays':sheet==='share'?'Share this play':sheet==='options'?'Playback and view':sheet==='menu'?'More':'Team shapes'}</h3><button type="button" className={s.tool} aria-label="Close" onClick={()=>setSheet(null)} data-cb="sheet-close"><BoardIcon name="close"/></button></div>
+  {sheet==='menu'&&<div className={s.sheetBody}>{!viewing&&<div className={s.row}><span>Pitch</span>{formatEl}</div>}<div className={s.menuGrid}>{actionBtns}</div></div>}
   {sheet==='options'&&<div className={s.sheetBody}>
    <div className={s.row}><span>Speed</span>{SPEEDS.map(v=>chipBtn(v===.5?'½×':`${v}×`,opts.speed===v,()=>setOpts(o=>({...o,speed:v})),'speed-'+v))}</div>
    <div className={s.row}><span>Loop</span>{chipBtn(opts.loop?'On':'Off',opts.loop,()=>setOpts(o=>({...o,loop:!o.loop})),'loop')}</div>
    <div className={s.row}><span>Show next moves</span>{chipBtn(opts.next?'On':'Off',opts.next,()=>setOpts(o=>({...o,next:!o.next})),'next')}</div>
    <div className={s.row}><span>Show trails</span>{chipBtn(opts.trails?'On':'Off',opts.trails,()=>setOpts(o=>({...o,trails:!o.trails})),'trails')}</div>
    <div className={s.row}><span>Snap counters</span>{(['off','grid','shape'] as const).map(v=>chipBtn(v==='off'?'Off':v==='grid'?'Grid':'Shape',opts.snap===v,()=>setOpts(o=>({...o,snap:v})),'snap-'+v))}</div>
-   <p className={s.small}>Next moves are the faint arrows to where each player goes in the next step. Trails show where they came from.</p></div>}
+   <div className={s.row}><span>Show</span>{ZOOM_VIEWS.map(v=>chipBtn(ZOOM_LABEL[v],zoom===v,()=>setZoomPreset(v),'view-'+v))}</div>
+   <div className={s.row}><span>Zoom</span>{chipBtn('Zoom out',false,()=>zoomStep(-1),'opt-zoom-out')}{chipBtn('Zoom in',false,()=>zoomStep(1),'opt-zoom-in')}{chipBtn('Fit',!zoomed,fitToScreen,'opt-fit')}</div>
+   <p className={s.small}>Next moves are the faint arrows to where each player goes in the next step. Trails show where they came from. Pinch with two fingers (or ⌘/Ctrl + scroll) to zoom; two fingers pan.</p>
+   {full&&<p className={s.small} data-cb="shortcuts"><b>Keys:</b> V select · P home player · ⇧P away · B ball · A arrow · M marker · E eraser · Space play · , . step · + − 0 zoom · ⌘/Ctrl Z undo · ⌘/Ctrl ⇧Z or Y redo · Delete removes</p>}</div>}
   {sheet==='shapes'&&<div className={s.sheetBody}>{formationsFor(play.format).map(f=><div key={f.id} className={s.shape}><div><b>{f.name}</b><small>{f.why}</small></div>
    <div className={s.shapeBtns}>{chipBtn('Home',false,()=>{edit(p=>loadFormation(p,f.id,'home'));setSheet(null);setAnnounce(`${f.name} loaded`);},`shape-${f.id}-home`)}{chipBtn('Away',false,()=>{edit(p=>loadFormation(p,f.id,'away'));setSheet(null);},`shape-${f.id}-away`)}{chipBtn('Both',false,()=>{edit(p=>loadFormation(p,f.id,'both'));setSheet(null);setAnnounce(`${f.name} loaded for both teams`);},`shape-${f.id}-both`)}</div></div>)}
    <button type="button" className={s.pill} onClick={()=>{edit(p=>removeChips(p,p.chips.map(c=>c.id)));setSheet(null);}} data-cb="clear-board">Clear the board</button></div>}
@@ -470,27 +585,48 @@ export default function TacticsBoard({tabs}:{tabs?:ReactNode}){
     {typeof navigator!=='undefined'&&'share' in navigator&&<button type="button" className={s.pill} disabled={!link} onClick={nativeShare}>Share…</button>}
     <button type="button" className={s.pill} onClick={savePicture} data-cb="png"><BoardIcon name="image" size={18}/> Save picture</button></div></div>}
   {sheet==='plays'&&<div className={s.sheetBody}>
+   {!viewing&&<div className={s.thisPlay}><h4>On the board</h4><div className={s.row}>{nameEl}{saveEl}{saved&&<small className={s.small}>Saved on this device</small>}</div><div className={s.row}><span>Pitch</span>{formatEl}</div></div>}
    <div className={s.row}><span>New play</span>{FORMATS.map(f=>chipBtn(FORMAT_LABEL[f],false,()=>newBoard(f),'new-'+f))}</div>
    <h4>Your plays</h4>
    {lib.plays.length?<ul className={s.list}>{lib.plays.map(p=><PlayRow key={p.id} p={p} on={!viewing&&p.id===hist.now.id} onOpen={()=>openPlay(p)}
      onCopy={()=>setLib(l=>{const r=duplicatePlay(l,p.id);saveLibrary(r.lib);return r.lib;})}
      onDelete={()=>setLib(l=>{const next=deletePlay(l,p.id);saveLibrary(next);if(p.id===hist.now.id)setHist(h=>({...h,now:{...h.now,id:uid('p')}}));return next;})}/>)}</ul>
-    :<p className={s.small}>Nothing saved yet. Press Save on a board to keep it here.</p>}
+    :<p className={s.small}>Nothing saved yet. Press Save on a board to keep it here (plays stay on this device).</p>}
    <h4>Examples to learn from</h4>
    <ul className={s.list}>{EXAMPLE_PLAYS.map(p=><li key={p.id} className={s.item}><div><b>{p.name}</b><small>{FORMAT_LABEL[p.format]} · {p.steps.length} steps · {p.note}</small></div>
     <button type="button" className={s.save} onClick={()=>watch(p,'example')} data-cb={'example-'+p.id}>Watch</button></li>)}</ul></div>}
  </div>;
 
- return <div ref={root} className={s.root} data-layout={layout?.side?'side':'stack'} data-cb="board-root" tabIndex={-1} onKeyDown={onRootKey}>
-  {layout?.side?<>
-   <div className={s.boardCol}>{board}</div>
-   <div className={s.panel} style={{width:layout.panel}}>{top}{banner}{timeline}<div className={s.ctxWrap}>{context}</div>{tools}{sheetEl}</div>
-  </>:<>{top}{banner}<div className={s.boardCol}>{board}</div><div className={s.ctxWrap}>{context}</div>{timeline}{tools}{sheetEl}</>}
+ return <div ref={root} className={s.root} data-mode={lmode} data-viewing={viewing||undefined} data-sheet={sheet??undefined} data-cb="board-root" tabIndex={-1} onKeyDown={onRootKey}>
+  <div ref={probe} className={s.safeProbe} aria-hidden="true"/>
+  {canvas}
+  {!thin&&<header className={s.topBar}>
+   <div className={s.group}>{backBtn}<div className={s.nameRow}>{nameEl}{saveEl}</div>{lmode!=='dock'&&formatEl}</div>
+   <div className={s.group}>{full&&zoomEl}{undoRedo}</div>
+  </header>}
+  {!dock&&<nav className={`${s.rail} ${s.railLeft}`} data-open={rails.left||undefined} aria-label="Tools">
+   {thin&&backBtn}
+   {!viewing&&<div className={s.railStack} role="toolbar" aria-orientation="vertical" aria-label="Board tools">{rails.left&&toolBtns}
+    {railBtn({id:'rail-left-toggle',label:rails.left?'Hide tools':'Show tools',short:rails.left?'Hide':'Tools',icon:rails.left?'chevL':'chevR',expanded:rails.left,on:()=>setRails(r=>({...r,left:!r.left}))})}</div>}
+  </nav>}
+  {!dock&&<aside className={`${s.rail} ${s.railRight}`} data-open={rails.right||undefined} aria-label="Plays and actions">
+   {thin&&undoRedo&&<div className={s.railStack}>{undoRedo}</div>}
+   <div className={s.railStack} role="toolbar" aria-orientation="vertical" aria-label="Actions">{rails.right&&actionBtns}
+    {railBtn({id:'rail-right-toggle',label:rails.right?'Hide actions':'Show actions',short:rails.right?'Hide':'More',icon:rails.right?'chevR':'chevL',expanded:rails.right,on:()=>setRails(r=>({...r,right:!r.right}))})}</div>
+  </aside>}
+  {banner}
+  {ctxEl}
+  {fitChip}
+  {timeline}
+  {dock&&<nav className={s.dock} aria-label="Tools"><div className={s.dockStack} role="toolbar" aria-label="Board tools">{toolBtns}
+   {railBtn({id:'more',label:'More: plays, shapes, playback, share',short:'More',icon:'more',pressed:!!sheet,expanded:!!sheet,on:()=>setSheet(x=>x?null:'menu')})}</div></nav>}
+  {sheetEl}
   <div ref={ghostEl} className={s.dragGhost} hidden aria-hidden="true"><span className={s.chipFace}/></div>
   {toast&&<div className={s.toast} role="status">{toast}</div>}
   <p className={s.sr} aria-live="polite" data-cb="live">{announce}</p>
  </div>;
 }
+
 const ARROW_KINDS_UI:ArrowKind[]=['pass','run','dribble'];
 /** Updates a saved play in place, keeping its spot in the list (upsertPlay moves it first: only on an explicit save). */
 function upsertPlayKeep(l:Library,p:Play):Library{return {...l,plays:l.plays.map(x=>x.id===p.id?p:x)};}

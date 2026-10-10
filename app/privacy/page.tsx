@@ -8,7 +8,9 @@ import styles from './privacy.module.css';
  */
 export const metadata:Metadata={title:'Privacy · Futbol Island',description:'What Futbol Island keeps, why, and for how long. No accounts, no ads, no chat.',alternates:{canonical:'/privacy'}};
 
+import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function PrivacyPage(){
+ preloadIslandBrush();
  return <main className={styles.page}><div className={styles.wrap}>
   <a className={styles.back} href="/">Back to the island</a>
   <h1>Privacy policy</h1>
