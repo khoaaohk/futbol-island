@@ -313,6 +313,8 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .waterCrest{position:absolute;left:0;bottom:calc(100% - 1px);width:200%;height:12px;fill:#78d7df}
 .waterPill[data-loading]{cursor:progress}
 .waterPill[data-loading]:disabled{opacity:1}
+/* Loading… sits optically centred in the pill (no subtitle while loading; the brush face rides high in its line box). */
+.waterPill[data-loading]{align-content:center}.waterPill[data-loading]>span{translate:0 1px}
 .waterCrestBack{height:15px;fill:#b4ecee;opacity:.85}
 @media(prefers-reduced-motion:no-preference){.waterPill[data-loading] .waterCrest{animation:crestRoll 1.3s linear infinite}.waterPill[data-loading] .waterCrestBack{animation:crestRoll 2.1s linear infinite reverse}}
 @keyframes crestRoll{from{transform:translateX(0)}to{transform:translateX(-50%)}}

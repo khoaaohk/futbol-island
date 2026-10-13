@@ -1,0 +1,18 @@
+/* Modern gallery: quick check + ending (Oct 10 2026). Additive companion to modern.module.css. */
+.checkList{list-style:none;margin:0;padding:0;display:grid;gap:36px}
+.checkItem{display:grid;gap:14px}
+.num{font:600 13px/1 var(--sans,Helvetica,Arial,sans-serif);letter-spacing:.08em;color:var(--muted,#6b6a66);font-variant-numeric:tabular-nums}
+.score{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.score b{font:700 clamp(48px,8vw,88px)/.9 var(--sans,Helvetica,Arial,sans-serif);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.score span{font:400 16px/1.5 var(--sans,Helvetica,Arial,sans-serif);color:var(--muted,#6b6a66)}
+.pillIn{animation:pillIn .52s var(--spring,cubic-bezier(.2,.8,.2,1)) both}
+@keyframes pillIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.ending{display:grid;gap:24px;align-items:center;padding:clamp(28px,5vw,56px) 0;border-top:1px solid var(--hair,#d9d6cf)}
+@media (min-width:760px){.ending{grid-template-columns:minmax(160px,260px) minmax(0,1fr);gap:56px}}
+.endArt{width:min(260px,62vw)}
+.endArt svg{display:block;width:100%;height:auto;overflow:visible}
+.endText{display:grid;gap:14px;align-content:start}
+.seen{margin:0;font:700 clamp(24px,3.4vw,34px)/1.12 var(--sans,Helvetica,Arial,sans-serif);letter-spacing:-.02em}
+.take{margin:0;font:400 17px/1.55 var(--sans,Helvetica,Arial,sans-serif);max-width:52ch}
+.take b{font-weight:600}
+@media (prefers-reduced-motion:reduce){.pillIn{animation:none}}

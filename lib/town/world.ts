@@ -9,15 +9,20 @@ import {buildCoralCay} from './coralCayWorld';
 import {createCaySharks} from '../graphics/caySharks';
 import {createCayMantas} from '../graphics/cayMantas';
 import {createFarmDecor} from '../graphics/farmDecor';
-import {fadeBand} from './shallows';
 import {buildFarmersMarket} from './farmersMarket';
 import {MUSEUM_WING} from '../museum/museumDoors';
+import {buildMuseumExterior,MUSEUM_CANOPY,MUSEUM_ACCENT} from './museumExterior';
 import {createWaterRipples} from '../graphics/waterRipples';
+import {patchOceanMaterial,stepWaterTime} from '../graphics/waterSurface';
+import {createIslandShore} from '../graphics/islandShore';
+import {createSchemePicker,awningColour,type BuildingScheme} from './buildingStyles';
+import {createShapePicker} from './buildingShapes';
+import {buildSoftHouse} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
-import {ISLAND_SHORE,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from './shoreline';
+import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from './shoreline';
 import { Obstacle } from './simulation';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
@@ -109,18 +114,18 @@ export function* buildTownSteps(scene: T.Scene) {
   // A single ocean surrounds the curved foundation on every side.
   const waterRipples=createWaterRipples();textures.push(waterRipples.texture);
   const oceanMat=new T.MeshStandardMaterial({color:'#368eb3',map:waterRipples.texture,emissive:'#185a94',emissiveIntensity:.3,roughness:.52,metalness:.02});materials.push(oceanMat);
+  // Moving water (lib/graphics/waterSurface.ts): two drifting ripple layers off one shared clock; the fishing shore box adds swells.
+  patchOceanMaterial(oceanMat);
   // 1800 m wide since Coral Cay (x up to ~770): the east edge stays past the camera's 500 m far plane from the cay. UVs are
   // stretched with the width so the ripple tiles keep their size (texture repeat is set for 1400 m).
   const oceanGeometry=new T.PlaneGeometry(1800,1400),oceanUv=oceanGeometry.getAttribute('uv');for(let i=0;i<oceanUv.count;i++)oceanUv.setX(i,oceanUv.getX(i)*1800/1400);
   const water=new T.Mesh(oceanGeometry,oceanMat);water.rotation.x=-Math.PI/2;water.position.set(270,-.43,10);
-  // Shallows (Sep 29 2026): ONE shared lit material with per-vertex colour + alpha, fading from a light tint at the shore
-  // to fully transparent at sea. Used round the main coast, the causeway, the sandbars and Coral Cay. Its pieces join the
-  // 50 m spatial batches like any other mesh (one draw per chunk in view); depthWrite off, drawn after the opaque sea.
-  const shallowMat=new T.MeshStandardMaterial({vertexColors:true,transparent:true,depthWrite:false,roughness:.52,metalness:.02});materials.push(shallowMat);
-  const SHALLOW_Y=-.416;
-  const shallows=(g:T.BufferGeometry,x:number,z:number)=>{const m=new T.Mesh(g,shallowMat);m.position.set(x,SHALLOW_Y,z);m.castShadow=false;m.receiveShadow=true;m.userData.skipRoofObstacle=true;town.add(m);return m;};water.name='surrounding-ocean';scene.add(water);
-  const waves:T.Mesh[]=[];
-  for(let i=0;i<30;i++){const w=box(.055,.008,8+(i%5)*2,'#a9d9ed',-88-(i%6)*5,-.405,-300+i*13);w.rotation.y=.12;waves.push(w);}
+  water.name='surrounding-ocean';scene.add(water);
+  // Island-wide moving shoreline (lib/graphics/islandShore.ts): swash, foam, wet sand and the ocean's depth gradient off ONE shore
+  // field baked once at mount (Town calls islandShore.bake). It replaces the static shallows bands, the foam rings/lines round the
+  // cay, causeway and East Pier, and the 30 static wave boxes off the west coast (Oct 12 2026).
+  const shoreGroup=new T.Group();shoreGroup.name='island-shore-water';scene.add(shoreGroup);
+  const islandShore=createIslandShore(shoreGroup);
   function palm(x:number,z:number,height=6){prop('palm',()=>palmParts(x,z,height));}
   function palmParts(x:number,z:number,height=6){
     assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:6.5,visualD:6.5,canopyHeight:height});
@@ -148,10 +153,13 @@ export function* buildTownSteps(scene: T.Scene) {
     'CAFÉ MARÉ','PALM HOUSE','SURF & SOLE','COAST ROOMS','BAKERY',
     'RUA DO SOL','WEST END BOOKS','CASA DO SOL','CORNER DELI','PIER BAKERY']);
   const buildingRadius=(label:string)=>label==='CAFE BY THE SEA'?4:softBuildings.has(label)?1.5:0;
-  function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657'){
+  // Paint schemes (lib/town/buildingStyles.ts): recolour only plain palette boxes, which the batching pass folds into the
+  // same vertex-colour chunk draws, so varied streets cost no draw call, triangle or texture. Landmarks get null (as before).
+  function building(x:number,z:number,w:number,d:number,h:number,color:string,label:string,accent='#bd7657',scheme:BuildingScheme|null=null){
     const radius=buildingRadius(label),rounded=radius>0,knockout=label==='ROOFTOP KNOCKOUT',arcade=label==='ARCADE',front=w-radius*2;
-    if(rounded){roundedBlock(w,h,d,radius,color,x,0,z);roundedBlock(w+.45,.23,d+.5,radius+.2,'#eddfbb',x,h-.035,z);roundedBlock(w+.15,.35,d+.16,radius+.1,'#d2bc94',x,.005,z);}
-    else{box(w,h,d,color,x,h/2,z);box(w+.45,.23,d+.5,'#eddfbb',x,h+.08,z);box(w+.15,.35,d+.16,'#d2bc94',x,.18,z);}
+    const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
+    if(rounded){roundedBlock(w,h,d,radius,color,x,0,z);roundedBlock(w+.45,.23,d+.5,radius+.2,roofPaint,x,h-.035,z);roundedBlock(w+.15,.35,d+.16,radius+.1,plinth,x,.005,z);}
+    else{box(w,h,d,color,x,h/2,z);box(w+.45,.23,d+.5,roofPaint,x,h+.08,z);box(w+.15,.35,d+.16,plinth,x,.18,z);}
     obstacles.push({x,z,w,d,...(rounded?{cornerRadius:radius}:{})});
     const floors=Math.min(label==='CAFE BY THE SEA'?2:4,Math.floor(h/2.5)),columns=Math.max(2,Math.min(6,Math.floor(front/2)));
     for(let floor=0;floor<floors;floor++)for(let col=0;col<columns;col++){
@@ -160,18 +168,18 @@ export function* buildTownSteps(scene: T.Scene) {
       if(knockout&&(floor===0||xx<x+w/2-5))continue;
       // Arcade: keep the wall above the double door clear of windows/balconies.
       if(arcade&&floor>0&&Math.abs(xx-x)<2.4)continue;
-      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,'#f0debb',xx,yy-.65,z+d/2+.1);
-      if(!knockout&&floor>0&&col%2===0){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
+      box(.88,1.25,.06,'#365b56',xx,yy,z+d/2+.04);box(1.04,.09,.21,sill,xx,yy-.65,z+d/2+.1);
+      if(!knockout&&floor>0&&col%2===(scheme?.balconyOdd&&columns>2?1:0)){box(1.4,.11,.7,'#e9cfa5',xx,yy-.64,z+d/2+.35);for(let q=-2;q<=2;q++)cylinder(.018,.55,'#647169',xx+q*.26,yy-.32,z+d/2+.65);box(1.4,.04,.045,'#526b5e',xx,yy-.04,z+d/2+.65);}
     }
     // Side windows remain visible from the follow camera.
     for(let floor=0;floor<floors;floor++)for(let k=0;k<3;k++)if(!knockout||k!==1)box(.065,1.22,.86,'#3d625c',x+w/2+.035,1.4+floor*2.45,z-d/2+(k+.5)*d/3);
     if(knockout)return; // Plain stair wall: no shopfront, balcony or awning projections.
     // The arcade's name lives on its roof neon only; its awning splits around the door.
-    if(label&&!arcade)sign(label,front*.86,.62,x,2.45,z+d/2+.1);
+    if(label&&!arcade)sign(label,front*.86,.62,x,2.45,z+d/2+.1,scheme?.sign);
     if(arcade)for(const side of [-1,1])for(let col=0;col<3;col++){const inner=2.35,span=(front/2-inner)/3,awning=box(span,.10,1.3,col%2?'#ecdcb8':accent,x+side*(inner+(col+.5)*span),2.08,z+d/2+.58);awning.rotation.x=.14;}
-    else for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
+    else for(let col=0;col<8;col++){const awning=box(front/8,.10,1.3,scheme?awningColour(scheme,col,8):col%2?'#ecdcb8':accent,x-front/2+(col+.5)*front/8,2.08,z+d/2+.58);awning.rotation.x=.14;}
     box(front-.6,1.65,.06,'#274c48',x,.97,z+d/2+.07);
-    for(let col=1;col<3;col++)box(.055,1.7,.09,'#d7c49e',x-front/2+col*front/3,.96,z+d/2+.13);
+    for(let col=1;col<3;col++)box(.055,1.7,.09,mullion,x-front/2+col*front/3,.96,z+d/2+.13);
     if(label!=='ROOFTOP KNOCKOUT')box(1.2,1.1,1.1,'#dbccaa',x+w*.22,h+.7,z-d*.2);
   }
 
@@ -179,7 +187,19 @@ export function* buildTownSteps(scene: T.Scene) {
   const warm=['#d6b58a','#b88472','#d5aa83','#e2c69a'];
   const buildings:{x:number;z:number;w:number;d:number;height:number;name:string;cornerRadius?:number}[]=[];
   const roads:{x:number;z:number;w:number;d:number;carriageway:number;boulevard:boolean;vertical:boolean}[]=[];
+  const pickScheme=createSchemePicker();
+  // Soft silhouettes (lib/town/softHouses.ts): every building with a paint scheme (all but the landmarks) is drawn with rounded
+  // corners and one of the curated shapes. Same data as the box recipe: footprint, obstacle, height and roof furniture boxes.
+  const pickShape=createShapePicker();
   function house(x:number,z:number,w:number,d:number,h:number,label:string,index:number){
+    const scheme=pickScheme(label),shape=scheme?pickShape(label,buildingRadius(label)):null;
+    if(scheme&&shape){
+      const radius=buildingRadius(label);
+      obstacles.push({x,z,w,d,...(radius?{cornerRadius:radius}:{})});
+      buildSoftHouse({put,box,cylinder,sign},{x,z,w,d,h,label,index,scheme,shape,dataRadius:radius,wall:scheme.wall});
+      buildings.push({x,z,w,d,height:h+.23,name:label,...(radius?{cornerRadius:radius}:{})});
+      return;
+    }
     if(label==='CAFE BY THE SEA'){
       building(x,z,w,d,9,warm[index%warm.length],label,'#bd7657');
       buildings.push({x,z,w,d,height:9.23,name:label,cornerRadius:4});
@@ -190,16 +210,16 @@ export function* buildTownSteps(scene: T.Scene) {
       obstacles.push({x,z:northZ,w,d:20,cornerRadius:4});
       return;
     }
-    building(x,z,w,d,h,warm[index%warm.length],label,index%3?'#bd7657':'#477c6a');
+    building(x,z,w,d,h,scheme?.wall??warm[index%warm.length],label,index%3?'#bd7657':'#477c6a',scheme);
     buildings.push({x,z,w,d,height:h+.23,name:label,...(buildingRadius(label)?{cornerRadius:buildingRadius(label)}:{})});
     if(label==='CAFE BY THE SEA'||label==='ROOFTOP KNOCKOUT')return;
-    // Parapets, roof tanks, stepped roof rooms and visible drainpipes vary silhouettes.
-    for(const side of [-1,1])box(w,.42,.18,'#eddfbb',x,h+.4,z+side*(d/2-.15));
+    // Roof tanks, stepped roof rooms and visible drainpipes vary silhouettes. The straight roof-edge rails are gone (user, Oct 12
+    // 2026: "remove these side things on the building"); they were 0.18 m thin, never roof obstacles, so roof walking is unchanged.
     if(index%3===0){cylinder(.75,1.25,'#d2bc94',x-w*.23,h+.8,z-d*.18);cylinder(.82,.12,'#9d805b',x-w*.23,h+1.46,z-d*.18);}
-    if(index%3===1)box(w*.35,1.45,d*.42,warm[index%4],x-w*.16,h+.78,z-d*.12);
+    if(index%3===1)box(w*.35,1.45,d*.42,scheme?.wall??warm[index%4],x-w*.16,h+.78,z-d*.12);
     cylinder(.045,h,'#9d805b',x+w/2-.18,h/2,z+d/2+.14);
     // Doors, doorstep, number plaque and shutters make ordinary homes readable too.
-    box(1.15,1.95,.13,'#365b56',x-w*.26,1.02,z+d/2+.2);
+    box(1.15,1.95,.13,scheme?.door??'#365b56',x-w*.26,1.02,z+d/2+.2);
     box(1.65,.15,.8,'#d2bc94',x-w*.26,.1,z+d/2+.45);
     box(.18,.07,.05,'#f8d9a2',x-w*.26+.34,1.01,z+d/2+.29);
     if(index%2===0){box(1.1,.34,.42,'#b88472',x+w*.25,3.1,z+d/2+.45);for(const dx of [-.3,0,.3])put(new T.IcosahedronGeometry(.22,0),'#739568',x+w*.25+dx,3.38,z+d/2+.45);}
@@ -920,11 +940,8 @@ export function* buildTownSteps(scene: T.Scene) {
   // Palm Coast beach opens south of the garage; static shoreline costs no animation.
 
   path(11,79,5,22);path(2.75,90,104.5,4);path(53,79.5,4,17);
-  // Thin, curved pale shoreline follows the same outline as the land.
-  for(let i=0;i<ISLAND_SHORE.length;i++){const a=ISLAND_SHORE[i],b=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length];line(new T.Vector3(a.x,-.14,a.z),new T.Vector3(b.x,-.14,b.z),.12,'#f5e9cb');}
-  // The same fading shallows round the main coast (outward normals, flipped like fishingVisuals' shoreline band).
-  {const n=ISLAND_SHORE.length,normals=ISLAND_SHORE.map((p,i)=>{const a=ISLAND_SHORE[(i-1+n)%n],b=ISLAND_SHORE[(i+1)%n];let nx=b.z-a.z,nz=-(b.x-a.x);const l=Math.hypot(nx,nz)||1;nx/=l;nz/=l;if(onIsland(p.x+nx*2,p.z+nz*2)){nx=-nx;nz=-nz;}return {x:nx,z:nz};});
-   for(let a=0;a<n;a+=10){const idx=Array.from({length:11},(_,k)=>(a+k)%n),mid=ISLAND_SHORE[idx[5]];shallows(fadeBand(idx.map(i=>ISLAND_SHORE[i]),idx.map(i=>normals[i]),.3,5.2,false,mid.x,mid.z),mid.x,mid.z);}}
+  // The coast's edge is the sand ribbon's own rounded slope into the sea (fields.ts); the old row of 160 pale cylinders here
+  // read as a segmented pipe with gaps at every joint (Oct 12 2026).
   for(const [x,z] of [[-29,80],[-12,94],[35,96],[51,119],[51,138]])palm(x,z,5.5);
   for(const [x,z] of [[-18,101],[8,108],[32,116]]){
     cylinder(.045,2.5,'#9d805b',x,1.25,z);
@@ -1086,20 +1103,17 @@ export function* buildTownSteps(scene: T.Scene) {
   path(80,-110,24,16);path(63,-108,20,4);
   table(76,-108);table(85,-108);bench(78,-103);planter(70,-104);planter(89,-115);tree(92,-107);
   // Pier trading rooms frame the school-to-water route; the middle stays open.
-  for(const [x,label] of [[99,'PIER BAKERY'],[118,'COAST CAFÉ'],[168,'HISTORY MUSEUM']] as [number,string][])house(x,181,label==='HISTORY MUSEUM'?30:12,9,5,label,2);
-  sign('HISTORY MUSEUM',25,2.5,168,7.4,185.7,'#294f43','#f4cc7c');
-  sign('THE STORY OF FOOTBALL',18,.7,168,5.85,185.72,'#477c6a','#fff0cf');
-  // The museum's west wing (Oct 3 2026, user: "L shape building"): fills the lot between the museum's west wall (x 153), the
-  // high-school road sidewalk (z 171), the pier path (x 132.5–137.5) and the SOUTH PIER sign (z 203); main door stays the entrance.
-  {const {x,z,w,d,h}=MUSEUM_WING;building(x,z,w,d,h,warm[2],'YOUR COLLECTION','#bd7657');buildings.push({x,z,w,d,height:h+.23,name:'HISTORY MUSEUM WEST WING'});
-   box(.18,.42,d,'#eddfbb',x-w/2+.15,h+.4,z);box(w,.42,.18,'#eddfbb',x,h+.4,z+d/2-.15);cylinder(.045,h,'#9d805b',x-w/2+.18,h/2,z+d/2+.14);}
+  for(const [x,label] of [[99,'PIER BAKERY'],[118,'COAST CAFÉ']] as [number,string][])house(x,181,12,9,5,label,2);
+  // The History Museum and its west wing ("L shape building", Oct 3 2026), restyled Oct 10 2026 as a modern art museum to match
+  // the gallery inside: lib/town/museumExterior.ts (same footprints, roof height, door, names and obstacles; plaza included).
+  buildMuseumExterior({box,put,town,obstacles,rails:museumRails,buildings,surfaceAreas,textures,materials});
   // Connected promenades: museum front, cafe entrance, and the southern boardwalk.
   path(190.75,190,30.5,4);path(204,177,4,30);path(204,205.25,4,3.5);
   path(200,169,12,4);
   for(const x of [99,118]){path(x,196,15,15);table(x-2,195);bench(x+4,200);}
   path(203.25,196,13.5,15);table(200,195);bench(207,200);
-  // One rectangular museum forecourt, with a clear central route to the pier.
-  path(168,194.5,15,18);path(168,205.25,4,3.5);
+  // The museum plaza (museumExterior.ts) keeps a clear central route to the pier.
+  path(168,205.25,4,3.5);
   table(163,195);bench(172,200);
   // Fixed shade structures, showers and a fishing station give the shoreline use.
   for(const [x,z] of [[100,196],[200,196]]){
@@ -1281,11 +1295,11 @@ export function* buildTownSteps(scene: T.Scene) {
 
   buildEastCoast({box,put,obstacles,prop});
   // East Jetty (eastPierWorld.ts): static pieces join the same batches; its lamps join the night pools below.
-  const eastPier=buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets,prop});destinations.push(eastPier.destination);
+  const eastPier=buildEastPier({box,cylinder,put,sign,obstacles,assets,prop});destinations.push(eastPier.destination);
   // Coral Cay, its causeway and the two sandbar stops (lib/town/coralCayWorld.ts). Built before the batching pass below,
   // so it shares the same 50 m spatial paint batches; its lamps join the night pools after the lamp placement pass.
   yield;
-  const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,shallows,obstacles,buildings,assets,surfaceAreas,prop});
+  const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
   destinations.push(...coralCay.destinations);
 
   // Canonical centre lines remove offsets and duplicated dash phases. Touching
@@ -1391,7 +1405,7 @@ export function* buildTownSteps(scene: T.Scene) {
 
   // Steady welcoming pools connect learning venues and the surrounding streets.
   // These are painted light, not extra real-time lights or shadow passes.
-  const windowSources=['#365b56','#3d625c','#274c48'].map(color=>mat(color));
+  const windowSources=['#365b56','#3d625c','#274c48','#3e5f73'].map(color=>mat(color)); // + the museum's cooler glass (museumExterior.ts)
   for(const material of windowSources){material.emissive.set('#ffd294');material.emissiveIntensity=0;}
   const windowPaint=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.85,emissive:'#ffd294',emissiveIntensity:0});materials.push(windowPaint);
   const lampLens=mat('#ffe8ae');lampLens.emissive.set('#ffd294');lampLens.emissiveIntensity=0;
@@ -1542,7 +1556,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const position=new T.Vector3();
   // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
   const batchObject=(object:T.Object3D)=>{
-    if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.parent===ferry||waves.includes(object)||Array.isArray(object.material))return;
+    if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.parent===ferry||Array.isArray(object.material))return;
     object.getWorldPosition(position);
     const paint=object.castShadow?paintMaterials.get(object.material):undefined;
     const material=paint??object.material;
@@ -1645,6 +1659,6 @@ export function* buildTownSteps(scene: T.Scene) {
   const cayRegion=new T.Box3(new T.Vector3(220,-2,-330),new T.Vector3(800,16,20));let cayShown=true,sceneryShown=true;
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;};
   const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion);if(show!==cayShown){cayShown=show;applyCayVisibility();}};
-  return {sharks,mantas,farmDecor,updateSharks:updateCoralCay,cayChunkCount:cayChunks.size,get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown);},dynamicScenery:town,umbrellaReaction,propSpecs,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,8.8,185.8)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,landingExclusions,updateWater:waterRipples.update,updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,waves,oceanMat,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
-    updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{sharks.dispose();mantas.dispose();farmDecor.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
+  return {sharks,mantas,farmDecor,updateSharks:updateCoralCay,cayChunkCount:cayChunks.size,get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown);},dynamicScenery:town,umbrellaReaction,propSpecs,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,landingExclusions,updateWater:(dt:number,still:boolean)=>stepWaterTime(dt,still),updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+    updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{sharks.dispose();mantas.dispose();farmDecor.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

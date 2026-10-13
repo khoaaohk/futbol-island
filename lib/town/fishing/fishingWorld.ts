@@ -96,12 +96,12 @@ function signTexture(){
  * `player` + `session` enable live fishing in the island view (docs/fishing.md): the HUD starts a session, this module
  * steps it each frame, drives the rig (camera, rod, float, shadow) and places the in-world catch label.
  */
-export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:FishingSessionApi){
+export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:FishingSessionApi,renderer?:T.WebGLRenderer){
  const cam=createFishingCamera();let liveSpot=-1,visuals:FishingVisuals|null=null,fishing=false,stand={x:0,z:0},cast=castPoint(FISH_SPOTS[0],FISH_SPOTS[0]);const labelPoint=new T.Vector3();
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
  let catchLabelHeight=0;
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
- const makeVisuals=()=>{if(visualsModule&&player)return visualsModule.createFishingVisuals(scene,player);void loadFishingVisuals();return null;};
+ const makeVisuals=()=>{if(visualsModule&&player)return visualsModule.createFishingVisuals(scene,player,renderer);void loadFishingVisuals();return null;};
  const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel'||e==='pull')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
  const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;};
  const driver=player&&session?(c:FishingUpdate,near:number):number=>{
@@ -130,7 +130,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     visuals.setPose(ph==='caught'?'holdUp':ph==='casting'?(s.t<.25?'windup':'cast'):ph==='bite'||ph==='reeling'&&s.dip>.1?'strike':'hold');
     visuals.setBobber(ph==='ready'?{kind:'hanging'}:ph==='casting'?{kind:'flying',progress:s.t/CAST_TIME}:ph==='reeling'?{kind:'reeling',progress:s.reelTaps/Math.max(1,s.reelTarget)}:ph==='bite'?{kind:'under'}:ph==='caught'?{kind:'hidden'}:{kind:'floating'});
     const f=s.fish?fishById(s.fish.id):undefined;
-    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape}:null);
+    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape,id:f.id,color:f.color,mode:ph==='nibble'||ph==='bite'?ph:ph==='scared'||ph==='escaped'?'flee':'swim'}:null);
     visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
     visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
     for(const e of events)beat(e);}
@@ -250,6 +250,10 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   return {hovered:hoverKey>=0,hoverStarted,wants:(wantsFish?'fish':wantsSell?'sell':null) as 'fish'|'sell'|null,wantsDistance};
  }
  return {update,spots:FISH_SPOTS,
+  /** A session is on and its camera has arrived: Town freezes the background (lib/graphics/focusMode.ts). */
+  get focused(){return fishing&&cam.arrived;},
+  /** Where the angler stands (valid while `focused`). */
+  get stand(){return stand;},
   /** Call right after the follow camera is placed (like vending.applyCamera): eases to the low shoreline shot while fishing. */
   applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>cam.apply(camera,dt,reduced),
   dispose(){boat.dispose();visuals?.dispose();visuals=null;spotGlow.dispose();standGlow.dispose();spotGlowRoot.removeFromParent();standGlowRoot.removeFromParent();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(mat=>mat.dispose());textures.forEach(t=>t.dispose());floats.dispose();}};

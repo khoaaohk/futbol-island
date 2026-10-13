@@ -21,7 +21,27 @@ type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:num
  * Heat audit Sep 30 2026: their matrices are frozen too, so the renderer's per-frame matrix refresh no longer recomposes and multiplies
  * ~3,100 of them (it still visits them; they have no children). */
 const RELEASED=new T.BufferGeometry();
-function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});}
+function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});detachClassic(root);}
+/** NPC heat fix 2 (Oct 12 2026, user-approved): the classic parts above are also taken OFF the scene graph, so the renderer's
+ * matrix refresh, render-list build and shadow traversal no longer visit them (≈ 37 of a townsperson's ≈ 60 objects: the 35
+ * released meshes, the hidden classic jersey with its shirt-number decal, and the classic long-hair group). A part counts as
+ * classic-only when the bean skin flagged it (userData.beanHidden), or it is a hidden non-bean mesh whose children are all
+ * classic-only, or it is the classic long-hair group. Joints (Groups the bean skin reads), bean meshes (userData.beanPart, even a
+ * hidden bean hat) and everything added later (name tag, glow shells, activity props) stay. The detached parts keep their
+ * materials in the rig's lists (rig.dispose frees them); their geometry is the shared empty RELEASED one or the rig's own spine
+ * surface / number decal (also freed by rig.dispose). Nothing re-shows them: a townsperson's appearance is set once (no costume,
+ * no setAppearance/setShirtNumber later), so the skin's restore never runs; picking, the name tag, npcShadowBatch (skips
+ * beanHidden and hidden meshes) and the onboarding glow (shells only on what is in the graph) see only the drawn parts. */
+const classicOnly=(o:T.Object3D):boolean=>o.userData.beanHidden===true||(o instanceof T.Mesh&&!o.visible&&!o.userData.beanPart&&o.children.every(classicOnly))||(o.name==='female-long-hair'&&o.children.every(classicOnly));
+function detachClassic(root:T.Object3D){const off:T.Object3D[]=[];const visit=(o:T.Object3D)=>{for(const child of o.children){if(classicOnly(child))off.push(child);else visit(child);}};visit(root);for(const o of off)o.removeFromParent();return off.length;}
+/** NPC heat fix 1 (Oct 12 2026, user-approved): beyond FAR_POSE metres (from the player, like the older 32 m rule) a walking or
+ * idle townsperson solves its pose at 10 Hz. The ticks are phase-locked to one shared clock with a per-townsperson offset
+ * (poseSlot, golden-ratio spread over the 0.1 s step), so about a third of them pose on any 30 fps frame and the spread never
+ * collapses (a per-entry timer reset on pose drifts into lock-step after frame-time hiccups). The root still follows the route
+ * position every frame, so it glides smoothly; only the skeletal solve is spaced out (poseDt carries the time since the last
+ * solve, so gait phase is unchanged). Riders and runners (travel), stunned townsfolk, truck witnesses and anyone within FAR_POSE
+ * pose every frame; court freestylers keep the older 32 m rule (their ball follows the solved feet). */
+const FAR_POSE=20,POSE_HZ=10;
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[];
@@ -35,7 +55,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(material);
-  const label=new T.Sprite(material);label.visible=false;label.position.y=2.5;label.scale.set(3.5,1.094,1);label.userData.npcId=definition.id;rig.root.add(label);
+  const label=new T.Sprite(material);label.visible=false;label.position.y=2.5;label.scale.set(3.5,1.094,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
   const position={x,y:authoredRoute?.[0].y??placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const freestyle=definition.freestyle===undefined?null:createCourtFreestyle(rig,definition.freestyle,definition.id);
   const activity=definition.activity?createNpcActivity(definition.activity,rig):null;
@@ -53,13 +73,13 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(authoredRoute){route.splice(0,route.length,...authoredRoute.map(p=>({...p})));routine.speed=.9;routine.socialCooldown=Infinity;
    if(definition.id==='cafe-oren'){routine.waypoint=authoredRoute.findIndex(p=>p.pause===7);Object.assign(position,route[routine.waypoint]);routine.target={...position};rig.root.position.set(position.x,position.y,position.z);}
   }
-  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle),route,routine,near:false,stunned:false,labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
+  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle),route,routine,near:false,stunned:false,labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  // Freestyle pairs on the court (freestyleRoutine.ts): one shared timeline, so the ball they pass meets both. `freestyleClock` is
  // the routines' shared clock; it stops while the island is paused (a conversation), like their tricks.
  for(const [a,b] of FREESTYLE_PAIRS){const A=entryById.get(a),B=entryById.get(b);if(A?.freestyle&&B?.freestyle)linkFreestylePair(A.freestyle,B.freestyle,A.position,B.position);}
- let freestyleClock=0;
+ let freestyleClock=0,poseClock=0;
  const viewFrustum=new T.Frustum(),viewMatrix=new T.Matrix4(),viewSphere=new T.Sphere();
  const stats={posed:0,offscreenSkipped:0,slowRoutine:0};
  const truckWitnesses=new Map<string,{remaining:number;x:number;z:number}>();
@@ -74,6 +94,8 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const nearest=(player:Position,maxDistance=6)=>{if(tagFocus&&!reactions?.get('npc:'+tagFocus.id)&&!isThinned(tagFocus)&&Math.hypot(tagFocus.position.x-player.x,tagFocus.position.z-player.z,tagFocus.position.y-player.y)<maxDistance)return tagFocus.definition;let best:NpcDefinition|null=null,distance=maxDistance;for(const entry of entries){if(reactions?.get('npc:'+entry.id)||isThinned(entry))continue;const d=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);if(d<distance){distance=d;best=entry.definition;}}return best;};
  /** Heat pass 4 (lib/graphics/islandHeat): tier 3 / Battery saver draws and poses ambient townsfolk only within this range. */
  let drawLimit:number|null=null;
+ /** Fishing focus mode (lib/graphics/focusMode.ts): townsfolk farther than r from (x, z) hold still (no routine, no posing; still drawn). */
+ let focusAt:{x:number;z:number;r:number}|null=null;const heldByFocus=(e:{position:{x:number;z:number}})=>focusAt!==null&&Math.hypot(e.position.x-focusAt.x,e.position.z-focusAt.z)>focusAt.r;
  const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
  // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
  const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((_,i)=>i%5===1||i%5===3))).has(entry);
@@ -81,7 +103,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   stats.posed=stats.offscreenSkipped=0;if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7;entry.stunned=Boolean(reactions?.get('npc:'+entry.id));}
   neighborhood.length=0;frozen.clear();
-  for(const entry of entries){if(isThinned(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
+  for(const entry of entries){if(isThinned(entry)||heldByFocus(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
   for(const [id,witness] of truckWitnesses){witness.remaining-=paused?0:dt;if(witness.remaining<=0)truckWitnesses.delete(id);else frozen.add(id);}
   // Heat pass 5: townsfolk off screen (frustum + margin) step their routines at 10 Hz (the stepper's own 0.1 s clamp); anyone near,
   // stunned, frozen or in a conversation, and everyone on screen, steps every frame. Posing is already skipped off screen.
@@ -90,9 +112,9 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=8+Math.max(0,entry.position.y)*1.4;
    (viewFrustum.intersectsSphere(viewSphere)?fastRoutine:slowRoutine).push(entry);}
   advanceNpcRoutines(fastRoutine,paused?0:dt,canTravel,frozen);
-  freestyleClock+=paused?0:dt;slowRoutineDt+=paused?0:dt;if(slowRoutineDt>=.1||!slowRoutine.length){if(slowRoutine.length)advanceNpcRoutines(slowRoutine,slowRoutineDt,canTravel,frozen);stats.slowRoutine=slowRoutine.length;slowRoutineDt=0;}
+  freestyleClock+=paused?0:dt;poseClock+=paused?0:dt;slowRoutineDt+=paused?0:dt;if(slowRoutineDt>=.1||!slowRoutine.length){if(slowRoutine.length)advanceNpcRoutines(slowRoutine,slowRoutineDt,canTravel,frozen);stats.slowRoutine=slowRoutine.length;slowRoutineDt=0;}
   for(const id of truckWitnesses.keys())if(id!==hoveredId)frozen.delete(id);
-  for(const entry of entries){if(frozen.has(entry.id))continue;const distance=entry.distance;entry.rig.root.visible=!isThinned(entry)&&distance<(drawLimit??(desktop?96:72));if(entry.ride)entry.ride.root.visible=entry.rig.root.visible&&!entry.stunned;entry.rigElapsed+=paused?0:dt;if(!entry.rig.root.visible&&!entry.stunned)continue;if(camera&&!entry.near&&!entry.stunned){viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=5+Math.max(0,entry.position.y)*1.4;if(!viewFrustum.intersectsSphere(viewSphere)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);if(entry.ride)entry.ride.root.position.copy(entry.rig.root.position);stats.offscreenSkipped++;continue;}}if(distance>32&&!entry.definition.travel&&!['walk','approach'].includes(entry.routine.mode)&&!entry.stunned&&entry.rigElapsed<.1)continue;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
+  for(const entry of entries){if(frozen.has(entry.id)||heldByFocus(entry))continue;const distance=entry.distance;entry.rig.root.visible=!isThinned(entry)&&distance<(drawLimit??(desktop?96:72));if(entry.ride)entry.ride.root.visible=entry.rig.root.visible&&!entry.stunned;entry.rigElapsed+=paused?0:dt;if(!entry.rig.root.visible&&!entry.stunned)continue;if(camera&&!entry.near&&!entry.stunned){viewSphere.center.set(entry.position.x,entry.position.y+1.5,entry.position.z);viewSphere.radius=5+Math.max(0,entry.position.y)*1.4;if(!viewFrustum.intersectsSphere(viewSphere)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);if(entry.ride)entry.ride.root.position.copy(entry.rig.root.position);stats.offscreenSkipped++;continue;}}const bucket=Math.floor((poseClock+entry.poseSlot)*POSE_HZ);if(bucket===entry.poseBucket&&!entry.definition.travel&&!entry.stunned&&!truckWitnesses.has(entry.id)&&(entry.freestyle?distance>32&&entry.routine.mode!=='walk'&&entry.routine.mode!=='approach':distance>FAR_POSE)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);continue;}entry.poseBucket=bucket;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
    let facing=entry.near?Math.atan2(player.x-entry.position.x,player.z-entry.position.z):r.mode==='social'&&partner?Math.atan2(partner.position.x-entry.position.x,partner.position.z-entry.position.z):r.mode==='work'?entry.definition.workYaw:undefined;
    if(r.mode==='rest')facing=(entry.definition.workYaw??0)+(reduced?0:Math.sin(r.clock*.35)*.4);
    if(entry.freestyle?.facing!==undefined)facing=entry.freestyle.facing; // a pair trick: face the partner until the rally ends
@@ -125,5 +147,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  };
  const visibleInScene=(object:T.Object3D)=>{for(let current:T.Object3D|null=object;current;current=current.parent){if(!current.visible)return false;}return true;};
  const pick=(raycaster:T.Raycaster)=>{if(!root.visible)return null;const hit=raycaster.intersectObject(root,true).find(hit=>hit.distance<90&&visibleInScene(hit.object)&&hit.object.userData.npcId&&!reactions?.get('npc:'+hit.object.userData.npcId));return hit?NPC_DIALOGUES.find(npc=>npc.id===hit.object.userData.npcId)??null:null;};
- return {reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number}|null){focusAt=f;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

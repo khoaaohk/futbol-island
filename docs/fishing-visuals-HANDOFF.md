@@ -63,7 +63,7 @@ This file is original art only: no Nintendo assets, names, sounds or UI copy.
   - `heading`: a yaw, with the fish facing the float while it approaches.
   - `alpha`: 0..1. It fades in on approach and out when the fish flees.
 - **`holdUpFish({color, lengthCm} | null)`**: the caught fish held above the head. The species is in `fishCatalog`, but you get the colour and the length in cm.
-- **`setCoastVisible(visible)`**: the shoreline foam and ripples near the spots. It is true within 45 m of a spot or while fishing.
+- **`setCoastVisible(visible)`**: true within 45 m of a spot or while fishing. Since Oct 12 2026 it is a no-op: the static foam/ripple decals were replaced by the moving shoreline (`shoreWater.ts`: swash, wet sand, caustics, swells via the shared ocean shader `lib/graphics/waterSurface.ts`) and ambient fish schools (`fishSchools.ts`), both started in `begin()` and faded out after `end()`. `createFishingVisuals` takes the renderer as an optional third argument (one top-down height render per spot builds the shore distance field); without it the shore stays still.
 
 **One-shot beats** (called once, on the event)
 - **`splash('land')`**: the float lands, 0.7 s after the cast.

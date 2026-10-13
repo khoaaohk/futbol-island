@@ -18,5 +18,17 @@ export const EXTRA_SOURCES:MuseumSource[]=[
  {title:'Balls.ie · Packie Bonner and others who helped inspire rule changes in their sport',url:'https://www.balls.ie/football/rule-changes-sport-360063'},
  {title:'Sky Sports · Eight-second rule to reduce time-wasting by goalkeepers approved',url:'https://www.skysports.com/football/news/11095/13321150/eight-second-rule-to-reduce-time-wasting-by-goalkeepers-approved-for-next-season'},
 ];
-/** The two mini-matches are our own game, not footage: said plainly in the panel. */
-export const FICTION_NOTE='The two little matches are a game we made to show the idea. The facts on this page are real history.';
+/** The little game is our own invention, not footage: said plainly in the panel. */
+export const FICTION_NOTE='“Kill the Clock” and “Beat the press” are little games we made to show the idea. The facts on this page are real history.';
+/** The ref's calls (kept from the Oct 10 quick check, Quiz.tsx): the score screen asks one; the room's story lists the rest. */
+export type Call={q:string;options:readonly string[];answer:number;why:string};
+export const CALLS:readonly Call[]=[
+ {q:'Your team-mate KICKS the ball back to the keeper on purpose. Can the keeper pick it up?',options:['Yes, hands are fine','No: feet only'],answer:1,
+  why:'Since 1992 the keeper must play it with the feet. If he handles it, the other team gets an indirect free kick.'},
+ {q:'Your team-mate HEADS the ball back to the keeper. Can the keeper pick it up?',options:['Yes','No'],answer:0,
+  why:'Yes! The law is about kicks, so a header or a chest pass back is allowed. A trick, like flicking it up to head it back, is not.'},
+ {q:'Why was the law changed in 1992?',options:['To give keepers a rest','To stop teams wasting time','To score more headers'],answer:1,
+  why:'Under the old law a keeper could hold the ball while nobody was allowed to tackle him. The new law kept the ball moving.'},
+ {q:'1997: a team-mate takes a throw-in straight to the keeper. Can he catch it?',options:['Yes','No'],answer:1,
+  why:'No. In 1997 the law grew: a throw-in from a team-mate can’t be handled by the keeper either.'},
+];

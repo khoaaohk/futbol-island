@@ -1,9 +1,9 @@
 import {timelineOrder,type Exhibit} from '@/lib/endgame/museum';
-import {FIGURES} from './hairline/figures';
-import type {FigureDef} from './hairline/figure';
 /**
- * The eras on the timeline: the museum's own cases in timelineOrder(), each with its hairline figure and ONE line quoted word for
- * word from that case's facts (picked by index, so the text can never drift from lib/endgame/museum.ts). No new facts here.
+ * The eras on the timeline: the museum's own cases in timelineOrder(), each with ONE line quoted word for word from that case's
+ * facts (picked by index, so the text can never drift from lib/endgame/museum.ts). No new facts here.
+ * Anatomy restyle (Oct 12 2026): ONE accent for the whole exhibit (blue, the museum's primary palette); chapters are told by
+ * their numbers and titles, not by colour.
  */
 export const FACT_LINE:Readonly<Record<string,number>>={
  'laws-1863':0,      // the FA wrote down one set of rules
@@ -20,7 +20,7 @@ export const FACT_LINE:Readonly<Record<string,number>>={
  'hall-of-fame':0,   // your certificates hang here
 };
 /**
- * The story's chapters (Oct 9 2026): a 7–12-year-old reads the scroll as five chapters and an ending, not twelve loose dates.
+ * The story's chapters (Oct 9 2026): a 7–12-year-old reads the timeline as five chapters and an ending, not twelve loose dates.
  * Framing words only (no new facts): each title sums up the cases under it.
  */
 export const CHAPTERS:readonly {n:number;title:string;ids:readonly string[]}[]=[
@@ -32,9 +32,12 @@ export const CHAPTERS:readonly {n:number;title:string;ids:readonly string[]}[]=[
  {n:6,title:'Your turn',ids:['hall-of-fame']},
 ];
 export const chapterOf=(id:string)=>CHAPTERS.find(c=>c.ids.includes(id))??null;
-export type Era={exhibit:Exhibit;fact:string;figure:FigureDef;tick:string};
-/** The tick label under the scrubber: the year, or a short form of "Before the 1960s". */
+/** The exhibit's one accent (the museum's primary blue). */
+export const ACCENT='#2a5bd7';
+export const accentOf=(_id:string)=>ACCENT;
+export type Era={exhibit:Exhibit;fact:string;tick:string;accent:string};
+/** The tick label under the year rail: the year, or a short form of "Before the 1960s". */
 export const tickLabel=(year:string)=>/before/i.test(year)?`<${year.match(/\d{4}s?/)?.[0]??year}`:year;
 export function eras(list?:readonly Exhibit[]):Era[]{
- return timelineOrder(list).map(e=>({exhibit:e,fact:e.facts[FACT_LINE[e.id]??0]??e.facts[0]??'',figure:FIGURES[e.id],tick:tickLabel(e.year)})).filter(x=>!!x.figure);
+ return timelineOrder(list).map(e=>({exhibit:e,fact:e.facts[FACT_LINE[e.id]??0]??e.facts[0]??'',tick:tickLabel(e.year),accent:accentOf(e.id)}));
 }

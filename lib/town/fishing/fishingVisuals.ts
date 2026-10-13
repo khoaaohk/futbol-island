@@ -1,10 +1,11 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {ISLAND_SHORE,onIsland} from '../shoreline';
-import {clearOfCayShores} from '../coralCay';
 import {FISH_SPOTS,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCatalog';
-import {castPoint} from './fishingCore';
+import {createFishingWater} from './shoreWater';
+import {createFishSchools} from './fishSchools';
 import {speciesModel,releaseSpeciesModels,type ShadowKind,type SpeciesModel} from './fishModels';
+import {patchUnderwater,seabedStyle,uwDepthAt,UW_SURFACE} from './underwater';
+import {graphicsQuality} from '../../graphics/quality';
 
 /**
  * FISHING VISUALS — original shoreline art behind a small interface (hand-off: docs/fishing-visuals-HANDOFF.md).
@@ -32,14 +33,16 @@ export interface FishingVisuals{
  nibble():void;
  /** The fish shadow (or null to hide): size class, position relative to the float, heading (radians, yaw), 0..1 opacity. */
  /* `shape` (optional, Oct 5 2026) picks a cheap silhouette: sharks, rays, octopus/squid and crabs read differently from a fish. */
- showShadow(shadow:{size:ShadowSize;pos:Vec2;heading:number;alpha:number;shape?:FishShape}|null):void;
+ /* `id` / `color` (optional, Oct 12 2026): in the clear water the catch is drawn as its own species, with the shadow on the seabed. */
+ /* `mode` (optional, Oct 12 2026): while it nibbles and bites, the swimming catch comes up under the float, nose up at the bait. */
+ showShadow(shadow:{size:ShadowSize;pos:Vec2;heading:number;alpha:number;shape?:FishShape;id?:string;color?:string;mode?:'swim'|'nibble'|'bite'|'flee'}|null):void;
  /** The held-up catch above the angler (or null). */
  /* `shape` (optional, added Sep 28 2026 by the fishing agent for the new sea animals: crab, ray, eel, seahorse …) is
     fishCatalog's FishShape so the art can tell a crab from a fish. `id` (optional, Oct 5 2026) picks the species' own model
     (fishModels.ts): a shrimp looks like a shrimp, a haddock has its thumbprint. Without it the shape picks a generic animal. */
  setReelingFish(fish:CatchLook|null):void;
  holdUpFish(fish:CatchLook|null):void;
- /** The static shoreline foam / ripple lines near the spots. */
+ /** Near a spot (45 m). Since Oct 12 2026 the shore is the moving water built when a session begins (shoreWater.ts); kept for the driver. */
  setCoastVisible(visible:boolean):void;
  /** World point for the in-world catch label (above the angler's head). */
  labelAnchor(out:T.Vector3):T.Vector3;
@@ -50,34 +53,20 @@ export interface FishingVisuals{
 }
 
 const SURFACE=-.398,ROD=1.7,LINE_N=20;
-/** Small hand-painted decals: transparent edges, no full-screen water shader. */
-function coastTexture(foam:boolean){
- const c=document.createElement('canvas');c.width=512;c.height=128;const g=c.getContext('2d')!;
- let seed=19;const r=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
- if(foam){
-  // Separate looping strands leave the sea visible between them, unlike a solid strip.
-  g.strokeStyle='#edfff4';g.lineCap='round';
-  for(let j=0;j<3;j++){g.beginPath();for(let x=0;x<=512;x+=4){const y=22+j*24+Math.sin(x*.037+j)*9+Math.sin(x*.071)*4;if(x===0)g.moveTo(x,y);else g.lineTo(x,y);}g.lineWidth=3-j*.6;g.globalAlpha=.8-j*.18;g.stroke();}
-  for(let i=0;i<72;i++){const x=r()*512,y=8+r()*100;g.globalAlpha=.12+r()*.4;g.lineWidth=1+r()*1.8;g.beginPath();g.ellipse(x,y,3+r()*12,2+r()*5,r()*.4,0,Math.PI*2);g.stroke();}
- }else{
-  const grad=g.createLinearGradient(0,0,0,128);grad.addColorStop(0,'rgba(24,89,142,0)');grad.addColorStop(.25,'rgba(40,126,174,.18)');grad.addColorStop(.6,'rgba(48,143,176,.48)');grad.addColorStop(.9,'rgba(103,193,209,.68)');grad.addColorStop(1,'rgba(155,219,205,.25)');g.fillStyle=grad;g.fillRect(0,0,512,128);
-  for(let i=0;i<100;i++){const x=r()*512,y=10+r()*110;g.strokeStyle=i%3?'#a0e2e8':'#2269a4';g.globalAlpha=.08+r()*.12;g.lineWidth=.5+r()*1.4;g.beginPath();g.moveTo(x,y);g.quadraticCurveTo(x+8,y+2,x+12+r()*22,y-1);g.stroke();}
- }
- const t=new T.CanvasTexture(c);t.wrapS=T.RepeatWrapping;t.colorSpace=T.SRGBColorSpace;return t;
-}
-
 /** The catch material: flat-shaded vertex colours, with a vertex-shader wag (no CPU vertex work) and per-vertex glow. */
 type FishFx={material:T.MeshStandardMaterial;setAnim(a:SpeciesModel['anim']):void;drive(phase:number,amp:number):void};
-function fishMaterial():FishFx{
+function fishMaterial(underwater=false):FishFx{
  const u={uPhase:{value:0},uAmp:{value:0},uStart:{value:0},uSpan:{value:.5},uAxis:{value:new T.Vector3(1,0,0)},uDir:{value:new T.Vector3(0,0,1)},uK:{value:new T.Vector3(5,0,0)}};
- const material=new T.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.55,metalness:0,side:T.DoubleSide});
+ const material=new T.MeshStandardMaterial({vertexColors:true,flatShading:true,roughness:.55,metalness:0,side:T.DoubleSide,transparent:underwater});
  material.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uPhase,uAmp,uStart,uSpan;uniform vec3 uAxis,uDir,uK;attribute float glow;varying float vGlow;')
    .replace('#include <begin_vertex>','#include <begin_vertex>\nvGlow=glow;{float w=clamp((dot(position,uAxis)-uStart)/uSpan,0.,1.);transformed+=uDir*(uAmp*w*w*sin(uPhase-dot(position,uK)));}');
   // A soft self-lift keeps the toon colours bright in the low camera; glow (photophores, lures) shines.
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vGlow;').replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vColor.rgb*(.12+vGlow*1.4);');
+  // The catch swimming under the clear water: tinted by its depth like the coral and the ambient fish (underwater.ts).
+  if(underwater)patchUnderwater(sh);
  };
- material.customProgramCacheKey=()=>'fishing-catch-wag-v1';
+ material.customProgramCacheKey=()=>underwater?'fishing-catch-wag-under-v1':'fishing-catch-wag-v1';
  return {material,setAnim(a){u.uAxis.value.set(...a.axis);u.uDir.value.set(...a.dir).normalize();u.uK.value.set(...a.k);u.uStart.value=a.start;u.uSpan.value=a.span;},drive(phase,amp){u.uPhase.value=phase;u.uAmp.value=amp;}};
 }
 /** How far the held model's lowest point hangs below its origin, in model units (octopus arms, seahorse tails). */
@@ -99,7 +88,7 @@ function silhouette(kind:ShadowKind){
  const g=mergeGeometries(parts)!;parts.forEach(p=>p.dispose());g.rotateX(-Math.PI/2);return g;
 }
 
-export function createFishingVisuals(scene:T.Scene,player:T.Object3D):FishingVisuals{
+export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T.WebGLRenderer):FishingVisuals{
  const root=new T.Group();root.name='fishing-live';root.visible=false;scene.add(root);
  const geometries:T.BufferGeometry[]=[],materials:T.Material[]=[],textures:T.Texture[]=[];
  const keep=<G extends T.BufferGeometry>(g:G)=>{geometries.push(g);return g;},mat=<M extends T.Material>(m:M)=>{materials.push(m);return m;};
@@ -125,42 +114,26 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D):FishingVis
  const empty=keep(new T.BufferGeometry());
  const held=new T.Mesh(empty,heldFx.material);held.name='fishing-held-fish';held.castShadow=true;held.visible=false;root.add(held);
  const reeledFish=new T.Mesh(empty,reelFx.material);reeledFish.name='fishing-reeled-fish';reeledFish.visible=false;root.add(reeledFish);
- let heldModel:SpeciesModel|null=null,reelModel:SpeciesModel|null=null,heldLift=0;
+ // Clear water (Oct 12 2026): the catch approaching the float is drawn as its own species under the surface (one more draw while it
+ // is there), depth-tinted like the ambient fish; the dark silhouette becomes its shadow on the seabed, so the "fish shadow" cue stays.
+ const catchFx=fishMaterial(true);mat(catchFx.material);
+ const catchFish=new T.Mesh(empty,catchFx.material);catchFish.name='fishing-catch-swimmer';catchFish.renderOrder=.65;catchFish.visible=false;catchFish.raycast=()=>{};root.add(catchFish);
+ let heldModel:SpeciesModel|null=null,reelModel:SpeciesModel|null=null,catchModel:SpeciesModel|null=null,heldLift=0;
+ // The catch's bite pose (visual only; fishingCore's timings and cues are untouched): `biteBlend` eases it from where it swims to
+ // under the float, nose up with its mouth at the hook; `peck` is the quick dart on each nibble, `lunge` the strong pull on the bite.
+ const catchSwim={x:0,y:0,z:0,heading:0,len:1,depth:1,mode:'swim' as 'swim'|'nibble'|'bite'|'flee',alpha:0};let biteBlend=0,peck=0,lunge=0,catchYaw=0,catchFresh=true;
+ const catchPos=new T.Vector3(),BITE_PITCH=.8;
  const look=(m:T.Mesh,fx:FishFx,f:CatchLook)=>{const model=speciesModel(f.id,f.shape,f.color);if(m.geometry!==model.geometry)m.geometry=model.geometry;fx.setAnim(model.anim);return model;};
  let swimPhase=0;
  const spray=new T.InstancedMesh(keep(new T.SphereGeometry(.035,6,4)),mat(new T.MeshBasicMaterial({color:'#e3fff9',transparent:true,opacity:.85,depthWrite:false})),12);spray.visible=false;spray.frustumCulled=false;root.add(spray);let sprayAge=1,spraySize=1,sprayX=0,sprayZ=0;const dropMatrix=new T.Object3D();
 
- // Shoreline foam band + a light shallow band + ripple lines near every spot: static, merged, only toggled visible.
- const foamTex=coastTexture(true),waterTex=coastTexture(false);textures.push(foamTex,waterTex);
- const foamParts:T.BufferGeometry[]=[],bandParts:T.BufferGeometry[]=[],lineParts:T.BufferGeometry[]=[],n=ISLAND_SHORE.length;
- /** Four faint ripple arcs round a spot's float (merged into the one static ripple-line mesh). */
- function addRippleLines(c:{x:number;z:number;dir:{x:number;z:number}}){
-  for(let r=0;r<4;r++){const ang=Math.atan2(c.dir.x,c.dir.z)+(r-1.5)*.55,dist=4+r*2.2,x=c.x+Math.sin(ang)*dist*.6+c.dir.x*(r%2?1.5:-.5),z=c.z+Math.cos(ang)*dist*.6+c.dir.z*(r%2?1.5:-.5);
-   const g=new T.RingGeometry(1.6+r*.4,1.625+r*.4,32,1,0,1.1);g.rotateX(-Math.PI/2);g.rotateY(ang+Math.PI/2);g.translate(x,SURFACE+.002,z);if(!onIsland(x,z)&&clearOfCayShores(x,z))lineParts.push(g.toNonIndexed());g.dispose();}
- }
- for(const s of FISH_SPOTS){
-  const c=castPoint(s,s),pts:number[]=[];
-  // The causeway and Coral Cay spots (Oct 5 2026) keep their own beaches' foam: no main-island ribbon (Seawall Gate Sands is
-  // 17 m off the main coast), just the ripple lines round the float.
-  if(s.area)addRippleLines(c);
-  if(s.area)continue;
-  for(let i=0;i<n;i++){const p=ISLAND_SHORE[i];if(Math.hypot(p.x-c.x,p.z-c.z)<22)pts.push(i);}
-  if(pts.length<2)continue;let run=[pts[0]];for(let k=1;k<pts.length;k++){if(pts[k]-pts[k-1]===1)run.push(pts[k]);else if(run.length<k)run=[pts[k]];}
-  const ribbon=(width:number,uScale:number,parts:T.BufferGeometry[])=>{const pos:number[]=[],uv:number[]=[],colors:number[]=[],idx:number[]=[];let u=0;
-   run.forEach((i,k)=>{const a=ISLAND_SHORE[(i-1+n)%n],b=ISLAND_SHORE[(i+1)%n],p=ISLAND_SHORE[i];let nx=b.z-a.z,nz=-(b.x-a.x);const l=Math.hypot(nx,nz)||1;nx/=l;nz/=l;if(onIsland(p.x+nx*2,p.z+nz*2)){nx=-nx;nz=-nz;}
-    if(k>0){const q=ISLAND_SHORE[run[k-1]];u+=Math.hypot(p.x-q.x,p.z-q.z)/uScale;}const w=width*(.85+.3*Math.sin(i*1.7));
-    pos.push(p.x-nx*.3,SURFACE,p.z-nz*.3,p.x+nx*(w-.3),SURFACE,p.z+nz*(w-.3));uv.push(u,1,u,0);const edge=Math.min(1,k/2,(run.length-1-k)/2),alpha=edge*edge*(3-2*edge);colors.push(1,1,1,alpha,1,1,1,alpha);if(k>0){const o=(k-1)*2;idx.push(o,o+1,o+2,o+1,o+3,o+2);}});
-   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));g.setAttribute('color',new T.Float32BufferAttribute(colors,4));g.setIndex(idx);parts.push(g.toNonIndexed());g.dispose();};
-  ribbon(1.25,7,foamParts);ribbon(26,24,bandParts);
-  addRippleLines(c);
- }
- const coast=new T.Group();coast.name='fishing-shore-foam';coast.visible=false;scene.add(coast);
- const addCoast=(parts:T.BufferGeometry[],m:T.Material,order:number)=>{if(!parts.length)return;const g=keep(mergeGeometries(parts)!);parts.forEach(p=>p.dispose());coast.add(Object.assign(new T.Mesh(g,mat(m)),{renderOrder:order}));};
- addCoast(bandParts,new T.MeshBasicMaterial({map:waterTex,vertexColors:true,transparent:true,opacity:1,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1}),1);
- addCoast(foamParts,new T.MeshBasicMaterial({map:foamTex,vertexColors:true,transparent:true,depthWrite:false,side:T.DoubleSide}),2);
- addCoast(lineParts,new T.MeshBasicMaterial({color:'#d9f7f0',transparent:true,opacity:.2,depthWrite:false,side:T.DoubleSide}),2);
- coast.traverse(o=>{o.matrixAutoUpdate=false;o.updateMatrix();});
-
+ // Moving water (Oct 12 2026): the swash, wet sand, caustics and swells round the active spot (shoreWater.ts, one strip draw + the
+ // ocean's own draw) and ambient fish schools (fishSchools.ts, one instanced draw). Replaces the static foam / band / ripple decals.
+ // ?fishwater=0 (A/B measurements only) leaves the shore still and the schools out.
+ const waterOn=typeof window==='undefined'||new URLSearchParams(window.location.search).get('fishwater')!=='0';
+ // Phones (every heat tier): fewer seabed props, a simpler fish body, no sway (underwater.ts / fishSchools.ts).
+ const phone=typeof window!=='undefined'&&graphicsQuality().phone;
+ const water=renderer&&waterOn?createFishingWater(scene,renderer,phone):null,schools=createFishSchools(scene,phone);
  let active=false,stand:Vec2={x:0,z:0},cast:Vec2={x:0,z:0},dir:Vec2={x:0,z:1},pose:FishingPose='hold',bobState:BobberState={kind:'hanging'},dip=0,shadowOn=false,heldFish:CatchLook|null=null;
  let reelTravel=0,landingAge=1,reelingFish:CatchLook|null=null;const landingFrom=new T.Vector3();
  const hv=new T.Vector3(),tip=new T.Vector3(),bob=new T.Vector3(),tmp=new T.Vector3();
@@ -169,24 +142,35 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D):FishingVis
  const ring=(size:number,life:number)=>{const r=rings.reduce((a,b)=>a.age/a.life>b.age/b.life?a:b);r.mesh.position.set(cast.x-dir.x*reelDistance(),SURFACE+.01,cast.z-dir.z*reelDistance());r.age=0;r.life=life;r.size=size;r.mesh.visible=true;};
  const ringsBusy=()=>rings.some(r=>r.mesh.visible)||sprayAge<.6;
  return {
-  begin(s,c,d){active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
-  end(){active=false;rod.visible=line.visible=bobber.visible=false;shadow.visible=false;held.visible=false;reeledFish.visible=false;reelingFish=null;shadowOn=false;heldFish=null;if(!ringsBusy())root.visible=false;},
+  begin(s,c,d){const spot=FISH_SPOTS.reduce((a,b)=>Math.hypot(b.x-s.x,b.z-s.z)<Math.hypot(a.x-s.x,a.z-s.z)?b:a);
+   const halfWidth=typeof window!=='undefined'&&window.innerWidth<window.innerHeight?4.5:9;
+   water?.begin(s,d,spot,halfWidth);if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,seabedStyle(spot),spot.id);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
+  end(){water?.end();schools.end();active=false;rod.visible=line.visible=bobber.visible=false;shadow.visible=false;catchFish.visible=false;held.visible=false;reeledFish.visible=false;reelingFish=null;shadowOn=false;heldFish=null;if(!ringsBusy())root.visible=false;},
   setPose(p){pose=p;},
   setBobber(s){bobState=s;},
-  splash(size){sprayAge=0;sprayX=cast.x-dir.x*reelDistance();sprayZ=cast.z-dir.z*reelDistance();spraySize=size==='bite'||size==='hook'?1.5:.7;if(size==='land')ring(.9,.9);else if(size==='bite'){ring(1.5,1.1);ring(.8,.7);ring(2.1,1.4);}else if(size==='hook'){ring(1.2,.8);ring(2.1,1.4);}else ring(.7,.7);},
-  nibble(){dip=1;if(bobState.kind==='reeling'){reelImpulse=1;ring(.8,.7);sprayAge=0;spraySize=.45;sprayX=cast.x-dir.x*reelDistance();sprayZ=cast.z-dir.z*reelDistance();}else ring(.55,.6);},
-  showShadow(sh){shadowOn=!!sh&&sh.alpha>.01;shadow.visible=shadowOn;if(!sh)return;shadow.position.set(cast.x+sh.pos.x-dir.x*reelDistance(),SURFACE-.001,cast.z+sh.pos.z-dir.z*reelDistance());// The silhouette head is local -Z; simulation headings point along +Z.
+  splash(size){if(size==='bite')lunge=1;schools.scatter(cast.x-dir.x*reelDistance(),cast.z-dir.z*reelDistance(),size==='bite'||size==='hook'?1.2:size==='land'?1:.7);sprayAge=0;sprayX=cast.x-dir.x*reelDistance();sprayZ=cast.z-dir.z*reelDistance();spraySize=size==='bite'||size==='hook'?1.5:.7;if(size==='land')ring(.9,.9);else if(size==='bite'){ring(1.5,1.1);ring(.8,.7);ring(2.1,1.4);}else if(size==='hook'){ring(1.2,.8);ring(2.1,1.4);}else ring(.7,.7);},
+  nibble(){dip=1;if(catchSwim.mode==='nibble')peck=1;if(bobState.kind==='reeling'){reelImpulse=1;ring(.8,.7);sprayAge=0;spraySize=.45;sprayX=cast.x-dir.x*reelDistance();sprayZ=cast.z-dir.z*reelDistance();}else ring(.55,.6);},
+  showShadow(sh){shadowOn=!!sh&&sh.alpha>.01;shadow.visible=shadowOn;const clear=!!water?.field;catchFish.visible=shadowOn&&clear;if(!sh)return;
+   const x=cast.x+sh.pos.x-dir.x*reelDistance(),z=cast.z+sh.pos.z-dir.z*reelDistance(),depth=clear?uwDepthAt(water!.field!.distance(x,z)):0;
+   // Clear water: the silhouette lies on the seabed under the swimming catch; without the clear water (A/B) it stays at the surface.
+   shadow.position.set(x,clear?UW_SURFACE-depth+.012:SURFACE-.001,z);shadow.renderOrder=clear?.58:1;// The silhouette head is local -Z; simulation headings point along +Z.
    const kind=shadowKind(sh.shape);if(kind!==shKind){shKind=kind;({geo:shGeo,rest:shadowRest}=shadowGeo(kind));shadow.geometry=shGeo;}
-   shadow.rotation.y=sh.heading+Math.PI;shadow.scale.setScalar(SHADOW_LENGTH[sh.size]);shadowMat.opacity=.5*sh.alpha;},
+   shadow.rotation.y=sh.heading+Math.PI;shadow.scale.setScalar(SHADOW_LENGTH[sh.size]);shadowMat.opacity=(clear?.36:.5)*sh.alpha;
+   if(clear){catchModel=look(catchFish,catchFx,{color:sh.color??'#8aa0a8',lengthCm:40,shape:sh.shape,id:sh.id});
+    // The model's nose is local −X (see the reeled fish): face the heading. Near the surface, so it reads clearly over the seabed.
+    // Placed in frame() (the bite pose eases in and out there); here only where it swims.
+    Object.assign(catchSwim,{x,z,y:UW_SURFACE-Math.min(.42,Math.max(.2,depth-.25)),heading:sh.heading,len:SHADOW_LENGTH[sh.size]*.95,depth,mode:sh.mode??'swim',alpha:sh.alpha});
+    catchFx.material.opacity=Math.min(1,sh.alpha*1.3);}
+   else catchFresh=true;},
   setReelingFish(f){reelingFish=f;reeledFish.visible=!!f;if(f)reelModel=look(reeledFish,reelFx,f);},
   holdUpFish(f){if(f&&!heldFish){landingAge=0;landingFrom.copy(bob);}heldFish=f;held.visible=!!f;
    if(f){heldModel=look(held,heldFx,f);heldLift=liftWhenHeld(heldModel);}},
-  setCoastVisible(v){if(coast.visible!==v)coast.visible=v;},
+  setCoastVisible(){},
   labelAnchor(out){const hd=head;if(hd)hd.getWorldPosition(out);else out.set(stand.x,1.3,stand.z);out.y+=.55;return out;},
-  get busy(){return active||ringsBusy();},
+  get busy(){return active||ringsBusy()||!!water?.busy||schools.busy;},
   frame(dt,elapsed,reduced){
    if(sprayAge<.6){sprayAge+=dt;spray.visible=!reduced&&sprayAge<.6;for(let i=0;i<12&&spray.visible;i++){const a=i*Math.PI*2/12,t=sprayAge/.6,r=(.12+t*.65)*spraySize;dropMatrix.position.set(sprayX+Math.cos(a)*r,SURFACE+Math.sin(t*Math.PI)*(.3+(i%3)*.1)*spraySize,sprayZ+Math.sin(a)*r);dropMatrix.scale.setScalar((1-t)*(.7+(i%3)*.3));dropMatrix.updateMatrix();spray.setMatrixAt(i,dropMatrix.matrix);}if(spray.visible)spray.instanceMatrix.needsUpdate=true;}
-   if(active&&!reduced)waterTex.offset.x=Math.sin(elapsed*.2)*.012;
+   water?.frame(dt,reduced);schools.frame(dt,reduced,active&&(bobState.kind==='floating'||bobState.kind==='under'||bobState.kind==='reeling')?{x:bob.x,z:bob.z}:null);
    for(const r of rings){if(!r.mesh.visible)continue;r.age+=dt;const k=r.age/r.life;if(k>=1){r.mesh.visible=false;continue;}r.mesh.scale.setScalar(r.size*(.35+k*.9));(r.mesh.material as T.MeshBasicMaterial).opacity=.75*(1-k);}
    if(!active){if(!ringsBusy())root.visible=false;return;}
    dip=Math.max(0,dip-dt*4);const reelTarget=bobState.kind==='reeling'?Math.min(2.7,Math.hypot(cast.x-stand.x,cast.z-stand.z)*.5)*bobState.progress:0;reelTravel=reduced?reelTarget:reelTravel+(reelTarget-reelTravel)*(1-Math.exp(-dt*14));
@@ -227,8 +211,27 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D):FishingVis
    }
    // The wag (shader): the same phases the old tail / fin rotations used, scaled by each species' own amplitude.
    if(reelModel)reelFx.drive(swimPhase-1,reduced?0:reelModel.anim.amp*(1+dip*1.2));
+   if(catchModel&&catchFish.visible)catchFx.drive(swimPhase,reduced?0:catchModel.anim.amp*(1+dip));
    if(heldModel)heldFx.drive(swimPhase*1.4,reduced?0:heldModel.anim.amp*.8);
-   if(reelingFish){shadow.visible=false;const len=Math.min(1.2,Math.max(.62,reelingFish.lengthCm/85));reeledFish.scale.setScalar(len);const sway=reduced?0:Math.sin(swimPhase*.5)*(.05+dip*.11);
+   if(catchFish.visible){
+    // Swim → bite pose. Hook point: just under the float, on the line. The mouth (model nose, local −X) goes there, the body
+    // pitched nose-up toward it and facing in from where the fish was; pecks dart in and back, the bite lunges and tugs.
+    const k=reduced?1:1-Math.exp(-dt*(catchSwim.mode==='nibble'||catchSwim.mode==='bite'?3.2:2.6));
+    biteBlend+=((catchSwim.mode==='nibble'||catchSwim.mode==='bite'?1:0)-biteBlend)*(reduced?1:Math.min(1,dt/.45));
+    peck=Math.max(0,peck-dt/.28);lunge=Math.max(0,lunge-dt/.5);
+    const e=biteBlend*biteBlend*(3-2*biteBlend),len=catchSwim.len,hx=bob.x,hz=bob.z,hy=Math.min(SURFACE-.14,bob.y-.16);
+    let fx=hx-catchSwim.x,fz=hz-catchSwim.z;const fl=Math.hypot(fx,fz);if(fl>.05){fx/=fl;fz/=fl;}else{fx=Math.sin(catchSwim.heading);fz=Math.cos(catchSwim.heading);}
+    const pitch=BITE_PITCH*e,c=Math.cos(pitch),sn=Math.sin(pitch),dart=.06-(reduced?0:Math.sin(peck*Math.PI)*.1+Math.sin(lunge*Math.PI)*.16);
+    // Body centre for a mouth at the hook (nose is half a length ahead along the pitched axis), held off the seabed.
+    const bx=hx-fx*(dart*c+len*.5*c),bz=hz-fz*(dart*c+len*.5*c),by=Math.max(UW_SURFACE-catchSwim.depth+len*.5*sn+.05,hy-dart*sn-len*.5*sn);
+    const tx=catchSwim.x+(bx-catchSwim.x)*e,ty=catchSwim.y+(by-catchSwim.y)*e,tz=catchSwim.z+(bz-catchSwim.z)*e;
+    if(catchFresh){catchPos.set(tx,ty,tz);catchYaw=catchSwim.heading;catchFresh=false;}else catchPos.set(catchPos.x+(tx-catchPos.x)*k,catchPos.y+(ty-catchPos.y)*k,catchPos.z+(tz-catchPos.z)*k);
+    let turn=Math.atan2(fx,fz)-catchSwim.heading;turn=Math.atan2(Math.sin(turn),Math.cos(turn));const yawTarget=catchSwim.heading+turn*e;
+    let dy=yawTarget-catchYaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));catchYaw+=dy*(reduced?1:Math.min(1,dt*5));
+    catchFish.position.copy(catchPos);catchFish.scale.setScalar(len);catchFish.rotation.set(0,catchYaw+Math.PI/2,-pitch,'YZX');
+    // The seabed silhouette stays exactly where fishingCore puts the fish (the gameplay cue: nose-first approach and flight).
+   }
+   if(reelingFish){shadow.visible=false;catchFish.visible=false;const len=Math.min(1.2,Math.max(.62,reelingFish.lengthCm/85));reeledFish.scale.setScalar(len);const sway=reduced?0:Math.sin(swimPhase*.5)*(.05+dip*.11);
     // -X (the nose) points back toward the angler, in the direction of the reel travel.
     reeledFish.rotation.set(reduced?0:Math.sin(swimPhase)*.09,Math.atan2(dir.x,dir.z)-Math.PI/2+(reduced?0:Math.sin(swimPhase*.7)*(.12+reelImpulse*.25)),reduced?0:Math.sin(swimPhase*.65)*.07);
     // Authoritative attachment is the nose at local -X, not the fish centre or
@@ -246,6 +249,6 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D):FishingVis
     // faces out to sea. Flat animals tip their back toward the camera; the octopus hangs its arms down (model.hold).
     const hm=heldModel;held.rotation.set(hm?.hold.x??0,Math.atan2(dir.x,dir.z)-.3,.15+(hm?.hold.z??0)+(reduced?0:Math.sin(landingAge*Math.PI)*.65),'YZX');}
   },
-  dispose(){spray.dispose();releaseSpeciesModels();root.removeFromParent();coast.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());},
+  dispose(){water?.dispose();schools.dispose();spray.dispose();releaseSpeciesModels();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());},
  };
 }

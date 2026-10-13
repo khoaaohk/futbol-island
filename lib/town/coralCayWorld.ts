@@ -6,7 +6,6 @@ import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
-import {fadeBand} from './shallows';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Mesh=T.Mesh;
@@ -22,8 +21,6 @@ export type CayTools={
  planter:(x:number,z:number)=>void;
  path:(x:number,z:number,w:number,d:number)=>void;
  districtSign:(text:string,x:number,z:number)=>void;
- /** Adds a shallows band geometry (shallows.ts fadeBand, built relative to x/z) with the shared fading material. */
- shallows:(g:T.BufferGeometry,x:number,z:number)=>void;
  obstacles:Obstacle[];
  buildings:{x:number;z:number;w:number;d:number;height:number;name:string;cornerRadius?:number}[];
  assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number;baseY?:number}[];
@@ -38,7 +35,7 @@ function mergeRows(parts:T.BufferGeometry[]){const pos:number[]=[],nor:number[]=
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setIndex(idx);return g;}
 
 export function buildCoralCay(t:CayTools){
- const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,shallows,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
+ const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
  const lampSites:CayLampSite[]=[];
  const farmDecor:DecorPlant[]=[];
  const z0=CAUSEWAY.z,P=CAUSEWAY_PATH,deck=CAUSEWAY.deckHalf;
@@ -79,13 +76,9 @@ export function buildCoralCay(t:CayTools){
  // tapers its alpha to nothing over its first and last ~14 m, blending into the main-coast and cay-coast bands.
  const landIndex=(side:RoadSide)=>{let i=lastWater;while(i<last){const q=offsetPoint(P[i],side*(deck+2.6));if(onCay(q.x,q.z))break;i++;}return Math.min(last,i+3);};
  for(const side of [-1,1] as RoadSide[]){
-  const end=landIndex(side),b0=Math.max(0,firstWater-5),b1=Math.min(last,end+6),taper=7;
+  const end=landIndex(side);
   strip(firstWater,end,()=>side*deck,()=>side*(deck+2.4),-.02,-.5,'#bca987');
-  strip(firstWater,end,p=>side*(contact(p,side)-.25),p=>side*(contact(p,side)+.3+wobble(p,side,1)*.3),-.405,-.405,'#f5e9cb',false,60);
-  // One wide shallows band fading out to sea (shared material, smooth outer edge); pieces share their end samples.
-  const ends=(j:number)=>Math.min(1,(j-b0)/taper,(b1-j)/taper);
-  for(let a=b0;a<b1;a+=60){const b=Math.min(b1,a+60),run=P.slice(a,b+1),mid=P[(a+b)>>1];
-   shallows(fadeBand(run.map(p=>offsetPoint(p,0)),run.map(p=>({x:-p.tz*side,z:p.tx*side})),i=>contact(run[i],side),5.2,false,mid.x,mid.z,i=>{const t=ends(a+i);return t*t*(3-2*t);}),mid.x,mid.z);}
+  // The foam line and the shallows tint here are drawn by the island-wide moving shoreline (lib/graphics/islandShore.ts).
  }
  // Centre dashes share a 6 m rhythm along the curve, turned to the road's heading.
  for(let s=8;s<P[last].s-4;s+=6){const p=P[Math.round(s/P[last].s*last)];if(Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ARM_END+2)continue;const d=box(2,.008,.12,'#e6d7b5',p.x,.008,p.z);d.rotation.y=-Math.atan2(p.tz,p.tx);}
@@ -254,8 +247,12 @@ export function buildCoralCay(t:CayTools){
  /** Soft shoreline round a star-shaped outline (sandbars, the cay): a wet-sand skirt sloping into the sea, a foam line
   *  where it meets the water and two shallow-water tints, offset along each point's outward radial direction. One mesh
   *  per band, built relative to the centre. */
- function shoreRings(points:{x:number;z:number}[],cx:number,cz:number,topY:number,skirt=2.6){
-  const n=points.length,dirs=points.map(p=>{const dx=p.x-cx,dz=p.z-cz,l=Math.hypot(dx,dz)||1;return {x:dx/l,z:dz/l};});
+ function shoreRings(points:{x:number;z:number}[],cx:number,cz:number,topY:number,skirt=2.6,alongNormal=false){
+  // `alongNormal` (the cay's smooth spline coast): offset each point along the coast's own outward normal instead of the radial
+  // direction, so the skirt's quads stay flat instead of twisting into long skewed facets that read as steps along the beach
+  // and cut a zig-zag waterline (Oct 12 2026). The star-shaped sandbars keep the radial offset (no folds at their spikes).
+  const n=points.length,dirs=points.map((p,i)=>{const dx=p.x-cx,dz=p.z-cz,l=Math.hypot(dx,dz)||1;if(!alongNormal)return {x:dx/l,z:dz/l};
+   const a=points[(i+n-1)%n],b=points[(i+1)%n];let nx=b.z-a.z,nz=-(b.x-a.x);const m=Math.hypot(nx,nz)||1;nx/=m;nz/=m;if(nx*dx+nz*dz<0){nx=-nx;nz=-nz;}return {x:nx,z:nz};});
   const ring=(d0:(i:number)=>number,d1:(i:number)=>number,y0:number,y1:number,color:string)=>{const positions:number[]=[],indices:number[]=[];
    for(let i=0;i<n;i++){const p=points[i],d=dirs[i];positions.push(p.x-cx+d.x*d0(i),y0,p.z-cz+d.z*d0(i),p.x-cx+d.x*d1(i),y1,p.z-cz+d.z*d1(i));const a=i*2,b=((i+1)%n)*2;indices.push(a,b,a+1,b,b+1,a+1);}
    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
@@ -263,8 +260,6 @@ export function buildCoralCay(t:CayTools){
    flat(put(g,color,cx,0,cz));};
   const w=(i:number,k:number)=>.35*Math.sin(i*.9+k)+.25*Math.sin(i*2.3+k*2),edge=skirt*(.43+topY)/(.47+topY)*.97;
   ring(()=>0,()=>skirt,topY,-.47,'#dfc99e');
-  ring(()=>edge-.25,i=>edge+.3+w(i,1)*.3,-.405,-.405,'#f5e9cb');
-  shallows(fadeBand(points,dirs,edge,5.2,true,cx,cz),cx,cz);
  }
  /** A prop spot on the sandbar: the requested offset, pulled toward the centre until it stands on walkable sand. */
  const onBar=(s:Sandbar,dx:number,dz:number,margin=0)=>{for(let k=1;k>.2;k-=.05){const x=s.x+dx*k,z=s.z+dz*k;if([[0,0],[margin,0],[-margin,0],[0,margin],[0,-margin]].every(([a,b])=>onSandbarStop(x+a,z+b)))return {x,z};}return {x:s.x,z:s.z};};
@@ -304,7 +299,7 @@ export function buildCoralCay(t:CayTools){
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
   const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
- shoreRings(CAY_SHORE,C.x,C.z,-.11,3);
+ shoreRings(CAY_SHORE,C.x,C.z,-.11,3,true);
 
  // ---- Village: boulevard, plaza and a row of shops facing the road (house() fronts face +z, like the main island).
  CAY_HOUSES.forEach(([x,z,w,d,h,label],i)=>house(x,z,w,d,h,label,[2,0,1,3][i]));

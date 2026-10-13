@@ -11,7 +11,9 @@ export type IslandHeatTargets={renderer:ShadowRenderer;sun:Sun;resolution:{setLi
 
 export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}:IslandHeatTargets){
  const governor=new ThermalGovernor();const hidden=new Set<Car>();
- let tier:HeatTier=effectiveTier(),settings:TierSettings=TIERS[tier],frame=0,spectating=false,limitApplied=-1;const options=heatOptions();
+ let tier:HeatTier=effectiveTier(),settings:TierSettings=TIERS[tier],frame=0,spectating=false,limitApplied=-1,focused=false;const options=heatOptions();
+ // Fishing focus mode (lib/graphics/focusMode.ts): the background is frozen, so only the angler's shadow moves: refresh at half rate.
+ const shadowEvery=()=>Math.max(settings.shadowEvery,focused?2:1);
  // fewerAmbient (visible option, off): every 5th-and-3rd ordinary car (40%) is not drawn. Enabling it for real also needs them out of the traffic sim.
  const thinned=(car:Car)=>options.fewerAmbient&&governed&&!car.pickup&&(car.index%5===1||car.index%5===3);
  const applyLimit=()=>{const l=Math.min(settings.maxPixelRatio,spectating&&options.spectateDpr125&&governed?1.25:Infinity);if(l!==limitApplied){limitApplied=l;resolution.setLimit(l);}};
@@ -21,7 +23,7 @@ export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}
  const apply=(next:HeatTier)=>{
   tier=next;settings=TIERS[next];applyLimit();npcs.setDrawDistance(settings.npcDrawDistance);
   const size=Math.min(baseShadow,settings.shadowSize);if(sun.shadow.mapSize.x!==size){const prev=sun.shadow.mapSize.x;sun.shadow.mapSize.set(size,size);if(sun.shadow.normalBias!==undefined)sun.shadow.normalBias*=prev/size;/* the fit sets 2 texels; keep 2 texels at the new size */sun.shadow.map?.dispose();sun.shadow.map=null;}
-  renderer.shadowMap.autoUpdate=settings.shadowEvery<=1;renderer.shadowMap.needsUpdate=true;frame=0;
+  renderer.shadowMap.autoUpdate=shadowEvery()<=1;renderer.shadowMap.needsUpdate=true;frame=0;
   if(settings.trafficDrawDistance===null)restoreTraffic();
  };
  // Hidden debug readout (quality pass): open the island with ?heat=1 to see the tier, resolution, frame rate and the governor's view.
@@ -37,11 +39,14 @@ export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}
   /** Frame slot for the capped loop: 30 fps, 24 fps at tier 3 (a uniform rate; never per-object); 24 fps while spectating with the spectate24 option. */get frameMs(){return frameMsNow();},
   get spectating(){return spectating;},
   force:forceHeatTier,
+  /** Fishing focus on/off: shadow refresh every 2nd frame while on (the tier's own cadence if slower). */
+  setFocus(on:boolean){if(on===focused)return;focused=on;renderer.shadowMap.autoUpdate=shadowEvery()<=1;renderer.shadowMap.needsUpdate=true;frame=0;},
+  get focused(){return focused;},
   /** Right before renderer.render: shadow refresh cadence and far-traffic thinning (render only; every car keeps driving). */
   beforeRender(player:{x:number;z:number},isSpectating=false){
    if(isSpectating!==spectating){spectating=isSpectating;applyLimit();}
    if(options.fewerAmbient&&governed)for(const car of traffic.cars)if(thinned(car)&&car.group.visible){car.group.visible=false;hidden.add(car);}
-   if(settings.shadowEvery>1){if(frame%settings.shadowEvery===0)renderer.shadowMap.needsUpdate=true;frame++;}
+   const every=shadowEvery();if(every>1){if(frame%every===0)renderer.shadowMap.needsUpdate=true;frame++;}
    const limit=settings.trafficDrawDistance;if(limit===null)return;
    for(const car of traffic.cars){const far=!car.pickup&&car.index!==traffic.rider.index&&Math.hypot(car.group.position.x-player.x,car.group.position.z-player.z)>limit;
     if(far&&!hidden.has(car)&&car.group.visible){car.group.visible=false;hidden.add(car);}else if(!far&&hidden.has(car)){car.group.visible=true;hidden.delete(car);}}

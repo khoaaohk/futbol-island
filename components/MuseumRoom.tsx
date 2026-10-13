@@ -22,6 +22,7 @@ import {refreshMuseumDeparture,MUSEUM_RETURN_URL} from '@/lib/museum/museumDoors
 import {museumSfx,museumClickTarget,unlockMuseumAudio,createMuseumAmbience,MUSEUM_UNLOCK_EVENTS,type MuseumAmbience} from '@/lib/museum/museumSound';
 import {konbiniAudioContext} from '@/lib/konbini/konbiniSound';
 import type {MuseumScene,MuseumZoomView} from '@/lib/museum/museumScene';
+import {accentOf} from '@/lib/museum/museumAtlas';
 import type {MuseumPoi} from '@/lib/museum/museumLayout';
 const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
@@ -44,7 +45,7 @@ const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,l
  */
 type Counts=MuseumCounts&{ready:boolean;collection:MuseumCollection};
 /** The header's four collection chips, in each gallery's colour. */
-const COUNT_WORD={balls:'balls',cards:'cards',books:'books',graduations:'grads'} as const,COUNT_ART={balls:'#2f8f8a',cards:'#d8466f',books:'#e0a33a',graduations:'#477c6a'} as const;
+const COUNT_WORD={balls:'balls',cards:'cards',books:'books',graduations:'grads'} as const,COUNT_ART={balls:'#2a5bd7',cards:'#e4322b',books:'#f2c230',graduations:'#1f8a5b'} as const;
 export default function MuseumRoom(){
  const counts=useMuseumCounts(),record=useGraduations();
  // Freeze what the cases show for this visit once the stores are read (nothing is collected inside the museum).
@@ -107,6 +108,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   const obs=new MutationObserver(apply);obs.observe(root,{childList:true});return()=>obs.disconnect();},[experience]);
  const joyRect=useJoystickBounds(joy,ready&&!zoom&&!covered);
 
+ // Done exits straight away (door slide, then the island), no walk to the door first (user, Oct 10 2026).
  const leave=()=>{if(leavingRef.current)return;leavingRef.current=true;ambience.current?.fadeOut(.4);setTimeout(()=>ambience.current?.dispose(),420);setWalkingOut(true);setGuideOpen(false);setCert(null);room.current?.clearInput();refreshMuseumDeparture();setLeaving(true);
   setTimeout(()=>window.location.assign(MUSEUM_RETURN_URL),matchMedia('(prefers-reduced-motion:reduce)').matches?60:520);};
  /** Look at a spot: zoom onto a case or wall; the guide opens their panel. */
@@ -151,16 +153,16 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   if(!zoom||!zoom.arrived)return null;
   if(zoom.id==='timeline')return <div className={styles.tag} data-museum-card="timeline"><div className={styles.tagHead}><span className={styles.eyebrow}>Timeline wall</span><h2>The story of football</h2></div>
    <p>Every case in date order. Tap a year to go to its case.</p>
-   <ol className={styles.years}>{timelineOrder().map(e=>{const s=exhibitState(e,counts);return <li key={e.id}><button type="button" data-museum-year={e.id} data-open={s.open} style={{'--g':galleryOf(e.gallery).art} as React.CSSProperties} aria-label={`${e.year}: ${e.title}${s.open?'':'. Locked'}`} onClick={()=>room.current?.zoomTo(e.id)}>
+   <ol className={styles.years}>{timelineOrder().map(e=>{const s=exhibitState(e,counts);return <li key={e.id}><button type="button" data-museum-year={e.id} data-open={s.open} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} aria-label={`${e.year}: ${e.title}${s.open?'':'. Locked'}`} onClick={()=>room.current?.zoomTo(e.id)}>
     <b>{e.year}{visits.seen.includes(e.id)&&<i className={styles.yearSeen} data-museum-year-seen aria-label=" (visited)"/>}</b><span>{s.open?e.title:<><i className={styles.lockIcon} aria-hidden="true"/>{e.title}</>}</span></button></li>;})}</ol>
    <p className={styles.small} data-museum-passport={pass.seen}>{pass.seen} of {pass.total} exhibits visited. Step inside to collect a stamp for each one.</p></div>;
-  if(zoom.id==='my-balls'){const found=COIN_QUEST.filter(spot=>counts.collection.balls.includes(spot.id));return <div className={styles.tag} data-museum-card="my-balls" style={{'--g':'#477c6a'} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>Your hidden balls</h2></div>
+  if(zoom.id==='my-balls'){const found=COIN_QUEST.filter(spot=>counts.collection.balls.includes(spot.id));return <div className={styles.tag} data-museum-card="my-balls" style={{'--g':accentOf('hall')} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>Your hidden balls</h2></div>
    <p data-museum-found={found.length}><b>{found.length} of {COIN_QUEST.length}</b> found. Each one sits on its own peg.</p>
    <div className={styles.progress} role="progressbar" aria-label="Hidden balls found" aria-valuemin={0} aria-valuemax={COIN_QUEST.length} aria-valuenow={found.length}><i style={{width:`${found.length/COIN_QUEST.length*100}%`}}/></div>
    {found.length?<details className={styles.sources} open={found.length<=3}><summary>What your balls taught you</summary><ul className={styles.collectionList}>{found.map(spot=><li key={spot.id}><b>{spot.name}</b> {spot.teaching}</li>)}</ul></details>
     :<p className={styles.small}>{UNLOCK_WORDS.balls.how}</p>}</div>;}
   if(zoom.id==='my-cards'||zoom.id==='my-books'){const cards=zoom.id==='my-cards',items=cards?counts.collection.cards:counts.collection.books,kind=cards?'cards':'books';
-   return <div className={styles.tag} data-museum-card={zoom.id} style={{'--g':'#477c6a'} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>{cards?'Your player cards':'Your pop-up books'}</h2></div>
+   return <div className={styles.tag} data-museum-card={zoom.id} style={{'--g':accentOf('hall')} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>{cards?'Your player cards':'Your pop-up books'}</h2></div>
     <p>{cards?counts.collection.cardLesson:counts.collection.bookLesson}</p>
     <p data-museum-have={items.length}><b>{items.length} {items.length===1?UNLOCK_WORDS[kind].one:UNLOCK_WORDS[kind].many}</b>{items.length>(cards?10:18)?` (the ${cards?'table':'shelves'} show${cards?'s':''} the first ${cards?10:18})`:''}</p>
     {items.length?<ul className={styles.collectionList}>{items.map(item=><li key={item.id}><b>{item.label}</b>{item.detail?` · ${item.detail}`:''}</li>)}</ul>:<p className={styles.small}>{UNLOCK_WORDS[kind].how}</p>}</div>;}
@@ -168,7 +170,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    <p>Every path you graduate hangs its certificate here.</p><Certificates earned={earned} open={id=>{if(isCertificateId(id))setCert(id);}}/></div>;
   if(!exhibit)return null;
   const g=galleryOf(exhibit.gallery),s=exhibitState(exhibit,counts),shown=open[exhibit.id]&&s.open;
-  return <div className={styles.tag} data-museum-card={exhibit.id} data-open={shown} style={{'--g':g.art} as React.CSSProperties}>
+  return <div className={styles.tag} data-museum-card={exhibit.id} data-open={shown} style={{'--g':accentOf(g.id)} as React.CSSProperties}>
    <div className={styles.tagHead}><span className={styles.eyebrow}>{g.title} · {exhibit.year}</span><h2>{exhibit.title}</h2></div>
    {shown?<>
     <ul className={styles.facts}>{exhibit.facts.map(f=><li key={f}>{f}</li>)}</ul>
@@ -184,7 +186,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
  return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom} data-story={storyCase&&!!zoom?.arrived||undefined}>
-  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton label="Done" data-museum-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
+  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
    {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>openExperience('timeline')}>Step inside</button>}
    {zoom?.arrived&&zoom.id!=='timeline'&&EXPERIENCES[zoom.id]&&open[zoom.id]&&<button type="button" className={styles.stepInside} data-museum-step-inside={zoom.id} data-visited={visits.seen.includes(zoom.id)||undefined} onClick={()=>openExperience(zoom.id)}>
@@ -208,7 +210,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    {zoom.arrived&&(storyCase&&exhibit?<MuseumStory key={zoom.id} exhibit={exhibit} open={!!open[exhibit.id]} counts={counts} hooks={storyHooks}/>:<div className={styles.card} key={zoom.id}>{card()}</div>)}
    {spinning&&<p className={styles.hint} aria-hidden="true">Drag to spin</p>}
   </>}
-  {timelineId&&!zoom&&(()=>{const e=EXHIBITS.find(x=>x.id===timelineId);if(!e)return null;const s=exhibitState(e,counts);return <p key={timelineId} className={styles.yearPop} style={{'--g':galleryOf(e.gallery).art} as React.CSSProperties} data-museum-timeline={timelineId} role="status"><b>{e.year}</b>{e.title}{s.open?'':' · locked'}</p>;})()}
+  {timelineId&&!zoom&&(()=>{const e=EXHIBITS.find(x=>x.id===timelineId);if(!e)return null;const s=exhibitState(e,counts);return <p key={timelineId} className={styles.yearPop} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} data-museum-timeline={timelineId} role="status"><b>{e.year}</b>{e.title}{s.open?'':' · locked'}</p>;})()}
   {greeting&&!zoom&&<p className={styles.greeting} data-museum-greeting role="status"><b>Ada:</b> Welcome to the History Museum! Gallery voices, please. Shh!</p>}
   {guideOpen&&<div className={styles.panelWrap} onPointerDown={e=>{if(e.target===e.currentTarget)setGuideOpen(false);}}>
    <GuidePanel onClose={()=>setGuideOpen(false)}>
@@ -225,8 +227,8 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    </GuidePanel></div>}
   {/* The timeline wall (Hairline line figures, components/museum/experiences/timeline): "Visit this case" closes it and walks the hall's camera to that case. */}
   {experience&&(()=>{const X=EXPERIENCES[experience],tl=experience==='timeline',e=tl?(EXHIBITS.find(x=>x.id===stage.tlAt)??timelineOrder()[0]):EXHIBITS.find(x=>x.id===experience);if(!X||!e)return null;
-   const info:StageInfo=tl?{id:'timeline',year:'1863 → Today',title:'The story of football',gallery:'The timeline',color:'#c9a24a',note:stage.note}
-    :{id:e.id,year:e.year,title:e.title,gallery:galleryOf(e.gallery).title,color:galleryOf(e.gallery).art,note:stage.note};
+   const info:StageInfo=tl?{id:'timeline',year:'1863 → Today',title:'The story of football',gallery:'The timeline',color:'#1d1d1b',note:stage.note}
+    :{id:e.id,year:e.year,title:e.title,gallery:galleryOf(e.gallery).title,color:accentOf(e.gallery),note:stage.note};
    /** Out of an experience: back to the timeline when it was entered from there, otherwise the hall fades in with the stamp card. */
    const closed=()=>{if(!tl&&stage.from==='timeline'){openExperience('timeline',{covered:true,from:experience,tlAt:experience,note:stage.note.startsWith('New')?stage.note:''});return;}
     const id=experience;refocus.current='trigger';setExperience(null);setAfterglow(info.color);if(!tl)setStamp(s=>({id,fresh:stage.note.startsWith('New'),k:(s?.k??0)+1}));};
@@ -259,7 +261,7 @@ function StampCard({exhibit,fresh,seen,total,all,next,onNext,onDone}:{exhibit:{i
  const doneRef=useRef(onDone);doneRef.current=onDone;
  useEffect(()=>{const t=setTimeout(()=>doneRef.current(),9000);return()=>clearTimeout(t);},[]);
  const g=galleryOf(exhibit.gallery),n=timelineOrder().filter(e=>seen.includes(e.id)).length;
- return <aside className={styles.stampCard} role="status" data-museum-stamp={exhibit.id} data-fresh={fresh||undefined} data-all={all||undefined} style={{'--g':g.art} as React.CSSProperties}>
+ return <aside className={styles.stampCard} role="status" data-museum-stamp={exhibit.id} data-fresh={fresh||undefined} data-all={all||undefined} style={{'--g':accentOf(g.id)} as React.CSSProperties}>
   <span className={styles.stampSeal} aria-hidden="true"><b>{exhibit.year.match(/\d{4}/)?.[0]??exhibit.year}</b></span>
   <div className={styles.stampBody}>
    <p className={styles.stampHead}>{all&&fresh?'Every exhibit visited!':fresh?'New stamp!':'Exhibit visited'}<span>{n} of {total}</span></p>

@@ -1,46 +1,51 @@
-/* Walk-in History Museum UI (Oct 3 2026). The Konbini room's layout and the island design system (gold / mint pill buttons from
+/* Walk-in History Museum UI (Oct 3 2026; restyled Oct 10 2026 as a modern gallery, docs/museum-modern-style.md: gallery-white
+ * cards with hairlines, one grotesque sans, ink buttons (filled = primary, outlined = secondary), the gallery accent (--g) only as
+ * a mark; Back/Done stay the app's NavigationButton). Originally: The Konbini room's layout and the island design system (gold / mint pill buttons from
  * the --btn-* tokens, the store-enter-prompt pill, IslandBrush headings), in museum colours: cream gallery paper, the
  * museum's dark green, and each gallery's own colour (--g) as the card's band. Pure CSS, no blur, no animation loops; every
  * one-shot animation is off with reduced motion. Buttons are ≥ 44 px. */
-.root{--m-paper:#fff6e3;--m-ink:#22366b;--m-green:#294f43;--m-soft:#4d5b74;--control-bottom:calc(28px + env(safe-area-inset-bottom,0px));position:fixed;inset:0;background:#f6ecd6;color:var(--m-ink);font-family:var(--font-body,Arial,sans-serif);overflow:hidden}
+.root{--m-paper:#fbfaf7;--m-ink:#1d1d1b;--m-green:#1d1d1b;--m-soft:#6b6a66;--m-hair:#d9d6cf;--m-ground:#f6f4ef;--control-bottom:calc(28px + env(safe-area-inset-bottom,0px));position:fixed;inset:0;background:var(--m-ground);color:var(--m-ink);font-family:"Helvetica Neue",Helvetica,Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;overflow:hidden}
 .canvas{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none;width:100%;height:100%;display:block;touch-action:none;outline:none}
 .header{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px));pointer-events:none}
 .header>*{pointer-events:auto}
 @media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px calc(16px + env(safe-area-inset-left,0px))}}
-.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(52vw,360px);padding:8px 14px;border-radius:999px;background:#294f43e6;color:#fff1d3;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(52vw,360px);padding:8px 14px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 .counts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}
-.counts span{display:inline-flex;align-items:baseline;gap:4px;padding:6px 10px;border-radius:999px;background:var(--m-paper);border:2px solid var(--g);color:var(--m-ink);font-size:12px;font-weight:700;box-shadow:0 2px 0 #3a2b1826}
-.counts b{font-size:15px;font-weight:900;color:var(--g)}
+.counts span{display:inline-flex;align-items:baseline;gap:5px;padding:6px 11px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-soft);font-size:12px;font-weight:500;box-shadow:none}
+.counts b{font-size:15px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums;position:relative;padding-left:12px}.counts b::before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-4px;background:var(--g)}
 @media(max-width:420px){.counts{gap:4px;max-width:62vw}.counts span{padding:4px 8px;font-size:11px}}
 .prompt{z-index:4;visibility:hidden}
-.error{position:absolute;inset:32% 12%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:20px;background:#2a2016e6;color:#fff1d3;text-align:center;padding:16px}
-.error button,.gold,.mint{min-height:44px;min-width:44px;padding:8px 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,999px);background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-weight:800;font-size:14px;cursor:pointer}
-.mint{background:var(--btn-mint,#beded1) var(--btn-grain) center/128px 128px;box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
-.error button:active,.gold:active,.mint:active{translate:0 var(--btn-press,2px);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+/* The hall's look-at prompt: an ink pill (overrides the island's gold store-enter-prompt inside the museum only). */
+.root .prompt{border:1.5px solid var(--m-ink);background:var(--m-ink);background-image:none;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66;font-weight:600}
+.root .prompt:hover{background:#3a3a37;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66}
+.error{position:absolute;inset:32% 12%;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;text-align:center;padding:16px}
+.error button,.gold,.mint{min-height:44px;min-width:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;letter-spacing:.01em;cursor:pointer;transition:background .16s,color .16s,transform .12s}
+.mint{background:transparent;color:var(--m-ink)}.gold:hover{background:#3a3a37}.mint:hover{background:#1d1d1b0d}
+.error button:active,.gold:active,.mint:active{transform:scale(.97)}.gold:disabled,.mint:disabled{opacity:.4;cursor:default}
 /* Zoomed: section arrows either side of the case, the exhibit card under it (portrait) or beside it (landscape). */
-.arrow{position:absolute;z-index:3;top:34%;width:48px;height:48px;display:grid;place-items:center;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f5c45e);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#bf954a);cursor:pointer}
+.arrow{position:absolute;z-index:3;top:34%;width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--m-hair);border-radius:999px;background:#fbfaf7f0;color:var(--m-ink);box-shadow:0 6px 18px -8px #1d1d1b40;cursor:pointer}
 .arrow:disabled{opacity:.35;cursor:default}.prev{left:calc(18px + env(safe-area-inset-left,0px))}.next{right:calc(18px + env(safe-area-inset-right,0px))}
 .card{position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));max-height:46%;overflow:auto;overscroll-behavior:contain;border-radius:26px}
 @media(min-aspect-ratio:6/5){.card{left:auto;translate:none;right:calc(84px + env(safe-area-inset-right,0px));top:calc(84px + env(safe-area-inset-top,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(440px,40%);max-height:none}}
 @media(min-aspect-ratio:6/5) and (max-height:520px){.card{top:calc(70px + env(safe-area-inset-top,0px));right:calc(70px + env(safe-area-inset-right,0px));width:min(380px,46%)}}
-.tag{--g:#294f43;box-sizing:border-box;border:3px solid var(--btn-rim,#fff2cd);border-top:10px solid var(--g);border-radius:26px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);padding:12px 16px 14px;box-shadow:0 7px 0 #3a2b1833,0 12px 30px #2a20162e;animation:tagIn .28s ease-out both}
+.tag{--g:#1d1d1b;box-sizing:border-box;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;border-top:4px solid var(--g);padding:14px 18px 16px;animation:tagIn .28s cubic-bezier(.2,.8,.2,1) both}
 @keyframes tagIn{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
-.tagHead h2{margin:2px 0 4px;font:normal 26px/1.08 IslandBrush,Georgia,serif;color:var(--m-ink)}
-.eyebrow{display:block;font-size:12px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--g)}
-.tag p{margin:6px 0 0;font-size:14px;line-height:1.42}
+.tagHead h2{margin:4px 0 6px;font-family:inherit;font-style:normal;font-weight:700;font-size:24px;line-height:1.12;letter-spacing:-.01em;color:var(--m-ink)}
+.eyebrow{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:none;color:var(--m-soft);font-variant-numeric:tabular-nums}.eyebrow::before{content:'';flex:none;width:9px;height:9px;background:var(--g)}
+.tag p{margin:6px 0 0;font-size:14px;line-height:1.5}
 .facts{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.42}.facts li{margin:3px 0}
-.forGame{padding:8px 10px;border-radius:14px;background:#294f4314}.forGame b{color:var(--m-green)}
-.sources{margin-top:8px;font-size:13px}.sources summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:800;color:var(--m-soft)}.sources ul{margin:0;padding-left:18px}.sources a{color:#2f6fb0;overflow-wrap:anywhere}
+.forGame{padding:10px 12px;border-left:3px solid var(--g);background:#1d1d1b08}.forGame b{color:var(--m-ink)}
+.sources{margin-top:8px;font-size:13px}.sources summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600;color:var(--m-soft)}.sources ul{margin:0;padding-left:18px}.sources a{color:#2a5bd7;overflow-wrap:anywhere}
 .small{font-size:13px;color:var(--m-soft)}
 .locked{margin-top:6px}.lockText{font-weight:800;font-size:15px!important}
-.progress{height:14px;margin:10px 0 2px;border-radius:999px;background:#3a2b1820;overflow:hidden}.progress i{display:block;height:100%;border-radius:999px;background:var(--g)}
+.progress{height:4px;margin:12px 0 4px;border-radius:0;background:var(--m-hair);overflow:hidden}.progress i{display:block;height:100%;background:var(--g)}
 .lockIcon{display:inline-block;width:10px;height:9px;margin-right:5px;border-radius:2px;background:currentColor;position:relative;top:-1px}
 .lockIcon::before{content:'';position:absolute;left:1.5px;top:-6px;width:7px;height:7px;box-sizing:border-box;border:2px solid currentColor;border-bottom:0;border-radius:5px 5px 0 0}
 /* Timeline wall: one button per case, in date order. */
 .years{list-style:none;margin:10px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.years button{width:100%;min-height:52px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:6px 10px;border:2px solid var(--g);border-left-width:8px;border-radius:14px;background:#fffdf6;color:var(--m-ink);font:inherit;text-align:left;cursor:pointer}
-.years button[data-open=false]{opacity:.62;border-style:dashed}
-.years b{font-size:15px;color:var(--g)}.years span{font-size:12px;font-weight:700;line-height:1.25}
+.years button{width:100%;min-height:52px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:8px 10px;border:1px solid var(--m-hair);border-left:4px solid var(--g);border-radius:4px;background:#fff;color:var(--m-ink);font:inherit;text-align:left;cursor:pointer}
+.years button[data-open=false]{opacity:.55;border-left-color:var(--m-hair)}
+.years b{font-size:16px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums}.years span{font-size:12px;font-weight:500;line-height:1.3;color:var(--m-soft)}
 /* The hands-on exhibit. */
 .hands{margin:10px 0 2px;padding:10px 12px 12px;border:2px dashed var(--g);border-radius:18px;background:#fffdf6}
 .hands h4{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--g)}
@@ -51,7 +56,7 @@
 .bigCard{position:fixed;z-index:20;left:50%;top:34%;translate:-50% -50%;width:min(260px,70%);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;animation:raise .38s cubic-bezier(.2,.9,.3,1.3) both}
 .bigCardFace{width:120px;height:168px;border-radius:14px;border:5px solid #fff;background:#f8d651;box-shadow:0 18px 40px #2a201655;transform:rotate(-6deg)}
 .bigCard[data-color=red] .bigCardFace{background:#e0453d;transform:rotate(5deg)}
-.bigCard b{padding:6px 16px;border-radius:999px;background:var(--m-ink);color:#fff1d3;font:normal 30px/1.1 IslandBrush,Georgia,serif}
+.bigCard b{padding:6px 16px;border-radius:999px;background:var(--m-ink);color:#fff1d3;font:700 26px/1.1 inherit}
 .bigCard p{margin:0;padding:8px 12px;border-radius:14px;background:var(--m-paper);color:var(--m-ink);font-weight:700;font-size:15px;box-shadow:0 6px 18px #2a201633}
 @keyframes raise{from{transform:translateY(120px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 .var{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.varScreen{width:min(260px,100%);height:auto;border-radius:10px;box-shadow:0 4px 0 #3a2b1833}
@@ -64,35 +69,35 @@
 .shirt:nth-child(1){background:#3a9e5c}.shirt:nth-child(3){background:#2f6fb0}.shirt[aria-pressed=true]{outline:4px solid var(--m-ink);outline-offset:2px}
 .certs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
 .certs .gold{width:100%}
-.certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:2px dashed #8c8068;border-radius:14px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
-.hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#294f43d9;color:#fff1d3;font-weight:800;font-size:13px;pointer-events:none}
+.certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:1px dashed var(--m-hair);border-radius:4px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
+.hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;pointer-events:none}
 @media(min-aspect-ratio:6/5){.hint{left:30%}.bigCard{left:32%;top:46%}}
-.greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border-radius:18px;background:var(--m-paper);color:var(--m-ink);font-weight:700;font-size:15px;box-shadow:0 6px 18px #2a201633;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
-.greeting b{color:var(--m-green)}
+.greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;font-weight:500;font-size:15px;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
+.greeting b{color:var(--m-ink);font-weight:700}
 @keyframes bubble{0%{opacity:0;transform:translateY(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
 /* The guide's panel. */
-.panelWrap{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#2a201666;padding:calc(76px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
-.panel{position:relative;width:min(480px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:3px solid var(--btn-rim,#fff2cd);border-top:10px solid #477c6a;border-radius:26px;padding:16px 18px 18px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);box-shadow:0 12px 40px #2a201655;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.panel h2{margin:0 96px 0 0;font:normal 28px/1.05 IslandBrush,Georgia,serif}
-.panel h3{margin:8px 0 0;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#477c6a}
-.panel p{margin:0;font-size:14px;line-height:1.4}
+.panelWrap{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:#f6f4efb3;padding:calc(76px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.panel{position:relative;width:min(480px,100%);max-height:100%;overflow:auto;overscroll-behavior:contain;box-sizing:border-box;border:1px solid var(--m-hair);border-top:4px solid var(--m-ink);border-radius:6px;padding:18px 20px 20px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 24px 60px -24px #1d1d1b55;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.panel h2{margin:0 96px 0 0;font-family:inherit;font-style:normal;font-weight:700;font-size:26px;line-height:1.1;letter-spacing:-.01em}
+.panel h3{margin:10px 0 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--m-soft)}
+.panel p{margin:0;font-size:14px;line-height:1.5}
 .close{position:absolute;top:12px;right:12px}
 .guideCounts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
-.guideCounts li{padding:8px 10px;border-radius:12px;background:#f6ecd6;font-size:14px}.guideCounts b{font-size:18px;color:var(--m-green)}
+.guideCounts li{padding:10px 12px;border:1px solid var(--m-hair);border-radius:4px;background:#fff;font-size:13px;color:var(--m-soft)}.guideCounts b{display:block;font-size:24px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums}
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.tag,.greeting,.bigCard{animation:none}}
 .collectionList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4}.collectionList li{margin:4px 0}.collectionList b{color:var(--m-green)}
 /* Storytelling strip (Oct 4 2026): a slim caption bar under the working exhibit, not a card. One action, beat dots, the told
  * line, an ⓘ plaque. No backdrop, no focus trap; the exhibit stays the star. */
-.strip{--g:#294f43;position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));box-sizing:border-box;display:flex;flex-direction:column;gap:6px;padding:10px 14px 12px;border:3px solid var(--btn-rim,#fff2cd);border-left:8px solid var(--g);border-radius:22px;background:var(--btn-grain) center/160px,var(--m-paper);background-blend-mode:soft-light,normal;color:var(--m-ink);box-shadow:0 6px 0 #3a2b1833,0 10px 26px #2a20162e}
-.stripHead{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap}.stripHead b{font:normal 19px/1.1 IslandBrush,Georgia,serif}.stripHead .eyebrow{flex-basis:100%}
-.dots{display:inline-flex;gap:5px;margin-left:auto}.dots i{width:9px;height:9px;border-radius:50%;background:#3a2b1826}.dots i[data-on]{background:var(--g)}
-.plaqueButton{width:44px;height:44px;flex:none;border:3px solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--m-paper);color:var(--g);font:italic 900 20px/1 Georgia,serif;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}.plaqueButton[aria-expanded=true]{background:var(--g);color:#fff1d3}
-.caption{margin:0;min-height:2.6em;font-size:15px;line-height:1.35;font-weight:700}
+.strip{--g:#1d1d1b;position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));box-sizing:border-box;display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--m-hair);border-top:4px solid var(--g);border-radius:6px;background:#fbfaf7f5;color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .28s cubic-bezier(.2,.8,.2,1) both}
+.stripHead{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap}.stripHead b{font-family:inherit;font-style:normal;font-weight:700;font-size:19px;line-height:1.15;letter-spacing:-.01em}.stripHead .eyebrow{flex-basis:100%}
+.dots{display:inline-flex;gap:5px;margin-left:auto}.dots i{width:8px;height:8px;border-radius:50%;background:var(--m-hair)}.dots i[data-on]{background:var(--m-ink)}
+.plaqueButton{width:44px;height:44px;flex:none;border:1px solid var(--m-hair);border-radius:50%;background:#fff;color:var(--m-ink);font:600 17px/1 "Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;box-shadow:none;cursor:pointer}.plaqueButton[aria-expanded=true]{background:var(--m-ink);border-color:var(--m-ink);color:#fff}
+.caption{margin:0;min-height:2.6em;font-size:15px;line-height:1.45;font-weight:500}
 .strip .gold,.strip .mint{align-self:flex-start}
-.takeaway{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 6px 6px 12px;border-radius:14px;background:#f2bb4540}.takeaway b{color:var(--m-green)}
-.plaque{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:min(40vh,320px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:10px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:18px;background:#fffdf6;color:var(--m-ink);box-shadow:0 8px 22px #2a201633;animation:tagIn .22s ease-out both}
+.takeaway{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 12px;border-left:3px solid var(--g);background:#1d1d1b08}.takeaway b{color:var(--m-ink);font-weight:700}
+.plaque{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:min(40vh,320px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:12px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .22s ease-out both}
 .plaque .facts{margin-top:0}
 @media(max-height:520px) and (orientation:landscape){.strip{left:auto;right:calc(16px + env(safe-area-inset-right,0px));translate:none;width:min(380px,46%)}.caption{min-height:0}}
 @media(prefers-reduced-motion:reduce){.plaque{animation:none}}
@@ -101,43 +106,43 @@
 /* One header row whatever the title's length: the title shrinks with an ellipsis, the dots and the ⓘ stay put. */
 .stripHead b{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The walk-through timeline's pop-up: the year you're standing on, in its gallery's colour. */
-.yearPop{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;align-items:baseline;gap:10px;max-width:calc(100% - 32px);margin:0;padding:8px 16px;border-radius:16px;border-left:8px solid var(--g);background:var(--m-paper);color:var(--m-ink);font-weight:800;font-size:15px;box-shadow:0 6px 18px #2a201633;animation:tagIn .2s ease-out both;pointer-events:none}
-.yearPop b{font:normal 24px/1 IslandBrush,Georgia,serif;color:var(--g)}
+.yearPop{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;align-items:baseline;gap:10px;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-left:4px solid var(--g);border-radius:4px;background:var(--m-paper);color:var(--m-ink);font-weight:500;font-size:15px;box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .2s ease-out both;pointer-events:none}
+.yearPop b{font-family:inherit;font-style:normal;font-weight:700;font-size:24px;line-height:1;color:var(--m-ink);font-variant-numeric:tabular-nums}
 @media(prefers-reduced-motion:reduce){.yearPop{animation:none}}
 
 /* "Step inside": opens the case's full-screen experience (components/museum/experiences). */
-.stepInside{min-height:44px;padding:8px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665) var(--btn-grain) center/128px 128px;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:transform .16s,translate .16s,box-shadow .16s}
-.stepInside:active{translate:0 var(--btn-press,2px);transform:scale(.94);box-shadow:0 1px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.stepInside{min-height:44px;padding:8px 18px;border:1.5px solid var(--m-ink);border-radius:999px;background:var(--m-ink);color:#fff;box-shadow:none;font:inherit;font-weight:600;font-size:14px;cursor:pointer;transition:transform .16s,background .16s}
+.stepInside:active{transform:scale(.96)}.stepInside:hover{background:#3a3a37}
 @media(prefers-reduced-motion:reduce){.stepInside{transition:none}}
 
 /* The museum passport (Oct 9 2026; lib/museum/museumVisits.ts). "Step inside again" wears a small stamp; the timeline wall's
  * year buttons show which cases you have visited; the stamp card springs in when you come out of an exhibit. */
 .stepInside{display:inline-flex;align-items:center;gap:8px}
-.stepSeen{width:16px;height:16px;border-radius:50%;background:var(--m-green);position:relative;flex:none}
-.stepSeen::after,.yearSeen::after{content:'';position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid #fff6e3;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.yearSeen{display:inline-block;vertical-align:-2px;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--g);position:relative}
-.stampCard{--g:#294f43;position:fixed;z-index:8;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:min(440px,calc(100% - 24px));box-sizing:border-box;
- display:flex;align-items:flex-start;gap:12px;padding:12px 10px 12px 12px;border:3px solid var(--btn-rim,#fff2cd);border-left:10px solid var(--g);border-radius:22px;
- background:var(--m-paper);color:var(--m-ink);box-shadow:0 14px 34px -12px #2a201680;animation:stampCardIn .5s cubic-bezier(.3,1.4,.5,1) both;animation:stampCardIn .62s linear(0,.2 6%,.62 16%,.94 27%,1.06 36%,1.07 44%,1.02 58%,.99 72%,1) both}
-.stampSeal{flex:none;width:58px;height:58px;display:grid;place-items:center;border-radius:12px;background:var(--g);color:#fff6e3;box-shadow:inset 0 0 0 3px #fff6e399,inset 0 0 0 5px var(--g);
- transform:rotate(-6deg);animation:stampPress .5s cubic-bezier(.3,1.6,.5,1) .18s both}
-.stampSeal b{font:normal 19px/1 IslandBrush,Georgia,serif;letter-spacing:.02em}
+.stepSeen{width:16px;height:16px;border-radius:50%;background:#fff;position:relative;flex:none}
+.stepSeen::after,.yearSeen::after{content:'';position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid var(--m-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}.yearSeen::after{border-color:#fff}
+.yearSeen{display:inline-block;vertical-align:-2px;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--m-ink);position:relative}
+.stampCard{--g:#1d1d1b;position:fixed;z-index:8;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:min(440px,calc(100% - 24px));box-sizing:border-box;
+ display:flex;align-items:flex-start;gap:14px;padding:14px 10px 14px 14px;border:1px solid var(--m-hair);border-radius:6px;
+ background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b55;animation:stampCardIn .5s cubic-bezier(.2,.8,.2,1) both}
+.stampSeal{flex:none;width:52px;height:52px;display:grid;place-items:center;border-radius:2px;background:#fff;border:3px solid var(--g);box-sizing:border-box;color:var(--m-ink);box-shadow:none;
+ animation:stampPress .4s cubic-bezier(.2,.8,.2,1) .15s both}
+.stampSeal b{font-family:inherit;font-style:normal;font-weight:700;font-size:15px;line-height:1;letter-spacing:.02em}
 .stampBody{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.stampHead{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--g)}
+.stampHead{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--m-soft)}
 .stampHead span{color:var(--m-soft);letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.stampTitle{margin:0;font:normal 22px/1.1 IslandBrush,Georgia,serif}
+.stampTitle{margin:0;font-family:inherit;font-style:normal;font-weight:700;font-size:20px;line-height:1.15;letter-spacing:-.01em}
 .stampDots{display:flex;flex-wrap:wrap;gap:5px}
-.stampDots i{width:12px;height:12px;border-radius:50%;border:2px solid #3a2b1840;box-sizing:border-box}
-.stampDots i[data-seen]{background:var(--m-green);border-color:var(--m-green)}
-.stampDots i[data-now]{background:var(--g);border-color:var(--g);animation:stampDot .5s cubic-bezier(.3,1.8,.5,1) .4s both}
-.stampNext{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;padding:6px 14px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;
- background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font:inherit;font-size:14px;font-weight:800;text-align:left;cursor:pointer;
+.stampDots i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--m-hair);box-sizing:border-box}
+.stampDots i[data-seen]{background:var(--m-ink);border-color:var(--m-ink)}
+.stampDots i[data-now]{background:var(--g);border-color:var(--g);animation:stampDot .4s cubic-bezier(.2,.8,.2,1) .35s both}
+.stampNext{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;padding:6px 16px;border:1.5px solid var(--m-ink);border-radius:999px;
+ background:transparent;color:var(--m-ink);box-shadow:none;font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer;
  transition:transform 140ms cubic-bezier(.3,1.5,.5,1)}
 .stampNext:active{transform:scale(.95)}
 .stampClose{flex:none;width:44px;height:44px;margin:-6px -4px 0 0;border:0;border-radius:50%;background:transparent;color:var(--m-soft);font-size:26px;line-height:1;cursor:pointer}
-.stampCard[data-all] .stampSeal{background:linear-gradient(135deg,#f9d665,#d7a43c);color:#3a2b18}
+.stampCard[data-all] .stampSeal{background:var(--m-ink);border-color:var(--m-ink);color:#fff}
 @keyframes stampCardIn{from{transform:translate3d(0,-18px,0) scale(.94);opacity:0}to{transform:none;opacity:1}}
-@keyframes stampPress{from{transform:scale(1.7) rotate(-14deg);opacity:0}to{transform:rotate(-6deg);opacity:1}}
+@keyframes stampPress{from{transform:scale(1.25);opacity:0}to{transform:none;opacity:1}}
 @keyframes stampDot{from{transform:scale(0)}to{transform:none}}
 @media(prefers-reduced-motion:reduce){.stampCard,.stampSeal,.stampDots i[data-now]{animation:none}.stampNext{transition:none}}
 .stampBody p{margin:0}
@@ -145,3 +150,8 @@
  * the stamp card sits under the label). */
 @media(max-width:600px){.header:has(.stepInside) .section{top:calc(100% - 4px);max-width:calc(100% - 32px)}
  .stampCard{top:calc(124px + env(safe-area-inset-top,0px))}}
+/* Oct 10 2026 gallery restyle: the guide panel's Done sits top right, clear of the title (NavigationButton's own
+ * `button.button.button{position:relative}` out-ranked the plain .close rule, so it fell to the panel's top left). The stamp
+ * card's × keeps the app's shared dismissal colour (globals.css). */
+.panel button.close.close{position:absolute;top:14px;right:14px;left:auto}
+.panel>h2{min-height:44px;display:flex;align-items:center}

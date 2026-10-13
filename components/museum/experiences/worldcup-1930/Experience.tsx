@@ -6,44 +6,43 @@ import ExperienceBack from '../ExperienceBack';
 import type {Chart} from './voyage';
 import {CASE_FACTS,DATES,FINAL,GOALS,GROUPS,PORTS,QUIZ,SEA_NOTES,SEMIS,SOURCES,TEAMS,score,type Group,type Tie} from './data';
 import {flip,rubber,stepSpring} from './spring';
-import Poster from './Poster';
+import Composition from './Composition';
+import WallLabel from '../modern/WallLabel';
+import Ending from '../modern/Ending';
+import m from '../modern/modern.module.css';
 import s from './Experience.module.css';
 
 /**
- * worldcup-1930 · "Two weeks at sea" (Oct 5 2026; Oct 9 2026 restyled as an Art Deco travel poster, user: "the museum is a
- * playground for different styles"). One long scroll in beats the visitor drives:
- *  1. The poster: an original deco liner poster (Poster.tsx) with one orchestrated spring entrance.
- *  2. The voyage: scrolling sails the liner from Genoa to Montevideo across a deco route map (Canvas 2D, lazily loaded),
- *     picking up Romania, France, Belgium and Brazil; a keepy-up on the rolling deck in mid-ocean.
- *  3. Arrival: the Estadio Centenario and the first kick-off.
+ * worldcup-1930 · "Two weeks at sea" (Oct 5 2026; Oct 10 2026 modern gallery pass, docs/museum-modern-style.md: gallery-white
+ * ground, Swiss type with wall labels, ONE accent (blue #2a5bd7), abstract geometry, precise spring motion). One long scroll in
+ * beats the visitor drives:
+ *  1. The composition: Genoa as a dot, Montevideo as a blue disc, one arc between them, 13 squares for 13 teams (Composition.tsx).
+ *  2. The voyage: scrolling sails the ship (a blue disc) from Genoa to Montevideo across a map of land drawn as dots (Canvas 2D,
+ *     lazily loaded), picking up Romania, France, Belgium and Brazil; a keepy-up on the rolling deck (a tilting line) mid-ocean.
+ *  3. Arrival: the Estadio Centenario as rings, a pitch rectangle and the tower as one blue bar; the first kick-off.
  *  4. The bracket you build: pick each group winner; your team flies (spring FLIP) to where it really finished.
  *  5. The final with two balls: drag the ball along the match clock (spring follow, flick momentum, rubber-band at the
- *     half-time wall), then drag Uruguay's ball onto the pitch at half-time; the balls trade places with a spring FLIP.
- *  6. Ticket check: four quick questions on the story; every right answer punches a hole in your deco ticket home.
- * Fonts: Limelight and Josefin Sans (SIL OFL 1.1, self-hosted in public/museum/experiences/worldcup-1930/ with their licences),
- * loaded with the FontFace API on open (no global CSS), with fallback stacks.
+ *     half-time wall), then drag Uruguay's ball (the blue disc) onto the pitch at half-time; the balls trade places (spring FLIP).
+ *  6. Ticket check (the quick check): four questions; every right answer punches a hole (a ring fills blue). Done: onComplete.
+ *  7. The ending: the arc from the opening completes into a full circle; "You've seen…", the take-it line, sources.
  * Heat: no loop runs unless something moves. The chart draws on scroll and eases for a moment, then sleeps; the keepy-up, the
  * clock and the ball spring run only while the ball is in the air / you drag / it settles / Play runs; everything stops when
- * the tab is hidden and is torn down on unmount. Sound: the museum's shared one-shots (they respect the island's mute).
+ * the tab is hidden and is torn down on unmount. Motion is transform, opacity and stroke-dashoffset only. Sound: the museum's
+ * shared one-shots (they respect the island's mute).
  */
 const CHAPTERS=[{id:'voyage',label:'Sail'},{id:'arrive',label:'Arrive'},{id:'bracket',label:'Bracket'},{id:'final',label:'Final'},{id:'quiz',label:'Ticket'},{id:'end',label:'Sources'}] as const;
 type ChapterId=typeof CHAPTERS[number]['id'];
 const DRILL_P=.505;// between "Training at sea" (.44) and "Crossing the Equator" (.58)
 const reduced=()=>typeof matchMedia!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const play=(f:()=>void)=>{try{f();}catch{}};
-const FONT_DIR='/museum/experiences/worldcup-1930/';
-/** Load the two deco faces once per page (FontFace API; nothing global in CSS). Resolves when they're ready, or on failure. */
-let fontsReady:Promise<void>|null=null;
-function loadFonts(){if(fontsReady)return fontsReady;if(typeof FontFace==='undefined'||!document.fonts)return fontsReady=Promise.resolve();
- const faces=[new FontFace('WC30 Deco',`url(${FONT_DIR}limelight-latin.woff2) format("woff2")`,{display:'swap'}),
-  new FontFace('WC30 Sans',`url(${FONT_DIR}josefin-sans-latin.woff2) format("woff2")`,{weight:'100 700',display:'swap'})];
- return fontsReady=Promise.all(faces.map(f=>f.load().then(x=>{document.fonts.add(x);}).catch(()=>{}))).then(()=>{});}
-
-export default function Experience({exhibit,onClose}:ExperienceProps){
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
  const scroller=useRef<HTMLDivElement>(null),canvas=useRef<HTMLCanvasElement>(null),track=useRef<HTMLDivElement>(null);
  const hudRef=useRef<HTMLDivElement>(null),dayRef=useRef<HTMLSpanElement>(null),dateRef=useRef<HTMLSpanElement>(null),barRef=useRef<HTMLSpanElement>(null);
  const [chapter,setChapter]=useState<ChapterId>('voyage'),[sailing,setSailing]=useState(true),[chartFailed,setChartFailed]=useState(false);
  const chapterRef=useRef<ChapterId>('voyage'),sailingRef=useRef(true);
+ // The ticket check is the real end: once it is punched, the shared Ending mounts with `reached` and calls onComplete once.
+ const [ticketDone,setTicketDone]=useState(false);
+ const ticketed=useCallback(()=>setTicketDone(true),[]);
 
  // ---- The voyage: scroll → target progress → (eased) chart frame. ------------------------------------------------------
  useEffect(()=>{
@@ -73,8 +72,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   };
   const onResize=()=>{chart?.resize();target=progress();if(still)cur=target;kick();};
   const onVis=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else kick();};
-  import('./voyage').then(({createChart})=>{if(disposed)return;try{chart=createChart(cv,{coarse:matchMedia('(pointer:coarse)').matches});target=cur=progress();chart.draw(cur,0);hud(cur);
-   loadFonts().then(()=>{if(!disposed&&chart)chart.draw(cur,phase);});}catch(err){console.error('worldcup-1930 chart failed',err);setChartFailed(true);}})
+  import('./voyage').then(({createChart})=>{if(disposed)return;try{chart=createChart(cv,{coarse:matchMedia('(pointer:coarse)').matches});target=cur=progress();chart.draw(cur,0);hud(cur);}catch(err){console.error('worldcup-1930 chart failed',err);setChartFailed(true);}})
    .catch(()=>{if(!disposed)setChartFailed(true);});
   el.addEventListener('scroll',onScroll,{passive:true});window.addEventListener('resize',onResize);document.addEventListener('visibilitychange',onVis);
   (window as unknown as {__wc1930?:unknown}).__wc1930={progress:()=>cur,looping:()=>raf!==0};
@@ -83,12 +81,12 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
  },[]);
 
  // Escape leaves; focus the scroller so the arrow keys / space scroll the voyage straight away.
- useEffect(()=>{void loadFonts();const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();}};window.addEventListener('keydown',key);scroller.current?.focus({preventScroll:true});
+ useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();}};window.addEventListener('keydown',key);scroller.current?.focus({preventScroll:true});
   return()=>window.removeEventListener('keydown',key);},[onClose]);
  const jump=(id:ChapterId)=>{const el=scroller.current,n=el?.querySelector<HTMLElement>(`[data-chapter="${id}"]`);if(!el||!n)return;
   el.scrollTo({top:id==='voyage'?0:n.offsetTop,behavior:reduced()?'auto':'smooth'});};
 
- return <section className={s.root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}: two weeks at sea`} data-museum-experience="worldcup-1930" data-chapter-now={chapter}>
+ return <section className={`${m.ground} ${s.root}`} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}: two weeks at sea`} data-museum-experience="worldcup-1930" data-chapter-now={chapter}>
   <canvas ref={canvas} className={s.chart} aria-hidden="true" style={{visibility:sailing?'visible':'hidden'}}/>
   <ExperienceBack onClose={onClose}/>
   <header className={s.header}>
@@ -105,12 +103,10 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
   <div ref={scroller} className={s.scroller} tabIndex={0} aria-label="The 1930 World Cup story. Scroll to sail.">
    {/* ---- Act 1: the voyage ---- */}
    <div className={s.hero} data-chapter="voyage">
-    <div className={s.posterWrap}><Poster/></div>
+    <div className={s.posterWrap}><Composition/></div>
     <div className={s.heroText}>
-     <p className={s.kicker}>{exhibit.year} · {exhibit.title}</p>
-     <h1 className={s.title}><span>Two weeks</span> <span>at sea.</span></h1>
-     <p className={s.route}><span>Genoa</span><i aria-hidden="true"/><span>Montevideo</span></p>
-     <p className={s.lede}>{CASE_FACTS.host} Uruguay is far from Europe, so the European teams had to sail there. Four of them shared one ship.</p>
+     <WallLabel as="h1" title="Two weeks at sea" meta={`${exhibit.year} · Genoa → Montevideo · ${exhibit.title}`}
+      caption={<>{CASE_FACTS.host} Uruguay is far from Europe, so the European teams had to sail there. Four of them shared one ship.</>}/>
      <p className={s.scrollHint} aria-hidden="true"><span>Scroll to set sail</span><b>↓</b></p>
      {chartFailed&&<p className={s.note}>The route map couldn’t load on this device, but the story still scrolls.</p>}
     </div>
@@ -132,8 +128,7 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
 
    {/* ---- Act 2: arrival ---- */}
    <section className={s.arrive} data-chapter="arrive" aria-labelledby="wc30-arrive">
-    <p className={s.kicker}>Montevideo · July 1930</p>
-    <h2 id="wc30-arrive" className={s.bigHead}>A brand-new stadium</h2>
+    <WallLabel className={s.secLabel} id="wc30-arrive" title="A brand-new stadium" meta="July 1930 · Montevideo, Uruguay"/>
     <Stadium/>
     <div className={s.factGrid}>
      <div className={s.fact}><b>Estadio Centenario</b><p>Uruguay built it for the World Cup, in about nine months. “Centenario” means 100 years: the country’s first constitution was from 1830.</p></div>
@@ -149,19 +144,27 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
    <FinalMatch/>
 
    {/* ---- Quick check: punch your ticket home ---- */}
-   <TicketCheck/>
+   <TicketCheck onDone={ticketed}/>
 
    {/* ---- Outro ---- */}
    <section className={s.end} data-chapter="end" aria-labelledby="wc30-end">
-    <p className={s.kicker}>Take it to your game</p>
-    <h2 id="wc30-end" className={s.quote}>{exhibit.forYourGame}</h2>
+    <h2 id="wc30-end" className={m.labelMeta}>The end of the voyage</h2>
+    {ticketDone?<Ending art={<EndMark/>} reached onComplete={onComplete}
+      seen="You’ve seen the first World Cup: two weeks at sea, 13 teams, and a final played with two balls."
+      take={exhibit.forYourGame}/>
+    :<>
+     <EndMark/>
+     <p className={s.seen}>You’ve seen the first World Cup: two weeks at sea, 13 teams, and a final played with two balls.</p>
+     <p className={s.kicker}>Take it to your game</p>
+     <p className={s.quote}>{exhibit.forYourGame}</p>
+     <p className={s.endWait}>Punch all four holes in your ticket ↑ to finish your visit.</p>
+    </>}
     <p className={s.endLine}>And if you’re losing at half-time, keep going. Uruguay were 2–1 down and won 4–2.</p>
     <ul className={s.recap}>{[CASE_FACTS.host,CASE_FACTS.final,CASE_FACTS.teams].map(f=><li key={f}>{f}</li>)}</ul>
     <details className={s.sources}><summary>Sources</summary><ul>{[...exhibit.sources,...SOURCES.filter(x=>!exhibit.sources.some(e=>e.url===x.url))].map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul>
-     <p className={s.small}>Everything here is real history. The pictures are new drawings in the style of 1930s Art Deco travel posters, not real posters or photos, and the liner is not drawn in the real Conte Verde’s colours. The route map is simplified; the ship’s line joins the real ports but is not its logged course. Team colours are just colours, not 1930 flags.</p></details>
+     <p className={s.small}>Everything here is real history. The pictures are abstract compositions made for this museum, not real posters, maps or photos. The route map is simplified (land drawn as dots); the ship’s line joins the real ports but is not its logged course. Team colours are just colours, not 1930 flags.</p></details>
     <div className={s.endRow}>
      <button type="button" className={s.againBtn} data-museum-own-cue onClick={()=>jump('voyage')}><span aria-hidden="true">↑</span> Sail it again</button>
-     <p className={s.fin} aria-hidden="true">Fin · 1930</p>
     </div>
    </section>
   </div>
@@ -170,107 +173,114 @@ export default function Experience({exhibit,onClose}:ExperienceProps){
 function interp(p:number){if(p<=DATES[0].p)return DATES[0].day;for(let i=1;i<DATES.length;i++)if(p<=DATES[i].p){const a=DATES[i-1],b=DATES[i];return a.day+(b.day-a.day)*(p-a.p)/(b.p-a.p);}return DATES[DATES.length-1].day;}
 
 // ---- Keepy-up on a rolling deck ------------------------------------------------------------------------------------------
-/** Tap under the ball to keep it up while the deck rolls; where you touch it steers it (soft, central touches win). The loop
- *  only runs while the ball is in the air. */
-const CHEERS:Record<number,string>={5:'Five in a row!',10:'Ten! The sailors are cheering',20:'Twenty! Romania’s coach wants you'};
+/** "Deck drill" (Oct 10 2026 play pass): a scored round of three balls. Tap under the ball when it drops into the touch zone
+ *  (the hairline band just above the deck): a central touch is Clean (+2), an off-centre one is Edge (+1) and sends the ball
+ *  drifting, and a tap while the ball is still high is Too early (it breaks your streak). Five Clean touches in a row double
+ *  the points. The longer you keep it up, the rougher the sea: the deck rolls further and pushes the ball sideways, so you have
+ *  to touch it a little on the side it is rolling towards. Lose a ball when it lands or rolls off the deck; three balls make a
+ *  round, then you get a rank and your best. Teaches: soft, central touches under the ball keep it straight; Romania's coach
+ *  really drilled his players on deck. The loop only runs while the ball is in the air. Reduced motion: the same rules, one
+ *  touch at a time (the ball waits in the air, the deck tilts a little more after each touch, you tap to correct the drift). */
+const BALLS=3,GRAV=1100;
+/** The ball's launch speed and the touch zone fit the stage height, so the ball never leaves the frame on a phone. */
+const launch=(h:number)=>Math.sqrt(2*GRAV*Math.max(40,h-68)),zoneH=(h:number)=>Math.max(30,(h-68)*.5);
+const RANKS:[number,string][]=[[0,'Deck hand'],[20,'Sailor'],[45,'First mate'],[80,'Captain’s pick']];
+const rankOf=(n:number)=>RANKS.filter(r=>n>=r[0]).pop()![1];
+type DrillView={phase:'ready'|'play'|'over';score:number;touches:number;ballTouches:number;combo:number;left:number;best:number;bestTouches:number;msg:string};
+type DrillHit={k:number;x:number;y:number;label:string;q:'clean'|'edge'|'early'};
 function DeckDrill(){
  const stage=useRef<HTMLButtonElement>(null),ball=useRef<HTMLSpanElement>(null),deck=useRef<HTMLSpanElement>(null),shadow=useRef<HTMLSpanElement>(null);
- const st=useRef({x:0,y:0,vx:0,vy:0,t:0,air:false,raf:0,last:0});
- const [count,setCount]=useState(0),[best,setBest]=useState(0),[msg,setMsg]=useState('Tap the ball to start'),[cheer,setCheer]=useState('');
+ const st=useRef({x:0,y:0,vx:0,vy:0,t:0,air:false,raf:0,last:0,phase:'ready' as DrillView['phase'],score:0,touches:0,ballTouches:0,combo:0,left:BALLS,best:0,bestTouches:0,hk:0});
+ const first='Tap under the ball to start. You have three balls.';
+ const [v,setV]=useState<DrillView>({phase:'ready',score:0,touches:0,ballTouches:0,combo:0,left:BALLS,best:0,bestTouches:0,msg:first});
+ const [hit,setHit]=useState<DrillHit|null>(null);
+ const still=useRef(false);useEffect(()=>{still.current=reduced();},[]);
+ const sync=(msg?:string)=>{const b=st.current;setV(o=>({phase:b.phase,score:b.score,touches:b.touches,ballTouches:b.ballTouches,combo:b.combo,left:b.left,best:b.best,bestTouches:b.bestTouches,msg:msg??o.msg}));};
+ /** The sea gets rougher the longer the round goes on: the deck rolls 3° at first, up to 10°. */
+ const amp=()=>3+Math.min(7,st.current.touches*.3);
+ const tilt=(t:number)=>still.current?Math.sin(st.current.touches*1.7+.6)*amp():Math.sin(t*1.1)*amp();
  const paint=()=>{const b=st.current;if(ball.current)ball.current.style.transform=`translate(${b.x}px,${-b.y}px)`;if(deck.current)deck.current.style.transform=`rotate(${tilt(b.t)}deg)`;
   if(shadow.current){const k=Math.max(.35,1-b.y/260);shadow.current.style.transform=`translateX(${b.x}px) scale(${k})`;shadow.current.style.opacity=String(.2+.4*k);}};
- const still=useRef(false);useEffect(()=>{still.current=reduced();},[]);
- const tilt=(t:number)=>still.current?0:Math.sin(t*1.1)*5;
+ /** A ball is lost (it landed on the deck or rolled off it). The third one ends the round. */
+ const lose=()=>{const b=st.current;b.combo=0;b.left--;b.x=0;b.y=0;paint();play(museumSfx.look);const n=b.ballTouches;b.ballTouches=0;
+  if(b.left<=0){b.phase='over';const record=b.score>b.best;b.best=Math.max(b.best,b.score);b.bestTouches=Math.max(b.bestTouches,b.touches);play(museumSfx.whistle);
+   sync(record&&b.score>0?`New best! ${b.score} points. You are a ${rankOf(b.score)}.`:`Round over: ${b.score} points. You are a ${rankOf(b.score)}.`);return;}
+  sync(`${n?`Dropped after ${n}.`:'Dropped.'} ${b.left} ${b.left===1?'ball':'balls'} left: tap to go again.`);};
  const step=useCallback((now:number)=>{const b=st.current;b.raf=0;if(document.hidden){b.last=0;return;}const dt=Math.min(.04,b.last?(now-b.last)/1000:.016);b.last=now;b.t+=dt;
-  const w=(stage.current?.clientWidth??260)/2-18;b.vy-=900*dt;b.vx+=tilt(b.t)*14*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
-  if(b.y<=0||Math.abs(b.x)>w){b.air=false;b.y=0;b.x=Math.max(-w,Math.min(w,b.x));b.vx=b.vy=0;b.last=0;paint();
-   setCheer('');setCount(c=>{setBest(x=>Math.max(x,c));setMsg(c?`Dropped after ${c}. Tap to go again`:'Tap the ball to start');return 0;});return;}
+  const w=(stage.current?.clientWidth??260)/2-18;b.vy-=GRAV*dt;b.vx+=tilt(b.t)*14*dt;b.x+=b.vx*dt;b.y+=b.vy*dt;
+  if(b.y<=0||Math.abs(b.x)>w){b.air=false;b.y=0;b.x=Math.max(-w,Math.min(w,b.x));b.vx=b.vy=0;b.last=0;paint();setHit(null);lose();return;}
   paint();b.raf=requestAnimationFrame(step);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
- const touch=(e:ReactPointerEvent<HTMLButtonElement>|null)=>{const b=st.current,r=stage.current?.getBoundingClientRect();
-  let off=0;if(e&&r&&e.clientX){off=(e.clientX-(r.left+r.width/2+b.x))/30;}// tap left of the ball → it goes right
-  off=Math.max(-1.2,Math.min(1.2,off));b.vy=430;b.vx=-off*120+b.vx*.3;setMsg('');play(museumSfx.kick);
-  setCount(c=>{const n=c+1;const m=CHEERS[n];if(m){setCheer(m);play(museumSfx.crowd);}return n;});
+ const begin=()=>{const b=st.current;Object.assign(b,{phase:'play',score:0,touches:0,ballTouches:0,combo:0,left:BALLS,x:0,y:0,vx:0,vy:0});};
+ const touch=(clientX:number|null,push=0)=>{const b=st.current;
+  if(b.phase!=='play'){if(b.air)return;begin();}
+  const w=(stage.current?.clientWidth??260)/2-18;
+  // Timing: the ball only answers a touch once it has dropped into the touch zone.
+  const H=stage.current?.clientHeight??150;
+  if(b.air&&b.y>zoneH(H)){b.combo=0;setHit({k:++b.hk,x:b.x,y:b.y,label:'Too early',q:'early'});play(museumSfx.tick);sync('Wait for it to drop into the zone.');return;}
+  const r=stage.current?.getBoundingClientRect();let off=0;if(clientX!==null&&r)off=(clientX-(r.left+r.width/2+b.x))/30;// tap left of the ball → it goes right
+  if(clientX===null)off=push;
+  off=Math.max(-1.2,Math.min(1.2,off));const q:'clean'|'edge'=Math.abs(off)<.5?'clean':'edge';
+  b.combo=q==='clean'?b.combo+1:0;const mult=b.combo>=5?2:1,pts=(q==='clean'?2:1)*mult;b.score+=pts;b.touches++;b.ballTouches++;
+  setHit({k:++b.hk,x:b.x,y:b.y,label:`${q==='clean'?'Clean':'Edge'} +${pts}`,q});play(museumSfx.kick);
+  let msg='';if(b.combo===5){msg='Five clean in a row: double points!';play(museumSfx.crowd);}else if(b.touches===10)msg='The sea is getting rougher. Watch the deck.';
+  else if(b.touches===20){msg='Twenty! Romania’s coach wants you.';play(museumSfx.crowd);}else if(q==='edge')msg='Off-centre: the ball drifts. Touch it right underneath.';
+  if(still.current){// One touch at a time: where you touch it, plus the deck's roll, decides where it goes next.
+   b.t+=1;b.x+=-off*34+tilt(b.t)*2.6;b.y=zoneH(H)*.6;if(Math.abs(b.x)>w){b.x=Math.max(-w,Math.min(w,b.x));lose();return;}paint();sync(msg||`${b.ballTouches} on this ball. The deck tilts: tap on the side it rolls to.`);return;}
+  b.vy=launch(H);b.vx=-off*120+b.vx*.3;sync(msg||'');
   if(!b.air){b.air=true;b.last=0;}if(!b.raf)b.raf=requestAnimationFrame(step);};
+ const again=()=>{const b=st.current;if(b.air)return;begin();b.phase='ready';b.y=0;paint();setHit(null);sync(first);stage.current?.focus({preventScroll:true});};
  useEffect(()=>{const onVis=()=>{const b=st.current;if(!document.hidden&&b.air&&!b.raf)b.raf=requestAnimationFrame(step);};document.addEventListener('visibilitychange',onVis);
   const b=st.current;return()=>{cancelAnimationFrame(b.raf);b.raf=0;document.removeEventListener('visibilitychange',onVis);};},[step]);
- return <div className={s.drill}>
-  <h2 className={s.cardTitle}>Keep it up on deck</h2>
-  <button ref={stage} type="button" className={s.stage} data-museum-own-cue aria-label={`Keepy-up on the ship’s deck. Tap to touch the ball up. ${count} touches.`}
-   onPointerDown={e=>{e.preventDefault();touch(e);}} onKeyDown={e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();touch(null);}}}>
+ const over=v.phase==='over';
+ return <div className={s.drill} data-drill={v.phase}>
+  <h2 className={s.cardTitle}>Deck drill</h2>
+  <div className={s.drillHud} aria-hidden="true">
+   <span className={s.drillPips}>{Array.from({length:BALLS},(_,i)=><i key={i} data-on={i<v.left||undefined}/>)}</span>
+   <span className={s.drillCombo} data-hot={v.combo>=5||undefined}>{v.combo>=5?'×2 streak':v.combo>1?`${v.combo} clean in a row`:' '}</span>
+  </div>
+  <button ref={stage} type="button" className={s.stage} data-museum-own-cue aria-label={`Keepy-up on the ship’s deck. Tap under the ball when it drops low. Space touches it in the middle; the left and right arrows nudge it that way. ${v.score} points, ${v.left} balls left.`}
+   onPointerDown={e=>{e.preventDefault();touch(e.clientX);}} onKeyDown={e=>{const k:Record<string,number>={' ':0,Enter:0,ArrowLeft:.8,ArrowRight:-.8};if(e.key in k){e.preventDefault();touch(null,k[e.key]);}}}>
    <span className={s.swell} aria-hidden="true"/>
+   <span className={s.touchZone} aria-hidden="true"/>
    <span ref={deck} className={s.deck} aria-hidden="true"><i/></span>
    <span ref={shadow} className={s.drillShadow} aria-hidden="true"/>
    <span ref={ball} className={s.drillBall} aria-hidden="true"/>
-   <span key={count} className={s.drillCount} data-pop={count>0||undefined} aria-hidden="true">{count}</span>
+   {hit&&<span key={hit.k} className={s.drillHit} data-q={hit.q} style={{'--hx':`${hit.x}px`,'--hy':`${-hit.y}px`} as CSSProperties} aria-hidden="true">{hit.label}</span>}
+   <span key={v.score} className={s.drillCount} data-pop={v.score>0||undefined} aria-hidden="true">{v.score}</span>
   </button>
-  <p className={s.drillMsg} aria-live="polite" data-cheer={cheer?true:undefined}>{cheer||msg||`${count} touches`}{best?<span className={s.best}>Best {best}</span>:null}</p>
-  <p className={s.small}>Tap under the middle of the ball to keep it straight. Off-centre taps make it drift.</p>
+  <p className={s.drillMsg} aria-live="polite" data-cheer={/double|Twenty|best/i.test(v.msg)||undefined}>{v.msg||`${v.ballTouches} touches on this ball`}{v.best?<span className={s.best}>Best {v.best}</span>:null}</p>
+  {over&&<div className={s.drillOver} role="status">
+   <p><b>{v.score}</b> points · {v.touches} touches · <em>{rankOf(v.score)}</em></p>
+   <button type="button" className={s.againBtn} data-museum-own-cue onClick={again}><span aria-hidden="true">↺</span> Play again</button>
+  </div>}
+  {!over&&<p className={s.small}>Touch it right under the middle. When the deck tilts, the ball rolls downhill: tap a little on that side.</p>}
  </div>;
 }
 
 // ---- The stadium (SVG) ---------------------------------------------------------------------------------------------------
-/** The crowd: seeded dots on rings between the rim and the pitch wall, made once (no randomness at render). */
-const CROWD=(()=>{const out:{x:number;y:number;c:string}[]=[];const pal=['#1f2a44','#b8322a','#f4efe3','#5fa8dc','#3b3530','#8a6a45','#f4efe3','#1f2a44'];let r=1930;
- for(let ring=0;ring<6;ring++){const t=.12+ring*.14,rx=300-(300-214)*t,ry=64-(64-40)*t,cy=180+(192-180)*t,n=Math.round(80+rx*.22);
-  for(let i=0;i<n;i++){r=(Math.imul(r,1664525)+1013904223)>>>0;const a=(i+(ring%2)*.5)/n*Math.PI*2,j=((r>>>8)&255)/255-.5;
-   out.push({x:+(320+Math.cos(a)*rx+j*1.6).toFixed(1),y:+(cy+Math.sin(a)*ry+j).toFixed(1),c:pal[(r>>>16)%pal.length]});}}
- return out;})();
+/** The Estadio Centenario, abstracted: the bowl as dotted rings (the stands), the pitch as a rectangle, the Torre de los
+ *  Homenajes as ONE blue bar. Static; drawn once. */
 function Stadium(){
- return <svg className={s.stadium} viewBox="0 0 640 260" role="img" aria-label="A drawing of the Estadio Centenario: a full oval bowl around the pitch, with a tall tower on the far side.">
-  <defs>
-   <linearGradient id="wc30sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#1f5566"/><stop offset=".45" stopColor="#e9a35b"/><stop offset=".75" stopColor="#f6d58a"/><stop offset="1" stopColor="#f8efd9"/></linearGradient>
-   <radialGradient id="wc30sun" cx="12%" cy="22%" r="40%"><stop offset="0" stopColor="#fff6dc" stopOpacity=".95"/><stop offset="1" stopColor="#fff6dc" stopOpacity="0"/></radialGradient>
-   <linearGradient id="wc30stand" x1="0" x2="1"><stop offset="0" stopColor="#efe2bf"/><stop offset=".55" stopColor="#ddcb9f"/><stop offset="1" stopColor="#c4af80"/></linearGradient>
-   <linearGradient id="wc30wall" x1="0" x2="1"><stop offset="0" stopColor="#e3d3ad"/><stop offset="1" stopColor="#b59f72"/></linearGradient>
-   <linearGradient id="wc30shade" x1="0" x2="1"><stop offset=".45" stopColor="#1f2a44" stopOpacity="0"/><stop offset="1" stopColor="#1f2a44" stopOpacity=".22"/></linearGradient>
-   <clipPath id="wc30pitch"><ellipse cx="320" cy="194" rx="206" ry="35"/></clipPath>
-  </defs>
-  <rect width="640" height="260" fill="url(#wc30sky)"/>
-  {/* Deco sunburst rising behind the Torre de los Homenajes. */}
-  <g opacity=".22">{Array.from({length:16},(_,i)=>{const a0=Math.PI+i/16*Math.PI,a1=a0+Math.PI/32;return <path key={i} d={`M402 150 L${(402+Math.cos(a0)*700).toFixed(1)} ${(150+Math.sin(a0)*700).toFixed(1)} L${(402+Math.cos(a1)*700).toFixed(1)} ${(150+Math.sin(a1)*700).toFixed(1)}Z`} fill="#fff2c4"/>;})}</g>
-  <circle cx="402" cy="150" r="58" fill="#f3b443" opacity=".55"/><rect width="640" height="260" fill="url(#wc30sun)"/>
-  {/* Montevideo on the horizon. */}
-  <path d="M0 150 L0 132 L26 132 L26 120 L40 120 L40 128 L70 128 L74 112 L80 112 L84 126 L120 126 L120 116 L150 116 L150 130 L200 130 L210 124 L240 128 L640 132 L640 150Z" fill="#a9b6bf" opacity=".45"/>
-  <ellipse cx="320" cy="214" rx="318" ry="42" fill="#1f2a44" opacity=".12"/>
-  {/* The outside wall of the near stand, then the stands' slope, the crowd, the pitch wall and the pitch. */}
-  <path d="M20 180 A300 64 0 0 0 620 180 L620 198 A300 64 0 0 1 20 198Z" fill="url(#wc30wall)" stroke="#1f2a44" strokeWidth="1.5"/>
-  <g stroke="#1f2a44" strokeOpacity=".22" strokeWidth="1">{Array.from({length:23},(_,i)=>{const x=40+i*25,dy=64*Math.sqrt(Math.max(0,1-((x-320)/300)**2));return <line key={i} x1={x} y1={180+dy+3} x2={x} y2={196+dy}/>;})}</g>
-  <ellipse cx="320" cy="180" rx="300" ry="64" fill="url(#wc30stand)" stroke="#1f2a44" strokeWidth="1.5"/>
-  <g>{CROWD.map((d,i)=><circle key={i} cx={d.x} cy={d.y} r="1.9" fill={d.c} opacity=".8"/>)}</g>
-  <ellipse cx="320" cy="180" rx="300" ry="64" fill="url(#wc30shade)"/>
-  <ellipse cx="320" cy="193" rx="214" ry="40" fill="#e9dcb8" stroke="#1f2a44" strokeWidth="1.2"/>
-  <g clipPath="url(#wc30pitch)">
-   <rect x="110" y="155" width="420" height="80" fill="#5f8f4f"/>
-   {Array.from({length:10},(_,i)=><rect key={i} x={114+i*42} y="155" width="21" height="80" fill="#6c9c59"/>)}
-   <rect x="110" y="155" width="420" height="80" fill="url(#wc30shade)"/>
-  </g>
-  <ellipse cx="320" cy="194" rx="206" ry="35" fill="none" stroke="#1f2a44" strokeWidth="1.2"/>
-  <g stroke="#f4efe3" strokeWidth="1.4" fill="none" opacity=".9" strokeLinejoin="round">
-   <path d="M196 178 L444 178 L462 210 L178 210Z"/><path d="M320 178 L320 210"/><ellipse cx="320" cy="194" rx="20" ry="5.5"/>
-   <path d="M196 185 L172 185 L162 203 L189 203"/><path d="M444 185 L468 185 L478 203 L451 203"/>
-  </g>
-  {/* Torre de los Homenajes: lit from the left. */}
-  <g transform="translate(402 0)">
-   <path d="M-12 128 L12 128 L12 42 L-12 42Z" fill="#f4efe3" stroke="#1f2a44" strokeWidth="1.6"/>
-   <path d="M2 128 L12 128 L12 42 L2 42Z" fill="#1f2a44" opacity=".16"/>
-   {[52,64,76,88,100,112].map(y=><rect key={y} x="-7" y={y} width="5" height="7" fill="#1f2a44" opacity=".55"/>)}
-   {[52,64,76,88,100,112].map(y=><rect key={y} x="4" y={y} width="5" height="7" fill="#1f2a44" opacity=".7"/>)}
-   <path d="M-15 42 L15 42 L15 36 L-15 36Z M-10 36 L10 36 L10 26 L-10 26Z M-6 26 L6 26 L6 18 L-6 18Z" fill="#f4efe3" stroke="#1f2a44" strokeWidth="1.4"/>
-   <line x1="0" y1="18" x2="0" y2="-2" stroke="#1f2a44" strokeWidth="1.6"/>
-   <g transform="translate(1 -2)"><rect width="24" height="15" fill="#f4efe3" stroke="#1f2a44" strokeWidth=".8"/>
-    {[3.3,6.7,10,13.3].map(y=><rect key={y} x={y<7?8:0} y={y-.8} width={y<7?16:24} height="1.7" fill="#2f6fb5"/>)}<rect width="8" height="7" fill="#f4efe3"/><circle cx="4" cy="3.6" r="2.3" fill="#e2b53b"/></g>
-  </g>
-  <text x="24" y="36" fontFamily={'"WC30 Deco","Limelight",Georgia,serif'} fontSize="19" fill="#f8efd9">Estadio Centenario</text>
-  <text x="24" y="54" fontFamily={'"WC30 Sans","Josefin Sans",Futura,Arial,sans-serif'} fontWeight="700" fontSize="10" letterSpacing="2.5" fill="#f8efd9" opacity=".85">MONTEVIDEO · OPENED 18 JULY 1930</text>
+ return <svg className={s.stadium} viewBox="0 0 640 300" role="img" aria-label="An abstract plan of the Estadio Centenario: dotted rings for the stands around a rectangular pitch, and the tower as one tall blue bar.">
+  <g fill="none" strokeLinecap="round">{[0,1,2,3,4,5].map(i=><ellipse key={i} cx="300" cy="176" rx={268-i*20} ry={112-i*9} stroke="var(--ink)" strokeWidth={i===0?1.5:1.6} strokeDasharray={i===0?undefined:'0 7'} opacity={i===0?1:.55}/>)}</g>
+  <rect x="190" y="128" width="220" height="96" fill="none" stroke="var(--ink)" strokeWidth="1.5"/>
+  <line x1="300" y1="128" x2="300" y2="224" stroke="var(--ink)" strokeWidth="1"/>
+  <circle cx="300" cy="176" r="16" fill="none" stroke="var(--ink)" strokeWidth="1"/>
+  <rect x="190" y="156" width="22" height="40" fill="none" stroke="var(--ink)" strokeWidth="1"/><rect x="388" y="156" width="22" height="40" fill="none" stroke="var(--ink)" strokeWidth="1"/>
+  <rect className={s.tower} x="536" y="22" width="16" height="150" fill="var(--accent)"/>
+  <line x1="544" y1="22" x2="544" y2="6" stroke="var(--accent)" strokeWidth="2"/>
+  <text x="530" y="194" textAnchor="end" className={s.svgSmall}>Torre de los Homenajes</text>
+  <text x="0" y="22" className={s.svgTitle}>Estadio Centenario</text>
+  <text x="0" y="42" className={s.svgSmall}>Montevideo · opened 18 July 1930</text>
  </svg>;
 }
 
 // ---- The bracket you build -----------------------------------------------------------------------------------------------
 function Chip({id,on,dim}:{id:string;on?:boolean;dim?:boolean}){const t=TEAMS[id];return <span className={s.chip} data-chip data-on={on||undefined} data-dim={dim||undefined}>
  <i style={{background:t.color}} aria-hidden="true"/>{t.name}{t.ship&&<ShipIcon/>}</span>;}
-function ShipIcon(){return <svg className={s.shipIcon} viewBox="0 0 24 14" aria-label="came on the ship" role="img"><path d="M1 8h22l-3 5H4z" fill="currentColor"/><rect x="7" y="4" width="10" height="4" fill="currentColor" opacity=".7"/><rect x="9" y="0" width="2.4" height="4" fill="#d9a441"/><rect x="13" y="0" width="2.4" height="4" fill="#d9a441"/></svg>;}
+function ShipIcon(){return <svg className={s.shipIcon} viewBox="0 0 24 14" aria-label="came on the ship" role="img"><line x1="1" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="1 3" strokeLinecap="round"/><circle cx="19" cy="7" r="4.5" fill="var(--accent)"/></svg>;}
 
 function Bracket(){
  const [pick,setPick]=useState<Record<string,string>>({});
@@ -286,8 +296,7 @@ function Bracket(){
  const groupsDone=GROUPS.every(g=>pick[g.id]),semisDone=groupsDone&&SEMIS.every(t=>pick[t.id]),finalDone=semisDone&&!!pick.f;
  const right=[...GROUPS.map(g=>pick[g.id]===g.winner),...SEMIS.map(t=>pick[t.id]===t.winner)].filter(Boolean).length;
  return <section className={s.bracket} data-chapter="bracket" aria-labelledby="wc30-bracket">
-  <p className={s.kicker}>13 – 30 July 1930</p>
-  <h2 id="wc30-bracket" className={s.bigHead}>Build the bracket</h2>
+  <WallLabel className={s.secLabel} id="wc30-bracket" title="Build the bracket" meta="13–30 July 1930 · Montevideo"/>
   <p className={s.lede}>{CASE_FACTS.teams} Nobody had to qualify: they were invited. Seven came from South America, four from Europe and two from North America.</p>
   <div className={s.howTo}>
    <p><b>Groups.</b> Every team plays every other team in its group once. Only the top team goes through.</p>
@@ -330,36 +339,52 @@ function TieCard({t,pick,locked,onPick,final}:{t:Tie;pick?:string;locked:boolean
 }
 
 // ---- Ticket check: the quick learning check --------------------------------------------------------------------------------
-/** Four questions on what the story taught. A right answer punches the next hole in your ticket (a CSS spring pop, no loop); a
- *  wrong one explains nothing yet and lets you try again. All four punched: the ticket is stamped "Montevideo 1930". */
-function TicketCheck(){
+/** Four questions on what the story taught, in the shared quick-check pattern (outlined pills; the right one fills blue; one
+ *  line of why). A right answer punches the next hole in the ticket stub (a ring fills blue with a CSS spring, no loop); a wrong
+ *  one is struck through and you try again. All four punched: the stub is complete, a quiet "Visited" mark, and onDone (the
+ *  passport's gold stamp). */
+function TicketCheck({onDone}:{onDone?:()=>void}){
  const [i,setI]=useState(0),[picked,setPicked]=useState<number|null>(null),[wrong,setWrong]=useState<number[]>([]),[first,setFirst]=useState(0);
  const done=i>=QUIZ.length,q=QUIZ[Math.min(i,QUIZ.length-1)],ok=picked!==null,punched=i+(ok?1:0);
  const answer=(k:number)=>{if(ok||done)return;if(k===q.right){setPicked(k);if(!wrong.length)setFirst(n=>n+1);play(museumSfx.stamp);}else{setWrong(w=>[...w,k]);play(museumSfx.look);}};
  const next=()=>{setPicked(null);setWrong([]);setI(n=>n+1);if(i+1>=QUIZ.length)play(museumSfx.crowd);else play(museumSfx.click);};
  const again=()=>{setI(0);setPicked(null);setWrong([]);setFirst(0);};
+ const completed=useRef(false);
+ useEffect(()=>{if(done&&!completed.current){completed.current=true;onDone?.();}},[done,onDone]);
  return <section className={s.quiz} data-chapter="quiz" aria-labelledby="wc30-quiz">
-  <p className={s.kicker}>Before you sail home</p>
-  <h2 id="wc30-quiz" className={s.bigHead}>Ticket check</h2>
+  <WallLabel className={s.secLabel} id="wc30-quiz" title="Ticket check" meta="Quick check · four questions before you sail home"/>
   <div className={s.ticket} data-done={done||undefined}>
-   <div className={s.ticketStub} aria-hidden="true"><b>1930</b><span>Montevideo</span><span>→ Home</span>
+   <div className={s.ticketStub} aria-hidden="true"><b>1930</b><span>Montevideo → Home</span>
     <ol className={s.holes}>{QUIZ.map((_,k)=><li key={k} data-on={k<punched||undefined}/>)}</ol></div>
-   {!done?<div key={i} className={s.ticketBody}>
+   {!done?<div key={i} className={`${m.check} ${s.ticketBody}`}>
     <p className={s.ticketNo}>Question {i+1} of {QUIZ.length}</p>
-    <p className={s.ticketQ}>{q.q}</p>
-    <div className={s.answers} role="group" aria-label="Answers">{q.choices.map((c,k)=><button key={c} type="button" className={s.answerBtn} data-museum-own-cue
+    <p className={m.checkQ}>{q.q}</p>
+    <div className={m.pills} role="group" aria-label="Answers">{q.choices.map((c,k)=><button key={c} type="button" className={m.pill} data-museum-own-cue
      data-a={ok&&k===q.right?'right':wrong.includes(k)?'wrong':undefined} disabled={ok||wrong.includes(k)} onClick={()=>answer(k)}>{c}</button>)}</div>
-    <p className={s.ticketWhy} aria-live="polite">{ok?<><b>Punched!</b> {q.why}</>:wrong.length?<><b>Not that one.</b> Try another.</>:'Every right answer punches a hole in your ticket.'}</p>
-    {ok&&<button type="button" className={s.againBtn} data-museum-own-cue onClick={next}>{i+1<QUIZ.length?'Next question':'Stamp my ticket'} <span aria-hidden="true">→</span></button>}
+    <p className={m.why} aria-live="polite">{ok?<><b>Punched.</b> {q.why}</>:wrong.length?<><b>Not that one.</b> Try another.</>:'Every right answer punches a hole in your ticket.'}</p>
+    {ok&&<button type="button" className={s.againBtn} data-museum-own-cue onClick={next}>{i+1<QUIZ.length?'Next question':'Complete the ticket'} <span aria-hidden="true">→</span></button>}
    </div>
-   :<div className={s.ticketBody} role="status">
-    <span className={s.stamp} aria-hidden="true"><i>Montevideo</i><b>1930</b><i>Approved</i></span>
-    <p className={s.ticketQ}>{first===QUIZ.length?'All four, first time. Bon voyage!':`${first} of ${QUIZ.length} first time. Bon voyage!`}</p>
-    <p className={s.ticketWhy}>You sailed with the teams, built the bracket and played the final with two balls.</p>
+   :<div className={`${m.check} ${s.ticketBody}`} role="status">
+    <span className={m.visited}><i aria-hidden="true"/>Visited · Montevideo 1930</span>
+    <p className={m.checkQ}>{first===QUIZ.length?'All four, first time. Bon voyage.':`${first} of ${QUIZ.length} first time. Bon voyage.`}</p>
+    <p className={m.why}>You sailed with the teams, built the bracket and played the final with two balls.</p>
     <button type="button" className={s.againBtn} data-museum-own-cue onClick={again}><span aria-hidden="true">↺</span> Check again</button>
    </div>}
   </div>
  </section>;
+}
+
+/** The ending's accent shape: the opening composition's arc, completed into a full blue circle (stroke-dashoffset, drawn once
+ *  when the ending scrolls into view; an IntersectionObserver, not a loop). Reduced motion: drawn complete. */
+function EndMark(){
+ const ref=useRef<SVGSVGElement>(null);
+ useEffect(()=>{const el=ref.current;if(!el)return;if(typeof IntersectionObserver==='undefined'||reduced()){el.dataset.seen='true';return;}
+  const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting)){el.dataset.seen='true';io.disconnect();}},{threshold:.5});io.observe(el);return()=>io.disconnect();},[]);
+ return <svg ref={ref} className={s.endMark} viewBox="0 0 120 120" aria-hidden="true">
+  <circle cx="60" cy="60" r="44" fill="none" stroke="var(--hair)" strokeWidth="1"/>
+  <circle className={s.endRing} cx="60" cy="60" r="44" fill="none" stroke="var(--accent)" strokeWidth="6" pathLength={1} strokeDasharray="1 1" transform="rotate(-90 60 60)"/>
+  <circle className={s.endDot} cx="60" cy="60" r="10" fill="var(--accent)"/>
+ </svg>;
 }
 
 // ---- The final: two balls, one clock -------------------------------------------------------------------------------------
@@ -457,10 +482,8 @@ function FinalMatch(){
  const status=ft?'Full time':half?'Half-time':`${Math.floor(min)}′`;
  const ballProps=(kind:'arg'|'uru')=>{const drag=kind==='uru'&&!swapped;return drag?{onPointerDown:ballDown,onPointerMove:ballMove,onPointerUp:ballUp,onPointerCancel:ballUp,'data-drag':half?'ready':'wait'}:{};};
  return <section className={s.final} data-chapter="final" aria-labelledby="wc30-final" data-half={min<45?1:2} data-swapped={swapped}>
-  <span className={s.finalRays} aria-hidden="true"/>
-  <p className={s.kickerLight}>30 July 1930 · Estadio Centenario · 68,346 fans</p>
-  <h2 id="wc30-final" className={s.bigHeadLight}>The final with two balls</h2>
-  <p className={s.ledeLight}>Uruguay and Argentina could not agree whose ball to use. So they used one each: Argentina’s ball in the first half, Uruguay’s in the second. Drag the ball along the clock to play the match.</p>
+  <WallLabel className={s.secLabel} id="wc30-final" title="The final with two balls" meta="30 July 1930 · Estadio Centenario · 68,346 fans"/>
+  <p className={s.lede}>Uruguay and Argentina could not agree whose ball to use. So they used one each: Argentina’s ball in the first half, Uruguay’s in the second. Drag the ball along the clock to play the match.</p>
   <div className={s.board} role="status" aria-live="polite" aria-label={`${status}. Uruguay ${sc.uru}, Argentina ${sc.arg}.`}>
    <span className={`${s.team} ${s.teamA}`}><i aria-hidden="true" style={{background:TEAMS.uru.color}}/>Uruguay</span>
    <span key={`u${sc.uru}`} className={`${s.num} ${s.numA}`} data-pop={sc.uru>0||undefined}>{sc.uru}</span><span className={s.dash}>–</span>
@@ -507,30 +530,24 @@ function FinalMatch(){
   </div>}
  </section>;
 }
-/** The two 1930 balls, drawn: Argentina's (about 12 panels) and Uruguay's T-Model (11 T-shaped panels), both laced leather. */
+/** The two 1930 balls, abstracted: Argentina's as an ink ring with its panel seams as two pairs of arcs; Uruguay's T-Model as
+ *  the exhibit's blue disc with a white T. Static SVG; only their slots change (spring FLIP). */
 function Ball({kind,slot,...rest}:{kind:'arg'|'uru';slot:'spot'|'benchL'|'benchR'}&HTMLAttributes<HTMLElement>&{'data-drag'?:string}){
  const arg=kind==='arg';
  return <figure className={s.ball} data-ball={kind} data-slot={slot} data-active={slot==='spot'||undefined} {...rest}>
   <svg viewBox="-60 -60 120 120" role="img" aria-label={arg?'Argentina’s ball, used in the first half':'Uruguay’s T-Model ball, used in the second half'}>
-   <defs><radialGradient id={`wc30b-${kind}`} cx="35%" cy="30%" r="80%"><stop offset="0" stopColor={arg?'#c98a52':'#f0cf96'}/><stop offset=".7" stopColor={arg?'#8e5528':'#c08a4c'}/><stop offset="1" stopColor="#4d2c12"/></radialGradient>
-    <clipPath id={`wc30c-${kind}`}><circle r="52"/></clipPath></defs>
-   <circle r="52" fill={`url(#wc30b-${kind})`}/>
-   <g clipPath={`url(#wc30c-${kind})`} stroke="#3a2210" strokeWidth="1.6" fill="none" opacity=".75">
-    {arg?<><path d="M-52 -14 Q0 -24 52 -14 M-52 14 Q0 24 52 14"/><path d="M-18 -52 Q-24 0 -18 52 M18 -52 Q24 0 18 52"/></>
-    :<><path d="M-52 -18 L52 -18 M-6 -18 L-6 52 M6 -18 L6 52"/><path d="M-52 20 Q-30 22 -6 20 M6 20 Q30 22 52 20"/><path d="M-30 -52 L-30 -18 M30 -52 L30 -18"/></>}
-   </g>
-   <g stroke="#f1dfbf" strokeWidth="2" strokeLinecap="round">{[-12,-6,0,6,12].map(y=><line key={y} x1="-6" y1={y-28} x2="6" y2={y-28}/>)}</g>
-   <path d="M-6 -42 L-6 -14 M6 -42 L6 -14" stroke="#3a2210" strokeWidth="1.4"/>
-   <ellipse cx="-20" cy="-24" rx="14" ry="8" fill="#fff" opacity=".12" transform="rotate(-30 -20 -24)"/>
+   {arg?<><circle r="50" fill="var(--ground)" stroke="var(--ink)" strokeWidth="3"/>
+    <g fill="none" stroke="var(--ink)" strokeWidth="1.5"><path d="M-50 -14 Q0 -26 50 -14 M-50 14 Q0 26 50 14"/><path d="M-16 -48 Q-24 0 -16 48 M16 -48 Q24 0 16 48"/></g></>
+   :<><circle r="50" fill="var(--accent)"/>
+    <g fill="none" stroke="var(--ground)" strokeWidth="3" strokeLinecap="round"><path d="M-30 -18 H30 M0 -18 V34"/></g></>}
   </svg>
   <figcaption><b>{arg?'Argentina’s ball':'Uruguay’s ball'}</b><span>{arg?'1st half':'2nd half'}</span></figcaption>
  </figure>;
 }
 function Trophy(){
- return <svg className={s.trophy} viewBox="0 0 120 170" role="img" aria-label="A drawing of the World Cup trophy: a winged figure holding a cup, on a base.">
-  <defs><linearGradient id="wc30gold" x1="0" x2="1"><stop offset="0" stopColor="#9b7424"/><stop offset=".45" stopColor="#f3d27a"/><stop offset="1" stopColor="#a87d2a"/></linearGradient></defs>
-  <rect x="30" y="140" width="60" height="22" rx="3" fill="#2b3550"/><rect x="38" y="128" width="44" height="14" rx="2" fill="url(#wc30gold)"/>
-  <path d="M60 128 C46 120 48 96 52 80 C40 70 22 52 14 30 C30 40 44 50 54 60 L56 48 C50 46 46 40 48 34 L72 34 C74 40 70 46 64 48 L66 60 C76 50 90 40 106 30 C98 52 80 70 68 80 C72 96 74 120 60 128Z" fill="url(#wc30gold)"/>
-  <path d="M44 34 Q60 10 76 34Z" fill="url(#wc30gold)"/><ellipse cx="60" cy="34" rx="16" ry="3" fill="#f7e2a3"/>
+ return <svg className={s.trophy} viewBox="0 0 120 170" role="img" aria-label="An abstract trophy: a blue disc held up on a thin line above a stepped base.">
+  <circle cx="60" cy="50" r="30" fill="var(--accent)"/>
+  <line x1="60" y1="80" x2="60" y2="128" stroke="var(--ink)" strokeWidth="2"/>
+  <rect x="38" y="128" width="44" height="12" fill="var(--ink)"/><rect x="28" y="142" width="64" height="16" fill="var(--ink)"/>
  </svg>;
 }

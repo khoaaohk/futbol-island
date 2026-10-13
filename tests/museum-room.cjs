@@ -69,7 +69,7 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
  console.log('PASS wiring: Town → /museum, ?from=museum, door slide, sleeping loop, full dispose');}
 
 // 6. Storytelling exhibits (Oct 4 2026): every beat is grounded, the engine can't skip, every line is voiced.
-{const S=require('../lib/museum/museumStories.ts'),norm=s=>s.replace(/[’']/g,"'");const exhibitsSrc=read('lib/museum/museumExhibits.ts')+read('lib/museum/museumExhibits2.ts');
+{const S=require('../lib/museum/museumStories.ts'),norm=s=>s.replace(/[’']/g,"'");const exhibitsSrc=read('lib/museum/museumExhibits.ts');
  for(const [id,story] of Object.entries(S.STORIES)){const e=X.EXHIBITS.find(x=>x.id===id);assert.ok(e,id+' is a real case');
   assert.ok(story.beats.length+1>=3&&story.beats.length+1<=6,id+': 3–6 beats including the takeaway');
   for(const b of story.beats){assert.ok(b.prompt.length>2,id+' beat has a prompt');assert.ok(new RegExp(`\\b${b.anim}\\s*:`).test(exhibitsSrc),id+': animation '+b.anim+' exists');
@@ -84,3 +84,10 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
  const room=read('components/MuseumRoom.tsx');assert.match(room,/storyCase&&exhibit\?<MuseumStory/,'story cases show the caption strip, not the card');
  assert.ok(!/useModalFocus|aria-modal/.test(read('components/MuseumStory.tsx')),'the strip and plaque are not modal');
  console.log(`PASS stories: ${Object.keys(S.STORIES).length} storytelling exhibits, every beat grounded in its case, ${S.storyLines().length} voiced lines, no skipping`);}
+// Oct 10 2026 (the Weather Machine agent's finding): a draw-on dash (stroke-dashoffset animated or transitioned) on a stroke with
+// vector-effect:non-scaling-stroke stops part-way in Chrome. No museum rule may combine the two (the shared .draw forces it off).
+{const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(d+'/'+e.name):e.name.endsWith('.css')?[d+'/'+e.name]:[]);
+ const bad=[];for(const f of walk('components/museum'))for(const m of read(f).matchAll(/([^{}]*)\{([^{}]*)\}/g)){const b=m[2];
+  if(/vector-effect:\s*non-scaling-stroke/.test(b)&&/stroke-dashoffset/.test(b)&&/(animation|transition)\s*:/.test(b))bad.push(f+' '+m[1].trim());}
+ assert.deepEqual(bad,[],'no draw-on dash on a non-scaling stroke');
+ console.log('PASS museum line drawings: no draw-on dash on a non-scaling stroke');}

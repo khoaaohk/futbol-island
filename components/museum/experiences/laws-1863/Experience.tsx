@@ -1,270 +1,192 @@
 'use client';
-import {Fragment,useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as RPointerEvent} from 'react';
-import ExperienceBack from '../ExperienceBack';
-import {museumSfx} from '@/lib/museum/museumSound';
+import {useEffect,useRef,useState,type KeyboardEvent,type PointerEvent as RPointerEvent} from 'react';
+import {museumSfx,unlockMuseumAudio} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
-import {THREADS,MILESTONES,FIRST_YEAR,TODAY,LAW_SOURCES,versionIndexAt,milestoneAt,yearLabel,eraOf,diffWords,type LawThread} from './laws';
-import {SORT_SOURCES} from './sort';
-import Sorter from './Sorter';
-import LineMorph from './LineMorph';
-import Prologue from './Prologue';
-import QuickCheck from './QuickCheck';
-import {FIG_VB,THREAD_LINE,THREAD_VB,ruleDrawing} from './drawings';
-import s from './Experience.module.css';
+import WallLabel from '../modern/WallLabel';
+import StepCheck,{type CheckItem} from '../modern/StepCheck';
+import Ending from '../modern/Ending';
+import {useReduced} from '../modern/hooks';
+import g from '../modern/gallery.module.css';
+import {PaperRoom,PaperCard,Banner,Intro,ScoreCover,Pips,Chips,noteSpace,paper as s} from '../anatomy/PaperRoom';
+import {useBox,clamp,scaleOf} from '../anatomy/paper-kit';
+import {usePaperLoop} from '../anatomy/paper-loop';
+import {LAW_SOURCES,MILESTONES,yearLabel} from './laws';
+import {SORT_SOURCES,type SortCard} from './sort';
+import {CALL_MS,callPoints,makeRound,maxRound,rng,type RefCall} from './refcalls';
+import {BEATS,CHECK} from './story';
+import {FILMS,MATCH_N,PRESS_N,PRESS_PTS,matchVerdict,pressInit,pressRound,pressVerdict,truthOf,type Die,type MatchView,type PressState} from './model';
+import {Press,GLYPH,type PressApi} from './Press';
+import {Pitch,type PitchApi} from './Pitch';
 
 /**
- * laws-1863 · "The Living Rulebook" (Oct 5 2026), retold on Oct 9 2026 as THIN LINE ART IN MOTION. One hairline ink on a clean
- * light ground, one accent for what changed, lots of white space, and motion that tells the story:
- *  - the masthead is the museum's own Hairline rulebook figure (the timeline's port of the Hairline engine, used read-only);
- *  - one continuous line runs between the beats and loops round a ball (it draws itself on as it comes into view);
- *  - beat 1, "Still a rule?" (Sorter.tsx): line-drawn cards, each telling its 1863 Law as a tiny line story, sorted by drag/flick;
- *  - beat 2, the living rulebook: drag the year and every rule rewrites itself word by word while its line drawing MORPHS between
- *    eras (LineMorph: the tape sags then straightens into a crossbar, scattered players walk into an eleven, a referee arrives,
- *    lifts a card, gets a screen), new strokes drawing themselves on and retired ones drawing themselves off.
- * Wide screens set the rules in three/two columns; phones turn them into a swipeable deck ending on "Take it to your game".
- * Heat: no loop at rest. Draw-on/off are one-shot CSS animations; the morphs and the sorter's throws run one rAF chain (spring.ts)
- * only while points move; the Hairline figure's shared loop sleeps when its springs rest. Timers and observers are cleaned up.
+ * laws-1863 · "Write the first Laws" (Oct 12 2026 anatomy Paper restyle; user: "these games should not be the pixel style. only
+ * the penalty kick should be pixel game", "it needs to be larger and fill the entire screen", the anatomy skill's Paper theme).
+ * One big paper card fills the first screen; two machines drawn with the anatomy kit:
+ *  1. Story intro (Intro): before 1863 → the Freemasons' Tavern, 26 October 1863 → thirteen Laws, Blackheath walks out.
+ *  2. THE RULE PRESS (Press.tsx): six of the 1863 Laws, one at a time, on the bed of a cast-iron lever press. Tap a tray to set
+ *     the die (✓ still a rule today, ✗ changed since), then drag the lever down (or the Pull button / Space): the ram drives
+ *     the platen onto the card, the card is stamped and slides into its tray. Then the truth (sort.ts).
+ *  3. REF THE MATCH (Pitch.tsx): six moments on a table-top pitch, each under the Laws of 1863 (two posts with flags, no bar,
+ *     no net, no lines) or today's (the goal, the net, the lines). The pegs play the moment; a stopwatch gives you six seconds
+ *     to call it; speed and a streak score more (refcalls.ts). Then the why, under that rulebook.
+ *  4. Full time (ScoreCover): both scores, a best, the three-question check (StepCheck) → the Ending → onComplete (once).
+ * Heat: one Paper loop (anatomy/paper-loop.ts) runs only while the press moves, a film plays or the stopwatch runs; it parks
+ * off-screen and is disposed on unmount. Reduced motion: the press jumps to the end of each pull; each match moment is shown on
+ * its last frame, untimed (turn-based).
  */
-const SPAN=TODAY-FIRST_YEAR;
-const pct=(y:number)=>((y-FIRST_YEAR)/SPAN)*100;
-const shortName=(t:LawThread)=>t.title.replace(/^Of (the )?/,'');
-/** Ruler labels that have room on a wide dock (the others would collide with a neighbour). */
-const LABELLED=new Set([1863,1882,1891,1912,1925,1970,1990,2018,TODAY]);
+const BEST_KEY='futbol.museum.laws-1863.refBest';
+const readBest=()=>{try{return Number(localStorage.getItem(BEST_KEY))||0;}catch{return 0;}};
+const writeBest=(n:number)=>{try{localStorage.setItem(BEST_KEY,String(n));}catch{/* private mode: fine */}};
+const CHECKS:CheckItem[]=CHECK.map(q=>({q:q.q,options:q.options,right:q.answer,why:q.why}));
+const ACCENT='#c8372d';
+type Phase='intro'|'press'|'stamped'|'between'|'call'|'called'|'score';
+type Anim={mode:'none'|'pull'|'release'|'after'|'film'|'fuse';t:number};
+type CallResult={right:boolean;pts:number;timeout:boolean;pick:number|null};
 
-function useReducedMotion(){
- const [r,setR]=useState(false);
- useEffect(()=>{const q=window.matchMedia('(prefers-reduced-motion: reduce)');setR(q.matches);const on=()=>setR(q.matches);q.addEventListener('change',on);return()=>q.removeEventListener('change',on);},[]);
- return r;
-}
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
+ const reduced=useReduced(),timed=!reduced;
+ const [cardRef,box]=useBox<HTMLDivElement>();
+ const stageRef=useRef<HTMLDivElement>(null),pressApi=useRef<PressApi>(null),pitchApi=useRef<PitchApi>(null),readRef=useRef<HTMLSpanElement>(null);
+ const [phase,setPhase]=useState<Phase>('intro');
+ const [cards,setCards]=useState<SortCard[]>(()=>pressRound(rng(1863))),[ci,setCi]=useState(0),[pressRes,setPressRes]=useState<boolean[]>([]);
+ const [calls,setCalls]=useState<RefCall[]>(()=>makeRound(1863,MATCH_N)),[mi,setMi]=useState(0),[callRes,setCallRes]=useState<CallResult[]>([]);
+ const [die,setDieS]=useState<Die>('kept'),[best,setBest]=useState(0),[checked,setChecked]=useState(false),[games,setGames]=useState(0);
+ const ps=useRef<PressState>(pressInit()),mv=useRef<MatchView>({event:calls[0].event,era:calls[0].era,t:0,fuse:null,answered:false});
+ const anim=useRef<Anim>({mode:'none',t:0}),flash=useRef(0),callT0=useRef(0),streak=useRef(0);
+ const said=useRef('');const say=(t:string)=>{if(t===said.current)return;said.current=t;if(readRef.current)readRef.current.textContent=t;};
+ useEffect(()=>{setBest(readBest());},[]);
+ const inMatch=phase==='call'||phase==='called'||(phase==='score'&&callRes.length>0);
+ const draw=()=>{pressApi.current?.draw();pitchApi.current?.draw();};
 
-/** Spring easing (CSS linear(), a critically-damped-ish spring with a small overshoot) shared by the word glide, stamps and thumb. */
-const SPRING='linear(0, 0.007, 0.029 2.2%, 0.118 4.7%, 0.625 14.4%, 0.826 19%, 0.902, 0.962, 1.008 27.3%, 1.041 31.2%, 1.05 34.5%, 1.045 38.3%, 1.016 46.5%, 0.998 55.2%, 0.994 63.5%, 1.001 80%, 1)';
-type Ghost={w:string;x:number;y:number;width:number;k:number};
-type Morph={gen:number;pairs:[number,number,number][];ghosts:Ghost[];added:Set<number>};
-const visualPos=(el:HTMLElement):[number,number]=>{const m=getComputedStyle(el).transform;if(!m||m==='none')return [el.offsetLeft,el.offsetTop];const d=new DOMMatrix(m);return [el.offsetLeft+d.e,el.offsetTop+d.f];};
+ // ── press ──
+ const card=cards[Math.min(ci,cards.length-1)];
+ const loadCard=(k:number,list=cards)=>{const s=ps.current;s.card=list[k];s.pull=0;s.stamped=null;s.slide=0;setCi(k);setPhase('press');say(`LAW ${k+1}/${list.length} · PULL`);draw();};
+ const setDie=(d:Die)=>{if(phase!=='press'||anim.current.mode!=='none'||ps.current.stamped)return;unlockMuseumAudio();ps.current.die=d;setDieS(d);museumSfx.tick();draw();};
+ const stamp=()=>{const s=ps.current;if(s.stamped||!s.card)return;s.pull=1;s.stamped=s.die;museumSfx.stamp();flash.current=1;anim.current={mode:'after',t:0};say('STAMPED!');loop.wake();};
+ const finishStamp=()=>{const s=ps.current,d=s.stamped!;s.stacks[d]++;const right=truthOf(s.card!)===d;s.card=null;s.slide=0;
+  setPressRes(r=>{const n=[...r];n[ci]=right;return n;});right?museumSfx.reveal():museumSfx.look();say(right?`+${PRESS_PTS}`:'+0');setPhase('stamped');};
+ const pullButton=()=>{if(phase!=='press'||anim.current.mode!=='none'||ps.current.stamped)return;unlockMuseumAudio();anim.current={mode:'pull',t:0};loop.wake();};
+ const nextCard=()=>{if(ci+1<cards.length)loadCard(ci+1);else{setPhase('between');museumSfx.whistle();say('KICK-OFF');}};
+ // Drag the lever: down (and a little right) pulls it; let go early and it springs back up.
+ const drag=useRef<{y:number;x:number;pull:number;id:number}|null>(null);
+ const onDown=(e:RPointerEvent<HTMLDivElement>)=>{if(phase!=='press'||anim.current.mode!=='none'||ps.current.stamped)return;unlockMuseumAudio();
+  drag.current={x:e.clientX,y:e.clientY,pull:ps.current.pull,id:e.pointerId};try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* fine */}};
+ const onMove=(e:RPointerEvent<HTMLDivElement>)=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;const s=ps.current;if(s.stamped)return;
+  const P=pressApi.current?.proj(),span=P?64*scaleOf(P):160;s.pull=clamp(d.pull+((e.clientY-d.y)+(e.clientX-d.x)*.25)/span,0,1);say(`PULL ${Math.round(s.pull*100)}%`);
+  if(s.pull>=1){drag.current=null;stamp();}else draw();};
+ const onUp=(e:RPointerEvent<HTMLDivElement>)=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;drag.current=null;const s=ps.current;
+  if(!s.stamped&&s.pull>0){anim.current={mode:'release',t:0};loop.wake();}};
 
-/**
- * A rule's words, FLIP-animated (First, Last, Invert, Play). When the rule changes: words that survive glide from where they
- * were to where they now sit (one Web Animation each, spring-eased); struck words stay behind as red ghosts that are inked out;
- * new words are set in one by one. Every word is an inline-block both idle and mid-morph, so the end state is the idle layout
- * and nothing snaps when the morph is cleaned up. All one-shot; reduced motion swaps the text instantly.
- */
-function MorphText({text,reduced,cap}:{text:string;reduced:boolean;cap:boolean}){
- const box=useRef<HTMLSpanElement>(null),[cur,setCur]=useState(text),[morph,setMorph]=useState<Morph|null>(null),gen=useRef(0);
- useLayoutEffect(()=>{
-  if(text===cur)return;
-  const el=box.current;
-  if(reduced||!el){setCur(text);setMorph(null);return;}
-  const old=[...el.querySelectorAll<HTMLElement>('[data-k]')].map(w=>{const [x,y]=visualPos(w);return {x,y,width:w.offsetWidth};});
-  const tokens=diffWords(cur,text),pairs:[number,number,number][]=[],ghosts:Ghost[]=[],added=new Set<number>();
-  let o=0,n=0;
-  for(const t of tokens){
-   if(t.kind==='same'){const p=old[o];if(p)pairs.push([n,p.x,p.y]);o++;n++;}
-   else if(t.kind==='del'){const p=old[o];if(p)ghosts.push({w:t.w,x:p.x,y:p.y,width:p.width,k:o});o++;}
-   else{added.add(n);n++;}
-  }
-  gen.current++;setCur(text);setMorph({gen:gen.current,pairs,ghosts,added});
- },[text,cur,reduced]);
- useLayoutEffect(()=>{
-  const el=box.current;if(!morph||!el)return;
-  const words=el.querySelectorAll<HTMLElement>('[data-k]');
-  for(const [k,x,y] of morph.pairs){const w=words[k];if(!w)continue;w.getAnimations().forEach(a=>a.cancel());
-   const dx=x-w.offsetLeft,dy=y-w.offsetTop;if(Math.abs(dx)<.5&&Math.abs(dy)<.5)continue;
-   w.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:640,easing:SPRING});}
-  const t=setTimeout(()=>setMorph(null),1300);
-  return()=>clearTimeout(t);
- },[morph]);
- const words=cur.split(/\s+/);let added=0;
- return <span ref={box} className={s.morph}>
-  {cap&&<span key={'c'+cur[0]} className={s.cap}>{cur[0]}</span>}
-  {words.map((w,k)=><Fragment key={k}><span data-k={k} className={morph?.added.has(k)?s.add:s.w}
-   style={morph?.added.has(k)?{animationDelay:`${300+Math.min(added++*34,600)}ms`}:undefined}>{cap&&k===0?w.slice(1):w}</span> </Fragment>)}
-  {morph?.ghosts.map(g=><span key={`${morph.gen}-${g.k}`} className={s.del} style={{left:g.x,top:g.y,width:g.width}} aria-hidden="true">{g.w}</span>)}
- </span>;
-}
+ // ── match ──
+ const call=calls[Math.min(mi,calls.length-1)];
+ const [filmDone,setFilmDone]=useState(false);
+ const loadCall=(k:number,list=calls)=>{const rc=list[k],f=FILMS[rc.event.id];
+  mv.current={event:rc.event,era:rc.era,t:reduced?f.T:0,fuse:reduced?null:1,answered:false};setMi(k);setPhase('call');setFilmDone(reduced);
+  say(`${rc.era==='1863'?'1863':'TODAY'} · CALL ${k+1}/${list.length}`);
+  if(!reduced){anim.current={mode:'film',t:0};museumSfx.kick();loop.wake();}else{callT0.current=performance.now();draw();}};
+ const answer=(pick:number|null)=>{if(phase!=='call'||mv.current.answered)return;const v=mv.current,rc=call;
+  if(anim.current.mode==='film'&&pick!=null)return;
+  const ms=timed?performance.now()-callT0.current:null;
+  anim.current={mode:'none',t:0};loop.stop();v.answered=true;v.t=FILMS[rc.event.id].T;
+  const right=pick!=null&&pick===rc.event.answer[rc.era],pts=callPoints(right,timed&&pick!=null?ms:null,streak.current);
+  streak.current=right?streak.current+1:0;right?museumSfx.reveal():museumSfx.look();say(right?`+${pts}`:pick==null?'TIME!':'+0');
+  setCallRes(r=>{const n=[...r];n[mi]={right,pts,timeout:pick==null,pick};return n;});setPhase('called');draw();};
+ const scored=useRef(false);
+ const nextCall=()=>{if(mi+1<calls.length){loadCall(mi+1);return;}
+  if(!scored.current){scored.current=true;const total=pressPts+matchPts;if(total>best){setBest(total);writeBest(total);}museumSfx.crowd();}setPhase('score');};
 
-/** What each version of each rule's drawing shows, said in words under it (Hairline keeps words out of the figure itself). */
-const CAPTION:Record<string,readonly string[]>={
- players:['How many a side? Agree before kick-off.','Eleven a side.','Eleven a side, and one is the goalkeeper.'],
- goal:['No top: a goal at any height.','A tape, eight feet up.','A solid crossbar, eight feet up.','7.32 m wide, 2.44 m high, and a net.'],
- hands:['Catch it, and mark the spot with your heel.','Feet only: no more catching.','The goalkeeper may use his hands.','The keeper’s hands stop at his penalty area.','Not from a team-mate’s back-pass.','Only the keeper, only in his box.'],
- offside:['In front of the ball = offside.','Three opponents ahead = onside.','Two opponents ahead = onside.','Level = onside.','Level = onside.'],
- throw:['A race: the first to the ball throws it.','No race: the other team throws it.','Two hands.','Two hands, from behind and over the head.'],
- fair:['No tripping, no hacking.','A referee takes charge.','Yellow and red cards.','A video screen helps the referee.','Tripping is still a foul.'],
-};
+ // ── the one loop: press motion, films, the stopwatch ──
+ const loop=usePaperLoop(dt=>{const a=anim.current,s=ps.current;a.t+=dt;
+  if(flash.current>0)flash.current=Math.max(0,flash.current-dt*2.4);
+  if(a.mode==='pull'){s.pull=Math.min(1,a.t/.4);if(s.pull>=1){stamp();}draw();return true;}
+  if(a.mode==='release'){s.pull=Math.max(0,s.pull-dt*2.8);draw();if(s.pull<=0){a.mode='none';say('PULL');return false;}return true;}
+  if(a.mode==='after'){s.pull=Math.max(0,1-Math.max(0,a.t-.12)/.4);s.slide=clamp((a.t-.4)/.75,0,1);draw();
+   if(a.t>=1.2){a.mode='none';flash.current=0;finishStamp();draw();return false;}return true;}
+  if(a.mode==='film'){const T=FILMS[mv.current.event.id].T;mv.current.t=Math.min(T,a.t);draw();
+   if(a.t>=T){a.mode='fuse';a.t=0;callT0.current=performance.now();setFilmDone(true);}return true;}
+  if(a.mode==='fuse'){const left=1-a.t*1000/CALL_MS;mv.current.fuse=Math.max(0,left);say(`TIME ${Math.max(0,CALL_MS/1000-a.t).toFixed(1)}`);draw();
+   if(left<=0){a.mode='none';answer(null);return false;}return true;}
+  a.mode='none';if(flash.current>0){draw();return true;}return false;},stageRef,reduced);
 
-/** The museum's own Hairline line figure for this case (the rulebook; move the pointer up and its cover opens), mounted read-only
- *  from the timeline's port of the Hairline engine, drawn on once as it appears. Its loop sleeps when nothing moves. */
-function Book(){
- const el=useRef<HTMLDivElement>(null);
- useEffect(()=>{const h=el.current;if(!h)return;let f:{destroy():void}|null=null,dead=false;
-  void import('../timeline/hairline/figures').then(({FIGURES})=>import('../timeline/hairline/figure').then(({mountFigure})=>{if(dead||!FIGURES['laws-1863'])return;
-   f=mountFigure(h,FIGURES['laws-1863'],true);h.querySelectorAll('path,ellipse').forEach((p,k)=>{p.setAttribute('pathLength','1');(p as SVGElement).style.setProperty('--i',String(k));});h.dataset.ready='';}));
-  return()=>{dead=true;f?.destroy();};},[]);
- return <div ref={el} className={s.book} aria-hidden="true"/>;
-}
+ const again=()=>{const r=rng(Date.now()),pc=pressRound(r),rc=makeRound(Date.now(),MATCH_N);scored.current=false;streak.current=0;
+  ps.current=pressInit();setCards(pc);setCalls(rc);setPressRes([]);setCallRes([]);setGames(n=>n+1);setMi(0);setDieS('kept');loadCard(0,pc);};
 
-/** The masthead year as a printer's odometer: each digit is a column of 0-9 that rolls (CSS transform transition, spring-eased). */
-function Odometer({year}:{year:number}){
- if(year>=TODAY)return <span key="today" className={`${s.bigYear} ${s.odoToday}`} aria-hidden="true">Today</span>;
- return <span key="odo" className={`${s.bigYear} ${s.odo}`} aria-hidden="true">{String(year).split('').map((d,k)=><span key={k} className={s.odoCol}>
-  <span className={s.odoReel} style={{transform:`translateY(${-Number(d)*10}%)`}}>{'0123456789'.split('').map(n=><span key={n}>{n}</span>)}</span></span>)}</span>;
-}
+ const onKey=(e:KeyboardEvent<HTMLElement>)=>{const k=e.key,btn=e.target instanceof HTMLButtonElement;
+  if(k==='Escape'){e.preventDefault();onClose();return;}
+  if(phase==='press'){if(k==='ArrowLeft'){e.preventDefault();setDie('kept');}else if(k==='ArrowRight'){e.preventDefault();setDie('changed');}else if((k===' '||k==='Enter')&&!btn){e.preventDefault();pullButton();}}
+  else if(phase==='call'&&filmDone&&(k==='1'||k==='2')){e.preventDefault();answer(Number(k)-1);}
+  else if((k===' '||k==='Enter')&&!btn){if(phase==='stamped'){e.preventDefault();nextCard();}else if(phase==='called'){e.preventDefault();nextCall();}else if(phase==='between'){e.preventDefault();loadCall(0);}}};
 
-function Rule({thread,year,reduced,onPick}:{thread:LawThread;year:number;reduced:boolean;onPick:(y:number)=>void}){
- const i=versionIndexAt(thread,year),v=thread.versions[i],era=eraOf(v.year),last=i===thread.versions.length-1;
- const drawing=useMemo(()=>ruleDrawing(thread.id,i),[thread.id,i]);
- return <article className={s.rule} data-era={era} data-rule={thread.id} data-slide aria-labelledby={`law-${thread.id}`}>
-  <header className={s.ruleHead}>
-   <span className={s.lawLine}>
-    {(v.old||last)&&<span className={s.lawNo}>{v.old?thread.lawThen:thread.lawNow}</span>}
-    {!v.old&&<span key={v.year} className={s.stamp} data-today={last||undefined}>{last?'In force today':`Amended ${v.year}`}</span>}
-   </span>
-   <h2 id={`law-${thread.id}`} className={s.ruleTitle}>{thread.title}</h2>
-  </header>
-  <p className={s.ruleText} aria-hidden="true"><MorphText text={v.text} reduced={reduced} cap={false}/></p>
-  <p className={s.srOnly}>{v.old?'The 1863 Law says: ':`From ${yearLabel(v.year)}: `}{v.text}</p>
-  <figure className={s.figBox}>
-   <LineMorph className={s.fig} vb={FIG_VB} drawing={drawing} reduced={reduced} whenSeen/>
-   <figcaption key={i} className={s.figCap}>{CAPTION[thread.id]?.[i]}</figcaption>
-  </figure>
-  <p key={`why-${v.year}`} className={s.why}><b>{v.old?'In 1863':last?'Today':`Why, ${v.year}`}</b> {v.why}</p>
-  <nav className={s.versions} aria-label={`${thread.title}: every version`}>
-   {thread.versions.map((x,k)=><button key={x.year} type="button" className={s.versionBtn} aria-pressed={k===i} aria-label={`Show ${thread.title.toLowerCase()} in ${yearLabel(x.year)}`} onClick={()=>onPick(x.year)}>{yearLabel(x.year)}</button>)}
-  </nav>
- </article>;
-}
+ const pressRight=pressRes.filter(Boolean).length,pressPts=pressRight*PRESS_PTS;
+ const matchRight=callRes.filter(r=>r?.right).length,matchPts=callRes.reduce((n,r)=>n+(r?.pts??0),0);
+ const maxAll=PRESS_N*PRESS_PTS+maxRound(MATCH_N,timed);
+ const lastPress=phase==='stamped'?pressRes[ci]:null,lastCall=phase==='called'?callRes[mi]:null;
+ const banner=phase==='stamped'&&card?<Banner kind={lastPress?'good':'bad'} big={lastPress?`Right! +${PRESS_PTS}`:'Not quite'} line={card.now}/>
+  :phase==='called'&&lastCall?<Banner kind={lastCall.right?'good':lastCall.timeout?'ok':'bad'} big={lastCall.right?`Right call +${lastCall.pts}`:lastCall.timeout?'Time!':'Wrong call'}
+    line={<>{call.era==='1863'?'In 1863':'Today'}: {call.event.why[call.era]}</>}/>
+  :phase==='between'?<Banner kind="info" big="Kick-off" line={<>{pressRight} of {cards.length} rules sorted. {pressVerdict(pressRight,cards.length)} Now referee a match: some moments use the Laws of 1863, some today’s.</>}/>:null;
+ const note=phase==='press'&&card?<><span className={s.tag}>{card.law}</span>{card.then} <b>Still a rule today, or changed?</b></>
+  :phase==='call'?<><span className={s.tag} data-tone="acc">{call.era==='1863'?'Laws of 1863':'Today’s Laws'}</span>{call.event.text}</>:null;
+ const pressPips=cards.map((_,i)=>pressRes[i]==null?undefined:pressRes[i]?'good':'miss');
+ const callPips=calls.map((_,i)=>callRes[i]==null?undefined:callRes[i].right?'good':'miss');
+ const [top,setTop]=useState(40),bottom=40;
+ useEffect(()=>{setTop(noteSpace(cardRef.current));},[phase,ci,mi,box.w,box.h,cardRef]);
 
-export default function Experience({exhibit,onClose}:ExperienceProps){
- const [year,setYear]=useState(FIRST_YEAR),[touched,setTouched]=useState(false),[dragging,setDragging]=useState(false);
- const [scrolled,setScrolled]=useState(false),[active,setActive]=useState(0),[done,setDone]=useState(false);
- const reduced=useReducedMotion(),slider=useRef<HTMLInputElement>(null),closeRef=useRef(onClose);closeRef.current=onClose;
- const rootRef=useRef<HTMLElement>(null),deckRef=useRef<HTMLDivElement>(null),rulerRef=useRef<HTMLDivElement>(null);
- const t=(year-FIRST_YEAR)/SPAN,era=eraOf(year),m=milestoneAt(year),atToday=year>=TODAY;
- const idx=THREADS.map(th=>versionIndexAt(th,year)),changed=idx.filter(Boolean).length,sig=idx.join('.');
+ const cover=phase==='intro'?<Intro kicker="London · 1863" title={<>Write the <em>first Laws</em>.</>} deck={exhibit.facts[0]} beats={BEATS} onStart={()=>{unlockMuseumAudio();loadCard(0);}} startLabel="To the press ▸"/>
+  :phase==='score'?<ScoreCover kicker="Full time · the press and the match" score={pressPts+matchPts} unit={`of ${maxAll} points${best?` · best ${best}`:''}`}
+    notes={<><p><b>The press: {pressRight} of {cards.length}.</b> {pressVerdict(pressRight,cards.length)}</p>
+     <p><b>The match: {matchRight} of {calls.length}.</b> {matchVerdict(matchRight,calls.length)}</p>
+     <p><b>Since 1886</b> the IFAB has looked after the Laws, so a game is played the same way all over the world.</p></>}
+    buttons={<><button type="button" className={s.btn} data-museum-own-cue data-again onClick={again}>Play again</button></>}>
+    <StepCheck key={games} items={CHECKS} kicker={(i,n)=>`Quick check · ${i+1} of ${n}`} onPick={ok=>ok?museumSfx.stamp():museumSfx.look()} onDone={()=>setChecked(true)}
+     renderDone={()=><Ending reached={checked} onComplete={onComplete} art={<svg viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" rx="3" fill="none" stroke={ACCENT} strokeWidth="2"/><path d={GLYPH.kept} transform="translate(10 11) scale(2)" fill="none" stroke={ACCENT} strokeWidth="1.6" strokeLinecap="round"/></svg>}
+      seen="You stamped the first Laws and refereed 1863 against today." take={exhibit.forYourGame}/>}/>
+   </ScoreCover>:null;
 
- useEffect(()=>{rootRef.current?.focus({preventScroll:true});
-  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.stopPropagation();closeRef.current();}};
-  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[]);
+ const fig=inMatch?(call.era==='1863'?'1863':'TODAY'):'1863';
+ const title=inMatch?'Ref the match':'The rule press';
+ const hint=phase==='press'||phase==='stamped'?'Tap a tray · drag the lever down':inMatch?(reduced?'Read the board · make the call':'Watch · call it before the watch runs out'):'Stamp the rules · ref the match';
+ const stageLabel=inMatch||phase==='between'&&mi>0?`A table-top pitch refereed by the ${call.era==='1863'?'Laws of 1863: two posts with flags, no crossbar, no net, no lines':'Laws of today: a goal with a crossbar and net, and the lines'}. ${call.event.text}`
+  :`A cast-iron rule press with a law card on its bed, a ✓ tray for rules still in force and a ✗ tray for rules that changed. The die is set to ${die==='kept'?'✓ still a rule':'✗ changed'}. ${card.then}`;
 
- // A soft rubber stamp whenever a rule is amended (throttled so a fast drag is not a drum roll); a short fanfare the first time
- // the visitor reaches today's Laws. Mute is respected by museumSfx.
- const lastSig=useRef(sig),lastStamp=useRef(0);
- useEffect(()=>{if(sig===lastSig.current)return;lastSig.current=sig;const now=performance.now();if(now-lastStamp.current>240){lastStamp.current=now;museumSfx.stamp();}},[sig]);
- useEffect(()=>{if(atToday&&!done){setDone(true);museumSfx.reveal();}},[atToday,done]);
-
- const go=useCallback((y:number)=>{setTouched(true);setYear(Math.max(FIRST_YEAR,Math.min(TODAY,Math.round(y))));},[]);
-
- // Which card is showing in the phone deck (a no-op on the broadsheet grid, where every card is visible).
- useEffect(()=>{const deck=deckRef.current;if(!deck||typeof IntersectionObserver==='undefined')return;
-  const io=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){const k=[...deck.children].indexOf(e.target);if(k>=0)setActive(k);}},{root:deck,threshold:.6});
-  [...deck.children].forEach(c=>io.observe(c));return()=>io.disconnect();},[]);
-
- /** Bring a card into view: slide the deck sideways on phones, scroll the broadsheet on wide screens. */
- const reveal=useCallback((k:number)=>{const deck=deckRef.current,el=deck?.children[k] as HTMLElement|undefined;if(!deck||!el)return;
-  const behavior:ScrollBehavior=reduced?'auto':'smooth';
-  if(deck.scrollWidth>deck.clientWidth+4){deck.scrollTo({left:el.offsetLeft-deck.offsetLeft-parseFloat(getComputedStyle(deck).paddingLeft||'0'),behavior});
-   // The deck may be below the sorter: bring the pager + deck into view too.
-   const sc=deck.closest<HTMLElement>('[data-scroll]'),pg=sc?.querySelector<HTMLElement>('[data-pager]'),r=(pg??deck).getBoundingClientRect(),v=sc?.getBoundingClientRect();
-   if(sc&&v&&(r.top<v.top+60||r.top>v.top+v.height*.4))sc.scrollTo({top:sc.scrollTop+r.top-v.top-64,behavior});return;}
-  const sc=el.closest<HTMLElement>('[data-scroll]');if(!sc)return;const r=el.getBoundingClientRect(),v=sc.getBoundingClientRect();
-  if(r.top>=v.top+8&&r.bottom<=v.bottom)return;el.scrollIntoView({block:'start',behavior});},[reduced]);
- // Earlier/next change: show the first rule the jump rewrote (or the closing card when it reaches today).
- const step=(y:number)=>{const k=y>=TODAY?THREADS.length:THREADS.findIndex(th=>versionIndexAt(th,y)!==versionIndexAt(th,year));go(y);if(k>=0)setJump(j=>({k,n:(j?.n??0)+1}));};
- const [jump,setJump]=useState<{k:number;n:number}|null>(null);
- useEffect(()=>{if(jump)reveal(jump.k);},[jump,reveal]);
- /** From the sorter: set the year to when that Law changed and show its rule. */
- const see=useCallback((id:string,y:number)=>{const k=THREADS.findIndex(th=>th.id===id);go(y);if(k>=0)setJump(j=>({k,n:(j?.n??0)+1}));},[go]);
- const prev=MILESTONES.filter(x=>x.year<year).at(-1),next=MILESTONES.find(x=>x.year>year);
- const sources=useMemo(()=>{const seen=new Set<string>();return [...LAW_SOURCES,...SORT_SOURCES,...exhibit.sources].filter(x=>seen.has(x.url)?false:(seen.add(x.url),true));},[exhibit.sources]);
-
- // The year rule: drag anywhere along it (touch, pen or mouse). Let go near a change and it clicks onto that year.
- const yearAt=(clientX:number)=>{const r=rulerRef.current!.getBoundingClientRect(),pad=28;return FIRST_YEAR+Math.max(0,Math.min(1,(clientX-r.left-pad)/(r.width-pad*2)))*SPAN;};
- const onDown=(e:RPointerEvent<HTMLDivElement>)=>{if(e.button>0)return;e.currentTarget.setPointerCapture(e.pointerId);setDragging(true);go(yearAt(e.clientX));};
- const onMove=(e:RPointerEvent<HTMLDivElement>)=>{if(dragging)go(yearAt(e.clientX));};
- const onUp=(e:RPointerEvent<HTMLDivElement>)=>{if(!dragging)return;setDragging(false);const y=yearAt(e.clientX),near=MILESTONES.reduce((a,b)=>Math.abs(b.year-y)<Math.abs(a.year-y)?b:a);if(Math.abs(near.year-y)<=2.5)go(near.year);};
-
- const style={'--p':String(t)} as CSSProperties;
-
- return <section ref={rootRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}: the living rulebook`} data-museum-experience="laws-1863" data-era={era} className={s.root} style={style}>
-  <div className={s.topFade} data-show={scrolled||undefined} aria-hidden="true"/>
-  <ExperienceBack onClose={onClose}/>
-
-  <div className={s.scroll} data-scroll onScroll={e=>setScrolled(e.currentTarget.scrollTop>12)}>
-   <header className={s.masthead} data-era={era}>
-    <p className={s.topline}><span>{exhibit.year} · {exhibit.title}</span><span>The living rulebook</span></p>
-    <Book/>
-    <h1 className={s.title}><span className={s.titleSmall}>The</span> Laws of the Game</h1>
-    <div className={s.doubleRule} aria-hidden="true"/>
-    <p className={s.dateline}>
-     <span className={s.dateLeft}>{year<1886?'Framed by the Football Association, London':'Looked after by the IFAB since 1886'}</span>
-     <Odometer year={year}/>
-     <span className={s.dateRight}>{changed===0?'As first printed, 1863':`${changed} of ${THREADS.length} rules rewritten`}</span>
-    </p>
-    <p className={s.standfirst}>{exhibit.facts.join(' ')}</p>
-   </header>
-
-   <Prologue reduced={reduced}/>
-   <LineMorph className={s.thread} vb={THREAD_VB} drawing={THREAD_LINE} reduced={reduced} whenSeen/>
-   <Sorter reduced={reduced} onSee={see}/>
-   <LineMorph className={s.thread} vb={THREAD_VB} drawing={THREAD_LINE} reduced={reduced} whenSeen/>
-
-   <h2 className={s.bookHead}><span>The living rulebook</span><small>Drag the year at the bottom: every rule rewrites itself.</small></h2>
-   <nav className={s.pager} data-pager aria-label="The rules">
-    {THREADS.map((th,k)=><button key={th.id} type="button" className={s.pageBtn} aria-current={active===k||undefined} data-changed={idx[k]>0||undefined}
-     aria-label={`${shortName(th)}${idx[k]>0?' (rewritten)':''}`} onClick={()=>reveal(k)}><i/></button>)}
-    <button type="button" className={s.pageBtn} data-end aria-current={active===THREADS.length||undefined} data-changed={atToday||undefined} aria-label="Take it to your game" onClick={()=>reveal(THREADS.length)}><i/></button>
-   </nav>
-
-   <div ref={deckRef} className={s.columns}>
-    {THREADS.map(th=><Rule key={th.id} thread={th} year={year} reduced={reduced} onPick={go}/>)}
-    <aside className={s.finale} data-slide data-done={atToday||undefined} aria-label="Take it to your game">
-     <div className={s.finaleInner}>
-      {atToday&&<span className={s.seal} aria-hidden="true"><svg viewBox="0 0 80 80"><path pathLength={1} d="M40 6a34 34 0 1 1-.1 0"/></svg><b>{THREADS.length}/{THREADS.length}</b>rules up to date</span>}
-      <p className={s.finaleKicker}>Take it to your game</p>
-      <p className={s.finaleLine}>{exhibit.forYourGame}</p>
-      <p className={s.finaleNote}>{atToday
-       ?'Thirteen Laws were printed in 1863; today there are seventeen. Tripping has been against the Laws the whole time.'
-       :<>Drag the year all the way to <b>Today</b> to finish the rulebook.</>}</p>
-      {!atToday&&<button type="button" className={s.finaleBtn} onClick={()=>step(TODAY)}>Jump to today</button>}
-      {atToday&&<button type="button" className={s.finaleBtn} onClick={()=>document.getElementById('check-title')?.scrollIntoView({block:'start',behavior:reduced?'auto':'smooth'})}>Quick check ↓</button>}
-     </div>
-    </aside>
+ return <PaperRoom id="laws-1863" accent={ACCENT} ariaLabel={`${exhibit.year} · ${exhibit.title}: the rule press and the 1863 match`} onClose={onClose} onKeyDown={onKey}
+  rootProps={{'data-phase':phase,'data-era':inMatch?call.era:'1863','data-card':phase==='press'||phase==='stamped'?card.id:undefined,'data-call':inMatch?call.event.id:undefined,
+   'data-result':phase==='stamped'?(lastPress?'right':'wrong'):phase==='called'&&lastCall?(lastCall.right?'right':'wrong'):undefined,'data-points':pressPts+matchPts,'data-reduced':reduced||undefined}}
+  head={<WallLabel as="h1" title={exhibit.title} meta={<>{exhibit.year} · Freemasons’ Tavern, London</>}/>}
+  card={<PaperCard ref={cardRef} data-wide-note={inMatch?"right":""} fig={`Fig. ${fig}`} title={title} hint={hint} readout="PULL" readoutRef={readRef} note={note} banner={banner} cover={cover}>
+   <div ref={stageRef} className={s.stage} tabIndex={0} role="application" aria-label={stageLabel} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
+    data-stage={inMatch?'pitch':'press'} style={{cursor:phase==='press'?'grab':undefined}}>
+    {inMatch?<Pitch ref={pitchApi} w={box.w} h={box.h} view={mv.current} top={top} bottom={bottom}/>
+     :<Press ref={pressApi} w={box.w} h={box.h} state={ps.current} flash={flash} onTray={setDie} top={top} bottom={bottom}/>}
    </div>
-
-   <LineMorph className={s.thread} vb={THREAD_VB} drawing={THREAD_LINE} reduced={reduced} whenSeen/>
-   <QuickCheck/>
-
-   <footer className={s.foot}>
-    <p className={s.standfirstFoot}>{exhibit.facts.join(' ')}</p>
-    <p className={s.footNote}>The 1863 rules above quote the FA’s first printed Laws (a few are shortened); the later ones are short summaries in plain words. Everything here is real history.</p>
-    <details className={s.sources}>
-     <summary>Sources</summary>
-     <ul>{sources.map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noreferrer">{x.title}</a></li>)}</ul>
-    </details>
-   </footer>
-  </div>
-
-  <div className={s.dock}>
-   <div className={s.dockRow}>
-    <button type="button" className={s.step} disabled={!prev} aria-label={prev?`Earlier change: ${yearLabel(prev.year)}`:'No earlier change'} onClick={()=>prev&&step(prev.year)}>
-     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-    <p className={s.now} aria-live="polite"><span key={m.year} className={s.nowYear}>{yearLabel(year)}</span><span key={'h'+m.year} className={s.nowHead}>{m.year===year?m.headline:`Still the Laws of ${yearLabel(m.year)}`}</span></p>
-    <button type="button" className={s.step} data-pulse={!touched||undefined} disabled={!next} aria-label={next?`Next change: ${yearLabel(next.year)}`:'No later change'} onClick={()=>next&&step(next.year)}>
-     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+  </PaperCard>}
+  dock={phase==='intro'||phase==='score'?null:<>
+   <div className={s.row}>
+    <Pips results={inMatch?callPips:pressPips} total={inMatch?calls.length:cards.length} label={inMatch?`${callRes.length} of ${calls.length} calls`:`${pressRes.length} of ${cards.length} rules stamped`}/>
+    <span className={s.grow}><Chips items={[{k:'press',label:'Rules',value:`${pressRight}/${cards.length}`},{k:'match',label:'Match',value:matchPts},{k:'streak',label:'Streak',value:streak.current}]}/></span>
    </div>
-   <div ref={rulerRef} className={s.ruler} data-dragging={dragging||undefined} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
-    <div className={s.track} aria-hidden="true">
-     <span className={s.fill}/>
-     {MILESTONES.map(x=><span key={x.year} className={s.notch} data-passed={x.year<=year||undefined} data-label={(LABELLED.has(x.year)&&Math.abs(x.year-year)>10)||undefined} style={{left:`${pct(x.year)}%`}}><i>{yearLabel(x.year)}</i></span>)}
-    </div>
-    <input ref={slider} className={s.range} type="range" min={FIRST_YEAR} max={TODAY} step={1} value={year} tabIndex={0}
-     aria-label="Year of the Laws" aria-valuetext={`${yearLabel(year)}. ${changed} of ${THREADS.length} rules changed since 1863.`}
-     onChange={e=>go(Number(e.target.value))}/>
-    <span className={s.thumb} aria-hidden="true"><span>{yearLabel(year)}</span></span>
-    {!touched&&<span className={s.hint} aria-hidden="true">Drag the year <span className={s.hintArrow}>→</span><span className={s.hintTail}> the Laws rewrite themselves</span></span>}
+   <div className={s.row}>
+    {phase==='press'&&<>
+     <button type="button" className={die==='kept'?s.btn:s.ghost} data-tone={die==='kept'?'acc':undefined} aria-pressed={die==='kept'} data-die="kept" onClick={()=>setDie('kept')}>✓ Still a rule</button>
+     <button type="button" className={die==='changed'?s.btn:s.ghost} data-tone={die==='changed'?'acc':undefined} aria-pressed={die==='changed'} data-die="changed" onClick={()=>setDie('changed')}>✗ Changed</button>
+     <button type="button" className={s.btn} data-pull onClick={pullButton}>Pull the lever ▼</button></>}
+    {phase==='stamped'&&<button type="button" className={s.btn} data-tone="acc" data-next onClick={nextCard}>{ci+1<cards.length?'Next law ▸':'To the match ▸'}</button>}
+    {phase==='between'&&<button type="button" className={s.btn} data-tone="acc" data-next data-kickoff onClick={()=>loadCall(0)}>Kick off ▸</button>}
+    {phase==='call'&&call.event.options.map((o,j)=><button key={j} type="button" className={j?s.ghost:s.btn} data-option={j} disabled={!filmDone} onClick={()=>answer(j)}>
+     {o}<span className={s.srOnly}> (key {j+1})</span></button>)}
+    {phase==='call'&&!filmDone&&<span className={s.say}>Watch the moment…</span>}
+    {phase==='called'&&<button type="button" className={s.btn} data-tone="acc" data-next onClick={nextCall}>{mi+1<calls.length?'Next moment ▸':'Full time ▸'}</button>}
    </div>
-  </div>
- </section>;
+  </>}>
+  <section className={g.section} aria-labelledby="laws-wall">
+   <p className={g.kicker}>{exhibit.year} · Freemasons’ Tavern, London</p>
+   <h2 id="laws-wall" className={g.h2}>Thirteen Laws, so everyone could play the same game</h2>
+   <ol className={g.steps}>{exhibit.facts.map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}</ol>
+   <ul className={g.steps}>{MILESTONES.map(m=><li key={m.year}><span>{yearLabel(m.year)}</span><p className={g.body}>{m.headline}</p></li>)}</ul>
+   <p className={g.body}><b>Since 1886</b> the IFAB has looked after the Laws.</p>
+   <p className={g.small}>Take it to your game: {exhibit.forYourGame} The 1863 rules in the game quote the FA’s first printed Laws in short; the match moments are made-up and judged by the Laws of each time. The machines are drawings made for this museum.</p>
+   <details className={g.sources}><summary>Sources</summary>
+    <ul>{[...LAW_SOURCES,...SORT_SOURCES,...exhibit.sources].filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i).map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul></details>
+  </section>
+ </PaperRoom>;
 }
-

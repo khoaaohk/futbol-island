@@ -34,6 +34,11 @@ import {BALL_R,GOAL_H,GOAL_W,MARK,POST_X,POWERS,WOBBLE,atKeeper,flightTime,keepe
  * Mega Drive's 9-bit colour (8 levels per channel) through a 4×4 Bayer ordered dither, with a one-pixel dark outline where a
  * figure meets a brighter background. The goal-plane graphics are drawn on a small canvas sampled nearest-neighbour (square
  * pixels, no smoothing). While a shot plays the stage is drawn at 30 frames a second (sprite-like cadence, half the GPU work).
+ *
+ * The arcade cabinet (Oct 10 2026): the stage now lives in a framed screen on the modern gallery page (Cabinet.tsx), not full
+ * screen. `opts.pixel` fixes the buffer-pixel size (the cabinet snaps the canvas to a multiple of it: integer upscaling), and
+ * `setAwake(false)` puts the loop to sleep while the cabinet is off-screen or not being played (IntersectionObserver in the host):
+ * no frame is requested until it wakes, and a shot fired while asleep jumps to its end, like a hidden tab.
  */
 export type Insets={top:number;right:number;bottom:number;left:number};
 export type Shot={x:number;y:number;result:Result};
@@ -49,9 +54,11 @@ export type PenaltyScene={
  unproject(px:number,py:number):{x:number;y:number};
  /** World metres → canvas pixels, using the aiming camera. */
  project(x:number,y:number,z:number):{x:number;y:number};
+ /** In view and being played (true) or asleep (false): asleep, no frame is ever requested. */
+ setAwake(on:boolean):void;
  dispose():void;
 };
-type Opts={coarse:boolean;reducedMotion:boolean;onLayout?:()=>void};
+type Opts={coarse:boolean;reducedMotion:boolean;onLayout?:()=>void;pixel?:number};
 
 const VR=.13;// the drawn ball's radius (a touch bigger than real, so it reads on a phone)
 const KZ_TODAY=.32;// the keeper stands just off his line
@@ -167,7 +174,7 @@ void main(){vec2 d=1./uRes;vec3 c=texture2D(uTex,vUv).rgb;float l=lum(c);
 export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltyScene{
  const renderer=new T.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});
  // Pixel art: the drawing buffer is low-res (DPR well under 1); the browser upscales it nearest-neighbour. Never above 1.5 on touch.
- let px=pixelScale(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));
+ const scaleOf=(w:number,h:number)=>opts.pixel??pixelScale(w,h);let px=scaleOf(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));
  renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;
  renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
  const scene=new T.Scene();scene.background=new T.Color('#16244a');
@@ -238,7 +245,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
 
  // ── state ──
  let state:SceneState={era:'today',power:'firm',aimX:1.3,aimY:1.2,shots:[],mode:'intro'};
- let insets:Insets={top:0,right:0,bottom:0,left:0},cw=1,ch=1,disposed=false,raf=0,last=0,elapsed=0;
+ let insets:Insets={top:0,right:0,bottom:0,left:0},cw=1,ch=1,disposed=false,raf=0,last=0,elapsed=0,awake=true,frames=0;
  let lookEra:Era|null=null,ovKey='';
  // Keeper position: walks between the line (today) and 6 yards out (1891).
  const keeperPos={x:0,z:KZ_TODAY,tz:KZ_TODAY};
@@ -450,11 +457,11 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
  // ── loop (on demand) ──
  const busy=()=>!!run&&!run.done||camT<1||settle>0||Math.abs(keeperPos.z-keeperPos.tz)>.005||shake>0;
  function frame(now:number){
-  raf=0;if(disposed||document.hidden)return;
+  raf=0;if(disposed||document.hidden||!awake)return;
   // 30 frames a second while something moves: the sprite cadence of a console game, and half the GPU work of 60.
   if(last&&now-last<31){raf=requestAnimationFrame(frame);return;}
   const dt=last?Math.min(.05,(now-last)/1000):1/60;last=now;elapsed+=dt;
-  advance(dt);draw();
+  advance(dt);draw();frames++;
   if(busy())raf=requestAnimationFrame(frame);else last=0;}
  function advance(dt:number){
   if(camT<1){camT=Math.min(1,camT+dt/(1.5));camMix=lerp(camFrom,camTo,camT);}
@@ -463,7 +470,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   else if(!run){const walking=stepKeeperWalk(dt);if(walking||settle>0){idleKicker(dt);idleKeeper(dt);settle=Math.max(0,settle-dt);}if(!walking&&settle<=0)settle=0;placeBall();}
  }
  function draw(){applyCamera();drawOverlay();renderer.render(scene,camera);sizePost();renderer.copyFramebufferToTexture(fb);renderer.render(postScene,postCam);}
- const wake=()=>{if(!raf&&!disposed&&!document.hidden){raf=requestAnimationFrame(frame);}};
+ const wake=()=>{if(!raf&&!disposed&&!document.hidden&&awake){raf=requestAnimationFrame(frame);}};
  /** One frame now-ish (aiming, layout): a single rAF, then sleep. */
  const request=wake;
  /** Ease the rigs into their current idle pose without drawing each step (instant, no loop). */
@@ -471,13 +478,15 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
  const onVis=()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;last=0;}else{wake();}};
  document.addEventListener('visibilitychange',onVis);
 
- function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;if(w===cw&&h===ch)return;cw=w;ch=h;px=pixelScale(w,h);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));renderer.setSize(w,h,false);sizePost();camera.aspect=w/h;request();opts.onLayout?.();}
+ function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;if(w===cw&&h===ch)return;cw=w;ch=h;px=scaleOf(w,h);renderer.setPixelRatio(Math.min(1/px,opts.coarse?1.5:2));renderer.setSize(w,h,false);sizePost();camera.aspect=w/h;request();opts.onLayout?.();}
  const ro=new ResizeObserver(resize);ro.observe(canvas);
  resize();applyEra('today');placeBall();settleNow();keeperPos.z=keeperPos.tz;
 
  // Dev hook for the browser checks (frame strips, framing, sleep): not in production builds.
  if(process.env.NODE_ENV!=='production')(window as unknown as {__pk?:unknown}).__pk={
   get sleeping(){return raf===0;},
+  get awake(){return awake;},
+  get frames(){return frames;},
   get pixel(){renderer.getDrawingBufferSize(bufSize);return {px,buffer:[bufSize.x,bufSize.y]};},
   get debug(){return {run:run?{t:+run.t.toFixed(2),end:+run.end.toFixed(2),done:run.done}:null,camT,settle,kz:keeperPos.z,ktz:keeperPos.tz,shake};},
   goalCentre(){applyCamera();return api.project(0,GOAL_H/2,0);},
@@ -500,7 +509,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   shoot(plan,onImpact,onDone){
    if(run&&!run.done)return;api.reset();keeperPos.z=keeperPos.tz;
    settle=0;const r=planRun(plan,onImpact,onDone);run=r;
-   if(opts.reducedMotion||document.hidden){// jump to the end: the same timeline, stepped without drawing
+   if(opts.reducedMotion||document.hidden||!awake){// jump to the end: the same timeline, stepped without drawing
     for(let s=0;s<r.end+.05;s+=1/30){elapsed+=1/30;stepRun(r,1/30);}draw();return;}
    last=0;wake();},
   reset(){if(run&&!run.done)return;run=null;netU.uAmp.value=0;shake=0;placeBall();
@@ -509,6 +518,7 @@ export function createPenaltyScene(canvas:HTMLCanvasElement,opts:Opts):PenaltySc
   unproject(px,py){const f=aimF;const tx=f.l+(px/cw)*(f.r-f.l),ty=f.t-(py/ch)*(f.t-f.b);
    tmp.set(tx,ty,-1).transformDirection(aimCam.matrixWorld);const o=aimCam.position,s=-o.z/tmp.z;return {x:o.x+tmp.x*s,y:o.y+tmp.y*s};},
   project(x,y,z){inv.copy(aimCam.matrixWorld).invert();tmp.set(x,y,z).applyMatrix4(inv);const f=aimF,tx=tmp.x/-tmp.z,ty=tmp.y/-tmp.z;return {x:(tx-f.l)/(f.r-f.l)*cw,y:(f.t-ty)/(f.t-f.b)*ch};},
+  setAwake(on){if(on===awake)return;awake=on;if(!on){cancelAnimationFrame(raf);raf=0;last=0;}else wake();},
   dispose(){disposed=true;cancelAnimationFrame(raf);raf=0;ro.disconnect();document.removeEventListener('visibilitychange',onVis);
    if(process.env.NODE_ENV!=='production')delete (window as unknown as {__pk?:unknown}).__pk;
    kicker.dispose();keeper.dispose();disposables.forEach(d=>d.dispose());fb.dispose();sun.shadow.map?.dispose();renderer.dispose();renderer.forceContextLoss();},

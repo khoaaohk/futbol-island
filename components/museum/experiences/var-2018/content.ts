@@ -22,7 +22,6 @@ export const CHECKS:readonly {label:string;yes:boolean;why:string}[]=[
  {label:'Second yellow card',yes:false,why:'No: only straight reds.'},
 ];
 
-export const OFFSIDE_LAW='You are offside if any part of your head, body or feet is nearer the goal line than both the ball and the second-last opponent when a teammate plays the ball. Hands and arms don’t count. Level is onside.';
 export const IFAB_QUOTE='The final decision is always taken by the referee.';
 export const IFAB_MOTTO='Minimum interference – maximum benefit.';
 
@@ -48,8 +47,8 @@ export const QUIZ:readonly {q:string;options:readonly string[];answer:number;why
   why:'No. VAR only helps with goals, penalties, straight red cards and mistaken identity.',hint:'Remember the booth: which things could VAR check?'},
  {q:'At its deepest, a slice of the ball is still on the line. Goal?',options:['Goal','No goal'],answer:1,
   why:'No goal. The WHOLE ball must cross the WHOLE line.',hint:'Look at the goal-line camera again in your head: was ALL of the ball over?'},
- {q:'For offside, which part of a player does NOT count?',options:['The foot','The head','The arm'],answer:2,
-  why:'The arm. You can’t score with your hands or arms, so they don’t count for offside.',hint:'Which line did the room tell you was the wrong one?'},
+ {q:'France v Australia, 2018: who gave the first VAR penalty at a World Cup?',options:['The VAR, from the video room','The referee, after watching the screen'],answer:1,
+  why:'Referee Andrés Cunha. VAR asked him to look again; he watched the replay at the pitchside screen and decided: penalty.',hint:'Read the 2018 story again: who went to the screen?'},
 ];
 export const TOURNAMENT_NUMBERS='In the first 62 matches of Russia 2018, VAR quietly made more than 440 checks, but asked for a second look only 19 times.';
 

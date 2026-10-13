@@ -25,6 +25,8 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-east-pier-challenge-v1','fi2-fuel-v1',
  // The museum passport (Oct 9 2026): exhibits stepped inside / finished (lib/museum/museumVisits.ts)
  'fi2-museum-visits-v1',
+ // Museum mini-games (Oct 10 2026): the Legends arena progress and two best scores, small and worth keeping across devices
+ 'fi2-museum-hof-arena-v1','fi2-museum-backpass-press-best','fi2-museum-timeline-order-best',
  // Coins & items
  'fi2-arcade-wallet-v1','fi2-vending-v1','fi2-backpack-v1','fi2-home-decor-v1','fi2-ride-unlocks-v1','fi2-ride-unlock-announced-v1',
  'fi2-costume-milestone-v1',

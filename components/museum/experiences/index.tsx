@@ -7,7 +7,7 @@ import type {ExperienceProps} from './types';
  * placeholder, so work in progress never breaks the museum page. Agents build and test theirs at /museum-lab/<id>.
  * While a chunk loads the host's ExperienceStage curtain covers this fallback (warm lacquer, never a black flash).
  */
-const load=(f:()=>Promise<{default:ComponentType<ExperienceProps>}>)=>dynamic(f,{ssr:false,loading:()=><p role="status" data-museum-exp-loading style={{position:'fixed',inset:0,zIndex:20,display:'grid',placeItems:'center',margin:0,background:'#1d1712',color:'#f3e6c8',font:'600 16px/1.3 system-ui,sans-serif'}}>Opening the exhibit…</p>});
+const load=(f:()=>Promise<{default:ComponentType<ExperienceProps>}>)=>dynamic(f,{ssr:false,loading:()=><p role="status" data-museum-exp-loading style={{position:'fixed',inset:0,zIndex:20,display:'grid',placeItems:'center',margin:0,background:'#f6f4ef',color:'#6b6a66',font:'500 15px/1.3 "Helvetica Neue",Helvetica,Arial,system-ui,sans-serif'}}>Opening the exhibit…</p>});
 const placeholder=load(()=>import('./Placeholder'));
 const READY:Record<string,ComponentType<ExperienceProps>>={
  'timeline':load(()=>import('./timeline/Experience')),

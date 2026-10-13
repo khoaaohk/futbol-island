@@ -78,7 +78,7 @@ assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);as
  assert.match(town,/const heat=createIslandHeat\(\{renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality\.phone\}\);\(window as unknown as \{__fi2:Record<string,unknown>\}\)\.__fi2\.heat=heat;/);
  assert.match(town,/if\(idleFrame\|\|coarse\|\|heat\.cap30\)\{const slot=frameCapSlot\(now,lastRendered,Math\.max\(idleFrame,heat\.frameMs\)\)/);
  assert.match(town,/heat\.beforeRender\(location[^;]*\);renderer\.render\(scene,camera\);renderStats\.rendered\+\+;heat\.afterRender\(now,ms,performance\.now\(\)-now,renderer\.info\.render\.calls,learning\?\?''\);/);
- assert.match(town,/world\.updateWater\(active&&!learning\?dt:0,reduced\|\|heat\.staticAmbience\)/);assert.match(town,/return\(\)=>\{[^\n]{0,120}heat\.dispose\(\);/,'heat control disposed with the island');
+ assert.match(town,/const stillWater=reduced\|\|heat\.staticAmbience\|\|heat\.governor\.last\.state==='slow';world\.updateWater\(active&&!learning\?dt:0,stillWater\);setWaterDetail\(stillWater\?0:/,'water holds still (and takes the cheap static path) for reduced motion, the static-ambience tiers and the governor\'s slow state');assert.match(town,/return\(\)=>\{[^\n]{0,120}heat\.dispose\(\);/,'heat control disposed with the island');
  assert.match(film,/let cap=Math\.min\([^;]*filmDprCap\(\)\)/,'card film cap follows the heat tier');
  assert.match(settings,/aria-label="Battery saver" aria-pressed=\{saver\}[^>]*onClick=\{\(\)=>setBatterySaver\(!saver\)\}/);assert.match(settings,/Keeps your device cooler/);
  assert.match(npcs,/entry\.rig\.root\.visible=(!isThinned\(entry\)&&)?distance<\(drawLimit\?\?\(desktop\?96:72\)\)/);}

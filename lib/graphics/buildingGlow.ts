@@ -12,11 +12,13 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
  const shapes=vending?[
   {w:width+.1,d:depth+.1,h:height+.06,x:0,y:(height+.06)/2,z:0}
  ]:kind==='museum'?[
-  // History Museum (Oct 3 2026, user: hover "not correctly highlighting the building"): its own box and roof rim plus the
-  // wide HISTORY MUSEUM / THE STORY OF FOOTBALL sign board (25 m, y 5.5–8.65). No roof room: the museum has none.
+  // History Museum (Oct 3 2026, user: hover "not correctly highlighting the building"): its own box and roof slab plus, since the
+  // modern restyle (Oct 10 2026, lib/town/museumExterior.ts), the blue accent plane (x +10.6, 7.2 m tall) and the entrance canopy
+  // (x 155.5–166, 3 m deep at y 4.25). Offsets are from the building centre (168, 181). No roof room: the museum has none.
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},
-  {w:width+.56,d:depth+.6,h:.23,x:0,y:height+.08,z:0},
-  {w:25.3,d:.42,h:3.25,x:0,y:7.07,z:depth/2+.2}
+  {w:width+.76,d:depth+.8,h:.32,x:0,y:height+.09,z:0},
+  {w:5.84,d:.64,h:7.32,x:10.6,y:3.66,z:depth/2+.2},
+  {w:10.74,d:3.12,h:.37,x:-7.25,y:4.25,z:depth/2+1.5}
  ]:kind==='konbini'||kind==='museum-wing'?[
   // Konbini (Sep 29 2026): exactly the store's own box (facade to back wall, ground to parapet) plus its flat roof rim.
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},

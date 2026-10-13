@@ -1,166 +1,199 @@
 'use client';
-import {useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'react';
-import {museumSfx} from '@/lib/museum/museumSound';
-import ExperienceBack from '../ExperienceBack';
+import {useCallback,useEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent as RPointerEvent} from 'react';
+import {isSoundEnabled} from '@/lib/games/sound';
+import {museumSfx,unlockMuseumAudio} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
-import {EDITIONS,WINNER_COLOR,titles,SOURCES,type Edition} from './data';
-import {FinalPitch,FinalPanel,useReplay} from './FinalReplay';
-import {DarkStage,DarkPanel,useDarkYears} from './DarkYears';
-import {ChinaStage,ChinaPanel,useFold} from './China91';
-import {AkersPitch,AkersPanel,useAkers} from './AkersGame';
-import {QuizStage,QuizPanel,useQuiz} from './Quiz';
-import {Medallion,starPath} from './papercut';
-import {flip,pop} from './spring';
-import {Chevron,Play} from './icons';
-import styles from './wwc.module.css';
+import WallLabel from '../modern/WallLabel';
+import StepCheck,{type CheckItem} from '../modern/StepCheck';
+import Ending from '../modern/Ending';
+import {useReduced} from '../modern/hooks';
+import g from '../modern/gallery.module.css';
+import {PaperRoom,PaperCard,Banner,Intro,ScoreCover,Pips,Chips,noteSpace,paper as s} from '../anatomy/PaperRoom';
+import {useBox,local,toFloor} from '../anatomy/paper-kit';
+import {usePaperLoop} from '../anatomy/paper-loop';
+import {BANS,CHINA_1991,EDITIONS,FINAL_1991,QUIZ,SOURCES,TAKE_IT} from './data';
+import {CHANCES,GOAL_PTS,PRESS_PTS,ROUND,ROUND_PTS,cleanRun,demoRun,gateNews,newGates,newPlay,pointsOf,settleGates,stepGates,stepPlay,yearAtX,
+ type GateState,type Outcome,type Play,type V} from './model';
+import {Gates,type GatesApi} from './Gates';
+import {Final,type FinalApi} from './Final';
+import w from './wwc.module.css';
 
 /**
- * wwc-1991 · "Cut from paper" (Oct 9 2026 restyle of "A Sky of Firsts", Oct 5). The first FIFA Women's World Cup (China 1991)
- * told as Chinese paper-cut (剪纸 jianzhi): red sheets with sawtooth and crescent cuts layered on cream paper, 1991 poster type.
- * Five beats the visitor drives:
- *  1. Shut out: scrub 1920 → 1991; each ban on women's football is a red shutter across a country's lane that lifts when it ends.
- *  2. China 1991: drag a folded paper open into a 12-petal window flower, one petal per team (12 teams, 80-minute matches).
- *  3. The final: replay USA 2–1 Norway as a paper goal map, then YOUR TURN: drag Michelle Akers to win Norway's back pass and
- *     flick in the winner (Akers scored both US goals).
- *  4. Every star since: each Women's World Cup as a paper star; tap one for its host, final and star player.
- *  5. Cut your star (quick check): five questions on beats 1–3; each right answer cuts one point of a paper star, then it ignites.
- * Real history, sourced in data.ts. Heat: no canvas and no loop at rest; the only rAF loops are the replay, the time-travel
- * play button, the paper unfold spring and the Akers game, each running only while it moves and stopping when finished,
- * hidden or unmounted. Paper texture is CSS (an SVG noise tile the browser rasterises once). Transitions between beats are
- * FLIP / WAAPI on spring-sampled keyframes (no View Transitions).
+ * wwc-1991 · "The first Women’s World Cup" (Oct 12 2026 anatomy Paper restyle; user: "these games should not be the pixel style …
+ * it needs to be larger and fill the entire screen", the anatomy skill's Paper theme). One big paper card fills the first screen:
+ *  1. Story intro (4 beats).
+ *  2. OPEN THE GATES (Gates.tsx): drag the slider along the year rail, 1920 → 1991. The bans (England 1921–71, Brazil 1941–79,
+ *     West Germany 1955–70) lock and unlock their gates; at 1991 the World Cup gate opens.
+ *  3. SCORE AKERS'S WINNER (Final.tsx): the 1991 final, minute 78, 1–1. Draw Michelle Akers's run with a finger: cut out Norway's
+ *     back pass, go round the diving keeper, finish. Five chances, each back pass faster. 100 a goal, +up to 50 for pressing
+ *     early, +50 for going round the keeper.
+ *  4. Score (ScoreCover): points, the real goal, the quick check (StepCheck) → the Ending → onComplete (passport gold) once.
+ * Heat: one Paper loop (anatomy/paper-loop.ts) runs only while a run plays or the gates move; it parks off-screen and is
+ * disposed on unmount. Reduced motion: the run resolves at once (its trail is drawn), the gates snap: fully playable, turn by turn.
  */
-type Mode='dark'|'china'|'final'|'stars'|'quiz';
-const BEATS:[Mode,string,string][]=[['dark','1','Shut out'],['china','2','China'],['final','3','Final'],['stars','4','Stars'],['quiz','5','Quiz']];
-const WIDE:[number,number][]=[[8,74],[18,52],[28,66],[37,40],[47,58],[56,32],[66,50],[75,24],[85,38],[93,70]];
-const TALL:[number,number][]=[[22,90],[70,80],[26,69],[74,59],[28,48],[72,38],[26,28],[68,18],[30,8],[82,6]];
-const color=(e:Edition)=>e.winner?WINNER_COLOR[e.winner]:'#b9a989';
-const size=(e:Edition)=>e.year===1991?32:15+e.teams/4;
+type Phase='intro'|'gate'|'final'|'score';
+type Result={outcome:Outcome;points:number;press:number;round:boolean};
+const ACCENT='#d6342b';
+const BEATS=[
+ {when:'1920 · Goodison Park',head:'53,000 fans',text:BANS[0].before??''},
+ {when:'1921 to 1979',head:'Shut out',text:'Then England’s FA banned women’s teams from its grounds for 50 years. Brazil (1941) and West Germany (1955) banned them too.'},
+ {when:'November 1991 · China',head:'The first World Cup',text:`${CHINA_1991.trial} 12 teams came. ${CHINA_1991.minutes}`},
+ {when:`${FINAL_1991.date} · ${FINAL_1991.place}`,head:'USA 2–1 Norway',text:`${FINAL_1991.goals[2].who}, minute ${FINAL_1991.goals[2].min} of 80: ${FINAL_1991.goals[2].how}`},
+] as const;
+const Q=QUIZ[2],CHECK:CheckItem={q:Q.q,options:Q.choices,right:Q.right,why:Q.why};
+const WORD:Record<Outcome,{kind:'good'|'ok'|'bad';big:string;line:string}>={
+ goal:{kind:'good',big:'Goal!',line:'Won the back pass, scored the winner.'},
+ saved:{kind:'ok',big:'Saved',line:'Cut sideways as the keeper dives, then finish.'},
+ keeper:{kind:'bad',big:'Too late',line:'The keeper picked up the pass. Run at the pass sooner.'},
+ tackled:{kind:'bad',big:'Tackled',line:'Norway’s defender got back. Be quicker to goal.'},
+ blocked:{kind:'bad',big:'Blocked',line:'The defender was on the line. Aim away from her.'},
+ wide:{kind:'bad',big:'Wide',line:'Finish between the posts.'},
+ short:{kind:'bad',big:'No shot',line:'Draw the run on toward the goal.'},
+};
+const sfx=(f:()=>void)=>{try{if(isSoundEnabled())f();}catch{/* no audio */}};
 
-export default function Experience({exhibit,onClose}:ExperienceProps){
- const [mode,setMode]=useState<Mode>('dark');
- const [sub,setSub]=useState<'watch'|'play'>('watch');
- const [sel,setSel]=useState(0);
- const [touched,setTouched]=useState(false);
- const [tall,setTall]=useState(false);
- const [seen,setSeen]=useState<ReadonlySet<number>>(()=>new Set([0]));
- const [complete,setComplete]=useState(false);
- const stage=useRef<HTMLDivElement>(null),tabs=useRef<HTMLDivElement>(null),pill=useRef<HTMLSpanElement>(null),pillFrom=useRef<DOMRect|null>(null);
- const reduced=useRef(false);
- useEffect(()=>{reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;},[]);
- const replay=useReplay(reduced);
- const dark=useDarkYears(reduced);
- const fold=useFold(reduced);
- const akers=useAkers(reduced);
- const quiz=useQuiz(reduced);
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
+ const reduced=useReduced();
+ const [phase,setPhase]=useState<Phase>('intro');const phaseRef=useRef(phase);phaseRef.current=phase;
+ const [cardRef,box]=useBox<HTMLDivElement>();
+ const stageRef=useRef<HTMLDivElement>(null),gatesApi=useRef<GatesApi>(null),finalApi=useRef<FinalApi>(null),readRef=useRef<HTMLSpanElement>(null);
+ const said=useRef('');const say=useCallback((t:string)=>{if(t===said.current)return;said.current=t;if(readRef.current)readRef.current.textContent=t;},[]);
+ const draw=()=>{gatesApi.current?.draw();finalApi.current?.draw();};
+ // Per-frame state lives in refs; React state only for what the controls show.
+ const gates=useRef<GateState>(newGates());
+ const [year,setYear]=useState(gates.current.year),[gateDone,setGateDone]=useState(false);
+ const play=useRef<Play|null>(null),run=useRef<V[]>([]),pts=useRef<V[]>([]),cursor=useRef<V|null>(null),demo=useRef(false);
+ const [ci,setCi]=useState(0),[results,setResults]=useState<Result[]>([]),[last,setLast]=useState<Result|null>(null),[busy,setBusy]=useState(false),[drawn,setDrawn]=useState(false);
+ const [checked,setChecked]=useState(false),[games,setGames]=useState(0);
+ const src=useMemo(()=>({play,run,cursor}),[]);
+ const chance=CHANCES[Math.min(ci,ROUND-1)];
+ const total=results.reduce((a,r)=>a+r.points,0),goals=results.filter(r=>r.outcome==='goal').length;
+ const [top,setTop]=useState(40);
+ useEffect(()=>{setTop(noteSpace(cardRef.current));},[phase,ci,last,busy,box.w,box.h,cardRef]);
 
- // Portrait vs landscape constellation (measured, not polled).
- useEffect(()=>{const st=stage.current;if(!st)return;const measure=()=>{const r=st.getBoundingClientRect();setTall(r.width<600||r.width/Math.max(1,r.height)<1.05);};
-  measure();const ro=new ResizeObserver(measure);ro.observe(st);return()=>ro.disconnect();},[]);
+ // ── The loop: alive only while a run plays or the gates move ──
+ const loop=usePaperLoop(dt=>{
+  if(phaseRef.current==='gate'){const moving=stepGates(gates.current,dt);draw();return moving;}
+  const p=play.current;if(!p)return false;const more=stepPlay(p,dt);draw();
+  say(p.done?WORD[p.outcome!].big.toUpperCase():p.won!=null?'WON IT! GO ROUND HER':'CHASE THE PASS');
+  if(!more){finish();return false;}return true;},stageRef,reduced);
 
- // The beat rail's paper tab slides to the chosen beat (FLIP on a spring), instead of jumping.
- useLayoutEffect(()=>{const t=tabs.current,p=pill.current;if(!t||!p)return;const b=t.querySelector<HTMLElement>('[aria-selected="true"]');if(!b)return;
-  p.style.left=b.offsetLeft+'px';p.style.width=b.offsetWidth+'px';const from=pillFrom.current;pillFrom.current=null;if(from&&!reduced.current)flip(p,from,{scale:true,k:300,c:24});},[mode]);
+ const finish=()=>{const p=play.current;if(!p||!p.done)return;setBusy(false);
+  if(demo.current){demo.current=false;setLast(null);say('YOUR TURN: DRAW THE RUN');play.current=null;run.current=[];draw();return;}
+  const pt=pointsOf(p),r:Result={outcome:p.outcome!,points:pt.total,press:pt.press,round:pt.round>0};
+  setLast(r);say(r.outcome==='goal'?`GOAL +${r.points}`:WORD[r.outcome].big.toUpperCase());
+  sfx(r.outcome==='goal'?museumSfx.net:r.outcome==='saved'?museumSfx.stamp:museumSfx.look);if(r.outcome==='goal')sfx(museumSfx.crowd);
+  setResults(list=>[...list,r]);};
+ const startRun=(r:V[],isDemo=false)=>{if(play.current&&!play.current.done)return;unlockMuseumAudio();
+  demo.current=isDemo;run.current=r;play.current=newPlay(chance,r);setBusy(true);setLast(null);setDrawn(false);sfx(museumSfx.kick);loop.wake();};
+ const nextChance=()=>{if(results.length>=ROUND){setPhase('score');return;}play.current=null;run.current=[];pts.current=[];cursor.current=null;setLast(null);setDrawn(false);
+  setCi(results.length);say(`CHANCE ${results.length+1} OF ${ROUND}`);draw();};
+ useEffect(()=>{if(phase==='final'&&results.length&&!busy&&last&&results.length>=ROUND){const t=setTimeout(()=>setPhase('score'),reduced?0:1600);return()=>clearTimeout(t);}},[phase,results,busy,last,reduced]);
 
- const go=useCallback((m:Mode)=>{if(m===mode)return;pillFrom.current=pill.current?.getBoundingClientRect()??null;try{museumSfx.flap();}catch{}
-  setMode(m);if(m==='final'){setSub('watch');replay.start();}else replay.pause();if(m!=='dark')dark.pause();},[mode,replay,dark]);
- const visit=useCallback((i:number)=>{setSel(i);setTouched(true);if(seen.has(i))return;const n=new Set(seen);n.add(i);setSeen(n);if(n.size===EDITIONS.length){museumSfx.reveal();setComplete(true);}},[seen]);
- const pick=useCallback((i:number)=>{const j=Math.max(0,Math.min(EDITIONS.length-1,i));visit(j);museumSfx.flap();
-  if(!reduced.current)pop(document.querySelector(`[data-wwc-star="${j}"] svg`),.7);},[visit]);
- const play=useCallback(()=>{replay.pause();setSub('play');},[replay]);
+ // ── Input: the year slider (drag along the rail, or tap the rail) and the run (draw with a finger) ──
+ const setGateYear=useCallback((y:number)=>{const gs=gates.current,prev=gs.year,ny=Math.max(1920,Math.min(1991,Math.round(y)));if(ny===prev)return;
+  const before=gateNews(prev),after=gateNews(ny);gs.year=ny;setYear(ny);
+  if(after.text!==before.text){sfx(after.kind==='bad'?museumSfx.stamp:after.kind==='good'?museumSfx.reveal:museumSfx.flap);}else sfx(museumSfx.tick);
+  if(ny>=1991&&!gateDone){setGateDone(true);sfx(museumSfx.crowd);}
+  say(`${ny}`);loop.wake();draw();},[gateDone,loop,say]);
+ const floorAt=(e:{clientX:number;clientY:number},z=0)=>{const P=(phase==='gate'?gatesApi:finalApi).current?.proj(),el=stageRef.current;if(!P||!el)return null;const [sx,sy]=local(e,el),[x,y]=toFloor(sx,sy,P,z);return {x:x/10,y:y/10};};
+ const ptr=useRef<number|null>(null);
+ const onDown=(e:RPointerEvent<HTMLDivElement>)=>{
+  if(phase==='gate'){const p=floorAt(e,4);if(!p)return;unlockMuseumAudio();ptr.current=e.pointerId;try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* fine */}setGateYear(yearAtX(p.x));return;}
+  if(phase!=='final'||busy||results.length>=ROUND||last)return;const p=floorAt(e);if(!p)return;unlockMuseumAudio();ptr.current=e.pointerId;try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* fine */}
+  pts.current=[p];cursor.current=null;run.current=cleanRun(chance.akers,pts.current);draw();};
+ const onMove=(e:RPointerEvent<HTMLDivElement>)=>{if(ptr.current!==e.pointerId)return;
+  if(phase==='gate'){const p=floorAt(e,4);if(p)setGateYear(yearAtX(p.x));return;}
+  const p=floorAt(e);if(!p)return;const lp=pts.current[pts.current.length-1];if(!lp||Math.hypot(p.x-lp.x,p.y-lp.y)>.2){pts.current.push(p);run.current=cleanRun(chance.akers,pts.current);
+   say(`RUN ${(run.current.length*.25).toFixed(1)} M`);draw();}};
+ const onUp=(e:RPointerEvent<HTMLDivElement>,cancelled=false)=>{if(ptr.current!==e.pointerId)return;ptr.current=null;if(phase!=='final')return;
+  if(cancelled||run.current.length<4){run.current=[];draw();return;}startRun(run.current);};
 
- useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();return;}
-  if(mode!=='stars'||(e.target instanceof HTMLElement&&e.target.matches('input,summary,a')))return;
-  if(e.key==='ArrowRight'||e.key==='ArrowUp'){e.preventDefault();pick(sel+1);}
-  else if(e.key==='ArrowLeft'||e.key==='ArrowDown'){e.preventDefault();pick(sel-1);}};
-  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[mode,onClose,pick,sel]);
+ // Keyboard: the slider ← → (Shift: 10 years); the run: arrows move a cursor, Enter adds a point, the Go button runs it.
+ const keyMove=(dx:number,dy:number,fine:boolean)=>{if(phase==='gate'){setGateYear(gates.current.year+(dx||-dy)*(fine?10:1));return;}
+  if(phase!=='final'||busy||last)return;const c=cursor.current??{...chance.akers},k=fine?.25:.6;cursor.current={x:c.x+dx*k,y:c.y+dy*k};say('ENTER: ADD A POINT');draw();};
+ const onKey=(e:KeyboardEvent<HTMLElement>)=>{const k=e.key,btn=e.target instanceof HTMLButtonElement;
+  if(k==='Escape'){e.preventDefault();onClose();return;}
+  const mv:Record<string,[number,number]>={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  if(mv[k]&&!btn){e.preventDefault();keyMove(mv[k][0],mv[k][1],e.shiftKey);return;}
+  if((k==='Enter'||k===' ')&&!btn&&phase==='final'&&!busy&&!last&&cursor.current){e.preventDefault();pts.current.push({...cursor.current});run.current=cleanRun(chance.akers,pts.current);setDrawn(true);draw();}};
 
- const pos=tall?TALL:WIDE,ar=tall?.75:5/3,e=EDITIONS[sel];
- return <section className={styles.root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="wwc-1991" data-mode={mode}>
-  <Medallion className={`${styles.deco} ${styles.decoA}`} r={50} n={12}/>
-  <Medallion className={`${styles.deco} ${styles.decoB}`} r={50} n={8}/>
-  <ExperienceBack onClose={onClose}/>
-  <header className={styles.header}>
-   <h1 className={styles.title}><span className={styles.hanziSm} lang="zh">中国 1991</span> The first Women’s World Cup</h1>
-   <span className={styles.real}>Real history</span>
-  </header>
+ // Phase changes redraw; the gate settles at once when entered.
+ useEffect(()=>{if(phase==='gate'){settleGates(gates.current);say(`${gates.current.year}`);}if(phase==='final'&&!play.current)say(`CHANCE ${ci+1} OF ${ROUND}`);draw();},[phase]);// eslint-disable-line react-hooks/exhaustive-deps
 
-  <div ref={stage} className={styles.stage}>
-   <div key={mode+(mode==='final'?sub:'')} className={styles.scene}>
-   {mode==='dark'&&<DarkStage d={dark} onLit={()=>go('china')}/>}
-   {mode==='china'&&<ChinaStage f={fold}/>}
-   {mode==='final'&&(sub==='watch'?<FinalPitch r={replay}/>:<AkersPitch g={akers}/>)}
-   {mode==='quiz'&&<QuizStage q={quiz}/>}
-   {mode==='stars'&&<div className={styles.sky} data-complete={complete||undefined} style={{'--ar':ar} as CSSProperties} role="group" aria-label="Every FIFA Women’s World Cup as a paper star. Bigger stars had more teams.">
-    <svg className={styles.lines} viewBox={`0 0 ${100*ar} 100`} aria-hidden="true">
-     {pos.slice(1).map((p,i)=>{const a=pos[i],fut=EDITIONS[i+1].upcoming,on=sel===i||sel===i+1;
-      return <line key={i} className={styles.thread} data-future={fut||undefined} data-on={on||undefined} x1={a[0]*ar} y1={a[1]} x2={p[0]*ar} y2={p[1]} style={{'--i':i} as CSSProperties}/>;})}
-    </svg>
-    {EDITIONS.map((ed,i)=><button key={ed.year} type="button" className={styles.star} data-wwc-star={i} data-first={ed.year===1991||undefined} data-future={ed.upcoming||undefined} aria-pressed={i===sel} data-seen={seen.has(i)||undefined} data-museum-own-cue
-      data-side={tall?(pos[i][0]<50?'l':'r'):'b'}
-      aria-label={`${ed.year}, ${ed.host}. ${ed.upcoming?'Not played yet':`Won by ${ed.winner}`}. ${ed.teams} teams.`} onClick={()=>pick(i)}
-      style={{left:`${pos[i][0]}%`,top:`${pos[i][1]}%`,'--r':`${size(ed)}px`,'--c':color(ed),'--i':i} as CSSProperties}>
-     <svg viewBox="-12 -12 24 24" aria-hidden="true"><path d={starPath(10.5)} transform="translate(.5 .8)" className={styles.starShadow}/><path d={starPath(10.5)} fillRule="evenodd" className={styles.starPaper}/></svg>
-     <span className={styles.yr}>{ed.year}<small>{ed.upcoming?'next':ed.winner}</small></span></button>)}
-    {complete&&<p className={styles.done} role="status"><b>Every star visited</b><span>9 World Cups played. One star still to cut.</span></p>}
-    {!touched&&<span className={styles.hint}><i aria-hidden="true"/>Tap any star to visit that World Cup</span>}
-   </div>}
+ const again=()=>{setResults([]);setLast(null);setCi(0);setChecked(false);setGames(n=>n+1);play.current=null;run.current=[];pts.current=[];setPhase('final');say(`CHANCE 1 OF ${ROUND}`);};
+ const news=gateNews(year),word=last?WORD[last.outcome]:null;
+ const sources=useMemo(()=>{const seen=new Set<string>();return [...exhibit.sources,...SOURCES].filter(x=>seen.has(x.url)?false:(seen.add(x.url),true));},[exhibit.sources]);
+ const pips=results.map(r=>r.outcome==='goal'?'good':r.outcome==='saved'?'ok':'miss');
+ const atGate=phase==='gate'||phase==='intro';
+
+ const note=phase==='gate'?<><span className={s.tag} data-tone={news.kind==='bad'?'acc':undefined}>{year}</span>{news.text}</>
+  :phase==='final'&&!busy&&!last?<><span className={s.tag} data-tone="acc">Chance {ci+1} of {ROUND}</span>The dashed line is Norway’s back pass. Draw Akers’s run from her ring: cut out the pass, go round the keeper, finish.</>:null;
+ const banner=phase==='final'&&word&&!busy?<Banner kind={word.kind} big={last?.outcome==='goal'?`Goal! +${last.points}`:word.big} line={last?.outcome==='goal'?(last.round?'Round the keeper, like Akers in 1991.':'Next time go round the keeper for +50.'):word.line}/>
+  :phase==='gate'&&gateDone?<Banner kind="good" big="1991" line="The World Cup gate is open: the first Women’s World Cup, in China."/>:null;
+
+ const cover=phase==='intro'?<Intro kicker={<>Real history · {exhibit.year}</>} title={<>The first <em>Women’s</em> World Cup</>} deck={exhibit.facts[0]} beats={BEATS}
+   onStart={()=>{unlockMuseumAudio();setPhase('gate');}} startLabel="Open the gates ▸"/>
+  :phase==='score'?<ScoreCover kicker={`Full time · ${ROUND} chances`} score={total} unit={`of ${ROUND*(GOAL_PTS+PRESS_PTS+ROUND_PTS)} points · ${goals} of ${ROUND} goals`}
+    notes={<><p><b>{goals} of {ROUND} goals.</b> {exhibit.facts[1]} {exhibit.facts[2]}</p>
+     <p><b>The real winner:</b> minute {FINAL_1991.goals[2].min} of 80. {FINAL_1991.goals[2].how} {TAKE_IT}</p></>}
+    buttons={<><button type="button" className={s.btn} data-museum-own-cue data-wwc-again onClick={again}>Five more</button>
+     <button type="button" className={s.ghost} onClick={()=>{gates.current=newGates();setYear(1920);setGateDone(false);setPhase('gate');}}>Open the gates again</button></>}>
+    <StepCheck key={games} items={[CHECK]} kicker={()=>'Quick check'} onPick={ok=>sfx(ok?museumSfx.stamp:museumSfx.look)} onDone={()=>setChecked(true)} doneLabel="Finish"
+     renderDone={()=><Ending reached={checked} onComplete={onComplete} art={<svg viewBox="0 0 40 40"><path d="M20 5l4.4 9 9.9 1.4-7.2 7 1.7 9.8L20 27.6l-8.8 4.6 1.7-9.8-7.2-7 9.9-1.4z" fill={ACCENT}/></svg>}
+      seen="You opened the gates and scored Akers’s winner." take={exhibit.forYourGame}/>}/>
+   </ScoreCover>:null;
+
+ const title=atGate?'Open the gates':'Score Akers’s winner';
+ const hint=atGate?'Drag the slider · 1920 to 1991':reduced?'Draw her run: it plays at once':'Draw Akers’s run · let go to play';
+ const label=atGate?`A stadium wall with gates for England, Brazil and West Germany and the World Cup gate, and a year rail in front. The year is ${year}. ${news.text}`
+  :`The 1991 final, minute 78, 1–1. Norway’s defender is about to pass back to the keeper. Michelle Akers, the lit player in the red ring, waits. Chance ${ci+1} of ${ROUND}.`;
+
+ return <PaperRoom id="wwc-1991" accent={ACCENT} ariaLabel={`${exhibit.year} · ${exhibit.title}`} onClose={onClose} onKeyDown={onKey}
+  rootProps={{'data-phase':phase,'data-chance':ci+1,'data-result':last?.outcome,'data-score':total,'data-year':year,'data-reduced':reduced||undefined}}
+  head={<WallLabel as="h1" title={exhibit.title} meta={<>{exhibit.year} · {CHINA_1991.region}, China</>}/>}
+  card={<PaperCard ref={cardRef} data-wide-note="right" fig={`Fig. ${exhibit.year}`} title={title} hint={hint} readout={atGate?String(year):`CHANCE ${ci+1} OF ${ROUND}`} readoutRef={readRef} note={note} banner={banner} cover={cover}>
+   <div ref={stageRef} className={s.stage} tabIndex={0} role="application" aria-label={label} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={e=>onUp(e)} onPointerCancel={e=>onUp(e,true)}
+    data-stage={atGate?'gates':'final'} style={{cursor:atGate?'ew-resize':phase==='final'&&!busy&&!last?'crosshair':undefined}}>
+    {atGate?<Gates ref={gatesApi} w={box.w} h={box.h} top={top} bottom={40} g={gates.current}/>
+     :<Final ref={finalApi} w={box.w} h={box.h} top={top} bottom={40} src={src} chance={chance}/>}
    </div>
-  </div>
-
-  <aside className={styles.panel} aria-label="The story">
-   <div ref={tabs} className={styles.tabs} role="tablist" aria-label="Story beats">
-    <span ref={pill} className={styles.pill} aria-hidden="true"/>
-    {BEATS.map(([m,n,l])=><button key={m} type="button" role="tab" aria-selected={mode===m} data-museum-own-cue onClick={()=>go(m)}><i>{n}</i><span>{l}</span></button>)}
+  </PaperCard>}
+  dock={phase==='gate'?<div className={s.row}>
+    <button type="button" className={s.ghost} aria-label="Ten years earlier" onClick={()=>setGateYear(year-10)} disabled={year<=1920}>◀◀</button>
+    <button type="button" className={s.ghost} aria-label="One year earlier" onClick={()=>setGateYear(year-1)} disabled={year<=1920}>◀</button>
+    <span className={s.big} data-wwc-year={year} aria-live="polite">{year}</span>
+    <button type="button" className={s.ghost} aria-label="One year later" onClick={()=>setGateYear(year+1)} disabled={year>=1991}>▶</button>
+    <button type="button" className={s.ghost} aria-label="Ten years later" onClick={()=>setGateYear(year+10)} disabled={year>=1991}>▶▶</button>
+    {gateDone&&<button type="button" className={s.btn} data-tone="acc" data-museum-own-cue data-wwc-to-final onClick={()=>{setPhase('final');sfx(museumSfx.whistle);}}>To the final ▸</button>}
    </div>
-   <div key={mode} className={styles.pane}>
-    {mode==='dark'&&<DarkPanel d={dark} onLit={()=>go('china')}/>}
-    {mode==='china'&&<ChinaPanel f={fold} onNext={()=>go('final')}/>}
-    {mode==='final'&&<>{sub==='watch'?<FinalPanel r={replay} onPlay={play}/>:<AkersPanel g={akers} onWatch={()=>{setSub('watch');}}/>}
-     <div className={styles.row}><span className={styles.grow}/><button type="button" className={styles.btn} data-museum-own-cue onClick={()=>go('stars')}>Next: every World Cup since →</button></div></>}
-    {mode==='stars'&&<><StarCard e={e} sel={sel} seen={seen.size} pick={pick} onReplay={()=>go('final')} onDark={()=>go('dark')}/>
-     <div className={styles.row}><span className={styles.grow}/><button type="button" className={`${styles.btn} ${styles.gold}${complete?' '+styles.pop:''}`} data-museum-own-cue data-wwc-to-quiz onClick={()=>go('quiz')}>Next: cut your star →</button></div></>}
-    {mode==='quiz'&&<QuizPanel q={quiz} onAgain={()=>{quiz.reset();go('dark');}}/>}
+  :phase==='final'?<>
+   <div className={s.row}>
+    <Pips results={pips} total={ROUND} label={`${results.length} of ${ROUND} chances, ${goals} goals`}/>
+    <span className={s.grow}><Chips items={[{k:'pts',label:'Points',value:total},{k:'goals',label:'Goals',value:`${goals}/${results.length}`},{k:'pass',label:'Pass speed',value:`${chance.speed.toFixed(1)} m/s`}]}/></span>
    </div>
-   <details className={styles.sources}><summary>Sources</summary>
-    <p>Everything here is real football history, not part of the island’s story. The 1991 goal spots and the “Your turn” game are drawn to show how each goal happened.</p>
-    <ul>{SOURCES.map(s=><li key={s.url}><a href={s.url} target="_blank" rel="noopener noreferrer">{s.title}</a></li>)}</ul>
-   </details>
-  </aside>
- </section>;
-}
-
-function StarCard({e,sel,seen,pick,onReplay,onDark}:{e:Edition;sel:number;seen:number;pick:(i:number)=>void;onReplay:()=>void;onDark:()=>void}){
- const eyebrow=e.year===1991?'The very first Women’s World Cup':e.upcoming?'The next Women’s World Cup':`Women’s World Cup number ${sel+1}`;
- return <div className={styles.starCard} style={{'--c':color(e)} as CSSProperties}>
-  <div key={e.year} className={styles.card} aria-live="polite">
-   <p className={styles.eyebrow}>{eyebrow}</p>
-   <div className={styles.big}><span className={styles.bigYear}>{e.year}</span><span className={styles.host}><b>{e.host}</b><span>{e.teams} teams</span></span></div>
-   <p className={styles.score}>{e.upcoming?e.final:<>Final: {e.final}</>}</p>
-  </div>
-  <div key={'b'+e.year} className={`${styles.card} ${styles.cardBody}`}>
-   <p className={styles.who}><b>{e.upcoming?e.star:e.star+'.'}</b> {e.starWhy}</p>
-   <p className={styles.note}>{e.note}</p>
-  </div>
-  <div className={styles.row}>
-   <button type="button" className={`${styles.btn} ${styles.icon}`} aria-label="Earlier World Cup" disabled={sel===0} onClick={()=>pick(sel-1)}><Chevron left/></button>
-   <span className={styles.count}>{seen} of {EDITIONS.length}<small>visited</small></span>
-   <button type="button" className={`${styles.btn} ${styles.icon}`} aria-label="Later World Cup" disabled={sel===EDITIONS.length-1} onClick={()=>pick(sel+1)}><Chevron/></button>
-   <span className={styles.grow}/>
-   {e.year===1991?<button type="button" className={`${styles.btn} ${styles.gold}`} onClick={onReplay}><Play/>Replay the final</button>
-    :<button type="button" className={styles.btn} onClick={onDark}>Before 1991</button>}
-  </div>
-  <div className={styles.extra}>
-   <p className={styles.eyebrow}>Teams at each World Cup</p>
-   <div className={styles.growth} role="img" aria-label="The number of teams grew from 12 in 1991 to 16 in 1999, 24 in 2015 and 32 in 2023.">
-    {EDITIONS.map((ed,i)=><span key={ed.year} data-on={i===sel||undefined} data-future={ed.upcoming||undefined} style={{'--h':ed.teams/32,'--c':color(ed)} as CSSProperties}>
-     <i/>{(i===0||EDITIONS[i-1].teams!==ed.teams)&&!ed.upcoming&&<em>{ed.teams}</em>}</span>)}
-   </div>
-   <div className={styles.growthAxis} aria-hidden="true"><span>1991</span><span>2027</span></div>
-  </div>
-  <div className={styles.titlesBox}>
-   <p className={styles.eyebrow}>Titles so far</p>
-   <ul className={styles.legend}>{titles().map(([t,n])=><li key={t} style={{'--c':WINNER_COLOR[t as keyof typeof WINNER_COLOR]} as CSSProperties}>
-    <b>{t}</b><span className={styles.pips} aria-label={`${n} ${n===1?'title':'titles'}`}>{Array.from({length:n},(_,k)=><i key={k}/>)}</span></li>)}</ul>
-  </div>
- </div>;
+   <div className={s.row}>
+    {last&&results.length<ROUND?<button type="button" className={s.btn} data-tone="acc" data-wwc-next onClick={nextChance}>Next chance ▸</button>
+     :<button type="button" className={s.btn} data-tone={drawn?'acc':undefined} disabled={busy||!!last} data-wwc-go onClick={()=>{if(drawn&&run.current.length>1)startRun(run.current);else startRun(demoRun(chance),true);}}>{drawn?'Go!':'Show me'}</button>}
+    {busy&&<span className={s.say}>{demo.current?'Watch: meet the pass, cut away from the keeper, walk it in.':'…'}</span>}
+   </div></>:null}>
+  <section className={g.section} aria-labelledby="wwc-story">
+   <p className={g.kicker}>Real history</p>
+   <h2 id="wwc-story" className={g.h2}>From locked gates to the first star</h2>
+   <ol className={g.steps}>
+    {exhibit.facts.map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}
+    {BANS.map(b=><li key={b.country}><span>{b.from}</span><p className={g.body}><b>{b.country}, {b.from} to {b.to}.</b> {b.banned} {b.who} {b.after}</p></li>)}
+    <li><span>1991</span><p className={g.body}>{CHINA_1991.trial} {CHINA_1991.opener} {CHINA_1991.minutes} Its official name: the {CHINA_1991.officialName}.</p></li>
+    <li><span>Final</span><p className={g.body}>{FINAL_1991.date}, {FINAL_1991.place}, {FINAL_1991.crowd} fans. {FINAL_1991.goals.map(x=>`${x.min}′ ${x.who} (${x.team}): ${x.how}`).join(' ')}</p></li>
+   </ol>
+   <p className={g.small}>The game’s spots on the pitch are drawn for teaching and squeezed onto one screen. The machines are drawings made for this museum.</p>
+  </section>
+  <section className={g.section} aria-labelledby="wwc-since">
+   <p className={g.kicker}>Every Women’s World Cup since</p>
+   <ul className={w.cups}>{EDITIONS.map(e=><li key={e.year} data-first={e.year===1991||undefined}><b>{e.year}</b><span>{e.host} · {e.teams} teams</span><span>{e.final}</span><span>{e.star}: {e.starWhy}</span></li>)}</ul>
+   <p className={g.body}><b>Take it to your game:</b> {exhibit.forYourGame}</p>
+   <details className={g.sources}><summary>Sources</summary>
+    <ul>{sources.map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul></details>
+  </section>
+ </PaperRoom>;
 }

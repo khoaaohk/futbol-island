@@ -1,0 +1,58 @@
+/* Modern gallery page kit (Oct 10 2026, docs/museum-modern-style.md): the full-screen room, the reading column, sections,
+ * buttons, big numerals and the sources drawer, shared by the exhibits restyled into the one gallery language. Additive only:
+ * add classes, never rename. Pair with modern.module.css (.ground tokens, wall label, quick-check pills). Each exhibit's root
+ * sets --accent (and optionally --accent-ink for text on the accent). Motion: transform / opacity / stroke-dashoffset only. */
+.room{position:fixed;inset:0;z-index:20;display:block;outline:none;overflow:hidden;
+ --ground:#f6f4ef;--ink:#1d1d1b;--muted:#6b6a66;--hair:#d9d6cf;--accent:#1d1d1b;--accent-ink:#fff;
+ --sans:"Helvetica Neue",Helvetica,Arial,var(--btn-font,Arial),sans-serif;
+ --spring:linear(0,.06 2%,.24 6%,.52 12%,.78 19%,.95 27%,1.02 35%,1.03 43%,1.01 55%,1 100%);
+ background:var(--ground);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+.scroll{position:absolute;inset:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+ padding:calc(96px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(56px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.col{width:100%;max-width:1120px;margin:0 auto;display:grid;gap:clamp(64px,10vw,128px)}
+.section{display:grid;gap:28px;align-items:start;scroll-margin-top:84px}
+.split{display:grid;gap:28px;align-items:center}
+@media (min-width:900px){.split{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:64px}.splitFlip>:first-child{order:2}}
+.rule{height:1px;background:var(--hair);border:0;margin:0}
+.kicker{margin:0;font:600 12px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.kicker b{color:var(--ink);font-weight:600}
+.h2{margin:0;font:700 clamp(24px,3.4vw,36px)/1.08 var(--sans);letter-spacing:-.02em}
+.lead{margin:0;font:400 clamp(17px,1.9vw,20px)/1.55 var(--sans);max-width:58ch}
+.body{margin:0;font:400 16px/1.6 var(--sans);max-width:62ch}
+.muted{color:var(--muted)}
+.small{margin:0;font:400 13px/1.55 var(--sans);color:var(--muted);max-width:62ch}
+/* Big Swiss numerals for years and stats. */
+.numeral{display:block;font:700 clamp(72px,14vw,168px)/.86 var(--sans);letter-spacing:-.05em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat{display:grid;gap:4px}
+.stat b{font:700 clamp(32px,5vw,48px)/1 var(--sans);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.stat span{font:500 12px/1.3 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+/* Art: a frame for the abstract composition, square-ish, hairline-free by default. */
+.art{position:relative;width:100%;display:block}
+.art svg{display:block;width:100%;height:auto;overflow:visible}
+/* Buttons: an ink pill (primary), an outlined pill (ghost); ≥ 44 px; press = scale. */
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn,.ghost{min-height:48px;padding:12px 22px;border-radius:999px;font:600 15px/1.2 var(--sans);letter-spacing:.01em;transition:transform .14s,background-color .2s,color .2s,border-color .2s,opacity .2s}
+.btn{border:1.5px solid var(--ink);background:var(--ink);color:var(--ground)}
+.ghost{border:1.5px solid var(--ink);background:transparent;color:var(--ink)}
+.btn:active:not(:disabled),.ghost:active:not(:disabled){transform:scale(.96)}
+.btn:disabled,.ghost:disabled{opacity:.35}
+.btn:focus-visible,.ghost:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (hover:hover){.ghost:hover:not(:disabled){background:rgba(29,29,27,.05)}.btn:hover:not(:disabled){opacity:.88}}
+/* Numbered steps (01 02 03): left-aligned Swiss list. */
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:0;border-top:1px solid var(--hair)}
+.steps>li{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;padding:20px 0;border-bottom:1px solid var(--hair)}
+.steps>li>span{font:600 13px/1.6 var(--sans);letter-spacing:.08em;color:var(--muted);font-variant-numeric:tabular-nums}
+/* Sources drawer. */
+.sources{border-top:1px solid var(--hair);padding-top:16px;font:400 14px/1.5 var(--sans)}
+.sources summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font:600 13px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.sources ul{margin:8px 0 0;padding-left:18px;display:grid;gap:8px}
+.sources a{color:var(--ink);text-underline-offset:3px;text-decoration-color:var(--hair)}
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Draw-on hairlines: give a path pathLength=1 and the class; it draws once when its parent gets data-in. */
+.draw{vector-effect:none!important;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.1s cubic-bezier(.2,.7,.2,1)}
+[data-in] .draw{stroke-dashoffset:0}
+@media (prefers-reduced-motion:reduce){.draw{transition:none;stroke-dashoffset:0}.btn,.ghost{transition:none}}
+/* A ground-coloured fade under the fixed Back corner so scrolled text never sits behind it. */
+.veil{position:absolute;z-index:1;left:0;right:0;top:0;height:calc(env(safe-area-inset-top,0px) + 84px);pointer-events:none;background:linear-gradient(var(--ground) 62%,rgba(246,244,239,0))}
+/* A ghost pill that is a chosen answer (aria-pressed) fills with the accent. */
+.ghost[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff)}

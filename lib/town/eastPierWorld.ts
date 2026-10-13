@@ -8,7 +8,6 @@ import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
-import {fadeBand} from './shallows';
 import {EAST_PIER,JETTY_PATH,JETTY_BEACON,KEEPER_HUT,PIER_KICK_SPOT,coilAt,jettyOffset,walkwayOffset,jettySide,type JettySample} from './eastPier';
 type Mesh=T.Mesh;
 export type PierTools={
@@ -16,7 +15,6 @@ export type PierTools={
  cylinder:(r:number,h:number,c:string,x:number,y:number,z:number)=>Mesh;
  put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>Mesh;
  sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string,ink?:string,rotation?:number)=>Mesh;
- shallows:(g:T.BufferGeometry,x:number,z:number)=>void;
  obstacles:Obstacle[];
  assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;baseY?:number}[];
  prop?:PropTagger;
@@ -25,7 +23,7 @@ export type PierLampSite={x:number;z:number;ground:number;region:'east-pier';poo
 const WALK='#e2d5b5',KERB='#bca987',ROCK='#bca987',ROCK2='#d2bc94',FOAM='#f5e9cb',IRON='#384443',POST='#9d805b';
 const jitter=(i:number,k=1)=>{const s=Math.sin(i*12.9898+k*78.233)*43758.5453;return s-Math.floor(s);};
 
-export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets,prop=untaggedProp}:PierTools){
+export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untaggedProp}:PierTools){
  const P=EAST_PIER,S=JETTY_PATH,last=S.length-1,lampSites:PierLampSite[]=[];
  const overWater=(p:{x:number;z:number})=>!onIsland(p.x,p.z);
  /** Index runs where keep(i) holds. */
@@ -60,16 +58,12 @@ export function buildEastPier({box,cylinder,put,sign,shallows,obstacles,assets,p
   const seaOk=(i:number)=>overWater(jettySide(S[i],side*P.flankHalf))&&Math.hypot(jettySide(S[i],side*P.flankHalf).x-P.cx,jettySide(S[i],side*P.flankHalf).z-P.cz)>P.plazaEdge+1.4;
   for(const [a,b] of runs(seaOk)){
    band(a,b,side*P.railHalf,-.12,side*P.flankHalf,-.5,ROCK,[side,1]);
-   band(a,b,side*(P.flankHalf-.3),-.405,side*(P.flankHalf+.35),-.405,FOAM,[0,1]);
   }
   // Riprap boulders at the waterline, both sides; skipped where they would sit on another coil's walkway.
   for(let i=start+2;i<last;i+=2){const p=S[i],o=P.flankHalf-.2+jitter(i,side)*.7,q=jettySide(p,side*o);
    if(!overWater(q)||jettyOffset(q.x,q.z)<P.railHalf+.4)continue;
    const r=.5+jitter(i,side+3)*.45,rock=put(new T.IcosahedronGeometry(r,0),jitter(i,side+5)>.5?ROCK2:ROCK,q.x,-.36,q.z);rock.scale.y=.55;rock.rotation.y=i;}
-  // Fading shallows off both flanks (the causeway's band, shared material); inside the coils the sea keeps them too.
-  const water=runs(i=>overWater(jettySide(S[i],side*P.flankHalf)));
-  for(const [a,b] of water)for(let i0=a;i0<b;i0+=60){const i1=Math.min(b,i0+60),run=S.slice(i0,i1+1),mid=S[(i0+i1)>>1],ends=(j:number)=>Math.min(1,(j-a)/6,(b-j)/6);
-   shallows(fadeBand(run.map(p=>({x:p.x,z:p.z})),run.map(p=>({x:-p.tz*side,z:p.tx*side})),P.flankHalf,4.2,false,mid.x,mid.z,j=>{const t=Math.max(0,ends(i0+j));return t*t*(3-2*t);}),mid.x,mid.z);}
+  // Foam on the armour and the shallows off both flanks: the island-wide moving shoreline (lib/graphics/islandShore.ts).
  }
  // ---- Plaza at the spiral's centre: paved disc, a stone skirt and a kerb ring open where the walkway comes in.
  {const disc=new T.CircleGeometry(P.plazaEdge-.2,36);disc.rotateX(-Math.PI/2);put(disc,WALK,P.cx,.004,P.cz);

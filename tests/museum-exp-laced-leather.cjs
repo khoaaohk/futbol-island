@@ -1,87 +1,111 @@
-// laced-leather · The Weather Machine (Oct 5 2026): the exhibit's facts appear word for word, the added numbers are the sourced
-// ones, Back is the shared ExperienceBack (no local NavigationButton Back), the canvas loop sleeps/stops/disposes, and sources are cited.
+// laced-leather · "The weather machine" in the anatomy Paper style (Oct 12 2026 restyle; user: "these games should not be the
+// pixel style. only the penalty kick should be pixel game", "larger and fill the entire screen", then every exhibit except the
+// penalty kick in the anatomy isometric technical-illustration look). Checks: the case's facts and the sourced numbers
+// (facts.ts, unchanged), the host contract, no pixel kit left, the Paper look on the shared anatomy kit, a play area that fills
+// the screen at 1440 × 900, 1845 × 1110 and 390 × 844, heat (one loop that stops), the rain machine (410 → 595 g; the modern ball
+// unchanged; the dial needle), the rain match (a heavier ball carries shorter; 3/2/1/0), reduced motion, and both machines
+// rendered in Node.
 // usage: node tests/museum-exp-laced-leather.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
-require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+const compile=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText,f);
+require.extensions['.ts']=compile;require.extensions['.tsx']=compile;
 const root=path.join(__dirname,'..'),dir='components/museum/experiences/laced-leather/',read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const X=require('../lib/endgame/museum.ts'),F=require('../'+dir+'facts.ts');
-const exp=read(dir+'Experience.tsx'),machine=read(dir+'machine.ts'),balls=read(dir+'ballRender.ts'),css=read(dir+'Experience.module.css');
+const X=require('../lib/endgame/museum.ts'),F=require('../'+dir+'facts.ts'),M=require('../'+dir+'model.ts'),R=require('../'+dir+'match.ts'),C=require('../'+dir+'content.ts');
+const B=require('../components/museum/experiences/anatomy/bench.tsx'),S=require('../'+dir+'scene.tsx'),K=require('../components/museum/experiences/anatomy/iso-kit.ts');
+const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+const exp=read(dir+'Experience.tsx'),model=read(dir+'model.ts'),match=read(dir+'match.ts'),scene=read(dir+'scene.tsx'),bench=read('components/museum/experiences/anatomy/bench.tsx'),loopSrc=read('components/museum/experiences/anatomy/paper-loop.ts'),css=read(dir+'Experience.module.css');
 const e=X.EXHIBITS.find(x=>x.id==='laced-leather');
+const files=fs.readdirSync(path.join(root,dir)).sort();
+const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 
-// 1. The case's own facts and "take it to your game" line are shown (quoted from exhibit.facts, not retyped).
-{assert.equal(e.facts.length,3);
- assert.match(exp,/fact\(0\)\.split\('\. '\)\[0\]/,'fact 1, first sentence (brown leather with laces)');
- assert.match(exp,/fact\(0\)\.split\('\. '\)\.slice\(1\)/,'fact 1, second sentence (they soaked up rain and got heavy)');
- assert.ok(e.facts[0].split('. ').length===2&&/soaked up rain and got heavy/.test(e.facts[0].split('. ')[1]),'the split lands on the rain sentence');
- assert.match(exp,/\{fact\(1\)\}/,'size 5 fact');assert.match(exp,/\{fact\(2\)\}/,'youth sizes fact');
- assert.match(exp,/exhibit\.forYourGame/,'take it to your game');
- console.log('PASS facts: the three case facts and the take-it-to-your-game line are quoted from the exhibit');}
+// 1. Facts and sources: the case's three facts word for word; the lab numbers, sizes, Yeats and the head study, all cited.
+{for(const i of [0,1,2])assert.match(exp,new RegExp(`exhibit\\.facts\\[${i}\\]`),`fact ${i+1} is shown`);assert.match(exp,/take=\{exhibit\.forYourGame\}/);
+ assert.equal(F.LEATHER.dry,410);assert.equal(F.LEATHER.wet,595);assert.equal(F.LEATHER.soakMinutes,90);assert.equal(F.LEATHER_GAIN,185);assert.equal(F.LEATHER_GAIN_PCT,45);
+ assert.ok(e.facts[1].includes(F.SIZES['5'].around)&&e.facts[1].includes(F.SIZES['5'].weight),'size 5 = the case fact');
+ for(const k of ['NO_LACES_1966','HEAD_PAIN','HEAD_STUDY'])assert.match(exp,new RegExp(`\\b${k}\\b`),k+' shown');
+ assert.match(exp,/YEATS\.quote/);assert.match(exp,/data-sizes/,'the size table (3, 4, 5)');assert.match(exp,/\{PRACTICE_NOTE\}/);assert.match(C.PRACTICE_NOTE,/practice game/);
+ assert.match(C.BEATS[0].text,/rainy Saturday/);
+ for(const u of ['https://www.nature.com/articles/s41598-023-45489-2','https://lfchistory.net/articles/4667','https://en.wikipedia.org/wiki/Slazenger_Challenge_4-Star'])assert.ok(F.EXTRA_SOURCES.some(s=>s.url===u),'cites '+u);
+ assert.match(exp,/\[\.\.\.exhibit\.sources,\.\.\.EXTRA_SOURCES\]/);assert.match(exp,/<summary>Sources<\/summary>/);
+ console.log('PASS facts: 3 case facts, lab 410 → 595 g in 90 min, sizes, Yeats, head study, practice game labelled, all sources');}
 
-// 2. Added numbers are the sourced ones.
-{assert.equal(F.LEATHER.dry,410);assert.equal(F.LEATHER.wet,595);assert.equal(F.LEATHER.soakMinutes,90);assert.equal(F.LEATHER.ballYear,1966);
- assert.equal(F.LEATHER_GAIN,185);assert.equal(F.LEATHER_GAIN_PCT,45);
- assert.deepEqual([F.SIZES['5'].minG,F.SIZES['5'].maxG],[410,450],'Law 2 weight');assert.equal(F.SIZES['5'].around,'68–70 cm','Law 2 circumference');
- assert.ok(e.facts[1].includes(F.SIZES['5'].around)&&e.facts[1].includes(F.SIZES['5'].weight),'size 5 numbers match the case fact');
- assert.deepEqual([F.SIZES['4'].minG,F.SIZES['4'].maxG,F.SIZES['3'].minG,F.SIZES['3'].maxG],[350,390,300,320]);
- assert.ok(F.SIZES['3'].cm<F.SIZES['4'].cm&&F.SIZES['4'].cm<F.SIZES['5'].cm,'drawn to scale, smallest to largest');
- assert.deepEqual(F.AGE_CHOICES.map(a=>a.size),['3','4','5']);
- assert.match(machine,/SIZES\[input\.right\]\.cm\/SIZES\['5'\]\.cm/,'the right-hand ball is drawn to scale');
- assert.match(machine,/LEATHER\.dry\+\(LEATHER\.wet-LEATHER\.dry\)\*soak/,'the needle runs from the lab dry weight to the lab soaked weight');
- assert.match(exp,/lab/i,'the numbers are labelled as a lab test');
- console.log('PASS numbers: 410 g dry → 595 g after 90 min (+185 g, 45%), size 5/4/3 specs, drawn to scale');}
+// 2. Contract.
+{assert.match(exp,/export default function Experience\(\{exhibit,onClose,onComplete\}:ExperienceProps\)/);
+ assert.match(exp,/role="dialog" aria-modal="true"/);assert.match(exp,/data-museum-experience="laced-leather"/);
+ assert.equal((exp.match(/<ExperienceBack onClose=\{onClose\}\/>/g)||[]).length,1);assert.doesNotMatch(exp,/NavigationButton|immediate/);assert.match(exp,/e\.key==='Escape'/);
+ assert.equal((code(exp).match(/onComplete/g)||[]).length,3);assert.match(exp,/\{checked&&<Ending [^\n]*onComplete=\{onComplete\} reached=\{checked\}\/>\}/);assert.match(exp,/const checked=picked!=null/);
+ assert.match(exp,/<StepCheck items=\{\[\{q:check\.q,options:check\.options,right:check\.answer,why:check\.why\}\]\}/,'the shared quick check');
+ for(const h of ['data-phase','data-ball','data-soak','data-pass','data-kick','data-score','data-rain','data-kick-off','data-play-modern','data-play-again','data-needle','data-aim'])assert.ok(exp.includes(h)||scene.includes(h),'hook '+h);
+ assert.equal(C.BEST_KEY,'futbol.museum.laced-leather.rainMatchBest','the progress key is kept');assert.match(exp,/try\{localStorage\.setItem\(BEST_KEY/);
+ assert.match(read('app/museum-lab/laced-leather/page.tsx'),/<Lab id="laced-leather"/);assert.match(read('components/museum/experiences/index.tsx'),/'laced-leather':load\(\(\)=>import\('\.\/laced-leather\/Experience'\)\)/);
+ console.log('PASS contract: dialog, shared Back, Escape, onComplete only after game + quick check, hooks, progress key, lab route');}
 
-// 3. Sources cited with URLs.
-{const urls=F.EXTRA_SOURCES.map(s=>s.url);
- assert.ok(urls.includes('https://www.nature.com/articles/s41598-023-45489-2'),'the 2023 Scientific Reports lab test');
- assert.ok(urls.some(u=>/size-charts\.com/.test(u))&&urls.some(u=>/nike\.com/.test(u)),'youth size guides');
- for(const s of [...e.sources,...F.EXTRA_SOURCES])assert.match(s.url,/^https:\/\//);
- assert.match(exp,/<summary>Sources<\/summary>/);assert.match(exp,/\[\.\.\.exhibit\.sources,\.\.\.EXTRA_SOURCES\]/);
- console.log('PASS sources: IFAB Law 2, Wikipedia, Scientific Reports 2023 and size guides, listed with URLs');}
+// 3. Style: no pixel kit; the anatomy kit in the Paper tint; one blue accent (the water and the aim).
+{for(const f of files){const src=read(dir+f);assert.doesNotMatch(src,/pixeliso/,f+' imports no pixeliso / pixeliso-laws');
+  assert.doesNotMatch(src,/#000048|PK Press Start|PK Pixelify|Mega Drive|crispEdges/i,f+': no pixel palette, fonts or navy ground');}
+ assert.deepEqual(files,['Experience.module.css','Experience.tsx','content.ts','facts.ts','match.ts','model.ts','scene.tsx']);
+ assert.match(bench,/from '\.\/iso-kit'/);assert.match(exp,/from '\.\.\/anatomy\/bench'/);assert.match(exp,/dangerouslySetInnerHTML=\{\{__html:ISO_CSS\}\}/);
+ assert.match(exp,/className=\{`\$\{g\.room\} iso \$\{s\.root\}`\} data-theme="light"/);
+ assert.match(css,/\.root\.root\[data-theme\]\{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3/,'Paper ground and solids');
+ assert.match(exp,/'--accent':'#2a5bd7'/);assert.equal(S.BLUE,'#2a5bd7');
+ console.log('PASS style: no pixeliso, no pixel palette / fonts / navy; anatomy kit, Paper tint, one blue accent');}
 
-// 4. Host contract + controls.
-{assert.match(exp,/data-museum-experience="laced-leather"/);assert.match(exp,/role="dialog" aria-modal="true"/);
- assert.match(css,/\.root\{[^}]*position:fixed;inset:0;z-index:20/);
- assert.match(exp,/import ExperienceBack from '\.\.\/ExperienceBack'/);assert.match(exp,/<ExperienceBack onClose=\{onClose\}\/>/,'the shared Back');
- assert.doesNotMatch(exp,/NavigationButton/,'no local NavigationButton Back');assert.doesNotMatch(css,/\.back\{/,'no local Back wrapper or positioning');
- assert.match(machine,/backR=phone\?92:100,backB=phone\?60:64/,'the lightbox keeps clear of the Back corner');
- assert.doesNotMatch(exp,/immediate/,'never immediate');assert.match(exp,/e\.key==='Escape'/);
- assert.match(css,/min-height:4[48]px/);assert.match(css,/:active\{transform:scale\(\.9\d\)\}/,'press-shrink');
- assert.match(css,/safe-area-inset/);assert.match(css,/prefers-reduced-motion/);
- for(const sel of css.replace(/\/\*[\s\S]*?\*\//g,'').replace(/@[^{]+\{/g,'').split('}').map(r=>r.split('{')[0].trim()).filter(Boolean).flatMap(s=>s.split(',')))
-  if(!/^(from|to|\d+%)$/.test(sel.trim()))assert.match(sel,/\.[a-zA-Z]/,`CSS module selector "${sel.trim()}" has a local class`);
- console.log('PASS contract: fixed full-screen dialog, shared ExperienceBack, Escape, 44 px+ press-shrink controls, safe areas');}
+// 4. Fill the screen.
+{assert.match(css,/\.screen\{box-sizing:border-box;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax\(0,1fr\) auto/);
+ assert.match(css,/\.svg\{position:absolute;inset:0;width:100%;height:100%;touch-action:none/);
+ assert.match(exp,/data-play-area data-fill-screen/);assert.match(exp,/viewBox=\{`0 0 \$\{W\} \$\{H\}`\}/);assert.match(exp,/const box=useBox\(card\)/);
+ for(const [W,H] of [[1400,690],[1805,890],[370,560]]){const tall=W<H*1.05,FM=B.frameFor('wide'),FL=B.frameFor(tall?'tall':'wide'),pad=Math.round(Math.max(18,Math.min(W,H)*.05));
+  for(const [name,F,pts,el] of [['machine',FM,S.rigPoints(tall?360:246),tall?22:30],['lane',FL,S.lanePoints(),tall?50:36]]){
+   const P=B.fit(F,pts,W,H-34,pad,el),xy=pts.map(([a,b,z])=>K.iso([...B.at(F,a,b),z],P));
+   const w=Math.max(...xy.map(p=>p[0]))-Math.min(...xy.map(p=>p[0])),h=Math.max(...xy.map(p=>p[1]))-Math.min(...xy.map(p=>p[1]));
+   assert.ok(w/W>.8||h/(H-34)>.8,`${name} fills the ${W}×${H} card (${Math.round(w/W*100)}% × ${Math.round(h/(H-34)*100)}%)`);}}
+ console.log('PASS fill: 100dvh screen, card = 1fr, viewBox = measured card, machine and lane fill ≥ 80% at 1440, 1845 and 390');}
 
-// 5. Heat: the loop sleeps when settled, stops when hidden, and everything is disposed.
-{assert.match(machine,/if\(moving&&!document\.hidden\)raf=requestAnimationFrame\(frame\)/,'loop only continues while something moves');
- assert.match(machine,/visibilitychange/);assert.match(machine,/if\(document\.hidden\)\{cancelAnimationFrame\(raf\)/,'hidden tab stops the loop');
- assert.match(machine,/dispose\(\)\{disposed=true;cancelAnimationFrame\(raf\);raf=0;ro\.disconnect\(\);document\.removeEventListener\('visibilitychange',vis\)/);
- assert.match(machine,/opts\.coarse\?1\.5:2/,'pixel ratio ≤ 1.5 on coarse pointers');assert.match(machine,/parts\.length<260/,'bounded particles');
- assert.match(exp,/return\(\)=>\{m\.dispose\(\)/,'disposed on unmount');assert.match(exp,/prefers-reduced-motion: reduce/);
- assert.doesNotMatch(exp+machine+balls,/setInterval|<audio|<video|autoplay/i,'no polling, no media');
- assert.doesNotMatch(balls,/requestAnimationFrame|setInterval/,'ball sprites are rendered on demand, never in a loop of their own');
- assert.match(balls,/while\(cache\.size>10\)/,'bounded sprite cache');assert.match(machine,/clearBallCache\(\);plate=null;canvas\.width=canvas\.height=0/,'sprite cache and the cached sepia plate freed on dispose');
- assert.match(machine,/if\(opts\.reduced\)\{if\(!near/,'reduced motion: a still rain curtain, no particles');
- assert.match(css,/animation:cue[^;]*\b3\}/,'idle cue pulses 3 times and stops');
- console.log('PASS heat: sleeping rAF loop, stops when hidden, disposed on unmount, DPR ≤ 1.5 on touch, bounded particles');}
+// 5. Heat: one frame loop that runs only while it rains, while the marker sweeps or while the ball flies.
+{for(const src of [exp,model,match,scene])assert.doesNotMatch(src,/requestAnimationFrame|setInterval/);
+ assert.match(bench,/export \{useRaf\} from '\.\/paper-loop'/);assert.match(loopSrc,/else\{wanted=false;last=0;\}/);assert.match(loopSrc,/cancelAnimationFrame\(id\)/);
+ assert.match(exp,/if\(r\.soak>=1\)\{stopRain\(\);return false;\}return true;/,'rain stops when soaked');assert.match(exp,/if\(f\.done\)\{land\(\);return false;\}/,'the flight stops when the ball lands');
+ assert.match(exp,/return false;\},live\);/,'nothing moving: the loop ends');
+ assert.match(scene,/\{raining&&<g className="ll-rain">/,'the falling water is drawn only while it rains');
+ assert.match(exp,/useEffect\(\(\)=>\(\)=>timers\.current\.forEach\(clearTimeout\),\[\]\)/);
+ console.log('PASS heat: rain / sweep / flight only while they happen, 0 frames at rest, cancelled on unmount');}
 
-// 6. Plate IV "Head it" (Oct 9 2026 motion pass): a pendulum header rig the visitor drives, with the sourced numbers and quotes.
-{assert.deepEqual(Object.keys(F.HEAD_BALLS),['wet','dry','modern']);
- assert.equal(F.HEAD_BALLS.wet.g,F.LEATHER.wet,'soaked = the lab weight');assert.equal(F.HEAD_BALLS.dry.g,F.LEATHER.dry);
- assert.ok(F.HEAD_BALLS.modern.g>=F.SIZES['5'].minG&&F.HEAD_BALLS.modern.g<=F.SIZES['5'].maxG,'the modern ball is inside Law 2');
- assert.equal(F.HEAD_MORE_PCT,40,'595 / 430 → about 40 % more push at the same speed');
- assert.equal(F.YEATS.quote,'The ball had a lace in it and if you headed the lace, you had prints all over your head.','Ron Yeats, word for word');
- assert.match(F.HEAD_STUDY,/slow headers/);assert.match(F.HEAD_STUDY,/fast headers/,'the 2023 result is told both ways, not overstated');
- const urls=F.EXTRA_SOURCES.map(s=>s.url);for(const u of ['https://lfchistory.net/articles/4667','https://www.readingrefs.org.uk/ftm/ftmpages/FTM124.html'])assert.ok(urls.includes(u),'cites '+u);
- assert.equal(new Set([...e.sources,...F.EXTRA_SOURCES].map(s=>s.url)).size,e.sources.length+F.EXTRA_SOURCES.length,'no duplicate source URLs (React keys)');
- assert.match(exp,/replica/i,'the lab ball is labelled a replica');assert.doesNotMatch(exp,/real leather World Cup ball/,'not called the real ball');
- // the mechanic: grab → pull → let go on the canvas, and a keyboard/button path that runs the same swing
- assert.match(exp,/m\.grab\(x,y\)/);assert.match(exp,/machine\.current\?\.pull\(/);assert.match(exp,/machine\.current\?\.letGo\(\)/);
- assert.match(exp,/autoSwing\(\)\}>Pull back and let go/,'a button for keyboards and anyone who cannot drag');
- assert.match(exp,/aria-live="polite"/,'results announced');assert.match(exp,/compared&&/,'a takeaway once two balls are compared');
- // motion: velocity-aware springs, a real pendulum, a hit-stop, rubber-banding, and the loop still sleeps
- assert.match(machine,/hd\.om\+=-\(G\/H\.L\)\*Math\.sin\(hd\.th\)\*h/,'pendulum physics');
- assert.match(machine,/hitStop/);assert.match(machine,/raw\*=\.18/,'rubber-band when pushed into the head');
- assert.match(machine,/\(hd\.print>0&&!opts\.reduced\)/,'the lace print fade keeps the loop awake only while it fades');
- assert.match(machine,/if\(opts\.reduced\)\{\/\/ reduced motion: no swing/,'reduced motion: the result without the swing');
- assert.match(css,/\.paper\{[^}]*pointer-events:none/,'the print-speckle overlay never blocks input');
- console.log('PASS head it: pendulum rig, sourced quotes, fair-test framing, button + drag, sleeping loop, reduced-motion result');}
+// 6. The rain machine: the scale reads the lab's two numbers; the needle turns; the modern ball stays inside Law 2.
+{assert.equal(M.gramsAt(0),410);assert.equal(M.gramsAt(1),595);assert.equal(M.gramsAt(2),595,'never past soaked');assert.equal(M.gramsAt(.5),503);
+ assert.equal(M.minutesAt(1),90);assert.equal(M.minutesAt(.5),45);assert.equal(M.SOAK_SECONDS,4);assert.ok(Math.abs(M.TAP_SOAK*90-15)<1e-9,'a tap = 15 minutes');
+ assert.ok(M.MODERN_G>=F.SIZES['5'].minG&&M.MODERN_G<=F.SIZES['5'].maxG,'the modern ball is a legal size 5');
+ assert.notEqual(M.leatherTone(0),M.leatherTone(1),'the leather darkens as it soaks');assert.ok(B.luma(M.leatherTone(1))<B.luma(M.leatherTone(0))-50);
+ assert.ok(M.needleAngle(595)>M.needleAngle(410)&&M.needleAngle(430)<M.needleAngle(595),'the needle climbs with the weight');
+ console.log('PASS machine: 410 → 595 g over 90 minutes (a tap = 15), the needle climbs, the modern ball 430 g, the leather darkens');}
+
+// 7. The rain match: eight passes, the ball soaks pass by pass, a heavier ball carries shorter, 3/2/1/0 by distance.
+{assert.equal(R.KICKS,8);assert.equal(R.minuteOf(0),0);assert.equal(R.minuteOf(7),90);
+ assert.equal(R.gramsOf('leather',0),410);assert.equal(R.gramsOf('leather',7),595);assert.equal(R.gramsOf('modern',7),M.MODERN_G);
+ assert.equal(R.carryFactor(410),1);assert.ok(R.carryFactor(595)<.8&&R.carryFactor(595)>.75,'a soaked ball carries about 22% shorter');
+ assert.ok(R.carry(1,595)<R.carry(1,410),'same kick, heavier ball, shorter');assert.equal(R.dryCarry(.5),R.DMAX/2);
+ const t=R.targets(()=>.5);assert.equal(t.length,8);assert.ok(t.every(x=>x>=R.TARGET_MIN&&x<=R.TARGET_MAX));for(let i=1;i<8;i++)assert.ok(Math.abs(t[i]-t[i-1])>=4,'never two alike in a row');
+ assert.ok(R.carry(1,595)>=R.TARGET_MAX+1.5,'the furthest team-mate is reachable with a soaked ball');
+ assert.equal(R.scoreKick(20,20).pts,3);assert.equal(R.scoreKick(17,20).pts,2);assert.equal(R.scoreKick(15,20).pts,1);assert.equal(R.scoreKick(10,20).pts,0);assert.match(R.scoreKick(10,20).say,/short/);
+ assert.equal(R.MAX_POINTS,24);assert.equal(R.powerAt(0),0);assert.equal(R.powerAt(R.SWEEP_MS),1);assert.ok(Math.abs(R.powerAt(R.SWEEP_MS*1.5)-.5)<1e-9,'the sweep comes back');
+ const f=M.flightAt(20,M.flightTime(20));assert.ok(f.done&&Math.abs(f.u-20)<1e-9&&f.z<1e-9);
+ // A pointer on the kick line reads back as metres along it (the reduced-motion aim).
+ const FL=B.frameFor('tall'),P=B.fit(FL,S.lanePoints(),370,560,20,50),[x,y]=B.pt(FL,18*S.M2W,0,4,P);assert.ok(Math.abs(S.metresAt(FL,P,x,y)-18)<1e-6);
+ console.log('PASS match: 8 passes 0 → 90 min, 410 → 595 g, ~22% shorter soaked, targets reachable, 3/2/1/0, the power sweep, pointer → metres');}
+
+// 8. Both machines rendered in Node: dense solid parts, the dial needle, the rain only while raining, the pass.
+{const FM=B.frameFor('wide'),P=B.fit(FM,S.rigPoints(),1200,700,30);
+ const off=renderToStaticMarkup(React.createElement('svg',null,React.createElement(S.RigStatic,{F:FM,P}),React.createElement(S.RigLive,{F:FM,P,soak:.5,raining:false}),React.createElement(S.Hood,{F:FM,P,raining:false})));
+ const on=renderToStaticMarkup(React.createElement('svg',null,React.createElement(S.RigLive,{F:FM,P,soak:.5,raining:true})));
+ assert.ok((off.match(/<path/g)||[]).length>150,'a dense machine ('+(off.match(/<path/g)||[]).length+' paths)');assert.match(off,/class="iso-halo"/);
+ assert.equal((off.match(/data-needle=/g)||[]).length,2,'two dial needles');assert.match(off,/data-needle="503"/);assert.doesNotMatch(off,/ll-rain/);assert.match(on,/ll-rain/);
+ for(const o of ['wide','tall']){const FL=B.frameFor(o),Pl=B.fit(FL,S.lanePoints(),1200,700,30);
+  const lane=renderToStaticMarkup(React.createElement('svg',null,React.createElement(S.LaneStatic,{F:FL,P:Pl,minute:45}),React.createElement(S.LaneLive,{F:FL,P:Pl,target:18,aim:20,ball:null,landed:null,grams:503,leather:true,kicking:false})));
+  assert.match(lane,/data-zones/);assert.match(lane,/data-aim="20.0"/);assert.ok((lane.match(/<path/g)||[]).length>120,o+' lane is detailed');}
+ console.log('PASS render: machine + lane rendered in Node, > 150 paths, two needles, rain only while raining, zones and the aim');}
+
+// 9. Reduced motion: RAIN taps add 15 minutes, tap the pitch to aim then tap Kick, the ball lands at once.
+{assert.match(exp,/if\(reduced\)\{r\.soak=Math\.min\(1,r\.soak\+TAP_SOAK\+1e-9\)/);
+ assert.match(exp,/if\(reduced\)\{kick\(\(M\.aim\?\?DMAX\/2\)\/DMAX\);return;\}/,'Kick uses the placed marker');
+ assert.match(exp,/if\(reduced\)\{M\.ball=\{u:M\.to,z:0\};land\(\);return;\}/,'the ball lands at once');
+ assert.match(exp,/metresAt\(F,P,x,y\)/,'tap the pitch to place the marker');assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
+ console.log('PASS reduced motion: tap-to-rain, tap-to-aim then Kick, instant landings');}

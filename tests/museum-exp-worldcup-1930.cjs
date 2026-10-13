@@ -5,12 +5,15 @@
 // Oct 9 2026 (styles + motion pass): an Art Deco travel poster in the full view (self-hosted OFL fonts via FontFace), a
 // drag-scrubbed match clock (spring follow, flick momentum, rubber-band at the half-time wall), a drag-the-ball half-time swap,
 // spring FLIP instead of View Transitions; section 6 below checks those.
+// Oct 10 2026 (modern gallery pass, docs/museum-modern-style.md): the Art Deco poster and fonts are gone; gallery-white ground,
+// Swiss wall labels, ONE accent (blue), abstract art (land as dots, ship as a disc, stadium as rings, balls as discs), the quick
+// check in the shared pill pattern calling onComplete, and an ending whose accent ring completes. Section 8 checks those.
 // usage: node tests/museum-exp-worldcup-1930.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const root=path.join(__dirname,'..'),dir='components/museum/experiences/worldcup-1930/',read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const X=require('../lib/endgame/museum.ts'),D=require('../'+dir+'data.ts');
-const ui=read(dir+'Experience.tsx'),chart=read(dir+'voyage.ts'),css=read(dir+'Experience.module.css'),poster=read(dir+'Poster.tsx'),spring=read(dir+'spring.ts');
+const ui=read(dir+'Experience.tsx'),chart=read(dir+'voyage.ts'),css=read(dir+'Experience.module.css'),poster=read(dir+'Composition.tsx'),spring=read(dir+'spring.ts');
 
 // 1. The case's three facts, quoted exactly and shown.
 {const e=X.EXHIBITS.find(x=>x.id==='worldcup-1930');for(const f of e.facts)assert.ok(Object.values(D.CASE_FACTS).includes(f),'case fact quoted: '+f);
@@ -51,8 +54,8 @@ const ui=read(dir+'Experience.tsx'),chart=read(dir+'voyage.ts'),css=read(dir+'Ex
  assert.match(ui,/if\(e\.drag\|\|e\.play\|\|!settled\)e\.raf=requestAnimationFrame\(frame\);else e\.last=0;/,'the clock loop sleeps once nothing is dragging, playing or settling');
  assert.match(ui,/if\(!\(a&&c\)&&!document\.hidden\)b\.raf=requestAnimationFrame\(tick\);/,'the ball spring-back stops when settled or hidden');
  assert.doesNotMatch(spring,/requestAnimationFrame|setInterval|setTimeout/,'the spring kit never runs a loop of its own');
- assert.doesNotMatch(poster,/requestAnimationFrame|setInterval|setTimeout|infinite/,'the poster entrance is one-shot WAAPI');
- assert.match(poster,/prefers-reduced-motion: reduce\)'\)\.matches\)return/,'the poster entrance is skipped with reduced motion');
+ assert.doesNotMatch(poster,/requestAnimationFrame|setInterval|setTimeout|infinite/,'the composition entrance is one-shot WAAPI');
+ assert.match(poster,/prefers-reduced-motion: reduce\)'\)\.matches\)return/,'the composition entrance is skipped with reduced motion');
  assert.match(ui,/b\.air=false[\s\S]{0,260}return;\}/,'the keepy-up loop stops when the ball lands');
  assert.ok((ui.match(/visibilitychange/g)||[]).length>=6,'every loop listens for the tab hiding (add + remove)');
  assert.ok((ui.match(/cancelAnimationFrame/g)||[]).length>=4,'every loop is cancelled');
@@ -85,13 +88,53 @@ const ui=read(dir+'Experience.tsx'),chart=read(dir+'voyage.ts'),css=read(dir+'Ex
  assert.match(css,/\.scrub\{[^}]*touch-action:pan-y/,'the clock drag never fights vertical page scroll');assert.match(css,/\.ball\[data-drag\]\{[^}]*touch-action:none/,'the ball drag owns its gesture');
  assert.match(css,/\.thumb\{[^}]*width:38px;height:38px/);assert.match(css,/\.scrub\{[^}]*height:56px/,'the clock is a ≥44 px target');
  assert.match(ui,/aria-live="polite">\{nudge\|\|/,'live feedback for the ball swap');
- // Self-hosted OFL fonts, loaded with FontFace (no global @font-face in the module), with fallbacks.
- for(const f of ['limelight-latin.woff2','josefin-sans-latin.woff2','OFL-Limelight.txt','OFL-JosefinSans.txt'])assert.ok(fs.existsSync(path.join(root,'public/museum/experiences/worldcup-1930',f)),'self-hosted: '+f);
- assert.match(ui,/new FontFace\('WC30 Deco'/);assert.doesNotMatch(css,/@font-face/);assert.match(css,/--deco:"WC30 Deco","Limelight",[^;]*serif/);
- assert.match(ui,/new drawings in the style of 1930s Art Deco travel posters/,'the art is labelled as new drawings in a style');
+ assert.match(ui,/abstract compositions made for this museum/,'the art is labelled as abstract compositions, not real posters or photos');
  // 7. Oct 9 2026 (story pass): a quick learning check before the outro: each right answer punches the ticket.
  assert.ok(D.QUIZ.length>=3);for(const q of D.QUIZ){assert.ok(q.right>=0&&q.right<q.choices.length&&new Set(q.choices).size===q.choices.length,q.q);assert.ok(q.why.length>20);}
  assert.ok(new Set(D.QUIZ.map(q=>q.right)).size>1,'the right answer moves around');
- assert.match(ui,/<TicketCheck\/>/);assert.match(ui,/\{id:'quiz',label:'Ticket'\}/,'the ticket check is a chapter');assert.match(ui,/data-chapter="quiz"/);
- assert.match(css,/\.quote\{margin:0 auto;/,'the outro quote is centred with the rest of the outro');
- console.log('PASS style + motion: deco fonts self-hosted, FLIP not View Transitions, slider + keyboard, rubber band, momentum, swap by drag or button');}
+ assert.match(ui,/<TicketCheck onDone=\{ticketed\}\/>/);assert.match(ui,/\{id:'quiz',label:'Ticket'\}/,'the ticket check is a chapter');assert.match(ui,/data-chapter="quiz"/);
+ assert.match(css,/\.quote\{margin:0;/,'the outro quote is left-aligned (Swiss)');
+ console.log('PASS motion: FLIP not View Transitions, slider + keyboard, rubber band, momentum, swap by drag or button');}
+
+// 8. Oct 10 2026: the modern gallery language.
+{const all=ui+poster+chart+css;
+ assert.doesNotMatch(all,/FontFace|WC30 Deco|Limelight|Josefin|@font-face/,'no deco fonts: the app sans only');
+ assert.match(css,/--accent:#2a5bd7/,'one accent: blue');assert.match(css,/--ground:#f6f4ef/);assert.match(css,/--ink:#1d1d1b/);
+ const hexes=new Set((css.match(/#[0-9a-f]{6}\b/gi)||[]).map(h=>h.toLowerCase()));for(const h of hexes)assert.ok(['#2a5bd7','#f6f4ef','#1d1d1b','#6b6a66','#d9d6cf','#eceae4','#000000'].includes(h),'palette only: '+h);
+ assert.doesNotMatch(css,/gradient|blur\(|drop-shadow|feTurbulence/,'no texture, glow or airbrush');
+ assert.match(ui,/import WallLabel from '\.\.\/modern\/WallLabel'/,'the shared wall label');assert.ok((ui.match(/<WallLabel /g)||[]).length>=5,'every room opens with a wall label');
+ assert.match(ui,/as="h1" title="Two weeks at sea"/);
+ // Abstract art: the map's land is a dot field, the ship a disc; the stadium is rings + one blue bar; no gradients in the SVGs.
+ assert.match(chart,/landDots\(\)/);assert.match(chart,/const GROUND='#f6f4ef',INK='#1d1d1b',MUTED='#6b6a66',HAIR='#d9d6cf',BLUE='#2a5bd7'/);assert.doesNotMatch(chart,/createLinearGradient|createRadialGradient/);
+ assert.doesNotMatch(ui,/linearGradient|radialGradient/,'flat abstract SVGs');assert.match(ui,/className=\{s\.tower\}/,'the tower is one bar');
+ // The quick check: the shared pill pattern, right answer fills the accent, onComplete when the ticket is complete.
+ assert.match(ui,/className=\{m\.pill\}/);assert.match(ui,/className=\{m\.checkQ\}/);assert.match(ui,/className=\{m\.why\}/);
+ assert.match(ui,/export default function Experience\(\{exhibit,onClose,onComplete\}:ExperienceProps\)/);assert.match(ui,/<TicketCheck onDone=\{ticketed\}\/>/);
+ // onComplete only through the shared Ending, mounted with `reached` once the ticket is punched (Oct 10 2026 play pass).
+ assert.match(ui,/import Ending from '\.\.\/modern\/Ending';/);assert.match(ui,/\{ticketDone\?<Ending art=\{<EndMark\/>\} reached onComplete=\{onComplete\}/);
+ assert.doesNotMatch(ui,/onComplete\?\.\(|onDone=\{onComplete\}/,'no direct onComplete call');
+ assert.match(ui,/if\(done&&!completed\.current\)\{completed\.current=true;onDone\?\.\(\);\}/,'onComplete once, when the check is done');
+ assert.match(ui,/m\.visited/,'a quiet Visited mark, not confetti');
+ // The ending: the accent ring completes (stroke-dashoffset) when seen, by IntersectionObserver (no loop).
+ assert.match(ui,/<EndMark\/>/);assert.match(ui,/new IntersectionObserver/);assert.match(css,/\.endRing\{stroke-dashoffset:1;transition:stroke-dashoffset/);
+ assert.match(ui,/You’ve seen the first World Cup/);
+ // Motion: transform, opacity and stroke-dashoffset only (no animated layout properties).
+ for(const m of css.matchAll(/@keyframes\s+\w+\{([\s\S]*?\})\s*\}/g))assert.doesNotMatch(m[1],/(?:^|[{;])\s*(?:width|height|top|left|right|bottom|margin|padding|background|box-shadow|filter)\s*:/,'keyframes animate transform / opacity / stroke-dashoffset only');
+ // Facts kept: the Rădulescu wording and Chile 1–0 France.
+ assert.ok(D.SEA_NOTES.some(n=>n.text.includes('Romania’s coach, Costel Rădulescu, drilled his players on deck.')),'Rădulescu wording kept');
+ console.log('PASS modern: app sans only, one blue accent on ground/ink/hairlines, wall labels, dot map, abstract SVGs, shared quick check + onComplete, ending ring');}
+
+// Oct 10 2026 play pass: the Deck drill is a scored round. Three balls; a touch only counts in the touch zone (too early breaks
+// your streak); a central touch is Clean (+2), off-centre Edge (+1); five Clean in a row double the points; the sea gets
+// rougher the longer you go; a rank and your best at the end. Reduced motion: the same rules one touch at a time.
+{assert.match(ui,/const BALLS=3,GRAV=1100;/);assert.match(ui,/RANKS:\[number,string\]\[\]=\[\[0,'Deck hand'\],\[20,'Sailor'\],\[45,'First mate'\],\[80,'Captain’s pick'\]\]/);
+ assert.match(ui,/Too early/);assert.match(ui,/'Clean':'Edge'/);assert.match(ui,/b\.combo>=5\?2:1/,'streak doubles points');assert.match(ui,/3\+Math\.min\(7,st\.current\.touches\*\.3\)/,'the sea gets rougher');
+ assert.match(ui,/if\(still\.current\)\{\/\/ One touch at a time/,'reduced motion: turn-based');assert.match(ui,/Play again/);assert.match(ui,/ArrowLeft:\.8,ArrowRight:-\.8/,'keyboard nudges');
+ assert.match(css,/\.touchZone\{[^}]*border-top:1px dashed var\(--hair\)/);assert.match(css,/@keyframes hitRise/);
+ const launch=h=>Math.sqrt(2*1100*Math.max(40,h-68));for(const h of [116,150,170])assert.ok(launch(h)**2/(2*1100)+34+26<=h,'the ball stays inside a '+h+' px stage');
+ console.log('PASS deck drill: three balls, touch zone timing, Clean/Edge, streak ×2, rougher sea, ranks + best, turn-based reduced motion');}
+
+// 10. Resume pass (Oct 10 2026): 44 px chapter chips from 390 px up; before the ticket is punched the end says so (no stamp yet).
+{assert.match(css,/@media\(max-width:380px\)\{\.chapterBtn\{min-width:40px\}\}/);assert.doesNotMatch(css,/@media\(max-width:400px\)\{\.chapterBtn/);
+ assert.match(ui,/Punch all four holes in your ticket/);assert.match(ui,/const \[ticketDone,setTicketDone\]=useState\(false\)/);
+ console.log('PASS resume: 44 px chips at 390 px, Ending only after the ticket, a nudge before it');}

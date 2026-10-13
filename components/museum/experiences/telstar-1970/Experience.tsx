@@ -1,309 +1,291 @@
 'use client';
-import {useCallback,useEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
+import {useCallback,useEffect,useMemo,useReducer,useRef,useState,type CSSProperties,type PointerEvent as RPE} from 'react';
 import {museumSfx} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
 import ExperienceBack from '../ExperienceBack';
-import type {BallKind,Shot,TvScene} from './tvScene';
-import TestCard from './TestCard';
-import StitchBench,{PIECE,type BenchEvent} from './StitchBench';
-import type {Bench,BenchCounts} from './stitch';
-import {Lamp,Stand} from './Room';
-import {ColdOpen,EndCard,Quiz,QUIZ} from './FullTime';
-import styles from './Experience.module.css';
+import WallLabel from '../modern/WallLabel';
+import StepCheck from '../modern/StepCheck';
+import Ending from '../modern/Ending';
+import {useReduced} from '../modern/hooks';
+import g from '../modern/gallery.module.css';
+import {ISO_CSS} from '../anatomy/iso-kit';
+import {fit,frameFor,useBox,useLive,useRaf} from '../anatomy/bench';
+import {BallShadeDefs,Ghost,PitchLive,PitchStatic,StudioBall,StudioStatic,Tally,Tray,ballCentre,ballPx,ballScreen,pitchPoints,studioPoints,trayHull} from './scene';
+import {BEATS,BEST_KEY,CHECK,EXTRA,EXTRA_SOURCES,MODEL_NOTE} from './content';
+import {HALF_S,PANELS,PIECES,START_Q,STEPS,ballPanels,bringToFront,counts,easeOut,follow,frameBox,inFrame,match,nextGap,pct,slerp,stillTimes,stitch,tapHit,verdict,type BallKind,type Picture,type Quat} from './model';
+import {polygon,type PanelKind} from './geometry';
+import s from './Experience.module.css';
 
 /**
- * telstar-1970 · "The broadcast" (Oct 5 2026). The whole screen is a 1970 television set in a dark living room. Switch it on,
- * read the test card, tune in to a (pretend) match and work the knobs: BALL (old brown leather ↔ the Telstar), PICTURE
- * (black and white ↔ colour) and CAMERA (wide ↔ close-up). In the wide shot the ball is a few pixels, as it was on a real
- * broadcast: on a black-and-white set the brown ball turns the same grey as the grass and vanishes, the Telstar's black and
- * white panels don't. In the close-up an eye test spins the ball: which way did it turn? The results table fills in for every
- * ball and picture, so the visitor proves for themselves why 32 black-and-white panels were easy to follow.
+ * telstar-1970 · "Mexico 70 on air" (Oct 12 2026 anatomy restyle; user: "these games should not be the pixel style", "larger and
+ * fill the entire screen", then: every exhibit except the penalty kick in the anatomy isometric Paper style). The pixel game's
+ * rules and teaching are kept; the drawing is now a crafted table-top machine that fills the play area at every size.
  *
- * Polish (Oct 5 2026): the set now stands on a teak stand in a 1970s living room (wallpaper, skirting, carpet, a lamp on
- * wide screens, the screen's glow on the wall), and the side column is a paper TV guide the height of the set: tonight's
- * programme (four steps), the step, the facts, your scores and a Full-time ending. Knob turns flash an on-screen setting and a
- * right answer gets a broadcast lower-third.
- *
- * Heat: the 3D picture (tvScene.ts, three) is lazy-loaded when the TV is switched on, renders at a capped TV resolution and
- * only while the ball moves; the test card is static SVG; the static "snow" is one small tile shown for half a second.
+ *  1. Stitch (the studio stand): a big Telstar on a turntable in front of a 1970 TV camera. The gap at the front is rimmed in red;
+ *     drag the right panel from its tray onto the ball (or tap the tray, or press 5 / 6): a black pentagon (5 sides) or a white
+ *     hexagon (6 sides). A wrong shape is refused with the reason. 12 + 20 = 32; "Stitch the rest" after 8.
+ *  2. On air (two halves of the same seeded pretend match on a table-top pitch): drag to steer the viewfinder and keep the ball in
+ *     shot. The picture is black and white: the brown leather ball melts into the grass greys; the Telstar's black and white
+ *     don't. ON AIR % per half; a Picture switch (B&W / colour) for a replay. Reduced motion: eight still frames, tap the ball.
+ *  3. Full time: both percentages, the quick check, then the gallery ending (onComplete once, via Ending `reached`).
+ * Heat: SVG drawn by React only when something changes; the frame loop (anatomy/paper-loop.ts, via bench useRaf) runs only while the ball turns or a half is
+ * played, pauses off screen or in a hidden tab, and is cancelled on unmount. 0 frames at rest.
  */
-
-type Caption={id:string;text:string;tag:string};
-type Results=Record<string,{right:number;total:number}>;
-const EXTRA={
- name:'The ball was named after Telstar, a ball-shaped satellite launched in 1962 and covered in flat panels, a bit like a football. It sent the first live TV pictures across the Atlantic Ocean.',
- made:'Only 20 Telstars were made for the 1970 World Cup. The 32-panel pattern was not new (a Danish company, Select, made one in 1962), but the World Cup on TV made it famous.',
- live:'In 1970, World Cup games were shown live around the world by satellite. A few places saw them in colour, but many families still watched in black and white.',
- panels:'The 32 panels are 12 black pentagons (5 sides) and 20 white hexagons (6 sides).',
-};
-const EXTRA_SOURCES=[
- {title:'Wikipedia · Telstar 1',url:'https://en.wikipedia.org/wiki/Telstar_1'},
- {title:'Science Museum · Telstar, Intelsat and the first global satellite broadcast',url:'https://www.sciencemuseum.org.uk/objects-and-stories/telstar-intelsat-and-first-global-satellite-broadcast'},
- {title:'Britannica · Telstar communications satellite',url:'https://www.britannica.com/technology/Telstar-communications-satellite'},
- {title:'Smithsonian National Museum of American History · Soccer ball',url:'https://americanhistory.si.edu/collections/object/nmah_682185'},
- {title:'Wikipedia · List of FIFA World Cup official match balls',url:'https://en.wikipedia.org/wiki/List_of_FIFA_World_Cup_official_match_balls'},
-];
+type Phase='intro'|'stitch'|'ready'|'air'|'half'|'score';
+const BALLS:readonly BallKind[]=['leather','telstar'];
 const BALL_NAME:Record<BallKind,string>={leather:'Brown leather',telstar:'Telstar'};
-const key=(b:BallKind,colour:boolean)=>`${b}-${colour?'colour':'bw'}`;
+const keyOf=(b:BallKind,p:Picture)=>`${b}-${p}`;
+const readBest=():Record<string,number>=>{try{return JSON.parse(localStorage.getItem(BEST_KEY)||'{}')||{};}catch{return {};}};
+const saveBest=(v:Record<string,number>)=>{try{localStorage.setItem(BEST_KEY,JSON.stringify(v));}catch{/* private mode */}};
 
-function Knob({label,options,value,onTurn}:{label:string;options:readonly [string,string];value:0|1;onTurn:()=>void}){
- return <div className={styles.knobWrap}>
-  <span className={styles.knobLabel} aria-hidden="true">{label}</span>
-  <button type="button" className={styles.knob} data-value={value} onClick={onTurn} data-museum-own-cue aria-label={`${label} knob: ${options[value]}. Turn to ${options[1-value]}.`}>
-   <span className={styles.knobFace}/>
-  </button>
-  <span className={styles.knobValue} aria-hidden="true" key={value}>{options[value]}</span>
- </div>;
-}
+/** Keep the pointer while a finger holds (a synthetic or lost pointer just skips it). */
+const capture=(e:{currentTarget:EventTarget;pointerId:number})=>{try{(e.currentTarget as Element).setPointerCapture?.(e.pointerId);}catch{/* no active pointer */}};
 
-const STEPS=['Switch on','Stitch the ball','Tune in','Follow the ball','Eye test'] as const;
-
-export default function Experience({exhibit,onClose}:ExperienceProps){
- const [power,setPower]=useState<'off'|'warming'|'card'|'build'|'live'>('off');
- const [counts,setCounts]=useState<BenchCounts>({pent:0,hex:0,total:0}),[benchMsg,setBenchMsg]=useState(''),[skipped,setSkipped]=useState(false);
- const bench=useRef<Bench|null>(null);
- const [ball,setBall]=useState<BallKind>('leather'),[colour,setColour]=useState(false),[shot,setShot]=useState<Shot>('wide');
- const [tuning,setTuning]=useState(false),[failed,setFailed]=useState(false),[ready,setReady]=useState(false);
- const [spin,setSpin]=useState<{phase:'idle'|'spinning'|'ask'|'answered';dir:-1|1;answer?:-1|0|1}>({phase:'idle',dir:1});
- const [results,setResults]=useState<Results>({});
- const [passes,setPasses]=useState<Record<BallKind,number>>({leather:0,telstar:0});
- const [seen,setSeen]=useState<string[]>([]);
- const [capIndex,setCapIndex]=useState(-1);
- const [osd,setOsd]=useState<{text:string;n:number}|null>(null);
- const [cheer,setCheer]=useState(0),[fresh,setFresh]=useState('');
- const [floorY,setFloorY]=useState<number|null>(null);
- /** Full time: the closedown card on the TV and the quiz of the night in the guide. */
- const [ending,setEnding]=useState(false),[quizScore,setQuizScore]=useState<number|null>(null);
- const sceneEl=useRef<HTMLDivElement>(null),setEl=useRef<HTMLDivElement>(null);
- const canvas=useRef<HTMLCanvasElement>(null),scene=useRef<TvScene|null>(null),root=useRef<HTMLElement>(null);
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
+ const reduced=useReduced();
+ const card=useRef<HTMLDivElement>(null),svgRef=useRef<SVGSVGElement>(null),readRef=useRef<HTMLSpanElement>(null),endRef=useRef<HTMLDivElement>(null);
+ const box=useBox(card),live=useLive(card);
+ const say=useCallback((t:string)=>{if(readRef.current&&readRef.current.textContent!==t)readRef.current.textContent=t;},[]);
+ const [phase,setPhase]=useState<Phase>('intro');
+ const phaseRef=useRef(phase);phaseRef.current=phase;
+ const [,redraw]=useReducer((n:number)=>n+1,0);
+ // Stitch.
+ const [done,setDone]=useState<ReadonlySet<number>>(()=>new Set());
+ const studio=useRef({q:START_Q as Quat,from:START_Q as Quat,to:START_Q as Quat,u:1,target:0 as number|null,t0:0,misses:0});
+ const [misses,setMisses]=useState(0),[wrong,setWrong]=useState(false),[note,setNote]=useState('The gap with the red rim is at the front. Which panel fits it?'),[stitchSecs,setStitchSecs]=useState<number|null>(null);
+ const [drag,setDrag]=useState<{kind:PanelKind;x:number;y:number;x0:number;y0:number}|null>(null);
+ // On air.
+ const m=useMemo(()=>match(1970),[]);
+ const stills=useMemo(()=>stillTimes(m),[m]);
+ const [half,setHalf]=useState(0),[picture,setPicture]=useState<Picture>('bw');
+ const [results,setResults]=useState<Record<string,number>>({}),[best,setBest]=useState<Record<string,number>>({});
+ const air=useRef({t:0,aim:[0,0] as [number,number],want:[0,0] as [number,number],on:0,total:0,onAir:true,step:0,hits:0,tap:null as [number,number]|null,reveal:false,hit:false});
+ const [picked,setPicked]=useState<number|null>(null);
+ const [flash,setFlash]=useState<{big:string;line:string}|null>(null);
+ const ball=BALLS[half]??'telstar';
+ const ballRef=useRef(ball);ballRef.current=ball;const picRef=useRef(picture);picRef.current=picture;
+ useEffect(()=>{setBest(readBest());},[]);
  const timers=useRef<ReturnType<typeof setTimeout>[]>([]);
  const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
- const reduced=useMemo(()=>typeof window!=='undefined'&&matchMedia('(prefers-reduced-motion: reduce)').matches,[]);
+ useEffect(()=>{const k=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();onClose();}};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[onClose]);
 
- // The captions: the case's three facts (verbatim) plus three sourced extras, revealed as you do things.
- const all:Caption[]=useMemo(()=>[
-  {id:'f0',text:exhibit.facts[0],tag:'Fact'},{id:'name',text:EXTRA.name,tag:'Why the name?'},{id:'live',text:EXTRA.live,tag:'1970 on TV'},
-  {id:'f1',text:exhibit.facts[1],tag:'Fact'},{id:'panels',text:EXTRA.panels,tag:'Count them'},{id:'f2',text:exhibit.facts[2],tag:'Fact'},{id:'made',text:EXTRA.made,tag:'Did you know?'},
-  {id:'game',text:exhibit.forYourGame,tag:'Take it to your game'},
- ],[exhibit]);
- const reveal=useCallback((...ids:string[])=>setSeen(s=>{const add=ids.filter(id=>!s.includes(id));if(!add.length)return s;const next=[...s,...add];setCapIndex(s.length);return next;}),[]);
- const captions=seen.map(id=>all.find(c=>c.id===id)!).filter(Boolean);
- const cap=captions[Math.max(0,Math.min(capIndex,captions.length-1))];
+ // The model fills the play area: landscape or portrait, fitted to the live size of the card.
+ const W=box.w||1,H=box.h||1,orient=W>=H*1.05?'wide':'tall',F=useMemo(()=>frameFor(orient),[orient]);
+ const pad=Math.round(Math.max(18,Math.min(W,H)*.06));
+ const studioView=phase==='intro'||phase==='stitch'||(phase==='ready'&&!Object.keys(results).length&&half===0&&!!flash);
+ const P=useMemo(()=>studioView?fit(F,studioPoints(F),W,H-34,pad,orient==='wide'?30:54):fit(F,pitchPoints(F),W,H-34,pad,orient==='wide'?34:52),[F,W,H,pad,orient,studioView]);
+ const Pv=useMemo(()=>({...P,origin:[P.origin[0],P.origin[1]+12] as [number,number]}),[P]);// a little below the corner labels
+ const fb=frameBox(W,H);
 
- // Escape leaves.
- useEffect(()=>{const k=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();onClose();}};window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[onClose]);
+ // One loop for both machines: the ball's turn on the stand, and a half of the match. It stops when nothing moves.
+ const wake=useRaf((dt)=>{
+  if(phaseRef.current==='air'&&!reduced){const a=air.current;
+   a.t=Math.min(HALF_S,a.t+dt);a.aim=[follow(a.aim[0],a.want[0],dt,.12),follow(a.aim[1],a.want[1],dt,.12)];
+   a.onAir=inFrame(a.aim,ballScreen(F,Pv,m,a.t),frameBox(W,H));a.total+=dt;if(a.onAir)a.on+=dt;
+   say(`ON AIR ${pct(a.on,a.total)}% · ${Math.ceil(HALF_S-a.t)} s`);redraw();
+   if(a.t>=HALF_S){endHalf(pct(a.on,a.total));return false;}return true;}
+  const st=studio.current;if(st.u>=1)return false;st.u=Math.min(1,st.u+dt/.42);st.q=slerp(st.from,st.to,easeOut(st.u));redraw();return st.u<1;},live);
 
- // Snow: one 96 px noise tile, drawn once.
- const [snow,setSnow]=useState('');
- useEffect(()=>{try{const c=document.createElement('canvas');c.width=c.height=96;const g=c.getContext('2d')!,img=g.createImageData(96,96);for(let i=0;i<img.data.length;i+=4){const v=Math.random()*255|0;img.data[i]=img.data[i+1]=img.data[i+2]=v;img.data[i+3]=255;}g.putImageData(img,0,0);setSnow(`url(${c.toDataURL()})`);}catch{}},[]);
+ // ── Stitch ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ const turnTo=(i:number|null)=>{const st=studio.current;st.target=i;if(i==null)return;st.from=st.q;st.to=bringToFront(st.q,i);st.u=0;
+  if(reduced){st.q=st.to;st.u=1;redraw();}else wake();};
+ const startStitch=()=>{const st=studio.current;st.q=START_Q;st.target=nextGap(START_Q,new Set());st.t0=performance.now();st.misses=0;setMisses(0);setDone(new Set());setPhase('stitch');
+  say('Panels 0 / 32');museumSfx.card();};
+ const finishStitch=()=>{const secs=Math.round((performance.now()-studio.current.t0)/1000);setStitchSecs(secs);studio.current.target=null;
+  museumSfx.reveal();museumSfx.crowd();setFlash({big:'32 panels',line:'12 black + 20 white. Now film the match.'});later(()=>setFlash(null),2200);
+  setNote(EXTRA.panels);say(`32 / 32 · ${secs} s`);setPhase('ready');};
+ const place=(piece:PanelKind)=>{if(phaseRef.current!=='stitch')return;const st=studio.current,gap=st.target;if(gap==null)return;
+  const r=stitch(gap,piece);
+  if(!r.ok){st.misses++;setMisses(st.misses);museumSfx.flap();setNote(r.say);setWrong(true);say(`${PIECES[PANELS[gap].kind].sides} sides!`);later(()=>setWrong(false),420);return;}
+  const next=new Set(done);next.add(gap);setDone(next);museumSfx.card();const c=counts(next);say(`Panels ${c.total} / 32`);
+  setNote(c.total===1?'Stitched! The ball turns to the next gap.':piece==='pent'?`A black pentagon: ${c.pent} of 12.`:`A white hexagon: ${c.hex} of 20.`);
+  if(next.size===32){finishStitch();return;}
+  turnTo(nextGap(st.q,next));};
+ const stitchRest=()=>{const all=new Set(PANELS.map((_,i)=>i));setDone(all);finishStitch();};
 
- // Warm the 3D chunk while the visitor reads the off screen (still a separate lazy chunk; nothing renders until power-on),
- // so the live picture is ready by the time they tune in, even on a cold cache.
- useEffect(()=>{const t=setTimeout(()=>{import('./tvScene').catch(()=>{});},400);return()=>clearTimeout(t);},[]);
- // The 3D picture: lazy-loaded the first time the TV is switched on, disposed on unmount.
- const wantScene=power!=='off';
- useEffect(()=>{if(!wantScene||scene.current||!canvas.current)return;let cancelled=false;const node=canvas.current;
-  import('./tvScene').then(({createTvScene})=>{if(cancelled)return;try{
-   scene.current=createTvScene(node,{reducedMotion:reduced,onSpinEnd:()=>setSpin(s=>s.phase==='spinning'?{...s,phase:'ask'}:s)});
-   scene.current.setBall(ballRef.current);scene.current.setShot(shotRef.current);
-   (window as unknown as {__telstarTv?:TvScene}).__telstarTv=scene.current;setReady(true);
-  }catch(err){console.warn('telstar tv: 3D picture unavailable',err);setFailed(true);}}).catch(()=>!cancelled&&setFailed(true));
-  return()=>{cancelled=true;};
- },[wantScene,reduced]);
- useEffect(()=>()=>{scene.current?.dispose();scene.current=null;delete (window as unknown as {__telstarTv?:TvScene}).__telstarTv;},[]);
- const ballRef=useRef(ball),shotRef=useRef(shot);ballRef.current=ball;shotRef.current=shot;
- useEffect(()=>{scene.current?.setBall(ball);},[ball]);
- useEffect(()=>{scene.current?.setShot(shot);},[shot]);
+ // Drag a panel from its tray onto the ball (a tap on the tray places it too).
+ const local=(e:{clientX:number;clientY:number})=>{const r=svgRef.current?.getBoundingClientRect();return r?[e.clientX-r.left,e.clientY-r.top] as const:[0,0] as const;};
+ const grabPiece=(kind:PanelKind,e:RPE)=>{if(phase!=='stitch')return;e.preventDefault();const [x,y]=local(e);setDrag({kind,x,y,x0:x,y0:y});museumSfx.flapBook();};
+ useEffect(()=>{if(!drag)return;
+  const move=(e:PointerEvent)=>{const [x,y]=local(e);setDrag(d=>d&&{...d,x,y});};
+  const up=(e:PointerEvent)=>{const [x,y]=local(e),{c,r}=ballCentre(F,Pv),moved=Math.hypot(x-drag.x0,y-drag.y0);
+   if(Math.hypot(x-c[0],y-c[1])<r*1.15||moved<10)place(drag.kind);setDrag(null);};
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
+  return()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[drag?.kind,drag?.x0,drag?.y0,F,Pv]);
 
- // A short burst of snow, the sound of a TV between channels.
- const snowBurst=(ms=450)=>{setTuning(true);museumSfx.look();later(()=>setTuning(false),reduced?150:ms);};
+ // ── On air ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ const kickOff=()=>{const a=air.current;a.t=0;a.on=0;a.total=0;a.step=0;a.hits=0;a.tap=null;a.reveal=false;
+  const b=ballScreen(F,Pv,m,0);a.aim=[b[0],b[1]];a.want=[b[0],b[1]];a.onAir=true;
+  setFlash(null);setPhase('air');phaseRef.current='air';museumSfx.whistle();
+  if(reduced){say(`Frame 1 / ${STEPS}`);redraw();return;}
+  say('ON AIR 100%');wake();};
+ function endHalf(p:number){const k=keyOf(ballRef.current,picRef.current);museumSfx.whistle();
+  setResults(r=>({...r,[k]:p}));setBest(b=>{const n={...b,[k]:Math.max(b[k]??0,p)};saveBest(n);return n;});
+  const isLast=BALLS.indexOf(ballRef.current)===BALLS.length-1;
+  setFlash({big:`${p}%`,line:`${verdict(p)} · ${BALL_NAME[ballRef.current]}`});
+  setPhase('half');if(isLast)later(()=>{setFlash(null);setPhase('score');},reduced?400:1700);}
+ const secondHalf=()=>{setHalf(1);ballRef.current='telstar';kickOff();};
+ const replay=(p:Picture)=>{setPicture(p);picRef.current=p;setHalf(0);ballRef.current='leather';setPicked(null);setResults({});kickOff();};
+ // Reduced motion: tap the ball on each still frame.
+ const tapStill=(x:number,y:number)=>{const a=air.current;if(a.reveal)return;a.aim=[x,y];a.tap=[x,y];a.reveal=true;
+  const [bx,by]=ballScreen(F,Pv,m,stills[a.step]),hit=Math.hypot(x-bx,y-by)<=tapHit(ballPx(Pv));a.hit=hit;if(hit){a.hits++;museumSfx.reveal();}else museumSfx.tick();
+  say(`${hit?'Found it':'Lost it'} · ${a.hits} / ${a.step+1}`);redraw();
+  later(()=>{a.reveal=false;a.tap=null;a.step++;if(a.step>=STEPS){endHalf(pct(a.hits,STEPS));return;}say(`Frame ${a.step+1} / ${STEPS}`);redraw();},900);};
+ // Steer: the viewfinder moves WITH the finger (like a trackpad), so a thumb never covers the frame it is steering.
+ const grab=useRef<[number,number]|null>(null);
+ const onDown=(e:RPE<SVGSVGElement>)=>{if(phase!=='air')return;const [x,y]=local(e);if(reduced){tapStill(x,y);return;}
+  grab.current=[x-air.current.want[0],y-air.current.want[1]];capture(e);};
+ const onMove=(e:RPE<SVGSVGElement>)=>{if(!grab.current||phase!=='air')return;const [x,y]=local(e),a=air.current;
+  a.want=[Math.max(0,Math.min(W,x-grab.current[0])),Math.max(0,Math.min(H,y-grab.current[1]))];};
+ const onUp=()=>{grab.current=null;};
+ const onKey=(e:React.KeyboardEvent)=>{const step=e.shiftKey?6:20,a=air.current;
+  if(phase==='stitch'&&(e.key==='5'||e.key==='6')){e.preventDefault();place(e.key==='5'?'pent':'hex');return;}
+  if(phase!=='air')return;const d:Record<string,[number,number]>={ArrowLeft:[-step,0],ArrowRight:[step,0],ArrowUp:[0,-step],ArrowDown:[0,step]};
+  if(d[e.key]){e.preventDefault();a.want=[a.want[0]+d[e.key][0],a.want[1]+d[e.key][1]];if(reduced){a.aim=[...a.want];redraw();}}
+  else if((e.key==='Enter'||e.key===' ')&&reduced){e.preventDefault();tapStill(a.aim[0],a.aim[1]);}};
 
- // Switching off: the picture squeezes to a bright line, then a dot, and fades (a CRT losing its scan), with WAAPI.
- const pic=useRef<HTMLDivElement>(null),cooling=useRef(false);
- const switchPower=()=>{museumSfx.tick();if(power==='off'){setPower('warming');later(()=>{setPower('card');reveal('f0','name');},reduced?60:900);return;}
-  if(cooling.current)return;const off=()=>{cooling.current=false;setPower('off');setEnding(false);setBenchMsg('');setSpin({phase:'idle',dir:1});setOsd(null);setCheer(0);};
-  const el=pic.current;if(reduced||!el||typeof el.animate!=='function'){off();return;}
-  cooling.current=true;const a=el.animate([{transform:'scale(1,1)',filter:'brightness(1)',opacity:1},{transform:'scale(1,.012)',filter:'brightness(2.6)',opacity:1,offset:.5},{transform:'scale(.02,.012)',filter:'brightness(3)',opacity:1,offset:.82},{transform:'scale(0,0)',filter:'brightness(3)',opacity:0}],{duration:520,easing:'cubic-bezier(.55,0,1,.45)',fill:'forwards'});
-  a.finished.then(()=>{off();a.cancel();},()=>{off();});};
- const tuneIn=()=>{snowBurst(600);later(()=>{setPower('live');reveal('live');},reduced?100:350);};
- // "How it's made": the stitching programme between the test card and the match.
- const toBench=()=>{snowBurst(450);later(()=>setPower('build'),reduced?80:260);};
- const skip=()=>{setSkipped(true);tuneIn();};
- const built=counts.total===32;
- const onBench=useCallback((c:BenchCounts,e:BenchEvent)=>{setCounts(c);
-  if(e.kind==='place'){museumSfx.card();setBenchMsg('');if(c.total===1)reveal('panels');}
-  else if(e.kind==='wrong'&&e.need){museumSfx.flap();const n=PIECE[e.need];setBenchMsg(`That gap has ${n.sides} sides. It needs a ${n.name}.`);}
-  else if(e.kind==='turn'){museumSfx.spin();}
-  else if(e.kind==='done'){museumSfx.reveal();museumSfx.crowd();setBenchMsg('');reveal('panels','f1');setCheer(c2=>c2+1);const n=Date.now();cheerAt.current=n;later(()=>{if(cheerAt.current===n)setCheer(0);},2400);}
- },[reveal]);
- // On-screen display: the new setting shows on the picture for a moment after every knob turn (the knob's own feedback).
- const showOsd=(text:string)=>{if(power!=='live')return;setOsd(o=>({text,n:(o?.n??0)+1}));const n=Date.now();osdAt.current=n;later(()=>{if(osdAt.current===n)setOsd(null);},1500);};
- const osdAt=useRef(0);
- const turnBall=()=>{museumSfx.tick();if(power==='live')snowBurst(300);const b:BallKind=ball==='leather'?'telstar':'leather';setBall(b);setSpin({phase:'idle',dir:1});showOsd('BALL · '+BALL_NAME[b].toUpperCase());};
- const turnColour=()=>{museumSfx.tick();setColour(c=>!c);showOsd('PICTURE · '+(colour?'BLACK & WHITE':'COLOUR'));};
- const turnCamera=()=>{museumSfx.tick();if(power==='live')snowBurst(250);setShot(s=>s==='wide'?'close':'wide');setSpin({phase:'idle',dir:1});showOsd('CAMERA · '+(shot==='wide'?'CLOSE-UP':'WIDE'));};
+ const c=counts(done);
+ const lp=results[keyOf('leather',picture)],tp=results[keyOf('telstar',picture)];
+ const checked=picked!=null;
+ const sources=useMemo(()=>{const seen=new Set<string>();return [...exhibit.sources,...EXTRA_SOURCES].filter(x=>seen.has(x.url)?false:(seen.add(x.url),true));},[exhibit.sources]);
+ const hint=phase==='stitch'?'Drag the panel that fits onto the red gap':phase==='air'?(reduced?'Tap the ball on each still frame':'Drag to keep the ball in the frame'):phase==='half'?'Half time':phase==='ready'?'The camera is ready':'Mexico 70';
+ const label=studioView?`A big studio Telstar on a turntable, ${c.total} of 32 panels stitched: ${c.pent} black pentagons and ${c.hex} white hexagons. A 1970 TV camera points at it.`
+  :`A table-top pitch filmed from the touchline on a ${picture==='bw'?'black-and-white':'colour'} picture. The ball is the ${BALL_NAME[ball].toLowerCase()}.`;
 
- // Facts follow what's on screen: the Telstar on a black-and-white picture is the case's second fact.
- useEffect(()=>{if(power==='live'&&ball==='telstar'&&!colour)reveal('f1','panels');},[power,ball,colour,reveal]);
+ // Live air drawing.
+ const a=air.current,tNow=reduced&&phase==='air'?stills[Math.min(a.step,stills.length-1)]:a.t;
+ const showFinder=phase==='air'&&!reduced;
+ const fx=a.aim[0]-fb.w/2,fy=a.aim[1]-fb.h/2;
+ const ballAtNow=!studioView?ballScreen(F,Pv,m,tNow):null;
+ const ready=box.w>0;
 
- const pass=()=>{museumSfx.kick();scene.current?.pass();setPasses(p=>({...p,[ball]:p[ball]+1}));};
- const startSpin=()=>{const dir:(-1|1)=Math.random()<.5?-1:1;museumSfx.spin();setSpin({phase:'spinning',dir});scene.current?.spin(dir);};
- const answer=(a:-1|0|1)=>{const right=a===spin.dir;if(right)museumSfx.reveal();else museumSfx.tick();setSpin(s=>({...s,phase:'answered',answer:a}));
-  const k=key(ball,colour);setResults(r=>({...r,[k]:{right:(r[k]?.right??0)+(right?1:0),total:(r[k]?.total??0)+1}}));
-  setFresh(k+':'+Date.now());if(right){setCheer(c=>c+1);const n=Date.now();cheerAt.current=n;later(()=>{if(cheerAt.current===n)setCheer(0);},1900);}
-  if(ball==='telstar')reveal('f2','made','game');};
-
- const cheerAt=useRef(0);
-
- // The floor line sits just behind the stand's feet, wherever the layout puts the set (measured on resize, never polled).
- useEffect(()=>{const sc=sceneEl.current,st=setEl.current;if(!sc||!st)return;
-  const measure=()=>{const a=sc.getBoundingClientRect(),b=st.getBoundingClientRect();const stand=parseFloat(getComputedStyle(st).getPropertyValue('--stand-h'))||0;setFloorY(Math.round(b.bottom-a.top-Math.max(6,stand*.62)));};
-  const ro=new ResizeObserver(measure);ro.observe(sc);ro.observe(st);measure();return()=>ro.disconnect();},[]);
-
- // Turning the ball by hand in the close-up.
- const drag=useRef<{id:number;x:number;y:number;t:number;vx:number;vy:number}|null>(null);
- const down=(e:ReactPointerEvent<HTMLCanvasElement>)=>{if(power!=='live'||drag.current||spin.phase==='spinning')return;drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,t:performance.now(),vx:0,vy:0};e.currentTarget.setPointerCapture(e.pointerId);scene.current?.grab();};
- const move=(e:ReactPointerEvent<HTMLCanvasElement>)=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;const dx=e.clientX-d.x,dy=e.clientY-d.y,now=performance.now(),dt=Math.max(8,now-d.t)/1000;
-  d.vx=d.vx*.5+dx/dt*.5;d.vy=d.vy*.5+dy/dt*.5;d.x=e.clientX;d.y=e.clientY;d.t=now;scene.current?.drag(dx,dy);};
- const up=(e:ReactPointerEvent<HTMLCanvasElement>)=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;drag.current=null;const still=performance.now()-d.t>90;scene.current?.release(still?0:d.vx,still?0:d.vy);
-  if(ball==='telstar'&&shot==='close')reveal('f2','made','game');};
-
- const on=power!=='off';
- const hint=power==='off'?'Switch on the 1970 TV with its red power button.'
-  :power==='build'?(benchMsg||(counts.total===0?'Drag a black or a white panel onto a gap with the same shape. Or just tap one!'
-   :built?(colour?'Your Telstar! Now tune in to the match.':'32 panels: 12 black, 20 white. Black spots on white show up on a black-and-white TV.')
-   :counts.total<6?`${counts.total} of 32 stitched. Spin the ball to find more gaps.`:`${counts.total} of 32! Keep going, or stitch the rest.`))
-  :power==='warming'?'Warming up…'
-  :power==='card'?'This is the test card. First, let’s see how the Telstar is made.'
-  :shot==='wide'&&ball==='leather'&&!passes.leather?(colour?'Press Pass and follow the brown ball.':'Press Pass. Can you follow the brown ball on a black-and-white TV?')
-  :shot==='wide'&&ball==='leather'?'Hard to see? Turn the BALL knob to the Telstar.'
-  :shot==='wide'&&!passes.telstar?'Now press Pass. Can you follow the Telstar?'
-  :shot==='wide'?'Now turn the CAMERA knob to the close-up for an eye test.'
-  :spin.phase==='idle'?'Eye test: press Spin and watch which way the ball turns.'
-  :spin.phase==='spinning'?'Watch the ball…'
-  :spin.phase==='ask'?'Which way did the front of the ball turn?'
-  :spin.answer===spin.dir?'Right! Try another ball or picture.'
-  :spin.answer===0?`It turned ${spin.dir>0?'right':'left'}. ${ball==='leather'?'A plain ball gives your eyes little to follow.':'Watch one black panel and try again.'}`
-  :`Not quite: it turned ${spin.dir>0?'right':'left'}. Try again.`;
- const picture=!on?'The TV is off.':power==='build'?'How it’s made: the Telstar on a bench.':power==='live'?`${colour?'Colour':'Black-and-white'} picture, ${shot==='wide'?'wide shot':'close-up'} of the ${BALL_NAME[ball].toLowerCase()} ball on the pitch.`:'Test card with the Telstar satellite.';
-
- // Tonight's programme: four steps, ticked off as you go; Full time once the Telstar has had its eye test.
- const done=[on,built||skipped,power==='live'||passes.leather+passes.telstar>0||Object.keys(results).length>0,passes.leather+passes.telstar>0,Object.keys(results).length>0];
- const current=done.findIndex(d=>!d);
- const fullTime=Object.keys(results).some(k=>k.startsWith('telstar'));
- const leatherTested=!!results[key('leather',false)];
- const freshKey=fresh.split(':')[0];
- const score=(b:BallKind,c:boolean)=>{const r=results[key(b,c)];return r?`${r.right}/${r.total}`:null;};
- const endRows=(['leather','telstar'] as const).flatMap(b=>[false,true].map(c=>({label:`${b==='leather'?'LEATHER':'TELSTAR'} · ${c?'COLOUR':'B&W'}`,score:score(b,c)}))).filter((r):r is {label:string;score:string}=>!!r.score);
- const lb=results[key('leather',false)],tb=results[key('telstar',false)];
- const compareLine=lb&&tb?`On black and white you read the brown ball’s spin ${lb.right} out of ${lb.total}, and the Telstar’s ${tb.right} out of ${tb.total}. ${tb.right/tb.total>lb.right/lb.total?'The black and white panels helped your eyes, just as they helped viewers in 1970.':'Sharp eyes! On a real 1970 broadcast the ball was only a few grey dots, and the panels made all the difference.'}`
-  :'In 1970, viewers at home could follow the Telstar’s black and white panels, even on a grey picture.';
- const goFullTime=()=>{museumSfx.whistle();snowBurst(300);setQuizScore(null);setEnding(true);
-  // the closedown card is on the TV: bring the set into view (phones stack the guide under it)
-  root.current?.scrollTo?.({top:0,behavior:reduced?'auto':'smooth'});};
-
- return <section ref={root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="telstar-1970" className={styles.root} data-power={power} data-colour={colour}>
+ return <section role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="telstar-1970"
+  className={`${g.room} iso ${s.root}`} data-theme="light" data-phase={phase} data-gap={phase==='stitch'&&studio.current.target!=null?PANELS[studio.current.target].kind:undefined} data-stitched={c.total} data-picture={picture} data-ball={ball} data-orient={orient} data-reduced={reduced||undefined} style={{'--accent':'#e4322b'} as CSSProperties}>
+  <style dangerouslySetInnerHTML={{__html:ISO_CSS}}/>
   <ExperienceBack onClose={onClose}/>
-  <div ref={sceneEl} className={styles.room} style={{['--snow' as string]:snow,['--floor-y' as string]:floorY==null?undefined:floorY+'px'}}>
-   <div className={styles.floor} aria-hidden="true"/>
-   <Lamp className={styles.lamp}/>
+  <div className={`${g.scroll} ${s.scroll}`} data-scroll>
+   <div className={s.screen} data-play-screen>
+    <header className={s.head}>
+     <WallLabel as="h1" title={exhibit.title} meta={`${exhibit.year} · Mexico`} caption="Stitch the ball, then film the match on a black-and-white set." className={s.label}/>
+    </header>
 
-   <header className={styles.top}>
-    <p className={styles.title}><span>{exhibit.year}</span> {exhibit.title}</p>
-   </header>
-
-   <div className={styles.stage}>
-    <div ref={setEl} className={styles.set}>
-     <div className={styles.tv} data-power={power}>
-      <div className={styles.bezel}>
-       <div className={styles.screen} data-colour={colour} data-tuning={tuning||(power==='live'&&!ready&&!failed)} data-power={power}>
-        <div ref={pic} className={styles.picture}>
-        <canvas ref={canvas} className={styles.canvas} role="img" aria-label={picture} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} data-show={power==='live'}/>
-        {power==='card'&&<div className={styles.card}><TestCard/></div>}
-        {power==='build'&&<StitchBench reduced={reduced} counts={counts} onChange={onBench} bind={b=>{bench.current=b;}}/>}
-        {power==='build'&&cheer>0&&<div key={'b'+cheer} className={styles.lower} aria-hidden="true"><b>✓ TELSTAR</b><span>32 PANELS</span></div>}
-        {power==='live'&&!ending&&<div className={styles.bug} aria-hidden="true"><b>LIVE</b> VIA SATELLITE</div>}
-        {power==='live'&&shot==='wide'&&!ending&&<div className={styles.bug2} aria-hidden="true">MEXICO 70</div>}
-        {power==='live'&&osd&&<div key={osd.n} className={styles.osd} aria-hidden="true">{osd.text}</div>}
-        {power==='live'&&cheer>0&&<div key={'c'+cheer} className={styles.lower} aria-hidden="true"><b>✓ RIGHT!</b><span>You read the spin</span></div>}
-        {ending&&power==='live'&&<EndCard rows={endRows} quiz={quizScore==null?null:{right:quizScore,total:QUIZ.length}}/>}
-        {failed&&power==='live'&&<p className={styles.fail}>The picture can’t show on this device.</p>}
-        </div>
-        {power==='live'&&cheer>0&&<div key={'f'+cheer} className={styles.flash} aria-hidden="true"/>}
-        <div className={styles.roll} aria-hidden="true"/>
-        <div className={styles.snow} aria-hidden="true"/>
-        <div className={styles.scan} aria-hidden="true"/>
-        <div className={styles.glass} aria-hidden="true"/>
-        {power==='warming'&&<div className={styles.warm} aria-hidden="true"/>}
-       </div>
-      </div>
-      <div className={styles.controls}>
-       <div className={styles.brand} aria-hidden="true">TELE·70</div>
-       <Knob label="BALL" options={['Leather','Telstar']} value={ball==='leather'?0:1} onTurn={turnBall}/>
-       <Knob label="PICTURE" options={['B&W','Colour']} value={colour?1:0} onTurn={turnColour}/>
-       <Knob label="CAMERA" options={['Wide','Close']} value={shot==='wide'?0:1} onTurn={turnCamera}/>
-       <button type="button" className={styles.power} data-on={on} onClick={switchPower} data-museum-own-cue aria-pressed={on} aria-label={on?'Switch the TV off':'Switch the TV on'}><span/></button>
-      </div>
+    <div ref={card} className={s.card} data-play-area data-fill-screen onKeyDown={onKey} tabIndex={0} aria-label={label}>
+     <div className={s.corners} aria-hidden="true">
+      <span data-corner="fig">Fig. 1970</span><span data-corner="title">Mexico 70 · on air</span>
+      <span data-corner="hint">{hint}</span><span data-corner="readout" ref={readRef}>Panels 0 / 32</span>
      </div>
-     <Stand className={styles.stand}/>
+     {ready&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}
+      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} data-drag={drag?'':undefined}>
+      <BallShadeDefs/>
+      {studioView?<g>
+        <StudioStatic F={F} P={Pv} tally={phase==='stitch'}/>
+        {(['pent','hex'] as const).map(kind=><g key={kind}>
+         <Tray F={F} P={Pv} kind={kind} left={PIECES[kind].total-(kind==='pent'?c.pent:c.hex)} hot={drag?.kind===kind}/>
+         <path d={trayHull(F,Pv,kind)} fill="transparent" className={s.hit} data-tray-hit={kind} onPointerDown={e=>grabPiece(kind,e)}/>
+        </g>)}
+        <StudioBall F={F} P={Pv} q={studio.current.q} done={done} target={phase==='stitch'?studio.current.target:null} wrong={wrong}/>
+        {drag&&<Ghost kind={drag.kind} x={drag.x} y={drag.y} r={Math.max(22,ballCentre(F,Pv).r*.22)}/>}
+       </g>
+      :<g>
+        <g className={s.picture}>
+         <PitchStatic F={F} P={Pv} picture={picture}/>
+         <PitchLive F={F} P={Pv} m={m} t={tNow} ball={ball} picture={picture}/>
+        </g>
+        <Tally F={F} P={Pv} on={phase==='air'&&a.onAir}/>
+        {showFinder&&<g data-viewfinder={a.onAir?'on':'off'} className={s.finder}>
+         <path d={`M0 0H${W}V${H}H0Z M${fx} ${fy}v${fb.h}h${fb.w}v${-fb.h}Z`} fillRule="evenodd" className={s.veil}/>
+         {[[0,0,1,1],[1,0,-1,1],[1,1,-1,-1],[0,1,1,-1]].map(([u,v,sx,sy],i)=>{const X=fx+u*fb.w,Y=fy+v*fb.h,L=Math.min(28,fb.w*.16);
+          return <path key={i} d={`M${X} ${Y+sy*L}V${Y}H${X+sx*L}`} className={s.bracket}/>;})}
+         <path d={`M${a.aim[0]-7} ${a.aim[1]}h14M${a.aim[0]} ${a.aim[1]-7}v14`} className={s.bracket}/>
+         <g transform={`translate(${fx+10} ${fy+10})`}><circle r={5} cx={5} cy={5} className={s.recDot}/><text x={15} y={9} className={s.rec}>{a.onAir?'ON AIR':'LOST'}</text></g>
+        </g>}
+        {reduced&&phase==='air'&&a.reveal&&a.tap&&ballAtNow&&<g data-still-tap={a.hit?'hit':'miss'}>
+         <circle cx={ballAtNow[0]} cy={ballAtNow[1]} r={tapHit(ballPx(Pv))} className={a.hit?s.ringHit:s.ringMiss}/>
+         <path d={`M${a.tap[0]-8} ${a.tap[1]}h16M${a.tap[0]} ${a.tap[1]-8}v16`} className={s.bracket}/>
+        </g>}
+       </g>}
+     </svg>}
+     {flash&&<div className={s.flash} role="status"><b>{flash.big}</b><span>{flash.line}</span></div>}
+
+     {phase==='intro'&&<div className={s.panel} data-intro>
+      <p className={g.kicker}>1970 · Mexico</p>
+      <h2 className={s.panelTitle}>The ball you can see on black and white.</h2>
+      <p className={g.body}>{exhibit.facts[0]}</p>
+      <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><b>{b.head}</b><p>{b.text}</p></li>)}</ol>
+      <div className={g.row}><button type="button" className={g.btn} data-start onClick={startStitch} data-museum-own-cue>Stitch the Telstar</button></div>
+     </div>}
+
+     {phase==='score'&&<div className={s.panel} data-score-panel>
+      <p className={g.kicker}>Full time · {picture==='bw'?'black and white':'colour'}</p>
+      <div className={s.compare} data-compare>{BALLS.map(b=>{const v=results[keyOf(b,picture)];return <p key={b} data-ball={b}><span>{BALL_NAME[b]}</span><b>{v??'–'}%</b><i style={{'--f':(v??0)/100} as CSSProperties} aria-hidden="true"/></p>;})}</div>
+      <p className={g.body}>{lp!=null&&tp!=null&&tp>lp?<><b>The panels won.</b> Same match, same passes: you kept the Telstar on air {tp-lp} points more than the brown ball.</>
+       :<><b>Sharp eyes!</b> On a real 1970 set the ball was a few grey dots, and the black and white panels made all the difference.</>} {exhibit.facts[1]}</p>
+      {picture==='bw'&&<p className={g.small}>Play it again in colour: the brown ball is easy to see again.</p>}
+      <StepCheck items={[CHECK]} kicker={()=> 'Quick check'} onPick={ok=>{setPicked(ok?CHECK.right:-1);if(ok)museumSfx.reveal();else museumSfx.tick();}}
+       doneLabel="See the ending" onDone={()=>later(()=>endRef.current?.scrollIntoView?.({behavior:reduced?'auto':'smooth',block:'start'}),60)}/>
+      <div className={g.row}>
+       <button type="button" className={g.btn} data-museum-own-cue data-play-again onClick={()=>replay(picture)}>Play again</button>
+       <button type="button" className={g.ghost} data-play-colour onClick={()=>replay(picture==='bw'?'colour':'bw')}>{picture==='bw'?'Play in colour':'Play in B&W'}</button>
+      </div>
+     </div>}
     </div>
 
-    <aside className={styles.guide} aria-label="What’s on"><div className={styles.sheet}>
-     <div className={styles.masthead} aria-hidden="true"><b>What’s on</b><span>Mexico 70 · Channel 1</span></div>
-     {ending&&power==='live'?<Quiz forYourGame={exhibit.forYourGame} compareLine={compareLine} onDone={n=>setQuizScore(n)} onBack={()=>{setEnding(false);museumSfx.tick();}}/>
-     :fullTime&&on?<div className={styles.fullTime} role="status">
-      <b>{leatherTested?'Ready for full time':'Nearly full time'}</b>
-      <p>{leatherTested?'Compare your two rows below. Which ball could your eyes follow on black and white?':'You tested the Telstar. Now try the brown leather ball on black and white, and compare your scores.'}</p>
-      {power==='live'&&<button type="button" className={styles.whistleBtn} onClick={goFullTime} data-museum-own-cue>Blow for full time: quiz of the night</button>}
-     </div>
-     :<ol className={styles.steps} aria-label="Tonight’s programme">
-      {STEPS.map((s,i)=><li key={s} data-state={done[i]?'done':i===current?'now':'next'}><i aria-hidden="true">{done[i]?'✓':i+1}</i><span>{s}</span>{done[i]&&<span className={styles.sr}> (done)</span>}</li>)}
-     </ol>}
+    <div className={s.dock} data-dock>
+     {phase==='stitch'?<>
+       <div className={s.pieces} role="group" aria-label="Stitch a panel into the red gap">
+        <button type="button" className={s.piece} data-piece="pent" data-museum-own-cue onClick={()=>place('pent')}><svg viewBox="-12 -12 24 24" aria-hidden="true"><polygon points={polygon(5,0,0,11)} fill="#1d1d1b"/></svg>Pentagon<small>5 sides</small></button>
+        <button type="button" className={s.piece} data-piece="hex" data-museum-own-cue onClick={()=>place('hex')}><svg viewBox="-12 -12 24 24" aria-hidden="true"><polygon points={polygon(6,0,0,11)} fill="#f9f9f6"/></svg>Hexagon<small>6 sides</small></button>
+       </div>
+       <dl className={s.stats}><div><dt>Pentagons</dt><dd>{c.pent}/12</dd></div><div><dt>Hexagons</dt><dd>{c.hex}/20</dd></div><div><dt>Wrong</dt><dd>{misses}</dd></div></dl>
+       <p className={s.say} aria-live="polite">{note}</p>
+       {c.total>=8&&<button type="button" className={g.ghost} data-stitch-rest onClick={stitchRest}>Stitch the rest</button>}
+      </>
+      :phase==='air'?<>
+       <dl className={s.stats}><div><dt>Ball</dt><dd>{ball==='leather'?'Leather':'Telstar'}</dd></div><div><dt>Picture</dt><dd>{picture==='bw'?'B&W':'Colour'}</dd></div><div><dt>Half</dt><dd>{half+1}/2</dd></div></dl>
+       <p className={s.say}>{reduced?'Find the ball in each still frame and tap it.':ball==='leather'?'Follow the brown ball. On a grey picture it hides in the grass.':'Follow the Telstar: black and white panels on a grey picture.'}</p>
+      </>
+      :phase==='intro'?<><button type="button" className={g.btn} data-start-dock onClick={startStitch}>Stitch the Telstar</button><p className={s.say}>Mexico, 1970: the first World Cup shown live around the world.</p></>
+      :phase==='score'?<p className={s.say}>Same match, same passes: only the ball changed.</p>
+      :<>
+       <div className={s.toggle} role="group" aria-label="Picture">
+        {(['bw','colour'] as const).map(v=><button key={v} type="button" aria-pressed={picture===v} data-picture-opt={v} onClick={()=>setPicture(v)} aria-label={v==='bw'?'Black-and-white picture':'Colour picture'}>{v==='bw'?'B&W':'Colour'}</button>)}
+       </div>
+       {phase==='half'&&half===0?<button type="button" className={g.btn} data-second-half onClick={secondHalf}>2nd half: the Telstar</button>
+        :<button type="button" className={g.btn} data-kick-off onClick={()=>replay(picture)}>Kick off</button>}
+       <p className={s.say} aria-live="polite">{phase==='half'&&half===0?<>Half time: <b>{lp??0}%</b> on air with the brown leather ball. Same match, same passes: now the Telstar.</>
+        :<>Your Telstar is ready{stitchSecs!=null?<> ({stitchSecs} s, {misses} wrong)</>:null}. You are the 1970 cameraman: keep the ball in the frame. First half: the <b>brown leather</b> ball.</>}</p>
+      </>}
+    </div>
+   </div>
 
-     {power==='off'&&<ColdOpen/>}
-     {!(ending&&power==='live')&&<><p className={styles.hint} aria-live="polite" key={hint}>{hint}</p>
-     <div className={styles.actions}>
-      {power==='off'&&<button type="button" className={styles.action} onClick={switchPower} data-museum-own-cue>Switch on</button>}
-      {power==='card'&&<><button type="button" className={styles.action} onClick={toBench} data-museum-own-cue>Stitch the Telstar</button><button type="button" className={styles.skip} onClick={skip} data-museum-own-cue>Skip to the match</button></>}
-      {power==='build'&&!built&&counts.total>=6&&<button type="button" className={styles.action} onClick={()=>bench.current?.finish()} data-museum-own-cue>Stitch the rest</button>}
-      {power==='build'&&built&&<button type="button" className={styles.action} onClick={tuneIn} data-museum-own-cue>Tune in to the match</button>}
-      {power==='build'&&<p className={styles.tally} aria-live="polite"><span><i data-kind="pent" aria-hidden="true"/>{counts.pent}/12 black</span><span><i data-kind="hex" aria-hidden="true"/>{counts.hex}/20 white</span><b>{counts.total}/32</b></p>}
-      {power==='live'&&shot==='wide'&&<button type="button" className={styles.action} onClick={pass} data-museum-own-cue>Pass</button>}
-      {power==='live'&&shot==='close'&&(spin.phase==='idle'||spin.phase==='answered')&&<button type="button" className={styles.action} onClick={startSpin} data-museum-own-cue>{spin.phase==='answered'?'Spin again':'Spin'}</button>}
-      {power==='live'&&shot==='close'&&spin.phase==='spinning'&&<button type="button" className={styles.action} disabled>Spinning…</button>}
-      {power==='live'&&shot==='close'&&spin.phase==='ask'&&<div className={styles.answers} role="group" aria-label="Which way did it turn?">
-       <button type="button" className={styles.answer} onClick={()=>answer(-1)} data-museum-own-cue aria-label="It turned left">← Left</button>
-       <button type="button" className={styles.answer} onClick={()=>answer(0)} data-museum-own-cue>Couldn’t tell</button>
-       <button type="button" className={styles.answer} onClick={()=>answer(1)} data-museum-own-cue aria-label="It turned right">Right →</button>
-      </div>}
-     </div></>}
-
-     {Object.keys(results).length>0&&<table className={styles.results}>
-      <caption>Your eye test · right answers</caption>
-      <thead><tr><th scope="col"><span className={styles.sr}>Ball</span></th><th scope="col">Black & white</th><th scope="col">Colour</th></tr></thead>
-      <tbody>{(['leather','telstar'] as const).map(b=><tr key={b}><th scope="row">{BALL_NAME[b]}</th>{[false,true].map(c=>{const k=key(b,c),r=results[k];return <td key={String(c)} data-now={b===ball&&c===colour}><span key={k===freshKey?fresh:k} data-fresh={k===freshKey}>{r?`${r.right} / ${r.total}`:'–'}</span></td>;})}</tr>)}</tbody>
-     </table>}
-     {cap&&<figure className={styles.caption}>
-      <figcaption>{cap.tag}</figcaption>
-      <p key={cap.id} aria-live="polite">{cap.text}</p>
-      {captions.length>1&&<div className={styles.pager}>
-       <button type="button" onClick={()=>setCapIndex(i=>Math.max(0,Math.min(i,captions.length-1)-1))} disabled={capIndex<=0} aria-label="Previous fact">‹</button>
-       <span>{Math.min(capIndex,captions.length-1)+1} of {all.length} facts</span>
-       <button type="button" onClick={()=>setCapIndex(i=>Math.min(captions.length-1,i+1))} disabled={capIndex>=captions.length-1} aria-label="Next fact">›</button>
-      </div>}
-     </figure>}
-
-     <footer className={styles.foot}>
-      <p className={styles.note}>The match on this TV is pretend, made for the eye test. The facts are real.</p>
-      <details className={styles.sources}>
-       <summary>Sources</summary>
-       <ul>{[...exhibit.sources,...EXTRA_SOURCES].map(s=><li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.title}</a></li>)}</ul>
-       <p>Ball drawing: the museum’s World Cup ball gallery model of the 1970 Telstar. Test card, TV and room drawn for this exhibit.</p>
-      </details>
-     </footer>
-    </div></aside>
+   <div className={s.below}>
+    <section className={g.section} aria-labelledby="ts-facts">
+     <p className={g.kicker}>The real story</p>
+     <h2 id="ts-facts" className={g.h2}>Why the ball went black and white</h2>
+     <ol className={g.steps}>{[exhibit.facts[0],exhibit.facts[1],EXTRA.live,EXTRA.panels,EXTRA.name,exhibit.facts[2],EXTRA.made].map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}</ol>
+     {Object.keys(best).length>0&&<p className={g.small} data-best>Your best on air: {BALLS.flatMap(b=>(['bw','colour'] as const).map(p=>best[keyOf(b,p)]!=null?`${BALL_NAME[b]} (${p==='bw'?'B&W':'colour'}) ${best[keyOf(b,p)]}%`:null)).filter(Boolean).join(' · ')}</p>}
+     <p className={g.small}>{MODEL_NOTE}</p>
+    </section>
+    <div ref={endRef}>{checked&&<Ending art={<EndBall/>} seen="You’ve seen the Telstar: 12 black and 20 white panels, made to be followed on a black-and-white screen." take={exhibit.forYourGame} onComplete={onComplete} reached={checked}/>}</div>
+    <footer>
+     <details className={g.sources}><summary>Sources</summary>
+      <ul>{sources.map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul>
+      <p className={g.small}>The ball is drawn from real geometry: a truncated icosahedron, 12 pentagons and 20 hexagons.</p>
+     </details>
+    </footer>
    </div>
   </div>
  </section>;
+}
+
+/** The ending's mark: the finished Telstar on its cup (the same geometry as the game). */
+function EndBall(){
+ const list=ballPanels(bringToFront(START_Q,3),0,0,100);
+ return <svg viewBox="-110 -110 220 230" aria-hidden="true"><ellipse cx="0" cy="104" rx="70" ry="10" fill="#8a8a80" opacity=".3"/>
+  <BallShadeDefs/><circle r="100" fill="#f7f7f3"/>
+  {list.map(p=><path key={p.i} d={p.d} fill={p.kind==='pent'?'#1d1d1b':'#f7f7f3'} stroke="#77777a" strokeWidth=".8"/>)}
+  <circle r="100" fill="url(#ts-ballshade)"/><circle r="100" fill="none" stroke="#1d1d1b" strokeWidth="1.2"/></svg>;
 }

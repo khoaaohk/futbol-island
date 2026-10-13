@@ -3,6 +3,7 @@ import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {galleryOf,exhibitState,UNLOCK_WORDS,type Exhibit,type MuseumCounts} from '@/lib/endgame/museum';
 import {STORIES,startStory,beginBeat,endBeat,storyTakeaway,type StoryBeat,type StoryState} from '@/lib/museum/museumStories';
 import {sayLine,stopLine} from '@/lib/museum/museumVoice';
+import {accentOf} from '@/lib/museum/museumAtlas';
 import styles from './MuseumRoom.module.css';
 
 /**
@@ -26,7 +27,7 @@ export default function MuseumStory({exhibit,open,counts,hooks}:{exhibit:Exhibit
   clearTimeout(timer.current);timer.current=setTimeout(()=>{hooks.duck(false);setState(st=>endBeat(st));},ms);
  }
  function again(){clearTimeout(timer.current);stopLine();hooks.reset();setState(startStory(exhibit.id));setLine('');}
- const style={'--g':g.art} as CSSProperties;
+ const style={'--g':accentOf(g.id)} as CSSProperties;
  if(!open)return <div className={styles.strip} style={style} data-museum-story={exhibit.id} data-locked>
   <div className={styles.stripHead}><span className={styles.eyebrow}>{g.title} · {exhibit.year}</span><b>{exhibit.title}</b></div>
   <p className={styles.lockText} data-museum-locked={exhibit.id}>{s.lockText}</p>

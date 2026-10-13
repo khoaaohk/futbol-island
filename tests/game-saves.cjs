@@ -394,7 +394,7 @@ await ok('retention',async()=>{
  assert.equal(ST.monthsBefore('2026-10-10',12),'2025-10-10');assert.equal(ST.monthsBefore('2025-03-31',1),'2025-02-28');assert.equal(ST.monthsBefore('2024-03-31',1),'2024-02-29');
  const st=ST.createMemorySaveStore();await st.create('a'.repeat(64),snap({}),20);await st.create('b'.repeat(64),snap({}),20);await st.create('c'.repeat(64),snap({}),20);
  st.data.saves['a'.repeat(64)].lastUsedOn='2025-10-09';st.data.saves['b'.repeat(64)].lastUsedOn='2025-10-10';st.data.saves['c'.repeat(64)].lastUsedOn='2026-01-01';
- await st.hit('c:old',5,60,new Date(Date.now()-3*DAY));await st.salt('2020-01-01');
+ await st.hit('c:old',5,60,new Date(Date.parse('2026-10-10T03:00:00Z')-3*DAY));await st.salt('2020-01-01');
  const r=await st.purge(new Date('2026-10-10T03:00:00Z'));
  assert.deepEqual(Object.keys(st.data.saves).sort(),['b'.repeat(64),'c'.repeat(64)],'unused for more than 12 months: deleted');assert.equal(r.saves,1);
  assert(!Object.keys(st.data.throttle).some(k=>k.startsWith('c:old')),'old throttle rows go');assert(!st.data.salts['2020-01-01'],'old salts go');
@@ -402,7 +402,7 @@ await ok('retention',async()=>{
  await lookupKeeps.lookup('d'.repeat(64),'ip:x',false,false,new Date());assert.equal(lookupKeeps.data.saves['d'.repeat(64)].lastUsedOn,new Date().toISOString().slice(0,10),'using a save keeps it');
  const cron=read('app/api/cron/analytics/route.ts');assert(cron.indexOf('cronAuthorized(')<cron.indexOf('await purgeSaves()')&&/saves\.purge\(/.test(cron),'the nightly cron purges, after the secret check');
  const vercel=JSON.parse(read('vercel.json'));
- assert.deepEqual(vercel.crons,[{path:'/api/cron/analytics',schedule:'30 2 * * *'},{path:'/api/cron/scores',schedule:'*/5 * * * *'}],'crons unchanged');
+ assert.deepEqual(vercel.crons,[{path:'/api/cron/analytics',schedule:'30 10 * * *'},{path:'/api/cron/scores',schedule:'*/5 * * * *'}],'crons unchanged');
  assert.equal(vercel.ignoreCommand,"git diff --quiet HEAD^ HEAD -- . ':(exclude)docs' ':(exclude)*.md'",'ignoreCommand unchanged');
 });
 
@@ -559,7 +559,8 @@ await ok('sql',async()=>{
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
-  assert.equal(files.filter(f=>f>'20261010_game_saves.sql').join(),'20261011_admin_save_metrics.sql','the save migration is last but for the admin metrics');
+  // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time); none may touch the save tables (checked below).
+  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql'],'only admin add-ons run after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');

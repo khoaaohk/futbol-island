@@ -29,6 +29,8 @@ export function createFishingCamera(){
   /** Ease back to the normal follow camera. */
   end(){dir=-1;arrived=null;},
   get easing(){return dir!==0||t>0;},
+  /** Fully on the fishing shot (not easing in or out): the island may freeze its background (lib/graphics/focusMode.ts). */
+  get arrived(){return dir===1&&t>=1;},
   /** Blend the already-placed follow camera toward the shot (an orbit: focus, direction and distance are blended). */
   apply(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
    if(dir===0&&t===0)return false;

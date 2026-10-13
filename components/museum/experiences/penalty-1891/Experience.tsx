@@ -1,300 +1,219 @@
 'use client';
-import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState,type CSSProperties,type PointerEvent as RPointerEvent} from 'react';
 import ExperienceBack from '../ExperienceBack';
 import {museumSfx} from '@/lib/museum/museumSound';
 import type {ExperienceProps} from '../types';
-import styles from './Experience.module.css';
-import StoryDrawer from './StoryDrawer';
-import {BALL_R,GOAL_H,MARK,POWERS,WOBBLE,flightTime,keeperDepth,keeperTime,landing,odds,pickDive,reach,shotResult,toGoal,zoneOf,type Dive,type Era,type Power,type Result} from './model';
-import {CHECKS,ERA_NAME,ERA_TEXT,RESULT_TEXT,STORY,ZONE_TEXT,compareText} from './content';
-import {loop,rubber,spring,stepSpring} from './motion';
-import type {PenaltyScene,SceneState,Shot} from './scene';
+import WallLabel from '../modern/WallLabel';
+import StepCheck from '../modern/StepCheck';
+import Ending from '../modern/Ending';
+import {ACCENT,springLinear} from '../modern/tokens';
+import {useReduced,useSeen} from '../modern/hooks';
+import g from '../modern/gallery.module.css';
+import pc from '../modern/pieces.module.css';
+import {BALL_R,GOAL_H,GOAL_W,HUB_Y,MARK,POST_X,POWERS,SIX_YARDS,WOBBLE,flightTime,keeperDepth,keeperTime,landing,odds,pickDive,reach,shotResult,toGoal,zoneOf,type Dive,type Era,type Power,type Result} from './model';
+import {CHECKS,ERA_NAME,ERA_TEXT,HISTORY,MODEL_NOTE,RESEARCH,RESULT_TEXT,SOURCES,STORY,ZONE_TEXT,compareText} from './content';
+import Cabinet from './Cabinet';
+import s from './Experience.module.css';
 
 /**
- * penalty-1891 · "Step up to the spot" as a 16-bit arcade penalty (Oct 9 2026 museum styles pass; the Oct 5 broadcast redesign's
- * stage, model and story kept). The island's bean characters in the three.js stadium, rendered as pixel art (scene.ts: a low-res
- * buffer, 9-bit colour, ordered dither, outlines) under an arcade HUD set in pixel type (Press Start 2P, Pixelify Sans).
- *
- * The visitor DOES the penalty, in three beats:
- *  1. Aim: drag on the goal. The reticle follows the finger; flick it and it glides, push past a post and it rubber-bands back.
- *     The goal-plane graphics show the keeper's reach and the spray of where the shot can land; the numbers say how often.
- *  2. Power: HOLD Shoot. An arcade power bar charges on a spring through Soft → Firm → Blast, and you watch the cause and effect:
- *     the spray on the goal grows (harder = less accurate) while the keeper's reach shrinks (harder = less time). Let go to kick.
- *     A quick tap kicks at the chosen power; the power buttons and Enter do the same from the keyboard.
- *  3. Compare: after a kick, "Same kick in 1891" walks the keeper 6 yards out and replays the SAME kick and the SAME dive under the
- *     1891 rule (or today's), so the visitor sees why the keeper was sent back to his line. Five kicks make a round; the round card
- *     counts how many of them would have gone in under the other rules.
- * Heat: the three.js stage is lazy-loaded, draws only on change or while a shot plays (at 30 fps), and is disposed. The HUD's own
- * motion (the power spring, the aim glide/rubber-band) runs one rAF chain only while a finger is down or a spring settles, then
- * stops; frames at rest = 0.
+ * penalty-1891 · "Step up to the spot", retold on Oct 10 2026 in the museum's MODERN GALLERY language
+ * (docs/museum-modern-style.md; before: a 16-bit arcade stadium). One accent: red. The penalty is abstract: a sphere and a line
+ * at 11 m, a goal drawn as a 7.32 × 2.44 m frame (to scale), the keeper reduced to a circle head and a rounded body, his reach a
+ * pale oval, the kicker's wobble a spray of red dots (the model's own samples).
+ *  1. Wall label + the hero composition, drawn to scale: the goal, the line, the sphere on the spot 11 m away; "Take a penalty →".
+ *  1b. THE ARCADE CABINET (Oct 10 2026, user: "keep the white modern design, but add on the pixel penalty from the last design";
+ *     "that was more interactive"): the 16-bit shootout from the Oct 9 arcade pass, framed on the wall as an exhibit within the
+ *     exhibit (Cabinet.tsx). It is the hands-on centrepiece, right after the opening: cutscene, aim, hold-to-power, the keeper's
+ *     dive, the crowd, five kicks, the score screen with a quick check per round. The page explains, the cabinet plays; both run
+ *     on model.ts, so the numbers agree. A finished round (with its question answered) is a real ending too.
+ *  2. How it happened: four numbered history steps (fouls that stopped goals → McCrum's idea → the handball on the line → a Law).
+ *  3. Up close: same kick, two rules (the explainer; rounds of five live in the cabinet): drag on the goal to aim, pick how hard, shoot. The spray grows with
+ *     power while the keeper's reach shrinks (less time). Switch the rules to 1891 and the keeper walks 6 yards out on the 11 m
+ *     line above, his shadow covering much more of the goal; "Same kick in 1891" replays the same landing and the same dive under
+ *     the other rule, which is why since 1905 the keeper stays on his line.
+ *  4. The rule then and now, what studies found, the practice-model note, sources; quick check (shared); ending → onComplete.
+ * Heat: this page 0 rAF (the cabinet sleeps off-screen and at rest, see Cabinet.tsx). The aim follows the finger by pointer events (no loop) and settles on a CSS spring transition; the shot and the dive
+ * are one-shot Web Animations (transform only); reveals are CSS. Reduced motion: no flight, no dive, the result appears.
  */
-const AIM_X=[-5.2,5.2] as const,AIM_Y=[BALL_R,3.4] as const,ROUND=5,BAND=.4,TAP_MS=170,CHARGE_S=1.15;
+const AIM_X=[-5.2,5.2] as const,AIM_Y=[BALL_R,3.4] as const,MARKS=5;
 const clamp=(v:number,[a,b]:readonly [number,number])=>Math.max(a,Math.min(b,v));
-type Phase='intro'|'aim'|'flying'|'result';
-type Kick={x:number;y:number;dive:Dive;power:Power;era:Era;result:Result};
-const ZONE_LABEL={outside:'Off target','top-corner':'Top corner','low-corner':'Low corner',middle:'The middle',near:'Near the keeper'} as const;
 const POWER_KEYS=Object.keys(POWERS) as Power[];
-const bandOf=(c:number):Power=>c<1/3?'soft':c<2/3?'firm':'blast';
-const SEGMENTS=12;
+const ZONE_LABEL={outside:'Off target','top-corner':'Top corner','low-corner':'Low corner',middle:'The middle',near:'Near the keeper'} as const;
+type Kick={x:number;y:number;dive:Dive;power:Power;era:Era;result:Result};
+const SPRAY=WOBBLE.slice(0,90);
+const EASE=springLinear(170,.72);
+const kSc=(era:Era)=>MARK/(MARK-keeperDepth(era));
+const pct=(v:number)=>`${Math.round(v*100)}%`;
 
-export default function Experience({exhibit,onClose}:ExperienceProps){
- const canvas=useRef<HTMLCanvasElement>(null),scene=useRef<PenaltyScene|null>(null),dock=useRef<HTMLDivElement>(null),header=useRef<HTMLElement>(null),root=useRef<HTMLElement>(null),intro=useRef<HTMLDivElement>(null);
- const chip=useRef<HTMLDivElement>(null),reachTag=useRef<HTMLSpanElement>(null),gauge=useRef<HTMLSpanElement>(null);
- const [phase,setPhase]=useState<Phase>('intro'),[era,setEra]=useState<Era>('today'),[power,setPower]=useState<Power>('firm');
- const [aim,setAim]=useState({x:1.3,y:1.2}),[shots,setShots]=useState<Shot[]>([]),[kicks,setKicks]=useState<Kick[]>([]),[roundStart,setRoundStart]=useState(0),[last,setLast]=useState<Result|null>(null);
- const [story,setStory]=useState(false),[failed,setFailed]=useState(false),[moved,setMoved]=useState(false),[summary,setSummary]=useState(false),[busy,setBusy]=useState(false);
- const [ready,setReady]=useState(0),[layout,setLayout]=useState(0),[charging,setCharging]=useState(false);
- /** The intro's story beat (0 = title, 1–4 = STORY) and, on the round card, the quick-check answer (one question per round). */
- const [beat,setBeat]=useState(0),[rounds,setRounds]=useState(0),[answer,setAnswer]=useState<number|null>(null);
- /** The kick on screen, and (after "Same kick in 1891") what the same kick did under the other rules. */
- const [shown,setShown]=useState<Kick|null>(null),[compare,setCompare]=useState<{from:Kick;to:Kick}|null>(null),[replaying,setReplaying]=useState(false);
- const reduced=useRef(false),timers=useRef<ReturnType<typeof setTimeout>[]>([]);
- const roundShots=shots.slice(roundStart),roundKicks=kicks.slice(roundStart);
- const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
- useEffect(()=>()=>{timers.current.forEach(clearTimeout);},[]);
+/** The hero: the goal frame, the line and the sphere on the spot, all at the same scale (30 units a metre). */
+function ToScale(){
+ const [ref,seen]=useSeen<HTMLDivElement>(.2);const M=30,top=20,line=top+GOAL_H*M,spot=line+MARK*M;
+ return <div ref={ref} data-in={seen||undefined} className={s.scaleArt}>
+  <svg viewBox={`0 0 300 ${spot+30}`} aria-hidden="true">
+   <line x1={0} x2={300} y1={line} y2={line} className={s.hair}/>
+   <path d={`M${150-GOAL_W/2*M} ${line}V${top}H${150+GOAL_W/2*M}V${line}`} pathLength={1} className={`${g.draw} ${s.ln}`}/>
+   <line x1={150} x2={150} y1={line} y2={spot} pathLength={1} className={`${g.draw} ${s.ln}`} style={{transitionDelay:'.35s'}}/>
+   <line x1={150-GOAL_W/2*M} x2={150+GOAL_W/2*M} y1={spot+18} y2={spot+18} className={s.hair}/>
+   <g className={s.pop} style={{transitionDelay:'.9s'}}><circle cx={150} cy={spot} r={13} className={s.ball}/></g>
+  </svg>
+  <p className={s.scaleTag}><span className={g.numeral}>11<small>m</small></span><span className={g.small}>From the spot to the goal line. Goal 7.32 m × 2.44 m. Drawn to scale.</span></p>
+ </div>;
+}
 
- // Lazy-load the three.js stage (three + the island's character rig); dispose it on unmount.
- useEffect(()=>{let cancelled=false;const node=canvas.current;if(!node)return;
-  reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  import('./scene').then(({createPenaltyScene})=>{if(cancelled)return;try{scene.current=createPenaltyScene(node,{coarse:matchMedia('(pointer: coarse)').matches,reducedMotion:reduced.current,onLayout:()=>!cancelled&&setLayout(n=>n+1)});setReady(r=>r+1);}catch{setFailed(true);}}).catch(()=>!cancelled&&setFailed(true));
-  return()=>{cancelled=true;scene.current?.dispose();scene.current=null;};},[]);
- const mode:SceneState['mode']=phase;
- const sceneState:SceneState=useMemo(()=>({era,power,aimX:aim.x,aimY:aim.y,shots:roundShots,mode}),[era,power,aim,roundShots.length,mode]);// eslint-disable-line react-hooks/exhaustive-deps
- useEffect(()=>{scene.current?.set(sceneState);},[sceneState,ready]);
+const ICON:Record<typeof STORY[number]['icon'],JSX.Element>={
+ foul:<svg viewBox="0 0 64 40" aria-hidden="true"><circle cx={22} cy={20} r={10} className={s.solidInk}/><circle cx={40} cy={20} r={10} className={s.ln}/><path d="M27 33l8 6M35 33l-8 6" className={s.ln}/></svg>,
+ idea:<svg viewBox="0 0 64 40" aria-hidden="true"><line x1={4} x2={60} y1={34} y2={34} className={s.hair}/><circle cx={32} cy={26} r={6} className={s.ball}/><path d="M12 6H52" className={s.ln}/></svg>,
+ hand:<svg viewBox="0 0 64 40" aria-hidden="true"><path d="M8 36V6H56V36" className={s.ln}/><line x1={2} x2={62} y1={36} y2={36} className={s.ln}/><rect x={28} y={24} width={8} height={8} className={s.solidInk}/></svg>,
+ law:<svg viewBox="0 0 64 40" aria-hidden="true">{[6,14,22,30].map((y,k)=><line key={y} x1={10} x2={k===3?34:54} y1={y} y2={y} className={k===3?s.redLine:s.ln}/>)}</svg>,
+};
 
- // Tell the stage which part of the screen is free (not under the header, the dock or the intro card): the goal is centred there.
- useLayoutEffect(()=>{const r=root.current;if(!r)return;
-  const measure=()=>{const s=scene.current;if(!s)return;const R=r.getBoundingClientRect(),h=header.current?.getBoundingClientRect(),W=R.width,H=R.height;
-   const top=Math.max(64,(h?h.bottom-R.top:64)+6);let right=0,bottom=8,left=0;
-   const box=(phase==='intro'?intro.current:dock.current)?.getBoundingClientRect();
-   if(box&&box.width>0){if(box.left>W*.4)right=R.right-box.left+8;else if(box.right<W*.62&&box.height>H*.5)left=box.right-R.left+8;else bottom=Math.max(8,R.bottom-box.top+8);}
-   s.setInsets({top:phase==='intro'?(left?24:top):top,right,bottom,left});};
-  measure();const ro=new ResizeObserver(measure);ro.observe(r);if(dock.current)ro.observe(dock.current);if(intro.current)ro.observe(intro.current);if(header.current)ro.observe(header.current);
-  return()=>ro.disconnect();},[ready,phase]);
-
- // The live goal-chance chip rides above the reticle and the KEEPER REACH tag sits on top of the reach oval (both written straight
- // to the DOM: no re-render per drag move).
- useLayoutEffect(()=>{const s=scene.current;if(!s)return;const c=chip.current,t=reachTag.current;
-  if(c){const p=s.project(aim.x,aim.y+.42,0);c.style.transform=`translate(${p.x.toFixed(0)}px,${p.y.toFixed(0)}px) translate(-50%,-100%)`;}
-  if(t){const {b}=reach(keeperTime(era,power)),cy=toGoal(era,0,1).y,sc=era==='1891'?MARK/(MARK-keeperDepth('1891')):1,top=Math.min(GOAL_H+.3,cy+b*sc);
-   const p=s.project(0,top,0);t.style.transform=`translate(${p.x.toFixed(0)}px,${p.y.toFixed(0)}px) translate(-50%,-55%)`;}
- },[aim,era,power,layout,ready,phase]);
-
- // Every fifth kick ends a round: let the result land, then show the round card.
- useEffect(()=>{if(phase!=='result'||replaying||compare||!roundShots.length||roundShots.length<ROUND)return;const t=setTimeout(()=>setSummary(true),reduced.current?0:1400);return()=>clearTimeout(t);},[roundShots.length,phase,replaying,compare]);
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
+ const reduced=useReduced();
+ const [era,setEra]=useState<Era>('today'),[power,setPower]=useState<Power>('firm'),[aim,setAim]=useState({x:1.3,y:1.2});
+ const [kicks,setKicks]=useState<Kick[]>([]),[shown,setShown]=useState<Kick|null>(null);
+ const [compare,setCompare]=useState<{from:Kick;to:Kick}|null>(null),[flying,setFlying]=useState(false),[dragging,setDragging]=useState(false),[moved,setMoved]=useState(false);
+ const [checked,setChecked]=useState(false),[played,setPlayed]=useState(false),[cabWake,setCabWake]=useState(0);
+ const cabSec=useRef<HTMLElement>(null),storySec=useRef<HTMLElement>(null);
+ const root=useRef<HTMLElement>(null),svg=useRef<SVGSVGElement>(null),ballEl=useRef<SVGGElement>(null),keeperEl=useRef<SVGGElement>(null);
+ const anims=useRef<Animation[]>([]),timers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ const closeRef=useRef(onClose);closeRef.current=onClose;
+ useEffect(()=>()=>{anims.current.forEach(a=>a.cancel());timers.current.forEach(clearTimeout);},[]);
+ useEffect(()=>{root.current?.focus({preventScroll:true});},[]);
 
  const live=useMemo(()=>odds(era,power,aim.x,aim.y),[era,power,aim]);
  const zone=zoneOf(aim.x,aim.y);
- const goals=shots.filter(s=>s.result==='goal').length,roundGoals=roundShots.filter(s=>s.result==='goal').length;
+ const round=kicks.slice(-MARKS);
+ /** "Take a penalty →": scroll to the cabinet and focus its first control. */
+ const toCabinet=()=>{cabSec.current?.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});setCabWake(n=>n+1);museumSfx.whistle();};
+ const toStory=()=>storySec.current?.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'});
 
- const ready2=useCallback(()=>{if(phase==='result'&&!busy){setPhase('aim');setLast(null);setSummary(false);setCompare(null);setShown(null);scene.current?.reset();}},[phase,busy]);
+ // Keeper reach on the goal plane (the 1891 keeper stands 5.5 m out: his shadow from the ball covers twice as much).
+ const sc=MARK/(MARK-keeperDepth(era)),{a,b}=reach(keeperTime(era,power)),hubY=toGoal(era,0,HUB_Y).y;
+ const spray=useMemo(()=>SPRAY.map(w=>landing(aim.x,aim.y,power,w)),[aim,power]);
 
- // ── Aim: a damped spring per axis. Dragging writes the target straight through (with rubber-banding past the posts and the bar);
- // letting go hands the release velocity to the springs, which glide, then settle back inside the bounds. Interruptible.
- const ax=useRef(spring(1.3)),ay=useRef(spring(1.2)),aimLoop=useRef<ReturnType<typeof loop>|null>(null);
- const showAim=useCallback((x:number,y:number)=>setAim({x:rubber(x,AIM_X[0],AIM_X[1],.55),y:rubber(y,AIM_Y[0],AIM_Y[1],.4)}),[]);
- const settleAim=useCallback(()=>{aimLoop.current?.stop();
-  const X=ax.current,Y=ay.current;
-  if(reduced.current){X.x=X.target=clamp(X.x,AIM_X);Y.x=Y.target=clamp(Y.x,AIM_Y);X.v=Y.v=0;setAim({x:X.x,y:Y.x});return;}
-  // A flick glides: project where the velocity would carry it (friction), clamp that into the goal area, and spring there.
-  X.target=clamp(X.x+X.v*.14,AIM_X);Y.target=clamp(Y.x+Y.v*.14,AIM_Y);
-  aimLoop.current=loop(dt=>{const a=stepSpring(X,dt,170,24),b=stepSpring(Y,dt,170,24);showAim(X.x,Y.x);return !(a&&b);});},[showAim]);
- useEffect(()=>()=>aimLoop.current?.stop(),[]);
- const nudge=useCallback((dx:number,dy:number)=>{ready2();setMoved(true);aimLoop.current?.stop();const X=ax.current,Y=ay.current;
-  X.x=X.target=clamp(X.x+dx,AIM_X);Y.x=Y.target=clamp(Y.x+dy,AIM_Y);X.v=Y.v=0;setAim({x:X.x,y:Y.x});},[ready2]);
+ /** Play the shot: the sphere flies from the spot (near, big) to where it lands; the keeper dives. One-shot WAAPI, transform only. */
+ const play=useCallback((k:Kick,done:()=>void)=>{
+  anims.current.forEach(x=>x.cancel());anims.current=[];
+  const bEl=ballEl.current,kEl=keeperEl.current;
+  if(reduced||!bEl||typeof bEl.animate!=='function'){done();return;}
+  const ms=Math.round(flightTime(k.power)*1300),dir=k.dive==='left'?-1:k.dive==='right'?1:0;
+  anims.current.push(bEl.animate([{transform:'translate(0px,0.9px) scale(3.2)',opacity:0},{opacity:1,offset:.08},{transform:`translate(${k.x}px,${-k.y}px) scale(1)`,opacity:1}],{duration:ms,easing:'cubic-bezier(.25,.6,.35,1)',fill:'forwards'}));
+  // The dive happens inside the keeper's (1891: doubled) shadow, so it is measured in his own scale and stays inside the oval.
+  if(kEl&&dir)anims.current.push(kEl.animate([{transform:'none'},{transform:`translate(${(dir*Math.min(2.2/kSc(k.era),reach(keeperTime(k.era,k.power)).a*.8)).toFixed(3)}px,-0.3px) rotate(${dir*62}deg)`}],{duration:Math.round(ms*.9),delay:90,easing:EASE,fill:'forwards'}));
+  else if(kEl)anims.current.push(kEl.animate([{transform:'none'},{transform:'translateY(-0.18px)'},{transform:'none'}],{duration:ms,easing:'ease-out'}));
+  timers.current.push(setTimeout(done,ms+40));
+ },[reduced]);
+ const resetPose=()=>{anims.current.forEach(x=>x.cancel());anims.current=[];};
 
- // ── Power: hold Shoot. A spring follows the charge (it lags and overshoots a touch, like a needle), the bar fills, and the power
- // band (Soft / Firm / Blast) follows it live, so the spray and the keeper's reach change on the goal as you hold.
- const charge=useRef(spring(0)),hold=useRef<{t0:number;id:number;live:boolean}|null>(null),powerLoop=useRef<ReturnType<typeof loop>|null>(null),powerRef=useRef(power);powerRef.current=power;
- const paintGauge=useCallback((v:number)=>{const g=gauge.current;if(g)g.style.setProperty('--c',Math.max(0,Math.min(1.08,v)).toFixed(3));},[]);
- const runPower=useCallback(()=>{if(powerLoop.current?.running)return;
-  powerLoop.current=loop(dt=>{const h=hold.current,C=charge.current;
-   if(h){const held=performance.now()-h.t0;if(held>TAP_MS){if(!h.live){h.live=true;setCharging(true);}C.target=Math.min(1,(held-TAP_MS)/1000/CHARGE_S);
-     const band=bandOf(C.target);if(band!==powerRef.current){powerRef.current=band;setPower(band);museumSfx.tick();}}}
-   const rest=stepSpring(C,dt,260,20);paintGauge(C.x);return !!h||!rest;});},[paintGauge]);
- useEffect(()=>()=>powerLoop.current?.stop(),[]);
-
- const fire=useCallback((plan:{x:number;y:number;dive:Dive},opts:{era:Era;power:Power;replay?:Kick})=>{
-  const s=scene.current;if(!s)return;
-  const result=shotResult(opts.era,opts.power,plan.dive,plan.x,plan.y),kick:Kick={...plan,power:opts.power,era:opts.era,result};
-  setPhase('flying');setLast(null);setBusy(true);setMoved(true);museumSfx.kick();
-  s.shoot({...plan,result},()=>{
-   if(opts.replay){setCompare({from:opts.replay,to:kick});setReplaying(false);}
-   else{setShots(list=>[...list.slice(-29),{x:plan.x,y:plan.y,result}]);setKicks(list=>[...list.slice(-29),kick]);}
-   setShown(kick);setLast(result);setPhase('result');
-   if(!reduced.current&&result==='goal')navigator.vibrate?.(14);
-   if(result==='goal'){museumSfx.net();museumSfx.crowd();}else if(result==='post'||result==='bar')museumSfx.stamp();else museumSfx.look();
-  },()=>setBusy(false));
- },[]);
-
- const shoot=useCallback((p:Power=power)=>{
-  if(phase!=='aim'&&!(phase==='result'&&!busy))return;if(!scene.current)return;setSummary(false);setCompare(null);
-  if(roundShots.length>=ROUND){setRoundStart(shots.length);setRounds(r=>r+1);setAnswer(null);}
-  aimLoop.current?.stop();const X=ax.current,Y=ay.current,x=clamp(X.x,AIM_X),y=clamp(Y.x,AIM_Y);X.x=X.target=x;Y.x=Y.target=y;X.v=Y.v=0;setAim({x,y});
-  const w=WOBBLE[Math.floor(Math.random()*WOBBLE.length)],l=landing(x,y,p,w);
-  fire({x:l.x,y:l.y,dive:pickDive(Math.random())},{era,power:p});
- },[phase,busy,power,era,roundShots.length,shots.length,fire]);
- const shootRef=useRef(shoot);shootRef.current=shoot;
-
+ const land=(k:Kick)=>{setShown(k);setFlying(false);
+  if(k.result==='goal'){museumSfx.net();museumSfx.crowd();}else if(k.result==='post'||k.result==='bar')museumSfx.stamp();else museumSfx.look();};
+ const shoot=()=>{if(flying)return;
+  const w=WOBBLE[Math.floor(Math.random()*WOBBLE.length)],l=landing(aim.x,aim.y,power,w),dive=pickDive(Math.random());
+  const k:Kick={x:l.x,y:l.y,dive,power,era,result:shotResult(era,power,dive,l.x,l.y)};
+  setFlying(true);setCompare(null);setShown(null);setMoved(true);museumSfx.kick();
+  play(k,()=>{setKicks(list=>[...list.slice(-29),k]);land(k);});};
  /** The same kick (same spot, same dive) under the other rules: the keeper walks to his 1891 spot (or back to his line) first. */
- const replayOther=()=>{const k=shown;if(!k||busy||phase!=='result')return;const other:Era=k.era==='1891'?'today':'1891';
-  setReplaying(true);setBusy(true);setPhase('flying');setLast(null);setEra(other);scene.current?.reset();museumSfx.whistle();
-  later(()=>{setBusy(false);fire({x:k.x,y:k.y,dive:k.dive},{era:other,power:k.power,replay:k});},reduced.current?60:1500);};
+ const replayOther=()=>{const k=shown;if(!k||flying)return;const other:Era=k.era==='1891'?'today':'1891';
+  setFlying(true);setShown(null);setEra(other);resetPose();museumSfx.whistle();
+  const go=()=>{const k2:Kick={...k,era:other,result:shotResult(other,k.power,k.dive,k.x,k.y)};play(k2,()=>{setCompare({from:k,to:k2});land(k2);});};
+  if(reduced)go();else timers.current.push(setTimeout(go,900));};
 
- const shootDown=(e:ReactPointerEvent<HTMLButtonElement>)=>{if(e.button>0||hold.current)return;const b=e.currentTarget;if(b.disabled)return;
-  ready2();b.setPointerCapture(e.pointerId);hold.current={t0:performance.now(),id:e.pointerId,live:false};charge.current.target=0;runPower();};
- const shootUp=(e:ReactPointerEvent<HTMLButtonElement>)=>{const h=hold.current;if(!h||h.id!==e.pointerId)return;hold.current=null;
-  const p=h.live?bandOf(charge.current.target):powerRef.current;setCharging(false);charge.current.target=0;runPower();
-  if(e.type==='pointerup')shootRef.current(p);};
- // The keyboard (Enter/Space on the focused button) still clicks: kick at the chosen power. Pointer clicks were handled on release.
- const shootClick=(e:ReactMouseEvent<HTMLButtonElement>)=>{if(e.detail===0)shoot();};
-
- // Drag to aim. Touch and pen move the aim by how far you drag (the finger never hides the target); a mouse click on the goal
- // puts the aim right there, then drags it. Velocity is tracked for the flick.
- const drag=useRef<{id:number;x:number;y:number;t:number}|null>(null);
- const down=(e:ReactPointerEvent<HTMLCanvasElement>)=>{if(phase==='intro'||phase==='flying'||busy||drag.current||summary)return;ready2();aimLoop.current?.stop();
-  drag.current={id:e.pointerId,x:e.clientX,y:e.clientY,t:e.timeStamp};e.currentTarget.setPointerCapture(e.pointerId);const X=ax.current,Y=ay.current;X.v=Y.v=0;
-  if(e.pointerType==='mouse'&&scene.current){const r=e.currentTarget.getBoundingClientRect(),p=scene.current.unproject(e.clientX-r.left,e.clientY-r.top);
-   if(p.x>AIM_X[0]-.5&&p.x<AIM_X[1]+.5&&p.y>-.5&&p.y<AIM_Y[1]+.4){X.x=X.target=clamp(p.x,AIM_X);Y.x=Y.target=clamp(p.y,AIM_Y);setAim({x:X.x,y:Y.x});setMoved(true);}}};
- const move=(e:ReactPointerEvent<HTMLCanvasElement>)=>{const d=drag.current,s=scene.current;if(!d||d.id!==e.pointerId||!s)return;
-  const r=e.currentTarget.getBoundingClientRect(),a=s.unproject(d.x-r.left,d.y-r.top),b=s.unproject(e.clientX-r.left,e.clientY-r.top),dt=Math.max(.008,(e.timeStamp-d.t)/1000);d.x=e.clientX;d.y=e.clientY;d.t=e.timeStamp;
-  // Touch: a little gain, so a thumb sweep across a phone reaches either post.
-  const g=e.pointerType==='mouse'?1:1.25,dx=(b.x-a.x)*g,dy=(b.y-a.y)*g,X=ax.current,Y=ay.current;
-  X.x+=dx;Y.x+=dy;X.target=X.x;Y.target=Y.x;X.v=X.v*.6+dx/dt*.4;Y.v=Y.v*.6+dy/dt*.4;setMoved(true);showAim(X.x,Y.x);};
- const up=(e:ReactPointerEvent<HTMLCanvasElement>)=>{const d=drag.current;if(d?.id!==e.pointerId)return;drag.current=null;
-  // A pause before letting go is not a flick.
-  if(e.timeStamp-d.t>80){ax.current.v=0;ay.current.v=0;}settleAim();};
-
- // Keyboard: arrows aim, Enter/Space shoot, Escape closes the round card first, then the exhibit (the story drawer handles its own).
+ // ── Aim: drag on the goal (the reticle follows the finger, no loop); a tap jumps there on the spring; arrows nudge.
+ const toGoalPlane=(e:{clientX:number;clientY:number})=>{const el=svg.current,m=el?.getScreenCTM();if(!el||!m)return null;const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(m.inverse());return {x:clamp(p.x,AIM_X),y:clamp(-p.y,AIM_Y)};};
+ const down=(e:RPointerEvent<SVGSVGElement>)=>{if(flying||e.button>0)return;const p=toGoalPlane(e);if(!p)return;e.currentTarget.setPointerCapture(e.pointerId);setDragging(true);setMoved(true);if(shown){setShown(null);setCompare(null);resetPose();}setAim(p);};
+ const move=(e:RPointerEvent<SVGSVGElement>)=>{if(!dragging)return;const p=toGoalPlane(e);if(p)setAim(p);};
+ const up=()=>{if(dragging){setDragging(false);museumSfx.tick();}};
  useEffect(()=>{const key=(e:KeyboardEvent)=>{
-  if(story)return;
-  if(e.key==='Escape'){e.preventDefault();if(summary)setSummary(false);else onClose();return;}
-  if(phase==='intro'||summary)return;const step=e.shiftKey?.4:.12;
-  if(e.key==='ArrowLeft'){e.preventDefault();nudge(-step,0);}else if(e.key==='ArrowRight'){e.preventDefault();nudge(step,0);}
-  else if(e.key==='ArrowUp'){e.preventDefault();nudge(0,step);}else if(e.key==='ArrowDown'){e.preventDefault();nudge(0,-step);}
-  else if((e.key==='Enter'||e.key===' ')&&!(e.target instanceof HTMLButtonElement)&&!(e.target instanceof HTMLElement&&e.target.closest('summary'))){e.preventDefault();shoot();}};
-  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[phase,story,summary,nudge,shoot,onClose]);
+  if(e.defaultPrevented)return;
+  if(e.key==='Escape'){e.preventDefault();closeRef.current();return;}
+  const t=e.target as HTMLElement|null;if(!t?.closest?.('[data-aim]'))return;
+  const st=e.shiftKey?.4:.12,d:{[k:string]:[number,number]}={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,st],ArrowDown:[0,-st]};
+  if(d[e.key]){e.preventDefault();setMoved(true);setAim(p=>({x:clamp(p.x+d[e.key][0],AIM_X),y:clamp(p.y+d[e.key][1],AIM_Y)}));}
+  else if(e.key==='Enter'||e.key===' '){e.preventDefault();shoot();}};
+  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);});
 
- const begin=()=>{museumSfx.whistle();setPhase('aim');};
- const pct=(v:number)=>`${Math.round(v*100)}%`;
+
+ const banner=compare?compare.to:shown;
+ const sources=useMemo(()=>{const seen=new Set<string>();return [...exhibit.sources,...SOURCES].filter(x=>seen.has(x.url)?false:(seen.add(x.url),true));},[exhibit.sources]);
+ const items=useMemo(()=>CHECKS.map(c=>({q:c.q,options:c.options,right:c.answer,why:c.why})),[]);
  const aimLabel=`Aim ${Math.abs(aim.x).toFixed(1)} m ${aim.x<0?'left':'right'} of the middle, ${aim.y.toFixed(1)} m up. On target ${pct(live.onTarget)}, goal chance ${pct(live.goal)}.`;
- const eraIndex=era==='1891'?0:1,powerIndex=POWER_KEYS.indexOf(power);
- // Stage geometry for the result banner and round card (the goal's centre column; the pitch in front of the goal).
- const s=scene.current,stageX=s&&ready?s.project(0,GOAL_H/2,0).x:undefined,bannerY=s&&ready?s.project(0,0,6.2).y:undefined;void layout;
- // The round card centres on the goal but never runs off the screen.
- const cardLeft=(x:number)=>{const W=root.current?.clientWidth??0,H=root.current?.clientHeight??0,half=Math.min(W>H*1.1&&H<=560?260:220,(W-32)/2)+16;return {left:Math.min(Math.max(x,half),W-half)};};
- const fresh=roundShots.length>=ROUND&&phase==='aim',dots=Array.from({length:ROUND},(_,i)=>fresh?undefined:roundShots[i]?.result);
- // The round under the other rules: the same five kicks, the same dives.
- const otherEra:Era=roundKicks[0]?.era==='1891'?'today':'1891';
- const otherGoals=roundKicks.filter(k=>shotResult(k.era==='1891'?'today':'1891',k.power,k.dive,k.x,k.y)==='goal').length;
- const canCompare=phase==='result'&&!!shown&&!compare&&!busy;
- const banner=compare?{era:compare.to.era,result:compare.to.result}:shown?{era:shown.era,result:shown.result}:null;
 
- return <section ref={root} className={styles.root} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="penalty-1891" data-era={era} data-phase={phase} data-summary={summary||undefined} data-charging={charging||undefined}>
-  <canvas ref={canvas} className={styles.canvas} role="img" aria-label={`A penalty at real size, drawn as pixel art: a goal 7.32 metres wide, 11 metres away, and you at the spot. ${aimLabel}`} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}/>
-  {failed&&<p className={styles.error}>The penalty spot couldn’t load on this device.</p>}
-
+ return <section ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${exhibit.year} · ${exhibit.title}`} data-museum-experience="penalty-1891"
+  data-era={era} className={`${g.room} ${s.root}`} style={{'--accent':ACCENT.red} as CSSProperties}>
+  <div className={g.veil} aria-hidden="true"/>
   <ExperienceBack onClose={onClose}/>
-  <header ref={header} className={styles.header}>
-   {phase!=='intro'&&<div className={styles.era} role="group" aria-label="Which rules" style={{'--i':eraIndex} as CSSProperties}>
-    <span className={styles.thumb} aria-hidden="true"/>
-    {(['1891','today'] as const).map(v=><button key={v} type="button" aria-pressed={era===v} data-era-button={v} disabled={busy} onClick={()=>{ready2();setEra(v);}}>{v==='today'?'Today':'1891'}</button>)}
-   </div>}
-   <button type="button" className={styles.storyButton} aria-haspopup="dialog" onClick={()=>setStory(true)}>Story</button>
-   {phase!=='intro'&&<p className={styles.eraNote} key={era} data-hidden={phase!=='aim'||summary||undefined} aria-live="polite"><b>{era==='1891'?'1891 rules':'Today’s rules'}</b>{ERA_TEXT[era].replace(/^[^:]*:\s*/,'')}</p>}
-  </header>
+  <div className={g.scroll} data-scroll><div className={g.col}>
 
-  {phase!=='intro'&&<div ref={chip} className={styles.chip} data-hidden={phase!=='aim'||undefined} aria-hidden="true"><span>Goal</span><b>{pct(live.goal)}</b></div>}
-  {phase!=='intro'&&<span ref={reachTag} className={styles.reachTag} data-hidden={phase!=='aim'||undefined} aria-hidden="true">Keeper reach</span>}
-  {phase==='aim'&&!moved&&<p className={styles.hint} style={stageX!=null&&bannerY!=null?{left:stageX,top:bannerY}:undefined} aria-hidden="true"><span className={styles.hintDot}/>Drag to aim · hold SHOOT</p>}
-
-  {phase==='result'&&last&&banner&&!summary&&<div key={compare?'c':'r'} className={styles.result} style={stageX!=null&&bannerY!=null?{left:stageX,top:bannerY}:undefined} data-result={last} role="status">
-   {compare&&<em className={styles.resultEra}>Same kick · {ERA_NAME[compare.to.era]}</em>}
-   <b>{RESULT_TEXT[last].big}</b>
-   <span>{compare?compareText(compare.to.era,compare.from.result,compare.to.result):RESULT_TEXT[last].line}</span>
-   {compare&&<span className={styles.vs} aria-label={`${ERA_NAME[compare.from.era]}: ${RESULT_TEXT[compare.from.result].big} ${ERA_NAME[compare.to.era]}: ${RESULT_TEXT[compare.to.result].big}`}>
-    <i data-result={compare.from.result}>{compare.from.era==='1891'?'1891':'Today'} · {RESULT_TEXT[compare.from.result].big}</i>
-    <i data-result={compare.to.result}>{compare.to.era==='1891'?'1891':'Today'} · {RESULT_TEXT[compare.to.result].big}</i></span>}
-   {canCompare&&<button type="button" className={styles.compare} onClick={replayOther}>▶ Same kick {shown!.era==='1891'?'today':'in 1891'}</button>}
-  </div>}
-  {replaying&&phase==='flying'&&<p className={styles.walk} style={stageX!=null&&bannerY!=null?{left:stageX,top:bannerY}:undefined} role="status">{era==='1891'?'1891: the keeper walks 6 yards out…':'Today: the keeper goes back to his line…'}</p>}
-
-  {phase!=='intro'&&<div ref={dock} className={styles.dock}>
-   <div className={styles.line}>
-    <span className={styles.zoneTag} data-zone={zone}>{ZONE_LABEL[zone]}</span>
-    <p className={styles.zone} aria-live="polite">{roundShots.length>=3&&phase==='result'&&!compare?exhibit.forYourGame:charging?'Harder kicks wobble more (the yellow spray grows), but the keeper gets less time (his blue reach shrinks).':ZONE_TEXT[zone]}</p>
-    <ol className={styles.round} aria-label={`This round: ${roundShots.length} of ${ROUND} kicks taken, ${roundGoals} scored`}>{dots.map((r,i)=><li key={i} data-result={r}/>)}</ol>
-   </div>
-   <dl className={styles.stats}>
-    <div data-k="target"><dt>On target</dt><dd>{pct(live.onTarget)}</dd><i style={{transform:`scaleX(${live.onTarget})`}}/></div>
-    <div data-k="reach"><dt>Keeper reach</dt><dd>{pct(live.reach)}</dd><i style={{transform:`scaleX(${live.reach})`}}/></div>
-    <div data-k="goal"><dt>Goal chance</dt><dd>{pct(live.goal)}</dd><i style={{transform:`scaleX(${live.goal})`}}/></div>
-   </dl>
-   <div className={styles.controls}>
-    <div className={styles.power} role="group" aria-label="How hard" style={{'--i':powerIndex} as CSSProperties}>
-     <span className={styles.thumb} aria-hidden="true"/>
-     {POWER_KEYS.map(p=><button key={p} type="button" aria-pressed={power===p} disabled={busy} onClick={()=>{ready2();setPower(p);}} aria-label={`${POWERS[p].label}: ${POWERS[p].kmh} kilometres an hour`}>
-      <b>{POWERS[p].label}</b><small>{POWERS[p].kmh} km/h</small></button>)}
+   <header className={`${g.split} ${s.hero}`}>
+    <div className={s.stack}>
+     <WallLabel as="h1" title="The penalty kick" meta={<>{exhibit.year} · Milford, County Armagh</>} caption="A goalkeeper invented it."/>
+     <p className={g.lead}>{exhibit.facts[0]}</p>
+     <p className={g.body}>{exhibit.facts.slice(1).join(' ')}</p>
+     <div className={g.row}><button type="button" className={`${g.btn} ${s.take}`} data-museum-own-cue data-take-penalty onClick={toCabinet}>Take a penalty →</button></div>
     </div>
-    <button type="button" className={styles.shoot} data-museum-own-cue onPointerDown={shootDown} onPointerUp={shootUp} onPointerCancel={shootUp} onClick={shootClick}
-     onContextMenu={e=>e.preventDefault()} disabled={busy||phase==='flying'||!!failed||summary} aria-describedby="pk-shoot-help">
-     <span className={styles.shootLabel}>{phase==='result'?'Again':'Shoot'}</span>
-     <span ref={gauge} className={styles.gauge} aria-hidden="true">{Array.from({length:SEGMENTS},(_,i)=><i key={i} style={{'--k':i/SEGMENTS} as CSSProperties}/>)}</span>
-    </button>
-    <p id="pk-shoot-help" className={styles.srOnly}>Tap to kick at the chosen power, or hold to power up and let go to kick.</p>
-   </div>
-   <p className={styles.meta}>Ball flies <b>{flightTime(power).toFixed(2)} s</b> · keeper gets <b>{keeperTime(era,power).toFixed(2)} s</b>{shots.length>0&&<span className={styles.metaWide}> · goals <b>{goals}/{shots.length}</b></span>} · <span className={styles.model}>practice model</span></p>
-  </div>}
+    <ToScale/>
+   </header>
 
-  {summary&&<div className={styles.scrim} aria-hidden="true" onClick={()=>setSummary(false)}/>}
-  {summary&&<div className={styles.summary} role="dialog" aria-label="Your five penalties" style={stageX!=null?cardLeft(stageX):undefined}>
-   <p className={styles.kicker}>Full time · five penalties</p>
-   <h2 className={styles.summaryHead}>{roundGoals}<span>/{ROUND}</span> <em>scored</em></h2>
-   <svg className={styles.map} viewBox={`${-4.3} ${-GOAL_H-.5} 8.6 ${GOAL_H+.7}`} shapeRendering="crispEdges" aria-label={`Your shot map: ${roundGoals} goals, ${ROUND-roundGoals} misses or saves`}>
-    <rect x={-3.66} y={-GOAL_H} width={7.32} height={GOAL_H} className={styles.mapMouth}/>
-    <path d={`M-3.66 0V${-GOAL_H}H3.66V0`} className={styles.mapFrame}/>
-    <line x1={-4.3} x2={4.3} y1={0} y2={0} className={styles.mapLine}/>
-    {roundShots.map((r,i)=><rect key={i} x={r.x-.17} y={-r.y-.17} width={.34} height={.34} className={styles.mapDot} data-result={r.result} style={{'--d':`${i*90}ms`} as CSSProperties}/>)}
-   </svg>
-   {roundKicks.length===ROUND&&<p className={styles.other}><b>Same five kicks under {ERA_NAME[otherEra]}:</b> {otherGoals} {otherGoals===1?'goal':'goals'}. {otherEra==='1891'
-    ?(otherGoals<roundGoals?'A keeper 6 yards out saves more. That is why, since 1905, he has to stay on his line.':'Your kicks were out of his reach either way.')
-    :(otherGoals>roundGoals?'Keepers on the line save fewer: that is today’s rule since 1905.':'Your kicks did the same either way.')}</p>}
-   {(()=>{const c=CHECKS[rounds%CHECKS.length];return <div className={styles.check} role="group" aria-label={`Quick check: ${c.q}`}>
-    <p className={styles.checkQ}><b>Quick check</b>{c.q}</p>
-    <div className={styles.checkOpts}>{c.options.map((o,j)=><button key={j} type="button" className={styles.checkOpt} disabled={answer!=null}
-     data-state={answer==null?undefined:j===c.answer?'right':j===answer?'wrong':'off'} onClick={()=>{setAnswer(j);if(j===c.answer)museumSfx.net();else museumSfx.look();}}>{o}</button>)}</div>
-    {answer!=null&&<p className={styles.checkWhy} role="status"><b>{answer===c.answer?'Right!':'Not quite.'}</b> {c.why}</p>}
-   </div>;})()}
-   <p className={styles.summaryTake}><b>Take it to your game:</b> {exhibit.forYourGame}</p>
-   <div className={styles.summaryButtons}>
-    <button type="button" className={styles.primary} data-museum-own-cue onClick={()=>{setSummary(false);setRoundStart(shots.length);setRounds(r=>r+1);setAnswer(null);ready2();}}>Take five more</button>
-    <button type="button" className={styles.ghost} onClick={()=>{setSummary(false);setStory(true);}}>Read the story</button>
-   </div>
-  </div>}
+   <section ref={cabSec} id="pk-cabinet" className={`${g.section} ${s.cabSec}`} aria-labelledby="pk-cab" data-cabinet-section>
+    <div className={s.cabHead}>
+     <WallLabel as="h2" id="pk-cab" title={<>Penalty, 16-bit <span className={s.playIt}>· Play it</span></>} meta="Arcade cabinet · the shootout" caption="Five kicks against the keeper, from the spot, 11 m out."/>
+     <p className={g.small}>Drag the goal to aim, hold <b>Shoot</b> to power up, let go to kick. Switch the rules to 1891 and the keeper may come 6 yards out.</p>
+    </div>
+    <Cabinet exhibit={exhibit} reduced={reduced} wake={cabWake} onRound={()=>setPlayed(true)} onStory={toStory}/>
+   </section>
 
-  {phase==='intro'&&<div className={styles.intro}><div ref={intro} className={styles.introCard} data-beat={beat}>
-   {beat===0?<div key="title" className={styles.beat}>
-    <p className={styles.kicker}>{exhibit.year} · Milford, County Armagh</p>
-    <h1 className={styles.headline}>A goalkeeper invented the <em>penalty</em>.</h1>
-    <p className={styles.deck}>{exhibit.facts[0]} Why did football need it? Here’s what happened.</p>
-   </div>:<div key={beat} className={styles.beat} aria-live="polite">
-    <p className={styles.kicker}>{STORY[beat-1].when}</p>
-    <h2 className={styles.beatHead}><span className={styles.beatIcon} data-icon={STORY[beat-1].icon} aria-hidden="true">{beat}</span>{STORY[beat-1].head}</h2>
-    <p className={styles.deck}>{STORY[beat-1].text}</p>
-    {beat===STORY.length&&<dl className={styles.scale} aria-label="Everything is real size">
-     <div><dt>Goal wide</dt><dd>7.32<small>m</small></dd></div><div><dt>Goal high</dt><dd>2.44<small>m</small></dd></div><div><dt>To the spot</dt><dd>11<small>m</small></dd></div>
-    </dl>}
-   </div>}
-   <ol className={styles.pips} aria-label={`Story ${beat} of ${STORY.length}`}>{STORY.map((_,i)=><li key={i} data-on={i<beat||undefined}/>)}</ol>
-   <div className={styles.introButtons}>
-    {beat<STORY.length
-     ?<><button type="button" className={styles.primary} data-museum-own-cue onClick={()=>{museumSfx.tick();setBeat(b=>b+1);}}>{beat===0?'How it happened ▸':'Next ▸'}</button>
-      <button type="button" className={styles.ghost} onClick={begin}>Skip: step up</button></>
-     :<><button type="button" className={styles.primary} data-museum-own-cue onClick={begin}>Step up to the spot</button>
-      <button type="button" className={styles.ghost} onClick={()=>setStory(true)}>The story</button></>}
-   </div>
-  </div></div>}
+   <section ref={storySec} className={g.section} aria-labelledby="pk-story">
+    <p className={g.kicker}>How it happened</p>
+    <h2 id="pk-story" className={g.h2}>Why football needed a free shot at goal</h2>
+    <ol className={s.history}>{STORY.map((b,i)=><HistoryStep key={i} i={i} b={b}/>)}</ol>
+   </section>
 
-  {story&&<StoryDrawer exhibit={exhibit} onClose={()=>setStory(false)}/>}
+   <section className={`${g.section} ${g.split}`} aria-labelledby="pk-rule">
+    <div className={s.stack}>
+     <p className={g.kicker}>The rule, then and now</p>
+     <h2 id="pk-rule" className={g.h2}>From a line across the pitch to a spot</h2>
+     <ol className={g.steps}>{[...exhibit.facts,...HISTORY].map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}</ol>
+    </div>
+    <div className={s.stack}>
+     <p className={g.kicker}>Where to aim? What studies found</p>
+     {RESEARCH.map(f=><p key={f} className={g.lead}>{f}</p>)}
+     <p className={g.small}>{MODEL_NOTE}</p>
+    </div>
+   </section>
+
+   <section className={g.section} aria-labelledby="pk-check">
+    <p className={g.kicker}>Quick check</p>
+    <h2 id="pk-check" className={g.h2}>Three questions on the penalty</h2>
+    <StepCheck items={items} kicker={(i,n)=>`${i+1} of ${n}`} onPick={ok=>ok?museumSfx.net():museumSfx.look()} doneLabel="Finish"
+     onDone={()=>{museumSfx.reveal();setChecked(true);}}
+     renderDone={(score,again)=><div className={pc.score} role="status"><b>{score}/{items.length}</b><span>{score===items.length?'Every one right.':'Good try. The answers are in the room.'}</span><button type="button" className={g.ghost} onClick={again}>Try again</button></div>}/>
+   </section>
+
+   {(checked||played)&&<Ending art={<EndArt/>} seen="You’ve seen why the keeper stays on his line." take={exhibit.forYourGame} onComplete={onComplete} reached={checked||played}/>}
+
+   <footer className={s.stack}>
+    <details className={g.sources}><summary>Sources</summary>
+     <ul>{sources.map(x=><li key={x.url}><a href={x.url} target="_blank" rel="noopener noreferrer">{x.title}</a></li>)}</ul></details>
+   </footer>
+  </div></div>
  </section>;
+}
+
+function HistoryStep({i,b}:{i:number;b:typeof STORY[number]}){
+ const [ref,seen]=useSeen<HTMLLIElement>(.35);
+ return <li ref={ref} data-in={seen||undefined} className={s.hStep}>
+  <span className={s.hNum}>{String(i+1).padStart(2,'0')}</span>
+  <div className={s.hIcon}>{ICON[b.icon]}</div>
+  <div className={s.hText}><p className={g.kicker}>{b.when}</p><h3 className={s.h3}>{b.head}</h3><p className={g.body}>{b.text}</p></div>
+ </li>;
+}
+
+/** The ending: the frame completes and the sphere comes to rest inside it. */
+function EndArt(){
+ const [ref,seen]=useSeen<HTMLDivElement>(.3);
+ return <div ref={ref} data-in={seen||undefined}><svg viewBox="0 0 260 120">
+  <line x1={0} x2={260} y1={100} y2={100} className={s.hair}/>
+  <path d="M20 100V20H240V100" pathLength={1} className={`${g.draw} ${s.ln}`}/>
+  <g className={s.pop} style={{transitionDelay:'.8s'}}><circle cx={200} cy={44} r={12} className={s.ball}/></g>
+ </svg></div>;
 }

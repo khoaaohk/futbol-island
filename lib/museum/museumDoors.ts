@@ -7,7 +7,7 @@ import type {TravelMode} from '../town/travelModes';
  * `/?from=museum`, which spawns the player outside the same door. Pure except save/read, which use the Arcade's tab-local
  * departure record (lib/arcade/islandReturnPosition.ts, read-only use of Astra's module).
  *
- * Door anchor: lib/town/world.ts `house(168,181,30,9,5,'HISTORY MUSEUM')` draws its door at x − w·0.26 = 168 − 7.8 = 160.2, on the
+ * Door anchor: the museum door (lib/town/museumExterior.ts, at x − w·0.26 = 168 − 7.8 = 160.2 since the original house() door), on the
  * front face z + d/2 + 0.2 = 185.7. The front faces +z (south), so "facing out" is yaw 0.
  */
 export const MUSEUM_DOOR={x:168-30*.26,front:181+9/2+.2,label:'History Museum'} as const;

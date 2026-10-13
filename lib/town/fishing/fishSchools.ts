@@ -1,0 +1,236 @@
+import * as T from 'three';
+import {patchUnderwater,uwDepthAt,UW_SURFACE,type SeabedStyle} from './underwater';
+
+/**
+ * Sea life in the fishing view (Oct 12 2026: "more fish", then "see the coral and the fish and not just shadows").
+ *
+ * Coloured low-poly fish in three schools that turn together and scatter from the float, solo cruisers, a couple of crabs scuttling
+ * near the shore and, at Coral Cay and on the causeway, an occasional ray or turtle gliding past. Each animal has a soft shadow on
+ * the seabed under it. Decoration only: the catchable fish is driven by fishingCore.ts (fishingVisuals.ts draws it).
+ *
+ * Cost: ONE InstancedMesh draw for everything. The geometry holds every body (fish, crab, ray, turtle) plus a shadow quad; the vertex
+ * shader keeps the instance's own body (the others collapse to a point), bends the tail / legs / wings / flippers, and drops the
+ * shadow onto the seabed. Species colours and patterns (silver, striped, blue, yellow, orange, clownfish bands, two-tone parrotfish)
+ * are per-instance attributes painted in the fragment shader, tinted by depth like the coral (underwater.ts). Steering at 10 Hz,
+ * positions per rendered frame. Phones get a 4-sided body and fewer fish. Exists only with the fishing visuals; hidden when idle.
+ */
+const STEER_DT=.1;
+type Look={a:string;b:string;pattern:number;shape:[number,number,number];size:[number,number]};
+const LOOKS:Record<string,Look>={
+ sardine:{a:'#4f7896',b:'#e9f0f4',pattern:0,shape:[.8,.75,1.1],size:[.36,.46]},
+ bream:{a:'#d8cc8e',b:'#2a2a30',pattern:1,shape:[1,1.15,1],size:[.42,.52]},
+ blueTang:{a:'#2c5ee8',b:'#ffd23a',pattern:2,shape:[.9,1.35,.9],size:[.4,.5]},
+ yellowTang:{a:'#ffd21f',b:'#fff0a0',pattern:2,shape:[.9,1.45,.85],size:[.38,.48]},
+ clown:{a:'#ff7414',b:'#ffffff',pattern:3,shape:[1,1.1,.95],size:[.3,.38]},
+ garibaldi:{a:'#ff6400',b:'#ffa528',pattern:4,shape:[1,1.2,1],size:[.62,.76]},
+ parrot:{a:'#22c4a2',b:'#a066ea',pattern:4,shape:[1,1.05,1.1],size:[.72,.88]},
+ mackerel:{a:'#2f6f6a',b:'#e6eef0',pattern:5,shape:[.85,.8,1.15],size:[.6,.74]},
+ bass:{a:'#7f8c96',b:'#eef2f4',pattern:0,shape:[1,1,1.05],size:[.74,.9]},
+};
+const CAST:Record<SeabedStyle,{schools:string[];cruisers:string[];glider:boolean}>={
+ cay:{schools:['yellowTang','blueTang','clown'],cruisers:['parrot','garibaldi','parrot','blueTang'],glider:true},
+ causeway:{schools:['sardine','yellowTang','bream'],cruisers:['parrot','mackerel','garibaldi','bass'],glider:true},
+ beach:{schools:['sardine','bream','blueTang'],cruisers:['garibaldi','mackerel','bass','parrot'],glider:false},
+ pier:{schools:['sardine','bream','sardine'],cruisers:['mackerel','bass','garibaldi','bass'],glider:false},
+};
+const KIND={fish:0,crab:1,ray:2,turtle:3,shadow:9};
+
+// ---- Geometry: every body in one buffer. Head toward −Z, y up. Attributes: position, color (fins darker), aKind, aBend.
+type Part={pos:number[];col:number[];kind:number[];bend:number[]};
+const part=():Part=>({pos:[],col:[],kind:[],bend:[]});
+function tri(p:Part,a:number[],b:number[],c:number[],col:number[],kind:number,bend:(v:number[])=>number){for(const v of [a,b,c]){p.pos.push(v[0],v[1],v[2]);p.col.push(...col);p.kind.push(kind);p.bend.push(bend(v));}}
+/** A thin part (fin, leg, tail): both windings, so the batch can cull back faces of the closed bodies. */
+const tri2=(p:Part,a:number[],b:number[],c:number[],col:number[],kind:number,bend:(v:number[])=>number)=>{tri(p,a,b,c,col,kind,bend);tri(p,a,c,b,col,kind,bend);};
+function fromGeometry(p:Part,g:T.BufferGeometry,col:(y:number,x:number,z:number)=>number[],kind:number,bend:(v:number[])=>number){
+ const geo=g.index?g.toNonIndexed():g,pos=geo.getAttribute('position');for(let i=0;i<pos.count;i++){const v=[pos.getX(i),pos.getY(i),pos.getZ(i)];p.pos.push(...v);p.col.push(...col(v[1],v[0],v[2]));p.kind.push(kind);p.bend.push(bend(v));}
+ if(geo!==g)geo.dispose();g.dispose();
+}
+const tailBend=(v:number[])=>{const w=T.MathUtils.clamp((v[2]+.1)/.66,0,1);return w*w;};
+function fishBody(p:Part,phone:boolean){
+ const rings:[number,number][]=phone?[[-.5,0],[-.3,.8],[-.05,1],[.18,.66],[.32,.22]]:[[-.5,0],[-.42,.52],[-.28,.86],[-.1,1],[.08,.88],[.22,.55],[.32,.22]];
+ const m=phone?4:6,ring=(i:number,j:number)=>{const [z,s]=rings[i],a=j/m*Math.PI*2+(phone?Math.PI/4:0);return [Math.cos(a)*.1*s,Math.sin(a)*.2*s-(s===0?.01:0),z];};
+ const W=[1,1,1];
+ for(let i=0;i<rings.length-1;i++)for(let j=0;j<m;j++){const a=ring(i,j),b=ring(i,(j+1)%m),c=ring(i+1,j),d=ring(i+1,(j+1)%m);tri(p,a,b,c,W,0,tailBend);tri(p,b,d,c,W,0,tailBend);}
+ // Close the tail end of the body.
+ {const last=rings.length-1,end=[0,0,rings[last][0]+.02];for(let j=0;j<m;j++)tri(p,ring(last,j),ring(last,(j+1)%m),end,W,0,tailBend);}
+ const F=[.82,.82,.82];
+ // Forked tail, a dorsal fin and (desktop) a little belly fin.
+ tri2(p,[0,.02,.3],[0,.2,.56],[0,.03,.44],F,0,tailBend);tri2(p,[0,-.02,.3],[0,-.03,.44],[0,-.2,.56],F,0,tailBend);
+ tri2(p,[0,.03,.3],[0,.03,.44],[0,-.03,.44],F,0,tailBend);tri2(p,[0,.03,.3],[0,-.03,.44],[0,-.03,.3],F,0,tailBend);
+ tri2(p,[0,.17,-.16],[0,.28,-.02],[0,.15,.12],F,0,tailBend);
+ if(!phone)tri2(p,[0,-.16,-.05],[0,-.24,.06],[0,-.12,.12],F,0,tailBend);
+}
+const hex=(h:string)=>{const c=new T.Color(h);return [c.r,c.g,c.b];};
+function crabBody(p:Part){
+ const shell=hex('#e5552c'),top=hex('#ff8a4a'),leg=hex('#c9472a');
+ fromGeometry(p,new T.IcosahedronGeometry(.13,0).scale(1.25,.5,.9).translate(0,.07,0),y=>y>.08?top:shell,1,()=>0);
+ for(const s of [-1,1]){
+  for(let i=0;i<4;i++){const z=-.06+i*.05,b=[s*.12,.05,z],k=[s*.24,.1,z*1.25+.01],f=[s*.29,0,z*1.4+.02];
+   tri2(p,b,k,[b[0],b[1],b[2]+.025],leg,1,()=>1);tri2(p,k,f,[k[0],k[1],k[2]+.025],leg,1,()=>1);}
+  fromGeometry(p,new T.IcosahedronGeometry(.05,0).scale(1,.7,1.3).translate(s*.11,.07,-.19),()=>top,1,()=>.4);
+  fromGeometry(p,new T.IcosahedronGeometry(.022,0).translate(s*.05,.13,-.1),()=>[.95,.95,.9],1,()=>0);
+ }
+}
+function rayBody(p:Part){
+ const top=hex('#4f6475'),edge=hex('#6f8798'),belly=hex('#d9e2e6');
+ const nose=[0,0,-.42],l=[-.58,-.01,.02],r=[.58,-.01,.02],tail=[0,0,.32],hump=[0,.07,-.06],under=[0,-.04,-.04];
+ const wing=(v:number[])=>Math.pow(Math.abs(v[0])/.58,1.5);
+ tri(p,nose,l,hump,edge,2,wing);tri(p,l,tail,hump,top,2,wing);tri(p,tail,r,hump,top,2,wing);tri(p,r,nose,hump,edge,2,wing);
+ tri(p,nose,under,l,belly,2,wing);tri(p,l,under,tail,belly,2,wing);tri(p,tail,under,r,belly,2,wing);tri(p,r,under,nose,belly,2,wing);
+ tri2(p,[-.015,0,.3],[.015,0,.3],[0,.005,1.05],top,2,()=>0);
+}
+function turtleBody(p:Part){
+ const shell=hex('#5d7a34'),shellTop=hex('#8a9a4a'),skin=hex('#a3b46a');
+ fromGeometry(p,new T.SphereGeometry(.3,7,3,0,Math.PI*2,0,Math.PI/2).scale(1,.45,1.25).translate(0,.02,0),y=>y>.09?shellTop:shell,3,()=>0);
+ fromGeometry(p,new T.IcosahedronGeometry(.085,0).scale(1,.8,1.2).translate(0,.04,-.45),()=>skin,3,()=>0);
+ for(const s of [-1,1]){
+  const flip=(v:number[])=>Math.min(1,Math.abs(v[0])/.5);
+  tri(p,[s*.2,.04,-.25],[s*.62,0,-.12],[s*.26,.03,-.08],skin,3,flip);tri(p,[s*.2,.04,-.25],[s*.26,.03,-.08],[s*.62,0,-.12],skin,3,flip);
+  tri(p,[s*.2,.02,.25],[s*.36,0,.42],[s*.14,.02,.33],skin,3,flip);tri(p,[s*.2,.02,.25],[s*.14,.02,.33],[s*.36,0,.42],skin,3,flip);
+ }
+}
+function shadowQuad(p:Part){const a=[-.3,0,-.52],b=[.3,0,-.52],c=[-.3,0,.52],d=[.3,0,.52];tri(p,a,c,b,[0,0,0],9,()=>0);tri(p,b,c,d,[0,0,0],9,()=>0);}
+function creatureGeometry(phone:boolean){
+ const p=part();shadowQuad(p);fishBody(p,phone);crabBody(p);rayBody(p);turtleBody(p);
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.pos,3));g.setAttribute('color',new T.Float32BufferAttribute(p.col,3));
+ g.setAttribute('aKind',new T.Float32BufferAttribute(p.kind,1));g.setAttribute('aBend',new T.Float32BufferAttribute(p.bend,1));g.computeVertexNormals();
+ return g;
+}
+type Fish={x:number;z:number;vx:number;vz:number;heading:number;phase:number;scale:number;swim:number;alpha:number;school:number;slot:{x:number;z:number};panic:number;shape:[number,number,number]};
+type Leader={x:number;z:number;vx:number;vz:number;tx:number;tz:number;speed:number;panic:number};
+type Crab={x:number;z:number;heading:number;side:number;walk:number;wait:number;phase:number};
+type Glider={kind:number;on:boolean;wait:number;x:number;z:number;vx:number;vz:number;phase:number;len:number;y:number;t:number;life:number};
+
+export function createFishSchools(scene:T.Scene,phone=false){
+ const SCHOOLS=3,PER=phone?5:7,CRUISERS=phone?3:4,CRABS=2,GLIDERS=1,FISH=SCHOOLS*PER+CRUISERS,COUNT=FISH+CRABS+GLIDERS;
+ const geometry=creatureGeometry(phone);
+ const motion=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);motion.setUsage(T.DynamicDrawUsage);geometry.setAttribute('iMotion',motion);
+ const colA=new T.InstancedBufferAttribute(new Float32Array(COUNT*3),3),colB=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);geometry.setAttribute('iColA',colA);geometry.setAttribute('iColB',colB);
+ const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,transparent:true});
+ material.onBeforeCompile=sh=>patchUnderwater(sh,{
+  vertexHead:'attribute vec4 iMotion;attribute vec3 iColA;attribute vec4 iColB;attribute float aKind,aBend;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  vertexBody:/* glsl */`vLocal=position;vShadow=step(8.5,aKind);vColA=iColA;vColB=iColB;vAlpha=iMotion.y;
+   if(aKind<8.5&&abs(aKind-iMotion.z)>.5)transformed=vec3(0.);
+   else if(vShadow>.5)transformed.y-=iMotion.w;
+   else{float ph=iMotion.x;
+    if(aKind<.5)transformed.x+=sin(ph-position.z*6.)*.09*aBend;
+    else if(aKind<1.5){float s=sin(ph+position.z*40.);transformed.y+=aBend*.03*max(0.,s);transformed.z+=aBend*.025*cos(ph+position.z*40.);}
+    else if(aKind<2.5)transformed.y+=sin(ph-position.z*2.5)*.17*aBend;
+    else{transformed.y+=sin(ph+position.z*4.)*.08*aBend;transformed.z+=cos(ph+position.z*4.)*.07*aBend;}}`,
+  fragmentHead:'varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  colorBody:/* glsl */`
+   if(vShadow>.5){diffuseColor=vec4(0.,0.,0.,(1.-smoothstep(.2,1.,length(vec2(vLocal.x/.3,vLocal.z/.52))))*.34*vAlpha);}
+   else{vec3 base=vec3(1.);float pat=vColB.a;
+    if(pat>-.5){float belly=smoothstep(.02,-.1,vLocal.y);vec3 b=vColB.rgb;
+     if(pat<.5)base=mix(vColA,b,belly);
+     else if(pat<1.5)base=mix(mix(vColA,vColA*1.1+.06,belly),b,step(.58,fract((vLocal.z+.5)*4.2))*(1.-belly*.7)*step(vLocal.z,.3));
+     else if(pat<2.5)base=mix(vColA,b,smoothstep(.27,.31,vLocal.z));
+     else if(pat<3.5){float z=vLocal.z,band=max(step(abs(z+.2),.045),step(abs(z-.1),.04)),edge=max(step(abs(z+.2),.065),step(abs(z-.1),.06));base=mix(vColA,vec3(.03),edge);base=mix(base,b,band);}
+     else if(pat<4.5)base=mix(vColA,b,smoothstep(-.35,.3,vLocal.z));
+     else if(pat<5.5){float wav=step(.5,fract(vLocal.z*9.+sin(vLocal.y*30.)*.25))*smoothstep(-.02,.08,vLocal.y);base=mix(mix(vColA,b,belly),vColA*.35,wav);}
+     else base=mix(vColA,b,step(.8,sin(vLocal.x*38.)*sin(vLocal.z*38.)));
+     // Eyes: white with a dark pupil (fish only).
+     if(pat<5.5){float e=length(vec2(vLocal.z+.36,vLocal.y-.04));base=mix(base,vec3(.95),step(e,.034));base=mix(base,vec3(.02),step(e,.019));}}
+    diffuseColor.rgb*=base;diffuseColor.a*=vAlpha;}`,
+ });
+ material.customProgramCacheKey=()=>'fishing-sea-life-v1'+(phone?'p':'');
+ const mesh=new T.InstancedMesh(geometry,material,COUNT);mesh.name='fishing-ambient-fish';mesh.renderOrder=.6;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};scene.add(mesh);
+ const fish:Fish[]=[],leaders:Leader[]=[],crabs:Crab[]=[],glider:Glider={kind:KIND.ray,on:false,wait:3,x:0,z:0,vx:0,vz:0,phase:0,len:1,y:0,t:0,life:1},dummy=new T.Object3D();
+ let water:(x:number,z:number)=>number=()=>10,cx=0,cz=0,ux=0,uz=1,wide=5,steer=0,fade=0,target=0,style:SeabedStyle='beach',turtleSpot=false;
+ const inView=(x:number,z:number)=>{const a=(x-cx)*ux+(z-cz)*uz,b=(x-cx)*uz-(z-cz)*ux;return a>0&&a<11&&Math.abs(b)<wide*(.5+a/11*.5);};
+ const inWater=(x:number,z:number,min=2.5,max=17)=>{const d=water(x,z);return d>min&&d<max&&inView(x,z);};
+ const pick=(min=3,max=17)=>{for(let i=0;i<60;i++){const a=2+Math.random()*8.5,b=(Math.random()*2-1)*wide*(.5+a/11*.5),x=cx+ux*a+uz*b,z=cz+uz*a-ux*b;if(inWater(x,z,min,max))return {x,z};}return {x:cx+ux*6,z:cz+uz*6};};
+ const setColors=(i:number,look:Look|null,pattern=look?.pattern??-1)=>{const a=look?new T.Color(look.a):new T.Color(1,1,1),b=look?new T.Color(look.b):new T.Color(1,1,1);
+  colA.setXYZ(i,a.r,a.g,a.b);colB.setXYZW(i,b.r,b.g,b.b,pattern);};
+ function place(){
+  fish.length=0;leaders.length=0;crabs.length=0;const cast=CAST[style];
+  for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]],swim=.35+Math.random()*.5;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
+   for(let i=0;i<PER;i++){const row=Math.floor(i/2),side=i%2?1:-1,slot={x:side*(.35+row*.18)+(Math.random()-.5)*.2,z:row*.55+(Math.random()-.5)*.2};
+    setColors(fish.length,look);
+    fish.push({x:p.x+slot.x,z:p.z+slot.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:swim+(Math.random()-.5)*.15,alpha:1,school:s,slot,panic:0,shape:look.shape});}}
+  for(let i=0;i<CRUISERS;i++){const p=pick(5),look=LOOKS[cast.cruisers[i%cast.cruisers.length]];setColors(fish.length,look);
+   fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:.5+Math.random()*.6,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
+   leaders.push({x:p.x,z:p.z,vx:0,vz:0,...(()=>{const t=pick(5);return {tx:t.x,tz:t.z};})(),speed:.45+Math.random()*.2,panic:0});}
+  // Crabs on the sand just under the waterline, in view.
+  for(let i=0;i<CRABS;i++){let p={x:cx+ux*2,z:cz+uz*2};for(let k=0;k<80;k++){const a=.5+Math.random()*7,b=(Math.random()*2-1)*wide*.8,x=cx+ux*a+uz*b,z=cz+uz*a-ux*b,d=water(x,z);if(d>.5&&d<2.4){p={x,z};break;}}
+   setColors(FISH+i,null);crabs.push({x:p.x,z:p.z,heading:Math.random()*6.28,side:Math.random()<.5?-1:1,walk:0,wait:.5+Math.random()*2,phase:Math.random()*6});}
+  setColors(FISH+CRABS,null,6);glider.on=false;glider.wait=2+Math.random()*4;
+ }
+ function steerAll(){
+  // Leaders wander between targets in water; members hold their slot behind the leader (so a school turns together).
+  for(const l of leaders){let dx=l.tx-l.x,dz=l.tz-l.z,dist=Math.hypot(dx,dz);if(dist<1.2||!inWater(l.x+l.vx,l.z+l.vz,2)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;dx=l.tx-l.x;dz=l.tz-l.z;dist=Math.hypot(dx,dz)||1;}
+   const sp=l.speed*(1+l.panic*2.2),k=.25+l.panic*.5;l.vx+=(dx/dist*sp-l.vx)*k;l.vz+=(dz/dist*sp-l.vz)*k;l.panic=Math.max(0,l.panic-STEER_DT/1.4);}
+  for(let i=0;i<fish.length;i++){const f=fish[i];const l=f.school>=0?leaders[f.school]:leaders[SCHOOLS+i-SCHOOLS*PER];
+   let ax=0,az=0;
+   if(f.school>=0&&f.panic<.3){// Slot: slot.z metres behind the leader, slot.x to its right.
+    const h=Math.atan2(l.vx,l.vz)||0,c=Math.cos(h),s=Math.sin(h),tx=l.x+(f.slot.x*c)-(f.slot.z*s),tz=l.z-(f.slot.x*s)-(f.slot.z*c);ax+=(tx-f.x)*1.6+(l.vx-f.vx)*.8;az+=(tz-f.z)*1.6+(l.vz-f.vz)*.8;}
+   else if(f.school<0){ax+=(l.x-f.x)*1.2+(l.vx-f.vx);az+=(l.z-f.z)*1.2+(l.vz-f.vz);}
+   for(let j=0;j<fish.length;j++){if(j===i)continue;const o=fish[j],dx=f.x-o.x,dz=f.z-o.z,d2=dx*dx+dz*dz;if(d2<.16&&d2>1e-6){const d=Math.sqrt(d2);ax+=dx/d*(.4-d)*6;az+=dz/d*(.4-d)*6;}}
+   // Stay in the water: push out to sea along the field's gradient.
+   const d=water(f.x,f.z);if(d<2.2){const gx=water(f.x+.5,f.z)-water(f.x-.5,f.z),gz=water(f.x,f.z+.5)-water(f.x,f.z-.5),g=Math.hypot(gx,gz)||1;ax+=gx/g*(2.2-d)*4;az+=gz/g*(2.2-d)*4;}
+   f.vx+=ax*STEER_DT;f.vz+=az*STEER_DT;const max=(f.school>=0?1.9:.9)*(1+f.panic*2),sp=Math.hypot(f.vx,f.vz);if(sp>max){f.vx*=max/sp;f.vz*=max/sp;}
+   f.panic=Math.max(0,f.panic-STEER_DT/1.2);}
+  for(let i=0;i<SCHOOLS;i++){const l=leaders[i];l.x+=l.vx*STEER_DT;l.z+=l.vz*STEER_DT;}
+  for(let i=0;i<CRUISERS;i++){const l=leaders[SCHOOLS+i];l.x+=l.vx*STEER_DT;l.z+=l.vz*STEER_DT;}
+  // Crabs: wait, then scuttle sideways for a moment; turn back before leaving the shallow sand.
+  for(const c of crabs){if(c.walk>0){c.walk-=STEER_DT;if(c.walk<=0)c.wait=1+Math.random()*3;}else{c.wait-=STEER_DT;if(c.wait<=0){c.walk=.6+Math.random()*1.1;if(Math.random()<.35)c.heading+=(Math.random()-.5)*1.4;if(Math.random()<.4)c.side*=-1;}}
+   const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side,d=water(c.x+sx*.4,c.z+sz*.4);if(c.walk>0&&(d<.35||d>2.8))c.side*=-1;}
+ }
+ const startGlider=()=>{
+  // Across the view, further out, from one side to the other (and back next time).
+  for(let k=0;k<20;k++){const a=6+Math.random()*6,side=Math.random()<.5?-1:1,b0=-side*wide*1.7,b1=side*wide*1.7,x0=cx+ux*a+uz*b0,z0=cz+uz*a-ux*b0,x1=cx+ux*a+uz*b1,z1=cz+uz*a-ux*b1;
+   if(water(x0,z0)<4||water(x1,z1)<4||water((x0+x1)/2,(z0+z1)/2)<4)continue;
+   const len=Math.hypot(x1-x0,z1-z0),sp=style==='cay'&&Math.random()<.5||turtleSpot?.55:.85;glider.kind=turtleSpot?KIND.turtle:style==='cay'?(Math.random()<.5?KIND.turtle:KIND.ray):KIND.ray;
+   glider.on=true;glider.x=x0;glider.z=z0;glider.vx=(x1-x0)/len*sp;glider.vz=(z1-z0)/len*sp;glider.t=0;glider.life=len/sp;glider.len=glider.kind===KIND.turtle?1.25:1.5;
+   glider.y=glider.kind===KIND.ray?.3:.75;
+   // Eagle-ray spots (pattern 6, brightened past white); the turtle keeps its own colours.
+   colA.setXYZ(FISH+CRABS,1,1,1);colB.setXYZW(FISH+CRABS,2.4,2.4,2.4,glider.kind===KIND.ray?6:-1);colA.needsUpdate=true;colB.needsUpdate=true;return;}
+  glider.wait=4;
+ };
+ const arr=motion.array as Float32Array;
+ const write=(i:number,x:number,y:number,z:number,heading:number,sx:number,sy:number,sz:number,phase:number,alpha:number,kind:number,dropLocal:number,pitch=0)=>{
+  dummy.position.set(x,y,z);dummy.rotation.set(pitch,heading+Math.PI,0,'YXZ');dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  arr[i*4]=phase;arr[i*4+1]=alpha;arr[i*4+2]=kind;arr[i*4+3]=dropLocal;
+ };
+ return {mesh,
+  /** Start in the water in front of the angler at `stand`, casting along unit `dir`; `distance` is the shore field (m, + at sea);
+   *  `wide` is the half-width of the visible water (smaller on portrait phones); `spotStyle` picks the species. */
+  begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotStyle:SeabedStyle='beach',spotId=''){
+   water=distance??(()=>10);cx=stand.x;cz=stand.z;ux=dir.x;uz=dir.z;wide=halfWidth;style=spotStyle;turtleSpot=spotId==='turtle-bank'||spotId==='coral-garden';
+   place();colA.needsUpdate=true;colB.needsUpdate=true;target=1;steer=0;mesh.visible=true;},
+  end(){target=0;},
+  get busy(){return mesh.visible;},
+  /** Something hit the water at (x, z): nearby fish dart away, schools regroup after ~1 s; close crabs scuttle off. */
+  scatter(x:number,z:number,strength=1){
+   for(const f of fish){const dx=f.x-x,dz=f.z-z,d=Math.hypot(dx,dz);if(d>7*strength)continue;const k=(1-d/(7*strength))*3.2*strength;f.vx+=dx/(d||1)*k;f.vz+=dz/(d||1)*k;f.panic=1;}
+   for(const l of leaders){const dx=l.x-x,dz=l.z-z,d=Math.hypot(dx,dz);if(d<8*strength){l.panic=1;const ux=dx/(d||1),uz=dz/(d||1);l.tx=l.x+ux*6;l.tz=l.z+uz*6;if(!inWater(l.tx,l.tz,3)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;}}}
+   for(const c of crabs)if(Math.hypot(c.x-x,c.z-z)<3*strength){c.walk=1.2;c.wait=0;}
+  },
+  frame(dt:number,reduced:boolean,float:{x:number;z:number}|null){
+   if(!mesh.visible)return;
+   fade=reduced?target:T.MathUtils.clamp(fade+Math.sign(target-fade)*Math.min(Math.abs(target-fade),dt/.9),0,1);if(fade<=0&&target===0){mesh.visible=false;return;}
+   const step=reduced?0:Math.min(dt,.05);steer+=step;while(steer>=STEER_DT){steer-=STEER_DT;
+    if(float)for(const f of fish){const dx=f.x-float.x,dz=f.z-float.z,d=Math.hypot(dx,dz);if(d<1.3){f.vx+=dx/(d||1)*.8;f.vz+=dz/(d||1)*.8;}}
+    steerAll();}
+   for(let i=0;i<fish.length;i++){const f=fish[i];f.x+=f.vx*step;f.z+=f.vz*step;const sp=Math.hypot(f.vx,f.vz);
+    if(sp>.05){const h=Math.atan2(f.vx,f.vz);let dh=h-f.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));f.heading+=dh*Math.min(1,step*6);}
+    f.phase+=step*(4+sp*7);
+    const d=water(f.x,f.z),depth=uwDepthAt(d),a=f.alpha*fade*T.MathUtils.smoothstep(d,1.6,2.6)*(1-T.MathUtils.smoothstep(d,14,19));
+    const sy=f.scale*f.shape[1],swim=Math.min(f.swim,Math.max(.18,depth-.12-.2*sy)),y=UW_SURFACE-swim-i*.0004;
+    write(i,f.x,y,f.z,f.heading,f.scale*f.shape[0],sy,f.scale*f.shape[2],f.phase,a,KIND.fish,(y-(UW_SURFACE-depth))/sy);}
+   for(let i=0;i<crabs.length;i++){const c=crabs[i];if(c.walk>0&&step>0){const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side;c.x+=sx*.45*step;c.z+=sz*.45*step;c.phase+=step*16;}
+    const d=water(c.x,c.z),y=UW_SURFACE-uwDepthAt(d);write(FISH+i,c.x,y,c.z,c.heading,.85,.85,.85,c.phase,fade*T.MathUtils.smoothstep(d,.25,.55),KIND.crab,.004);}
+   const gi=FISH+CRABS;
+   if(CAST[style].glider){
+    if(!glider.on){glider.wait-=step;if(glider.wait<=0)startGlider();}
+    if(glider.on){glider.t+=step;glider.x+=glider.vx*step;glider.z+=glider.vz*step;glider.phase+=step*(glider.kind===KIND.ray?2.3:2.6);
+     if(glider.t>=glider.life){glider.on=false;glider.wait=7+Math.random()*12;}}
+   }
+   if(glider.on){const d=water(glider.x,glider.z),depth=uwDepthAt(d),y=UW_SURFACE-Math.max(.25,depth-glider.y),k=Math.min(1,glider.t/2,(glider.life-glider.t)/2);
+    write(gi,glider.x,y,glider.z,Math.atan2(glider.vx,glider.vz),glider.len,glider.len,glider.len,glider.phase,fade*Math.max(0,k)*(1-T.MathUtils.smoothstep(d,14,19)),glider.kind,(y-(UW_SURFACE-depth))/glider.len,glider.kind===KIND.ray?Math.sin(glider.phase)*.05:0);}
+   else write(gi,0,-50,0,0,0,0,0,0,0,KIND.ray,0);
+   mesh.instanceMatrix.needsUpdate=true;motion.needsUpdate=true;
+  },
+  dispose(){mesh.removeFromParent();mesh.dispose();geometry.dispose();material.dispose();},
+ };
+}

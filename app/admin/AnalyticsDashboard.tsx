@@ -42,30 +42,6 @@ const barsOf=(rows:Row[],label:(k:string)=>string,metric:'visitors'|'sessions'='
 const shortDay=(day:string)=>new Date(day+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
 const dayRun=(days:string[])=>days.length===1?shortDay(days[0]):`${days.length} days (${shortDay(days[0])} – ${shortDay(days[days.length-1])})`;
 
-/**
- * Oct 12 2026 (accuracy pass): the known limits of these numbers, next to them. Range-specific ones (UTC stand-in days,
- * visitor counts from before the salt rotated at Pacific midnight, DST days, an estimated comparison) are flagged and open the
- * box; the standing ones (what a visitor is, save-code dates, "on now") are always listed.
- */
-function ReadingNotes({report}:{report:Report}){
- const tm=report.time;if(!tm)return null;
- const flagged:string[]=[];
- if(tm.mode==='utc')flagged.push('Days are UTC days until the Pacific-time migration runs (see the banner).');
- if(tm.utcDays.length)flagged.push(`${dayRun(tm.utcDays)} in this range are UTC-day totals (marked *): they were frozen before Pacific time and their raw rows are gone, so each covers 5 pm Pacific the day before to 5 pm (4 pm in winter). Where they meet the first Pacific day, that evening (about 7 hours) is not counted on either side.`);
- if(tm.inexactVisitorDays.length)flagged.push(`Unique visitors on ${dayRun(tm.inexactVisitorDays)} may be slightly high: the visitor count still reset at UTC midnight (5 pm Pacific, 4 pm in winter) then, so someone who played before and after that hour counts twice. Sessions, time and page views are exact.`);
- for(const d of tm.dstDays)flagged.push(`${shortDay(d.day)} had ${d.hours} hours (clocks went ${d.hours<24?'forward':'back'}); day-by-day comparisons are by calendar day.`);
- if(tm.compare==='estimated')flagged.push('The change vs the period before compares like with like up to this time of day; that period’s last day is older than the raw 14 days, so its part-day is estimated from yesterday’s shape.');
- const standing=[
-  'A visitor is one device and network on one day (no cookies, no ids): a shared tablet counts once, one child on a phone and a laptop counts twice, and a returning player counts again each day. Over several days, visitors add up as visitor-days. Save codes are the only measure that follows a player across days.',
-  'Bots, automated browsers, Do-Not-Track/GPC browsers, preview builds, local and admin pages, and ?preview=all test sessions are never counted.',
-  'Save codes keep only the UTC date they were made and last used, so save-code days run 5 pm to 5 pm Pacific (4 pm in winter). Retention is rolling: "day 7" means used again 7 or more days after the code was made.',
-  '"On now" is browser tabs that sent anything in the last 5 minutes, not people; an idle tab stops counting after 10 minutes.',
- ];
- return <details className={styles.readNotes} open={flagged.length>0}>
-  <summary>How to read these numbers{flagged.length?` · ${flagged.length} note${flagged.length>1?'s':''} for this range`:''}</summary>
-  <ul>{flagged.map(n=><li key={n} data-flag="">{n}</li>)}{standing.map(n=><li key={n}>{n}</li>)}</ul>
- </details>;
-}
 
 /** `saves`: the save-code status line from the server (app/admin/page.tsx; counts only, never a code or a save's contents). */
 export default function AnalyticsDashboard({initial,initialRange,saves}:{initial:Report;initialRange:Preset;saves?:string}){
@@ -119,7 +95,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
   <div className={styles.wrap}>
    <header className={styles.header}>
     <span aria-hidden="true"/>
-    <h1><small>Admin</small>Futbol Island at a glance</h1>
+    <h1><small>Admin</small>Analytics</h1>
    </header>
 
    <div className={styles.filters} role="group" aria-label="Date range">
@@ -133,7 +109,6 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
    </div>
    <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
-   <ReadingNotes report={report}/>
 
    {!report.configured&&<section className={styles.banner}>
     <h2>Analytics storage is not configured</h2>

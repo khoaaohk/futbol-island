@@ -280,7 +280,7 @@ await ok('UTC stand-in days, inexact visitors, visitor-days, banners',async()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),region=read('app/admin/RegionCard.tsx');
  assert(/20261012_admin_pacific_time\.sql/.test(dash)&&/OK, admin pacific time installed/.test(dash)&&/storage\?\.pacific===false/.test(dash),'the banner names the file and the OK row');
  assert(/visitor-days/.test(dash)&&/Visitor-days/.test(region),'multi-day visitor columns say visitor-days');
- assert(/ReadingNotes/.test(dash)&&/inexactVisitorDays/.test(dash)&&/utcDays/.test(dash)&&/one device and network/.test(dash),'known limitations are shown on the dashboard');
+ assert(!/ReadingNotes|How to read these numbers/.test(dash),'no "How to read these numbers" box (removed at the user\'s request, Oct 12 2026)');
 });
 
 // 5. Save codes: the like-for-like "new codes" comparison.

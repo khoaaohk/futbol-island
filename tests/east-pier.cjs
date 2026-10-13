@@ -98,7 +98,7 @@ for(const t of pier.PIER_TARGET_SPOTS)assert(!flightBlocked(t.x,t.z-10),'flyable
 
 // ---- Scenery heat + integration: built into the shared batches, lamps in the night pool batch, no traffic, maps drawn.
 {const w=src('lib/town/eastPierWorld.ts'),world=src('lib/town/world.ts');
- assert(!/requestAnimationFrame|setInterval|setTimeout|new T\.Mesh\(|castShadow=true|street\(|roads/.test(w)&&/fadeBand\(/.test(w)&&/IcosahedronGeometry/.test(w),'static merged pieces only (walkway, kerbs, armour, boulders, shallows) through the shared helpers; no roads (traffic stays off)');
+ assert(!/requestAnimationFrame|setInterval|setTimeout|new T\.Mesh\(|castShadow=true|street\(|roads|fadeBand\(/.test(w)&&/IcosahedronGeometry/.test(w),'static merged pieces only (walkway, kerbs, armour, boulders) through the shared helpers; no roads (traffic stays off); foam and shallows come from the island-wide moving shoreline (lib/graphics/islandShore.ts)');
  assert(/lampSites\.push\(\.\.\.coralCay\.lampSites,\.\.\.eastPier\.lampSites\)/.test(world),'pier lamps join the night pools');
  assert(/cx<=7&&cz>=0&&cz<=2/.test(world),'pier chunks are not hidden by the Coral Cay region gate');
  const map=src('components/IslandOverview.tsx');assert(/data-east-pier="spiral"/.test(map)&&/data-lighthouse/.test(map)&&/JETTY_PATH/.test(map)&&/PIER_TARGET_SPOTS/.test(map),'minimap and travel map draw the spiral jetty and ring (fishing marker via FISH_SPOTS)');}
