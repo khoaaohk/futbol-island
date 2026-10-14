@@ -1,0 +1,7 @@
+/* Shared coin-balance pill (Oct 13 2026): the Kit Shop room's look (ShopRoom.module.css .coins) — cream pill, gold coin, bold
+ * number — reused as-is in the room header and in all three studio headers (Jersey, Ball, Boots), so every "how many coins do
+ * I have" readout in the shop is pixel-identical. Display-only (not a button): no tap-target rule applies. */
+.coinPill{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:999px;
+ background:#fbfbf9;box-shadow:0 2px 0 rgba(34,39,43,.12),0 0 0 1px rgba(34,39,43,.08);
+ font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;font-weight:800;font-size:17px;line-height:1;color:#22272b;white-space:nowrap}
+.coin{width:18px;height:18px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe58a,#f2c230 60%,#c99a12);box-shadow:inset 0 0 0 2px rgba(150,110,0,.35)}

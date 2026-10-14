@@ -1,0 +1,91 @@
+/* Arcade leaderboards (docs/arcade-leaderboards.md): the arcade's neon room look with the island's gold and cream pills
+   (--btn-* tokens, docs/ui/BUTTONS.md) and IslandBrush headings. Phone first: full screen under 600px, a centred panel above. */
+@font-face{font-family:ArcadeBoardBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.dialog{
+ --btn-gold:#20243d;--btn-ink:#e8ffff;--btn-rim:#70f5ec;
+ --btn-shadow-gold:0 4px 0 #101323,0 0 14px #4debd533;
+ --btn-shadow-gold-pressed:0 1px 0 #101323,0 0 18px #4debd54d;
+ --btn-focus:3px solid #b6fff7;
+ --gold:#f9d665;--gold-edge:#aa8b3e;--cream:#fff1d3;--ink:#244d40;--cyan:#70f5ec;--pink:#ff85d9;
+ position:fixed;inset:0;margin:auto;width:min(480px,calc(100% - 32px));height:fit-content;max-height:calc(100% - 32px);max-width:100%;
+ box-sizing:border-box;padding:0;border:1px solid #ff85d950;border-top:3px solid var(--pink);border-radius:24px;
+ background:#101022;color:#f5efff;box-shadow:0 18px 70px #000a,0 0 30px #ff62c226;overflow:hidden;
+ font-family:var(--font-body,Arial,sans-serif);isolation:isolate;animation:boardIn .24s ease both;
+ -webkit-touch-callout:none;user-select:none;-webkit-user-select:none;
+}
+.dialog[open]{display:flex;flex-direction:column}
+.dialog::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('/stories/films/assets/entry-grain.png') center/128px 128px;opacity:.055}
+.dialog::backdrop{background:#030410c4}
+@media(max-width:600px){.dialog{width:100%;height:100%;max-height:100%;border-radius:0;border-left:0;border-right:0;border-bottom:0}}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;padding:calc(18px + env(safe-area-inset-top,0px)) calc(20px + env(safe-area-inset-right,0px)) 14px calc(20px + env(safe-area-inset-left,0px));border-bottom:1px solid #ff85d925}
+.head h2{font-family:ArcadeBoardBrush,Georgia,serif;font-weight:normal;font-size:32px;line-height:1.1;margin:0;color:#ffeafa;text-shadow:0 0 18px #ff62c255}
+.head h2[data-gold]{color:#ffe58c;text-shadow:0 0 20px #f4c94e66}
+.body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:16px calc(20px + env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px));scrollbar-color:#8264a0 #151328}
+.body p{font-size:14px;line-height:1.5;color:#c9bddc;margin:6px 0 12px}
+.lead{text-align:center}
+.lead strong{display:block;font-size:46px;line-height:1.1;font-variant-numeric:tabular-nums;color:#ffe58c;text-shadow:0 0 20px #f4c94e40}
+.lead span{display:block;font-size:13px;font-weight:700;letter-spacing:.08em;color:#fff0b9;text-transform:uppercase}
+.lead em{display:block;font-style:normal;font-size:15px;font-weight:700;color:var(--cyan);margin-top:10px}
+.learn{font-size:12px!important;color:#b6abc9!important;text-align:center}
+
+/* Chips: cream when off, pink when chosen (island chip tokens). */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 6px;scrollbar-width:none;touch-action:pan-x}
+.chips::-webkit-scrollbar{display:none}
+.dialog .chip{flex:none;min-height:44px;min-width:44px;padding:8px 14px;border:2px solid #fff2cd;border-radius:999px;background:var(--btn-cream,#fff1d3);color:var(--ink);font:700 13px/1.1 var(--font-body,Arial,sans-serif);cursor:pointer;box-shadow:0 3px 0 #0006;touch-action:manipulation}
+.dialog .chip[aria-pressed="true"],.dialog .chip[aria-selected="true"]{background:var(--btn-pink,#ed9dce);border-color:#ffd6f1;color:#3a1631;box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590),0 0 14px #ff62c244}
+.dialog .chip:focus-visible,.dialog .pill:focus-visible,.dialog .step:focus-visible,.dialog .icon:focus-visible,.dialog .tile:focus-visible{outline:var(--btn-focus);outline-offset:3px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 12px}
+.dialog .tabs .chip{padding:8px 6px;font-size:12px}
+
+/* Board rows. */
+.rows{list-style:none;margin:0;padding:0;counter-reset:none}
+.rows li{display:grid;grid-template-columns:40px 30px 1fr auto;align-items:center;gap:8px;min-height:44px;padding:4px 12px;margin:0 0 6px;border:1px solid #6c5b824d;border-radius:14px;background:#1b182e;font-variant-numeric:tabular-nums}
+.rows li[data-rank="1"]{border-color:#ffe58c99;background:#2a2335}
+.rank{font-weight:800;font-size:15px;color:#c2b5d5}
+.rows li[data-rank="1"] .rank{color:#ffe58c}
+.who{font:800 22px/1 ui-monospace,'SF Mono',Menlo,Consolas,monospace;letter-spacing:.18em;color:#f7f0ff}
+.pic{font-size:22px;line-height:1;text-align:center}
+.pts{font-weight:800;font-size:16px;color:#e8ffff}
+.rows li[data-mine]{border-color:var(--cyan);background:#16303a;box-shadow:0 0 14px #4debd533}
+.rows li[data-new]{border:2px solid var(--gold);background:#3a3220;box-shadow:0 0 18px #f4c94e55;animation:rowGlow 1.2s ease 2}
+.rows li[data-new] .who,.rows li[data-new] .pts{color:#ffe58c}
+.you{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:8px;background:var(--cyan);color:#0e2a2c;font:800 10px/1.2 var(--font-body,Arial,sans-serif);letter-spacing:.06em;vertical-align:middle}
+.empty{padding:22px 12px;border:1px dashed #6c5b8280;border-radius:14px;text-align:center;color:#c9bddc;font-size:14px}
+.note{margin:10px 0 0!important;font-size:12px!important;color:#b6abc9!important;text-align:center}
+.cheer{margin:0 0 12px!important;padding:10px 14px;border-radius:14px;background:#2a2335;border:1px solid #ffe58c80;color:#ffe58c!important;font-weight:800;font-size:16px!important;text-align:center}
+
+/* The letter wheels. */
+.wheels{display:flex;justify-content:center;gap:14px;margin:16px 0 8px}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:8px}
+.dialog .step{display:grid;place-items:center;width:64px;min-height:48px;border:2px solid #fff2cd;border-radius:16px;background:var(--btn-cream,#fff1d3);color:var(--ink);font-size:20px;line-height:1;cursor:pointer;box-shadow:0 4px 0 #0007;touch-action:manipulation}
+.dialog .step:active{transform:translateY(3px);box-shadow:0 1px 0 #0007}
+.dialog .tile{position:relative;display:grid;place-items:center;width:72px;height:84px;padding:0;border:3px solid #6c5b82;border-radius:18px;background:#0b0b18;color:#ffe58c;font:800 52px/1 ui-monospace,'SF Mono',Menlo,Consolas,monospace;text-shadow:0 0 16px #f4c94e66;cursor:pointer;touch-action:none;overflow:hidden}
+.dialog .tile[aria-current="true"]{border-color:var(--cyan);box-shadow:0 0 18px #4debd555}
+.dialog .tile span{display:block;animation:roll .16s ease-out}
+.dialog .tile span[data-dir="down"]{animation-name:rollDown}
+.blocked{min-height:22px;margin:4px 0 0!important;text-align:center;color:#ffb0a0!important;font-weight:700}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin:8px 0 14px}
+.dialog .icon{display:grid;place-items:center;min-width:44px;min-height:48px;padding:0;border:2px solid #6c5b8280;border-radius:14px;background:#1b182e;font-size:24px;line-height:1;cursor:pointer;touch-action:manipulation}
+.dialog .icon[aria-pressed="true"]{border-color:var(--pink);background:#3a2140;box-shadow:0 0 14px #ff62c244}
+.dialog .icon small{font-size:11px;font-weight:700;color:#c9bddc}
+.label{display:block;margin:12px 0 4px;font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#c9bddc}
+
+/* Pills: gold primary, cream secondary (island button tokens). */
+.actions{display:grid;gap:10px;margin-top:12px}
+.dialog .pill{min-height:var(--btn-height-lg,48px);padding:10px 22px;border:3px solid #fff2cd;border-radius:999px;font:800 16px/1.2 var(--font-body,Arial,sans-serif);cursor:pointer;touch-action:manipulation;transition:translate .16s,box-shadow .16s}
+.dialog .gold{background:var(--gold) url('/stories/films/assets/entry-grain.png') center/128px 128px;background-blend-mode:soft-light;color:var(--ink);box-shadow:0 5px 0 var(--gold-edge),0 0 0 4px #fff2cd40}
+.dialog .cream{background:var(--cream);color:var(--ink);box-shadow:0 5px 0 #193f3766}
+.dialog .pill:active{translate:0 3px;box-shadow:0 2px 0 var(--gold-edge)}
+.dialog .pill:disabled{opacity:.45;cursor:default;translate:none}
+.small{font-size:12px!important;color:#b6abc9!important;text-align:center;margin:2px 0 0!important}
+.openBoards{min-height:44px}
+
+@keyframes boardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes rowGlow{50%{box-shadow:0 0 28px #f4c94e99}}
+@keyframes roll{from{transform:translateY(40%);opacity:.2}to{transform:none;opacity:1}}
+@keyframes rollDown{from{transform:translateY(-40%);opacity:.2}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.dialog,.rows li[data-new],.dialog .tile span{animation:none}.dialog .pill{transition:none}.dialog .step:active,.dialog .pill:active{transform:none;translate:none}}
+@media(max-height:520px) and (min-width:601px){.wheels{margin:8px 0 4px}.dialog .tile{height:64px;font-size:40px}.lead strong{font-size:34px}}
+@media(max-height:520px){.head{padding-top:10px;padding-bottom:8px}.head h2{font-size:24px}.lead strong{font-size:30px}.dialog .tile{height:60px;width:64px;font-size:38px}.dialog .step{min-height:44px}.wheels{margin:6px 0 2px}}
+/* Phones held sideways (Strikers is landscape-only): letters on the left, pictures and Save on the right, so Save stays in view. */
+@media(max-height:520px) and (min-width:601px){.pick{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pick .label{margin-top:4px}.lead em{margin-top:4px;font-size:14px}.lead span{font-size:11px}}

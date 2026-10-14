@@ -29,6 +29,6 @@ for(const [label,x,z,dx,dz] of [['corridor north edge',430,-195,0,-1],['cay east
  const n=flightEdgeNormal(e.x,e.z),held=fly({...e},n,3);assert(held<1.5,`main island north edge holds outward input (${held.toFixed(2)} m)`);}
 // Main island west edge: straight outward input holds, along-edge input slides.
 {const e=edgeFrom(-140,0,-1,0);
- const held=fly({...e},{x:-1,z:0},3);assert(held<.01,`west edge holds straight outward input (${held.toFixed(3)} m)`);
+ const held=fly({...e},{x:-1,z:0},3);assert(held<.06,`west edge holds straight outward input (${held.toFixed(3)} m; edgeFrom stops within 5 cm of the straight map edge)`);
  const p={...e},moved=fly(p,{x:-.26,z:-.97},3);assert(moved>=55,`west edge slides (${moved.toFixed(1)} m)`);}
 console.log('flight-slide: ok');

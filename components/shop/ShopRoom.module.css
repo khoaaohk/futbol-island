@@ -1,0 +1,58 @@
+/* The Kit Shop (Oct 12 2026): a modern kit store. Crisp white panels, graphite ink, one orange accent; big tap targets (≥ 56 px)
+ * for 7–12 year olds. No backdrop-filter over the canvas (heat), no looping animation. */
+.root{position:fixed;inset:0;overflow:hidden;background:#f4f2ed;color:#22272b;font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+ --accent:#ef5a2f;--ink:#22272b;--control-bottom:calc(28px + env(safe-area-inset-bottom,0px));--navy:#1f2a44;--paper:#fbfbf9;-webkit-tap-highlight-color:transparent;touch-action:none}
+.canvas{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none;cursor:pointer}
+/* Walk-in (Oct 12 2026): the prompt pill over a wall or a person (the island's store-enter-prompt, in the shop's orange), the
+ * clerk's hello bubble and the walking hint. Positioned by the scene (left/top in px); hidden until it has a place. */
+.prompt{z-index:6;visibility:hidden}
+.root .prompt{border:0;background:var(--accent);background-image:none;color:#fff;font-weight:800;letter-spacing:.02em;box-shadow:0 10px 24px -10px rgba(239,90,47,.7);cursor:pointer}
+.root .prompt:hover{background:#d94b22;color:#fff}
+.root .prompt:focus-visible{outline:3px solid var(--navy);outline-offset:3px}
+.greeting{position:absolute;z-index:5;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 62px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);box-sizing:border-box;margin:0;padding:10px 16px;border-radius:16px;
+ background:var(--navy);color:#fff;font-size:15px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.18);pointer-events:none}
+.greeting b{color:#ffb79c}
+.hintTouch{display:none}
+@media(pointer:coarse){.hintDesk{display:none}.hintTouch{display:inline}}
+.top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;padding:max(12px,env(safe-area-inset-top)) 20px 0;pointer-events:none}
+.top>*{pointer-events:auto}
+.title{margin:0 auto 0 4px;display:flex;flex-direction:column;line-height:1.05;pointer-events:none;padding:6px 14px;border-radius:14px;background:rgba(250,248,243,.92);box-shadow:0 2px 0 rgba(34,39,43,.1),0 0 0 1px rgba(34,39,43,.06)}
+.title b{white-space:nowrap;font-size:20px;letter-spacing:.14em;color:var(--navy)}
+.title span{font-size:13px;color:#59606a;letter-spacing:.02em}
+.topRight{display:flex;align-items:center;gap:8px}
+/* The coin-balance pill (cream, gold coin) is the shared components/shop/CoinPill.tsx — same height, padding, radius, shadow,
+ * font and icon as the three studio headers, so all four match (Oct 13 2026). */
+.myKitButton{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:800 15px/1 inherit;letter-spacing:.04em;cursor:pointer}
+.myKitButton b{min-width:22px;height:22px;display:inline-grid;place-items:center;border-radius:11px;background:var(--accent);font-size:13px}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 8px);transform:translateX(-50%);margin:0;padding:6px 12px;border-radius:999px;background:rgba(34,39,43,.72);color:#fff;font-size:13px;white-space:nowrap;pointer-events:none}
+.studio{position:absolute;inset:0;z-index:20;background:#f4f2ed}
+.studioLoading{position:absolute;inset:0;display:grid;place-items:center;margin:0;font-weight:800;color:var(--navy)}
+.soon{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));box-sizing:border-box;padding:24px;border-radius:20px;background:var(--paper);box-shadow:0 10px 40px rgba(0,0,0,.18);text-align:center}
+.soonTitle{margin:0 0 6px;font-size:22px;font-weight:800;color:var(--navy)}
+.primary{min-height:52px;margin-top:12px;padding:0 22px;border:0;border-radius:999px;background:var(--accent);color:#fff;font:800 16px/1 inherit;cursor:pointer}
+.secondary{min-height:44px;padding:0 14px;border:2px solid var(--navy);border-radius:999px;background:transparent;color:var(--navy);font:800 14px/1 inherit;cursor:pointer}
+.panel{position:absolute;z-index:30;left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 32px));max-height:calc(100% - 48px);overflow:auto;box-sizing:border-box;padding:18px 18px 14px;border-radius:22px;background:var(--paper);box-shadow:0 14px 50px rgba(0,0,0,.22);outline:none}
+.panelHead{display:flex;align-items:center;justify-content:space-between}
+.panelHead h2{margin:0;font-size:22px;color:var(--navy);letter-spacing:.04em}
+.close{width:44px;height:44px;border:0;border-radius:50%;background:#eceae5;font-size:26px;line-height:1;cursor:pointer}
+.empty,.note{color:#59606a;font-size:14px;line-height:1.4}
+.kindGroup h3{margin:14px 0 6px;font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.kindGroup ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.kindGroup li{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:#f2f0eb}
+.swatch{display:flex;width:44px;height:44px;border-radius:10px;overflow:hidden;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.swatch i{flex:1}
+.itemName{flex:1;display:flex;flex-direction:column;font-weight:800;min-width:0}
+.itemName small{font-weight:600;color:#59606a}
+.wearing{font-size:13px;font-weight:800;color:#1f8a5b}
+.toast{position:absolute;z-index:40;left:50%;top:calc(max(12px,env(safe-area-inset-top)) + 60px);transform:translateX(-50%);max-width:calc(100% - 32px);margin:0;padding:12px 18px;border-radius:16px;background:var(--navy);color:#fff;font-weight:800;font-size:15px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast[data-tone=warn]{background:#8a2d14}
+.failed{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;padding:18px;border-radius:16px;background:var(--paper);text-align:center}
+/* Phones and touch screens: the walk hint moves up out of the joystick's way; the subtitle hides. */
+@media(max-width:720px),(pointer:coarse){
+ .hint{bottom:auto;top:calc(max(12px,env(safe-area-inset-top)) + 62px)}
+ .title span{display:none}
+}
+@media(prefers-reduced-motion:reduce){.station{transition:none}}
+@media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+/* The right inset stays 20px (matching the studio headers): only the left side shrinks, for the title. */
+@media(max-width:420px){.top{gap:8px;padding-left:12px}.title b{font-size:15px;letter-spacing:.08em}.myKitButton{padding:0 12px}}

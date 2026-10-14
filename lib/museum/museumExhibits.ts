@@ -1,283 +1,260 @@
 import * as T from 'three';
 import {CASE_PLACES,CASE} from './museumLayout';
-import {museumSfx} from './museumSound';
-import {STORIES} from './museumStories';
+import {buildMuseumBoot} from './museumBoot';
 
 /**
- * The hall's exhibits as abstract sculptures (Oct 10 2026, user: "more modern and clean like the World Cup balls … more of a
- * MoMA, where things are more abstract"; shared brief docs/museum-modern-style.md). Each open case is a white plinth carrying
- * ONE geometric idea in the gallery palette (ink, white, and one primary accent). The beats of each story
- * (lib/museum/museumStories.ts) move the pieces: planes slide, spheres travel, lines draw. No literal props, no characters.
+ * The hall's sculptures: one object per open case, on its white plinth, in the gallery palette (ink, white and the primaries).
  *
- *  - laws-1863      a stack of thin slabs: they fan apart (every club its own rules), align into one stack, a slab opens, a blue
- *                   square is pressed on top;
- *  - penalty-1891   a red sphere and a line: a ring of sound, the sphere moves to its spot, a black upright slides on the line,
- *                   then the sphere crosses it (left, middle or right);
- *  - cards-1970     two coloured planes, yellow and red, lying flat; they lift and float, each steps forward in turn;
- *  - backpass-1992  a black ring with a blue sphere and a block in its centre: the block catches the sphere, a bar comes down,
- *                   then the sphere glances off the block and rolls away (drag to turn the ring);
- *  - var-2018       a frame within a frame: the inner frame steps forward, quarter-turns, a red line scans, the sphere is in or out;
- *  - worldcup-1930  a ring of small black cubes round a red disc; the cubes rise and a yellow column grows from the centre;
- *  - wwc-1991       a white sphere inside a tilted red orbit; it turns, two red points travel the ring, the ring levels;
- *  - futsal-1989    a blue plate with a hairline; a large and a small sphere fall, the small one barely bounces, then rolls;
- *  - laced-leather  a balance: a brown sphere against a white one; the brown side sinks, darkens in blue rain; three sizes appear;
- *  - telstar-1970   a black plane rises behind a white sphere; it flickers black and white, splits in two and they orbit;
- *  - shirts         a row of colour fields that rise, take white number tabs and part into two teams;
- *  - hall-of-fame   three stepped blocks, a green sphere on the highest, and a line drawn forward (the path ahead).
+ * Oct 13 2026 (user: "for all the exhibits remove this info thing and btn, just have the full thing at the beginning" and, of the
+ * boots case, "This doesn't look anything like a futbol boot"): the step-through stories are gone, so the sculptures no longer
+ * perform. Each is a still, recognisable object instead of an abstract piece that only made sense mid-story:
  *
- * Heat: every moving piece across the hall is an instance of FOUR shared instanced meshes (box, sphere, cylinder, ring) on one
- * material: 4 draw calls for all twelve sculptures. Pieces that never move join the room's ONE merged mesh (`add`). Matrices are
- * rewritten only for the sculpture that is animating; `update` reports busy only while something moves, so the room's loop
- * sleeps after each beat. Reduced motion: every beat jumps to its end pose (a complete static composition).
+ *  - laws-1863      a stack of rule books, an open book on top, an ink pot and a quill;
+ *  - penalty-1891   a goal with its net, the goal line, the penalty spot and a ball on it;
+ *  - stadiums       a stadium bowl: an oval of two-tier stands round a striped pitch, a roof ring and a white arch over it;
+ *  - boots          a real football boot (the Kit Shop's procedural boot, lib/museum/museumBoot.ts): black leather with a white
+ *                   sole, white laces and moulded studs, standing on its studs three-quarters to the camera;
+ *  - var-2018       a referee's review monitor on its stand, a goal-line replay on screen;
+ *  - worldcup-1930  a winged gold cup on a blue octagonal base (the first World Cup's trophy);
+ *  - wwc-1991       a globe on a stand;
+ *  - futsal-1989    a tabletop indoor court with goals, lines and a small ball;
+ *  - laced-leather  a brown laced leather ball beside a modern size 5 ball;
+ *  - telstar-1970   an old television set with the black-and-white Telstar in front of it (the one piece that moves: drag to
+ *                   spin it, MuseumExhibit's ⟲ ⟳ buttons);
+ *  - shirts         three shirts on stands: green 1, red 9, blue 10;
+ *  - hall-of-fame   the Trophy room: a two-handled gold cup on a stepped base, a shelf of small cups behind it.
+ *
+ * Heat: everything joins the room's ONE merged vertex-coloured mesh (`add`), so the sculptures cost no draw call of their own,
+ * except two pieces with a mesh each on the room's material: the Telstar (so it can turn) and the boot (the shop geometry's phone
+ * detail, ~20k triangles, kept indexed and frustum-culled instead of tripling its vertices in the merged mesh). One boot, not a
+ * row: a second would double the hall's triangle count. Nothing animates on its own: the room's loop sleeps whenever you stop.
  */
 type Add=(geo:T.BufferGeometry,x:number,y:number,z:number,hex:string,rx?:number,ry?:number,rz?:number,s?:number)=>unknown;
-export type ExhibitAnim={id:string;anim:string;t:number;dur:number;arg?:number};
 /** The gallery palette (docs/museum-modern-style.md). */
-export const ART={ground:'#f6f4ef',ink:'#1d1d1b',muted:'#6b6a66',hair:'#d9d6cf',red:'#e4322b',blue:'#2a5bd7',yellow:'#f2c230',green:'#1f8a5b',white:'#f7f6f2',stone:'#e6e3dc',leather:'#8a5a33'} as const;
+export const ART={ground:'#f6f4ef',ink:'#1d1d1b',muted:'#6b6a66',hair:'#d9d6cf',red:'#e4322b',blue:'#2a5bd7',yellow:'#f2c230',green:'#1f8a5b',white:'#f7f6f2',stone:'#e6e3dc',leather:'#8a5a33',gold:'#d9a92e',pitch:'#3f9a5a'} as const;
 const TOP=CASE.plinthH+.04;
-const ease=(t:number)=>t<=0?0:t>=1?1:t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const clamp01=(v:number)=>v<0?0:v>1?1:v;
-/** Eased progress of `u` through the window a–b. */
-const seg=(u:number,a:number,b:number)=>ease(clamp01((u-a)/Math.max(.001,b-a)));
-const L=(a:number,b:number,k:number)=>a+(b-a)*k;
+const {ink:K,white:W,red:R,blue:B,green:G,gold:AU,hair:H}=ART;
+/** The boot on the boots plinth: the Kit Shop's 1960s–80s "Retro Leather" silhouette (lib/shop/boots.ts MODELS). */
+const BOOT_MODEL='retro';
 
-type Kind='box'|'sphere'|'cyl'|'ring';
-type Tf={x:number;y:number;z:number;rx:number;ry:number;rz:number;sx:number;sy:number;sz:number};
-type Node=Tf&{parent:Node|null;rest:Tf};
-type Part=Node&{kind:Kind;i:number;c:string;restC:string;shown:string};
-type Anim={dur:number;run:(u:number,arg?:number)=>void;cues?:readonly (readonly [number,()=>void])[]};
-type Sculpture={id:string;root:Node;nodes:Node[];parts:Part[];anims:Record<string,Anim>;height:number;step?:(dt:number)=>boolean;onReset?:()=>void};
+// ---- Geometry helpers: every piece is coloured, placed and flattened to position + normal + colour --------------------------
+const m4=new T.Matrix4(),q=new T.Quaternion(),eu=new T.Euler(),pv=new T.Vector3(),sv=new T.Vector3(),cc=new T.Color(),nv=new T.Vector3();
+type Paint=string|((n:T.Vector3,p:T.Vector3)=>string);
+/** Colour (one hex, or per face from its normal/centre), transform (YXZ euler, then scale), and strip to the three attributes. */
+function piece(geo:T.BufferGeometry,paint:Paint,x=0,y=0,z=0,rx=0,ry=0,rz=0,sx=1,sy=sx,sz=sx){
+ const g=geo.index?geo.toNonIndexed():geo;if(g!==geo)geo.dispose();
+ if(!g.getAttribute('normal'))g.computeVertexNormals();
+ for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal'&&k!=='color')g.deleteAttribute(k);
+ if(!g.getAttribute('color')){const pos=g.getAttribute('position'),n=pos.count,c=new Float32Array(n*3);
+  if(typeof paint==='string'){cc.set(paint);for(let i=0;i<n;i++){c[i*3]=cc.r;c[i*3+1]=cc.g;c[i*3+2]=cc.b;}}
+  else{const a=new T.Vector3(),b=new T.Vector3(),d=new T.Vector3(),ctr=new T.Vector3();
+   for(let f=0;f<n;f+=3){a.fromBufferAttribute(pos,f);b.fromBufferAttribute(pos,f+1);d.fromBufferAttribute(pos,f+2);ctr.copy(a).add(b).add(d).divideScalar(3);
+    nv.copy(ctr).normalize();cc.set(paint(nv,ctr));for(let k=0;k<3;k++){c[(f+k)*3]=cc.r;c[(f+k)*3+1]=cc.g;c[(f+k)*3+2]=cc.b;}}}
+  g.setAttribute('color',new T.BufferAttribute(c,3));}
+ q.setFromEuler(eu.set(rx,ry,rz,'YXZ'));m4.compose(pv.set(x,y,z),q,sv.set(sx,sy,sz));g.applyMatrix4(m4);return g;
+}
+/** Concatenate pieces (all non-indexed with position, normal, colour) into one geometry. */
+function join(parts:readonly T.BufferGeometry[]){
+ let n=0;for(const p of parts)n+=p.getAttribute('position').count;const out=new T.BufferGeometry();
+ for(const name of ['position','normal','color']){const a=new Float32Array(n*3);let o=0;for(const p of parts){const s=p.getAttribute(name).array as ArrayLike<number>;a.set(s,o);o+=s.length;}out.setAttribute(name,new T.BufferAttribute(a,3));}
+ for(const p of parts)p.dispose();return out;
+}
+const boxG=(w:number,h:number,d:number)=>new T.BoxGeometry(w,h,d);
+const cylG=(r0:number,r1:number,h:number,seg=20)=>new T.CylinderGeometry(r0,r1,h,seg);
+/** A lathe from [radius, height] pairs, bottom to top (outside first, then back down the inside for a hollow cup). */
+const latheG=(pts:readonly (readonly [number,number])[],seg=24)=>new T.LatheGeometry(pts.map(([r,y])=>new T.Vector2(r,y)),seg);
+/** The 12 pentagon centres of a football (an icosahedron's corners). */
+const PENTA=(()=>{const g=new T.IcosahedronGeometry(1,0),p=g.getAttribute('position'),out:T.Vector3[]=[];
+ for(let i=0;i<p.count;i++){const v=new T.Vector3().fromBufferAttribute(p,i).normalize();if(!out.some(o=>o.distanceToSquared(v)<1e-4))out.push(v);}g.dispose();return out;})();
+/** A black-and-white football (the Telstar pattern: 12 black pentagons on white). */
+const football=(r:number,detail=3)=>piece(new T.IcosahedronGeometry(r,detail),n=>{let best=-1;for(const c of PENTA)best=Math.max(best,c.dot(n));return best>.936?K:W;});
+/** A box frame of four bars (w × h, bar thickness t) facing +z. */
+function frame(w:number,h:number,t:number,d:number,hex:string,x:number,y:number,z:number){
+ return [piece(boxG(w,t,d),hex,x,y+h/2-t/2,z),piece(boxG(w,t,d),hex,x,y-h/2+t/2,z),piece(boxG(t,h,d),hex,x-w/2+t/2,y,z),piece(boxG(t,h,d),hex,x+w/2-t/2,y,z)];
+}
+/** Seven-segment digits (white boxes) for shirt numbers: width w, height h, bar t, at (x, y) on the plane z. */
+const SEG:Record<string,string>={'0':'abcdef','1':'bc','9':'abcdfg'};
+function digit(ch:string,x:number,y:number,z:number,w:number,h:number,t:number,hex:string){
+ const out:T.BufferGeometry[]=[],hh=h/2,hw=w/2;
+ for(const s of SEG[ch]??''){
+  if(s==='a')out.push(piece(boxG(w,t,.002),hex,x,y+hh-t/2,z));if(s==='g')out.push(piece(boxG(w,t,.002),hex,x,y,z));if(s==='d')out.push(piece(boxG(w,t,.002),hex,x,y-hh+t/2,z));
+  if(s==='b')out.push(piece(boxG(t,hh,.002),hex,x+hw-t/2,y+hh/2,z));if(s==='c')out.push(piece(boxG(t,hh,.002),hex,x+hw-t/2,y-hh/2,z));
+  if(s==='f')out.push(piece(boxG(t,hh,.002),hex,x-hw+t/2,y+hh/2,z));if(s==='e')out.push(piece(boxG(t,hh,.002),hex,x-hw+t/2,y-hh/2,z));}
+ return out;
+}
 
-const TF0:Tf={x:0,y:0,z:0,rx:0,ry:0,rz:0,sx:1,sy:1,sz:1};
-const copyTf=(t:Tf):Tf=>({x:t.x,y:t.y,z:t.z,rx:t.rx,ry:t.ry,rz:t.rz,sx:t.sx,sy:t.sy,sz:t.sz});
-
-export function createStoryExhibits(scene:T.Scene,opts:{open:Readonly<Record<string,boolean>>;reduced:boolean;add:Add;
- /** A soft contact shadow on a plinth top (world x, z, radius x/z). */
- shadow?:(x:number,y:number,z:number,rx:number,rz:number)=>void;earned?:number}){
- const {add,reduced}=opts,built=new Set<string>(),stageTops:Record<string,number>={},sculptures:Sculpture[]=[];
- const counts:Record<Kind,number>={box:0,sphere:0,cyl:0,ring:0};
-
- // ---- A tiny scene graph of plain numbers (no Object3Ds): nodes nest, parts are instances of the four shared meshes ---------
- let cur:Sculpture;
- const node=(t:Partial<Tf>,parent:Node|null=cur.root):Node=>{const n={...TF0,...t,parent,rest:copyTf({...TF0,...t})} as Node;cur.nodes.push(n);return n;};
- const part=(kind:Kind,c:string,t:Partial<Tf>,parent:Node|null=cur.root):Part=>{const p={...TF0,...t,parent,kind,i:counts[kind]++,c,restC:c,shown:'',rest:copyTf({...TF0,...t})} as Part;cur.parts.push(p);return p;};
- /** Box by size (w, h, d), sphere by radius, cylinder by radius + height, ring by radius (tube scales with it). */
- const box=(c:string,w:number,h:number,d:number,t:Partial<Tf>={},parent?:Node|null)=>part('box',c,{sx:w,sy:h,sz:d,...t},parent);
- const ball=(c:string,r:number,t:Partial<Tf>={},parent?:Node|null)=>part('sphere',c,{sx:r,sy:r,sz:r,...t},parent);
- const cyl=(c:string,r:number,h:number,t:Partial<Tf>={},parent?:Node|null)=>part('cyl',c,{sx:r,sy:h,sz:r,...t},parent);
- const ring=(c:string,r:number,t:Partial<Tf>={},parent?:Node|null)=>part('ring',c,{sx:r,sy:r,sz:r,...t},parent);
- /** Start a sculpture on its plinth: (x, z) of the case, `height` of its tallest pose (for the zoom framing and its label). */
- function sculpture(id:string,height:number,make:(p:{x:number;z:number},stat:(geo:T.BufferGeometry,x:number,y:number,z:number,hex:string,rx?:number,ry?:number,rz?:number)=>void,shadow:(x:number,z:number,rx:number,rz?:number)=>void)=>Record<string,Anim>|null){
-  if(!opts.open[id]||!STORIES[id])return;const p=CASE_PLACES[id];
-  cur={id,root:null as unknown as Node,nodes:[],parts:[],anims:{},height};cur.root={...TF0,x:p.x,y:TOP,z:p.z,parent:null,rest:copyTf({...TF0,x:p.x,y:TOP,z:p.z})};cur.nodes.push(cur.root);
-  const stat=(geo:T.BufferGeometry,x:number,y:number,z:number,hex:string,rx=0,ry=0,rz=0)=>{add(geo,p.x+x,TOP+y,p.z+z,hex,rx,ry,rz);};
+export function createExhibitSculptures(opts:{open:Readonly<Record<string,boolean>>;add:Add;
+ /** A soft contact shadow on a plinth top (world x, y, z, radius x/z). */
+ shadow?:(x:number,y:number,z:number,rx:number,rz:number)=>void}){
+ const built=new Set<string>();
+ /** Pieces with their own mesh (world placement): the Telstar, which spins, and the boot. */
+ const solo:{name:string;geometry:T.BufferGeometry;x:number;y:number;z:number;rx:number;ry:number;s:number}[]=[];
+ /** Build case `id`'s sculpture: `make` returns its pieces in plinth-top coordinates; they join the hall's merged mesh. */
+ function sculpture(id:string,make:(shadow:(x:number,z:number,rx:number,rz?:number)=>void,p:{x:number;z:number})=>T.BufferGeometry[]){
+  if(!opts.open[id])return;const p=CASE_PLACES[id];if(!p)return;
   const shadow=(x:number,z:number,rx:number,rz=rx)=>opts.shadow?.(p.x+x,TOP+.002,p.z+z,rx,rz);
-  const anims=make(p,stat,shadow);if(!anims)return;cur.anims=anims;built.add(id);stageTops[id]=TOP+height;sculptures.push(cur);
+  const parts=make(shadow,p);if(parts.length)opts.add(join(parts),p.x,TOP,p.z,'');built.add(id);
  }
- const {ink:K,white:W,stone:S,red:R,blue:B,yellow:Y,green:G}=ART;
 
- // ---- 1863 · The first Laws: a stack of thin slabs -------------------------------------------------------------------------
- sculpture('laws-1863',.52,(_p,_s,shadow)=>{shadow(0,0,.34,.26);
-  const slabs=[0,1,2,3,4].map(i=>box(i===2?B:i%2?S:W,.54,.036,.38,{y:.018+i*.05,ry:(i-2)*.05}));
-  const stamp=box(B,.12,.024,.12,{y:.7,sx:0,sy:0,sz:0});const spread=(i:number)=>(i%2?1:-1);
-  const tight=(i:number)=>.018+i*.038;
-  return {
-   argue:{dur:1.6,cues:[[0,museumSfx.flapBook],[.5,museumSfx.flapBook]],run(u){slabs.forEach((s,i)=>{const k=seg(u,i*.08,.6+i*.08);s.ry=s.rest.ry+k*spread(i)*(.32+i*.07);s.x=k*spread(i)*.07;s.y=s.rest.y+k*i*.025;});}},
-   merge:{dur:1.4,cues:[[.55,museumSfx.flapBook]],run(u){slabs.forEach((s,i)=>{const k=seg(u,i*.06,.7+i*.06);s.ry=L(s.rest.ry+spread(i)*(.32+i*.07),0,k);s.x=L(spread(i)*.07,0,k);s.y=L(s.rest.y+i*.025,tight(i),k);if(i===2)s.c=k>.6?W:B;});}},
-   play:{dur:1.4,cues:[[.2,museumSfx.flapBook]],run(u){const s=slabs[4],k=ease(u);s.y=tight(4)+Math.sin(u*Math.PI)*.16;s.ry=k*Math.PI;s.rx=Math.sin(u*Math.PI)*-.35;}},
-   stamp:{dur:1.1,cues:[[.62,museumSfx.stamp]],run(u){const k=clamp01(u/.62),top=tight(4)+.018;stamp.sx=stamp.sz=.12;stamp.sy=.024;
-    stamp.y=L(.62,top+.012,k*k);if(u>.62){const b=Math.sin(clamp01((u-.62)/.38)*Math.PI)*.25;stamp.sy=.024*(1-b);stamp.sx=stamp.sz=.12*(1+b*.4);stamp.y=top+stamp.sy/2;}}},
-  };});
+ // ---- 1863 · The first Laws: a stack of rule books, an open book, an ink pot and a quill --------------------------------------
+ sculpture('laws-1863',shadow=>{shadow(0,0,.36,.28);const out:T.BufferGeometry[]=[];
+  /** A closed book lying flat: boards and spine in the cover colour, cream page edges between them. */
+  const book=(w:number,h:number,d:number,cover:string,x:number,y:number,z:number,ry:number)=>{const c=Math.cos(ry),s=Math.sin(ry),at=(lx:number,ly:number,lz:number):[number,number,number]=>[x+lx*c+lz*s,y+ly,z-lx*s+lz*c];
+   const b=.008;out.push(piece(boxG(w,b,d),cover,...at(0,b/2,0),0,ry),piece(boxG(w,b,d),cover,...at(0,h-b/2,0),0,ry),piece(boxG(.012,h,d),cover,...at(-w/2+.006,h/2,0),0,ry),
+    piece(boxG(w-.02,h-2*b,d-.014),'#f1ece0',...at(.004,h/2,0),0,ry));};
+  book(.5,.06,.36,B,0,0,0,.04);book(.44,.05,.32,K,.01,.06,.01,-.08);book(.4,.045,.3,R,-.01,.11,-.005,.1);
+  // the open book on top: two page fans in a shallow V on a board
+  {const y=.155,w=.17,d=.26;out.push(piece(boxG(2*w+.02,.008,d+.012),K,0,y+.004,0,0,.05));
+   for(const s of [-1,1])out.push(piece(boxG(w,.018,d),'#fbf8f0',s*(w/2+.004),y+.02+.012,0,0,.05,s*-.1));
+   out.push(piece(boxG(.004,.003,d*.9),H,0,y+.02,0,0,.05));}
+  // ink pot and quill
+  out.push(piece(cylG(.035,.04,.06),K,.31,.03,.12),piece(cylG(.022,.022,.012),K,.31,.066,.12));
+  out.push(piece(new T.SphereGeometry(1,10,6),W,.27,.16,.08,0,-.6,.5,.012,.13,.03),piece(cylG(.002,.004,.12,6),K,.31,.1,.115,0,-.6,.45));
+  return out;});
 
- // ---- 1891 · The penalty kick: a sphere and a line ---------------------------------------------------------------------------
- sculpture('penalty-1891',.42,(_p,stat,shadow)=>{
-  stat(new T.BoxGeometry(.8,.006,.014),0,.003,-.3,K);stat(new T.CylinderGeometry(.014,.014,.004,20),0,.002,.18,K);
-  const r0=.07,keeper=box(K,.1,.24,.014,{y:0,z:-.3,sy:0});const sphere=ball(R,r0,{x:-.28,y:r0,z:.32});const sound=ring(R,.08,{x:-.28,y:r0,z:.32,rx:Math.PI/2,sx:0,sy:0,sz:0});
-  let kx=0,kr=0;
-  return {
-   whistle:{dur:1.1,cues:[[0,museumSfx.whistle]],run(u){const r=u>=1?0:.08+ease(u)*.22;sound.x=sphere.x;sound.z=sphere.z;sound.sx=sound.sy=sound.sz=r;}},
-   place:{dur:1.2,run(u){const k=ease(u);sphere.x=L(-.28,0,k);sphere.z=L(.32,.18,k);}},
-   keeper:{dur:1.6,run(u){keeper.sy=.24*seg(u,0,.35);keeper.y=keeper.sy/2;keeper.x=Math.sin(seg(u,.3,1)*Math.PI*2)*.14;}},
-   shoot:{dur:1.3,cues:[[0,museumSfx.kick],[.72,museumSfx.net]],run(u,arg=0){const tx=arg*.27,k=ease(clamp01(u/.8));kx=arg===0?.24:-arg*.24;kr=-Math.sign(kx)*1.05;
-    sphere.x=L(0,tx,k);sphere.z=L(.18,-.36,k);sphere.y=r0+Math.sin(k*Math.PI)*(arg===0?.16:.1);
-    const d=seg(u,.15,.65);keeper.x=kx*d;keeper.rz=kr*d;keeper.y=L(.12,.07,d);}},
-  };});
+ // ---- 1891 · The penalty kick: a goal with its net, the goal line, the spot and the ball ---------------------------------------
+ sculpture('penalty-1891',shadow=>{shadow(0,-.28,.4,.14);shadow(0,.2,.08);const out:T.BufferGeometry[]=[];
+  const gw=.62,gh=.26,gz=-.24,back=-.42,r=.011;
+  out.push(piece(boxG(.86,.003,.012),W,0,.0015,gz));// goal line
+  for(const s of [-1,1]){out.push(piece(cylG(r,r,gh,12),W,s*gw/2,gh/2,gz));
+   // back stanchions: from the crossbar back down to the ground bar
+   const len=Math.hypot(gh,gz-back);out.push(piece(cylG(.005,.005,len,8),K,s*gw/2,gh/2,(gz+back)/2,Math.atan2(gz-back,gh)));
+   // the side nets: a few strands
+   for(let k=1;k<4;k++){const t=k/4;out.push(piece(boxG(.002,gh*(1-t),.002),H,s*gw/2,gh*(1-t)/2,gz+(back-gz)*t));}}
+  out.push(piece(cylG(r,r,gw+2*r,12),W,0,gh,gz,0,0,Math.PI/2),piece(cylG(.005,.005,gw,8),K,0,.005,back,0,0,Math.PI/2));
+  // the back net: strands down the slope and across it
+  const slope=Math.hypot(gh,gz-back),tilt=Math.atan2(gz-back,gh);
+  for(let k=1;k<8;k++)out.push(piece(boxG(.002,slope,.002),H,-gw/2+k*gw/8,gh/2,(gz+back)/2,tilt));
+  for(let k=1;k<4;k++){const t=k/4;out.push(piece(boxG(gw,.002,.002),H,0,gh*(1-t),gz+(back-gz)*t));}
+  out.push(piece(cylG(.022,.022,.003,20),W,0,.0015,.2),football(.055,5));out[out.length-1].translate(0,.058,.2);
+  return out;});
 
- // ---- 1970 · Yellow and red cards: two floating coloured planes ------------------------------------------------------------
- sculpture('cards-1970',.66,(_p,_s,shadow)=>{shadow(0,0,.36,.24);
-  const w=.24,h=.34,big=1.12,flat=-Math.PI/2,yl=box(Y,w,h,.008,{x:-.15,y:.005,rx:flat}),rd=box(R,w,h,.008,{x:.15,y:.005,rx:flat});
-  const hover=(c:Part,k:number,side:number)=>{c.y=L(.005,.34,k);c.rx=L(flat,-.08,k);c.ry=side*.2*k;};
-  const size=(c:Part,k:number)=>{c.sx=w*k;c.sy=h*k;};
-  return {
-   lamp:{dur:1.5,cues:[[.1,museumSfx.reveal]],run(u){hover(yl,seg(u,0,.75),1);hover(rd,seg(u,.2,1),-1);}},
-   yellow:{dur:1,cues:[[0,museumSfx.card]],run(u){const k=ease(u);yl.z=.13*k;yl.ry=.2*(1-k);size(yl,L(1,big,k));rd.z=-.06*k;}},
-   red:{dur:1,cues:[[0,museumSfx.card]],run(u){const k=ease(u);rd.z=L(-.06,.13,k);rd.ry=-.2*(1-k);size(rd,L(1,big,k));yl.z=L(.13,0,k);size(yl,L(big,1,k));}},
-   mexico:{dur:1.6,run(u){const k=ease(u);yl.ry=k*Math.PI*2;rd.ry=k*Math.PI*2;rd.z=L(.13,.04,k);yl.z=L(0,.04,k);size(rd,L(big,1,k));}},
-   crowd:{dur:1.6,cues:[[0,museumSfx.crowd]],run(u){const k=ease(u);for(const [c,s] of [[yl,1],[rd,-1]] as const){c.y=.34+.1*k;c.rz=Math.sin(u*Math.PI*3)*.12*(1-u)*s;}}},
-  };});
+ // ---- 1950 · Stadiums of the World: a stadium bowl round a pitch, with a white arch ------------------------------------------
+ sculpture('stadiums',shadow=>{shadow(0,0,.46,.38);const out:T.BufferGeometry[]=[];const ox=1.15,oz=.86;
+  const oval=(g:T.BufferGeometry)=>{g.scale(ox,1,oz);return g;};
+  out.push(piece(oval(cylG(.4,.4,.012,40)),'#cfcac0',0,.006,0));
+  // stands: a red lower tier, a white upper tier and the outer wall, all one oval lathe each
+  out.push(piece(oval(latheG([[.215,.012],[.215,.03],[.29,.075]],40)),R));
+  out.push(piece(oval(latheG([[.29,.075],[.29,.082],[.37,.135],[.385,.135],[.385,.012]],40)),W));
+  out.push(piece(oval(latheG([[.345,.16],[.392,.152],[.392,.146],[.345,.154]],40)),'#cfcac0'));// the roof's thin rim
+  for(let i=0;i<12;i++){const a=i/12*Math.PI*2;out.push(piece(cylG(.003,.003,.02,6),'#cfcac0',Math.cos(a)*.388*ox,.145,Math.sin(a)*.388*oz));}
+  // the pitch: stripes and lines
+  const pw=.4,pd=.28;for(let i=0;i<8;i++)out.push(piece(boxG(pw/8,.008,pd),i%2?ART.pitch:'#4aa766',-pw/2+pw/16+i*pw/8,.016,0));
+  const ly=.0205,lt=.004;out.push(piece(boxG(pw-.02,.001,lt),W,0,ly,pd/2-.012),piece(boxG(pw-.02,.001,lt),W,0,ly,-pd/2+.012),piece(boxG(lt,.001,pd-.024),W,-pw/2+.012,ly,0),piece(boxG(lt,.001,pd-.024),W,pw/2-.012,ly,0),piece(boxG(lt,.001,pd-.024),W,0,ly,0));
+  out.push(piece(new T.TorusGeometry(.04,.002,4,24),W,0,ly,0,Math.PI/2));
+  // the penalty areas: three lines each
+  for(const s of [-1,1]){const ex=s*(pw/2-.012),ix=s*(pw/2-.06);out.push(piece(boxG(lt,.001,.13),W,ix,ly,0),piece(boxG(.048,.001,lt),W,(ex+ix)/2,ly,.065),piece(boxG(.048,.001,lt),W,(ex+ix)/2,ly,-.065));}
+  // Wembley's arch, leaning back over the bowl
+  out.push(piece(new T.TorusGeometry(.43,.009,6,40,Math.PI),W,0,.012,-.03,-.55));
+  return out;});
 
- // ---- 1992 · The back-pass rule: a ring, a sphere and a block (drag turns the ring) ----------------------------------------
- let spin=0,turn=null as Node|null;
- sculpture('backpass-1992',.4,(_p,_s,shadow)=>{shadow(0,0,.36,.36);
-  turn=node({});const R0=.3,rg=ring(K,R0,{y:.012,rx:Math.PI/2},turn);void rg;box(K,.03,.012,.03,{x:0,y:.006,z:-R0-.0},turn);
-  const block=box(W,.11,.06,.11,{y:.03},turn),bar=box(K,.56,.012,.012,{y:.7,sx:0}),sp=ball(B,.04,{y:.052,z:-R0},turn);
-  const onRing=(a:number)=>{sp.x=Math.sin(a)*R0;sp.z=-Math.cos(a)*R0;sp.y=.052;};
-  return {
-   old:{dur:2.2,cues:[[0,museumSfx.kick]],run(u){const a=seg(u,0,.55);onRing(a*Math.PI);if(u>.55){const k=seg(u,.55,.8);sp.z=L(R0,0,k);sp.x=0;}
-    const lift=seg(u,.72,1);block.sy=L(.06,.2,lift);block.y=block.sy/2;if(u>.8)sp.y=block.sy+.04;}},
-   lever:{dur:1.1,cues:[[.6,museumSfx.stamp]],run(u){const k=ease(u);bar.sx=.56;bar.y=L(.7,.3,k*k);const d=seg(u,.6,1);block.sy=L(.2,.06,d);block.y=block.sy/2;sp.y=block.sy+.04;sp.x=0;sp.z=0;
-    if(u>.6){sp.z=L(0,R0,d);sp.y=L(.24,.052,d);}}},
-   new:{dur:2.2,cues:[[0,museumSfx.kick]],run(u){const a=seg(u,0,.5);onRing(Math.PI+a*Math.PI);if(u>.5){const k=seg(u,.5,.72),b=seg(u,.72,1);sp.z=L(-R0,-.09,k)+(u>.72?-b*.12:0);sp.x=0;}}},
-   feet:{dur:1.3,cues:[[.3,museumSfx.kick]],run(u){block.z=L(0,-.1,seg(u,0,.3));const k=seg(u,.3,1);sp.z=L(-.21,-.08,k);sp.x=L(0,.38,k);sp.rz=-k*9;}},
-  };});
+ // ---- 1900s · Boots through time: an old black leather boot and a modern speed boot (the Kit Shop's geometry) ---------------
+ sculpture('boots',(shadow,p)=>{shadow(0,.02,.4,.2);const out:T.BufferGeometry[]=[];
+  // the old boot on a low ink riser at the back, the modern boot in front, both turned three-quarters to the camera
+  solo.push({name:'museum-boot',geometry:buildMuseumBoot({model:BOOT_MODEL,collar:'low',laces:'visible',studs:'fg',upper:'#242321',lining:'#5a544c',sole:'#f1ede4',studColor:'#2a2926',lace:'#f4f1ea'}),
+   x:p.x,y:TOP,z:p.z+.02,rx:0,ry:-.12,s:.24});
+  return out;});
 
- // ---- 2018 · The video assistant referee: a frame within a frame -----------------------------------------------------------
- sculpture('var-2018',.62,(_p,stat,shadow)=>{shadow(0,-.05,.32,.12);shadow(.36,.22,.06);
-  const F=.52,t=.016,cy=.32;for(const s of [-1,1]){stat(new T.BoxGeometry(F,t,t),0,cy+s*(F-t)/2,-.08,K);stat(new T.BoxGeometry(t,F,t),s*(F-t)/2,cy,-.08,K);}
-  stat(new T.BoxGeometry(.1,.012,.06),0,.006,-.08,K);stat(new T.BoxGeometry(t,cy-F/2,t),0,(cy-F/2)/2,-.08,K);
-  const inner=node({y:cy,z:-.06}),f=.24,bars:Part[]=[];for(const s of [-1,1]){bars.push(box(B,f,.012,.012,{y:s*(f-.012)/2},inner),box(B,.012,f,.012,{x:s*(f-.012)/2},inner));}
-  const scan=box(R,.006,f-.03,.006,{sy:0},inner),pt=ball(R,.026,{x:.36,y:.026,z:.22});
-  return {
-   booth:{dur:1.2,cues:[[0,museumSfx.look]],run(u){const k=ease(u);inner.z=L(-.06,.1,k);inner.sx=inner.sy=inner.sz=L(1,1.15,k);}},
-   checks:{dur:1.8,cues:[[0,museumSfx.tick],[.33,museumSfx.tick],[.66,museumSfx.tick]],run(u){let r=0;for(let i=0;i<3;i++)r+=seg(u,i/3,i/3+.26)*Math.PI/2;inner.rz=r;}},
-   scrub:{dur:1.6,cues:[[0,museumSfx.tick]],run(u){scan.sy=(f-.03)*seg(u,0,.12);scan.x=u<.12?-.1:u<.62?L(-.1,.1,seg(u,.12,.62)):L(.1,0,seg(u,.62,1));}},
-   call:{dur:1.4,cues:[[1,museumSfx.reveal]],run(u,arg=1){const k=ease(u);scan.sy=(f-.03)*(1-seg(u,0,.2));
-    if(arg){pt.x=L(.36,0,k);pt.z=L(.22,.12,k);pt.y=L(.026,cy,k)+Math.sin(k*Math.PI)*.08;}else{pt.x=L(.36,.08,seg(u,0,.5));pt.y=.026+Math.sin(seg(u,0,.5)*Math.PI)*.2;pt.z=.22;if(u>.5){const d=seg(u,.5,1);pt.x=L(.08,-.36,d);pt.y=.026;}}
-    if(u>=1)for(const b of bars)b.c=arg?G:K;}},
-  };});
+ // ---- 2018 · The video assistant referee: a review monitor, a goal-line replay on screen -------------------------------------
+ sculpture('var-2018',shadow=>{shadow(0,-.04,.32,.12);const out:T.BufferGeometry[]=[];
+  const sw=.62,sh=.4,cy=.38,z=-.05;
+  out.push(piece(boxG(.26,.014,.14),K,0,.007,z),piece(boxG(.04,cy-sh/2,.025),K,0,(cy-sh/2)/2+.01,z-.02));
+  out.push(piece(boxG(sw,sh,.04),K,0,cy,z));
+  // the replay: a pitch with the goal line, the post and the ball (the whole ball over the line), a red "live" dot
+  const sz=z+.0205,iw=sw-.04,ih=sh-.04;out.push(piece(boxG(iw,ih,.002),'#2f7d4c',0,cy,sz));
+  out.push(piece(boxG(iw,ih*.3,.002),'#1e2e4f',0,cy+ih*.35,sz+.0005));
+  out.push(piece(boxG(.008,ih*.7,.002),W,.04,cy-ih*.15,sz+.001),piece(boxG(.016,ih*.5,.002),W,.04,cy+ih*.1,sz+.0015));
+  out.push(piece(cylG(.032,.032,.002,24),W,-.05,cy-.08,sz+.0015,Math.PI/2),piece(cylG(.012,.012,.002,12),K,-.05,cy-.08,sz+.0025,Math.PI/2));
+  out.push(piece(cylG(.012,.012,.002,12),R,-iw/2+.03,cy+ih/2-.03,sz+.002,Math.PI/2));
+  // the referee's flag beside it
+  out.push(piece(cylG(.004,.004,.26,8),K,.38,.13,.12),piece(boxG(.09,.06,.003),'#f2c230',.335,.22,.12),piece(boxG(.045,.03,.0035),R,.3125,.235,.12));
+  return out;});
 
- // ---- 1930 · The first World Cup: a ring of cubes and a rising column ------------------------------------------------------
- sculpture('worldcup-1930',.62,(_p,_s,shadow)=>{shadow(0,0,.38,.38);
-  const cubes=Array.from({length:13},(_,i)=>{const a=i/13*Math.PI*2;return box(K,.045,.045,.045,{x:Math.sin(a)*.32,z:Math.cos(a)*.32,ry:a,y:.008,sy:.016});});
-  const disc=cyl(R,.13,.012,{y:.006,sx:0,sz:0}),col=cyl(Y,.028,.44,{y:.012,sy:0}),top=ball(Y,.05,{y:.5,sx:0,sy:0,sz:0});
-  return {
-   host:{dur:1.2,cues:[[0,museumSfx.flap]],run(u){const k=ease(u);disc.sx=disc.sz=.13*k;}},
-   teams:{dur:1.7,run(u){cubes.forEach((c,i)=>{const k=seg(u,i*.05,i*.05+.3);c.sy=L(.016,.045,k);c.y=c.sy/2;});}},
-   final:{dur:1.9,cues:[[1.25/1.9,museumSfx.crowd],[1.25/1.9,museumSfx.reveal]],run(u){const k=seg(u,0,.65);col.sy=.44*k;col.y=.012+col.sy/2;const s=seg(u,.6,.85)*.05;top.sx=top.sy=top.sz=s;top.y=.012+.44+.05;}},
-  };});
+ // ---- 1930 · The first World Cup: a winged gold cup on a blue base, ringed by 13 cubes ----------------------------------------
+ sculpture('worldcup-1930',shadow=>{shadow(0,0,.2,.2);const out:T.BufferGeometry[]=[];const k=1.35;
+  // a blue octagonal base with a gold band, a slim gold figure whose swept wings hold an octagonal cup overhead
+  out.push(piece(cylG(.07*k,.085*k,.09*k,8),B,0,.045*k,0,0,Math.PI/8),piece(cylG(.074*k,.074*k,.008*k,8),AU,0,.094*k,0,0,Math.PI/8));
+  out.push(piece(latheG([[.04,0],[.03,.02],[.02,.08],[.024,.14],[.034,.18],[.06,.22],[.075,.26],[.07,.262],[.055,.23],[0,.215]].map(([r,y])=>[r*k,y*k] as [number,number]),8),AU,0,.098*k,0,0,Math.PI/8));
+  for(const s of [-1,1])out.push(piece(boxG(.05*k,.13*k,.007*k),AU,s*.04*k,.28*k,-.012*k,0,s*.3,s*-.42));
+  return out;});
 
- // ---- 1991 · The first Women's World Cup: a sphere in a tilted orbit -------------------------------------------------------
- sculpture('wwc-1991',.52,(_p,stat,shadow)=>{shadow(0,0,.2,.2);
-  stat(new T.CylinderGeometry(.03,.05,.06,24),0,.03,0,K);stat(new T.IcosahedronGeometry(.17,4),0,.06+.17,0,W);
-  const orbit=node({y:.23,rz:.38}),R1=.28;ring(R,R1,{rx:Math.PI/2},orbit);
-  const pts=[0,1].map(i=>ball(R,.028,{x:Math.cos(i*Math.PI)*R1,z:Math.sin(i*Math.PI)*R1,sx:0,sy:0,sz:0},orbit));
-  return {
-   spin:{dur:2,cues:[[0,museumSfx.spin]],run(u){orbit.ry=ease(u)*Math.PI*2;}},
-   goals:{dur:1.8,cues:[[.4,museumSfx.crowd]],run(u){pts.forEach((p,i)=>{const a=i*Math.PI+ease(u)*Math.PI*.75+i*.3*ease(u),s=.028*seg(u,i*.15,i*.15+.25);p.x=Math.cos(a)*R1;p.z=Math.sin(a)*R1;p.sx=p.sy=p.sz=s;});}},
-   result:{dur:1.4,cues:[[0,museumSfx.whistle]],run(u){const k=ease(u);orbit.rz=L(.38,0,k);orbit.y=L(.23,.23,k);}},
-  };});
+ // ---- 1991 · The first Women's World Cup: a globe on a stand -----------------------------------------------------------------
+ sculpture('wwc-1991',shadow=>{shadow(0,0,.2,.2);const out:T.BufferGeometry[]=[];
+  out.push(piece(cylG(.07,.09,.025,28),K,0,.0125,0),piece(cylG(.012,.016,.06,12),K,0,.055,0));
+  const gy=.085+.165,land=[[-.55,.5,.66,.5],[-.25,-.45,.85,.36],[.45,.3,.85,.42],[.55,-.25,.8,.3],[.95,.15,-.2,.4],[.1,.95,.2,.3]].map(([x,y,z,r])=>({d:new T.Vector3(x,y,z).normalize(),c:Math.cos(r)}));
+  const wob=(n:T.Vector3)=>.08*Math.sin(n.x*9+n.y*5)*Math.cos(n.z*7-n.y*3);
+  out.push(piece(new T.IcosahedronGeometry(.16,6),n=>Math.abs(n.y)>.9?W:land.some(l=>l.d.dot(n)>l.c+wob(n))?G:B,0,gy,0));
+  // the meridian ring, tilted with the axis
+  out.push(piece(new T.TorusGeometry(.18,.006,6,48,Math.PI),K,0,gy,0,0,-.75,-.41-Math.PI/2));
+  return out;});
 
- // ---- 1989 · Futsal's World Cup: a blue plate, a large and a small sphere --------------------------------------------------
- sculpture('futsal-1989',.6,(_p,_s,shadow)=>{shadow(0,0,.42,.28);
-  const plate=box(S,.72,.016,.44,{y:.008}),line=box(W,.006,.003,.44,{y:.0175,sz:0}),base=.016;
-  const big=ball(W,.066,{x:-.14,y:base+.066}),small=ball(K,.05,{x:.14,y:base+.05});
-  const rod=cyl(K,.004,.3,{x:.3,z:-.16,y:.016,sy:0}),flag=box(Y,.12,.07,.004,{x:.36,z:-.16,y:.28,sx:0,sy:0});
-  /** A drop from `h` with restitution `e`: height at time `t` (s) above the rest point. */
-  const drop=(t:number,h:number,e:number)=>{const g=3.2;let v=Math.sqrt(2*g*h),tt=t;const first=Math.sqrt(2*h/g);if(tt<first)return h-.5*g*tt*tt;tt-=first;v*=e;for(let i=0;i<5;i++){const fl=2*v/g;if(tt<fl)return v*tt-.5*g*tt*tt;tt-=fl;v*=e;}return 0;};
-  const blue=new T.Color(B),stone=new T.Color(S),tint=new T.Color();
-  return {
-   court:{dur:1.3,cues:[[0,museumSfx.reveal]],run(u){plate.c='#'+tint.copy(stone).lerp(blue,seg(u,0,.6)).getHexString();line.sz=.44*seg(u,.5,1);}},
-   bounce:{dur:2.4,cues:[[.42,museumSfx.kick]],run(u){const up=seg(u,0,.15),t=Math.max(0,u-.15)*2.4;
-    big.y=base+.066+(u<.15?up*.5:drop(t,.5,.72));small.y=base+.05+(u<.15?up*.5:drop(t,.5,.22));if(u>=1){big.y=base+.066;small.y=base+.05;}}},
-   sole:{dur:1.5,run(u){const x=u<.5?L(.14,-.12,seg(u,0,.5)):L(-.12,.06,seg(u,.5,1));small.rz=-(x-.14)/.05;small.x=x;}},
-   cup:{dur:1.4,cues:[[.7,museumSfx.reveal]],run(u){const k=seg(u,0,.6);rod.sy=.3*k;rod.y=base+rod.sy/2;const f=seg(u,.55,1);flag.sx=.12*f;flag.sy=.07*f;flag.x=.3+.06*f;flag.y=base+.3-.035;}},
-  };});
+ // ---- 1989 · Futsal's World Cup: a tabletop indoor court ---------------------------------------------------------------------
+ sculpture('futsal-1989',shadow=>{shadow(0,0,.44,.3);const out:T.BufferGeometry[]=[];
+  const cw=.76,cd=.46,y=.016,lt=.006;
+  out.push(piece(boxG(cw+.04,.012,cd+.04),K,0,.006,0),piece(boxG(cw,.006,cd),B,0,.015,0),piece(boxG(cw*.86,.0005,cd*.82),'#f08a3c',0,.0182,0));
+  out.push(...frame(cw*.86,cd*.82,lt,.001,W,0,0,0).map(g=>{g.rotateX(-Math.PI/2);g.translate(0,y+.003,0);return g;}));
+  out.push(piece(boxG(lt,.001,cd*.82),W,0,y+.003,0),piece(new T.TorusGeometry(.055,.003,4,28),W,0,y+.003,0,Math.PI/2));
+  for(const s of [-1,1]){out.push(piece(new T.TorusGeometry(.09,.003,4,20,Math.PI),W,s*cw*.43,y+.003,0,Math.PI/2,0,s>0?Math.PI/2:-Math.PI/2));
+   const gx=s*(cw*.43+.012);out.push(piece(cylG(.004,.004,.07,8),W,gx,y+.035,-.05),piece(cylG(.004,.004,.07,8),W,gx,y+.035,.05),piece(cylG(.004,.004,.104,8),W,gx,y+.07,0,Math.PI/2));
+   out.push(piece(boxG(.002,.07,.1),H,gx+s*.03,y+.035,0,0,0,s*.4));}
+  const ball=football(.028,3);ball.translate(.08,y+.031,.06);out.push(ball);
+  return out;});
 
- // ---- Before the 1960s · Laced leather balls: a balance ------------------------------------------------------------------
- sculpture('laced-leather',.46,(_p,stat,shadow)=>{shadow(0,0,.4,.16);
-  stat(new T.CylinderGeometry(.004,.045,.14,24),0,.07,0,K);
-  const beam=node({y:.144}),r=.075;box(K,.64,.01,.024,{},beam);const leather=ball(ART.leather,r,{x:-.26,y:.005+r},beam),modern=ball(W,r,{x:.26,y:.005+r},beam);
-  const drops=[0,1,2].map(i=>box(B,.004,.09,.004,{x:-.3+i*.04,y:.6,sy:0}));
-  const sizes=[.034,.044,.055].map((s,i)=>ball(W,s,{x:-.2+i*.2,y:s,z:.3,sx:0,sy:0,sz:0}));
-  return {
-   weigh:{dur:1.4,run(u){beam.rz=Math.sin(seg(u,0,1)*Math.PI*.5)*.15+Math.sin(u*Math.PI*3)*.03*(1-u);}},
-   rain:{dur:1.9,cues:[[0,museumSfx.hush]],run(u){drops.forEach((d,i)=>{const ph=(u*2.4+i*.33)%1;d.sy=u<1?.09:0;d.y=L(.62,.32,ph);});beam.rz=L(.15,.27,seg(u,.2,1));
-    leather.c='#'+new T.Color(ART.leather).lerp(new T.Color('#3e2a1c'),seg(u,.1,.9)).getHexString();}},
-   size5:{dur:1.6,run(u){beam.rz=L(.27,.02,seg(u,0,.8))+Math.sin(u*Math.PI*3)*.025*(1-u);const p=Math.sin(seg(u,.1,.6)*Math.PI)*.12;modern.sx=modern.sy=modern.sz=r*(1+p);}},
-   sizes:{dur:1.6,cues:[[0,museumSfx.reveal]],run(u){sizes.forEach((s,i)=>{const k=seg(u,i*.2,i*.2+.45),r0=[.034,.044,.055][i];s.sx=s.sy=s.sz=r0*k;s.y=r0;});}},
-  };});
+ // ---- Before the 1960s · Laced leather balls: an old laced ball and a modern size 5 --------------------------------------------
+ sculpture('laced-leather',shadow=>{shadow(-.12,0,.2,.16);shadow(.2,.06,.13,.1);const out:T.BufferGeometry[]=[];
+  const r=.15,cx=-.12;out.push(piece(new T.TorusGeometry(.07,.012,8,28),K,cx,.012,0,Math.PI/2));
+  // eighteen-panel leather: three bands of panels whose seams run round the ball, darker where they meet
+  out.push(piece(new T.IcosahedronGeometry(r,8),(n)=>{const seam=Math.min(Math.abs(n.x),Math.abs(n.y),Math.abs(n.z))<.035||(Math.abs(n.x)>Math.abs(n.y)&&Math.abs(n.x)>Math.abs(n.z)&&Math.abs(n.y-n.z)<.03)||(Math.abs(n.z)>Math.abs(n.y)&&Math.abs(n.z)>Math.abs(n.x)&&Math.abs(n.x-n.y)<.03);return seam?'#4a2e19':'#94603a';},cx,r+.008,0,.2,.3,0));
+  // the lace: a slit across the top, stitched with cream thongs
+  out.push(piece(boxG(.012,.004,.1),'#3b2414',cx,2*r+.008,0,0,.3));
+  for(let i=0;i<6;i++){const t=-.04+i*.016;out.push(piece(boxG(.04,.006,.006),'#efe2c6',cx+Math.sin(.3)*t,2*r+.009-Math.abs(t)*.25,Math.cos(.3)*t,0,.3));}
+  out.push(piece(new T.TorusGeometry(.05,.01,8,24),K,.2,.01,.06,Math.PI/2));const b5=football(.1,5);b5.translate(.2,.11,.06);out.push(b5);
+  return out;});
 
- // ---- 1970 · The Telstar TV ball: a black plane and a black-and-white pair -------------------------------------------------
- sculpture('telstar-1970',.5,(_p,_s,shadow)=>{shadow(0,.12,.22,.14);shadow(0,-.2,.24,.06);
-  const hinge=node({z:-.16,rx:-Math.PI/2});box(K,.42,.32,.014,{y:.16},hinge);
-  const pair=node({y:.09,z:.12}),white=ball(W,.09,{},pair),black=ball(K,.09,{sx:0,sy:0,sz:0},pair);
-  return {
-   tv:{dur:1.4,cues:[[.8,museumSfx.tick]],run(u){hinge.rx=L(-Math.PI/2,0,ease(u));}},
-   bw:{dur:1.7,cues:[[0,museumSfx.tick],[.6,museumSfx.reveal]],run(u){const flick=u<.55?Math.floor(u*14)%2:0;white.c=flick?K:W;const k=seg(u,.55,1);black.sx=black.sy=black.sz=.09*Math.min(1,k*3);white.x=-.11*k;black.x=.11*k;}},
-   spin:{dur:1.8,cues:[[0,museumSfx.spin]],run(u){pair.ry=ease(u)*Math.PI*2;}},
-  };});
+ // ---- 1970 · The Telstar: an old television set, the ball in front of it (the ball is its own mesh: drag to spin it) ----------
+ sculpture('telstar-1970',(shadow,p)=>{shadow(0,-.12,.26,.16);shadow(0,.2,.11,.08);const out:T.BufferGeometry[]=[];
+  const tz=-.14,tw=.46,th=.32,td=.28,ty=.05+th/2;
+  for(const sx of [-1,1])for(const sz of [-1,1])out.push(piece(cylG(.008,.006,.05,8),K,sx*(tw/2-.04),.025,tz+sz*(td/2-.04)));
+  out.push(piece(boxG(tw,th,td),'#6b4a2f',0,ty,tz),piece(boxG(.32,.24,.01),K,-.05,ty,tz+td/2),piece(boxG(.29,.21,.006),'#8a948e',-.05,ty,tz+td/2+.004));
+  out.push(piece(boxG(.002,.17,.003),'#a6aea9',-.07,ty,tz+td/2+.008));
+  for(const ky of [.06,-.02])out.push(piece(cylG(.016,.016,.014,16),'#e8e2d4',tw/2-.055,ty+ky,tz+td/2+.006,Math.PI/2));
+  out.push(piece(boxG(.06,.012,.004),'#e8e2d4',tw/2-.055,ty-.09,tz+td/2+.003));
+  for(const s of [-1,1])out.push(piece(cylG(.003,.003,.24,6),K,s*.06,ty+th/2+.11,tz,0,0,s*-.45));
+  out.push(piece(new T.SphereGeometry(.025,12,8),K,0,ty+th/2+.005,tz,0,0,0,1,.5,1));
+  // the ball's cup
+  out.push(piece(new T.TorusGeometry(.04,.008,8,24),K,0,.008,.2,Math.PI/2));
+  solo.push({name:'museum-telstar',geometry:football(.09,7),x:p.x,y:TOP+.1,z:p.z+.2,rx:.35,ry:-.5,s:1});
+  return out;});
 
- // ---- 1928 · Numbers and colours: a row of colour fields -------------------------------------------------------------------
- sculpture('shirts',.46,(_p,_s,shadow)=>{shadow(0,0,.4,.1);
-  // The kit wall's 1 (green), 9 (red) and 10 (blue), then yellow.
-  const cols=[G,R,B,Y],xs=[-.27,-.09,.09,.27];
-  const fields=cols.map((c,i)=>{const n=node({x:xs[i]});const f=box(c,.15,.34,.012,{y:.05,sy:.1},n);const tab=box(W,.05,.05,.004,{y:.27,z:.008,sx:0,sy:0,sz:0},n);return {n,f,tab};});
-  /** Field `i` steps forward and its number tab grows; the one before steps back. */
-  const step=(i:number,u:number)=>{const k=ease(u),a=fields[i],b=fields[i-1];a.n.z=.1*k;a.tab.sx=a.tab.sy=L(.05,.07,k);if(b){b.n.z=.1*(1-k);b.tab.sx=b.tab.sy=L(.07,.05,k);}};
-  return {
-   numbers:{dur:1.7,cues:[[0,museumSfx.reveal]],run(u){fields.forEach(({f,tab},i)=>{const k=seg(u,i*.1,i*.1+.5);f.sy=L(.1,.34,k);f.y=f.sy/2;const t=seg(u,.55+i*.08,.8+i*.06);tab.sx=tab.sy=.05*t;tab.sz=.004*(t>0?1:0);});}},
-   open1:{dur:1,cues:[[0,museumSfx.flap]],run(u){step(0,u);}},
-   open9:{dur:1,cues:[[0,museumSfx.flap]],run(u){step(1,u);}},
-   open10:{dur:1,cues:[[0,museumSfx.flap]],run(u){step(2,u);}},
-   colours:{dur:1.6,cues:[[0,museumSfx.flap]],run(u){const k=ease(u),to=[-.32,-.17,.17,.32];fields[2].tab.sx=fields[2].tab.sy=L(.07,.05,k);fields.forEach(({n},i)=>{n.x=L(xs[i],to[i],k);n.ry=(i<2?.35:-.35)*k;n.z=L(i===2?.1:0,.04,k);});}},
-  };});
+ // ---- 1928 · Numbers and colours: three shirts on stands, 1 · 9 · 10 ---------------------------------------------------------
+ sculpture('shirts',shadow=>{shadow(0,0,.42,.12);const out:T.BufferGeometry[]=[];
+  const s=new T.Shape([[-.07,0],[.07,0],[.07,.15],[.115,.172],[.094,.222],[.04,.244],[.0,.226],[-.04,.244],[-.094,.222],[-.115,.172],[-.07,.15]].map(([x,y])=>new T.Vector2(x,y)));
+  const shirts:[string,string,number,number,number][]=[[G,'1',-.28,.02,.25],[R,'9',0,-.03,0],[B,'10',.28,.02,-.25]];
+  for(const [hex,num,x,z,ry] of shirts){const parts:T.BufferGeometry[]=[];
+   parts.push(piece(new T.ExtrudeGeometry(s,{depth:.014,bevelEnabled:false}),hex,0,.09,-.007));
+   parts.push(piece(new T.TorusGeometry(.035,.005,4,16,Math.PI),W,0,.09+.228,.008,0,0,Math.PI));
+   const dw=.045,dh=.08,gap=.014,n=num.length,x0=-(n*dw+(n-1)*gap)/2+dw/2;[...num].forEach((ch,i)=>parts.push(...digit(ch,x0+i*(dw+gap),.09+.12,.008,dw,dh,.011,W)));
+   parts.push(piece(cylG(.05,.055,.01,24),K,0,.005,0),piece(cylG(.004,.004,.1,8),K,0,.05,-.012));
+   const g=join(parts);out.push(piece(g,'',x,0,z,0,ry));}
+  return out;});
 
- // ---- Today · Your Hall of Fame: stepped blocks, a green sphere, a line forward ----------------------------------------------
- sculpture('hall-of-fame',.5,(_p,_s,shadow)=>{shadow(0,0,.3,.14);
-  const hs=[.14,.22,.09],blocks=hs.map((_,i)=>box(i===1?W:S,.15,.04,.15,{x:(i-1)*.155,y:.02}));
-  const champ=ball(G,.05,{y:.7,sx:0,sy:0,sz:0}),path=box(K,.008,.004,.34,{y:.002,z:.075,sz:0}),goal=box(G,.04,.004,.04,{y:.002,z:.43,sx:0,sz:0});
-  return {
-   podium:{dur:1.8,cues:[[1.4/1.8,museumSfx.reveal]],run(u){blocks.forEach((b,i)=>{const k=seg(u,[.1,0,.2][i],[.1,0,.2][i]+.5);b.sy=L(.04,hs[i],k);b.y=b.sy/2;});
-    const d=seg(u,.55,.78);champ.sx=champ.sy=champ.sz=.05*(d>0?1:0);champ.y=L(.7,.22+.05,d*d);}},
-   ferry:{dur:1.6,run(u){const k=seg(u,0,.8);path.sz=.34*k;path.z=.075+path.sz/2;const g=seg(u,.75,1);goal.sx=goal.sz=.04*g;}},
-  };});
-
- // ---- The four shared instanced meshes --------------------------------------------------------------------------------------
- const mat=new T.MeshPhongMaterial({color:'#ffffff',shininess:36,specular:'#262626'});
- const geos:Record<Kind,T.BufferGeometry>={box:new T.BoxGeometry(1,1,1),sphere:new T.IcosahedronGeometry(1,3),cyl:new T.CylinderGeometry(1,1,1,24),ring:new T.TorusGeometry(1,.055,6,48)};
- const meshes={} as Record<Kind,T.InstancedMesh>;
- for(const k of Object.keys(geos) as Kind[]){const m=new T.InstancedMesh(geos[k],mat,Math.max(1,counts[k]));m.count=counts[k];m.frustumCulled=false;m.name='museum-sculpture-'+k;m.matrixAutoUpdate=false;
-  m.instanceMatrix.setUsage(T.DynamicDrawUsage);meshes[k]=m;if(counts[k])scene.add(m);}
- const mA=new T.Matrix4(),mB=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),v=new T.Vector3(),sv=new T.Vector3(),col=new T.Color();
- /** A piece with any zero axis is hidden (collapsed to a point), so a half-grown line never leaves a speck. */
- const local=(t:Tf,out:T.Matrix4)=>out.compose(v.set(t.x,t.y,t.z),q.setFromEuler(e.set(t.rx,t.ry,t.rz,'YXZ')),t.sx*t.sy*t.sz===0?sv.set(1e-6,1e-6,1e-6):sv.set(t.sx,t.sy,t.sz));
- const world=(n:Node,out:T.Matrix4):T.Matrix4=>{local(n,out);for(let p=n.parent;p;p=p.parent)out.premultiply(local(p,mB));return out;};
- const dirty=new Set<Kind>();
- function write(s:Sculpture){for(const p of s.parts){world(p,mA);meshes[p.kind].setMatrixAt(p.i,mA);dirty.add(p.kind);
-   if(p.shown!==p.c){p.shown=p.c;meshes[p.kind].setColorAt(p.i,col.set(p.c));}}
-  for(const k of dirty){meshes[k].instanceMatrix.needsUpdate=true;if(meshes[k].instanceColor)meshes[k].instanceColor!.needsUpdate=true;}dirty.clear();}
- const restore=(s:Sculpture)=>{for(const n of s.nodes)Object.assign(n,n.rest);for(const p of s.parts){Object.assign(p,p.rest);p.c=p.restC;}s.onReset?.();};
- for(const s of sculptures)write(s);
-
- const byId=new Map(sculptures.map(s=>[s.id,s]));
- const backpass=byId.get('backpass-1992')??null;
- if(backpass&&turn){const tn=turn;backpass.step=dt=>{if(!spin)return false;tn.ry+=spin*dt;spin*=Math.exp(-dt*2.4);if(Math.abs(spin)<.05)spin=0;return true;};backpass.onReset=()=>{spin=0;};}
- let active:ExhibitAnim|null=null;
- /** Sound cues: `at` (0–1 of the beat) fires once when the beat's clock passes it; cues at 0 fire as the beat starts. */
- const cueRun=(a:Anim,prev:number,now:number)=>{for(const [at,fn] of a.cues??[]){const t=at*a.dur;if(prev<0?at===0:at>0&&t>prev&&t<=now)fn();}};
- function finish(){if(!active)return;const s=byId.get(active.id)!,a=s.anims[active.anim];a.run(1,active.arg);write(s);active=null;}
+ // ---- Today · The Trophy room: a two-handled gold cup on a stepped base, a shelf of small cups behind -------------------------
+ sculpture('hall-of-fame',shadow=>{shadow(0,.03,.24,.16);shadow(0,-.28,.34,.06);const out:T.BufferGeometry[]=[];
+  out.push(piece(cylG(.1,.11,.05,32),K,0,.025,.04),piece(cylG(.075,.085,.04,32),K,0,.07,.04));
+  const cup:[number,number][]=[[.065,0],[.06,.012],[.03,.03],[.016,.06],[.016,.12],[.03,.14],[.06,.165],[.09,.22],[.105,.29],[.11,.33],[.1,.332],[.095,.29],[.08,.225],[.05,.18],[0,.17]];
+  out.push(piece(latheG(cup,32),AU,0,.09,.04));
+  for(const s of [-1,1])out.push(piece(new T.TorusGeometry(.055,.01,8,20,Math.PI),AU,s*.1,.09+.255,.04,0,0,s>0?-Math.PI/2:Math.PI/2,1,1.15,1));
+  // the shelf of your own cups
+  out.push(piece(boxG(.62,.014,.1),W,0,.19,-.33),piece(boxG(.012,.19,.1),W,-.3,.095,-.33),piece(boxG(.012,.19,.1),W,.3,.095,-.33));
+  const small:[number,number][]=[[.03,0],[.008,.02],[.008,.05],[.035,.065],[.042,.1],[.035,.102],[0,.07]];
+  [-.18,0,.18].forEach((x,i)=>out.push(piece(latheG(small,16),i===1?G:'#c9c4b8',x,.197,-.33)));
+  return out;});
 
  return {
   /** Cases whose object is a sculpture (the scene skips their vitrine). */
   built,
-  /** Each sculpture's top (world y): the zoom frames the whole piece up to here. */
-  stageTops,
-  has:(id:string)=>byId.has(id),
-  /** Play one beat's animation; returns its length in seconds (0 with reduced motion: it jumps to the end pose). */
-  play(id:string,anim:string,arg?:number){const s=byId.get(id),a=s?.anims[anim];if(!s||!a)return 0;finish();
-   if(reduced){for(const [,fn] of a.cues??[]){fn();break;}a.run(1,arg);write(s);return 0;}
-   active={id,anim,t:0,dur:a.dur,arg};cueRun(a,-1,0);a.run(0,arg);write(s);return a.dur;},
-  /** The back-pass ring turns with a drag (radians). */
-  crank(d:number){if(!backpass||!turn)return;if(reduced){turn.ry+=Math.sign(d)*Math.PI/6;}else{turn.ry+=d;spin=Math.max(-8,Math.min(8,spin+d*6));}write(backpass);},
-  reset(id:string){const s=byId.get(id);if(!s)return;if(active?.id===id)active=null;restore(s);write(s);},
-  /** Advance the playing beat (and the ring's coast); true while anything moves (the room's loop keeps rendering). */
-  update(dt:number){let busy=false;
-   if(active){const s=byId.get(active.id)!,a=s.anims[active.anim],prev=active.t;active.t=Math.min(active.dur,active.t+dt);cueRun(a,prev,active.t);
-    if(active.t>=active.dur)finish();else{a.run(active.t/active.dur,active.arg);write(s);busy=true;}}
-   if(backpass?.step?.(dt)){write(backpass);busy=true;}
-   return busy;},
-  get debug(){return {active:active?{...active}:null,sculptures:sculptures.map(s=>s.id),instances:{...counts},spin};},
-  dispose(){for(const k of Object.keys(meshes) as Kind[]){scene.remove(meshes[k]);meshes[k].dispose();geos[k].dispose();}mat.dispose();},
+  /** Pieces with their own mesh: 'museum-telstar' (it spins) and 'museum-boot'. */
+  solo,
  };
 }
-export type StoryExhibits=ReturnType<typeof createStoryExhibits>;
+export type ExhibitSculptures=ReturnType<typeof createExhibitSculptures>;

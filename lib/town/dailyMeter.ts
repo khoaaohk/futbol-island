@@ -14,8 +14,8 @@ export const TRAINING_FULL_COINS=60,TRAINING_HALF_COINS=120,TRAINING_TIP_COINS=1
 export type TrainingTier='full'|'half'|'tip';
 /** Arcade machines whose payouts count as training (every arcade game, puzzles included). */
 export const TRAINING_GAMES:readonly string[]=['runner','pinball','tennis','live','puzzle'];
-/** Island wallet runs that count as training: job shifts, market sales, card trade-ins. */
-const TRAINING_ISLAND_RUN=/^(island-job:|market:|market-sale:|card-trade:)/;
+/** Island wallet runs that count as training: job shifts, market sales, card trade-ins, Summit Kick rounds. */
+const TRAINING_ISLAND_RUN=/^(island-job:|market:|market-sale:|card-trade:|summit-kick:)/;// summit-kick: the Summit Kick rounds (lib/town/summitKick.ts)
 /** Whether a wallet run is repeatable training (metered) rather than a one-off grant or a learning reward. */
 export function isTrainingRun(id:string,game:string):boolean{return TRAINING_GAMES.includes(game)||game==='island'&&TRAINING_ISLAND_RUN.test(id);}
 const whole=(n:number)=>Number.isFinite(n)?Math.max(0,Math.floor(n)):0;

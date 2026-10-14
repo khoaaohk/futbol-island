@@ -67,8 +67,9 @@ Local testing: `SAVE_LOCAL_FILE=/some/file.json` (a JSON-file store, ignored on 
   milestones the stores already announce, at most once per 2 minutes. No timers, polling or loops. Each trigger first compares
   an FNV-1a hash of the snapshot with the last saved one and sends nothing when it matches.
 - **Two devices:** the server keeps `rev`; a save sends `baseRev`. If the server is newer and this device changed nothing, the
-  newer island loads quietly (one reload behind the loading screen). If both changed: "Which island do you want?". The island
-  not chosen is kept on the device for 7 days ("Undo swap" in Settings).
+  newer island loads quietly (one reload behind the loading screen). If both changed, the copy played most recently wins, with
+  no question to the kid (Oct 12 2026). The other copy is kept on the device for 7 days: "Restore the other island from <day>"
+  in Settings, behind the parent gate. Coins are never added across copies. Details: accounts-design §4.4.
 - **Wallet compaction:** only the uploaded copy is compacted. Receipts older than 90 days that can never be paid again (random
   arcade-run ids, past `daily-play:` days, puzzle runs whose attempt id stays in `attempts`, arcade play fees) are folded into
   ordinary receipts of at most each game's cap (`fold:<game>:<n>`), so the existing sanitiser and older tabs read them as they

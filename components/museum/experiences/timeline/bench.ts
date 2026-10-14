@@ -1,11 +1,11 @@
-import {axisVector,boxCorners,cameraOf,circleRing,corners,cylinder,depthOf,extrude,fitProjection,insetPlan,iso,knurl,lineOnTop,onTop,planOutline,radialTicks,ring,sideArc,sideSeam,slabOf,topTicks,
+import {axisVector,boxCorners,cameraOf,circleRing,corners,cylinder,depthOf,extrude,fitProjection,insetPlan,iso,knurl,lineOnTop,onTop,planOutline,radialTicks,ring,sideArc,sideSeam,slabOf,topTicks,pathOf,
  type Flat,type LineTone,type Plan,type Plane,type Projection,type SolidPaths,type Tone} from '../anatomy/iso-kit';
 
 /**
  * timeline · the DISPLAY BENCH (Oct 12 2026, anatomy restyle; the shared kit in ../anatomy; replaces the pixel time machine).
  * Football's story as a long museum bench on feet: twelve turntable stands, one per case, each carrying a small turned or built
- * artifact (the book of laws, the penalty goal, a folded numbered shirt, the 1930 cup, a laced ball on a ring, two cards in a
- * holder, a TV set, a futsal court, the 1991 trophy, a keeper and the back-pass, the VAR monitor, your own frame). A carriage
+ * artifact (the book of laws, the penalty goal, a folded numbered shirt, the 1930 cup, a stadium under its arch, a boot with
+ * studs, a laced ball on a ring, a TV set, a futsal court, the 1991 trophy, the VAR monitor, a Trophy room cup). A carriage
  * runs on twin rails along the front: its pointer marks the case you're at, and its handwheel is the crank (one turn = 1.5
  * cases). The bench slides under the carriage; the current artifact is lit and ringed in the exhibit's one accent (blue).
  * Pure geometry: tests build every artifact in Node.
@@ -79,10 +79,22 @@ export function artifact(id:string,P:Projection,cx:number,z:number,lit=false):It
   case 'laced-leather':{// a heavy laced ball on a ring stand
    cyl(0,0,.75,z,.12,{tone:'mid'});cyl(0,0,.12,z+.12,.5,{tone:'mid'});it.push(L(ring(cx,0,.42,z+.66,P,28),'mid'));
    it.push(ball(P,cx,0,z+.55,.78,lit?'leather lit':'leather'));break;}
-  case 'cards-1970':{// two cards standing in a holder
-   box({x:-.8,y:-1,w:1.6,d:2,r:.1},z,.35,{tone:'mid',bevel:.04});
-   box({x:-.45,y:-.95,w:.08,d:.85,r:.02},z+.35,1.3,{lit});box({x:.15,y:.05,w:.08,d:.85,r:.02},z+.35,1.3,{tone:hi});
-   it.push(L(planOutline({x:cx-.6,y:-.85,w:1.2,d:1.7,r:.06},z+.35,P,3),'faint'));break;}
+  case 'stadiums':{// a stadium on a plate: a back stand under a white arch, two ends, a front stand, the pitch in the middle
+   box({x:-1.25,y:-1.05,w:2.5,d:2.1,r:.12},z,.16,{tone:'mid',bevel:.03});
+   box({x:-1.15,y:-1,w:2.3,d:.45,r:.04},z+.16,.75,{inner:sideSeam({x:cx-1.15,y:-1,w:2.3,d:.45,r:.04},z+.5,P,3)});
+   it.push(L(pathOf(Array.from({length:21},(_,j)=>{const f=j/20;return iso([cx-1.3+2.6*f,-1.12,z+.95+1.05*(1-(2*f-1)**2)],P);})),'hi'));
+   box({x:-1.15,y:-.52,w:.36,d:1,r:.04},z+.16,.45);
+   box({x:-.7,y:-.45,w:1.4,d:.9,r:.04},z+.16,.06,{lit});
+   it.push(L(lineOnTop([cx,-.45],[cx,.45],z+.22,P)+ring(cx,0,.16,z+.22,P,16),'mid'));
+   box({x:.79,y:-.52,w:.36,d:1,r:.04},z+.16,.45);
+   box({x:-1.15,y:.5,w:2.3,d:.45,r:.04},z+.16,.28);break;}
+  case 'boots':{// a boot on a little stand: studs under the sole, a high heel and a laced toe
+   box({x:-.95,y:-.6,w:1.9,d:1.2,r:.1},z,.2,{tone:'mid',bevel:.03});
+   for(const x of [-.6,-.2,.25,.6])cyl(x,0,.07,z+.2,.12,{tone:'mid'});
+   box({x:-.85,y:-.3,w:1.7,d:.6,r:.22},z+.32,.12);
+   box({x:-.85,y:-.3,w:.75,d:.6,r:.2},z+.44,.75,{lit,inner:sideSeam({x:cx-.85,y:-.3,w:.75,d:.6,r:.2},z+.9,P,4)});
+   box({x:-.12,y:-.28,w:.95,d:.56,r:.26},z+.44,.28);
+   it.push(L([.05,.22,.39].map(x=>lineOnTop([cx+x,-.16],[cx+x,.16],z+.72,P)).join(''),'mid'));break;}
   case 'telstar-1970':{// a TV set on legs, a dotted ball beside it
    for(const [x,y] of [[-.55,-.7],[.45,-.7],[-.55,.6],[.45,.6]])cyl(x,y,.06,z,.45,{tone:'mid'});
    const tv:Plan={x:cx-.75,y:-.95,w:1.4,d:1.9,r:.12};it.push(S(slabOf(tv,z+.45,1.3,P,4,.06),{tone:hi,lit,inner:sideSeam(tv,z+.6,P,4)}));
@@ -95,19 +107,15 @@ export function artifact(id:string,P:Projection,cx:number,z:number,lit=false):It
    it.push(L(planOutline(insetPlan(c,.12),z+.12,P,3)+lineOnTop([cx,-.78],[cx,.78],z+.12,P)+ring(cx,0,.3,z+.12,P,20),'mid'));
    for(const s of [-1,1]){const gx=cx+s*1.18;for(const y of [-.32,.32])it.push(S(cylinder(gx,y,.04,z+.12,.4,P,10),{tone:hi}));it.push(S(slabOf({x:gx-.04,y:-.36,w:.08,d:.72,r:.02},z+.48,.06,P,2),{tone:hi}));}
    it.push(ball(P,cx+.3,.25,z+.12,.14,'ball'));break;}
-  case 'backpass-1992':{// a keeper piece on a small pitch tile, the ball rolling back to him
-   box({x:-1.2,y:-1,w:2.4,d:2,r:.06},z,.12,{tone:'mid'});it.push(L(lineOnTop([cx-.6,-.9],[cx-.6,.9],z+.12,P),'mid'));
-   cyl(-.6,0,.32,z+.12,.1,{tone:'mid'});cyl(-.6,0,.17,z+.22,.75,{lit});cyl(-.6,0,.24,z+.97,.1);it.push(ball(P,cx-.6,0,z+1.07,.16,lit?'head lit':'head'));
-   it.push(ball(P,cx+.55,.3,z+.12,.2,'ball'));it.push(L(lineOnTop([cx+.35,.24],[cx-.25,.06],z+.13,P),'faint'));break;}
   case 'var-2018':{// a monitor on a post, a base with a fader
    box({x:-.7,y:-.7,w:1.4,d:1.4,r:.1},z,.2,{tone:'mid',bevel:.04});cyl(0,0,.1,z+.2,1.1,{tone:'mid'});
    const m:Plan={x:cx-.12,y:-1.05,w:.24,d:2.1,r:.04};it.push(S(slabOf(m,z+1.1,1.25,P,3,.03),{tone:hi,lit}));
    it.push(S(slabOf({x:cx+.12,y:-.92,w:.02,d:1.84,r:0},z+1.22,1.0,P,1),{tone:'lo',crease:'none'}));
    it.push(L(planOutline({x:cx-.2,y:-.25,w:.4,d:.5,r:.04},z+.2,P,3),'lo'));break;}
-  default:{// hall-of-fame: a plinth with a framed certificate standing on it
-   box({x:-.8,y:-.8,w:1.6,d:1.6,r:.06},z,.9,{tone:'mid',inner:sideSeam({x:cx-.8,y:-.8,w:1.6,d:1.6,r:.06},z+.7,P,4)});
-   box({x:-.12,y:-.75,w:.14,d:1.5,r:.03},z+.9,1.1,{lit});
-   it.push(S(slabOf({x:cx+.02,y:-.6,w:.01,d:1.2,r:0},z+1.02,.86,P,1),{tone:'lo',crease:'none'}));}
+  default:{// hall-of-fame, the Trophy room: a cabinet shelf with three cups, the middle (yours) lit (Oct 12 2026; was a certificate)
+   box({x:-.5,y:-1.2,w:1,d:2.4,r:.06},z,.22,{tone:'mid',bevel:.03});box({x:-.45,y:-1.15,w:.12,d:2.3,r:.03},z+.22,1.5,{tone:'mid'});
+   for(const [y,h,on] of [[-.75,.7,false],[0,1,true],[.75,.6,false]] as const){cyl(0,y,.2,z+.22,.08,{tone:'mid'});cyl(0,y,.06,z+.3,h*.45);
+    cyl(0,y,.3,z+.3+h*.45,h*.5,{lit:on&&lit,tone:on?'hi':'mid',inner:sideArc(cx,y,.3,z+.3+h*.7,P,20)});}}
  }
  return it;
 }

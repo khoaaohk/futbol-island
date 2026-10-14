@@ -145,3 +145,32 @@ Nothing here needs new art to work. The placeholders still render everything. Th
   - A shadow may pass on the camera side of the float, so it can be briefly under the HUD corners on phones. Keep the silhouette readable at the screen edges.
 - **Reeling.** Reeling now takes 2–14 taps, and big animals pull back when the player pauses. The bobber's `{kind:'reeling', progress}` can now **decrease** (line paid out). A `nibble()` beat marks the moment a pull-back starts, so a tug or spray there would read well.
 - **2D Fishbook art (`components/FishArt.tsx`).** It gained simple flat shapes in the existing style for all of the above. Redraw freely; keep the props `{fish, hidden, size}`.
+
+## Update, 13 Oct 2026: every spot has its own reef, and the coral is tropical
+
+User: "fix all the fishing spots so they don't all look the same, reuse things, but place them differently or different colors. we need to make the coral feel more tropical". Camera, cast distances, gameplay, bite pose and Fishbook are unchanged.
+
+- **Where:** each spot in `fishCatalog.ts` names a `reef` theme; the themes live in `underwater.ts` (`REEF_THEMES`): layout, reef palette, coral shapes, counts, sand and water tint, clarity, the fish mix (`fishSchools.ts` `LOOKS`) and signature props. Seeded by spot id (`reefSeed`), so a spot always looks the same.
+- **Same cost:** still ONE merged, vertex-coloured seabed mesh per spot and ONE instanced sea-life draw. Triangles stay within +15 % of the old per-style counts per spot and below them overall (tests/fishing.cjs, synthetic shore: 73.1k desktop / 41.8k phone for all 16 spots vs 90.7k / 52.7k before). Water tint and sand are shared uniforms set once per session (`applyReefWater`), no texture.
+- **Tropical coral:** vivid palettes with light/dark facets per piece; shapes from the existing primitives: brain domes, branching, staghorn (forks twice, pale tips), table, sea fans, tube sponges (dark inside), swaying soft corals and anemones (sway on desktop only). Anemones in view host a clownfish pair (two cruisers repurposed, no extra instances). Reef pieces take less of the water's absorption (×0.09 vs ×0.45), a little self-colour and a saturation lift before the depth tint, and 1.75× caustics; the fish ×0.26. New reef fish looks: butterflyfish, damselfish, wrasse, queen angelfish, royal gramma, sergeant major, pink parrotfish, red snapper, grouper, barracuda, anthias.
+- **Phones:** the scatter now reaches the whole view out past the float, and in portrait it narrows toward the camera (which hangs over the far water), so the reef is on screen.
+- **Fix:** the Deep Sea Boat used to throw (`mergeGeometries` of an empty list: no shore in its field) as fishing started there; an empty seabed is now allowed and the open-sea theme places its pieces by distance along the cast.
+
+| Spot | Theme | Layout | Palette / water / signature |
+| --- | --- | --- | --- |
+| South Pier | `barnacle-pilings` | old piles crusted with barnacles, sponges and anemones at their feet | sunflower yellow and plum; teal water, grey-gold sand; an anchor |
+| Lifebuoy Point | `lifebuoy-lagoon` | sandy lagoon, a few big bommies, starfish and shells | candy pink, yellow, orange; brightest turquoise, white sand; a starfish cluster |
+| Harbour Wall | `harbour-fan-wall` | a coral wall along the drop-off (depth contour) | crimson and violet sea fans; deep teal, grey sand; an anchor |
+| North Beach Rocks | `tidepool-flat` | rocky reef flat, red algae, many urchins | orange, magenta, yellow, violet; green-teal, brown sand; starfish |
+| West Cove | `stream-channel` | sandy channel through a green sea-grass meadow | lime and violet soft corals; greenish water; a lost football |
+| Deep Sea Boat | `blue-abyss` | open sea, tube sponges and tables far below | electric blue and violet; deep blue; an anchor |
+| East Jetty | `jetty-kelp` | kelp corridor along the cast, jetty piles | amber and crimson; cool teal, grey sand; a giant clam |
+| Seawall Gate Sands | `seawall-rubble` | rubble line by the seawall, sandy shallows beyond | pastel pink and sky blue; turquoise, cream sand; a lost football |
+| Channel Bend | `channel-tables` | table-coral terraces in three rows | blue and teal; deep blue, pale grey sand; an old training goal |
+| Turtle Bank | `turtle-meadow` | dense green sea-grass meadow, turtles | lime and yellow; clear turquoise, light sand; starfish |
+| Coral Garden Beach | `pink-ring` | ring reef round a sandy pool by the float | hot pink and purple; turquoise, white sand; a giant clam |
+| Sharks Beach Point | `sunlit-patches` | many small scattered patch reefs | orange and sunny yellow; bright aqua, golden sand; a lost football |
+| Farm Beach | `fruit-garden` | dense red and coral garden (soft corals, fans) | red, coral pink, peach; turquoise, pinkish sand; an old training goal |
+| Boulder Cove | `boulder-cove` | big boulder field, coral at their feet | lilac and lime; teal, dark gravel; an anchor |
+| Palm Point | `palm-staghorn` | staghorn thickets | peach and aqua; turquoise, pale sand; starfish |
+| Lookout Rocks | `lookout-bommies` | stepping-stone bommies in a line out from the shore | electric blue and orange; aqua, creamy sand; a giant clam |

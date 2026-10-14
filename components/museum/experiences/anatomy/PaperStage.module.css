@@ -1,6 +1,6 @@
 /* The Paper room (Oct 12 2026, anatomy "Paper" theme; user: isometric technical illustration, solid off-white parts with
  * a top-left light, thin dark-grey hairlines, fine engraved detail, a soft shadow under the base, a warm grey paper ground
- * inside a big rounded card; one accent per exhibit, only for the idea). Shared by cards-1970, var-2018 and backpass-1992.
+ * inside a big rounded card; one accent per exhibit, only for the idea). Used by var-2018.
  * Layout: the first screen is the game (label · card · controls = 100dvh), the wall text scrolls in below. */
 .room{position:fixed;inset:0;z-index:20;outline:none;overflow:hidden;
  --ground:#ecebe6;--ink:#1d1d1b;--muted:#6b6a66;--hair:#d9d6cf;--accent-ink:#fff;

@@ -1,27 +1,20 @@
 import type {GradFormat} from '@/lib/endgame/graduationModel';
 
 /**
- * Hall of Fame experience data (Oct 5 2026). Pure, so tests/museum-exp-hall-of-fame.cjs can read it without a browser.
+ * Trophy room · your own shelf's data (Oct 5 2026 Hall of Fame; Oct 12 2026 the room became the Trophy room, and the player's
+ * certificates and cups stand on their own shelf of the cabinet). Pure, so tests/museum-exp-hall-of-fame.cjs can read it.
  *
- * The room is about the PLAYER: four plinths, one per path, stepping up like stairs (futsal → 7v7 → 9v9 → 11v11, the
- * spaces grow). An earned plinth glows and holds its certificate; an unearned one is dim and says what to do next.
+ * One spot per path (futsal → 7v7 → 9v9 → 11v11, the spaces grow) and one for the Island Diploma: an earned spot holds a cup
+ * and its framed certificate; an empty one keeps its label and says what to do next.
  * "Same idea, different space" lights up the lesson where each big idea comes back in every path. Those links are the game's
  * own lesson list (lib/paths/formatPaths.json), not real-world history. The only real-world facts are the player counts.
  */
-export type Plinth={format:GradFormat;name:string;aSide:number;place:string;
- /** The light that falls on an earned plinth (a bright partner of the format's cap colour). */
- glow:string;
- /** One team's dots on the little pitch: [x,y] in a 100×64 box, own goal on the left. Illustrative shapes, not to scale. */
- dots:[number,number][];shape:string;scale:number};
+export type Plinth={format:GradFormat;name:string;aSide:number;place:string};
 export const PLINTHS:readonly Plinth[]=[
- {format:'futsal',glow:'#f7cb69',name:'Futsal',aSide:5,place:'Palm Coast rooftop court',shape:'3-1 (with the goalkeeper)',scale:.62,
-  dots:[[8,32],[30,32],[46,14],[46,50],[66,32]]},
- {format:'7v7',glow:'#fff2b9',name:'7v7',aSide:7,place:'Old Town Ground',shape:'2-3-1 (with the goalkeeper)',scale:.74,
-  dots:[[7,32],[26,20],[26,44],[48,10],[48,32],[48,54],[70,32]]},
- {format:'9v9',glow:'#ffc27a',name:'9v9',aSide:9,place:'Club Grounds',shape:'3-2-3 (with the goalkeeper)',scale:.87,
-  dots:[[6,32],[22,14],[22,32],[22,50],[42,22],[42,42],[66,12],[70,32],[66,52]]},
- {format:'11v11',glow:'#f7cb69',name:'11v11',aSide:11,place:'Eleven Park',shape:'4-3-3 (with the goalkeeper)',scale:1,
-  dots:[[5,32],[20,8],[18,24],[18,40],[20,56],[40,16],[38,32],[40,48],[66,10],[72,32],[66,54]]},
+ {format:'futsal',name:'Futsal',aSide:5,place:'Palm Coast rooftop court'},
+ {format:'7v7',name:'7v7',aSide:7,place:'Old Town Ground'},
+ {format:'9v9',name:'9v9',aSide:9,place:'Club Grounds'},
+ {format:'11v11',name:'11v11',aSide:11,place:'Eleven Park'},
 ];
 
 /** Big ideas that come back in every path, by starter lesson id (tests check each id is a starter lesson of that format). */
@@ -43,7 +36,8 @@ export const IDEAS:readonly Idea[]=[
 
 export const COPY={
  kicker:'Today · the last room in the museum',
- title:'Your Hall of Fame',
+ title:'Trophy room',
+ /** The registry still calls the case 'Your Hall of Fame' (lib/endgame/museum.ts); the room's own wall label says this. */
  /** The case's own facts and takeaway (lib/endgame/museum.ts), word for word. */
  fact1:'Every path you graduate hangs its certificate here.',
  fact2:'Graduate all four paths to board the Matchday Ferry for your Matchday final.',
@@ -52,7 +46,8 @@ export const COPY={
  ideasHint:'Pick a big idea to see where it comes back in every path.',
  ferryOpen:'All four paths graduated. The Matchday Ferry is open for your Matchday final!',
  champion:'Matchday Champion! You graduated every path and won the Matchday Ferry final.',
- gameNote:'The paths, pitches, certificates and the Matchday Ferry are part of the Futbol Island game. The player counts are real football rules.',
+ gameNote:'The paths, certificates, your cups and the Matchday Ferry are part of the Futbol Island game. The player counts are real football rules.',
+ trophyNote:'The eight trophies are drawn by us from their real shapes and sizes, turned on a lathe in centimetres; small details are left off. Every height, weight and story comes from the sources below. The Africa Cup of Nations trophy has no published height or weight, so we never measure or weigh it.',
 };
 export const ferryLine=(have:number)=>have>=4?COPY.ferryOpen:`${have} of 4 paths graduated. Graduate ${4-have} more to board the Matchday Ferry.`;
 export const nextStep=(name:string,done:number,total:number)=>done>=total

@@ -1,5 +1,5 @@
 /**
- * A one-line summary of an island for the restore screen and the "Which island do you want?" chooser (doc §3.3, §4.4):
+ * A one-line summary of an island for the restore screen and the grown-up's "Restore the other island" (doc §3.3, §4.4):
  * "1,240 coins · 36 cards · 12 lessons". Read from raw saved strings (a downloaded snapshot or this device's storage), with
  * the same rules the game uses: coins = the ledger's earned − packs − spends, a lesson counts once every quiz question is
  * right (lib/town/quizProgress.ts passedQuizLessons).
@@ -19,3 +19,12 @@ export function summarise(keys:Record<string,string|null|undefined>):IslandSumma
 }
 const plural=(n:number,one:string)=>`${n.toLocaleString('en-US')} ${one}${n===1?'':'s'}`;
 export const summaryLine=(s:IslandSummary)=>`${plural(s.coins,'coin')} · ${plural(s.cards,'card')} · ${plural(s.lessons,'lesson')}`;
+/**
+ * More progress ranks higher: lessons, then quiz answers, then cards, then coins. Only breaks a tie between two copies played
+ * at the same moment (doc §4.4); one whole copy is always kept, so coins are never added across copies.
+ */
+export function progressRank(keys:Record<string,string|null|undefined>):number{
+ const s=summarise(keys),answers=json(keys['futbol-island-quiz-progress-v1']);
+ const quiz=Array.isArray(answers)?new Set(answers).size:0;
+ return s.lessons*1e12+Math.min(quiz,999)*1e9+Math.min(s.cards,999)*1e6+Math.min(s.coins,999_999);
+}

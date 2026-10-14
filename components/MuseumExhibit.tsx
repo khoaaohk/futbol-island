@@ -1,6 +1,5 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {createPortal} from 'react-dom';
 import {EXHIBIT_INTERACTIVES,type ExhibitInteractive} from '@/lib/endgame/museum';
 import {CERT_SLOTS} from '@/lib/museum/museumAtlas';
 import {museumSfx} from '@/lib/museum/museumSound';
@@ -9,7 +8,7 @@ import styles from './MuseumRoom.module.css';
 /**
  * The hands-on part of an open case in the walk-in museum (Oct 3 2026). Config and every quoted line come from
  * lib/endgame/museum.ts EXHIBIT_INTERACTIVES (copied word for word from the case's own sourced facts; no new facts). DOM only:
- * buttons ≥ 44 px, nothing animates on its own except the one-shot card raise (none with reduced motion).
+ * buttons ≥ 44 px, nothing animates on its own.
  */
 export type ExhibitHooks={spin:(dir:1|-1)=>void;rain:(on:boolean)=>void;certificate:(id:string)=>void;earned:readonly string[]};
 export default function MuseumExhibit({id,hooks}:{id:string;hooks:ExhibitHooks}){
@@ -23,7 +22,6 @@ export default function MuseumExhibit({id,hooks}:{id:string;hooks:ExhibitHooks})
 function Body({cfg,hooks}:{cfg:ExhibitInteractive;hooks:ExhibitHooks}){
  switch(cfg.kind){
   case 'whistle':return <Whistle quote={cfg.quote}/>;
-  case 'cards':return <Cards cards={cfg.cards}/>;
   case 'var':return <Var cfg={cfg}/>;
   case 'compare':return <Compare cfg={cfg} rain={hooks.rain}/>;
   case 'spin':return <Spin quote={cfg.quote} spin={hooks.spin}/>;
@@ -36,18 +34,6 @@ function Whistle({quote}:{quote:string}){
  const [blown,setBlown]=useState(0);
  return <><button type="button" className={styles.gold} data-museum-own-cue data-museum-whistle onClick={()=>{museumSfx.whistle();setBlown(n=>n+1);try{navigator.vibrate?.([30,40,60]);}catch{/* no haptics */}}}>Blow the whistle</button>
   {blown>0&&<p className={styles.quote} role="status" data-museum-whistle-blown={blown}>Penalty! {quote}</p>}</>;
-}
-
-/** The raised card sits over the hall, not inside the scrolling card (its translate would trap position:fixed). */
-const portal=(node:React.ReactNode)=>{const host=typeof document!=='undefined'?document.querySelector('[data-museum-room]'):null;return host?createPortal(node,host):node;};
-function Cards({cards}:{cards:Extract<ExhibitInteractive,{kind:'cards'}>['cards']}){
- const [up,setUp]=useState<{i:number;key:number}|null>(null);
- useEffect(()=>{if(!up)return;const t=setTimeout(()=>setUp(null),2600);return()=>clearTimeout(t);},[up]);
- const card=up?cards[up.i]:null;
- return <><div className={styles.row}>{cards.map((c,i)=><button key={c.color} type="button" className={styles.cardButton} data-color={c.color} data-museum-own-cue data-museum-card-button={c.color} onClick={()=>{museumSfx.card();setUp({i,key:Date.now()});}}>
-   <i aria-hidden="true"/>{c.color==='yellow'?'Yellow card':'Red card'}</button>)}</div>
-  {card&&portal(<div key={up!.key} className={styles.bigCard} data-color={card.color} data-museum-card-up={card.color} role="status" onClick={()=>setUp(null)}>
-   <span className={styles.bigCardFace} aria-hidden="true"/><b>{card.word}!</b><p>{card.quote.charAt(0).toUpperCase()+card.quote.slice(1)}{/[.!?]$/.test(card.quote)?'':'.'}</p></div>)}</>;
 }
 
 /** A made-up practice replay (labelled): three frames of a ball flying at the line, then you decide. */

@@ -17,7 +17,7 @@ export type MuseumSource={title:string;url:string};
 export type MuseumCounts={balls:number;cards:number;books:number;graduations:number};
 export type UnlockKind=keyof MuseumCounts;
 export type MuseumGallery={id:string;title:string;blurb:string;unlock:UnlockKind;art:string};
-export type Exhibit={id:string;gallery:string;year:string;title:string;object:'book'|'whistle'|'cards'|'glove'|'screen'|'trophy'|'globe'|'court'|'leather'|'telstar'|'shirt'|'frame';
+export type Exhibit={id:string;gallery:string;year:string;title:string;object:'book'|'whistle'|'stadium'|'boot'|'screen'|'trophy'|'globe'|'court'|'leather'|'telstar'|'shirt'|'frame';
  facts:string[];forYourGame:string;need:number;sources:MuseumSource[]};
 
 const W=(page:string,title=page.replace(/_/g,' ')):MuseumSource=>({title:`Wikipedia · ${decodeURIComponent(title)}`,url:`https://en.wikipedia.org/wiki/${page}`});
@@ -25,8 +25,8 @@ const IFAB=(law:string,slug:string):MuseumSource=>({title:`IFAB Laws of the Game
 
 export const GALLERIES:MuseumGallery[]=[
  {id:'laws',title:'The Laws of the Game',blurb:'How football got its rules, and why they changed.',unlock:'balls',art:'#2f8f8a'},
- {id:'worldcup',title:'World Cup history',blurb:'The first tournaments for men, women and futsal.',unlock:'cards',art:'#d8466f'},
- {id:'kit',title:'Balls and kits',blurb:'From heavy leather to the size 5 ball, and why shirts have numbers.',unlock:'books',art:'#e0a33a'},
+ {id:'worldcup',title:'World Cup history',blurb:'The first tournaments for men, women and futsal, and the stadiums they play in.',unlock:'cards',art:'#d8466f'},
+ {id:'kit',title:'Balls and kits',blurb:'From heavy leather to the size 5 ball, boots with studs, and why shirts have numbers.',unlock:'books',art:'#e0a33a'},
  {id:'hall',title:'Hall of Fame',blurb:'Your own graduation certificates, on the wall.',unlock:'graduations',art:'#477c6a'},
 ];
 export const UNLOCK_WORDS:Record<UnlockKind,{one:string;many:string;how:string}>={
@@ -46,14 +46,6 @@ export const EXHIBITS:Exhibit[]=[
   facts:['The penalty kick joined the Laws in 1891. The idea came from William McCrum, a goalkeeper from Ireland.','Today the ball goes on the penalty mark, 11 metres from the goal line.','The goalkeeper stays on the goal line until the ball is kicked.'],
   forYourGame:'Pick your spot early and don’t change your mind: a calm routine helps under pressure.',
   sources:[W('Penalty_kick_(association_football)'),IFAB('Law 14 The Penalty Kick','the-penalty-kick')]},
- {id:'cards-1970',gallery:'laws',year:'1970',title:'Yellow and red cards',object:'cards',need:0,
-  facts:['Yellow and red cards were first used at the 1970 World Cup in Mexico.','English referee Ken Aston had the idea while waiting at traffic lights: yellow means careful, red means stop.','Cards showed every player and fan the referee’s decision, whatever language they spoke.'],
-  forYourGame:'A yellow card is a warning. Stay calm and keep playing fairly.',
-  sources:[W('Ken_Aston'),W('Penalty_card'),IFAB('Law 12 Fouls and Misconduct','fouls-and-misconduct')]},
- {id:'backpass-1992',gallery:'laws',year:'1992',title:'The back-pass rule',object:'glove',need:0,
-  facts:['Since 1992, a goalkeeper may not pick up the ball when a team-mate deliberately kicks it back to them.','The change stopped teams wasting time and made the game faster.','It is why today’s keepers practise passing and receiving with their feet.'],
-  forYourGame:'Keepers are part of the passing team: give them an easy ball to their feet.',
-  sources:[W('Back-pass_rule'),IFAB('Law 12 Fouls and Misconduct','fouls-and-misconduct')]},
  {id:'var-2018',gallery:'laws',year:'2018',title:'The video assistant referee',object:'screen',need:0,
   facts:['The video assistant referee (VAR) was first used at a men’s World Cup in 2018, in Russia.','VAR can only help with clear mistakes about goals, penalties, straight red cards and mistaken identity.','The referee on the pitch still makes the final decision.','A goal counts only when the whole ball has crossed the whole goal line, between the posts and under the crossbar.'],
   forYourGame:'Play to the whistle: keep going until the referee stops the game.',
@@ -71,6 +63,12 @@ export const EXHIBITS:Exhibit[]=[
   facts:['Futsal began in Montevideo, Uruguay, in 1930, when Juan Carlos Ceriani made up a five-a-side game for indoor courts.','The first FIFA Futsal World Cup was played in the Netherlands in 1989, and Brazil won it.','Futsal’s small, low-bounce ball rewards close control with the sole of the foot.'],
   forYourGame:'Small-sided games mean more touches. Every futsal skill helps you on grass too.',
   sources:[W('Futsal'),W('1989_FIFA_Futsal_World_Championship'),{title:'FIFA Futsal Laws of the Game 2024-25 · Law 2 The Ball',url:'https://digitalhub.fifa.com/m/7b1da24ec7a25f67/original/Futsal-Laws-of-the-Game-2024-2025.pdf'}]},
+ // Oct 12 2026: "Stadiums of the World" replaced the yellow and red cards (user: "replace the yellow and red cards with stadiums of
+ // the world … show a bunch of stadiums and breakdown how they are built"). Its year is the Maracanã's, the oldest story it tells.
+ {id:'stadiums',gallery:'worldcup',year:'1950',title:'Stadiums of the World',object:'stadium',need:0,
+  facts:['The Maracanã in Rio de Janeiro opened in 1950 for the World Cup. 199,854 people watched Uruguay beat Brazil 2–1 there.','Estadio Azteca in Mexico City was the first stadium to host two World Cup finals, in 1970 and 1986.','Wembley’s giant arch is 133 metres tall. It holds up all of the north roof and most of the south roof.','Under the grass of a modern pitch sit layers of sand and gravel, with pipes that drain away the rain and, in many stadiums, pipes that warm the ground.'],
+  forYourGame:'A great stadium is built from the ground up, one layer at a time. So is your game: get the basics right first.',
+  sources:[W('Maracan%C3%A3_Stadium','Maracanã Stadium'),W('Estadio_Azteca'),W('Wembley_Stadium'),{title:'GeoSmart · The hidden engineering beneath every World Cup stadium',url:'https://geosmartinfo.co.uk/blog/more-than-just-grass-the-hidden-engineering-beneath-every-world-cup-stadium/'}]},
  // ---- Balls and kits (books) ----
  {id:'laced-leather',gallery:'kit',year:'Before the 1960s',title:'Laced leather balls',object:'leather',need:0,
   facts:['Long ago, footballs were brown leather, and the old ones were laced up. They soaked up rain and got heavy.','Today an adult match ball is size 5: 68–70 cm around and 410–450 grams.','Younger players use smaller size 3 or 4 balls, so the ball fits the player.'],
@@ -80,12 +78,18 @@ export const EXHIBITS:Exhibit[]=[
   facts:['The official ball of the 1970 World Cup in Mexico was the Adidas Telstar.','Its 32 panels were black and white, so it stood out on black-and-white television.','That black-and-white pattern became the picture of a football all over the world.'],
   forYourGame:'Watch the ball, not the feet: a clear ball is easier to track and to strike cleanly.',
   sources:[W('Adidas_Telstar'),W('1970_FIFA_World_Cup')]},
+ // Oct 12 2026: "Boots through time" replaced the back-pass rule (user request via the coordinator). Its boots run from the early
+ // 1900s to today, so its year is "1900s" (a plain decade keeps it in date order; "…today" would sort it last).
+ {id:'boots',gallery:'kit',year:'1900s',title:'Boots through time',object:'boot',need:0,
+  facts:['Early football boots were heavy leather that came up over the ankle, with hard toe-caps and nailed studs.','Screw-in studs let players change to longer studs on a wet, muddy pitch.','Today many boots are light and knitted, with a plastic plate, and there are different soles for grass, plastic grass and indoor courts.'],
+  forYourGame:'Wear the right sole for the pitch: studs on grass, short studs or turf soles on plastic grass, a flat sole indoors.',
+  sources:[W('Football_boot'),IFAB('Law 4 The Players’ Equipment','the-players-equipment')]},
  {id:'shirts',gallery:'kit',year:'1928',title:'Numbers and colours',object:'shirt',need:0,
   facts:['In England, numbered shirts were first worn in league games in 1928 and became compulsory in 1939.','Classic numbers followed positions: 1 the goalkeeper, 9 the striker, 10 the playmaker.','The Laws say the two teams must wear colours that are different from each other and from the referees, and each goalkeeper wears a colour of their own.'],
   forYourGame:'Scan for shirt colours before you get the ball: it tells you who is free.',
   sources:[W('Squad_number_(association_football)'),IFAB('Law 4 The Players’ Equipment','the-players-equipment')]},
  // ---- Hall of Fame (graduations): the player's own certificates ----
- {id:'hall-of-fame',gallery:'hall',year:'Today',title:'Your Hall of Fame',object:'frame',need:0,
+ {id:'hall-of-fame',gallery:'hall',year:'Today',title:'Trophy room',object:'frame',need:0,
   facts:['Every path you graduate hangs its certificate here.','Graduate all four paths to board the Matchday Ferry for your Matchday final.'],
   forYourGame:'Learning football is a journey: futsal, 7v7, 9v9 and 11v11 all teach the same big ideas in different spaces.',
   sources:[]},
@@ -108,7 +112,6 @@ export const openExhibits=(counts:MuseumCounts)=>EXHIBITS.filter(e=>exhibitState
  */
 export type ExhibitInteractive=
  |{kind:'whistle';label:string;quote:string}
- |{kind:'cards';label:string;cards:{color:'yellow'|'red';word:string;quote:string}[]}
  |{kind:'var';label:string;frames:string[];quote:string;
    /** The goal-line rule (Law 10), quoted from the case: the practice replay shows a ball clearly over, or clearly still on, the line. */
    rule:string;over:string;on:string}
@@ -118,7 +121,6 @@ export type ExhibitInteractive=
  |{kind:'hall';label:string};
 export const EXHIBIT_INTERACTIVES:Readonly<Record<string,ExhibitInteractive>>={
  'penalty-1891':{kind:'whistle',label:'Blow the referee’s whistle',quote:'Today the ball goes on the penalty mark, 11 metres from the goal line.'},
- 'cards-1970':{kind:'cards',label:'Hold up a card',cards:[{color:'yellow',word:'Careful',quote:'A yellow card is a warning.'},{color:'red',word:'Stop',quote:'yellow means careful, red means stop'}]},
  'var-2018':{kind:'var',label:'Practice replay',frames:['The ball flies at the goal…','Freeze! Where is the ball?','Look closer: is the WHOLE ball over the line?'],quote:'The referee on the pitch still makes the final decision.',
   rule:'A goal counts only when the whole ball has crossed the whole goal line, between the posts and under the crossbar.',over:'The whole ball is past the line: goal!',on:'Part of the ball is still on the line: no goal yet.'},
  'laced-leather':{kind:'compare',label:'Compare the balls',old:{title:'Laced leather',quote:'They soaked up rain and got heavy.'},now:{title:'Size 5 match ball',quote:'68–70 cm around and 410–450 grams'},young:{quote:'Younger players use smaller size 3 or 4 balls, so the ball fits the player.'}},

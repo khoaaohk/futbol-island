@@ -52,8 +52,10 @@ export function decodeBody(bytes:Uint8Array,contentType:string|null):Record<stri
 }
 
 /** The snapshot as it will be stored (allowlisted keys only, coach-plan text stripped), or why not. */
-export function storedSnapshot(v:unknown):{ok:true;snapshot:Snapshot;bytes:number}|{ok:false;reason:'bad'|'newer'|'too-big'}{
+export function storedSnapshot(v:unknown,now?:Date):{ok:true;snapshot:Snapshot;bytes:number}|{ok:false;reason:'bad'|'newer'|'too-big'}{
  const r=readSnapshot(v);if(!r.ok)return {ok:false,reason:r.newer?'newer':'bad'};
+ // "Newest wins" (doc §4.4) trusts each device's clock a little: a played time in the future is pulled back to the server's now.
+ if(now&&r.snapshot.played&&r.snapshot.played>now.getTime()+5*60_000)r.snapshot.played=now.getTime();
  const bytes=Buffer.byteLength(JSON.stringify(r.snapshot));
  return bytes>MAX_SNAPSHOT_BYTES?{ok:false,reason:'too-big'}:{ok:true,snapshot:r.snapshot,bytes};
 }
@@ -75,7 +77,7 @@ export async function handleSave(route:SaveRoute,req:{bytes:Uint8Array;contentTy
  try{
   const t=now(),bucket=ipBucket(await store.salt(utcDay(t)),clientIp(req.headers));
   if(route==='create'){
-   const snap=storedSnapshot(body.snapshot??{format:1,game:'',keys:{}});
+   const snap=storedSnapshot(body.snapshot??{format:1,game:'',keys:{}},t);
    if(!snap.ok)return {status:snap.reason==='too-big'?413:400,body:{ok:false,tooBig:snap.reason==='too-big'||undefined,newer:snap.reason==='newer'||undefined}};
    // Creation caps (not code-dependent, so they may say "busy").
    if(!await store.hit('c:'+bucket,LIMITS.createPerIp,60,t)||!await store.hit('c:global',LIMITS.createPerDay,1440,t))return {status:429,body:{ok:false,busy:true}};
@@ -94,7 +96,7 @@ export async function handleSave(route:SaveRoute,req:{bytes:Uint8Array;contentTy
   // A code that can't parse still costs a failed try (the store counts it), so typing junk is no faster than guessing.
   const hash=parsed?codeHash(pepper,formatCode(parsed)):'0'.repeat(64);
   if(route==='sync'){
-   const snap=storedSnapshot(body.snapshot);
+   const snap=storedSnapshot(body.snapshot,t);
    if(!snap.ok)return {status:snap.reason==='too-big'?413:400,body:{ok:false,tooBig:snap.reason==='too-big'||undefined,newer:snap.reason==='newer'||undefined}};
    const base=Number(body.baseRev);if(!Number.isInteger(base)||base<1)return {status:400,body:{ok:false}};
    const r=await store.put(hash,base,snap.snapshot,snap.bytes,bucket,t);

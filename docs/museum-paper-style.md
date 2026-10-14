@@ -5,8 +5,9 @@ isometric technical-illustration style, Paper theme (the `anatomy` skill; refere
 "these games should not be the pixel style. only the penalty kick should be pixel game", "it needs to be larger and fill the
 entire screen", "the rest of the game should be in this style".
 
-- **Paper exhibits (11):** telstar-1970, laced-leather, shirts, cards-1970, var-2018, backpass-1992, laws-1863, futsal-1989,
-  wwc-1991, hall-of-fame, timeline.
+- **Paper exhibits (11):** telstar-1970, laced-leather, shirts, stadiums, var-2018, boots, laws-1863, futsal-1989,
+  wwc-1991, hall-of-fame (the Trophy room), timeline. (Oct 12 2026: stadiums replaced cards-1970, boots replaced
+  backpass-1992; stadiums draws its models with its own geometry.ts on iso-kit and uses `usePaperLoop`.)
 - **Not Paper:** penalty-1891 is the pixel arcade cabinet (`docs/museum-pixel-iso.md`); worldcup-1930 and the World Cup balls
   display keep their own looks.
 

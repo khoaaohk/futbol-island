@@ -51,14 +51,6 @@
 .hands h4{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--g)}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .quote{font-weight:700;color:var(--m-green)}
-.cardButton{min-height:48px;display:inline-flex;align-items:center;gap:8px;padding:6px 14px 6px 8px;border:3px solid #fff2cd;border-radius:14px;background:#fff;color:var(--m-ink);font:inherit;font-weight:800;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}
-.cardButton i{width:24px;height:32px;border-radius:4px;border:2px solid var(--m-ink);background:#f8d651}.cardButton[data-color=red] i{background:#e0453d}
-.bigCard{position:fixed;z-index:20;left:50%;top:34%;translate:-50% -50%;width:min(260px,70%);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;cursor:pointer;animation:raise .38s cubic-bezier(.2,.9,.3,1.3) both}
-.bigCardFace{width:120px;height:168px;border-radius:14px;border:5px solid #fff;background:#f8d651;box-shadow:0 18px 40px #2a201655;transform:rotate(-6deg)}
-.bigCard[data-color=red] .bigCardFace{background:#e0453d;transform:rotate(5deg)}
-.bigCard b{padding:6px 16px;border-radius:999px;background:var(--m-ink);color:#fff1d3;font:700 26px/1.1 inherit}
-.bigCard p{margin:0;padding:8px 12px;border-radius:14px;background:var(--m-paper);color:var(--m-ink);font-weight:700;font-size:15px;box-shadow:0 6px 18px #2a201633}
-@keyframes raise{from{transform:translateY(120px) rotate(-12deg);opacity:0}to{transform:none;opacity:1}}
 .var{display:flex;flex-direction:column;align-items:flex-start;gap:8px}.varScreen{width:min(260px,100%);height:auto;border-radius:10px;box-shadow:0 4px 0 #3a2b1833}
 .var p{margin:0}
 .compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
@@ -71,7 +63,9 @@
 .certs .gold{width:100%}
 .certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:1px dashed var(--m-hair);border-radius:4px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
 .hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;pointer-events:none}
-@media(min-aspect-ratio:6/5){.hint{left:30%}.bigCard{left:32%;top:46%}}
+@media(min-aspect-ratio:6/5){.hint{left:30%}}
+/* Phones: the case label drops under the Back / Step inside row, so the drag hint sits below it. */
+@media(max-width:600px){.header:has(.stepInside)~.hint{top:calc(124px + env(safe-area-inset-top,0px))}}
 .greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;font-weight:500;font-size:15px;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
 .greeting b{color:var(--m-ink);font-weight:700}
 @keyframes bubble{0%{opacity:0;transform:translateY(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
@@ -86,25 +80,8 @@
 .guideCounts li{padding:10px 12px;border:1px solid var(--m-hair);border-radius:4px;background:#fff;font-size:13px;color:var(--m-soft)}.guideCounts b{display:block;font-size:24px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums}
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
-@media(prefers-reduced-motion:reduce){.tag,.greeting,.bigCard{animation:none}}
+@media(prefers-reduced-motion:reduce){.tag,.greeting{animation:none}}
 .collectionList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4}.collectionList li{margin:4px 0}.collectionList b{color:var(--m-green)}
-/* Storytelling strip (Oct 4 2026): a slim caption bar under the working exhibit, not a card. One action, beat dots, the told
- * line, an ⓘ plaque. No backdrop, no focus trap; the exhibit stays the star. */
-.strip{--g:#1d1d1b;position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(560px,calc(100% - 28px));box-sizing:border-box;display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--m-hair);border-top:4px solid var(--g);border-radius:6px;background:#fbfaf7f5;color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .28s cubic-bezier(.2,.8,.2,1) both}
-.stripHead{display:flex;align-items:center;gap:4px 10px;flex-wrap:wrap}.stripHead b{font-family:inherit;font-style:normal;font-weight:700;font-size:19px;line-height:1.15;letter-spacing:-.01em}.stripHead .eyebrow{flex-basis:100%}
-.dots{display:inline-flex;gap:5px;margin-left:auto}.dots i{width:8px;height:8px;border-radius:50%;background:var(--m-hair)}.dots i[data-on]{background:var(--m-ink)}
-.plaqueButton{width:44px;height:44px;flex:none;border:1px solid var(--m-hair);border-radius:50%;background:#fff;color:var(--m-ink);font:600 17px/1 "Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;box-shadow:none;cursor:pointer}.plaqueButton[aria-expanded=true]{background:var(--m-ink);border-color:var(--m-ink);color:#fff}
-.caption{margin:0;min-height:2.6em;font-size:15px;line-height:1.45;font-weight:500}
-.strip .gold,.strip .mint{align-self:flex-start}
-.takeaway{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 12px;border-left:3px solid var(--g);background:#1d1d1b08}.takeaway b{color:var(--m-ink);font-weight:700}
-.plaque{position:absolute;left:0;right:0;bottom:calc(100% + 8px);max-height:min(40vh,320px);overflow:auto;overscroll-behavior:contain;box-sizing:border-box;padding:12px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .22s ease-out both}
-.plaque .facts{margin-top:0}
-@media(max-height:520px) and (orientation:landscape){.strip{left:auto;right:calc(16px + env(safe-area-inset-right,0px));translate:none;width:min(380px,46%)}.caption{min-height:0}}
-@media(prefers-reduced-motion:reduce){.plaque{animation:none}}
-/* Story stages fill the top of a phone: the case arrows sit below the stage, above the caption strip (never over the set). */
-@media(max-width:600px){.root[data-story] .arrow{top:auto;bottom:calc(214px + env(safe-area-inset-bottom,0px));width:44px;height:44px}}
-/* One header row whatever the title's length: the title shrinks with an ellipsis, the dots and the ⓘ stay put. */
-.stripHead b{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* The walk-through timeline's pop-up: the year you're standing on, in its gallery's colour. */
 .yearPop{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;align-items:baseline;gap:10px;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-left:4px solid var(--g);border-radius:4px;background:var(--m-paper);color:var(--m-ink);font-weight:500;font-size:15px;box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .2s ease-out both;pointer-events:none}
 .yearPop b{font-family:inherit;font-style:normal;font-weight:700;font-size:24px;line-height:1;color:var(--m-ink);font-variant-numeric:tabular-nums}
@@ -116,42 +93,14 @@
 @media(prefers-reduced-motion:reduce){.stepInside{transition:none}}
 
 /* The museum passport (Oct 9 2026; lib/museum/museumVisits.ts). "Step inside again" wears a small stamp; the timeline wall's
- * year buttons show which cases you have visited; the stamp card springs in when you come out of an exhibit. */
+ * year buttons show which cases you have visited. (The stamp card that sprang in on the way out was removed Oct 12 2026.) */
 .stepInside{display:inline-flex;align-items:center;gap:8px}
 .stepSeen{width:16px;height:16px;border-radius:50%;background:#fff;position:relative;flex:none}
 .stepSeen::after,.yearSeen::after{content:'';position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid var(--m-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}.yearSeen::after{border-color:#fff}
 .yearSeen{display:inline-block;vertical-align:-2px;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--m-ink);position:relative}
-.stampCard{--g:#1d1d1b;position:fixed;z-index:8;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:min(440px,calc(100% - 24px));box-sizing:border-box;
- display:flex;align-items:flex-start;gap:14px;padding:14px 10px 14px 14px;border:1px solid var(--m-hair);border-radius:6px;
- background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b55;animation:stampCardIn .5s cubic-bezier(.2,.8,.2,1) both}
-.stampSeal{flex:none;width:52px;height:52px;display:grid;place-items:center;border-radius:2px;background:#fff;border:3px solid var(--g);box-sizing:border-box;color:var(--m-ink);box-shadow:none;
- animation:stampPress .4s cubic-bezier(.2,.8,.2,1) .15s both}
-.stampSeal b{font-family:inherit;font-style:normal;font-weight:700;font-size:15px;line-height:1;letter-spacing:.02em}
-.stampBody{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
-.stampHead{margin:0;display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--m-soft)}
-.stampHead span{color:var(--m-soft);letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.stampTitle{margin:0;font-family:inherit;font-style:normal;font-weight:700;font-size:20px;line-height:1.15;letter-spacing:-.01em}
-.stampDots{display:flex;flex-wrap:wrap;gap:5px}
-.stampDots i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--m-hair);box-sizing:border-box}
-.stampDots i[data-seen]{background:var(--m-ink);border-color:var(--m-ink)}
-.stampDots i[data-now]{background:var(--g);border-color:var(--g);animation:stampDot .4s cubic-bezier(.2,.8,.2,1) .35s both}
-.stampNext{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;min-height:44px;max-width:100%;padding:6px 16px;border:1.5px solid var(--m-ink);border-radius:999px;
- background:transparent;color:var(--m-ink);box-shadow:none;font:inherit;font-size:14px;font-weight:600;text-align:left;cursor:pointer;
- transition:transform 140ms cubic-bezier(.3,1.5,.5,1)}
-.stampNext:active{transform:scale(.95)}
-.stampClose{flex:none;width:44px;height:44px;margin:-6px -4px 0 0;border:0;border-radius:50%;background:transparent;color:var(--m-soft);font-size:26px;line-height:1;cursor:pointer}
-.stampCard[data-all] .stampSeal{background:var(--m-ink);border-color:var(--m-ink);color:#fff}
-@keyframes stampCardIn{from{transform:translate3d(0,-18px,0) scale(.94);opacity:0}to{transform:none;opacity:1}}
-@keyframes stampPress{from{transform:scale(1.25);opacity:0}to{transform:none;opacity:1}}
-@keyframes stampDot{from{transform:scale(0)}to{transform:none}}
-@media(prefers-reduced-motion:reduce){.stampCard,.stampSeal,.stampDots i[data-now]{animation:none}.stampNext{transition:none}}
-.stampBody p{margin:0}
-/* Phones: "Step inside" and the zoomed case's label can't share one row with Back, so the label drops just under the row (and
- * the stamp card sits under the label). */
-@media(max-width:600px){.header:has(.stepInside) .section{top:calc(100% - 4px);max-width:calc(100% - 32px)}
- .stampCard{top:calc(124px + env(safe-area-inset-top,0px))}}
+/* Phones: "Step inside" and the zoomed case's label can't share one row with Back, so the label drops just under the row. */
+@media(max-width:600px){.header:has(.stepInside) .section{top:calc(100% - 4px);max-width:calc(100% - 32px)}}
 /* Oct 10 2026 gallery restyle: the guide panel's Done sits top right, clear of the title (NavigationButton's own
- * `button.button.button{position:relative}` out-ranked the plain .close rule, so it fell to the panel's top left). The stamp
- * card's × keeps the app's shared dismissal colour (globals.css). */
+ * `button.button.button{position:relative}` out-ranked the plain .close rule, so it fell to the panel's top left). */
 .panel button.close.close{position:absolute;top:14px;right:14px;left:auto}
 .panel>h2{min-height:44px;display:flex;align-items:center}

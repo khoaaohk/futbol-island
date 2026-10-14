@@ -4,8 +4,6 @@ import dynamic from 'next/dynamic';
 import {NavigationButton} from './DoneButton';
 import MuseumDoorSlide from './MuseumDoorSlide';
 import MuseumExhibit,{Certificates,type ExhibitHooks} from './MuseumExhibit';
-import MuseumStory,{type StoryHooks} from './MuseumStory';
-import {isStoryCase} from '@/lib/museum/museumStories';
 import EndgameDialog from './EndgameDialog';
 import {Icon} from './Icon';
 import styles from './MuseumRoom.module.css';
@@ -27,7 +25,7 @@ import type {MuseumPoi} from '@/lib/museum/museumLayout';
 const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
 import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/experiences/ExperienceStage';
-import {nextToVisit,passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
+import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
@@ -75,19 +73,18 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const [experience,setExperience]=useState<string|null>(null);
  // The visit's connective tissue (Oct 9 2026): one doorway curtain for every experience (ExperienceStage), Back from an exhibit
  // you entered from the timeline returns to the timeline at that era, and the museum passport (lib/museum/museumVisits.ts)
- // stamps every exhibit you step inside, with a stamp card in the hall when you come out.
+ // stamps every exhibit you step inside.
  const visits=useMuseumVisits(),pass=passport(visits);
  const [stage,setStage]=useState<{covered:boolean;from:string|null;tlAt:string|null;note:string}>({covered:false,from:null,tlAt:null,note:''});
  const [afterglow,setAfterglow]=useState<string|null>(null);
  const rootRef=useRef<HTMLElement>(null),trigger=useRef<{el:HTMLElement|null;id:string}|null>(null),refocus=useRef<'trigger'|'canvas'|null>(null);
- const [stamp,setStamp]=useState<{id:string;fresh:boolean;k:number}|null>(null);
- /** Step inside an experience (from a case, the timeline, the stamp card or ?exp=). Stamps the passport. */
+ /** Step inside an experience (from a case, the timeline or ?exp=). Stamps the passport. */
  const openExperience=useCallback((id:string,o:{covered?:boolean;from?:string|null;tlAt?:string|null;note?:string}={})=>{
-  // Remember the control that opened it from the hall (Step inside, the stamp card's Next), to hand focus back on the way out.
+  // Remember the control that opened it from the hall (Step inside), to hand focus back on the way out.
   if(!o.covered){const a=document.activeElement;trigger.current={el:a instanceof HTMLElement&&a!==document.body?a:null,id};}
   const fresh=recordMuseumVisit(id),p=passport(museumVisitsNow());
   const note=o.note!==undefined?o.note:id==='timeline'?`${p.seen} of ${p.total} exhibits visited`:fresh?`New stamp! ${p.seen} of ${p.total} visited`:`Visited before · ${p.seen} of ${p.total}`;
-  setStamp(null);setStage({covered:!!o.covered,from:o.from??null,tlAt:o.tlAt??null,note});setExperience(id);},[]);
+  setStage({covered:!!o.covered,from:o.from??null,tlAt:o.tlAt??null,note});setExperience(id);},[]);
  useEffect(()=>experience?enterActivity(`exhibit_${experience}` as ActivityId):undefined,[experience]);// admin analytics: time per exhibit (module variable, no render)
  useEffect(()=>{const q=new URLSearchParams(window.location.search);if(q.has('balls'))setBalls(q.get('balls')||'');
   const x=q.get('exp');if(x&&EXPERIENCES[x]&&process.env.NODE_ENV!=='production')openExperience(x);},[openExperience]);
@@ -129,10 +126,14 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const ambience=useRef<MuseumAmbience|null>(null);
  useEffect(()=>{const a=createMuseumAmbience();ambience.current=a;(window as unknown as {__museumAmbience?:unknown}).__museumAmbience=a;a.input();const vis=()=>a.visibility();document.addEventListener('visibilitychange',vis);
   return()=>{document.removeEventListener('visibilitychange',vis);a.dispose();ambience.current=null;};},[]);
+ // Step inside / out of an exhibit: cross-fade the hall theme to its activity variant (the penalty-1891 cabinet gets the chiptune one).
+ useEffect(()=>{ambience.current?.setExhibit(!!experience,experience==='penalty-1891');},[experience]);
+ // Ada's guide panel reads like a voice-over: duck the music under it, same as the arrival bell/hush below.
+ useEffect(()=>{ambience.current?.duck(guideOpen);},[guideOpen]);
  useEffect(()=>{const input=(e:Event)=>{if(!e.isTrusted)return;unlockMuseumAudio();if(!leavingRef.current)ambience.current?.input();if(arrival.current&&performance.now()-arrival.current<8000){const c=konbiniAudioContext();if(c?.state==='running'){arrival.current=0;museumSfx.bell();setTimeout(museumSfx.hush,500);}}};
   for(const t of MUSEUM_UNLOCK_EVENTS)window.addEventListener(t,input,{capture:true,passive:true});return()=>{for(const t of MUSEUM_UNLOCK_EVENTS)window.removeEventListener(t,input,{capture:true});};},[]);
  useEffect(()=>{if(!firstFrame)return;const c=konbiniAudioContext();if(c?.state==='running'){museumSfx.bell();setTimeout(museumSfx.hush,500);}else arrival.current=performance.now();
-  room.current?.greet();setGreeting(true);const t=setTimeout(()=>setGreeting(false),3600);return()=>clearTimeout(t);},[firstFrame]);
+  room.current?.greet();setGreeting(true);ambience.current?.duck(true);const t=setTimeout(()=>{setGreeting(false);ambience.current?.duck(false);},3600);return()=>{clearTimeout(t);ambience.current?.duck(false);};},[firstFrame]);
  // Keyboard: Enter/E looks at the prompted spot (arrows / Escape while zoomed live in the scene).
  useEffect(()=>{if(covered)return;const key=(e:KeyboardEvent)=>{if(e.repeat||e.target instanceof HTMLButtonElement)return;if((e.code==='Enter'||e.code==='KeyE')&&!zoom&&near){e.preventDefault();look(near);}};
   window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);
@@ -143,8 +144,11 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const stop=(e?:{pointerId:number})=>{if(e&&e.pointerId!==pointer.current)return;const id=pointer.current;pointer.current=null;joyRect.current=null;if(id!==null&&joy.current?.hasPointerCapture(id))joy.current.releasePointerCapture(id);room.current?.setStick(0,0);paintJoystick(joy.current,0,0);};
  const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,scale=Math.min(1,36/Math.max(1,Math.hypot(dx,dy))),x=dx*scale,y=dy*scale;room.current?.setStick(x/36,y/36);paintJoystick(joy.current,x,y);};
 
- const zoomedId=zoom?.id??null,exhibit=EXHIBITS.find(e=>e.id===zoomedId)??null,spinning=zoomedId==='telstar-1970'&&!!zoom?.arrived&&!!open['telstar-1970']&&!isStoryCase('telstar-1970'),cranking=zoomedId==='backpass-1992'&&!!zoom?.arrived&&!!open['backpass-1992'],storyCase=isStoryCase(zoomedId);
- const storyHooks:StoryHooks=useMemo(()=>({play:(anim,arg)=>room.current?.story.play(zoomedId??'',anim,arg)??0,reset:()=>{if(zoomedId)room.current?.story.reset(zoomedId);},duck:on=>ambience.current?.duck(on)}),[zoomedId]);
+ // Every case opens straight onto its full card (Oct 13 2026, user: "for all the exhibits remove this info thing and btn, just have
+ // the full thing at the beginning"): eyebrow, title, facts, the hands-on bit, "Take it to your game", sources, Step inside. The
+ // step-through story strip (beat dots, the ⓘ plaque, the beat buttons and the coach's voiced lines) is gone. The Telstar is the
+ // one sculpture you can still drag to spin.
+ const zoomedId=zoom?.id??null,exhibit=EXHIBITS.find(e=>e.id===zoomedId)??null,spinning=zoomedId==='telstar-1970'&&!!zoom?.arrived&&!!open['telstar-1970'];
  const rain=useCallback((on:boolean)=>room.current?.setRain(on),[]);
  const hooks:ExhibitHooks=useMemo(()=>({spin:d=>room.current?.spinNudge(d),rain,certificate:id=>{if(isCertificateId(id))setCert(id);},earned}),[rain,earned]);
  const nextCase=nextExhibitToOpen(counts);
@@ -185,7 +189,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  }
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
- return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom} data-story={storyCase&&!!zoom?.arrived||undefined}>
+ return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
    {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>openExperience('timeline')}>Step inside</button>}
@@ -195,8 +199,8 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
     {(['balls','cards','books','graduations'] as const).map(k=><span key={k} data-museum-hud={k} style={{'--g':COUNT_ART[k]} as React.CSSProperties}><b>{counts[k]}</b>{counts[k]===1?COUNT_WORD[k].slice(0,-1):COUNT_WORD[k]}</span>)}</span>}
   </header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label="Walkable History Museum. Use WASD or arrow keys to walk, then Enter to look at a case. Tap a case to walk there and look closer."
-   onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};if(spinning||cranking){drag.current={x:e.clientX,t:performance.now(),v:0,moved:0};e.currentTarget.setPointerCapture(e.pointerId);}}}
-   onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x,now=performance.now(),dt=Math.max(1,now-d.t);d.v=dx*.012/(dt/1000);d.x=e.clientX;d.t=now;d.moved+=Math.abs(dx);if(cranking)room.current?.story.crank(dx*.02);else room.current?.spinDrag(dx);}}
+   onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};if(spinning){drag.current={x:e.clientX,t:performance.now(),v:0,moved:0};e.currentTarget.setPointerCapture(e.pointerId);}}}
+   onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x,now=performance.now(),dt=Math.max(1,now-d.t);d.v=dx*.012/(dt/1000);d.x=e.clientX;d.t=now;d.moved+=Math.abs(dx);room.current?.spinDrag(dx);}}
    onPointerCancel={()=>{drag.current=null;}}
    onPointerUp={e=>{const p=tap.current,d=drag.current;tap.current=null;drag.current=null;
     if(d){if(d.moved>6&&spinning)room.current?.spinRelease(performance.now()-d.t<120?d.v:0);return;}
@@ -207,7 +211,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   {zoom&&<>
    <button type="button" className={`${styles.arrow} ${styles.prev}`} data-museum-prev aria-label="Previous case" disabled={zoom.index<=0} onClick={()=>room.current?.zoomStep(-1)}><Icon name="back" size={22}/></button>
    <button type="button" className={`${styles.arrow} ${styles.next}`} data-museum-next aria-label="Next case" disabled={zoom.index>=zoom.count-1} onClick={()=>room.current?.zoomStep(1)}><Icon name="arrow" size={22}/></button>
-   {zoom.arrived&&(storyCase&&exhibit?<MuseumStory key={zoom.id} exhibit={exhibit} open={!!open[exhibit.id]} counts={counts} hooks={storyHooks}/>:<div className={styles.card} key={zoom.id}>{card()}</div>)}
+   {zoom.arrived&&<div className={styles.card} key={zoom.id}>{card()}</div>}
    {spinning&&<p className={styles.hint} aria-hidden="true">Drag to spin</p>}
   </>}
   {timelineId&&!zoom&&(()=>{const e=EXHIBITS.find(x=>x.id===timelineId);if(!e)return null;const s=exhibitState(e,counts);return <p key={timelineId} className={styles.yearPop} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} data-museum-timeline={timelineId} role="status"><b>{e.year}</b>{e.title}{s.open?'':' · locked'}</p>;})()}
@@ -229,19 +233,16 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   {experience&&(()=>{const X=EXPERIENCES[experience],tl=experience==='timeline',e=tl?(EXHIBITS.find(x=>x.id===stage.tlAt)??timelineOrder()[0]):EXHIBITS.find(x=>x.id===experience);if(!X||!e)return null;
    const info:StageInfo=tl?{id:'timeline',year:'1863 → Today',title:'The story of football',gallery:'The timeline',color:'#1d1d1b',note:stage.note}
     :{id:e.id,year:e.year,title:e.title,gallery:galleryOf(e.gallery).title,color:accentOf(e.gallery),note:stage.note};
-   /** Out of an experience: back to the timeline when it was entered from there, otherwise the hall fades in with the stamp card. */
+   /** Out of an experience: back to the timeline when it was entered from there, otherwise the hall fades back in. */
    const closed=()=>{if(!tl&&stage.from==='timeline'){openExperience('timeline',{covered:true,from:experience,tlAt:experience,note:stage.note.startsWith('New')?stage.note:''});return;}
-    const id=experience;refocus.current='trigger';setExperience(null);setAfterglow(info.color);if(!tl)setStamp(s=>({id,fresh:stage.note.startsWith('New'),k:(s?.k??0)+1}));};
+    refocus.current='trigger';setExperience(null);setAfterglow(info.color);};// no stamp card on the way out (user, Oct 12 2026: "simplify and get rid of this"); visits still count in the passport
    // The timeline wall (components/museum/experiences/timeline): "Find it in the hall" closes it and walks the hall's camera to
    // that case; "Step inside" opens that exhibit straight away, and its Back comes back to the timeline at that era.
    return <ExperienceStage key={experience+(stage.covered?'+c':'')} info={info} covered={stage.covered} onClose={closed}>{close=><X exhibit={e} earned={earned} openCertificate={id=>setCert(id)} onClose={close}
     onComplete={()=>{recordMuseumVisit(experience,'done');}}
     {...(tl?{onVisit:(id:string)=>{refocus.current='canvas';setExperience(null);setAfterglow(info.color);requestAnimationFrame(()=>room.current?.zoomTo(id));},
      onEnter:(id:string)=>{if(EXPERIENCES[id]&&open[id])openExperience(id,{covered:true,from:'timeline',tlAt:id});else{refocus.current='canvas';setExperience(null);requestAnimationFrame(()=>room.current?.zoomTo(id));}}}:{})}/>}</ExperienceStage>;})()}
-  {afterglow&&<ExperienceAfterglow key={afterglow+(stamp?.k??0)} color={afterglow} onDone={()=>setAfterglow(null)}/>}
-  {stamp&&!experience&&(()=>{const e=EXHIBITS.find(x=>x.id===stamp.id);if(!e)return null;const next=nextToVisit(visits,id=>!!open[id],id=>!!EXPERIENCES[id],e.id);
-   return <StampCard key={stamp.k} exhibit={e} fresh={stamp.fresh} seen={visits.seen} total={pass.total} all={pass.all} next={next}
-    onNext={next?()=>{setStamp(null);room.current?.zoomTo(next.id);openExperience(next.id);}:undefined} onDone={()=>setStamp(null)}/>;})()}
+  {afterglow&&<ExperienceAfterglow key={afterglow} color={afterglow} onDone={()=>setAfterglow(null)}/>}
   {balls!==false&&<WorldCupBalls initialId={balls||undefined} onClose={()=>{setBalls(false);canvas.current?.focus();}}/>}
   <EndgameDialog open={!!cert} label="certificate" title="Certificate" onClose={()=>setCert(null)}>{cert&&<GraduationCeremony record={record} formats={[]} view={cert}/>}</EndgameDialog>
   {!zoom&&!covered&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the museum"
@@ -251,26 +252,3 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  </main>;
 }
 
-/**
- * The passport stamp card (Oct 9 2026): when you come out of an exhibit, its stamp presses into your museum passport (one dot
- * per case, in timeline order) and the card offers the next open exhibit you haven't visited. Not modal (role="status"); it goes
- * by itself after 9 s. One-shot CSS spring on transform/opacity; reduced motion shows it still.
- */
-function StampCard({exhibit,fresh,seen,total,all,next,onNext,onDone}:{exhibit:{id:string;year:string;title:string;gallery:string};fresh:boolean;seen:readonly string[];total:number;all:boolean;
- next:{id:string;year:string;title:string}|null;onNext?:()=>void;onDone:()=>void}){
- const doneRef=useRef(onDone);doneRef.current=onDone;
- useEffect(()=>{const t=setTimeout(()=>doneRef.current(),9000);return()=>clearTimeout(t);},[]);
- const g=galleryOf(exhibit.gallery),n=timelineOrder().filter(e=>seen.includes(e.id)).length;
- return <aside className={styles.stampCard} role="status" data-museum-stamp={exhibit.id} data-fresh={fresh||undefined} data-all={all||undefined} style={{'--g':accentOf(g.id)} as React.CSSProperties}>
-  <span className={styles.stampSeal} aria-hidden="true"><b>{exhibit.year.match(/\d{4}/)?.[0]??exhibit.year}</b></span>
-  <div className={styles.stampBody}>
-   <p className={styles.stampHead}>{all&&fresh?'Every exhibit visited!':fresh?'New stamp!':'Exhibit visited'}<span>{n} of {total}</span></p>
-   <p className={styles.stampTitle}>{exhibit.title}</p>
-   <span className={styles.stampDots} aria-hidden="true">{timelineOrder().map(e=><i key={e.id} data-seen={seen.includes(e.id)||undefined} data-now={e.id===exhibit.id||undefined}/>)}</span>
-   {all?<p className={styles.small}>You’re a Museum Explorer: you’ve stepped inside the whole story of football.</p>
-    :next&&onNext?<button type="button" className={styles.stampNext} data-museum-stamp-next={next.id} onClick={onNext}>Next: {next.year} · {next.title}<span aria-hidden="true">→</span></button>
-    :<p className={styles.small}>Collect more on the island to open the next case.</p>}
-  </div>
-  <button type="button" className={styles.stampClose} aria-label="Close" data-museum-stamp-close onClick={onDone}><span aria-hidden="true">×</span></button>
- </aside>;
-}

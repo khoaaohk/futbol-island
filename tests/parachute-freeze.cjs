@@ -58,5 +58,5 @@ function glide({start,height,target,boxes=[],blocked=()=>false,steer=()=>({x:0,z
   assert.ok(r.landed,`random drop ${n} from ${JSON.stringify(start)} lands (ended ${JSON.stringify(r.p)} h ${r.h.toFixed(2)})`);}
 }
 // 11. Town wiring: the glide gets the flight bounds only; the old height-only surface rule must not come back.
-{const town=fs.readFileSync('components/Town.tsx','utf8');assert.ok(!town.includes("rooftop.surface(x,z)>flight.height-1"),'old pinning rule removed from Town');assert.ok(town.includes('blocked:flightBlocked,floor:rooftop.surface'),'Town passes flightBlocked + rooftop.surface to jetActions');}
+{const town=fs.readFileSync('components/Town.tsx','utf8');assert.ok(!town.includes("rooftop.surface(x,z)>flight.height-1"),'old pinning rule removed from Town');assert.ok(town.includes('blocked:flightBlocked,floor:rooftop.surface')||town.includes('blocked:(x,z)=>flightBlocked(x,z)||summitSolid(x,z,flight.height),floor:rooftop.surface'),'Town passes flightBlocked (plus Summit Isle\'s solid slopes, Oct 12 2026) + rooftop.surface to jetActions');}
 console.log('PARACHUTE_FREEZE_PASS low hover, poles, props, roof edges, steering, blocked safety, age cap and 400 random drops all land');

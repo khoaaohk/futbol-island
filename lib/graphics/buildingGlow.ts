@@ -1,8 +1,9 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {KIT_SHOP_GLOW} from '../shop/shopDoors';
 
 /** Architectural edges and a soft upward wash, updated by the island's existing loop. */
-export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'){
+export function createBuildingGlow(root:T.Group,width:number,depth:number,height:number,kind:'store'|'arcade'|'coaches'|'museum'|'museum-wing'|'arena'|'ferry'|'cabinet'|'vending'|'konbini'|'shop'){
  const arcade=kind==='arcade',coaches=kind==='coaches',vending=kind==='vending',cabinet=kind==='cabinet'||vending;
  const effect=new T.Group();effect.name='building-outline-glow';effect.visible=false;root.add(effect);
  const uniforms={strength:{value:0},rise:{value:-2},tint:{value:new T.Color('#35ed8b')},moving:{value:1}};
@@ -19,6 +20,10 @@ export function createBuildingGlow(root:T.Group,width:number,depth:number,height
   {w:width+.76,d:depth+.8,h:.32,x:0,y:height+.09,z:0},
   {w:5.84,d:.64,h:7.32,x:10.6,y:3.66,z:depth/2+.2},
   {w:10.74,d:3.12,h:.37,x:-7.25,y:4.25,z:depth/2+1.5}
+ ]:kind==='shop'?[
+  // Kit Shop (Oct 12 2026, lib/town/kitShopExterior.ts): the volume, the overhanging roof slab, the rooftop sign, the entrance
+  // canopy and the accent fin (lib/shop/shopDoors.ts KIT_SHOP_GLOW, offsets from the building centre 170, −177).
+  ...KIT_SHOP_GLOW
  ]:kind==='konbini'||kind==='museum-wing'?[
   // Konbini (Sep 29 2026): exactly the store's own box (facade to back wall, ground to parapet) plus its flat roof rim.
   {w:width+.22,d:depth+.24,h:height+.2,x:0,y:(height+.2)/2,z:0},

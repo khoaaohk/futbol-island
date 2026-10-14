@@ -1,0 +1,76 @@
+/* Summit Isle activities: the Summit Kick HUD and cards, and the telescope eyepiece (components/SummitKickHud.tsx, TelescopeView.tsx).
+   Static styles; the only animations run once on a cheer or the 5/5 celebration (and none with reduced motion). */
+.hud{position:absolute;inset:0;z-index:30;pointer-events:none}
+.back{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px));pointer-events:auto}
+.board{position:absolute;top:calc(80px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;gap:14px;align-items:center;padding:8px 16px;border:2px solid #fff2cd;border-radius:18px;background:#294f43ee;color:#fff0cc;box-shadow:0 4px 0 #172d2a66;font:700 14px var(--font-body,Arial),sans-serif;white-space:nowrap}
+.board strong{font:26px Impact,Arial Narrow,sans-serif;color:#ffd27a;letter-spacing:.5px}
+.board small{display:block;font:700 9px monospace;letter-spacing:1px;color:#efc477}
+.balls{display:flex;gap:4px}
+.balls i{width:11px;height:11px;border-radius:50%;background:#fff3df;border:1px solid #f4e2b0}
+.balls i[data-used]{background:transparent;opacity:.45}
+.note{position:absolute;top:calc(146px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(460px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif}
+.cheer{position:absolute;top:30%;left:50%;translate:-50% 0;font:56px Impact,Arial Narrow,sans-serif;color:#ffcb6a;text-shadow:4px 4px #25443a;rotate:-4deg;animation:cheer .9s ease-out both;white-space:nowrap}
+@keyframes cheer{0%{opacity:0;scale:.6}25%{opacity:1;scale:1.08}70%{opacity:1;scale:1}100%{opacity:0;scale:1}}
+.card{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));translate:-50% 0;width:min(420px,calc(100% - 32px));max-height:calc(100% - 120px);overflow:auto;padding:20px 20px 16px;border:2px solid #517461;border-radius:12px;background:#f0e4c1;color:#244b40;box-shadow:5px 6px 0 #152b2455;pointer-events:auto;font:14px/1.5 var(--font-body,Arial),sans-serif}
+.card h2{margin:2px 0 8px;font:30px Impact,Arial Narrow,sans-serif;letter-spacing:.4px;color:#244b40}
+.card p{margin:6px 0}
+.eyebrow{font:700 9px monospace;letter-spacing:1.6px;color:#9c633d;text-transform:uppercase}
+.steps{margin:10px 0 12px;padding-left:20px}
+.steps li{margin:5px 0}
+.learn{border-left:3px solid #718656;padding:4px 10px;margin:10px 0;font-size:13px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.go,.plain{min-height:46px;padding:10px 18px;border-radius:10px;font:700 15px var(--font-body,Arial),sans-serif;cursor:pointer;transition:translate .16s,box-shadow .16s}
+.go{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold)}
+.go:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.plain{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
+.plain:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.score{display:grid;grid-template-columns:1fr auto;gap:2px 14px;margin:10px 0;font-size:14px}
+.score b{text-align:right}
+.total{font:34px Impact,Arial Narrow,sans-serif;color:#244b40}
+.best{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--btn-gold-bright);color:var(--btn-ink);font:700 11px monospace;letter-spacing:.8px}
+.sunset{font-size:12px;opacity:.8}
+.party{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.party i{position:absolute;top:-12px;width:10px;height:14px;border-radius:2px;animation:fall 1.8s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
+
+/* ---- Telescope eyepiece ---- */
+.scope{position:absolute;inset:0;z-index:3;touch-action:none;cursor:grab;--r:min(43vw,40vh)}
+.scope:active{cursor:grabbing}
+.scope::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent calc(var(--r) - 3px),#0b1714f2 calc(var(--r) + 2px));pointer-events:none}
+.rim{position:absolute;left:50%;top:50%;width:calc(var(--r) * 2);height:calc(var(--r) * 2);translate:-50% -50%;border-radius:50%;border:4px solid #e9c75f;box-shadow:0 0 0 2px #294f43,inset 0 0 40px #0b171488;pointer-events:none}
+.cross{position:absolute;left:50%;top:50%;width:34px;height:34px;translate:-50% -50%;pointer-events:none}
+.cross::before,.cross::after{content:'';position:absolute;background:#fff3dfcc}
+.cross::before{left:16px;top:0;width:2px;height:34px}
+.cross::after{top:16px;left:0;height:2px;width:34px}
+.ring{position:absolute;left:50%;top:50%;width:64px;height:64px;translate:-50% -50%;pointer-events:none}
+.label{position:absolute;left:50%;top:calc(50% + var(--r) - 92px);translate:-50% 0;width:min(380px,calc(var(--r) * 1.6));padding:9px 14px;border:2px solid #fff2cd;border-radius:14px;background:#294f43ee;color:#fff0cc;text-align:center;font:13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
+.label strong{display:block;font:20px Impact,Arial Narrow,sans-serif;letter-spacing:.4px;color:#ffd27a}
+.scopeTop{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;padding-right:0;pointer-events:none}
+.scopeTop>*{pointer-events:auto}
+/* Wider screens: Zoom sits top right, so the glint count stops short of it. */
+@media(min-width:601px){.scopeTop{right:calc(130px + env(safe-area-inset-right,0px))}}
+/* Zoom: bottom right on phones (with the island's action buttons); top right beside the glints on wider screens. */
+.scopeActions{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));right:calc(24px + env(safe-area-inset-right,0px));pointer-events:auto}
+.found{padding:7px 12px;border:2px solid #fff2cd;border-radius:999px;background:#294f43ee;color:#fff0cc;font:700 12px monospace;letter-spacing:.6px}
+.zoom{min-width:64px;min-height:46px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:12px;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);font:700 15px var(--font-body,Arial),sans-serif;box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s}
+.zoom:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.scopeNote{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));translate:-50% 0;width:max-content;max-width:min(460px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
+@media(max-width:600px),(pointer:coarse){
+ .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
+ .board{top:calc(72px + env(safe-area-inset-top,0px));gap:10px;padding:6px 12px;font-size:12px}
+ .board strong{font-size:22px}
+ .note{top:calc(130px + env(safe-area-inset-top,0px));font-size:12px}
+ .cheer{font-size:40px}
+ .card{padding:16px 16px 12px;font-size:13px}
+ .card h2{font-size:25px}
+ /* The stick stays usable under the eyepiece (bottom left), so the note moves up a little. */
+ .scopeNote{bottom:calc(150px + env(safe-area-inset-bottom,0px));font-size:12px}
+ .label{top:calc(50% + var(--r) - 86px);font-size:12px}
+ /* The coin bar hides under the eyepiece, so Back sits at the usual top-left spot (like every other screen) and the glint count
+    at the top right; Zoom moves to the bottom right where the island's action buttons live (user, Oct 13 2026). */
+ .scopeTop{top:calc(16px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px))}
+ .zoom{position:fixed;right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));min-width:72px;min-height:72px;border-radius:50%;font-size:14px;padding:0 8px}
+}
+/* While the eyepiece is up the island HUD steps aside; the joystick stays to pan with. */
+:global(.town-app):has(.scope) :global(:is(nav[data-hud-triggers],.town-minimap,.travel-actions,.touch-actions,[data-hud-stack],.field-learn-card,button[data-tour],.goal-toast)){visibility:hidden;pointer-events:none}
+:global(.town-app):has(.board) :global(:is(.field-learn-card,nav[data-hud-triggers])){visibility:hidden;pointer-events:none}

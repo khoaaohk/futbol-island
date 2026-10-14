@@ -1,33 +1,71 @@
-/* var-2018 · exhibit-only pieces on top of the shared Paper room (anatomy/PaperStage.module.css): the goal-line camera's monitor
- * (a frame within the frame), the frame scrubber and the call buttons. */
+/* var-2018 · exhibit-only pieces on top of the shared Paper room (anatomy/PaperStage.module.css): the VAR's monitor (a frame
+ * within the frame) with its camera tabs and magnifier, the frame scrubber and the call buttons. */
 .stage{position:absolute;inset:0}
-.monitor{position:absolute;z-index:2;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:6px;padding:10px 12px 10px;border-radius:18px;background:#f7f7f3;
+.monitor{position:absolute;z-index:2;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;padding:10px 12px 10px;border-radius:18px;background:#f7f7f3;
  box-shadow:0 0 0 1px #3a3a37,inset 0 0 0 5px #f7f7f3,inset 0 0 0 6px #c4c4bd,0 18px 36px -18px #00000055;box-sizing:border-box}
-.monitor[data-pos=side]{top:44px;right:22px;bottom:44px;width:min(36%,460px)}
-.monitor[data-pos=top]{top:34px;left:12px;right:12px;height:30%}
-.monTop,.monBottom{display:flex;justify-content:space-between;gap:8px;font:600 10px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--anatomy-text);padding:0 4px}
-.monTop i{font-style:normal;display:inline-flex;align-items:center;gap:6px}
-.monTop i::before{content:"";width:8px;height:8px;border-radius:50%;background:#cfcfc8;box-shadow:0 0 0 1px #3a3a37}
-.monitor[data-locked] .monTop i::before{background:var(--accent)}
+.monitor[data-pos=side]{top:44px;right:22px;bottom:44px;width:min(40%,520px)}
+.monitor[data-pos=top]{top:34px;left:10px;right:10px;height:42%;padding:8px 9px;gap:6px;border-radius:16px}
+.monTop,.monBottom{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 10px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--anatomy-text);padding:0 2px;min-width:0}
+.tc{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tabs{display:flex;gap:4px;padding:3px;border-radius:999px;background:#e9e9e4;box-shadow:inset 0 0 0 1px #00000014}
+.tab{min-height:32px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--anatomy-text);font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;
+ display:inline-flex;align-items:center;gap:6px;touch-action:manipulation;transition:background-color .2s,color .2s}
+.tab::before{content:"";width:7px;height:7px;border-radius:50%;background:#cfcfc8;box-shadow:0 0 0 1px #3a3a37}
+.tab[aria-pressed=true]{background:#f7f7f3;color:var(--ink);box-shadow:0 0 0 1px #3a3a37}
+.tab[aria-pressed=true]::before{background:var(--accent)}
+.tab:disabled{cursor:default;opacity:.75}
+.tab:focus-visible,.zbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .screen{position:relative;min-height:0;border-radius:10px;overflow:hidden;background:#e9e9e4;box-shadow:inset 0 0 0 1px #3a3a37}
 .screen svg{position:absolute;inset:0;width:100%;height:100%;display:block}
-/* Before the camera is on the ball the screen stays quiet: the line and the mown grass, faded, and the hint in a small pill low
- * on the screen (not across the line). */
-.aim{position:absolute;inset:0;display:grid;align-items:end;justify-items:center;text-align:center;padding:12px 12px 22%;pointer-events:none}
+.screen svg *{vector-effect:non-scaling-stroke}
+.screen svg[data-idle]{opacity:.55}
+/* The monitor picture, true scale in cm (Monitor.tsx). */
+.mSky{fill:#f3f3ee}
+.mGoal{fill:#e2e2dc}
+.mGround{fill:#dcdcd5}
+.mPitch{fill:#ecece6}
+.mStripe{fill:#e4e4de}
+.mNet{stroke:#c9c9c2;stroke-width:.6}
+.mFaint{stroke:#c9c9c2;stroke-width:.6}
+.mPlane{fill:#2a5bd70d;stroke:#98989a;stroke-width:.6;stroke-dasharray:3 3}
+.mLine{fill:#fbfbf8;stroke:#3a3a37;stroke-width:.9}
+.mEdge{stroke:var(--accent);stroke-width:1.2;stroke-dasharray:5 4}
+.mBar{fill:#f7f7f3;stroke:#3a3a37;stroke-width:1}
+.mShadow{fill:#4a4a44}
+.mBallSh{fill:#d3d3ce}
+.mBall{fill:#f7f7f3}
+.mBallHi{fill:#ffffff;opacity:.85}
+.mSeam{fill:none;stroke:#6f6f72;stroke-width:.8}
+.mBallEdge{fill:none;stroke:var(--accent);stroke-width:1.6}
+.mAcc{stroke:var(--accent)}
+.mInk{stroke:#3a3a37}
+.mDim{stroke:#1d1d1b;stroke-width:1.2}
+.mText{fill:#1d1d1b;font-family:var(--sans);font-weight:700;paint-order:stroke;stroke:#f3f3ee;stroke-width:3px;stroke-linejoin:round}
+.zoomChip{position:absolute;top:8px;right:8px;padding:3px 8px;border-radius:999px;background:#f7f7f3;box-shadow:0 0 0 1px #3a3a37;font:700 11px/1.3 var(--mono);color:var(--accent);pointer-events:none}
+.zoom{display:flex;align-items:center;gap:8px;min-width:0}
+.zoom span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zbtn{width:44px;height:44px;flex:none;border-radius:50%;border:1.5px solid var(--ink);background:#f7f7f3;color:var(--ink);font:600 18px/1 var(--sans);cursor:pointer;touch-action:manipulation;padding:0}
+.zbtn:disabled{opacity:.3;cursor:default}
+.status{white-space:nowrap;color:var(--accent)}
+.aim{position:absolute;inset:0;display:grid;align-items:end;justify-items:center;text-align:center;padding:12px 12px 14%;pointer-events:none}
 .aim span{padding:6px 12px;border-radius:999px;background:#f7f7f3;box-shadow:0 0 0 1px #3a3a3740;font:600 11px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--anatomy-text)}
-.screen svg[data-idle]{opacity:.6}
-.verdictCm{font:700 clamp(18px,2.4vw,28px)/1 var(--sans);letter-spacing:-.02em;color:var(--ink);text-transform:none}
 .banner{position:absolute;z-index:3;left:clamp(14px,2vw,24px);bottom:42px;max-width:min(420px,calc(100% - 28px));display:grid;gap:4px;padding:14px 18px 16px;border-radius:16px;
  background:#f7f7f3;box-shadow:0 0 0 1px #0000001c,0 12px 30px -14px #00000045;pointer-events:none;animation:in .45s var(--spring) both}
 .banner b{font:700 clamp(22px,3vw,34px)/1 var(--sans);letter-spacing:-.02em}
 .banner[data-kind=good] b{color:#1f8a5b}.banner[data-kind=bad] b{color:#e4322b}.banner[data-kind=info] b{color:var(--accent)}
 .banner span{font:400 14px/1.45 var(--sans)}
 @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@media (max-width:600px){.banner{bottom:36px;padding:10px 14px}.banner span{display:none}}
+@media (max-width:600px){.banner{bottom:36px;padding:10px 14px}.banner span{display:none}
+ .tab{padding:0 9px;font-size:9.5px}.monTop,.monBottom{font-size:9px;letter-spacing:.06em}.zbtn{width:44px;height:44px}}
+/* How to play (intro sheet): four numbered steps. */
+.how{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.how li{display:grid;gap:4px;padding:12px;border-radius:14px;background:#ecebe6;font:400 13px/1.4 var(--sans)}
+.how i{font:700 11px/1 var(--mono);font-style:normal;color:var(--accent)}
+.how b{font:700 15px/1.2 var(--sans)}
+@media (max-width:700px){.how{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* The frame scrubber: a strip of 37 frames you drag along, like a jog wheel laid flat. */
 .strip{flex:1 1 360px;min-width:0;height:52px;position:relative;border-radius:12px;background:#f7f7f3;box-shadow:inset 0 0 0 1.5px var(--ink);touch-action:none;cursor:ew-resize;outline:none}
 .strip:focus-visible{box-shadow:inset 0 0 0 1.5px var(--ink),0 0 0 3px color-mix(in srgb,var(--accent) 45%,transparent)}
-.strip[aria-disabled=true]{opacity:.4;cursor:default}
 .ticks{position:absolute;inset:8px 14px;display:flex;justify-content:space-between;align-items:flex-end}
 .ticks i{width:1px;height:40%;background:#9d9d96}.ticks i:nth-child(6n+1){height:70%;background:#3a3a37}
 .head{position:absolute;top:4px;bottom:4px;width:4px;margin-left:-2px;border-radius:2px;background:var(--accent);transition:left .08s linear}
@@ -39,4 +77,4 @@
 .list b{font-weight:700}
 .endArt{display:block;width:100%;height:auto}
 @media (max-width:600px){.strip{flex-basis:100%;height:46px}.calls{width:100%}.calls>*{flex:1 1 0}}
-@media (prefers-reduced-motion:reduce){.banner{animation:none}.head{transition:none}}
+@media (prefers-reduced-motion:reduce){.banner{animation:none}.head{transition:none}.tab{transition:none}}

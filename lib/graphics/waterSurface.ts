@@ -64,6 +64,12 @@ float swellPhase(float d,float alongNoise){return fract(d/SWELL_L+uWaterTime/SWA
 /** Ground counts as land where it stands above this (m over WATER_Y = −0.42): the ocean plane (−0.43) meets it right there, so the
  *  shore fields' zero line is the waterline actually drawn (Oct 12 2026 seam fix; it was +0.03, 0.2–0.35 m up the slopes). */
 export const SHORE_LAND_LIFT=-.008;
+/** The waterline drawn on beaches (beach waves, Oct 12 2026): the edge of the flat sand, where the skirt starts sloping into the sea.
+ *  Ground counts as sea for it when it is low (under SHORE_VIS_LIFT over the water) and slopes like a skirt (a rise per metre in
+ *  SHORE_VIS_SLOPE): the main coast's skirt (0.27 m/m from 0.3 m), Coral Cay's (0.12 from 0.31), the sandbars' (0.16 from 0.37) and
+ *  the causeway banks' (0.2 from 0.4). Flat sand stays land however low (West Cove's beach is 0.24 m over the water), and so do rocks.
+ *  The island strip paints the skirt as shallow water, and the foam laps from its top. */
+export const SHORE_VIS_LIFT=.34,SHORE_VIS_SLOPE=[.07,.45] as const;
 /** Ground this high (decks, kerbs, piers, rocks, walls: 0.4 m over the water) is never draped by a shore strip. */
 export const SHORE_HIGH=.4;
 /** 1 where the ground is not beach: high (decks, kerbs, piers, walls) or steep (rocks and boulders: over 0.45 m rise per metre
@@ -110,34 +116,44 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
     if(uShore>.999&&shoreEdge(vWaterXZ)>.999){float cd=shoreSample(vWaterXZ).r;if(cd>.02&&cd<14.9){gl_FragColor=vec4(0.,0.,0.,1.);return;}}
-    float waterGlint=0.;vec4 ripple=vec4(1.);
+    float waterGlint=0.;vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
     #ifdef USE_MAP
-    // Two drifting layers of the painted ripple tile (one on phones and on the still path).
-    vec4 rippleA=texture2D(map,vMapUv+uWaterTime*vec2(.014,.006));ripple=rippleA;
-    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(vMapUv.y,-vMapUv.x)*1.37+uWaterTime*vec2(-.008,.012));ripple=max(rippleA,rippleB);
+    // Two drifting layers of the painted ripple tile (one on phones and on the still path), their strokes bent by the field's
+    // noise so they read as wavy ripples instead of long straight streaks.
+    // (Two domain-warped sines stand in for the field's noise out at sea, past the field's rect.)
+    vec2 wq=vWaterXZ*.11;float seaN=.5+.5*sin(wq.x+1.7*sin(wq.y*.8))*sin(wq.y*1.2+1.7*sin(wq.x*.7));
+    vec2 rUv=vMapUv+(s.gb-.5)*.24+(seaN-.5)*vec2(.12,-.1);
+    vec4 rippleA=texture2D(map,rUv+uWaterTime*vec2(.014,.006));ripple=rippleA;
+    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));ripple=max(rippleA,rippleB);
      waterGlint=smoothstep(.93,1.,min(rippleA.g,rippleB.g)+.02);}
-    diffuseColor*=ripple;
+    // The tile repeats every 32 m: patches of it fade out on the 14 m noise, so its strokes never line up into long streaks.
+    diffuseColor*=mix(vec4(.95),ripple,.3+.7*smoothstep(.3,.7,s.g*.45+s.b*.4+seaN*.5-.15));
     #endif
-    {vec4 s=waterField(vWaterXZ);float d=s.r;
+    {
      // Depth: pale sandy shallows at the waterline, turquoise over the first metres, back to the open-sea teal by ~24 m.
-     vec3 shallowC=mix(vec3(.2,.55,.52),vec3(.05,.42,.52),smoothstep(.3,5.,d));
+     vec3 shallowC=mix(vec3(.17,.56,.57),vec3(.05,.42,.53),smoothstep(.3,5.,d));
      float nearK=1.-smoothstep(3.,24.,d);
      diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
+     float crest=0.;
      if(uWaterDetail>.5){
-      // Rolling swells drifting toward every shore (a soft bright front, a faint trough behind), breaking near the beach.
-      float ph=swellPhase(d,s.g),front=smoothstep(.86,1.,ph),back=1.-smoothstep(0.,.3,ph),crest=max(front,back);
-      float reach=smoothstep(20.,6.,d)*smoothstep(.6,3.,d)*(.3+.8*s.b);
-      diffuseColor.rgb+=reach*(crest*vec3(.09,.13,.12)-(1.-crest)*smoothstep(.3,.75,ph)*vec3(.015,.02,.018));
+      // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
+      // crest's strength varies wave to wave and along the shore (14 m sets, blended so nothing seams), it breaks into pieces on the
+      // 5 m noise and bends with it (less so close in, where it meets the swash in step), and it fades out at sea and close in.
+      float cyc=swellPhase(d,s.g)+(s.b-.5)*.45*smoothstep(1.,9.,d),ph=fract(cyc),wi=floor(d/SWELL_L+uWaterTime/SWASH_P+s.g*.35+.5);
+      float nb=s.g*4.,fb=floor(nb),wset=mix(waterHash(wi*1.7+fb),waterHash(wi*1.7+fb+1.),smoothstep(0.,1.,nb-fb));
+      crest=smoothstep(.8,1.,ph)+1.-smoothstep(0.,.07,ph);
+      float reach=smoothstep(22.,8.,d)*smoothstep(.8,3.5,d)*wset*smoothstep(.3,.62,s.b+.45*wset-.2);
+      diffuseColor.rgb+=reach*crest*vec3(.1,.14,.12);
       // Animal Crossing-style white ripple lines on the crest close in, broken up by the ripple tile and the noise.
-      diffuseColor.rgb+=reach*front*smoothstep(10.,2.5,d)*smoothstep(.9,1.,ripple.r+.12*s.b)*vec3(.4);
+      diffuseColor.rgb+=reach*smoothstep(.9,1.,ph)*smoothstep(11.,3.,d)*smoothstep(.9,1.,ripple.r+.1*s.b)*vec3(.35);
       // Sun sparkle (desktop only): glints where the two ripple layers cross, brightest toward the sun's reflection.
       if(uWaterDetail>1.5){vec3 v=normalize(vec3(vWaterXZ.x,-.43,vWaterXZ.y)-cameraPosition);float sun=max(dot(vec3(v.x,-v.y,v.z),uSunDir),0.);
-       waterGlint*=(.3+.7*sun*sun*sun)*(.6+.8*crest)*smoothstep(1.,4.,d);}
+       waterGlint*=(.3+.7*sun*sun*sun)*(.6+.8*crest)*smoothstep(4.,9.,d);}
      }
      if(uWaterDetail<1.5)waterGlint=0.;
     }`)
-   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterGlint*vec3(1.,.93,.78)*1.6;');
+   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterGlint*vec3(1.,.96,.88)*1.4;');
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v2';
+ material.customProgramCacheKey=()=>'island-ocean-water-v3';
  material.needsUpdate=true;
 }

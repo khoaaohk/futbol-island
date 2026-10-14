@@ -27,6 +27,13 @@ import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {loadIdp,goalById} from '@/lib/coaches/idp';
 import arcade from './ArcadeGame3D.module.css';
 import styles from './PassPuzzleGame.module.css';
+import dynamic from 'next/dynamic';
+import {beginBoardSession} from '@/lib/arcade/boardClient';
+// Leaderboards (docs/arcade-leaderboards.md): the puzzle board ranks total stars. Lazy, loaded only when it is needed.
+const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
+const ArcadeBoards=dynamic(()=>import('../arcade/ArcadeBoards'),{ssr:false});
+/** Total stars across the puzzles (the daily remix is a bonus and doesn't count toward the board). */
+const boardStars=(stars:Record<string,number>)=>Object.entries(stars).reduce((n,[k,v])=>k.startsWith('daily')?n:n+v,0);
 
 const SCENARIOS=ALL_SCENARIOS,PACKS=ALL_PACKS;
 /** Daily remix of a learned idea, built (and engine-checked) only when the child opens it. */
@@ -75,6 +82,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const [progress,setProgress]=useState<Progress>({stars:{}}),[format,setFormat]=useState<Format>('9v9'),progressRef=useRef(progress);progressRef.current=progress;
  const [levelId,setLevelId]=useState<string>(SCENARIOS[0]?.id??''),[view,setViewState]=useState<View>('levels');
  const [hud,setHud]=useState({attempt:1,attempts:3,passes:0,phase:'aiming' as string});
+ const [boardScore,setBoardScore]=useState<number|null>(null),[boardsOpen,setBoardsOpen]=useState(false);
  const [outcome,setOutcome]=useState<Outcome|null>(null),[replaying,setReplaying]=useState(false),[showHint,setShowHint]=useState(false),[error,setError]=useState(false);
  const loftMeter=useRef<HTMLDivElement>(null);
  /** The chosen pack's puzzle grid (scrolled into view when a pack is picked on a phone). */
@@ -131,6 +139,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   const move=success&&r.passes>=sc.require.minPasses,mask=success?STAR_SOLVE|(move?STAR_MOVE:0)|(r.bonus?STAR_BONUS:0):0;
   const before=progressRef.current.masks?.[id]??0,merged=before|mask,fresh=mask&~before,stars=Math.max(starCount(merged),progressRef.current.stars[id]??0);
   if(success&&coinAttempt.current&&!id.startsWith('daily-'))void recordPuzzleBest(id,stars,coinAttempt.current,coinVisit.current);
+  if(success&&fresh&&!id.startsWith('daily')){const total=boardStars({...progressRef.current.stars,[id]:Math.max(progressRef.current.stars[id]??0,stars)});if(total>0)setBoardScore(total);}
   if(success){setProgress(p=>{const next={...p,stars:{...p.stars,[id]:Math.max(p.stars[id]??0,stars)},masks:{...p.masks,[id]:(p.masks?.[id]??0)|mask}};writeProgress(next);return next;});
    [STAR_SOLVE,STAR_MOVE,STAR_BONUS].filter(b=>mask&b).forEach((_,i)=>puzzleStar(audio.current,i+1,.85+i*.22));}
   let why:string[]=[],fix:string|undefined;
@@ -243,7 +252,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const openLevel=(s:Scenario)=>{loadLevel(s);setView('brief');};
  const dailyId=`daily-${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
  const openDaily=()=>{const d=todaysDaily();if(d)openLevel(d.scenario);};
- const play=async()=>{unlock();const id=await entry.enter();if(!id)return;aimSince.current=performance.now();coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');recordExploreActivity('arcade');setView('play');const w=worldRef.current;if(w)sceneRef.current?.setAim(null,w.state);settleUntil.current=performance.now()+1200;wake.current();};
+ const play=async()=>{unlock();const id=await entry.enter();if(!id)return;setBoardScore(null);beginBoardSession('puzzle');aimSince.current=performance.now();coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');recordExploreActivity('arcade');setView('play');const w=worldRef.current;if(w)sceneRef.current?.setAim(null,w.state);settleUntil.current=performance.now()+1200;wake.current();};
  const retry=async()=>{aimSince.current=performance.now();const worldBefore=worldRef.current;if(!worldBefore)return;if(worldBefore.state.attemptsLeft<=0||worldBefore.state.phase==='success'){const id=await entry.enter();if(!id)return;}rewindPoint.current=null;rewound.current=false;coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');const world=worldRef.current,scene=sceneRef.current;if(!world||!scene)return;replayRef.current=null;setReplaying(false);if(!world.retry()){loadLevel(world.scenario);setView('play');return;}attemptEvents.current=[];notes.current=[];scene.resetActors();scene.update(world.state,0);scene.setAim(null,world.state);scene.setCalls(world.state,null);applyHint.current();applyScan.current();syncHud();setOutcome(null);setShowHint(true);setView('play');settleUntil.current=performance.now()+600;wake.current();};
  const rewindPass=()=>{aimSince.current=performance.now();const world=worldRef.current,scene=sceneRef.current,snapshot=rewindPoint.current;if(!world||!scene||!snapshot||rewound.current)return;cancelDrawing.current();replayRef.current=null;setReplaying(false);world.drain();world.restore(snapshot);rewound.current=true;rewindPoint.current=null;attemptEvents.current=attemptEvents.current.filter(e=>e.tick<snapshot.state.tick);notes.current.length=Math.min(notes.current.length,world.inputs().length);scene.resetActors();scene.setReplayFocus(null);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);applyHint.current();applyScan.current();setOutcome(null);setShowHint(true);syncHud();setView('play');settleUntil.current=performance.now()+600;wake.current();};
  const coachReplay=useRef(false),playerView=useRef(false),[playerCam,setPlayerCam]=useState(false),[replayKind,setReplayKind]=useState<'mine'|'coach'>('mine');
@@ -323,6 +332,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    <fieldset className={styles.formatChoice}><legend>How do you play football?</legend><p>This changes the coaching words, not the difficulty.</p><div className={styles.formats}>{FORMATS.map((f,i)=><button key={f} className={`pixel-btn ${styles.format}`} aria-pressed={format===f} onClick={()=>chooseFormat(f)}><b>{f}</b><span>{['Small-sided','Growing teams','Full pitch'][i]}</span></button>)}</div></fieldset>
    <fieldset className={styles.formatChoice} data-heading-choice><legend>Heading the ball</legend><p>US youth rule: no heading at 10 and under. With heading off, crosses are chested down and finished.</p><div className={styles.formats} data-two>{[false,true].map(on=><button key={String(on)} className={`pixel-btn ${styles.format}`} aria-pressed={heading===on} onClick={()=>chooseHeading(on)}><b>{on?'Heading on':'No heading'}</b><span>{on?'Ages 11+':'Ages 10 and under'}</span></button>)}</div></fieldset>
    <button className={styles.daily} data-daily onClick={openDaily}><Icon name="clock" size={18}/><span><b>Daily puzzle</b><small>A new twist on a move you know, every day</small></span><em>{[0,1,2].map(n=>star(n<(progress.stars[dailyId]??0),n))}</em></button>
+   <button type="button" className={arcade.boards} onClick={()=>setBoardsOpen(true)}>Leaderboard · {boardStars(progress.stars)} ★</button>
    {/* The pack map: a path of packs, each opened by stars earned anywhere (skill unlocks, never coins). */}
    <ol className={styles.packMap} role="group" aria-label="Choose a puzzle topic">{PACKS.map((p,i)=>{const list=packs.find(([id])=>id===p.id)?.[1]??[],got=list.reduce((n,s)=>n+(progress.stars[s.id]??0),0),open=packGateOpen(p,totalStars);
     return <li key={p.id} data-open={open} data-done={got===list.length*3||undefined}><button aria-label={p.title} aria-pressed={packId===p.id} onClick={()=>{setPackId(p.id);requestAnimationFrame(()=>packList.current?.scrollIntoView({block:'nearest',behavior:sceneRef.current?.stage.reduced?'auto':'smooth'}));}}><b>{i+1}</b><span>{p.title}</span><small>{open?`${got}/${list.length*3} ★`:`🔒 ${p.gate} ★`}</small></button></li>;})}</ol>
@@ -358,5 +368,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   </section></div>}
 
   {error&&<div className={arcade.overlay}><section className={arcade.card}><span className={arcade.badge}>TAKE A BREATHER</span><h3>The pitch couldn’t load.</h3><p>Return to the arcade and try again.</p><button className={arcade.exit} onClick={onExit}>Back to arcade</button></section></div>}
+  {boardScore!==null&&view==='result'&&<HighScoreEntry game="puzzle" score={boardScore} detail="Your total stars across every puzzle." onClose={()=>setBoardScore(null)}/>}
+  {boardsOpen&&<ArcadeBoards game="puzzle" onClose={()=>setBoardsOpen(false)}/>}
  </div>;
 }

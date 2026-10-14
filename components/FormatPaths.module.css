@@ -3,3 +3,18 @@
 .tabHighlight{position:absolute;z-index:0;top:8px;bottom:8px;left:8px;width:calc((100% - 34px)/4);border-radius:11px;background:#304d42;transform:translateX(calc(var(--format-index,0)*(100% + 6px)));transition:transform .26s cubic-bezier(.22,.68,0,1.05);pointer-events:none}
 @media(max-width:380px){.tabHighlight{top:5px;bottom:5px;left:5px;width:calc((100% - 19px)/4);transform:translateX(calc(var(--format-index,0)*(100% + 3px)))}}
 @media(prefers-reduced-motion:reduce){.tabHighlight,.tabs button{transition:none}}
+/* "Go deeper" restyled to the island UI (Oct 12 2026, user: "update this to match more with the UI"): a brush-font heading with
+   a round toggle, lessons as cream tiles with the button rim and a lift, and "Watch & try" as a small gold pill. */
+.depth{border-top:0;padding:18px 0}
+.depth summary{list-style:none;display:flex;align-items:center;gap:10px;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:24px;line-height:1.1;color:var(--btn-ink)}
+.depth summary::-webkit-details-marker{display:none}
+.depth summary::before{content:'+';display:grid;place-items:center;flex:none;width:32px;height:32px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 20px/1 var(--btn-font);box-shadow:0 3px 0 var(--btn-green-edge);transition:rotate .2s ease}
+.depth[open] summary::before{rotate:45deg}
+.depth>p{margin:8px 0 6px 42px;font-size:14px;color:#4c6a5e}
+.depth button{margin-top:12px;padding:14px 14px 14px 18px;min-height:var(--btn-height-lg);border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:#fffaf0;color:var(--btn-ink);font-weight:700;box-shadow:0 4px 0 #d9cfb2;transition:translate .12s ease,box-shadow .12s ease}
+.depth button span{flex:1;min-width:0}
+.depth button small{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:2px solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font-size:12px;font-weight:800;box-shadow:0 2px 0 var(--btn-gold-edge)}
+.depth button small::after{content:'→'}
+@media(hover:hover){.depth button:hover{background:#fffdf5}}
+.depth button:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #d9cfb2}
+@media(prefers-reduced-motion:reduce){.depth summary::before,.depth button{transition:none}}

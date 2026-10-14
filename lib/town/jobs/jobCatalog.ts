@@ -4,6 +4,7 @@
  */
 import type {JobId} from './jobEconomy';
 import {GARDEN_SPOTS,GARDEN_SHIFT} from './garden';
+import {SUMMIT_PATHS,SUMMIT_LANDMARKS} from '../summitIsle';
 export type JobPoint={x:number;z:number};
 export type JobKind='collect'|'trail'|'carry'|'rebound'|'sort'|'offside'|'pump'|'harvest'|'garden';
 export type JobProp='leaf'|'cone'|'ball'|'bottle'|'chalk'|'shirt'|'flag'|'peg'|'produce';
@@ -180,6 +181,22 @@ JOBS.push({id:'garden-shift',title:'Garden shift',role:'Gardener',place:'Communi
  lesson:"Fruit is carbohydrate, your muscles' main sprint fuel, and colourful veg gives vitamins and minerals that help you recover between matches. Recover after training with a real meal: veg, carbs, protein and water. Half-time oranges are mostly water, so they rehydrate you.",
  lessonSource:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf',
  task:{type:'garden',goal:GARDEN_SHIFT.goal,fruitGoal:GARDEN_SHIFT.fruitGoal,vegGoal:GARDEN_SHIFT.vegGoal}});
+// ---- Added 12 Oct 2026 (user: "a park ranger ... offers a 'trail clean-up' job"): Summit Isle's ranger job. Targets are
+// runtime points along SUMMIT_PATHS and SUMMIT_LANDMARKS (never fixed coordinates), so they follow the terrain agent's
+// reshaping of the island. 5 marks along the climbing trail, 3 on the beach either side of the sandbar's landing.
+JOBS.push((()=>{
+ const at=(path:readonly{x:number;z:number}[],i:number)=>path[Math.min(path.length-1,Math.max(0,i))];
+ const TRAIL=SUMMIT_PATHS[0],SWITCH=SUMMIT_PATHS[1],land=SUMMIT_LANDMARKS.sandbarLanding,north=SUMMIT_LANDMARKS.northBeach;
+ const targets=[at(TRAIL,2),at(TRAIL,5),at(TRAIL,9),at(SWITCH,6),at(SWITCH,14)].map(p=>({x:p.x,z:p.z}))
+  .concat([{x:land.x-6,z:land.z-5},{x:land.x+2,z:land.z-9},{x:north.x-4,z:north.z-3}]);
+ const board={x:TRAIL[0].x-4,z:TRAIL[0].z+3,yaw:0};
+ const def:JobDef={id:'trail-cleanup',title:'Trail clean-up',role:'Park ranger',place:'Summit Isle trailhead',board,color:'#5f7a4a',kind:'collect',prop:'bottle',
+  targets,deliver:{x:board.x+2,z:board.z,label:'litter bin'},radius:1.5,
+  intro:'Hikers leave bottles and wrappers along the trail and the beach. Pick up every piece of litter, then toss the bag in the bin by my sign.',
+  howTo:'Pick up every bit of litter on the trail and the beach, then toss the bag in the litter bin.',unit:'Litter collected',
+  work:{target:[{id:'pick',label:'Pick up',mode:'tap',hint:'Pick the litter up and pop it in your bag.'}],deliver:{id:'toss',label:'Toss in the bin',mode:'tap',hint:'Toss the full bag into the litter bin.'}},
+  lesson:'Leave no trace: a trail only stays open for everyone if hikers carry out everything they carry in. A clear path is safer underfoot, just like a clear pitch is safer to play on.'};
+ return def;})());
 export const jobById=(id:string)=>JOBS.find(j=>j.id===id);
 /** Rebound job: the Coaches Centre practice wall face (lib/town/world.ts) and its painted target square. */
 export const REBOUND_WALL={x:156,z:-29.5,halfWidth:13,face:-29.32,target:{x:156,halfWidth:2,bottom:.25,top:1.7},passes:50,shots:15,

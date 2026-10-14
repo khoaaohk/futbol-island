@@ -36,7 +36,8 @@ export const onBoatHull=(x:number,z:number)=>{const p=worldToBoat(x,z);return p.
 /** Axis-aligned world box round the hull plus a margin: open-water exclusion (like the moored ferry's) and desktop hover. */
 export const BOAT_AFLOAT=(()=>{const pts=[[BOAT_HULL.x0,-BOAT_HULL.halfBeam],[BOAT_HULL.x0,BOAT_HULL.halfBeam],[BOAT_HULL.x1,-BOAT_HULL.halfBeam],[BOAT_HULL.x1,BOAT_HULL.halfBeam]].map(([a,b])=>boatToWorld(a,b));
  return {x0:Math.min(...pts.map(p=>p.x))-.5,x1:Math.max(...pts.map(p=>p.x))+.5,z0:Math.min(...pts.map(p=>p.z))-.5,z1:Math.max(...pts.map(p=>p.z))+.5};})();
-/** The fishing stand on the deck and the red float marker off the starboard side. */
-export const BOAT_STAND=boatToWorld(-2.4,.5),BOAT_BUOY=boatToWorld(-2.4,7.5);
+/** The fishing stand on the deck and the red float marker off the starboard side. Oct 13 2026 ("cast farther out"): the
+ *  buoy moved from 7.5 to 15.3 m off the rail (≈2.1× the old cast), still clear open sea past the hull and the causeway. */
+export const BOAT_STAND=boatToWorld(-2.4,.5),BOAT_BUOY=boatToWorld(-2.4,15.3);
 /** Where the "Fish" prompt floats: over the rod holders on the starboard rail. */
 export const BOAT_PROMPT={...boatToWorld(-3.2,1.5),y:3.2};

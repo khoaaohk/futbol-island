@@ -46,7 +46,11 @@ export const PRODUCE_GOODS:Good[]=[
   source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
  {id:'sweet-potato',kind:'produce',name:'Sweet potato',plural:'Sweet potatoes',price:2,color:'#b9774a',
   lesson:'Sweet potatoes are starchy carbs: great in your pre-match meal 3–4 hours before.',
-  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'},
+  source:'https://digitalhub.fifa.com/m/16e433eb11621446/original/ukbqfkkxw2o8s1gyjria-pdf.pdf'}, // Summit Isle foraging (Oct 13 2026, lib/town/summitForage.ts): coconuts shaken down from the beach palms (mangoes and oranges
+ // from its fruit trees are the goods above).
+ {id:'coconut',kind:'produce',name:'Coconut',plural:'Coconuts',price:3,color:'#8b5a2b',
+  lesson:'Coconut water has salts (electrolytes) that help you rehydrate after you sweat.',
+  source:'https://health.clevelandclinic.org/the-health-benefits-of-coconut-water'},
 ];
 
 // --- Fish (fishing agent: lib/town/fishing/*) ---

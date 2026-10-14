@@ -19,6 +19,9 @@ const BALANCE:Arm=[-.35,.35,-.4];
 const GARDEN_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake']);
 const TIPTOE={py:.9,toe:.55,fl:[.04,.11] as [number,number],fr:[-.04,.11] as [number,number]};
 const CARRY_BALL:Arm=[-.75,-.05,-1.55],CARD:Arm=[-.95,-.05,-1.1],STACK:Arm=[-.35,.08,-1.45];
+/** Tree shake (Summit Isle foraging): braced with the elbows bent, then pushing with straight arms and the weight forward. */
+const SHAKE_BRACE={py:.8,pz:-.02,tx:.2,hx:-.3,fl:[.24,.07] as [number,number],fr:[-.2,.07] as [number,number],al:[-1.3,.02,-1.15] as Arm,ar:[-1.3,.02,-1.15] as Arm};
+const SHAKE_PUSH={py:.78,pz:.06,tx:.45,hx:-.22,fl:[.26,.07] as [number,number],fr:[-.24,.07] as [number,number],al:[-1.5,-.03,-.15] as Arm,ar:[-1.5,-.03,-.15] as Arm};
 const PULLED={py:.66,pz:-.22,tx:-.28,hx:.2,fl:[.26,.07] as [number,number],fr:[-.05,.07] as [number,number],al:[-.95,.14,-.1] as Arm,ar:[-.95,.14,-.1] as Arm};
 /** One-shot keyframes (progress 0 → 1). Held poses are computed below from their live value (`tug`). */
 const KEYS:Partial<Record<JobPoseKind,Key[]>>={
@@ -57,7 +60,13 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  firsttouch:[[0,{}],[.4,{tx:.2,hx:.4,al:[-.3,.55,-.35],ar:[-.25,.5,-.35]}],[1,{}]],
  flagup:[[0,{}],[.3,{ar:[-3.05,.04,-.05],hx:-.1}],[.85,{ar:[-3.05,.04,-.05],hx:-.1}],[1,{ar:[-3.05,.04,-.05]}]],
  flagdown:[[0,{}],[.4,{al:[-1.45,.12,-.1],ar:[.1,.1,-.1],tx:.05}],[.8,{al:[-1.3,.35,-.1]}],[1,{}]],
+ // Summit Isle foraging (lib/graphics/fruitTrees.ts): a staggered stance, both hands on the trunk, two pushes (elbows bent →
+ // arms straight, leaning in) with the eyes up on the canopy; the fruit falls on the second push (TREE_SHAKE_PUSHES).
+ treeshake:[[0,{}],[.15,{...SHAKE_BRACE}],[.3,{...SHAKE_PUSH}],[.46,{...SHAKE_BRACE}],[.62,{...SHAKE_PUSH}],
+  [.82,{py:.84,tx:.1,hx:-.2,fl:[.12,.07],fr:[-.08,.07],al:[-.9,.1,-.7],ar:[-.9,.1,-.7]}],[1,{}]],
 };
+/** Tree shake: the push peaks' progress (the canopy gets a shove at each; lib/graphics/fruitTrees.ts reads these). */
+export const TREE_SHAKE_PUSHES=[.3,.62] as const;
 const out:PoseTarget={...N,fl:[0,.07],fr:[0,.07],al:[0,0,0,0],ar:[0,0,0,0],upper:false};
 const lerp=(a:number,b:number,k:number)=>a+(b-a)*k;
 function set(p:Partial<Omit<PoseTarget,'upper'>>){

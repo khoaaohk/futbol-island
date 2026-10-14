@@ -1,18 +1,22 @@
 import {useEffect,useRef,useMemo,memo,useState} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,VENUES,type Format} from '@/lib/town/venues';
 import {MUSEUM_DOOR} from '@/lib/museum/museumDoors';
+import {SHOP_DOOR} from '@/lib/shop/shopDoors';
 /** The History Museum's door on the map (Oct 5 2026, user: "add museum to the map"); the label hangs just below it. */
 const MUSEUM_MAP_POINT={x:MUSEUM_DOOR.x,z:MUSEUM_DOOR.front} as const;
+/** The Kit Shop's door (Oct 12 2026); its label hangs above it, over the shop's own roof (the 9v9 pitch is below). */
+const SHOP_MAP_POINT={x:SHOP_DOOR.x,z:SHOP_DOOR.front} as const;
 import {ISLAND_SHORE,SHORE_SAND,INTERIOR_GRASS,INTERIOR_GRASS_COLOR,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from '@/lib/town/shoreline';
 import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
 import {onLand} from '@/lib/town/landmass';
 import {CAY_SHORE,CAY_SAND,CAY_LAWN,CAUSEWAY_PATH,CAUSEWAY_BEACHES,SANDBARS,FARM,HOSTEL,ROUNDABOUT,CAY_HOMES,HOSTEL_PATHS,CAY_PLAZA,BEACH_COURT,COURT_BEACH,CAY_HUTS,CAY_HUT_RADIUS,CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
-import {FLIGHT_OUTLINE_PATH} from '@/lib/town/flightOutline.data';
 import {VENDING_MACHINES} from '@/lib/town/vendingCatalog';
 import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
 import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers} from '@/lib/town/mapMarkers';
+import SummitIsleMap from './SummitIsleMap';
+import TelescopeGlintMarks from './TelescopeGlintMarks';
 // East Jetty (eastPier.ts): the straight stone walkway from the market seawall curling into its spiral, drawn from the same
 // centre-line samples movement uses (every 3rd sample, fixed precision: static string built once).
 const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&&(i%3===0||i===JETTY_PATH.length-1)).map(p=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`).join(' ');
@@ -29,9 +33,9 @@ const VENDING_MARKERS=VENDING_MACHINES.reduce<{id:string;x:number;z:number;names
  const near=list.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);if(near){near.names.push(m.name);near.ids.push(m.id);}else list.push({id:m.id,x:m.x,z:m.z,names:[m.name],ids:[m.id]});return list;},[]);
 /** Job board markers ("J", full map only): one per board in JOBS (new jobs appear by themselves), nudged clear of the V/F
  *  markers, field names and Rosa's label (lib/town/mapMarkers.ts). Static, computed once. */
-const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20}]);// the full map's ARCADE and MUSEUM labels
+const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z-26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
-export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum';
+export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit';
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
  // The map is drawn in the browser only (after hydration): its world-space coordinates come from trig, and WebKit and the
  // server's V8 disagree in the last digit, which made React report a hydration mismatch on every Safari load (Sep 30 2026).
@@ -51,13 +55,9 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
  const view=position?`${-radius} ${-radius} ${radius*2} ${radius*2}`:`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`;
  const localMap=!!position;
  const terrain=useMemo(()=> <>
-  <rect x={b.minX-8} y={b.minZ-8} width={w+16} height={h+16} fill="#83b5ac"/>
-  {/* The flyable region traced from flightBlocked (lib/town/flightOutline.ts): main margin, the winding Coral Cay corridor,
-      sandbar halos and cay margin as ONE outline, so the map can never disagree with the rule. */}
-  <g aria-label="Offshore flight area" data-flight-margin={FLIGHT_WATER_MARGIN} opacity={localMap?.25:1}>
-   <path d={FLIGHT_OUTLINE_PATH} fill={localMap?'#e5dcc3':'#99c8bd'} stroke={localMap?'#526659':'#d5e9dd'} strokeWidth="3" strokeLinejoin="round"/>
-  </g>
-  {localMap&&<g aria-label="Flight boundary" pointerEvents="none" data-flight-boundary="traced"><path d={FLIGHT_OUTLINE_PATH} style={{fill:'none',stroke:'#795433',strokeWidth:3,strokeLinejoin:'round'}}/></g>}
+  {/* The whole map is playable sea (Oct 12 2026, user: "the border is the edge of the map"): no inner border line; the frame is
+      the edge (flightBlocked is the map's rectangle with soft corners). */}
+  <rect x={b.minX-8} y={b.minZ-8} width={w+16} height={h+16} fill="#99c8bd" data-flight-margin={FLIGHT_WATER_MARGIN}/>
   <polygon points={shorePoints} fill="#e1d3ae" stroke="#f1d6a1" strokeWidth="5"/>
   <polygon aria-label="Interior grass" points={INTERIOR_GRASS.map(p=>svgPoint(p)).join(' ')} fill={INTERIOR_GRASS_COLOR}/>
   <g aria-label="Ferry dock"><path d="M210 190H238L235 204L226.5 215H210Z" fill="#b98f62" stroke="#91704d" strokeWidth=".7"/><rect x="202" y="190.5" width="8" height="5" fill="#b98f62"/><rect aria-label="Ferry boarding ramp" x="234" y="204" width="10" height="3.2" fill="#b98f62" stroke="#fff0cf" strokeWidth=".3"/><rect x="242" y="190.5" width="8" height="17" rx="2" fill="#477c6a"/><rect x="243" y="194" width="6" height="10" fill="#fff0cf"/></g>
@@ -87,10 +87,12 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <g aria-label="Coral Cay Farm" data-coral-cay="farm"><polygon points={FARM.fence.map(svgPoint).join(' ')} fill="#a99466" stroke="#8b6a4a" strokeWidth="1"/>{Array.from({length:7},(_,i)=><rect key={'farm-row'+i} x={FARM.crops.x0} y={-126+i*4.8} width={FARM.crops.x1-FARM.crops.x0} height={1.6} fill="#739568"/>)}{/* Label sits east of centre so the farm's two job J marks (west gate boards) never cover it. */}<text x={(FARM.fence[0].x+FARM.fence[1].x)/2+12} y={-104} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">FARM</text></g>
   <g aria-label="Coral Cay Hostel and homes" data-coral-cay="hostel">{HOSTEL_PATHS.map(([x,z,w,d],i)=><rect key={'hp'+i} x={x-w/2} y={z-d/2} width={w} height={d} fill="#eddfbb"/>)}<rect x={HOSTEL.x-HOSTEL.w/2} y={HOSTEL.z-HOSTEL.d/2} width={HOSTEL.w} height={HOSTEL.d} rx="1" fill="#be8d65"/>{CAY_HOMES.map((h,i)=>h.style==='hut'?<circle key={'home'+i} cx={h.x} cy={h.z} r={2.2} fill="#be8d65"/>:<rect key={'home'+i} x={h.x-2.6} y={h.z-2.3} width={5.2} height={4.6} rx=".8" fill="#be8d65"/>)}<text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-(localMap?3:6)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?9:11} fontWeight="700">HOSTEL</text></g>
   {CAY_HUTS.map((h,i)=><circle key={'hut'+i} cx={h.x} cy={h.z} r={CAY_HUT_RADIUS} fill="#be8d65"/>)}
+  {/* Summit Isle, its mountain, the Summit 5s and its sandbar (Oct 12 2026; SummitIsleMap.tsx). */}
+  <SummitIsleMap localMap={localMap} pitchProps={destination('summit','Summit 5s')}/>
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
   {buildings.map((r,i)=><rect key={'building'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} rx={r.cornerRadius??1} fill="#be8d65"/>)}
   {VENUES.map(v=><g key={v.id} {...destination(v.id,v.id+' field')}><rect x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length} fill={v.surface} stroke="#fff0cc" strokeWidth="1.5"/><text x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:22} fontWeight="700">{v.id}</text></g>)}
-  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':'Arcade')}>
+  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':'Arcade')}>
    <path d={`M${point.x} ${point.z} L${point.x+dx} ${point.z+dy}`} fill="none" stroke="#294f43" strokeWidth="1.2"/>
    <circle cx={point.x} cy={point.z} r={localMap?4.5:6} fill="#f9ca70" stroke="#294f43" strokeWidth="1.5"/>
    {!localMap&&<circle cx={point.x} cy={point.z} r="11" fill="transparent"/>}
@@ -119,6 +121,8 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect x={MARKET_STAND.x-(localMap?87:126)} y={MARKET_STAND.z-(localMap?7:11)} width={localMap?74:102} height={localMap?14:22} rx="5" fill="#f4c2a4" stroke="#294f43" strokeWidth="1"/>
    <text x={MARKET_STAND.x-(localMap?50:75)} y={MARKET_STAND.z+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:11} fontWeight="800">ROSA’S MARKET</text>
   </g>
+  {/* Summit Isle telescope glints spotted but not yet collected (TelescopeGlintMarks.tsx; re-renders only when the hunt changes). */}
+  <TelescopeGlintMarks localMap={localMap}/>
   {!localMap&&markerPosition&&<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>}
  </>,[roads,buildings,onSelect,markerPosition,localMap]);
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>

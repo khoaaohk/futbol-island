@@ -26,7 +26,7 @@ const perDay=(p:PeriodTotals)=>p.perDay?.value??(p.days?p.visitors/p.days:0);
 const plural=(n:number,w:string)=>`${n} ${w}${n===1?'':'s'}`;
 const hours=(ms:number)=>ms>=3_600_000?`${(ms/3_600_000).toFixed(ms>=36_000_000?0:1)} h`:fmtDuration(ms);
 
-/** Row 1: the numbers an investor reads first. One hero (players per day); everything else a stat tile. */
+/** Row 1: the numbers an investor reads first. One hero (players: that day, or the total over a range); everything else a stat tile. */
 export function HeadlineTiles({report}:{report:Report}){
  const o=report.overview,c=o?.current,p=o?.previous??null,d=saveData(report),gap=saveGap(report.saves);
  const len=c?.days||1,label=compareLabel(report,len),partial=!!report.time?.partialToday;
@@ -36,15 +36,15 @@ export function HeadlineTiles({report}:{report:Report}){
  // is shown beside it), and the period before averages the same 6 positions a week earlier.
  const per=c?.perDay,single=len===1,full=len-(partial?1:0);
  const perLabel=single?label:`the same ${per?.days??full} days ${len===7?'a week':plural(len,'day')} earlier`;
- const todaySoFar=partial&&!single?report.series[report.series.length-1]?.visitors:undefined;
  // New save codes: like for like when the range ends today (its complete days vs as many days before; lib/saves/metrics.ts).
  const sc=report.saves?.compare;
  return <section className={styles.kpis8} aria-label="Headline numbers">
   <div className={`${styles.tile} ${styles.hero}`}>
-   <span>{single?(partial?'Players today so far':'Players that day'):'Players per day'}</span>
-   <b>{c?fmtInt(Math.round(perDay(c))):'0'}</b>
-   <small>{single?'unique visitors':`average unique visitors a day over ${per&&per.days<full?`the ${plural(per.days,'day')} since tracking began`:plural(per?.days??full,'complete day')}`}{todaySoFar!==undefined?` · today so far ${fmtInt(todaySoFar)}`:''} · a visitor is one device and network on one day</small>
-   {c&&<Delta cur={perDay(c)} prev={p?perDay(p):null} label={perLabel}/>}
+   <span>{single?(partial?'Players today so far':'Players that day'):'Players, total'}</span>
+   <b>{c?fmtInt(single?Math.round(perDay(c)):c.visitors):'0'}</b>
+   <small>{single?'unique visitors':`players added up day by day over ${plural(len,'day')}${partial?' (today so far included)':''}: someone who plays on 3 days counts 3 times · about ${fmtInt(Math.round(perDay(c!)))} a day`} · a visitor is one device and network on one day</small>
+   {/* Totals (user, Oct 13 2026: "change that to total ... easier to understand than per day"); the change compares the same complete days, so a range that ends today isn't unfairly behind. */}
+   {c&&<Delta cur={single?perDay(c):perDay(c)*(per?.days??full)} prev={p?(single?perDay(p):perDay(p)*(per?.days??full)):null} label={perLabel}/>}
    <Sparkline values={report.series.map(s=>s.visitors)} label="Visitors over the range"/>
   </div>
   <div className={styles.tile}><span>Active save codes, 7 days</span><b>{d?fmtInt(d.active_7):'—'}</b>

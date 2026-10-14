@@ -4,6 +4,8 @@ import {getSoundVolume,isSoundEnabled} from '../games/sound';
 import {storyLineHash,storyVoiceUrl,captionMs} from './museumStories';
 
 /**
+ * RETIRED Oct 13 2026: the hall no longer tells stories (see museumStories.ts); nothing imports this module. Kept with its clips.
+ *
  * The storytelling narration (Oct 4 2026): the coach voices one line per beat (Kokoro clips baked by
  * scripts/museum/kokoro-museum.py into public/voice/museum, durations in manifest.json). One reused <audio> element, loaded
  * only when a beat plays (no preloading, no timers but the beat's own). Respects the island's settings: sound muted

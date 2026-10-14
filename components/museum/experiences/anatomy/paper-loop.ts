@@ -51,7 +51,7 @@ export function usePaperLoop(tick:(dt:number)=>boolean,el:RefObject<Element|null
 /**
  * The same loop under the names the other Paper exhibits were written against (Oct 12 2026 consolidation: there is ONE frame-loop
  * implementation, createPaperLoop above; these are thin adapters, not loops of their own).
- *  - useFrames(tick, el): cards-1970, var-2018, backpass-1992 ({wake, stop, running}); no reduced mode (those exhibits go
+ *  - useFrames(tick, el): var-2018 and the older figure exhibits ({wake, stop, running}); no reduced mode (those exhibits go
  *    turn-based themselves).
  *  - useFrameLoop(tick, el, reduced): hall-of-fame, timeline ({wake, stop, running()}); reduced = run to rest at once.
  *  - useRaf(tick, live): telstar-1970, laced-leather (returns wake); `live` (on screen and the tab visible, from useLive) parks it.

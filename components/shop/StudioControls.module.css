@@ -1,0 +1,42 @@
+/* Shared Kit Shop studio stage-controls (Boot, Jersey, Ball studios) — Oct 13 2026, user: "find common btns and make sure they
+ * are in the same positions for the boot store". One layout, one set of classes, so the three studios can't drift apart again:
+ *  - .iconRow: the history + tools cluster — Undo, Redo, then whichever of Randomise / Help / Fullscreen (show it off) /
+ *    Reset view / Pair that studio has, in that fixed left-to-right order — top-right of the stage. 12px inset on phones,
+ *    18px on desktop (≥900px, matching the shared studio frame's stage margin). 44px round buttons, 10px gaps, the shared
+ *    gold button face, pink when aria-pressed (a toggle, e.g. Pair or Help's tips-on state).
+ *  - .modeToggle: a two-segment pill for a studio's own drawing/view mode (On shirt/Flat, Paint/Spin) — top-centre of the
+ *    stage, the same slot in every studio that has one (Boot doesn't).
+ *  - .viewChips: the view/angle chip row (Boot's Hero…Sole, Jersey's Front…Back) — bottom-centre of the stage, wraps onto a
+ *    second row rather than clipping or needing horizontal scroll on narrow phones.
+ * Each studio still owns its own icons, labels, handlers and step-conditional rendering; only chrome (size, shape, colour,
+ * position, spacing) is shared here, via components/shop/StudioControls.tsx.
+ */
+.iconRow{position:absolute;z-index:5;top:12px;right:12px;display:flex;flex-direction:row;flex-wrap:nowrap;gap:10px}
+.icon{display:grid;place-items:center;width:44px;height:44px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim);border-radius:50%;
+ background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);
+ box-shadow:var(--btn-shadow-gold);transition:translate .14s,box-shadow .14s,opacity .14s}
+.icon:not(:disabled):active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed)}
+.icon:disabled{opacity:.5;box-shadow:none}
+.icon[aria-pressed=true]{background-color:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
+.icon svg{width:22px;height:22px;display:block}
+
+.viewChips{position:absolute;z-index:3;left:10px;right:10px;bottom:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.viewChips button{flex:0 0 auto;min-height:40px;padding:0 13px;border:2px solid var(--btn-rim);border-radius:999px;background:#fffaf0e6;color:var(--btn-ink);
+ font:700 13px var(--btn-font,Arial,Helvetica,sans-serif);box-shadow:0 3px 0 #dccfae;transition:translate .14s,box-shadow .14s,background-color .14s}
+.viewChips button:active{translate:0 3px;box-shadow:0 1px 0 #dccfae}
+.viewChips button[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+
+/* top:70px on phones: a narrow stage isn't wide enough for a centred toggle to clear a 4-5 button row at top:12/right:12;
+   desktop's wide stage has room for both at the same top, restored below */
+.modeToggle{position:absolute;z-index:3;left:50%;top:70px;translate:-50% 0;display:flex;padding:3px;gap:3px;border:var(--btn-rim-width,3px) solid var(--btn-rim);
+ border-radius:999px;background:#fff2d3 var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:0 4px 0 #dccfae}
+.modeToggle button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--btn-ink);
+ font:800 13.5px var(--btn-font,Arial,Helvetica,sans-serif);transition:background-color .18s}
+.modeToggle button svg{width:20px;height:20px}
+.modeToggle button[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+
+/* desktop (≥900px): every studio's stage sits 18/20px in from the shared frame, so the row moves out to match */
+@media (min-width:900px){
+ .iconRow{top:18px;right:18px}
+ .modeToggle{top:18px}
+}

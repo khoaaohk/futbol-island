@@ -2,7 +2,7 @@
 
 > **Scope now: the penalty-1891 cabinet only.** On Oct 12 2026 the user asked for every other exhibit to be in the anatomy
 > Paper style ("these games should not be the pixel style. only the penalty kick should be pixel game"), so the eleven
-> exhibits that were pixel-iso games (telstar-1970, laced-leather, shirts, cards-1970, var-2018, backpass-1992, laws-1863,
+> exhibits that were pixel-iso games (telstar-1970, laced-leather, shirts, cards-1970 (now stadiums), var-2018, backpass-1992 (now boots), laws-1863,
 > futsal-1989, wwc-1991, hall-of-fame, timeline) are now Paper: see `docs/museum-paper-style.md`. worldcup-1930 and the World
 > Cup balls display (`wc-balls`) keep their own looks.
 >

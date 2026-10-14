@@ -28,5 +28,5 @@ const cacheStatic = [
 // `/` is prerendered static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum (spawn
 // outside that door, walking, return loading screen), is a rewrite to the equally static /island-return, so neither page
 // renders per request. The URL in the address bar stays /?from=…; ?store= is read by Town on the client (it always was).
-const rewrites = { beforeFiles: [{ source: '/', has: [{ type: 'query', key: 'from', value: '^(arcade|konbini|museum)$' }], destination: '/island-return' }] };
+const rewrites = { beforeFiles: [{ source: '/', has: [{ type: 'query', key: 'from', value: '^(arcade|konbini|museum|shop)$' }], destination: '/island-return' }] };
 export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return cacheStatic; }, async rewrites() { return rewrites; } });

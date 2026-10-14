@@ -52,7 +52,8 @@ function sandbarLoops(index:0|1){
 export const MANTA_LOOPS:MantaLoop[]=[
  coastLoop('cay-north','cay',CAY_SHORE,CAY_CENTER,-132*D,-88*D,16,24,1.5,.22,true),
  coastLoop('cay-sharks-beach','cay',CAY_SHORE,CAY_CENTER,-14*D,-66*D,15,23,1.4),
- coastLoop('cay-south','cay',CAY_SHORE,CAY_CENTER,48*D,112*D,15,23,1.6),
+ // South cove: east of the Summit Isle sandbar (Oct 12 2026; was 48°–112°, which crossed the new sandbar at ~90°).
+ coastLoop('cay-south','cay',CAY_SHORE,CAY_CENTER,22*D,76*D,15,23,1.6),
  ...sandbarLoops(0),...sandbarLoops(1),
 ];
 export const MANTA_ISLANDS:MantaIsland[]=['cay','starfish','turtle'];

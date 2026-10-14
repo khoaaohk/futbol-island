@@ -41,7 +41,7 @@ function environment(shared){
  // of the other jobs instead of the bottom (it paid 8: ~2 a minute). Same tiers: half pay 13, then the 1-coin tip.
  {assert.equal(JOB_BASE_PAY['wall-rebounds'],26,'Wall rebounds pays 26');assert.equal(E.JOB_MINUTES['wall-rebounds'],3.5);
   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),h=others.length>>1,mid=others.length%2?others[h]:(others[h-1]+others[h])/2;
-  assert.equal(others.length,11,'ten short jobs + the Garden shift (30 Sep 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
+  assert.equal(others.length,12,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
   assert(rate('wall-rebounds')>others[0]&&rate('wall-rebounds')<others[others.length-1],'neither the lowest nor the highest per minute');
   assert(8/E.jobShiftMinutes('wall-rebounds')<others[0],'the old pay (8) was the lowest per minute: the reason for the raise');
   const short=JOB_IDS.filter(id=>id!=='wall-rebounds').map(E.jobShiftMinutes);assert(Math.abs(short.reduce((a,b)=>a+b,0)/short.length-1.5)<.05,'the short jobs still average 1.5 min a shift (the sim assumption)');
@@ -92,7 +92,8 @@ function environment(shared){
   assert.match(cones.intro,/beside the pitch, so the match can keep going/);assert(Math.hypot(cones.board.x-t[4].x,cones.board.z-t[4].z)<8,'the sign stands by the session');
   for(const q of t)assert(!R.outsideJobArea(cones,q.x,q.z),'every mark is inside the job area');}
  // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
- assert.equal(C.JOBS.length,12,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift');
+ // Summit Isle's ranger job (12 Oct 2026) makes 13.
+ assert.equal(C.JOBS.length,13,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up');
  {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],8);}
  {const farm=C.jobById('farm-harvest');assert(farm&&farm.kind==='harvest'&&farm.prop==='produce'&&farm.task.type==='harvest'&&farm.task.fruitGoal===5&&farm.task.vegGoal===5&&farm.deliver&&farm.deliver.label==='farm stand','Harvest day: shake 5 fruit and pull/pick/snip 5 veg, then unload at the farm stand');
   const goodsReg=env.load('lib/town/market/goods.ts');assert(farm.task.spots.every(sp=>goodsReg.goodById(sp.good)?.kind==='produce'),'every harvest crop is a sellable produce good');
@@ -101,6 +102,16 @@ function environment(shared){
   assert.equal(farm.task.spots.filter(sp=>sp.action!=='shake'&&sp.ripe!==false).length,farm.task.vegGoal,'exactly 5 ready veg; the green ones are decoys');
   assert.equal(farm.place,'The Farm, Coral Cay');assert.match(farm.lessonSource,/fifa\.com/);assert.match(farm.lesson,/carbohydrate/i);assert.match(farm.lesson,/water/i);assert.equal(JOB_BASE_PAY['farm-harvest'],8);
   assert.match(E.payMessage('farm-harvest',E.recordCompletion(E.recordCompletion(E.emptyJobLedger(day),'farm-harvest',8,30),'farm-harvest',8,30)),/The harvest is in/);}
+ // Trail clean-up (Summit Isle, 12 Oct 2026): 8 litter marks along the trail and the beach, placed from summitIsle.ts's own
+ // exported points (never fixed coordinates), a ranger's sign at the trailhead, pay in the 7–10 band.
+ {const trail=C.jobById('trail-cleanup'),summit=env.load('lib/town/summitIsle.ts');
+  assert(trail&&trail.kind==='collect'&&trail.prop==='bottle'&&trail.targets.length===8&&trail.deliver&&trail.deliver.label==='litter bin','Trail clean-up: 8 litter marks, a litter bin drop-off');
+  assert.equal(trail.place,'Summit Isle trailhead');assert.equal(trail.role,'Park ranger');assert(trail.lesson.length>60,'teaches a football-relevant lesson');
+  assert.equal(JOB_BASE_PAY['trail-cleanup'],8);assert.equal(E.JOB_MINUTES['trail-cleanup'],.7);
+  assert(summit.distanceToSummitLand(trail.board.x,trail.board.z)<1,'the ranger\'s sign stands on Summit Isle (or its sandbar)');
+  for(const t of trail.targets)assert(summit.distanceToSummitLand(t.x,t.z)<3,`litter mark (${t.x.toFixed(1)}, ${t.z.toFixed(1)}) is on Summit Isle ground, not in the sea`);
+  // Litter is only built while the shift is active (jobScene.ts buildProps(), the generic rule every collect job already follows).
+  assert.match(fs.readFileSync(path.join(__dirname,'..','lib/town/jobs/jobScene.ts'),'utf8'),/function buildProps\(def:JobDef\)\{/,'props (incl. litter) are built per shift, not at module load');}
  // Signs never crowd each other, the vending machines, the fishing posts or the Clubhouse doorway.
  const vend=[[89.5,-49],[11,-48],[132.8,-69.8],[96,115],[175.26,9],[73.8,-198.5],[434.41,-141.28],[549.5,-169],[665.62,-211.77],[526.1,-177.16],[73.1,-52.16],[74.91,-52.16],[527.91,-177.16]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
  for(const a of C.JOBS){for(const b of C.JOBS)if(a!==b)assert(Math.hypot(a.board.x-b.board.x,a.board.z-b.board.z)>2*C.BOARD_RANGE,`${a.id} and ${b.id} signs are apart`);

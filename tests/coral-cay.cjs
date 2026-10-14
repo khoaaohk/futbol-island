@@ -57,7 +57,9 @@ assert(onLand(600,-160)&&!onIsland(600,-160)&&onLand(342,-194)&&!onLand(342,-160
 for(let x=196;x<=560;x+=2)assert(!flightBlocked(x,-159),`straight east at x=${x} is flyable`);
 // Funnel entry near both coasts; off-corridor open sea stays blocked.
 assert(!flightBlocked(250,-215)&&!flightBlocked(262,-100)&&!flightBlocked(480,-230),'forgiving corridor entry at both coasts');
-for(const [x,z] of [[330,-285],[800,-160],[400,-270],[FLIGHT_BOUNDS.maxX+5,-160]])assert(flightBlocked(x,z),`open sea at ${x},${z} is blocked`);
+// Oct 12 2026 (user: "the border is the edge of the map"): the whole map rectangle is flyable sea, with soft corners; past it is not.
+for(const [x,z] of [[330,-285],[800,-160],[400,-270],[860,0],[0,-316],[-150,0],[300,298]])assert(!flightBlocked(x,z),`open sea at ${x},${z} is flyable (inside the map)`);
+for(const [x,z] of [[FLIGHT_BOUNDS.maxX+5,-160],[0,FLIGHT_BOUNDS.minZ-3],[FLIGHT_BOUNDS.minX-3,0],[600,FLIGHT_BOUNDS.maxZ+3],[FLIGHT_BOUNDS.maxX-2,FLIGHT_BOUNDS.maxZ-2],[FLIGHT_BOUNDS.minX+2,FLIGHT_BOUNDS.minZ+2]])assert(flightBlocked(x,z),`past the map's edge or in a rounded corner (${x},${z}) is blocked`);
 for(const s of cay.SANDBARS)assert(!flightBlocked(s.x,s.z+s.side*(s.radius+10)),s.id+' halo is flyable');
 // South edge = the user's red line: near-straight at z -55 east of the rounded corner; inside near it, outside well south.
 assert(!flightBlocked(420,-57)&&!flightBlocked(505,-57)&&!flightBlocked(330,-52)&&!flightBlocked(300,-17),'points just inside the red line are flyable');
@@ -68,7 +70,10 @@ for(const [x,z] of [[420,-40],[380,-30],[500,-35],[350,-35],[400,0],[450,20],[56
 assert(!flightBlocked(700,60)&&!flightBlocked(760,100)&&!flightBlocked(800,0),'the south-east extension is flyable');
 // South-east sea (second red line (855,111) → (712,152) → (597,270)): everything north-west of it is flyable, one region.
 for(const [x,z] of [[450,150],[560,60],[620,60],[300,200],[520,280],[700,140],[840,100],[282.5,-93.5]])assert(!flightBlocked(x,z),`north-west of the second red line (${x},${z}) is flyable`);
-for(const [x,z] of [[750,250],[740,165],[640,250],[870,111],[600,300],[430,315]])assert(flightBlocked(x,z),`south-east of the second red line (${x},${z}) is blocked`);
+// Oct 12 2026 (Summit Isle, the user's third red line): the sea grows south and east round the new island, so the old line's
+// far side is flyable now; the border runs ~45 m past the island's beaches, inside x ≤ 864 and z ≤ 300.
+for(const [x,z] of [[750,250],[740,165],[640,250],[820,120],[790,270],[480,270],[611,-26]])assert(!flightBlocked(x,z),`Summit Isle's sea at (${x},${z}) is flyable`);
+for(const [x,z] of [[870,111],[600,305],[430,315],[868,200],[858,296],[500,306]])assert(flightBlocked(x,z),`past the map's edge (${x},${z}) is blocked`);
 {const sea=cay.SOUTH_EAST_SEA;let near=0;for(const [x,z] of [[855,111],[712,152],[597,270]])near+=sea.some(p=>Math.hypot(p.x-x,p.z-z)<1)?1:0;assert(near===3,'the fill passes through the red line points');}
 {let blockedIn=0;for(let x=300;x<=760;x+=6)for(let z=-44;z<=110;z+=6)if(flightBlocked(x,z)&&!onLand(x,z))blockedIn++;assert(blockedIn===0,`no notches between the old pieces (${blockedIn} blocked water points)`);}
 // The corridor is a broad smoothed band: ≥70 m south and ≥38 m north of the road everywhere, no pinch at the bends.
@@ -76,7 +81,7 @@ for(let x=240;x<=520;x+=4){const e=cay.corridorEdges(x),road=P.reduce((b,p)=>Mat
 {let sharpest=0;for(let x=CORRIDOR_X0+2;x<=CORRIDOR_X1-2;x++){const a=cay.corridorEdges(x-2),b=cay.corridorEdges(x),c=cay.corridorEdges(x+2);sharpest=Math.max(sharpest,Math.abs(a.south-2*b.south+c.south),Math.abs(a.north-2*b.north+c.north));}assert(sharpest<1.2,'corridor edges curve gently (no arches or V shapes): '+sharpest.toFixed(2));}
 {const at=cay.causewayAt(cay.SANDBARS[0].spur.s),p={x:at.x,z:at.z},v={x:0,z:0};for(let i=0;i<60*40;i++)stepPlayer(p,v,{x:0,z:1,sprint:false},1/60,[],'jetpack');
  // Since the south-east sea (Sep 29 2026) the flight carries on past the old band edge to the fill's south edge.
- assert(!flightBlocked(p.x,p.z)&&flightBlocked(p.x,p.z+1.5)&&p.z>250&&Math.min(...cay.SOUTH_EAST_SEA.map(q=>Math.hypot(q.x-p.x,q.z-p.z)))<8,`flying south from the Starfish bend stops at the south-east sea's edge (z ${p.z.toFixed(0)})`);}
+ assert(!flightBlocked(p.x,p.z)&&flightBlocked(p.x,p.z+1.5)&&p.z>FLIGHT_BOUNDS.maxZ-2,`flying south from the Starfish bend stops at the map's south edge (z ${p.z.toFixed(0)})`);}
 // The main island's margin is 50 m everywhere else (east coast at z 0 is x≈246, west coast at z 0 is x≈-99).
 assert(!flightBlocked(292,0)&&!flightBlocked(-145,0)&&flightBlocked(-156,0),'50 m main margin on the other coasts');
 

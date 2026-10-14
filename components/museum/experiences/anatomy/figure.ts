@@ -3,7 +3,7 @@ import {depthOf,iso,type Flat,type LineTone,type Point3,type Projection,type Sol
 /**
  * Paper figures (Oct 12 2026, anatomy "Paper" restyle; user: every exhibit except the penalty kick is an isometric technical
  * illustration, players "simple isometric figures in the same paper-and-hairline style", fouls "crystal clear"). Pure: no DOM,
- * so the exhibit tests run it in Node. Used by cards-1970, var-2018 and backpass-1992.
+ * so the exhibit tests run it in Node. Its Item and Part types are used by PaperStage (var-2018); cards-1970 and backpass-1992, which drew mannequins with it, were replaced on Oct 12 2026.
  *
  * A figure is an artist's wooden mannequin: every limb is a solid capsule (a paper body with a hairline outline and a lighter
  * band toward the light), the head a ball. World units are centimetres (x, y on the floor, z up), so a player is 180 tall.

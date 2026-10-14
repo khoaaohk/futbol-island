@@ -21,8 +21,8 @@ import {registerConsumables,registerCollectionGroup,type Consumable,type Source}
 // itself when it loads (lazy-load pass, Oct 7 2026): this data module stays free of the canvas painters, so the island's boot bundle
 // (which needs isDrinkMachine and the machine info) does not carry the Konbini food art.
 
-export type DrinkMachineId='drinksplaza'|'drinkscay';
-export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay'];
+export type DrinkMachineId='drinksplaza'|'drinkscay'|'drinksummit';
+export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay','drinksummit'];
 export const isDrinkMachine=(id:string):id is DrinkMachineId=>(DRINK_MACHINE_IDS as readonly string[]).includes(id);
 
 // ---- Sources (checked 29 Sep 2026) -----------------------------------------------------------------------------------------
@@ -99,6 +99,28 @@ export const DRINKS:Drink[]=[
    lesson:'Fizzy sweet drinks are a sometimes treat: the sugar is hard on your teeth. Water is what refills you after play.',sources:['nhs','sda'],
    art:{shape:'can',body:'#e9f0ff',label:'#5b7fe0',ink:'#ffffff',cap:'#c9ced4',word:'SODA'}},
  ]),
+ // Summit Isle: a small trailside machine at the Konbini-style snack stand, now on the summit terrace by the pitch gate
+ // (moved up from the sandbar's landing Oct 13 2026).
+ ...d('drinksummit','summit',[
+  {key:'water',label:'Water',jp:'水',reading:'みず',price:3,group:'hydration',temp:'cold',blurb:'Cold water in a steel bottle, filled at the trailhead tap.',
+   lesson:'Climbing makes you sweat even on a cool day. Drink before the trail, and sip at every switchback, not just when you feel thirsty.',sources:['sda','nhsDehydration'],
+   art:{shape:'bottle',body:'#dff1fb',label:'#2f7a8c',ink:'#ffffff',cap:'#2f7a8c',word:'WATER'}},
+  {key:'barley',label:'Barley tea',jp:'麦茶',reading:'むぎちゃ',price:3,group:'hydration',temp:'cold',blurb:'Mugicha: roasted barley tea, a hiker’s favourite on a hot trail.',
+   lesson:'Hikers in Japan often carry mugicha on hot trails. Keep sipping all the way up, not only at the top.',sources:['aap','sda'],
+   art:{shape:'bottle',body:'#c98a4b',label:'#f3d27a',ink:'#5a3310',cap:'#8a5424',word:'BARLEY'}},
+  {key:'sports',label:'Sports drink',jp:'スポーツドリンク',reading:'',price:5,group:'hydration',temp:'cold',blurb:'A generic sports drink with a little sugar and salt.',
+   lesson:'On a long, hot climb over an hour, a sports drink can help. For a short trail to the pitch, water is all you need.',sources:['aap','sda'],
+   art:{shape:'bottle',body:'#dff3ff',label:'#1d5fb8',ink:'#ffffff',cap:'#ffffff',word:'SPORT'}},
+  {key:'milk',label:'Milk',jp:'牛乳',reading:'ぎゅうにゅう',price:4,group:'protein',temp:'cold',blurb:'A small carton of cold milk.',
+   lesson:'After a climb down, milk gives you fluid plus a little protein for tired legs.',sources:['nhs','aap','fifa'],
+   art:{shape:'carton',body:'#f7f7f2',label:'#3d7fd6',ink:'#ffffff',cap:'#3d7fd6',word:'MILK'}},
+  {key:'lemon',label:'Lemon water',jp:'レモン水',reading:'れもんすい',price:4,group:'hydration',temp:'cold',blurb:'Plain water with a squeeze of lemon, no added sugar.',
+   lesson:'A squeeze of lemon adds flavour with no sugar, so you keep sipping all the way up the switchbacks.',sources:['sda','nhs'],
+   art:{shape:'bottle',body:'#f7fbd6',label:'#e3c21a',ink:'#4b4200',cap:'#e3c21a',word:'LEMON'}},
+  {key:'cocoa',label:'Hot cocoa',jp:'ホットココア',reading:'',price:5,group:'treat',temp:'hot',blurb:'A warm can of cocoa milk for a cold, windy climb.',
+   lesson:'A warm reward at the top for a cold climb: cocoa is milk with a little added sugar. Water is still what refills you.',sources:['aap','nhs'],
+   art:{shape:'can',body:'#7a4a2c',label:'#e8b36a',ink:'#4a2512',cap:'#c9ced4',word:'COCOA'}},
+ ]),
 ];
 export const drink=(id:string)=>DRINKS.find(x=>x.id===id);
 export const drinksAt=(machine:DrinkMachineId)=>DRINKS.filter(x=>x.machine===machine);
@@ -106,11 +128,15 @@ export const drinkSources=(x:Drink)=>x.sources.map(s=>DRINK_SOURCES[s]);
 
 // ---- Machines ---------------------------------------------------------------------------------------------------------------
 /** The machine sheet, merged into VENDING_MACHINES by lib/town/vendingCatalog.ts. `beside` is the id of the store's machine. */
-export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbini';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
+export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbini'|'summit';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
  drinksplaza:{beside:'plaza',name:'Drinks · Island Square',shop:'Island Square Konbini',place:'beside the Konbini’s vending machine, under the east end of the canopy',
   color:'#2d6fc7',light:'#eef6ff',ink:'#0b2a52',lesson:'Hydration helps you play: drink before, during and after the game.'},
  drinkscay:{beside:'caykonbini',name:'Drinks · Coral Cay',shop:'Coral Cay Konbini',place:'beside the Coral Cay Konbini’s vending machine, by the roundabout',
   color:'#1b9ad0',light:'#e6f8ff',ink:'#06324a',lesson:'Hot island days mean more sweat: water first, and check your pee is pale.'},
+ // Summit Isle: beside the little Konbini snack stand's vending machine. Moved Oct 13 2026 with that machine, from the
+ // sandbar's landing up to the summit terrace, outside the Summit 5s pitch gate.
+ drinksummit:{beside:'summit',name:'Drinks · Summit Isle',shop:'Summit Isle Konbini',place:'beside the Summit Isle Konbini’s vending machine, on the summit terrace by the pitch gate',
+  color:'#4f8f5a',light:'#eaf6e4',ink:'#17331c',lesson:'Climbing is thirsty work: drink before you start up the trail, and keep sipping on the way.'},
 };
 /** Cabinet width on the ground (VENDING_SIZE.w × VENDING_SCALE = 1.3 × 1.3) and the gap between the two cabinets. */
 export const CABINET_WIDTH=1.69,DRINK_GAP=.12;

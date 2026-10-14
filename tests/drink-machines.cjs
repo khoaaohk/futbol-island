@@ -15,17 +15,19 @@ function load(file){
 }
 const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,'lib/konbini/food.ts'));
 
-// 1. Exactly two machines, six drinks each, unique ids that never clash with the Konbini menu.
+// 1. Exactly three machines (Oct 12 2026: Summit Isle joined Island Square and Coral Cay), six drinks each, unique ids that
+// never clash with the Konbini menu.
 {
- same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay']);
+ same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay','drinksummit']);
  for(const m of D.DRINK_MACHINE_IDS){assert.equal(D.drinksAt(m).length,6,m+' sells six drinks');assert(D.DRINK_MACHINE_INFO[m].lesson.length>20);}
- const ids=D.DRINKS.map(d=>d.id);assert.equal(new Set(ids).size,ids.length,'unique item ids');assert.equal(ids.length,12);
+ const ids=D.DRINKS.map(d=>d.id);assert.equal(new Set(ids).size,ids.length,'unique item ids');assert.equal(ids.length,18);
  for(const id of ids){assert(/^[a-z0-9-]{2,60}$/.test(id),id);assert(!F.foodItem(id),id+' does not clash with the Konbini menu');}
  // The requested menus (generic names only).
  const menu=m=>D.drinksAt(m).map(d=>d.label);
  same(menu('drinksplaza'),['Water','Green tea','Barley tea','Milk','Sports drink','Hot cocoa']);
  same(menu('drinkscay'),['Coconut water','Water','Sports drink','Pineapple juice','Lemon water','Yoghurt soda']);
- assert.equal(D.DRINKS.filter(d=>d.temp==='hot').map(d=>d.id).join(),'drink-cocoa-square','one warm can (the あったか～い row) at Island Square');
+ same(menu('drinksummit'),['Water','Barley tea','Sports drink','Milk','Lemon water','Hot cocoa']);
+ same(D.DRINKS.filter(d=>d.temp==='hot').map(d=>d.id).sort(),['drink-cocoa-square','drink-cocoa-summit'],'one warm can (the あったか～い row) at each machine that has one');
  const JP={'Water':'水','Green tea':'緑茶','Barley tea':'麦茶','Milk':'牛乳','Sports drink':'スポーツドリンク','Hot cocoa':'ホットココア','Coconut water':'ココナッツウォーター','Pineapple juice':'パイナップルジュース','Lemon water':'レモン水','Yoghurt soda':'ヨーグルトソーダ'};
  for(const d of D.DRINKS){assert.equal(d.jp,JP[d.label],d.id+' Japanese name');if(/[一-龯]/.test(d.jp))assert(/^[぀-ゟ]+$/.test(d.reading),d.id+' has a hiragana reading for its kanji');else assert.equal(d.reading,'');}
  const brands=/pocari|aquarius|calpis|coca|pepsi|gatorade|powerade|milo|ito ?en|oi ocha|suntory|kirin|asahi|vita ?coco|dole|yakult|georgia|boss|nestl|lipton|evian|volvic/i;
@@ -53,7 +55,7 @@ const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,
  for(const d of D.DRINKS){assert(Number.isInteger(d.price)&&d.price>=D.DRINK_PRICE_RANGE.min&&d.price<=D.DRINK_PRICE_RANGE.max,d.id+' price 3–6');
   same({...d.limit},{key:'drinks',perDay:3},'separate 3-a-day drinks bucket');
   const c=F.consumable(d.id);assert(c,d.id+' registered as a Konbini consumable');assert.equal(c.price,d.price);assert.equal(F.foodNote(d.id),d.lesson);}
- const g=F.collectionGroups().find(x=>x.id==='drink-machines');assert(g,'Drink machines group on the Konbini Collection page');assert.equal(g.label,'Drink machines');assert.equal(g.items.length,12);
+ const g=F.collectionGroups().find(x=>x.id==='drink-machines');assert(g,'Drink machines group on the Konbini Collection page');assert.equal(g.label,'Drink machines');assert.equal(g.items.length,18);
  for(const i of g.items)assert(i.jp&&/machine/.test(i.hint),i.id+' has a where-to-find hint');
  D.registerDrinks();assert.equal(F.collectionGroups().filter(x=>x.id==='drink-machines').length,1,'registration is idempotent');
 }
@@ -102,5 +104,5 @@ const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,
  assert(!/konbini\/foodStore/.test(ctl),'the controller goes through the adapter');
  assert.match(town,/isDrinkMachine\(vendingId\)&&<DrinkMachine /,'Town opens drink machines with the drink controller');
  assert.match(town,/<VendingMachine [^\n]*open=\{storeOpen&&!isDrinkMachine\(vendingId\)\}/,'and never the shop face');
- console.log('PASS drink machines: 2 machines × 6 drinks (unique ids, Japanese names, generic art), verified hydration lines with sources, prices 3–6, 3 drinks/day (separate from food), repeat-safe purchases, pouch + collection group, no loops');
+ console.log('PASS drink machines: 3 machines × 6 drinks (unique ids, Japanese names, generic art), verified hydration lines with sources, prices 3–6, 3 drinks/day (separate from food), repeat-safe purchases, pouch + collection group, no loops');
 })().catch(e=>{console.error(e);process.exit(1);});

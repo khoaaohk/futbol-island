@@ -6,7 +6,7 @@ import type {Item,Part} from './figure';
 import s from './PaperStage.module.css';
 
 /**
- * The Paper room (Oct 12 2026 anatomy restyle): the frame every paper exhibit (cards-1970, var-2018, backpass-1992) stands in.
+ * The Paper room (Oct 12 2026 anatomy restyle): the frame var-2018 stands in (cards-1970 and backpass-1992 used it until they were replaced on Oct 12 2026).
  * The first screen IS the game: a short wall label beside Back, then one big rounded paper card that takes all the height left
  * (100dvh minus the label and the controls) and the full width, then the controls. The wall text, history and sources sit
  * below the fold. Escape leaves; the game's keys are heard anywhere in the room.

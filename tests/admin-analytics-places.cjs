@@ -255,12 +255,16 @@ await ok('sql',async()=>{
   // Additive only: running it again is harmless too (idempotent), and the grants still hold.
   runFile('supabase/migrations/20261008_analytics_places.sql');
   runFile('supabase/migrations/20261009_analytics_counts.sql');runFile('supabase/migrations/20261009_analytics_start.sql');// and the learning + start-page ones after it, as in production
+  runFile('supabase/migrations/20261012_analytics_museum_exhibits.sql');// Oct 12 2026: the two replaced museum exhibits' activity keys
   for(const role of ['anon','authenticated'])assert.match(fails(`select analytics_ingest('{}'::jsonb)`,role),/permission denied/);
   assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts'],'three new columns (+ counts, Oct 9), nothing else');
   // The SQL's enums and limits are the TypeScript ones.
   const sql=read('supabase/migrations/20261008_analytics_places.sql');
   const lists=[...sql.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
-  assert.deepEqual(lists[1],[...IDS.PLACE_IDS]);assert.deepEqual(lists[2],[...IDS.ACTIVITY_IDS]);
+  assert.deepEqual(lists[1],[...IDS.PLACE_IDS]);
+  // The activity allowlist's latest definition (Oct 12 2026: exhibit_stadiums and exhibit_boots replaced two retired exhibits).
+  {const latest=read('supabase/migrations/20261012_analytics_museum_exhibits.sql'),acts=[...latest.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
+   assert.deepEqual(acts[2],[...IDS.ACTIVITY_IDS]);assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(latest.replace(/--.*$/gm,'')),'no destructive statements');}
   assert(sql.includes(`key::integer < ${IDS.CELL_COUNT}`)&&sql.includes(`limit ${IDS.MAX_BEAT_CELLS}`));
   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
   // Ingest caps in SQL (the last line, behind the server's own clamp).

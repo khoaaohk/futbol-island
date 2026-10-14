@@ -116,4 +116,33 @@ export const SPECIAL_FISH:FishSpecies[]=[
   club:{name:'Sharks FC',country:'Nigeria',link:'Club name',fact:'Sharks FC of Port Harcourt, Nigeria, had their own ground, the Sharks Stadium. In 2016 they merged with Dolphin FC to form Rivers United.',source:W+'Sharks_F.C.',sources:[W+'Rivers_United_F.C.']}},
  {id:'coelacanth',name:'Coelacanth',plural:'Coelacanths',rarity:'legendary',group:'fish',spots:['west-cove'],price:18,size:[100,200],color:'#3d4f7a',belly:'#8ea0c0',shape:'round',shadow:'huge',
   club:{name:'Comoros national team',country:'Comoros',link:'Nickname',nickname:'Les Cœlacanthes',fact:'The Comoros national team is nicknamed "Les Cœlacanthes", after the coelacanth, a rare, ancient fish that lives in the seas around the Comoro Islands.',source:W+'Comoros_national_football_team',sources:[W+'Coelacanth']}},
+
+ // ---- Boulder Cove, Summit Isle (Oct 12 2026, user: "a rocky cove ... with 2-3 new fish species"): small, shy rock-dwellers
+ // and one big legendary shark passing the headland (3). Facts checked 12 Oct 2026 against the sources below.
+ {id:'pool-seahorse',name:'Pool Seahorse',plural:'Pool Seahorses',rarity:'uncommon',group:'seahorse',spots:['summit-cove'],price:5,size:[8,16],color:'#9a6a52',belly:'#f0cdab',shape:'seahorse',shadow:'small',
+  club:{name:'Whitley Bay F.C.',country:'England',link:'Nickname',nickname:'The Seahorses',
+   fact:'Whitley Bay F.C., from the seaside town of Whitley Bay in north-east England, are nicknamed "The Seahorses". The club adopted the seahorse as its emblem after a fan competition in the 1964-65 season.',
+   source:W+'Whitley_Bay_F.C.'}},
+ {id:'rockpool-shrimp',name:'Rockpool Shrimp',plural:'Rockpool Shrimp',rarity:'common',group:'shellfish',spots:['summit-cove'],price:2,size:[3,7],color:'#b89a78',belly:'#f0e3c6',shape:'shrimp',shadow:'small',
+  club:{name:'Morecambe F.C.',country:'England',link:'Nickname',nickname:'The Shrimps',
+   fact:'Morecambe F.C., from the seaside town of Morecambe on the Lancashire coast, are nicknamed "The Shrimps" after the shrimping boats that once worked Morecambe Bay.',
+   source:W+'Morecambe_F.C.'}},
+ {id:'red-reef-shark',name:'Red Reef Shark',plural:'Red Reef Sharks',rarity:'legendary',group:'shark',spots:['summit-cove'],price:16,size:[120,260],color:'#9a4a3f',belly:'#eecfc4',shape:'shark',shadow:'giant',
+  club:{name:'C.D. Veracruz',country:'Mexico',link:'Nickname',nickname:'Tiburones Rojos',
+   fact:'C.D. Veracruz, from the port of Veracruz on Mexico’s Gulf coast, were nicknamed "Tiburones Rojos": the Red Sharks. Founded in 1943, they won the Mexican league twice in the 1940s.',
+   source:W+'C.D._Veracruz'}},
+
+ // ---- Palm Point, Summit Isle (Oct 13 2026, "add two more fishing spots on the mountain island"): one exclusive, a shore
+ // crab that works the sand between the headland's boulders. Fact checked 13 Oct 2026 against the source below.
+ {id:'mealy-crab',name:'Mealy Crab',plural:'Mealy Crabs',rarity:'common',group:'crab',spots:['summit-palm'],price:4,size:[8,20],color:'#6a4a78',belly:'#e9cdae',shape:'crab',shadow:'small',
+  club:{name:'Mahasarakham CC F.C.',country:'Thailand',link:'Nickname',nickname:'The Mealy Crabs',
+   fact:'Mahasarakham CC F.C., from an inland rice-farming province of north-east Thailand, are nicknamed "The Mealy Crabs" (ปูม่วงมหากาฬ) after the purple field crabs found across the region.',
+   source:W+'Mahasarakham_CC_F.C.'}},
+
+ // ---- Lookout Rocks, Summit Isle (Oct 13 2026): one exclusive, a shoaling fish that passes the straight stretch of beach
+ // below the old lookout. Fact checked 13 Oct 2026 against the source below.
+ {id:'bloater',name:'Bloater',plural:'Bloaters',rarity:'common',group:'fish',spots:['summit-lookout'],price:3,size:[20,34],color:'#3a6f8f',belly:'#eef2f0',shape:'slim',shadow:'small',
+  club:{name:'Great Yarmouth Town F.C.',country:'England',link:'Nickname',nickname:'The Bloaters',
+   fact:'Great Yarmouth Town F.C., from the Norfolk fishing port of Great Yarmouth, are nicknamed "The Bloaters" after a whole smoked herring, once the town’s biggest catch and export.',
+   source:W+'Great_Yarmouth_Town_F.C.'}},
 ];

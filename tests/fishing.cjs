@@ -5,7 +5,9 @@ function environment(){
  const data=new Map(),events=new Map(),cache=new Map();
  const localStorage={getItem:k=>data.has(k)?data.get(k):null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};
  const window={addEventListener:(n,f)=>events.set(n,f),removeEventListener:(n,f)=>{if(events.get(n)===f)events.delete(n);}};
- const context=vm.createContext({console,Set,Map,Math,Date,JSON,Promise,Object,Array,Number,String,Error,URL,localStorage,window,structuredClone,queueMicrotask});
+ const context=vm.createContext({console,Set,Map,Math,Date,JSON,Promise,Object,Array,Number,String,Error,URL,localStorage,window,structuredClone,queueMicrotask,
+  // three.js comes from this realm, so typed arrays must too (mergeGeometries compares array constructors).
+  Float32Array,Float64Array,Uint8Array,Uint16Array,Int32Array});
  const overrides=new Map();
  function load(name){const file=path.resolve(ROOT,name);if(overrides.has(file))return overrides.get(file);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
   const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
@@ -45,7 +47,9 @@ for(const f of FISH){
 const exclusives=FISH.filter(cat.isExclusive);
 // The East Pier (Sep 29 2026) has no specials by design: its table reuses shared species (shore commons + a few visitors).
 // The six causeway and Coral Cay spots (Oct 5 2026, `area` set) follow the East Pier's rule: shared species only.
-for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.area){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+// The causeway/cay spots (area set, Oct 5 2026) share the East Pier's rule; Summit Isle's cove (area 'summit', Oct 12 2026) is
+// a destination catch like the six main shore spots, so it keeps its own 1-10 specials instead.
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.area==='causeway'||s.area==='cay'){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
 {const pier=cat.spotById('east-pier'),w=Object.entries(pier.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
  assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus'].every(id=>id in pier.weights)&&w.length===9,'east-pier: shore commons, three good catches, a rare tuna and a legendary octopus');
  assert(ev>3.8&&ev<4.3,`east-pier mean catch ${ev.toFixed(2)} ≈ the shore's 4.0 (economy unchanged)`);}
@@ -64,10 +68,11 @@ assert(FISH.every(f=>['fish','shark','ray','eel','seahorse','crab','lobster','sh
 // Big animals pay more, but the economy stays sane (docs/island-jobs.md: welcome 40, packs 40/60, books 100).
 assert(Math.max(...FISH.map(f=>f.price))<=20,'no catch pays more than 20 coins');
 for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id)),`${s.id}: valid species`);assert(s.story,'island story text');}
-// 13 spots (Oct 5 2026): the 6 main-island shore posts (the East Pier is the 6th), the Deep Sea Boat, and 6 more on the Coral
-// Cay side (user: "add more fishing spots along the bridge road and coral cay island"): 3 on the causeway's sand banks and 3 on
-// the cay's beaches. Still ONE merged post mesh and ONE float InstancedMesh for all of them (asserted below).
-assert.equal(FISH_SPOTS.length,13,'13 fishing spots: 6 main-island posts, the Deep Sea Boat, 3 causeway posts and 3 Coral Cay posts');
+// 16 spots: the 6 main-island shore posts (the East Pier is the 6th), the Deep Sea Boat, 6 on the Coral Cay side (user:
+// "add more fishing spots along the bridge road and coral cay island": 3 on the causeway's sand banks and 3 on the cay's
+// beaches), and Summit Isle's own 3 (Oct 12-13 2026: Boulder Cove, then Palm Point and Lookout Rocks). Still ONE merged
+// post mesh and ONE float InstancedMesh for all of them (asserted below).
+assert.equal(FISH_SPOTS.length,16,'16 fishing spots: 6 main-island posts, the Deep Sea Boat, 3 causeway posts, 3 Coral Cay posts and Summit Isle\'s 3 coves');
 {const cayCat=e.load('lib/town/coralCay.ts'),{onLand}=e.load('lib/town/landmass.ts'),world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
  const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
  assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');
@@ -101,6 +106,40 @@ assert.equal(FISH_SPOTS.length,13,'13 fishing spots: 6 main-island posts, the De
  for(const id of ['causeway-gate','turtle-bank','farm-beach'])assert('shrimp' in cat.spotById(id).weights&&!('tuna' in cat.spotById(id).weights),`${id}: sandy shallows`);
  // Heat: still one merged post mesh (built from FISH_SPOTS) and one float InstancedMesh sized to FISH_SPOTS.
  assert(/for\(const s of FISH_SPOTS\)\{if\(s\.boat\)continue;/.test(world)&&/new T\.InstancedMesh\(floatGeo,floatMaterial,FISH_SPOTS\.length\)/.test(world)&&(world.match(/new T\.Mesh\(merged,/g)||[]).length===1,'posts merged into one mesh, floats instanced');}
+
+// ---- Summit Isle's rocky cove (Oct 12 2026, user: "a rocky cove on the far side of the island from the sandbar, with 2-3 new
+// fish species"): its own 3 specials (like the 6 main shore spots), placed from summitIsle.ts's own exported helpers.
+{const summit=e.load('lib/town/summitIsle.ts'),cove=cat.spotById('summit-cove');
+ assert(cove&&cove.area==='summit','the cove is tagged for its own Fishbook section');
+ assert(summit.onSummitIsle(cove.x,cove.z),'the angler stands on walkable Summit Isle sand');
+ assert(!summit.onSummitSandbar(cove.x,cove.z),'the cove is on the island itself, not the sandbar');
+ const own=exclusives.filter(f=>f.spots[0]==='summit-cove');
+ assert.equal(own.length,3,'three species exclusive to the cove');
+ assert(own.some(f=>f.rarity==='legendary'),'a legendary catch swims past the cove');
+ for(const o of FISH_SPOTS)if(o.id!=='summit-cove')assert(Math.hypot(o.x-cove.x,o.z-cove.z)>60,`summit-cove: 60+ m from ${o.id}`);
+ assert(cove.x>300&&cove.z>0,'the cove is on Summit Isle, nowhere near Coral Cay or the main island');
+ assert(core.inOpenWater(cove.buoy.x,cove.buoy.z),'the idle float sits in open water');
+ const c=core.castPoint(cove,cove);assert(core.inOpenWater(c.x,c.z)&&Math.hypot(c.x-cove.buoy.x,c.z-cove.buoy.z)<3,'the cast lands in open water by the float');
+ // Summit Isle's own land (the sandbar and the island) never reads as open water or a clear cast.
+ assert(!core.inOpenWater(615,20),'the sandbar landing is not open water');
+}
+
+// ---- Lookout Rocks and Palm Point, Summit Isle (Oct 13 2026, "add two more fishing spots on the mountain island"): the
+// island's other two boulder headlands, each with its own single exclusive catch, placed clear of the boulders on the same
+// bearing ray summitIsleWorld.ts's rock loop uses.
+{const summit=e.load('lib/town/summitIsle.ts');
+ for(const id of ['summit-lookout','summit-palm']){
+  const spot=cat.spotById(id);
+  assert(spot&&spot.area==='summit','tagged for its own Fishbook section');
+  assert(summit.onSummitIsle(spot.x,spot.z),'the angler stands on walkable Summit Isle sand');
+  assert(!summit.onSummitSandbar(spot.x,spot.z),'on the island itself, not the sandbar');
+  const own=exclusives.filter(f=>f.spots[0]===id);
+  assert.equal(own.length,1,`${id}: one exclusive species`);
+  for(const o of FISH_SPOTS)if(o.id!==id)assert(Math.hypot(o.x-spot.x,o.z-spot.z)>60,`${id}: 60+ m from ${o.id}`);
+  assert(core.inOpenWater(spot.buoy.x,spot.buoy.z),`${id}: the idle float sits in open water`);
+  const c=core.castPoint(spot,spot);assert(core.inOpenWater(c.x,c.z)&&Math.hypot(c.x-spot.buoy.x,c.z-spot.buoy.z)<3,`${id}: the cast lands in open water by the float`);
+ }
+}
 
 // Kid safety: no odds or percentages anywhere the player reads.
 const sessionMod=e.load('lib/town/fishing/fishingSession.ts');
@@ -169,6 +208,19 @@ assert(fishById('tuna').shadow==='huge'&&fishById('shrimp').shadow==='small','sh
 const shore=e.load('lib/town/shoreline.ts');
 for(const s of FISH_SPOTS){const c=core.castPoint(s,s);assert(!shore.onIsland(c.x,c.z),`${s.id}: float lands in the water`);assert(c.distance>3&&c.distance<=30);
  const r=lcg(3);for(let i=0;i<10;i++){const p=core.shadowSpawn(c,r);assert(!shore.onIsland(c.x+p.x,c.z+p.z)||Math.hypot(p.x,p.z)<4,`${s.id}: shadow starts in the water`);}}
+
+// ---- Farther casts (Oct 13 2026, "cast farther out … to see more of the ocean and a little deeper"): every buoy sits
+// well clear of its stand, in open water, and the live cast (castPoint, which now reaches to the buoy's own distance
+// whenever that stays in open water) lands close to it. causeway-gate and causeway-channel run right along the friendly
+// sharks' patrol stretch (the existing ≥9 m clearance rule above), so their farther reach is modest by comparison; every
+// other spot reaches at least 9 m, most well past that.
+for(const s of FISH_SPOTS){
+ const dist=Math.hypot(s.buoy.x-s.x,s.buoy.z-s.z);
+ assert(dist>=9,`${s.id}: casts at least 9 m out (${dist.toFixed(1)} m)`);
+ assert(core.inOpenWater(s.buoy.x,s.buoy.z),`${s.id}: the buoy itself sits in open water`);
+ const c=core.castPoint(s,s);assert(Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z)<3,`${s.id}: the live cast lands close to the buoy`);
+}
+assert(['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','east-pier','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-cove','summit-palm','summit-lookout'].every(id=>{const s=cat.spotById(id);return Math.hypot(s.buoy.x-s.x,s.buoy.z-s.z)>=14;}),'every spot off the two shark-patrolled causeway posts casts at least 14 m out');
 
 // ---- Approaches: a different direction each cast, curved paths, always in the water (user, Sep 28 2026) ----
 for(const s of FISH_SPOTS){const c=core.castPoint(s,s),r=lcg(40+s.id.length),sectors=new Set(),species=FISH.filter(f=>f.spots.includes(s.id));let loops=0,curved=0;
@@ -329,9 +381,11 @@ assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.co
 {const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingStore.ts'),'utf8');
  assert(/__fi2Fishing/.test(src)&&/hot\.session\?\?=createFishingSession/.test(src),'the session singleton lives on globalThis');
  assert(e.fresh('lib/town/fishing/fishingStore.ts').fishingSession===fishingStore.fishingSession,'a hot-updated fishingStore reuses the same session');}
-// ---- Portrait framing: head and float both clear the top HUD and bottom controls ----
+// ---- Framing (Oct 13 2026, farther casts: desktop/landscape added to the long-standing two portrait sizes) — head and
+// float both clear the top HUD and bottom controls at 3 aspect ratios: phone portrait, a second portrait size, and
+// desktop/landscape (the camera's own `out`/`lift` scale with the cast distance, so a much farther float still frames). ----
 {const T=require('three'),{createFishingCamera}=e.load('lib/town/fishing/fishingCamera.ts');
- for(const spot of FISH_SPOTS)for(const [width,height] of [[390,844],[375,667]]){
+ for(const spot of FISH_SPOTS)for(const [width,height] of [[390,844],[375,667],[1280,800]]){
   const stand={x:spot.x,z:spot.z},floor=spot.boat?.floor??0,cast=core.castPoint(spot,stand),camera=new T.PerspectiveCamera(40,width/height,.1,1000),rig=createFishingCamera();rig.begin(stand,cast.dir,cast.distance,undefined,spot.camera);rig.apply(camera,.05,true);camera.updateMatrixWorld();
   const float=new T.Vector3(cast.x,-.35,cast.z).project(camera),head=new T.Vector3(stand.x,floor+1.6,stand.z).project(camera);
   assert(float.y>-.6&&float.y<.6,`${spot.id} float stays between HUD and controls at ${width}x${height}`);assert(Math.abs(float.x)<.8&&head.y<.65&&head.y>-.1,'angler and float are framed');
@@ -360,6 +414,39 @@ assert.equal(MARKET_STAND.z,35,'one stand: the CITRUS & FRUIT stall the jobs sal
  const sorted=tris.map(t=>t[1]).sort((a,b)=>a-b);console.log(`species models: ${tris.length}, triangles min ${sorted[0]} median ${sorted[sorted.length>>1]} max ${sorted[sorted.length-1]} (${tris.find(t=>t[1]===sorted[sorted.length-1])[0]})`);}
 
 for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:40};s.phase='bite';core.tapSession(s);for(let i=0;i<hz*9;i++)core.stepSession(s,pier,1/hz,()=>.5,spawn);assert.notEqual(s.phase,'caught','idle reeling never awards a fish');assert(['escaped','floating'].includes(s.phase));}
+
+// ---- Per-spot reef themes (Oct 13 2026, "fix all the fishing spots so they don't all look the same … make the coral feel more tropical") ----
+{const uw=e.load('lib/town/fishing/underwater.ts'),sea=e.load('lib/town/fishing/fishSchools.ts'),T=require('three');
+ const ids=FISH_SPOTS.map(s=>s.reef);
+ assert(ids.every(id=>id&&uw.REEF_THEMES[id]),'every spot names a reef theme that exists');
+ assert.equal(new Set(ids).size,FISH_SPOTS.length,'every spot has its own reef theme');
+ const themes=FISH_SPOTS.map(s=>uw.reefTheme(s));
+ assert.equal(new Set(themes.map(t=>t.coral.join())).size,themes.length,'reef palettes differ between spots');
+ assert.equal(new Set(themes.map(t=>JSON.stringify(t.water))).size,themes.length,'water tints differ between spots');
+ assert.equal(new Set(themes.map(t=>JSON.stringify(t.sand))).size,themes.length,'sand tones differ between spots');
+ assert(new Set(themes.map(t=>t.layout)).size>=12,'at least 12 different reef layouts');
+ assert(new Set(themes.map(t=>t.fish.schools.join()+'|'+t.fish.cruisers.join())).size===themes.length,'each spot has its own fish mix');
+ for(const t of themes){for(const f of [...t.fish.schools,...t.fish.cruisers])assert(sea.LOOKS[f],`${t.id}: fish look ${f} exists`);
+  assert(t.coral.length>=3&&t.coral.every(c=>/^#[0-9a-f]{6}$/i.test(c)),`${t.id}: a reef palette`);
+  // Tropical: every palette has at least one vivid, saturated colour.
+  assert(t.coral.some(c=>{const hsl={};new T.Color(c).getHSL(hsl);return hsl.s>.75&&hsl.l>.4;}),`${t.id}: vivid reef colours`);}
+ assert(uw.reefSeed('coral-garden')===uw.reefSeed('coral-garden')&&uw.reefSeed('coral-garden')!==uw.reefSeed('sharks-beach'),'seeded by spot id');
+ // Prop budget on a synthetic straight shore: the old per-style seabed (cay ≈ 10.2k / 5.9k triangles desktop / phone, every other
+ // spot ≤ 5.3k / 3.2k; all 16 spots 90.7k / 52.7k) may grow at most 15 % per spot, and the total stays flat.
+ const n=160,size=80,lift=new Float32Array(n*n);for(let j=0;j<n;j++)for(let i=0;i<n;i++)lift[j*n+i]=-40+(j+.5)*size/n<-8?.3:-.5;
+ const field={box:new T.Vector4(-40,-40,size,size),n,size,lift,distance:(x,z)=>z+8},tot={desktop:0,phone:0};
+ for(const s of FISH_SPOTS)for(const phone of [false,true]){const cay=s.area==='cay',build=()=>uw.buildSeabedProps(field,uw.reefTheme(s),{x:0,z:-9},{x:0,z:1},phone,uw.reefSeed(s.id),phone?4.5:9,25);
+  const p=build(),q=build(),cap=(cay?(phone?5932:10182):(phone?3240:5264))*1.15;
+  assert(p.triangles>(phone?500:900)&&p.triangles<=cap,`${s.id} ${phone?'phone':'desktop'} seabed ${p.triangles} triangles (cap ${Math.round(cap)})`);
+  assert.equal(q.triangles,p.triangles,`${s.id}: deterministic seabed`);
+  if(uw.reefTheme(s).anemones)assert(p.homes.length>=1,`${s.id}: an anemone for the clownfish`);
+  tot[phone?'phone':'desktop']+=p.triangles;p.dispose();q.dispose();}
+ assert(tot.desktop<=90734&&tot.phone<=52680,`seabed triangles flat overall (${tot.desktop} / ${tot.phone})`);
+ // Open sea (the Deep Sea Boat: no shore in the field) builds without throwing.
+ const open={...field,lift:new Float32Array(n*n).fill(-.5),distance:()=>1e6},o=uw.buildSeabedProps(open,uw.reefTheme(cat.spotById('deep-sea-boat')),{x:0,z:0},{x:1,z:0},true,1,4.5,20);o.dispose();
+ const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/underwater.ts'),'utf8');
+ assert(/caustic:1\.75/.test(src)&&/new T\.Mesh\(geometry,material\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1,'seabed stays ONE merged mesh, with brighter caustics on the reef');
+ console.log(`reef themes: ${themes.length} spots, ${new Set(themes.map(t=>t.layout)).size} layouts, seabed triangles ${tot.desktop} desktop / ${tot.phone} phone`);}
 
 console.log(`FISHING_PASS: ${FISH.length} species with cited club facts (${exclusives.length} spot specials), ${FISH_SPOTS.length} spots, weighted catches (commons first), rarity reel taps + pull-back, varied in-water approaches, live bite timing (nibbles, 0.7-1 s window, early = scared, late = escaped, idle reels in), Fishbook persists, sell one/all + soft cap pay the shared wallet`);
 })().catch(err=>{console.error(err);process.exit(1);});

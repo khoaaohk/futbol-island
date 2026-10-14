@@ -7,13 +7,13 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 const root=path.join(__dirname,'..'),X='components/museum/experiences/',read=f=>fs.readFileSync(path.join(root,f),'utf8'),has=f=>fs.existsSync(path.join(root,f));
-const EXHIBITS=['telstar-1970','laced-leather','shirts','cards-1970','var-2018','backpass-1992','laws-1863','futsal-1989','wwc-1991','hall-of-fame','timeline'];
+const EXHIBITS=['telstar-1970','laced-leather','shirts','stadiums','var-2018','boots','laws-1863','futsal-1989','wwc-1991','hall-of-fame','timeline'];
 const srcOf=dir=>fs.readdirSync(path.join(root,X+dir)).filter(f=>/\.(tsx?|css)$/.test(f)).map(f=>[dir+'/'+f,read(X+dir+'/'+f)]);
 
 // 1. One loop: requestAnimationFrame only in anatomy/paper-loop.ts.
 {for(const [f,s] of [...EXHIBITS.flatMap(srcOf),...srcOf('anatomy')])if(f!=='anatomy/paper-loop.ts')assert.doesNotMatch(s,/requestAnimationFrame\(/,'no rAF in '+f);
  const loop=read(X+'anatomy/paper-loop.ts');for(const n of ['createPaperLoop','usePaperLoop','useFrames','useFrameLoop','useRaf'])assert.match(loop,new RegExp('export function '+n+'\\('),n+' is in the one loop file');
- for(const [dir,hook] of [['cards-1970','useFrames'],['var-2018','useFrames'],['backpass-1992','useFrames'],['laws-1863','usePaperLoop'],['futsal-1989','usePaperLoop'],['wwc-1991','usePaperLoop'],
+ for(const [dir,hook] of [['stadiums','usePaperLoop'],['var-2018','useFrames'],['boots','useRaf'],['laws-1863','usePaperLoop'],['futsal-1989','usePaperLoop'],['wwc-1991','usePaperLoop'],
   ['hall-of-fame','useFrameLoop'],['timeline','useFrameLoop'],['telstar-1970','useRaf'],['laced-leather','useRaf']])assert.ok(srcOf(dir).some(([,s])=>s.includes(hook+'(')),dir+' uses the shared loop ('+hook+')');
  assert.ok(!srcOf('shirts').some(([,s])=>/useRaf\(|usePaperLoop\(/.test(s)),'shirts has no frame loop at all');
  console.log('PASS one loop: requestAnimationFrame only in anatomy/paper-loop.ts; all ten moving exhibits use it');}
@@ -36,7 +36,7 @@ const srcOf=dir=>fs.readdirSync(path.join(root,X+dir)).filter(f=>/\.(tsx?|css)$/
 // 3. One set of Paper tokens.
 {const PAPER={page:'#e0e0db',card:'#e0e0db',paper:'#f7f7f3',top:'#f7f7f3','shade-0':'#d3d3ce','shade-1':'#dcdcd7','shade-2':'#e3e3de','shade-3':'#e9e9e4',
   hi:'#3a3a3c',mid:'#6f6f72',lo:'#98989a',faint:'#c2c2bd',halo:'#4a4a44','halo-opacity':'.34',weight:'.8px'};
- const files=['anatomy/paper-kit.tsx','anatomy/PaperStage.module.css','telstar-1970/Experience.module.css','laced-leather/Experience.module.css','shirts/Experience.module.css','hall-of-fame/Experience.module.css','timeline/Experience.module.css'];
+ const files=['anatomy/paper-kit.tsx','anatomy/PaperStage.module.css','telstar-1970/Experience.module.css','laced-leather/Experience.module.css','shirts/Experience.module.css','stadiums/Experience.module.css','hall-of-fame/Experience.module.css','timeline/Experience.module.css'];
  for(const f of files){const s=read(X+f).split('\n').filter(l=>!/hof-opp|hof-keeper/.test(l)).join('\n');
   for(const [k,v] of Object.entries(PAPER)){const found=[...s.matchAll(new RegExp('--anatomy-'+k+':([^;}]+)','g'))].map(m=>m[1].trim());
    for(const x of found)assert.equal(x,v,`${f}: --anatomy-${k} is ${x}, the Paper token is ${v}`);}

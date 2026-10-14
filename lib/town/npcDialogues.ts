@@ -4,9 +4,15 @@ import {EAST_PIER_NPCS} from './eastPierNpcs';
 import {VIDEO_NEIGHBORS} from './videoNeighbors';
 import {npcEncounter} from './npcInterests';
 import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
+import type {NpcLookOverride} from './beanLooks';
+import {TOWNSFOLK_CAST,TOWNSFOLK_MOVES,TOWNSFOLK_VOICES,townsfolkCastEnabled,type NpcAge,type NpcPoseKind,type TownArea} from './townsfolkCast';
+import {SUMMIT_ISLE_NPCS} from './summitIsleNpcs';
 /** Familiar island personalities, with short football conversations you can choose. */
 export type NpcTopic={id:string;question:string;answer:string;followUp:{question:string;answer:string}};
-export type NpcDefinition={freestyle?:number;/** FREESTYLE_CLIPS id shown first (unique per freestyler); `freestyle` only picks the rig's trick program. */freestyleClip?:string;pursuit?:string;videoTopic?:string;videoPrompt?:string;ranking?:boolean;newsLeague?:NewsLeague;newsSlot?:number;newsFocus?:string;matchStory?:boolean;travel?:'run'|'skateboard'|'scooter';body?:'balanced'|'strong'|'slim';activity?:'watering'|'sweeping'|'serving';workYaw?:number;news?:'scores'|'transfers';newsQuestion?:string;newsIntro?:string;id:string;name:string;role:string;greeting:string;x:number;z:number;character:'male'|'female';face:'warm'|'deep'|'light';clothing:'classic'|'coast'|'sunset';topics:NpcTopic[]};
+export type NpcDefinition={freestyle?:number;/** FREESTYLE_CLIPS id shown first (unique per freestyler); `freestyle` only picks the rig's trick program. */freestyleClip?:string;pursuit?:string;videoTopic?:string;videoPrompt?:string;ranking?:boolean;newsLeague?:NewsLeague;newsSlot?:number;newsFocus?:string;matchStory?:boolean;travel?:'run'|'skateboard'|'scooter';body?:'balanced'|'strong'|'slim';activity?:'watering'|'sweeping'|'serving';workYaw?:number;news?:'scores'|'transfers';newsQuestion?:string;newsIntro?:string;id:string;name:string;role:string;greeting:string;x:number;z:number;character:'male'|'female';face:'warm'|'deep'|'light';clothing:'classic'|'coast'|'sunset';topics:NpcTopic[];
+ /** Townsfolk cast (Oct 12 2026, lib/town/townsfolkCast.ts): a still pose at a bench, on a towel or lying in the sun (x, z exact,
+  *  facing workYaw); an age band (rig height profile); explicit look overrides; a persona and rotating conversation openers. */
+ pose?:NpcPoseKind;age?:NpcAge;look?:NpcLookOverride;persona?:string;lines?:string[];area?:TownArea};
 const ISLAND_REGULARS:NpcDefinition[]=[
  {id:'rosa',name:'Coach Rosa',role:'Futsal coach',x:16,z:43,character:'female',face:'warm',clothing:'sunset',greeting:'Welcome to the rooftop! Futsal gives you lots of touches and very little time. What are you working on?',topics:[
   {id:'touch',question:'How do I improve my first touch?',answer:'Look around before the pass arrives. Cushion the ball into space where you can play your next pass. In futsal, your sole can help you stop and protect it.',followUp:{question:'What can I practise?',answer:'Pass against a wall, check over your shoulder, then receive to either side. Start slowly and keep the ball close enough for your next touch.'}},
@@ -178,3 +184,15 @@ NPC_DIALOGUES.push(...CORAL_CAY_NPCS);
 
 // East Pier: a fisher (keeper patience, the shooting challenge) and a keep-ups kid (touch, Laws 9 and 15). Sources in eastPierNpcs.ts.
 NPC_DIALOGUES.push(...EAST_PIER_NPCS);
+
+// Summit Isle: hikers and its park ranger (Oct 12 2026). Sources in summitIsleNpcs.ts.
+NPC_DIALOGUES.push(...SUMMIT_ISLE_NPCS);
+
+// Townsfolk cast (Oct 12 2026, user-approved; lib/town/townsfolkCast.ts, docs/npc-cast.md): every islander gets a persona and
+// rotating conversation openers (the greeting stays the first one, so gameplay wording is unchanged); 60 new townsfolk join
+// and a few movable regulars are spread out. `?npcmore=0` keeps today's cast and places (A/B for the heat measurements).
+for(const npc of NPC_DIALOGUES){const voice=TOWNSFOLK_VOICES[npc.id];if(voice){npc.persona??=voice.persona;npc.lines??=voice.lines;}}
+if(townsfolkCastEnabled()){
+ for(const npc of NPC_DIALOGUES){const move=TOWNSFOLK_MOVES[npc.id];if(move){npc.x=move.x;npc.z=move.z;if(move.area)npc.area=move.area;}}
+ NPC_DIALOGUES.push(...TOWNSFOLK_CAST);
+}

@@ -4,8 +4,8 @@
  * and resets at local midnight; a job can always be played again.
  */
 import {signalExplore} from '../exploreSignals';
-export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor'|'farm-harvest'|'match-day-snacks'|'garden-shift';
-export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor','farm-harvest','match-day-snacks','garden-shift'];
+export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor'|'farm-harvest'|'match-day-snacks'|'garden-shift'|'trail-cleanup';
+export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor','farm-harvest','match-day-snacks','garden-shift','trail-cleanup'];
 /** One-time welcome coins: exactly one 40-coin card pack, or a few arcade plays or a small vending item (user, Sep 27 2026;
  *  raised 30 → 40 with pack prices in the economy pass, docs/economy/ECONOMY_PROPOSAL.md, 28 Sep 2026). */
 export const STARTER_COINS=40;
@@ -20,8 +20,10 @@ export const FIRST_JOB_BONUS=4;
  *  Garden shift (30 Sep 2026, docs/island-jobs.md §13): 10 for a ~1-minute shift (8 picks + the crate) = 6.25 coins a minute, the
  *  middle (median) of the jobs per minute, like Wall rebounds.
  *  Pump the balls (1 Oct 2026, user: "make it harder"): ~85 small Pump strokes over five balls (8 → 24 each) instead of ~15, so
- *  its play time goes .45 → .85 min. Pay 7 → 10 keeps it in line per minute (6.67 → 6.90 coins a minute, inside the 7–10 band). */
-export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':10,'goal-anchor':8,'farm-harvest':8,'match-day-snacks':8,'garden-shift':10};
+ *  its play time goes .45 → .85 min. Pay 7 → 10 keeps it in line per minute (6.67 → 6.90 coins a minute, inside the 7–10 band).
+ *  Trail clean-up (Summit Isle, Oct 12 2026): 8 litter items along the trail and beach, like Court clean-up's pace, for 8
+ *  coins at ~6.15 coins a minute (inside the 7–10 band; see JOB_MINUTES). */
+export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':10,'goal-anchor':8,'farm-harvest':8,'match-day-snacks':8,'garden-shift':10,'trail-cleanup':8};
 /**
  * Estimated minutes of real play per shift (30 Sep 2026). Each estimate is the route length from the sign through the targets
  * and to the drop-off at walking pace (3.7 m/s), plus the actions (holds, taps, replays, shots). Wall rebounds: ~1 min of wall
@@ -30,7 +32,7 @@ export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26
  * the station (~3 s), ~78 strokes to reach five narrowing green zones plus a few top-ups after the slow leak or an over-pump (~85
  * taps at ~3 a second ≈ 28 s), five gauge checks and Ball ready presses (~20 s) ≈ 0.85 min. Used only for pay balance (per-minute parity) and the economy sim, never at runtime.
  */
-export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.85,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1};
+export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.85,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1,'trail-cleanup':.7};
 /** Per shift, on top of the play: walk to the sign, the intro card and the payday card. With it, the short jobs average 1.5 min a
  *  shift, the economy sim's long-standing job assumption. */
 export const JOB_SHIFT_OVERHEAD_MINUTES=.6;
@@ -59,7 +61,7 @@ export function jobPayout(id:JobId,ledger:JobLedger):{coins:number;tier:PayTier;
 }
 /** The friendly line under the payout. Never guilt, never a countdown. */
 export function payMessage(id:JobId,ledger:JobLedger):string{
- const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!','farm-harvest':'The harvest is in and the stand is full!','match-day-snacks':'Every snack is in the right crate!','garden-shift':'The garden crate is full for the market!'};
+ const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!','farm-harvest':'The harvest is in and the stand is full!','match-day-snacks':'Every snack is in the right crate!','garden-shift':'The garden crate is full for the market!','trail-cleanup':'The trail is clear for the next hiker!'};
  if(next==='full')return 'Full pay for the next shift too.';
  if(next==='half')return `${done[id]} The next shifts today pay half — try a different job for full pay.`;
  return `${done[id]} Come back tomorrow for full pay. You can still help for a 1-coin thank-you tip.`;

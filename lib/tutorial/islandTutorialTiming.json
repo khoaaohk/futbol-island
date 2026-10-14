@@ -1,0 +1,78 @@
+{
+ "voice": "Kokoro af_heart",
+ "engine": "kokoro-onnx",
+ "speed": 0.86,
+ "license": "Apache-2.0 model; MIT runtime",
+ "scenes": {
+  "welcome": {
+   "src": "/stories/island-tutorial/welcome.m4a",
+   "duration": 8.2,
+   "sha256": "8c3aa7679893738b393ef00ee89dfb49585805d307c96c003645e540c3df2ab2"
+  },
+  "walk": {
+   "src": "/stories/island-tutorial/walk.m4a",
+   "duration": 10.0,
+   "sha256": "1b9d730014b31f12c143193926f965734d9f31d8278caedfd2297a9b8725d81d"
+  },
+  "ride": {
+   "src": "/stories/island-tutorial/ride.m4a",
+   "duration": 10.8,
+   "sha256": "acd40c81746992719a23afd3ad74fd011e18c0759fa8475557e308b17e01a9d9"
+  },
+  "fly": {
+   "src": "/stories/island-tutorial/fly.m4a",
+   "duration": 8.4,
+   "sha256": "2cf83625d84e022e621e0c85d112f7ecdefc63c9cd0a9c8edbfb34412c35ad26"
+  },
+  "map": {
+   "src": "/stories/island-tutorial/map.m4a",
+   "duration": 7.0,
+   "sha256": "c6587e1d15bc863e526ffc7a8c7b75e47f3862aedecbd34c66fd99af8b2bd371"
+  },
+  "jobs": {
+   "src": "/stories/island-tutorial/jobs.m4a",
+   "duration": 10.0,
+   "sha256": "112ea681e676525347def81ba84e3a9fbb6e0096e5c016c74a133ca3d8af65ff"
+  },
+  "fishing": {
+   "src": "/stories/island-tutorial/fishing.m4a",
+   "duration": 9.9,
+   "sha256": "4334477a4f0b546f090dd98aaa5c03bb3ec1023a53ca89d71d438578c46231fb"
+  },
+  "vending": {
+   "src": "/stories/island-tutorial/vending.m4a",
+   "duration": 10.1,
+   "sha256": "013ad4d98836d3d189d020aa2358ce5e637519e9c3cba505f22c1567e5cd6205"
+  },
+  "arcade": {
+   "src": "/stories/island-tutorial/arcade.m4a",
+   "duration": 10.6,
+   "sha256": "3acfd13c82de0a15558580ba79ed075b36d2c20fb90df2461e2d5acf2267c0a3"
+  },
+  "explore": {
+   "src": "/stories/island-tutorial/explore.m4a",
+   "duration": 10.1,
+   "sha256": "18f16d46971a414e53fe1c803fe7b9e357208b7d9b98104f8189b3020f5ea40e"
+  },
+  "museum": {
+   "src": "/stories/island-tutorial/museum.m4a",
+   "duration": 7.7,
+   "sha256": "75fb2827b5f714ae15f2ac1cf39ab03ee8085c1ae3181dd8e3070997b2be67eb"
+  },
+  "people": {
+   "src": "/stories/island-tutorial/people.m4a",
+   "duration": 9.9,
+   "sha256": "982b19cacdbf985c580e220f9f1bd098cb0a41deee68b9b6307c5420e1ce6ad2"
+  },
+  "paths": {
+   "src": "/stories/island-tutorial/paths.m4a",
+   "duration": 13.2,
+   "sha256": "d16a0358ab040425b01cfddfce6fd6131b72d4a0e2345eed03d35db76fdd901f"
+  },
+  "help": {
+   "src": "/stories/island-tutorial/help.m4a",
+   "duration": 8.8,
+   "sha256": "83bf6a6f45413ae90060a7723318cafdc95ad08ffe7d120c47082133543b3f72"
+  }
+ }
+}

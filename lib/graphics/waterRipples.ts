@@ -6,18 +6,21 @@ export function createWaterRipples() {
   const ctx=canvas.getContext('2d')!;
   ctx.fillStyle='#eef5ff';ctx.fillRect(0,0,256,256);
   ctx.lineCap='round';
-  for(let i=0;i<22;i++){
-    const x=(i*97)%256,y=(i*61)%256,length=18+(i*13)%48;
+  // Scattered at seeded random spots with a slight tilt each (beach waves, Oct 12 2026): the old x = 97i, y = 61i lattice put
+  // the strokes on diagonal rows that merged into long straight streaks across the sea from the island camera.
+  let seed=20261012;const rand=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let i=0;i<24;i++){
+    const x=rand()*256,y=rand()*256,length=16+rand()*44,tilt=(rand()-.5)*.5,bend=(rand()-.5)*8,dx=Math.cos(tilt)*length,dy=Math.sin(tilt)*length;
     // Wrap each stroke across tile boundaries for a seamless repeating surface.
     for(const ox of [-256,0,256])for(const oy of [-256,0,256]){
-      const gradient=ctx.createLinearGradient(x+ox,y+oy,x+ox+length,y+oy);
+      const gradient=ctx.createLinearGradient(x+ox,y+oy,x+ox+dx,y+oy+dy);
       gradient.addColorStop(0,'rgba(255,255,255,0)');
       gradient.addColorStop(.35,'rgba(255,255,255,.85)');
       gradient.addColorStop(.7,'rgba(255,255,255,.6)');
       gradient.addColorStop(1,'rgba(255,255,255,0)');
       ctx.strokeStyle=gradient;ctx.lineWidth=1.4+(i%3)*.4;ctx.beginPath();
       ctx.moveTo(x+ox,y+oy);
-      ctx.bezierCurveTo(x+ox+length*.3,y+oy-3,x+ox+length*.65,y+oy+4,x+ox+length,y+oy);
+      ctx.bezierCurveTo(x+ox+dx*.3,y+oy+dy*.3-3+bend*.4,x+ox+dx*.65,y+oy+dy*.65+4-bend*.4,x+ox+dx,y+oy+dy);
       ctx.stroke();
     }
   }

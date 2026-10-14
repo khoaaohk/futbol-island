@@ -53,7 +53,7 @@ const none=new Set(),seven=coreOf('7v7');
  assert.match(onb,/label=\{last\?'Explore':'Next'\}/,'onboarding ends on Explore (Oct 6 2026, user)');assert.doesNotMatch(onb,/launchPathLesson/,'Explore drops into the island, no lesson launch');
  assert.match(town,/\{VENUES\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\}/,'Town renders the pitch cards from FieldPathCard');
  assert.match(card2,/pitchCardTarget\(venue\.id,/);assert.match(card2,/if\(target\)launchPathLesson\(venue\.id,target\.lesson,steps,answers\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
- assert.match(quests,/<div ref=\{setLandingSlot\} className=\{journey\.landingSlot\}\/>\n <section ref=\{arrivalRef\}/,'the landing slot sits above the hero art');
+ assert.match(quests,/<div ref=\{setLandingSlot\} className=\{journey\.landingSlot\}\/>\n <section className=\{journey\.arrival\}/,'the landing slot sits above the hero art');
  assert.match(qlp,/return landingSlot\?createPortal\(landing,landingSlot\):landing;/,'the landing card renders into that slot');
 }
 

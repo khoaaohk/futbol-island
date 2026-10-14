@@ -14,6 +14,7 @@ import {earnForNpc} from '@/lib/town/cardRewardTriggers';
 import {npcCardsToday} from '@/lib/town/cardRewardStore';
 import cardStyles from './CardOffer.module.css';
 import NpcMatchStory from './NpcMatchStory';
+import {markNpcVisited,npcOpener} from '@/lib/town/npcOpeners';
 const NpcRanking=dynamic(()=>import('./NpcRanking'),{ssr:false});
 const CourtFreestyleClips=dynamic(()=>import('./CourtFreestyleClips'),{ssr:false});
 const NpcClips=dynamic(()=>import('./NpcClips'),{ssr:false});
@@ -40,6 +41,10 @@ export default function NpcConversation({npc,open,onOpenChange,actions,practice=
  const learned=useRef<{npc:NpcDefinition;topics:string}|null>(null);
  if(open&&npc&&exchanges.some(exchange=>exchange.id.endsWith(':follow-up')))learned.current={npc,topics:exchanges.map(exchange=>`${exchange.question} ${exchange.answer??''}`).join(' ')};
  useEffect(()=>{if(open)return;const done=learned.current;learned.current=null;if(done)earnForNpc(done.npc,done.topics);},[open]);
+ // Rotating openers (lib/town/npcOpeners.ts): the opener is fixed for one chat; closing it moves this islander to their next line.
+ const opener=useRef<{id:string;text:string;done:boolean}|null>(null);
+ if(open&&npc&&(!opener.current||opener.current.id!==npc.id||opener.current.done))opener.current={id:npc.id,text:npcOpener(npc),done:false};
+ useEffect(()=>{if(open)return;const o=opener.current;if(o&&!o.done){o.done=true;markNpcVisited(o.id);}},[open]);
  const cardsToday=open&&npc?npcCardsToday(npc.id):'off';
  const send=(exchange:Exchange)=>{if(thinkingId||asked.has(exchange.id))return;if((exchange.answer?.length??0)>150&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)setThinkingId(exchange.id);setExchanges(current=>[...current,exchange]);};
  return <dialog ref={dialog} className={`${styles.dialog} ${slide.drawer} ${open?`${styles.entering} ${slide.entering}`:`${styles.leaving} ${slide.leaving}`}`} aria-labelledby="npc-conversation-title" aria-modal="true" onCancel={event=>{event.preventDefault();onOpenChange(false);}} onClick={event=>{if(event.target===event.currentTarget)onOpenChange(false);}} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();onOpenChange(false);}}} onKeyUp={event=>event.stopPropagation()}>
@@ -48,7 +53,7 @@ export default function NpcConversation({npc,open,onOpenChange,actions,practice=
    <div ref={body} className={`${shell.body} ${styles.body}`}>
     <p className={shell.context}>{npc?.role}</p>
     <div className={styles.transcript} role="log" aria-label={`Conversation with ${npc?.name??'an island neighbour'}`} aria-live="polite" aria-relevant="additions">
-     <div className={styles.message}><span className={styles.speaker}>{npc?.name}</span><p>{npc?.greeting}</p></div>
+     <div className={styles.message}><span className={styles.speaker}>{npc?.name}</span><p>{opener.current?.id===npc?.id?opener.current?.text:npc?.greeting}</p></div>
      {open&&npc?.matchStory&&<NpcMatchStory key={npc.id} id={npc.id} name={npc.name} league={npc.newsLeague} slot={npc.newsSlot} focus={npc.newsFocus}/>}
      {open&&npc?.freestyle!==undefined&&<CourtFreestyleClips key={npc.id} clipId={npc.freestyleClip} variant={npc.freestyle}/>}
      {open&&showRanking&&npc?.ranking&&<NpcRanking/>}

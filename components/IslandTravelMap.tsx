@@ -6,6 +6,7 @@ import {Icon} from './Icon';
 import IslandOverview,{type MapDestination,type MapFootprint} from './IslandOverview';
 import {FLIGHT_BOUNDS} from '@/lib/town/simulation';
 import {CAY_SHORE} from '@/lib/town/coralCay';
+import {SUMMIT_SHORE} from '@/lib/town/summitIsle';
 import {LEGEND_TIPS,legendTipText,type MapMarkKind} from '@/lib/town/mapMarkers';
 import styles from './IslandTravelMap.module.css';
 type Props={position:{x:number;z:number};open:boolean;onOpenChange:(open:boolean)=>void;onSelect:(destination:MapDestination)=>void;roads:MapFootprint[];buildings:MapFootprint[]};
@@ -13,9 +14,9 @@ type Direction='up'|'right'|'down'|'left';
 // The overview's viewBox (flight bounds plus its 8-unit rim). The map is drawn to cover the frame, so it overflows on one axis and pans.
 const MAP_X=FLIGHT_BOUNDS.minX-8,MAP_Z=FLIGHT_BOUNDS.minZ-8,MAP_W=FLIGHT_BOUNDS.maxX-FLIGHT_BOUNDS.minX+16,MAP_H=FLIGHT_BOUNDS.maxZ-FLIGHT_BOUNDS.minZ+16;
 const STEP=.6,DRAG_SLOP=8;
-/** The right pan stops at the easternmost land (Coral Cay's shore plus room for its beach and labels), not at the far edge of
+/** The right pan stops at the easternmost land (Coral Cay's or Summit Isle's shore plus room for its beach and labels), not at the far edge of
  *  the flight area's empty south-east lobe: on a phone the last taps used to push CORAL CAY and HOSTEL off the left edge. */
-const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(...CAY_SHORE.map(p=>p.x))+24);
+const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(...CAY_SHORE.map(p=>p.x),...SUMMIT_SHORE.map(p=>p.x))+24);
 const ARROWS:{dir:Direction;label:string;rotate:number}[]=[{dir:'up',label:'Move map up',rotate:0},{dir:'right',label:'Move map right',rotate:90},{dir:'down',label:'Move map down',rotate:180},{dir:'left',label:'Move map left',rotate:270}];
 /** Map key (G-13, Sep 30 2026): the same marks the map draws (IslandOverview), so a child can read V / F / J / W at a glance.
  *  The marks on the map are plain drawings; tapping V, F or J here shows what it is (Sep 30 2026, user: "the legend above is

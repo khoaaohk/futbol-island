@@ -385,8 +385,15 @@ await ok('ui hidden without setup',async()=>{
  assert(/onCancel=\{e=>\{e\.preventDefault\(\);if\(dialog\.kind==='restore'\)close\(\);\}\}/.test(sync),'the required prompt cannot be dismissed with Escape');
  // Onboarding analytics ids are unchanged (the save screens are sub-screens of the welcome).
  assert.deepEqual([...onb.matchAll(/\{id:'([a-z]+)',eyebrow:/g)].map(m=>m[1]),['welcome','paths','balls','earn','learn']);
- for(const f of ['components/saves/SaveCodeCard.tsx','components/saves/SaveCodeCreate.tsx','components/saves/SaveCodeRestore.tsx','components/saves/SaveActions.tsx','components/saves/IslandChooser.tsx','components/saves/SaveSync.tsx','components/IslandOnboarding.tsx'])
+ for(const f of ['components/saves/SaveCodeCard.tsx','components/saves/SaveCodeCreate.tsx','components/saves/SaveCodeRestore.tsx','components/saves/SaveActions.tsx','components/saves/SaveSync.tsx','components/IslandOnboarding.tsx'])
   assert(!/(NavigationButton|BackButton|DoneButton)[^>]*\bimmediate\b/.test(read(f)),'nav buttons keep the shrink-to-icon animation: '+f);
+ // One code is one island (user decision, Oct 12 2026): no "Which island do you want?" anywhere; a grown-up brings back the
+ // other copy from Settings, behind the gate.
+ assert(!fs.existsSync('components/saves/IslandChooser.tsx'),'the chooser is gone');
+ for(const f of ['components/saves/SaveSync.tsx','components/saves/SaveCodeCard.tsx','lib/saves/client.ts'])assert(!/Which island|IslandChooser|SAVE_CONFLICT|fi2-save-conflict/.test(read(f)),'no chooser left in '+f);
+ const card2=read('components/saves/SaveCodeCard.tsx');
+ assert(/Restore the other island from \{day\(b\.playedOn\)\}/.test(card2),'the backup is offered as "Restore the other island from <date>"');
+ assert(/view==='gate-other'\)return <ParentGate/.test(card2)&&/setView\(grownups\?'other':'gate-other'\)/.test(card2),'behind the parent gate (For grown-ups is behind it already)');
 });
 
 // 9. Retention.
@@ -408,18 +415,23 @@ await ok('retention',async()=>{
 
 // 10. A full two-device flow through the real client module, the real handler and the memory store.
 await ok('client flow',async()=>{
- const deps=memDeps();
- function device(name,init={}){
-  const ls=memStorage(init),listeners={},reloads=[];let requests=0;const ctl={drop:false};
+ // A shared clock, so "played most recently" is exact: every device (and the server) reads it.
+ const clock={t:NOW+DAY};const tick=(ms=60_000)=>{clock.t+=ms;};
+ class FakeDate extends Date{constructor(...a){super(...(a.length?a:[clock.t]));}static now(){return clock.t;}}
+ const deps=memDeps({now:()=>new FakeDate()});
+ /** A tab: `shared` gives it another tab's storage (two tabs of one island on one device). */
+ function device(name,init={},{shared}={}){
+  const ls=shared??memStorage(init),listeners={},reloads=[];let requests=0;const ctl={drop:false,offline:false};
   const win={addEventListener:(k,f)=>{(listeners[k]??=[]).push(f);},removeEventListener:(k,f)=>{listeners[k]=(listeners[k]||[]).filter(x=>x!==f);},dispatchEvent:e=>{for(const f of listeners[e.type]||[])f(e);return true;}};
   const fetchImpl=async(url,init={})=>{requests++;
+   if(ctl.offline)throw new TypeError('offline');
    if(url==='/api/save/status')return new Response(JSON.stringify(await SV.saveStatus(deps)),{status:200});
    const route=url.split('/').pop(),body=init.body;const bytes=typeof body==='string'?Buffer.from(body):Buffer.from(body);
    const r=await SV.handleSave(route,{bytes:new Uint8Array(bytes),contentType:init.headers['Content-Type'],headers:headersFor('198.51.100.'+name.length)},{...deps,minAnswerMs:0});
    if(ctl.drop)throw new TypeError('the page closed before the answer');
    return new Response(JSON.stringify(r.body),{status:r.status});};
   const loc={hash:'',pathname:'/',search:'',reload:()=>reloads.push(1)};
-  const L=makeLoader({localStorage:ls,fetch:fetchImpl,window:win,location:loc,history:{state:null,replaceState:()=>{}}});
+  const L=makeLoader({localStorage:ls,fetch:fetchImpl,window:win,location:loc,history:{state:null,replaceState:()=>{}},Date:FakeDate});
   return {ls,client:L('lib/saves/client.ts'),reloads,listeners,get requests(){return requests;},win,ctl};
  }
  // Required codes: a fresh device needs one; a code (made or restored) satisfies it; a grown-up's delete is respected.
@@ -457,26 +469,46 @@ await ok('client flow',async()=>{
  // Existing sanitisers accept the restored data (existing saves keep working).
  const AWS=AW.sanitizeArcadeWallet(JSON.parse(B.ls.getItem('fi2-arcade-wallet-v1')),new Set(['Marta']));assert(Object.keys(AWS.runs).length>0);
  assert.equal(IDP.sanitizeIdp(JSON.parse(B.ls.getItem('fi2-idp-plan-v1'))).plan.goalId,'7-look');
- // Two devices both play: A saves first, B has its own changes → B is asked which island.
+ // One code is one island (user decision, Oct 12 2026): two devices both play, and the copy played most recently wins, quietly.
+ // The other copy is set aside whole on this device for 7 days; coins are never added across copies.
  const B2=device('B',Object.fromEntries(B.ls._m));
  assert.equal(await B2.client.bootCheck(),'same','a fresh boot after the restore is quiet');
- A.ls.setItem('fi2-player-cards-v1',JSON.stringify(['Marta','Pelé','Kerr','Bronze']));assert.equal(await A.client.syncNow('manual'),'saved');
- B2.ls.setItem('fi2-passport-v1',JSON.stringify({stamps:['coast']}));
- let conflicts=0;B2.win.addEventListener('fi2-save-conflict',()=>conflicts++);
- assert.equal(await B2.client.bootCheck(),'conflict');assert.equal(conflicts,1);
- const c=await B2.client.loadConflict();assert.equal(c.saved.cards,4);assert.equal(c.here.cards,2);
- assert.equal(await B2.client.keepThisIsland(c),true,'"Keep this one" saves over the other island');
- assert(B2.client.swapBackup(),'the other island is kept 7 days');assert.equal(JSON.parse(B2.client.swapBackup().keys['fi2-player-cards-v1']).length,4);
- // A had no new changes: its next boot takes B's island quietly (one reload).
+ const earn=(ls,id,paid)=>{const w=JSON.parse(ls.getItem('fi2-arcade-wallet-v1'));w.runs[id]={game:'learn',paid,reason:'Learning',at:clock.t};ls.setItem('fi2-arcade-wallet-v1',JSON.stringify(w));};
+ tick();A.ls.setItem('fi2-player-cards-v1',JSON.stringify(['Marta','Pelé','Kerr','Bronze']));earn(A.ls,'learn:lesson:7v7:a1',40);assert.equal(await A.client.syncNow('manual'),'saved');
+ const aPlayed=clock.t,aCoins=WC.walletBalance(A.ls.getItem('fi2-arcade-wallet-v1'));
+ tick();B2.ls.setItem('fi2-passport-v1',JSON.stringify({stamps:['coast']}));earn(B2.ls,'learn:lesson:7v7:b1',25);
+ const bCoins=WC.walletBalance(B2.ls.getItem('fi2-arcade-wallet-v1'));
+ assert.equal(await B2.client.bootCheck(),'same','B played last: B keeps its island, no question asked');
+ assert.equal(B2.reloads.length,0,'no reload');assert.equal(B2.client.getSyncState().conflict,undefined);
+ {const view=device('view',{});const r=await view.client.restoreSave(made.code);assert(r.ok);
+  assert.equal(r.snapshot.keys['fi2-passport-v1'],JSON.stringify({stamps:['coast']}),'the server has B\'s island');
+  assert.equal(WC.walletBalance(r.snapshot.keys['fi2-arcade-wallet-v1']),bCoins,'coins: B\'s ledger whole, never A\'s added on');
+  assert.notEqual(bCoins,aCoins);assert(!r.snapshot.keys['fi2-arcade-wallet-v1'].includes('learn:lesson:7v7:a1'),'not one of A\'s receipts');
+  assert.equal(r.snapshot.played,B2.client.localPlayed(),'the save carries when it was played');}
+ const bk=B2.client.swapBackup();assert(bk,'A\'s copy is set aside on B');assert.equal(JSON.parse(bk.keys['fi2-player-cards-v1']).length,4);
+ assert.equal(bk.playedOn,aPlayed,'labelled with when A played it');assert.equal(bk.summary.coins,aCoins);
+ // A had no new changes: its next boot takes B's island quietly (one reload, no backup needed).
  const A2=device('A',Object.fromEntries(A.ls._m));
  assert.equal(await A2.client.bootCheck(),'reloading');assert.equal(A2.reloads.length,1);
  assert.equal(A2.ls.getItem('fi2-passport-v1'),JSON.stringify({stamps:['coast']}),'A now has B\'s island');
  assert(A2.ls.getItem('fi2-idp-plan-v1').includes('Oak Hill School'),'A kept its own coach-plan text');
- // "Use the saved one" on a third device with local progress.
- const A3=device('A',Object.fromEntries(A2.ls._m));A3.ls.setItem('fi2-garden-v1','{"beds":1}');
- B2.ls.setItem('fi2-garden-v1','{"beds":7}');assert.equal(await B2.client.syncNow('manual'),'saved');
- assert.equal(await A3.client.bootCheck(),'conflict');const c3=await A3.client.loadConflict();A3.client.chooseSavedIsland(c3);
- assert.equal(A3.ls.getItem('fi2-garden-v1'),'{"beds":7}');assert.equal(JSON.parse(A3.client.swapBackup().keys['fi2-garden-v1']).beds,1,'the local island is the backup');
+ assert.equal(A2.client.swapBackup(),null,'nothing of A\'s own was lost, so nothing set aside');
+ // The saved copy is newer: A3 played offline earlier, B played after and saved. A3's start takes B's island (behind the
+ // loading screen) and sets its own copy aside, which a grown-up can bring back from Settings.
+ const A3=device('A',Object.fromEntries(A2.ls._m));
+ tick();A3.ls.setItem('fi2-garden-v1','{"beds":1}');A3.ctl.offline=true;assert.equal(await A3.client.syncNow('hide'),'failed');A3.ctl.offline=false;
+ const a3Played=clock.t;
+ tick();B2.ls.setItem('fi2-garden-v1','{"beds":7}');assert.equal(await B2.client.syncNow('manual'),'saved');
+ tick();assert.equal(await A3.client.bootCheck(),'reloading','the newer copy loads quietly');
+ assert.equal(A3.ls.getItem('fi2-garden-v1'),'{"beds":7}');
+ const back3=A3.client.swapBackup();assert.equal(JSON.parse(back3.keys['fi2-garden-v1']).beds,1,'A3\'s own copy is the backup');assert.equal(back3.playedOn,a3Played);
+ // "Restore the other island" (a grown-up): it comes back, the replaced one becomes the backup, and it is saved as the newest.
+ const A4=device('A',Object.fromEntries(A3.ls._m));
+ assert.equal(A4.client.undoSwap(),true);assert.equal(A4.reloads.length,1);assert.equal(A4.ls.getItem('fi2-garden-v1'),'{"beds":1}');
+ assert.equal(JSON.parse(A4.client.swapBackup().keys['fi2-garden-v1']).beds,7,'switching back works the same way');
+ const A5=device('A',Object.fromEntries(A4.ls._m));tick();assert.equal(await A5.client.syncNow('manual'),'saved','the restored island is saved over the other');
+ {const view=device('view2',{});const r=await view.client.restoreSave(made.code);assert.equal(r.snapshot.keys['fi2-garden-v1'],'{"beds":1}');}
+ const A3x=A5;
  // Wrong codes: friendly client limits on top of the server's.
  const K=device('K',{});
  for(let i=0;i<2;i++)assert.equal((await K.client.restoreSave('banana kite lion 123')).reason,'wrong');
@@ -485,47 +517,117 @@ await ok('client flow',async()=>{
  for(let i=0;i<3;i++)await K.client.restoreSave('banana kite lion 123',{grownup:true});
  assert.equal((await K.client.restoreSave(made.code,{grownup:true})).reason,'break','6 misses: take a break');
  // Delete: gone on the server, the code forgotten here, the island kept here.
- assert.equal(await A3.client.deleteSave(),true);assert.equal(A3.ls.getItem('fi2-save-code-v1'),null);assert.equal(A3.ls.getItem('fi2-garden-v1'),'{"beds":7}');
+ assert.equal(await A3x.client.deleteSave(),true);assert.equal(A3x.ls.getItem('fi2-save-code-v1'),null);assert.equal(A3x.ls.getItem('fi2-garden-v1'),'{"beds":1}');
  assert.equal((await B2.client.bootCheck()),'failed','another device just sees "not saved yet"');
  // Email from the client: the address goes in the POST body once and nowhere else.
  const E=device('E',base);await E.client.createSave();
  assert.equal(await E.client.sendCodeToGrownup('x@example.org'),'unavailable','no provider configured in this test');
  assert(![...E.ls._m.values()].some(v=>v.includes('example.org')));
- // A page-hide save that lands but whose answer never arrives (the page closed): the next start adopts it, no chooser.
+ // A page-hide save that lands but whose answer never arrives (the page closed): the next start adopts it, nothing set aside.
  const F=device('F',base);await F.client.createSave();F.ls.setItem('fi2-garden-v1','{"beds":3}');F.ctl.drop=true;
  assert.equal(await F.client.syncNow('hide'),'failed','the answer was lost');F.ctl.drop=false;
- const F2=device('F',Object.fromEntries(F.ls._m));let fc=0;F2.win.addEventListener('fi2-save-conflict',()=>fc++);
- assert.equal(await F2.client.bootCheck(),'same');assert.equal(fc,0,'no chooser for its own save');assert.equal(F2.client.getSyncState().rev,2);
- // Local "changes" that end up identical to the saved island: no chooser either.
+ const F2=device('F',Object.fromEntries(F.ls._m));
+ assert.equal(await F2.client.bootCheck(),'same');assert.equal(F2.client.getSyncState().rev,2);assert.equal(F2.client.swapBackup(),null);assert.equal(F2.reloads.length,0);
+ // Local "changes" that end up identical to the saved island: nothing to settle either.
  const F3=device('F',Object.fromEntries(F2.ls._m));F3.ls.setItem('fi2-save-sync-v1',JSON.stringify({rev:1,hash:'stale',at:1}));
  assert.equal(await F3.client.bootCheck(),'same');assert.equal(F3.client.getSyncState().rev,2);
- // But another device's newer save is never mistaken for ours, even right after our own page-hide save was lost.
- const G=device('G',Object.fromEntries(F2.ls._m)),H=device('H',Object.fromEntries(F2.ls._m));
- H.ls.setItem('fi2-garden-v1','{"beds":9}');assert.equal(await H.client.syncNow('manual'),'saved');
- G.ls.setItem('fi2-garden-v1','{"beds":4}');G.ctl.drop=true;await G.client.syncNow('hide');G.ctl.drop=false;
- const G2=device('G',Object.fromEntries(G.ls._m));assert.equal(await G2.client.bootCheck(),'conflict','two different islands: the player chooses');
- // QA Oct 10 2026: visiting a room (Konbini, arcade, museum) and coming back never opens "Which island do you want?". The
- // island's page-hide save lands but its page unloads before the answer; the room's own page-hide save is then sent from the
- // same old rev and meets a conflict. Both were this device's: the next start adopts the server's island and saves on top.
+ // Another device's save is never mistaken for ours, even right after our own page-hide save was lost: newest wins.
+ {const G=device('G',Object.fromEntries(F2.ls._m)),H=device('H',Object.fromEntries(F2.ls._m));
+  tick();H.ls.setItem('fi2-garden-v1','{"beds":9}');assert.equal(await H.client.syncNow('manual'),'saved');
+  tick();G.ls.setItem('fi2-garden-v1','{"beds":4}');G.ctl.drop=true;await G.client.syncNow('hide');G.ctl.drop=false;
+  const G2=device('G',Object.fromEntries(G.ls._m));tick();assert.equal(await G2.client.bootCheck(),'same','G played last: kept');
+  assert.equal(G2.ls.getItem('fi2-garden-v1'),'{"beds":4}');assert.equal(JSON.parse(G2.client.swapBackup().keys['fi2-garden-v1']).beds,9,'H\'s copy set aside');
+  // …and the other way round: H plays again after G, so G's next start takes H's island.
+  tick();H.ls.setItem('fi2-garden-v1','{"beds":10}');const h2=device('H',Object.fromEntries(H.ls._m));assert.equal(await h2.client.bootCheck(),'same');
+  assert.equal(h2.ls.getItem('fi2-garden-v1'),'{"beds":10}','H played after G: H wins its own start');
+  const G3=device('G',Object.fromEntries(G2.ls._m));tick();assert.equal(await G3.client.bootCheck(),'reloading','G was idle: it takes the newer island');
+  assert.equal(G3.ls.getItem('fi2-garden-v1'),'{"beds":10}');}
+ // A tie on the clock goes to the copy with more progress.
+ {const T=device('T',Object.fromEntries(F2.ls._m)),U=device('U',Object.fromEntries(F2.ls._m));
+  T.ls.setItem('fi2-player-cards-v1',JSON.stringify(['Marta','Pelé','Kerr','Bronze','Mead']));U.ls.setItem('fi2-garden-v1','{"beds":2}');
+  tick();T.ctl.offline=true;await T.client.syncNow('hide');T.ctl.offline=false;await U.client.syncNow('hide');
+  const T2=device('T',Object.fromEntries(T.ls._m));assert.equal(await T2.client.bootCheck(),'same','same minute, more cards: kept');
+  assert.equal(JSON.parse(T2.ls.getItem('fi2-player-cards-v1')).length,5);}
+ // A copy with no progress never beats a real island, even when its clock says it was touched last.
+ {const Y=device('Y',{'fi2-welcome-v1':'completed','fi2-save-code-v1':F2.ls.getItem('fi2-save-code-v1'),'fi2-save-sync-v1':JSON.stringify({rev:1,hash:'',at:1})});
+  tick();Y.ls.setItem('fi2-music-volume','0.2');assert.equal(await Y.client.bootCheck(),'reloading','the real island loads');assert(Y.client.deviceHasProgress());}
+ // Keys the game writes by itself (card offers re-rolled on view, the energy bar) never count as playing: a device that only
+ // looked around does not beat a copy really played elsewhere, and sets nothing aside.
+ {const P=device('P',Object.fromEntries(F2.ls._m)),Q=device('Q',Object.fromEntries(F2.ls._m));
+  tick();Q.ls.setItem('fi2-card-offers-v1',JSON.stringify({version:1,offers:[{id:'x',seen:true}]}));Q.ls.setItem('fi2-fuel-v1',JSON.stringify({fuel:87.34491,day:'2026-10-11'}));
+  assert(!('fi2-fuel-v1' in Q.client.currentSnapshot().keys),'the energy bar stays on each device');
+  await Q.client.syncNow('hide');
+  tick();P.ls.setItem('fi2-garden-v1','{"beds":12}');assert.equal(await P.client.syncNow('manual'),'saved');
+  tick();Q.ls.setItem('fi2-card-offers-v1',JSON.stringify({version:1,offers:[{id:'y',seen:true}]}));
+  const Q2=device('Q',Object.fromEntries(Q.ls._m));assert.equal(await Q2.client.bootCheck(),'reloading','the island really played wins');
+  assert.equal(Q2.ls.getItem('fi2-garden-v1'),'{"beds":12}');assert.equal(Q2.client.swapBackup(),null,'a copy with nothing of its own is not set aside');
+  assert.equal(Q2.ls.getItem('fi2-fuel-v1'),JSON.stringify({fuel:87.34491,day:'2026-10-11'}),'this device keeps its energy bar');}
+ // QA Oct 10 2026: visiting a room (Konbini, arcade, museum) and coming back never brings up anything. The island's page-hide
+ // save lands but its page unloads before the answer; the room's own page-hide save is then sent from the same old rev and
+ // meets a conflict. Both were this device's: the next start adopts the server's island and saves on top.
  {const I=device('I',base);await I.client.createSave();
   I.ls.setItem('fi2-garden-v1','{"beds":5}');I.ctl.drop=true;assert.equal(await I.client.syncNow('hide'),'failed','the island unloads unanswered');I.ctl.drop=false;
   assert.equal(I.client.getSyncState().sent.length,1,'what was sent is recorded before the request goes');
-  const room=device('I',Object.fromEntries(I.ls._m));room.ls.setItem('fi2-garden-v1','{"beds":6}');
-  assert.equal(await room.client.syncNow('hide'),'conflict','the room\'s save meets the island\'s');
-  const back=device('I',Object.fromEntries(room.ls._m));let bc=0;back.win.addEventListener('fi2-save-conflict',()=>bc++);
-  assert.equal(await back.client.bootCheck(),'same','back on the island: no chooser');assert.equal(bc,0,'no conflict event');
+  const room=device('I',Object.fromEntries(I.ls._m));room.ls.setItem('fi2-museum-hof-arena-v1','{"best":3}');
+  assert.equal(await room.client.syncNow('hide'),'saving','the room\'s save meets the island\'s: left to settle');
+  const back=device('I',Object.fromEntries(room.ls._m));
+  assert.equal(await back.client.bootCheck(),'same','back on the island');assert.equal(back.reloads.length,0);assert.equal(back.client.swapBackup(),null,'nothing set aside');
   const st=back.client.getSyncState();assert.equal(st.conflict,undefined);assert.equal(st.rev,3,'the room\'s change is saved on top');
   const J2=device('J2',{});const fromServer=await J2.client.restoreSave(I.ls.getItem('fi2-save-code-v1'));assert(fromServer.ok);
-  assert.equal(fromServer.snapshot.keys['fi2-garden-v1'],'{"beds":6}','the server has the latest island');
-  // The same inside a room that saves on a milestone: adopted on the spot, no chooser in the room either.
+  assert.equal(fromServer.snapshot.keys['fi2-museum-hof-arena-v1'],'{"best":3}','the server has the latest island');
+  // The same inside a room that saves on a milestone: adopted on the spot.
   const K2=device('K2',base);await K2.client.createSave();K2.ls.setItem('fi2-garden-v1','{"beds":7}');K2.ctl.drop=true;await K2.client.syncNow('hide');K2.ctl.drop=false;
-  const room2=device('K2',Object.fromEntries(K2.ls._m));let rc=0;room2.win.addEventListener('fi2-save-conflict',()=>rc++);
-  room2.ls.setItem('fi2-garden-v1','{"beds":8}');assert.equal(await room2.client.syncNow('manual'),'saved');assert.equal(rc,0);assert.equal(room2.client.getSyncState().rev,3);
-  // A remembered chooser for a real second device still opens.
+  const room2=device('K2',Object.fromEntries(K2.ls._m));
+  room2.ls.setItem('fi2-garden-v1','{"beds":8}');assert.equal(await room2.client.syncNow('manual'),'saved');assert.equal(room2.client.getSyncState().rev,3);assert.equal(room2.client.swapBackup(),null);
+  // Room in and out several times, each page-hide answer lost: never a backup, never a reload, the server always catches up.
+  let cur=room2;
+  for(let n=0;n<4;n++){tick(5_000);cur.ls.setItem('fi2-museum-stadiums-best',String(10+n));cur.ctl.drop=true;await cur.client.syncNow('hide');cur.ctl.drop=false;
+   const next=device('K2',Object.fromEntries(cur.ls._m));next.ls.setItem('fi2-museum-timeline-order-best',String(n));await next.client.syncNow('hide');cur=device('K2',Object.fromEntries(next.ls._m));
+   assert.notEqual(await cur.client.bootCheck(),'reloading');assert.equal(cur.client.swapBackup(),null,'round '+n+': nothing set aside');}
+  assert.equal(await cur.client.syncNow('manual'),'saved');
+  // Room to room without the island in between (browser QA Oct 12 2026: every room's page-hide answer is lost as the next page
+  // loads, so no conflict was ever recorded and each room met a silent conflict). Each room checks once as it opens.
+  for(let n=0;n<3;n++){tick(5_000);cur.ls.setItem('fi2-museum-stadiums-best',String(50+n));cur.ctl.drop=true;await cur.client.syncNow('hide');cur.ctl.drop=false;
+   const roomN=device('K2',Object.fromEntries(cur.ls._m));assert(roomN.client.getSyncState().sent.length>0,'an unanswered save');
+   await roomN.client.resumeCheck();const sn=roomN.client.getSyncState();assert.equal(sn.conflict,undefined);assert.equal(sn.sent,undefined,'adopted on open');
+   assert.equal(roomN.reloads.length,0);assert.equal(roomN.client.swapBackup(),null);
+   roomN.ls.setItem('fi2-museum-timeline-order-best',String(40+n));roomN.ctl.drop=true;await roomN.client.syncNow('hide');roomN.ctl.drop=false;cur=roomN;}
+  {const last=device('K2',Object.fromEntries(cur.ls._m));await last.client.resumeCheck();cur=last;}
+  const before2=cur.requests;assert.equal(await cur.client.resumeCheck(),'saved');assert.equal(cur.requests,before2,'nothing unanswered: no request on open');
+  {const v=device('v',{});const r=await v.client.restoreSave(K2.ls.getItem('fi2-save-code-v1'));assert.equal(r.snapshot.keys['fi2-museum-timeline-order-best'],'42','the server has the last room\'s save');}
+  // A remembered page-hide conflict with a real second device settles too (newest wins), with no event at all.
   const M=device('M',Object.fromEntries(back.ls._m)),N=device('N',Object.fromEntries(back.ls._m));
-  N.ls.setItem('fi2-garden-v1','{"beds":1}');assert.equal(await N.client.syncNow('manual'),'saved');
-  M.ls.setItem('fi2-garden-v1','{"beds":2}');assert.equal(await M.client.syncNow('hide'),'conflict');
-  const M2=device('M',Object.fromEntries(M.ls._m));assert.equal(await M2.client.bootCheck(),'conflict','another device\'s island: the player chooses');}
+  tick();N.ls.setItem('fi2-garden-v1','{"beds":1}');assert.equal(await N.client.syncNow('manual'),'saved');
+  tick();M.ls.setItem('fi2-garden-v1','{"beds":2}');assert.equal(await M.client.syncNow('hide'),'saving');
+  assert.equal(M.client.getSyncState().conflict>0,true,'remembered for later');
+  const M2=device('M',Object.fromEntries(M.ls._m));assert.equal(await M2.client.bootCheck(),'same','M played last');assert.equal(M2.ls.getItem('fi2-garden-v1'),'{"beds":2}');
+  assert.equal(JSON.parse(M2.client.swapBackup().keys['fi2-garden-v1']).beds,1);
+  for(const d of [M,M2,back,room,room2])assert.deepEqual(Object.keys(d.listeners).filter(k=>k.includes('conflict')),[],'no conflict listeners or events');}
+ // Two tabs of one island on one device share storage: they never set each other aside or ping-pong, whatever the timing.
+ {const T1=device('W',base);await T1.client.createSave();const T2=device('W',{}, {shared:T1.ls});
+  for(let n=0;n<5;n++){
+   tick(1_000);T1.ls.setItem('fi2-garden-v1',JSON.stringify({beds:20+n}));
+   // Both tabs save at once (one hides while the other's milestone save is out): one meets the other's save.
+   const a=T1.client.syncNow('manual');T1.ls.setItem('fi2-passport-v1',JSON.stringify({stamps:['n'+n]}));const b=T2.client.syncNow(n%2?'hide':'manual');await Promise.all([a,b]);
+   const r1=T1.client.resumeCheck(),r2=T2.client.resumeCheck();await Promise.all([r1,r2]);
+   if(n%2===0){const t3=device('W',{}, {shared:T1.ls});assert.notEqual(await t3.client.bootCheck(),'reloading','a third tab opening mid-way loads nothing');}
+  }
+  assert.equal(await T2.client.syncNow('manual'),'saved');assert.equal(T1.client.swapBackup(),null,'nothing ever set aside');
+  assert.equal(T1.reloads.length+T2.reloads.length,0,'no reloads');assert.equal(T1.client.getSyncState().conflict,undefined);
+  const v=device('v3',{});const r=await v.client.restoreSave(T1.ls.getItem('fi2-save-code-v1'));
+  assert.equal(S.snapshotHash(r.snapshot),S.snapshotHash(T1.client.currentSnapshot()),'the server ends up with exactly this island');
+  // The start check and a save racing in one tab (a milestone fires while the check is out): never a reload or a backup.
+  T1.ls.setItem('fi2-garden-v1','{"beds":99}');const X=device('W',{}, {shared:T1.ls});
+  const [boot]=await Promise.all([X.client.bootCheck(),T2.client.syncNow('manual'),X.client.syncNow('manual')]);
+  assert.equal(boot,'same');assert.equal(X.client.swapBackup(),null);assert.equal(X.reloads.length,0);}
+ // A tab back after a while asks once: a device left open takes what another device played meanwhile (it had no changes).
+ {const O=device('O',base);await O.client.createSave();await O.client.syncNow('hide');
+  const R2=device('R2',{});const got=await R2.client.restoreSave(O.ls.getItem('fi2-save-code-v1'));R2.client.applyRestoredSave(got);
+  const R3=device('R2',Object.fromEntries(R2.ls._m));tick(10_000);R3.ls.setItem('fi2-garden-v1','{"beds":31}');assert.equal(await R3.client.syncNow('manual'),'saved');
+  await O.client.syncNow('hide');tick(10_000);
+  const before=O.requests;assert.equal(await O.client.resumeCheck(),'saved','back within a minute: no request');assert.equal(O.requests,before);
+  await O.client.syncNow('hide');tick(61_000);assert.equal(await O.client.resumeCheck(),'reloading','back after a minute: the newer island loads');
+  assert.equal(O.ls.getItem('fi2-garden-v1'),'{"beds":31}');}
  // "Get my code" never hangs: no answer within the timeout → 'timeout' (the screen offers Try again or Play now).
  {const ls=memStorage(base);ls.removeItem('fi2-save-code-v1');ls.removeItem('fi2-save-sync-v1');
   const hang=(url,init={})=>url==='/api/save/status'?Promise.resolve(new Response('{"saving":true}')):new Promise((_,no)=>init.signal?.addEventListener('abort',()=>no(init.signal.reason)));
@@ -559,8 +661,8 @@ await ok('sql',async()=>{
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
-  // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time); none may touch the save tables (checked below).
-  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql'],'only admin add-ons run after the save migration');
+  // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time, 20261012 museum exhibit analytics keys); none may touch the save tables (checked below).
+  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql'],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');
@@ -633,6 +735,7 @@ await ok('wiring',()=>{
  // `/` renders the game through components/root/Game.tsx (the title screen comes first, Oct 9 2026).
  for(const f of ['components/root/Game.tsx','app/island-return/page.tsx'])assert(/<SaveSync\/>/.test(read(f))&&/from '@\/components\/saves\/LazySaveSync'/.test(read(f)),'boot check on '+f+', loaded after hydration');
  for(const f of ['app/arcade/page.tsx','app/konbini/page.tsx','app/museum/page.tsx'])assert(/<SaveSync boot=\{false\}\/>/.test(read(f)),'hide-save on '+f);
+ assert(/else void resumeCheck\(\);/.test(read('components/saves/SaveSync.tsx')),'rooms settle a waiting save as they open');
  assert(/SaveCodeCard/.test(read('components/IslandSettings.tsx'))&&/dynamicImport\(\(\)=>import\('\.\/saves\/SaveCodeCard'\)/.test(read('components/IslandSettings.tsx')),'Settings card, lazy');
  const g=read('components/GrownUps.tsx');assert(/Saving progress/.test(g)&&!/Vercel Web Analytics/.test(g),'grown-ups card; stale analytics wording gone');
  assert(/its own counter: no cookies and no personal identifiers/.test(g));

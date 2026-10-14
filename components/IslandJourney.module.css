@@ -12,13 +12,32 @@
 @media(min-width:850px){.arrival{margin-top:10px}.basecamp{display:grid;grid-template-columns:1fr 1.35fr;align-items:center;gap:28px}.sideQuests.sideQuests{margin:0}.coasts.coasts{gap:24px}.coasts button{min-height:104px}.bearing.bearing{display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.bearing>.eyebrow,.bearing>h3,.bearing>p{grid-column:1}.bearing>strong{grid-column:2;grid-row:1}.bearing>progress{grid-column:2;grid-row:2;align-self:center}.bearing>button{grid-column:2;grid-row:3;align-self:center}.bearing>small{grid-column:1/-1}.arrivalArt{max-height:280px}}
 @media(max-width:600px){.arrival{grid-template-columns:1fr;padding:24px 22px 0;border-radius:26px 50px 26px 26px;gap:0}.arrivalArt{max-height:175px;margin-top:-4px}.arrivalCopy>p{max-width:30ch}.arrivalCopy h3{font-size:34px}.arrivalCopy details{margin:10px 0}.sectionLabel p{font-size:16px}.coasts.coasts{gap:7px}.coasts button{min-height:86px;padding:8px 4px}.coastArt{width:40px;height:32px}.coasts button strong{font-size:13px}.coasts button small{font-size:9px}.bearing.bearing{padding:18px!important}.mapLegend{gap:12px;font-size:10px}.sideQuests.sideQuests{gap:10px!important}.levelMap ol li>strong{font-size:12px}.chapterFlag strong{font-size:13px}.harbour.harbour{padding:24px}.harbour h3{font-size:23px}}
 @media(prefers-reduced-motion:reduce){.coasts button{transition:none}}
-/* Guide disclosure has its own full-width row, so artwork never follows its height. */
-.arrival{align-items:start}.arrivalArt{align-self:center}
-.guide{grid-column:1/-1;min-width:0}.guide>button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:12px 0;border:0;border-top:1px solid #244d4026;background:transparent;color:#173e37;text-align:left;font:inherit;font-size:13px;font-weight:700;cursor:pointer}.guide>button>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#244d4014;font-size:20px}.guide>button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}.guideReveal{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 280ms ease,opacity 160ms ease-out}.guideReveal[data-open=true]{grid-template-rows:1fr;opacity:1}.guideReveal>div{min-height:0;overflow:hidden}.guideReveal p{font-size:13px;line-height:1.7;margin:8px 0 16px}
+/* The Island Tutorial button has its own full-width row under the art. Any spare height (so the closed card can match the
+   open tutorial's height) goes into the row above the divider/button (headline+art centre inside it); the button row stays
+   pinned to the card's own bottom padding, never a dead gap under it. (Mobile keeps its own 3-row version below.) */
+.arrival{align-items:center;grid-template-rows:minmax(0,1fr) auto}.arrivalArt{align-self:center}
+.guide{grid-column:1/-1;min-width:0}.guide>button{display:flex;align-items:center;width:100%;min-height:var(--btn-height,44px);padding:12px 0;border:0;border-top:1px solid #244d4026;background:transparent;color:#173e37;text-align:left;font:inherit;cursor:pointer}.guide>button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+/* Island Tutorial CTA (Oct 13 2026, user: "make it more noticeable, add some type of animation"): a bold label and a filled gold
+   circle (the card's own button tokens), with a brief pop + ring ripple + label nudge. Transform/opacity only, 3 cycles then
+   stops (finite animation-iteration-count, no JS timers): IslandQuests.tsx remounts .ctaPulse (a fresh key) once the row scrolls
+   into view, and again on hover/focus. Paused while the tab is hidden; nothing moves under reduced motion. */
+.ctaPulse{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
+.ctaLabel{font-size:18px;line-height:1.3;font-weight:800;letter-spacing:-.01em}
+.ctaIcon{position:relative;display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-gold-bright-edge,#aa8b3e);transition:transform .18s ease,box-shadow .18s ease}
+.ctaIcon::after{content:'';position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--btn-gold-bright,#f9d665);opacity:0}
+.ctaIcon svg{display:block;margin-left:2px}
+.ctaPulse .ctaIcon{animation:ctaPop .55s ease-out 3}
+.ctaPulse .ctaIcon::after{animation:ctaRing 1.1s ease-out 3}
+.ctaPulse .ctaLabel{animation:ctaNudge .55s ease-out 3}
+@keyframes ctaPop{0%,100%{transform:scale(1)}45%{transform:scale(1.16)}}
+@keyframes ctaRing{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes ctaNudge{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+.guide[data-page-hidden=true] .ctaIcon,.guide[data-page-hidden=true] .ctaIcon::after,.guide[data-page-hidden=true] .ctaLabel{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){.ctaPulse .ctaIcon,.ctaPulse .ctaIcon::after,.ctaPulse .ctaLabel{animation:none!important;transition:none!important}.guide>button:hover .ctaIcon,.guide>button:active .ctaIcon{transform:none!important}}
 .coasts button,.sideQuests>button{transition:translate 180ms ease,box-shadow 180ms ease,scale 180ms ease}.coasts button .coastArt{transition:transform 160ms ease-out}.coasts button:active,.sideQuests>button:active{translate:0 4px;scale:.98;box-shadow:0 2px 0 #173e3755!important}.coasts button:focus-visible,.sideQuests>button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(hover:hover) and (pointer:fine){.coasts button:hover,.sideQuests>button:hover{translate:0 -5px;box-shadow:0 11px 0 #173e3744!important}.coasts button:hover .coastArt{transform:rotate(0) scale(1.07)}.coasts button:active,.sideQuests>button:active{translate:0 4px;box-shadow:0 2px 0 #173e3755!important}}
-@media(max-width:600px){.arrival{padding-bottom:12px}.guideReveal p{font-size:12px}}
-@media(prefers-reduced-motion:reduce){.guideReveal,.coasts button,.sideQuests>button,.coasts button .coastArt{transition:none}.coasts button:hover,.sideQuests>button:hover,.coasts button:active,.sideQuests>button:active{translate:none;scale:1}.coasts button:hover .coastArt{transform:rotate(-9deg)}}
+@media(max-width:600px){.arrival{padding-bottom:12px}}
+@media(prefers-reduced-motion:reduce){.coasts button,.sideQuests>button,.coasts button .coastArt{transition:none}.coasts button:hover,.sideQuests>button:hover,.coasts button:active,.sideQuests>button:active{translate:none;scale:1}.coasts button:hover .coastArt{transform:rotate(-9deg)}}
 .arrival::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background:url('/stories/films/assets/entry-grain.png') repeat;opacity:.22;mix-blend-mode:multiply}
 .coastArt{background-image:url('/stories/films/assets/entry-grain.png')}
 .mapGrain{opacity:.24;mix-blend-mode:multiply}
@@ -31,18 +50,14 @@
  .guide{margin-top:0}
 }
 
-.guide>button{font-size:18px;line-height:1.4}
 
 .arrivalArt{transform:none;rotate:0;width:100%;justify-self:stretch}
 @media(max-width:600px){.arrivalArt{max-height:none;height:auto;width:calc(100% + 28px);max-width:none;margin:12px -14px 26px;transform:none}}
-.guide>button>span{transition:transform .18s ease,background-color .18s ease,box-shadow .18s ease}
-@media(hover:hover){.guide>button:hover>span{background:#f9d665;transform:scale(1.12);box-shadow:0 3px 0 #aa8b3e}}
-.guide>button:focus-visible>span{background:#f9d665;box-shadow:0 0 0 3px #fff2cd}
-.guide>button:active>span{transform:scale(.94)}
-@media(prefers-reduced-motion:reduce){.guide>button>span{transition:none;transform:none!important}}
+@media(hover:hover){.guide>button:hover .ctaIcon{transform:scale(1.12)}}
+.guide>button:focus-visible .ctaIcon{box-shadow:0 0 0 3px #fff2cd,0 3px 0 var(--btn-gold-bright-edge,#aa8b3e)}
+.guide>button:active .ctaIcon{transform:scale(.94)}
+@media(prefers-reduced-motion:reduce){.guide>button:hover .ctaIcon,.guide>button:active .ctaIcon,.guide>button:focus-visible .ctaIcon{transition:none;transform:none!important}}
 
-.guideReveal p{font-size:16px;line-height:1.7}
-@media(min-width:850px){.guideReveal p{font-size:17px}}
 .arrivalArt{width:100%;max-width:100%;margin-inline:0}
 @media(max-width:600px){.arrivalArt{width:100%;max-width:100%;margin-inline:0}}
 
@@ -95,11 +110,11 @@
 @media(min-width:850px){.landing.landing{grid-template-columns:minmax(0,1fr) minmax(300px,1fr);column-gap:34px;padding:26px 28px!important}}
 
 /* The hero card keeps its box height after the subtitle was removed, so the Paths screen does not reflow. */
-.arrival.arrival{min-height:355px}
-@media(max-width:1100px){.arrival.arrival{min-height:330px}}
-@media(max-width:849px){.arrival.arrival{min-height:323px}}
-@media(max-width:600px){.arrival.arrival{min-height:483px}}
-@media(max-width:360px){.arrival.arrival{min-height:522px}}
+.arrival.arrival{min-height:427px}
+@media(max-width:849px){.arrival.arrival{min-height:440px}}
+@media(max-width:649px){.arrival.arrival{min-height:460px}}
+/* Phones: the open tutorial's measured height (Oct 13): ~535–556 px up to 430 px wide, then it grows with the art (≈0.62 × width). */
+@media(max-width:600px){.arrival.arrival{min-height:calc(556px + max(0px,100vw - 430px) * .62)}}
 
 /* Covered artwork must stop animating while a story owns the screen. */
 :global(body:has([data-riso-story])) .arrivalArt,:global(body:has([data-riso-story])) .arrivalArt *{animation-play-state:paused!important}
@@ -134,13 +149,13 @@
 @media(min-width:850px){.sideQuests [data-count-word]{display:block}}
 /* Phones/tablets: the two half-width cards (Ball hunt, Explore) always put the count word on its own line, so they match. */
 @media(max-width:849px){.sideQuests.sideQuests>button:not(:first-child) [data-count-word]{display:block}}
-/* The arrival art keeps its size when "How your journey works" opens: columns may not grow with their content. */
+/* The arrival art keeps its size: columns may not grow with their content. */
 .arrival{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
 @media(max-width:600px){.arrival{grid-template-columns:minmax(0,1fr)}}
-/* Phone (user, Sep 24 2026): opening "How your journey works" must not move the art. The card's min-height left spare space that
-   was shared between the rows (the art is centred in its row), so the art jumped when the guide grew. The spare space now goes to
-   the guide's row only (its button sits at the bottom), and the heading and art rows never change. */
-@media(max-width:600px){.arrival.arrival{grid-template-rows:auto auto 1fr}.arrival .arrivalArt{align-self:start}.arrival .guide{align-self:end}}
+/* Phone (Sep 24 2026; updated Oct 13 2026 to match the open tutorial's height): the card's spare height goes to the art's own
+   row (the art centres in it), so the divider/button row stays snug under the art with its normal bottom padding, never a
+   dead gap under it. */
+@media(max-width:600px){.arrival.arrival{grid-template-rows:auto minmax(0,1fr) auto}.arrival .arrivalArt{align-self:center}.arrival .guide{align-self:start}}
 /* G-12 (Sep 30 2026): the opening story is optional, so it sits beside Continue as a lighter outlined pill (same shape). */
 .landing .landingNext .optionalStory{min-height:48px;padding:8px 18px;background:transparent;color:#244d40;box-shadow:inset 0 0 0 2px #244d40}
 .landing .landingNext .optionalStory .continueTitle{font-size:15px}
@@ -151,3 +166,8 @@
 /* Oct 4 2026 (clear path): Paths' top slot holds the landing card and the Warm-up row above the hero art. */
 .landingSlot{margin:6px 0 20px}.landingSlot:empty{display:none}
 .landingSlot .landing.landing{margin:0!important}
+
+/* Island Tutorial (Oct 13 2026): the tutorial plays inside this card, in the same box. Open, the card holds only the tutorial
+   (IslandTutorial.module.css) on one full-width row; it keeps its resting min-height, so the page below barely moves. */
+.arrival[data-tutorial]{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;align-items:start;padding:22px 24px}
+@media(max-width:600px){.arrival.arrival[data-tutorial]{grid-template-rows:auto;padding:16px 14px 14px}}

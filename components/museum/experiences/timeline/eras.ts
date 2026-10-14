@@ -10,12 +10,12 @@ export const FACT_LINE:Readonly<Record<string,number>>={
  'penalty-1891':0,   // William McCrum's idea
  'shirts':0,         // numbered shirts, 1928 / 1939
  'worldcup-1930':1,  // Uruguay beat Argentina 4–2
+ 'stadiums':0,       // the Maracanã, 1950: 199,854 people
+ 'boots':1,          // screw-in studs for a muddy pitch
  'laced-leather':0,  // brown leather, laces, heavy in the rain
- 'cards-1970':1,     // Ken Aston and the traffic lights
  'telstar-1970':1,   // black and white for black-and-white TV
  'futsal-1989':1,    // first Futsal World Cup, Brazil won
  'wwc-1991':1,       // USA 2–1 Norway
- 'backpass-1992':0,  // the back-pass rule
  'var-2018':1,       // what VAR may help with
  'hall-of-fame':0,   // your certificates hang here
 };
@@ -25,10 +25,10 @@ export const FACT_LINE:Readonly<Record<string,number>>={
  */
 export const CHAPTERS:readonly {n:number;title:string;ids:readonly string[]}[]=[
  {n:1,title:'Writing the rules',ids:['laws-1863','penalty-1891']},
- {n:2,title:'The game grows up',ids:['shirts','worldcup-1930','laced-leather']},
- {n:3,title:'The whole world is watching',ids:['cards-1970','telstar-1970']},
+ {n:2,title:'The game grows up',ids:['boots','shirts','worldcup-1930','stadiums','laced-leather']},
+ {n:3,title:'The whole world is watching',ids:['telstar-1970']},
  {n:4,title:'Everyone joins in',ids:['futsal-1989','wwc-1991']},
- {n:5,title:'A faster, fairer game',ids:['backpass-1992','var-2018']},
+ {n:5,title:'A faster, fairer game',ids:['var-2018']},
  {n:6,title:'Your turn',ids:['hall-of-fame']},
 ];
 export const chapterOf=(id:string)=>CHAPTERS.find(c=>c.ids.includes(id))??null;

@@ -24,15 +24,18 @@
  *
  * Heat (AGENTS.md, docs/performance-guide.md): no polling, no timers, no loops. Network only (1) once on start if this device
  * has a code, (2) when the tab hides, (3) after a milestone the stores already announce, at most once per 2 minutes, and
- * (4) when the player taps something. Each save first compares a cheap hash and sends nothing if nothing changed.
+ * (4) when the player taps something, (5) when the tab comes back while a save is waiting to be settled. Each save first
+ * compares a cheap hash and sends nothing if nothing changed.
+ *
+ * One code is one island (user decision, Oct 12 2026): kids are never asked to choose. When two copies meet, the one played
+ * most recently wins and the other is kept on this device for 7 days, for a grown-up to bring back from Settings (doc §4.4).
  */
-import {SAVE_APPLIED_KEY,SAVE_BACKUP_KEY,SAVE_CODE_KEY,SAVE_OPTOUT_KEY,SAVE_SYNC_KEY,SAVE_TRIES_KEY,WALLET_KEY_NAME,KEEPALIVE_BYTES,applySnapshot,buildSnapshot,
- hasProgress,localKeys,readBackup,readSnapshot,snapshotHash,writeBackup,type Snapshot,type StoragePort} from './snapshot';
+import {SAVE_APPLIED_KEY,SAVE_BACKUP_KEY,SAVE_CODE_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY,SAVE_SYNC_KEY,SAVE_TRIES_KEY,WALLET_KEY_NAME,KEEPALIVE_BYTES,applySnapshot,
+ buildSnapshot,diffKeys,hasProgress,localKeys,playedTime,progressHash,readBackup,readSnapshot,snapshotHash,writeBackup,type Backup,type Snapshot,type StoragePort} from './snapshot';
 import {compactWallet} from './walletCompact';
-import {summarise,type IslandSummary} from './summary';
+import {progressRank,summarise,type IslandSummary} from './summary';
 
 export const SAVE_CHANGED='fi2-save-changed';
-export const SAVE_CONFLICT='fi2-save-conflict';
 /** Milestones the stores already dispatch (lesson coins, graduations, stage complete, cards, purchases, daily coins). */
 export const SAVE_MILESTONES=['fi2-learn-coins-earned','fi2-graduations-changed','fi2-learning-stage-complete','fi2-card-added','fi2-backpack-changed','fi2-daily-play-earned','fi2-konbini-changed'] as const;
 export const MILESTONE_GAP_MS=2*60_000;
@@ -42,10 +45,13 @@ export const TRIES_WINDOW_MS=10*60_000,TRIES_ASK_GROWNUP=3,TRIES_BREAK=6;
 /**
  * `sent`: hashes of saves sent from `rev` whose answer may never have arrived (a page-hide save: the page can unload before the
  * reply). Written synchronously BEFORE the request, so a closing page still leaves the record. If the server later turns out
- * to hold one of these islands, it is ours, not another device's: it is adopted instead of opening the chooser.
+ * to hold one of these islands, it is ours, not another device's: it is adopted and this device saves on top.
+ * `conflict`: the server's rev when a save met a newer island and there was no time to settle it (a page-hide save). It is
+ * settled (newest wins) on the next start, the next save, or when the tab comes back. Nothing is shown to the player.
+ * `p`: progressHash of the island at the last confirmed save, so a copy that adds nothing since then is never set aside.
  */
-export type SyncState={rev:number;hash:string;at:number;conflict?:number;sent?:string[]};
-export type SaveStatus='none'|'saved'|'saving'|'failed'|'conflict';
+export type SyncState={rev:number;hash:string;at:number;conflict?:number;sent?:string[];p?:string};
+export type SaveStatus='none'|'saved'|'saving'|'failed';
 export type RestoreResult={ok:true;code:string;rev:number;snapshot:Snapshot;summary:IslandSummary}|{ok:false;reason:'wrong'|'grownup'|'break'|'unavailable'|'newer'|'offline';until?:number};
 
 const storage=():StoragePort|null=>{try{return typeof localStorage==='undefined'?null:localStorage;}catch{return null;}};
@@ -65,7 +71,7 @@ export function getSyncState():SyncState|null{try{const s=JSON.parse(read(SAVE_S
 const SENT_MAX=4;
 const setSyncState=(s:SyncState|null)=>{write(SAVE_SYNC_KEY,s?JSON.stringify(s):null);emit();};
 let status:SaveStatus='none';
-export function saveStatus():SaveStatus{if(!getLocalCode())return 'none';if(getSyncState()?.conflict)return 'conflict';return status==='none'?(getSyncState()?'saved':'failed'):status;}
+export function saveStatus():SaveStatus{if(!getLocalCode())return 'none';if(getSyncState()?.conflict)return 'saving';return status==='none'?(getSyncState()?'saved':'failed'):status;}
 const setStatus=(s:SaveStatus)=>{status=s;emit();};
 
 // ── Availability ───────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -108,6 +114,22 @@ export function currentSnapshot(now=Date.now()):Snapshot|null{
 }
 const localDirty=(state:SyncState|null)=>{const snap=currentSnapshot();return !!snap&&(!state||snapshotHash(snap)!==state.hash);};
 
+/**
+ * When this device's island last changed. Looked at on every save trigger (no timer): if the progress fingerprint moved since
+ * the last look, the island was played now-ish. Keys the game writes by itself don't count (PLAYED_IGNORE_KEYS).
+ */
+function readPlayed():{hash:string;at:number}|null{try{const v=JSON.parse(read(SAVE_PLAYED_KEY)??'null');return v&&typeof v.hash==='string'&&typeof v.at==='number'?v:null;}catch{return null;}}
+export function localPlayed(snap:Snapshot|null=currentSnapshot(),now=Date.now()):number{
+ if(!snap)return 0;
+ const h=progressHash(snap),r=readPlayed();if(r&&r.hash===h)return r.at;
+ write(SAVE_PLAYED_KEY,JSON.stringify({hash:h,at:now}));return now;
+}
+const notePlayed=(snap:Snapshot|null,at:number)=>{if(snap)write(SAVE_PLAYED_KEY,JSON.stringify({hash:progressHash(snap),at}));};
+/** Dev only: which keys differ when two copies of an island meet (finds keys that change by themselves). */
+const devDiff=(why:string,here:Record<string,string>,there:Record<string,string>)=>{
+ if(process.env.NODE_ENV==='development')try{console.info(`[saves] ${why}: keys that differ`,diffKeys(here,there));}catch{}
+};
+
 // ── Create ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 /** How long "Get my code" waits before handing back 'timeout' (the screen offers Try again or playing without a code). */
 export const CREATE_TIMEOUT_MS=15_000;
@@ -116,91 +138,152 @@ export async function createSave({timeoutMs=CREATE_TIMEOUT_MS}:{timeoutMs?:numbe
  const snap=currentSnapshot();if(!snap)return {ok:false,reason:'error'};
  // One user-initiated request, aborted by the platform's own timer signal (no timer of ours stays armed).
  const signal=typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function'?AbortSignal.timeout(timeoutMs):undefined;
- const r=await post('create',{snapshot:snap},{compress:true,signal});
+ const r=await post('create',{snapshot:{...snap,played:localPlayed(snap)}},{compress:true,signal});
  if(r==='timeout')return {ok:false,reason:'timeout'};
  if(!r)return {ok:false,reason:'error'};
  if(r.status===503)return {ok:false,reason:'unavailable'};
  if(r.status===429)return {ok:false,reason:'busy'};
  if(r.json.ok!==true||typeof r.json.code!=='string')return {ok:false,reason:'error'};
- write(SAVE_CODE_KEY,r.json.code);write(SAVE_OPTOUT_KEY,null);setSyncState({rev:Number(r.json.rev)||1,hash:snapshotHash(snap),at:Date.now()});setStatus('saved');
+ write(SAVE_CODE_KEY,r.json.code);write(SAVE_OPTOUT_KEY,null);setSyncState({rev:Number(r.json.rev)||1,hash:snapshotHash(snap),at:Date.now(),p:progressHash(snap)});localPlayed(snap);setStatus('saved');
  return {ok:true,code:r.json.code};
 }
 
 // ── Sync ───────────────────────────────────────────────────────────────────────────────────────────────────────────────
-let inFlight:Promise<SaveStatus>|null=null,lastAttempt=0,suspended=false;
+/** One save job at a time in this tab: the start check and the saves never interleave (a save landing mid-check looked like
+ * another device). Other tabs are covered by the shared `sent` list and by re-reading the sync state after each download. */
+let inFlight:Promise<SaveStatus>|null=null,booting:Promise<BootResult>|null=null,lastAttempt=0,suspended=false,hiddenAt=0;
+/** A tab back after at least this long away asks the server once more (another device may have played meanwhile). */
+export const RESUME_CHECK_MS=60_000;
 /**
  * Saves now if anything changed. `hide`: the tab is going away (keepalive, ≤ 64 KB). `milestone`: at most once per 2 minutes
  * (an earlier milestone's change is carried by the next one, or by the next hide: no timer is armed).
  */
 export function syncNow(reason:'hide'|'milestone'|'manual'='manual'):Promise<SaveStatus>{
  const code=getLocalCode();if(!code||suspended)return Promise.resolve(saveStatus());
- if(inFlight)return inFlight;
  const now=Date.now();
+ // Going away: note when (for the check on coming back) and when this island last changed (for "newest wins").
+ if(reason==='hide'){hiddenAt=now;localPlayed(currentSnapshot(now),now);}
+ if(booting)return booting.then(()=>saveStatus());
+ if(inFlight)return inFlight;
  if(reason==='milestone'&&now-lastAttempt<MILESTONE_GAP_MS)return Promise.resolve(saveStatus());
- const state=getSyncState();if(!state||state.conflict)return Promise.resolve(saveStatus());
+ const state=getSyncState();if(!state)return Promise.resolve(saveStatus());
+ // A copy still waiting to be settled: settle it first (newest wins), unless the page is going away.
+ if(state.conflict){if(reason==='hide')return Promise.resolve(saveStatus());
+  inFlight=settle(code,{canReload:false}).then(()=>saveStatus()).finally(()=>{inFlight=null;});return inFlight;}
  const snap=currentSnapshot(now);if(!snap)return Promise.resolve(saveStatus());
  const hash=snapshotHash(snap);if(hash===state.hash)return Promise.resolve(saveStatus());
  lastAttempt=now;
+ inFlight=send(code,state,snap,hash,reason).finally(()=>{inFlight=null;});
+ return inFlight;
+}
+async function send(code:string,state:SyncState,snap:Snapshot,hash:string,reason:'hide'|'milestone'|'manual'):Promise<SaveStatus>{
  // Remember what we are sending before we send it: a page-hide save can land on the server while its page unloads unanswered.
  const sending:SyncState={...state,sent:[...(state.sent??[]).filter(h=>h!==hash),hash].slice(-SENT_MAX)};
  write(SAVE_SYNC_KEY,JSON.stringify(sending));
- inFlight=(async():Promise<SaveStatus>=>{
-  if(reason!=='hide')setStatus('saving');
-  let st=sending;
-  for(let attempt=0;attempt<2;attempt++){
-   const r=await post('sync',{code,baseRev:st.rev,snapshot:snap},{compress:true,keepalive:reason==='hide'});
-   if(r?.json.ok===true&&Number.isInteger(r.json.rev)){setSyncState({rev:r.json.rev as number,hash,at:Date.now()});setStatus('saved');return 'saved';}
-   if(!(r?.json.conflict===true&&Number.isInteger(r.json.rev)))break;
-   // Usually our own earlier page-hide save (the island's, sent just before this room opened): adopt it and save on top.
-   // Not while this page is hiding: there is no time for a download, and the next start's check settles it.
-   if(reason!=='hide'&&attempt===0&&await adoptIfOurs(code,st,hash)==='ours'){
-    const adopted=getSyncState();if(!adopted)break;
-    if(adopted.hash===hash)return 'saved';
-    st={...adopted,sent:[hash]};write(SAVE_SYNC_KEY,JSON.stringify(st));continue;}
-   setSyncState({...st,conflict:r.json.rev as number});setStatus('conflict');window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict';
-  }
-  setStatus('failed');return 'failed';
- })().finally(()=>{inFlight=null;});
- return inFlight;
+ const body={...snap,played:localPlayed(snap)};
+ if(reason!=='hide')setStatus('saving');
+ let st=sending;
+ for(let attempt=0;attempt<2;attempt++){
+  const r=await post('sync',{code,baseRev:st.rev,snapshot:body},{compress:true,keepalive:reason==='hide'});
+  if(r?.json.ok===true&&Number.isInteger(r.json.rev)){setSyncState({rev:r.json.rev as number,hash,at:Date.now(),p:progressHash(snap)});setStatus('saved');return 'saved';}
+  if(!(r?.json.conflict===true&&Number.isInteger(r.json.rev)))break;
+  const theirs=r.json.rev as number;
+  // Another tab of this island may already have saved and moved the number on: nothing to settle, the next save carries this.
+  const fresh=getSyncState();
+  if(fresh&&fresh.rev>=theirs&&!fresh.conflict){
+   if(fresh.hash===hash||reason==='hide'||attempt>0){setStatus('saved');return 'saved';}
+   st={...fresh,sent:union(fresh.sent,st.sent)};write(SAVE_SYNC_KEY,JSON.stringify(st));continue;}
+  // Page going away: no time to download. Remember it; the next start (or the tab coming back) settles it, quietly.
+  if(reason==='hide'){setSyncState({...(fresh??st),sent:union(fresh?.sent,st.sent),conflict:theirs});return 'saving';}
+  if(attempt===0){const got=await settleWith(code,{canReload:false,sent:st.sent});if(got!=='retry')return saveStatus();
+   const next=getSyncState();if(!next||next.conflict)break;if(next.hash===hash){setStatus('saved');return 'saved';}
+   st={...next,sent:[hash]};write(SAVE_SYNC_KEY,JSON.stringify(st));continue;}
+  break;
+ }
+ setStatus('failed');return 'failed';
 }
+const union=(a?:string[],b?:string[])=>[...new Set([...(a??[]),...(b??[])])].slice(-SENT_MAX*2);
+
+export type BootResult='none'|'same'|'reloading'|'failed';
 /**
- * Is the server's latest island one this device sent (its answer lost), or simply identical to this one? Then take its number
- * and carry on: no chooser. 'theirs' leaves the downloaded island for the chooser (one download, not two).
+ * One check when the island starts (doc §4.4). The server has a newer save and this device changed nothing since its last
+ * save: take it quietly (apply and reload once, behind the loading screen). Both changed: newest wins, quietly too.
  */
-async function adoptIfOurs(code:string,state:SyncState|null,nowHash:string):Promise<'ours'|'theirs'|'failed'>{
- const saved=await downloadOwn(code);if(!saved)return 'failed';
- const h=snapshotHash(saved.snapshot);
- if(h===nowHash||(state?.sent??[]).includes(h)){setSyncState({rev:saved.rev,hash:h,at:Date.now()});setStatus('saved');return 'ours';}
- lastConflict=saved;return 'theirs';
+export function bootCheck():Promise<BootResult>{
+ const code=getLocalCode();if(!code)return Promise.resolve('none');
+ if(booting)return booting;
+ booting=(async():Promise<BootResult>=>{
+  if(inFlight)await inFlight.catch(()=>null);
+  const state=getSyncState();
+  if(state?.conflict)return settleBoot(code);
+  const r=await post('check',{code});
+  if(!r||r.json.ok!==true||!Number.isInteger(r.json.rev)){setStatus('failed');return 'failed';}
+  const rev=r.json.rev as number,fresh=getSyncState();
+  if(fresh&&rev<=fresh.rev){setStatus('saved');return 'same';}
+  // No record of the last save here (cleared state) but real progress on this device: never overwrite it unseen.
+  if(fresh?localDirty(fresh):deviceHasProgress())return settleBoot(code);
+  const got=await downloadOwn(code);if(!got)return 'failed';
+  applyRestoredSave({ok:true,code,rev:got.rev,snapshot:got.snapshot,summary:summarise(got.snapshot.keys)},{backup:false});
+  return 'reloading';
+ })().finally(()=>{booting=null;});
+ return booting;
+}
+const settleBoot=async(code:string):Promise<BootResult>=>{const r=await settle(code,{canReload:true});return r==='reloading'?'reloading':r==='failed'?'failed':'same';};
+/**
+ * The tab came back (SaveSync calls this on visibilitychange → visible), or a room page opened. A copy waiting to be settled
+ * is settled now. One `check` runs as on start when an earlier save was never answered (`sent`: a page-hide save whose page
+ * unloaded first; in the rooms that is every page-hide save), or after a minute or more away, so a device left open adopts
+ * what another device played meanwhile before the player carries on here (no timer: two timestamps compared).
+ */
+export function resumeCheck():Promise<SaveStatus|BootResult>{
+ const code=getLocalCode();if(!code||suspended||booting||inFlight)return Promise.resolve(saveStatus());
+ const away=hiddenAt>0&&Date.now()-hiddenAt>=RESUME_CHECK_MS;hiddenAt=0;
+ const st=getSyncState();
+ if(st?.conflict){inFlight=settle(code,{canReload:true}).then(()=>saveStatus()).finally(()=>{inFlight=null;});return inFlight;}
+ return away||!!st?.sent?.length?bootCheck():Promise.resolve(saveStatus());
+}
+/** settleWith, then this device's island is saved on top when it was kept. */
+async function settle(code:string,o:{canReload:boolean}){
+ const r=await settleWith(code,o);if(r!=='retry')return r;
+ const st=getSyncState(),snap=currentSnapshot();if(!st||!snap)return 'failed' as const;
+ const hash=snapshotHash(snap);if(hash!==st.hash)await send(code,st,snap,hash,'manual');else setStatus('saved');
+ return 'kept' as const;
 }
 
 /**
- * One check when the island starts (doc §4.4). The server has a newer save and this device changed nothing since its last
- * save: take it quietly (apply and reload once, behind the loading screen). Both changed: ask "Which island do you want?".
+ * Two copies of one island meet (doc §4.4). One download, then:
+ *  1. the server holds this island, our last save, or one this device sent (its answer lost): take its number, save on top;
+ *  2. otherwise the copy played most recently wins (a copy with no progress never beats one with progress; a tie on the
+ *     clock goes to more progress); the other is kept on this device for 7 days.
+ *     Coins are never added across copies: one whole island is kept, the other is set aside whole.
+ * The saved copy winning means a reload: done at a start or when the tab comes back, otherwise left for then.
  */
-export async function bootCheck():Promise<'none'|'same'|'reloading'|'conflict'|'failed'>{
- const code=getLocalCode();if(!code)return 'none';
- const state=getSyncState();
- const now=currentSnapshot(),nowHash=now?snapshotHash(now):'';
- // Same check before showing a remembered chooser: a room's page-hide save gets a conflict from the island's own page-hide
- // save (sent from the same rev, its answer lost while the island unloaded). That is not another device: adopt it.
- const conflictOrAdopt=async(st:SyncState|null)=>{
-  const got=await adoptIfOurs(code,st,nowHash);
-  if(got==='failed'){setStatus('failed');return 'failed' as const;}
-  if(got==='ours'){if(localDirty(getSyncState()))await syncNow('manual');return 'same' as const;}
-  setSyncState({...(st??{rev:0,hash:'',at:0}),conflict:lastConflict?.rev??st?.conflict??0});window.dispatchEvent(new Event(SAVE_CONFLICT));return 'conflict' as const;
- };
- if(state?.conflict)return conflictOrAdopt(state);
- const r=await post('check',{code});
- if(!r||r.json.ok!==true||!Number.isInteger(r.json.rev)){setStatus('failed');return 'failed';}
- const rev=r.json.rev as number;
- if(state&&rev<=state.rev){setStatus('saved');return 'same';}
- // No record of the last save here (cleared state) but real progress on this device: never overwrite it quietly.
- // Both sides changed, unless the saved island is in fact this one or one this device sent (typically our own page-hide
- // save, whose answer never came back because the page closed): then just take its number.
- if(state?localDirty(state):deviceHasProgress())return conflictOrAdopt(state);
- const got=await downloadOwn(code);if(!got)return 'failed';
- applyRestoredSave({ok:true,code,rev:got.rev,snapshot:got.snapshot,summary:summarise(got.snapshot.keys)},{backup:false});
+async function settleWith(code:string,{canReload,sent=[]}:{canReload:boolean;sent?:string[]}):Promise<'kept'|'reloading'|'waiting'|'failed'|'retry'>{
+ const saved=await downloadOwn(code);if(!saved){setStatus('failed');return 'failed';}
+ const s=storage(),here=currentSnapshot();if(!s||!here){setStatus('failed');return 'failed';}
+ const st=getSyncState(),h=snapshotHash(saved.snapshot),hereHash=snapshotHash(here);
+ const ours=h===hereHash||h===st?.hash||union(st?.sent,sent).includes(h);
+ const p=progressHash(saved.snapshot);
+ if(ours){
+  setSyncState({rev:saved.rev,hash:h,at:Date.now(),p});
+  if(h===hereHash){setStatus('saved');return 'kept';}
+  return 'retry';
+ }
+ devDiff('two copies met',here.keys,saved.snapshot.keys);
+ const herePlayed=localPlayed(here),therePlayed=playedTime(saved.snapshot);
+ // A copy with no progress at all never beats one with progress, whatever the clocks say (a device that only looked around).
+ const hereReal=hasProgress(here.keys),thereReal=hasProgress(saved.snapshot.keys);
+ const keepHere=hereReal!==thereReal?hereReal:herePlayed!==therePlayed?herePlayed>therePlayed:progressRank(here.keys)>=progressRank(saved.snapshot.keys);
+ if(keepHere){
+  // Set aside only a copy with something of its own (not one that differs just in keys the game writes by itself), so a
+  // trivial copy never pushes out a real one.
+  if(p!==progressHash(here))writeBackup(s,Date.now(),saved.snapshot.keys,therePlayed);
+  setSyncState({rev:saved.rev,hash:h,at:Date.now(),p});
+  return 'retry';
+ }
+ if(!canReload){setSyncState({...(st??{rev:0,hash:'',at:0}),conflict:saved.rev});setStatus('saving');return 'waiting';}
+ // This device's copy is set aside, unless it holds nothing beyond what it last saved (that copy was kept wherever it lost).
+ applyRestoredSave({ok:true,code,rev:saved.rev,snapshot:saved.snapshot,summary:summarise(saved.snapshot.keys)},{herePlayed,backup:st?.p!==progressHash(here)});
  return 'reloading';
 }
 async function downloadOwn(code:string):Promise<{rev:number;snapshot:Snapshot}|null>{
@@ -242,52 +325,45 @@ export function deviceHasProgress():boolean{const s=storage();return !!s&&hasPro
 export function deviceSummary():IslandSummary{const s=storage();return summarise(s?localKeys(s):{});}
 
 /** Replaces this device's island with a downloaded one, keeps the old one 7 days, remembers the code, then reloads. */
-export function applyRestoredSave(r:Extract<RestoreResult,{ok:true}>,{reload=true,backup=true}:{reload?:boolean;backup?:boolean}={}){
+export function applyRestoredSave(r:Extract<RestoreResult,{ok:true}>,{reload=true,backup=true,herePlayed}:{reload?:boolean;backup?:boolean;herePlayed?:number}={}){
  const s=storage();if(!s)return;
  suspended=true;
  const now=Date.now();
- if(backup&&deviceHasProgress())writeBackup(s,now);
+ const before=currentSnapshot(now);
+ if(backup&&deviceHasProgress()&&(!before||progressHash(before)!==progressHash(r.snapshot)))writeBackup(s,now,undefined,herePlayed??localPlayed(before));
  applySnapshot(s,r.snapshot);
  if(read('fi2-welcome-v1')===null)write('fi2-welcome-v1','completed');
  write(SAVE_CODE_KEY,r.code);write(SAVE_OPTOUT_KEY,null);
  const snap=currentSnapshot(now);
- write(SAVE_SYNC_KEY,JSON.stringify({rev:r.rev,hash:snap?snapshotHash(snap):'',at:now}));
+ write(SAVE_SYNC_KEY,JSON.stringify({rev:r.rev,hash:snap?snapshotHash(snap):'',at:now,...(snap?{p:progressHash(snap)}:{})}));
+ // The island keeps its own "last played" time: loading it here is not playing it.
+ notePlayed(snap,playedTime(r.snapshot)||now);
  write(SAVE_TRIES_KEY,null);
  // Other open tabs of the island reload too (SaveSync listens), so no tab merges its old ledger into the new one.
  write(SAVE_APPLIED_KEY,String(now));
  if(reload&&typeof location!=='undefined')location.reload();
 }
 
-// ── Two devices ────────────────────────────────────────────────────────────────────────────────────────────────────────
-export type Conflict={rev:number;snapshot:Snapshot;here:IslandSummary;saved:IslandSummary};
-/** The saved island downloaded by the start check, reused by the chooser (one download, not two). */
-let lastConflict:{rev:number;snapshot:Snapshot}|null=null;
-export async function loadConflict():Promise<Conflict|null>{
- const code=getLocalCode(),state=getSyncState();if(!code||!state)return null;
- const got=lastConflict??await downloadOwn(code);lastConflict=null;if(!got)return null;
- return {rev:got.rev,snapshot:got.snapshot,here:deviceSummary(),saved:summarise(got.snapshot.keys)};
-}
-/** "Keep this one": the saved island becomes the 7-day backup and this device's island is saved over it. */
-export async function keepThisIsland(c:Conflict):Promise<boolean>{
- const s=storage(),code=getLocalCode(),state=getSyncState();if(!s||!code||!state)return false;
- writeBackup(s,Date.now(),c.snapshot.keys);
- setSyncState({...state,rev:c.rev,conflict:undefined,hash:''});
- return (await syncNow('manual'))==='saved';
-}
-/** "Use the saved one": this device's island becomes the backup and the saved one loads. */
-export function chooseSavedIsland(c:Conflict){const code=getLocalCode();if(code)applyRestoredSave({ok:true,code,rev:c.rev,snapshot:c.snapshot,summary:c.saved});}
-
 // ── Backup, delete, email ──────────────────────────────────────────────────────────────────────────────────────────────
-export function swapBackup(){const s=storage();return s?readBackup(s,Date.now()):null;}
-/** "Undo swap": the backed-up island comes back (and is saved on the next save, so the server follows). */
+/** The other copy of the island kept on this device for 7 days (after a restore, or after two copies met), if any. */
+export function swapBackup():(Backup&{summary:IslandSummary;playedOn:number})|null{
+ const s=storage(),b=s?readBackup(s,Date.now()):null;if(!b)return null;
+ return {...b,summary:summarise(b.keys),playedOn:b.played??b.at};
+}
+/**
+ * "Restore the other island" (a grown-up, behind the gate): the backed-up island comes back and becomes the newest copy, so the
+ * next save puts it on the server; the island it replaces becomes the backup (so this can be undone the same way).
+ */
 export function undoSwap(){
  const s=storage(),b=s?readBackup(s,Date.now()):null;if(!s||!b)return false;
  suspended=true;
+ const now=Date.now(),herePlayed=localPlayed();
  const current=localKeys(s);try{const idp=s.getItem('fi2-idp-plan-v1');if(idp!==null)current['fi2-idp-plan-v1']=idp;}catch{}
  applySnapshot(s,{format:1,game:'',keys:b.keys});
  write(SAVE_BACKUP_KEY,null);
- writeBackup(s,Date.now(),current);
- write(SAVE_APPLIED_KEY,String(Date.now()));
+ writeBackup(s,now,current,herePlayed);
+ notePlayed(currentSnapshot(now),now);
+ write(SAVE_APPLIED_KEY,String(now));
  location.reload();return true;
 }
 /** Deletes the save from the server (doc §4.7). This device keeps its game; the code is forgotten here. */

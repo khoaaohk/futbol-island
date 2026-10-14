@@ -39,50 +39,33 @@ test('Museum: enter from the island, read the free case, blow the whistle, see a
   await page.waitForTimeout(1200);
   await shot('museum-entrance');
 
-  // The free first case is a storytelling exhibit (a meeting-table diorama): walk up, then work it beat by beat. Each action
-  // plays one beat (animation + the coach's line in the caption strip); the last is "Take it to your game". No card opens.
-  const playStory = async (id: string, choose = 'choose:1') => {
-    for (let beat = 0; beat < 8; beat++) {
-      const act = page.locator('[data-museum-story-act]').first();
-      if (!(await act.count())) break;
-      const kind = await act.getAttribute('data-museum-story-act');
-      await tap(kind === 'choose:-1' ? `[data-museum-story-act="${choose}"]` : '[data-museum-story-act]');
-      await page.waitForFunction(() => !document.querySelector('[data-museum-story][data-playing]'), null, { timeout: 20_000 });
-    }
-    await expect(page.locator(`[data-museum-story="${id}"][data-done]`)).toBeVisible();
-  };
+  // Every case opens straight onto its full card (Oct 13 2026): the eyebrow, title, facts, the hands-on bit, "Take it to your
+  // game", the sources and Step inside. No story strip, beat buttons or plaque.
   await page.evaluate(() => (window as any).__museum.walkTo('laws-1863'));
   await arrived(page, 'laws-1863');
-  await expect(page.locator('[data-museum-card="laws-1863"]'), 'no card for a story exhibit').toHaveCount(0);
-  await tap('[data-museum-story-act]');
-  await expect(page.locator('[data-museum-caption]')).toContainText('their own rules');
-  await shot('museum-story-beat');
-  await page.waitForFunction(() => !document.querySelector('[data-museum-story][data-playing]'), null, { timeout: 20_000 });
-  await playStory('laws-1863');
-  await expect(page.locator('[data-museum-caption]')).toContainText('Everyone plays by the same Laws');
-  // The plaque: the case's facts and sources, a tap away (not a modal).
-  await tap('[data-museum-plaque-toggle]');
-  await expect(page.locator('[data-museum-plaque="laws-1863"]')).toContainText('Football Association');
+  const card = page.locator('[data-museum-card="laws-1863"]');
+  await expect(card).toBeVisible();
+  await expect(card).toContainText('Football Association');
+  await expect(card).toContainText('Take it to your game');
+  await expect(page.locator('[data-museum-story], [data-museum-plaque-toggle]'), 'no story strip').toHaveCount(0);
+  await card.locator('summary').click();
   // (External links go through the grown-ups gate, which moves href to data-gated-href.)
-  expect(await page.locator('[data-museum-plaque="laws-1863"] a').first().evaluate(a => a.getAttribute('href') || a.getAttribute('data-gated-href'))).toMatch(/wikipedia/);
+  expect(await card.locator('a').first().evaluate(a => a.getAttribute('href') || a.getAttribute('data-gated-href'))).toMatch(/wikipedia/);
   await shot('museum-case-open');
-  await tap('[data-museum-plaque-toggle]');
 
-  // Next case: the penalty kick (opened by 10 balls): "stand where they stood". Blow the whistle, place the ball, watch the
-  // keeper on the line, pick a spot and shoot.
+  // Next case: the penalty kick: its card carries the whistle.
   await tap('[data-museum-next]');
   await arrived(page, 'penalty-1891');
-  await tap('[data-museum-story-act]');
-  await expect(page.locator('[data-museum-caption]')).toContainText('William McCrum');
-  await page.waitForFunction(() => !document.querySelector('[data-museum-story][data-playing]'), null, { timeout: 20_000 });
-  await playStory('penalty-1891');
+  await expect(page.locator('[data-museum-card="penalty-1891"]')).toBeVisible();
+  await tap('[data-museum-whistle]');
+  await expect(page.locator('[data-museum-whistle-blown]')).toContainText('11 metres');
   await shot('museum-interactive');
 
-  // Next: the yellow and red cards case is still covered, and says exactly what to collect.
+  // Next in hall order: the VAR case (every case is free since Oct 9 2026).
   await tap('[data-museum-next]');
-  await arrived(page, 'cards-1970');
-  await expect(page.locator('[data-museum-locked="cards-1970"]')).toContainText('Collect 15 more hidden balls to open this case (10/25).');
-  await shot('museum-case-locked');
+  await arrived(page, 'var-2018');
+  await expect(page.locator('[data-museum-card="var-2018"]')).toBeVisible();
+  await shot('museum-case-next');
 
   // The west wing, "Your Collection": walk through the wide opening to the hidden-ball pegboard (10 of the 100 pegs hold a ball).
   await tap('[data-museum-back]');

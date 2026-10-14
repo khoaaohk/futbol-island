@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {distanceToLandableDeck} from '../landableDecks';
 import {WATER_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,setShore,shoreDrape,shoreRough} from '../../graphics/waterSurface';
-import {UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,seabedStyle,type SeabedProps} from './underwater';
+import {UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,reefSeed,reefTheme,type SeabedProps} from './underwater';
 
 /**
  * Moving shoreline for the fishing view (Oct 12 2026, "animate the water so it's moving and washing ashore … more realistic").
@@ -20,7 +20,10 @@ import {UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,seabedStyl
  * no extra passes, time from the shared water clock (advances only when the island renders). Disposed with the fishing visuals.
  */
 export const WATER_Y=-.42,STRIP_Y=-.403;
-const FIELD_SIZE=80,FIELD_N=160,BAND_IN=-4.2,BAND_OUT=4.7,SEA_OUT=24,COARSE=4;
+// SEA_OUT (Oct 13 2026, "cast farther out … make sure the underwater rendering's depth tint … handle the larger area"):
+// 24 → 34 m so the clear, tinted strip (and its seabed/fish view-through) still covers a float cast up to ~29 m out,
+// with a margin; FIELD_SIZE (the 80 m top-down field) already spans that without change.
+const FIELD_SIZE=80,FIELD_N=160,BAND_IN=-4.2,BAND_OUT=4.7,SEA_OUT=34,COARSE=4;
 export type ShoreField={box:T.Vector4;n:number;size:number;sdf:Float32Array;lift:Float32Array;texture:T.DataTexture;
  /** Bilinear signed distance (m) at a world point; large positive outside the box. */distance(x:number,z:number):number};
 
@@ -132,7 +135,8 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
  geometry.setAttribute('normal',new T.Float32BufferAttribute(new Float32Array(positions.length).map((_,i)=>i%3===1?1:0),3));geometry.computeBoundingSphere();
  const material=new T.MeshLambertMaterial({color:'#ffffff',transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
  material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,WATER_UNIFORMS,{uWaterNoise:{value:noise}});
+  // The spot's water tint, clarity and sand (Oct 13 2026, per-spot reef themes) come in with the shared underwater uniforms.
+  Object.assign(shader.uniforms,WATER_UNIFORMS,UW_UNIFORMS,{uWaterNoise:{value:noise}});
   // Clear water (Oct 12 2026): where the view ray meets the seabed is worked out per VERTEX (it is smooth: the field, the ray and the
   // beach slope), so each water pixel only reads the foam lace and the caustics. The seabed is taken as locally flat along the ray
   // (its slope from one field read 1 m further on): one closed-form step, stable where the ray is flatter than the beach slope.
@@ -146,7 +150,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // What the water does to the seabed colour (absorption, its own tint) and the sky it reflects: smooth, so per vertex too.
    vTrans=vec4(uwTrans(h,vSea.w),pow(1.-vy,3.)*.3);vTint=uwTint(h);
    vOpen=open;shorePull(mvPosition,f.r,open);`);
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vVy,vOpen;varying vec2 vWaterXZ;varying vec4 vField,vSea,vTrans;varying vec3 vTint;\n'+SHORE_GLSL+UNDERWATER_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vVy,vOpen;varying vec2 vWaterXZ;varying vec4 vField,vSea,vTrans;varying vec3 vTint;uniform vec3 uSandA,uSandB;uniform vec4 uSandWeed;\n'+SHORE_GLSL+UNDERWATER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
    float d=vField.r,n1=vField.g,n2=vField.b,beach=vField.a,edgeFade=shoreEdge(vWaterXZ)*uShore;
    float t=uWaterTime;
@@ -156,11 +160,12 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // the same as coral and fish).
    vec2 P=vSea.xy;float h=vSea.z,pathL=vSea.w,vy=vVy;
    float rip=sin(dot(P,vec2(1.7,.9))*2.4+n1*10.+n2*5.)*.5+.5;
-   vec3 sand=mix(vec3(.55,.55,.49),vec3(.67,.66,.59),n2)*(.9+.14*rip*rip);
-   sand=mix(sand,vec3(.24,.3,.15),smoothstep(.64,.82,n1)*smoothstep(1.2,3.,d)*.55);
+   // Sand tone and weed patches per spot (the theme's light / dark sand, weed colour and amount: a meadow covers more).
+   vec3 sand=mix(uSandA,uSandB,n2)*(.9+.14*rip*rip);float wlo=mix(.74,.42,uSandWeed.a);
+   sand=mix(sand,uSandWeed.rgb,smoothstep(wlo,wlo+.18,n1)*smoothstep(1.2,3.,d)*mix(.35,.8,uSandWeed.a));
    float caus=uwCaustic(P)*smoothstep(3.2,.15,h);sand*=1.+caus*.55;
    vec3 uwT=vTrans.rgb,col=sand*uwT+vTint*(1.-uwT);
-   float alpha=sea*(1.-smoothstep(15.,23.,d));
+   float alpha=sea*(1.-smoothstep(21.,32.,d));
    float foam=0.,swell=0.;
    // ---- The swash band (near the waterline only: nothing in it reaches past 3.4 m).
    if(d<3.8){
@@ -195,7 +200,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    }
    // ---- The surface over the clear water: swells rolling in (same phase as the ocean's), shimmering ripple lines, and more sky
    // reflected at grazing angles so it settles into the island ocean further out.
-   float sph=swellPhase(d,n1);swell=smoothstep(.84,1.,sph)*smoothstep(.2,1.5,d)*smoothstep(24.,6.,d);
+   float sph=swellPhase(d,n1);swell=smoothstep(.84,1.,sph)*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
    float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
    float fres=vTrans.a;
    col=mix(col,vec3(.42,.72,.7),sea*(swell*.28+lines*.22));col=mix(col,vec3(.2,.42,.47),sea*fres);
@@ -205,7 +210,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    float waterLight=(foam*.22+glint*.9)*edgeFade;vec3 waterGlow=(col*.08+vTint*(1.-uwT)*UW_GLOW)*sea*alpha*edgeFade;`)
    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
  };
- material.customProgramCacheKey=()=>'fishing-shore-strip-v5';
+ material.customProgramCacheKey=()=>'fishing-shore-strip-v7';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-shore-water';mesh.renderOrder=.5;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};
  return {mesh,dispose(){geometry.dispose();material.dispose();}};
 }
@@ -220,12 +225,16 @@ export function createFishingWater(scene:T.Scene,renderer:T.WebGLRenderer,phone=
   get busy(){return strength>0||target>0;},
   /** Triangles in the current seabed (perf readout). */
   get seabedTriangles(){return current?.props?.triangles??0;},
-  /** Show the moving shore round the angler at `stand` casting along `dir`; `spot` picks the seabed (coral, sea grass, piles). */
-  begin(stand:{x:number;z:number},dir:{x:number;z:number},spot?:{id:string;area?:string;x:number;z:number}|null,halfWidth=9){
+  /** Anemones with a clownfish pair in the current seabed (fishSchools.ts). */
+  get homes(){return current?.props?.homes??[];},
+  /** Show the moving shore round the angler at `stand` casting along `dir`; `spot` picks the seabed (coral, sea grass, piles).
+   *  `viewDepth` (Oct 13 2026, farther casts): how far out the seabed scatter reaches, in metres; the caller passes the
+   *  spot's real cast distance plus a few metres, so coral and rocks still surround a float cast much farther out. */
+  begin(stand:{x:number;z:number},dir:{x:number;z:number},spot?:{id:string;area?:string;reef?:string;x:number;z:number}|null,halfWidth=9,viewDepth?:number){
    const cx=Math.round((stand.x+dir.x*14)/4)*4,cz=Math.round((stand.z+dir.z*14)/4)*4,key=cx+':'+cz;
    let entry=fields.get(key);
    if(!entry){const field=buildShoreField(renderer,scene,cx,cz);noise??=createWaterNoise();UW_UNIFORMS.uWaterNoise.value=noise;
-    const props=spot?buildSeabedProps(field,seabedStyle(spot),stand,dir,phone,Math.round(spot.x*73+spot.z*131),halfWidth):null;
+    const props=spot?buildSeabedProps(field,reefTheme(spot),stand,dir,phone,reefSeed(spot.id),halfWidth,viewDepth):null;
     entry={field,strip:createShoreStrip(field,noise),props};fields.set(key,entry);}
    if(current&&current!==entry){current.strip.mesh.removeFromParent();current.props?.mesh.removeFromParent();}
    current=entry;scene.add(entry.strip.mesh);entry.strip.mesh.updateMatrix();if(entry.props){scene.add(entry.props.mesh);entry.props.mesh.updateMatrix();}target=1;

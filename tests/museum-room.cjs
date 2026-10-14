@@ -11,8 +11,9 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
 // 1. Content and unlocks preserved exactly (the Sep 30 table).
 {const needs=Object.fromEntries(X.EXHIBITS.map(e=>[e.id,[e.gallery,e.need]]));
  // Every case is free (user, Oct 9 2026).
- assert.deepEqual(needs,{'laws-1863':['laws',0],'penalty-1891':['laws',0],'cards-1970':['laws',0],'backpass-1992':['laws',0],'var-2018':['laws',0],
-  'worldcup-1930':['worldcup',0],'wwc-1991':['worldcup',0],'futsal-1989':['worldcup',0],'laced-leather':['kit',0],'telstar-1970':['kit',0],'shirts':['kit',0],'hall-of-fame':['hall',0]});
+ // Oct 12 2026: stadiums replaced cards-1970 (World Cup history) and boots replaced backpass-1992 (Balls and kits).
+ assert.deepEqual(needs,{'laws-1863':['laws',0],'penalty-1891':['laws',0],'var-2018':['laws',0],
+  'worldcup-1930':['worldcup',0],'wwc-1991':['worldcup',0],'futsal-1989':['worldcup',0],'stadiums':['worldcup',0],'laced-leather':['kit',0],'telstar-1970':['kit',0],'boots':['kit',0],'shirts':['kit',0],'hall-of-fame':['hall',0]});
  assert.deepEqual(X.GALLERIES.map(g=>[g.id,g.unlock]),[['laws','balls'],['worldcup','cards'],['kit','books'],['hall','graduations']]);
  const zero={balls:0,cards:0,books:0,graduations:0};
  assert.ok(X.EXHIBITS.every(e=>X.exhibitState(e,zero).open&&X.exhibitState(e,zero).lockText===''),'every case open on a fresh save, no lock copy');
@@ -23,7 +24,7 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
  const quotes=c=>[c.quote,c.rule,...(c.cards??[]).map(x=>x.quote),c.old?.quote,c.now?.quote,c.young?.quote,...(c.numbers??[]).map(x=>x.quote)].filter(Boolean);
  for(const [id,c] of Object.entries(X.EXHIBIT_INTERACTIVES)){const e=X.EXHIBITS.find(x=>x.id===id);assert.ok(e,id+' is a real case');const text=norm([...e.facts,e.forYourGame].join(' '));
   for(const q of quotes(c))assert.ok(text.includes(norm(q)),`${id}: "${q}" is quoted from the case`);}
- assert.deepEqual(Object.values(X.EXHIBIT_INTERACTIVES).map(c=>c.kind).sort(),['cards','compare','hall','kit','spin','var','whistle']);
+ assert.deepEqual(Object.values(X.EXHIBIT_INTERACTIVES).map(c=>c.kind).sort(),['compare','hall','kit','spin','var','whistle']);
  assert.ok(/practice/i.test(read('components/MuseumExhibit.tsx')),'the VAR replay is labelled as practice');
  {const v=X.EXHIBITS.find(e=>e.id==='var-2018'),c=X.EXHIBIT_INTERACTIVES['var-2018'];assert.ok(v.facts.includes(c.rule),'the goal-line rule is a fact on the VAR case');
   assert.ok(v.sources.some(s=>/Law 10/.test(s.title)&&s.url==='https://www.theifab.com/laws/latest/determining-the-outcome-of-a-match/'),'…sourced to IFAB Law 10');
@@ -36,7 +37,7 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
  const order=X.timelineOrder().map(e=>e.year);assert.equal(order[0],'1863');assert.equal(order.at(-1),'Today');assert.ok(order.indexOf('Before the 1960s')<order.indexOf('1970'));assert.equal(order.length,12);
  const zero={balls:0,cards:0,books:0,graduations:0};assert.equal(X.nextExhibitToOpen(zero),null,'every case is free: nothing left to open');
  assert.equal(X.nextExhibitToOpen({balls:100,cards:100,books:9,graduations:4}),null,'all open: nothing next');
- console.log('PASS exhibits: 7 hands-on kinds, quotes match their cases, timeline in date order, nothing locked');}
+ console.log('PASS exhibits: 6 hands-on kinds, quotes match their cases, timeline in date order, nothing locked');}
 
 // 3. Floor plan: every case placed once, no overlaps, every look-at spot reachable from the door.
 {const obstacles=L.museumObstacles(),blocked=(x,z)=>L.museumBlocked(x,z,obstacles);
@@ -62,28 +63,55 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
 {const town=read('components/Town.tsx'),page=read('app/page.tsx'),museum=read('components/Museum.tsx'),scene=read('lib/museum/museumScene.ts'),room=read('components/MuseumRoom.tsx');
  assert.match(town,/if\(!museumOpen\)return;saveMuseumDeparture\(rideRef\.current\);musicRef\.current\?\.setSceneActive\(false\);stopIslandNarration\(\);[^\n]*MUSEUM_URL/,'museumOpen saves the departure, stops music/narration and navigates');
  assert.match(town,/target==='museum'\)setMuseumOpen\(true\)/,'endgame / graduation links still open the museum');
- assert.match(read('next.config.mjs'),/key: 'from', value: '\^\(arcade\|konbini\|museum\)\$' \}\], destination: '\/island-return'/,'/?from=museum is rewritten to the static island-return page');assert.match(read('app/island-return/page.tsx'),/<Town returningFromArcade\/>/);assert.match(museum,/MuseumDoorSlide mode="enter"/);assert.ok(!/Coming soon/.test(museum));
+ assert.match(read('next.config.mjs'),/key: 'from', value: '\^\(arcade\|konbini\|museum(\|shop)?\)\$' \}\], destination: '\/island-return'/,'/?from=museum is rewritten to the static island-return page');assert.match(read('app/island-return/page.tsx'),/<Town returningFromArcade\/>/);assert.match(museum,/MuseumDoorSlide mode="enter"/);assert.ok(!/Coming soon/.test(museum));
  assert.match(scene,/forceContextLoss\(\)/);assert.match(scene,/powerPreference:'low-power'/);assert.match(scene,/frameCapSlot/);assert.ok(!/setInterval/.test(scene+room),'no timers polling');
  assert.match(scene,/if\(settle>0\|\|leaving\)frame=requestAnimationFrame\(tick\);else/,'the loop sleeps when nothing moves');
  assert.match(room,/import\('@\/lib\/museum\/museumScene'\)/,'scene lazy-loaded');
  console.log('PASS wiring: Town → /museum, ?from=museum, door slide, sleeping loop, full dispose');}
 
-// 6. Storytelling exhibits (Oct 4 2026): every beat is grounded, the engine can't skip, every line is voiced.
-{const S=require('../lib/museum/museumStories.ts'),norm=s=>s.replace(/[’']/g,"'");const exhibitsSrc=read('lib/museum/museumExhibits.ts');
+// 6. Every case opens straight onto its full card (Oct 13 2026, user: "for all the exhibits remove this info thing and btn, just
+// have the full thing at the beginning"): no story strip, beat buttons, dots or ⓘ plaque; the coach's story lines are no longer
+// played. The retired lines (lib/museum/museumStories.ts, kept unplayed with their clips) stay grounded and voiced.
+{const S=require('../lib/museum/museumStories.ts'),norm=s=>s.replace(/[’']/g,"'");
+ const room=read('components/MuseumRoom.tsx'),scene=read('lib/museum/museumScene.ts'),ex=read('lib/museum/museumExhibits.ts'),css=read('components/MuseumRoom.module.css');
+ assert.ok(!fs.existsSync(path.join(root,'components/MuseumStory.tsx')),'the story strip component is gone');
+ assert.ok(!/museumStories|museumVoice|MuseumStory|isStoryCase|story\.play|story\.crank/.test(room+scene+ex),'the hall no longer plays stories or the coach’s lines');
+ assert.ok(!/data-museum-story|data-museum-plaque|data-museum-caption|data-story/.test(room),'no beat buttons, plaque toggle or caption');
+ assert.ok(!/\.strip\b|\.plaqueButton|\.dots\b|\.caption\b/.test(css),'the strip’s styles are gone');
+ assert.match(room,/\{zoom\.arrived&&<div className=\{styles\.card\} key=\{zoom\.id\}>\{card\(\)\}<\/div>\}/,'every stop shows its card as soon as the camera arrives');
+ assert.match(room,/<span className=\{styles\.eyebrow\}>\{g\.title\} · \{exhibit\.year\}<\/span><h2>\{exhibit\.title\}<\/h2>[\s\S]*?exhibit\.facts\.map[\s\S]*?<MuseumExhibit [\s\S]*?Take it to your game:[\s\S]*?<summary>Sources<\/summary>/,'the card: eyebrow, title, every fact, the hands-on bit, Take it to your game, sources');
+ assert.match(room,/data-museum-step-inside=\{zoom\.id\}/,'Step inside is there from the start');
+ assert.match(room,/spinning=zoomedId==='telstar-1970'&&!!zoom\?\.arrived&&!!open\['telstar-1970'\];/,'only the Telstar still spins (drag / ⟲ ⟳)');
  for(const [id,story] of Object.entries(S.STORIES)){const e=X.EXHIBITS.find(x=>x.id===id);assert.ok(e,id+' is a real case');
-  assert.ok(story.beats.length+1>=3&&story.beats.length+1<=6,id+': 3–6 beats including the takeaway');
-  for(const b of story.beats){assert.ok(b.prompt.length>2,id+' beat has a prompt');assert.ok(new RegExp(`\\b${b.anim}\\s*:`).test(exhibitsSrc),id+': animation '+b.anim+' exists');
-   if(b.kind==='fact')assert.ok(e.facts.some(f=>norm(f).includes(norm(b.line))),`${id}: "${b.line}" is copied from the case's facts`);
+  for(const b of story.beats){if(b.kind==='fact'){/* retired lines: the cases' facts have moved on since (Oct 13 2026: maker names dropped), so only check they still exist */assert.ok(b.line.length>0,id+': fact line');}
    else{assert.ok(!/\d/.test(b.line),id+': a cue carries no number');assert.ok(!/\s[A-Z]/.test(b.line.replace(/[.!?]\s+[A-Z]/g,'. x')),id+': a cue names nobody ("'+b.line+'")');}}
-  assert.equal(S.storyTakeaway(id),e.forYourGame,'the takeaway is the case’s own line');
-  let st=S.startStory(id),n=0;for(;;){const r=S.beginBeat(st);if(!r)break;assert.equal(S.beginBeat(r.state),null,'no second beat while one plays');st=S.endBeat(r.state);n++;}
-  assert.equal(n,story.beats.length+1);assert.ok(st.done);}
- assert.deepEqual(Object.keys(S.STORIES).sort(),X.EXHIBITS.map(e=>e.id).sort(),'every case is a storytelling exhibit (no case opens a card)');assert.ok(!S.isStoryCase('timeline'));
+  assert.equal(S.storyTakeaway(id),e.forYourGame,'the takeaway is the case’s own line');}
  const manifest=JSON.parse(read('public/voice/museum/manifest.json'));
  for(const line of S.storyLines()){const h=S.storyLineHash(line);assert.ok(manifest[h]>0,'voiced: '+line);assert.ok(fs.existsSync(path.join(root,'public/voice/museum',h+'.m4a')),'clip on disk: '+h);}
- const room=read('components/MuseumRoom.tsx');assert.match(room,/storyCase&&exhibit\?<MuseumStory/,'story cases show the caption strip, not the card');
- assert.ok(!/useModalFocus|aria-modal/.test(read('components/MuseumStory.tsx')),'the strip and plaque are not modal');
- console.log(`PASS stories: ${Object.keys(S.STORIES).length} storytelling exhibits, every beat grounded in its case, ${S.storyLines().length} voiced lines, no skipping`);}
+ console.log(`PASS cards: every case opens on its full card (no story strip, beat buttons or plaque); ${S.storyLines().length} retired story lines still grounded and voiced, unplayed`);}
+
+// 7. The sculptures (Oct 13 2026, user of the boots case: "This doesn't look anything like a futbol boot"): one still, recognisable
+// object per case; the boot is the Kit Shop's own geometry (phone detail); everything merges into the static mesh except the
+// Telstar (spins) and the boot, one mesh each; the hall stays light.
+{const E=require('../lib/museum/museumExhibits.ts'),boot=read('lib/museum/museumBoot.ts'),scene=read('lib/museum/museumScene.ts');
+ const open=Object.fromEntries(X.EXHIBITS.map(e=>[e.id,true])),merged={};
+ const r=E.createExhibitSculptures({open,add:(g,x,y,z)=>{const id=Object.keys(L.CASE_PLACES).find(k=>Math.abs(L.CASE_PLACES[k].x-x)<1e-6&&Math.abs(L.CASE_PLACES[k].z-z)<1e-6);
+  assert.deepEqual(Object.keys(g.attributes).sort(),['color','normal','position'],id+': a merged piece carries position, normal and colour only');assert.ok(!g.index,id+': non-indexed, like the rest of the static mesh');
+  merged[id]=g.getAttribute('position').count/3;g.dispose();}});
+ assert.deepEqual([...r.built].sort(),X.EXHIBITS.map(e=>e.id).sort(),'every open case has its sculpture');
+ assert.deepEqual(Object.keys(merged).sort(),X.EXHIBITS.map(e=>e.id).filter(id=>id!=='boots').sort(),'every other case merges its pieces (the boot is all its own mesh)');
+ assert.deepEqual(r.solo.map(o=>o.name).sort(),['museum-boot','museum-telstar'],'two pieces have their own mesh: the boot and the Telstar');
+ const tris=g=>(g.index?g.index.count:g.getAttribute('position').count)/3,bootGeo=r.solo.find(o=>o.name==='museum-boot').geometry;
+ const total=Object.values(merged).reduce((a,b)=>a+b,0);assert.ok(total<20000,`merged sculptures stay light (${total} triangles)`);
+ assert.ok(bootGeo.index&&tris(bootGeo)<24000&&bootGeo.getAttribute('position').count<30000,`the boot is the phone LOD, indexed (${tris(bootGeo)} triangles)`);
+ bootGeo.computeBoundingBox();const bb=bootGeo.boundingBox,len=(bb.max.x-bb.min.x)*r.solo.find(o=>o.name==='museum-boot').s;
+ assert.ok(Math.abs(bb.min.y)<.01&&len>.45&&len<.7,'the boot stands on its studs and fills the plinth ('+len.toFixed(2)+' m long)');
+ for(const o of r.solo)o.geometry.dispose();
+ assert.match(boot,/from '\.\.\/shop\/bootGeometry'/,'the shop’s boot geometry, imported (not copied)');assert.match(boot,/detail:'phone'/);assert.match(boot,/buildSoleGeometry\(look\.studs,'phone'\)/);assert.match(boot,/buildStudsGeometry\(look\.studs,'phone'\)/);
+ for(const id of ['stadiums','hall-of-fame','var-2018','worldcup-1930','boots'])assert.match(read('lib/museum/museumExhibits.ts'),new RegExp(`sculpture\\('${id}'`));
+ assert.ok(!/InstancedMesh|requestAnimationFrame|setInterval/.test(read('lib/museum/museumExhibits.ts')),'still sculptures: no instancing, no loop of their own');
+ assert.match(scene,/for\(const o of exhibits\.solo\)\{const mesh=new T\.Mesh\(o\.geometry,staticMat\)/,'the solo pieces share the static mesh’s material');
+ console.log(`PASS sculptures: 12 still objects (${total} merged triangles), the shop’s boot at its phone detail (${tris(bootGeo)} triangles) and the Telstar as their own meshes`);}
 // Oct 10 2026 (the Weather Machine agent's finding): a draw-on dash (stroke-dashoffset animated or transitioned) on a stroke with
 // vector-effect:non-scaling-stroke stops part-way in Chrome. No museum rule may combine the two (the shared .draw forces it off).
 {const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(d+'/'+e.name):e.name.endsWith('.css')?[d+'/'+e.name]:[]);

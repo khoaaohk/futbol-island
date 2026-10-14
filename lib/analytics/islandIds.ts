@@ -12,7 +12,7 @@ export const PLACES=[
  ['island_square','Island Square'],['arcade','Arcade (outside)'],['konbini','Konbini (outside)'],['coaches','Coaches Centre'],
  ['library_square','Library Square'],['community_park','Community Park'],['old_town','Old Town'],['field_7v7','Old Town Ground (7v7)'],
  ['field_futsal','Palm Coast Rooftop (futsal)'],['palm_coast','Palm Coast Beach'],['west_side','West Market & Beach Kitchen'],
- ['field_9v9','Club Grounds pitch (9v9)'],['club_grounds','Club Grounds homes'],['community_hall','Community Hall'],
+ ['field_9v9','Club Grounds pitch (9v9)'],['club_grounds','Club Grounds homes'],['community_hall','Kit Shop (outside)'],
  ['community_garden','Community Garden & Greenhouse'],['farmers_market','Farmers Market & Rosa’s'],['east_jetty','East Jetty'],
  ['field_11v11','Eleven Park (11v11)'],['school','Island High School'],['museum','History Museum (outside)'],
  ['south_pier','South Pier & cafés'],['ferry_dock','Ferry dock & Fishing Station'],['north_beach','North Beach'],['town','Other streets (main island)'],
@@ -31,7 +31,7 @@ export const PLACE_LABEL:Record<string,string>=Object.fromEntries(PLACES);
  * `idle` is visible time with no input for a while (ACTIVITY_IDLE_MS): it is reported, but never counted as play in places
  * or cells.
  */
-export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','cards-1970','backpass-1992','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame'] as const;
+export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame'] as const;
 export const ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
 export const ACTIVITIES=[
  ['walk','Walking'],['ride','Riding (scooter, bike, moped, truck)'],['fly','Flying (jetpack, parachute)'],['boat','On a boat'],
@@ -42,10 +42,10 @@ export const ACTIVITIES=[
  ['arcade_tennis','Arcade: Futbol Tennis'],['arcade_pinball','Arcade: Futbol Pinball'],['arcade_puzzle','Arcade: Pass Puzzles'],
  ['museum_hall','Museum (walking around)'],
  ['exhibit_timeline','Exhibit: Timeline'],['exhibit_laws-1863','Exhibit: Laws of 1863'],['exhibit_penalty-1891','Exhibit: First penalty, 1891'],
- ['exhibit_cards-1970','Exhibit: Cards, 1970'],['exhibit_backpass-1992','Exhibit: Back-pass rule, 1992'],['exhibit_var-2018','Exhibit: VAR, 2018'],
+ ['exhibit_stadiums','Exhibit: Stadiums of the World'],['exhibit_boots','Exhibit: Boots through time'],['exhibit_var-2018','Exhibit: VAR, 2018'],
  ['exhibit_worldcup-1930','Exhibit: World Cup 1930'],['exhibit_wwc-1991','Exhibit: Women’s World Cup 1991'],['exhibit_futsal-1989','Exhibit: Futsal, 1989'],
  ['exhibit_laced-leather','Exhibit: Laced leather ball'],['exhibit_telstar-1970','Exhibit: Telstar, 1970'],['exhibit_shirts','Exhibit: Shirts'],
- ['exhibit_hall-of-fame','Exhibit: Hall of Fame'],
+ ['exhibit_hall-of-fame','Exhibit: Trophy room (Hall of Fame)'],
  ['konbini_shop','Inside the Konbini'],['controller','Phone controller'],['other','Other / loading'],['idle','Idle (no input)'],
 ] as const;
 export type ActivityId=typeof ACTIVITIES[number][0];

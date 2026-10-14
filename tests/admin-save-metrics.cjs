@@ -100,7 +100,7 @@ await ok('wiring',()=>{
  assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])),'sections in investor order');
  assert(dash.indexOf('<HeadlineTiles')<dash.indexOf('<EngagementTiles')&&dash.indexOf('<InvestorFunnel')<dash.indexOf('<PlanCard')&&dash.indexOf('<SaveHealthCard')<dash.indexOf('<StartSection report={report}'),'cards in their sections');
  assert(/cornerLeft[^\n]*BackButton/.test(dash)&&/cornerRight[^\n]*Log out/.test(dash),'Back top left, Log out top right');
- assert(/\{id:'90d',label:'90 days'\}/.test(dash)&&C.resolveRange({range:'90d'},NOW).from===D(-89),'90-day preset');
+ assert(/\{id:'90d',label:'90 days'\}/.test(dash)&&C.resolveRange({range:'90d'},NOW).from===C.addDays(C.pacificDay(NOW),-89),'90-day preset');
  for(const f of ['app/admin/SavesSection.tsx','app/admin/OverviewSection.tsx','app/admin/AnalyticsDashboard.tsx'])assert(!/^import(?! type)[^\n]*(saves\/(metrics|store|server)|analytics\/(overview|store|report))'/m.test(read(f)),f+': server modules stay out of the client bundle');
 });
 

@@ -66,7 +66,7 @@ export const CORAL_CAY_SPOTS:CoinSpot[]=[
  // ── The causeway (eight): deck edges, the beach banks, a road cover, the welcome arch and two aerial balls. ──
  {id:'cay-warmup',name:'Causeway · south pavement',...at(deck(.115,4.6)),y:0,kind:'hidden',
   clue:'Before the long walk to Coral Cay, a training bag waits where the causeway leaves the island.',
-  detail:'Walk onto the causeway from the Community Hall. Just after the sea begins, look on the south pavement for a small training bag.',
+  detail:'Walk onto the causeway from the Kit Shop corner. Just after the sea begins, look on the south pavement for a small training bag.',
   teaching:'Warm up before you play. Jog, skip, balance and jump for about fifteen minutes before a game. In a big study, children’s teams that warmed up like this had about half as many injuries.',lesson:'movement'},
  {id:'cay-line',name:'Causeway · north edge parcel',...at(deck(.215,-4.6)),y:0,kind:'kick',
   clue:'On the first bend out to sea, a parcel sits right on the edge of the causeway pavement.',

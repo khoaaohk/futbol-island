@@ -8,8 +8,9 @@ survives a cleared browser and can move to another device? Players are children 
 
 **User decisions (Oct 9 2026), built in phase 1 + 2a ([save-codes.md](save-codes.md)):** every recommended default below
 (3 words + a 3-digit number with a picture per word where one exists, 12-month deletion, coach-plan text stays on the device,
-the "Which island do you want?" chooser, a `/privacy` page), plus phase 2a "Send my code to a grown-up". Phase 2b (grown-up
-accounts) is not built; `guardian_id` stays reserved.
+a `/privacy` page), plus phase 2a "Send my code to a grown-up". Phase 2b (grown-up accounts) is not built; `guardian_id` stays
+reserved. **Oct 12 2026:** the "Which island do you want?" chooser is gone (user decision: one code is one island, kids never
+choose). Two copies settle themselves, newest wins, and the other is kept on the device for a grown-up (§4.4).
 
 **User decision, Oct 9 2026: a save code is REQUIRED before playing** ("We don't want them to play and then figure that out
 later"). This replaces the "skippable, Not now" step in §3.1 and the ICO standard 13 note in §6.1 (Not now as an equal
@@ -249,7 +250,8 @@ Without a code: **Get my code** and **I have a save code**.
   - Button: **Load my island**.
 - **If this device already has progress:** *"This device has an island too. Loading your code will swap it."* Buttons:
   **Load my code's island** · **Keep this one**.
-  - The replaced local save is kept as a single on-device backup for 7 days: Settings shows "Undo swap".
+  - The replaced local save is kept as a single on-device backup for 7 days: Settings shows "Restore the other island from
+    <day>" behind the parent gate (§4.4).
 - **Success R2.** *"Welcome back!"* with a summary computed by the existing grown-ups summary code from the downloaded save:
   "🪙 1,240 coins · 36 cards · 12 lessons". Button **Play** reloads the page so every store re-reads the save.
 - **Wrong code:** *"That code didn't work. Check each word and try again."* The message is the same whether or not the code
@@ -292,10 +294,11 @@ are DOM event names (`fi2-path-cue`, `fi2-card-added`, `fi2-vending-cue` and so 
 |---|---|
 | Character & onboarding | `futbol-island-customization-v1` (character, skin tone choice, kit, costume; no name), `fi2-welcome-v1` |
 | Lessons & quizzes | `futbol-island-quiz-progress-v1`, `futbol-island-quiz-growth-v1` (migration marker; must travel with quiz progress), `futbol-island2.progress.v1` (legacy scores), `fi2-quiz-runs-v1` (paused quizzes, max 24), `fi2-lesson-review-v1`, `fi2-football-learning-v1`, `fi2-lesson-format-v1`, `fi2-path-format-v1`, `fi2-path-last-opened-v1`, `fi2-optional-path-stories-v1`, `fi2-life-paths-v1`, `fi2-graduations-v1` |
-| Exploration | `futbol-island-quests-v1`, `fi2-passport-v1`, `fi2-club-stories-v1`, `fi2-matchday-coins-v1` (ball hunt), `fi2-explore-activity-v1`, `fi2-east-pier-challenge-v1`, `fi2-fuel-v1`, `fi2-museum-visits-v1`, `fi2-museum-hof-arena-v1`, `fi2-museum-backpass-press-best`, `fi2-museum-timeline-order-best` (the museum passport: exhibits stepped inside and finished; Oct 9 2026) |
+| Exploration | `futbol-island-quests-v1`, `fi2-passport-v1`, `fi2-club-stories-v1`, `fi2-matchday-coins-v1` (ball hunt), `fi2-explore-activity-v1`, `fi2-east-pier-challenge-v1`, `fi2-summit-kick-v1` (the Summit Kick best score), `fi2-telescope-v1` (the Summit Isle telescope's glints spotted and collected), `fi2-museum-visits-v1`, `fi2-museum-hof-arena-v1`, `fi2-museum-timeline-order-best`, `fi2-museum-stadiums-best`, `fi2-museum-boots-best` (the museum passport: exhibits stepped inside and finished; Oct 9 2026; museum best scores, Oct 12 2026) |
 | Coins & items | `fi2-arcade-wallet-v1` (the coin ledger: runs, spends, packs), `fi2-vending-v1`, `fi2-backpack-v1`, `fi2-home-decor-v1`, `fi2-ride-unlocks-v1`, `fi2-ride-unlock-announced-v1`, `fi2-costume-milestone-v1` |
 | Cards & books | `fi2-player-cards-v1`, `fi2-card-offers-v1`, `fi2-card-trade-v1`, `fi2-binder-layout-v1`, `fi2-player-books-v1`, `fi2-book-checks-v1`, `fi2-book-checks-answered-v1` |
-| Jobs, fishing, food | `fi2-island-jobs-v1`, `fi2-garden-v1`, `fi2-market-v1`, `fi2-fishbook-v1`, `fi2-konbini-v1`, `fi2-konbini-collection-v1`, `fi2-konbini-ball-v1` |
+| Jobs, fishing, food | `fi2-island-jobs-v1`, `fi2-garden-v1`, `fi2-market-v1`, `fi2-fishbook-v1`, `fi2-konbini-v1`, `fi2-konbini-collection-v1`, `fi2-konbini-ball-v1`, `fi2-summit-forage-v1` (Summit Isle fruit trees, Oct 13 2026: fruit picked per tree with its regrow clock, today's count) |
+| Kit Shop (Oct 12 2026) | `fi2-shop-jersey-v1`, `fi2-shop-boots-v1`, `fi2-shop-ball-v1`, `fi2-shop-owned-v1` |
 | Arcade | `fi2-arcade-record-<game>-v1` (one per game), `fi2-strikers-stars-v1`, `fi2-strikers-cup-v1`, `fi2-strikers-shape-v1`, `fi2-runner-missions-v1`, `fi2-runner-coach-v1`, `fi2-tennis-stars-v1`, `fi2-pinball-stars-v1`, `fi2-pass-puzzles-v1`, `fi.game.runner.best` |
 | Grown-ups & IDP | `fi2-grownups-format-v1`, `fi2-idp-plan-v1` **with free text removed** (see §4.6), `fi2-idp-v2` (IDP v2, Oct 9 2026: ids, dates and picture choices only; no text field exists; docs/idp/DESIGN.md §5) |
 
@@ -304,7 +307,7 @@ are DOM event names (`fi2-path-cue`, `fi2-card-added`, `fi2-vending-cue` and so 
 `fi2-music-enabled`, `fi2-music-volume`, `fi2-sound-muted`, `fi2-sound-volume`, `fi2-audio-mix`, `fi2-voice-enabled`,
 `fi2-coach-voice`, `fi2-controls-flipped`, `fi2-battery-saver`, `fi2-time-of-day`, `fi2-cards-field-v1`, `fi-card-dots`,
 `fi2-last-visit-day-v1` (welcome-back is per device), `fi2-bottle-open-date`, `fi2-idp-text-v1` (IDP v2 typed notes and the
-strength words: child free text never leaves the device; Oct 9 2026), `fi2-coach-plays-v1` (Coaches Board plays: user decision Oct 9 2026, play names are typed text; coaches move plays between devices with the board's share link).
+strength words: child free text never leaves the device; Oct 9 2026), `fi2-coach-plays-v1` (Coaches Board plays: user decision Oct 9 2026, play names are typed text; coaches move plays between devices with the board's share link), `fi2-fuel-v1` (the energy bar, moved here Oct 12 2026: it refills on each device's first visit of the day and is redrawn as a float while walking, so it changed on every visit with no progress and made two copies of one island look different). `fi2-arcade-boards-v1` (arcade leaderboards, Oct 12 2026: the "This device" top 10s, the remembered three letters and picture, and the ids and claim secrets of this device's own island entries; docs/arcade-leaderboards.md).
 
 **C. Never synced**
 
@@ -371,21 +374,60 @@ that still prevent double credit.
 - **Expected traffic:** about 1 check plus 1–3 saves a visit. The model below uses 3 calls a visit.
 - **Phone cost:** no work while playing. `JSON.stringify` of ~50 KB plus gzip takes a few ms, only at those moments.
 
-### 4.4 Two devices (conflicts)
+### 4.4 Two devices (conflicts): one code, one island
 
-The server keeps an integer `rev`. Every save sends `base_rev`.
+The server keeps an integer `rev`. Every save sends `base_rev`. **Kids are never asked to choose** (user decision, Oct 12 2026:
+the "Which island do you want?" chooser confused players, often over two copies that looked the same). The rule is **newest
+wins, with a backup**.
 
-- **Boot `check`, server rev newer, no unsynced local changes:** the client takes the server copy quietly (it applies the
-  copy and reloads once, before the island renders, behind the existing loading screen).
-- **Boot `check`, server rev newer, local changes too** (two devices played offline): show one kid screen, **"Which island do
-  you want?"**, with two summary cards ("This tablet: 1,240 coins · 36 cards" / "Saved island: 980 coins · 41 cards") and
-  the buttons **Keep this one** / **Use the saved one**. The one not chosen is kept as the 7-day on-device backup.
-- **A save with an old `base_rev`** returns `409` with the server rev, and the client runs the same rule.
-- **Phase 2 (optional): automatic merge per key.**
-  - Union for sets (cards, quiz answers, passport, fishbook, found balls).
-  - Max for records and stars.
-  - The ledger merge already written for the wallet (receipts keyed by id, so coins are never duplicated or lost).
-  - This removes the chooser in most cases. It is not needed for v1.
+- **Boot `check`, server rev newer, no unsaved local changes:** the client takes the server copy quietly (it applies the copy
+  and reloads once, behind the existing loading screen).
+- **Boot `check`, server rev newer, local changes too**, **a save that meets a newer `rev` (409)**, or **a remembered page-hide
+  conflict:** the client downloads the server copy once (`lib/saves/client.ts` `settleWith`) and:
+  1. **It is ours** (identical to this island, our last confirmed save, or a hash in the `sent` list of saves whose answer was
+     lost while the page unloaded): take its `rev` and save this island on top. Nothing is set aside.
+  2. **Otherwise the copy played most recently wins.** Each snapshot carries `played` (ms): when that island last changed on the
+     device that saved it. The device tracks it in `fi2-save-played-v1` `{hash,at}`: whenever the progress fingerprint
+     (`progressHash`, the snapshot hash without `PLAYED_IGNORE_KEYS`) moves, the island was played now. It is looked at on every
+     save trigger (no timer), and a tab hiding always stamps it. The server pulls a `played` more than 5 minutes in the future
+     back to its own clock. Older saves without `played` count from the start of their `game` day.
+     - A copy with **no progress** (`hasProgress`) never beats one with progress, whatever the clocks say.
+     - A **tie** on the clock goes to more progress (`progressRank`: lessons, quiz answers, cards, coins).
+  3. **The loser is kept whole** as the 7-day on-device backup (`fi2-save-backup-v1`, with its `played` time), unless it holds
+     nothing of its own: a server copy whose progress fingerprint equals this island's, or this device's copy when its progress
+     equals its last confirmed save (`SyncState.p`). That way a trivial copy never pushes out a real one.
+  4. **Coins are never added across copies.** One whole island is kept and the other is set aside whole; nothing is merged.
+- **When the saved copy wins**, applying it needs a reload. That happens at a start (behind the loading screen) or when the tab
+  comes back. During play (a milestone save) it waits: the conflict is remembered silently and settled at the next start or
+  return. A page-hide save that meets a conflict also only remembers it (there is no time to download).
+- **Coming back to a tab** (`visibilitychange` → visible) **or opening a room** (arcade, Konbini, museum: `resumeCheck`): a
+  remembered conflict is settled. One `check` runs as on start when an earlier save was never answered (`sent` is not empty:
+  the previous page's page-hide save landed after its page was gone, which in the rooms is nearly every time), or after at
+  least a minute away, so a device left open adopts what another device played meanwhile before the kid carries on there.
+  Before Oct 12 2026 a room never checked, so hopping from room to room met a silent conflict on every page-hide save and
+  nothing reached the server until the island started again.
+- **One save job at a time per tab:** the start check and the saves never overlap (a save landing mid-check used to look like
+  another device). Other tabs share the `sent` list and the sync state, which is re-read after every download, and a tab whose
+  save meets another tab's newer `rev` simply saves again on top of it.
+- **Grown-up restore:** Settings → My save code (and For grown-ups → Saving progress) shows **"Restore the other island from
+  <day>"** while a backup is held. In Settings it opens the parent gate first. The confirm screen shows the other copy's summary,
+  and **Restore the other island** swaps it in, keeps the current one as the backup (so it can be switched back the same way),
+  and marks it played now, so it becomes the newest copy on the server too.
+- **Known limit:** two devices played at the very same time with one code (two kids sharing a code) keep replacing each other's
+  copy on the server. Each device keeps its own island and the other's latest copy in its backup.
+
+**Why the chooser kept appearing (Oct 12 2026 investigation).** Reproduced in `tests/game-saves.cjs` against the old client:
+- **Two tabs of one island.** A tab-switch page-hide save met the other tab's save from the same `rev`. The page was still
+  alive, so the conflict event opened the chooser right away, over two copies with the same coins, cards and lessons. The same
+  happened for two page-hide saves in a row whose answers were lost (an app switch on a tablet).
+- **Keys that change by themselves.** `fi2-fuel-v1` refilled on each device's first visit of the day and was redrawn as a float
+  while walking, so every visit made the island "changed". It is now a device key (§4.1 B). Card offers re-rolled on view,
+  backpack and vending "seen" marks, announced flags and on-mount migrations still sync, but they no longer count as playing
+  (`PLAYED_IGNORE_KEYS`).
+- **The start check racing a save** in the same tab. Now serialised.
+- The old chooser summary (coins · cards · lessons) hid what really differed, which is why the two cards looked identical.
+- A dev-only log (`[saves] two copies met: keys that differ`, `NODE_ENV=development`) lists the differing keys whenever two
+  copies meet.
 
 ### 4.5 Supabase tables and RLS
 
@@ -589,7 +631,7 @@ Proposed text:
 | 2 | Word list (1,024 words + pictures where we have art) and code generation; normalise and autocomplete; offensive-triple check | 1 |
 | 3 | Migration (`game_saves`, `save_throttle`, functions, RLS) plus a test on throwaway Postgres like `tests/admin-analytics.cjs` | 1 |
 | 4 | API routes, HMAC pepper, throttles, constant-shape responses; WAF rules staged | 1 |
-| 5 | Onboarding steps 1/1b, "I have a save code", Restore R1/R2, the which-island chooser | 1.5 |
+| 5 | Onboarding steps 1/1b, "I have a save code", Restore R1/R2, two-device handling (now automatic, §4.4) | 1.5 |
 | 6 | Settings card, For grown-ups card, printable code card (reusing `printHtml`), delete flow | 1 |
 | 7 | Sync triggers (hide / milestones / boot check), 409 handling, offline retries; no timers while idle | 0.5 |
 | 8 | Privacy page, retention and security policies, copy; e2e on phone + tablet + a school-IP scenario | 0.5 |
@@ -635,8 +677,8 @@ Watch for:
 4. **Retention.** Is 12 months of inactivity before deletion OK? 6 months is more minimal; 24 months is kinder to seasonal
    players.
 5. **IDP notes.** Keep the coach-plan free text on the device (recommended), or sync it after a grown-up turns it on?
-6. **Two devices.** Is a simple "Which island do you want?" chooser OK for v1, or do you want the automatic merge from the
-   start (+2 days)?
+6. **Two devices.** ~~Is a simple "Which island do you want?" chooser OK for v1?~~ Decided Oct 12 2026: no chooser. Newest
+   wins, with a 7-day backup a grown-up can restore (§4.4). Merging was not chosen: one whole copy is always kept.
 7. **Phase 2.** Do you want "send my code to a grown-up's email" (one email, address not stored), and which email provider?
    Is there a lawyer or privacy-review budget for that and for the IDP P1 guardian accounts?
 8. **Device settings.** Should volume, music, controls and battery saver stay per device (recommended), or travel with the

@@ -134,3 +134,9 @@
 .root .card>.primary.primary{position:sticky;bottom:0;z-index:1;box-shadow:var(--btn-shadow-gold),0 0 0 12px #151a30}
 @media(max-height:500px){.steps{margin:4px 0}.steps li{padding:4px 6px;font-size:10px}.steps b{font-size:15px}.chain{top:8px;left:12px;font-size:10px}.chain b{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.bump,.chain,.prompt,.starList li[data-done]{animation:none}.root .actions button[data-hint]::after{animation:none;opacity:1}}
+
+/* Leaderboards (Oct 12 2026, docs/arcade-leaderboards.md): a cream pill under Kick off / Play again opens the Strikers boards. */
+.boards{display:block;margin:12px auto 0;min-height:44px;min-width:44px;padding:10px 22px;border:3px solid #fff2cd;border-radius:999px;background:var(--btn-cream,#fff1d3);color:var(--btn-ink,#244d40);font:800 14px/1.2 var(--font-body,Arial,sans-serif);box-shadow:0 4px 0 #193f3766;cursor:pointer;touch-action:manipulation}
+.boards:active{translate:0 3px;box-shadow:0 1px 0 #193f3766}
+.boards:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(prefers-reduced-motion:reduce){.boards:active{translate:none}}

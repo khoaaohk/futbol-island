@@ -217,6 +217,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   }
   function boundary(){if(ready('boundary',.7)){tone(170,65,.19,.22,'triangle');hiss(550,.14,.15);}}
   function fall(){if(ready('fall',1)){tone(760,150,.75,.14,'sine');}}
+  /** A hop's touchdown on Summit Isle's slopes (rooftopTravel / slopeHop): a soft thud, fuller for a harder landing (0…1). */
+  function land(power:number){if(ready('land',.18)){const p=Math.max(0,Math.min(1,power));tone(150,62,.1+.08*p,.07+.1*p,'triangle');hiss(420,.07+.06*p,.05+.07*p);}}
   function impact(){if(ready('impact',1)){hiss(750,.42,.4);tone(105,38,.28,.3);tone(420,780,.18,.09,'sine',.12);tone(600,240,.3,.08,'sine',.28);}}
   function ball(kind:'kick'|'bounce'|'receive'){
     if(!ready('ball-'+kind,.1))return;
@@ -261,5 +263,5 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
   function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
-  return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }

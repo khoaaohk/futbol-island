@@ -1,4 +1,5 @@
 import {BEACH_COURT} from './coralCay';
+import {summitGround} from './summitIsle';
 export type Format='futsal'|'7v7'|'9v9'|'11v11';
 export type Venue={id:Format;name:string;x:number;z:number;width:number;length:number;players:number;goalWidth:number;goalHeight:number;surface:string;shape:string;elevation?:number};
 export const VENUES:Venue[]=[
@@ -58,7 +59,8 @@ export function parkingSurfaceHeight(x:number,z:number){
 }
 export function fieldSurfaceHeight(x:number,z:number,margin=0){
  const v=VENUES.find(v=>Math.abs(x-v.x)<=v.width/2+3+margin&&Math.abs(z-v.z)<=v.length/2+3+margin);
- return v?(v.elevation??0)+FIELD_SURFACE_Y:parkingSurfaceHeight(x,z);
+ // Summit Isle's mountain (summitIsle.ts, Oct 12 2026): 0 outside its box after four comparisons.
+ return v?(v.elevation??0)+FIELD_SURFACE_Y:parkingSurfaceHeight(x,z)||summitGround(x,z);
 }
 
 export const ISLAND_SQUARE={x:95,z:-35};

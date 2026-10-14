@@ -1,0 +1,137 @@
+/* Island Tutorial: plays inside the Paths hero card (IslandJourney .arrival), in the card's riso: cream paper with the card's
+   own grain on top (.arrival::after), the flat island inks (#ffd03e yellow, #1255ee blue, #087451 green, #ff6230 flag, #fa8bd2
+   player dot, #173e37 key ink) and the IslandBrush display face, with slightly mis-registered overprints.
+   Heat: transform/opacity loops only, and every loop pauses unless [data-active=true] (playing, tab visible, card on-screen). */
+.tutorial{--ink:#173e37;--paper:#fff1cf;--yellow:#ffd03e;--blue:#1255ee;--green:#087451;--flag:#ff6230;--pink:#fa8bd2;
+ grid-column:1/-1;position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;color:var(--ink);outline:none}
+.tutorial:focus-visible{outline:var(--btn-focus);outline-offset:4px;border-radius:18px}
+.tutorial[data-active=false] *,.tutorial[data-active=false] *::before,.tutorial[data-active=false] *::after{animation-play-state:paused!important}
+
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:'title mute close';align-items:center;column-gap:12px}
+.top .title{grid-area:title;margin:0;font:400 clamp(26px,3vw,34px)/1.1 IslandBrush,sans-serif;letter-spacing:-.02em;text-shadow:1.5px 1px 0 #fa8bd2aa}
+.close{grid-area:close;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;min-width:48px;padding:0;border:0;border-radius:50%;background:var(--ink);color:var(--paper);box-shadow:2px 2px 0 var(--flag);cursor:pointer;transition:transform .16s ease}
+.close:active{transform:scale(.94)}
+/* No hover transform: the island's close face has a solid drop shadow, and rotating/moving it skewed that shadow (user, Oct 13). */
+.mute{grid-area:mute;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;padding:0;border:3px solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-cream,#fff1d3);color:var(--ink);box-shadow:0 var(--btn-lift,4px) 0 var(--btn-cream-edge,#193f3733),var(--btn-halo,0 0 0 4px #fff2cd40);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.mute:active{translate:0 3px;box-shadow:0 1px 0 var(--btn-cream-edge,#193f3733)}
+.mute[aria-pressed=true]{background:#ffe0d3;border-color:var(--flag)}
+
+/* The art keeps the scene's 420×260 shape, so layered pieces land on the same pixels as the static art. */
+.stage{position:relative;width:100%;aspect-ratio:420/260;max-height:min(46vh,330px);margin:0 auto;border-radius:22px 34px 20px 26px;overflow:hidden;background:#fbe7b8;box-shadow:inset 0 0 0 2px #173e3714}
+@supports (aspect-ratio:1){.stage{height:auto}}
+.art{position:absolute;inset:0}
+.headline{position:absolute;z-index:1;left:10px;top:8px;margin:0;max-width:70%;padding:2px 12px 4px;border-radius:4px 10px 6px 3px;background:#fff1cfe6;box-shadow:2px 2px 0 #173e3726;rotate:-2deg;font:400 clamp(22px,3.2vw,32px)/1.05 IslandBrush,sans-serif;letter-spacing:-.01em;color:var(--ink);text-shadow:1.8px 1.4px 0 var(--pink),-1px -.7px 0 #ffd03eaa;pointer-events:none;animation:headlinePop .42s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes headlinePop{0%{opacity:0;transform:translateY(8px) scale(.9)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:none}}
+
+.chapterList{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#fff1cfee}
+.chapterList button{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:10px;min-height:44px;padding:8px 10px;border:2px solid #173e3726;border-radius:16px 22px 14px 18px;background:#fff8e4;color:var(--ink);text-align:left;cursor:pointer}
+.chapterList button>span{grid-row:1/3;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--yellow);font-weight:800}
+.chapterList button strong{font-size:15px;line-height:1.2}
+.chapterList button small{font-size:12px;color:#4d5d49}
+.chapterList button[aria-current=true]{border-color:var(--ink);background:#ffe9a6}
+
+.endCard{position:absolute;inset:auto 0 0 0;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:12px;background:linear-gradient(transparent,#fff1cfdd 40%)}
+.endCard button{min-height:48px;padding:0 20px;border-radius:999px;font-weight:800;font-size:16px;cursor:pointer}
+.replay{border:0;background:var(--ink);color:var(--paper);box-shadow:2px 2px 0 var(--flag)}
+.back{border:2px solid var(--ink);background:var(--paper);color:var(--ink)}
+
+/* Captions: always on, under the art, never smaller than 16px. */
+.caption{min-height:calc(3 * 1.5 * 17px + 20px);padding:10px 14px;border-radius:16px 20px 14px 18px;background:#fffaf0;box-shadow:inset 0 0 0 2px #173e371f,2px 3px 0 #173e3714}
+.caption p{margin:0;font-size:17px;line-height:1.5;font-weight:600;color:#122f29;animation:captionIn .25s ease-out both}
+.caption small{display:block;margin-top:6px;font-size:14px;color:#8a3a1c}
+@keyframes captionIn{from{opacity:0}to{opacity:1}}
+
+/* Scene bar: one segment per scene, a wider gap between chapters; each segment is a full 44px-tall tap target. */
+.progress{display:flex;align-items:stretch;gap:3px;min-width:0}
+.progress button{flex:1 1 0;min-width:0;height:44px;padding:0;border:0;background:none;display:flex;align-items:center;cursor:pointer}
+.progress button[data-chapter-start]{margin-left:7px}
+.progress button>span{position:relative;display:block;width:100%;height:8px;border-radius:4px;background:#173e3726;overflow:hidden}
+.progress button[data-state=done]>span{background:var(--ink)}
+.progress button[data-state=now]>span{background:#173e3740;box-shadow:0 0 0 2px #fff1cf,0 0 0 3.5px var(--ink)}
+.progress button>span>i{position:absolute;inset:0;background:var(--flag);transform-origin:left center;animation:fill var(--scene-seconds,8s) linear both}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.progress button:focus-visible{outline:var(--btn-focus);outline-offset:0}
+
+.controls{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.controls button{display:grid;place-items:center;min-width:48px;height:48px;padding:0;border:2px solid #173e3730;border-radius:50%;background:#fff8e4;color:var(--ink);cursor:pointer;transition:transform .14s ease}
+.controls button:disabled{opacity:.35;cursor:default}
+.controls button:not(:disabled):active{transform:scale(.93)}
+.controls .play{width:58px;height:58px;border:0;background:var(--yellow);box-shadow:2px 3px 0 var(--ink)}
+.controls button[aria-pressed=true]{background:#ffe0d3;border-color:var(--flag)}
+
+@media(max-width:600px){
+ .tutorial{gap:8px}
+ .stage{max-height:none;border-radius:18px 26px 16px 20px}
+ .caption{min-height:calc(4 * 1.5 * 16px + 20px)}
+ .caption p{font-size:16px}
+ .controls{gap:8px}
+ .chapterList{grid-template-columns:minmax(0,1fr);gap:5px;padding:8px;overflow:auto}
+ .chapterList button{min-height:44px;padding:4px 10px;grid-template-rows:auto;align-items:center}
+ .chapterList button small{display:none}
+ .chapterList button>span{grid-row:auto;width:26px;height:26px}
+}
+/* Wide cards: the print on the left, caption beside it, so the card stays short. The scene bar is its own full-width row
+   directly above the Back/Play/Forward row (both full width, centred to the card). The caption box matches the art's height
+   (top and bottom), text led from the top; if the longest caption needs more room than the art at 850px, this row grows
+   rather than shrinking the text (both panes stretch to the row, so their edges still line up). */
+@media(min-width:601px){
+ .tutorial{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-rows:auto auto auto auto;grid-template-areas:'top top' 'caption stage' 'progress progress' 'controls controls';column-gap:24px;row-gap:10px}
+ .top{grid-area:top}.stage{grid-area:stage;align-self:stretch;max-height:none}
+ .caption{grid-area:caption;align-self:stretch;display:flex;flex-direction:column;justify-content:flex-start;min-height:0}
+ .progress{grid-area:progress}.controls{grid-area:controls;justify-content:center}
+ .caption p{font-size:18px}
+}
+
+/* ---------- Scene art (IslandTutorialArt) ---------- */
+.scene{position:absolute;inset:0;animation:sceneIn .35s ease-out both}
+@keyframes sceneIn{from{opacity:0;transform:scale(1.02)}to{opacity:1;transform:none}}
+.layer{position:absolute;inset:0;display:block;width:100%;height:100%}
+.piece{position:absolute;inset:0;will-change:auto}
+.piece>svg{position:absolute;inset:0;display:block;width:100%;height:100%}
+/* Riso overprint: the pink plate sits a hair off the key plate. */
+.misreg{transform:translate(.6%,.5%);mix-blend-mode:multiply;opacity:.55}
+.bob{animation:bob 2.4s ease-in-out infinite}
+.bobSlow{animation:bob 3.6s ease-in-out infinite}
+.hop{animation:hop 1.2s cubic-bezier(.3,0,.4,1) infinite}
+.walkPath{animation:walkPath 5s ease-in-out infinite}
+.stick{animation:stick 5s ease-in-out infinite}
+.keyPress{animation:keyPress 5s steps(1) infinite}
+.rise{animation:rise 5.5s ease-in-out infinite}
+.glide{animation:glide 5.5s ease-in-out infinite}
+.drift{animation:drift 7s ease-in-out infinite alternate}
+.spin{animation:spin 6s linear infinite}
+.coinUp{animation:coinUp 2.2s ease-out infinite}
+.coinUp2{animation:coinUp 2.2s .7s ease-out infinite}
+.coinUp3{animation:coinUp 2.2s 1.4s ease-out infinite}
+.pulse{animation:pulse 2.2s ease-in-out infinite}
+.blink{animation:blink 2.8s steps(1) infinite}
+.sway{animation:sway 3.2s ease-in-out infinite}
+.swing{animation:swing 2.6s ease-in-out infinite}
+.sail{animation:sail 9s ease-in-out infinite}
+.slideIn{animation:slideIn 4.5s ease-in-out infinite}
+.wave{animation:wave 3s ease-in-out infinite alternate}
+.peek{animation:peek 4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2%)}}
+@keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-6%)}}
+@keyframes walkPath{0%{transform:translate(0,0)}35%{transform:translate(18%,-6%)}65%{transform:translate(30%,4%)}100%{transform:translate(0,0)}}
+@keyframes stick{0%{transform:translate(0,0)}35%{transform:translate(4%,-3%)}65%{transform:translate(4%,3%)}100%{transform:translate(0,0)}}
+@keyframes keyPress{0%,30%{opacity:1}35%,60%{opacity:.25}65%,100%{opacity:1}}
+@keyframes rise{0%{transform:translateY(18%)}40%{transform:translateY(-16%)}100%{transform:translateY(18%)}}
+@keyframes glide{0%{transform:translate(-6%,-10%) rotate(-4deg)}50%{transform:translate(6%,4%) rotate(4deg)}100%{transform:translate(-6%,-10%) rotate(-4deg)}}
+@keyframes drift{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes coinUp{0%{transform:translateY(8%);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateY(-14%);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.2}}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes swing{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes sail{0%{transform:translateX(-26%)}55%,70%{transform:translateX(16%)}100%{transform:translateX(-26%)}}
+@keyframes slideIn{0%,15%{transform:translateX(-4%)}50%,85%{transform:translateX(4%)}100%{transform:translateX(-4%)}}
+@keyframes wave{from{transform:translateX(-2%)}to{transform:translateX(2%)}}
+@keyframes peek{0%,30%,100%{transform:translateY(5%)}45%,85%{transform:translateY(0)}}
+
+@media(prefers-reduced-motion:reduce){
+ .tutorial *,.tutorial *::before,.tutorial *::after{animation:none!important;transition:none!important}
+ /* The progress segment still shows where the scene is, without moving. */
+ .progress button>span>i{transform:scaleX(.5)}
+}

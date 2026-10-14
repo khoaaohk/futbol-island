@@ -172,3 +172,10 @@
 
 /* Futbol Pinball full time: the coach's one takeaway (was only ever in the in-play message bar, hidden by this card). */
 .takeaway{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:#2a2148;color:#fff6c8;border-left:4px solid #ffe86d;font-size:14px;line-height:1.4}
+
+/* Leaderboards (Oct 12 2026, docs/arcade-leaderboards.md): a cream pill on the start and full-time cards opens this game's
+   boards (lazy). */
+.boards{display:block;margin:14px auto 0;min-height:var(--btn-height,44px);min-width:44px;padding:10px 22px;border:3px solid #fff2cd;border-radius:var(--btn-radius,999px);background:var(--btn-cream,#fff1d3);color:var(--btn-ink,#244d40);font-weight:800;box-shadow:0 4px 0 #193f3766;cursor:pointer;touch-action:manipulation}
+.boards:active{translate:0 3px;box-shadow:0 1px 0 #193f3766}
+.boards:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(prefers-reduced-motion:reduce){.boards:active{translate:none}}

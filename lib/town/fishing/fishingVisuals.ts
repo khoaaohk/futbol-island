@@ -4,7 +4,7 @@ import {FISH_SPOTS,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCat
 import {createFishingWater} from './shoreWater';
 import {createFishSchools} from './fishSchools';
 import {speciesModel,releaseSpeciesModels,type ShadowKind,type SpeciesModel} from './fishModels';
-import {patchUnderwater,seabedStyle,uwDepthAt,UW_SURFACE} from './underwater';
+import {applyReefWater,patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE} from './underwater';
 import {graphicsQuality} from '../../graphics/quality';
 
 /**
@@ -144,7 +144,13 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  return {
   begin(s,c,d){const spot=FISH_SPOTS.reduce((a,b)=>Math.hypot(b.x-s.x,b.z-s.z)<Math.hypot(a.x-s.x,a.z-s.z)?b:a);
    const halfWidth=typeof window!=='undefined'&&window.innerWidth<window.innerHeight?4.5:9;
-   water?.begin(s,d,spot,halfWidth);if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,seabedStyle(spot),spot.id);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
+   // Farther casts (Oct 13 2026): the seabed scatter and the ambient schools reach past the float itself (default 11/15 m
+   // when the cast happens to be shorter), so coral, rocks and fish still surround a float cast much farther out.
+   const viewDepth=Math.max(halfWidth<6?11:15,Math.hypot(c.x-s.x,c.z-s.z)+5);
+   // Each spot's own reef (Oct 13 2026): water tint and sand (shared uniforms), the seabed layout and palette, the fish and the
+   // clownfish's anemone, all from its theme (underwater.ts REEF_THEMES).
+   const theme=reefTheme(spot);applyReefWater(theme);
+   water?.begin(s,d,spot,halfWidth,viewDepth);if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,water?.homes??[],viewDepth);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
   end(){water?.end();schools.end();active=false;rod.visible=line.visible=bobber.visible=false;shadow.visible=false;catchFish.visible=false;held.visible=false;reeledFish.visible=false;reelingFish=null;shadowOn=false;heldFish=null;if(!ringsBusy())root.visible=false;},
   setPose(p){pose=p;},
   setBobber(s){bobState=s;},

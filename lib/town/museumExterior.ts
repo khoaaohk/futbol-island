@@ -59,7 +59,10 @@ export function buildMuseumExterior(k:MuseumExteriorKit){
  for(const dx of [-1.1,1.1])k.box(.06,3.6,.1,C.frame,door+dx,1.8,front+.1);   // mullions either side of the doors
  k.box(2.14,.06,.1,C.frame,door,2.4,front+.1);                                // door head
  for(const dx of [-.22,.22])k.box(.05,.9,.06,C.steel,door+dx,1.15,front+.16);  // pull bars
- k.box(pw,.25,1.4,C.plinth,door,-.1,front+.7);                                 // dark threshold mat (.25 thick: joins the paint batch)
+ // Dark threshold mat: a thin slab flush on the plaza paving (paving top is y −.02; see the plaza build below), not plunged
+ // through it — the old .25 m-thick box sank .205 m into the paving/joint boxes, the box-in-box overlap behind the reported
+ // z-fighting at the door base. Same visible top (y .025) and footprint; bottom now sits exactly on the paving, no gap or overlap.
+ k.box(pw,.045,1.4,C.plinth,door,.0025,front+.7);
  // ---- Cantilevered canopy (no posts): a thin white slab with a dark soffit edge.
  const cw=MUSEUM_CANOPY.x1-MUSEUM_CANOPY.x0,cx=(MUSEUM_CANOPY.x0+MUSEUM_CANOPY.x1)/2;
  k.box(cw,MUSEUM_CANOPY.t,MUSEUM_CANOPY.depth,C.roof,cx,MUSEUM_CANOPY.y,front+MUSEUM_CANOPY.depth/2);

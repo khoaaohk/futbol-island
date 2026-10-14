@@ -1,6 +1,12 @@
 import {EXHIBITS} from '../endgame/museum';
 
 /**
+ * RETIRED Oct 13 2026 (user: "for all the exhibits remove this info thing and btn, just have the full thing at the beginning"):
+ * the hall no longer plays these stories; every case opens straight onto its full card (components/MuseumRoom.tsx) and the
+ * sculptures are still objects (museumExhibits.ts no longer has the beat animations named below). Nothing in the app imports this
+ * module or lib/museum/museumVoice.ts. The beats, the baked clips (public/voice/museum) and the bake scripts are kept, unplayed, so
+ * the narration could come back; tests/museum-room.cjs still checks that every line is grounded and voiced.
+ *
  * Storytelling exhibits (Oct 4 2026, user: "Each section opens up a modal. That is not the interaction we want. Want more
  * storytelling… think outside the box and make it more interactive like [the pop-up books]"). Pure, so tests/museum-room.cjs
  * can check every line.
@@ -43,28 +49,26 @@ export const STORIES:Readonly<Record<string,Story>>={
   fact('tap','Watch the keeper','keeper','The goalkeeper stays on the goal line until the ball is kicked.'),
   cue('choose','Pick your spot','shoot','You picked your spot. Strike!'),
  ]},
- // A hand-cranked zoetrope: crank the old rule, pull the lever, crank the new one.
- 'backpass-1992':{id:'backpass-1992',beats:[
-  cue('crank','Turn the crank','old','A team-mate kicks it back, and the keeper picks it up.'),
-  fact('pull','Pull the lever','lever','Since 1992, a goalkeeper may not pick up the ball when a team-mate deliberately kicks it back to them.'),
-  fact('crank','Turn the crank again','new','The change stopped teams wasting time and made the game faster.'),
-  fact('tap','Watch the keeper','feet','It is why today’s keepers practise passing and receiving with their feet.'),
- ]},
  // A split-flap scoreboard: every lever pull flips the next part of the story.
  'worldcup-1930':{id:'worldcup-1930',beats:[
   fact('pull','Pull the lever','host','The first FIFA World Cup was played in Uruguay in 1930.'),
   fact('pull','Pull it again','teams','Only 13 teams took part.'),
   fact('pull','Pull for the final','final','Uruguay, the hosts, won it, beating Argentina 4–2 in the final in Montevideo.'),
  ]},
- // A magic lantern projects the idea onto the wall: traffic lights become cards.
- 'cards-1970':{id:'cards-1970',beats:[
-  fact('tap','Light the lantern','lamp','English referee Ken Aston had the idea while waiting at traffic lights'),
-  fact('tap','Tap the amber light','yellow','yellow means careful'),
-  fact('tap','Tap the red light','red','red means stop.'),
-  fact('tap','Next slide','mexico','Yellow and red cards were first used at the 1970 World Cup in Mexico.'),
-  fact('tap','Show the crowd','crowd','Cards showed every player and fan the referee’s decision, whatever language they spoke.'),
+ // A turntable stadium (Oct 12 2026, replaced the yellow and red cards): lay the pitch, raise the stands, fill them, raise the arch.
+ 'stadiums':{id:'stadiums',beats:[
+  fact('tap','Lay the pitch','pitch','Under the grass of a modern pitch sit layers of sand and gravel'),
+  fact('tap','Raise the stands','stands','The Maracanã in Rio de Janeiro opened in 1950 for the World Cup.'),
+  fact('tap','Fill the seats','crowd','199,854 people watched Uruguay beat Brazil 2–1 there.'),
+  fact('tap','Raise the arch','arch','Wembley’s giant arch is 133 metres tall.'),
  ]},
- // The VAR booth: sit in, see what VAR may check, scrub the replay, make the call.
+ // A boot through time (Oct 12 2026, replaced the back-pass rule): the heavy old boot, studs that screw in, rain, today's boot.
+ 'boots':{id:'boots',beats:[
+  fact('tap','Lace the old boot','old','Early football boots were heavy leather that came up over the ankle, with hard toe-caps and nailed studs.'),
+  fact('tap','Screw in the studs','studs','Screw-in studs let players change to longer studs on a wet, muddy pitch.'),
+  cue('tap','Make it rain','rain','Rain falls, and the long studs dig into the mud.'),
+  fact('tap','Make it light','light','Today many boots are light and knitted, with a plastic plate'),
+ ]},
  'var-2018':{id:'var-2018',beats:[
   fact('tap','Sit in the booth','booth','The video assistant referee (VAR) was first used at a men’s World Cup in 2018, in Russia.'),
   fact('tap','What can VAR check?','checks','VAR can only help with clear mistakes about goals, penalties, straight red cards and mistaken identity.'),
@@ -107,7 +111,9 @@ export const STORIES:Readonly<Record<string,Story>>={
  ]},
  // The Hall of Fame podium (the player's own certificates).
  'hall-of-fame':{id:'hall-of-fame',beats:[
-  fact('tap','Step onto the podium','podium','Every path you graduate hangs its certificate here.'),
+  cue('tap','Spin the cup','spin','A golden cup turns slowly on its stand.'),
+  cue('tap','Take it apart','apart','The cup comes apart: base, stem and bowl.'),
+  fact('tap','Your own shelf','shelf','Every path you graduate hangs its certificate here.'),
   fact('tap','Look down the path','ferry','Graduate all four paths to board the Matchday Ferry for your Matchday final.'),
  ]},
 };

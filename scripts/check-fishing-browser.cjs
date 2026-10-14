@@ -4,7 +4,7 @@ const [,,mode='desktop',spot='west-cove']=process.argv;
 // FISHING_RARE=1 biases Math.random for the second fish only, so the rarer end of the spot's catch list bites (for a rare-catch screenshot).
 const RARE=process.env.FISHING_RARE==='1';
 const VP={desktop:{width:1280,height:800},mobile:{width:390,height:844},landscape:{width:844,height:390}}[mode];const touch=mode!=='desktop';
-const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4],'causeway-gate':[254.8,-169.2],'causeway-channel':[359.2,-176.1],'turtle-bank':[486.2,-124.8],'coral-garden':[514.8,-226.5],'sharks-beach':[697.3,-200.2],'farm-beach':[651,-68.1]};
+const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4],'causeway-gate':[254.8,-169.2],'causeway-channel':[359.2,-176.1],'turtle-bank':[486.2,-124.8],'coral-garden':[514.8,-226.5],'sharks-beach':[697.3,-200.2],'farm-beach':[651,-68.1],'summit-cove':[546.9,234.2],'summit-palm':[780.3,53.3],'summit-lookout':[540.6,35.8]};
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  const ctx=await browser.newContext({viewport:VP,isMobile:touch,hasTouch:touch,deviceScaleFactor:touch?2:1});

@@ -11,7 +11,7 @@ import {EXHIBITS,type Exhibit} from '../endgame/museum';
  *
  *             x=−21        x=−12                                          x=12
  *   z=−8  ┌ YOUR COLLECTION ┬ THE LAWS (teal) ──── timeline ──── WORLD CUP (pink) ┐
- *         │ ball pegboard   │ 5 cases                              3 cases         │
+ *         │ ball pegboard   │ 3 cases                              4 cases         │
  *         │                 ·                                                      │
  *         │ card table      · opening ── partition (kit wall) ─ aisle ─ partition ─┤ z=0
  *         │                 ·                                                      │
@@ -31,11 +31,11 @@ export const FLOOR={minX:WING.x0,maxX:ROOM.halfW,minZ:-ROOM.halfD,maxZ:WING.z1} 
 export const CASE={w:.96,d:.96,plinthH:.92,glassH:.78} as const;
 export const CASE_PLACES:Readonly<Record<string,{x:number;z:number}>>={
  // The Laws of the Game (back left)
- 'laws-1863':{x:-10,z:-6},'penalty-1891':{x:-7,z:-6},'cards-1970':{x:-4.2,z:-6},'backpass-1992':{x:-8.6,z:-2.8},'var-2018':{x:-5.4,z:-2.8},
- // World Cup history (back right)
- 'worldcup-1930':{x:4.2,z:-6},'wwc-1991':{x:7.2,z:-6},'futsal-1989':{x:10,z:-6},
- // Balls and kits (the whole front: the kit wall behind the shirts; the ball-compare case has the front right to itself)
- 'shirts':{x:-8.4,z:2.9},'telstar-1970':{x:-4.4,z:3.4},'laced-leather':{x:7.6,z:3.2},
+ 'laws-1863':{x:-10,z:-6},'penalty-1891':{x:-7,z:-6},'var-2018':{x:-4.2,z:-6},
+ // World Cup history (back right; Stadiums of the World, Oct 12 2026, in the second row)
+ 'worldcup-1930':{x:4.2,z:-6},'wwc-1991':{x:7.2,z:-6},'futsal-1989':{x:10,z:-6},'stadiums':{x:7.2,z:-2.8},
+ // Balls and kits (the whole front: the kit wall behind the shirts; Boots through time, Oct 12 2026, right of the aisle)
+ 'shirts':{x:-8.4,z:2.9},'telstar-1970':{x:-4.4,z:3.4},'boots':{x:5.6,z:2.8},'laced-leather':{x:7.6,z:3.2},
  // Hall of Fame (the wing, beside the certificate wall)
  'hall-of-fame':{x:-15.2,z:13},
 };

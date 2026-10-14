@@ -22,11 +22,13 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-life-paths-v1','fi2-graduations-v1',
  // Exploration
  'futbol-island-quests-v1','fi2-passport-v1','fi2-club-stories-v1','fi2-matchday-coins-v1','fi2-explore-activity-v1',
- 'fi2-east-pier-challenge-v1','fi2-fuel-v1',
+ 'fi2-east-pier-challenge-v1',
+ 'fi2-summit-kick-v1','fi2-telescope-v1',// Summit Isle (Oct 12 2026): the Summit Kick best and the telescope glints found
  // The museum passport (Oct 9 2026): exhibits stepped inside / finished (lib/museum/museumVisits.ts)
  'fi2-museum-visits-v1',
- // Museum mini-games (Oct 10 2026): the Legends arena progress and two best scores, small and worth keeping across devices
- 'fi2-museum-hof-arena-v1','fi2-museum-backpass-press-best','fi2-museum-timeline-order-best',
+ // Museum mini-games (Oct 10 2026): the Legends arena progress and the best scores, small and worth keeping across devices
+ // (Oct 12 2026: the back-pass press best went with its case; Stadiums of the World and Boots through time keep theirs)
+ 'fi2-museum-hof-arena-v1','fi2-museum-timeline-order-best','fi2-museum-stadiums-best','fi2-museum-boots-best',
  // Coins & items
  'fi2-arcade-wallet-v1','fi2-vending-v1','fi2-backpack-v1','fi2-home-decor-v1','fi2-ride-unlocks-v1','fi2-ride-unlock-announced-v1',
  'fi2-costume-milestone-v1',
@@ -35,6 +37,8 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-book-checks-answered-v1',
  // Jobs, fishing, food
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
+ 'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
+ 'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
  'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
  'fi2-pinball-stars-v1','fi2-pass-puzzles-v1','fi.game.runner.best',
@@ -47,17 +51,22 @@ export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,
 export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
+ // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),
+ // so it changed on every visit without any progress and made a second copy of the island look different. Per device now.
+ 'fi2-fuel-v1',
  // Coaches Board plays stay on the device (user, Oct 9 2026): play names are typed text and could name a child. Share links move them.
- 'fi2-coach-plays-v1'];
+ 'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */
 export const SAVE_CODE_KEY='fi2-save-code-v1',SAVE_SYNC_KEY='fi2-save-sync-v1',SAVE_BACKUP_KEY='fi2-save-backup-v1',
  SAVE_TRIES_KEY='fi2-save-tries-v1',SAVE_NUDGE_KEY='fi2-save-nudge-v1',SAVE_APPLIED_KEY='fi2-save-applied-v1',
+ /** {hash,at}: when this device's island last changed (progressHash), so two copies can be told apart by "played last". */
+ SAVE_PLAYED_KEY='fi2-save-played-v1',
  /** Set when a grown-up deletes the save (behind the ParentGate): this device is not asked for a code again. */
  SAVE_OPTOUT_KEY='fi2-save-deleted-v1';
 /** Doc §4.1 table C, plus the save system's own keys. */
 export const NEVER_KEYS:readonly string[]=['fi2-parent-gate-lock-v1','fi2-arcade-departure-v1','fi-card-back-tab','fi2-dev-unlock-toast',
  'fi-visit','fi-visit-off','fi2-cards-dev-v1','fi2-cards-dev-progress-v1','fi2-card-trade-dev-v1','fi2-ride-dev-paths-v1','fi2-path-art-source',
- SAVE_CODE_KEY,SAVE_SYNC_KEY,SAVE_BACKUP_KEY,SAVE_TRIES_KEY,SAVE_NUDGE_KEY,SAVE_APPLIED_KEY,SAVE_OPTOUT_KEY];
+ SAVE_CODE_KEY,SAVE_SYNC_KEY,SAVE_BACKUP_KEY,SAVE_TRIES_KEY,SAVE_NUDGE_KEY,SAVE_APPLIED_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY];
 export const IDP_KEY_NAME='fi2-idp-plan-v1',IDP2_KEY_NAME='fi2-idp-v2',WALLET_KEY_NAME='fi2-arcade-wallet-v1';
 const SYNC=new Set(SYNC_KEYS);
 export const isSyncKey=(key:unknown):key is string=>typeof key==='string'&&(SYNC.has(key)||ARCADE_RECORD_KEY.test(key));
@@ -65,7 +74,8 @@ export const isSyncKey=(key:unknown):key is string=>typeof key==='string'&&(SYNC
 /** Size caps (doc §4.1 Limits). The server enforces them too. */
 export const MAX_SNAPSHOT_BYTES=512*1024,MAX_GZIP_BYTES=128*1024,MAX_KEY_BYTES=256*1024,KEEPALIVE_BYTES=64*1024;
 
-export type Snapshot={format:number;game:string;keys:Record<string,string>};
+/** `played` (ms, optional): when the island last changed on the device that saved it ("newest wins", doc §4.4). */
+export type Snapshot={format:number;game:string;keys:Record<string,string>;played?:number};
 export type StoragePort={getItem(k:string):string|null;setItem(k:string,v:string):void;removeItem(k:string):void;readonly length:number;key(i:number):string|null};
 
 /** Every key currently in a storage area (localStorage is not iterable everywhere). */
@@ -139,6 +149,32 @@ export function snapshotHash(s:Pick<Snapshot,'keys'>):string{
  for(const k of Object.keys(s.keys).sort()){feed(k);feed(s.keys[k]);}
  return h.toString(16).padStart(8,'0');
 }
+/**
+ * Synced keys a game writes by itself (on load, per day, when something is merely seen), not because the player did anything.
+ * They still travel with the island, but they never make it count as "played more recently" (doc §4.4).
+ */
+export const PLAYED_IGNORE_KEYS:readonly string[]=[
+ // Re-rolled or stamped just by looking: card offers (re-rolled on view), backpack/vending "seen" and "found" marks
+ 'fi2-card-offers-v1','fi2-backpack-v1','fi2-vending-v1',
+ // Derived from other progress on load (counted there already) or announced-once flags written on mount
+ 'fi2-ride-unlocks-v1','fi2-ride-unlock-announced-v1','fi2-costume-milestone-v1','fi2-graduations-v1','futbol-island-quiz-growth-v1',
+ // Migrations and preferences written on mount: the IDP v1 mirror, the inferred path/lesson format, onboarding done
+ 'fi2-idp-plan-v1','fi2-path-format-v1','fi2-lesson-format-v1','fi2-grownups-format-v1','fi2-welcome-v1',
+];
+/** snapshotHash without PLAYED_IGNORE_KEYS: the "did the player change anything" fingerprint behind the played time. */
+export function progressHash(s:Pick<Snapshot,'keys'>):string{
+ const keys:Record<string,string>={};for(const [k,v] of Object.entries(s.keys))if(!PLAYED_IGNORE_KEYS.includes(k))keys[k]=v;
+ return snapshotHash({keys});
+}
+/** Keys whose values differ between two islands (for the dev-only log and tests). */
+export function diffKeys(a:Record<string,string>,b:Record<string,string>):string[]{
+ return [...new Set([...Object.keys(a),...Object.keys(b)])].filter(k=>a[k]!==b[k]).sort();
+}
+/** When an island was last played: its `played` stamp, else the start of the day it was saved (older saves). */
+export function playedTime(s:Pick<Snapshot,'played'|'game'>):number{
+ if(typeof s.played==='number'&&s.played>0)return s.played;
+ const d=Date.parse(`${s.game}T00:00:00Z`);return Number.isFinite(d)?d:0;
+}
 export const snapshotBytes=(s:Snapshot)=>new TextEncoder().encode(JSON.stringify(s)).length;
 
 /** Validates a downloaded snapshot. `newer` means a later game wrote it: ask for a refresh and never overwrite anything. */
@@ -148,7 +184,8 @@ export function readSnapshot(v:unknown):{ok:true;snapshot:Snapshot}|{ok:false;ne
  if(typeof s.format!=='number')return {ok:false,newer:false};
  if(s.format>SNAPSHOT_FORMAT)return {ok:false,newer:true};
  const keys=cleanKeys(s.keys);if(!keys)return {ok:false,newer:false};
- return {ok:true,snapshot:{format:SNAPSHOT_FORMAT,game:typeof s.game==='string'?s.game.slice(0,10):'',keys}};
+ const played=typeof s.played==='number'&&Number.isFinite(s.played)&&s.played>0?Math.floor(s.played):undefined;
+ return {ok:true,snapshot:{format:SNAPSHOT_FORMAT,game:typeof s.game==='string'?s.game.slice(0,10):'',keys,...(played?{played}:{})}};
 }
 
 /**
@@ -164,12 +201,13 @@ export function applySnapshot(storage:StoragePort,snapshot:Snapshot){
 
 /** The 7-day on-device copy kept when a swap replaces this device's island (doc §3.3, §4.4). */
 export const BACKUP_DAYS=7;
-export type Backup={at:number;keys:Record<string,string>};
-export function writeBackup(storage:StoragePort,now:number,keys?:Record<string,string>){
+/** `played`: when that island was last played (shown to a grown-up as "Restore the other island from <date>"). */
+export type Backup={at:number;keys:Record<string,string>;played?:number};
+export function writeBackup(storage:StoragePort,now:number,keys?:Record<string,string>,played?:number){
  const k=keys??buildSnapshot(storage,now).keys;
  // The local copy keeps this device's IDP text: it never leaves the device.
  if(!keys){try{const idp=storage.getItem(IDP_KEY_NAME);if(idp!==null)k[IDP_KEY_NAME]=idp;}catch{}}
- try{storage.setItem(SAVE_BACKUP_KEY,JSON.stringify({at:now,keys:k}));return true;}catch{return false;}
+ try{storage.setItem(SAVE_BACKUP_KEY,JSON.stringify({at:now,keys:k,...(played?{played}:{})}));return true;}catch{return false;}
 }
 export function readBackup(storage:Pick<StoragePort,'getItem'|'removeItem'>,now:number):Backup|null{
  let b:Backup|null=null;try{b=JSON.parse(storage.getItem(SAVE_BACKUP_KEY)??'null');}catch{}

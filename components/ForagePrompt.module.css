@@ -1,0 +1,6 @@
+/* Summit Isle foraging notes (components/ForagePrompt.tsx): one short note at a time, faded out by CSS alone (no JS timers). */
+.note{position:absolute;z-index:31;top:calc(146px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(420px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none;animation:note 2.6s ease-out forwards}
+.note[data-tip]{animation-duration:5.5s;background:#f4cc7c}
+.note[data-tip]::before{content:'Tip · ';color:#9c633d}
+@keyframes note{0%{opacity:0;translate:-50% 6px}8%{opacity:1;translate:-50% 0}82%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){.note{animation-name:noteStill}@keyframes noteStill{0%,90%{opacity:1}100%{opacity:0;visibility:hidden}}}

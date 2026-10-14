@@ -9,7 +9,13 @@ import {EXHIBITS,timelineOrder,type Exhibit} from '../endgame/museum';
  * what is already saved (a set union), so two tabs or a restored save never lose a stamp.
  *
  * Ids are the case ids in lib/endgame/museum.ts plus 'timeline' (the story wall); anything else is dropped when read.
+ *
+ * Retired cases (Oct 12 2026): 'cards-1970' (now "Stadiums of the World", id 'stadiums') and 'backpass-1992' (now "Boots through
+ * time", id 'boots'). Their old stamps are DROPPED, not moved onto the new cases: the new rooms are new things to visit, and a
+ * stamp says you stepped inside. Dropping keeps the passport honest (seen ≤ total, "all" only when every current case has a
+ * stamp); the next write of the passport cleans the old ids out of storage.
  */
+export const RETIRED_IDS:readonly string[]=['cards-1970','backpass-1992'];
 export const MUSEUM_VISITS_KEY='fi2-museum-visits-v1';
 export const PASSPORT_IDS:readonly string[]=['timeline',...EXHIBITS.map(e=>e.id)];
 export type MuseumVisits={seen:string[];done:string[]};

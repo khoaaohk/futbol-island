@@ -1,0 +1,176 @@
+/* stadiums · the full-screen workshop in the anatomy Paper style (Oct 12 2026). The room is the gallery room
+ * (../modern/gallery.module.css); the play area is one big rounded paper card under the wall label, the controls docked beneath.
+ * One accent (red): the leader lines, the numbers, the warm pipes. Colour elsewhere only where colour is the point. */
+.root.root[data-theme]{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3;--anatomy-face:#fbfbf8;--anatomy-top:#f7f7f3;
+ --anatomy-shade-0:#d3d3ce;--anatomy-shade-1:#dcdcd7;--anatomy-shade-2:#e3e3de;--anatomy-shade-3:#e9e9e4;--anatomy-lit-top:#ffffff;--anatomy-lit-shade:#efefeb;
+ --anatomy-hi:#3a3a3c;--anatomy-mid:#6f6f72;--anatomy-lo:#98989a;--anatomy-faint:#c2c2bd;--anatomy-lit:#111111;--anatomy-halo:#4a4a44;--anatomy-halo-opacity:.34;
+ --anatomy-dot:#3a3a3c;--anatomy-weight:.8px;--anatomy-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+ --ground:#ecebe6}
+.root .scroll{padding:0}
+.screen{box-sizing:border-box;height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:12px;
+ padding:calc(18px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.head{min-height:52px;padding-left:112px;display:flex;align-items:center}
+.label h1{font-size:clamp(20px,2.3vw,30px)}
+.label p:last-child{font-size:14px}
+.card{position:relative;min-height:0;border-radius:24px;background:var(--anatomy-card);overflow:hidden;outline:none;
+ box-shadow:inset 0 0 0 1px rgba(29,29,27,.06),0 1px 2px rgba(29,29,27,.04)}
+.card:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+.svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.svg:active{cursor:grabbing}
+.corners{position:absolute;inset:16px 20px;pointer-events:none;z-index:1;font:500 11px/1 var(--anatomy-mono);letter-spacing:.06em;color:#6b6a66}
+.corners span{position:absolute;white-space:nowrap}
+.corners [data-corner=fig]{top:0;left:0;color:#1d1d1b}
+.corners [data-corner=title]{top:0;right:0;text-transform:uppercase;letter-spacing:.12em}
+.corners [data-corner=hint]{bottom:0;left:0;text-transform:uppercase;letter-spacing:.12em;max-width:62%;white-space:normal;line-height:1.35}
+.corners [data-corner=readout]{bottom:0;right:0;color:#1d1d1b;font-variant-numeric:tabular-nums;font-size:12px}
+.root[data-phase=explore][data-wide] .corners [data-corner=hint]{left:calc(min(300px,22%) + 28px)}
+
+/* The drawing's own strokes: chalk lines, nets and posts, warm pipes, the arch, leader lines and number badges. */
+.card :global(.st-heat){stroke:var(--accent);stroke-width:1}
+.card :global(.st-chalk){stroke:#fbfbf6;stroke-width:1}
+.card :global(.st-net){stroke:#c9c9c4}
+.card :global(.st-post){stroke:#fbfbf6;stroke-width:1.4}
+.card :global(.st-arch){fill:none;stroke:#fbfbf8;stroke-linecap:round}
+.card :global(.st-arch-edge){fill:none;stroke:#3a3a3c;stroke-linecap:round}
+.card :global(.st-arch-lattice){stroke:#c2c2bd}
+.card :global(.st-leader){fill:none;stroke:var(--accent);stroke-width:1;vector-effect:non-scaling-stroke}
+.card :global(.st-leader-end){fill:#fbfbf8;stroke:var(--accent);stroke-width:1.2}
+.card :global(.st-leader-dot){fill:var(--accent)}
+.card :global(.st-badge){cursor:pointer}
+.card :global(.st-badge circle){fill:#fbfbf8;stroke:var(--accent);stroke-width:1.4}
+.card :global(.st-badge text){font:700 12px/1 var(--sans);fill:var(--accent);text-anchor:middle}
+.card :global(.st-badge[data-on] circle){fill:var(--accent)}
+.card :global(.st-badge[data-on] text){fill:#fff}
+/* Focus one layer: the others fade back. Silhouette: every part in ink, no lines (the "Which stadium?" shape rounds). */
+.svg[data-focus=ground] :global([data-l]:not([data-l=ground]):not([data-l=base])),
+.svg[data-focus=pitch] :global([data-l]:not([data-l=pitch]):not([data-l=base])),
+.svg[data-focus=stands] :global([data-l]:not([data-l=stands]):not([data-l=base])),
+.svg[data-focus=roof] :global([data-l]:not([data-l=roof]):not([data-l=base])),
+.svg[data-focus=outside] :global([data-l]:not([data-l=outside]):not([data-l=base])){opacity:.22}
+.svg[data-sil] :global([data-l]:not([data-l=base]) path),.svg[data-sil] :global([data-l]:not([data-l=base]) circle){fill:#3a3a3c!important;stroke:#3a3a3c!important}
+.svg[data-sil] :global([data-l]:not([data-l=base]) .iso-halo){fill:#4a4a44!important;stroke:none!important}
+
+/* The stat card (wide): name, opened, seats, the seat bars of all seven, a famous match. */
+.stat{position:absolute;z-index:2;left:16px;top:40px;max-height:calc(100% - 80px);width:min(300px,22%);overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:12px;
+ padding:18px 18px 16px;border-radius:16px;background:rgba(249,249,246,.92);box-shadow:0 0 0 1px rgba(29,29,27,.07),0 14px 30px -18px rgba(29,29,27,.3)}
+.statWhere{margin:0;font:600 11px/1.3 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.statName{margin:-6px 0 0;font:700 clamp(22px,2vw,28px)/1.05 var(--sans);letter-spacing:-.02em}
+.statNums{margin:0;display:flex;gap:22px}
+.statNums div{display:grid;gap:2px}
+.statNums dt{font:600 11px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.statNums dd{margin:0;font:700 26px/1 var(--sans);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.bars{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.bars button{width:100%;display:grid;grid-template-columns:minmax(0,1fr);gap:3px;padding:3px 0;border:0;background:none;text-align:left;cursor:pointer;color:var(--muted);font:500 12px/1.2 var(--sans)}
+.bars i{display:block;height:6px;border-radius:3px;background:linear-gradient(90deg,#b9b9b4 var(--w),rgba(29,29,27,.06) var(--w))}
+.bars li[data-on] button{color:#1d1d1b;font-weight:700}
+.bars li[data-on] i{background:linear-gradient(90deg,var(--accent) var(--w),rgba(29,29,27,.06) var(--w))}
+.famous{margin:0;font:400 13px/1.45 var(--sans)}
+.glow{display:flex;gap:6px}
+.glow button{flex:1;min-height:44px;border-radius:999px;border:1.5px solid #1d1d1b;background:transparent;font:600 13px/1 var(--sans);color:#1d1d1b}
+.glow button[aria-pressed=true]{background:var(--c);border-color:var(--c);color:#fff;box-shadow:inset 0 0 0 1px rgba(29,29,27,.25)}
+.glow button[aria-pressed=true][style*="#ffffff"]{color:#1d1d1b}
+
+/* Leader-line labels (wide): a column on the right, each a button that lights its layer. */
+.leaderLabel{position:absolute;z-index:2;left:0;top:0;width:min(268px,20%);display:none;flex-direction:column;gap:3px;padding:2px 4px;border:0;background:none;text-align:left;cursor:pointer;color:#1d1d1b;
+ transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.leaderLabel[data-show]{display:flex}
+.root:not([data-wide]) .leaderLabel{display:none!important}
+.leaderLabel b{display:flex;align-items:center;gap:7px;font:700 15px/1.15 var(--sans)}
+.leaderLabel b i{font-style:normal;display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#fbfbf8;box-shadow:inset 0 0 0 1.4px var(--accent);color:var(--accent);font:700 11px/1 var(--sans)}
+.leaderLabel span{font:400 13px/1.38 var(--sans);color:#3a3a3c}
+.leaderLabel[aria-pressed=true] b i{background:var(--accent);color:#fff}
+.leaderLabel[aria-pressed=true] span{color:#1d1d1b}
+/* Phone caption (the focused layer's line) and the quiz clue across the top of the card. */
+.caption{position:absolute;z-index:2;left:10px;right:10px;bottom:30px;margin:0;padding:10px 12px;border-radius:12px;background:rgba(249,249,246,.94);font:400 14px/1.4 var(--sans);box-shadow:0 0 0 1px rgba(29,29,27,.06)}
+.mystery{position:absolute;z-index:1;left:50%;top:54%;transform:translate(-50%,-50%);font:700 clamp(96px,16vw,200px)/1 var(--sans);color:var(--accent);opacity:.9;pointer-events:none}
+.clue{position:absolute;z-index:2;left:50%;top:36px;transform:translateX(-50%);width:min(620px,calc(100% - 28px));box-sizing:border-box;display:grid;gap:4px;padding:12px 16px;border-radius:14px;
+ background:rgba(249,249,246,.94);box-shadow:0 0 0 1px rgba(29,29,27,.07);text-align:center}
+.clue b{font:600 11px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.clue span{font:600 clamp(16px,1.6vw,20px)/1.3 var(--sans)}
+
+/* Cover panels (intro, score). */
+.panel{position:absolute;z-index:3;left:20px;top:44px;bottom:40px;width:min(560px,calc(100% - 40px));overflow:auto;overscroll-behavior:contain;display:grid;gap:18px;align-content:start;
+ padding:28px 28px 32px;border-radius:18px;background:rgba(249,249,246,.96);box-shadow:0 0 0 1px rgba(29,29,27,.07),0 18px 40px -18px rgba(29,29,27,.35);animation:panelIn .55s var(--spring) both}
+@keyframes panelIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.panelTitle{margin:0;font:700 clamp(28px,3.6vw,44px)/1.04 var(--sans);letter-spacing:-.025em}
+.beats{list-style:none;margin:0;padding:0;display:grid;border-top:1px solid var(--hair)}
+.beats li{display:grid;grid-template-columns:110px minmax(0,1fr);column-gap:14px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.beats span{grid-row:1 / 3;font:600 12px/1.5 var(--sans);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.beats b{font:700 16px/1.3 var(--sans)}
+.beats p{margin:2px 0 0;font:400 15px/1.5 var(--sans)}
+.big{margin:0;display:flex;align-items:baseline;gap:12px}
+.big b{font:700 clamp(56px,7vw,88px)/.9 var(--sans);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.big span{font:500 16px/1.3 var(--sans);color:var(--muted)}
+.tally{list-style:none;margin:0;padding:0;display:grid;gap:6px;font:400 15px/1.4 var(--sans)}
+.tally b{display:inline-block;min-width:48px;font-variant-numeric:tabular-nums}
+
+/* The dock under the card. */
+.dock{min-height:60px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.say{margin:0;flex:1 1 260px;font:400 15px/1.45 var(--sans);color:#1d1d1b;max-width:62ch}
+.carousel{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 520px}
+.names{display:flex;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.names::-webkit-scrollbar{display:none}
+.name{flex:none;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(29,29,27,.25);background:transparent;font:600 14px/1 var(--sans);color:#1d1d1b;white-space:nowrap}
+.name[aria-pressed=true]{background:#1d1d1b;border-color:#1d1d1b;color:#f6f4ef}
+.only{display:none}
+.round{flex:none;width:44px;height:44px;border-radius:50%;border:1.5px solid #1d1d1b;background:transparent;font:600 20px/1 var(--sans);color:#1d1d1b;display:grid;place-items:center}
+.round:active{transform:scale(.94)}
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.slider{display:flex;align-items:center;gap:10px;font:600 12px/1.2 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.slider input{width:min(220px,40vw);accent-color:var(--accent);height:32px}
+.mini{position:relative;margin:0;flex:1 1 100%;font:400 14px/1.35 var(--sans);padding-bottom:9px}
+.mini i{position:absolute;left:0;right:0;bottom:0;height:5px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--w),rgba(29,29,27,.08) var(--w))}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:48px;padding:0 18px;border-radius:999px;border:1.5px solid #1d1d1b;background:#fbfbf8;font:700 15px/1 var(--sans);color:#1d1d1b}
+.chip[data-on]{background:#1d1d1b;color:#f6f4ef;opacity:.35}
+.chip[data-shake]{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.pips{list-style:none;margin:0;padding:0;display:flex;gap:6px}
+.pips li{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #1d1d1b}
+.pips li[data-on]{background:var(--accent);box-shadow:none}
+.pips li[data-miss]{background:#a9a9a8;box-shadow:none}
+.options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex:1 1 560px}
+.option{min-height:52px;padding:6px 12px;border-radius:14px;border:1.5px solid #1d1d1b;background:#fbfbf8;font:700 15px/1.15 var(--sans);color:#1d1d1b}
+.option[data-a=right]{background:var(--accent);border-color:var(--accent);color:#fff}
+.option[data-a=wrong]{background:#a9a9a8;border-color:#a9a9a8;color:#fff}
+.option:disabled:not([data-a]){opacity:.45}
+
+/* Below the play screen: the real story, the ending, sources. */
+.below{width:100%;max-width:1120px;margin:0 auto;box-sizing:border-box;padding:56px 20px calc(64px + env(safe-area-inset-bottom,0px));display:grid;gap:64px}
+.table{width:100%;border-collapse:collapse;font:400 15px/1.4 var(--sans)}
+.table caption{text-align:left;font:600 12px/1.3 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding-bottom:8px}
+.table th,.table td{text-align:left;padding:10px 8px 10px 0;border-bottom:1px solid var(--hair);vertical-align:top}
+.table thead th{font-weight:600;font-size:13px}
+.table small{display:block;color:var(--muted);font-weight:400}
+
+@media (max-width:719px),(max-aspect-ratio:1/1){
+ .screen{gap:8px;padding:calc(14px + env(safe-area-inset-top,0px)) 10px calc(10px + env(safe-area-inset-bottom,0px))}
+ .head{padding-left:96px;min-height:48px}
+ .label p:last-child{display:none}
+ .card{border-radius:18px}
+ .corners{inset:12px 14px}
+ .corners [data-corner=hint]{display:none}
+ .panel{left:10px;right:10px;top:34px;bottom:32px;width:auto;padding:20px 18px 24px}
+ .dock{gap:8px;min-height:0}
+ .say{font-size:14px;flex-basis:100%}
+ .beats li{grid-template-columns:84px minmax(0,1fr)}
+ .carousel{flex:1 1 100%}
+ .names .name{display:none}
+ .only{display:block;flex:1;text-align:center;font:400 14px/1.2 var(--sans);color:var(--muted)}
+ .only b{color:#1d1d1b;font-size:16px}
+ .names{flex:1;justify-content:center}
+ .controls{flex:1 1 100%;gap:8px}
+ .slider{flex:1;min-width:0}.slider span{display:none}.slider input{width:100%}
+ .controls :global(button){min-height:44px;padding:0 14px}
+ .options{grid-template-columns:repeat(2,minmax(0,1fr));flex-basis:100%}
+ .option{min-height:46px;font-size:14px}
+ .chip{min-height:44px;padding:0 14px;font-size:14px}
+ .clue{top:30px}
+ .table{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}.leaderLabel{transition:none}.chip[data-shake]{animation:none}}
+
+/* Paper halo (shared look, anatomy/paper-kit PAPER_CSS): one soft diffuse shadow under each base plate. */
+.root :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
+
+@media (min-width:700px) and (max-height:1000px){.panel{gap:12px;padding-top:22px;padding-bottom:22px}.panelTitle{font-size:clamp(26px,2.8vw,36px)}.beats li{padding:7px 0}.beats p{font-size:14px;line-height:1.4}}

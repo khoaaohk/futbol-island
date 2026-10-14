@@ -60,7 +60,7 @@ export function odometer(pos:number,years:readonly string[],now=new Date().getFu
 }
 /** "Find it" missions: travel the machine to the right case. Prompts use the cases' own titles; no new facts. */
 export const CHALLENGES:readonly {id:string;ask:string}[]=[
- {id:'cards-1970',ask:'the yellow and red cards'},
+ {id:'stadiums',ask:'the stadiums of the world'},
  {id:'worldcup-1930',ask:'the first World Cup'},
  {id:'var-2018',ask:'the video referee'},
 ];

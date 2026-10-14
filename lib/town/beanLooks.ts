@@ -9,7 +9,7 @@
  */
 import {
   BEAN_BUILDS,BEAN_EYES,BEAN_MOUTHS,DEFAULT_HOME_KIT,DEFAULT_AWAY_KIT,DEFAULT_KEEPER_KIT,
-  type BeanLook,type BeanHairStyle,type BeanHeadwear,type Outfit,
+  type BeanLook,type BeanHairStyle,type BeanHeadwear,type BeanBuild,type Outfit,
 } from '../graphics/beanLook';
 
 export type TeamSide='home'|'away';
@@ -170,7 +170,10 @@ const CASUAL_SOCKS=['#f7f1e6','#ffffff','#e8674f','#35507a','#ffd35c'] as const;
 const CASUAL_SHOES=['#6a4a3a','#f2eee2','#26262b','#e2578a','#4fc3c7','#b04a2a'] as const;
 const HEADWEAR_COLOURS=['#23315e','#ff7a3c','#ffffff','#e2578a','#3d8f5a','#ffc83d','#35507a','#c8734f'] as const;
 
-export type NpcLookInput={id:string;role?:string;character?:'male'|'female';face?:'warm'|'deep'|'light';clothing?:'classic'|'coast'|'sunset'};
+/** Explicit look choices for an islander (townsfolkCast.ts): skin is an index into SKIN_TONES (0 lightest … 7 deepest); hair
+ *  colour may be any hex (greys and whites for grandparents); everything else falls back to the seeded pick. */
+export type NpcLookOverride={skin?:number;hair?:BeanHairStyle;hairColor?:string;headwear?:BeanHeadwear;headwearColor?:string;build?:BeanBuild;top?:string};
+export type NpcLookInput={id:string;role?:string;character?:'male'|'female';face?:'warm'|'deep'|'light';clothing?:'classic'|'coast'|'sunset';look?:NpcLookOverride};
 /** Headwear that suits a role's wording (coach, keeper, reporter, beach, market...); falls back to a varied mix. */
 export function roleHeadwear(role:string|undefined):readonly BeanHeadwear[]{
   const r=(role??'').toLowerCase();
@@ -200,7 +203,12 @@ export function npcDress(input:NpcLookInput):BeanDress{
   if(headwear!=='none'){look.headwearColor=pick(HEADWEAR_COLOURS,16);look.headwearColor2=pick(CASUAL_ACCENTS,17);}
   const tops=CASUAL_TOPS[input.clothing??pick(['classic','coast','sunset'] as const,18)];
   const shirt=pick(tops,19);
-  const outfit:Outfit={kind:'casual',shirt,shirt2:pick(CASUAL_ACCENTS.filter(c=>colourDistance(c,shirt)>=20),20),shorts:pick(CASUAL_BOTTOMS,21),socks:pick(CASUAL_SOCKS,22),boots:pick(CASUAL_SHOES,23),number:null};
+  const o=input.look,top=o?.top??shirt;
+  if(o){if(o.skin!==undefined)look.skin=SKIN_TONES[Math.max(0,Math.min(SKIN_TONES.length-1,Math.round(o.skin)))];
+   if(o.hair||o.hairColor)look.hair={style:o.hair??look.hair!.style,color:o.hairColor??look.hair!.color};
+   if(o.build)look.build=o.build;
+   if(o.headwear){look.headwear=o.headwear;if(o.headwear!=='none'){look.headwearColor=o.headwearColor??look.headwearColor??pick(HEADWEAR_COLOURS,16);look.headwearColor2=look.headwearColor2??pick(CASUAL_ACCENTS,17);}}}
+  const outfit:Outfit={kind:'casual',shirt:top,shirt2:pick(CASUAL_ACCENTS.filter(c=>colourDistance(c,top)>=20),20),shorts:pick(CASUAL_BOTTOMS,21),socks:pick(CASUAL_SOCKS,22),boots:pick(CASUAL_SHOES,23),number:null};
   return {look,outfit};
 }
 

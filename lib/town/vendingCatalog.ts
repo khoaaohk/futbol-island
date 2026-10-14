@@ -5,8 +5,9 @@ import {COIN_REWARD_ID,COSTUME_UNLOCK_ORDER} from './coinQuest';
 import {CARD_ENTRIES} from './cardCollection';
 import {LEGEND_PACK_CANDIDATES,legendFor,MYSTERY_PACK_OPTIONS} from '../arcade/legendPacks';
 import {SPECIAL_BALL_IDS,type VendingSpecialBall} from './specialBalls';
-import {cayVendingSpots,konbiniMachineSpot,ISLAND_SQUARE_KONBINI} from './vendingPlaces';
+import {cayVendingSpots,konbiniMachineSpot,ISLAND_SQUARE_KONBINI,summitSnackSpot} from './vendingPlaces';
 import {DRINK_MACHINE_IDS,DRINK_MACHINE_INFO,drinkSpotBeside,type DrinkMachineId} from './drinkMachines';
+import {summitGround} from './summitIsle';
 
 /**
  * Island vending machines (user, Sep 27 2026): the Store is gone; Japanese-style vending machines around the island sell
@@ -14,7 +15,7 @@ import {DRINK_MACHINE_IDS,DRINK_MACHINE_INFO,drinkSpotBeside,type DrinkMachineId
  * Coral Cay, each selling one new hardship pop-up book (placed from Coral Cay's anchors in lib/town/vendingPlaces.ts). Every machine stocks the full regular catalogue in rows (card packs, balls, rides, island
  * animals) plus a Specials row that only that machine sells. docs/vending-machines.md documents prices and decisions.
  */
-export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|DrinkMachineId;
+export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|'summit'|DrinkMachineId;
 export type VendingMachine={id:VendingMachineId;name:string;place:string;x:number;z:number;y:number;yaw:number;
  /** Cabinet colour, lighter sign colour and a readable ink for the UI. */
  color:string;light:string;ink:string;specials:string[];lesson:string;
@@ -31,6 +32,9 @@ const bookBlurb=(id:PlayerBookId)=>id==='island'?'Futbol Island: an introduction
 
 export const VENDING_YAW=Math.atan2(16,33);
 export const VENDING_SIZE={w:1.3,d:.86,h:2.12} as const;
+/** Oct 13 2026: the kiosk now stands 50 m up, on the summit terrace, so (unlike every sea-level machine below) its height
+ *  comes from summitGround at its own spot rather than a literal 0. */
+const SUMMIT_SNACK=summitSnackSpot();
 export const VENDING_MACHINES:VendingMachine[]=[
  {id:'plaza',name:'Konbini',place:'under the convenience-store canopy beside the sliding doors',...konbiniMachineSpot(ISLAND_SQUARE_KONBINI),y:0,color:'#d8342c',light:'#ffd9c9',ink:'#5a0f0b',specials:['ball:telstar','pack:legends'],lesson:'Football history lives here: the 1970 TV ball and all-time legends.'},
  {id:'rooftop',name:'Palm Coast Rooftop',place:'on the rooftop futsal court',x:11,z:-7.8,y:6,yaw:VENDING_YAW,color:'#1f9aa6',light:'#c9f5f2',ink:'#073c42',specials:['ball:futsal','pack:futsal'],lesson:'Futsal is 5-a-side on a hard court with a smaller, low-bounce ball.'},
@@ -49,6 +53,11 @@ export const VENDING_MACHINES:VendingMachine[]=[
  // Island Square's Konbini).
  {id:'caykonbini',name:'Konbini · Coral Cay',place:'under the Coral Cay Konbini canopy beside the sliding doors, by the roundabout',...cayVendingSpots.konbini(),y:0,color:'#3f8f6c',light:'#d9f3e6',ink:'#0f3324',specials:[],lesson:'Refuel like a pro: water first, then a carb snack like a banana or rice ball after you play.'},
  {id:'sharks',name:'Sharks Beach',place:'on the sand at Sharks Beach, by the Sharks Beach court',...cayVendingSpots.sharks(),y:0,color:'#2f86d6',light:'#d3ebff',ink:'#0a2b4d',specials:[],lesson:'Strikers time their runs so they meet the ball at speed.'},
+ // Summit Isle: a small Konbini-style kiosk, selling the regular catalogue only (like the Coral Cay Konbini's own
+ // machine): it is a long walk from every other machine, not a sixth "home" shop. Moved Oct 13 2026 (user: "move the
+ // vending machines on top of the mountain") from the sandbar landing up to the summit terrace, on the walkway just
+ // outside the Summit 5s' fence, by the gate where the climbing trail arrives (lib/town/vendingPlaces.ts summitSnackSpot).
+ {id:'summit',name:'Summit Isle Konbini',place:'on the summit terrace, just outside the Summit 5s pitch gate',...SUMMIT_SNACK,y:summitGround(SUMMIT_SNACK.x,SUMMIT_SNACK.z),color:'#6a5acd',light:'#e8e4fb',ink:'#2a1f52',specials:[],lesson:'Hikers pack light and fuel often: a snack and water keep legs going on a long climb.'},
 ];
 // Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
 for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id],next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
@@ -58,6 +67,7 @@ const displayThemes:Record<VendingMachineId,[string,string,string]>={
  clubgrounds:['Maldini','Defend together','#d48c45'],eleven:['Zidane','Scan and pass','#5c7fc3'],beach:['Ronaldinho','Creative play','#db81a5'],
  pier:['Pelé','Finishing','#b7a477'],market:['Cruyff','Move into space','#9a77bf'],
  northbeach:['Cafu','Overlap','#e0b33f'],causeway:['Nadim','Penalties','#7c93b3'],cayplaza:['Kanté','Win it back','#8dba55'],sharks:['Oshoala','Time your run','#4f98d8'],caykonbini:['Konbini','Fuel up','#5fa98a'],drinksplaza:['Drinks','Hydrate','#5d93d6'],drinkscay:['Drinks','Hydrate','#4fb0dc'],
+ summit:['Nadim','Keep climbing','#8a7fd0'],drinksummit:['Drinks','Hydrate','#6aab74'],
 };
 /** Four pop-up books join each machine's exclusive ball and pack: six specials total. A book that isn't written yet
  * shows as a "coming soon" preview (no storyId, so it can't be bought or opened). */
@@ -84,6 +94,7 @@ export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId
  cayplaza:['kante','vardy','debruyne','kane'],             // told no, kept working
  sharks:['oshoala','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
  caykonbini:['messi','marta','ronaldinho','putellas'],     // a Konbini mix of island favourites
+ summit:['davies','kante','vardy','weah'],                 // long, hard roads: a mix for the trail's own Konbini
 };
 export const vendingMachine=(id:string)=>VENDING_MACHINES.find(m=>m.id===id);
 export function nearestVendingMachine(x:number,z:number):VendingMachine{

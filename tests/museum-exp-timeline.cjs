@@ -20,12 +20,12 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
 // 1. Every case on the timeline is an era, in timelineOrder(), quoting one of its own facts; one accent for the exhibit.
 {const order=X.timelineOrder().map(e=>e.id),list=E.eras();
  assert.equal(order.length,X.EXHIBITS.length);assert.deepEqual(list.map(e=>e.exhibit.id),order,'every case is an era, oldest first');
- assert.deepEqual(order.slice(0,5),['laws-1863','penalty-1891','shirts','worldcup-1930','laced-leather']);assert.equal(order.at(-1),'hall-of-fame');
+ assert.deepEqual(order.slice(0,7),['laws-1863','penalty-1891','boots','shirts','worldcup-1930','stadiums','laced-leather']);assert.equal(order.at(-1),'hall-of-fame');
  assert.equal(E.ACCENT,'#2a5bd7');for(const x of list)assert.equal(x.accent,E.ACCENT,'one accent');assert.match(css,/--accent:#2a5bd7/);
  for(const era of list){const e=era.exhibit;assert.ok(e.facts.includes(era.fact),e.id+' fact line comes from its case');}
  const at=id=>list.find(x=>x.exhibit.id===id).fact;
  assert.match(at('laws-1863'),/Football Association was formed in London/);assert.match(at('penalty-1891'),/William McCrum/);assert.match(at('worldcup-1930'),/Argentina 4–2/);
- assert.match(at('cards-1970'),/Ken Aston/);assert.match(at('wwc-1991'),/Norway 2–1/);assert.match(at('var-2018'),/final decision|clear mistakes/);
+ assert.match(at('stadiums'),/Maracanã/);assert.match(at('boots'),/Screw-in studs/);assert.match(at('wwc-1991'),/Norway 2–1/);assert.match(at('var-2018'),/final decision|clear mistakes/);
  assert.match(exp,/\{list\[idx\]\.fact\}/,'the label quotes the fact');assert.match(exp,/aria-valuetext=\{`\$\{e\.year\}: \$\{e\.title\}`\}/);
  const ch=E.CHAPTERS.flatMap(c=>c.ids);assert.deepEqual([...ch].sort(),X.EXHIBITS.map(e=>e.id).sort(),'every case sits in exactly one chapter');
  console.log('PASS 12 eras in timeline order, each quoting its case, one accent');}
@@ -37,7 +37,7 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
  assert.equal(Mm.projectSnap(2.3,0,12),2);assert.equal(Mm.projectSnap(2.3,2,12),3);assert.equal(Mm.projectSnap(2,-2,12),1);assert.ok(Mm.projectSnap(2,30,12)>=6);assert.equal(Mm.projectSnap(10.8,40,12),11);
  assert.equal(Mm.velocity([[0,0],[100,1]]),10);assert.equal(Mm.velocity([[0,1]]),0);
  const years=X.timelineOrder().map(e=>e.year),xs=Mm.tickXs(years,2026);for(let i=1;i<xs.length;i++)assert.ok(xs[i]>=xs[i-1]);
- assert.equal(xs[years.indexOf('1970')],xs[years.lastIndexOf('1970')],'two 1970 cases share a spot');
+ {const dup=Mm.tickXs(['1863','1970','1970','Today'],2026);assert.equal(dup[1],dup[2],'two cases in the same year share a spot');}
  for(const p of [0,1.5,4,7.25,11]){const back=Mm.fracToPos(Mm.posToFrac(p,xs),xs);assert.ok(Math.abs(Mm.posToFrac(back,xs)-Mm.posToFrac(p,xs))<1e-9);}
  assert.equal(Mm.odometer(0,years,2026),1863);assert.equal(Mm.odometer(1,years,2026),1891);assert.equal(Mm.odometer(.5,years,2026),1877);assert.equal(Mm.odometer(11,years,2026),2026);
  assert.equal(Mm.yearsBetween('1863','1970'),107);assert.equal(Mm.yearsBetween('Before the 1960s','1970'),null);
@@ -51,7 +51,7 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
 // 3. Missions and Order it: real cases, no new facts, scoring.
 {const ids=E.eras().map(x=>x.exhibit.id);for(const c of Mm.CHALLENGES){assert.ok(ids.includes(c.id));assert.ok(c.ask.length<40);}
  assert.match(exp,/Found it! \$\{tx\.title\}: \$\{tx\.year\}/);assert.match(exp,/keep going, it’s later/);assert.match(exp,/go back, it’s earlier/);assert.match(exp,/data-tl-quest-next/);
- const pool=E.eras().filter(x=>O.dated(x.exhibit)).map(x=>O.toItem(x.exhibit,x.accent,2026));assert.equal(pool.length,10,'only cases with one exact year');
+ const pool=E.eras().filter(x=>O.dated(x.exhibit)).map(x=>O.toItem(x.exhibit,x.accent,2026));assert.equal(pool.length,9,'only cases with one exact year (Oct 12 2026: boots is "1900s", a decade, so it sits out)');
  for(let seed=1;seed<40;seed++)for(let k=0;k<6;k++){const d=O.deal(pool,k,seed,k?O.deal(pool,k-1,seed).map(x=>x.id):[]);assert.equal(d.length,O.setSize(k));
   assert.equal(new Set(d.map(x=>x.y)).size,d.length);assert.ok(!O.inOrder(d),'never dealt in order');}
  assert.deepEqual(O.move(['a','b','c','d'],0,2),['b','c','a','d']);assert.deepEqual(O.swap(['a','b','c'],0,2),['c','b','a']);assert.equal(O.slotAt(85,80,1,4),2);

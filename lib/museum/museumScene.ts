@@ -12,8 +12,7 @@ import {createStuckWatch} from '../konbini/konbiniPath';
 import {BALL_PLINTH,ROOM,WING,FLOOR,CASE,CASE_PLACES,DESK,GUIDE,TIMELINE,CERT_WALL,KIT_WALL,PEGBOARD,CARD_TABLE,BOOKCASE,ZOOM_STOPS,museumPois,museumObstacles,museumBlocked,findMuseumPath,type MuseumPoi} from './museumLayout';
 import {paintMuseumAtlas,ATLAS,SIGN_RECTS,placardRect,TIMELINE_RECT,KIT_RECTS,certRect,CERT_SLOTS,DESK_RECT,COLLECTION_SIGN_RECT,PEG_RECT,accentOf,type Rect} from './museumAtlas';
 import {museumSfx} from './museumSound';
-import {createStoryExhibits} from './museumExhibits';
-import {isStoryCase} from './museumStories';
+import {createExhibitSculptures} from './museumExhibits';
 import {createBallMaterial} from './wcBalls/ballViewer';
 import {ballDesign} from './wcBalls/designs';
 
@@ -23,7 +22,7 @@ import {ballDesign} from './wcBalls/designs';
  * ONE merged unlit mesh on one canvas atlas (museumAtlas.ts), the vitrine glass ONE mesh, the doors one 2-instance mesh; two
  * lights, no shadow maps (soft contact shadows: ONE merged mesh on a 64² gradient). Oct 10 2026: restyled as a modern gallery
  * (docs/museum-modern-style.md): gallery white, pale concrete with hairline joints, white plinths on shadow gaps, Swiss wall
- * labels, and one abstract sculpture per case (museumExhibits.ts: all twelve share four instanced meshes). The World Cup ball
+ * labels, and one sculpture per case (museumExhibits.ts: still, recognisable objects merged into the static mesh; Oct 13 2026). The World Cup ball
  * plinth is unchanged. No music; the loop runs only while something moves and sleeps otherwise; phones are capped at 30 fps
  * with the heat tier's pixel-ratio and frame caps; dispose() frees everything.
  */
@@ -32,9 +31,9 @@ export type MuseumSceneInput={open:Readonly<Record<string,boolean>>;earned:reado
  /** Your Collection: which ball-hunt spots are found (COIN_QUEST order), and how many cards and books the player has. */
  found:readonly boolean[];cards:number;books:number};
 type Cam={pos:T.Vector3;look:T.Vector3;hw:number;hh:number};
-/** Sculpture medium shots: the whole piece above the caption strip, its wall label just in view. */
-const SCULPTURE_FRAME={y:.3,w:.9,h:1,elev:.16,dz:0};
-type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number;h:number;elev:number;story?:boolean};
+/** `tight`: the Your Collection stops frame their piece close, above the card. `piece`: a case, framed from its wall label
+ *  (`bot`) to the top of its sculpture (`top`), clear of the card. */
+type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number;h:number;elev:number;tight?:boolean;piece?:{top:number;bot:number}};
 
 /** The modern gallery (Oct 10 2026; docs/museum-modern-style.md): gallery white, pale concrete, ink, hairlines. */
 const P={ground:'#f6f4ef',floor:'#dcd8cf',joint:'#cfcac0',wall:'#f7f5f0',reveal:'#cbc7be',plinth:'#fbfaf7',ink:'#1d1d1b',hair:'#d9d6cf',wood:'#e9e6df'};
@@ -143,8 +142,8 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
 
  // ---- Exhibit plinths ----------------------------------------------------------------------------------------------------------
  const TOP=CASE.plinthH+.04;
- // The sculptures (lib/museum/museumExhibits.ts): one abstract piece per open case; fixed parts join the merged mesh.
- const exhibits=createStoryExhibits(scene,{open:input.open,reduced,add:(geo,x,y,z,hex,rx,ry,rz,s)=>add(geo,x,y,z,hex,rx,ry,rz,s),shadow:(x,y,z,rx,rz)=>shade(x,y,z,rx,rz),earned:input.earned.length});
+ // The sculptures (lib/museum/museumExhibits.ts): one still object per open case, merged into the static mesh.
+ const exhibits=createExhibitSculptures({open:input.open,add:(geo,x,y,z,hex,rx,ry,rz,s)=>add(geo,x,y,z,hex,rx,ry,rz,s),shadow:(x,y,z,rx,rz)=>shade(x,y,z,rx,rz)});
  // The World Cup ball plinth (Oct 5 2026): a round pedestal with the 2026 ball on a brass cup; looking at it opens the gallery.
  {const P=BALL_PLINTH;add(new T.CylinderGeometry(P.r,P.r*1.08,P.h,28),P.x,P.h/2,P.z,'#294f43');add(new T.CylinderGeometry(P.r*1.12,P.r*1.12,.05,28),P.x,P.h+.025,P.z,'#e7b94a');
   add(new T.CylinderGeometry(.11,.15,.06,20),P.x,P.h+.08,P.z,'#e7b94a');add(new T.CylinderGeometry(P.r*1.14,P.r*1.14,.04,28),P.x,.02,P.z,'#e7b94a');
@@ -219,21 +218,26 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'};
  const ray=new T.Raycaster(),pointer=new T.Vector2(),floor=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3(),projected=new T.Vector3(),tmpPos=new T.Vector3(),tmpLook=new T.Vector3(),curLook=new T.Vector3();
  const frameMs=()=>{const t=tierSettings();return mobile?Math.max(1000/30,t.frameMs):t.cap30Everywhere?t.frameMs:0;};
- // Telstar spin (drag, ← → buttons): a little inertia, then it sleeps. Reduced motion: it turns only while you drag / per press.
- // (The hall's sculptures don't spin; the hooks stay for the exhibit card API.)
- let spinV=0,spinTurns=0,rain=false;const telstar=null as T.Mesh|null;
+ // Telstar spin (drag, ⟲ ⟳ buttons): a little inertia, then it sleeps. Reduced motion: it turns only while you drag / per press.
+ // The ball and the boot are the two sculpture pieces with a mesh of their own (one draw call each), on the static mesh's material.
+ let spinV=0,spinTurns=0,rain=false;
+ let telstar:T.Mesh|null=null;
+ for(const o of exhibits.solo){const mesh=new T.Mesh(o.geometry,staticMat);mesh.position.set(o.x,o.y,o.z);mesh.rotation.set(o.rx,o.ry,0);mesh.scale.setScalar(o.s);mesh.name=o.name;
+  if(o.name==='museum-telstar')telstar=mesh;else{mesh.matrixAutoUpdate=false;mesh.updateMatrix();}scene.add(mesh);}
 
  // ---- Zoom (the vending/Konbini close-up: an eased orthographic move onto the real case) ------------------------------------
+ /** How tall each case's sculpture stands above its plinth (museumExhibits.ts), for the zoom framing. */
+ const SCULPTURE_TOP:Record<string,number>={'laws-1863':.32,'penalty-1891':.3,stadiums:.42,boots:.3,'var-2018':.6,'worldcup-1930':.52,'wwc-1991':.44,'futsal-1989':.2,'laced-leather':.34,'telstar-1970':.62,shirts:.36,'hall-of-fame':.46};
  const stops:Stop[]=ZOOM_STOPS.map(id=>{
   if(id==='timeline')return {id,label:'Timeline wall',x:TIMELINE.x,y:TIMELINE.y,z:TIMELINE.z,yaw:0,w:TIMELINE.w,h:TIMELINE.h+.3,elev:.12};
   if(id==='hall-wall')return {id,label:'Certificate wall',x:CERT_WALL.x,y:CERT_WALL.y+.3,z:CERT_WALL.z,yaw:-Math.PI/2,w:CERT_WALL.w-1,h:2,elev:.12};
-  if(id==='my-balls')return {id,label:'Your hidden balls',x:PEGBOARD.x,y:PEGBOARD.y,z:PEGBOARD.z,yaw:0,w:PEGBOARD.w+.3,h:PEGBOARD.h+.4,elev:.12,story:true};
-  if(id==='my-cards')return {id,label:'Your player cards',x:CARD_TABLE.x,y:CARD_TABLE.h,z:CARD_TABLE.z,yaw:0,w:CARD_TABLE.w+.2,h:1,elev:.75,story:true};
-  if(id==='my-books')return {id,label:'Your pop-up books',x:BOOKCASE.x,y:BOOKCASE.h/2,z:BOOKCASE.z,yaw:0,w:BOOKCASE.w+.2,h:BOOKCASE.h+.2,elev:.15,story:true};
+  if(id==='my-balls')return {id,label:'Your hidden balls',x:PEGBOARD.x,y:PEGBOARD.y,z:PEGBOARD.z,yaw:0,w:PEGBOARD.w+.3,h:PEGBOARD.h+.4,elev:.12,tight:true};
+  if(id==='my-cards')return {id,label:'Your player cards',x:CARD_TABLE.x,y:CARD_TABLE.h,z:CARD_TABLE.z,yaw:0,w:CARD_TABLE.w+.2,h:1,elev:.75,tight:true};
+  if(id==='my-books')return {id,label:'Your pop-up books',x:BOOKCASE.x,y:BOOKCASE.h/2,z:BOOKCASE.z,yaw:0,w:BOOKCASE.w+.2,h:BOOKCASE.h+.2,elev:.15,tight:true};
   const e=EXHIBITS.find(x=>x.id===id)!,p=CASE_PLACES[id];
-  // Story cases: a medium shot of the working machine; the penalty drops low behind the ball ("stand where they stood").
-  if(isStoryCase(id)&&input.open[id]){const f=SCULPTURE_FRAME;return {id,label:e.title,x:p.x,y:TOP+f.y,z:p.z+f.dz,yaw:0,w:f.w,h:f.h,elev:f.elev,story:true};}
-  return {id,label:e.title,x:p.x,y:(TOP+CASE.glassH+.25)/2+.18,z:p.z,yaw:0,w:1.25,h:1.5,elev:.2};});
+  // A case (Oct 13 2026: every case opens on its full card): the sculpture and its wall label, as big as the room beside or above
+  // the card allows. The stadium is seen from higher up, so you look into the bowl.
+  return {id,label:e.title,x:p.x,y:TOP,z:p.z,yaw:0,w:CASE.w,h:1,elev:id==='stadiums'?.5:.22,piece:{top:TOP+(input.open[id]?SCULPTURE_TOP[id]??.62:CASE.glassH+.04),bot:TOP-.3}};});
  const ZD=9;let zoomIndex:number|null=null,zoom:{from:Cam;to:number|null;t:number;dur:number}|null=null,arrived=false;
  const walkCam=():Cam=>({pos:new T.Vector3(cameraX+Math.sin(camYaw)*12.5,10.8,cameraZ+Math.cos(camYaw)*12.5),look:new T.Vector3(cameraX,.6,cameraZ),hw:halfW,hh:halfH});
  const snapshot=():Cam=>({pos:camera.position.clone(),look:curLook.clone(),hw:camera.right,hh:camera.top});
@@ -241,11 +245,17 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   const a=viewportW/Math.max(1,viewportH),yv=s.yaw-.14,look=new T.Vector3(s.x,s.y,s.z);
   let hw=s.w/2*1.08+.12,hh=s.h/2*1.1+.15;if(hw/hh>a)hh=hw/a;else hw=hh*a;
   // Leave room for the exhibit card: below the case on portrait, beside it (right) on landscape.
-  // Story cases keep the machine above the slim caption strip; other cases leave room for their card.
-  if(s.story){if(a<1){
-   // Phone: the whole stage, from its front edge up to its plaque, sits between the header (11 %) and the caption strip
-   // (64 %), as big as the width allows.
-   const yTop=(exhibits.stageTops[s.id]??TOP+.8)+.26,yBot=TOP-.16;hh=Math.max((yTop-yBot)/1.06,s.w/2*1.04/a);hw=hh*a;look.y=yTop-.78*hh;}else{hh=s.h/2*1.25+.05;hw=hh*a;look.y-=hh*.2;}}
+  if(s.piece){const ce=Math.cos(s.elev),span=(s.piece.top-s.piece.bot)*ce+.08,mid=(s.piece.top+s.piece.bot)/2;
+   if(a<1.2){
+    // Portrait (the card fills the bottom 46 %): the piece sits in the band between the header (13 %) and the card (53 %), centred
+    // at 33 %, as big as the band allows while the sculpture stays clear of the side arrows (the middle 66 % of the width).
+    hh=Math.max(span/.8,(s.w/2+.2)/.66/a);hw=hh*a;look.y=mid-.34*hh/ce;}
+   else{
+    // Landscape (the card on the right): the piece fills ~60 % of the height, centred a third of the way across.
+    const short=viewportH<=520;hh=span/(short?1.1:1.2);hw=hh*a;const rx=Math.cos(yv),rz=-Math.sin(yv),k=short?.4:.34;look.x+=rx*hw*k;look.z+=rz*hw*k;look.y=mid-(short?.02:.06)*hh/ce;}}
+  else if(s.tight){if(a<1){
+   // Phone: the whole piece sits between the header (11 %) and the card, as big as the width allows.
+   const yTop=TOP+.8+.26,yBot=TOP-.16;hh=Math.max((yTop-yBot)/1.06,s.w/2*1.04/a);hw=hh*a;look.y=yTop-.78*hh;}else{hh=s.h/2*1.25+.05;hw=hh*a;look.y-=hh*.2;}}
   else if(a<1){hh*=1.14;hw=hh*a;look.y-=hh*.4;}
   else{hw*=1.65;hh=hw/a;const rx=Math.cos(yv),rz=-Math.sin(yv);look.x+=rx*hw*.4;look.z+=rz*hw*.4;look.y-=hh*.06;}
   return {pos:look.clone().add(new T.Vector3(Math.sin(yv)*Math.cos(s.elev),Math.sin(s.elev),Math.cos(yv)*Math.cos(s.elev)).multiplyScalar(ZD)),look,hw,hh};
@@ -301,7 +311,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   else placeCamera();
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=!hidePlayer;
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.4,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
-  const exhibitBusy=exhibits.update(dt)||stepRollcall(dt);if(!leaving)stepTimeline();
+  const exhibitBusy=stepRollcall(dt);if(!leaving)stepTimeline();
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
   const busy=exhibitBusy||!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
   if(busy)settle=.5;else settle-=dt;
@@ -344,8 +354,6 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   zoomTo(id:string){const i=stopIndex(id);if(i>=0)zoomToIndex(i);},
   zoomStep(dir:1|-1){if(zoomIndex!==null&&!zoom){const i=Math.max(0,Math.min(stops.length-1,zoomIndex+dir));if(i!==zoomIndex){museumSfx.turn();zoomToIndex(i,.6);}}},
   zoomOut,
-  /** Storytelling exhibits: play a beat's animation (seconds), turn the zoetrope crank, reset a story. */
-  story:{play(id:string,anim:string,arg?:number){const d=exhibits.play(id,anim,arg);wake();return d;},crank(d:number){exhibits.crank(d);wake();},reset(id:string){exhibits.reset(id);wake();},has:(id:string)=>exhibits.has(id)},
   greet(){greet=reduced?0:1.8;wake();},
   /** Telstar: drag by `dx` CSS px (a turn), release with a flick velocity (rad/s); `nudge` turns it by an eighth. */
   spinDrag(dx:number){if(!telstar)return;telstar.rotation.y+=dx*.012;spinTurns+=Math.abs(dx*.012);spinV=0;wake();},
@@ -358,11 +366,11 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   /** Test/measurement hooks. */
   measureRender(n=60){const t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);return (performance.now()-t)/n;},
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
-  get state(){return {exhibits:exhibits.debug,x,z,yaw,zoom:zoomView(),zooming:!!zoom,near:near?.id??null,leaving,doorOpen,sleeping:frame===0,draws,frames,steps,spin:{turns:spinTurns,v:spinV,angle:telstar?.rotation.y??0},rain,
+  get state(){return {exhibits:{sculptures:[...exhibits.built]},x,z,yaw,zoom:zoomView(),zooming:!!zoom,near:near?.id??null,leaving,doorOpen,sleeping:frame===0,draws,frames,steps,spin:{turns:spinTurns,v:spinV,angle:telstar?.rotation.y??0},rain,
    render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),stops:stops.map(s=>s.id)};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    player.dispose();guide.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});
-   exhibits.dispose();geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());doorGeo.dispose();atlas.dispose();shadeTex.dispose();renderer.dispose();renderer.forceContextLoss();},
+   geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());doorGeo.dispose();atlas.dispose();shadeTex.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
 }
 export type MuseumScene=ReturnType<typeof createMuseumScene>;

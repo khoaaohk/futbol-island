@@ -140,7 +140,7 @@ export default function Order({pool,reduced,onFinish,onClose}:{pool:readonly Ite
     <p className={s.kicker}>Time’s up · {verdict(score)}</p>
     <p className={s.score}><b data-tl-order-final={score}>{score}</b><span>{newBest?'A new best score!':`Best: ${best}`}</span></p>
     <p className={s.body}><b>{perfects}</b> sets in perfect order · <b>{placed}</b> cases on the right step · <b>{bestStreak}</b> perfect in a row</p>
-    <p className={s.body}>Football changed one idea at a time: first the rules were written down, then came the World Cup, cards, new games for everyone, and the video referee. Each change came after the one before.</p>
+    <p className={s.body}>Football changed one idea at a time: first the rules were written down, then came the World Cup, big stadiums, new games for everyone, and the video referee. Each change came after the one before.</p>
     {!checked?<StepCheck items={[check]} kicker={()=> 'Quick check'} doneLabel="Finish" onPick={ok=>sfx(ok?'reveal':'look')} onDone={()=>{setChecked(true);onFinish(scoreRef.current);}}/>
      :<Ending reached art={<svg className="iso-svg" viewBox={`0 0 ${AW} ${AH}`} aria-hidden="true"><Draw items={artifactScene('worldcup-1930',AW,AH)}/></svg>}
        seen="You’ve put football’s story in order, from the first Laws to the video referee."

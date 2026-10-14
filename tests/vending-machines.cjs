@@ -31,22 +31,28 @@ const {STORE_ITEMS}=load(path.join(root,'lib/town/store.ts'));
 const {VENUES,STORE_DOOR,ARCADE_DOOR,COACHES_DOOR,parkingSurfaceHeight}=load(path.join(root,'lib/town/venues.ts'));
 const {onIsland}=load(path.join(root,'lib/town/shoreline.ts'));
 const {isOnCayLand}=load(path.join(root,'lib/town/coralCay.ts'));
-const {standsOnCay,cayVendingSpots}=load(path.join(root,'lib/town/vendingPlaces.ts'));
+const {standsOnCay,cayVendingSpots,summitSnackSpot,standsOnSummit}=load(path.join(root,'lib/town/vendingPlaces.ts'));
 const {PLAYER_BOOKS}=load(path.join(root,'lib/books/catalog.ts'));
+const {onSummitIsle,summitGround,SUMMIT_LANDMARKS}=load(path.join(root,'lib/town/summitIsle.ts'));
 /** Sep 29 2026: four book machines (North Beach, causeway, two on Coral Cay), each selling one new pop-up book. */
 const BOOK_MACHINES=['northbeach','causeway','cayplaza','sharks'],CAY_MACHINES=['causeway','cayplaza','sharks','caykonbini'];
-/** Sep 29 2026: the Coral Cay Konbini's machine sells the regular rows only (Island Square's Konbini keeps its specials). */
-const REGULAR_ONLY=['caykonbini'];
-/** Sep 29 2026: exactly two drink machines (lib/town/drinkMachines.ts), each side by side with its Konbini's machine. */
-const DRINK_MACHINES={drinksplaza:'plaza',drinkscay:'caykonbini'};
+/** Oct 12 2026: Summit Isle's little kiosk, on its own island. */
+const SUMMIT_MACHINES=['summit'];
+/** Sep 29 2026: the Coral Cay Konbini's machine sells the regular rows only (Island Square's Konbini keeps its specials).
+ *  Oct 12 2026: Summit Isle's kiosk does too (a small trailside stand, not a sixth "home" shop). */
+const REGULAR_ONLY=['caykonbini','summit'];
+/** Sep 29 2026: exactly two drink machines (lib/town/drinkMachines.ts), each side by side with its Konbini's machine.
+ *  Oct 12 2026: a third, beside Summit Isle's kiosk. */
+const DRINK_MACHINES={drinksplaza:'plaza',drinkscay:'caykonbini',drinksummit:'summit'};
 const {MYSTERY_PACK_OPTIONS}=load(path.join(root,'lib/arcade/legendPacks.ts'));
 const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customization.ts'));
 
-// 1. Catalogue: fifteen machines (eight original + four book machines + the Coral Cay Konbini + two drink machines), the same regular rows
+// 1. Catalogue: seventeen machines (eight original + four book machines + the Coral Cay Konbini + two drink machines + Summit
+// Isle's kiosk and its drink machine), the same regular rows
 // in every shop machine, exclusive specials.
 {
- const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,15);assert.equal(new Set(ALL.map(m=>m.id)).size,15);assert.equal(new Set(ALL.map(m=>m.color)).size,15,'each machine has its own colour');
- same(ALL.filter(m=>m.drinks).map(m=>m.id),Object.keys(DRINK_MACHINES),'exactly two drink machines');
+ const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,17);assert.equal(new Set(ALL.map(m=>m.id)).size,17);assert.equal(new Set(ALL.map(m=>m.color)).size,17,'each machine has its own colour');
+ same(ALL.filter(m=>m.drinks).map(m=>m.id),Object.keys(DRINK_MACHINES),'exactly three drink machines');
  const M=ALL.filter(m=>!m.drinks);
  const rows=['special','books','packs','ball','scooter','bike','moped','jetpack','costume'];
  const regular=new Set(C.VENDING_ITEMS.map(i=>i.id)),seen=new Map();
@@ -86,6 +92,11 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,0);
    const s=cayVendingSpots[m.id==='cayplaza'?'cafe':m.id==='caykonbini'?'konbini':m.id]();same([m.x,m.z,m.yaw],[s.x,s.z,s.yaw],m.id+' placed from the Coral Cay anchors');
    assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
+  if(SUMMIT_MACHINES.includes(m.id)){assert(onSummitIsle(m.x,m.z)&&standsOnSummit(m),m.id+' stands on flat, walkable ground outside the Summit 5s fence');
+   assert.equal(m.y,summitGround(m.x,m.z),m.id+' stands on the summit terrace, not floating or sunk at sea level');
+   assert(Math.hypot(m.x-SUMMIT_LANDMARKS.gate.x,m.z-SUMMIT_LANDMARKS.gate.z)<25,m.id+' is near the pitch gate, up on the summit');
+   same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(summitSnackSpot()),m.id+' placed from the Summit Isle anchors');
+   assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
   assert(onIsland(m.x,m.z),m.id+' on the island');
   const v=VENUES.find(v=>Math.abs(m.x-v.x)<v.width/2+3+1&&Math.abs(m.z-v.z)<v.length/2+3+1);assert(!v,m.id+' off the '+(v&&v.id)+' pitch and runoff');
   assert.equal(m.y,m.id==='market'?17.23:parkingSurfaceHeight(m.x,m.z),m.id+' stands on the ground or its accessible rooftop');
@@ -113,7 +124,10 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   const along=(m.x-b.x)*Math.cos(b.yaw)-(m.z-b.z)*Math.sin(b.yaw),out=(m.x-b.x)*Math.sin(b.yaw)+(m.z-b.z)*Math.cos(b.yaw),gap=Math.abs(along)-D.CABINET_WIDTH;
   assert(gap>.05&&gap<.4&&Math.abs(out)<1e-6,id+' stands side by side with a small gap: '+gap.toFixed(2)+' m');
   for(const o of M)if(o!==m&&o!==b)assert(Math.hypot(o.x-m.x,o.z-m.z)>20,id+' is the only machine near '+beside+' (not '+o.id+')');
-  const door=KONBINI_DOORS[beside==='plaza'?'main':'cay'],fx=m.x+Math.sin(m.yaw)*1.5,fz=m.z+Math.cos(m.yaw)*1.5;
+  const fx=m.x+Math.sin(m.yaw)*1.5,fz=m.z+Math.cos(m.yaw)*1.5;
+  // Summit Isle's kiosk is a small stand, not a full Konbini building, so it has no KONBINI_DOORS entry to check against.
+  if(beside==='summit'){assert(onSummitIsle(m.x,m.z)&&onSummitIsle(fx,fz),id+' on Summit Isle');continue;}
+  const door=KONBINI_DOORS[beside==='plaza'?'main':'cay'];
   assert(Math.abs(m.x-door.x)-D.CABINET_WIDTH/2>2.2,id+' keeps the sliding doors clear');assert(!konbiniDoorNear(beside==='plaza'?'main':'cay',fx,fz),id+"'s walk-up spot is outside the door's Enter zone");
   if(beside==='caykonbini')assert(standsOnCay(m),id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');else assert(onIsland(m.x,m.z)&&onIsland(fx,fz),id+' on the island');
  }
@@ -124,10 +138,10 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const {createVendingMachines,VENDING_SCALE}=load(path.join(root,'lib/graphics/vendingMachines.ts'));
  const scene=new T.Scene(),v=createVendingMachines(scene);
  const meshes=[];v.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
- assert.equal(meshes.length,15,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all fifteen share one material');
+ assert.equal(meshes.length,17,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all seventeen share one material');
  const atlasMaps=new Set(meshes.map(m=>m.material.map));assert.equal(atlasMaps.size,1,'one shared atlas texture, no new textures for the book machines');
  assert(meshes.every(m=>m.frustumCulled&&m.geometry.boundingSphere),'frustum-culled with bounds');assert(meshes.every(m=>m.geometry.getAttribute('position').count<800),'low-poly');
- assert.equal(v.obstacles.length,15);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
+ assert.equal(v.obstacles.length,17);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines or Summit Isle');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
  const glow=scene.getObjectByName('vending-selection');assert(glow,'one shared hover glow');
  let glowMeshes=0;glow.traverse(o=>{if(o.isMesh)glowMeshes++;});assert.equal(glowMeshes,3,'single buildingGlow (outline, halo, wash) for all machines');
  const camera=new T.PerspectiveCamera(40,390/844,1,500);const plaza=v.entries.find(e=>e.machine.id==='plaza');
@@ -276,7 +290,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  // i.e. under the HTML tap areas), and goes back to the flat printed front at distance.
  {const {VENDING_BAY,VENDING_FACE_LAYOUT:FL}=load(path.join(root,'lib/graphics/vendingFaceLayout.ts'));
   const w=load(path.join(root,'lib/graphics/vendingMachines.ts')).createVendingMachines(new T.Scene(),{viewport:()=>({width:1280,height:800,dpr:2}),coins:()=>123});
-  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,15);
+  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,17);
   const yaws=new Set();
   for(const e of w.entries){const id=e.machine.id,pos=e.geometry.getAttribute('position'),before=Array.from(pos.array);yaws.add(+e.machine.yaw.toFixed(3));
    assert(!w.hasCloseUp(id),id+' shows its flat front at distance');
@@ -394,7 +408,7 @@ function sourceChecks(){
  assert(!/data-machines-found=|>No real money</.test(ui),'requested footer labels removed');assert(!/className=\{styles.only\}/.test(face),'no badges over the product artwork');
  for(const f of ['components/RideUnlockToast.tsx','components/BallHuntLesson.tsx','components/CoinQuest.tsx','lib/town/npcDialogues.ts','lib/town/questModel.ts','lib/town/exploreChecklist.ts','components/IslandTravelMap.tsx'])assert(!/\bthe (Island )?Store\b|Visit the Store|in the Store/.test(read(f)),f+' no longer sends players to the Store');
  lockHintChecks(controller);
- console.log('PASS vending machines: 15 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, 2 drink machines beside the Konbini machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
+ console.log('PASS vending machines: 17 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, Summit Isle\'s kiosk, 3 drink machines beside the Konbini/kiosk machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
 }
 
 // 6. Locked hints on the LED (Sep 30 2026, E2E audit: a page where every item said LOCKED gave no hint). The copy comes from the

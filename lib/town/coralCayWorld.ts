@@ -3,7 +3,7 @@
 // (box/palm/house/sign…), so every mesh joins the existing 50 m spatial paint batches: no new materials beyond palette
 // colours, no animation, no per-frame work. Shapes come from coralCay.ts, which movement, flight and the maps also read.
 import * as T from 'three';
-import type {Obstacle} from './simulation';
+import {trunkCollider,type Obstacle} from './simulation';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
@@ -295,7 +295,14 @@ export function buildCoralCay(t:CayTools){
   CAY_SAND.forEach((s,i)=>{positions.push(s.outer.x-C.x,-.105,s.outer.z-C.z,s.inner.x-C.x,-.105,s.inner.z-C.z);const a=i*2,b=((i+1)%CAY_SAND.length)*2;indices.push(a,b,a+1,b,b+1,a+1);});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
   if(g.getAttribute('normal').getY(0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];g.setIndex(indices);g.computeVertexNormals();}
-  const sand=flat(put(g,'#f1d6a1',C.x,0,C.z));sand.name='coral-cay-sand';}
+  const sand=flat(put(g,'#f1d6a1',C.x,0,C.z));sand.name='coral-cay-sand';
+  // Glitchy from above (Oct 13 2026): this ring, the beach-court sand and the sandbar sand (outlineSlab) share this
+  // cached '#f1d6a1' material and sit only 3-7mm above the lawn/foundation underneath — fine close up, but a jetpack at
+  // altitude loses enough depth precision over that distance to flicker green through tan in jagged bands. A small
+  // negative polygon offset (the same trick as the manhole covers, ball marker and shore water overlay) reliably wins
+  // the depth test at any camera distance instead of relying on a few millimetres of world-space height, with no new
+  // draw calls or geometry.
+  const sandMat=sand.material as T.MeshStandardMaterial;sandMat.polygonOffset=true;sandMat.polygonOffsetFactor=-2;sandMat.polygonOffsetUnits=-4;}
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
   const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
@@ -398,7 +405,7 @@ export function buildCoralCay(t:CayTools){
    if(kind==='papaya'){cylinder(.12,3.2,'#9d805b',x,1.6,z);for(let k=0;k<6;k++){const leaf=box(1.3,.04,.3,'#739568',x+Math.cos(k)*.55,3.25,z+Math.sin(k)*.55);leaf.rotation.y=-k;leaf.rotation.z=.25;}for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.16,0),'#e8be71',x+Math.cos(k*1.6)*.18,2.8,z+Math.sin(k*1.6)*.18);}
    else{cylinder(.16,1.6,'#9d805b',x,.8,z);const c=put(new T.IcosahedronGeometry(kind==='mango'?1.55:1.3,0),kind==='mango'?'#5b895e':'#739568',x,2.4,z);c.scale.y=.85;
     for(let k=0;k<5;k++)put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',x+Math.cos(k*1.3+i)*1.05,1.9+rnd(i,k)*.7,z+Math.sin(k*1.3+i)*1.05);}});
-   obstacles.push({x,z,w:.5,d:.5});assets.push({kind:'fruit-tree',x,z,w:.5,d:.5,visualW:3.2,visualD:3.2,canopyHeight:3.4});
+   obstacles.push(trunkCollider(x,z,kind==='papaya'?.12:.16));assets.push({kind:'fruit-tree',x,z,w:.5,d:.5,visualW:3.2,visualD:3.2,canopyHeight:3.4});
   });
   for(let z=-127;z<=-116;z+=2.8){const x=687;prop('bush',()=>{cylinder(.16,1.8,'#8baa69',x,.9,z);for(let k=0;k<5;k++){const leaf=box(1.5,.03,.38,'#7a9e67',x+Math.cos(k*1.25)*.55,1.95,z+Math.sin(k*1.25)*.55);leaf.rotation.y=-k*1.25;leaf.rotation.z=-.35;}put(new T.IcosahedronGeometry(.2,0),'#e8d25a',x+.2,1.4,z);});obstacles.push({x,z,w:.4,d:.4});}
   // Pineapple patch and a melon/pumpkin patch on the ground.
@@ -459,7 +466,7 @@ export function buildCoralCay(t:CayTools){
   for(const o of FARM_FENCE_OBSTACLES){if(o.w<3&&o.d<3)continue;const horizontal=o.w>=o.d,len=Math.max(o.w,o.d);for(let t=-len/2+1.4;t<len/2-1;t+=3.3){const x=o.x+(horizontal?t:0),z=o.z+(horizontal?0:t);plant(...[0,1,2].map(k=>{const r=.2+rnd(t,k)*.08;return blob(x+(horizontal?(k-1)*.3:0),.75+(k%2)*.25,z+(horizontal?0:(k-1)*.3),r,r,r,k===1?'#739568':'#c2458f');}));}}
   // Monstera and ferns under the orchard trees.
   for(const [x,z] of trees.map(([x,z])=>[x,z]) as [number,number][])plant(...[0,1].map(k=>broadLeaf(x+Math.cos(k*3+x)*1.1,z+Math.sin(k*3+x)*1.1,.55,k*3+x,k?'#3f7a4f':'#5b895e')));
-  for(const [x,z] of [[647.8,-126.2],[647.8,-115.5]] as [number,number][]){prop('tree',()=>{cylinder(.2,2.2,'#8a6a4a',x,1.1,z);const c=put(new T.IcosahedronGeometry(1.75,0),'#3f7a4f',x,3.1,z);c.scale.y=.9;for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.2,0),'#9cc05a',x+Math.cos(k*1.6)*1.3,2.5,z+Math.sin(k*1.6)*1.3);});obstacles.push({x,z,w:.6,d:.6});assets.push({kind:'fruit-tree',x,z,w:.6,d:.6,visualW:3.5,visualD:3.5,canopyHeight:4.6});}
+  for(const [x,z] of [[647.8,-126.2],[647.8,-115.5]] as [number,number][]){prop('tree',()=>{cylinder(.2,2.2,'#8a6a4a',x,1.1,z);const c=put(new T.IcosahedronGeometry(1.75,0),'#3f7a4f',x,3.1,z);c.scale.y=.9;for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.2,0),'#9cc05a',x+Math.cos(k*1.6)*1.3,2.5,z+Math.sin(k*1.6)*1.3);});obstacles.push(trunkCollider(x,z,.2));assets.push({kind:'fruit-tree',x,z,w:.6,d:.6,visualW:3.5,visualD:3.5,canopyHeight:4.6});}
   for(const [x,z,h] of [[594,-127,6.8],[594.5,-94,5.2],[660,-96,6.2],[681,-97,4.8],[692.5,-120,5.6],[640,-86,5.4]] as [number,number,number][])palm(x,z,h);
   // Signs: the farm's name at the path gate and two short fuelling lessons (the farmers explain more).
   // Farm gateway over the track at the west fence gate (off the tan path): timber posts on the gate edges, a crossbeam

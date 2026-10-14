@@ -4,7 +4,17 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(base,f),'utf8');
 const loaded=new Map();function load(file){file=path.resolve(base,file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod.exports);
- vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,JSON,require:id=>{if(id.startsWith('.')){const t=path.resolve(path.dirname(file),id);return load(fs.existsSync(t+'.ts')?t+'.ts':t);}throw Error('unexpected import '+id);}});return mod.exports;}
+ vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,{exports:mod.exports,module:mod,Math,JSON,Set,Map,require:id=>{
+  if(id.startsWith('.')){
+   const t=path.resolve(path.dirname(file),id);
+   // A handful of data modules (vendingCatalog's card/book catalogues) import JSON directly: hand it to Node's own require.
+   if(id.endsWith('.json')&&fs.existsSync(t))return require(t);
+   return load(fs.existsSync(t+'.ts')?t+'.ts':t);
+  }
+  // A few data modules pull in a React hook file in passing (never called at module load): a harmless stub keeps the loader
+  // tiny instead of chasing those transitive imports.
+  const stub=new Proxy(function(){},{get:()=>stub,apply:()=>stub});return stub;
+ }});return mod.exports;}
 const {JOBS}=load('lib/town/jobs/jobCatalog.ts'),M=load('lib/town/mapMarkers.ts');
 
 // 1. One J per job board, from the catalog (new jobs appear by themselves), including the Coral Cay farm jobs.
@@ -47,5 +57,60 @@ assert.equal(M.legendTipText('job'),'Jobs: help out to earn coins');
  assert(!/flight area/i.test(o.replace(/aria-label="Offshore flight area"/,'')),'no flight area text on the map');
  assert.match(o,/data-coral-cay="court">.*<text[^>]*fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke"[^>]*>BEACH SOCCER<\/text>/,'Beach Soccer title');
  assert.match(o,/const \[mounted,setMounted\]=useState\(false\)/,'WebKit hydration gate kept');
+}
+// 7. Map audit (Oct 13 2026): every vending machine, drink machine and fishing spot has exactly one marker at (or a small
+//    distance from) its true world position, no marker exists without a catalog source, and the Kit Shop + Summit Isle labels
+//    are drawn. Jobs are already covered above (section 1: one J per JOBS entry, in catalog order).
+{
+ const vendingCatalog=load('lib/town/vendingCatalog.ts'),fishCatalog=load('lib/town/fishing/fishCatalog.ts');
+ const {VENDING_MACHINES}=vendingCatalog,{FISH_SPOTS}=fishCatalog;
+ // The same merge IslandOverview.tsx performs: a Konbini/kiosk and its drink machine (always <6 m apart) share one V mark.
+ const VENDING_MARKERS=VENDING_MACHINES.reduce((list,m)=>{
+  const near=list.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);
+  if(near)near.ids.push(m.id);else list.push({x:m.x,z:m.z,ids:[m.id]});
+  return list;
+ },[]);
+ for(const m of VENDING_MACHINES){
+  const marker=VENDING_MARKERS.find(v=>v.ids.includes(m.id));
+  assert(marker,`${m.id}: every vending/drink machine has a V marker`);
+  assert(Math.hypot(marker.x-m.x,marker.z-m.z)<6,`${m.id}: its V marker sits within a small distance of its true world position`);
+ }
+ // No V mark exists without a real machine behind it, and every machine is counted exactly once (no stale leftover mark, e.g.
+ // the Summit Isle kiosk's old sandbar-landing spot).
+ for(const v of VENDING_MARKERS)for(const id of v.ids)assert(VENDING_MACHINES.some(m=>m.id===id),'every V marker id traces back to a real machine in VENDING_MACHINES');
+ assert.equal(VENDING_MARKERS.reduce((n,v)=>n+v.ids.length,0),VENDING_MACHINES.length,'every machine is behind exactly one V mark, with none left over');
+ assert(VENDING_MACHINES.some(m=>m.id==='summit'),"Summit Isle's kiosk is in the catalog");
+ assert(VENDING_MACHINES.some(m=>m.id==='drinksummit'),"Summit Isle's drink machine is in the catalog");
+ const summitMachine=VENDING_MACHINES.find(m=>m.id==='summit'),summitMarker=VENDING_MARKERS.find(v=>v.ids.includes('summit'));
+ assert(Math.hypot(summitMarker.x-summitMachine.x,summitMarker.z-summitMachine.z)<6,"the Summit Isle kiosk's V sits at its current summit-terrace spot");
+ // The old sandbar landing (lib/town/summitIsle.ts SUMMIT_LANDMARKS.sandbarLanding, x 615 z 20) is not where any V mark is now.
+ assert(Math.hypot(summitMachine.x-615,summitMachine.z-20)>20,'the Summit Isle kiosk no longer sits at the old sandbar-landing spot');
+
+ // Fishing: the map draws one F mark straight from FISH_SPOTS (IslandOverview.tsx), so every spot is already its own marker at
+ // its own position; confirm that wiring (no separate, driftable list) and that every id (incl. the new Boulder Cove) is unique.
+ const overviewSrc=read('components/IslandOverview.tsx');
+ assert.match(overviewSrc,/\{FISH_SPOTS\.map\(spot=>/,'F marks are drawn straight from FISH_SPOTS, so every spot always has exactly one marker at its own position');
+ const fishIds=new Set();
+ for(const s of FISH_SPOTS){assert(!fishIds.has(s.id),`${s.id}: fishing spot id is unique (one F mark, not two)`);fishIds.add(s.id);}
+ assert(FISH_SPOTS.some(s=>s.id==='summit-cove'),"Summit Isle's Boulder Cove is in the fishing catalog, so it has an F mark");
+ assert(FISH_SPOTS.some(s=>s.id==='summit-lookout'),"Summit Isle's Lookout Rocks is in the fishing catalog, so it has an F mark");
+ assert(FISH_SPOTS.some(s=>s.id==='summit-palm'),"Summit Isle's Palm Point is in the fishing catalog, so it has an F mark");
+
+ // Vending too is drawn straight from the derived VENDING_MARKERS (built from VENDING_MACHINES, never a separate hand-kept list).
+ assert.match(overviewSrc,/VENDING_MARKERS=VENDING_MACHINES\.reduce/,'V marks are derived straight from VENDING_MACHINES, so none can go stale');
+
+ // Labels: Kit Shop (the merged Club Grounds + Community Hall building) and Summit Isle are named on the map.
+ assert.match(overviewSrc,/label:'KIT SHOP'/,'the Kit Shop is labelled on the full map');
+ const summitMapSrc=read('components/SummitIsleMap.tsx');
+ assert.match(summitMapSrc,/\{SUMMIT_NAME\}/,'Summit Isle is named on the full map');
+ assert.match(summitMapSrc,/SUMMIT_CENTER\.z\+54\}.*fontSize="9"/,'Summit Isle is also named on the minimap');
+ // Club Grounds and Community Hall no longer draw their own building footprints (lib/town/world.ts): they are skipped in favour
+ // of the Kit Shop's one merged footprint (lib/town/kitShopExterior.ts).
+ const worldSrc=read('lib/town/world.ts');
+ assert.match(worldSrc,/label==='CLUB GROUNDS'\|\|label==='COMMUNITY HALL'[\s\S]{0,80}return;\}/,'CLUB GROUNDS and COMMUNITY HALL are skipped as separate building footprints');
+ const kitShopSrc=read('lib/town/kitShopExterior.ts');
+ assert.match(kitShopSrc,/buildings\.push\(\{x,z,w,d,height:h\+\.23,name:KIT_SHOP\.name\}\)/,'the Kit Shop pushes its one merged building footprint');
+ const shopDoorsSrc=read('lib/shop/shopDoors.ts');
+ assert.match(shopDoorsSrc,/name:'KIT SHOP'/,'the Kit Shop building is named "KIT SHOP"');
 }
 console.log('map markers ok');

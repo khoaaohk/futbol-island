@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {patchUnderwater,uwDepthAt,UW_SURFACE,type SeabedStyle} from './underwater';
+import {patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE,type ReefTheme} from './underwater';
 
 /**
  * Sea life in the fishing view (Oct 12 2026: "more fish", then "see the coral and the fish and not just shadows").
@@ -16,7 +16,8 @@ import {patchUnderwater,uwDepthAt,UW_SURFACE,type SeabedStyle} from './underwate
  */
 const STEER_DT=.1;
 type Look={a:string;b:string;pattern:number;shape:[number,number,number];size:[number,number]};
-const LOOKS:Record<string,Look>={
+/** Ambient species looks (exported for tests/fishing.cjs: every reef theme's fish must exist here). */
+export const LOOKS:Record<string,Look>={
  sardine:{a:'#4f7896',b:'#e9f0f4',pattern:0,shape:[.8,.75,1.1],size:[.36,.46]},
  bream:{a:'#d8cc8e',b:'#2a2a30',pattern:1,shape:[1,1.15,1],size:[.42,.52]},
  blueTang:{a:'#2c5ee8',b:'#ffd23a',pattern:2,shape:[.9,1.35,.9],size:[.4,.5]},
@@ -26,12 +27,18 @@ const LOOKS:Record<string,Look>={
  parrot:{a:'#22c4a2',b:'#a066ea',pattern:4,shape:[1,1.05,1.1],size:[.72,.88]},
  mackerel:{a:'#2f6f6a',b:'#e6eef0',pattern:5,shape:[.85,.8,1.15],size:[.6,.74]},
  bass:{a:'#7f8c96',b:'#eef2f4',pattern:0,shape:[1,1,1.05],size:[.74,.9]},
-};
-const CAST:Record<SeabedStyle,{schools:string[];cruisers:string[];glider:boolean}>={
- cay:{schools:['yellowTang','blueTang','clown'],cruisers:['parrot','garibaldi','parrot','blueTang'],glider:true},
- causeway:{schools:['sardine','yellowTang','bream'],cruisers:['parrot','mackerel','garibaldi','bass'],glider:true},
- beach:{schools:['sardine','bream','blueTang'],cruisers:['garibaldi','mackerel','bass','parrot'],glider:false},
- pier:{schools:['sardine','bream','sardine'],cruisers:['mackerel','bass','garibaldi','bass'],glider:false},
+ // Oct 13 2026 ("colourful tropical fish"): reef species for the per-spot casts (underwater.ts REEF_THEMES `fish`).
+ butterfly:{a:'#fff6e0',b:'#ffd21f',pattern:4,shape:[.75,1.5,.8],size:[.3,.4]},
+ damsel:{a:'#1f8bff',b:'#7fd8ff',pattern:0,shape:[.85,1.05,.9],size:[.22,.3]},
+ wrasse:{a:'#2fd27a',b:'#ff5fa8',pattern:4,shape:[.8,.8,1.2],size:[.4,.52]},
+ queenAngel:{a:'#2a7fff',b:'#ffd21f',pattern:4,shape:[.8,1.55,.85],size:[.45,.56]},
+ royalGramma:{a:'#a040ff',b:'#ffd21f',pattern:4,shape:[.85,1,1],size:[.24,.32]},
+ sergeant:{a:'#f2e46a',b:'#1d1d22',pattern:1,shape:[.9,1.2,.95],size:[.3,.4]},
+ parrotPink:{a:'#ff6fae',b:'#3fd6ff',pattern:4,shape:[1,1.05,1.1],size:[.7,.86]},
+ snapper:{a:'#ff4a3a',b:'#ffd0c0',pattern:0,shape:[1,1.05,1.05],size:[.5,.64]},
+ grouper:{a:'#8a5a3a',b:'#e0b080',pattern:6,shape:[1.1,1.1,1.1],size:[.8,1]},
+ barracuda:{a:'#9fb4c2',b:'#eef4f8',pattern:5,shape:[.65,.6,1.5],size:[.8,1]},
+ anthias:{a:'#ff7a3a',b:'#ff3fa0',pattern:4,shape:[.85,1.05,1],size:[.24,.32]},
 };
 const KIND={fish:0,crab:1,ray:2,turtle:3,shadow:9};
 
@@ -132,25 +139,34 @@ export function createFishSchools(scene:T.Scene,phone=false){
      // Eyes: white with a dark pupil (fish only).
      if(pat<5.5){float e=length(vec2(vLocal.z+.36,vLocal.y-.04));base=mix(base,vec3(.95),step(e,.034));base=mix(base,vec3(.02),step(e,.019));}}
     diffuseColor.rgb*=base;diffuseColor.a*=vAlpha;}`,
+  // Reef fish keep their colours through the clear water (Oct 13 2026, "colourful tropical fish").
+  absorb:.26,
  });
- material.customProgramCacheKey=()=>'fishing-sea-life-v1'+(phone?'p':'');
+ material.customProgramCacheKey=()=>'fishing-sea-life-v2'+(phone?'p':'');
  const mesh=new T.InstancedMesh(geometry,material,COUNT);mesh.name='fishing-ambient-fish';mesh.renderOrder=.6;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};scene.add(mesh);
  const fish:Fish[]=[],leaders:Leader[]=[],crabs:Crab[]=[],glider:Glider={kind:KIND.ray,on:false,wait:3,x:0,z:0,vx:0,vz:0,phase:0,len:1,y:0,t:0,life:1},dummy=new T.Object3D();
- let water:(x:number,z:number)=>number=()=>10,cx=0,cz=0,ux=0,uz=1,wide=5,steer=0,fade=0,target=0,style:SeabedStyle='beach',turtleSpot=false;
- const inView=(x:number,z:number)=>{const a=(x-cx)*ux+(z-cz)*uz,b=(x-cx)*uz-(z-cz)*ux;return a>0&&a<11&&Math.abs(b)<wide*(.5+a/11*.5);};
- const inWater=(x:number,z:number,min=2.5,max=17)=>{const d=water(x,z);return d>min&&d<max&&inView(x,z);};
- const pick=(min=3,max=17)=>{for(let i=0;i<60;i++){const a=2+Math.random()*8.5,b=(Math.random()*2-1)*wide*(.5+a/11*.5),x=cx+ux*a+uz*b,z=cz+uz*a-ux*b;if(inWater(x,z,min,max))return {x,z};}return {x:cx+ux*6,z:cz+uz*6};};
+ // viewDepth (Oct 13 2026, farther casts): how far out schools and cruisers roam, in metres (default 11, the old fixed
+ // reach); the caller passes the spot's real cast distance plus a margin, so the schools still turn around the float.
+ let water:(x:number,z:number)=>number=()=>10,cx=0,cz=0,ux=0,uz=1,wide=5,steer=0,fade=0,target=0,theme:ReefTheme=reefTheme({id:''}),viewDepth=11;
+ // Anemones in view (underwater.ts `homes`): one or two cruisers become a clownfish pair living in the first one.
+ let homes:{x:number;y:number;z:number}[]=[];const homeOf=new Map<number,{x:number;y:number;z:number}>();
+ const inView=(x:number,z:number)=>{const a=(x-cx)*ux+(z-cz)*uz,b=(x-cx)*uz-(z-cz)*ux;return a>0&&a<viewDepth&&Math.abs(b)<wide*(.5+a/viewDepth*.5);};
+ const inWater=(x:number,z:number,min=2.5,max=viewDepth*1.55)=>{const d=water(x,z);return d>min&&d<max&&inView(x,z);};
+ const pick=(min=3,max=viewDepth*1.55)=>{for(let i=0;i<60;i++){const a=2+Math.random()*(viewDepth-2.5),b=(Math.random()*2-1)*wide*(.5+a/viewDepth*.5),x=cx+ux*a+uz*b,z=cz+uz*a-ux*b;if(inWater(x,z,min,max))return {x,z};}return {x:cx+ux*6,z:cz+uz*6};};
  const setColors=(i:number,look:Look|null,pattern=look?.pattern??-1)=>{const a=look?new T.Color(look.a):new T.Color(1,1,1),b=look?new T.Color(look.b):new T.Color(1,1,1);
   colA.setXYZ(i,a.r,a.g,a.b);colB.setXYZW(i,b.r,b.g,b.b,pattern);};
  function place(){
-  fish.length=0;leaders.length=0;crabs.length=0;const cast=CAST[style];
-  for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]],swim=.35+Math.random()*.5;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
+  fish.length=0;leaders.length=0;crabs.length=0;homeOf.clear();const cast=theme.fish;
+  for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]]??LOOKS.sardine,swim=.35+Math.random()*.5;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
    for(let i=0;i<PER;i++){const row=Math.floor(i/2),side=i%2?1:-1,slot={x:side*(.35+row*.18)+(Math.random()-.5)*.2,z:row*.55+(Math.random()-.5)*.2};
     setColors(fish.length,look);
     fish.push({x:p.x+slot.x,z:p.z+slot.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:swim+(Math.random()-.5)*.15,alpha:1,school:s,slot,panic:0,shape:look.shape});}}
-  for(let i=0;i<CRUISERS;i++){const p=pick(5),look=LOOKS[cast.cruisers[i%cast.cruisers.length]];setColors(fish.length,look);
-   fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:.5+Math.random()*.6,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
-   leaders.push({x:p.x,z:p.z,vx:0,vz:0,...(()=>{const t=pick(5);return {tx:t.x,tz:t.z};})(),speed:.45+Math.random()*.2,panic:0});}
+  for(let i=0;i<CRUISERS;i++){const home=homes.length&&i<(phone?1:2)?homes[0]:null,p=home?{x:home.x+(Math.random()-.5)*.5,z:home.z+(Math.random()-.5)*.5}:pick(5);
+   const look=LOOKS[home?'clown':cast.cruisers[i%cast.cruisers.length]]??LOOKS.sardine;setColors(fish.length,look);
+   // A clownfish hovers just over its anemone's tentacles (swim depth from the surface).
+   const swim=home?Math.max(.18,UW_SURFACE-home.y-.12):.5+Math.random()*.6;if(home)homeOf.set(SCHOOLS+i,home);
+   fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
+   leaders.push({x:p.x,z:p.z,vx:0,vz:0,...(()=>{const t=home?p:pick(5);return {tx:t.x,tz:t.z};})(),speed:home?.22:.45+Math.random()*.2,panic:0});}
   // Crabs on the sand just under the waterline, in view.
   for(let i=0;i<CRABS;i++){let p={x:cx+ux*2,z:cz+uz*2};for(let k=0;k<80;k++){const a=.5+Math.random()*7,b=(Math.random()*2-1)*wide*.8,x=cx+ux*a+uz*b,z=cz+uz*a-ux*b,d=water(x,z);if(d>.5&&d<2.4){p={x,z};break;}}
    setColors(FISH+i,null);crabs.push({x:p.x,z:p.z,heading:Math.random()*6.28,side:Math.random()<.5?-1:1,walk:0,wait:.5+Math.random()*2,phase:Math.random()*6});}
@@ -158,7 +174,10 @@ export function createFishSchools(scene:T.Scene,phone=false){
  }
  function steerAll(){
   // Leaders wander between targets in water; members hold their slot behind the leader (so a school turns together).
-  for(const l of leaders){let dx=l.tx-l.x,dz=l.tz-l.z,dist=Math.hypot(dx,dz);if(dist<1.2||!inWater(l.x+l.vx,l.z+l.vz,2)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;dx=l.tx-l.x;dz=l.tz-l.z;dist=Math.hypot(dx,dz)||1;}
+  for(let li=0;li<leaders.length;li++){const l=leaders[li],home=homeOf.get(li);let dx=l.tx-l.x,dz=l.tz-l.z,dist=Math.hypot(dx,dz);
+   // A clownfish's leader potters round its anemone (within ~0.45 m) instead of roaming the view.
+   if(home){if(dist<.15||Math.hypot(l.tx-home.x,l.tz-home.z)>.5){const a=Math.random()*6.28,rr=.1+Math.random()*.35;l.tx=home.x+Math.cos(a)*rr;l.tz=home.z+Math.sin(a)*rr;dx=l.tx-l.x;dz=l.tz-l.z;dist=Math.hypot(dx,dz)||1;}}
+   else if(dist<1.2||!inWater(l.x+l.vx,l.z+l.vz,2)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;dx=l.tx-l.x;dz=l.tz-l.z;dist=Math.hypot(dx,dz)||1;}
    const sp=l.speed*(1+l.panic*2.2),k=.25+l.panic*.5;l.vx+=(dx/dist*sp-l.vx)*k;l.vz+=(dz/dist*sp-l.vz)*k;l.panic=Math.max(0,l.panic-STEER_DT/1.4);}
   for(let i=0;i<fish.length;i++){const f=fish[i];const l=f.school>=0?leaders[f.school]:leaders[SCHOOLS+i-SCHOOLS*PER];
    let ax=0,az=0;
@@ -177,10 +196,11 @@ export function createFishSchools(scene:T.Scene,phone=false){
    const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side,d=water(c.x+sx*.4,c.z+sz*.4);if(c.walk>0&&(d<.35||d>2.8))c.side*=-1;}
  }
  const startGlider=()=>{
-  // Across the view, further out, from one side to the other (and back next time).
-  for(let k=0;k<20;k++){const a=6+Math.random()*6,side=Math.random()<.5?-1:1,b0=-side*wide*1.7,b1=side*wide*1.7,x0=cx+ux*a+uz*b0,z0=cz+uz*a-ux*b0,x1=cx+ux*a+uz*b1,z1=cz+uz*a-ux*b1;
+  // Across the view, further out, from one side to the other (and back next time). Scales with viewDepth like the rest
+  // of the scatter, so a ray or turtle can still cross comfortably beyond a far-cast float.
+  for(let k=0;k<20;k++){const a=(6+Math.random()*6)*(viewDepth/11),side=Math.random()<.5?-1:1,b0=-side*wide*1.7,b1=side*wide*1.7,x0=cx+ux*a+uz*b0,z0=cz+uz*a-ux*b0,x1=cx+ux*a+uz*b1,z1=cz+uz*a-ux*b1;
    if(water(x0,z0)<4||water(x1,z1)<4||water((x0+x1)/2,(z0+z1)/2)<4)continue;
-   const len=Math.hypot(x1-x0,z1-z0),sp=style==='cay'&&Math.random()<.5||turtleSpot?.55:.85;glider.kind=turtleSpot?KIND.turtle:style==='cay'?(Math.random()<.5?KIND.turtle:KIND.ray):KIND.ray;
+   const g=theme.fish.glider;glider.kind=g==='turtle'?KIND.turtle:g==='both'?(Math.random()<.5?KIND.turtle:KIND.ray):KIND.ray;const len=Math.hypot(x1-x0,z1-z0),sp=glider.kind===KIND.turtle?.55:.85;
    glider.on=true;glider.x=x0;glider.z=z0;glider.vx=(x1-x0)/len*sp;glider.vz=(z1-z0)/len*sp;glider.t=0;glider.life=len/sp;glider.len=glider.kind===KIND.turtle?1.25:1.5;
    glider.y=glider.kind===KIND.ray?.3:.75;
    // Eagle-ray spots (pattern 6, brightened past white); the turtle keeps its own colours.
@@ -194,9 +214,12 @@ export function createFishSchools(scene:T.Scene,phone=false){
  };
  return {mesh,
   /** Start in the water in front of the angler at `stand`, casting along unit `dir`; `distance` is the shore field (m, + at sea);
-   *  `wide` is the half-width of the visible water (smaller on portrait phones); `spotStyle` picks the species. */
-  begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotStyle:SeabedStyle='beach',spotId=''){
-   water=distance??(()=>10);cx=stand.x;cz=stand.z;ux=dir.x;uz=dir.z;wide=halfWidth;style=spotStyle;turtleSpot=spotId==='turtle-bank'||spotId==='coral-garden';
+   *  `wide` is the half-width of the visible water (smaller on portrait phones); `spotTheme` picks the species (underwater.ts REEF_THEMES),
+   *  `homesIn` are the anemones a clownfish pair lives in.
+   *  `viewDepthIn` (Oct 13 2026, farther casts): how far out schools and cruisers roam (the spot's real cast distance
+   *  plus a margin), so they still turn around a float cast much farther than the old fixed 11 m. */
+  begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotTheme:ReefTheme=reefTheme({id:''}),homesIn:{x:number;y:number;z:number}[]=[],viewDepthIn=11){
+   water=distance??(()=>10);cx=stand.x;cz=stand.z;ux=dir.x;uz=dir.z;wide=halfWidth;theme=spotTheme;homes=homesIn;viewDepth=viewDepthIn;
    place();colA.needsUpdate=true;colB.needsUpdate=true;target=1;steer=0;mesh.visible=true;},
   end(){target=0;},
   get busy(){return mesh.visible;},
@@ -221,7 +244,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
    for(let i=0;i<crabs.length;i++){const c=crabs[i];if(c.walk>0&&step>0){const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side;c.x+=sx*.45*step;c.z+=sz*.45*step;c.phase+=step*16;}
     const d=water(c.x,c.z),y=UW_SURFACE-uwDepthAt(d);write(FISH+i,c.x,y,c.z,c.heading,.85,.85,.85,c.phase,fade*T.MathUtils.smoothstep(d,.25,.55),KIND.crab,.004);}
    const gi=FISH+CRABS;
-   if(CAST[style].glider){
+   if(theme.fish.glider){
     if(!glider.on){glider.wait-=step;if(glider.wait<=0)startGlider();}
     if(glider.on){glider.t+=step;glider.x+=glider.vx*step;glider.z+=glider.vz*step;glider.phase+=step*(glider.kind===KIND.ray?2.3:2.6);
      if(glider.t>=glider.life){glider.on=false;glider.wait=7+Math.random()*12;}}

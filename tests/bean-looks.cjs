@@ -77,7 +77,7 @@ for(const format of ['11v11','9v9','7v7','futsal']){
 {
  const all=[...NPC_DIALOGUES,...PRACTICE_NPCS],headwear=new Set(),shirts=new Set();
  for(const npc of all){const d=L.npcDress(npc);validLook(d.look,npc.id);validOutfit(d.outfit,'casual',npc.id);assert.equal(d.outfit.number,null);headwear.add(d.look.headwear);shirts.add(d.outfit.shirt);
-  assert.ok(L.roleHeadwear(npc.role).includes(d.look.headwear),npc.id+' headwear suits role');}
+  assert.ok(npc.look?.headwear?d.look.headwear===npc.look.headwear:L.roleHeadwear(npc.role).includes(d.look.headwear),npc.id+' headwear suits role (or is the cast\'s explicit choice, townsfolkCast.ts)');}
  assert.ok(headwear.size>=4,'NPC headwear varies: '+[...headwear]);assert.ok(new Set(all.map(n=>L.npcDress(n).look.body)).size>=6,'NPC bodies stay colourful');assert.ok(shirts.size>=5,'NPC shirts vary');
  assert.ok(L.roleHeadwear('Futsal coach').every(h=>['cap','visor','none'].includes(h)));
  assert.ok(L.roleHeadwear('Beach football regular').includes('bucket'));

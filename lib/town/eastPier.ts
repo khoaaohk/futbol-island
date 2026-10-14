@@ -72,9 +72,11 @@ export const jettySide=(p:JettySample,d:number)=>({x:p.x-p.tz*d,z:p.z+p.tx*d});
 /** The sample at a spiral angle (for placing things on a coil). */
 export const coilAt=(theta:number,side=0)=>{const p=spiralPoint(theta),q=spiralPoint(theta-.001),l=Math.hypot(q.x-p.x,q.z-p.z),tx=(q.x-p.x)/l,tz=(q.z-p.z)/l;return {x:p.x-tz*side,z:p.z+tx*side,tx,tz};};
 
-/** Jetty fishing (lib/town/fishing/fishCatalog.ts `east-pier`): the spiral's outermost east point, casting east. */
+/** Jetty fishing (lib/town/fishing/fishCatalog.ts `east-pier`): the spiral's outermost east point, casting east.
+ *  Oct 13 2026 ("cast farther out, to see more of the ocean"): the buoy moved from +14 to +28.3 m off the stand
+ *  (≈2.15× the old cast, checked against inOpenWater/underEastPier in tests/fishing.cjs), clear open sea the whole way. */
 const EAST=spiralRadius(0);
-export const EAST_PIER_FISHING={x:P.cx+EAST+1.6,z:P.cz,buoy:{x:P.cx+EAST+14,z:P.cz}};
+export const EAST_PIER_FISHING={x:P.cx+EAST+1.6,z:P.cz,buoy:{x:P.cx+EAST+28.3,z:P.cz}};
 /** Two islanders (lib/town/eastPierNpcs.ts): a fisher by the post and a kid doing keep-ups on the straight. */
 export const EAST_PIER_NPC_SPOTS={fisher:{x:P.cx+EAST-1.2,z:P.cz-3},kid:{x:285,z:97.4}};
 /** The lighthouse at the plaza centre (tower base radius r, 16.6 m to the cap) and the keeper's hut on its east side, clear of

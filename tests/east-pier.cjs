@@ -102,4 +102,39 @@ for(const t of pier.PIER_TARGET_SPOTS)assert(!flightBlocked(t.x,t.z-10),'flyable
  assert(/lampSites\.push\(\.\.\.coralCay\.lampSites,\.\.\.eastPier\.lampSites\)/.test(world),'pier lamps join the night pools');
  assert(/cx<=7&&cz>=0&&cz<=2/.test(world),'pier chunks are not hidden by the Coral Cay region gate');
  const map=src('components/IslandOverview.tsx');assert(/data-east-pier="spiral"/.test(map)&&/data-lighthouse/.test(map)&&/JETTY_PATH/.test(map)&&/PIER_TARGET_SPOTS/.test(map),'minimap and travel map draw the spiral jetty and ring (fishing marker via FISH_SPOTS)');}
-console.log(`PASS East Jetty: ${(P.cx-P.wallX).toFixed(0)} m straight + ${P.turns}-turn spiral (${P.r0} → ${P.r1} m, plaza r ${P.plazaR}, ${pier.JETTY_BEACON.height} m lighthouse), ${pathLength.toFixed(0)} m of walkway; walk/scooter/bike/moped to the centre, curved edges hold, landing, flyable, boat/causeway/sharks clear, seawall gap, fishing, shooting ring, 2 islanders, heat rules`);
+
+// ---- Lighthouse beam (lighthouseBeam.ts, Oct 13 2026): a rotating sweep + flash, night/dusk only, no scene lights, at most
+// 2 extra draw calls, and the rotation skips when far/off-screen, frozen (focus mode/menus: dt 0) or steady (reduced
+// motion / the heat governor's slow state / a higher tier).
+{const T=require('three'),beamSrc=src('lib/graphics/lighthouseBeam.ts'),worldSrc=src('lib/town/world.ts'),townSrc=src('components/Town.tsx');
+ assert(!/requestAnimationFrame|setInterval|setTimeout/.test(beamSrc),'no new frame loop of its own (driven by the island\'s existing loop)');
+ assert(!/new T\.(Point|Spot|Directional|Ambient|Hemisphere)Light/.test(beamSrc),'no scene lights: emissive/additive meshes only');
+ assert((beamSrc.match(/new T\.Mesh\(/g)||[]).length===1&&(beamSrc.match(/new T\.Sprite\(/g)||[]).length===1,'one beam mesh + one flash sprite — at most 2 extra draw calls');
+ assert(/createLighthouseBeam\(scene/.test(worldSrc)&&/updateLighthouse:lighthouseBeam\.update/.test(worldSrc)&&/lighthouseBeam\.dispose\(\)/.test(worldSrc),'built and wired into world.ts\'s update/dispose API');
+ assert(/world\.updateLighthouse\(/.test(townSrc),'Town.tsx calls world.updateLighthouse from the island frame loop');
+
+ const lh=load('lib/graphics/lighthouseBeam.ts');
+ assert.equal(lh.beamAlignment(0,0),1,'a beam arm pointing straight at the camera aligns fully');
+ assert.equal(lh.beamAlignment(0,Math.PI),1,'the opposite arm (180° on a two-beam lighthouse) also aligns fully');
+ assert(lh.beamAlignment(0,Math.PI/2)<1e-6,'a quarter-turn away, no flash');
+
+ const scene=new T.Scene(),beam=lh.createLighthouseBeam(scene,{x:pier.JETTY_BEACON.x,z:pier.JETTY_BEACON.z},14.6);
+ assert.equal(beam.group.visible,false,'hidden until lit');
+ const near={x:pier.JETTY_BEACON.x-40,z:pier.JETTY_BEACON.z-10};
+ const cam=new T.PerspectiveCamera(60,1,.1,1000);cam.position.set(near.x,20,near.z);cam.lookAt(pier.JETTY_BEACON.x,14.6,pier.JETTY_BEACON.z);cam.updateMatrixWorld();cam.updateProjectionMatrix();
+ beam.update(0,'day',false,cam,near,true);
+ assert.equal(beam.group.visible,false,'hidden by day');
+ let hasLight=false;scene.traverse(o=>{if(o.isLight)hasLight=true;});assert.equal(hasLight,false,'no scene lights added');
+ beam.update(0,'night',false,cam,near,true);
+ assert(beam.group.visible&&beam.beam.material.opacity>0,'visible and lit at night');
+ assert(beam.beam.material.opacity<.3,'subtle: low peak opacity');
+ const p0=beam.beam.rotation.y;
+ beam.update(0,'night',false,cam,near);assert.equal(beam.beam.rotation.y,p0,'rotation skips when dt is 0 (focus mode / menus)');
+ beam.update(.1,'night',true,cam,near);assert.equal(beam.beam.rotation.y,p0,'rotation skips when steady (reduced motion / heat governor slow / a higher tier)');
+ beam.update(.1,'night',false,cam,near);assert(beam.beam.rotation.y!==p0,'rotates on screen, at night, awake and not steady');
+ const far={x:pier.JETTY_BEACON.x+9000,z:pier.JETTY_BEACON.z};
+ const p1=beam.beam.rotation.y;beam.update(.1,'night',false,cam,far);
+ assert.equal(beam.beam.rotation.y,p1,'rotation skips when far from the player');
+ assert.equal(beam.group.visible,false,'hides outright when far away (no draws)');
+}
+console.log(`PASS East Jetty: ${(P.cx-P.wallX).toFixed(0)} m straight + ${P.turns}-turn spiral (${P.r0} → ${P.r1} m, plaza r ${P.plazaR}, ${pier.JETTY_BEACON.height} m lighthouse), ${pathLength.toFixed(0)} m of walkway; walk/scooter/bike/moped to the centre, curved edges hold, landing, flyable, boat/causeway/sharks clear, seawall gap, fishing, shooting ring, 2 islanders, heat rules, lighthouse beam`);

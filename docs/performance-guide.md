@@ -1,5 +1,92 @@
 # Performance reference for future Futbol Island updates
 
+## Summit Isle rides, trail and hops, Oct 13 2026 (not deployed)
+
+- **Stuck rides:** the island's walkable test (slope ≤ 0.62, pointwise) walled ~30% of the green mountain off; rides and walkers now move anywhere inside the waterline (`onSummitGround`, `groundBlocked`), with a hill assist (`rideSlope.ts createHillAssist`: climbs above 0.6–0.85 grade turn across the slope, never under a crawl, steep descents braked) and rides sliding round colliders. Landing still needs `onSummitLand`.
+- **Trail:** the ribbon was hidden under the coarse terrain on 31% of its area (wedges). Terrain quads the carve reaches (and that missed it by > 0.25 m) are split into ~2.5 m cells at the walked height (~12k more triangles, same draw calls); the ribbon is sampled every 1 m, 5 vertices across, draped on the drawn mesh, round ends; the climb's last bend is a 3.2 m radius turn.
+- **Hops** (`slopeHop.ts`): 3 grid reads per tick only when going downhill at speed; dust is one pooled instanced mesh, hidden when idle.
+- **Heat:** A/B on the same machine at 4× (trail-walk, pitch-walk, peak-fly, 3 reps interleaved): main-thread busy medians after ≤ before (noisy machine, both 30–55%); draw calls unchanged, triangles +5%.
+
+## Heat audit, Oct 13 2026 (local working tree vs live HEAD ceaa6c30, not deployed)
+
+User: "we need to also make sure that heating is not an issue with these latest changes". Everything since ceaa6c30: Summit Isle (mountain, Summit 5s, Summit Kick, telescope, snack stand, Boulder Cove, hikers, trails, 2 m flight grid, ride slopes), map-edge border with the 2100 × 1700 m ocean and whole-map shore bake, 60 more townsfolk (149), island-wide water and beach waves, fishing focus mode, the Kit Shop room and its three studios, new museum exhibits, arcade leaderboards, building colour schemes and the removed island chooser.
+
+- **Method:** two production builds (`git archive HEAD` and a copy of the working tree without `app/bits-lab` and `components/bits`), served one at a time with `next start` (8155 HEAD, 8156 now, `NEXT_DIST_DIR=.next-heat`). Headless Chromium (Metal ANGLE), 390 × 844, touch, DPR 2 (the game caps the island at 1.75 on tier 0; studios 1.5), heat tier forced to 0. Each load measures 8 s at 4× and then 8 s at 6× CPU throttle; 3 reps per scenario, builds interleaved per rep (now/HEAD, HEAD/now, now/HEAD), medians. Generic WebGL hooks on every canvas: draw calls and triangles per rendered rAF tick, CPU per tick, GPU per tick (EXT_disjoint_timer_query_webgl2 around every rAF callback), rAF callbacks/s, long tasks, CDP TaskDuration (main-thread busy %), JS heap after GC, live/detached WebGL contexts and DOM counters. Scripts: session scratchpad `heat-audit/` (`probe.mjs`, `leak.mjs`, `loadprobe.mjs`, `analyze.py`, chart `heat-audit-chart.png`).
+- **Danger line:** main-thread busy ≤ 50 % of the frame slot at 4× and the frame interval within the governor's calm band (median ≤ 1.12 × 33.3 ms = 37.3 ms on the 30 fps island). Regression flag: > 15 % worse with every rep of now above every rep of HEAD.
+
+| Scenario | busy % 4× (HEAD → now) | busy % 6× (HEAD → now) | CPU ms/frame 4× | GPU ms/frame 4× | draws | triangles (k) | fps 4× / 6× | rAF/s | verdict |
+|---|---|---|---|---|---|---|---|---|---|
+| title screen idle | 0.0 → 0.0 | 0.2 → 0.1 | – | – | – | – | 0 / 0 | 0 | OK |
+| spawn idle, on foot | 19.9 → 20.5 | 28.8 → 30.4 | 6.0 → 6.3 | 3.05 → 3.08 | 221 → 201 | 251 → 276 | 30 / 30 | 60 | OK (tris +10–15 %: townsfolk) |
+| spawn idle on the scooter (20 fps idle cap) | 14.1 → 14.5 | 21.3 → 21.9 | 6.6 → 6.8 | 1.66 → 3.15 * | 237 → 218 | 255 → 281 | 20 / 20 | 60 | OK |
+| walking, Island Square | 22.5 → 23.3 | 33.3 → 35.8 | 6.4 → 6.7 | 3.00 → 3.31 * | 216 → 203 | 248 → 274 | 30 / 30 | 60 | OK |
+| walking, busiest new-townsfolk spot (80, −40; 29 people drawn) | 18.9 → 20.3 | 28.8 → 31.1 | 5.4 → 5.8 | 1.86 → 2.84 * | 163 → 164 | 164 → 190 | 30 / 30 | 60 | OK |
+| jetpack across the main island | 27.1 → 28.8 | 34.4 → 37.4 | 6.8 → 7.1 | 2.36 → 2.52 | 197 → 195 | 224 → 252 | 30 / 30 | 60 | OK |
+| Coral Cay, walking | 13.8 → 16.6 | 18.2 → 22.5 | 3.6 → 4.5 | 2.42 → 2.59 | 97 → 102 | 249 → 282 | 30 / 30 | 60 | borderline: CPU/frame +25 %, busy +20 % (townsfolk 10 → 17 drawn) |
+| north beach (lots of water), walking | 12.5 → 15.4 | 16.0 → 19.8 | 2.8 → 3.8 | 1.72 → 1.94 | 46 → 56 | 38 → 72 | 30 / 30 | 60 | borderline: CPU/frame +36 %, draws +22 %, tris +88 % (townsfolk 1 → 10 drawn) |
+| fishing (focus mode, West Cove) | 13.2 → 14.3 | 17.2 → 19.3 | 3.7 → 4.0 | 2.40 → 2.68 | 106 → 114 | 210 → 237 | 30 / 30 | 60 | OK |
+| Summit: sandbar walk | – → 13.6 | – → 19.3 | 3.5 | 3.25 | 96 | 222 | 30 / 30 | 60 | OK |
+| Summit: trail walk | – → 13.2 | – → 18.7 | 3.6 | 2.27 | 108 | 266 | 30 / 30 | 60 | OK |
+| Summit: on the pitch | – → 14.7 | – → 20.5 | 3.9 | 2.43 | 183 | 267 | 30 / 30 | 60 | OK |
+| Summit: jetpack over the peak | – → 15.0 | – → 20.1 | 3.9 | 2.70 | 172 | 346 | 30 / 30 | 60 | OK |
+| Summit Kick round running | – → 14.9 | – → 20.8 | 4.0 | 1.90 | 187 | 253 | 30 / 30 | 60 | OK |
+| telescope view, panning | – → 24.0 | – → 31.9 | 5.6 | 2.28 | 325 | 204 | 30 / 30 | 60 | OK (most draws of any view: far plane 1600 m) |
+| Kit Shop idle (5 shoppers walking) | – → 0.7 | – → 1.4 | 0.4 | 0.69 | 21 | 38 | 10 / 14 | 29 | OK (sleeps between shopper walks; see below) |
+| Kit Shop walking | – → 2.4 | – → 2.8 | 0.4 | 0.65 | 20 | 37 | 30 / 30 | 60 | OK |
+| jersey studio idle / spin / draw | – → 0.0 / 4.1 / 7.0 | – → 0.3 / 6.3 / 9.7 | ≤ 0.1 | – / 0.51 / 0.47 | 2 | 17 | 0 / 60 / 24 | 0 / 60 / 24 | OK (spin renders at 60 fps on phones) |
+| boot studio idle / spin | – → 0.0 / 2.4 | – → 0.3 / 3.5 | ≤ 0.1 | – / 0.69 | 5 | 20 | 0 / 60 | 0 / 60 | OK (spin renders at 60 fps on phones) |
+| ball studio idle / spin / draw | – → 0.0 / 2.4 / 8.8 | – → 0.2 / 3.9 / 11.5 | ≤ 0.5 | – / 0.97 / 1.07 | 2 | 6 | 0 / 44 / 26 | 0 / 44 / 26 | OK |
+| museum hall idle | 0.0 → 0.0 | 0.2 → 0.2 | – | – | – | – | 0 / 0 | 0 | OK |
+| museum hall walking | 1.5 → 1.5 | 1.7 → 1.7 | 0.2 → 0.2 | 0.51 → 0.51 | 17 → 17 | 21 → 25 | 30 / 30 | 60 | OK |
+| exhibit: VAR (dragging) | 1.4 → 1.4 | 2.3 → 2.4 | – | – | – | – | 0 | 0 | OK |
+| exhibit: Trophy room (dragging; HEAD = old Hall of Fame) | 1.8 → 9.8 | 2.3 → 13.6 | – | – | – | – | 0 | 0 | OK (input-driven SVG work, 0 rAF, 0 at rest) |
+| exhibit: Stadiums of the World (dragging) | – → 1.5 | – → 2.5 | – | – | – | – | 0 | 0 | OK |
+| exhibit: Boots through time (dragging) | – → 1.5 | – → 2.4 | – | – | – | – | 0 | 0 | OK |
+| arcade room idle | 1.8 → 2.0 | 1.9 → 2.1 | 0.7 → 0.8 | 1.03 → 1.25 | 52 → 52 | 140 → 140 | 18 / 15 | 60 | OK (unchanged; it renders at rest, see below) |
+| arcade with the Hall of High Scores open | – → 0.0 | – → 0.2 | – | – | – | – | 0 | 0 | OK (room sleeps under it) |
+
+\* The GPU timer on this Mac is bimodal (~1.5 ms vs ~3 ms per frame for the same view, by GPU clock state; e.g. HEAD's scooter-idle reps were 1.55 / 3.10 / 1.66, now's 3.25 / 3.14 / 3.15). A sustained-load GPU bench (400 back-to-back renders of one view) was tried to pin the clocks and rejected: it was bimodal too (1 vs 10–24 ms). Treat the GPU column as a range, not a regression; the geometry counts are the reliable GPU-side change (triangles +10–16 % on the main island, the extra townsfolk).
+
+- **Verdict:** no scenario is over the danger line. Highest main-thread load: jetpack over the main island 28.8 % at 4× (37.4 % at 6×), telescope 24 % (31.9 %); every island view held 30 fps (20 fps on the idle ride) at both throttles with the frame-interval median at 33.3 ms (50 ms idle), inside the calm band; no long tasks while playing (median 0 per 8 s window). Summit Isle views cost less than the main island (13–15 % at 4×). Borderline: Coral Cay and the north beach, +3 percentage points of main-thread time (CPU/frame +25–36 %): per-system timing puts it on the townsfolk (beach: NPC update 4.3 → 12.0 ms/s, render 50 → 67 ms/s, shadow pass 8.6 → 17.2 ms/s at 4×; 1 → 10 people drawn), i.e. the intended 60 new islanders, still at half the load of the town centre.
+- **At rest:** 0 rAF on the title screen, museum hall (3 min: 0 callbacks), every exhibit, all three studios after their opening turn, and the arcade under the score panel. Kit Shop: never fully idle while its 5 shoppers walk (by design 20 fps while only they move, a timer between walks): over 3 min at 4×, 13–20 rAF/s, ~6 rendered frames/s on average, 0.7 % main thread. The island renders at 30 fps standing still on foot (60 rAF/s; the 20 fps idle cap applies on rides and the jetpack only), unchanged from HEAD. The arcade room renders at 15–18 fps at rest (60 rAF/s), unchanged from HEAD.
+- **Leaks:** 5 enter/exit cycles each, phone profile. Studios (jersey, boots, ball ×5, then 12 cycles): every studio's WebGL context is released (16 created, 1 live, 0 detached-but-alive), DOM nodes flat (147), listeners flat, JS heap plateaus at ~16.5 MB. Museum exhibits (VAR, Stadiums, Boots, Trophy room ×5): DOM flat (145 nodes), heap flat at ~14.5 MB, one context. Fishing enter/exit ×5: heap flat (166.9 → 168.0 MB, HEAD 151.7 → 152.7), DOM flat. Shop ↔ island ×5 (full page loads): one context each time, island heap 161 MB each return. 3-min idle at the spawn (4×): heap 161.4 → 164.0 MB (HEAD 146.3 → 149.2), flat after the first 30 s. (A first pass showed DOM nodes growing per visit on both builds: Playwright's `waitForSelector` element handles were pinning the closed subtrees; with locator waits it is flat. Use `locator().waitFor()` in leak probes.)
+- **First load (4× throttle from navigation, 3 reps):** first island frame 5.52–5.64 s → 6.20–6.23 s (+0.65 s); the one world-build long task 4.68–4.80 s → 5.37–5.39 s; shore bake 294–304 → 489–495 ms (map-wide bounds, 32 tiles, strip 54.8k → 78.0k triangles); JS heap after load 145–146 → 161 MB (+15 MB); geometries 1013 → 1029, textures 22 → 24, programs 32 → 32. Summit Isle's 2 m height grid (~29.5k samples, 75 ms cold in node unthrottled) is built lazily on the first approach (≤ 74 ms task at 4×, observed once while flying in from the cay side); the trail grid is built at module load inside the world-build task.
+- **Fixes applied:** none. No scenario crossed the line or the calm band, and the only flagged regressions (Coral Cay, the beach) come from the new townsfolk themselves; every lever left (fewer people drawn, shorter NPC draw distance, skipping their shadows) changes what is on screen.
+- **Recommendations (not applied, they change the look or feel, or touch files under active work):**
+  1. Studios: cap drag/spin rendering at 30 fps on coarse pointers like the room (`jerseyScene.ts`, `ballStage.ts`; `lib/shop/bootScene.ts` is under the boot-studio fix pass). Cheap per frame (≤ 1 ms GPU), but it is the only place left that renders 60 fps on phones.
+  2. Kit Shop: after ~60 s without input, let the shoppers stop (or walk less often) so the room reaches 0 rAF, matching the museum.
+  3. If a real-device trace shows the beach or Coral Cay warm, the prepared `HEAT_OPTIONS.fewerAmbient` lever (heatTier.ts, off) is the place to trim townsfolk on phones; townsfolk shadows past ~40 m are the next candidate.
+  4. Load: the shore bake grew 190 ms with the map-wide bounds; restricting the distance transforms to a band around actual shores, or baking after the first frame, would claw most of it back (a visible change for the first frames if deferred). Pre-warming the Summit height grid in idle time would remove the ≤ 74 ms first-approach task (summitIsle.ts is under the flight fix pass).
+  5. Arcade room (pre-existing): it renders 15–18 fps at rest; letting it sleep like the museum would remove 60 rAF/s there.
+- **Real-device checklist (emulation is not an iPhone):** (1) Safari Web Inspector → Timelines (JavaScript & Events, Rendering Frames, Memory, CPU) for 5 min each at the spawn standing still, on the Summit 5s pitch, in the Kit Shop (idle, then walking, then a studio spin and drawing) and in fishing focus mode: frames should sit at 33 ms (50 ms on an idle ride), CPU % roughly flat, no growing memory, no recurring long tasks. (2) `?heat=1`: watch the governor's readout for 5–10 min at the spawn and the beach — it should stay on tier 0 and 'calm'/'steady'; a step to tier 1+ within ~5 min on a cool phone is the warning sign; note the time of any step. (3) Thermal feel: a 10-min session (spawn → beach → Coral Cay → sandbar → summit → kit shop → fishing) on a mid phone (e.g. iPhone 12/13) at normal brightness, unplugged; compare back-of-phone warmth and battery % lost with the same route on the live site. (4) In the studios, note whether a long spin or drawing session warms the phone faster than the island (they render at 60 fps while dragged).
+
+## Fishing: a reef of its own at every spot, tropical coral — October 13, 2026 (local, not deployed)
+
+User: "fix all the fishing spots so they don't all look the same, reuse things, but place them differently or different colors. we need to make the coral feel more tropical". Details and the spot table: `docs/fishing-visuals-HANDOFF.md` (13 Oct update). Code: `lib/town/fishing/underwater.ts` (REEF_THEMES, layouts, coral shapes), `fishSchools.ts` (fish per theme, clownfish homes), `fishingVisuals.ts`, `shoreWater.ts` (sand/water uniforms), `fishCatalog.ts` (`reef` per spot).
+
+- **Cost kept:** seabed still ONE merged vertex-coloured mesh per spot, sea life ONE instanced draw (clownfish reuse two cruiser slots), no textures; water tint, clarity and sand are shared uniforms written once per session. Seabed triangles per spot within +15 % of the old per-style count, total lower (synthetic shore, 16 spots: 90.7k → 73.1k desktop, 52.7k → 41.8k phone; in-browser phone per spot 1.2–4.9k vs 2.4–5.7k). Shader: a few extra ALU ops on the reef (self-colour, saturation) and stronger caustic weight; no extra reads. Sway still desktop only.
+- **Measured** (production builds, `next start`, headless Chromium Metal, 390 × 844 touch DPR 2, 4× CPU, tier 0, fishing, 10 s, 2 reps, before → after): West Cove CPU rAF 7.6/5.7 → 4.7/5.3 ms, GPU 2.86/2.85 → 2.78/2.85 ms, draws 140 → 139; Coral Garden 5.7/5.0 → 5.1/6.7 ms, GPU 2.66/2.52 → 2.77/2.79, draws 141 → 142; Sharks Beach 5.9/6.9 → 7.1/6.3 ms, GPU 2.59/2.97 → 3.34/3.11, draws 98–101 → 98; Boulder Cove 3.6/7.4 → 3.8/5.6 ms, GPU 1.98/1.97 → 2.23/2.57, draws 59–64 (same). 30 fps everywhere. CPU unchanged within noise; GPU +0–0.4 ms at the reef spots (larger, brighter reef pieces cover more pixels; within this host's bimodal drift but consistently up at the cay and Summit). Reduced work only, no iPhone temperature claim.
+- **Fix:** fishing from the Deep Sea Boat threw (`mergeGeometries([])`, no shore in its field) before; now an empty seabed is allowed.
+- **Validation:** `npx tsc --noEmit` (0 errors in fishing files), `tests/fishing.cjs` (themes distinct, palettes/water/sand/fish differ, fish looks exist, vivid colours, deterministic, per-spot and total triangle budgets, open sea builds), heat-pass3/4/5/6, heat-tiers, coral-cay, summit-isle, east-pier; `scripts/check-fishing-browser.cjs` mobile coral-garden, desktop east-pier, mobile summit-cove (no errors); before/after phone contact sheets of all 16 spots and desktop close-ups (session scratchpad `fishing-variety/`).
+
+## Summit Isle (new island, mountain, Summit 5s, sandbar, map-edge border) — October 12, 2026 (local, not deployed)
+
+User: "build a medium size island and extend the borders like how i drew it … a small mountain in the middle … connected to coral cay island via a sandbar", then "a small 5v5 field at the top", a greener, ridged, gradually sloping mountain, a skinnier sandbar, "the border is the edge of the map".
+
+- **What:** `lib/town/summitIsle.ts` (pure data: coast, height field, trail carve, sandbar, pitch, camera pull, jetpack clearance), `lib/town/summitIsleWorld.ts` (3D), `components/SummitIsleMap.tsx` (maps). A 50 m green peak (bell profile: domed top, concave sweep to the beaches, radial ridged noise for spurs and gullies, damped on the north-east face) with the Summit 5s (36 × 22 m, 12 × 6 ft goals, fence, ball-stop nets, two floodlights) on a summit flat just big enough for it. Ground height goes through `fieldSurfaceHeight` (venues.ts); walking is blocked where the slope exceeds 0.62 (`onSummitIsle`, via `simulation.blocked` / `landmass.onLand`); one carved trail (1 m distance grid, built at load) climbs round the mountain. `summitSolid` stops the walking ball and the parachute at the slope; `createSummitFlightLift` lifts the jetpack's fixed cruise over the peak (≥ 2.4 m clearance in tests); `summitCameraPull` dollies the follow camera in along its own view line when the slope would block the player. Flight is now the whole map rectangle (`flightBlocked`: FLIGHT_BOUNDS with 60 m rounded corners; the map's inner border line is gone).
+- **Heat:** terrain = 192 bearings × 27 rings round the summit (~10.4k triangles), dense only on the steep upper slopes; trees, rocks, fence, goals and nets baked into one vertex-colour mesh per 45° sector plus one summit mesh (two materials, the palette shader program, no new textures, nothing animated, ground casts no shadows). Island chunks have their own region box (`isleRegion` in world.ts, one frustum test per frame). Whole build ~22k triangles. Per-call cost: `fieldSurfaceHeight` +4 ns, `blocked`/`onLand` unchanged (node micro-benchmark); `flightBlocked` is now O(1).
+- **Measured** (production builds, before = snapshot without this work, Playwright Chromium 390×844, DPR 1.75, 4× CPU throttle, interleaved, two rounds): spawn 210 → 210 draws, 279.8k → 278.8k triangles, rAF CPU and GPU within this host's run-to-run noise; Coral Cay 98 → 99 draws, 304k → 308k triangles (the sandbar). New island views: north beach 62 draws / 138k triangles, trail 105 / 255k, sandbar 93 / 218k, on the summit pitch 180 / 265k (the whole Coral Cay is in view from 50 m: 65 of those draws are the cay's own chunks, 22 the island's), GPU 2.0–2.7 ms vs Coral Cay 2.5–3.8 ms. Shore bake bounds now cover the whole map (1036 × 626 m, +33% texels): 4× bake 401–429 → 480–492 ms; strip 59k → 78k triangles (frustum-culled tiles). Ocean plane 2100 × 1700 m (still one mesh).
+- **Validation:** `tests/summit-isle.cjs` (shape, walkability, solidity from 36 directions, flights from 12 directions at 3 heights, trail walk from the cay to the pitch, build smoke test incl. nothing blocking the trail), updated border assertions in `tests/coral-cay.cjs`, `flight-slide.cjs`, `parachute-freeze.cjs`; browser walk (Coral Cay → sandbar → trail → gate → pitch), jetpack sandbar → summit landing → walk round the pitch → take off → land on the beach, border stops at the map edge, fishing check; screenshots in the session scratchpad `new-island/`. Reduced work only: no phone-temperature claim without an iPhone recording.
+
+## Beach waves — October 12, 2026 (local, not deployed)
+
+User: "the waves don't look good here, make this better" (Coral Cay's lifeguard-chair headland from the island camera).
+
+- **Causes:** (1) every beach ends in a sand skirt sloping 1–3 m into the sea (main coast 1.4 m, Coral Cay 3 m, sandbars 2.6 m, causeway banks 2.4 m) and the island field's zero was the TRUE waterline at its foot, so the foam lapped 2.3 m up the skirt under a 30–60 % sheet and the skirt (its own colour, its facets, its angular outline) read as a tan cardboard step between the foam and the sea; (2) the ocean's swells were evenly spaced bright/dark bands on the distance field (contour rings), and (3) the ripple tile's 22 strokes sat on an x = 97i, y = 61i lattice, so from the island camera they merged into long straight streaks; (4) the foam was a thin exp() line wobbling on the 7.7 m lace, a hazy breaker band behind it.
+- **Fix:** `islandShore.ts` bakes a second, drawn waterline `vis` (1 m, blurred): the edge of the flat sand, with low (< `SHORE_VIS_LIFT` 0.34 m) skirt-sloped ground (0.07–0.45 m/m) within 4 m of the water counted as sea (flat low sand such as West Cove's 0.24 m beach stays land). The texture's distance (ocean depth gradient, swells) and the strip's foam use it; the true distance (smoothed) only drives the strip's fade into the ocean and its depth pull. The strip (new shader, `island-shore-strip-v3`) paints the skirt as near-opaque turquoise shallow water, a clear aqua sheet at its edge, a soft foam band (bright edge + lacy trail, thinning on the backwash), a darker wet-sand band that dries, and a soft broken white line rolling in before each surge; rocks on a skirt keep water round their foot. Ocean (`island-ocean-water-v3`): broken crest lines whose strength varies per wave and along the shore and fades out at sea, no trough darkening; ripple strokes bent by the field noise (and two cheap sines past the field) and faded in patches; glints kept off the first 4–9 m. `waterRipples.ts` scatters the strokes at seeded random spots.
+- **Cost:** no per-frame CPU, no new draws, textures or passes; one more float attribute per strip vertex; strip 54,812 → 59,028 triangles (in view: North Beach 37,860 → 37,986, Coral Cay 133,312 → 134,110, +0.3–0.6 %); bake +2 distance transforms and two blurs (115–275 ms on this loaded host vs 131–183 ms). Phone 4× GPU medians are bimodal on this host (load 11–15): best-of-runs North Beach 0.94 → 0.97 ms, Coral Cay 1.26 → 1.33 ms. Detail 0 (reduced motion / governor slow / heat 3–4) keeps a static water edge, foam band and damp band, no lace read; detail 1 has no glints.
+- **Validation:** `npx tsc --noEmit` (no errors outside other agents' `.next-agent-*` folders), the test chain with `app/bits-lab` aside (device-guards, new-player-flow `shop-lab` and admin-save-metrics fail on other agents' in-progress work), `scripts/check-fishing-browser.cjs mobile west-cove` and `desktop sharks-beach`; before/after at Coral Cay's lifeguard headland, Starfish Sandbar, West Cove, North Beach, Palm Coast, Sharks Beach and the causeway, phone and desktop, 6-frame lapping sequences and reduced motion (session scratchpad `beach-waves/`).
+
 ## Shoreline seams — October 12, 2026 (local, not deployed)
 
 User: "some of the edges are not looking great. there's gaps" (close-up of a beach while fishing; also the Ferry Dock / East Pier and Sharks Beach).
@@ -99,6 +186,29 @@ Reduced work only: no phone-temperature claim without an iPhone recording.
 - `scripts/check-fishing-browser.cjs` (mobile, West Cove: cast, scare, bite, reel, catch, Fishbook, stop, visuals sleep, no errors).
 - A resume probe: chunks restored; the frozen futsal match resumed from the same ball position; cars resumed; townsfolk visible count unchanged; shadow `autoUpdate` restored.
 - Captures and 6-frame swash sequences at four spots, desktop and reduced motion. Scripts are in the session scratchpad (`fishing-water/`).
+
+## Townsfolk cast: 60 more islanders, spread out — October 12, 2026 (local, not deployed)
+
+User-approved. Full write-up, personas and sources: `docs/npc-cast.md`.
+
+**The change:**
+- 60 new townsfolk (89 → 149): Island Square and shops 15, beaches 15, East Jetty and Ferry Dock 10, Coral Cay 10, homes and parks 10;
+- six regulars moved out of the spawn and busy clusters;
+- no new pitch players.
+
+**Still townsfolk (bench, towel, sunbathing)** use the freestyle `sit` and `lie` stances as the rig's trick pose. They hold their solved pose, re-solving only for two frames after a wave, bump or truck.
+
+**Measured** with an interleaved synchronous bench (`islandNpcs.update` plus render with shadows), phone 390×844, production build, before = `?npcmore=0`:
+
+| View | 4× (ms) | 6× (ms) |
+|---|---|---|
+| Spawn | 15.3 → 14.8 | 18.5 → 17.8 |
+| Konbini | 13.0 → 14.2 | 17.3 → 18.0 |
+| Pier cafés | 13.2 → 14.2 | 22.3 → 21.6 |
+
+- At 4×, every view stays under 16.7 ms. At 6×, the baselines were already over the line on a heavily shared host, and the added cost is within the run-to-run spread.
+- At most +9 drawn and about +5 on screen in any view (the guidance allows +50 at 4× and +20–25 at 6×).
+- Focus mode and the 10 Hz far pose cover the new townsfolk (verified in the browser and in `tests/townsfolk-cast.cjs`).
 
 ## Townsfolk: 10 Hz far poses and classic parts off the scene graph — October 12, 2026 (local, not deployed)
 
@@ -4772,7 +4882,7 @@ No device heat measurement was needed or claimed for this change.
 
 ## Museum Paper exhibits (Oct 12 2026 anatomy restyle and consolidation; local, not deployed)
 
-Eleven museum exhibits are full-screen mini-games drawn in the anatomy isometric technical-illustration style, Paper theme: laws-1863, cards-1970, var-2018, wwc-1991, futsal-1989, backpass-1992, telstar-1970, shirts, laced-leather, hall-of-fame and timeline. They replace the Oct 10 pixel-iso versions (user, Oct 12: "these games should not be the pixel style. only the penalty kick should be pixel game"). penalty-1891 stays the pixel cabinet (`docs/museum-pixel-iso.md`); worldcup-1930 and the World Cup balls display are unchanged. Style guide: `docs/museum-paper-style.md`.
+Eleven museum exhibits are full-screen mini-games drawn in the anatomy isometric technical-illustration style, Paper theme: laws-1863, stadiums, var-2018, wwc-1991, futsal-1989, boots, telstar-1970, shirts, laced-leather, hall-of-fame and timeline. They replace the Oct 10 pixel-iso versions (user, Oct 12: "these games should not be the pixel style. only the penalty kick should be pixel game"). penalty-1891 stays the pixel cabinet (`docs/museum-pixel-iso.md`); worldcup-1930 and the World Cup balls display are unchanged. Style guide: `docs/museum-paper-style.md`.
 
 **The shared kit** (`components/museum/experiences/anatomy/`, test `tests/museum-paper-kit.cjs`):
 
@@ -4780,18 +4890,18 @@ Eleven museum exhibits are full-screen mini-games drawn in the anatomy isometric
 - **SVG drawn on change.** Each card is one SVG whose viewBox is the card's own pixel size (one ResizeObserver), drawn by React or by writing a transform on a ref during a drag. No canvas, no WebGL, no DPR-sized buffers. The soft halo under each base plate is one blurred path per plate.
 - **Reduced motion:** the loop runs the tick to its end synchronously (at most 3000 steps of 1/30 s), so every motion has a static end state and no frames are scheduled.
 
-**Measured** (headless Chromium, 1440 × 900, dev build, `requestAnimationFrame` counted from page start): 0 rAF calls in 2 s at rest on the intro screen and 0 in 2 s at rest on the first game screen, for all eleven. A running film (cards-1970) schedules about 60 rAF a second while it plays and stops when it ends. The loop's park / resume / single-chain / dispose behaviour is unit-tested with a fake rAF in `tests/museum-paper-kit.cjs`. These are desktop emulation results only; no iPhone thermal claim is made.
+**Measured** (headless Chromium, 1440 × 900, dev build, `requestAnimationFrame` counted from page start): 0 rAF calls in 2 s at rest on the intro screen and 0 in 2 s at rest on the first game screen, for all eleven. A moving model (stadiums: the turntable easing or the layers coming apart) schedules about 60 rAF a second while it moves and stops when it lands; a turntable drag draws once per pointer move. The loop's park / resume / single-chain / dispose behaviour is unit-tested with a fake rAF in `tests/museum-paper-kit.cjs`. These are desktop emulation results only; no iPhone thermal claim is made.
 
 **Per exhibit** (folder `components/museum/experiences/<id>/`, test `tests/museum-exp-<id>.cjs`):
 
 | Exhibit | The game | What moves (the loop runs only then) | Reduced motion |
 |---|---|---|---|
 | laws-1863 | The rule press (still a rule or changed, pull the lever), then ref the match (a film per moment, call it before the watch runs out) | the press, a film, the stopwatch | the press jumps to the end; each moment untimed |
-| cards-1970 | Ref at match speed: whistle the foul, show the right card | a film or a replay playing | each moment frozen on its contact |
+| stadiums | Seven stadiums on a turntable: take them apart (five layers, a pitch sample), build one back bottom-up, spot them from a shape or a clue | the turntable easing, the layers moving, a layer dropping (the faint lines are left out while moving) | everything lands at once |
 | var-2018 | Freeze the replay at the deepest frame, aim the goal-line camera, call it | the replay rolling, the referee walking | the replay starts frozen; step it |
 | wwc-1991 | Open the gates (year slider 1920 → 1991), then draw Akers's winning run | gates moving, a run playing | resolves turn by turn |
 | futsal-1989 | The drop rig, then keep the ball with the futsal and the grass ball | the drop, a round | the drop lands at once; the round is turn-based |
-| backpass-1992 | Kill the clock under the 1990 rules, then beat the press under the 1992 rules | the ball, the players, a hold | HOLD is a fixed step |
+| boots | Boots through time (see its own folder) | see tests/museum-exp-boots.cjs | see its test |
 | telstar-1970 | Stitch the 32 panels, then keep the ball in a black-and-white shot | the ball turning, a half | still frames, tap the ball |
 | shirts | Number the 2-3-5 shirts, then dye kits that never clash | nothing: CSS stamp, a 1 s clock only during a half | no clock |
 | laced-leather | Hold Rain to soak the leather ball (410 → 595 g), then a rain match | rain while held, a kick's flight | taps add 15 minutes; the ball lands at once |
@@ -4922,3 +5032,45 @@ Costs: warm island on the title ≈ JS heap of the built scene (~15–25 MB) and
 - **What:** the open-space cue never goes blank (`tennisAimSide`: a central rival still leaves the wide lane), a coach nudge after three straight-at-the-rival returns, KICK NOW waits while the ball will still reach the body (`TENNIS_WAIT_LOOKAHEAD`), the Target Drill lights the touch for the ring's depth, puts rings on full-aim lanes and lights the ring when the yellow aim ring is on it, a soft drill gate (6 → 5 → 4 after misses), and an immediate press acknowledgement (ready stance, aim-ring pulse, soft plant sound) while the patient touch holds.
 - **Cost / saved:** the 14 trail spheres are now one `InstancedMesh` with its own material (it also stops recolouring the stage's shared `#ffe084` material). Lane marks hide on the drill and under the pink space ring. Measured at 390×844, court 1, real touch input: draw calls 50.9 → 43.2 average (58 → 48 max), triangles 18.6k → 17.8k. No new loops; the serve still sleeps (0 rAF at rest); the drill ring colour swaps preallocated `Color`s only on change.
 - **Validation:** `tests/tennis-aim-drill.cjs` (new), the existing tennis suites, TypeScript, Playwright at 390×844 touch, 844×390 and 1440×900 with real input, reduced motion, exit disposal. Desktop emulation only: no iPhone thermal claim.
+
+## Kit Shop on the island (Oct 12 2026, local, not deployed)
+
+- **What:** the CLUB GROUNDS and COMMUNITY HALL houses became one walk-in KIT SHOP (`lib/town/kitShopExterior.ts`, wired in `world.ts` after the Club Grounds shift; the two skipped houses still draw their paint scheme and shape so every other building keeps its look). `components/Town.tsx` mirrors the museum: one hover/tap box (`KIT_SHOP_BOUNDS`), the shared green outline (`buildingGlow` kind `shop`), the door prompt ("Enter KIT SHOP"), tap-to-enter, the CSS door slide, then `/shop` (the island unloads); Done returns to `/?from=shop` at the door. The map shows a KIT SHOP label.
+- **Cost:** every solid piece is plain palette paint, so the batching pass folds it into the existing 50 m chunk's paint (no new draw). The only extra draw is the one lettering material (one 1024×256 canvas texture, two planes). No lights, no per-frame work; the outline is the existing glow (hidden at rest). Hover/door checks are one ray–box test and one rectangle test per frame, like the museum's.
+- **Measured (headless Chrome, emulation, not iPhone heat; at the shop, follow camera from the street):** desktop 1280×800 day 100 → 101 draw calls, 67.7k → 70.4k triangles; night 105 → 106 (105 most frames), 67.7k → 70.4k; phone 390×844 @2x day 57 → 57, 42.8k → 45.2k; night 59 → 58, 42.8k → 45.2k.
+- **Validation:** `tests/shop-room.cjs` (now in `npm test`: exterior built headless, one extra material, every piece in one chunk, island wiring, bought kit never read outside the shop).
+
+## Walk-in Kit Shop with a clerk and shoppers (Oct 12 2026, local, not deployed)
+
+- **What:** `/shop` is now walkable like the Museum (`lib/shop/shopScene.ts`, floor plan `lib/shop/shopLayout.ts`, cast `lib/shop/shopCast.ts`): your character walks in through glass doors (WASD / arrows, the joystick, tap-to-walk on the Konbini's A*), wall prompts open the studios (E / Enter / tap), walking out of the doors returns to `/?from=shop`. Femi the clerk stands in a closed corner behind the till; five shoppers (a kid, a teen holding up a boot, a grandad, a parent with her son) browse the walls. Chats use `components/NpcConversation.tsx`. The room grew 1.5 m toward the street (front z 3 → 4.5).
+- **Heat:** the island stays unloaded. Every person is the townsfolk bean rig; a still person is never posed; one shopper walks at a time with a 12 s rest between walks; walkers beyond 4 m pose at 15 Hz (phase-spread); when only shoppers move the loop caps at 20 fps; a still room renders nothing and the next shopper walk is a `setTimeout`, not a loop. One instanced blob shadow for everyone, no shadow maps; pixel ratio ≤ 1.5 on phones, 30 fps cap. A studio, My kit or a chat covers the room: no frames, no shopper timer.
+- **Measured (headless Chrome, 390×844 touch, DPR 3, CPU 4× throttled; emulation, not iPhone heat; gl.draw* counted per frame, CPU = JS time in the rAF callback):** island walking at the shop door 192 draws, 265k triangles, 7.3 ms CPU/frame at 30 fps. Old diorama shop (drag to look) 4 draws, 14.8k triangles, 0.3 ms. New shop walking 20–21 draws, 37–42k triangles, 0.8–0.9 ms CPU/frame at 30 fps; shoppers-only 18 fps, ~1 ms; untouched for 30 s: 172 frames (≈ 5.7 fps average, 0 between walks); studio open: 0 room frames, 0 rAF (the Ball studio's own preview runs its own loop). GPU time could not be isolated in headless Chrome (`gl.finish()` timing ≈ CPU timing).
+- **Validation:** `tests/shop-room.cjs` (floor plan reachability, the closed clerk corner, cast cap and lines, loop and posing guards, wiring).
+
+## Summit Kick and the lookout telescope (Summit Isle, Oct 12 2026, local, not deployed)
+
+- **Idle cost:** `lib/graphics/summitActivities.ts` runs inside Town's existing loop (no rAF, timer or listener of its own). While neither activity is on, each frame costs a phase check in `ball()`/`aim()`/`holdPlayer()`/`applyCamera()` and, in `update()`, two distances when the player is on Summit Isle (x > 400; nothing on the main island). The glint walk check runs only while a spotted glint waits to be collected (≤ 5 distances). `tests/summit-kick.cjs` and `tests/telescope.cjs` count rAF/timers/meshes over idle frames (0).
+- **Static props** (the kick post and the telescope stand) are built in `buildTown` (`summitActivitiesWorld.ts`) and join the 50 m batches.
+- **A round** adds 5 hoop meshes (one shared vertex-coloured geometry, one `MeshBasicMaterial`, no shadows) and a chalk line, built at "Let's go" and disposed on Done/exit. The hoops spin/pulse only while the round runs (none with reduced motion); a popped hoop scales out over 0.32 s and hides. One board-session POST per round.
+- **The telescope** reuses Town's renderer and camera: FOV 20°/9° and far 1600 m while looking (restored on exit), the frame cap untouched. Five additive glint sprites (one 64 px canvas texture) exist only while looking. The eyepiece frame is CSS (radial gradient) over the canvas; pointer events only while dragging.
+
+## Summit Isle fruit trees: shake to forage (Oct 13 2026, local, not deployed)
+
+User: "for the mountain island, let's have the trees have fruit on some of them for the character to forage and collect … shake the
+tree to have it drop to pick up". Rules and save: `lib/town/summitForage.ts`; runtime: `lib/graphics/fruitTrees.ts`; HUD:
+`components/ForagePrompt.tsx`; the push pose is the job pose `treeshake` (`lib/graphics/jobPoses.ts`, played by `jobMoves`);
+tests: `tests/summit-forage.cjs`.
+
+- **Draws:** all the island's fruit (10 trees × 3) is ONE instanced mesh, no shadow, a fixed bounding sphere over Summit Isle
+  (hidden fruit is zero-scaled where it hangs, never at the origin), so it culls with the island: +1 draw, +2.4k triangles when the
+  island is in view. Falling, lying and flying-to-hand fruit are instances of the same mesh. During a shake (~2.5 s) a copy of that
+  tree's canopy (no shadow) sways about mid-trunk and the pooled jobFx particles (36, hidden when idle) show leaves and the pickup
+  sparkle: +2 draws only then.
+- **CPU:** off the island update() is one box test. The fruit trees are chosen deterministically from `SUMMIT_TREE_SITES` the first
+  time the player comes within 40 m of the island, time-sliced (≤ 3 ms a frame, a generator; ~40 ms of node time over ~19 frames).
+  At rest nothing animates: no instance uploads, no rAF, no timers (tests check all three); the regrow clock is one comparison a frame.
+- **Measured (4× CPU throttle, phone profile, headless, A/B in one build with `?forage=0` = before):** forage update 0.1–0.4 ms/s
+  walking the slope or beach, 1.5–2.1 ms/s standing at a tree with its prompt up (the same prompt work as an Enter prompt),
+  2.8 ms/s while shaking every 2.6 s; draws 50 → 51 (slope), 76 → 77 (beach), 108 → 109 (trail); 30 fps held everywhere; frame
+  CPU and GPU medians within run-to-run noise. Not measured on an iPhone; no thermal claim.
+- **Respects:** the fishing focus (`frozen` = no work), reduced motion (no sway or leaves, fruit lands at once), off-screen culling.
