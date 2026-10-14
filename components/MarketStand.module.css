@@ -11,7 +11,7 @@
 .wallet{flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:6px 14px 6px 10px;border:2px solid #fff2cd;border-radius:20px;background:#fff1d3;box-shadow:0 3px 0 #a8863d}
 .wallet b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:24px;line-height:1}
 .wallet small{font-weight:700;color:#61705b}
-.coin{display:inline-block;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);box-shadow:inset 0 0 0 2px #b27a17}
+.coin{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim)}
 .allowance{margin-bottom:14px}
 .allowance p{margin:6px 0 0;font-size:12px;line-height:1.45;color:#52634e}
 .meter{height:10px;border-radius:6px;background:#e6e1c8;overflow:hidden}
@@ -39,7 +39,7 @@
 .note small{display:block;margin-top:6px;font-size:12px;color:#48604c}
 .note em{display:block;font-style:normal;font-weight:800;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#61705b}
 .burst{position:absolute;left:24px;top:14px;pointer-events:none}
-.burst i{position:absolute;width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);animation:fly .9s cubic-bezier(.2,.7,.3,1) calc(var(--i)*70ms) both}
+.burst i{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim);animation:fly .9s cubic-bezier(.2,.7,.3,1) calc(var(--i)*70ms) both}
 @keyframes fly{0%{transform:translate(0,0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translate(calc(var(--i)*14px + 20px),-46px) scale(1);opacity:0}}
 @media(max-width:480px){.top{align-items:flex-start}.rosa{font-size:13px;padding:10px 12px}.wallet{padding:4px 10px 4px 8px}.wallet b{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.burst{display:none}}

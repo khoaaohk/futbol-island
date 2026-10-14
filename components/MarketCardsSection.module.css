@@ -36,7 +36,7 @@
 .note{position:relative;margin:0;padding:12px 14px;border-radius:16px;background:#e6f0da;font-size:13px;line-height:1.45}
 .note b{color:#7a5a12}
 .burst{position:absolute;right:18px;top:8px;width:0;height:0;pointer-events:none}
-.burst i{position:absolute;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b8,#f3c643 55%,#b88a24);box-shadow:inset 0 0 0 2px #fff2cd;opacity:0;animation:coinUp .9s cubic-bezier(.2,.7,.3,1) calc(var(--i) * 70ms) 1 both}
+.burst i{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim);opacity:0;animation:coinUp .9s cubic-bezier(.2,.7,.3,1) calc(var(--i) * 70ms) 1 both}
 @keyframes coinUp{0%{opacity:0;transform:translate(0,14px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translate(calc((var(--i) - 2) * 14px),-54px) scale(1)}}
 @media(max-width:600px){.list{grid-template-columns:1fr}.confirm{flex-direction:column;text-align:center}.actions{justify-content:center}.keeper strong{font-size:20px}.confirm h3{font-size:21px}.big{--w:84px}.keeper p{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.burst{display:none}.sell,.yes,.keep{transition:none}}

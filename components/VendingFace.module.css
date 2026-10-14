@@ -50,7 +50,7 @@
 .slot[data-state=locked] .push:not([data-lit]),.slot[data-state=soldout] .push:not([data-lit]){color:#9aa3ad}.slot[data-state=short] .push:not([data-lit]){color:#7cf29a99}
 .slot[data-vending-out] .window>*{animation:vendOut .45s ease-in forwards}
 @keyframes vendOut{to{transform:translateY(70%) scale(.7);opacity:0}}
-.coin{display:inline-block;width:.9em;height:.9em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3b0,#f2b62c 55%,#b67a10);box-shadow:0 0 0 1px #8a5a0a;flex:none}
+.coin{display:inline-block;width:.9em;height:.9em;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim);flex:none}
 .only{position:absolute;top:3px;left:3px;padding:2px 5px;border-radius:5px;background:#ffcf33;color:#5a2a00;font-style:normal;font-size:12px;font-weight:900;line-height:1.1;box-shadow:0 2px 0 #b78300}
 
 .led{display:flex;flex-direction:column;justify-content:center;gap:2px;padding:4px 10px;border-radius:6px;overflow:hidden;background:#152018;color:#7cf29a;box-shadow:inset 0 0 0 4px #0a0f0b,inset 0 0 18px #7cf29a22;font-family:ui-monospace,Menlo,monospace}
@@ -66,7 +66,7 @@
 .mouth{position:relative;align-self:center;width:12px;height:80%;min-height:16px;border-radius:6px;background:#1b1d21;box-shadow:0 0 0 3px #50565f,inset 0 2px 3px #000}
 .coinSlot small{font-size:12px;font-weight:900;letter-spacing:.06em;color:#2b3440}
 .face[data-compact] .coinSlot{grid-template-rows:auto 1fr}.face[data-compact] .coinSlot small{display:none}
-.dropCoin{position:absolute;left:50%;top:0;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);box-shadow:inset 0 0 0 2px #b27a17;
+.dropCoin{position:absolute;left:50%;top:0;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim);
  opacity:0;animation:coinIn .34s calc(120ms + var(--i) * 170ms) cubic-bezier(.5,0,.9,.6) both}
 @keyframes coinIn{0%{opacity:1;transform:translateY(-2.6em)}70%{opacity:1;transform:translateY(0) rotate(80deg) scaleX(.35)}100%{opacity:0;transform:translateY(4px) rotate(90deg) scaleX(.15)}}
 

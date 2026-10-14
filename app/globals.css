@@ -578,6 +578,8 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 :root{--island-hud-row-top:calc(20px + env(safe-area-inset-top,0px));--island-hud-row-height:var(--btn-height);--island-hud-row-gap:14px}
 @media(max-width:600px),(pointer:coarse){:root{--island-hud-row-top:calc(16px + env(safe-area-inset-top,0px))}}
 /* Tactile gold controls shared by island and pitch HUDs. */
+/* One coin look everywhere (Oct 13 2026, user): the Kit Shop's CoinPill coin. Face + rim used by every coin icon. */
+:root{--coin-face:radial-gradient(circle at 35% 35%,#ffe58a,#f2c230 60%,#c99a12);--coin-rim:inset 0 0 0 2px rgba(150,110,0,.35)}
 :root{--island-control-face:var(--btn-gold) var(--btn-grain);--island-control-shadow:var(--btn-shadow-gold)}
 :is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]){background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;border-radius:50%;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
 :is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]):active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40!important}

@@ -5,7 +5,7 @@
 .wallet b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1}
 .wallet small{font-weight:700;color:#61705b}
 .wallet em{font-style:normal;font-weight:700;font-size:11px;margin-left:4px;padding:2px 7px;border-radius:10px;background:#e6efd0;color:#3c6a45}
-.coin{display:inline-block;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);box-shadow:inset 0 0 0 2px #b27a17}
+.coin{display:inline-block;flex:0 0 auto;width:18px;height:18px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim)}
 .offer{position:absolute;z-index:33;left:50%;transform:translateX(-50%);display:grid;grid-template-columns:1fr auto;column-gap:14px;align-items:center;text-align:left;
  max-width:calc(100% - 36px);min-height:48px;padding:8px 10px 8px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--btn-radius,24px);
  background:var(--btn-gold,#f4cc7c) var(--btn-grain,none) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 4px 0 #a8863d);font-size:15px;font-weight:700;white-space:nowrap}
@@ -42,7 +42,7 @@
 .payout{position:relative;display:flex;align-items:baseline;gap:8px;margin:6px 0 10px}
 .payout b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:44px;line-height:1;color:#b27a17;text-shadow:0 2px 0 #fff8e0}
 .payout small{font-weight:700;color:#61705b}
-.burst{position:absolute;left:18px;top:20px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0 0 18%,#f6c948 19% 58%,#c98f1f 59%);opacity:0;
+.burst{position:absolute;left:18px;top:20px;width:16px;height:16px;border-radius:50%;background:var(--coin-face);box-shadow:var(--coin-rim);opacity:0;
  animation:coinPop .9s calc(var(--i) * 70ms) cubic-bezier(.2,.8,.3,1) both}
 @keyframes coinPop{0%{opacity:0;transform:translate(0,0) scale(.4)}25%{opacity:1}100%{opacity:0;transform:translate(calc((var(--i) - 2) * 26px),-54px) scale(1)}}
 .lesson{padding:10px 12px;border-left:4px solid #6e9678;border-radius:4px 12px 12px 4px;background:#e6efd0}
