@@ -174,7 +174,6 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <h2 className={s.panelTitle}>The ball that drank the rain.</h2>
       <p className={g.body}>{exhibit.facts[0]}</p>
       <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><b>{b.head}</b><p>{b.text}</p></li>)}</ol>
-      <div className={g.row}><button type="button" className={g.btn} data-start onClick={startMachine} data-museum-own-cue>Start the machine</button></div>
      </div>}
 
      {phase==='score'&&<div className={s.panel} data-score-panel>
@@ -194,7 +193,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock>
-     {phase==='intro'?<><button type="button" className={g.btn} data-start-dock onClick={startMachine}>Start the machine</button><p className={s.say}>A rainy Saturday, long ago. Your team’s ball is brown leather.</p></>
+     {phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startMachine}>Start the machine</button><p className={s.say}>A rainy Saturday, long ago. Your team’s ball is brown leather.</p></div>
      :phase==='machine'?<>
        {!full?<button type="button" className={s.hold} data-rain onPointerDown={e=>{e.preventDefault();capture(e);startRain();}} onPointerUp={stopRain} onPointerCancel={stopRain}
          onKeyDown={e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();startRain();}}} onKeyUp={e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stopRain();}}}>{reduced?'Rain +15 min':'Hold: Rain'}</button>

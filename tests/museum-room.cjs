@@ -78,8 +78,10 @@ const {validIslandReturnPosition}=require('../lib/arcade/islandReturnPosition.ts
  assert.ok(!/museumStories|museumVoice|MuseumStory|isStoryCase|story\.play|story\.crank/.test(room+scene+ex),'the hall no longer plays stories or the coach’s lines');
  assert.ok(!/data-museum-story|data-museum-plaque|data-museum-caption|data-story/.test(room),'no beat buttons, plaque toggle or caption');
  assert.ok(!/\.strip\b|\.plaqueButton|\.dots\b|\.caption\b/.test(css),'the strip’s styles are gone');
- assert.match(room,/\{zoom\.arrived&&<div className=\{styles\.card\} key=\{zoom\.id\}>\{card\(\)\}<\/div>\}/,'every stop shows its card as soon as the camera arrives');
+ assert.match(room,/\{zoom\.arrived&&\(\(\)=>\{const c=card\(\);return c&&<div className=\{styles\.card\} key=\{zoom\.id\}>\{c\}<\/div>;\}\)\(\)\}/,'a stop that has a card shows it as soon as the camera arrives (open exhibits have none: just See exhibit)');
  assert.match(room,/<span className=\{styles\.eyebrow\}>\{g\.title\} · \{exhibit\.year\}<\/span><h2>\{exhibit\.title\}<\/h2>[\s\S]*?exhibit\.facts\.map[\s\S]*?<MuseumExhibit [\s\S]*?Take it to your game:[\s\S]*?<summary>Sources<\/summary>/,'the card: eyebrow, title, every fact, the hands-on bit, Take it to your game, sources');
+ assert.match(room,/if\(shown&&EXPERIENCES\[exhibit\.id\]\)return null;/,'open cases with an exhibit show no info card, only the button (Oct 14 2026)');
+ assert.match(room,/'See exhibit again':'See exhibit'/,'the button reads See exhibit');assert(!/'Step inside'/.test(room),'no Step inside wording left');
  assert.match(room,/data-museum-step-inside=\{zoom\.id\}/,'Step inside is there from the start');
  assert.match(room,/spinning=zoomedId==='telstar-1970'&&!!zoom\?\.arrived&&!!open\['telstar-1970'\];/,'only the Telstar still spins (drag / ⟲ ⟳)');
  for(const [id,story] of Object.entries(S.STORIES)){const e=X.EXHIBITS.find(x=>x.id===id);assert.ok(e,id+' is a real case');

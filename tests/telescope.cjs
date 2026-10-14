@@ -89,10 +89,12 @@ await ok('3D runtime: the eyepiece on the same camera, glints only while looking
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(40,1,1,500);camera.position.set(spot.x+18,spot.ground+23,spot.z+30);camera.lookAt(spot.x,spot.ground,spot.z);camera.updateMatrixWorld();
  const fun=mod.createSummitActivities(scene,{teleport:()=>{},impact:()=>{}});const before=scene.children.length;
  const el=()=>({hidden:true,dataset:{},style:{}});const kickBtn=el(),scopeBtn=el();
- const ctx=(x,z,extra={})=>({now:0,dt:1/30,elapsed:0,reduced:false,camera,width:390,height:844,x,z,onFoot:true,canEnter:true,sunset:true,focusKey:null,ui:s=>s.includes('summit-kick')?kickBtn:scopeBtn,place(){},hide(e,h){e.hidden=h;},...extra});
+ const ctx=(x,z,extra={})=>({now:0,dt:1/30,elapsed:0,reduced:false,camera,width:390,height:844,x,z,onFoot:true,onGround:true,canEnter:true,sunset:true,focusKey:null,ui:s=>s.includes('summit-kick')?kickBtn:scopeBtn,place(){},hide(e,h){e.hidden=h;},...extra});
  await env.watchTimers(async()=>{for(let i=0;i<100;i++){fun.update(ctx(120,40));fun.applyCamera(camera,1/30,false);}});
  assert.equal(env.counts.raf+env.counts.timeout+env.counts.interval,0,'idle: no rAF or timers');assert.equal(scene.children.length,before,'idle: no glints in the scene');
  assert.equal(fun.update(ctx(spot.x+1,spot.z))?.key,'telescope','the stand wants the focus nearby');
+ assert.equal(fun.update(ctx(spot.x+1,spot.z,{onFoot:false,onGround:true}))?.key,'telescope','…from a bike, scooter or moped too (user, Oct 14)');
+ assert.equal(fun.update(ctx(spot.x+1,spot.z,{onFoot:false,onGround:false})),null,'…but not while flying');
  fun.update(ctx(spot.x+1,spot.z,{focusKey:'telescope'}));assert.equal(scopeBtn.hidden,false,'Look through the telescope');
  store.summitActions.openScope();assert(store.scopeStore.get().active);
  const glints=scene.getObjectByName('telescope-glints');assert(glints&&glints.children.length===TT.GLINT_COUNT,'glint sprites only now');
@@ -125,7 +127,7 @@ await ok('3D runtime: the eyepiece on the same camera, glints only while looking
  store.summitActions.exitScope();fun.applyCamera(camera,1/30,false);
  // Walk to the KIT SHOP door: collected once, 5 learning coins.
  fun.update(ctx(g.at.x+20,g.at.z));assert(!saved().collected.includes('kit-shop'),'not from far away');
- fun.update(ctx(g.at.x+.5,g.at.z,{onFoot:false}));assert(!saved().collected.includes('kit-shop'),'not while flying over');
+ fun.update(ctx(g.at.x+.5,g.at.z,{onFoot:false,onGround:false}));assert(!saved().collected.includes('kit-shop'),'not while flying over');
  fun.update(ctx(g.at.x+.5,g.at.z));fun.update(ctx(g.at.x+.5,g.at.z));await new Promise(r=>setImmediate(r));
  assert(saved().collected.includes('kit-shop'),'collected on foot');
  assert.deepEqual(paid.filter(p=>p.id==='learn:explore:telescope-kit-shop').map(p=>p.amount),[5],'paid once, 5 coins');

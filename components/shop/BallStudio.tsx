@@ -26,7 +26,8 @@ import {
 import type {BallStage} from '@/lib/shop/ballStage';
 import type {Painter,PaintTool,StampKind,Symmetry} from '@/lib/shop/ballPaint';
 import type {BallSound} from '@/lib/shop/ballSound';
-import {StudioIconButton,StudioIconRow,StudioModeToggle} from './StudioControls';
+import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,studioSectionTitle,useStudioSheet} from './StudioControls';
+import type {StageInsets} from '@/lib/shop/studioSheet';
 
 type Props={onClose():void;onBuy?(design:BallDesign):void};
 const STEPS=[{id:'panels',label:'Start'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'finish',label:'Finish'},{id:'draw',label:'Draw'},{id:'stickers',label:'Stickers'},{id:'done',label:'Done'}] as const;
@@ -90,6 +91,8 @@ const STEP_ICON:Record<StepId,React.ReactNode>={
  stickers:sv(<><path d="M5 4h10l4 4v12H5z" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"/><path d="M15 4v4h4" fill="none" stroke="currentColor" strokeWidth="2.2"/><circle cx="12" cy="13.5" r="3" fill="currentColor"/></>),
  done:I.check,
 };
+/** The shared step pills (components/shop/StudioControls.tsx <StudioSteps>) — built once from STEPS/STEP_ICON. */
+const STEP_DEFS=STEPS.map(x=>({id:x.id,label:x.label,icon:STEP_ICON[x.id]}));
 const TOOLS:{id:PaintTool;label:string;icon:React.ReactNode}[]=[{id:'brush',label:'Brush',icon:I.brush},{id:'marker',label:'Marker',icon:I.marker},{id:'eraser',label:'Eraser',icon:I.eraser},
  {id:'fill',label:'Fill',icon:I.fill},{id:'line',label:'Line',icon:I.line},{id:'stamp',label:'Stamps',icon:I.stamp}];
 const STAMP_ICON:Record<StampKind,React.ReactNode>={
@@ -158,7 +161,7 @@ export default function BallStudio({onClose,onBuy}:Props){
  const [hint,setHint]=useState<string|null>(null);
  const [bump,setBump]=useState(0);
  const [preview,setPreview]=useState<BallDesign|null>(null);
- const [bursts,setBursts]=useState<{id:number;s:number}[]>([]);
+ const [bursts,setBursts]=useState<{id:number;s:number;y:number}[]>([]);
  // Draw step
  const [tool,setTool]=useState<PaintTool>('brush');
  const [bsize,setBsize]=useState(1);
@@ -169,6 +172,7 @@ export default function BallStudio({onClose,onBuy}:Props){
  const [,setDrawRev]=useState(0);
  const wallet=useArcadeWallet();
  const canvasRef=useRef<HTMLCanvasElement>(null),stageRef=useRef<BallStage|null>(null),designRef=useRef(design);designRef.current=design;
+ const stageElRef=useRef<HTMLDivElement>(null),insetsRef=useRef<StageInsets|null>(null);
  const rootRef=useRef<HTMLDivElement>(null),cursorRef=useRef<HTMLDivElement>(null),soundRef=useRef<BallSound|null>(null);
  const storeRef=useRef<BallStore|null>(null);storeRef.current=store;
  const reduced=useRef(false);
@@ -203,9 +207,10 @@ export default function BallStudio({onClose,onBuy}:Props){
   reduced.current=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const coarse=window.matchMedia('(pointer: coarse)').matches||Math.min(window.innerWidth,window.innerHeight)<600;
   import('@/lib/shop/ballSound').then(m=>{if(!dead)soundRef.current=m.createBallSound();}).catch(()=>{});
-  const onBounce=(v:number)=>{soundRef.current?.kick(v);if(v<1&&!reduced.current){const id=Date.now()+Math.random();setBursts(b=>[...b.slice(-3),{id,s:v}]);window.setTimeout(()=>setBursts(b=>b.filter(x=>x.id!==id)),700);}};
+  const onBounce=(v:number)=>{soundRef.current?.kick(v);if(v<1&&!reduced.current){const id=Date.now()+Math.random(),sb=stageRef.current?.screenBall(),top=stageElRef.current?.getBoundingClientRect().top??0;
+   setBursts(b=>[...b.slice(-3),{id,s:v,y:sb?sb.y+sb.r-top-6:-1}]);window.setTimeout(()=>setBursts(b=>b.filter(x=>x.id!==id)),700);}};
   import('@/lib/shop/ballStage').then(({createBallStage})=>{if(dead)return;
-   try{const st=createBallStage(canvas,{coarse,reducedMotion:reduced.current,onBounce});stageRef.current=st;st.setDesign(designRef.current);attach();flushDirty();st.preview();setReady(true);
+   try{const st=createBallStage(canvas,{coarse,reducedMotion:reduced.current,onBounce});stageRef.current=st;st.setDesign(designRef.current);st.setInsets(insetsRef.current);attach();flushDirty();st.preview();setReady(true);
     if(typeof window!=='undefined'&&(process.env.NODE_ENV!=='production'||location.pathname.startsWith('/shop-lab')))(window as unknown as {__fiBallStage?:BallStage}).__fiBallStage=st;}
    catch(err){console.warn('ball studio: no WebGL',err);setFailed(true);}}).catch(()=>setFailed(true));
   return ()=>{dead=true;clearTimeout(encTimer.current);stageRef.current?.dispose();stageRef.current=null;soundRef.current?.close();soundRef.current=null;const w=window as unknown as {__fiBallStage?:BallStage};if(w.__fiBallStage)delete w.__fiBallStage;};},[attach,flushDirty]);
@@ -260,16 +265,18 @@ export default function BallStudio({onClose,onBuy}:Props){
  const idx=STEPS.findIndex(x=>x.id===step);
  const decalEditable=step==='stickers';
  const painting=step==='draw'&&mode==='paint'&&!showoff;
+ // The resizable phone sheet (shared with Boot and Jersey): the ball re-fits to the stage's visible box as it moves.
+ const panel=useStudioSheet({stageRef:stageElRef,fitOff:showoff,onInsets:i=>{insetsRef.current=i;stageRef.current?.setInsets(i);}});
  const close=()=>{const d=flushEncode();saveBallCurrent(d,undefined,artMem.current);onClose();};
 
  // ---- decals ----
- const frontDir=():Vec3=>{const st=stageRef.current,c=canvasRef.current;if(!st||!c)return [0,0,1];const r=c.getBoundingClientRect();return st.pick(r.left+r.width/2,r.top+r.height*.47)??[0,0,1];};
+ const frontDir=():Vec3=>{const st=stageRef.current;if(!st)return [0,0,1];const b=st.screenBall();return st.pick(b.x,b.y-b.r*.06)??[0,0,1];};
  /** A free spot near the front of the ball so a new decal doesn't cover another: the first candidate (screen offsets in
   *  ball radii) whose angular gap to every decal is bigger than both half-widths. */
- const freeDir=(kind:DecalKind,prefer:[number,number][]):Vec3=>{const st=stageRef.current,c=canvasRef.current;if(!st||!c)return [0,0,1];const r=c.getBoundingClientRect(),rad=Math.min(r.width,r.height)*.31;
+ const freeDir=(kind:DecalKind,prefer:[number,number][]):Vec3=>{const st=stageRef.current;if(!st)return [0,0,1];const b=st.screenBall(),rad=b.r;
   const asp=(k:DecalKind)=>k==='name'?2.6:k==='quote'?3.4:k==='flag'?1.5:1,half=(k:DecalKind,sz:number)=>Math.min(sz*asp(k),.95)*.8+sz*.2;
   let best:Vec3=frontDir(),bestGap=-9;
-  for(const [fx,fy] of prefer){const d=st.pick(r.left+r.width/2+fx*rad,r.top+r.height*.47+fy*rad);if(!d)continue;
+  for(const [fx,fy] of prefer){const d=st.pick(b.x+fx*rad,b.y-b.r*.06+fy*rad);if(!d)continue;
    let gap=9;for(const x of designRef.current.decals){const a=Math.acos(Math.max(-1,Math.min(1,d[0]*x.dir[0]+d[1]*x.dir[1]+d[2]*x.dir[2])));gap=Math.min(gap,a-half(x.kind,x.size)-half(kind,DEFAULT_SIZE[kind])*.6);}
    if(gap>0)return d;if(gap>bestGap){bestGap=gap;best=d;}}
   return best;};
@@ -392,26 +399,26 @@ export default function BallStudio({onClose,onBuy}:Props){
  const swatchRow=(cur:string,set:(hex:string)=>void,label:string,hov?:(hex:string)=>ReturnType<typeof hover>|object)=><div className={s.swatches} role="group" aria-label={label}>
   {PALETTE.map(c=><button key={c.hex} className={`${s.sw} ${isLight(c.hex)?s.light:''}`} style={{background:c.hex}} aria-label={c.name} title={c.name} aria-pressed={cur===c.hex} onClick={()=>set(c.hex)} {...(hov?hov(c.hex):{})}/>)}
   <label className={`${s.sw} ${s.custom}`} title="Any colour"><span className={s.sr}>Pick any colour</span><input type="color" value={cur} onChange={e=>set(e.target.value)}/></label></div>;
- const brushPx=(()=>{const c=canvasRef.current;if(!c)return 20;const w=c.clientWidth,hh=c.clientHeight,R=w>=hh?.3*hh:.31*w;const m=modsRef.current;const r=m?(tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.BRUSH_SIZES[bsize]):.042;return Math.max(8,r*R*2);})();
+ const brushPx=(()=>{const st=stageRef.current;if(!st)return 20;const R=st.screenBall().r;const m=modsRef.current;const r=m?(tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.BRUSH_SIZES[bsize]):.042;return Math.max(8,r*R*2);})();
 
  const pane=(()=>{switch(step){
   case 'panels':return <div className={s.pane} key="panels">
-   <h2 className={s.h2}>Start from an idea</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Start from an idea</h2>
    <div className={s.presets}>
     <button className={`${s.preset} ${s.surprise}`} onClick={surprise} data-shop-own-cue><span className={s.diceBall}>{I.dice}</span>Surprise me!</button>
     {PRESETS.map(p=><button key={p.id} className={s.preset} onClick={()=>applyPreset(p.design)} data-shop-own-cue {...hover(d=>{const n=cloneBall(p.design);Object.assign(d,{...n,decals:d.decals,size:d.size,futsal:d.futsal,art:{id:d.art.id,fills:n.layout===d.layout?d.art.fills:[]}});})}><MiniBall d={p.design}/>{p.label}</button>)}</div>
-   <h2 className={s.h2}>Choose your panels <small>{L.panels} panels</small></h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Choose your panels <small>{L.panels} panels</small></h2>
    <div className={s.tiles}>{LAYOUTS.map(l=><button key={l.id} className={s.tile} aria-pressed={design.layout===l.id} onClick={()=>pick(d=>setLayout(d,l.id))} {...hover(d=>setLayout(d,l.id))}>
     <span className={s.tileArt}><LayoutIcon id={l.id} a={design.colors.a} b={design.colors.b} c={design.colors.c}/></span>{l.label}<small>{l.panels} panels</small></button>)}</div>
    <p className={s.fact}>{I.bulb}<span><b>Did you know?</b>{L.fact}</span></p>{nextCta}</div>;
   case 'colours':return <div className={s.pane} key="colours">
-   <h2 className={s.h2}>Colour your panels</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Colour your panels</h2>
    <div className={s.groups}>{groupsList.map((k,i)=><button key={k} className={s.groupBtn} aria-pressed={group===k} onClick={()=>setGroup(k)}><i style={{background:design.colors[k]}}/>{L.groups[i]}</button>)}</div>
    {swatchRow(design.colors[group],setColour,`Colour for ${L.groups[groupsList.indexOf(group)]}`,hex=>hover(d=>{d.colors[group]=hex;}))}
    <div className={s.row} style={{marginTop:14}}><button className={s.chip} onClick={()=>edit(d=>{const t=d.colors.a;d.colors.a=d.colors.b;d.colors.b=t;})}>{I.shuffle}Swap first two</button>
     <button className={s.chip} onClick={surprise} data-shop-own-cue>{I.dice}Surprise colours</button></div>{nextCta}</div>;
   case 'pattern':return <div className={s.pane} key="pattern">
-   <h2 className={s.h2}>Add a pattern</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Add a pattern</h2>
    <div className={s.tiles}>{PATTERNS.map(p=><button key={p.id} className={s.tile} aria-pressed={design.pattern.kind===p.id} onClick={()=>pick(d=>{d.pattern.kind=p.id;})} {...hover(d=>{d.pattern.kind=p.id;})}>
     <span className={`${s.tileArt} ${s.patArt}`}>{patThumbs[p.id]?<img src={patThumbs[p.id]} alt=""/>:null}</span>{p.label}</button>)}</div>
    {design.pattern.kind!=='none'&&<>
@@ -422,11 +429,11 @@ export default function BallStudio({onClose,onBuy}:Props){
     <div className={s.row}>{(['all',...groupsList] as PatternTarget[]).map(k=><button key={k} className={s.chip} aria-pressed={design.pattern.on===k} onClick={()=>edit(d=>{d.pattern.on=k;})}>{k==='all'?'Whole ball':L.groups[['a','b','c'].indexOf(k)]}</button>)}
      <button className={s.chip} onClick={()=>edit(d=>{d.pattern.seed=(d.pattern.seed*7+13)%9999;})}>{I.shuffle}Shuffle</button></div></>}{nextCta}</div>;
   case 'finish':{const F=FINISHES.find(f=>f.id===design.finish)!;return <div className={s.pane} key="finish">
-   <h2 className={s.h2}>Pick a finish</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Pick a finish</h2>
    <div className={s.tiles}>{FINISHES.map(f=><button key={f.id} className={s.tile} aria-pressed={design.finish===f.id} onClick={()=>pick(d=>{d.finish=f.id;})} {...hover(d=>{d.finish=f.id;})}><span className={s.finish} style={FINISH_CSS[f.id]}/>{f.label}</button>)}</div>
    <p className={s.fact}>{I.bulb}<span><b>{F.label}</b>{F.fact}</span></p>{nextCta}</div>;}
   case 'draw':return <div className={s.pane} key="draw" data-draw-pane>
-   <h2 className={s.h2}>Draw on your ball</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Draw on your ball</h2>
    <div className={s.tools} role="group" aria-label="Drawing tools">{TOOLS.map(t=><button key={t.id} className={s.tool} aria-pressed={tool===t.id} onClick={()=>{setTool(t.id);setMode('paint');}} data-tool={t.id}>{t.icon}<span>{t.label}</span></button>)}</div>
    {tool==='stamp'&&<div className={s.stamps} role="group" aria-label="Stamps">{(['star','heart','circle','bolt'] as StampKind[]).map(k=><button key={k} className={s.stampBtn} aria-pressed={stamp===k} aria-label={`${k==='bolt'?'Lightning':k[0].toUpperCase()+k.slice(1)} stamp`} onClick={()=>setStamp(k)} style={{color:ink}}>{STAMP_ICON[k]}</button>)}</div>}
    <div className={s.drawRow}>
@@ -437,7 +444,7 @@ export default function BallStudio({onClose,onBuy}:Props){
    <div className={s.row} style={{marginTop:12}}><button className={s.chip} onClick={clearDrawing}>{I.bin}Clear drawing</button></div>
    <p className={s.fact}>{I.hand}<span><b>{tool==='fill'?'Fill a panel':tool==='stamp'?'Stamps':sym==='radial5'?'×5 magic':'How to draw'}</b>{tool==='fill'?'Tap any panel to paint it. Tap it again to take the colour off.':tool==='stamp'?'Tap the ball to stamp. Try ×5 for a ring of stars!':sym==='radial5'?'Everything you draw is copied five times round the ball, like the five sides of a pentagon.':'Paint with one finger. Spin the ball with two fingers, or switch to Spin.'}</span></p>{nextCta}</div>;
   case 'stickers':return <div className={s.pane} key="stickers">
-   <h2 className={s.h2}>Stickers &amp; words <small className={s.count} aria-label={`${design.decals.length} of ${MAX_DECALS} used`}>{Array.from({length:MAX_DECALS},(_,i)=><i key={i} data-on={i<design.decals.length?'':undefined}/>)}</small></h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Stickers &amp; words <small className={s.count} aria-label={`${design.decals.length} of ${MAX_DECALS} used`}>{Array.from({length:MAX_DECALS},(_,i)=><i key={i} data-on={i<design.decals.length?'':undefined}/>)}</small></h2>
    <div className={s.tabs} role="group" aria-label="Sticker kind">{(['sticker','flag','quote','name'] as const).map(k=><button key={k} aria-pressed={tray===k} onClick={()=>setTray(k)}>{k==='sticker'?'Stickers':k==='flag'?'Flags':k==='quote'?'Words':'Name'}</button>)}</div>
    {tray==='sticker'&&<div className={s.trays}>{STICKER_IDS.map(id=><button key={id} className={s.item} aria-label={`${id} sticker`} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('sticker',id)} data-shop-own-cue>{thumbs[`sticker:${id}`]?<img src={thumbs[`sticker:${id}`]} alt=""/>:null}</button>)}</div>}
    {tray==='flag'&&<div className={`${s.trays} ${s.flags}`}>{FLAGS.map(f=><button key={f.code} className={s.item} aria-label={`${f.name} flag`} title={f.name} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('flag',f.code)} data-shop-own-cue>{thumbs[`flag:${f.code}`]?<img src={thumbs[`flag:${f.code}`]} alt="" style={{height:'78%'}}/>:null}<span className={s.flagName}>{f.name}</span></button>)}</div>}
@@ -455,7 +462,7 @@ export default function BallStudio({onClose,onBuy}:Props){
     tray==='name'?<p className={s.fact}>{I.bulb}<span><b>Like the pros</b>Players often have their name or number printed on their own training balls so they never get mixed up.</span></p>:
     <p className={s.fact}>{I.hand}<span><b>How to stick</b>Tap one and it jumps onto the ball. Drag it to move it, pinch to resize.</span></p>}{nextCta}</div>;
   case 'done':return <div className={s.pane} key="done">
-   <h2 className={s.h2}>Pick your size</h2>
+   <h2 className={`${s.h2} ${studioSectionTitle}`}>Pick your size</h2>
    <div className={s.sizes}>{SIZES.map(z=><button key={z.id} className={s.tile} aria-pressed={design.size===z.id} onClick={()=>edit(d=>{d.size=z.id;})}><span className={s.sizeBall} style={{width:30+z.id*7,height:30+z.id*7}}/>{z.label}</button>)}</div>
    <p className={s.fact}>{I.bulb}<span><b>Size {design.size}</b>{SIZES.find(z=>z.id===design.size)!.note} Kids usually play with size 3 or 4.</span></p>
    <button className={s.toggle} aria-pressed={design.futsal} onClick={()=>edit(d=>{d.futsal=!d.futsal;})}><span><b>Futsal ball</b>{FUTSAL_NOTE}</span><i className={s.switch}/></button>
@@ -469,11 +476,11 @@ export default function BallStudio({onClose,onBuy}:Props){
     <div className={s.titleBox}><h1 className={s.title}>Ball Studio</h1><div className={s.sub} data-saving={saving?'':undefined}><i className={s.savedDot}/>{saving?'Saving…':'Saved'}</div></div>
     <CoinPill balance={wallet.balance} className={s.headerCoins} data-coins/>
    </div>
-  <div className={s.stage} data-painting={painting?'':undefined} data-tool={painting?tool:undefined} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onContextMenu={e=>{if(step==='draw')e.preventDefault();}}>
+  <div ref={stageElRef} className={s.stage} data-painting={painting?'':undefined} data-tool={painting?tool:undefined} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onContextMenu={e=>{if(step==='draw')e.preventDefault();}}>
    <div className={s.spot}/>
    <canvas ref={canvasRef} className={s.canvas} aria-label={painting?'Your football. Drag on it to paint; two fingers spin it.':'Your football. Drag to spin it, pinch to zoom, double-tap to reset.'} role="img"/>
    {painting&&<div ref={cursorRef} className={s.cursor} aria-hidden style={{width:brushPx,height:brushPx,marginLeft:-brushPx/2,marginTop:-brushPx/2,borderColor:tool==='eraser'?'#244d40':ink}}/>}
-   {bursts.map(b=><span key={b.id} className={s.burst} style={{'--s':.6+b.s*.8} as React.CSSProperties} aria-hidden>{Array.from({length:7},(_,i)=><i key={i} style={{'--a':`${i*51+10}deg`} as React.CSSProperties}/>)}</span>)}
+   {bursts.map(b=><span key={b.id} className={s.burst} style={{'--s':.6+b.s*.8,...(b.y>0?{top:b.y}:null)} as React.CSSProperties} aria-hidden>{Array.from({length:7},(_,i)=><i key={i} style={{'--a':`${i*51+10}deg`} as React.CSSProperties}/>)}</span>)}
    {!showoff&&<StudioIconRow>
     <StudioIconButton label="Undo" disabled={!canUndo} onClick={undo}>{I.undo}</StudioIconButton>
     <StudioIconButton label="Redo" disabled={!canRedo} onClick={redo}>{I.redo}</StudioIconButton>
@@ -496,14 +503,14 @@ export default function BallStudio({onClose,onBuy}:Props){
     <button aria-label="Turn" onClick={()=>changeSel(x=>{x.rot+=Math.PI/8;})}>{I.turn}</button>
     <button className={s.del} aria-label="Remove sticker" onClick={removeSel}>{I.bin}</button>
     <button className={s.okBtn} aria-label="Done with this sticker" onClick={()=>setSel(-1)}>{I.check}</button></div>}
-   {!(selDecal&&decalEditable)&&<div className={s.kickWrap} onPointerDown={e=>e.stopPropagation()}>
+   {!(selDecal&&decalEditable)&&<div className={s.kickWrap} data-studio-top="" onPointerDown={e=>e.stopPropagation()}>
     <button className={s.kick} onClick={kick} data-shop-own-cue><span>{I.ball}</span>Kick!</button></div>}
    {showoff&&<button className={s.showClose} onClick={exitShow} onPointerDown={e=>e.stopPropagation()}>{I.close}Back to designing</button>}
    {toast&&<div key={toast.id} className={s.toast} role="status">{toast.text}</div>}
   </div>
-  <section className={s.sheet} aria-label="Design your ball">
-   <div className={s.grab}/>
-   <nav className={s.steps} aria-label="Steps">{STEPS.map((x,i)=><button key={x.id} className={s.stepBtn} aria-current={step===x.id?'step':undefined} data-done={visited.has(x.id)&&step!==x.id?'':undefined} data-step-id={x.id} onClick={()=>goto(x.id)}><b>{step===x.id?STEP_ICON[x.id]:i+1}</b>{x.label}</button>)}</nav>
+  <section className={`${s.sheet} ${panel.sheetClass}`} {...panel.sheetProps} aria-label="Design your ball">
+   <StudioSheetHandle sheet={panel}/>
+   <StudioSteps steps={STEP_DEFS} activeId={step} isDone={id=>visited.has(id as StepId)} onSelect={id=>goto(id as StepId)}/>
    <div className={s.body}>{pane}</div>
    <div className={s.foot}>
     <button className={s.save} onClick={openSlots}>{I.save}Save</button>

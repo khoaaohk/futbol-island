@@ -1,4 +1,5 @@
 'use client';
+import StepIcon from '../StepIcon';
 import {useEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent as RPointerEvent} from 'react';
 import * as k from '../anatomy/iso-kit';
 import {museumSfx} from '@/lib/museum/museumSound';
@@ -204,8 +205,8 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     <div className={v.head} style={{left:`calc(14px + (100% - 28px) * ${frame/LAST})`}} aria-hidden="true"/>
    </div>
    <div className={v.calls}>
-    <button type="button" className={`${s.ghost} ${v.step}`} aria-label="Back one frame" data-step="-1" onClick={()=>step(-1)}>◀</button>
-    <button type="button" className={`${s.ghost} ${v.step}`} aria-label="Forward one frame" data-step="1" onClick={()=>step(1)}>▶</button>
+    <button type="button" className={`${s.ghost} ${v.step}`} aria-label="Back one frame" data-step="-1" onClick={()=>step(-1)}><StepIcon kind="prev"/></button>
+    <button type="button" className={`${s.ghost} ${v.step}`} aria-label="Forward one frame" data-step="1" onClick={()=>step(1)}><StepIcon kind="next"/></button>
     {phase==='roll'?<button type="button" className={s.btn} data-accent data-freeze onClick={freeze}>Freeze</button>
      :<><button type="button" className={s.btn} data-call="goal" onClick={()=>call('goal')}>Goal</button>
       <button type="button" className={s.ghost} data-call="nogoal" onClick={()=>call('nogoal')}>No goal</button></>}

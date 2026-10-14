@@ -105,3 +105,6 @@
 
 /* Shorter desktop windows (about 900 px tall): a tighter intro so the whole story and its button fit the card without scrolling. */
 @media (min-width:700px) and (max-height:1000px){.panel{gap:12px;padding-top:22px;padding-bottom:22px}.panelTitle{font-size:clamp(26px,2.8vw,36px)}.beats li{padding:7px 0}.beats p{font-size:14px;line-height:1.4}}
+
+/* One start button, centred with its line under it (Oct 14 2026, user: no second copy above). */
+.introDock{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.introDock .say{flex:none}

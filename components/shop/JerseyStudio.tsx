@@ -4,10 +4,11 @@
  * Contract: default export, props {onClose(); onBuy?(design)}. Self-contained: its own small three.js scene
  * (./jerseyScene, imported only once the studio is open), its own save under JERSEY_KEY (auto-save + 3 slots).
  *
- * Kid UX (ages 7–12): a step bar with a progress line (Style → Colours → Pattern → Draw → Crest → Name & number → Done), big
- * tiles with drawn thumbnails, 13 presets, one-tap kit palettes, a harmonious Randomise, hover / press previews on the 3D shirt,
- * a sparkle when a step is finished, a "Looking good!" Done moment, a full-screen Show-off turntable, save slots with
- * thumbnails, and a Buy confirmation with the receipt. Undo / redo cover every edit, including each drawn stroke.
+ * Kid UX (ages 7–12): the shared step pills (Style → Colours → Pattern → Draw → Crest → Name & number → Done — the shared
+ * components/shop/StudioControls.tsx <StudioSteps>, same pill design as Boot and Ball, no progress bar), big tiles with drawn
+ * thumbnails, 13 presets, one-tap kit palettes, a harmonious Randomise, hover / press previews on the 3D shirt, a "Looking
+ * good!" Done moment, a full-screen Show-off turntable, save slots with thumbnails, and a Buy confirmation with the receipt.
+ * Undo / redo cover every edit, including each drawn stroke.
  * DRAW: brush, spray, eraser, fill, straight line, stamps (circle, star, heart, stripe band), 3 sizes, kid colours + custom,
  * mirror, "paint on" lock, On shirt / Flat template view. The drawing is a layer between the pattern and the prints.
  * Every option is original: no real teams, crests, sponsors or kit makers. Tips teach football words and shirt history.
@@ -26,7 +27,8 @@ import {
 import {drawFlatShirt,drawCrest,FONT_FACES} from '@/lib/shop/jerseyPaint';
 import {type ArtOp,type ArtShape,type ArtSize,artFullness} from '@/lib/shop/paint/artOps';
 import type {JerseySceneApi,JerseyFocus,JerseyAngle,DrawConfig,DrawTool,PaintLock} from './jerseyScene';
-import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioViewChips} from './StudioControls';
+import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
+import type {StageInsets} from '@/lib/shop/studioSheet';
 
 type Step='style'|'colours'|'pattern'|'draw'|'crest'|'name'|'done';
 const STEPS:{id:Step;label:string}[]=[{id:'style',label:'Style'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'draw',label:'Draw'},{id:'crest',label:'Crest'},{id:'name',label:'Name & number'},{id:'done',label:'Done'}];
@@ -144,8 +146,10 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  const [flat,setFlat]=useState(false);
  const [clearArm,setClearArm]=useState(false);
  const [showOff,setShowOff]=useState<'off'|'spinning'|'still'>('off');
- const [sparkle,setSparkle]=useState(0);
  const contentRef=useRef<HTMLDivElement>(null),stepsRef=useRef<HTMLElement>(null),stage=useRef<HTMLDivElement>(null),sceneRef=useRef<JerseySceneApi|null>(null),designRef=useRef(d),pulseNext=useRef(false);
+ const insetsRef=useRef<StageInsets|null>(null);
+ // The resizable phone sheet (shared with Ball and Boot): the shirt re-fits to the stage's visible box as it moves.
+ const sheet=useStudioSheet({stageRef:stage,fitOff:showOff!=='off',onInsets:i=>{insetsRef.current=i;sceneRef.current?.setInsets(i);}});
  const reduced=useMemo(()=>typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches,[]);
  designRef.current=d;
 
@@ -176,7 +180,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    try{
     api=m.createJerseyScene(stage.current,{reducedMotion:reduced,onFace:setFace,onInteract:()=>setHint(false),
      onArt:op=>cb.current.onArt(op),onArtFull:()=>cb.current.onArtFull(),onArtMiss:()=>cb.current.onArtMiss(),onShowOffEnd:()=>cb.current.onShowOffEnd()});
-    sceneRef.current=api;api.setDesign(designRef.current);setSceneState('ready');
+    sceneRef.current=api;api.setInsets(insetsRef.current);api.setDesign(designRef.current);setSceneState('ready');
    }catch{setSceneState('failed');}
   }).catch(()=>{if(!cancelled)setSceneState('failed');});
   return()=>{cancelled=true;api?.dispose();sceneRef.current=null;};
@@ -202,7 +206,6 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  const stepIndex=STEPS.findIndex(s=>s.id===step);
  const goStep=(s:Step)=>{
   const to=STEPS.findIndex(x=>x.id===s);
-  if(to>stepIndex&&!reduced)setSparkle(n=>n+1);
   setStep(s);setVisited(v=>{const n=new Set(v);n.add(s);for(let i=0;i<to;i++)n.add(STEPS[i].id);return n;});
   contentRef.current?.scrollTo({top:0});
   requestAnimationFrame(()=>stepsRef.current?.querySelector(`[data-step="${s}"]`)?.scrollIntoView({block:'nearest',inline:'center',behavior:reduced?'auto':'smooth'}));
@@ -249,34 +252,34 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  let body:ReactNode=null;
  if(step==='style')body=<>
   <section className={styles.group}>
-   <h3>Start from a design</h3>
+   <h3 className={studioSectionTitle}>Start from a design</h3>
    <div className={styles.presets}>
     {PRESETS.map(p=>{const make=()=>({...p.design,name:d.name,art:d.art});return <button key={p.id} type="button" className={styles.preset} aria-pressed={sameJersey(make(),d)} {...pv(make)} onClick={()=>{pulseNext.current=true;dispatch({type:'set',design:make()});}}>
      <ShirtThumb design={p.design} size={84}/><span>{p.label}</span></button>;})}
    </div>
   </section>
   {savedSlots.length>0&&<section className={styles.group}>
-   <h3>Your saved designs</h3>
+   <h3 className={studioSectionTitle}>Your saved designs</h3>
    <div className={styles.presets}>
     {savedSlots.map(({s,i})=><button key={i} type="button" className={styles.preset} {...pv(()=>validateJersey(s!.design).design)} onClick={()=>loadSlot(i)}>
      <ShirtThumb design={s!.design} art size={84}/><span>{s!.name}</span></button>)}
    </div>
   </section>}
   <section className={styles.group}>
-   <h3>Sleeves</h3>
+   <h3 className={studioSectionTitle}>Sleeves</h3>
    <div className={styles.tiles2}>
     {SLEEVES.map(s=><button key={s.id} type="button" className={styles.tile} aria-pressed={d.sleeves===s.id} onClick={()=>set({sleeves:s.id})}><StyleIcon kind={s.id==='long'?'long':'short'}/><span>{s.label}</span></button>)}
    </div>
   </section>
   <section className={styles.group}>
-   <h3>Collar</h3>
+   <h3 className={studioSectionTitle}>Collar</h3>
    <div className={styles.tiles4}>
     {COLLARS.map(c=><button key={c.id} type="button" className={styles.tile} aria-pressed={d.collar===c.id} onClick={()=>{set({collar:c.id});sceneRef.current?.setView('front','collar');}}><StyleIcon kind={c.id}/><span>{c.label}</span></button>)}
    </div>
    {tip(COLLARS.find(c=>c.id===d.collar)!.tip)}
   </section>
   <section className={styles.group}>
-   <h3>Cuffs</h3>
+   <h3 className={studioSectionTitle}>Cuffs</h3>
    <div className={styles.tiles2}>
     <button type="button" className={styles.tile} aria-pressed={d.cuffs} onClick={()=>{set({cuffs:true});sceneRef.current?.setView('front','sleeve');}}><StyleIcon kind="cuffsOn"/><span>Rib cuffs</span></button>
     <button type="button" className={styles.tile} aria-pressed={!d.cuffs} onClick={()=>{set({cuffs:false});sceneRef.current?.setView('front','sleeve');}}><StyleIcon kind="short"/><span>Plain hem</span></button>
@@ -287,7 +290,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
   const pickRole=(hex:string)=>({[colorRole]:hex,...(colorRole==='primary'&&d.textColor===d.primary?{textColor:bestInk(hex)}:{})});
   body=<>
   <section className={styles.group}>
-   <h3>Kit palettes <small className={styles.h3Note}>one tap, all three colours</small></h3>
+   <h3 className={studioSectionTitle}>Kit palettes <small className={styles.h3Note}>one tap, all three colours</small></h3>
    <div className={styles.palettes}>
     {KIT_PALETTES.map(p=><button key={p.id} type="button" className={styles.paletteTile} aria-pressed={d.primary===p.colors[0]&&d.secondary===p.colors[1]&&d.accent===p.colors[2]}
      {...pv(()=>applyPalette(designRef.current,p.colors))} onClick={()=>{pulseNext.current=true;dispatch({type:'set',design:applyPalette(d,p.colors)});}}>
@@ -295,7 +298,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    </div>
   </section>
   <section className={styles.group}>
-   <div className={styles.groupHead}><h3>Or pick each colour</h3>
+   <div className={styles.groupHead}><h3 className={studioSectionTitle}>Or pick each colour</h3>
     <button type="button" className={styles.roundSmall} aria-label="Swap main and second colours" title="Swap" onClick={()=>set({primary:d.secondary,secondary:d.primary})}><Ico name="swap" size={20}/></button></div>
    <div className={styles.roles}>
     {roles.map(r=><button key={r.id} type="button" className={styles.role} aria-pressed={colorRole===r.id} onClick={()=>setColorRole(r.id)}><span className={styles.roleDot} style={{background:d[r.id]}}/>{r.label}</button>)}
@@ -307,7 +310,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  </>;}
  else if(step==='pattern')body=<>
   <section className={styles.group}>
-   <h3>Pattern</h3>
+   <h3 className={studioSectionTitle}>Pattern</h3>
    <div className={styles.patterns}>
     {PATTERNS.map(p=><button key={p.id} type="button" className={styles.patternTile} aria-pressed={d.pattern===p.id} {...pv(()=>({...designRef.current,pattern:p.id}))} onClick={()=>set({pattern:p.id})}>
      <ShirtThumb design={d} pattern={p.id} size={84}/><span>{p.label}</span></button>)}
@@ -339,7 +342,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    </div>
   </section>}
   <section className={styles.group}>
-   <div className={styles.groupHead}><h3>Paint on</h3>
+   <div className={styles.groupHead}><h3 className={studioSectionTitle}>Paint on</h3>
     <div className={styles.meter} title="How much drawing space is left" aria-label={`Paint left: ${Math.round((1-fullness)*100)}%`}>
      <span>Paint left</span><i><b style={{width:`${Math.round((1-fullness)*100)}%`}} data-low={fullness>.85}/></i>
     </div></div>
@@ -363,22 +366,22 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
   <section className={`${styles.group} ${styles.crestTop}`}>
    <div className={styles.crestPreview}><CrestThumb crest={d.crest} size={104}/></div>
    <div className={styles.crestFields}>
-    <label className={styles.fieldLabel} htmlFor="jersey-initials">Initials</label>
+    <label className={`${styles.fieldLabel} ${studioSectionTitle}`} htmlFor="jersey-initials">Initials</label>
     <input id="jersey-initials" className={styles.input} value={d.crest.initials} maxLength={3} autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="ABC"
      onChange={e=>{const v=cleanInitials(e.target.value);if(v===''||initialsOk(v))setCrest({initials:v},'initials');}}/>
     <small className={styles.hintText}>1 to 3 letters</small>
    </div>
   </section>
   <section className={styles.group}>
-   <h3>Shape</h3>
+   <h3 className={studioSectionTitle}>Shape</h3>
    <div className={styles.tiles3}>{CREST_SHAPES.map(s=><button key={s.id} type="button" className={styles.tile} aria-pressed={d.crest.shape===s.id} {...pv(()=>({...designRef.current,crest:{...designRef.current.crest,shape:s.id}}))} onClick={()=>setCrest({shape:s.id})}><CrestThumb crest={{...d.crest,shape:s.id}} size={48}/><span>{s.label}</span></button>)}</div>
   </section>
   <section className={styles.group}>
-   <h3>Icon</h3>
+   <h3 className={studioSectionTitle}>Icon</h3>
    <div className={styles.tiles5}>{CREST_ICONS.map(s=><button key={s.id} type="button" className={styles.tile} aria-pressed={d.crest.icon===s.id} {...pv(()=>({...designRef.current,crest:{...designRef.current.crest,icon:s.id}}))} onClick={()=>setCrest({icon:s.id})}><CrestThumb crest={{...d.crest,icon:s.id,initials:''}} size={40}/><span>{s.label}</span></button>)}</div>
   </section>
   <section className={styles.group}>
-   <h3>Crest colours</h3>
+   <h3 className={studioSectionTitle}>Crest colours</h3>
    <div className={styles.roles}>
     {roles.map(r=><button key={r.id} type="button" className={styles.role} aria-pressed={crestRole===r.id} onClick={()=>setCrestRole(r.id)}><span className={styles.roleDot} style={{background:d.crest[r.id]}}/>{r.label}</button>)}
     <button type="button" className={styles.chip} onClick={()=>setCrest({fill:d.secondary,ring:d.accent,ink:d.primary})}>Match kit</button>
@@ -386,7 +389,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    <Swatches label={`Crest ${crestRole} colour`} value={d.crest[crestRole]} preview={hex=>pv(()=>({...designRef.current,crest:{...designRef.current.crest,[crestRole]:hex}}))} onPick={(hex,key)=>setCrest({[crestRole]:hex},key?`cc-${crestRole}`:undefined)}/>
   </section>
   <section className={styles.group}>
-   <h3>Shirt sponsor</h3>
+   <h3 className={studioSectionTitle}>Shirt sponsor</h3>
    <div className={styles.sponsors}>{SPONSORS.map(s=><button key={s.id} type="button" className={styles.sponsor} aria-pressed={d.sponsor===s.id} {...pv(()=>({...designRef.current,sponsor:s.id}))} onClick={()=>set({sponsor:s.id})}>
     <strong style={s.id==='none'?undefined:{fontFamily:FONT_FACES.classic.css}}>{s.id==='none'?'Nothing':s.line}</strong><small>{s.label}</small></button>)}</div>
    {tip(SPONSORS.find(s=>s.id===d.sponsor)!.tip)}
@@ -394,7 +397,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  </>;}
  else if(step==='name')body=<>
   <section className={styles.group}>
-   <label className={styles.fieldLabel} htmlFor="jersey-name">Name on the back</label>
+   <label className={`${styles.fieldLabel} ${studioSectionTitle}`} htmlFor="jersey-name">Name on the back</label>
    <div className={styles.nameRow}>
     <input id="jersey-name" className={`${styles.input} ${styles.nameInput}`} value={nameDraft} maxLength={NAME_MAX} autoComplete="off" autoCapitalize="characters" spellCheck={false} enterKeyHint="done" placeholder="YOUR NAME"
      aria-invalid={!!nameMsg} aria-describedby="jersey-name-help" onFocus={()=>sceneRef.current?.setView('back','back')} onChange={e=>onName(e.target.value)}/>
@@ -403,7 +406,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    <small id="jersey-name-help" className={nameMsg?styles.warn:styles.hintText} role={nameMsg?'alert':undefined}>{nameMsg??'Letters, spaces and hyphens. Up to 12.'}</small>
   </section>
   <section className={styles.group}>
-   <h3>Number</h3>
+   <h3 className={studioSectionTitle}>Number</h3>
    <div className={styles.numberRow}>
     <button type="button" className={styles.stepper} aria-label="Number down" onClick={()=>setNumber(d.number==null?10:(d.number+99)%100)}>−</button>
     <input className={styles.numberInput} inputMode="numeric" pattern="[0-9]*" maxLength={2} aria-label="Shirt number" value={d.number??''} placeholder="–"
@@ -415,12 +418,12 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    {tip(numberTip(d.number))}
   </section>
   <section className={styles.group}>
-   <h3>Font</h3>
+   <h3 className={studioSectionTitle}>Font</h3>
    <div className={styles.tiles4}>{FONTS.map(f=><button key={f.id} type="button" className={styles.tile} aria-pressed={d.font===f.id} {...pv(()=>({...designRef.current,font:f.id}))} onClick={()=>set({font:f.id})}>
     <span className={styles.fontSample} style={{fontFamily:FONT_FACES[f.id].css,fontWeight:FONT_FACES[f.id].weight as CSSProperties['fontWeight'],transform:`scaleX(${FONT_FACES[f.id].squeeze})`}}>{d.number??10}</span><span>{f.label}</span></button>)}</div>
   </section>
   <section className={styles.group}>
-   <h3>Print</h3>
+   <h3 className={studioSectionTitle}>Print</h3>
    <div className={styles.toggles}>
     <button type="button" className={styles.chip} aria-pressed={d.outline} onClick={()=>set({outline:!d.outline})}>Outline</button>
     <button type="button" className={styles.chip} aria-pressed={d.frontNumber} onClick={()=>{set({frontNumber:!d.frontNumber});sceneRef.current?.setView('front','crest');}}>Number on front</button>
@@ -444,7 +447,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    </div>
   </section>
   <section className={styles.group}>
-   <h3>Save slots</h3>
+   <h3 className={studioSectionTitle}>Save slots</h3>
    <div className={styles.slots}>
     {save.slots.map((sl,i)=><div key={i} className={styles.slot} data-active={slot===i}>
      {sl?<ShirtThumb design={sl.design} art size={64}/>:<span className={styles.slotEmpty} aria-hidden="true">{i+1}</span>}
@@ -498,12 +501,9 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    </div>}
   </div>
 
-  <div className={styles.sheet}>
-   <nav className={styles.steps} aria-label="Steps" ref={stepsRef}>
-    {STEPS.map((s,i)=><button key={s.id} type="button" className={styles.step} data-step={s.id} aria-current={step===s.id?'step':undefined} data-done={visited.has(s.id)&&i<stepIndex} onClick={()=>goStep(s.id)}>
-     <span className={styles.stepNum}>{visited.has(s.id)&&i<stepIndex?<Ico name="check" size={14}/>:i+1}</span>{s.label}</button>)}
-   </nav>
-   <div className={styles.progress} aria-hidden="true"><i style={{width:`${(stepIndex/(STEPS.length-1))*100}%`}}/>{sparkle>0&&<span key={sparkle} className={styles.sparkle} style={{left:`${(stepIndex/(STEPS.length-1))*100}%`}}>{Array.from({length:8},(_,i)=><b key={i}/>)}</span>}</div>
+  <div className={`${styles.sheet} ${sheet.sheetClass}`} {...sheet.sheetProps}>
+   <StudioSheetHandle sheet={sheet}/>
+   <StudioSteps ref={stepsRef} steps={STEPS} activeId={step} isDone={(id,i)=>visited.has(id as Step)&&i<stepIndex} onSelect={id=>goStep(id as Step)}/>
    <p className={styles.stepCount}>Step {stepIndex+1} of {STEPS.length} · <b>{STEPS[stepIndex].label}</b></p>
    <div className={styles.content} ref={contentRef}>
     <div key={step} className={styles.stepBody}>

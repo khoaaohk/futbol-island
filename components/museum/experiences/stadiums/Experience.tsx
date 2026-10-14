@@ -207,7 +207,6 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <h2 className={s.panelTitle}>How do you build a stadium?</h2>
       <p className={g.body}>{exhibit.facts[0]}</p>
       <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><b>{b.head}</b><p>{b.text}</p></li>)}</ol>
-      <div className={g.row}><button type="button" className={g.btn} data-start onClick={startExplore} data-museum-own-cue>Open the workshop</button></div>
      </div>}
 
      {phase==='score'&&<div className={s.panel} data-score-panel>
@@ -224,7 +223,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock data-phase={phase}>
-     {phase==='intro'?<><button type="button" className={g.btn} data-start-dock onClick={startExplore}>Open the workshop</button><p className={s.say}>Seven famous stadiums are waiting on the workbench.</p></>
+     {phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock onClick={startExplore} data-museum-own-cue>Open the workshop</button><p className={s.say}>Seven famous stadiums are waiting on the workbench.</p></div>
      :phase==='explore'?<>
        <div className={s.carousel} role="group" aria-label="Choose a stadium">
         <button type="button" className={s.round} aria-label="Previous stadium" data-prev onClick={()=>go(si-1)}>‹</button>

@@ -57,7 +57,8 @@ const script=JSON.parse(read('lib/tutorial/islandTutorial.json')),timing=JSON.pa
  assert.match(player,/<div className=\{styles\.caption\} data-tutorial-caption="" aria-live="polite">\s*<p key=\{`c\$\{run\}:\$\{index\}`\}>\{scene\.narration\}<\/p>/,'the caption is always rendered');
  for(const m of css.matchAll(/\.caption p\{[^}]*font-size:(\d+)px/g))assert(Number(m[1])>=16,'caption ≥ 16px');
 }
-// 4. Mute: the app's settings decide (sound, volume, voice); muted scenes follow caption timing; nothing plays while muted.
+// 4. Audio: the tutorial always starts voiced (Oct 14 2026, user: "don't mute at the beginning, play audio"), at the app volume or
+//    0.8 when that is off/0; the speaker button mutes; muted scenes follow caption timing; nothing plays while muted.
 {
  const store=new Map(),sandbox={module:{exports:{}},localStorage:{getItem:k=>store.has(k)?store.get(k):null},Audio:class{constructor(src){this.src=src;this.dataset={};this.played=0;}play(){this.played++;return Promise.resolve();}}};
  const sound={isSoundEnabled:()=>store.get('fi2-sound-muted')!=='true',getSoundVolume:()=>store.has('fi2-sound-volume')?Number(store.get('fi2-sound-volume')):.5};
@@ -66,9 +67,10 @@ const script=JSON.parse(read('lib/tutorial/islandTutorial.json')),timing=JSON.pa
  const {narrationOn,primeTutorialNarration,tutorialClipUrl}=sandbox.module.exports;
  assert.equal(narrationOn(),true,'default: narration on');
  const primed=primeTutorialNarration('welcome');assert(primed&&primed.played===1&&primed.src===tutorialClipUrl('welcome'),'the opening tap starts the first line (iOS gesture)');
- store.set('fi2-sound-muted','true');assert.equal(narrationOn(),false,'sound muted → narration off');assert.equal(primeTutorialNarration('welcome'),null,'…and nothing is primed');store.clear();
- store.set('fi2-sound-volume','0');assert.equal(narrationOn(),false,'volume 0 → off');store.clear();
- store.set('fi2-voice-enabled','false');assert.equal(narrationOn(),false,'voice setting off → off');store.clear();
+ const {narrationVolume}=sandbox.module.exports;
+ store.set('fi2-sound-muted','true');assert.equal(narrationOn(),true,'sound muted elsewhere: the tutorial still starts voiced');assert(primeTutorialNarration('welcome'),'…and the first line is primed');assert.equal(narrationVolume(),.8,'…at a sensible volume');store.clear();
+ store.set('fi2-sound-volume','0');assert.equal(narrationVolume(),.8,'volume 0 → 0.8');store.clear();
+ store.set('fi2-sound-volume','0.3');assert.equal(narrationVolume(),.3,'otherwise the app volume');store.clear();
  assert.match(player,/useState\(\(\)=>!narrationOn\(\)\)/,'the player starts muted when the settings say so');
  assert.match(player,/const voiced=Boolean\(media&&!muted&&scene\.audio&&/,'muted scenes never call play()');
  assert.match(player,/timer=setTimeout\(finishLine,Math\.max\(0,scene\.seconds-c\.elapsed\)\*1000\)/,'one timer per scene: caption timing drives muted playback');

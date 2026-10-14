@@ -34,7 +34,7 @@ export type SummitUpdate={
  now:number;dt:number;elapsed:number;reduced:boolean;camera:T.Camera;width:number;height:number;
  x:number;z:number;
  /** On foot on the ground (not flying, riding or falling). */
- onFoot:boolean;canEnter:boolean;sunset:boolean;
+ onFoot:boolean;/** Walking or on a ground ride (scooter, bike, moped): the telescope and its glints work from the saddle too (user, Oct 14). */onGround:boolean;canEnter:boolean;sunset:boolean;
  /** The HUD arbiter's current 'enter' key (lib/ui/hudStack.ts), so exactly one prompt shows. */
  focusKey:string|null;
  ui:<E extends HTMLElement>(selector:string)=>E|null|undefined;place:(el:HTMLElement,x:number,y:number)=>void;hide:(el:HTMLElement,hidden:boolean)=>void;
@@ -111,7 +111,9 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
  }
 
  // ---------------------------------------------------------------------------------------------------- telescope
- const scope={active:false,yaw:0,pitch:0,zoom:0,blend:1,arrived:false,restore:false,hold:0,holdId:'',label:'',
+ /** Phones: the eyepiece centre sits at 40% of the screen height (CSS .scope --cy), i.e. 10% above the middle. */
+const SCOPE_PHONE_LIFT=.1;
+ const scope={lift:0,active:false,yaw:0,pitch:0,zoom:0,blend:1,arrived:false,restore:false,hold:0,holdId:'',label:'',
   start:{p:new T.Vector3(),q:new T.Quaternion(),fov:SCOPE.normalFov as number,far:500},normal:{fov:SCOPE.normalFov as number,far:500}};
  let glintRoot:T.Group|null=null,glintMat:T.SpriteMaterial|null=null,glintTex:T.Texture|null=null,spottedMat:T.SpriteMaterial|null=null;
  const glintSprites=new Map<string,T.Sprite>();
@@ -180,7 +182,7 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
   /** Per frame (Town's HUD block): prompts, the round clock, hoop animation, the eyepiece readout, glint collection. */
   update(c:SummitUpdate):{key:string;distance:number}|null{
    // Glints waiting to be collected: only then any work (a handful of distances).
-   if(pending.length&&c.onFoot&&!scope.active){const g=glintAt(readTelescopeSafe(),c.x,c.z);if(g){const next=collectGlint(readTelescopeSafe(),g.id);writeTelescope(next);pending=pendingGlints(next);cue('coin');
+   if(pending.length&&c.onGround&&!scope.active){const g=glintAt(readTelescopeSafe(),c.x,c.z);if(g){const next=collectGlint(readTelescopeSafe(),g.id);writeTelescope(next);pending=pendingGlints(next);cue('coin');
     void learnCoins.pay('explore',glintRewardId(g.id),`You found the telescope glint at ${g.name}`);}}
    // ---- the round
    if(phase==='playing'&&round&&layout){
@@ -213,10 +215,11 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
    let want:{key:string;distance:number}|null=null;
    const kickPrompt=c.ui<HTMLButtonElement>('[data-summit-kick-start]'),scopePrompt=c.ui<HTMLButtonElement>('[data-telescope-open]');
    if(!kickPrompt&&!scopePrompt)return null;
-   const near=c.onFoot&&c.canEnter&&!scope.active&&phase==='idle';
+   // Summit Kick needs feet on the ball; the telescope only needs you parked beside it, so ground rides count too.
+   const near=c.onGround&&c.canEnter&&!scope.active&&phase==='idle';
    let dk=Infinity,ds=Infinity,L:KickLayout|null=null,S:typeof spot=null;
    // Cheap box test first: both posts are on Summit Isle (x > 400), so the main island never computes the layout.
-   if(near&&c.x>400){const e=ensure();L=e.layout;S=e.spot;dk=Math.hypot(c.x-L.post.x,c.z-L.post.z);ds=Math.hypot(c.x-S.x,c.z-S.z);}
+   if(near&&c.x>400){const e=ensure();L=e.layout;S=e.spot;if(c.onFoot)dk=Math.hypot(c.x-L.post.x,c.z-L.post.z);ds=Math.hypot(c.x-S.x,c.z-S.z);}
    if(dk<REACH&&dk<=ds)want={key:'summit-kick',distance:dk};else if(ds<REACH)want={key:'telescope',distance:ds};
    const show=(el:HTMLButtonElement|null|undefined,visible:boolean,x:number,y:number,z:number)=>{if(!el)return;let hidden=!visible;
     if(!hidden){anchor.set(x,y,z).project(c.camera);hidden=anchor.z< -1||anchor.z>1;if(!hidden)c.place(el,T.MathUtils.clamp((anchor.x+1)*c.width/2,75,c.width-75),T.MathUtils.clamp((1-anchor.y)*c.height/2,90,c.height-160));}
@@ -227,10 +230,10 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
   },
   /** Call after the follow camera is placed (like fishing.applyCamera): the eyepiece view, or the way back to the normal one. */
   applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(scope.restore){scope.restore=false;camera.fov=scope.normal.fov;camera.far=scope.normal.far;camera.updateProjectionMatrix();return;}
+   if(scope.restore){scope.restore=false;camera.fov=scope.normal.fov;camera.far=scope.normal.far;camera.clearViewOffset();camera.updateProjectionMatrix();return;}
    if(!scope.active)return;
    const s=spot!;
-   if(scope.blend===0){scope.start.p.copy(camera.position);scope.start.q.copy(camera.quaternion);scope.start.fov=camera.fov;scope.normal.fov=camera.fov;scope.normal.far=camera.far;}
+   if(scope.blend===0){scope.lift=typeof matchMedia==='function'&&matchMedia('(max-width:600px)').matches?SCOPE_PHONE_LIFT:0;scope.start.p.copy(camera.position);scope.start.q.copy(camera.quaternion);scope.start.fov=camera.fov;scope.normal.fov=camera.fov;scope.normal.far=camera.far;}
    scope.blend=reduced?1:Math.min(1,scope.blend+dt/.65);const e=scope.blend*scope.blend*(3-2*scope.blend);
    eyeV.set(s.eye.x,s.eye.y,s.eye.z);const d=viewDir(scope.yaw,scope.pitch);lookV.set(s.eye.x+d.x,s.eye.y+d.y,s.eye.z+d.z);
    aimer.position.copy(eyeV);aimer.up.set(0,1,0);aimer.lookAt(lookV);targetQ.copy(aimer.quaternion);
@@ -238,7 +241,9 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
    const want=scope.start.fov+(fov()-scope.start.fov)*e;
    // Zoom changes ease too (a quick lens move), once arrived.
    const next=scope.blend>=1?camera.fov+(fov()-camera.fov)*Math.min(1,dt*(reduced?60:9)):want;
-   if(Math.abs(next-camera.fov)>1e-3||camera.far!==SCOPE.far){camera.fov=next;camera.far=SCOPE.far;camera.updateProjectionMatrix();}
+   // Phones: the eyepiece circle sits higher (CSS --cy) so the place label fits under it; shift the projection centre to match.
+   const lift=scope.lift*e,liftNow=camera.view?.enabled?camera.view.offsetY:0;
+   if(Math.abs(next-camera.fov)>1e-3||camera.far!==SCOPE.far||Math.abs(lift-liftNow)>1e-4){camera.fov=next;camera.far=SCOPE.far;if(scope.lift)camera.setViewOffset(1,1,0,lift,1,1);camera.updateProjectionMatrix();}
    camera.updateMatrixWorld();
    if(scope.blend>=1)scope.arrived=true;
   },

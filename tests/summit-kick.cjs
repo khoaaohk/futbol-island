@@ -138,7 +138,7 @@ await ok('3D runtime: idle costs nothing, a round builds 5 hoops and disposes th
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(40,1,1,500);camera.position.set(0,30,30);camera.lookAt(0,0,0);camera.updateMatrixWorld();
  const moved=[];const fun=mod.createSummitActivities(scene,{teleport:(x,z,yaw)=>moved.push({x,z,yaw}),impact:()=>{}});
  const el=()=>({hidden:true,dataset:{},style:{setProperty(){},getPropertyValue(){return '';}}});const kickBtn=el(),scopeBtn=el();
- const ctx=(x,z,extra={})=>({now:0,dt:1/30,elapsed:0,reduced:false,camera,width:390,height:844,x,z,onFoot:true,canEnter:true,sunset:true,focusKey:null,ui:s=>s.includes('summit-kick')?kickBtn:scopeBtn,place(){},hide(e,h){e.hidden=h;},...extra});
+ const ctx=(x,z,extra={})=>({now:0,dt:1/30,elapsed:0,reduced:false,camera,width:390,height:844,x,z,onFoot:true,onGround:true,canEnter:true,sunset:true,focusKey:null,ui:s=>s.includes('summit-kick')?kickBtn:scopeBtn,place(){},hide(e,h){e.hidden=h;},...extra});
  const before=scene.children.length;
  await env.watchTimers(async()=>{
   for(let i=0;i<200;i++){assert.equal(fun.update(ctx(100,-20)),null);fun.ball({mode:'shot',x:1,y:1,z:1},{x:0,z:0});assert.equal(fun.aim({x:0,z:0},0),null);assert.equal(fun.holdPlayer({x:0,z:0,kick:false,juggle:false},new Set(),1/60),false);fun.applyCamera(camera,1/30,false);}
@@ -146,7 +146,7 @@ await ok('3D runtime: idle costs nothing, a round builds 5 hoops and disposes th
  assert.equal(env.counts.raf,0,'no rAF');assert.equal(env.counts.timeout+env.counts.interval,0,'no timers');assert.equal(scene.children.length,before,'no meshes while idle');
  assert.equal(camera.fov,40,'the camera is untouched');
  // Near the post: the prompt wants the focus; shown only once the arbiter gives it.
- const want=fun.update(ctx(lay.post.x+1,lay.post.z));assert.equal(want?.key,'summit-kick');assert.equal(kickBtn.hidden,true);
+ const want=fun.update(ctx(lay.post.x+1,lay.post.z));assert.equal(want?.key,'summit-kick');assert.notEqual(fun.update(ctx(lay.post.x+1,lay.post.z,{onFoot:false,onGround:true}))?.key,'summit-kick','Summit Kick still needs you on foot (the telescope works from a ride)');assert.equal(kickBtn.hidden,true);
  camera.position.set(lay.post.x+18,lay.ground+23,lay.post.z+30);camera.lookAt(lay.post.x,lay.ground,lay.post.z);camera.updateMatrixWorld();
  fun.update(ctx(lay.post.x+1,lay.post.z,{focusKey:'summit-kick'}));assert.equal(kickBtn.hidden,false,'the Start prompt shows');assert.equal(scopeBtn.hidden,true,'one prompt at a time');
  // Start → intro card → round.

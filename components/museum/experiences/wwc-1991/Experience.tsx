@@ -1,4 +1,5 @@
 'use client';
+import StepIcon from '../StepIcon';
 import {useCallback,useEffect,useMemo,useRef,useState,type KeyboardEvent,type PointerEvent as RPointerEvent} from 'react';
 import {isSoundEnabled} from '@/lib/games/sound';
 import {museumSfx,unlockMuseumAudio} from '@/lib/museum/museumSound';
@@ -160,11 +161,11 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
    </div>
   </PaperCard>}
   dock={phase==='gate'?<div className={s.row}>
-    <button type="button" className={s.ghost} aria-label="Ten years earlier" onClick={()=>setGateYear(year-10)} disabled={year<=1920}>◀◀</button>
-    <button type="button" className={s.ghost} aria-label="One year earlier" onClick={()=>setGateYear(year-1)} disabled={year<=1920}>◀</button>
+    <button type="button" className={s.ghost} aria-label="Ten years earlier" onClick={()=>setGateYear(year-10)} disabled={year<=1920}><StepIcon kind="prev10"/></button>
+    <button type="button" className={s.ghost} aria-label="One year earlier" onClick={()=>setGateYear(year-1)} disabled={year<=1920}><StepIcon kind="prev"/></button>
     <span className={s.big} data-wwc-year={year} aria-live="polite">{year}</span>
-    <button type="button" className={s.ghost} aria-label="One year later" onClick={()=>setGateYear(year+1)} disabled={year>=1991}>▶</button>
-    <button type="button" className={s.ghost} aria-label="Ten years later" onClick={()=>setGateYear(year+10)} disabled={year>=1991}>▶▶</button>
+    <button type="button" className={s.ghost} aria-label="One year later" onClick={()=>setGateYear(year+1)} disabled={year>=1991}><StepIcon kind="next"/></button>
+    <button type="button" className={s.ghost} aria-label="Ten years later" onClick={()=>setGateYear(year+10)} disabled={year>=1991}><StepIcon kind="next10"/></button>
     {gateDone&&<button type="button" className={s.btn} data-tone="acc" data-museum-own-cue data-wwc-to-final onClick={()=>{setPhase('final');sfx(museumSfx.whistle);}}>To the final ▸</button>}
    </div>
   :phase==='final'?<>

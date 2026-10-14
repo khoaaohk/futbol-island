@@ -6,7 +6,7 @@
 
 .studio{
  --paper:#fbf3e1;--paper-2:#f4e8cc;--ink:var(--btn-ink);--ink-soft:#4d6a5e;--line:#e3d5b2;--teal:#244d40;
- position:fixed;inset:0;z-index:80;display:grid;grid-template-rows:auto minmax(250px,1fr) auto;
+ position:fixed;inset:0;z-index:80;display:grid;grid-template-rows:auto minmax(0,1fr) auto;
  background:var(--teal) var(--btn-grain) center/160px 160px;background-blend-mode:soft-light;color:var(--ink);font-family:var(--btn-font);
  overflow:hidden;-webkit-tap-highlight-color:transparent;animation:studioIn .26s ease-out both;
 }
@@ -40,33 +40,20 @@
 .canvas:active{cursor:grabbing}
 .loading{position:absolute;inset:0;z-index:2;display:grid;place-content:center;justify-items:center;gap:10px;color:var(--ink);font:700 14px var(--btn-font);pointer-events:none;animation:fadeUp .4s ease-out both}
 .glyph{display:block;overflow:visible}
-.hint{position:absolute;z-index:3;left:12px;top:14px;margin:0;max-width:calc(100% - 170px);padding:8px 13px;border-radius:999px;background:#244d40e0;color:#fff2cd;
- font:700 12px/1.3 var(--btn-font);text-align:center;pointer-events:none;animation:fadeUp .4s .6s ease-out both}
-.hint[data-help]{animation-delay:0s}
 .toast{position:absolute;z-index:4;left:50%;top:50%;margin:0;padding:10px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;background:var(--btn-green);color:var(--btn-ink-on-dark);
  font:800 14px var(--btn-font);white-space:nowrap;box-shadow:0 4px 0 var(--btn-green-edge);translate:-50% -50%;animation:toastIn .3s ease both;pointer-events:none}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* ---- the sheet ---- */
+/* Plain cream sheet with no grain, the same as Ball Studio's (Oct 14 2026, user: "use the one without textures. apply to all in the kit shop"). */
 .sheet{position:relative;display:flex;flex-direction:column;min-height:0;height:min(50svh,520px);margin-top:0;border-top:var(--btn-rim-width) solid var(--btn-rim);border-radius:28px 28px 0 0;
- background:var(--paper) var(--btn-grain) center/160px 160px;background-blend-mode:multiply;box-shadow:0 -8px 24px #0f241d40;overflow:hidden}
-.sheet::before{content:'';position:absolute;left:50%;top:7px;width:44px;height:5px;margin-left:-22px;border-radius:9px;background:#d9c9a3}
+ background:#fff6e2;box-shadow:0 -8px 24px #0f241d40;overflow:hidden}
+/* the grab bar is the shared drag handle (components/shop/StudioControls.tsx <StudioSheetHandle>, Oct 14 2026): on phones the
+ * height is the player's snap (inline, ≈ 34 / 50 / 78% of the screen); the min(50svh,520px) above is the first-paint fallback */
 
-/* step bar */
-/* step chips a little lower from the sheet's drag handle (top:22, was 18), and more room below them before the progress bar
-   (bottom:24, was 8) — user: "add more padding and the bar" (Oct 13 2026) */
-.steps{position:relative;display:flex;gap:4px;padding:22px var(--phone-gutter) 24px;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
-.steps::-webkit-scrollbar{display:none}
-.stepTrack{position:absolute;left:var(--phone-gutter);right:var(--phone-gutter);bottom:4px;height:4px;border-radius:4px;background:#eadbb8;overflow:hidden}
-.stepTrack span{position:absolute;inset:0;transform-origin:0 50%;transform:scaleX(var(--p));background:linear-gradient(90deg,#efc477,#e9a43a);transition:transform .3s ease}
-.stepBtn{flex:0 0 auto;display:flex;align-items:center;gap:6px;min-height:40px;padding:0 10px 0 4px;border:0;border-radius:999px;background:transparent;color:var(--ink-soft);font:700 13px var(--btn-font);white-space:nowrap}
-.stepBtn b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:2px solid #d9c9a3;background:#fffaf0;color:var(--ink-soft);font:800 13px var(--btn-font);transition:transform .2s}
-.stepBtn[data-done] b{background:var(--btn-gold);border-color:var(--btn-gold-edge);color:var(--ink)}
-.stepBtn[aria-current=step]{background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 3px 0 var(--btn-green-edge)}
-.stepBtn[aria-current=step] b{border-color:var(--btn-rim);background:var(--btn-gold-bright);color:var(--ink);transform:scale(1.06)}
-.stepBtn:not([aria-current=step]) span{display:none}
-.stepBtn:not([aria-current=step])[data-done] span,.stepBtn:not([aria-current=step]) span{display:none}
+/* the step pills are the shared components/shop/StudioControls.tsx <StudioSteps> (Oct 14 2026: one pill design for Boot,
+ * Jersey and Ball, no progress bar — StudioControls.module.css) */
 
 .panel{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px var(--phone-gutter) 16px;animation:fadeUp .24s ease-out both}
 .section{margin:10px 0 16px}
@@ -145,7 +132,6 @@
 .studGroupTitle{margin:0 0 6px;font:800 12px/1.2 var(--btn-font);letter-spacing:.08em;text-transform:uppercase;color:#7a6a45}
 .tiles5{display:grid;gap:8px;grid-template-columns:repeat(5,minmax(0,1fr))}
 .tiles5 svg{width:34px;height:34px}
-@media (max-width:420px){.tiles5{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .studTile{display:flex;align-items:center;gap:12px;padding:10px 12px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius-tile);background:#fffaf0;text-align:left;
  box-shadow:0 4px 0 #dccfae;transition:translate .14s,box-shadow .14s}
 .studTile svg{flex:0 0 auto;width:96px;height:auto}
@@ -244,10 +230,12 @@
 .back:active,.next:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
 
 /* always-visible actions */
-.actions{flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:10px var(--phone-gutter) calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #eadcbc;background:#f7ecd3}
-.save{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:var(--btn-height-lg);padding:0 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);font:700 14px var(--btn-font);transition:translate .14s,box-shadow .14s}
-.save{background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge)}
-.save:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.actions{flex:0 0 auto;display:flex;gap:8px;align-items:center;padding:10px var(--phone-gutter) calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #efe1bf;background:#fff6e2}
+/* Save: the same cream pill as Ball's and Jersey's (Oct 14 2026: one Save look across the Kit Shop studios) */
+.save{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--btn-height-lg,48px);padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim);border-radius:999px;
+ background:var(--btn-cream,#fff1d3);color:var(--ink);font:900 15px var(--btn-font);box-shadow:0 4px 0 #dccfae,var(--btn-halo,0 0 0 4px #fff2cd40);transition:translate .12s,box-shadow .12s}
+.save:active{translate:0 3px;box-shadow:0 1px 0 #dccfae}
+.save svg{width:20px;height:20px}
 .buy{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:var(--btn-height-lg);padding:0 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
  background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);font:800 16px var(--btn-font);box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s;white-space:nowrap}
 .buy:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
@@ -281,19 +269,53 @@
     shared StudioControls icon row a few px off their shared top/right inset (Oct 13 2026, cross-studio control alignment) */
  .stage{margin:20px 0 20px 20px;border-radius:32px;box-shadow:0 0 0 var(--btn-rim-width) var(--btn-rim),0 6px 0 #17352b,inset 0 0 0 1px #fff8}
  .sheet{grid-row:2;grid-column:2;max-height:none;margin:20px 20px 20px 28px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:28px;box-shadow:0 6px 0 #17352b}
- .sheet::before{display:none}
- .steps{flex-wrap:wrap;padding:16px 18px 12px;gap:6px}
- .stepBtn:not([aria-current=step]) span{display:inline}
- .stepBtn{padding-right:12px;background:#fffaf0;border:2px solid #eadcbc}
- .stepBtn[aria-current=step]{border-color:var(--btn-green)}
- .stepTrack{left:18px;right:18px}
  .panel{padding:8px 18px 18px}
  .actions{padding:12px 18px 14px}
- .hint{left:18px;top:18px}
  .sheet{height:auto}
  .saveLayer{place-items:center}
 }
 
+/* Phones, Oct 14 2026 (user: "make better use of the space so the items are not as large… apply this to… shoes"): more air
+ * between sections, denser tiles — looks 4 across, the shape row ~3.5 cards, stud finishes 5 across, stickers 6, flags 5 —
+ * art scaled down to match, 13px labels on at most two lines, tap targets ≥ 44px. Same cards, rims, shadows, selected states. */
+@media (max-width:899px){
+ .panel{padding:8px var(--phone-gutter) 18px}
+ .section{margin:6px 0 20px}
+ .h3{margin-bottom:8px}
+ .h3 small{font-size:11.5px}
+ .modelCard{gap:10px;margin:2px 0 12px;padding:8px 10px}
+ .modelCard svg{width:84px;height:auto}
+ .modelCard h3{font-size:15px}
+ .modelCard p{font-size:12.5px;line-height:1.35}
+ .presets{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .preset{padding:6px 3px 7px;font-size:12px;line-height:1.1}
+ .preset svg{width:100%;max-width:70px;height:auto}
+ .preset small{font-size:10.5px}
+ .modelRow{grid-auto-columns:94px;gap:8px}
+ .modelTile{padding:6px 3px 7px;font-size:12px}
+ .modelTile svg{width:74px;height:auto}
+ .tile{min-height:84px;padding:9px 4px 8px}
+ .tile strong{font-size:13px}
+ .tile small{font-size:10.5px}
+ .tiles5{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+ .tiles5 .tile{min-height:72px;padding:8px 2px 7px}
+ .tiles5 svg{width:28px;height:28px}
+ .tiles5 .tile strong{font-size:11.5px}
+ .studTile{gap:10px;padding:8px 10px}
+ .studTile svg{width:74px}
+ .studText strong{font-size:14px}
+ .studText span{font-size:12px}
+ .stickerGrid{grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:7px}
+ .flagGrid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:7px}
+ .flagBtn img{width:40px;height:30px}
+ .palette{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:9px}
+ .stepNav{margin-top:12px}
+ /* the plinth and the centre circle sit under the fitted boot (BootStudio sets --fit-cy / --fit-ppw from the stage's visible
+    box, Oct 14 2026: the boot is centred between the icon row and the view chips now, not at a fixed 50%) */
+ .stage[data-fit] .plinth{top:calc(var(--fit-cy) + var(--fit-ppw) * .58);width:min(92%,calc(var(--fit-ppw) * 2.75))}
+ .stage[data-fit] .sweep::after{top:calc(var(--fit-cy) + var(--fit-ppw) * .58);width:min(130%,calc(var(--fit-ppw) * 3.8))}
+}
+@media (max-width:370px){.tiles5{grid-template-columns:repeat(3,minmax(0,1fr))}.presets{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:370px){.tiles4{grid-template-columns:repeat(2,minmax(0,1fr))}.tiles3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){
  .studio,.studio *,.studio *::before,.studio *::after{animation:none!important;transition:none!important}

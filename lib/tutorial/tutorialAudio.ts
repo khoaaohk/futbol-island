@@ -6,14 +6,16 @@
 import {getSoundVolume,isSoundEnabled} from '@/lib/games/sound';
 import timing from './islandTutorialTiming.json';
 
-/** Narration starts on only when the app's settings allow it: sound not muted, volume above 0, and the voice setting on (the same
- *  rule as the museum's narration, lib/museum/museumVoice.ts). The tutorial's speaker button changes it for one viewing only. */
-export function narrationOn(){try{return isSoundEnabled()&&getSoundVolume()>0&&localStorage.getItem('fi2-voice-enabled')!=='false';}catch{return false;}}
+/** The tutorial always starts with its narration playing (Oct 14 2026, user: "don't mute at the beginning, play audio"): opening
+ *  it is the ask. The tutorial's speaker button still mutes it for that viewing. */
+export function narrationOn(){return true;}
+/** The narration volume: the app's sound volume, or a sensible level when that is off or 0 (the tutorial is opened on purpose). */
+export function narrationVolume(){try{return isSoundEnabled()&&getSoundVolume()>0?getSoundVolume():.8;}catch{return .8;}}
 /** The versioned URL of a scene's clip (the same string IslandTutorial sets as the element's source). */
 export function tutorialClipUrl(id:string){const clip=(timing as {scenes:Record<string,{src:string;sha256:string}>}).scenes[id];return clip?`${clip.src}?v=${clip.sha256.slice(0,10)}`:'';}
 /** Called inside the tap: an Audio element already playing the first line, or null when narration is off. */
 export function primeTutorialNarration(firstScene:string){
  if(!narrationOn())return null;const src=tutorialClipUrl(firstScene);if(!src)return null;
- const media=new Audio(src);media.preload='auto';media.volume=getSoundVolume();media.dataset.scene=src;
+ const media=new Audio(src);media.preload='auto';media.volume=narrationVolume();media.dataset.scene=src;
  void media.play().catch(()=>{});return media;
 }

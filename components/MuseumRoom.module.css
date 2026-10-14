@@ -9,11 +9,15 @@
 .header{position:absolute;z-index:3;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px));pointer-events:none}
 .header>*{pointer-events:auto}
 @media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px calc(16px + env(safe-area-inset-left,0px))}}
-.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(52vw,360px);padding:8px 14px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-.counts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;pointer-events:none}
+/* The zoomed case's name sits top right, on Back's centre line (Oct 14 2026, user). */
+.section{position:static;margin-left:auto;min-width:0;flex:0 1 auto;max-width:min(100%,420px);padding:8px 14px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.counts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;pointer-events:none}
+/* Back on the left, Done on the right, everywhere (Oct 14 2026, user): in the hall the counts sit left and Done right. */
+.doneRight{order:2;margin-left:auto}
 .counts span{display:inline-flex;align-items:baseline;gap:5px;padding:6px 11px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-soft);font-size:12px;font-weight:500;box-shadow:none}
 .counts b{font-size:15px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums;position:relative;padding-left:12px}.counts b::before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-4px;background:var(--g)}
-@media(max-width:420px){.counts{gap:4px;max-width:62vw}.counts span{padding:4px 8px;font-size:11px}}
+/* Phones: all four counts on one row, centred on Done's line (Oct 14 2026, user: "move grads up with the others"). */
+@media(max-width:420px){.counts{gap:3px;flex-wrap:nowrap;align-items:center;max-width:none;min-width:0}.counts span{align-items:center;gap:3px;padding:5px 7px;font-size:11px;white-space:nowrap}.counts b{font-size:13px;padding-left:9px}.counts b::before{width:6px;height:6px;margin-top:-3px}}
 .prompt{z-index:4;visibility:hidden}
 /* The hall's look-at prompt: an ink pill (overrides the island's gold store-enter-prompt inside the museum only). */
 .root .prompt{border:1.5px solid var(--m-ink);background:var(--m-ink);background-image:none;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66;font-weight:600}
@@ -64,8 +68,6 @@
 .certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:1px dashed var(--m-hair);border-radius:4px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
 .hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;pointer-events:none}
 @media(min-aspect-ratio:6/5){.hint{left:30%}}
-/* Phones: the case label drops under the Back / Step inside row, so the drag hint sits below it. */
-@media(max-width:600px){.header:has(.stepInside)~.hint{top:calc(124px + env(safe-area-inset-top,0px))}}
 .greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;font-weight:500;font-size:15px;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
 .greeting b{color:var(--m-ink);font-weight:700}
 @keyframes bubble{0%{opacity:0;transform:translateY(-8px)}10%,85%{opacity:1;transform:none}100%{opacity:0}}
@@ -94,12 +96,13 @@
 
 /* The museum passport (Oct 9 2026; lib/museum/museumVisits.ts). "Step inside again" wears a small stamp; the timeline wall's
  * year buttons show which cases you have visited. (The stamp card that sprang in on the way out was removed Oct 12 2026.) */
-.stepInside{display:inline-flex;align-items:center;gap:8px}
+.stepInside{display:inline-flex;align-items:center;gap:8px;pointer-events:auto}
+.enterBar{position:absolute;z-index:4;left:50%;translate:-50% 0;bottom:var(--control-bottom);display:flex;justify-content:center;pointer-events:none}
+.enterBar:empty{display:none}
+.enterBar .stepInside{min-height:52px;padding:10px 26px;font-size:16px;box-shadow:0 10px 24px -12px #1d1d1b80}
 .stepSeen{width:16px;height:16px;border-radius:50%;background:#fff;position:relative;flex:none}
 .stepSeen::after,.yearSeen::after{content:'';position:absolute;left:5px;top:3px;width:4px;height:7px;border:solid var(--m-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}.yearSeen::after{border-color:#fff}
 .yearSeen{display:inline-block;vertical-align:-2px;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--m-ink);position:relative}
-/* Phones: "Step inside" and the zoomed case's label can't share one row with Back, so the label drops just under the row. */
-@media(max-width:600px){.header:has(.stepInside) .section{top:calc(100% - 4px);max-width:calc(100% - 32px)}}
 /* Oct 10 2026 gallery restyle: the guide panel's Done sits top right, clear of the title (NavigationButton's own
  * `button.button.button{position:relative}` out-ranked the plain .close rule, so it fell to the panel's top left). */
 .panel button.close.close{position:absolute;top:14px;right:14px;left:auto}

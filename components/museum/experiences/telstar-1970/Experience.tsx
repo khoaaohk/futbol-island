@@ -215,7 +215,6 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <h2 className={s.panelTitle}>The ball you can see on black and white.</h2>
       <p className={g.body}>{exhibit.facts[0]}</p>
       <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><b>{b.head}</b><p>{b.text}</p></li>)}</ol>
-      <div className={g.row}><button type="button" className={g.btn} data-start onClick={startStitch} data-museum-own-cue>Stitch the Telstar</button></div>
      </div>}
 
      {phase==='score'&&<div className={s.panel} data-score-panel>
@@ -247,7 +246,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
        <dl className={s.stats}><div><dt>Ball</dt><dd>{ball==='leather'?'Leather':'Telstar'}</dd></div><div><dt>Picture</dt><dd>{picture==='bw'?'B&W':'Colour'}</dd></div><div><dt>Half</dt><dd>{half+1}/2</dd></div></dl>
        <p className={s.say}>{reduced?'Find the ball in each still frame and tap it.':ball==='leather'?'Follow the brown ball. On a grey picture it hides in the grass.':'Follow the Telstar: black and white panels on a grey picture.'}</p>
       </>
-      :phase==='intro'?<><button type="button" className={g.btn} data-start-dock onClick={startStitch}>Stitch the Telstar</button><p className={s.say}>Mexico, 1970: the first World Cup shown live around the world.</p></>
+      :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startStitch}>Stitch the Telstar</button><p className={s.say}>Mexico, 1970: the first World Cup shown live around the world.</p></div>
       :phase==='score'?<p className={s.say}>Same match, same passes: only the ball changed.</p>
       :<>
        <div className={s.toggle} role="group" aria-label="Picture">

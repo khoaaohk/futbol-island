@@ -35,8 +35,59 @@
 .modeToggle button svg{width:20px;height:20px}
 .modeToggle button[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
 
+/* Step pills (Boot, Jersey, Ball studios) — Oct 14 2026, user: "these 2 look different… use the design from ball studio and
+ * remove the bar". One pill design for every studio's step nav, in the bottom sheet: a tan pill holding a small white
+ * numbered circle; the active step is a dark pill with a gold circle (that step's own icon if it has one, else its number).
+ * Scrolls horizontally with a hidden scrollbar on phones (components/shop/StudioControls.tsx <StudioSteps>); wraps on
+ * desktop below. No progress bar anywhere — the pills and the active label carry the progress instead. */
+.steps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px var(--phone-gutter,18px) 8px;scroll-padding:0 40px;flex:none}
+.steps::-webkit-scrollbar{display:none}
+.stepBtn{flex:none;display:flex;align-items:center;gap:7px;height:44px;padding:0 13px 0 5px;border:2px solid transparent;border-radius:999px;
+ background:#efe1bf;color:#4c6a5e;font:800 13px var(--btn-font,Arial,Helvetica,sans-serif);white-space:nowrap;transition:background .2s,color .2s,transform .15s}
+.stepBtn b{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#fff6e2;color:var(--btn-ink);font-size:12px}
+.stepBtn b svg{width:16px;height:16px;display:block}
+.stepBtn[aria-current=step]{background:var(--btn-ink);color:var(--btn-ink-on-dark);border-color:var(--btn-rim);box-shadow:0 3px 0 var(--btn-green-edge)}
+.stepBtn[aria-current=step] b{background:var(--btn-gold);color:var(--btn-ink)}
+.stepBtn[data-done] b{background:#bfe3c9}
+.stepBtn:active{transform:scale(.96)}
+
 /* desktop (≥900px): every studio's stage sits 18/20px in from the shared frame, so the row moves out to match */
 @media (min-width:900px){
  .iconRow{top:18px;right:18px}
  .modeToggle{top:18px}
+ .steps{flex-wrap:wrap;padding:16px 20px 8px}
+}
+
+/* Section titles in every studio sheet (Ball, Boot, Jersey — Oct 14 2026, user: "reduce the text for start from an idea and
+ * choose panels and all other section titles. taking up too much space"). Phones: one smaller brush size and tighter margins;
+ * the right-hand meta ("32 PANELS") and the subtitles keep sitting on the title's baseline (each studio's own flex rules).
+ * Desktop keeps each studio's own size. Doubled class: beats the studios' single-class heading rules wherever they load. */
+@media (max-width:899px){
+ .sectionTitle.sectionTitle{font-size:19px;line-height:1.1;margin-top:2px;margin-bottom:7px}
+}
+
+/* ---- the resizable phone sheet (Ball, Boot, Jersey — Oct 14 2026; components/shop/StudioControls.tsx useStudioSheet +
+ * <StudioSheetHandle>, snap maths in lib/shop/studioSheet.ts). The studio's sheet gets its height inline (three snaps,
+ * ≈ 34% / 50% / 78% of the viewport); here: the ~220 ms ease between snaps (none while a finger drags it, none under reduced
+ * motion), and the handle — a full-width 44px strip with the grab bar, touch-action:none so a drag never scrolls the page.
+ * Desktop (≥ 900px): no handle and no inline height, the side panel is unchanged. */
+.sheetHandle{display:none}
+@media (max-width:899px){
+ .sheetResizable{transition:height .22s cubic-bezier(.25,.8,.3,1)}
+ .sheetResizable[data-sheet-dragging]{transition:none}
+ .sheetHandle{position:relative;flex:none;display:block;width:100%;height:44px;margin:0;padding:0;border:0;border-radius:26px 26px 0 0;
+  background:transparent;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+ .sheetHandle::before{content:'';position:absolute;left:50%;top:11px;width:48px;height:6px;margin-left:-24px;border-radius:9px;background:#d4c294;
+  transition:width .15s,margin-left .15s,background-color .15s}
+ .sheetHandle:active,.sheetResizable[data-sheet-dragging] .sheetHandle{cursor:grabbing}
+ .sheetHandle:active::before,.sheetResizable[data-sheet-dragging] .sheetHandle::before{width:66px;margin-left:-33px;background:#b9a46f}
+ .sheetHandle:focus-visible{outline:none}
+ .sheetHandle:focus-visible::before{outline:3px solid #ffd451;outline-offset:4px}
+ /* the step pills follow straight on: the handle's own 44px already gives them air */
+ .sheetHandle+.steps{padding-top:0}
+ /* tall (browsing options): the stage is a short strip, so the bottom view chips step aside and the model keeps the room */
+ [role=dialog]:has([data-sheet-snap=tall]) .viewChips{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+ .sheetResizable,.sheetHandle::before{transition:none!important}
 }

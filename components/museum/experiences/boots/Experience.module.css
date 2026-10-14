@@ -182,3 +182,6 @@
 /* Paper halo (shared look): one soft diffuse shadow under each base plate. */
 .root :global(.iso-halo){filter:blur(14px);transform:translateY(6px)}
 @media (min-width:700px) and (max-height:1000px){.panel{gap:12px;padding-top:22px;padding-bottom:22px}.panelTitle{font-size:clamp(26px,2.8vw,36px)}}
+
+/* One start button, centred with its line under it (Oct 14 2026, user: no second copy above). */
+.introDock{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.introDock .say{flex:none}

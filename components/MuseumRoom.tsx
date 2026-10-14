@@ -155,11 +155,12 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
 
  function card(){
   if(!zoom||!zoom.arrived)return null;
-  if(zoom.id==='timeline')return <div className={styles.tag} data-museum-card="timeline"><div className={styles.tagHead}><span className={styles.eyebrow}>Timeline wall</span><h2>The story of football</h2></div>
+  if(zoom.id==='timeline')return null;// the timeline wall too: just See exhibit (its year list lives inside the exhibit)
+  if(zoom.id==='timeline-card')return <div className={styles.tag} data-museum-card="timeline"><div className={styles.tagHead}><span className={styles.eyebrow}>Timeline wall</span><h2>The story of football</h2></div>
    <p>Every case in date order. Tap a year to go to its case.</p>
    <ol className={styles.years}>{timelineOrder().map(e=>{const s=exhibitState(e,counts);return <li key={e.id}><button type="button" data-museum-year={e.id} data-open={s.open} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} aria-label={`${e.year}: ${e.title}${s.open?'':'. Locked'}`} onClick={()=>room.current?.zoomTo(e.id)}>
     <b>{e.year}{visits.seen.includes(e.id)&&<i className={styles.yearSeen} data-museum-year-seen aria-label=" (visited)"/>}</b><span>{s.open?e.title:<><i className={styles.lockIcon} aria-hidden="true"/>{e.title}</>}</span></button></li>;})}</ol>
-   <p className={styles.small} data-museum-passport={pass.seen}>{pass.seen} of {pass.total} exhibits visited. Step inside to collect a stamp for each one.</p></div>;
+   <p className={styles.small} data-museum-passport={pass.seen}>{pass.seen} of {pass.total} exhibits visited. See each exhibit to collect its stamp.</p></div>;
   if(zoom.id==='my-balls'){const found=COIN_QUEST.filter(spot=>counts.collection.balls.includes(spot.id));return <div className={styles.tag} data-museum-card="my-balls" style={{'--g':accentOf('hall')} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>Your hidden balls</h2></div>
    <p data-museum-found={found.length}><b>{found.length} of {COIN_QUEST.length}</b> found. Each one sits on its own peg.</p>
    <div className={styles.progress} role="progressbar" aria-label="Hidden balls found" aria-valuemin={0} aria-valuemax={COIN_QUEST.length} aria-valuenow={found.length}><i style={{width:`${found.length/COIN_QUEST.length*100}%`}}/></div>
@@ -174,6 +175,9 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    <p>Every path you graduate hangs its certificate here.</p><Certificates earned={earned} open={id=>{if(isCertificateId(id))setCert(id);}}/></div>;
   if(!exhibit)return null;
   const g=galleryOf(exhibit.gallery),s=exhibitState(exhibit,counts),shown=open[exhibit.id]&&s.open;
+  // Open cases show no card at all, just the "See exhibit" button (Oct 14 2026, user: "remove this information in front of the
+  // exhibit. it's overwhelming. only have the btn to enter"). The facts live inside the exhibit itself; locked cases still say how to open.
+  if(shown&&EXPERIENCES[exhibit.id])return null;
   return <div className={styles.tag} data-museum-card={exhibit.id} data-open={shown} style={{'--g':accentOf(g.id)} as React.CSSProperties}>
    <div className={styles.tagHead}><span className={styles.eyebrow}>{g.title} · {exhibit.year}</span><h2>{exhibit.title}</h2></div>
    {shown?<>
@@ -190,14 +194,17 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
  return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom}>
-  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
+  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
-   {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>openExperience('timeline')}>Step inside</button>}
-   {zoom?.arrived&&zoom.id!=='timeline'&&EXPERIENCES[zoom.id]&&open[zoom.id]&&<button type="button" className={styles.stepInside} data-museum-step-inside={zoom.id} data-visited={visits.seen.includes(zoom.id)||undefined} onClick={()=>openExperience(zoom.id)}>
-    {visits.seen.includes(zoom.id)&&<i className={styles.stepSeen} aria-hidden="true"/>}{visits.seen.includes(zoom.id)?'Step inside again':'Step inside'}</button>}
    {!zoom&&<span className={styles.counts} aria-label={`${counts.balls} hidden balls, ${counts.cards} player cards, ${counts.books} pop-up books, ${counts.graduations} graduations`}>
     {(['balls','cards','books','graduations'] as const).map(k=><span key={k} data-museum-hud={k} style={{'--g':COUNT_ART[k]} as React.CSSProperties}><b>{counts[k]}</b>{counts[k]===1?COUNT_WORD[k].slice(0,-1):COUNT_WORD[k]}</span>)}</span>}
   </header>
+  {/* See exhibit: bottom centre, the one thing to do at an open case (Oct 14 2026, user). */}
+  <div className={styles.enterBar}>
+   {zoom?.arrived&&zoom.id==='timeline'&&<button type="button" className={styles.stepInside} data-museum-step-inside="timeline" onClick={()=>openExperience('timeline')}>See exhibit</button>}
+   {zoom?.arrived&&zoom.id!=='timeline'&&EXPERIENCES[zoom.id]&&open[zoom.id]&&<button type="button" className={styles.stepInside} data-museum-step-inside={zoom.id} data-visited={visits.seen.includes(zoom.id)||undefined} onClick={()=>openExperience(zoom.id)}>
+    {visits.seen.includes(zoom.id)&&<i className={styles.stepSeen} aria-hidden="true"/>}{visits.seen.includes(zoom.id)?'See exhibit again':'See exhibit'}</button>}
+  </div>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label="Walkable History Museum. Use WASD or arrow keys to walk, then Enter to look at a case. Tap a case to walk there and look closer."
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};if(spinning){drag.current={x:e.clientX,t:performance.now(),v:0,moved:0};e.currentTarget.setPointerCapture(e.pointerId);}}}
    onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x,now=performance.now(),dt=Math.max(1,now-d.t);d.v=dx*.012/(dt/1000);d.x=e.clientX;d.t=now;d.moved+=Math.abs(dx);room.current?.spinDrag(dx);}}
@@ -211,7 +218,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
   {zoom&&<>
    <button type="button" className={`${styles.arrow} ${styles.prev}`} data-museum-prev aria-label="Previous case" disabled={zoom.index<=0} onClick={()=>room.current?.zoomStep(-1)}><Icon name="back" size={22}/></button>
    <button type="button" className={`${styles.arrow} ${styles.next}`} data-museum-next aria-label="Next case" disabled={zoom.index>=zoom.count-1} onClick={()=>room.current?.zoomStep(1)}><Icon name="arrow" size={22}/></button>
-   {zoom.arrived&&<div className={styles.card} key={zoom.id}>{card()}</div>}
+   {zoom.arrived&&(()=>{const c=card();return c&&<div className={styles.card} key={zoom.id}>{c}</div>;})()}
    {spinning&&<p className={styles.hint} aria-hidden="true">Drag to spin</p>}
   </>}
   {timelineId&&!zoom&&(()=>{const e=EXHIBITS.find(x=>x.id===timelineId);if(!e)return null;const s=exhibitState(e,counts);return <p key={timelineId} className={styles.yearPop} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} data-museum-timeline={timelineId} role="status"><b>{e.year}</b>{e.title}{s.open?'':' · locked'}</p>;})()}
@@ -225,7 +232,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
     <p className={styles.small}>{EXHIBITS.filter(e=>exhibitState(e,counts).open).length} of {EXHIBITS.length} cases open · {pass.seen} of {pass.total} exhibits visited{pass.all?'. You’re a Museum Explorer!':''}</p>
     {nextCase?<><h3>Next to open</h3><p data-museum-next-case={nextCase.id}><b>{nextCase.title}</b> ({nextCase.year}). {exhibitState(nextCase,counts).lockText}</p>
      <button type="button" className={styles.gold} data-museum-show-me onClick={()=>{setGuideOpen(false);room.current?.walkTo(nextCase.id);}}>Show me</button></>
-     :<p>Every case is open. Step inside any exhibit to explore!</p>}
+     :<p>Every case is open. Tap See exhibit on any case to explore!</p>}
     <div className={styles.row}><button type="button" className={styles.mint} data-museum-guide-timeline onClick={()=>{setGuideOpen(false);room.current?.walkTo('timeline');}}>Walk me to the timeline</button>
      <button type="button" className={styles.mint} data-museum-guide-collection onClick={()=>{setGuideOpen(false);room.current?.walkTo('my-balls');}}>Your Collection wing</button></div>
    </GuidePanel></div>}

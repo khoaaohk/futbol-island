@@ -106,6 +106,8 @@
 
 /* The dock under the card. */
 .dock{min-height:60px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+/* One Open the workshop button, centred with its line under it (Oct 14 2026, user). */
+.introDock{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.introDock .say{flex:none}
 .say{margin:0;flex:1 1 260px;font:400 15px/1.45 var(--sans);color:#1d1d1b;max-width:62ch}
 .carousel{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 520px}
 .names{display:flex;gap:6px;min-width:0;overflow-x:auto;scrollbar-width:none}

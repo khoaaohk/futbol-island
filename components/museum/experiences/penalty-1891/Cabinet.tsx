@@ -1,4 +1,5 @@
 'use client';
+import StepIcon from '../StepIcon';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties,type KeyboardEvent as ReactKeyboardEvent,type PointerEvent as ReactPointerEvent,type MouseEvent as ReactMouseEvent} from 'react';
 import {museumSfx} from '@/lib/museum/museumSound';
 import type {Exhibit} from '@/lib/endgame/museum';
@@ -240,7 +241,7 @@ export default function Cabinet({exhibit,reduced,wake,onRound,onStory}:{exhibit:
      {compare&&<span className={styles.vs} aria-label={`${ERA_NAME[compare.from.era]}: ${RESULT_TEXT[compare.from.result].big} ${ERA_NAME[compare.to.era]}: ${RESULT_TEXT[compare.to.result].big}`}>
       <i data-result={compare.from.result}>{compare.from.era==='1891'?'1891':'Today'} · {RESULT_TEXT[compare.from.result].big}</i>
       <i data-result={compare.to.result}>{compare.to.era==='1891'?'1891':'Today'} · {RESULT_TEXT[compare.to.result].big}</i></span>}
-     {canCompare&&<button type="button" className={styles.compare} onClick={replayOther}>▶ Same kick {shown!.era==='1891'?'today':'in 1891'}</button>}
+     {canCompare&&<button type="button" className={styles.compare} onClick={replayOther}><StepIcon kind="play" size={16}/>Same kick {shown!.era==='1891'?'today':'in 1891'}</button>}
     </div>}
     {replaying&&phase==='flying'&&<p className={styles.walk} style={pos} role="status">{era==='1891'?'1891: the keeper walks 6 yards out…':'Today: the keeper goes back to his line…'}</p>}
    </div>

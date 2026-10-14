@@ -172,7 +172,7 @@ export default function Experience({exhibit,onClose,onVisit,onEnter,onComplete}:
        <p className={s.meta}><span>{galleryOf(e.gallery).title}</span><span>{idx+1} / {n}</span>{!!later&&<span>{later} years later</span>}{seen&&<em className={s.seen} data-tl-seen={e.id}><i aria-hidden="true"/>Visited</em>}</p>
       </div>
       <div className={s.actions}>
-       {canEnter&&<button type="button" className={s.btn} data-museum-own-cue data-tl-enter={e.id} onClick={()=>visit(e.id,true)}>{seen?'Step inside again':'Step inside'}</button>}
+       {canEnter&&<button type="button" className={s.btn} data-museum-own-cue data-tl-enter={e.id} onClick={()=>visit(e.id,true)}>{seen?'See exhibit again':'See exhibit'}</button>}
        <button type="button" className={canEnter?s.ghost:s.btn} data-tl-visit={e.id} onClick={()=>visit(e.id)}>{canEnter?'Find it in the hall':'Visit this case'}</button>
        {st&&!st.open&&<p className={s.lock} data-tl-lock={e.id}>{st.lockText}</p>}
       </div>

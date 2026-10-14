@@ -30,6 +30,7 @@ import {type JerseyDesign} from '@/lib/shop/jersey';
 import {paintAtlas,paintAtlasBase,paintAtlasPrints,JERSEY_SURFACE,regionAllowed,regionView} from '@/lib/shop/jerseyPaint';
 import {buildJersey,type MeshData} from '@/lib/shop/jerseyShape';
 import {frameCapSlot,studioFrameMs} from '@/lib/shop/studioFrameCap';
+import {applyInsetOffset,fitDistance,sameInsets,type StageInsets} from '@/lib/shop/studioSheet';
 import {type ArtOp,type ArtPoint,type ArtShape,type ArtSize,type PxRect,ART_GRID,ART_MAX_CHARS,ART_MAX_POINTS,StrokePainter,encodePoints,artFits,artStats,drawOp,renderArt,unionRect} from '@/lib/shop/paint/artOps';
 
 export type JerseyFocus='full'|'crest'|'back'|'collar'|'sleeve'|'side';
@@ -57,6 +58,9 @@ export interface JerseySceneApi{
  /** The flat template view (draw mode only). */
  setFlat(on:boolean):void;
  showOff(on:boolean):void;
+ /** Phones: the stage's visible box (CSS px off the host's top / bottom, lib/shop/studioSheet.ts); the shirt (and the flat
+  *  template) is re-fitted and centred in it. null = the legacy whole-stage fit (desktop, show-off). */
+ setInsets(i:StageInsets|null):void;
  stats():{renders:number;frames:number;paints:number;uploads:number;subUploads:number;pickRenders:number;flatDraws:number;rafPending:boolean;layered:boolean;textureSize:number;pixelRatio:number;calls:number;triangles:number};
  dispose():void;
 }
@@ -191,16 +195,20 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
  let paintTimer:ReturnType<typeof setTimeout>|undefined,firstPaint=true;
  const reduced=opts.reducedMotion;
 
+ let insets:StageInsets|null=null;
  const request=()=>{if(!raf&&!disposed&&!document.hidden){raf=requestAnimationFrame(frame);}};
  function fit(){
   const w=host.clientWidth||1,h=host.clientHeight||1;
-  renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);camera.aspect=w/h;applyInsetOffset(camera,w,h,insets);
  }
  function applyCamera(){
   // fit the shirt (sleeves included) with room for the Front/Back toggle under it: the view centre sits a little low
-  const halfH=Math.max(.45,(halfW*1.1)/camera.aspect)*1.12;
-  const dist=halfH/Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*st.zoom;
-  const cy=st.ty-halfH*.13*Math.min(1,st.zoom);
+  // phones (the resizable sheet, Oct 14 2026): fit the visible box between the icon row and the view chips / sheet, centred
+  // there by a view offset (fit()), so no low-sitting allowance for the toggle is needed; desktop keeps the legacy fit
+  const w=host.clientWidth||1,h=host.clientHeight||1;
+  const halfH=insets?.4:Math.max(.45,(halfW*1.1)/camera.aspect)*1.12;
+  const dist=(insets?fitDistance({fov:camera.fov,w,h,insets,halfW:halfW*1.1,halfH:.4,fillW:1/1.06,fillH:.98}):halfH/Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*st.zoom;
+  const cy=insets?st.ty:st.ty-halfH*.13*Math.min(1,st.zoom);
   camera.position.set(st.tx,cy+Math.sin(st.el)*dist,Math.cos(st.el)*dist);
   camera.lookAt(st.tx,cy,0);
   group.rotation.y=st.yaw;group.scale.setScalar(st.scale);
@@ -389,7 +397,7 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
  let pickRT:THREE.WebGLRenderTarget|null=null,pickBuf:Uint8Array|null=null,pickW=0,pickH=0,pickScale=1,pickSig='',pickRect:DOMRect|null=null;
  const pickMat=new THREE.ShaderMaterial({vertexShader:PICK_VS,fragmentShader:PICK_FS,side:THREE.DoubleSide,blending:THREE.NoBlending});
  const occMat=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide});
- const sig=()=>`${st.yaw.toFixed(4)}|${st.el.toFixed(4)}|${st.zoom.toFixed(4)}|${st.tx.toFixed(4)}|${st.ty.toFixed(4)}|${st.scale}|${host.clientWidth}x${host.clientHeight}|${shapeKey}`;
+ const sig=()=>`${st.yaw.toFixed(4)}|${st.el.toFixed(4)}|${st.zoom.toFixed(4)}|${st.tx.toFixed(4)}|${st.ty.toFixed(4)}|${st.scale}|${host.clientWidth}x${host.clientHeight}|${insets?`${insets.top},${insets.bottom}`:''}|${shapeKey}`;
  function ensurePick(){
   if(!body||!trim)return false;
   const s=sig();pickRect=canvas.getBoundingClientRect();if(s===pickSig&&pickBuf)return true;
@@ -546,7 +554,7 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
  function flatLayout(){
   const dpr=Math.min(window.devicePixelRatio||1,phone?1.5:2),W=host.clientWidth,H=host.clientHeight;
   flatC.width=Math.max(1,Math.round(W*dpr));flatC.height=Math.max(1,Math.round(H*dpr));fl.dpr=dpr;
-  const view=regionView(drawCfg?.lock??'all'),pad=14,top=64,bottom=26;
+  const view=regionView(drawCfg?.lock??'all'),pad=14,top=insets?Math.max(14,insets.top):64,bottom=insets?Math.max(14,insets.bottom+6):26;
   fl.view=view;fl.scale=Math.max(1,Math.min((W-pad*2)/view.w,(H-top-bottom)/view.h));
   fl.ox=(W-view.w*fl.scale)/2;fl.oy=top+(H-top-bottom-view.h*fl.scale)/2;
  }
@@ -636,6 +644,7 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
     animateTo({zoom:FOCI.full.zoom,tx:0,ty:0,el:FOCI.full.el},420);showoff={until:performance.now()+3*TAU/.85*1000};request();}
    else{showoff=null;st.yaw=wrapAngle(st.yaw);request();}
   },
+  setInsets(i){if(disposed||sameInsets(i,insets))return;insets=i?{...i}:null;fit();if(flatOn){flatLayout();flatDraw(null);}request();},
   stats(){return{renders,frames,paints,uploads,subUploads,pickRenders,flatDraws,rafPending:raf!==0,layered,textureSize:texSize,pixelRatio,calls:renderer.info.render.calls,triangles:renderer.info.render.triangles};},
   dispose(){
    if(disposed)return;disposed=true;

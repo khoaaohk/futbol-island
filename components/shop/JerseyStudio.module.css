@@ -58,30 +58,15 @@
 .studio[data-showoff] .stage{inset:0}
 
 /* ---- the sheet ---- */
-.sheet{position:relative;z-index:4;display:flex;flex-direction:column;min-height:0;height:min(53dvh,470px);
- background:var(--paper) var(--btn-grain) center/160px;border-radius:26px 26px 0 0;box-shadow:0 -10px 28px #17352b38}
-.sheet::before{content:'';position:absolute;top:7px;left:50%;width:42px;height:5px;translate:-50% 0;border-radius:3px;background:#244d4026}
-/* step chips a little lower from the sheet's drag handle, and more room before the progress bar and the section heading below
-   it — user: "add more padding and the bar" (Oct 13 2026), same spacing as the Boot studio */
-.steps{display:flex;gap:6px;overflow-x:auto;padding:22px var(--phone-gutter) 14px;scrollbar-width:none;scroll-snap-type:x proximity;flex:none}
-.steps::-webkit-scrollbar{display:none}
-.step{flex:none;display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px 0 7px;border:2px solid #fff2cd;border-radius:999px;background:var(--btn-cream);color:var(--ink);
- font-weight:800;font-size:13px;box-shadow:0 3px 0 #193f3726;scroll-snap-align:center;transition:background-color .18s,translate .12s}
-.step:active{translate:0 2px}
-.stepNum{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#244d401a;font-size:12px}
-.step[aria-current=step]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
-.step[aria-current=step] .stepNum{background:var(--ink);color:#fff2cd}
-.step[data-done=true] .stepNum{background:var(--btn-mint);color:var(--ink)}
-.progress{position:relative;flex:none;height:6px;margin:4px var(--phone-gutter) 0;border-radius:6px;background:#244d401a}
-.progress>i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#7fd3a6,#f9d665);transition:width .35s ease}
+/* Plain cream sheet with no grain, the same as Ball Studio's (Oct 14 2026, user: "use the one without textures. apply to all in the kit shop"). */
+.sheet{position:relative;z-index:4;display:flex;flex-direction:column;min-height:0;height:min(50dvh,470px);
+ background:#fff6e2;border-radius:26px 26px 0 0;box-shadow:0 -10px 28px #17352b38}
+/* the grab bar is the shared drag handle (components/shop/StudioControls.tsx <StudioSheetHandle>, Oct 14 2026): on phones the
+ * height is the player's snap (inline, ≈ 34 / 50 / 78% of the screen); min(50dvh,470px) is only the first-paint fallback */
+/* the step pills are the shared components/shop/StudioControls.tsx <StudioSteps> (Oct 14 2026: one pill design for Boot,
+ * Jersey and Ball, no progress bar — StudioControls.module.css) */
 .stepCount{flex:none;margin:6px var(--phone-gutter) 6px;font-size:12px;font-weight:700;color:var(--ink-soft)}
 .stepCount b{color:var(--ink)}
-.sparkle{position:absolute;top:3px;width:0;height:0;pointer-events:none}
-.sparkle b{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:2px;background:#f9d665;box-shadow:0 0 0 1.5px #fff8;animation:spark .7s ease-out both}
-.sparkle b:nth-child(2n){background:#ff8fb8}.sparkle b:nth-child(3n){background:#7fd3a6}
-.sparkle b:nth-child(1){--a:0deg}.sparkle b:nth-child(2){--a:45deg}.sparkle b:nth-child(3){--a:90deg}.sparkle b:nth-child(4){--a:135deg}
-.sparkle b:nth-child(5){--a:180deg}.sparkle b:nth-child(6){--a:225deg}.sparkle b:nth-child(7){--a:270deg}.sparkle b:nth-child(8){--a:315deg}
-@keyframes spark{0%{transform:rotate(var(--a)) translateX(0) scale(.4);opacity:1}100%{transform:rotate(var(--a)) translateX(30px) scale(1) rotate(90deg);opacity:0}}
 .content{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px var(--phone-gutter) 14px;-webkit-overflow-scrolling:touch}
 .stepBody{animation:stepIn .26s ease-out both}
 @keyframes stepIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -261,11 +246,12 @@
 .nextBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
 
 /* ---- always-visible actions ---- */
-.actions{flex:none;display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px var(--phone-gutter) calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #e6d6a8;background:#f3e6c2 var(--btn-grain) center/160px}
+.actions{flex:none;display:grid;grid-template-columns:auto 1fr;gap:10px;padding:10px var(--phone-gutter) calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid #efe1bf;background:#fff6e2}
 .saveBtn,.buyBtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:var(--btn-height-lg);padding:0 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;
  font-weight:800;font-size:15.5px;color:var(--ink);transition:translate .12s,box-shadow .12s}
-.saveBtn{background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge)}
-.saveBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+/* Save: the same cream pill as Ball's and Boot's (Oct 14 2026: one Save look across the Kit Shop studios) */
+.saveBtn{padding:0 16px;background:var(--btn-cream,#fff1d3);font-weight:900;font-size:15px;box-shadow:0 4px 0 #dccfae,var(--btn-halo,0 0 0 4px #fff2cd40)}
+.saveBtn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 #dccfae}
 .buyBtn{background:var(--btn-gold) var(--btn-grain) center/128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold);font-size:16.5px}
 .buyBtn b{font-size:18px}
 .buyBtn:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
@@ -296,9 +282,8 @@
 .slotCardEmpty{display:grid;place-items:center;width:72px;height:72px;border-radius:16px;border:2.5px dashed #cbbd94;color:#a99c74;font:900 30px/1 var(--btn-font)}
 .confirmBtns .chipMint{min-height:var(--btn-height-lg);padding:0 16px}
 
-/* draw step on phones: a smaller sheet so the shirt has room to paint on, and the tools + colours as swipeable rows so both
-   show without scrolling */
-.studio[data-step=draw] .sheet{height:min(46dvh,430px)}
+/* draw step on phones: the tools + colours as swipeable rows so both show without scrolling (the sheet height is the player's
+   snap now, Oct 14 2026: no per-step height) */
 @media(max-width:899px){
  /* clears the shared top-right icon row (StudioControls, Oct 13 2026): a narrow phone stage isn't wide enough for a centred
     hint pill to clear 4 round buttons at top:12; the desktop stage is wide enough that top:14/20 never collided */
@@ -317,23 +302,47 @@
  .header{grid-column:1/-1;min-height:76px;padding:18px 20px 14px}
  .title{font-size:38px}
  .stageWrap{grid-column:1;grid-row:2;margin:20px 14px 20px 20px;border-radius:30px}
- .studio[data-step=draw] .sheet{height:auto}
  .patterns{grid-template-columns:repeat(4,minmax(0,1fr))}
  .stage{inset:0}
  .stageWrap::before{bottom:calc(26% - 14px)}
  .sheet{grid-column:2;grid-row:2;height:auto;margin:20px 20px 20px 14px;border-radius:30px;min-width:0}
- .sheet::before{display:none}
- .steps{flex-wrap:wrap;gap:6px 5px;padding:18px 20px 8px;overflow:visible}
- .step{padding:0 12px 0 6px;font-size:13px}
  .content{padding:4px 22px 16px}
  .actions{padding:12px 22px 16px}
  .doneTop{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:360px){.tiles4,.tools{grid-template-columns:repeat(3,minmax(0,1fr))}.tiles5{grid-template-columns:repeat(3,minmax(0,1fr))}.patterns{grid-template-columns:repeat(2,minmax(0,1fr))}.sponsors{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-height:700px) and (max-width:899px){.sheet{height:min(56dvh,400px)}.title{font-size:24px}}
+@media(max-height:700px) and (max-width:899px){.title{font-size:24px}}
+/* Phones, Oct 14 2026 (user: "make better use of the space so the items are not as large… apply this to… jerseys"): more air
+ * between sections, denser tiles — the design row ~3.5 cards, sleeves 3 across, patterns and kit palettes 4 across — art scaled
+ * down to match, 13px labels on at most two lines, tap targets ≥ 44px. Same cards, rims, shadows and selected states. */
+@media(max-width:899px){
+ .content{padding:6px var(--phone-gutter) 18px}
+ .stepCount{margin:0 var(--phone-gutter) 2px;font-size:11.5px}
+ .group{margin:0 0 20px}
+ .presets{gap:8px;padding-top:2px;padding-bottom:6px}
+ .preset{width:92px;min-height:96px;gap:4px;padding:7px 3px 7px}
+ .preset canvas{width:66px!important;height:57px!important}
+ .preset>span{font-size:12px}
+ .tiles2{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .tile,.patternTile,.sponsor{font-size:12.5px}
+ .tile{min-height:64px}
+ .tile>span:last-child,.patternTile>span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;text-align:center}
+ .styleIcon{width:38px;height:35px}
+ .patterns{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .patternTile{min-height:84px;padding:6px 2px 7px}
+ .patternTile canvas{width:62px!important;height:53px!important}
+ .palettes{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .paletteTile{min-height:64px;gap:5px;padding:8px 3px 7px;font-size:12px}
+ .paletteDots i{width:22px;height:22px;margin-left:-6px}
+ .crestPreview{width:104px;height:104px}
+ .sponsor{min-height:58px}
+ .stepNav{margin-top:10px}
+ /* the stage runs 22px under the sheet's rounded top: lift the Front/Back chips clear of it (they were half hidden) */
+ .stageWrap>[data-studio-bottom]{bottom:32px}
+}
 
 @media(prefers-reduced-motion:reduce){
- .studio,.stepBody,.toast,.confirm,.confirmWrap,.dragHint,.warn,.crestPreview canvas,.loadingDots i,.toolTile[aria-pressed=true],.chipWarn,.lookingGood span,.sparkle b,.confetti b,
+ .studio,.stepBody,.toast,.confirm,.confirmWrap,.dragHint,.warn,.crestPreview canvas,.loadingDots i,.toolTile[aria-pressed=true],.chipWarn,.lookingGood span,.confetti b,
  :is(.tile,.patternTile,.preset,.sponsor)[aria-pressed=true],:is(.tile,.patternTile,.preset,.sponsor)[aria-pressed=true]::after{animation:none}
- .tile,.patternTile,.preset,.sponsor,.paletteTile,.toolTile,.progress>i,.meter b,.swatch,.swatchCheck,.roundSmall,.stepper,.saveBtn,.buyBtn,.chip,.chipMint,.role,.step,.nextBtn,.placeholder{transition:none}
+ .tile,.patternTile,.preset,.sponsor,.paletteTile,.toolTile,.meter b,.swatch,.swatchCheck,.roundSmall,.stepper,.saveBtn,.buyBtn,.chip,.chipMint,.role,.nextBtn,.placeholder{transition:none}
 }

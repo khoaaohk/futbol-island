@@ -68,7 +68,7 @@
 .result .vs{display:flex;gap:6px;justify-content:center;padding:6px;background:transparent;box-shadow:none;animation-delay:.3s}
 .vs i{font-style:normal;font-family:var(--arcade);font-size:8px;line-height:1.4;padding:5px 7px 4px;color:#000;background:var(--miss);box-shadow:var(--edge)}
 .vs i[data-result=goal]{background:var(--goal)}.vs i[data-result=saved]{background:var(--reach)}
-.compare{pointer-events:auto;align-self:center;margin-top:10px;min-height:44px;padding:0 14px;border:0;background:var(--gold);color:#000;font-family:var(--arcade);font-size:11px;cursor:pointer;
+.compare{pointer-events:auto;display:inline-flex;align-items:center;gap:6px;align-self:center;margin-top:10px;min-height:44px;padding:0 14px;border:0;background:var(--gold);color:#000;font-family:var(--arcade);font-size:11px;cursor:pointer;
  box-shadow:var(--edge),inset 0 -4px 0 var(--gold2);animation:rise .3s .6s steps(3) both}
 .walk{position:absolute;z-index:4;left:50%;top:62%;transform:translateX(-50%);margin:0;padding:9px 12px;width:max-content;max-width:calc(100% - 16px);
  background:var(--win2);box-shadow:var(--edge);font-family:var(--arcade);font-size:10px;line-height:1.5;color:var(--gold);text-align:center;animation:riseC .3s steps(3) both}

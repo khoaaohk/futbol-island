@@ -300,7 +300,6 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <h2 className={s.panelTitle}>From heavy leather to knit.</h2>
       <p className={g.body}>{exhibit.facts[0]}</p>
       <ol className={s.beats}>{[['Spin and open up','Five boots from the early 1900s to today. Spin them, lift the layers apart, see through them.'],['Build one','Put the layers back together from the ground up.'],['Test the studs','Mud, grass, plastic grass, a hall floor: which studs grip?']].map(([h,t])=><li key={h}><b>{h}</b><p>{t}</p></li>)}</ol>
-      <div className={g.row}><button type="button" className={g.btn} data-start onClick={()=>goto('bench')} data-museum-own-cue>Open the bench</button></div>
      </div>}
 
      {phase==='score'&&<div className={s.panel} data-score-panel>
@@ -315,7 +314,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock>
-     {phase==='intro'&&<><button type="button" className={g.btn} data-start-dock onClick={()=>goto('bench')}>Open the bench</button><p className={s.say}>Boots have changed a lot. Let’s take five of them apart.</p></>}
+     {phase==='intro'&&<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={()=>goto('bench')}>Open the bench</button><p className={s.say}>Boots have changed a lot. Let’s take five of them apart.</p></div>}
      {(phase==='bench'||phase==='icons')&&<>
       {phase==='bench'?<span className={s.eras} role="group" aria-label="Boot">{ERAS.map(e=><button key={e.id} type="button" aria-pressed={era===e.id} data-era-btn={e.id} onClick={()=>chooseEra(e.id)}>{e.when}</button>)}</span>
        :<span className={s.eras} role="group" aria-label="Boot line">{ICONS.map(i=><button key={i.id} type="button" aria-pressed={icon===i.id} data-icon-btn={i.id} onClick={()=>{setIcon(i.id);setSel(null);museumSfx.card();}}>{i.name.replace(/^(adidas|Nike|Puma) /,'')}</button>)}</span>}

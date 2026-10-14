@@ -11,7 +11,8 @@ import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {STICKERS,stickerDataUrl} from '@/lib/shop/bootStickers';
 import {BOOT_GLYPHS} from '@/lib/shop/bootGlyphs';
 import type {BootScene,BootView,DecalPatch} from '@/lib/shop/bootScene';
-import {StudioIconButton,StudioIconRow,StudioViewChips} from './StudioControls';
+import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
+import type {StageInsets} from '@/lib/shop/studioSheet';
 import styles from './BootStudio.module.css';
 
 /**
@@ -26,6 +27,8 @@ type Props={onClose():void;onBuy?(design:BootDesign):void};
 const STEPS=['Shape','Style','Colours','Pattern','Studs','Stickers & flags','Name','Done'] as const;
 /** Step indices (the Shape step comes first). */
 const ST={shape:0,style:1,colours:2,pattern:3,studs:4,decals:5,name:6,done:7} as const;
+/** The shared step pills (components/shop/StudioControls.tsx <StudioSteps>): one entry per STEPS label, id = its index. */
+const STEP_DEFS=STEPS.map((label,i)=>({id:String(i),label}));
 const ZONE_VIEW:Record<ColourZone,BootView>={toe:'front',mid:'side',heel:'heel',collar:'top',laces:'tongue',soleplate:'sole',studs:'sole',tips:'sole',accent:'side'};
 const DECAL_VIEW:Record<DecalZone,BootView>={outside:'side',inside:'inside',toe:'front',heel:'heel',tongue:'tongue'};
 const VIEW_CHIPS:{id:BootView;label:string}[]=[{id:'hero',label:'Hero'},{id:'side',label:'Outside'},{id:'inside',label:'Inside'},{id:'top',label:'Top'},{id:'heel',label:'Heel'},{id:'sole',label:'Sole'}];
@@ -55,12 +58,11 @@ function BootGlyph({d,size=96}:{d:GlyphDesign;size?:number}){
  </svg>;
 }
 function Coin(){return <CoinIcon/>;}
-function Sym({name}:{name:'undo'|'redo'|'dice'|'pair'|'save'|'trash'|'minus'|'plus'|'rotl'|'rotr'|'help'|'check'|'eye'}){
+function Sym({name}:{name:'undo'|'redo'|'dice'|'pair'|'save'|'trash'|'minus'|'plus'|'rotl'|'rotr'|'check'|'eye'}){
  const d={undo:'M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-3',redo:'m15 7 5 5-5 5m5-5H9a5 5 0 0 0 0 10h3',
   dice:'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01',
   pair:'M3 15c0-5 2-9 5-9l2 3c3 1 5 2 6 4 1 1 1 3-1 3H3zM9 20h12c2 0 2-3 1-4-1-2-3-3-6-4',save:'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6',
-  trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',minus:'M5 12h14',plus:'M12 5v14M5 12h14',rotl:'M4 12a8 8 0 1 0 3-6M4 4v4h4',rotr:'M20 12a8 8 0 1 1-3-6M20 4v4h-4',
-  help:'M9 9a3 3 0 1 1 4 2.8c-.7.3-1 1-1 1.7V14M12 18h.01',check:'m5 12 4 4L19 6',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zm10-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'}[name];
+  trash:'M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13',minus:'M5 12h14',plus:'M12 5v14M5 12h14',rotl:'M4 12a8 8 0 1 0 3-6M4 4v4h4',rotr:'M20 12a8 8 0 1 1-3-6M20 4v4h-4',check:'m5 12 4 4L19 6',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zm10-3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z'}[name];
  return <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 }
 /** Sole diagram for the stud tiles (heel on the left, toe on the right). */
@@ -115,9 +117,19 @@ export default function BootStudio({onClose,onBuy}:Props){
  const [view,setViewState]=useState<BootView|null>('hero');
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false);
  const [toast,setToast]=useState<{text:string;n:number}|null>(null);
- const [saveOpen,setSaveOpen]=useState(false),[help,setHelp]=useState(false),[touched,setTouched]=useState(false);
+ const [saveOpen,setSaveOpen]=useState(false);
  const [nameDraft,setNameDraft]=useState(''),[nameError,setNameError]=useState('');
  const canvasRef=useRef<HTMLCanvasElement|null>(null),sceneRef=useRef<BootScene|null>(null);
+ const stageRef=useRef<HTMLDivElement>(null),insetsRef=useRef<StageInsets|null>(null);
+ // The resizable phone sheet (shared with Ball and Jersey): the boot re-fits to the stage's visible box as it moves.
+ const pairRef=useRef(false);
+ /** Phones: the CSS plinth follows the fitted boot (its centre and its scale, the same span/height bounds bootScene uses). */
+ const placePlinth=useCallback(()=>{const el=stageRef.current,i=insetsRef.current;if(!el)return;
+  if(!i){el.removeAttribute('data-fit');return;}
+  const w=el.clientWidth||1,h=el.clientHeight||1,vis=Math.max(1,h-i.top-i.bottom),span=(pairRef.current?3.7:3.15)*.94;
+  const ppw=Math.min(w/1.06/span,vis/1.1/1.9);
+  el.dataset.fit='';el.style.setProperty('--fit-cy',`${Math.round(i.top+vis/2)}px`);el.style.setProperty('--fit-ppw',`${ppw.toFixed(1)}px`);},[]);
+ const sheet=useStudioSheet({stageRef,onInsets:i=>{insetsRef.current=i;sceneRef.current?.setInsets(i);placePlinth();}});
  const designRef=useRef(design);
  const stepRef=useRef(step);stepRef.current=step;
  const selRef=useRef(selected);selRef.current=selected;
@@ -149,7 +161,7 @@ export default function BootStudio({onClose,onBuy}:Props){
   import('@/lib/shop/bootScene').then(({createBootScene})=>{
    if(!alive||!canvasRef.current)return;
    try{scene=createBootScene(canvasRef.current,{coarse,reducedMotion,
-    onTap:hit=>{setTouched(true);
+    onTap:hit=>{
      if(!hit)return;
      if(stepRef.current===ST.decals){
       if(hit.decal&&!hit.decal.startsWith('__')){setSelected(hit.decal);return;}
@@ -160,16 +172,16 @@ export default function BootStudio({onClose,onBuy}:Props){
      }else if(stepRef.current===ST.colours){setZoneC(hit.paint);}
     },
     onDecalMove:(id,patch:DecalPatch,done)=>{if(done)commitRef.current(d=>({...d,decals:d.decals.map(x=>x.id===id?{...x,...patch}:x)}));},
-    onManualTurn:()=>{setViewState(null);setTouched(true);},
+    onManualTurn:()=>{setViewState(null);},
    });}catch(err){console.warn('boot studio: no WebGL',err);setFailed(true);return;}
-   sceneRef.current=scene;scene.setDesign(designRef.current);setReady(true);
+   sceneRef.current=scene;scene.setInsets(insetsRef.current);scene.setDesign(designRef.current);setReady(true);
    const w=window as unknown as {__bootStudio?:unknown};if(location.pathname.startsWith('/shop-lab'))w.__bootStudio=scene;
   }).catch(err=>{console.warn('boot studio failed to load',err);setFailed(true);});
   return()=>{alive=false;sceneRef.current=null;scene?.dispose();const w=window as unknown as {__bootStudio?:unknown};if(w.__bootStudio===scene)delete w.__bootStudio;};
  },[say]);
  useEffect(()=>{sceneRef.current?.setDesign(design);},[design,ready]);
  useEffect(()=>{sceneRef.current?.setEditing(step===ST.decals);sceneRef.current?.setSelected(step===ST.decals?selected:null);},[step,selected,ready]);
- useEffect(()=>{sceneRef.current?.setPair(pair);},[pair,ready]);
+ useEffect(()=>{sceneRef.current?.setPair(pair);pairRef.current=pair;placePlinth();},[pair,ready,placePlinth]);
  // Each step turns the boot to what it edits.
  useEffect(()=>{if(!ready)return;const v:BootView=step===ST.studs?'sole':step===ST.name?'heel':step===ST.decals?DECAL_VIEW[zoneD]:step===ST.colours?ZONE_VIEW[zoneC]:'hero';setView(v);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -360,7 +372,7 @@ export default function BootStudio({onClose,onBuy}:Props){
    <CoinPill balance={wallet.balance} className={styles.headerCoins} data-coins/>
   </header>
 
-  <div className={styles.stage}>
+  <div ref={stageRef} className={styles.stage}>
    <div className={styles.sweep} aria-hidden="true"><span className={styles.plinth}/></div>
    <canvas ref={canvasRef} className={styles.canvas} aria-label="Your boot. Drag to spin, pinch to zoom, double-tap to reset." role="img"/>
    {!ready&&!failed&&<div className={styles.loading}><BootGlyph d={design} size={140}/><span>Lacing up…</span></div>}
@@ -369,19 +381,15 @@ export default function BootStudio({onClose,onBuy}:Props){
     <StudioIconButton label="Undo" disabled={!canUndo} onClick={undo}><Sym name="undo"/></StudioIconButton>
     <StudioIconButton label="Redo" disabled={!canRedo} onClick={redo}><Sym name="redo"/></StudioIconButton>
     <StudioIconButton label="Randomise" onClick={randomise}><Sym name="dice"/></StudioIconButton>
-    <StudioIconButton label={help?'Hide tips':'How to use'} pressed={help} onClick={()=>setHelp(h=>!h)}><Sym name="help"/></StudioIconButton>
     <StudioIconButton label={pair?'Show one boot':'Show the pair'} pressed={pair} onClick={()=>setPair(p=>!p)}><Sym name="pair"/></StudioIconButton>
    </StudioIconRow>
    <StudioViewChips label="Turn the boot">{VIEW_CHIPS.map(v=><button key={v.id} type="button" aria-pressed={view===v.id} onClick={()=>setView(v.id)}>{v.label}</button>)}</StudioViewChips>
-   {(!touched||help)&&ready&&<p className={styles.hint} data-help={help||undefined}>{help?'Drag to spin · Pinch or scroll to zoom · Double-tap to reset · Tap the boot to pick a part':'Drag to spin'}</p>}
    {toast&&<p key={toast.n} className={styles.toast} role="status">{toast.text}</p>}
   </div>
 
-  <section className={styles.sheet}>
-   <nav className={styles.steps} aria-label="Steps" style={{'--p':step/(STEPS.length-1)} as CSSProperties}>
-    <span className={styles.stepTrack} aria-hidden="true"><span/></span>
-    {STEPS.map((s,i)=><button key={s} type="button" className={styles.stepBtn} aria-current={i===step?'step':undefined} data-done={i<step||undefined} onClick={()=>setStep(i)}><b>{i+1}</b><span>{s}</span></button>)}
-   </nav>
+  <section className={`${styles.sheet} ${sheet.sheetClass}`} {...sheet.sheetProps}>
+   <StudioSheetHandle sheet={sheet}/>
+   <StudioSteps steps={STEP_DEFS} activeId={String(step)} isDone={(_,i)=>i<step} onSelect={id=>setStep(Number(id))}/>
    <div className={styles.panel} key={step}>
     {stepBody()}
     <div className={styles.stepNav}>
@@ -410,7 +418,7 @@ export default function BootStudio({onClose,onBuy}:Props){
 }
 
 function Section({title,hint,children}:{title:string;hint?:string;children:ReactNode}){
- return <section className={styles.section}><h3 className={styles.h3}>{title}{hint&&<small>{hint}</small>}</h3>{children}</section>;
+ return <section className={styles.section}><h3 className={`${styles.h3} ${studioSectionTitle}`}>{title}{hint&&<small>{hint}</small>}</h3>{children}</section>;
 }
 function Tile({on,onClick,label,note,children}:{on:boolean;onClick():void;label:string;note?:string;children?:ReactNode}){
  return <button type="button" className={styles.tile} aria-pressed={on} onClick={onClick}>{children}<strong>{label}</strong>{note&&<small>{note}</small>}{on&&<span className={styles.tick} aria-hidden="true"><Sym name="check"/></span>}</button>;

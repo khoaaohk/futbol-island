@@ -39,32 +39,22 @@ test('Museum: enter from the island, read the free case, blow the whistle, see a
   await page.waitForTimeout(1200);
   await shot('museum-entrance');
 
-  // Every case opens straight onto its full card (Oct 13 2026): the eyebrow, title, facts, the hands-on bit, "Take it to your
-  // game", the sources and Step inside. No story strip, beat buttons or plaque.
+  // Open cases show no info card, only the "See exhibit" button (Oct 14 2026, user: "remove this information in front of the
+  // exhibit ... only have the btn to enter the exhibit").
   await page.evaluate(() => (window as any).__museum.walkTo('laws-1863'));
   await arrived(page, 'laws-1863');
-  const card = page.locator('[data-museum-card="laws-1863"]');
-  await expect(card).toBeVisible();
-  await expect(card).toContainText('Football Association');
-  await expect(card).toContainText('Take it to your game');
+  await expect(page.locator('[data-museum-card="laws-1863"]'), 'no info card').toHaveCount(0);
+  await expect(page.locator('[data-museum-step-inside="laws-1863"]')).toHaveText(/See exhibit/);
   await expect(page.locator('[data-museum-story], [data-museum-plaque-toggle]'), 'no story strip').toHaveCount(0);
-  await card.locator('summary').click();
-  // (External links go through the grown-ups gate, which moves href to data-gated-href.)
-  expect(await card.locator('a').first().evaluate(a => a.getAttribute('href') || a.getAttribute('data-gated-href'))).toMatch(/wikipedia/);
   await shot('museum-case-open');
 
-  // Next case: the penalty kick: its card carries the whistle.
+  // Next in hall order: the penalty case, then VAR; each just offers See exhibit.
   await tap('[data-museum-next]');
   await arrived(page, 'penalty-1891');
-  await expect(page.locator('[data-museum-card="penalty-1891"]')).toBeVisible();
-  await tap('[data-museum-whistle]');
-  await expect(page.locator('[data-museum-whistle-blown]')).toContainText('11 metres');
-  await shot('museum-interactive');
-
-  // Next in hall order: the VAR case (every case is free since Oct 9 2026).
+  await expect(page.locator('[data-museum-step-inside="penalty-1891"]')).toBeVisible();
   await tap('[data-museum-next]');
   await arrived(page, 'var-2018');
-  await expect(page.locator('[data-museum-card="var-2018"]')).toBeVisible();
+  await expect(page.locator('[data-museum-step-inside="var-2018"]')).toBeVisible();
   await shot('museum-case-next');
 
   // The west wing, "Your Collection": walk through the wide opening to the hidden-ball pegboard (10 of the 100 pegs hold a ball).

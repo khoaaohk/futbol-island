@@ -6,7 +6,7 @@
 
 .root{
  --ink:#244d40;--ink-soft:#4c6a5e;--paper:#fff6e2;--paper-2:#f6ead0;--line:#e3d4b0;--gold:var(--btn-gold,#e9c16b);--gold-edge:var(--btn-gold-edge,#a8863d);
- --rim:var(--btn-rim,#fff2cd);--grain:var(--btn-grain,url('/stories/films/assets/entry-grain.png'));--sheet-h:min(53dvh,470px);
+ --rim:var(--btn-rim,#fff2cd);--grain:var(--btn-grain,url('/stories/films/assets/entry-grain.png'));--sheet-h:min(50dvh,470px);
  position:fixed;inset:0;z-index:90;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;background:#244d40 var(--grain) center/160px;color:var(--ink);font-family:var(--btn-font,Arial,Helvetica,sans-serif);
  -webkit-text-size-adjust:100%;text-size-adjust:100%;overscroll-behavior:contain;animation:rootIn .28s ease-out both}
 .root *{box-sizing:border-box}
@@ -74,15 +74,11 @@
 /* ---- Sheet / side panel ---- */
 .sheet{position:relative;z-index:6;height:var(--sheet-h);display:flex;flex-direction:column;margin-top:-22px;border-radius:26px 26px 0 0;background:var(--paper);
  box-shadow:0 -6px 0 #f6e4bd66,0 -1px 0 var(--rim);padding-bottom:env(safe-area-inset-bottom,0px)}
-.grab{width:44px;height:5px;border-radius:9px;background:#d8c79e;margin:8px auto 0}
-.steps{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:10px var(--phone-gutter,18px) 8px;scroll-padding:0 40px;flex:none}
-.steps::-webkit-scrollbar{display:none}
-.stepBtn{flex:none;display:flex;align-items:center;gap:7px;height:44px;padding:0 13px 0 5px;border:2px solid transparent;border-radius:999px;background:#efe1bf;color:var(--ink-soft);font-size:13px;font-weight:800;white-space:nowrap;transition:background .2s,color .2s,transform .15s}
-.stepBtn b{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#fff6e2;color:var(--ink);font-size:12px}
-.stepBtn[aria-current='step']{background:var(--ink);color:#fff3d2;border-color:var(--rim);box-shadow:0 3px 0 #17352b}
-.stepBtn[aria-current='step'] b{background:var(--gold);color:var(--ink)}
-.stepBtn[data-done] b{background:#bfe3c9}
-.stepBtn:active{transform:scale(.96)}
+/* the grab bar is the shared drag handle (components/shop/StudioControls.tsx <StudioSheetHandle>, Oct 14 2026): on phones
+ * the sheet's height is the snap the player picked (inline, ≈ 34 / 50 / 78% of the screen); --sheet-h is only the first-paint
+ * fallback before that loads */
+/* the step pills are the shared components/shop/StudioControls.tsx <StudioSteps> (Oct 14 2026: one pill design for Boot,
+ * Jersey and Ball, no progress bar — StudioControls.module.css) */
 .body{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:4px var(--phone-gutter,18px) 14px;-webkit-overflow-scrolling:touch}
 .pane{animation:paneIn .26s ease-out both}
 @keyframes paneIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:none}}
@@ -285,8 +281,6 @@
  .decalBar{left:50%;bottom:26px;transform:translateX(-50%)}
  @keyframes barIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
  .sheet{width:auto;min-width:0;height:auto;margin:20px 20px 20px 14px;border-radius:28px;box-shadow:0 8px 0 #0000002e,0 0 0 3px var(--rim)}
- .grab{display:none}
- .steps{flex-wrap:wrap;padding:16px 20px 8px}
  .body{padding:4px 20px 18px}
  .foot{border-radius:0 0 28px 28px;padding:14px 20px 16px}
  .hint{top:20px}
@@ -301,18 +295,41 @@
  /* clears the shared top-right icon row (StudioControls, Oct 13 2026): a narrow phone stage isn't wide enough for a centred
     hint pill to clear 5 round buttons at top:12; the desktop stage is wide enough that top:14/20 never collided */
  .hint{top:70px}}
-@media (max-height:700px) and (max-width:899px){.root{--sheet-h:min(56dvh,400px)}}
-/* Phone: the Draw step gives the ball more room (the tools are compact). */
-@media (max-width:899px){.root[data-step='draw']{--sheet-h:min(46dvh,410px)}.tools{gap:5px}.tool{min-height:58px;font-size:11px}.tool svg{width:24px;height:24px}
+/* Phone: the draw tools are compact (the sheet height is the player's snap now, Oct 14 2026: no per-step height). */
+@media (max-width:899px){.tools{gap:5px}.tool{min-height:58px;font-size:11px}.tool svg{width:24px;height:24px}
  /* the stage controls sit clear of the sheet's rounded top (the sheet overlaps the stage by 22px) */
- .kickWrap{bottom:44px}.decalBar{bottom:44px!important}
+ /* Kick sits top-left on phones, on the icon row's line, so the ball and the sheet edge stay clear (user, Oct 14). */
+ .kickWrap{top:12px;bottom:auto;left:10px;translate:none}.kick{height:44px;gap:4px;padding:0 10px 0 5px}.kick span{width:30px;height:30px}.decalBar{bottom:44px!important}
  /* Draw step on a phone: the palette is one scrolling row so the tools stay in view */
  [data-draw-pane] .swatches{display:flex;overflow-x:auto;scrollbar-width:none;gap:8px;margin:10px calc(-1 * var(--phone-gutter,18px)) 0;padding:4px var(--phone-gutter,18px) 8px}
  [data-draw-pane] .swatches::-webkit-scrollbar{display:none}
  [data-draw-pane] .sw{flex:none;width:44px;height:44px}
- [data-draw-pane] .h2{margin:2px 0 8px;font-size:21px}
  [data-draw-pane] .fact{display:none}}
-@media (max-width:360px){.tools{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Phones, Oct 14 2026 (user: "make better use of the space so the items are not as large"): more air between sections, smaller
+ * and denser tiles — the preset row shows ~3.5 cards, the layout / pattern / finish grids go to 4 columns, the sticker and flag
+ * trays to 5 — with the art scaled to match, 13px labels on at most two lines, and every tap target still ≥ 44px. Same cream
+ * cards, rims, shadows and selected states; desktop untouched. */
+@media (max-width:899px){
+ .body{padding:8px var(--phone-gutter,18px) 18px}
+ .fact{margin:14px 0 2px;padding:10px 12px;font-size:12.5px}
+ .h3{margin:16px 0 8px;font-size:12px}
+ .presets{gap:8px;padding:2px var(--phone-gutter,18px) 6px}
+ .preset{width:94px;min-height:94px;gap:5px;padding:8px 4px;font-size:12.5px}
+ .preset .miniBall,.diceBall{width:44px;height:44px}
+ .diceBall svg{width:26px;height:26px}
+ .tiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+ .tile{gap:4px;padding:8px 3px 7px;font-size:13px;line-height:1.1;overflow-wrap:anywhere}
+ .tile small{font-size:10.5px}
+ .tileArt{width:50px;height:50px}
+ .finish{width:46px;height:46px}
+ .tile[aria-pressed='true']::after{top:-7px;right:-7px;width:22px;height:22px;background-size:14px}
+ .sizes{gap:8px}
+ .trays{grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+ .item{padding:5px;border-radius:14px}
+ .quote{min-height:48px;font-size:18px}
+ .nextCta{height:48px;margin-top:18px}
+}
+@media (max-width:360px){.tools{grid-template-columns:repeat(3,minmax(0,1fr))}.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.trays{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){
  .root,.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}
 }

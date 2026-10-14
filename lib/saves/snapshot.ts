@@ -54,6 +54,8 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),
  // so it changed on every visit without any progress and made a second copy of the island look different. Per device now.
  'fi2-fuel-v1',
+ // The Kit Shop studios' phone panel size (Oct 14 2026): a per-device layout preference.
+ 'fi2-studio-sheet-v1',
  // Coaches Board plays stay on the device (user, Oct 9 2026): play names are typed text and could name a child. Share links move them.
  'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */

@@ -34,16 +34,16 @@
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
 
 /* ---- Telescope eyepiece ---- */
-.scope{position:absolute;inset:0;z-index:3;touch-action:none;cursor:grab;--r:min(43vw,40vh)}
+.scope{position:absolute;inset:0;z-index:3;touch-action:none;cursor:grab;--r:min(43vw,40vh);--cy:50%}
 .scope:active{cursor:grabbing}
-.scope::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent calc(var(--r) - 3px),#0b1714f2 calc(var(--r) + 2px));pointer-events:none}
-.rim{position:absolute;left:50%;top:50%;width:calc(var(--r) * 2);height:calc(var(--r) * 2);translate:-50% -50%;border-radius:50%;border:4px solid #e9c75f;box-shadow:0 0 0 2px #294f43,inset 0 0 40px #0b171488;pointer-events:none}
-.cross{position:absolute;left:50%;top:50%;width:34px;height:34px;translate:-50% -50%;pointer-events:none}
+.scope::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% var(--cy),transparent calc(var(--r) - 3px),#0b1714f2 calc(var(--r) + 2px));pointer-events:none}
+.rim{position:absolute;left:50%;top:var(--cy);width:calc(var(--r) * 2);height:calc(var(--r) * 2);translate:-50% -50%;border-radius:50%;border:4px solid #e9c75f;box-shadow:0 0 0 2px #294f43,inset 0 0 40px #0b171488;pointer-events:none}
+.cross{position:absolute;left:50%;top:var(--cy);width:34px;height:34px;translate:-50% -50%;pointer-events:none}
 .cross::before,.cross::after{content:'';position:absolute;background:#fff3dfcc}
 .cross::before{left:16px;top:0;width:2px;height:34px}
 .cross::after{top:16px;left:0;height:2px;width:34px}
-.ring{position:absolute;left:50%;top:50%;width:64px;height:64px;translate:-50% -50%;pointer-events:none}
-.label{position:absolute;left:50%;top:calc(50% + var(--r) - 92px);translate:-50% 0;width:min(380px,calc(var(--r) * 1.6));padding:9px 14px;border:2px solid #fff2cd;border-radius:14px;background:#294f43ee;color:#fff0cc;text-align:center;font:13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
+.ring{position:absolute;left:50%;top:var(--cy);width:64px;height:64px;translate:-50% -50%;pointer-events:none}
+.label{position:absolute;left:50%;top:calc(var(--cy) + var(--r) - 92px);translate:-50% 0;width:min(380px,calc(var(--r) * 1.6));padding:9px 14px;border:2px solid #fff2cd;border-radius:14px;background:#294f43ee;color:#fff0cc;text-align:center;font:13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
 .label strong{display:block;font:20px Impact,Arial Narrow,sans-serif;letter-spacing:.4px;color:#ffd27a}
 .scopeTop{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;padding-right:0;pointer-events:none}
 .scopeTop>*{pointer-events:auto}
@@ -65,7 +65,9 @@
  .card h2{font-size:25px}
  /* The stick stays usable under the eyepiece (bottom left), so the note moves up a little. */
  .scopeNote{bottom:calc(150px + env(safe-area-inset-bottom,0px));font-size:12px}
- .label{top:calc(50% + var(--r) - 86px);font-size:12px}
+ /* The circle rides higher (40%, the camera's projection centre is lifted to match) and the place label sits under it, not over the view (user, Oct 14). */
+ .scope{--cy:40%;--r:min(41vw,36vh)}
+ .label{top:calc(var(--cy) + var(--r) + 14px);font-size:12px}
  /* The coin bar hides under the eyepiece, so Back sits at the usual top-left spot (like every other screen) and the glint count
     at the top right; Zoom moves to the bottom right where the island's action buttons live (user, Oct 13 2026). */
  .scopeTop{top:calc(16px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px))}

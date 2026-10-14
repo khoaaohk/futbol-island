@@ -21,6 +21,7 @@ import {BALL_VERT,ballFrag,MAX_FILLS,MAX_SHADER_DECALS} from './ballShader';
 import {decalImage,drawPatternMask,loadDecalFonts} from './ballArt';
 import {QUOTES,type BallDecal,type BallDesign,type BallLayout,type Vec3} from './ball';
 import {frameCapSlot,studioFrameMs} from './studioFrameCap';
+import {applyInsetOffset,fitDistance,insetShift,sameInsets,type StageInsets} from './studioSheet';
 
 export type StageOpts={coarse:boolean;reducedMotion:boolean;
  /** Called when the kicked ball leaves the foot (strength 1) and on each bounce (0..1): the studio plays the sound. */
@@ -55,6 +56,10 @@ export type BallStage={
  spin(seconds:number):void;
  /** Test hook: the shader's panel id/group under each client point (GPU read-back), or null off the ball. */
  debugPanelIds(pts:[number,number][]):({id:number;grp:number}|null)[];
+ /** Phones: the stage's visible box (CSS px off the canvas top / bottom); the ball is re-fitted and centred in it. null = legacy fit. */
+ setInsets(i:StageInsets|null):void;
+ /** The ball's centre and radius on screen (client px) at rest, for placing new stickers and sizing the brush ring. */
+ screenBall():{x:number;y:number;r:number};
  setPaused(p:boolean):void;resize():void;dispose():void;
  stats:StageStats;renderer:T.WebGLRenderer;
 };
@@ -114,13 +119,17 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  let stepAcc={x:0,y:0};
  let design:BallDesign|null=null,futsal=false;
  let decals:BallDecal[]=[],aspects:number[]=[],atlasKeys='',patKey='',patTimer=0,atlasTimer=0;
+ let insets:StageInsets|null=null;
 
  function placeCamera(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;camera.aspect=w/h;
-  // Fit like a product shot: the ball's radius is `f` of the view height (≈62% of the shorter side across), leaving room for the bounce.
-  const t=Math.tan(T.MathUtils.degToRad(camera.fov/2)),f=w>=h?.3:.31*w/h,dist=1/(t*f*2)/zoom,elev=T.MathUtils.degToRad(9);
-  camera.position.set(0,Math.sin(elev)*dist,Math.cos(elev)*dist);camera.lookAt(0,-.04,0);camera.updateProjectionMatrix();
+  const t=Math.tan(T.MathUtils.degToRad(camera.fov/2)),elev=T.MathUtils.degToRad(9);
+  // Desktop / no sheet: fit like a product shot, the ball's radius `f` of the view height (≈62% of the shorter side across),
+  // leaving room for the bounce. Phones (Oct 14 2026, the resizable sheet): fit the visible box between the stage controls and
+  // the sheet (lib/shop/studioSheet.ts) — up to 80% of the width / 86% of the box — and centre it there with a view offset.
+  const dist=(insets?fitDistance({fov:camera.fov,w,h,insets,halfW:1,halfH:1,fillW:.8,fillH:.86}):1/(t*(w>=h?.3:.31*w/h)*2))/zoom;
+  camera.position.set(0,Math.sin(elev)*dist,Math.cos(elev)*dist);camera.lookAt(0,-.04,0);applyInsetOffset(camera,w,h,insets);
   // Fine surface detail (dimples, grain) fades when the ball is small on screen so it never shimmers.
-  uniforms.uDetail.value=Math.min(1,Math.max(.25,h*dpr()*f*zoom/260));}
+  uniforms.uDetail.value=Math.min(1,Math.max(.25,h/2/(t*dist)*dpr()/260));}
  function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setPixelRatio(dpr());renderer.setSize(w,h,false);placeCamera();invalidate();}
 
  function render(){holderSync();uploadDraw();renderer.render(scene,camera);stats.renders++;}
@@ -246,6 +255,9 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
   viewAxes,snapshot,debugPanelIds,
   spin(seconds){if(reduced)return;preview=previewLen=Math.max(.5,seconds);resetAnim=null;invalidate();},
   step(dx,dy){const S=Math.PI/6;if(dx)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(0,1,0),dx*S));if(dy)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(1,0,0),dy*S));invalidate();},
+  setInsets(i){if(sameInsets(i,insets))return;insets=i?{...i}:null;placeCamera();invalidate();},
+  screenBall(){const r=canvas.getBoundingClientRect(),h=canvas.clientHeight||1,t=Math.tan(T.MathUtils.degToRad(camera.fov/2)),dist=camera.position.length();
+   return {x:r.left+r.width/2,y:r.top+r.height/2+(insets?insetShift(insets):0),r:h/2/(t*dist)};},
   setPaused(p){paused=p;if(p){cancelAnimationFrame(raf);raf=0;}else invalidate();},
   resize,
   dispose(){disposed=true;cancelAnimationFrame(raf);raf=0;clearTimeout(patTimer);clearTimeout(atlasTimer);clearTimeout(drawTimer);drawTex?.dispose();drawTex=null;ro.disconnect();document.removeEventListener('visibilitychange',vis);canvas.removeEventListener('webglcontextlost',lost);

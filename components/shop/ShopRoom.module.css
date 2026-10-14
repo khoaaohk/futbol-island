@@ -20,6 +20,8 @@
 .title b{white-space:nowrap;font-size:20px;letter-spacing:.14em;color:var(--navy)}
 .title span{font-size:13px;color:#59606a;letter-spacing:.02em}
 .topRight{display:flex;align-items:center;gap:8px}
+/* Done on the right like every screen (Oct 14 2026, user: "done btns should be consistent and on the right"). */
+.doneRight{order:3}
 /* The coin-balance pill (cream, gold coin) is the shared components/shop/CoinPill.tsx — same height, padding, radius, shadow,
  * font and icon as the three studio headers, so all four match (Oct 13 2026). */
 .myKitButton{white-space:nowrap;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:800 15px/1 inherit;letter-spacing:.04em;cursor:pointer}

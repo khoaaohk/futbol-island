@@ -153,7 +153,7 @@ export default function ShopRoom(){
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerCancel={()=>{tap.current=null;}}
    onPointerUp={e=>{const p=tap.current;tap.current=null;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12)room.current?.pick(e.clientX,e.clientY);}}/>
   {!studio&&<header className={styles.top}>
-   <NavigationButton label="Done" data-shop-done onNavigate={leave}/>
+   <NavigationButton className={styles.doneRight} label="Done" data-shop-done onNavigate={leave}/>
    <p className={styles.title}><b>KIT SHOP</b><span>Design your own kit</span></p>
    <div className={styles.topRight}>
     <CoinPill balance={wallet.balance} data-shop-coins/>

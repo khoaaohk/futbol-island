@@ -1,8 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type CSSProperties} from 'react';
 import {registerIslandNarration,islandNarrationAllowed} from '@/lib/audio/islandNarration';
-import {getSoundVolume} from '@/lib/games/sound';
-import {narrationOn} from '@/lib/tutorial/tutorialAudio';
+import {narrationOn,narrationVolume} from '@/lib/tutorial/tutorialAudio';
 import {TUTORIAL_SCENES} from '@/lib/tutorial/islandTutorial';
 import IslandTutorialArt from './IslandTutorialArt';
 import styles from './IslandTutorial.module.css';
@@ -28,7 +27,7 @@ export default function IslandTutorial({onClose,primed}:{onClose:()=>void;primed
 
  // One audio element for the tutorial's lifetime (the one the opening tap primed, see lib/tutorial/tutorialAudio.ts), released on close.
  useEffect(()=>{
-  const media=primed??new Audio();media.preload='auto';media.volume=getSoundVolume()||.5;audio.current=media;
+  const media=primed??new Audio();media.preload='auto';media.volume=narrationVolume();audio.current=media;
   const release=registerIslandNarration(media),fail=()=>{if(media.getAttribute('src'))setAudioFailed(true);};media.addEventListener('error',fail);
   root.current?.focus({preventScroll:true});
   return()=>{release();media.removeEventListener('error',fail);media.pause();delete media.dataset.scene;media.removeAttribute('src');media.load();audio.current=null;};

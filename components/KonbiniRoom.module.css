@@ -144,5 +144,5 @@
 @media(prefers-reduced-motion:reduce){.streak,.coachTip,.clerkLine,.streak[data-best]::before,.streak[data-best]::after{animation:none}}
 /* Narrow screens: the coach tip spans the width under the header, so the cashier's line slides in below it. */
 @media(max-width:760px){.clerkLine{top:calc(236px + env(safe-area-inset-top,0px))}}
-/* Coins on the left, Done / Back on the right (user, Sep 30 2026). */
-.headerActions{order:-1}.coins i{right:auto;left:calc(64px + env(safe-area-inset-left,0px))}
+/* Coins on the left and Done on the right (user, Sep 30 2026); Back always on the far left (Oct 14 2026, user). */
+.headerActions{order:-1}.backLeft{order:-2}.coins i{right:auto;left:calc(64px + env(safe-area-inset-left,0px))}

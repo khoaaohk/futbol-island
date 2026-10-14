@@ -1,14 +1,18 @@
-/* Island Tutorial: plays inside the Paths hero card (IslandJourney .arrival), in the card's riso: cream paper with the card's
-   own grain on top (.arrival::after), the flat island inks (#ffd03e yellow, #1255ee blue, #087451 green, #ff6230 flag, #fa8bd2
-   player dot, #173e37 key ink) and the IslandBrush display face, with slightly mis-registered overprints.
+/* Island Tutorial: plays inside the Paths hero card (IslandJourney .arrival). The scene art is drawn like the welcome tour's
+   icons (IslandOnboarding + PocketArt): flat rounded shapes, soft two-tone shading, no outlines, small ground shadows, on the
+   tour's light textured cream (#fff6e0 + entry grain), in its palette (#244d40 ink, #2e7867 teal, #f08a2c orange, #f4c64a gold).
+   The controls keep the card's own tokens below.
    Heat: transform/opacity loops only, and every loop pauses unless [data-active=true] (playing, tab visible, card on-screen). */
 .tutorial{--ink:#173e37;--paper:#fff1cf;--yellow:#ffd03e;--blue:#1255ee;--green:#087451;--flag:#ff6230;--pink:#fa8bd2;
  grid-column:1/-1;position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;min-width:0;width:100%;color:var(--ink);outline:none}
 .tutorial:focus-visible{outline:var(--btn-focus);outline-offset:4px;border-radius:18px}
 .tutorial[data-active=false] *,.tutorial[data-active=false] *::before,.tutorial[data-active=false] *::after{animation-play-state:paused!important}
+/* The one-shot entrance fades (.35s, then idle) still finish while paused, so jumping to a scene while paused never leaves the
+   art, title or caption frozen at opacity 0. Only the loops below wait. */
+.tutorial[data-active=false] .scene,.tutorial[data-active=false] .headline,.tutorial[data-active=false] .caption p{animation-play-state:running!important}
 
 .top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:'title mute close';align-items:center;column-gap:12px}
-.top .title{grid-area:title;margin:0;font:400 clamp(26px,3vw,34px)/1.1 IslandBrush,sans-serif;letter-spacing:-.02em;text-shadow:1.5px 1px 0 #fa8bd2aa}
+.top .title{grid-area:title;margin:0;font:400 clamp(26px,3vw,34px)/1.1 IslandBrush,sans-serif;letter-spacing:0;color:#25483e}
 .close{grid-area:close;box-sizing:border-box;display:grid;place-items:center;width:48px;height:48px;min-width:48px;padding:0;border:0;border-radius:50%;background:var(--ink);color:var(--paper);box-shadow:2px 2px 0 var(--flag);cursor:pointer;transition:transform .16s ease}
 .close:active{transform:scale(.94)}
 /* No hover transform: the island's close face has a solid drop shadow, and rotating/moving it skewed that shadow (user, Oct 13). */
@@ -17,11 +21,12 @@
 .mute[aria-pressed=true]{background:#ffe0d3;border-color:var(--flag)}
 
 /* The art keeps the scene's 420×260 shape, so layered pieces land on the same pixels as the static art. */
-.stage{position:relative;width:100%;aspect-ratio:420/260;max-height:min(46vh,330px);margin:0 auto;border-radius:22px 34px 20px 26px;overflow:hidden;background:#fbe7b8;box-shadow:inset 0 0 0 2px #173e3714}
+.stage{position:relative;width:100%;aspect-ratio:420/260;max-height:min(46vh,330px);margin:0 auto;border-radius:22px 28px 20px 18px;overflow:hidden;background:#fff6e0 url('/stories/films/assets/entry-grain.png');background-blend-mode:soft-light;box-shadow:inset 0 0 0 2px #24584a14}
 @supports (aspect-ratio:1){.stage{height:auto}}
 .art{position:absolute;inset:0}
-.headline{position:absolute;z-index:1;left:10px;top:8px;margin:0;max-width:70%;padding:2px 12px 4px;border-radius:4px 10px 6px 3px;background:#fff1cfe6;box-shadow:2px 2px 0 #173e3726;rotate:-2deg;font:400 clamp(22px,3.2vw,32px)/1.05 IslandBrush,sans-serif;letter-spacing:-.01em;color:var(--ink);text-shadow:1.8px 1.4px 0 var(--pink),-1px -.7px 0 #ffd03eaa;pointer-events:none;animation:headlinePop .42s cubic-bezier(.2,1.3,.4,1) both}
-@keyframes headlinePop{0%{opacity:0;transform:translateY(8px) scale(.9)}60%{opacity:1;transform:scale(1.04)}100%{opacity:1;transform:none}}
+/* Scene title: a cream rounded tag with dark-green text (the tour's path-stop edge under it, no riso shadow). */
+.headline{position:absolute;z-index:1;left:10px;top:8px;margin:0;max-width:70%;padding:3px 14px 5px;border-radius:999px;background:#fff6e0f2;box-shadow:0 3px 0 #24584a24;font:400 clamp(22px,3.2vw,32px)/1.05 IslandBrush,sans-serif;letter-spacing:0;color:#244d40;pointer-events:none;animation:headlinePop .4s ease-out both}
+@keyframes headlinePop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 .chapterList{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;background:#fff1cfee}
 .chapterList button{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:10px;min-height:44px;padding:8px 10px;border:2px solid #173e3726;border-radius:16px 22px 14px 18px;background:#fff8e4;color:var(--ink);text-align:left;cursor:pointer}
@@ -83,52 +88,41 @@
 }
 
 /* ---------- Scene art (IslandTutorialArt) ---------- */
+/* Gentle loops in the welcome tour's spirit: small bobs, slides and pulses, eased, transform/opacity only. */
 .scene{position:absolute;inset:0;animation:sceneIn .35s ease-out both}
-@keyframes sceneIn{from{opacity:0;transform:scale(1.02)}to{opacity:1;transform:none}}
+@keyframes sceneIn{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:none}}
 .layer{position:absolute;inset:0;display:block;width:100%;height:100%}
 .piece{position:absolute;inset:0;will-change:auto}
 .piece>svg{position:absolute;inset:0;display:block;width:100%;height:100%}
-/* Riso overprint: the pink plate sits a hair off the key plate. */
-.misreg{transform:translate(.6%,.5%);mix-blend-mode:multiply;opacity:.55}
-.bob{animation:bob 2.4s ease-in-out infinite}
-.bobSlow{animation:bob 3.6s ease-in-out infinite}
-.hop{animation:hop 1.2s cubic-bezier(.3,0,.4,1) infinite}
-.walkPath{animation:walkPath 5s ease-in-out infinite}
-.stick{animation:stick 5s ease-in-out infinite}
-.keyPress{animation:keyPress 5s steps(1) infinite}
-.rise{animation:rise 5.5s ease-in-out infinite}
-.glide{animation:glide 5.5s ease-in-out infinite}
+.bob{animation:bob 2.6s ease-in-out infinite}
+.bobSlow{animation:bob 3.8s ease-in-out infinite}
+.hop{animation:hop 1.6s ease-in-out infinite}
+.walkPath{animation:walkPath 6s ease-in-out infinite}
+.stick{animation:stick 6s ease-in-out infinite}
+.keyPress{animation:keyPress 6s ease-in-out infinite}
+.rise{animation:rise 6s ease-in-out infinite}
+.glide{animation:glide 6s ease-in-out infinite}
 .drift{animation:drift 7s ease-in-out infinite alternate}
-.spin{animation:spin 6s linear infinite}
-.coinUp{animation:coinUp 2.2s ease-out infinite}
-.coinUp2{animation:coinUp 2.2s .7s ease-out infinite}
-.coinUp3{animation:coinUp 2.2s 1.4s ease-out infinite}
-.pulse{animation:pulse 2.2s ease-in-out infinite}
-.blink{animation:blink 2.8s steps(1) infinite}
-.sway{animation:sway 3.2s ease-in-out infinite}
-.swing{animation:swing 2.6s ease-in-out infinite}
-.sail{animation:sail 9s ease-in-out infinite}
-.slideIn{animation:slideIn 4.5s ease-in-out infinite}
-.wave{animation:wave 3s ease-in-out infinite alternate}
-.peek{animation:peek 4s ease-in-out infinite}
-@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2%)}}
-@keyframes hop{0%,100%{transform:translateY(0)}45%{transform:translateY(-6%)}}
+.coinUp{animation:coinUp 2.6s ease-out infinite}
+.coinUp2{animation:coinUp 2.6s .85s ease-out infinite}
+.coinUp3{animation:coinUp 2.6s 1.7s ease-out infinite}
+.pulse{animation:pulse 2.6s ease-in-out infinite}
+.blink{animation:blink 3s ease-in-out infinite}
+.sway{animation:sway 3.4s ease-in-out infinite}
+.peek{animation:peek 4.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.8%)}}
+@keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5%)}}
 @keyframes walkPath{0%{transform:translate(0,0)}35%{transform:translate(18%,-6%)}65%{transform:translate(30%,4%)}100%{transform:translate(0,0)}}
-@keyframes stick{0%{transform:translate(0,0)}35%{transform:translate(4%,-3%)}65%{transform:translate(4%,3%)}100%{transform:translate(0,0)}}
-@keyframes keyPress{0%,30%{opacity:1}35%,60%{opacity:.25}65%,100%{opacity:1}}
-@keyframes rise{0%{transform:translateY(18%)}40%{transform:translateY(-16%)}100%{transform:translateY(18%)}}
-@keyframes glide{0%{transform:translate(-6%,-10%) rotate(-4deg)}50%{transform:translate(6%,4%) rotate(4deg)}100%{transform:translate(-6%,-10%) rotate(-4deg)}}
+@keyframes stick{0%,100%{transform:translate(0,0)}35%{transform:translate(4%,-3%)}65%{transform:translate(4%,3%)}}
+@keyframes keyPress{0%,25%{opacity:1}40%,55%{opacity:.3}70%,100%{opacity:1}}
+@keyframes rise{0%,100%{transform:translateY(12%)}45%{transform:translateY(-12%)}}
+@keyframes glide{0%,100%{transform:translate(-5%,-8%) rotate(-3deg)}50%{transform:translate(5%,3%) rotate(3deg)}}
 @keyframes drift{from{transform:translateX(-3%)}to{transform:translateX(3%)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes coinUp{0%{transform:translateY(8%);opacity:0}20%{opacity:1}80%{opacity:1}100%{transform:translateY(-14%);opacity:0}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes blink{0%,60%{opacity:1}61%,100%{opacity:.2}}
-@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
-@keyframes swing{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
-@keyframes sail{0%{transform:translateX(-26%)}55%,70%{transform:translateX(16%)}100%{transform:translateX(-26%)}}
-@keyframes slideIn{0%,15%{transform:translateX(-4%)}50%,85%{transform:translateX(4%)}100%{transform:translateX(-4%)}}
-@keyframes wave{from{transform:translateX(-2%)}to{transform:translateX(2%)}}
-@keyframes peek{0%,30%,100%{transform:translateY(5%)}45%,85%{transform:translateY(0)}}
+@keyframes coinUp{0%{transform:translateY(6%);opacity:0}25%{opacity:1}75%{opacity:1}100%{transform:translateY(-10%);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.85)}}
+@keyframes sway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes peek{0%,25%,100%{transform:translateY(5%)}45%,80%{transform:translateY(0)}}
 
 @media(prefers-reduced-motion:reduce){
  .tutorial *,.tutorial *::before,.tutorial *::after{animation:none!important;transition:none!important}

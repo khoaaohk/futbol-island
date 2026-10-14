@@ -156,7 +156,6 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <h2 className={s.panelTitle}>Numbers and colours.</h2>
       <p className={g.body}>{exhibit.facts[0]}</p>
       <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><b>{b.head}</b><p>{b.text}</p></li>)}</ol>
-      <div className={g.row}><button type="button" className={g.btn} data-start onClick={startNumbers} data-museum-own-cue>Open the kit room</button></div>
      </div>}
 
      {phase==='score'&&<div className={s.panel} data-score-panel>
@@ -172,7 +171,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock>
-     {phase==='intro'?<><button type="button" className={g.btn} data-start-dock onClick={startNumbers}>Open the kit room</button><p className={s.say}>Matchday, 1928: the first numbered shirts.</p></>
+     {phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startNumbers}>Open the kit room</button><p className={s.say}>Matchday, 1928: the first numbered shirts.</p></div>
      :phase==='numbers'?<>
        <dl className={s.stats}><div><dt>Shirt</dt><dd className={s.shirtNo}>{shirt??'–'}</dd></div><div><dt>Points</dt><dd>{score.numbers}</dd></div><div><dt>In a row</dt><dd>{score.streak}</dd></div><div><dt>Clock</dt><dd>{reduced?'–':`${clock}s`}</dd></div></dl>
        <p className={s.say} aria-live="polite">{note}</p>

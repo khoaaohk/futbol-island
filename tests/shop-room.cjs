@@ -181,5 +181,20 @@ const C=require('../lib/shop/shopCast.ts');
  assert(/<NpcConversation npc=\{talking\?\?lastTalk\.current\} open=\{!!talking\}[\s\S]{0,120}practice=\{false\} actions=\{clerkActions\}/.test(room),'the island’s NPC chat, with the clerk’s Show me replies');
  assert(/onExit:\(\)=>leave\(\)/.test(room)&&/if\(!leaving&&z>ROOM\.front-\.1&&Math\.abs\(x-DOOR\.x\)<DOOR\.half&&vz>\.15\)\{leaving=true;[^}]*callbacks\.onExit\?\.\(\);\}/.test(scene),'walking out of the doors leaves');
  assert(!/data-shop-station=/.test(room),'no studio cards along the bottom (removed at the user\'s request, Oct 12 2026)');
+
+ // 8. Step pills (Oct 14 2026, user: "these 2 look different … use the design from ball studio and remove the bar"): Boot,
+ // Jersey and Ball all render the one shared components/shop/StudioControls.tsx <StudioSteps> for their step nav, and none of
+ // the three keeps its own duplicate pill CSS or a progress bar.
+ {const controls=read('components/shop/StudioControls.tsx'),controlsCss=read('components/shop/StudioControls.module.css');
+  assert(/export const StudioSteps=/.test(controls),'StudioControls exports the shared step pills');
+  assert(/\.steps\{/.test(controlsCss)&&/\.stepBtn\{/.test(controlsCss),'the pill chrome lives once, in StudioControls.module.css');
+  const studios=[['components/shop/BootStudio.tsx','components/shop/BootStudio.module.css'],
+   ['components/shop/JerseyStudio.tsx','components/shop/JerseyStudio.module.css'],
+   ['components/shop/BallStudio.tsx','components/shop/BallStudio.module.css']];
+  for(const [tsxPath,cssPath] of studios){const tsx=read(tsxPath),css=read(cssPath);
+   assert(/import\s*\{[^}]*StudioSteps[^}]*\}\s*from\s*'\.\/StudioControls'/.test(tsx),tsxPath+': imports the shared StudioSteps');
+   assert(/<StudioSteps\b/.test(tsx),tsxPath+': renders <StudioSteps>');
+   assert(!/\.stepTrack\{|\.progress\{|\.sparkle\{|\bstepTrack\b|\bstyles\.progress\b|\bstyles\.sparkle\b/.test(css+tsx),tsxPath+'/'+cssPath+': no progress-bar markup or CSS left behind');
+   assert(!/\.stepBtn\{|^\.steps\{/m.test(css),cssPath+': no duplicate step-pill CSS (shared in StudioControls.module.css)');}}
  console.log('shop room: ok');
 })().catch(e=>{console.error(e);process.exit(1);});

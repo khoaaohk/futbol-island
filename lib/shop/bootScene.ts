@@ -6,6 +6,7 @@ import {createBaker,MAX_DECALS,MAX_EYELETS} from './bootBake';
 import {FLAGS,QUOTES,flagUrl,type BootDecal,type BootDesign,type BootModel,type ColourZone,type DecalZone,type StickerId,type StudFinish,type StudType} from './boots';
 import {STICKERS,stickerDataUrl} from './bootStickers';
 import {frameCapSlot,studioFrameMs} from './studioFrameCap';
+import {applyInsetOffset,fitDistance,sameInsets,type StageInsets} from './studioSheet';
 
 /**
  * The boot studio's three.js scene (Oct 12 2026). Loaded on demand by BootStudio (dynamic import), disposed on close.
@@ -52,6 +53,9 @@ export type BootScene={
  setView(v:BootView,animate?:boolean):void;setPair(on:boolean):void;resetView():void;
  /** Test/screenshot hook: hold an exact orientation. */
  pose(yaw:number,pitch:number):void;
+ /** Phones: the stage's visible box (CSS px off the canvas top / bottom, lib/shop/studioSheet.ts); the boot (or the pair) is
+  *  re-fitted and centred in it. null = the legacy whole-canvas fit (desktop, unchanged). */
+ setInsets(i:StageInsets|null):void;
  resize():void;dispose():void;
  readonly stats:{rafs:number;frames:number;bakes:number;atlasUploads:number;calls:number;triangles:number};
  readonly renderer:T.WebGLRenderer;
@@ -608,11 +612,14 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
  let zoom=1,zoomTarget=1,held=false,frame=0,last=0,slot=0;const capMs=studioFrameMs();
  q.copy(viewQ('hero'));
  if(!reduced){intro={t:0,dur:3.4,start:q.clone()};}
+ let insets:StageInsets|null=null;
  function fit(){
   const w=canvas.clientWidth||1,h=canvas.clientHeight||1;camera.aspect=w/h;
   const span=(pair?3.7:3.15)*(coarse?.94:1),tH=Math.tan(T.MathUtils.degToRad(camera.fov/2));
-  const distW=span/2/(tH*camera.aspect),distH=1.9/2/tH;const dist=Math.max(distW,distH)*1.08/zoom;
-  camera.position.set(0,dist*.16,dist);camera.lookAt(0,-.05,0);camera.updateProjectionMatrix();
+  // phones (the resizable sheet, Oct 14 2026): the same span / height bounds, fitted to the visible box between the icon row and
+  // the view chips, and centred there by a view offset; desktop keeps the whole-canvas fit
+  const dist=(insets?fitDistance({fov:camera.fov,w,h,insets,halfW:span/2,halfH:.95,fillW:1/1.06,fillH:1/1.1}):Math.max(span/2/(tH*camera.aspect),1.9/2/tH)*1.08)/zoom;
+  camera.position.set(0,dist*.16,dist);camera.lookAt(0,-.05,0);applyInsetOffset(camera,w,h,insets);
  }
  function resize(){const w=canvas.clientWidth||window.innerWidth,h=canvas.clientHeight||window.innerHeight;renderer.setPixelRatio(dpr());renderer.setSize(w,h,false);fit();invalidate();}
  function updateShadows(){
@@ -741,6 +748,7 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
   setEditing(on){if(on===editing)return;editing=on;if(design)setDesign(design);},
   setView,resetView,
   setPair(on){if(on===pair)return;pair=on;layout();fit();invalidate();},
+  setInsets(i){if(sameInsets(i,insets))return;insets=i?{...i}:null;fit();invalidate();},
   pose(yaw,pitch){intro=null;tween=null;omega.set(0,0,0);q.setFromEuler(new T.Euler(pitch,yaw,0,'XYZ'));invalidate();},
   resize,
   dispose(){
