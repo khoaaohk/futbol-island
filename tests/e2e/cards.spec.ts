@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { capture, center, drag, expectDialogSurvivesStaleDvh, expectNoErrors, expectNoHorizontalScroll, openIsland, overlap, press } from './helpers';
+import { capture, center, drag, expectDialogSurvivesStaleDvh, expectNoErrors, expectNoHorizontalScroll, openIsland, overlap, pointer, press } from './helpers';
 
 /* Player cards: the Collect cards binder and the card offer (?cards=earn). */
 
@@ -123,6 +123,93 @@ test('binder: turn a page, search above the soft keyboard, open a card, flip and
   await expectNoHorizontalScroll(page, 'card viewer');
   // Last, because it freezes the page's dvh values: the binder dialog still fills the screen with a stale 100dvh.
   if (info.project.use.isMobile) await expectDialogSurvivesStaleDvh(page, 'binder');
+  expectNoErrors(issues, info);
+});
+
+test('binder page turns: rubber band, drag-turn with one render, cancel, keys and focus, no rAF at rest, reduced motion', async ({ page }, info) => {
+  const issues = await openIsland(page, { storage: { 'fi2-player-cards-v1': JSON.stringify(OWNED) } });
+  await press(page.getByRole('button', { name: 'Paths', exact: true }), info);
+  await press(page.getByRole('button', { name: /Collect cards/ }), info);
+  const binder = page.locator('dialog[open] [aria-roledescription=binder]');
+  await expect(binder.locator('li button').first()).toBeVisible({ timeout: 30_000 });
+  await page.waitForTimeout(1500);
+  const live = () => page.evaluate(() => [...document.querySelectorAll('dialog[open] p[aria-live=polite]')].map(p => p.textContent ?? '').find(t => /^Page /.test(t)) ?? '');
+  const renders = () => page.evaluate(() => (window as any).__fiBinderRenders as number);
+  const box = (await binder.boundingBox())!, y = box.y + box.height * 0.45;
+  const spread = await binder.evaluate(el => el.hasAttribute('data-spread'));
+  // Page x-range for the forward (right / single) page.
+  const pages = (await binder.locator('[class*=pages]').first().boundingBox())!;
+  const fwd = spread ? { from: pages.x + pages.width * 0.92, to: pages.x + pages.width * 0.08 } : { from: pages.x + pages.width * 0.88, to: pages.x + pages.width * 0.05 };
+  const back = spread ? { from: pages.x + pages.width * 0.08, to: pages.x + pages.width * 0.92 } : { from: pages.x + pages.width * 0.1, to: pages.x + pages.width * 0.95 };
+  const first = await live();
+  expect(first).toMatch(/^Page 1/);
+
+  // Rubber band: pulling back on the first page gives a little (a transform on the resting page), then springs back; no turn.
+  {
+    const p = await pointer(page, info);
+    await p.down(back.from, y);
+    for (let i = 1; i <= 10; i++) { await p.move(back.from + (back.to - back.from) * i / 10 * 0.6, y); await page.waitForTimeout(16); }
+    await page.waitForTimeout(60);
+    const pulled = await page.evaluate(() => (document.querySelector('dialog[open] [data-rest] > *') as HTMLElement | null)?.style.transform ?? '');
+    expect(pulled, 'the first page gives under the pull').toMatch(/rotateY|translateX/);
+    await p.up(); await p.dispose();
+    await page.waitForTimeout(700);
+    expect(await page.evaluate(() => (document.querySelector('dialog[open] [data-rest] > *') as HTMLElement | null)?.style.transform ?? ''), 'springs back and clears').toBe('');
+    expect(await live(), 'no turn past the first page').toBe(first);
+  }
+
+  // Drag-turn: the sheet follows the finger with ONE binder render for the whole drag (none per pointer move).
+  {
+    const before = await renders();
+    const p = await pointer(page, info);
+    await p.down(fwd.from, y);
+    for (let i = 1; i <= 24; i++) { await p.move(fwd.from + (fwd.to - fwd.from) * i / 24, y); await page.waitForTimeout(16); }
+    const during = (await renders()) - before;
+    expect(during, `binder renders during a 24-move drag: ${during}`).toBeLessThanOrEqual(4);
+    expect(await binder.locator('[class*=BinderLeaf_strip]').count(), 'the sheet is up while dragging').toBeGreaterThan(0);
+    await p.up(); await p.dispose();
+    await expect.poll(live, { timeout: 10_000 }).not.toBe(first);
+  }
+  const second = await live();
+  await page.waitForTimeout(1500);
+
+  // Cancel: a short, slow drag that stops before lifting falls back.
+  {
+    const p = await pointer(page, info);
+    await p.down(fwd.from, y);
+    const end = fwd.from - (fwd.from - fwd.to) * 0.18;
+    for (let i = 1; i <= 8; i++) { await p.move(fwd.from + (end - fwd.from) * i / 8, y); await page.waitForTimeout(30); }
+    await page.waitForTimeout(250);
+    await p.up(); await p.dispose();
+    await page.waitForTimeout(1200);
+    expect(await live(), 'a short drag that stopped falls back').toBe(second);
+  }
+
+  // Keys: arrows turn, and focus stays in the binder (never dropped to <body>).
+  await binder.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect.poll(live, { timeout: 10_000 }).toBe(first);
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => { const a = document.activeElement; return !!a && a !== document.body && !!a.closest('dialog[open]'); }), 'focus stays in the binder after a key turn').toBe(true);
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(live, { timeout: 10_000 }).toBe(second);
+
+  // No rAF and no running animation at rest.
+  await page.waitForTimeout(2500);
+  const rest = await page.evaluate(() => new Promise<{ raf: number; anims: number }>(res => {
+    let n = 0; const o = window.requestAnimationFrame;
+    window.requestAnimationFrame = cb => { n++; return o.call(window, cb); };
+    setTimeout(() => { window.requestAnimationFrame = o; res({ raf: n, anims: document.getAnimations().filter(a => a.playState === 'running').length }); }, 1500);
+  }));
+  expect(rest.raf, 'no rAF at rest').toBeLessThanOrEqual(1);
+  expect(rest.anims, 'no running animation at rest').toBe(0);
+
+  // Reduced motion: no turning sheet; the page swaps at once (with a short fade).
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await press(page.locator('dialog[open] nav[aria-label=Binder]').getByRole('button', { name: 'Next page' }), info);
+  await expect.poll(live, { timeout: 2_000 }).not.toBe(second);
+  expect(await binder.locator('[class*=BinderLeaf_strip]').count(), 'reduced motion: no sheet').toBe(0);
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   expectNoErrors(issues, info);
 });
 

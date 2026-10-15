@@ -11,6 +11,7 @@ import navStyles from './DoneButton.module.css';
 import BinderLeaf,{type LeafHandle} from './BinderLeaf';
 import {matchesCard} from './cardSearch';
 import {buildBinder,pageOf,sectionOf,sectionsOf,viewStart,type BinderPage} from './binder';
+import {addSample,dragIntent,edgeGive,followPose,releaseCompletes,settleCurve,velocity,type DragSide,type Samples} from './binderTurn';
 import profiles from '@/lib/town/playerProfiles.json';
 import {CARD_ENTRIES,ROLE_ORDER,readCollection} from '@/lib/town/cardCollection';
 import {CARD_ADDED,CARD_SPOT,cardRewardsActive,takeCardSpot} from '@/lib/town/cardRewardStore';
@@ -67,6 +68,10 @@ const FIELD_KEY='fi2-cards-field-v1';
 const readField=():Field=>{try{return localStorage.getItem(FIELD_KEY)==='futsal'?'futsal':'football';}catch{return 'football';}};
 const saveField=(field:Field)=>{try{localStorage.setItem(FIELD_KEY,field);}catch{}};
 const reducedMotion=()=>typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** A soft page-turn swish from the island's sound kit (lib/audio/islandSound.ts 'fi2-path-cue' → ui('page')); silent where no
+ * island sound is listening. Once per turn: when a planned turn starts, or when a released drag commits. Deferred a few ms so
+ * building the voice never lands in the turn's first frame. */
+const pageSound=()=>{window.setTimeout(()=>{try{document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'page'}));}catch{}},30);};
 /** Ease out with a slight overshoot, then settle (the sheet lands and rests). */
 /** CSS cubic-bezier(x1,y1,x2,y2) as a function (Newton steps on x, then y). */
 const bezier=(x1:number,y1:number,x2:number,y2:number)=>{const f=(a:number,b:number,t:number)=>((1-3*b+3*a)*t+(3*b-6*a))*t*t+3*a*t,d=(a:number,b:number,t:number)=>3*(1-3*b+3*a)*t*t+2*(3*b-6*a)*t+3*a;
@@ -120,13 +125,17 @@ type Turn={id:number;from:number;to:number;dir:1|-1;under:{side:'left'|'right'|'
  * (transform and opacity only). No loop runs at rest.
  */
 export default function CardCollection(){
- useEffect(()=>enterActivity('cards'),[]);// admin analytics: time in the cards binder (module variable, no render)
+ useEffect(()=>enterActivity('cards'),[]);
+ // Test hook (tests/e2e/cards.spec.ts): counts binder renders, so a drag can be checked to render once, not per pointer move.
+ if(typeof window!=='undefined'){const w=window as Window&{__fiBinderRenders?:number};w.__fiBinderRenders=(w.__fiBinderRenders??0)+1;}// admin analytics: time in the cards binder (module variable, no render)
  const [owned,setOwned]=useState<string[]>([]),[field,setField]=useState<Field>('football'),[page,setPage]=useState(0),[turn,setTurn]=useState<Turn|null>(null);
  const [query,setQuery]=useState(''),[searchOpen,setSearchOpen]=useState(false),[active,setActive]=useState(0),[spot,setSpot]=useState<string|null>(null),[size,setSize]=useState({width:0,height:0});
  const [flipped,setFlipped]=useState(false),[lift,setLift]=useState<Lift|null>(null),[host,setHost]=useState<HTMLElement|null>(null),[leaving,setLeaving]=useState(false);
  const root=useRef<HTMLDivElement>(null),layer=useRef<HTMLDivElement>(null),binderRef=useRef<HTMLDivElement>(null),pagesRef=useRef<HTMLDivElement>(null),viewer=useRef<HTMLDivElement>(null),cardHost=useRef<HTMLDivElement>(null),backdrop=useRef<HTMLDivElement>(null),search=useRef<HTMLInputElement>(null),searchPanel=useRef<HTMLDivElement>(null);
  const leaves=useRef<(LeafHandle|null)[]>([]),underRef=useRef<HTMLDivElement>(null),castNear=useRef<HTMLDivElement>(null),castFar=useRef<HTMLDivElement>(null),raf=useRef<number>(),turnRef=useRef<Turn|null>(null),turnIds=useRef(0);
- const dragging=useRef<{id:number;x0:number;y0:number;grab:number;p:number;vx:number;lx:number;lt:number;started:boolean;side:'left'|'right'|'single'}|null>(null),swiped=useRef(0),sizeLock=useRef(false);
+ const dragging=useRef<{id:number;x0:number;y0:number;x:number;grab:number;hinge:number;p:number;samples:Samples;started:boolean;back:boolean;side:DragSide;
+  /** Pulled past the first or last page: the resting page that gives, and how. */rubber?:{el:HTMLElement;mode:'lift'|'slide';sign:number};
+  /** Reduced motion: the page a swipe turns to on release (no sheet follows the finger). */swipe?:number}|null>(null),swiped=useRef(0),sizeLock=useRef(false);
  const uid=useId().replace(/:/g,''),searchId=`${uid}-search`;
  // The one likely next turn, prebuilt while the binder rests (its sheets mounted but hidden), so a turn's first frame only
  // makes them visible. Valid only for the view and geometry it was planned from (key).
@@ -173,8 +182,9 @@ export default function CardCollection(){
   return {cover,spine,tab,headH,inner,gap,pocketPad,pocketW,pocketH,cardW,pageW,pageH,binderW,binderH,top};
  },[W,H,spread]);
  const step=spread?2:1,start=viewStart(page,spread),last=viewStart(pages.length-1,spread),strips=spread?5:4;
- // Photos for the pages on show and the next spread load ahead, so a lifted card never waits for its photo.
- useEffect(()=>{preloadPlayerPhotos(pages.slice(start,start+step*2).flatMap(p=>p.slots));},[start,step,pages]);
+ // Photos for the pages on show and the spreads either side load ahead, so a lifted card never waits for its photo and a
+ // turn (forward or back, dragged or tapped) never shows a photo popping in mid-turn.
+ useEffect(()=>{preloadPlayerPhotos([...pages.slice(start,start+step*2),...pages.slice(Math.max(0,start-step),start)].flatMap(p=>p.slots));},[start,step,pages]);
  // A single page that reaches the screen's left edge (portrait phones): a sheet turned past p = .65 lies off-screen but for a
  // 1–6 px sliver over the binder's edge, so BinderLeaf hides it there instead of snapping that sliver away when the turn
  // settles. Where there is room beside the binder (a landscape phone) the turned sheet stays visible as before.
@@ -209,6 +219,7 @@ export default function CardCollection(){
   castShadows(mainP,t);return done;};
  const finish=(commit:boolean)=>{const t=turnRef.current;if(!t)return;
   const hold=window as HoldWindow;if(hold.__fiBinderHold){hold.__fiBinderRelease=()=>{hold.__fiBinderRelease=undefined;finish(commit);};return;}
+  keepFocus.current=!!binderRef.current?.contains(document.activeElement);
   if(commit)setPage(t.to);setTurn({...t,settling:true});
   requestAnimationFrame(()=>requestAnimationFrame(()=>setTurn(current=>current&&current.id===t.id?null:current)));};
  // The clock starts on the first animation frame (not when the sheets mount), so the costly mount frame never eats into the
@@ -219,6 +230,11 @@ export default function CardCollection(){
  // keyframes (as the card flight does), so no script, style recalc, layerize or paint runs per frame. Their clock starts when
  // the first frame is shown, like run()'s. A drag keeps the per-frame loop (it follows the pointer).
  const turnAnims=useRef<Animation[]>([]);
+ // Focus stays in the binder across a turn: if the focused pocket (now empty) or corner (now disabled) lost it, the binder
+ // region takes it, so the arrow keys keep turning pages.
+ const keepFocus=useRef(false);
+ useEffect(()=>{if(turn||!keepFocus.current)return;keepFocus.current=false;const a=document.activeElement;
+  if(!a||a===document.body||!a.isConnected)binderRef.current?.focus({preventScroll:true});},[turn]);
  const stopAnims=()=>{for(const a of turnAnims.current)a.cancel();turnAnims.current=[];};
  useEffect(()=>stopAnims,[]);
  const samples=(ms:number,at:(q:number)=>number)=>{const k=Math.max(2,Math.ceil(ms/(1000/60))+1);return Array.from({length:k},(_,i)=>at(i/(k-1)));};
@@ -255,7 +271,10 @@ export default function CardCollection(){
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[turn,lift,W,prepKey]);
  const goTo=(target:number)=>{const to=Math.max(0,Math.min(viewStart(target,spread),last));if(to===start||turn||!W)return;
-  if(reducedMotion()){setPage(to);return;}setTurn(ready(to,false));};
+  if(reducedMotion()){fade.current=true;setPage(to);return;}setTurn(ready(to,false));};
+ // Reduced motion: no sheet; the new page fades in over a fifth of a second (opacity only), so the change still reads.
+ const fade=useRef(false);
+ useLayoutEffect(()=>{if(!fade.current)return;fade.current=false;pagesRef.current?.animate?.([{opacity:.3},{opacity:1}],{duration:200,easing:'ease-out'});},[start,field]);
  // Quick taps on the arrows (or arrow keys) during a planned turn are kept, not dropped: they add up and play as the next
  // turn (a riffle when several) once this one lands. A dragged turn ignores them.
  const queued=useRef(0);
@@ -267,42 +286,74 @@ export default function CardCollection(){
  // The last turn's keyframes are dropped first (its sheets are gone; the shadows may be reused), so inline poses apply again.
  useLayoutEffect(()=>{if(!turn||turn.settling)return;stopAnims();lastDir.current=turn.dir;leaves.current.forEach(leaf=>leaf?.reveal());const u=underRef.current;if(u?.hasAttribute('data-prep')){u.style.opacity='';u.removeAttribute('data-prep');}
   if(turn.drag){const d=dragging.current;const leaf=turn.leaves[0];leaves.current[0]?.pose(leaf.reverse?1-(d?.p??0):(d?.p??0));castShadows(leaf.reverse?1-(d?.p??0):(d?.p??0),turn);return;}
-  poseAll(turn,0);play(turn);
+  poseAll(turn,0);play(turn);pageSound();
   // eslint-disable-next-line react-hooks/exhaustive-deps
  },[turn?.id]);
  // A prebuilt turn's sheets rest where its first frame will put them (nothing is written again when it starts).
  useLayoutEffect(()=>{const t=prepRef.current;if(!t||turnRef.current)return;stopAnims();t.leaves.forEach((leaf,j)=>leaves.current[j]?.pose(leaf.reverse?1:0));
   for(const el of [castNear.current,castFar.current])if(el){el.style.opacity='0';el.style.transform='';}},[prep?.id]);
 
- // Drag a page: it follows the pointer, curling from where it was grabbed; release past halfway (or flick) to turn.
- const hingeX=()=>{const r=pagesRef.current?.getBoundingClientRect();return r?r.left+(spread?g.pageW+g.spine/2:0):0;};
+ // Drag a page: it follows the pointer, curling from where it was grabbed; release past halfway (or flick) to turn, flick
+ // back to cancel. The maths is in components/binderTurn.ts (unit-tested). Per pointer move only numbers are stored; at most
+ // one rAF per frame poses the sheet from the LATEST pointer position (coalesced), and no React state changes during the
+ // drag (one render when it starts). The release settles on the compositor (keyframes that leave at the finger's speed).
+ // Past the first or last page the resting page gives a little (rubber band) and springs back.
  const onDown=(event:React.PointerEvent)=>{if(turn||lift||event.button>0)return;const r=pagesRef.current?.getBoundingClientRect();if(!r)return;
-  const side=!spread?'single':event.clientX<r.left+g.pageW+g.spine/2?'left':'right';
-  dragging.current={id:event.pointerId,x0:event.clientX,y0:event.clientY,grab:event.clientX,p:0,vx:0,lx:event.clientX,lt:performance.now(),started:false,side};
+  const side:DragSide=!spread?'single':event.clientX<r.left+g.pageW+g.spine/2?'left':'right',now=performance.now();
+  // The hinge is measured once per press (no layout read per move).
+  dragging.current={id:event.pointerId,x0:event.clientX,y0:event.clientY,x:event.clientX,grab:event.clientX,hinge:r.left+(spread?g.pageW+g.spine/2:0),p:0,samples:addSample([],now,event.clientX),started:false,back:false,side};
   if(side!=='single')prepare(side==='left'?-step:step);};
+ /** One frame of a drag: the sheet (or the rubber-banded page) from the newest pointer position. */
+ const paintDrag=()=>{raf.current=undefined;const d=dragging.current;if(!d||!d.started)return;
+  if(d.rubber){const {el,mode,sign}=d.rubber,give=edgeGive(Math.abs(d.x-d.x0),g.pageW);
+   el.style.transform=mode==='slide'?`translateX(${give.px.toFixed(2)}px)`:`perspective(1200px) rotateY(${(sign*give.deg).toFixed(3)}deg)`;return;}
+  const t=turnRef.current;if(!t||!t.drag)return;const p=t.leaves[0].reverse?1-d.p:d.p;leaves.current[0]?.pose(p);castShadows(p,t);};
  const onMove=(event:React.PointerEvent)=>{const d=dragging.current;if(!d||d.id!==event.pointerId)return;const dx=event.clientX-d.x0,dy=event.clientY-d.y0,now=performance.now();
-  d.vx=(event.clientX-d.lx)/Math.max(1,now-d.lt);d.lx=event.clientX;d.lt=now;
-  if(!d.started){if(Math.abs(dx)<8||Math.abs(dx)<Math.abs(dy))return;
-   const forward=d.side==='right'||(d.side==='single'&&dx<0);if(d.side==='left'&&dx<0||d.side==='right'&&dx>0){dragging.current=null;return;}
-   const to=forward?start+step:start-step;if(to<0||to>last){dragging.current=null;return;}
-   d.started=true;swiped.current=now;try{(event.currentTarget as HTMLElement).setPointerCapture(d.id);}catch{}
-   setTurn(ready(to,true));}
-  const P=g.pageW,h=hingeX(),reach=Math.max(P*.35,Math.abs(d.grab-h));
-  // Forward (and a spread's back turn): the grabbed point stays under the pointer (the sheet's edge follows it). A single
-  // page's back turn comes in from the left, so it simply follows the drag distance.
-  const back=d.side==='single'&&dx>0;
-  d.p=back?Math.min(1,Math.max(0,dx/(P*.95))):Math.acos(Math.min(1,Math.max(-1,(d.side==='left'?h-event.clientX:event.clientX-h)/reach)))/Math.PI;
-  const t=turnRef.current;if(!t||!t.drag)return;const leaf=t.leaves[0],p=leaf.reverse?1-d.p:d.p;
-  if(!raf.current)raf.current=requestAnimationFrame(()=>{raf.current=undefined;leaves.current[0]?.pose(p);castShadows(p,t);});};
- const onUp=(event:React.PointerEvent)=>{const d=dragging.current;dragging.current=null;if(!d||d.id!==event.pointerId||!d.started)return;swiped.current=performance.now();
-  // A finger that stopped before lifting is not a flick. A phone's single page turns about its left edge, which sits at
-  // the screen edge, so the pointer can never pass the hinge (p > .5): dragging most of the way across completes it.
-  const t=turnRef.current;if(!t)return;const vx=performance.now()-d.lt>120?0:d.vx,flick=d.side==='left'||(d.side==='single'&&t.dir===-1)?vx>.45:vx<-.45;
-  const complete=d.p>(d.side==='single'&&t.dir===1?.4:.5)||flick,from=d.p,to=complete?1:0,leaf=t.leaves[0],duration=Math.max(220,520*Math.abs(to-from)+120),t0=performance.now();
-  if(raf.current)cancelAnimationFrame(raf.current);
-  const frame=(now:number)=>{if(turnRef.current?.id!==t.id)return;const q=Math.min(1,(now-t0)/duration),e=q>=1?1:settle(q),p=from+(to-from)*e,pose=leaf.reverse?1-p:p;
-   leaves.current[0]?.pose(pose);castShadows(pose,t);if(q<1){raf.current=requestAnimationFrame(frame);return;}raf.current=undefined;finish(complete);};
-  if(reducedMotion()){finish(complete);return;}raf.current=requestAnimationFrame(frame);};
+  d.x=event.clientX;addSample(d.samples,now,event.clientX);
+  if(!d.started){const intent=dragIntent(dx,dy);if(intent==='wait')return;if(intent==='none'){dragging.current=null;return;}
+   if(d.side==='left'&&dx<0||d.side==='right'&&dx>0){dragging.current=null;return;}
+   const forward=d.side==='right'||(d.side==='single'&&dx<0),to=forward?start+step:start-step;
+   d.started=true;d.back=d.side==='single'&&dx>0;swiped.current=now;try{(event.currentTarget as HTMLElement).setPointerCapture(d.id);}catch{}
+   if(to<0||to>last){
+    // Rubber band: the resting page itself gives (transform only), lifting about its hinge, or sliding when it has none to lift from.
+    const slot=pagesRef.current?.querySelector<HTMLElement>(`[data-rest=${d.side}]`),el=slot?.firstElementChild as HTMLElement|null;
+    if(!el||reducedMotion())return;
+    const mode:'lift'|'slide'=d.side==='single'&&dx>0?'slide':'lift',sign=d.side==='left'?1:-1;
+    el.getAnimations().forEach(a=>a.cancel());el.style.transformOrigin=d.side==='left'?'right center':'left center';el.style.willChange='transform';
+    d.rubber={el,mode,sign};
+   }else if(reducedMotion())d.swipe=to;// Reduced motion: no sheet follows the finger; the release decides, and the page swaps.
+   else setTurn(ready(to,true));}
+  if(d.swipe!==undefined)return;
+  if(!d.rubber)d.p=followPose({side:d.side,back:d.back,x:event.clientX,x0:d.x0,hinge:d.hinge,grab:d.grab,pageW:g.pageW});
+  if(!raf.current)raf.current=requestAnimationFrame(paintDrag);};
+ const onUp=(event:React.PointerEvent)=>{const d=dragging.current;if(!d||d.id!==event.pointerId)return;dragging.current=null;if(!d.started)return;const now=performance.now();swiped.current=now;
+  if(raf.current){cancelAnimationFrame(raf.current);raf.current=undefined;}
+  const vx=event.type==='pointercancel'?0:velocity(d.samples,now);
+  if(d.rubber){const {el,mode}=d.rubber,from=el.style.transform;el.style.transform='';
+   if(from)el.animate([{transform:from},{transform:mode==='slide'?'translateX(0px)':'perspective(1200px) rotateY(0deg)'}],{duration:340,easing:'cubic-bezier(.3,1.35,.5,1)'}).onfinish=()=>{el.style.willChange='';el.style.transformOrigin='';};
+   else{el.style.willChange='';el.style.transformOrigin='';}return;}
+  if(d.swipe!==undefined){const rightwards=d.back||d.side==='left',along=rightwards?d.x-d.x0:d.x0-d.x,speed=rightwards?vx:-vx;
+   if(event.type!=='pointercancel'&&releaseCompletes(along/g.pageW,speed,.2))goTo(d.swipe);return;}
+  const t=turnRef.current;if(!t||!t.drag)return;
+  // The finger's speed in sheet terms: p per ms (how the pose would move over the next 16 ms at this speed), and px/ms along the turn.
+  const ahead=followPose({side:d.side,back:d.back,x:d.x+vx*16,x0:d.x0,hinge:d.hinge,grab:d.grab,pageW:g.pageW}),pv=(ahead-d.p)/16;
+  // A phone's single page turns about its left edge, at the screen edge, so the finger can never pass the hinge (p > .5): past .4 completes it.
+  const complete=event.type!=='pointercancel'&&releaseCompletes(d.p,Math.sign(pv)*Math.abs(vx),d.side==='single'&&t.dir===1?.4:.5);
+  if(complete)pageSound();
+  if(reducedMotion()){finish(complete);return;}
+  settleDrag(t,d.p,complete,pv);};
+ /** A released drag lands (or falls back) on the compositor: the sheet leaves at the finger's speed and settles with no overshoot. */
+ const settleDrag=(t:Turn,from:number,complete:boolean,pv:number)=>{
+  const curve=settleCurve(from,complete?1:0,pv),leaf=t.leaves[0],at=(q:number)=>{const p=curve.at(q);return leaf.reverse?1-p:p;};
+  const handle=leaves.current[0];
+  if(typeof Element!=='undefined'&&typeof Element.prototype.animate==='function'&&handle){stopAnims();const poses=samples(curve.duration,at),opts:KeyframeAnimationOptions={duration:curve.duration,easing:'linear',fill:'both'};
+   const anims=handle.play(poses,{duration:curve.duration,delay:0}),shade=poses.map(p=>shadowAt(p,t));
+   if(castNear.current)anims.push(castNear.current.animate(shade.map(s=>({opacity:s.near,transform:s.squash})),opts));
+   if(castFar.current)anims.push(castFar.current.animate(shade.map(s=>({opacity:s.far})),opts));
+   turnAnims.current=anims;Promise.all(anims.map(a=>a.finished)).then(()=>{if(turnRef.current?.id===t.id)finish(complete);},()=>{});return;}
+  const t0=performance.now();const frame=(now:number)=>{if(turnRef.current?.id!==t.id)return;const q=Math.min(1,(now-t0)/curve.duration),pose=at(q);
+   handle?.pose(pose);castShadows(pose,t);if(q<1){raf.current=requestAnimationFrame(frame);return;}raf.current=undefined;finish(complete);};
+  raf.current=requestAnimationFrame(frame);};
 
  // ── Search floats over everything: picking a result turns to its page (switching binder if needed) and lights the pocket.
  const pick=(name:string)=>{const entry=ENTRY.get(name);if(!entry)return;const target:Field=entry.futsal?'futsal':'football';
@@ -451,7 +502,7 @@ export default function CardCollection(){
  const vars={'--cover':`${g.cover}px`,'--spine':`${g.spine}px`,'--tab':`${g.tab}px`,'--head':`${g.headH}px`,'--inner':`${g.inner}px`,'--gap':`${g.gap}px`,'--pp':`${g.pocketPad}px`,'--pw':`${g.pocketW}px`,'--ph':`${g.pocketH}px`,'--w':`${g.cardW}px`,'--page-w':`${g.pageW}px`,'--page-h':`${g.pageH}px`,top:g.top,width:g.binderW,height:g.binderH} as React.CSSProperties;
  const shown=turn??(prep&&prep.key===prepKey?prep:null);
  // Memoized so that starting the prebuilt turn (reveal() on its first frame) re-renders none of its page copies.
- const sheets=useMemo(()=>shown?.leaves.map((leaf,j)=><BinderLeaf key={`${shown.id}-${j}`} ref={el=>{leaves.current[j]=el;}} hinge={leaf.hinge} offset={spread?g.spine/2:0} width={g.pageW} height={g.pageH} strips={leaf.strips} left={leaf.left} z={leaf.z} hidden={!turn} away={away}
+ const sheets=useMemo(()=>shown?.leaves.map((leaf,j)=><BinderLeaf key={`${shown.id}-${j}`} ref={el=>{leaves.current[j]=el;}} hinge={leaf.hinge} offset={spread?g.spine/2:0} width={g.pageW} height={g.pageH} strips={leaf.strips} left={leaf.left} z={leaf.z} thick={j===shown.leaves.length-1} hidden={!turn} away={away}
    front={(a:number,b:number)=>renderPage(leaf.front,spread?(leaf.hinge==='left'?'right':'left'):'single',[a,b])} back={leaf.back>=0?(a:number,b:number)=>renderPage(leaf.back,leaf.hinge==='left'?'left':'right',[a,b]):blank}/>),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [shown?.id,g,spread,away,pages,sections,have,matches,spot,lift]);
@@ -463,15 +514,15 @@ export default function CardCollection(){
 
  const binder=<div ref={layer} className={styles.layer} data-leaving={leaving||undefined} {...inert(!!lift)}>
   {W>0&&<div ref={binderRef} className={styles.binder} data-spread={spread||undefined} data-turning={turn?'':undefined} style={vars}
-   role="region" aria-roledescription="binder" aria-label={`${field==='football'?'Futbol':'Futsal'} card binder. Arrow keys or drag a page to turn it`}
+   role="region" tabIndex={-1} aria-roledescription="binder" aria-label={`${field==='football'?'Futbol':'Futsal'} card binder. Arrow keys or drag a page to turn it`}
    onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
    <div className={styles.cover} aria-hidden="true"/>
    <div ref={pagesRef} className={styles.pages}>
     {spread?<>
-     <div className={styles.slotLeft}>{renderPage(view.left!,'left')}{under?.side==='left'&&underCopy}</div>
+     <div className={styles.slotLeft} data-rest="left">{renderPage(view.left!,'left')}{under?.side==='left'&&underCopy}</div>
      <div className={styles.spine} aria-hidden="true">{[0,1,2].map(i=><span key={i} className={styles.ring}/>)}</div>
-     <div className={styles.slotRight}>{renderPage(view.right!,'right')}{under?.side==='right'&&underCopy}</div>
-    </>:<div className={styles.slotSingle}>{renderPage(view.single!,'single')}{under?.side==='single'&&underCopy}<div className={styles.holes} aria-hidden="true">{[0,1,2].map(i=><span key={i} className={styles.ring}/>)}</div></div>}
+     <div className={styles.slotRight} data-rest="right">{renderPage(view.right!,'right')}{under?.side==='right'&&underCopy}</div>
+    </>:<div className={styles.slotSingle} data-rest="single">{renderPage(view.single!,'single')}{under?.side==='single'&&underCopy}<div className={styles.holes} aria-hidden="true">{[0,1,2].map(i=><span key={i} className={styles.ring}/>)}</div></div>}
     {/* The shadows mount with the prebuilt turn too (transparent until it plays): a turn's first frame inserts nothing, which
         would restyle the whole dialog (its :has() rules). */}
     {shown&&<>

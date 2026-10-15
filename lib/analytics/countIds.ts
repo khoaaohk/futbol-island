@@ -16,6 +16,8 @@
  *   gr:<format> gr:finale          a graduation earned (or the Matchday Ferry final finished) in this session
  *   rv:q rv:ok rv:done             warm-up review questions answered (first try), right first time, warm-ups finished
  *   st: sg: sp:                    the title screen (at `/`), its For grown-ups and Privacy sheets (startIds.ts, Oct 9 2026)
+ *   tu:open tu:finish              the Island Tutorial (Paths card): opened, watched to the end (Oct 16 2026)
+ *   fi:<event>                     fishing content (FISHING_COUNT_EVENTS): legends, records, requests, derby, lures, photos
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  */
@@ -54,7 +56,8 @@ export const FORAGE_FRUIT_KINDS=['mango','orange','coconut','banana','papaya','l
 /**
  * Summit Isle events (Oct 15 2026, lib/analytics/summitEvents.ts): how players arrive, Summit Kick rounds played (its best
  * score is read straight from the arcade leaderboard instead: lib/arcade/kickAdminMetrics.ts), zipline rides, fruit
- * shaken by kind and method, catches at the three summit fishing spots, and the summit kiosk.
+ * shaken by kind and method, catches at the four summit fishing spots, the summit kiosk, Summit Isle's hidden balls, the
+ * painting easel and the Ball Cannon.
  */
 export const SUMMIT_COUNT_EVENTS=[
  ['arrive_walk','Arrived via the Sandbar (on foot or a ride)'],['arrive_fly','Arrived by jetpack or parachute'],
@@ -68,8 +71,21 @@ export const SUMMIT_COUNT_EVENTS=[
 ] as const;
 /** `su:fruit_<kind>:hand` / `:ball` — the two ways a fruit tree is shaken (lib/graphics/fruitTrees.ts drop()). */
 export const FRUIT_SHAKE_IDS:readonly string[]=FORAGE_FRUIT_KINDS.flatMap(k=>[`fruit_${k}:hand`,`fruit_${k}:ball`]);
-/** Beach finds picked up, by island (lib/town/beachcombing.ts recordFind; beachcombing is a separate in-progress feature). */
+/** Beach finds picked up, by island (lib/town/beachcombing.ts recordFind). */
 export const BEACH_COUNT_EVENTS=[['main','Beach finds picked up (Futbol Island)'],['cay','Beach finds picked up (Coral Cay)'],['summit','Beach finds picked up (Summit Isle)']] as const;
+/**
+ * The Island Tutorial (Oct 16 2026, components/IslandTutorial.tsx, the narrated scenes in the Paths card): opened, and watched to
+ * the last scene. Totals only, like the welcome walkthrough's ob: ids; never which scene was skipped to or how long it played.
+ */
+export const TUTORIAL_COUNT_EVENTS=[['open','Island Tutorial opened'],['finish','Island Tutorial watched to the end']] as const;
+
+/**
+ * Fishing content (Oct 15 2026, lib/town/fishing/fishingLogStore.ts, docs/fishing.md "Content systems"): totals only, never which
+ * fish, spot, lure or score.
+ */
+export const FISHING_COUNT_EVENTS=[['legend','Island Legend caught and released'],['record','New spot record'],['clue','Legend clue found'],
+ ['request','Islander fishing request finished'],['derby_start','Fishing Derby started'],['derby_done','Fishing Derby finished'],
+ ['lure','Lure put on the line'],['photo','Fishing photo saved']] as const;
 
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
@@ -77,7 +93,8 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...IDP_COUNT_EVENTS.map(([e])=>'ip:'+e),...START_COUNT_IDS,
  ...SHOP_COUNT_EVENTS.map(([e])=>'sh:'+e),...SANDBAR_COUNT_EVENTS.map(([e])=>'sb:'+e),
  ...SUMMIT_COUNT_EVENTS.map(([e])=>'su:'+e),...FRUIT_SHAKE_IDS.map(id=>'su:'+id),
- ...BEACH_COUNT_EVENTS.map(([e])=>'bc:pickup_'+e),
+ ...BEACH_COUNT_EVENTS.map(([e])=>'bc:pickup_'+e),...TUTORIAL_COUNT_EVENTS.map(([e])=>'tu:'+e),
+ ...FISHING_COUNT_EVENTS.map(([e])=>'fi:'+e),
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

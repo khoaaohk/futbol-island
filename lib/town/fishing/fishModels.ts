@@ -554,6 +554,22 @@ const SPECIES:Record<string,Spec>={
   dorsal:[{t0:.72,t1:.86,h:.3,shape:'sickle',sweep:.35}],anal:[{t0:.72,t1:.86,h:.28,shape:'sickle',sweep:.35}],pect:{t:.3,len:.06,a:1.6,droop:.1,round:true},eye:{t:.12,a:1.0,r:.03}});
   // Small round mouth at the front.
   b.decal([-.5,-.02,0],[-1,0,0],.025,hex('#2e3338'),{sides:6});void L;return {anim:{axis:[0,1,0],start:.2,span:.2,dir:[1,0,.3],k:[0,0,0],amp:.06}};},
+ // ---- Night and sunset fish (Oct 15 2026, nightFish.ts)
+ // Stargazer: a flat-headed sand-burier with its eyes on TOP, an upturned mouth and pale star-like spots.
+ stargazer:b=>{const L=fish(b,{x1:.3,H:.14,W:.15,peak:.28,q:.4,ped:.22,top:'#5f5040',side:'#7d6b55',belly:'#ebdfc4',line:-.15,tail:'round',tailH:.11,finC:'#5a4a3a',
+  paint:mottle(hex('#3a3026'),12,.55),dorsal:[{t0:.42,t1:.72,h:.05,shape:'round'}],anal:[{t0:.5,t1:.8,h:.04,shape:'round'}],pect:{t:.3,len:.13,round:true},eye:{t:.14,a:.3,r:.032,ring:'#e8dcb0'},mouth:{t:.03,len:.06,a:.9}});
+  spots(b,L,Array.from({length:10},(_,i):[number,number,number]=>[.25+.6*hash(i*3.1),.4+1.2*hash(i*7.7),.012+.008*hash(i)]),hex('#f3ecd2'),0,5);},
+ // Bigeye: a deep red reef fish with a huge eye for the dark.
+ bigeye:b=>{fish(b,{x1:.3,H:.16,W:.07,peak:.35,q:.55,ped:.14,top:'#a8332a',side:'#c4473b',belly:'#f3b9a2',tail:'fork',tailH:.13,finC:'#b23a30',
+  dorsal:[{t0:.3,t1:.72,h:.06,shape:'spiny',spines:10}],anal:[{t0:.58,t1:.8,h:.05,shape:'round'}],pect:{t:.26,len:.08},pelvic:{t:.3,len:.06},eye:{t:.13,a:1.1,r:.06,iris:'#120808',ring:'#f5d76e'},mouth:{t:.04,len:.05,a:1.4}});},
+ // Flashlight fish: a small dark fish with a glowing patch under each eye.
+ 'flashlight-fish':b=>{const L=fish(b,{x1:.32,H:.14,W:.07,peak:.32,q:.55,ped:.15,top:'#1e2236',side:'#2b3047',belly:'#56607e',tail:'fork',tailH:.12,finC:'#22273a',
+  dorsal:[{t0:.36,t1:.5,h:.05,shape:'spiny',spines:5},{t0:.56,t1:.78,h:.05,shape:'round'}],anal:[{t0:.6,t1:.8,h:.04,shape:'round'}],pect:{t:.26,len:.07},eye:{t:.12,a:1.2,r:.035,iris:'#05070d',ring:'#bcd0ff'}});
+  spots(b,L,[[.17,1.75,.032]],hex('#a6f2ff'),1,7);},
+ // Golden trevally: a deep, golden jack with faint dark bars and a forked tail.
+ 'golden-trevally':b=>{fish(b,{x1:.3,H:.18,W:.07,peak:.36,q:.5,ped:.1,top:'#a5822a',side:'#d8b13c',belly:'#f6e8a9',line:.05,tail:'fork',tailH:.16,finC:'#c9a033',
+  paint:(c,t)=>Math.sin(t*38)>.75&&t>.2&&t<.8?mixC(c,hex('#6b5418'),.35):c,
+  dorsal:[{t0:.32,t1:.45,h:.06,shape:'tri'},{t0:.5,t1:.82,h:.05,shape:'round'}],anal:[{t0:.55,t1:.82,h:.05,shape:'round'}],pect:{t:.27,len:.12,sweep:.4},eye:{t:.12,r:.03},mouth:{t:.04,len:.05,a:1.5}});},
  // ---- Boulder Cove, Summit Isle
  'pool-seahorse':b=>{seahorse(b,{body:'#9a6a52',belly:'#f0cdab'});return {anim:{axis:[0,-1,0],start:.15,span:.2,dir:[1,0,0],k:[0,6,0],amp:.03},shadow:'fish'};},
  'rockpool-shrimp':b=>{shrimp(b,{body:'#b89a78',belly:'#f0e3c6',speckle:'#6e5a3e'});return {anim:{axis:[1,0,0],start:.05,span:.3,dir:[0,1,0],k:[6,0,0],amp:.025},shadow:'fish'};},

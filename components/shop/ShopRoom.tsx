@@ -21,6 +21,7 @@ import type {ShopPoi,ShopStation} from '@/lib/shop/shopLayout';
 import {SHOP_CLERK,SHOW_ME,shopNpcDefs} from '@/lib/shop/shopCast';
 import {createShopAmbience,shopClickCue,shopSfx,unlockShopAudio,type ShopAmbience} from '@/lib/shop/shopSound';
 import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shopEvents';
+import {enterActivity} from '@/lib/analytics/tracker';
 const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
 
 /**
@@ -82,6 +83,7 @@ export default function ShopRoom(){
  useEffect(()=>{setOwned(loadOwned());const sync=(e:StorageEvent)=>{if(e.key===SHOP_OWNED_KEY)setOwned(loadOwned());};window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync);},[]);
  const say=useCallback((t:Toast)=>{setToast(t);clearTimeout(toastTimer.current);toastTimer.current=setTimeout(()=>setToast(null),t.tone==='ok'?3600:4800);},[]);
  useEffect(()=>()=>clearTimeout(toastTimer.current),[]);
+ useEffect(()=>studio?enterActivity('kit_studio'):undefined,[studio]);// admin analytics: time designing in a studio (module variable, no render); the rest of /shop is 'kit_shop'
  const covered=!!studio||myKit||!!talking;
  const joyRect=useJoystickBounds(joy,ready&&!covered);
 

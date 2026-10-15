@@ -12,15 +12,15 @@ import AnalyticsDashboard from './AnalyticsDashboard';
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
 
-/** /admin: protected on the server. Without a valid signed session cookie only the sign-in card is rendered. */
+/** /admin: protected on the server. Opens on Today on every load or reload (Oct 15 2026). Without a valid signed session cookie only the sign-in card is rendered. */
 export default async function AdminPage(){
  if(!adminPassword()||!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return <AdminLogin configured={!!adminPassword()}/>;
  const now=new Date();
  let report;
- try{report=await buildReportFor(getStore(),mode=>resolveRange({range:'7d'},now,mode),now);}
- catch{const {emptyReport}=await import('@/lib/analytics/core');const r=resolveRange({range:'7d'},now);report={...emptyReport(r.from,r.to,now,true),notes:['The analytics store did not answer. The numbers below are empty until it does.']};}
+ try{report=await buildReportFor(getStore(),mode=>resolveRange({range:'today'},now,mode),now);}
+ catch{const {emptyReport}=await import('@/lib/analytics/core');const r=resolveRange({range:'today'},now);report={...emptyReport(r.from,r.to,now,true),notes:['The analytics store did not answer. The numbers below are empty until it does.']};}
  // Save-code metrics (Oct 11 2026): aggregates only, after the session check; never throws (the status says what is missing).
  report.saves=await loadSaveMetrics(report.from,report.to,now);
  report.summitKick=await loadSummitKickMetrics(report.from,report.to);
- return <AnalyticsDashboard initial={report} initialRange="7d" saves={await saveAdminLine()}/>;
+ return <AnalyticsDashboard initial={report} initialRange="today" saves={await saveAdminLine()}/>;
 }

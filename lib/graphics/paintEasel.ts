@@ -5,7 +5,9 @@
  * "Paint the view" (a world-anchored prompt through the HUD arbiter, like the telescope) seats the player: the camera eases to a calm
  * framing over the painter's shoulder with the easel's board large in the foreground (the lower part of a phone, the lower left of a
  * wide screen) and the sea and the main island open beyond it. The board IS the paper ("the painting portion should be on the easel,
- * not two separate"): its texture is the paper, the faint "trace" view and the paint (the `sheet` canvas the UI draws into), and a
+ * not two separate"): its texture is the paper, the picture style under the paint (the pink button: the faint "trace" view or the
+ * view made into a pastel, watercolour, sketch, oil, comic or dots picture, lib/town/paintStyles.ts) and the paint (the `sheet`
+ * canvas the UI draws into), and a
  * screen point maps to the paper by intersecting the board's plane. "Just look" pulls the camera back to the full view and it breathes
  * with a slow drift (none with reduced motion).
  *
@@ -17,12 +19,15 @@
  *  - the board's texture (one 512×384 canvas) uploads only when the paper changed: painted() marks it, the next rendered frame
  *    composites and uploads once (so at most one upload per island frame while a finger paints, none at rest).
  *  - the plane intersection runs only from pointer events (hit()), never per frame.
- *  - two extra renders on arrival: the seated screen (the eyedropper) and the view from the easel (trace), each copied from the
- *    drawing buffer right after its render, small. Never again unless the screen's shape changes.
+ *  - two extra renders on arrival: the seated screen (the eyedropper) and the view from the easel (trace and the styles), each
+ *    copied from the drawing buffer right after its render, small. Never again unless the screen's shape changes.
+ *  - a picture style is one CPU filter run over that 512×384 snapshot when the pink button first shows it (cached per style, so
+ *    cycling round again costs nothing), then one board upload. Nothing per frame, nothing at rest.
  */
 import * as T from 'three';
 import {easelSpot,easelPoint,canvasPose,easelCamera,easelFov,easelDrift,easelPaintCamera,easelViewCamera,boardToPaper,EASEL_CAMERA,EASEL_LAYOUT,EASEL_REACH,
- PAINT_W,PAINT_H,PAINT_PAPER,readPaintings,type EaselSpot} from '../town/paintEasel';
+ PAINT_W,PAINT_H,PAINT_PAPER,readPaintings,hungPainting,type EaselSpot} from '../town/paintEasel';
+import {applyPaintStyle,isPictureStyle,TRACE_ALPHA,type PaintStyleId} from '../town/paintStyles';
 import {easelStore,installEaselActions,type PaperHit} from '../town/paintEaselStore';
 import {IDLE_RIDE_FRAME_MS} from '../town/idleRide';
 import {countEaselOpen} from '../analytics/summitEvents';
@@ -44,10 +49,8 @@ export type EaselUpdate={
 };
 const cue=(detail:string)=>{if(typeof document!=='undefined')document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail}));};
 const smooth=(t:number)=>{const c=Math.max(0,Math.min(1,t));return c*c*(3-2*c);};
-/** The trace snapshot (4:3) and the screen snapshot's longest side (px). */
-const VIEW_W=384,VIEW_H=288,SCREEN_MAX=360;
-/** How faint the traced view sits under the paint. */
-const TRACE_ALPHA=.3;
+/** The view snapshot (4:3, the paper's size: trace and the styles) and the screen snapshot's longest side (px). */
+const VIEW_W=PAINT_W,VIEW_H=PAINT_H,SCREEN_MAX=360;
 /** The seated near plane (m): the board is ~1–1.7 m from the eye, inside the island camera's usual 1 m near plane. */
 const SEATED_NEAR=.35;
 type Pose={p:T.Vector3;q:T.Quaternion;fov:number};
@@ -68,7 +71,9 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
 
  // ---- the board: the paper while seated, the latest saved painting afterwards (lazy: made the first time either exists)
  let board:T.Mesh|null=null,boardTex:T.CanvasTexture|null=null,boardCanvas:HTMLCanvasElement|null=null,sheet:HTMLCanvasElement|null=null;
- let seatMat:T.MeshBasicMaterial|null=null,worldMat:T.MeshLambertMaterial|null=null,boardDirty=false,traceOn=false,savedThisSeat=false;
+ let seatMat:T.MeshBasicMaterial|null=null,worldMat:T.MeshLambertMaterial|null=null,boardDirty=false;
+ /** The pink button's style, and the art-style pictures made from this seat's view snapshot (each made once, on first use). */
+ let style:PaintStyleId='off',styleRuns=0;const styled=new Map<PaintStyleId,HTMLCanvasElement>();
  let boardLoaded=false,boardImg='',boardPic:HTMLImageElement|null=null;
  const boardFrame={centre:new T.Vector3(),n:new T.Vector3(),r:new T.Vector3(),u:new T.Vector3(),w:1,h:1};
  const canvas2d=()=>{const c=document.createElement('canvas');c.width=PAINT_W;c.height=PAINT_H;return c;};
@@ -85,11 +90,13 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   board.matrixAutoUpdate=false;board.updateMatrix();scene.add(board);
   return board;
  }
- /** Paper, the faint view (trace) and the paint, into the board's canvas; one texture upload. */
- function composite(withTrace:boolean){
+ /** Paper, the style under the paint (the faint view, or an art style's picture) and the paint, into the board's canvas; one upload. */
+ function composite(){
   if(!boardCanvas||!boardTex)return;const g=boardCanvas.getContext('2d');if(!g)return;
   g.globalAlpha=1;g.fillStyle=PAINT_PAPER;g.fillRect(0,0,PAINT_W,PAINT_H);
-  if(withTrace&&viewCanvas){g.globalAlpha=TRACE_ALPHA;g.drawImage(viewCanvas,0,0,PAINT_W,PAINT_H);g.globalAlpha=1;}
+  const layer=styled.get(style);
+  if(style==='trace'&&viewCanvas){g.globalAlpha=TRACE_ALPHA;g.drawImage(viewCanvas,0,0,PAINT_W,PAINT_H);g.globalAlpha=1;}
+  else if(layer)g.drawImage(layer,0,0,PAINT_W,PAINT_H);
   if(sheet)g.drawImage(sheet,0,0);
   boardTex.needsUpdate=true;
  }
@@ -100,25 +107,34 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
  function showOnBoard(img:string){
   if(!img||img===boardImg||typeof document==='undefined'||typeof Image==='undefined')return;boardImg=img;
   const pic=new Image();pic.decoding='async';
-  pic.onload=()=>{if(disposed||boardImg!==img)return;boardPic=pic;if(!seated&&!savedThisSeat){drawPicture(pic);ports.wake();}};
+  boardPic=null;pic.onload=()=>{if(disposed||boardImg!==img)return;boardPic=pic;if(!seated){drawPicture(pic);ports.wake();}};
   pic.src=img;
  }
- function loadBoard(){if(boardLoaded)return;boardLoaded=true;const latest=readPaintings().items[0];if(latest)showOnBoard(latest.img);}
+ function loadBoard(){if(boardLoaded)return;boardLoaded=true;const hung=hungPainting(readPaintings());if(hung)showOnBoard(hung.img);}
+ /** An art style's picture: made once from the view snapshot (one CPU filter pass), then cached for this seat's snapshot. */
+ function styleLayer(id:PaintStyleId){
+  if(!isPictureStyle(id)||!viewCanvas||typeof document==='undefined')return null;const have=styled.get(id);if(have)return have;
+  const src=viewCanvas.getContext('2d',{willReadFrequently:true})?.getImageData(0,0,VIEW_W,VIEW_H);if(!src||!src.data)return null;
+  styleRuns++;const out=applyPaintStyle(id,{data:src.data,width:VIEW_W,height:VIEW_H});if(!out)return null;
+  const c=document.createElement('canvas');c.width=VIEW_W;c.height=VIEW_H;const g=c.getContext('2d');if(!g)return null;
+  const img=g.createImageData(VIEW_W,VIEW_H);if(!img||!img.data)return null;img.data.set(out.data);g.putImageData(img,0,0);styled.set(id,c);return c;
+ }
 
  // ---- commands from the UI
- function open(){if(seated)return;ensure();seated=true;mode='paint';blend=0;leaving=0;arrived=false;clock=0;captureKey='';lookT=0;traceOn=false;savedThisSeat=false;revision++;
+ function open(){if(seated)return;ensure();seated=true;mode='paint';blend=0;leaving=0;arrived=false;clock=0;captureKey='';lookT=0;style='off';styled.clear();revision++;
   if(!sheet&&typeof document!=='undefined')sheet=canvas2d();
-  if(ensureBoard()){board!.material=seatMat!;board!.visible=true;composite(false);}
-  easelStore.set({seated:true,mode:'paint',arrived:false,sheet,boardRect:null,capture:null});cue('category');countEaselOpen();ports.wake();}
- function exit(){if(!seated)return;seated=false;leaving=1;arrived=false;revision++;traceOn=false;boardDirty=false;
-  // The board in the world: what was just painted and saved, else the latest saved painting, else the bare board.
-  if(board){board.material=worldMat!;if(savedThisSeat)composite(false);else if(boardPic)drawPicture(boardPic);else board.visible=false;}
-  savedThisSeat=false;
-  easelStore.set({seated:false,arrived:false,mode:'paint',boardRect:null,capture:null});cue('previous');ports.wake();}
+  if(ensureBoard()){board!.material=seatMat!;board!.visible=true;composite();}
+  easelStore.set({seated:true,mode:'paint',arrived:false,sheet,boardRect:null,capture:null,style:'off',layer:null});cue('category');countEaselOpen();ports.wake();}
+ function exit(){if(!seated)return;seated=false;leaving=1;arrived=false;revision++;style='off';styled.clear();boardDirty=false;
+  // The board in the world: the painting hung there (the one just saved, unless another was hung), else the bare board.
+  if(board){board.material=worldMat!;if(boardPic)drawPicture(boardPic);else board.visible=false;}
+  easelStore.set({seated:false,arrived:false,mode:'paint',boardRect:null,capture:null,style:'off',layer:null});cue('previous');ports.wake();}
  function setMode(m:'paint'|'look'){if(!seated||m===mode)return;mode=m;revision++;easelStore.set({mode:m});ports.wake();}
  function painted(){if(!seated)return;boardDirty=true;revision++;ports.wake();}
- function trace(on:boolean){if(!seated||on===traceOn)return;traceOn=on;painted();}
- function saved(img:string){boardLoaded=true;if(seated)savedThisSeat=true;showOnBoard(img);}
+ function setStyle(id:PaintStyleId){if(!seated||id===style)return;style=id;easelStore.set({style:id,layer:styleLayer(id)});painted();}
+ function hang(img:string|null){boardLoaded=true;
+  if(img){showOnBoard(img);return;}
+  boardImg='';boardPic=null;if(!seated&&board){board.visible=false;ports.wake();}}
  const hitO=new T.Vector3(),hitD=new T.Vector3(),hitP=new T.Vector3();
  function hit(clientX:number,clientY:number):PaperHit|null{
   const cam=lastCamera;if(!seated||!arrived||mode!=='paint'||!cam||!board||!renderer)return null;
@@ -131,7 +147,7 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   return {...boardToPaper(a,b,F.w,F.h),inside:Math.abs(a)<=F.w/2&&Math.abs(b)<=F.h/2};
  }
  let disposed=false;
- const off=installEaselActions({open,exit,setMode,hit,painted,trace,saved});
+ const off=installEaselActions({open,exit,setMode,hit,painted,style:setStyle,hang});
 
  /** Copies the drawing buffer right after a render in the same task (still readable: no preserveDrawingBuffer needed). */
  function snap(cam:T.Camera,into:HTMLCanvasElement,sx:number,sy:number,sw:number,sh:number){
@@ -156,8 +172,10 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   let l=Infinity,t=Infinity,rt=-Infinity,b=-Infinity;const F=boardFrame;
   for(const [du,dv] of [[-1,-1],[1,-1],[-1,1],[1,1]]){anchor.copy(F.centre).addScaledVector(F.r,du*F.w/2).addScaledVector(F.u,dv*F.h/2).project(camera);
    const x=r.left+(anchor.x+1)/2*r.width,y=r.top+(1-anchor.y)/2*r.height;l=Math.min(l,x);rt=Math.max(rt,x);t=Math.min(t,y);b=Math.max(b,y);}
-  easelStore.set({capture:{canvas:screenCanvas,view:viewOk?viewCanvas:null,rect:{left:r.left,top:r.top,width:r.width,height:r.height},rev:captureRev},boardRect:{left:l,top:t,right:rt,bottom:b}});
-  if(traceOn)boardDirty=true;
+  // A new view: the style pictures are made again from it (the one showing now, the rest when next shown).
+  styled.clear();
+  easelStore.set({capture:{canvas:screenCanvas,view:viewOk?viewCanvas:null,rect:{left:r.left,top:r.top,width:r.width,height:r.height},rev:captureRev},boardRect:{left:l,top:t,right:rt,bottom:b},layer:styleLayer(style)});
+  if(style!=='off')boardDirty=true;
  }
 
  return {
@@ -168,6 +186,8 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   get spot(){return ensure();},
   /** The board mesh and its texture (tests and Town's diagnostics). */
   get board(){return board;},
+  /** The pink button's style, and how many times a style picture has been made (tests: once per style per snapshot). */
+  get style(){return style;},get styleRuns(){return styleRuns;},
   /** The 20 fps idle cap while seated (the camera has arrived; "Just look" drifts slowly at it too). 0 = normal rate. */
   get frameMs(){return seated&&arrived&&!leaving?IDLE_RIDE_FRAME_MS:0;},
   /** Nothing on screen will move (painting, the camera settled, no paper waiting to upload, and the water and life held still by
@@ -211,7 +231,7 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
    // Painting ↔ "Just look": ease between the board framing and the full view (at once with reduced motion).
    const wantLook=mode==='look'?1:0,k=reduced?1:1-Math.exp(-dt*3.2);lookT+=(wantLook-lookT)*k;if(Math.abs(lookT-wantLook)<1e-3)lookT=wantLook;
    if(paintAspect!==camera.aspect){paintAspect=camera.aspect;const P=easelPaintCamera(s,camera.aspect);aim(paintPose,P.x,P.y,P.z,P.yaw,P.pitch,P.fov);}
-   if(lookT>0){clock+=dt;const drift=easelDrift(clock,reduced),L=easelCamera(s);aim(lookPose,L.x,L.y,L.z,L.yaw+drift.yaw,L.pitch+drift.pitch,easelFov(camera.aspect,1));}
+   if(lookT>0){clock+=dt;const drift=easelDrift(clock,reduced),fov=easelFov(camera.aspect,1),L=easelCamera(s,fov);aim(lookPose,L.x,L.y,L.z,L.yaw+drift.yaw,L.pitch+drift.pitch,fov);}
    const m=smooth(lookT);targetP.lerpVectors(paintPose.p,lookPose.p,m);targetQ.slerpQuaternions(paintPose.q,lookPose.q,m);
    camera.position.lerpVectors(start.p,targetP,e);camera.quaternion.slerpQuaternions(start.q,targetQ,e);
    camera.fov=start.fov+(paintPose.fov+(lookPose.fov-paintPose.fov)*m-start.fov)*e;camera.far=EASEL_CAMERA.far;camera.near=SEATED_NEAR;
@@ -222,7 +242,7 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
    const key=`${camera.aspect.toFixed(3)}:${renderer?.domElement.width??0}`;
    if(arrived&&mode==='paint'&&lookT===0&&captureKey!==key){captureKey=key;capture(camera);}
    // The paper changed since the last frame: one composite, one upload.
-   if(boardDirty){boardDirty=false;composite(traceOn);}
+   if(boardDirty){boardDirty=false;composite();}
   },
   dispose(){disposed=true;off();if(board){board.removeFromParent();board.geometry.dispose();board=null;}seatMat?.dispose();worldMat?.dispose();seatMat=worldMat=null;boardTex?.dispose();boardTex=null;seated=false;leaving=0;},
  };

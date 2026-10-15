@@ -11,6 +11,7 @@ import StartSection from './StartSection';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
 import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
+import PullToRefresh from './PullToRefresh';
 import styles from './admin.module.css';
 
 type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'custom';
@@ -49,7 +50,11 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const router=useRouter();
  const [report,setReport]=useState(initial),[preset,setPreset]=useState<Preset>(initialRange),[loading,setLoading]=useState(false),[error,setError]=useState('');
  const [from,setFrom]=useState(initial.from),[to,setTo]=useState(initial.to);
+ const [updatedAt,setUpdatedAt]=useState<number|null>(null);
  const query=useRef(`range=${initialRange}`);
+ // The first paint's data came from the server moments ago; stamp it client-side once mounted (avoids an SSR/client
+ // Date.now() hydration mismatch).
+ useEffect(()=>{setUpdatedAt(Date.now());},[]);
 
  const load=useCallback(async(q:string)=>{
   query.current=q;setLoading(true);setError('');
@@ -57,10 +62,14 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
    const res=await fetch(`/api/admin/analytics?${q}`,{cache:'no-store'});
    if(res.status===401){router.refresh();return;}
    if(!res.ok)throw new Error();
-   const next=await res.json() as Report;if(query.current===q)setReport(next);
+   const next=await res.json() as Report;if(query.current===q){setReport(next);setUpdatedAt(Date.now());}
   }catch{setError('Could not load the numbers. Try again in a moment.');}
   finally{if(query.current===q)setLoading(false);}
  },[router]);
+ // Pull-to-refresh (mobile, drag down from the top): re-fetches through this same `load`, never a page reload, so
+ // the admin session and the current date-range filter survive.
+ // Pull-to-refresh is the phone's page reload, so like a reload it always comes back to Today (Oct 15 2026, user request).
+ const pullRefresh=useCallback(()=>{setPreset('today');return load('range=today');},[load]);
 
  // Refresh once a minute while this tab is visible and the range includes today ("on now" stays current).
  useEffect(()=>{
@@ -90,6 +99,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const sd=saveData(report);
 
  return <main className={styles.page}>
+  <PullToRefresh onRefresh={pullRefresh} loading={loading} updated={updatedAt}/>
   {/* Corners as in the main app and the museum exhibits: Back top left, Log out top right (24/20 px, 16/16 on phones). */}
   <div className={styles.cornerLeft}><BackButton onBack={()=>router.push('/')}/></div>
   <div className={styles.cornerRight}><button type="button" className={styles.secondary} onClick={logout}>Log out</button></div>
@@ -107,6 +117,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      <button type="submit" className={styles.primary}>Show</button>
     </form>}
     <span className={styles.spacer}/>
+    {updatedAt!=null&&<span className={styles.utc} data-updated-at>Updated {new Date(updatedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}</span>}
     <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
    </div>
    <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>

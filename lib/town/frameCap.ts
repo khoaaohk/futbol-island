@@ -21,3 +21,9 @@ export function frameCapSlot(now: number, slot: number, interval = PHONE_FRAME_M
   if (gap < 2 * interval - tolerance) return slot + interval;
   return now;
 }
+
+/** Town's largest frame step (s). It was 0.05 (one 20 fps frame), so every frame later than that (a missed refresh at the 24 fps
+ *  tier: 58 ms; at the 30 fps cap: 50 ms + a few ms of timestamp wobble) silently dropped the excess: the fixed 60 Hz simulation
+ *  fell behind the frames shown, a small stutter in anything fast (the zipline's camera at 25 m/s, Oct 15 2026). 1/15 s keeps a
+ *  stall from becoming a jump (at most four ticks in one frame) and covers every capped rate's late frame. */
+export const FRAME_DT_MAX = 1 / 15;

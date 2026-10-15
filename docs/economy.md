@@ -159,6 +159,18 @@ User: *"increase the probability of bigger fish on boats since it's in deep sea"
 
 Why a slower bite rather than a fee to board: a boat catch is worth about 2.89 coins (shore 2.29), so the boats really do pay more per fish, but the extra 8 s per cast brings coins a minute back to about 3.15 against the shore's 3.06 at full price (+3 %). On a hotspot every cast, the worst case, a boat pays 3.36 and the shore 3.25 a minute, both below a hidden ball (3.43) and a lesson quiz (4.72). Spooked water stops anyone farming one patch, and the market's daily allowance and ladder still cap what a day of fishing can sell for. `tests/economy.cjs` §3 checks all of it.
 
+### 4c. Fishing content (Oct 15 2026)
+
+Night and sunset fish, lures, weather, Island Legends, islander requests and the Fishing Derby (docs/fishing.md "Content systems") keep fishing's pay where §4b left it:
+
+| Feature | Guard-rail | Check |
+|---|---|---|
+| Night / sunset fish | priced inside their rarity band; they replace a resting day fish, never add weight | every spot's mean catch within ±3 % in all 60 time × weather × lure mixes (`tests/economy.cjs` §12) |
+| Lures, weather | reweight kinds inside each rarity; rarity shares never move (`BOOST_CAP` untouched); eased back to ±2.5 % | same test, plus "rarity share unchanged" per spot |
+| Island Legends | caught once and released: not a good, worth 0 | not in `GOODS`, a found legend only lowers the mean |
+| Requests | `FISH_REQUEST_COINS` = 3 through the jobs wallet (`island-job:fish-request:` runs, metered); 3 a day | below the cheapest job; ≤ a quarter of the full-pay meter |
+| Derby | no price bonus, no coins | `derby.ts` has no price, market or wallet code |
+
 ## 5. Diminishing returns at Rosa's stand
 
 The rules live in `lib/economy.ts` (`MARKET`, `marketUnitValue`, `payFromTally`) and are applied in `lib/town/market/market.ts` (`quoteSale`).

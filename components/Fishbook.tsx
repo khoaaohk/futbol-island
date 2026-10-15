@@ -12,13 +12,21 @@ import {BOAT_SPOTS,FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,SHOR
 import {speciesCaught} from '@/lib/town/fishing/fishingCore';
 import {fishSellValue} from '@/lib/economy';
 import {useFishbook} from '@/lib/town/fishing/fishingStore';
+// Oct 15 2026 (docs/fishing.md "Content systems"): the new pages, night fish, shape words (Agent A's fishingFight.ts) and rarity stars.
+import {FISHBOOK_PAGES,MilestoneBar,PhotosPage,RecordsPage,RequestsPage,TrophyPage,type FishbookPage} from './FishbookExtras';
+import extra from './FishbookExtras.module.css';
+import {refreshMilestones,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
+import {shadowShapeWord} from '@/lib/town/fishing/fishingFight';
+import {RarityStars} from './RarityStars';
+import {WHEN_LABEL} from '@/lib/town/fishing/nightFish';
 /** Plain credit name for a source URL. Kids see no clickable external links (user, Sep 27 2026); the URLs stay in the data and docs. */
 const LANG:Record<string,string>={en:'',it:' (Italian)',es:' (Spanish)',pt:' (Portuguese)',fr:' (French)',nl:' (Dutch)',de:' (German)',ja:' (Japanese)',th:' (Thai)'};
 const host=(url:string)=>{try{const h=new URL(url).hostname.replace(/^www\./,''),w=h.match(/^([a-z]+)\.wikipedia\.org$/);return w?`Wikipedia${LANG[w[1]]??''}`:h;}catch{return url;}};
 const credit=(f:FishSpecies)=>f.club.credit??host(f.club.source);
 /** Shared species first, then each spot's own specials (the Fishbook shows where every species lives, never how often it bites). */
 /** Oct 14 2026: the two deep-sea boats share one "Deep sea specials" section (their catches are marked "Deep sea"). */
-const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!isExclusive(f)&&!isDeepSeaSpecial(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)})),{id:'deep-sea',title:'Deep sea specials',fish:FISH.filter(isDeepSeaSpecial)}].filter(s=>s.fish.length);
+/** Oct 15 2026: the night and sunset fish (nightFish.ts) have their own section. */
+const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!f.when&&!isExclusive(f)&&!isDeepSeaSpecial(f))},{id:'night',title:'Night and sunset fish',fish:FISH.filter(f=>!!f.when)},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>!f.when&&isExclusive(f)&&f.spots[0]===s.id)})),{id:'deep-sea',title:'Deep sea specials',fish:FISH.filter(isDeepSeaSpecial)}].filter(s=>s.fish.length);
 /** "Found at": main-island shore spots first (collapsed to "every main-island shore spot" when it lives at all of them), then
  *  the causeway and Coral Cay spots (Oct 5 2026; collapsed the same way), then Summit Isle's spots (Oct 12 2026), then the
  *  deep-sea boats (two since Oct 14 2026). */
@@ -31,10 +39,15 @@ const foundAt=(f:FishSpecies)=>{const main=placesIn(f,MAIN_SHORE),cay=placesIn(f
 const boatsFor=(f:FishSpecies)=>{const at=BOAT_SPOTS.filter(s=>f.spots.includes(s.id));return !at.length?'':at.length===BOAT_SPOTS.length&&at.length>1?'both deep-sea boats':at.map(s=>`the ${s.name}`).join(', ');};
 /** "Deep sea" catches (Oct 14 2026): deep-sea creatures, marked on their Fishbook card. */
 const deepTag=(f:FishSpecies)=>f.deepSea?'Deep sea · ':'';
+/** The shadow's size and shape words, the only clues before a catch (shape: Agent A's A2 silhouette cue). */
+const shadowWords=(f:FishSpecies)=>`${SHADOW_LABEL[f.shadow]} · ${shadowShapeWord(f)}`;
+const whenLine=(f:FishSpecies)=>f.when?<p className={styles.found} data-fish-when={f.when}>{WHEN_LABEL[f.when]}</p>:null;
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
- const book=useFishbook(),caught=speciesCaught(book);
+ const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog();
+ const [page,setPage]=useState<FishbookPage>('fish');
+ useEffect(()=>{if(open)refreshMilestones();},[open]);
  const [leaving,setLeaving]=useState(false),closing=useRef(false),timer=useRef<ReturnType<typeof setTimeout>>();
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
  const requestClose=()=>{if(closing.current)return;closing.current=true;
@@ -47,18 +60,22 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
   <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}>
    <header className={`${shell.header} ${styles.header}`}><div><h2 id="fishbook-title">Fishbook</h2></div><DoneButton ref={close} onDone={requestClose}/></header>
    <div className={shell.body}>{open&&<div className={styles.book}>
-    <p className={styles.intro}><b>{caught} / {FISH.length} species</b>{book.total} caught in total. Every sea animal links to a real club, team or football story from the sea. Each fishing spot has its own specials.</p>
+    <div className={styles.intro}><b>{caught} / {FISH.length} species</b>{book.total} caught in total. Every sea animal links to a real club, team or football story from the sea. Each fishing spot has its own specials.<MilestoneBar caught={caught} log={log}/></div>
+    <div className={extra.tabs} role="tablist" aria-label="Fishbook pages">{FISHBOOK_PAGES.map(([id,label])=><button key={id} type="button" role="tab" aria-selected={page===id} data-fishbook-tab={id} onClick={()=>setPage(id)}>{label}</button>)}</div>
+    {page==='trophies'&&<TrophyPage log={log}/>}{page==='records'&&<RecordsPage log={log}/>}{page==='requests'&&<RequestsPage log={log}/>}{page==='photos'&&<PhotosPage/>}
+    {page==='fish'&&<>
     {SECTIONS.map(sec=>{const got=sec.fish.filter(f=>book.species[f.id]).length;return <section key={sec.id} className={styles.spot} data-fishbook-spot={sec.id}>
      <h3 className={styles.spotTitle}>{sec.title} <small>{got} / {sec.fish.length}</small></h3>
      <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id];return <li key={f.id} data-caught={!!e}>
       <FishArt fish={f} hidden={!e} size={92}/>
-      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}>{deepTag(f)}{RARITY_LABEL[f.rarity]} · {SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p><p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
+      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f)}<p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
        <div className={styles.fact}><span className={styles.tag}>Real football fact · {f.club.link}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div></>
-       :<><h3>Not caught yet</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}>{deepTag(f)}{SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p></>}
+       :<><h3>Not caught yet</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined} data-shape-word>{deepTag(f)}{shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f)}</>}
      </li>;})}</ul>
     </section>;})}
     <section className={styles.keeper}><h3>The keeper&apos;s lesson</h3><p><b>{KEEPER_LESSONS.nibble.title}.</b> {KEEPER_LESSONS.nibble.text}</p><small className={styles.credit}>Source: Bar-Eli et al. (2007), Journal of Economic Psychology</small></section>
-    <p className={styles.help}>Club facts are real football history. The fishing spots, their stories and which fish live where are island stories (game fiction).</p>
+    </>}
+    <p className={styles.help}>Club facts are real football history. The fishing spots, their stories, the legends and which fish live where are island stories (game fiction).</p>
    </div>}</div>
   </section>
  </dialog>;

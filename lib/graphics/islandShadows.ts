@@ -15,7 +15,7 @@ export const CASTER_DEPTH=60;
  *  bottom of the view (so a high camera, whose whole view is small on screen, still gets shadows everywhere it sees). The walk view
  *  sees ≤ ~140 m on flat ground (ultrawide corners; phones ~110 m), so only downhill views from Summit Isle's top end inside the view (where they fade, never cut). */
 export const SHADOW_REACH=145,SHADOW_REACH_SCALE=5;
-const STEP=3,MARGIN=1.5,SIZE_STEP=1,DEPTH_STEP=8,REFIT_MOVE=1.5;
+const STEP=3,MARGIN=1.5,SIZE_STEP=1,DEPTH_STEP=8,REFIT_MOVE=1.5,HOLD_HEADROOM=1.5;
 /** Ground height for the fit: Summit Isle's 2 m height grid (bilinear, cheap), 0 elsewhere (the parking deck's 6 m and every other
  *  raised floor sit inside RECEIVER_HEADROOM). */
 export function islandGroundForShadows(x:number,z:number){
@@ -77,6 +77,7 @@ export function createIslandShadowFit(light:T.DirectionalLight,groundAt:(x:numbe
  const basis=sunBasis(),target=new T.Vector3(),last=new T.Vector3(),lastQuat=new T.Quaternion();
  let rel:ShadowFootprint|null=null,halfX=0,halfY=0,nearOff=0,farOff=0,lastAspect=0,lastFov=0,lastZoom=0,lastMap=0,stale=true;
  const stats={refits:0,resizes:0};
+ let hold=false;
  function update(view:T.PerspectiveCamera){
   view.updateMatrixWorld();
   if(stale||!rel||view.position.distanceToSquared(last)>REFIT_MOVE*REFIT_MOVE||view.quaternion.angleTo(lastQuat)>.01||view.aspect!==lastAspect||view.fov!==lastFov||view.zoom!==lastZoom){
@@ -88,7 +89,7 @@ export function createIslandShadowFit(light:T.DirectionalLight,groundAt:(x:numbe
   const cx=view.position.dot(basis.right),cy=view.position.dot(basis.up),cz=view.position.dot(basis.depth);
   const minX=cx+rel.minX,maxX=cx+rel.maxX,minY=cy+rel.minY,maxY=cy+rel.maxY,minZ=cz+rel.minZ,maxZ=cz+rel.maxZ;
   // Half sizes: the footprint + margin, widened so the edge-fade band lies outside it; 1 m steps; a re-grow takes 10% headroom (few resizes on a climb), shrink after 20% slack.
-  const size=(need:number,current:number)=>{need=(need+MARGIN)/(1-2*SHADOW_EDGE_FADE);const q=Math.ceil(need/SIZE_STEP)*SIZE_STEP;if(q>current)return current>0?Math.ceil(need*1.1/SIZE_STEP)*SIZE_STEP:q;return q<current*.8?q:current;};
+  const size=(need:number,current:number)=>{need=(need+MARGIN)/(1-2*SHADOW_EDGE_FADE);const q=Math.ceil(need/SIZE_STEP)*SIZE_STEP;if(q>current)return current>0?Math.ceil(need*(hold?HOLD_HEADROOM:1.1)/SIZE_STEP)*SIZE_STEP:q;return q<current*.8&&!hold?q:current;};
   const hx=size((maxX-minX)/2,halfX),hy=size((maxY-minY)/2,halfY),map=light.shadow.mapSize.x;
   const shadowCamera=light.shadow.camera;let dirty=false;
   if(hx!==halfX||hy!==halfY||map!==lastMap||shadowCamera.right!==hx||shadowCamera.top!==hy){
@@ -113,6 +114,9 @@ export function createIslandShadowFit(light:T.DirectionalLight,groundAt:(x:numbe
  return {stats,update,
   /** Refit on the next update (resize, a watch view handing the light back). */
   invalidate(){stale=true;halfX=halfY=0;},
+  /** Held (the zipline ride, ~15 s: a fast camera dropping 40 m and a look-around): the box only grows, with more headroom, and
+   *  never shrinks until released, so the shadow texels don't change size (every shadow edge re-quantising) a dozen times. */
+  hold(on:boolean){hold=on;},
   get half(){return {x:halfX,y:halfY};}};
 }
 

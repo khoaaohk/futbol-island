@@ -11,6 +11,8 @@
  */
 import {SPECIAL_FISH} from './fishSpecials';
 import {DEEP_SEA_FISH} from './deepSeaFish';
+import {NIGHT_FISH} from './nightFish';
+import {LEGEND_FISH} from './legendary';
 import {BOAT_DECK_Y,BOAT_SPOT_IDS,DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {EAST_PIER_FISHING} from '../eastPier';
 import {beachPoint} from '../summitIsle';
@@ -41,6 +43,9 @@ export type FishSpecies={
  group:AnimalGroup;
  /** A deep-sea / offshore creature: the Deep Sea Boat's catch table favours these (docs/fishing.md). */
  deepSea?:boolean;
+ /** Oct 15 2026 (B3, ./nightFish.ts): only comes out at this time of the island's Day / Sunset / Night setting. Never in a spot's
+  *  static `weights`: at its time it takes the place of a resting day fish of the same rarity (fishingOdds.ts catchWeights). */
+ when?:'night'|'sunset';
  /** Where it can be caught. One spot = a spot-exclusive special (docs/fishing.md). Which animal lives where is island fiction. */
  spots:SpotId[];
  /** Optional internal catch weight (overrides RARITY_WEIGHT; never shown). */
@@ -110,7 +115,10 @@ export const FISH:FishSpecies[]=[
 FISH.push(...SPECIAL_FISH);
 // The Deep Sea Boat's own deep-sea specials (squid, lanternfish, grouper, sailfish, anglerfish, swordfish, marlin, sunfish): ./deepSeaFish.ts.
 FISH.push(...DEEP_SEA_FISH);
-const BY_ID=new Map(FISH.map(f=>[f.id,f]));
+// Oct 15 2026 (B3): the night and sunset fish (./nightFish.ts). They are Fishbook species and market goods like any other fish.
+FISH.push(...NIGHT_FISH);
+// Island Legends (C1, ./legendary.ts) are NOT in FISH (never sold, never counted): only fishById resolves them, for the live fight.
+const BY_ID=new Map([...FISH,...LEGEND_FISH].map(f=>[f.id,f]));
 export const fishById=(id:string)=>BY_ID.get(id);
 export const isFishId=(id:unknown):id is FishId=>typeof id==='string'&&BY_ID.has(id);
 
@@ -256,7 +264,7 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  * progressively harder to meet. A species may override its weight with `weight`.
  */
 export const RARITY_WEIGHT:Record<FishRarity,number>={common:40,uncommon:12,rare:4,legendary:1.2};
-for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id))spot.weights[f.id]=(f.weight??RARITY_WEIGHT[f.rarity])*(spot.shallowFactor&&!f.deepSea?spot.shallowFactor:1)*(spot.rarityBoost?.[f.rarity]??1);
+for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id)&&!f.when)spot.weights[f.id]=(f.weight??RARITY_WEIGHT[f.rarity])*(spot.shallowFactor&&!f.deepSea?spot.shallowFactor:1)*(spot.rarityBoost?.[f.rarity]??1);
 /** The shore spots (fishing posts), without the boat. */
 export const SHORE_SPOTS=FISH_SPOTS.filter(s=>!s.boat);
 export const spotById=(id:string)=>FISH_SPOTS.find(s=>s.id===id);

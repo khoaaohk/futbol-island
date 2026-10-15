@@ -9,7 +9,7 @@
  * landing or a carried truck ride does not. Walking is never throttled here.
  *
  * Tradeoff: the hover bob, exhaust, townsfolk and traffic animate at 20 fps while you sit still on a ride. The
- * simulation's dt clamp (0.05 s) equals one 20 fps frame, so nothing runs slower, only less often. */
+ * simulation's dt clamp (frameCap.ts FRAME_DT_MAX, 1/15 s) covers a late 20 fps frame, so nothing runs slower, only less often. */
 export const IDLE_RIDE_AFTER_MS = 4000;
 export const IDLE_RIDE_FRAME_MS = 1000 / 20;
 export const IDLE_TRAVEL_MPS = 0.35;

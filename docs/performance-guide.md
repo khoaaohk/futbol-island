@@ -165,7 +165,11 @@ User: "while fishing, pause everything in the background. And animate the water 
 
 **Focus mode: one switch** (`lib/graphics/focusMode.ts`, read once per frame in `components/Town.tsx`). On while a fishing session runs and the fishing camera has arrived (`fishingWorld.focused`); off the moment fishing stops, so the camera eases out over a live island. `?fishfocus=0` turns it off (A/B only).
 - **Holds still, still drawn** (no hiding, so nothing pops in or out): live matches (`games.update` skipped unless a pitch is within 30 m of the angler: frozen mid-play, resumed from the same ball position), street traffic (unless a car is within 30 m), the volleyball and coach-wall groups (unless within 30 m), the ferry, and townsfolk farther than 30 m (`islandNpcs.setFocus`: a two-line `heldByFocus` check at the top of the routine and posing loops; no routine, no posing, last pose kept). Near ones keep animating.
-- **Not drawn:** static island chunks more than 90 m from the angler on portrait screens (200 m in landscape, where the horizon is open). The portrait shot looks back at the island under the HUD card; captures at West Cove, East Pier, Sharks Beach and Harbour Wall were identical with and without them. `exit()` restores exactly the visibility it changed.
+- **Drawn complete but cheap (Oct 15 2026, replaces the 90 / 200 m chunk cut):** the old cut hid static chunks one *material batch* at a time, so it left half-built buildings, lone lamp posts, floating roofs and signs, and the ferry's floating green padlock. Now (`lib/graphics/focusMode.ts` + `lib/graphics/fishingBackdrop.ts`), for the main camera's colour pass only:
+  - the 50 m cells near the angler (45 m, measured on what each cell holds) keep their real chunks;
+  - every other cell is drawn only by the **backdrop**: a low-detail copy of the static chunks built once per page (in 6 ms slices, ~130–220 ms of work on a desktop) from the merged buffers already in memory. One vertex colour per piece, byte normals, no textures, one Lambert material, no shadows, one draw per island region (main, East Jetty, causeway + cay, Summit Isle) over one shared vertex buffer. Whole categories go: every lamp, pole, signal, flag, sign, bench, table, planter, fence, net, post, bike, crate, bollard and lifebuoy, and untagged pieces under 2 m (windows, sills). Small rounded pieces (palm-trunk rings, canopies) become boxes. Cells past 160 m draw a coarse subset (pieces ≥ 4 m plus every tree, palm and goal). Only cells inside the rendering camera's frustum are indexed (re-selected if the shot moves);
+  - townsfolk, cars, vending machines, ball-hunt spots, ramps, matches, the volleyball / coach groups and night light pools away from the angler are skipped whole; job signs, manholes and the ferry padlock never show behind a fishing shot. Pitches, floodlights, the ferry, the lighthouse, sea life, sea and shore stay.
+  Skipped objects are restored in `finally`; other renders (the shore field's top-down capture) see the normal scene. Draw calls fell at all 18 spots (e.g. Deep Sea Boat desktop 312 → 76, phone 121 → 57) and GPU time stayed level or fell; numbers in the "Fishing backdrop" section below. `?fishfocus=hold` keeps the hold-still freeze with the full-detail island (A/B).
 - **Shadows** refresh every 2nd frame while focused (`islandHeat.setFocus`; the tier's own cadence if slower). Only the angler, rod and fish move in the shot.
 - Not paused: the angler, fishing visuals, sharks and mantas (they already sleep off screen), the coin hunt, jobs, reactions, sound and the HUD.
 
@@ -203,6 +207,29 @@ Reduced work only: no phone-temperature claim without an iPhone recording.
 - `scripts/check-fishing-browser.cjs` (mobile, West Cove: cast, scare, bite, reel, catch, Fishbook, stop, visuals sleep, no errors).
 - A resume probe: chunks restored; the frozen futsal match resumed from the same ball position; cars resumed; townsfolk visible count unchanged; shadow `autoUpdate` restored.
 - Captures and 6-frame swash sequences at four spots, desktop and reduced motion. Scripts are in the session scratchpad (`fishing-water/`).
+
+## Fishing backdrop: the background complete, low detail — October 15 2026 (local, not deployed)
+
+User: "the background while fishing is not rendering fully. we need it to render but, not detailed", "save on heat", "audit that for all the other fishing as well". Implementation: `lib/graphics/fishingBackdrop.ts` + `lib/graphics/focusMode.ts` (see the focus-mode section above); `lib/town/world.ts` records each chunk's piece starts and prop kinds (`mesh.userData.pieces`); Town passes the renderer and the main camera to `createFocusMode`.
+
+- **Cause:** the 90 / 200 m cut hid `island-chunk-*` meshes by their own bounding sphere. A 50 m chunk is split by material, so walls, roofs, windows and lamps of one building had different spheres: some stayed, some went (half-built buildings, lone lamps, floating roofs and signs). The "floating green bag" is the ferry's locked padlock (`matchday-ferry-locked`, 9 m over the ferry), a marker that does not belong in a fishing shot.
+- **Backdrop:** 23.4k source pieces → 10.9k kept (5.6k as boxes), 12.5k dropped by category; 288k vertices, 251k triangles (217k in the coarse set); about 130–220 ms of work on a desktop, in 6 ms slices the first time a shot needs it (the island draws in full until it is ready). Memory: ~14 MB of arrays + the same on the GPU, kept for the page. Per focused frame: a frustum test of ~120 cell boxes, one light-uniform copy, and the skip / restore loop (~1.4k visibility flags).
+- **Audit (all 18 spots, desktop, in-page at render time):** 0 cells with some batches drawn and others not, 0 cells drawn by both the real chunks and the backdrop, no ferry padlock / job signs / manholes visible. `tests/fishing-backdrop.cjs` checks the same on a synthetic island for every spot in `FISH_SPOTS`, including a camera turn and the easel (no backdrop).
+- **Measured** (prod build, Playwright headless Chromium on this Mac's GPU; phone = 390×844, DPR 2 → 1.75, 4× CPU throttle; 8 s while the first cast waits; before = production 95f892e7). Phone: means of two interleaved runs.
+
+| Spot (phone) | draws | triangles | render CPU ms | GPU ms (median) |
+|---|---|---|---|---|
+| Deep Sea Boat | 121 → 57 | 66k → 79k | 4.19 → 2.65 | 1.88 → 1.90 |
+| Summit Deep Boat | 87 → 66 | 58k → 71k | 3.41 → 2.50 | 2.00 → 1.88 |
+| West Cove | 130 → 92 | 188k → 189k | 4.73 → 3.63 | 2.58 → 2.50 |
+| South Pier | 153 → 120 | 153k → 143k | 5.04 → 4.44 | 2.58 → 3.25 |
+| Coral Garden | 120 → 81 | 148k → 173k | 3.72 → 3.07 | 3.19 → 2.44 |
+| Drop-off Ledge | 69 → 50 | 115k → 158k | 2.97 → 2.39 | 2.53 → 2.71 |
+
+  Desktop (1440×900), all 18 spots: draws 256→153 (South Pier), 478→187 (West Pier), 495→156 (Harbour Wall), 331→123, 311→146, 312→76 (Deep Sea Boat), 333→103 (Summit Deep Boat), 312→113 (East Jetty), 369→127, 112→64, 103→84, 243→118, 292→127, 242→86, 60→46, 118→64, 64→47, 109→59; triangles fall at 14 of 18.
+- **GPU:** this host's timer is bimodal (≈1.7 or ≈3.2 ms on the same frame), so run-to-run GPU medians move ±0.5–1 ms; across all spots the change is level within that noise. Toggling only the backdrop on and off in the same page (same GPU state) costs 0.05–0.2 ms on the phone profile. Its shader has only the sun and sky terms: it skips the four pitch spot lights every island material loops over, and all shadow lookups. Phones draw more triangles at some spots (the old portrait cut drew nothing past 90 m), all in that one cheap pass.
+- **Tradeoffs:** far buildings are flat-coloured, without windows, signs, small props or night window glow. Far people, cars, vending machines, ramps and markers are skipped whole. Pitches, floodlights, the ferry, the lighthouse and the zipline stay. `?fishfocus=hold` keeps the old hold-still freeze with the full-detail island, for A/B checks.
+- Reduced work only: no phone-temperature claim without an iPhone recording.
 
 ## Townsfolk cast: 60 more islanders, spread out — October 12, 2026 (local, not deployed)
 
@@ -839,7 +866,7 @@ User: "when flying or riding idle should not waste energy." This supersedes the 
   - Applies on a ride or the jetpack, never while walking.
   - Triggers after 4 s with no pointer, key or wheel input and no travel. Travel means the player or camera moving faster than 0.35 m/s horizontally or 1.5 m/s vertically. The jetpack hover bob stays under those limits; a parachute descent, a landing, a camera pan or a carried truck ride do not.
   - While idle, the island renders at 20 fps on every device (`frameCapSlot` with 50 ms slots, never faster than the heat tier's own cap). Any input or travel restores 30 fps (phones) or the display rate (desktop) on the next frame.
-  - The simulation's dt clamp (0.05 s) equals one 20 fps frame, so nothing moves slower, only less often.
+  - The simulation's dt clamp (FRAME_DT_MAX, 1/15 s; 0.05 s before Oct 15 2026) covers a late 20 fps frame, so nothing moves slower, only less often.
 - **Measured** (Chromium with the Mac's GPU, 390×844):
   - Jetpack hover with no input: 20.0 fps, against 30 with input.
   - After a pointer move: 30.0 fps at once, and back to 20 fps after 4 s.
@@ -5151,6 +5178,14 @@ components/PaintEasel.tsx). The view stays live under a compact painting card, s
 
 Validation: tests/paint-easel.cjs (placement, tools, save budget, device-only key, runtime: no loops at rest, one snapshot render,
 20 fps cap, sleep when still, camera restored). Reduced work only; not measured on an iPhone.
+
+**Picture styles (Oct 15 2026, local, not deployed).** The pink button cycles Blank paper → Trace → Pastel → Watercolour → Sketch →
+Oil paint → Comic → Dots (lib/town/paintStyles.ts). Each art style is a CPU filter over the ONE view snapshot (now 512×384, aimed
+lower so it is mostly scenery), run once when that style is first shown and cached per style for the seat (cycling round again
+costs nothing); then one board upload. No per-frame work, nothing at rest, no WebGL pass. Measured in headless desktop Chrome:
+tap → shown 35–200 ms (watercolour and oil the slowest); a phone will be a few times slower, once per style. Memory: up to six
+512×384 canvases (~0.8 MB each) while seated, dropped on leaving. The seated and Just look cameras tilt further down (horizon at
+~23–26% of the screen instead of ~38%); no change to what is rendered.
 
 ## Zipline grip, body motion and ride actions (Oct 14 2026, local, not deployed)
 

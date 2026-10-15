@@ -22,7 +22,9 @@ export type LearningReport={
  questions:QuestionRow[];
  walkthrough:{steps:{id:string;label:string;seen:Cell;skipped:Cell}[];explore:Cell;lesson:Cell};
  progress:{n:Cell;bands:{label:string;sessions:Cell}[];grads:{label:string;sessions:Cell}[]};
- paths:{launches:{format:LearnFormat;sessions:Cell;launches:Cell}[];grads:{key:string;label:string;sessions:Cell}[];reviews:{answered:Cell;right:Cell;done:Cell}};
+ paths:{launches:{format:LearnFormat;sessions:Cell;launches:Cell}[];grads:{key:string;label:string;sessions:Cell}[];reviews:{answered:Cell;right:Cell;done:Cell};
+  /** Oct 16 2026: the Island Tutorial in the Paths card (tu: ids), sessions that opened it and that reached its last scene. */
+  tutorial:{open:Cell;finish:Cell}};
  settings:{n:Cell;bits:{key:string;label:string;sessions:Cell}[];voices:{id:string;label:string;sessions:Cell}[]};
 };
 
@@ -69,7 +71,8 @@ export function buildLearning(counts:Record<string,number>,sessions:Record<strin
  const progress={n:cell(flags.n),bands:PROGRESS_BANDS.map((label,i)=>({label,sessions:cell(flags['p'+i])})),grads:GRAD_BANDS.map((label,i)=>({label,sessions:cell(flags['g'+i])}))};
  const paths={launches:LEARN_FORMATS.map(format=>({format,sessions:cell(sessions['pf:'+format]),launches:guarded(counts['pf:'+format],sessions['pf:'+format])})),
   grads:[...LEARN_FORMATS.map(f=>['gr:'+f,f+' path'] as const),['gr:finale','Matchday Ferry final'] as const].map(([key,label])=>({key,label,sessions:cell(sessions[key])})),
-  reviews:{answered:guarded(counts['rv:q'],sessions['rv:q']),right:guarded(counts['rv:ok'],sessions['rv:ok']),done:cell(sessions['rv:done'])}};
+  reviews:{answered:guarded(counts['rv:q'],sessions['rv:q']),right:guarded(counts['rv:ok'],sessions['rv:ok']),done:cell(sessions['rv:done'])},
+  tutorial:{open:cell(sessions['tu:open']),finish:cell(sessions['tu:finish'])}};
  const settings={n:cell(flags.n),bits:SETTING_BITS.map(([key,,label])=>({key,label,sessions:cell(flags[key])})),
   voices:COACH_VOICE_IDS.map(([id,label],i)=>({id,label,sessions:cell(flags['v'+i])}))};
  const hasData=Object.keys(counts).length>0||(flags.n||0)>0;

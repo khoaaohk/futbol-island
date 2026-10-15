@@ -12,6 +12,9 @@
 //     on the deck, a map trip abandons it, analytics counted once
 //  5. the camera: replayed through Town's pipeline (60 Hz ticks drawn interpolated) at 20/30/60/120 fps with jitter: smooth
 //  6. heat and wiring: the cable is a few short tube pieces in the static batches, ≤ 2 sign draws; Town, world, the maps, analytics
+//  7. smoothness on phones (Oct 15 2026): drawn in step with the screen under a phone's uneven frames (20/24/30 fps capped, 60/120
+//     desktop), the look-around (eased, soft edges, back to the middle, frame-rate independent, drag + fling, keys), and the ride
+//     counting as active (no idle cap, no governor tier change, a held shadow box, late frames keep their time)
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const {createLoader,browser}=require('./summit-harness.cjs');
 const ROOT=path.join(__dirname,'..');const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
@@ -252,6 +255,166 @@ await ok('the camera: smooth through Town\'s pipeline at 20 / 30 / 60 / 120 fps 
   assert(m.rel<=.02,`${fps} fps: the trolley holds still on screen (offset change ${m.rel.toFixed(3)} m a frame)`);
   assert(m.swingJerk<=1.2,`${fps} fps: the swing under it is smooth (${m.swingJerk.toFixed(2)} m/s change a frame)`);}
  console.log(`  camera: worst velocity change ${worst.cam.toFixed(2)} m/s a frame; trolley on screen ${worst.rel.toFixed(4)} m; swing ${worst.swing.toFixed(2)} m/s`);
+});
+
+// ---- Smoothness on real phones (Oct 15 2026, user on an iPhone: "when using the zipline, it can still be a little jittery. also
+// when moving around while on the zipline should be smoother"). Town's pipeline replayed as a phone runs it: a 60 Hz rAF stream
+// whose callback timestamps wobble by a few ms, Town's frame cap (frameCapSlot) choosing the rendered frames, slow frames that miss
+// a refresh, each frame SHOWN on the refresh after its callback's; Town's dt (clamped to FRAME_DT_MAX) feeds the 60 Hz ticks. The
+// metric is the second difference of what is drawn, against the times the frames are shown.
+const FC=rl('lib/town/frameCap.ts');
+function frameClock(kind,seed=5){let s=seed;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;const gauss=()=>{let u=0;for(let i=0;i<6;i++)u+=rnd();return (u-3)/Math.sqrt(.5);};
+ const V=1000/60;let vs=0,slot=0,busy=0,tp=0;const late=()=>rnd()<.08?4+rnd()*6:Math.min(9,.5+Math.abs(gauss())*2.2);
+ const phone=(cap,slowP,slowMs)=>()=>{for(;;){vs++;const t=vs*V;if(t<busy)continue;const ts=t+late(),sl=FC.frameCapSlot(ts,slot,cap);if(sl<0)continue;slot=sl;if(rnd()<slowP)busy=ts+slowMs;return {shown:(vs+1)*V,ts};}};
+ return {phone30:phone(1000/30,.05,40),phone24:phone(1000/24,.05,40),phone20:phone(1000/20,.05,55),
+  desktop60:()=>{tp+=16.67+(rnd()-.5)*4;return {shown:tp,ts:tp};},desktop120:()=>{tp+=8.33+(rnd()-.5)*2;return {shown:tp,ts:tp};}}[kind];}
+/** A ride through Town's order (ticks → motion → follow camera → pose → the ride camera), frames from `frameClock(kind)`. */
+function townRide(kind,{seed=5,lookInput=null,keysAt=null,onFrame=null,until=null,width=390}={}){
+ const next=frameClock(kind,seed),r=makeRuntime(),{zip,loc,ctx,camera,player,scene}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z+.5;loc.y=ZS.ZIP_TOWER.deck;
+ zip.update(ctx(loc.x,loc.z,{width}));zip.ride();let acc=0,last=0,sim=0,ticks=0;const prevLoc={...loc},frames=[],inp=input(),keys=new Set();
+ while(sim<22&&(zip.phase!=='idle'||zip.stats.blend>0)&&!(until&&until(sim,zip))){const f=next(),dt=Math.max(0,Math.min((f.ts-last)/1000,FC.FRAME_DT_MAX));last=f.ts;sim+=dt;acc+=dt;
+  if(lookInput)inp.x=lookInput(sim,zip);keys.clear();if(keysAt){const k=keysAt(sim);if(k)keys.add(k);}
+  while(acc>=1/60){prevLoc.x=loc.x;prevLoc.z=loc.z;zip.holdPlayer(inp,keys,1/60);ticks++;acc-=1/60;}
+  const blend=acc*60,vx=prevLoc.x+(loc.x-prevLoc.x)*blend,vz=prevLoc.z+(loc.z-prevLoc.z)*blend;zip.motion({},blend);
+  const k=1-Math.exp(-dt*4);camera.position.x+=(vx+16-camera.position.x)*k;camera.position.z+=(vz+33-camera.position.z)*k;camera.position.y+=(loc.y+23-camera.position.y)*k;
+  camera.lookAt(camera.position.x-16,camera.position.y-23,camera.position.z-33);zip.pose(player,blend,dt,false);zip.applyCamera(camera,dt,false);
+  const tr=scene.getObjectByName('zipline-trolley'),h=scene.getObjectByName('zipline-handle'),st=scene.getObjectByName('strap0');
+  const fr={shown:f.shown/1000,sim,town:(ticks-1+blend)/60,drawnT:zip.drawn.t,ride:zip.phase==='ride'&&zip.stats.blend>=1,cam:camera.position.clone(),q:camera.quaternion.clone(),
+   rider:player.position.clone(),tr:tr&&tr.position.clone(),h:h&&h.position.clone(),st:st&&st.position.clone(),look:zip.look.x,lookV:zip.look.v,hy:zip.rigPose.hy};
+  frames.push(fr);if(onFrame)onFrame(fr,zip,r);}
+ return {frames,zip,r};}
+const pct=(a,p)=>{const v=[...a].sort((x,y)=>x-y);return v.length?v[Math.min(v.length-1,Math.floor(v.length*p))]:0;};
+/** Max and p95 of |Δv| between consecutive frames (m/s), v over the SHOWN interval; `get` picks a vector (null = skip). */
+function jerk(frames,get){const out=[];for(let i=2;i<frames.length;i++){const a=frames[i-2],b=frames[i-1],c=frames[i];if(!a.ride||!c.ride)continue;const pa=get(a),pb=get(b),pc=get(c);if(!pa||!pb||!pc)continue;
+ out.push(pc.clone().sub(pb).divideScalar(c.shown-b.shown).sub(pb.clone().sub(pa).divideScalar(b.shown-a.shown)).length());}return {max:Math.max(0,...out),p95:pct(out,.95),n:out.length};}
+/** Frame-to-frame change (ms) of the drawn instant's offset from the shown time: 0 = drawn exactly in step with the screen. */
+function timing(frames,key){const out=[];for(let i=1;i<frames.length;i++){const a=frames[i-1],b=frames[i];if(!a.ride||!b.ride)continue;out.push(Math.abs((b[key]-b.shown)-(a[key]-a.shown))*1000);}return {max:Math.max(0,...out),p95:pct(out,.95)};}
+
+await ok('jitter: rider, trolley, handle, straps and camera drawn in step with the screen at 20 / 24 / 30 fps on a phone and 60 / 120 fps (uneven frames)',()=>{
+ const limits={phone30:{cam:6,camP:1.6},phone24:{cam:5,camP:1.2},phone20:{cam:10,camP:3},desktop60:{cam:.6,camP:.4},desktop120:{cam:.6,camP:.4}};
+ const rows=[];
+ for(const kind of Object.keys(limits)){const {frames,zip}=townRide(kind),L=limits[kind];
+  const rel=key=>f=>f[key]?f[key].clone().sub(f.cam):null,cam=jerk(frames,f=>f.cam),rider=jerk(frames,rel('rider')),tro=jerk(frames,rel('tr')),hand=jerk(frames,rel('h')),strap=jerk(frames,rel('st'));
+  const drawnT=timing(frames,'drawnT'),townT=timing(frames,'town');
+  assert(cam.n>100,kind+': the ride was measured');
+  assert(cam.max<=L.cam&&cam.p95<=L.camP,`${kind}: the camera's velocity changes by ≤ ${cam.max.toFixed(2)} m/s a frame (p95 ${cam.p95.toFixed(2)}; ≤ ${L.cam} / ${L.camP})`);
+  assert(tro.max<1e-6,`${kind}: the trolley holds still on screen (the camera rides with it)`);
+  for(const [name,m] of [['rider',rider],['handle',hand],['strap',strap]])assert(m.max<=1.2,`${kind}: the ${name} moves smoothly on screen (≤ ${m.max.toFixed(2)} m/s change a frame)`);
+  if(kind.startsWith('phone'))assert(drawnT.p95<=townT.p95*.5,`${kind}: the drawn instant follows the screen (p95 ${drawnT.p95.toFixed(2)} ms of wobble a frame vs Town's instant ${townT.p95.toFixed(2)} ms)`);
+  else assert(drawnT.max<=townT.max+1e-6,`${kind}: desktop timestamps are exact: drawn at Town's instant`);
+  rows.push(`${kind} cam ${cam.max.toFixed(2)}/${cam.p95.toFixed(2)} m/s, rider ${rider.max.toFixed(2)}, timing ${drawnT.p95.toFixed(2)} ms (Town's instant ${townT.p95.toFixed(2)})`);zip.dispose();}
+ console.log('  '+rows.join('\n  '));
+ // Every drawn part reads the same instant: the handle is the bar the hands hold, the trolley is the drawn trolley, the straps run
+ // from the trolley's underside to the bar's ends; the ride camera is a pure function of the same drawn state.
+ townRide('phone30',{onFrame:(f,z,r)=>{if(!f.tr)return;assert(f.h.distanceTo(z.bar.mid)<1e-9,'the handle is the drawn bar');
+  assert(Math.hypot(f.tr.x-z.drawn.px,f.tr.y-z.drawn.py,f.tr.z-z.drawn.pz)<1e-9,'the trolley is the drawn trolley');
+  const st=r.scene.getObjectByName('strap1');if(st){const top=new T3.Vector3(0,-st.scale.y/2,0).applyQuaternion(st.quaternion).add(st.position);assert(Math.abs(top.y-(z.drawn.py-ZS.ZIP_TROLLEY_DROP))<.01,'the strap hangs from the drawn trolley');}},until:s=>s>6}).zip.dispose();
+ // The ride clock (lib/town/zipline.ts): exact desktop timestamps pass straight through; a snap on a stall or going back in time.
+ const c=ZS.createRideClock();let t=0;for(let i=0;i<60;i++){t+=1/60+(i%3-1)*.001;assert.equal(c.step(t),t,'fast displays: Town\'s instant');}
+ assert.equal(c.step(t),t,'the same instant twice (motion, then pose): the same answer');assert.equal(c.step(t-.2),t-.2,'back in time: snaps');
+ for(let i=0;i<20;i++){t+=1/30;c.step(t);}t+=.5;assert.equal(c.step(t),t,'a stall: snaps');
+ // Speed lines: on screen from the clip-on (one transparent streak, so the shader compiles then, not mid-ride when they appear).
+ {const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();zip.holdPlayer(input(),new Set(),1/60);zip.pose(r.player,1,1/60,false);
+  const lines=r.scene.getObjectByName('zipline-speed-lines');assert(lines&&lines.visible&&lines.count>=1&&lines.material.opacity===0,'the speed lines are drawn (invisible) from the clip-on');
+  // A frame drawn before the first tick shows the rider at the clip-on spot, never at the origin.
+  const r2=makeRuntime();r2.loc.x=L.x+1;r2.loc.z=L.z;r2.loc.y=ZS.ZIP_TOWER.deck;r2.zip.update(r2.ctx(r2.loc.x,r2.loc.z));r2.zip.ride();r2.zip.pose(r2.player,.3,1/120,false);
+  assert(r2.player.position.distanceTo(new T3.Vector3(L.x+1,ZS.ZIP_TOWER.deck,L.z))<.6,'drawn before the first tick: at the clip-on spot ('+r2.player.position.toArray().map(v=>v.toFixed(1))+')');zip.dispose();r2.zip.dispose();}
+});
+
+await ok('look-around: eased (no kick), soft at the edges, back to the middle on release, the same at 20–120 fps; drag with a fling; keys',()=>{
+ const Z2=ZS,LIM=Z2.ZIP_LOOK.limit;
+ // The stick: full right from 3 s to 5 s, released; at every frame rate.
+ const curves={};
+ for(const kind of ['phone20','phone30','desktop60','desktop120']){const {frames,zip}=townRide(kind,{lookInput:t=>t>3&&t<5?1:0,until:t=>t>8});
+  let maxAcc=0,peak=0,overshoot=0;for(let i=1;i<frames.length;i++){const a=frames[i-1],b=frames[i],dt=b.sim-a.sim;if(dt>0)maxAcc=Math.max(maxAcc,Math.abs(b.lookV-a.lookV)/dt);peak=Math.max(peak,b.look);if(b.sim>5)overshoot=Math.min(overshoot,b.look);}
+  assert(maxAcc<=18,`${kind}: the look accelerates smoothly (≤ ${maxAcc.toFixed(1)} rad/s²; no jump in its speed as the thumb lands or lifts)`);
+  assert(peak>.75*LIM&&peak<LIM,`${kind}: a full stick looks well round (${peak.toFixed(2)} rad), softly short of the ${LIM} rad edge`);
+  assert(overshoot>-.03,`${kind}: no swing past the middle on the way back (${overshoot.toFixed(3)})`);
+  const end=frames[frames.length-1];assert(Math.abs(end.look)<.03,`${kind}: back to the default view 3 s after release (${end.look.toFixed(3)})`);
+  curves[kind]=frames;zip.dispose();}
+ // Frame-rate independent: the look at the same moments agrees across 20 → 120 fps.
+ const at=(fr,t)=>{let best=fr[0];for(const f of fr)if(Math.abs(f.sim-t)<Math.abs(best.sim-t))best=f;return best.look;};
+ for(const t of [3.3,3.8,4.5,5.3,6]){const vals=Object.values(curves).map(fr=>at(fr,t));assert(Math.max(...vals)-Math.min(...vals)<.09,`at ${t} s the look agrees across frame rates (${vals.map(v=>v.toFixed(2)).join(' / ')})`);}
+ // Right is right: a + look turns the camera's view toward its own right; the rider's head turns the same way.
+ {const fr=curves.desktop60,a=fr.find(f=>f.sim>2.9&&f.ride),b=fr.find(f=>f.sim>4.6);const fa=new T3.Vector3(0,0,-1).applyQuaternion(a.q),fb=new T3.Vector3(0,0,-1).applyQuaternion(b.q),right=new T3.Vector3(1,0,0).applyQuaternion(a.q);
+  assert(fb.sub(fa).dot(right)>.2,'stick right: the view turns right');assert(b.hy<a.hy-.3,'… and the rider\'s head turns right with it');}
+ // The stick's walk floor (shapeStick) is taken back out: the look starts from zero as the thumb leaves the dead zone.
+ const WC=rl('lib/town/walkControl.ts'),o={x:0,z:0};WC.shapeStick(WC.STICK_DEAD_ZONE+.01,0,o);assert(o.x>.3&&Z2.stickLook(o.x,o.z)<.03,'just past the dead zone: a tiny look, not a third of it');
+ WC.shapeStick(1,0,o);assert(Math.abs(Z2.stickLook(o.x,o.z)-1)<1e-9,'full stick: full look');
+ // The soft edge: tanh, slope 1 in the middle, never past the limit.
+ assert(Math.abs(Z2.softLook(.01)-.01)<1e-5&&Z2.softLook(50)<=LIM&&Z2.softLook(-50)>=-LIM,'soft limit');
+ // Drag (a finger on a 390 px phone): a swipe right over 70 % of the screen width looks round to ~the stick's full aim; dragging far
+ // past the edge eases into it (no hard stop: the look's speed falls smoothly); a fling carries on after the finger lifts, then the
+ // view eases back to the middle.
+ for(const [width,kind] of [[390,'phone30'],[1440,'desktop60']]){
+  // A long swipe: to the edge, softly.
+  const swipe=(until,speed)=>{let x=100,t=0,lifted=null,liftAt=0,afterLift=0,peak=0,edgeStep=0,prevV=null;
+   const {frames,zip}=townRide(kind,{width,until:s=>s>9,onFrame:(f,z)=>{const ms=f.sim*1000;
+    if(f.sim>3&&f.sim<until&&z.phase==='ride'){if(!z.look.dragging){z.drag.start(7,x,ms);}else{x+=width*speed*(f.sim-(t||f.sim));z.drag.move(7,x,ms);}t=f.sim;}
+    else if(f.sim>=until&&z.look.dragging){z.drag.end(7,ms);lifted=f.look;liftAt=f.sim;}
+    if(lifted!==null&&f.sim<liftAt+.4)afterLift=Math.max(afterLift,f.look-lifted);peak=Math.max(peak,f.look);
+    if(prevV!==null&&f.look>.6*LIM)edgeStep=Math.max(edgeStep,Math.abs(f.lookV-prevV));prevV=f.lookV;}});
+   zip.dispose();return {peak,edgeStep,afterLift,end:frames[frames.length-1].look};};
+  const long=swipe(4.2,1.4);
+  assert(long.peak<LIM&&long.peak>.8*LIM,`${width} px: a long swipe looks round to the edge, softly (${long.peak.toFixed(2)} of ${LIM})`);
+  assert(long.edgeStep<.6,`${width} px: no snap at the edge (look speed changes ≤ ${long.edgeStep.toFixed(2)} rad/s a frame there)`);
+  assert(Math.abs(long.end)<.04,`${width} px: and the view eases back to the middle (${long.end.toFixed(3)})`);
+  // A flick: the look carries on after the finger lifts, then comes back.
+  const flick=swipe(3.2,1);
+  assert(flick.afterLift>.02,`${width} px: a flick carries on after the finger lifts (+${flick.afterLift.toFixed(3)} rad)`);
+  assert(Math.abs(flick.end)<.04,`${width} px: then back to the middle (${flick.end.toFixed(3)})`);}
+ // Sensitivity: the drag's aim per pixel is set by the screen width (≤ 900 px), so a phone and a desktop feel the same.
+ {const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();zip.holdPlayer(input(),new Set(),1/60);
+  zip.drag.start(1,0,0);zip.drag.move(1,.7*390,400);assert(Math.abs(zip.look.aim-Z2.ZIP_LOOK.drag)<1e-9,'390 px: 70 % of the width = the full aim');
+  zip.drag.move(2,9999,500);assert(Math.abs(zip.look.aim-Z2.ZIP_LOOK.drag)<1e-9,'another finger is ignored');zip.drag.end(1,900);assert(!zip.look.dragging,'lifted (held still first: no fling)');
+  // The window's pointer listeners: a drag that starts on the scene (the canvas), not on the HUD; only while riding.
+  const ev=(type,id,x,tag='CANVAS')=>window.dispatchEvent({type,pointerId:id,clientX:x,timeStamp:1000+x,button:0,target:{tagName:tag}});
+  ev('pointerdown',3,10,'BUTTON');assert(!zip.look.dragging,'a HUD button is not a drag');ev('pointerdown',3,10);assert(zip.look.dragging,'the scene is');ev('pointermove',3,60);ev('pointerup',3,60);assert(!zip.look.dragging);
+  zip.finishNow();ev('pointerdown',4,10);assert(!zip.look.dragging,'off the cable a drag does nothing');zip.dispose();}
+ // Keys: → held looks right, ← left; let go and it comes back.
+ {const {frames,zip}=townRide('desktop60',{keysAt:t=>t>3&&t<4.5?'arrowright':t>6&&t<7?'a':null,until:t=>t>9.5});
+  const peakR=Math.max(...frames.map(f=>f.look)),peakL=Math.min(...frames.map(f=>f.look));assert(peakR>.6&&peakL<-.4,`keys look both ways (${peakR.toFixed(2)}, ${peakL.toFixed(2)})`);
+  assert(Math.abs(frames[frames.length-1].look)<.05,'and back');zip.dispose();}
+ // Reduced motion: the same look, slower.
+ {const r=makeRuntime(),{zip,loc,ctx,camera}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();const inp={...input(),x:1};
+  for(let i=0;i<30;i++){zip.holdPlayer(inp,new Set(),1/60);zip.pose(r.player,1,1/60,true);zip.applyCamera(camera,1/60,true);}const red=zip.look.x;zip.dispose();
+  const q=makeRuntime();q.loc.x=L.x+1;q.loc.z=L.z;q.zip.update(q.ctx(q.loc.x,q.loc.z));q.zip.ride();for(let i=0;i<30;i++){q.zip.holdPlayer(inp,new Set(),1/60);q.zip.pose(q.player,1,1/60,false);q.zip.applyCamera(q.camera,1/60,false);}
+  assert(red<q.zip.look.x&&red>0,'reduced motion: a gentler turn');q.zip.dispose();}
+});
+
+await ok('the ride counts as active: no idle 20 fps cap, no governor tier change and a held shadow box mid-ride; late frames keep their time',()=>{
+ const town=read('components/Town.tsx');
+ // The idle-ride cap only ever applies on a ride (rideRef ≠ walk); the zipline is ridden on foot (a scooter or bike hops off first)
+ // and R / the ride button cannot change the ride in mid-air.
+ assert(town.includes("idleRide.interval(now,rideRef.current!=='walk')"),'Town: the idle cap is for rides only');
+ assert(/dismount:\(\)=>\{if\(rideRef\.current==='walk'\|\|rideRef\.current==='jetpack'\)return false;selectRide\('walk'\)/.test(town),'the zipline starts on foot');
+ assert(town.includes('hold:on=>{heat.hold(on);islandShadowFit.hold(on);}'),'Town: the ride holds the governor and the shadow box');
+ {const holds=[];const r=makeRuntime({hold:on=>holds.push(on)}),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();
+  while(zip.phase!=='idle')zip.holdPlayer(input(),new Set(),1/60);zip.dispose();
+  assert.deepEqual(holds,[true,false],'held from the clip-on to the landing, once');
+  const h2=[];const q=makeRuntime({hold:on=>h2.push(on)});q.loc.x=L.x+1;q.loc.z=L.z;q.zip.update(q.ctx(q.loc.x,q.loc.z));q.zip.ride();q.zip.finishNow();q.zip.ride();q.zip.update(q.ctx(q.loc.x,q.loc.z));q.zip.dispose();
+  assert.equal(h2[h2.length-1],false,'and released however the ride ends');}
+ assert(town.includes('Math.min(ms/1000,FRAME_DT_MAX)')&&Math.abs(FC.FRAME_DT_MAX-1/15)<1e-12,'Town: a late frame keeps its time (dt up to 1/15 s)');
+ // The idle-ride cap replayed over a ride (no input for 15 s, on foot: the zipline is never "a ride sitting still"), on the 30 fps
+ // phone cap; then the same seconds sitting still on a scooter DO drop to 20 fps (the check sees the cap).
+ const IR=rl('lib/town/idleRide.ts');
+ const replay=(riding)=>{const idle=IR.createIdleRide();let slot=0,rendered=0,capped=0;const p={x:0,y:0,z:0};
+  for(let k=1;k<=60*15;k++){const now=k*1000/60;const iv=idle.interval(now,riding);if(iv)capped++;const sl=FC.frameCapSlot(now,slot,Math.max(iv,1000/30));if(sl<0)continue;slot=sl;rendered++;idle.sample(now,p,p);}
+  return {fps:rendered/15,capped};};
+ const zipRun=replay(false),still=replay(true);assert(zipRun.capped===0&&zipRun.fps>29,`on the zipline: ${zipRun.fps.toFixed(1)} fps, never the idle cap`);assert(still.capped>0&&still.fps<26,`the check sees the cap (still on a scooter: ${still.fps.toFixed(1)} fps)`);
+ // The governor (lib/graphics/islandHeat.ts): severely slow frames for 40 s while held change nothing; released, the same frames do.
+ window.location??={search:''};const HT=rl('lib/graphics/heatTier.ts'),{createIslandHeat}=rl('lib/graphics/islandHeat.ts');HT.forceHeatTier(null);HT.setGovernorTier(0);
+ const sun={shadow:{mapSize:{x:1024,set(x){this.x=x;}},map:null,normalBias:.01}},heat=createIslandHeat({renderer:{shadowMap:{autoUpdate:true,needsUpdate:false}},sun,resolution:{setLimit(){}},npcs:{setDrawDistance(){}},traffic:{cars:[],rider:{index:-1}},governed:true});
+ let now=0;const feed=(secs,held)=>{heat.hold(held);for(let i=0;i<secs*8;i++){now+=125;heat.afterRender(now,125,5,300,'');}};
+ feed(40,true);assert.equal(heat.tier,0,'held: no tier change mid-ride');assert.equal(heat.governor.changes,0);
+ feed(40,false);assert(heat.tier>0,'released: the governor judges again ('+heat.tier+')');heat.dispose();HT.setGovernorTier(0);
+ // The shadow box over a ride (the camera dropping 40 m and the look swinging round): held, it only grows (a couple of re-sizes);
+ // free, it re-sizes (shadow texels changing size) over and over.
+ const SH=rl('lib/graphics/islandShadows.ts');
+ const fits=held=>{const light=new T3.DirectionalLight();light.shadow.mapSize.set(1024,1024);const fit=SH.createIslandShadowFit(light);let first=-1;
+  const {zip}=townRide('phone30',{lookInput:t=>t>4&&t<6?1:t>7&&t<8?-1:0,onFrame:(f,z,r)=>{if(z.phase==='idle')return;fit.hold(held&&z.active);fit.update(r.camera);if(first<0)first=fit.stats.resizes;}});zip.dispose();return fit.stats.resizes-first;};
+ const heldN=fits(true),freeN=fits(false);assert(heldN<=4&&freeN>=heldN*3,`shadow box re-sizes during a ride: ${heldN} held vs ${freeN} free`);
+ console.log(`  idle cap: ${zipRun.fps.toFixed(1)} fps on the zipline (still on a scooter: ${still.fps.toFixed(1)}); shadow re-sizes ${heldN} (free: ${freeN})`);
 });
 
 // ---- The grip, the body and the ride actions (Oct 14 2026, user after riding it: "the arms are not on the handle", "the body needs

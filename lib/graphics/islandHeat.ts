@@ -11,7 +11,7 @@ export type IslandHeatTargets={renderer:ShadowRenderer;sun:Sun;resolution:{setLi
 
 export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}:IslandHeatTargets){
  const governor=new ThermalGovernor();const hidden=new Set<Car>();
- let tier:HeatTier=effectiveTier(),settings:TierSettings=TIERS[tier],frame=0,spectating=false,limitApplied=-1,focused=false;const options=heatOptions();
+ let tier:HeatTier=effectiveTier(),settings:TierSettings=TIERS[tier],frame=0,spectating=false,limitApplied=-1,focused=false,held=false;const options=heatOptions();
  // Fishing focus mode (lib/graphics/focusMode.ts): the background is frozen, so only the angler's shadow moves: refresh at half rate.
  const shadowEvery=()=>Math.max(settings.shadowEvery,focused?2:1);
  // fewerAmbient (visible option, off): every 5th-and-3rd ordinary car (40%) is not drawn. Enabling it for real also needs them out of the traffic sim.
@@ -51,11 +51,16 @@ export function createIslandHeat({renderer,sun,resolution,npcs,traffic,governed}
    for(const car of traffic.cars){const far=!car.pickup&&car.index!==traffic.rider.index&&Math.hypot(car.group.position.x-player.x,car.group.position.z-player.z)>limit;
     if(far&&!hidden.has(car)&&car.group.visible){car.group.visible=false;hidden.add(car);}else if(!far&&hidden.has(car)){car.group.visible=true;hidden.delete(car);}}
   },
+  /** A short, fast-moving ride (the zipline, ~15 s) holds the governor's judgement: no tier change (a resolution or frame-rate
+   *  switch) mid-ride, and its frames (the whole island streaming past) are not judged; the window restarts after. */
+  hold(on:boolean){held=on;},
+  get held(){return held;},
   /** Right after renderer.render: interval since the previous rendered frame, the frame's work, draw calls and the view (isolated field id or ''). */
   afterRender(now:number,interval:number,work:number,drawCalls:number,view:string){
    // Normalise to the 30 fps budget the governor judges against: at a 24 fps slot (tier 4, spectate24) every healthy frame is 41.7 ms,
    // which would otherwise read as "slow" (stepping down) and never as "calm" (never stepping back up).
-   if(governed){const k=(1000/30)/frameMsNow();const next=governor.sample(now,interval*k,work*k,drawCalls,view);if(next!==-1)setGovernorTier(next);}
+   if(governed&&held)governor.sample(now,0,0,drawCalls,view);// held: the window restarts, nothing is judged
+   else if(governed){const k=(1000/30)/frameMsNow();const next=governor.sample(now,interval*k,work*k,drawCalls,view);if(next!==-1)setGovernorTier(next);}
    if(readout){frames++;if(now-readoutAt>=500){const g=governor.last,fps=frames*1000/Math.max(1,now-readoutAt);readout.textContent=`heat tier ${tier}${batterySaverOn()?' (saver)':''} · res ${renderer.getPixelRatio?.().toFixed(2)??'?'}\n${fps.toFixed(0)} fps · median ${g.median.toFixed(0)} ms · base ${g.baseline.toFixed(0)} · ${g.state}`;readoutAt=now;frames=0;}}},
   dispose(){readout?.remove();unsubscribe();restoreTraffic();resolution.setLimit(Infinity);npcs.setDrawDistance(null);renderer.shadowMap.autoUpdate=true;}
  };

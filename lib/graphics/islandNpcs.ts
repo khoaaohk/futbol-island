@@ -52,6 +52,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   const authoredRoute=CAFE_NPC_ROUTES[definition.id];
   let x=authoredRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??definition.z;
   search:for(let radius=0;radius<=12&&!authoredRoute&&!definition.pose;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
+  if(definition.floor){x=definition.x;z=definition.z;} // a boat deck (Oct 15 2026): keep the exact spot, never snap ashore
   const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});const dress=npcDress(definition);rig.setBeanLook(dress.look,dress.outfit);releaseHiddenClassic(rig.root);root.add(rig.root);
   if(definition.age&&definition.age!=='adult')rig.setProfile(AGE_PROFILES[definition.age]); // townsfolk cast: children, teens and grandparents (townsfolkCast.ts)
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
@@ -59,7 +60,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(material);
   const label=new T.Sprite(material);label.visible=false;label.position.y=2.5;label.scale.set(3.5/rig.profileScale,1.094/rig.profileScale,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
-  const position={x,y:authoredRoute?.[0].y??placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
+  const position={x,y:authoredRoute?.[0].y??definition.floor?.()??placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const freestyle=definition.freestyle===undefined?null:createCourtFreestyle(rig,definition.freestyle,definition.id);
   const activity=definition.activity?createNpcActivity(definition.activity,rig):null;
   if(freestyle)freestyle.ball.userData.npcId=definition.id;
@@ -68,7 +69,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale):undefined;
   const routine=createNpcRoutine(index,Boolean(activity||freestyle||seat),position);if(seat)routine.socialCooldown=Infinity;if(definition.travel){routine.speed=definition.travel==='run'?2.8:definition.travel==='skateboard'?3.8:4.5;routine.restDuration=.6;routine.socialCooldown=Infinity;}
   if(freestyle)routine.socialCooldown=Infinity;
-  const route=[{...position}];if(!activity&&!freestyle&&!seat)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
+  const route=[{...position}];if(!activity&&!freestyle&&!seat&&!definition.floor)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
   if(definition.travel){
    let best:{x:number;y:number;z:number}[]=[];let length=0;
    for(let direction=0;direction<8;direction++){const angle=direction*Math.PI/4;const ends=[-1,1].map(sign=>{let end={...position};for(let d=.5;d<=7;d+=.5){const next={x:x+Math.sin(angle)*d*sign,y:position.y,z:z+Math.cos(angle)*d*sign};if(!canTravel(position,next))break;end=next;}return end;});const span=Math.hypot(ends[0].x-ends[1].x,ends[0].z-ends[1].z);if(span>length){best=ends;length=span;}}
@@ -102,9 +103,11 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  let focusAt:{x:number;z:number;r:number}|null=null;const heldByFocus=(e:{position:{x:number;z:number}})=>focusAt!==null&&Math.hypot(e.position.x-focusAt.x,e.position.z-focusAt.z)>focusAt.r;
  const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
  // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
- const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((_,i)=>i%5===1||i%5===3))).has(entry);
+ const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
+ // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
+ const floored=entries.filter(e=>!!e.definition.floor);
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera,hideTags=false)=>{
-  stats.posed=stats.offscreenSkipped=0;if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
+  stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7;entry.stunned=Boolean(reactions?.get('npc:'+entry.id));}
   neighborhood.length=0;frozen.clear();
   for(const entry of entries){if(isThinned(entry)||heldByFocus(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}

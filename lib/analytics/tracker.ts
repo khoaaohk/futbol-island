@@ -146,7 +146,7 @@ export function startTracker(env:TrackerEnv){
   switch(area){
    case 'island':return frameMode==='walk'&&place==='deep_sea_boat'?'boat':frameMode??'other';
    case 'paths':return 'paths';case 'arcade':return 'arcade_lobby';case 'museum':return 'museum_hall';
-   case 'konbini':return 'konbini_shop';case 'controller':return 'controller';default:return 'other';
+   case 'konbini':return 'konbini_shop';case 'shop':return 'kit_shop';case 'controller':return 'controller';default:return 'other';
   }
  }
  /** Place time and heat-map cells count only in the island's world view: not in menus or Paths, and never idle. */

@@ -23,3 +23,6 @@ export const countPathLaunch=(format:string)=>count('pf:'+format);
 export const countGraduation=(key:string)=>count('gr:'+key);
 export function countReview(firstTryRight:boolean){count('rv:q');if(firstTryRight)count('rv:ok');}
 export const countReviewDone=()=>count('rv:done');
+/** The Island Tutorial (components/IslandTutorial.tsx): opened, and its last scene reached (Replay counts again). */
+export const countTutorialOpen=()=>count('tu:open');
+export const countTutorialFinish=()=>count('tu:finish');

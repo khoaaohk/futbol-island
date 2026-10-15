@@ -8,3 +8,5 @@
    The fold darkens as a strip turns edge-on; the plastic catches a highlight as it bends. Opacity only. */
 .shade{position:absolute;inset:0;background:#0f2a2f;opacity:0;pointer-events:none;will-change:opacity}
 .gloss{position:absolute;inset:0;background:linear-gradient(90deg,transparent,#ffffff8c 50%,transparent);opacity:0;pointer-events:none;will-change:opacity}
+/* The sheet's edge (thickness): card stock between two plastic faces, lit along its length. Only visible edge-on. */
+.edge{position:absolute;top:0;bottom:0;width:3px;pointer-events:none;opacity:0;background:linear-gradient(90deg,#d9c8a0,#fff6e0 45%,#c9b48a)}

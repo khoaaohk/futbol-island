@@ -54,7 +54,11 @@ export const ACTIVITIES=[
  ['exhibit_first-international-1872','Exhibit: First international, 1872'],['exhibit_floodlights-1878','Exhibit: Floodlights, 1878'],['exhibit_copa-america-1916','Exhibit: Copa América, 1916'],
  ['exhibit_offside-rules','Exhibit: Offside through time'],['exhibit_formations-history','Exhibit: Formations through time'],['exhibit_keeper-hands-1912','Exhibit: The goalkeeper’s hands, 1912'],
  ['exhibit_free-kick-wall','Exhibit: Free kicks and the wall'],['exhibit_ball-curve','Exhibit: How a ball curves'],['exhibit_throw-in','Exhibit: The throw-in'],['exhibit_ballon-dor','Exhibit: Ballon d’Or'],
- ['konbini_shop','Inside the Konbini'],['controller','Phone controller'],['other','Other / loading'],['idle','Idle (no input)'],
+ ['konbini_shop','Inside the Konbini'],
+ // Oct 16 2026: the Kit Shop's own page (/shop) had no activity of its own and was booked as "Other / loading". Needs
+ // supabase/migrations/20261016_analytics_kit_shop_activity.sql (activity_ms allowlist) before time here is counted.
+ ['kit_shop','Kit Shop (walking around)'],['kit_studio','Kit Shop: designing in a studio'],
+ ['controller','Phone controller'],['other','Other / loading'],['idle','Idle (no input)'],
 ] as const;
 export type ActivityId=typeof ACTIVITIES[number][0];
 export const ACTIVITY_IDS=ACTIVITIES.map(a=>a[0]) as readonly ActivityId[];

@@ -27,7 +27,7 @@ const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SH
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=72,'10 shared species + spot specials + the Deep Sea Boat creatures');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
+assert(FISH.length>=10&&FISH.length<=80,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026)');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -40,7 +40,7 @@ for(const f of FISH){
  assert(Array.isArray(f.spots)&&f.spots.length>=1&&f.spots.every(id=>SPOT_IDS.includes(id)),`${f.id}: lives at a real spot`);
  assert(Number.isInteger(f.price)&&f.price>=PRICE[f.rarity][0]&&f.price<=PRICE[f.rarity][1],`${f.id}: price ${f.price} fits its rarity`);
  assert(f.size[0]>0&&f.size[1]>f.size[0],`${f.id}: size range`);
- assert(FISH_SPOTS.some(s=>f.id in s.weights),`${f.id}: catchable somewhere`);
+ assert(FISH_SPOTS.some(s=>f.id in s.weights)||!!f.when&&e.load('lib/town/fishing/fishingOdds.ts').timeSpotsFor(f.id).length>0,`${f.id}: catchable somewhere (night and sunset fish: at their time)`);
  assert(f.group&&f.shape&&cat.SHADOW_LENGTH[f.shadow],`${f.id}: group, art shape and shadow size`);
 }
 // Spot-exclusive specials: at most 10 per spot, each only at its own spot, and every spot has its own.
@@ -284,7 +284,8 @@ for(const [r,w] of Object.entries(core.BITE_WINDOW)){assert(w>=.6&&w<=1,`${r} wi
  assert(renders-rendersBefore<20,'the HUD re-renders on phase changes only, not per frame');
  assert(cues.includes('tick')&&cues.includes('plunge')&&cues.includes('splash'));
  assert.equal(api.getView().hint,'Now! Reel it in!');assert(api.getView().lesson,'a keeper lesson was shown');
- api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.tap();}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
+ // Oct 15 2026: tapping Reel N times is the Easy reel option now (the default fight is covered in tests/fishing-fight.cjs).
+ api.setOptions({easyReel:true}); api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.tap();}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
  assert(cues.includes('fanfare'));assert.equal(api.drainTapEvents().filter(x=>x==='hooked').length,1);
  api.stop();assert(api.takeStop());api.end();assert.equal(api.getView().active,false);assert.equal(api.getView().catches,1);}
 

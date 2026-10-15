@@ -149,15 +149,19 @@ function PathsCard({paths}:{paths:LearningReport['paths']}){
  const launches=paths.launches.map(l=>({...bar(l.format,FORMAT_LABEL[l.format],l.sessions,l.launches===null?undefined:`${fmtInt(l.launches)} launches`)}));
  const grads=paths.grads.map(g=>bar(g.key,g.label.replace(/^(\w+) path$/,(_,f)=>`${FORMAT_LABEL[f]||f} path`),g.sessions));
  const r=paths.reviews,right=r.answered&&r.right!==null?r.right/r.answered:null;
- const none=paths.launches.every(l=>l.sessions===0)&&paths.grads.every(g=>g.sessions===0)&&r.answered===0&&r.done===0;
- return <ChartCard title="Paths, graduations and warm-ups" subtitle="Sessions that launched a Paths lesson by format, graduations earned, and the daily warm-up" empty={none} emptyText={EMPTY}
+ const t=paths.tutorial,tutorial=[bar('tu:open','Opened the Island Tutorial',t.open),bar('tu:finish','Watched it to the end',t.finish,t.open&&t.finish!==null?`${fmtPct(t.finish/t.open)} of those who opened it`:undefined)];
+ const none=paths.launches.every(l=>l.sessions===0)&&paths.grads.every(g=>g.sessions===0)&&r.answered===0&&r.done===0&&t.open===0&&t.finish===0;
+ return <ChartCard title="Paths, graduations and warm-ups" subtitle="Sessions that launched a Paths lesson by format, graduations earned, the daily warm-up and the Island Tutorial" empty={none} emptyText={EMPTY}
   table={{columns:['Measure','Sessions / count'],rows:[...launches.map(l=>['Paths launches: '+l.label,l.text??l.value]),...grads.map(g=>['Graduated: '+g.label,g.text??g.value]),
-   ['Warm-up questions answered',show(r.answered)],['Warm-up right first time',show(r.right)],['Warm-ups finished (sessions)',show(r.done)]]}}>
+   ['Warm-up questions answered',show(r.answered)],['Warm-up right first time',show(r.right)],['Warm-ups finished (sessions)',show(r.done)],
+   ...tutorial.map(x=>[x.label+' (sessions)',x.text??x.value])]}}>
   <p className={styles.miniHead}>Paths format share</p>
   <BarList rows={launches} unit="sessions" limit={launches.length}/>
   <p className={styles.miniHead}>Graduations earned</p>
   <BarList rows={grads} unit="sessions" share={false} limit={grads.length}/>
   <div className={styles.lengthStats}><span>Warm-up answers <b>{show(r.answered)}</b></span><span>Right first time <b>{right===null?'—':fmtPct(right)}</b></span><span>Warm-ups finished <b>{show(r.done)}</b></span></div>
+  <p className={styles.miniHead}>Island Tutorial</p>
+  <BarList rows={tutorial} unit="sessions" share={false} limit={tutorial.length}/>
  </ChartCard>;
 }
 

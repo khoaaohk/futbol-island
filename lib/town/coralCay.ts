@@ -327,7 +327,7 @@ export const inHostelArea=(x:number,z:number)=>x>536&&x<589.5&&z>-131&&z<-84;
 // ---------------------------------------------------------------------------------------------------------------
 // Roundabout (Sep 29 2026): where the causeway reaches Coral Cay. One-way, anticlockwise as seen on the map (traffic
 // keeps right; the circulating lane is on the outside of the node circle). Arms: west = causeway, east = boulevard.
-export const ROUNDABOUT={x:524,z:-159,nodeRadius:8.5,island:6.6,roadInner:7,roadOuter:13,walkOuter:14.6,nodes:12} as const;
+export const ROUNDABOUT={x:524,z:-159,nodeRadius:8.5,island:7,roadInner:7,roadOuter:13,walkOuter:14.6,nodes:12} as const;
 /** The welcome arch stands just east of the roundabout, where the boulevard starts. */
 /** pierOffset: each pier's centre is this far either side of the road's centre line (z ± pierOffset), on the pavement
  *  between the 4 m kerb and the 7 m deck edge; pierWidth: the square piers' side (m). */

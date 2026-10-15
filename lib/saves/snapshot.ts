@@ -41,6 +41,7 @@ export const SYNC_KEYS:readonly string[]=[
  // second device cannot reset Rosa's same-kind ladder.
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
+ 'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): spot records, legends, requests, lures, Fishbook rewards, derby bests
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
@@ -63,6 +64,10 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  // Coaches Board plays stay on the device (user, Oct 9 2026): play names are typed text and could name a child. Share links move them.
  // Summit Isle easel paintings (Oct 14 2026): child-made pictures stay on the device (never synced, never sent anywhere).
  'fi2-paintings-v1',
+ // Fishing (Oct 15 2026): the first-time ghost-hand tutorial seen, and the Easy reel choice (a per-device control preference).
+ 'fi2-fish-tutorial-v1','fi2-fish-easy-reel-v1',
+ // Fishing (Oct 15 2026): photo-mode snapshots (small JPEGs under a 300 KB budget, child-made: never synced) and the weather on/off choice.
+ 'fi2-fish-photos-v1','fi2-fish-weather-v1',
  'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */
 export const SAVE_CODE_KEY='fi2-save-code-v1',SAVE_SYNC_KEY='fi2-save-sync-v1',SAVE_BACKUP_KEY='fi2-save-backup-v1',
@@ -80,7 +85,7 @@ const SYNC=new Set(SYNC_KEYS);
 export const isSyncKey=(key:unknown):key is string=>typeof key==='string'&&(SYNC.has(key)||ARCADE_RECORD_KEY.test(key));
 
 /** Size caps (doc §4.1 Limits). The server enforces them too. */
-export const MAX_SNAPSHOT_BYTES=512*1024,MAX_GZIP_BYTES=128*1024,MAX_KEY_BYTES=256*1024,KEEPALIVE_BYTES=64*1024;
+export const MAX_SNAPSHOT_BYTES=512*1024,MAX_GZIP_BYTES=192*1024,MAX_KEY_BYTES=256*1024,KEEPALIVE_BYTES=64*1024;
 
 /** `played` (ms, optional): when the island last changed on the device that saved it ("newest wins", doc §4.4). */
 export type Snapshot={format:number;game:string;keys:Record<string,string>;played?:number};

@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {CAMERA_RIDE} from './boatMotion';
 
 /**
  * The low shoreline camera for live fishing (docs/fishing.md, framing reference docs/fishing-visuals-ref.png).
@@ -14,7 +15,7 @@ export const CAMERA_IN_S=.9,CAMERA_OUT_S=.8;
 type P={x:number;z:number};
 
 export function createFishingCamera(){
- let t=0,dir:0|1|-1=0,arrived:(()=>void)|null=null,aspect=0,shot={stand:{x:0,z:0} as P,d:{x:0,z:1} as P,D:6},nudge:{lift?:number;out?:number;look?:number}={};
+ let rideTarget=0,rideY=0,t=0,dir:0|1|-1=0,arrived:(()=>void)|null=null,aspect=0,shot={stand:{x:0,z:0} as P,d:{x:0,z:1} as P,D:6},nudge:{lift?:number;out?:number;look?:number}={};
  const pos=new T.Vector3(),look=new T.Vector3(),follow=new T.Vector3(),mix=new T.Vector3(),viewDir=new T.Vector3(-16,-23,-33).normalize();
  const oFrom=new T.Vector3(),oTo=new T.Vector3(),v=new T.Vector3(),fwd=new T.Vector3(0,0,1),qa=new T.Quaternion(),qb=new T.Quaternion();
  function aim(a:number){
@@ -27,7 +28,12 @@ export function createFishingCamera(){
   /** Ease in toward the shot for an angler at `stand` casting along `d` (unit) to distance `D`; `onArrive` fires once there. */
   begin(stand:P,d:P,D:number,onArrive?:()=>void,spotNudge:{lift?:number;out?:number;look?:number}={}){shot={stand:{...stand},d:{...d},D};nudge=spotNudge;aim(aspect||1.6);dir=1;arrived=onArrive??null;},
   /** Ease back to the normal follow camera. */
-  end(){dir=-1;arrived=null;},
+  end(){dir=-1;arrived=null;rideTarget=0;},
+  /** Oct 15 2026 (the deep-sea boats ride the swell, ./boatMotion.ts): the deck's heave in metres. The shot follows CAMERA_RIDE of
+   *  it, smoothed, and none of the tilt, so the view stays steady (never seasick); 0 on shore. */
+  ride(heave:number){rideTarget=heave;},
+  /** The camera's current ride offset (m), for tests. */
+  get rideOffset(){return rideY;},
   get easing(){return dir!==0||t>0;},
   /** Fully on the fishing shot (not easing in or out): the island may freeze its background (lib/graphics/focusMode.ts). */
   get arrived(){return dir===1&&t>=1;},
@@ -39,6 +45,8 @@ export function createFishingCamera(){
    const k=easeInOut(t),hit=viewDir.y<-1e-3?-camera.position.y/viewDir.y:40;follow.copy(camera.position).addScaledVector(viewDir,Math.min(hit,80));
    mix.lerpVectors(follow,look,k);oFrom.copy(camera.position).sub(follow);oTo.copy(pos).sub(look);const len=T.MathUtils.lerp(oFrom.length(),oTo.length(),k);
    qa.setFromUnitVectors(fwd,oFrom.normalize());qb.setFromUnitVectors(fwd,oTo.normalize());qa.slerp(qb,k);
+   // The boat ride: a small, damped share of the heave on the shot (position and look move together: no tilt).
+   rideY+=((reduced?0:rideTarget*CAMERA_RIDE)-rideY)*(reduced?1:1-Math.exp(-step*2.5));if(rideY!==0)mix.y+=rideY*k;
    camera.position.copy(mix).addScaledVector(v.copy(fwd).applyQuaternion(qa),len);camera.lookAt(mix);
    if(t>=1&&arrived){const fn=arrived;arrived=null;fn();}
    if(dir<0&&t<=0)dir=0;

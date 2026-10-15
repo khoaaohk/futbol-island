@@ -63,15 +63,19 @@ export function canvasPose(s:EaselSpot){
 }
 
 /** The seated camera: behind and above the painter, looking out over the canvas to the sea and the main island. */
-export const EASEL_CAMERA={back:2.1,side:1.05,eye:2.45,pitchDeg:-6,
+export const EASEL_CAMERA={back:2.1,side:1.05,eye:2.45,
+ /** "Just look" (Oct 15 2026, "can we see less skyline?"): the horizon sits this high above the screen's centre (NDC), so the sea,
+  *  the beach and the main island fill most of the view and the sky is a band at the top (was a fixed -6° pitch: ~45% sky on a phone). */
+ lookHorizon:.4,
  /** Horizontal half-angle (degrees) the visible part of the view should span on narrow screens; the FOV is clamped to fovMin…fovMax. */
  halfDeg:30,fovMin:42,fovMax:96,far:1300,
  /** The blend in and out (s), and the "Just look" drift: ±yaw/pitch degrees over a period (s). Off with reduced motion. */
  blendIn:1.1,blendOut:.7,driftYaw:1.1,driftPitch:.35,driftPeriod:48} as const;
-export function easelCamera(s:EaselSpot){
+/** The "Just look" camera. `fov` (vertical, degrees: easelFov for the screen) sets the pitch that puts the horizon at lookHorizon. */
+export function easelCamera(s:EaselSpot,fov=60){
  // Over the painter's shoulder, a step to the right: the easel sits low at the left of the frame, the view open in the middle.
  const b=easelPoint(s,-EASEL_CAMERA.back,EASEL_CAMERA.side),g=Math.max(summitGround(b.x,b.z),s.ground);
- return {x:b.x,y:g+EASEL_CAMERA.eye,z:b.z,yaw:s.yaw,pitch:EASEL_CAMERA.pitchDeg*Math.PI/180};
+ return {x:b.x,y:g+EASEL_CAMERA.eye,z:b.z,yaw:s.yaw,pitch:-Math.atan(EASEL_CAMERA.lookHorizon*Math.tan(fov*Math.PI/360))};
 }
 /** Vertical FOV (degrees) so the visible region (the screen minus the painting card) spans ~halfDeg either side of centre. */
 export function easelFov(visibleAspect:number,visibleFraction=1){
@@ -84,10 +88,12 @@ export function easelFov(visibleAspect:number,visibleFraction=1){
  *  the lower part of a phone (above the one-row tool tray) or the lower left of a wide screen (the palette tray beside it), the camera
  *  looking straight out to the main island so the sea and the horizon stay open above it. Values in NDC (-1…1):
  *  `bottom` the board's lower edge (phones: clear of the tray), `left` its left edge (wide screens; phones centre it), `width` the
- *  most of the screen width it may take, `half` the most half-height, `horizon` where the horizon sits. */
+ *  most of the screen width it may take, `half` the most half-height, `horizon` where the horizon sits (Oct 15 2026, "can we see
+ *  less skyline?": raised from .24 / .42, so the camera tilts down and the sky is only a band at the top of the screen, the island,
+ *  the sea and the beach filling the space between it and the board). */
 export const EASEL_PAINT_FRAME={
- phone:{fov:76,bottom:-.76,left:null,width:.92,half:.34,horizon:.24},
- wide:{fov:54,bottom:-.8,left:-.84,width:.4,half:.5,horizon:.42},
+ phone:{fov:76,bottom:-.76,left:null,width:.92,half:.34,horizon:.54},
+ wide:{fov:54,bottom:-.8,left:-.84,width:.4,half:.5,horizon:.58},
  /** The camera never comes closer to the board than this (m), nor lower than this above the ground. */
  minDepth:.85,minEye:.7,
 } as const;
@@ -106,10 +112,14 @@ export function easelPaintCamera(s:EaselSpot,aspect:number){
  y=Math.max(y,summitGround(x,z)+EASEL_PAINT_FRAME.minEye);
  return {x,y,z,yaw,pitch,fov:F.fov};
 }
-/** The "trace" snapshot's camera: standing at the easel looking out at the view (the easel behind it), 4:3 centre crop ±30°. */
+/** The view snapshot (trace and the picture styles): standing at the easel looking out at the view (the easel behind it), a 4:3
+ *  centre crop ±VIEW_SHOT.halfDeg wide, aimed down so the horizon sits VIEW_SHOT.horizon from the top: mostly island, sea and beach,
+ *  a strip of sky (was ±30° at -4°: the top ~40% blank sky). */
+export const VIEW_SHOT={halfDeg:25,horizon:.2} as const;
 export function easelViewCamera(s:EaselSpot,aspect:number){
- const C=EASEL_CAMERA,tanV=Math.tan(C.halfDeg*Math.PI/180)/Math.min(Math.max(.3,aspect),PAINT_W/PAINT_H);
- return {x:s.x+s.fx*.4,y:s.ground+1.75,z:s.z+s.fz*.4,yaw:s.yaw,pitch:-4*Math.PI/180,fov:2*Math.atan(tanV)*180/Math.PI};
+ const tanH=Math.tan(VIEW_SHOT.halfDeg*Math.PI/180),tanCrop=tanH/(PAINT_W/PAINT_H),tanV=tanH/Math.min(Math.max(.3,aspect),PAINT_W/PAINT_H);
+ const pitch=-Math.atan((1-2*VIEW_SHOT.horizon)*tanCrop);
+ return {x:s.x+s.fx*.4,y:s.ground+1.75,z:s.z+s.fz*.4,yaw:s.yaw,pitch,fov:2*Math.atan(tanV)*180/Math.PI};
 }
 /** Where a point on the board's plane (offset a along its right, b along its up, metres from the centre) lands on the paper (px). */
 export const boardToPaper=(a:number,b:number,w:number,h:number)=>({x:(a/w+.5)*PAINT_W,y:(.5-b/h)*PAINT_H});
@@ -157,14 +167,15 @@ export const hexToRgb=(hex:string)=>{const n=parseInt(hex.replace('#','').slice(
 export const rgbToHex=(r:number,g:number,b:number)=>'#'+[r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
 
 /** Scanline flood fill in RGBA `data` (w×h) from (x, y) with `rgba` (0–255 each). Pixels within `tol` (max channel difference,
- *  alpha included) of the start pixel are filled. Returns the number of pixels changed. */
-export function floodFill(data:Uint8ClampedArray,w:number,h:number,x:number,y:number,rgba:readonly [number,number,number,number],tol=FILL_TOLERANCE){
+ *  alpha included) of the start pixel are filled. Returns the number of pixels changed. With `target` (same size), the region is
+ *  found in `data` but painted into `target` (a style picture under the paint: fill its shapes, colouring-book style, on the paint). */
+export function floodFill(data:Uint8ClampedArray,w:number,h:number,x:number,y:number,rgba:readonly [number,number,number,number],tol=FILL_TOLERANCE,target?:Uint8ClampedArray){
  x|=0;y|=0;if(x<0||y<0||x>=w||y>=h)return 0;
  const i0=(y*w+x)*4,sr=data[i0],sg=data[i0+1],sb=data[i0+2],sa=data[i0+3];
  if(Math.max(Math.abs(sr-rgba[0]),Math.abs(sg-rgba[1]),Math.abs(sb-rgba[2]),Math.abs(sa-rgba[3]))===0)return 0;
  const seen=new Uint8Array(w*h);
  const match=(p:number)=>{if(seen[p])return false;const i=p*4;return Math.abs(data[i]-sr)<=tol&&Math.abs(data[i+1]-sg)<=tol&&Math.abs(data[i+2]-sb)<=tol&&Math.abs(data[i+3]-sa)<=tol;};
- const set=(p:number)=>{seen[p]=1;const i=p*4;data[i]=rgba[0];data[i+1]=rgba[1];data[i+2]=rgba[2];data[i+3]=rgba[3];};
+ const out=target??data,set=(p:number)=>{seen[p]=1;const i=p*4;out[i]=rgba[0];out[i+1]=rgba[1];out[i+2]=rgba[2];out[i+3]=rgba[3];};
  const stack:number[]=[x,y];let n=0;
  while(stack.length){const sy=stack.pop()!,sx=stack.pop()!;let lx=sx;const row=sy*w;if(!match(row+lx))continue;
   while(lx>0&&match(row+lx-1))lx--;let rx=sx;while(rx<w-1&&match(row+rx+1))rx++;
@@ -187,7 +198,8 @@ export const PAINT_SAVE_KEY='fi2-paintings-v1';
 /** Keep the newest MAX paintings, each at most ITEM_BYTES (a data URL), all of them under TOTAL_BYTES. */
 export const PAINT_BUDGET={max:5,itemBytes:90*1024,totalBytes:300*1024} as const;
 export type Painting={id:string;at:number;img:string};
-export type PaintSave={version:1;items:Painting[]};
+/** `hung`: the painting on the easel in the world ("Hang on easel"); unset, the newest hangs there. */
+export type PaintSave={version:1;items:Painting[];hung?:string};
 export const emptyPaintSave=():PaintSave=>({version:1,items:[]});
 const IMG_RE=/^data:image\/(?:webp|jpeg|png);base64,[A-Za-z0-9+/]+=*$/;
 export const validPaintingImage=(v:unknown):v is string=>typeof v==='string'&&v.length<=PAINT_BUDGET.itemBytes&&IMG_RE.test(v);
@@ -196,26 +208,33 @@ export function sanitizePaintSave(v:unknown):PaintSave{
  const items:Painting[]=[],ids=new Set<string>();
  for(const p of (v as PaintSave).items){if(!p||typeof p!=='object')continue;const {id,at,img}=p as Painting;
   if(typeof id!=='string'||!/^[a-z0-9-]{1,40}$/.test(id)||ids.has(id)||!Number.isFinite(at)||!validPaintingImage(img))continue;ids.add(id);items.push({id,at,img});}
- items.sort((a,b)=>b.at-a.at);return fitBudget({version:1,items}).save;
+ items.sort((a,b)=>b.at-a.at);const hung=(v as PaintSave).hung;return fitBudget(withHung({version:1,items},typeof hung==='string'?hung:undefined)).save;
 }
+/** The save with `hung` kept only while it names one of its paintings. */
+const withHung=(s:PaintSave,hung:string|undefined):PaintSave=>hung&&s.items.some(p=>p.id===hung)?{version:1,items:s.items,hung}:{version:1,items:s.items};
 export const paintSaveBytes=(s:PaintSave)=>s.items.reduce((n,p)=>n+p.img.length+40,0);
 /** Newest first; drops the oldest until it fits MAX and TOTAL_BYTES. */
 export function fitBudget(s:PaintSave):{save:PaintSave;dropped:string[]}{
  const items=[...s.items].sort((a,b)=>b.at-a.at),dropped:string[]=[];
  while(items.length>PAINT_BUDGET.max||(items.length>1&&paintSaveBytes({version:1,items})>PAINT_BUDGET.totalBytes))dropped.push(items.pop()!.id);
- return {save:{version:1,items},dropped};
+ return {save:withHung({version:1,items},s.hung),dropped};
 }
 /** Adds a painting (newest first). Refused (unchanged) if the image is not a small data URL. */
 export function addPainting(s:PaintSave,p:Painting):{save:PaintSave;added:boolean;dropped:string[]}{
  if(!validPaintingImage(p.img)||!/^[a-z0-9-]{1,40}$/.test(p.id))return {save:s,added:false,dropped:[]};
- const r=fitBudget({version:1,items:[p,...s.items.filter(q=>q.id!==p.id)]});return {save:r.save,added:true,dropped:r.dropped};
+ const r=fitBudget(withHung({version:1,items:[p,...s.items.filter(q=>q.id!==p.id)]},s.hung));return {save:r.save,added:true,dropped:r.dropped};
 }
-export const removePainting=(s:PaintSave,id:string):PaintSave=>({version:1,items:s.items.filter(p=>p.id!==id)});
+/** Removes a painting; if it was the one on the easel, the newest left hangs there instead (none left: a bare board). */
+export const removePainting=(s:PaintSave,id:string):PaintSave=>withHung({version:1,items:s.items.filter(p=>p.id!==id)},s.hung===id?undefined:s.hung);
+/** "Hang on easel": this painting shows on the easel in the world (refused, unchanged, if it is not in the save). */
+export const hangPainting=(s:PaintSave,id:string):PaintSave=>withHung(s,id).hung===id?withHung(s,id):s;
+/** The painting on the easel in the world: the one hung there, else the newest; null with none saved. */
+export const hungPainting=(s:PaintSave):Painting|null=>s.items.find(p=>p.id===s.hung)??s.items[0]??null;
 type Store={getItem(k:string):string|null;setItem(k:string,v:string):void};
 export function readPaintings(store?:Store|null):PaintSave{try{const st=store??(typeof localStorage!=='undefined'?localStorage:null);return sanitizePaintSave(JSON.parse(st?.getItem(PAINT_SAVE_KEY)??'null'));}catch{return emptyPaintSave();}}
 /** Writes the save; when the device is full, drops the oldest paintings and tries again. Returns what was stored (null: nothing). */
 export function writePaintings(s:PaintSave,store?:Store|null):PaintSave|null{
  const st=store??(typeof localStorage!=='undefined'?localStorage:null);if(!st)return null;let cur=s;
- for(;;){try{st.setItem(PAINT_SAVE_KEY,JSON.stringify(cur));return cur;}catch{if(cur.items.length<=1)return null;cur={version:1,items:cur.items.slice(0,-1)};}}
+ for(;;){try{st.setItem(PAINT_SAVE_KEY,JSON.stringify(cur));return cur;}catch{if(cur.items.length<=1)return null;cur=withHung({version:1,items:cur.items.slice(0,-1)},cur.hung);}}
 }
 export const newPaintingId=(now:number,rand:number)=>`p-${Math.floor(now).toString(36)}-${Math.floor(rand*1e6).toString(36)}`;

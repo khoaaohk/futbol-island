@@ -7,7 +7,7 @@
  * the island itself, never from the every-page tracker bundle (tests/admin-analytics-places.cjs checks that tracker.ts,
  * islandIds.ts and core.ts stay geometry-free; this file is a sibling, not an import of theirs).
  *
- * Privacy: totals only. Fruit kind and shake method, which of the three fishing spots, which travel mode — never a
+ * Privacy: totals only. Fruit kind and shake method, which of the four summit fishing spots, which travel mode — never a
  * position, a time, or anything that could rebuild a route.
  */
 import {count} from './tracker';

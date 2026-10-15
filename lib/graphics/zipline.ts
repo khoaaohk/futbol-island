@@ -7,7 +7,7 @@
  *    fruit trees' way), through the HUD arbiter like every proximity prompt. E works too.
  *  - The ride, on Town's fixed 60 Hz tick (holdPlayer): clip on (a hop onto the launch spot, arms up to the handle), the ride along
  *    the sagging cable on a fixed speed profile (ZIP_RIDE.seconds whatever the frame rate), the landing (legs reach for the deck,
- *    feet down, let go). The stick only turns the camera (and the rider's head) to look around.
+ *    feet down, let go). The stick (or a drag on the scene) only turns the camera (and the rider's head) to look around.
  *  - The grip (user, after riding it: "the arms are not on the handle"): the handle bar hangs from the trolley on a short strap and
  *    the BODY is placed from the bar: the bar's point in the rider's own frame (ZIP_GRIP) is put exactly on the drawn bar, and
  *    player.ts solves both arms onto it (two-bone, in the chest's frame), so both mittens close round the bar at the same two
@@ -23,13 +23,21 @@
  *    never above 30 m/s, extra speed lines and wind), Spin (a 360° turn on the swivel, a whoosh) and Wave (one hand lets go and
  *    waves; the other never leaves the bar). Space / Q / E, or 1 / 2 / 3. None can stop, slow or move the ride or its landing.
  *  - The camera follows from behind and a little to the east (the follow camera's side), looking down the cable over the sea to
- *    Coral Cay; it is a pure function of the drawn ride (interpolated between ticks like the player) plus an eased look offset, so
- *    it is smooth at any frame rate; it blends in from and back out to the follow camera.
+ *    Coral Cay; it is a pure function of the drawn ride plus the look-around, so it is smooth at any frame rate; it blends in from
+ *    and back out to the follow camera.
+ *  - Smooth on phones (Oct 15 2026, user: "it can still be a little jittery … moving around while on the zipline should be
+ *    smoother"): every drawn thing (rider, rig pose, handle, straps, trolley, speed lines, camera) reads ONE interpolation of the
+ *    tick history per frame, at the ride clock's instant (lib/town/zipline.ts createRideClock: steps in whole display refreshes, so
+ *    rAF timestamp wobble no longer shakes the whole screen); the look-around (stick, A/D ←/→, or a drag on the scene with a
+ *    fling) is a critically damped spring on an eased, soft-limited aim (ZIP_LOOK), back to the middle when let go; the ride
+ *    holds the heat governor and the shadow box (ports.hold) so no tier or texel-size change lands mid-ride; the speed lines'
+ *    shader compiles at the clip-on.
  *  - The tab hiding (or the page going away) mid-ride finishes the ride at once on the roof deck: never stuck in the air.
  * Reduced motion: a calm camera, a damped swing (half), no sideways sway or cable buzz, a half bounce, gentler legs, a slower spin,
  * a third of the speed lines, no hop.
  *
- * Heat: nothing at rest. Off Summit Isle update() is one box test; near the tower a distance. The trolley (a few small meshes) and
+ * Heat: nothing at rest (the pointer listeners for the drag exist only while riding). Off Summit Isle update() is one box test;
+ * near the tower a distance. The trolley (a few small meshes) and
  * the speed lines (ONE instanced mesh, one draw call) are built when a ride starts and disposed when it ends; the ride's maths runs
  * only while riding, on preallocated typed arrays and vectors (no allocation per tick or frame); no timers, no rAF, one keydown and
  * one visibilitychange listener.
@@ -37,7 +45,7 @@
 import * as T from 'three';
 import {ZIP_RIDE,ZIP_LAUNCH,ZIP_LAND,ZIP_DECK,ZIP_DIR,ZIP_TOP_SPEED,ZIP_NOTES,ZIP_GRIP,ZIP_STRAP,ZIP_TROLLEY_DROP,ZIP_TUCK,ZIP_SPIN,ZIP_WAVE,
  towerReach,nearTower,zipStore,zipActions,cableInto,cableGrade,rideProgress,rideSpeed,tuckRate,zipKeyAction,
- type ZipActionId,type ZipRigPose,type ZipPoint} from '../town/zipline';
+ createRideClock,softLook,stickLook,springTo,ZIP_LOOK,type ZipActionId,type ZipRigPose,type ZipPoint} from '../town/zipline';
 import {countZiplineRide} from '../analytics/summitEvents';
 
 type Ports={
@@ -58,6 +66,9 @@ type Ports={
  haptic?:()=>void;
  /** Something else holds the player (a job, a kick round, a pose): no ride now. */
  busy?:()=>boolean;
+ /** The ride is on (true at the clip-on, false once it ends): Town holds the heat governor's judgement (no tier change: a
+  *  resolution or frame-rate switch mid-ride) and the shadow box (grow only) for these ~15 fast seconds. */
+ hold?:(on:boolean)=>void;
 };
 export type ZiplineUpdate={
  x:number;z:number;
@@ -72,6 +83,8 @@ type Phase='idle'|'arriving'|'clip'|'ride'|'land';
 const F={X:0,Y:1,Z:2,PX:3,PY:4,PZ:5,SWING:6,ROLL:7,YAW:8,SPEED:9,SPIN:10,BOUNCE:11,W:12,DROP:13,SX:14,SY:15,SZ:16,BARY:17,BARZ:18,WAVE:19,WPH:20,PELY:21,PELZ:22,TX:23,TY:24,TZ:25,HX:26,HY:27,SPREAD:28,HIPL:29,HIPR:30,KNL:31,KNR:32,ANL:33,ANR:34,TUCK:35,N:36} as const;
 const G=9.8,PENDULUM=1.5,ARRIVAL_WAIT=4;
 const LINES=28,LINES_TUCK=44;
+/** Tick history kept for drawing (the drawn instant may sit a little behind Town's: lib/town/zipline.ts createRideClock). */
+const HIST=6;
 const lerp=(a:number,b:number,k:number)=>a+(b-a)*k;
 const smooth=(k:number)=>{const t=Math.max(0,Math.min(1,k));return t*t*(3-2*t);};
 const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
@@ -83,17 +96,25 @@ export function createZipline(scene:T.Scene,ports:Ports){
  /** Clip-on start (feet), the last placed location (a map trip mid-ride ends it). */
  const from={x:0,y:0,z:0},placed={x:0,z:0};
  /** The tick's physics: the fore-aft swing and the sideways sway (angle, rate), the strap's bounce, the last speeds. */
- let swing=0,swingV=0,roll=0,rollV=0,bounce=0,bounceV=0,prevSpeed=0,prevVy=0,whooshAt=0,landed=false,fresh=true;
+ let swing=0,swingV=0,roll=0,rollV=0,bounce=0,bounceV=0,prevSpeed=0,prevVy=0,whooshAt=0,landed=false;
  /** The actions: tuck held, its eased amount and the time rate it gives; the spin's and the wave's clocks (−1 = none). */
  let tuckHeld=false,tuckW=0,rate=1,tuckWhooshAt=-9,spinT=-1,spinDur:number=ZIP_SPIN.seconds,waveT=-1,cyclePhase=0;
- const prev=new Float64Array(F.N),cur=new Float64Array(F.N),draw=new Float64Array(F.N);
+ const cur=new Float64Array(F.N),draw=new Float64Array(F.N);
+ /** The last HIST ticks (a ring: `hist` rows, `histT` their ride-clock times, tick n at n/60 s) and the drawing clock. Every drawn
+  *  thing (the rider, the rig pose, the handle, the straps, the trolley, the speed lines, the camera) reads ONE interpolation of it
+  *  per frame, at the clock's instant; `frameStep` is how far that instant moved this frame (the per-frame effects step by it). */
+ const hist=new Float64Array(F.N*HIST),histT=new Float64Array(HIST);let histN=0,histHead=-1,tickNo=0,drawT=NaN,frameStep=0;
+ const clock=createRideClock();
  /** The drawn ride for the camera and tests (named fields; filled from `draw`). */
- const drawn={x:0,y:0,z:0,px:0,py:0,pz:0,swing:0,roll:0,yaw:0,speed:0,spin:0,tuck:0,wave:0};
+ const drawn={x:0,y:0,z:0,px:0,py:0,pz:0,swing:0,roll:0,yaw:0,speed:0,spin:0,tuck:0,wave:0,look:0,t:0};
  /** The rider's pose for player.ts (filled in place each frame). */
  const rig:ZipRigPose={w:0,barY:ZIP_GRIP.y,barZ:ZIP_GRIP.z,half:ZIP_GRIP.half,free:1,wave:0,wavePhase:0,py:.94,pz:0,pike:0,tx:0,ty:0,tz:0,hx:0,hy:0,spread:0,
   hipL:0,hipR:0,kneeL:0,kneeR:0,ankleL:0,ankleR:0};
- /** Camera blend (0 = Town's follow camera, 1 = the ride camera) and the eased look-around offset (radians). */
- let blend=0,look=0,lookWant=0,camActive=false;
+ /** Camera blend (0 = Town's follow camera, 1 = the ride camera). The look-around (lib/town/zipline.ts ZIP_LOOK): the spring
+  *  (`lookS.x` radians, + = to the right; `lookS.v` its rate), the stick's aim (−1 … 1, set on the tick), the drag's aim (radians
+  *  before the soft limit), its fling rate after a release and the time since, and the finger being followed. */
+ let blend=0,camActive=false,stickAim=0,dragAim=0,dragV=0,dragVel=0,dragging=false,dragId=-1,dragX=0,dragT=0,releaseAge=9;
+ const lookS={x:0,v:0};let lookAim=0;
  const stats={rides:0,busyTicks:0,spins:0,waves:0,tucks:0,get phase(){return phase;},get blend(){return blend;},get rate(){return rate;}};
  // ---- the ride's meshes (built at the launch, disposed after)
  let root:T.Group|null=null,lines:T.InstancedMesh|null=null,trolley:T.Group|null=null,handle:T.Group|null=null,straps:T.Mesh[]=[];const geos:T.BufferGeometry[]=[],mats:T.Material[]=[];
@@ -121,10 +142,17 @@ export function createZipline(scene:T.Scene,ports:Ports){
   // Speed lines: thin white streaks in a loose tube round the rider, streaming back past them (one instanced draw); a tuck adds more.
   const n=reduced?Math.round(LINES_TUCK/3):LINES_TUCK,g=new T.BoxGeometry(.03,.03,2.2),m=new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:0,depthWrite:false});geos.push(g);mats.push(m);
   lines=new T.InstancedMesh(g,m,n);lines.name='zipline-speed-lines';lines.frustumCulled=false;lines.castShadow=false;lines.receiveShadow=false;
+  // Drawn (one transparent streak) from the clip-on, so its shader compiles as the rider grabs the handle, not mid-ride when the
+  // lines first appear (a phone's compile stall there was a visible hitch on every ride: the materials are new each ride).
+  lines.count=1;
   linePos.length=0;for(let i=0;i<n;i++)linePos.push(streak({a:0,r:0,along:0},-3+Math.random()*39));
   root.add(lines);scene.add(root);
+  if(typeof window!=='undefined'&&!listening){listening=true;window.addEventListener('pointerdown',onPointerDown,true);window.addEventListener('pointermove',onPointerMove,true);
+   window.addEventListener('pointerup',onPointerUp,true);window.addEventListener('pointercancel',onPointerUp,true);}
  }
- function dispose3d(){if(root){root.removeFromParent();root=null;}lines?.dispose();lines=null;trolley=null;handle=null;straps=[];geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());geos.length=0;mats.length=0;}
+ function dispose3d(){if(listening){listening=false;dragging=false;dragId=-1;if(typeof window!=='undefined'){window.removeEventListener('pointerdown',onPointerDown,true);
+   window.removeEventListener('pointermove',onPointerMove,true);window.removeEventListener('pointerup',onPointerUp,true);window.removeEventListener('pointercancel',onPointerUp,true);}}
+  if(root){root.removeFromParent();root=null;}lines?.dispose();lines=null;trolley=null;handle=null;straps=[];geos.forEach(g=>g.dispose());mats.forEach(m=>m.dispose());geos.length=0;mats.length=0;}
 
  const yaw=ZIP_DIR.yaw;
  function startRide(){
@@ -136,9 +164,12 @@ export function createZipline(scene:T.Scene,ports:Ports){
  }
  function resetActions(){tuckHeld=false;tuckW=0;rate=1;tuckWhooshAt=-9;spinT=-1;waveT=-1;cyclePhase=0;}
  function clipOn(){
-  const p=ports.where();from.x=p.x;from.z=p.z;from.y=p.y;prev.fill(0);cur.fill(0);draw.fill(0);fresh=true;
-  phase='clip';age=0;rideT=0;swing=swingV=roll=rollV=bounce=bounceV=0;prevSpeed=prevVy=0;whooshAt=0;landed=false;look=lookWant=0;resetActions();stats.rides++;
-  build();camActive=true;zipStore.set({riding:true,note:ZIP_NOTES.start,notes:zipStore.get().notes+1});
+  const p=ports.where();from.x=p.x;from.z=p.z;from.y=p.y;cur.fill(0);draw.fill(0);
+  phase='clip';age=0;rideT=0;swing=swingV=roll=rollV=bounce=bounceV=0;prevSpeed=prevVy=0;whooshAt=0;landed=false;resetActions();stats.rides++;
+  lookS.x=lookS.v=lookAim=0;stickAim=dragAim=dragV=dragVel=0;dragging=false;dragId=-1;releaseAge=9;
+  // The first tick state now (standing at the clip-on spot), so a frame drawn before the next tick never shows an empty state.
+  histN=0;histHead=-1;tickNo=0;drawT=NaN;frameStep=0;clock.reset();sample(cur,0);push();
+  build();camActive=true;setHold(true);zipStore.set({riding:true,note:ZIP_NOTES.start,notes:zipStore.get().notes+1});
   if(typeof document!=='undefined')document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:'select'}));ports.haptic?.();
   countZiplineRide();// admin analytics: a zipline ride
  }
@@ -150,12 +181,14 @@ export function createZipline(scene:T.Scene,ports:Ports){
    if(!quiet&&!landed)ports.touchdown?.(ZIP_LAND.x,ZIP_DECK.height,ZIP_LAND.z);
    zipStore.set({riding:false,note:quiet?'':ZIP_NOTES.land,notes:zipStore.get().notes+(quiet?0:1)});}
   else zipStore.set({riding:false});
-  dispose3d();
+  dispose3d();setHold(false);
   // The camera eases back to the follow camera (applyCamera), or snaps when the tab was hidden.
   if(quiet){blend=0;camActive=false;}
  }
  /** Stop without moving the player (a map trip moved them already). */
- function abandon(){phase='idle';resetActions();dispose3d();blend=0;camActive=false;zipStore.set({riding:false});}
+ function abandon(){phase='idle';resetActions();dispose3d();setHold(false);blend=0;camActive=false;zipStore.set({riding:false});}
+ let holding=false;
+ function setHold(on:boolean){if(on===holding)return;holding=on;ports.hold?.(on);}
 
  // ---- The ride's three actions (HUD buttons, keys). None touches the ride's path, speed past the brake, or its landing.
  function press(id:ZipActionId,p:'tap'|'down'|'up'){
@@ -249,9 +282,9 @@ export function createZipline(scene:T.Scene,ports:Ports){
   out[F.TX]=-.22*launch+.24*tuck+.08*approach;
   out[F.TY]=(reduced?0:.1*Math.sin(tt*.8)*v+.04*Math.sin(tt*2.1)*v)+.14*wave;
   out[F.TZ]=-roll*.6;
-  // Head: ahead and down at the water (more at speed), up with the launch, down at the deck coming in; it turns where the stick
-  // looks, and toward the beach with a wave.
-  out[F.HX]=.16+.18*v-.25*launch-.08*tuck+.3*approach;out[F.HY]=look*.7+.3*wave;
+  // Head: ahead and down at the water (more at speed), up with the launch, down at the deck coming in; toward the beach with a
+  // wave (and where the stick or a drag looks: added per frame in interp, from the camera's own look).
+  out[F.HX]=.16+.18*v-.25*launch-.08*tuck+.3*approach;out[F.HY]=.3*wave;// + the look-around, added when drawn (interp)
   out[F.PELY]=.94;out[F.PELZ]=0;
   // The bar in the body's frame: a pull up in a tuck and at the launch.
   out[F.BARY]=ZIP_GRIP.y-ZIP_GRIP.pull*tuck-.04*launch;out[F.BARZ]=ZIP_GRIP.z+.03*tuck;
@@ -262,16 +295,55 @@ export function createZipline(scene:T.Scene,ports:Ports){
   placeBody(out,1,1,tickPos,tickQ);out[F.X]=tickPos.x;out[F.Y]=phase==='land'?Math.max(ZIP_DECK.height,tickPos.y):tickPos.y;out[F.Z]=tickPos.z;
  }
  let lastUpdate:ZiplineUpdate|null=null;
- /** The drawn state at tick blend k (between the last two ticks). The spin snaps across its wrap (2π → 0). */
+ /** A tick's state into the history (its time on the ride clock: tick n at n/60 s). */
+ function push(){histHead=(histHead+1)%HIST;hist.set(cur,histHead*F.N);histT[histHead]=tickNo/60;if(histN<HIST)histN++;}
+ /** The drawn state for Town's tick blend k: Town would draw its prev → cur lerp at k, the instant (tickNo − 1 + k)/60; the ride
+  *  clock smooths that instant (rAF timestamp noise) and the state is interpolated there between the two ticks around it. The
+  *  spin snaps across its wrap (2π → 0). Called twice a frame (motion, pose) with the same k: the same instant, the same state. */
  function interp(k:number){
-  for(let i=0;i<F.N;i++)draw[i]=prev[i]+(cur[i]-prev[i])*k;
-  if(Math.abs(cur[F.SPIN]-prev[F.SPIN])>Math.PI)draw[F.SPIN]=cur[F.SPIN];
+  if(histN===0)return;
+  let t=clock.step((tickNo-1+k)/60);
+  const newest=histT[histHead],oldest=histT[(histHead-histN+1+HIST)%HIST];if(t>newest)t=newest;if(t<oldest)t=oldest;
+  if(t!==drawT){frameStep=Number.isFinite(drawT)&&t>drawT?t-drawT:0;drawT=t;}
+  let i=histHead,left=histN-1;while(left>0&&histT[i]>t){i=(i-1+HIST)%HIST;left--;}
+  const a=i*F.N,j=(i+1)%HIST;
+  if(i===histHead||!(histT[j]>histT[i])){for(let q=0;q<F.N;q++)draw[q]=hist[a+q];}
+  else{const b=j*F.N,u=(t-histT[i])/(histT[j]-histT[i]);for(let q=0;q<F.N;q++)draw[q]=hist[a+q]+(hist[b+q]-hist[a+q])*u;
+   if(Math.abs(hist[b+F.SPIN]-hist[a+F.SPIN])>Math.PI)draw[F.SPIN]=hist[b+F.SPIN];}
   drawn.x=draw[F.X];drawn.y=draw[F.Y];drawn.z=draw[F.Z];drawn.px=draw[F.PX];drawn.py=draw[F.PY];drawn.pz=draw[F.PZ];drawn.swing=draw[F.SWING];drawn.roll=draw[F.ROLL];
-  drawn.yaw=draw[F.YAW];drawn.speed=draw[F.SPEED];drawn.spin=draw[F.SPIN];drawn.tuck=draw[F.TUCK];drawn.wave=draw[F.WAVE];
+  drawn.yaw=draw[F.YAW];drawn.speed=draw[F.SPEED];drawn.spin=draw[F.SPIN];drawn.tuck=draw[F.TUCK];drawn.wave=draw[F.WAVE];drawn.look=lookS.x;drawn.t=t;
   const r=rig;r.w=draw[F.W];r.barY=draw[F.BARY];r.barZ=draw[F.BARZ];r.half=ZIP_GRIP.half;r.free=1;r.wave=draw[F.WAVE];r.wavePhase=draw[F.WPH];
-  r.py=draw[F.PELY];r.pz=draw[F.PELZ];r.pike=0;r.tx=draw[F.TX];r.ty=draw[F.TY];r.tz=draw[F.TZ];r.hx=draw[F.HX];r.hy=draw[F.HY];r.spread=draw[F.SPREAD];
+  r.py=draw[F.PELY];r.pz=draw[F.PELZ];r.pike=0;r.tx=draw[F.TX];r.ty=draw[F.TY];r.tz=draw[F.TZ];r.hx=draw[F.HX];r.hy=draw[F.HY]-lookS.x*ZIP_LOOK.head;r.spread=draw[F.SPREAD];
   r.hipL=draw[F.HIPL];r.hipR=draw[F.HIPR];r.kneeL=draw[F.KNL];r.kneeR=draw[F.KNR];r.ankleL=draw[F.ANL];r.ankleR=draw[F.ANR];
  }
+ /** Looking around (lib/town/zipline.ts ZIP_LOOK), stepped once a frame by `h` seconds: the fling coasts and the drag's aim eases
+  *  back after a release; the spring follows the soft-limited aim (stick + drag). Off the cable it settles back to the middle. */
+ function lookStep(h:number,isReduced:boolean,riding:boolean){
+  if(!(h>0))return;
+  if(!riding){stickAim=0;dragAim=0;dragV=0;dragging=false;dragId=-1;}
+  else if(!dragging){
+   if(dragV!==0){const f=ZIP_LOOK.friction,e=Math.exp(-f*h);dragAim+=dragV*(1-e)/f;dragV*=e;if(Math.abs(dragV)<.01)dragV=0;}
+   releaseAge+=h;dragAim*=Math.exp(-ZIP_LOOK.back*smooth(releaseAge/ZIP_LOOK.hold)*h);if(Math.abs(dragAim)<1e-6)dragAim=0;}
+  dragAim=clamp(dragAim,-ZIP_LOOK.maxAim,ZIP_LOOK.maxAim);
+  const fast=dragging||dragV!==0,slow=isReduced?ZIP_LOOK.reducedRate:1;
+  // The aim eases first (so the spring's pull, too, starts from nothing: no kick in the turn as a thumb lands), then the spring.
+  lookAim+=(softLook(stickAim*ZIP_LOOK.stick+dragAim)-lookAim)*(1-Math.exp(-(fast?ZIP_LOOK.dragEase:ZIP_LOOK.ease)*slow*h));
+  springTo(lookS,lookAim,(fast?ZIP_LOOK.dragRate:stickAim!==0?ZIP_LOOK.stickRate:ZIP_LOOK.returnRate)*slow,h);if(!riding&&Math.abs(lookS.x)<1e-5&&Math.abs(lookS.v)<1e-4)lookS.x=lookS.v=0;
+ }
+ /** A drag on the scene (a finger on the phone, the mouse on desktop) looks around while riding: + x = to the right. */
+ const dragWidth=()=>Math.max(320,Math.min(ZIP_LOOK.dragWidth,lastUpdate?.width||390));
+ function dragStart(id:number,x:number,t:number){if(dragging||!(phase==='clip'||phase==='ride'||phase==='land'))return false;
+  dragging=true;dragId=id;dragX=x;dragT=t;dragVel=0;dragV=0;return true;}
+ function dragMove(id:number,x:number,t:number){if(!dragging||id!==dragId)return;
+  const d=(x-dragX)*ZIP_LOOK.drag/(ZIP_LOOK.dragSpan*dragWidth()),s=(t-dragT)/1000;dragAim=clamp(dragAim+d,-ZIP_LOOK.maxAim,ZIP_LOOK.maxAim);
+  if(s>0)dragVel+=(d/s-dragVel)*(1-Math.exp(-s/.05));dragX=x;dragT=t;}
+ function dragEnd(id:number,t:number){if(!dragging||id!==dragId)return;dragging=false;dragId=-1;
+  // A fling carries on; a finger that stopped before lifting (80 ms) does not.
+  dragV=t-dragT>80?0:clamp(dragVel,-ZIP_LOOK.maxFling,ZIP_LOOK.maxFling);releaseAge=0;}
+ let listening=false;
+ function onPointerDown(e:PointerEvent){const el=e.target as Element|null;if(e.button>0||!el||el.tagName!=='CANVAS')return;dragStart(e.pointerId,e.clientX,e.timeStamp);}
+ function onPointerMove(e:PointerEvent){if(dragging&&e.pointerId===dragId)dragMove(e.pointerId,e.clientX,e.timeStamp);}
+ function onPointerUp(e:PointerEvent){if(dragging&&e.pointerId===dragId)dragEnd(e.pointerId,e.timeStamp);}
 
  function onKey(e:KeyboardEvent){if(e.key.toLowerCase()!=='e'||e.repeat||!promptShown)return;const el=e.target as HTMLElement|null;if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable))return;if(startRide())e.preventDefault();}
  function onHide(){if(typeof document!=='undefined'&&document.hidden&&phase!=='idle')finish(true);}
@@ -316,17 +388,17 @@ export function createZipline(scene:T.Scene,ports:Ports){
    stats.busyTicks++;
    // A map trip (or anything else) moved the player off the line: stop at once, leave them where they are.
    const w=ports.where();if(phase!=='clip'&&Math.hypot(w.x-placed.x,w.z-placed.z)>3){abandon();return false;}
-   const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.x;
-   lookWant=clamp(kx,-1,1)*1.15;
+   // The stick (its walk floor taken back out) and A/D, ←/→: the look-around's aim (+ = right); the spring runs per frame.
+   stickAim=clamp((keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+stickLook(input.x,input.z),-1,1);
    input.kick=input.juggle=false;input.shotPower=0;input.charging=false;
-   prev.set(cur);age+=dt;
+   age+=dt;
    if(phase==='clip'&&age>=ZIP_RIDE.clip){phase='ride';age=0;rideT=0;ports.whoosh?.();ports.haptic?.();}
    else if(phase==='ride'){rideT=Math.min(ZIP_RIDE.seconds,rideT+dt*rate);
     if(rideT-whooshAt>2.4&&rideSpeed(rideT/ZIP_RIDE.seconds)*rate>ZIP_TOP_SPEED*.55){whooshAt=rideT;ports.whoosh?.();}
     if(rideT>=ZIP_RIDE.seconds){phase='land';age=0;tuckHeld=false;}}
    if(phase==='land'&&!landed&&age>=ZIP_RIDE.land*.72){landed=true;ports.touchdown?.(ZIP_LAND.x,ZIP_DECK.height,ZIP_LAND.z);ports.haptic?.();}
    if(phase==='land'&&age>=ZIP_RIDE.land){finish(false);return true;}
-   sample(cur,dt);if(fresh){prev.set(cur);fresh=false;}
+   tickNo++;sample(cur,dt);push();
    ports.place(cur[F.X],cur[F.Z],cur[F.Y]);placed.x=cur[F.X];placed.z=cur[F.Z];
    return true;
   },
@@ -357,12 +429,13 @@ export function createZipline(scene:T.Scene,ports:Ports){
      vTmp.subVectors(strapEnd,vPivot);const len=Math.max(.02,vTmp.length());strapMid.addVectors(strapEnd,vPivot).multiplyScalar(.5);
      st.position.copy(strapMid);st.quaternion.setFromUnitVectors(Yup,vTmp.divideScalar(len));st.scale.set(1,len,1);}
    }
-   if(lines){const v=drawn.speed,tk=drawn.tuck,show=phase==='ride'&&v>5;lines.visible=show;
-    if(show){const mat=lines.material as T.MeshBasicMaterial,base=reduced?Math.round(LINES/3):LINES,max=linePos.length;
+   if(lines){const v=drawn.speed,tk=drawn.tuck,show=phase==='ride'&&v>5,h=dt>0?frameStep:0;
+    if(!show){(lines.material as T.MeshBasicMaterial).opacity=0;lines.count=1;}
+    else{const mat=lines.material as T.MeshBasicMaterial,base=reduced?Math.round(LINES/3):LINES,max=linePos.length;
      lines.count=Math.min(max,Math.round(base+(max-base)*tk));
      mat.opacity=Math.min(.55,(v-5)/ZIP_TOP_SPEED)*(1+.5*tk)*(reduced?.5:1);
      const fx=ZIP_DIR.x,fz=ZIP_DIR.z,rx=-fz,rz=fx,cy=drawn.py-1.1,n=lines.count;Q.setFromEuler(E.set(0,yaw,0));
-     for(let i=0;i<n;i++){const l=linePos[i];l.along-=v*(1.35+.35*tk)*dt;if(l.along<-3)streak(l,l.along+39);
+     for(let i=0;i<n;i++){const l=linePos[i];l.along-=v*(1.35+.35*tk)*h;if(l.along<-3)streak(l,l.along+39);
       const ox=Math.cos(l.a)*l.r,oy=Math.sin(l.a)*l.r*.6;P.set(drawn.px+fx*l.along+rx*ox,cy+oy,drawn.pz+fz*l.along+rz*ox);
       S.set(1,1,(.5+v/ZIP_TOP_SPEED)*(1+.8*tk));M.compose(P,Q,S);lines.setMatrixAt(i,M);}
      lines.instanceMatrix.needsUpdate=true;}}
@@ -371,10 +444,12 @@ export function createZipline(scene:T.Scene,ports:Ports){
   applyCamera(camera:T.PerspectiveCamera,dt:number,isReduced:boolean){
    const riding=phase==='clip'||phase==='ride'||phase==='land';
    if(!riding&&!camActive)return;
+   // One step for everything drawn this frame: the ride clock's (the same instant as the rider); Town's dt once off the cable.
+   const h=riding&&dt>0&&frameStep>0?frameStep:dt;
    const target=riding?1:0,rateC=isReduced?4:(riding?1.5:1.1);
-   blend=target?Math.min(1,blend+dt*rateC):Math.max(0,blend-dt*rateC);
-   if(!riding&&blend<=0){camActive=false;return;}
-   look+=(lookWant-look)*(1-Math.exp(-dt*(isReduced?3:5)));if(!riding)lookWant=0;
+   blend=target?Math.min(1,blend+h*rateC):Math.max(0,blend-h*rateC);
+   if(!riding&&blend<=0){camActive=false;lookS.x=lookS.v=lookAim=0;return;}
+   lookStep(h,isReduced,riding);const look=-lookS.x;// + = right on screen; the angles below turn left for +
    // Behind the trolley and a little to the east (the follow camera's side), above the cable, looking down it to Coral Cay.
    // Portrait phones see a narrow slice sideways: a smaller side angle and a step further back keep the rider in frame.
    const portrait=camera.aspect<1,a=yaw+Math.PI+(portrait?.1:isReduced?.2:.32)+look,back=(isReduced?9:8.5)+(portrait?1.5:0),up=(isReduced?3.4:2.9)+(portrait?.6:0);
@@ -399,11 +474,15 @@ export function createZipline(scene:T.Scene,ports:Ports){
     c.hide(prompt,hidden);promptShown=!hidden;}
    return want;
   },
+  /** The look-around (tests, debug): the drawn look (rad, + = right) and its rate; a drag's start / move / end (pointer id,
+   *  clientX px, timeStamp ms) as the window's pointer listeners feed it while riding. */
+  get look(){return {x:lookS.x,v:lookS.v,aim:stickAim*ZIP_LOOK.stick+dragAim,dragging};},
+  drag:{start:dragStart,move:dragMove,end:dragEnd},
   /** Tests and debug: finish now (as the tab hiding does). */
   finishNow(){finish(true);},
   dispose(){if(typeof window!=='undefined'){window.removeEventListener('keydown',onKey);window.removeEventListener('pagehide',onHide);}
    if(typeof document!=='undefined'&&document.removeEventListener)document.removeEventListener('visibilitychange',onHide);
-   zipActions.ride=()=>{};zipActions.press=()=>{};zipStore.reset();dispose3d();phase='idle';resetActions();},
+   zipActions.ride=()=>{};zipActions.press=()=>{};zipStore.reset();dispose3d();setHold(false);phase='idle';resetActions();},
  };
 }
 export type Zipline=ReturnType<typeof createZipline>;

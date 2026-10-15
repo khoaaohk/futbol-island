@@ -7,7 +7,7 @@
  *  compactly inside the design (so they sync with the save code) and replayed into a transparent "art layer" canvas that the
  *  studio composites between its pattern and its crisp prints. Vector ops (not a PNG) because:
  *   - small: a busy kid drawing is 3–10 KB of JSON (a 512² PNG/WebP is 40–150 KB and does not gzip), and the whole synced
- *     snapshot is capped at 512 KB raw / 128 KB gzip (lib/saves/snapshot.ts MAX_SNAPSHOT_BYTES / MAX_GZIP_BYTES; one key ≤ 256 KB);
+ *     snapshot is capped at 512 KB raw / 192 KB gzip (lib/saves/snapshot.ts MAX_SNAPSHOT_BYTES / MAX_GZIP_BYTES; one key ≤ 256 KB);
  *   - resolution-free: replays crisp at 1024² (phones) and 2048² (desktop);
  *   - per-stroke undo/redo is just the op list.
  *  Hard caps (validateArt / artFits): ART_MAX_CHARS of JSON, ART_MAX_POINTS points, ART_MAX_OPS ops, ART_MAX_FILLS fills.

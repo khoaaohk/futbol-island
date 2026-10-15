@@ -6,6 +6,9 @@
  --s1:#008a72;--s2:#c86a00;--s3:#8152c9;--a-live:#0ca30c;
  color-scheme:light;min-height:100vh;min-height:100dvh;background:var(--a-page);color:var(--a-ink);font-family:var(--btn-font);
  padding:20px 24px calc(40px + env(safe-area-inset-bottom,0px));box-sizing:border-box;
+ /* Oct 15 2026: the admin page drives its own pull-to-refresh (PullToRefresh.tsx); this stops iOS/Chrome's native
+    pull-to-refresh from firing at the same time and double-triggering a reload. Scoped to this page only. */
+ overscroll-behavior-y:contain;
 }
 @media (prefers-color-scheme:dark){:root:where(:not([data-theme=light])) .page{
  --a-page:#0f241d;--a-surface:#183a30;--a-ink:#fff3d1;--a-ink-2:#d6dcc8;--a-muted:#a9b8a6;--a-grid:#24493d;--a-axis:#3a6455;--a-ring:#fff3d114;

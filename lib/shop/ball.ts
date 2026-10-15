@@ -8,7 +8,7 @@
  * data URLs keyed by their hash. Designs only carry the drawing's id (design.art.id), so the shop's bought-items key
  * (fi2-shop-owned-v1, up to 36 designs) never holds pixels. v1 stores (no drawings, no thumbnails) load as-is (migrated).
  * The shop syncs BALL_KEY with the save code (lib/saves SYNC_KEYS). Size budget (lib/saves/snapshot.ts: 256 KB per key,
- * 128 KB gzip per save): a drawing ≤ DRAW_MAX_CHARS (16 000 chars ≈ 12 KB), the whole pool ≤ ART_POOL_MAX (64 000 chars),
+ * 192 KB gzip per save): a drawing ≤ DRAW_MAX_CHARS (16 000 chars ≈ 12 KB), the whole pool ≤ ART_POOL_MAX (64 000 chars),
  * a slot thumbnail ≤ THUMB_MAX (6 000 chars); so BALL_KEY stays under ≈ 90 000 chars in the worst case.
  *
  * Every ball is an ORIGINAL design: panel layouts are generic geometry (truncated icosahedron etc.), patterns are abstract

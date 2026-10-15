@@ -16,6 +16,8 @@
 /* The binder: padded cover, pages side by side (or one page), rings, divider tabs. Sizes come from JS (--page-w …). */
 .binder{position:absolute;left:50%;transform:translateX(-50%);touch-action:pinch-zoom;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .binder:not([data-spread]){margin-left:calc(var(--tab) / -2)}
+/* Focusable (tabIndex -1) only so focus can stay in the binder after a turn removes the focused pocket or corner. */
+.binder:focus{outline:none}
 .cover{position:absolute;inset:0;border-radius:24px 34px 24px 24px;
  background:radial-gradient(120% 90% at 30% 10%,#2f6a58 0,#244d40 55%,#1b3d33 100%);
  box-shadow:inset 0 0 0 3px #1a3a31,inset 0 0 0 6px #33705e,inset 0 2px 0 7px #ffffff14,0 12px 0 #0f2a2f55,0 30px 60px #0f2a2f77}

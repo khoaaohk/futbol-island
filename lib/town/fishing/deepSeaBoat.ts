@@ -2,6 +2,8 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {registerLandableDeck} from '../landableDecks';
 import {BOAT_DECK_Y,BOAT_HULL,DEEP_SEA_BOATS,type DeepSeaBoat} from './deepSeaBoatData';
+import {WATER_UNIFORMS} from '../../graphics/waterSurface';
+import {boatSettled,createBoatRide,stepBoatMotion,type BoatMotion} from './boatMotion';
 
 /**
  * The Deep Sea Boat's 3D build (docs/fishing.md "Deep Sea Boat"): a small low-poly fishing boat in the island palette —
@@ -14,14 +16,21 @@ import {BOAT_DECK_Y,BOAT_HULL,DEEP_SEA_BOATS,type DeepSeaBoat} from './deepSeaBo
  * the last), so a second boat in range costs one more draw and no extra memory. The gentle bob is one group transform, written only while the player is within BOB_RANGE,
  * the boat is inside the camera frustum and reduced motion is off; otherwise update() is a distance check. No timers,
  * no animation loop of its own (the island loop calls update()).
+ *
+ * Oct 15 2026 (user: "add in animation for the boat, it needs a little more movement with the water when fishing"): the bob is
+ * now ./boatMotion.ts: heave, pitch and roll on the island's water clock (the swell's 5.6 s rhythm), a little bigger while the
+ * player fishes on it, rocked by a cast and leaned by a running fish; the deck floor follows the heave at the fishing stand, so the
+ * player (and the rod and line in their hand) ride the deck. The waterline foam collar is pinned to the sea surface in the
+ * vertex shader with a small lap (no new draw), so the hull rises and falls through it. Still one group matrix write per frame,
+ * only near and on screen (or while fishing on it); reduced motion keeps a very small heave only.
  */
 const BUILD_RANGE=260,DROP_RANGE=340,BOB_RANGE=150;
-type Part={geometry:T.BufferGeometry;color:string};
-function paint({geometry,color}:Part){
+type Part={geometry:T.BufferGeometry;color:string;foam?:boolean};
+function paint({geometry,color,foam}:Part){
  const g=geometry.index?geometry.toNonIndexed():geometry.clone();geometry.dispose();
  g.deleteAttribute('uv');const c=new T.Color(color),n=g.getAttribute('position').count,col=new Float32Array(n*3);
  for(let i=0;i<n;i++){col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
- g.setAttribute('color',new T.BufferAttribute(col,3));return g;
+ g.setAttribute('color',new T.BufferAttribute(col,3));g.setAttribute('foam',new T.BufferAttribute(new Float32Array(n).fill(foam?1:0),1));return g;
 }
 const place=(g:T.BufferGeometry,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(1,1,1)));
 const box=(x0:number,x1:number,y0:number,y1:number,z0:number,z1:number)=>new T.BoxGeometry(x1-x0,y1-y0,z1-z0).translate((x0+x1)/2,(y0+y1)/2,(z0+z1)/2);
@@ -39,7 +48,7 @@ function boatParts():Part[]{
  const D=BOAT_DECK_Y,B=BOAT_HULL.halfBeam,rail=D+.46,parts:Part[]=[];
  const add=(geometry:T.BufferGeometry,color:string)=>parts.push({geometry,color});
  // Hull: foam collar at the waterline, red boot stripe, white topsides, teal gunwale, wooden deck with plank seams.
- add(hullBand(B+.12,BOAT_HULL.x0-.12,BOAT_HULL.x1+.14,-.43,-.405),'#e8f7f2');
+ parts.push({geometry:hullBand(B+.12,BOAT_HULL.x0-.12,BOAT_HULL.x1+.14,-.43,-.405),color:'#e8f7f2',foam:true});
  add(hullBand(B*.78,BOAT_HULL.x0+.25,BOAT_HULL.x1-.5,-.8,-.28),'#b8483a');
  add(hullBand(B,BOAT_HULL.x0,BOAT_HULL.x1,-.28,.56),'#f3ecdb');
  add(hullBand(B+.02,BOAT_HULL.x0-.02,BOAT_HULL.x1+.03,.56,D-.04),'#2f6f73');
@@ -79,16 +88,32 @@ function boatParts():Part[]{
  return parts;
 }
 
-export type DeepSeaBoatUpdate={x:number;z:number;camera:T.Camera;elapsed:number;reduced:boolean};
+export type DeepSeaBoatUpdate={x:number;z:number;camera:T.Camera;elapsed:number;reduced:boolean;dt?:number};
+/** The hull material: the foam collar (attribute `foam`) is pinned to the sea surface in world space with a small lap, so the
+ *  boat heaves and rolls through it and the waterline always shows (vertex shader only; no extra draw, no CPU work). */
+const WATERLINE_Y=-.428;
+function foamMaterial(){
+ const m=new T.MeshStandardMaterial({vertexColors:true,roughness:.8});
+ m.onBeforeCompile=sh=>{sh.uniforms.uWaterTime=WATER_UNIFORMS.uWaterTime;
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float foam;uniform float uWaterTime;')
+   .replace('#include <project_vertex>',`vec4 mvPosition=vec4(transformed,1.);
+if(foam>.5){vec4 fw=modelMatrix*mvPosition;float lap=sin(uWaterTime*2.3+fw.x*1.6+fw.z*1.1)*.012+sin(uWaterTime*3.7+fw.z*2.3)*.006;
+ fw.y=${WATERLINE_Y.toFixed(3)}+(position.y+.43)+lap;mvPosition=viewMatrix*fw;}else mvPosition=modelViewMatrix*mvPosition;
+gl_Position=projectionMatrix*mvPosition;`);};
+ m.customProgramCacheKey=()=>'deep-sea-boat-foam-v1';return m;}
 /** The shared boat mesh data (both boats are the same model): built on first use, released when no boat holds it. */
 let shared:{geometry:T.BufferGeometry;material:T.Material;users:number}|null=null;
 function takeShared(){if(!shared){const parts=boatParts().map(paint),geometry=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());geometry.computeBoundingSphere();
- shared={geometry,material:new T.MeshStandardMaterial({vertexColors:true,roughness:.8}),users:0};}
+ shared={geometry,material:foamMaterial(),users:0};}
  shared.users++;return shared;}
 function releaseShared(){if(!shared)return;shared.users--;if(shared.users<=0){shared.geometry.dispose();shared.material.dispose();shared=null;}}
 export function createDeepSeaBoat(scene:T.Scene,boat:DeepSeaBoat=DEEP_SEA_BOATS[0]){
  const M=boat.mooring,YAW=boat.yaw;
  let group:T.Group|null=null,unregister:(()=>void)|null=null,bobbing=false;
+ // The ride (./boatMotion.ts): fishing on this boat, a cast kick this frame, the fight's lean; the last pose (for the camera).
+ const ride=createBoatRide(),seed=(M.x*.013)%1;let riding=false,kick=false,lean=0;const motion:BoatMotion={heave:0,pitch:0,roll:0,yaw:0};
+ /** The stand's local offset (the deck floor height follows the heave and the tilt there). */
+ const standLX=-2.4,standLZ=.5;
  const deck={...boat.deck};
  const frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(M.x,1.5,M.z),6.5);
  function build(){
@@ -107,13 +132,25 @@ export function createDeepSeaBoat(scene:T.Scene,boat:DeepSeaBoat=DEEP_SEA_BOATS[
    const d=Math.hypot(c.x-M.x,c.z-M.z);
    if(!group){if(d<BUILD_RANGE)build();else return;}
    if(d>DROP_RANGE){drop();return;}
-   let bob=!c.reduced&&d<BOB_RANGE;
-   if(bob){c.camera.updateMatrixWorld();pv.multiplyMatrices(c.camera.projectionMatrix,c.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);bob=frustum.intersectsSphere(sphere);}
+   // Moves while the player fishes on it, or while it is near and on screen; otherwise one distance check (and settled: no work).
+   let bob=riding||d<BOB_RANGE;
+   if(bob&&!riding){c.camera.updateMatrixWorld();pv.multiplyMatrices(c.camera.projectionMatrix,c.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);bob=frustum.intersectsSphere(sphere);}
    const g=group!;
-   if(bob){const t=c.elapsed+(M.x*.013),y=Math.sin(t*1.1)*.035;g.position.y=y;g.rotation.set(Math.sin(t*.9+1)*.006,YAW,Math.sin(t*.75)*.013,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y+y;}
-   else if(bobbing){g.position.y=0;g.rotation.set(0,YAW,0,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y;}
+   if(bob||!boatSettled(ride)&&bobbing){const m=stepBoatMotion(ride,c.dt??1/60,WATER_UNIFORMS.uWaterTime.value,seed,{fishing:riding,reduced:c.reduced,lean,kick});kick=false;Object.assign(motion,m);
+    g.position.y=m.heave;g.rotation.set(m.roll,YAW+m.yaw,m.pitch,'YXZ');g.updateMatrix();
+    // The floor under the fishing stand (local x = bow, z = starboard): heave, plus the pitch and roll at that point.
+    deck.height=BOAT_DECK_Y+m.heave+standLX*m.pitch-standLZ*m.roll;bob=true;}
+   else if(bobbing){g.position.y=0;g.rotation.set(0,YAW,0,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y;motion.heave=motion.pitch=motion.roll=motion.yaw=0;}
    bobbing=bob;
   },
+  /** Fishing on this boat (the bigger swell; the camera rides along). */
+  ride(on:boolean){riding=on;if(!on)lean=0;},
+  /** A cast from this boat rocks it once. */
+  kick(){kick=true;},
+  /** A running fish pulls the boat toward its side (-1..1; 0 = none). */
+  lean(side:number){lean=side;},
+  /** The current pose (heave m, angles rad), for the fishing camera. */
+  get motion():Readonly<BoatMotion>{return motion;},
   dispose:drop,
  };
 }

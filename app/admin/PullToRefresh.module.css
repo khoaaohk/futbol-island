@@ -1,0 +1,23 @@
+/* Pull-to-refresh indicator (Oct 15 2026). Fixed to the viewport so it reveals above the content regardless of scroll
+   position; transform + opacity only (no layout properties change while dragging). */
+.indicator{
+ position:fixed;top:0;left:50%;z-index:30;pointer-events:none;
+ display:flex;align-items:center;gap:8px;
+ margin-top:calc(10px + env(safe-area-inset-top,0px));
+ padding:6px 14px;border-radius:999px;
+ background:var(--a-surface,#fff9e9);color:var(--a-ink,#244d40);
+ box-shadow:0 4px 0 #183b3438;
+ font:700 12px var(--btn-font,inherit);
+ will-change:transform,opacity;
+}
+/* Snap back smoothly on release; no transition while the finger is actively dragging it (stays 1:1 with the touch). */
+.indicator[data-dragging='false']{transition:transform .22s ease,opacity .22s ease}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;flex:none}
+.spin{animation:ptr-spin .7s linear infinite}
+.label{font-variant-numeric:tabular-nums;white-space:nowrap}
+@keyframes ptr-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+ .spin{animation:none}
+ .indicator{transition:opacity .2s ease!important}
+ .indicator[data-dragging='false']{transition:opacity .2s ease}
+}

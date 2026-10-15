@@ -1566,7 +1566,7 @@ export function* buildTownSteps(scene: T.Scene) {
   });
   const canopies=canopyCollector.finish();
   yield;
-  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[]};
+  type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[]};
   // Where each tagged prop's pieces go: batch + index in that batch (→ vertex start once merged) + world bounds.
   const propRecords=new Map<PropTag,{pieces:{batch:Batch;index:number}[];bounds:T.Box3}>();
   const batches=new Map<string,Batch>(),original:T.Mesh[]=[],mergedMeshes:T.Mesh[]=[];
@@ -1605,7 +1605,7 @@ export function* buildTownSteps(scene: T.Scene) {
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
-    let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[]};batches.set(key,batch);}batch.geometries.push(geom);original.push(object);
+    let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);
     const tag=object.userData.propTag as PropTag|undefined;
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
   };
@@ -1615,7 +1615,9 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const [key,batch] of batches){const {material,castShadow,geometries}=batch;
     let vertex=0;batch.starts=geometries.map(g=>{const start=vertex;vertex+=g.getAttribute('position').count;return start;});
     const merged=mergeGeometries(geometries);
-    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;mesh.name='island-chunk-'+key;mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
+    // Fishing backdrop (lib/graphics/fishingBackdrop.ts): where each source piece starts in the merged buffer and its prop kind, so the
+    // low-detail skyline can drop whole small props (every lamp, bench, sign) instead of half of one. Two small arrays per chunk.
+    if(merged){merged.computeBoundingSphere();const mesh=new T.Mesh(merged,material);batch.mesh=mesh;mesh.name='island-chunk-'+key;mesh.userData.pieces={starts:batch.starts,kinds:batch.kinds};mesh.castShadow=castShadow;mesh.receiveShadow=true;mesh.matrixAutoUpdate=false;mesh.matrixWorldAutoUpdate=false;scene.add(mesh);mergedMeshes.push(mesh);}
     geometries.forEach(g=>g.dispose());
     if(++merges%12===0)yield;
   }

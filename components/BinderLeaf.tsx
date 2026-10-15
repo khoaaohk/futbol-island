@@ -12,6 +12,8 @@ export type LeafHandle={pose:(p:number)=>void;
  * each strip copy can skip the pockets it never shows (a turn mounts 2 × strips page copies: keep them light). */
 export type LeafFace=ReactNode|((from:number,to:number)=>ReactNode);
 const draw=(face:LeafFace,from:number,to:number)=>typeof face==='function'?face(from,to):face;
+/** The sheet's thickness (px): its edge plane, seen when the sheet stands edge-on mid-turn. */
+const EDGE=3;
 type Props={
  /** Which edge of the leaf is bound in the rings. */hinge:'left'|'right';
  /** Distance from that edge to the hinge line (half the spine), so a turned leaf lands exactly on the opposite page. */offset:number;
@@ -21,6 +23,7 @@ type Props={
  /** The leaf's left edge inside the pages box (px). */left:number;
  /** Stacking for a riffle of several leaves: a turned leaf's z flips sign, so the first turned lands lowest. */z?:number;
  /** Most extra curl (degrees) across the sheet at mid-turn. */bend?:number;
+ /** Draw the sheet's edge (thickness) plane: the main sheet only (each plane is one more composited layer). */thick?:boolean;
  /** How far (px) the sheet rises off the page at mid-turn, so the turn reads in depth. */lift?:number;
  /** Prebuilt ahead of its turn: mounted, laid out, painted and rasterized but all but transparent (opacity .001, so the
   * compositor keeps its tiles), so the turn's first frame only calls reveal(). */hidden?:boolean;
@@ -38,8 +41,8 @@ type Props={
  * compositor as Web Animations keyframes sampled from the same poses (arrows, keys, corners, tabs, riffles). No React renders.
  * At p = 0 and p = 1 the sheet is flat and lies exactly on the page box it hands over to.
  */
-const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,width,height,strips,front,back,left,z=0,bend=78,lift=34,hidden=false,away},ref){
- const gone=useRef(false),root=useRef<HTMLDivElement>(null),strip=useRef<(HTMLDivElement|null)[]>([]),shade=useRef<(HTMLSpanElement|null)[]>([]),shadeB=useRef<(HTMLSpanElement|null)[]>([]),gloss=useRef<(HTMLSpanElement|null)[]>([]);
+const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,width,height,strips,front,back,left,z=0,thick=true,bend=78,lift=34,hidden=false,away},ref){
+ const gone=useRef(false),root=useRef<HTMLDivElement>(null),strip=useRef<(HTMLDivElement|null)[]>([]),shade=useRef<(HTMLSpanElement|null)[]>([]),shadeB=useRef<(HTMLSpanElement|null)[]>([]),gloss=useRef<(HTMLSpanElement|null)[]>([]),edge=useRef<HTMLSpanElement|null>(null);
  // Whole-pixel strips (the last takes the remainder): every slice's content sits on the same pixel grid as the resting page.
  const n=Math.max(1,strips),s=Math.floor(width/n),sign=hinge==='left'?-1:1,steps=n*(n-1)/2||1;
  const sw=(i:number)=>i<n-1?s:width-s*(n-1);
@@ -49,20 +52,23 @@ const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,
   // The curl peaks early (c ≈ 0.4): the free edge leads as the sheet peels up, then the sheet flattens as it lands.
   const c=Math.min(1,Math.max(0,p)),curl=Math.sin(Math.PI*Math.pow(c,.8))*bend*(n>1?1:0);
   const up=Math.sin(Math.PI*c)*lift;
-  let angle=sign*(180*p-curl*.45);const out:{transform:string;dark:string;gloss:string}[]=[];
+  let angle=sign*(180*p-curl*.45);const out:{transform:string;dark:string;gloss:string;edge:string}[]=[];
   for(let i=0;i<n;i++){
    const d=i===0?angle:sign*curl*i/steps;if(i>0)angle+=d;
    const a=Math.abs(angle),edgeOn=Math.abs(Math.sin(a*Math.PI/180)),facing=a<=90?a:180-a;
    // Flat at rest (p = 0 or 1): no shade at all, so the landed sheet matches the resting page pixel for pixel.
    out.push({transform:i===0?`translateZ(${(z+up).toFixed(2)}px) rotateY(${d.toFixed(2)}deg)`:`rotateY(${d.toFixed(2)}deg)`,
+    // The edge plane shows only while the sheet stands up (0 when flat, so perspective leaves no sliver at rest).
+    edge:(c>0&&c<1?Math.min(1,edgeOn*1.6):0).toFixed(3),
     dark:(.38*Math.pow(edgeOn,1.4)).toFixed(3),gloss:(.55*Math.pow(Math.max(0,Math.cos((facing-46)*Math.PI/180)),14)*(c>0&&c<1?1:0)).toFixed(3)});
   }
   return out;};
  useImperativeHandle(ref,()=>({reveal(){const el=root.current;if(el?.hasAttribute('data-prep')){el.style.opacity=gone.current?'.001':'';el.removeAttribute('data-prep');}},pose(p){
   // Off the page (a phone's sheet past `away`): hidden; a prebuilt sheet keeps its own .001 until reveal().
   const off=away!==undefined&&p>=away,el=root.current;if(off!==gone.current){gone.current=off;if(el&&!el.hasAttribute('data-prep'))el.style.opacity=off?'.001':'';}
-  frame(p).forEach((f,i)=>{const st=strip.current[i];if(st)st.style.transform=f.transform;const sh=shade.current[i],sb=shadeB.current[i],gl=gloss.current[i];
+  const fr=frame(p);fr.forEach((f,i)=>{const st=strip.current[i];if(st)st.style.transform=f.transform;const sh=shade.current[i],sb=shadeB.current[i],gl=gloss.current[i];
    if(sh)sh.style.opacity=f.dark;if(sb)sb.style.opacity=f.dark;if(gl)gl.style.opacity=f.gloss;});
+  const last=fr[n-1];if(edge.current&&last)edge.current.style.opacity=last.edge;
  },play(ps,timing){
   // The same poses as keyframes (linear between samples taken a 60 Hz frame apart): the compositor plays them, with no
   // style writes, style recalcs or paints per frame. fill 'both': holds the first pose through a riffle's delay and the
@@ -71,6 +77,7 @@ const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,
   const run=(el:Element|null|undefined,kf:Keyframe[])=>{if(el)anims.push(el.animate(kf,opts));};
   for(let i=0;i<n;i++){run(strip.current[i],frames.map(f=>({transform:f[i].transform})));
    const dark=frames.map(f=>({opacity:f[i].dark}));run(shade.current[i],dark);run(shadeB.current[i],dark);run(gloss.current[i],frames.map(f=>({opacity:f[i].gloss})));}
+  run(edge.current,frames.map(f=>({opacity:f[n-1].edge})));
   // A phone's sheet past `away` is hidden (opacity .001 on the leaf, tiles kept) when the turn's clock reaches the first
   // sample past it (or, for a back turn, shown again at the first one before it), as pose() did. A one-off timer on the
   // turn's own clock, not an opacity animation: animating the leaf's opacity would flatten its 3D (opacity is a grouping
@@ -96,6 +103,10 @@ const BinderLeaf=forwardRef<LeafHandle,Props>(function BinderLeaf({hinge,offset,
   return <div ref={el=>{strip.current[i]=el;}} className={styles.strip} style={style}>
    <div className={styles.face}><div className={styles.slice} style={{left:1-x(i),width,height}}>{draw(front,x(i)-1,x(i)+own+1)}</div><span ref={el=>{shade.current[i]=el;}} className={styles.shade}/><span ref={el=>{gloss.current[i]=el;}} className={styles.gloss}/></div>
    <div className={`${styles.face} ${styles.back}`}><div className={styles.slice} style={{left:1-(width-x(i)-own),width,height}}>{draw(back,width-x(i)-own-1,width-x(i)+1)}</div><span ref={el=>{shadeB.current[i]=el;}} className={styles.shade}/></div>
+   {/* The sheet's thickness: a thin plane standing at right angles to the last strip's free edge (behind the face). Flat at
+       rest it projects to nothing (so a landed sheet still matches the resting page pixel for pixel); edge-on mid-turn it
+       shows as the page's edge. Painted once; it rides the strip's transform. */}
+   {thick&&i===n-1&&<span ref={edge} className={styles.edge} style={hinge==='left'?{left:own,transformOrigin:'0 50%',transform:'rotateY(90deg)'}:{left:-EDGE,transformOrigin:`${EDGE}px 50%`,transform:'rotateY(-90deg)'}}/>}
    {build(i+1)}
   </div>;
  };

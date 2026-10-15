@@ -76,7 +76,9 @@ export function buildCoralCay(t:CayTools){
  // tapers its alpha to nothing over its first and last ~14 m, blending into the main-coast and cay-coast bands.
  const landIndex=(side:RoadSide)=>{let i=lastWater;while(i<last){const q=offsetPoint(P[i],side*(deck+2.6));if(onCay(q.x,q.z))break;i++;}return Math.min(last,i+3);};
  for(const side of [-1,1] as RoadSide[]){
-  const end=landIndex(side);
+  // It stops where the roundabout's west arm flares out (Oct 15 2026): beyond that its top edge (level with the pavement
+  // at -.02) ran on under the flare's paving, two coplanar layers that flicker from the jetpack.
+  const end=Math.min(landIndex(side),iW);
   strip(firstWater,end,()=>side*deck,()=>side*(deck+2.4),-.02,-.5,'#bca987');
   // The foam line and the shallows tint here are drawn by the island-wide moving shoreline (lib/graphics/islandShore.ts).
  }
@@ -89,6 +91,8 @@ export function buildCoralCay(t:CayTools){
  districtSign('CORAL CAY CAUSEWAY',215,-170.5);
 
  // ---- Beach shoulders: sand banks outside the deck in irregular stretches, sloping into the sea (coralCay.ts widths).
+ // Near the cay they run on under the roundabout's west arm (they fill the beach either side of it); the paving sits 7-8 cm
+ // above them, and the sand material carries no polygon offset, so the paving always wins (Oct 15 2026).
  for(const side of [-1,1] as RoadSide[])for(const [a,b] of causewayRuns(p=>shoulderWidth(p.s,side)>0)){
   const w=(p:PathSample)=>shoulderWidth(p.s,side);
   // Sand top, then a wet-sand slope into the sea whose width tapers with the bank, so bank tips stay pointed and soft.
@@ -175,7 +179,9 @@ export function buildCoralCay(t:CayTools){
    const zp=P.reduce((b,q)=>Math.abs(Math.hypot(q.x-R.x,q.z-R.z)-(R.roadOuter+3.2))<Math.abs(Math.hypot(b.x-R.x,b.z-R.z)-(R.roadOuter+3.2))&&(q.x-R.x)*ax+(q.z-R.z)*az>0?q:b,m.p);
    for(let n=-3;n<=3;n+=1.5){const q=offsetPoint(zp,n);const stripe=box(1.6,.009,.65,'#f5eed5',q.x,.01,q.z);stripe.rotation.y=-Math.atan2(zp.tz,zp.tx);}});
   // Central island: kerb, lawn, a palm and a beach-soccer ball on a plinth (a nod to the court up the road).
-  cylinder(R.island,.3,'#d2bc94',R.x,.12,R.z);const lawn=new T.CircleGeometry(R.island-.35,32);lawn.rotateX(-Math.PI/2);flat(put(lawn,'#739568',R.x,.285,R.z));
+  // The kerb fills the asphalt's hole exactly (island = roadInner, circumscribed 40-gon): the old 6.6 m low-poly kerb left a
+  // ragged ring of cay lawn/sand showing between it and the asphalt (Oct 15 2026).
+  {const kerbR=R.island/Math.cos(Math.PI/40);put(new T.CylinderGeometry(kerbR,kerbR,.3,40),'#d2bc94',R.x,.12,R.z);}const lawn=new T.CircleGeometry(R.island-.35,40);lawn.rotateX(-Math.PI/2);flat(put(lawn,'#739568',R.x,.285,R.z));
   palm(R.x-2,R.z-1.5,6.2);for(let k=0;k<6;k++){const a=k*1.05,b=put(new T.IcosahedronGeometry(.4,0),k%2?'#c2458f':'#f4cc7c',R.x+Math.cos(a)*4.6,.55,R.z+Math.sin(a)*4.6);b.scale.y=.7;}
   box(1.6,.9,1.6,'#eddfbb',R.x+2,.75,R.z+1.2);const ball=put(new T.IcosahedronGeometry(1.1,1),'#f4edd3',R.x+2,2.3,R.z+1.2);ball.userData.skipRoofObstacle=true;
   for(const [dx,dy,dz] of [[0,1,0],[1,.2,.3],[-.8,.3,.6],[.3,.4,-1],[-.5,-.2,-.8]] as [number,number,number][]){const l=Math.hypot(dx,dy,dz),patch=put(new T.IcosahedronGeometry(.34,0),'#294f43',R.x+2+dx/l*1.02,2.3+dy/l*1.02,R.z+1.2+dz/l*1.02);patch.scale.set(1,.35,1);}
@@ -296,13 +302,12 @@ export function buildCoralCay(t:CayTools){
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
   if(g.getAttribute('normal').getY(0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];g.setIndex(indices);g.computeVertexNormals();}
   const sand=flat(put(g,'#f1d6a1',C.x,0,C.z));sand.name='coral-cay-sand';
-  // Glitchy from above (Oct 13 2026): this ring, the beach-court sand and the sandbar sand (outlineSlab) share this
-  // cached '#f1d6a1' material and sit only 3-7mm above the lawn/foundation underneath — fine close up, but a jetpack at
-  // altitude loses enough depth precision over that distance to flicker green through tan in jagged bands. A small
-  // negative polygon offset (the same trick as the manhole covers, ball marker and shore water overlay) reliably wins
-  // the depth test at any camera distance instead of relying on a few millimetres of world-space height, with no new
-  // draw calls or geometry.
-  const sandMat=sand.material as T.MeshStandardMaterial;sandMat.polygonOffset=true;sandMat.polygonOffsetFactor=-2;sandMat.polygonOffsetUnits=-4;}
+  // Glitchy from above (Oct 13 2026) was fixed with a slope-scaled polygon offset on this cached '#f1d6a1' material. That
+  // offset (factor -2) also outranked the Coral Cay roundabout and causeway paving 8-10 cm ABOVE the sand ring (Oct 15 2026,
+  // user: "fix the roundabout, the road is covering that"): at the phone's reduced resolution the beach drew over the ring,
+  // the arms and their pavements, leaving the zebra floating on sand. The sand now relies on real height gaps instead: the
+  // ring meets the lawn edge to edge (no overlap), and the beach-court sand sits 3 cm over the lawn (below). No offset.
+ }
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
   const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
@@ -323,8 +328,9 @@ export function buildCoralCay(t:CayTools){
  // Café terrace tables and surfboards leaning outside the surf shop.
  {const [cx,cz,,cd]=CAY_HOUSES[0];for(const dx of [-5,4])table(cx+dx,cz+cd/2+4.4);}
  {const [sx,sz,,sd]=CAY_HOUSES[1];['#589aa0','#f4cc7c','#bd7657'].forEach((c,i)=>{const board=box(.62,2.3,.09,c,sx+3+i*.85,1.12,sz+sd/2+.35);board.rotation.x=-.18;board.rotation.z=(i-1)*.05;});obstacles.push({x:sx+3.85,z:sz+sd/2+.45,w:2.6,d:.6});}
- // Paths: plaza → court, road → huts, plaza → south beach.
- path(628,z0,48,3);path(CAY_HUTS[1].x,-146.5,3,13);path(CAY_HUTS[0].x,-144.6,3,6.2);path(CAY_HUTS[2].x,-147,3,11);path(CAY_PLAZA.x,-117,3,54);
+ // Paths: plaza → court, road → huts, plaza → south beach. The first hut's path starts under the roundabout's pavement
+ // (z -145.5), not under its asphalt (Oct 15 2026: it ran 1.6 m into the ring, 3 cm under the carriageway).
+ path(628,z0,48,3);path(CAY_HUTS[1].x,-146.5,3,13);path(CAY_HUTS[0].x,-143.5,3,4);path(CAY_HUTS[2].x,-147,3,11);path(CAY_PLAZA.x,-117,3,54);
  // Thatched huts: stucco drum, dark door, straw cone roof. Obstacles only (the cone is not a landing roof).
  CAY_HUTS.forEach((h,i)=>{
   cylinder(CAY_HUT_RADIUS-.35,2.6,i%2?'#e2c69a':'#d6b58a',h.x,1.3,h.z);box(1.05,1.9,.12,'#365b56',h.x,.95,h.z+CAY_HUT_RADIUS-.37);
@@ -338,14 +344,14 @@ export function buildCoralCay(t:CayTools){
  // the imaginary penalty-area line (9 m) meets each touchline; goals 5.5 m wide × 2.2 m high.
  const K=BEACH_COURT,halfL=K.length/2,halfW=K.width/2,blue='#4a8bb0';
  // No sand box on a lawn: the court sits on COURT_BEACH, one organic sand surface that runs east into the beach ring
- // (same sand colour, a hair under the ring so the overlap never shows). Built relative to the cay centre (cay chunk).
+ // (same sand colour, 2.5 cm over the ring and 3 cm over the lawn: real height gaps, no polygon offset; Oct 15 2026). Built relative to the cay centre (cay chunk).
  {const shape=new T.Shape();COURT_BEACH.forEach((p,i)=>i?shape.lineTo(p.x-C.x,-(p.z-C.z)):shape.moveTo(p.x-C.x,-(p.z-C.z)));shape.closePath();
-  const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);flat(put(g,'#f1d6a1',C.x,-.108,C.z)).name='beach-court-sand';}
+  const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);flat(put(g,'#f1d6a1',C.x,-.08,C.z)).name='beach-court-sand';}
  surfaceAreas.push({kind:'sand',x:K.x,z:K.z,w:K.length+16,d:K.width+13});assets.push({kind:'beach-soccer-court',x:K.x,z:K.z,w:K.length,d:K.width});
- for(const side of [-1,1])box(K.length,.014,.1,blue,K.x,-.095,K.z+side*halfW);
- for(const end of [-1,1])for(const side of [-1,1]){const inner=K.goalWidth/2,len=halfW-inner;box(.1,.014,len,blue,K.x+end*halfL,-.095,K.z+side*(inner+len/2));}
+ for(const side of [-1,1])box(K.length,.014,.1,blue,K.x,-.07,K.z+side*halfW);
+ for(const end of [-1,1])for(const side of [-1,1]){const inner=K.goalWidth/2,len=halfW-inner;box(.1,.014,len,blue,K.x+end*halfL,-.07,K.z+side*(inner+len/2));}
  // Five-metre substitution zone in front of the team benches (Law 3: rolling substitutions through this zone).
- for(const dx of [-2.5,2.5])box(.1,.014,1.2,blue,K.x+dx,-.095,K.z+halfW+.6);
+ for(const dx of [-2.5,2.5])box(.1,.014,1.2,blue,K.x+dx,-.07,K.z+halfW+.6);
  const flag=(x:number,z:number,color:string)=>{prop('flag',()=>{cylinder(.03,1.5,'#eddfbb',x,.75,z);box(.02,.34,.5,color,x,1.33,z+.26);});obstacles.push({x,z,w:.12,d:.12});};
  for(const sx of [-1,1])for(const sz of [-1,1])flag(K.x+sx*(halfL+.8),K.z+sz*(halfW+.8),'#d9534a');
  for(const sz of [-1,1]){flag(K.x,K.z+sz*(halfW+1),'#d9534a');for(const sx of [-1,1])flag(K.x+sx*(halfL-K.penalty),K.z+sz*(halfW+1),'#f4cc7c');}
@@ -542,7 +548,10 @@ export function buildCoralCay(t:CayTools){
  const nearCauseway=(p:{x:number;z:number})=>onCourt(p)||p.x<CAY_BOULEVARD.x0+30&&Math.abs(p.z-z0)<18||Math.abs(p.x-CAY_KONBINI.x)<CAY_KONBINI.w/2+4&&p.z>CAY_KONBINI.z-CAY_KONBINI.d/2-4&&p.z<ROUNDABOUT.z;
  for(let i=0;i<n;i+=5){const p=inward(i,.6+jitter(i)*.2);if(nearCauseway(p))continue;palm(p.x,p.z,5.3+jitter(i,2)*1.3);}
  let u=0;for(let i=2;i<n;i+=17){const p=inward(i,.4);if(nearCauseway(p))continue;umbrella(p.x,p.z,u++);}
- for(let i=0;i<n;i+=3){const p=inward(i,.08+jitter(i,4)*.06),rock=put(new T.IcosahedronGeometry(.22+jitter(i,6)*.3,0),'#d2bc94',p.x,-.1,p.z);rock.scale.y=.5;}
+ // Tide-line rocks never sit on the roundabout or the causeway's paving (Oct 15 2026: the cay's west shore runs under the
+ // ring's west half, and pebbles poked up through the asphalt and the zebra).
+ const onPaving=(p:{x:number;z:number})=>Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ROUNDABOUT.roadOuter+5.5||P.some(q=>Math.hypot(q.x-p.x,q.z-p.z)<deck+1.5);
+ for(let i=0;i<n;i+=3){const p=inward(i,.08+jitter(i,4)*.06);if(onPaving(p))continue;const rock=put(new T.IcosahedronGeometry(.22+jitter(i,6)*.3,0),'#d2bc94',p.x,-.1,p.z);rock.scale.y=.5;}
  {let best=0;for(let i=0;i<n;i++)if(CAY_SHORE[i].x>CAY_SHORE[best].x)best=i;const p=inward(best,.45);lifeguardChair(p.x,p.z);}
  // Grove palms and shrub clumps on the open lawn: kept only where they stand well inside the (irregular) coast.
  // The farm (FARM fence, plus a metre) keeps its own planting: no lawn palms or shrub clumps inside it.

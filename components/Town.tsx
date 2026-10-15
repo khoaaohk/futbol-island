@@ -33,7 +33,7 @@ import * as T from 'three';
 import TravelIcon from './TravelIcon';
 import {createSpinGesture} from '@/lib/town/spinGesture';
 import {tapHaptic} from '@/lib/town/haptics';
-import {frameCapSlot} from '@/lib/town/frameCap';
+import {frameCapSlot,FRAME_DT_MAX} from '@/lib/town/frameCap';
 import {createIdleRide} from '@/lib/town/idleRide';
 import {createIslandHeat} from '@/lib/graphics/islandHeat';
 import {createFocusMode} from '@/lib/graphics/focusMode';
@@ -629,7 +629,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Fishing focus mode (lib/graphics/focusMode.ts): one switch freezes the background while the fishing shot is on.
     // Since Oct 12 2026 (user: "dont have npcs move in at all") everything holds still while fishing, near or far; ?fishfocus=near
     // brings back the old live ring (anything within FOCUS_LIVE_M of the angler kept moving) and ?fishfocus=0 turns it off (A/B).
-    const focusParam=new URLSearchParams(window.location.search).get('fishfocus'),focus=createFocusMode(scene),focusAllowed=focusParam!=='0',focusNearLive=focusParam==='near',FOCUS_LIVE_M=30;
+    const focusParam=new URLSearchParams(window.location.search).get('fishfocus'),focus=createFocusMode(scene,renderer,camera),focusAllowed=focusParam!=='0',focusNearLive=focusParam==='near',FOCUS_LIVE_M=30;
     const focusLive={games:true,traffic:true,volleyball:true,coaches:true};
     const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.focus=focus;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.islandWater=world.islandShore;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propReactions=propReactions;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propSpecs=propSpecs;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
     sharpenSceneTextures(scene,renderer.capabilities.getMaxAnisotropy());// quality pass: crisp textures at grazing angles
@@ -722,7 +722,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       land:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
       dismount:()=>{if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';},
       where:()=>({x:location.x,z:location.z,y:rooftop.state.height}),touchdown:(x,y,z)=>{landingDust.trigger(x,y,z,.8,false,reduced);sound.land(.8);},whoosh:()=>sound.boost('forward'),swish:()=>sound.boost('up'),haptic:tapHaptic,
-      busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing'});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.zipline=zipline;
+      busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',hold:on=>{heat.hold(on);islandShadowFit.hold(on);}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.zipline=zipline;
     // Beachcombing (lib/graphics/beachFinds.ts, docs/beachcombing.md): shells and sea creatures on every island's beaches.
     const beach=createBeachFinds(scene,{obstacles:[...world.obstacles,...world.buildings],paved:[...world.surfaceAreas,...world.roads],busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run,gather:id=>beachMarket.gather(id),
       reward:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},cue:propCue,haptic:tapHaptic,pose:(kind,at)=>{jobMoves.start(kind,jobPlayer(),at,jobFloor,reduced,jobBallNow());wakeLoop();}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.beach=beach;
@@ -969,14 +969,14 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(idleFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(idleFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
       idleRide.sample(now,player.root.position,camera.position);
       const ms=now-last;last=now;
-      const dt=Math.max(0,Math.min(ms/1000,.05)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
+      const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
       // Focus mode: on once the fishing camera has arrived, off the moment fishing stops (the camera eases out over a live island).
       const focusWanted=focusAllowed&&(fishing.focused||easel.focused)&&!learningFormat.current&&!lessonRef.current&&!fieldMenu.current;
       if(focusWanted!==focus.active){
         // User (Oct 12 2026): "when fishing, have the npcs not move around ... don't have npcs move in at all": EVERYTHING holds still,
         // near ones too (r −1 holds every townsperson); ?fishfocus=near brings back the old 30 m live ring for A/B runs.
         if(focusWanted){const s=easel.focused?easel.stand:fishing.stand,near=(x:number,z:number,r=0)=>focusNearLive&&Math.hypot(x-s.x,z-s.z)-r<FOCUS_LIVE_M;
-          focus.enter(s.x,s.z,easel.focused?Infinity:camera.aspect<1?90:200);islandNpcs.setFocus({x:s.x,z:s.z,r:focusNearLive?FOCUS_LIVE_M:-1});heat.setFocus(true);
+          focus.enter(s.x,s.z,!easel.focused&&focusParam!=='hold');/* fishing: low-detail backdrop past the near cells (?fishfocus=hold: full detail) */islandNpcs.setFocus({x:s.x,z:s.z,r:focusNearLive?FOCUS_LIVE_M:-1});heat.setFocus(true);
           focusLive.games=games.entries.some(e=>near(e.venue.x,e.venue.z,Math.hypot(e.venue.width,e.venue.length)/2));
           focusLive.traffic=streetTraffic.cars.some(car=>near(car.group.position.x,car.group.position.z));
           focusLive.volleyball=focusNearLive&&focus.near(volleyballGame.root,FOCUS_LIVE_M);focusLive.coaches=focusNearLive&&focus.near(coachPractice.root,FOCUS_LIVE_M);}

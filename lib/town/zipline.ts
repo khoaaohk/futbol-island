@@ -20,6 +20,7 @@
  */
 import {SUMMIT_LANDMARKS,summitGround} from './summitIsle';
 import {HOSTEL} from './coralCay';
+import {STICK_WALK_FLOOR} from './walkControl';
 
 export type ZipPoint={x:number;y:number;z:number};
 type Box={x:number;z:number;w:number;d:number};
@@ -174,6 +175,81 @@ export function tuckRate(tau:number,v:number,held:boolean){
  if(!held||tau>=ZIP_TUCK.until)return 1;return Math.max(1,Math.min(1+ZIP_TUCK.boost,ZIP_TUCK.maxSpeed/Math.max(1,v)));
 }
 
+// ---- Smooth drawing and looking around (Oct 15 2026, user on an iPhone: "when using the zipline, it can still be a little jittery.
+// also when moving around while on the zipline should be smoother"). -------------------------------------------------------------
+/**
+ * The drawn ride's clock. The ride camera is locked to the trolley, so at 25 m/s the whole island streams past and any error in
+ * WHEN a frame is drawn shows as the whole screen juddering. A phone at the 30 fps cap shows its frames on the display's refresh
+ * (iOS Safari runs rAF at 60 Hz, ProMotion included): 33.3 ms apart, 50 after a missed refresh, the 24 fps tier alternating the
+ * two. Town measures dt from the rAF timestamps, which wobble by a few ms (Safari stamps the start of its rendering update, after
+ * whatever main-thread work came first), and draws the 60 Hz ticks at exactly that wobbling instant: ±3 ms of timestamp noise was
+ * ±8–14 m/s of camera velocity change from frame to frame (tests/zipline.cjs "jitter").
+ * At capped rates (the recent median frame ≥ `capped` s) the clock steps by whole refreshes (`vsync`) to the refresh nearest
+ * Town's instant (a missed refresh is real: drawn at once); the rest, under half a refresh, is timestamp noise and only pulls the
+ * clock's phase (≤ `noise`: `minGain` a frame, ≥ `follow`: `maxGain`). Timestamp noise is white (no lag-1 correlation of that
+ * rest); a frame clock that really is uneven (a variable-refresh display, a browser whose timestamps are exact) drifts, its rest
+ * strongly correlated: then the clock hands over to Town's instant (`steady` → 0). A jump over `snap` (a stall, a new ride, a
+ * test) snaps. Faster displays (desktop 60–144 Hz,
+ * whose timestamps are the refresh's own) are drawn at Town's instant exactly. Pure.
+ */
+export const ZIP_CLOCK={vsync:1/60,capped:.025,noise:.003,follow:.008,minGain:.08,maxGain:.4,snap:.05,window:5,corr:.08,blendRate:.04} as const;
+export type RideClock={reset():void;step(target:number):number;readonly time:number;readonly period:number;readonly steady:number};
+export function createRideClock():RideClock{
+ const W=ZIP_CLOCK.window,ds=new Float64Array(W),tmp=new Float64Array(W);
+ let r=NaN,g=NaN,last=NaN,n=0,k=0,period=1/60,prevRest=0,c=0,v=0,w=1;
+ /** How much of the frame-to-frame wobble is timestamp noise on a steady refresh grid (1) rather than a genuinely uneven frame
+  *  clock (0): white noise around the grid has no lag-1 correlation, a drifting clock's offset is strongly correlated. */
+ const steadiness=()=>{const rho=v>1e-12?c/v:0;const u=Math.max(0,Math.min(1,(rho-.3)/.35));return 1-u*u*(3-2*u);};
+ return {
+  reset(){r=g=last=NaN;n=0;k=0;period=1/60;prevRest=c=v=0;w=1;},
+  get time(){return r;},get period(){return period;},get steady(){return w;},
+  /** `target` = the instant Town's tick blend would draw (s). The same target twice is the same frame (the same instant back). */
+  step(target:number){
+   if(!Number.isFinite(r)||!(target>=last-1e-9)){r=g=last=target;n=0;k=0;prevRest=c=v=0;w=1;return r;}
+   const d=target-last;if(d<=1e-9)return r;last=target;
+   ds[k]=d;k=(k+1)%W;if(n<W)n++;
+   for(let i=0;i<n;i++){const x=ds[i];let j=i-1;while(j>=0&&tmp[j]>x){tmp[j+1]=tmp[j];j--;}tmp[j+1]=x;}
+   period=tmp[n>>1];
+   if(n<3||period<ZIP_CLOCK.capped||Math.abs(target-g)>ZIP_CLOCK.snap+ZIP_CLOCK.vsync){r=g=target;prevRest=0;return r;}
+   // The grid clock moves in whole refreshes, to the refresh (on its own phase) nearest Town's instant; the rest, under half a
+   // refresh, is timestamp noise and only pulls the phase gently (a real change of phase is followed within a few frames).
+   const q=ZIP_CLOCK.vsync;g+=Math.max(d>q*.5?1:0,Math.round((target-g)/q))*q;
+   const rest=target-g,a=Math.abs(rest),u=Math.max(0,Math.min(1,(a-ZIP_CLOCK.noise)/(ZIP_CLOCK.follow-ZIP_CLOCK.noise)));
+   g+=rest*(ZIP_CLOCK.minGain+(ZIP_CLOCK.maxGain-ZIP_CLOCK.minGain)*u*u*(3-2*u));
+   c+=(rest*prevRest-c)*ZIP_CLOCK.corr;v+=(rest*rest-v)*ZIP_CLOCK.corr;prevRest=rest;
+   // Drawn: the grid clock while the wobble looks like timestamp noise, Town's instant itself when the frames really are uneven;
+   // the hand-over moves `blendRate` a frame (never a jump of the drawn instant).
+   w+=Math.max(-ZIP_CLOCK.blendRate,Math.min(ZIP_CLOCK.blendRate,steadiness()-w));
+   r=target+(g-target)*w;
+   return r;
+  },
+ };
+}
+/**
+ * Looking around while riding: the stick (or A/D, ←/→) and a drag on the scene turn the ride camera round the trolley (and the
+ * rider's head). The look is a critically damped spring (velocity continuous: no jolt as a thumb lands or lifts), solved exactly
+ * per frame (the same motion at 20 or 120 fps). Its aim goes through a soft limit (tanh: it slows into the edge, never clamps).
+ *  - stick: `stick` × the deflection (the walk floor taken back out, so it starts from zero at the dead zone); released → back.
+ *  - drag: `drag` of aim across `dragSpan` of the screen width (≤ `dragWidth` px: a 390 px phone swipes ~270 px, a mouse ~630 px),
+ *    the spring following the finger at `dragRate`; let go and a fling carries on (`friction`), holds a moment (`hold`) and eases
+ *    back (`back`/s).
+ *  - rates (ω, 1/s): `stickRate` toward a held aim, `dragRate` after a finger, `returnRate` back to the default view; the aim itself
+ *    eases in first (`ease`, `dragEase` /s) so the turn starts without a kick (its acceleration grows from zero too).
+ */
+export const ZIP_LOOK={limit:1.2,stick:1.6,drag:1.6,dragSpan:.7,dragWidth:900,maxAim:2.6,maxFling:5,friction:6,hold:.45,back:2.6,
+ ease:10,dragEase:30,stickRate:6,dragRate:16,returnRate:3.6,reducedRate:.6,head:.7} as const;
+/** The soft edge: aim (rad) → look (rad), slope 1 at the centre, approaching ±limit. */
+export const softLook=(aim:number)=>ZIP_LOOK.limit*Math.tanh(aim/ZIP_LOOK.limit);
+/** The stick's sideways look (−1 … 1) from Town's shaped stick (shapeStick: dead zone, then a 0.36 walk floor): the floor taken
+ *  back out, so the look grows from zero as the thumb leaves the dead zone instead of jumping to a third of the way. */
+export function stickLook(x:number,z:number){const m=Math.hypot(x,z);if(m<1e-6)return 0;
+ const u=Math.max(0,Math.min(1,(Math.min(1,m)-STICK_WALK_FLOOR)/(1-STICK_WALK_FLOOR)));return x/m*u;}
+/** One exact step of a critically damped spring toward `want` (constant over the step): {x, v} changed in place. */
+export function springTo(s:{x:number;v:number},want:number,omega:number,h:number){
+ if(!(h>0))return s;const x=s.x-want,e=Math.exp(-omega*h),c=s.v+omega*x;
+ s.x=want+(x+c*h)*e;s.v=(s.v-omega*c*h)*e;return s;
+}
+
 // ---- The HUD bridge (components/ZiplineHud.tsx): written only when something shown changes, never per frame. ----------------
 export type ZipView={
  /** A short note ("Hold on tight!", "Welcome to Coral Cay!"), its counter (a new note restarts the CSS fade) and whether riding. */
@@ -191,6 +267,6 @@ export const zipStore={
 /** The prompt's tap and the ride's three actions; the runtime installs the real ones while the island is up. */
 export const zipActions={ride:()=>{},press:(_id:ZipActionId,_phase:'tap'|'down'|'up')=>{}};
 export const ZIP_NOTES={
- start:'Hold on tight! Zipping to Coral Cay. Tuck, spin or wave; the stick looks around.',
+ start:'Hold on tight! Zipping to Coral Cay. Tuck, spin or wave; drag or use the stick to look around.',
  land:'Welcome to the Coral Cay Hostel roof! The stairs down are on the east side.',
 } as const;

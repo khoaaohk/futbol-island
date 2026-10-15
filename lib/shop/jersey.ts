@@ -12,7 +12,7 @@
  * Oct 12 2026 (v2, "draw your own design"): a design may carry `art`, the child's own drawing as compact vector ops
  * (lib/shop/paint/artOps.ts). It is optional, so every older save and every bought design still validates unchanged (same JSON,
  * same purchase id). Size budget: one drawing ≤ ART_MAX_CHARS (12 KB) of JSON; the save holds at most 4 (current + 3 slots),
- * so the jersey key stays under ~50 KB, far inside the sync caps (lib/saves/snapshot.ts: 256 KB per key, 512 KB / 128 KB gzip
+ * so the jersey key stays under ~50 KB, far inside the sync caps (lib/saves/snapshot.ts: 256 KB per key, 512 KB / 192 KB gzip
  * per snapshot). Drawings are user-generated images stored only in the child's own save (no public sharing); typed text still
  * goes only through the name filter below.
  */

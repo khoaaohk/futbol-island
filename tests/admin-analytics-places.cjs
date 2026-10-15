@@ -263,6 +263,7 @@ await ok('sql',async()=>{
   psql(`select analytics_ingest('{"type":"beat","session":"sqlpresummit0000001","engaged_ms":10000,"area_ms":{"shop":9000},"place_ms":{"summit_isle":9000}}'::jsonb)`,{role:'service_role'});
   assert.equal(psql(`select area_ms::text || place_ms::text from analytics_beats where session_id='sqlpresummit0000001'`),'{}{}','unknown "shop"/"summit_isle" keys dropped before the migration runs; the beat still counts');
   runFile('supabase/migrations/20261015_analytics_summit_kit.sql');// Oct 15 2026: Kit Shop's "shop" area, Summit Isle's three places
+  runFile('supabase/migrations/20261016_analytics_kit_shop_activity.sql');// Oct 16 2026: the Kit Shop's two activity keys (kit_shop, kit_studio)
   psql(`select analytics_ingest('{"type":"beat","session":"sqlpresummit0000001","engaged_ms":10000,"area_ms":{"shop":9000},"place_ms":{"summit_isle":4000,"summit_pitch":3000,"summit_sandbar":2000}}'::jsonb)`,{role:'service_role'});
   const post=JSON.parse(psql(`select json_build_object('a',area_ms,'p',place_ms) from analytics_beats where session_id='sqlpresummit0000001' order by ts desc limit 1`));
   assert.deepEqual(post,{a:{shop:9000},p:{summit_isle:4000,summit_pitch:3000,summit_sandbar:2000}},'after the migration: the same keys are kept');
@@ -272,15 +273,17 @@ await ok('sql',async()=>{
   const sql=read('supabase/migrations/20261008_analytics_places.sql');
   assert(sql.includes(`key::integer < ${IDS.CELL_COUNT}`)&&sql.includes(`limit ${IDS.MAX_BEAT_CELLS}`));
   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
-  // The place/area allowlist's latest definition (Oct 15 2026, 20261015_analytics_summit_kit.sql): areas and places are this
-  // task's own addition, so they must match lib/analytics/islandIds.ts / core.ts exactly.
-  {const latest=read('supabase/migrations/20261015_analytics_summit_kit.sql'),lists=[...latest.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
-   assert.deepEqual(lists[0],[...C.AREAS],'area allow-list = AREAS (20261015 adds "shop")');
-   assert.deepEqual(lists[1],[...IDS.PLACE_IDS],'place allow-list = PLACE_IDS (20261015 adds the three Summit Isle places)');
+  // The place/area allowlist's latest definition (the newest migration that replaces analytics_ingest; 20261016 since Oct 16
+  // 2026): areas and places must match lib/analytics/islandIds.ts / core.ts exactly. tests/admin-analytics-coverage.cjs checks
+  // every id the client can produce against the same file (and ingests them all into Postgres).
+  {const ingestFiles=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&/create or replace function public\.analytics_ingest/.test(read('supabase/migrations/'+f))).sort();
+   const latest=read('supabase/migrations/'+ingestFiles[ingestFiles.length-1]),lists=[...latest.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
+   assert.deepEqual(lists[0],[...C.AREAS],'area allow-list = AREAS (20261015 added "shop")');
+   assert.deepEqual(lists[1],[...IDS.PLACE_IDS],'place allow-list = PLACE_IDS (20261015 added the three Summit Isle places)');
    // Activities: a DIFFERENT, concurrently-released feature (new museum exhibits) may add MORE activity keys to this same
    // file before a reviewer runs it, so this only requires every id lib/analytics/islandIds.ts knows about today to still be
    // accepted — never that the SQL has no more than that (tests/museum-exp-*.cjs and the museum agent's own tests own those ids).
-   for(const id of IDS.ACTIVITY_IDS)assert(lists[2].includes(id),`activity allow-list (20261015) is missing ${id}`);
+   for(const id of IDS.ACTIVITY_IDS)assert(lists[2].includes(id),`activity allow-list (${ingestFiles[ingestFiles.length-1]}) is missing ${id}`);
    assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(latest.replace(/--.*$/gm,'')),'no destructive statements');}
   // Ingest caps in SQL (the last line, behind the server's own clamp).
   const today=new Date().toISOString().slice(0,10);

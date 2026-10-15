@@ -4,6 +4,7 @@ import {registerIslandNarration,islandNarrationAllowed} from '@/lib/audio/island
 import {narrationOn,narrationVolume} from '@/lib/tutorial/tutorialAudio';
 import {TUTORIAL_SCENES} from '@/lib/tutorial/islandTutorial';
 import IslandTutorialArt from './IslandTutorialArt';
+import {countTutorialFinish,countTutorialOpen} from '@/lib/analytics/learnEvents';
 import styles from './IslandTutorial.module.css';
 
 type Status='playing'|'paused'|'finished';
@@ -33,6 +34,9 @@ export default function IslandTutorial({onClose,primed}:{onClose:()=>void;primed
   return()=>{release();media.removeEventListener('error',fail);media.pause();delete media.dataset.scene;media.removeAttribute('src');media.load();audio.current=null;};
  // eslint-disable-next-line react-hooks/exhaustive-deps -- adopted once
  },[]);
+ // Admin analytics (map increments only): the tutorial opened, and its last scene reached.
+ useEffect(()=>{countTutorialOpen();},[]);
+ useEffect(()=>{if(status==='finished')countTutorialFinish();},[status]);
  // Sleep while the tab is hidden or the card is off-screen; wake where it left off.
  useEffect(()=>{const node=root.current;if(!node)return;let onScreen=true;
   const update=()=>setAwake(onScreen&&!document.hidden);

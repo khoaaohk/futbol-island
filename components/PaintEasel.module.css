@@ -17,7 +17,7 @@
 /* Buttons: the app's button tokens, 44 px targets. */
 .tool,.act{display:grid;place-items:center;width:var(--btn-icon);height:var(--btn-icon);flex:0 0 auto;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-cream-edge);cursor:pointer;transition:translate .16s,box-shadow .16s}
 .tool:active,.act:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-cream-edge)}
-.tool[aria-pressed=true],.act[aria-pressed=true],.tool[aria-expanded=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+.tool[aria-pressed=true],.act[aria-pressed=true],.tool[aria-expanded=true],.act[aria-expanded=true],.act[data-active]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
 .act:disabled,.save:disabled{opacity:.5;box-shadow:none;cursor:default}
 .act[data-confirm]{width:auto;padding:0 10px;background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
 .sure{font:700 13px var(--btn-font)}
@@ -30,10 +30,23 @@
 .toolRow{display:flex;gap:4px;justify-content:space-between}
 .colours{display:grid;grid-template-columns:repeat(6,var(--btn-icon));gap:6px;justify-content:center}
 .actRow{display:flex;gap:4px;justify-content:space-between;align-items:center}
-.gallery{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px}
-.gallery::-webkit-scrollbar{display:none}
-.thumb{flex:0 0 auto;width:68px;height:51px;padding:0;border:3px solid var(--btn-rim);border-radius:8px;background:var(--btn-cream);box-shadow:0 3px 0 var(--btn-cream-edge);overflow:hidden;cursor:pointer}
+/* "My paintings": the saved thumbnails (the one on the easel badged), the chosen one's actions, and where they are kept. */
+.galleryTitle{font:800 14px var(--btn-font)}
+.gallery{display:flex;flex-direction:column;gap:8px}
+.thumbs{display:flex;gap:8px;align-items:center;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px}
+.thumbs::-webkit-scrollbar{display:none}
+.thumb{position:relative;flex:0 0 auto;width:68px;height:51px;padding:0;border:3px solid var(--btn-rim);border-radius:8px;background:var(--btn-cream);box-shadow:0 3px 0 var(--btn-cream-edge);overflow:hidden;cursor:pointer}
+.thumb[aria-pressed=true]{border-color:var(--btn-pink);box-shadow:0 0 0 3px var(--btn-pink-edge)}
 .thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.badge{position:absolute;left:0;right:0;bottom:0;padding:1px 0;background:#12302acc;color:#fff8ea;font:700 9px/1.2 var(--btn-font);text-align:center}
+.gacts{display:flex;gap:6px;flex-wrap:wrap}
+.gact{flex:1 1 auto;min-height:var(--btn-icon);padding:0 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-cream-edge);font:700 13px var(--btn-font);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.gact:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-cream-edge)}
+.gact:disabled{opacity:.6;box-shadow:none;cursor:default}
+.gact[data-confirm]{background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
+/* The picture style's name, on the board for a moment after a tap (one CSS fade, then still: no timers). */
+.toast{position:absolute;left:50%;top:calc(84px + env(safe-area-inset-top,0px));translate:-50% 0;padding:7px 16px;border-radius:999px;background:#12302ad9;color:#fff8ea;font:800 16px var(--btn-font);white-space:nowrap;pointer-events:none;animation:toastOut 1.8s ease-in forwards}
+@keyframes toastOut{0%,65%{opacity:1}100%{opacity:0}}
 .small{flex:0 1 auto;font:600 11px/1.3 var(--btn-font);opacity:.75;min-width:120px}
 
 /* Phones: one compact row at the bottom, like a brush tray; the brushes and the colours open small popovers above it. */
@@ -68,5 +81,6 @@
 }
 @media (prefers-reduced-motion:reduce){
  .row,.board,.lookHint{animation:none}
- .look,.tool,.act,.swatch,.save{transition:none}
+ .toast{animation:toastOut 2.4s steps(1,end) forwards}
+ .look,.tool,.act,.swatch,.save,.gact{transition:none}
 }

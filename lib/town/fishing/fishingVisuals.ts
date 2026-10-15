@@ -12,6 +12,8 @@ import type {Hotspot} from './fishingAim';
 import {fishingLife} from './fishingLife';
 import {effectiveTier} from '../../graphics/heatTier';
 import {WATER_UNIFORMS} from '../../graphics/waterSurface';
+import {shadowShape} from './fishingFight';
+import {applyLiveWaterMood} from './waterMood';// Agent B hook
 
 /**
  * FISHING VISUALS — original shoreline art behind a small interface (hand-off: docs/fishing-visuals-HANDOFF.md).
@@ -56,6 +58,13 @@ export interface FishingVisuals{
     fishCatalog's FishShape so the art can tell a crab from a fish. `id` (optional, Oct 5 2026) picks the species' own model
     (fishModels.ts): a shrimp looks like a shrimp, a haddock has its thumbprint. Without it the shape picks a generic animal. */
  setReelingFish(fish:CatchLook|null):void;
+ /** The fight (Oct 15 2026, docs/fishing-research.md B1/B6; optional): line tension 0..1 (the line reddens, the rod bends more),
+  *  where the fish pulls (a world offset in metres from the straight line in), a run in progress (a wake behind it) and a
+  *  slip's head-shake (seconds left). Null when not fighting (Easy reel keeps the old look). */
+ setFight?(f:{tension:number;lateral:Vec2;running:boolean;stun:number}|null):void;
+ /** Cosmetics (Oct 15 2026, Agent B's rewards; optional): the float's colour (null = classic red), the golden rod, and the float's
+  *  glow after dark (0..1, waterMood floatGlow). Material values only. */
+ setLook?(l:{floatColor:string|null;goldenRod:boolean;floatGlow:number}):void;
  holdUpFish(fish:CatchLook|null):void;
  /** Near a spot (45 m). Since Oct 12 2026 the shore is the moving water built when a session begins (shoreWater.ts); kept for the driver. */
  setCoastVisible(visible:boolean):void;
@@ -68,6 +77,10 @@ export interface FishingVisuals{
 }
 
 const SURFACE=-.398,ROD=1.7,LINE_N=20;
+/** B2: the leap lasts LEAP_S; its path parameter pauses near the top for LEAP_HOLD of that time (the freeze-frame). */
+export const LEAP_S=.95,LEAP_HOLD=.16;
+/** Leap time (0..1) to path (0..1): even up to the apex, almost still for LEAP_HOLD, then even down into the hands. */
+export function leapPath(a:number){const h0=.5-LEAP_HOLD/2,h1=.5+LEAP_HOLD/2;return a<h0?a/h0*.49:a<h1?.49+(a-h0)/LEAP_HOLD*.02:.51+(a-h1)/(1-h1)*.49;}
 /** The catch material: flat-shaded vertex colours, with a vertex-shader wag (no CPU vertex work) and per-vertex glow. */
 type FishFx={material:T.MeshStandardMaterial;setAnim(a:SpeciesModel['anim']):void;drive(phase:number,amp:number):void};
 function fishMaterial(underwater=false):FishFx{
@@ -91,13 +104,17 @@ function liftWhenHeld(m:SpeciesModel){
  const box=m.geometry.boundingBox!.clone().applyMatrix4(new T.Matrix4().makeRotationFromEuler(new T.Euler(m.hold.x,0,m.hold.z+.15,'YZX')));
  return Math.max(0,-box.min.y-.15);
 }
-const shadowKind=(shape?:FishShape):ShadowKind=>shape==='shark'||shape==='hammerhead'?'shark':shape==='ray'?'ray':shape==='octopus'||shape==='squid'?'octopus':shape==='crab'||shape==='lobster'||shape==='shell'?'crab':'fish';
+/** The approach silhouette per family (A2, Oct 15 2026: eels are long and thin; the mapping is fishingFight's shadowShape, whose
+ *  shape word the Fishbook shows). */
+type Silhouette=ShadowKind|'eel';
+const shadowKind=(shape?:FishShape):Silhouette=>shape?shadowShape({shape,group:'fish'}):'fish';
 /** Flat top-view silhouettes, head toward -Z after the rotation (the swim code bends +Z, the tail). */
-function silhouette(kind:ShadowKind){
+function silhouette(kind:Silhouette){
  const parts:T.BufferGeometry[]=[];const shape=(pts:[number,number][])=>{const s=new T.Shape(pts.map(([x,y])=>new T.Vector2(x,y)));parts.push(new T.ShapeGeometry(s).toNonIndexed());};
  if(kind==='fish'){parts.push(new T.CircleGeometry(.5,24).scale(.42,1,1).toNonIndexed(),new T.CircleGeometry(.16,3).rotateZ(Math.PI/2).translate(0,-.56,0).scale(1.1,1,1).toNonIndexed());}
  else if(kind==='shark')shape([[0,.55],[.1,.35],[.13,.15],[.42,-.05],[.44,-.12],[.12,-.04],[.07,-.4],[.25,-.66],[.18,-.7],[0,-.5],[-.18,-.7],[-.25,-.66],[-.07,-.4],[-.12,-.04],[-.44,-.12],[-.42,-.05],[-.13,.15],[-.1,.35]]);
  else if(kind==='ray'){shape([[0,.42],[.5,.0],[.05,-.22],[.02,-.7],[-.02,-.7],[-.05,-.22],[-.5,0]]);}
+ else if(kind==='eel'){parts.push(new T.CircleGeometry(.5,28).scale(.075,1,1).toNonIndexed(),new T.CircleGeometry(.06,10).scale(1,1.4,1).translate(0,.44,0).toNonIndexed());}
  else if(kind==='octopus'){parts.push(new T.CircleGeometry(.2,14).scale(1,1.2,1).translate(0,.28,0).toNonIndexed());for(let i=0;i<8;i++){const a=-Math.PI*.85+i/7*Math.PI*.7;shape([[Math.sin(a)*.06-.03,.1],[Math.sin(a)*.06+.03,.1],[Math.sin(a)*.45,-.55+Math.abs(i-3.5)*.04]]);}}
  else {parts.push(new T.CircleGeometry(.24,12).scale(1.3,.8,1).toNonIndexed());for(const s of [1,-1]){for(let i=0;i<4;i++)shape([[s*.25,.1-i*.08],[s*.5,.18-i*.14],[s*.48,.14-i*.14],[s*.25,.06-i*.08]]);shape([[s*.15,.15],[s*.32,.42],[s*.2,.46],[s*.08,.18]]);}}
  for(const p of parts){p.deleteAttribute('uv');p.deleteAttribute('normal');}
@@ -115,12 +132,13 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  const rodNormals=rod.geometry.getAttribute('normal') as T.BufferAttribute,rodNormalRest=new Float32Array(rodNormals.array);
  let bend=0,lastBend=-1,rodTilt=.62,rightArm=-1.05,leftArm=0,reelTurn=0,reelImpulse=0;
  const linePos=new Float32Array(LINE_N*3),lineGeo=keep(new T.BufferGeometry());lineGeo.setAttribute('position',new T.BufferAttribute(linePos,3));
- const line=new T.Line(lineGeo,mat(new T.LineBasicMaterial({color:'#f5f1e4',transparent:true,opacity:.85})));line.name='fishing-line';line.frustumCulled=false;root.add(line);
+ const lineMat=mat(new T.LineBasicMaterial({color:'#f5f1e4',transparent:true,opacity:.85})),LINE_WHITE=new T.Color('#f5f1e4'),LINE_RED=new T.Color('#e8473a');
+ const line=new T.Line(lineGeo,lineMat);line.name='fishing-line';line.frustumCulled=false;root.add(line);
  const bobber=new T.Mesh(keep(mergeGeometries([new T.SphereGeometry(.13,12,8,0,Math.PI*2,0,Math.PI/2).toNonIndexed(),new T.SphereGeometry(.13,12,8,0,Math.PI*2,Math.PI/2,Math.PI/2).toNonIndexed(),new T.CylinderGeometry(.016,.012,.2,6).translate(0,.19,0).toNonIndexed()],true)!),[mat(new T.MeshStandardMaterial({color:'#e0513f',roughness:.45})),mat(new T.MeshStandardMaterial({color:'#fff6e6',roughness:.45})),mat(new T.MeshStandardMaterial({color:'#ffe292',emissive:'#ffbd42',emissiveIntensity:.18}))]);root.add(bobber);
  // Swimming shadow: one mesh; its silhouette geometry (fish / shark / ray / octopus / crab) is built once per kind on first use.
- const shadowGeos=new Map<ShadowKind,{geo:T.BufferGeometry;rest:Float32Array}>();
- const shadowGeo=(kind:ShadowKind)=>{let e=shadowGeos.get(kind);if(!e){const geo=keep(silhouette(kind));e={geo,rest:new Float32Array(geo.getAttribute('position').array)};shadowGeos.set(kind,e);}return e;};
- let shKind:ShadowKind='fish',{geo:shGeo,rest:shadowRest}=shadowGeo('fish');
+ const shadowGeos=new Map<Silhouette,{geo:T.BufferGeometry;rest:Float32Array}>();
+ const shadowGeo=(kind:Silhouette)=>{let e=shadowGeos.get(kind);if(!e){const geo=keep(silhouette(kind));e={geo,rest:new Float32Array(geo.getAttribute('position').array)};shadowGeos.set(kind,e);}return e;};
+ let shKind:Silhouette='fish',{geo:shGeo,rest:shadowRest}=shadowGeo('fish');
  const shadowMat=mat(new T.MeshBasicMaterial({color:'#0d2a33',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}));const shadow=new T.Mesh(shGeo,shadowMat);shadow.name='fishing-swimming-shadow';shadow.renderOrder=1;shadow.visible=false;root.add(shadow);
  // The catch: ONE mesh each for the held-up and the reeled animal, species geometry from fishModels.ts (cached, merged,
  // vertex-coloured), the tail wag / arm sway in the vertex shader (fishMaterial), so 2 draws instead of 12.
@@ -156,6 +174,9 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  let hotList:readonly Hotspot[]=[],clockT=0,aimTo:Vec2|null=null;
  let active=false,stand:Vec2={x:0,z:0},cast:Vec2={x:0,z:0},dir:Vec2={x:0,z:1},pose:FishingPose='hold',bobState:BobberState={kind:'hanging'},dip=0,shadowOn=false,heldFish:CatchLook|null=null;
  let reelTravel=0,landingAge=1,reelingFish:CatchLook|null=null;const landingFrom=new T.Vector3();
+ // Oct 15 2026: the fight's look (line colour, bend, the fish pulling sideways, its wake), the bite's "!" and the leap's size.
+ let fight:{tension:number;lateral:Vec2;running:boolean;stun:number}|null=null,lineRed=0,latX=0,latZ=0,bangAge=0,leapBig=0;
+ const shWorld={x:0,z:0,heading:0,alpha:0,rise:1,len:1,mode:'swim' as string};
  const hv=new T.Vector3(),tip=new T.Vector3(),bob=new T.Vector3(),tmp=new T.Vector3();
  const rightShoulder=player.getObjectByName('right-shoulder'),leftShoulder=player.getObjectByName('left-shoulder'),rightHand=player.getObjectByName('right-hand'),head=player.getObjectByName('player-head');
  const reelDistance=()=>reelTravel;
@@ -171,14 +192,18 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    const viewDepth=Math.max(halfWidth<6?11:15,Math.hypot(c.x-s.x,c.z-s.z)+5);
    // Each spot's own reef (Oct 13 2026): water tint and sand (shared uniforms), the seabed layout and palette, the fish and the
    // clownfish's anemone, all from its theme (underwater.ts REEF_THEMES).
-   const theme=reefTheme(spot);applyReefWater(theme);
+   const theme=reefTheme(spot);applyReefWater(theme);applyLiveWaterMood(UW_UNIFORMS);// Agent B hook (Oct 15 2026): night / weather water mood, uniforms only (waterMood.ts)
    water?.begin(s,d,spot,halfWidth,viewDepth);if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,water?.homes??[],viewDepth,water?.pieces??[]);
    if(theme.deep)column?.begin(s,d,theme);else column?.end();overlay.begin();
    // Bubbles rise now and then from the taller reef pieces in view (from the seabed build; none in open deep water).
    {const pcs=(water?.pieces??[]).filter(p=>p.top-p.y>.2);const pick:{x:number;y:number;z:number}[]=[];for(let i=0;i<pcs.length&&pick.length<12;i+=Math.max(1,Math.floor(pcs.length/12)))pick.push({x:pcs[i].x,y:pcs[i].y,z:pcs[i].z});overlay.setBubbleSources(pick);}
-   lineSag=.1;lineTwitch=0;restRing=1.5;dripT=9;hotList=[];aimTo=null;overlay.setHotspots(hotList);overlay.setAim(null);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
-  end(){water?.end();schools.end();column?.end();overlay.end();aimTo=null;active=false;rod.visible=line.visible=bobber.visible=false;shadow.visible=false;catchFish.visible=false;held.visible=false;reeledFish.visible=false;reelingFish=null;shadowOn=false;heldFish=null;if(!ringsBusy())root.visible=false;},
+   lineSag=.1;lineTwitch=0;restRing=1.5;dripT=9;hotList=[];aimTo=null;overlay.setHotspots(hotList);overlay.setAim(null);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;fight=null;latX=latZ=0;bangAge=0;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
+  end(){water?.end();schools.end();column?.end();overlay.end();aimTo=null;active=false;fight=null;rod.visible=line.visible=bobber.visible=false;shadow.visible=false;catchFish.visible=false;held.visible=false;reeledFish.visible=false;reelingFish=null;shadowOn=false;heldFish=null;if(!ringsBusy())root.visible=false;},
   setPose(p){pose=p;},
+  setFight(f){fight=f;},
+  setLook(l){const top=bobber.material[0] as T.MeshStandardMaterial,tipM=bobber.material[2] as T.MeshStandardMaterial,shaft=rod.material[0] as T.MeshStandardMaterial;
+   top.color.set(l.floatColor??'#e0513f');tipM.emissiveIntensity=.18+Math.max(0,Math.min(1,l.floatGlow))*1.1;top.emissive.set(l.floatGlow>.5?l.floatColor??'#e0513f':'#000000');top.emissiveIntensity=l.floatGlow*.35;
+   shaft.color.set(l.goldenRod?'#d4a53a':'#213d49');shaft.metalness=l.goldenRod?.55:0;shaft.roughness=l.goldenRod?.35:.7;},
   setCast(c,d){cast={...c};dir={...d};},
   setHotspots(list){hotList=list;overlay.setHotspots(list);const bait=list.find(h=>h.kind==='baitball');schools.setBait(bait?{x:bait.x,z:bait.z}:null);},
   setAim(to){aimTo=to;},
@@ -192,6 +217,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    // Clear water: the silhouette lies on the seabed under the swimming catch; without the clear water (A/B) it stays at the surface.
    shadow.position.set(x,clear?UW_SURFACE-depth+.012:SURFACE-.001,z);shadow.renderOrder=clear?.58:1;// The silhouette head is local -Z; simulation headings point along +Z.
    const kind=shadowKind(sh.shape);if(kind!==shKind){shKind=kind;({geo:shGeo,rest:shadowRest}=shadowGeo(kind));shadow.geometry=shGeo;}
+   Object.assign(shWorld,{x,z,heading:sh.heading,alpha:sh.alpha,rise:sh.rise??0,len:SHADOW_LENGTH[sh.size],mode:sh.mode??'swim'});
    shadow.rotation.y=sh.heading+Math.PI;shadow.scale.setScalar(SHADOW_LENGTH[sh.size]);shadowMat.opacity=(clear?.36:.5)*sh.alpha;
    if(clear){catchModel=look(catchFish,catchFx,{color:sh.color??'#8aa0a8',lengthCm:40,shape:sh.shape,id:sh.id});
     // The model's nose is local −X (see the reeled fish): face the heading. Near the surface, so it reads clearly over the seabed.
@@ -202,9 +228,10 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
     catchFx.material.opacity=Math.min(1,sh.alpha*1.3)*(1-rise*.55);shadowMat.opacity*=1-rise*.8;}
    else catchFresh=true;},
   setReelingFish(f){reelingFish=f;reeledFish.visible=!!f;if(f)reelModel=look(reeledFish,reelFx,f);},
-  holdUpFish(f){if(f&&!heldFish){landingAge=0;landingFrom.copy(bob);
-    // The catch leaving the water: a splash, two rings and a burst of drops where it came out; it drips for a moment after.
-    overlay.ring(bob.x,bob.z,1.1,1);overlay.ring(bob.x,bob.z,.6,.7);overlay.burst(bob.x,SURFACE+.02,bob.z,14,1.1);dripT=0;dripWait=.15;}
+  holdUpFish(f){if(f&&!heldFish){landingAge=0;landingFrom.copy(bob);leapBig=Math.min(1,f.lengthCm/120);
+    // The catch leaving the water (B2, Oct 15 2026: a bigger leap for a bigger fish): a splash, rings and a burst of drops where
+    // it came out; it drips for a moment after.
+    overlay.ring(bob.x,bob.z,1.1+leapBig*.6,1);overlay.ring(bob.x,bob.z,.6,.7);overlay.ring(bob.x,bob.z,1.9+leapBig,1.3);overlay.burst(bob.x,SURFACE+.02,bob.z,14,1.1);if(leapBig>.3)overlay.burst(bob.x,SURFACE+.02,bob.z,4,1.1+leapBig*.5);dripT=0;dripWait=.15;}
    heldFish=f;held.visible=!!f;
    if(f){heldModel=look(held,heldFx,f);heldLift=liftWhenHeld(heldModel);}},
   setCoastVisible(){},
@@ -214,9 +241,8 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    // Heat gate (fishingLife): sway, the extra reef life and particles only on the cool tiers; uniform writes only.
    life=fishingLife(effectiveTier(),reduced,WATER_UNIFORMS.uWaterDetail.value);UW_UNIFORMS.uUwSway.value=life.sway?1:0;overlay.setLife(life.particles);schools.setLife(life.life);
    column?.frame(dt,reduced);
-   overlay.setAim(active&&aimTo?{from:{x:tip.x,y:tip.y,z:tip.z},to:aimTo}:null);overlay.frame(dt,reduced,clockT);
    water?.frame(dt,reduced);schools.frame(dt,reduced,active&&(bobState.kind==='floating'||bobState.kind==='under'||bobState.kind==='reeling')?{x:bob.x,z:bob.z}:null);
-   if(!active){UW_UNIFORMS.uUwFloatOn.value=0;if(!ringsBusy())root.visible=false;return;}
+   if(!active){overlay.setAim(null);overlay.frame(dt,reduced,clockT);UW_UNIFORMS.uUwFloatOn.value=0;if(!ringsBusy())root.visible=false;return;}
    dip=Math.max(0,dip-dt*4);const reelTarget=bobState.kind==='reeling'?Math.min(2.7,Math.hypot(cast.x-stand.x,cast.z-stand.z)*.5)*bobState.progress:0;reelTravel=reduced?reelTarget:reelTravel+(reelTarget-reelTravel)*(1-Math.exp(-dt*14));
    // Face the water and pose the arms (applied after the rig's own update each frame).
    player.rotation.y=Math.atan2(dir.x,dir.z);
@@ -232,7 +258,8 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    rodTilt+=(tilt-rodTilt)*ease;
    // Curvature grows toward the tip. The same deformed endpoint drives the line,
    // so the line stays attached through the windup, bite and each pull.
-   const tension=reeling?.16+reelImpulse*.2:pose==='strike'?.3:pose==='windup'?-.09:pose==='cast'?.1:dip*.08;
+   // B6: under the fight the rod bends with the line's tension (more range) and shakes on a slip.
+   const tension=reeling?(fight?.14+fight.tension*.36+(reduced?0:Math.sin(elapsed*38)*.07*Math.min(1,fight.stun*1.5)):.16+reelImpulse*.2):pose==='strike'?.3:pose==='windup'?-.09:pose==='cast'?.1:dip*.08;
    bend+=(tension-bend)*(reduced?1:1-Math.exp(-dt*12));
    if(Math.abs(bend-lastBend)>.0005){for(let i=0;i<rodPositions.count;i++){const j=i*3,t=Math.max(0,(rodRest[j+1]-.3)/(ROD-.3)),slope=2*t*bend/(ROD-.3),angle=Math.atan(slope),c=Math.cos(angle),s=Math.sin(angle);
     rodPositions.setZ(i,rodRest[j+2]+t*t*bend);rodNormals.setY(i,rodNormalRest[j+1]*c-rodNormalRest[j+2]*s);rodNormals.setZ(i,rodNormalRest[j+1]*s+rodNormalRest[j+2]*c);}
@@ -246,11 +273,15 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    const swellBob=reduced?0:Math.sin(elapsed*1.122)*.022+Math.sin(elapsed*2.9+1.3)*.008,swellTilt=reduced?0:Math.cos(elapsed*1.122)*.09+Math.sin(elapsed*2.3)*.035;
    if(b.kind==='hanging'){bob.set(tip.x,tip.y-.45,tip.z);sagTarget=0;}
    else if(b.kind==='flying'){const k=Math.min(1,b.progress);bob.set(tip.x+(cast.x-tip.x)*k,tip.y+(SURFACE+.06-tip.y)*k+Math.sin(k*Math.PI)*1.6,tip.z+(cast.z-tip.z)*k);sagTarget=.05+k*.25;}
-   else if(b.kind==='reeling'){const pull=reelDistance();bob.set(cast.x-dir.x*pull,SURFACE+.04-dip*.05+swellBob*.4,cast.z-dir.z*pull);sagTarget=.05-reelImpulse*.04;}
-   else if(b.kind==='under'){bob.set(cast.x,SURFACE-.12+(reduced?0:Math.sin(elapsed*40)*.02),cast.z);sagTarget=0;}
+   else if(b.kind==='reeling'){const pull=reelDistance(),lk=reduced?1:1-Math.exp(-dt*3.2);latX+=((fight?.lateral.x??0)-latX)*lk;latZ+=((fight?.lateral.z??0)-latZ)*lk;
+    bob.set(cast.x-dir.x*pull+latX,SURFACE+.04-dip*.05+swellBob*.4,cast.z-dir.z*pull+latZ);sagTarget=fight?.04-fight.tension*.05:.05-reelImpulse*.04;}
+   else if(b.kind==='under'){bob.set(cast.x,SURFACE-.12+(reduced?0:Math.sin(elapsed*40)*.02),cast.z);sagTarget=0;
+    // A1: the bold "!" pops over the float for the whole bite window (a quick overshoot, then a gentle pulse; still with reduced motion).
+    bangAge+=dt;const pop=reduced?1:bangAge<.16?bangAge/.16*1.25:bangAge<.26?1.25-(bangAge-.16)/.1*.25:1+Math.sin(bangAge*10)*.05;overlay.mark('bang',cast.x,SURFACE+1.05,cast.z,.8*pop);}
    else{bob.set(cast.x,SURFACE+.05+swellBob-dip*.07,cast.z);sagTarget=.3+swellBob*2-dip*.18;
     // A faint resting ripple round the float every few seconds as it rocks (cool tiers only).
     if(life.particles&&!reduced){restRing-=dt;if(restRing<=0){restRing=2.6+Math.random()*1.6;overlay.ring(bob.x,bob.z,.42,1.8);}}}
+   if(b.kind!=='under')bangAge=0;
    lineTwitch=Math.max(0,lineTwitch-dt*3);
    lineSag=reduced?sagTarget:lineSag+(sagTarget-lineSag)*(1-Math.exp(-dt*(sagTarget<lineSag?10:2.5)));
    const sag=Math.max(0,lineSag-lineTwitch*.12);
@@ -303,12 +334,26 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
     // A hanging line sags most a little past the middle (the float end is lower); a twitch sends a small wave along it.
     const hang=4*t*(1-t)*(1+.35*(t-.5));tmp.y-=hang*sag;if(lineTwitch>0&&!reduced)tmp.y+=Math.sin(t*Math.PI*3-elapsed*30)*.012*lineTwitch*Math.sin(t*Math.PI);linePos[i*3]=tmp.x;linePos[i*3+1]=tmp.y;linePos[i*3+2]=tmp.z;}
    lineGeo.attributes.position.needsUpdate=true;
+   // B6: the line reddens with the fight's tension (one colour write when it changes).
+   const red=fight&&reeling?Math.min(1,Math.max(0,(fight.tension-.25)/.75))**1.3:0;lineRed+=(red-lineRed)*(reduced?1:1-Math.exp(-dt*8));
+   if(Math.abs(lineRed-(lineMat.userData.red??-1))>.01){lineMat.color.copy(LINE_WHITE).lerp(LINE_RED,lineRed);lineMat.userData.red=lineRed;}
+   // B6: a V-wake behind a fish making a run (it pulls sideways), in the overlay's draw.
+   if(reelingFish&&fight?.running&&!reduced){const ml=Math.hypot(fight.lateral.x,fight.lateral.z)||1,mx=fight.lateral.x/ml,mz=fight.lateral.z/ml;overlay.mark('wake',bob.x-mx*.75,SURFACE+.012,bob.z-mz*.75,.9,Math.atan2(-mx,-mz),1,.9);}
+   // A2: a shark's dorsal fin breaks the surface on its approach (and as it swims off), with a little V-wake behind it.
+   if(shadowOn&&shKind==='shark'&&shWorld.rise<.75&&shWorld.alpha>.15&&!reelingFish){const a=Math.min(1,shWorld.alpha*1.4)*(1-shWorld.rise*.9),L=shWorld.len,mx=Math.sin(shWorld.heading),mz=Math.cos(shWorld.heading);
+    const fx=shWorld.x-mx*.08*L,fz=shWorld.z-mz*.08*L,fs=Math.max(.32,.34*L);overlay.mark('fin',fx,SURFACE+fs*.42,fz,fs,0,a);
+    if(!reduced&&shWorld.mode!=='nibble'&&shWorld.mode!=='bite')overlay.mark('wake',fx-mx*.55*L,SURFACE+.012,fz-mz*.55*L,.75*L,Math.atan2(-mx,-mz),1,.7*a);}
    if(heldFish){const hd=head;if(hd)hd.getWorldPosition(tmp);else tmp.set(stand.x,1.3,stand.z);
-    const len=Math.min(1.3,Math.max(.8,heldFish.lengthCm/70));held.scale.setScalar(len);held.position.set(tmp.x,tmp.y+.55+len*(.2+heldLift)+(reduced?0:Math.sin(elapsed*3)*.02),tmp.z);landingAge=Math.min(1,landingAge+dt/.65);if(!reduced&&landingAge<1){const k=landingAge*landingAge*(3-2*landingAge);held.position.lerpVectors(landingFrom,tmp.copy(held.position),k);held.position.y+=Math.sin(landingAge*Math.PI)*1.1;held.scale.setScalar(len*(.6+.4*k));}// Side-on to the fishing camera (it looks back from over the water, a little to the side): the animal's flank (+Z)
+    const len=Math.min(1.3,Math.max(.8,heldFish.lengthCm/70));held.scale.setScalar(len);held.position.set(tmp.x,tmp.y+.55+len*(.2+heldLift)+(reduced?0:Math.sin(elapsed*3)*.02),tmp.z);landingAge=Math.min(1,landingAge+dt/LEAP_S);
+    // B2 (Oct 15 2026): the catch LEAPS out of the water in an arc (higher for a bigger fish), with a ~150 ms freeze at the top
+    // (only this fish's own clock slows; the island loop and frame cap are untouched), then lands in the angler's hands.
+    if(!reduced&&landingAge<1){const u=leapPath(landingAge),k=u*u*(3-2*u);held.position.lerpVectors(landingFrom,tmp.copy(held.position),k);held.position.y+=Math.sin(u*Math.PI)*(1.1+leapBig*.9);held.scale.setScalar(len*(.6+.4*k));}// Side-on to the fishing camera (it looks back from over the water, a little to the side): the animal's flank (+Z)
     // faces out to sea. Flat animals tip their back toward the camera; the octopus hangs its arms down (model.hold).
-    const hm=heldModel;held.rotation.set(hm?.hold.x??0,Math.atan2(dir.x,dir.z)-.3+(reduced?0:Math.sin(elapsed*9)*.12*wriggle),.15+(hm?.hold.z??0)+(reduced?0:Math.sin(landingAge*Math.PI)*.65+Math.sin(elapsed*13)*.1*wriggle),'YZX');
+    const hm=heldModel;held.rotation.set(hm?.hold.x??0,Math.atan2(dir.x,dir.z)-.3+(reduced?0:Math.sin(elapsed*9)*.12*wriggle),.15+(hm?.hold.z??0)+(reduced?0:Math.sin(leapPath(landingAge)*Math.PI)*.65+Math.sin(elapsed*13)*.1*wriggle),'YZX');
     // Water drips off it for a couple of seconds (a few drops falling to the sand; cool tiers only).
     if(dripT<2.4&&!reduced){dripWait-=dt;if(dripWait<=0){dripWait=.1+dripT*.12+Math.random()*.12;overlay.drip(held.position.x+(Math.random()-.5)*.3*len,held.position.y-.12*len,held.position.z+(Math.random()-.5)*.3*len,player.position.y+.03);}}}
+   // The overlay draws last, so this frame's marks (the "!", fins, wakes) and the aim arc from this frame's rod tip are in it.
+   overlay.setAim(aimTo?{from:{x:tip.x,y:tip.y,z:tip.z},to:aimTo}:null);overlay.frame(dt,reduced,clockT);
   },
   dispose(){water?.dispose();schools.dispose();column?.dispose();overlay.dispose();releaseSpeciesModels();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());},
  };
