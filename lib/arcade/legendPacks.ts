@@ -1,9 +1,10 @@
 /** Career context is sourced; coaching notes are original Futbol Island writing, never player quotes. */
 /** Pack prices since the economy pass (docs/economy/ECONOMY_PROPOSAL.md §5.2, applied 28 Sep 2026; were 30 / 50). */
-export const LEGEND_PACK_PRICE=40;
-export const MYSTERY_PACK_OPTIONS=[{size:3,price:40,secondLegendChance:0},{size:5,price:60,secondLegendChance:.25}] as const;
+import {PACK_PRICES,PACKS_PER_DAY as PER_DAY} from '../economy';
+export const LEGEND_PACK_PRICE=PACK_PRICES.legend;// lib/economy.ts
+export const MYSTERY_PACK_OPTIONS=[{size:3,price:PACK_PRICES.pack3,secondLegendChance:0},{size:5,price:PACK_PRICES.pack5,secondLegendChance:.25}] as const;
 /** Card packs a player can open per local day, across every machine; machines restock at local midnight. */
-export const PACKS_PER_DAY=3;
+export const PACKS_PER_DAY=PER_DAY;
 export const PACK_RESTOCK_MESSAGE='This machine restocks at midnight.';
 export const LEGEND_PACKS=[
  {name:'Pelé',theme:'Stay curious',context:'Pelé won the World Cup with Brazil in 1958, 1962 and 1970.',note:'A good performance is a starting point. Choose one touch to improve next time, and give it your full attention.',source:'https://www.fifa.com/en/tournaments/mens/worldcup/articles/pele-three-world-cup-titles-only-player',publisher:'FIFA'},

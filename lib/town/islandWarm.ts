@@ -1,5 +1,7 @@
 import * as T from 'three';
 import {buildTownSteps,runSteps,type TownWorld} from './world';
+import {attachHorizonHaze} from '@/lib/graphics/horizonHaze';
+import '@/lib/graphics/shadowEdgeFade';// soft shadow-box edge, patched into three's chunk before the warm-up compile
 import {createVendingMachines,type VendingMachines} from '@/lib/graphics/vendingMachines';
 import {readArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {graphicsQuality} from '@/lib/graphics/quality';
@@ -50,7 +52,7 @@ export function* warmIslandSteps():Generator<void|Promise<unknown>,boolean,unkno
  const quality=graphicsQuality();antialias=quality.antialias;
  try{renderer=new T.WebGLRenderer({antialias,powerPreference:'default'});configureIslandRenderer(renderer);}catch{renderer=null;}
  slices++;yield;
- scene=new T.Scene();scene.background=new T.Color('#e8b98b');scene.fog=null;
+ scene=new T.Scene();scene.background=new T.Color('#e8b98b');attachHorizonHaze(scene);// compiled with the haze Town uses (no recompile)
  build=buildTownSteps(scene);
  for(;;){if(currentPhase()!=='building')return false;const r=build.next();slices++;if(r.done){world=r.value;break;}yield;}
  build=null;

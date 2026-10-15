@@ -77,7 +77,7 @@ export type DiagramFrame={
  settle:number;
 };
 
-/* ─────────────────────────────── The 100 scenes ─────────────────────────────── */
+/* ─────────────────────────────── The 115 scenes ─────────────────────────────── */
 export const SCENES={
  /* Level 1: the simplest space and time ideas (7v7 words). */
  'scan-shoulder':{cast:{p:[80,200,'Passer'],a:[165,135,'You'],x:[114,90,'?']},ball:'p',steps:[
@@ -488,6 +488,67 @@ export const SCENES={
   {note:'A high ball drops at your head',tags:[['a','Head it?']],hint:['M165 60L165 132']},
   {note:'Let it drop · cushion it',ball:'a',dribble:true,tags:[['a','Chest']]},
   {note:'On the ground · pass with your feet',ball:'m',lanes:[['a','m',1]]}]},
+ /* Summit Isle (Oct 15 2026): Laws of the Game, goalkeeping, skills and teamwork. */
+ 'dropped-ball':{cast:{a:[150,150,'You'],b:[226,112,'Mate'],x1:[188,170],x2:[112,98]},ball:[168,150],steps:[
+  {note:'Someone is hurt · the referee stops play',tags:[['b','Hurt']]},
+  {note:'Your team touched it last',at:{x1:[206,190],x2:[92,80]},tags:[['a','Last touch']]},
+  {note:'Dropped for you · others 4 m away',ball:'a',at:{x1:[214,196],x2:[86,74]},zones:[[112,112,84,70,'4 m']],pulse:['a','Yours!']}]},
+ 'fair-challenge':{cast:{x:[112,150,'Dribbler'],a:[150,176,'You'],m:[256,72,'Mate'],x2:[214,112]},ball:'x',steps:[
+  {note:'You stick out a leg · trip!',tags:[['x','Foul!']]},
+  {note:'Free kick to the other team',at:{x:[118,166],x2:[196,128]},tags:[['x','Free kick']]},
+  {note:'Again: stay up · poke the ball',at:{a:[128,160]},ball:[150,128],bend:{ball:-14},pulse:['a','Clean!']}]},
+ 'goal-kick-in':{pitch:'defend',cast:{k:[165,214,'Keeper'],b:[112,196,'Mate'],c:[236,176],x1:[124,140],x2:[206,138]},ball:'k',steps:[
+  {note:'Goal kick · a mate inside the area',zones:[[90,172,150,58,'Area']]},
+  {note:'Opponents wait outside the area',at:{x1:[118,160],x2:[212,160]},zones:[[90,172,150,58,'Area']],tags:[['x1','Wait']]},
+  {note:'It moves · in play · pass it short',ball:'b',lanes:[['k','b',1]],pulse:['b','In play!']}]},
+ 'referee-final':{cast:{a:[150,150,'You'],b:[236,96,'Mate'],x:[186,120]},ball:[204,132],steps:[
+  {note:'A free kick against you · unfair?',tags:[['a','Grr!']]},
+  {note:'Arguing can earn a yellow card',at:{a:[172,138]},tags:[['a','Yellow card?']]},
+  {note:'Back into position · next ball',at:{a:[118,194]},pulse:['a','Focus!']}]},
+ 'keeper-set':{pitch:'defend',cast:{k:[136,208,'Keeper'],x:[204,146,'Shooter'],d:[106,150]},ball:'x',steps:[
+  {note:'Still moving as they get ready',tags:[['k','Moving']]},
+  {note:'Small hop · land on your toes',at:{k:[160,206]},tags:[['k','Set']]},
+  {note:'Set feet · push off · save!',ball:[194,216],at:{k:[188,214]},order:'together',pulse:[[194,216],'Saved!']}]},
+ 'encourage':{cast:{a:[118,176,'You'],b:[204,124,'Mate'],c:[262,170],x:[168,74]},ball:'b',steps:[
+  {note:'A missed pass · head down',tags:[['b','Sad']]},
+  {note:'“Unlucky, go again!”',at:{a:[178,140]},tags:[['b','Lifted']]},
+  {note:'They try again · perfect pass',at:{c:[262,128]},ball:'c',lanes:[['b','c',1]],pulse:['c','Yes!']}]},
+ 'disguise-pass':{cast:{a:[165,170,'You'],b:[90,110,'Mate'],c:[240,110,'Mate'],x:[165,128]},ball:'a',steps:[
+  {note:'Your eyes point at one mate',face:{a:-50},tags:[['a','Looking']]},
+  {note:'The defender steps across',at:{x:[130,124]},lanes:[['a','b',0]]},
+  {note:'Late hips · pass the other way',face:{a:50},ball:'c',lanes:[['a','c',1]],pulse:['c','Free!']}]},
+ 'shin-guards':{cast:{a:[150,160,'You'],b:[222,104,'Mate'],x:[196,148]},ball:'a',steps:[
+  {note:'No shin guards · a watch on',tags:[['a','Unsafe']]},
+  {note:'Shin guards on · jewellery off',at:{a:[128,172]},tags:[['a','Safe']]},
+  {note:'A knock on the shin · play on',at:{x:[146,166]},ball:'b',tags:[['a','Protected']]}]},
+ 'corner-goal':{pitch:'attack',cast:{t:[302,36,'You'],xk:[160,34],x1:[146,66],a:[196,78,'Mate']},ball:'t',steps:[
+  {note:'Corner · they expect a cross',tags:[['a','Waiting']]},
+  {note:'Curl it toward the near post',ball:[222,44],bend:{ball:-18},at:{xk:[172,36]}},
+  {note:'Straight in · it counts!',ball:[188,24],at:{xk:[158,34]},pulse:[[188,26],'Goal!']}]},
+ 'kickoff-goal':{cast:{a:[165,132,'You'],b:[140,136,'Mate'],xk:[165,34,'Keeper'],x1:[118,96],x2:[214,96]},ball:'a',steps:[
+  {note:'Kick-off · each team in its own half',lines:[['x1','x2']]},
+  {note:'Their keeper is far out of goal',at:{xk:[150,72]},tags:[['xk','Far out!']]},
+  {note:'Shoot from the kick-off · it counts',ball:[176,24],pulse:[[176,26],'Goal!']}]},
+ 'eleven-players':{pitch:'defend',cast:{k:[165,214,'Keeper'],b:[98,180],c:[232,180],d:[165,150],e:[104,104],f:[226,104],g:[165,62,'Striker'],x:[165,40]},ball:'k',steps:[
+  {note:'Up to eleven · one is the keeper',tags:[['k','Keeper']],links:[['b','d','c']]},
+  {note:'Hurt or sent off · fewer players',at:{e:[34,218],f:[296,218]},dim:['e','f']},
+  {note:'Fewer than seven: the match stops',at:{b:[60,220],c:[270,220]},dim:['e','f','b','c'],tags:[['d','Too few!']]}]},
+ 'handball-arms':{pitch:'defend',cast:{x:[165,112,'Shooter'],a:[165,162,'You'],k:[165,214,'Keeper']},ball:'x',steps:[
+  {note:'Arms out wide to block',tags:[['a','Arms out']]},
+  {note:'It hits your arm · handball!',ball:[146,160],tags:[[[146,146],'Handball!']]},
+  {note:'Arms tucked in · a body block',at:{a:[156,164]},ball:'a',tags:[['a','Arms in']],pulse:['a','Blocked!']}]},
+ 'side-foot':{cast:{a:[200,200,'You'],b:[90,120,'Mate'],x:[100,190]},ball:'a',steps:[
+  {note:'A toe-poke skids off target',hint:['M200 200L250 214'],tags:[[[256,204],'Off target']]},
+  {note:'Standing foot points at your mate',at:{a:[206,194]},face:{a:-55},tags:[['a','Plant']]},
+  {note:'Inside of the foot · on target',ball:'b',lanes:[['a','b',1]],pulse:['b','Perfect!']}]},
+ 'cruyff-turn':{cast:{a:[246,140,'You'],x:[222,164],b:[110,92,'Mate']},ball:'a',steps:[
+  {note:'Chased toward the touchline',tags:[['x','Chasing']]},
+  {note:'Fake a pass · drag it behind',at:{a:[262,134],x:[248,150]},tags:[['x','Fooled']]},
+  {note:'Spin away the other way',at:{a:[196,108]},dribble:true,pulse:['a','Away!']}]},
+ 'indirect-kick':{pitch:'attack',cast:{t:[165,92,'You'],b:[204,86,'Mate'],xk:[165,30,'Keeper'],x1:[150,60],x2:[182,60]},ball:'t',steps:[
+  {note:'Arm raised: an indirect free kick',tags:[[[118,104],'Ref: arm up']]},
+  {note:'Pass it short first',ball:'b',lanes:[['t','b',1]]},
+  {note:'Second touch · shoot · it counts',ball:[212,26],at:{xk:[150,32]},pulse:[[212,28],'Goal!']}]},
 } satisfies Record<string,Scene>;
 export type DiagramKind=keyof typeof SCENES;
 

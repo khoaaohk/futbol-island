@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {registerLandableDeck} from '../landableDecks';
-import {BOAT_DECK,BOAT_DECK_Y,BOAT_HULL,BOAT_MOORING,BOAT_YAW} from './deepSeaBoatData';
+import {BOAT_DECK_Y,BOAT_HULL,DEEP_SEA_BOATS,type DeepSeaBoat} from './deepSeaBoatData';
 
 /**
  * The Deep Sea Boat's 3D build (docs/fishing.md "Deep Sea Boat"): a small low-poly fishing boat in the island palette —
@@ -10,7 +10,8 @@ import {BOAT_DECK,BOAT_DECK_Y,BOAT_HULL,BOAT_MOORING,BOAT_YAW} from './deepSeaBo
  *
  * Heat (AGENTS.md): the whole boat is ONE merged, vertex-coloured mesh (one draw; it receives the player's shadow but
  * casts none, so it adds no shadow-map draw). Nothing exists until the player comes within BUILD_RANGE; it is disposed
- * again beyond DROP_RANGE. The gentle bob is one group transform, written only while the player is within BOB_RANGE,
+ * again beyond DROP_RANGE. Two boats (Oct 14 2026) share ONE merged geometry and material (built for the first, released with
+ * the last), so a second boat in range costs one more draw and no extra memory. The gentle bob is one group transform, written only while the player is within BOB_RANGE,
  * the boat is inside the camera frustum and reduced motion is off; otherwise update() is a distance check. No timers,
  * no animation loop of its own (the island loop calls update()).
  */
@@ -79,31 +80,38 @@ function boatParts():Part[]{
 }
 
 export type DeepSeaBoatUpdate={x:number;z:number;camera:T.Camera;elapsed:number;reduced:boolean};
-export function createDeepSeaBoat(scene:T.Scene){
- let group:T.Group|null=null,geometry:T.BufferGeometry|null=null,material:T.Material|null=null,unregister:(()=>void)|null=null,bobbing=false;
- const deck={...BOAT_DECK};
- const frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(BOAT_MOORING.x,1.5,BOAT_MOORING.z),6.5);
+/** The shared boat mesh data (both boats are the same model): built on first use, released when no boat holds it. */
+let shared:{geometry:T.BufferGeometry;material:T.Material;users:number}|null=null;
+function takeShared(){if(!shared){const parts=boatParts().map(paint),geometry=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());geometry.computeBoundingSphere();
+ shared={geometry,material:new T.MeshStandardMaterial({vertexColors:true,roughness:.8}),users:0};}
+ shared.users++;return shared;}
+function releaseShared(){if(!shared)return;shared.users--;if(shared.users<=0){shared.geometry.dispose();shared.material.dispose();shared=null;}}
+export function createDeepSeaBoat(scene:T.Scene,boat:DeepSeaBoat=DEEP_SEA_BOATS[0]){
+ const M=boat.mooring,YAW=boat.yaw;
+ let group:T.Group|null=null,unregister:(()=>void)|null=null,bobbing=false;
+ const deck={...boat.deck};
+ const frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(M.x,1.5,M.z),6.5);
  function build(){
-  const parts=boatParts().map(paint);geometry=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());geometry.computeBoundingSphere();
-  material=new T.MeshStandardMaterial({vertexColors:true,roughness:.8});
+  const {geometry,material}=takeShared();
   const mesh=new T.Mesh(geometry,material);mesh.name='deep-sea-boat-hull';mesh.receiveShadow=true;mesh.castShadow=false;mesh.matrixAutoUpdate=false;mesh.updateMatrix();
-  group=new T.Group();group.name='deep-sea-boat';group.position.set(BOAT_MOORING.x,0,BOAT_MOORING.z);group.rotation.y=BOAT_YAW;group.matrixAutoUpdate=false;group.add(mesh);group.updateMatrix();scene.add(group);
+  group=new T.Group();group.name=boat.spotId;group.position.set(M.x,0,M.z);group.rotation.y=YAW;group.matrixAutoUpdate=false;group.add(mesh);group.updateMatrix();scene.add(group);
   deck.height=BOAT_DECK_Y;unregister=registerLandableDeck(deck);
  }
- function drop(){unregister?.();unregister=null;group?.removeFromParent();geometry?.dispose();material?.dispose();group=null;geometry=null;material=null;bobbing=false;}
+ function drop(){unregister?.();unregister=null;if(group){group.removeFromParent();releaseShared();}group=null;bobbing=false;}
  return {
+  boat,
   /** The live deck (null while the boat is not built). */
   get deck(){return unregister?deck:null;},
   get built(){return !!group;},
   update(c:DeepSeaBoatUpdate){
-   const d=Math.hypot(c.x-BOAT_MOORING.x,c.z-BOAT_MOORING.z);
+   const d=Math.hypot(c.x-M.x,c.z-M.z);
    if(!group){if(d<BUILD_RANGE)build();else return;}
    if(d>DROP_RANGE){drop();return;}
    let bob=!c.reduced&&d<BOB_RANGE;
    if(bob){c.camera.updateMatrixWorld();pv.multiplyMatrices(c.camera.projectionMatrix,c.camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pv);bob=frustum.intersectsSphere(sphere);}
    const g=group!;
-   if(bob){const t=c.elapsed,y=Math.sin(t*1.1)*.035;g.position.y=y;g.rotation.set(Math.sin(t*.9+1)*.006,BOAT_YAW,Math.sin(t*.75)*.013,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y+y;}
-   else if(bobbing){g.position.y=0;g.rotation.set(0,BOAT_YAW,0,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y;}
+   if(bob){const t=c.elapsed+(M.x*.013),y=Math.sin(t*1.1)*.035;g.position.y=y;g.rotation.set(Math.sin(t*.9+1)*.006,YAW,Math.sin(t*.75)*.013,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y+y;}
+   else if(bobbing){g.position.y=0;g.rotation.set(0,YAW,0,'YXZ');g.updateMatrix();deck.height=BOAT_DECK_Y;}
    bobbing=bob;
   },
   dispose:drop,

@@ -12,6 +12,8 @@ import {onCay,onCauseway,SANDBARS,BEACH_COURT,FARM,inHostelArea,SHARKS_BEACH,CAY
 import {EAST_PIER,jettyOffset} from '@/lib/town/eastPier';
 import {onFerryBoarding} from '@/lib/town/ferryBoarding';
 import {ISLAND_SQUARE_KONBINI} from '@/lib/town/vendingPlaces';
+import {onSummitSandbar,onSummitIsle,TERRACE,SUMMIT_FENCE} from '@/lib/town/summitIsle';
+import {DEEP_SEA_BOATS} from '@/lib/town/fishing/deepSeaBoatData';
 import type {PlaceId} from './islandIds';
 
 type Box={x0:number;x1:number;z0:number;z1:number};
@@ -25,7 +27,9 @@ export const ZONES={
  arcadeDoor:ARCADE_DOOR,
  konbiniDoor:{x:ISLAND_SQUARE_KONBINI.x,z:ISLAND_SQUARE_KONBINI.front-2},
  cayKonbini:{x:CAY_KONBINI.x,z:CAY_KONBINI.front+2},
- boat:{x:282.5,z:-93.5},// the deep-sea boat's mooring (coralCay.ts CAY_LANDMARKS.deepSeaMooring)
+ boat:DEEP_SEA_BOATS[0].mooring,// the Deep Sea Boat's mooring (lib/town/fishing/deepSeaBoatData.ts; moved Oct 14 2026)
+ /** Every deep-sea boat (Oct 14 2026: two). Both count as the one `deep_sea_boat` place (no new SQL place key). */
+ boats:DEEP_SEA_BOATS.map(b=>b.mooring),
  jettyBox:{x0:EAST_PIER.x0,x1:EAST_PIER.cx+EAST_PIER.r0+8,z0:EAST_PIER.cz-EAST_PIER.r0-8,z1:EAST_PIER.z+8} as Box,
  fields:{field_futsal:venueBox('futsal',6),field_7v7:venueBox('7v7',6),field_9v9:venueBox('9v9',6),field_11v11:venueBox('11v11',6)} as Record<string,Box>,
  beachCourt:{x0:BEACH_COURT.x-BEACH_COURT.length/2-8,x1:BEACH_COURT.x+BEACH_COURT.length/2+8,z0:BEACH_COURT.z-BEACH_COURT.width/2-22,z1:BEACH_COURT.z+BEACH_COURT.width/2+6} as Box,
@@ -45,6 +49,10 @@ export const ZONES={
  clubGrounds:{x0:100,x1:215,z0:-205,z1:-56} as Box,
  garden:[{x0:175,x1:212,z0:-42,z1:42},{x0:212,x1:246,z0:-42,z1:12}] as Box[],
  market:{x0:205,x1:250,z0:12,z1:183} as Box,
+ // Summit Isle's 5-a-side pitch (the Summit Kick field): the fence's own footprint, no extra margin (unlike the main
+ // island's other fields) — the terrace it stands on is a shared, small plateau (the lookout and the zipline's tower share its
+ // north-west corner, just past the fence), so padding out any further would claim the lookout as "on the pitch" too.
+ summitPitch:{x0:TERRACE.x-SUMMIT_FENCE.halfX,x1:TERRACE.x+SUMMIT_FENCE.halfX,z0:TERRACE.z-SUMMIT_FENCE.halfZ,z1:TERRACE.z+SUMMIT_FENCE.halfZ} as Box,
 } as const;
 
 /** Which named place a world position is in. Off land (open water, flying over the sea) is `sea`. */
@@ -53,7 +61,11 @@ export function placeAt(x:number,z:number):PlaceId{
  const Z=ZONES;
  // Things that stand over the water first: the jetty, the boat, the sandbars and the causeway.
  if(inside(Z.jettyBox,x,z)&&jettyOffset(x,z)<=EAST_PIER.flankHalf+2)return 'east_jetty';
- if(near(Z.boat,24,x,z))return 'deep_sea_boat';
+ for(const m of Z.boats)if(near(m,24,x,z))return 'deep_sea_boat';
+ // Summit Isle and its sandbar (Oct 15 2026): checked before the Coral Cay catch-all below, which would otherwise claim this
+ // x range (the island sits past x 470, inside the x ≥ 490 block). Both tests box-reject first (cheap off the island).
+ if(onSummitSandbar(x,z))return 'summit_sandbar';
+ if(onSummitIsle(x,z))return inside(Z.summitPitch,x,z)?'summit_pitch':'summit_isle';
  if(x>228&&x<506){
   for(const s of SANDBARS)if(near(s,s.radius+6,x,z)||Math.abs(x-s.spur.x)<=s.spur.half+2&&z>=s.spur.z0&&z<=s.spur.z1)return 'sandbars';
   if(onCauseway(x,z))return 'causeway';

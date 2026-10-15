@@ -8,6 +8,13 @@ type Point={x:number;z:number};
 // every PARACHUTE_REAIM_SECONDS, not every frame (findLanding can scan far rings over open sea).
 export const PARACHUTE_REAIM_METRES=2,PARACHUTE_REAIM_SECONDS=.25;
 export const PARACHUTE_SETTLE_ASSIST=1,PARACHUTE_SETTLE_LIMIT=2.5,PARACHUTE_MAX_AGE=60;
+// Smooth descent (Oct 14 2026, user: "parachuting down is glitchy. it shakes"). The canopy's sink rate eases in over
+// PARACHUTE_SINK_EASE s after the blast (the blast ends at rest; it used to drop at the full 9 m/s from one tick to the next), and
+// the height never pops upward: a re-aimed landing spot's glide slope, or a ledge under the canopy, raises it at most
+// PARACHUTE_RISE m/s (never below the ground itself) instead of in one tick (up to 7.5 m when the target changed near a coast).
+// The sink also flares out above the glide slope (PARACHUTE_FLARE per metre left, never under PARACHUTE_FLARE_MIN m/s, so the
+// touchdown is still reached in finite time) instead of stopping from 9 m/s to the slope in one tick.
+export const PARACHUTE_SINK=9,PARACHUTE_SINK_EASE=.7,PARACHUTE_RISE=6,PARACHUTE_FLARE=2.5,PARACHUTE_FLARE_MIN=1.5;
 // A canopy may not glide into a surface taller than the rider (less 1 m of clearance), but moving onto ground no higher
 // than the ground already under the rider is always allowed. Before this, the rule compared against the rider's height
 // alone, so at touchdown height (floor + .5) the ground itself counted as a wall and the glide was pinned in place.
@@ -26,7 +33,7 @@ export function createJetpackActions(){
   if(state.phase==='dash'){
    const distance=128*dt,steps=Math.max(1,Math.ceil(distance/.25));for(let i=0;i<steps;i++){const x=p.x+Math.sin(state.yaw)*distance/steps,z=p.z+Math.cos(state.yaw)*distance/steps;if(env.blocked(x,z)){reset();break;}p.x=x;p.z=z;}if(state.age>=.45)reset();
   }else if(state.phase==='charge'){if(state.age>=.65){state.phase='blast';state.age=0;}}
-  else if(state.phase==='blast'){const t=Math.min(1,state.age/1.05);height=state.startHeight+180*t*t*(3-2*t);if(t===1){state.phase='parachute';recordExploreActivity('parachute');state.age=0;glideVX=glideVZ=0;settleAge=0;bestD=bestH=Infinity;assistAge=-1;}}
+  else if(state.phase==='blast'){const t=Math.min(1,state.age/1.05);height=state.startHeight+180*t*t*t*(t*(6*t-15)+10);/* smootherstep: arrives with no deceleration jolt at the canopy opening (Oct 14 2026) */if(t===1){state.phase='parachute';recordExploreActivity('parachute');state.age=0;glideVX=glideVZ=0;settleAge=0;bestD=bestH=Infinity;assistAge=-1;}}
   else if(state.phase==='fall'){if(state.age<.65)return{height,landed:false};fallSpeed+=75*dt;const floor=env.floor(p.x,p.z);height=Math.max(floor,height-fallSpeed*dt);if(height<=floor){
     const landing=env.findLanding?env.findLanding(p.x,p.z):p;
     if(!landing)return {height:floor+.5,landed:false};
@@ -64,7 +71,11 @@ export function createJetpackActions(){
    // Glide slope: short of the spot the canopy holds up to ~0.9 m per metre of remaining distance (capped just under the 8 m
    // approach height, never below .5 m), so a long final approach glides in instead of skimming the ground. It also stays
    // .5 m over whatever is under the rider, so a canopy short of the spot never sinks into a roof or prop it is crossing.
-   const under=env.floor(p.x,p.z);height=Math.max(floor+(d>.2?Math.min(7.5,Math.max(.5,d*.9)):0),d>.2?under+.5:0,height-dt*9);
+   const under=env.floor(p.x,p.z),hold=Math.max(floor+(d>.2?Math.min(7.5,Math.max(.5,d*.9)):0),d>.2?under+.5:0);
+   // Sink: eased in after the opening, and flared out over the last metres above the glide slope (it used to stop dead there).
+   const ease=Math.min(1,state.age/PARACHUTE_SINK_EASE),sink=Math.min(PARACHUTE_SINK*ease*ease*(3-2*ease),PARACHUTE_FLARE*Math.max(0,height-hold)+PARACHUTE_FLARE_MIN);
+   const rise=hold>height?Math.max(Math.min(hold,height+dt*PARACHUTE_RISE),d>.2?under:-Infinity,floor):hold;
+   height=Math.max(rise,height-dt*sink);
    // Time without a new lowest height or a new closest approach counts toward the settle limits; any record resets them.
    // (Records, not frame deltas: a joystick held into a pole makes the canopy shuttle back and forth without arriving.)
    const progressed=height<bestH-1e-3||d<bestD-.05;bestH=Math.min(bestH,height);bestD=Math.min(bestD,d);

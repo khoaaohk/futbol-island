@@ -16,7 +16,7 @@ import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers} from '@/lib/town/mapMarkers';
 import SummitIsleMap from './SummitIsleMap';
-import TelescopeGlintMarks from './TelescopeGlintMarks';
+import ZiplineMapMark from './ZiplineMapMark';
 // East Jetty (eastPier.ts): the straight stone walkway from the market seawall curling into its spiral, drawn from the same
 // centre-line samples movement uses (every 3rd sample, fixed precision: static string built once).
 const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&&(i%3===0||i===JETTY_PATH.length-1)).map(p=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`).join(' ');
@@ -89,6 +89,8 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   {CAY_HUTS.map((h,i)=><circle key={'hut'+i} cx={h.x} cy={h.z} r={CAY_HUT_RADIUS} fill="#be8d65"/>)}
   {/* Summit Isle, its mountain, the Summit 5s and its sandbar (Oct 12 2026; SummitIsleMap.tsx). */}
   <SummitIsleMap localMap={localMap} pitchProps={destination('summit','Summit 5s')}/>
+  {/* The zipline from the summit's lookout to the Coral Cay Hostel roof (Oct 14 2026; ZiplineMapMark.tsx). */}
+  <ZiplineMapMark localMap={localMap}/>
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
   {buildings.map((r,i)=><rect key={'building'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} rx={r.cornerRadius??1} fill="#be8d65"/>)}
   {VENUES.map(v=><g key={v.id} {...destination(v.id,v.id+' field')}><rect x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length} fill={v.surface} stroke="#fff0cc" strokeWidth="1.5"/><text x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:22} fontWeight="700">{v.id}</text></g>)}
@@ -121,8 +123,6 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect x={MARKET_STAND.x-(localMap?87:126)} y={MARKET_STAND.z-(localMap?7:11)} width={localMap?74:102} height={localMap?14:22} rx="5" fill="#f4c2a4" stroke="#294f43" strokeWidth="1"/>
    <text x={MARKET_STAND.x-(localMap?50:75)} y={MARKET_STAND.z+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:11} fontWeight="800">ROSA’S MARKET</text>
   </g>
-  {/* Summit Isle telescope glints spotted but not yet collected (TelescopeGlintMarks.tsx; re-renders only when the hunt changes). */}
-  <TelescopeGlintMarks localMap={localMap}/>
   {!localMap&&markerPosition&&<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>}
  </>,[roads,buildings,onSelect,markerPosition,localMap]);
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>

@@ -121,7 +121,7 @@ const summit=load('lib/town/summitIsle.ts');
  const job=C.jobById('trail-cleanup');
  assert(job&&job.kind==='collect'&&job.prop==='bottle','a collect job, like Court clean-up');
  assert(job.targets.length>=6&&job.targets.length<=10,`6-10 litter marks (${job.targets.length})`);
- assert(E.JOB_IDS.includes('trail-cleanup')&&E.JOB_BASE_PAY['trail-cleanup']>=7&&E.JOB_BASE_PAY['trail-cleanup']<=10,'pays in the usual 7-10 coin band');
+ assert(E.JOB_IDS.includes('trail-cleanup')&&E.JOB_BASE_PAY['trail-cleanup']>=4&&E.JOB_BASE_PAY['trail-cleanup']<=7,'pays in the usual 4-7 coin band (7-10 until the 14 Oct 2026 rebalance)');
  assert(M.JOB_SLOTS['trail-cleanup'],'has a button layout (Pick up / Toss in the bin)');
  for(const t of [...job.targets,job.board,job.deliver])assert(summit.distanceToSummitLand(t.x,t.z)<3,`(${t.x.toFixed(1)}, ${t.z.toFixed(1)}) is on Summit Isle ground`);
  const folk=load('lib/town/summitIsleNpcs.ts').SUMMIT_ISLE_NPCS,ranger=folk.find(n=>n.role==='Park ranger');

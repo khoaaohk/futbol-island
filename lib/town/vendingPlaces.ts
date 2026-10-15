@@ -7,6 +7,7 @@
 import {causewayPoint,CAUSEWAY,CAY_HOUSES,SHARKS_BEACH,CAY_LANDMARKS,CAY_KONBINI,isOnCayLand} from './coralCay';
 import {SUMMIT_LANDMARKS,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_OBSTACLES,SUMMIT_PATHS,TERRACE,onSummitIsle,summitGround,summitSlope} from './summitIsle';
 import {kickLayout} from './summitKick';
+import {ZIP_TOWER} from './zipline';
 import {drinkSpotBeside} from './drinkMachines';
 
 export type VendingSpot={x:number;z:number;yaw:number};
@@ -83,7 +84,8 @@ function distanceToSummitPaths(x:number,z:number){
  *  the "SMALL-SIDED = MORE TOUCHES" teaching board flank the gate, a bench sits further west, and a floodlight mast stands on
  *  each far corner of the terrace — all on the same south walkway the kiosk now shares. Read-only reference points (built
  *  there, never here), so the kiosk and drink machine give every one of them a clean berth. The Summit Kick start post and
- *  the lookout telescope/cairn are checked from their own modules instead (kickLayout, SUMMIT_LANDMARKS.lookout).
+ *  the lookout cairn and the zipline's tower (on the removed telescope's spot) are checked from their own modules instead
+ *  (kickLayout, SUMMIT_LANDMARKS.lookout, ZIP_TOWER).
  */
 const SUMMIT_WALKWAY_Z=TERRACE.z+TERRACE.b+1.6;
 const SUMMIT_HAND_PROPS:{x:number;z:number;halfW:number;halfD:number}[]=[
@@ -94,7 +96,8 @@ const SUMMIT_HAND_PROPS:{x:number;z:number;halfW:number;halfD:number}[]=[
  {x:SUMMIT_PITCH.x-6,z:SUMMIT_PITCH.z+(TERRACE.b+1.4),halfW:1.3,halfD:1.3},// south-west floodlight mast
 ];
 function clearOfSummitHandProps(x:number,z:number,pad:number){
- if(Math.hypot(x-SUMMIT_LANDMARKS.lookout.x,z-SUMMIT_LANDMARKS.lookout.z)<10)return false;// lookout cairn + telescope stand
+ if(Math.hypot(x-SUMMIT_LANDMARKS.lookout.x,z-SUMMIT_LANDMARKS.lookout.z)<10)return false;// lookout flag + cairn
+ if(Math.hypot(x-ZIP_TOWER.x,z-ZIP_TOWER.z)<3.5+pad)return false;// the zipline's launch tower (and its step and sign), on the shoulder below
  const post=kickLayout().post;if(Math.hypot(x-post.x,z-post.z)<1.4+pad)return false;// Summit Kick start post + hoop crate
  return !SUMMIT_HAND_PROPS.some(o=>Math.abs(x-o.x)<o.halfW+pad&&Math.abs(z-o.z)<o.halfD+pad);
 }

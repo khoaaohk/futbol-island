@@ -26,6 +26,7 @@ import type {LearningReport} from './learning';
 import type {StartReport} from './startReport';
 import type {Overview} from './overview';
 import type {SaveMetricsReport} from '../saves/metrics';
+import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -54,12 +55,14 @@ export const ENGAGED_SLACK_MS=60_000;
 /** A session that never got past its first page and stayed under this long counts as a bounce. */
 export const BOUNCE_MS=10_000;
 
-export const AREAS=['island','paths','arcade','museum','konbini','controller','other'] as const;
+// 'shop' (Oct 15 2026): the Kit Shop's own document (/shop, like /arcade and /museum). Needs
+// supabase/migrations/20261015_analytics_summit_kit.sql (area_ms allowlist) before time here is counted; see that file.
+export const AREAS=['island','paths','arcade','museum','konbini','shop','controller','other'] as const;
 export type Area=typeof AREAS[number];
 /** The only paths that are stored. Anything else becomes "/other". */
 /** '/start' (Oct 9 2026): the old landing page, kept so its past sessions still show; the title screen is at `/` now and /start
  *  was removed (a session that saw the title screen carries st:view). */
-export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee','/start'] as const;
+export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee','/start','/shop'] as const;
 
 export type Utm={source?:string;medium?:string;campaign?:string};
 export type SourceClass='direct'|'search'|'social'|'referral'|'campaign';
@@ -523,6 +526,9 @@ export type Report={
  overview?:Overview|null;
  /** Oct 11 2026: save-code metrics (lib/saves/metrics.ts), added by the admin page and route; aggregates only. */
  saves?:SaveMetricsReport|null;
+ /** Oct 15 2026: Summit Kick plays and best score in range, read straight from the arcade leaderboard (lib/arcade/kickAdminMetrics.ts).
+  *  Aggregates only (no initials, no icon); null when not configured or not reachable. */
+ summitKick?:KickAdminMetrics|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

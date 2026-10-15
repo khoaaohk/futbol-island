@@ -26,29 +26,36 @@ async function economyPass(){
  const make=(valid=['A','B','C','D','E','F','G'],seed=null)=>{let data=seed,q=Promise.resolve(),clock=new Date(2026,8,28,10).getTime();
   const p={meter:isTrainingRun,read:()=>structuredClone(data),write:v=>{data=structuredClone(v);},lock:fn=>{const t=q.then(fn);q=t.catch(()=>{});return t;},valid:new Set(valid),grant:()=>true,notify:()=>{},now:()=>clock,id:()=>'id'+Math.random(),random:()=>0};
   return {w:createArcadeWallet(p),tick:ms=>{clock+=ms;},data:()=>data};};
- // Pure meter: full to 60, half to 120, then a 1-coin tip per earning.
- assert.equal(trainingPay(0,20),20);assert.equal(trainingPay(50,20),15,'10 full + 10 at half');assert.equal(trainingPay(119,20),1);assert.equal(trainingPay(200,20),1,'tip');assert.equal(trainingPay(200,0),0);
+ // Pure meter: full to 40, half to 80 (60 / 120 until the 14 Oct 2026 rebalance, lib/economy.ts TRAINING), then a 1-coin tip per earning.
+ assert.equal(TRAINING_FULL_COINS,40);assert.equal(TRAINING_HALF_COINS,80);
+ assert.equal(trainingPay(0,20),20);assert.equal(trainingPay(30,20),15,'10 full + 10 at half');assert.equal(trainingPay(79,20),1);assert.equal(trainingPay(200,20),1,'tip');assert.equal(trainingPay(200,0),0);
  assert(isTrainingRun('island-job:leaf-rake:2026-09-28:1','island')&&isTrainingRun('market:2026-09-28:3','island')&&isTrainingRun('card-trade:2026-09-28:1','island')&&isTrainingRun('x','runner')&&isTrainingRun('puzzle:a','puzzle'));
  assert(!isTrainingRun('island-starter-coins','island')&&!isTrainingRun('daily-play:2026-09-28','island')&&!isTrainingRun('learn:quiz:7v7:a','learn'),'grants and learning coins are never metered');
- {const {w,tick}=make();let total=0;for(let i=0;i<3;i++)total+=await w.creditRun(`island-job:ball-kid:2026-09-28:${i}`,'island',20,'Job');assert.equal(total,TRAINING_FULL_COINS,'three 20-coin shifts fill the full-pay line');
+ {const {w,tick}=make();let total=0;for(let i=0;i<2;i++)total+=await w.creditRun(`island-job:ball-kid:2026-09-28:${i}`,'island',20,'Job');assert.equal(total,TRAINING_FULL_COINS,'two 20-coin earnings fill the full-pay line');
   assert.equal(await w.creditRun('run-a','live',20,'Match'),10,'then half pay');
   // A growing arcade run is metered as one earning, never twice.
   assert.equal(await w.creditRun('run-b','runner',4,'Goals'),2);assert.equal(await w.creditRun('run-b','runner',4,'Goals'),0,'retry pays nothing');assert.equal(await w.creditRun('run-b','runner',10,'More goals'),3);
   for(let i=0;i<20;i++)await w.creditRun(`market:2026-09-28:${i}`,'island',20,'Sale');
   assert(w.load().training.earned>=TRAINING_HALF_COINS,'the snapshot reports today\'s meter');assert.equal(w.load().training.day,'2026-09-28');
   const before=w.load().balance;assert.equal(await w.creditRun('card-trade:2026-09-28:1','island',2,'Trade-in'),1,'past the half line: a 1-coin tip');
-  assert.equal(await w.creditOnce(learnRunId('quiz','7v7:scan'),'learn',learnAmount('quiz',true),'Learning'),18,'learning coins are never metered');assert.equal(w.load().balance,before+19);
+  assert.equal(await w.creditOnce(learnRunId('quiz','7v7:scan'),'learn',learnAmount('quiz',true),'Learning'),21,'learning coins are never metered (quiz 15 + 6 perfect since 14 Oct 2026)');assert.equal(w.load().balance,before+22);
   tick(86400000);assert.equal(await w.creditRun('island-job:ball-kid:2026-09-29:1','island',10,'Job'),10,'full pay again after local midnight');}
  // Learning coins: once ever, a later perfect run cannot top a lesson up; the path reward fits one run (cap 75).
  {const {w}=make();const notes=[];const learn=createLearnCoins({creditOnce:w.creditOnce,notify:d=>notes.push(d)});
-  assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’'),12);assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’',true),0,'first completion decides');
-  assert.equal(await learn.pay('path','7v7','You finished the 7v7 path'),75);assert.equal(await learn.pay('ball','b1','You found a hidden ball'),10,'hidden ball 5 → 10 (economy update 29 Sep 2026)');assert.equal(await learn.pay('story','s1','x'),10);assert.equal(await learn.pay('journey','j:0','x'),8);assert.equal(await learn.pay('explore','e','x'),5);
-  assert.equal(notes.length,6);assert.equal(notes[0].amount,12);assert.equal(w.load().byGame.learn,120);}
+  assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’'),15,'quiz 12 → 15 (economy rebalance 14 Oct 2026)');assert.equal(await learn.pay('quiz','7v7:scan','You passed ‘Scanning’',true),0,'first completion decides');
+  assert.equal(await learn.pay('path','7v7','You finished the 7v7 path'),75);assert.equal(await learn.pay('ball','b1','You found a hidden ball'),12,'hidden ball 5 → 10 (29 Sep 2026) → 12 (14 Oct 2026)');assert.equal(await learn.pay('story','s1','x'),10);assert.equal(await learn.pay('journey','j:0','x'),8);assert.equal(await learn.pay('explore','e','x'),5);
+  assert.equal(notes.length,6);assert.equal(notes[0].amount,15);assert.equal(w.load().byGame.learn,125);}
  // 29 Sep 2026: the ball raise is forward-only. A ball paid 5 under the old value keeps its 5 and is never topped up or cut.
  {const old={version:1,spends:{},runs:{'learn:ball:b0':{game:'learn',paid:5,reason:'Learning · old ball',at:1}},best:{},attempts:{},visits:{},packs:[]};
   const {w}=make(undefined,old);const learn=createLearnCoins({creditOnce:w.creditOnce,notify:()=>{}});assert.equal(w.load().balance,5,'old ball coins kept');
   assert.equal(await learn.pay('ball','b0','x'),0,'an already-paid ball never pays again');assert.equal(w.load().balance,5);
-  assert.equal(await learn.pay('ball','b1','x'),10,'a newly found ball pays the new 10');assert.equal(w.load().balance,15);}
+  assert.equal(await learn.pay('ball','b1','x'),12,'a newly found ball pays the new 12');assert.equal(w.load().balance,17);}
+ // 14 Oct 2026 rebalance: forward-only too. Old 10-coin balls and 12-coin quizzes, 30-coin daily kick-offs, 26-coin wall-rebound
+ // shifts and 120-coin meter days all stay exactly as saved; only new earnings use the new values.
+ {const old={version:1,spends:{},runs:{'learn:ball:b9':{game:'learn',paid:10,reason:'Learning · ball',at:1},'learn:quiz:7v7:old':{game:'learn',paid:18,reason:'Learning · quiz',at:1},
+   'daily-play:2026-10-13':{game:'island',paid:30,reason:'Daily play',at:1},'island-job:wall-rebounds:2026-10-13:1':{game:'island',paid:20,reason:'Job',at:1,raw:30}},best:{},attempts:{},visits:{},packs:[]};
+  const {w}=make(undefined,old);assert.equal(w.load().balance,10+18+30+20,'every coin saved before the rebalance is kept');
+  const learn=createLearnCoins({creditOnce:w.creditOnce,notify:()=>{}});assert.equal(await learn.pay('ball','b9','x'),0);assert.equal(await learn.pay('quiz','7v7:old','x',true),0,'never re-paid or cut');assert.equal(w.load().balance,78);}
  // Pass Puzzles: first solve 5 + stars, new stars only after that, repeats pay 0.
  {const {w}=make();assert.equal(ARCADE_COIN_CAPS.puzzle,8);assert.equal(await w.recordPuzzleBest('p1',3,'a1','v1'),8);assert.equal(await w.recordPuzzleBest('p2',1,'a2','v1'),6);assert.equal(await w.recordPuzzleBest('p2',2,'a3','v1'),1);
   for(let i=0;i<4;i++)assert.equal(await w.recordPuzzleBest('p1',3,'r'+i,'v1'),0,'a repeat pays 0');}

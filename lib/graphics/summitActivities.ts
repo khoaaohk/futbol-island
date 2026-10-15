@@ -1,28 +1,32 @@
 /**
- * Summit Isle activities runtime (Oct 12 2026): the Sunset Kick challenge's hoops and the lookout telescope's eyepiece view.
- * Rules: lib/town/summitKick.ts and lib/town/telescope.ts; static props (start post, telescope stand): summitActivitiesWorld.ts;
- * HUDs: components/SummitKickHud.tsx and components/TelescopeView.tsx (they talk through lib/town/summitStore.ts).
+ * Summit Isle activities runtime (Oct 12 2026): the Sunset Kick challenge's hoops. Rules: lib/town/summitKick.ts; static props
+ * (the start post): summitActivitiesWorld.ts; HUD: components/SummitKickHud.tsx (it talks through lib/town/summitStore.ts).
+ * The lookout telescope that shared this runtime was removed (Oct 14 2026, user: "let's remove the telescope entirely"); the
+ * zipline stands where it stood (lib/graphics/zipline.ts).
  *
  * Heat: everything here is built on demand and disposed when it ends. While nothing is on, Town's calls cost a few comparisons:
- *  - update(): two distances to the start post and the stand (prompts), and a glint check only when a spotted glint waits
- *    to be collected (≤ 5 distances);
+ *  - update(): one distance to the start post (the prompt);
  *  - ball() / aim() / holdPlayer(): one phase check.
- * A round adds 5 hoop meshes (one shared geometry and material) and a chalk line, animated only while the round runs. The
- * telescope reuses Town's renderer and camera (narrower FOV, a longer far plane while it is up; the frame cap is untouched) and
- * adds 5 glint sprites that exist only while you look through it. No timers, no rAF of its own, no network but the one board
- * session request when a round starts.
+ * A round adds 5 hoop meshes (one shared geometry and material) and a chalk line, animated only while the round runs. No timers,
+ * no rAF of its own, no network but the one board session request when a round starts.
  */
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {kickLayout,createKickRound,kickCoins,recordKickRound,sanitizeKickSave,behindLine,onKickPitch,HOOP_COUNT,KICK_RULES,KICK_RUN_PREFIX,KICK_PERFECT_REWARD,KICK_SAVE_KEY,type KickLayout,type KickRound,type KickHoop,type KickVec} from '../town/summitKick';
-import {telescopeSpot,TELESCOPE_GLINTS,TELESCOPE_LANDMARKS,GLINT_COUNT,SCOPE,aimAt,viewDir,centredLandmark,centredGlint,panByDrag,panByStick,glintAt,spotGlint,collectGlint,seeLandmark,pendingGlints,glintRewardId} from '../town/telescope';
-import {readTelescope,writeTelescope} from '../town/telescopeProgress';
-import {kickStore,scopeStore,installSummitActions} from '../town/summitStore';
+import {kickStore,installSummitActions} from '../town/summitStore';
 import {creditRun,creditOnce} from '../arcade/arcadeWallet';
 import {beginBoardSession} from '../arcade/boardClient';
 import {createLearnCoins,LEARN_COINS_EARNED} from '../town/learnCoins';
+import {countKickPlay} from '../analytics/summitEvents';
+import {COIN_QUEST} from '../town/coinQuest';
+import {readCoinProgress,recordCoin} from '../town/coinProgress';
+import {SCORE_BALL_HOOPS} from '../town/summitBalls';
+/** Summit Isle hidden ball (Oct 15 2026, summitBalls.ts): a Summit Kick round with SCORE_BALL_HOOPS hoops pops one out of the post.
+ *  Revealing writes the ball hunt's own save (no new key). */
+const SCORE_BALL=COIN_QUEST.find(s=>s.reveal==='score');
+const ballRevealed=(id:string)=>{try{return readCoinProgress().revealed.includes(id);}catch{return true;}};
 
-/** Start prompts show within this many metres of the post / stand (on foot). */
+/** The start prompt shows within this many metres of the post (on foot). */
 const REACH=3.4;
 type Ports={
  /** Puts the player on the kick spot facing the goal, the ball at their feet. */
@@ -34,14 +38,14 @@ export type SummitUpdate={
  now:number;dt:number;elapsed:number;reduced:boolean;camera:T.Camera;width:number;height:number;
  x:number;z:number;
  /** On foot on the ground (not flying, riding or falling). */
- onFoot:boolean;/** Walking or on a ground ride (scooter, bike, moped): the telescope and its glints work from the saddle too (user, Oct 14). */onGround:boolean;canEnter:boolean;sunset:boolean;
+ onFoot:boolean;canEnter:boolean;sunset:boolean;
  /** The HUD arbiter's current 'enter' key (lib/ui/hudStack.ts), so exactly one prompt shows. */
  focusKey:string|null;
  ui:<E extends HTMLElement>(selector:string)=>E|null|undefined;place:(el:HTMLElement,x:number,y:number)=>void;hide:(el:HTMLElement,hidden:boolean)=>void;
 };
 const cue=(detail:string)=>{if(typeof document!=='undefined')document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail}));};
 const learnCoins=createLearnCoins({creditOnce:(id,game,amount,reason)=>creditOnce(id,game,amount,reason),notify:detail=>{if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent(LEARN_COINS_EARNED,{detail}));}});
-const SUNSET_RING=new T.Color('#ffb04a'),DAY_RING=new T.Color('#ef6a3c'),SPOTTED=new T.Color('#9ff0b8'),GLINT=new T.Color('#fff2b0');
+const SUNSET_RING=new T.Color('#ffb04a'),DAY_RING=new T.Color('#ef6a3c');
 
 function hoopGeometry(r:number){
  const parts:T.BufferGeometry[]=[];const paint=(g:T.BufferGeometry,c:string)=>{const col=new T.Color(c),n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++){a[i*3]=col.r;a[i*3+1]=col.g;a[i*3+2]=col.b;}g.setAttribute('color',new T.BufferAttribute(a,3));g.deleteAttribute('uv');g.deleteAttribute('normal');return g.index?g.toNonIndexed():g;};
@@ -49,19 +53,10 @@ function hoopGeometry(r:number){
  for(let i=0;i<8;i++){const g=new T.TorusGeometry(r,.055,6,6,Math.PI/4);g.rotateZ(i*Math.PI/4);parts.push(paint(g,i%2?'#fff3df':'#ffffff'));}
  const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());merged.rotateY(Math.PI/2);return merged;
 }
-function glintTexture(){
- const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d')!;
- const grad=g.createRadialGradient(32,32,0,32,32,32);grad.addColorStop(0,'rgba(255,255,255,1)');grad.addColorStop(.25,'rgba(255,240,180,.9)');grad.addColorStop(1,'rgba(255,220,120,0)');
- g.fillStyle=grad;g.beginPath();g.arc(32,32,32,0,Math.PI*2);g.fill();
- // Four-point star rays.
- g.fillStyle='rgba(255,255,240,.95)';for(const [w,h] of [[3,30],[30,3]] as const){g.beginPath();g.ellipse(32,32,w,h,0,0,Math.PI*2);g.fill();}
- const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;
-}
-
 export function createSummitActivities(scene:T.Scene,ports:Ports){
  // Positions are computed lazily (first prompt check), from the island's shape as it is now.
- let layout:KickLayout|null=null,spot:ReturnType<typeof telescopeSpot>|null=null;
- const ensure=()=>{if(!layout)layout=kickLayout();if(!spot)spot=telescopeSpot();return {layout:layout!,spot:spot!};};
+ let layout:KickLayout|null=null;
+ const ensure=()=>{if(!layout)layout=kickLayout();return {layout:layout!};};
  const anchor=new T.Vector3();
 
  // ---------------------------------------------------------------------------------------------------- kick challenge
@@ -84,11 +79,12 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
  function disposeHoops(){if(hoopsRoot){hoopsRoot.removeFromParent();hoopsRoot=null;}hoopMeshes.clear();popAge.clear();hoopGeo?.dispose();hoopMat?.dispose();lineGeo?.dispose();lineMat?.dispose();hoopGeo=lineGeo=null;hoopMat=lineMat=null;}
  const readSave=()=>{try{return sanitizeKickSave(JSON.parse(localStorage.getItem(KICK_SAVE_KEY)??'null'));}catch{return sanitizeKickSave(null);}};
  const viewOf=()=>{const s=round?.state;return {hits:s?.hits??0,kicks:s?.kicks??0,secondsLeft:Math.ceil(round?.timeLeft??KICK_RULES.seconds)};};
- function startKick(){if(phase!=='idle'||scope.active)return;phase='intro';kickStore.set({phase:'intro',result:null,note:'',hits:0,kicks:0,maxKicks:KICK_RULES.kicks,hoops:HOOP_COUNT,secondsLeft:KICK_RULES.seconds});cue('select');}
+ function startKick(){if(phase!=='idle')return;phase='intro';kickStore.set({phase:'intro',result:null,note:'',hits:0,kicks:0,maxKicks:KICK_RULES.kicks,hoops:HOOP_COUNT,secondsLeft:KICK_RULES.seconds});cue('select');}
  function beginRound(){
   if(phase!=='intro'&&phase!=='done')return;
   const L=ensure().layout;buildHoops(L);round=createKickRound(L,performance.now());roundNo++;prevMode='';
   beginBoardSession('kick');// the play token for the island board, issued as the round starts
+  countKickPlay();// admin analytics: a Summit Kick round played (best score is read from the arcade board)
   // Applied at the start of the next island tick (holdPlayer), inside the loop like any other move.
   teleport={x:L.spot.x,z:L.spot.z,yaw:L.spot.yaw};onPitch=false;
   phase='playing';kickStore.set({phase:'playing',result:null,note:'Shoot from behind the chalk line (a kick moves you a step closer). Tap Kick for the low hoops, hold Kick a moment for the high ones.',...viewOf(),popped:'',pops});cue('confirm');
@@ -108,58 +104,18 @@ export function createSummitActivities(scene:T.Scene,ports:Ports){
   const coins=quit?0:kickCoins(s.hits);
   if(coins>0)void creditRun(`${KICK_RUN_PREFIX}${Date.now().toString(36)}-${roundNo}`,'island',coins,`Summit Kick · ${s.hits}/${HOOP_COUNT} hoops`).then(paid=>{const v=kickStore.get();if(v.result&&v.result.round===result.round)kickStore.set({result:{...v.result,coins:paid}});if(paid>0)cue('coin');});
   if(s.hits===HOOP_COUNT)void learnCoins.pay('explore',KICK_PERFECT_REWARD,'Summit Kick: all five hoops');
+  if(!quit&&SCORE_BALL&&s.hits>=SCORE_BALL_HOOPS&&!ballRevealed(SCORE_BALL.id)&&recordCoin(SCORE_BALL.id,'reveal')){kickStore.set({note:'A hidden ball popped out of the kick post! Go and grab it.'});cue('equip');}
  }
 
- // ---------------------------------------------------------------------------------------------------- telescope
- /** Phones: the eyepiece centre sits at 40% of the screen height (CSS .scope --cy), i.e. 10% above the middle. */
-const SCOPE_PHONE_LIFT=.1;
- const scope={lift:0,active:false,yaw:0,pitch:0,zoom:0,blend:1,arrived:false,restore:false,hold:0,holdId:'',label:'',
-  start:{p:new T.Vector3(),q:new T.Quaternion(),fov:SCOPE.normalFov as number,far:500},normal:{fov:SCOPE.normalFov as number,far:500}};
- let glintRoot:T.Group|null=null,glintMat:T.SpriteMaterial|null=null,glintTex:T.Texture|null=null,spottedMat:T.SpriteMaterial|null=null;
- const glintSprites=new Map<string,T.Sprite>();
- const aimer=new T.PerspectiveCamera(),eyeV=new T.Vector3(),lookV=new T.Vector3(),targetQ=new T.Quaternion();
- let pending=pendingGlints(readTelescopeSafe());
- function readTelescopeSafe(){try{return readTelescope();}catch{return {version:1 as const,spotted:[],collected:[],seen:[]};}}
- function buildGlints(){
-  disposeGlints();const save=readTelescopeSafe();
-  glintTex=glintTexture();glintMat=new T.SpriteMaterial({map:glintTex,color:GLINT,transparent:true,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
-  spottedMat=glintMat.clone();spottedMat.color=SPOTTED.clone();
-  glintRoot=new T.Group();glintRoot.name='telescope-glints';
-  for(const g of TELESCOPE_GLINTS){if(save.collected.includes(g.id))continue;const sp=new T.Sprite(save.spotted.includes(g.id)?spottedMat:glintMat);sp.position.set(g.x,g.y,g.z);sp.renderOrder=3;glintRoot.add(sp);glintSprites.set(g.id,sp);}
-  scene.add(glintRoot);
- }
- function disposeGlints(){if(glintRoot){glintRoot.removeFromParent();glintRoot=null;}glintSprites.clear();glintMat?.dispose();spottedMat?.dispose();glintTex?.dispose();glintMat=spottedMat=null;glintTex=null;}
- const scopeFound=()=>readTelescopeSafe().spotted.length;
- function openScope(){
-  if(scope.active||phase==='playing')return;const {spot:s}=ensure();
-  const first=TELESCOPE_LANDMARKS[0],v=aimAt(s.eye,first);
-  scope.active=true;scope.yaw=v.yaw;scope.pitch=v.pitch;scope.zoom=0;scope.blend=0;scope.arrived=false;scope.hold=0;scope.holdId='';scope.label='';scope.restore=false;
-  buildGlints();
-  scopeStore.set({active:true,zoom:0,label:null,spotting:null,found:scopeFound(),total:GLINT_COUNT,note:'Drag (or use the stick) to look around. Find the places, and look for glints!'});
-  cue('category');
- }
- function exitScope(){if(!scope.active)return;scope.active=false;scope.restore=true;disposeGlints();scopeStore.set({active:false,label:null,spotting:null,note:''});cue('previous');}
- const fov=()=>SCOPE.fov[scope.zoom]??SCOPE.fov[0];
- function pan(dx:number,dy:number){if(!scope.active)return;const v=panByDrag(scope,dx,dy,fov());scope.yaw=v.yaw;scope.pitch=v.pitch;}
- function zoom(){if(!scope.active)return;scope.zoom=(scope.zoom+1)%SCOPE.fov.length;scopeStore.set({zoom:scope.zoom});cue('select');}
- function spotted(id:string){
-  const g=TELESCOPE_GLINTS.find(x=>x.id===id);if(!g)return;const next=spotGlint(readTelescopeSafe(),id);writeTelescope(next);pending=pendingGlints(next);
-  const sp=glintSprites.get(id);if(sp&&spottedMat)sp.material=spottedMat;
-  const v=scopeStore.get();scopeStore.set({found:next.spotted.length,spotting:null,note:`Glint spotted! ${g.clue} It’s on your map now.`,notes:v.notes+1});cue('equip');
- }
-
- const off=installSummitActions({startKick,beginRound,exitKick:endKick,openScope,exitScope,pan,zoom});
+ const off=installSummitActions({startKick,beginRound,exitKick:endKick});
 
  return {
-  get kickPhase(){return phase;},get scopeActive(){return scope.active;},
-  get layout(){return ensure().layout;},get scopeSpot(){return ensure().spot;},
-  /** Telescope mode owns the stick and keys (they pan the eyepiece); the player stands still. True = skip the walk this tick. */
-  holdPlayer(input:{x:number;z:number;kick:boolean;juggle:boolean;shotPower?:number;charging?:boolean},keys:ReadonlySet<string>,dt:number){
+ get kickPhase(){return phase;},
+  get layout(){return ensure().layout;},
+  /** At the start of each island tick: a round's pending move to the kick spot. Never holds the player (always false). */
+  holdPlayer(_input?:unknown,_keys?:unknown,_dt?:number){
    if(teleport){const t=teleport;teleport=null;ports.teleport(t.x,t.z,t.yaw);}
-   if(!scope.active)return false;
-   const kx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.x,kz=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.z;
-   if(kx||kz){const v=panByStick(scope,Math.max(-1,Math.min(1,kx)),Math.max(-1,Math.min(1,kz)),dt,fov());scope.yaw=v.yaw;scope.pitch=v.pitch;}
-   input.kick=input.juggle=false;input.shotPower=0;input.charging=false;return true;
+   return false;
   },
   /** Tap-shot aim help during a round: toward the nearest low hoop within 18° of the facing (like the pier ring's); null = leave it. */
   aim(p:{x:number;z:number},yaw:number):number|null{
@@ -179,11 +135,8 @@ const SCOPE_PHONE_LIFT=.1;
    if(prevMode==='shot'&&b.mode!=='shot')round.shotOver();
    prev.x=cur.x;prev.y=cur.y;prev.z=cur.z;prevMode=b.mode;
   },
-  /** Per frame (Town's HUD block): prompts, the round clock, hoop animation, the eyepiece readout, glint collection. */
+  /** Per frame (Town's HUD block): the prompt, the round clock, hoop animation. */
   update(c:SummitUpdate):{key:string;distance:number}|null{
-   // Glints waiting to be collected: only then any work (a handful of distances).
-   if(pending.length&&c.onGround&&!scope.active){const g=glintAt(readTelescopeSafe(),c.x,c.z);if(g){const next=collectGlint(readTelescopeSafe(),g.id);writeTelescope(next);pending=pendingGlints(next);cue('coin');
-    void learnCoins.pay('explore',glintRewardId(g.id),`You found the telescope glint at ${g.name}`);}}
    // ---- the round
    if(phase==='playing'&&round&&layout){
     round.step(c.dt);
@@ -197,57 +150,23 @@ const SCOPE_PHONE_LIFT=.1;
      if(age!==undefined){const a=age+c.dt;popAge.set(id,a);if(a>.32){if(m.visible)m.visible=false;}else m.scale.setScalar(1+a*2.4);continue;}
      if(phase==='playing'&&!c.reduced){m.rotation.x=t*1.2;m.scale.setScalar(1+.04*Math.sin(t*4+m.position.z));}}
    }
-   // ---- the eyepiece
-   if(scope.active){
-    const s=spot!,f=fov();
-    const lm=centredLandmark(s.eye,scope.yaw,scope.pitch,f);const id=lm?.id??'';
-    if(id!==scope.label){scope.label=id;scopeStore.set({label:lm?{id:lm.id,name:lm.name,line:lm.line}:null});if(lm){const save=readTelescopeSafe(),next=seeLandmark(save,lm.id);if(next!==save)writeTelescope(next);}}
-    const spottedSet=new Set(readTelescopeSafe().spotted),g=centredGlint(s.eye,scope.yaw,scope.pitch,f,spottedSet);
-    if(g&&scope.arrived){if(scope.holdId!==g.id){scope.holdId=g.id;scope.hold=0;}scope.hold+=c.dt;const p=Math.min(1,scope.hold/SCOPE.spotSeconds);
-     if(p>=1){scope.holdId='';scope.hold=0;spotted(g.id);}else scopeStore.set({spotting:{id:g.id,progress:Math.round(p*10)/10}});}
-    else if(scope.holdId){scope.holdId='';scope.hold=0;scopeStore.set({spotting:null});}
-    // Glints keep a steady size on screen (scaled with distance and zoom) and twinkle.
-    const k=Math.tan(f*Math.PI/360)*.075;let i=0;
-    for(const [gid,sp] of glintSprites){const gl=TELESCOPE_GLINTS.find(x=>x.id===gid)!,d=Math.hypot(gl.x-s.eye.x,gl.y-s.eye.y,gl.z-s.eye.z);
-     sp.scale.setScalar(d*k*(c.reduced?1:.8+.35*Math.sin(c.elapsed*5.5+i*1.7)));i++;}
-   }
    // ---- prompts (world-anchored, like the fishing post's)
    let want:{key:string;distance:number}|null=null;
-   const kickPrompt=c.ui<HTMLButtonElement>('[data-summit-kick-start]'),scopePrompt=c.ui<HTMLButtonElement>('[data-telescope-open]');
-   if(!kickPrompt&&!scopePrompt)return null;
-   // Summit Kick needs feet on the ball; the telescope only needs you parked beside it, so ground rides count too.
-   const near=c.onGround&&c.canEnter&&!scope.active&&phase==='idle';
-   let dk=Infinity,ds=Infinity,L:KickLayout|null=null,S:typeof spot=null;
-   // Cheap box test first: both posts are on Summit Isle (x > 400), so the main island never computes the layout.
-   if(near&&c.x>400){const e=ensure();L=e.layout;S=e.spot;if(c.onFoot)dk=Math.hypot(c.x-L.post.x,c.z-L.post.z);ds=Math.hypot(c.x-S.x,c.z-S.z);}
-   if(dk<REACH&&dk<=ds)want={key:'summit-kick',distance:dk};else if(ds<REACH)want={key:'telescope',distance:ds};
+   const kickPrompt=c.ui<HTMLButtonElement>('[data-summit-kick-start]');
+   if(!kickPrompt)return null;
+   // Summit Kick needs feet on the ball.
+   const near=c.onFoot&&c.canEnter&&phase==='idle';
+   let dk=Infinity,L:KickLayout|null=null;
+   // Cheap box test first: the post is on Summit Isle (x > 400), so the main island never computes the layout.
+   if(near&&c.x>400){L=ensure().layout;dk=Math.hypot(c.x-L.post.x,c.z-L.post.z);}
+   if(dk<REACH)want={key:'summit-kick',distance:dk};
    const show=(el:HTMLButtonElement|null|undefined,visible:boolean,x:number,y:number,z:number)=>{if(!el)return;let hidden=!visible;
     if(!hidden){anchor.set(x,y,z).project(c.camera);hidden=anchor.z< -1||anchor.z>1;if(!hidden)c.place(el,T.MathUtils.clamp((anchor.x+1)*c.width/2,75,c.width-75),T.MathUtils.clamp((1-anchor.y)*c.height/2,90,c.height-160));}
     c.hide(el,hidden);};
    show(kickPrompt,!!want&&want.key==='summit-kick'&&c.focusKey==='summit-kick',L?.post.x??0,(L?.ground??0)+2.9,L?.post.z??0);
-   show(scopePrompt,!!want&&want.key==='telescope'&&c.focusKey==='telescope',S?.x??0,(S?.ground??0)+2.1,S?.z??0);
    return want;
   },
-  /** Call after the follow camera is placed (like fishing.applyCamera): the eyepiece view, or the way back to the normal one. */
-  applyCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
-   if(scope.restore){scope.restore=false;camera.fov=scope.normal.fov;camera.far=scope.normal.far;camera.clearViewOffset();camera.updateProjectionMatrix();return;}
-   if(!scope.active)return;
-   const s=spot!;
-   if(scope.blend===0){scope.lift=typeof matchMedia==='function'&&matchMedia('(max-width:600px)').matches?SCOPE_PHONE_LIFT:0;scope.start.p.copy(camera.position);scope.start.q.copy(camera.quaternion);scope.start.fov=camera.fov;scope.normal.fov=camera.fov;scope.normal.far=camera.far;}
-   scope.blend=reduced?1:Math.min(1,scope.blend+dt/.65);const e=scope.blend*scope.blend*(3-2*scope.blend);
-   eyeV.set(s.eye.x,s.eye.y,s.eye.z);const d=viewDir(scope.yaw,scope.pitch);lookV.set(s.eye.x+d.x,s.eye.y+d.y,s.eye.z+d.z);
-   aimer.position.copy(eyeV);aimer.up.set(0,1,0);aimer.lookAt(lookV);targetQ.copy(aimer.quaternion);
-   camera.position.lerpVectors(scope.start.p,eyeV,e);camera.quaternion.slerpQuaternions(scope.start.q,targetQ,e);
-   const want=scope.start.fov+(fov()-scope.start.fov)*e;
-   // Zoom changes ease too (a quick lens move), once arrived.
-   const next=scope.blend>=1?camera.fov+(fov()-camera.fov)*Math.min(1,dt*(reduced?60:9)):want;
-   // Phones: the eyepiece circle sits higher (CSS --cy) so the place label fits under it; shift the projection centre to match.
-   const lift=scope.lift*e,liftNow=camera.view?.enabled?camera.view.offsetY:0;
-   if(Math.abs(next-camera.fov)>1e-3||camera.far!==SCOPE.far||Math.abs(lift-liftNow)>1e-4){camera.fov=next;camera.far=SCOPE.far;if(scope.lift)camera.setViewOffset(1,1,0,lift,1,1);camera.updateProjectionMatrix();}
-   camera.updateMatrixWorld();
-   if(scope.blend>=1)scope.arrived=true;
-  },
-  dispose(){off();disposeHoops();disposeGlints();round=null;phase='idle';scope.active=false;},
+  dispose(){off();disposeHoops();round=null;phase='idle';},
  };
 }
 export type SummitActivities=ReturnType<typeof createSummitActivities>;

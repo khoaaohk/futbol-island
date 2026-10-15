@@ -32,9 +32,10 @@ const G=load('lib/town/market/goods.ts'),M=load('lib/town/market/market.ts'),C=l
   assert.equal(credits[0].amount,orange.price*2,'wallet credited through the port');assert.match(credits[0].id,/^market:2026-09-27:1$/,'deterministic wallet run id');
   assert.equal(M.basketCount(market.read()),0,'sold goods leave the basket');
   assert.equal((await market.sell()).ok,false,'an empty basket sells nothing');
-  // Soft cap: after MARKET_FULL_PRICE_COINS of sales in a day, items earn half (at least 1 coin); a new day resets it.
+  // Soft cap: after MARKET_FULL_PRICE_COINS of sales in a day, items earn half; a new day resets it. Since 14 Oct 2026 a part-coin
+  // goes on Rosa's tally (lib/economy.ts payFromTally): two 1-coin oranges at half price make 1 coin, never 2.
   let s=M.emptyMarket('2026-09-27');s={...s,soldToday:M.MARKET_FULL_PRICE_COINS,basket:{orange:2}};
-  const q=M.quoteSale(s);assert.equal(q.halfPrice,true);assert.equal(q.coins,2*Math.max(1,Math.floor(orange.price/2)),'half price after the soft cap');
+  const q=M.quoteSale(s);assert.equal(q.halfPrice,true);assert.equal(q.coins,Math.floor(2*orange.price/2),'half price after the soft cap');
   assert.equal(M.sanitizeMarket({...s,day:'2026-09-26'},'2026-09-27').soldToday,0,'soft cap resets at local midnight');
   for(const g of G.GOODS){assert.ok(Number.isInteger(g.price)&&g.price>=1&&g.price<=M.MARKET_FULL_PRICE_COINS/2,`${g.id} price is a whole number no bigger than half the daily soft cap`);assert.ok(g.lesson.length>20,`${g.id} teaches football`);}
   assert.equal(new Set(G.GOODS.map(g=>g.id)).size,G.GOODS.length,'no duplicate goods ids');

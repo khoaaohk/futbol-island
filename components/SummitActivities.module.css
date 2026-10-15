@@ -1,4 +1,4 @@
-/* Summit Isle activities: the Summit Kick HUD and cards, and the telescope eyepiece (components/SummitKickHud.tsx, TelescopeView.tsx).
+/* Summit Isle activities: the Summit Kick HUD and cards (components/SummitKickHud.tsx). The telescope eyepiece was removed (Oct 14 2026).
    Static styles; the only animations run once on a cheer or the 5/5 celebration (and none with reduced motion). */
 .hud{position:absolute;inset:0;z-index:30;pointer-events:none}
 .back{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px));pointer-events:auto}
@@ -33,28 +33,6 @@
 .party i{position:absolute;top:-12px;width:10px;height:14px;border-radius:2px;animation:fall 1.8s ease-in forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.2}}
 
-/* ---- Telescope eyepiece ---- */
-.scope{position:absolute;inset:0;z-index:3;touch-action:none;cursor:grab;--r:min(43vw,40vh);--cy:50%}
-.scope:active{cursor:grabbing}
-.scope::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% var(--cy),transparent calc(var(--r) - 3px),#0b1714f2 calc(var(--r) + 2px));pointer-events:none}
-.rim{position:absolute;left:50%;top:var(--cy);width:calc(var(--r) * 2);height:calc(var(--r) * 2);translate:-50% -50%;border-radius:50%;border:4px solid #e9c75f;box-shadow:0 0 0 2px #294f43,inset 0 0 40px #0b171488;pointer-events:none}
-.cross{position:absolute;left:50%;top:var(--cy);width:34px;height:34px;translate:-50% -50%;pointer-events:none}
-.cross::before,.cross::after{content:'';position:absolute;background:#fff3dfcc}
-.cross::before{left:16px;top:0;width:2px;height:34px}
-.cross::after{top:16px;left:0;height:2px;width:34px}
-.ring{position:absolute;left:50%;top:var(--cy);width:64px;height:64px;translate:-50% -50%;pointer-events:none}
-.label{position:absolute;left:50%;top:calc(var(--cy) + var(--r) - 92px);translate:-50% 0;width:min(380px,calc(var(--r) * 1.6));padding:9px 14px;border:2px solid #fff2cd;border-radius:14px;background:#294f43ee;color:#fff0cc;text-align:center;font:13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
-.label strong{display:block;font:20px Impact,Arial Narrow,sans-serif;letter-spacing:.4px;color:#ffd27a}
-.scopeTop{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:center;gap:10px;padding-right:0;pointer-events:none}
-.scopeTop>*{pointer-events:auto}
-/* Wider screens: Zoom sits top right, so the glint count stops short of it. */
-@media(min-width:601px){.scopeTop{right:calc(130px + env(safe-area-inset-right,0px))}}
-/* Zoom: bottom right on phones (with the island's action buttons); top right beside the glints on wider screens. */
-.scopeActions{position:absolute;top:calc(18px + env(safe-area-inset-top,0px));right:calc(24px + env(safe-area-inset-right,0px));pointer-events:auto}
-.found{padding:7px 12px;border:2px solid #fff2cd;border-radius:999px;background:#294f43ee;color:#fff0cc;font:700 12px monospace;letter-spacing:.6px}
-.zoom{min-width:64px;min-height:46px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:12px;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);font:700 15px var(--font-body,Arial),sans-serif;box-shadow:var(--btn-shadow-gold);transition:translate .16s,box-shadow .16s}
-.zoom:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
-.scopeNote{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));translate:-50% 0;width:max-content;max-width:min(460px,calc(100% - 40px));padding:9px 14px;border:2px solid #fff2cd;border-radius:16px;background:#fff1d3;color:#244d40;box-shadow:0 4px 0 #a8863d;text-align:center;font:700 13px/1.4 var(--font-body,Arial),sans-serif;pointer-events:none}
 @media(max-width:600px),(pointer:coarse){
  .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
  .board{top:calc(72px + env(safe-area-inset-top,0px));gap:10px;padding:6px 12px;font-size:12px}
@@ -63,16 +41,5 @@
  .cheer{font-size:40px}
  .card{padding:16px 16px 12px;font-size:13px}
  .card h2{font-size:25px}
- /* The stick stays usable under the eyepiece (bottom left), so the note moves up a little. */
- .scopeNote{bottom:calc(150px + env(safe-area-inset-bottom,0px));font-size:12px}
- /* The circle rides higher (40%, the camera's projection centre is lifted to match) and the place label sits under it, not over the view (user, Oct 14). */
- .scope{--cy:40%;--r:min(41vw,36vh)}
- .label{top:calc(var(--cy) + var(--r) + 14px);font-size:12px}
- /* The coin bar hides under the eyepiece, so Back sits at the usual top-left spot (like every other screen) and the glint count
-    at the top right; Zoom moves to the bottom right where the island's action buttons live (user, Oct 13 2026). */
- .scopeTop{top:calc(16px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px))}
- .zoom{position:fixed;right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));min-width:72px;min-height:72px;border-radius:50%;font-size:14px;padding:0 8px}
 }
-/* While the eyepiece is up the island HUD steps aside; the joystick stays to pan with. */
-:global(.town-app):has(.scope) :global(:is(nav[data-hud-triggers],.town-minimap,.travel-actions,.touch-actions,[data-hud-stack],.field-learn-card,button[data-tour],.goal-toast)){visibility:hidden;pointer-events:none}
 :global(.town-app):has(.board) :global(:is(.field-learn-card,nav[data-hud-triggers])){visibility:hidden;pointer-events:none}

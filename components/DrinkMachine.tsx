@@ -13,6 +13,7 @@ import KonbiniReveal from './KonbiniReveal';
 import type {VendingMachines} from '@/lib/graphics/vendingMachines';
 import {DRINKS_FULL,DRINKS_PER_DAY,DRINK_COLLECTION_GROUP,drinkSources,drinksAt,isDrinkMachine,type Drink} from '@/lib/town/drinkMachines';
 import {buyDrink,chooseDrinkFate,keepDrink,drinksBoughtToday,newPurchaseId,pouchCount,useKonbini,POUCH_SIZE} from '@/lib/town/drinkShop';
+import {countKioskPurchase} from '@/lib/analytics/summitEvents';
 import jobStyles from './IslandJobs.module.css';
 import vendStyles from './VendingMachine.module.css';
 import styles from './DrinkMachine.module.css';
@@ -122,6 +123,7 @@ export default function DrinkMachine({open,machineId,onOpenChange,machines}:{ope
    const [result]=await Promise.all([buyDrink(d.id,purchaseId),new Promise(r=>setTimeout(r,quick?0:t.coinsDone(1)))]);
    if(purchaseVisit!==visit.current)return;
    if(!result.ok){setPhase('idle');setCoinDrop(null);setLed({msg:result.limit?'Plenty for today!':result.reason,sub:result.limit?DRINKS_FULL:undefined,tone:'warn'});cue('buzz');if(result.limit)pending.current=null;return;}
+   if(machineId==='drinksummit')countKioskPurchase(d.price);// admin analytics: the summit kiosk's drink machine too
    pending.current=null;inHand.current={purchaseId:result.purchase.id,drink:d};
    setVendingSlot(d.id);setDispense({drink:d,key:Date.now()});setReveal({drink:d,purchaseId:result.purchase.id,firstTime:result.firstTime});setPhase('drop');setLed({msg:'Thank you! ありがとう',sub:'Your drink is dropping… ガコン!',tone:'ok'});
    later(()=>{cue('thunk');setPhase('tray');setVendingSlot(null);setCoinDrop(null);setLed({msg:'Tap the tray to take it',sub:`${d.label} is in the tray.`,tone:'ok'});},quick?0:t.drop);

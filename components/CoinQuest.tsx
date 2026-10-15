@@ -27,7 +27,7 @@ export default function CoinQuest({onStore}:{onStore?:()=>void}){
   <h4 id="selected-ball-title">{found?'✓ ':''}Ball {index+1}{found||level>0?` · ${ball.name}`:''}</h4>
   {found?<><p>{pathText(ball.teaching)}</p><div className={styles.discoveryActions}><button type="button" className={styles.secondary} aria-haspopup="dialog" onClick={()=>{setPractice(false);setReplay(ball.id);}}>Watch tip again</button><button type="button" className={styles.secondary} aria-haspopup="dialog" onClick={()=>{setPractice(true);setReplay(ball.id);}}>Practice idea</button></div></>:<>
    {level>0&&<p aria-live="polite">{pathText(level===1?ball.clue:ball.detail)}</p>}
-   {progress.revealed.includes(ball.id)&&<p>Parcel opened—return to collect the ball.</p>}
+   {progress.revealed.includes(ball.id)&&<p>{ball.reveal?'It’s out of hiding! Go and pick it up.':'Parcel opened—return to collect the ball.'}</p>}
    <button type="button" className={styles.secondary} onClick={()=>{if(level>=2){setCoinHint(ball.id);window.dispatchEvent(new Event('fi2-coin-hint'));}else setClues(v=>({...v,[ball.id]:level+1}));}}>{level===0?'Give me a clue':level===1?'A little more help':'Show a clue marker'}</button>
   </>}
  </section>

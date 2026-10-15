@@ -1,5 +1,7 @@
 # Daily active-play coins
 
+> **Coin numbers updated 14 Oct 2026:** see [economy.md](economy.md) (the one table is `lib/economy.ts`). Values below may predate it.
+
 Local implementation, not deployed by this pass.
 
 **Economy pass (28 Sep 2026):** the bonus is now **30** (`DAILY_PLAY_COINS`). Receipts saved at 40 before the change are kept whole (`LEGACY_DAILY_PLAY_MAX=40` in `sanitizeArcadeWallet`), so no balance shrinks. The toast reads the constant.

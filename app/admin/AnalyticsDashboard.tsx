@@ -5,6 +5,7 @@ import {BackButton} from '@/components/BackButton';
 import type {Report,Row} from '@/lib/analytics/core';
 import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import IslandSection from './IslandSection';
+import SummitKitSection from './SummitKitSection';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
@@ -18,8 +19,8 @@ const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yester
 const SECTIONS:[string,string][]=[['sec-headline','Headline'],['sec-engagement','Engagement'],['sec-acquisition','Acquisition'],['sec-product','Product usage'],['sec-health','Save health'],['sec-detail','Detail']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
-const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',controller:'Phone controller',other:'Other pages'};
-const PAGE_LABEL:Record<string,string>={'/':'Title screen and island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/controller':'Phone controller','/coffee':'Support page','/start':'Old landing page (/start, removed Oct 9 2026)','/other':'Other'};
+const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',shop:'Kit Shop',controller:'Phone controller',other:'Other pages'};
+const PAGE_LABEL:Record<string,string>={'/':'Title screen and island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/shop':'Kit Shop','/controller':'Phone controller','/coffee':'Support page','/start':'Old landing page (/start, removed Oct 9 2026)','/other':'Other'};
 
 let regionNames:Intl.DisplayNames|null=null;
 function countryName(code:string){
@@ -218,6 +219,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
       <PlanCard report={report}/>
      </div>
      <IslandSection report={report}/>
+     <SummitKitSection report={report}/>
     </section>
 
     <section className={styles.island} aria-labelledby="sec-health">

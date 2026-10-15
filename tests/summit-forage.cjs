@@ -1,8 +1,11 @@
-// Summit Isle fruit trees (Oct 13 2026, user: "for the mountain island, let's have the trees have fruit on some of them for the
-// character to forage and collect … shake the tree to have it drop to pick up"). Covers: the fruit trees exist, are spread out and
-// reachable on foot (not inside colliders, on walkable ground, connected to the sandbar landing); a shake drops 1–3 fruit that fall,
-// bounce and rest; pickups go into the market basket; the regrow clock and the daily cap; nothing runs at rest (no rAF, no timers,
-// no instance writes); dispose. Rules: lib/town/summitForage.ts; runtime: lib/graphics/fruitTrees.ts. usage: node tests/summit-forage.cjs
+// Summit Isle fruit trees (Oct 13 2026; orchard, eight fruit kinds, daily fruiting, ride/fly shake, trunk grip, GPU sway and ball
+// hits Oct 14 2026). Covers: the orchard's placement rules (trail verges, the summit ring, clear zones, no steep ground) and its draw
+// and triangle budget; the fruit trees are reachable on foot; each day ~60% fruit (stable all day, different tomorrow) and picked
+// fruit stays gone until tomorrow; the prompt on foot, riding and flying low (not too high, not in traffic); the hop-off and the
+// land-then-shake sequence; hands-on contact per form; the shake sways only that tree and settles to rest; a hard kicked ball knocks
+// fruit down (a soft one doesn't, a bare tree drops none, the daily cap holds); pickups go into the basket; every kind sells; nothing
+// runs at rest; dispose. Rules: lib/town/summitForage.ts, lib/town/summitOrchard.ts; runtime: lib/graphics/fruitTrees.ts.
+// usage: node tests/summit-forage.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.resolve(__dirname,'..');
 const timers={raf:0,timeout:0,interval:0},winListeners=new Map();
@@ -26,7 +29,7 @@ function load(file){
 }
 const T=require('three');
 const S=load('lib/town/summitIsle.ts'),W=load('lib/town/summitIsleWorld.ts'),F=load('lib/town/summitForage.ts'),Sim=load('lib/town/simulation.ts');
-const RT=load('lib/graphics/fruitTrees.ts'),goods=load('lib/town/market/goods.ts'),pocket=load('lib/town/market/pocket.ts');
+const RT=load('lib/graphics/fruitTrees.ts'),goods=load('lib/town/market/goods.ts'),pocket=load('lib/town/market/pocket.ts'),O=load('lib/town/summitOrchard.ts');
 
 // ---- Build the island (stub tools, like tests/summit-isle.cjs) to get its trees, palms and colliders.
 const town=new T.Group(),mk=g=>{const m=new T.Mesh(g,new T.MeshStandardMaterial());town.add(m);return m;};
@@ -37,154 +40,235 @@ const sites=W.SUMMIT_TREE_SITES.map(s=>({...s,top:{...s.top}}));
 assert(sites.some(s=>s.kind==='tree')&&sites.some(s=>s.kind==='palm'),'the build lists its trees and palms (SUMMIT_TREE_SITES)');
 const obstacles=tools.obstacles,blockedAt=(x,z)=>Sim.blocked(x,z,obstacles,.32),ground=(x,z)=>S.summitGround(x,z)-S.SUMMIT_VISUAL_DROP;
 
-// ---- 1. The fruit trees: 8–12, mango/orange trees on the lower slopes and coconut palms on the beach, spread out.
+// ---- 1. The pool of fruit trees: every orchard plant + the island's own trees and palms; all eight kinds; deterministic.
 const world={walkable:S.onSummitIsle,blocked:blockedAt,ground,paths:S.SUMMIT_PATHS,landing:S.SUMMIT_LANDMARKS.sandbarLanding,beach:(x,z)=>S.beachPoint(Math.atan2(z-S.SUMMIT_CENTER.z,x-S.SUMMIT_CENTER.x),.5),view:(x,z,y)=>S.summitCameraPull(x,z,y,x+F.FOLLOW_CAMERA.x,y+F.FOLLOW_CAMERA.y,z+F.FOLLOW_CAMERA.z)};
-const picks=F.pickFruitTrees(sites,world);
-assert(picks.length>=8&&picks.length<=12,`8–12 fruit trees (${picks.length})`);
+const picks=F.pickFruitTrees(sites,world),BEFORE=10;// Oct 13 2026: 7 mango/orange trees + 3 coconut palms
+assert(picks.length>=BEFORE*4,`roughly 4–7× the old ${BEFORE} fruit trees (${picks.length})`);assert(picks.length<=90,'but bounded');
 assert.deepEqual(F.pickFruitTrees(sites,world).map(t=>t.id),picks.map(t=>t.id),'deterministic: the same trees on every device');
-const kinds=new Set(picks.map(t=>t.fruit));for(const k of ['mango','orange','coconut'])assert(kinds.has(k),'grows '+k);
+assert.equal(new Set(picks.map(t=>t.id)).size,picks.length,'unique ids');
+const kinds=new Set(picks.map(t=>t.fruit));for(const k of F.FRUIT_KINDS)assert(kinds.has(k),'grows '+k);
+const forms=new Set(picks.map(t=>t.form??t.kind));for(const f of [...O.ORCHARD_FORMS,'tree','palm'])assert(forms.has(f),'has the form '+f);
 for(const t of picks){
  assert(goods.goodById(t.fruit)&&pocket.pocketCategory(goods.goodById(t.fruit))==='fruit',`${t.fruit} is a basket good in the Fruit pocket`);
- if(t.fruit==='coconut')assert(t.kind==='palm'&&t.y<1,'coconut palms stand on the beach');else assert(t.kind==='tree'&&t.y<=18,`${t.id} is on the lower slopes (${t.y.toFixed(1)} m)`);
+ if(t.fruit==='coconut')assert(t.kind==='palm'&&t.y<1,'coconut palms stand on the beach');
+ if(t.form)assert(O.FORM_FRUIT[t.form].includes(t.fruit),`${t.id}: a ${t.form} bears ${t.fruit}`);
  assert(S.onSummitIsle(t.x,t.z),`${t.id} roots on walkable Summit Isle ground (not a cliff)`);
- assert(world.view(t.stand.x,t.stand.z,ground(t.stand.x,t.stand.z))>=F.MIN_VIEW,`${t.id}: the follow camera sees it (not pulled in against the hill)`);
- assert(S.onSummitIsle(t.stand.x,t.stand.z)&&!blockedAt(t.stand.x,t.stand.z),`${t.id}: its stand spot is walkable and clear of every collider`);
- assert(Math.abs(Math.hypot(t.stand.x-t.x,t.stand.z-t.z)-F.FORAGE.standOff)<1e-6,'the stand spot is an arm’s length from the trunk');
- const others=obstacles.filter(o=>Sim.insideObstacle(t.x,t.z,o,0));assert.equal(others.length,1,`${t.id}: only its own trunk collider is there`);
- for(const u of picks)if(u!==t)assert(Math.hypot(u.x-t.x,u.z-t.z)>=F.FORAGE.spacing,`${t.id} and ${u.id} are spread out`);}
-const L=S.SUMMIT_LANDMARKS.sandbarLanding,nearest=Math.min(...picks.map(t=>Math.hypot(t.x-L.x,t.z-L.z)));
-assert(nearest<60,`a fruit tree near the sandbar landing for a first-time visitor (${nearest.toFixed(0)} m)`);
+ assert(world.view(t.stand.x,t.stand.z,ground(t.stand.x,t.stand.z))>=F.MIN_VIEW,`${t.id}: the follow camera sees it`);
+ assert(S.onSummitIsle(t.stand.x,t.stand.z)&&!blockedAt(t.stand.x,t.stand.z),`${t.id}: its grip spot is walkable and clear of every collider`);
+ assert(t.sides.length>=1,`${t.id}: a side to grip it from`);
+ const others=obstacles.filter(o=>Sim.insideObstacle(t.x,t.z,o,0));assert.equal(others.length,1,`${t.id}: only its own trunk collider is there`);}
+// Spread: any 60 m stretch of the island has a mix (no single-kind orchard).
+{let mixed=0,areas=0;for(const t of picks){const near=picks.filter(u=>Math.hypot(u.x-t.x,u.z-t.z)<60);if(near.length<4)continue;areas++;if(new Set(near.map(u=>u.fruit)).size>=3)mixed++;}
+ assert(mixed/areas>=.9,`any area has a mix of fruit (${mixed}/${areas})`);}
+const L=S.SUMMIT_LANDMARKS.sandbarLanding,welcome=picks.filter(t=>t.welcome);
+assert.equal(welcome.length,1,'one welcome tree');assert(Math.hypot(welcome[0].x-L.x,welcome[0].z-L.z)<60,'the welcome tree is near the sandbar landing');
 
-// Reachable on foot: a 1 m walk grid (walkable ground, clear of colliders) flood-filled from the sandbar landing reaches every stand.
-{const B=S.SUMMIT_BOX,x0=Math.floor(B.minX),z0=Math.floor(B.minZ),nx=Math.ceil(B.maxX-x0)+1,nz=Math.ceil(B.maxZ-z0)+1;
- const cell=new Map();for(const o of obstacles){const r=Math.max(o.w,o.d)/2+1;for(let x=Math.floor(o.x-r);x<=Math.ceil(o.x+r);x++)for(let z=Math.floor(o.z-r);z<=Math.ceil(o.z+r);z++){const k=x*4096+z;if(!cell.has(k))cell.set(k,[]);cell.get(k).push(o);}}
- const free=(x,z)=>S.onSummitIsle(x,z)&&!(cell.get(Math.round(x)*4096+Math.round(z))??[]).some(o=>Sim.insideObstacle(x,z,o,.32));
- const seen=new Uint8Array(nx*nz),queue=[];let sx=Math.round(L.x),sz=Math.round(L.z);
- for(let r=0;r<6&&!free(sx,sz);r++){sx+=1;}
- assert(free(sx,sz),'the landing is walkable');queue.push((sx-x0)*nz+(sz-z0));seen[queue[0]]=1;
- const cache2=new Int8Array(nx*nz);const ok=(i,j)=>{const k=i*nz+j;if(!cache2[k])cache2[k]=free(x0+i,z0+j)?1:-1;return cache2[k]>0;};
- for(let h=0;h<queue.length;h++){const c=queue[h],i=Math.floor(c/nz),j=c%nz;
-  for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]){const a=i+di,b=j+dj;if(a<0||b<0||a>=nx||b>=nz)continue;const k=a*nz+b;if(seen[k]||!ok(a,b))continue;
-   if(di&&dj&&!(ok(i+di,j)||ok(i,j+dj)))continue;seen[k]=1;queue.push(k);}}
- for(const t of picks){let reached=false;for(let dx=-1;dx<=1&&!reached;dx++)for(let dz=-1;dz<=1&&!reached;dz++){const i=Math.round(t.stand.x)+dx-x0,j=Math.round(t.stand.z)+dz-z0;if(i>=0&&j>=0&&i<nx&&j<nz&&seen[i*nz+j])reached=true;}
-  assert(reached,`${t.id} can be walked to from the sandbar landing`);}}
+// ---- 2. The orchard's placement: trail verges both sides, a summit ring, clear zones, never steep, never on a trail.
+const orchard=sites.filter(s=>s.form),zones=O.orchardClearZones();
+{const plan=O.planOrchard((x,z,r)=>false,[]);
+ assert.deepEqual(O.planOrchard((x,z,r)=>false,[]).map(p=>[p.x,p.z,p.form]),plan.map(p=>[p.x,p.z,p.form]),'the plan is deterministic');}
+assert(orchard.length>=50,`the orchard plants ${orchard.length} fruit trees and plants`);
+const zoneOf=t=>{const d=S.summitTrailDistance(t.x,t.z);if(Math.hypot(t.x-S.TERRACE.x,t.z-S.TERRACE.z)<S.summitEdgeRadius(Math.atan2(t.z-S.TERRACE.z,t.x-S.TERRACE.x))+8)return 'top';return d<9?'trail':'other';};
+const trailTrees=orchard.filter(t=>zoneOf(t)==='trail'),topTrees=orchard.filter(t=>zoneOf(t)==='top');
+assert(trailTrees.length>=15,`an orchard walk along the trails (${trailTrees.length})`);assert(topTrees.length>=8,`a cluster round the summit (${topTrees.length})`);
+// Both verges: trees on the left and on the right of the climb.
+{const climb=S.SUMMIT_PATHS[1];let left=0,right=0;for(const t of trailTrees){let best=Infinity,side=0;for(let i=1;i<climb.length;i++){const a=climb[i-1],b=climb[i],d=Math.hypot((a.x+b.x)/2-t.x,(a.z+b.z)/2-t.z);if(d<best){best=d;side=Math.sign((b.x-a.x)*(t.z-a.z)-(b.z-a.z)*(t.x-a.x));}}if(best<12){if(side>0)left++;else right++;}}
+ assert(left>=3&&right>=3,`both sides of the climb (${left} left, ${right} right)`);}
+for(const t of orchard){
+ assert(S.summitTrailDistance(t.x,t.z)>=O.TRAIL_CLEAR,`${t.form} at ${t.x.toFixed(0)},${t.z.toFixed(0)} stands ${O.TRAIL_CLEAR} m clear of every trail`);
+ assert(S.summitSlope(t.x,t.z)<=O.ORCHARD_MAX_SLOPE,'never on steep ground or a cliff');
+ assert(!O.nearPitch(t.x,t.z)&&S.terraceWeight(t.x,t.z)===0,'off the pitch, its fence and the walkway');
+ for(const c of zones)assert(Math.hypot(c.x-t.x,c.z-t.z)>=c.r,`clear of the ${c.what}`);}
+// The lookout and the zipline's tower (Oct 14 2026: on the removed telescope's spot; the same clear circles, so the orchard is
+// planned exactly as before): ≥ 4 m of open grass round each.
+{const Lk=S.SUMMIT_LANDMARKS.lookout,Z=load('lib/town/zipline.ts');
+ for(const [what,p] of [['lookout',Lk],['zipline tower',Z.ZIP_TOWER],['zipline tower seaward grass',{x:Lk.x-9.2,z:Lk.z-2}],['lookout walkway',{x:Lk.x-2.4,z:Lk.z}]])
+  for(const t of sites)if(t.form)assert(Math.hypot(t.x-p.x,t.z-p.z)>=O.ORCHARD_CLEAR,`no orchard tree within ${O.ORCHARD_CLEAR} m of the ${what}`);
+ const kick=load('lib/town/summitKick.ts').kickLayout(),snack=load('lib/town/vendingPlaces.ts').summitSnackSpot();
+ for(const t of orchard){assert(Math.hypot(t.x-kick.post.x,t.z-kick.post.z)>=O.ORCHARD_CLEAR,'clear of Summit Kick');assert(Math.hypot(t.x-snack.x,t.z-snack.z)>=O.ORCHARD_CLEAR,'clear of the kiosk');}}
 
-// ---- 2. Pure rules: drop count, regrow clock, daily cap, save sanitising.
+// ---- 3. Heat: no new draw call per tree, the triangle budget, and the fruit mesh sized to today's fruit.
+{const props=town.children.filter(m=>/^summit-isle(-summit)?-props/.test(m.name));
+ assert(props.length<=9,`the orchard is baked into the island's existing prop meshes (${props.length} meshes, one per sector + the summit)`);
+ assert(!town.children.some(m=>/orchard|fruit/i.test(m.name)),'no orchard or fruit mesh in the island build');
+ const tris=O.planOrchard(()=>false,[]).map(O.orchardTriangles),total=tris.reduce((a,b)=>a+b,0);
+ assert(Math.max(...tris)<=160,`≤ 160 triangles a plant (${Math.max(...tris)})`);assert(total<=9000,`orchard ≤ 9k triangles on every tier (${total})`);
+ const withTree=props.filter(m=>m.geometry.getAttribute('aTree'));assert(withTree.length>=8,'the props carry the per-tree sway id');
+ const ids=new Set();for(const m of withTree){const a=m.geometry.getAttribute('aTree');for(let i=0;i<a.count;i++)ids.add(a.getX(i));}
+ for(const t of sites)assert(ids.has(t.tid),`tree ${t.tid} is tagged for its sway`);
+ console.log(`  orchard: ${orchard.length} plants, ${total} triangles baked into ${props.length} existing meshes (0 new draws); per plant ≤ ${Math.max(...tris)}`);}
+
+// ---- 4. The day's fruit: ~60% of the trees, stable all day, different tomorrow; the welcome tree always.
+{const days=['2026-10-13','2026-10-14','2026-10-15','2026-11-02','2027-01-01'],sets=days.map(d=>F.fruitingToday(picks,d));
+ for(const [i,set] of sets.entries()){const share=set.size/picks.length;assert(share>=.5&&share<=2/3+1e-9,`${days[i]}: ${(share*100).toFixed(0)}% of the trees fruit`);
+  assert(set.has(welcome[0].id),'the welcome tree fruits every day');
+  assert.deepEqual([...F.fruitingToday(picks,days[i])].sort(),[...set].sort(),'stable within a day');}
+ for(let i=1;i<sets.length;i++){const a=sets[i-1],b=sets[i],same=[...a].filter(x=>b.has(x)).length;assert(same<a.size*.85,`${days[i]} differs from ${days[i-1]} (${same}/${a.size} shared)`);}
+ for(const t of picks){const n=F.fruitToday(days[0],t.id);assert(n>=2&&n<=F.FORAGE.perTree);}
+ const h0=RT.hangPoint(picks[0],0,days[0]),h1=RT.hangPoint(picks[0],0,days[1]);assert(h0.distanceTo(h1)>.05||RT.hangPoint(picks[0],1,days[0]).distanceTo(RT.hangPoint(picks[0],1,days[2]))>.05,'the fruit hangs in different spots on different days');}
+
+// ---- 5. Pure rules: drop counts, ball drops, picked fruit gone until tomorrow, daily cap, save sanitising.
 {const R=F.FORAGE;
  for(let r=0;r<1;r+=.05){const n=F.dropCount(r,3,99);assert(n>=1&&n<=3,'a shake drops 1–3');}
  assert.equal(F.dropCount(.99,1,99),1,'never more than hang there');assert.equal(F.dropCount(.99,3,2),2,'never past today’s cap');assert.equal(F.dropCount(.5,3,0),0,'none once the cap is reached');
- const t0=Date.UTC(2026,9,13,10,0,0);let s=F.emptyForage(t0);const id='tree-593-45';
- assert.equal(F.hangingNow(s,id,t0),R.perTree,'a tree starts full');
- s=F.recordPick(s,id,t0);s=F.recordPick(s,id,t0+1000);assert.equal(F.hangingNow(s,id,t0+1000),R.perTree-2);assert.equal(s.today,2);
- assert.equal(F.hangingNow(s,id,t0+R.regrowMs-1),R.perTree-2,'nothing regrows early');assert.equal(F.hangingNow(s,id,t0+R.regrowMs),R.perTree-1,'one fruit back after one regrow period');
- assert.equal(F.nextRegrowAt(s,id,t0+5),t0+R.regrowMs);
- // Picking mid-regrow keeps the clock's progress.
- const mid=t0+R.regrowMs*1.5;s=F.recordPick(s,id,mid);assert.equal(F.hangingNow(s,id,mid),R.perTree-2);assert.equal(F.hangingNow(s,id,t0+R.regrowMs*2),R.perTree-1,'the half-grown fruit still arrives on time');
- assert.equal(F.hangingNow(s,id,t0+R.regrowMs*4),R.perTree,'full again after an hour or so');
- assert(R.regrowMs>=10*60e3&&R.dailyCap>=5&&R.dailyCap<=12,'regrows over real minutes; a sensible daily cap');
- // The cap vs the economy: a day's forage at full price stays inside the market's daily full-price allowance.
- const best=Math.max(...['mango','orange','coconut'].map(g=>goods.goodById(g).price));const M=load('lib/town/market/market.ts');
+ assert.equal(F.ballDropCount(3,3,9),0,'a gentle roll drops nothing');assert.equal(F.ballDropCount(6,3,9),1,'a firm kick drops one');assert.equal(F.ballDropCount(12,3,9),2,'a hard one two');assert.equal(F.ballDropCount(12,3,0),0,'the cap holds');
+ const t0=new Date(2026,9,13,10,0,0).getTime(),id='tree-593-45';let s=F.emptyForage(t0);
+ assert.equal(F.hangingNow(s,id,t0,3),3,'a fruiting tree starts with its dawn fruit');
+ s=F.recordPick(s,id,t0);s=F.recordPick(s,id,t0+1000);assert.equal(F.hangingNow(s,id,t0+1000,3),1);assert.equal(s.today,2);
+ assert.equal(F.hangingNow(s,id,t0+6*3600e3,3),1,'picked fruit stays gone all day (no regrow)');
+ const tomorrow=new Date(2026,9,14,8,0,0).getTime();assert.equal(F.hangingNow(s,id,tomorrow,3),3,'a new day, the tree is full again');
+ assert.equal(Object.keys(F.sanitizeForage(JSON.parse(JSON.stringify(s)),tomorrow).trees).length,0,'yesterday’s picks are forgotten');
+ assert(R.dailyCap>=5&&R.dailyCap<=12,'a sensible daily cap');
+ const best=Math.max(...F.FRUIT_KINDS.map(g=>goods.goodById(g).price));const M=load('lib/town/market/market.ts');
  assert(R.dailyCap*best<=M.MARKET_FULL_PRICE_COINS,`a day's fruit (${R.dailyCap*best} coins) fits in the market's full-price allowance`);
  let c=F.emptyForage(t0);for(let i=0;i<R.dailyCap;i++)c=F.recordPick(c,'palm-569-27',t0+i);assert.equal(F.capLeft(c,t0+10),0,'cap reached');
- assert.equal(F.capLeft(c,t0+864e5),R.dailyCap,'a new day, a new allowance');assert.equal(F.recordPick(c,'palm-569-27',t0+864e5).today,1);
- const dirty=F.sanitizeForage({version:1,day:F.localForageDay(t0),today:99,tip:'yes',trees:{'tree-1-2':{n:9,t:t0},'__proto__':{n:1,t:1},'bad':{n:1,t:1},'palm-3-4':{n:1,t:t0+9e9}}},t0);
- assert.equal(dirty.today,R.dailyCap);assert.equal(dirty.tip,false);assert.deepEqual(Object.keys(dirty.trees).sort(),['palm-3-4','tree-1-2']);assert.equal(dirty.trees['tree-1-2'].n,R.perTree);assert.equal(dirty.trees['palm-3-4'].t,t0,'no future clocks');
+ assert.equal(F.capLeft(c,tomorrow),R.dailyCap,'a new day, a new allowance');assert.equal(F.recordPick(c,'palm-569-27',tomorrow).today,1);
+ const dirty=F.sanitizeForage({version:1,day:F.localForageDay(t0),today:99,tip:'yes',trees:{'tree-1-2':{n:9,t:t0},'__proto__':{n:1,t:1},'bad':{n:1,t:1},'palm-3-4':{n:1,t:t0+9e9},'tree-600--3':{n:1,t:t0}}},t0);
+ assert.equal(dirty.today,R.dailyCap);assert.equal(dirty.tip,false);assert.deepEqual(Object.keys(dirty.trees).sort(),['palm-3-4','tree-1-2','tree-600--3']);assert.equal(dirty.trees['tree-1-2'].n,R.perTree);assert.equal(dirty.trees['palm-3-4'].t,t0,'no future clocks');
  assert.deepEqual(F.sanitizeForage('nonsense',t0),F.emptyForage(t0));}
 
-// ---- 3. The runtime: prompt, shake, fall + bounce, pickups into the basket, regrow, cap, forget, idle, dispose.
+// ---- 6. Hands on the trunk: per form, the chest is trunk radius + 0.25 m from the grip axis; the root clear of the collider.
+{const byForm=new Map();for(const t of picks){const f=t.form??t.kind;if(!byForm.has(f))byForm.set(f,t);}
+ assert.equal(F.TRUNK_CLEARANCE,Sim.TRUNK_CLEARANCE,'the trunk clearance matches simulation.ts');
+ for(const [form,t] of byForm){const g=t.rig.grip;assert(g.r>.05&&g.r<.3,`${form}: a trunk radius at grip height (${g.r.toFixed(2)})`);assert(Math.abs(g.y-t.y-O.GRIP_HEIGHT)<.02,`${form}: grip at chest height`);
+  for(const a of t.sides){const c=F.contactAt(t,a);
+   assert(Math.abs(Math.hypot(c.contact.x-g.x,c.contact.z-g.z)-(g.r+F.FORAGE.contact))<1e-9,`${form}: contact = trunk radius + ${F.FORAGE.contact} m`);
+   const own=obstacles.find(o=>Sim.insideObstacle(t.x,t.z,o,0));assert(!Sim.insideObstacle(c.root.x,c.root.z,own,F.WALKER_RADIUS),`${form}: the root stays outside the trunk collider`);
+   assert(c.lean>=0&&c.lean<.75,`${form}: the body leans the last ${c.lean.toFixed(2)} m`);
+   const yaw=Math.atan2(g.x-c.root.x,g.z-c.root.z);assert(Math.abs(Math.atan2(Math.sin(yaw-c.face),Math.cos(yaw-c.face)))<1e-6,`${form}: faces the trunk`);}}
+ // A leaning palm: the grip follows its lean, not the base.
+ const palm=picks.find(t=>t.kind==='palm');assert(Math.hypot(palm.rig.grip.x-palm.x,palm.rig.grip.z-palm.z)>.01,'a leaning palm’s grip follows its trunk');}
+
+// ---- 7. The runtime.
+const sway={tree:{value:0},pivot:{value:new T.Vector3()},axis:{value:new T.Vector3()},angle:{value:0},height:{value:5},bend:{value:1}};
 function rig(opts={}){
- const store=new Map(opts.store??[]),calls={pose:[],gather:[],cue:[]};let clock=opts.now??Date.UTC(2026,9,13,10,0,0),seed=7;
+ const store=new Map(opts.store??[]),calls={pose:[],gather:[],cue:[],dismount:[],touchdown:0};let clock=opts.now??new Date(2026,9,13,10,0,0).getTime(),seed=7;
  const scene=new T.Scene();
- const f=RT.createSummitForage(scene,{obstacles,sites:()=>sites,budgetMs:opts.budgetMs??Infinity,pose:p=>calls.pose.push(p),gather:id=>{if(opts.full)return 0;calls.gather.push(id);return 1;},cue:k=>calls.cue.push(k),
+ const f=RT.createSummitForage(scene,{obstacles,sites:()=>sites,sway,budgetMs:opts.budgetMs??Infinity,pose:(p,how)=>calls.pose.push({p,how}),gather:id=>{if(opts.full)return 0;calls.gather.push(id);return 1;},cue:k=>calls.cue.push(k),
+  dismount:(how,spot)=>{calls.dismount.push({how,spot});return opts.dismount??true;},touchdown:()=>{calls.touchdown++;},
   now:()=>clock,random:()=>{seed=(seed*16807)%2147483647;return seed/2147483647;},read:()=>store.get(F.FORAGE_SAVE_KEY)??null,write:v=>store.set(F.FORAGE_SAVE_KEY,v)});
  const el={hidden:true,placed:0},camera=new T.PerspectiveCamera(50,390/844,.1,500);
  const ctx=(x,z,extra={})=>({dt:1/60,x,z,onFoot:true,canEnter:true,frozen:false,reduced:!!opts.reduced,camera,width:390,height:844,focusKey:'forage',ui:()=>el,place:()=>{el.placed++;},hide:(e,h)=>{e.hidden=h;},...extra});
  const aim=(x,z)=>{camera.position.set(x+18,ground(x,z)+23,z+30);camera.lookAt(x,ground(x,z),z);camera.updateMatrixWorld();};
  return {f,scene,store,calls,el,ctx,aim,tick:ms=>{clock+=ms;},get now(){return clock;}};
 }
+const run=(r,x,z,frames,extra)=>{for(let i=0;i<frames;i++){r.tick(1000/60);r.f.update(r.ctx(x,z,typeof extra==='function'?extra(i):extra));}};
 {const r=rig(),f=r.f;
- // Off the island: nothing is built, one box test a frame.
  assert.equal(f.update(r.ctx(103,-8)),null);assert.equal(f.stats.built,false,'built only near Summit Isle');assert.equal(r.scene.children.length,0);
- const t=picks[0];r.aim(t.stand.x,t.stand.z);
- const want=f.update(r.ctx(t.stand.x,t.stand.z));assert(want&&want.key==='forage'&&want.distance<F.FORAGE.reach,'walking up to a fruit tree offers the prompt');
- assert.equal(r.el.hidden,false,'"Shake the tree" shows');assert.match(F.forageStore.get().label,/^Shake the (mango tree|orange tree|coconut palm)$/);
- const view0=f.view(),tree0=view0.trees.find(x=>x.id===t.id);assert.equal(tree0.hanging,F.FORAGE.perTree,'a full tree hangs '+F.FORAGE.perTree);
- const fruitMesh=f.root.children.find(o=>o.isInstancedMesh&&o.name==='summit-fruit');
- assert(fruitMesh&&fruitMesh.count===picks.length*F.FORAGE.perTree,'ALL the island’s fruit is one instanced mesh');assert.equal(fruitMesh.castShadow,false);
- assert(fruitMesh.boundingSphere&&fruitMesh.boundingSphere.center.x>400,'a fixed bounding sphere over Summit Isle (culled off screen, never stretched to the origin)');
- // Shake.
- assert.equal(f.shake(),true,'tap: shake');assert.equal(JSON.stringify(r.calls.pose),JSON.stringify([{x:t.x,z:t.z}]),'the character steps to the trunk and pushes (jobMoves treeshake)');
+ const L0=picks[0];r.aim(L0.stand.x,L0.stand.z);f.update(r.ctx(L0.stand.x,L0.stand.z));
+ const v0=f.view();assert.equal(v0.pool.length,picks.length,'the whole pool');assert.equal(v0.trees.length,F.fruitingToday(picks,v0.day).size,'today’s fruiting trees only');
+ const fruitMesh=f.root.children.find(o=>o.isInstancedMesh&&o.name==='summit-fruit'),dawnTotal=v0.trees.reduce((n,t)=>n+t.dawn,0);
+ assert(fruitMesh&&fruitMesh.count===dawnTotal,'ALL of today’s fruit is one instanced mesh, sized to the fruiting trees only');assert.equal(fruitMesh.castShadow,false);
+ assert(fruitMesh.count*80<=12000,`fruit ≤ 12k triangles (${fruitMesh.count} fruit)`);
+ assert(fruitMesh.boundingSphere&&fruitMesh.boundingSphere.center.x>400,'a fixed bounding sphere over Summit Isle');
+ const bare=picks.find(p=>!v0.trees.some(t=>t.id===p.id));
+ // A bare tree: no prompt.
+ {r.aim(bare.stand.x,bare.stand.z);assert.equal(f.update(r.ctx(bare.stand.x,bare.stand.z)),null,'no prompt at a bare tree today');}
+ // On foot at a fruiting tree.
+ const t=v0.trees.find(x=>x.hanging>=2&&picks.find(p=>p.id===x.id).kind==='tree'&&!picks.find(p=>p.id===x.id).form)??v0.trees.find(x=>x.hanging>=2),T0=picks.find(p=>p.id===t.id);r.aim(t.stand.x,t.stand.z);
+ const want=f.update(r.ctx(t.stand.x,t.stand.z));assert(want&&want.key==='forage','walking up to a fruiting tree offers the prompt');
+ assert.equal(r.el.hidden,false,'"Shake the tree" shows');assert.equal(F.forageStore.get().label,`Shake the ${F.FRUIT_LOOK[T0.fruit].tree}`);
+ // Shake: walk to the grip spot, grip, two pushes; the sway marks just this tree in the shader and settles to rest.
+ const from={x:t.stand.x+1.5,z:t.stand.z+.4};f.update(r.ctx(from.x,from.z));
+ assert.equal(f.shake(),true,'tap: shake');const p=r.calls.pose[0];
+ assert(Math.abs(p.p.x-T0.rig.grip.x)<1e-9&&Math.abs(p.p.z-T0.rig.grip.z)<1e-9,'the pose targets the trunk at grip height');
+ assert(p.how.lead>0&&Math.abs(p.how.lead-Math.hypot(p.how.stand.x-from.x,p.how.stand.z-from.z)/3.5)<1e-6,'walks the last step first');
  assert.equal(f.shake(),false,'one shake at a time');
- let sawSway=false,sawFall=false,maxBounces=0,dropped=0;
- for(let i=0;i<60*3;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));if(f.root.children.some(o=>o.name==='summit-fruit-tree-sway'))sawSway=true;const v=f.view();
-  if(v.fallen.some(q=>q.mode==='fall'))sawFall=true;for(const q of v.fallen)maxBounces=Math.max(maxBounces,q.bounces);dropped=Math.max(dropped,v.fallen.length);}
- assert(sawSway,'the canopy sways while it is shaken');assert(sawFall,'fruit falls');assert.equal(r.calls.cue.filter(k=>k==='rustle').length,load('lib/graphics/jobPoses.ts').TREE_SHAKE_PUSHES.length,'a rustle on each push');
- assert(f.stats.dropped>=1&&f.stats.dropped<=3,`1–3 fruit drop (${f.stats.dropped})`);assert(r.calls.cue.includes('thud'),'a thud as fruit lands');assert(maxBounces>=1,'it bounces');
- // Settle; whatever lands within reach is picked up by itself; walk over the rest.
- for(let i=0;i<60*3;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));}
- for(const q of f.view().fallen)assert.equal(q.mode,'ground','the fruit comes to rest on the ground');
- for(const q of f.view().fallen)assert(Math.abs(q.y-ground(q.x,q.z))<.4&&S.onSummitIsle(q.x,q.z),'resting on walkable ground, not floating or sunk');
- for(let guard=0;f.view().fallen.length&&guard<20;guard++){const q=f.view().fallen[0];for(let i=0;i<40;i++){r.tick(1000/60);f.update(r.ctx(q.x+.3,q.z));}}
+ let sawSway=false,others=false,maxBounces=0;
+ for(let i=0;i<60*3;i++){r.tick(1000/60);f.update(r.ctx(p.how.stand.x,p.how.stand.z));if(sway.angle.value!==0){sawSway=true;if(sway.tree.value!==T0.tid)others=true;}for(const q of f.view().fallen)maxBounces=Math.max(maxBounces,q.bounces);}
+ assert(sawSway,'the tree sways in the vertex shader');assert(!others,'only the shaken tree is marked');assert(sway.pivot.value.x===T0.x&&sway.pivot.value.z===T0.z,'about its trunk base');
+ assert.equal(r.calls.cue.filter(k=>k==='rustle').length,load('lib/graphics/jobPoses.ts').TREE_SHAKE_PUSHES.length,'a rustle on each push');
+ assert(f.stats.dropped>=1&&f.stats.dropped<=3,`1–3 fruit drop (${f.stats.dropped})`);assert(r.calls.cue.includes('thud'));assert(maxBounces>=1,'it bounces');
+ run(r,p.how.stand.x,p.how.stand.z,60*3);
+ assert.equal(sway.angle.value,0,'the sway settles to exactly 0');assert.equal(sway.tree.value,0,'and unmarks the tree');assert.equal(f.view().swaying,false);
+ for(const q of f.view().fallen)assert(q.mode==='ground'&&Math.abs(q.y-ground(q.x,q.z))<.4&&S.onSummitIsle(q.x,q.z),'resting on walkable ground');
+ for(let guard=0;f.view().fallen.length&&guard<20;guard++){const q=f.view().fallen[0];run(r,q.x+.3,q.z,40);}
  assert.equal(f.view().fallen.length,0,'every fallen fruit picked up');
- assert.equal(r.calls.gather.length,f.stats.dropped,'each pickup = +1 in the basket');for(const g of r.calls.gather)assert.equal(g,t.fruit);
- assert(r.calls.cue.includes('pick'),'a pickup sound');
- const save=JSON.parse(r.store.get(F.FORAGE_SAVE_KEY));assert.equal(save.today,f.stats.dropped,'saved: today’s count');assert.equal(save.tip,true,'the first-time tip shown once');
- assert.equal(f.view().trees.find(x=>x.id===t.id).hanging,F.FORAGE.perTree-f.stats.dropped,'the tree is lighter');
- assert(F.forageStore.get().notes>=1,'a note after the pickup');
- // Regrow: the tree fills up again over real minutes.
- for(let i=0;i<120;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));}// let the sway and sparkles finish
- r.tick(F.FORAGE.regrowMs*3);f.update(r.ctx(t.stand.x,t.stand.z));assert.equal(f.view().trees.find(x=>x.id===t.id).hanging,F.FORAGE.perTree,'regrown and saved across time');
+ assert.equal(r.calls.gather.length,f.stats.dropped,'each pickup = +1 in the basket');for(const g of r.calls.gather)assert.equal(g,T0.fruit);
+ const save=JSON.parse(r.store.get(F.FORAGE_SAVE_KEY));assert.equal(save.today,f.stats.dropped);assert.equal(save.tip,true);
+ const left=f.view().trees.find(x=>x.id===t.id).hanging;assert.equal(left,t.dawn-f.stats.dropped,'the tree is lighter');
+ r.tick(5*3600e3);run(r,p.how.stand.x,p.how.stand.z,2);assert.equal(f.view().trees.find(x=>x.id===t.id).hanging,left,'and stays lighter all day');
  // At rest: no rAF, no timers, no instance writes, no per-frame work.
- assert.equal(f.view().swaying,false,'the sway shell is gone once it settles');assert(!f.root.children.some(o=>o.name==='summit-fruit-tree-sway'));
- const v0=fruitMesh.instanceMatrix.version,b0=f.stats.busyFrames;
- for(let i=0;i<300;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));}
- assert.equal(fruitMesh.instanceMatrix.version,v0,'nothing animates at rest (no instance uploads)');assert.equal(f.stats.busyFrames,b0,'no per-frame work at rest');
- const fxMesh=f.root.children.find(o=>o.name==='job-fx-particles');assert(fxMesh&&fxMesh.visible===false,'pooled particles hidden when idle');
+ const iv=fruitMesh.instanceMatrix.version,b0=f.stats.busyFrames;run(r,p.how.stand.x,p.how.stand.z,300);
+ assert.equal(fruitMesh.instanceMatrix.version,iv,'nothing animates at rest');assert.equal(f.stats.busyFrames,b0,'no per-frame work at rest');
  assert.deepEqual(timers,{raf:0,timeout:0,interval:0},'no rAF and no timers of its own');
- // E shakes when the prompt shows.
  const keys=winListeners.get('keydown');assert(keys&&keys.size===1,'one keydown listener');
- const press=k=>{for(const fn of keys)fn({key:k,repeat:false,target:null,preventDefault(){}});};press('e');assert.equal(r.calls.pose.length,2,'E shakes too');
- for(let i=0;i<60*5;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));}
- // Walk away from fallen fruit: it goes back up the tree, nothing lost.
- {const r2=rig(),g=r2.f,u=picks[1];r2.aim(u.stand.x,u.stand.z);g.update(r2.ctx(u.stand.x,u.stand.z));g.shake();
-  for(let i=0;i<60*3;i++){r2.tick(1000/60);g.update(r2.ctx(u.stand.x,u.stand.z,{onFoot:i<50}));}// hop on a ride after the shake: no pickups
-  const down=g.view().fallen.length;assert(down>=1);
-  const far={x:u.x+(u.x>S.SUMMIT_CENTER.x?-35:35),z:u.z};for(let i=0;i<10;i++){r2.tick(1000/60);g.update(r2.ctx(far.x,far.z));}
-  assert.equal(g.view().fallen.length,0);assert.equal(g.view().trees.find(x=>x.id===u.id).hanging,F.FORAGE.perTree,'left behind = back on the tree');assert.equal(r2.calls.gather.length,0);g.dispose();}
- // Dispose.
- f.dispose();assert.equal(f.root.parent,null,'removed from the scene');assert.equal(winListeners.get('keydown').size,0,'listener removed');
- assert.equal(F.forageStore.get().note,'','store reset');
-}
-// The daily cap: past it a shake still plays, but nothing falls and a friendly note explains.
-{const t0=Date.UTC(2026,9,13,15,0,0);let s=F.emptyForage(t0);for(let i=0;i<F.FORAGE.dailyCap;i++)s=F.recordPick(s,'palm-999-999',t0);
- const r=rig({now:t0+1000,store:[[F.FORAGE_SAVE_KEY,JSON.stringify(s)]]}),t=picks[2];r.aim(t.stand.x,t.stand.z);r.f.update(r.ctx(t.stand.x,t.stand.z));
- assert.equal(r.f.shake(),true);for(let i=0;i<60*2;i++){r.tick(1000/60);r.f.update(r.ctx(t.stand.x,t.stand.z));}
- assert.equal(r.f.stats.dropped,0,'nothing drops past the daily cap');assert.match(F.forageStore.get().note,/foraged \d+ fruit today/);r.f.dispose();}
-// A full basket: the fruit stays on the ground (nothing lost) and the note says where to sell.
-{const r=rig({full:true}),t=picks[3];r.aim(t.stand.x,t.stand.z);r.f.update(r.ctx(t.stand.x,t.stand.z));r.f.shake();
- for(let i=0;i<60*3;i++){r.tick(1000/60);r.f.update(r.ctx(t.stand.x,t.stand.z));}
- const q=r.f.view().fallen[0];for(let i=0;i<30;i++){r.tick(1000/60);r.f.update(r.ctx(q.x,q.z));}
- assert(r.f.view().fallen.length>=1,'the fruit waits on the ground');assert.match(F.forageStore.get().note,/basket is full/i);assert.equal(JSON.parse(r.store.get(F.FORAGE_SAVE_KEY)??'{"today":0}').today,0,'not counted');r.f.dispose();}
-// Reduced motion: no sway or leaves; the fruit is on the ground at once.
-{const r=rig({reduced:true}),t=picks[4];r.aim(t.stand.x,t.stand.z);r.f.update(r.ctx(t.stand.x,t.stand.z));r.f.shake();let sway=false;
- for(let i=0;i<60;i++){r.tick(1000/60);r.f.update(r.ctx(t.stand.x,t.stand.z));if(r.f.view().swaying)sway=true;}
- assert.equal(sway,false,'no sway with reduced motion');assert(r.f.view().fallen.every(q=>q.mode==='ground'),'lands at once');r.f.dispose();}
-// The first visit spreads the tree choice over frames (one check per frame at a 0 ms budget) and lands on the same trees.
-{const r=rig({budgetMs:0}),t=picks[0];let frames=0;while(!r.f.stats.built&&frames<500){r.f.update(r.ctx(t.stand.x,t.stand.z));frames++;}
- assert(r.f.stats.built&&frames>5,`the choice is time-sliced (${frames} frames)`);assert.deepEqual(r.f.view().trees.map(x=>x.id).join(),picks.map(x=>x.id).join(),'same trees');r.f.dispose();}
-// Frozen (the fishing focus) or off the island: no work.
-{const r=rig(),t=picks[0];const before=r.f.stats.busyFrames;r.f.update(r.ctx(t.stand.x,t.stand.z,{frozen:true}));assert.equal(r.f.stats.built,false,'nothing while the fishing focus holds the island still');assert.equal(r.f.stats.busyFrames,before);r.f.dispose();}
+ f.dispose();assert.equal(f.root.parent,null);assert.equal(winListeners.get('keydown').size,0);assert.equal(F.forageStore.get().note,'','store reset');}
 
-// ---- 4. Wiring and data.
-{const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),town=read('components/Town.tsx'),world=read('lib/town/summitIsleWorld.ts'),rt=read('lib/graphics/fruitTrees.ts');
+// The prompt riding and flying low; the hop-off and land-then-shake sequence.
+{const r=rig(),f=r.f,fr=()=>f.view().trees;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));
+ const lone=x=>fr().every(u=>u.id===x.id||Math.hypot(u.x-x.x,u.z-x.z)>10),t=fr().find(x=>x.hanging>=1&&lone(x)),T0=picks.find(p=>p.id===t.id),off={x:T0.x+3.8,z:T0.z+1};r.aim(off.x,off.z);
+ assert.equal(f.update(r.ctx(off.x,off.z)),null,'on foot 3.9 m away: out of reach');
+ assert(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'ride'})),'on a bike 3.9 m away: the prompt shows');
+ assert.equal(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:null})),null,'in street traffic or the truck: no prompt');
+ assert(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'fly',air:()=>4})),'parachuting 4 m up: the prompt shows');
+ assert(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'fly',air:()=>15.8})),'the jetpack’s low hover over Summit Isle (15.8 m): the prompt shows');
+ assert(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'fly',air:()=>21})),'and over a foothill (21 m)');
+ assert.equal(f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'fly',air:()=>27.5})),null,'at the 28 m cruise over the sand: too high');
+ // Ride: tap → hop off (the host's switch to walking), then walk in and shake.
+ f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'ride'}));assert.equal(f.shake(),true);assert.equal(r.calls.dismount[0].how,'ride','hops off the ride');
+ assert.equal(r.calls.pose.length,0,'no shake until on foot');assert(f.view().arriving,'waiting to be on foot');
+ f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'ride'}));assert.equal(f.shake(),false,'input locked during the sequence');
+ r.tick(16);f.update(r.ctx(off.x,off.z));assert.equal(r.calls.pose.length,1,'on foot: walks in and shakes');assert.equal(r.calls.touchdown,0,'no landing dust for a hop-off');
+ const lead=r.calls.pose[0].how.lead;assert(lead>.3&&lead<=1.4,`a short walk to the trunk (${lead.toFixed(2)} s)`);
+ assert(lead+1<=2.6,'the whole sequence is ~1–2.5 s');run(r,off.x,off.z,60*6);f.dispose();}
+{const r=rig(),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const t=f.view().trees.find(x=>x.hanging>=1),T0=picks.find(p=>p.id===t.id),off={x:T0.x+2,z:T0.z-4};
+ r.aim(off.x,off.z);f.update(r.ctx(off.x,off.z,{onFoot:false,arrival:'fly',air:()=>5}));assert.equal(f.shake(),true);
+ const d=r.calls.dismount[0];assert.equal(d.how,'fly','lands from the air');
+ assert(Math.hypot(d.spot.x-T0.x,d.spot.z-T0.z)<3.5&&S.onSummitIsle(d.spot.x,d.spot.z)&&!blockedAt(d.spot.x,d.spot.z),'on a clear spot beside the trunk');
+ run(r,off.x,off.z,30,{onFoot:false,arrival:'fly',air:()=>3});assert.equal(r.calls.pose.length,0,'still landing');
+ r.tick(16);f.update(r.ctx(d.spot.x,d.spot.z));assert.equal(r.calls.touchdown,1,'touchdown: the landing dust');assert.equal(r.calls.pose.length,1,'then walks in and shakes');
+ run(r,d.spot.x,d.spot.z,60*5);assert(f.stats.dropped>=1,'fruit drops as usual');f.dispose();}
+{const r=rig({dismount:false}),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const t=f.view().trees.find(x=>x.hanging>=1),T0=picks.find(p=>p.id===t.id);
+ f.update(r.ctx(T0.x+2,T0.z,{onFoot:false,arrival:'ride'}));assert.equal(f.shake(),false,'nothing when the host can’t hop off');assert.equal(f.view().arriving,null);f.dispose();}
+
+// A kicked ball: a hard hit knocks fruit down, a soft one doesn't, a bare tree only sways, the daily cap holds.
+{const r=rig(),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const v=f.view(),t=v.trees.find(x=>x.hanging>=2),T0=picks.find(p=>p.id===t.id),at={x:t.x-T0.rig.baseR-.2,y:t.y+.5,z:t.z};
+ r.aim(t.stand.x,t.stand.z);
+ assert.equal(f.ballHit(at.x,at.y,at.z,3,0),false,'a gentle roll does nothing');assert.equal(f.view().fallen.length,0);
+ assert.equal(f.ballHit(at.x,at.y,at.z,8,0),true,'a firm kick hits the tree');run(r,t.stand.x,t.stand.z,2);
+ assert.equal(f.view().fallen.length,1,'one fruit falls');assert.equal(sway.tree.value,T0.tid,'the tree sways');
+ r.tick(700);f.ballHit(at.x,at.y,at.z,13,0);run(r,t.stand.x,t.stand.z,2);assert.equal(f.view().fallen.length,Math.min(t.hanging,3),'a hard one drops two more (as many as hang)');
+ run(r,t.stand.x+40,t.stand.z,5);// walk away: back up the tree, nothing lost
+ const bare=picks.find(p=>!v.trees.some(x=>x.id===p.id)),before=f.view().fallen.length;
+ assert.equal(f.ballHit(bare.x-bare.rig.baseR-.2,bare.y+.5,bare.z,12,0),true,'a bare tree is hit');run(r,bare.x,bare.z,2);
+ assert.equal(sway.tree.value,bare.tid,'it sways');assert.equal(f.view().fallen.length,before,'but nothing falls');run(r,bare.x,bare.z,60*4);assert.equal(sway.angle.value,0,'and settles');
+ f.dispose();}
+{const t0=new Date(2026,9,13,15,0,0).getTime();let s=F.emptyForage(t0);for(let i=0;i<F.FORAGE.dailyCap;i++)s=F.recordPick(s,'palm-999-999',t0);
+ const r=rig({now:t0+1000,store:[[F.FORAGE_SAVE_KEY,JSON.stringify(s)]]}),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const t=f.view().trees.find(x=>x.hanging>=1),T0=picks.find(p=>p.id===t.id);
+ f.ballHit(t.x-T0.rig.baseR-.2,t.y+.5,t.z,13,0);run(r,t.x,t.z,2);assert.equal(f.view().fallen.length,0,'the daily cap holds for ball hits');
+ r.aim(t.stand.x,t.stand.z);r.tick(700);f.update(r.ctx(t.stand.x,t.stand.z));assert.equal(f.shake(),true);run(r,t.stand.x,t.stand.z,60*2);
+ assert.equal(f.stats.dropped,0,'nothing drops past the daily cap');assert.match(F.forageStore.get().note,/foraged \d+ fruit today/);f.dispose();}
+// A full basket: the fruit stays on the ground and the note says where to sell.
+{const r=rig({full:true}),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const t=f.view().trees.find(x=>x.hanging>=1);r.aim(t.stand.x,t.stand.z);f.update(r.ctx(t.stand.x,t.stand.z));f.shake();
+ run(r,t.stand.x,t.stand.z,60*3);const q=f.view().fallen[0];run(r,q.x,q.z,30);
+ assert(f.view().fallen.length>=1,'the fruit waits on the ground');assert.match(F.forageStore.get().note,/basket is full/i);f.dispose();}
+// Reduced motion: a small sway, no leaves; the fruit is on the ground at once.
+{const r=rig({reduced:true}),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const t=f.view().trees.find(x=>x.hanging>=1);r.aim(t.stand.x,t.stand.z);f.update(r.ctx(t.stand.x,t.stand.z));f.shake();let maxAng=0;
+ for(let i=0;i<90;i++){r.tick(1000/60);f.update(r.ctx(t.stand.x,t.stand.z));maxAng=Math.max(maxAng,Math.abs(sway.angle.value));}
+ assert(maxAng<.06,`a small sway with reduced motion (${maxAng.toFixed(3)} rad)`);assert(f.view().fallen.every(q=>q.mode==='ground'),'lands at once');f.dispose();}
+// The first visit spreads the tree choice over frames and lands on the same trees.
+{const r=rig({budgetMs:0});let frames=0;while(!r.f.stats.built&&frames<2000){r.f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));frames++;}
+ assert(r.f.stats.built&&frames>5,`the choice is time-sliced (${frames} frames)`);assert.deepEqual(r.f.view().pool.join(),picks.map(x=>x.id).join(),'same trees');r.f.dispose();}
+{const r=rig();r.f.update(r.ctx(picks[0].stand.x,picks[0].stand.z,{frozen:true}));assert.equal(r.f.stats.built,false,'nothing while the fishing focus holds the island still');r.f.dispose();}
+
+// ---- 8. Wiring, goods and data.
+{const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),town=read('components/Town.tsx'),art=read('components/ProduceArt.tsx');
  assert(town.includes('createSummitForage(')&&town.includes('forage.dispose()')&&town.includes('<ForagePrompt/>')&&town.includes("jobMoves.start('treeshake'"),'Town builds, shows and disposes it; the pose is a job pose');
  assert(town.includes("cands.push({kind:'enter',key:forageWant.key"),'the prompt competes in the HUD stack (one prompt at a time)');
+ assert(/dismount:\(how,spot\)=>\{if\(how==='ride'\)[^\n]*selectRide\('walk'\)/.test(town),'riding: the usual switch to walking');
+ assert(/pendingRide\.current='walk';[^\n]*flight\.landing=/.test(town),'flying: the usual guided jetpack landing, aimed beside the trunk');
+ assert(town.includes('landingDust.trigger(location.x,y,location.z')&&town.includes('touchdown:'),'landing dust on touchdown');
+ assert(town.includes("arrival:")&&town.includes("air:()=>flight.height-rooftop.surface"),'Town reports ride / low flight');
+ assert(town.includes('forage.ballHit(x,y,z,walkBall.state.vx,walkBall.state.vz)'),'a kicked ball reports its collisions');
+ assert(town.includes('jobFrame.free?')&&town.includes('jobFrame.lean'),'the grip spot and the lean');
  assert(read('lib/graphics/jobPoses.ts').includes('treeshake:[')&&read('lib/town/jobs/jobMoves.ts').includes("'treeshake'"),'push-and-shake pose');
- // The sway copies the baked canopy: keep fruitTrees.ts canopyCopy() in step with summitIsleWorld.ts tree() / palm().
- for(const src of ["IcosahedronGeometry(1.7*s,0),i%3?'#5b895e':'#4f7f55',at(x,y+2.9*s,z,0,i)","IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2)",
-  "bakeBox(piece,2.6,.06,.5,k%2?'#5b895e':'#3f7a4f',tx+Math.cos(a)*1.15,ty-.25,tz+Math.sin(a)*1.15,0,-a,-.42)"])assert(world.includes(src),'summitIsleWorld still bakes: '+src.slice(0,40));
- assert(rt.includes("i%3?'#5b895e':'#4f7f55'")&&rt.includes("f%2?'#5b895e':'#3f7a4f'"),'the sway copy uses the same colours');
  assert(load('lib/saves/snapshot.ts').SYNC_KEYS.includes(F.FORAGE_SAVE_KEY),'the forage save syncs with the island');
- const coconut=goods.goodById('coconut');assert(coconut&&coconut.kind==='produce'&&coconut.price===3&&coconut.lesson.length<=85&&/^https:\/\//.test(coconut.source),'coconut: a fairly priced basket good that teaches');}
+ for(const k of F.FRUIT_KINDS){const g=goods.goodById(k);assert(g&&g.kind==='produce'&&g.price>=1&&g.price<=5&&g.lesson.length>40&&/^https:\/\//.test(g.source),`${k}: a fairly priced basket good that teaches`);if(['papaya','lime','guava','avocado'].includes(k))assert(g.lesson.length<=85,`${k}: a short lesson`);
+  assert(new RegExp(`\\n ${k}:c=>`).test(art),`${k} has its own pocket icon`);assert(F.FRUIT_LOOK[k].tree.length>3,`${k}: prompt words`);
+  assert(load('lib/town/fuel.ts').produceFuel(k,'produce','fruit')>0,`${k} can be eaten from the pocket`);}
+ // Rosa's stand sells every kind (the market quotes any basket good from the registry).
+ const M=load('lib/town/market/market.ts');const st={...M.emptyMarket('2026-10-13'),basket:Object.fromEntries(F.FRUIT_KINDS.map(k=>[k,1]))};
+ const q=M.quoteSale(st);assert.equal(q.lines.length,F.FRUIT_KINDS.length,'every fruit kind has a sale line');assert(q.lines.every(l=>l.coins>=1),'and each sells for coins');}
 
-console.log(`PASS Summit Isle fruit trees: ${picks.filter(t=>t.kind==='tree').length} mango/orange trees + ${picks.filter(t=>t.kind==='palm').length} coconut palms, reachable from the landing; a shake drops 1–3 that fall, bounce and rest; pickups fill the basket; regrow every ${F.FORAGE.regrowMs/60e3} min, ${F.FORAGE.dailyCap} a day; idle = no work, no timers`);
+console.log(`PASS Summit Isle fruit trees: ${BEFORE} → ${picks.length} fruit trees (${picks.filter(t=>t.form).length} of the ${orchard.length} orchard plants, ${O.ORCHARD_FORMS.length} forms + ${picks.filter(t=>!t.form&&t.kind==='tree').length} round trees + ${picks.filter(t=>t.kind==='palm').length} palms), ${F.FRUIT_KINDS.length} fruit kinds, ~${Math.round(F.FORAGE.fruiting*100)}% fruiting a day; shake on foot, riding or flying low; hands on the trunk; GPU sway; ball knocks fruit; idle = no work`);

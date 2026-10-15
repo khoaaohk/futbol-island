@@ -1,9 +1,10 @@
 import {DAILY_PLAY_COINS,LEGACY_DAILY_PLAY_MAX,localPlayDay,type DailyPlayResult} from '../town/dailyPlay';
 import {LEGEND_PACK_PRICE,MYSTERY_PACK_OPTIONS,PACKS_PER_DAY,PACK_RESTOCK_MESSAGE} from './legendPacks';
 import {trainingPay} from '../town/dailyMeter';
+import {ARCADE_PLAY_COST as PLAY_COST,ARCADE_COIN_CAPS as COIN_CAPS,PUZZLE_FIRST_SOLVE_COINS as PUZZLE_FIRST} from '../economy';
 /** `learn`: one-off learning coins (lessons, hidden balls, stories, journeys, explore, paths), paid once ever and never metered. */
 export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn';
-export const ARCADE_PLAY_COST=3;
+export const ARCADE_PLAY_COST=PLAY_COST;// lib/economy.ts
 /** Explicit one-time local testing credit; ordinary gameplay caps remain unchanged. */
 export const TEST_COIN_GRANT_ID='testing-credit-2026-09-27';
 export const TEST_COIN_GRANT_AMOUNT=50000;
@@ -18,9 +19,9 @@ type Run={game:ArcadeCoinGame;paid:number;reason:string;at:number;raw?:number};
 type State={version:1;spends:Record<string,ArcadeSpend>;runs:Record<string,Run>;best:Record<string,number>;attempts:Record<string,true>;visits:Record<string,number>;packs:(LegendPack&{granted?:boolean})[]};
 /** Per-run caps. Raising a cap is always safe; lowering one would shrink saved receipts (sanitizeArcadeWallet clamps to it).
  *  puzzle 8 = first solve 5 + 3 stars; learn 75 = a finished path, the biggest learning reward. */
-export const ARCADE_COIN_CAPS={runner:12,pinball:15,tennis:18,live:20,puzzle:8,island:20,learn:75} as const;
+export const ARCADE_COIN_CAPS=COIN_CAPS;// lib/economy.ts (never lower: also the save clamp)
 /** Pass Puzzles (economy pass, 28 Sep 2026): free to play, first solve pays PUZZLE_FIRST_SOLVE_COINS + new stars, a repeat pays 0. */
-export const PUZZLE_FIRST_SOLVE_COINS=5;
+export const PUZZLE_FIRST_SOLVE_COINS=PUZZLE_FIRST;// lib/economy.ts
 const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn'];
 const integer=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0;
 const key=(s:unknown):s is string=>typeof s==='string'&&s.length>0&&s.length<180&&s!=='__proto__'&&s!=='constructor'&&s!=='prototype';

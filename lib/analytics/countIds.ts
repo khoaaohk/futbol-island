@@ -36,10 +36,48 @@ export const IDP_COUNT_EVENTS=[['open','Plan story opened'],['set','Plan made'],
  ['checkin','Check-in'],['proud','Proud moment added'],['met','Goal celebrated'],['review','6-week review done'],['link','Island link opened from the plan'],
  ['grown','Grown-up view opened'],['fridge','Fridge card printed'],['coachqr','Coach goal QR made'],['coachadd','Coach goal added by a player'],
  ['week','Shared week plan opened'],['cheer','Cheer left for the player'],['helped','“This helped” tapped'],['note','Player note written']] as const;
+/**
+ * Kit Shop events (Oct 15 2026, lib/analytics/shopEvents.ts): studio opens, designs saved to a slot, purchases and coins
+ * spent, My kit opened. `spend` carries the price as its count (n), so the total may take a few beats to arrive in full
+ * (count() chunks large n across beats; see tracker.ts count/takeCounts) — the day's total still adds up correctly.
+ */
+export const SHOP_COUNT_EVENTS=[
+ ['open_jersey','Jersey studio opened'],['open_boots','Boot studio opened'],['open_ball','Ball studio opened'],
+ ['save_jersey','Jersey design saved'],['save_boots','Boot design saved'],['save_ball','Ball design saved'],
+ ['buy_jersey','Jersey bought'],['buy_boots','Boots bought'],['buy_ball','Ball bought'],
+ ['spend','Coins spent (Kit Shop)'],['mykit','“My kit” opened'],
+] as const;
+/** The sandbar between Coral Cay and Summit Isle (lib/town/summitIsle.ts SANDBAR_NAME). */
+export const SANDBAR_COUNT_EVENTS=[['cross','Sandbar crossed']] as const;
+/** Fruit kinds a tree can bear (lib/town/summitForage.ts FRUIT_KINDS), for the fruit-shaken ids below. */
+export const FORAGE_FRUIT_KINDS=['mango','orange','coconut','banana','papaya','lime','guava','avocado'] as const;
+/**
+ * Summit Isle events (Oct 15 2026, lib/analytics/summitEvents.ts): how players arrive, Summit Kick rounds played (its best
+ * score is read straight from the arcade leaderboard instead: lib/arcade/kickAdminMetrics.ts), zipline rides, fruit
+ * shaken by kind and method, catches at the three summit fishing spots, and the summit kiosk.
+ */
+export const SUMMIT_COUNT_EVENTS=[
+ ['arrive_walk','Arrived via the Sandbar (on foot or a ride)'],['arrive_fly','Arrived by jetpack or parachute'],
+ ['kick_play','Summit Kick round played'],
+ ['zipline_ride','Zipline ride to Coral Cay'],
+ ['fish_cove','Fish caught at Boulder Cove'],['fish_palm','Fish caught at Palm Point'],['fish_look','Fish caught at Lookout Rocks'],['fish_ledge','Fish caught at Drop-off Ledge'],
+ ['kiosk_buy','Summit kiosk purchase'],['kiosk_coin','Coins spent (summit kiosk)'],
+ ['ball_find','Hidden ball found on Summit Isle'],
+ ['easel_open','Painting easel: sat down to paint'],['easel_save','Painting easel: painting saved'],
+ ['cannon_sit','Ball cannon: sat in the seat'],['cannon_hit','Ball cannon: clay disc knocked out'],
+] as const;
+/** `su:fruit_<kind>:hand` / `:ball` — the two ways a fruit tree is shaken (lib/graphics/fruitTrees.ts drop()). */
+export const FRUIT_SHAKE_IDS:readonly string[]=FORAGE_FRUIT_KINDS.flatMap(k=>[`fruit_${k}:hand`,`fruit_${k}:ball`]);
+/** Beach finds picked up, by island (lib/town/beachcombing.ts recordFind; beachcombing is a separate in-progress feature). */
+export const BEACH_COUNT_EVENTS=[['main','Beach finds picked up (Futbol Island)'],['cay','Beach finds picked up (Coral Cay)'],['summit','Beach finds picked up (Summit Isle)']] as const;
+
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
  ...IDP_COUNT_EVENTS.map(([e])=>'ip:'+e),...START_COUNT_IDS,
+ ...SHOP_COUNT_EVENTS.map(([e])=>'sh:'+e),...SANDBAR_COUNT_EVENTS.map(([e])=>'sb:'+e),
+ ...SUMMIT_COUNT_EVENTS.map(([e])=>'su:'+e),...FRUIT_SHAKE_IDS.map(id=>'su:'+id),
+ ...BEACH_COUNT_EVENTS.map(([e])=>'bc:pickup_'+e),
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

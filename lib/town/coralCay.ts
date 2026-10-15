@@ -270,7 +270,7 @@ const cayAngle=(p:CayPoint)=>Math.atan2(p.z-CAY_CENTER.z,p.x-CAY_CENTER.x);
 export const SHARKS_BEACH_SHORE=CAY_SHORE.filter(p=>{const a=cayAngle(p)*180/Math.PI;return a>-64&&a<-18;}).sort((a,b)=>cayAngle(a)-cayAngle(b));
 export const SHARKS_BEACH=(()=>{const mid=SHARKS_BEACH_SHORE[SHARKS_BEACH_SHORE.length>>1],d=cayAngle(mid);return {name:'Sharks Beach',x:mid.x-Math.cos(d)*12,z:mid.z-Math.sin(d)*12,shoreX:mid.x,shoreZ:mid.z};})();
 /** Closed patrol loops (world x/z). Out along one offset, back along a wider one: a long lazy S-loop. */
-export type SharkLoop={id:string;region:'causeway';points:CayPoint[];speed:number};
+export type SharkLoop={id:string;region:'causeway'|'summit';points:CayPoint[];speed:number};
 function causewayLoop(id:string,side:RoadSide,s0:number,s1:number,gap:number,speed:number):SharkLoop{
  const run=CAUSEWAY_PATH.filter(p=>p.s>=s0&&p.s<=s1);
  // Clear of the widest waterline within ±16 m, so the loop never grazes a bank.
@@ -371,9 +371,9 @@ export const CAY_LANDMARKS={
  hostel:{x:HOSTEL.x,z:HOSTEL.verandah.z+2.5},
  /** Open, deep water in the big south block (clear of the causeway sharks, the sandbars and the flight edge): the deep-sea
   *  fishing boat's mooring (owned by the fishing/boat feature, which may register it via landableDecks.ts). Not land. */
- /** The deep-sea boat's mooring (BOAT_MOORING in lib/town/fishing/deepSeaBoatData.ts; the user's spot, Sep 29 2026).
-  *  Open, flyable sea just west of the south block. Informational: the boat no longer reads it. */
- deepSeaMooring:{x:282.5,z:-93.5},
+ /** The deep-sea boat's mooring (BOAT_MOORING in lib/town/fishing/deepSeaBoatData.ts; moved Oct 14 2026 to the open bay north
+  *  of the East Jetty). Open, flyable sea. Informational: the boat no longer reads it. */
+ deepSeaMooring:{x:335,z:-5},
  /** The lane junction among the homes (fixed point; stays valid if homes are added or removed). */
  homes:{x:571.5,z:-99.5},
  /** The lifeguard tower on the cay's easternmost headland (same rule as coralCayWorld.ts). */

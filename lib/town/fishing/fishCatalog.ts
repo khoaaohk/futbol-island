@@ -11,7 +11,7 @@
  */
 import {SPECIAL_FISH} from './fishSpecials';
 import {DEEP_SEA_FISH} from './deepSeaFish';
-import {BOAT_BUOY,BOAT_DECK_Y,BOAT_PROMPT,BOAT_SPOT_ID,BOAT_STAND} from './deepSeaBoatData';
+import {BOAT_DECK_Y,BOAT_SPOT_IDS,DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {EAST_PIER_FISHING} from '../eastPier';
 import {beachPoint} from '../summitIsle';
 export type FishId=string;
@@ -21,12 +21,16 @@ export type ShadowSize='small'|'medium'|'large'|'huge'|'giant';
 export const SHADOW_LENGTH:Record<ShadowSize,number>={small:.45,medium:.7,large:1,huge:1.45,giant:1.9};
 export const SHADOW_LABEL:Record<ShadowSize,string>={small:'Small shadow',medium:'Medium shadow',large:'Large shadow',huge:'Huge shadow',giant:'Giant shadow'};
 export type SpotId='south-pier'|'west-pier'|'harbour-wall'|'north-rocks'|'west-cove'|'deep-sea-boat'|'east-pier'
+ /** Oct 14 2026: the second deep-sea boat, west of Summit Isle (./deepSeaBoatData.ts). */
+ |'deep-sea-boat-west'
  /** Oct 5 2026: three posts along the Coral Cay causeway and three round the cay's shore (see FISH_SPOTS). */
  |'causeway-gate'|'causeway-channel'|'turtle-bank'|'coral-garden'|'sharks-beach'|'farm-beach'
  /** Oct 12 2026: a rocky cove on Summit Isle's far shore, opposite the sandbar (see FISH_SPOTS). */
  |'summit-cove'
  /** Oct 13 2026: the island's other two boulder headlands, see FISH_SPOTS. */
- |'summit-lookout'|'summit-palm';
+ |'summit-lookout'|'summit-palm'
+ /** Oct 14 2026: a ledge on Summit Isle's south-east shore (see FISH_SPOTS). */
+ |'summit-ledge';
 /** What kind of sea animal it is (sharks reel like legendary animals: 10-14 taps). */
 /** Fish (incl. sharks, rays, eels, seahorses) plus a few crustaceans, shellfish and the octopus. NO marine mammals or reptiles (user decision, Sep 28 2026; tests/fishing.cjs keeps a denylist). */
 export type AnimalGroup='fish'|'shark'|'ray'|'eel'|'crab'|'lobster'|'shellfish'|'octopus'|'squid'|'seahorse';
@@ -65,15 +69,15 @@ export const FISH:FishSpecies[]=[
   club:{name:'Southend United',country:'England',link:'Nickname',nickname:'The Shrimpers',
    fact:'Southend United are "The Shrimpers" because nearby Leigh-on-Sea had lots of shrimp-fishing boats, and a shrimp is on the club badge.',
    source:'https://en.wikipedia.org/wiki/Southend_United_F.C.'}},
- {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
+ {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
   club:{name:'Santos FC',country:'Brazil',link:'Nickname',nickname:'Peixe (Fish)',
    fact:'In 1933 rival fans teased port-city Santos as "fishmongers", so Santos fans proudly took the nickname "Peixe" (Fish). Pelé played there from 1956 to 1974.',
    source:'https://en.wikipedia.org/wiki/Santos_FC'}},
- {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
+ {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
   club:{name:'Celta Vigo',country:'Spain',link:'Port city',
    fact:'Celta Vigo\'s home city, Vigo, has Europe\'s biggest fishing port: almost a million tonnes of fish arrive there every year.',
    source:'https://www.fao.org/newsroom/story/Not-business-as-usual-in-Europe-s-largest-fishing-port/en'}},
- {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
+ {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
   club:{name:'Olympique de Marseille',country:'France',link:'Nickname',nickname:'Les Phocéens',
    fact:'Marseille are "Les Phocéens", after the Greek sailors from Phocaea who founded the port about 600 BC. In 1993 OM became the first French club to win the Champions League.',
    source:'https://en.wikipedia.org/wiki/Olympique_de_Marseille'}},
@@ -81,23 +85,23 @@ export const FISH:FishSpecies[]=[
   club:{name:'FC St. Pauli',country:'Germany',link:'Fan culture',
    fact:'FC St. Pauli come from Hamburg\'s harbour district. Fans started waving a skull-and-crossbones pirate flag in the 1980s, and the club now uses it as a logo.',
    source:'https://en.wikipedia.org/wiki/Skull_and_crossbones_(fraternities_and_sports)'}},
- {id:'cod',name:'Cod',plural:'Cod',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier','causeway-channel','farm-beach'],price:6,size:[40,90],color:'#9b8a5e',belly:'#efe6c8',shape:'round',shadow:'large',
+ {id:'cod',name:'Cod',plural:'Cod',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier','causeway-channel','farm-beach','summit-ledge'],price:6,size:[40,90],color:'#9b8a5e',belly:'#efe6c8',shape:'round',shadow:'large',
   club:{name:'Fleetwood Town',country:'England',link:'Fan culture',nickname:'The Cod Army',
    fact:'Fleetwood Town\'s fans are the "Cod Army" because Fleetwood grew up as a big deep-sea fishing port.',
    source:'https://en.wikipedia.org/wiki/Fleetwood_Town_F.C.'}},
- {id:'haddock',name:'Haddock',plural:'Haddock',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier','causeway-gate','coral-garden','farm-beach'],price:6,size:[35,70],color:'#6d6f73',belly:'#e9e7df',shape:'round',shadow:'medium',
+ {id:'haddock',name:'Haddock',plural:'Haddock',rarity:'uncommon',group:'fish',spots:['harbour-wall','west-cove','east-pier','causeway-gate','coral-garden','farm-beach','summit-ledge'],price:6,size:[35,70],color:'#6d6f73',belly:'#e9e7df',shape:'round',shadow:'medium',
   club:{name:'Grimsby Town',country:'England',link:'Fan culture',nickname:'The Mariners',
    fact:'Grimsby Town, "The Mariners", have fans who wave inflatable fish called "Harry Haddock", a tradition that began at FA Cup matches in 1989.',
    source:'https://gtfc.co.uk/the-return-of-harry-haddock/'}},
- {id:'tuna',name:'Bluefin Tuna',plural:'Bluefin Tuna',rarity:'rare',group:'fish',deepSea:true,spots:['south-pier','harbour-wall','west-cove','deep-sea-boat','east-pier','causeway-channel','sharks-beach'],price:9,size:[80,160],color:'#2f4f78',belly:'#d9e2e6',shape:'long',shadow:'huge',
+ {id:'tuna',name:'Bluefin Tuna',plural:'Bluefin Tuna',rarity:'rare',group:'fish',deepSea:true,spots:['south-pier','harbour-wall','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-channel','sharks-beach'],price:9,size:[80,160],color:'#2f4f78',belly:'#d9e2e6',shape:'long',shadow:'huge',
   club:{name:'Yokohama F. Marinos',country:'Japan',link:'Port city',nickname:'Marinos',
    fact:'"Marinos" means sailors in Spanish, chosen because Yokohama is a big international port. The club mascot is a seagull called Marinos-kun.',
    source:'https://www.f-marinos.com/en/club'}},
- {id:'shark',name:'Little Shark',plural:'Little Sharks',rarity:'rare',group:'shark',spots:['west-pier','north-rocks','west-cove','causeway-channel','turtle-bank','coral-garden','sharks-beach'],price:10,size:[50,90],color:'#7c8b96',belly:'#e4e9ea',shape:'shark',shadow:'large',
+ {id:'shark',name:'Little Shark',plural:'Little Sharks',rarity:'rare',group:'shark',spots:['west-pier','north-rocks','west-cove','causeway-channel','turtle-bank','coral-garden','sharks-beach','summit-ledge'],price:10,size:[50,90],color:'#7c8b96',belly:'#e4e9ea',shape:'shark',shadow:'large',
   club:{name:'Junior de Barranquilla',country:'Colombia',link:'Nickname',nickname:'Los Tiburones',
    fact:'Junior, from Barranquilla on Colombia\'s Caribbean coast, are nicknamed "Los Tiburones": The Sharks.',
    source:'https://en.wikipedia.org/wiki/Atl%C3%A9tico_Junior'}},
- {id:'octopus',name:'Octopus',plural:'Octopuses',rarity:'legendary',group:'octopus',deepSea:true,spots:['south-pier','west-pier','north-rocks','deep-sea-boat','east-pier','causeway-gate','coral-garden'],price:12,size:[40,100],color:'#c9655a',belly:'#f1b39b',shape:'octopus',shadow:'large',
+ {id:'octopus',name:'Octopus',plural:'Octopuses',rarity:'legendary',group:'octopus',deepSea:true,spots:['south-pier','west-pier','north-rocks','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','coral-garden'],price:12,size:[40,100],color:'#c9655a',belly:'#f1b39b',shape:'octopus',shadow:'large',
   club:{name:'Paul the Octopus',country:'Germany',link:'Football culture',
    fact:'At the 2010 World Cup, Paul the Octopus from Sea Life Oberhausen picked the winner of all seven Germany matches and the final: 8 out of 8!',
    source:'https://en.wikipedia.org/wiki/Paul_the_Octopus'}},
@@ -136,9 +140,17 @@ export type FishSpot={
  boat?:{floor:number;prompt:{x:number;y:number;z:number}};
  /** Internal multiplier (never shown) for species that are NOT deep-sea creatures at this spot: the boat keeps a few bait fish. */
  shallowFactor?:number;
+ /** Internal multiplier (never shown) per rarity at this spot (Oct 14 2026, the deep-sea boats: "increase the probability of
+  *  bigger fish on boats since it's in deep sea"). Absent = 1. Hotspot boosts stack on top of it, capped (fishingAim.ts). */
+ rarityBoost?:Partial<Record<FishRarity,number>>;
+ /** Seconds added to every wait for a bite (Oct 14 2026: deep water, the fish rise from far below). The economy's
+  *  compensation for the boats' bigger catches (docs/economy.md): the same coins a minute, give or take a few percent. */
+ biteDelay?:number;
  /** Off the main island: on the Coral Cay causeway's sand banks or round the cay's shore (Oct 5 2026), or on Summit Isle's
   *  own shore (Oct 12 2026). The Fishbook groups these by place; absent = a main-island spot. */
  area?:'causeway'|'cay'|'summit';
+ /** Oct 14 2026: the open-sea boats (both deep-sea boats). The Fishbook groups their catches as "Deep sea". */
+ deep?:boolean;
  /** Underwater look (Oct 13 2026, "fix all the fishing spots so they don't all look the same"): the spot's reef theme in
   *  underwater.ts REEF_THEMES (layout, reef palette, sand and water tint, fish, signature prop). Every spot has its own. */
  reef?:string;
@@ -161,6 +173,12 @@ const SUMMIT_COVE_STAND=beachPoint(SUMMIT_COVE_BEARING,.18),SUMMIT_COVE_BUOY=bea
 const SUMMIT_PALM_BEARING=-.5,SUMMIT_LOOKOUT_BEARING=3.9;
 const SUMMIT_PALM_STAND=beachPoint(SUMMIT_PALM_BEARING,.34),SUMMIT_PALM_BUOY=beachPoint(SUMMIT_PALM_BEARING,-.9);
 const SUMMIT_LOOKOUT_STAND=beachPoint(SUMMIT_LOOKOUT_BEARING,.44),SUMMIT_LOOKOUT_BUOY=beachPoint(SUMMIT_LOOKOUT_BEARING,-1);
+// Drop-off Ledge (Oct 14 2026): bearing 54° round SUMMIT_CENTER (atan2(z, x), 90° is south), same beachPoint helper.
+const SUMMIT_LEDGE_BEARING=54*Math.PI/180;
+const SUMMIT_LEDGE_STAND=beachPoint(SUMMIT_LEDGE_BEARING,.3),SUMMIT_LEDGE_BUOY=beachPoint(SUMMIT_LEDGE_BEARING,-.9);
+/** The deep-sea boats' rarity boost (internal, never shown) and their slower bite (seconds), see FISH_SPOTS. */
+export const DEEP_BOOST:Partial<Record<FishRarity,number>>={common:.85,uncommon:1.15,rare:1.6,legendary:1.6};
+export const DEEP_BITE_DELAY=8;
 // Oct 13 2026 ("fix all the fishing spots to be casting farther out, to see more of the ocean and a little deeper"): every
 // spot's buoy moved to roughly 1.6-2.2x its old distance from the stand (tests/fishing.cjs checks each is still in open
 // water, clear of rocks, piers and the sandbar). castPoint (fishingCore.ts) now casts to the buoy's own distance (capped
@@ -176,11 +194,14 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
   reef:'tidepool-flat',weights:{},story:'Tide-pool rocks at the quiet end of North Beach. Octopuses hide in the cracks.'},
  {id:'west-cove',name:'West Cove',x:-95.5,z:24,buoy:{x:-122.4,z:24},
   reef:'stream-channel',weights:{},story:'A windy cove on the west coast where a little stream meets the sea, so river fish swim in beside the rays and sharks.'},
- // Deep Sea Boat (Sep 29 2026): moored off the main island's east coast, south of the Coral Cay causeway; reached by jetpack
- // only. Stand on the aft deck and cast off the starboard (east, seaward) side. About three casts in four bring a deep-sea creature (internal).
- {id:BOAT_SPOT_ID,name:'Deep Sea Boat',x:BOAT_STAND.x,z:BOAT_STAND.z,buoy:{x:BOAT_BUOY.x,z:BOAT_BUOY.z},
-  reef:'blue-abyss',weights:{},story:'A little fishing boat moored far out in deep blue water. Squid, marlin and stranger things swim far below.',
-  camera:{lift:1.6,out:4,look:.5},boat:{floor:BOAT_DECK_Y,prompt:BOAT_PROMPT},shallowFactor:.5},
+ // Deep Sea Boats (Sep 29 2026; moved and joined by a second boat Oct 14 2026, ./deepSeaBoatData.ts): moored out in the deep
+ // open bay, reached by jetpack or parachute. Stand on the aft deck and cast off the starboard (east, seaward) side. Deep water
+ // (Oct 14 2026, user: "increase the probability of bigger fish on boats since it's in deep sea"): rare and legendary catches
+ // twice as likely, uncommon a little more, commons a quarter less (DEEP_BOOST), and each bite takes a few seconds longer to
+ // rise from the deep (DEEP_BITE_DELAY), so coins per minute stay close to the shore's (docs/economy.md, tests/economy.cjs).
+ ...DEEP_SEA_BOATS.map((b,i)=>({id:b.spotId,name:i?'Summit Deep Boat':'Deep Sea Boat',deep:true,x:b.stand.x,z:b.stand.z,buoy:{x:b.buoy.x,z:b.buoy.z},
+  reef:i?'abyss-green':'blue-abyss',weights:{},story:i?'A second little fishing boat, moored in the deep channel west of Summit Isle. Green, deep water where tuna, sailfish and marlin hunt the bait balls.':'A little fishing boat moored far out in the deep blue bay, north of the East Jetty. Squid, marlin and stranger things swim far below.',
+  camera:{lift:1.6,out:4,look:.5},boat:{floor:BOAT_DECK_Y,prompt:b.prompt},shallowFactor:.5,rarityBoost:DEEP_BOOST,biteDelay:DEEP_BITE_DELAY}) as FishSpot&{id:SpotId}),
  // East Jetty (Sep 29 2026 as the East Pier; spiral jetty Sep 30, lib/town/eastPier.ts): the outer east curve of the spiral off the farmers market. No specials of its
  // own: a table between the shore and the deep sea, built from species already in the game (the four shared commons, herring,
  // cod and haddock, plus the odd tuna or octopus that swims in from deeper water). Mean catch ≈ 4.05 coins (shore ≈ 4.0).
@@ -221,18 +242,30 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
   reef:'palm-staghorn',weights:{},story:'A curving beach on Summit Isle’s shore, shaded by a lone dune palm where five boulders break the swell. Shore crabs work the sand between them.'},
  {id:'summit-lookout',name:'Lookout Rocks',area:'summit',x:SUMMIT_LOOKOUT_STAND.x,z:SUMMIT_LOOKOUT_STAND.z,buoy:{x:SUMMIT_LOOKOUT_BUOY.x,z:SUMMIT_LOOKOUT_BUOY.z},
   reef:'lookout-bommies',weights:{},story:'Four boulders set out like stepping stones along a straight stretch of beach, in sight of the island’s old lookout. Shoals of silvery fish pass close to shore here.'},
+ // Drop-off Ledge (Oct 14 2026, user: "add one more fishing spot to the mountain island on the southeast side"): the south-east
+ // shore at bearing 54° (SUMMIT_LEDGE_BEARING), in the gap between the south-east sharks' patrol (34–58°, 29 m+ out) and the
+ // south bay's mantas; ≈ 21 m from the sea cave, ≈ 30 m from the beach hut. A shore spot with shore odds: like the East Jetty,
+ // no specials of its own, a table of the shared species that fits a rocky ledge over deeper water (no shrimp; cod, haddock and
+ // a little shark), mean catch ≈ the shore's.
+ {id:'summit-ledge',name:'Drop-off Ledge',area:'summit',x:SUMMIT_LEDGE_STAND.x,z:SUMMIT_LEDGE_STAND.z,buoy:{x:SUMMIT_LEDGE_BUOY.x,z:SUMMIT_LEDGE_BUOY.z},
+  reef:'ledge-dropoff',weights:{},story:'A rocky ledge on Summit Isle’s south-east shore, where the sand stops and the sea drops away into deep blue. Cod and haddock nose along the edge, and now and then a little shark patrols it.'},
 ];
+
 /**
  * Internal catch weights by rarity (code + docs only, NEVER shown to kids): commons are easy, each rarer tier is
  * progressively harder to meet. A species may override its weight with `weight`.
  */
 export const RARITY_WEIGHT:Record<FishRarity,number>={common:40,uncommon:12,rare:4,legendary:1.2};
-for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id))spot.weights[f.id]=(f.weight??RARITY_WEIGHT[f.rarity])*(spot.shallowFactor&&!f.deepSea?spot.shallowFactor:1);
+for(const spot of FISH_SPOTS)for(const f of FISH)if(f.spots.includes(spot.id))spot.weights[f.id]=(f.weight??RARITY_WEIGHT[f.rarity])*(spot.shallowFactor&&!f.deepSea?spot.shallowFactor:1)*(spot.rarityBoost?.[f.rarity]??1);
 /** The shore spots (fishing posts), without the boat. */
 export const SHORE_SPOTS=FISH_SPOTS.filter(s=>!s.boat);
 export const spotById=(id:string)=>FISH_SPOTS.find(s=>s.id===id);
 /** Species that live only at one spot (the spot's specials). */
 export const isExclusive=(f:FishSpecies)=>f.spots.length===1;
+/** The deep-sea boats' shared specials (Oct 14 2026: both boats fish the same deep water): species found only on the boats. */
+export const isDeepSeaSpecial=(f:FishSpecies)=>f.spots.length>0&&f.spots.every(id=>BOAT_SPOT_IDS.includes(id));
+/** The deep-sea boat spots. */
+export const BOAT_SPOTS=FISH_SPOTS.filter(s=>s.deep);
 
 /**
  * THE farmers-market sell stand (fish, produce, cards): the existing CITRUS & FRUIT stall of lib/town/farmersMarket.ts

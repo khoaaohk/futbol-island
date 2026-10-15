@@ -8,23 +8,29 @@ import {DoneButton} from './DoneButton';
 import FishArt from './FishArt';
 import shell from './ModalShell.module.css';
 import styles from './Fishbook.module.css';
-import {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,SHORE_SPOTS,isExclusive,type FishSpecies} from '@/lib/town/fishing/fishCatalog';
+import {BOAT_SPOTS,FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,SHORE_SPOTS,isDeepSeaSpecial,isExclusive,type FishSpecies} from '@/lib/town/fishing/fishCatalog';
 import {speciesCaught} from '@/lib/town/fishing/fishingCore';
+import {fishSellValue} from '@/lib/economy';
 import {useFishbook} from '@/lib/town/fishing/fishingStore';
 /** Plain credit name for a source URL. Kids see no clickable external links (user, Sep 27 2026); the URLs stay in the data and docs. */
 const LANG:Record<string,string>={en:'',it:' (Italian)',es:' (Spanish)',pt:' (Portuguese)',fr:' (French)',nl:' (Dutch)',de:' (German)',ja:' (Japanese)',th:' (Thai)'};
 const host=(url:string)=>{try{const h=new URL(url).hostname.replace(/^www\./,''),w=h.match(/^([a-z]+)\.wikipedia\.org$/);return w?`Wikipedia${LANG[w[1]]??''}`:h;}catch{return url;}};
 const credit=(f:FishSpecies)=>f.club.credit??host(f.club.source);
 /** Shared species first, then each spot's own specials (the Fishbook shows where every species lives, never how often it bites). */
-const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!isExclusive(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)}))].filter(s=>s.fish.length);
+/** Oct 14 2026: the two deep-sea boats share one "Deep sea specials" section (their catches are marked "Deep sea"). */
+const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!isExclusive(f)&&!isDeepSeaSpecial(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)})),{id:'deep-sea',title:'Deep sea specials',fish:FISH.filter(isDeepSeaSpecial)}].filter(s=>s.fish.length);
 /** "Found at": main-island shore spots first (collapsed to "every main-island shore spot" when it lives at all of them), then
- *  the causeway and Coral Cay spots (Oct 5 2026; collapsed the same way), then Summit Isle's cove (Oct 12 2026), then the
- *  Deep Sea Boat. */
+ *  the causeway and Coral Cay spots (Oct 5 2026; collapsed the same way), then Summit Isle's spots (Oct 12 2026), then the
+ *  deep-sea boats (two since Oct 14 2026). */
 const MAIN_SHORE=SHORE_SPOTS.filter(s=>!s.area),CAY_SHORE=SHORE_SPOTS.filter(s=>s.area==='causeway'||s.area==='cay'),SUMMIT_SHORE=SHORE_SPOTS.filter(s=>s.area==='summit');
 const placesIn=(f:FishSpecies,spots:typeof SHORE_SPOTS)=>spots.filter(s=>f.spots.includes(s.id));
 const foundAt=(f:FishSpecies)=>{const main=placesIn(f,MAIN_SHORE),cay=placesIn(f,CAY_SHORE),summit=placesIn(f,SUMMIT_SHORE),both=main.length>0&&cay.length>0;
  const part=(at:typeof SHORE_SPOTS,of:typeof SHORE_SPOTS,every:string,label:string)=>!at.length?'':at.length===of.length?every:`${both?label:''}${at.map(s=>s.name).join(', ')}`;
- return [part(main,MAIN_SHORE,'every main-island shore spot','Main island: '),part(cay,CAY_SHORE,'every causeway and Coral Cay spot','Causeway and Coral Cay: '),part(summit,SUMMIT_SHORE,'every Summit Isle spot','Summit Isle: '),FISH_SPOTS.some(s=>s.boat&&f.spots.includes(s.id))?'the Deep Sea Boat':''].filter(Boolean).join(' · ');};
+ return [part(main,MAIN_SHORE,'every main-island shore spot','Main island: '),part(cay,CAY_SHORE,'every causeway and Coral Cay spot','Causeway and Coral Cay: '),part(summit,SUMMIT_SHORE,'every Summit Isle spot','Summit Isle: '),boatsFor(f)].filter(Boolean).join(' · ');};
+/** The deep-sea boats a species lives at: "both deep-sea boats" or the one boat's name. */
+const boatsFor=(f:FishSpecies)=>{const at=BOAT_SPOTS.filter(s=>f.spots.includes(s.id));return !at.length?'':at.length===BOAT_SPOTS.length&&at.length>1?'both deep-sea boats':at.map(s=>`the ${s.name}`).join(', ');};
+/** "Deep sea" catches (Oct 14 2026): deep-sea creatures, marked on their Fishbook card. */
+const deepTag=(f:FishSpecies)=>f.deepSea?'Deep sea · ':'';
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
@@ -46,9 +52,9 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
      <h3 className={styles.spotTitle}>{sec.title} <small>{got} / {sec.fish.length}</small></h3>
      <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id];return <li key={f.id} data-caught={!!e}>
       <FishArt fish={f} hidden={!e} size={92}/>
-      {e?<><h3>{f.name}</h3><p className={styles.eyebrow}>{RARITY_LABEL[f.rarity]} · {SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p><p>Caught {e.count} · biggest {e.biggest} cm · {f.price} coins at Rosa&apos;s stand</p>
+      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}>{deepTag(f)}{RARITY_LABEL[f.rarity]} · {SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p><p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
        <div className={styles.fact}><span className={styles.tag}>Real football fact · {f.club.link}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div></>
-       :<><h3>Not caught yet</h3><p className={styles.eyebrow}>{SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p></>}
+       :<><h3>Not caught yet</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}>{deepTag(f)}{SHADOW_LABEL[f.shadow]}</p><p className={styles.found}>Found at: {foundAt(f)}</p></>}
      </li>;})}</ul>
     </section>;})}
     <section className={styles.keeper}><h3>The keeper&apos;s lesson</h3><p><b>{KEEPER_LESSONS.nibble.title}.</b> {KEEPER_LESSONS.nibble.text}</p><small className={styles.credit}>Source: Bar-Eli et al. (2007), Journal of Economic Psychology</small></section>

@@ -30,4 +30,16 @@ export const BALL_HUNT_SOURCES:Record<string,BallHuntSource[]>={
  'cay-rest':[{title:'American Academy of Sleep Medicine (2016) · Recommended amount of sleep for pediatric populations',url:'https://jcsm.aasm.org/doi/10.5664/jcsm.5866'},{title:'American Academy of Pediatrics (2024) · Overuse injuries, overtraining and burnout in young athletes',url:'https://publications.aap.org/pediatrics/article/153/2/e2023065129/196435/Overuse-Injuries-Overtraining-and-Burnout-in-Young'}],
  'cay-water':[{title:'American Academy of Pediatrics (2011) · Climatic heat stress and exercising children and adolescents',url:'https://publications.aap.org/pediatrics/article/128/3/e741/30624/Climatic-Heat-Stress-and-Exercising-Children-and'},IFAB('Law 7 The Duration of the Match (drinks and cooling breaks)','the-duration-of-the-match')],
  'cay-heading':[{title:'The FA · Updated heading guidance (2020)',url:'https://www.thefa.com/news/2020/feb/24/updated-heading-guidance-announcement-240220'},{title:'US Soccer heading guidelines (2015), summarised by US Club Soccer',url:'https://usclubsoccer.org/headinjuries/'}],
+ // Summit Isle (Oct 15 2026): the Laws of the Game (IFAB, 11-a-side) and two skills.
+ 'summit-mango':[IFAB('Law 8 The Start and Restart of Play (dropped ball)','the-start-and-restart-of-play')],
+ 'summit-shore-mango':[IFAB('Law 12 Fouls and Misconduct (direct free kick, penalty kick)','fouls-and-misconduct')],
+ 'summit-hut-roof':[IFAB('Law 16 The Goal Kick','the-goal-kick')],
+ 'summit-north-rim':[IFAB('Law 5 The Referee (decisions of the referee)','the-referee'),IFAB('Law 12 Fouls and Misconduct (cautions: dissent)','fouls-and-misconduct')],
+ 'summit-hill-cave':[IFAB('Law 4 The Players’ Equipment','the-players-equipment')],
+ 'summit-sea-cave':[IFAB('Law 17 The Corner Kick','the-corner-kick')],
+ 'summit-cairn':[IFAB('Law 8 The Start and Restart of Play (kick-off)','the-start-and-restart-of-play')],
+ 'summit-lookout-rocks':[IFAB('Law 3 The Players','the-players')],
+ 'summit-bend':[IFAB('Law 12 Fouls and Misconduct (handling the ball)','fouls-and-misconduct')],
+ 'summit-sky':[IFAB('Law 13 Free Kicks (indirect free kick signal)','free-kicks')],
+ 'summit-whale-buoy':[{title:'Cruyff turn · Johan Cruyff v Sweden, 1974 FIFA World Cup',url:'https://en.wikipedia.org/wiki/Cruyff_turn'}],
 };

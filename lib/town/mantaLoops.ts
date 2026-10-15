@@ -3,8 +3,9 @@
 // heat rules live in lib/graphics/cayMantas.ts; tests/manta-rays.cjs checks every loop stays in open water, clear of the
 // islands' shallows, the causeway and its sharks, the buoy and the Deep Sea Boat, and inside the flight zone.
 import {CAY_CENTER,CAY_SHORE,SANDBARS,type CayPoint} from './coralCay';
+import {SUMMIT_CENTER,SUMMIT_SHORE} from './summitIsle';
 
-export type MantaIsland='cay'|'starfish'|'turtle';
+export type MantaIsland='cay'|'starfish'|'turtle'|'summit';
 export type MantaLoop={id:string;island:MantaIsland;points:CayPoint[];speed:number;
  /** Dropped on phones (heat): each island keeps at least 2 mantas everywhere. */desktopOnly?:boolean};
 
@@ -24,11 +25,11 @@ function ring(anchors:CayPoint[],seg:number):CayPoint[]{
  return out;
 }
 /**
- * A long, lazy glide loop hugging one stretch of coast: out along the near offset `dIn` (metres beyond the island's edge,
+ * coastRing: the points of a long, lazy glide loop hugging one stretch of coast: out along the near offset `dIn` (metres beyond the island's edge,
  * smoothed over ±`window` radians so coves don't pull it in and headlands never clip it), round a wide turn, and back
  * along the far offset `dOut`. Angles a0 → a1 are bearings from the island centre (atan2(z, x)).
  */
-function coastLoop(id:string,island:MantaIsland,poly:CayPoint[],c:CayPoint,a0:number,a1:number,dIn:number,dOut:number,speed:number,window=.22,desktopOnly=false):MantaLoop{
+export function coastRing(poly:CayPoint[],c:CayPoint,a0:number,a1:number,dIn:number,dOut:number,window=.22,seg=4):CayPoint[]{
  const edge=(a:number)=>{let r=0;for(let k=-4;k<=4;k++)r=Math.max(r,rayRadius(poly,c.x,c.z,a+k*window/4));return r;};
  const at=(a:number,d:number)=>{const r=edge(a)+d;return {x:c.x+Math.cos(a)*r,z:c.z+Math.sin(a)*r};};
  const steps=Math.max(3,Math.round(Math.abs(a1-a0)/.16)),anchors:CayPoint[]=[];
@@ -36,9 +37,18 @@ function coastLoop(id:string,island:MantaIsland,poly:CayPoint[],c:CayPoint,a0:nu
  const over=(a1>a0?1:-1)*.05;anchors.push(at(a1+over,(dIn+dOut)/2));
  for(let i=steps;i>=0;i--)anchors.push(at(a0+(a1-a0)*i/steps,dOut+1*Math.sin(i*.9+1)));
  anchors.push(at(a0-over,(dIn+dOut)/2));
- return {id,island,points:ring(anchors,4),speed,desktopOnly};
+ return ring(anchors,seg);
+}
+function coastLoop(id:string,island:MantaIsland,poly:CayPoint[],c:CayPoint,a0:number,a1:number,dIn:number,dOut:number,speed:number,window=.22,desktopOnly=false,seg=4):MantaLoop{
+ return {id,island,points:coastRing(poly,c,a0,a1,dIn,dOut,window,seg),speed,desktopOnly};
 }
 const D=Math.PI/180;
+/** Summit Isle's manta bays: bearings (degrees, atan2(z, x) round SUMMIT_CENTER) and offsets past the waterline (m). */
+const SUMMIT_MANTA_BAYS=[
+ {id:'summit-north-bay',a0:-88,a1:-46,dIn:11,dOut:20,speed:1.4,desktopOnly:false},
+ {id:'summit-east-bay',a0:-10,a1:30,dIn:11,dOut:19,speed:1.5,desktopOnly:false},
+ {id:'summit-south-bay',a0:72,a1:112,dIn:11,dOut:19,speed:1.35,desktopOnly:true},
+];
 /** Sandbar loops wrap the seaward side, away from the causeway (the road bends away from both sandbars there). */
 function sandbarLoops(index:0|1){
  const s=SANDBARS[index],far=s.side>0?90*D:-90*D,c={x:s.x,z:s.z},island=s.id as MantaIsland;
@@ -55,7 +65,10 @@ export const MANTA_LOOPS:MantaLoop[]=[
  // South cove: east of the Summit Isle sandbar (Oct 12 2026; was 48°–112°, which crossed the new sandbar at ~90°).
  coastLoop('cay-south','cay',CAY_SHORE,CAY_CENTER,22*D,76*D,15,23,1.6),
  ...sandbarLoops(0),...sandbarLoops(1),
+ // Summit Isle (Oct 14 2026, user: "add some sharks, manta rays and even a whale shark around the mountain island"): the
+ // shallower bays, inside the island's sharks (summitSeaLife.ts) and away from its three fishing floats. Phones keep two.
+ ...SUMMIT_MANTA_BAYS.map(b=>coastLoop(b.id,'summit',SUMMIT_SHORE,SUMMIT_CENTER,b.a0*D,b.a1*D,b.dIn,b.dOut,b.speed,.2,b.desktopOnly,6)),
 ];
-export const MANTA_ISLANDS:MantaIsland[]=['cay','starfish','turtle'];
+export const MANTA_ISLANDS:MantaIsland[]=['cay','starfish','turtle','summit'];
 /** Mantas drawn per island: every loop on desktop, desktop-only loops dropped on phones. */
 export const mantaLoopsFor=(island:MantaIsland,phone:boolean)=>MANTA_LOOPS.filter(l=>l.island===island&&!(phone&&l.desktopOnly));

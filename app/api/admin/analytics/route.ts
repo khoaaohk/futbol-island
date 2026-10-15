@@ -4,6 +4,7 @@ import {resolveRange} from '@/lib/analytics/core';
 import {buildReportFor} from '@/lib/analytics/report';
 import {getStore} from '@/lib/analytics/store';
 import {loadSaveMetrics} from '@/lib/saves/metrics';
+import {loadSummitKickMetrics} from '@/lib/arcade/kickAdminMetrics';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -14,6 +15,8 @@ export async function GET(req:Request){
  const q=new URL(req.url).searchParams,now=new Date();
  // Oct 12 2026: presets and custom dates resolve on the store's clock (Pacific days once 20261012_admin_pacific_time.sql runs).
  try{const report=await buildReportFor(getStore(),mode=>resolveRange({range:q.get('range'),from:q.get('from'),to:q.get('to')},now,mode),now);
-  report.saves=await loadSaveMetrics(report.from,report.to,now);return Response.json(report,{headers});}
+  report.saves=await loadSaveMetrics(report.from,report.to,now);
+  report.summitKick=await loadSummitKickMetrics(report.from,report.to);
+  return Response.json(report,{headers});}
  catch{return Response.json({error:'store-unavailable'},{status:502,headers});}
 }

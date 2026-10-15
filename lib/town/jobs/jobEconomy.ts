@@ -4,15 +4,16 @@
  * and resets at local midnight; a job can always be played again.
  */
 import {signalExplore} from '../exploreSignals';
+import {JOBS,JOB_PAY,STARTER_COINS as STARTER} from '../../economy';
 export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor'|'farm-harvest'|'match-day-snacks'|'garden-shift'|'trail-cleanup';
 export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor','farm-harvest','match-day-snacks','garden-shift','trail-cleanup'];
 /** One-time welcome coins: exactly one 40-coin card pack, or a few arcade plays or a small vending item (user, Sep 27 2026;
  *  raised 30 → 40 with pack prices in the economy pass, docs/economy/ECONOMY_PROPOSAL.md, 28 Sep 2026). */
-export const STARTER_COINS=40;
+export const STARTER_COINS=STARTER;// lib/economy.ts
 /** Full pay for a job's first completions each day, then half pay, then a 1-coin thank-you tip. */
-export const FULL_PAY_PER_DAY=2,HALF_PAY_PER_DAY=2,TIP_COINS=1;
+export const FULL_PAY_PER_DAY=JOBS.fullPerDay,HALF_PAY_PER_DAY=JOBS.halfPerDay,TIP_COINS=JOBS.tip;// lib/economy.ts
 /** Extra coins the very first time a player finishes each job (mirrors the arcade's first puzzle solve bonus). */
-export const FIRST_JOB_BONUS=4;
+export const FIRST_JOB_BONUS=JOBS.firstBonus;// lib/economy.ts
 /** Base pay for a full-pay shift. The short jobs pay 7–10. Wall rebounds pays 26 (30 Sep 2026, user-approved). It became a
  *  ~3.5-minute drill (50 wall passes + 15 target shots, docs/island-jobs.md §11). At 8 coins it paid ~2 coins a minute, the lowest
  *  of all jobs. 26 puts it at the middle (median) of the other jobs' coins per minute (JOB_MINUTES below, tests/island-jobs.cjs).
@@ -22,8 +23,13 @@ export const FIRST_JOB_BONUS=4;
  *  Pump the balls (1 Oct 2026, user: "make it harder"): ~85 small Pump strokes over five balls (8 → 24 each) instead of ~15, so
  *  its play time goes .45 → .85 min. Pay 7 → 10 keeps it in line per minute (6.67 → 6.90 coins a minute, inside the 7–10 band).
  *  Trail clean-up (Summit Isle, Oct 12 2026): 8 litter items along the trail and beach, like Court clean-up's pace, for 8
- *  coins at ~6.15 coins a minute (inside the 7–10 band; see JOB_MINUTES). */
-export const JOB_BASE_PAY:Record<JobId,number>={'leaf-rake':8,'wall-rebounds':26,'ball-kid':10,'cone-setup':7,'line-painter':8,'court-cleanup':7,'offside-flag':9,'ball-pump':10,'goal-anchor':8,'farm-harvest':8,'match-day-snacks':8,'garden-shift':10,'trail-cleanup':8};
+ *  coins at ~6.15 coins a minute (inside the 7–10 band; see JOB_MINUTES).
+ *
+ * Oct 14 2026 (docs/economy.md, user: "make it harder to buy things"): every job's pay cut about a third, band 7–10 → 4–7, wall
+ * rebounds 26 → 16, so each job pays less per minute than a lesson quiz. The numbers live in lib/economy.ts JOB_PAY; the history
+ * above explains their RELATIVE sizes (per-minute parity), which the cut keeps. Was: leaf 8, wall 26, ball-kid 10, cones 7,
+ * lines 8, court 7, offside 9, pump 10, anchor 8, harvest 8, snacks 8, garden 10, trail 8. */
+export const JOB_BASE_PAY:Record<JobId,number>=JOB_PAY;
 /**
  * Estimated minutes of real play per shift (30 Sep 2026). Each estimate is the route length from the sign through the targets
  * and to the drop-off at walking pace (3.7 m/s), plus the actions (holds, taps, replays, shots). Wall rebounds: ~1 min of wall

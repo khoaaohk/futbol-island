@@ -2,21 +2,21 @@
 const assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm'),ts=require('typescript'),path=require('path'),T=require('three');
 const read=p=>fs.readFileSync(p,'utf8');
 function load(file,globals={}){const m={exports:{}};vm.runInNewContext(ts.transpileModule(read(file),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,Math,...globals,require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts'),globals):require(id)});return m.exports;}
-const {fitIslandShadows,fitShadowsToBox}=load('lib/graphics/islandShadows.ts');
+const {createIslandShadowFit,fitShadowsToBox}=load('lib/graphics/islandShadows.ts');
 
-// 1. The town fit covers only the visible receivers: smaller than the old y = −8 / ±8 m fit (so more texels per metre), yet every
+// 1. The town fit (since Oct 14 2026 createIslandShadowFit: the real camera over the real ground; tests/shadow-fit.cjs covers Summit Isle) covers only the visible receivers: smaller than the old y = −8 / ±8 m fit (so more texels per metre), yet every
 // receiver point along the view's corner rays (ground and roofs up to 24 m) stays inside, and the normal bias is 2 texels.
 {const light=new T.DirectionalLight();light.shadow.mapSize.set(1024,1024);
  for(const [aspect,elevation] of [[390/844,0],[390/844,28],[834/1194,0],[1280/800,0]]){
-  const view=new T.PerspectiveCamera(40,aspect,.1,500);fitIslandShadows(light,view,elevation);const c=light.shadow.camera,w=c.right-c.left,h=c.top-c.bottom;
+  const view=new T.PerspectiveCamera(40,aspect,.1,500);view.position.set(18,23+elevation,30);view.lookAt(2,elevation,-3);const scene=new T.Scene();scene.add(light,light.target);createIslandShadowFit(light,()=>elevation).update(view);const c=light.shadow.camera,w=c.right-c.left,h=c.top-c.bottom;
   // the old fit, for comparison
   const ref=new T.PerspectiveCamera(40,aspect,.1,500);ref.position.set(18,23+elevation,30);ref.lookAt(2,elevation,-3);ref.updateMatrixWorld();
-  const sv=new T.OrthographicCamera();sv.position.set(-288,252,198);sv.lookAt(0,0,0);sv.updateMatrixWorld();let l=1e9,r=-1e9,b=1e9,t=-1e9;const ray=new T.Vector3(),p=new T.Vector3();
+  const sv=new T.OrthographicCamera();sv.position.set(-288,252,198);sv.lookAt(0,0,0);sv.updateMatrixWorld();const tq=light.target.position.clone().applyMatrix4(sv.matrixWorldInverse);let l=1e9,r=-1e9,b=1e9,t=-1e9;const ray=new T.Vector3(),p=new T.Vector3();
   for(const x of [-1,1])for(const y of [-1,1]){ray.set(x,y,.5).unproject(ref).sub(ref.position).normalize();const g=ref.position.clone().addScaledVector(ray,(-8-ref.position.y)/ray.y);for(const hh of [-8,24]){p.set(g.x,hh,g.z).applyMatrix4(sv.matrixWorldInverse);l=Math.min(l,p.x);r=Math.max(r,p.x);b=Math.min(b,p.y);t=Math.max(t,p.y);}}
   const oldArea=(r-l+16)*(t-b+16);assert(w*h<oldArea*.9,`aspect ${aspect.toFixed(2)} elevation ${elevation}: ${w}×${h} vs old ${(r-l+16).toFixed(0)}×${(t-b+16).toFixed(0)}`);
   // coverage: sample receivers along the corner and edge rays at the ground and at roof heights
   for(const x of [-1,0,1])for(const y of [-1,0,1]){ray.set(x,y,.5).unproject(ref).sub(ref.position).normalize();if(ray.y>=0)continue;
-   for(const hh of [0,6,12,20]){if(hh>=ref.position.y)continue;const q=ref.position.clone().addScaledVector(ray,(hh-ref.position.y)/ray.y);q.applyMatrix4(sv.matrixWorldInverse);
+   for(const hh of [0,6,12,20].map(v=>v+elevation)){if(hh>=ref.position.y)continue;const q=ref.position.clone().addScaledVector(ray,(hh-ref.position.y)/ray.y);q.applyMatrix4(sv.matrixWorldInverse).sub(tq);
     assert(q.x>=c.left&&q.x<=c.right&&q.y>=c.bottom&&q.y<=c.top,`receiver at ${hh} m on ray (${x},${y}) outside the shadow frustum`);}}
   assert(Math.abs(light.shadow.normalBias-2*Math.max(w,h)/1024)<1e-9,'normal bias = 2 texels (no acne on parapets at the tighter fit)');}}
 // 2. The watch view fits the watched pitch: every pitch corner is inside, far tighter than the view-based fit there (~680 m).
@@ -24,8 +24,8 @@ const {fitIslandShadows,fitShadowsToBox}=load('lib/graphics/islandShadows.ts');
  const sv=new T.OrthographicCamera();sv.position.set(-288,252,198);sv.lookAt(0,0,0);sv.updateMatrixWorld();
  for(const x of [-34,34])for(const z of [-50,50])for(const y of [0,2.5]){const q=new T.Vector3(x,y,z).applyMatrix4(sv.matrixWorldInverse);assert(q.x>=c.left&&q.x<=c.right&&q.y>=c.bottom&&q.y<=c.top);}
  assert(c.right-c.left<160&&c.top-c.bottom<100,`pitch fit ${c.right-c.left}×${c.top-c.bottom}`);
- const town=read('components/Town.tsx');assert.match(town,/if\(watchedVenue\)fitShadowsToBox\(sun,watchedVenue\.width\/2\+3,watchedVenue\.length\/2\+3,0,6\);else fitIslandShadows\(sun,camera,shadowElevation\);/);
- assert.match(town,/if\(watchedVenue\)sun\.target\.position\.set\(watchedVenue\.x,watchedVenue\.elevation\?\?0,watchedVenue\.z\);else sun\.target\.position\.set\(camera\.position\.x-18,0,camera\.position\.z-30\);/);}
+ const town=read('components/Town.tsx');assert.match(town,/if\(watchedVenue\)fitShadowsToBox\(sun,watchedVenue\.width\/2\+3,watchedVenue\.length\/2\+3,0,6\);else islandShadowFit\.invalidate\(\);/);
+ assert.match(town,/if\(watchedVenue\)\{sun\.target\.position\.set\(watchedVenue\.x,watchedVenue\.elevation\?\?0,watchedVenue\.z\);/);assert.match(town,/else islandShadowFit\.update\(camera\);/);}
 // 3. Anisotropic filtering: 4× (capped by the device) on mipmapped textures only.
 {const {sharpenSceneTextures}=load('lib/graphics/lambertScenery.ts');const scene=new T.Scene();
  const mip=new T.Texture();mip.generateMipmaps=true;mip.minFilter=T.LinearMipmapLinearFilter;const flat=new T.Texture();flat.generateMipmaps=false;flat.minFilter=T.LinearFilter;

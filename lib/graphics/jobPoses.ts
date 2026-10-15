@@ -20,8 +20,11 @@ const GARDEN_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake']);
 const TIPTOE={py:.9,toe:.55,fl:[.04,.11] as [number,number],fr:[-.04,.11] as [number,number]};
 const CARRY_BALL:Arm=[-.75,-.05,-1.55],CARD:Arm=[-.95,-.05,-1.1],STACK:Arm=[-.35,.08,-1.45];
 /** Tree shake (Summit Isle foraging): braced with the elbows bent, then pushing with straight arms and the weight forward. */
-const SHAKE_BRACE={py:.8,pz:-.02,tx:.2,hx:-.3,fl:[.24,.07] as [number,number],fr:[-.2,.07] as [number,number],al:[-1.3,.02,-1.15] as Arm,ar:[-1.3,.02,-1.15] as Arm};
-const SHAKE_PUSH={py:.78,pz:.06,tx:.45,hx:-.22,fl:[.26,.07] as [number,number],fr:[-.24,.07] as [number,number],al:[-1.5,-.03,-.15] as Arm,ar:[-1.5,-.03,-.15] as Arm};
+// Oct 14 2026 (user: "fix the animation of shaking to actually touch the tree"): the hands grip the bark at chest height. The body
+// stands hands-on (trunk radius + 0.25 m, lib/town/summitForage.ts contactAt), so both arms reach straight forward at the shoulders
+// and bend at the elbows: pulled in on the brace (body back), pushed out on the push (body in); the tree sways with each push.
+const SHAKE_BRACE={py:.8,pz:-.07,tx:.04,hx:-.3,fl:[.22,.07] as [number,number],fr:[-.2,.07] as [number,number],al:[-1.48,.2,-1.4] as Arm,ar:[-1.48,.2,-1.4] as Arm};
+const SHAKE_PUSH={py:.78,pz:.06,tx:.3,hx:-.22,fl:[.26,.07] as [number,number],fr:[-.24,.07] as [number,number],al:[-1.45,.14,-.8] as Arm,ar:[-1.45,.14,-.8] as Arm};
 const PULLED={py:.66,pz:-.22,tx:-.28,hx:.2,fl:[.26,.07] as [number,number],fr:[-.05,.07] as [number,number],al:[-.95,.14,-.1] as Arm,ar:[-.95,.14,-.1] as Arm};
 /** One-shot keyframes (progress 0 → 1). Held poses are computed below from their live value (`tug`). */
 const KEYS:Partial<Record<JobPoseKind,Key[]>>={
@@ -63,7 +66,7 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  // Summit Isle foraging (lib/graphics/fruitTrees.ts): a staggered stance, both hands on the trunk, two pushes (elbows bent →
  // arms straight, leaning in) with the eyes up on the canopy; the fruit falls on the second push (TREE_SHAKE_PUSHES).
  treeshake:[[0,{}],[.15,{...SHAKE_BRACE}],[.3,{...SHAKE_PUSH}],[.46,{...SHAKE_BRACE}],[.62,{...SHAKE_PUSH}],
-  [.82,{py:.84,tx:.1,hx:-.2,fl:[.12,.07],fr:[-.08,.07],al:[-.9,.1,-.7],ar:[-.9,.1,-.7]}],[1,{}]],
+  [.82,{...SHAKE_BRACE,py:.83,tx:.1}],[1,{}]],
 };
 /** Tree shake: the push peaks' progress (the canopy gets a shove at each; lib/graphics/fruitTrees.ts reads these). */
 export const TREE_SHAKE_PUSHES=[.3,.62] as const;

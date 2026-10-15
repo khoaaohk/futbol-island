@@ -82,7 +82,7 @@ const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31};
 const SPOTS=[['island_square',85,-35,18,14],['arcade',103,-48,6,6],['konbini',71,-55,6,5],['field_11v11',135,100,28,13],['field_7v7',11,-80,16,8],['field_9v9',160,-110,20,7],
  ['field_futsal',11,18,9,5],['east_jetty',330,75,22,7],['farmers_market',228,60,10,6],['north_beach',60,-215,60,6],['coaches',160,-30,12,4],['school',120,160,30,4],
  ['palm_coast',20,70,25,4],['old_town',-20,-110,20,4],['causeway',380,-160,80,6],['sandbars',342,-222,10,2],['cay_town',560,-160,25,6],['beach_court',680,-161,15,7],
- ['farm',640,-110,25,4],['sharks_beach',660,-210,15,3],['hostel',560,-108,12,2],['deep_sea_boat',283,-92,6,3],['south_pier',110,200,40,4],['ferry_dock',225,200,10,2],
+ ['farm',640,-110,25,4],['sharks_beach',660,-210,15,3],['hostel',560,-108,12,2],['deep_sea_boat',335,-5,6,3],['south_pier',110,200,40,4],['ferry_dock',225,200,10,2],
  ['community_hall',181,-177,8,2],['library_square',80,-110,12,2],['town',150,-60,60,5],['sea',300,0,60,2],['coral_cay',650,-150,40,2],['west_side',-60,70,20,2],
  ['club_grounds',150,-150,30,2],['community_garden',205,0,15,2],['museum',160,186,6,3],['cay_konbini',524,-176,5,1],['community_park',10,-45,15,1]];
 const ACTS=[['walk',30],['ride',14],['fly',10],['fishing',7],['job',5],['lesson',5],['watch',4],['quiz',3],['vending',3],['book',2],['cards',2],['films',2],['talk',2],['menu',6],['paths',3],['boat',1],['coaches',1],['idle',8]];

@@ -86,7 +86,8 @@ export const FUEL_BY_ITEM:Record<string,number>={'bento-small':100,'bento-locomo
 export function foodFuel(item:Pick<Consumable,'id'|'group'>):number{return FUEL_BY_ITEM[item.id]??(/^drink-sports\b/.test(item.id)?30:FUEL_BY_GROUP[item.group]);}
 /** Produce that can be eaten straight from the basket (fruit and crunchy veg). Fish and sweet potato (needs cooking: try the
  *  Konbini's yaki imo) are not. Any produce added later counts as fruit 25 / veg 20 via producePocketFuel. */
-export const PRODUCE_FUEL:Record<string,number>={banana:30,mango:28,orange:25,strawberry:22,cherry:22,carrot:22,tomato:20,pepper:20,greens:20};
+export const PRODUCE_FUEL:Record<string,number>={banana:30,mango:28,orange:25,strawberry:22,cherry:22,carrot:22,tomato:20,pepper:20,greens:20,
+ coconut:22,papaya:26,guava:24,avocado:26,lime:12};// Summit Isle orchard fruit (Oct 14 2026)
 export const NOT_RAW:ReadonlySet<string>=new Set(['sweet-potato']);
 /** Fuel for eating one basket good, or 0 when it can't be eaten raw. */
 export function produceFuel(id:string,kind:'produce'|'fish',category?:'fruit'|'veg'|'fish'):number{

@@ -1,5 +1,8 @@
 # Island jobs, Community Garden and the coin economy
 
+> **Coin numbers updated 14 Oct 2026:** see [economy.md](economy.md) (the one table is `lib/economy.ts`). Values below may predate it.
+
+
 Built 27 Sep 2026. Local only (not committed or deployed). Code: `lib/town/jobs/*`, `lib/town/market/*`, `components/IslandJobs.tsx`. Town has six small hooks, all marked in `components/Town.tsx` by the `jobs.` calls. Tests: `tests/island-jobs.cjs`, which is part of `npm test`.
 
 Every job teaches work ethic plus one football skill or club value (AGENTS.md). Coins are in-game only. The design avoids anything that punishes or pressures the player: there are no streaks, no countdowns that cost coins, no odds, no lost progress and no guilt messages.
@@ -67,7 +70,7 @@ Sources: [Oakley Cannonier (Wikipedia)](https://en.wikipedia.org/wiki/Oakley_Can
 | First-time bonus | +4 on each job's first completion | Encourages trying every job. It matches the arcade's +4 first puzzle solve. |
 | Daily soft cap (per job) | 2 full-pay shifts → 2 half-pay shifts → 1-coin thank-you tips | There are no walls: the job is always playable. A friendly note explains the change ("The pitch is spotless! Come back tomorrow for full pay"). It resets at local midnight. There is no streak. |
 | Daily ceiling | About 250 coins if a child does all ten jobs 4 times each (about 40 min; the test bounds it at 20–34 coins per job) | Casual play (each job once) earns about 80 coins plus bonuses: 2–3 packs a day. The per-job soft cap is unchanged; adding jobs adds variety, not a faster grind per job. |
-| Market prices | Produce 2–3 coins each; basket of 20 | A full basket is worth about 40–50 coins at full price. |
+| Market prices | Produce 1–2 coins each since 14 Oct 2026 (was 2–3); basket of 20; same-kind ladder ([economy.md](economy.md)) | A full basket of mixed produce is worth about 20–25 coins at full price. |
 | Market soft cap | Full price until 40 coins of sales in a day, then half price (at least 1 coin); resets tomorrow | This is shared by produce and fish (`lib/town/market/market.ts`). |
 
 **If the user wants arcade plays to cost coins:** charge 3–5 coins per play (not built, because that is Astra's file). The round caps (12–20) mean a decent round refunds its cost, which keeps the arcade skill-positive and avoids feeling like a slot machine.

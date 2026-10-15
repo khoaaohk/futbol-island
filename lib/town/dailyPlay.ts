@@ -1,7 +1,10 @@
 /** Event/frame-driven daily play qualification. No timers, browser globals or storage. */
-/** 30 coins since the economy pass (docs/economy/ECONOMY_PROPOSAL.md, applied 28 Sep 2026; was 40). */
-export const DAILY_PLAY_COINS=30,DAILY_PLAY_SECONDS=30;
-/** Receipts saved before 28 Sep 2026 paid 40: the wallet keeps them whole, so lowering the bonus never shrinks a balance. */
+/** 30 coins since the economy pass (docs/economy/ECONOMY_PROPOSAL.md, applied 28 Sep 2026; was 40); 20 since 14 Oct 2026
+ *  (docs/economy.md). The amount lives in lib/economy.ts. */
+import {DAILY_PLAY_COINS} from '../economy';
+export {DAILY_PLAY_COINS};
+export const DAILY_PLAY_SECONDS=30;
+/** Receipts saved before 28 Sep 2026 paid 40 (then 30 until 14 Oct 2026): the wallet keeps them whole, so lowering the bonus never shrinks a balance. */
 export const LEGACY_DAILY_PLAY_MAX=40;
 export function localPlayDay(now:number){const d=new Date(now);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 export type DailyPlayResult={ok:boolean;amount:number};

@@ -20,6 +20,7 @@ import type {ShopScene} from '@/lib/shop/shopScene';
 import type {ShopPoi,ShopStation} from '@/lib/shop/shopLayout';
 import {SHOP_CLERK,SHOW_ME,shopNpcDefs} from '@/lib/shop/shopCast';
 import {createShopAmbience,shopClickCue,shopSfx,unlockShopAudio,type ShopAmbience} from '@/lib/shop/shopSound';
+import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shopEvents';
 const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
 
 /**
@@ -89,7 +90,7 @@ export default function ShopRoom(){
   ambience.current?.fadeOut(.4);setTimeout(()=>ambience.current?.dispose(),420);
   setTimeout(()=>window.location.assign(SHOP_RETURN_URL),matchMedia('(prefers-reduced-motion:reduce)').matches?60:520);},[]);
  /** Open a studio (the prompt, E / Enter, arriving at a tapped wall, or a station card). Closing it leaves you where you stood. */
- const open=useCallback((s:ShopStation)=>{if(leavingRef.current)return;setTalking(null);setStudio(s);},[]);
+ const open=useCallback((s:ShopStation)=>{if(leavingRef.current)return;setTalking(null);setStudio(s);countStudioOpen(STATIONS.find(x=>x.id===s)!.kind);},[]);
  const closeStudio=useCallback(()=>{setStudio(null);canvas.current?.focus({preventScroll:true});},[]);
  /** Act on a spot: a wall opens its studio, a person opens the chat. */
  const act=useCallback((p:ShopPoi)=>{if(leavingRef.current)return;if(p.kind==='station'&&p.station){open(p.station);return;}
@@ -137,6 +138,7 @@ export default function ShopRoom(){
    if(!result.ok){say({tone:'warn',text:result.reason});return;}
    shopSfx.chaChing();
    setOwned(loadOwned());
+   if(!result.already)countPurchase(kind,price);// admin analytics: a real purchase (coins charged), not re-picking an owned design
    say({tone:'ok',text:result.already?`You already own ${kind==='boots'?'these boots':`this ${KIND_LABEL[kind].toLowerCase()}`}. ${kind==='boots'?'They’re':'It’s'} your pick again.`:`Bought for ${price} coins! Find it in My kit.`});
   }finally{buying.current=false;}
  },[say]);
@@ -157,7 +159,7 @@ export default function ShopRoom(){
    <p className={styles.title}><b>KIT SHOP</b><span>Design your own kit</span></p>
    <div className={styles.topRight}>
     <CoinPill balance={wallet.balance} data-shop-coins/>
-    <button type="button" className={styles.myKitButton} onClick={()=>setMyKit(true)} data-shop-mykit-open>My kit{owned.items.length?<b>{owned.items.length}</b>:null}</button>
+    <button type="button" className={styles.myKitButton} onClick={()=>{setMyKit(true);countMyKitOpen();}} data-shop-mykit-open>My kit{owned.items.length?<b>{owned.items.length}</b>:null}</button>
    </div>
   </header>}
   {/* The studio cards along the bottom were removed (user, Oct 12 2026: "remove this"): walk to a wall, or ask Femi. */}

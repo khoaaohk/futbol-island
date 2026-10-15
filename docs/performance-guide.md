@@ -4576,6 +4576,18 @@ The wing (ball pegboard: 100 pegs, card table, bookcase, certificate wall) joins
 
 These are reduced-work numbers only. They make no claim about measured iPhone cooling.
 
+**Walls that read as walls + player cutaway (Oct 14 2026, local, not deployed).** User: "fix this wall, it blends in and hard to tell it's a wall" (the wing's east wall seen from the hall: its −x face rendered the floor's own grey, 1.01:1, and its vertical edge sliced the player standing behind it).
+- `lib/museum/museumWalls.ts` lists every wall (shell, opening stubs + lintel, both partitions, front sills). Each face's vertex colour is solved against the hall's two lights so it renders at a target tone: lit (+z) warm white, shaded (±x, −z) soft grey (1.30:1 darker than the floor), cap brightest, plus a muted-ink rim box at the top and a darker skirting box at the foot. All of it is in the **same merged static mesh** (no new draws; +184 triangles).
+- Contact shadow: one 0.5 m strip per wall foot side on the **existing soft-shadow mesh**, UV-mapped onto the column of its 64² radial gradient (no new texture, no shadow maps).
+- Cutaway: the static mesh and the print mesh get an `onBeforeCompile` patch (one `aCut` vertex attribute flags walls and what hangs on them). Wall fragments inside a 0.78 × 1.08 m screen ellipse round the player are dithered away when they lie ≥ 0.15 m on the camera's side of the player AND the player is behind that face's plane, so walls behind or beside the player are never cut. Four uniforms, written by `updateCut` in `tick()` just before the render (no allocation); the loop still sleeps at rest (0 rAF). The static mesh now uses a clone of the Lambert material (one more program compile at load, same draw count); the solo/instanced pieces keep `staticMat`.
+- Tests: `tests/museum-walls.cjs` (tones vs floor, every wall with skirting + floor band, 5 hidden-player spots fully cleared from the follow camera, walls behind/beside never cut, heat wiring).
+
+**West wing: Your Collection → four history galleries (Oct 14 2026, local, not deployed).** User: "get rid of your pop-up books, your player cards, your hidden balls, and your certificates … replace with other historical exhibits … also add 3 more", then "don't remove the wing".
+- Removed: the pegboard, card table, bookcase, certificate wall, the Your Collection sign, their zoom stops/cards and the roll-call (three InstancedMeshes and their animation step), the header's collection counts.
+- Added: ten cases in the wing (Firsts, Rules & tactics, Skills & science, plus the Ballon d'Or beside the Trophy room in Legends), a low wing partition (in `museumWalls()`), two free-standing signs. Every sculpture joins the ONE merged static mesh; the floodlight heads are unlit quads on the atlas's glow swatch inside the ONE print mesh; the signs and wall labels share the one 1024² atlas (re-laid out: 8 sign slots, 36 label slots). **No new draw call.** Merged sculpture triangles: ~28.8k (was ~15k for 12 cases).
+- Measured (headless Chromium + SwiftShader, dev server, fresh save): phone 390×844 at the door 9 calls / 37.5k triangles, in the wing 8 calls; desktop 1440×900 at the door 15 calls / 66.9k, in the wing 9 calls; asleep at rest. Reduced-work numbers only: no claim about iPhone cooling.
+- Tests: `tests/museum-room.cjs` (wing contents and counts pills gone, 10 new cases placed/reachable/sourced/registered, timeline in date order, draw-call wiring), `tests/museum-exp-ballon-dor.cjs`.
+
 ## Futbol Tennis feel pass (A3), October 4 2026 (local, not deployed)
 
 **What was added.**
@@ -5074,3 +5086,51 @@ tests: `tests/summit-forage.cjs`.
   2.8 ms/s while shaking every 2.6 s; draws 50 → 51 (slope), 76 → 77 (beach), 108 → 109 (trail); 30 fps held everywhere; frame
   CPU and GPU medians within run-to-run noise. Not measured on an iPhone; no thermal claim.
 - **Respects:** the fishing focus (`frozen` = no work), reduced motion (no sway or leaves, fruit lands at once), off-screen culling.
+
+## Parachute shake and the high-altitude horizon (Oct 14 2026, local, not deployed)
+User (desktop Chrome): "when parachuting down from the mountain. the view of the edge to the world is odd and parachuting down is
+a glitchy. it shakes". Test: `tests/parachute-smooth.cjs`.
+- **Horizon edge:** the camera's 500 m far plane clipped the sea and coast in a straight line once the camera passed ~110 m
+  (the parachute blast reaches ~250 m); `scene.fog` was null, so the flat sky colour sat above the cut.
+  `lib/graphics/horizonHaze.ts` gives the island scene a linear fog whose colour IS `scene.background` (shared Color, so the
+  day/sunset/night lerp moves both) and whose far distance is `camera.far`; three.js applies fog after tone mapping in the clear
+  colour's space, so the clip line is exactly sky-coloured. Near distance follows camera height (60 m band up to a ~75 m camera,
+  so the walk view, the summit walk view and the 28 m cruise never reach it; 160 m band from ~180 m up). Attached before the
+  first compile in `islandWarm.ts` and `Town.tsx` (no recompile); updated per frame before render. Cost: no draws, no geometry,
+  one varying + mix per fragment. camera.far is unchanged (no extra scenery drawn at altitude). The telescope's 1600 m far plane
+  gets only a 60 m fade at its very edge.
+- **Shake:** (1) the flight height was drawn as the latest 60 Hz tick while x/z were interpolated, so the 9 m/s descent moved
+  in stairs at 120 Hz and whenever 60 Hz rAF drifted across a tick; now drawn interpolated (`lib/town/flightRender.ts`).
+  (2) the flying camera used the hop lag `camGroundY`, which reset whenever it passed 4 m: during the blast and the canopy
+  opening the camera sawed ~3 m per frame against the pilot; flying now follows the drawn height exactly. (3) The parachute
+  itself (`jetpackActions.ts`): the blast is a smootherstep (arrives at rest without a deceleration jolt), the sink eases in
+  over 0.7 s and flares above the glide slope (min 1.5 m/s), and re-aim / ledge rises are rate-limited to 6 m/s (never below
+  ground) instead of popping up to 7.5 m. Landings take ~0.3 s longer.
+- **Numbers (replayed pipeline, glide):** worst frame-to-frame vertical-velocity change 17-19 m/s (120 Hz, jittery 60 Hz) → ≤ 1.4
+  at 20/30/60/120 fps; pilot-vs-camera step at the opening 2.8-3.3 m → 0. Browser (headless Chrome, :8180) draw calls and render
+  time unchanged within noise (see the parachute agent report for the table).
+
+## Summit Isle painting easel (Oct 14 2026, local, not deployed)
+
+A quiet spot on Summit Isle's upper west slope (lib/town/paintEasel.ts, paintEaselWorld.ts, lib/graphics/paintEasel.ts,
+components/PaintEasel.tsx). The view stays live under a compact painting card, so the island is **not** paused; instead:
+
+- **Prop:** easel, stool and paint table are built with world.ts's box/cylinder/put tools, so they join the 50 m static batches (no
+  draw call of their own). The saved painting on the board is one 256×192 CanvasTexture quad, created only after the first save and
+  updated only on a save.
+- **Idle (not seated):** `easel.update()` is one x-compare off Summit Isle and one distance on it; `applyCamera()` one boolean. No rAF,
+  no timers.
+- **Seated:** Town's focus mode (the fishing one) holds traffic, matches and townsfolk still (chunk radius Infinity: the main island
+  is the view, so nothing is hidden); the loop is capped at 20 fps (`easel.frameMs`, its own frame-slot grid); with nothing moving
+  (reduced motion or a static-ambience heat tier, while painting, or Just look with reduced motion) `easel.still()` lets the loop
+  sleep; every UI command wakes it for a frame (`easel.revision` is in the sleep key).
+- **View snapshot:** one extra render when the camera arrives (drawImage from the drawing buffer right after the render, ≤ 360 px),
+  reused by the eyedropper and "trace"; redone only if the card's layout changes.
+- **Painting UI:** draws only on pointer events; coalesced points are flushed by one requestAnimationFrame per frame **only while a
+  finger is down**. No timers. One ResizeObserver reports the card's size. Undo keeps at most 8 snapshots (512×384, ~0.8 MB each).
+- **Audio:** a very quiet looped surf wash (one 6 s noise buffer, a low-pass and an LFO) only while seated, plus a soft swish per
+  stroke; stopped on leaving or when muted.
+- **Saves:** `fi2-paintings-v1` (device only): at most 5 WebP/JPEG data URLs, ≤ 90 KB each, ≤ 300 KB total.
+
+Validation: tests/paint-easel.cjs (placement, tools, save budget, device-only key, runtime: no loops at rest, one snapshot render,
+20 fps cap, sleep when still, camera restored). Reduced work only; not measured on an iPhone.

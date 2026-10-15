@@ -62,7 +62,7 @@ const staticImports=src=>[...src.matchAll(/^import\s+(?!type\b)[^;]*?from\s*'([^
  assert.match(world,/import\('\.\/fishingVisuals'\)/);
  const prefetch=Number(world.match(/const VISUALS_PREFETCH=(\d+);/)?.[1]);assert(prefetch>=100,'the chunk is fetched well before 45 m');
  assert.match(world,/if\(!visualsModule&&nearAnySpot\(c\.x,c\.z,VISUALS_PREFETCH\)\)void loadFishingVisuals\(\);/);
- assert.match(world,/if\(!visuals&&around\)\{visuals=makeVisuals\(\);if\(visuals&&fishing\)visuals\.begin\(stand,cast,cast\.dir\);\}/,'a session that started first gets its visuals when the chunk lands');}
+ assert.match(world,/if\(!visuals&&around\)\{visuals=makeVisuals\(\);if\(visuals&&fishing\)\{?visuals\.begin\(stand,cast,cast\.dir\);/,'a session that started first gets its visuals when the chunk lands');}
 
 // 6. Konbini food art: drink layers are registered by foodArt itself; the drink machines' data module does not import it.
 {assert(!staticImports(read('lib/town/drinkMachines.ts')).some(m=>/foodArt|drinkArt/.test(m)),'drinkMachines stays free of the canvas painters');

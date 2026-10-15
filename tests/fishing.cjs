@@ -49,7 +49,11 @@ const exclusives=FISH.filter(cat.isExclusive);
 // The six causeway and Coral Cay spots (Oct 5 2026, `area` set) follow the East Pier's rule: shared species only.
 // The causeway/cay spots (area set, Oct 5 2026) share the East Pier's rule; Summit Isle's cove (area 'summit', Oct 12 2026) is
 // a destination catch like the six main shore spots, so it keeps its own 1-10 specials instead.
-for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.area==='causeway'||s.area==='cay'){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+// The two deep-sea boats (Oct 14 2026) fish the same deep water: they share the deep-sea specials (isDeepSeaSpecial). Summit
+// Isle's Drop-off Ledge (Oct 14 2026) is a shore spot with a shared table, like the East Jetty.
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.id==='summit-ledge'||s.area==='causeway'||s.area==='cay'){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}
+ if(s.deep){const deep=FISH.filter(cat.isDeepSeaSpecial);assert.equal(own.length,0,`${s.id}: no single-boat specials`);assert(deep.length>=1&&deep.length<=10&&deep.every(f=>f.id in s.weights),`${s.id}: the shared deep-sea specials`);continue;}
+ assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
 {const pier=cat.spotById('east-pier'),w=Object.entries(pier.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
  assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus'].every(id=>id in pier.weights)&&w.length===9,'east-pier: shore commons, three good catches, a rare tuna and a legendary octopus');
  assert(ev>3.8&&ev<4.3,`east-pier mean catch ${ev.toFixed(2)} ≈ the shore's 4.0 (economy unchanged)`);}
@@ -72,7 +76,8 @@ for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id))
 // "add more fishing spots along the bridge road and coral cay island": 3 on the causeway's sand banks and 3 on the cay's
 // beaches), and Summit Isle's own 3 (Oct 12-13 2026: Boulder Cove, then Palm Point and Lookout Rocks). Still ONE merged
 // post mesh and ONE float InstancedMesh for all of them (asserted below).
-assert.equal(FISH_SPOTS.length,16,'16 fishing spots: 6 main-island posts, the Deep Sea Boat, 3 causeway posts, 3 Coral Cay posts and Summit Isle\'s 3 coves');
+// Oct 14 2026: 18 — a second deep-sea boat (west of Summit Isle) and Summit Isle's Drop-off Ledge.
+assert.equal(FISH_SPOTS.length,18,'18 fishing spots: 6 main-island posts, 2 deep-sea boats, 3 causeway posts, 3 Coral Cay posts and Summit Isle\'s 4');
 {const cayCat=e.load('lib/town/coralCay.ts'),{onLand}=e.load('lib/town/landmass.ts'),world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
  const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
  assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');
@@ -293,7 +298,11 @@ const merged=core.mergeFishbooks(book,core.recordCatch(core.emptyFishbook(),'tun
 
 // ---- Market: goods registry, soft cap, sell one / all, into the shared wallet ----
 const goods=e.load('lib/town/market/goods.ts'),market=e.load('lib/town/market/market.ts'),stand=e.load('lib/town/market/marketStand.ts');
-for(const f of FISH){const g=goods.goodById(f.id);assert(g&&g.kind==='fish'&&g.price===f.price&&g.lesson.includes(f.club.name),`${f.id} is a sellable good`);}
+// Oct 14 2026 (docs/economy.md): Rosa pays lib/economy.ts fishSellValue: the species value × its rarity's factor (commons ½, rarer
+// catches keep more), so the catalogue's `price` orders the species and the economy module sets what a catch is worth.
+const econ=e.load('lib/economy.ts');
+for(const f of FISH){const g=goods.goodById(f.id);assert(g&&g.kind==='fish'&&g.price===econ.fishSellValue(f)&&g.rarity===f.rarity&&g.lesson.includes(f.club.name),`${f.id} is a sellable good`);}
+assert.equal(econ.fishSellValue(fishById('mackerel')),2);assert.equal(econ.fishSellValue(fishById('octopus')),10);assert.equal(econ.fishSellValue(fishById('shrimp')),2);
 assert(goods.PRODUCE_GOODS.length>0&&goods.GOODS.some(g=>g.kind==='produce'),'produce entries kept');
 const walletCore=e.load('lib/arcade/arcadeWalletCore.ts'),jobWallet=e.load('lib/town/jobs/jobWallet.ts');
 let saved=null,serial=0,queue=Promise.resolve();
@@ -303,19 +312,26 @@ const day=market.localMarketDay();
 const store=e.data;store.set(market.MARKET_STORAGE_KEY,JSON.stringify({version:1,day,basket:{mackerel:3,octopus:1,orange:2},soldToday:0,sales:0,lifetime:0}));
 const live=market.createMarket({read:()=>JSON.parse(store.get(market.MARKET_STORAGE_KEY)??'null'),write:v=>store.set(market.MARKET_STORAGE_KEY,JSON.stringify(v)),credit:(id,a,r)=>bridge.credit(id,a,r)});
 const ports={read:()=>JSON.parse(store.get(market.MARKET_STORAGE_KEY)??'null'),write:v=>store.set(market.MARKET_STORAGE_KEY,JSON.stringify(v)),credit:(id,a,r)=>bridge.credit(id,a,r),refresh:()=>live.refresh()};
-assert.equal(stand.unitPrice(live.read(),'mackerel'),4);
-const one=await stand.sellOneGood('mackerel',ports);assert(one.ok&&one.coins===4&&one.credited===4,'sell one pays its price');
-assert.equal(live.read().basket.mackerel,2);assert.equal(wallet.load().balance,4);
+assert.equal(stand.unitPrice(live.read(),'mackerel'),2);
+const one=await stand.sellOneGood('mackerel',ports);assert(one.ok&&one.coins===2&&one.credited===2,'sell one pays its price');
+assert.equal(live.read().basket.mackerel,2);assert.equal(wallet.load().balance,2);
 assert.equal((await stand.sellOneGood('cod',ports)).ok,false,'cannot sell what you do not have');
-const all=await live.sell('fish');assert(all.ok&&all.coins===4*2+12&&all.credited===20);assert.equal(wallet.load().balance,24);
+const all=await live.sell('fish');assert(all.ok&&all.coins===2*2+10&&all.credited===14);assert.equal(wallet.load().balance,16);
 assert.equal(stand.basketLines(live.read(),'fish').length,0);assert.equal(stand.basketLines(live.read(),'produce')[0].count,2,'produce stays for its own section');
-// Soft cap: after MARKET_FULL_PRICE_COINS of sales today, prices halve (min 1) — shared by fish and produce.
+// Soft cap: after MARKET_FULL_PRICE_COINS of sales today, prices halve — shared by fish, produce and beach finds.
 store.set(market.MARKET_STORAGE_KEY,JSON.stringify({...JSON.parse(store.get(market.MARKET_STORAGE_KEY)),basket:{octopus:2,shrimp:1},soldToday:market.MARKET_FULL_PRICE_COINS}));live.refresh();
-assert.equal(stand.unitPrice(live.read(),'octopus'),6);assert.equal(stand.allowanceUsed(live.read()),1);
-const half=await stand.sellOneGood('octopus',ports);assert(half.ok&&half.coins===6&&half.halfPrice);
-const plan=stand.planSellOne({version:1,day,basket:{shrimp:1},soldToday:39,sales:0,lifetime:0},'shrimp');assert.equal(plan.coins,3,'the item that crosses the cap is still full price');
+assert.equal(stand.unitPrice(live.read(),'octopus'),5);assert.equal(stand.allowanceUsed(live.read()),1);
+const half=await stand.sellOneGood('octopus',ports);assert(half.ok&&half.coins===5&&half.halfPrice);
+const plan=stand.planSellOne({version:1,day,basket:{shrimp:1},soldToday:market.MARKET_FULL_PRICE_COINS-1,sales:0,lifetime:0},'shrimp');assert.equal(plan.coins,2,'the item that crosses the cap is still full price');
+// The same-kind ladder (Oct 14 2026): Rosa has plenty of sardines after 4 today; a rare or legendary catch never drops.
+{const st={version:1,day,basket:{sardine:6,octopus:1},soldToday:0,sales:0,lifetime:0},q=market.quoteSale(st,'fish');
+ assert.equal(q.lines.find(l=>l.id==='sardine').coins,4*2+2*1,'sardines: 4 at 2, then 2 at 1');
+ assert.equal(stand.unitPrice({...st,byGood:{octopus:9}},'octopus'),10,'the 10th octopus today (legendary) still fetches full price');
+ assert.equal(q.plenty.join(),'sardine');assert.match(stand.plentyNote({...st,byGood:{sardine:4}},'sardine'),/Rosa already has plenty of sardines today: 1 coin each/);
+ const ones=[];let s2={...st,basket:{sardine:6}};for(let i=0;i<6;i++){const p=stand.planSellOne(s2,'sardine');ones.push(p.coins);s2=p.next;}
+ assert.equal(ones.reduce((a,b)=>a+b,0),q.lines.find(l=>l.id==='sardine').coins,'selling one at a time pays exactly the same as selling all');}
 // Idempotent wallet runs: replaying a sale id never pays twice.
-const before=wallet.load().balance;assert.equal(await bridge.credit(`market:${day}:1`,4,'replay'),0);assert.equal(wallet.load().balance,before);
+const before=wallet.load().balance;assert.equal(await bridge.credit(`market:${day}:1`,2,'replay'),0);assert.equal(wallet.load().balance,before);
 
 // ---- Browser store: landing a fish logs it and fills the shared basket ----
 e.override('lib/town/jobs/islandWallet.ts',{islandMarket:live});
@@ -328,51 +344,69 @@ const full=fishingStore.landFish('herring',30,9100);assert(!full.inBasket&&full.
 assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.count,2);
 
 
-// ---- Deep Sea Boat (user, Sep 29 2026): a moored boat south of the Coral Cay causeway; its catches are mostly deep-sea ----
+// ---- Deep Sea Boats (user, Sep 29 2026; Oct 14 2026: "move the fishing boat over more to where i circled and then add a second
+// boat to the west of the mountain island. also increase the probability of bigger fish on boats since it's in deep sea") ----
 {const cay=e.load('lib/town/coralCay.ts'),data=e.load('lib/town/fishing/deepSeaBoatData.ts'),decks=e.load('lib/town/landableDecks.ts'),land=e.load('lib/town/landmass.ts'),sim=e.load('lib/town/simulation.ts');
- const boat=cat.spotById('deep-sea-boat'),m=data.BOAT_MOORING;
- assert(boat&&boat.boat,'the boat spot exists');
- // The boat's own mooring (the user's circled spot, Sep 29 2026), checked against the live Coral Cay and flight rules:
- // the hull plus a 12 m ring of fishing water is flyable open sea (never land); outside the shallow band; at least 12 m
- // (plus the boat's half-length) from the causeway deck and banks and from every shark patrol point.
- for(let a=0;a<32;a++)for(const r of [0,3,6,9,12]){const x=m.x+Math.cos(a/32*Math.PI*2)*r,z=m.z+Math.sin(a/32*Math.PI*2)*r;
-  assert(!sim.flightBlocked(x,z)&&!land.onLand(x,z),`boat water ${x.toFixed(1)},${z.toFixed(1)} is open, flyable sea`);}
- const offShore=shore.distanceToShore(m.x,m.z);assert(offShore>=25&&offShore<=70,`off the main island's east beach, outside the shallow band (${offShore.toFixed(1)} m)`);
- const halfLength=Math.max(-data.BOAT_HULL.x0,data.BOAT_HULL.x1);
- assert(cay.distanceToCayLand(m.x,m.z)>=12+halfLength,'clear of the causeway deck, its banks and the sandbars');
- assert(cay.SHARK_LOOPS.every(l=>l.points.every(p=>Math.hypot(p.x-m.x,p.z-m.z)>=12+halfLength)),'clear of the causeway shark patrols');
- // Bow along the coast (north), casting side (starboard) out to sea (east).
- const bow=data.boatToWorld(1,0),star=data.boatToWorld(0,1);assert(bow.z<m.z-.99&&star.x>m.x+.99,'bow points north along the coast; you cast east, out to sea');
- assert(Math.hypot(boat.x-m.x,boat.z-m.z)<4,'the spot is on the boat');
- assert(!shore.onIsland(boat.x,boat.z)&&!cay.isOnCayLand(boat.x,boat.z),'the boat floats in open water, far from both coasts');
- // The aft deck: a real floor while registered (walkable, landable), water again once removed. Height stays "on foot".
- const deck=data.BOAT_DECK;assert(deck.height<1.2&&deck.height>.4,'deck floor height counts as on foot');
- for(const [u,v] of [[-1,-1],[-1,1],[1,-1],[1,1]]){const c=data.boatToWorld(-2.4+u*deck.w/2,v*deck.d/2);assert(data.onBoatHull(c.x,c.z),'deck lies inside the hull');}
- {const sl=data.worldToBoat(boat.x,boat.z);assert(Math.abs(sl.x+2.4)<=deck.w/2&&Math.abs(sl.z)<=deck.d/2,'the fishing stand is on the deck');}
- assert(!land.onLand(boat.x,boat.z),'no floor before the boat is built');
- const off=decks.registerLandableDeck({...deck});assert(land.onLand(boat.x,boat.z)&&decks.landableDeckHeight(boat.x,boat.z)===deck.height,'registered deck is land at deck height');off();
- // Float and shadows stay off the hull; the cast clears the rail.
- const c=core.castPoint(boat,boat);assert(core.inOpenWater(c.x,c.z)&&!data.onBoatHull(c.x,c.z)&&c.distance>3,'boat cast lands in open water past the rail');
- assert(!core.inOpenWater(m.x,m.z),'the hull is not open water');
- // Catch table: 70-80% deep-sea creatures (internal weights, never shown), plus a few bait fish.
- const w=Object.entries(boat.weights),tot=w.reduce((a,[,v])=>a+v,0),deep=w.filter(([id])=>fishById(id).deepSea).reduce((a,[,v])=>a+v,0);
- assert(deep/tot>=.7&&deep/tot<=.8,`deep-sea share of the boat table ${(deep/tot).toFixed(3)}`);
- const rand=lcg(99);let hits=0;for(let i=0;i<10000;i++)if(fishById(core.rollCatch(boat,rand())).deepSea)hits++;assert(hits>=6800&&hits<=8200,`simulated deep-sea catches ${hits}/10000`);
- const own=FISH.filter(f=>cat.isExclusive(f)&&f.spots[0]==='deep-sea-boat');
- assert(own.length>=6&&own.every(f=>f.deepSea),'the boat has its own deep-sea specials');
+ const pier=e.load('lib/town/eastPier.ts'),summit=e.load('lib/town/summitIsle.ts'),life=e.load('lib/town/summitSeaLife.ts'),mantas=e.load('lib/town/mantaLoops.ts');
+ assert.equal(data.DEEP_SEA_BOATS.length,2,'two deep-sea boats');
+ assert.equal(data.DEEP_SEA_BOATS.map(b=>b.spotId).join(),'deep-sea-boat,deep-sea-boat-west','the Deep Sea Boat and the Summit Deep Boat');
+ // The circled spot (the travel map draws world x/z 1:1, IslandOverview viewBox): the open bay north of the East Jetty's spiral,
+ // between the spiral and the old mooring (282.5, -93.5).
+ {const m=data.BOAT_MOORING,P=pier.EAST_PIER;assert(m.z<P.cz-P.r0-20&&m.z>-93.5&&Math.abs(m.x-P.cx)<20,`the Deep Sea Boat is just north of the spiral (${m.x}, ${m.z})`);}
+ // The Summit Deep Boat: between the main island's south-east and Summit Isle's west coast, south of the jetty.
+ {const w=data.DEEP_SEA_BOATS[1].mooring,P=pier.EAST_PIER;assert(w.z>P.z+40&&w.x>P.cx&&w.x<summit.SUMMIT_CENTER.x-150,`the Summit Deep Boat is south of the jetty, west of Summit Isle (${w.x}, ${w.z})`);}
+ // Every live loop the boats must keep clear of (≥ 15 m from any cast landing): causeway sharks, Summit sharks, the whale shark, mantas.
+ const loops=[...cay.SHARK_LOOPS,...life.SUMMIT_SHARK_LOOPS,life.WHALE_SHARK_LOOP,...mantas.MANTA_LOOPS].map(l=>l.points);
+ const loopGap=(x,z)=>Math.min(...loops.flatMap(pts=>pts.map(p=>Math.hypot(p.x-x,p.z-z))));
+ const jetty=pier.JETTY_PATH,jettyGap=(x,z)=>Math.min(...jetty.map(p=>Math.hypot(p.x-x,p.z-z)))-pier.EAST_PIER.flankHalf;
+ const aim=e.load('lib/town/fishing/fishingAim.ts');
+ for(const b of data.DEEP_SEA_BOATS){const boat=cat.spotById(b.spotId),m=b.mooring,id=b.spotId;
+  assert(boat&&boat.boat&&boat.deep,`${id}: a deep boat spot`);
+  // Deep, open water: the hull plus a 12 m ring is flyable open sea (never land), far from every coast, the jetty and the sandbars.
+  for(let a=0;a<32;a++)for(const r of [0,3,6,9,12]){const x=m.x+Math.cos(a/32*Math.PI*2)*r,z=m.z+Math.sin(a/32*Math.PI*2)*r;
+   assert(!sim.flightBlocked(x,z)&&!land.onLand(x,z),`${id}: water ${x.toFixed(1)},${z.toFixed(1)} is open, flyable sea`);}
+  assert(shore.distanceToShore(m.x,m.z)>=60,`${id}: far out from the main island (${shore.distanceToShore(m.x,m.z).toFixed(1)} m)`);
+  assert(cay.distanceToCayLand(m.x,m.z)>=60,`${id}: far from Coral Cay, the causeway and its sandbars`);
+  assert(summit.distanceToSummitLand(m.x,m.z)>=60,`${id}: far from Summit Isle and its sandbar`);
+  assert(jettyGap(m.x,m.z)>=30,`${id}: clear of the East Jetty (${jettyGap(m.x,m.z).toFixed(1)} m)`);
+  assert(mantas.MANTA_LOOPS.every(l=>l.points.every(p=>Math.hypot(p.x-m.x,p.z-m.z)>=80)),`${id}: 80+ m from every manta loop`);
+  for(const o of FISH_SPOTS)if(o.id!==id){assert(Math.hypot(o.x-m.x,o.z-m.z)>=60,`${id}: 60+ m from ${o.id}`);assert(Math.hypot(o.buoy.x-b.buoy.x,o.buoy.z-b.buoy.z)>=60,`${id}: its float 60+ m from ${o.id}'s`);}
+  // The whole aim area (every landing a cast can reach, quick or aimed, both phone and desktop) stays 15+ m from every loop.
+  for(const phone of [false,true]){const A=aim.aimArea(boat,boat,phone);
+   for(let u=-1;u<=1;u+=.25)for(let v=0;v<=1;v+=.25){const p=aim.aimPolar(A,u,v);assert(loopGap(p.x,p.z)>=15,`${id}: aim area point ${p.x.toFixed(1)},${p.z.toFixed(1)} is ${loopGap(p.x,p.z).toFixed(1)} m from a sea-life loop`);}}
+  // Bow along north, casting side (starboard) out to the east; the spot, deck and float.
+  const bow=b.toWorld(1,0),star=b.toWorld(0,1);assert(bow.z<m.z-.99&&star.x>m.x+.99,`${id}: bow north, you cast east`);
+  assert(Math.hypot(boat.x-m.x,boat.z-m.z)<4,`${id}: the spot is on the boat`);
+  const deck=b.deck;assert(deck.id===id&&deck.height<1.2&&deck.height>.4,`${id}: deck floor height counts as on foot`);
+  for(const [u,v] of [[-1,-1],[-1,1],[1,-1],[1,1]]){const c=b.toWorld(-2.4+u*deck.w/2,v*deck.d/2);assert(b.onHull(c.x,c.z)&&data.onBoatHull(c.x,c.z),`${id}: deck lies inside the hull`);}
+  {const sl=b.toLocal(boat.x,boat.z);assert(Math.abs(sl.x+2.4)<=deck.w/2&&Math.abs(sl.z)<=deck.d/2,`${id}: the fishing stand is on the deck`);}
+  assert(!land.onLand(boat.x,boat.z),`${id}: no floor before the boat is built`);
+  const off=decks.registerLandableDeck({...deck});assert(land.onLand(boat.x,boat.z)&&decks.landableDeckHeight(boat.x,boat.z)===deck.height,`${id}: registered deck is land at deck height`);off();
+  // Float and shadows stay off the hull; the cast clears the rail (the fix earlier this week: a shoreless deep spot never throws).
+  const c=core.castPoint(boat,boat);assert(core.inOpenWater(c.x,c.z)&&!data.onBoatHull(c.x,c.z)&&c.distance>3,`${id}: cast lands in open water past the rail`);
+  assert(!core.inOpenWater(m.x,m.z),`${id}: the hull is not open water`);
+  // Catch table: mostly deep-sea creatures (internal weights, never shown), a few bait fish, rarer catches boosted.
+  const w=Object.entries(boat.weights),tot=w.reduce((a,[,v])=>a+v,0),deep=w.filter(([fid])=>fishById(fid).deepSea).reduce((a,[,v])=>a+v,0);
+  assert(deep/tot>=.75&&deep/tot<=.85,`${id}: deep-sea share of the table ${(deep/tot).toFixed(3)}`);
+  const rand=lcg(99);let hits=0;for(let i=0;i<10000;i++)if(fishById(core.rollCatch(boat,rand())).deepSea)hits++;assert(hits>=7300&&hits<=8700,`${id}: simulated deep-sea catches ${hits}/10000`);}
+ // The two boats are the same model, the same table, different water (their own reef themes).
+ {const a=cat.spotById('deep-sea-boat'),b=cat.spotById('deep-sea-boat-west');assert.equal(JSON.stringify(a.weights),JSON.stringify(b.weights),'both boats fish the same deep table');assert(a.reef!==b.reef&&a.name!==b.name,'each boat has its own name and water');}
+ const own=FISH.filter(cat.isDeepSeaSpecial);
+ assert(own.length>=6&&own.every(f=>f.deepSea),'the boats have their own deep-sea specials');
  assert(fishById('ocean-sunfish').weight<cat.RARITY_WEIGHT.legendary,'the ocean sunfish is the rarest');
  // Old shore spots unchanged (snapshot taken before the boat was added: species count and total internal weight).
  const SNAP={'south-pier':[14,304.8],'west-pier':[16,281.2],'harbour-wall':[18,369.2],'north-rocks':[15,358.4],'west-cove':[18,269.2]};
- for(const [id,[n,sum]] of Object.entries(SNAP)){const s=cat.spotById(id),v=Object.values(s.weights);assert.equal(v.length,n,`${id}: same species`);assert(Math.abs(v.reduce((a,b)=>a+b,0)-sum)<1e-6,`${id}: same weights`);assert(!Object.keys(s.weights).some(k=>own.some(f=>f.id===k)),`${id}: no boat specials`);}
- // Each new species: complete content, a cited source, Fishbook art for its shape.
+ for(const [sid,[n,sum]] of Object.entries(SNAP)){const s=cat.spotById(sid),v=Object.values(s.weights);assert.equal(v.length,n,`${sid}: same species`);assert(Math.abs(v.reduce((a,b)=>a+b,0)-sum)<1e-6,`${sid}: same weights`);assert(!Object.keys(s.weights).some(k=>own.some(f=>f.id===k)),`${sid}: no boat specials`);}
+ // Each deep-sea species: complete content, a cited source, Fishbook art for its shape.
  const art=fs.readFileSync(path.join(ROOT,'components/FishArt.tsx'),'utf8');
  for(const f of own){assert(f.name&&f.plural&&f.club.name&&f.club.fact.length>40&&/^https:\/\/en\.wikipedia\.org\/wiki\//.test(f.club.source),`${f.id}: content and a Wikipedia source`);
   assert(['slim','round','squid'].includes(f.shape)||new RegExp(`case '${f.shape}'`).test(art),`${f.id}: has Fishbook art`);}
- // The catch card names the boat; the Fishbook separates shore spots from the boat.
+ // The catch card names the boat; the Fishbook groups the deep-sea specials and marks deep-sea catches "Deep sea".
  assert(/data-fish-where>Deep sea boat</.test(fs.readFileSync(path.join(ROOT,'components/FishingHost.tsx'),'utf8')),'catch card says "Deep sea boat"');
- // Heat: one merged boat mesh, no shadow casting, no timers or frame loops, built/dropped by distance, bob gated.
+ {const book=fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8');assert(/'Deep sea specials'/.test(book)&&/f\.deepSea\?'Deep sea · ':''/.test(book)&&/both deep-sea boats/.test(book),'Fishbook: a Deep sea specials section and a "Deep sea" tag');}
+ // Heat: one shared merged boat mesh, no shadow casting, no timers or frame loops, built/dropped by distance, bob gated.
  const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/deepSeaBoat.ts'),'utf8');
- assert(/mergeGeometries\(parts\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1,'the boat is one merged mesh');
+ assert(/mergeGeometries\(parts\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1&&/let shared:/.test(src),'the boats share one merged mesh');
  assert(/castShadow=false/.test(src)&&!/requestAnimationFrame|setInterval|setTimeout/.test(src),'no shadow draw, no timers');
  assert(/BUILD_RANGE=\d+,DROP_RANGE=\d+,BOB_RANGE=\d+/.test(src)&&/frustum\.intersectsSphere/.test(src),'lazy build, bob only near and on screen');}
 
@@ -437,11 +471,19 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  const field={box:new T.Vector4(-40,-40,size,size),n,size,lift,distance:(x,z)=>z+8},tot={desktop:0,phone:0};
  for(const s of FISH_SPOTS)for(const phone of [false,true]){const cay=s.area==='cay',build=()=>uw.buildSeabedProps(field,uw.reefTheme(s),{x:0,z:-9},{x:0,z:1},phone,uw.reefSeed(s.id),phone?4.5:9,25);
   const p=build(),q=build(),cap=(cay?(phone?5932:10182):(phone?3240:5264))*1.15;
+  // The deep-sea boats (Oct 14 2026): open deep water shows no seabed at all (the water column draws instead).
+  if(s.deep){assert.equal(p.triangles,0,`${s.id}: no seabed pieces under a deep-sea boat`);assert(!p.mesh.visible,`${s.id}: the empty seabed is hidden`);p.dispose();q.dispose();continue;}
   assert(p.triangles>(phone?500:900)&&p.triangles<=cap,`${s.id} ${phone?'phone':'desktop'} seabed ${p.triangles} triangles (cap ${Math.round(cap)})`);
   assert.equal(q.triangles,p.triangles,`${s.id}: deterministic seabed`);
   if(uw.reefTheme(s).anemones)assert(p.homes.length>=1,`${s.id}: an anemone for the clownfish`);
   tot[phone?'phone':'desktop']+=p.triangles;p.dispose();q.dispose();}
- assert(tot.desktop<=90734&&tot.phone<=52680,`seabed triangles flat overall (${tot.desktop} / ${tot.phone})`);
+ // Oct 14 2026: the boats' reef left (deep water: none) and Drop-off Ledge joined; the total may grow by at most one shore spot's cap.
+ assert(tot.desktop<=90734+5264*1.15&&tot.phone<=52680+3240*1.15,`seabed triangles flat overall (${tot.desktop} / ${tot.phone})`);
+ // The deep look: every deep spot's theme has the water-column config, its fish exist, the water is darker than any reef's.
+ for(const s of FISH_SPOTS.filter(x=>x.deep)){const t=uw.reefTheme(s);assert(t.layout==='abyss'&&t.deep,`${s.id}: the open deep-sea look`);
+  for(const f of [t.deep.bait,...t.deep.big])assert(sea.LOOKS[f],`${s.id}: deep life look ${f} exists`);
+  assert(t.water[1].reduce((a,b)=>a+b,0)<.25&&t.clear>1.5,`${s.id}: dark, deep water (no visible bottom)`);}
+ assert(uw.reefTheme(cat.spotById('deep-sea-boat')).deep.bait!==uw.reefTheme(cat.spotById('deep-sea-boat-west')).deep.bait,'the two boats look different (their own bait ball)');
  // Open sea (the Deep Sea Boat: no shore in the field) builds without throwing.
  const open={...field,lift:new Float32Array(n*n).fill(-.5),distance:()=>1e6},o=uw.buildSeabedProps(open,uw.reefTheme(cat.spotById('deep-sea-boat')),{x:0,z:0},{x:1,z:0},true,1,4.5,20);o.dispose();
  const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/underwater.ts'),'utf8');

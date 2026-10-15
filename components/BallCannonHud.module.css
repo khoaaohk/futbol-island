@@ -1,0 +1,31 @@
+/* The Ball Cannon's seated controls (components/BallCannonHud.tsx). Shared button tokens (docs/ui/BUTTONS.md): Fire is the gold
+   primary as a big round in-game control, Release disc / Pull are mint secondaries; Back is the shared BackButton at the usual
+   anchors. Static styles; the only animation is the one-off cheer on a hit (shorter, fade only, with reduced motion). */
+.hud{position:absolute;inset:0;z-index:30;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.hud:active{cursor:grabbing}
+.back{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px))}
+.hint{position:absolute;top:calc(20px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(440px,calc(100% - 220px));margin:0;padding:9px 14px;border:2px solid var(--btn-rim);border-radius:16px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);text-align:center;font:700 13px/1.4 var(--btn-font);pointer-events:none}
+.cheer{position:absolute;top:28%;left:50%;translate:-50% 0;font:52px Impact,Arial Narrow,sans-serif;color:var(--btn-gold-bright);text-shadow:4px 4px var(--btn-green);rotate:-4deg;white-space:nowrap;pointer-events:none;animation:cheer .9s ease-out both}
+@keyframes cheer{0%{opacity:0;scale:.6}25%{opacity:1;scale:1.08}70%{opacity:1;scale:1}100%{opacity:0;scale:1}}
+.controls{position:absolute;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(28px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:14px}
+.discs{display:flex;flex-direction:column;gap:12px}
+.disc,.fire{display:flex;flex-direction:column;align-items:center;justify-content:center;border:var(--btn-rim-width) solid var(--btn-rim);color:var(--btn-ink);font:800 15px/1.1 var(--btn-font);cursor:pointer;touch-action:manipulation;transition:translate .16s,box-shadow .16s}
+.disc{min-width:150px;min-height:48px;padding:6px 16px;border-radius:999px;background:var(--btn-mint);box-shadow:0 4px 0 var(--btn-mint-edge)}
+.disc:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.fire{width:104px;height:104px;border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:var(--btn-shadow-gold);font-size:20px}
+.fire:active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+.disc kbd,.fire kbd{margin-top:2px;font:700 10px monospace;letter-spacing:.6px;opacity:.65}
+@media(max-width:600px),(pointer:coarse){
+ .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
+ .hint{top:calc(72px + env(safe-area-inset-top,0px));max-width:calc(100% - 36px);font-size:12px}
+ .controls{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));gap:12px}
+ .disc{min-width:136px;min-height:52px;font-size:14px}
+ .fire{width:100px;height:100px}
+ .cheer{font-size:42px}
+ .disc kbd,.fire kbd{display:none}
+}
+@media(prefers-reduced-motion:reduce){.cheer{animation:cheerQuiet .5s ease-out both}}
+@keyframes cheerQuiet{0%,60%{opacity:1}100%{opacity:0}}
+/* While seated the island HUD steps aside (stick, ride and map buttons, the stack, the coin bar, other prompts): the drag area,
+   Fire and the disc buttons own the screen. */
+:global(.town-app):has(.hud) :global(:is(nav[data-hud-triggers],.town-minimap,.travel-actions,.touch-actions,.touch-controls,[data-hud-stack],.field-learn-card,button[data-tour],.goal-toast,[data-job-wallet],.store-enter-prompt,.npc-talk-prompt)){visibility:hidden;pointer-events:none}

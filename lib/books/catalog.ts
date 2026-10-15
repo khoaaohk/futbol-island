@@ -50,7 +50,7 @@ export function bookForMachine(machine:string):PlayerBookId|undefined{return boo
 /** Every book a machine sells, in shelf order (four per original machine, one per Sep 29 book machine). */
 export function booksForMachine(machine:string):PlayerBookId[]{return (Object.keys(PLAYER_BOOKS) as PlayerBookId[]).filter(id=>PLAYER_BOOKS[id].machine!==null&&PLAYER_BOOKS[id].machine===machine);}
 /** Every pop-up book costs the same. */
-export const BOOK_PRICE=100;
+export {BOOK_PRICE} from '../economy';// 100 (user decision, 28 Sep 2026); lib/economy.ts
 export function readableBook(item: {id:string;storyId?:string}): PlayerBookId | null {
  const id=item.storyId;
  return id && Object.prototype.hasOwnProperty.call(PLAYER_BOOKS,id) && PLAYER_BOOKS[id as PlayerBookId].itemId===item.id ? id as PlayerBookId : null;

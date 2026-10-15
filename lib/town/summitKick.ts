@@ -10,6 +10,7 @@
  * SUMMIT_FENCE, SUMMIT_LANDMARKS, summitGround, onSummitIsle), so the hoops follow the island's final shape.
  */
 import {SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_LANDMARKS,SUMMIT_OBSTACLES,summitGround,onSummitIsle} from './summitIsle';
+import {SUMMIT_KICK_COINS} from '../economy';
 
 export type KickVec={x:number;y:number;z:number};
 /** A hoop: centre, radius, and the unit normal pointing back toward the kicker (a ball passing against it is a hit). */
@@ -98,11 +99,12 @@ export function kickScore({hits,kicks,seconds}:{hits:number;kicks:number;seconds
 }
 
 /**
- * Coins: 2 a hoop and 4 more for all five (at most 14 a round), paid as a metered island run (`summit-kick:` ids count toward
+ * Coins: 1 a hoop and 3 more for all five (at most 8 a round; lib/economy.ts), paid as a metered island run (`summit-kick:` ids count toward
  * the daily Training meter, lib/town/dailyMeter.ts, and the island run cap). The first 5/5 ever also pays a one-off learning
  * reward (learn:explore:summit-kick-perfect).
  */
-export const KICK_COINS={perHoop:2,perfect:4} as const;
+// Oct 14 2026 (docs/economy.md): 2 + 4 (max 14) → 1 + 3 (max 8), read from lib/economy.ts SUMMIT_KICK_COINS.
+export const KICK_COINS=SUMMIT_KICK_COINS;
 export const KICK_RUN_PREFIX='summit-kick:';
 export const KICK_PERFECT_REWARD='summit-kick-perfect';
 export const kickCoins=(hits:number)=>{const h=Math.min(HOOP_COUNT,Math.max(0,Math.floor(Number.isFinite(hits)?hits:0)));return h*KICK_COINS.perHoop+(h===HOOP_COUNT?KICK_COINS.perfect:0);};

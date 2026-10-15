@@ -1,5 +1,8 @@
 # Sell stand: Fish · Produce · Cards
 
+> **Coin numbers updated 14 Oct 2026:** see [economy.md](economy.md) (the one table is `lib/economy.ts`). Values below may predate it.
+
+
 Written 27 Sep 2026. Local only: nothing has been committed or deployed.
 
 ## Where selling happens

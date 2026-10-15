@@ -53,8 +53,9 @@ for(const good of G.GOODS){
  assert.equal(row.count,2);assert.equal(row.name,good.plural);assert.equal(row.each,good.price);assert.equal(row.value,good.price*2,`${good.id} value`);
  assert.equal(v.hud.fish,good.kind==='fish'?2:0);assert.equal(v.hud.produce,good.kind==='produce'?2:0);
  assert.equal(v.hud.fish,hudLikeIslandJobs(market.read(),'fish'));assert.equal(v.hud.produce,hudLikeIslandJobs(market.read(),'produce'));
- assert.equal(v.fish.count+v.fruit.count+v.veg.count,v.total,'groups add up to the basket');
+ assert.equal(v.fish.count+v.fruit.count+v.veg.count+v.beach.count,v.total,'groups add up to the basket');// beach: beachcombing finds
  if(good.kind==='fish'){assert(cat.fishById(good.id),`${good.id} has fish art data`);assert.equal(good.name,cat.fishById(good.id).name);}
+ else if(cat_==='beach'){/* beach finds draw with BeachFindArt (tests/beachcombing.cjs) */}
  else{assert(cat_==='fruit'||cat_==='veg');const svg=art.default({good,size:38});assert.equal(svg.type,'svg');let shapes=0;walk(svg.props.children,n=>{if(['path','circle','ellipse'].includes(n.type))shapes++;});assert(shapes>0,`${good.id} icon draws`);if(!art.hasOwnProduceArt(good.id))missingArt.push(good.id);}
  const one=await S.sellOneGood(good.id,sellPorts);assert.equal(one.ok,true);
  assert.equal(view()[cat_].rows.find(r=>r.id===good.id).count,1,`${good.id}: selling one updates the pocket`);
@@ -88,7 +89,7 @@ stored={...stored,basket:{...stored.basket,'not-a-good':3}};assert.equal(P.pocke
 
 // ---- Soft cap: values follow the stand's half price once today's allowance is used ----
 const capped=P.pocketView({...market.read(),soldToday:M.MARKET_FULL_PRICE_COINS});
-assert(capped.fish.rows.every(r=>r.each===Math.max(1,Math.floor(r.good.price/2))),'half price after the allowance');
+assert(capped.fish.rows.every(r=>r.each===r.good.price/2),'half price after the allowance (a part-coin goes on Rosa\'s tally, 14 Oct 2026)');
 assert.equal(capped.value,M.quoteSale({...market.read(),soldToday:M.MARKET_FULL_PRICE_COINS}).coins,'pocket total = stand "sell all"');
 
 // ---- Bug A15 (Deploy 11 audit): row values add up to the card's "Worth N coins today" across the daily full-price cap ----

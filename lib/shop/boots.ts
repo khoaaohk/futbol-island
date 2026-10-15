@@ -8,6 +8,7 @@
  * No real brands: original stickers (bootStickers.ts), no logos, no stripes trademarks, no model names. Flags are flag-icons
  * (MIT, public/shop/flags/LICENSE.txt, docs/third-party/flag-icons.md).
  */
+import {BOOT_PRICES} from '../economy';
 
 export const BOOTS_KEY='fi2-shop-boots-v1';
 /** Stickers, flags and quotes a kid can place. The name, number and flag badge are separate (personal) and do not count. */
@@ -304,11 +305,8 @@ export function validateBoots(input:unknown):BootDesign{
 
 /* ---------- Price ---------- */
 // Oct 12 2026 (user: "make them pricier"): about 2.5× the first prices, boots are something to save up for over a few days.
-export const PRICE={base:200,finish:{matte:0,glossy:10,metallic:40,iridescent:50},collar:{low:0,mid:15,sock:25},laces:{visible:0,covered:15,laceless:25},
- // the shapes with extra parts (fins, a lace cover, a strike pad, a fold-over tongue) cost a little more
- model:{speed:0,retro:10,classic:15,feather:15,fins:30,track:10,longflap:25,cage:25,offset:20,wrap:15,pro:15,knit:15,sock:10,laceless:10,indoor:0},
- studs:{fg:0,blade:10,hybrid:15,chevron:15,sg:25,sgmix:30,ag:10,turf:0,indoor:0,futsal:5,split:40,carbon:50},
- studFinish:{matte:0,glossy:0,translucent:15,chrome:20,tipped:10},pattern:15,decal:5,name:10,flag:10} as const;
+// Oct 14 2026 (docs/economy.md): base 200 → 240 (the user's floor is 200), extras unchanged; the table lives in lib/economy.ts.
+export const PRICE=BOOT_PRICES;
 /** Coins, with the lines the Done step shows. The shop owns the numbers in PRICE; the studio only ever reads bootPrice(). */
 const isFlat=(t:StudType)=>t==='indoor'||t==='futsal';
 export function bootPriceLines(design:BootDesign):{label:string;coins:number}[]{

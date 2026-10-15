@@ -13,8 +13,10 @@ export type LearnKind='quiz'|'ball'|'story'|'journey'|'explore'|'path'|'review'|
  *  (~240/h) and pays for the 4 new books. Forward-only: balls already paid keep their saved 5 (creditOnce never pays an id twice).
  *  review 2 / book 5 (30 Sep 2026, docs/economy/ECONOMY_UPDATE_2026-09-30.md): a correct Daily warm-up answer pays 2, at most
  *  REVIEW_PAID_PER_DAY (3) a day (ids `learn:review:<day>:<n>`, lib/learning/review.ts), and a book's "Take it to your game"
- *  check pays 5 once per book (`learn:book:<bookId>`). The only daily-repeatable learning coins, hard-capped at 6 a day. */
-export const LEARN_COINS={quiz:12,quizPerfect:6,ball:10,story:10,journey:8,explore:5,path:75,review:2,book:5} as const;
+ *  check pays 5 once per book (`learn:book:<bookId>`). The only daily-repeatable learning coins, hard-capped at 6 a day.
+ *  quiz 12 → 15, ball 10 → 12 (14 Oct 2026, docs/economy.md): the values now live in lib/economy.ts with every other coin number. */
+export {LEARN_COINS} from '../economy';
+import {LEARN_COINS} from '../economy';
 /** Window event the island HUD listens for to show the coin toast. Detail: LearnCoinsEarned. */
 export const LEARN_COINS_EARNED='fi2-learn-coins-earned';
 export type LearnCoinsEarned={kind:LearnKind;amount:number;reason:string};

@@ -88,8 +88,8 @@ await ok('scoring and its ceiling',()=>{
  assert.match(K.kickEndLine('perfect',5),/Five out of five/);assert.match(K.kickEndLine('kicks',0),/Tap Kick/);
 });
 
-await ok('coins: 2 a hoop + 4 for 5/5, metered training, capped',async()=>{
- assert.deepEqual([0,1,2,3,4,5].map(K.kickCoins),[0,2,4,6,8,14]);assert.equal(K.kickCoins(99),14);assert.equal(K.kickCoins(-1),0);
+await ok('coins: 1 a hoop + 3 for 5/5 (2 + 4 until the 14 Oct 2026 rebalance), metered training, capped',async()=>{
+ assert.deepEqual([0,1,2,3,4,5].map(K.kickCoins),[0,1,2,3,4,8]);assert.equal(K.kickCoins(99),8);assert.equal(K.kickCoins(-1),0);
  const DM=load('lib/town/dailyMeter.ts'),W=load('lib/arcade/arcadeWalletCore.ts');
  assert(DM.isTrainingRun(K.KICK_RUN_PREFIX+'abc','island'),'Summit Kick rounds count toward the daily Training meter');
  assert(!DM.isTrainingRun('learn:explore:'+K.KICK_PERFECT_REWARD,'learn'),'the one-off 5/5 reward is a learning coin');
@@ -97,10 +97,10 @@ await ok('coins: 2 a hoop + 4 for 5/5, metered training, capped',async()=>{
  // The real wallet with the real meter: rounds pay in full, then half, then a 1-coin tip once today's training is high.
  let saved=null,clock=Date.parse('2026-10-12T15:00:00');
  const wallet=W.createArcadeWallet({meter:DM.isTrainingRun,read:()=>saved,write:v=>{saved=JSON.parse(JSON.stringify(v));},lock:fn=>Promise.resolve().then(fn),valid:new Set(),grant:()=>true,notify:()=>{},now:()=>clock,id:()=>'x',random:()=>.5});
- let total=0;const pays=[];for(let i=0;i<14;i++){const p=await wallet.creditRun(`${K.KICK_RUN_PREFIX}r${i}`,'island',K.kickCoins(5),'Summit Kick');pays.push(p);total+=p;clock+=60_000;}
- assert.equal(pays[0],14,'full pay at first');assert(pays.some(p=>p===7),'then half pay');assert.equal(pays[pays.length-1],1,'then the tip');
- assert(total<=DM.TRAINING_HALF_COINS+14,`a day of rounds stays near the meter (${total})`);
- assert.equal(await wallet.creditRun(`${K.KICK_RUN_PREFIX}r0`,'island',14,'again'),0,'a round id pays once');
+ let total=0;const pays=[];for(let i=0;i<20;i++){const p=await wallet.creditRun(`${K.KICK_RUN_PREFIX}r${i}`,'island',K.kickCoins(5),'Summit Kick');pays.push(p);total+=p;clock+=60_000;}
+ assert.equal(pays[0],8,'full pay at first');assert(pays.some(p=>p===4),'then half pay');assert.equal(pays[pays.length-1],1,'then the tip');
+ assert(total<=DM.TRAINING_HALF_COINS+8,`a day of rounds stays near the meter (${total})`);
+ assert.equal(await wallet.creditRun(`${K.KICK_RUN_PREFIX}r0`,'island',8,'again'),0,'a round id pays once');
  assert.equal(await wallet.creditRun(`${K.KICK_RUN_PREFIX}huge`,'island',999,'cheat'),1,'over the cap: clamped to the island cap, then metered');
 });
 
@@ -141,12 +141,12 @@ await ok('3D runtime: idle costs nothing, a round builds 5 hoops and disposes th
  const ctx=(x,z,extra={})=>({now:0,dt:1/30,elapsed:0,reduced:false,camera,width:390,height:844,x,z,onFoot:true,onGround:true,canEnter:true,sunset:true,focusKey:null,ui:s=>s.includes('summit-kick')?kickBtn:scopeBtn,place(){},hide(e,h){e.hidden=h;},...extra});
  const before=scene.children.length;
  await env.watchTimers(async()=>{
-  for(let i=0;i<200;i++){assert.equal(fun.update(ctx(100,-20)),null);fun.ball({mode:'shot',x:1,y:1,z:1},{x:0,z:0});assert.equal(fun.aim({x:0,z:0},0),null);assert.equal(fun.holdPlayer({x:0,z:0,kick:false,juggle:false},new Set(),1/60),false);fun.applyCamera(camera,1/30,false);}
+  for(let i=0;i<200;i++){assert.equal(fun.update(ctx(100,-20)),null);fun.ball({mode:'shot',x:1,y:1,z:1},{x:0,z:0});assert.equal(fun.aim({x:0,z:0},0),null);assert.equal(fun.holdPlayer({x:0,z:0,kick:false,juggle:false},new Set(),1/60),false);}
  });
  assert.equal(env.counts.raf,0,'no rAF');assert.equal(env.counts.timeout+env.counts.interval,0,'no timers');assert.equal(scene.children.length,before,'no meshes while idle');
  assert.equal(camera.fov,40,'the camera is untouched');
  // Near the post: the prompt wants the focus; shown only once the arbiter gives it.
- const want=fun.update(ctx(lay.post.x+1,lay.post.z));assert.equal(want?.key,'summit-kick');assert.notEqual(fun.update(ctx(lay.post.x+1,lay.post.z,{onFoot:false,onGround:true}))?.key,'summit-kick','Summit Kick still needs you on foot (the telescope works from a ride)');assert.equal(kickBtn.hidden,true);
+ const want=fun.update(ctx(lay.post.x+1,lay.post.z));assert.equal(want?.key,'summit-kick');assert.notEqual(fun.update(ctx(lay.post.x+1,lay.post.z,{onFoot:false,onGround:true}))?.key,'summit-kick','Summit Kick still needs you on foot');assert.equal(kickBtn.hidden,true);
  camera.position.set(lay.post.x+18,lay.ground+23,lay.post.z+30);camera.lookAt(lay.post.x,lay.ground,lay.post.z);camera.updateMatrixWorld();
  fun.update(ctx(lay.post.x+1,lay.post.z,{focusKey:'summit-kick'}));assert.equal(kickBtn.hidden,false,'the Start prompt shows');assert.equal(scopeBtn.hidden,true,'one prompt at a time');
  // Start → intro card → round.
@@ -166,7 +166,7 @@ await ok('3D runtime: idle costs nothing, a round builds 5 hoops and disposes th
  fun.update(ctx(S.x,S.z));const v=store.kickStore.get();
  assert.equal(v.phase,'done');assert.equal(v.result.hits,5);assert.equal(v.result.end,'perfect');assert(v.result.score>=600);
  await new Promise(r=>setImmediate(r));
- assert(paid.some(p=>p.kind==='run'&&p.id.startsWith('summit-kick:')&&p.amount===14&&p.game==='island'),'the round pays 14 through the wallet');
+ assert(paid.some(p=>p.kind==='run'&&p.id.startsWith('summit-kick:')&&p.amount===K.kickCoins(5)&&p.game==='island'),'the round pays kickCoins(5) through the wallet');
  assert(paid.some(p=>p.kind==='once'&&p.id==='learn:explore:summit-kick-perfect'),'and the one-off 5/5 learning reward');
  assert.equal(JSON.parse(env.store.get('fi2-summit-kick-v1')).best,v.result.score,'best saved');
  // Exit: everything built for the round is gone.
@@ -180,7 +180,7 @@ await ok('3D runtime: idle costs nothing, a round builds 5 hoops and disposes th
 
 await ok('wiring: Town, world, saves, HUD, npm test',()=>{
  const town=read('components/Town.tsx'),world=read('lib/town/world.ts');
- assert(/createSummitActivities\(scene/.test(town)&&/summitFun\.holdPlayer\(/.test(town)&&/summitFun\.ball\(walkBall\.state,ballPlayer\)/.test(town)&&/summitFun\.applyCamera\(/.test(town)&&/summitFun\.update\(/.test(town)&&/summitFun\.dispose\(\)/.test(town));
+ assert(/createSummitActivities\(scene/.test(town)&&/summitFun\.holdPlayer\(/.test(town)&&/summitFun\.ball\(walkBall\.state,ballPlayer\)/.test(town)&&/summitFun\.update\(/.test(town)&&/summitFun\.dispose\(\)/.test(town));
  assert(/<SummitKickHud\/>/.test(town)&&/buildSummitActivityProps\(/.test(world));
  const S=load('lib/saves/snapshot.ts');assert(S.SYNC_KEYS.includes(K.KICK_SAVE_KEY),'the best score syncs with the save code');
  const hud=read('components/SummitKickHud.tsx');assert(/HighScoreEntry/.test(hud)&&/dynamic\(/.test(hud)&&/game="kick"/.test(hud),'the initials picker, lazy');

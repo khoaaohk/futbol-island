@@ -11,9 +11,9 @@
  * Konbini, cards and gear live in the Backpack (lib/town/backpack.ts), not here.
  */
 import {GOODS,type Good,type GoodKind} from './goods';
-import {BASKET_LIMIT,MARKET_FULL_PRICE_COINS,basketCount,quoteSale,type MarketState} from './market';
+import {BASKET_LIMIT,basketCount,quoteSale,nextUnitValue,type MarketState} from './market';
 
-export type PocketCategory='fish'|'fruit'|'veg';
+export type PocketCategory='fish'|'fruit'|'veg'|'beach';
 /**
  * Fruit vs veggies (kitchen sense, the way a kid sorts a lunchbox: tomatoes and peppers are veggies). A good may carry its own
  * optional `category` ('fruit'|'veg'); otherwise this list decides, and any other produce counts as veggies. The list already
@@ -23,23 +23,24 @@ export const FRUIT_IDS:ReadonlySet<string>=new Set(['orange','cherry','strawberr
  'melon','watermelon','guava','passion-fruit','lime','lemon','apple','pear','peach','plum','grape','grapes','kiwi','blueberry','raspberry','lychee','avocado']);
 export function pocketCategory(g:Good):PocketCategory{
  if(g.kind==='fish')return 'fish';
+ if(g.kind==='beach')return 'beach';// beachcombing finds (Oct 14 2026)
  const own=(g as Good&{category?:unknown}).category;
  if(own==='fruit'||own==='veg')return own;
  return FRUIT_IDS.has(g.id)?'fruit':'veg';
 }
-export const POCKET_LABEL:Record<PocketCategory,string>={fish:'Fish',fruit:'Fruit',veg:'Veggies'};
+export const POCKET_LABEL:Record<PocketCategory,string>={fish:'Fish',fruit:'Fruit',veg:'Veggies',beach:'Beach finds'};
 
-/** Coins one more item of `g` fetches right now (the stand's rule: full price, then half after today's allowance, at least 1). */
-const each=(s:MarketState,g:Good)=>s.soldToday>=MARKET_FULL_PRICE_COINS?Math.max(1,Math.floor(g.price/2)):g.price;
+/** Coins one more item of `g` fetches right now (the stand's rule: the same-kind ladder, then half after today's allowance, at least 1). */
+const each=(s:MarketState,g:Good)=>nextUnitValue(s,g);// may be part of a coin (Rosa's tally)
 /** The stand's quote for just these goods sold together now (same order and soft cap as its "Sell all"). */
 const quoteFor=(s:MarketState,ids:readonly string[])=>{const basket:Record<string,number>={};for(const id of ids)if(s.basket[id])basket[id]=s.basket[id];return quoteSale({...s,basket});};
 
 export type PocketRow={id:string;good:Good;category:PocketCategory;count:number;name:string;each:number;value:number};
 export type PocketGroup={category:PocketCategory;label:string;rows:PocketRow[];count:number;value:number};
 export type PocketView={
- fish:PocketGroup;fruit:PocketGroup;veg:PocketGroup;
+ fish:PocketGroup;fruit:PocketGroup;veg:PocketGroup;beach:PocketGroup;
  /** The HUD coins-bar counters: fish, and fruit + veggies together. */
- hud:{fish:number;produce:number};
+ hud:{fish:number;produce:number;beach:number};
  total:number;limit:number;full:boolean;value:number;
 };
 
@@ -53,10 +54,10 @@ export function pocketView(s:MarketState):PocketView{
  // Row values (bug A15, Sep 30 2026): each row is its share of its card's quote (fish; fruit + veggies), in the stand's selling
  // order across the daily full-price allowance, so the rows always add up to the card's "Worth N coins today". Priced alone,
  // every row used to get the full-price allowance to itself (7 + 7 shown against a total of 10).
- for(const card of [['fish'],['fruit','veg']] as PocketCategory[][]){const q=quoteFor(s,rows.filter(r=>card.includes(r.category)).map(r=>r.id));
+ for(const card of [['fish'],['fruit','veg'],['beach']] as PocketCategory[][]){const q=quoteFor(s,rows.filter(r=>card.includes(r.category)).map(r=>r.id));
   for(const l of q.lines){const r=rows.find(x=>x.id===l.id);if(r)r.value=l.coins;}}
  const group=(category:PocketCategory):PocketGroup=>{const list=rows.filter(r=>r.category===category);
   return {category,label:POCKET_LABEL[category],rows:list,count:list.reduce((n,r)=>n+r.count,0),value:list.reduce((n,r)=>n+r.value,0)};};
- const fish=group('fish'),fruit=group('fruit'),veg=group('veg'),total=basketCount(s);
- return {fish,fruit,veg,hud:{fish:hudCount(s,'fish'),produce:hudCount(s,'produce')},total,limit:BASKET_LIMIT,full:total>=BASKET_LIMIT,value:quoteSale(s).coins};
+ const fish=group('fish'),fruit=group('fruit'),veg=group('veg'),beach=group('beach'),total=basketCount(s);
+ return {fish,fruit,veg,beach,hud:{fish:hudCount(s,'fish'),produce:hudCount(s,'produce'),beach:hudCount(s,'beach')},total,limit:BASKET_LIMIT,full:total>=BASKET_LIMIT,value:quoteSale(s).coins};
 }

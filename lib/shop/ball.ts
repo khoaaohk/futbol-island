@@ -15,6 +15,7 @@
  * shapes, stickers are our own drawings and the flags are simplified self-drawn flags (lib/shop/ballArt.ts). No maker marks,
  * no tournament names.
  */
+import {BALL_PRICES} from '../economy';
 export const BALL_KEY='fi2-shop-ball-v1';
 export const MAX_DECALS=8;
 export const SLOT_COUNT=3;
@@ -201,11 +202,9 @@ export function cloneBall(d:BallDesign):BallDesign{return {...d,colors:{...d.col
 
 // ---- Price ----------------------------------------------------------------------------------------------------------------
 // Oct 12 2026 (user: "make them pricier"): about 2.5× the first prices, a ball is something to save up for over a few days.
-export const PRICE={base:150,layout:{classic32:0,panel26:25,panel14:25,propeller6:40,panel8:25,leather18:50} as Record<BallLayout,number>,
- finish:{gloss:0,matte:0,dimple:25,leather:40,holo:60,metal:50} as Record<BallFinish,number>,pattern:25,decal:10,size:{3:0,4:10,5:25} as Record<BallSize,number>,futsal:10,
- /** Oct 12 2026: hand-drawn art (strokes or filled panels) is printed by hand at the shop, a small extra. */
- drawing:20};
-/** The ball's price in island coins (whole coins; 150 for a plain classic size-3 ball, at most 420 with a drawing). */
+// Oct 14 2026 (docs/economy.md): base 150 → 160 (the user's floor is 150), extras unchanged; the table lives in lib/economy.ts.
+export const PRICE:{base:number;layout:Record<BallLayout,number>;finish:Record<BallFinish,number>;pattern:number;decal:number;size:Record<BallSize,number>;futsal:number;drawing:number}=BALL_PRICES;
+/** The ball's price in island coins (whole coins; PRICE.base for a plain classic size-3 ball, base + 270 at most with a drawing). */
 export function ballPrice(design:BallDesign):number{
  const d=validateBall(design);
  return PRICE.base+PRICE.layout[d.layout]+PRICE.finish[d.finish]+(d.pattern.kind==='none'?0:PRICE.pattern)+PRICE.decal*d.decals.length+PRICE.size[d.size]+(d.futsal?PRICE.futsal:0)+(hasArt(d)?PRICE.drawing:0);

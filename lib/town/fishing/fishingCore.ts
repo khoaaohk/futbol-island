@@ -11,8 +11,9 @@
  * Kid safety: catch weights are internal only (never shown), and every phase ends on its own, so nothing loops forever.
  */
 import {FISH,FISH_SPOTS,SHADOW_LENGTH,fishById,type FishId,type FishSpot,type FishRarity,type FishSpecies} from './fishCatalog';
+import {catchWeights} from './fishingOdds';
 import {distanceToShore,onIsland} from '../shoreline';
-import {BOAT_AFLOAT,onBoatHull} from './deepSeaBoatData';
+import {BOAT_AFLOATS,onBoatHull} from './deepSeaBoatData';
 import {underEastPier} from '../eastPier';
 import {clearOfCayShores} from '../coralCay';
 import {onSummitLand,distanceToSummitLand} from '../summitIsle';
@@ -33,7 +34,9 @@ export function castPoint(spot:FishSpot,from:{x:number;z:number}){
  const minReach=d+3.2,target=Math.min(Math.max(minReach,l),30);
  let reach=minReach;
  for(let r=minReach+.5;r<=target+1e-6;r+=.5){if(!inOpenWater(from.x+ux*r,from.z+uz*r))break;reach=r;}
- return {x:from.x+ux*reach,z:from.z+uz*reach,dir:{x:ux,z:uz},distance:reach};
+ return {x:from.x+ux*reach,z:from.z+uz*reach,dir:{x:ux,z:uz},distance:reach,
+  /** The nearest landing that clears every hazard along this direction (aimed casts never land closer, fishingAim.ts). */
+  min:minReach};
 }
 /**
  * Open water for a shadow: off the island polygon (which already contains the piers, the ferry dock, the harbour wall
@@ -45,7 +48,7 @@ export const WATER_MARGIN=.8;
  *  Boat, ./deepSeaBoatData.ts), plus a margin. The causeway, its sandbars and Coral Cay keep the same margin past their
  *  waterlines (clearOfCayShores, Oct 5 2026: their fishing spots); Summit Isle and its sandbar keep the same margin past
  *  distanceToSummitLand (Oct 12 2026: the cove). */
-const AFLOAT=[{x0:240.5,x1:251.5,z0:189,z1:209},BOAT_AFLOAT];
+const AFLOAT=[{x0:240.5,x1:251.5,z0:189,z1:209},...BOAT_AFLOATS];
 export const inOpenWater=(x:number,z:number)=>!onIsland(x,z)&&!onSummitLand(x,z)&&!underEastPier(x,z)&&!AFLOAT.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)&&distanceToShore(x,z)>=WATER_MARGIN&&clearOfCayShores(x,z,WATER_MARGIN)&&distanceToSummitLand(x,z)>=WATER_MARGIN;
 /** Legacy single start point (kept as the last-resort fallback of planApproach): along the shore, in open water. */
 export function shadowSpawn(cast:{x:number;z:number;dir:{x:number;z:number}},rand:()=>number,inWater:(x:number,z:number)=>boolean=inOpenWater){
@@ -70,7 +73,10 @@ export function planApproach(cast:{x:number;z:number;dir:Vec},rand:()=>number,sp
  const length=SHADOW_LENGTH[species.shadow],mouth=length*.5+.05,loop=rand()<circles(species);
  const wet=(pts:Vec[])=>pts.every(p=>inWater(cast.x+p.x,cast.z+p.z));
  for(let attempt=0;attempt<24;attempt++){
-  const withLoop=loop&&attempt<16,angle=rand()*Math.PI*2,dist=2.1+rand()*1.5+length*.5;
+  // Oct 14 2026 ("the fish sometimes teleport in"): the biter starts well away from the float (5.5-8 m out; later attempts
+  // come in closer where the water is tight) and deep: the shadow's `rise` (stepSession) holds it down in the depth haze,
+  // fading up from nothing, for the first stretch of the swim.
+  const withLoop=loop&&attempt<16,angle=rand()*Math.PI*2,far=attempt<12?5.5+rand()*2.5:attempt<20?3.6+rand()*1.6:2.1+rand()*1.5,dist=far+length*.5;
   const ux=Math.sin(angle),uz=Math.cos(angle),nx=uz,nz=-ux,amp=(.3+rand()*.6)*(rand()<.5?-1:1),waves=rand()<.5?1:2;
   const radius=withLoop?Math.max(1.05,mouth+.7):mouth,pts:Vec[]=[];
   // 1. Swim in from the start to the loop radius (or straight to the mouth), wandering sideways.
@@ -89,15 +95,18 @@ export function planApproach(cast:{x:number;z:number;dir:Vec},rand:()=>number,sp
  return {points:pts,circles:false,angle:Math.atan2(p.x,p.z)};
 }
 
-/** Internal weighted pick for a spot. Odds are never shown to the player. */
-export function rollCatch(spot:FishSpot,rand:number):FishId{
- const weighted=(Object.entries(spot.weights) as [FishId,number][]);
+/** Internal weighted pick for a spot. Odds are never shown to the player. `hot` (0..1, Oct 14 2026): how squarely the cast
+ *  landed on a hotspot (fishingAim.ts), which raises the big/rare weights (fishingOdds.ts catchWeights, capped). */
+export function rollCatch(spot:FishSpot,rand:number,hot=0):FishId{
+ const weighted=(Object.entries(hot>0?catchWeights(spot,hot):spot.weights) as [FishId,number][]);
  const total=weighted.reduce((a,[,w])=>a+w,0);let pick=Math.max(0,Math.min(.999999,rand))*total;
  for(const [id,w] of weighted){if(pick<w)return id;pick-=w;}
  return weighted[weighted.length-1][0];
 }
-/** Bigger fish are rarer; size never changes the price (fixed prices keep selling simple). */
-export function rollSize(id:FishId,rand:number){const f=fishById(id)!;const r=Math.max(0,Math.min(1,rand));return Math.round((f.size[0]+(f.size[1]-f.size[0])*r**1.6)*10)/10;}
+/** Bigger fish are rarer; size never changes the price (fixed prices keep selling simple). `spook` (0..1, Oct 14 2026): spooked
+ *  water (the same patch cast into again and again) only gives the smaller ones; `bigger` (0..1: the deep-sea boats, a hotspot)
+ *  rolls toward the top of the species' range. */
+export function rollSize(id:FishId,rand:number,spook=0,bigger=0){const f=fishById(id)!;const r=Math.max(0,Math.min(1,rand))**(1/(1+.8*Math.max(0,Math.min(1,bigger))))*(1-.6*Math.max(0,Math.min(1,spook)));return Math.round((f.size[0]+(f.size[1]-f.size[0])*r**1.6)*10)/10;}
 
 // ---- Session: the live catch timing ----
 export type SessionPhase='ready'|'casting'|'floating'|'approach'|'nibble'|'bite'|'reeling'|'scared'|'escaped'|'caught';
@@ -123,11 +132,17 @@ export const pullFor=(f:FishSpecies)=>f.group==='shark'?REEL_PULL.legendary:REEL
 export const SWIM_SPEED:Record<FishRarity,number>={common:.9,uncommon:1,rare:1.2,legendary:1.5};
 const speedOf=(f:FishSpecies)=>f.group==='shark'?1.6:SWIM_SPEED[f.rarity];
 export type Shadow={x:number;z:number;heading:number;alpha:number;length:number;
+ /** 1 = deep in the haze below, 0 = up at the float (Oct 14 2026): the biter rises in from the deep as it approaches and sinks
+  *  away when it leaves, so it never pops in or vanishes in view (fishingVisuals.ts places it by this). */
+ rise:number;
  /** The planned route (relative to the float) and the index of the next point. */
  path:Vec[];next:number;circles:boolean;
  /** Open-water direction (away from the shore): scared and escaping fish flee this way, never over land. */
  out:Vec};
-export type Session={phase:SessionPhase;t:number;wait:number;fish:{id:FishId;size:number}|null;shadow:Shadow|null;nibblesLeft:number;nextNibble:number;window:number;nibbles:number;dip:number;idleEscapes:number;reelTaps:number;reelTarget:number;reelIdle:number;reelCooldown:number;pulling:boolean};
+export type Session={phase:SessionPhase;t:number;wait:number;fish:{id:FishId;size:number}|null;shadow:Shadow|null;nibblesLeft:number;nextNibble:number;window:number;nibbles:number;dip:number;idleEscapes:number;reelTaps:number;reelTarget:number;reelIdle:number;reelCooldown:number;pulling:boolean;
+ /** Where this cast landed (Oct 14 2026, aimed casting, fishingAim.ts): `hot` 0..1 on a hotspot (bigger, rarer fish), `spook`
+  *  0..1 in water cast into again and again (slower bites, smaller fish). Set by the world when the float lands. */
+ mods:{hot:number;spook:number}};
 /** After this many fish swim off with no tap at all, the line is reeled in (no endless cycle if a child puts the phone down). */
 export const IDLE_ESCAPES=3;
 export type SessionOptions={
@@ -137,9 +152,16 @@ export type SessionOptions={
  out?:Vec;
  easy?:boolean;
 };
-export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,pulling:false});
+export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,pulling:false,mods:{hot:0,spook:0}});
 const go=(s:Session,phase:SessionPhase)=>{s.phase=phase;s.t=0;};
-const newWait=(s:Session,rand:()=>number,base=1.2)=>{s.wait=base+rand()*2.3;};
+/** Spooked water waits up to 2.5× as long for a bite (Oct 14 2026). */
+export const SPOOK_WAIT=1.5;
+/** The wait before a fish notices the float: a little random, longer in spooked water, plus the spot's own delay (the deep-sea
+ *  boats: the fish rise from far below). */
+export const biteWait=(spot:FishSpot,spook:number,r:number,base=1.2)=>(base+r*2.3)*(1+SPOOK_WAIT*Math.max(0,Math.min(1,spook)))+(spot.biteDelay??0);
+const newWait=(s:Session,spot:FishSpot,rand:()=>number,base=1.2)=>{s.wait=biteWait(spot,s.mods.spook,rand(),base);};
+/** The approach's first stretch is swum fast and deep (it starts 5.5-8 m out, see planApproach), then it slows to its own pace. */
+const RISE_SHARE=.4,RUN_IN=1.7;
 /** Point the shadow so that it flees away from the float and towards open water (heading+PI is the flee direction). */
 function aimFlee(sh:Shadow){const d=Math.hypot(sh.x,sh.z)||1,fx=sh.x/d+sh.out.x*1.2,fz=sh.z/d+sh.out.z*1.2;sh.heading=Math.atan2(-fx,-fz);}
 
@@ -148,15 +170,16 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
  const ev:SessionEvent[]=[],step=Math.max(0,Math.min(dt,.1));s.t+=step;s.dip=Math.max(0,s.dip-step*4);s.reelCooldown=Math.max(0,s.reelCooldown-step);
  const sh=s.shadow;
  switch(s.phase){
-  case 'casting':if(s.t>=CAST_TIME){go(s,'floating');newWait(s,rand);ev.push('splash');}break;
+  case 'casting':if(s.t>=CAST_TIME){go(s,'floating');newWait(s,spot,rand);ev.push('splash');}break;
   case 'floating':if(s.t>=s.wait){
-   const id=rollCatch(spot,rand()),f=fishById(id)!,route=o.approach(rand,f),p=route.points[0],q=route.points[1]??{x:0,z:0};
-   s.fish={id,size:rollSize(id,rand())};
-   s.shadow={x:p.x,z:p.z,heading:Math.atan2(q.x-p.x,q.z-p.z),alpha:0,length:SHADOW_LENGTH[f.shadow],path:route.points,next:1,circles:route.circles,out:o.out??{x:-p.x/(Math.hypot(p.x,p.z)||1),z:-p.z/(Math.hypot(p.x,p.z)||1)}};
+   const hot=s.mods.hot*(1-s.mods.spook),id=rollCatch(spot,rand(),hot),f=fishById(id)!,route=o.approach(rand,f),p=route.points[0],q=route.points[1]??{x:0,z:0};
+   s.fish={id,size:rollSize(id,rand(),s.mods.spook,Math.min(1,(spot.deep?.6:0)+hot*.6))};
+   s.shadow={x:p.x,z:p.z,heading:Math.atan2(q.x-p.x,q.z-p.z),alpha:0,rise:1,length:SHADOW_LENGTH[f.shadow],path:route.points,next:1,circles:route.circles,out:o.out??{x:-p.x/(Math.hypot(p.x,p.z)||1),z:-p.z/(Math.hypot(p.x,p.z)||1)}};
    go(s,'approach');ev.push('notice');}break;
   case 'approach':if(sh&&s.fish){
-   const f=fishById(s.fish.id)!;let move=speedOf(f)*step;
-   sh.alpha=Math.min(1,sh.alpha+step*1.5);
+   const f=fishById(s.fish.id)!,share=sh.next/sh.path.length;let move=speedOf(f)*step*(share<RISE_SHARE?RUN_IN:1);
+   // Fades up out of the depth haze over the first stretch (never a pop-in), rising toward the float as it comes.
+   sh.alpha=Math.min(1,sh.alpha+step*.8);sh.rise=Math.max(0,1-share/RISE_SHARE);
    // Follow the planned route point by point; the heading is the direction of travel (nose first).
    while(move>0&&sh.next<sh.path.length){const t=sh.path[sh.next],dx=t.x-sh.x,dz=t.z-sh.z,d=Math.hypot(dx,dz);
     if(d>1e-6)sh.heading=Math.atan2(dx,dz);
@@ -177,8 +200,9 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
    s.pulling=pulling;
    if(s.reelIdle>=REEL_IDLE_LIMIT){s.idleEscapes++;s.pulling=false;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;}
   case 'scared':case 'escaped':
-   if(sh){const flee=(s.phase==='scared'?3.2:2.2)*step;sh.x+=Math.sin(sh.heading+Math.PI)*flee;sh.z+=Math.cos(sh.heading+Math.PI)*flee;sh.alpha=Math.max(0,1-s.t/FLEE_TIME);}
-   if(s.t>=FLEE_TIME){s.shadow=null;s.fish=null;if(s.idleEscapes>=IDLE_ESCAPES){s.idleEscapes=0;go(s,'ready');ev.push('reeled-in');}else{go(s,'floating');newWait(s,rand,1.5);}}break;
+   // Swims off and sinks into the haze as it fades (never vanishes in view).
+   if(sh){const flee=(s.phase==='scared'?3.2:2.2)*step;sh.x+=Math.sin(sh.heading+Math.PI)*flee;sh.z+=Math.cos(sh.heading+Math.PI)*flee;sh.alpha=Math.max(0,1-s.t/FLEE_TIME);sh.rise=Math.min(1,s.t/FLEE_TIME);}
+   if(s.t>=FLEE_TIME){s.shadow=null;s.fish=null;if(s.idleEscapes>=IDLE_ESCAPES){s.idleEscapes=0;go(s,'ready');ev.push('reeled-in');}else{go(s,'floating');newWait(s,spot,rand,1.5);}}break;
  }
  return ev;
 }

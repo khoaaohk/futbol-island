@@ -10,7 +10,9 @@
  * The wallet (lib/arcade/arcadeWalletCore.ts) applies it under its own lock: today's total is computed from its saved runs, so
  * there is no extra ledger to drift out of step, and a retried or growing run is metered as one earning (idempotent).
  */
-export const TRAINING_FULL_COINS=60,TRAINING_HALF_COINS=120,TRAINING_TIP_COINS=1;
+// 60 / 120 until 14 Oct 2026; now 40 / 80 (lib/economy.ts TRAINING, docs/economy.md).
+import {TRAINING} from '../economy';
+export const TRAINING_FULL_COINS=TRAINING.full,TRAINING_HALF_COINS=TRAINING.half,TRAINING_TIP_COINS=TRAINING.tip;
 export type TrainingTier='full'|'half'|'tip';
 /** Arcade machines whose payouts count as training (every arcade game, puzzles included). */
 export const TRAINING_GAMES:readonly string[]=['runner','pinball','tennis','live','puzzle'];

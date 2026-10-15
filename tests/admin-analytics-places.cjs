@@ -59,7 +59,7 @@ await ok('zones',()=>{
  const L=CC.CAY_LANDMARKS,pa=P.placeAt;
  const cases=[[85,-35,'island_square'],[103,-48,'arcade'],[71,-55,'konbini'],[135,100,'field_11v11'],[11,-80,'field_7v7'],[160,-110,'field_9v9'],[11,18,'field_futsal'],
   [MUS.MUSEUM_DOOR.x,MUS.MUSEUM_DOOR.front,'museum'],[181,-177,'community_hall'],[161,-30,'coaches'],[230,60,'farmers_market'],[343,68,'east_jetty'],[290,98,'east_jetty'],
-  [282.5,-93.5,'deep_sea_boat'],[L.starfishSandbar.x,L.starfishSandbar.z,'sandbars'],[L.turtleSandbar.x,L.turtleSandbar.z,'sandbars'],[L.plaza.x,L.plaza.z,'cay_town'],
+  [335,-5,'deep_sea_boat'],[385,185,'deep_sea_boat'],[390,188,'deep_sea_boat'],[L.starfishSandbar.x,L.starfishSandbar.z,'sandbars'],[L.turtleSandbar.x,L.turtleSandbar.z,'sandbars'],[L.plaza.x,L.plaza.z,'cay_town'],
   [L.roundabout.x,L.roundabout.z,'cay_town'],[L.cayKonbini.x,L.cayKonbini.z,'cay_konbini'],[L.beachSoccerCourt.x,L.beachSoccerCourt.z,'beach_court'],[L.farm.x,L.farm.z,'farm'],
   [L.hostel.x,L.hostel.z,'hostel'],[L.sharksBeach.x,L.sharksBeach.z,'sharks_beach'],[L.lifeguardTower.x,L.lifeguardTower.z,'coral_cay'],[80,-215,'north_beach'],
   [-60,60,'west_side'],[-63,94,'west_side'],[80,-105,'library_square'],[108,196,'south_pier'],[217,213,'ferry_dock'],[246,199,'ferry_dock'],[-140,0,'sea'],[400,-40,'sea'],[NaN,0,'sea']];
@@ -109,8 +109,8 @@ await ok('tracker accounting',()=>{
  assert(Math.abs(sum(b.c)*1000-sum(b.pl))<=IDS.SAMPLE_MS,'cells agree with place time to within one sample');
  assert.equal(x.timers.size,0,'still no timers while hidden');tr.stop();
  // Passive activities (watching, reading, quizzes) are not cut at 60 s; the boat deck is "on a boat"; frames do nothing when off.
- const y=env(),t2=T.startTracker(y.e);t2.pageview('/');y.play(120_000,135,100,'lesson');y.play(10_000,282.5,-93.5,'walk',{input:true});y.hide();
- const b2=merged(y.sent);assert.deepEqual(b2.ac,{lesson:120_000,boat:10_000});assert.equal(b2.ac.idle,undefined);t2.stop();
+ const y=env(),t2=T.startTracker(y.e);t2.pageview('/');y.play(120_000,135,100,'lesson');y.play(10_000,335,-5,'walk',{input:true});y.play(10_000,385,185,'walk',{input:true});y.hide();
+ const b2=merged(y.sent);assert.deepEqual(b2.ac,{lesson:120_000,boat:20_000},'both deep-sea boats count as on a boat');assert.equal(b2.ac.idle,undefined);t2.stop();
  let calls=0;T.islandFrame(0,0,'walk',()=>{calls++;return 'town';});assert.equal(calls,0,'no tracker (dev, DNT, preview): islandFrame is a no-op');
  // Per frame: a comparison. The place lookup runs once per SAMPLE_MS however many frames there are.
  const z=env(),t3=T.startTracker(z.e);t3.pageview('/');calls=0;const look=(a,b)=>{calls++;return P.placeAt(a,b);};
@@ -256,17 +256,32 @@ await ok('sql',async()=>{
   runFile('supabase/migrations/20261008_analytics_places.sql');
   runFile('supabase/migrations/20261009_analytics_counts.sql');runFile('supabase/migrations/20261009_analytics_start.sql');// and the learning + start-page ones after it, as in production
   runFile('supabase/migrations/20261012_analytics_museum_exhibits.sql');// Oct 12 2026: the two replaced museum exhibits' activity keys
+  // Oct 15 2026: before the Summit Isle + Kit Shop migration runs, its new area/place keys are silently dropped (never an error).
+  // A day of its own (not the fixture DAY below), so this session never joins the rollup = TypeScript-reference comparison.
+  const presummitDay='2026-08-01';
+  psql(`select analytics_ingest('{"type":"start","session":"sqlpresummit0000001","path":"/","day":"${presummitDay}","visitor_hash":"${'8'.repeat(32)}","device":"phone","source":"direct"}')`,{role:'service_role'});
+  psql(`select analytics_ingest('{"type":"beat","session":"sqlpresummit0000001","engaged_ms":10000,"area_ms":{"shop":9000},"place_ms":{"summit_isle":9000}}'::jsonb)`,{role:'service_role'});
+  assert.equal(psql(`select area_ms::text || place_ms::text from analytics_beats where session_id='sqlpresummit0000001'`),'{}{}','unknown "shop"/"summit_isle" keys dropped before the migration runs; the beat still counts');
+  runFile('supabase/migrations/20261015_analytics_summit_kit.sql');// Oct 15 2026: Kit Shop's "shop" area, Summit Isle's three places
+  psql(`select analytics_ingest('{"type":"beat","session":"sqlpresummit0000001","engaged_ms":10000,"area_ms":{"shop":9000},"place_ms":{"summit_isle":4000,"summit_pitch":3000,"summit_sandbar":2000}}'::jsonb)`,{role:'service_role'});
+  const post=JSON.parse(psql(`select json_build_object('a',area_ms,'p',place_ms) from analytics_beats where session_id='sqlpresummit0000001' order by ts desc limit 1`));
+  assert.deepEqual(post,{a:{shop:9000},p:{summit_isle:4000,summit_pitch:3000,summit_sandbar:2000}},'after the migration: the same keys are kept');
   for(const role of ['anon','authenticated'])assert.match(fails(`select analytics_ingest('{}'::jsonb)`,role),/permission denied/);
   assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts'],'three new columns (+ counts, Oct 9), nothing else');
   // The SQL's enums and limits are the TypeScript ones.
   const sql=read('supabase/migrations/20261008_analytics_places.sql');
-  const lists=[...sql.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
-  assert.deepEqual(lists[1],[...IDS.PLACE_IDS]);
-  // The activity allowlist's latest definition (Oct 12 2026: exhibit_stadiums and exhibit_boots replaced two retired exhibits).
-  {const latest=read('supabase/migrations/20261012_analytics_museum_exhibits.sql'),acts=[...latest.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
-   assert.deepEqual(acts[2],[...IDS.ACTIVITY_IDS]);assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(latest.replace(/--.*$/gm,'')),'no destructive statements');}
   assert(sql.includes(`key::integer < ${IDS.CELL_COUNT}`)&&sql.includes(`limit ${IDS.MAX_BEAT_CELLS}`));
   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
+  // The place/area allowlist's latest definition (Oct 15 2026, 20261015_analytics_summit_kit.sql): areas and places are this
+  // task's own addition, so they must match lib/analytics/islandIds.ts / core.ts exactly.
+  {const latest=read('supabase/migrations/20261015_analytics_summit_kit.sql'),lists=[...latest.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
+   assert.deepEqual(lists[0],[...C.AREAS],'area allow-list = AREAS (20261015 adds "shop")');
+   assert.deepEqual(lists[1],[...IDS.PLACE_IDS],'place allow-list = PLACE_IDS (20261015 adds the three Summit Isle places)');
+   // Activities: a DIFFERENT, concurrently-released feature (new museum exhibits) may add MORE activity keys to this same
+   // file before a reviewer runs it, so this only requires every id lib/analytics/islandIds.ts knows about today to still be
+   // accepted — never that the SQL has no more than that (tests/museum-exp-*.cjs and the museum agent's own tests own those ids).
+   for(const id of IDS.ACTIVITY_IDS)assert(lists[2].includes(id),`activity allow-list (20261015) is missing ${id}`);
+   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(latest.replace(/--.*$/gm,'')),'no destructive statements');}
   // Ingest caps in SQL (the last line, behind the server's own clamp).
   const today=new Date().toISOString().slice(0,10);
   psql(`select analytics_ingest('{"type":"start","session":"sqlplacesession00001","path":"/","day":"${today}","visitor_hash":"${'9'.repeat(32)}","device":"phone","source":"direct"}')`,{role:'service_role'});

@@ -661,8 +661,9 @@ await ok('sql',async()=>{
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
-  // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time, 20261012 museum exhibit analytics keys); none may touch the save tables (checked below).
-  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql'],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
+  // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time, 20261012 museum exhibit analytics keys,
+  // 20261015 Summit Isle + Kit Shop + more museum exhibit keys); none may touch the save tables (checked below).
+  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql','20261015_analytics_summit_kit.sql'],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');

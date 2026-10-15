@@ -10,6 +10,9 @@ import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import {stripePlan,stripedSlabGeometry} from '../graphics/pitchStripes';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
+import {ORCHARD_OFF,planOrchard,orchardParts,orchardRig,roundTreeRig,palmRig,type TreeRig,type OrchardForm} from './summitOrchard';
+import type {FruitKind} from './summitForage';
+import {SUMMIT_HUTS,SUMMIT_HUT_RADIUS,SUMMIT_CAVES,CAVE_SIDE,CAVE_BACK,RIDDLE_BOARD,HUT_WALL,HUT_CONE,HUT_CONE_LIFT,hutGroundTop} from './summitBalls';
 import {SUMMIT_CENTER,SUMMIT_HEIGHT,SUMMIT_VISUAL_DROP,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_OBSTACLES,SUMMIT_PATHS,SUMMIT_PATH_WIDTH,SUMMIT_LANDMARKS,SANDBAR_PATH,SANDBAR_SKIRT,
  SUMMIT_PEAK,TERRACE,PITCH_HEIGHT,coastRadius,peakCoastRadius,beachWidth,summitGround,summitSlope,ridgeShade,terraceWeight,heightPoint,profileU,peakPoint,sandbarHalfWidth,onSummitIsle,summitTrailDistance,SUMMIT_TRAIL_CARVE,
  isleJitter as jitter,type IslePoint} from './summitIsle';
@@ -53,21 +56,53 @@ function resamplePath(path:IslePoint[],step:number):IslePoint[]{
 /** A growing vertex-coloured triangle list (positions relative to an origin). */
 class Piece{
  pos:number[]=[];nor:number[]=[];colr:number[]=[];idx:number[]=[];
+ /** The tree each vertex belongs to (SUMMIT_TREE_SITES tid; 0 = not a tree): the shaken tree's sway (SUMMIT_TREE_SWAY). */
+ tree:number[]=[];tid=0;
  constructor(public ox:number,public oz:number){}
- vertex(x:number,y:number,z:number,c:T.Color,n:[number,number,number]=[0,1,0]){this.pos.push(x-this.ox,y,z-this.oz);this.nor.push(...n);this.colr.push(c.r,c.g,c.b);return this.pos.length/3-1;}
+ vertex(x:number,y:number,z:number,c:T.Color,n:[number,number,number]=[0,1,0]){this.pos.push(x-this.ox,y,z-this.oz);this.nor.push(...n);this.colr.push(c.r,c.g,c.b);this.tree.push(this.tid);return this.pos.length/3-1;}
  tri(a:number,b:number,c:number){this.idx.push(a,b,c);}
  /** A quad strip (a, b) × (c, d) facing up. */
  quad(a:number,b:number,c:number,d:number){this.idx.push(a,c,b,b,c,d);}
- geometry(){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(this.pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(this.nor,3));g.setAttribute('color',new T.Float32BufferAttribute(this.colr,3));g.setIndex(this.idx);g.computeBoundingSphere();return g;}
+ geometry(){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(this.pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(this.nor,3));g.setAttribute('color',new T.Float32BufferAttribute(this.colr,3));
+  if(this.tree.some(t=>t>0))g.setAttribute('aTree',new T.Float32BufferAttribute(this.tree,1));g.setIndex(this.idx);g.computeBoundingSphere();return g;}
 }
 
 /** Every tree and palm the build bakes (refilled by each build): Summit Isle's fruit trees are picked from these
  *  (lib/town/summitForage.ts; lib/graphics/fruitTrees.ts copies a picked tree's canopy for its shake, so keep the two in step). */
-export type SummitTreeSite={kind:'tree'|'palm';x:number;z:number;y:number;size:number;seed:number;top:{x:number;y:number;z:number}};
+export type SummitTreeSite={kind:'tree'|'palm';x:number;z:number;y:number;size:number;seed:number;top:{x:number;y:number;z:number};
+ /** Its id in the baked props' `aTree` attribute (index + 1), the foraging rig (grip, crown, sway) and, for the orchard's plants
+  *  (lib/town/summitOrchard.ts), its form and fruit. */
+ tid:number;rig:TreeRig;form?:OrchardForm;fruit?:FruitKind};
 export const SUMMIT_TREE_SITES:SummitTreeSite[]=[];
+/** Every rock and boulder the build bakes (headlands, crests, the terrace banks, the lookout cairn, the caves): centre, horizontal
+ *  reach (m) and top. tests/summit-balls.cjs checks each one bigger than a pebble has a collider covering its footprint. */
+export type SummitRockSite={x:number;z:number;reach:number;top:number};
+export const SUMMIT_ROCK_SITES:SummitRockSite[]=[];
+/** Rocks smaller than this (horizontal reach, m) are pebbles you walk over; anything bigger blocks. */
+export const SUMMIT_PEBBLE=.5;
+const rockSite=(x:number,z:number,reach:number,top:number)=>{SUMMIT_ROCK_SITES.push({x,z,reach,top});};
+/**
+ * The shake (Oct 14 2026, user: "fix the animation of shaking to actually touch the tree"): ONE tree of the baked props sways in
+ * the vertex shader (no shell mesh, no extra draw): every vertex whose `aTree` is `tree` turns about `pivot` (the trunk's base)
+ * round the horizontal `axis` by `angle` × (height over the base / `height`)^`bend` (palms and papayas bend more at the top).
+ * lib/graphics/fruitTrees.ts drives it while a shake settles and sets `angle` back to 0 (the branch is skipped at rest).
+ */
+export const SUMMIT_TREE_SWAY={tree:{value:0},pivot:{value:new T.Vector3()},axis:{value:new T.Vector3(1,0,0)},angle:{value:0},height:{value:5},bend:{value:1}};
+/** The sway's weight at height `dy` over the trunk's base (the shader's formula, for the hanging fruit on the CPU). */
+export const swayWeight=(dy:number,height:number,bend:number)=>Math.pow(Math.max(0,Math.min(1,dy/Math.max(.1,height))),bend);
+function swayShader(mat:T.MeshStandardMaterial){
+ mat.customProgramCacheKey=()=>'summit-tree-sway';
+ mat.onBeforeCompile=sh=>{const U=SUMMIT_TREE_SWAY;Object.assign(sh.uniforms,{uSwayTree:U.tree,uSwayPivot:U.pivot,uSwayAxis:U.axis,uSwayAngle:U.angle,uSwayHeight:U.height,uSwayBend:U.bend});
+  sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>
+attribute float aTree;uniform float uSwayTree;uniform vec3 uSwayPivot;uniform vec3 uSwayAxis;uniform float uSwayAngle;uniform float uSwayHeight;uniform float uSwayBend;`)
+   .replace('#include <begin_vertex>',`#include <begin_vertex>
+if(uSwayAngle!=0.0&&abs(aTree-uSwayTree)<.5){vec3 off=modelMatrix[3].xyz,p=transformed+off-uSwayPivot;
+ float a=uSwayAngle*pow(clamp(p.y/max(.1,uSwayHeight),0.,1.),uSwayBend),c=cos(a),s=sin(a);
+ p=p*c+cross(uSwayAxis,p)*s+uSwayAxis*dot(uSwayAxis,p)*(1.-c);transformed=p+uSwayPivot-off;}`);};
+}
 export function buildSummitIsle(t:SummitTools){
  const {box,cylinder,sign,town,obstacles,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
- SUMMIT_TREE_SITES.length=0;
+ SUMMIT_TREE_SITES.length=0;SUMMIT_ROCK_SITES.length=0;
  const lampSites:SummitLampSite[]=[];
  // ONE material for every ground piece (terrain, plateau, pitch, lines, paths, sandbar): vertex colours, no texture, no emissive,
  // so it compiles to the same program as the island's batched palette paint. Ground casts no shadows (it only receives them).
@@ -221,7 +256,7 @@ export function buildSummitIsle(t:SummitTools){
  // ---- Baked props (heat): trees, palms, rocks, the fence, goals, nets, masts and the lookout are baked into ONE vertex-coloured
  // mesh per terrain sector plus one for the summit, instead of palette meshes, which the batching pass would spread over ~30
  // separate 50 m chunk draws (and as many shadow draws) on an island this size. They cast shadows; the ground does not.
- const propMat=new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85});propMat.name='summit-isle-props';
+ const propMat=new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85});propMat.name='summit-isle-props';swayShader(propMat);
  const sectorProps=sectors.map(p=>new Piece(p.ox,p.oz)),summitProps=new Piece(C.x,C.z);
  const M=new T.Matrix4(),NM=new T.Matrix3(),Q=new T.Quaternion(),E=new T.Euler(),VP=new T.Vector3(),VS=new T.Vector3(),UP=new T.Vector3(0,1,0),A=new T.Vector3(),B=new T.Vector3();
  function bake(piece:Piece,g:T.BufferGeometry,hex:string,m:T.Matrix4){const c=col(hex),p=g.getAttribute('position'),n=g.getAttribute('normal'),base=piece.pos.length/3;NM.getNormalMatrix(m);
@@ -257,20 +292,25 @@ export function buildSummitIsle(t:SummitTools){
  const pathNear=(x:number,z:number,r:number)=>SUMMIT_PATHS.some(path=>path.some(p=>Math.hypot(p.x-x,p.z-z)<r));
  const F=SUMMIT_FENCE,PI=SUMMIT_PITCH;
  const nearPitch=(x:number,z:number,r:number)=>Math.abs(x-PI.x)<F.halfX+r&&Math.abs(z-PI.z)<F.halfZ+r;
- function palm(x:number,z:number,h:number,i:number){const y=yAt(x,z),lean=.12+jitter(i,4)*.12,yaw=jitter(i,6)*Math.PI*2,piece=propsAt(x,z);
+ function palm(x:number,z:number,h:number,i:number){const y=yAt(x,z),lean=.12+jitter(i,4)*.12,yaw=jitter(i,6)*Math.PI*2,piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
   bake(piece,new T.CylinderGeometry(.11,.21,h,6),'#9d805b',at(x+Math.cos(yaw)*lean*h/2,y+h/2,z+Math.sin(yaw)*lean*h/2,Math.sin(yaw)*lean,0,-Math.cos(yaw)*lean));
   const tx=x+Math.cos(yaw)*lean*h,tz=z+Math.sin(yaw)*lean*h,ty=y+h;
   for(let k=0;k<6;k++){const a=k/6*Math.PI*2+i;bakeBox(piece,2.6,.06,.5,k%2?'#5b895e':'#3f7a4f',tx+Math.cos(a)*1.15,ty-.25,tz+Math.sin(a)*1.15,0,-a,-.42);}
   bake(piece,new T.IcosahedronGeometry(.28,0),'#7a5a3a',at(tx,ty-.35,tz));
-  obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz}});}
- function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z);
+  piece.tid=0;
+  obstacles.push(trunkCollider(x,z,.21));assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:5.5,visualD:5.5,canopyHeight:ty,baseY:y});SUMMIT_TREE_SITES.push({kind:'palm',x,z,y,size:h,seed:i,top:{x:tx,y:ty,z:tz},tid,rig:palmRig(x,z,y,{x:tx,y:ty,z:tz})});}
+ function tree(x:number,z:number,s:number,i:number){const y=yAt(x,z),piece=propsAt(x,z),tid=SUMMIT_TREE_SITES.length+1;piece.tid=tid;
   bake(piece,new T.CylinderGeometry(.2*s,.2*s,2.2*s,6),'#8a6a48',at(x,y+1.1*s,z));
   bake(piece,new T.IcosahedronGeometry(1.7*s,0),i%3?'#5b895e':'#4f7f55',at(x,y+2.9*s,z,0,i));
   bake(piece,new T.IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2));
-  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z}});}
- function rock(x:number,z:number,r:number,i:number,piece=propsAt(x,z)){const y=yAt(x,z);
-  bake(piece,new T.IcosahedronGeometry(r,0),['#9b9e90','#878b7e','#b1b3a6'][i%3],at(x,y+r*.25,z,0,jitter(i,5)*6,0,1+jitter(i,3)*.4,.55+jitter(i,8)*.3,1+jitter(i,4)*.3));
-  if(r>.7&&onSummitIsle(x,z))obstacles.push({x,z,w:r*1.5,d:r*1.5});}
+  piece.tid=0;
+  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s)});}
+ function rock(x:number,z:number,r:number,i:number,piece=propsAt(x,z)){const y=yAt(x,z),sx=1+jitter(i,3)*.4,sy=.55+jitter(i,8)*.3,sz=1+jitter(i,4)*.3;
+  bake(piece,new T.IcosahedronGeometry(r,0),['#9b9e90','#878b7e','#b1b3a6'][i%3],at(x,y+r*.25,z,0,jitter(i,5)*6,0,sx,sy,sz));
+  // Solid to the size it shows (Oct 15 2026, user: "fix running through rocks"): a round collider out to the rock's widest reach
+  // (its radius × its larger stretch, whatever way it is turned). It used to be 0.75 × the radius and none at all under 0.7 m,
+  // so you walked into the outer half of every boulder. Only pebbles (reach < SUMMIT_PEBBLE) stay walk-through.
+  const reach=r*Math.max(sx,sz);rockSite(x,z,reach,y+r*.25+r*sy);if(reach>=SUMMIT_PEBBLE)obstacles.push({x,z,w:reach*2,d:reach*2,cornerRadius:reach});}
  // Palms along the dune line on every side but the sandbar landing.
  let n=0;
  for(let k=0;k<28;k++){const a=k/28*Math.PI*2+jitter(k,1)*.12,rc=coastRadius(a),bw=beachWidth(a),r=rc-bw*(.55+jitter(k,2)*.3),x=C.x+Math.cos(a)*r,z=C.z+Math.sin(a)*r;
@@ -345,7 +385,70 @@ export function buildSummitIsle(t:SummitTools){
  {const L=SUMMIT_LANDMARKS.lookout,ys=SUMMIT_HEIGHT-DROP;
   bakeRod(SP,V(L.x,ys,L.z),V(L.x,ys+6.5,L.z),.06,'#eddfbb',6);bakeBox(SP,.04,1.1,1.8,'#d9534a',L.x,ys+5.9,L.z+.92);bakeBox(SP,.045,.34,1.8,'#f4cc7c',L.x,ys+5.9,L.z+.92);
   obstacles.push({x:L.x,z:L.z,w:.3,d:.3});
-  for(let k=0;k<5;k++)bake(SP,new T.IcosahedronGeometry(.5-k*.08,0),k%2?'#9b9e90':'#878b7e',at(L.x+3.6,ys+.22+k*.38,L.z,0,k));obstacles.push({x:L.x+3.6,z:L.z,w:1,d:1});}
+  for(let k=0;k<5;k++)bake(SP,new T.IcosahedronGeometry(.5-k*.08,0),k%2?'#9b9e90':'#878b7e',at(L.x+3.6,ys+.22+k*.38,L.z,0,k));obstacles.push({x:L.x+3.6,z:L.z,w:1,d:1});rockSite(L.x+3.6,L.z,.5,ys+2);}
+ // ---- The orchard (Oct 14 2026, lib/town/summitOrchard.ts): fruit trees and plants of seven forms along both sides of the trails,
+ // round the summit's edge, on the open slopes and the beaches' grass edge, clear of every trail, the pitch, the lookout and the
+ // telescope, the kiosk, the fishing spots and the hikers. Baked into the same sector pieces as the trees above (no new draw call)
+ // with their own trunk colliders (rides and balls bounce off them like any trunk).
+ {const isle=obstacles.filter(o=>o.x>C.x-260&&o.x<C.x+260&&o.z>C.z-260&&o.z<C.z+260);
+  const blockedNear=(x:number,z:number,r:number)=>isle.some(o=>Math.abs(o.x-x)<o.w/2+r&&Math.abs(o.z-z)<o.d/2+r);
+  for(const o of ORCHARD_OFF?[]:planOrchard(blockedNear,SUMMIT_TREE_SITES.map(t=>({x:t.x,z:t.z})))){const piece=propsAt(o.x,o.z),tid=SUMMIT_TREE_SITES.length+1,rig=orchardRig(o);piece.tid=tid;
+   for(const part of orchardParts(o))bake(piece,part.geo(),part.color,part.matrix);piece.tid=0;
+   const plant=o.form==='banana'||o.form==='papaya',top=rig.sway.h;
+   obstacles.push(trunkCollider(o.x,o.z,rig.baseR));assets.push({kind:plant?'palm':'tree',x:o.x,z:o.z,w:rig.baseR*2.5,d:rig.baseR*2.5,visualW:plant?4.5:3.6*o.s,visualD:plant?4.5:3.6*o.s,canopyHeight:o.y+top,baseY:o.y});
+   SUMMIT_TREE_SITES.push({kind:'tree',x:o.x,z:o.z,y:o.y,size:o.s,seed:o.seed,top:{x:rig.crown.x,y:o.y+top,z:rig.crown.z},tid,rig,form:o.form,fruit:o.fruit});}}
+
+ // ---- Huts, caves and the riddle board (Oct 15 2026, lib/town/summitBalls.ts: the hidden balls' hiding places). Baked into the
+ // same sector prop pieces as the trees (no new draw call), AFTER the orchard is planned (so no fruit tree moves), each wall and
+ // rock with its own collider. The caves are boulders built onto the ground (the terrain is untouched: no holes, no seams).
+ {const R=SUMMIT_HUT_RADIUS,yaw=(d:{x:number;z:number})=>Math.atan2(d.x,d.z);
+  for(const h of SUMMIT_HUTS){const piece=propsAt(h.x,h.z);let lo=Infinity,hi=-Infinity;
+   for(let a=0;a<16;a++){const y=yAt(h.x+Math.cos(a/16*Math.PI*2)*R,h.z+Math.sin(a/16*Math.PI*2)*R);lo=Math.min(lo,y);hi=Math.max(hi,y);}hi=Math.max(hi,hutGroundTop(h));
+   // A stucco drum sunk into the slope, an eave ring and a straw cone (Coral Cay's thatched huts, a little smaller).
+   const base=lo-.35,top=hi+HUT_WALL;
+   bake(piece,new T.CylinderGeometry(R,R,top-base,16),h.id==='beach'?'#e7cfa4':h.id==='rest'?'#d6b58a':h.id==='sunset'?'#e2c69a':'#cdb48c',at(h.x,(base+top)/2,h.z));
+   bake(piece,new T.CylinderGeometry(R+.5,R+.5,.2,16),'#b9955a',at(h.x,top+.05,h.z));
+   bake(piece,new T.ConeGeometry(R+.75,HUT_CONE,12),h.id==='fisher'?'#c99a5b':h.id==='sunset'?'#d69b61':'#d7ad62',at(h.x,top+HUT_CONE_LIFT,h.z));
+   // The doorway: a dark opening proud of the wall under a timber lintel.
+   const dg=yAt(h.x+h.door.x*R,h.z+h.door.z*R);
+   bakeBox(piece,1.05,1.9,.16,'#2c302e',h.x+h.door.x*(R-.02),dg+.95,h.z+h.door.z*(R-.02),0,yaw(h.door),0);
+   bakeBox(piece,1.3,.13,.22,'#8a6a48',h.x+h.door.x*(R+.03),dg+1.95,h.z+h.door.z*(R+.03),0,yaw(h.door),0);
+   obstacles.push({x:h.x,z:h.z,w:R*2-.4,d:R*2-.4,cornerRadius:R-.2});
+   const side={x:-h.door.z,z:h.door.x},out=(k:number,s2=0)=>({x:h.x+h.door.x*k+side.x*s2,z:h.z+h.door.z*k+side.z*s2});
+   if(h.window){// The beach hut: a window on the sea side with a shelf below it (the ball sits on the shelf).
+    const wg=yAt(h.x+h.window.x*R,h.z+h.window.z*R);
+    bakeBox(piece,.85,.7,.16,'#2c302e',h.x+h.window.x*(R-.02),wg+1.6,h.z+h.window.z*(R-.02),0,yaw(h.window),0);
+    bakeBox(piece,1.05,.07,.42,'#9d805b',h.x+h.window.x*(R+.14),wg+1.02,h.z+h.window.z*(R+.14),0,yaw(h.window),0);
+    for(const s2 of [-.42,.42])bakeBox(piece,.06,.3,.06,'#8a6a48',h.x+h.window.x*(R+.2)-h.window.z*s2,wg+.85,h.z+h.window.z*(R+.2)+h.window.x*s2,0,yaw(h.window),0);}
+   if(h.porch){// The rest hut: a thatched porch on two posts and a bench (the ball rolled under it).
+    for(const s2 of [-1.25,1.25]){const p=out(R+1.55,s2),y=yAt(p.x,p.z);bakeRod(piece,V(p.x,y-.2,p.z),V(p.x,dg+2.3,p.z),.08,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.26,d:.26});}
+    {const p=out(R+.8);bakeBox(piece,3.1,.16,1.9,'#d7ad62',p.x,dg+2.38,p.z,0,yaw(h.door),0);}
+    {const p=out(R+.75),y=yAt(p.x,p.z);bakeBox(piece,1.7,.08,.44,'#a67d55',p.x,y+.96,p.z,0,yaw(h.door),0);
+     for(const s2 of [-.72,.72]){const q=out(R+.75,s2);bakeBox(piece,.08,.96,.4,'#6b5238',q.x,yAt(q.x,q.z)+.46,q.z,0,yaw(h.door),0);}}}
+   if(h.id==='fisher'){// A drying rack with a net and a crate beside the door.
+    const a=out(.6,R+1.3),b=out(-.9,R+1.6);for(const p of [a,b]){bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,yAt(p.x,p.z)+1.7,p.z),.06,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.22,d:.22});}
+    const ay=yAt(a.x,a.z)+1.6,by=yAt(b.x,b.z)+1.6;bakeRod(piece,V(a.x,ay,a.z),V(b.x,by,b.z),.04,'#9d805b',5);
+    bake(piece,new T.BoxGeometry(1.5,.9,.04),'#5f7f86',at((a.x+b.x)/2,(ay+by)/2-.48,(a.z+b.z)/2,0,Math.atan2(b.x-a.x,b.z-a.z)+Math.PI/2,0));
+    const c=out(R+.5,-1.35);bakeBox(piece,.7,.55,.6,'#9d805b',c.x,yAt(c.x,c.z)+.27,c.z,0,yaw(h.door)+.3,0);obstacles.push({x:c.x,z:c.z,w:.8,d:.8});}}
+  // Caves: two boulders frame the mouth, two more and a big back boulder close the sides and the back, a dark rock fills the
+  // recess and a flat capstone overhangs the back half only, so the follow camera (from the south-east) sees in.
+  for(const c of SUMMIT_CAVES){const piece=propsAt(c.x,c.z),f=c.mouth,r={x:-f.z,z:f.x},ry=yaw(f);
+   const P=(along:number,s2:number)=>({x:c.x+f.x*along+r.x*s2,z:c.z+f.z*along+r.z*s2});
+   const tone=c.id==='sea'?['#a39c8c','#8e887a','#b4ad9e']:['#9b9e90','#878b7e','#b1b3a6'];
+   const boulder=(p:{x:number;z:number},rad:number,sy:number,k:number)=>{const y=yAt(p.x,p.z);bake(piece,new T.IcosahedronGeometry(rad,0),tone[k%3],at(p.x,y+rad*sy*.5,p.z,0,jitter(k,c.x)*6,0,1,sy,1));
+    rockSite(p.x,p.z,rad,y+rad*sy*1.5);obstacles.push({x:p.x,z:p.z,w:rad*2,d:rad*2,cornerRadius:rad});};
+   let gTop=-Infinity;for(const [a2,s2] of [[0,0],[-CAVE_BACK,0],[-1.5,-CAVE_SIDE],[-1.5,CAVE_SIDE],[0,-CAVE_SIDE],[0,CAVE_SIDE]]){const p=P(a2,s2);gTop=Math.max(gTop,yAt(p.x,p.z));}
+   let k=0;for(const s2 of [-1,1]){boulder(P(-.2,s2*CAVE_SIDE),1.45,1.3,k++);boulder(P(-1.8,s2*(CAVE_SIDE-.25)),1.35,1.45,k++);boulder(P(.9,s2*(CAVE_SIDE+.9)),.75,1,k++);}
+   boulder(P(-CAVE_BACK,0),1.7,1.25,k++);boulder(P(-CAVE_BACK+1.1,-1.4),1.1,1.2,k++);
+   {const p=P(-2.3,0);bake(piece,new T.IcosahedronGeometry(1.2,1),'#272420',at(p.x,yAt(p.x,p.z)+.95,p.z,0,ry,0,1.25,.85,.7));obstacles.push({x:p.x,z:p.z,w:1.5,d:1.5,cornerRadius:.75});}
+   {const p=P(-2.6,0);bake(piece,new T.IcosahedronGeometry(2.6,0),tone[1],at(p.x,gTop+3.15,p.z,0,ry,0,1.25,.42,.75));}
+   for(let j=0;j<4;j++){const p=P(-1.2-j*.6,(j%2?1:-1)*(CAVE_SIDE+.6));bake(piece,new T.IcosahedronGeometry(.45+jitter(j,c.z)*.3,0),tone[j%3],at(p.x,gTop+2.2+j*.12,p.z,0,j,0));}}
+  // The riddle board at the sandbar landing: two posts, a little roof and three paper notes (the riddles show in the hunt hint).
+  {const B=RIDDLE_BOARD,y=yAt(B.x,B.z),ax={x:Math.cos(B.yaw),z:-Math.sin(B.yaw)},n={x:Math.sin(B.yaw),z:Math.cos(B.yaw)},piece=propsAt(B.x,B.z);
+   for(const s2 of [-1.05,1.05]){const p={x:B.x+ax.x*s2,z:B.z+ax.z*s2};bakeRod(piece,V(p.x,yAt(p.x,p.z)-.2,p.z),V(p.x,y+2.45,p.z),.07,'#8a6a48',6);obstacles.push({x:p.x,z:p.z,w:.22,d:.22});}
+   bakeBox(piece,2.3,1.25,.1,'#7a5a3a',B.x,y+1.65,B.z,0,B.yaw,0);bakeBox(piece,2.6,.1,.6,'#b9955a',B.x,y+2.45,B.z,0,B.yaw,0);
+   for(const [s2,dy,tilt] of [[-.68,.1,.06],[0,-.08,-.04],[.68,.12,.05]] as [number,number,number][])bakeBox(piece,.55,.7,.02,'#f6ecd2',B.x+ax.x*s2+n.x*.06,y+1.65+dy,B.z+ax.z*s2+n.z*.06,0,B.yaw,tilt);
+   bake(piece,new T.IcosahedronGeometry(.13,0),'#f4f1e6',at(B.x+n.x*.12,y+2.1,B.z+n.z*.12));}}
  sectorProps.forEach((p,i)=>props(p,'summit-isle-props-'+i));props(SP,'summit-isle-summit-props');
  // ---- A welcome board where the sandbar lands (the path starts here) and one at the Coral Cay end.
  {const s=SUMMIT_LANDMARKS.sandbarLanding,y=yAt(s.x+5,s.z+3);prop('sign',()=>{box(5.6,.7,.12,'#294f43',s.x+5,y+2.1,s.z+3);for(const dx of [-2.6,2.6])cylinder(.07,2.4,'#9d805b',s.x+5+dx,y+1.2,s.z+3);sign('SUMMIT ISLE',5.3,.55,s.x+5,y+2.1,s.z+2.92,'#294f43','#f4cc7c',Math.PI);});

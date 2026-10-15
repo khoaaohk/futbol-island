@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
+import {perItemText} from '@/lib/economy';
 import {DoneButton} from './DoneButton';
 import {useVending} from '@/lib/town/vendingWallet';
 import {islandMarket} from '@/lib/town/jobs/islandWallet';
@@ -8,6 +9,8 @@ import {pocketView,type PocketGroup} from '@/lib/town/market/pocket';
 import {fishById} from '@/lib/town/fishing/fishCatalog';
 import FishArt from './FishArt';
 import ProduceArt from './ProduceArt';
+import BeachFindArt from './BeachFindArt';
+import {BEACH_FINDS,beachFindById,OPEN_SHELLBOOK} from '@/lib/town/beachcombing';
 import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {DAILY_PLAY_COINS,DAILY_PLAY_SECONDS,localPlayDay} from '@/lib/town/dailyPlay';
 import {TRAINING_HALF_COINS,trainingMeterView} from '@/lib/town/dailyMeter';
@@ -34,7 +37,7 @@ export default function IslandBalanceDrawer({onClose}:{onClose:()=>void}){
  // Fuel (docs/economy/FUEL_2026-09-30.md): eat fruit or veg from the basket. Free garden picks (
  // map) are the zero-coin ways to refuel.
  const fuel=useFuel(),[ate,setAte]=useState('');
- const edible=[...pocket.fruit.rows,...pocket.veg.rows].map(r=>({...r,fuel:produceFuel(r.id,'produce',r.category==='fish'?undefined:r.category)})).filter(r=>r.fuel>0);
+ const edible=[...pocket.fruit.rows,...pocket.veg.rows].map(r=>({...r,fuel:produceFuel(r.id,'produce',r.category==='fish'||r.category==='beach'?undefined:r.category)})).filter(r=>r.fuel>0);
  // The real (unrounded) tank decides, not the bar's whole number (bug A4: at 99.6 the bar said 99 and an orange went for +0).
  const eat=(r:typeof edible[number])=>{if(!worthEating(fuelStore.read().fuel,r.fuel)){setAte('Your tank is full. Save it for later, or sell it at the stand.');return;}
   if(!islandMarket.take(r.id,1))return;const got=eatFuel(r.fuel);setAte(`Yum, ${r.good.name.toLowerCase()}! +${got} fuel. ${r.good.lesson}`);};
@@ -47,8 +50,8 @@ export default function IslandBalanceDrawer({onClose}:{onClose:()=>void}){
  // Training meter (lib/town/dailyMeter.ts): read on open from the wallet snapshot; no countdown, no timers.
  const training=trainingMeterView(coins.training.day===localPlayDay(Date.now())?coins.training.earned:0);
  const items=(g:PocketGroup)=><ul className={styles.items} data-pocket-group={g.category}>{g.rows.map(r=>{const fish=r.category==='fish'?fishById(r.id):undefined;return <li key={r.id} data-pocket-item={r.id} data-count={r.count}>
-  <span className={styles.itemArt} aria-hidden="true">{fish?<FishArt fish={fish} size={52}/>:<ProduceArt good={r.good} size={38}/>}</span>
-  <span className={styles.itemName}><b>{r.name}</b><small>{r.each} coin{r.each===1?'':'s'} each</small></span>
+  <span className={styles.itemArt} aria-hidden="true">{fish?<FishArt fish={fish} size={52}/>:r.category==='beach'&&beachFindById(r.id)?<BeachFindArt find={beachFindById(r.id)!} size={40}/>:<ProduceArt good={r.good} size={38}/>}</span>
+  <span className={styles.itemName}><b>{r.name}</b><small>{perItemText(r.each)}</small></span>
   <b className={styles.itemCount} aria-label={`${r.count} in your basket`}>×{r.count}</b>
   <span className={styles.itemValue} aria-label={`worth ${r.value} coins`}>{r.value}<small>coins</small></span>
  </li>;})}</ul>;
@@ -67,6 +70,7 @@ export default function IslandBalanceDrawer({onClose}:{onClose:()=>void}){
  </section>
   <section className={`${styles.card} ${styles.fish}`} aria-labelledby="pocket-fish"><div className={styles.cardTop}><BalanceIcon kind="fish"/><div><h3 id="pocket-fish">Fish</h3><strong data-pocket-fish>{pocket.fish.count}</strong><span>in your basket</span></div></div><p>Catch fish from the shore spots, the East Jetty and the Deep Sea Boat.</p>{pocket.fish.rows.length?items(pocket.fish):<p className={styles.empty}>Your next catch will appear here.</p>}{worth(pocket.fish.value,'Sell fish at Rosa’s market stand, at the farmers market.')}<div className={styles.note}>Your Fishbook remembers the fish you discover, even after you sell them.</div></section>
  <section className={`${styles.card} ${styles.fruit}`} aria-labelledby="pocket-fruit"><div className={styles.cardTop}><BalanceIcon kind="fruit"/><div><h3 id="pocket-fruit">Fruit &amp; veggies</h3><strong data-pocket-fruit>{produce}</strong><span>in your basket</span></div></div><p>Pick ripe produce in the Community Garden, or bring home a share of the Coral Cay Harvest day.</p>{produce?<>{sub(pocket.fruit)}{sub(pocket.veg)}</>:<p className={styles.empty}>A little exploring can fill your basket.</p>}{worth(pocket.fruit.value+pocket.veg.value,'Sell fruit and veggies at Rosa’s market stand or the Coral Cay farm stand.')}</section>
- <p className={styles.capacity}>Basket space <b data-pocket-space>{pocket.total} / {pocket.limit}</b><span>{pocket.full?'Your basket is full! Sell some to make room for more.':'Fish and produce share this space. Sell some to make room for more.'} Snacks, cards and gear live in your Backpack.</span></p>
+ <section className={`${styles.card} ${styles.fish}`} aria-labelledby="pocket-beach" data-pocket-beach-section><div className={styles.cardTop}><BeachFindArt find={BEACH_FINDS[0]} size={60}/><div><h3 id="pocket-beach">Beach finds</h3><strong data-pocket-beach>{pocket.beach.count}</strong><span>in your basket</span></div></div><p>Look for little sparkles on the sand of Summit Isle, Coral Cay and the main island&apos;s beaches. Only take empty shells: living animals go back gently.</p>{pocket.beach.rows.length?items(pocket.beach):<p className={styles.empty}>Your next beach find will appear here.</p>}{worth(pocket.beach.value,'Sell empty shells at Rosa’s market stand.')}<button type="button" className={market.one} onClick={()=>window.dispatchEvent(new Event(OPEN_SHELLBOOK))} data-pocket-shellbook>Open your Shellbook</button></section>
+ <p className={styles.capacity}>Basket space <b data-pocket-space>{pocket.total} / {pocket.limit}</b><span>{pocket.full?'Your basket is full! Sell some to make room for more.':'Fish, produce and beach finds share this space. Sell some to make room for more.'} Snacks, cards and gear live in your Backpack.</span></p>
  </div></section></dialog>;
 }

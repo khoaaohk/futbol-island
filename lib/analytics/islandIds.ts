@@ -19,6 +19,9 @@ export const PLACES=[
  ['causeway','Causeway'],['sandbars','Sandbars (Starfish & Turtle)'],['deep_sea_boat','Deep-sea boat'],
  ['cay_town','Coral Cay town & plaza'],['cay_konbini','Coral Cay Konbini (outside)'],['hostel','Coral Cay Hostel & homes'],
  ['farm','Coral Cay Farm'],['beach_court','Beach soccer court'],['sharks_beach','Sharks Beach'],['coral_cay','Coral Cay (elsewhere)'],
+ // Summit Isle (Oct 15 2026): the mountain island reached by its sandbar from Coral Cay (lib/town/summitIsle.ts). Needs
+ // supabase/migrations/20261015_analytics_summit_kit.sql (place_ms allowlist) before time here is counted; see that file.
+ ['summit_sandbar','Summit Sandbar'],['summit_pitch','Summit 5s (5v5 pitch)'],['summit_isle','Summit Isle (elsewhere)'],
  ['sea','Open sea & sky'],
 ] as const;
 export type PlaceId=typeof PLACES[number][0];

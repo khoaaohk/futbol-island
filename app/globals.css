@@ -692,6 +692,6 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
    loader; the pre-paint <html data-root-view> flag shows one. No flag (no JS): the title screen. */
 [data-root-landing],[data-root-game]{display:contents}
 html[data-root-view=game] [data-root-landing],html:not([data-root-view=game]) [data-root-game]{display:none}
-/* Telescope eyepiece (components/TelescopeView.tsx sets html[data-telescope=on]): hide the island pocket (coins, fish, fruit, fuel)
-   and building entry prompts so only the scope and its own controls show. */
-html[data-telescope=on] [data-job-wallet],html[data-telescope=on] .store-enter-prompt:not([data-telescope-open]){visibility:hidden!important;pointer-events:none!important}
+/* Painting easel (components/PaintEasel.tsx sets html[data-easel=on]): the island's HUD (pocket, minimap, buttons, prompts, toasts)
+   steps aside so only the view and the painting card show; "Just look" (the card hidden too) leaves nothing but the view. */
+html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:hidden!important;pointer-events:none!important}

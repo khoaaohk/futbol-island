@@ -13,8 +13,9 @@ import {createFishingCamera} from './fishingCamera';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
 import {createDeepSeaBoat} from './deepSeaBoat';
-import {BOAT_AFLOAT} from './deepSeaBoatData';
-import type {FishingSessionApi} from './fishingSession';
+import {DEEP_SEA_BOATS,boatBySpot} from './deepSeaBoatData';
+import {aimCharge,type FishingSessionApi} from './fishingSession';
+import {aimArea,aimPolar,clampAim,hotAt,hotspotSeed,planHotspots,quickCast,rememberCast,spookAt,HOTSPOT_RESEED,type AimArea,type CastMark,type Hotspot,type Landing} from './fishingAim';
 
 /**
  * Fishing props on the island + the "Fish" / "Sell" prompts (docs/fishing.md).
@@ -97,32 +98,54 @@ function signTexture(){
  * steps it each frame, drives the rig (camera, rod, float, shadow) and places the in-world catch label.
  */
 export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:FishingSessionApi,renderer?:T.WebGLRenderer){
- const cam=createFishingCamera();let liveSpot=-1,visuals:FishingVisuals|null=null,fishing=false,stand={x:0,z:0},cast=castPoint(FISH_SPOTS[0],FISH_SPOTS[0]);const labelPoint=new T.Vector3();
+ const cam=createFishingCamera();let liveSpot=-1,visuals:FishingVisuals|null=null,fishing=false,stand={x:0,z:0},cast:Landing=castPoint(FISH_SPOTS[0],FISH_SPOTS[0]);const labelPoint=new T.Vector3();
+ // Aimed casting (Oct 14 2026, fishingAim.ts): the aim area, this session's hotspots (re-placed every few minutes), the aim
+ // preview, the recent casts (spooked water) and the session clock for the hotspots' drift. All per session, none at rest.
+ let area:AimArea|null=null,hotspots:Hotspot[]=[],hotBucket=-1,sessionNo=0,aimLanding:Landing|null=null,clock=0;const castMarks:CastMark[]=[];
+ const aimRay=new T.Raycaster(),aimPlane=new T.Plane(new T.Vector3(0,1,0),.43),aimHit=new T.Vector3(),aimNdc=new T.Vector2();
+ const replanHotspots=(s:FishSpot,nowS:number)=>{if(!area)return;hotBucket=Math.floor(nowS/HOTSPOT_RESEED);hotspots=planHotspots(s,area,hotspotSeed(s.id,nowS,sessionNo));visuals?.setHotspots?.(hotspots);};
+ /** A cast just started: where it lands (aimed or quick), and what the water there is like (hotspot, spooked). */
+ /** Where an aim input lands (a screen point is cast onto the sea plane through the camera), clamped to the spot's water. */
+ const landingFor=(input:NonNullable<FishingSessionApi['aimInput']>,camera:T.Camera):Landing|null=>{if(!area)return null;
+  if(input.kind==='polar')return clampAim(area,aimPolar(area,input.u,input.charge!==undefined?aimCharge(performance.now()-input.charge):input.v));
+  aimNdc.set(input.x,input.y);aimRay.setFromCamera(aimNdc,camera);return aimRay.ray.intersectPlane(aimPlane,aimHit)?clampAim(area,{x:aimHit.x,z:aimHit.z}):null;};
+ const landCast=(api:FishingSessionApi,s:FishSpot,nowS:number,camera:T.Camera)=>{if(!area)return;
+  const aimed=api.takeAimedCast();cast=(aimed&&landingFor(aimed,camera))||quickCast(area,Math.random);aimLanding=null;
+  const hot=hotAt(hotspots,cast.x,cast.z,clock),spook=spookAt(castMarks,cast.x,cast.z,nowS);rememberCast(castMarks,cast.x,cast.z,nowS);
+  api.session.mods={hot,spook};api.setWater(spook>=.3?'spooked':hot>=.3?'hot':'calm');visuals?.setCast?.(cast,cast.dir);};
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
  let catchLabelHeight=0;
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
  const makeVisuals=()=>{if(visualsModule&&player)return visualsModule.createFishingVisuals(scene,player,renderer);void loadFishingVisuals();return null;};
  const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='splash')visuals.splash('land');else if(e==='reel'||e==='pull')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
- const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;};
+ const stopFishing=(api:FishingSessionApi)=>{fishing=false;cam.end();visuals?.end();api.end();hideFloat(liveSpot,false);liveSpot=-1;area=null;hotspots=[];aimLanding=null;};
  const driver=player&&session?(c:FishingUpdate,near:number):number=>{
   // Paused under the Fishbook / market stand: the island renders one last frame after the player rig has re-posed,
   // so re-apply the frozen angler pose (arms, rod, line) with no time step instead of skipping it (the character used to snap).
   if(session.paused){if(fishing&&visuals)visuals.frame(0,c.elapsed,c.reduced);return near;}
   const pending=session.takePending();
   if(pending&&!fishing){const i=FISH_SPOTS.findIndex(s=>s.id===pending),s=FISH_SPOTS[i];
-   if(s&&near===i){liveSpot=i;fishing=true;stand={x:c.x,z:c.z};cast=castPoint(s,stand);session.begin(s.id);hideFloat(i,true);
-    visuals??=makeVisuals();visuals?.begin(stand,cast,cast.dir);
-    cam.begin(stand,cast.dir,cast.distance,()=>{if(fishing&&session.session.phase==='ready')session.tap();},s.camera);}}
+   if(s&&near===i){liveSpot=i;fishing=true;stand={x:c.x,z:c.z};area=aimArea(s,stand,c.height>c.width);cast=area.base;session.begin(s.id);hideFloat(i,true);
+    sessionNo++;clock=0;aimLanding=null;
+    visuals??=makeVisuals();visuals?.begin(stand,cast,cast.dir);replanHotspots(s,c.now/1000);
+    // The camera eases in and the player aims the first cast (Oct 14 2026: no automatic first throw any more).
+    cam.begin(stand,cast.dir,cast.distance,undefined,s.camera);}}
   const events:SessionEvent[]=[];
   if(fishing){
    if(session.takeStop()||Math.hypot(c.x-stand.x,c.z-stand.z)>1.3||!c.onFoot||!c.canEnter)stopFishing(session);
    else{events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced,out:cast.dir,approach:(r,f)=>planApproach(cast,r,f)}));if(events.length||session.session.phase==='reeling')session.handle(events);}
   }else session.takeStop();
-  events.push(...session.drainTapEvents());
+  const taps=session.drainTapEvents();events.push(...taps);
+  if(fishing){const s=FISH_SPOTS[liveSpot],nowS=c.now/1000,ph=session.session.phase;clock+=c.dt;
+   if(Math.floor(nowS/HOTSPOT_RESEED)!==hotBucket&&ph!=='approach'&&ph!=='nibble'&&ph!=='bite'&&ph!=='reeling')replanHotspots(s,nowS);
+   // Aim preview: the HUD's input (a point on the screen, or a polar aim) clamped to the spot's water.
+   const input=session.aimInput;aimLanding=input&&(ph==='ready'||ph==='caught')?landingFor(input,c.camera):null;
+   visuals?.setAim?.(aimLanding);visuals?.setClock?.(clock);
+   if(taps.includes('cast'))landCast(session,s,nowS,c.camera);}
   // Visuals lifecycle + drive (no logic in the visuals; they only show the current state).
   const around=fishing||nearAnySpot(c.x,c.z,45);
   if(!visualsModule&&nearAnySpot(c.x,c.z,VISUALS_PREFETCH))void loadFishingVisuals();
-  if(!visuals&&around){visuals=makeVisuals();if(visuals&&fishing)visuals.begin(stand,cast,cast.dir);}
+  if(!visuals&&around){visuals=makeVisuals();if(visuals&&fishing){visuals.begin(stand,cast,cast.dir);visuals.setHotspots?.(hotspots);}}
   if(visuals&&!fishing&&!visuals.busy&&!nearAnySpot(c.x,c.z,80)){visuals.dispose();visuals=null;}
   if(visuals){
    visuals.setCoastVisible(around);
@@ -189,19 +212,19 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const spotGlow=createBuildingGlow(spotGlowRoot,1.2,.7,2.9,'cabinet');
  const standGlowRoot=new T.Group();standGlowRoot.name='market-stand-selection';standGlowRoot.position.set(MARKET_STAND.x,0,MARKET_STAND.z);standGlowRoot.scale.set(7.8/8.4,4/4.74,9.2/17.4);scene.add(standGlowRoot);
  const standGlow=createBuildingGlow(standGlowRoot,8.4,17.4,4.7,'ferry');
- const kioskBoxes=FISH_SPOTS.map(s=>{if(s.boat)return new T.Box3(new T.Vector3(BOAT_AFLOAT.x0,-.4,BOAT_AFLOAT.z0),new T.Vector3(BOAT_AFLOAT.x1,3,BOAT_AFLOAT.z1));const k=kioskAt(s);return new T.Box3(new T.Vector3(k.x-1.2,0,k.z-1.2),new T.Vector3(k.x+1.2,3.3,k.z+1.2));});
+ const kioskBoxes=FISH_SPOTS.map(s=>{const a=s.boat?boatBySpot(s.id)?.afloat:null;if(a)return new T.Box3(new T.Vector3(a.x0,-.4,a.z0),new T.Vector3(a.x1,3,a.z1));const k=kioskAt(s);return new T.Box3(new T.Vector3(k.x-1.2,0,k.z-1.2),new T.Vector3(k.x+1.2,3.3,k.z+1.2));});
  const standBox=new T.Box3(new T.Vector3(MARKET_STAND.x-3.8,0,MARKET_STAND.z-4.6),new T.Vector3(MARKET_STAND.x+3.8,5.1,MARKET_STAND.z+4.6));
  const hit=new T.Vector3(),anchor=new T.Vector3();
  let glowSpot=-1,hoverKind='',hoverSpot=-1,hoverUntil=0,bobbing=false,lastHover=-1;
  const rippleAge={t:0};
- // The moored Deep Sea Boat: built only near it, one merged mesh, registers its aft deck as a landable floor.
- const boat=createDeepSeaBoat(scene);
+ // The moored Deep Sea Boats: each built only near it (one shared merged mesh), registering its aft deck as a landable floor.
+ const boats=DEEP_SEA_BOATS.map(b=>createDeepSeaBoat(scene,b)),boatOf=new Map(boats.map(b=>[b.boat.spotId as string,b]));
 
  function update(c:FishingUpdate){
-  boat.update(c);
+  for(const b of boats)b.update(c);
   // Nearest spot within reach (on foot) — the only work when the player is away from the water.
   let near=-1,nearD=SPOT_REACH,closestFloat=Infinity;
-  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD&&(!s.boat||boat.deck)){near=i;nearD=d;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
+  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD&&(!s.boat||boatOf.get(s.id)?.deck)){near=i;nearD=d;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
   if(!c.onFoot||!c.canEnter)near=-1;
   // ---- Live fishing session ----
   // ---- Live fishing: the state machine drives the camera and the (swappable) visuals ----
@@ -256,5 +279,5 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   get stand(){return stand;},
   /** Call right after the follow camera is placed (like vending.applyCamera): eases to the low shoreline shot while fishing. */
   applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>cam.apply(camera,dt,reduced),
-  dispose(){boat.dispose();visuals?.dispose();visuals=null;spotGlow.dispose();standGlow.dispose();spotGlowRoot.removeFromParent();standGlowRoot.removeFromParent();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(mat=>mat.dispose());textures.forEach(t=>t.dispose());floats.dispose();}};
+  dispose(){boats.forEach(b=>b.dispose());visuals?.dispose();visuals=null;spotGlow.dispose();standGlow.dispose();spotGlowRoot.removeFromParent();standGlowRoot.removeFromParent();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(mat=>mat.dispose());textures.forEach(t=>t.dispose());floats.dispose();}};
 }

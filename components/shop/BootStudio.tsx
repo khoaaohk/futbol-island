@@ -13,6 +13,7 @@ import {BOOT_GLYPHS} from '@/lib/shop/bootGlyphs';
 import type {BootScene,BootView,DecalPatch} from '@/lib/shop/bootScene';
 import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
 import type {StageInsets} from '@/lib/shop/studioSheet';
+import {countDesignSave} from '@/lib/analytics/shopEvents';
 import styles from './BootStudio.module.css';
 
 /**
@@ -215,7 +216,7 @@ export default function BootStudio({onClose,onBuy}:Props){
  const model=modelOf(design.model),free=!model.collar;
  const typeName=(raw:string)=>{const n=cleanName(raw);setNameDraft(n);if(!nameAllowed(n)){setNameError('Let’s pick a different name.');return;}setNameError('');commit(d=>({...d,name:n.trim(),heelText:n.trim()?'name':d.heelText}));};
  const saveSlot=(i:number)=>{if(!saves)return;const slots=[...saves.slots];const prev=slots[i];slots[i]={name:prev?.name??(design.name?`${design.name}’s boots`.slice(0,NAME_MAX):`Boots ${i+1}`),design,at:Date.now()};
-  const next={...saves,slots,current:design};setSaves(next);storeBootSaves(next);say('Saved!');};
+  const next={...saves,slots,current:design};setSaves(next);storeBootSaves(next);say('Saved!');countDesignSave('boots');};
  const renameSlot=(i:number,raw:string)=>{if(!saves)return;const s=saves.slots[i];if(!s)return;const n=cleanName(raw);if(!nameAllowed(n))return;const slots=[...saves.slots];slots[i]={...s,name:n||`Boots ${i+1}`};const next={...saves,slots};setSaves(next);storeBootSaves(next);};
  const loadSlot=(i:number)=>{const s=saves?.slots[i];if(!s)return;commit(s.design);setNameDraft(s.design.name);setSaveOpen(false);say('Loaded');};
  const buy=()=>{const d=validateBoots(design);onBuy?.(d);};

@@ -28,6 +28,7 @@ import type {Painter,PaintTool,StampKind,Symmetry} from '@/lib/shop/ballPaint';
 import type {BallSound} from '@/lib/shop/ballSound';
 import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,studioSectionTitle,useStudioSheet} from './StudioControls';
 import type {StageInsets} from '@/lib/shop/studioSheet';
+import {countDesignSave} from '@/lib/analytics/shopEvents';
 
 type Props={onClose():void;onBuy?(design:BallDesign):void};
 const STEPS=[{id:'panels',label:'Start'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'finish',label:'Finish'},{id:'draw',label:'Draw'},{id:'stickers',label:'Stickers'},{id:'done',label:'Done'}] as const;
@@ -375,7 +376,7 @@ export default function BallStudio({onClose,onBuy}:Props){
  const doBuy=()=>{const d=validateBall(flushEncode());markBallBought(d,undefined,artMem.current);setStore(loadBallStore());setConfirm(null);
   if(onBuy)onBuy(d);stageRef.current?.kick();say(onBuy?'It’s yours! Find it in My kit.':'Ask at the till to buy your ball!');};
  const openSlots=()=>{flushEncode();setSel(-1);setStore(loadBallStore());window.setTimeout(()=>setSheet({thumb:snap(96)}),0);};
- const slotSave=(i:number,name:string)=>{const d=flushEncode();if(saveBallSlot(i,name,d,Date.now(),undefined,artMem.current,sheet?.thumb)){setStore(loadBallStore());say('Saved! Your ball is safe.');soundRef.current?.pop(1.1);}else say('This browser could not save.');};
+ const slotSave=(i:number,name:string)=>{const d=flushEncode();if(saveBallSlot(i,name,d,Date.now(),undefined,artMem.current,sheet?.thumb)){setStore(loadBallStore());say('Saved! Your ball is safe.');soundRef.current?.pop(1.1);countDesignSave('ball');}else say('This browser could not save.');};
  const slotLoad=(i:number)=>{const sl=store?.slots[i];if(!sl)return;commit(sl.design);setSheet(null);setSel(-1);say(`Loaded ${sl.name}`);stageRef.current?.preview();};
  const enterShow=()=>{flushEncode();setSel(-1);setShowoff(true);setPreview(null);try{const r=rootRef.current;if(r?.requestFullscreen&&!document.fullscreenElement)void r.requestFullscreen().catch(()=>{});}catch{}
   window.setTimeout(()=>{stageRef.current?.resize();stageRef.current?.reset();window.setTimeout(()=>stageRef.current?.spin(6),480);},60);};

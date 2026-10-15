@@ -1,4 +1,4 @@
-// Shared loader for tests/summit-kick.cjs and tests/telescope.cjs (Summit Isle activities, Oct 12 2026). Not a test on its own.
+// Shared loader for tests/summit-kick.cjs and tests/zipline.cjs (Summit Isle activities, Oct 12 2026). Not a test on its own.
 // - load(file): a TypeScript module transpiled to CommonJS, relative and '@/…' imports resolved, with per-test overrides.
 // - runtime(): lib/graphics/summitActivities.ts on the real three.js (ESM) with browser stubs that COUNT any frame loop or
 //   timer it might start, and stubbed wallet/board ports that record what would be paid or requested.

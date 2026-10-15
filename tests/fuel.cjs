@@ -91,9 +91,10 @@ function memStore(start){const data=new Map(),clock={t:start??Date.UTC(2026,8,30
  assert(/export const resolveFood=/.test(store)&&/export const keepFood=/.test(store)&&/export const eatFromPouch=/.test(store)&&/fuelFrom\(/.test(store),'every Konbini/drink eat path refuels');
  const count=read('components/FuelCount.tsx');assert(/data-fuel-level/.test(count)&&/Empty/.test(count)&&/Low/.test(count)&&/empty=\{level==='empty'\}/.test(count),'state by colour + icon + text');}
 
-// 9. Economy guard (the full checks live in tests/economy.cjs §9): buying every refill stays a small share and keeps the 60–90 day target.
+// 9. Economy guard (the full checks live in tests/economy.cjs §9): buying every refill stays a small share and keeps the pace target
+//    (85–120 days for a regular player since the 14 Oct 2026 rebalance; 60–90 before).
 {const S=require('../scripts/economy-sim.cjs');const reg=S.averaged(S.FUEL_BUY,'regular',200,3),free=S.averaged(S.FUEL_FREE,'casual15',200,3);
- assert(reg.fuelSharePct<=12,`regular spends ${reg.fuelSharePct}% of income on fuel`);assert(reg.allBought>=60&&reg.allBought<=90,`regular owns everything by day ${reg.allBought}`);
+ assert(reg.fuelSharePct<=12,`regular spends ${reg.fuelSharePct}% of income on fuel`);assert(reg.allBought>=85&&reg.allBought<=120,`regular owns everything by day ${reg.allBought}`);
  assert.equal(free.fuelShortDays,0,'a casual child with no coins to spare is never short of fuel');}
 
 // 10. Deploy 11 audit regressions (Sep 30 2026, lane A).

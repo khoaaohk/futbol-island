@@ -23,7 +23,8 @@ export const SYNC_KEYS:readonly string[]=[
  // Exploration
  'futbol-island-quests-v1','fi2-passport-v1','fi2-club-stories-v1','fi2-matchday-coins-v1','fi2-explore-activity-v1',
  'fi2-east-pier-challenge-v1',
- 'fi2-summit-kick-v1','fi2-telescope-v1',// Summit Isle (Oct 12 2026): the Summit Kick best and the telescope glints found
+ 'fi2-summit-kick-v1','fi2-telescope-v1',// Summit Isle (Oct 12 2026): the Summit Kick best; the telescope's glints (the telescope was removed Oct 14 2026: the key
+ // stays so an older save's data still round-trips and is never dropped)
  // The museum passport (Oct 9 2026): exhibits stepped inside / finished (lib/museum/museumVisits.ts)
  'fi2-museum-visits-v1',
  // Museum mini-games (Oct 10 2026): the Legends arena progress and the best scores, small and worth keeping across devices
@@ -36,8 +37,11 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-player-cards-v1','fi2-card-offers-v1','fi2-card-trade-v1','fi2-binder-layout-v1','fi2-player-books-v1','fi2-book-checks-v1',
  'fi2-book-checks-answered-v1',
  // Jobs, fishing, food
+ // fi2-market-v1 also holds today's per-good sales and part-coin tallies (Oct 14 2026 economy rebalance, docs/economy.md): synced, so a
+ // second device cannot reset Rosa's same-kind ladder.
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
+ 'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
  'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
@@ -57,6 +61,8 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  // The Kit Shop studios' phone panel size (Oct 14 2026): a per-device layout preference.
  'fi2-studio-sheet-v1',
  // Coaches Board plays stay on the device (user, Oct 9 2026): play names are typed text and could name a child. Share links move them.
+ // Summit Isle easel paintings (Oct 14 2026): child-made pictures stay on the device (never synced, never sent anywhere).
+ 'fi2-paintings-v1',
  'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */
 export const SAVE_CODE_KEY='fi2-save-code-v1',SAVE_SYNC_KEY='fi2-save-sync-v1',SAVE_BACKUP_KEY='fi2-save-backup-v1',

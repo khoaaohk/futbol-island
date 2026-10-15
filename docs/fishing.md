@@ -1,5 +1,7 @@
 # Fishing and Rosa's market stand
 
+> **Coin numbers updated 14 Oct 2026:** see [economy.md](economy.md) (the one table is `lib/economy.ts`). Values below may predate it.
+
 Written 27 Sep 2026; expanded 28 Sep 2026 (56 species, spot specials, rarity reeling, varied approaches; marine mammals and reptiles removed the same day by user decision); 29 Sep 2026: the **Deep Sea Boat** and 8 deep-sea creatures (64 species, 6 spots; see [Deep Sea Boat](#deep-sea-boat-29-sep-2026)). Local only: nothing has been committed or deployed.
 
 User request: "Add fishing-related elements along the island to catch fish to sell at the farmers market for money."
@@ -225,6 +227,19 @@ This section fits the jobs economy in `lib/town/jobs/jobEconomy.ts` and `docs/is
   - The football lesson of the goods sold.
 - **How Sell 1 works.** It lives in `lib/town/market/marketStand.ts` and reuses `quoteSale` from `market.ts`, so one item and "sell all" follow the same prices and cap.
 - **Opening the stand from other features:** `window.dispatchEvent(new CustomEvent('fi2-open-market-stand',{detail:{tab:'produce'}}))`.
+
+## Deep-sea boats, aimed casting, hotspots and Drop-off Ledge (14 Oct 2026)
+
+User asks: *"move the fishing boat over more to where i circled and then add a second boat to the west of the mountain island. also increase the probability of bigger fish on boats since it's in deep sea"*; *"add one more fishing spot to the mountain island on the southeast side"*; *"update the fishing to be able to cast in certain spots to try and catch bigger fish. not cast in the same spot"*; *"update the water scene for the boat"*; *"the fish sometimes teleport in"*.
+
+- **Boats** (`deepSeaBoatData.ts` `DEEP_SEA_BOATS`): the Deep Sea Boat moved from (282.5, −93.5) to **(335, −5)**, the open bay just north of the East Jetty's spiral. The travel map draws world x/z 1:1 (`IslandOverview` viewBox in world metres), so the circled map point is the world point. The new **Summit Deep Boat** is moored at **(385, 185)**, between the main island's south-east coast and Summit Isle's west coast. Both use the same model (one shared merged geometry), the same boarding (jetpack or parachute onto the landable deck), the same catch table (the deep-sea specials live at both) and the `deep_sea_boat` analytics place. They have different water: `blue-abyss` and `abyss-green`. `tests/fishing.cjs` checks both against the coasts, the jetty, the sea-life loops (≥ 15 m from every possible landing), the floats and the flight zone.
+- **Deep water look** (`deepSeaScene.ts`, `fishSchools.ts` deep mode): the boats show no seabed pieces. The water darkens with depth, with light shafts, plankton and jellyfish (one draw), a bait ball, big tuna and marlin silhouettes far below, and a manta or turtle. The green variant has a mackerel ball and a turtle.
+- **Odds**: see `docs/economy.md` §4b (deep boost, slower bite, hotspot boost, cap). The Fishbook groups the boats' specials as "Deep sea specials" and tags every deep-sea creature "Deep sea".
+- **Aimed casting** (`fishingAim.ts`, `FishingHost.tsx`): press on the water to aim at that point, drag to move the dotted arc, let go to cast. The mouse previews the aim on hover. You can also drag from the Cast button (sideways turns the aim, up throws farther), or use the arrow keys and hold Space for power. A tap on Cast or Space is a quick cast near the usual float. Landings are clamped to the water the camera frames, and always land in open water.
+- **Hotspots** (`fishingOverlay.ts`, one instanced draw while fishing): each spot has 1–3 patches (2–3 on the boats): a dark drop-off, ripples, diving birds, a reef edge, a passing shadow, a bait-ball boil or a dark upwelling. They drift slowly and move to new water every 3 minutes. Casting on one raises the rarer odds (capped).
+- **Spooked water**: casting again within 2.5 m of a recent cast gives slower bites and smaller fish, and the hint says *"The fish here are spooked, try another spot!"*. The water calms down again over 90 s. The ready hint teaches *"Read the water: fish gather where the water changes."*
+- **No pop-in**: the biter starts 5.5–8 m out, deep in the haze and fully faded, then rises as it swims in. It leaves by fading and sinking. Ambient fish rise in as a session fades in. Tests: `tests/fishing-aim.cjs`.
+- **Drop-off Ledge** (`summit-ledge`): Summit Isle's south-east shore (bearing 54°), with a shore table of shared species and its own `ledge-dropoff` reef. Catches there count as `su:fish_ledge`.
 
 ## Deep Sea Boat (29 Sep 2026)
 

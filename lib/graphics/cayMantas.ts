@@ -16,9 +16,13 @@
 //    (dt 0: map, lessons, overlays) and reduced motion / static ambience upload nothing; the island loop itself parks
 //    behind overlays, so nothing runs there at all. No per-frame allocations, no loop, timer or audio of its own.
 //  - Phones draw 2 mantas round the cay (desktop 3); both sandbars keep 2.
+//  - Summit Isle (Oct 14 2026) is a fourth island: 3 mantas on desktop, 2 on phones, thinned on hot tiers (summitSeaLifeCounts:
+//    2 at tiers 1–2, 1 at tier 3, none at the hottest), one `count` change when the tier changes.
 import * as T from 'three';
 import {MANTA_ISLANDS,mantaLoopsFor,type MantaIsland,type MantaLoop} from '../town/mantaLoops';
 import {dynamicResolutionEnabled} from './quality';
+import {subscribeHeatTier,effectiveTier} from './heatTier';
+import {summitSeaLifeCounts} from '../town/summitSeaLife';
 const WATER=-.43,SCALE=1.2,NEAR=140,DRAW=220;
 export const MANTA_EVENT={minGap:22,spread:28,breach:2.4,wingtip:3.2,breachChance:.34} as const;
 const hash=(i:number)=>{const s=Math.sin(i*12.9898+4.1414)*43758.5453;return s-Math.floor(s);};
@@ -94,13 +98,15 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   const group=new T.Group();group.name=`mantas-${island}`;group.add(under,surface);root.add(group);
   const flat={minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z};
   return {island,tracks,under,surface,group,box:flat,sphere,time:0,placed:false,placedReduced:false,
-   event:{active:false,manta:0,kind:'wingtip' as 'wingtip'|'breach',t:0,duration:0,side:1},next:MANTA_EVENT.minGap*.5+hash(ii+3)*MANTA_EVENT.spread,events:0};
+   event:{active:false,manta:0,kind:'wingtip' as 'wingtip'|'breach',t:0,duration:0,side:1},next:MANTA_EVENT.minGap*.5+hash(ii+3)*MANTA_EVENT.spread,events:0,active:tracks.length};
  });
  type Island=typeof islands[number];
+ // Heat tiers: Summit Isle's mantas thin out on a hot phone (the cay's and sandbars' stay as before). Only on a tier change.
+ const applyTier=()=>{const tier=effectiveTier();for(const r of islands){if(r.island!=='summit')continue;r.active=Math.min(r.tracks.length,summitSeaLifeCounts(tier,phone).mantas);r.under.count=r.active;if(r.event.active)endEvent(r);r.placed=false;}};
  const m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),pos=new T.Vector3(),flat=new T.Vector3(SCALE,.02,SCALE),full=new T.Vector3(SCALE,SCALE,SCALE),zero=new T.Vector3(0,0,0);
  const stats={awake:0,updated:0,surfacing:0,events:0,visibleIslands:0};
  function startEvent(r:Island){
-  const ev=r.event,n=r.tracks.length,h=hash(r.events*3.1+r.tracks[0].phase);
+  const ev=r.event,n=r.active,h=hash(r.events*3.1+r.tracks[0].phase);
   ev.active=true;ev.manta=r.events%n;ev.kind=h<MANTA_EVENT.breachChance?'breach':'wingtip';ev.t=0;ev.duration=ev.kind==='breach'?MANTA_EVENT.breach:MANTA_EVENT.wingtip;ev.side=r.events%2?1:-1;
   const phase=r.surface.geometry.getAttribute('aPhase') as T.InstancedBufferAttribute;phase.setX(0,r.tracks[ev.manta].phase);phase.needsUpdate=true;
   r.events++;stats.events++;r.surface.visible=true;
@@ -111,7 +117,7 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   if(reduced){if(r.event.active)endEvent(r);}
   else if(r.event.active){r.event.t+=dt;if(r.event.t>=r.event.duration)endEvent(r);}
   else if(dt>0&&(r.next-=dt)<=0)startEvent(r);
-  for(let i=0;i<r.tracks.length;i++){
+  for(let i=0;i<r.active;i++){
    const t=r.tracks[i],pts=t.loop.points,n=pts.length;
    const before=t.u;t.u=(t.u+dt*t.loop.speed)%t.total;if(t.u<before)t.k=1;
    while(t.k<n&&t.lengths[t.k]<t.u)t.k++;
@@ -135,16 +141,17 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
  function update(dt:number,reduced:boolean,frustum:T.Frustum,player:{x:number;z:number}){
   stats.awake=stats.updated=stats.surfacing=stats.visibleIslands=0;let moved=false;
   for(const r of islands){
-   r.group.visible=boxDistance(r.box,player.x,player.z)<DRAW;if(!r.group.visible)continue;stats.visibleIslands++;
+   r.group.visible=r.active>0&&boxDistance(r.box,player.x,player.z)<DRAW;if(!r.group.visible)continue;stats.visibleIslands++;
    if(!r.placed||r.placedReduced!==reduced){place(r,0,reduced);r.placed=true;r.placedReduced=reduced;}
-   let awake=false;for(const t of r.tracks)if(boxDistance(t.box,player.x,player.z)<NEAR&&frustum.intersectsSphere(t.sphere)){awake=true;break;}
+   let awake=false;for(let i=0;i<r.active;i++){const t=r.tracks[i];if(boxDistance(t.box,player.x,player.z)<NEAR&&frustum.intersectsSphere(t.sphere)){awake=true;break;}}
    if(!awake)continue;
    // Frozen (dt 0: map, lessons) or static ambience / reduced motion: already placed, so no matrix upload.
    stats.awake++;if(dt===0||reduced)continue;
-   place(r,Math.min(dt,.1),false);stats.updated+=r.tracks.length;if(r.event.active)stats.surfacing++;moved=true;
+   place(r,Math.min(dt,.1),false);stats.updated+=r.active;if(r.event.active)stats.surfacing++;moved=true;
   }
   // Wrap on a whole number of flap periods (2π/1.9 s), so the wave never jumps.
   if(moved){clock=(clock+Math.min(dt,.1))%(2*Math.PI/1.9*500);time.value=clock;}
  }
- return {root,stats,update,islands,time,dispose(){root.removeFromParent();for(const r of islands){r.under.geometry.dispose();r.surface.geometry.dispose();r.under.dispose();r.surface.dispose();}geometry.dispose();underMat.dispose();surfaceMat.dispose();}};
+ applyTier();const offTier=subscribeHeatTier(applyTier);
+ return {root,stats,update,islands,time,applyTier,dispose(){offTier();root.removeFromParent();for(const r of islands){r.under.geometry.dispose();r.surface.geometry.dispose();r.under.dispose();r.surface.dispose();}geometry.dispose();underMat.dispose();surfaceMat.dispose();}};
 }

@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
 const base=path.resolve(__dirname,'..'),T=require('node:module').createRequire(base+'/package.json')('three');
 const loaded=new Map();function load(file){file=path.resolve(base,file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,Map,Set,Uint8Array,Float32Array,require:id=>id==='three'?T:id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});loaded.set(file,mod.exports);return mod.exports;}
-const cay=load('lib/town/coralCay.ts'),{flightBlocked}=load('lib/town/simulation.ts'),{onLand,distanceToLand}=load('lib/town/landmass.ts');
+const cay=load('lib/town/coralCay.ts'),summit=load('lib/town/summitIsle.ts'),{flightBlocked}=load('lib/town/simulation.ts'),{onLand,distanceToLand}=load('lib/town/landmass.ts');
 const M=load('lib/town/mantaLoops.ts'),{BOAT_MOORING}=load('lib/town/fishing/deepSeaBoatData.ts'),{EAST_PIER}=load('lib/town/eastPier.ts');
 const {CORAL_CAY_SPOTS}=load('lib/town/coralCayBalls.ts'),buoy=CORAL_CAY_SPOTS.find(s=>s.buoy);
 const G=load('lib/graphics/cayMantas.ts');
@@ -34,7 +34,7 @@ for(const l of loops){
   let d=Math.atan2(n.z-c.z,n.x-c.x)-Math.atan2(c.z-p.z,c.x-p.x);d=Math.atan2(Math.sin(d),Math.cos(d));worst=Math.max(worst,Math.abs(d));}
  assert(worst<.8,l.id+' turns smoothly (worst '+worst.toFixed(2)+' rad per sample)');
  // Each loop circles its own island: centred on it, within the near water.
- const home=l.island==='cay'?cay.CAY_CENTER:cay.SANDBARS.find(s=>s.id===l.island),far=l.island==='cay'?160:70;
+ const home=l.island==='cay'?cay.CAY_CENTER:l.island==='summit'?summit.SUMMIT_CENTER:cay.SANDBARS.find(s=>s.id===l.island),far=l.island==='cay'?160:l.island==='summit'?215:70;
  assert(l.points.every(p=>Math.hypot(p.x-home.x,p.z-home.z)<far),l.id+' stays round its island');
 }
 for(const a of loops)for(const b of loops)if(a!==b){let gap=Infinity;for(const p of a.points)for(const q of b.points)gap=Math.min(gap,Math.hypot(p.x-q.x,p.z-q.z));assert(gap>=7,`${a.id} and ${b.id} never overlap (${gap.toFixed(1)} m)`);}
@@ -43,8 +43,8 @@ for(const l of loops.filter(l=>l.island==='cay'))assert(l.points.every(p=>p.x>ca
 
 // ---- Counts per island (2–3 each; phones keep two round the cay).
 const count=(phone)=>Object.fromEntries(M.MANTA_ISLANDS.map(i=>[i,M.mantaLoopsFor(i,phone).length]));
-same(count(false),{cay:3,starfish:2,turtle:2},'desktop: 3 round the cay, 2 per sandbar');
-same(count(true),{cay:2,starfish:2,turtle:2},'phone: 2 per island');
+same(count(false),{cay:3,starfish:2,turtle:2,summit:3},'desktop: 3 round the cay, 2 per sandbar, 3 round Summit Isle');
+same(count(true),{cay:2,starfish:2,turtle:2,summit:2},'phone: 2 per island');
 
 // ---- Model: shared, low-poly, dark top / pale belly, no shadows, one draw per island while gliding.
 const geo=G.mantaGeometry(),tris=geo.getAttribute('position').count/3;assert(tris<=160,'low-poly manta ('+tris+' triangles)');
@@ -56,13 +56,13 @@ assert(/aPhase/.test(G.WING_WAVE)&&/uMantaTime/.test(G.WING_WAVE),'wing wave run
 function make(phone){const scene=new T.Scene();return {scene,mantas:G.createCayMantas(scene,{phone})};}
 const {scene,mantas}=make(false);
 {const meshes=[];scene.traverse(o=>{if(o.isInstancedMesh)meshes.push(o);});
- assert.equal(meshes.length,6,'two instanced meshes per island');
+ assert.equal(meshes.length,8,'two instanced meshes per island');
  assert(meshes.every(m=>!m.castShadow&&!m.receiveShadow&&m.frustumCulled&&m.boundingSphere),'no shadows, fixed culling bounds');
  assert.equal(new Set(meshes.map(m=>m.material)).size,2,'two shared materials');
  assert.equal(new Set(meshes.map(m=>m.geometry.getAttribute('position'))).size,1,'one shared vertex buffer');
- same(mantas.islands.map(r=>r.under.count),[3,2,2],'silhouettes per island');
+ same(mantas.islands.map(r=>r.under.count),[3,2,2,3],'silhouettes per island');
  assert(mantas.islands.every(r=>!r.surface.visible),'no surfacing mesh drawn while gliding');}
-same(make(true).mantas.islands.map(r=>r.under.count),[2,2,2],'phone silhouettes per island');
+same(make(true).mantas.islands.map(r=>r.under.count),[2,2,2,2],'phone silhouettes per island');
 
 // ---- Culling and sleep.
 const cam=new T.PerspectiveCamera(60,390/844,.1,900),frustum=new T.Frustum(),vp=new T.Matrix4();
@@ -118,4 +118,4 @@ mantas.update(1/30,false,frustum,nearTurtle);assert(ver(turtle)>placed&&mantas.t
  assert(t&&/plankton/.test(t.answer)&&/first touch/i.test(t.followUp.answer),'Nia teaches the manta / first-touch link');
  assert(/manta/i.test(nia.greeting),'Nia mentions the mantas when you meet her');}
 
-console.log(`PASS manta rays: ${loops.length} loops (cay 3/2 phone, sandbars 2 each), ${tris} triangles, open water ≥ 10 m from land, clear of causeway/sharks/buoy/boat, culling + sleep + reduced motion, rare bounded surfacing, Nia's first-touch lesson`);
+console.log(`PASS manta rays: ${loops.length} loops (cay 3/2 phone, sandbars 2 each, Summit Isle 3/2 phone), ${tris} triangles, open water ≥ 10 m from land, clear of causeway/sharks/buoy/boat, culling + sleep + reduced motion, rare bounded surfacing, Nia's first-touch lesson`);

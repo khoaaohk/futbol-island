@@ -30,7 +30,9 @@ const obstacles=[],assets=[],town=new T.Group();{const W=load('lib/town/summitIs
   sign:(t,w,h,x,y,z)=>{const m=mk(new T.PlaneGeometry(w,h));m.position.set(x,y,z);return m;},town,obstacles,assets,surfaceAreas:[]});
  // The activity props too (the Summit Kick post once stood on the trail's last metres into the gate).
  load('lib/town/summitActivitiesWorld.ts').buildSummitActivityProps({box:(w,h,d,c,x,y,z)=>{const m=mk(new T.BoxGeometry(w,h,d));m.position.set(x,y,z);return m;},cylinder:(r,h,c,x,y,z)=>{const m=mk(new T.CylinderGeometry(r,r,h,8));m.position.set(x,y,z);return m;},
-  put:(g,c,x,y,z)=>{const m=mk(g);m.position.set(x,y,z);return m;},sign:(t,w,h,x,y,z)=>{const m=mk(new T.PlaneGeometry(w,h));m.position.set(x,y,z);return m;},obstacles});}
+  put:(g,c,x,y,z)=>{const m=mk(g);m.position.set(x,y,z);return m;},sign:(t,w,h,x,y,z)=>{const m=mk(new T.PlaneGeometry(w,h));m.position.set(x,y,z);return m;},obstacles});
+ // The painting easel's easel, stool and paint table (Oct 14 2026) are colliders on the west slope too.
+ load('lib/town/paintEaselWorld.ts').buildPaintEasel({box:(w,h,d,c,x,y,z)=>{const m=mk(new T.BoxGeometry(w,h,d));m.position.set(x,y,z);return m;},cylinder:(r,h,c,x,y,z)=>{const m=mk(new T.CylinderGeometry(r,r,h,8));m.position.set(x,y,z);return m;},put:(g,c,x,y,z)=>{const m=mk(g);m.position.set(x,y,z);return m;},obstacles});}
 const P=S.SUMMIT_PATHS,L=S.SUMMIT_LANDMARKS;
 
 // ---- One connected trail network.
@@ -102,7 +104,9 @@ assert.equal(RS.hillSpeedScale('walk',.9),1);
 const PK=S.SUMMIT_PEAK,F=S.SUMMIT_FENCE,PI=S.SUMMIT_PITCH,GO={x:L.gate.x,z:L.gate.z+1.5};
 // "Steer toward the summit": straight at the gate; when the pitch's fence is in the way, via the corner of a 4.5 m berth round it.
 const inFenceBox=(a,b)=>{const RX=F.halfX+2.2,RZ=F.halfZ+1.6;let t0=0,t1=1;for(const [p0,d,lo,hi] of [[a.x-PI.x,b.x-a.x,-RX+.5,RX-.5],[a.z-PI.z,b.z-a.z,-RZ+.5,RZ-.5]]){if(Math.abs(d)<1e-9){if(p0<lo||p0>hi)return false;continue;}let u=(lo-p0)/d,v=(hi-p0)/d;if(u>v)[u,v]=[v,u];t0=Math.max(t0,u);t1=Math.min(t1,v);if(t0>t1)return false;}return true;};
-const toGate=p=>{if(Math.hypot(p.x-GO.x,p.z-GO.z)<3.5)return null;if(!inFenceBox(p,GO))return GO;const sx=p.x<PI.x?-1:1,south={x:PI.x+sx*(F.halfX+4.5),z:PI.z+F.halfZ+4.5},north={x:south.x,z:PI.z-F.halfZ-4.5};return inFenceBox(p,south)?north:south;};
+// The detour corners sit 7 m out from the fence (Oct 14 2026: at 4.5 m the south-west corner fell on the bench by the fence, and
+// the straight-line test rider ground along it once the telescope stand no longer nudged it east first).
+const toGate=p=>{if(Math.hypot(p.x-GO.x,p.z-GO.z)<3.5)return null;if(!inFenceBox(p,GO))return GO;const sx=p.x<PI.x?-1:1,south={x:PI.x+sx*(F.halfX+7),z:PI.z+F.halfZ+7},north={x:south.x,z:PI.z-F.halfZ-7};return inFenceBox(p,south)?north:south;};
 const toBeach=p=>S.summitGround(p.x,p.z)<.4?null:S.beachPoint(Math.atan2(p.z-PK.z,p.x-PK.x),.5);
 function drive(mode,start,target,fps,secs){const p={...start},v={x:0,z:0},roof=createRooftopTravel([],obstacles,p);roof.reset(p.x,p.z);const stick={x:0,z:0,sprint:mode==='walk'};
  const crawl=(RS.RIDE_CRAWL[mode]??1)*.8;let acc=0,slow=0,worstSlow=0,ticks=0,hops=[],below=0,peak=0,minSp=Infinity;

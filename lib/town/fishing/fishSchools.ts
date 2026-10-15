@@ -13,6 +13,13 @@ import {patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE,type ReefTheme} from './u
  * shadow onto the seabed. Species colours and patterns (silver, striped, blue, yellow, orange, clownfish bands, two-tone parrotfish)
  * are per-instance attributes painted in the fragment shader, tinted by depth like the coral (underwater.ts). Steering at 10 Hz,
  * positions per rendered frame. Phones get a 4-sided body and fewer fish. Exists only with the fishing visuals; hidden when idle.
+ *
+ * Oct 14 2026:
+ * - No pop-in ("the fish sometimes teleport in"): at the start of a session every fish rises from the seabed haze as it fades in
+ *   (never appears at its swimming depth), the glider and the deep silhouettes start outside the view and fade at both ends.
+ * - DEEP MODE (a theme with `deep`, the deep-sea boats): no crabs, no seabed shadows; the schools become ONE bait ball swirling
+ *   round a slowly moving centre (it follows the boat's bait-ball hotspot when there is one, `setBait`), two cruisers become big
+ *   tuna / marlin silhouettes crossing far below, and the glider is a manta or turtle deep down. Same one draw.
  */
 const STEER_DT=.1;
 type Look={a:string;b:string;pattern:number;shape:[number,number,number];size:[number,number]};
@@ -39,6 +46,10 @@ export const LOOKS:Record<string,Look>={
  grouper:{a:'#8a5a3a',b:'#e0b080',pattern:6,shape:[1.1,1.1,1.1],size:[.8,1]},
  barracuda:{a:'#9fb4c2',b:'#eef4f8',pattern:5,shape:[.65,.6,1.5],size:[.8,1]},
  anthias:{a:'#ff7a3a',b:'#ff3fa0',pattern:4,shape:[.85,1.05,1],size:[.24,.32]},
+ // Oct 14 2026, the deep-sea boats (deep mode below): a silver bait-ball fish and the big pelagic silhouettes far below.
+ baitfish:{a:'#8fb2c8',b:'#f2f7fa',pattern:0,shape:[.7,.7,1.15],size:[.26,.32]},
+ tuna:{a:'#10243e',b:'#2a4258',pattern:0,shape:[1,.95,1.35],size:[1.5,1.8]},
+ marlin:{a:'#102a4e',b:'#26405a',pattern:0,shape:[.55,.7,2],size:[1.6,2]},
 };
 const KIND={fish:0,crab:1,ray:2,turtle:3,shadow:9};
 
@@ -114,7 +125,8 @@ export function createFishSchools(scene:T.Scene,phone=false){
  const motion=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);motion.setUsage(T.DynamicDrawUsage);geometry.setAttribute('iMotion',motion);
  const colA=new T.InstancedBufferAttribute(new Float32Array(COUNT*3),3),colB=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);geometry.setAttribute('iColA',colA);geometry.setAttribute('iColB',colB);
  const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,transparent:true});
- material.onBeforeCompile=sh=>patchUnderwater(sh,{
+ const uShadow={value:1};
+ material.onBeforeCompile=sh=>patchUnderwater(sh,{uniforms:{uShadow},
   vertexHead:'attribute vec4 iMotion;attribute vec3 iColA;attribute vec4 iColB;attribute float aKind,aBend;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
   vertexBody:/* glsl */`vLocal=position;vShadow=step(8.5,aKind);vColA=iColA;vColB=iColB;vAlpha=iMotion.y;
    if(aKind<8.5&&abs(aKind-iMotion.z)>.5)transformed=vec3(0.);
@@ -124,9 +136,9 @@ export function createFishSchools(scene:T.Scene,phone=false){
     else if(aKind<1.5){float s=sin(ph+position.z*40.);transformed.y+=aBend*.03*max(0.,s);transformed.z+=aBend*.025*cos(ph+position.z*40.);}
     else if(aKind<2.5)transformed.y+=sin(ph-position.z*2.5)*.17*aBend;
     else{transformed.y+=sin(ph+position.z*4.)*.08*aBend;transformed.z+=cos(ph+position.z*4.)*.07*aBend;}}`,
-  fragmentHead:'varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  fragmentHead:'uniform float uShadow;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
   colorBody:/* glsl */`
-   if(vShadow>.5){diffuseColor=vec4(0.,0.,0.,(1.-smoothstep(.2,1.,length(vec2(vLocal.x/.3,vLocal.z/.52))))*.34*vAlpha);}
+   if(vShadow>.5){diffuseColor=vec4(0.,0.,0.,(1.-smoothstep(.2,1.,length(vec2(vLocal.x/.3,vLocal.z/.52))))*.34*vAlpha*uShadow);}
    else{vec3 base=vec3(1.);float pat=vColB.a;
     if(pat>-.5){float belly=smoothstep(.02,-.1,vLocal.y);vec3 b=vColB.rgb;
      if(pat<.5)base=mix(vColA,b,belly);
@@ -148,6 +160,10 @@ export function createFishSchools(scene:T.Scene,phone=false){
  // viewDepth (Oct 13 2026, farther casts): how far out schools and cruisers roam, in metres (default 11, the old fixed
  // reach); the caller passes the spot's real cast distance plus a margin, so the schools still turn around the float.
  let water:(x:number,z:number)=>number=()=>10,cx=0,cz=0,ux=0,uz=1,wide=5,steer=0,fade=0,target=0,theme:ReefTheme=reefTheme({id:''}),viewDepth=11;
+ // Deep mode (the deep-sea boats): the bait ball's centre, where it heads (a hotspot or a wander point), and the big silhouettes.
+ let deep=false,ballX=0,ballZ=0,ballTX=0,ballTZ=0,ballSpin=0,ballPanic=0,bait:{x:number;z:number}|null=null;
+ type Big={on:boolean;wait:number;x:number;z:number;vx:number;vz:number;t:number;life:number;y:number;len:number;phase:number};
+ const bigs:Big[]=[0,1].map(i=>({on:false,wait:1.5+i*5,x:0,z:0,vx:0,vz:0,t:0,life:1,y:5,len:2,phase:0}));
  // Anemones in view (underwater.ts `homes`): one or two cruisers become a clownfish pair living in the first one.
  let homes:{x:number;y:number;z:number}[]=[];const homeOf=new Map<number,{x:number;y:number;z:number}>();
  const inView=(x:number,z:number)=>{const a=(x-cx)*ux+(z-cz)*uz,b=(x-cx)*uz-(z-cz)*ux;return a>0&&a<viewDepth&&Math.abs(b)<wide*(.5+a/viewDepth*.5);};
@@ -157,6 +173,16 @@ export function createFishSchools(scene:T.Scene,phone=false){
   colA.setXYZ(i,a.r,a.g,a.b);colB.setXYZW(i,b.r,b.g,b.b,pattern);};
  function place(){
   fish.length=0;leaders.length=0;crabs.length=0;homeOf.clear();const cast=theme.fish;
+  if(deep){// One bait ball (every school fish), two big silhouettes (the first two cruisers), the rest unused.
+   const look=LOOKS[theme.deep!.bait]??LOOKS.baitfish,c=pick(5,1e9);ballX=ballTX=c.x;ballZ=ballTZ=c.z;ballSpin=0;ballPanic=0;
+   for(let i=0;i<SCHOOLS*PER;i++){setColors(fish.length,look);
+    // slot: orbit radius (m), height in the ball (m, + up), orbit phase; swim = angular speed (rad/s).
+    const u=(i+.5)/(SCHOOLS*PER),h=(u*2-1)*.85,rr=Math.sqrt(1-h*h)*(.8+Math.random()*.5);
+    fish.push({x:c.x,z:c.z,vx:0,vz:0,heading:0,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:.8+Math.random()*.5,alpha:1,school:0,slot:{x:rr,z:h},panic:Math.random()*6.28,shape:look.shape});}
+   for(let i=0;i<CRUISERS;i++){const look2=LOOKS[theme.deep!.big[i%2]]??LOOKS.tuna;setColors(fish.length,look2);fish.push({x:0,z:0,vx:0,vz:0,heading:0,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look2.size[0],look2.size[1],Math.random()),swim:5,alpha:0,school:-1,slot:{x:0,z:0},panic:0,shape:look2.shape});}
+   for(let i=0;i<CRABS;i++)setColors(FISH+i,null);
+   bigs.forEach((b,i)=>{b.on=false;b.wait=1.5+i*6+Math.random()*3;});
+   setColors(FISH+CRABS,null,6);glider.on=false;glider.wait=4+Math.random()*5;return;}
   for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]]??LOOKS.sardine,swim=.35+Math.random()*.5;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
    for(let i=0;i<PER;i++){const row=Math.floor(i/2),side=i%2?1:-1,slot={x:side*(.35+row*.18)+(Math.random()-.5)*.2,z:row*.55+(Math.random()-.5)*.2};
     setColors(fish.length,look);
@@ -207,6 +233,38 @@ export function createFishSchools(scene:T.Scene,phone=false){
    colA.setXYZ(FISH+CRABS,1,1,1);colB.setXYZW(FISH+CRABS,2.4,2.4,2.4,glider.kind===KIND.ray?6:-1);colA.needsUpdate=true;colB.needsUpdate=true;return;}
   glider.wait=4;
  };
+ /** Deep mode, per rendered frame (only while fishing at a boat): the bait ball, the big silhouettes and the deep glider. */
+ function frameDeep(step:number){
+  const fe=fade*fade*(3-2*fade);
+  // Ball centre: toward the bait hotspot, else a slow wander between points in view, kept clear of the hull.
+  if(bait){ballTX=bait.x;ballTZ=bait.z;}else if(Math.hypot(ballTX-ballX,ballTZ-ballZ)<.8){const t=pick(5,1e9);ballTX=t.x;ballTZ=t.z;}
+  {const dx=ballTX-ballX,dz=ballTZ-ballZ,d=Math.hypot(dx,dz),sp=Math.min(d,.45*step);if(d>1e-4){ballX+=dx/d*sp;ballZ+=dz/d*sp;}}
+  ballPanic=Math.max(0,ballPanic-step/1.6);ballSpin+=step;
+  const ballY=UW_SURFACE-(1.5+3*(1-fe))-ballPanic*.6,spread=1+ballPanic*1.4;
+  for(let i=0;i<SCHOOLS*PER;i++){const f=fish[i],w=f.swim*(1+ballPanic*1.5),a=f.phase+ballSpin*w,r=f.slot.x*spread;
+   const x=ballX+Math.cos(a)*r,z=ballZ+Math.sin(a)*r,y=ballY+f.slot.z*spread+Math.sin(ballSpin*1.3+f.panic)*.08;
+   // Swims along the orbit (tangent), tail beating.
+   f.heading=Math.atan2(-Math.sin(a),Math.cos(a));f.x=x;f.z=z;
+   write(i,x,y,z,f.heading,f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],ballSpin*9+i,f.alpha*fe,KIND.fish,0);}
+  // Big silhouettes: cross the view far below, from outside one side to outside the other, fading at both ends.
+  for(let k=0;k<CRUISERS;k++){const i=SCHOOLS*PER+k,f=fish[i];
+   if(k>=bigs.length){write(i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);continue;}
+   const b=bigs[k];
+   if(!b.on){b.wait-=step;if(b.wait<=0){const a=(6+Math.random()*7)*(viewDepth/11),side=Math.random()<.5?-1:1,b0=-side*wide*2,b1=side*wide*2,len=Math.hypot(b1-b0,0),sp=.7+Math.random()*.4;
+     b.on=true;b.t=0;b.x=cx+ux*a+uz*b0;b.z=cz+uz*a-ux*b0;b.vx=uz*side*sp;b.vz=-ux*side*sp;b.life=len/sp;b.y=4.2+Math.random()*2;b.len=f.scale;}}
+   if(b.on){b.t+=step;b.x+=b.vx*step;b.z+=b.vz*step;b.phase+=step*3;if(b.t>=b.life){b.on=false;b.wait=6+Math.random()*10;}}
+   const k2=b.on?Math.max(0,Math.min(1,b.t/3,(b.life-b.t)/3)):0;
+   if(k2>0)write(i,b.x,UW_SURFACE-b.y,b.z,Math.atan2(b.vx,b.vz),f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],b.phase,fe*k2*.6,KIND.fish,0);
+   else write(i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);}
+  for(let i=0;i<CRABS;i++)write(FISH+i,0,-50,0,0,0,0,0,0,0,KIND.crab,0);
+  // The glider: a manta (or turtle) gliding across far down.
+  const gi=FISH+CRABS;
+  if(!glider.on){glider.wait-=step;if(glider.wait<=0){startGlider();if(glider.on){glider.len*=2.2;glider.y=5.5+Math.random()*1.5;}}}
+  if(glider.on){glider.t+=step;glider.x+=glider.vx*step;glider.z+=glider.vz*step;glider.phase+=step*(glider.kind===KIND.ray?1.6:2);if(glider.t>=glider.life){glider.on=false;glider.wait=10+Math.random()*12;}}
+  if(glider.on){const k=Math.max(0,Math.min(1,glider.t/3,(glider.life-glider.t)/3));write(gi,glider.x,UW_SURFACE-glider.y,glider.z,Math.atan2(glider.vx,glider.vz),glider.len,glider.len,glider.len,glider.phase,fade*k*.85,glider.kind,0,glider.kind===KIND.ray?Math.sin(glider.phase)*.05:0);}
+  else write(gi,0,-50,0,0,0,0,0,0,0,KIND.ray,0);
+  mesh.instanceMatrix.needsUpdate=true;motion.needsUpdate=true;
+ }
  const arr=motion.array as Float32Array;
  const write=(i:number,x:number,y:number,z:number,heading:number,sx:number,sy:number,sz:number,phase:number,alpha:number,kind:number,dropLocal:number,pitch=0)=>{
   dummy.position.set(x,y,z);dummy.rotation.set(pitch,heading+Math.PI,0,'YXZ');dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
@@ -220,11 +278,17 @@ export function createFishSchools(scene:T.Scene,phone=false){
    *  plus a margin), so they still turn around a float cast much farther than the old fixed 11 m. */
   begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotTheme:ReefTheme=reefTheme({id:''}),homesIn:{x:number;y:number;z:number}[]=[],viewDepthIn=11){
    water=distance??(()=>10);cx=stand.x;cz=stand.z;ux=dir.x;uz=dir.z;wide=halfWidth;theme=spotTheme;homes=homesIn;viewDepth=viewDepthIn;
+   deep=!!spotTheme.deep;uShadow.value=deep?0:1;bait=null;
+   // A new session fades in from zero (the fish rise out of the haze below, see frame()), never pops in at full strength.
+   if(!mesh.visible)fade=0;
    place();colA.needsUpdate=true;colB.needsUpdate=true;target=1;steer=0;mesh.visible=true;},
+  /** Deep mode: the bait ball heads for this point (the boat's bait-ball hotspot), or wanders when null. */
+  setBait(p:{x:number;z:number}|null){bait=p;},
   end(){target=0;},
   get busy(){return mesh.visible;},
   /** Something hit the water at (x, z): nearby fish dart away, schools regroup after ~1 s; close crabs scuttle off. */
   scatter(x:number,z:number,strength=1){
+   if(deep){if(Math.hypot(ballX-x,ballZ-z)<6*strength)ballPanic=1;return;}
    for(const f of fish){const dx=f.x-x,dz=f.z-z,d=Math.hypot(dx,dz);if(d>7*strength)continue;const k=(1-d/(7*strength))*3.2*strength;f.vx+=dx/(d||1)*k;f.vz+=dz/(d||1)*k;f.panic=1;}
    for(const l of leaders){const dx=l.x-x,dz=l.z-z,d=Math.hypot(dx,dz);if(d<8*strength){l.panic=1;const ux=dx/(d||1),uz=dz/(d||1);l.tx=l.x+ux*6;l.tz=l.z+uz*6;if(!inWater(l.tx,l.tz,3)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;}}}
    for(const c of crabs)if(Math.hypot(c.x-x,c.z-z)<3*strength){c.walk=1.2;c.wait=0;}
@@ -232,14 +296,18 @@ export function createFishSchools(scene:T.Scene,phone=false){
   frame(dt:number,reduced:boolean,float:{x:number;z:number}|null){
    if(!mesh.visible)return;
    fade=reduced?target:T.MathUtils.clamp(fade+Math.sign(target-fade)*Math.min(Math.abs(target-fade),dt/.9),0,1);if(fade<=0&&target===0){mesh.visible=false;return;}
-   const step=reduced?0:Math.min(dt,.05);steer+=step;while(steer>=STEER_DT){steer-=STEER_DT;
+   const step=reduced?0:Math.min(dt,.05);
+   if(deep){frameDeep(step);return;}
+   // Rise out of the haze while fading in (start of a session): never pop in at swimming depth.
+   const riseIn=1-fade*fade*(3-2*fade);
+   steer+=step;while(steer>=STEER_DT){steer-=STEER_DT;
     if(float)for(const f of fish){const dx=f.x-float.x,dz=f.z-float.z,d=Math.hypot(dx,dz);if(d<1.3){f.vx+=dx/(d||1)*.8;f.vz+=dz/(d||1)*.8;}}
     steerAll();}
    for(let i=0;i<fish.length;i++){const f=fish[i];f.x+=f.vx*step;f.z+=f.vz*step;const sp=Math.hypot(f.vx,f.vz);
     if(sp>.05){const h=Math.atan2(f.vx,f.vz);let dh=h-f.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));f.heading+=dh*Math.min(1,step*6);}
     f.phase+=step*(4+sp*7);
     const d=water(f.x,f.z),depth=uwDepthAt(d),a=f.alpha*fade*T.MathUtils.smoothstep(d,1.6,2.6)*(1-T.MathUtils.smoothstep(d,14,19));
-    const sy=f.scale*f.shape[1],swim=Math.min(f.swim,Math.max(.18,depth-.12-.2*sy)),y=UW_SURFACE-swim-i*.0004;
+    const sy=f.scale*f.shape[1],floor=Math.max(.18,depth-.12-.2*sy),swim=Math.min(f.swim,floor)+(floor-Math.min(f.swim,floor))*riseIn,y=UW_SURFACE-swim-i*.0004;
     write(i,f.x,y,f.z,f.heading,f.scale*f.shape[0],sy,f.scale*f.shape[2],f.phase,a,KIND.fish,(y-(UW_SURFACE-depth))/sy);}
    for(let i=0;i<crabs.length;i++){const c=crabs[i];if(c.walk>0&&step>0){const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side;c.x+=sx*.45*step;c.z+=sz*.45*step;c.phase+=step*16;}
     const d=water(c.x,c.z),y=UW_SURFACE-uwDepthAt(d);write(FISH+i,c.x,y,c.z,c.heading,.85,.85,.85,c.phase,fade*T.MathUtils.smoothstep(d,.25,.55),KIND.crab,.004);}

@@ -55,20 +55,20 @@ const B=require('../lib/shop/ball.ts'),P=require('../lib/shop/ballPaint.ts'),PN=
  console.log('PASS decals: ≤ 8 (schema and shader), unique ids');}
 
 // 5. Price: whole coins, adds up, stable bounds.
-{const P=B.ballPrice;assert.equal(P(B.validateBall({size:3})),150,'a plain classic size-3 ball is 150');assert.equal(P(B.DEFAULT_BALL),160);
+{const P=B.ballPrice,base=B.PRICE.base;assert.equal(base,160,'a plain classic size-3 ball is 160 (150 until the 14 Oct 2026 rebalance; the user\'s floor is 150)');assert.equal(P(B.validateBall({size:3})),base);assert.equal(P(B.DEFAULT_BALL),base+10);
  const max=B.validateBall({layout:'leather18',finish:'holo',pattern:{kind:'stars'},size:5,futsal:true,decals:Array.from({length:8},(_,i)=>({id:'d'+i,kind:'sticker',ref:'star',dir:[0,0,1]}))});
- assert.equal(P(max),150+50+60+25+80+25+10);
- const drawn=B.validateBall({...max,art:{id:'abc123',fills:[]}});assert.equal(P(drawn),400+B.PRICE.drawing,'a drawing is a small extra');assert.equal(B.PRICE.drawing,20);
+ assert.equal(P(max),base+50+60+25+80+25+10);
+ const drawn=B.validateBall({...max,art:{id:'abc123',fills:[]}});assert.equal(P(drawn),base+250+B.PRICE.drawing,'a drawing is a small extra');assert.equal(B.PRICE.drawing,20);
  const filled=B.validateBall({art:{id:'',fills:['#ff0000']}});assert.equal(P(filled),P(B.DEFAULT_BALL)+20,'a filled panel counts as a drawing');
  assert.ok(B.priceLines(drawn).some(l=>l.label==='Your drawing'&&l.coins===20));
- for(let i=0;i<50;i++){const r=B.randomBall(B.DEFAULT_BALL,(()=>{let s=i*97+1;return ()=>(s=(s*16807)%2147483647)/2147483647;})());const p=P(r);assert.ok(Number.isInteger(p)&&p>=150&&p<=400);
+ for(let i=0;i<50;i++){const r=B.randomBall(B.DEFAULT_BALL,(()=>{let s=i*97+1;return ()=>(s=(s*16807)%2147483647)/2147483647;})());const p=P(r);assert.ok(Number.isInteger(p)&&p>=base&&p<=base+250);
   assert.equal(B.priceLines(r).reduce((a,l)=>a+l.coins,0),p,'the bill adds up to the price');
   // Harmonious randomise: every colour comes from one curated palette.
   const pal=B.PALETTES.find(x=>[r.colors.a,r.colors.b,r.colors.c,r.pattern.c1,r.pattern.c2].every(c=>x.cols.includes(c)));assert.ok(pal,'randomise uses one curated palette');}
  assert.equal(B.priceLines(drawn).reduce((a,l)=>a+l.coins,0),P(drawn));
  const kept=B.randomBall(B.validateBall({art:{id:'keep1',fills:Array(32).fill('#ff0000')}}),()=>.99);assert.equal(kept.art.id,'keep1','randomise keeps the drawing');
  assert.ok(kept.layout==='classic32'||kept.art.fills.length===0,'fills are dropped when the layout changes (panel ids differ)');
- console.log('PASS price: 150–420 coins (+20 for a drawing), bill lines sum to the price, curated-palette randomise');}
+ console.log('PASS price: '+base+'–'+(base+270)+' coins (+20 for a drawing), bill lines sum to the price, curated-palette randomise');}
 
 // 6. Storage: current + 3 named slots under one key.
 {const mem=new Map(),store={getItem:k=>mem.has(k)?mem.get(k):null,setItem:(k,v)=>mem.set(k,v)};

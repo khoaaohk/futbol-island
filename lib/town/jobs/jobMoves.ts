@@ -128,6 +128,10 @@ export type JobFrame={
  ball:P3|null;
  /** Hold movement input (the pose ends quickly). */
  still:boolean;
+ /** Summit Isle foraging (Oct 14 2026): `stand` was checked clear by the caller (the trunk-grip root, closer to a trunk than the
+  *  landing rule allows), so the host only needs the walker's own collider clear there; and the body closes `lean` metres more
+  *  toward the trunk along its facing (visual only: the hands reach the bark). */
+ free?:boolean;lean?:number;
  /** The ball has just reached the feet again (the host resets its dribble). */
  caught:boolean;
 };
@@ -136,7 +140,7 @@ export const KICK_CONTACT=.36;
 export const TREE_KICK={standOff:2.2,ballOff:1.6,back:.9,tBack:.32,tIn:.24,tStrike:.5,ballSpeed:11,reboundSpeed:6.5,control:.16,maxApproach:.45,trunk:.28};
 type Kick={trunk:P;stand:P;ballAt:P;dir:P;age:number;tA:number;tOut:number;tHome:number;phase:'approach'|'back'|'in'|'strike'|'out'|'home'|'control';from:P3;hit:boolean;onHit:()=>void;reduced:boolean;phaseAge:number};
 export function createJobMoves(){
- let pose:{kind:JobPoseKind;age:number;dur:number;target:P|null;basket:boolean}|null=null,kick:Kick|null=null;
+ let pose:{kind:JobPoseKind;age:number;dur:number;target:P|null;basket:boolean;lead:number;stand:P|null;lean:number}|null=null,kick:Kick|null=null;
  /** The player's own ball set down while the hands work (`origin`: where the player stood). */
  let park:{at:P3;origin:P;returning:number;from:P3|null}|null=null;
  const yawTo=(a:P,b:P)=>Math.atan2(b.x-a.x,b.z-a.z);
@@ -148,9 +152,11 @@ export function createJobMoves(){
   park={at:{x,y:floor(x,z)+.2,z},origin:{x:p.x,z:p.z},returning:-1,from};}
  /** Start a one-shot pose (from a job event). `ball`: where the player's ball is now (to set it down from there). `basket`: the
   *  Garden shift basket stays in the left hand. */
- function start(kind:JobPoseKind,p:PlayerIn,target:P|null,floor:(x:number,z:number)=>number,reduced:boolean,ball:P3|null=null,basket=false){
+ /** `reach` (the tree shake): walk `lead` seconds to `stand` first (no pose, input held, facing the target), then play the pose
+  *  there with the body leaning `lean` metres further in. */
+ function start(kind:JobPoseKind,p:PlayerIn,target:P|null,floor:(x:number,z:number)=>number,reduced:boolean,ball:P3|null=null,basket=false,reach?:{stand:P;lean:number;lead:number}){
   if(kick&&kind!=='pick')return;const dur=(POSE_TIME[kind]??.4)*(reduced?.6:1);
-  pose={kind,age:0,dur,target,basket};if(HANDS_POSES.has(kind))parkBall(p,floor,ball);
+  pose={kind,age:0,dur,target,basket,lead:reach?Math.max(0,reach.lead):0,stand:reach?.stand??null,lean:reach?.lean??0};if(HANDS_POSES.has(kind)&&!pose.lead)parkBall(p,floor,ball);
  }
  /** Kick the tree: set the ball on the line to the trunk, step back, strike it in; `onHit` fires when it meets the trunk. */
  function startKick(trunk:P,p:PlayerIn,reduced:boolean,ball:P3|null,onHit:()=>void,canStand:(x:number,z:number)=>boolean){
@@ -181,8 +187,13 @@ export function createJobMoves(){
     if(f>=1)next('control');}
    if(k.phase==='control'){const u=Math.min(1,k.phaseAge/TREE_KICK.control);out.pose={kind:'control',progress:.5+u*.5};out.ball={x:feet.x,y:gy(feet),z:feet.z};if(u>=1){kick=null;out.caught=true;out.still=false;}}
    return out;}
-  if(pose){pose.age+=dt;const k=Math.min(1,pose.age/pose.dur);out.pose={kind:pose.kind,progress:k,...(pose.basket?{basket:true}:{})};out.still=STILL_POSES.has(pose.kind);
-   if(pose.target){out.facing=yawTo(p,pose.target);out.stand=standFor(pose.kind,p,pose.target);}if(k>=1)pose=null;}
+  if(pose&&pose.lead>0){// stepping up to the trunk: the legs walk (the host moves the root), the hands set the ball down on arrival
+   pose.lead-=dt;out.still=true;out.free=true;if(pose.target)out.facing=yawTo(p,pose.target);out.stand=pose.stand;
+   if(pose.lead<=0&&HANDS_POSES.has(pose.kind))parkBall(p,floor,null);}
+  else if(pose){pose.age+=dt;const k=Math.min(1,pose.age/pose.dur);out.pose={kind:pose.kind,progress:k,...(pose.basket?{basket:true}:{})};out.still=STILL_POSES.has(pose.kind);
+   if(pose.target){out.facing=yawTo(p,pose.target);out.stand=pose.stand??standFor(pose.kind,p,pose.target);}
+   if(pose.stand){out.free=true;out.lean=pose.lean*smooth(Math.min(k/.14,(1-k)/.14));}
+   if(k>=1)pose=null;}
   else if(held){out.pose=held;out.still=STILL_POSES.has(held.kind)&&!held.upper;if(HANDS_POSES.has(held.kind))parkBall(p,floor,null);
    if(held.target){out.facing=yawTo(p,held.target);out.stand=standFor(held.kind,p,held.target);}}
   if(park){

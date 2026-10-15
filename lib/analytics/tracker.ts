@@ -110,7 +110,7 @@ export function takeCounts(room:number):Record<string,number>|null{
  return out;
 }
 
-const areaOf=(path:string):Area=>{const top='/'+(path.split('/')[1]||'');return top==='/'?'island':top==='/arcade'?'arcade':top==='/museum'?'museum':top==='/konbini'?'konbini':top==='/controller'?'controller':'other';};
+const areaOf=(path:string):Area=>{const top='/'+(path.split('/')[1]||'');return top==='/'?'island':top==='/arcade'?'arcade':top==='/museum'?'museum':top==='/konbini'?'konbini':top==='/shop'?'shop':top==='/controller'?'controller':'other';};
 
 /** Why this browser sends nothing, or null when it may count. */
 export function skipReason(env:TrackerEnv):string|null{

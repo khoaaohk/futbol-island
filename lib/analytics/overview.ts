@@ -12,7 +12,7 @@
 import type {DailyRollup,Merged} from './core';
 import {MIN_SESSIONS,type Cell} from './learning';
 import {LESSON_TEXT} from './learningText.generated';
-import {IDP_COUNT_EVENTS,LEARN_FORMATS,optionKey,questionKey} from './countIds';
+import {BEACH_COUNT_EVENTS,FORAGE_FRUIT_KINDS,IDP_COUNT_EVENTS,LEARN_FORMATS,SANDBAR_COUNT_EVENTS,SHOP_COUNT_EVENTS,SUMMIT_COUNT_EVENTS,optionKey,questionKey} from './countIds';
 
 /** Average daily unique visitors over `days` complete days (`visitorDays` = their sum). */
 export type PerDay={value:number;days:number;visitorDays:number};
@@ -21,8 +21,15 @@ export type PeriodTotals={visitors:number;sessions:number;pageviews:number;engag
  steps:Record<string,Cell>;
  lessonsFinished:Cell;quizzesStarted:Cell;perfectQuizzes:Cell;firstTry:{right:number;tries:number}|null;pathsLaunched:Cell;graduations:Cell};
 export type DayCells={day:string;created:Cell;restored:Cell;returning:Cell;breaks:Cell;restoreFails:Cell};
+/** A fixed count event's total in range (`value`), suppressed like every other admin number: null under MIN_SESSIONS sessions. */
+export type CountRow={id:string;label:string;value:Cell};
 export type Overview={min:number;from:string;to:string;prevFrom:string;prevTo:string;current:PeriodTotals;previous:PeriodTotals|null;daily:DayCells[];
- plan:{id:string;label:string;sessions:Cell}[]};
+ plan:{id:string;label:string;sessions:Cell}[];
+ /** Oct 15 2026: Kit Shop (studio opens, designs saved, purchases, coins spent, My kit), the Sandbar, and Summit Isle
+  *  (arrivals, Summit Kick rounds, zipline rides, fruit shaken, fishing, the kiosk) — lib/analytics/countIds.ts. */
+ shop:CountRow[];sandbar:CountRow[];summit:CountRow[];beach:CountRow[];
+ /** Fruit shaken on Summit Isle, by kind and how (hand vs a kicked ball; lib/graphics/fruitTrees.ts). */
+ fruit:{kind:string;label:string;hand:Cell;ball:Cell}[]};
 
 /** The title-screen and save-code steps the overview reads (startIds.ts). */
 export const OVERVIEW_STEPS=['st:view','st:start','st:created','st:saved','st:play_ready','st:have','st:restored','st:play_restored','st:restore_fail','st:returning','st:play_returning','st:break','st:play_break'] as const;
@@ -43,10 +50,24 @@ export function periodTotals(m:Merged,days:number,perDay?:PerDay):PeriodTotals{
   pathsLaunched:guarded(new RegExp(`^pf:(${LEARN_FORMATS.join('|')})$`),new RegExp(`^pf:(${LEARN_FORMATS.join('|')})$`)),graduations:cellOf(sumPrefix(s,/^gr:/))};
 }
 
+/** A fixed count id's TOTAL in range (not just session presence, unlike `cellOf`): shown only once enough distinct sessions
+ *  carry it (same MIN_SESSIONS rule as `guarded` above), so a sum like "coins spent" or "fish caught" means something while
+ *  still hiding a small, possibly identifying number. */
+function countRow(m:Merged,fullId:string,label:string):CountRow{
+ const ss=m.countSessions[fullId]||0;
+ return {id:fullId,label,value:ss>=MIN_SESSIONS?(m.counts[fullId]||0):ss>0?null:0};
+}
+
 export function buildOverview(cur:{merged:Merged;rollups:DailyRollup[];from:string;to:string;perDay?:PerDay},prev:{merged:Merged;days:number;from:string;to:string;perDay?:PerDay}|null):Overview{
  const daily=cur.rollups.map(r=>{const s=r.countSessions||{};
   return {day:r.day,created:cellOf(s['st:created']),restored:cellOf(s['st:restored']),returning:cellOf(s['st:returning']),breaks:cellOf(s['st:break']),restoreFails:cellOf(s['st:restore_fail'])};});
  return {min:MIN_SESSIONS,from:cur.from,to:cur.to,prevFrom:prev?.from??'',prevTo:prev?.to??'',
   current:periodTotals(cur.merged,cur.rollups.length,cur.perDay),previous:prev?periodTotals(prev.merged,prev.days,prev.perDay):null,daily,
-  plan:IDP_COUNT_EVENTS.map(([id,label])=>({id,label,sessions:cellOf(cur.merged.countSessions['ip:'+id])}))};
+  plan:IDP_COUNT_EVENTS.map(([id,label])=>({id,label,sessions:cellOf(cur.merged.countSessions['ip:'+id])})),
+  shop:SHOP_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'sh:'+id,label)),
+  sandbar:SANDBAR_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'sb:'+id,label)),
+  summit:SUMMIT_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'su:'+id,label)),
+  beach:BEACH_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'bc:pickup_'+id,label)),
+  fruit:FORAGE_FRUIT_KINDS.map(kind=>({kind,label:kind[0].toUpperCase()+kind.slice(1),
+   hand:countRow(cur.merged,`su:fruit_${kind}:hand`,'').value,ball:countRow(cur.merged,`su:fruit_${kind}:ball`,'').value}))};
 }

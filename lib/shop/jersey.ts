@@ -255,7 +255,9 @@ export function jerseyHistory(s:JerseyHist,a:JerseyHistAct):JerseyHist{
  *  tests read them from here (jerseyPrice / jerseyPriceParts / JERSEY_PRICES) and never hard-code a price. */
 // Oct 12 2026 (user: "make them pricier"): about 2.5× the first prices, a jersey is something to save up for over several days.
 // v2: a small extra for a hand-drawn design (the studio and the till read it from here).
-export const JERSEY_PRICES={base:300,longSleeves:40,collar:25,print:25,drawing:30};
+// Oct 14 2026 (docs/economy.md): base 300 → 330 (the user's floor is 300); the numbers live in lib/economy.ts JERSEY_PRICES.
+export {JERSEY_PRICES} from '../economy';
+import {JERSEY_PRICES} from '../economy';
 export const JERSEY_BASE_PRICE=JERSEY_PRICES.base;
 export function jerseyPriceParts(d:JerseyDesign):{label:string;coins:number}[]{
  const P=JERSEY_PRICES,parts=[{label:'Custom jersey',coins:P.base}];

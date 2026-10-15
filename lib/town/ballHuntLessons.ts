@@ -5,12 +5,14 @@
 import {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap,type DiagramKind,type DiagramFrame,type DiagramLayout,type DiagramNode} from './ballLessonScenes';
 export {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap};
 export type {DiagramKind,DiagramFrame,DiagramLayout,DiagramNode};
-export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping'|'Rules of the game'|'Player health'|'Beach soccer';
+export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping'|'Rules of the game'|'Player health'|'Beach soccer'|'Teamwork';
 export type BallLesson={kind:DiagramKind;family:LessonFamily;level:1|2|3;steps:[string,string,string];actions:[string,string]};
 const L=(level:1|2|3,family:LessonFamily)=>(kind:DiagramKind,a:string,b:string,c:string,x:string,y:string):BallLesson=>({kind,family,level,steps:[a,b,c],actions:[x,y]});
 const space1=L(1,'Creating space'),time1=L(1,'Timing'),shape1=L(1,'Team shape'),ball1=L(1,'On the ball'),final1=L(1,'Final third'),trans1=L(1,'Transitions'),def1=L(1,'Defending space');
 const space2=L(2,'Creating space'),time2=L(2,'Timing'),shape2=L(2,'Team shape'),lines2=L(2,'Breaking lines'),zones2=L(2,'Zones and thirds'),final2=L(2,'Final third'),trans2=L(2,'Transitions'),def2=L(2,'Defending space'),ball2=L(2,'On the ball'),set2=L(2,'Set pieces'),keep2=L(2,'Goalkeeping');
 const rules1=L(1,'Rules of the game'),health1=L(1,'Player health'),beach1=L(1,'Beach soccer'),keep1=L(1,'Goalkeeping'),rules2=L(2,'Rules of the game'),beach2=L(2,'Beach soccer'),ball3=L(3,'On the ball'),set3=L(3,'Set pieces');
+// Summit Isle (Oct 15 2026): Laws of the Game, goalkeeping, skills and teamwork.
+const team2=L(2,'Teamwork'),rules3=L(3,'Rules of the game');
 const space3=L(3,'Creating space'),shape3=L(3,'Team shape'),lines3=L(3,'Breaking lines'),zones3=L(3,'Zones and thirds'),final3=L(3,'Final third'),trans3=L(3,'Transitions'),def3=L(3,'Defending space'),keep3=L(3,'Goalkeeping');
 
 export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
@@ -122,6 +124,22 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  "cay-rest":health1('rest-sleep','You play every day and stay up late. Tired legs lose the chase.','Sleep well at night and take a day or two off each week.','Rested legs are fresh again. You win the chase to the ball.','Sleep and rest','Play fresh'),
  "cay-water":health1('drink-heat','A hot, sunny match. Everyone is getting thirsty and slow.','At the drinks break everyone walks to the touchline and drinks water.','Back on the pitch, refreshed. Keep sipping water before, during and after.','Drink a little','Stay cool'),
  "cay-heading":health1('heading-safe','A high ball drops toward your head. In practice, young players don’t head it.','Let it drop and cushion it with your chest or foot instead.','The ball is on the ground and under control. Pass it with your feet.','Let it drop','Play it on the ground'),
+ // Summit Isle (Oct 15 2026, summitBalls.ts): Laws of the Game (IFAB, simplified), goalkeeping, skills and teamwork.
+ "summit-mango":rules2('dropped-ball','A player is hurt, so the referee stops the game.','Your team touched the ball last, so the restart is yours.','The referee drops it for you. Everyone else stays 4 metres away.','Stop for the injury','Restart with your ball'),
+ "summit-shore-mango":rules2('fair-challenge','A dribbler runs past you. You stick out a leg and trip them.','That is a foul. Their team gets a free kick.','Try again: stay on your feet and poke away just the ball.','Spot the foul','Win the ball fairly'),
+ "summit-hut-roof":rules3('goal-kick-in','Goal kick. Your teammate stands inside your penalty area.','The other team must wait outside the area until it is kicked.','The ball is in play once it moves. Your teammate takes it.','Wait outside the area','Play it short'),
+ "summit-north-rim":rules2('referee-final','The referee gives a free kick against you. You think it was wrong.','Arguing changes nothing and can earn you a yellow card.','Accept it, get back into position and focus on the next ball.','Accept the call','Focus on the next ball'),
+ "summit-fisher-hut":keep2('keeper-set','The shooter gets ready. You are still running across your goal.','Take a small hop and land on your toes, knees bent.','Your feet are set as they shoot. Push off and save it!','Hop and set','Push off and save'),
+ "summit-rest-hut":team2('encourage','Your teammate misses a pass and stares down at the grass.','Run over and say “Unlucky, go again!” with a thumbs up.','They feel supported, try again, and the next pass is perfect.','Cheer them up','Go again together'),
+ "summit-beach-hut":ball2('disguise-pass','You look at one teammate. The defender follows your eyes.','The defender steps across to block that pass.','Turn your hips late and pass to your other teammate.','Look one way','Pass the other'),
+ "summit-hill-cave":rules2('shin-guards','Before the game you forgot your shin guards and kept a watch on.','Put shin guards on under your socks. Take off every bracelet and watch.','Now a knock on the shin is safe. Play on!','Pads on','Jewellery off'),
+ "summit-sea-cave":set2('corner-goal','A corner kick to your team. Everyone waits for a cross.','Curl it toward the goal. Nobody touches it on the way.','It curls straight in. A goal from a corner counts!','Curl it in','Score from the corner'),
+ "summit-cairn":rules2('kickoff-goal','Kick-off. Everyone stands in their own half.','Look up. Their keeper is standing far out of the goal.','Shoot straight from the kick-off. A goal like that counts!','Spot the keeper','Shoot from the start'),
+ "summit-lookout-rocks":rules2('eleven-players','Each team has up to eleven players, and one is the goalkeeper.','If players get hurt or sent off, the team gets smaller.','With fewer than seven players, the match cannot carry on.','Count your team','Know the minimum'),
+ "summit-bend":rules2('handball-arms','A shot is coming. You jump to block with your arms out wide.','The ball hits your arm. Handball, and maybe a penalty!','Block again with your arms tucked in. It hits your body.','Arms out is risky','Tuck your arms in'),
+ "summit-kick-bonus":ball2('side-foot','You toe-poke the pass. It skids off in the wrong direction.','Plant your standing foot beside the ball, pointing at your mate.','Lock your ankle and push through with the inside of your foot.','Plant and point','Push through'),
+ "summit-whale-buoy":ball3('cruyff-turn','A defender chases you toward the touchline and blocks the way ahead.','Fake a pass, then drag the ball behind your standing leg with the inside of your foot.','Spin away the other way. The defender is still going the wrong way.','Fake the pass','Drag and spin'),
+ "summit-sky":rules3('indirect-kick','The referee raises an arm high: this free kick is indirect.','A shot straight into the goal would not count, so pass it short first.','Your teammate shoots after that second touch. Now the goal counts!','Spot the raised arm','Touch, then shoot'),
 };
 
 /** Prediction prompts are loaded only with the lesson modal, never by the island. */
@@ -226,4 +244,19 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'cay-rest':'How much sleep do you need, and how many rest days a week?',
  'cay-water':'On a hot day, when should you drink water?',
  'cay-heading':'A high ball drops at a young player. What should they do instead of heading it?',
+ 'summit-mango':'Play stops for an injury. Who gets the dropped ball when it restarts?',
+ 'summit-shore-mango':'A dribbler races past you. How do you win the ball without a foul?',
+ 'summit-hut-roof':'At a goal kick, where must the other team wait until the ball moves?',
+ 'summit-north-rim':'The referee gives a decision you think is wrong. What do you do next?',
+ 'summit-fisher-hut':'A shooter is about to strike. What should a keeper’s feet do?',
+ 'summit-rest-hut':'Your teammate just missed a pass. What could you say to them?',
+ 'summit-beach-hut':'How can your eyes and hips trick a defender before you pass?',
+ 'summit-hill-cave':'Before a match, what must you put on and what must you take off?',
+ 'summit-sea-cave':'Can a corner kick go straight into the goal and count?',
+ 'summit-cairn':'At kick-off, their keeper is far out. Could you shoot straight away?',
+ 'summit-lookout-rocks':'How many players does an 11-a-side team have, and what is the fewest allowed?',
+ 'summit-bend':'You jump to block a shot. Where should your arms be?',
+ 'summit-kick-bonus':'Which part of your foot gives the most accurate pass, and where does your standing foot go?',
+ 'summit-whale-buoy':'A defender chases you to the touchline. Which turn could take you the other way?',
+ 'summit-sky':'The referee raises an arm at a free kick. What must happen before a goal counts?',
 };

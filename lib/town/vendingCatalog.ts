@@ -110,7 +110,8 @@ export const VENDING_ROWS:{id:Exclude<VendingRowId,'special'>;label:string}[]=[
 ];
 /** Coin prices (docs/vending-machines.md; raised in the economy pass, docs/economy/ECONOMY_PROPOSAL.md §5.2, 28 Sep 2026).
  *  Packs keep the arcade wallet's own prices; books keep BOOK_PRICE (100, user decision). */
-export const VENDING_PRICES={ball:20,specialBall:35,scooter:30,bike:40,moped:50,jetpack:70,costume:30} as const;
+export {VENDING_PRICES} from '../economy';// unchanged 14 Oct 2026; the one table is lib/economy.ts
+import {VENDING_PRICES} from '../economy';
 
 /** `extra`: other missing cards that may fill slots the pack's own pool cannot (set by vendingLedger.packFreshness). */
 export type PackSpec={size:3|5;legends:readonly string[];regular:readonly string[];theme?:string;extra?:readonly string[]};

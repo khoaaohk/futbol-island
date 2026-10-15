@@ -119,7 +119,11 @@ export function createOceanClear(scene:T.Scene){
 export type SeabedStyle='cay'|'causeway'|'beach'|'pier';
 export const PIER_SPOTS=new Set(['east-pier','south-pier','west-pier','harbour-wall']);
 export function seabedStyle(spot:{id:string;area?:string}):SeabedStyle{return spot.area==='cay'?'cay':spot.area==='causeway'?'causeway':PIER_SPOTS.has(spot.id)?'pier':'beach';}
-export type ReefLayout='pilings'|'lagoon'|'wall'|'flat'|'channel'|'open'|'kelp'|'rubble'|'tables'|'meadow'|'ring'|'patches'|'garden'|'boulders'|'staghorn'|'line';
+export type ReefLayout='pilings'|'lagoon'|'wall'|'flat'|'channel'|'open'|'kelp'|'rubble'|'tables'|'meadow'|'ring'|'patches'|'garden'|'boulders'|'staghorn'|'line'
+ /** Oct 14 2026: open deep sea (the deep-sea boats): no seabed at all, the water column instead (deepSeaScene.ts). */
+ |'abyss'
+ /** Oct 14 2026: a rocky ledge where the sand drops away (Summit Isle's Drop-off Ledge). */
+ |'ledge';
 export type CoralKind='brain'|'branch'|'stag'|'fan'|'table'|'anemone'|'tube'|'soft';
 export type Signature='football'|'anchor'|'stars'|'clam'|'goal';
 type V3=[number,number,number];
@@ -142,9 +146,13 @@ export type ReefTheme={
  /** Ambient fish (fishSchools.ts LOOKS ids): three schools, the solo cruisers, the occasional glider. */
  fish:{schools:[string,string,string];cruisers:string[];glider:'ray'|'turtle'|'both'|null};
  signature:Signature[];
+ /** Open deep sea (layout 'abyss', the deep-sea boats, Oct 14 2026: "update the water scene for the boat"): no seabed pieces;
+  *  the water column (deepSeaScene.ts: light shafts, plankton, jellyfish) and deep life (fishSchools.ts deep mode: a bait ball,
+  *  big silhouettes far below, a manta or turtle). `coral` tints the jellyfish and the plankton glints. */
+ deep?:{bait:string;big:[string,string];shafts:number;jellies:number;plankton:string;jelly:string};
 };
 const T_SAND:[V3,V3]=[[.55,.55,.49],[.67,.66,.59]];
-/** The 16 themes (docs/fishing-visuals-HANDOFF.md has the table). Shapes: brain, branch, stag (staghorn), fan, table, anemone, tube (sponges), soft (swaying soft coral). */
+/** The 19 themes (docs/fishing-visuals-HANDOFF.md has the table; Oct 14 2026: the two deep-sea boats and Drop-off Ledge). Shapes: brain, branch, stag (staghorn), fan, table, anemone, tube (sponges), soft (swaying soft coral). */
 export const REEF_THEMES:Record<string,ReefTheme>={
  'barnacle-pilings':{id:'barnacle-pilings',name:'Barnacle pilings',layout:'pilings',coral:['#ffd000','#8a2cc0','#ffe65a','#b04cff','#ff9d00'],
   kinds:{tube:3,anemone:3,soft:2,brain:1},clusters:16,items:[3,4],spread:.7,scale:.9,grass:4,kelp:2,rocks:7,rockSize:[.14,.3],pebbles:4,stars:7,shells:6,urchins:4,piles:9,anemones:1,
@@ -166,10 +174,20 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   kinds:{soft:3,fan:2,anemone:1,brain:1},clusters:14,items:[2,4],spread:.6,scale:.9,grass:30,kelp:2,rocks:6,rockSize:[.14,.28],pebbles:5,stars:5,shells:6,urchins:1,piles:0,anemones:0,
   grassCol:['#2f7a2a','#a8e05a'],rock:'#80786a',algae:'#6a8a3a',urchin:['#2a1a3a','#6a4f90'],sand:[[.52,.5,.38],[.62,.6,.46]],weed:[.18,.34,.12,.9],
   water:[[.06,.44,.36],[.02,.18,.16]],clear:1.05,fish:{schools:['sardine','bream','wrasse'],cruisers:['bass','mackerel','parrot','garibaldi'],glider:'ray'},signature:['football']},
- 'blue-abyss':{id:'blue-abyss',name:'Deep blue open sea',layout:'open',coral:['#2a5cff','#7a3cff','#00b8ff'],
-  kinds:{tube:3,table:1,brain:1},clusters:12,items:[2,3],spread:.9,scale:1,grass:0,kelp:3,rocks:3,rockSize:[.3,.5],pebbles:0,stars:3,shells:0,urchins:0,piles:0,anemones:0,
-  grassCol:['#2a5a3a','#6aa06a'],rock:'#4a5260',algae:'#3a5a5a',urchin:['#1a1020','#4a2a5a'],sand:[[.3,.33,.38],[.38,.42,.46]],weed:[.15,.2,.2,.2],
-  water:[[0,.22,.55],[0,.05,.28]],clear:1,fish:{schools:['sardine','mackerel','barracuda'],cruisers:['barracuda','mackerel','bass','grouper'],glider:'ray'},signature:['anchor']},
+ // The deep-sea boats (Oct 14 2026, user: "update the water scene for the boat. it doesn't look good"): no seabed — the water
+ // darkens with depth into a blue (or green) haze, with light shafts, plankton, jellyfish and deep life instead (deepSeaScene.ts,
+ // fishSchools.ts deep mode). The sand colours are the haze itself, so the shore strip's seabed reads as deep water.
+ 'blue-abyss':{id:'blue-abyss',name:'Deep blue open sea',layout:'abyss',coral:['#7ad8ff','#b48cff','#3fa8ff'],
+  kinds:{},clusters:0,items:[0,0],spread:0,scale:1,grass:0,kelp:0,rocks:0,rockSize:[.3,.5],pebbles:0,stars:0,shells:0,urchins:0,piles:0,anemones:0,
+  grassCol:['#2a5a3a','#6aa06a'],rock:'#4a5260',algae:'#3a5a5a',urchin:['#1a1020','#4a2a5a'],sand:[[.01,.04,.13],[.015,.05,.15]],weed:[0,0,0,0],
+  water:[[0,.16,.42],[0,.035,.17]],clear:1.9,fish:{schools:['baitfish','baitfish','baitfish'],cruisers:['tuna','marlin'],glider:'ray'},signature:[],
+  deep:{bait:'baitfish',big:['tuna','marlin'],shafts:1,jellies:2,plankton:'#cfefff',jelly:'#c9a6ff'}},
+ // The Summit Deep Boat's variant: greener, darker water, a mackerel ball and a turtle far down.
+ 'abyss-green':{id:'abyss-green',name:'Deep green channel',layout:'abyss',coral:['#7affd0','#ffd27a','#3fe0b0'],
+  kinds:{},clusters:0,items:[0,0],spread:0,scale:1,grass:0,kelp:0,rocks:0,rockSize:[.3,.5],pebbles:0,stars:0,shells:0,urchins:0,piles:0,anemones:0,
+  grassCol:['#2a5a3a','#6aa06a'],rock:'#4a5a50',algae:'#3a5a4a',urchin:['#1a1020','#4a2a5a'],sand:[[.01,.07,.08],[.015,.08,.09]],weed:[0,0,0,0],
+  water:[[0,.24,.3],[0,.06,.1]],clear:2.1,fish:{schools:['mackerel','mackerel','mackerel'],cruisers:['marlin','tuna'],glider:'turtle'},signature:[],
+  deep:{bait:'mackerel',big:['marlin','tuna'],shafts:.8,jellies:1,plankton:'#d8ffe8',jelly:'#ffb37a'}},
  'jetty-kelp':{id:'jetty-kelp',name:'Kelp corridor',layout:'kelp',coral:['#ff5a1a','#c4122e','#ffb02e','#ff3f6e'],
   kinds:{anemone:2,soft:2,tube:1,brain:1},clusters:13,items:[2,3],spread:.6,scale:.85,grass:3,kelp:12,rocks:7,rockSize:[.16,.3],pebbles:3,stars:6,shells:5,urchins:4,piles:7,anemones:0,
   grassCol:['#3a6a2a','#9ac05a'],rock:'#77736c',algae:'#6a7a3a',urchin:['#24142e','#5a2f78'],sand:[[.48,.48,.46],[.58,.58,.55]],weed:[.24,.28,.14,.4],
@@ -206,6 +224,12 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   kinds:{stag:6,branch:1,brain:1,anemone:1},clusters:11,items:[3,5],spread:.6,scale:1,grass:4,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:2,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#a49a8a',algae:'#9aa86a',urchin:['#2a1a3a','#6a4f90'],sand:[[.74,.72,.62],[.84,.82,.72]],weed:[.26,.34,.18,.2],
   water:[[.02,.54,.64],[0,.24,.4]],clear:.8,fish:{schools:['yellowTang','anthias','sergeant'],cruisers:['butterfly','parrotPink','wrasse','parrot'],glider:'turtle'},signature:['stars']},
+ // Summit Isle's Drop-off Ledge (Oct 14 2026): a stepped rocky ledge where the sand drops into deep blue; big groupers and a
+ // ray cruise the edge.
+ 'ledge-dropoff':{id:'ledge-dropoff',name:'Ledge drop-off',layout:'ledge',coral:['#ff4fd8','#ffb02e','#7a5cff','#ff7a5a','#2fe0ff'],
+  kinds:{fan:3,brain:2,tube:2,soft:1},clusters:14,items:[3,5],spread:.7,scale:1.1,grass:2,kelp:1,rocks:16,rockSize:[.3,.6],pebbles:3,stars:4,shells:3,urchins:4,piles:0,anemones:0,
+  grassCol:['#2f6a3a','#8fc06a'],rock:'#5f5a62',algae:'#5a6a4a',urchin:['#1a1020','#4a2a5a'],sand:[[.46,.44,.4],[.56,.54,.49]],weed:[.2,.24,.16,.3],
+  water:[[0,.38,.6],[0,.08,.26]],clear:1.15,fish:{schools:['sardine','anthias','damsel'],cruisers:['grouper','grouper','snapper','barracuda'],glider:'ray'},signature:['anchor']},
  'lookout-bommies':{id:'lookout-bommies',name:'Stepping-stone bommies',layout:'line',coral:['#2a7fff','#ff7a1a','#5aa8ff','#ffa040','#1fd0ff'],
   kinds:{brain:3,branch:2,table:1,tube:1,anemone:1,fan:1},clusters:12,items:[5,7],spread:.65,scale:1,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:3,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a9080',algae:'#8a9a5a',urchin:['#2a1a3a','#6a4f90'],sand:[[.7,.64,.52],[.8,.74,.6]],weed:[.26,.32,.18,.25],
@@ -379,6 +403,8 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  // The whole view, out past the float: on phones the camera hangs over the far water, so the reef must reach it to be seen.
  const nC=N(theme.clusters),L=theme.layout,far=aView,cast=Math.max(6,aView-5);
  const centres:(P|null)[]=[];
+ // Open deep sea ('abyss'): every count in the theme is zero, so nothing is placed and the mesh stays empty and hidden (the
+ // water column is deepSeaScene.ts).
  if(L==='ring'){// A ring of bommies round a sandy pool, the float near its middle.
   const ca=cast*.85,R=phone?2.6:3.6;for(let i=0;i<nC;i++){const g=i/nC*Math.PI*2+r()*.3;centres.push(ab(ca+Math.cos(g)*R*1.3,Math.sin(g)*R*1.2)??at(1.4,99));}}
  else if(L==='wall'){// A wall along the drop-off: the clusters follow the 4.5 m depth contour across the whole view.
@@ -389,6 +415,10 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  else if(L==='channel'||L==='kelp'){for(let i=0;i<nC;i++){const a=2+r()*(far-2.5),side=i%2?1:-1;centres.push(ab(a,side*(L==='kelp'?2.9:1.8)+side*r()*.8));}}
  else if(L==='garden')for(let i=0;i<nC;i++)centres.push(at(2.2,99,far,.75,cast*.3));
  else if(L==='open')for(let i=0;i<nC;i++){const a=4+r()*(aView-4);centres.push(ab(a,(r()*2-1)*wedge(a)*.8));}
+ else if(L==='ledge'){// Two steps across the view where the sand drops away: boulders along each edge, coral on their lips.
+  for(let i=0;i<nC;i++){const step=i%2,dEdge=step?Math.max(4.5,cast*.6):Math.max(2.4,cast*.3),b=(-1+2*((i>>1)+.5)/Math.ceil(nC/2))*wedge(dEdge)*1.05+(r()-.5)*.6;
+   let p:P|null=null;for(let a=0;a<aView;a+=.3){const q=ab(a,b);if(q&&q.d>=dEdge){p=q;break;}}
+   if(p){const sz=theme.rockSize[0]+r()*(theme.rockSize[1]-theme.rockSize[0]);rockAt(p,sz,.6);}centres.push(p);}}
  else if(L==='boulders'){// Big boulders first; the coral nestles round their feet.
   for(let i=0;i<N(theme.rocks);i++){const p=at(1,99,far,.9);if(!p)continue;const sz=theme.rockSize[0]+r()*(theme.rockSize[1]-theme.rockSize[0]);rockAt(p,sz,.7);if(i<nC)centres.push(near(p,sz+.3));}}
  else for(let i=0;i<nC;i++)centres.push(at(1.4,99,far,1,L==='lagoon'?cast*.3:-1));

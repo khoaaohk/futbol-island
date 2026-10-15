@@ -25,7 +25,9 @@ function environment(shared){
  const day='2026-09-27';let ledger=E.emptyJobLedger(day);
  const first=E.jobPayout('leaf-rake',ledger);same(first,{coins:JOB_BASE_PAY['leaf-rake']+FIRST_JOB_BONUS,tier:'full',bonus:FIRST_JOB_BONUS});
  const pays=[];for(let i=0;i<6;i++){const p=E.jobPayout('ball-kid',ledger);pays.push(p.coins);ledger=E.recordCompletion(ledger,'ball-kid',p.coins,30-i);}
- same(pays,[14,10,5,5,1,1],'first-time bonus, full, half, half, then 1-coin tips');
+ // Oct 14 2026 economy rebalance (lib/economy.ts JOB_PAY): ball-kid 10 → 7, so 7+4, 7, 4, 4, then tips (was 14, 10, 5, 5, 1, 1).
+ assert.equal(JOB_BASE_PAY['ball-kid'],7,'Ball kid pays 7 (economy rebalance, 14 Oct 2026)');
+ same(pays,[11,7,4,4,1,1],'first-time bonus, full, half, half, then 1-coin tips');
  assert.equal(ledger.today['ball-kid'],6);assert.equal(ledger.best['ball-kid'],25,'best time is the fastest shift');
  assert.match(E.payMessage('ball-kid',ledger),/Come back tomorrow/);assert.doesNotMatch(E.payMessage('ball-kid',ledger),/lose|streak|hurry/i);
  const tomorrow=E.sanitizeJobLedger(JSON.parse(JSON.stringify(ledger)),'2026-09-28');
@@ -35,18 +37,23 @@ function environment(shared){
  same(E.splitCredit(25,20),[20,5]);same(E.splitCredit(7,20),[7]);same(E.splitCredit(0,20),[]);
  // Daily ceiling: a player who does every job 4 times earns a bounded amount.
  let all=E.emptyJobLedger(day),total=0;for(const id of JOB_IDS)for(let i=0;i<FULL_PAY_PER_DAY+HALF_PAY_PER_DAY;i++){const p=E.jobPayout(id,all);total+=p.coins;all=E.recordCompletion(all,id,p.coins,40);}
- assert(total<=JOB_IDS.length*34&&total>=JOB_IDS.length*20,`full + half pay across all jobs stays bounded (${total})`);
- for(const id of JOB_IDS)if(id!=='wall-rebounds')assert(JOB_BASE_PAY[id]>=7&&JOB_BASE_PAY[id]<=10,`${id} pays inside the 7–10 coin band`);
+ assert(total<=JOB_IDS.length*25&&total>=JOB_IDS.length*14,`full + half pay across all jobs stays bounded (${total}; 14 Oct 2026 rebalance: was 20–34 a job)`);
+ // Oct 14 2026 (docs/economy.md): every job pays about a third less, band 7–10 → 4–7 (lib/economy.ts JOB_PAY_BAND), and no job
+ // pays more per minute than a lesson quiz (learning pays best).
+ {const [lo,hi]=env.load('lib/economy.ts').JOB_PAY_BAND;assert.deepEqual([lo,hi],[4,7]);
+  for(const id of JOB_IDS)if(id!=='wall-rebounds')assert(JOB_BASE_PAY[id]>=lo&&JOB_BASE_PAY[id]<=hi,`${id} pays inside the ${lo}–${hi} coin band`);
+  const L=env.load('lib/town/learnCoins.ts').LEARN_COINS,quizPerMin=(L.quiz+L.quizPerfect*.65)/4;
+  for(const id of JOB_IDS)assert(E.jobCoinsPerMinute(id)<quizPerMin,`${id}: ${E.jobCoinsPerMinute(id).toFixed(2)} coins a minute, under a lesson quiz (${quizPerMin.toFixed(2)})`);}
  // Wall rebounds (30 Sep 2026, user-approved): 50 passes + 15 shots (~3.5 min) pays 26, so its coins per minute sit at the middle
  // of the other jobs instead of the bottom (it paid 8: ~2 a minute). Same tiers: half pay 13, then the 1-coin tip.
- {assert.equal(JOB_BASE_PAY['wall-rebounds'],26,'Wall rebounds pays 26');assert.equal(E.JOB_MINUTES['wall-rebounds'],3.5);
+ {assert.equal(JOB_BASE_PAY['wall-rebounds'],16,'Wall rebounds pays 16 (26 until the 14 Oct 2026 rebalance)');assert.equal(E.JOB_MINUTES['wall-rebounds'],3.5);
   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),h=others.length>>1,mid=others.length%2?others[h]:(others[h-1]+others[h])/2;
   assert.equal(others.length,12,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
   assert(rate('wall-rebounds')>others[0]&&rate('wall-rebounds')<others[others.length-1],'neither the lowest nor the highest per minute');
   assert(8/E.jobShiftMinutes('wall-rebounds')<others[0],'the old pay (8) was the lowest per minute: the reason for the raise');
   const short=JOB_IDS.filter(id=>id!=='wall-rebounds').map(E.jobShiftMinutes);assert(Math.abs(short.reduce((a,b)=>a+b,0)/short.length-1.5)<.05,'the short jobs still average 1.5 min a shift (the sim assumption)');
   let w=E.emptyJobLedger(day);const wall=[];for(let i=0;i<6;i++){const p=E.jobPayout('wall-rebounds',w);wall.push(p.coins);w=E.recordCompletion(w,'wall-rebounds',p.coins,210);}
-  same(wall,[30,26,13,13,1,1],'first-time bonus, full, half, half, then 1-coin tips (rules unchanged)');
+  same(wall,[20,16,8,8,1,1],'first-time bonus, full, half, half, then 1-coin tips (rules unchanged)');
   same(E.splitCredit(30,20),[20,10],'a 30-coin payday credits in two wallet runs');}
 
  // ---- Wallet integration: the real arcade wallet core with in-memory ports ----
@@ -94,20 +101,20 @@ function environment(shared){
  // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
  // Summit Isle's ranger job (12 Oct 2026) makes 13.
  assert.equal(C.JOBS.length,13,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up');
- {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],8);}
+ {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],5);}
  {const farm=C.jobById('farm-harvest');assert(farm&&farm.kind==='harvest'&&farm.prop==='produce'&&farm.task.type==='harvest'&&farm.task.fruitGoal===5&&farm.task.vegGoal===5&&farm.deliver&&farm.deliver.label==='farm stand','Harvest day: shake 5 fruit and pull/pick/snip 5 veg, then unload at the farm stand');
   const goodsReg=env.load('lib/town/market/goods.ts');assert(farm.task.spots.every(sp=>goodsReg.goodById(sp.good)?.kind==='produce'),'every harvest crop is a sellable produce good');
   same([...new Set(farm.task.spots.map(sp=>sp.action))].sort(),['cut','pull','shake','twist'],'four physical actions: shake, pull, twist, snip');
   assert.equal(farm.task.spots.filter(sp=>sp.action==='shake').reduce((n,sp)=>n+sp.fruit,0),15,'15 ripe fruit hang on 5 trees (5 needed)');
   assert.equal(farm.task.spots.filter(sp=>sp.action!=='shake'&&sp.ripe!==false).length,farm.task.vegGoal,'exactly 5 ready veg; the green ones are decoys');
-  assert.equal(farm.place,'The Farm, Coral Cay');assert.match(farm.lessonSource,/fifa\.com/);assert.match(farm.lesson,/carbohydrate/i);assert.match(farm.lesson,/water/i);assert.equal(JOB_BASE_PAY['farm-harvest'],8);
+  assert.equal(farm.place,'The Farm, Coral Cay');assert.match(farm.lessonSource,/fifa\.com/);assert.match(farm.lesson,/carbohydrate/i);assert.match(farm.lesson,/water/i);assert.equal(JOB_BASE_PAY['farm-harvest'],6);
   assert.match(E.payMessage('farm-harvest',E.recordCompletion(E.recordCompletion(E.emptyJobLedger(day),'farm-harvest',8,30),'farm-harvest',8,30)),/The harvest is in/);}
  // Trail clean-up (Summit Isle, 12 Oct 2026): 8 litter marks along the trail and the beach, placed from summitIsle.ts's own
  // exported points (never fixed coordinates), a ranger's sign at the trailhead, pay in the 7–10 band.
  {const trail=C.jobById('trail-cleanup'),summit=env.load('lib/town/summitIsle.ts');
   assert(trail&&trail.kind==='collect'&&trail.prop==='bottle'&&trail.targets.length===8&&trail.deliver&&trail.deliver.label==='litter bin','Trail clean-up: 8 litter marks, a litter bin drop-off');
   assert.equal(trail.place,'Summit Isle trailhead');assert.equal(trail.role,'Park ranger');assert(trail.lesson.length>60,'teaches a football-relevant lesson');
-  assert.equal(JOB_BASE_PAY['trail-cleanup'],8);assert.equal(E.JOB_MINUTES['trail-cleanup'],.7);
+  assert.equal(JOB_BASE_PAY['trail-cleanup'],5);assert.equal(E.JOB_MINUTES['trail-cleanup'],.7);
   assert(summit.distanceToSummitLand(trail.board.x,trail.board.z)<1,'the ranger\'s sign stands on Summit Isle (or its sandbar)');
   for(const t of trail.targets)assert(summit.distanceToSummitLand(t.x,t.z)<3,`litter mark (${t.x.toFixed(1)}, ${t.z.toFixed(1)}) is on Summit Isle ground, not in the sea`);
   // Litter is only built while the shift is active (jobScene.ts buildProps(), the generic rule every collect job already follows).
@@ -283,16 +290,19 @@ function environment(shared){
  // ---- Farmers market basket + selling (shared with fishing) ----
  const goods=env.load('lib/town/market/goods.ts'),M=env.load('lib/town/market/market.ts');
  for(const good of goods.PRODUCE_GOODS){assert(good.lesson.length>40&&good.price>0&&good.price<=5,`${good.id} teaches and is fairly priced`);}
- assert(goods.GOODS.every(x=>x.kind==='produce'||x.kind==='fish'));
+ assert(goods.GOODS.every(x=>x.kind==='produce'||x.kind==='fish'||x.kind==='beach'));// beach: beachcombing finds (tests/beachcombing.cjs)
  let stored=null;const credits=[];const market=M.createMarket({read:()=>stored,write:v=>{stored=JSON.parse(JSON.stringify(v));},credit:async(id,amount,reason)=>{credits.push({id,amount,reason});return amount;},now:()=>t0});
  assert.equal(market.gather('orange',3),3);assert.equal(market.gather('not-a-good'),0);
  assert.equal(market.gather('strawberry',M.BASKET_LIMIT),M.BASKET_LIMIT-3,'basket holds 20 items');assert.equal(market.gather('carrot'),0);
  const quote=market.quote('produce');assert.equal(quote.coins,M.quoteSale(M.sanitizeMarket(stored,M.localMarketDay(t0)),'produce').coins);
- assert.equal(quote.coins,3*3+16*2+1,"16 strawberries at full price reach the 40-coin allowance; the last one is half price");assert.equal(quote.halfPrice,true,'sales beyond 40 coins a day are half price');
+ // Oct 14 2026 (lib/economy.ts): oranges and strawberries sell for 1 coin, and Rosa's same-kind ladder applies: the first 4 of a kind
+ // full, the next 4 at ½, the rest at ¼, with part-coins on her tally. 3 oranges = 3; 17 strawberries = 4 + 2 + 9 × ¼ (2, ¼ left).
+ assert.equal(quote.coins,3+4+2+2,"3 oranges, then 17 strawberries down Rosa's same-kind ladder");assert.equal(quote.halfPrice,false,'11 coins is inside the 30-coin allowance');
+ assert.equal(quote.plenty.join(),'strawberry','Rosa has plenty of strawberries');assert.equal(quote.tally.strawberry,.25,'a quarter coin waits on the tally');
  const sale=await market.sell('produce');assert.equal(sale.ok,true);assert.equal(sale.coins,quote.coins);assert.equal(credits.length,1);assert.match(credits[0].id,/^market:2026-09-27:1$/);
  assert.equal(M.basketCount(market.read()),0);assert.equal((await market.sell()).ok,false);
- market.gather('orange',2);assert.equal(market.quote().coins,2,'still half price later the same day');
- const nextDayMarket=M.createMarket({read:()=>stored,write:v=>{stored=v;},credit:async(i,a)=>a,now:()=>t0+86400e3});assert.equal(nextDayMarket.quote().coins,6,'full price again tomorrow');
+ market.gather('orange',2);assert.equal(market.quote().coins,1,'later the same day the ladder remembers: the 4th orange is full, the 5th is ½ (on the tally)');
+ const nextDayMarket=M.createMarket({read:()=>stored,write:v=>{stored=v;},credit:async(i,a)=>a,now:()=>t0+86400e3});assert.equal(nextDayMarket.quote().coins,2,'full price again tomorrow (the ladder resets at midnight)');
 
  // ---- Harvest day actions (Sep 30 2026): shake → drop → pick up, pull timing, twist / not ready, snip, the 5 + 5 mix ----
  {const job=C.jobById('farm-harvest'),floor=(x,z)=>V.fieldSurfaceHeight(x,z),at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),spots=job.task.spots,idx=f=>spots.findIndex(f);
@@ -359,10 +369,11 @@ function environment(shared){
   const snacks=await w3.payJob('match-day-snacks','Match-day snacks',60);assert.equal(snacks.coins-snacks.bonus,JOB_BASE_PAY['match-day-snacks']);assert(snacks.credited>0,'Match-day snacks pays');same(snacks.goods,[]);assert.equal(M.basketCount(mkt.read()),3);}
 
  // ---- Selling farm produce (Rosa's stand and the farm stand share ONE market state, allowance and Training meter) ----
- {for(const id of ['banana','mango','pepper','greens','sweet-potato']){const g=goods.goodById(id);assert(g&&g.kind==='produce'&&g.price>=2&&g.price<=3,`${id} is fairly priced produce`);assert(g.lesson.length<=85,`${id} lesson ≤ 85 chars (${g.lesson.length})`);assert.match(g.source,/^https:\/\//);}
+ {for(const id of ['banana','mango','pepper','greens','sweet-potato']){const g=goods.goodById(id);assert(g&&g.kind==='produce'&&g.price>=1&&g.price<=2,`${id} is fairly priced produce (1–2 coins since 14 Oct 2026)`);assert(g.lesson.length<=85,`${id} lesson ≤ 85 chars (${g.lesson.length})`);assert.match(g.source,/^https:\/\//);}
   let st=null;const mk=M.createMarket({read:()=>st,write:v=>{st=JSON.parse(JSON.stringify(v));},credit:async(i,a)=>a,now:()=>t0});
-  mk.grant('k',[{id:'mango',count:2},{id:'banana',count:1}]);assert.equal(mk.quote('produce').coins,3*2+2);assert.equal((await mk.sell('produce')).coins,8);
-  mk.gather('strawberry',16);await mk.sell('produce');assert.equal(mk.read().soldToday,40);mk.gather('mango',2);assert.equal(mk.quote('produce').coins,2,'after 40 coins of sales today, farm produce sells at half price too');
+  mk.grant('k',[{id:'mango',count:2},{id:'banana',count:1}]);assert.equal(mk.quote('produce').coins,2*2+1);assert.equal((await mk.sell('produce')).coins,5);
+  mk.gather('strawberry',16);await mk.sell('produce');assert.equal(mk.read().soldToday,5+8,'16 strawberries: 4 + 4 × ½ + 8 × ¼');
+  st={...st,soldToday:M.MARKET_FULL_PRICE_COINS};mk.refresh();mk.gather('mango',2);assert.equal(mk.quote('produce').coins,2,`after ${M.MARKET_FULL_PRICE_COINS} coins of sales today, farm produce sells at half price too`);
   const MS=env.load('lib/town/market/marketStand.ts'),one=await MS.sellOneGood('mango',{read:()=>st,write:v=>{st=JSON.parse(JSON.stringify(v));},credit:async(i,a)=>a,refresh:()=>mk.refresh(),now:()=>t0});assert.equal(one.coins,1);assert.equal(mk.read().basket.mango,1);
   const DM=env.load('lib/town/dailyMeter.ts');assert(DM.isTrainingRun(`market:${M.localMarketDay(t0)}:3`,'island'),'every farm-stand sale is a metered market run');
   const stand=fs.readFileSync(path.join(base,'components/MarketStand.tsx'),'utf8');assert.match(stand,/place==='farm'/);assert.match(stand,/filter\(t=>t\.id==='produce'\)/,'the farm stand buys produce only');}
@@ -500,9 +511,9 @@ function environment(shared){
    same(run.garden.bag.length,8);assert.equal(JM.jobButtons(run),null,'done: the default buttons come back');
    // Tree fruit is a reach-up pick.
    const tree=spots.findIndex(G.isTreeSpot),r3=R.startRun(job,1);R.stepRun(r3,at(spots[tree]),.1,floor);assert.equal(R.runAction(r3,'pluck').find(e=>e.type==='pluck').value,1,'tree fruit: reach up');}
-  // Pay: 10 (+4 the first time), half 5, then tips; per-minute parity with the other jobs; the daily ceiling stays bounded.
+  // Pay: 6 (+4 the first time), half 3, then tips (10 / 5 until the 14 Oct 2026 rebalance); per-minute parity with the other jobs; the daily ceiling stays bounded.
   {let l=E.emptyJobLedger(day);const p=[];for(let i=0;i<6;i++){const x=E.jobPayout('garden-shift',l);p.push(x.coins);l=E.recordCompletion(l,'garden-shift',x.coins,60);}
-   same(p,[14,10,5,5,1,1],'first-time bonus, full, half, half, then 1-coin tips');assert.equal(E.JOB_MINUTES['garden-shift'],1);
+   same(p,[10,6,3,3,1,1],'first-time bonus, full, half, half, then 1-coin tips');assert.equal(E.JOB_MINUTES['garden-shift'],1);
    const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='garden-shift'&&id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),mid=(others[4]+others[5])/2;
    assert(Math.abs(rate('garden-shift')-mid)/mid<=.1,`garden shift ${rate('garden-shift').toFixed(2)} coins/min within 10% of the other short jobs' median ${mid.toFixed(2)}`);
    assert.match(E.payMessage('garden-shift',l),/garden crate is full/);}
@@ -513,9 +524,9 @@ function environment(shared){
    same(S.jobShare('farm-harvest','full',0,['mango','orange','banana']).map(x=>x.count).reduce((a,b)=>a+b,0),3,'the farm share is unchanged');
    let ms=null,clk=Date.parse('2026-09-30T11:00:00');const mkt=M.createMarket({read:()=>ms,write:v=>{ms=JSON.parse(JSON.stringify(v));},credit:async(i,a)=>a,now:()=>clk});
    const w=W.createJobWallet({creditRun:(id,game,target,reason)=>arcade.creditRun(id,game,target,reason),balance:()=>arcade.load().balance,caps:core.ARCADE_COIN_CAPS,now:()=>clk,grantGoods:(k,items)=>mkt.grant(k,items)});
-   const pay=await w.payJob('garden-shift','Garden shift',62,bag);assert.equal(pay.coins,14);assert.equal(pay.bonus,4);assert.equal(count(pay.goods),2);assert.equal(M.basketCount(mkt.read()),2);
+   const pay=await w.payJob('garden-shift','Garden shift',62,bag);assert.equal(pay.coins,10);assert.equal(pay.bonus,4);assert.equal(count(pay.goods),2);assert.equal(M.basketCount(mkt.read()),2);
    same(mkt.grant(`island-job:garden-shift:${E.localDay(clk)}:1`,pay.offered),[],'the share is added once: a replayed payday adds nothing');assert.equal(M.basketCount(mkt.read()),2);
-   const second=await w.payJob('garden-shift','Garden shift',58,bag);assert.equal(second.coins,10);assert.equal(count(second.goods),2);assert.equal(M.basketCount(mkt.read()),4);}
+   const second=await w.payJob('garden-shift','Garden shift',58,bag);assert.equal(second.coins,6);assert.equal(count(second.goods),2);assert.equal(M.basketCount(mkt.read()),4);}
   // Auto-stop: the shift ends a short way outside the garden (15 m, not the usual 45 m: the Coaches Centre lawn is close by).
   assert.equal(job.areaMargin,15);for(const q of [job.board,job.deliver,...spots.slice(0,3),{x:202,z:12}])assert(!R.outsideJobArea(job,q.x,q.z),'inside the garden area');
   for(const [x,z] of [[156,-25],[208,40],[260,-12],[208,-60]])assert(R.outsideJobArea(job,x,z),`(${x},${z}) is outside: the shift stops`);

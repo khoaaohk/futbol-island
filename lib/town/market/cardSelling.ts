@@ -14,13 +14,14 @@
  *  - no money loop: every pack costs more than the most its cards could ever trade for (see maxPackTradeValue).
  * In-game coins only, never real money.
  */
+import {CARD_TRADE} from '../../economy';
 export type CardTradeMode='off'|'trade-in';
 /** SHIPPED DEFAULT. 'off' = cards cannot be sold (the Cards section explains why). Switch to 'trade-in' once the user confirms. */
 export const CARD_TRADE_MODE:CardTradeMode='trade-in'; // switched on by the user, Sep 27 2026
-/** Coins for any tradeable card. Deliberately tiny next to a 7-10 coin island job and a 40-coin pack. */
-export const CARD_TRADE_COINS=2;
+/** Coins for any tradeable card. Deliberately tiny next to a 4-7 coin island job and a 40-coin pack (lib/economy.ts CARD_TRADE). */
+export const CARD_TRADE_COINS=CARD_TRADE.coins;
 /** Cards a child can trade in per local day. */
-export const CARD_TRADES_PER_DAY=3;
+export const CARD_TRADES_PER_DAY=CARD_TRADE.perDay;
 export const CARD_TRADE_STORAGE_KEY='fi2-card-trade-v1';
 const HISTORY_LIMIT=20;
 
