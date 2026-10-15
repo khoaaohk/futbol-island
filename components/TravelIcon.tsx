@@ -39,7 +39,12 @@ export default function TravelIcon({kind}:{kind:string}){
  check:'M4 12l5 5L20 6',
  hammer:'M13 7 4 20 M10 3l9 9 2-2-9-9z',
  crate:'M3 10h18v10H3z M3 14h18 M8 10V7h8v3 M12 4v6 M9 7l3 3 3-3',
- take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8'
+ take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8',
+ // Zipline ride actions (Oct 14 2026, lib/town/zipline.ts ZIP_BUTTONS): tuck (knees up, speed lines), spin (a turn under the bar),
+ // wave (one hand on the bar, the other up and waving).
+ ziptuck:'M6 3h12 M9 3l2 5 M15 3l-2 5 M12 10a1.8 1.8 0 1 0 0 .01 M12 12v4l4-1-1 5 M2 13h4 M3 17h3',
+ zipspin:'M6 3h12 M12 3v4 M17.6 13.5a5.5 5.5 0 1 1-1.7-3.9 M18.5 6.5v3.5H15',
+ zipwave:'M3 3h10 M8 3v5 M8 10a1.8 1.8 0 1 0 0 .01 M8 12v5 M6 21l2-4 2 4 M8 13l5-4 M15 4l2-2 M16 8h3 M15 11l3 1'
  };
  return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]??paths.walk}/></svg>;
 }

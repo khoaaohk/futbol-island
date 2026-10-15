@@ -19,6 +19,7 @@ import type {BeanLook,Outfit,BeanExpression} from './beanLook';
 import {createSkillDriver,type SkillMotion} from './skillMoves';
 import {jobPoseTarget,type PoseTarget} from './jobPoses';
 import type {JobPose} from '../town/jobs/jobMoves';
+import type {ZipRigPose} from '../town/zipline';
 import {copyTrickPose,createTrickPose,solveTrickLeg,type TrickPose,type TrickLegAngles} from './trickPose';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
@@ -76,6 +77,9 @@ export type PlayerMotion = {
   parachute?: boolean;
   parachuteJuggle?: {phase:number;side:-1|1};
   parachuteSpin?: number;
+  /** Hanging from the zipline's handle bar (lib/graphics/zipline.ts): the body pose, and both hands solved onto the bar at
+   *  (±half, barY, barZ) rig-local (one may let go to wave). Replaces the parachute pose; `w` fades it out on the landing deck. */
+  zipline?: ZipRigPose;
   turnSmoothing?: number;
   flight?: FlightPose;
   rooftopPose?: 'hang'|'fall'|'dizzy';
@@ -322,6 +326,15 @@ export type PlayerRig = {
   update: (x: number, z: number, dt: number, time: number, reduced: boolean, motion?: PlayerMotion) => void;
   dispose: () => void;
 };
+
+// Zipline grip solve (poseZipArms): shoulder → elbow, and elbow → the middle of the mitten (the hand joint + 2 cm, where the bar
+// runs through the closed hand: lib/graphics/beanSkin.ts centres the mitten 2 cm down the hand joint); shared temporaries.
+const ZIP_UPPER=.28,ZIP_FORE=.285;
+const zipChest=new T.Matrix4(),zipInv=new T.Matrix4(),zipBasis=new T.Matrix4(),zipT=new T.Vector3(),zipN=new T.Vector3(),zipE=new T.Vector3(),zipF=new T.Vector3(),
+ zipX=new T.Vector3(),zipY=new T.Vector3(),zipZ=new T.Vector3(),zipPole=new T.Vector3(),zipQ=new T.Quaternion(),zipQ2=new T.Quaternion(),zipEuler=new T.Euler();
+const zipMix=(o:T.Euler|T.Vector3,k:'x'|'y'|'z',v:number,w:number)=>{o[k]+=(v-o[k])*w;};
+/** The middle of a hand's mitten in the elbow's frame (the zipline grip point; tests and the runtime read it). */
+export const ZIP_GRIP_POINT=[0,-ZIP_FORE,0] as const;
 
 export function createPlayer(id: string, team: string, mergeRigidParts=true, articulatedHands=true): PlayerRig {
   const root = new T.Group(), pelvis = new T.Group(), torso = new T.Group();pelvis.name='player-pelvis';
@@ -756,6 +769,47 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     mix(torso.rotation,'x',t.tx);mix(torso.rotation,'y',t.ty);mix(torso.rotation,'z',0);mix(head.rotation,'x',t.hx);mix(head.rotation,'y',-t.ty*.5+t.hy);
     for(let i=0;i<2;i++){const a=i===0?t.al:t.ar,arm=arms[i],side=i===0?-1:1;
       mix(arm.shoulder.rotation,'x',a[0]);mix(arm.shoulder.rotation,'y',0);mix(arm.shoulder.rotation,'z',side*a[1]);mix(arm.elbow.rotation,'x',a[2]);mix(arm.elbow.rotation,'y',0);mix(arm.hand.rotation,'y',side*(a[3]??0));}
+  };
+  /** Zipline (Oct 14 2026, user: "the arms are not on the handle"): the body hangs under the handle bar (legs, hips, torso, head
+   *  from the runtime's ZipRigPose), then both arms are solved onto the bar: a two-bone solve in the chest's own frame (after the
+   *  spine has moved, the torso's shape scale included), elbows out to the side and a little back, so the middle of each mitten
+   *  (the hand joint + 2 cm) sits ON the bar every frame. The waving hand blends to a wave over the top. No allocation. */
+  const poseZipBody=(z:ZipRigPose)=>{
+    const w=Math.max(0,Math.min(1,z.w));if(w<=0)return;const legOff=(P.legs-1)*.83;
+    zipMix(pelvis.position,'x',0,w);zipMix(pelvis.position,'y',z.py+legOff,w);zipMix(pelvis.position,'z',z.pz,w);
+    zipMix(pelvis.rotation,'x',z.pike,w);zipMix(pelvis.rotation,'y',0,w);zipMix(pelvis.rotation,'z',0,w);
+    zipMix(torso.rotation,'x',z.tx,w);zipMix(torso.rotation,'y',z.ty,w);zipMix(torso.rotation,'z',z.tz,w);
+    zipMix(head.rotation,'x',z.hx,w);zipMix(head.rotation,'y',z.hy,w);zipMix(head.rotation,'z',-z.tz*.35,w);
+    for(let i=0;i<2;i++){const side=i===0?-1:1,leg=legs[i];if(leg.hip.rotation.order!=='XYZ')leg.hip.rotation.reorder('XYZ');
+      zipMix(leg.hip.rotation,'x',i===0?z.hipL:z.hipR,w);zipMix(leg.hip.rotation,'y',0,w);zipMix(leg.hip.rotation,'z',side*z.spread,w);
+      zipMix(leg.knee.rotation,'x',i===0?z.kneeL:z.kneeR,w);zipMix(leg.knee.rotation,'y',0,w);zipMix(leg.knee.rotation,'z',0,w);
+      zipMix(leg.ankle.rotation,'x',i===0?z.ankleL:z.ankleR,w);zipMix(leg.ankle.rotation,'y',0,w);zipMix(leg.ankle.rotation,'z',0,w);}
+  };
+  const poseZipArms=(z:ZipRigPose)=>{
+    const w=Math.max(0,Math.min(1,z.w));if(w<=0)return;
+    pelvis.updateMatrix();torso.updateMatrix();lumbar.updateMatrix();chest.updateMatrix();
+    zipChest.multiplyMatrices(pelvis.matrix,torso.matrix).multiply(lumbar.matrix).multiply(chest.matrix);zipInv.copy(zipChest).invert();
+    for(let i=0;i<2;i++){const side=i===0?-1:1,arm=arms[i];
+      // The bar point for this hand, in the chest's frame, from the shoulder.
+      zipT.set(side*z.half,z.barY,z.barZ).applyMatrix4(zipInv).sub(arm.shoulder.position);
+      let d=zipT.length();const reach=ZIP_UPPER+ZIP_FORE-.003;if(d>reach){zipT.multiplyScalar(reach/d);d=reach;}if(d<.1){zipT.setLength(.1);d=.1;}
+      zipN.copy(zipT).divideScalar(d);
+      // The elbow's side: out and a little back (rig-local), made square to the reach line.
+      zipPole.set(side,-.1,-.45).transformDirection(zipInv);zipPole.addScaledVector(zipN,-zipPole.dot(zipN));
+      if(zipPole.lengthSq()<1e-8)zipPole.set(side,0,0);zipPole.normalize();
+      const along=(ZIP_UPPER*ZIP_UPPER-ZIP_FORE*ZIP_FORE+d*d)/(2*d),out=Math.sqrt(Math.max(0,ZIP_UPPER*ZIP_UPPER-along*along));
+      zipE.copy(zipN).multiplyScalar(along).addScaledVector(zipPole,out);// the elbow, from the shoulder
+      zipY.copy(zipE).divideScalar(-ZIP_UPPER);// the shoulder's local +y (the upper arm runs down its −y)
+      zipF.copy(zipT).sub(zipE).divideScalar(ZIP_FORE);// the forearm's direction
+      zipZ.copy(zipF).addScaledVector(zipY,-zipF.dot(zipY));if(zipZ.lengthSq()<1e-8)zipZ.copy(zipPole).negate();zipZ.normalize();
+      zipX.crossVectors(zipY,zipZ);zipBasis.makeBasis(zipX,zipY,zipZ);zipQ.setFromRotationMatrix(zipBasis);
+      let elbow=-Math.acos(Math.max(-1,Math.min(1,-zipF.dot(zipY))));
+      if(side===z.free&&z.wave>0){// let go and wave: the arm up and out, the forearm swinging
+        const k=Math.max(0,Math.min(1,z.wave)),s=Math.sin(z.wavePhase);
+        zipQ2.setFromEuler(zipEuler.set(-.25+.08*s,0,side*(2.45+.3*s),'XYZ'));zipQ.slerp(zipQ2,k);elbow+=(-.55-.35*Math.sin(z.wavePhase+1.2)-elbow)*k;}
+      arm.shoulder.quaternion.slerp(zipQ,w);
+      arm.elbow.rotation.set(arm.elbow.rotation.x+(elbow-arm.elbow.rotation.x)*w,arm.elbow.rotation.y*(1-w),arm.elbow.rotation.z*(1-w));
+      arm.hand.rotation.set(arm.hand.rotation.x*(1-w),arm.hand.rotation.y*(1-w),arm.hand.rotation.z*(1-w));}
   };
   /** Freestyle trick pose over the finished pose (motion.trick, lib/graphics/trickPose.ts): pelvis, torso, head, both legs by the
    *  shared analytic solve (so the host knows exactly where each boot is) and both arms, blended by `w`. No allocation. */
@@ -1576,7 +1630,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       for(let i=0;i<2;i++){const side=i===0?-1:1,stride=Math.sin(phase+i*Math.PI);legs[i].hip.rotation.x=stride*.42;legs[i].knee.rotation.x=.15+Math.max(0,-stride)*.45;legs[i].ankle.rotation.x=-Math.max(0,-stride)*.15;arms[i].shoulder.rotation.set(-stride*.3,0,side*.25);arms[i].elbow.rotation.x=-.35;}
     }
     if(!motion?.parachute)parachutePhase=0;
-    if(motion?.parachute){
+    if(motion?.parachute&&!motion.zipline){
       if(!reduced)parachutePhase+=dt*2.8;
       const spin=reduced?0:T.MathUtils.clamp(motion.parachuteSpin??0,0,1);
       const juggle=motion.parachuteJuggle;
@@ -1603,6 +1657,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         }
       }
     }
+    if(motion?.zipline)poseZipBody(motion.zipline);
     if(motion?.rooftopPose){
       const pose=motion.rooftopPose, frantic=pose==='hang'||pose==='fall', dizzy=pose==='dizzy';
       const wobble=reduced?0:Math.sin(time*5)*.18;
@@ -1653,6 +1708,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     // Keep the gaze stable while the upper spine moves beneath it.
     head.rotation.x-=(lumbar.rotation.x+chest.rotation.x)*.65;
     head.rotation.z-=(lumbar.rotation.z+chest.rotation.z)*.65;
+    if(motion?.zipline)poseZipArms(motion.zipline);
     // "To me!": the receiver raises the ball-side arm high and waves it; the rig eases in and out.
     const calledTarget=reactOK?T.MathUtils.clamp(motion?.called??0,0,1):0;
     if(calledTarget>0||calledBlend>0){

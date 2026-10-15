@@ -46,7 +46,10 @@ export function buildBallCannonProps(t:BallCannonTools){
  // ---- A crate of footballs on the deck's left side.
  {const c=at(L.x,L.z,-.15,-1.75),g=summitGround(c.x,c.z),crate=box(.56,.36,.44,C.deck,c.x,g+.18,c.z);crate.rotation.y=yaw;
   for(const [a,r] of [[-.12,-.1],[.1,.12],[.0,-.02]] as const){const p=at(c.x,c.z,a,r),ball=put(new T.SphereGeometry(.15,10,8),C.cream,p.x,g+.48+(a===0?.1:0),p.z);ball.castShadow=false;}
-  obstacles.push({x:c.x,z:c.z,w:.6,d:.6});}
+  // Round colliders out to the turned box's corners (Oct 14 2026, user: "when zooming fast to the mountain, it collides for a
+  // second"): square ones padded by a ride's radius closed the 2 m you can see between the crate and the clay trap, a pocket that
+  // held a ride coming up from the sandbar.
+  obstacles.push({x:c.x,z:c.z,w:.72,d:.72,cornerRadius:.36});}
  obstacles.push({x:L.x,z:L.z,w:CANNON.baseR*2,d:CANNON.baseR*2,cornerRadius:CANNON.baseR});
  // ---- The clay trap: an iron box on legs, the throwing arm cocked toward the sea, a stack of orange discs on top.
  {const q=L.trap,g=q.ground,qx=Math.sin(q.yaw),qz=Math.cos(q.yaw);
@@ -55,6 +58,6 @@ export function buildBallCannonProps(t:BallCannonTools){
   const arm=box(.08,.06,.62,C.yellow,q.x+qx*.18,g+.75,q.z+qz*.18);arm.rotation.set(0,q.yaw,0);arm.rotateX(-.45);
   for(let k=0;k<4;k++){const d=put(new T.CylinderGeometry(CANNON.discR,CANNON.discR*.86,.05,12),C.clay,q.x-qx*.12,g+.7+k*.055,q.z-qz*.12);d.castShadow=false;}
   const lever=box(.05,.42,.05,C.iron,q.x-qx*.3+qz*.22,g+.86,q.z-qz*.3-qx*.22);lever.rotation.y=q.yaw;
-  obstacles.push({x:q.x,z:q.z,w:.8,d:.8});}
+  obstacles.push({x:q.x,z:q.z,w:.8,d:.8,cornerRadius:.4});}
  return {cannon:{x:L.x,z:L.z},trap:{x:L.trap.x,z:L.trap.z}};
 }

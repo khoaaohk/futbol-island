@@ -105,6 +105,10 @@ export function rideSpeed(tau:number){return VS(tau)/PROFILE.norm*ZIP_SPAN/ZIP_R
 /** Peak speed (m/s). */
 export const ZIP_TOP_SPEED=(()=>{let m=0;for(let i=0;i<=200;i++)m=Math.max(m,rideSpeed(i/200));return m;})();
 
+/** cableAt without an allocation (the ride's 60 Hz tick). */
+export function cableInto(t:number,out:ZipPoint):ZipPoint{
+ out.x=ZIP_LAUNCH.x+(ZIP_LAND.x-ZIP_LAUNCH.x)*t;out.y=Y0+(Y1-Y0)*t-4*ZIP_SAG*t*(1-t);out.z=ZIP_LAUNCH.z+(ZIP_LAND.z-ZIP_LAUNCH.z)*t;return out;
+}
 /** The trolley (on the cable) and the rider's feet at ride time `t` (s, 0 … ZIP_RIDE.seconds). */
 export function ridePoint(t:number){
  const tau=t/ZIP_RIDE.seconds,f=rideProgress(tau),c=cableAt(f);
@@ -128,6 +132,48 @@ export function cableSamples(n=240){const out:{t:number;x:number;z:number;cable:
 /** Map line (world x/z, drawn on the island maps): the tower to the roof. */
 export const ZIP_MAP={from:{x:ZIP_TOWER.x,z:ZIP_TOWER.z},to:{x:ZIP_DECK.x,z:ZIP_DECK.z}} as const;
 
+// ---- The grip and the rider's actions (Oct 14 2026, user after riding it: "the arms are not on the handle", "the body needs to
+// animate with the movements more", "when ziplining, remove the actions and change those to three different actions that are more
+// related to the zipline"). ------------------------------------------------------------------------------------------------------
+/** The handle bar in the rider's own (rig-local, unscaled) frame: both hands close round it here every frame (player.ts solves the
+ *  arms to it; lib/graphics/zipline.ts places the body so this point IS the bar). `half` is each hand's distance from the middle;
+ *  `pull` how far the body pulls up toward the bar in a tuck; the bar is `length` long. */
+export const ZIP_GRIP={y:1.8,z:.05,half:.2,pull:.14,length:.62,radius:.026} as const;
+/** The trolley body's underside (below the cable) and the strap from it to the bar: the feet still hang ZIP_HANG under the cable. */
+export const ZIP_TROLLEY_DROP=.23;
+export const ZIP_STRAP=ZIP_HANG-ZIP_TROLLEY_DROP-ZIP_GRIP.y;
+/** The rider's pose for player.ts (rig-local radians and metres; written in place by the runtime every frame, never allocated).
+ *  `w` fades the whole pose (1 = hanging; it falls to 0 as the rider lets go on the deck). One hand can let go (`free`: −1 left,
+ *  +1 right) for a wave, blended by `wave` with its rhythm in `wavePhase`. */
+export type ZipRigPose={w:number;barY:number;barZ:number;half:number;free:-1|1;wave:number;wavePhase:number;
+ py:number;pz:number;pike:number;tx:number;ty:number;tz:number;hx:number;hy:number;spread:number;
+ hipL:number;hipR:number;kneeL:number;kneeR:number;ankleL:number;ankleR:number};
+/** The three ride actions (they take the Kick / Juggle / Ride slots of the HUD action cluster while riding; Space / Q / E, or 1 / 2 / 3):
+ *  Tuck (hold: knees up, a little faster, within the safe top speed and only before the brake), Spin (a 360° turn on the swivel)
+ *  and Wave (one hand lets go and waves; the other never leaves the bar). Pure fun: no score, and none of them can stop the ride,
+ *  slow it, or change the landing. */
+export type ZipActionId='tuck'|'spin'|'wave';
+export const ZIP_BUTTONS=[
+ {slot:'shoot',key:'Space',id:'tuck',label:'Hold to tuck and go faster',icon:'ziptuck',hold:true,enabled:true},
+ {slot:'juggle',key:'Q',id:'spin',label:'Spin on the handle',icon:'zipspin',enabled:true},
+ {slot:'ride',key:'E',id:'wave',label:'Wave with one hand',icon:'zipwave',enabled:true},
+] as const;
+/** Keyboard: Space or 1 = tuck (hold), Q or 2 = spin, E or 3 = wave. */
+export function zipKeyAction(code:string,key:string):ZipActionId|null{
+ if(code==='Space'||code==='Digit1'||code==='Numpad1')return 'tuck';
+ const k=key.toLowerCase();if(k==='q'||code==='Digit2'||code==='Numpad2')return 'spin';if(k==='e'||code==='Digit3'||code==='Numpad3')return 'wave';return null;
+}
+/** Tuck: up to `boost` faster (eased in and out at `ease`/s), never above `maxSpeed` m/s, only before `until` of the ride time (the
+ *  brake into the roof is never touched). Spin: one turn in `seconds` (`reduced` with reduced motion), none in the last `lastGap` s.
+ *  Wave: `seconds` long, none in the last `lastGap` s; it is always finished (the hand back on the bar) before the landing. */
+export const ZIP_TUCK={boost:.14,maxSpeed:30,until:.6,ease:2.5} as const;
+export const ZIP_SPIN={seconds:1.15,reduced:1.9,lastGap:.6} as const;
+export const ZIP_WAVE={seconds:2.2,lastGap:1.3} as const;
+/** The tuck's time-rate target at ride fraction τ (base speed v): 1 + boost, capped so v·rate ≤ maxSpeed; 1 from `until` on. */
+export function tuckRate(tau:number,v:number,held:boolean){
+ if(!held||tau>=ZIP_TUCK.until)return 1;return Math.max(1,Math.min(1+ZIP_TUCK.boost,ZIP_TUCK.maxSpeed/Math.max(1,v)));
+}
+
 // ---- The HUD bridge (components/ZiplineHud.tsx): written only when something shown changes, never per frame. ----------------
 export type ZipView={
  /** A short note ("Hold on tight!", "Welcome to Coral Cay!"), its counter (a new note restarts the CSS fade) and whether riding. */
@@ -142,9 +188,9 @@ export const zipStore={
  reset(){if(zipView===IDLE_VIEW)return;zipView=IDLE_VIEW;zipListeners.forEach(fn=>fn());},
  subscribe(fn:()=>void){zipListeners.add(fn);return()=>{zipListeners.delete(fn);};},
 };
-/** The prompt's tap; the runtime installs the real one while the island is up. */
-export const zipActions={ride:()=>{}};
+/** The prompt's tap and the ride's three actions; the runtime installs the real ones while the island is up. */
+export const zipActions={ride:()=>{},press:(_id:ZipActionId,_phase:'tap'|'down'|'up')=>{}};
 export const ZIP_NOTES={
- start:'Hold on tight! Zipping to Coral Cay. Use the stick to look around.',
+ start:'Hold on tight! Zipping to Coral Cay. Tuck, spin or wave; the stick looks around.',
  land:'Welcome to the Coral Cay Hostel roof! The stairs down are on the east side.',
 } as const;

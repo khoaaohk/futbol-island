@@ -11,6 +11,10 @@
  *
  * Heat:
  *  - All the fruit is ONE instanced mesh (1 draw call, no shadow) sized to today's fruiting trees only (bare trees have no slots).
+ *    Every kind shares one 70-triangle sphere that the vertex shader bends per instance (Oct 14 2026, user: "these don't look like
+ *    bananas?"): `aForm` stretches, tapers (pears) and bends it along an arc (a mango's kidney, a banana's crescent), `aPattern`
+ *    paints the stem spot, a banana's dark ends, coconut fibres, a mango blush or papaya shoulders. A banana slot is a hand of
+ *    4–6 finger instances (fewer once it falls: 1–3); everything else is one instance a fruit. No extra draw, no extra texture.
  *    Built the first time the player comes near Summit Isle; rebuilt only when the local day changes.
  *  - The sway is a vertex-shader rotation of just the shaken tree inside the island's baked prop meshes (summitIsleWorld.ts
  *    SUMMIT_TREE_SWAY): no shell mesh, no extra draw; the uniform angle goes back to exactly 0 when it settles.
@@ -26,7 +30,7 @@ import {createJobFx,type JobFx} from '../town/jobs/jobFx';
 import {POSE_TIME} from '../town/jobs/jobMoves';
 import {TREE_SHAKE_PUSHES} from './jobPoses';
 import {FORAGE,FRUIT_LOOK,FORAGE_TIP,FOLLOW_CAMERA,fruitTreeSteps,hangingNow,capLeft,recordPick,dropCount,ballDropCount,readForage,writeForage,forageStore,forageActions,
- localForageDay,fruitingToday,fruitToday,dayHash,contactAt,type FruitTree,type ForageSave,type TreeSite} from '../town/summitForage';
+ localForageDay,fruitingToday,fruitToday,dayHash,contactAt,type FruitLook,type FruitTree,type ForageSave,type TreeSite} from '../town/summitForage';
 import {SUMMIT_TREE_SITES,SUMMIT_TREE_SWAY,swayWeight} from '../town/summitIsleWorld';
 import {countFruitShake} from '../analytics/summitEvents';
 import {SUMMIT_BOX,SUMMIT_PATHS,SUMMIT_LANDMARKS,SUMMIT_CENTER,SUMMIT_VISUAL_DROP,summitGround,onSummitIsle,beachPoint,summitCameraPull} from '../town/summitIsle';
@@ -77,7 +81,9 @@ export type ForageUpdate={
  focusKey:string|null;
  ui:<E extends HTMLElement>(selector:string)=>E|null|undefined;place:(el:HTMLElement,x:number,y:number)=>void;hide:(el:HTMLElement,hidden:boolean)=>void;
 };
-type Slot={tree:number;k:number;mode:'hang'|'hidden'|'fall'|'ground'|'fly';hang:T.Vector3;pos:T.Vector3;vel:T.Vector3;bounces:number;age:number;spin:number;fly:T.Vector3};
+/** One fruit (one pickup). Its instances are base … base+n-1: one for most kinds, a banana hand's fingers for bananas. */
+type Slot={tree:number;k:number;mode:'hang'|'hidden'|'fall'|'ground'|'fly';hang:T.Vector3;pos:T.Vector3;vel:T.Vector3;bounces:number;age:number;spin:number;fly:T.Vector3;
+ base:number;n:number;fallen:number;yaw:number;tint:number};
 const G=9.8,NEAR_BOX=40,BUCKET=8;
 /** Walking pace of the step to the trunk (Town's job stand step, m/s) and the longest step the shake waits for. */
 const STEP_SPEED=3.5,MAX_LEAD=1.4;
@@ -85,13 +91,78 @@ const STEP_SPEED=3.5,MAX_LEAD=1.4;
 const ARRIVAL_WAIT=6;
 /** ?forage=0: the fruit trees are off (A/B heat runs, like ?fishfocus=0). */
 const OFF=typeof location!=='undefined'&&typeof URLSearchParams!=='undefined'&&new URLSearchParams(location.search).get('forage')==='0';
-const DUMMY=new T.Object3D(),Q=new T.Quaternion(),V=new T.Vector3();
+const DUMMY=new T.Object3D(),Q=new T.Quaternion(),V=new T.Vector3(),M2=new T.Matrix4(),HIDE=new T.Matrix4(),HUE=new T.Color();
 const LEAF_TREE='#6f9a55',LEAF_PALM='#5b895e',SPARKLE=['#fff3b0','#ffe18a','#ffffff'];
+
+// ---- The fruit shapes: one shared sphere bent per instance (the shader below and its CPU twin fruitPoint, for tests). ----
+/** Where unit-sphere point (x, y, z) goes for a fruit of this look (units of r; y is the stem axis, the stem at +y): stretched to
+ *  `elong`, a cross-section of `width` that narrows toward the stem by `taper`, bent along an arc of half-angle `bend` (the
+ *  hollow side toward +x). The vertex shader in fruitMaterial() does exactly this. */
+export function fruitPoint(L:Pick<FruitLook,'elong'|'width'|'bend'|'taper'>,x:number,y:number,z:number,out=new T.Vector3()){
+ const ss=(a:number,b:number,v:number)=>{const t=Math.max(0,Math.min(1,(v-a)/(b-a)));return t*t*(3-2*t);};
+ const r=L.width*(1+.2*L.taper-L.taper*ss(-.5,.8,y)),s=y*L.elong;
+ if(L.bend>.001){const R=L.elong/L.bend,th=s/R,c=Math.cos(th),sn=Math.sin(th),sag=R*(1-Math.cos(L.bend));
+  return out.set(R*(1-c)-.5*sag+r*x*c,R*sn-r*x*sn,r*z);}
+ return out.set(r*x,s,r*z);
+}
+const FRUIT_VERT=`
+ vec3 fp=position;float fe=aForm.x,fw=aForm.y,fb=aForm.z,ft=aForm.w;
+ float fr=fw*(1.0+0.2*ft-ft*smoothstep(-0.5,0.8,fp.y)),fs=fp.y*fe;
+ vec3 fA=vec3(0.0,fs,0.0),fT=vec3(0.0,1.0,0.0),fN=vec3(1.0,0.0,0.0);
+ if(fb>0.001){float R=fe/fb,th=fs/R,c=cos(th),sn=sin(th);fA=vec3(R*(1.0-c)-0.5*R*(1.0-cos(fb)),R*sn,0.0);fT=vec3(sn,c,0.0);fN=vec3(c,-sn,0.0);}
+ vec3 fiPos=fA+fr*(fp.x*fN+vec3(0.0,0.0,fp.z));
+ vec3 objectNormal=normalize(fp.x/fw*fN+fp.y/fe*fT+vec3(0.0,0.0,fp.z/fw));
+ vFruitP=fp;vFruitPat=aPattern;`;
+const FRUIT_FRAG=`
+ {vec3 q=vFruitP;float pat=vFruitPat;vec3 c=diffuseColor.rgb;
+  if(pat<0.5)c=mix(c,vec3(0.16,0.11,0.05),smoothstep(0.9,0.97,q.y));
+  else if(pat<1.5){c*=0.92+0.08*smoothstep(-0.2,0.6,q.z);c=mix(c,vec3(0.13,0.1,0.04),smoothstep(0.8,0.93,abs(q.y)));}
+  else if(pat<2.5){float a=atan(q.z,q.x),f=0.5+0.5*sin(a*13.0+q.y*6.0+sin(a*4.0+q.y*3.0)*2.2);c*=mix(1.08,0.55,f*f);c=mix(c,vec3(0.08,0.05,0.02),smoothstep(0.84,0.94,q.y));}
+  else if(pat<3.5){c=mix(c,vec3(0.72,0.1,0.04),0.8*smoothstep(-0.1,0.75,q.x*0.85+q.y*0.5));c=mix(c,vec3(0.25,0.4,0.08),0.7*smoothstep(0.3,0.9,-q.x*0.7-q.y*0.5));c=mix(c,vec3(0.16,0.11,0.05),smoothstep(0.92,0.98,q.y));}
+  else if(pat<4.5){c=mix(c,vec3(0.2,0.38,0.08),0.85*smoothstep(-0.1,0.7,q.y));c=mix(c,vec3(0.16,0.11,0.05),smoothstep(0.93,0.98,q.y));}
+  else{c=mix(c,vec3(0.16,0.11,0.05),smoothstep(0.88,0.96,-q.y)+smoothstep(0.93,0.98,q.y));}
+  diffuseColor.rgb=c;}`;
+/** The fruit's material: MeshStandard plus the shape bend (vertex) and the pattern (fragment). One program for every kind. */
+function fruitMaterial(){
+ const m=new T.MeshStandardMaterial({color:'#ffffff',roughness:.55,emissive:'#4a3510',emissiveIntensity:.22});
+ m.onBeforeCompile=sh=>{
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec4 aForm;attribute float aPattern;varying vec3 vFruitP;varying float vFruitPat;')
+   .replace('#include <beginnormal_vertex>',FRUIT_VERT).replace('#include <begin_vertex>','vec3 transformed=fiPos;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vFruitP;varying float vFruitPat;')
+   .replace('#include <color_fragment>','#include <color_fragment>'+FRUIT_FRAG);};
+ m.customProgramCacheKey=()=>'summit-fruit-shapes-1';
+ return m;
+}
+/** A banana hand on the plant: 4–6 fingers fanned round the stalk, pointing out and curving up (units of r, crown at the origin,
+ *  the fan centred on +x). Fallen: 1–3 fingers lying on their sides, nested crescents (the long axis flat on the ground). */
+export const BANANA={hand:[4,6] as const,fallen:[1,3] as const};
+const handCache=new Map<string,T.Matrix4[]>();
+export function bananaLayout(n:number,lying:boolean):readonly T.Matrix4[]{
+ const key=(lying?'l':'h')+n;let out=handCache.get(key);if(out)return out;out=[];
+ const L=FRUIT_LOOK.banana,e=L.elong,w=L.width,X=new T.Vector3(),Y=new T.Vector3(),Z=new T.Vector3();
+ for(let i=0;i<n;i++){const m=new T.Matrix4(),o=i-(n-1)/2;
+  if(lying){// axis → world x, hollow side → +z, thickness up: nested crescents side by side
+   X.set(0,0,1);Y.set(1,0,0);Z.set(0,1,0);m.makeBasis(X,Y,Z).setPosition(o*.12,0,o*w*2.15);}
+  else{// out from the crown at fan angle phi, tilted alpha from straight up, hollow side up and in (tips curl skyward)
+   const phi=o*Math.min(.62,2.6/Math.max(1,n-1)),alpha=.82+(i%2?.2:-.12),sa=Math.sin(alpha),ca=Math.cos(alpha);
+   Y.set(sa*Math.cos(phi),ca,sa*Math.sin(phi));X.set(-ca*Math.cos(phi),sa,-ca*Math.sin(phi));Z.crossVectors(X,Y);
+   const base=.3+(i%2?.12:0);m.makeBasis(X,Y,Z).setPosition(Math.cos(phi)*base+Y.x*e*.92,Y.y*e*.92-(i%2?.1:0),Math.sin(phi)*base+Y.z*e*.92);}
+  out.push(m);}
+ handCache.set(key,out);return out;
+}
+/** Half the height of a fruit lying on the ground (m): a banana on its side, a long fruit on its side, a round one upright; plus
+ *  a few centimetres, since the island's coarse ground mesh sits a little above summitGround on its slopes (thin fallen bananas
+ *  and papayas looked half sunk). */
+export const REST_LIFT=.035;
+export function restHeight(L:FruitLook,banana:boolean){return L.r*(banana?L.width:L.elong>1.2?L.width*(1+.2*L.taper):L.elong)*.94+REST_LIFT;}
 
 /** Where fruit k hangs today: on the canopy's surface on the follow camera's side (it looks from +x +z), or clustered under a
  *  palm's, banana's or papaya's crown; the day's hash turns the positions round, so they differ from day to day. */
 export function hangPoint(t:FruitTree,k:number,day=''):T.Vector3{
  const c=t.rig.crown,j=dayHash(day,t.id,3)-.5,cam=1.03;
+ // Bananas: the hands up the bunch's stalk (the day turns the bunch, so the hands sit a little differently each day).
+ const st=t.rig.stalk;if(t.fruit==='banana'&&st){const f=[.08,.34,.6][k%3]+j*.1,a=cam+j*2.4+k*1.9,o=.1;
+  return new T.Vector3(c.x+(st.x-c.x)*f+Math.cos(a)*o,c.y+(st.y-c.y)*f,c.z+(st.z-c.z)*f+Math.sin(a)*o);}
  if(c.hang==='under'){const a=cam+(k-1)*1.1+j*1.2;return new T.Vector3(c.x+Math.cos(a)*(c.rx+.3*(t.kind==='palm'?0:.4)),c.y-(k%2)*c.ry,c.z+Math.sin(a)*(c.rx+.3*(t.kind==='palm'?0:.4)));}
  const a=cam+(k-1)*.95+j*1.4,el=[-.18,.22,-.45][(k+Math.floor((j+.5)*3))%3];
  return new T.Vector3(c.x+Math.cos(el)*Math.cos(a)*c.rx*.97,c.y+Math.sin(el)*c.ry*.97,c.z+Math.cos(el)*Math.sin(a)*c.rx*.97);
@@ -101,7 +172,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
  const now=ports.now??(()=>Date.now()),rand=ports.random??Math.random,cue=(k:string)=>ports.cue?.(k),U=ports.sway??SUMMIT_TREE_SWAY;
  const root=new T.Group();root.name='summit-fruit-trees';
  let built=false,pool:FruitTree[]=[],trees:FruitTree[]=[],slots:Slot[]=[],save:ForageSave|null=null,mesh:T.InstancedMesh|null=null,geo:T.BufferGeometry|null=null,mat:T.MeshStandardMaterial|null=null;
- let fx:JobFx|null=null,dirty=false,day='',dawn:number[]=[];
+ let fx:JobFx|null=null,dirty=false,dirtyColor=false,day='',dawn:number[]=[];
  /** The shake under way: the tree, its clock (negative while stepping in), the pushes done, the push direction (player → trunk). */
  let shake:{tree:number;t:number;dur:number;pushes:number;dir:T.Vector2;dropped:boolean}|null=null;
  /** Waiting for the hop-off or landing before the shake. */
@@ -138,29 +209,46 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
  }
  /** Today's fruit: only the day's fruiting trees get slots (instances), with the day's count and positions. */
  function buildDay(){
-  if(mesh){mesh.removeFromParent();mesh.dispose();mesh=null;}endSway();slots=[];trees=[];dawn=[];buckets.clear();
+  if(mesh){mesh.removeFromParent();mesh.dispose();mesh=null;}geo?.dispose();geo=null;endSway();slots=[];trees=[];dawn=[];buckets.clear();
   day=localForageDay(now());if(!pool.length)return;
   if(save&&save.day!==day)save=readForage(now(),()=>JSON.stringify(save));
   const fruiting=fruitingToday(pool,day);trees=pool.filter(t=>fruiting.has(t.id));stats.fruiting=trees.length;
-  geo??=new T.IcosahedronGeometry(1,1);mat??=new T.MeshStandardMaterial({color:'#ffffff',roughness:.5,emissive:'#4a3510',emissiveIntensity:.3});
-  const c=new T.Color();
-  trees.forEach((t,ti)=>{dawn[ti]=fruitToday(day,t.id);for(let k=0;k<dawn[ti];k++){const h=hangPoint(t,k,day);slots.push({tree:ti,k,mode:'hidden',hang:h,pos:h.clone(),vel:new T.Vector3(),bounces:0,age:0,spin:0,fly:new T.Vector3()});}
+  mat??=fruitMaterial();
+  let total=0;
+  trees.forEach((t,ti)=>{dawn[ti]=fruitToday(day,t.id);const j=dayHash(day,t.id,5);
+   for(let k=0;k<dawn[ti];k++){const h=hangPoint(t,k,day),banana=t.fruit==='banana';
+    // A banana hand: 4–6 fingers on the plant (the top hand the biggest, like a real bunch), 1–3 once it falls.
+    const n=banana?Math.max(BANANA.hand[0],Math.min(BANANA.hand[1],6-k-(j<.5?1:0))):1,fallen=banana?BANANA.fallen[0]+(k+Math.floor(j*3))%(BANANA.fallen[1]-BANANA.fallen[0]+1):1;
+    slots.push({tree:ti,k,mode:'hidden',hang:h,pos:h.clone(),vel:new T.Vector3(),bounces:0,age:0,spin:0,fly:new T.Vector3(),base:total,n,fallen,yaw:-(1.03+(k-1)*1.25+(j-.5)*1.2),tint:-1});total+=n;}
    const b=Math.floor(t.x/BUCKET)*8192+Math.floor(t.z/BUCKET);let l=buckets.get(b);if(!l)buckets.set(b,l=[]);l.push(ti);});
-  mesh=new T.InstancedMesh(geo,mat,Math.max(1,slots.length));mesh.name='summit-fruit';mesh.castShadow=false;mesh.receiveShadow=false;mesh.count=slots.length;
-  slots.forEach((s,i)=>mesh!.setColorAt(i,c.set(FRUIT_LOOK[trees[s.tree].fruit].color)));
-  for(let i=0;i<slots.length;i++)paint(i,true);
+  // The shared shape: 70 triangles (a 7-sided banana reads as its ridged skin), bent per instance (aForm: elong, width, bend, taper; aPattern) in the vertex shader.
+  geo=new T.SphereGeometry(1,7,6);const N=Math.max(1,total),form=new Float32Array(N*4),pat=new Float32Array(N);
+  for(const sl of slots){const L=FRUIT_LOOK[trees[sl.tree].fruit];for(let q=sl.base;q<sl.base+sl.n;q++){form.set([L.elong,L.width,L.bend,L.taper],q*4);pat[q]=L.pattern;}}
+  geo.setAttribute('aForm',new T.InstancedBufferAttribute(form,4));geo.setAttribute('aPattern',new T.InstancedBufferAttribute(pat,1));
+  mesh=new T.InstancedMesh(geo,mat,N);mesh.name='summit-fruit';mesh.castShadow=false;mesh.receiveShadow=false;mesh.count=total;
+  const c=new T.Color();slots.forEach(sl=>{for(let q=sl.base;q<sl.base+sl.n;q++)mesh!.setColorAt(q,c.set(FRUIT_LOOK[trees[sl.tree].fruit].color));});
+  for(let i=0;i<slots.length;i++)paint(i,true);dirtyColor=false;
   mesh.computeBoundingSphere();if(mesh.boundingSphere)mesh.boundingSphere.radius+=4;// falls land within a few metres of the trees
   root.add(mesh);refresh();
  }
  /** The sway's tilt of a point on the swaying tree (the shader's formula, for the hanging fruit). */
  function swayed(p:T.Vector3,out:T.Vector3){const sw=sway!;const w=swayWeight(p.y-sw.pivot.y,sw.h,sw.bend);Q.setFromAxisAngle(sw.axis,sw.ang*w);return out.copy(p).sub(sw.pivot).applyQuaternion(Q).add(sw.pivot);}
- /** Instance matrix of slot i (hidden = zero scale where it hangs, so the bounding sphere never reaches the origin). */
- function paint(i:number,hide=false){if(!mesh)return;const s=slots[i],t=trees[s.tree],L=FRUIT_LOOK[t.fruit];
-  if(hide||s.mode==='hidden'){DUMMY.position.copy(s.hang);DUMMY.rotation.set(0,0,0);DUMMY.scale.setScalar(0);}
-  else{let p=s.pos;if(s.mode==='hang'){p=s.hang;if(sway&&sway.tree===s.tree&&sway.ang!==0)p=swayed(s.hang,V);}
-   const shrink=s.mode==='fly'?Math.max(.05,1-s.age/.32):1;DUMMY.position.copy(p);DUMMY.rotation.set(s.mode==='ground'?Math.PI/2*(L.stretch[1]>1.2?1:0):s.spin*s.age,s.k*1.3,0);
-   DUMMY.scale.set(L.r*L.stretch[0]*shrink,L.r*L.stretch[1]*shrink,L.r*L.stretch[2]*shrink);}
-  DUMMY.updateMatrix();mesh.setMatrixAt(i,DUMMY.matrix);dirty=true;}
+ /** Instance matrices of slot i (hidden = zero scale where it hangs, so the bounding sphere never reaches the origin). A banana slot
+  *  is its hand's fingers: the hand on the plant, 1–3 fingers lying on their sides once down (falling ones tumble as a group). */
+ function paint(i:number,hide=false){if(!mesh)return;const s=slots[i],t=trees[s.tree],L=FRUIT_LOOK[t.fruit],banana=t.fruit==='banana';
+  let shown=0,layout:readonly T.Matrix4[]|null=null;
+  if(hide||s.mode==='hidden'){DUMMY.position.copy(s.hang);DUMMY.rotation.set(0,0,0);DUMMY.scale.setScalar(0);shown=s.n;}
+  else{let p=s.pos;const hang=s.mode==='hang';if(hang){p=s.hang;if(sway&&sway.tree===s.tree&&sway.ang!==0)p=swayed(s.hang,V);}
+   const shrink=s.mode==='fly'?Math.max(.05,1-s.age/.32):1,tumble=s.mode==='fall'||s.mode==='fly'?s.spin*s.age:0;DUMMY.position.copy(p);
+   if(banana){layout=bananaLayout(hang?s.n:s.fallen,!hang);shown=layout.length;DUMMY.rotation.set(tumble,hang?s.yaw:s.k*1.3,0);
+    const tint=hang?0:1;if(s.tint!==tint){s.tint=tint;HUE.set(hang&&L.hangColor?L.hangColor:L.color);for(let q=s.base;q<s.base+s.n;q++)mesh.setColorAt(q,HUE);dirtyColor=true;}}
+   else{shown=1;DUMMY.rotation.set(s.mode==='ground'&&L.elong>1.2?Math.PI/2:tumble,s.k*1.3,0);}
+   DUMMY.scale.setScalar(L.r*shrink);}
+  DUMMY.updateMatrix();
+  for(let q=0;q<s.n;q++){
+   if(q>=shown){HIDE.makeScale(0,0,0).setPosition(s.hang);mesh.setMatrixAt(s.base+q,HIDE);}
+   else mesh.setMatrixAt(s.base+q,layout?M2.multiplyMatrices(DUMMY.matrix,layout[q]):DUMMY.matrix);}
+  dirty=true;}
  const inUse=(s:Slot)=>s.mode==='fall'||s.mode==='ground'||s.mode==='fly';
  const fallenFrom=(ti:number)=>slots.reduce((n,s)=>n+(s.tree===ti&&(s.mode==='fall'||s.mode==='ground')?1:0),0);
  const hangingSlots=(ti:number)=>slots.filter(s=>s.tree===ti&&s.mode==='hang');
@@ -219,7 +307,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
   const onGround=slots.filter(s=>s.mode==='fall'||s.mode==='ground').length,allowed=capLeft(save,now())-onGround;
   const hanging=hangingSlots(ti),n=count(hanging.length,allowed);
   if(n<=0){if(allowed<=0&&hanging.length)note(`You've foraged ${FORAGE.dailyCap} fruit today. Leave the rest for the birds. More tomorrow!`);return 0;}
-  for(let j=0;j<n;j++){const s=hanging[hanging.length-1-j],i=slots.indexOf(s),L=FRUIT_LOOK[t.fruit],to=landing(t,j,away),gy=ground(to.x,to.z)+L.r*L.stretch[1]*.85;
+  for(let j=0;j<n;j++){const s=hanging[hanging.length-1-j],i=slots.indexOf(s),L=FRUIT_LOOK[t.fruit],to=landing(t,j,away),gy=ground(to.x,to.z)+restHeight(L,t.fruit==='banana');
    // From where it hangs right now (the canopy is mid-sway), a small hop up, landing on the spot.
    if(sway&&sway.tree===ti)swayed(s.hang,s.pos);else s.pos.copy(s.hang);
    s.mode='fall';s.bounces=0;s.age=0;s.spin=(rand()-.5)*10;
@@ -301,7 +389,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
    // ---- falling, lying and flying-to-hand fruit
    moving=0;
    for(let i=0;i<slots.length;i++){const s=slots[i];if(!inUse(s))continue;moving++;work=true;const t=trees[s.tree],L=FRUIT_LOOK[t.fruit];s.age+=c.dt;
-    if(s.mode==='fall'){const dt=Math.min(c.dt,.05);s.vel.y-=G*dt;s.pos.addScaledVector(s.vel,dt);const gy=ground(s.pos.x,s.pos.z)+L.r*L.stretch[1]*.85;
+    if(s.mode==='fall'){const dt=Math.min(c.dt,.05);s.vel.y-=G*dt;s.pos.addScaledVector(s.vel,dt);const gy=ground(s.pos.x,s.pos.z)+restHeight(L,t.fruit==='banana');
      if(s.pos.y<=gy){s.pos.y=gy;if(s.bounces===0)cue('thud');
       if(s.vel.y<-1.1&&s.bounces<3){s.vel.y=-s.vel.y*.36;s.vel.x*=.45;s.vel.z*=.45;s.bounces++;}else{s.mode='ground';s.age=0;s.vel.set(0,0,0);}}
      paint(i);}
@@ -314,6 +402,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
      const gy=ground(c.x,c.z)+1.1;s.pos.set(s.fly.x+(c.x-s.fly.x)*k,s.fly.y+(gy-s.fly.y)*k+Math.sin(k*Math.PI)*.5,s.fly.z+(c.z-s.fly.z)*k);paint(i);}}
    if(fx&&fx.busy){work=true;fx.update(c.dt);}
    if(dirty&&mesh){mesh.instanceMatrix.needsUpdate=true;dirty=false;}
+   if(dirtyColor&&mesh?.instanceColor){mesh.instanceColor.needsUpdate=true;dirtyColor=false;}
    if(work)stats.busyFrames++;else stats.idleFrames++;
    // ---- the prompt: the nearest fruiting tree with fruit within reach (on foot, riding, or flying low; nothing else on)
    near=-1;const reach=c.onFoot?FORAGE.reach:player.arrival==='ride'?FORAGE.reachRide:player.arrival==='fly'?FORAGE.reachFly:0;let best=reach;

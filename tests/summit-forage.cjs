@@ -139,6 +139,29 @@ for(const t of orchard){
  // A leaning palm: the grip follows its lean, not the base.
  const palm=picks.find(t=>t.kind==='palm');assert(Math.hypot(palm.rig.grip.x-palm.x,palm.rig.grip.z-palm.z)>.01,'a leaning palm’s grip follows its trunk');}
 
+// ---- 6b. Each kind reads as itself: a banana is a long, slim crescent; pears taper to the stem; a mango is a curved oval.
+{const ext=L=>{const pts=[];for(let i=0;i<=24;i++){const y=-1+i/12,rr=Math.sqrt(Math.max(0,1-y*y));for(let a=0;a<8;a++)pts.push(RT.fruitPoint(L,rr*Math.cos(a*Math.PI/4),y,rr*Math.sin(a*Math.PI/4)));}
+  const box=new T.Box3().setFromPoints(pts),size=box.getSize(new T.Vector3());return {pts,size};};
+ const LK=F.FRUIT_LOOK,B=ext(LK.banana);
+ const len=Math.hypot(B.size.x,B.size.y),thick=B.size.z;assert(len/thick>=3.5,`a banana finger is long and slim (${(len/thick).toFixed(1)}:1)`);
+ // Curved: the middle of its axis sits well off the chord between its two ends.
+ const tip=RT.fruitPoint(LK.banana,0,1,0),end=RT.fruitPoint(LK.banana,0,-1,0),mid=RT.fruitPoint(LK.banana,0,0,0),chord=tip.distanceTo(end);
+ const off=new T.Vector3().subVectors(mid,end).cross(new T.Vector3().subVectors(tip,end).normalize()).length();
+ assert(off/chord>=.12,`a banana is curved (sagitta ${(off/chord*100).toFixed(0)}% of its length)`);
+ for(const k of ['orange','lime','coconut']){const s=ext(LK[k]).size;assert(Math.max(s.x,s.y,s.z)/Math.min(s.x,s.y,s.z)<1.2,`${k} is round`);}
+ for(const k of ['papaya','avocado','guava']){const top=RT.fruitPoint(LK[k],1,.6,0).x,bottom=RT.fruitPoint(LK[k],1,-.4,0).x;assert(top<bottom*.9,`${k} is a pear, narrower toward the stem`);}
+ assert(ext(LK.papaya).size.y>ext(LK.papaya).size.x*1.5,'a papaya is long');assert(ext(LK.mango).size.y>ext(LK.mango).size.x*1.2&&LK.mango.bend>0,'a mango is a curved oval');
+ assert(LK.lime.r<LK.orange.r,'a lime is smaller than an orange');
+ const rgb=h=>{const n=parseInt(h.slice(1),16),c={r:(n>>16&255)/255,g:(n>>8&255)/255,b:(n&255)/255};c.getHSL=()=>{const o=new T.Color();o.r=c.r;o.g=c.g;o.b=c.b;return o.getHSL({},T.LinearSRGBColorSpace);};return c;};
+ const g=rgb(LK.avocado.color),y=rgb(LK.banana.color),cn=rgb(LK.coconut.color),lm=rgb(LK.lime.color);
+ assert(g.g>g.r&&g.g>g.b&&g.getHSL({}).l<.3,'an avocado is dark green');assert(lm.g>lm.r&&lm.g>lm.b,'a lime is green');assert(y.r>.8&&y.g>.7&&y.b<.4,'a banana is yellow');
+ const hsl=cn.getHSL({});assert(hsl.h>.03&&hsl.h<.12&&hsl.l<.45,'a coconut is brown');
+ // The banana hand: 4–6 fingers pointing out and up; fallen ones lie flat (long axis horizontal).
+ for(let n=RT.BANANA.hand[0];n<=RT.BANANA.hand[1];n++){const hand=RT.bananaLayout(n,false);assert.equal(hand.length,n);
+  for(const m of hand){const ax=new T.Vector3(0,1,0).transformDirection(m);assert(ax.y>.3&&Math.hypot(ax.x,ax.z)>.5,'each finger points out and up from the stalk');}}
+ for(let n=RT.BANANA.fallen[0];n<=RT.BANANA.fallen[1];n++)for(const m of RT.bananaLayout(n,true)){const ax=new T.Vector3(0,1,0).transformDirection(m),up=new T.Vector3(0,0,1).transformDirection(m),bend=new T.Vector3(1,0,0).transformDirection(m);
+  assert(Math.abs(ax.y)<1e-9&&Math.abs(bend.y)<1e-9&&Math.abs(up.y-1)<1e-9,'a fallen banana lies on its side: its long axis and its curve flat on the ground');}}
+
 // ---- 7. The runtime.
 const sway={tree:{value:0},pivot:{value:new T.Vector3()},axis:{value:new T.Vector3()},angle:{value:0},height:{value:5},bend:{value:1}};
 function rig(opts={}){
@@ -158,8 +181,15 @@ const run=(r,x,z,frames,extra)=>{for(let i=0;i<frames;i++){r.tick(1000/60);r.f.u
  const L0=picks[0];r.aim(L0.stand.x,L0.stand.z);f.update(r.ctx(L0.stand.x,L0.stand.z));
  const v0=f.view();assert.equal(v0.pool.length,picks.length,'the whole pool');assert.equal(v0.trees.length,F.fruitingToday(picks,v0.day).size,'today’s fruiting trees only');
  const fruitMesh=f.root.children.find(o=>o.isInstancedMesh&&o.name==='summit-fruit'),dawnTotal=v0.trees.reduce((n,t)=>n+t.dawn,0);
- assert(fruitMesh&&fruitMesh.count===dawnTotal,'ALL of today’s fruit is one instanced mesh, sized to the fruiting trees only');assert.equal(fruitMesh.castShadow,false);
- assert(fruitMesh.count*80<=12000,`fruit ≤ 12k triangles (${fruitMesh.count} fruit)`);
+ // One instance a fruit, a banana hand's fingers for each banana (4–6).
+ const bananaSlots=v0.trees.filter(t=>t.fruit==='banana').reduce((n,t)=>n+t.dawn,0);
+ assert(fruitMesh&&fruitMesh.count>=dawnTotal+bananaSlots*(RT.BANANA.hand[0]-1)&&fruitMesh.count<=dawnTotal+bananaSlots*(RT.BANANA.hand[1]-1),'ALL of today’s fruit is one instanced mesh, sized to the fruiting trees only');
+ assert.equal(fruitMesh.castShadow,false);
+ const fruitTris=fruitMesh.geometry.index.count/3;assert(fruitTris<=80,`the shared fruit shape is ≤ 80 triangles (the old icosahedron) (${fruitTris})`);
+ assert(fruitMesh.count*fruitTris<=16000,`fruit ≤ 16k triangles (${fruitMesh.count} instances, ${dawnTotal} fruit)`);
+ assert(fruitMesh.geometry.getAttribute('aForm')?.isInstancedBufferAttribute&&fruitMesh.geometry.getAttribute('aPattern')?.isInstancedBufferAttribute,'the shape is per instance (bent in the vertex shader, no extra draw)');
+ assert.equal(f.root.children.filter(o=>o.isMesh&&!o.isPoints&&/fruit/.test(o.name)).length,1,'one draw call for every fruit kind');
+ console.log(`  fruit: ${dawnTotal} fruit today (${bananaSlots} banana hands) → ${fruitMesh.count} instances × ${fruitTris} triangles in 1 draw`);
  assert(fruitMesh.boundingSphere&&fruitMesh.boundingSphere.center.x>400,'a fixed bounding sphere over Summit Isle');
  const bare=picks.find(p=>!v0.trees.some(t=>t.id===p.id));
  // A bare tree: no prompt.
@@ -251,6 +281,22 @@ const run=(r,x,z,frames,extra)=>{for(let i=0;i<frames;i++){r.tick(1000/60);r.f.u
 {const r=rig({budgetMs:0});let frames=0;while(!r.f.stats.built&&frames<2000){r.f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));frames++;}
  assert(r.f.stats.built&&frames>5,`the choice is time-sliced (${frames} frames)`);assert.deepEqual(r.f.view().pool.join(),picks.map(x=>x.id).join(),'same trees');r.f.dispose();}
 {const r=rig();r.f.update(r.ctx(picks[0].stand.x,picks[0].stand.z,{frozen:true}));assert.equal(r.f.stats.built,false,'nothing while the fishing focus holds the island still');r.f.dispose();}
+
+// Bananas in the runtime: a hand of fingers on the plant up its stalk; shaken down, single fingers or hands of 2–3 lying flat at rest height.
+{const r=rig(),f=r.f;f.update(r.ctx(picks[0].stand.x,picks[0].stand.z));const v=f.view(),t=v.trees.find(x=>x.fruit==='banana'&&x.hanging>=2),T0=picks.find(p=>p.id===t.id);
+ assert(T0.rig.stalk,'a banana plant knows its bunch stalk');
+ const mesh=f.root.children.find(o=>o.name==='summit-fruit'),mat=new T.Matrix4(),pos=new T.Vector3(),q=new T.Quaternion(),sc=new T.Vector3(),ax=new T.Vector3();
+ // The visible instances near this plant (the hand's fingers), before the shake.
+ const near=(maxD)=>{const out=[];for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,mat);mat.decompose(pos,q,sc);if(sc.x>1e-6&&Math.hypot(pos.x-T0.x,pos.z-T0.z)<maxD)out.push({p:pos.clone(),ax:new T.Vector3(0,1,0).applyQuaternion(q),s:sc.x});}return out;};
+ const hanging=near(1.5);assert(hanging.length>=t.hanging*RT.BANANA.hand[0],`each banana is a hand of ≥ ${RT.BANANA.hand[0]} fingers on the plant (${hanging.length} fingers, ${t.hanging} hands)`);
+ for(const h of hanging){assert(h.p.y>T0.rig.crown.y-.5&&h.p.y<T0.rig.stalk.y+.6,'the hands hang up the bunch stalk, under the leaves');}
+ r.aim(t.stand.x,t.stand.z);f.update(r.ctx(t.stand.x,t.stand.z));assert(f.shake());run(r,t.stand.x,t.stand.z,60*4);
+ const down=f.view().fallen;assert(down.length>=1&&down.every(d=>d.mode==='ground'),'bananas fell');
+ const lying=[];for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,mat);mat.decompose(pos,q,sc);if(sc.x<1e-6)continue;if(down.some(d=>Math.hypot(d.x-pos.x,d.z-pos.z)<.6&&Math.abs(d.y-pos.y)<.3))lying.push({y:pos.y,ax:new T.Vector3(0,1,0).applyQuaternion(q),x:pos.x,z:pos.z});}
+ assert(lying.length>=down.length&&lying.length<=down.length*RT.BANANA.fallen[1],`fallen: single fingers or hands of 2–3 (${lying.length} fingers for ${down.length})`);
+ const LB=F.FRUIT_LOOK.banana;
+ for(const l of lying){assert(Math.abs(l.ax.y)<.02,'a landed banana lies flat (long axis horizontal)');const gy=ground(l.x,l.z);assert(l.y-gy>LB.r*LB.width*.6&&l.y-gy<LB.r*LB.width*1.4+RT.REST_LIFT,`on the grass, not floating or sunk (${(l.y-gy).toFixed(3)} m over it)`);}
+ const col=new T.Color();mesh.getColorAt(0,col);f.dispose();}
 
 // ---- 8. Wiring, goods and data.
 {const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),town=read('components/Town.tsx'),art=read('components/ProduceArt.tsx');

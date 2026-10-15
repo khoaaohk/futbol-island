@@ -487,7 +487,49 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  // Open sea (the Deep Sea Boat: no shore in the field) builds without throwing.
  const open={...field,lift:new Float32Array(n*n).fill(-.5),distance:()=>1e6},o=uw.buildSeabedProps(open,uw.reefTheme(cat.spotById('deep-sea-boat')),{x:0,z:0},{x:1,z:0},true,1,4.5,20);o.dispose();
  const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/underwater.ts'),'utf8');
- assert(/caustic:1\.75/.test(src)&&/new T\.Mesh\(geometry,material\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1,'seabed stays ONE merged mesh, with brighter caustics on the reef');
+ assert(/caustic:1\.4/.test(src)&&/new T\.Mesh\(geometry,material\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1,'seabed stays ONE merged mesh, with caustics on the reef');
+ // ---- Depth (Oct 14 2026, "the coral looks like it's on top of the water … make it have more depth") ----
+ // 1. The depth look: deeper = less saturated and more tinted by the water; the shallows stay vivid.
+ const hsl=c=>{const o={};new T.Color(...c).getHSL(o);return o;},dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+ for(const s of FISH_SPOTS.filter(x=>!x.deep)){const t=uw.reefTheme(s);
+  for(const hex of t.coral){const c0=new T.Color(hex),rgb=[c0.r,c0.g,c0.b],s0=hsl(rgb).s;if(s0<.5)continue;
+   // The piece's own colour loses saturation (no water: clear 0), and what reaches the eye moves toward the water's tint.
+   const H=[.25,.8,1.5,2.4,3.2],look=H.map(h=>uw.uwDepthLook(rgb,h,h/.6,t,'reef')),sat=H.map(h=>hsl(uw.uwDepthLook(rgb,h,0,{...t,clear:0},'reef')).s),tint=look.map(c=>dist(c,t.water[1]));
+   for(let i=1;i<look.length;i++){assert(sat[i]<sat[i-1]+1e-6,`${t.id} ${hex}: saturation falls with depth (${sat.map(x=>x.toFixed(2))})`);
+    assert(tint[i]<tint[i-1]+1e-6,`${t.id} ${hex}: closer to the water's deep tint with depth (${tint.map(x=>x.toFixed(2))})`);}
+   assert(sat[0]>s0*.75,`${t.id} ${hex}: vivid in the shallows (${sat[0].toFixed(2)} vs ${s0.toFixed(2)})`);
+   assert(sat[3]<sat[0]&&sat[4]<sat[0]*.97,`${t.id} ${hex}: softer at 2.4 m and 3.2 m (${sat[3].toFixed(2)}, ${sat[4].toFixed(2)} vs ${sat[0].toFixed(2)})`);}
+  // Not the old near-zero share: the reef takes a real part of the water's absorption.
+  assert(uw.reefAbsorb(t)>=.15&&uw.fishAbsorb(t)>=.2,`${t.id}: the reef (≥ .15, the user’s middle ground) and fish take a real share of the water (${uw.reefAbsorb(t)}, ${uw.fishAbsorb(t)})`);}
+ for(const s of FISH_SPOTS.filter(x=>x.deep))assert(uw.fishAbsorb(uw.reefTheme(s))>=.6,`${s.id}: the bait ball and silhouettes fade into the deep`);
+ assert(uw.reefTheme(cat.spotById('summit-ledge')).floor>3.2,'the Drop-off Ledge drops deeper than the other shores');
+ // 2. Every reef piece stands ON the seabed the strip draws (base y = surface − the theme's seabed depth there) and stays under
+ //    the surface.
+ {let n=0,worst=0,maxTop=-9;
+  for(const s of FISH_SPOTS.filter(x=>!x.deep))for(const phone of [false,true]){const t=uw.reefTheme(s),p=uw.buildSeabedProps(field,t,{x:0,z:-9},{x:0,z:1},phone,uw.reefSeed(s.id),phone?4.5:9,25);
+   assert(p.pieces.length>20,`${s.id}: pieces recorded`);
+   for(const q of p.pieces){const bed=uw.UW_SURFACE-uw.uwDepthAt(field.distance(q.x,q.z),t.floor??3.2);worst=Math.max(worst,Math.abs(q.y-bed));maxTop=Math.max(maxTop,q.top-uw.UW_SURFACE);n++;
+    assert(Math.abs(q.y-bed)<.01,`${s.id}: a piece at (${q.x.toFixed(1)}, ${q.z.toFixed(1)}) sits on the seabed (base ${q.y.toFixed(3)}, seabed ${bed.toFixed(3)})`);
+    assert(q.top<uw.UW_SURFACE-.02,`${s.id}: a piece at (${q.x.toFixed(1)}, ${q.z.toFixed(1)}) stays under the surface (top ${(q.top-uw.UW_SURFACE).toFixed(3)} m)`);}
+   p.dispose();}
+  console.log(`reef depth: ${n} pieces on the seabed (worst ${worst.toFixed(4)} m), highest top ${maxTop.toFixed(3)} m vs the surface`);}
+ // 3. The shaders: the reef and the fish are drawn THROUGH the surface (the surface overlay, refraction sway, depth look), the reef
+ //    sits in the sand, and the strip carries the float's shadow and the sway too. Patched onto three's real Lambert shader, so a
+ //    renamed include would fail here instead of silently dropping the effect.
+ {const lam=()=>({uniforms:{},vertexShader:T.ShaderLib.lambert.vertexShader,fragmentShader:T.ShaderLib.lambert.fragmentShader});
+  const reef=uw.buildSeabedProps(field,uw.reefTheme(cat.spotById('summit-ledge')),{x:0,z:-9},{x:0,z:1},false,1,9,25),sh=lam();reef.mesh.material.onBeforeCompile(sh);
+  for(const [what,re] of [['surface overlay',/outgoingLight=uwSurfaceOver\(/],['depth desaturation',/uwDesat\(outgoingLight/],['theme absorption',/uwA=uUwReef/],['buried in the sand',/discard;/],['depth-faded caustics',/uwCausticFade\(uwH\)/]])assert(re.test(sh.fragmentShader),`reef shader: ${what}`);
+  assert(/uwWobble\(uww\.xz/.test(sh.vertexShader),'reef shader: refraction sway');
+  for(const k of ['uUwReef','uUwFloor','uWaterNoise','uShoreTex'])assert(sh.uniforms[k],`reef shader has ${k}`);
+  reef.dispose();
+  const scene=new T.Scene(),fishS=sea.createFishSchools(scene,true),fsh=lam();fishS.mesh.material.onBeforeCompile(fsh);
+  assert(/outgoingLight=uwSurfaceOver\(/.test(fsh.fragmentShader)&&/uwA=uUwFish/.test(fsh.fragmentShader)&&!/discard;/.test(fsh.fragmentShader),'fish shader: the surface overlay and the fish absorption (and never cut by the seabed)');
+  fishS.dispose();
+  const stripSrc=fs.readFileSync(path.join(ROOT,'lib/town/fishing/shoreWater.ts'),'utf8');
+  assert(/uUwFloatOn/.test(stripSrc)&&/uwWobble\(vSea\.xy/.test(stripSrc)&&/uwCausticFade\(h\)/.test(stripSrc),'strip: float shadow, refraction sway, depth-faded caustics');
+  assert(/uUwFloatOn\.value=onWater/.test(visualsSrc),'the visuals write the float shadow uniforms (no extra draw)');
+  // The fishing view's own top-down height bake drops thin overhead lines (the zipline cable) like the island bake does.
+  assert(/dropOverheadLines\(lift,high,drawn,n,n\);\n return lift;/.test(stripSrc)&&/from '\.\.\/\.\.\/graphics\/islandShore'/.test(stripSrc)&&/setClearColor\(0x000000,0\)/.test(stripSrc),'fishing shore field: overhead lines (zipline cable) are not land');}
  console.log(`reef themes: ${themes.length} spots, ${new Set(themes.map(t=>t.layout)).size} layouts, seabed triangles ${tot.desktop} desktop / ${tot.phone} phone`);}
 
 console.log(`FISHING_PASS: ${FISH.length} species with cited club facts (${exclusives.length} spot specials), ${FISH_SPOTS.length} spots, weighted catches (commons first), rarity reel taps + pull-back, varied in-water approaches, live bite timing (nibbles, 0.7-1 s window, early = scared, late = escaped, idle reels in), Fishbook persists, sell one/all + soft cap pay the shared wallet`);

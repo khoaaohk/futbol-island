@@ -7,12 +7,14 @@
 //  3. painting maths: palette, brush sizes, stamp spacing, flood fill, bounded undo
 //  4. the save: newest first, at most 5, under the byte budget (oldest rotated out), junk refused, a full device handled; the key is
 //     DEVICE-only (never synced) in lib/saves/snapshot.ts and docs/accounts-design.md table B
-//  5. the 3D runtime: idle = no rAF/timers/meshes; the prompt through the HUD arbiter; sitting eases the same camera to the view,
-//     holds the player, hides them; one snapshot render on arrival; the 20 fps cap and sleep-when-still; Just look; leaving restores
-//     the camera; the saved painting on the board
-//  6. heat + UI wiring: the island is NOT paused under the card (the view stays live) but held still (focus mode), capped and asleep
-//     when nothing moves; the UI draws only on pointer events (rAF only while a finger is down), no timers; Back/Done/Just look;
-//     44 px controls; the HUD steps aside; analytics counts; Town wiring
+//  5. the painting framing: the easel's board IS the paper, large in the foreground (phone: lower middle above the tray; wide: lower
+//     left beside the palette board), the main island in view above it; the trace camera in front of the easel
+//  6. the 3D runtime: idle = no rAF/timers/meshes; the prompt through the HUD arbiter; sitting eases the same camera to the board,
+//     holds the player, hides them; two snapshot renders on arrival; screen points map to the paper through the board's plane (UVs
+//     round-trip); the board texture uploads once per island frame while painting and never at rest; the 20 fps cap and
+//     sleep-when-still; Just look pulls back to the full view; Done leaves the painting on the board; leaving restores the camera
+//  7. heat + UI wiring: no separate paper, no Back; Done saves and leaves (Escape too); hit-tests only from pointer events, rAF only
+//     while a finger is down, no timers; the phone row and the wide palette board; 44 px controls; the HUD steps aside; analytics; Town
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {ROOT,createLoader,runtime}=require('./summit-harness.cjs');
 const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
@@ -134,10 +136,35 @@ await ok('the key is DEVICE-only: never synced, never sent',()=>{
  for(const f of ['lib/town/paintEasel.ts','lib/graphics/paintEasel.ts','components/PaintEasel.tsx'])assert(!/fetch\(|sendBeacon|XMLHttpRequest/.test(read(f)),f+': no network');
 });
 
-await ok('3D runtime: prompt, seat, one snapshot, 20 fps and sleep, Just look, leave, the board',async()=>{
+await ok('the painting framing: the board large in the foreground (phone: lower middle; wide: lower left), the view open above',()=>{
+ const T3=require('three');
+ const frame=(W,H)=>{const P=E.easelPaintCamera(s,W/H),cam=new T3.PerspectiveCamera(P.fov,W/H,.35,1300);cam.position.set(P.x,P.y,P.z);
+  cam.lookAt(P.x+Math.sin(P.yaw)*Math.cos(P.pitch),P.y+Math.sin(P.pitch),P.z+Math.cos(P.yaw)*Math.cos(P.pitch));cam.updateMatrixWorld();cam.updateProjectionMatrix();
+  const C=E.canvasPose(s),n=new T3.Vector3(C.nx,C.ny,C.nz),r=new T3.Vector3(s.rx,0,s.rz),u=new T3.Vector3().crossVectors(n,r).normalize();
+  let l=1,rt=-1,t=-1,b=1;for(const [a,c] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const p=new T3.Vector3(C.x,C.y,C.z).addScaledVector(r,a*C.w/2).addScaledVector(u,c*C.h/2).project(cam);
+   assert(p.z>-1&&p.z<1,'the board is inside the near/far planes');l=Math.min(l,p.x);rt=Math.max(rt,p.x);t=Math.max(t,p.y);b=Math.min(b,p.y);}
+  // Screen fractions (0 top/left … 1 bottom/right).
+  const sq=load('lib/town/venues.ts').ISLAND_SQUARE,isl=new T3.Vector3(sq.x,3,sq.z).project(cam);
+  return {left:(l+1)/2,right:(rt+1)/2,top:(1-t)/2,bottom:(1-b)/2,P,island:{x:(isl.x+1)/2,y:(1-isl.y)/2}};};
+ const ph=frame(390,844);
+ assert(ph.right-ph.left>=.8,`phone: the board spans most of the width (${(ph.right-ph.left).toFixed(2)})`);
+ assert(Math.abs((ph.left+ph.right)/2-.5)<.02,'phone: centred');
+ assert(ph.bottom<=.9&&ph.bottom>=.84,`phone: its lower edge just above the one-row tray (${ph.bottom.toFixed(2)})`);
+ assert(ph.top>=.5,`phone: the upper half is the view (${ph.top.toFixed(2)})`);
+ assert(ph.island.y>.15&&ph.island.y<ph.top&&ph.island.x>.3&&ph.island.x<.7,'phone: the main island in view above the board');
+ const dk=frame(1440,900);
+ assert(dk.left>=.05&&dk.right<=.55,`desktop: the board on the left (${dk.left.toFixed(2)}–${dk.right.toFixed(2)})`);
+ assert(dk.bottom<=.93&&dk.top>=.3,'desktop: in the lower part');
+ assert(dk.island.y<dk.top&&dk.island.x>.35&&dk.island.x<.75,'desktop: the main island in view, beside and above the board');
+ for(const f of [ph,dk])assert(f.P.y>SI.summitGround(f.P.x,f.P.z)+.6,'the eye is above the ground');
+ // The trace camera stands in front of the easel (the easel behind it), facing the view.
+ const V=E.easelViewCamera(s,390/844);assert((V.x-s.x)*s.fx+(V.z-s.z)*s.fz>0,'trace: in front of the easel');
+ assert.deepEqual(E.boardToPaper(0,0,1,.75),{x:E.PAINT_W/2,y:E.PAINT_H/2});assert.deepEqual(E.boardToPaper(-.5,.375,1,.75),{x:0,y:0},'top left is the paper\'s (0, 0)');
+});
+
+await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one upload per frame while painting, none at rest, Just look, Done',async()=>{
  const {env,T:T3,load:rl}=await runtime();
  const rt=rl('lib/graphics/paintEasel.ts'),store=rl('lib/town/paintEaselStore.ts');
- // Browser bits the runtime touches: an <img> that decodes at once, a fake WebGL canvas for the snapshot.
  globalThis.Image=class{set src(v){this._s=v;this.onload&&this.onload();}get src(){return this._s;}};
  const scene=new T3.Scene(),camera=new T3.PerspectiveCamera(40,390/844,1,500);camera.position.set(s.x+18,s.ground+23,s.z+30);camera.lookAt(s.x,s.ground,s.z);camera.updateMatrixWorld();
  let renders=0,wakes=0;const renderer={domElement:{width:390,height:844,getBoundingClientRect:()=>({left:0,top:0,width:390,height:844})},render:()=>{renders++;}};
@@ -154,59 +181,93 @@ await ok('3D runtime: prompt, seat, one snapshot, 20 fps and sleep, Just look, l
  assert.equal(easel.update(ctx(st.x,st.z,{onGround:false})),null,'not while flying');
  easel.update(ctx(st.x,st.z,{focusKey:'telescope'}));assert.equal(btn.hidden,true,'another prompt has the focus: hidden');
  easel.update(ctx(st.x,st.z,{focusKey:'easel'}));assert.equal(btn.hidden,false,'Paint the view shows');
- assert(read('components/PaintEasel.tsx').includes('data-easel-open aria-label="Paint the view"'));
- // Sit down.
- store.easelActions.open();assert(store.easelStore.get().seated&&easel.seated,'seated');assert(wakes>0,'wakes the island loop');
+ // Sit down: the paper is the easel's board.
+ store.easelActions.open();const view=store.easelStore.get();assert(view.seated&&easel.seated,'seated');assert(wakes>0,'wakes the island loop');
+ assert(view.sheet&&view.sheet.width===E.PAINT_W&&view.sheet.height===E.PAINT_H,'the paper canvas (512×384) for the UI to paint into');
+ const board=scene.getObjectByName('paint-easel-board');assert(board,'the board quad');assert.equal(scene.children.filter(c=>c.name==='paint-easel-board').length,1,'one quad');
+ const tex=board.material.map;assert(tex&&tex.isCanvasTexture,'its texture is a canvas');assert(tex.image.width>=512&&tex.image.width<=768,'crisp but cheap (512–768 px)');
+ assert(board.material.isMeshBasicMaterial&&board.material.toneMapped===false,'seated: the paint\'s true colours');
  assert(env.counts.events.some(e=>e==='fi2-vending-cue:category'),'a soft cue');
  const input={x:1,z:0,kick:true,juggle:true,shotPower:.4};assert.equal(easel.holdPlayer(input),true);assert.equal(input.kick,false);assert.equal(input.shotPower,0);
  assert.equal(easel.update(ctx(st.x,st.z,{focusKey:'easel'})),null,'no prompt while seated');assert.equal(btn.hidden,true);
- store.easelActions.layout({bottom:.44,right:0});
+ assert.equal(store.easelActions.hit(195,600),null,'no painting before the camera arrives');
  await env.watchTimers(async()=>{for(let i=0;i<20;i++)easel.applyCamera(camera,1/30,false);});
  assert(!easel.focused&&store.easelStore.get().arrived===false,'still easing in');assert.equal(renders,0,'no snapshot before arriving');
  await env.watchTimers(async()=>{for(let i=0;i<60;i++)easel.applyCamera(camera,1/30,false);});
  assert.equal(env.counts.raf+env.counts.timeout+env.counts.interval,0,'seated: no loops of its own');
  assert(store.easelStore.get().arrived&&easel.focused,'arrived: Town\'s focus mode holds the background still');
- const cam=E.easelCamera(s);assert(camera.position.distanceTo(new T3.Vector3(cam.x,cam.y,cam.z))<1e-6,'the camera behind the canvas');
- const dir=new T3.Vector3();camera.getWorldDirection(dir);assert(dir.x<-.85&&dir.y<0&&dir.y>-.2,'looking out west over the sea, a little down');
- assert.equal(camera.far,E.EASEL_CAMERA.far,'a longer far plane (the main island is ~500 m away)');
- assert(camera.view&&camera.view.enabled&&Math.abs(camera.view.offsetY-.22)<1e-3,'the view shifts up into the open part above the card');
- assert(camera.fov>=E.EASEL_CAMERA.fovMin&&camera.fov<=E.EASEL_CAMERA.fovMax,'a calm, wide framing');
+ const P=E.easelPaintCamera(s,390/844);assert(camera.position.distanceTo(new T3.Vector3(P.x,P.y,P.z))<1e-6,'the camera at the painting framing');
+ const dir=new T3.Vector3();camera.getWorldDirection(dir);assert(dir.x<-.85&&dir.y<0&&dir.y>-.35,'looking out west over the sea, a little down');
+ assert.equal(camera.far,E.EASEL_CAMERA.far,'a longer far plane (the main island is ~500 m away)');assert(camera.near<.5,'a near plane in front of the board');
+ assert(!camera.view||!camera.view.enabled,'no view offset (the tray is slim)');
  assert.equal(player.visible,false,'the painter is hidden (the camera stands at their head)');
- assert.equal(renders,1,'one snapshot render on arrival');const cap=store.easelStore.get().capture;assert(cap&&cap.rect.height===844*(1-.44),'the snapshot covers the view above the card');
- for(let i=0;i<30;i++)easel.applyCamera(camera,1/30,false);assert.equal(renders,1,'…and never again while nothing changes');
+ assert.equal(renders,2,'two snapshot renders on arrival (the screen for the eyedropper, the view from the easel for trace)');
+ const cap=store.easelStore.get().capture;assert(cap&&cap.view&&cap.rect.height===844,'the snapshots');
+ const br=store.easelStore.get().boardRect;assert(br&&br.right-br.left>300&&br.bottom<844*.9&&br.top>844*.5,'where the board sits on screen');
+ // Strokes map to the board's UVs: a paper point, placed on the board in 3D and projected to the screen, hits back to itself.
+ const C=E.canvasPose(s),n=new T3.Vector3(C.nx,C.ny,C.nz),r=new T3.Vector3(s.rx,0,s.rz),u=new T3.Vector3().crossVectors(n,r).normalize(),w=C.w,h=C.h;
+ const onScreen=(px,py)=>{const p=new T3.Vector3(C.x,C.y,C.z).addScaledVector(n,.0205).addScaledVector(r,(px/E.PAINT_W-.5)*w).addScaledVector(u,(.5-py/E.PAINT_H)*h).project(camera);
+  return {x:(p.x+1)/2*390,y:(1-p.y)/2*844};};
+ for(const [px,py] of [[256,192],[40,30],[480,350],[100,300],[400,60]]){const q=onScreen(px,py),hit=store.easelActions.hit(q.x,q.y);
+  assert(hit&&Math.abs(hit.x-px)<.5&&Math.abs(hit.y-py)<.5&&hit.inside,`paper (${px}, ${py}) ⇄ screen (${q.x.toFixed(0)}, ${q.y.toFixed(0)}) ⇄ ${hit&&hit.x.toFixed(1)}, ${hit&&hit.y.toFixed(1)}`);}
+ const lt=onScreen(0,0),rb=onScreen(E.PAINT_W,E.PAINT_H);assert(lt.x<rb.x&&lt.y<rb.y,'the paper\'s top left is the board\'s top left on screen (not mirrored)');
+ const sky=store.easelActions.hit(195,120);assert(!sky||!sky.inside,'a tap on the sky is not on the board');
+ // The texture uploads only while painting: none at rest, one per island frame however many strokes arrive.
+ const v0=tex.version;await env.watchTimers(async()=>{for(let i=0;i<40;i++)easel.applyCamera(camera,1/20,false);});
+ assert.equal(tex.version,v0,'at rest: no uploads');assert.equal(renders,2,'…and no more snapshots');assert.equal(easel.still(true),true,'at rest: the loop may sleep');
+ const rev=easel.revision,w0=wakes;store.easelActions.painted();store.easelActions.painted();store.easelActions.painted();
+ assert(easel.revision!==rev&&wakes>w0,'painting wakes the island (a new sleep key)');assert.equal(easel.still(true),false,'paper waiting: draw a frame');assert.equal(tex.version,v0,'nothing uploads outside the island\'s frame');
+ easel.applyCamera(camera,1/20,false);assert.equal(tex.version,v0+1,'one upload for the frame');assert.equal(easel.still(true),true,'then still again');
+ for(let i=0;i<10;i++)easel.applyCamera(camera,1/20,false);assert.equal(tex.version,v0+1,'nothing more until the next stroke');
+ store.easelActions.trace(true);easel.applyCamera(camera,1/20,false);assert.equal(tex.version,v0+2,'trace on: one upload');store.easelActions.trace(true);easel.applyCamera(camera,1/20,false);assert.equal(tex.version,v0+2,'trace already on: none');
  assert.equal(easel.frameMs,1000/20,'the 20 fps idle cap while seated');
- assert.equal(easel.still(false),false,'water and life still move: keep drawing at 20 fps');assert.equal(easel.still(true),true,'nothing moving (reduced motion / static tier): the loop may sleep');
- const rev=easel.revision;
- // Just look: the card's room goes, the view drifts gently (not with reduced motion).
- store.easelActions.setMode('look');assert.equal(store.easelStore.get().mode,'look');assert(easel.revision!==rev,'a new sleep key (wakes one frame)');
+ assert.equal(easel.still(false),false,'water and life still move: keep drawing at 20 fps');
+ // Just look: the tray goes, the camera pulls back to the full view and drifts gently (not with reduced motion); no painting.
+ store.easelActions.setMode('look');assert.equal(store.easelStore.get().mode,'look');assert.equal(store.easelActions.hit(195,600),null,'no painting in Just look');
+ for(let i=0;i<120;i++)easel.applyCamera(camera,1/20,false);
+ const L=E.easelCamera(s);assert(camera.position.distanceTo(new T3.Vector3(L.x,L.y,L.z))<1e-3,'back at the full view');
  const q0=camera.quaternion.clone();for(let i=0;i<60;i++)easel.applyCamera(camera,1/20,false);
- assert(!camera.view.enabled||Math.abs(camera.view.offsetY)<1e-3,'no card: the view centred');assert(camera.quaternion.angleTo(q0)>1e-4,'a slow drift');assert.equal(easel.still(true),false,'drifting: keep drawing (at 20 fps)');
- const q1=camera.quaternion.clone();for(let i=0;i<20;i++)easel.applyCamera(camera,1/20,true);
- const q2=camera.quaternion.clone();easel.applyCamera(camera,1/20,true);assert(camera.quaternion.angleTo(q2)<1e-9,'reduced motion: no drift');void q1;
+ assert(camera.quaternion.angleTo(q0)>1e-4,'a slow drift');assert.equal(easel.still(true),false,'drifting: keep drawing (at 20 fps)');
+ const q2=camera.quaternion.clone();easel.applyCamera(camera,1/20,true);easel.applyCamera(camera,1/20,true);const q3=camera.quaternion.clone();easel.applyCamera(camera,1/20,true);assert(camera.quaternion.angleTo(q3)<1e-9,'reduced motion: no drift');void q2;
  assert.equal(easel.still(true),true,'reduced motion in Just look: still, may sleep');
- store.easelActions.setMode('paint');for(let i=0;i<40;i++)easel.applyCamera(camera,1/30,false);assert.equal(renders,1,'back to painting, same layout: the snapshot is reused');
- // A painting saved: it shows on the board (one textured quad, made only now).
- store.easelActions.saved('data:image/webp;base64,AAAA');const board=scene.getObjectByName('paint-easel-board');assert(board,'the board shows the painting');
- assert.equal(scene.children.filter(c=>c.name==='paint-easel-board').length,1,'one quad');
- // Leave: the camera eases back to the follow camera and the projection is restored.
- store.easelActions.exit();assert(!store.easelStore.get().seated&&!easel.seated);assert.equal(easel.holdPlayer({x:0,z:0,kick:true,juggle:false}),false,'free to walk');
+ store.easelActions.setMode('paint');for(let i=0;i<120;i++)easel.applyCamera(camera,1/30,false);assert.equal(renders,2,'back to painting, same screen: the snapshots are reused');
+ assert(camera.position.distanceTo(new T3.Vector3(P.x,P.y,P.z))<1e-3,'back at the board');
+ // Done: the UI saves, then leaves: the board keeps the painting, lit like the world.
+ store.easelActions.saved('data:image/webp;base64,AAAA');store.easelActions.exit();assert(!store.easelStore.get().seated&&!easel.seated);
+ assert.equal(easel.holdPlayer({x:0,z:0,kick:true,juggle:false}),false,'free to walk');
+ assert(board.visible&&board.material.isMeshLambertMaterial,'the painting stays on the easel in the world');
  for(let i=0;i<40;i++){camera.position.set(s.x+18,s.ground+23,s.z+30);camera.lookAt(s.x,s.ground,s.z);easel.applyCamera(camera,1/30,false);}
- assert.equal(camera.fov,40,'the normal FOV is back');assert.equal(camera.far,500,'and the far plane');assert(!camera.view||!camera.view.enabled,'and no view offset');
+ assert.equal(camera.fov,40,'the normal FOV is back');assert.equal(camera.far,500,'and the far plane');assert.equal(camera.near,1,'and the near plane');
  assert.equal(easel.frameMs,0,'no cap after leaving');assert.equal(easel.focused,false,'focus mode off');
+ const v1=tex.version;await env.watchTimers(async()=>{for(let i=0;i<60;i++){easel.update(ctx(st.x,st.z));easel.applyCamera(camera,1/30,false);}});
+ assert.equal(tex.version,v1,'after leaving: no uploads');assert.equal(env.counts.raf+env.counts.timeout+env.counts.interval,0,'and no loops');
  easel.dispose();assert.equal(scene.children.length,before,'nothing left behind');
 });
 
-await ok('heat and UI wiring: live view, capped and asleep when still, drawing only on pointer events, 44 px, HUD aside, counts, Town',()=>{
- const ui=read('components/PaintEasel.tsx'),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+await ok('heat and UI wiring: drawing on the board only on pointer events, no Back, Done saves, the tray, 44 px, HUD aside, counts, Town',()=>{
+ const ui=read('components/PaintEasel.tsx'),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,''),rtSrc=read('lib/graphics/paintEasel.ts').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
  assert(!/setInterval|setTimeout/.test(code),'the painting UI starts no timers');
  const rafs=code.match(/requestAnimationFrame\(/g)||[];assert.equal(rafs.length,1,'one requestAnimationFrame call…');
  assert(/const move=[^;]*;[\s\S]*?if\(!s\.raf\)s\.raf=requestAnimationFrame\(flush\)/.test(code),'…only in the pointer-move handler, while a finger is down (coalesced)');
  assert(/getCoalescedEvents/.test(code)&&/cancelAnimationFrame\(s\.raf\);flush\(\)/.test(code),'coalesced points, flushed on lift');
- assert(/ResizeObserver/.test(code)&&!/animationend|scroll/.test(code.replace(/overscroll/g,'')),'the layout is measured on size changes only');
- assert(/<BackButton[^>]*onBack=\{leave\}/.test(ui)&&/<DoneButton[^>]*onDone=\{done\}/.test(ui)&&ui.indexOf('<BackButton')<ui.indexOf('<DoneButton'),'Back (left) and Done (right)');
+ // The paper is the board: no separate paper canvas in the UI; the board's plane is intersected only from pointer events.
+ assert(!/<canvas/.test(code),'no separate paper on screen: the easel\'s board is the paper');
+ const hits=[...code.matchAll(/easelActions\.hit\(/g)].length;assert.equal(hits,2,'the board is hit-tested in two places…');
+ assert(/const down=\(e:RPointerEvent[^]*?easelActions\.hit\(e\.clientX,e\.clientY\)/.test(code)&&/const move=\(e:RPointerEvent[^]*?easelActions\.hit\(q\.clientX,q\.clientY\)/.test(code),'…pointer down and pointer move only');
+ assert(/onPointerDown=\{down\} onPointerMove=\{move\} onPointerUp=\{up\}/.test(code),'on the surface over the island');
+ assert(!/\bhit\(/.test(rtSrc.slice(rtSrc.indexOf('return {'))),'the runtime never hit-tests per frame');
+ assert(/s\.pending\.length=0;easelActions\.painted\(\);/.test(code),'one painted() per drawn frame');
+ assert(/if\(boardDirty\)\{boardDirty=false;composite\(traceOn\);\}/.test(rtSrc),'the board composites and uploads only when the paper changed');
+ assert.equal((rtSrc.match(/needsUpdate=true/g)||[]).length,2,'two upload sites: the paper (composite) and a saved picture');
+ // No Back; Done (top right) saves unsaved work and leaves; Escape does the same.
+ assert(!/BackButton/.test(ui),'no Back button');
+ assert(/<DoneButton[^>]*onDone=\{done\}/.test(ui),'Done');assert(/\.done\{grid-column:3;justify-self:end\}/.test(read('components/PaintEasel.module.css')),'Done top right');
+ assert(/const done=useCallback\(\(\)=>\{if\(statusRef\.current==='dirty'\)doSave\(\);easelActions\.exit\(\);\}/.test(code),'Done saves unsaved work, then leaves');
+ assert(/if\(k==='escape'\)\{e\.preventDefault\(\);e\.stopPropagation\(\);done\(\);return;\}/.test(code),'Escape: the same as Done');
  assert(/data-easel-just-look/.test(ui)&&/Just look/.test(ui)&&/data-easel-look-back/.test(ui)&&/Tap to paint again/.test(ui),'Just look and the way back');
- for(const id of ['data-easel-undo','data-easel-clear','data-easel-trace','data-easel-save','data-easel-size','data-easel-gallery'])assert(ui.includes(id),id);
+ for(const id of ['data-easel-undo','data-easel-clear','data-easel-trace','data-easel-save','data-easel-size','data-easel-gallery','data-easel-tools','data-easel-colours','data-easel-tray="row"','data-easel-tray="board"'])assert(ui.includes(id),id);
  assert(/Tap again to clear/.test(ui),'clear asks for a second tap (no popup)');
+ assert(!/data-easel-card/.test(ui),'no separate painting card');
  const css=read('components/PaintEasel.module.css');
  for(const sel of ['.tool,.act','.swatch','.look','.save'])assert(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\{[^}]*(var\\(--btn-icon\\)|var\\(--btn-height\\))').test(css),sel+' is at least 44 px');
  assert(/\.thumb\{[^}]*width:68px;height:51px/.test(css),'gallery thumbnails 68×51');
@@ -216,6 +277,7 @@ await ok('heat and UI wiring: live view, capped and asleep when still, drawing o
  assert(/html\[data-easel=on\] \.town-app>:not\(\.town-scene\):not\(\[data-easel-ui\]\)\{visibility:hidden!important;pointer-events:none!important\}/.test(read('app/globals.css')),'the island HUD steps aside while painting');
  const ids=load('lib/analytics/countIds.ts');for(const e of ['easel_open','easel_save'])assert(ids.SUMMIT_COUNT_EVENTS.some(([k])=>k===e),'count id su:'+e);
  assert(/countEaselOpen\(\)/.test(read('lib/graphics/paintEasel.ts'))&&/countEaselSave\(\)/.test(ui),'counted where it happens');
+ assert(/paintSound\.seaStart\(\)/.test(ui)&&/paintSound\.seaStop\(\)/.test(ui)&&/paintSound\.brush\(/.test(ui),'the sea and the brush sounds');
  const town=read('components/Town.tsx');
  assert(/createPaintEasel\(scene,renderer,\{wake:\(\)=>wakeLoopRef\.current\(\),player:\(\)=>player\.root\}\)/.test(town),'created with a wake port');
  assert(/if\(easel\.holdPlayer\(input\.current\)\)\{velocity\.x=velocity\.z=0;return;\}/.test(town),'seated: no walking');
@@ -224,7 +286,6 @@ await ok('heat and UI wiring: live view, capped and asleep when still, drawing o
  assert(/if\(easel\.frameMs\)\{const slot=frameCapSlot\(now,easelSlot,Math\.max\(easel\.frameMs,heat\.frameMs\)\);if\(slot<0\)return;easelSlot=slot;\}/.test(town),'the 20 fps cap while seated');
  assert(/easel\.applyCamera\(camera,dt,reduced\)/.test(town)&&/const easelWant=easel\.update\(/.test(town)&&/if\(easelWant\)cands\.push\(\{kind:'enter',key:easelWant\.key/.test(town),'camera, prompt and the HUD arbiter');
  assert(/easel\.dispose\(\)/.test(town)&&/<PaintEasel\/>/.test(town),'disposed; the UI mounted');
- // The view is never paused under the card: the easel is not in the menu/pause list.
  assert(!/settingsRef\.current=[^;]*easel/i.test(town),'the island is not paused while painting (the view stays live)');
 });
 console.log(failed?`\npaint-easel: ${failed} failed`:'\npaint-easel: all passed');process.exit(failed?1:0);

@@ -6,10 +6,13 @@ const WATER_Y=-.42,STRIP_Y=-.403;
 /** Only the static ground: opaque island chunks and the island base meshes. */
 const GROUND=new Set(['curved-island-foundation','interior-island-grass','continuous-sandy-shore']);
 const isGround=(o:T.Object3D)=>(o instanceof T.Mesh)&&(GROUND.has(o.name)||o.name.startsWith('island-chunk-')&&!(Array.isArray(o.material)?o.material.some(m=>m.transparent):o.material.transparent));
+/** Ground this far over the water (m) or higher is "overhead" for the bake (see OVERHEAD in sampleIslandHeights). */
+const OVERHEAD=3;
+/** R/G: height over the water (−0.5 … 1.5 m, 16 bits); B: 1 where the surface is OVERHEAD or higher; A: 1 = something drawn. */
 function heightMaterial(){
  return new T.ShaderMaterial({uniforms:{uWater:{value:WATER_Y}},
   vertexShader:'varying float vY;void main(){vec4 p=vec4(position,1.);\n#ifdef USE_INSTANCING\np=instanceMatrix*p;\n#endif\nvec4 w=modelMatrix*p;vY=w.y;gl_Position=projectionMatrix*viewMatrix*w;}',
-  fragmentShader:'uniform float uWater;varying float vY;void main(){float v=clamp((vY-uWater+.5)/2.,0.,1.)*255.;gl_FragColor=vec4(floor(v)/255.,fract(v),0.,1.);}',side:T.DoubleSide});
+  fragmentShader:`uniform float uWater;varying float vY;void main(){float v=clamp((vY-uWater+.5)/2.,0.,1.)*255.;gl_FragColor=vec4(floor(v)/255.,fract(v),vY-uWater>${OVERHEAD.toFixed(1)}?1.:0.,1.);}`,side:T.DoubleSide});
 }
 /** Smooth value noise on an n×n grid (lattice every `cell` texels). */
 function valueNoise(n:number,cell:number,seed:number){
@@ -51,7 +54,18 @@ function laceNoise(){
 const MIN_X=-156,MIN_Z=-322,SIZE_X=1036,SIZE_Z=626,STEP=2,TILE=128,BAND_IN=-2.4,BAND_OUT=2.6;
 const NX=SIZE_X,NZ=SIZE_Z,TX=SIZE_X/STEP,TZ=SIZE_Z/STEP;
 
-/** Height above the water (m, −0.5 … 1.5) on the 1 m grid, row k at z = MIN_Z + k + .5, from one top-down render. */
+/**
+ * Height above the water (m, −0.5 … 1.5) on the 1 m grid, row k at z = MIN_Z + k + .5, from a top-down render of the ground.
+ *
+ * Thin things high overhead are not ground (Oct 14 2026, user: "not sure what this is to the left of the sand bar, remove this").
+ * The zipline cable is baked into the static island chunks, so the top-down render read it, 16–24 m over the sandbar channel, as
+ * a dotted line of tall land in the sea: each dot got its own foam ring (octagons: a 1 m cell's distance field), a pale shallow
+ * patch round it from the ocean's depth gradient, and where it crosses Summit Isle's north beach the wet skirt under it turned to
+ * dry sand, a hard-edged wedge poking into the water. So where the top-down height is OVERHEAD or more but only as a thin line
+ * (gone after a 3×3 opening: a cable, a pole, a frond, never a building or the mountain), the cell takes the mean of the lower
+ * ground round it (open sea counting as −0.5): open water under the cable, the beach under it where it crosses the sand, and
+ * the slope unchanged at a ragged cell of the mountain's 3 m contour (its lower neighbours read 1.5 like it did).
+ */
 function sampleIslandHeights(renderer:T.WebGLRenderer,scene:T.Scene){
  const target=new T.WebGLRenderTarget(NX,NZ,{depthBuffer:true}),camera=new T.OrthographicCamera(-SIZE_X/2,SIZE_X/2,SIZE_Z/2,-SIZE_Z/2,1,300);
  const cx=MIN_X+SIZE_X/2,cz=MIN_Z+SIZE_Z/2;camera.position.set(cx,200,cz);camera.up.set(0,0,-1);camera.lookAt(cx,0,cz);camera.updateMatrixWorld();
@@ -62,15 +76,30 @@ function sampleIslandHeights(renderer:T.WebGLRenderer,scene:T.Scene){
  const pixels=new Uint8Array(NX*NZ*4);
  try{
   renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=false;scene.overrideMaterial=material;scene.background=null;
-  renderer.setRenderTarget(target);renderer.setClearColor(0x000000,1);renderer.clear();renderer.render(scene,camera);
+  renderer.setRenderTarget(target);renderer.setClearColor(0x000000,0);renderer.clear();renderer.render(scene,camera);
   renderer.readRenderTargetPixels(target,0,0,NX,NZ,pixels);
  }finally{
   renderer.setRenderTarget(prev.target);scene.overrideMaterial=prev.override;scene.background=prev.bg;renderer.setClearColor(prev.clear,prev.alpha);
   renderer.shadowMap.autoUpdate=prev.auto;renderer.shadowMap.needsUpdate=prev.needs;for(const o of hidden)o.visible=true;for(const o of shown)o.visible=false;target.dispose();material.dispose();
  }
  // Pixel row j (from the bottom) looks at z = maxZ − (j + .5) (camera up is −Z): flip into z-ascending rows.
- const lift=new Float32Array(NX*NZ);
- for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const p=(j*NX+i)*4;lift[(NZ-1-j)*NX+i]=(pixels[p]+pixels[p+1]/255)/255*2-.5;}
+ const lift=new Float32Array(NX*NZ),high=new Uint8Array(NX*NZ),drawn=new Uint8Array(NX*NZ);
+ for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const p=(j*NX+i)*4,k=(NZ-1-j)*NX+i;lift[k]=(pixels[p]+pixels[p+1]/255)/255*2-.5;high[k]=pixels[p+2]>127?1:0;drawn[k]=pixels[p+3]>127?1:0;}
+ dropOverheadLines(lift,high,drawn,NX,NZ);
+ return lift;
+}
+/**
+ * Thin overhead lines out of a w×h height grid (in place): `high` cells (OVERHEAD or more over the water) not covered by any 3×3
+ * block of high cells take the mean of their lower 8-neighbours (undrawn ones, open sea, count as −0.5). Exported for the tests.
+ */
+export function dropOverheadLines(lift:Float32Array,high:Uint8Array,drawn:Uint8Array,w:number,h:number){
+ const core=new Uint8Array(w*h),top=lift.slice();
+ for(let z=1;z<h-1;z++)for(let x=1;x<w-1;x++){let all=1;for(let dz=-1;dz<=1&&all;dz++)for(let dx=-1;dx<=1;dx++)if(!high[(z+dz)*w+x+dx]){all=0;break;}core[z*w+x]=all;}
+ for(let z=0;z<h;z++)for(let x=0;x<w;x++){const k=z*w+x;if(!high[k])continue;
+  let kept=false;for(let dz=-1;dz<=1&&!kept;dz++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,zz=z+dz;if(xx>=0&&zz>=0&&xx<w&&zz<h&&core[zz*w+xx]){kept=true;break;}}
+  if(kept)continue;
+  let sum=0,n=0;for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=w||zz>=h)continue;const i=zz*w+xx;if(high[i])continue;sum+=drawn[i]?top[i]:-.5;n++;}
+  lift[k]=n?sum/n:-.5;}
  return lift;
 }
 /** Felzenszwalb–Huttenlocher 1D squared distance transform over `n` samples. */

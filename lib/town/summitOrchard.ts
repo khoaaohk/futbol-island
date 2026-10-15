@@ -49,6 +49,8 @@ export type TreeRig={
  crown:{x:number;y:number;z:number;rx:number;ry:number;hang:'canopy'|'under'};
  /** The sway: rotation about the trunk's base, weighted (height / sway.h)^bend (palms and papayas bend more at the top). */
  sway:{h:number;bend:number};
+ /** Banana plants: the top of the baked bunch stalk (the crown is its foot above the purple bud); the hands hang along it. */
+ stalk?:{x:number;y:number;z:number};
 };
 
 /** Clear zones: nothing planted within r metres of these (the lookout and the zipline tower get ≥ 4 m of open grass). */
@@ -177,17 +179,17 @@ export function orchardRig(p:OrchardPlan):TreeRig{
  const W=worldOf(p),t=trunkOf(p),s=p.s,v=new T.Vector3();
  const at=(x:number,y:number,z:number)=>v.set(x,y,z).applyMatrix4(W).clone();
  const g=at(0,GRIP_HEIGHT,0),rGrip=t.r+(t.top-t.r)*Math.min(1,GRIP_HEIGHT/t.h);
- let crown:TreeRig['crown'],h:number,bend=1;
+ let crown:TreeRig['crown'],h:number,bend=1,stalk:TreeRig['stalk'];
  switch(p.form){
   case 'round':{const c=at(0,t.h+.95*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.55*s,ry:1.55*s,hang:'canopy'};h=t.h+2.6*s;break;}
   case 'oval':{const c=at(0,t.h+1.55*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.15*s,ry:1.9*s,hang:'canopy'};h=t.h+3.4*s;break;}
   case 'umbrella':{const c=at(0,t.h+.5*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.95*s,ry:.94*s,hang:'canopy'};h=t.h+1.6*s;break;}
   case 'lobed':{const c=at(0,t.h+.9*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.6*s,ry:1.05*s,hang:'canopy'};h=t.h+1.9*s;break;}
   case 'columnar':{const c=at(0,t.h+1.7*s,0);crown={x:c.x,y:c.y,z:c.z,rx:.85*s,ry:1.95*s,hang:'canopy'};h=t.h+4*s;break;}
-  case 'banana':{const c=at(.42,t.h-.55,0);crown={x:c.x,y:c.y,z:c.z,rx:.16,ry:.2,hang:'under'};h=t.h+.6;bend=1.3;break;}
+  case 'banana':{const c=at(.42,t.h-.55,0);crown={x:c.x,y:c.y,z:c.z,rx:.16,ry:.2,hang:'under'};stalk=at(.15,t.h+.06,0);h=t.h+.6;bend=1.3;break;}
   case 'papaya':{const c=at(0,t.h-.32,0);crown={x:c.x,y:c.y,z:c.z,rx:.2,ry:.12,hang:'under'};h=t.h+.5;bend=1.7;break;}
  }
- return {grip:{x:g.x,y:g.y,z:g.z,r:rGrip},baseR:t.r,crown:crown!,sway:{h:h!,bend}};
+ return {grip:{x:g.x,y:g.y,z:g.z,r:rGrip},baseR:t.r,crown:crown!,sway:{h:h!,bend},...stalk?{stalk}:{}};
 }
 /** Rig of the island's own round trees (summitIsleWorld.ts tree(): trunk r 0.2 s, canopy centre 2.9 s up, r 1.7 s). */
 export function roundTreeRig(x:number,z:number,y:number,s:number):TreeRig{

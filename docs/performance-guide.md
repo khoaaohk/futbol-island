@@ -113,6 +113,7 @@ User-approved follow-up to the fishing water: "moving and washing ashore", "more
     - Walking at 30 fps on the beach: GPU 1.52/1.61 → 1.64/0.92 ms; rAF 4.7/3.0 → 2.7/2.7 ms.
   - Interleaved in-page A/B (new water on/off, 8 × 2 s slots each): GPU +0.02 (spawn), +0.12 (beach), +0.04 (walking) ms on the phone profile and +0.02 / +0.16 ms on desktop 1280×800. Render CPU ±0.1 ms (noise); +1–4 draws; +2–8k triangles.
 - Reduced work only: no phone-temperature claim without an iPhone recording.
+- **Overhead lines (Oct 14 2026, local):** the zipline cable sits in the static ground chunks, so the bake read it as a dotted line of tall land across the sandbar channel (octagonal foam rings, pale shallow patches, a sand wedge on Summit Isle's north beach). The height render now flags surfaces 3 m+ over the water in its blue channel, and `dropOverheadLines` turns thin runs of them (not covered by a 3×3 block: cables, poles, fronds) into the mean of the lower ground round them. Same single render; one extra CPU pass over the 1 m grid inside the one-time bake (bakeMs 146–215 on desktop dev, within run-to-run noise); no runtime cost. `tests/shore-overhead.cjs`.
 - **Validation:** `npx tsc --noEmit`; full `npm test` (with `app/bits-lab` set aside; `tests/heat-tiers.cjs` now pins the `stillWater` wiring and `tests/east-pier.cjs` the retired shallows); `scripts/check-fishing-browser.cjs mobile west-cove` (cast, bite, catch, Fishbook, no errors). Before/after captures at seven beaches on phone and desktop, 6-frame lapping sequences and a reduced-motion capture (session scratchpad `island-water/`).
 
 ## Fishing: clear water, coral and real fish — October 12, 2026 (local, not deployed)
@@ -5134,3 +5135,25 @@ components/PaintEasel.tsx). The view stays live under a compact painting card, s
 
 Validation: tests/paint-easel.cjs (placement, tools, save budget, device-only key, runtime: no loops at rest, one snapshot render,
 20 fps cap, sleep when still, camera restored). Reduced work only; not measured on an iPhone.
+
+## Zipline grip, body motion and ride actions (Oct 14 2026, local, not deployed)
+
+User after riding it: "the arms are not on the handle", "the body needs to animate with the movements more", "remove the actions
+and change those to three different actions that are more related to the zipline".
+
+- **Grip:** the body is placed FROM the handle bar (`lib/graphics/zipline.ts` placeBody: the bar's point in the rider's frame,
+  `ZIP_GRIP` in `lib/town/zipline.ts`, is put on the drawn bar) and `lib/graphics/player.ts` (`motion.zipline`, poseZipArms)
+  solves both arms onto it with a two-bone solve in the chest's frame, elbows out and back. Both mittens' middles stay within
+  ~1.5 mm of the bar line and ~3 mm of their two grip points every drawn frame (tests/zipline.cjs, bean and classic, 30–120 fps).
+- **Body:** all from the 60 Hz tick: a fore-aft pendulum driven by the speed change, a sideways pendulum driven by speed-scaled
+  gusts, a damped strap bounce from the vertical acceleration over the sag plus a cable buzz, legs kicking off the tower,
+  trailing the swing, tucking at top speed and reaching for the deck, a launch lean back, a torso twist, the head looking ahead
+  and down. Drawing interpolates the last two ticks; it never changes the state. Reduced motion: half swing, no sway or buzz.
+- **Actions:** Tuck (hold; ≤ 14 % faster, capped at 30 m/s, never past 60 % of the ride, so the brake and landing are untouched),
+  Spin (360° on the swivel) and Wave (one hand). They replace the action cluster's three slots while `zipStore.riding`
+  (`Town.tsx` actionCluster, the job cluster's `JobActionButton`, same classes, sizes and positions); Space/1, Q/2, E/3; the
+  ride also owns R and J so no ride change or juggle happens in the air.
+- **Cost:** only while riding: one flat Float64Array snapshot per tick (copied, not allocated), one arm solve per arm per frame
+  (four matrix updates, one inverse), two strap meshes and a handle group built with the trolley and disposed after it. A Tuck
+  can raise the speed-line instance count from 28 to 44 (still one draw). Nothing at rest: motion() returns Town's motion
+  untouched, pose() returns at once, keys pass through. Reduced work only; not measured on an iPhone.

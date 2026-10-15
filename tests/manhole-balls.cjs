@@ -108,7 +108,7 @@ console.log('PASS glints: flying + nearby + unfound only, static, hidden while p
  t.h.update(.05,{x:s.x,y:20,z:s.z},true,false,null,false,true);t.h.land({x:s.x,y:0,z:s.z},true);t.h.update(.05,{x:s.x,y:20,z:s.z},true,false,null,false,true);assert.equal(over(),null,'opened covers get no target');
  t.h.dispose();}
 {const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8'),marker=fs.readFileSync(path.join(base,'lib/graphics/landingMarker.ts'),'utf8');
- assert(!/emphasis/.test(marker)&&/landingMarker\.update\(landingPreview,flight\.height,rooftop\.surface,showLanding&&!overPickup,elapsed,reduced,showLanding&&!overPickup&&coinHunt\.manholeTarget\(\)\?3\.2:1\)/.test(town)&&/root\.scale\.setScalar\(\(reduced\?1:\.9\+pulse\*\.18\)\*size\)/.test(marker),'the manhole uses the standard landing ring, only scaled to sit around the rim');
+ assert(!/emphasis/.test(marker)&&/landingMarker\.update\(landingPreview,flight\.height,(?:rooftop\.surface|skySurface),showLanding&&!overPickup,elapsed,reduced,showLanding&&!overPickup&&coinHunt\.manholeTarget\(\)\?3\.2:1\)/.test(town)&&/root\.scale\.setScalar\(\(reduced\?1:\.9\+pulse\*\.18\)\*size\)/.test(marker),'the manhole uses the standard landing ring, only scaled to sit around the rim');
  assert(!/manholeTilt|MANHOLE_LOOK/.test(town),'the view does not change over a manhole');
  assert(!/manholeTarget\(\)\?\?rooftop\.findLanding/.test(town)&&!/location\.x=cover\.x/.test(town),'no snap or steering onto the cover');}
 console.log('PASS manhole landing ring: 4.5 m lock, holds within 6 m, lingers, gone once opened; standard ring, no view change, no snap');

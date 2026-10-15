@@ -31,7 +31,7 @@ export default function BallCannonHud(){
   <button type="button" className="store-enter-prompt" data-ball-cannon-sit aria-label="Sit in the ball cannon" hidden onClick={()=>cannonActions.sit()}>Sit in the ball cannon</button>
   {v.seated&&<div className={styles.hud} data-ball-cannon-hud role="application" aria-label="Ball cannon. Drag to aim." onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onLostPointerCapture={up}>
    <div className={styles.back}><BackButton aria-label="Get out of the ball cannon" onBack={()=>cannonActions.leave()}/></div>
-   {v.shots===0&&<p className={styles.hint} aria-live="polite">Drag to aim. <b>Release disc</b>, then <b>Fire</b> to knock it out of the sky!</p>}
+   {v.shots===0&&<p className={styles.hint} aria-live="polite">Drag or use the stick to aim. <b>Release disc</b>, then <b>Fire</b> to knock it out of the sky!</p>}
    {v.hits>0&&v.word&&<div key={v.hits} className={styles.cheer} aria-hidden="true" data-ball-cannon-cheer>{v.word}</div>}
    <div className={styles.controls}>
     <div className={styles.discs}>

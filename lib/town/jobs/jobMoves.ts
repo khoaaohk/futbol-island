@@ -17,7 +17,7 @@ import type {JobDef} from './jobCatalog';
 
 // ---------------- Buttons ----------------
 /** `slot`: where it sits in the default cluster (shoot = the big primary, juggle, ride). `key`: its desktop key. */
-export type JobButton={slot:'shoot'|'juggle'|'ride';key:'Space'|'J'|'R';id:string;label:string;icon:string;hold?:boolean;enabled:boolean};
+export type JobButton={slot:'shoot'|'juggle'|'ride';key:'Space'|'J'|'R'|'Q'|'E';id:string;label:string;icon:string;hold?:boolean;enabled:boolean};
 type SlotDef={ids:string[];label:string;icon:string|Record<string,string>};
 const SLOT_KEYS=[['shoot','Space'],['juggle','J'],['ride','R']] as const;
 /** Each job's action slots (index 0 = the primary button). Wall rebounds is a football drill: it keeps Juggle / Shoot. */

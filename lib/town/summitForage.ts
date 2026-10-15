@@ -55,17 +55,32 @@ export const FORAGE={
 /** The walker's collider radius and the trunk collider's clearance (lib/town/simulation.ts walk radius and TRUNK_CLEARANCE):
  *  the character's root never enters the trunk's collider; the last few centimetres to the bark are the pose's lean. */
 export const WALKER_RADIUS=.32,TRUNK_CLEARANCE=.3;
-/** In-world look of each fruit (radius in metres, a stretch for the long ones, its colour): a little larger than life so it reads
- *  from the follow camera ~38 m away; `tree` names the plant in the prompt ("Shake the banana plant"). */
-export const FRUIT_LOOK:Record<FruitKind,{r:number;stretch:[number,number,number];color:string;tree:string}>={
- mango:{r:.2,stretch:[1,1.35,1],color:'#f2a43a',tree:'mango tree'},
- orange:{r:.23,stretch:[1,1,1],color:'#f08a2c',tree:'orange tree'},
- coconut:{r:.25,stretch:[1,1.12,1],color:'#c98f3a',tree:'coconut palm'},// a golden king coconut: reads against the crown
- banana:{r:.2,stretch:[1.35,1.8,1.35],color:'#f5d94a',tree:'banana plant'},// a hanging bunch
- papaya:{r:.19,stretch:[1,1.75,1],color:'#e9a13b',tree:'papaya tree'},// long, clustered under the crown
- lime:{r:.15,stretch:[1,1.1,1],color:'#9ad04a',tree:'lime tree'},// small and bright
- guava:{r:.19,stretch:[1,.95,1],color:'#cfe07a',tree:'guava tree'},// pale yellow-green and round
- avocado:{r:.18,stretch:[1,1.45,1],color:'#3b5a24',tree:'avocado tree'},// dark green and pear-long
+/** The fruit's surface pattern in the shared fruit shader (lib/graphics/fruitTrees.ts): a stem spot, a banana's dark ends, a
+ *  coconut's fibres, a mango's red blush, a papaya's green shoulders, a guava's dark crown at its base. */
+export const FRUIT_PATTERN={plain:0,banana:1,coconut:2,mango:3,papaya:4,guava:5} as const;
+export type FruitLook={
+ /** Size in metres (a little larger than life so it reads from the follow camera ~25–40 m away). */
+ r:number;
+ /** The shape, in units of r (one shared low-poly mesh bent per instance in the vertex shader): half-length along the stem axis,
+  *  cross-section radius, `bend` = half the arc's angle in radians (a mango's kidney curve, a banana's crescent), `taper` = the
+  *  pear's narrowing toward the stem (0 round). */
+ elong:number;width:number;bend:number;taper:number;pattern:number;
+ color:string;
+ /** Bananas: a greener yellow while hanging on the plant (yellow once picked off the ground). */
+ hangColor?:string;
+ tree:string;
+};
+/** In-world look of each fruit; `tree` names the plant in the prompt ("Shake the banana plant"). Bananas hang as hands of 4–6
+ *  curved fingers up a stalk and fall as single fingers or small hands of 2–3 (lib/graphics/fruitTrees.ts BANANA). */
+export const FRUIT_LOOK:Record<FruitKind,FruitLook>={
+ mango:{r:.2,elong:1.28,width:.88,bend:.32,taper:.08,pattern:FRUIT_PATTERN.mango,color:'#f4b23a',tree:'mango tree'},// an oval, a little kidney-curved, a red blush
+ orange:{r:.23,elong:.97,width:1,bend:0,taper:0,pattern:FRUIT_PATTERN.plain,color:'#f28526',tree:'orange tree'},
+ coconut:{r:.25,elong:1.1,width:1,bend:0,taper:.06,pattern:FRUIT_PATTERN.coconut,color:'#8d5a2e',tree:'coconut palm'},// brown and fibrous
+ banana:{r:.22,elong:1.1,width:.27,bend:.85,taper:0,pattern:FRUIT_PATTERN.banana,color:'#f7d940',hangColor:'#d5d544',tree:'banana plant'},// one finger
+ papaya:{r:.19,elong:1.7,width:.98,bend:0,taper:.38,pattern:FRUIT_PATTERN.papaya,color:'#f0a03a',tree:'papaya tree'},// a long pear, green shoulders
+ lime:{r:.15,elong:1.08,width:1,bend:0,taper:0,pattern:FRUIT_PATTERN.plain,color:'#7cc43c',tree:'lime tree'},// small and bright
+ guava:{r:.19,elong:1.08,width:1,bend:0,taper:.22,pattern:FRUIT_PATTERN.guava,color:'#c9dd6e',tree:'guava tree'},// a round pear, pale yellow-green
+ avocado:{r:.18,elong:1.42,width:.92,bend:0,taper:.42,pattern:FRUIT_PATTERN.plain,color:'#36541f',tree:'avocado tree'},// a dark green pear
 };
 export const FORAGE_TIP='Fruit is great fuel before a match! Eat it from your pocket, or sell it at a farm stand.';
 

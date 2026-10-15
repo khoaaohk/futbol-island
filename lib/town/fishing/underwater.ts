@@ -18,29 +18,72 @@ import {distanceToLandableDeck} from '../landableDecks';
  * slow / still path (no sway, no caustics). Reduced motion holds the water clock, so everything is still.
  */
 export const UW_SURFACE=-.42;
+/**
+ * Depth (Oct 14 2026, user: "the coral looks like it's on top of the water. anything we can do to make it have more depth?").
+ * The seabed's floor depth is per spot (a theme's `floor`, Drop-off Ledge drops deeper); `applyReefWater` sets it for the CPU
+ * (placement, fish) and the shaders (uUwFloor) together, so the strip's seabed, the reef and the fish always agree.
+ */
+export const UW_DEPTH={floor:3.2};
 /** Seabed depth (m below the surface) at signed shore distance d (m). Shared with the GLSL below. */
-export const uwDepthAt=(d:number)=>.05+3.2*(1-Math.exp(-Math.max(d,0)/3.4));
+export const uwDepthAt=(d:number,floor=UW_DEPTH.floor)=>.05+floor*(1-Math.exp(-Math.max(d,0)/3.4));
 /**
  * Shared noise texture (shoreWater.createWaterNoise), set when the fishing water builds it, and the spot's water look (Oct 13 2026,
  * "fix all the fishing spots so they don't all look the same"): the depth tint (shallow / deep colour, linear), how clear the water
  * is (absorption scale) and the sand seen through it. One set of uniform objects shared by every underwater material and the strip,
  * written once per session by `applyReefWater` (no recompile, no extra draw).
+ * Oct 14 2026 (depth): how much of the water's absorption the reef and the fish take (per theme), the floor depth, and the float's
+ * shadow on the seabed (uUwFloat: float x, z, angler x, z; uUwFloatOn 0..1), written per frame while fishing (uniforms only).
  */
 export const UW_UNIFORMS={uWaterNoise:{value:null as T.Texture|null},
  uUwShallow:{value:new T.Vector3(0,.42,.62)},uUwDeep:{value:new T.Vector3(.004,.16,.32)},uUwClear:{value:1},
+ uUwReef:{value:.55},uUwFish:{value:.4},uUwFloor:{value:3.2},uUwFloat:{value:new T.Vector4(0,0,0,0)},uUwFloatOn:{value:0},
  uSandA:{value:new T.Vector3(.55,.55,.49)},uSandB:{value:new T.Vector3(.67,.66,.59)},uSandWeed:{value:new T.Vector4(.24,.3,.15,.55)}};
 
+/**
+ * The depth look of anything under the water (Oct 14 2026): colour first loses saturation with depth (only the shallowest pieces
+ * stay vivid), then the water absorbs it per channel and adds its own tint (`uwTrans` / `uwTint`). Exported with the GLSL built
+ * from the same numbers, so tests/fishing.cjs can check the curve (`uwDepthLook`).
+ * - sat: colour saturation [in the shallows, at depth]; `DEPTH_K`: the depth range (m) it eases over.
+ */
+// Oct 14 2026 (user chose the middle ground): about half of the vividness back after the depth pass; deep coral stays visibly
+// underwater but keeps more colour (was absorb .22 / deep saturation .88; now .155 / .92).
+export const UW_LOOK={reefSat:[1.35,.92] as [number,number],fishSat:[1.2,.85] as [number,number],depthK:[.4,3] as [number,number],
+ /** How much of the water's own colour the reef takes where the water absorbed its light (the sand takes 1): less, so deep
+  *  pieces go darker and bluer instead of grey (pink + cyan = grey). */
+ reefHaze:.5,
+ /** Absorption per metre of path (L) and of depth (h), per channel: red goes first, so things turn aqua. */
+ pathK:[.36,.16,.07] as V3,depthAbs:[.36,.12,.05] as V3,
+ /** The reef and fish count the slant path only up to pathCap × depth + 0.3 m (see patchUnderwater). */
+ pathCap:1.5};
+const f3=(v:number[])=>`vec3(${v.map(x=>x.toFixed(3)).join(',')})`;
+const smooth=(a:number,b:number,x:number)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
+/**
+ * CPU mirror of the shader's depth look (unlit, for tests): a linear colour `rgb` at depth h (m) seen along L metres of water, for
+ * a theme (`absorb` = reef or fish share). Returns the colour the eye gets (before the scene light).
+ */
+export function uwDepthLook(rgb:V3,h:number,L:number,theme:ReefTheme,kind:'reef'|'fish'='reef'):V3{
+ const [s0,s1]=kind==='reef'?UW_LOOK.reefSat:UW_LOOK.fishSat,sat=s0+(s1-s0)*smooth(UW_LOOK.depthK[0],UW_LOOK.depthK[1],h);
+ const lum=rgb[0]*.3+rgb[1]*.59+rgb[2]*.11,c=rgb.map(x=>Math.max(0,lum+(x-lum)*sat));
+ const a=(kind==='reef'?reefAbsorb(theme):fishAbsorb(theme))*theme.clear,k=smooth(1,3.1,h),tint=theme.water[0].map((x,i)=>x+(theme.water[1][i]-x)*k);
+ const Lc=Math.min(L,h*UW_LOOK.pathCap+.3);
+ const haze=kind==='reef'?UW_LOOK.reefHaze:1;
+ return c.map((x,i)=>{const tr=Math.exp(-(Lc*a*UW_LOOK.pathK[i]+h*a*UW_LOOK.depthAbs[i]));return x*tr+tint[i]*(1-tr)*haze;}) as V3;
+}
+
 export const UNDERWATER_GLSL=/* glsl */`
-uniform sampler2D uWaterNoise;uniform vec3 uUwShallow,uUwDeep;uniform float uUwClear;
+uniform sampler2D uWaterNoise;uniform vec3 uUwShallow,uUwDeep;uniform float uUwClear,uUwReef,uUwFish,uUwFloor,uUwFloatOn;uniform vec4 uUwFloat;
 const float UW_Y=${UW_SURFACE.toFixed(3)};
 // The water's own glow (like the island ocean's blue emissive): keeps it blue under the orange sunset light.
 const float UW_GLOW=.45;
-float uwDepthAt(float d){return .05+3.2*(1.-exp(-max(d,0.)/3.4));}
+const float UW_PATH_CAP=${UW_LOOK.pathCap.toFixed(2)};
+float uwDepthAt(float d){return .05+uUwFloor*(1.-exp(-max(d,0.)/3.4));}
 // Water colour by depth: the spot's shallow colour (clear turquoise by default), its deep colour further down (linear).
 vec3 uwTint(float h){return mix(uUwShallow,uUwDeep,smoothstep(1.,3.1,h));}
 // What survives the water on the way to the eye (per channel: red goes first, so things turn aqua but keep their contrast);
 // the rest is the water's own colour: col·T + tint·(1 − T). L = path length under water, h = depth.
-vec3 uwTrans(float h,float L){return exp((-L*vec3(.36,.16,.07)-h*vec3(.36,.12,.05))*uUwClear);}
+vec3 uwTrans(float h,float L){return exp((-L*${f3(UW_LOOK.pathK)}-h*${f3(UW_LOOK.depthAbs)})*uUwClear);}
+// Saturation by depth (Oct 14 2026): vivid in the shallows, greyer (then blue, from uwTrans) further down.
+vec3 uwDesat(vec3 c,float h,vec2 sat){float l=dot(c,vec3(.3,.59,.11));return max(mix(vec3(l),c,mix(sat.x,sat.y,smoothstep(${UW_LOOK.depthK[0].toFixed(2)},${UW_LOOK.depthK[1].toFixed(2)},h))),0.);}
 // Moving caustics: a network of light lines from the noise texture's cell edges, wobbled by its soft channel (desktop: 2 reads,
 // phone: 1, still/slow: none). Scroll rates are multiples of 1/500 per second, so the water clock's wrap never jumps.
 float uwCaustic(vec2 xz){
@@ -50,7 +93,38 @@ float uwCaustic(vec2 xz){
  if(uWaterDetail>1.5){float c2=texture2D(uWaterNoise,uv*.83+vec2(.37-t*.008,.11+t*.01)).r;c=c*.62+c2*.62+c*c2*.5;}
  return smoothstep(.3,.95,c);
 }
+// Caustic strength by depth: bright in the shallows, gone by the floor (squared, so deep pieces lose them fast).
+float uwCausticFade(float h){float k=smoothstep(3.3,.1,h);return k*k;}
+`+UW_WOBBLE_GLSL()+/* glsl */`
+// The water surface over something under it (Oct 14 2026: "the coral looks like it's on top of the water"): where the view ray
+// crossed the surface (S), the same swells, ripple lines, breaking foam, sky reflection and (desktop) glints the strip draws round
+// it, so a piece is seen THROUGH the surface. F = the shore field at the piece (it stands in for the field at S: one read fewer),
+// lit = the light on the surface (irradiance / π), vy = how steeply the eye looks down. One noise read (two on desktop).
+vec3 uwSurfaceOver(vec3 col,vec2 S,vec4 F,float vy,float L,float h,vec3 lit){
+ float t=uWaterTime,d=F.r;vec4 lc=texture2D(uWaterNoise,S*.21+vec2(t*.004,t*.002));float lace=lc.g;
+ // Light shafts (in-scattering): brighter where the light came in through a bright patch of surface, more over a longer path.
+ col+=uwTint(h)*(lit+UW_GLOW*.4)*smoothstep(.45,.85,lc.b)*(1.-exp(-min(L,h*1.5+.3)*.35))*.07;
+ float swell=smoothstep(.84,1.,swellPhase(d,F.g))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
+ float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
+ // Half the strip's crest brightening: a passing swell must not wash a whole fan pale (it reads as the coral losing colour).
+ col=mix(col,vec3(.42,.72,.7)*lit+uwTint(0.)*UW_GLOW*.3,swell*.14+lines*.08);
+ // Fresnel: more sky the flatter the eye looks across the water (far side of the view), see-through looking straight down.
+ // (Slightly under the strip's 0.3 so far pieces keep their colour for kids; the sand round them carries the full reflection.)
+ col=mix(col,vec3(.2,.42,.47)*lit+vec3(.03,.07,.08),pow(1.-vy,3.)*.24);
+ // The swell breaking over the last metres (the strip's breaker band).
+ float ph=fract(t/SWASH_P+F.g*.35),dc=SWELL_L*(1.-ph);
+ float foam=exp(-abs(d-dc)/(.35+.25*dc))*smoothstep(3.4,.6,dc)*smoothstep(.25,.7,lace+.15)*step(-.2,d)*step(d,3.8);
+ col=mix(col,vec3(.97,.98,.96)*(lit+.22),clamp(foam,0.,1.)*.8);
+ if(uWaterDetail>1.5){float g2=texture2D(uWaterNoise,S*.33-vec2(t*.01,t*.004)).g;col+=smoothstep(.8,.9,min(lace,g2))*smoothstep(1.,4.,d)*(.4+.6*swell)*.9*vec3(1.,.97,.9);}
+ return col;
+}
 `;
+/** Refraction (Oct 14 2026): what lies under the moving surface sways a little, more the deeper it is. Periods 5, 7 and 4 s divide
+ *  the water clock's 3500 s wrap, so it never jumps; held on the still path (detail 0). Vertex (patchUnderwater) and fragment (strip). */
+function UW_WOBBLE_GLSL(){return /* glsl */`
+vec2 uwWobble(vec2 xz,float h){if(uWaterDetail<.5||h<=0.)return vec2(0.);float t=uWaterTime;
+ return vec2(sin(xz.x*1.7+xz.y*.9+t*1.256637)+.5*sin(xz.y*2.3-t*.897598),cos(xz.y*1.9-xz.x*.7+t*1.570796)+.5*cos(xz.x*2.1+t*.897598))*min(h,2.5)*.018;}
+`;}
 /** Up-facing irradiance from the scene lights, so the water colour follows the time of day exactly like the lit strip. */
 const UW_LIGHT=/* glsl */`
  vec3 uwUp=normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz);vec3 uwIrr=ambientLightColor;
@@ -62,29 +136,47 @@ const UW_LIGHT=/* glsl */`
  #endif
 `;
 /**
- * Patch a lit (Lambert / Standard) material that sits under the water: world position varying, caustics on up-facing surfaces and
- * the depth tint applied to the final light. `extraVertex` / `extraFragment` add the caller's own declarations.
+ * Patch a lit (Lambert / Standard) material that sits under the water: world position varying, refraction sway, caustics on
+ * up-facing surfaces, the depth look (saturation, absorption, tint) and the water surface drawn over it.
+ * `extraVertex` / `extraFragment` add the caller's own declarations.
  */
 export function patchUnderwater(sh:T.WebGLProgramParametersWithUniforms,extra:{uniforms?:Record<string,T.IUniform>;vertexHead?:string;vertexBody?:string;fragmentHead?:string;colorBody?:string;beforeTint?:string;
- /** Caustic strength on up-facing surfaces (1.1 default; the reef takes more, Oct 13 2026 "brighter caustic light on the reef"). */
+ /** Caustic strength on up-facing surfaces (1.1 default). */
  caustic?:number;
- /** How much of the water's absorption the object takes (0.45 default; the reef less, so its colours stay vivid in the shallows). */
- absorb?:number}={}){
- const caustic=(extra.caustic??1.1).toFixed(2),absorb=(extra.absorb??.45).toFixed(2);
+ /** How much of the water's absorption the object takes: a number, or a GLSL expression (the reef / fish uniforms per theme). */
+ absorb?:number|string;
+ /** Saturation [shallow, deep] (Oct 14 2026 depth look). */
+ sat?:[number,number];
+ /** The reef (Oct 14 2026): cut away below the seabed (rocks and corals sit IN the sand) and darken the foot (contact shade). */
+ bury?:boolean;
+ /** Share of the water's own colour added where light was absorbed (1 default; the reef less, UW_LOOK.reefHaze). */
+ haze?:number}={}){
+ const caustic=(extra.caustic??1.1).toFixed(2),absorb=typeof extra.absorb==='string'?extra.absorb:(extra.absorb??.45).toFixed(2),sat=extra.sat??UW_LOOK.fishSat;
  Object.assign(sh.uniforms,WATER_UNIFORMS,UW_UNIFORMS,extra.uniforms??{});
- sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vUwPos;uniform float uWaterTime,uWaterDetail;\n'+(extra.vertexHead??''))
+ sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vUwPos;uniform float uWaterTime,uWaterDetail;\n'+UW_WOBBLE_GLSL()+(extra.vertexHead??''))
   .replace('#include <begin_vertex>','#include <begin_vertex>\n'+(extra.vertexBody??''))
-  .replace('#include <project_vertex>','#include <project_vertex>\n{vec4 uwp=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nuwp=instanceMatrix*uwp;\n#endif\nvUwPos=(modelMatrix*uwp).xyz;}');
+  // Refraction: the drawn position sways (vUwPos stays put, so caustics and the depth look stick to the piece).
+  .replace('#include <project_vertex>',`#include <project_vertex>\n{vec4 uwp=vec4(transformed,1.);\n#ifdef USE_INSTANCING\nuwp=instanceMatrix*uwp;\n#endif\nvUwPos=(modelMatrix*uwp).xyz;
+   float uwHv=${UW_SURFACE.toFixed(3)}-vUwPos.y;if(uwHv>0.){vec3 uww=vUwPos;uww.xz+=uwWobble(uww.xz,uwHv);gl_Position=projectionMatrix*viewMatrix*vec4(uww,1.);}}`);
  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying vec3 vUwPos;\n'+SHORE_GLSL+UNDERWATER_GLSL+(extra.fragmentHead??''))
   .replace('#include <color_fragment>','#include <color_fragment>\n'+(extra.colorBody??''))
   .replace('#include <opaque_fragment>',/* glsl */`{
-   float uwH=max(0.,UW_Y-vUwPos.y);vec3 uwV=normalize(vUwPos-cameraPosition);float uwL=uwH/max(.12,-uwV.y);
+   float uwH=max(0.,UW_Y-vUwPos.y);vec3 uwV=normalize(vUwPos-cameraPosition);float uwVy=max(.12,-uwV.y),uwL=uwH/uwVy;
+   vec4 uwF=shoreSample(vUwPos.xz);
    ${UW_LIGHT}
-   float uwC=uwCaustic(vUwPos.xz)*max(dot(normal,uwUp),0.)*smoothstep(3.2,.2,uwH);
+   ${extra.bury?/* glsl */`// Sits IN the seabed: nothing shows below the sand (the strip draws the sand), and the foot is shaded.
+   float uwBed=UW_Y-uwDepthAt(uwF.r);if(uShore>0.&&vUwPos.y<uwBed-.025)discard;outgoingLight*=mix(.5,1.,smoothstep(0.,.2,vUwPos.y-uwBed));`:''}
+   float uwC=uwCaustic(vUwPos.xz)*max(dot(normal,uwUp),0.)*uwCausticFade(uwH);
    outgoingLight+=reflectedLight.directDiffuse*uwC*${caustic}+uwIrr*RECIPROCAL_PI*diffuseColor.rgb*uwC*.25;
    ${extra.beforeTint??''}
-   // Lighter than the sand's (×0.45, the reef ×0.09, the fish ×0.26): coral, fish and crabs keep their colours and stand out from the seabed (stylised, for reading).
-   vec3 uwT=uwTrans(uwH*${absorb},uwL*${absorb});outgoingLight=outgoingLight*uwT+uwTint(uwH)*(uwIrr*RECIPROCAL_PI*.85+UW_GLOW)*(1.-uwT);
+   // Depth look: saturation falls off with depth, then the water's absorption and its own tint (the reef and fish take a share of
+   // the sand's full absorption, per theme: the shallows stay vivid, deeper pieces go bluer and softer).
+   outgoingLight=uwDesat(outgoingLight,uwH,vec2(${sat[0].toFixed(2)},${sat[1].toFixed(2)}));
+   // The path counts only up to ~1.5× the depth: at the camera's low angle the full slant path would turn everything past the
+   // shallows the same grey-blue; capped, the look follows depth (what reads as "deeper" on screen) and stays colourful.
+   float uwA=${absorb};vec3 uwT=uwTrans(uwH*uwA,min(uwL,uwH*UW_PATH_CAP+.3)*uwA);outgoingLight=outgoingLight*uwT+uwTint(uwH)*(uwIrr*RECIPROCAL_PI*.85+UW_GLOW)*(1.-uwT)*${(extra.haze??1).toFixed(2)};
+   // The water surface over it (seen through it, not pasted on it).
+   if(uwH>0.)outgoingLight=uwSurfaceOver(outgoingLight,vUwPos.xz-uwV.xz/uwVy*uwH,uwF,uwVy,uwL,uwH,uwIrr*RECIPROCAL_PI);
   }
   #include <opaque_fragment>`);
 }
@@ -150,6 +242,9 @@ export type ReefTheme={
   *  the water column (deepSeaScene.ts: light shafts, plankton, jellyfish) and deep life (fishSchools.ts deep mode: a bait ball,
   *  big silhouettes far below, a manta or turtle). `coral` tints the jellyfish and the plankton glints. */
  deep?:{bait:string;big:[string,string];shafts:number;jellies:number;plankton:string;jelly:string};
+ /** Depth (Oct 14 2026, "make it have more depth"): the seabed's floor depth in metres (3.2 default) and how much of the water's
+  *  absorption the reef and the fish take (0.55 / 0.4 default; times `clear`). Higher = bluer, softer at depth. */
+ floor?:number;reefAbsorb?:number;fishAbsorb?:number;
 };
 const T_SAND:[V3,V3]=[[.55,.55,.49],[.67,.66,.59]];
 /** The 19 themes (docs/fishing-visuals-HANDOFF.md has the table; Oct 14 2026: the two deep-sea boats and Drop-off Ledge). Shapes: brain, branch, stag (staghorn), fan, table, anemone, tube (sponges), soft (swaying soft coral). */
@@ -165,7 +260,7 @@ export const REEF_THEMES:Record<string,ReefTheme>={
  'harbour-fan-wall':{id:'harbour-fan-wall',name:'Sea-fan wall',layout:'wall',coral:['#d4142e','#8f2cff','#ff3f6e','#6a1fd0','#ff6a3d'],
   kinds:{fan:5,tube:2,branch:2,soft:1},clusters:15,items:[3,5],spread:.65,scale:1.15,grass:2,kelp:2,rocks:8,rockSize:[.16,.32],pebbles:3,stars:6,shells:5,urchins:4,piles:6,anemones:0,
   grassCol:['#2a5a3a','#6aa06a'],rock:'#6f6e6a',algae:'#5f6f4a',urchin:['#1a1020','#4a2a5a'],sand:[[.4,.41,.4],[.5,.5,.48]],weed:[.18,.22,.16,.4],
-  water:[[0,.26,.42],[0,.07,.18]],clear:1.1,fish:{schools:['sardine','mackerel','anthias'],cruisers:['bass','grouper','snapper','mackerel'],glider:null},signature:['anchor']},
+  water:[[0,.26,.42],[0,.07,.18]],clear:1.1,fish:{schools:['sardine','mackerel','anthias'],cruisers:['bass','grouper','snapper','mackerel'],glider:null},signature:['anchor'],floor:3.8,reefAbsorb:.3},
  'tidepool-flat':{id:'tidepool-flat',name:'Rocky reef flat',layout:'flat',coral:['#ff6a00','#ff2f6e','#ffd000','#b02cff'],
   kinds:{brain:2,anemone:3,soft:2,tube:1},clusters:18,items:[2,3],spread:.6,scale:0.9,grass:3,kelp:1,rocks:24,rockSize:[.14,.36],pebbles:6,stars:12,shells:6,urchins:9,piles:0,anemones:1,
   grassCol:['#3a6a2a','#9ac05a'],rock:'#8a7a68',algae:'#b0503a',urchin:['#4a0a14','#c0283a'],sand:[[.52,.46,.38],[.62,.56,.46]],weed:[.3,.2,.12,.45],
@@ -229,7 +324,9 @@ export const REEF_THEMES:Record<string,ReefTheme>={
  'ledge-dropoff':{id:'ledge-dropoff',name:'Ledge drop-off',layout:'ledge',coral:['#ff4fd8','#ffb02e','#7a5cff','#ff7a5a','#2fe0ff'],
   kinds:{fan:3,brain:2,tube:2,soft:1},clusters:14,items:[3,5],spread:.7,scale:1.1,grass:2,kelp:1,rocks:16,rockSize:[.3,.6],pebbles:3,stars:4,shells:3,urchins:4,piles:0,anemones:0,
   grassCol:['#2f6a3a','#8fc06a'],rock:'#5f5a62',algae:'#5a6a4a',urchin:['#1a1020','#4a2a5a'],sand:[[.46,.44,.4],[.56,.54,.49]],weed:[.2,.24,.16,.3],
-  water:[[0,.38,.6],[0,.08,.26]],clear:1.15,fish:{schools:['sardine','anthias','damsel'],cruisers:['grouper','grouper','snapper','barracuda'],glider:'ray'},signature:['anchor']},
+  water:[[0,.38,.6],[0,.08,.26]],clear:1.15,fish:{schools:['sardine','anthias','damsel'],cruisers:['grouper','grouper','snapper','barracuda'],glider:'ray'},signature:['anchor'],
+  // The ledge drops deeper than any other shore spot, and its far pieces fade hardest into the blue.
+  floor:3.9,reefAbsorb:.24,fishAbsorb:.32},
  'lookout-bommies':{id:'lookout-bommies',name:'Stepping-stone bommies',layout:'line',coral:['#2a7fff','#ff7a1a','#5aa8ff','#ffa040','#1fd0ff'],
   kinds:{brain:3,branch:2,table:1,tube:1,anemone:1,fan:1},clusters:12,items:[5,7],spread:.65,scale:1,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:3,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a9080',algae:'#8a9a5a',urchin:['#2a1a3a','#6a4f90'],sand:[[.7,.64,.52],[.8,.74,.6]],weed:[.26,.32,.18,.25],
@@ -242,7 +339,11 @@ export function reefTheme(spot:{id:string;area?:string;reef?:string}):ReefTheme{
 export function reefSeed(id:string){let h=2166136261;for(let i=0;i<id.length;i++){h^=id.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0)%2147483646+1;}
 /** The spot's water and sand (shared uniforms: the strip, the reef, the fish and the catch all follow). */
 export function applyReefWater(t:ReefTheme){const u=UW_UNIFORMS;u.uUwShallow.value.set(...t.water[0]);u.uUwDeep.value.set(...t.water[1]);u.uUwClear.value=t.clear;
- u.uSandA.value.set(...t.sand[0]);u.uSandB.value.set(...t.sand[1]);u.uSandWeed.value.set(...t.weed);}
+ u.uSandA.value.set(...t.sand[0]);u.uSandB.value.set(...t.sand[1]);u.uSandWeed.value.set(...t.weed);
+ u.uUwReef.value=reefAbsorb(t);u.uUwFish.value=fishAbsorb(t);UW_DEPTH.floor=u.uUwFloor.value=t.floor??3.2;}
+/** The reef's and the fish's share of the water's absorption for a theme (Oct 14 2026 depth look). */
+export function reefAbsorb(t:ReefTheme){return t.reefAbsorb??.155;}
+export function fishAbsorb(t:ReefTheme){return t.fishAbsorb??(t.deep?.7:.26);}
 
 type Field={box:T.Vector4;n:number;size:number;lift:Float32Array;distance(x:number,z:number):number};
 const C=(hex:string)=>new T.Color(hex),WHITE=new T.Color(1,1,1);
@@ -272,7 +373,7 @@ const PALETTE={
 type Rng=()=>number;
 const shade=(c:T.Color,k:number)=>c.clone().multiplyScalar(k),lighten=(c:T.Color,k:number)=>c.clone().lerp(WHITE,k);
 function rock(r:Rng,s:number,col:T.Color,algae:T.Color|null,flat=.55){const c=col.clone().multiplyScalar(.85+r()*.3);
- return paint(put(new T.IcosahedronGeometry(s,0),0,s*.18,0,(r()-.5)*.4,r()*6,(r()-.5)*.4,1,flat,1+r()*.3),c,algae?c.clone().lerp(algae,.6):c.clone().multiplyScalar(1.15),0,false,.12);}
+ return paint(put(new T.IcosahedronGeometry(s,0),0,s*.06,0,(r()-.5)*.4,r()*6,(r()-.5)*.4,1,flat,1+r()*.3),c,algae?c.clone().lerp(algae,.6):c.clone().multiplyScalar(1.15),0,false,.12);}
 function pebbles(r:Rng,parts:T.BufferGeometry[],x:number,y:number,z:number,count:number,col:T.Color){for(let i=0;i<count;i++){const s=.04+r()*.06;parts.push(put(paint(new T.OctahedronGeometry(s,0),col.clone().multiplyScalar(.9+r()*.4),PALETTE.shell[0],0),x+(r()-.5)*.6,y+s*.3,z+(r()-.5)*.6,(r()-.5)*.5,r()*3,0,1,.7,1));}}
 // ---- Coral shapes (each a list of painted parts, base at y 0).
 function brain(r:Rng,s:number,c:T.Color){return [paint(put(new T.IcosahedronGeometry(s,1),0,s*.2,0,0,r()*6,0,1,.6+r()*.15,1),shade(c,.62),lighten(c,.3),0,false,.2)];}
@@ -350,6 +451,8 @@ function goal(r:Rng){const w=C('#efeee6'),moss=C('#7a9a4a'),parts=[new T.Cylinde
  const g=paint(merged(parts),w.clone().lerp(moss,.6),w,0,false,.15);g.rotateZ((r()-.5)*.2);g.rotateX(-.25);g.rotateY(r()*6);g.translate(0,-.08,0);return [g];}
 
 export type SeabedProps={mesh:T.Mesh;triangles:number;
+ /** Every placed piece (Oct 14 2026, tests): its base point (on the seabed) and its top (m, world y). */
+ pieces:{x:number;y:number;z:number;top:number}[];
  /** Anemones with a clownfish pair (world position of the tentacle tops), for fishSchools.ts. */
  homes:{x:number;y:number;z:number}[];
  dispose():void};
@@ -367,7 +470,9 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  const pal=theme.coral.map(C),rockC=C(theme.rock),algaeC=C(theme.algae),grassA=C(theme.grassCol[0]),grassB=C(theme.grassCol[1]),urchinA=C(theme.urchin[0]),urchinB=C(theme.urchin[1]);
  const liftAt=(x:number,z:number)=>{const i=Math.floor((x-box.x)/texel),j=Math.floor((z-box.y)/texel);return i<0||j<0||i>=n||j>=n?-.5:field.lift[j*n+i];};
  type P={x:number;z:number;d:number;depth:number;y:number};
- const water=(x:number,z:number):P|null=>{const d=field.distance(x,z);if(d<.3||liftAt(x,z)>=-.45)return null;const depth=uwDepthAt(d);return {x,z,d,depth,y:UW_SURFACE-depth};};
+ // The theme's own floor depth (the same one applyReefWater gives the shaders), so every piece stands ON the seabed the strip draws.
+ const floor=theme.floor??3.2;
+ const water=(x:number,z:number):P|null=>{const d=field.distance(x,z);if(d<.3||liftAt(x,z)>=-.45)return null;const depth=uwDepthAt(d,floor);return {x,z,d,depth,y:UW_SURFACE-depth};};
  // a along the cast (out from the angler), b across it.
  const ab=(a:number,b:number)=>water(stand.x+ux*a+uz*b,stand.z+uz*a-ux*b);
  const across=(p:{x:number;z:number})=>(p.x-stand.x)*uz-(p.z-stand.z)*ux;
@@ -376,7 +481,10 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  const wedge=(a:number)=>halfWidth<6?halfWidth*Math.max(.45,1.25-.8*Math.max(0,a)/aView):halfWidth*(.65+Math.max(0,a)/14);
  const at=(dMin:number,dMax:number,aMax=aView,spread=1,aMin=-1)=>{for(let t=0;t<40;t++){const a=aMin+r()*(aMax-aMin),p=ab(a,(r()*2-1)*wedge(a)*spread);if(p&&p.d>=dMin&&p.d<=dMax)return p;}return null;};
  const near=(c:{x:number;z:number},rad:number,dMin=1.2)=>{for(let t=0;t<10;t++){const p=water(c.x+(r()*2-1)*rad,c.z+(r()*2-1)*rad);if(p&&p.d>=dMin)return p;}return null;};
- const add=(gs:T.BufferGeometry|T.BufferGeometry[],p:{x:number;y:number;z:number},scale=1)=>{for(const g of Array.isArray(gs)?gs:[gs])parts.push(put(g,p.x,p.y,p.z,0,0,0,scale,scale,scale));};
+ const pieces:SeabedProps['pieces']=[];
+ const add=(gs:T.BufferGeometry|T.BufferGeometry[],p:{x:number;y:number;z:number},scale=1)=>{let top=-Infinity;
+  for(const g of Array.isArray(gs)?gs:[gs]){parts.push(put(g,p.x,p.y,p.z,0,0,0,scale,scale,scale));g.computeBoundingBox();top=Math.max(top,g.boundingBox!.max.y);}
+  pieces.push({x:p.x,y:p.y,z:p.z,top});};
  /** Keep a piece of height h under the surface (10 cm clearance): shrink it in shallow water. */
  const fit=(h:number,depth:number)=>Math.min(1,Math.max(.25,(depth-.12)/h));
  const N=(v:number)=>Math.max(v?1:0,Math.round(v*k));
@@ -442,7 +550,7 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
   add(anemone(r,.36,lighten(tone(lead),.15),foot(pal[lead])),p,fit(.36,p.depth));const q=near(p,.4);if(q)add(anemone(r,.28,tone(lead),foot(pal[lead])),q,fit(.28,q.depth));homes.push({x:p.x,y:p.y+h,z:p.z});}
  // ---- Old piles off the pier edge: cut off under the surface, crusted with barnacles and mussels (pilings: anemones and sponges too).
  if(theme.piles){let made=0;for(let t=0;t<220&&made<N(theme.piles);t++){const p=at(.5,4.5,aView+4,1.6);if(!p)continue;if(distanceToLandableDeck(p.x,p.z)>2.2)continue;const h=Math.min(p.depth-.25,.5+r()*.8);if(h<.3)continue;
-  for(const g of pile(r,h))parts.push(put(g,p.x,p.y,p.z));
+  add(pile(r,h),p);
   if(L==='pilings'){const a=r()*Math.PI*2,q={x:p.x+Math.cos(a)*.3,y:p.y,z:p.z+Math.sin(a)*.3},c=tone(Math.floor(r()*pal.length));add(r()<.5?tube(r,.3,c):anemone(r,.2,c,foot(c)),q);}
   made++;}}
  // ---- Signature props.
@@ -454,12 +562,14 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  material.onBeforeCompile=sh=>patchUnderwater(sh,{vertexHead:'attribute float aSway;',
   // Sea grass, kelp, fans, anemones and soft corals sway (desktop only; phones and the slow/still path hold them).
   vertexBody:'if(uWaterDetail>1.5&&aSway>0.){float ph=position.x*.71+position.z*.53,w=aSway*aSway;transformed.x+=w*.11*sin(uWaterTime*1.256+ph);transformed.z+=w*.07*sin(uWaterTime*1.004+ph*1.7);}',
-  fragmentHead:'',caustic:1.75,absorb:.09,
-  // Tropical reef colours: a little of the piece's own colour as glow (shaded sides stay colourful, not brown) and more saturation
-  // before the water tint (a few ALU ops, no texture).
-  beforeTint:'outgoingLight+=diffuseColor.rgb*.16;outgoingLight=max(mix(vec3(dot(outgoingLight,vec3(.3,.59,.11))),outgoingLight,1.45),0.);'});
- material.customProgramCacheKey=()=>'fishing-seabed-props-v2';
+  // Depth (Oct 14 2026, "the coral looks like it's on top of the water"): the reef takes the theme's share of the water's
+  // absorption (0.22-0.34 × the theme's clarity, was 0.09) and its saturation falls with depth (1.55 in the shallows to 0.88 deep), so only the shallowest
+  // pieces are vivid; it sits IN the sand (bury); caustics fade with depth; the surface is drawn over it (patchUnderwater).
+  fragmentHead:'',caustic:1.4,absorb:'uUwReef',sat:UW_LOOK.reefSat,bury:true,haze:UW_LOOK.reefHaze,
+  // Tropical reef colours: a little of the piece's own colour as glow, so shaded sides stay colourful, not brown.
+  beforeTint:'outgoingLight+=diffuseColor.rgb*.16;'});
+ material.customProgramCacheKey=()=>'fishing-seabed-props-v3';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-seabed';mesh.renderOrder=.55;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};mesh.visible=parts.length>0;
  const pos=geometry.getAttribute('position');
- return {mesh,triangles:pos?pos.count/3:0,homes,dispose(){mesh.removeFromParent();geometry.dispose();material.dispose();}};
+ return {mesh,triangles:pos?pos.count/3:0,homes,pieces,dispose(){mesh.removeFromParent();geometry.dispose();material.dispose();}};
 }

@@ -8,7 +8,7 @@
 //  - createRideSuspension: the ride's drawn height follows the wheels' ground through a stiff, critically damped spring, never
 //    more than RIDE_SUSPENSION_TRAVEL m from it, and the pitch eases to the slope, so the 1 m trail grid, the switchback
 //    corners and the ridge crests read as a ride over a hill instead of a judder. Drawing only: the physics height is unchanged.
-import {SUMMIT_BOX,summitGridGround} from './summitIsle';
+import {SUMMIT_BOX,SUMMIT_TRAIL_CARVE,summitGridGround,summitTrailDistance} from './summitIsle';
 import {TRAVEL_MODES,type TravelMode} from './travelModes';
 
 /** Speed change per unit of grade: uphill divides by (1 + up·grade), downhill multiplies by (1 + down·grade) up to maxDown. */
@@ -43,6 +43,17 @@ export function rideSlopeScale(mode:TravelMode,grade:number){
 // Cost per tick near the island: four bilinear reads of the 2 m height grid.
 /** Steepest grade taken head-on (m per m): bike ~37°, moped ~40°, scooter ~35°, walking ~31° (the old walk limit). */
 export const RIDE_MAX_CLIMB:Record<'walk'|'scooter'|'bike'|'moped',number>={walk:.6,scooter:.7,bike:.75,moped:.85};
+/** Arriving at a climb faster than the climbing speed, the excess bleeds off at this rate (per second: ~0.4 s time constant, the
+ *  climbing speed reached in about a second) instead of the ride's acceleration rate (6–8 per second, a hard brake at the foot). */
+export const RIDE_CLIMB_COAST=2.5;
+/** The coast rate for a ride at (x, z) climbing `grade` heading (dx, dz): RIDE_CLIMB_COAST on the open slopes (where a ride
+ *  arrives from the beach at full speed) and crossing the carved trail, 0 (off) riding along the trail, whose gentle graded
+ *  climbs keep their tuned speed profile. Two more trail-grid reads, only within the trail's carve. */
+export function climbCoast(x:number,z:number,grade:number,dx:number,dz:number){
+ if(!(grade>0))return 0;const d=summitTrailDistance(x,z);if(d>SUMMIT_TRAIL_CARVE)return RIDE_CLIMB_COAST;
+ // Along the trail the distance to its centre line hardly changes; across it, it does.
+ const l=Math.hypot(dx,dz)||1,ux=dx/l*.5,uz=dz/l*.5,across=Math.abs(summitTrailDistance(x+ux,z+uz)-summitTrailDistance(x-ux,z-uz));return across>.5?RIDE_CLIMB_COAST:0;
+}
 /** The slowest a ride ever goes with the stick held (m/s), however steep. */
 export const RIDE_CRAWL:Record<'scooter'|'bike'|'moped',number>={scooter:2.4,bike:2.8,moped:3.4};
 const DESCENT_BRAKE_FROM=.55,DESCENT_BRAKE=1.3,GRAD_E=2;

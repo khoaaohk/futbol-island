@@ -482,28 +482,46 @@ export function createSummitCameraPull(){let pull=1,lift=0;
  *    vertical speed nears its cap (up FLIGHT_MAX_RISE, down FLIGHT_MAX_SINK m/s), so speed and acceleration both stay smooth.
  *  - Safety: never within FLIGHT_FLOOR m of the real ground (a hard floor, reached only in edge cases; `floorHits` counts them).
  * Returns the extra height above `base` to add this frame: exactly 0 and four comparisons away from the island once settled.
+ *  - Take-off (Oct 14 2026, user: "taking off on the mountain is slower. it should be the same speed as other parts of the island"):
+ *    Town's take-off used to ease from the ground to the 28 m cruise height whatever the ground, so on the mountain it eased
+ *    DOWN (or barely up) and only this spring (9 m/s², after a 2.5 m pop to the hard floor) lifted the rider, ~3 s to cruise
+ *    instead of ~0.5 s. Town now takes off to summitCruiseHeight (the height the flight holds over this spot) on the same 1.05 s
+ *    curve, passing its cruise height as `cruise`, so the spring's target is the cruise one. While the take-off rises the lift
+ *    rides on it (its targets follow it up, so nothing lags behind and overshoots once it ends) and the hard floor is the
+ *    take-off itself (never under the ground), so leaving the ground never pops.
  */
-export const FLIGHT_CLEARANCE=9,FLIGHT_FLOOR=2.5,FLIGHT_CLIMB_GRADE=.3,FLIGHT_MAX_RISE=20,FLIGHT_MAX_SINK=6.5,FLIGHT_MAX_JERK=25;
+// Oct 14 2026 (user, after weighing it up): 15 m over the mountain (was 9), clearing the orchard, the zipline tower and the huts,
+// with the "never soar" ceiling raised to ~72 m to fit it (tests/summit-flight-smooth.cjs). The parachute blast stays the big view.
+export const FLIGHT_CLEARANCE=15,FLIGHT_FLOOR=2.5,FLIGHT_CLIMB_GRADE=.3,FLIGHT_MAX_RISE=20,FLIGHT_MAX_SINK=6.5,FLIGHT_MAX_JERK=25;
 const SPRING_W=1.6,RISE_ACCEL=9,SINK_ACCEL=5,SETTLE_TAU=1.3,RISE_TAU=.3,BLEND_TAU=.25,LOOK_TURN=3.5,LOOK_TIMES=[.5,1,1.5,2,2.5,3],LIFT_RANGE=70;
+/** The height the flight holds over (x, z) at cruise height `cruise` when not moving (no look-ahead): `cruise` itself away from the
+ *  island, else the smooth max of it and the envelope + FLIGHT_CLEARANCE (createSummitFlightLift's target). Grid reads only. */
+export function summitCruiseHeight(x:number,z:number,cruise:number){
+ const B=SUMMIT_BOX,m=LIFT_RANGE;if(x<B.minX-m||x>B.maxX+m||z<B.minZ-m||z>B.maxZ+m)return cruise;
+ return cruiseWant(summitEnvelope(x,z)+FLIGHT_CLEARANCE,cruise);
+}
+const cruiseWant=(need:number,base:number)=>{const gap=Math.max(0,8-Math.abs(need-base))/8;return Math.max(base,need)+gap*gap*2;};// a smooth max (exact 8 m either side): the climb eases in
 export function createSummitFlightLift(){
  let y=NaN,v=0,acc=0,pre=NaN,target=NaN,prevBase=NaN,lookX=0,lookZ=0,floorHits=0;
  const settled=(base:number)=>Math.abs(y-base)<.01&&Math.abs(v)<.01&&Math.abs(target-base)<.01;
  return {get lift(){return Number.isFinite(y)&&Number.isFinite(prevBase)?y-prevBase:0;},get floorHits(){return floorHits;},get speed(){return v;},
   reset(){y=NaN;v=0;acc=0;pre=target=NaN;prevBase=NaN;lookX=lookZ=0;},
-  update(x:number,z:number,vx:number,vz:number,base:number,dt:number){
-   const B=SUMMIT_BOX,m=LIFT_RANGE,far=x<B.minX-m||x>B.maxX+m||z<B.minZ-m||z>B.maxZ+m;
-   if(!Number.isFinite(y)||far&&settled(base)){y=base;v=0;acc=0;pre=target=base;prevBase=base;lookX=vx;lookZ=vz;if(far)return 0;}
+  update(x:number,z:number,vx:number,vz:number,base:number,dt:number,cruise=base){
+   const B=SUMMIT_BOX,m=LIFT_RANGE,far=x<B.minX-m||x>B.maxX+m||z<B.minZ-m||z>B.maxZ+m,fresh=!Number.isFinite(y);
+   if(fresh||far&&settled(base)){y=base;v=0;acc=0;pre=target=base;prevBase=base;lookX=vx;lookZ=vz;if(far)return 0;}
    const rising=base>prevBase+1e-6,baseRate=dt>0&&rising?(base-prevBase)/dt:0;prevBase=base;
    if(!(dt>0))return y-base;
-   let want=base;
+   let want=cruise;
    // The look-ahead swings round with the flight's heading over ~0.3 s (a sudden turn toward the peak eases the climb in).
    const turn=1-Math.exp(-dt*LOOK_TURN);lookX+=(vx-lookX)*turn;lookZ+=(vz-lookZ)*turn;
    if(!far){const sp=Math.hypot(lookX,lookZ),dx=sp>.5?lookX/sp:0,dz=sp>.5?lookZ/sp:0,reach=Math.min(sp,40);let need=summitEnvelope(x,z)+FLIGHT_CLEARANCE;
     if(sp>.5)for(const t of LOOK_TIMES){const d=reach*t;need=Math.max(need,summitEnvelope(x+dx*d,z+dz*d)+FLIGHT_CLEARANCE-FLIGHT_CLIMB_GRADE*d);}
-    const gap=Math.max(0,8-Math.abs(need-base))/8;want=Math.max(base,need)+gap*gap*2;}// a smooth max (exact 8 m either side): the climb eases in
+    want=cruiseWant(need,cruise);}
+   want=Math.max(want,base);
    // Take-off: the cruise height eases up from the ground and the flight rides on it (never below the base), keeping the
    // take-off's upward speed only as far as the mountain ahead needs it (carrying all of it sent the flight soaring).
    if(base>y&&(rising||base>y+.5)){y=base;v=Math.min(baseRate,FLIGHT_MAX_RISE,Math.max(0,(want-base)*SPRING_W));acc=0;}
+   if(rising){if(pre<y)pre=y;if(target<y)target=y;}// the targets ride up with the take-off (no lag to catch up on afterwards)
    // Two easing stages (rises quickly, settles back slowly; then a short common one), so the target's own rate is smooth too.
    pre+=(want-pre)*(1-Math.exp(-dt/(want>=pre?RISE_TAU:SETTLE_TAU)));
    const from=target;target+=(pre-target)*(1-Math.exp(-dt/BLEND_TAU));
@@ -514,7 +532,8 @@ export function createSummitFlightLift(){
     acc+=Math.max(-FLIGHT_MAX_JERK*h,Math.min(FLIGHT_MAX_JERK*h,a-acc));v+=acc*h;y+=v*h;}// and the push itself ramps (jerk cap)
    // Never climbing once 12 m above what is asked for: a guard, so nothing can carry the flight away upward.
    if(y>Math.max(base,want,target)+12&&v>0){v=0;if(acc>0)acc=0;}
-   const floor=summitGround(x,z)+FLIGHT_FLOOR;if(y<floor){y=floor;if(v<0)v=0;if(acc<0)acc=0;floorHits++;}
+   // The hard floor; while the take-off rises out of it (from its first tick), the take-off itself (never under the ground), so leaving the ground never pops.
+   const g=summitGround(x,z),floor=rising||fresh?Math.min(g+FLIGHT_FLOOR,Math.max(g,base)):g+FLIGHT_FLOOR;if(y<floor){y=floor;if(v<0)v=0;if(acc<0)acc=0;floorHits++;}
    return y-base;}};
 }
 /** Solid rock for anything moving at height `y` (the walking ball, a parachute drifting sideways): true where the mountain's

@@ -80,6 +80,39 @@ export function easelFov(visibleAspect:number,visibleFraction=1){
  const tanVis=Math.tan(C.halfDeg*Math.PI/180)/a,full=2*Math.atan(tanVis/v)*180/Math.PI;
  return Math.max(C.fovMin,Math.min(C.fovMax,full));
 }
+/** The painting framing (Oct 14 2026, "the painting portion should be on the easel"): the easel's own board is the paper, large in
+ *  the lower part of a phone (above the one-row tool tray) or the lower left of a wide screen (the palette tray beside it), the camera
+ *  looking straight out to the main island so the sea and the horizon stay open above it. Values in NDC (-1…1):
+ *  `bottom` the board's lower edge (phones: clear of the tray), `left` its left edge (wide screens; phones centre it), `width` the
+ *  most of the screen width it may take, `half` the most half-height, `horizon` where the horizon sits. */
+export const EASEL_PAINT_FRAME={
+ phone:{fov:76,bottom:-.76,left:null,width:.92,half:.34,horizon:.24},
+ wide:{fov:54,bottom:-.8,left:-.84,width:.4,half:.5,horizon:.42},
+ /** The camera never comes closer to the board than this (m), nor lower than this above the ground. */
+ minDepth:.85,minEye:.7,
+} as const;
+/** The seated painting camera for a screen `aspect`: position, yaw/pitch and FOV that put the board where EASEL_PAINT_FRAME says. */
+export function easelPaintCamera(s:EaselSpot,aspect:number){
+ const F=aspect<1?EASEL_PAINT_FRAME.phone:EASEL_PAINT_FRAME.wide,a=Math.max(.3,aspect);
+ const tanV=Math.tan(F.fov*Math.PI/360),tanH=tanV*a,C=canvasPose(s);
+ const pitch=-Math.atan(F.horizon*tanV),yaw=s.yaw,cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+ // Depth: the board as wide as allowed, unless that makes it too tall.
+ const Z=Math.max(EASEL_PAINT_FRAME.minDepth,C.w/(2*F.width*tanH),C.h/2/(F.half*tanV));
+ const halfW=C.w/2/(Z*tanH),halfH=C.h/2/(Z*tanV);
+ const bx=F.left===null?0:F.left+halfW,by=F.bottom+halfH,X=bx*Z*tanH,Y=by*Z*tanV;
+ // Camera basis: forward (yaw, pitch), right, up = right × forward.
+ const f={x:sy*cp,y:sp,z:cy*cp},r={x:-cy,y:0,z:sy},u={x:-sy*sp,y:cp,z:-cy*sp};
+ const x=C.x-f.x*Z-r.x*X-u.x*Y,z=C.z-f.z*Z-r.z*X-u.z*Y;let y=C.y-f.y*Z-r.y*X-u.y*Y;
+ y=Math.max(y,summitGround(x,z)+EASEL_PAINT_FRAME.minEye);
+ return {x,y,z,yaw,pitch,fov:F.fov};
+}
+/** The "trace" snapshot's camera: standing at the easel looking out at the view (the easel behind it), 4:3 centre crop ±30°. */
+export function easelViewCamera(s:EaselSpot,aspect:number){
+ const C=EASEL_CAMERA,tanV=Math.tan(C.halfDeg*Math.PI/180)/Math.min(Math.max(.3,aspect),PAINT_W/PAINT_H);
+ return {x:s.x+s.fx*.4,y:s.ground+1.75,z:s.z+s.fz*.4,yaw:s.yaw,pitch:-4*Math.PI/180,fov:2*Math.atan(tanV)*180/Math.PI};
+}
+/** Where a point on the board's plane (offset a along its right, b along its up, metres from the centre) lands on the paper (px). */
+export const boardToPaper=(a:number,b:number,w:number,h:number)=>({x:(a/w+.5)*PAINT_W,y:(.5-b/h)*PAINT_H});
 /** The "Just look" drift (radians) at time t (s): a slow breathing pan. Zero with reduced motion. */
 export function easelDrift(t:number,reduced:boolean){
  if(reduced)return {yaw:0,pitch:0};const C=EASEL_CAMERA,w=2*Math.PI/C.driftPeriod,D=Math.PI/180;
@@ -89,6 +122,8 @@ export function easelDrift(t:number,reduced:boolean){
 // ------------------------------------------------------------------------------------------------------------------- painting
 /** The working canvas (and the saved picture): 4:3, small enough that undo snapshots stay cheap. */
 export const PAINT_W=512,PAINT_H=384;
+/** The paper's colour (the board's ground under the paint, and the saved picture's background). */
+export const PAINT_PAPER='#fbf6ea';
 /** Colours from the view: sky, sea, sand, grass, sunset, white and ink. */
 export const PAINT_PALETTE:readonly {id:string;name:string;hex:string}[]=[
  {id:'sky',name:'Sky blue',hex:'#8fcbe8'},{id:'deep',name:'Deep sea',hex:'#2b6f9e'},{id:'sea',name:'Sea turquoise',hex:'#3fbfb4'},

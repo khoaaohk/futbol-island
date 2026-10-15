@@ -80,14 +80,85 @@ function slideRound(position:{x:number;z:number},velocity:{x:number;z:number},px
     position.x=px+rx*h;position.z=pz+rz*h;velocity.x=rx;velocity.z=rz;return true;}
   return false;
 }
-/** `speedScale` scales the top speed (rides on Summit Isle's slopes: rideSlope.ts rideSlopeScale); 1 everywhere else. */
-export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1) {
+// Sliding round a round collider (Oct 14 2026, user: "when zooming fast to the mountain, it collides for a second, it should move
+// smoothly up the mountain"). A ride that clipped a tree trunk or a rock used to grind round it: every blocked sub-step turned the
+// step and cut the speed to 40–87% (slideRound), so a glancing touch at 20 m/s ended at walking pace or held for most of a second.
+// Now a step blocked by round colliders (trees, palms, bushes, rocks, huts: cornerRadius) slides along their surface: the part of
+// the step into them is dropped and the rest (the tangent) is taken. A walker meeting one off-centre (more than ~5°) keeps
+// SLIDE_KEEP of its pace and steps round (one walking dead into a trunk still stops); a ride keeps at least SLIDE_KEEP of its top
+// speed (a dead-centre hit goes round one side), so it brushes past instead of grinding to a halt; wedged in a notch two of them
+// make (two boulders), it works its way out along the "wall" the two make. Boxes (walls, nets, posts, fences) keep the axis
+// slide and the ride's turn away (slideRound), exactly as before.
+const SLIDE_KEEP:Record<TravelMode,number>={walk:.5,scooter:.7,bike:.7,moped:.7,jetpack:0};
+/** Outward unit normal at (x, z) of the round colliders the circle of `radius` would overlap at the probe points (summed: in a notch
+ *  between two rocks it points out of it, along the "wall" they make) and how many; null when a box (or a coast, or the island's
+ *  bounds) is in the way too: those keep the old response. */
+function contactNormal(x:number,z:number,probes:number[],obstacles:Obstacle[],radius:number){
+  let sx=0,sz=0,count=0;
+  for(const o of obstacles){let touch=false;for(let i=0;i<probes.length&&!touch;i+=2)touch=insideObstacle(probes[i],probes[i+1],o,radius);if(!touch)continue;
+    const r=Math.min(o.cornerRadius??0,o.w/2,o.d/2);if(!(r>0))return null;
+    const hx=o.w/2-r,hz=o.d/2-r,dx=x-o.x,dz=z-o.z;let nx=dx-Math.max(-hx,Math.min(hx,dx)),nz=dz-Math.max(-hz,Math.min(hz,dz));const l=Math.hypot(nx,nz);if(l<1e-6){nx=Math.sign(dx)||1;nz=0;}else{nx/=l;nz/=l;}
+    sx+=nx;sz+=nz;count++;}
+  const l=Math.hypot(sx,sz);return count&&l>1e-6?{x:sx/l,z:sz/l,count}:null;
+}
+/** The blocked step into (tx, tz) taken round the round colliders in the way instead; false (nothing moved) when that is blocked
+ *  too, or a box is in the way. (ix, iz): the stick's direction (unit, or 0); top: the top speed the stick asks for; was: the speed
+ *  this tick began with. */
+function slideAlong(position:{x:number;z:number},velocity:{x:number;z:number},tx:number,tz:number,h:number,obstacles:Obstacle[],radius:number,mode:TravelMode,top:number,was:number,ix:number,iz:number,hit:(x:number,z:number)=>boolean){
+  const vx=velocity.x,vz=velocity.z,sp=Math.hypot(vx,vz);if(sp<1e-6)return false;
+  const probes=[tx,tz],keep=SLIDE_KEEP[mode],take=(x:number,z:number,ux:number,uz:number)=>{if(hit(x,z))return false;position.x=x;position.z=z;velocity.x=ux;velocity.z=uz;return true;};
+  for(let pass=0;pass<2;pass++){
+    const n=contactNormal(position.x,position.z,probes,obstacles,radius);if(!n)return false;
+    const into=vx*n.x+vz*n.z;if(into>=0)return false;
+    let sx=vx-into*n.x,sz=vz-into*n.z,ts=Math.hypot(sx,sz);const square=ts<.35*sp;
+    // The way round follows the stick where it leans along the surface (else the way already going).
+    const along=-n.z*ix+n.x*iz,leans=Math.abs(along)>.15,side=leans?Math.sign(along):1;
+    if(leans&&(sx*-n.z+sz*n.x)*along<0){sx=-sx;sz=-sz;}
+    // The kept speed is a share of the top speed (never more than the speed this tick began with), not of the speed now, so
+    // grinding round a collider tick after tick does not shrink it away. A walker walking dead into a trunk keeps nothing.
+    const least=mode==='walk'&&ts<.08*sp?0:Math.min(Math.max(sp,was),keep*top);
+    if(least>0&&ts<least){if(ts<1e-3*sp){sx=-n.z*side;sz=n.x*side;ts=1;}const k=least/ts;sx*=k;sz*=k;ts=least;}
+    if(ts>=1e-4){
+      const nx=position.x+sx*h,nz=position.z+sz*h;if(take(nx,nz,sx,sz))return true;
+      // Met nearly square on and that side is shut (the sea, another rock): the other way round.
+      if(square&&mode!=='walk'&&take(position.x-sx*h,position.z-sz*h,-sx,-sz))return true;
+      probes.push(nx,nz);}
+    // Wedged in a notch between two (the stick held into it): back out of it on the way along the wall the two make, so the rider
+    // works its way out sideways (and round the end of the wall) instead of standing still.
+    if(pass||n.count>1){const m=Math.max(ts,.35*Math.min(top,Math.max(sp,was)));if(m<1e-4)return false;
+      let ux=ts>=1e-4?sx/ts:-n.z*side,uz=ts>=1e-4?sz/ts:n.x*side;ux+=n.x*.7;uz+=n.z*.7;const l=Math.hypot(ux,uz);ux*=m/l;uz*=m/l;
+      if(take(position.x+ux*h,position.z+uz*h,ux,uz))return true;
+      if(pass)return false;}
+    if(ts<1e-4&&n.count<2)return false;
+  }
+  return false;
+}
+/** Out of a collider the rider already overlaps (one that turned solid under it: the hostel's wall once a ride on the outside
+ *  stair is a few treads down; standing still it would never get free, every step "into" it). Moved off the nearest face of the
+ *  padded outline (or the rounded edge) to just clear of it, when that spot is free; true when moved. Only colliders whose
+ *  footprint the centre is outside of (inside one is not "touching" it). */
+export function pushOutOf(position:{x:number;z:number},obstacles:Obstacle[],radius:number){
+  let moved=false;
+  for(const o of obstacles){if(!insideObstacle(position.x,position.z,o,radius)||insideObstacle(position.x,position.z,o,0))continue;
+    const r=Math.min(o.cornerRadius??0,o.w/2,o.d/2),dx=position.x-o.x,dz=position.z-o.z;let x=position.x,z=position.z;
+    if(r>0){const hx=o.w/2-r,hz=o.d/2-r,qx=dx-Math.max(-hx,Math.min(hx,dx)),qz=dz-Math.max(-hz,Math.min(hz,dz)),l=Math.hypot(qx,qz);if(l<1e-6)continue;x+=qx/l*(r+radius+.01-l);z+=qz/l*(r+radius+.01-l);}
+    else if(Math.abs(dx)-o.w/2>Math.abs(dz)-o.d/2)x=o.x+Math.sign(dx)*(o.w/2+radius+.01);else z=o.z+Math.sign(dz)*(o.d/2+radius+.01);
+    if(Math.hypot(x-position.x,z-position.z)>radius||groundBlocked(x,z,obstacles,radius))continue;
+    position.x=x;position.z=z;moved=true;}
+  return moved;
+}
+/** `speedScale` scales the top speed (rides on Summit Isle's slopes: rideSlope.ts rideSlopeScale); 1 everywhere else. `coast` (per
+ *  second, 0 = off): speed above that top speed bleeds off at this rate instead of the acceleration's (a ride's momentum carrying it
+ *  up a slope, easing down to its climbing speed rather than braking hard at the foot). */
+export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1, coast = 0) {
   dt = Math.max(0, Math.min(dt, .25));
   const settings = TRAVEL_MODES[mode];
   const length = Math.hypot(input.x, input.z), speed = (mode === 'walk' && input.sprint ? 6 : settings.maxSpeed)*speedScale;
-  const blend = 1-Math.exp(-dt*(length ? settings.acceleration : settings.braking));
+  const blend = 1-Math.exp(-dt*(length ? settings.acceleration : settings.braking)), was = Math.hypot(velocity.x,velocity.z), before = coast>0&&length ? was : 0;
   velocity.x += ((length ? input.x/Math.max(1,length)*speed : 0)-velocity.x)*blend;
   velocity.z += ((length ? input.z/Math.max(1,length)*speed : 0)-velocity.z)*blend;
+  // The gentler rate only for a real excess (a quarter of the top speed and more), blending back to the acceleration's below that.
+  if (before>speed) {const rate=coast+(settings.acceleration-coast)*Math.max(0,1-(before-speed)/(.25*speed)),after=Math.hypot(velocity.x,velocity.z),least=speed+(before-speed)*Math.exp(-dt*rate);if(after>1e-6&&after<least){velocity.x*=least/after;velocity.z*=least/after;}}
   // Sample the swept movement in steps smaller than the collision diameter.
   // Even a thin fence cannot be skipped at moped speed after a long frame.
   const steps = Math.max(1, Math.ceil(Math.hypot(velocity.x,velocity.z)*dt/.15));
@@ -102,6 +173,14 @@ export function stepPlayer(position: {x: number; z: number}, velocity: {x: numbe
       if (normal===undefined) normal=flightEdgeNormal(position.x,position.z);
       if (normal && slideAlongFlightEdge(position,velocity,normal,dt/steps)) continue;
     }
+    // A clear step is taken whole (checking x then z alone would stop a diagonal step whose x-only half grazes a collider it
+    // already clears, the turn straight after a slide); a blocked one slides along the collider first.
+    if (mode!=='jetpack') {
+      if (!hit(nx,nz)) {
+        // Clear: the whole step. Where only one axis of it grazes a collider (a diagonal step past a round one, the turn straight
+        // after a slide) the step is still taken when what it grazes is round; a box's corner keeps the axis response below.
+        if (!hit(nx,position.z)&&!hit(position.x,nz) || contactNormal(position.x,position.z,[nx,position.z,position.x,nz],obstacles,collisionRadius)) {position.x=nx;position.z=nz;continue;}
+      } else if (slideAlong(position,velocity,nx,nz,dt/steps,obstacles,collisionRadius,mode,length?speed:0,was,length?input.x/length:0,length?input.z/length:0,hit)) continue;}
     const vx=velocity.x,vz=velocity.z,px=position.x,pz=position.z;
     if (!hit(nx,position.z)) position.x=nx; else velocity.x=0;
     if (!hit(position.x,nz)) position.z=nz; else velocity.z=0;

@@ -14,7 +14,7 @@ function createLoader(overrides={}){
  function load(file){
   file=path.resolve(ROOT,file);if(cache.has(file))return cache.get(file).exports;
   const mod={exports:{}};cache.set(file,mod);
-  const out=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+  const out=ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file/* .ts files never parse as JSX (generic arrows) */,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText;
   const req=spec=>{
    for(const [k,v] of Object.entries(overrides))if(spec===k||spec.endsWith('/'+k)||spec.endsWith('/'+k+'.ts'))return v;
    const r=resolve(file,spec);return r?load(r):require(spec);

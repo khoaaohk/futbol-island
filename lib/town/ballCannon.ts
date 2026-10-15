@@ -35,11 +35,14 @@ export const CANNON={
   *  so it reads at 30 m), the seconds between shots and the most in the air at once. */
  ballSpeed:27,gravity:9.8,muzzle:1.25,ballR:.15,cooldown:.32,balls:8,
  /** How close (m, centre to centre) a ball must pass a disc to knock it out: generous for 7–12 year olds. */
- hitR:.85,
+ hitR:1.6,
  /** Clay discs: the most in the air at once, radius, launch speed and elevation ranges, their lighter fall (they glide). */
- discs:6,discR:.24,discSpeed:[14,17.5] as readonly [number,number],discElev:[30,42] as readonly [number,number],discGravity:6.2,
+ discs:6,discR:.34,discSpeed:[11.5,14] as readonly [number,number],discElev:[34,44] as readonly [number,number],discGravity:4.6,
+ /** Aim assist (Oct 14 2026, user: "really hard to hit the target, can we make that easier?"): a shot fired within this many
+  *  degrees of a disc's intercept is steered onto it (full help inside half the cone, fading out at its edge). */
+ assistDeg:22,
  /** Discs leave the trap heading this many degrees east of north (across the cannon's view from the left, away from the sandbar). */
- discBearing:[4,30] as readonly [number,number],
+ discBearing:[8,30] as readonly [number,number],
  /** A Pull launches two, the second this long after the first. */
  pullGap:.32,
  /** Shards per broken disc (fewer with reduced motion) and how long they fly. */
@@ -103,9 +106,23 @@ export function aimByDrag(a:Aim,dxPx:number,dyPx:number):Aim{const k=CANNON.drag
 export function aimBySteer(a:Aim,x:number,y:number,dt:number):Aim{return clampAim({yaw:a.yaw-x*CANNON.keyYawDegPerSec*D*dt,pitch:a.pitch-y*CANNON.keyPitchDegPerSec*D*dt});}
 
 /** A ball fired now along the aim, from the muzzle. */
-export function fireBall(L:CannonLayout,a:Aim,t0:number):Flight{
- const d=aimDir(a),m=CANNON.muzzle,s=CANNON.ballSpeed;
- return {p:{x:L.joint.x+d.x*m,y:L.joint.y+d.y*m,z:L.joint.z+d.z*m},v:{x:d.x*s,y:d.y*s,z:d.z*s},a:{x:0,y:-CANNON.gravity,z:0},t0};
+export function fireBall(L:CannonLayout,a:Aim,t0:number,targets:readonly Flight[]=[]):Flight{
+ const d=aimDir(a),m=CANNON.muzzle,s=CANNON.ballSpeed,p={x:L.joint.x+d.x*m,y:L.joint.y+d.y*m,z:L.joint.z+d.z*m};
+ let v={x:d.x*s,y:d.y*s,z:d.z*s};
+ // Aim assist: find the disc whose intercept direction is closest to the aim, and steer the shot onto it if it's within the cone.
+ let best:{dir:Vec3;ang:number}|null=null;
+ for(const f of targets){const dir=interceptDir(p,f,t0);if(!dir)continue;const ang=Math.acos(Math.max(-1,Math.min(1,dir.x*d.x+dir.y*d.y+dir.z*d.z)));if(!best||ang<best.ang)best={dir,ang};}
+ if(best&&best.ang<CANNON.assistDeg*D){const k=Math.min(1,Math.max(0,(CANNON.assistDeg*D-best.ang)/(CANNON.assistDeg*D*.3)));
+  const x=d.x+(best.dir.x-d.x)*k,y=d.y+(best.dir.y-d.y)*k,z=d.z+(best.dir.z-d.z)*k,l=Math.hypot(x,y,z)||1;v={x:x/l*s,y:y/l*s,z:z/l*s};}
+ return {p,v,a:{x:0,y:-CANNON.gravity,z:0},t0};
+}
+/** The launch direction (unit) from `p` that meets disc flight `f`, fired at clock `t0`: a few fixed-point steps on the flight time
+ *  (the ball falls under gravity, so aim at the disc's future spot lifted by the ball's drop). Null if the disc has landed by then. */
+export function interceptDir(p:Vec3,f:Flight,t0:number):Vec3|null{
+ const s=CANNON.ballSpeed,g=CANNON.gravity,q={x:0,y:0,z:0};let tf=.6;
+ for(let i=0;i<5;i++){flightAt(f,t0+tf,q);const dx=q.x-p.x,dz=q.z-p.z,dy=q.y-p.y+.5*g*tf*tf;tf=Math.max(.05,Math.hypot(dx,dy,dz)/s);}
+ if(t0+tf-f.t0>CANNON.maxFlight||q.y<0)return null;
+ const dx=q.x-p.x,dz=q.z-p.z,dy=q.y-p.y+.5*g*tf*tf,l=Math.hypot(dx,dy,dz)||1;return {x:dx/l,y:dy/l,z:dz/l};
 }
 /** Position at time `t` (clock seconds) into `out`. */
 export function flightAt(f:Flight,t:number,out:Vec3={x:0,y:0,z:0}):Vec3{const u=Math.max(0,t-f.t0);out.x=f.p.x+f.v.x*u+.5*f.a.x*u*u;out.y=f.p.y+f.v.y*u+.5*f.a.y*u*u;out.z=f.p.z+f.v.z*u+.5*f.a.z*u*u;return out;}

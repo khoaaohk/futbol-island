@@ -66,7 +66,7 @@ function townFlight(start,dir,flySecs){const loc={...start},vel={x:0,z:0},roof=c
 const L=S.SUMMIT_LANDMARKS,clearances=[];
 for(const [label,start,dir,secs] of [['sandbar, up the north face',L.sandbarLanding,{x:.3,z:1},4],['sandbar, over the summit',L.sandbarLanding,{x:.25,z:.9},6],['west beach, onto the slopes',L.westBeach,{x:1,z:0},3],['east beach, over the top',L.eastBeach,{x:-1,z:0},5],['the pitch, straight back down',L.pitch,{x:0,z:0},2.5],['north beach, along the coast',L.northBeach,{x:1,z:.15},6]]){
  const r=townFlight(start,dir,secs);assert(r.landed,`${label}: lands`);
- assert(r.top<S.SUMMIT_HEIGHT+16,`${label}: never soars (top ${r.top.toFixed(1)} m)`);
+ assert(r.top<S.SUMMIT_HEIGHT+22,`${label}: never soars (top ${r.top.toFixed(1)} m)`);
  assert(Math.abs(r.height-r.floor)<.02,`${label}: feet on the ground after landing`);
  // Every take-off keeps a real margin over the rock, the steep north face straight after the sandbar take-off included (Oct 13
  // 2026: that one skimmed ~2 m over the top; the lift now looks where the stick points during the take-off, as Town does).

@@ -242,3 +242,14 @@ await ok('wiring: Town, the HUD, the island build, analytics, npm test',()=>{
 });
 console.log(failed?`\nball-cannon: ${failed} failed`:'\nball-cannon: all passed');process.exit(failed?1:0);
 })();
+
+// Easier to hit (Oct 14 2026, user: "really hard to hit the target, can we make that easier?"): a roughly aimed shot (±8° yaw,
+// ±5° pitch around the disc) is steered onto it by the aim assist; the hit radius is generous.
+{const {createLoader}=require('./summit-harness.cjs');const C=createLoader()('lib/town/ballCannon.ts');const L=C.cannonLayout();let hits=0;
+ for(let n=0;n<60;n++){const disc=C.throwDisc(L,n,0),q=C.flightAt(disc,1.0),dx=q.x-L.joint.x,dz=q.z-L.joint.z,dy=q.y-L.joint.y,w=v=>Math.atan2(Math.sin(v),Math.cos(v));
+  const r=((n*7919)%1000)/1000-.5,r2=((n*104729)%1000)/1000-.5;
+  const aim=C.clampAim({yaw:w(Math.atan2(dx,dz)-C.CENTRE_YAW)+r*16*Math.PI/180,pitch:Math.atan2(dy,Math.hypot(dx,dz))+r2*10*Math.PI/180});
+  const b=C.fireBall(L,aim,.6,[disc]);let pb=C.flightAt(b,.6),pd=C.flightAt(disc,.6);
+  for(let t=.6;t<5;t+=1/60){const nb=C.flightAt(b,t),nd=C.flightAt(disc,t);if(C.discHit(pb,nb,pd,nd)){hits++;break;}pb=nb;pd=nd;}}
+ require('node:assert')(hits>=54,`aim assist: ${hits}/60 roughly aimed shots hit (want ≥ 90%)`);
+ require('node:assert')(C.CANNON.hitR>=1.5&&C.CANNON.assistDeg>=20,'a generous hit radius and assist cone');}

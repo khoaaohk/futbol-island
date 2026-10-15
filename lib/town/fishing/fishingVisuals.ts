@@ -4,7 +4,7 @@ import {FISH_SPOTS,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCat
 import {createFishingWater} from './shoreWater';
 import {createFishSchools} from './fishSchools';
 import {speciesModel,releaseSpeciesModels,type ShadowKind,type SpeciesModel} from './fishModels';
-import {applyReefWater,patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE} from './underwater';
+import {applyReefWater,patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE,UW_UNIFORMS} from './underwater';
 import {graphicsQuality} from '../../graphics/quality';
 import {createDeepSeaScene} from './deepSeaScene';
 import {createFishingOverlay,type AimPreview} from './fishingOverlay';
@@ -203,7 +203,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    overlay.setAim(active&&aimTo?{from:{x:tip.x,y:tip.y,z:tip.z},to:aimTo}:null);overlay.frame(dt,reduced,clockT);
    water?.frame(dt,reduced);schools.frame(dt,reduced,active&&(bobState.kind==='floating'||bobState.kind==='under'||bobState.kind==='reeling')?{x:bob.x,z:bob.z}:null);
    for(const r of rings){if(!r.mesh.visible)continue;r.age+=dt;const k=r.age/r.life;if(k>=1){r.mesh.visible=false;continue;}r.mesh.scale.setScalar(r.size*(.35+k*.9));(r.mesh.material as T.MeshBasicMaterial).opacity=.75*(1-k);}
-   if(!active){if(!ringsBusy())root.visible=false;return;}
+   if(!active){UW_UNIFORMS.uUwFloatOn.value=0;if(!ringsBusy())root.visible=false;return;}
    dip=Math.max(0,dip-dt*4);const reelTarget=bobState.kind==='reeling'?Math.min(2.7,Math.hypot(cast.x-stand.x,cast.z-stand.z)*.5)*bobState.progress:0;reelTravel=reduced?reelTarget:reelTravel+(reelTarget-reelTravel)*(1-Math.exp(-dt*14));
    // Face the water and pose the arms (applied after the rig's own update each frame).
    player.rotation.y=Math.atan2(dir.x,dir.z);
@@ -232,7 +232,9 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    else if(b.kind==='reeling'){const pull=reelDistance();bob.set(cast.x-dir.x*pull,SURFACE+.04-dip*.05,cast.z-dir.z*pull);sag=.035;}
    else if(b.kind==='under'){bob.set(cast.x,SURFACE-.12+(reduced?0:Math.sin(elapsed*40)*.02),cast.z);sag=0;}
    else bob.set(cast.x,SURFACE+.05+(reduced?0:Math.sin(elapsed*2.2)*.012)-dip*.07,cast.z);
-   const showLine=b.kind!=='hidden'&&pose!=='holdUp';bobber.visible=showLine;line.visible=showLine;bobber.position.copy(bob);bobber.rotation.z=reduced?0:Math.sin(elapsed*2.1)*.07+dip*.2;
+   const showLine=b.kind!=='hidden'&&pose!=='holdUp';bobber.visible=showLine;line.visible=showLine;
+   // The float's and the line's soft shadow on the seabed (Oct 14 2026 depth pass; drawn by the strip shader: two uniform writes).
+   const onWater=showLine&&(b.kind==='floating'||b.kind==='under'||b.kind==='reeling');UW_UNIFORMS.uUwFloatOn.value=onWater?1:0;if(onWater)UW_UNIFORMS.uUwFloat.value.set(bob.x,bob.z,stand.x,stand.z);bobber.position.copy(bob);bobber.rotation.z=reduced?0:Math.sin(elapsed*2.1)*.07+dip*.2;
    swimPhase+=Math.min(.05,Math.max(0,dt))*(reelingFish?10+dip*12:7);
    if(shadowOn){
     // A travelling bend grows toward the tail. Reuse the original vertex buffer.

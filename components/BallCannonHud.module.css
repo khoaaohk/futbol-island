@@ -18,7 +18,9 @@
 @media(max-width:600px),(pointer:coarse){
  .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
  .hint{top:calc(72px + env(safe-area-inset-top,0px));max-width:calc(100% - 36px);font-size:12px}
- .controls{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));gap:12px}
+ /* The stick sits bottom-left now, so the disc buttons stack above Fire on the right (Oct 14 2026). */
+ .controls{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));gap:12px;flex-direction:column-reverse;align-items:flex-end}
+ .discs{gap:10px}
  .disc{min-width:136px;min-height:52px;font-size:14px}
  .fire{width:100px;height:100px}
  .cheer{font-size:42px}
@@ -28,4 +30,8 @@
 @keyframes cheerQuiet{0%,60%{opacity:1}100%{opacity:0}}
 /* While seated the island HUD steps aside (stick, ride and map buttons, the stack, the coin bar, other prompts): the drag area,
    Fire and the disc buttons own the screen. */
-:global(.town-app):has(.hud) :global(:is(nav[data-hud-triggers],.town-minimap,.travel-actions,.touch-actions,.touch-controls,[data-hud-stack],.field-learn-card,button[data-tour],.goal-toast,[data-job-wallet],.store-enter-prompt,.npc-talk-prompt)){visibility:hidden;pointer-events:none}
+:global(.town-app):has(.hud) :global(:is(nav[data-hud-triggers],.town-minimap,.travel-actions,.touch-actions,[data-hud-stack],.field-learn-card,button[data-tour],.goal-toast,[data-job-wallet],.store-enter-prompt,.npc-talk-prompt)){visibility:hidden;pointer-events:none}
+/* Phones: the island's round stick stays and aims the barrel (Oct 14 2026, user: "on mobile shouldn't that have the circular
+   controller to move the cannon?"). It sits above the drag area; its own action buttons stay hidden (Fire and the discs replace them). */
+:global(.town-app):has(.hud) :global(.touch-controls){z-index:31;visibility:visible}
+:global(.town-app):has(.hud) :global(.touch-controls .touch-actions){visibility:hidden;pointer-events:none}

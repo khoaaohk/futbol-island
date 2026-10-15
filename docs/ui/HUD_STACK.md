@@ -136,3 +136,13 @@ and the landscape dock are unchanged. Guarded by `tests/oct1-ui.cjs`, `tests/hud
 The Talk target and the NPC name tag now agree: `islandNpcs.nearest` returns the townsperson holding the one visible name tag
 (closest, 1.5 m hysteresis, `lib/graphics/npcTagFocus.ts`) while it is in Talk range, so "Talk to …" always names the tagged person.
 
+## Zipline ride actions (14 October 2026)
+
+While the zipline holds the player (clip-on, the ride, the landing; `zipStore.riding`, `lib/town/zipline.ts`), the bottom-right
+action cluster shows the ride's three actions instead of walk/ride/jetpack/parachute and the travel actions: **Wave** in the
+ride slot (`.travel-mode`), **Tuck** (hold) in the Kick slot (`.touch-shoot`) and **Spin** in the Juggle slot (`.touch-juggle`).
+They are the job cluster's `JobActionButton` with the same classes, so the same 58 px (phone) / 72 px (desktop) circles,
+positions, faces and press; line icons `ziptuck` / `zipspin` / `zipwave` (`TravelIcon.tsx`) with a short word under each.
+Keys: Space or 1 (hold), Q or 2, E or 3. The minimap toggle and the stick (look around) stay. The normal cluster comes back the
+moment the feet are on the roof deck. Guarded by `tests/zipline.cjs`.
+

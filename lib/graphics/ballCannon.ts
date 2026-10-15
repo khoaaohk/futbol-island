@@ -127,7 +127,7 @@ export function createBallCannon(scene:T.Scene,ports:Ports){
   if(pools)pools.arc.visible=false;pendingDiscs.length=0;cam.restoring=cam.blend>0;cam.restore=0;cannonStore.set({seated:false});cue('previous');}
  function fire(){if(!seated||!pools)return;if(lastShot>=0&&clock-lastShot<CANNON.cooldown)return;lastShot=clock;
   const slot=pools.balls.find(b=>!b.alive)??pools.balls.reduce((a,b)=>a.f.t0<=b.f.t0?a:b);
-  slot.f=fireBall(layout(),aim,clock);slot.alive=true;slot.spin=0;flightAt(slot.f,clock,slot.prev);flightAt(slot.f,clock,slot.cur);
+  slot.f=fireBall(layout(),aim,clock,pools.discs.filter(d=>d.alive).map(d=>d.f));slot.alive=true;slot.spin=0;flightAt(slot.f,clock,slot.prev);flightAt(slot.f,clock,slot.cur);
   recoil=.32;shots++;cannonStore.set({shots:Math.min(shots,1)});ports.kick();/* the HUD only needs 0 vs 1+ (its how-to line): one re-render per sitting */}
  function launchDisc(){if(!pools)return;const slot=pools.discs.find(d=>!d.alive)??pools.discs.reduce((a,b)=>a.f.t0<=b.f.t0?a:b);
   slot.f=throwDisc(layout(),discNo++,clock);slot.alive=true;slot.tilt=(discNo%3-1)*.18;flightAt(slot.f,clock,slot.prev);flightAt(slot.f,clock,slot.cur);cue('thunk');}

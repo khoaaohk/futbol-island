@@ -19,6 +19,16 @@ export const PARACHUTE_SINK=9,PARACHUTE_SINK_EASE=.7,PARACHUTE_RISE=6,PARACHUTE_
 // than the ground already under the rider is always allowed. Before this, the rule compared against the rider's height
 // alone, so at touchdown height (floor + .5) the ground itself counted as a wall and the glide was pinned in place.
 export function parachuteTooTall(floor:(x:number,z:number)=>number,from:Point,x:number,z:number,height:number){const next=floor(x,z);return next>height-1&&next>floor(from.x,from.z)+.35;}
+// The jetpack take-off: the height eases from the ground `start` up to `top` over JETPACK_TAKEOFF_TIME s (a fast launch that
+// slows into the cruise; linear with reduced motion). Oct 14 2026 (user: "taking off on the mountain is slower. it should be the
+// same speed as other parts of the island"): Town's `top` is the height the flight holds over the take-off spot
+// (summitCruiseHeight: the 28 m cruise height, or the mountain's clearance over Summit Isle), so the climb reaches cruise on the
+// same curve, in the same time, from any ground. It used to be the 28 m cruise height everywhere, which eased DOWN from the
+// mountain's 50 m plateau and left the climb to Summit's slow terrain lift (~3 s instead of ~0.5 s).
+export const JETPACK_TAKEOFF_TIME=1.05;
+export function jetpackTakeoffHeight(start:number,top:number,time:number,reduced=false){
+ const t=Math.max(0,Math.min(1,time/JETPACK_TAKEOFF_TIME)),q=t-1,ease=reduced?t:1+1.9*q*q*q+.9*q*q;return start+(top-start)*ease;
+}
 export function createJetpackActions(){
  const state={phase:'idle' as 'idle'|'dash'|'charge'|'blast'|'parachute'|'fall',age:0,scanAge:-1,scanYaw:0,scanSpeed:0,scanRadius:0,scanIntensity:0,juggleAge:-1,startHeight:0,yaw:0,target:null as Point|null};
  let aimX=NaN,aimZ=NaN,aimAge=0,fallSpeed=0,glideVX=0,glideVZ=0,spiralX=0,spiralZ=0,spiralRadius=0,settleAge=0,bestD=Infinity,bestH=Infinity,assistAge=-1;

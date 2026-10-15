@@ -151,10 +151,12 @@ export function createFishSchools(scene:T.Scene,phone=false){
      // Eyes: white with a dark pupil (fish only).
      if(pat<5.5){float e=length(vec2(vLocal.z+.36,vLocal.y-.04));base=mix(base,vec3(.95),step(e,.034));base=mix(base,vec3(.02),step(e,.019));}}
     diffuseColor.rgb*=base;diffuseColor.a*=vAlpha;}`,
-  // Reef fish keep their colours through the clear water (Oct 13 2026, "colourful tropical fish").
-  absorb:.26,
+  // Reef fish keep their colours in the shallows (Oct 13 2026, "colourful tropical fish"); since Oct 14 2026 ("more depth") they take
+  // the theme's share of the water (0.4 shore, 0.8 the deep boats: the bait ball and the big silhouettes fade into the blue), so a
+  // school down between the coral is bluer and fainter than one near the surface.
+  absorb:'uUwFish',
  });
- material.customProgramCacheKey=()=>'fishing-sea-life-v2'+(phone?'p':'');
+ material.customProgramCacheKey=()=>'fishing-sea-life-v3'+(phone?'p':'');
  const mesh=new T.InstancedMesh(geometry,material,COUNT);mesh.name='fishing-ambient-fish';mesh.renderOrder=.6;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};scene.add(mesh);
  const fish:Fish[]=[],leaders:Leader[]=[],crabs:Crab[]=[],glider:Glider={kind:KIND.ray,on:false,wait:3,x:0,z:0,vx:0,vz:0,phase:0,len:1,y:0,t:0,life:1},dummy=new T.Object3D();
  // viewDepth (Oct 13 2026, farther casts): how far out schools and cruisers roam, in metres (default 11, the old fixed
@@ -183,14 +185,16 @@ export function createFishSchools(scene:T.Scene,phone=false){
    for(let i=0;i<CRABS;i++)setColors(FISH+i,null);
    bigs.forEach((b,i)=>{b.on=false;b.wait=1.5+i*6+Math.random()*3;});
    setColors(FISH+CRABS,null,6);glider.on=false;glider.wait=4+Math.random()*5;return;}
-  for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]]??LOOKS.sardine,swim=.35+Math.random()*.5;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
+  // Depth layers (Oct 14 2026): one school near the surface, one mid-water, one down among the coral (each clamped to the
+  // seabed below it in frame()), so fish pass over and behind the reef.
+  for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]]??LOOKS.sardine,swim=[.35,.9,1.7][s]+Math.random()*.4;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
    for(let i=0;i<PER;i++){const row=Math.floor(i/2),side=i%2?1:-1,slot={x:side*(.35+row*.18)+(Math.random()-.5)*.2,z:row*.55+(Math.random()-.5)*.2};
     setColors(fish.length,look);
     fish.push({x:p.x+slot.x,z:p.z+slot.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:swim+(Math.random()-.5)*.15,alpha:1,school:s,slot,panic:0,shape:look.shape});}}
   for(let i=0;i<CRUISERS;i++){const home=homes.length&&i<(phone?1:2)?homes[0]:null,p=home?{x:home.x+(Math.random()-.5)*.5,z:home.z+(Math.random()-.5)*.5}:pick(5);
    const look=LOOKS[home?'clown':cast.cruisers[i%cast.cruisers.length]]??LOOKS.sardine;setColors(fish.length,look);
    // A clownfish hovers just over its anemone's tentacles (swim depth from the surface).
-   const swim=home?Math.max(.18,UW_SURFACE-home.y-.12):.5+Math.random()*.6;if(home)homeOf.set(SCHOOLS+i,home);
+   const swim=home?Math.max(.18,UW_SURFACE-home.y-.12):.5+Math.random()*1.4;if(home)homeOf.set(SCHOOLS+i,home);
    fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
    leaders.push({x:p.x,z:p.z,vx:0,vz:0,...(()=>{const t=home?p:pick(5);return {tx:t.x,tz:t.z};})(),speed:home?.22:.45+Math.random()*.2,panic:0});}
   // Crabs on the sand just under the waterline, in view.

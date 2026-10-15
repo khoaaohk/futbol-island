@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {distanceToLandableDeck} from '../landableDecks';
 import {WATER_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,setShore,shoreDrape,shoreRough} from '../../graphics/waterSurface';
+import {dropOverheadLines} from '../../graphics/islandShore';
 import {UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,reefSeed,reefTheme,type SeabedProps} from './underwater';
 
 /**
@@ -31,10 +32,13 @@ export type ShoreField={box:T.Vector4;n:number;size:number;sdf:Float32Array;lift
 const GROUND=new Set(['curved-island-foundation','interior-island-grass','continuous-sandy-shore']);
 const isGround=(o:T.Object3D)=>(o instanceof T.Mesh)&&(GROUND.has(o.name)||o.name.startsWith('island-chunk-')&&!(Array.isArray(o.material)?o.material.some(m=>m.transparent):o.material.transparent));
 
+/** Same threshold as the island bake (lib/graphics/islandShore.ts OVERHEAD): a thin line this high over the water is not land. */
+const OVERHEAD=3;
 function heightMaterial(){
  return new T.ShaderMaterial({uniforms:{uWater:{value:WATER_Y}},
   vertexShader:'varying float vY;void main(){vec4 p=vec4(position,1.);\n#ifdef USE_INSTANCING\np=instanceMatrix*p;\n#endif\nvec4 w=modelMatrix*p;vY=w.y;gl_Position=projectionMatrix*viewMatrix*w;}',
-  fragmentShader:'uniform float uWater;varying float vY;void main(){float v=clamp((vY-uWater+.5)/2.,0.,1.)*255.;gl_FragColor=vec4(floor(v)/255.,fract(v),0.,1.);}',side:T.DoubleSide});
+  // B: 1 where the surface is OVERHEAD or higher (cables, poles, fronds; see dropOverheadLines); A: 1 = something drawn.
+  fragmentShader:`uniform float uWater;varying float vY;void main(){float v=clamp((vY-uWater+.5)/2.,0.,1.)*255.;gl_FragColor=vec4(floor(v)/255.,fract(v),vY-uWater>${OVERHEAD.toFixed(1)}?1.:0.,1.);}`,side:T.DoubleSide});
 }
 /** Height above the water (m, −0.5 … 1.5) on an n×n grid, row k at z = minZ + (k + .5)·texel, from one top-down render. */
 function sampleHeights(renderer:T.WebGLRenderer,scene:T.Scene,minX:number,minZ:number){
@@ -46,15 +50,18 @@ function sampleHeights(renderer:T.WebGLRenderer,scene:T.Scene,minX:number,minZ:n
  const pixels=new Uint8Array(n*n*4);
  try{
   renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=false;scene.overrideMaterial=material;scene.background=null;
-  renderer.setRenderTarget(target);renderer.setClearColor(0x000000,1);renderer.clear();renderer.render(scene,camera);
+  renderer.setRenderTarget(target);renderer.setClearColor(0x000000,0);renderer.clear();renderer.render(scene,camera);
   renderer.readRenderTargetPixels(target,0,0,n,n,pixels);
  }finally{
   renderer.setRenderTarget(prev.target);scene.overrideMaterial=prev.override;scene.background=prev.bg;renderer.setClearColor(prev.clear,prev.alpha);
   renderer.shadowMap.autoUpdate=prev.auto;renderer.shadowMap.needsUpdate=prev.needs;for(const o of toggled)o.visible=true;target.dispose();material.dispose();
  }
  // Pixel row j (from the bottom) looks at z = maxZ − (j + .5)·texel (camera up is −Z): flip into z-ascending rows.
- const lift=new Float32Array(n*n);
- for(let j=0;j<n;j++)for(let i=0;i<n;i++){const p=(j*n+i)*4,v=(pixels[p]+pixels[p+1]/255)/255;lift[(n-1-j)*n+i]=v*2-.5;}
+ const lift=new Float32Array(n*n),high=new Uint8Array(n*n),drawn=new Uint8Array(n*n);
+ for(let j=0;j<n;j++)for(let i=0;i<n;i++){const p=(j*n+i)*4,v=(pixels[p]+pixels[p+1]/255)/255,k=(n-1-j)*n+i;lift[k]=v*2-.5;high[k]=pixels[p+2]>127?1:0;drawn[k]=pixels[p+3]>127?1:0;}
+ // Oct 14 2026: the zipline cable (and any thin raised line: poles, fronds) must not read as land (fake foam rings and shallows in
+ // the sea); same pass as the island bake.
+ dropOverheadLines(lift,high,drawn,n,n);
  return lift;
 }
 /** Felzenszwalb–Huttenlocher squared distance transform, one line. */
@@ -145,7 +152,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    vLift=lift;vec3 uwW=(modelMatrix*vec4(transformed,1.)).xyz;vWaterXZ=uwW.xz;vec4 f=shoreSample(uwW.xz);vField=f;
    vec3 uwV=normalize(vec3(uwW.x,UW_Y,uwW.z)-cameraPosition);float hl=max(length(uwV.xz),1e-3),vy=max(.12,-uwV.y);vec2 dirH=uwV.xz/hl;
    float g=clamp(f.r-shoreSample(uwW.xz+dirH).r,0.,1.)*step(0.,f.r);
-   float h0=uwDepthAt(f.r),slope=.941*exp(-max(f.r,0.)/3.4)*g,tH=h0/(vy/hl+slope),h=tH*vy/hl;
+   float h0=uwDepthAt(f.r),slope=uUwFloor/3.4*exp(-max(f.r,0.)/3.4)*g,tH=h0/(vy/hl+slope),h=tH*vy/hl;
    vSea=vec4(uwW.xz+dirH*tH,h,sqrt(tH*tH+h*h));vVy=vy;
    // What the water does to the seabed colour (absorption, its own tint) and the sky it reflects: smooth, so per vertex too.
    vTrans=vec4(uwTrans(h,vSea.w),pow(1.-vy,3.)*.3);vTint=uwTint(h);
@@ -154,17 +161,27 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    .replace('#include <map_fragment>',/* glsl */`
    float d=vField.r,n1=vField.g,n2=vField.b,beach=vField.a,edgeFade=shoreEdge(vWaterXZ)*uShore;
    float t=uWaterTime;
-   float lace=texture2D(uWaterNoise,vWaterXZ*.21+vec2(t*.004,t*.002)).g;
+   vec4 laceT=texture2D(uWaterNoise,vWaterXZ*.21+vec2(t*.004,t*.002));float lace=laceT.g;
    float sea=smoothstep(-.25,0.,d);
    // ---- The seabed seen through the water: sand ripples and patches, moving caustics, tinted by the water crossed (underwater.ts,
    // the same as coral and fish).
-   vec2 P=vSea.xy;float h=vSea.z,pathL=vSea.w,vy=vVy;
+   // Refraction (Oct 14 2026): the seabed seen through the moving surface sways a little, more the deeper it is (the reef and fish
+   // sway the same way in their vertex shaders, underwater.ts).
+   float h=vSea.z,pathL=vSea.w,vy=vVy;vec2 P=vSea.xy-uwWobble(vSea.xy,h);
    float rip=sin(dot(P,vec2(1.7,.9))*2.4+n1*10.+n2*5.)*.5+.5;
    // Sand tone and weed patches per spot (the theme's light / dark sand, weed colour and amount: a meadow covers more).
    vec3 sand=mix(uSandA,uSandB,n2)*(.9+.14*rip*rip);float wlo=mix(.74,.42,uSandWeed.a);
    sand=mix(sand,uSandWeed.rgb,smoothstep(wlo,wlo+.18,n1)*smoothstep(1.2,3.,d)*mix(.35,.8,uSandWeed.a));
-   float caus=uwCaustic(P)*smoothstep(3.2,.15,h);sand*=1.+caus*.55;
+   // Depth (Oct 14 2026): caustics fade fast with depth (squared), and less light reaches the deeper sand, so the seabed visibly
+   // slopes away and darkens.
+   float caus=uwCaustic(P)*uwCausticFade(h);sand*=(1.+caus*.5)*mix(1.,.62,smoothstep(.5,uUwFloor,h));
+   // The float's (and line's) soft shadow on the seabed, cast along the sun (uniforms written while fishing, no extra draw).
+   if(uUwFloatOn>0.){vec2 q=P+uSunDir.xz/max(uSunDir.y,.35)*h,fl=uUwFloat.xy,ln=uUwFloat.zw-fl;float tl=clamp(dot(q-fl,ln)/max(dot(ln,ln),1e-4),0.,1.);
+    float fs=1.-smoothstep(.07,.17+.06*h,length(q-fl)),ls=(1.-smoothstep(.012,.03+.012*h,length(q-fl-ln*tl)))*step(.0,d)*smoothstep(0.,.6,d);
+    sand*=1.-max(fs*.42,ls*.22)*uUwFloatOn*(1.-smoothstep(1.,4.,h)*.6);}
    vec3 uwT=vTrans.rgb,col=sand*uwT+vTint*(1.-uwT);
+   // Light shafts (in-scattering, Oct 14 2026): the same term the reef and fish get (underwater.ts uwSurfaceOver), from the same read.
+   col+=vTint*smoothstep(.45,.85,laceT.b)*(1.-exp(-pathL*.35))*.1;
    float alpha=sea*(1.-smoothstep(21.,32.,d));
    float foam=0.,swell=0.;
    // ---- The swash band (near the waterline only: nothing in it reaches past 3.4 m).
@@ -203,14 +220,14 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    float sph=swellPhase(d,n1);swell=smoothstep(.84,1.,sph)*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
    float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
    float fres=vTrans.a;
-   col=mix(col,vec3(.42,.72,.7),sea*(swell*.28+lines*.22));col=mix(col,vec3(.2,.42,.47),sea*fres);
+   col=mix(col,vec3(.42,.72,.7),sea*(swell*.28+lines*.1));col=mix(col,vec3(.2,.42,.47),sea*fres);
    vec3 foamC=vec3(.97,.98,.96);col=mix(col,foamC,foam);alpha=max(alpha,foam*.95);
    float glint=0.;if(uWaterDetail>1.5){float g2=texture2D(uWaterNoise,vWaterXZ*.33-vec2(t*.01,t*.004)).g;glint=smoothstep(.8,.9,min(lace,g2))*sea*smoothstep(1.,4.,d)*(.4+.6*swell);}
    diffuseColor=vec4(col,alpha*edgeFade);
    float waterLight=(foam*.22+glint*.9)*edgeFade;vec3 waterGlow=(col*.08+vTint*(1.-uwT)*UW_GLOW)*sea*alpha*edgeFade;`)
    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
  };
- material.customProgramCacheKey=()=>'fishing-shore-strip-v7';
+ material.customProgramCacheKey=()=>'fishing-shore-strip-v8';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-shore-water';mesh.renderOrder=.5;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};
  return {mesh,dispose(){geometry.dispose();material.dispose();}};
 }

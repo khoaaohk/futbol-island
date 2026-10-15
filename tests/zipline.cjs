@@ -131,6 +131,24 @@ await ok('walking: up the tower step to the launch, down from the roof deck by t
  assert(world.roofObstacles.some(o=>Math.abs(o.x-St.rail)<.01&&o.d>9),'a handrail barrier along the outer side');
 });
 
+// Oct 14 2026, user: "riding gets stuck going down here" (a bike at the top of the hostel's outside stair). The stair is 1.6 m
+// between the wall and its handrail, a ride's 0.8 m collision radius each side, so a ride wedged at the top (and its foot, beside
+// the wall, turned a ride away at the bottom). On and next to steps a ride narrows to RIDE_STAIR_RADIUS (rooftopTravel.ts).
+await ok('riding and walking down and up the hostel stair: no stall, no fall, at 20/30/60 fps',()=>{
+ const {RIDE_STAIR_RADIUS}=load('lib/town/rooftopTravel.ts');assert(RIDE_STAIR_RADIUS<=.5,'a ride narrows on steps');
+ const St=Z.ZIP_STAIR,down=[{x:Z.ZIP_LAND.x,z:Z.ZIP_LAND.z},{x:St.landing.x,z:St.landing.z},{x:St.treads[0].x,z:St.treads[0].z},{x:St.bottom.x,z:St.bottom.z},{x:St.bottom.x+1,z:St.bottom.z+2}];
+ const drive=(mode,route,fps)=>{const rt=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,{x:0,z:0},world.roofObstacles,()=>0,world.landingExclusions,world.canopies);
+  const p={...route[0]},v={x:0,z:0},stick={x:0,z:0,sprint:false};rt.reset(p.x,p.z);let k=1,acc=0,ticks=0,slow=0,worst=0,fell=false;
+  for(let f=0;f<fps*30&&k<route.length;f++){while(k<route.length&&Math.hypot(route[k].x-p.x,route[k].z-p.z)<.4)k++;if(k>=route.length)break;const dx=route[k].x-p.x,dz=route[k].z-p.z,d=Math.hypot(dx,dz);stick.x=dx/d;stick.z=dz/d;
+   acc+=1/fps;while(acc>=1/60-1e-9){acc-=1/60;rt.update(1/60,p,v,stick,mode);ticks++;if(rt.state.falling||rt.state.recovery>0)fell=true;if(ticks>30&&Math.hypot(v.x,v.z)<.5)slow++;else slow=0;worst=Math.max(worst,slow/60);}}
+  return {done:k>=route.length,secs:ticks/60,worst,fell,h:rt.state.height};};
+ for(const mode of ['bike','scooter','moped','walk'])for(const fps of [20,30,60]){
+  const d=drive(mode,down,fps);assert(d.done&&!d.fell&&d.h<.05,`${mode} @${fps} fps: down the stair to the path (${d.done?d.secs.toFixed(1)+' s':'stuck'}, height ${d.h.toFixed(2)})`);
+  assert(d.worst<=.25,`${mode} @${fps} fps: never stalls going down (${d.worst.toFixed(2)} s)`);
+  const u=drive(mode,[...down].reverse(),fps);assert(u.done&&!u.fell&&Math.abs(u.h-Z.ZIP_DECK.height)<.01,`${mode} @${fps} fps: up the stair to the deck (${u.done?u.secs.toFixed(1)+' s':'stuck'}, height ${u.h.toFixed(2)})`);
+  assert(u.worst<=.25,`${mode} @${fps} fps: never stalls going up (${u.worst.toFixed(2)} s)`);}
+});
+
 await ok('the ride: ~10–15 s, quick off the tower, easing into the roof',()=>{
  const R=Z.ZIP_RIDE,total=R.clip+R.seconds+R.land;assert(total>=10&&total<=16,'ride time '+total.toFixed(1)+' s');
  let last=-1;for(let i=0;i<=500;i++){const f=Z.rideProgress(i/500);assert(f>=last-1e-12,'monotonic');last=f;}
@@ -234,6 +252,132 @@ await ok('the camera: smooth through Town\'s pipeline at 20 / 30 / 60 / 120 fps 
   assert(m.rel<=.02,`${fps} fps: the trolley holds still on screen (offset change ${m.rel.toFixed(3)} m a frame)`);
   assert(m.swingJerk<=1.2,`${fps} fps: the swing under it is smooth (${m.swingJerk.toFixed(2)} m/s change a frame)`);}
  console.log(`  camera: worst velocity change ${worst.cam.toFixed(2)} m/s a frame; trolley on screen ${worst.rel.toFixed(4)} m; swing ${worst.swing.toFixed(2)} m/s`);
+});
+
+// ---- The grip, the body and the ride actions (Oct 14 2026, user after riding it: "the arms are not on the handle", "the body needs
+// to animate with the movements more", "when ziplining, remove the actions and change those to three different actions").
+const CS=rl('lib/graphics/characterStyle.ts'),PL=rl('lib/graphics/player.ts');
+/** A whole ride through Town's order (tick → motion → player.update → pose) on the REAL character rig, drawn at `fps` (the tick stays
+ *  60 Hz), with `act(tick, zip)` pressing actions. Every drawn frame: both mittens' middles against the drawn bar. */
+function rigRide({style='bean',fps=60,reduced=false,act=()=>{},onFrame=()=>{}}={}){
+ CS.setCharacterStyle(style);const rig=PL.createPlayer('you','home',true,true);CS.setCharacterStyle(undefined);
+ const r=makeRuntime(),{zip,loc,ctx,scene}=r,L=ZS.ZIP_LAUNCH;scene.add(rig.root);loc.x=L.x+1;loc.z=L.z;loc.y=ZS.ZIP_TOWER.deck;
+ zip.update(ctx(loc.x,loc.z,{reduced}));zip.ride();
+ const el=[rig.root.getObjectByName('left-elbow'),rig.root.getObjectByName('right-elbow')],g=new T3.Vector3(),d=new T3.Vector3();
+ const out={grip:0,along:0,checked:0,waveChecked:0,frames:0,ticks:0,log:[]};let acc=0,t=0,tick=0;
+ while(zip.phase!=='idle'&&t<40){const dt=1/fps;t+=dt;acc+=dt;
+  while(acc>=1/60-1e-9){act(tick,zip);zip.holdPlayer(input(),new Set(),1/60);tick++;acc-=1/60;
+   out.log.push({tick,phase:zip.phase,swing:zip.drawn.swing,speed:zip.drawn.speed,rate:zip.stats.rate,placedY:loc.y});}
+  const k=Math.min(1,acc*60),m=zip.motion({},k);rig.update(loc.x,loc.z,dt,t,reduced,m);zip.pose(rig.root,k,dt,reduced);rig.root.updateWorldMatrix(true,true);out.frames++;
+  const pose=zip.rigPose,b=zip.bar;onFrame(zip,pose,rig);
+  if(zip.active&&pose.w>=.999)for(let i=0;i<2;i++){const side=i?1:-1;if(side===pose.free&&pose.wave>0){out.waveChecked++;continue;}
+   el[i].localToWorld(g.set(...PL.ZIP_GRIP_POINT));d.copy(g).sub(b.mid);const along=d.dot(b.dir);d.addScaledVector(b.dir,-along);
+   out.grip=Math.max(out.grip,d.length());out.along=Math.max(out.along,Math.abs(along-side*ZS.ZIP_GRIP.half));out.checked++;}}
+ out.ticks=tick;out.zip=zip;out.r=r;out.rig=rig;return out;}
+
+await ok('the grip: both hands close round the bar at the same two points every drawn frame (bean and classic, 30–120 fps, spin, tuck, wave)',()=>{
+ for(const [style,fps] of [['bean',60],['bean',30],['bean',120],['classic',45]]){
+  const o=rigRide({style,fps,act:(t,z)=>{if(t===150)z.press('tuck','down');if(t===260)z.press('spin','tap');if(t===330)z.press('tuck','up');if(t===420)z.press('wave','tap');if(t===600)z.press('spin','tap');}});
+  assert(o.checked>fps*12,`${style} ${fps} fps: the hands were checked over the ride (${o.checked})`);
+  assert(o.grip<=.02,`${style} ${fps} fps: each mitten's middle is on the bar's line (worst ${(o.grip*100).toFixed(2)} cm)`);
+  assert(o.along<=.02,`${style} ${fps} fps: at the same point along it, no sliding (worst ${(o.along*100).toFixed(2)} cm)`);
+  assert(o.waveChecked>0&&o.zip.stats.waves===1&&o.zip.stats.spins===2,'the wave and both spins happened');
+  console.log(`  grip ${style} ${fps} fps: worst ${(o.grip*1000).toFixed(1)} mm off the bar, ${(o.along*1000).toFixed(1)} mm along it (${o.checked} hand checks)`);
+  o.zip.dispose();}
+ // The handle: an orange T-bar with grip sleeves at the hands, hung by two straps from the trolley's underside, built only while riding.
+ const r=makeRuntime(),{zip,loc,ctx,scene}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();for(let i=0;i<120;i++){zip.holdPlayer(input(),new Set(),1/60);zip.pose(r.player,1,1/60,false);}
+ const h=scene.getObjectByName('zipline-handle');assert(h&&scene.getObjectByName('strap0')&&scene.getObjectByName('strap1'),'the handle and its straps');
+ assert(h.position.distanceTo(zip.bar.mid)<1e-9,'the handle is drawn where the hands grip');
+ const tr=scene.getObjectByName('zipline-trolley');assert(Math.abs(tr.position.y-ZS.ZIP_TROLLEY_DROP-ZS.ZIP_STRAP-h.position.y)<.25,'it hangs a short strap under the trolley');zip.dispose();
+});
+
+await ok('the body moves with the ride: the swing answers the push and the brake; legs kick, trail, tuck and reach for the deck; head and torso',()=>{
+ const seen={launchHip:[],tuckKnee:0,reachHip:9,headDown:0,torsoBack:0,legTrail:0,bounce:0};
+ const o=rigRide({fps:60,act:(t,z)=>{if(t===48+60*3)z.press('tuck','down');if(t===48+60*4.5)z.press('tuck','up');},onFrame:(z,p)=>{
+  if(z.phase==='ride'){const rt=z.stats.busyTicks/60-ZS.ZIP_RIDE.clip;if(rt<1.4)seen.launchHip.push(p.hipL);
+   if(rt>3.6&&rt<4.4)seen.tuckKnee=Math.max(seen.tuckKnee,p.kneeL);if(rt<.5)seen.torsoBack=Math.min(seen.torsoBack,p.tx);
+   if(rt>4&&rt<8)seen.headDown=Math.max(seen.headDown,p.hx);}
+  if(z.phase==='land'||z.phase==='ride'&&z.drawn.speed<2&&z.stats.busyTicks>400)seen.reachHip=Math.min(seen.reachHip,p.hipL);}});
+ const ride=o.log.filter(l=>l.phase==='ride');
+ const early=ride.slice(5,60),brake=ride.filter((l,i)=>i>ride.length*.62&&i<ride.length*.9);
+ const mean=a=>a.reduce((s,l)=>s+l.swing,0)/a.length;
+ assert(mean(early)>.03,'off the tower the feet trail behind the hands (swing '+mean(early).toFixed(3)+')');
+ assert(mean(brake)<-.01,'into the brake they swing forward (swing '+mean(brake).toFixed(3)+')');
+ // The swing follows the acceleration (a pendulum driven by it): positive correlation over the ride.
+ const accs=[],sw=[];for(let i=1;i<ride.length;i++){accs.push((ride[i].speed-ride[i-1].speed)*60);sw.push(ride[i].swing);}
+ const avg=a=>a.reduce((s,v)=>s+v,0)/a.length,ma=avg(accs),ms=avg(sw);let cov=0,va=0,vs=0;for(let i=0;i<accs.length;i++){cov+=(accs[i]-ma)*(sw[i]-ms);va+=(accs[i]-ma)**2;vs+=(sw[i]-ms)**2;}
+ const corr=cov/Math.sqrt(va*vs);assert(corr>.5,'the swing answers the acceleration (correlation '+corr.toFixed(2)+')');
+ const lo=Math.min(...seen.launchHip),hi=Math.max(...seen.launchHip);assert(hi-lo>.5,'the legs kick and cycle off the tower (hip range '+(hi-lo).toFixed(2)+' rad)');
+ assert(seen.tuckKnee>1.6,'Tuck pulls the knees up ('+seen.tuckKnee.toFixed(2)+')');assert(seen.reachHip<-.45,'the legs stretch out for the deck ('+seen.reachHip.toFixed(2)+')');
+ assert(seen.headDown>.2,'the head looks ahead and down at the water');assert(seen.torsoBack<-.1,'a lean back off the tower');
+ assert(Math.min(...o.log.map(l=>l.placedY))>=ZS.ZIP_DECK.height-.01,'never below the roof deck');
+ // Frame-rate independent: the physics lives on the 60 Hz tick; drawing (any number of frames, any blend) never changes it.
+ {const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();for(let i=0;i<300;i++)zip.holdPlayer(input(),new Set(),1/60);
+  zip.pose(r.player,1,0,false);const a={...zip.drawn},p=r.player.position.clone();for(let i=0;i<20;i++){zip.motion({},i/20);zip.pose(r.player,i/20,1/240,false);}zip.pose(r.player,1,0,false);
+  assert.deepEqual({...zip.drawn},a,'drawing frames leaves the ride state alone');assert(r.player.position.distanceTo(p)<1e-9);zip.dispose();}
+ // Reduced motion: damped (half the swing, no sway, gentler legs) — the grip holds just the same.
+ const red=rigRide({fps:60,reduced:true});assert(red.grip<=.02&&red.along<=.02,'reduced motion: hands on the bar');
+ const full=Math.max(...ride.map(l=>Math.abs(l.swing))),calm=Math.max(...red.log.filter(l=>l.phase==='ride').map(l=>Math.abs(l.swing)));
+ assert(calm<full*.6,'reduced motion: a damped swing ('+calm.toFixed(2)+' vs '+full.toFixed(2)+')');o.zip.dispose();red.zip.dispose();
+});
+
+await ok('the three ride actions: Tuck (faster, within the safe top speed, never into the brake), Spin, Wave; keys; nothing stops or moves the landing',()=>{
+ assert.deepEqual(ZS.ZIP_BUTTONS.map(b=>[b.id,b.slot,b.key]),[['tuck','shoot','Space'],['spin','juggle','Q'],['wave','ride','E']],'three actions in the cluster\'s three slots');
+ assert(ZS.ZIP_BUTTONS[0].hold&&!ZS.ZIP_BUTTONS[1].hold&&!ZS.ZIP_BUTTONS[2].hold,'Tuck is held; Spin and Wave are taps');
+ const icons=read('components/TravelIcon.tsx');for(const b of ZS.ZIP_BUTTONS)assert(new RegExp(`\\b${b.icon}:'M`).test(icons),'a line icon for '+b.id);
+ assert(/tuck:'Tuck',spin:'Spin',wave:'Wave'/.test(read('components/JobActionButton.tsx')),'short words under the icons');
+ // Base ride vs a ride with Tuck held all the way and every action pressed every tick.
+ function run(act){const r=makeRuntime(),{zip,loc,ctx,log}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;loc.y=ZS.ZIP_TOWER.deck;zip.update(ctx(loc.x,loc.z));zip.ride();
+  let ticks=0,top=0,lastF=-1,back=0,rateAfter=1,maxRate=1;
+  while(zip.phase!=='idle'&&ticks<60*40){act(ticks,zip);zip.holdPlayer(input(),new Set(),1/60);ticks++;zip.pose(r.player,1,1/60,false);
+   if(zip.phase==='ride'){top=Math.max(top,zip.drawn.speed);const f=Math.hypot(zip.drawn.px-ZS.ZIP_LAUNCH.x,zip.drawn.pz-ZS.ZIP_LAUNCH.z);if(f<lastF-1e-9)back++;lastF=f;maxRate=Math.max(maxRate,zip.stats.rate);
+    const tau=(Math.hypot(zip.drawn.px-ZS.ZIP_LAUNCH.x,zip.drawn.pz-ZS.ZIP_LAUNCH.z))/ZS.ZIP_SPAN;if(tau>.86)rateAfter=Math.max(rateAfter,zip.stats.rate);}}
+  const out={ticks,top,back,maxRate,rateAfter,landed:log.landed.slice(),touch:log.touch,stats:{...zip.stats},minY:Math.min(...log.placed.map(p=>p.y))};zip.dispose();return out;}
+ const base=run(()=>{});
+ const mash=run((t,z)=>{z.press('tuck','down');z.press('spin','tap');z.press('wave','tap');z.key({code:'KeyR',key:'r',repeat:false,preventDefault(){}},true);});
+ assert(mash.maxRate>1.08,'Tuck speeds the ride up ('+mash.maxRate.toFixed(3)+'×)');assert(mash.top<=ZS.ZIP_TUCK.maxSpeed+1e-6&&mash.top>base.top,'… a little, never above '+ZS.ZIP_TUCK.maxSpeed+' m/s ('+mash.top.toFixed(1)+' vs '+base.top.toFixed(1)+')');
+ assert(mash.rateAfter<1.01,'… and never into the brake to the roof ('+mash.rateAfter.toFixed(3)+')');
+ assert(mash.ticks<base.ticks&&mash.ticks>base.ticks*.85,'a shorter ride, not a different one ('+mash.ticks+' vs '+base.ticks+' ticks)');
+ assert.equal(mash.back,0,'nothing pulls the rider back up the cable');assert(mash.stats.spins>=2&&mash.stats.waves>=2,'spins and waves happen (one at a time)');
+ for(const o of [base,mash]){assert.equal(o.landed.length,1);assert.deepEqual([o.landed[0].x,o.landed[0].z],[ZS.ZIP_LAND.x,ZS.ZIP_LAND.z],'the same landing on the deck');assert.equal(o.touch,1);assert(o.minY>=ZS.ZIP_DECK.height-.01);}
+ // Spin: one 360° turn, eased, then square again; refused at the very end. Wave: up and back to the bar before the landing.
+ {const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();for(let i=0;i<120;i++)zip.holdPlayer(input(),new Set(),1/60);
+  zip.press('spin','tap');let maxSpin=0,ticks=0;while(zip.drawn.spin>=0&&ticks<200){zip.holdPlayer(input(),new Set(),1/60);zip.pose(r.player,1,1/60,false);maxSpin=Math.max(maxSpin,zip.drawn.spin);ticks++;if(ticks>5&&zip.drawn.spin===0)break;}
+  assert(maxSpin>Math.PI*1.9&&Math.abs(ticks/60-ZS.ZIP_SPIN.seconds)<.1,'a full turn in '+(ticks/60).toFixed(2)+' s');
+  zip.press('wave','tap');let maxWave=0;for(let i=0;i<60*3;i++){zip.holdPlayer(input(),new Set(),1/60);zip.motion({},1);maxWave=Math.max(maxWave,zip.rigPose.wave);}assert(maxWave>.95&&zip.rigPose.wave===0,'the wave comes and goes');
+  while(zip.phase==='ride'&&zip.drawn.speed>3)zip.holdPlayer(input(),new Set(),1/60);const n=zip.stats.spins;zip.press('spin','tap');zip.press('wave','tap');
+  assert.equal(zip.stats.spins,n,'no spin in the last seconds');let w=0;while(zip.phase!=='idle'){zip.holdPlayer(input(),new Set(),1/60);zip.motion({},1);w=Math.max(w,zip.rigPose.wave);}assert.equal(w,0,'no wave into the landing');zip.dispose();}
+ // Keys (Town's keydown/keyup hand them over first while riding): Space/1 hold-tuck, Q/2 spin, E/3 wave; R and J are the ride's.
+ {const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));const ev=(code,key,repeat=false)=>({code,key,repeat,preventDefault(){this.prevented=true;}});
+  assert.equal(zip.key(ev('Space',' '),true),false,'at rest the keys are the island\'s');zip.ride();for(let i=0;i<90;i++)zip.holdPlayer(input(),new Set(),1/60);
+  assert.equal(zip.key(ev('Space',' '),true),true);for(let i=0;i<60;i++)zip.holdPlayer(input(),new Set(),1/60);assert(zip.stats.rate>1.02,'Space holds a tuck');zip.key(ev('Space',' '),false);
+  assert.equal(zip.key(ev('KeyQ','q'),true),true);assert.equal(zip.stats.spins,1,'Q spins');for(let i=0;i<90;i++)zip.holdPlayer(input(),new Set(),1/60);
+  assert.equal(zip.key(ev('Digit3','3'),true),true);assert.equal(zip.stats.waves,1,'3 waves');
+  const rk=ev('KeyR','r');assert.equal(zip.key(rk,true),true);assert(rk.prevented,'R cannot change the ride in mid-air');assert.equal(zip.key(ev('ArrowLeft','ArrowLeft'),true),false,'the arrows still look around');zip.dispose();}
+ // The HUD: while riding the cluster IS the three actions (same component, classes and slots), and the normal ones come back after.
+ const town=read('components/Town.tsx');
+ assert(/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:jobButtons;/.test(town),'Town: the zipline\'s actions replace the cluster while riding');
+ assert(/useSyncExternalStore\(zipStore\.subscribe,\(\)=>zipStore\.get\(\)\.riding,\(\)=>false\)/.test(town),'… from the store (written only on changes)');
+ assert(['travel-mode','touch-shoot','touch-juggle'].every(c=>town.includes(`className="${c}" onPress={pressCluster}/>`)),'… with the job cluster\'s button in the ride, shoot and juggle slots');
+ assert(/if\(zipline\.key\(e,true\)\)return;/.test(town)&&/if\(zipline\.key\(e,false\)\)return;/.test(town),'Town hands the keys to the ride first');
+ const r=makeRuntime(),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();assert.equal(ZS.zipStore.get().riding,true,'riding: the zipline actions show');
+ while(zip.phase!=='idle')zip.holdPlayer(input(),new Set(),1/60);assert.equal(ZS.zipStore.get().riding,false,'landed: the normal actions are back');
+ ZS.zipActions.press('spin','tap');assert.equal(zip.stats.spins,0,'the buttons do nothing off the cable');zip.dispose();
+});
+
+await ok('heat: the ride\'s maths only while riding, no allocation per tick or frame, nothing at rest',()=>{
+ const src=read('lib/graphics/zipline.ts').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+ const body=(start,end)=>{const a=src.indexOf(start),b=src.indexOf(end,a+start.length);assert(a>=0&&b>a,'found '+start);return src.slice(a,b);};
+ for(const [name,code] of [['sample',body('function sample(','let lastUpdate')],['interp',body('function interp(','function onKey')],['placeBody',body('function placeBody(','const barMid')],
+  ['holdPlayer',body('holdPlayer(','motion<')],['motion',body('motion<','pose(player')],['pose',body('pose(player','applyCamera(')]])
+  assert(!/\bnew\s|\{\.\.\.|\[\.\.\.|\.map\(|\.filter\(|=>\s*\(?\{/.test(code.replace(/streak\(l,/g,'')),name+': no allocation per tick/frame');
+ assert(!/requestAnimationFrame|setInterval|setTimeout/.test(src),'no loop or timer of its own');
+ // At rest: motion() hands Town's motion back untouched, pose() leaves the player alone, the keys pass through.
+ const r=makeRuntime(),{zip,player}=r,m={facing:1};player.position.set(1,2,3);
+ assert.equal(zip.motion(m,.5),m);assert.deepEqual(m,{facing:1},'motion untouched at rest');zip.pose(player,.5,1/60,false);assert.deepEqual(player.position.toArray(),[1,2,3],'the player untouched at rest');
+ assert.equal(zip.key({code:'KeyQ',key:'q',repeat:false,preventDefault(){}},true),false);zip.dispose();
+ // The rig's grip solve: preallocated temporaries, no allocation inside it.
+ const pl=read('lib/graphics/player.ts'),a=pl.indexOf('const poseZipBody='),b=pl.indexOf('/** Freestyle trick pose',a);assert(a>0&&b>a);assert(!/\bnew\s|\{\.\.\./.test(pl.slice(a,b)),'player.ts: the grip solve allocates nothing');
 });
 
 await ok('heat: a few short tube pieces in the static batches, nothing animated at rest; wiring',()=>{

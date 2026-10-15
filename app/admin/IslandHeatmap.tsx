@@ -11,22 +11,28 @@ import {CELL_COUNT,GRID,PLACE_LABEL,cellCenter,cellOf} from '@/lib/analytics/isl
 import {placeAt} from '@/lib/analytics/islandPlaces';
 import {ISLAND_SHORE} from '@/lib/town/shoreline';
 import {CAY_SHORE,CAUSEWAY_PATH,SANDBARS} from '@/lib/town/coralCay';
+import {SUMMIT_CENTER,SANDBAR_PATH,SUMMIT_PITCH,coastRadius} from '@/lib/town/summitIsle';
+import {ZIP_TOWER,ZIP_LAND} from '@/lib/town/zipline';
 import {VENUES} from '@/lib/town/venues';
 import {EAST_PIER,JETTY_PATH} from '@/lib/town/eastPier';
 import {Tip,fmtDuration,fmtPct,useWidth,type TipState} from './charts';
 import styles from './admin.module.css';
 
-type View='all'|'main'|'cay';
+type View='all'|'main'|'cay'|'summit';
 const VIEWS:{id:View;label:string;box:[number,number,number,number]}[]=[
  {id:'all',label:'Whole map',box:[GRID.x0,GRID.z0,GRID.cols*GRID.size,GRID.rows*GRID.size]},
  {id:'main',label:'Main island',box:[-130,-270,520,510]},
  {id:'cay',label:'Coral Cay',box:[220,-300,540,280]},
+ {id:'summit',label:'Summit Isle',box:[470,-20,330,300]},
 ];
 const pts=(list:{x:number;z:number}[],step=1)=>list.filter((_,i)=>i%step===0).map(p=>`${Math.round(p.x*10)/10},${Math.round(p.z*10)/10}`).join(' ');
 // Static silhouette strings, built once.
 const SHORE=pts(ISLAND_SHORE),CAY=pts(CAY_SHORE),CAUSEWAY=pts(CAUSEWAY_PATH,3),JETTY=pts(JETTY_PATH.filter(p=>p.x>=EAST_PIER.wallX),3);
 const SANDBAR_PTS=SANDBARS.map(s=>pts(s.outline));
-const LABELS=[{x:85,z:-35,text:'Island Square'},{x:600,z:-240,text:'Coral Cay'},{x:343,z:28,text:'East Jetty'},{x:380,z:-145,text:'Causeway'}];
+// Summit Isle, the mountain island (Oct 14 2026): its coast from the island's own polar outline, the walkable sandbar to it, the 5s pitch.
+const SUMMIT=pts(Array.from({length:180},(_,i)=>{const a=i/180*Math.PI*2,r=coastRadius(a);return {x:SUMMIT_CENTER.x+Math.cos(a)*r,z:SUMMIT_CENTER.z+Math.sin(a)*r};}));
+const SUMMIT_BAR=pts(SANDBAR_PATH,3);
+const LABELS=[{x:85,z:-35,text:'Island Square'},{x:600,z:-240,text:'Coral Cay'},{x:343,z:28,text:'East Jetty'},{x:380,z:-145,text:'Causeway'},{x:SUMMIT_CENTER.x,z:SUMMIT_CENTER.z+70,text:'Summit Isle'},{x:182,z:-180,text:'Kit Shop'},{x:(ZIP_TOWER.x+ZIP_LAND.x)/2+14,z:(ZIP_TOWER.z+ZIP_LAND.z)/2,text:'Zipline'}];
 export const HEAT_BINS=5;
 /** Legend edges, rounded so the scale reads at a glance ("16 min", "1.1 h"); the tooltip keeps exact times. */
 export function fmtEdge(seconds:number):string{
@@ -88,15 +94,18 @@ export default function IslandHeatmap({cells}:{cells:[number,number][]}){
     onPointerMove={pick} onPointerDown={pick} onPointerLeave={()=>setActive(null)} onFocus={()=>{if(ranked.length)setActive(ranked[0][0]);}} onBlur={()=>setActive(null)} onKeyDown={key}>
     <rect x={box[0]} y={box[1]} width={box[2]} height={box[3]} className={styles.heatSea}/>
     <g className={styles.heatLand}>
-     <polygon points={SHORE}/><polygon points={CAY}/>{SANDBAR_PTS.map((p,i)=><polygon key={i} points={p}/>)}
+     <polygon points={SHORE}/><polygon points={CAY}/><polygon points={SUMMIT}/>{SANDBAR_PTS.map((p,i)=><polygon key={i} points={p}/>)}
+     <polyline points={SUMMIT_BAR} fill="none" strokeWidth={8} strokeLinejoin="round"/>
+    </g>
+    <g className={styles.heatPitch} fill="none"><line x1={ZIP_TOWER.x} y1={ZIP_TOWER.z} x2={ZIP_LAND.x} y2={ZIP_LAND.z} strokeWidth={1.5} strokeDasharray="6 4"/>
      <polyline points={CAUSEWAY} fill="none" strokeWidth={10} strokeLinejoin="round"/>
      <polyline points={JETTY} fill="none" strokeWidth={6} strokeLinejoin="round"/>
      <circle cx={EAST_PIER.cx} cy={EAST_PIER.cz} r={EAST_PIER.plazaEdge}/>
     </g>
-    <g className={styles.heatPitch}>{VENUES.map(v=><rect key={v.id} x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length}/>)}</g>
+    <g className={styles.heatPitch}>{VENUES.map(v=><rect key={v.id} x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length}/>)}<rect x={SUMMIT_PITCH.x-SUMMIT_PITCH.length/2} y={SUMMIT_PITCH.z-SUMMIT_PITCH.width/2} width={SUMMIT_PITCH.length} height={SUMMIT_PITCH.width}/></g>
     <g>{valid.map(([i,s])=>{const c=cellCenter(i),b=heatBin(s,max);return <rect key={i} x={c.x-GRID.size/2+.8} y={c.z-GRID.size/2+.8} width={GRID.size-1.6} height={GRID.size-1.6} rx={2}
      style={{fill:`var(--h${b})`}}/>;})}</g>
-    <g className={styles.heatCoast} fill="none"><polygon points={SHORE}/><polygon points={CAY}/></g>
+    <g className={styles.heatCoast} fill="none"><polygon points={SHORE}/><polygon points={CAY}/><polygon points={SUMMIT}/></g>
     {active!==null&&(()=>{const c=cellCenter(active);return <rect x={c.x-GRID.size/2} y={c.z-GRID.size/2} width={GRID.size} height={GRID.size} className={styles.heatFocus}/>;})()}
     <g className={styles.heatLabels} style={{fontSize:font}}>{LABELS.filter(l=>{const half=l.text.length*font*.32;return l.x-half>=box[0]&&l.x+half<=box[0]+box[2]&&l.z-font>=box[1]&&l.z<=box[1]+box[3];}).map(l=><text key={l.text} x={l.x} y={l.z} textAnchor="middle" strokeWidth={3/scale}>{l.text}</text>)}</g>
    </svg>
