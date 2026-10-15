@@ -33,13 +33,14 @@ ok("the 'swim' activity: client list, Town's frame, the newest analytics_ingest"
  assert(IDS.ACTIVITY_IDS.includes('swim'));assert(IDS.ACTIVITY_LABEL.swim);
  const town=read('components/Town.tsx');assert.match(town,/islandFrame\(location\.x[^\n]*water\.inWater\?'swim':'walk'/);
  const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')&&/create or replace function public\.analytics_ingest/.test(read('supabase/migrations/'+f))).sort();
- const latest=files[files.length-1];assert.equal(latest,'20261017_analytics_water.sql','the water migration is the newest analytics_ingest (update when a newer one lands)');
+ const latest='20261017_analytics_water.sql',at=files.indexOf(latest);assert(at>0,'the water migration replaces analytics_ingest');
+ // Oct 15 2026: 20261018_analytics_live.sql is newer; tests/admin-analytics-live.cjs checks it keeps every key of this one.
  const sql=read('supabase/migrations/'+latest),lists=[...sql.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
  const [areas,places,acts]=lists;
  assert(acts.includes('swim'),'swim allowed');
  // Nothing the previous ingest allowed is dropped.
- const prev=read('supabase/migrations/'+files[files.length-2]),plists=[...prev.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
- for(const [i,l] of plists.entries())for(const k of l)assert(lists[i].includes(k),`${files[files.length-2]} key kept: ${k}`);
+ const prev=read('supabase/migrations/'+files[at-1]),plists=[...prev.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1].split(',').map(s=>s.trim().replace(/'/g,'')));
+ for(const [i,l] of plists.entries())for(const k of l)assert(lists[i].includes(k),`${files[at-1]} key kept: ${k}`);
  assert(acts.includes('kit_studio')&&places.includes('summit_isle'));
  assert.match(sql.trim().split('\n').pop(),/as status;$/);assert(sql.includes("'OK, water analytics installed'"));
  assert(!/\bdrop\b|\btruncate\b|\bdelete from\b/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');

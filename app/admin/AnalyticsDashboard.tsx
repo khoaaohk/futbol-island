@@ -14,6 +14,9 @@ import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewS
 import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
 import PullToRefresh from './PullToRefresh';
+import LivePanel from './LivePanel';
+import SourcesSection from './SourcesSection';
+import liveStyles from './LivePanel.module.css';
 import styles from './admin.module.css';
 
 type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'custom';
@@ -53,6 +56,9 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const [report,setReport]=useState(initial),[preset,setPreset]=useState<Preset>(initialRange),[loading,setLoading]=useState(false),[error,setError]=useState('');
  const [from,setFrom]=useState(initial.from),[to,setTo]=useState(initial.to);
  const [updatedAt,setUpdatedAt]=useState<number|null>(null);
+ // Oct 15 2026: the "N on now" tile opens the live slide-out (LivePanel.tsx).
+ const [liveOpen,setLiveOpen]=useState(false),liveTile=useRef<HTMLButtonElement>(null);
+ const closeLive=useCallback(()=>{setLiveOpen(false);requestAnimationFrame(()=>liveTile.current?.focus({preventScroll:true}));},[]);
  const query=useRef(`range=${initialRange}`);
  // The first paint's data came from the server moments ago; stamp it client-side once mounted (avoids an SSR/client
  // Date.now() hydration mismatch).
@@ -120,7 +126,8 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     </form>}
     <span className={styles.spacer}/>
     {updatedAt!=null&&<span className={styles.utc} data-updated-at>Updated {new Date(updatedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}</span>}
-    <span className={styles.live} data-tip="Tabs that sent anything in the last 5 minutes" title="Tabs that sent anything in the last 5 minutes"><i aria-hidden="true"/>{fmtInt(report.live)} on now</span>
+    <button type="button" ref={liveTile} className={`${styles.live} ${liveStyles.tile}`} data-live-tile aria-haspopup="dialog" aria-expanded={liveOpen} onClick={()=>setLiveOpen(true)}
+     data-tip="Tabs that sent anything in the last 5 minutes. Tap for who is on now." title="Tabs that sent anything in the last 5 minutes. Tap for who is on now."><i aria-hidden="true"/>{fmtInt(report.live)} on now</button>
    </div>
    <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
 
@@ -219,6 +226,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
        <BarList rows={barsOf(d.entry,k=>PAGE_LABEL[k]||k,'sessions')} unit="sessions"/>
       </ChartCard>
      </div>
+     <SourcesSection report={report} countryName={countryName}/>
     </section>
 
     <section className={styles.island} aria-labelledby="sec-product">
@@ -256,5 +264,6 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     </section>
    </div>
   </div>
+  <LivePanel open={liveOpen} onClose={closeLive} countryName={countryName}/>
  </main>;
 }

@@ -89,7 +89,8 @@ export function createMemoryStore(file?:string,{tz='pacific'}:{tz?:TimeZoneMode}
     if(data.starts[ev.session])return;
     if(Object.values(data.starts).filter(s=>s.day===ev.day&&s.visitorHash===ev.visitorHash).length>=SESSION_CAP_PER_VISITOR_DAY)return;
     data.starts[ev.session]={id:ev.session,day:ev.day,visitorHash:ev.visitorHash,startedAt:t,entryPath:ev.path,country:ev.country,region:ev.region,device:ev.device,
-     source:ev.source,referrerHost:ev.referrerHost,utmSource:ev.utmSource,utmMedium:ev.utmMedium,utmCampaign:ev.utmCampaign,flags:ev.flags||{}};
+     source:ev.source,referrerHost:ev.referrerHost,utmSource:ev.utmSource,utmMedium:ev.utmMedium,utmCampaign:ev.utmCampaign,flags:ev.flags||{},
+     returning:ev.returning??null,hasCode:ev.hasCode??null};
    }else{
     const s=data.starts[ev.session];
     if(!s||now.getTime()-Date.parse(s.startedAt)>BEAT_WINDOW_MS)return;
@@ -168,7 +169,9 @@ export function createSupabaseStore(url:string,serviceKey:string,fetchImpl:typeo
     referrer_host:ev.referrerHost,utm_source:ev.utmSource,utm_medium:ev.utmMedium,utm_campaign:ev.utmCampaign,engaged_ms:ev.engagedMs,pageviews:ev.pageviews,area_ms:ev.areaMs,
     place_ms:ev.placeMs,activity_ms:ev.activityMs,cells:ev.cells,
     // Oct 9 2026: ignored by the ingest of older migrations (so this ships safely before 20261009_analytics_counts.sql runs).
-    counts:ev.counts,flags:ev.flags}});
+    counts:ev.counts,flags:ev.flags,
+    // Oct 15 2026: ignored by the ingest before 20261018_analytics_live.sql (stored as null by it when absent).
+    is_returning:ev.returning??null,has_code:ev.hasCode??null}});
   },
   async rollups(fromDay,toDay){return frozenRows(await timeMode()==='pacific'?'analytics_daily_pt':'analytics_daily',fromDay,toDay);},
   async legacyRollups(fromDay,toDay){return frozenRows('analytics_daily',fromDay,toDay);},

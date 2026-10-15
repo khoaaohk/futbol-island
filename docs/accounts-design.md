@@ -494,6 +494,12 @@ unknown keys, and strips IDP free text.
 - The code itself: only its keyed hash. The client keeps the code in localStorage as `fi2-save-code-v1` so it can sync and
   show "My code".
 - Any analytics link: the save id never appears in analytics, and analytics hashes never appear in saves.
+  - Oct 15 2026 (live sessions, `supabase/migrations/20261018_analytics_live.sql`): a session's start carries two yes/no
+    marks, "this device has played before" and "a save code is active on it" (`analytics_sessions.is_returning` / `has_code`),
+    never the code, its hash or the save id. The visit counter records the country and region a device connects from, the
+    website that linked to the island and a campaign tag (`?from=` / `utm_*`), and session activity, all without names,
+    accounts, IP addresses or precise location; the owner sees this in /admin as anonymous sessions (a 6-hex salted `sid`),
+    and day reports hide rows under 3 sessions. `/privacy` §7 says so.
 - **Free text typed by a child.** The IDP's "My strength" (80 characters) and reflection notes (280 characters) could contain
   a name or a school.
   - In v1 the snapshot keeps the IDP's structured choices (focus, tags, review ticks), and the text stays on the device.

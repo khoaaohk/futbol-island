@@ -1,0 +1,60 @@
+/* "On now" slide-out (Oct 15 2026). Lives inside the admin .page, so it uses the admin tokens (--a-*) and the shared button
+   variables; slides in from the right; full width at 390 px; its own scroll (overscroll contained, so neither the page nor the
+   page's pull-to-refresh moves under it). */
+.root{position:fixed;inset:0;z-index:40;pointer-events:none}
+.root[data-open=true]{pointer-events:auto}
+.scrim{position:absolute;inset:0;background:#0f241d66;opacity:0;transition:opacity .24s}
+.root[data-open=true] .scrim{opacity:1}
+.panel{position:absolute;top:0;right:0;bottom:0;width:min(460px,100vw);display:flex;flex-direction:column;background:var(--a-page);color:var(--a-ink);
+ box-shadow:-12px 0 32px #0f241d33;transform:translateX(102%);transition:transform .28s cubic-bezier(.22,.68,0,1);visibility:hidden}
+.root[data-open=true] .panel{transform:none;visibility:visible}
+@media (prefers-reduced-motion:reduce){.panel,.scrim{transition:none}}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px 16px;border-bottom:1px solid var(--a-grid)}
+.head h2{margin:0;display:flex;align-items:center;gap:10px;font:700 22px/1.1 var(--btn-font)}
+.count{font-variant-numeric:tabular-nums;color:var(--a-ink-2)}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--a-live);box-shadow:0 0 0 0 #0ca30c66;animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #0ca30c66}70%{box-shadow:0 0 0 9px #0ca30c00}100%{box-shadow:0 0 0 0 #0ca30c00}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none;box-shadow:0 0 0 3px #0ca30c33}}
+.body{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 16px calc(24px + env(safe-area-inset-bottom,0px));display:grid;align-content:start;gap:12px}
+.windows{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.windows button{min-height:40px;padding:0 14px;border-radius:var(--btn-radius);border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-gold-bright);color:var(--btn-ink);font:700 14px var(--btn-font);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
+.windows button[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 3px 0 var(--btn-pink-edge)}
+.windows button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.note,.foot{font-size:12px;color:var(--a-muted)}
+.note{margin-left:auto}
+.foot{margin:4px 0 0;line-height:1.4}
+.strip{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:start;padding:10px 12px;border-radius:14px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring)}
+.stripLabel{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--a-muted);padding-top:3px}
+.strip ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px}
+.strip li{display:grid;font-size:14px}
+.strip li b{font-weight:700;white-space:nowrap}
+.strip li small{font-size:12px;color:var(--a-ink-2)}
+.none{color:var(--a-muted)}
+.cards{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.card{padding:12px;border-radius:16px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring);display:grid;gap:6px}
+.cardTop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sid{font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--a-ink-2)}
+.badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e7dfc2;color:#244d40}
+.badge[data-kind=returning]{background:#cfe9d9}
+.badge[data-kind=new]{background:#fde3b8}
+.badge[data-kind=code]{background:#d9ccf3}
+.spent{margin-left:auto;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums}
+.now{margin:0;font-size:16px}
+.now small{color:var(--a-muted);font-size:13px}
+.timeLine{margin:0;font-size:12px;color:var(--a-ink-2)}
+.facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.facts div{min-width:0}
+.facts .wide{grid-column:1/-1}
+.facts dt{font-size:11px;color:var(--a-muted)}
+.facts dd{margin:0;font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.chips li{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--a-page);box-shadow:0 0 0 1px var(--a-ring)}
+.empty{margin:24px 0;text-align:center;font-size:16px;color:var(--a-ink-2)}
+.error,.warn{margin:0;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.4;background:#fde3b8;color:#5a3a00}
+/* The "N on now" tile as a button (AnalyticsDashboard). */
+.tile{cursor:pointer;border:0;font:inherit;color:inherit}
+.tile:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.tile:active{translate:0 1px}
+.tile i{animation:pulse 1.6s ease-out infinite}
+@media (prefers-reduced-motion:reduce){.tile i{animation:none}}

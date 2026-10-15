@@ -23,6 +23,8 @@ const onMove=ptr.match(/const onMove=\(e:TouchEvent\)=>\{([\s\S]*?)\n  \};/);
 const onEnd=ptr.match(/const onEnd=\(\)=>\{([\s\S]*?)\n  \};/);
 assert.ok(onStart&&onMove&&onEnd,'onStart/onMove/onEnd handlers are present');
 assert.ok(!/preventDefault/.test(onStart[1]),'touchstart never calls preventDefault (passive)');
+assert.match(onStart[1],/closest\?\.\('\[data-pull-ignore\]'\)\)return;/,'a touch inside the On now slide-out never starts a pull (Oct 15 2026)');
+assert.match(fs.readFileSync(path.join(__dirname,'..','app/admin/LivePanel.tsx'),'utf8'),/data-open=\{open\} aria-hidden=\{!open\} data-pull-ignore/,'the slide-out is marked');
 assert.ok(!/preventDefault/.test(onEnd[1]),'touchend never calls preventDefault (passive)');
 // Inside touchmove, preventDefault must come after the bail-out for "not actually pulling down from the top".
 const bailIdx=onMove[1].indexOf('reset();return;');

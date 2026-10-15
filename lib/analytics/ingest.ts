@@ -76,6 +76,8 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   placeMs:start?{}:clampSplit(ev.pl,PLACE_IDS,engagedMs),activityMs:start?{}:clampSplit(ev.ac,ACTIVITY_IDS,engagedMs),cells:start?{}:clampCells(ev.c,engagedMs),
   // Learning (Oct 9 2026): allowlisted counter ids on beats, coarse buckets on starts. Totals per fixed id only.
   counts:start?{}:clampCounts(ev.k),flags:start?(checkFlags(ev.f)||{}):{},
+  // Live sessions (Oct 15 2026): two yes/no marks on a start (validateEvent refuses them on a beat). Never a code or an id.
+  returning:start&&ev.rt!==undefined?ev.rt===1:null,hasCode:start&&ev.hc!==undefined?ev.hc===1:null,
  };
  // A beat with no time, no page views and no counters is not written. (A count-only beat is a hide that drained leftovers.)
  if(!start&&!engagedMs&&!clean.pageviews&&!Object.keys(clean.counts).length)return {status:204,reason:'empty-beat'};

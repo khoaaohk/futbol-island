@@ -240,7 +240,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
 // 10. `/` = the title screen first, then the game in place (lib/rootView.ts, components/root/*); /start is gone.
 {const rv=read('lib/rootView.ts'),page=read('app/page.tsx'),sw=read('components/root/RootSwitch.tsx'),css=read('app/globals.css');
  // The pre-paint rule, run as the browser runs it: fresh → title screen; a tab in the game, ?from=, ?panel= → the game.
- const BOOT=JSON.parse('"'+(rv.match(/ROOT_VIEW_BOOT=`([^`]*)`/)[1]).replace(/\$\{IN_GAME_KEY\}/g,'fi2-in-game').replace(/\$\{JSON\.stringify\(GAME_QUERY_KEYS\)\}/g,"['from','panel']").replace(/"/g,'\\"')+'"');
+ const BOOT=JSON.parse('"'+(rv.match(/ROOT_VIEW_BOOT=`([^`]*)`/)[1]).replace(/\$\{IN_GAME_KEY\}/g,'fi2-in-game').replace(/\$\{JSON\.stringify\(GAME_QUERY_KEYS\)\}/g,"['from','panel']").replace(/\$\{JSON\.stringify\(GAME_FROM\)\}/g,"['arcade','konbini','museum','shop']").replace(/"/g,'\\"')+'"');
  const boot=(search,stored={},nav='navigate')=>{const html={dataset:{}};vm.runInNewContext(BOOT,{document:{documentElement:html},location:{search},URLSearchParams,
   performance:{getEntriesByType:()=>[{type:nav}]},sessionStorage:{getItem:k=>stored[k]??null}});return html.dataset.rootView;};
  assert.equal(boot(''),'landing','a fresh session sees the title screen');
@@ -249,13 +249,14 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  assert.equal(boot('',{'fi2-in-game':'1'},'navigate'),'landing','…and so does visiting the address again');
  assert.equal(boot('',{'fi2-island-handoff':'tan'},'reload'),'game','the game\'s own hand-off reload (a restored save) lands in the game');
  assert.equal(boot('?from=arcade'),'game','/?from=arcade goes straight to the game');
+ assert.equal(boot('?from=flyer'),'landing','a printed link\'s tag (the QR card\'s ?from=flyer) shows the title screen (Oct 15 2026)');
  assert.equal(boot('?panel=about&coffee=thanks'),'game','the game\'s About return opens the game');
  assert.equal(boot('',null),'landing');
  {const html={dataset:{}};vm.runInNewContext(BOOT,{document:{documentElement:html},location:{search:''},URLSearchParams,sessionStorage:{getItem:()=>{throw new Error('blocked');}}});assert.equal(html.dataset.rootView,'landing','storage blocked: the title screen');}
  // The client rule is the same one.
  const out=ts.transpileModule(rv,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
  const store={};const R={exports:{}};vm.runInNewContext(out,{module:R,exports:R.exports,URLSearchParams,location:{search:''},sessionStorage:{getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=v;}}});
- const V=R.exports;assert.equal(V.isInGame(''),false);assert.equal(V.isInGame('?from=museum'),true);assert.equal(V.isInGame('?coffee=thanks'),false);
+ const V=R.exports;assert.equal(V.isInGame(''),false);assert.equal(V.isInGame('?from=museum'),true);assert.equal(V.isInGame('?coffee=thanks'),false);assert.equal(V.isInGame('?from=flyer'),false);
  let heard=0;const off=V.subscribeRootView(()=>heard++);V.rememberInGame();assert.equal(heard,0,'remembering (before a restore reload) does not switch the page');
  assert.equal(store['fi2-in-game'],'1');V.enterGame();assert.equal(heard,1,'Play switches it');assert.equal(V.rootViewSnapshot(),'game');off();
  // Decided before first paint, static, both screens prerendered; the game is its own chunk.

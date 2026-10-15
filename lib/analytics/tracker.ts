@@ -52,6 +52,8 @@ export type TrackerEnv={
  fetch?:typeof fetch;
  /** Coarse progress/settings buckets for the session's start (lib/analytics/startFlags.ts). Called once per new session. */
  flags?:()=>StartFlags|null;
+ /** Oct 15 2026 (live sessions): two yes/no marks for the start (lib/analytics/deviceMarks.ts readDeviceMarks). Once per new session. */
+ marks?:()=>{returning:boolean;hasCode:boolean}|null;
  allowLocalhost?:boolean;
 };
 
@@ -126,6 +128,23 @@ export function skipReason(env:TrackerEnv):string|null{
  const q=new URLSearchParams(search);
  if(q.get('preview')==='all'||q.has('unlock')||q.has('testCoins')){try{env.storage?.setItem(SKIP_KEY,'1');}catch{}return 'preview';}
  try{if(env.storage?.getItem(SKIP_KEY)==='1')return 'preview';}catch{}
+ return null;
+}
+
+/** The referring site's HOST only (never its path or query), or null for no referrer, an unparseable one or our own site. */
+export function referrerHost(referrer:string|null|undefined,ownHost:string):string|null{
+ try{if(!referrer)return null;const u=new URL(referrer);if(u.protocol!=='http:'&&u.protocol!=='https:')return null;const h=u.hostname.toLowerCase();return h&&h!==ownHost.toLowerCase()?h:null;}catch{return null;}
+}
+/** The `?from=` tag of a printed or shared link (or `utm_source`), sanitised: letters, digits and dashes, at most 24, lower case.
+ *  The game's own return trips (?from=arcade|konbini|museum|shop, next.config.mjs) are not campaigns and give null. */
+export const RETURN_FROM=['arcade','konbini','museum','shop'] as const;
+export function campaignTag(search:string):string|null{
+ let q:URLSearchParams;try{q=new URLSearchParams(search);}catch{return null;}
+ for(const key of ['from','utm_source']){
+  const v=(q.get(key)||'').trim().toLowerCase();
+  if(!v||(key==='from'&&(RETURN_FROM as readonly string[]).includes(v)))continue;
+  return /^[a-z0-9-]{1,24}$/.test(v)?v:null;
+ }
  return null;
 }
 
@@ -220,10 +239,13 @@ export function startTracker(env:TrackerEnv){
   const body:Record<string,unknown>={v:1,t:'start',s:session,p};
   {
    isNew=false;
-   try{const host=new URL(d.referrer).hostname;if(host&&host!==w.location.hostname)body.r=host;}catch{}
+   const r=referrerHost(d.referrer,w.location.hostname);if(r)body.r=r;
    const q=new URLSearchParams(w.location.search),u:Record<string,string>={};
    for(const k of ['source','medium','campaign']){const v=q.get('utm_'+k);if(v)u[k]=v.slice(0,100);}
+   // A printed link's tag (Oct 15 2026: the QR card is https://futbolisland.app/?from=flyer) rides as the source when no utm_source.
+   const tag=campaignTag(w.location.search);if(tag&&!u.source)u.source=tag;
    if(Object.keys(u).length)body.u=u;
+   try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;}}catch{}
    if((n.maxTouchPoints||0)>1)body.tp=1;
    try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
   }

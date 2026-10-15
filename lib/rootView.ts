@@ -16,10 +16,14 @@
 export const IN_GAME_KEY='fi2-in-game';
 /** Query keys only the game's own links carry. */
 export const GAME_QUERY_KEYS=['from','panel'] as const;
+/** Oct 15 2026: only the game's own return trips open the game with `?from=`; any other value (a printed link's tag, e.g. the QR
+ *  card's ?from=flyer, read once by the visit counter) shows the title screen like a bare `/`. Same list as next.config.mjs. */
+export const GAME_FROM=['arcade','konbini','museum','shop'] as const;
+const gameQuery=(q:URLSearchParams)=>q.has('panel')||(GAME_FROM as readonly string[]).includes(q.get('from')||'');
 export type RootView='landing'|'game';
 
 /** Inline, pre-paint: <html data-root-view="game|landing">. Mirrors isInGame(). */
-export const ROOT_VIEW_BOOT=`try{var g=!!document.documentElement.dataset.islandHandoff;try{g=g||!!sessionStorage.getItem('fi2-island-handoff')}catch(e){}if(!g){var q=new URLSearchParams(location.search);g=${JSON.stringify(GAME_QUERY_KEYS)}.some(function(k){return q.has(k)})}document.documentElement.dataset.rootView=g?'game':'landing'}catch(e){}`;
+export const ROOT_VIEW_BOOT=`try{var g=!!document.documentElement.dataset.islandHandoff;try{g=g||!!sessionStorage.getItem('fi2-island-handoff')}catch(e){}if(!g){var q=new URLSearchParams(location.search);g=q.has('panel')||${JSON.stringify(GAME_FROM)}.indexOf(q.get('from')||'')>=0}document.documentElement.dataset.rootView=g?'game':'landing'}catch(e){}`;
 
 /** Set when sessionStorage is unavailable (private modes that throw), so the switch still holds for this page's life. */
 let entered=false;
@@ -28,7 +32,7 @@ const listeners=new Set<()=>void>();
 export function isInGame(search:string=typeof location==='undefined'?'':location.search):boolean{
  if(entered)return true;
  if(typeof document!=='undefined'&&document.documentElement.dataset.islandHandoff)return true;
- try{const q=new URLSearchParams(search);return GAME_QUERY_KEYS.some(k=>q.has(k));}catch{return false;}
+ try{return gameQuery(new URLSearchParams(search));}catch{return false;}
 }
 /** Remember that this tab is in the game (no re-render): Town calls it on mount; a restore calls it before its reload. */
 export function rememberInGame(){try{sessionStorage.setItem(IN_GAME_KEY,'1');}catch{/* the in-memory flag covers this page */}}

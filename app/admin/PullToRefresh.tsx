@@ -32,6 +32,8 @@ export default function PullToRefresh({onRefresh,loading,updated}:{onRefresh:()=
   const onStart=(e:TouchEvent)=>{
    // Only begin from the very top of the page, on a single touch pointer, and never while a fetch is already running.
    if(refreshing||loading||e.touches.length!==1||!atTop())return;
+   // Oct 15 2026: never from inside an overlay with its own scroll (the "On now" slide-out, LivePanel.tsx: data-pull-ignore).
+   if((e.target as Element|null)?.closest?.('[data-pull-ignore]'))return;
    pulling.current=true;setDragging(true);startY.current=e.touches[0].clientY;
   };
 

@@ -9,7 +9,8 @@
  *   v  coach voice (index into the fixed COACH_VOICE_IDS list)
  *
  * Deliberately NOT read: the last-visit day (lib/town/welcomeBack.ts) or anything else that would tell a returning visitor
- * apart. That needs grown-ups wording and an opt-out first (docs/analytics-roadmap.md #6).
+ * apart. Oct 15 2026: that yes/no now exists, disclosed on /privacy, as its own two marks in lib/analytics/deviceMarks.ts
+ * (separate from these flags, which still never carry it).
  * The keys are the game's own (tests/admin-analytics-learning.cjs checks they still match the code that writes them).
  */
 import {COACH_VOICE_IDS,LEARN_FORMATS,gradBand,lessonInfo,progressBand,type StartFlags} from './countIds';
@@ -36,3 +37,4 @@ export function readStartFlags(storage:Pick<Storage,'getItem'>|null):StartFlags|
  out.v=Math.max(0,COACH_VOICE_IDS.findIndex(([id])=>id===get(FLAG_KEYS.coach)));
  return out;
 }
+

@@ -92,12 +92,14 @@ export default function PrivacyPolicy(){
     <li>the kind of device (phone, tablet or computer), worked out from the browser type, which is then discarded;</li>
     <li>how the visitor arrived: the name of the website that linked to us (not the full address), or a campaign tag in our own links;</li>
     <li>which part of the game was opened first, from a fixed list;</li>
-    <li>time spent while the game is on screen, in total and by area (for example the island, the arcade or the museum), by place on the island, by activity (such as walking, fishing or a lesson), and by 20-metre square of the island map. These are totals; we never record a route or the order in which places were visited;</li>
+    <li>time spent while the game is on screen, in total and by area (for example the island, the arcade or the museum), by place on the island, by activity (such as walking, fishing or a lesson), and by 20-metre square of the island map. These are totals; we never record a route or the order in which places were visited (only, for a visit still under way, the part of the game it is in now and the one before);</li>
     <li>counts of learning steps from fixed lists: lessons opened and finished, which answer was chosen first on each quiz question, steps of the welcome walkthrough, football-plan actions, and broad progress bands (such as “1–3 lessons done”);</li>
     <li>which buttons and links on the start page are tapped (for example Start, For grown-ups or Donate), counted as totals;</li>
-    <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off.</li>
+    <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
+    <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code.</li>
    </ul>
-   <p>We never record typed text, names, save codes, the order of a visitor’s actions, or anything that would let us follow one child. Small numbers (fewer than 5 visits) are hidden in our own reports.</p>
+   <p>We never record typed text, names, save codes, the order of a visitor’s actions, or anything that would let us follow one child. Small numbers are hidden in our day-by-day reports.</p>
+   <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, and its time and counts so far. Never a name, an account, a network address or a precise location.</p>
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>
   </section>
 

@@ -28,6 +28,7 @@ import type {Overview} from './overview';
 import type {SaveMetricsReport} from '../saves/metrics';
 import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import type {FishingAdminMetrics} from './fishingAdminMetrics';
+import type {SourcesSummary} from './live';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -73,7 +74,10 @@ export type Device='phone'|'tablet'|'desktop';
 export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e?:number;a?:Record<string,number>;n?:number;tp?:number;
  pl?:Record<string,number>;ac?:Record<string,number>;c?:Record<string,number>;
  /** Oct 9 2026: learning counters (beats) and start flags (starts). */
- k?:Record<string,number>;f?:StartFlags};
+ k?:Record<string,number>;f?:StartFlags;
+ /** Oct 15 2026 (live sessions): on a start only, two yes/no marks read from the game's own storage on this device:
+  *  rt = 1 when the device has played here before, hc = 1 when a save code is active on it. Never the code itself. */
+ rt?:0|1;hc?:0|1};
 /** Seconds per heat-map cell (key = cell index as a string). */
 export type CellMap=Record<string,number>;
 
@@ -86,6 +90,8 @@ export type CleanEvent={
  placeMs:Partial<Record<PlaceId,number>>;activityMs:Partial<Record<ActivityId,number>>;cells:CellMap;
  /** Oct 9 2026: allowlisted learning counters (beats) and start flags (starts); empty objects otherwise. */
  counts:Record<string,number>;flags:StartFlags;
+ /** Oct 15 2026: starts only (null when the tab did not say, and on beats). */
+ returning?:boolean|null;hasCode?:boolean|null;
 };
 
 const SESSION_RE=/^[A-Za-z0-9_-]{16,32}$/;
@@ -157,7 +163,7 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
@@ -165,6 +171,7 @@ export function validateEvent(body:string):Validated{
  if(r.r!==undefined&&(typeof r.r!=='string'||r.r.length>253))return {ok:false,reason:'referrer'};
  if(r.e!==undefined&&(typeof r.e!=='number'||!Number.isFinite(r.e)||r.e<0||r.e>3_600_000))return {ok:false,reason:'engaged'};
  if(r.tp!==undefined&&r.tp!==0&&r.tp!==1)return {ok:false,reason:'touch'};
+ for(const k of ['rt','hc'] as const)if(r[k]!==undefined&&((r[k]!==0&&r[k]!==1)||r.t!=='start'))return {ok:false,reason:'marks'};
  if(r.u!==undefined){
   if(!r.u||typeof r.u!=='object'||Array.isArray(r.u))return {ok:false,reason:'utm'};
   for(const [k,v] of Object.entries(r.u as Record<string,unknown>))if(!['source','medium','campaign'].includes(k)||typeof v!=='string'||v.length>100)return {ok:false,reason:'utm'};
@@ -293,7 +300,9 @@ export type SessionRow={
 /** Append-only rows: one per session start, one per beat. */
 export type StartRow={id:string;day:string;visitorHash:string;startedAt:string;entryPath:string;country:string|null;region:string|null;device:Device;source:SourceClass;referrerHost:string|null;utmSource:string|null;utmMedium:string|null;utmCampaign:string|null;
  /** Oct 9 2026; absent on starts stored before the learning counters. */
- flags?:StartFlags};
+ flags?:StartFlags;
+ /** Oct 15 2026 (20261018_analytics_live.sql): played on this device before / a save code active; null = not sent (older tabs). */
+ returning?:boolean|null;hasCode?:boolean|null};
 export type BeatRow={sessionId:string;ts:string;engagedMs:number;pageviews:number;areaMs:Partial<Record<Area,number>>;
  /** Oct 8 2026; absent on beats stored before the place split. */
  placeMs?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap;
@@ -533,6 +542,8 @@ export type Report={
  /** Oct 15 2026: fights per fishing session over the raw-beat window (lib/analytics/fishingAdminMetrics.ts,
   *  supabase/migrations/20261017_analytics_fishing.sql); the fishing counters themselves are in `overview.fishing`. */
  fishing?:FishingAdminMetrics|null;
+ /** Oct 15 2026: "Where players come from" (lib/analytics/liveAdmin.ts loadSources, supabase/migrations/20261018_analytics_live.sql). */
+ sources?:SourcesSummary|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */
