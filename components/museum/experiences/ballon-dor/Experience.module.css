@@ -1,0 +1,27 @@
+/* ballon-dor · the exhibit's own bits on top of the shared Paper room. One accent: gold. */
+.plate{display:grid;gap:6px}
+.plate ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 14px;font:400 14px/1.35 var(--sans)}
+.plate li{display:flex;flex-wrap:wrap;gap:0 6px;align-items:baseline}
+.plate li b{font:700 12px/1.3 var(--mono);color:#7a7a76}
+.plate li em{font-style:normal;font:700 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:#8a6a1c}
+.plate li[data-g="gk"],.plate li[data-g="df"]{color:#1d1d1b;font-weight:600}
+.plate small{font:400 12px/1.3 var(--sans);color:#7a7a76}
+@media (max-width:600px){.plate ul{font-size:12.5px;gap:1px 10px}}
+.records{list-style:none;margin:0 0 4px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.records li{display:grid;gap:2px;padding:10px 12px;border-radius:12px;background:#f7f7f3;box-shadow:0 0 0 1px rgba(29,29,27,.08)}
+.records b{font:800 30px/1 var(--sans);letter-spacing:-.02em;color:#8a6a1c}
+.records span{font:400 14px/1.4 var(--sans);color:#3a3a3c}
+.criteria{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.criteria li{display:flex;gap:8px;align-items:center;min-height:44px;padding:6px 10px;border-radius:12px;background:#f7f7f3;box-shadow:inset 0 0 0 1.5px var(--accent);font:600 13px/1.25 var(--sans)}
+.criteria i{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#1d1d1b;font:700 12px/1 var(--mono);font-style:normal}
+@media (max-width:600px){.criteria{grid-template-columns:1fr}.criteria li{min-height:36px;font-size:12.5px}}
+.labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+.leaders{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.leaders path{stroke:#8a6a1c;stroke-width:1;fill:none}
+.leaders circle{fill:#8a6a1c}
+.label{position:absolute;box-sizing:border-box;padding:8px 10px;border-radius:12px;background:rgba(247,247,243,.95);box-shadow:0 0 0 1px rgba(29,29,27,.12),0 8px 20px -12px rgba(29,29,27,.4);font:400 13px/1.35 var(--sans);color:#3a3a3c}
+.label b{display:flex;align-items:center;gap:6px;font:700 15px/1.2 var(--sans);color:#1d1d1b;margin-bottom:2px}
+.label b i{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #8a6a1c;color:#8a6a1c;font:700 11px/1 var(--mono);font-style:normal}
+.label span{display:block}
+@media (max-width:600px){.label{padding:6px 8px;font-size:11.5px}.label b{font-size:13px}}
+@media (prefers-reduced-motion:reduce){.label{transition:none}}

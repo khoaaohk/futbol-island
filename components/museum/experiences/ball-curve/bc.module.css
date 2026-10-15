@@ -1,0 +1,46 @@
+/* ball-curve · the lab's own bits on top of the shared Paper room (anatomy/paper.module.css). One accent: red. */
+.stage{-webkit-touch-callout:none}
+.stage :global([data-ctl]){cursor:grab}
+.stage[data-active] :global([data-ctl]){cursor:grabbing}
+.stage[data-stage="apart"]{cursor:grab}
+.stage :global([data-ctl]:focus-visible){outline:none;stroke:var(--accent);stroke-width:2px;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}
+/* the wind tunnel: white smoke on the dark floor, the glass, the push */
+.stage :global(.bc-smoke){fill:none;stroke:#ffffff;stroke-width:1.8px;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14 5;vector-effect:non-scaling-stroke}
+.stage :global(.bc-smoke-under){fill:none;stroke:rgba(29,29,27,.28);stroke-width:3.6px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.stage :global(.bc-glass){fill:rgba(214,230,236,.22);stroke:rgba(58,58,60,.55);stroke-width:.8px;vector-effect:non-scaling-stroke}
+.stage :global(.bc-glint){fill:none;stroke:#ffffff;stroke-width:2px;opacity:.7;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.stage :global(.bc-push){fill:var(--accent);stroke:color-mix(in srgb,var(--accent) 50%,#000);stroke-width:1px;vector-effect:non-scaling-stroke}
+.stage :global(.bc-spin){fill:none;stroke:var(--accent);stroke-width:2.6px;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+/* the launcher's lines: the straight aim, the dashed prediction, the flight and its shadow */
+.stage :global(.bc-straight){fill:none;stroke:#3a3a3c;stroke-opacity:.55;stroke-width:1px;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+.stage :global(.bc-pred){fill:none;stroke:var(--accent);stroke-width:2.4px;stroke-dasharray:6 5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.stage :global(.bc-flight){fill:none;stroke:var(--accent);stroke-width:2.6px;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.stage :global(.bc-shadow){fill:none;stroke:#2f4a2c;stroke-opacity:.32;stroke-width:2px;stroke-dasharray:2 4;vector-effect:non-scaling-stroke}
+.stage :global(.bc-cross){stroke:var(--accent);stroke-opacity:.55;stroke-width:1px;fill:none;vector-effect:non-scaling-stroke}
+.stage :global(.bc-spinarc){fill:none;stroke:var(--accent);stroke-width:2.6px;stroke-linecap:round;stroke-linejoin:round}
+/* the ball taken apart */
+.stage :global(.bc-tape){fill:none;stroke:#e2b622;stroke-width:5px;stroke-linecap:round;opacity:.95}
+.stage :global(.bc-tape[data-on]){stroke:var(--accent)}
+.stage :global(.bc-valve-line){fill:none;stroke:#98989a;stroke-width:1px;stroke-dasharray:2 3;vector-effect:non-scaling-stroke}
+.stage :global(.bc-seam-on){fill:none;stroke:var(--accent);stroke-width:1.8px;vector-effect:non-scaling-stroke}
+.kick{min-width:160px}
+/* the breakdown: leader lines to a column of labels (wide), number badges + a caption (phone) */
+.over{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.leader{fill:none;stroke:var(--accent);stroke-width:1px}
+.leaderEnd{fill:#f7f7f3;stroke:var(--accent);stroke-width:1.5px}
+.badge circle{fill:#f7f7f3;stroke:var(--accent);stroke-width:2px}
+.badge text{font:700 13px/1 var(--sans);fill:var(--accent);text-anchor:middle}
+.badge[data-on] circle{fill:var(--accent)}.badge[data-on] text{fill:#fff}
+.badgeHit{position:absolute;z-index:2;width:44px;height:44px;border:0;border-radius:50%;background:transparent;cursor:pointer;padding:0}
+.badgeHit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.label{position:absolute;z-index:2;display:grid;gap:4px;padding:8px 10px;border:0;border-radius:12px;background:rgba(247,247,243,.9);box-shadow:0 0 0 1px rgba(29,29,27,.06);text-align:left;cursor:pointer;color:var(--ink);min-height:44px;animation:labelIn .35s ease both}
+.label b{display:flex;align-items:center;gap:8px;font:700 15px/1.2 var(--sans)}
+.label i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--accent);color:var(--accent);font:700 12px/1 var(--sans);font-style:normal}
+.label span{font:400 13.5px/1.4 var(--sans);color:#3a3a3c}
+.label[aria-pressed="true"]{background:#fff;box-shadow:0 0 0 1.5px var(--accent)}
+.label[aria-pressed="true"] i{background:var(--accent);color:#fff}
+.label:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes labelIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+.slider{display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0;font:600 12px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.slider input{flex:1;min-width:120px;height:44px;margin:0;accent-color:var(--accent);cursor:pointer}
+@media (prefers-reduced-motion:reduce){.label{animation:none}}

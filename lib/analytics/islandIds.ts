@@ -34,7 +34,9 @@ export const PLACE_LABEL:Record<string,string>=Object.fromEntries(PLACES);
  * `idle` is visible time with no input for a while (ACTIVITY_IDLE_MS): it is reported, but never counted as play in places
  * or cells.
  */
-export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame'] as const;
+// Oct 14 2026: the west wing's ten history cases (the Your Collection pieces were never exhibits, so nothing is retired here).
+export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame',
+ 'first-international-1872','offside-rules','formations-history','floodlights-1878','copa-america-1916','keeper-hands-1912','ballon-dor','free-kick-wall','ball-curve','throw-in'] as const;
 export const ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
 export const ACTIVITIES=[
  ['walk','Walking'],['ride','Riding (scooter, bike, moped, truck)'],['fly','Flying (jetpack, parachute)'],['boat','On a boat'],
@@ -48,7 +50,10 @@ export const ACTIVITIES=[
  ['exhibit_stadiums','Exhibit: Stadiums of the World'],['exhibit_boots','Exhibit: Boots through time'],['exhibit_var-2018','Exhibit: VAR, 2018'],
  ['exhibit_worldcup-1930','Exhibit: World Cup 1930'],['exhibit_wwc-1991','Exhibit: Women’s World Cup 1991'],['exhibit_futsal-1989','Exhibit: Futsal, 1989'],
  ['exhibit_laced-leather','Exhibit: Laced leather ball'],['exhibit_telstar-1970','Exhibit: Telstar, 1970'],['exhibit_shirts','Exhibit: Shirts'],
- ['exhibit_hall-of-fame','Exhibit: Trophy room (Hall of Fame)'],
+ ['exhibit_hall-of-fame','Exhibit: Trophy room (Legends)'],
+ ['exhibit_first-international-1872','Exhibit: First international, 1872'],['exhibit_floodlights-1878','Exhibit: Floodlights, 1878'],['exhibit_copa-america-1916','Exhibit: Copa América, 1916'],
+ ['exhibit_offside-rules','Exhibit: Offside through time'],['exhibit_formations-history','Exhibit: Formations through time'],['exhibit_keeper-hands-1912','Exhibit: The goalkeeper’s hands, 1912'],
+ ['exhibit_free-kick-wall','Exhibit: Free kicks and the wall'],['exhibit_ball-curve','Exhibit: How a ball curves'],['exhibit_throw-in','Exhibit: The throw-in'],['exhibit_ballon-dor','Exhibit: Ballon d’Or'],
  ['konbini_shop','Inside the Konbini'],['controller','Phone controller'],['other','Other / loading'],['idle','Idle (no input)'],
 ] as const;
 export type ActivityId=typeof ACTIVITIES[number][0];

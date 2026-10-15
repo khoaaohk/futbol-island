@@ -29,7 +29,20 @@ export function landFish(id:FishId,size:number,now=Date.now()):LandResult{
 
 // ---- The live session singleton (HUD <-> island loop). Sounds reuse the island sound system's document cues. ----
 import {createFishingSession} from './fishingSession';
-const CUES={tick:['fi2-path-cue','path-pop'],splash:['fi2-path-cue','undock'],plunge:['fi2-path-cue','swipe-left'],cast:['fi2-path-cue','swipe-right'],fanfare:['fi2-story-cue','finish']} as const;
+/**
+ * Sounds (Oct 14 2026 polish: "subtle sounds for the cast whoosh, plop, reel click, splash and catch"): every cue reuses the island
+ * sound kit's existing document events (no new audio context, no new voices; islandSound.ts rate-limits each one and keeps them
+ * quiet): the cast is a soft whoosh (job 'throw'), the float landing a plop (path 'undock'), each reel tap a small click (job 'snip'),
+ * the bite a plunge plus a splash hiss (job 'swish'), the catch the finish jingle plus a splash as it leaves the water.
+ * Haptics: a short pulse on the bite and a little double pulse on the catch, where the browser supports navigator.vibrate (not with
+ * reduced motion), the same pattern the arcade uses.
+ */
+const CUES:Record<'tick'|'splash'|'plunge'|'cast'|'fanfare'|'reel',readonly (readonly [string,string])[]>={tick:[['fi2-path-cue','path-pop']],splash:[['fi2-path-cue','undock']],
+ plunge:[['fi2-path-cue','swipe-left'],['fi2-job-cue','swish']],cast:[['fi2-job-cue','throw']],fanfare:[['fi2-story-cue','finish'],['fi2-job-cue','swish']],reel:[['fi2-job-cue','snip']]};
+const HAPTIC:Partial<Record<keyof typeof CUES,number|number[]>>={plunge:14,fanfare:[10,40,18]};
+let lastHaptic=0;
+function fishHaptic(kind:keyof typeof CUES){const p=HAPTIC[kind];if(p===undefined||typeof navigator==='undefined'||typeof navigator.vibrate!=='function')return;
+ const now=Date.now();if(now-lastHaptic<150)return;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;lastHaptic=now;navigator.vibrate(p);}catch{/* no haptics */}}
 /**
  * ONE session per page, kept on globalThis so it survives hot updates (Sep 29 2026 fix, "the fishing for the boat doesn't
  * work"). A hot update of any module under this one (catalogue, boat data …) re-ran this file and made a SECOND session:
@@ -40,7 +53,7 @@ const CUES={tick:['fi2-path-cue','path-pop'],splash:['fi2-path-cue','undock'],pl
 type HotFishing={session?:ReturnType<typeof createFishingSession>;land?:typeof landFish;cue?:(kind:keyof typeof CUES)=>void};
 const hot:HotFishing=typeof globalThis==='undefined'?{}:((globalThis as {__fi2Fishing?:HotFishing}).__fi2Fishing??={});
 hot.land=landFish;
-hot.cue=kind=>{try{const [name,detail]=CUES[kind];document.dispatchEvent(new CustomEvent(name,{detail}));}catch{}};
+hot.cue=kind=>{try{for(const [name,detail] of CUES[kind])document.dispatchEvent(new CustomEvent(name,{detail}));}catch{}fishHaptic(kind);};
 export const fishingSession=hot.session??=createFishingSession(
  (id,size)=>{const r=hot.land!(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket};},
  kind=>hot.cue!(kind),

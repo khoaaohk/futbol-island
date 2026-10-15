@@ -60,6 +60,22 @@ User: "we need to also make sure that heating is not an issue with these latest 
   5. Arcade room (pre-existing): it renders 15–18 fps at rest; letting it sleep like the museum would remove 60 rAF/s there.
 - **Real-device checklist (emulation is not an iPhone):** (1) Safari Web Inspector → Timelines (JavaScript & Events, Rendering Frames, Memory, CPU) for 5 min each at the spawn standing still, on the Summit 5s pitch, in the Kit Shop (idle, then walking, then a studio spin and drawing) and in fishing focus mode: frames should sit at 33 ms (50 ms on an idle ride), CPU % roughly flat, no growing memory, no recurring long tasks. (2) `?heat=1`: watch the governor's readout for 5–10 min at the spawn and the beach — it should stay on tier 0 and 'calm'/'steady'; a step to tier 1+ within ~5 min on a cool phone is the warning sign; note the time of any step. (3) Thermal feel: a 10-min session (spawn → beach → Coral Cay → sandbar → summit → kit shop → fishing) on a mid phone (e.g. iPhone 12/13) at normal brightness, unplugged; compare back-of-phone warmth and battery % lost with the same route on the live site. (4) In the studios, note whether a long spin or drawing session warms the phone faster than the island (they render at 60 fps while dragged).
 
+## Fishing polish: water, coral, fish and feel — October 14, 2026 (local, not deployed)
+
+Details: `docs/fishing.md` ("Polish pass"). Every motion is on the GPU (uniform-driven vertex shaders) or in small pools inside existing instanced draws, and runs only while a session is on. `fishingLife.ts` gates sway, extra life and particles: they run on heat tiers 0–1 and are off at tier 2+, with reduced motion and on the still path.
+- **Draws:** the 5 splash-ring meshes and the spray mesh moved into the overlay's single instanced draw, and the darters joined the sea-life draw. Max draws while fishing went down: Coral Garden 125 → 124, Sharks Beach 102 → 98, West Cove 138 → 134, Drop-off Ledge 74–77 → 73, Deep Sea Boat 123 → 123. Triangles in the frame changed by +0–1 %. Seabed per spot is within +15 % (worst +8.8 %), and the total is lower (74.4k → 72.8k desktop, 42.6k → 41.3k phone).
+- **Measured.** Production builds, headless Chromium Metal, 390×844 touch, DPR 2, 4× CPU, 10 s while fishing, 2 reps, before → after:
+
+| Spot | render CPU ms/frame | rAF ms | GPU ms (mean) |
+| --- | --- | --- | --- |
+| Coral Garden | 4.99 / 5.40 → 3.49 / 4.08 | 3.90 / 4.14 → 2.74 / 3.23 | 2.94 / 2.92 → 2.19 / 3.19 |
+| Sharks Beach | 3.93 / 4.48 → 3.49 / 3.56 | 3.18 / 3.60 → 2.84 / 2.83 | 4.22 / 2.97 → 3.19 / 2.86 |
+| West Cove | 3.65 / 6.03 → 3.91 / 3.74 | 2.70 / 4.54 → 2.93 / 2.77 | 2.31 / 2.67 → 2.25 / 2.41 |
+| Drop-off Ledge | 4.30 / 3.39 → 3.21 / 2.62 | 3.69 / 2.90 → 2.75 / 2.25 | 2.41 / 2.22 → 2.23 / 3.04 |
+| Deep Sea Boat | 4.86 / 3.69 → 3.59 / 3.40 | 3.93 / 2.83 → 2.89 / 2.73 | 1.97 / 2.58 → 1.55 / 1.91 |
+
+  Every spot ran at 30 fps. CPU was the same or lower. GPU was within this host's ±0.5 ms drift, with no consistent rise. The shader adds a few ALU ops to the strip (gust, phone sparkle, the derivative check) and the reef vertex sway on phones. This shows reduced work only and makes no claim about iPhone temperature.
+
 ## Fishing: a reef of its own at every spot, tropical coral — October 13, 2026 (local, not deployed)
 
 User: "fix all the fishing spots so they don't all look the same, reuse things, but place them differently or different colors. we need to make the coral feel more tropical". Details and the spot table: `docs/fishing-visuals-HANDOFF.md` (13 Oct update). Code: `lib/town/fishing/underwater.ts` (REEF_THEMES, layouts, coral shapes), `fishSchools.ts` (fish per theme, clownfish homes), `fishingVisuals.ts`, `shoreWater.ts` (sand/water uniforms), `fishCatalog.ts` (`reef` per spot).

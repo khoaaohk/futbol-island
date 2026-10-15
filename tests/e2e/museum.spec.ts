@@ -3,8 +3,8 @@ import { isTouch } from './helpers';
 import { bootAt, where } from './gap-helpers';
 
 /* Walk-in History Museum (Oct 3 2026): the island door prompt → /museum → the free first case (facts) → the next case's
-   hands-on exhibit (blow the referee's whistle) → a locked case's "collect" copy → the Your Collection wing (ball pegboard,
-   cards) → Back → Done walks out to the island, at the museum door, on foot. Node: tests/museum-room.cjs. Run with --workers=1 (other agents share the machine).
+   hands-on exhibit (blow the referee's whistle) → a locked case's "collect" copy → the west wing's history galleries (Oct 14
+   2026: the Ballon d'Or case, beside the Trophy room) → Back → Done walks out to the island, at the museum door, on foot. Node: tests/museum-room.cjs. Run with --workers=1 (other agents share the machine).
    Screenshots: FI_MUSEUM_SHOTS=<dir> saves the entrance, a zoomed case, the locked case and the exit. */
 
 /** lib/museum/museumDoors.ts MUSEUM_DOOR */
@@ -57,17 +57,18 @@ test('Museum: enter from the island, read the free case, blow the whistle, see a
   await expect(page.locator('[data-museum-step-inside="var-2018"]')).toBeVisible();
   await shot('museum-case-next');
 
-  // The west wing, "Your Collection": walk through the wide opening to the hidden-ball pegboard (10 of the 100 pegs hold a ball).
+  // The west wing (Oct 14 2026: four history galleries; the Your Collection pieces and the header's counts are gone): walk
+  // through the wide opening to the Ballon d'Or case in Legends, beside the Trophy room.
   await tap('[data-museum-back]');
   await page.waitForFunction(() => !(window as any).__museum.state.zoom, null, { timeout: 15_000 });
-  await page.evaluate(() => (window as any).__museum.walkTo('my-balls'));
-  await arrived(page, 'my-balls');
+  await expect(page.locator('[data-museum-hud]'), 'no collection counts in the header').toHaveCount(0);
+  await page.evaluate(() => (window as any).__museum.walkTo('ballon-dor'));
+  await arrived(page, 'ballon-dor');
   expect(await page.evaluate(() => (window as any).__museum.state.x), 'standing in the west wing').toBeLessThan(-12);
-  await expect(page.locator('[data-museum-card="my-balls"] [data-museum-found="10"]')).toContainText('10 of 100');
+  await expect(page.locator('[data-museum-step-inside="ballon-dor"]')).toHaveText(/See exhibit/);
   await shot('museum-wing');
   await tap('[data-museum-next]');
-  await arrived(page, 'my-cards');
-  await expect(page.locator('[data-museum-card="my-cards"]')).toBeVisible();
+  await arrived(page, 'hall-of-fame');
 
   // Back out, then Done walks out of the wing, through the hall and the doors to the island, outside the museum door.
   await tap('[data-museum-back]');

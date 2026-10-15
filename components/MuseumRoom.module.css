@@ -11,13 +11,8 @@
 @media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px calc(16px + env(safe-area-inset-left,0px))}}
 /* The zoomed case's name sits top right, on Back's centre line (Oct 14 2026, user). */
 .section{position:static;margin-left:auto;min-width:0;flex:0 1 auto;max-width:min(100%,420px);padding:8px 14px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
-.counts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-start;pointer-events:none}
-/* Back on the left, Done on the right, everywhere (Oct 14 2026, user): in the hall the counts sit left and Done right. */
+/* Back on the left, Done on the right, everywhere (Oct 14 2026, user). The collection counts that sat left of Done are gone (Oct 14 2026). */
 .doneRight{order:2;margin-left:auto}
-.counts span{display:inline-flex;align-items:baseline;gap:5px;padding:6px 11px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-soft);font-size:12px;font-weight:500;box-shadow:none}
-.counts b{font-size:15px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums;position:relative;padding-left:12px}.counts b::before{content:'';position:absolute;left:0;top:50%;width:7px;height:7px;margin-top:-4px;background:var(--g)}
-/* Phones: all four counts on one row, centred on Done's line (Oct 14 2026, user: "move grads up with the others"). */
-@media(max-width:420px){.counts{gap:3px;flex-wrap:nowrap;align-items:center;max-width:none;min-width:0}.counts span{align-items:center;gap:3px;padding:5px 7px;font-size:11px;white-space:nowrap}.counts b{font-size:13px;padding-left:9px}.counts b::before{width:6px;height:6px;margin-top:-3px}}
 .prompt{z-index:4;visibility:hidden}
 /* The hall's look-at prompt: an ink pill (overrides the island's gold store-enter-prompt inside the museum only). */
 .root .prompt{border:1.5px solid var(--m-ink);background:var(--m-ink);background-image:none;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66;font-weight:600}
@@ -63,9 +58,6 @@
 .round{width:48px;height:48px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold-bright,#f9d665);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e);font-size:22px;font-weight:900;cursor:pointer}
 .shirt{width:56px;height:56px;display:grid;place-items:center;border:3px solid #fff2cd;border-radius:14px 14px 18px 18px;background:#d8466f;color:#fff1d3;font-size:22px;font-weight:900;box-shadow:0 3px 0 #3a2b1833;cursor:pointer}
 .shirt:nth-child(1){background:#3a9e5c}.shirt:nth-child(3){background:#2f6fb0}.shirt[aria-pressed=true]{outline:4px solid var(--m-ink);outline-offset:2px}
-.certs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
-.certs .gold{width:100%}
-.certEmpty{display:flex;flex-direction:column;gap:2px;min-height:44px;justify-content:center;padding:6px 12px;border:1px dashed var(--m-hair);border-radius:4px;font-size:13px;color:var(--m-soft)}.certEmpty b{color:var(--m-ink);font-size:14px}
 .hint{position:absolute;z-index:3;left:50%;top:calc(76px + env(safe-area-inset-top,0px));translate:-50% 0;margin:0;padding:6px 12px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;pointer-events:none}
 @media(min-aspect-ratio:6/5){.hint{left:30%}}
 .greeting{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-radius:6px;background:var(--m-paper);color:var(--m-ink);box-shadow:0 18px 40px -18px #1d1d1b40;font-weight:500;font-size:15px;animation:bubble 3.6s ease both;pointer-events:none;text-align:center}
@@ -78,12 +70,9 @@
 .panel h3{margin:10px 0 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--m-soft)}
 .panel p{margin:0;font-size:14px;line-height:1.5}
 .close{position:absolute;top:12px;right:12px}
-.guideCounts{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
-.guideCounts li{padding:10px 12px;border:1px solid var(--m-hair);border-radius:4px;background:#fff;font-size:13px;color:var(--m-soft)}.guideCounts b{display:block;font-size:24px;font-weight:700;color:var(--m-ink);font-variant-numeric:tabular-nums}
 .srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.tag,.greeting{animation:none}}
-.collectionList{margin:6px 0 0;padding-left:18px;font-size:13px;line-height:1.4}.collectionList li{margin:4px 0}.collectionList b{color:var(--m-green)}
 /* The walk-through timeline's pop-up: the year you're standing on, in its gallery's colour. */
 .yearPop{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;display:flex;align-items:baseline;gap:10px;max-width:calc(100% - 32px);margin:0;padding:10px 16px;border:1px solid var(--m-hair);border-left:4px solid var(--g);border-radius:4px;background:var(--m-paper);color:var(--m-ink);font-weight:500;font-size:15px;box-shadow:0 18px 40px -18px #1d1d1b40;animation:tagIn .2s ease-out both;pointer-events:none}
 .yearPop b{font-family:inherit;font-style:normal;font-weight:700;font-size:24px;line-height:1;color:var(--m-ink);font-variant-numeric:tabular-nums}

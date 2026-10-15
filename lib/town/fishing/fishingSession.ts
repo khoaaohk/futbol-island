@@ -43,7 +43,7 @@ const floatHint=(w:FishingView['water'])=>w==='spooked'?SPOOKED_HINT:w==='hot'?H
 export const PULL_HINT='It is pulling back! Hold on like a keeper: keep tapping Reel!';
 
 type Lander=(id:FishId,size:number)=>Omit<CatchView,'id'|'size'>;
-export function createFishingSession(land:Lander,cue:(kind:'tick'|'splash'|'plunge'|'cast'|'fanfare')=>void=()=>{}){
+export function createFishingSession(land:Lander,cue:(kind:'tick'|'splash'|'plunge'|'cast'|'fanfare'|'reel')=>void=()=>{}){
  let view=IDLE,session:Session=createSession(),pending:string|null=null,stopRequested=false,lessonKey=0,tapEvents:SessionEvent[]=[];const shown=new Set<string>();
  let paused=false,aimInput:AimInput|null=null,aimCast:AimInput|null=null,water:FishingView['water']='calm';
  const listeners=new Set<()=>void>();
@@ -54,7 +54,7 @@ export function createFishingSession(land:Lander,cue:(kind:'tick'|'splash'|'plun
   let lessonNext=view.lesson,caught=view.caught,catches=view.catches;
   for(const e of events){
    if(e==='cast')cue('cast');
-   if(e==='reel')cue('tick');
+   if(e==='reel')cue('reel');
    if(e==='pull')cue('splash');
    if(e==='splash'){cue('splash');lessonNext=lesson('cast');}
    if(e==='nibble'){cue('tick');if(session.nibbles===1)lessonNext=lesson('nibble');}

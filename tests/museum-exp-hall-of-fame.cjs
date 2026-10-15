@@ -1,10 +1,11 @@
 // hall-of-fame · the Trophy room (Oct 12 2026; user: "Change the your hall of fame exhibit to something else. don't like this
-// idea", chose "Trophy room"). It is still the last room in the museum and still where the player's certificates go (their own shelf
-// of the cabinet). Checks: the host contract (shared ExperienceBack, Escape after the certificate, certificates via the host,
-// onComplete once through the shared Ending after the quick check), no human figures (no anatomy/figure.ts, no legends), the eight
-// trophies' sourced facts, both games played in Node, the lathe model (every trophy, every part, spin only moves decorations), the
-// fill-screen card (every scene fills its region at desktop, wide-desktop and phone sizes), heat (one sleeping loop, no rAF), the
-// kept progress key and its sanitiser, reduced motion and CSS rules.
+// idea", chose "Trophy room". Oct 14 2026: the player's own shelf of cups and certificates was removed — the room is now purely
+// the eight real trophies, no 'yours' bay and no 'shelf' station). Checks: the host contract (shared ExperienceBack, Escape after
+// certificates removed with it, onComplete once through the shared Ending after the quick check), no human figures (no
+// anatomy/figure.ts, no legends), the eight trophies' sourced facts, both games played in Node, the lathe model (every trophy,
+// every part, spin only moves decorations), the fill-screen card (every scene fills its region at desktop, wide-desktop and
+// phone sizes), heat (one sleeping loop, no rAF), the kept progress key and its sanitiser, reduced motion and CSS rules, and that
+// the shelf feature (YourHall.tsx, the 'yours' bay, the 'shelf' station) is fully gone.
 // usage: node tests/museum-exp-hall-of-fame.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const compile=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{fileName:f,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,jsx:ts.JsxEmit.ReactJSX}}).outputText,f);
@@ -12,40 +13,41 @@ require.extensions['.ts']=compile;require.extensions['.tsx']=compile;require.ext
 const Module=require('node:module'),root=path.join(__dirname,'..'),dir='components/museum/experiences/hall-of-fame/',read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const resolve=Module._resolveFilename;Module._resolveFilename=function(req,...a){return resolve.call(this,req.startsWith('@/')?path.join(root,req.slice(2)):req,...a);};
 const files=fs.readdirSync(path.join(root,dir)),src=Object.fromEntries(files.map(f=>[f,read(dir+f)]));
-const exp=src['Experience.tsx'],yours=src['YourHall.tsx'],css=src['Experience.module.css'],loopSrc=read('components/museum/experiences/anatomy/paper-loop.ts');
+const exp=src['Experience.tsx'],css=src['Experience.module.css'],loopSrc=read('components/museum/experiences/anatomy/paper-loop.ts');
 const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=>s).join('\n');
 const T=require('../'+dir+'trophies.ts'),G=require('../'+dir+'game.ts'),M=require('../'+dir+'model.ts'),H=require('../'+dir+'hallData.ts');
-const K=require('../components/museum/experiences/anatomy/iso-kit.ts'),X=require('../lib/endgame/museum.ts'),paths=require('../lib/paths/formatPaths.json'),GM=require('../lib/endgame/graduationModel.ts');
-const S=require('../'+dir+'scene.tsx'),Y=require('../'+dir+'YourHall.tsx');
+const K=require('../components/museum/experiences/anatomy/iso-kit.ts'),X=require('../lib/endgame/museum.ts'),paths=require('../lib/paths/formatPaths.json');
+const S=require('../'+dir+'scene.tsx');
 const ex=X.EXHIBITS.find(e=>e.id==='hall-of-fame');
+void paths;
 
 // 1. Contract.
 {assert.match(exp,/export default function Experience/);assert.match(exp,/data-museum-experience="hall-of-fame"/);assert.match(exp,/role="dialog" aria-modal="true"/);
  assert.match(css,/\.root\{position:fixed;inset:0;z-index:20/);
  assert.match(exp,/import ExperienceBack from '\.\.\/ExperienceBack'/);assert.match(exp,/<ExperienceBack onClose=\{onClose\}\/>/);assert.doesNotMatch(all,/NavigationButton|immediate/);
- assert.match(exp,/e\.key!=='Escape'/);assert.match(exp,/dialog\[open\]/,'Escape lets the host certificate close first');assert.match(exp,/removeEventListener\('keydown'/);
- assert.match(yours,/openCert\(`grad:\$\{p\.format\}`\)/,'earned spots open the host certificates');assert.match(yours,/openCert\('diploma'\)/,'the champion opens the Island Diploma');
+ assert.match(exp,/e\.key!=='Escape'/);assert.match(exp,/removeEventListener\('keydown'/);
  assert.match(exp,/const complete=useCallback\(\(\)=>\{if\(completed\.current\)return;completed\.current=true;onComplete\?\.\(\);\}/,'onComplete fires once');
  assert.match(exp,/\{checked&&<Ending art=\{<EndCup\/>\} reached=\{checked\} onComplete=\{complete\}/,'the shared Ending, mounted only after the quick check, marks the visit');
  assert.equal((exp.replace(/\/\*[\s\S]*?\*\//g,'').match(/complete\(\)/g)||[]).length,0,'complete is never called directly: only the Ending fires it');
  assert.match(exp,/import StepCheck from '\.\.\/modern\/StepCheck'/);assert.match(exp,/onDone=\{\(\)=>\{setChecked\(true\)/,'the check sets the end');
  assert.match(exp,/const canCheck=mDone&&cDone/);assert.match(exp,/disabled=\{lock\}/,'the quick check unlocks after both games');
  assert.match(exp,/import WallLabel from '\.\.\/modern\/WallLabel'/);
- for(const h of ['data-hof-stage','data-hof-art','data-hof-open','data-hof-station','data-hof-apart','data-hof-turn','data-hof-answer','data-hof-next','data-hof-result','data-hof-readout','data-hof-note','data-hof-final','data-hof-start','data-hof-to-check','data-hof-measure','data-hof-pick'])assert.ok(exp.includes(h),'hook '+h);
- for(const h of ['data-hof-yours','data-hof-plinth','data-hof-cert','data-hof-idea','data-hof-ferry','data-tag','data-empty'])assert.ok(yours.includes(h),'hook '+h);
+ for(const h of ['data-hof-stage','data-hof-art','data-hof-open','data-hof-station','data-hof-apart','data-hof-turn','data-hof-answer','data-hof-next','data-hof-result','data-hof-readout','data-hof-note','data-hof-final','data-hof-start','data-hof-measure','data-hof-pick'])assert.ok(exp.includes(h),'hook '+h);
  assert.ok(fs.existsSync(path.join(root,'app/museum-lab/hall-of-fame/page.tsx')),'the museum-lab preview route');
  for(const gone of ['Arena.tsx','arenaRules.ts','board.ts','legends.ts','plinths.ts','Draw.tsx'])assert.ok(!files.includes(gone),'the Legends Arena is gone: '+gone);
  // no people: the user dislikes the paper characters
  assert.doesNotMatch(all,/anatomy\/figure|from '\.\.\/anatomy\/figure'|PaperFigure|mannequin/i,'no human figures (anatomy/figure.ts is not imported)');
  assert.doesNotMatch(all,/LEGENDS|Legends Arena|legend\.fact/,'the legends and positions concept is dropped');
- console.log('PASS contract: fixed dialog, shared Back, Escape after certificates, host certificates, onComplete once via the Ending after the quick check, no figures');}
+ // the player's own shelf (YourHall.tsx, the 'yours' bay, the 'shelf' station) is fully gone: the room is purely the trophies
+ for(const gone of ['YourHall.tsx','progress.ts'])assert.ok(!files.includes(gone),'the shelf file is gone: '+gone);
+ assert.doesNotMatch(all,/YourHall|ShelfNote|\bShelf\b|SpotId|\bSPOTS\b|\bPLINTHS\b|\bIDEAS\b|ferryLine|nextStep\(/,'no leftover shelf code');
+ assert.doesNotMatch(all,/'yours'|"yours"|data-hof-open="yours"|data-hof-spot|data-hof-to-check|data-hof-yours/,'no "yours" bay, no shelf spots, no shelf hooks');
+ assert.doesNotMatch(exp,/station==='shelf'|go\('shelf'\)|'shelf'\|/,'no "shelf" station anywhere in the Experience');
+ console.log('PASS contract: fixed dialog, shared Back, Escape, host certificates untouched elsewhere, onComplete once via the Ending after the quick check, no figures, no shelf');}
 
 // 2. Content: the case's words, the eight trophies, every fact sourced.
 {assert.equal(H.COPY.fact1,ex.facts[0]);assert.equal(H.COPY.fact2,ex.facts[1]);assert.equal(H.COPY.takeaway,ex.forYourGame);assert.equal(H.COPY.title,'Trophy room');
- assert.match(exp,/\{COPY\.fact1\}/);assert.match(yours,/\{COPY\.fact2\}/);assert.match(yours,/\{COPY\.takeaway\}/);assert.match(exp,/\{COPY\.gameNote\}/);assert.match(exp,/\{COPY\.trophyNote\}/);
- assert.deepEqual(H.PLINTHS.map(p=>p.format),[...GM.GRADUATION_FORMATS]);assert.deepEqual(H.PLINTHS.map(p=>p.aSide),[5,7,9,11]);
- const starter=Object.fromEntries(paths.map(p=>[p.format,new Set(p.chapters.flatMap(c=>c.lessons.map(l=>l.id)))]));
- for(const i of H.IDEAS)for(const f of GM.GRADUATION_FORMATS)assert.ok(starter[f].has(i.lessons[f]),`${i.id}: ${f} lesson is a starter lesson`);
+ assert.match(exp,/\{COPY\.fact1\}/);assert.match(exp,/\{COPY\.gameNote\}/);assert.match(exp,/\{COPY\.trophyNote\}/);
  assert.equal(T.TROPHIES.length,8);assert.deepEqual(T.TROPHIES.map(t=>t.id),['worldcup','womens','ucl','copa','afcon','euro','asian','facup']);
  const want={worldcup:[36.8,6.175,1974],womens:[47,4.6,1999],ucl:[74,11,1967],copa:[77,9,1916],afcon:[null,null,2002],euro:[60,8,1960],asian:[78,15,2019],facup:[61.5,6.3,1911]};
  for(const t of T.TROPHIES){assert.deepEqual([t.heightCm,t.weightKg,t.first],want[t.id],t.id+': height, weight, first won as sourced');
@@ -57,7 +59,7 @@ const ex=X.EXHIBITS.find(e=>e.id==='hall-of-fame');
  assert.match(T.byId('ucl').story,/big ears/);assert.match(T.byId('facup').story,/little tin idol/);assert.match(T.byId('asian').keeper,/five petals/i);
  assert.match(T.byId('afcon').made,/not published/,'no invented numbers for the Africa Cup of Nations trophy');
  assert.match(exp,/\.\.\.TROPHIES\.flatMap\(t=>t\.sources\)/);assert.match(exp,/<summary>Sources/);
- console.log('PASS content: case facts word for word, real lessons, eight trophies with sourced heights, weights, years and stories');}
+ console.log('PASS content: case facts word for word, the eight trophies with sourced heights, weights, years and stories');}
 
 // 3. The games, played in Node.
 {assert.equal(G.MATCH.length,6);for(const r of G.MATCH){assert.ok(r.choices.includes(r.right),r.ask);assert.equal(new Set(r.choices).size,3);assert.ok(r.why.length>10);}
@@ -104,31 +106,28 @@ const ex=X.EXHIBITS.find(e=>e.id==='hall-of-fame');
  // the regions the card leaves the scene (card size minus the corner captions and the note), from the three viewports
  const regions=[['1440×900',1340,600,false],['1845×1110',1735,800,false],['390×844',354,560,true],['390×844 under a note',354,330,true]];
  for(const [name,w,h,tall] of regions){
-  const scenes=[['cabinet',S.cabinet(tall?S.CAB_TALL:S.CAB_WIDE).points,S.AZ_CAB],['shelf',Y.shelf(tall).points,S.AZ_CAB],['bench',S.benchPoints(82),tall?58:S.AZ_BENCH],['plinths',S.plinths(3).points,S.AZ],['shadow',S.plinths(1).points,S.AZ],
+  const scenes=[['cabinet',S.cabinet(tall?S.CAB_TALL:S.CAB_WIDE).points,S.AZ_CAB],['bench',S.benchPoints(82),tall?58:S.AZ_BENCH],['plinths',S.plinths(3).points,S.AZ],['shadow',S.plinths(1).points,S.AZ],
    ...T.TROPHIES.map(t=>['stand '+t.id,S.stand(t).points,S.AZ])];
   for(const [sc,pts,az] of scenes){if(name.endsWith('note')&&(sc==='cabinet'))continue;const P=K.fitProjection(pts,w,h,{pad:tall?8:16,azimuth:az,elevation:S.EL}),[bw,bh]=span(pts,P);
    assert.ok(bw>=w*.9-1||bh>=h*.9-1,`${name} ${sc}: fills its region (${Math.round(bw)}×${Math.round(bh)} of ${w}×${h})`);}}
- // the cabinet holds all eight at true size, each in its own bay
- for(const L of [S.CAB_WIDE,S.CAB_TALL]){const C=S.cabinet(L),ids=C.slots.map(s=>s.id).filter(id=>id!=='yours');assert.deepEqual([...ids].sort(),T.TROPHIES.map(t=>t.id).sort());
-  for(const s of C.slots)if(s.id!=='yours')assert.ok((s.x1-s.x0)/2>=T.reach(T.byId(s.id))+2,s.id+' fits its bay');}
- assert.ok(S.cabinet(S.CAB_TALL).slots.some(s=>s.id==='yours'),'the phone cabinet has a bay that opens your shelf');
- assert.deepEqual(Y.SPOTS,['futsal','7v7','9v9','11v11','diploma'],'your shelf: a spot per path and the diploma');
- assert.match(css,/\.note:not\(\[data-wide-note\]\)\{left:10px;right:10px;top:10px/,'phone: the note runs across the top, the scene is fitted below');
- assert.match(exp,/const top=tall\?\(hasNote\?noteH\+18:34\):34/);
- console.log('PASS fill-screen: 100dvh screen, the card is the SVG, every scene fills its region at desktop, wide and phone sizes');}
+ // the cabinet holds all eight (and only the eight) at true size, each in its own bay — no 'yours' bay, on either layout
+ for(const L of [S.CAB_WIDE,S.CAB_TALL]){const C=S.cabinet(L),ids=C.slots.map(s=>s.id);assert.deepEqual([...ids].sort(),T.TROPHIES.map(t=>t.id).sort());
+  assert.ok(!ids.includes('yours'),'no "yours" bay in the cabinet');
+  for(const s of C.slots)assert.ok((s.x1-s.x0)/2>=T.reach(T.byId(s.id))+2,s.id+' fits its bay');}
+ assert.equal(S.CAB_TALL.rows.flat().length,8,'the phone cabinet holds exactly the eight trophies, no ninth bay');
+ console.log('PASS fill-screen: 100dvh screen, the card is the SVG, every scene fills its region at desktop, wide and phone sizes, the cabinet is purely the eight trophies');}
 
 // 6. Heat, input and reduced motion.
 {assert.ok(!/requestAnimationFrame|setInterval/.test(all),'no rAF or polling in the exhibit: the shared Paper loop only');
  assert.match(exp,/import \{useFrameLoop\} from '\.\.\/anatomy\/paper-loop'/,'the one shared loop');
  assert.match(exp,/bump\(\);return more;\},card,reduced\)/,'the loop runs only while something eases, on the card, reduced = at once');
  assert.match(loopSrc,/else\{wanted=false;last=0;\}/);assert.match(loopSrc,/IntersectionObserver/);assert.match(loopSrc,/l\.dispose\(\)/);assert.match(loopSrc,/reduced\|\|!raf/);
- assert.ok(!/useFrameLoop|usePaperLoop/.test(yours),'your shelf has no loop');
  assert.match(exp,/if\(reduced\)\{m\.spin\+=dir\*Math\.PI\/4;bump\(\);return;\}/,'reduced motion: the turntable turns in 45° steps');
  assert.match(exp,/setPointerCapture/);assert.match(exp,/ArrowLeft/);
  assert.match(exp,/<button key="next"/,'a new Next button per answer (the answer tap can\'t skip a round)');
  const cssNo=css.replace(/\/\*[\s\S]*?\*\//g,'');assert.doesNotMatch(cssNo,/infinite/);assert.match(cssNo,/prefers-reduced-motion:reduce/);
- assert.match(cssNo,/\.btn,\.ghost,\.choice,\.round\{min-height:48px/);assert.match(cssNo,/\.chip\{min-height:44px/);assert.match(cssNo,/\.stations button\{[^}]*min-height:44px/);
+ assert.match(cssNo,/\.btn,\.ghost,\.choice,\.round\{min-height:48px/);assert.match(cssNo,/\.stations button\{[^}]*min-height:44px/);
  for(const sel of cssNo.replace(/@(media|supports|keyframes)[^{]*\{/g,'').match(/(^|\})\s*[^@{}][^{}]*\{/g)??[])for(const part of sel.replace(/^\}?\s*/,'').replace(/\{$/,'').split(','))
   if(!/^(from|to|\d+%)$/.test(part.trim()))assert.match(part,/\.[a-zA-Z]/,'every CSS module selector has a local class: '+part.trim());
- console.log('PASS heat and input: one sleeping loop (none on your shelf), turn-based reduced motion, 44–48 px targets, CSS rules');}
+ console.log('PASS heat and input: one sleeping loop, turn-based reduced motion, 44–48 px targets, CSS rules');}
 console.log('museum-exp-hall-of-fame: all passed');

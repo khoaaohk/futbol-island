@@ -1,7 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {EXHIBIT_INTERACTIVES,type ExhibitInteractive} from '@/lib/endgame/museum';
-import {CERT_SLOTS} from '@/lib/museum/museumAtlas';
 import {museumSfx} from '@/lib/museum/museumSound';
 import styles from './MuseumRoom.module.css';
 
@@ -10,7 +9,7 @@ import styles from './MuseumRoom.module.css';
  * lib/endgame/museum.ts EXHIBIT_INTERACTIVES (copied word for word from the case's own sourced facts; no new facts). DOM only:
  * buttons ≥ 44 px, nothing animates on its own.
  */
-export type ExhibitHooks={spin:(dir:1|-1)=>void;rain:(on:boolean)=>void;certificate:(id:string)=>void;earned:readonly string[]};
+export type ExhibitHooks={spin:(dir:1|-1)=>void;rain:(on:boolean)=>void};
 export default function MuseumExhibit({id,hooks}:{id:string;hooks:ExhibitHooks}){
  const cfg=EXHIBIT_INTERACTIVES[id];if(!cfg)return null;
  return <section className={styles.hands} data-museum-interactive={cfg.kind} aria-label={cfg.label}>
@@ -26,7 +25,6 @@ function Body({cfg,hooks}:{cfg:ExhibitInteractive;hooks:ExhibitHooks}){
   case 'compare':return <Compare cfg={cfg} rain={hooks.rain}/>;
   case 'spin':return <Spin quote={cfg.quote} spin={hooks.spin}/>;
   case 'kit':return <Kit numbers={cfg.numbers}/>;
-  case 'hall':return <Certificates earned={hooks.earned} open={hooks.certificate}/>;
  }
 }
 
@@ -84,9 +82,3 @@ function Kit({numbers}:{numbers:{n:number;quote:string}[]}){
   <p className={styles.quote} role="status">{q?`Classic numbers followed positions: ${q.quote}.`:'Tap a shirt on the kit wall.'}</p></>;
 }
 
-export function Certificates({earned,open}:{earned:readonly string[];open:(id:string)=>void}){
- return <ul className={styles.certs} role="list">{CERT_SLOTS.map(c=>{const got=earned.includes(c.id);return <li key={c.id}>
-  {got?<button type="button" className={styles.gold} data-museum-cert={c.id} onClick={()=>open(c.id)}>{c.title}</button>
-   :<span className={styles.certEmpty} data-museum-cert-empty={c.id}><b>{c.title}</b>{c.id==='diploma'?'Graduate all four paths and win your Matchday final to hang it here.':'Graduate a path to hang one here.'}</span>}
- </li>;})}</ul>;
-}

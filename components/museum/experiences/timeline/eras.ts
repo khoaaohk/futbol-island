@@ -24,12 +24,13 @@ export const FACT_LINE:Readonly<Record<string,number>>={
  * Framing words only (no new facts): each title sums up the cases under it.
  */
 export const CHAPTERS:readonly {n:number;title:string;ids:readonly string[]}[]=[
- {n:1,title:'Writing the rules',ids:['laws-1863','penalty-1891']},
- {n:2,title:'The game grows up',ids:['boots','shirts','worldcup-1930','stadiums','laced-leather']},
+ // Oct 14 2026: the west wing's ten history cases join their eras (the Your Collection wing is gone).
+ {n:1,title:'Writing the rules',ids:['laws-1863','penalty-1891','offside-rules','throw-in','free-kick-wall','first-international-1872','floodlights-1878','formations-history']},
+ {n:2,title:'The game grows up',ids:['boots','shirts','worldcup-1930','stadiums','laced-leather','keeper-hands-1912','copa-america-1916','ballon-dor']},
  {n:3,title:'The whole world is watching',ids:['telstar-1970']},
  {n:4,title:'Everyone joins in',ids:['futsal-1989','wwc-1991']},
  {n:5,title:'A faster, fairer game',ids:['var-2018']},
- {n:6,title:'Your turn',ids:['hall-of-fame']},
+ {n:6,title:'Your turn',ids:['hall-of-fame','ball-curve']},
 ];
 export const chapterOf=(id:string)=>CHAPTERS.find(c=>c.ids.includes(id))??null;
 /** The exhibit's one accent (the museum's primary blue). */

@@ -1,0 +1,41 @@
+/* copa-america-1916 · "The oldest cup for nations" (Oct 14 2026 redo). The room, card, covers and buttons are the shared anatomy
+ * Paper room (anatomy/paper.module.css); the tournament machine is drawn by scene.ts. Here: the stage, the invisible hit areas
+ * over the controls (each ≥ 48 px), the trophy's part badges and list, the station switch's done marks and the cup list below.
+ * Motion: colour / opacity / transform only; none under reduced motion. */
+.card{touch-action:none}
+.stage{position:absolute;inset:0}
+.svg{display:block;width:100%;height:100%;overflow:visible;-webkit-tap-highlight-color:transparent;touch-action:none}
+.hit{fill:transparent;stroke:none;cursor:grab;outline:none;pointer-events:all}
+.hit:active{cursor:grabbing}
+.hit:focus-visible{stroke:var(--accent);stroke-width:2.5;stroke-dasharray:5 4}
+/* Part badges (numbers on the trophy taken apart). */
+.badge{cursor:pointer;outline:none}
+.badge circle:not(.badgeHit):not(.badgeEnd){fill:#f7f7f3;stroke:#1d1d1b;stroke-width:1.4;transition:fill .2s}
+.badge text{font:700 13px/1 var(--sans);fill:#1d1d1b;text-anchor:middle;pointer-events:none}
+.badge path{stroke:#1d1d1b;stroke-width:1.2;fill:none}
+.badge[data-on] circle:not(.badgeHit):not(.badgeEnd){fill:var(--accent)}
+.badge[data-on] text{fill:#fff}
+.badge:focus-visible circle:not(.badgeHit):not(.badgeEnd){stroke-width:2.6}
+.badgeHit{fill:transparent;stroke:none}
+.badge circle.badgeEnd{fill:#1d1d1b;stroke:none}
+/* The parts list: a column on the right of a wide card. */
+.parts{position:absolute;z-index:3;right:14px;top:44px;bottom:40px;width:min(290px,26%);overflow-y:auto;padding:8px;border-radius:14px;background:rgba(247,247,243,.94);
+ box-shadow:0 0 0 1px rgba(29,29,27,.1),0 10px 28px -14px rgba(29,29,27,.35);font:400 14px/1.4 var(--sans);color:#2a2a2a}
+.parts ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.parts button{display:grid;gap:3px;width:100%;min-height:48px;padding:8px 10px;border:0;border-radius:10px;background:transparent;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.parts button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 16%,#fff)}
+.parts button:focus-visible{outline:2px solid #1d1d1b;outline-offset:1px}
+.parts b{display:flex;gap:8px;align-items:center;font:700 14px/1.2 var(--sans)}
+.parts i{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#1d1d1b;color:#f7f7f3;font:700 11px/1 var(--sans);font-style:normal}
+.parts span{font-size:13px;line-height:1.35;color:#4a4a48}
+/* The station switch: a small accent dot once a station's job is done. */
+.segIn{display:inline-flex;align-items:center;gap:6px}
+.segIn i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.go{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px}
+/* Below the fold: every continent's first cup. */
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.list li{display:grid;grid-template-columns:56px 1fr;gap:2px 12px;padding:10px 0;border-top:1px solid #d9d6cf;font:400 15px/1.4 var(--sans)}
+.list b{grid-row:span 2;font:800 18px/1.2 var(--sans);font-variant-numeric:tabular-nums}
+.list span:last-child{color:#6b6a66;font-size:13.5px}
+@media (max-width:600px){.parts{display:none}}
+@media (prefers-reduced-motion:reduce){.badge circle{transition:none}}

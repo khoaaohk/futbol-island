@@ -8,6 +8,8 @@ import {UW_SURFACE,UW_UNIFORMS,type ReefTheme} from './underwater';
  * - soft light shafts slanting down from the surface and fading into the dark (additive quads that turn to face the camera);
  * - faint plankton specks drifting slowly, fading with depth;
  * - one or two jellyfish pulsing gently as they drift (a dome and trailing tentacles).
+ * Oct 14 2026 polish: the bell glows a little brighter as it contracts, the plankton twinkles, the light shafts breathe slowly
+ * (all in the same shaders from the same time uniform: no extra draw, no CPU work).
  * The water itself darkens with depth through the theme's tint (underwater.ts applyReefWater), so no seabed is drawn.
  *
  * Heat (AGENTS.md): ONE merged mesh and ONE additive shader for everything (one draw), built once in boat-local space and
@@ -45,9 +47,9 @@ function buildColumn(phone:boolean){
  g.setIndex(b.index);return g;
 }
 const VERT=/* glsl */`
-uniform float uTime,uJellies;attribute vec3 aLocal;attribute float aKind,aSeed;varying vec2 vUv;varying float vKind,vDepth,vSeed;
+uniform float uTime,uJellies;attribute vec3 aLocal;attribute float aKind,aSeed;varying vec2 vUv;varying float vKind,vDepth,vSeed,vPulse;
 void main(){
- vUv=uv;vKind=aKind;vSeed=aSeed;
+ vUv=uv;vKind=aKind;vSeed=aSeed;vPulse=0.;
  vec3 right=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]),up=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);
  vec3 c=(modelMatrix*vec4(position,1.)).xyz,p;
  if(aKind<.5){// Light shaft: hangs from the surface, turned to face the camera about the vertical, slanting with the sun, swaying.
@@ -57,7 +59,7 @@ void main(){
   vec3 drift=vec3(sin(uTime*.11+aSeed)*.6,sin(uTime*.07+aSeed*1.7)*.35+mod(uTime*.03+aSeed,1.)*.3,cos(uTime*.09+aSeed*.6)*.6);
   p=c+drift+right*aLocal.x+up*aLocal.y;}
  else{// Jellyfish: the dome pulses (wider then taller), the tentacles trail and sway; it drifts in a slow loop and bobs.
-  float hidden=step(10.,aSeed)*step(uJellies,1.5);float ph=uTime*1.7+aSeed,pulse=sin(ph);vec3 l=aLocal;
+  float hidden=step(10.,aSeed)*step(uJellies,1.5);float ph=uTime*1.7+aSeed,pulse=sin(ph);vec3 l=aLocal;vPulse=max(0.,-pulse);
   if(uv.y>.5){l.xz*=1.+.13*pulse;l.y*=1.-.1*pulse;}else{float k=(.5-uv.y)*2.;l.x+=sin(ph-k*2.5)*.08*k;l.z+=cos(ph*.8-k*2.)*.06*k;}
   vec3 drift=vec3(sin(uTime*.05+aSeed)*1.2,sin(uTime*.31+aSeed)*.25+max(0.,-pulse)*.05,cos(uTime*.04+aSeed)*1.2);
   p=c+drift+l*(1.-hidden);}
@@ -65,12 +67,12 @@ void main(){
  gl_Position=projectionMatrix*viewMatrix*vec4(p,1.);
 }`;
 const FRAG=/* glsl */`
-uniform float uStrength,uShafts;uniform vec3 uUwShallow,uUwDeep,uPlankton,uJelly;varying vec2 vUv;varying float vKind,vDepth,vSeed;
+uniform float uStrength,uShafts,uTime;uniform vec3 uUwShallow,uUwDeep,uPlankton,uJelly;varying vec2 vUv;varying float vKind,vDepth,vSeed,vPulse;
 void main(){
  vec3 col;float a;
- if(vKind<.5){float across=1.-abs(vUv.x*2.-1.);a=pow(across,2.2)*smoothstep(0.,.35,vUv.y)*smoothstep(1.,.75,vUv.y)*pow(vUv.y,1.3)*.07*uShafts;col=mix(uUwShallow*1.6+vec3(.25,.3,.28),vec3(.8,.95,1.),.35);}
- else if(vKind<1.5){vec2 d=vUv*2.-1.;a=(1.-smoothstep(.2,1.,length(d)))*.55*exp(-vDepth*.28)*smoothstep(.1,.6,vDepth);col=uPlankton;}
- else{float rim=vUv.y>.5?.35+.65*smoothstep(.55,1.,vUv.y):.55*vUv.y*2.;a=rim*.28*exp(-vDepth*.2);col=uJelly*.8;}
+ if(vKind<.5){float across=1.-abs(vUv.x*2.-1.);a=pow(across,2.2)*smoothstep(0.,.35,vUv.y)*smoothstep(1.,.75,vUv.y)*pow(vUv.y,1.3)*.07*uShafts*(.78+.22*sin(uTime*.4+vSeed));col=mix(uUwShallow*1.6+vec3(.25,.3,.28),vec3(.8,.95,1.),.35);}
+ else if(vKind<1.5){vec2 d=vUv*2.-1.;a=(1.-smoothstep(.2,1.,length(d)))*.55*exp(-vDepth*.28)*smoothstep(.1,.6,vDepth)*(.55+.45*sin(uTime*1.3+vSeed*7.));col=uPlankton;}
+ else{float rim=vUv.y>.5?.35+.65*smoothstep(.55,1.,vUv.y):.55*vUv.y*2.;a=rim*.28*exp(-vDepth*.2)*(1.+.6*vPulse);col=uJelly*(.8+.35*vPulse);}
  // Into the haze: the deeper, the more of the water's own colour (matches the depth tint of everything else under the surface).
  col=mix(col,uUwDeep*2.,clamp(vDepth/7.,0.,.85));
  gl_FragColor=vec4(col*a*uStrength,1.);

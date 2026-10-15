@@ -1,0 +1,27 @@
+/* throw-in · the exhibit's own bits on top of the shared Paper room. One accent: green (the ball, a fair throw, your team). */
+.stage{-webkit-touch-callout:none}
+.stage svg{display:block;width:100%;height:100%}
+.stage :global(.iso-hit){cursor:grab}
+.stage :global(.iso-hit:focus-visible){stroke:var(--accent);stroke-width:2px;stroke-dasharray:4 3;fill:color-mix(in srgb,var(--accent) 10%,transparent)}
+.tip{color:#4a4a48}
+/* the referee's four checks under the card: a tick or a cross each (drawn, no glyphs) */
+.checks{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.checks li{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 10px;border-radius:12px;background:#f7f7f3;box-shadow:inset 0 0 0 1.5px #d23b2f;
+ font:600 13px/1.2 var(--sans);color:#1d1d1b;transition:box-shadow .2s,background-color .2s}
+.checks li[data-ok]{box-shadow:inset 0 0 0 1.5px var(--accent);background:color-mix(in srgb,var(--accent) 9%,#f7f7f3)}
+.checks small{display:inline-block;margin-right:6px;font:600 11px/1 var(--mono);color:#7a7a76}
+.mark{flex:none}
+.mark circle{fill:#d23b2f}
+.mark path{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mark[data-ok] circle{fill:var(--accent)}
+@media (max-width:600px){.checks{grid-template-columns:1fr 1fr}.checks li{font-size:12.5px;padding:5px 8px;min-height:40px}}
+/* the exploded layers' labels */
+.labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+.label{position:absolute;box-sizing:border-box;padding:8px 10px;border-radius:12px;background:rgba(247,247,243,.95);box-shadow:0 0 0 1px rgba(29,29,27,.12),0 8px 20px -12px rgba(29,29,27,.4);
+ font:400 13px/1.35 var(--sans);color:#3a3a3c}
+.label b{display:flex;align-items:center;gap:6px;font:700 15px/1.2 var(--sans);color:#1d1d1b;margin-bottom:2px}
+.label b i{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent);font:700 11px/1 var(--mono);font-style:normal}
+.label b svg{margin-left:auto}
+@media (max-width:600px){.label{padding:6px 8px;font-size:11.5px}.label b{font-size:13px}}
+@media (prefers-reduced-motion:reduce){.checks li{transition:none}}
+.twin{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px}

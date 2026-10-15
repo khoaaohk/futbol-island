@@ -105,7 +105,7 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.ok(L.CASE_PLACES.stadiums&&!L.CASE_PLACES['cards-1970']);assert.match(read('lib/museum/museumExhibits.ts'),/sculpture\('stadiums'/);
  assert.ok(E.CHAPTERS.some(c=>c.ids.includes('stadiums')));assert.ok(V.RETIRED_IDS.includes('cards-1970'));
  const old=V.sanitizeMuseumVisits({seen:['cards-1970','laws-1863','timeline'],done:['cards-1970']});assert.deepEqual(old,{seen:['timeline','laws-1863'],done:[]},'an old cards-1970 stamp is dropped, the rest kept');
- const p=V.passport({seen:[...X.EXHIBITS.map(x=>x.id).filter(id=>id!=='stadiums'),'cards-1970'],done:[]});assert.equal(p.total,12);assert.equal(p.seen,11);assert.equal(p.all,false,'an old stamp never completes the passport');
+ const p=V.passport({seen:[...X.EXHIBITS.map(x=>x.id).filter(id=>id!=='stadiums'),'cards-1970'],done:[]});assert.equal(p.total,X.EXHIBITS.length);assert.equal(p.seen,X.EXHIBITS.length-1);assert.equal(p.all,false,'an old stamp never completes the passport');
  assert.ok(read('lib/analytics/islandIds.ts').includes("['exhibit_stadiums',"));assert.ok(!fs.existsSync(path.join(root,'components/museum/experiences/cards-1970')));assert.ok(!fs.existsSync(path.join(root,'app/museum-lab/cards-1970')));
  // Oct 13 2026: the hall's stories are retired; the stadium is a still bowl and its case opens on the full card.
  assert.ok(!/cranking/.test(read('components/MuseumRoom.tsx')),'the hall case is a still stadium bowl, no turntable');

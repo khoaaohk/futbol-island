@@ -3,7 +3,7 @@ import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type Point
 import dynamic from 'next/dynamic';
 import {NavigationButton} from './DoneButton';
 import MuseumDoorSlide from './MuseumDoorSlide';
-import MuseumExhibit,{Certificates,type ExhibitHooks} from './MuseumExhibit';
+import MuseumExhibit,{type ExhibitHooks} from './MuseumExhibit';
 import EndgameDialog from './EndgameDialog';
 import {Icon} from './Icon';
 import styles from './MuseumRoom.module.css';
@@ -13,15 +13,14 @@ import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {EXHIBITS,UNLOCK_WORDS,exhibitState,galleryOf,nextExhibitToOpen,timelineOrder,type MuseumCounts} from '@/lib/endgame/museum';
 import {useGraduations} from '@/lib/endgame/graduationStore';
-import {certificateIds,isCertificateId,type CertificateId} from '@/lib/endgame/certificate';
-import {useMuseumCounts,type MuseumCollection} from '@/lib/museum/useMuseumCounts';
-import {COIN_QUEST} from '@/lib/town/coinQuest';
+import {certificateIds,type CertificateId} from '@/lib/endgame/certificate';
+import {useMuseumCounts} from '@/lib/museum/useMuseumCounts';
 import {refreshMuseumDeparture,MUSEUM_RETURN_URL} from '@/lib/museum/museumDoors';
 import {museumSfx,museumClickTarget,unlockMuseumAudio,createMuseumAmbience,MUSEUM_UNLOCK_EVENTS,type MuseumAmbience} from '@/lib/museum/museumSound';
 import {konbiniAudioContext} from '@/lib/konbini/konbiniSound';
 import type {MuseumScene,MuseumZoomView} from '@/lib/museum/museumScene';
 import {accentOf} from '@/lib/museum/museumAtlas';
-import type {MuseumPoi} from '@/lib/museum/museumLayout';
+import {CASE_PLACES,type MuseumPoi} from '@/lib/museum/museumLayout';
 const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
 import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/experiences/ExperienceStage';
@@ -35,23 +34,23 @@ const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,l
  * that interactive"). A separate document like the Konbini and the Arcade: /museum. The island is not loaded here; the scene
  * module is lazy-loaded when the page mounts, and only after the collections are read (the cases are built open or covered).
  *
- * Same content and unlock rules as the Sep 30 dialog (lib/endgame/museum.ts): 12 cases in 4 galleries, opened by hidden balls,
- * player cards, pop-up books and graduations; the first case is free and every case cites its sources. Walk up to a case and
+ * Content and rules from lib/endgame/museum.ts: every case is free and cites its sources. Oct 14 2026 (user: "get rid of your
+ * pop-up books, your player cards, your hidden balls, and your certificates … replace with other historical exhibits"): the west
+ * wing's Your Collection pieces, their cards and the header's collection counts are gone; the wing holds four history galleries. Walk up to a case and
  * Look (or tap it): the camera eases onto the real case (the Konbini/vending close-up), and the card underneath holds the facts,
  * "Take it to your game", the sources and the case's hands-on exhibit. Locked cases wear a cloth cover and say exactly what to
  * collect. The museum guide at the desk tells you what opens next and walks you there.
  */
-type Counts=MuseumCounts&{ready:boolean;collection:MuseumCollection};
-/** The header's four collection chips, in each gallery's colour. */
-const COUNT_WORD={balls:'balls',cards:'cards',books:'books',graduations:'grads'} as const,COUNT_ART={balls:'#2a5bd7',cards:'#e4322b',books:'#f2c230',graduations:'#1f8a5b'} as const;
+type Counts=MuseumCounts&{ready:boolean};
+/** The west wing's first case (the guide's "Walk me to the west wing"): the first Firsts case that has a place on the floor. */
+const WING_FIRST=EXHIBITS.find(e=>e.gallery==='firsts'&&CASE_PLACES[e.id])?.id??EXHIBITS.find(e=>e.gallery==='hall')!.id;
 export default function MuseumRoom(){
  const counts=useMuseumCounts(),record=useGraduations();
  // Freeze what the cases show for this visit once the stores are read (nothing is collected inside the museum).
  useEffect(()=>{recordExploreActivity('museum');},[]);// Explore checklist: Visit the museum
- const [frozen,setFrozen]=useState<{open:Record<string,boolean>;earned:CertificateId[];found:boolean[];cards:number;books:number}|null>(null);
- useEffect(()=>{if(frozen||!counts.ready)return;setFrozen({open:Object.fromEntries(EXHIBITS.map(e=>[e.id,exhibitState(e,counts).open])),earned:certificateIds(record),
-  found:COIN_QUEST.map(spot=>counts.collection.balls.includes(spot.id)),cards:counts.cards,books:counts.books});},[frozen,counts,record]);
- return frozen?<MuseumHall counts={counts} open={frozen.open} earned={frozen.earned} scene={frozen}/>:<main className={styles.root} aria-label="History Museum"><MuseumDoorSlide mode="arrive" ready={false}/></main>;
+ const [frozen,setFrozen]=useState<{open:Record<string,boolean>;earned:CertificateId[]}|null>(null);
+ useEffect(()=>{if(frozen||!counts.ready)return;setFrozen({open:Object.fromEntries(EXHIBITS.map(e=>[e.id,exhibitState(e,counts).open])),earned:certificateIds(record)});},[frozen,counts,record]);
+ return frozen?<MuseumHall counts={counts} open={frozen.open} earned={frozen.earned}/>:<main className={styles.root} aria-label="History Museum"><MuseumDoorSlide mode="arrive" ready={false}/></main>;
 }
 
 /** The guide's panel: focus moves in, Escape closes, Tab stays inside. */
@@ -60,7 +59,7 @@ function GuidePanel({onClose,children}:{onClose:()=>void;children:React.ReactNod
  return <section ref={ref} tabIndex={-1} className={styles.panel} role="dialog" aria-modal="true" aria-label="Museum guide" data-museum-guide-panel>{children}</section>;
 }
 
-function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Record<string,boolean>;earned:CertificateId[];scene:{found:boolean[];cards:number;books:number}}){
+function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boolean>;earned:CertificateId[]}){
  const canvas=useRef<HTMLCanvasElement>(null),room=useRef<MuseumScene|null>(null),joy=useRef<HTMLDivElement>(null),pointer=useRef<number|null>(null),promptRef=useRef<HTMLButtonElement>(null);
  const tap=useRef<{x:number;y:number}|null>(null),drag=useRef<{x:number;t:number;v:number;moved:number}|null>(null);
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[firstFrame,setFirstFrame]=useState(false),[near,setNear]=useState<MuseumPoi|null>(null);
@@ -112,7 +111,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  const look=(p:MuseumPoi|string)=>{const id=typeof p==='string'?p:p.id;if(id==='guide'){room.current?.greet();setGuideOpen(true);return;}if(id==='wc-balls'){setBalls('');return;}room.current?.zoomTo(id);};
  useEffect(()=>{if(!canvas.current)return;let canceled=false;const node=canvas.current;
   import('@/lib/museum/museumScene').then(({createMuseumScene})=>{if(canceled)return;try{
-   const scene=createMuseumScene(node,{open,earned,found:sceneInput.found,cards:sceneInput.cards,books:sceneInput.books},{onNear:setNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:setZoom,onTimeline:setTimelineId,onFirstFrame:()=>setFirstFrame(true),onZoomArrive:()=>museumSfx.look(),
+   const scene=createMuseumScene(node,{open},{onNear:setNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:setZoom,onTimeline:setTimelineId,onFirstFrame:()=>setFirstFrame(true),onZoomArrive:()=>museumSfx.look(),
     onPrompt:(x,y,visible)=>{const b=promptRef.current;if(b){const half=(b.offsetWidth||160)/2,vw=window.innerWidth,l=`${Math.round(Math.max(half+8,Math.min(vw-half-8,x))*2)/2}px`,t=`${Math.round(y*2)/2}px`,v=visible?'visible':'hidden';if(b.style.left!==l)b.style.left=l;if(b.style.top!==t)b.style.top=t;if(b.style.visibility!==v)b.style.visibility=v;}}});
    room.current=scene;(window as unknown as {__museum?:unknown}).__museum=scene;setReady(true);}catch(err){console.error("museum scene failed",err);setFailed(true);}}).catch(()=>!canceled&&setFailed(true));
   return()=>{canceled=true;room.current?.dispose();room.current=null;delete (window as unknown as {__museum?:unknown}).__museum;};
@@ -150,7 +149,7 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  // one sculpture you can still drag to spin.
  const zoomedId=zoom?.id??null,exhibit=EXHIBITS.find(e=>e.id===zoomedId)??null,spinning=zoomedId==='telstar-1970'&&!!zoom?.arrived&&!!open['telstar-1970'];
  const rain=useCallback((on:boolean)=>room.current?.setRain(on),[]);
- const hooks:ExhibitHooks=useMemo(()=>({spin:d=>room.current?.spinNudge(d),rain,certificate:id=>{if(isCertificateId(id))setCert(id);},earned}),[rain,earned]);
+ const hooks:ExhibitHooks=useMemo(()=>({spin:d=>room.current?.spinNudge(d),rain}),[rain]);
  const nextCase=nextExhibitToOpen(counts);
 
  function card(){
@@ -161,18 +160,6 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    <ol className={styles.years}>{timelineOrder().map(e=>{const s=exhibitState(e,counts);return <li key={e.id}><button type="button" data-museum-year={e.id} data-open={s.open} style={{'--g':accentOf(e.gallery)} as React.CSSProperties} aria-label={`${e.year}: ${e.title}${s.open?'':'. Locked'}`} onClick={()=>room.current?.zoomTo(e.id)}>
     <b>{e.year}{visits.seen.includes(e.id)&&<i className={styles.yearSeen} data-museum-year-seen aria-label=" (visited)"/>}</b><span>{s.open?e.title:<><i className={styles.lockIcon} aria-hidden="true"/>{e.title}</>}</span></button></li>;})}</ol>
    <p className={styles.small} data-museum-passport={pass.seen}>{pass.seen} of {pass.total} exhibits visited. See each exhibit to collect its stamp.</p></div>;
-  if(zoom.id==='my-balls'){const found=COIN_QUEST.filter(spot=>counts.collection.balls.includes(spot.id));return <div className={styles.tag} data-museum-card="my-balls" style={{'--g':accentOf('hall')} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>Your hidden balls</h2></div>
-   <p data-museum-found={found.length}><b>{found.length} of {COIN_QUEST.length}</b> found. Each one sits on its own peg.</p>
-   <div className={styles.progress} role="progressbar" aria-label="Hidden balls found" aria-valuemin={0} aria-valuemax={COIN_QUEST.length} aria-valuenow={found.length}><i style={{width:`${found.length/COIN_QUEST.length*100}%`}}/></div>
-   {found.length?<details className={styles.sources} open={found.length<=3}><summary>What your balls taught you</summary><ul className={styles.collectionList}>{found.map(spot=><li key={spot.id}><b>{spot.name}</b> {spot.teaching}</li>)}</ul></details>
-    :<p className={styles.small}>{UNLOCK_WORDS.balls.how}</p>}</div>;}
-  if(zoom.id==='my-cards'||zoom.id==='my-books'){const cards=zoom.id==='my-cards',items=cards?counts.collection.cards:counts.collection.books,kind=cards?'cards':'books';
-   return <div className={styles.tag} data-museum-card={zoom.id} style={{'--g':accentOf('hall')} as React.CSSProperties}><div className={styles.tagHead}><span className={styles.eyebrow}>Your Collection</span><h2>{cards?'Your player cards':'Your pop-up books'}</h2></div>
-    <p>{cards?counts.collection.cardLesson:counts.collection.bookLesson}</p>
-    <p data-museum-have={items.length}><b>{items.length} {items.length===1?UNLOCK_WORDS[kind].one:UNLOCK_WORDS[kind].many}</b>{items.length>(cards?10:18)?` (the ${cards?'table':'shelves'} show${cards?'s':''} the first ${cards?10:18})`:''}</p>
-    {items.length?<ul className={styles.collectionList}>{items.map(item=><li key={item.id}><b>{item.label}</b>{item.detail?` · ${item.detail}`:''}</li>)}</ul>:<p className={styles.small}>{UNLOCK_WORDS[kind].how}</p>}</div>;}
-  if(zoom.id==='hall-wall')return <div className={styles.tag} data-museum-card="hall-wall"><div className={styles.tagHead}><span className={styles.eyebrow}>Hall of Fame</span><h2>Your certificates</h2></div>
-   <p>Every path you graduate hangs its certificate here.</p><Certificates earned={earned} open={id=>{if(isCertificateId(id))setCert(id);}}/></div>;
   if(!exhibit)return null;
   const g=galleryOf(exhibit.gallery),s=exhibitState(exhibit,counts),shown=open[exhibit.id]&&s.open;
   // Open cases show no card at all, just the "See exhibit" button (Oct 14 2026, user: "remove this information in front of the
@@ -196,8 +183,6 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
  return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
-   {!zoom&&<span className={styles.counts} aria-label={`${counts.balls} hidden balls, ${counts.cards} player cards, ${counts.books} pop-up books, ${counts.graduations} graduations`}>
-    {(['balls','cards','books','graduations'] as const).map(k=><span key={k} data-museum-hud={k} style={{'--g':COUNT_ART[k]} as React.CSSProperties}><b>{counts[k]}</b>{counts[k]===1?COUNT_WORD[k].slice(0,-1):COUNT_WORD[k]}</span>)}</span>}
   </header>
   {/* See exhibit: bottom centre, the one thing to do at an open case (Oct 14 2026, user). */}
   <div className={styles.enterBar}>
@@ -227,14 +212,13 @@ function MuseumHall({counts,open,earned,scene:sceneInput}:{counts:Counts;open:Re
    <GuidePanel onClose={()=>setGuideOpen(false)}>
     <NavigationButton className={styles.close} label="Done" onNavigate={()=>setGuideOpen(false)}/>
     <h2>Ada, museum guide</h2>
-    <p>Every case opens with something you collect on the island, and the west wing shows your own collection. Here’s what you have:</p>
-    <ul className={styles.guideCounts}>{(['balls','cards','books','graduations'] as const).map(k=><li key={k} data-museum-count={k}><b>{counts[k]}</b> {counts[k]===1?UNLOCK_WORDS[k].one:UNLOCK_WORDS[k].many}</li>)}</ul>
+    <p>Every case tells a true story from football’s history. The main hall has the Laws, the World Cup, and balls and kits; through the west wing’s wide opening are Firsts, Rules &amp; tactics, Skills &amp; science and Legends.</p>
     <p className={styles.small}>{EXHIBITS.filter(e=>exhibitState(e,counts).open).length} of {EXHIBITS.length} cases open · {pass.seen} of {pass.total} exhibits visited{pass.all?'. You’re a Museum Explorer!':''}</p>
     {nextCase?<><h3>Next to open</h3><p data-museum-next-case={nextCase.id}><b>{nextCase.title}</b> ({nextCase.year}). {exhibitState(nextCase,counts).lockText}</p>
      <button type="button" className={styles.gold} data-museum-show-me onClick={()=>{setGuideOpen(false);room.current?.walkTo(nextCase.id);}}>Show me</button></>
      :<p>Every case is open. Tap See exhibit on any case to explore!</p>}
     <div className={styles.row}><button type="button" className={styles.mint} data-museum-guide-timeline onClick={()=>{setGuideOpen(false);room.current?.walkTo('timeline');}}>Walk me to the timeline</button>
-     <button type="button" className={styles.mint} data-museum-guide-collection onClick={()=>{setGuideOpen(false);room.current?.walkTo('my-balls');}}>Your Collection wing</button></div>
+     <button type="button" className={styles.mint} data-museum-guide-wing onClick={()=>{setGuideOpen(false);room.current?.walkTo(WING_FIRST);}}>Walk me to the west wing</button></div>
    </GuidePanel></div>}
   {/* The timeline wall (Hairline line figures, components/museum/experiences/timeline): "Visit this case" closes it and walks the hall's camera to that case. */}
   {experience&&(()=>{const X=EXPERIENCES[experience],tl=experience==='timeline',e=tl?(EXHIBITS.find(x=>x.id===stage.tlAt)??timelineOrder()[0]):EXHIBITS.find(x=>x.id===experience);if(!X||!e)return null;

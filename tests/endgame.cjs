@@ -121,7 +121,11 @@ const finishPath=(format,skipLast=false)=>{const quiz=at('lib/town/quizProgress.
 {
  const X=at('lib/endgame/museum.ts');const zero={balls:0,cards:0,books:0,graduations:0};
  assert.equal(new Set(X.EXHIBITS.map(e=>e.id)).size,X.EXHIBITS.length,'unique ids');
- same(X.GALLERIES.map(g=>g.unlock),['balls','cards','books','graduations'],'one gallery per collection');
+ // Oct 14 2026: the Your Collection wing became history galleries and every case is free (need 0), so `unlock` is only the legacy
+ // field the guide's copy reads: the hall's four keep theirs, the wing's three new galleries carry a valid kind.
+ same(X.GALLERIES.map(g=>g.id),['laws','worldcup','kit','hall','firsts','tactics','skills'],'seven galleries');
+ same(X.GALLERIES.slice(0,4).map(g=>g.unlock),['balls','cards','books','graduations'],'the hall\'s four keep their legacy unlock kind');
+ assert.ok(X.GALLERIES.every(g=>g.unlock in zero),'every gallery names a valid unlock kind');
  // Every exhibit is free to see (user, Oct 9 2026): a fresh save opens every case.
  same(X.openExhibits(zero).map(e=>e.id),X.EXHIBITS.map(e=>e.id),'fresh save: every case is open');
  assert.ok(X.EXHIBITS.every(e=>e.need===0),'no exhibit needs a collection');

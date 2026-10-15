@@ -33,6 +33,6 @@ export function refreshMuseumDeparture(){
  * The west wing (Oct 3 2026, user: "expand the museum to have another wing and fill this grass area. L shape building"): the grass
  * lot between the museum's west wall (x 153), the high-school road's sidewalk (z 171), the pier path (x 132.5–137.5) and the
  * SOUTH PIER sign (z 203, posts at x 142.7/149.3) and its lamp (148, 205.5). Joined to the museum's west wall so the footprint
- * reads as an L; the main door stays the only entrance. Inside, it is the "Your Collection" wing (lib/museum/museumLayout.ts).
+ * reads as an L; the main door stays the only entrance. Inside, it is the west wing of four history galleries (lib/museum/museumLayout.ts; the "Your Collection" pieces were replaced Oct 14 2026).
  */
 export const MUSEUM_WING={x:146,z:186,w:14,d:26,h:5} as const;

@@ -27,8 +27,10 @@ export default function IslandQuests({onDiscover,onExplore,onCards,exploration=f
  // The "Island Tutorial" row's CTA animation (user, Oct 13 2026): a brief pop/ring/nudge, a fresh remount (`key`) each time it
  // should play so the finite CSS animation-iteration-count restarts. It plays once the row scrolls into view, and again on
  // hover/focus; it pauses (via the data-page-hidden attribute, no re-render) while the tab is hidden.
- const guideRow=useRef<HTMLDivElement>(null),[ctaRun,setCtaRun]=useState(0),ctaSeen=useRef(false);
- const bumpCta=()=>setCtaRun(r=>r+1);
+ const guideRow=useRef<HTMLDivElement>(null),ctaPulse=useRef<HTMLSpanElement>(null),ctaSeen=useRef(false);
+ // Replays the finite CSS pulse IN PLACE (Web Animations API), never by remounting: remounting the label under a finger between
+ // pointerdown and pointerup made the browser drop the tap, so "Island Tutorial" didn't open on phones (Oct 15 2026 QA).
+ const bumpCta=()=>{const el=ctaPulse.current;if(!el||typeof el.getAnimations!=='function')return;for(const a of el.getAnimations({subtree:true})){a.cancel();a.play();}};
  useEffect(()=>{
   const node=guideRow.current;if(!node)return;
   const onVisibility=()=>{if(node)node.dataset.pageHidden=String(document.hidden);};
@@ -50,8 +52,8 @@ export default function IslandQuests({onDiscover,onExplore,onCards,exploration=f
  {tutorial?<IslandTutorial onClose={closeTutorial} primed={primed.current}/>:<>
  <div className={journey.arrivalCopy}><h3>Have fun.<br/>Explore your island.</h3></div>
  <JourneyArrivalArt className={journey.arrivalArt}/>
- <div ref={guideRow} className={journey.guide}><button ref={tutorialButton} type="button" data-ui-sound="expand" data-island-tutorial-open="" onClick={openTutorial} onPointerEnter={()=>{preloadTutorial();bumpCta();}} onFocus={()=>{preloadTutorial();bumpCta();}}>
-  <span className={journey.ctaPulse} key={ctaRun}><span className={journey.ctaLabel}>Island Tutorial</span><span className={journey.ctaIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg></span></span>
+ <div ref={guideRow} className={journey.guide}><button ref={tutorialButton} type="button" data-ui-sound="expand" data-island-tutorial-open="" onClick={openTutorial} onPointerEnter={e=>{preloadTutorial();if(e.pointerType==='mouse')bumpCta();}} onFocus={()=>{preloadTutorial();bumpCta();}}>
+  <span className={journey.ctaPulse} ref={ctaPulse}><span className={journey.ctaLabel}>Island Tutorial</span><span className={journey.ctaIcon} aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16"><path d="M8 5l11 7-11 7z" fill="currentColor"/></svg></span></span>
  </button></div>
  </>}
  </section>

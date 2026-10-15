@@ -20,14 +20,16 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
 // 1. Every case on the timeline is an era, in timelineOrder(), quoting one of its own facts; one accent for the exhibit.
 {const order=X.timelineOrder().map(e=>e.id),list=E.eras();
  assert.equal(order.length,X.EXHIBITS.length);assert.deepEqual(list.map(e=>e.exhibit.id),order,'every case is an era, oldest first');
- assert.deepEqual(order.slice(0,7),['laws-1863','penalty-1891','boots','shirts','worldcup-1930','stadiums','laced-leather']);assert.equal(order.at(-1),'hall-of-fame');
+ // Oct 14 2026: the west wing's history cases join the timeline; the original cases keep their relative order.
+ {const old=['laws-1863','penalty-1891','boots','shirts','worldcup-1930','stadiums','laced-leather'];assert.deepEqual(order.filter(id=>old.includes(id)),old);}
+ assert.equal(order[0],'laws-1863');assert.equal(X.EXHIBITS.find(e=>e.id===order.at(-1)).year,'Today');
  assert.equal(E.ACCENT,'#2a5bd7');for(const x of list)assert.equal(x.accent,E.ACCENT,'one accent');assert.match(css,/--accent:#2a5bd7/);
  for(const era of list){const e=era.exhibit;assert.ok(e.facts.includes(era.fact),e.id+' fact line comes from its case');}
  const at=id=>list.find(x=>x.exhibit.id===id).fact;
  assert.match(at('laws-1863'),/Football Association was formed in London/);assert.match(at('penalty-1891'),/William McCrum/);assert.match(at('worldcup-1930'),/Argentina 4–2/);
  assert.match(at('stadiums'),/Maracanã/);assert.match(at('boots'),/Screw-in studs/);assert.match(at('wwc-1991'),/Norway 2–1/);assert.match(at('var-2018'),/final decision|clear mistakes/);
  assert.match(exp,/\{list\[idx\]\.fact\}/,'the label quotes the fact');assert.match(exp,/aria-valuetext=\{`\$\{e\.year\}: \$\{e\.title\}`\}/);
- const ch=E.CHAPTERS.flatMap(c=>c.ids);assert.deepEqual([...ch].sort(),X.EXHIBITS.map(e=>e.id).sort(),'every case sits in exactly one chapter');
+ const ch=E.CHAPTERS.flatMap(c=>c.ids);for(const e of X.EXHIBITS)assert.equal(ch.filter(id=>id===e.id).length,1,e.id+' sits in exactly one chapter');assert.equal(new Set(ch).size,ch.length,'no case in two chapters');
  console.log('PASS 12 eras in timeline order, each quoting its case, one accent');}
 
 // 2. The bench's maths: wheel → cases, rubber band, flick → snap, the year counter, the year rail, the spring.
@@ -39,7 +41,9 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
  const years=X.timelineOrder().map(e=>e.year),xs=Mm.tickXs(years,2026);for(let i=1;i<xs.length;i++)assert.ok(xs[i]>=xs[i-1]);
  {const dup=Mm.tickXs(['1863','1970','1970','Today'],2026);assert.equal(dup[1],dup[2],'two cases in the same year share a spot');}
  for(const p of [0,1.5,4,7.25,11]){const back=Mm.fracToPos(Mm.posToFrac(p,xs),xs);assert.ok(Math.abs(Mm.posToFrac(back,xs)-Mm.posToFrac(p,xs))<1e-9);}
- assert.equal(Mm.odometer(0,years,2026),1863);assert.equal(Mm.odometer(1,years,2026),1891);assert.equal(Mm.odometer(.5,years,2026),1877);assert.equal(Mm.odometer(11,years,2026),2026);
+ // (Oct 14 2026: counted from the live list, which grew from 12 cases with the west wing's history galleries.)
+ {const yr=i=>Number(years[i].match(/\d{4}/)[0]),j=years.findIndex((y,i)=>i>0&&/^\d{4}$/.test(y)&&Number(y)!==yr(0));
+  assert.equal(Mm.odometer(0,years,2026),1863);assert.equal(Mm.odometer(j,years,2026),yr(j));assert.ok(Mm.odometer(j-.5,years,2026)>=1863&&Mm.odometer(j-.5,years,2026)<=yr(j));assert.equal(Mm.odometer(years.length-1,years,2026),2026);}
  assert.equal(Mm.yearsBetween('1863','1970'),107);assert.equal(Mm.yearsBetween('Before the 1960s','1970'),null);
  assert.equal(Mm.direction(2,5),'later');assert.equal(Mm.direction(5,2),'earlier');assert.equal(Mm.direction(3,3),'here');
  {const sp=Mm.spring(0);sp.target=3;let n=0;while(!Mm.stepSpring(sp,1/60)&&n<600)n++;assert.ok(n<600&&sp.x===3&&sp.v===0,'the spring settles exactly, so the loop can stop');}
@@ -51,7 +55,7 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
 // 3. Missions and Order it: real cases, no new facts, scoring.
 {const ids=E.eras().map(x=>x.exhibit.id);for(const c of Mm.CHALLENGES){assert.ok(ids.includes(c.id));assert.ok(c.ask.length<40);}
  assert.match(exp,/Found it! \$\{tx\.title\}: \$\{tx\.year\}/);assert.match(exp,/keep going, it’s later/);assert.match(exp,/go back, it’s earlier/);assert.match(exp,/data-tl-quest-next/);
- const pool=E.eras().filter(x=>O.dated(x.exhibit)).map(x=>O.toItem(x.exhibit,x.accent,2026));assert.equal(pool.length,9,'only cases with one exact year (Oct 12 2026: boots is "1900s", a decade, so it sits out)');
+ const pool=E.eras().filter(x=>O.dated(x.exhibit)).map(x=>O.toItem(x.exhibit,x.accent,2026));assert.ok(pool.length>=9&&pool.every(x=>/^\d{4}$/.test(String(x.y))),'only cases with one exact year (Oct 12 2026: boots is "1900s", a decade, so it sits out)');
  for(let seed=1;seed<40;seed++)for(let k=0;k<6;k++){const d=O.deal(pool,k,seed,k?O.deal(pool,k-1,seed).map(x=>x.id):[]);assert.equal(d.length,O.setSize(k));
   assert.equal(new Set(d.map(x=>x.y)).size,d.length);assert.ok(!O.inOrder(d),'never dealt in order');}
  assert.deepEqual(O.move(['a','b','c','d'],0,2),['b','c','a','d']);assert.deepEqual(O.swap(['a','b','c'],0,2),['c','b','a']);assert.equal(O.slotAt(85,80,1,4),2);
@@ -114,5 +118,5 @@ const all=Object.entries(src).filter(([f])=>/\.(tsx?|css)$/.test(f)).map(([,s])=
  assert.match(cssNo,/\.stepBtn\{width:48px;height:48px/);assert.match(cssNo,/\.rail\{[^}]*height:56px;touch-action:none/);assert.match(cssNo,/\.cart\{[^}]*touch-action:none/);
  for(const sel of cssNo.replace(/@(media|supports|keyframes)[^{]*\{/g,'').match(/(^|\})\s*[^@{}][^{}]*\{/g)??[])for(const part of sel.replace(/^\}?\s*/,'').replace(/\{$/,'').split(','))
   if(!/^(from|to|\d+%)$/.test(part.trim()))assert.match(part,/\.[a-zA-Z]/,'local class: '+part.trim());
- global.window=undefined;const V=require('../lib/museum/museumVisits.ts');assert.deepEqual(V.passport({seen:['timeline','laws-1863'],done:[]}),{seen:1,done:0,total:12,all:false});
+ global.window=undefined;const V=require('../lib/museum/museumVisits.ts');assert.deepEqual(V.passport({seen:['timeline','laws-1863'],done:[]}),{seen:1,done:0,total:X.EXHIBITS.length,all:false});
  console.log('PASS heat and input: one sleeping loop, drags paint directly, the wheel round the hub, reduced motion lands at once, CSS rules');}

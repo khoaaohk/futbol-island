@@ -23,6 +23,16 @@ const READY:Record<string,ComponentType<ExperienceProps>>={
  'hall-of-fame':load(()=>import('./hall-of-fame/Experience')),
  'shirts':load(()=>import('./shirts/Experience')),
  'laws-1863':load(()=>import('./laws-1863/Experience')),
+ 'first-international-1872':load(()=>import('./first-international-1872/Experience')),
+ 'offside-rules':load(()=>import('./offside-rules/Experience')),
+ 'formations-history':load(()=>import('./formations-history/Experience')),
+ 'floodlights-1878':load(()=>import('./floodlights-1878/Experience')),
+ 'copa-america-1916':load(()=>import('./copa-america-1916/Experience')),
+ 'keeper-hands-1912':load(()=>import('./keeper-hands-1912/Experience')),
+ 'ballon-dor':load(()=>import('./ballon-dor/Experience')),
+ 'free-kick-wall':load(()=>import('./free-kick-wall/Experience')),
+ 'ball-curve':load(()=>import('./ball-curve/Experience')),
+ 'throw-in':load(()=>import('./throw-in/Experience')),
 };
-const IDS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame'] as const;
+const IDS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame','first-international-1872','offside-rules','formations-history','floodlights-1878','copa-america-1916','keeper-hands-1912','ballon-dor','free-kick-wall','ball-curve','throw-in'] as const;
 export const EXPERIENCES:Readonly<Record<string,ComponentType<ExperienceProps>>>=Object.fromEntries(IDS.map(id=>[id,READY[id]??placeholder]));

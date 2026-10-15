@@ -68,15 +68,15 @@ export const Puck=({x,y,z,r,P}:{x:number;y:number;z:number;r:number;P:k.Projecti
  <Solid paths={k.cylinder(x,y,r,z,1.6,P,40,.4)} tone="mid"/><Line d={k.ring(x,y,r-1.4,z+1.6,P,40)} tone="faint"/></g>;
 
 // ── 1. The cabinet ───────────────────────────────────────────────────────────────────────────────────────────────────────
-/** Rows top first (reading order). Wide cards: one long vitrine, each bay as wide as its trophy. Tall: 3 × 3 even bays. */
-export type CabLayout={rows:readonly (readonly (TrophyId|'yours')[])[];minBay:number};
+/** Rows top first (reading order). Wide cards: one long vitrine, each bay as wide as its trophy. Tall: 3 × 3, last row of 2. */
+export type CabLayout={rows:readonly (readonly TrophyId[])[];minBay:number};
 export const CAB_WIDE:CabLayout={rows:[['worldcup','womens','ucl','copa','afcon','euro','asian','facup']],minBay:0};
-export const CAB_TALL:CabLayout={rows:[['worldcup','womens','ucl'],['copa','afcon','euro'],['asian','facup','yours']],minBay:66};
+export const CAB_TALL:CabLayout={rows:[['worldcup','womens','ucl'],['copa','afcon','euro'],['asian','facup']],minBay:66};
 const CH=94,CD=34,WALL=3,DIV=2,SHELF=3,BASE=14;
 /** The cabinet is seen nearly face on (the bays are narrow and deep things would hide behind the dividers). */
 export const AZ_CAB=74;
-const bayOf=(id:TrophyId|'yours',min:number)=>Math.max(min,id==='yours'?42:Math.max(34,2*reach(byId(id)!)+12));
-export type Slot={id:TrophyId|'yours';row:number;x0:number;x1:number;x:number;y:number;z:number;first:boolean};
+const bayOf=(id:TrophyId,min:number)=>Math.max(min,Math.max(34,2*reach(byId(id)!)+12));
+export type Slot={id:TrophyId;row:number;x0:number;x1:number;x:number;y:number;z:number;first:boolean};
 export function cabinet(L:CabLayout){
  const n=L.rows.length,widths=L.rows.map(r=>r.reduce((a,id)=>a+bayOf(id,L.minBay),0)+(r.length-1)*DIV),inner=Math.max(...widths),W=inner+WALL*2;
  const top=BASE+n*(CH+SHELF)+SHELF,slots:Slot[]=[];
@@ -98,17 +98,16 @@ export function Cabinet({L,P,seen,spin,hot}:{L:CabLayout;P:k.Projection;seen:Rea
    {/* the shelf this row stands on and the back panel's grooves (three per bay) */}
    <Solid paths={k.slabOf({x:WALL,y:3,w:W-WALL*2,d:CD+1,r:0},z0,SHELF,P,1)} tone="mid"/>
    <Line d={inRow.flatMap(s=>[.25,.5,.75].map(f=>k.segment([s.x0+(s.x1-s.x0)*f,3,z0+SHELF+.5],[s.x0+(s.x1-s.x0)*f,3,z0+SHELF+CH-1],P))).join('')} tone="faint"/>
-   {inRow.map(s=>{const t=s.id==='yours'?null:byId(s.id)!;
+   {inRow.map(s=>{const t=byId(s.id)!;
     return <g key={s.id}>
      {!s.first&&<Solid paths={k.slabOf({x:s.x0-DIV,y:3,w:DIV,d:CD+1,r:0},z0+SHELF,CH,P,1)} tone="mid"/>}
      {/* a small lamp under the shelf above, at the back of the bay */}
      <Solid paths={k.slabOf({x:s.x-6,y:5,w:12,d:3,r:1},z0+SHELF+CH-2.4,2.4,P,3)} tone="hi"/>
-     {t?<g data-slot={t.id} data-seen={seen.has(t.id)||undefined}>
+     <g data-slot={t.id} data-seen={seen.has(t.id)||undefined}>
        <Puck x={s.x} y={s.y} z={s.z} r={Math.min(footOf(t)+2.4,(s.x1-s.x0)/2-3)} P={P}/>
        <TrophyArt t={t} pose={poseAt(P,s.x,s.y,s.z+1.6,spin)}/>
        <Label x={s.x-Math.min(12,(s.x1-s.x0)/2-3)} y={CD-6} w={Math.min(24,s.x1-s.x0-6)} d={6} z={s.z} P={P} lit={seen.has(t.id)||hot===t.id}/>
       </g>
-      :<YoursSlot x={s.x} y={s.y} z={s.z} P={P}/>}
     </g>;})}
   </g>;})}
   {/* the crown, the right wall (nearest the viewer of the two) */}
@@ -132,26 +131,6 @@ export function Cabinet({L,P,seen,spin,hot}:{L:CabLayout;P:k.Projection;seen:Rea
    </g>;})}
  </g>;
 }
-/** The tall cabinet's ninth bay: your own shelf's sign (a framed certificate on an easel and a small cup). */
-function YoursSlot({x,y,z,P}:{x:number;y:number;z:number;P:k.Projection}){
- return <g data-slot="yours">
-  <Solid paths={k.slabOf({x:x-15,y:y-10,w:30,d:3,r:.6},z,36,P,2,.5)} tone="hi"/>
-  <Line d={k.pathOf([k.iso([x-11,y-7,z+5],P),k.iso([x+11,y-7,z+5],P),k.iso([x+11,y-7,z+31],P),k.iso([x-11,y-7,z+31],P)],true)} tone="lo"/>
-  {[14,18,22].map((h,i)=><Line key={i} d={k.segment([x-7,y-7,z+h+4],[x+7-i*3,y-7,z+h+4],P)} tone="lo" free/>)}
-  <path d={k.cylinder(x+6,y-7,2.6,z+8,.2,P,20).fill} fill={ACCENT} stroke="var(--anatomy-hi)" strokeWidth={.6}/>
-  <Puck x={x+2} y={y+8} z={z} r={7} P={P}/>
-  <TrophyArt t={KID_CUP} pose={poseAt(P,x+2,y+8,z+1.6,.6)}/>
- </g>;
-}
-
-/** Your own cup (the shelf's prize for a graduated path): a small turned cup with two handles, in the accent yellow. */
-export const KID_CUP:Trophyish={parts:[{id:'cup',lift:0}],model:[
- {k:'lathe',part:'cup',mat:'paper',prof:[[5.4,0],[5.5,.3],[5.5,2.2],[4.6,3]]},
- {k:'lathe',part:'cup',mat:'yellow',prof:[[1.7,3],[1.4,6],[2.4,7.4],[1.6,8.6],[2.6,10.4]]},
- {k:'lathe',part:'cup',mat:'yellow',prof:[[2.6,10.4],[5,12.4],[6.4,15.6],[6.8,19],[7,20.6]],open:true,rings:[18]},
- {k:'handle',part:'cup',mat:'yellow',at:[Math.PI/2,-Math.PI/2],t:.55,curve:[[6.7,19.4],[9.2,19.6],[10,16.6],[8.4,13.6],[6.2,13.4]]},
-]};
-
 // ── 2. The turntable stand ───────────────────────────────────────────────────────────────────────────────────────────────
 export function stand(t:Trophy){
  const rt=Math.max(15,footOf(t)+5),Z0=12,ruler=Math.ceil((t.drawH+4)/10)*10,gx=-rt-20,gy=-4;

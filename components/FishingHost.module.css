@@ -80,3 +80,13 @@
 .hud[data-phase=bite] .message{background:var(--btn-gold-bright)}
 @media(max-width:600px),(pointer:coarse){.message{top:calc(90px + env(safe-area-inset-top,0px));max-width:calc(100% - 36px);padding:9px 13px}.messageTitle{font-size:13px}.messageLesson{font-size:12px}}
 @media(orientation:landscape) and (max-height:500px){.message{top:calc(78px + env(safe-area-inset-top,0px));max-width:min(440px,calc(100% - 220px))}}
+
+/* Reel feedback polish (Oct 14 2026): notches show how many pulls the catch needs, each pull flashes the bar once, and a fish
+   pulling back makes the button strain twice (one-shot animations, re-triggered by state changes; none with reduced motion). */
+.reelProgress{position:relative;height:6px}
+.reelProgress::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(100% - 1.5px),#fff1d3b3 0) 0 0/calc(100% / var(--reel-steps,1)) 100% repeat-x;pointer-events:none}
+.reelFlash{position:absolute;inset:-2px 0;border-radius:99px;background:#fff6dc;opacity:0;animation:reelFlash .28s ease-out}
+@keyframes reelFlash{from{opacity:.75}to{opacity:0}}
+.reel[data-pulling]{animation:reelStrain .16s ease-in-out 4 alternate}
+@keyframes reelStrain{from{rotate:-4deg}to{rotate:4deg}}
+@media(prefers-reduced-motion:reduce){.reelFlash{animation:none}.reel[data-pulling]{animation:none}}

@@ -7,7 +7,7 @@ import type {Obstacle} from './simulation';
  * docs/museum-modern-style.md). A modern art museum in the island's low-poly language: a clean gallery-white volume with a thin
  * floating roof slab and a dark plinth, a deep-set glass entrance under a cantilevered canopy, one bold accent plane in the gallery
  * blue (with a white disc: the ball, abstracted), a long ribbon window, minimal sans lettering and a stone plaza with low planters.
- * The west wing ("Your Collection") speaks the same language.
+ * The west wing (four history galleries inside since Oct 14 2026) speaks the same language.
  *
  * Kept exactly: both footprints (MUSEUM_BUILDING 30×9×5 at 168,181; MUSEUM_WING), the roof height (5.23: the museum-roof coin
  * lands there), the door anchor (MUSEUM_DOOR 160.2 / 185.7), the building names (lamps, map footprints) and their obstacles.

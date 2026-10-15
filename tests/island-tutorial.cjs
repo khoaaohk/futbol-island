@@ -123,7 +123,11 @@ const script=JSON.parse(read('lib/tutorial/islandTutorial.json')),timing=JSON.pa
  assert.match(journeyCss,/@media\(prefers-reduced-motion:reduce\)\{\.ctaPulse[^}]*animation:none!important/,'reduced motion: no CTA animation, just the stronger static styling');
  assert.match(journeyCss,/min-height:var\(--btn-height,44px\)/,'the button keeps a ≥44px tap target');
  assert.match(quests,/new IntersectionObserver\(entries=>\{\s*if\(entries\[0\]\?\.isIntersecting&&!ctaSeen\.current\)/,'the CTA plays once the row scrolls into view');
- assert.match(quests,/onPointerEnter=\{\(\)=>\{preloadTutorial\(\);bumpCta\(\);\}\}/,'hovering re-triggers the CTA');
+ assert.match(quests,/onPointerEnter=\{e=>\{preloadTutorial\(\);if\(e\.pointerType==='mouse'\)bumpCta\(\);\}\}/,'a mouse hover re-triggers the CTA (a touch does not)');
+ // Oct 15 2026 QA: re-keying the label under the finger between pointerdown and pointerup dropped real taps. The pulse replays in
+ // place through the Web Animations API and nothing under the button is ever remounted.
+ assert(!/key=\{ctaRun\}|setCtaRun/.test(quests),'the CTA label is never remounted (that swallowed taps)');
+ assert.match(quests,/getAnimations\(\{subtree:true\}\)\)\{a\.cancel\(\);a\.play\(\);\}/,'the pulse replays in place');
  assert.match(quests,/node\.dataset\.pageHidden=String\(document\.hidden\)/,'the row tracks page visibility locally, not with global state');
 }
 console.log(`PASS island tutorial: button, open/close + focus, ${script.scenes.length} scenes with captions and voiced clips, mute rules, reduced motion, heat, shared height token, desktop caption/art/scene-bar layout, CTA animation`);

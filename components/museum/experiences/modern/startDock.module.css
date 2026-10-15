@@ -1,0 +1,4 @@
+/* One start button, centred with its line under it (Oct 14 2026, user: no second copy above). Shared by StartDock.tsx. */
+.dock{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:4px 0 2px}
+.start{min-width:220px;min-height:52px;font-size:16px}
+.line{margin:0;font:400 14px/1.4 var(--sans);color:#4a4a48;max-width:52ch}

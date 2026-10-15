@@ -1,6 +1,5 @@
 'use client';
 import {useCallback,useEffect,useMemo,useReducer,useRef,useState,type CSSProperties,type PointerEvent as RPE} from 'react';
-import {isCertificateId,type CertificateId} from '@/lib/endgame/certificate';
 import {museumSfx} from '@/lib/museum/museumSound';
 import ExperienceBack from '../ExperienceBack';
 import WallLabel from '../modern/WallLabel';
@@ -11,50 +10,41 @@ import {ISO_CSS,fitProjection,type Projection,type Point3} from '../anatomy/iso-
 import {useSize} from '../anatomy/hooks';
 import {useFrameLoop} from '../anatomy/paper-loop';
 import type {ExperienceProps} from '../types';
-import {COPY,PLINTHS,SOURCES} from './hallData';
-import {lessonNames,readPathProgress,type PathProgress} from './progress';
+import {COPY,SOURCES} from './hallData';
 import {TROPHIES,byId,reach,type Trophy,type TrophyId} from './trophies';
 import {drawTrophy,trophyBox} from './model';
 import {BEST_KEY,COMPARE,MATCH,coast,follow,sanitizeSave,stars,tiltFor,winner,type Save} from './game';
 import {AZ,AZ_BENCH,AZ_CAB,EL,BENCH_PLAN,Beam,BenchStatic,CAB_TALL,CAB_WIDE,Cabinet,Crank,Cursors,Gauge,KG,Leaders,Marks,PLINTH_GAP,PlinthLetter,PlinthsStatic,StandStatic,TrophyArt,TrophyDefs,
  benchPoints,cabinet,kOf,panZ,plinths,poseAt,stand,type Box} from './scene';
-import {Ideas,SPOTS,Shelf,ShelfNote,shelf,type SpotId} from './YourHall';
 import s from './Experience.module.css';
 
 /**
  * hall-of-fame · the Trophy room (Oct 12 2026; user: "Change the your hall of fame exhibit to something else. don't like this
- * idea", chose "Trophy room"). Still the last room in the museum, and still where the player's own certificates hang: they now
- * stand on their own shelf of the trophy cabinet. A full-screen game in the anatomy Paper style (docs/museum-paper-style.md):
+ * idea", chose "Trophy room"; Oct 14 2026: the player's own shelf of cups and certificates was removed — the room is now purely
+ * the real trophies). A full-screen game in the anatomy Paper style (docs/museum-paper-style.md):
  *  1. The cabinet: eight of football's great trophies behind glass, all at true size. Tap one.
  *  2. The turntable: drag to spin it; a height gauge's arm rests on its top (the readout is the arm's height); "Take it apart"
  *     lifts its parts with leader lines (base, malachite bands, handles, globe…). Facts and one story per trophy, all sourced.
  *  3. Match it: six rounds, the trophy for a story, a tournament or a shadow on a paper screen.
  *  4. Measure and weigh: six pairs on a pan balance with a ruler column. Taller is not always heavier.
- *  5. Your shelf: one spot per path and the Island Diploma; earned spots hold a cup and the framed certificate (the host opens
- *     it), the rest keep an empty, labelled spot and what to do next.
  *  Then the quick check (StepCheck) → the shared Ending (`reached`) → onComplete, once.
  * Heat: one loop (anatomy/paper-loop.ts via useFrameLoop) runs only while something eases (a coasting turntable, the explode, the
  * gauge arm, the balance, the cursors); 0 frames at rest, parked off-screen, disposed on unmount. Reduced motion: every motion
  * lands at once, the turntable turns in 45° steps. Progress (trophies seen, best scores) is kept under BEST_KEY.
  */
-type Station='cabinet'|'turn'|'match'|'compare'|'shelf'|'check';
-const STATIONS:{id:Station;label:string;short:string}[]=[{id:'cabinet',label:'Cabinet',short:'Cabinet'},{id:'match',label:'Match it',short:'Match'},{id:'compare',label:'Measure',short:'Measure'},{id:'shelf',label:'Your shelf',short:'Shelf'},{id:'check',label:'Check',short:'Check'}];
+type Station='cabinet'|'turn'|'match'|'compare'|'check';
+const STATIONS:{id:Station;label:string;short:string}[]=[{id:'cabinet',label:'Cabinet',short:'Cabinet'},{id:'match',label:'Match it',short:'Match'},{id:'compare',label:'Measure',short:'Measure'},{id:'check',label:'Check',short:'Check'}];
 const sfx=(c:'click'|'reveal'|'look'|'tick'|'card')=>{try{(museumSfx as unknown as Record<string,()=>void>)[c]?.();}catch{/* sound is optional */}};
-/** Development only: /museum-lab/hall-of-fame?earned=grad:futsal,grad:7v7,diploma previews earned states (the lab passes none). */
-function devEarned(earned:readonly CertificateId[]):readonly CertificateId[]{
- if(process.env.NODE_ENV==='production'||typeof location==='undefined')return earned;
- const q=new URLSearchParams(location.search).get('earned');return q==null?earned:q.split(',').filter(isCertificateId);
-}
 const readSave=():Save=>{try{return sanitizeSave(JSON.parse(localStorage.getItem(BEST_KEY)??'null'));}catch{return sanitizeSave(null);}};
 const writeSave=(v:Save)=>{try{localStorage.setItem(BEST_KEY,JSON.stringify(v));}catch{/* private mode */}};
 const CHECK=[
  {q:'Which trophy is the smallest in the cabinet, but heavier than the Women’s World Cup trophy?',options:['The World Cup trophy','The Asian Cup trophy','The Copa América trophy'],right:0,why:'36.8 cm of solid 18-carat gold weighs 6.175 kg.'},
  {q:'Who found the stolen Jules Rimet trophy in 1966?',options:['A police officer','A dog called Pickles','A goalkeeper'],right:1,why:'Pickles the dog sniffed it out under a garden hedge in south London, seven days after it was stolen.'},
- {q:'Where do your own cups and certificates go?',options:['On your shelf in the Trophy room','In the Champions League','Nowhere'],right:0,why:'Every path you graduate puts a cup and its certificate on your shelf.'},
+ {q:'How many of football’s great trophies stand in this cabinet?',options:['Six','Eight','Ten'],right:1,why:'Eight trophies, from the World Cup to the FA Cup, each at its true size.'},
 ] as const;
 const capture=(e:{currentTarget:EventTarget;pointerId:number})=>{try{(e.currentTarget as Element).setPointerCapture?.(e.pointerId);}catch{/* no active pointer */}};
 
-export default function Experience({exhibit,onClose,earned:given,openCertificate,onComplete}:ExperienceProps){
+export default function Experience({exhibit,onClose,onComplete}:ExperienceProps){
  const root=useRef<HTMLElement>(null),card=useRef<HTMLDivElement>(null),endRef=useRef<HTMLDivElement>(null);
  const reduced=useReduced();
  const {w:W,h:H}=useSize(card);
@@ -64,26 +54,19 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
   if(typeof ResizeObserver==='undefined')return;const ro=new ResizeObserver(read);ro.observe(noteEl);return()=>ro.disconnect();},[noteEl]);
  const tall=W>0&&W<H*1.05;
  const [,bump]=useReducer((n:number)=>n+1,0);
- const [earned,setEarned]=useState(given);useEffect(()=>setEarned(devEarned(given)),[given]);
- const [progress,setProgress]=useState<Record<string,PathProgress>>(lessonNames);
- const has=useMemo(()=>new Set<SpotId>(earned.map(e=>e==='diploma'?'diploma':e.slice(5) as SpotId)),[earned]);
- const count=PLINTHS.filter(p=>has.has(p.format)).length;
  const [station,setStation]=useState<Station>('cabinet');
  const [save,setSave]=useState<Save>(()=>sanitizeSave(null));
  const [ti,setTi]=useState<TrophyId>('worldcup');
  const [mi,setMi]=useState(0),[mPick,setMPick]=useState<TrophyId|null>(null),[mScore,setMScore]=useState(0),[mDone,setMDone]=useState(false);
  const [ci,setCi]=useState(0),[cPick,setCPick]=useState<'left'|'right'|null>(null),[cScore,setCScore]=useState(0),[cDone,setCDone]=useState(false);
- const [spot,setSpot]=useState<SpotId>(()=>SPOTS[0]);
  const [checked,setChecked]=useState(false);
  const [hot,setHot]=useState<string|null>(null);
  const completed=useRef(false);
  const complete=useCallback(()=>{if(completed.current)return;completed.current=true;onComplete?.();},[onComplete]);
- useEffect(()=>{setProgress(readPathProgress());setSave(readSave());root.current?.focus({preventScroll:true});},[]);
- useEffect(()=>{const next=SPOTS.find(x=>x!=='diploma'&&!has.has(x));setSpot(next??'diploma');},[has]);
+ useEffect(()=>{setSave(readSave());root.current?.focus({preventScroll:true});},[]);
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.key!=='Escape'||e.defaultPrevented)return;if(document.querySelector('dialog[open]'))return;/* the host's certificate is on top: let it close first */
   e.preventDefault();onClose();};document.addEventListener('keydown',key);return()=>document.removeEventListener('keydown',key);},[onClose]);
  const store=useCallback((f:(v:Save)=>Save)=>setSave(v=>{const n=f(v);writeSave(n);return n;}),[]);
- const openCert=(id:CertificateId)=>{sfx('reveal');openCertificate(id);};
 
  // ── motion: one loop for everything that eases ───────────────────────────────────────────────────────────────────────
  const mo=useRef({spin:.5,vel:0,apart:0,apartTo:0,arm:0,armTo:0,tilt:0,tiltTo:0,cl:0,cr:0,clTo:0,crTo:0});
@@ -139,7 +122,6 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
   if(station==='turn')return fitTo(stand(trophy).points,tall?10:18);
   if(station==='match'){const n=round.kind==='silhouette'?1:3;return fitTo(plinths(n).points,tall?6:16);}
   if(station==='compare')return fitTo(benchPoints(82),tall?6:16,tall?58:AZ_BENCH);
-  if(station==='shelf')return fitTo(shelf(tall).points,tall?8:16,AZ_CAB);
   return fitTo(cabinet(cabL).points,tall?6:14,AZ_CAB);
  },[station,trophy,tall,round.kind,fitTo,cabL]);
  const ready=W>0&&H>0;
@@ -150,19 +132,17 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
  const readout=station==='turn'?(trophy.heightCm?`${trophy.heightCm} cm · ${KG(trophy.weightKg!)} kg`:'Height not published')
   :station==='match'?`Round ${Math.min(mi+1,MATCH.length)} / ${MATCH.length} · ${mScore} right`
   :station==='compare'?`Pair ${Math.min(ci+1,COMPARE.length)} / ${COMPARE.length} · ${cScore} right`
-  :station==='shelf'?`${count} of 4 paths`:`${seen.size} of 8 looked at`;
+  :`${seen.size} of 8 looked at`;
  const hint=station==='turn'?(reduced?'Use the turn buttons':'Drag to spin · take it apart'):station==='match'?(round.kind==='silhouette'?'Pick the name that fits':'Tap the trophy that fits'):station==='compare'?(cr.ask==='taller'?'Which is taller?':'Which is heavier?')
-  :station==='shelf'?'Tap a spot on your shelf':'Tap a trophy to spin it';
- const title=station==='turn'?trophy.short:station==='match'?'Match it':station==='compare'?'Measure and weigh':station==='shelf'?'Your shelf':'Trophy room';
+  :'Tap a trophy to spin it';
+ const title=station==='turn'?trophy.short:station==='match'?'Match it':station==='compare'?'Measure and weigh':'Trophy room';
 
  // ── scene ──────────────────────────────────────────────────────────────────────────────────────────────────────────────
  let art:React.ReactNode=null,label='';
  if(ready&&station==='cabinet'){const C=cabinet(cabL);
   label=`A glass-fronted trophy cabinet with eight trophies at true size. ${seen.size} of 8 looked at.`;
   art=<g><Cabinet L={cabL} P={P} seen={seen} spin={.3} hot={hot}/>
-   {C.slots.map(sl=>{const id=sl.id;
-    if(id==='yours'){const b=trophyBox(18,40,poseAt(P,sl.x,sl.y,sl.z,0));return <rect key={id} {...rect(b)} className={s.hit} fill="transparent" data-hof-open="yours" onClick={()=>go('shelf')}/>;}
-    const t=byId(id)!,b=trophyBox(Math.min(reach(t),(sl.x1-sl.x0)/2),t.drawH+4,poseAt(P,sl.x,sl.y,sl.z,0));
+   {C.slots.map(sl=>{const id=sl.id,t=byId(id)!,b=trophyBox(Math.min(reach(t),(sl.x1-sl.x0)/2),t.drawH+4,poseAt(P,sl.x,sl.y,sl.z,0));
     return <rect key={id} {...rect(b)} className={s.hit} fill="transparent" data-hof-open={id} aria-label={t.name} onPointerEnter={()=>setHot(id)} onPointerLeave={()=>setHot(null)} onClick={()=>openTrophy(id)}/>;})}
   </g>;}
  else if(ready&&station==='turn'){const S=stand(trophy),pose=poseAt(P,0,0,S.Z0,m.spin,m.apart);
@@ -200,25 +180,23 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
     <TrophyArt t={tt} pose={poseAt(P,x as number,0,z as number,.5)}/>
     <rect {...rect(trophyBox(Math.min(reach(tt),40),tt.drawH+2,poseAt(P,x as number,0,z as number,0)))} className={s.hit} fill="transparent" data-hof-pick={side as string} onClick={()=>pickCompare(side as 'left'|'right')}/></g>;})}
   </g>;}
- else if(ready&&station==='shelf'){label=`Your shelf: ${count} of 4 path cups and certificates${has.has('diploma')?' and the Island Diploma':''}. The other spots are empty and labelled.`;
-  art=<Shelf P={P} tall={tall} earned={has} sel={spot} onPick={id=>{sfx('look');setSpot(id);}}/>;}
  else if(ready&&station==='check'){const C=cabinet(cabL);label='The trophy cabinet behind the quick check.';art=<g opacity={.5}><Cabinet L={cabL} P={P} seen={seen} spin={.3} hot={null}/></g>;void C;}
 
  const matchRight=mPick!=null&&mPick===round.right,compareRight=cPick!=null&&cPick===winner(cr);
  const canCheck=mDone&&cDone;
 
- return <section ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${COPY.title}: ${count} of 4 paths graduated`} data-museum-experience="hall-of-fame" data-earned={count}
+ return <section ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={`${COPY.title}: eight trophies behind glass`} data-museum-experience="hall-of-fame"
   className={`${s.root} iso`} data-theme="light" data-station={station} data-orient={tall?'tall':'wide'} data-reduced={reduced||undefined} style={{'--accent':'#f2c230'} as CSSProperties}>
   <style dangerouslySetInnerHTML={{__html:ISO_CSS}}/>
   <ExperienceBack onClose={onClose}/>
   <div className={s.scroll} data-hof-scroll>
    <div className={s.screen} data-hof-screen>
     <header className={s.head}>
-     <WallLabel as="h1" title={COPY.title} meta={<>{COPY.kicker} · {COPY.fact1} <b>{count===0?'Your first one is waiting.':count>=4?'All 4 are here!':`${count} of 4 so far.`}</b></>}/>
+     <WallLabel as="h1" title={COPY.title} meta={<>{COPY.kicker} · {COPY.fact1}</>}/>
     </header>
     <div ref={card} className={s.card} data-fill-screen data-hof-stage tabIndex={0} onKeyDown={onKey} aria-label={label}>
      <div className={s.corners} aria-hidden="true">
-      <span data-corner="fig">Fig. {station==='turn'?`1.${TROPHIES.findIndex(t=>t.id===ti)+1}`:{cabinet:1,match:2,compare:3,shelf:4,check:5}[station]}</span><span data-corner="title">{title}</span>
+      <span data-corner="fig">Fig. {station==='turn'?`1.${TROPHIES.findIndex(t=>t.id===ti)+1}`:{cabinet:1,match:2,compare:3,check:4}[station]}</span><span data-corner="title">{title}</span>
       <span data-corner="hint">{hint}</span><span data-corner="readout" data-hof-readout>{readout}</span>
      </div>
      {ready&&<svg className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label} data-hof-art={station}
@@ -246,7 +224,6 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
         {cPick&&<><p className={s.measure} data-hof-measure>{[cr.left,cr.right].map(id=>{const t=byId(id)!;return <span key={id}><small>{t.short}</small><b>{cr.ask==='taller'?`${t.heightCm} cm`:`${KG(t.weightKg!)} kg`}</b></span>;})}</p>
          <p className={s.noteBody} role="status" data-hof-result={compareRight?'right':'wrong'}><b>{compareRight?'Right! ':'Not quite. '}</b>{cr.why}</p></>}
        </div>)}
-      {station==='shelf'&&<ShelfNote id={spot} earned={has} progress={progress} openCert={openCert}/>}
      </div>}
      {station==='check'&&<div className={s.panel} data-hof-final>
       <p className={s.noteKicker}>Quick check</p>
@@ -275,23 +252,18 @@ export default function Experience({exhibit,onClose,earned:given,openCertificate
        :<>{round.choices.map((id,i)=><button key={id} type="button" className={s.choice} data-hof-answer={id} disabled={!!mPick}
          data-a={mPick?(id===round.right?'right':id===mPick?'wrong':undefined):undefined} onClick={()=>pickMatch(id)}><i>{round.kind==='silhouette'?i+1:'ABC'[i]}</i>{byId(id)!.short}</button>)}
         {mPick&&<button key="next" type="button" className={s.btn} data-hof-next onClick={nextMatch}>{mi+1<MATCH.length?'Next round':'See your score'}</button>}</>)}
-      {station==='compare'&&(cDone?<><button type="button" className={s.ghost} onClick={replayCompare}>Play again</button><button type="button" className={s.btn} data-hof-next-room onClick={()=>go('shelf')}>Next: your shelf</button></>
+      {station==='compare'&&(cDone?<><button type="button" className={s.ghost} onClick={replayCompare}>Play again</button>
+        {canCheck?<button type="button" className={s.btn} data-hof-next-room onClick={()=>go('check')}>Quick check</button>
+         :<p className={s.say}>Play Match it to unlock the quick check.</p>}</>
        :<>{(['left','right'] as const).map(side=>{const id=cr[side];return <button key={side} type="button" className={s.choice} data-hof-answer={side} disabled={!!cPick}
          data-a={cPick?(side===winner(cr)?'right':side===cPick?'wrong':undefined):undefined} onClick={()=>pickCompare(side)}><i>{side==='left'?'L':'R'}</i>{byId(id)!.short}</button>;})}
         {cPick&&<button key="next" type="button" className={s.btn} data-hof-next onClick={nextCompare}>{ci+1<COMPARE.length?'Next pair':'See your score'}</button>}</>)}
-      {station==='shelf'&&<>
-       <div className={s.tabs} role="tablist" aria-label="Spots on your shelf">{SPOTS.map(id=><button key={id} type="button" role="tab" aria-selected={spot===id} data-earned={has.has(id)||undefined} data-hof-spot={id}
-        onClick={()=>{sfx('look');setSpot(id);}}>{id==='diploma'?'Diploma':PLINTHS.find(p=>p.format===id)!.name}</button>)}</div>
-       {canCheck?<button type="button" className={s.btn} data-hof-to-check onClick={()=>go('check')}>Quick check</button>
-        :<p className={s.say}>{!mDone?'Play Match it':'Finish Measure'} to unlock the quick check.</p>}
-      </>}
       {station==='check'&&<p className={s.say}>Three questions about the cabinet.</p>}
      </div>
     </div>
    </div>
 
    <div className={s.below}>
-    <section className={s.block} aria-label="Your shelf"><Ideas progress={progress} earned={has}/></section>
     <div ref={endRef}>{checked&&<Ending art={<EndCup/>} reached={checked} onComplete={complete}
      seen="You’ve seen eight great trophies: spun them, taken them apart, matched their stories, and weighed gold against silver." take={exhibit.forYourGame}/>}</div>
     <details className={s.sources}>

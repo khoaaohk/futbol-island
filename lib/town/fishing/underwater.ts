@@ -37,6 +37,8 @@ export const uwDepthAt=(d:number,floor=UW_DEPTH.floor)=>.05+floor*(1-Math.exp(-M
 export const UW_UNIFORMS={uWaterNoise:{value:null as T.Texture|null},
  uUwShallow:{value:new T.Vector3(0,.42,.62)},uUwDeep:{value:new T.Vector3(.004,.16,.32)},uUwClear:{value:1},
  uUwReef:{value:.55},uUwFish:{value:.4},uUwFloor:{value:3.2},uUwFloat:{value:new T.Vector4(0,0,0,0)},uUwFloatOn:{value:0},
+ /** Oct 14 2026 polish: reef sway on (1) / off (0), from fishingLife (heat tiers 0-1 on desktop and phones; written per fishing frame). */
+ uUwSway:{value:0},
  uSandA:{value:new T.Vector3(.55,.55,.49)},uSandB:{value:new T.Vector3(.67,.66,.59)},uSandWeed:{value:new T.Vector4(.24,.3,.15,.55)}};
 
 /**
@@ -104,7 +106,7 @@ vec3 uwSurfaceOver(vec3 col,vec2 S,vec4 F,float vy,float L,float h,vec3 lit){
  float t=uWaterTime,d=F.r;vec4 lc=texture2D(uWaterNoise,S*.21+vec2(t*.004,t*.002));float lace=lc.g;
  // Light shafts (in-scattering): brighter where the light came in through a bright patch of surface, more over a longer path.
  col+=uwTint(h)*(lit+UW_GLOW*.4)*smoothstep(.45,.85,lc.b)*(1.-exp(-min(L,h*1.5+.3)*.35))*.07;
- float swell=smoothstep(.84,1.,swellPhase(d,F.g))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
+ float swell=smoothstep(.74,1.,swellPhase(d,F.g))*(.5+.5*smoothstep(.25,.75,lc.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
  float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
  // Half the strip's crest brightening: a passing swell must not wash a whole fan pale (it reads as the coral losing colour).
  col=mix(col,vec3(.42,.72,.7)*lit+uwTint(0.)*UW_GLOW*.3,swell*.14+lines*.08);
@@ -216,7 +218,9 @@ export type ReefLayout='pilings'|'lagoon'|'wall'|'flat'|'channel'|'open'|'kelp'|
  |'abyss'
  /** Oct 14 2026: a rocky ledge where the sand drops away (Summit Isle's Drop-off Ledge). */
  |'ledge';
-export type CoralKind='brain'|'branch'|'stag'|'fan'|'table'|'anemone'|'tube'|'soft';
+export type CoralKind='brain'|'branch'|'stag'|'fan'|'table'|'anemone'|'tube'|'soft'
+ /** Oct 14 2026 polish: a barrel (vase) sponge and a ridged plate / mushroom coral, for more variety in shape. */
+ |'barrel'|'plate';
 export type Signature='football'|'anchor'|'stars'|'clam'|'goal';
 type V3=[number,number,number];
 export type ReefTheme={
@@ -250,19 +254,19 @@ const T_SAND:[V3,V3]=[[.55,.55,.49],[.67,.66,.59]];
 /** The 19 themes (docs/fishing-visuals-HANDOFF.md has the table; Oct 14 2026: the two deep-sea boats and Drop-off Ledge). Shapes: brain, branch, stag (staghorn), fan, table, anemone, tube (sponges), soft (swaying soft coral). */
 export const REEF_THEMES:Record<string,ReefTheme>={
  'barnacle-pilings':{id:'barnacle-pilings',name:'Barnacle pilings',layout:'pilings',coral:['#ffd000','#8a2cc0','#ffe65a','#b04cff','#ff9d00'],
-  kinds:{tube:3,anemone:3,soft:2,brain:1},clusters:16,items:[3,4],spread:.7,scale:.9,grass:4,kelp:2,rocks:7,rockSize:[.14,.3],pebbles:4,stars:7,shells:6,urchins:4,piles:9,anemones:1,
+  kinds:{tube:3,anemone:3,soft:2,brain:1,barrel:1},clusters:16,items:[3,4],spread:.7,scale:.9,grass:4,kelp:2,rocks:7,rockSize:[.14,.3],pebbles:4,stars:7,shells:6,urchins:4,piles:9,anemones:1,
   grassCol:['#2f6a3a','#8fc06a'],rock:'#857f74',algae:'#7a8a4a',urchin:['#24142e','#5a2f78'],sand:[[.56,.52,.42],[.66,.62,.5]],weed:[.22,.28,.14,.4],
   water:[[0,.4,.56],[0,.14,.3]],clear:.95,fish:{schools:['sardine','sergeant','bream'],cruisers:['mackerel','bass','garibaldi','butterfly'],glider:null},signature:['anchor']},
  'lifebuoy-lagoon':{id:'lifebuoy-lagoon',name:'Sandy turquoise lagoon',layout:'lagoon',coral:['#ff5d7a','#ffd23a','#ff9a3c','#ff7aa8'],
-  kinds:{brain:3,branch:2,anemone:1,soft:1},clusters:9,items:[3,5],spread:.8,scale:1.5,grass:3,kelp:0,rocks:4,rockSize:[.12,.24],pebbles:3,stars:16,shells:18,urchins:1,piles:5,anemones:1,
+  kinds:{brain:3,branch:2,anemone:1,soft:1,plate:1},clusters:9,items:[3,5],spread:.8,scale:1.5,grass:3,kelp:0,rocks:4,rockSize:[.12,.24],pebbles:3,stars:16,shells:18,urchins:1,piles:5,anemones:1,
   grassCol:['#3f8a3a','#a8e07a'],rock:'#a49a8a',algae:'#9aa86a',urchin:['#2a1a3a','#6a4f90'],sand:[[.78,.76,.68],[.88,.86,.78]],weed:[.3,.4,.2,.12],
   water:[[.06,.68,.7],[0,.36,.48]],clear:.7,fish:{schools:['sardine','sergeant','blueTang'],cruisers:['bream','garibaldi','butterfly','bass'],glider:null},signature:['stars']},
  'harbour-fan-wall':{id:'harbour-fan-wall',name:'Sea-fan wall',layout:'wall',coral:['#d4142e','#8f2cff','#ff3f6e','#6a1fd0','#ff6a3d'],
-  kinds:{fan:5,tube:2,branch:2,soft:1},clusters:15,items:[3,5],spread:.65,scale:1.15,grass:2,kelp:2,rocks:8,rockSize:[.16,.32],pebbles:3,stars:6,shells:5,urchins:4,piles:6,anemones:0,
+  kinds:{fan:5,tube:2,branch:2,soft:1,barrel:1},clusters:15,items:[3,5],spread:.65,scale:1.15,grass:2,kelp:2,rocks:8,rockSize:[.16,.32],pebbles:3,stars:6,shells:5,urchins:4,piles:6,anemones:0,
   grassCol:['#2a5a3a','#6aa06a'],rock:'#6f6e6a',algae:'#5f6f4a',urchin:['#1a1020','#4a2a5a'],sand:[[.4,.41,.4],[.5,.5,.48]],weed:[.18,.22,.16,.4],
   water:[[0,.26,.42],[0,.07,.18]],clear:1.1,fish:{schools:['sardine','mackerel','anthias'],cruisers:['bass','grouper','snapper','mackerel'],glider:null},signature:['anchor'],floor:3.8,reefAbsorb:.3},
  'tidepool-flat':{id:'tidepool-flat',name:'Rocky reef flat',layout:'flat',coral:['#ff6a00','#ff2f6e','#ffd000','#b02cff'],
-  kinds:{brain:2,anemone:3,soft:2,tube:1},clusters:18,items:[2,3],spread:.6,scale:0.9,grass:3,kelp:1,rocks:24,rockSize:[.14,.36],pebbles:6,stars:12,shells:6,urchins:9,piles:0,anemones:1,
+  kinds:{brain:2,anemone:3,soft:2,tube:1,plate:1},clusters:18,items:[2,3],spread:.6,scale:0.9,grass:3,kelp:1,rocks:24,rockSize:[.14,.36],pebbles:6,stars:12,shells:6,urchins:9,piles:0,anemones:1,
   grassCol:['#3a6a2a','#9ac05a'],rock:'#8a7a68',algae:'#b0503a',urchin:['#4a0a14','#c0283a'],sand:[[.52,.46,.38],[.62,.56,.46]],weed:[.3,.2,.12,.45],
   water:[[0,.4,.5],[0,.15,.26]],clear:1,fish:{schools:['sergeant','bream','damsel'],cruisers:['garibaldi','grouper','wrasse','bass'],glider:null},signature:['stars']},
  'stream-channel':{id:'stream-channel',name:'Sandy channel through sea grass',layout:'channel',coral:['#b04cff','#ff7ad0','#c8f040','#8a3cff'],
@@ -288,11 +292,11 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   grassCol:['#3a6a2a','#9ac05a'],rock:'#77736c',algae:'#6a7a3a',urchin:['#24142e','#5a2f78'],sand:[[.48,.48,.46],[.58,.58,.55]],weed:[.24,.28,.14,.4],
   water:[[0,.36,.5],[0,.12,.26]],clear:1,fish:{schools:['sardine','mackerel','sergeant'],cruisers:['garibaldi','bass','snapper','garibaldi'],glider:null},signature:['clam']},
  'seawall-rubble':{id:'seawall-rubble',name:'Seawall rubble and shallows',layout:'rubble',coral:['#ff8ab8','#5ad6ff','#ffe06a','#ff5aa0','#3fb8ff'],
-  kinds:{brain:2,branch:2,soft:2,anemone:2,tube:1},clusters:14,items:[2,4],spread:.7,scale:.85,grass:4,kelp:0,rocks:20,rockSize:[.18,.34],pebbles:5,stars:8,shells:8,urchins:3,piles:0,anemones:1,
+  kinds:{brain:2,branch:2,soft:2,anemone:2,tube:1,plate:1},clusters:14,items:[2,4],spread:.7,scale:.85,grass:4,kelp:0,rocks:20,rockSize:[.18,.34],pebbles:5,stars:8,shells:8,urchins:3,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a948a',algae:'#8aa05a',urchin:['#2a1a3a','#6a4f90'],sand:[[.74,.68,.56],[.84,.78,.64]],weed:[.26,.34,.18,.3],
   water:[[.02,.52,.66],[0,.22,.4]],clear:.8,fish:{schools:['damsel','yellowTang','sardine'],cruisers:['wrasse','parrotPink','butterfly','bream'],glider:'ray'},signature:['football']},
  'channel-tables':{id:'channel-tables',name:'Table-coral terraces',layout:'tables',coral:['#1e7bff','#00c2d4','#3fa0ff','#14e0c8','#5a6cff'],
-  kinds:{table:5,branch:1,tube:2,fan:1},clusters:18,items:[2,4],spread:.7,scale:1.2,grass:2,kelp:0,rocks:5,rockSize:[.14,.28],pebbles:3,stars:6,shells:5,urchins:2,piles:0,anemones:0,
+  kinds:{table:5,branch:1,tube:1,fan:1,barrel:1},clusters:18,items:[2,4],spread:.7,scale:1.2,grass:2,kelp:0,rocks:5,rockSize:[.14,.28],pebbles:3,stars:6,shells:5,urchins:2,piles:0,anemones:0,
   grassCol:['#2a6a4a','#6ac0a0'],rock:'#7a8088',algae:'#5a8a7a',urchin:['#101a2e','#2a4a7a'],sand:[[.56,.58,.58],[.66,.68,.67]],weed:[.16,.26,.2,.25],
   water:[[0,.3,.66],[0,.08,.38]],clear:1,fish:{schools:['damsel','blueTang','sardine'],cruisers:['barracuda','mackerel','queenAngel','parrot'],glider:'ray'},signature:['goal']},
  'turtle-meadow':{id:'turtle-meadow',name:'Green sea-grass meadow',layout:'meadow',coral:['#9be22a','#ffe03a','#3fd07a','#c8f040'],
@@ -300,35 +304,35 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   grassCol:['#1f8a2a','#b8f06a'],rock:'#a09a88',algae:'#7aa04a',urchin:['#2a1a3a','#6a4f90'],sand:[[.66,.64,.54],[.76,.74,.62]],weed:[.14,.38,.1,1],
   water:[[.03,.56,.6],[0,.26,.36]],clear:.75,fish:{schools:['sardine','wrasse','yellowTang'],cruisers:['parrot','bream','wrasse','bass'],glider:'turtle'},signature:['stars']},
  'pink-ring':{id:'pink-ring',name:'Hot-pink ring reef',layout:'ring',coral:['#ff2fa8','#c03cff','#ff5fd0','#8a3cff','#ff8ad8','#e01e8c'],
-  kinds:{branch:2,stag:2,brain:2,fan:2,soft:2,tube:1,table:1},clusters:21,items:[4,6],spread:.85,scale:1.05,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:10,shells:8,urchins:3,piles:0,anemones:2,
+  kinds:{branch:2,stag:2,brain:2,fan:2,soft:2,tube:1,table:1,plate:1},clusters:21,items:[4,6],spread:.85,scale:1.05,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:10,shells:8,urchins:3,piles:0,anemones:2,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#a49a8e',algae:'#9aa86a',urchin:['#2a1a3a','#6a4f90'],sand:[[.72,.7,.64],[.84,.82,.76]],weed:[.26,.34,.18,.2],
   water:[[0,.5,.66],[0,.2,.4]],clear:.85,fish:{schools:['anthias','royalGramma','blueTang'],cruisers:['parrotPink','butterfly','queenAngel','parrot'],glider:'turtle'},signature:['clam']},
  'sunlit-patches':{id:'sunlit-patches',name:'Sunlit patch reef',layout:'patches',coral:['#ff8a00','#ffc400','#ffe14a','#ff6a1a','#ffb000','#fff07a'],
-  kinds:{branch:2,brain:2,table:1,stag:1,soft:2,anemone:1,fan:1},clusters:39,items:[2,4],spread:.55,scale:.8,grass:4,kelp:0,rocks:6,rockSize:[.12,.26],pebbles:4,stars:10,shells:10,urchins:3,piles:0,anemones:2,
+  kinds:{branch:2,brain:2,table:1,stag:1,soft:2,anemone:1,fan:1,plate:1},clusters:39,items:[2,4],spread:.55,scale:.8,grass:4,kelp:0,rocks:6,rockSize:[.12,.26],pebbles:4,stars:10,shells:10,urchins:3,piles:0,anemones:2,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#a8987e',algae:'#a0a05a',urchin:['#2a1a3a','#6a4f90'],sand:[[.68,.58,.42],[.78,.68,.5]],weed:[.28,.32,.16,.25],
   water:[[.02,.55,.62],[0,.24,.38]],clear:.8,fish:{schools:['yellowTang','sergeant','damsel'],cruisers:['parrot','butterfly','garibaldi','barracuda'],glider:'ray'},signature:['football']},
  'fruit-garden':{id:'fruit-garden',name:'Red and coral garden',layout:'garden',coral:['#ff3b3b','#ff6f61','#ff9a7a','#e8204a','#ff5a8a','#ffb08a'],
-  kinds:{soft:4,fan:3,anemone:2,branch:2,brain:1,tube:1},clusters:24,items:[4,6],spread:.75,scale:.9,grass:3,kelp:0,rocks:5,rockSize:[.12,.26],pebbles:4,stars:10,shells:8,urchins:3,piles:0,anemones:2,
+  kinds:{soft:4,fan:3,anemone:2,branch:2,brain:1,barrel:1},clusters:24,items:[4,6],spread:.75,scale:.9,grass:3,kelp:0,rocks:5,rockSize:[.12,.26],pebbles:4,stars:10,shells:8,urchins:3,piles:0,anemones:2,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#a8968a',algae:'#a08a6a',urchin:['#2a1a3a','#6a4f90'],sand:[[.72,.6,.54],[.82,.7,.63]],weed:[.3,.26,.16,.2],
   water:[[0,.47,.58],[0,.2,.34]],clear:.9,fish:{schools:['anthias','yellowTang','snapper'],cruisers:['snapper','parrotPink','butterfly','bass'],glider:'both'},signature:['goal']},
  'boulder-cove':{id:'boulder-cove',name:'Lilac boulder field',layout:'boulders',coral:['#a36bff','#d9b8ff','#c8f040','#7a3cff'],
-  kinds:{brain:2,soft:2,anemone:2,fan:1,tube:1},clusters:16,items:[2,4],spread:.7,scale:.9,grass:3,kelp:1,rocks:10,rockSize:[.45,.85],pebbles:5,stars:6,shells:5,urchins:5,piles:0,anemones:1,
+  kinds:{brain:2,soft:2,anemone:2,fan:1,barrel:1},clusters:16,items:[2,4],spread:.7,scale:.9,grass:3,kelp:1,rocks:10,rockSize:[.45,.85],pebbles:5,stars:6,shells:5,urchins:5,piles:0,anemones:1,
   grassCol:['#2f6a3a','#8fc06a'],rock:'#6a6870',algae:'#5a7a4a',urchin:['#1a1020','#4a2a5a'],sand:[[.36,.36,.4],[.46,.46,.5]],weed:[.2,.26,.18,.35],
   water:[[0,.36,.54],[0,.12,.3]],clear:.95,fish:{schools:['royalGramma','sardine','damsel'],cruisers:['grouper','parrot','wrasse','queenAngel'],glider:null},signature:['anchor']},
  'palm-staghorn':{id:'palm-staghorn',name:'Peach and aqua staghorn thickets',layout:'staghorn',coral:['#ff9a6a','#20d8c8','#ffc49a','#00b8d4','#ff7a5a'],
-  kinds:{stag:6,branch:1,brain:1,anemone:1},clusters:11,items:[3,5],spread:.6,scale:1,grass:4,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:2,piles:0,anemones:1,
+  kinds:{stag:6,branch:1,brain:1,anemone:1,plate:1},clusters:11,items:[3,5],spread:.6,scale:1,grass:4,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:2,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#a49a8a',algae:'#9aa86a',urchin:['#2a1a3a','#6a4f90'],sand:[[.74,.72,.62],[.84,.82,.72]],weed:[.26,.34,.18,.2],
   water:[[.02,.54,.64],[0,.24,.4]],clear:.8,fish:{schools:['yellowTang','anthias','sergeant'],cruisers:['butterfly','parrotPink','wrasse','parrot'],glider:'turtle'},signature:['stars']},
  // Summit Isle's Drop-off Ledge (Oct 14 2026): a stepped rocky ledge where the sand drops into deep blue; big groupers and a
  // ray cruise the edge.
  'ledge-dropoff':{id:'ledge-dropoff',name:'Ledge drop-off',layout:'ledge',coral:['#ff4fd8','#ffb02e','#7a5cff','#ff7a5a','#2fe0ff'],
-  kinds:{fan:3,brain:2,tube:2,soft:1},clusters:14,items:[3,5],spread:.7,scale:1.1,grass:2,kelp:1,rocks:16,rockSize:[.3,.6],pebbles:3,stars:4,shells:3,urchins:4,piles:0,anemones:0,
+  kinds:{fan:3,brain:2,tube:1,soft:1,barrel:1},clusters:14,items:[3,5],spread:.7,scale:1.1,grass:2,kelp:1,rocks:16,rockSize:[.3,.6],pebbles:3,stars:4,shells:3,urchins:4,piles:0,anemones:0,
   grassCol:['#2f6a3a','#8fc06a'],rock:'#5f5a62',algae:'#5a6a4a',urchin:['#1a1020','#4a2a5a'],sand:[[.46,.44,.4],[.56,.54,.49]],weed:[.2,.24,.16,.3],
   water:[[0,.38,.6],[0,.08,.26]],clear:1.15,fish:{schools:['sardine','anthias','damsel'],cruisers:['grouper','grouper','snapper','barracuda'],glider:'ray'},signature:['anchor'],
   // The ledge drops deeper than any other shore spot, and its far pieces fade hardest into the blue.
   floor:3.9,reefAbsorb:.24,fishAbsorb:.32},
  'lookout-bommies':{id:'lookout-bommies',name:'Stepping-stone bommies',layout:'line',coral:['#2a7fff','#ff7a1a','#5aa8ff','#ffa040','#1fd0ff'],
-  kinds:{brain:3,branch:2,table:1,tube:1,anemone:1,fan:1},clusters:12,items:[5,7],spread:.65,scale:1,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:3,piles:0,anemones:1,
+  kinds:{brain:2,branch:2,table:1,tube:1,anemone:1,fan:1,barrel:1,plate:1},clusters:12,items:[5,7],spread:.65,scale:1,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:3,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a9080',algae:'#8a9a5a',urchin:['#2a1a3a','#6a4f90'],sand:[[.7,.64,.52],[.8,.74,.6]],weed:[.26,.32,.18,.25],
   water:[[0,.44,.66],[0,.16,.38]],clear:.9,fish:{schools:['blueTang','sardine','sergeant'],cruisers:['queenAngel','garibaldi','barracuda','parrot'],glider:'ray'},signature:['clam']},
 };
@@ -376,7 +380,12 @@ function rock(r:Rng,s:number,col:T.Color,algae:T.Color|null,flat=.55){const c=co
  return paint(put(new T.IcosahedronGeometry(s,0),0,s*.06,0,(r()-.5)*.4,r()*6,(r()-.5)*.4,1,flat,1+r()*.3),c,algae?c.clone().lerp(algae,.6):c.clone().multiplyScalar(1.15),0,false,.12);}
 function pebbles(r:Rng,parts:T.BufferGeometry[],x:number,y:number,z:number,count:number,col:T.Color){for(let i=0;i<count;i++){const s=.04+r()*.06;parts.push(put(paint(new T.OctahedronGeometry(s,0),col.clone().multiplyScalar(.9+r()*.4),PALETTE.shell[0],0),x+(r()-.5)*.6,y+s*.3,z+(r()-.5)*.6,(r()-.5)*.5,r()*3,0,1,.7,1));}}
 // ---- Coral shapes (each a list of painted parts, base at y 0).
-function brain(r:Rng,s:number,c:T.Color){return [paint(put(new T.IcosahedronGeometry(s,1),0,s*.2,0,0,r()*6,0,1,.6+r()*.15,1),shade(c,.62),lighten(c,.3),0,false,.2)];}
+function brain(r:Rng,s:number,c:T.Color){const g=paint(put(new T.IcosahedronGeometry(s,1),0,s*.2,0,0,r()*6,0,1,.6+r()*.15,1),shade(c,.62),lighten(c,.3),0,false,.2);
+ // Oct 14 2026 polish: meandering grooves (darker valleys between pale ridges) in the vertex colours, so a brain coral reads as one
+ // and not as a smooth pink rock. Same triangles.
+ const p=g.getAttribute('position'),col=g.getAttribute('color'),k=9/s,o=r()*6;
+ for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),m=Math.sin(x*k+Math.sin(z*k*.8+o)*1.7+y*k*.5),f=m>.2?1.12:m<-.35?.62:.9;col.setXYZ(i,col.getX(i)*f,col.getY(i)*f,col.getZ(i)*f);}
+ return [g];}
 /** Arms from the base: open tubes, each with a fork part way up (tip found by the same rotations, so forks stay attached). */
 function arms(r:Rng,h:number,n:number,tilt:[number,number],rad:number,forks:number,radial=4){
  const parts:T.BufferGeometry[]=[];
@@ -388,7 +397,23 @@ function arms(r:Rng,h:number,n:number,tilt:[number,number],rad:number,forks:numb
 function branch(r:Rng,h:number,c:T.Color){return [paint(arms(r,h,4+Math.floor(r()*3),[.25,.8],.045,1),shade(c,.65),lighten(c,.35),0,false,.1)];}
 /** Staghorn: upright antlers that fork twice, with pale tips. */
 function stag(r:Rng,h:number,c:T.Color){return [paint(arms(r,h*1.15,5+Math.floor(r()*2),[.08,.42],.032,2,3),shade(c,.7),lighten(c,.6),0,false,.08)];}
-function fan(r:Rng,h:number,c:T.Color){const g=new T.CircleGeometry(h,8,0,Math.PI);g.scale(1.3,1,1);g.rotateY(r()*Math.PI);return [paint(g,shade(c,.7),lighten(c,.3),.5,true,.14)];}
+function fan(r:Rng,h:number,c:T.Color){const seg=11,g=new T.CircleGeometry(h,seg,0,Math.PI);g.scale(1.3,1,1);
+ // Oct 14 2026 polish: a gently cupped, wavy fan (not a flat sheet), with darker ribs fanning out from the foot (vertex colours).
+ {const p=g.getAttribute('position');for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),q=x/(1.3*h);p.setZ(i,q*q*h*.22+Math.sin(x*9/h)*h*.03*(y/h));}}
+ g.rotateY(r()*Math.PI);const out=paint(g,shade(c,.7),lighten(c,.3),.5,true,.14);
+ // Ribs: the rim vertices alternate light / dark, so the fan shows radial veins (interpolated toward the foot).
+ const p=out.getAttribute('position'),col=out.getAttribute('color');for(let i=0;i<p.count;i++){const y=p.getY(i);if(y<h*.15)continue;const a=Math.atan2(y,Math.hypot(p.getX(i),p.getZ(i))),f=Math.round(a*seg/Math.PI)%2?1.15:.78;col.setXYZ(i,col.getX(i)*f,col.getY(i)*f,col.getZ(i)*f);}
+ return [out];}
+/** Barrel (vase) sponge: a flared open cup, dark inside (Oct 14 2026 polish). */
+function barrel(r:Rng,h:number,c:T.Color){const top=h*.42,bot=h*.24,seg=7,cup=new T.CylinderGeometry(top,bot,h,seg,2,true).translate(0,h/2,0);
+ {const p=cup.getAttribute('position');for(let i=0;i<p.count;i++){const y=p.getY(i)/h,a=Math.atan2(p.getZ(i),p.getX(i)),k=1+Math.sin(y*Math.PI)*.12+Math.sin(a*seg)*.04;p.setX(i,p.getX(i)*k);p.setZ(i,p.getZ(i)*k);}}
+ const inside=new T.CircleGeometry(top*.9,seg).rotateX(-Math.PI/2).translate(0,h*.72,0);cup.rotateY(r()*6);
+ return [paint(cup,shade(c,.55),lighten(c,.2),0,false,.12),paint(inside,shade(c,.2),shade(c,.3),0)];}
+/** Plate / mushroom coral: a low ridged dome lying on the sand (ridges = alternating vertex colours round the rim). */
+function plate(r:Rng,s:number,c:T.Color){const seg=12,g=new T.ConeGeometry(s,s*.28,seg,2,false).translate(0,s*.14,0);g.scale(1,1,.8+r()*.3);g.rotateY(r()*6);
+ const out=paint(g,shade(c,.6),lighten(c,.45),0,false,.08),p=out.getAttribute('position'),col=out.getAttribute('color');
+ for(let i=0;i<p.count;i++){const a=Math.atan2(p.getZ(i),p.getX(i)),f=Math.cos(a*seg*1.5)>0?1.12:.8;col.setXYZ(i,col.getX(i)*f,col.getY(i)*f,col.getZ(i)*f);}
+ return [out];}
 function table(r:Rng,s:number,c:T.Color){const top=new T.CylinderGeometry(s,s*.8,.05,8).translate(0,s*.55,0),stem=new T.CylinderGeometry(.04,.07,s*.55,5,1,true).translate(0,s*.275,0);
  const g=merged([top,stem]);g.rotateY(r()*6);return [paint(g,shade(c,.55),lighten(c,.28),0,false,.16)];}
 /** Anemone: a short column and a ring of tentacles with bright tips (they sway on desktop). */
@@ -503,6 +528,8 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
    case 'anemone':{const h=.22*sz;add(anemone(r,h,c,foot(c)),q,fit(h,q.depth));break;}
    case 'tube':{const h=.4*sz;add(tube(r,h,c),q,fit(h*1.15,q.depth));break;}
    case 'soft':{const h=.34*sz;add(soft(r,h,c),q,fit(h,q.depth));break;}
+   case 'barrel':{const h=.36*sz;add(barrel(r,h,c),q,fit(h,q.depth));break;}
+   case 'plate':{const h=.26*sz;add(plate(r,h,c),q,fit(h*.3,q.depth));break;}
   }};
  const cluster=(c:{x:number;z:number}|null,scaleMul=1)=>{if(!c)return;const lead=Math.floor(r()*pal.length),items=theme.items[0]+Math.floor(r()*(theme.items[1]-theme.items[0]+1));
   for(let i=0;i<items;i++){const q=near(c,theme.spread);if(q)coral(q,pickKind(),tone(lead),theme.scale*scaleMul*(.75+r()*.6));}};
@@ -559,16 +586,19 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
   else for(let i=0;i<6;i++){const q=near(p,.45,.6);if(q)add(star(r,.07+r()*.06),q);}}
  const geometry=parts.length?mergeGeometries(parts)!:new T.BufferGeometry();parts.forEach(g=>g.dispose());geometry.computeBoundingSphere();
  const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,transparent:true});
- material.onBeforeCompile=sh=>patchUnderwater(sh,{vertexHead:'attribute float aSway;',
-  // Sea grass, kelp, fans, anemones and soft corals sway (desktop only; phones and the slow/still path hold them).
-  vertexBody:'if(uWaterDetail>1.5&&aSway>0.){float ph=position.x*.71+position.z*.53,w=aSway*aSway;transformed.x+=w*.11*sin(uWaterTime*1.256+ph);transformed.z+=w*.07*sin(uWaterTime*1.004+ph*1.7);}',
+ material.onBeforeCompile=sh=>patchUnderwater(sh,{vertexHead:'attribute float aSway;uniform float uUwSway;',
+  // Sea grass, kelp, fans, anemones and soft corals sway (Oct 14 2026 polish: on desktop AND phones while fishingLife allows it,
+  // i.e. heat tiers 0-1; tier 2+, reduced motion and the still path hold them). A long surge that travels across the reef (world
+  // phase) plus a smaller per-piece flutter (hashed phase), so neighbours never move in lockstep. Periods divide the water clock's
+  // wrap (5, 8, 2.5 s), so it never jumps.
+  vertexBody:'if(uUwSway>.5&&uWaterDetail>.5&&aSway>0.){float ph=position.x*.71+position.z*.53,w=aSway*aSway,hp=fract(sin(dot(floor(position.xz*3.),vec2(12.9898,78.233)))*43758.5)*6.2832;transformed.x+=w*(.09*sin(uWaterTime*1.256637+ph)+.025*sin(uWaterTime*2.513274+hp));transformed.z+=w*(.06*sin(uWaterTime*.785398+ph*1.7)+.02*cos(uWaterTime*2.513274+hp*1.3));}',
   // Depth (Oct 14 2026, "the coral looks like it's on top of the water"): the reef takes the theme's share of the water's
   // absorption (0.22-0.34 × the theme's clarity, was 0.09) and its saturation falls with depth (1.55 in the shallows to 0.88 deep), so only the shallowest
   // pieces are vivid; it sits IN the sand (bury); caustics fade with depth; the surface is drawn over it (patchUnderwater).
   fragmentHead:'',caustic:1.4,absorb:'uUwReef',sat:UW_LOOK.reefSat,bury:true,haze:UW_LOOK.reefHaze,
   // Tropical reef colours: a little of the piece's own colour as glow, so shaded sides stay colourful, not brown.
   beforeTint:'outgoingLight+=diffuseColor.rgb*.16;'});
- material.customProgramCacheKey=()=>'fishing-seabed-props-v3';
+ material.customProgramCacheKey=()=>'fishing-seabed-props-v4';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-seabed';mesh.renderOrder=.55;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};mesh.visible=parts.length>0;
  const pos=geometry.getAttribute('position');
  return {mesh,triangles:pos?pos.count/3:0,homes,pieces,dispose(){mesh.removeFromParent();geometry.dispose();material.dispose();}};

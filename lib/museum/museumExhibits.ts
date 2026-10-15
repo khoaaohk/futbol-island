@@ -33,6 +33,9 @@ type Add=(geo:T.BufferGeometry,x:number,y:number,z:number,hex:string,rx?:number,
 /** The gallery palette (docs/museum-modern-style.md). */
 export const ART={ground:'#f6f4ef',ink:'#1d1d1b',muted:'#6b6a66',hair:'#d9d6cf',red:'#e4322b',blue:'#2a5bd7',yellow:'#f2c230',green:'#1f8a5b',white:'#f7f6f2',stone:'#e6e3dc',leather:'#8a5a33',gold:'#d9a92e',pitch:'#3f9a5a'} as const;
 const TOP=CASE.plinthH+.04;
+/** How tall each case's sculpture stands above its plinth top (the hall's zoom frames it). A case without an entry has no sculpture. */
+export const SCULPTURE_TOP:Readonly<Record<string,number>>={'laws-1863':.32,'penalty-1891':.3,stadiums:.42,boots:.3,'var-2018':.6,'worldcup-1930':.52,'wwc-1991':.44,'futsal-1989':.2,'laced-leather':.34,'telstar-1970':.62,shirts:.36,'hall-of-fame':.46,
+ 'first-international-1872':.36,'floodlights-1878':.56,'copa-america-1916':.5,'offside-rules':.18,'formations-history':.5,'keeper-hands-1912':.24,'free-kick-wall':.22,'ball-curve':.38,'throw-in':.42,'ballon-dor':.46};
 const {ink:K,white:W,red:R,blue:B,green:G,gold:AU,hair:H}=ART;
 /** The boot on the boots plinth: the Kit Shop's 1960s–80s "Retro Leather" silhouette (lib/shop/boots.ts MODELS). */
 const BOOT_MODEL='retro';
@@ -85,12 +88,15 @@ function digit(ch:string,x:number,y:number,z:number,w:number,h:number,t:number,h
 
 export function createExhibitSculptures(opts:{open:Readonly<Record<string,boolean>>;add:Add;
  /** A soft contact shadow on a plinth top (world x, y, z, radius x/z). */
- shadow?:(x:number,y:number,z:number,rx:number,rz:number)=>void}){
+ shadow?:(x:number,y:number,z:number,rx:number,rz:number)=>void;
+ /** A piece that reads as lit (world coordinates): the hall draws it unlit, in its one print mesh (no extra draw). */
+ glow?:(geo:T.BufferGeometry)=>void}){
  const built=new Set<string>();
  /** Pieces with their own mesh (world placement): the Telstar, which spins, and the boot. */
  const solo:{name:string;geometry:T.BufferGeometry;x:number;y:number;z:number;rx:number;ry:number;s:number}[]=[];
  /** Build case `id`'s sculpture: `make` returns its pieces in plinth-top coordinates; they join the hall's merged mesh. */
  function sculpture(id:string,make:(shadow:(x:number,z:number,rx:number,rz?:number)=>void,p:{x:number;z:number})=>T.BufferGeometry[]){
+  if(!SCULPTURE_TOP[id])return;// every sculpture declares its height (the zoom frames it)
   if(!opts.open[id])return;const p=CASE_PLACES[id];if(!p)return;
   const shadow=(x:number,z:number,rx:number,rz=rx)=>opts.shadow?.(p.x+x,TOP+.002,p.z+z,rx,rz);
   const parts=make(shadow,p);if(parts.length)opts.add(join(parts),p.x,TOP,p.z,'');built.add(id);
@@ -248,6 +254,140 @@ export function createExhibitSculptures(opts:{open:Readonly<Record<string,boolea
   out.push(piece(boxG(.62,.014,.1),W,0,.19,-.33),piece(boxG(.012,.19,.1),W,-.3,.095,-.33),piece(boxG(.012,.19,.1),W,.3,.095,-.33));
   const small:[number,number][]=[[.03,0],[.008,.02],[.008,.05],[.035,.065],[.042,.1],[.035,.102],[0,.07]];
   [-.18,0,.18].forEach((x,i)=>out.push(piece(latheG(small,16),i===1?G:'#c9c4b8',x,.197,-.33)));
+  return out;});
+
+ // ==== The west wing (Oct 14 2026, user: replace the Your Collection pieces "with other historical exhibits") =====================
+ // Shared bits: a pitch slab, an abstract figure (rounded body + circle head, docs/museum-modern-style.md) and a goal frame.
+ const slab=(w:number,d:number,out:T.BufferGeometry[],x=0,z=0)=>{out.push(piece(boxG(w+.03,.01,d+.03),K,x,.005,z),piece(boxG(w,.008,d),ART.pitch,x,.014,z));return .018;};
+ const line=(out:T.BufferGeometry[],w:number,d:number,x:number,z:number,y=.0185)=>out.push(piece(boxG(w,.001,d),W,x,y,z));
+ /** A figure standing at (x, z): body capsule and head, `h` tall overall. */
+ const figure=(out:T.BufferGeometry[],x:number,z:number,hex:string,h=.2,y=.018)=>{const r=h*.16;out.push(piece(new T.CapsuleGeometry(r,h*.42,3,10),hex,x,y+r+h*.21,z),piece(new T.SphereGeometry(h*.13,10,7),hex,x,y+h*.87,z));};
+ /** A goal frame (posts + crossbar) of width w and height h, its mouth facing `ry` (0 = +z). */
+ const goal=(out:T.BufferGeometry[],x:number,z:number,w:number,h:number,ry:number,y=.018,t=.007)=>{const c=Math.cos(ry),sn=Math.sin(ry);
+  for(const s of [-1,1])out.push(piece(cylG(t,t,h,10),W,x+s*w/2*c,y+h/2,z-s*w/2*sn));out.push(piece(cylG(t,t,w+2*t,10),W,x,y+h,z,0,ry,Math.PI/2));
+  // a hint of net: a hairline back bar and two struts
+  out.push(piece(boxG(w,.004,.004),H,x-sn*h*.55,y+.002,z-c*h*.55,0,ry));};
+
+ // ---- 1872 · The first international: two goals facing each other across a pitch, a 0–0 board behind ---------------------------
+ sculpture('first-international-1872',shadow=>{shadow(0,0,.44,.3);const out:T.BufferGeometry[]=[];const y=slab(.78,.44,out);
+  line(out,.004,.4,0,0);out.push(piece(new T.TorusGeometry(.06,.0025,4,28),W,0,y+.001,0,Math.PI/2));
+  goal(out,-.37,0,.16,.07,Math.PI/2,y);goal(out,.37,0,.16,.07,-Math.PI/2,y);
+  // the score board on a slim stand: navy and white halves (the two teams), 0 – 0 in white seven-segment digits
+  out.push(piece(cylG(.006,.006,.2,8),K,0,.1,-.27),piece(boxG(.3,.13,.02),K,0,.27,-.27));
+  out.push(piece(boxG(.135,.11,.004),'#24365f',-.0725,.27,-.258),piece(boxG(.135,.11,.004),'#e8e4da',.0725,.27,-.258));
+  out.push(...digit('0',-.07,.27,-.255,.045,.07,.011,W),...digit('0',.07,.27,-.255,.045,.07,.011,K));
+  return out;});
+
+ // ---- 1878 · Under the lights: a pitch with four slim floodlight towers, their heads glowing ---------------------------------------
+ sculpture('floodlights-1878',(shadow,p)=>{shadow(0,0,.44,.32);const out:T.BufferGeometry[]=[];const y=slab(.6,.38,out);
+  line(out,.004,.36,0,0);out.push(piece(new T.TorusGeometry(.05,.0025,4,24),W,0,y+.001,0,Math.PI/2));
+  const ball=football(.022,2);ball.translate(.06,y+.022,.05);out.push(ball);
+  for(const sx of [-1,1])for(const sz of [-1,1]){const tx=sx*.37,tz=sz*.25,th=.5;
+   out.push(piece(cylG(.022,.026,.012,12),K,tx,.006,tz),piece(cylG(.006,.008,th,8),K,tx,th/2,tz));
+   // the head: an ink frame, its lamp face turned in toward the centre spot, drawn unlit so it reads as lit
+   const yaw=Math.atan2(-tx,-tz);out.push(piece(boxG(.1,.07,.016),K,tx,th+.02,tz,-.35,yaw));
+   const lx=tx+Math.sin(yaw)*.0095,lz=tz+Math.cos(yaw)*.0095;
+   if(opts.glow)opts.glow(piece(boxG(.088,.058,.004),'#fff4c2',p.x+lx,TOP+th+.02,p.z+lz,-.35,yaw));else out.push(piece(boxG(.088,.058,.004),'#fff4c2',lx,th+.02,lz,-.35,yaw));}
+  return out;});
+
+ // ---- 1916 · The oldest cup for nations: a silver cup on a South America map ------------------------------------------------------
+ sculpture('copa-america-1916',shadow=>{shadow(0,0,.32,.36);const out:T.BufferGeometry[]=[];
+  // South America as a standing ink plate, leaning back on the plinth so it faces the visitor (north up)
+  const SA=[[-.1,.3],[0,.31],[.1,.28],[.18,.24],[.22,.18],[.3,.12],[.33,.06],[.26,-.02],[.21,-.1],[.13,-.16],[.07,-.22],[.03,-.3],[-.01,-.38],[-.04,-.46],[-.07,-.5],[-.1,-.44],[-.1,-.3],[-.1,-.15],[-.12,0],[-.16,.1],[-.19,.18],[-.13,.25]];
+  const shape=new T.Shape(SA.map(([x,y])=>new T.Vector2(x,y)));
+  const map=new T.ExtrudeGeometry(shape,{depth:.016,bevelEnabled:false});map.translate(0,.5,0);
+  out.push(piece(map,K,-.06,.01,-.24,-.32,0,0,.62),piece(boxG(.36,.02,.08),K,-.06,.01,-.2));
+  // the cup: a silver bowl on a stem, two side handles, on a dark wooden base
+  const cup:[number,number][]=[[.05,0],[.045,.012],[.022,.03],[.012,.07],[.014,.12],[.04,.15],[.07,.2],[.078,.24],[.07,.242],[.06,.205],[.03,.165],[0,.16]];
+  const cx=.14,cz=.14;out.push(piece(cylG(.055,.06,.05,6),'#5b4632',cx,.025,cz,0,Math.PI/6),piece(latheG(cup,28),'#c9ccd1',cx,.05,cz));
+  for(const s of [-1,1])out.push(piece(new T.TorusGeometry(.035,.006,8,18,Math.PI),'#c9ccd1',cx+s*.075,.05+.19,cz,0,0,s>0?-Math.PI/2:Math.PI/2));
+  return out;});
+
+ // ---- 1863 · Offside: a strip of pitch, a row of figure pegs, and the offside line that slides on two rails ------------------------
+ sculpture('offside-rules',shadow=>{shadow(0,0,.44,.24);const out:T.BufferGeometry[]=[];const y=slab(.8,.34,out);
+  // the goal line at the right end, a small goal
+  line(out,.004,.32,.38,0);goal(out,.4,0,.14,.06,-Math.PI/2,y);
+  // the defenders (blue) and attackers (red); the second-last defender stands at x = .1
+  const lineX=.1;figure(out,.33,.04,B,.13,y);figure(out,lineX,-.08,B,.15,y);figure(out,-.12,.07,B,.15,y);
+  figure(out,.04,.08,R,.15,y);figure(out,-.25,-.06,R,.15,y);
+  // the rails along both touchlines and the yellow line across, level with the second-last defender
+  for(const s of [-1,1])out.push(piece(boxG(.78,.008,.012),K,0,y+.004,s*.165));
+  out.push(piece(boxG(.012,.012,.36),'#f2c230',lineX,y+.012,0));
+  for(const s of [-1,1])out.push(piece(boxG(.03,.02,.02),K,lineX,y+.012,s*.165));
+  // the ball at the attacker's feet behind the line
+  const b=football(.018,2);b.translate(-.2,y+.018,-.03);out.push(b);
+  return out;});
+
+ // ---- 1880s · Formations: a tactics board on an easel, eleven dots in the 2–3–5 of the 1880s ----------------------------------------
+ sculpture('formations-history',shadow=>{shadow(0,0,.36,.22);const out:T.BufferGeometry[]=[];
+  const bw=.62,bh=.42,parts:T.BufferGeometry[]=[];
+  parts.push(piece(boxG(bw+.03,bh+.03,.012),K,0,0,-.008),piece(boxG(bw,bh,.004),ART.pitch,0,0,0));
+  const L=(w:number,h:number,x:number,y2:number)=>parts.push(piece(boxG(w,h,.001),W,x,y2,.0025));
+  L(bw-.04,.003,0,bh/2-.02);L(bw-.04,.003,0,-bh/2+.02);L(.003,bh-.04,-bw/2+.02,0);L(.003,bh-.04,bw/2-.02,0);L(bw-.04,.003,0,0);
+  parts.push(piece(new T.TorusGeometry(.05,.0018,4,28),W,0,0,.0025));
+  // the 2–3–5 "pyramid", goal at the bottom: keeper, two backs, three half-backs, five forwards (one team, in the gallery's blue)
+  const rows:[number,number][]=[[1,-.17],[2,-.11],[3,-.03],[5,.09]];
+  for(const [n,yy] of rows)for(let i=0;i<n;i++){const xx=(i-(n-1)/2)*(n===5?.11:n===3?.14:.16);parts.push(piece(cylG(.016,.016,.006,16),n===1?K:B,xx,yy,.004,Math.PI/2));}
+  // turn the dots to lie on the board's face (their axis along +z)
+  out.push(piece(join(parts),'',0,.3,-.02,-.42));
+  // the easel: two front legs and a back leg, an ink ledge
+  for(const s of [-1,1])out.push(piece(cylG(.006,.006,.42,8),K,s*.22,.2,.06,-.42));
+  out.push(piece(cylG(.006,.006,.44,8),K,0,.2,-.17,.5),piece(boxG(.5,.012,.03),K,0,.11,.08,-.42));
+  return out;});
+
+ // ---- 1912 · The goalkeeper's hands: a pair of keeper gloves inside the penalty area's lines -------------------------------------
+ sculpture('keeper-hands-1912',shadow=>{shadow(0,.02,.38,.26);const out:T.BufferGeometry[]=[];const y=slab(.74,.5,out);
+  // the penalty area (the only place the keeper may handle since 1912) and the goal line behind
+  line(out,.7,.004,0,-.22);line(out,.004,.3,-.22,-.07);line(out,.004,.3,.22,-.07);line(out,.44,.004,0,.08);
+  goal(out,0,-.22,.2,.07,0,y);
+  /** A glove standing upright: a white palm, blue back, ink cuff; four fingers and a thumb. */
+  const glove=(x:number,z:number,ry:number,flip:number)=>{const g:T.BufferGeometry[]=[];
+   g.push(piece(new T.CapsuleGeometry(.045,.05,3,10),W,0,.09,0,0,0,0,1,1,.42));
+   g.push(piece(new T.CapsuleGeometry(.047,.05,3,10),B,0,.09,-.008,0,0,0,1,1,.3));
+   g.push(piece(cylG(.042,.042,.045,12),K,0,.03,-.004,0,0,0,1,1,.5));
+   [-.03,-.01,.01,.03].forEach((fx,i)=>g.push(piece(new T.CapsuleGeometry(.011,.045-Math.abs(i-1.5)*.008,2,6),W,fx,.175-Math.abs(i-1.5)*.006,0)));
+   g.push(piece(new T.CapsuleGeometry(.012,.035,2,6),W,flip*.052,.11,.004,0,0,flip*.6));
+   out.push(piece(join(g),'',x,y,z,0,ry));};
+  glove(-.09,0,.25,-1);glove(.09,0,-.25,1);
+  return out;});
+
+ // ---- Free kicks and the wall: a ball on its spot, a three-figure wall 9.15 m away (the gap marked with a dashed line) ------------
+ sculpture('free-kick-wall',shadow=>{shadow(0,0,.42,.3);const out:T.BufferGeometry[]=[];const y=slab(.76,.5,out);
+  const bx=-.06,bz=.16,wz=-.12;
+  out.push(piece(cylG(.012,.012,.002,16),W,bx,y+.001,bz));const b=football(.022,2);b.translate(bx,y+.022,bz);out.push(b);
+  for(let i=0;i<5;i++)out.push(piece(boxG(.004,.001,.03),W,bx,y+.001,bz-.05-i*.045+.0));
+  for(const dx of [-.06,0,.06])figure(out,bx+dx,wz,K,.2,y);
+  goal(out,-.04,-.23,.26,.08,0,y);
+  return out;});
+
+ // ---- How a ball curves: a ball and the curved arc of its flight, bending round to a small goal ----------------------------------
+ sculpture('ball-curve',shadow=>{shadow(0,0,.42,.24);const out:T.BufferGeometry[]=[];
+  out.push(piece(boxG(.8,.008,.012),W,0,.004,.15));
+  const curve=new T.CubicBezierCurve3(new T.Vector3(-.3,.06,.12),new T.Vector3(-.12,.34,.28),new T.Vector3(.18,.36,-.02),new T.Vector3(.3,.12,-.16));
+  out.push(piece(new T.TubeGeometry(curve,32,.006,5,false),'#f2c230'));
+  for(const t of [.25,.5,.75]){const p=curve.getPointAt(t);out.push(piece(new T.SphereGeometry(.012,10,8),'#f2c230',p.x,p.y,p.z));}
+  out.push(piece(cylG(.035,.04,.012,20),K,-.3,.006,.12));const b=football(.05,4);b.translate(-.3,.06,.12);out.push(b);
+  // the spin: a thin ring round the ball, tilted on its axis
+  out.push(piece(new T.TorusGeometry(.07,.003,6,32),K,-.3,.06,.12,.2,0,.5));
+  goal(out,.33,-.2,.18,.08,-Math.PI/4,0);
+  return out;});
+
+ // ---- The throw-in: a figure at the touchline, both hands holding the ball behind the head -----------------------------------------
+ sculpture('throw-in',shadow=>{shadow(0,0,.36,.26);const out:T.BufferGeometry[]=[];const y=slab(.66,.44,out);
+  // the touchline: a white strip across the slab, the pitch side in front
+  line(out,.64,.012,0,-.02);
+  const h=.34,r=h*.16,fx=0,fz=-.07;
+  out.push(piece(new T.CapsuleGeometry(r,h*.42,3,10),K,fx,y+r+h*.21,fz,-.12),piece(new T.SphereGeometry(h*.13,10,7),K,fx,y+h*.87,fz-.015));
+  // arms up and back, the ball held behind the head
+  for(const s of [-1,1])out.push(piece(new T.CapsuleGeometry(.013,.13,2,6),K,fx+s*.062,y+h*.9,fz-.03,0,0,s*.32));
+  const b=football(.04,3);b.translate(fx,y+h*1.12,fz-.045);out.push(b);
+  return out;});
+
+ // ---- 1956 · The Ballon d'Or: a golden ball on a stepped plinth ---------------------------------------------------------------------
+ sculpture('ballon-dor',shadow=>{shadow(0,0,.22,.22);const out:T.BufferGeometry[]=[];
+  out.push(piece(cylG(.13,.14,.05,32),K,0,.025,0),piece(cylG(.1,.11,.05,32),'#e6e3dc',0,.075,0),piece(cylG(.06,.08,.03,24),AU,0,.115,0));
+  // the ball: gold panels, the pentagons a deeper gold
+  out.push(piece(new T.IcosahedronGeometry(.16,4),n=>{let best=-1;for(const c of PENTA)best=Math.max(best,c.dot(n));return best>.936?'#b8861b':'#e3b43c';},0,.13+.16,0));
   return out;});
 
  return {

@@ -9,12 +9,13 @@ import {tierSettings} from '../graphics/heatTier';
 import {EXHIBITS,GALLERIES,galleryOf,timelineOrder,type Exhibit} from '../endgame/museum';
 import {easeZoom,ZOOM_IN_SECONDS,ZOOM_OUT_SECONDS} from '../konbini/konbiniZoom';
 import {createStuckWatch} from '../konbini/konbiniPath';
-import {BALL_PLINTH,ROOM,WING,FLOOR,CASE,CASE_PLACES,DESK,GUIDE,TIMELINE,CERT_WALL,KIT_WALL,PEGBOARD,CARD_TABLE,BOOKCASE,ZOOM_STOPS,museumPois,museumObstacles,museumBlocked,findMuseumPath,type MuseumPoi} from './museumLayout';
-import {paintMuseumAtlas,ATLAS,SIGN_RECTS,placardRect,TIMELINE_RECT,KIT_RECTS,certRect,CERT_SLOTS,DESK_RECT,COLLECTION_SIGN_RECT,PEG_RECT,accentOf,type Rect} from './museumAtlas';
+import {BALL_PLINTH,ROOM,WING,FLOOR,CASE,CASE_PLACES,DESK,GUIDE,TIMELINE,KIT_WALL,WING_PARTITION,GALLERY_SIGNS,ZOOM_STOPS,museumPois,museumObstacles,museumBlocked,findMuseumPath,type MuseumPoi} from './museumLayout';
+import {paintMuseumAtlas,ATLAS,SIGN_RECTS,SIGN_ASPECT,PLACARD,placardRect,TIMELINE_RECT,KIT_RECTS,DESK_RECT,GLOW_RECT,accentOf,type Rect} from './museumAtlas';
 import {museumSfx} from './museumSound';
-import {createExhibitSculptures} from './museumExhibits';
+import {createExhibitSculptures,SCULPTURE_TOP} from './museumExhibits';
 import {createBallMaterial} from './wcBalls/ballViewer';
 import {ballDesign} from './wcBalls/designs';
+import {museumWalls,MUSEUM_LIGHT,WALL_TONES,SKIRT_H,RIM_H,LIP,AO_WIDTH,faceAlbedo,toneFor,addCutaway,cutUniforms,updateCut,type WallSpec} from './museumWalls';
 
 /**
  * The walk-in History Museum interior (Oct 3 2026; docs/performance-guide.md "Walk-in History Museum"). The Konbini recipe:
@@ -27,13 +28,11 @@ import {ballDesign} from './wcBalls/designs';
  * with the heat tier's pixel-ratio and frame caps; dispose() frees everything.
  */
 export type MuseumZoomView={index:number;count:number;id:string;label:string;arrived:boolean};
-export type MuseumSceneInput={open:Readonly<Record<string,boolean>>;earned:readonly string[];
- /** Your Collection: which ball-hunt spots are found (COIN_QUEST order), and how many cards and books the player has. */
- found:readonly boolean[];cards:number;books:number};
+/** Oct 14 2026: the Your Collection wing (found balls, cards, books, certificates) is gone; the hall only needs which cases are open. */
+export type MuseumSceneInput={open:Readonly<Record<string,boolean>>};
 type Cam={pos:T.Vector3;look:T.Vector3;hw:number;hh:number};
-/** `tight`: the Your Collection stops frame their piece close, above the card. `piece`: a case, framed from its wall label
- *  (`bot`) to the top of its sculpture (`top`), clear of the card. */
-type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number;h:number;elev:number;tight?:boolean;piece?:{top:number;bot:number}};
+/** `piece`: a case, framed from its wall label (`bot`) to the top of its sculpture (`top`), clear of the card. */
+type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number;h:number;elev:number;piece?:{top:number;bot:number}};
 
 /** The modern gallery (Oct 10 2026; docs/museum-modern-style.md): gallery white, pale concrete, ink, hairlines. */
 const P={ground:'#f6f4ef',floor:'#dcd8cf',joint:'#cfcac0',wall:'#f7f5f0',reveal:'#cbc7be',plinth:'#fbfaf7',ink:'#1d1d1b',hair:'#d9d6cf',wood:'#e9e6df'};
@@ -50,14 +49,14 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const scene=new T.Scene();scene.background=new T.Color(P.ground);
  const camera=new T.OrthographicCamera(-8,8,6,-6,.1,80);
  // Gallery light: an even, neutral white wash from above (no warm cast), one key from the front left for form.
- scene.add(new T.HemisphereLight('#ffffff','#e6e2da',2.5));const sun=new T.DirectionalLight('#ffffff',.9);sun.position.set(-3,10,6);scene.add(sun);
+ scene.add(new T.HemisphereLight(MUSEUM_LIGHT.sky,MUSEUM_LIGHT.ground,MUSEUM_LIGHT.hemi));const sun=new T.DirectionalLight(MUSEUM_LIGHT.sun,MUSEUM_LIGHT.sunIntensity);sun.position.set(...MUSEUM_LIGHT.sunPos);scene.add(sun);
 
  // ---- Shared materials + atlas ---------------------------------------------------------------------------------------------
- const atlasCanvas=paintMuseumAtlas(document.createElement('canvas'),input.open,input.earned);const atlas=new T.CanvasTexture(atlasCanvas);atlas.colorSpace=T.SRGBColorSpace;atlas.anisotropy=2;
+ const atlasCanvas=paintMuseumAtlas(document.createElement('canvas'),input.open);const atlas=new T.CanvasTexture(atlasCanvas);atlas.colorSpace=T.SRGBColorSpace;atlas.anisotropy=2;
  const printMat=new T.MeshBasicMaterial({map:atlas,alphaTest:.4,side:T.DoubleSide});
  const staticMat=new T.MeshLambertMaterial({vertexColors:true});
  const glassMat=new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.34,depthWrite:false});
- const boxes:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[],prints:T.BufferGeometry[]=[],shades:T.BufferGeometry[]=[];
+ const boxes:T.BufferGeometry[]=[],glass:T.BufferGeometry[]=[],prints:T.BufferGeometry[]=[],shades:T.BufferGeometry[]=[],glows:T.BufferGeometry[]=[];
  const color=new T.Color(),m=new T.Matrix4(),q=new T.Quaternion(),euler=new T.Euler(),v=new T.Vector3(),one=new T.Vector3(1,1,1),sv=new T.Vector3();
  /** Colour a geometry, place it, and add it to the merged static mesh (everything non-indexed so the merge always matches). */
  function add(geo:T.BufferGeometry,x:number,y:number,z:number,hex:string,rx=0,ry=0,rz=0,s=1,target=boxes){
@@ -72,13 +71,16 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  /** A printed quad from the atlas; `ry` turns it to face that way (0 = +z). */
  function print(r:Rect,x:number,y:number,z:number,w:number,h:number,ry=0,rx=0){
   const g=new T.PlaneGeometry(w,h),uv=g.attributes.uv as T.BufferAttribute,u0=r.x/ATLAS,u1=(r.x+r.w)/ATLAS,v1=1-r.y/ATLAS,v0=1-(r.y+r.h)/ATLAS;
-  uv.setXY(0,u0,v1);uv.setXY(1,u1,v1);uv.setXY(2,u0,v0);uv.setXY(3,u1,v0);q.setFromEuler(euler.set(rx,ry,0,'YXZ'));m.compose(v.set(x,y,z),q,one);g.applyMatrix4(m);prints.push(g);
+  uv.setXY(0,u0,v1);uv.setXY(1,u1,v1);uv.setXY(2,u0,v0);uv.setXY(3,u1,v0);q.setFromEuler(euler.set(rx,ry,0,'YXZ'));m.compose(v.set(x,y,z),q,one);g.applyMatrix4(m);
+  g.setAttribute('aCut',new T.BufferAttribute(new Float32Array(4).fill(onWall),1));prints.push(g);
  }
+ /** 1 while building things hung on a wall (signs, frames, shirts): they are cut away round the player with their wall. */
+ let onWall=0;
  /** A soft contact shadow (the ball gallery's sweep shadow): a flat quad on the soft-shadow texture, all merged into ONE mesh. */
  function shade(x:number,y:number,z:number,rx:number,rz=rx){const g=new T.PlaneGeometry(rx*2,rz*2);g.rotateX(-Math.PI/2);g.translate(x,y,z);shades.push(g);}
  const mix=(a:string,b:string,k:number)=>'#'+new T.Color(a).lerp(new T.Color(b),k).getHexString();
 
- // ---- Room shell: the main hall plus the west wing ("Your Collection") through a wide opening (an L, like the building) ------
+ // ---- Room shell: the main hall plus the west wing (four history galleries) through a wide opening (an L, like the building) --
  const W=ROOM.halfW,D=ROOM.halfD,H=ROOM.wallH,WX0=WING.x0,WX1=WING.x1,WZ1=WING.z1,WW=WX1-WX0,WCX=(WX0+WX1)/2,WCZ=(WZ1-D)/2,WD=WZ1+D;
  // Pale polished concrete, one plane each for hall and wing, with hairline joints on a 2 m grid.
  {const f=(w:number,d:number,x:number,z:number)=>{const g=new T.PlaneGeometry(w,d);g.rotateX(-Math.PI/2);add(g,x,.012,z,P.floor);};f(W*2,D*2,0,0);f(WW,WD,WCX,WCZ);
@@ -86,100 +88,79 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   for(let xx=-W+2;xx<W;xx+=2)joint(.018,D*2,xx,0);for(let zz=-D+2;zz<D;zz+=2)joint(W*2,.018,0,zz);
   for(let xx=WX0+1.5;xx<WX1;xx+=2)joint(.018,WD,xx,WCZ);for(let zz=-D+2;zz<WZ1;zz+=2)joint(WW,.018,WCX,zz);}
  box(W*2+.4,.12,D*2+.4,0,-.06,0,P.joint);box(WW+.4,.12,WD+.4,WCX,-.06,WCZ,P.joint);
- // Walls: one long back wall (wing + hall), the wing's west wall, the hall's east wall, and the hall's west wall as two stubs either
- // side of the opening (the southern one runs on as the wing's east wall, which carries the certificate frames). A recessed
- // shadow-gap reveal runs along their foot instead of a skirting board; no mouldings.
- box(W-WX0+.4,H,.2,(WX0+W)/2,H/2,-D-.1,P.wall);box(.2,H,WD+.4,WX0-.1,H/2,WCZ,P.wall);box(.2,H,D*2+.4,W+.1,H/2,0,P.wall);
- box(.24,H,D-WING.open,WX1,H/2,(-D-WING.open)/2,P.wall);box(.24,H,WZ1-WING.open,WX1,H/2,(WING.open+WZ1)/2,P.wall);
- box(.24,.5,WING.open*2+.24,WX1,H-.25,0,P.wall);
- box(W-WX0,.05,.012,(WX0+W)/2,.04,-D+.006,P.reveal);box(.012,.05,D*2,W-.006,.04,0,P.reveal);box(.012,.05,WZ1-WING.open,WX1-.126,.04,(WING.open+WZ1)/2,P.reveal);
- box(.012,.05,WD,WX0+.006,.04,WCZ,P.reveal);
- // Low partition between the back and front galleries (the kit wall on its front face), with an open central aisle and a gap
- // by the wing opening: plain white planes.
- for(const s of [-1,1]){const x0=s<0?ROOM.partitionWest:ROOM.aisleHalf,x1=s<0?-ROOM.aisleHalf:W,len=x1-x0,cx=(x0+x1)/2;box(len,ROOM.partitionH,.24,cx,ROOM.partitionH/2,ROOM.partitionZ,P.wall);
-  for(const sz of [-1,1])box(len,.05,.012,cx,.04,ROOM.partitionZ+sz*.126,P.reveal);}
- // Fronts: a low white sill (the camera looks in over it, as at the Konbini), the glass doors in the hall's.
- const dl=ROOM.doorX-ROOM.doorHalf-.1,dr=ROOM.doorX+ROOM.doorHalf+.1;
- box(dl-WX1+.1,.5,.18,(WX1+dl)/2,.25,D+.05,P.wall);box(W+.1-dr,.5,.18,(dr+W+.1)/2,.25,D+.05,P.wall);
- box(WW+.2,.5,.18,WCX,.25,WZ1+.05,P.wall);
+ // Walls (Oct 14 2026, user: "fix this wall, it blends in and hard to tell it's a wall"; lib/museum/museumWalls.ts): the shell,
+ // the opening's stubs and lintel, the low kit-wall partition (open central aisle, a gap by the wing opening) and the low front
+ // sills (the camera looks in over them, as at the Konbini). Every face is baked to its on-screen tone (lit faces warm white,
+ // shaded faces a soft grey darker than the floor, the cap brightest), with a muted-ink rim round the top, a darker skirting line
+ // at the foot and a soft contact-shadow band on the floor. All of it joins the static and soft-shadow meshes (no extra draws);
+ // wall fragments carry aCut = 1 for the cutaway round the player.
+ const nrm=new T.Vector3();
+ function wallBox(w:number,h:number,d:number,x:number,y:number,z:number,tone:(n:T.Vector3)=>string){
+  const g=new T.BoxGeometry(w,h,d).toNonIndexed();g.translate(x,y,z);const n=g.attributes.position.count,nr=g.attributes.normal as T.BufferAttribute,c=new Float32Array(n*3);
+  for(let i=0;i<n;i+=6){nrm.fromBufferAttribute(nr,i);const a=faceAlbedo(tone(nrm),nrm);for(let k=i;k<i+6;k++){c[k*3]=a.r;c[k*3+1]=a.g;c[k*3+2]=a.b;}}
+  g.setAttribute('color',new T.BufferAttribute(c,3));g.setAttribute('aCut',new T.BufferAttribute(new Float32Array(n).fill(1),1));boxes.push(g);}
+ /** A contact-shadow band along one foot: u at the gradient's centre column, v from its darkest (.5, at the wall) to clear (1). */
+ function aoBand(s:WallSpec,a:WallSpec['ao'][number]){
+  const alongX=a.side[1]==='z',sign=a.side[0]==='+'?1:-1,len=Math.abs(a.b-a.a),mid=(a.a+a.b)/2,face=alongX?s.z+sign*s.d/2:s.x+sign*s.w/2;
+  const g=new T.PlaneGeometry(alongX?len:AO_WIDTH,alongX?AO_WIDTH:len);g.rotateX(-Math.PI/2);const p=g.attributes.position as T.BufferAttribute,uv=g.attributes.uv as T.BufferAttribute;
+  for(let i=0;i<p.count;i++)uv.setXY(i,.5,(alongX?p.getZ(i):p.getX(i))*sign>0?1:.5);
+  g.translate(alongX?mid:face+sign*AO_WIDTH/2,.015,alongX?face+sign*AO_WIDTH/2:mid);shades.push(g);}
+ // (The wing's low partition, Oct 14 2026: Firsts behind it, Rules & tactics in front, is in museumWalls() with the rest.)
+ for(const s of museumWalls()){const top=s.y0+s.h;
+  wallBox(s.w,s.h,s.d,s.x,s.y0+s.h/2,s.z,n=>WALL_TONES[toneFor(n)]);
+  wallBox(s.w+LIP*2,RIM_H,s.d+LIP*2,s.x,top-RIM_H/2+.002,s.z,n=>n.y>.5?WALL_TONES.cap:WALL_TONES.rim);
+  if(s.skirt)wallBox(s.w+LIP*2,SKIRT_H,s.d+LIP*2,s.x,s.y0+SKIRT_H/2,s.z,()=>WALL_TONES.skirt);
+  for(const a of s.ao)aoBand(s,a);}
  box(2.6,.012,.4,ROOM.doorX,.018,D+.05,P.joint);
  const doorGeo=new T.BoxGeometry(ROOM.doorHalf-.04,2.4,.05),doors=new T.InstancedMesh(doorGeo,glassMat,2);doors.frustumCulled=false;scene.add(doors);
  const doorFrame=new T.Object3D();let doorOpen=1,doorTarget=1;
  function placeDoors(){for(let i=0;i<2;i++){const s=i?1:-1;doorFrame.position.set(ROOM.doorX+s*(ROOM.doorHalf/2+doorOpen*(ROOM.doorHalf-.1)),1.25,D+.02);doorFrame.updateMatrix();doors.setMatrixAt(i,doorFrame.matrix);}doors.instanceMatrix.needsUpdate=true;}
  placeDoors();
- // Gallery wall panels (title in the sans, one accent rule).
- print(SIGN_RECTS.laws,-W/2,2.72,-D+.03,4.2,.66);print(SIGN_RECTS.worldcup,W/2,2.72,-D+.03,4.2,.66);
- print(SIGN_RECTS.kit,-2.75,1.16,ROOM.partitionZ+.135,1.7,.27);print(SIGN_RECTS.kit,W-.03,2.85,D/2,4.2,.66,-Math.PI/2);
- print(COLLECTION_SIGN_RECT,PEGBOARD.x,3.0,-D+.03,3.4,.97);print(SIGN_RECTS.hall,CERT_WALL.x-.03,2.95,CERT_WALL.z,4.2,.66,-Math.PI/2);
+ // Gallery wall panels (title in the sans, one accent rule). Hung on walls: cut away with them round the player.
+ onWall=1;
+ // Oct 14 2026: one sign per gallery (museumLayout GALLERY_SIGNS), the wing's four included; the kit wall keeps its small label.
+ for(const [id,g] of Object.entries(GALLERY_SIGNS))if(SIGN_RECTS[id]){const h=g.w*SIGN_ASPECT;
+  // a free-standing sign: a white board on two slim ink legs, the print on its front (all merged: no draw of its own)
+  if(g.stand){box(g.w+.08,h+.08,.04,g.x,g.y,g.z-.025,P.plinth);for(const s of [-1,1])box(.025,g.y-h/2,.025,g.x+s*(g.w/2-.08),(g.y-h/2)/2,g.z-.025,P.ink);}
+  print(SIGN_RECTS[id],g.x,g.y,g.z,g.w,h,g.ry);}
+ print(SIGN_RECTS.kit,-2.75,1.16,ROOM.partitionZ+.135,1.7,1.7*SIGN_ASPECT);
 
- // ---- Timeline wall, kit wall, certificate wall, information desk ---------------------------------------------------------
+ // ---- Timeline wall, kit wall, information desk -----------------------------------------------------------------------------
  print(TIMELINE_RECT,TIMELINE.x,TIMELINE.y,TIMELINE.z,TIMELINE.w,TIMELINE.w*TIMELINE_RECT.h/TIMELINE_RECT.w);
  KIT_WALL.xs.forEach((x,i)=>print(KIT_RECTS[i],x,KIT_WALL.y,KIT_WALL.z,.8,.8));
- CERT_SLOTS.forEach((_,i)=>{const z=CERT_WALL.frames[i];box(.04,1.08,.92,CERT_WALL.x+.02,CERT_WALL.y,z,P.ink);print(certRect(i),CERT_WALL.x-.01,CERT_WALL.y,z,.84,1.0,-Math.PI/2);});
+ onWall=0;
  box(DESK.w,DESK.h,DESK.d,DESK.x,DESK.h/2,DESK.z,P.plinth);box(DESK.w-.06,.04,DESK.d-.06,DESK.x,.02,DESK.z,P.reveal);print(DESK_RECT,DESK.x,.7,DESK.z+DESK.d/2+.004,1.5,.43);
  shade(DESK.x,.016,DESK.z+.08,DESK.w*.72,DESK.d*.9);
-
- // ---- Your Collection: the player's own hidden balls, cards and books (no history here: only what they collected) ---------
- // Your Collection pieces that perform (instanced: one draw each): found balls, cards, books. See `rollcall` below.
- const wingBalls:{x:number;y:number;z:number}[]=[],wingCards:{x:number;y:number;z:number;a:number;c:string}[]=[],wingBooks:{x:number;y:number;z:number;h:number;c:string}[]=[];
- const PRIMARY=['#2a5bd7','#e4322b','#f2c230','#1f8a5b','#1d1d1b'];
- // Hidden-ball wall: one peg per ball-hunt spot (lib/town/coinQuest.ts order) on a white panel; a found ball sits on its peg.
- // (The peg grid is printed on the atlas: no peg geometry.)
- {const P0=PEGBOARD,cw=P0.w/P0.cols,rh=P0.h/P0.rows;box(P0.w+.24,P0.h+.24,.04,P0.x,P0.y,P0.z,P.plinth);print(PEG_RECT,P0.x,P0.y,P0.z+.022,P0.w,P0.h);
-  for(let i=0;i<P0.cols*P0.rows;i++){const px=P0.x-P0.w/2+(i%P0.cols+.5)*cw,py=P0.y+P0.h/2-(Math.floor(i/P0.cols)+.5)*rh;
-   if(input.found[i])wingBalls.push({x:px,y:py,z:P0.z+.18});}}
- // The card table: a fan of the player's cards (up to 10 shown), face up, on a white top with ink legs.
- {const t=CARD_TABLE;box(t.w,.04,t.d,t.x,t.h,t.z,P.plinth);for(const sx of [-1,1])for(const sz of [-1,1])box(.03,t.h,.03,t.x+sx*(t.w/2-.1),t.h/2,t.z+sz*(t.d/2-.1),P.ink);
-  shade(t.x,.016,t.z,t.w*.6,t.d*.7);
-  const n=Math.min(10,input.cards);
-  for(let i=0;i<n;i++)wingCards.push({x:t.x+(i-(n-1)/2)*.2,y:t.h+.05+i*.004,z:t.z+Math.abs(i-(n-1)/2)*.03,a:(i-(n-1)/2)*.16,c:PRIMARY[i%PRIMARY.length]});
-  if(!n)box(.24,.006,.34,t.x,t.h+.025,t.z,P.hair);}
- // The shelves: the player's pop-up books on three white shelves (up to 18 shown).
- {const b=BOOKCASE,bz=b.z-b.d/2;box(b.w,b.h,.03,b.x,b.h/2,bz+.015,P.wall);for(const sx of [-1,1])box(.03,b.h,b.d,b.x+sx*(b.w/2-.015),b.h/2,b.z,P.plinth);
-  for(let k=0;k<4;k++)box(b.w-.06,.03,b.d,b.x,.06+k*(b.h-.1)/3,b.z,P.plinth);shade(b.x,.016,b.z+.1,b.w*.6,.45);
-  const n=Math.min(18,input.books),cols=[...PRIMARY,'#d9d6cf'];
-  for(let i=0;i<n;i++){const shelf=Math.floor(i/6),slot=i%6,hgt=.3+((i*7)%3)*.04;wingBooks.push({x:b.x-b.w/2+.35+slot*.36,y:.075+shelf*(b.h-.1)/3+hgt/2,z:b.z,h:hgt,c:cols[i%cols.length]});}}
 
  // ---- Exhibit plinths ----------------------------------------------------------------------------------------------------------
  const TOP=CASE.plinthH+.04;
  // The sculptures (lib/museum/museumExhibits.ts): one still object per open case, merged into the static mesh.
- const exhibits=createExhibitSculptures({open:input.open,add:(geo,x,y,z,hex,rx,ry,rz,s)=>add(geo,x,y,z,hex,rx,ry,rz,s),shadow:(x,y,z,rx,rz)=>shade(x,y,z,rx,rz)});
+ // Pieces that should read as lit (the floodlight heads) are unlit prints on the atlas's glow swatch: no extra draw.
+ const glowUv=[(GLOW_RECT.x+GLOW_RECT.w/2)/ATLAS,1-(GLOW_RECT.y+GLOW_RECT.h/2)/ATLAS];
+ const exhibits=createExhibitSculptures({open:input.open,add:(geo,x,y,z,hex,rx,ry,rz,s)=>add(geo,x,y,z,hex,rx,ry,rz,s),shadow:(x,y,z,rx,rz)=>shade(x,y,z,rx,rz),
+  glow:geo=>{const g=geo.index?geo.toNonIndexed():geo;if(g!==geo)geo.dispose();for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal')g.deleteAttribute(k);
+   const n=g.attributes.position.count,uv=new Float32Array(n*2);for(let i=0;i<n;i++){uv[i*2]=glowUv[0];uv[i*2+1]=glowUv[1];}g.setAttribute('uv',new T.BufferAttribute(uv,2));
+   g.setAttribute('aCut',new T.BufferAttribute(new Float32Array(n),1));glows.push(g);}});
  // The World Cup ball plinth (Oct 5 2026): a round pedestal with the 2026 ball on a brass cup; looking at it opens the gallery.
  {const P=BALL_PLINTH;add(new T.CylinderGeometry(P.r,P.r*1.08,P.h,28),P.x,P.h/2,P.z,'#294f43');add(new T.CylinderGeometry(P.r*1.12,P.r*1.12,.05,28),P.x,P.h+.025,P.z,'#e7b94a');
   add(new T.CylinderGeometry(.11,.15,.06,20),P.x,P.h+.08,P.z,'#e7b94a');add(new T.CylinderGeometry(P.r*1.14,P.r*1.14,.04,28),P.x,.02,P.z,'#e7b94a');
   const ballMat=createBallMaterial(ballDesign('2026-trionda'));const bm=new T.Mesh(new T.SphereGeometry(P.ball,48,32),ballMat);bm.position.set(P.x,P.h+.11+P.ball,P.z);bm.quaternion.setFromUnitVectors(new T.Vector3(1,1,-1).normalize(),new T.Vector3(-.35,.75,.75).normalize());/* the three colour waves face the hall camera (the plain 4th panel faces away) */bm.name='museum-wc-ball';scene.add(bm);}
  // "Stand where they stood": a single ink spot on the floor in front of the penalty case.
  {const p=CASE_PLACES['penalty-1891'];add(new T.CylinderGeometry(.06,.06,.006,20),p.x,.016,p.z+1.1,P.ink);}
- EXHIBITS.forEach((e,i)=>{const p=CASE_PLACES[e.id],isOpen=!!input.open[e.id];
+ EXHIBITS.forEach((e,i)=>{const p=CASE_PLACES[e.id],isOpen=!!input.open[e.id];if(!p)return;// a case without a place yet is not built
   // A white plinth floating on a recessed shadow-gap base, a soft floor shadow, and its wall label on the front face.
   box(CASE.w-.06,.04,CASE.d-.06,p.x,.02,p.z,P.reveal);box(CASE.w,TOP-.04,CASE.d,p.x,.04+(TOP-.04)/2,p.z,P.plinth);
   shade(p.x,.016,p.z+.06,CASE.w*.82,CASE.d*.82);
-  print(placardRect(i),p.x,TOP-.17,p.z+CASE.d/2+.004,.5,.5*112/256);
+  print(placardRect(i),p.x,TOP-.17,p.z+CASE.d/2+.004,.5,.5*PLACARD.h/PLACARD.w);
   if(isOpen&&exhibits.built.has(e.id))return;
   // Not yet on view: a frosted acrylic vitrine, empty.
   add(new T.BoxGeometry(CASE.w-.1,CASE.glassH,CASE.d-.1),p.x,TOP+CASE.glassH/2,p.z,'',0,0,0,1,glass);box(CASE.w-.1,.012,CASE.d-.1,p.x,TOP+.006,p.z,P.hair);
  });
 
  // ---- Merge static, glass and prints ---------------------------------------------------------------------------------------
- // ---- Your Collection roll-call: arrive at the pegboard and your found balls hop one after another; the cards flip face up
- // in turn; your books slide out and back. Instanced (3 draws), animated only for ~3 s after you arrive; reduced motion: none.
- const instOf=(geo:T.BufferGeometry,n:number,name:string)=>{const g=geo.index?geo.toNonIndexed():geo;const c=new Float32Array(g.attributes.position.count*3).fill(1);g.setAttribute('color',new T.BufferAttribute(c,3));const m=new T.InstancedMesh(g,staticMat,Math.max(1,n));m.count=n;m.name=name;m.frustumCulled=false;scene.add(m);return m;};
- const ballInst=instOf(new T.IcosahedronGeometry(.13,2),wingBalls.length,'museum-wing-balls'),cardInst=instOf(new T.BoxGeometry(.24,.012,.34),wingCards.length,'museum-wing-cards'),bookInst=instOf(new T.BoxGeometry(.11,1,.3),wingBooks.length,'museum-wing-books');
- wingBalls.forEach((_,i)=>ballInst.setColorAt(i,color.set(P.plinth)));wingCards.forEach((c,i)=>cardInst.setColorAt(i,color.set(c.c)));wingBooks.forEach((b,i)=>bookInst.setColorAt(i,color.set(b.c)));
- const io=new T.Object3D();let rollcall:{id:string;t:number}|null=null;
- function poseWing(){const r=rollcall,t=r?.t??0;
-  wingBalls.forEach((b,i)=>{const k=r?.id==='my-balls'?Math.max(0,Math.sin(Math.min(1,Math.max(0,(t-i*.03)/.35))*Math.PI)):0;io.position.set(b.x,b.y+k*.12,b.z+k*.06);io.rotation.set(0,k*2,0);io.scale.setScalar(1+k*.25);io.updateMatrix();ballInst.setMatrixAt(i,io.matrix);});
-  wingCards.forEach((c,i)=>{const k=r?.id==='my-cards'?Math.min(1,Math.max(0,(t-i*.22)/.4)):1,flip=r?.id==='my-cards'?(1-k)*Math.PI:0;io.position.set(c.x,c.y+Math.sin(k*Math.PI)*.12,c.z);io.rotation.set(0,c.a,flip);io.scale.setScalar(1);io.updateMatrix();cardInst.setMatrixAt(i,io.matrix);cardInst.setColorAt(i,color.set(flip>Math.PI/2?P.ink:c.c));});
-  wingBooks.forEach((b,i)=>{const k=r?.id==='my-books'?Math.max(0,Math.sin(Math.min(1,Math.max(0,(t-i*.1)/.5))*Math.PI)):0;io.position.set(b.x,b.y,b.z+k*.12);io.rotation.set(0,0,0);io.scale.set(1,b.h,1);io.updateMatrix();bookInst.setMatrixAt(i,io.matrix);});
-  for(const m of [ballInst,cardInst,bookInst]){m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}}
- poseWing();
- function startRollcall(id:string){if(reduced||!['my-balls','my-cards','my-books'].includes(id))return;rollcall={id,t:0};if(id==='my-balls')museumSfx.reveal();}
- function stepRollcall(dt:number){if(!rollcall)return false;rollcall.t+=dt;const end=rollcall.id==='my-balls'?wingBalls.length*.03+.5:rollcall.id==='my-cards'?wingCards.length*.22+.5:wingBooks.length*.1+.6;
-  if(rollcall.id==='my-cards'&&Math.floor((rollcall.t)/.22)!==Math.floor((rollcall.t-dt)/.22)&&rollcall.t<wingCards.length*.22)museumSfx.card();
-  if(rollcall.t>end){rollcall=null;poseWing();return false;}poseWing();return true;}
  // ---- The walk-through timeline: a runner of year tiles along the back wall. Step on a year: its tile glows, a beam of light
  // finds that case across the room, and the year + title pop up (the cases' own years and titles; nothing new).
- const TL=timelineOrder(),tileW=.4,tileX0=-(TL.length-1)*tileW/2,tileZ=TIMELINE.z+.95;
+ const TL=timelineOrder().filter(e=>CASE_PLACES[e.id]),tileW=Math.min(.4,7.4/TL.length),tileX0=-(TL.length-1)*tileW/2,tileZ=TIMELINE.z+.95;
  TL.forEach((e,i)=>{box(tileW-.04,.012,.5,tileX0+i*tileW,.02,tileZ,input.open[e.id]?mix(accentOf(e.gallery),P.floor,.6):P.hair);});
  const tileGlow=new T.Mesh(new T.BoxGeometry(tileW-.02,.02,.52),new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.75}));tileGlow.visible=false;tileGlow.name='museum-timeline-glow';scene.add(tileGlow);
  const beam=new T.Mesh(new T.CylinderGeometry(.35,.6,3.2,20,1,true),new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:.3,depthWrite:false,side:T.DoubleSide}));beam.visible=false;beam.name='museum-timeline-beam';scene.add(beam);
@@ -187,15 +168,20 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  function stepTimeline(){const i=Math.abs(z-tileZ)<.35&&Math.abs(x-tileX0-(TL.length-1)*tileW/2)<TL.length*tileW/2?Math.round((x-tileX0)/tileW):-1;const idx=i>=0&&i<TL.length?i:-1;if(idx===tileIndex)return;tileIndex=idx;
   if(idx<0){tileGlow.visible=beam.visible=false;callbacks.onTimeline?.(null);return;}const e=TL[idx],c=CASE_PLACES[e.id];tileGlow.visible=true;tileGlow.position.set(tileX0+idx*tileW,.035,tileZ);
   beam.visible=true;beam.position.set(c.x,1.6,c.z);museumSfx.flap();callbacks.onTimeline?.(e.id);}
- const staticMesh=new T.Mesh(mergeGeometries(boxes,false)!,staticMat);staticMesh.name='museum-static';scene.add(staticMesh);
+ // The cutaway (museumWalls.ts): walls and what hangs on them, in front of the player within a small ellipse round them, are
+ // dithered away, so a wall between the camera and the player never hides or slices them. Two uniforms, set per rendered frame.
+ const cut=cutUniforms();
+ for(const g of boxes)if(!g.attributes.aCut)g.setAttribute('aCut',new T.BufferAttribute(new Float32Array(g.attributes.position.count),1));
+ const wallMat=staticMat.clone();addCutaway(wallMat,cut);addCutaway(printMat,cut);
+ const staticMesh=new T.Mesh(mergeGeometries(boxes,false)!,wallMat);staticMesh.name='museum-static';scene.add(staticMesh);
  // (Every open case is a sculpture, with no vitrine: an empty glass list gets an empty mesh.)
  const glassMesh=new T.Mesh(glass.length?mergeGeometries(glass,false)!:new T.BufferGeometry(),glassMat);glassMesh.renderOrder=2;scene.add(glassMesh);
- const printMesh=new T.Mesh(mergeGeometries(prints,false)!,printMat);printMesh.name='museum-prints';scene.add(printMesh);
+ const printMesh=new T.Mesh(mergeGeometries(glows.length?[...prints,...glows.map(g=>{const ix=new T.BufferGeometry();for(const k of Object.keys(g.attributes))ix.setAttribute(k,g.attributes[k]);ix.setIndex(Array.from({length:g.attributes.position.count},(_,i)=>i));return ix;})]:prints,false)!,printMat);printMesh.name='museum-prints';scene.add(printMesh);
  // Soft contact shadows: one radial-gradient texture (64²), every plinth, desk and sculpture shadow in ONE transparent mesh.
  const shadeCanvas=document.createElement('canvas');shadeCanvas.width=shadeCanvas.height=64;{const g=shadeCanvas.getContext('2d');if(g){const gr=g.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(0,0,0,.26)');gr.addColorStop(.45,'rgba(0,0,0,.12)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,64,64);}}
  const shadeTex=new T.CanvasTexture(shadeCanvas);
  const shadeMesh=new T.Mesh(shades.length?mergeGeometries(shades,false)!:new T.BufferGeometry(),new T.MeshBasicMaterial({map:shadeTex,color:'#2a2722',transparent:true,depthWrite:false}));shadeMesh.name='museum-shadows';shadeMesh.renderOrder=1;scene.add(shadeMesh);
- for(const g of [...boxes,...glass,...prints,...shades])g.dispose();
+ for(const g of [...boxes,...glass,...prints,...shades,...glows])g.dispose();
  staticMesh.matrixAutoUpdate=glassMesh.matrixAutoUpdate=printMesh.matrixAutoUpdate=shadeMesh.matrixAutoUpdate=false;staticMesh.updateMatrix();glassMesh.updateMatrix();printMesh.updateMatrix();shadeMesh.updateMatrix();
 
  // ---- Characters -------------------------------------------------------------------------------------------------------------
@@ -226,14 +212,8 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   if(o.name==='museum-telstar')telstar=mesh;else{mesh.matrixAutoUpdate=false;mesh.updateMatrix();}scene.add(mesh);}
 
  // ---- Zoom (the vending/Konbini close-up: an eased orthographic move onto the real case) ------------------------------------
- /** How tall each case's sculpture stands above its plinth (museumExhibits.ts), for the zoom framing. */
- const SCULPTURE_TOP:Record<string,number>={'laws-1863':.32,'penalty-1891':.3,stadiums:.42,boots:.3,'var-2018':.6,'worldcup-1930':.52,'wwc-1991':.44,'futsal-1989':.2,'laced-leather':.34,'telstar-1970':.62,shirts:.36,'hall-of-fame':.46};
  const stops:Stop[]=ZOOM_STOPS.map(id=>{
   if(id==='timeline')return {id,label:'Timeline wall',x:TIMELINE.x,y:TIMELINE.y,z:TIMELINE.z,yaw:0,w:TIMELINE.w,h:TIMELINE.h+.3,elev:.12};
-  if(id==='hall-wall')return {id,label:'Certificate wall',x:CERT_WALL.x,y:CERT_WALL.y+.3,z:CERT_WALL.z,yaw:-Math.PI/2,w:CERT_WALL.w-1,h:2,elev:.12};
-  if(id==='my-balls')return {id,label:'Your hidden balls',x:PEGBOARD.x,y:PEGBOARD.y,z:PEGBOARD.z,yaw:0,w:PEGBOARD.w+.3,h:PEGBOARD.h+.4,elev:.12,tight:true};
-  if(id==='my-cards')return {id,label:'Your player cards',x:CARD_TABLE.x,y:CARD_TABLE.h,z:CARD_TABLE.z,yaw:0,w:CARD_TABLE.w+.2,h:1,elev:.75,tight:true};
-  if(id==='my-books')return {id,label:'Your pop-up books',x:BOOKCASE.x,y:BOOKCASE.h/2,z:BOOKCASE.z,yaw:0,w:BOOKCASE.w+.2,h:BOOKCASE.h+.2,elev:.15,tight:true};
   const e=EXHIBITS.find(x=>x.id===id)!,p=CASE_PLACES[id];
   // A case (Oct 13 2026: every case opens on its full card): the sculpture and its wall label, as big as the room beside or above
   // the card allows. The stadium is seen from higher up, so you look into the bowl.
@@ -253,9 +233,6 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
    else{
     // Landscape (the card on the right): the piece fills ~60 % of the height, centred a third of the way across.
     const short=viewportH<=520;hh=span/(short?1.1:1.2);hw=hh*a;const rx=Math.cos(yv),rz=-Math.sin(yv),k=short?.4:.34;look.x+=rx*hw*k;look.z+=rz*hw*k;look.y=mid-(short?.02:.06)*hh/ce;}}
-  else if(s.tight){if(a<1){
-   // Phone: the whole piece sits between the header (11 %) and the card, as big as the width allows.
-   const yTop=TOP+.8+.26,yBot=TOP-.16;hh=Math.max((yTop-yBot)/1.06,s.w/2*1.04/a);hw=hh*a;look.y=yTop-.78*hh;}else{hh=s.h/2*1.25+.05;hw=hh*a;look.y-=hh*.2;}}
   else if(a<1){hh*=1.14;hw=hh*a;look.y-=hh*.4;}
   else{hw*=1.65;hh=hw/a;const rx=Math.cos(yv),rz=-Math.sin(yv);look.x+=rx*hw*.4;look.z+=rz*hw*.4;look.y-=hh*.06;}
   return {pos:look.clone().add(new T.Vector3(Math.sin(yv)*Math.cos(s.elev),Math.sin(s.elev),Math.cos(yv)*Math.cos(s.elev)).multiplyScalar(ZD)),look,hw,hh};
@@ -306,14 +283,16 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   if(zoom){zoom.t=reduced?1:Math.min(1,zoom.t+dt/zoom.dur);const A=zoom.from,B=zoom.to!==null?zoomCam(stops[zoom.to]):walkCam(),k=easeZoom(zoom.t);
    applyCam(tmpPos.lerpVectors(A.pos,B.pos,k),tmpLook.lerpVectors(A.look,B.look,k),A.hw+(B.hw-A.hw)*k,A.hh+(B.hh-A.hh)*k);
    if(zoom.t>=1){if(zoom.to===null){zoom=null;zoomIndex=null;arrived=false;camera.left=-halfW;camera.right=halfW;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix();placeCamera();callbacks.onZoom?.(null);}
-    else{zoom=null;arrived=true;setClip(true);callbacks.onZoom?.(zoomView());if(zoomIndex!==null){callbacks.onZoomArrive?.(stops[zoomIndex].id);startRollcall(stops[zoomIndex].id);}}}}
+    else{zoom=null;arrived=true;setClip(true);callbacks.onZoom?.(zoomView());if(zoomIndex!==null){callbacks.onZoomArrive?.(stops[zoomIndex].id);}}}}
   else if(zoomIndex!==null){const c=zoomCam(stops[zoomIndex]);applyCam(c.pos,c.look,c.hw,c.hh);}
   else placeCamera();
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=!hidePlayer;
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.4,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
-  const exhibitBusy=stepRollcall(dt);if(!leaving)stepTimeline();
+  if(!leaving)stepTimeline();
+  // The wall cutaway follows the player (view space; this loop only runs while something moves).
+  updateCut(cut,player.root.visible,x,z,camera);
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
-  const busy=exhibitBusy||!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
+  const busy=!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
   if(busy)settle=.5;else settle-=dt;
   if(settle>0||leaving)frame=requestAnimationFrame(tick);else{last=0;slot=0;}
  }

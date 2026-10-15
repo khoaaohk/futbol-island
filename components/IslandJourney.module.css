@@ -19,7 +19,7 @@
 .guide{grid-column:1/-1;min-width:0}.guide>button{display:flex;align-items:center;width:100%;min-height:var(--btn-height,44px);padding:12px 0;border:0;border-top:1px solid #244d4026;background:transparent;color:#173e37;text-align:left;font:inherit;cursor:pointer}.guide>button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* Island Tutorial CTA (Oct 13 2026, user: "make it more noticeable, add some type of animation"): a bold label and a filled gold
    circle (the card's own button tokens), with a brief pop + ring ripple + label nudge. Transform/opacity only, 3 cycles then
-   stops (finite animation-iteration-count, no JS timers): IslandQuests.tsx remounts .ctaPulse (a fresh key) once the row scrolls
+   stops (finite animation-iteration-count, no JS timers): IslandQuests.tsx replays .ctaPulse's animations in place (getAnimations, no remount) once the row scrolls
    into view, and again on hover/focus. Paused while the tab is hidden; nothing moves under reduced motion. */
 .ctaPulse{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
 .ctaLabel{font-size:18px;line-height:1.3;font-weight:800;letter-spacing:-.01em}

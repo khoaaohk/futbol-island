@@ -1,0 +1,10 @@
+/* first-international-1872 · the match analyser's card and dock (Oct 14 2026 redo). */
+.stage{touch-action:none}
+.stage :global(.iso-hit){outline:none}
+.stage :global(.iso-hit):focus-visible{outline:none}
+.dock{display:grid;gap:8px;justify-items:center;text-align:center}
+.dock>p{max-width:72ch}
+.dock>div{justify-content:center}
+@media (max-width:600px){.dock{gap:6px}.dock>div button{padding:10px 14px}}
+.big{font-weight:800}
+.big[data-kind="good"]{color:var(--accent)}

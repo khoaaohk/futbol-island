@@ -168,13 +168,18 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // Refraction (Oct 14 2026): the seabed seen through the moving surface sways a little, more the deeper it is (the reef and fish
    // sway the same way in their vertex shaders, underwater.ts).
    float h=vSea.z,pathL=vSea.w,vy=vVy;vec2 P=vSea.xy-uwWobble(vSea.xy,h);
-   float rip=sin(dot(P,vec2(1.7,.9))*2.4+n1*10.+n2*5.)*.5+.5;
+   // Stretch check (polish): see the caustics below; where the seabed hit point is smeared, the sand ripples and caustics settle.
+   vec2 pdx=dFdx(P),pdy=dFdy(P);float pa=length(pdx),pb=length(pdy),aniso=min(pa,pb)/max(max(pa,pb),1e-5),unsmear=smoothstep(.1,.45,aniso);
+   float rip=mix(.5,sin(dot(P,vec2(1.7,.9))*2.4+n1*10.+n2*5.)*.5+.5,unsmear);
    // Sand tone and weed patches per spot (the theme's light / dark sand, weed colour and amount: a meadow covers more).
    vec3 sand=mix(uSandA,uSandB,n2)*(.9+.14*rip*rip);float wlo=mix(.74,.42,uSandWeed.a);
    sand=mix(sand,uSandWeed.rgb,smoothstep(wlo,wlo+.18,n1)*smoothstep(1.2,3.,d)*mix(.35,.8,uSandWeed.a));
    // Depth (Oct 14 2026): caustics fade fast with depth (squared), and less light reaches the deeper sand, so the seabed visibly
    // slopes away and darkens.
-   float caus=uwCaustic(P)*uwCausticFade(h);sand*=(1.+caus*.5)*mix(1.,.62,smoothstep(.5,uUwFloor,h));
+   // Polish (Oct 14 2026): right at the waterline the low camera's rays all meet nearly the same seabed point, so the caustic network
+   // was smeared into pale vertical streaks under the swash. Where the hit point is stretched (its screen derivatives very
+   // uneven), the caustics fade out instead.
+   float caus=uwCaustic(P)*uwCausticFade(h)*unsmear;sand*=(1.+caus*.5)*mix(1.,.62,smoothstep(.5,uUwFloor,h));
    // The float's (and line's) soft shadow on the seabed, cast along the sun (uniforms written while fishing, no extra draw).
    if(uUwFloatOn>0.){vec2 q=P+uSunDir.xz/max(uSunDir.y,.35)*h,fl=uUwFloat.xy,ln=uUwFloat.zw-fl;float tl=clamp(dot(q-fl,ln)/max(dot(ln,ln),1e-4),0.,1.);
     float fs=1.-smoothstep(.07,.17+.06*h,length(q-fl)),ls=(1.-smoothstep(.012,.03+.012*h,length(q-fl-ln*tl)))*step(.0,d)*smoothstep(0.,.6,d);
@@ -217,17 +222,23 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    }
    // ---- The surface over the clear water: swells rolling in (same phase as the ocean's), shimmering ripple lines, and more sky
    // reflected at grazing angles so it settles into the island ocean further out.
-   float sph=swellPhase(d,n1);swell=smoothstep(.84,1.,sph)*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
-   float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
+   // Oct 14 2026 polish ("a gentle, layered surface"): the swell crest is broader and broken up by the soft noise (it used to draw
+   // hard straight bands across the phone screen), and the ripple lines come and go in slow wind gusts drifting across the water
+   // (one ALU wave over the noise already read: no extra texture reads). Period 20 s divides the water clock's wrap.
+   float sph=swellPhase(d,n1);swell=smoothstep(.74,1.,sph)*(.5+.5*smoothstep(.25,.75,laceT.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
+   float gust=.5+.5*sin(dot(vWaterXZ,vec2(.19,.12))-t*.314159+n2*5.+laceT.b*3.);
+   float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d)*(.45+.95*gust);
    float fres=vTrans.a;
-   col=mix(col,vec3(.42,.72,.7),sea*(swell*.28+lines*.1));col=mix(col,vec3(.2,.42,.47),sea*fres);
+   col=mix(col,vec3(.42,.72,.7),sea*(swell*.24+lines*.1));col=mix(col,vec3(.2,.42,.47),sea*fres);
    vec3 foamC=vec3(.97,.98,.96);col=mix(col,foamC,foam);alpha=max(alpha,foam*.95);
    float glint=0.;if(uWaterDetail>1.5){float g2=texture2D(uWaterNoise,vWaterXZ*.33-vec2(t*.01,t*.004)).g;glint=smoothstep(.8,.9,min(lace,g2))*sea*smoothstep(1.,4.,d)*(.4+.6*swell);}
+   // Phones (detail 1, polish): a light sparkle from the lace already read, where a gust ruffles the water (ALU only).
+   else if(uWaterDetail>.5)glint=smoothstep(.87,.93,lace)*smoothstep(.55,.95,gust)*sea*smoothstep(1.,4.,d)*.5;
    diffuseColor=vec4(col,alpha*edgeFade);
    float waterLight=(foam*.22+glint*.9)*edgeFade;vec3 waterGlow=(col*.08+vTint*(1.-uwT)*UW_GLOW)*sea*alpha*edgeFade;`)
    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
  };
- material.customProgramCacheKey=()=>'fishing-shore-strip-v8';
+ material.customProgramCacheKey=()=>'fishing-shore-strip-v11';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-shore-water';mesh.renderOrder=.5;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};
  return {mesh,dispose(){geometry.dispose();material.dispose();}};
 }
@@ -244,6 +255,8 @@ export function createFishingWater(scene:T.Scene,renderer:T.WebGLRenderer,phone=
   get seabedTriangles(){return current?.props?.triangles??0;},
   /** Anemones with a clownfish pair in the current seabed (fishSchools.ts). */
   get homes(){return current?.props?.homes??[];},
+  /** Reef pieces in the current seabed (bubble sources, darting reef fish; Oct 14 2026 polish). */
+  get pieces(){return current?.props?.pieces??[];},
   /** Show the moving shore round the angler at `stand` casting along `dir`; `spot` picks the seabed (coral, sea grass, piles).
    *  `viewDepth` (Oct 13 2026, farther casts): how far out the seabed scatter reaches, in metres; the caller passes the
    *  spot's real cast distance plus a few metres, so coral and rocks still surround a float cast much farther out. */

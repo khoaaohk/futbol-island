@@ -20,6 +20,13 @@ import {patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE,type ReefTheme} from './u
  * - DEEP MODE (a theme with `deep`, the deep-sea boats): no crabs, no seabed shadows; the schools become ONE bait ball swirling
  *   round a slowly moving centre (it follows the boat's bait-ball hotspot when there is one, `setBait`), two cruisers become big
  *   tuna / marlin silhouettes crossing far below, and the glider is a manta or turtle deep down. Same one draw.
+ *
+ * Oct 14 2026 polish ("better swimming motion … small life details"), still ONE draw:
+ * - fish are a little bigger (1.15× desktop, 1.3× phones) so their colours, fins and stripes read at the fishing camera distance;
+ * - the body undulates as a tail-driven S-curve whose strength follows the swimming speed (fast = strong beats, cruising = gentle);
+ * - fish bank into their turns (roll from the turn rate, eased) and tilt as the school turns together;
+ * - a few tiny reef fish dart about the coral heads (hover, then a quick dart to a new perch; they duck into the coral when the
+ *   float splashes). Only while fishingLife allows the extra life (heat tiers 0-1, not reduced motion).
  */
 const STEER_DT=.1;
 type Look={a:string;b:string;pattern:number;shape:[number,number,number];size:[number,number]};
@@ -114,13 +121,18 @@ function creatureGeometry(phone:boolean){
  g.setAttribute('aKind',new T.Float32BufferAttribute(p.kind,1));g.setAttribute('aBend',new T.Float32BufferAttribute(p.bend,1));g.computeVertexNormals();
  return g;
 }
-type Fish={x:number;z:number;vx:number;vz:number;heading:number;phase:number;scale:number;swim:number;alpha:number;school:number;slot:{x:number;z:number};panic:number;shape:[number,number,number]};
+type Fish={x:number;z:number;vx:number;vz:number;heading:number;phase:number;scale:number;swim:number;alpha:number;school:number;slot:{x:number;z:number};panic:number;shape:[number,number,number];roll?:number};
+/** A tiny reef fish living on one coral head: where it hovers now, where it darts to, and the dart clock. */
+type Darter={x:number;y:number;z:number;fx:number;fy:number;fz:number;tx:number;ty:number;tz:number;t:number;dur:number;wait:number;heading:number;phase:number;scale:number;home:number;alpha:number};
 type Leader={x:number;z:number;vx:number;vz:number;tx:number;tz:number;speed:number;panic:number};
 type Crab={x:number;z:number;heading:number;side:number;walk:number;wait:number;phase:number};
 type Glider={kind:number;on:boolean;wait:number;x:number;z:number;vx:number;vz:number;phase:number;len:number;y:number;t:number;life:number};
 
+/** Readability (Oct 14 2026 polish): shore fish drawn this much bigger than their LOOKS size. */
+export const FISH_READ_SCALE={desktop:1.15,phone:1.3};
 export function createFishSchools(scene:T.Scene,phone=false){
- const SCHOOLS=3,PER=phone?5:7,CRUISERS=phone?3:4,CRABS=2,GLIDERS=1,FISH=SCHOOLS*PER+CRUISERS,COUNT=FISH+CRABS+GLIDERS;
+ const SCHOOLS=3,PER=phone?5:7,CRUISERS=phone?3:4,CRABS=2,GLIDERS=1,DARTERS=phone?3:5,FISH=SCHOOLS*PER+CRUISERS,DART0=FISH+CRABS+GLIDERS,COUNT=DART0+DARTERS;
+ const READ=phone?FISH_READ_SCALE.phone:FISH_READ_SCALE.desktop;
  const geometry=creatureGeometry(phone);
  const motion=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);motion.setUsage(T.DynamicDrawUsage);geometry.setAttribute('iMotion',motion);
  const colA=new T.InstancedBufferAttribute(new Float32Array(COUNT*3),3),colB=new T.InstancedBufferAttribute(new Float32Array(COUNT*4),4);geometry.setAttribute('iColA',colA);geometry.setAttribute('iColB',colB);
@@ -128,11 +140,14 @@ export function createFishSchools(scene:T.Scene,phone=false){
  const uShadow={value:1};
  material.onBeforeCompile=sh=>patchUnderwater(sh,{uniforms:{uShadow},
   vertexHead:'attribute vec4 iMotion;attribute vec3 iColA;attribute vec4 iColB;attribute float aKind,aBend;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  // iMotion: phase, alpha, kind + 0.45 × swim strength (0..1, polish: the undulation follows the speed), shadow drop.
   vertexBody:/* glsl */`vLocal=position;vShadow=step(8.5,aKind);vColA=iColA;vColB=iColB;vAlpha=iMotion.y;
-   if(aKind<8.5&&abs(aKind-iMotion.z)>.5)transformed=vec3(0.);
+   float uwKind=floor(iMotion.z+.01),uwAmp=fract(iMotion.z+.01)/.45;
+   if(aKind<8.5&&abs(aKind-uwKind)>.5)transformed=vec3(0.);
    else if(vShadow>.5)transformed.y-=iMotion.w;
    else{float ph=iMotion.x;
-    if(aKind<.5)transformed.x+=sin(ph-position.z*6.)*.09*aBend;
+    // Tail-driven S-curve: the wave runs head to tail, small at the head, growing to the tail; stronger when swimming fast.
+    if(aKind<.5)transformed.x+=sin(ph-position.z*6.)*(.085*aBend+.012)*(.55+.9*uwAmp);
     else if(aKind<1.5){float s=sin(ph+position.z*40.);transformed.y+=aBend*.03*max(0.,s);transformed.z+=aBend*.025*cos(ph+position.z*40.);}
     else if(aKind<2.5)transformed.y+=sin(ph-position.z*2.5)*.17*aBend;
     else{transformed.y+=sin(ph+position.z*4.)*.08*aBend;transformed.z+=cos(ph+position.z*4.)*.07*aBend;}}`,
@@ -156,7 +171,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
   // school down between the coral is bluer and fainter than one near the surface.
   absorb:'uUwFish',
  });
- material.customProgramCacheKey=()=>'fishing-sea-life-v3'+(phone?'p':'');
+ material.customProgramCacheKey=()=>'fishing-sea-life-v4'+(phone?'p':'');
  const mesh=new T.InstancedMesh(geometry,material,COUNT);mesh.name='fishing-ambient-fish';mesh.renderOrder=.6;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};scene.add(mesh);
  const fish:Fish[]=[],leaders:Leader[]=[],crabs:Crab[]=[],glider:Glider={kind:KIND.ray,on:false,wait:3,x:0,z:0,vx:0,vz:0,phase:0,len:1,y:0,t:0,life:1},dummy=new T.Object3D();
  // viewDepth (Oct 13 2026, farther casts): how far out schools and cruisers roam, in metres (default 11, the old fixed
@@ -168,6 +183,8 @@ export function createFishSchools(scene:T.Scene,phone=false){
  const bigs:Big[]=[0,1].map(i=>({on:false,wait:1.5+i*5,x:0,z:0,vx:0,vz:0,t:0,life:1,y:5,len:2,phase:0}));
  // Anemones in view (underwater.ts `homes`): one or two cruisers become a clownfish pair living in the first one.
  let homes:{x:number;y:number;z:number}[]=[];const homeOf=new Map<number,{x:number;y:number;z:number}>();
+ // Darters (polish): their coral heads (reef pieces in view, tops under the surface) and whether the extra life is on.
+ let perches:{x:number;y:number;z:number}[]=[],lifeOn=true;const darters:Darter[]=[];
  const inView=(x:number,z:number)=>{const a=(x-cx)*ux+(z-cz)*uz,b=(x-cx)*uz-(z-cz)*ux;return a>0&&a<viewDepth&&Math.abs(b)<wide*(.5+a/viewDepth*.5);};
  const inWater=(x:number,z:number,min=2.5,max=viewDepth*1.55)=>{const d=water(x,z);return d>min&&d<max&&inView(x,z);};
  const pick=(min=3,max=viewDepth*1.55)=>{for(let i=0;i<60;i++){const a=2+Math.random()*(viewDepth-2.5),b=(Math.random()*2-1)*wide*(.5+a/viewDepth*.5),x=cx+ux*a+uz*b,z=cz+uz*a-ux*b;if(inWater(x,z,min,max))return {x,z};}return {x:cx+ux*6,z:cz+uz*6};};
@@ -182,7 +199,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
     const u=(i+.5)/(SCHOOLS*PER),h=(u*2-1)*.85,rr=Math.sqrt(1-h*h)*(.8+Math.random()*.5);
     fish.push({x:c.x,z:c.z,vx:0,vz:0,heading:0,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:.8+Math.random()*.5,alpha:1,school:0,slot:{x:rr,z:h},panic:Math.random()*6.28,shape:look.shape});}
    for(let i=0;i<CRUISERS;i++){const look2=LOOKS[theme.deep!.big[i%2]]??LOOKS.tuna;setColors(fish.length,look2);fish.push({x:0,z:0,vx:0,vz:0,heading:0,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look2.size[0],look2.size[1],Math.random()),swim:5,alpha:0,school:-1,slot:{x:0,z:0},panic:0,shape:look2.shape});}
-   for(let i=0;i<CRABS;i++)setColors(FISH+i,null);
+   for(let i=0;i<CRABS;i++)setColors(FISH+i,null);darters.length=0;for(let i=0;i<DARTERS;i++)setColors(DART0+i,null);
    bigs.forEach((b,i)=>{b.on=false;b.wait=1.5+i*6+Math.random()*3;});
    setColors(FISH+CRABS,null,6);glider.on=false;glider.wait=4+Math.random()*5;return;}
   // Depth layers (Oct 14 2026): one school near the surface, one mid-water, one down among the coral (each clamped to the
@@ -190,17 +207,22 @@ export function createFishSchools(scene:T.Scene,phone=false){
   for(let s=0;s<SCHOOLS;s++){const p=pick(3.5),t=pick(3.5),look=LOOKS[cast.schools[s]]??LOOKS.sardine,swim=[.35,.9,1.7][s]+Math.random()*.4;leaders.push({x:p.x,z:p.z,vx:0,vz:0,tx:t.x,tz:t.z,speed:.8+Math.random()*.5,panic:0});
    for(let i=0;i<PER;i++){const row=Math.floor(i/2),side=i%2?1:-1,slot={x:side*(.35+row*.18)+(Math.random()-.5)*.2,z:row*.55+(Math.random()-.5)*.2};
     setColors(fish.length,look);
-    fish.push({x:p.x+slot.x,z:p.z+slot.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim:swim+(Math.random()-.5)*.15,alpha:1,school:s,slot,panic:0,shape:look.shape});}}
+    fish.push({x:p.x+slot.x,z:p.z+slot.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random())*READ,swim:swim+(Math.random()-.5)*.15,alpha:1,school:s,slot,panic:0,shape:look.shape});}}
   for(let i=0;i<CRUISERS;i++){const home=homes.length&&i<(phone?1:2)?homes[0]:null,p=home?{x:home.x+(Math.random()-.5)*.5,z:home.z+(Math.random()-.5)*.5}:pick(5);
    const look=LOOKS[home?'clown':cast.cruisers[i%cast.cruisers.length]]??LOOKS.sardine;setColors(fish.length,look);
    // A clownfish hovers just over its anemone's tentacles (swim depth from the surface).
    const swim=home?Math.max(.18,UW_SURFACE-home.y-.12):.5+Math.random()*1.4;if(home)homeOf.set(SCHOOLS+i,home);
-   fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random()),swim,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
+   fish.push({x:p.x,z:p.z,vx:0,vz:0,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:T.MathUtils.lerp(look.size[0],look.size[1],Math.random())*READ,swim,alpha:1,school:-1,slot:{x:0,z:0},panic:0,shape:look.shape});
    leaders.push({x:p.x,z:p.z,vx:0,vz:0,...(()=>{const t=home?p:pick(5);return {tx:t.x,tz:t.z};})(),speed:home?.22:.45+Math.random()*.2,panic:0});}
   // Crabs on the sand just under the waterline, in view.
   for(let i=0;i<CRABS;i++){let p={x:cx+ux*2,z:cz+uz*2};for(let k=0;k<80;k++){const a=.5+Math.random()*7,b=(Math.random()*2-1)*wide*.8,x=cx+ux*a+uz*b,z=cz+uz*a-ux*b,d=water(x,z);if(d>.5&&d<2.4){p={x,z};break;}}
    setColors(FISH+i,null);crabs.push({x:p.x,z:p.z,heading:Math.random()*6.28,side:Math.random()<.5?-1:1,walk:0,wait:.5+Math.random()*2,phase:Math.random()*6});}
   setColors(FISH+CRABS,null,6);glider.on=false;glider.wait=2+Math.random()*4;
+  // Darters: tiny bright reef fish, each on a coral head in view (the theme's second school look, small).
+  darters.length=0;const ok=perches.map((p,j)=>j).filter(j=>inView(perches[j].x,perches[j].z)&&perches[j].y<UW_SURFACE-.25);
+  for(let i=0;i<DARTERS&&ok.length;i++){const h=ok[Math.floor(Math.random()*ok.length)],p=perches[h],look=LOOKS[cast.schools[(i+1)%3]]??LOOKS.damsel;setColors(DART0+i,look);
+   darters.push({x:p.x,y:p.y+.12,z:p.z,fx:p.x,fy:p.y+.12,fz:p.z,tx:p.x,ty:p.y+.12,tz:p.z,t:1,dur:.4,wait:Math.random()*2,heading:Math.random()*6.28,phase:Math.random()*6.28,scale:Math.min(.26,look.size[0]*.7)*READ,home:h,alpha:0});}
+  for(let i=darters.length;i<DARTERS;i++)setColors(DART0+i,null);
  }
  function steerAll(){
   // Leaders wander between targets in water; members hold their slot behind the leader (so a school turns together).
@@ -249,7 +271,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
    const x=ballX+Math.cos(a)*r,z=ballZ+Math.sin(a)*r,y=ballY+f.slot.z*spread+Math.sin(ballSpin*1.3+f.panic)*.08;
    // Swims along the orbit (tangent), tail beating.
    f.heading=Math.atan2(-Math.sin(a),Math.cos(a));f.x=x;f.z=z;
-   write(i,x,y,z,f.heading,f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],ballSpin*9+i,f.alpha*fe,KIND.fish,0);}
+   write(i,x,y,z,f.heading,f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],ballSpin*9+i,f.alpha*fe,KIND.fish,0,0,(Math.sin(a*2+f.panic)*.18)*(1+ballPanic),.7+ballPanic*.3);}
   // Big silhouettes: cross the view far below, from outside one side to outside the other, fading at both ends.
   for(let k=0;k<CRUISERS;k++){const i=SCHOOLS*PER+k,f=fish[i];
    if(k>=bigs.length){write(i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);continue;}
@@ -258,7 +280,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
      b.on=true;b.t=0;b.x=cx+ux*a+uz*b0;b.z=cz+uz*a-ux*b0;b.vx=uz*side*sp;b.vz=-ux*side*sp;b.life=len/sp;b.y=4.2+Math.random()*2;b.len=f.scale;}}
    if(b.on){b.t+=step;b.x+=b.vx*step;b.z+=b.vz*step;b.phase+=step*3;if(b.t>=b.life){b.on=false;b.wait=6+Math.random()*10;}}
    const k2=b.on?Math.max(0,Math.min(1,b.t/3,(b.life-b.t)/3)):0;
-   if(k2>0)write(i,b.x,UW_SURFACE-b.y,b.z,Math.atan2(b.vx,b.vz),f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],b.phase,fe*k2*.6,KIND.fish,0);
+   if(k2>0)write(i,b.x,UW_SURFACE-b.y,b.z,Math.atan2(b.vx,b.vz),f.scale*f.shape[0],f.scale*f.shape[1],f.scale*f.shape[2],b.phase,fe*k2*.6,KIND.fish,0,Math.sin(b.phase*.21)*.04,Math.sin(b.phase*.13)*.08,.35);
    else write(i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);}
   for(let i=0;i<CRABS;i++)write(FISH+i,0,-50,0,0,0,0,0,0,0,KIND.crab,0);
   // The glider: a manta (or turtle) gliding across far down.
@@ -267,20 +289,42 @@ export function createFishSchools(scene:T.Scene,phone=false){
   if(glider.on){glider.t+=step;glider.x+=glider.vx*step;glider.z+=glider.vz*step;glider.phase+=step*(glider.kind===KIND.ray?1.6:2);if(glider.t>=glider.life){glider.on=false;glider.wait=10+Math.random()*12;}}
   if(glider.on){const k=Math.max(0,Math.min(1,glider.t/3,(glider.life-glider.t)/3));write(gi,glider.x,UW_SURFACE-glider.y,glider.z,Math.atan2(glider.vx,glider.vz),glider.len,glider.len,glider.len,glider.phase,fade*k*.85,glider.kind,0,glider.kind===KIND.ray?Math.sin(glider.phase)*.05:0);}
   else write(gi,0,-50,0,0,0,0,0,0,0,KIND.ray,0);
+  hideDarters();
   mesh.instanceMatrix.needsUpdate=true;motion.needsUpdate=true;
  }
  const arr=motion.array as Float32Array;
- const write=(i:number,x:number,y:number,z:number,heading:number,sx:number,sy:number,sz:number,phase:number,alpha:number,kind:number,dropLocal:number,pitch=0)=>{
-  dummy.position.set(x,y,z);dummy.rotation.set(pitch,heading+Math.PI,0,'YXZ');dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
-  arr[i*4]=phase;arr[i*4+1]=alpha;arr[i*4+2]=kind;arr[i*4+3]=dropLocal;
+ const write=(i:number,x:number,y:number,z:number,heading:number,sx:number,sy:number,sz:number,phase:number,alpha:number,kind:number,dropLocal:number,pitch=0,roll=0,amp=.5)=>{
+  dummy.position.set(x,y,z);dummy.rotation.set(pitch,heading+Math.PI,roll,'YXZ');dummy.scale.set(sx,sy,sz);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  arr[i*4]=phase;arr[i*4+1]=alpha;arr[i*4+2]=kind+.45*Math.max(0,Math.min(1,amp));arr[i*4+3]=dropLocal;
  };
+ const hideDarters=()=>{for(let i=0;i<DARTERS;i++)write(DART0+i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);};
+ /** Darters (shore mode, per rendered frame): hover with a little bob, then a quick eased dart to a new perch on the same coral head
+  *  (now and then to a neighbouring head); they fade out when the extra life is off. */
+ function frameDarters(step:number,fe:number){
+  const ok=perches.length;
+  for(let i=0;i<DARTERS;i++){const d=darters[i];if(!d){write(DART0+i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);continue;}
+   d.alpha=T.MathUtils.clamp(d.alpha+(lifeOn?1:-1)*step/.6,0,1);if(!lifeOn&&step===0)d.alpha=0;
+   if(d.alpha<=0){write(DART0+i,0,-50,0,0,0,0,0,0,0,KIND.fish,0);continue;}
+   if(d.t<1){d.t=Math.min(1,d.t+step/d.dur);}else{d.wait-=step;if(d.wait<=0&&ok){let p=perches[d.home];
+     if(Math.random()<.25){for(let k=0;k<6;k++){const j=Math.floor(Math.random()*ok),q=perches[j];if(Math.hypot(q.x-p.x,q.z-p.z)<2.5&&inView(q.x,q.z)&&q.y<UW_SURFACE-.25){d.home=j;p=q;break;}}}
+     const a=Math.random()*6.28,r=.15+Math.random()*.35;d.fx=d.x;d.fy=d.y;d.fz=d.z;d.tx=p.x+Math.cos(a)*r;d.tz=p.z+Math.sin(a)*r;d.ty=Math.min(UW_SURFACE-.15,p.y+.08+Math.random()*.3);
+     d.t=0;d.dur=.25+Math.random()*.25;d.wait=.8+Math.random()*2.6;}}
+   const e=1-Math.pow(1-d.t,3),px=d.x,pz=d.z;d.x=d.fx+(d.tx-d.fx)*e;d.y=d.fy+(d.ty-d.fy)*e;d.z=d.fz+(d.tz-d.fz)*e;
+   if(Math.hypot(d.x-px,d.z-pz)>.002)d.heading=Math.atan2(d.x-px,d.z-pz);
+   const darting=d.t<1;d.phase+=step*(darting?28:7);const bob=Math.sin(d.phase*.15)*.015;
+   const seabed=UW_SURFACE-uwDepthAt(water(d.x,d.z)),sy=d.scale*1.05;
+   write(DART0+i,d.x,d.y+bob,d.z,d.heading,d.scale*.9,sy,d.scale,d.phase,d.alpha*fe,KIND.fish,(d.y+bob-seabed)/sy,0,0,darting?1:.25);}
+ }
  return {mesh,
   /** Start in the water in front of the angler at `stand`, casting along unit `dir`; `distance` is the shore field (m, + at sea);
    *  `wide` is the half-width of the visible water (smaller on portrait phones); `spotTheme` picks the species (underwater.ts REEF_THEMES),
    *  `homesIn` are the anemones a clownfish pair lives in.
    *  `viewDepthIn` (Oct 13 2026, farther casts): how far out schools and cruisers roam (the spot's real cast distance
    *  plus a margin), so they still turn around a float cast much farther than the old fixed 11 m. */
-  begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotTheme:ReefTheme=reefTheme({id:''}),homesIn:{x:number;y:number;z:number}[]=[],viewDepthIn=11){
+  begin(stand:{x:number;z:number},dir:{x:number;z:number},distance:((x:number,z:number)=>number)|null,_surfaceY:number,halfWidth=5,spotTheme:ReefTheme=reefTheme({id:''}),homesIn:{x:number;y:number;z:number}[]=[],viewDepthIn=11,
+   /** Reef pieces (base on the seabed, top): the darters' coral heads (Oct 14 2026 polish). */
+   piecesIn:{x:number;y:number;z:number;top:number}[]=[]){
+   perches=piecesIn.filter(p=>p.top-p.y>.12).map(p=>({x:p.x,y:p.top,z:p.z}));
    water=distance??(()=>10);cx=stand.x;cz=stand.z;ux=dir.x;uz=dir.z;wide=halfWidth;theme=spotTheme;homes=homesIn;viewDepth=viewDepthIn;
    deep=!!spotTheme.deep;uShadow.value=deep?0:1;bait=null;
    // A new session fades in from zero (the fish rise out of the haze below, see frame()), never pops in at full strength.
@@ -296,6 +340,8 @@ export function createFishSchools(scene:T.Scene,phone=false){
    for(const f of fish){const dx=f.x-x,dz=f.z-z,d=Math.hypot(dx,dz);if(d>7*strength)continue;const k=(1-d/(7*strength))*3.2*strength;f.vx+=dx/(d||1)*k;f.vz+=dz/(d||1)*k;f.panic=1;}
    for(const l of leaders){const dx=l.x-x,dz=l.z-z,d=Math.hypot(dx,dz);if(d<8*strength){l.panic=1;const ux=dx/(d||1),uz=dz/(d||1);l.tx=l.x+ux*6;l.tz=l.z+uz*6;if(!inWater(l.tx,l.tz,3)){const t=pick(3.5);l.tx=t.x;l.tz=t.z;}}}
    for(const c of crabs)if(Math.hypot(c.x-x,c.z-z)<3*strength){c.walk=1.2;c.wait=0;}
+   // Darters near the splash duck down into their coral head.
+   for(const d of darters)if(Math.hypot(d.x-x,d.z-z)<3.5*strength){const p=perches[d.home];if(!p)continue;d.fx=d.x;d.fy=d.y;d.fz=d.z;d.tx=p.x+(Math.random()-.5)*.2;d.tz=p.z+(Math.random()-.5)*.2;d.ty=p.y-.05;d.t=0;d.dur=.22;d.wait=1.5+Math.random()*1.5;}
   },
   frame(dt:number,reduced:boolean,float:{x:number;z:number}|null){
    if(!mesh.visible)return;
@@ -307,12 +353,14 @@ export function createFishSchools(scene:T.Scene,phone=false){
    steer+=step;while(steer>=STEER_DT){steer-=STEER_DT;
     if(float)for(const f of fish){const dx=f.x-float.x,dz=f.z-float.z,d=Math.hypot(dx,dz);if(d<1.3){f.vx+=dx/(d||1)*.8;f.vz+=dz/(d||1)*.8;}}
     steerAll();}
-   for(let i=0;i<fish.length;i++){const f=fish[i];f.x+=f.vx*step;f.z+=f.vz*step;const sp=Math.hypot(f.vx,f.vz);
-    if(sp>.05){const h=Math.atan2(f.vx,f.vz);let dh=h-f.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));f.heading+=dh*Math.min(1,step*6);}
+   for(let i=0;i<fish.length;i++){const f=fish[i];f.x+=f.vx*step;f.z+=f.vz*step;const sp=Math.hypot(f.vx,f.vz);let turn=0;
+    if(sp>.05){const h=Math.atan2(f.vx,f.vz);let dh=h-f.heading;dh=Math.atan2(Math.sin(dh),Math.cos(dh));turn=dh*Math.min(1,step*6);f.heading+=turn;}
+    // Bank into the turn (eased, at most ~0.4 rad), like a fish leaning as it curves.
+    const rollT=step>0?T.MathUtils.clamp(-turn/step*.16,-.4,.4):0;f.roll=(f.roll??0)+(rollT-(f.roll??0))*Math.min(1,step*5);
     f.phase+=step*(4+sp*7);
     const d=water(f.x,f.z),depth=uwDepthAt(d),a=f.alpha*fade*T.MathUtils.smoothstep(d,1.6,2.6)*(1-T.MathUtils.smoothstep(d,14,19));
     const sy=f.scale*f.shape[1],floor=Math.max(.18,depth-.12-.2*sy),swim=Math.min(f.swim,floor)+(floor-Math.min(f.swim,floor))*riseIn,y=UW_SURFACE-swim-i*.0004;
-    write(i,f.x,y,f.z,f.heading,f.scale*f.shape[0],sy,f.scale*f.shape[2],f.phase,a,KIND.fish,(y-(UW_SURFACE-depth))/sy);}
+    write(i,f.x,y,f.z,f.heading,f.scale*f.shape[0],sy,f.scale*f.shape[2],f.phase,a,KIND.fish,(y-(UW_SURFACE-depth))/sy,0,f.roll??0,Math.min(1,sp/1.6));}
    for(let i=0;i<crabs.length;i++){const c=crabs[i];if(c.walk>0&&step>0){const sx=Math.cos(c.heading)*c.side,sz=-Math.sin(c.heading)*c.side;c.x+=sx*.45*step;c.z+=sz*.45*step;c.phase+=step*16;}
     const d=water(c.x,c.z),y=UW_SURFACE-uwDepthAt(d);write(FISH+i,c.x,y,c.z,c.heading,.85,.85,.85,c.phase,fade*T.MathUtils.smoothstep(d,.25,.55),KIND.crab,.004);}
    const gi=FISH+CRABS;
@@ -324,8 +372,11 @@ export function createFishSchools(scene:T.Scene,phone=false){
    if(glider.on){const d=water(glider.x,glider.z),depth=uwDepthAt(d),y=UW_SURFACE-Math.max(.25,depth-glider.y),k=Math.min(1,glider.t/2,(glider.life-glider.t)/2);
     write(gi,glider.x,y,glider.z,Math.atan2(glider.vx,glider.vz),glider.len,glider.len,glider.len,glider.phase,fade*Math.max(0,k)*(1-T.MathUtils.smoothstep(d,14,19)),glider.kind,(y-(UW_SURFACE-depth))/glider.len,glider.kind===KIND.ray?Math.sin(glider.phase)*.05:0);}
    else write(gi,0,-50,0,0,0,0,0,0,0,KIND.ray,0);
+   frameDarters(step,fade);
    mesh.instanceMatrix.needsUpdate=true;motion.needsUpdate=true;
   },
+  /** fishingLife: the darting reef fish only on the cool tiers (they fade out, never pop). */
+  setLife(on:boolean){lifeOn=on;},
   dispose(){mesh.removeFromParent();mesh.dispose();geometry.dispose();material.dispose();},
  };
 }
