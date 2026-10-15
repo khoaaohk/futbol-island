@@ -127,6 +127,24 @@ for(const s of spots.filter(s=>s.parachute)){assert(!flightBlocked(s.x,s.z),`${s
  const buoy=spots.find(s=>s.buoy);assert(los(buoy.x,.6,buoy.z),'the whale-shark buoy can be seen from the summit lookout');}
 {const roof=spots.find(s=>s.id==='summit-hut-roof'),h=SB.SUMMIT_HUTS.find(h=>h.id==='sunset');assert(Math.hypot(roof.x-h.x,roof.z-h.z)<.01&&Math.abs(roof.y-(SB.hutRoofTip(h)+S.SUMMIT_VISUAL_DROP))<.02,'the roof ball sits on the sunset hut\'s roof tip');}
 console.log('PASS fly: the buoy, the roof ball and the sky ball are in open flight space; the buoy is in sight of the lookout; the roof ball sits on its hut');
+// Hut roofs (Oct 15 2026, user: "it's not possible to land on this hut"): every hut's straw cone is a landable, walkable roof.
+{const {createRooftopTravel}=load('lib/town/rooftopTravel.ts'),rt=createRooftopTravel([],obstacles,{x:600,z:100});
+ const K=SB.HUT_CONE/SB.HUT_CONE_RADIUS;
+ for(const h of SB.SUMMIT_HUTS){const apex=SB.hutRoofTip(h)+S.SUMMIT_VISUAL_DROP,steps=SB.hutRoofSteps(h);
+  const drum=obstacles.find(o=>Math.hypot(o.x-h.x,o.z-h.z)<.01&&o.cornerRadius);assert(drum&&drum.w===steps.at(-1).w&&drum.d===steps.at(-1).d,`${h.id}: the outer roof step shares the drum collider's footprint`);
+  assert(steps[0].w>=1&&Math.abs(steps[0].height-apex)<=.1,`${h.id}: a landing disc at the apex`);
+  for(let i=1;i<steps.length;i++)assert(steps[i-1].height-steps[i].height<=.35&&steps[i].height<steps[i-1].height,`${h.id}: roof steps ≤ .35 m apart, a walk down the cone`);
+  for(const r of [0,.3,.7,1.1,1.5,1.9,2]){const f=rt.surface(h.x+r,h.z,Infinity),cone=apex-K*r;assert(f>=cone-.15&&f<=cone+.15,`${h.id}: the roof floor follows the cone at ${r} m (${f.toFixed(2)} vs ${cone.toFixed(2)})`);}
+  assert(rt.canLand(h.x,h.z,Infinity)&&Math.abs(rt.surface(h.x,h.z,Infinity)-apex)<.1,`${h.id}: the jetpack can land on the apex`);
+  for(const [dx,dz] of [[0,0],[1.5,.5],[-2.5,1],[.3,-2.8]]){const at=rt.findLanding(h.x+dx,h.z+dz);assert(at&&Math.hypot(at.x-h.x,at.z-h.z)<=SB.HUT_LAND_RADIUS,`${h.id}: findLanding from above the roof (${dx}, ${dz}) lands on its apex`);}
+  // From the ground the drum is a wall: standing beside it, the floor is the grass, and the roof is not a step up.
+  const gx=h.x+SB.SUMMIT_HUT_RADIUS+.6,gz=h.z;assert(rt.surface(gx,gz)<apex-2,`${h.id}: beside the hut is the grass`);
+  rt.reset(h.x,h.z,rt.surface(h.x,h.z,Infinity));const p={x:h.x,z:h.z},v={x:0,z:0};for(let i=0;i<20;i++)rt.update(1/30,p,v,{x:0,z:0,sprint:false},'walk');
+  assert(Math.abs(rt.state.height-(apex-.08))<.02&&!rt.state.falling,`${h.id}: standing on the apex holds`);
+  const p2={x:h.x,z:h.z},v2={x:0,z:0};let fell=false;for(let i=0;i<150&&!fell;i++){rt.update(1/30,p2,v2,{x:1,z:0,sprint:false},'walk');fell=rt.state.falling||rt.jump.active||rt.state.height<apex-2;}
+  assert(fell||Math.hypot(p2.x-h.x,p2.z-h.z)>SB.HUT_DRUM_W/2,`${h.id}: walking off the roof leaves it`);}
+ const roof=spots.find(s=>s.id==='summit-hut-roof'),sunset=SB.SUMMIT_HUTS.find(h=>h.id==='sunset');assert(roof.perch&&Math.abs(rt.surface(sunset.x,sunset.z,Infinity)-roof.y)<.1,'the roof ball sits at the apex floor (reachable by landing on it)');}
+console.log('PASS hut roofs: every hut has a landable apex disc and a stepped walkable cone, findLanding over a hut picks its apex, the roof ball is on the floor');
 
 // ---- 6. Mechanics on the real runtime (a fresh module graph per scenario: coin progress is module state).
 async function hunt(){const b=browser();const T2=require('three');const L2=createLoader({three:T2});const got=[],near=[];const h=L2('lib/graphics/coinHunt.ts').createCoinHunt(new T2.Scene(),s=>got.push(s.id),t=>near.push(t));return {h,got,near,L:L2,b};}
@@ -157,6 +175,8 @@ async function hunt(){const b=browser();const T2=require('three');const L2=creat
  // Parachute balls: the roof tip, the buoy and the sky ball.
  {const {h,got}=await hunt();for(const s of spots.filter(s=>s.parachute)){h.update(.1,{x:s.x+1,y:s.y+1,z:s.z},true,false,null,false,true);assert(!got.includes(s.id),`${s.id}: not without the parachute`);
    h.update(.1,{x:s.x+1,y:s.y+1,z:s.z},true,false,null,true,true);assert(got.includes(s.id),`${s.id}: an open parachute collects it`);}
+  {const {h:h2,got:g2}=await hunt(),s=spots.find(s=>s.perch);assert.deepEqual(spots.filter(s=>s.perch).map(s=>s.id),['summit-hut-roof']);
+   for(let i=0;i<8;i++)h2.update(.1,{x:s.x+.4,y:s.y-.08,z:s.z},true,false);assert(g2.includes(s.id),'standing on the hut roof (landed, not parachuting) collects the roof ball');h2.dispose();}
   const buoys=h.buoyScenery;assert(buoys.children.length===1,'every buoy (Coral Cay\'s and the whale-shark one) is still one packed draw');h.dispose();}
  // Heat: no colliders for the new balls, nothing animates far away.
  {const {h}=await hunt();const props=[],obs=[];h.connectCollisions(obs,props);const ids=new Set(SB.SUMMIT_BALL_IDS);assert(!props.some(p=>spots.some(s=>(s.loose||s.reveal)&&s.x===p.x&&Math.abs(s.z-p.z)<.3)),'loose and event balls add no colliders');assert.equal(props.filter(p=>spots.some(s=>s.x===p.x&&s.z===p.z)).length,1,'only the landing crate is solid');

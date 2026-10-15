@@ -9,6 +9,7 @@ import {TRAVEL_MODES,type TravelMode} from './travelModes';
 import {createRoofJump,planRoofJump,planRoofLaunch} from './rooftopJump';
 import {nearSummit,createHillAssist,climbCoast} from './rideSlope';
 import {createSlopeHop} from './slopeHop';
+import {SUMMIT_HUTS,HUT_CONE_RADIUS,HUT_LAND_RADIUS,hutRoofSteps} from './summitBalls';
 /** Landing search bounds (findLanding): the arc aimed at the nearest land is ±LANDING_ARC m wide and LANDING_AIM_DEPTH rings
  *  deep; no ring ever does more than LANDING_RING_CAP canLand checks. */
 export const LANDING_ARC=48,LANDING_AIM_DEPTH=40,LANDING_RING_CAP=64;
@@ -19,10 +20,14 @@ export const RIDE_STAIR_RADIUS=.4;
 export const NARROW_STAIR=2.4;
 /** overhead: a canopy over open ground (canopySurfaces.ts): a floor only from above (CANOPY_STEP), never a wall; steep: a pitched
  *  roof over open ground, never a floor: a landing from above is refused there (moved beside it), walking under is untouched. */
-export type Roof=Obstacle&{height:number;overhead?:boolean;steep?:boolean};
+export type Roof=Obstacle&{height:number;overhead?:boolean;steep?:boolean;/** a Summit Isle hut's roof step: the hut's centre */hut?:{x:number;z:number}};
+/** Summit Isle's hut roofs (summitBalls.ts hutRoofSteps, Oct 15 2026): stepped discs down each straw cone, built once. The outer
+ *  step shares the drum collider's footprint, so the drum is that roof's building. */
+const summitHutRoofs=():Roof[]=>SUMMIT_HUTS.flatMap(h=>hutRoofSteps(h).map(s=>({...s,hut:{x:h.x,z:h.z}})));
 /** A canopy counts as the floor for a rider no more than this far below it (stepping onto one from a roof beside it). */
 export const CANOPY_STEP=.4;
 export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:number;z:number},roofProps:(Obstacle&{floor:number;top:number;noLanding?:boolean})[]=[],extraSurface:(x:number,z:number)=>number=()=>0,landingExclusions:Obstacle[]=[],canopies:Roof[]=[]){
+ roofs=[...roofs,...summitHutRoofs()];
  // air / landImpact: a hop off one of Summit Isle's crests (slopeHop.ts): airborne now; the touchdown's closing speed (m/s, on that
  // tick only); lastAir: how long the last hop lasted (s).
  const state={height:fieldSurfaceHeight(start.x,start.z),verticalSpeed:0,falling:false,hangTime:0,dropStart:0,recovery:0,impact:false,air:false,landImpact:0,lastAir:0};
@@ -56,6 +61,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // A pitched roof over open ground at or below `from` (from the sky: any): the rider would slide off, so not here.
   if(from>-Infinity)for(const r of steepGrid.query(x,z,0))if(r.height<=from+CANOPY_STEP&&insideObstacle(x,z,r,.3))return false;
   const roof=roofAt(x,z,from);
+  // A hut's straw cone: the apex disc (where its roof ball sits) is the landing; the steps lower down are walked, not landed on.
+  if(roof?.hut)return Math.hypot(x-roof.hut.x,z-roof.hut.z)<=HUT_LAND_RADIUS;
   if(blocked(x,z,propGrid.query(x,z,1).filter(p=>p.noLanding&&p.w>0&&p.d>0),1))return false;
   if(blocked(x,z,goalBarriersAt(surface(x,z,from)),.8))return false;
   const clearance=roof?Math.min(.8,roof.w/4,roof.d/4):.8;
@@ -139,6 +146,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // A landable point is its own landing. Off-island decks and piers skip the inner rings below (they start near the
   // shore distance), which made a parachute over a pier retarget in a loop instead of settling where it already was.
   if(canLand(x,z,from))return {x,z};
+  // Over a Summit hut's roof: its apex (a steep straw cone, so the ring search below would only find the grass beside it).
+  for(const h of SUMMIT_HUTS)if(Math.abs(x-h.x)<=HUT_CONE_RADIUS&&Math.abs(z-h.z)<=HUT_CONE_RADIUS&&Math.hypot(x-h.x,z-h.z)<=HUT_CONE_RADIUS&&canLand(h.x,h.z,from))return {x:h.x,z:h.z};
   // distanceToLand covers both islands, the causeway, the sandbars and the registered decks (0 on land).
   const d=distanceToLand(x,z),startRadius=Math.max(0,Math.floor(d)-1),maxRadius=Math.max(360,FLIGHT_WATER_MARGIN+20);
   // Heat (code review Sep 29 2026, finding 2): full rings ≤3 m apart cost ~630 canLand checks per ring at 300 m. Far from land,

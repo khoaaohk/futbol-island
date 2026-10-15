@@ -53,7 +53,11 @@
     ".next-agent-8279/types/**/*.ts",
     ".next-agent-8277/types/**/*.ts",
     ".next-agent-8278/types/**/*.ts",
-    ".next-agent-8280/types/**/*.ts"
+    ".next-agent-8280/types/**/*.ts",
+    ".next-agent-8281/types/**/*.ts",
+    ".next-agent-8282/types/**/*.ts",
+    ".next-agent-8283/types/**/*.ts",
+    ".next-agent-8284/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

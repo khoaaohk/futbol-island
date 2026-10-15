@@ -13,7 +13,7 @@
 // lib/graphics/whaleShark.ts: the same one mesh). Each exposes its loops as RideFriend records; while one is ridden, this module
 // owns its position along the loop (`u`, metres) and the graphics only place the mesh there, so the rider and the animal never
 // drift apart. Heat: `scan` (the prompt's proximity test) runs at the water probe's rate (WATER_PROBE_HZ) and only while
-// swimming; `step` is a few scalars per frame and only while riding. No allocation after creation, no timer, no loop of its own.
+// swimming; `step` is a few scalars per frame and only while riding; `dartStep` likewise, only for the DART_TIME s after one. No allocation after creation, no timer, no loop of its own.
 import {SWIM_FAST_SPEED,WATER_PROBE_HZ} from './waterDepth';
 
 export type RideKind='manta'|'whale';
@@ -26,8 +26,12 @@ export type RideFriend={
  u:number;
  /** Drawn and swimming right now (its island is near, its heat tier keeps it). */
  readonly available:boolean;
- /** Held by a rider: the graphics module stops advancing `u`, places the mesh there (surfaced) and keeps it awake. */
+ /** Held by a rider: the graphics module stops advancing `u`, places the mesh there and keeps it awake. */
  ridden:boolean;
+ /** Its own loop speed (m/s) and, for the dart after a ride (DART_*), a multiplier on it (1 = its own pace), a sideways offset
+  *  from the loop (m, + = right of the heading) and the matching extra heading (rad, + = towards the right). The graphics module
+  *  advances `u` by speed × boost and places the mesh `bend` to the side; this module writes them only while darting. */
+ readonly speed:number;boost:number;bend:number;bendYaw:number;
 };
 /** The prompt's label (the existing store-enter-prompt style) and the one water action while riding. */
 export const RIDE_PROMPT='Hang on!';
@@ -53,6 +57,22 @@ export const RIDE_WAKE_STEP={manta:.2,whale:.24} as const;
 export const RIDE_WAKE={manta:1.7,whale:2.3} as const;
 /** The little dismount splash (ballEffects.splashDown size) and how much of the ride's speed the swimmer keeps (it glides out). */
 export const RIDE_DISMOUNT_SPLASH=.55,RIDE_DISMOUNT_CARRY=.35;
+/** The dart (Oct 15 2026, user: "when getting off the whale and ray, make them move away fast from the character"): on Let go or
+ *  the lap's end the animal shoots off along its loop for DART_TIME s: up to DART_MULT × its loop speed, never slower than the
+ *  ride it just gave (× DART_RIDE: the ride is already 4–7× its loop pace, so it pulls away rather than braking), held for
+ *  DART_HOLD s, then easing back to its own pace by DART_TIME. It bends DART_BEND m to the side the loop turns (away from the
+ *  swimmer's straight glide) and back, and leaves a DART_WAKE × bigger wake from the ring pool. The swimmer is never touched. */
+export const DART_TIME=3,DART_HOLD=1.1,DART_RISE=.3,DART_MULT=2.5,DART_RIDE=1.15,DART_WAKE=1.35;
+export const DART_BEND={manta:3,whale:4.5} as const;
+/** The dart's speed (m/s) `t` s after letting go, from `start` (the ride speed) up to `peak`, back down to `loop`. */
+export function dartSpeed(t:number,start:number,peak:number,loop:number){
+ if(t<=0)return start;if(t<DART_RISE)return start+(peak-start)*(t/DART_RISE);if(t<DART_HOLD)return peak;if(t>=DART_TIME)return loop;
+ const k=(t-DART_HOLD)/(DART_TIME-DART_HOLD);return peak+(loop-peak)*k*k*(3-2*k);
+}
+/** The sideways bend (fraction of DART_BEND) `t` s after letting go: out quickly, held, back onto the loop by DART_TIME. */
+export function dartBend(t:number){
+ if(t<=0||t>=DART_TIME)return 0;const a=Math.min(1,t/.7),b=t<1.8?1:1-(t-1.8)/(DART_TIME-1.8);return a*a*(3-2*a)*b*b*(3-2*b);
+}
 /** The proximity tick (s): the water probe's own rate. */
 export const RIDE_TICK=1/WATER_PROBE_HZ;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
@@ -77,13 +97,19 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
  const p={x:0,z:0,yaw:0};
  const state={near:null as RideFriend|null,nearDist:Infinity,riding:null as RideFriend|null,speed:0,travelled:0,
   /** The rider's place and heading (the grip point), the body roll, the time since the last wake. */
-  x:0,z:0,yaw:0,roll:0,turn:0,wake:0,acc:Infinity,laps:0};
+  x:0,z:0,yaw:0,roll:0,turn:0,wake:0,acc:Infinity,laps:0,
+  /** The dart after a ride (DART_*): the animal, the time since letting go, its start / peak speed, the side, the wake clock. */
+  dart:null as RideFriend|null,dartT:0,dartStart:0,dartPeak:0,dartSide:1,dartWake:0,darts:0};
  const events:RideEvents={grabbed:'',ended:'',kind:'',x:0,z:0,yaw:0,speed:0};
  const clear=()=>{events.grabbed='';events.ended='';};
+ function endDart(){const f=state.dart;if(!f)return;f.boost=1;f.bend=0;f.bendYaw=0;state.dart=null;state.dartT=0;}
  const grip=(f:RideFriend,u:number)=>{loopPoint(f.points,f.lengths,f.total,u,p);const g=RIDE_GRIP[f.kind];p.x+=Math.sin(p.yaw)*g;p.z+=Math.cos(p.yaw)*g;return p;};
  function end(reason:RideEnd){
   const f=state.riding;if(!f)return events;
   f.ridden=false;state.riding=null;state.near=null;state.nearDist=Infinity;state.acc=Infinity;
+  // The dart: the animal shoots off (not when it is gone: a hot tier or a map trip took it away).
+  if(reason!=='gone'&&f.available){endDart();state.dart=f;state.dartT=0;state.dartStart=state.speed;state.dartPeak=Math.max(DART_MULT*f.speed,state.speed*DART_RIDE);
+   state.dartSide=state.turn>=0?1:-1;state.dartWake=RIDE_WAKE_STEP[f.kind];state.darts++;f.boost=state.speed/(f.speed||1);}
   events.ended=reason;events.kind=f.kind;events.x=state.x;events.z=state.z;events.yaw=state.yaw;events.speed=state.speed;state.roll=0;return events;
  }
  return {state,events,
@@ -92,7 +118,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
    if(!swimming||state.riding){state.near=null;state.nearDist=Infinity;state.acc=Infinity;return state.near;}
    state.acc+=dt;if(state.acc<RIDE_TICK-1e-6)return state.near;state.acc=0;
    let best:RideFriend|null=null,bestD=Infinity;
-   for(const f of friends()){if(!f.available||f.ridden)continue;loopPoint(f.points,f.lengths,f.total,f.u,p);
+   for(const f of friends()){if(!f.available||f.ridden||f===state.dart)continue;/* not one darting off */loopPoint(f.points,f.lengths,f.total,f.u,p);
     const d=Math.hypot(p.x-x,p.z-z)-RIDE_BODY[f.kind];if(d<=RIDE_RANGE&&d<bestD){bestD=d;best=f;}}
    state.near=best;state.nearDist=best?Math.max(0,bestD):Infinity;return best;
   },
@@ -100,7 +126,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   anchor(f:RideFriend,out:{x:number;z:number;yaw:number}){return loopPoint(f.points,f.lengths,f.total,f.u,out);},
   /** "Hang on!": grab the near animal. `speed` is the swimmer's own (the animal eases up from it). */
   grab(speed:number){
-   clear();const f=state.near;if(!f||state.riding||!f.available)return events;
+   clear();const f=state.near;if(!f||state.riding||!f.available)return events;if(state.dart===f)endDart();
    f.ridden=true;state.riding=f;state.speed=Math.max(0,speed);state.travelled=0;state.wake=0;state.roll=0;state.turn=0;
    grip(f,f.u);state.x=p.x;state.z=p.z;state.yaw=p.yaw;events.grabbed=f.kind;events.kind=f.kind;return events;
   },
@@ -121,10 +147,24 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
    if(state.travelled>=f.total){state.laps++;return end('lap');}
    return events;
   },
+  /** One frame of the dart (only while one runs: the host checks `darting`). Writes the animal's boost and bend; the graphics
+   *  module moves it. A few scalars, no allocation. */
+  dartStep(dt:number){
+   const f=state.dart;if(!f)return;if(!f.available||f.ridden){endDart();return;}
+   dt=Math.max(0,Math.min(dt,.25));const t0=state.dartT,t=state.dartT=t0+dt;if(t>=DART_TIME){endDart();return;}
+   const speed=dartSpeed(t,state.dartStart,state.dartPeak,f.speed),B=DART_BEND[f.kind]*state.dartSide,bend=B*dartBend(t);
+   f.boost=speed/(f.speed||1);f.bendYaw=dt>0?Math.atan2((bend-B*dartBend(t0))/dt,speed):0;f.bend=bend;state.dartWake+=dt;
+  },
+  /** The dart's wake is due (bigger rings while it is still fast); writes where the animal is. */
+  dartWakeDue(out:{x:number;z:number;yaw:number}){
+   const f=state.dart;if(!f||state.dartWake<RIDE_WAKE_STEP[f.kind]||f.boost<1.5)return false;state.dartWake=0;
+   loopPoint(f.points,f.lengths,f.total,f.u,out);out.x+=Math.cos(out.yaw)*f.bend;out.z-=Math.sin(out.yaw)*f.bend;return true;
+  },
+  get darting(){return state.dart!==null;},
   /** The wake is due (the host spawns the pooled rings); resets its clock. */
   wakeDue(){const f=state.riding;if(!f||state.wake<RIDE_WAKE_STEP[f.kind])return false;state.wake=0;return true;},
   /** "Let go" (or anything that ends the swim: a map trip, the water state leaving the sea). */
-  letGo(reason:RideEnd='off'){clear();return end(reason);},
+  letGo(reason:RideEnd='off'){clear();const e=end(reason);if(reason==='gone')endDart();return e;},
   get riding(){return state.riding!==null;},
  };
 }

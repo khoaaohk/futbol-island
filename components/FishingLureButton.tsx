@@ -14,15 +14,17 @@ import {fishById} from '@/lib/town/fishing/fishCatalog';
 import {LEGEND_INFO,legendForSpot} from '@/lib/town/fishing/legendary';
 import {FISH_REQUEST_COINS} from '@/lib/economy';
 
-const HOOK='M14 3v10a4 4 0 0 1-8 0v-2l2 2 M14 3a2 2 0 1 0 0 .1';
-const Svg=({d,size=26}:{d:string;size?:number})=><svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
+/** Oct 15 2026 (user: "fix the lure icon to be more centered and make sure the size is similar to other action btns"): the hook's
+ *  bounding box is centred in the 24-box (eye top right at x 16.5, bend down to x 5.5, barb), drawn bold like components/Icon.tsx. */
+const HOOK='M16.5 5.2v8.3a5.3 5.3 0 0 1-10.6 0v-2.9 M5.9 12.4l-1.9-2 M5.9 12.4l1.9-2 M16.5 5.2a1.9 1.9 0 1 0 0-.1';
+const Svg=({d,size=26}:{d:string;size?:number})=><svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d}/></svg>;
 
 /** The round lure button (bottom right of the HUD; the island action size) and its panel above it. */
 export function FishingLureButton({className}:{className:string}){
  const log=useFishingLog();const [open,setOpen]=useState(false);
  const lure=log.lure?lureById(log.lure):undefined;
  return <>
-  <button type="button" className={`${className} ${styles.lure}`} data-fish-lure aria-label={lure?`Lure: ${lure.short}`:'Choose a lure'} title={lure?`Lure: ${lure.name}`:'Choose a lure'} aria-expanded={open} data-on={!!lure||undefined} style={lure?{'--lure':lure.color} as React.CSSProperties:undefined} onClick={()=>setOpen(v=>!v)}><Svg d={HOOK} size={28}/></button>{/* Oct 15 2026 (user): icon only, 28 px like the Fishbook button; the chosen lure shows as the button's tint, its name in the panel and the aria-label. */}
+  <button type="button" className={`${className} ${styles.lure}`} data-fish-lure aria-label={lure?`Lure: ${lure.short}`:'Choose a lure'} title={lure?`Lure: ${lure.name}`:'Choose a lure'} aria-expanded={open} data-on={!!lure||undefined} style={lure?{'--lure':lure.color} as React.CSSProperties:undefined} onClick={()=>setOpen(v=>!v)}><Svg d={HOOK} size={32}/></button>{/* Oct 15 2026 (user): icon only, 28 px like the Fishbook button; the chosen lure shows as the button's tint, its name in the panel and the aria-label. */}
   {open&&<section className={styles.panel} aria-label="Lures" data-lure-panel>
    <h3>Lures</h3><p className={styles.note}>A lure changes which kinds of animal come, never how rare they are. Pick one for your next cast.</p>
    <ul className={styles.lures}>

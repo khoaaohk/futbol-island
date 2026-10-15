@@ -41,7 +41,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** 3D scene hover (character, NPC, building, ferry under the cursor). Only a pointer that just moved: a held key moving the
    * camera sweeps a resting cursor's ray across the world. Off in flight (camera always drifts; flight is engine + music only). */
   function sceneHover(flying=false){if(flying||performance.now()-lastPointer>HOVER_INPUT_MS)return;ui('hover');}
-  const debug={unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,counts:{} as Record<string,number>};
+  const debug={unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,rush:false,counts:{} as Record<string,number>};
   function getContext(){
     if(disposed)return null;
     try{
@@ -60,7 +60,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** Heat pass 4 (user decision Sep 26 2026): the shared context suspends 2 s after nothing is audible (no music, one-shot, engine or
    * ride hum), so the audio thread sleeps; any input unlock, or a sound the game wants to play, resumes it. */
   const IDLE_SUSPEND_MS=2000;let musicAudible=false,idleSuspended=false,idleTimer:ReturnType<typeof setTimeout>|undefined;
-  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum;
+  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush;
   function scheduleIdle(){if(typeof setTimeout!=='function')return;if(idleTimer!==undefined)clearTimeout(idleTimer);idleTimer=setTimeout(checkIdle,IDLE_SUSPEND_MS);}
   function checkIdle(){idleTimer=undefined;if(disposed||!context||context.state!=='running')return;if(audible())return;idleSuspended=true;debug.idleSuspends++;void context.suspend().catch(()=>{});}
   function wakeIdle(){if(!idleSuspended||!context||hidden||muted||disposed)return;idleSuspended=false;if(context.state==='suspended')void context.resume().catch(()=>{});}
@@ -73,7 +73,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
     const c=context,g=master;
     if(on){
-      stopEngine();stopTravelHum();
+      stopEngine();stopTravelHum();stopRush();
       if(c&&g&&c.state==='running'){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+IDLE_FADE);}
       idleFadeTimer=setTimeout(()=>{idleFadeTimer=undefined;if(!idleFaded||!context)return;silence(true);if(context.state==='running'){idleSuspended=true;void context.suspend().catch(()=>{});}},IDLE_FADE*1000+100);
       return;
@@ -81,13 +81,14 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(!c||!g||hidden)return;
     idleSuspended=false;if(c.state==='suspended')void c.resume().catch(()=>{});
     const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(level(),t+WAKE_FADE);
+    resumeRush();
   }
   function unlock(){
     if(disposed||hidden||muted)return;
     const current=getContext();if(!current)return;
     debug.unlocked=true;debug.contextState=current.state;idleSuspended=false;
     if(current.state!=='running'&&current.state!=='closed')void current.resume().catch(()=>{});
-    if(!audible())scheduleIdle();
+    resumeRush();if(!audible())scheduleIdle();
   }
   function ready(key:string,interval:number){
     if(disposed||muted||idleFaded||volume===0||hidden||!context||!master)return false;
@@ -161,7 +162,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const pathCue=(event:Event)=>{const kind=(event as CustomEvent).detail;if(kind==='dock'||kind==='undock'||kind==='swipe-right'||kind==='swipe-left'||kind==='path-pop'||kind==='page')ui(kind);};
   document.addEventListener('fi2-path-cue',pathCue);
   // Island job actions (Sep 30 2026, lib/town/jobs/jobScene.ts 'fi2-job-cue'): one short voice per action, from the same tone/noise kit.
-  const jobCue=(event:Event):void=>{if(deferUntilAwake(()=>jobCue(event)))return;const d=(event as CustomEvent).detail as string|{cue:string;gain?:number};
+  const jobCue=(event:Event):void=>{if(rideCue(event))return;if(deferUntilAwake(()=>jobCue(event)))return;const d=(event as CustomEvent).detail as string|{cue:string;gain?:number};
     // Oct 15 2026 (user: "increase the sound if they crank it faster"): a cue may carry a gain (the fishing reel's ratchet sends 0.5…1.5 with the spin rate).
     const kind=typeof d==='string'?String(d):String(d?.cue),gain=typeof d==='object'&&d&&typeof d.gain==='number'?Math.max(.2,Math.min(2,d.gain)):1;if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:kind==='snip'?.06:kind.startsWith('splash')?.2:.1))return;
     switch(kind){
@@ -277,9 +278,56 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     else if(cue==='pop'){tone(520,1040,.10,.05,'sine');tone(1320,1560,.13,.03,'sine',.065);}
     else if(cue==='buzz'){tone(170,160,.16,.04,'square');}};
   document.addEventListener('fi2-vending-cue',vendingCue);
+  /** Riding a manta or the whale shark (Oct 15 2026, user: "change the sounds when riding to sound more like fast moving through
+   *  the water"; lib/town/water/animalRides.ts): 'fi2-job-cue' 'ride-start' (detail {cue, gain}: the manta 1, the whale shark a
+   *  deeper 0.8) / 'ride-dart' (Let go or the lap's end: a short rush as the animal shoots off, then a fade) / 'ride-stop' (a
+   *  0.25 s fade: a map trip, the page closing). ONE looped noise source → one band-pass → one gain on the effects bus, so the
+   *  mute, volume, idle fade and page-hide silence all apply. The water bed rises with the ride's ease-up (the animal's
+   *  RIDE_EASE: the filter, the playback rate and the level glide up by audio-param automation, no per-frame calls), and the
+   *  soft surge is baked into its own 1 s noise loop (a swell every RUSH_SURGE s, the pace of the wake's rings), so nothing is
+   *  scheduled from JS while it plays: no timer, no oscillator, no samples. A hide / mute / idle cuts it; while the ride lasts it
+   *  comes back on the next unlock. */
+  let rush:{source:AudioBufferSourceNode;filter:BiquadFilterNode;gain:GainNode}|null=null,rushBuffer:AudioBuffer|null=null,rushWant=0;
+  const RUSH_SURGE=.5,RUSH_FADE=.25,RUSH_EASE=1/1.6;
+  function rushNoise(c:AudioContext){
+    if(rushBuffer)return rushBuffer;const n=c.sampleRate,b=c.createBuffer(1,n,n),d=b.getChannelData(0),surges=Math.round(1/RUSH_SURGE);let lp=0;
+    // Brown-ish noise (water mass) plus a little white (spray), with a periodic swell that loops seamlessly (whole surges per loop).
+    // The low-passed part runs round the loop twice (the second pass starts from the first's end), so the seam does not click.
+    for(let i=0;i<n;i++){d[i]=Math.random()*2-1;lp=lp*.97+d[i]*.03;}
+    for(let i=0;i<n;i++){const w=d[i];lp=lp*.97+w*.03;const ph=i/n*surges%1,swell=.62+.38*Math.sin(Math.PI*ph)**2;d[i]=(lp*5+w*.35)*swell;}
+    return rushBuffer=b;
+  }
+  function startRush(gainScale:number){
+    if(rush||muted||idleFaded||volume===0||hidden||disposed||!getContext()||!master)return;
+    const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),t=c.currentTime,deep=gainScale<.95;
+    source.buffer=rushNoise(c);source.loop=true;filter.type='bandpass';filter.Q.value=.7;
+    // Grab-on: a low swish that brightens and swells as the animal gets up to speed (≈ the ride's ease, 1.6/s).
+    source.playbackRate.setValueAtTime(deep?.8:.9,t);source.playbackRate.setTargetAtTime(deep?.95:1.1,t,RUSH_EASE);
+    filter.frequency.setValueAtTime(deep?320:420,t);filter.frequency.setTargetAtTime(deep?780:1100,t,RUSH_EASE);
+    gain.gain.setValueAtTime(.0001,t);gain.gain.setTargetAtTime(.2*gainScale,t,RUSH_EASE);
+    source.connect(filter);filter.connect(gain);gain.connect(master);source.start(t);
+    source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();if(rush?.source===source)rush=null;if(!audible())scheduleIdle();};
+    rush={source,filter,gain};debug.rush=true;debug.counts['ride-start']=(debug.counts['ride-start']??0)+1;
+  }
+  /** Ends the rush: `fade` s, after an optional short `swell` (the dart: louder and brighter for a moment as the animal goes). */
+  function stopRush(fade=RUSH_FADE,swell=false){
+    const r=rush;if(!r)return;rush=null;debug.rush=false;const c=context;
+    if(!c||c.state!=='running'){try{r.source.stop();}catch{}return;}
+    const t=c.currentTime,g=r.gain.gain,f=r.filter.frequency;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);f.cancelScheduledValues(t);f.setValueAtTime(f.value,t);
+    if(swell){g.linearRampToValueAtTime(Math.min(.4,g.value*1.7+.02),t+.18);f.linearRampToValueAtTime(1700,t+.18);r.source.playbackRate.setTargetAtTime(1.25,t,.1);g.linearRampToValueAtTime(0,t+.18+fade);f.linearRampToValueAtTime(500,t+.18+fade);try{r.source.stop(t+.2+fade);}catch{}return;}
+    g.linearRampToValueAtTime(0,t+fade);try{r.source.stop(t+fade+.01);}catch{}
+  }
+  function resumeRush(){if(rushWant&&!rush)startRush(rushWant);}
+  function rideCue(event:Event){
+    const d=(event as CustomEvent).detail as string|{cue:string;gain?:number},kind=typeof d==='string'?d:String(d?.cue);
+    if(kind!=='ride-start'&&kind!=='ride-stop'&&kind!=='ride-dart')return false;
+    debug.counts['cue:'+kind]=(debug.counts['cue:'+kind]??0)+1;
+    if(kind==='ride-start'){rushWant=typeof d==='object'&&d&&typeof d.gain==='number'?Math.max(.5,Math.min(1.2,d.gain)):1;stopRush(.05);startRush(rushWant);if(context&&context.state!=='running'&&!hidden&&!muted)wakeIdle();return true;}
+    rushWant=0;if(kind==='ride-dart')stopRush(1.3,true);else stopRush();return true;
+  }
   /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
-  function silence(now=false){stopEngine();stopTravelHum();for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
-  function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
+  function silence(now=false){stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
+  function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();else resumeRush();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
   function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}

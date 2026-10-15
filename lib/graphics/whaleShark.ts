@@ -99,16 +99,17 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
  const xs=pts.map(p=>p.x),zs=pts.map(p=>p.z),box={minX:Math.min(...xs)-8,maxX:Math.max(...xs)+8,minZ:Math.min(...zs)-8,maxZ:Math.max(...zs)+8};
  const sphere=new T.Sphere(new T.Vector3(),9);
  // Starts in the stretch the summit lookout's camera frames (on desktop and phones).
- const state={u:.45*total,k:1,clock:0,placed:false,placedReduced:false,ridden:false};
+ const state={u:.45*total,k:1,clock:0,placed:false,placedReduced:false,ridden:false,/* the dart after a ride (animalRides.ts DART_*) */boost:1,bend:0,bendYaw:0};
  const stats={awake:false,updated:0,visible:false};
  const up=new T.Vector3(0,1,0);
  function place(dt:number){
-  if(!state.ridden){const before=state.u;state.u=(state.u+dt*loop.speed)%total;if(state.u<before)state.k=1;}else if(state.u<lengths[state.k-1])state.k=1;// ridden (water P1b): the ride moved u
+  if(!state.ridden){const before=state.u;state.u=(state.u+dt*loop.speed*state.boost)%total;if(state.u<before)state.k=1;}else if(state.u<lengths[state.k-1])state.k=1;// ridden (water P1b): the ride moved u
   while(state.k<n&&lengths[state.k]<state.u)state.k++;
   const a=pts[state.k-1],b=pts[state.k%n],f=(state.u-lengths[state.k-1])/((lengths[state.k]-lengths[state.k-1])||1);
   const dx=b.x-a.x,dz=b.z-a.z;
   mesh.position.set(a.x+dx*f,WATER+.02,a.z+dz*f);
-  mesh.quaternion.setFromAxisAngle(up,Math.atan2(-dz,dx)+.05*Math.sin(state.clock*.37));mesh.updateMatrix();
+  if(state.bend!==0){const l=Math.hypot(dx,dz)||1;mesh.position.x+=dz/l*state.bend;mesh.position.z-=dx/l*state.bend;}// the dart's sideways bend
+  mesh.quaternion.setFromAxisAngle(up,Math.atan2(-dz,dx)+state.bendYaw+.05*Math.sin(state.clock*.37));mesh.updateMatrix();
  }
  /** Called from the island's frame update with the frustum the sharks just built. */
  function update(dt:number,reduced:boolean,frustum:T.Frustum,player:{x:number;z:number}){
@@ -123,6 +124,7 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
  /** Water P1b (lib/town/water/animalRides.ts): the whale shark as a ridable "island friend" (the same one mesh). */
  const friend:RideFriend={kind:'whale',id:loop===WHALE_SHARK_LOOP?WHALE_SHARK_LOOP.id:'whale-shark',points:pts,lengths,total,
   get u(){return state.u;},set u(v:number){state.u=v;},get available(){return root.visible;},
-  get ridden(){return state.ridden;},set ridden(v:boolean){state.ridden=v;}};
+  get ridden(){return state.ridden;},set ridden(v:boolean){state.ridden=v;},speed:loop.speed,
+  get boost(){return state.boost;},set boost(v:number){state.boost=v;},get bend(){return state.bend;},set bend(v:number){state.bend=v;},get bendYaw(){return state.bendYaw;},set bendYaw(v:number){state.bendYaw=v;}};
  return {root,mesh,stats,update,time,box,friend,dispose(){root.removeFromParent();geometry.dispose();material.dispose();}};
 }

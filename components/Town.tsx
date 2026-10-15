@@ -13,7 +13,8 @@ import {createTruckReactions} from '@/lib/graphics/truckReactions';
 import {truckHitsCharacter,rideHitsCharacter} from '@/lib/town/truckCollisions';
 import {isVideoPlaying,subscribeVideoPlayback} from '@/lib/videoPlayback';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
-import {rideSurfacePose} from '@/lib/town/rideSurfacePose';
+import {rideSurfacePose,rideSlopePose} from '@/lib/town/rideSurfacePose';
+import {createDrawnGround} from '@/lib/town/drawnGround';
 import {createPitchVisibility} from '@/lib/town/pitchVisibility';
 import {createObstacleGrid} from '@/lib/town/obstacleGrid';
 import {createShadowVisibility} from '@/lib/graphics/shadowVisibility';
@@ -167,8 +168,8 @@ import { District, DISTRICTS, districtAt, stepPlayer, blocked, groundBlocked, fl
 import {ballGround,OUT_OF_PLAY_NOTE} from '@/lib/town/ballSea';
 import {createPierTarget} from '@/lib/town/eastPierChallenge';
 import {CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
-import {summitGoalCrossed,createSummitCameraPull,createSummitFlightLift,summitCruiseHeight,summitSolid,SUMMIT_LANDMARKS} from '@/lib/town/summitIsle';
-import {createRideSuspension,nearSummit} from '@/lib/town/rideSlope';
+import {summitGoalCrossed,createSummitCameraPull,createSummitFlightLift,summitCruiseHeight,summitSolid,SUMMIT_LANDMARKS,SUMMIT_VISUAL_DROP} from '@/lib/town/summitIsle';
+import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlope';
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
@@ -181,7 +182,7 @@ import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
 import {countWade,countSwimStart,countSplashDown,countSwimFast,countFloat,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff} from '@/lib/analytics/waterEvents';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
-import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,type RideEvents} from '@/lib/town/water/animalRides';
+import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
 import SwimLessonToast from './SwimLessonToast';
 import PaintEasel from './PaintEasel';
 import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';// Summit Isle Ball Cannon (Oct 14 2026)
@@ -562,7 +563,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     dizzyStars.visible=false;
     const splat=new T.Mesh(new T.RingGeometry(.6,1,16),splatMaterial);splat.rotation.x=-Math.PI/2;splat.visible=false;scene.add(splat);
     const rideTrail=createRideTrail(),flightTrail=createFlightTrail();scene.add(rideTrail.root,flightTrail.root);
-    const stairRidePose={height:0,pitch:0};
+    const stairRidePose={height:0,pitch:0},slopeRidePose={height:0,pitch:0,roll:0},slopeGrad={gx:0,gz:0};
     const vehicle=createVehicle();scene.add(vehicle.root);const knockFace=createKnockdownFace(e=>player.setExpression(e));vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null;let appliedTeamLook=false;let previousRide:TravelMode=rideRef.current;let arrivalFacing:number|undefined=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));
     const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
     const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});const ballAppearance=createBallAppearance(ballMaterial);const ball=new T.Mesh(new T.SphereGeometry(.19,20,16),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
@@ -667,13 +668,15 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(id==='swimfast'||id==='float'){if(down&&!e.repeat)waterActions.press(id,'down');else if(!down)waterActions.press(id,'up');}else if(down&&!e.repeat)waterActions.press(id,'tap');return true;};
     // Water P1b (lib/town/water/animalRides.ts): hang on to a manta or the whale shark (the "island friends", never hooked by fishing).
     // The "Hang on!" proximity test runs at the probe's 10 Hz while swimming; a ride is a few scalars a frame and ends after one lap.
-    const rideFriends=[...world.mantas.friends,world.whaleShark.friend],animalRides=createAnimalRides(()=>rideFriends),ridePromptPoint={x:0,z:0,yaw:0},ridePromptV=new T.Vector3();let ridePromptShown=false,ridePromptKind='';
-    const rideEnded=(re:RideEvents)=>{if(!re.ended)return;if(re.ended==='lap')countRideLap();else if(re.ended==='off')countRideOff();
+    const rideFriends=[...world.mantas.friends,world.whaleShark.friend],animalRides=createAnimalRides(()=>rideFriends),ridePromptPoint={x:0,z:0,yaw:0},dartPoint={x:0,z:0,yaw:0},ridePromptV=new T.Vector3();let ridePromptShown=false,ridePromptKind='';
+    // The ride's sound (islandSound.ts rideCue): a rushing-water bed while held; Let go / the lap's end swells it as the animal darts off.
+    const rideSound=(cue:'ride-start'|'ride-stop'|'ride-dart',gain=1)=>document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue,gain}}));
+    const rideEnded=(re:RideEvents)=>{if(!re.ended)return;if(re.ended==='lap')countRideLap();else if(re.ended==='off')countRideOff();rideSound(re.ended==='gone'?'ride-stop':'ride-dart');
       // The dismount: a little splash from the ring pool and the feet-first cue; the swimmer glides on a little, treading water.
       ballEffects.splashDown(re.x,WATER_LEVEL,re.z,RIDE_DISMOUNT_SPLASH,reduced);playCues(SPLASH_CUES.feet);
       velocity.x=Math.sin(re.yaw)*re.speed*RIDE_DISMOUNT_CARRY;velocity.z=Math.cos(re.yaw)*re.speed*RIDE_DISMOUNT_CARRY;waterStore.set({riding:false});wakeLoop();};
     const grabRide=()=>{if(water.state.phase!=='swim'||animalRides.riding)return false;const re=animalRides.grab(Math.hypot(velocity.x,velocity.z));if(!re.grabbed)return false;
-      countRideStart(re.grabbed);water.state.fast=false;water.state.floating=false;water.state.circling=false;tapHaptic();sound.ui('click');playCues(SPLASH_CUES.feet);
+      countRideStart(re.grabbed);water.state.fast=false;water.state.floating=false;water.state.circling=false;tapHaptic();sound.ui('click');playCues(SPLASH_CUES.feet);rideSound('ride-start',re.grabbed==='whale'?.8:1);
       waterStore.set({riding:true,rideLesson:waterStore.get().rideLesson+1});wakeLoop();return true;};
     rideActions.current=()=>{grabRide();};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
@@ -806,7 +809,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Beachcombing (lib/graphics/beachFinds.ts, docs/beachcombing.md): shells and sea creatures on every island's beaches.
     const beach=createBeachFinds(scene,{obstacles:[...world.obstacles,...world.buildings],paved:[...world.surfaceAreas,...world.roads],busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run,gather:id=>beachMarket.gather(id),
       reward:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},cue:propCue,haptic:tapHaptic,pose:(kind,at)=>{jobMoves.start(kind,jobPlayer(),at,jobFloor,reduced,jobBallNow());wakeLoop();}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.beach=beach;
-    const summitFlight=createSummitFlightLift(),summitCamera=createSummitCameraPull(),rideSuspension=createRideSuspension();// Summit Isle: smoothed flight height and camera pull-in
+    const summitFlight=createSummitFlightLift(),summitCamera=createSummitCameraPull(),rideSuspension=createRideSuspension();
+    // Rides rest on Summit Isle's DRAWN grass (lib/town/drawnGround.ts), which stands above the walked height where its coarse mesh
+    // strays; the triangle index is built on the first ride there. Elsewhere: the walked height, unchanged.
+    const summitDrawn=createDrawnGround(()=>{const out:T.Mesh[]=[];scene.traverse(o=>{if((o as T.Mesh).isMesh&&/^(summit-isle-ground-|summit-isle-pitch$|summit-sandbar-)/.test(o.name))out.push(o as T.Mesh);});return out;});
+    const rideGround=(x:number,z:number)=>{const h=fieldSurfaceHeight(x,z);if(!nearSummit(x,z))return h;const d=summitDrawn.height(x,z)+SUMMIT_VISUAL_DROP;return d>h?d:h;};let rideRoll=0;// Summit Isle: smoothed flight height and camera pull-in
     function liftJetpack(dt:number){// take off to the height cruise holds over this spot (Summit Isle: over the mountain), the same curve everywhere
       const top=flight.takeoffTime<1.05?summitCruiseHeight(location.x,location.z,flight.cruiseHeight):flight.cruiseHeight;
       flight.takeoffTime=Math.min(1.05,flight.takeoffTime+dt);flight.height=jetpackTakeoffHeight(flight.startHeight,top,flight.takeoffTime,reduced);
@@ -837,7 +844,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
 
       if(rideRef.current==='jetpack'){
         streetTraffic.rider.index=-1;
-        if(water.inWater){if(animalRides.riding){animalRides.letGo('gone');}water.reset();rideBeforeWater=null;waterStore.set({inWater:false,swimming:false,riding:false});}// a map trip out of the sea straight into flight: dry again
+        if(water.inWater){if(animalRides.riding){animalRides.letGo('gone');rideSound('ride-stop');}water.reset();rideBeforeWater=null;waterStore.set({inWater:false,swimming:false,riding:false});}// a map trip out of the sea straight into flight: dry again
         if(requestedTruck.current!==null){truckLanding=requestedTruck.current;requestedTruck.current=null;flight.landing=null;flight.landTime=-1;}
         if(!pendingRide.current)truckLanding=null;
         if(pendingRide.current&&truckLanding===null&&!flight.landing)truckLanding=streetTraffic.landingTruckAt(location.x,location.z)?.index??null;
@@ -963,6 +970,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(liveKnockout.joined)liveKnockout.steer(velocity,ix,iz,dt);
       // Float held (lib/town/water): the lazy circle steers instead of the stick, at the circle's slow drift.
       let mx=ix,mz=iz;if(water.state.circling){mx=water.state.circleX*CIRCLE_INPUT;mz=water.state.circleZ*CIRCLE_INPUT;}
+      if(animalRides.darting)animalRides.dartStep(dt);// the animal shoots off after a ride (animalRides.ts DART_*): only for those 3 s
       if(animalRides.riding&&water.swimming&&rideRef.current==='walk'){rideEnded(animalRides.step(dt,location,velocity));}// water P1b: the animal drags the rider along its loop (the stick is ignored)
       else if(water.swimming&&rideRef.current==='walk'){
         // Swimming: no obstacles in the sea; momentum, the Swim fast hold, the soft 60 m edge (waterDepth.ts swimStep). The dip and
@@ -1012,6 +1020,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(animalRides.riding){if(!water.inWater||water.state.phase!=='swim')rideEnded(animalRides.letGo('off'));else{const pose=water.pose,rs=animalRides.state;pose.kind='hold';pose.effort=rs.roll;pose.fast=0;ev.wake=false;ev.stroke=0;/* no swim strokes: the ride has its own wake */
           if(animalRides.wakeDue()&&waterFxOn()&&rs.riding){const k=RIDE_WAKE[rs.riding.kind],fx=Math.sin(rs.yaw),fz=Math.cos(rs.yaw),rx=fz,rz=-fx;
             ballEffects.ripple(location.x+fx*1.6,WATER_LEVEL,location.z+fz*1.6,.3*k,.5);ballEffects.ripple(location.x-fx*1.4+rx*.8,WATER_LEVEL,location.z-fz*1.4+rz*.8,.42*k,.7);ballEffects.ripple(location.x-fx*1.4-rx*.8,WATER_LEVEL,location.z-fz*1.4-rz*.8,.42*k,.7);}}}
+        // The dart's bigger wake behind the departing animal (the same ring pool), while it is still fast.
+        if(animalRides.darting&&animalRides.dartWakeDue(dartPoint)&&waterFxOn()&&animalRides.state.dart){const k=RIDE_WAKE[animalRides.state.dart.kind]*DART_WAKE,fx=Math.sin(dartPoint.yaw),fz=Math.cos(dartPoint.yaw),rx=fz,rz=-fx;
+          ballEffects.ripple(dartPoint.x-fx*1.4+rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4+rz*.9,.42*k,.7);ballEffects.ripple(dartPoint.x-fx*1.4-rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4-rz*.9,.42*k,.7);}
         animalRides.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim');
         if(ev.left&&walkBall.state.mode==='attached'){walkBall.state.mode='return';walkBall.state.age=0;}/* the parked ball rolls back to the feet */
         if(ev.left&&rideBeforeWater){const m=rideBeforeWater;rideBeforeWater=null;if(rideRef.current==='walk'&&rideAllowed(m,jobActiveRef.current)&&fuelAllowsRide(m)){rideRef.current=m;setRideMode(m);}}/* the ride that splashed down comes back on the sand */
@@ -1188,7 +1199,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       else{accumulator=0;velocity.x=velocity.z=0;input.current.kick=false;}
       if(wasTruckRiding!==(streetTraffic.rider.index>=0)){wasTruckRiding=streetTraffic.rider.index>=0;setTruckRiding(wasTruckRiding);}
       sound.truck(streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].driveSpeed:0,active&&!fieldMenu.current&&!lessonRef.current&&streetTraffic.rider.index>=0);
-      sound.move(rideRef.current,Math.hypot(velocity.x,velocity.z),active&&!fieldMenu.current&&!lessonRef.current&&!['parachute','fall'].includes(jetActions.state.phase)&&(rideRef.current==='jetpack'||!rooftop.state.falling&&rooftop.state.recovery===0));
+      sound.move(rideRef.current,Math.hypot(velocity.x,velocity.z),active&&!animalRides.riding/* water P1b: the ride's own rushing-water bed, no footsteps */&&!fieldMenu.current&&!lessonRef.current&&!['parachute','fall'].includes(jetActions.state.phase)&&(rideRef.current==='jetpack'||!rooftop.state.falling&&rooftop.state.recovery===0));
       const blend=accumulator*60;
       visualLocation.x=active?T.MathUtils.lerp(previousLocation.x,location.x,blend):location.x;visualLocation.z=active?T.MathUtils.lerp(previousLocation.z,location.z,blend):location.z;
       const customizationChanged=appliedCustomization!==customizationRef.current;
@@ -1218,15 +1229,15 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       player.update(visualLocation.x,visualLocation.z,active?dt:0,elapsed,reduced,zipline.motion(cannon.pose(withJob({skill:liveKnockout.joined?liveKnockout.dodgeSkill:undefined,called:lessonRef.current==='aim'?1:lessonRef.current==='passing'||lessonRef.current==='replay'?lessonCalled:lessonRef.current?0:undefined,intentHeading:rideRef.current==='walk'&&Math.hypot(intentSX,intentSZ)>.05?Math.atan2(intentSX*.857+intentSZ*.515,-intentSX*.515+intentSZ*.857):undefined,brake:walkBrake,truckRiding:streetTraffic.rider.index>=0,truckSpeed:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].driveSpeed:0,turnSmoothing:water.swimming?7:jetActions.state.phase==='parachute'?(jetActions.state.scanAge>=0?18:3):undefined,swim:water.pose.w>0?water.pose:undefined,juggleTouch:walkBall.state.mode==='juggle'?walkBall.state.juggleTouch:'foot',parachute:jetActions.state.phase==='parachute',parachuteSpin:jetActions.state.scanIntensity,parachuteJuggle:airJuggling?{phase:airJugglePhase,side:airJuggleSide}:undefined,wallSplat:rampMotion.state.phase==='splat',mopedStand:trickPose.stand,mopedSuperman:reduced?0:rampMotion.state.trickStretch,flyingCar:['flying-car','mini-plane'].includes(customizationRef.current.jetpack),rocketboard:customizationRef.current.jetpack==='rocketboard',jump:roofJumpMotion(rooftop.jump,rideRef.current),rooftopPose:jetActions.state.phase==='fall'?(jetActions.state.age<.65?'hang':'fall'):rideRef.current==='jetpack'?undefined:rooftop.state.falling?(rooftop.state.hangTime>0?'hang':'fall'):rooftop.state.recovery>0?'dizzy':undefined,flight:flightPose,facing:jetActions.state.scanAge>=0&&!reduced?jetActions.state.scanYaw:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.y:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.kick>0)?walkBall.state.yaw:arrivalFacing,travelMode:rideRef.current,shotStep:steppingBack?(walkBall.state.age-.18)/.47:steppingIn?walkBall.state.age/(SHOT_WINDUP*.55):undefined,actionKind:rideRef.current==='walk'&&walkBall.state.kick>0?'shot':undefined,strikeX:rideRef.current==='walk'&&walkBall.state.kick>0?0:undefined,strikeZ:rideRef.current==='walk'&&walkBall.state.kick>0?.65/Math.max(.1,player.root.scale.x):undefined,shotPower:walkBall.state.charge,shotCharge:rideRef.current==='walk'&&walkBall.state.mode==='charging'?walkBall.state.charge:undefined,powerKick:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.mode==='shot'&&walkBall.state.kick>0),dribbling:liveKnockout.joined?liveKnockout.hasBall:rideRef.current==='walk'&&Math.hypot(orb.x-visualLocation.x,orb.z-visualLocation.z)<1.3,kick:rideRef.current==='walk'?(liveKnockout.joined?liveKnockout.kickPose:walkBall.state.kick):undefined,juggle:rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle'&&(walkBall.state.wallPhase==='receive'||walkBall.state.wallPhase==='kick'))?walkBall.state.jugglePhase:undefined,kickSide:walkBall.state.juggleSide}),player.root.scale.x),active?blend:1));
       flightHeading=player.root.rotation.y;
       vehicle.update(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,active?dt:0,Math.hypot(velocity.x,velocity.z),flightPose);vehicle.root.visible=vehicle.root.visible&&!fieldMenu.current&&!vending.hidesPlayer&&(customizationRef.current.jetpack==='ironman'||!['parachute','fall'].includes(jetActions.state.phase));
-      let groundY=rooftop.state.height;let ridePitch=0;
+      let groundY=rooftop.state.height;let ridePitch=0,slopeRoll=0;
       // In a hop the ride flies level, easing into a small wheelie, and the suspension carries on from it, so the touchdown
       // compresses it and springs back (rideSlope.ts createRideSuspension).
       hopPitch=T.MathUtils.damp(hopPitch,rooftop.state.air?(reduced?-.04:-.14):0,rooftop.state.air?5:12,active?dt:0);
       if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&rooftop.state.air){ridePitch=hopPitch;if(nearSummit(visualLocation.x,visualLocation.z)){const s=rideSuspension.update(active?dt:0,groundY,ridePitch);groundY=s.y;ridePitch=s.pitch;}}
-      else if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&groundY<=fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2){const yaw=player.root.rotation.y,front=(rideRef.current==='scooter'?.5:.62)*1.12,rear=(rideRef.current==='scooter'?.4:.53)*1.12;const hf=fieldSurfaceHeight(visualLocation.x+Math.sin(yaw)*front,visualLocation.z+Math.cos(yaw)*front),hr=fieldSurfaceHeight(visualLocation.x-Math.sin(yaw)*rear,visualLocation.z-Math.cos(yaw)*rear);ridePitch=Math.atan2(hr-hf,front+rear);groundY=(hf*rear+hr*front)/(front+rear)+.005;
+      else if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&groundY<=fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2){const yaw=player.root.rotation.y,summit=nearSummit(visualLocation.x,visualLocation.z);if(summit)summitGradient(visualLocation.x,visualLocation.z,slopeGrad);rideSlopePose(rideRef.current,visualLocation.x,visualLocation.z,yaw,rideGround,summit?slopeGrad.gx*Math.cos(yaw)-slopeGrad.gz*Math.sin(yaw):0,slopeRidePose);ridePitch=slopeRidePose.pitch;groundY=slopeRidePose.height;slopeRoll=slopeRidePose.roll;
         // Summit Isle's slopes: the drawn ride eases over the ground's kinks and ridges, its pitch easing to the slope (rideSlope.ts).
-        if(nearSummit(visualLocation.x,visualLocation.z)){const s=rideSuspension.update(active?dt:0,groundY,ridePitch+hopPitch);groundY=s.y;ridePitch=s.pitch;}else rideSuspension.reset();}else rideSuspension.reset();
-      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&groundY>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
+        if(nearSummit(visualLocation.x,visualLocation.z)){const s=rideSuspension.update(active?dt:0,groundY,ridePitch+hopPitch);groundY=Math.max(s.y,groundY-.02);ridePitch=s.pitch;}else rideSuspension.reset();}else rideSuspension.reset();// ≤ 2 cm into the grass
+      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&rooftop.state.height>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
       if(rideRef.current==='jetpack')groundY=active?flightRenderHeight(previousFlightHeight,flight.height,blend):flight.height;
       if(streetTraffic.rider.index>=0){const truck=streetTraffic.cars[streetTraffic.rider.index],bed=streetTraffic.bedPoint(truck.index);groundY=bed.y;ridePitch=truck.group.rotation.x;player.root.position.x=bed.x;player.root.position.z=bed.z;}
       if(water.inWater&&rideRef.current==='walk'&&streetTraffic.rider.index<0&&!rooftop.state.falling)groundY=water.state.rootY;// wading: the feet on the shelf; swimming: the root under the water line
@@ -1286,7 +1297,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const bob=flightPose?.bob??0;
       player.root.rotation.z+=flightPose?.roll??0;vehicle.root.rotation.z=flightPose?.roll??0;player.root.rotation.x+=flightPose?.pitch??0;vehicle.root.rotation.x+=flightPose?.pitch??0;player.root.position.y+=bob;vehicle.root.position.y+=bob;
       const bikeSway=crash>0||rooftop.state.falling||rampMotion.state.phase==='air'||wallSplat?0:(player.bikeRoll+player.rideTurnRoll)*(rideTricks.state.active?.3:1);
-      player.root.rotation.z+=bikeSway;vehicle.root.rotation.z+=bikeSway;
+      rideRoll=T.MathUtils.damp(rideRoll,slopeRoll,8,active?dt:0);player.root.rotation.z+=bikeSway+rideRoll;vehicle.root.rotation.z+=bikeSway+rideRoll;
       if(rideRef.current==='walk'&&(walkBall.state.mode==='charging'||walkBall.state.mode==='windup')){
         const back=walkBall.state.mode==='charging'?T.MathUtils.smoothstep(walkBall.state.age,.18,.65):T.MathUtils.smoothstep(walkBall.state.charge*1.8,0,.47)*(1-T.MathUtils.smoothstep(walkBall.state.age,0,SHOT_WINDUP*.55));
         const x=player.root.position.x-Math.sin(player.root.rotation.y)*back*1.1,z=player.root.position.z-Math.cos(player.root.rotation.y)*back*1.1;

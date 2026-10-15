@@ -2,7 +2,7 @@ import type {LearningId} from './learningJourneys';
 import {CORAL_CAY_SPOTS} from './coralCayBalls';
 import {SUMMIT_BALL_SPOTS} from './summitBalls';
 export const COIN_REWARD_ID='matchday-fox',COIN_STORAGE_KEY='fi2-matchday-coins-v1';
-export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
+export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;/** a parachute ball on something you can stand on (the Summit hut roof): standing beside it collects it too */perch?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
  /** A ball resting on a floating buoy in the sea (Coral Cay): kick it from `kickFrom` on the deck (a shot heading at the buoy
   *  collects it), or glide to it with the parachute. The buoy and the chalk mark are drawn in its packed parcel. */
  buoy?:boolean;kickFrom?:{x:number;z:number};

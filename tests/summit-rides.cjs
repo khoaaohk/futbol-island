@@ -163,8 +163,10 @@ for(const mode of ['bike','scooter','moped'])for(const fps of [20,30,60])for(con
 
 // ---- Landing: walkable spots clear of trees land (slopes, ridges, gullies, beaches, the trail); steep faces refuse and the
 // nearest walkable spot is offered instead; the touchdown height is the ground there.
-{const roof=createRooftopTravel([],obstacles,{x:L.pitch.x,z:L.pitch.z});let landed=0,refused=0,steepTried=0;const kinds={slope:0,beach:0,trail:0,steep:0};
+{const {SUMMIT_HUTS:HUTS,HUT_LAND_RADIUS:HUT_LAND}=load('lib/town/summitBalls.ts');const roof=createRooftopTravel([],obstacles,{x:L.pitch.x,z:L.pitch.z});let landed=0,refused=0,steepTried=0;const kinds={slope:0,beach:0,trail:0,steep:0};
  const B=S.SUMMIT_BOX;for(let x=B.minX+3;x<B.maxX;x+=9)for(let z=B.minZ+3;z<B.maxZ;z+=9){if(S.summitGround(x,z)<=0)continue;const can=roof.canLand(x,z),walk=S.onSummitLand(x,z),inTree=obstacles.some(o=>insideObstacle(x,z,o,0));
+  // A hut's apex (summitBalls.ts hutRoofSteps, Oct 15 2026: the huts' roofs are landable) is checked in tests/summit-balls.cjs.
+  if(can&&HUTS.some(h=>Math.hypot(x-h.x,z-h.z)<=HUT_LAND)){assert(roof.surface(x,z)>S.summitGround(x,z)+2,'a hut landing is on its roof');continue;}
   if(can){landed++;assert(walk&&!inTree,`lands only on walkable ground clear of trees (${x},${z})`);assert.equal(roof.surface(x,z),S.summitGround(x,z),'touchdown on the ground itself');
    const sl=S.summitSlope(x,z),g=S.summitGround(x,z);if(g<.5)kinds.beach++;else if(sl>.2)kinds.slope++;}
   else{refused++;if(!walk&&S.summitSlope(x,z)>S.SUMMIT_TRAIL_BANK_SLOPE){steepTried++;const alt=roof.findLanding(x,z);assert(alt&&roof.canLand(alt.x,alt.z)&&Math.hypot(alt.x-x,alt.z-z)<40,`a steep face (${x},${z}) offers a walkable spot nearby`);kinds.steep++;}}}

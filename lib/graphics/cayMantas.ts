@@ -69,12 +69,12 @@ function addWingWave(material:T.Material,uniform:{value:number}){
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float aPhase;\nuniform float uMantaTime;').replace('#include <begin_vertex>','#include <begin_vertex>'+WING_WAVE);};
  material.customProgramCacheKey=()=>'manta-wing-wave';
 }
-type Track={loop:MantaLoop;lengths:number[];total:number;u:number;k:number;phase:number;/** Held by a rider (water P1b, lib/town/water/animalRides.ts): the ride owns `u`. */ridden:boolean;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
+type Track={loop:MantaLoop;lengths:number[];total:number;u:number;k:number;phase:number;/** Held by a rider (water P1b, lib/town/water/animalRides.ts): the ride owns `u`. */ridden:boolean;/** The dart after a ride (animalRides.ts DART_*): speed multiplier, sideways offset (m, + = right), extra heading. */boost:number;bend:number;bendYaw:number;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
 function track(loop:MantaLoop,start:number,phase:number):Track{
  const lengths=[0],n=loop.points.length;for(let i=1;i<=n;i++){const a=loop.points[i-1],b=loop.points[i%n];lengths.push(lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z));}
  const xs=loop.points.map(p=>p.x),zs=loop.points.map(p=>p.z),box={minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
  const b3=new T.Box3(new T.Vector3(box.minX-4,WATER-1,box.minZ-4),new T.Vector3(box.maxX+4,WATER+3,box.maxZ+4));
- const total=lengths[n];return {loop,lengths,total,u:start*total,k:1,phase,ridden:false,box,sphere:b3.getBoundingSphere(new T.Sphere())};
+ const total=lengths[n];return {loop,lengths,total,u:start*total,k:1,phase,ridden:false,boost:1,bend:0,bendYaw:0,box,sphere:b3.getBoundingSphere(new T.Sphere())};
 }
 const boxDistance=(b:{minX:number;maxX:number;minZ:number;maxZ:number},x:number,z:number)=>Math.hypot(Math.max(b.minX-x,0,x-b.maxX),Math.max(b.minZ-z,0,z-b.maxZ));
 
@@ -120,14 +120,15 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   else if(dt>0&&!r.ridden&&(r.next-=dt)<=0)startEvent(r);
   for(let i=0;i<r.active;i++){
    const t=r.tracks[i],pts=t.loop.points,n=pts.length;
-   if(!t.ridden){const before=t.u;t.u=(t.u+dt*t.loop.speed)%t.total;if(t.u<before)t.k=1;}else if(t.u<t.lengths[t.k-1])t.k=1;// ridden: the ride moved u
+   if(!t.ridden){const before=t.u;t.u=(t.u+dt*t.loop.speed*t.boost)%t.total;if(t.u<before)t.k=1;}else if(t.u<t.lengths[t.k-1])t.k=1;// ridden: the ride moved u
    while(t.k<n&&t.lengths[t.k]<t.u)t.k++;
    const a=pts[t.k-1],b=pts[t.k%n],f=(t.u-t.lengths[t.k-1])/((t.lengths[t.k]-t.lengths[t.k-1])||1);
-   const dx=b.x-a.x,dz=b.z-a.z,yaw=Math.atan2(-dz,dx);
+   const dx=b.x-a.x,dz=b.z-a.z,yaw=Math.atan2(-dz,dx)+t.bendYaw;
    pos.set(a.x+dx*f,WATER+.015,a.z+dz*f);
+   if(t.bend!==0){const l=Math.hypot(dx,dz)||1;pos.x+=dz/l*t.bend;pos.z-=dx/l*t.bend;}// the dart's sideways bend (right of the heading)
    const ev=r.event,surfacing=ev.active&&ev.manta===i;let airborne=false;
-   // Ridden (water P1b): held surfaced on the island's one surfacing mesh, its silhouette instance hidden (+0 draws).
-   if(t.ridden){pos.y=WATER-.04;e.set(0,yaw,0,'YZX');q.setFromEuler(e);m.compose(pos,q,full);r.surface.setMatrixAt(0,m);r.surface.instanceMatrix.needsUpdate=true;pos.y=WATER+.015;airborne=true;}
+   // Ridden (water P1b): Oct 15 2026 (user: "make the manta ray riding look like the whales", "no black"): it stays its soft
+   // silhouette just under the surface, like the whale shark (the shared shadow material, its own instance): no surfacing mesh.
    if(surfacing){
     const s=Math.min(1,ev.t/ev.duration),arc=Math.sin(Math.PI*s);let pitch=0,roll=0;
     if(ev.kind==='breach'){const h=-.9+3.3*arc;airborne=h>.1;pos.y=WATER+h;pitch=Math.atan2(3.3*Math.PI/ev.duration*Math.cos(Math.PI*s),t.loop.speed*2)*.75;roll=.25*arc*ev.side;}
@@ -155,14 +156,14 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   // Wrap on a whole number of flap periods (2π/1.9 s), so the wave never jumps.
   if(moved){clock=(clock+Math.min(dt,.1))%(2*Math.PI/1.9*500);time.value=clock;}
  }
- /** Water P1b (lib/town/water/animalRides.ts): every manta as a ridable "island friend". `ridden` holds it surfaced on its
-  *  island's one surfacing mesh (any wingtip / breach there ends first, none start while it is held). */
+ /** Water P1b (lib/town/water/animalRides.ts): every manta as a ridable "island friend". `ridden` holds it on its
+  *  silhouette instance, like the whale shark (any wingtip / breach on its island ends first, none start while it is held). */
  const friends:RideFriend[]=[];
  for(const r of islands)r.tracks.forEach((t,i)=>friends.push({kind:'manta',id:t.loop.id,points:t.loop.points,lengths:t.lengths,total:t.total,
-  get u(){return t.u;},set u(v:number){t.u=v;},get available(){return i<r.active&&r.group.visible;},get ridden(){return t.ridden;},
+  get u(){return t.u;},set u(v:number){t.u=v;},get available(){return i<r.active&&r.group.visible;},get ridden(){return t.ridden;},speed:t.loop.speed,
+  get boost(){return t.boost;},set boost(v:number){t.boost=v;},get bend(){return t.bend;},set bend(v:number){t.bend=v;},get bendYaw(){return t.bendYaw;},set bendYaw(v:number){t.bendYaw=v;},
   set ridden(v:boolean){if(v===t.ridden)return;t.ridden=v;r.ridden=r.tracks.some(x=>x.ridden);if(r.event.active)endEvent(r);
-   if(v){const phase=r.surface.geometry.getAttribute('aPhase') as T.InstancedBufferAttribute;phase.setX(0,t.phase);phase.needsUpdate=true;}
-   r.surface.visible=v;r.placed=false;}}));
+   r.placed=false;}}));
  applyTier();const offTier=subscribeHeatTier(applyTier);
  return {root,stats,update,islands,time,applyTier,friends,dispose(){offTier();root.removeFromParent();for(const r of islands){r.under.geometry.dispose();r.surface.geometry.dispose();r.under.dispose();r.surface.dispose();}geometry.dispose();underMat.dispose();surfaceMat.dispose();}};
 }

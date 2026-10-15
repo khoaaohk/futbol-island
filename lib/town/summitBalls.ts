@@ -53,6 +53,18 @@ export const HUT_WALL=2.3,HUT_CONE=1.8,HUT_CONE_LIFT=1.03;
 export function hutGroundTop(h:Pt){let hi=-Infinity;for(let a=0;a<16;a++)hi=Math.max(hi,summitGround(h.x+Math.cos(a/16*Math.PI*2)*SUMMIT_HUT_RADIUS,h.z+Math.sin(a/16*Math.PI*2)*SUMMIT_HUT_RADIUS)-SUMMIT_VISUAL_DROP);return hi;}
 /** The straw cone's tip (drawn height). */
 export const hutRoofTip=(h:Pt)=>hutGroundTop(h)+HUT_WALL+HUT_CONE_LIFT+HUT_CONE/2;
+/** The drum's collider is a disc this wide (summitIsleWorld.ts); its outer roof step has the same footprint, so the rooftop
+ *  system knows the wall as that roof's building (solid from the ground, open from the roof). */
+export const HUT_DRUM_W=SUMMIT_HUT_RADIUS*2-.4,HUT_CONE_RADIUS=SUMMIT_HUT_RADIUS+.75;
+/** Hut roofs you can stand on (Oct 15 2026, user: "it's not possible to land on this hut"). The straw cone becomes concentric
+ *  discs stepped down its slope (each at the cone's height across its ring, ≤ .3 m apart: a walk up or down them, no wall),
+ *  the apex disc a few cm under the tip (the roof ball sits there). Outer radii (m); the last step is the drum's footprint.
+ *  Heights are rider heights (the drawn height + SUMMIT_VISUAL_DROP). Data only: rooftopTravel.ts registers them as roofs. */
+export const HUT_ROOF_STEPS=[.5,.9,1.3,1.7,HUT_DRUM_W/2] as const;
+/** A jetpack or parachute landing within this far of a hut's centre stands on its apex disc (rooftopTravel.ts canLand). */
+export const HUT_LAND_RADIUS=1;
+export function hutRoofSteps(h:Pt){const apex=hutRoofTip(h)+SUMMIT_VISUAL_DROP,k=HUT_CONE/HUT_CONE_RADIUS;
+ return HUT_ROOF_STEPS.map((r,i)=>{const inner=i?HUT_ROOF_STEPS[i-1]:0;return {x:h.x,z:h.z,w:r*2,d:r*2,cornerRadius:r,height:i?apex-k*(inner+r)/2:apex-.08};});}
 // ---- Caves: a shallow walk-in alcove of low-poly boulders built onto the ground (no hole in the terrain), open toward the camera.
 // The sea cave moved (Oct 15 2026, "move the bottom cave to the north west side of the island") from the south-east beach (746, 237:
 // the bottom of the overhead map, +z is screen-down) to the grass edge at the back of the north-west beach, its back to the waves and
@@ -96,10 +108,10 @@ export const SUMMIT_BALL_SPOTS:CoinSpot[]=[
   detail:'Follow the beach south from the east beach path. Find the round mango tree on the grass above the sand and kick your ball at its trunk.',
   teaching:'Play the ball, not the player. Tripping, pushing or kicking an opponent carelessly is a foul. The other team gets a free kick, or a penalty if it happens in your own penalty area.',lesson:'support'},
  // ── From the air (2): the sunset hut's roof tip (parachute) and a padded landing crate on the summit's north rim ──
- {id:'summit-hut-roof',name:'Summit Isle · sunset hut roof',x:505,z:175,y:round2(hutRoofTip({x:505,z:175})+SUMMIT_VISUAL_DROP),coinY:.36,kind:'hidden',summit:true,parachute:true,concept:'law16-goal-kick',
-  near:'A ball is resting on the hut’s roof! Open your parachute above it and glide down onto the tip.',
+ {id:'summit-hut-roof',name:'Summit Isle · sunset hut roof',x:505,z:175,y:round2(hutRoofTip({x:505,z:175})+SUMMIT_VISUAL_DROP),coinY:.36,kind:'hidden',summit:true,parachute:true,perch:true,concept:'law16-goal-kick',
+  near:'A ball is resting on the hut’s roof! Land on the roof with the jetpack, or glide down onto the tip with your parachute.',
   clue:'On Summit Isle’s west lawn, the sunset hut wears a ball on the tip of its straw roof.',
-  detail:'Fly to the round hut on the west lawn, above the whale shark’s sea. Rise above it, open your parachute and steer down onto the very tip of the roof.',
+  detail:'Fly to the round hut on the west lawn, above the whale shark’s sea. Hover over the roof and land the jetpack on it, or open your parachute above it and steer down onto the very tip.',
   teaching:'A goal kick is in play as soon as it moves. Your keeper can pass to a teammate inside the penalty area, but the other team must wait outside the area until the ball is kicked.',lesson:'support'},
  {id:'summit-north-rim',name:'Summit Isle · summit’s north rim',...ground({x:660,z:120}),kind:'landing',summit:true,concept:'law5-referee-decides',
   clue:'On the summit, east of the pitch, a padded crate sits on the grass at the very top of the mountain.',

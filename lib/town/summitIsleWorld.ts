@@ -12,7 +12,7 @@ import {stripePlan,stripedSlabGeometry} from '../graphics/pitchStripes';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {ORCHARD_OFF,planOrchard,orchardParts,orchardRig,roundTreeRig,palmRig,type TreeRig,type OrchardForm} from './summitOrchard';
 import type {FruitKind} from './summitForage';
-import {SUMMIT_HUTS,SUMMIT_HUT_RADIUS,SUMMIT_CAVES,CAVE_SIDE,CAVE_BACK,RIDDLE_BOARD,HUT_WALL,HUT_CONE,HUT_CONE_LIFT,hutGroundTop} from './summitBalls';
+import {SUMMIT_HUTS,SUMMIT_HUT_RADIUS,SUMMIT_CAVES,CAVE_SIDE,CAVE_BACK,RIDDLE_BOARD,HUT_WALL,HUT_CONE,HUT_CONE_LIFT,HUT_DRUM_W,hutGroundTop} from './summitBalls';
 import {SUMMIT_CENTER,SUMMIT_HEIGHT,SUMMIT_VISUAL_DROP,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_OBSTACLES,SUMMIT_PATHS,SUMMIT_PATH_WIDTH,SUMMIT_LANDMARKS,SANDBAR_PATH,SANDBAR_SKIRT,
  SUMMIT_PEAK,TERRACE,PITCH_HEIGHT,coastRadius,peakCoastRadius,beachWidth,summitGround,summitSlope,ridgeShade,terraceWeight,heightPoint,profileU,peakPoint,sandbarHalfWidth,onSummitIsle,summitTrailDistance,SUMMIT_TRAIL_CARVE,
  isleJitter as jitter,type IslePoint} from './summitIsle';
@@ -413,7 +413,7 @@ export function buildSummitIsle(t:SummitTools){
    const dg=yAt(h.x+h.door.x*R,h.z+h.door.z*R);
    bakeBox(piece,1.05,1.9,.16,'#2c302e',h.x+h.door.x*(R-.02),dg+.95,h.z+h.door.z*(R-.02),0,yaw(h.door),0);
    bakeBox(piece,1.3,.13,.22,'#8a6a48',h.x+h.door.x*(R+.03),dg+1.95,h.z+h.door.z*(R+.03),0,yaw(h.door),0);
-   obstacles.push({x:h.x,z:h.z,w:R*2-.4,d:R*2-.4,cornerRadius:R-.2});
+   obstacles.push({x:h.x,z:h.z,w:HUT_DRUM_W,d:HUT_DRUM_W,cornerRadius:HUT_DRUM_W/2});// the outer roof step's footprint (rooftopTravel.ts)
    const side={x:-h.door.z,z:h.door.x},out=(k:number,s2=0)=>({x:h.x+h.door.x*k+side.x*s2,z:h.z+h.door.z*k+side.z*s2});
    if(h.window){// The beach hut: a window on the sea side with a shelf below it (the ball sits on the shelf).
     const wg=yAt(h.x+h.window.x*R,h.z+h.window.z*R);
