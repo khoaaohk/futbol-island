@@ -91,4 +91,15 @@ const uw=e.load('lib/town/fishing/underwater.ts'),cat=e.load('lib/town/fishing/f
   runs++;}
  ok(worst<.25,`biter moves at most ${worst.toFixed(3)} m per 1/30 s frame (${runs} approaches)`);}
 
-console.log(`PASS fishing polish: heat-gated sway / life / particles, shader hooks, overlay sleeps at rest, fewer draws, seabed ≤ +15 %, continuous biter (${checks} checks)`);
+// ---- 7. The shark's surface fin is never a separate part (Oct 15 2026, user: "fish has fin that's separate") ----
+// In the clear water the catch is drawn as its own species model (its dorsal fin is part of the body, fishModels) and the bite pose
+// moves that body to the hook while fishingCore's silhouette stays put; the flat fin billboard anchored to the silhouette floated a
+// fish-length from the shark. It is now the silhouette-only cue (A/B water), and the wake follows the drawn body.
+{const vis=src('lib/town/fishing/fishingVisuals.ts');
+ ok((vis.match(/overlay\.mark\('fin'/g)||[]).length===1,'one fin cue in the visuals');
+ ok(/const bodyDrawn=catchFish\.visible,bx=bodyDrawn\?catchPos\.x:shWorld\.x,bz=bodyDrawn\?catchPos\.z:shWorld\.z;/.test(vis),'the fin / wake anchor is the drawn body when there is one, else the silhouette');
+ ok(/if\(!bodyDrawn\)overlay\.mark\('fin',fx,SURFACE\+fs\*\.42,fz,fs,0,a\);/.test(vis),'the flat fin billboard shows only when the dark silhouette is the whole body (no species model drawn)');
+ ok(/shWorld\.mode!=='nibble'&&shWorld\.mode!=='bite'\)overlay\.mark\('wake',fx-mx\*\.55\*L/.test(vis),'the wake trails the same anchor and stays off at the hook');
+ const models=src('lib/town/fishing/fishModels.ts');ok(/function shark\(/.test(models)&&/fin\(b,L,\{t0:o\.dorsalT\?\?\.36/.test(models),'the shark species model carries its dorsal fin on the body');}
+
+console.log(`PASS fishing polish: heat-gated sway / life / particles, shader hooks, overlay sleeps at rest, fewer draws, seabed ≤ +15 %, continuous biter, shark fin on the body (${checks} checks)`);

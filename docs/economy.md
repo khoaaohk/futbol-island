@@ -161,15 +161,14 @@ Why a slower bite rather than a fee to board: a boat catch is worth about 2.89 c
 
 ### 4c. Fishing content (Oct 15 2026)
 
-Night and sunset fish, lures, weather, Island Legends, islander requests and the Fishing Derby (docs/fishing.md "Content systems") keep fishing's pay where §4b left it:
+Night and sunset fish, lures, Island Legends and islander requests (docs/fishing.md "Content systems"; the weather and the Fishing Derby were removed on 15 Oct 2026, user decision) keep fishing's pay where §4b left it:
 
 | Feature | Guard-rail | Check |
 |---|---|---|
-| Night / sunset fish | priced inside their rarity band; they replace a resting day fish, never add weight | every spot's mean catch within ±3 % in all 60 time × weather × lure mixes (`tests/economy.cjs` §12) |
-| Lures, weather | reweight kinds inside each rarity; rarity shares never move (`BOOST_CAP` untouched); eased back to ±2.5 % | same test, plus "rarity share unchanged" per spot |
+| Night / sunset fish | priced inside their rarity band; they replace a resting day fish, never add weight | every spot's mean catch within ±3 % in all 15 time × lure mixes (`tests/economy.cjs` §12) |
+| Lures (free from the start since 15 Oct 2026) | reweight kinds inside each rarity; rarity shares never move (`BOOST_CAP` untouched); eased back to ±2.5 %, so a free lure carries no value | same test, plus "rarity share unchanged" per spot |
 | Island Legends | caught once and released: not a good, worth 0 | not in `GOODS`, a found legend only lowers the mean |
 | Requests | `FISH_REQUEST_COINS` = 3 through the jobs wallet (`island-job:fish-request:` runs, metered); 3 a day | below the cheapest job; ≤ a quarter of the full-pay meter |
-| Derby | no price bonus, no coins | `derby.ts` has no price, market or wallet code |
 
 ## 5. Diminishing returns at Rosa's stand
 

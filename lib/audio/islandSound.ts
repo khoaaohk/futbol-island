@@ -161,7 +161,9 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const pathCue=(event:Event)=>{const kind=(event as CustomEvent).detail;if(kind==='dock'||kind==='undock'||kind==='swipe-right'||kind==='swipe-left'||kind==='path-pop'||kind==='page')ui(kind);};
   document.addEventListener('fi2-path-cue',pathCue);
   // Island job actions (Sep 30 2026, lib/town/jobs/jobScene.ts 'fi2-job-cue'): one short voice per action, from the same tone/noise kit.
-  const jobCue=(event:Event):void=>{if(deferUntilAwake(()=>jobCue(event)))return;const kind=String((event as CustomEvent).detail);if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:.1))return;
+  const jobCue=(event:Event):void=>{if(deferUntilAwake(()=>jobCue(event)))return;const d=(event as CustomEvent).detail as string|{cue:string;gain?:number};
+    // Oct 15 2026 (user: "increase the sound if they crank it faster"): a cue may carry a gain (the fishing reel's ratchet sends 0.5…1.5 with the spin rate).
+    const kind=typeof d==='string'?String(d):String(d?.cue),gain=typeof d==='object'&&d&&typeof d.gain==='number'?Math.max(.2,Math.min(2,d.gain)):1;if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:kind==='snip'?.06:kind.startsWith('splash')?.2:.1))return;
     switch(kind){
       case 'rustle':hiss(2600,.18,.1);hiss(1400,.12,.05,.04);return;          // leaves shaking
       case 'swish':hiss(1800,.22,.09);return;                                   // rake / broom sweep
@@ -170,7 +172,13 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       case 'spring':tone(500,180,.18,.06,'triangle');return;                   // root springs back
       case 'tug':hiss(500,.14,.06);return;
       case 'twist':tone(700,420,.1,.05,'triangle');tone(980,980,.05,.04,'sine',.09);return;
-      case 'snip':tone(2400,1800,.035,.05,'square');return;
+      // Oct 15 2026 (user: "make the crash landing into water sound more like water"): a synthesized splash, three sizes (waterHud.ts
+      // SPLASH_CUES): a low bloop as the body goes under, a slap of noise, the water mass, a spray tail, two bubbles. No samples.
+      case 'splash-soft':case 'splash':case 'splash-big':{const g=kind==='splash-soft'?.7:kind==='splash-big'?1.4:1;
+        // Oct 15 2026 (user): no low bloop; a bigger slap and water mass, more spray, bigger bubbles.
+        hiss(1300,.14,.34*g);hiss(700,.5,.26*g,.03);hiss(3200,.85,.13*g,.08);hiss(5200,.6,.07*g,.2);
+        tone(480,860,.16,.09*g,'sine',.18);tone(620,1040,.14,.08*g,'sine',.33);tone(740,1180,.12,.06*g,'sine',.5);return;}
+      case 'snip':tone(2400*(.85+.3*gain),1800*(.85+.3*gain),.035,.05*gain,'square');return;    // the reel's ratchet: louder and brighter the faster it is cranked
       case 'cut':tone(2400,1700,.035,.05,'square');hiss(3000,.12,.07,.03);return;
       case 'pick':tone(660,990,.07,.045);return;
       case 'bag':hiss(700,.14,.1);tone(180,120,.08,.06,'sine',.05);return;
@@ -180,12 +188,16 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       case 'paint':hiss(4000,.2,.05);return;
       case 'throw':hiss(1200,.2,.07);return;
       case 'thunk':tone(180,110,.08,.11);return;                               // ball off the rebound wall
+      // Oct 15 2026 (user: "add animation when kicking the ball against the fish stall"; propReactions 'stall'): a wooden thunk off
+      // the counter, then a wet slap (a short noise burst) and two little drip blips off the ice. Synthesized, no samples.
+      case 'stall':tone(170,72,.14,.14,'sine',0,.004);hiss(380,.05,.06);hiss(1700,.09,.11,.05);tone(900,1300,.05,.03,'sine',.16);tone(1100,1600,.045,.025,'sine',.27);return;
       case 'ding':tone(880,880,.09,.06);tone(1320,1320,.14,.05,'sine',.08);return;
       case 'nope':tone(300,220,.14,.06,'triangle');return;
       case 'whistle':tone(2600,2500,.28,.05,'square');tone(2750,2650,.28,.03,'square');return;
       case 'pump':hiss(900,.1,.07);tone(240,300,.08,.04);return;
       case 'squeak':tone(1500,2100,.12,.05,'triangle');return;
       case 'hiss':hiss(5000,.35,.08);return;
+      case 'sting':tone(110,108,.34,.13,'triangle');tone(116.5,115,.5,.13,'triangle',.4);return; // water P1a: the sharks' two-note "da-dum" (a semitone up)
     }};
   document.addEventListener('fi2-job-cue',jobCue);
   function ride(mode:TravelMode){

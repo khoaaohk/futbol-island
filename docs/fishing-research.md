@@ -223,6 +223,7 @@ Key: **Impact** F = fun, L = learning. **Effort** S = under a day, M = 1–3 day
 ### B. Next sprint (M)
 
 **B1. The new fight: a tension reel (hold and release) with left/right runs. This is the headline change.**
+*(Built 15 Oct 2026 and reworked the same day, user decision: the hold-and-swipe input below became a Pokémon GO-style SPIN REEL — a big centred reel the finger circles, its spin rate scaling the winding and tension; a run means "stop spinning and let it tire", with no counter-steer. The derby, photo mode, the record boards and the weather from §C were removed as "too complicated". Current state: docs/fishing.md "The feel of fishing".)*
 - **How it plays:**
   - After the hook, a curved **tension arc** sits around the Reel button (green, then yellow, then red).
   - **Hold** Reel to wind in: progress fills and tension rises.

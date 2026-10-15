@@ -14,6 +14,7 @@
 //    loop on screen; beyond 260 m it is hidden entirely (no draw). Frozen frames (dt 0) and reduced motion / static ambience
 //    (heat tiers 3–4) upload nothing. No per-frame allocations, no loop, timer or audio of its own.
 import * as T from 'three';
+import type {RideFriend} from '../town/water/animalRides';
 import {WHALE_SHARK_LOOP} from '../town/summitSeaLife';
 
 const WATER=-.43,NEAR=140,DRAW=260;
@@ -98,11 +99,11 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
  const xs=pts.map(p=>p.x),zs=pts.map(p=>p.z),box={minX:Math.min(...xs)-8,maxX:Math.max(...xs)+8,minZ:Math.min(...zs)-8,maxZ:Math.max(...zs)+8};
  const sphere=new T.Sphere(new T.Vector3(),9);
  // Starts in the stretch the summit lookout's camera frames (on desktop and phones).
- const state={u:.45*total,k:1,clock:0,placed:false,placedReduced:false};
+ const state={u:.45*total,k:1,clock:0,placed:false,placedReduced:false,ridden:false};
  const stats={awake:false,updated:0,visible:false};
  const up=new T.Vector3(0,1,0);
  function place(dt:number){
-  const before=state.u;state.u=(state.u+dt*loop.speed)%total;if(state.u<before)state.k=1;
+  if(!state.ridden){const before=state.u;state.u=(state.u+dt*loop.speed)%total;if(state.u<before)state.k=1;}else if(state.u<lengths[state.k-1])state.k=1;// ridden (water P1b): the ride moved u
   while(state.k<n&&lengths[state.k]<state.u)state.k++;
   const a=pts[state.k-1],b=pts[state.k%n],f=(state.u-lengths[state.k-1])/((lengths[state.k]-lengths[state.k-1])||1);
   const dx=b.x-a.x,dz=b.z-a.z;
@@ -114,10 +115,14 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
   const d=Math.hypot(Math.max(box.minX-player.x,0,player.x-box.maxX),Math.max(box.minZ-player.z,0,player.z-box.maxZ));
   root.visible=stats.visible=d<DRAW;stats.awake=false;stats.updated=0;if(!root.visible)return;
   if(!state.placed||state.placedReduced!==reduced){place(0);state.placed=true;state.placedReduced=reduced;}
-  sphere.center.copy(mesh.position);if(d>NEAR||!frustum.intersectsSphere(sphere))return;
+  sphere.center.copy(mesh.position);if(!state.ridden&&(d>NEAR||!frustum.intersectsSphere(sphere)))return;
   // Frozen (dt 0) or static ambience / reduced motion: already placed, so nothing uploads.
-  stats.awake=true;if(dt===0||reduced)return;
+  stats.awake=true;if(dt===0||reduced&&!state.ridden)return;// a ride is the player's own travel: it moves with reduced motion too
   const step=Math.min(dt,.1);state.clock=(state.clock+step)%(2*Math.PI/1.15*400);time.value=state.clock;place(step);stats.updated=1;
  }
- return {root,mesh,stats,update,time,box,dispose(){root.removeFromParent();geometry.dispose();material.dispose();}};
+ /** Water P1b (lib/town/water/animalRides.ts): the whale shark as a ridable "island friend" (the same one mesh). */
+ const friend:RideFriend={kind:'whale',id:loop===WHALE_SHARK_LOOP?WHALE_SHARK_LOOP.id:'whale-shark',points:pts,lengths,total,
+  get u(){return state.u;},set u(v:number){state.u=v;},get available(){return root.visible;},
+  get ridden(){return state.ridden;},set ridden(v:boolean){state.ridden=v;}};
+ return {root,mesh,stats,update,time,box,friend,dispose(){root.removeFromParent();geometry.dispose();material.dispose();}};
 }

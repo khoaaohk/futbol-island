@@ -44,7 +44,7 @@ import {LEGEND_INFO,legendId} from './legendary';
 /** Boat-local standing point (bow +x, starboard +z): the forward end of the aft deck, port side, by the wheelhouse door. */
 export const CAPTAIN_LOCAL={x:-.15,z:-1.1};
 const HOW_TO_GREETING='Welcome aboard! Out here the water is deep, so bigger fish swim below, but they take longer to rise to your float. Look for diving gulls or a bait ball: cast there and land in new water each time.';
-const FIGHT_ANSWER='Drag on the water to aim, let go to cast, then watch the float. Wait for the real plunge, not the nibbles. Hold Reel to wind in, ease off when the line strains, and swipe the other way when a fish runs. Easy reel in the settings makes it one tap at a time.';
+const FIGHT_ANSWER='Drag on the water to aim, let go to cast, then watch the float. Wait for the real plunge, not the nibbles. Spin the reel round and round to wind in, ease off when the line strains, and stop spinning when a fish runs.';
 const legendLine=(spot:string)=>{const L=LEGEND_INFO[legendId(spot)];return L?`${L.clue} Help the islanders with their fishing requests and you will hear more about it. Catch it once, then let it go.`:'';};
 const floorAt=(x:number,z:number)=>()=>{const h=landableDeckHeight(x,z);return h>0?h:BOAT_DECK_Y;};
 const [B0,B1]=DEEP_SEA_BOATS;

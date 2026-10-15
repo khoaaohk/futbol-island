@@ -20,6 +20,7 @@ import {createSkillDriver,type SkillMotion} from './skillMoves';
 import {jobPoseTarget,type PoseTarget} from './jobPoses';
 import type {JobPose} from '../town/jobs/jobMoves';
 import type {ZipRigPose} from '../town/zipline';
+import {createSwimPoser,type SwimRigPose} from './swimPose';
 import {copyTrickPose,createTrickPose,solveTrickLeg,type TrickPose,type TrickLegAngles} from './trickPose';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
@@ -80,6 +81,9 @@ export type PlayerMotion = {
   /** Hanging from the zipline's handle bar (lib/graphics/zipline.ts): the body pose, and both hands solved onto the bar at
    *  (±half, barY, barZ) rig-local (one may let go to wave). Replaces the parachute pose; `w` fades it out on the landing deck. */
   zipline?: ZipRigPose;
+  /** In the sea (lib/town/water, lib/graphics/swimPose.ts): treading water, the front crawl, floating, the splash-down entry.
+   *  Replaces the gait's legs, arms, spine and head while `w` > 0; fades out over ~.2 s when removed. */
+  swim?: SwimRigPose;
   turnSmoothing?: number;
   flight?: FlightPose;
   rooftopPose?: 'hang'|'fall'|'dizzy';
@@ -774,6 +778,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
    *  from the runtime's ZipRigPose), then both arms are solved onto the bar: a two-bone solve in the chest's own frame (after the
    *  spine has moved, the torso's shape scale included), elbows out to the side and a little back, so the middle of each mitten
    *  (the hand joint + 2 cm) sits ON the bar every frame. The waving hand blends to a wave over the top. No allocation. */
+  const swimPoser=createSwimPoser({pelvis,torso,head,legs,arms});
   const poseZipBody=(z:ZipRigPose)=>{
     const w=Math.max(0,Math.min(1,z.w));if(w<=0)return;const legOff=(P.legs-1)*.83;
     zipMix(pelvis.position,'x',0,w);zipMix(pelvis.position,'y',z.py+legOff,w);zipMix(pelvis.position,'z',z.pz,w);
@@ -834,7 +839,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(dt>0)stepFrame=dt;
     ws = Math.max(.05, Math.abs(root.scale.x));
     // Dive / jump state first: a diving keeper's yaw must not chase his own sideways travel.
-    const airAllowed=!motion?.truckRiding&&!(motion?.travelMode&&motion.travelMode!=='walk')&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
+    const swimming=!!motion?.swim&&motion.swim.w>0;
+    const airAllowed=!motion?.truckRiding&&!(motion?.travelMode&&motion.travelMode!=='walk')&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
     const diveIn=airAllowed?motion?.dive:undefined,jumpIn=airAllowed?motion?.jump:undefined;
     const airJump=!initialized||!!motion?.resumePose;
     if(diveIn){const p=T.MathUtils.clamp(diveIn.progress,0,1);if(diveFade===0||p<diveP-.3)diveLast=-1;diveP=p;diveDir=diveIn.dir<0?-1:1;diveH=T.MathUtils.clamp(diveIn.height??.5,0,1);diveFade=1;}
@@ -933,7 +939,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(action>0)contactOffsets[kickSide<0?0:1].set(strikeKind==='pass'?-kickSide*.21:0,.08,strikeKind==='pass'?.062:.32);
     // One-shot reactions: the host drives progress; the rig fades a cleared reaction out over ~.15 s and
     // cross-fades a new one over the old, so a pose never snaps.
-    const reactOK=!rideBase&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
+    const reactOK=!rideBase&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
     const nextReaction=reactOK?motion?.reaction:undefined;
     if(nextReaction||reactKind||prevKind){
       const nextP=T.MathUtils.clamp(motion?.reactionProgress??0,0,1);
@@ -1022,7 +1028,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     else pivotSide=0;
     if(oldPivotSide&&oldPivotSide!==pivotSide){const i=oldPivotSide<0?0:1;replant[i]=replantTotal[i]=.18;replantAnchors[i].copy(shownFeet[i]);}
     const hardReset=discontinuity||!!sample||rideBase||reduced;
-    const flowingBody=!rideBase&&!reduced&&motion?.juggle===undefined&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat;
+    const flowingBody=!rideBase&&!reduced&&motion?.juggle===undefined&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat;
     const resetBody=hardReset||!flowingBody||!bodyResponseActive;
     const nextBodyMode=(action>0?1:0)+(receive>.05?2:0)+(jockey>.3?4:0)+(brake>.3?8:0)+(backpedal>.4?16:0)+(opening>.1?32:0)+(motion?.keeperReach&&motion.keeperReach>.1?64:0);
     const transitionBody=nextBodyMode!==bodyMode||kick>0&&kick<priorKick;
@@ -1433,7 +1439,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Cancel the whole parent rotation, not only its sagittal angles. Abducted hips and
       // banking otherwise tip the support boot onto its edge (especially in a wide jockey).
       // Retain deliberate toe pitch and leave striking/receiving and special action feet alone.
-      if(lateralSolve&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&motion?.stunAge===undefined&&!motion?.wallSplat){
+      if(lateralSolve&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat){
         const solePitch=(lockWeight>0?0:stance?0:-.12*swing*effort)+toe;
         const freeAnkle=lockWeight===0&&!stance&&shownFeet[index].y>.13&&!reduced;
         soleTarget.setFromEuler(soleEuler.set(solePitch,openingSide*opening*.25+side*(.045+.1*compact),freeAnkle?side*.055*swing*effort*smooth((shownFeet[index].y-.13)/.08):0,'YXZ'));
@@ -1500,7 +1506,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }else head.rotation.z=reduced?0:-torso.rotation.z*.18;
     }
     // Only involved, nearby actors track the ball. No scene queries or extra loops.
-    if (!rideBase && !motion?.parachute && !motion?.rooftopPose && motion?.stunAge===undefined && !motion?.juggle && !motion?.powerKick && !reduced && !clubCostume) {
+    if (!rideBase && !motion?.parachute && !motion?.rooftopPose && !swimming && motion?.stunAge===undefined && !motion?.juggle && !motion?.powerKick && !reduced && !clubCostume) {
       let target = 0;
       if (motion?.lookX!==undefined && motion.lookZ!==undefined) {
         const lx=motion.lookX-x,lz=motion.lookZ-z,d2=lx*lx+lz*lz;
@@ -1673,6 +1679,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         arms[i].elbow.rotation.x=frantic?-.7:-.25;
       }
     }
+    // In the sea (Oct 15 2026): the swim shapes over the solved body; also runs with no `swim` so a finished swim fades out.
+    if(swimming||swimPoser.active)swimPoser.apply(motion?.swim,dt,reduced,turn);
     if(motion?.stunAge!==undefined){
       const age=motion.stunAge,weight=smooth(age/.08)*(1-smooth((age-3.2)/.4)),down=age<1.15?1:1-smooth((age-1.15)/.7),flail=reduced?0:Math.exp(-age*1.7),dizzy=reduced?0:Math.sin(age*8)*.15;
       torso.rotation.x+=(.16*down+.08*(reduced?0:Math.sin(age*5)))*weight;head.rotation.z=dizzy*weight;head.rotation.x=.12*weight;

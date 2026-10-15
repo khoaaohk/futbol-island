@@ -27,6 +27,7 @@ import type {StartReport} from './startReport';
 import type {Overview} from './overview';
 import type {SaveMetricsReport} from '../saves/metrics';
 import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
+import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -529,6 +530,9 @@ export type Report={
  /** Oct 15 2026: Summit Kick plays and best score in range, read straight from the arcade leaderboard (lib/arcade/kickAdminMetrics.ts).
   *  Aggregates only (no initials, no icon); null when not configured or not reachable. */
  summitKick?:KickAdminMetrics|null;
+ /** Oct 15 2026: fights per fishing session over the raw-beat window (lib/analytics/fishingAdminMetrics.ts,
+  *  supabase/migrations/20261017_analytics_fishing.sql); the fishing counters themselves are in `overview.fishing`. */
+ fishing?:FishingAdminMetrics|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

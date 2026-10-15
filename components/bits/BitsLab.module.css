@@ -1,0 +1,23 @@
+/* /bits-lab (dev only). The museum's modern gallery palette (docs/museum-modern-style.md) for the carousel sample. */
+.page{min-height:100dvh;box-sizing:border-box;padding:24px 18px 64px;background:#f6f4ef;color:#1d1d1b;font-family:var(--btn-font);overflow-x:hidden}
+.head h1{margin:0 0 6px;font-size:clamp(26px,4vw,40px);letter-spacing:-.01em}
+.head p,.note{margin:0 0 12px;color:#6b6a66;font-size:14px;line-height:1.5}
+.head a{color:#2a5bd7}
+.gallery,.block{max-width:1100px;margin:28px auto 0;padding-top:18px;border-top:1px solid #d9d6cf}
+.block{display:flex;flex-direction:column;align-items:center;gap:12px}
+.gallery h2,.block h2{align-self:flex-start;margin:0 0 4px;font-size:20px}
+.plate{position:relative;box-sizing:border-box;height:340px;padding:22px 20px;background:#fff;border:1px solid #d9d6cf;border-radius:6px;display:flex;flex-direction:column;gap:8px;text-align:left}
+.bar{position:absolute;left:20px;right:20px;top:0;height:4px;background:var(--accent)}
+.year{font-size:64px;line-height:1;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;margin-top:10px}
+.plate h3{margin:12px 0 0;font-size:20px;line-height:1.2}
+.label{margin:0;font-size:13px;color:#6b6a66}
+.caption{margin:auto 0 0;font-size:15px;line-height:1.5}
+.mini{--w:clamp(150px,40vw,220px)}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.row button,.block>button{min-height:var(--btn-height);padding:8px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-bright-edge);font:800 14px var(--btn-font);cursor:pointer}
+.row button:active,.block>button:active{translate:0 var(--btn-press)}
+.wallet{display:flex;align-items:center;gap:8px;margin:0;padding:6px 14px;border-radius:999px;background:#fff8e6;border:2px solid #e9c16b;font-weight:700}
+.wallet b{font-size:24px}
+.coin{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a3,#e9b33b 60%,#a8863d)}
+.list{list-style:none;margin:0;padding:0;width:min(420px,100%);display:grid;gap:8px}
+.list li{padding:12px 14px;background:#fff;border:1px solid #d9d6cf;border-radius:6px}

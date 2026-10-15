@@ -27,6 +27,9 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  // tick only); lastAir: how long the last hop lasted (s).
  const state={height:fieldSurfaceHeight(start.x,start.z),verticalSpeed:0,falling:false,hangTime:0,dropStart:0,recovery:0,impact:false,air:false,landImpact:0,lastAir:0};
  let driftX=0,driftZ=0,collisionRadius=.32;
+ // Water (Oct 15 2026, lib/town/water): `canSplash` lets a ride launch end over water that is deep enough to splash into
+ // (rooftopJump.ts planRoofLaunch); Town installs it with setSplashTest. Walking into the shallows is the `water` argument of update().
+ let canSplash:((x:number,z:number)=>boolean)|null=null;
  const hill=createHillAssist(),steerInput={x:0,z:0,sprint:false},hop=createSlopeHop();
  // Roof-to-roof gap jumps (lib/town/rooftopJump.ts): planned only on the frame an edge fall would start.
  const jump=createRoofJump();
@@ -65,7 +68,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   const barriers=[...roofGrid.query(x,z,.8).filter(r=>r.height>roof.height+.35),...propGrid.query(x,z,.8).filter(p=>p.floor<=roof.height+.2&&p.top>roof.height+.2)];
   return insideObstacle(x,z,roof,-clearance)&&!blocked(x,z,barriers,.8);
  }
- function update(dt:number,p:{x:number;z:number},v:{x:number;z:number},input:{x:number;z:number;sprint:boolean},mode:TravelMode){
+ /** `water` (wading, Oct 15 2026): which water the walker may step into, and the wade speed scale (waterDepth.ts). */
+ function update(dt:number,p:{x:number;z:number},v:{x:number;z:number},input:{x:number;z:number;sprint:boolean},mode:TravelMode,water?:{allow:(x:number,z:number)=>boolean;speed:number}){
   state.impact=false;state.landImpact=0;
   const jumpHeight=jump.step(dt,p,v);if(jumpHeight!==null){state.height=jumpHeight;if(jump.state.fall)startFall(p,v);return;}
   if(state.recovery>0){state.recovery=Math.max(0,state.recovery-dt);v.x=v.z=0;return;}
@@ -105,7 +109,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // a climb steeper than the limit taken across the slope. 1 and four comparisons anywhere else.
   // Arriving fast at a climb, the ride's momentum carries it up and it eases down to its climbing speed (RIDE_CLIMB_COAST).
   let slope=1,coast=0,steer=input;if(mode!=='jetpack'&&nearSummit(p.x,p.z)){const a=hill.steer(mode,p.x,p.z,input.x,input.z);slope=a.scale;coast=climbCoast(p.x,p.z,a.grade,a.x,a.z);steerInput.x=a.x;steerInput.z=a.z;steerInput.sprint=input.sprint;steer=steerInput;}
-  stepPlayer(p,v,steer,dt,barriers,mode,collisionRadius,slope,coast);
+  stepPlayer(p,v,steer,dt,barriers,mode,collisionRadius,water?slope*water.speed:slope,coast,mode==='walk'&&water?water.allow:undefined);
   const floor=surface(p.x,p.z,state.height);
   // Hops off Summit Isle's crests (slopeHop.ts; a few comparisons anywhere else).
   if(mode!=='jetpack'&&(state.air||nearSummit(p.x,p.z))){const h=hop.step(dt,mode,p.x,p.z,v.x,v.z,state.height,floor);state.air=hop.state.air;
@@ -113,7 +117,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
    if(hop.state.landImpact>0){state.landImpact=hop.state.landImpact;state.lastAir=hop.state.lastAir;state.height=floor;return;}}
   if(state.height-floor>1){
    const from=state.height;
-   const query={x:p.x,z:p.z,vx:v.x,vz:v.z,height:state.height,mode,source:roofAt(fromX,fromZ,state.height),surface:(x:number,z:number)=>surface(x,z,from),ground:fieldSurfaceHeight,canLand:(x:number,z:number)=>canLand(x,z,from),blockedAt:(x:number,z:number)=>blocked(x,z,groundGrid.query(x,z,1).filter(o=>!buildingFor(o)),.8)};
+   const query={x:p.x,z:p.z,vx:v.x,vz:v.z,height:state.height,mode,source:roofAt(fromX,fromZ,state.height),surface:(x:number,z:number)=>surface(x,z,from),ground:fieldSurfaceHeight,canLand:(x:number,z:number)=>canLand(x,z,from),blockedAt:(x:number,z:number)=>blocked(x,z,groundGrid.query(x,z,1).filter(o=>!buildingFor(o)),.8),canSplash:canSplash??undefined};
    const plan=planRoofJump(query)??planRoofLaunch(query,TRAVEL_MODES[mode].maxSpeed);
    if(plan){jump.start(plan);return;}
    startFall(p,v);
@@ -149,5 +153,5 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   for(let r=startRadius;r<=maxRadius;r++){const n=r?Math.min(LANDING_RING_CAP,Math.max(32,Math.ceil(r*2*Math.PI/3))):1;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz,from))return {x:nx,z:nz};}}
   return null;
  }
- return {state,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update};
+ return {state,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update,setSplashTest(test:((x:number,z:number)=>boolean)|null){canSplash=test;}};
 }

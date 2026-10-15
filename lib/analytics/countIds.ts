@@ -17,7 +17,9 @@
  *   rv:q rv:ok rv:done             warm-up review questions answered (first try), right first time, warm-ups finished
  *   st: sg: sp:                    the title screen (at `/`), its For grown-ups and Privacy sheets (startIds.ts, Oct 9 2026)
  *   tu:open tu:finish              the Island Tutorial (Paths card): opened, watched to the end (Oct 16 2026)
- *   fi:<event>                     fishing content (FISHING_COUNT_EVENTS): legends, records, requests, derby, lures, photos
+ *   fi:<event>                     fishing (FISHING_COUNT_EVENTS, lib/analytics/fishingEvents.ts): legends, clues, requests, the
+ *                                  lure put on by id, fights started (spin reel), landed / escaped / missed, slips
+ *                                  per fight (bucketed), runs stopped vs spun through, average spin rate (bucketed), Fishbook opens
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  */
@@ -79,13 +81,44 @@ export const BEACH_COUNT_EVENTS=[['main','Beach finds picked up (Futbol Island)'
  */
 export const TUTORIAL_COUNT_EVENTS=[['open','Island Tutorial opened'],['finish','Island Tutorial watched to the end']] as const;
 
+/** The four lures (lib/town/fishing/lures.ts LureId; tests/admin-analytics-fishing.cjs checks they agree). Repeated here so the
+ *  every-page tracker bundle never imports the fishing content. */
+export const FISHING_LURE_IDS=['panenka','knuckleball','rabona','nutmeg'] as const;
 /**
- * Fishing content (Oct 15 2026, lib/town/fishing/fishingLogStore.ts, docs/fishing.md "Content systems"): totals only, never which
- * fish, spot, lure or score.
+ * Fishing (Oct 15 2026, lib/analytics/fishingEvents.ts, docs/fishing.md "Analytics"): totals only, never which fish, spot or
+ * size. The lure put on by id (so the four football-technique lures can be compared) and `lure_none` when it is taken off;
+ * fights started with the spin reel; each hooked fight's end (landed / escaped) and bites missed before a hook;
+ * per spin fight: slips bucketed 0 / 1 / 2 / 3+, runs the player stopped spinning for vs spun through, the average spin rate
+ * bucketed slow (< 0.45) / mid / full (≥ 0.8); the Fishbook opened from the HUD's button; requests done, legend clues and releases.
+ * Removed 15 Oct 2026 with the features (user: "too complicated"): fi:record, fi:derby_start, fi:derby_done, fi:photo, fi:lure.
  */
-export const FISHING_COUNT_EVENTS=[['legend','Island Legend caught and released'],['record','New spot record'],['clue','Legend clue found'],
- ['request','Islander fishing request finished'],['derby_start','Fishing Derby started'],['derby_done','Fishing Derby finished'],
- ['lure','Lure put on the line'],['photo','Fishing photo saved']] as const;
+export const FISHING_COUNT_EVENTS=[
+ ...FISHING_LURE_IDS.map(id=>[`lure_${id}`,`Lure put on: ${id[0].toUpperCase()+id.slice(1)}`] as const),['lure_none','Lure taken off'],
+ ['hook_spin','Fight started (spin reel)'],
+ ['land','Fish landed'],['escape','Hooked fish got away (idle)'],['miss','Bite missed (too early or too late)'],
+ ['slips_0','Spin fights with no slip'],['slips_1','Spin fights with 1 slip'],['slips_2','Spin fights with 2 slips'],['slips_3plus','Spin fights with 3+ slips'],
+ ['run_stopped','Runs: stopped spinning in time'],['run_spun','Runs: spun through (slipped)'],
+ ['spin_slow','Spin fights at a slow average rate'],['spin_mid','Spin fights at a medium average rate'],['spin_full','Spin fights at a full average rate'],
+ ['book','Fishbook opened while fishing'],
+ ['request','Islander fishing request finished'],['clue','Legend clue found'],['legend','Island Legend caught and released'],
+] as const;
+
+
+/**
+ * Water (Oct 15 2026, lib/analytics/waterEvents.ts, docs/swimming-research.md "P0 implemented"): the first wade and the first
+ * swim on a device, swims started, splash-downs by where they came from, the three water actions, time in a swim bucketed,
+ * the 20 fps treading-water cap engaging, and the once-per-device swim lesson. Totals only: never a position or a route.
+ */
+export const WATER_COUNT_EVENTS=[
+ ['first_wade','First time wading (per device)'],['first_swim','First time swimming (per device)'],
+ ['swim_start','Swims started'],
+ ['splash_fall','Splash-down: a fall or cut parachute'],['splash_roof','Splash-down: a rooftop jump'],['splash_launch','Splash-down: a ride launch'],['splash_dropin','Splash-down: jetpack “Drop in”'],
+ ['shore','“Back to shore” used'],['fast','“Swim fast” used'],['float','“Float” used'],
+ ['time_10s','Swims under 10 s'],['time_30s','Swims 10–30 s'],['time_60s','Swims 30–60 s'],['time_120s','Swims 1–2 min'],['time_long','Swims over 2 min'],
+ ['idle_cap','Treading water: 20 fps idle cap engaged'],['lesson','Swim lesson shown'],
+ ['sharks_circle','Sharks circled a swimmer'],['sharks_escape','Sharks peeled off (shore reached or lost interest)'],
+ ['ride_manta','Rides on a manta ray'],['ride_whale','Rides on the whale shark'],['ride_lap','Rides finished (one lap)'],['ride_off','Rides let go early'],
+] as const;
 
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
@@ -95,6 +128,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...SUMMIT_COUNT_EVENTS.map(([e])=>'su:'+e),...FRUIT_SHAKE_IDS.map(id=>'su:'+id),
  ...BEACH_COUNT_EVENTS.map(([e])=>'bc:pickup_'+e),...TUTORIAL_COUNT_EVENTS.map(([e])=>'tu:'+e),
  ...FISHING_COUNT_EVENTS.map(([e])=>'fi:'+e),
+ ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

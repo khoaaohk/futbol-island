@@ -7,8 +7,9 @@
  * nibbles 1-4 times (small bobs), then really bites (the float plunges). Tap during the bite window to hook it, then tap
  * Reel a number of times that grows with the animal (commons 2-3 ... legendary animals and sharks 10-14). Bigger animals
  * pull back if you pause. Tapping on a nibble scares the fish; tapping late lets it swim off. Nothing is ever lost.
- * Since Oct 15 2026 the default reel is the tension-and-runs fight (./fishingFight.ts: hold Reel, turn its runs, ease off in the
- * red; a slip drops one notch, the line never snaps); tapping Reel N times stays as the "Easy reel" option.
+ * Since Oct 15 2026 the default reel is the tension-and-runs fight (./fishingFight.ts: spin the big reel to wind in, stop spinning
+ * through a run, ease off in the red; a slip drops one notch, the line never snaps); tapping the reel N times stays as the "Easy
+ * reel" option.
  *
  * Kid safety: catch weights are internal only (never shown), and every phase ends on its own, so nothing loops forever.
  */
@@ -113,9 +114,9 @@ export function rollSize(id:FishId,rand:number,spook=0,bigger=0){const f=fishByI
 
 // ---- Session: the live catch timing ----
 export type SessionPhase='ready'|'casting'|'floating'|'approach'|'nibble'|'bite'|'reeling'|'scared'|'escaped'|'caught';
-export type SessionEvent='splash'|'notice'|'nibble'|'bite'|'escaped'|'scared'|'hooked'|'reel'|'reeled-in'|'cast'|'pull'
- /** Oct 15 2026 (docs/fishing-research.md A5, B1): the line twangs before the idle escape; the fight's runs, turns, slips and the red zone. */
- |'warn'|'run'|'turned'|'slip'|'leap'|'strain'|'ease';
+export type SessionEvent='splash'|'notice'|'nibble'|'bite'|'escaped'|'scared'|'hooked'|'reel'|'reeled-in'|'cast'
+ /** Oct 15 2026 (docs/fishing-research.md A5, B1): the line twangs before the idle escape; the fight's runs, slips and the red zone. */
+ |'warn'|'run'|'slip'|'leap'|'strain'|'ease';
 /** Reaction window after the real bite: about 0.6-1 s (shorter for rarer animals), a little longer in easy mode / reduced motion. */
 export const BITE_WINDOW:Record<FishRarity,number>={common:1,uncommon:.9,rare:.8,legendary:.7};
 export const EASY_BONUS=.35;
@@ -124,17 +125,6 @@ export const REEL_IDLE_LIMIT=8,REEL_TAP_GAP=.12;
 /** A5 (Oct 15 2026): the warning twang this long into an idle reel, before the REEL_IDLE_LIMIT escape. */
 export const REEL_WARN=5;
 export const CATCH_READ_TIME=3,CATCH_TAP_QUIET=.7;
-/** Reel taps needed after the hook, by rarity (sharks always reel like legendary animals). The size of the catch picks the number in the range. */
-export const REEL_TAPS:Record<FishRarity,[number,number]>={common:[2,3],uncommon:[4,5],rare:[6,8],legendary:[10,14]};
-export const reelRange=(f:FishSpecies):[number,number]=>f.group==='shark'?REEL_TAPS.legendary:REEL_TAPS[f.rarity];
-export function reelTapsFor(f:FishSpecies,sizeCm:number){const [lo,hi]=reelRange(f),k=Math.max(0,Math.min(1,(sizeCm-f.size[0])/Math.max(1e-6,f.size[1]-f.size[0])));return lo+Math.round((hi-lo)*k);}
-/**
- * Resistance: after a pause of `delay` seconds without a reel tap, bigger animals slowly pull line back (`rate` taps a
- * second). Kid-fair: commons never pull, progress never drops below zero, and the only "fail" is the same gentle escape
- * as a late tap after REEL_IDLE_LIMIT seconds of no tapping at all (nothing is lost; another fish comes).
- */
-export const REEL_PULL:Record<FishRarity,{delay:number;rate:number}|null>={common:null,uncommon:{delay:1.8,rate:.7},rare:{delay:1.4,rate:1},legendary:{delay:1.1,rate:1.3}};
-export const pullFor=(f:FishSpecies)=>f.group==='shark'?REEL_PULL.legendary:REEL_PULL[f.rarity];
 /** Swim speed (m/s) by rarity: rarer animals are faster (sharks fastest). */
 export const SWIM_SPEED:Record<FishRarity,number>={common:.9,uncommon:1,rare:1.2,legendary:1.5};
 const speedOf=(f:FishSpecies)=>f.group==='shark'?1.6:SWIM_SPEED[f.rarity];
@@ -146,12 +136,14 @@ export type Shadow={x:number;z:number;heading:number;alpha:number;length:number;
  path:Vec[];next:number;circles:boolean;
  /** Open-water direction (away from the shore): scared and escaping fish flee this way, never over land. */
  out:Vec};
-export type Session={phase:SessionPhase;t:number;wait:number;fish:{id:FishId;size:number}|null;shadow:Shadow|null;nibblesLeft:number;nextNibble:number;window:number;nibbles:number;dip:number;idleEscapes:number;reelTaps:number;reelTarget:number;reelIdle:number;reelCooldown:number;pulling:boolean;
+export type Session={phase:SessionPhase;t:number;wait:number;fish:{id:FishId;size:number}|null;shadow:Shadow|null;nibblesLeft:number;nextNibble:number;window:number;nibbles:number;dip:number;idleEscapes:number;reelTaps:number;reelTarget:number;reelIdle:number;reelCooldown:number;
  /** Where this cast landed (Oct 14 2026, aimed casting, fishingAim.ts): `hot` 0..1 on a hotspot (bigger, rarer fish), `spook`
   *  0..1 in water cast into again and again (slower bites, smaller fish). Set by the world when the float lands. */
  mods:{hot:number;spook:number};
  /** The tension-and-runs fight (./fishingFight.ts) while reeling; null = Easy reel (tap Reel N times, the original rules). */
  fight:Fight|null;
+ /** The fight of the last hook (kept after it lands or escapes, for the session's catch / escape events); null for an Easy reel hook. */
+ lastFight:Fight|null;
  /** The idle warning (A5) has played for this pause. */
  warned:boolean};
 /** After this many fish swim off with no tap at all, the line is reeled in (no endless cycle if a child puts the phone down). */
@@ -162,12 +154,12 @@ export type SessionOptions={
  /** Open-water direction at the spot (the cast direction). */
  out?:Vec;
  easy?:boolean;
- /** Content hooks (Oct 15 2026, the event API in ./fishingSession.ts): the current lure and derby flag, and an optional catch roll
-  *  that replaces rollCatch (night fish, lures …). It must return a species that lives at the spot. */
- lure?:string|null;derby?:boolean;
+ /** Content hooks (Oct 15 2026, the event API in ./fishingSession.ts): the current lure, and an optional catch roll that
+  *  replaces rollCatch (night fish, lures …). It must return a species that lives at the spot. */
+ lure?:string|null;
  roll?:(spot:FishSpot,rand:number,hot:number)=>FishId;
 };
-export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,pulling:false,mods:{hot:0,spook:0},fight:null,warned:false});
+export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,mods:{hot:0,spook:0},fight:null,lastFight:null,warned:false});
 const go=(s:Session,phase:SessionPhase)=>{s.phase=phase;s.t=0;};
 /** Spooked water waits up to 2.5× as long for a bite (Oct 14 2026). */
 export const SPOOK_WAIT=1.5;
@@ -209,21 +201,15 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
   case 'bite':if(s.t>=s.window){s.idleEscapes++;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;
   case 'reeling':{
    if(s.fight){
-    // The fight (B1): holding resets the idle clock; landing is the hook-out.
+    // The fight: spinning resets the idle clock; landing is the hook-out.
     const fe=stepFight(s.fight,step,rand);s.reelIdle=s.fight.holding?0:s.reelIdle+step;if(s.fight.holding)s.warned=false;
     s.reelTarget=1;s.reelTaps=s.fight.progress;
     for(const x of fe){if(x==='landed'){go(s,'caught');s.shadow=null;ev.push('hooked');s.fight=null;return ev;}ev.push(x);}
     if(!s.warned&&s.reelIdle>=REEL_WARN){s.warned=true;ev.push('warn');}
     if(s.reelIdle>=REEL_IDLE_LIMIT){s.idleEscapes++;s.fight=null;s.warned=false;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}
     break;}
-   s.reelIdle+=step;
-   if(!s.warned&&s.reelIdle>=REEL_WARN){s.warned=true;ev.push('warn');}
-   const f=s.fish?fishById(s.fish.id):undefined,pull=f?pullFor(f):null;
-   // Resistance: a big animal pulls line back while you pause (never below zero, never loses anything by itself).
-   const pulling=!!pull&&s.reelIdle>=pull.delay&&s.reelTaps>0;
-   if(pulling){s.reelTaps=Math.max(0,s.reelTaps-pull!.rate*step);if(!s.pulling)ev.push('pull');}
-   s.pulling=pulling;
-   if(s.reelIdle>=REEL_IDLE_LIMIT){s.idleEscapes++;s.pulling=false;s.warned=false;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;}
+   s.reelIdle+=step;// (no fight: only if a caller set the phase by hand)
+   if(s.reelIdle>=REEL_IDLE_LIMIT){s.idleEscapes++;s.warned=false;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;}
   case 'scared':case 'escaped':
    // Swims off and sinks into the haze as it fades (never vanishes in view).
    if(sh){const flee=(s.phase==='scared'?3.2:2.2)*step;sh.x+=Math.sin(sh.heading+Math.PI)*flee;sh.z+=Math.cos(sh.heading+Math.PI)*flee;sh.alpha=Math.max(0,1-s.t/FLEE_TIME);sh.rise=Math.min(1,s.t/FLEE_TIME);}
@@ -231,26 +217,22 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
  }
  return ev;
 }
-/** The one button (Reel / Space / tap on the water). `opts.fight` (Oct 15 2026): hooking starts the tension-and-runs fight
- *  (./fishingFight.ts) instead of the Easy reel taps; while it runs, taps do nothing (the Reel button is held instead). */
-export function tapSession(s:Session,opts?:{fight?:boolean;rand?:()=>number}):SessionEvent|null{
+/** The one button (the reel / Space / tap on the water). Hooking always starts the tension-and-runs fight (./fishingFight.ts,
+ *  Oct 15 2026; the Easy reel tap meter is gone); while it runs, taps do nothing (the reel is spun instead). */
+export function tapSession(s:Session,opts?:{rand?:()=>number}):SessionEvent|null{
  s.idleEscapes=0;
  // A burst of reel taps must never skip the catch fact. Require both time to
  // read and a short pause in tapping before an intentional new cast.
  if(s.phase==='caught'&&(s.t<CATCH_READ_TIME||s.reelCooldown>0)){s.reelCooldown=CATCH_TAP_QUIET;return null;}
  switch(s.phase){
-  case 'ready':case 'caught':s.fish=s.phase==='caught'?null:s.fish;s.shadow=null;s.nibbles=0;s.reelTaps=s.reelTarget=s.reelIdle=s.reelCooldown=0;s.pulling=false;s.fight=null;s.warned=false;go(s,'casting');return 'cast';
+  case 'ready':case 'caught':s.fish=s.phase==='caught'?null:s.fish;s.shadow=null;s.nibbles=0;s.reelTaps=s.reelTarget=s.reelIdle=s.reelCooldown=0;s.fight=null;s.warned=false;go(s,'casting');return 'cast';
   case 'floating':go(s,'ready');return 'reeled-in';
   case 'approach':case 'nibble':if(s.shadow)aimFlee(s.shadow);go(s,'scared');return 'scared';
-  case 'bite':{const f=fishById(s.fish!.id)!;s.reelTaps=0;s.reelTarget=reelTapsFor(f,s.fish!.size);s.reelIdle=0;s.pulling=false;s.warned=false;s.reelCooldown=REEL_TAP_GAP;
-   s.fight=opts?.fight?createFight(f,s.fish!.size,opts.rand??Math.random):null;if(s.fight)s.reelTarget=1;go(s,'reeling');return 'reel';}
-  case 'reeling':if(s.fight||s.reelCooldown>0)return null;s.reelTaps=Math.min(s.reelTarget,Math.floor(s.reelTaps+1+1e-9));s.reelIdle=0;s.pulling=false;s.warned=false;s.reelCooldown=REEL_TAP_GAP;s.dip=1;
-   if(s.reelTaps>=s.reelTarget){go(s,'caught');s.shadow=null;return 'hooked';}return 'reel';
+  case 'bite':{const f=fishById(s.fish!.id)!;s.reelTaps=0;s.reelIdle=0;s.warned=false;s.reelCooldown=REEL_TAP_GAP;
+   s.fight=createFight(f,s.fish!.size,opts?.rand??Math.random);s.lastFight=s.fight;s.reelTarget=1;go(s,'reeling');return 'reel';}
   default:return null;
  }
 }
-/** Whole reel taps banked so far (the HUD meter moves in whole steps, so it never re-renders per frame). */
-export const reelDone=(s:Session)=>Math.max(0,Math.floor(s.reelTaps+1e-9));
 /** Seconds of the reaction window left while the float is under (for the HUD, never a countdown number). */
 export const biteRemaining=(s:Session)=>s.phase==='bite'?Math.max(0,s.window-s.t):0;
 

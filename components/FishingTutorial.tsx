@@ -1,10 +1,10 @@
 'use client';
 /**
  * The first-time fishing tutorial (Oct 15 2026, docs/fishing-research.md A3): on this device's first fishing session a small
- * card walks through the beats one at a time (aim, watch the shadow, wait through the nibbles, NOW on the bite, then reel),
- * with a dotted "ghost hand" showing the gesture. It ends on the first catch (or Skip) and is remembered per device
+ * card walks through the beats one at a time (aim, watch the shadow, wait through the nibbles, NOW on the bite, then spin the
+ * reel), with a dotted "ghost hand" showing the gesture (a hand circling on the reel for the spin). It ends on the first catch
+ * (or Skip) and is remembered per device
  * (fi2-fish-tutorial-v1, a DEVICE key in lib/saves/snapshot.ts). DOM + one-shot / short CSS animations only; no timers.
- * The reel step offers the Easy reel option (tap instead of the tension fight).
  */
 import type {SessionPhase} from '@/lib/town/fishing/fishingCore';
 import styles from './FishingHost.module.css';
@@ -27,20 +27,18 @@ export const TUTORIAL_TEXT:Record<TutorialStep,string>={
  watch:'Watch the water for a fish shadow.',
  wait:'Wait… wait… a nibble is just a feint!',
  now:'NOW! Tap Hook!',
- reel:'Hold Reel to wind in. When it runs, swipe the other way!',
+ reel:'Spin the reel round and round to wind in. When it runs, stop and let it tire!',
  miss:'Oops! Another fish will come. Wait for the big splash.',
- done:'You did it! Easy reel can be turned on or off any time.',
+ done:'You did it! You landed your first catch.',
 };
-export const EASY_REEL_TEXT='Tap Reel again and again!';
 
-/** The card under the status message. `ghost` hands for the water (aim) are drawn here; the button hands live in the Reel button. */
-export function FishingTutorial({phase,easyReel,onEasyReel,onDone}:{phase:SessionPhase;easyReel:boolean;onEasyReel:(on:boolean)=>void;onDone:()=>void}){
- const step=tutorialStep(phase),text=step==='reel'&&easyReel?EASY_REEL_TEXT:TUTORIAL_TEXT[step];
+/** The card under the status message. `ghost` hands for the water (aim) are drawn here; the reel's hands live in the reel control. */
+export function FishingTutorial({phase,onDone}:{phase:SessionPhase;onDone:()=>void}){
+ const step=tutorialStep(phase),text=TUTORIAL_TEXT[step];
  return <>
   <div className={styles.tutorial} data-fish-tutorial data-step={step} role="status">
    {NUM[step]&&<span className={styles.tutorialNum}>{NUM[step]}</span>}
    <p>{text}</p>
-   {step==='reel'&&<button type="button" className={styles.tutorialEasy} role="switch" aria-checked={easyReel} onClick={()=>onEasyReel(!easyReel)}>{easyReel?'Easy reel is on':'Too tricky? Easy reel'}</button>}
    <button type="button" className={styles.tutorialSkip} data-fish-tutorial-done onClick={onDone}>{step==='done'?'Got it':'Skip'}</button>
   </div>
   {step==='aim'&&<span className={styles.ghostWater} aria-hidden="true"><GhostHand/></span>}

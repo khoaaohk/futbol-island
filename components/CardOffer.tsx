@@ -59,7 +59,7 @@ const place=(i:number,active:number,n:number)=>{const d=((i-active)%n+n)%n;retur
  * Sep 24 2026): no "Choose later", and Escape does nothing until a card is chosen (a reload re-opens the pending offer, in the same
  * order). Every card on offer is a new one; there are no odds, rarities, timers or anything to buy. Once chosen, the card unpacks
  * (LIFT_MS + FLY_MS, tap to skip) and settles as the full PlayerCard in the binder
- * viewer's own layout (user, Sep 24 2026): the viewer's top bar (Done top left, Play top centre, Flip top right) and its card size.
+ * viewer's own layout (user, Sep 24 2026): the viewer's top bar (Flip top left, Play top centre, Done top right since Oct 15 2026) and its card size.
  * "Added to your binder!" sits above the card in the brush font, and "See it in my binder" right under it (user, Sep 25 2026:
  * simple, no slide-up sheet); stars twinkle around the card.
  * Done shrinks to its check and returns to the game.
@@ -181,11 +181,12 @@ export default function CardOffer({offerId,complete=false,onClose}:{offerId:stri
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${uid}-title`} aria-describedby={`${uid}-reason`} onCancel={event=>{event.preventDefault();dismiss();}} onKeyDown={onKeyDown} onKeyUp={event=>event.stopPropagation()}
   onPointerDown={chosen&&!landed?skip:undefined}>
   {showViewer&&chosenEntry?
-   /* The reveal is the binder viewer (CardCollection): its top bar (Done left, Play centre, Flip right) and its card size. */
+   /* The reveal is the binder viewer (CardCollection): its top bar and its card size. Oct 15 2026 (user): Flip top left, Play
+    * top centre, Done top right ("done should always be on the right"); Done keeps the right edge even before Flip appears. */
    <div ref={rootRef} className={`${viewerStyles.viewer} ${styles.reveal}`} data-flying={flying?'':undefined}>
     <div className={viewerStyles.viewerBar}>
-     <DoneButton ref={doneRef} className={viewerStyles.viewerBack} onDone={onClose}/>
      {PlayerCard&&<button type="button" className={`${viewerStyles.viewerFlip} ${navStyles.button}`} data-navigation="done" aria-pressed={flipped} onClick={flipCard}><span className={navStyles.label}>Flip</span></button>}
+     <DoneButton ref={doneRef} className={`${viewerStyles.viewerBack} ${styles.doneRight}`} onDone={onClose}/>
     </div>
     <div ref={revealRef} className={`${viewerStyles.cardHost} ${styles.host}`}>
      {/* Above the card, large, in the island's brush font (user, Sep 25 2026). */}

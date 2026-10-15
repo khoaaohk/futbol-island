@@ -19,15 +19,20 @@
  *  - the board's texture (one 512×384 canvas) uploads only when the paper changed: painted() marks it, the next rendered frame
  *    composites and uploads once (so at most one upload per island frame while a finger paints, none at rest).
  *  - the plane intersection runs only from pointer events (hit()), never per frame.
- *  - two extra renders on arrival: the seated screen (the eyedropper) and the view from the easel (trace and the styles), each
- *    copied from the drawing buffer right after its render, small. Never again unless the screen's shape changes.
- *  - a picture style is one CPU filter run over that 512×384 snapshot when the pink button first shows it (cached per style, so
- *    cycling round again costs nothing), then one board upload. Nothing per frame, nothing at rest.
+ *  - two extra renders on arrival, each into an offscreen render target that is read back and disposed at once: the view from the
+ *    easel (1024×768: trace and the styles) and the seated screen (≤ 360 px: the eyedropper). Never the drawing buffer (Oct 15 2026,
+ *    user: "each style is blank": a WebGL canvas drawn into a 2D canvas is whatever the browser last composited, and on WebKit that
+ *    can be nothing; a read-back of our own framebuffer in the same task is the render, always, at a size the screen does not
+ *    decide). A snapshot with no brightness spread (an empty buffer, or sky alone) is rejected and taken again next frame, up to
+ *    CAPTURE_TRIES. Never again unless the screen's shape changes.
+ *  - a picture style is one CPU filter run over that snapshot when the pink button first shows it (lib/town/paintStyles.ts: the
+ *    edge styles at 1024×768, the soft ones at 512×384), scaled once to the paper's size and cached per style, so cycling round again
+ *    costs nothing; then one board upload. Nothing per frame, nothing at rest. `styleMs` keeps each run's time (the docs' numbers).
  */
 import * as T from 'three';
 import {easelSpot,easelPoint,canvasPose,easelCamera,easelFov,easelDrift,easelPaintCamera,easelViewCamera,boardToPaper,EASEL_CAMERA,EASEL_LAYOUT,EASEL_REACH,
- PAINT_W,PAINT_H,PAINT_PAPER,readPaintings,hungPainting,type EaselSpot} from '../town/paintEasel';
-import {applyPaintStyle,isPictureStyle,TRACE_ALPHA,type PaintStyleId} from '../town/paintStyles';
+ PAINT_W,PAINT_H,PAINT_PAPER,VIEW_W,VIEW_H,readPaintings,hungPainting,type EaselSpot} from '../town/paintEasel';
+import {applyPaintStyle,isPictureStyle,pixelSpread,flipRows,CAPTURE_MIN_SPREAD,TRACE_ALPHA,type PaintStyleId,type Pixels} from '../town/paintStyles';
 import {easelStore,installEaselActions,type PaperHit} from '../town/paintEaselStore';
 import {IDLE_RIDE_FRAME_MS} from '../town/idleRide';
 import {countEaselOpen} from '../analytics/summitEvents';
@@ -49,8 +54,10 @@ export type EaselUpdate={
 };
 const cue=(detail:string)=>{if(typeof document!=='undefined')document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail}));};
 const smooth=(t:number)=>{const c=Math.max(0,Math.min(1,t));return c*c*(3-2*c);};
-/** The view snapshot (4:3, the paper's size: trace and the styles) and the screen snapshot's longest side (px). */
-const VIEW_W=PAINT_W,VIEW_H=PAINT_H,SCREEN_MAX=360;
+/** The screen snapshot's longest side (px; the eyedropper). The view snapshot is VIEW_W×VIEW_H (lib/town/paintEasel.ts). */
+const SCREEN_MAX=360;
+/** A blank snapshot (pixelSpread under CAPTURE_MIN_SPREAD) is taken again on the next frames, this many times in a row at most. */
+const CAPTURE_TRIES=10;
 /** The seated near plane (m): the board is ~1–1.7 m from the eye, inside the island camera's usual 1 m near plane. */
 const SEATED_NEAR=.35;
 type Pose={p:T.Vector3;q:T.Quaternion;fov:number};
@@ -59,21 +66,23 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
  let spot:EaselSpot|null=null;const ensure=()=>spot??(spot=easelSpot());
  const anchor=new T.Vector3();
  // ---- seated state
- let driftOn=true,seated=false,mode:'paint'|'look'='paint',blend=0,leaving=0,arrived=false,clock=0,revision=0,captureKey='',captureRev=0,lookT=0;
+ let driftOn=true,seated=false,mode:'paint'|'look'='paint',blend=0,leaving=0,arrived=false,clock=0,revision=0,captureKey='',captureRev=0,captureTries=0,lookT=0;
+ /** The last snapshot's verdict (tests and __fi2.easel.capture on a device): tries this seat, the luma spread, accepted. */
+ const captureInfo={tries:0,spread:0,ok:false};
  const start={p:new T.Vector3(),q:new T.Quaternion(),fov:40},normal={fov:40,far:500,near:1},seat:Pose={p:new T.Vector3(),q:new T.Quaternion(),fov:40};
  const aimer=new T.PerspectiveCamera(),targetP=new T.Vector3(),targetQ=new T.Quaternion();
  /** The painting framing, cached per screen shape (plain maths, recomputed only when the aspect changes). */
  const paintPose:Pose={p:new T.Vector3(),q:new T.Quaternion(),fov:50},lookPose:Pose={p:new T.Vector3(),q:new T.Quaternion(),fov:50},viewPose:Pose={p:new T.Vector3(),q:new T.Quaternion(),fov:50};let paintAspect=-1;
  const aim=(out:Pose,x:number,y:number,z:number,yaw:number,pitch:number,fov:number)=>{out.p.set(x,y,z);aimer.position.copy(out.p);aimer.up.set(0,1,0);
   aimer.lookAt(x+Math.sin(yaw)*Math.cos(pitch),y+Math.sin(pitch),z+Math.cos(yaw)*Math.cos(pitch));out.q.copy(aimer.quaternion);out.fov=fov;};
- let screenCanvas:HTMLCanvasElement|null=null,viewCanvas:HTMLCanvasElement|null=null,viewCam:T.PerspectiveCamera|null=null;
+ let screenCanvas:HTMLCanvasElement|null=null,viewCanvas:HTMLCanvasElement|null=null,viewPixels:Pixels|null=null,viewCam:T.PerspectiveCamera|null=null;const size2=new T.Vector2();
  let lastCamera:T.PerspectiveCamera|null=null;
 
  // ---- the board: the paper while seated, the latest saved painting afterwards (lazy: made the first time either exists)
  let board:T.Mesh|null=null,boardTex:T.CanvasTexture|null=null,boardCanvas:HTMLCanvasElement|null=null,sheet:HTMLCanvasElement|null=null;
  let seatMat:T.MeshBasicMaterial|null=null,worldMat:T.MeshLambertMaterial|null=null,boardDirty=false;
  /** The pink button's style, and the art-style pictures made from this seat's view snapshot (each made once, on first use). */
- let style:PaintStyleId='off',styleRuns=0;const styled=new Map<PaintStyleId,HTMLCanvasElement>();
+ let style:PaintStyleId='off',styleRuns=0;const styled=new Map<PaintStyleId,HTMLCanvasElement>(),styleMs=new Map<PaintStyleId,number>();
  let boardLoaded=false,boardImg='',boardPic:HTMLImageElement|null=null;
  const boardFrame={centre:new T.Vector3(),n:new T.Vector3(),r:new T.Vector3(),u:new T.Vector3(),w:1,h:1};
  const canvas2d=()=>{const c=document.createElement('canvas');c.width=PAINT_W;c.height=PAINT_H;return c;};
@@ -111,21 +120,23 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   pic.src=img;
  }
  function loadBoard(){if(boardLoaded)return;boardLoaded=true;const hung=hungPainting(readPaintings());if(hung)showOnBoard(hung.img);}
- /** An art style's picture: made once from the view snapshot (one CPU filter pass), then cached for this seat's snapshot. */
+ /** An art style's picture: made once from the view snapshot (one CPU filter pass at the style's working size), scaled once to the
+  *  paper's size (the board shows no more; the layer stays small in memory), then cached for this seat's snapshot. */
  function styleLayer(id:PaintStyleId){
-  if(!isPictureStyle(id)||!viewCanvas||typeof document==='undefined')return null;const have=styled.get(id);if(have)return have;
-  const src=viewCanvas.getContext('2d',{willReadFrequently:true})?.getImageData(0,0,VIEW_W,VIEW_H);if(!src||!src.data)return null;
-  styleRuns++;const out=applyPaintStyle(id,{data:src.data,width:VIEW_W,height:VIEW_H});if(!out)return null;
-  const c=document.createElement('canvas');c.width=VIEW_W;c.height=VIEW_H;const g=c.getContext('2d');if(!g)return null;
-  const img=g.createImageData(VIEW_W,VIEW_H);if(!img||!img.data)return null;img.data.set(out.data);g.putImageData(img,0,0);styled.set(id,c);return c;
+  if(!isPictureStyle(id)||!viewPixels||typeof document==='undefined')return null;const have=styled.get(id);if(have)return have;
+  styleRuns++;const t0=typeof performance!=='undefined'?performance.now():0;const out=applyPaintStyle(id,viewPixels);if(!out)return null;
+  const full=document.createElement('canvas');full.width=out.width;full.height=out.height;const fg=full.getContext('2d');if(!fg)return null;
+  const img=fg.createImageData(out.width,out.height);if(!img||!img.data)return null;img.data.set(out.data);fg.putImageData(img,0,0);
+  const c=canvas2d(),g=c.getContext('2d');if(!g)return null;g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(full,0,0,PAINT_W,PAINT_H);
+  styled.set(id,c);if(t0)styleMs.set(id,performance.now()-t0);return c;
  }
 
  // ---- commands from the UI
- function open(){if(seated)return;ensure();seated=true;mode='paint';blend=0;leaving=0;arrived=false;clock=0;captureKey='';lookT=0;style='off';styled.clear();revision++;
+ function open(){if(seated)return;ensure();seated=true;mode='paint';blend=0;leaving=0;arrived=false;clock=0;captureKey='';captureTries=0;captureInfo.tries=0;captureInfo.spread=0;captureInfo.ok=false;lookT=0;style='off';styled.clear();revision++;
   if(!sheet&&typeof document!=='undefined')sheet=canvas2d();
   if(ensureBoard()){board!.material=seatMat!;board!.visible=true;composite();}
   easelStore.set({seated:true,mode:'paint',arrived:false,sheet,boardRect:null,capture:null,style:'off',layer:null});cue('category');countEaselOpen();ports.wake();}
- function exit(){if(!seated)return;seated=false;leaving=1;arrived=false;revision++;style='off';styled.clear();boardDirty=false;
+ function exit(){if(!seated)return;seated=false;leaving=1;arrived=false;revision++;style='off';styled.clear();styleMs.clear();viewPixels=null;boardDirty=false;
   // The board in the world: the painting hung there (the one just saved, unless another was hung), else the bare board.
   if(board){board.material=worldMat!;if(boardPic)drawPicture(boardPic);else board.visible=false;}
   easelStore.set({seated:false,arrived:false,mode:'paint',boardRect:null,capture:null,style:'off',layer:null});cue('previous');ports.wake();}
@@ -149,32 +160,50 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
  let disposed=false;
  const off=installEaselActions({open,exit,setMode,hit,painted,style:setStyle,hang});
 
- /** Copies the drawing buffer right after a render in the same task (still readable: no preserveDrawingBuffer needed). */
- function snap(cam:T.Camera,into:HTMLCanvasElement,sx:number,sy:number,sw:number,sh:number){
-  const g=into.getContext('2d',{willReadFrequently:true});if(!g||!renderer)return false;renderer.render(scene,cam);
-  try{g.drawImage(renderer.domElement,sx,sy,sw,sh,0,0,into.width,into.height);return true;}catch{return false;}
+ /** Renders `cam` into an offscreen target of w×h and copies the pixels into `into` (the same size), returning them. The target is
+  *  flagged as an XR layer with an sRGB texture: three (r169, WebGLPrograms.js / UniformsUtils.js getUnlitUniformColorSpace) then
+  *  tone-maps and encodes in the shader and clears the background in sRGB exactly as for the screen, in linear storage
+  *  (WebGLTextures.js forceLinearTransfer), so the bytes read back are the screen's. Disposed right after: nothing held at rest. */
+ function snap(cam:T.Camera,into:HTMLCanvasElement,w:number,h:number):Pixels|null{
+  if(!renderer||!w||!h)return null;const g=into.getContext('2d',{willReadFrequently:true});if(!g)return null;
+  into.width=w;into.height=h;
+  const target=new T.WebGLRenderTarget(w,h,{samples:4,depthBuffer:true,stencilBuffer:false,generateMipmaps:false,minFilter:T.LinearFilter,magFilter:T.LinearFilter});
+  (target as unknown as {isXRRenderTarget:boolean}).isXRRenderTarget=true;target.texture.colorSpace=T.SRGBColorSpace;
+  // Plain 8-bit storage for the texture AND the multisample buffer (otherwise three picks SRGB8_ALPHA8 for one and RGBA8 for the
+  // other and the resolve blit fails: a black read-back): the shader already wrote sRGB bytes.
+  target.texture.internalFormat='RGBA8';
+  const prev=renderer.getRenderTarget();let pixels:Pixels|null=null;
+  try{renderer.setRenderTarget(target);renderer.render(scene,cam);renderer.setRenderTarget(prev);
+   const raw=new Uint8Array(w*h*4);renderer.readRenderTargetPixels(target,0,0,w,h,raw);
+   const img=g.createImageData(w,h);if(img&&img.data){flipRows(raw,img.data,w,h);g.putImageData(img,0,0);pixels={data:img.data,width:w,height:h};}}
+  catch{pixels=null;}
+  finally{try{renderer.setRenderTarget(prev);}catch{/* fine */}target.dispose();}
+  return pixels;
  }
  function capture(camera:T.PerspectiveCamera){
   if(!renderer||typeof document==='undefined')return;const src=renderer.domElement,W=src.width,H=src.height;if(!W||!H)return;
   const s=ensure();
-  // The view from the easel (trace): its own camera, a 4:3 centre crop of the drawing buffer.
-  viewCanvas??=document.createElement('canvas');viewCanvas.width=VIEW_W;viewCanvas.height=VIEW_H;
-  const v=easelViewCamera(s,W/H);viewCam??=new T.PerspectiveCamera();viewCam.near=.5;viewCam.far=EASEL_CAMERA.far;viewCam.aspect=W/H;
+  // The view from the easel (trace and the styles): its own camera, the 4:3 picture itself (no crop: the target has its shape).
+  viewCanvas??=document.createElement('canvas');
+  const v=easelViewCamera(s,VIEW_W/VIEW_H);viewCam??=new T.PerspectiveCamera();viewCam.near=.5;viewCam.far=EASEL_CAMERA.far;viewCam.aspect=VIEW_W/VIEW_H;
   aim(viewPose,v.x,v.y,v.z,v.yaw,v.pitch,v.fov);viewCam.position.copy(viewPose.p);viewCam.quaternion.copy(viewPose.q);viewCam.fov=v.fov;viewCam.updateProjectionMatrix();viewCam.updateMatrixWorld();
-  const a=PAINT_W/PAINT_H;let cw=W,ch=W/a;if(ch>H){ch=H;cw=H*a;}
-  const viewOk=snap(viewCam,viewCanvas,(W-cw)/2,(H-ch)/2,cw,ch);
-  // The seated screen (the eyedropper on the view).
+  const view=snap(viewCam,viewCanvas,VIEW_W,VIEW_H),spread=view?pixelSpread(view):0,blank=!view||spread<CAPTURE_MIN_SPREAD;
+  captureTries++;captureInfo.tries=captureTries;captureInfo.spread=spread;captureInfo.ok=!blank;
+  // Blank (nothing drawn yet, or sky alone): not the view. Try again next frame, a bounded number of times, rather than cache it;
+  // still blank after that: no view (trace and the styles stay off, the eyedropper keeps the screen), and one line in the console.
+  if(blank&&captureTries<CAPTURE_TRIES){captureKey='';ports.wake();return;}
+  if(blank&&typeof console!=='undefined')console.warn(`paint easel: the view snapshot is blank after ${captureTries} tries (spread ${spread.toFixed(1)})`);
+  // The seated screen (the eyedropper on the view), small.
   const k=Math.min(1,SCREEN_MAX/Math.max(W,H));screenCanvas??=document.createElement('canvas');
-  screenCanvas.width=Math.max(1,Math.round(W*k));screenCanvas.height=Math.max(1,Math.round(H*k));
-  if(!snap(camera,screenCanvas,0,0,W,H))return;
+  if(!snap(camera,screenCanvas,Math.max(1,Math.round(W*k)),Math.max(1,Math.round(H*k)))&&captureTries<CAPTURE_TRIES){captureKey='';ports.wake();return;}
   const r=src.getBoundingClientRect();captureRev++;
   // Where the board sits on screen (the wide-screen tray stands beside it).
   let l=Infinity,t=Infinity,rt=-Infinity,b=-Infinity;const F=boardFrame;
   for(const [du,dv] of [[-1,-1],[1,-1],[-1,1],[1,1]]){anchor.copy(F.centre).addScaledVector(F.r,du*F.w/2).addScaledVector(F.u,dv*F.h/2).project(camera);
    const x=r.left+(anchor.x+1)/2*r.width,y=r.top+(1-anchor.y)/2*r.height;l=Math.min(l,x);rt=Math.max(rt,x);t=Math.min(t,y);b=Math.max(b,y);}
   // A new view: the style pictures are made again from it (the one showing now, the rest when next shown).
-  styled.clear();
-  easelStore.set({capture:{canvas:screenCanvas,view:viewOk?viewCanvas:null,rect:{left:r.left,top:r.top,width:r.width,height:r.height},rev:captureRev},boardRect:{left:l,top:t,right:rt,bottom:b},layer:styleLayer(style)});
+  viewPixels=blank?null:view;styled.clear();styleMs.clear();
+  easelStore.set({capture:{canvas:screenCanvas,view:blank?null:viewCanvas,rect:{left:r.left,top:r.top,width:r.width,height:r.height},rev:captureRev},boardRect:{left:l,top:t,right:rt,bottom:b},layer:styleLayer(style)});
   if(style!=='off')boardDirty=true;
  }
 
@@ -186,8 +215,11 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
   get spot(){return ensure();},
   /** The board mesh and its texture (tests and Town's diagnostics). */
   get board(){return board;},
-  /** The pink button's style, and how many times a style picture has been made (tests: once per style per snapshot). */
-  get style(){return style;},get styleRuns(){return styleRuns;},
+  /** The pink button's style, how many times a style picture has been made (tests: once per style per snapshot) and each run's
+   *  time (ms, by style: the docs' numbers). */
+  get style(){return style;},get styleRuns(){return styleRuns;},get styleMs(){return Object.fromEntries(styleMs);},
+  /** The last snapshot's verdict (tries this seat, luma spread, accepted) and the view snapshot itself (diagnostics, tests). */
+  get capture(){return captureInfo;},get snapshot(){return viewCanvas;},
   /** The 20 fps idle cap while seated (the camera has arrived; "Just look" drifts slowly at it too). 0 = normal rate. */
   get frameMs(){return seated&&arrived&&!leaving?IDLE_RIDE_FRAME_MS:0;},
   /** Nothing on screen will move (painting, the camera settled, no paper waiting to upload, and the water and life held still by
@@ -239,7 +271,7 @@ export function createPaintEasel(scene:T.Scene,renderer:T.WebGLRenderer|null,por
    seat.p.copy(camera.position);seat.q.copy(camera.quaternion);seat.fov=camera.fov;
    if(blend>=1&&!arrived){arrived=true;easelStore.set({arrived:true});}
    // The snapshots: once the camera has arrived at the board (again only if the screen's shape changes).
-   const key=`${camera.aspect.toFixed(3)}:${renderer?.domElement.width??0}`;
+   const key=renderer?.getSize?`${camera.aspect.toFixed(3)}:${renderer.getSize(size2).x}x${size2.y}`:`${camera.aspect.toFixed(3)}:${renderer?.domElement.width??0}`;
    if(arrived&&mode==='paint'&&lookT===0&&captureKey!==key){captureKey=key;capture(camera);}
    // The paper changed since the last frame: one composite, one upload.
    if(boardDirty){boardDirty=false;composite();}

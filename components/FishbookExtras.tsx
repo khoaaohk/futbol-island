@@ -1,31 +1,26 @@
 'use client';
 /**
- * The Fishbook's new pages (Oct 15 2026, docs/fishing.md "Content systems"): Trophies (Island Legends, the Fishbook milestones and
- * the Golden Rod, derby cups, lures and floats), Records (every spot's record board), Requests (today's islander requests, the
- * day's weather and its on/off switch) and Photos (photo-mode snapshots, on this device only). Not in the museum.
+ * The Fishbook's content pages (Oct 15 2026, docs/fishing.md "Content systems"): Trophies (Island Legends, the Fishbook milestones
+ * and the Golden Rod, the rod and float choice, the four lures) and Requests (today's islander requests). Not in the museum.
+ * Removed 15 Oct 2026 (user: "too complicated"): the Records and Photos pages, the derby cups and the weather switch.
  * Kid-safe: no chances shown (progress reads as words), no links.
  */
-import {useSyncExternalStore} from 'react';
 import FishArt from './FishArt';
 import styles from './FishbookExtras.module.css';
-import {FISH,FISH_SPOTS,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
+import {FISH,spotById} from '@/lib/town/fishing/fishCatalog';
 const FISH_COUNT=FISH.length;
 import {LEGEND_FISH,LEGEND_INFO} from '@/lib/town/fishing/legendary';
 import {LURES} from '@/lib/town/fishing/lures';
-import {FLOAT_SKINS,MILESTONES,MILESTONE_REWARDS,MILESTONE_WORD,REQUEST_UNLOCKS,fishbookPercent,type FishingLog,type FloatSkin} from '@/lib/town/fishing/fishingLog';
-import {chooseFloat,chooseRod,setWeatherOn,todaysLog,todaysWeather,weatherOn,timeOfDay} from '@/lib/town/fishing/fishingLogStore';
-import {DERBY_TROPHIES,derbyTrophies} from '@/lib/town/fishing/derby';
+import {FLOAT_SKINS,MILESTONES,MILESTONE_REWARDS,MILESTONE_WORD,fishbookPercent,type FishingLog,type FloatSkin} from '@/lib/town/fishing/fishingLog';
+import {chooseFloat,chooseLure,chooseRod,todaysLog} from '@/lib/town/fishing/fishingLogStore';
 import {requestHint,requestsForDay} from '@/lib/town/fishing/requests';
-import {WEATHER_HINT,WEATHER_LABEL,dayKey} from '@/lib/town/fishing/weather';
-import {deletePhoto,readPhotos,subscribePhotos} from '@/lib/town/fishing/photo';
+import {dayKey} from '@/lib/town/fishing/timeOfDay';
 import {FISH_REQUEST_COINS} from '@/lib/economy';
 
-export type FishbookPage='fish'|'trophies'|'records'|'requests'|'photos';
-export const FISHBOOK_PAGES:readonly [FishbookPage,string][]=[['fish','Fish'],['trophies','Trophies'],['records','Records'],['requests','Requests'],['photos','Photos']];
-const EMPTY:never[]=[];
-const usePhotos=()=>useSyncExternalStore(subscribePhotos,readPhotos,()=>EMPTY);
+export type FishbookPage='fish'|'trophies'|'requests';
+export const FISHBOOK_PAGES:readonly [FishbookPage,string][]=[['fish','Fish'],['trophies','Trophies'],['requests','Requests']];
 
-/** The Fishbook milestone bar (25 / 50 / 75 / 100 %) with each reward. */
+/** The Fishbook milestone bar (a quarter / half / all) with each reward. */
 export function MilestoneBar({caught,log}:{caught:number;log:FishingLog}){
  const pct=fishbookPercent(caught);
  return <div className={styles.milestones} data-fishbook-milestones>
@@ -35,7 +30,7 @@ export function MilestoneBar({caught,log}:{caught:number;log:FishingLog}){
 }
 
 export function TrophyPage({log}:{log:FishingLog}){
- const caughtLegends=LEGEND_FISH.filter(f=>log.legends[f.id]).length,cups=derbyTrophies(log.derby.points);
+ const caughtLegends=LEGEND_FISH.filter(f=>log.legends[f.id]).length;
  return <div className={styles.page} data-fishbook-page="trophies">
   <section className={styles.card}><h3>Island Legends <small>{caughtLegends} / {LEGEND_FISH.length}</small></h3>
    <p className={styles.note}>One giant lives at every fishing spot. Find its clue (help an islander, or catch 3 different kinds at the spot), then catch it once and let it go. Legends are never sold.</p>
@@ -46,45 +41,26 @@ export function TrophyPage({log}:{log:FishingLog}){
       {got?<><p>{info.story}</p><p className={styles.fact}><span>Real football legend</span><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}. {f.club.fact}</p><p className={styles.released}>Caught and released</p></>
        :clue?<p><b>Clue:</b> {info.clue}</p>:<p>No clue yet.</p>}</div></li>;})}</ul>
   </section>
-  <section className={styles.card}><h3>Derby cups</h3><p className={styles.note}>Best derby: <b>{log.derby.best}</b> points · {log.derby.played} played · {log.derby.points} points in all.</p>
-   <ul className={styles.cups}>{DERBY_TROPHIES.map(t=><li key={t.id} data-got={cups.some(c=>c.id===t.id)||undefined}><b>{t.name}</b><span>{cups.some(c=>c.id===t.id)?'Won!':`${t.points} derby points`}</span></li>)}</ul></section>
   <section className={styles.card}><h3>Rod and float</h3>
-   <p className={styles.note}>Cosmetic only: they never change which fish bite.</p>
+   <p className={styles.note}>Cosmetic only: they never change which fish bite. Fill your Fishbook to earn them.</p>
    <div className={styles.choices} role="group" aria-label="Rod">
     <button type="button" aria-pressed={log.rod==='standard'} onClick={()=>chooseRod('standard')}>Island rod</button>
     <button type="button" aria-pressed={log.rod==='golden'} disabled={!log.goldenRod} onClick={()=>chooseRod('golden')} data-golden>{log.goldenRod?'Golden Rod':'Golden Rod: fill your Fishbook'}</button></div>
-   <div className={styles.choices} role="group" aria-label="Float">{(Object.keys(FLOAT_SKINS) as FloatSkin[]).map(k=>{const owned=log.floats.includes(k),req=REQUEST_UNLOCKS.find(u=>u.float===k);
-    return <button type="button" key={k} aria-pressed={log.float===k} disabled={!owned} onClick={()=>chooseFloat(k)} style={{'--float':FLOAT_SKINS[k].color} as React.CSSProperties}><i aria-hidden="true"/>{owned?FLOAT_SKINS[k].name:req?`${FLOAT_SKINS[k].name}: ${req.at} requests`:`${FLOAT_SKINS[k].name}: fill your Fishbook`}</button>;})}</div>
+   <div className={styles.choices} role="group" aria-label="Float">{(Object.keys(FLOAT_SKINS) as FloatSkin[]).map(k=>{const owned=log.floats.includes(k),at=Object.entries(MILESTONE_REWARDS).find(([,r])=>r.float===k)?.[0];
+    return <button type="button" key={k} aria-pressed={log.float===k} disabled={!owned} onClick={()=>chooseFloat(k)} style={{'--float':FLOAT_SKINS[k].color} as React.CSSProperties}><i aria-hidden="true"/>{owned?FLOAT_SKINS[k].name:`${FLOAT_SKINS[k].name}: ${at?MILESTONE_WORD[Number(at)].toLowerCase():'fill'} of your Fishbook`}</button>;})}</div>
   </section>
-  <section className={styles.card}><h3>Lures</h3><ul className={styles.lureList}>{LURES.map(l=>{const owned=log.lures.includes(l.id);return <li key={l.id} data-owned={owned}><b style={{'--lure':l.color} as React.CSSProperties}><i aria-hidden="true"/>{l.name}</b> <span>{owned?l.effect:'Not earned yet.'}</span>{owned&&<small className={styles.fact}><span>Real football fact</span>{l.fact}</small>}</li>;})}</ul></section>
- </div>;
-}
-
-export function RecordsPage({log}:{log:FishingLog}){
- return <div className={styles.page} data-fishbook-page="records">
-  <p className={styles.note}>The 3 biggest catches at every spot. Size never changes what Rosa pays: records are just for bragging.</p>
-  <ul className={styles.boards}>{FISH_SPOTS.map(s=>{const list=log.records[s.id]??[];return <li key={s.id} data-records-spot={s.id}><h4>{s.name}</h4>
-   {list.length?<ol>{list.map((r,i)=><li key={i}><b>{fishById(r.f)?.name??r.f}</b> {r.s} cm</li>)}</ol>:<p>No catches here yet.</p>}</li>;})}</ul>
+  <section className={styles.card}><h3>Lures</h3>
+   <p className={styles.note}>A lure changes which kinds of animal come, never how rare they are. Pick one here or from the lure button while fishing; it works from your next cast.</p>
+   <ul className={styles.lureList} role="group" aria-label="Lure">{LURES.map(l=><li key={l.id}><button type="button" aria-pressed={log.lure===l.id} data-lure={l.id} onClick={()=>chooseLure(log.lure===l.id?null:l.id)} style={{'--lure':l.color} as React.CSSProperties}><b><i aria-hidden="true"/>{l.name}</b> <span>{l.effect}</span><small className={styles.fact}><span>Real football fact</span>{l.fact}</small></button></li>)}</ul></section>
  </div>;
 }
 
 export function RequestsPage({log}:{log:FishingLog}){
- const now=Date.now(),day=dayKey(now),today=todaysLog(now),reqs=requestsForDay(day),on=weatherOn(),w=todaysWeather(now),time=timeOfDay();void log;
+ const now=Date.now(),day=dayKey(now),today=todaysLog(now),reqs=requestsForDay(day);
  return <div className={styles.page} data-fishbook-page="requests">
   <section className={styles.card}><h3>Today&apos;s requests</h3>
-   <p className={styles.note}>Three islanders ask for a fish each day. Each one finished pays {FISH_REQUEST_COINS} coins (part of today&apos;s training pay) and can reveal a legend&apos;s clue. {log.reqTotal} finished so far.</p>
+   <p className={styles.note}>Three islanders ask for a fish each day. Each one finished pays {FISH_REQUEST_COINS} coins (part of today&apos;s training pay) and reveals a legend&apos;s clue. {log.reqTotal} finished so far.</p>
    <ul className={styles.reqs}>{reqs.map(q=>{const done=today.req.done.includes(q.id);return <li key={q.id} data-done={done}><b>{q.text}</b> <em>{done?'Done!':`${Math.min(q.count,today.req.progress[q.id]??0)}/${q.count}`}</em><span>{done?q.thanks:requestHint(q)}</span></li>;})}</ul>
-   <p className={styles.note}>Rewards: {REQUEST_UNLOCKS.map(u=>`${u.label} after ${u.at}`).join(' · ')}.</p></section>
-  <section className={styles.card}><h3>Island weather</h3>
-   <p className={styles.note}>{on?<>Today: <b>{WEATHER_LABEL[w]}</b>. {WEATHER_HINT[w]}</>:'Weather is off: every day is clear.'} It is {time==='day'?'daytime':time} on the island: change it in Settings to meet the night and sunset fish.</p>
-   <button type="button" className={styles.toggle} aria-pressed={on} onClick={()=>setWeatherOn(!on)} data-weather-toggle>{on?'Weather: on':'Weather: off'}</button></section>
- </div>;
-}
-
-export function PhotosPage(){
- const photos=usePhotos();
- return <div className={styles.page} data-fishbook-page="photos">
-  <p className={styles.note}>Photos stay on this device only. Take one with the camera button while fishing. The newest {6} are kept.</p>
-  {photos.length?<ul className={styles.photos}>{photos.map(p=><li key={p.id}>{/* eslint-disable-next-line @next/next/no-img-element */}<img src={p.img} alt={p.caption||'Fishing photo'}/><button type="button" onClick={()=>deletePhoto(p.id)} aria-label={`Delete photo: ${p.caption}`}>Delete</button></li>)}</ul>:<p className={styles.empty}>No photos yet.</p>}
+   <p className={styles.note}>Scouts read a match the way you read the water: look first, then choose where to cast. New requests every day.</p></section>
  </div>;
 }

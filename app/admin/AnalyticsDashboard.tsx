@@ -6,6 +6,8 @@ import type {Report,Row} from '@/lib/analytics/core';
 import {BarList,ChartCard,Columns,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import IslandSection from './IslandSection';
 import SummitKitSection from './SummitKitSection';
+import FishingSection from './FishingSection';
+import WaterSection from './WaterSection';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
@@ -231,6 +233,8 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      </div>
      <IslandSection report={report}/>
      <SummitKitSection report={report}/>
+     <FishingSection report={report}/>
+     <WaterSection report={report}/>
     </section>
 
     <section className={styles.island} aria-labelledby="sec-health">

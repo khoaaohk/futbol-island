@@ -13,7 +13,7 @@ import {fishingLife} from './fishingLife';
 import {effectiveTier} from '../../graphics/heatTier';
 import {WATER_UNIFORMS} from '../../graphics/waterSurface';
 import {shadowShape} from './fishingFight';
-import {applyLiveWaterMood} from './waterMood';// Agent B hook
+import {applyLiveWaterMood} from './waterMood';
 
 /**
  * FISHING VISUALS — original shoreline art behind a small interface (hand-off: docs/fishing-visuals-HANDOFF.md).
@@ -192,7 +192,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    const viewDepth=Math.max(halfWidth<6?11:15,Math.hypot(c.x-s.x,c.z-s.z)+5);
    // Each spot's own reef (Oct 13 2026): water tint and sand (shared uniforms), the seabed layout and palette, the fish and the
    // clownfish's anemone, all from its theme (underwater.ts REEF_THEMES).
-   const theme=reefTheme(spot);applyReefWater(theme);applyLiveWaterMood(UW_UNIFORMS);// Agent B hook (Oct 15 2026): night / weather water mood, uniforms only (waterMood.ts)
+   const theme=reefTheme(spot);applyReefWater(theme);applyLiveWaterMood(UW_UNIFORMS);// Oct 15 2026: the night / sunset water mood, uniforms only (waterMood.ts)
    water?.begin(s,d,spot,halfWidth,viewDepth);if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,water?.homes??[],viewDepth,water?.pieces??[]);
    if(theme.deep)column?.begin(s,d,theme);else column?.end();overlay.begin();
    // Bubbles rise now and then from the taller reef pieces in view (from the seabed build; none in open deep water).
@@ -339,9 +339,15 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    if(Math.abs(lineRed-(lineMat.userData.red??-1))>.01){lineMat.color.copy(LINE_WHITE).lerp(LINE_RED,lineRed);lineMat.userData.red=lineRed;}
    // B6: a V-wake behind a fish making a run (it pulls sideways), in the overlay's draw.
    if(reelingFish&&fight?.running&&!reduced){const ml=Math.hypot(fight.lateral.x,fight.lateral.z)||1,mx=fight.lateral.x/ml,mz=fight.lateral.z/ml;overlay.mark('wake',bob.x-mx*.75,SURFACE+.012,bob.z-mz*.75,.9,Math.atan2(-mx,-mz),1,.9);}
-   // A2: a shark's dorsal fin breaks the surface on its approach (and as it swims off), with a little V-wake behind it.
+   // A2: a shark's dorsal fin breaks the surface on its approach (and as it swims off), with a little V-wake behind it. The flat
+   // fin billboard is the silhouette-only cue (A/B water without the clear field, where the dark silhouette IS the body, at the
+   // surface, and the fin sits on it). In the clear water the catch is drawn as its own species model whose dorsal fin is part of
+   // the body (fishModels), and the bite pose moves that body to the hook while fishingCore's silhouette stays put, so a surface
+   // fin anchored to the silhouette floated a fish-length from the shark (bug, Oct 15 2026: "fish has fin that's separate").
+   // With the body drawn, only the wake shows, following the drawn body.
    if(shadowOn&&shKind==='shark'&&shWorld.rise<.75&&shWorld.alpha>.15&&!reelingFish){const a=Math.min(1,shWorld.alpha*1.4)*(1-shWorld.rise*.9),L=shWorld.len,mx=Math.sin(shWorld.heading),mz=Math.cos(shWorld.heading);
-    const fx=shWorld.x-mx*.08*L,fz=shWorld.z-mz*.08*L,fs=Math.max(.32,.34*L);overlay.mark('fin',fx,SURFACE+fs*.42,fz,fs,0,a);
+    const bodyDrawn=catchFish.visible,bx=bodyDrawn?catchPos.x:shWorld.x,bz=bodyDrawn?catchPos.z:shWorld.z;
+    const fx=bx-mx*.08*L,fz=bz-mz*.08*L,fs=Math.max(.32,.34*L);if(!bodyDrawn)overlay.mark('fin',fx,SURFACE+fs*.42,fz,fs,0,a);
     if(!reduced&&shWorld.mode!=='nibble'&&shWorld.mode!=='bite')overlay.mark('wake',fx-mx*.55*L,SURFACE+.012,fz-mz*.55*L,.75*L,Math.atan2(-mx,-mz),1,.7*a);}
    if(heldFish){const hd=head;if(hd)hd.getWorldPosition(tmp);else tmp.set(stand.x,1.3,stand.z);
     const len=Math.min(1.3,Math.max(.8,heldFish.lengthCm/70));held.scale.setScalar(len);held.position.set(tmp.x,tmp.y+.55+len*(.2+heldLift)+(reduced?0:Math.sin(elapsed*3)*.02),tmp.z);landingAge=Math.min(1,landingAge+dt/LEAP_S);

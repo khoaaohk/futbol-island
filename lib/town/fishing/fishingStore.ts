@@ -60,7 +60,7 @@ function fishHaptic(kind:FishCue,strength=0){const p=hapticFor(kind,strength);if
 type HotFishing={session?:ReturnType<typeof createFishingSession>;land?:typeof landFish;cue?:(kind:FishCue,strength?:number)=>void};
 const hot:HotFishing=typeof globalThis==='undefined'?{}:((globalThis as {__fi2Fishing?:HotFishing}).__fi2Fishing??={});
 hot.land=landFish;
-hot.cue=(kind,strength)=>{try{for(const [name,detail] of CUES[kind])document.dispatchEvent(new CustomEvent(name,{detail}));}catch{}fishHaptic(kind,strength);};
+hot.cue=(kind,strength)=>{try{for(const [name,detail] of CUES[kind])document.dispatchEvent(new CustomEvent(name,{detail:kind==='reel'&&strength!==undefined?{cue:detail,gain:.5+Math.max(0,Math.min(1,strength))}:detail}));}catch{}fishHaptic(kind,strength);};// the reel's ratchet carries its spin rate as a gain (islandSound.ts jobCue)
 export const fishingSession=hot.session??=createFishingSession(
  (id,size)=>{const r=hot.land!(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket};},
  (kind,strength)=>hot.cue!(kind,strength),
@@ -70,23 +70,18 @@ export const onFishingEvent:typeof fishingSession.onFishingEvent=fn=>fishingSess
 /** A4: the biggest size this player has landed of a species (cm, 0 = never caught); the catch card's RECORD stamp is a new one. */
 export const bestSize=(id:FishId)=>readFishbook().species[id]?.biggest??0;
 
-// ---- Device preferences (Oct 15 2026): the first-time tutorial and the Easy reel option, per device (lib/saves/snapshot.ts
-// DEVICE_KEYS; docs/accounts-design.md table B). No timers: read once, written on change. ----
-export const FISH_TUTORIAL_KEY='fi2-fish-tutorial-v1',FISH_EASY_REEL_KEY='fi2-fish-easy-reel-v1';
-const prefListeners=new Set<()=>void>();let prefs:{tutorialDone:boolean;easyReel:boolean}|null=null;
-const SERVER_PREFS={tutorialDone:true,easyReel:false};
+// ---- Device preferences (Oct 15 2026): the first-time tutorial, per device (lib/saves/snapshot.ts DEVICE_KEYS;
+// docs/accounts-design.md table B). No timers: read once, written on change. (The Easy reel option was removed: the spin fight is the only reel.) ----
+export const FISH_TUTORIAL_KEY='fi2-fish-tutorial-v1';
+const prefListeners=new Set<()=>void>();let prefs:{tutorialDone:boolean}|null=null;
+const SERVER_PREFS={tutorialDone:true};
 function readPrefs(){if(prefs)return prefs;if(typeof window==='undefined')return SERVER_PREFS;
- let done=false,easy:string|null=null;try{done=localStorage.getItem(FISH_TUTORIAL_KEY)==='1';easy=localStorage.getItem(FISH_EASY_REEL_KEY);}catch{/* private mode */}
- // No choice saved yet: Easy reel follows reduced motion (the accessibility path, docs/fishing-research.md checklist).
- let reduced=false;try{reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{/* old browsers */}
- prefs={tutorialDone:done,easyReel:easy===null?reduced:easy==='1'};return prefs;}
-const setPrefs=(patch:Partial<NonNullable<typeof prefs>>)=>{prefs={...readPrefs(),...patch};fishingSession.setOptions({easyReel:prefs.easyReel});prefListeners.forEach(f=>f());};
+ let done=false;try{done=localStorage.getItem(FISH_TUTORIAL_KEY)==='1';}catch{/* private mode */}
+ prefs={tutorialDone:done};return prefs;}
+const setPrefs=(patch:Partial<NonNullable<typeof prefs>>)=>{prefs={...readPrefs(),...patch};prefListeners.forEach(f=>f());};
 export const fishingPrefs=()=>readPrefs();
 export const subscribeFishingPrefs=(fn:()=>void)=>{prefListeners.add(fn);return()=>{prefListeners.delete(fn);};};
 export const useFishingPrefs=()=>useSyncExternalStore(subscribeFishingPrefs,readPrefs,()=>SERVER_PREFS);
-/** The Easy reel toggle (fishing settings / the tutorial): remembered on this device. */
-export function setEasyReel(on:boolean){try{localStorage.setItem(FISH_EASY_REEL_KEY,on?'1':'0');}catch{/* private mode */}setPrefs({easyReel:on});}
 /** The ghost-hand tutorial runs once per device (the first fishing session); B may offer a replay from the Fishbook. */
 export function finishFishingTutorial(){try{localStorage.setItem(FISH_TUTORIAL_KEY,'1');}catch{/* private mode */}setPrefs({tutorialDone:true});}
 export function resetFishingTutorial(){try{localStorage.removeItem(FISH_TUTORIAL_KEY);}catch{/* private mode */}setPrefs({tutorialDone:false});}
-if(typeof window!=='undefined')fishingSession.setOptions({easyReel:readPrefs().easyReel});

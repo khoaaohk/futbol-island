@@ -132,6 +132,9 @@ export function easelDrift(t:number,reduced:boolean){
 // ------------------------------------------------------------------------------------------------------------------- painting
 /** The working canvas (and the saved picture): 4:3, small enough that undo snapshots stay cheap. */
 export const PAINT_W=512,PAINT_H=384;
+/** The view snapshot (trace and the picture styles, lib/town/paintStyles.ts): 4:3 at twice the paper's size, so the buildings, the
+ *  lighthouse, the beach line and the palms survive the styles' edge work (the pictures are scaled to the paper once, cached). */
+export const VIEW_W=1024,VIEW_H=768;
 /** The paper's colour (the board's ground under the paint, and the saved picture's background). */
 export const PAINT_PAPER='#fbf6ea';
 /** Colours from the view: sky, sea, sand, grass, sunset, white and ink. */

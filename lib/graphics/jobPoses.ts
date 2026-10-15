@@ -26,6 +26,11 @@ const CARRY_BALL:Arm=[-.75,-.05,-1.55],CARD:Arm=[-.95,-.05,-1.1],STACK:Arm=[-.35
 const SHAKE_BRACE={py:.8,pz:-.07,tx:.04,hx:-.3,fl:[.22,.07] as [number,number],fr:[-.2,.07] as [number,number],al:[-1.48,.2,-1.4] as Arm,ar:[-1.48,.2,-1.4] as Arm};
 const SHAKE_PUSH={py:.78,pz:.06,tx:.3,hx:-.22,fl:[.26,.07] as [number,number],fr:[-.24,.07] as [number,number],al:[-1.45,.14,-.8] as Arm,ar:[-1.45,.14,-.8] as Arm};
 const PULLED={py:.66,pz:-.22,tx:-.28,hx:.2,fl:[.26,.07] as [number,number],fr:[-.05,.07] as [number,number],al:[-.95,.14,-.1] as Arm,ar:[-.95,.14,-.1] as Arm};
+/** Tree kick: wind-up (weight on the planted left boot, the right leg back), the strike (the right boot forward and up on the
+ *  bark, hips in) and the follow-through. Arms counter-swing: the left forward on the wind-up, the right forward on the strike. */
+const KICK_WIND={py:.84,pz:-.03,tx:.05,hx:.3,fl:[.1,.07] as [number,number],fr:[-.4,.16] as [number,number],al:[-.85,.3,-.5] as Arm,ar:[.45,.35,-.35] as Arm};
+const KICK_STRIKE={py:.82,pz:.1,tx:.2,hx:.35,fl:[.06,.07] as [number,number],fr:[.44,.26] as [number,number],al:[-.2,.5,-.3] as Arm,ar:[-.95,.4,-.4] as Arm};
+const KICK_THROUGH={py:.83,pz:.08,tx:.12,hx:.3,fl:[.06,.07] as [number,number],fr:[.3,.2] as [number,number],al:[-.3,.4,-.3] as Arm,ar:[-.6,.35,-.4] as Arm};
 /** One-shot keyframes (progress 0 → 1). Held poses are computed below from their live value (`tug`). */
 const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  // ---- Garden (Sep 30 2026, docs/island-jobs.md §13) ----
@@ -67,9 +72,15 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  // arms straight, leaning in) with the eyes up on the canopy; the fruit falls on the second push (TREE_SHAKE_PUSHES).
  treeshake:[[0,{}],[.15,{...SHAKE_BRACE}],[.3,{...SHAKE_PUSH}],[.46,{...SHAKE_BRACE}],[.62,{...SHAKE_PUSH}],
   [.82,{...SHAKE_BRACE,py:.83,tx:.1}],[1,{}]],
+ // Summit Isle tree kick (Oct 15 2026, lib/town/summitTreeKick.ts): the left boot plants beside the trunk, the right leg draws
+ // back (the left arm swings forward for balance), then strikes through the bark with the laces at TREE_KICK_CONTACT (hips in,
+ // eyes on the trunk, arms swapped) and follows through before settling. The host stands the root so the toe meets the bark.
+ treekick:[[0,{}],[.2,{...KICK_WIND}],[.4,{...KICK_STRIKE}],[.5,{...KICK_STRIKE,fr:[.43,.26]}],[.72,{...KICK_THROUGH}],[1,{}]],
 };
 /** Tree shake: the push peaks' progress (the canopy gets a shove at each; lib/graphics/fruitTrees.ts reads these). */
 export const TREE_SHAKE_PUSHES=[.3,.62] as const;
+/** Tree kick: the progress at which the boot meets the bark (the thunk, the sway and the leaves; fruitTrees.ts reads it). */
+export const TREE_KICK_CONTACT=.4;
 const out:PoseTarget={...N,fl:[0,.07],fr:[0,.07],al:[0,0,0,0],ar:[0,0,0,0],upper:false};
 const lerp=(a:number,b:number,k:number)=>a+(b-a)*k;
 function set(p:Partial<Omit<PoseTarget,'upper'>>){

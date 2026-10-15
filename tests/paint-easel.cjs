@@ -13,8 +13,11 @@
 //     holds the player, hides them; two snapshot renders on arrival; screen points map to the paper through the board's plane (UVs
 //     round-trip); the board texture uploads once per island frame while painting and never at rest; the 20 fps cap and
 //     sleep-when-still; Just look pulls back to the full view; Done leaves the painting on the board; leaving restores the camera
-//  8. picture styles (the pink button, Oct 15 2026): the cycle order; each style a distinct picture of a small fixture; one filter
-//     run and one upload per style change (cached), nothing per frame or at rest; the save composites the style's picture + paint
+//  8. picture styles (the pink button, Oct 15 2026): the cycle order; each style a distinct picture of a small fixture, far from the
+//     source and from each other; one filter run and one upload per style change (cached), nothing per frame or at rest; the save
+//     composites the style's picture + paint
+// 11. the snapshot (Oct 15 2026, "each style is blank"): an offscreen render target read back (never the drawing buffer), 1024×768,
+//     a blank/uniform capture rejected and retried on the next frames (bounded), the style pictures scaled to the paper
 //  9. less skyline (Oct 15 2026): the seated phone horizon in the top ~25–30% of the screen, desktop too; the view snapshot and
 //     Just look aimed lower
 // 10. "My paintings": hang on easel, delete (the easel then shows the next newest or a bare board), the device-only line
@@ -193,12 +196,20 @@ await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one 
  const rt=rl('lib/graphics/paintEasel.ts'),store=rl('lib/town/paintEaselStore.ts');
  globalThis.Image=class{set src(v){this._s=v;this.onload&&this.onload();}get src(){return this._s;}};
  const scene=new T3.Scene(),camera=new T3.PerspectiveCamera(40,390/844,1,500);camera.position.set(s.x+18,s.ground+23,s.z+30);camera.lookAt(s.x,s.ground,s.z);camera.updateMatrixWorld();
- let renders=0,wakes=0;const renderer={domElement:{width:390,height:844,getBoundingClientRect:()=>({left:0,top:0,width:390,height:844})},render:()=>{renders++;}};
+ // The renderer stub: renders count, and a read-back of our own render target (the view fixture, bottom row first as WebGL gives
+ // it). The first `blankReads` read-backs come back uniform (the scene not drawn yet), to see the capture reject and retry them.
+ let renders=0,wakes=0,reads=0,blankReads=0,targetsSet=[];
+ const viewFx=fixture(E.VIEW_W,E.VIEW_H);
+ const renderer={domElement:{width:390,height:844,getBoundingClientRect:()=>({left:0,top:0,width:390,height:844})},render:()=>{renders++;},
+  getRenderTarget:()=>null,setRenderTarget(t){targetsSet.push(t);},getSize(v){v.x=390;v.y=844;return v;},
+  readRenderTargetPixels(rt,x,y,w,h,buf){reads++;if(reads<=blankReads){buf.fill(200);return;}
+   if(w===E.VIEW_W&&h===E.VIEW_H){for(let row=0;row<h;row++)buf.set(viewFx.data.subarray((h-1-row)*w*4,(h-row)*w*4),row*w*4);}else buf.fill(120);}};
  const player=new T3.Group();scene.add(player);
  // Canvases that hold pixels enough for the style filter (a fixture view, and the pictures it makes).
  const fx=fixture(E.PAINT_W,E.PAINT_H);
  document.createElement=()=>{const c={width:0,height:0};const g=new Proxy({getImageData:(x,y,w,h)=>({data:fx.data.slice(0,w*h*4),width:w,height:h}),createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4),width:w,height:h}),putImageData(img){c.pixels=img;}},
   {get:(o,k)=>k in o?o[k]:k==='createRadialGradient'?()=>({addColorStop(){}}):()=>{},set:()=>true});c.getContext=()=>g;return c;};
+ globalThis.performance??={now:()=>Date.now()};
  const easel=rt.createPaintEasel(scene,renderer,{wake:()=>{wakes++;},player:()=>player});const before=scene.children.length;
  const btn={hidden:true,dataset:{},style:{}};
  const ctx=(x,z,extra={})=>({x,z,onGround:true,canEnter:true,camera,width:390,height:844,focusKey:null,ui:()=>btn,place(){},hide(e,h){e.hidden=h;},...extra});
@@ -223,17 +234,23 @@ await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one 
  assert.equal(store.easelActions.hit(195,600),null,'no painting before the camera arrives');
  await env.watchTimers(async()=>{for(let i=0;i<20;i++)easel.applyCamera(camera,1/30,false);});
  assert(!easel.focused&&store.easelStore.get().arrived===false,'still easing in');assert.equal(renders,0,'no snapshot before arriving');
+ blankReads=2;// the first two snapshots come back uniform (nothing drawn yet): rejected, taken again on the next frames
  await env.watchTimers(async()=>{for(let i=0;i<60;i++)easel.applyCamera(camera,1/30,false);});
  assert.equal(env.counts.raf+env.counts.timeout+env.counts.interval,0,'seated: no loops of its own');
  assert(store.easelStore.get().arrived&&easel.focused,'arrived: Town\'s focus mode holds the background still');
+ assert.equal(easel.capture.tries,3,'two blank snapshots rejected, the third accepted');assert(easel.capture.ok&&easel.capture.spread>PS.CAPTURE_MIN_SPREAD,'the accepted snapshot has a real spread');
+ assert(targetsSet.length>=4&&targetsSet.filter(t=>t&&t.isWebGLRenderTarget).every(t=>t.isXRRenderTarget===true&&t.texture.colorSpace==='srgb'&&t.texture.internalFormat==='RGBA8'&&t.samples===4),'rendered into an offscreen target that three treats like the screen (tone mapping, sRGB), multisampled');
+ assert(targetsSet[targetsSet.length-1]===null,'the render target is reset to the screen afterwards');
  const P=E.easelPaintCamera(s,390/844);assert(camera.position.distanceTo(new T3.Vector3(P.x,P.y,P.z))<1e-6,'the camera at the painting framing');
  const dir=new T3.Vector3();camera.getWorldDirection(dir);assert(dir.x<-.85&&dir.y<-.2&&dir.y>-.45,'looking out west over the sea, tilted down to the scenery (little sky)');
  assert.equal(camera.far,E.EASEL_CAMERA.far,'a longer far plane (the main island is ~500 m away)');assert(camera.near<.5,'a near plane in front of the board');
  assert(!camera.view||!camera.view.enabled,'no view offset (the tray is slim)');
  assert.equal(player.visible,false,'the painter is hidden (the camera stands at their head)');
- assert.equal(renders,2,'two snapshot renders on arrival (the screen for the eyedropper, the view from the easel for trace and the styles)');
+ assert.equal(renders,4,'two blank tries (one view render each), then the view and the screen: four renders, never the drawing buffer');
  const cap=store.easelStore.get().capture;assert(cap&&cap.view&&cap.rect.height===844,'the snapshots');
- assert(cap.view.width===E.PAINT_W&&cap.view.height===E.PAINT_H,'the view snapshot at the paper\'s size (512×384)');
+ assert(cap.view.width===E.VIEW_W&&cap.view.height===E.VIEW_H&&E.VIEW_W>=1024,'the view snapshot at 1024×768 (the styles\' source)');
+ assert(easel.snapshot===cap.view,'the snapshot is the view canvas');
+ const rtSrc0=read('lib/graphics/paintEasel.ts');assert(!/drawImage\(renderer\.domElement/.test(rtSrc0)&&/readRenderTargetPixels\(/.test(rtSrc0),'the capture reads back its own target, not the WebGL canvas');
  const br=store.easelStore.get().boardRect;assert(br&&br.right-br.left>300&&br.bottom<844*.9&&br.top>844*.5,'where the board sits on screen');
  // Strokes map to the board's UVs: a paper point, placed on the board in 3D and projected to the screen, hits back to itself.
  const C=E.canvasPose(s),n=new T3.Vector3(C.nx,C.ny,C.nz),r=new T3.Vector3(s.rx,0,s.rz),u=new T3.Vector3().crossVectors(n,r).normalize(),w=C.w,h=C.h;
@@ -245,7 +262,7 @@ await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one 
  const sky=store.easelActions.hit(195,120);assert(!sky||!sky.inside,'a tap on the sky is not on the board');
  // The texture uploads only while painting: none at rest, one per island frame however many strokes arrive.
  const v0=tex.version;await env.watchTimers(async()=>{for(let i=0;i<40;i++)easel.applyCamera(camera,1/20,false);});
- assert.equal(tex.version,v0,'at rest: no uploads');assert.equal(renders,2,'…and no more snapshots');assert.equal(easel.still(true),true,'at rest: the loop may sleep');
+ assert.equal(tex.version,v0,'at rest: no uploads');assert.equal(renders,4,'…and no more snapshots');assert.equal(easel.still(true),true,'at rest: the loop may sleep');
  const rev=easel.revision,w0=wakes;store.easelActions.painted();store.easelActions.painted();store.easelActions.painted();
  assert(easel.revision!==rev&&wakes>w0,'painting wakes the island (a new sleep key)');assert.equal(easel.still(true),false,'paper waiting: draw a frame');assert.equal(tex.version,v0,'nothing uploads outside the island\'s frame');
  easel.applyCamera(camera,1/20,false);assert.equal(tex.version,v0+1,'one upload for the frame');assert.equal(easel.still(true),true,'then still again');
@@ -259,7 +276,8 @@ await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one 
  for(const id of ['pastel','watercolour','sketch','oil','comic','dots']){const r0=easel.styleRuns;
   await env.watchTimers(async()=>{store.easelActions.style(id);});
   assert.equal(easel.styleRuns,r0+1,id+': one filter run');assert.equal(easel.style,id);
-  const view=store.easelStore.get();assert(view.style===id&&view.layer&&view.layer.width===E.PAINT_W&&view.layer.height===E.PAINT_H,id+': its picture, the paper\'s size');
+  const view=store.easelStore.get();assert(view.style===id&&view.layer&&view.layer.width===E.PAINT_W&&view.layer.height===E.PAINT_H,id+': its picture, scaled to the paper\'s size');
+  assert(typeof easel.styleMs[id]==='number','its run time is kept');
   runs.push(view.layer);assert.equal(tex.version,ver,id+': nothing uploads outside the island\'s frame');
   await env.watchTimers(async()=>{for(let i=0;i<30;i++)easel.applyCamera(camera,1/20,false);});ver++;
   assert.equal(tex.version,ver,id+': one upload, then nothing per frame');assert.equal(easel.styleRuns,r0+1,id+': no filter per frame');
@@ -279,7 +297,7 @@ await ok('3D runtime: seat, the board is the paper, strokes map to its UVs, one 
  assert(camera.quaternion.angleTo(q0)>1e-4,'a slow drift');assert.equal(easel.still(true),false,'drifting: keep drawing (at 20 fps)');
  const q2=camera.quaternion.clone();easel.applyCamera(camera,1/20,true);easel.applyCamera(camera,1/20,true);const q3=camera.quaternion.clone();easel.applyCamera(camera,1/20,true);assert(camera.quaternion.angleTo(q3)<1e-9,'reduced motion: no drift');void q2;
  assert.equal(easel.still(true),true,'reduced motion in Just look: still, may sleep');
- store.easelActions.setMode('paint');for(let i=0;i<120;i++)easel.applyCamera(camera,1/30,false);assert.equal(renders,2,'back to painting, same screen: the snapshots are reused');
+ store.easelActions.setMode('paint');for(let i=0;i<120;i++)easel.applyCamera(camera,1/30,false);assert.equal(renders,4,'back to painting, same screen: the snapshots are reused');
  assert(camera.position.distanceTo(new T3.Vector3(P.x,P.y,P.z))<1e-3,'back at the board');
  // Done: the UI saves (and hangs the new painting), then leaves: the board keeps the painting, lit like the world.
  store.easelActions.hang('data:image/webp;base64,AAAA');store.easelActions.exit();assert(!store.easelStore.get().seated&&!easel.seated);
@@ -303,16 +321,21 @@ await ok('picture styles: the cycle order, each a distinct picture, deterministi
  let id='off';const seen=[];for(let i=0;i<8;i++){seen.push(id);id=PS.nextPaintStyle(id);}assert.equal(id,'off','round to Blank paper');assert.equal(new Set(seen).size,8);
  assert.deepEqual(PS.PAINT_STYLES.map(x=>x.layer),['none','guide','picture','picture','picture','picture','picture','picture'],'Trace a guide; the art styles a picture');
  for(const x of PS.PAINT_STYLES)assert(x.name&&x.name.length<=12,'a short name for the label: '+x.name);
- const W=160,H=120,src=fixture(W,H),out={};
+ const W=1024,H=768,src=fixture(W,H),out={};// the capture's size: the rule for the styles' working sizes holds
  assert.equal(PS.applyPaintStyle('off',src),null);assert.equal(PS.applyPaintStyle('trace',src),null);
  const diff=(a,b)=>{let d=0;for(let i=0;i<a.length;i+=4)d+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);return d/(a.length/4)/3;};
  const sat=d=>{let t=0;for(let i=0;i<d.length;i+=4)t+=Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2]);return t/(d.length/4);};
  const mean=d=>{let t=0;for(let i=0;i<d.length;i+=4)t+=d[i]+d[i+1]+d[i+2];return t/(d.length/4)/3;};
+ // Compared at the source's size (a style may work at a whole-number fraction of it: the board shows 512×384 anyway).
+ const atSize=(r,w,h)=>{if(r.width===w&&r.height===h)return r.data;const d=new Uint8ClampedArray(w*h*4);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const j=((Math.floor(y*r.height/h))*r.width+Math.floor(x*r.width/w))*4,i=(y*w+x)*4;d[i]=r.data[j];d[i+1]=r.data[j+1];d[i+2]=r.data[j+2];d[i+3]=r.data[j+3];}return d;};
+ const sizes={};
  for(const x of PS.PAINT_STYLES.filter(x=>x.layer==='picture')){const r=PS.applyPaintStyle(x.id,src);
-  assert(r&&r.width===W&&r.height===H&&r.data.length===W*H*4,x.id+': same size');for(let i=3;i<r.data.length;i+=4)assert.equal(r.data[i],255,x.id+': opaque');
+  assert(r&&r.width>0&&Math.abs(r.width/r.height-W/H)<.02&&W%r.width===0&&r.width>=W/2,x.id+': the source\'s shape, at its size or half of it');for(let i=3;i<r.data.length;i+=4)assert.equal(r.data[i],255,x.id+': opaque');
   assert.deepEqual(r.data,PS.applyPaintStyle(x.id,src).data,x.id+': the same every time (seeded)');
-  assert(diff(r.data,src.data)>6,`${x.id}: not the photo (${diff(r.data,src.data).toFixed(1)})`);out[x.id]=r.data;}
- const ids=Object.keys(out);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const d=diff(out[ids[i]],out[ids[j]]);assert(d>6,`${ids[i]} vs ${ids[j]}: distinct pictures (${d.toFixed(1)})`);}
+  out[x.id]=atSize(r,W,H);sizes[x.id]=r.width;assert(diff(out[x.id],src.data)>14,`${x.id}: far from the photo (${diff(out[x.id],src.data).toFixed(1)})`);}
+ assert(sizes.sketch===W&&sizes.comic===W&&sizes.dots===W,'the edge styles keep the full size (clean lines, round dots)');
+ assert(sizes.pastel===W/2&&sizes.watercolour===W/2&&sizes.oil===W/2,'the soft styles work at half size (cost)');
+ const ids=Object.keys(out);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++){const d=diff(out[ids[i]],out[ids[j]]);assert(d>12,`${ids[i]} vs ${ids[j]}: distinct pictures (${d.toFixed(1)})`);}
  // Each reads as its style: pastel lighter and softer, sketch nearly grey on cream, comic with black ink, dots on cream paper.
  assert(mean(out.pastel)>mean(src.data)+10&&sat(out.pastel)<sat(src.data),'pastel: lighter, muted');
  assert(sat(out.sketch)<sat(src.data)*.35,'sketch: graphite on paper (little colour)');
@@ -320,6 +343,13 @@ await ok('picture styles: the cycle order, each a distinct picture, deterministi
  assert(darkShare(out.comic)>.02,'comic: bold black outlines');assert(darkShare(out.pastel)<.005&&darkShare(out.watercolour)<.005,'pastel and watercolour: no hard black');
  const corner=(d,x,y)=>{const i=(y*W+x)*4;return [d[i],d[i+1],d[i+2]];};
  assert(corner(out.watercolour,0,H-1).every((c,k)=>Math.abs(c-[251,246,234][k])<14),'watercolour: the wash runs out before the paper\'s edge');
+ assert([...Array(40).keys()].some(y=>corner(out.comic,W>>1,y).every(c=>c<=40))&&[...Array(40).keys()].some(y=>corner(out.comic,W>>1,H-1-y).every(c=>c<=40)),'comic: a thin black panel border, inset a little');
+ // Posterised: few distinct colour levels per channel away from the ink.
+ {let on=0,n=0;const d=out.comic;for(let i=0;i<d.length;i+=16){const l=.299*d[i]+.587*d[i+1]+.114*d[i+2];if(l<112||d[i]<=40)continue;n++;if(d[i]%51===0&&d[i+1]%51===0&&d[i+2]%51===0)on++;}assert(on/n>.85,`comic: posterised to 6 levels a channel outside the halftone and the ink (${(on/n*100).toFixed(0)}% on the grid)`);}
+ // The snapshot guard: a blank or uniform capture has no spread; a real view has plenty; GPU rows are flipped and made opaque.
+ assert.equal(PS.pixelSpread({data:new Uint8ClampedArray(64*48*4).fill(200),width:64,height:48}),0,'uniform: no spread');
+ assert(PS.pixelSpread(src)>PS.CAPTURE_MIN_SPREAD*3,'the fixture view: a real spread');assert(PS.CAPTURE_MIN_SPREAD>=3&&PS.CAPTURE_MIN_SPREAD<=12);
+ {const raw=new Uint8Array([1,2,3,0, 4,5,6,0, 7,8,9,0, 10,11,12,0]),dst=new Uint8ClampedArray(16);PS.flipRows(raw,dst,2,2);assert.deepEqual([...dst],[7,8,9,255,10,11,12,255,1,2,3,255,4,5,6,255],'rows flipped, opaque');}
  assert(sat(out.oil)>sat(src.data)*.9&&sat(out.comic)>sat(src.data)*.9,'oil and comic keep their colour');
 });
 
@@ -386,6 +416,7 @@ await ok('heat and UI wiring: drawing on the board only on pointer events, no Ba
  assert(/\.toast\{[^}]*animation:toastOut/.test(read('components/PaintEasel.module.css')),'the style name fades by CSS');
  assert(!/\bstyleLayer\(/.test(rtSrc.slice(rtSrc.indexOf('applyCamera('))),'no style work in the per-frame camera step');
  assert.equal((rtSrc.match(/needsUpdate=true/g)||[]).length,2,'two upload sites: the paper (composite) and a saved picture');
+ assert(!/preserveDrawingBuffer/.test(read('components/Town.tsx')),'no preserveDrawingBuffer on the island (the capture does not need it)');
  // No Back; Done (top right) saves unsaved work and leaves; Escape does the same.
  assert(!/BackButton/.test(ui),'no Back button');
  assert(/<DoneButton[^>]*onDone=\{done\}/.test(ui),'Done');assert(/\.done\{grid-column:3;justify-self:end\}/.test(read('components/PaintEasel.module.css')),'Done top right');

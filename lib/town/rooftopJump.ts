@@ -68,6 +68,8 @@ export type RoofJumpQuery = {
   /** Roof the player is leaving. */
   source:Obstacle|undefined;
   surface:(x:number,z:number)=>number;ground:(x:number,z:number)=>number;canLand:(x:number,z:number)=>boolean;
+  /** Water deep enough to splash into (Oct 15 2026, lib/town/water/waterDepth.ts canSplashDown): a launch may end over it. */
+  canSplash?:(x:number,z:number)=>boolean;
   reduced?:boolean;
   /** Launch only: true where the rider cannot end up (off the island, inside a ground obstacle). */
   blockedAt?:(x:number,z:number)=>boolean;
@@ -150,7 +152,7 @@ export function planRoofLaunch(q:RoofJumpQuery,maxSpeed:number):RoofJumpPlan|nul
   // Clamp short of anything the arc would pass through (the same clearance rule as the jump), and off-island.
   for (let s = .2; s <= distance; s += .2) {
     const x = q.x+dirX*s, z = q.z+dirZ*s;
-    if (q.surface(x,z) > arcHeight(probe,s/distance)-.15 || q.blockedAt?.(x,z)) { distance = s-LAUNCH_WALL_MARGIN; break; }
+    if (q.surface(x,z) > arcHeight(probe,s/distance)-.15 || q.blockedAt?.(x,z) && !q.canSplash?.(x,z)) { distance = s-LAUNCH_WALL_MARGIN; break; }
   }
   if (distance < 1) return null;
   // Forgiving: if the arc ends over a lower roof with a safe spot, land on it as a ride jump.

@@ -23,6 +23,7 @@ import {MANTA_ISLANDS,mantaLoopsFor,type MantaIsland,type MantaLoop} from '../to
 import {dynamicResolutionEnabled} from './quality';
 import {subscribeHeatTier,effectiveTier} from './heatTier';
 import {summitSeaLifeCounts} from '../town/summitSeaLife';
+import type {RideFriend} from '../town/water/animalRides';
 const WATER=-.43,SCALE=1.2,NEAR=140,DRAW=220;
 export const MANTA_EVENT={minGap:22,spread:28,breach:2.4,wingtip:3.2,breachChance:.34} as const;
 const hash=(i:number)=>{const s=Math.sin(i*12.9898+4.1414)*43758.5453;return s-Math.floor(s);};
@@ -68,12 +69,12 @@ function addWingWave(material:T.Material,uniform:{value:number}){
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float aPhase;\nuniform float uMantaTime;').replace('#include <begin_vertex>','#include <begin_vertex>'+WING_WAVE);};
  material.customProgramCacheKey=()=>'manta-wing-wave';
 }
-type Track={loop:MantaLoop;lengths:number[];total:number;u:number;k:number;phase:number;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
+type Track={loop:MantaLoop;lengths:number[];total:number;u:number;k:number;phase:number;/** Held by a rider (water P1b, lib/town/water/animalRides.ts): the ride owns `u`. */ridden:boolean;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
 function track(loop:MantaLoop,start:number,phase:number):Track{
  const lengths=[0],n=loop.points.length;for(let i=1;i<=n;i++){const a=loop.points[i-1],b=loop.points[i%n];lengths.push(lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z));}
  const xs=loop.points.map(p=>p.x),zs=loop.points.map(p=>p.z),box={minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
  const b3=new T.Box3(new T.Vector3(box.minX-4,WATER-1,box.minZ-4),new T.Vector3(box.maxX+4,WATER+3,box.maxZ+4));
- const total=lengths[n];return {loop,lengths,total,u:start*total,k:1,phase,box,sphere:b3.getBoundingSphere(new T.Sphere())};
+ const total=lengths[n];return {loop,lengths,total,u:start*total,k:1,phase,ridden:false,box,sphere:b3.getBoundingSphere(new T.Sphere())};
 }
 const boxDistance=(b:{minX:number;maxX:number;minZ:number;maxZ:number},x:number,z:number)=>Math.hypot(Math.max(b.minX-x,0,x-b.maxX),Math.max(b.minZ-z,0,z-b.maxZ));
 
@@ -97,7 +98,7 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   const sphere=box.getBoundingSphere(new T.Sphere());under.boundingSphere=sphere.clone();surface.boundingSphere=sphere.clone();
   const group=new T.Group();group.name=`mantas-${island}`;group.add(under,surface);root.add(group);
   const flat={minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z};
-  return {island,tracks,under,surface,group,box:flat,sphere,time:0,placed:false,placedReduced:false,
+  return {island,tracks,under,surface,group,box:flat,sphere,time:0,placed:false,placedReduced:false,ridden:false,
    event:{active:false,manta:0,kind:'wingtip' as 'wingtip'|'breach',t:0,duration:0,side:1},next:MANTA_EVENT.minGap*.5+hash(ii+3)*MANTA_EVENT.spread,events:0,active:tracks.length};
  });
  type Island=typeof islands[number];
@@ -116,15 +117,17 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   r.time+=dt;
   if(reduced){if(r.event.active)endEvent(r);}
   else if(r.event.active){r.event.t+=dt;if(r.event.t>=r.event.duration)endEvent(r);}
-  else if(dt>0&&(r.next-=dt)<=0)startEvent(r);
+  else if(dt>0&&!r.ridden&&(r.next-=dt)<=0)startEvent(r);
   for(let i=0;i<r.active;i++){
    const t=r.tracks[i],pts=t.loop.points,n=pts.length;
-   const before=t.u;t.u=(t.u+dt*t.loop.speed)%t.total;if(t.u<before)t.k=1;
+   if(!t.ridden){const before=t.u;t.u=(t.u+dt*t.loop.speed)%t.total;if(t.u<before)t.k=1;}else if(t.u<t.lengths[t.k-1])t.k=1;// ridden: the ride moved u
    while(t.k<n&&t.lengths[t.k]<t.u)t.k++;
    const a=pts[t.k-1],b=pts[t.k%n],f=(t.u-t.lengths[t.k-1])/((t.lengths[t.k]-t.lengths[t.k-1])||1);
    const dx=b.x-a.x,dz=b.z-a.z,yaw=Math.atan2(-dz,dx);
    pos.set(a.x+dx*f,WATER+.015,a.z+dz*f);
    const ev=r.event,surfacing=ev.active&&ev.manta===i;let airborne=false;
+   // Ridden (water P1b): held surfaced on the island's one surfacing mesh, its silhouette instance hidden (+0 draws).
+   if(t.ridden){pos.y=WATER-.04;e.set(0,yaw,0,'YZX');q.setFromEuler(e);m.compose(pos,q,full);r.surface.setMatrixAt(0,m);r.surface.instanceMatrix.needsUpdate=true;pos.y=WATER+.015;airborne=true;}
    if(surfacing){
     const s=Math.min(1,ev.t/ev.duration),arc=Math.sin(Math.PI*s);let pitch=0,roll=0;
     if(ev.kind==='breach'){const h=-.9+3.3*arc;airborne=h>.1;pos.y=WATER+h;pitch=Math.atan2(3.3*Math.PI/ev.duration*Math.cos(Math.PI*s),t.loop.speed*2)*.75;roll=.25*arc*ev.side;}
@@ -143,15 +146,23 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
   for(const r of islands){
    r.group.visible=r.active>0&&boxDistance(r.box,player.x,player.z)<DRAW;if(!r.group.visible)continue;stats.visibleIslands++;
    if(!r.placed||r.placedReduced!==reduced){place(r,0,reduced);r.placed=true;r.placedReduced=reduced;}
-   let awake=false;for(let i=0;i<r.active;i++){const t=r.tracks[i];if(boxDistance(t.box,player.x,player.z)<NEAR&&frustum.intersectsSphere(t.sphere)){awake=true;break;}}
+   let awake=r.ridden;if(!awake)for(let i=0;i<r.active;i++){const t=r.tracks[i];if(boxDistance(t.box,player.x,player.z)<NEAR&&frustum.intersectsSphere(t.sphere)){awake=true;break;}}
    if(!awake)continue;
    // Frozen (dt 0: map, lessons) or static ambience / reduced motion: already placed, so no matrix upload.
-   stats.awake++;if(dt===0||reduced)continue;
+   stats.awake++;if(dt===0||reduced&&!r.ridden)continue;// a ride is the player's own travel: it moves with reduced motion too
    place(r,Math.min(dt,.1),false);stats.updated+=r.active;if(r.event.active)stats.surfacing++;moved=true;
   }
   // Wrap on a whole number of flap periods (2π/1.9 s), so the wave never jumps.
   if(moved){clock=(clock+Math.min(dt,.1))%(2*Math.PI/1.9*500);time.value=clock;}
  }
+ /** Water P1b (lib/town/water/animalRides.ts): every manta as a ridable "island friend". `ridden` holds it surfaced on its
+  *  island's one surfacing mesh (any wingtip / breach there ends first, none start while it is held). */
+ const friends:RideFriend[]=[];
+ for(const r of islands)r.tracks.forEach((t,i)=>friends.push({kind:'manta',id:t.loop.id,points:t.loop.points,lengths:t.lengths,total:t.total,
+  get u(){return t.u;},set u(v:number){t.u=v;},get available(){return i<r.active&&r.group.visible;},get ridden(){return t.ridden;},
+  set ridden(v:boolean){if(v===t.ridden)return;t.ridden=v;r.ridden=r.tracks.some(x=>x.ridden);if(r.event.active)endEvent(r);
+   if(v){const phase=r.surface.geometry.getAttribute('aPhase') as T.InstancedBufferAttribute;phase.setX(0,t.phase);phase.needsUpdate=true;}
+   r.surface.visible=v;r.placed=false;}}));
  applyTier();const offTier=subscribeHeatTier(applyTier);
- return {root,stats,update,islands,time,applyTier,dispose(){offTier();root.removeFromParent();for(const r of islands){r.under.geometry.dispose();r.surface.geometry.dispose();r.under.dispose();r.surface.dispose();}geometry.dispose();underMat.dispose();surfaceMat.dispose();}};
+ return {root,stats,update,islands,time,applyTier,friends,dispose(){offTier();root.removeFromParent();for(const r of islands){r.under.geometry.dispose();r.surface.geometry.dispose();r.under.dispose();r.surface.dispose();}geometry.dispose();underMat.dispose();surfaceMat.dispose();}};
 }

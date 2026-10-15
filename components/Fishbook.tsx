@@ -12,8 +12,8 @@ import {BOAT_SPOTS,FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,SHADOW_LABEL,SHOR
 import {speciesCaught} from '@/lib/town/fishing/fishingCore';
 import {fishSellValue} from '@/lib/economy';
 import {useFishbook} from '@/lib/town/fishing/fishingStore';
-// Oct 15 2026 (docs/fishing.md "Content systems"): the new pages, night fish, shape words (Agent A's fishingFight.ts) and rarity stars.
-import {FISHBOOK_PAGES,MilestoneBar,PhotosPage,RecordsPage,RequestsPage,TrophyPage,type FishbookPage} from './FishbookExtras';
+// Oct 15 2026 (docs/fishing.md "Content systems"): the Trophies and Requests pages, night fish, shape words (fishingFight.ts) and rarity stars.
+import {FISHBOOK_PAGES,MilestoneBar,RequestsPage,TrophyPage,type FishbookPage} from './FishbookExtras';
 import extra from './FishbookExtras.module.css';
 import {refreshMilestones,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
 import {shadowShapeWord} from '@/lib/town/fishing/fishingFight';
@@ -62,7 +62,7 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
    <div className={shell.body}>{open&&<div className={styles.book}>
     <div className={styles.intro}><b>{caught} / {FISH.length} species</b>{book.total} caught in total. Every sea animal links to a real club, team or football story from the sea. Each fishing spot has its own specials.<MilestoneBar caught={caught} log={log}/></div>
     <div className={extra.tabs} role="tablist" aria-label="Fishbook pages">{FISHBOOK_PAGES.map(([id,label])=><button key={id} type="button" role="tab" aria-selected={page===id} data-fishbook-tab={id} onClick={()=>setPage(id)}>{label}</button>)}</div>
-    {page==='trophies'&&<TrophyPage log={log}/>}{page==='records'&&<RecordsPage log={log}/>}{page==='requests'&&<RequestsPage log={log}/>}{page==='photos'&&<PhotosPage/>}
+    {page==='trophies'&&<TrophyPage log={log}/>}{page==='requests'&&<RequestsPage log={log}/>}
     {page==='fish'&&<>
     {SECTIONS.map(sec=>{const got=sec.fish.filter(f=>book.species[f.id]).length;return <section key={sec.id} className={styles.spot} data-fishbook-spot={sec.id}>
      <h3 className={styles.spotTitle}>{sec.title} <small>{got} / {sec.fish.length}</small></h3>

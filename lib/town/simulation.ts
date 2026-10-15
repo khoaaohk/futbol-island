@@ -150,7 +150,9 @@ export function pushOutOf(position:{x:number;z:number},obstacles:Obstacle[],radi
 /** `speedScale` scales the top speed (rides on Summit Isle's slopes: rideSlope.ts rideSlopeScale); 1 everywhere else. `coast` (per
  *  second, 0 = off): speed above that top speed bleeds off at this rate instead of the acceleration's (a ride's momentum carrying it
  *  up a slope, easing down to its climbing speed rather than braking hard at the foot). */
-export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1, coast = 0) {
+/** `water` (Oct 15 2026, wading: lib/town/water/waterDepth.ts): a point test for water the walker may step into (the shallows and
+ *  the swim zone); without it the coast stops the walker as before. Only ground modes read it. */
+export function stepPlayer(position: {x: number; z: number}, velocity: {x: number; z: number}, input: {x: number; z: number; sprint: boolean}, dt: number, obstacles: Obstacle[], mode: TravelMode = 'walk', collisionRadius = mode==='walk'?.32:.8, speedScale = 1, coast = 0, water?: (x:number,z:number)=>boolean) {
   dt = Math.max(0, Math.min(dt, .25));
   const settings = TRAVEL_MODES[mode];
   const length = Math.hypot(input.x, input.z), speed = (mode === 'walk' && input.sprint ? 6 : settings.maxSpeed)*speedScale;
@@ -163,7 +165,7 @@ export function stepPlayer(position: {x: number; z: number}, velocity: {x: numbe
   // Even a thin fence cannot be skipped at moped speed after a long frame.
   const steps = Math.max(1, Math.ceil(Math.hypot(velocity.x,velocity.z)*dt/.15));
   let normal:{x:number;z:number}|null|undefined;
-  const hit=(x:number,z:number)=>mode==='jetpack'?flightBlocked(x,z):groundBlocked(x,z,obstacles,collisionRadius);
+  const hit=(x:number,z:number)=>mode==='jetpack'?flightBlocked(x,z):groundBlocked(x,z,obstacles,collisionRadius)&&!(water&&water(x,z));
   for (let i=0; i<steps; i++) {
     const nx = position.x+velocity.x*dt/steps, nz = position.z+velocity.z*dt/steps;
     if (mode==='jetpack') {

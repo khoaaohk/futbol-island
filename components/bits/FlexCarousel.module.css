@@ -1,0 +1,40 @@
+/* FlexCarousel (adapted from React Bits, docs/third-party.md). Themed by custom properties; the defaults are the museum's modern
+   gallery palette (docs/museum-modern-style.md): ground #f6f4ef, ink #1d1d1b, muted #6b6a66, hairline #d9d6cf. */
+.root{--fc-ink:#1d1d1b;--fc-muted:#6b6a66;--fc-line:#d9d6cf;--fc-surface:#fff;--fc-radius:6px;--fc-accent:#1d1d1b;
+ position:relative;display:flex;flex-direction:column;gap:14px;width:100%;color:var(--fc-ink);outline:none;-webkit-tap-highlight-color:transparent}
+.root:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.viewport{position:relative;overflow:hidden;padding:18px 0 26px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.root[data-dragging] .viewport{cursor:grabbing}
+.track{display:flex;gap:var(--fc-gap);padding-inline:calc(50% - var(--fc-card) / 2);will-change:transform;transform-style:flat}
+.card{position:relative;flex:0 0 var(--fc-card);width:var(--fc-card);backface-visibility:hidden;border-radius:var(--fc-radius)}
+.card::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+ background:linear-gradient(100deg,#ffffff00 20%,#ffffff8c 48%,#ffffff00 76%);opacity:calc(var(--fc-edge,0) * .9);mix-blend-mode:soft-light}
+.inner{height:100%;border-radius:inherit}
+.card :where(img){-webkit-user-drag:none}
+
+/* Entrance one-shot: cards rise in, nearest first. */
+.root[data-intro=wait] .inner{opacity:0}
+.root[data-intro=play] .inner{animation:fcIn .72s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--fc-d,0) * 70ms)}
+@keyframes fcIn{from{opacity:0;transform:translate3d(0,26px,0) scale(.94)}to{opacity:1;transform:none}}
+
+.controls{display:flex;align-items:center;justify-content:center;gap:18px}
+.arrow{display:grid;place-items:center;width:var(--btn-icon,44px);height:var(--btn-icon,44px);padding:0;border:1px solid var(--fc-line);border-radius:50%;
+ background:var(--fc-surface);color:var(--fc-ink);cursor:pointer;transition:background-color .15s,border-color .15s,opacity .15s}
+.arrow:hover:not(:disabled){border-color:var(--fc-ink)}
+.arrow:active:not(:disabled){translate:0 var(--btn-press,3px)}
+.arrow:disabled{opacity:.35;cursor:default}
+.arrow:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.count{min-width:72px;text-align:center;font:500 14px/1 var(--btn-font,Arial,Helvetica,sans-serif);letter-spacing:.06em;color:var(--fc-muted);font-variant-numeric:tabular-nums}
+.count b{color:var(--fc-ink);font-weight:700}
+.live{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Reduced motion: a plain native scroll-snap row (the engine does not run). */
+.root[data-reduced] .viewport{overflow-x:auto;scroll-snap-type:x mandatory;cursor:auto;user-select:auto;-webkit-user-select:auto;scrollbar-width:thin}
+.root[data-reduced] .track{transform:none!important}
+.root[data-reduced] .card{scroll-snap-align:center;transform:none!important}
+.root[data-reduced] .card::after{display:none}
+@media (prefers-reduced-motion:reduce){
+ .root .inner{opacity:1!important;animation:none!important}
+ .viewport{overflow-x:auto;scroll-snap-type:x mandatory}
+ .card{scroll-snap-align:center}
+}

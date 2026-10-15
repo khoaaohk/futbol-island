@@ -14,7 +14,7 @@ User request: "Add fishing-related elements along the island to catch fish to se
   - Nibbles: a nibble is a feint. Stay set like a keeper who doesn't dive early. The source is Bar-Eli et al. (2007), who studied 286 penalties and found that keepers nearly always dive, although staying in the middle would have saved the most.
   - Tapping on a nibble: "Dived too early", like being sold a striker's dummy.
   - Tapping late: "A touch too late". Keepers wait on their toes, ready to spring.
-  - Reeling a big animal that pulls back: "Hold on like a keeper". After a save, a keeper holds the ball tight so nobody scores from the rebound (`PULL_HINT` in `fishingSession.ts`).
+  - Reeling a big animal that pulls back: "Hold on like a keeper". After a save, a keeper holds the ball tight so nobody scores from the rebound (the old Pull-back hint went with the Easy reel, 15 Oct 2026).
 - **Game fiction is labelled separately.** The spot names, their blurbs and which fish live where are original fiction, shown as **Island story** in the Fishbook.
 
 ## Species and club links
@@ -149,8 +149,8 @@ Kids see only the rarity word: Common catch, Good catch, Rare catch, Legendary c
 
 - **Weighted selection per spot.** Each species' weight is added to every spot in its `spots` list, and `rollCatch` picks by weight. In 10,000 simulated casts per spot, commons land about 60–92% of the time, then Good, then Rare, then Legendary (asserted per tier and per species).
 - **Rarer means harder in every way.** Rarer animals have lower weights, bigger shadows on average (`small` 0.45 m up to `giant` 1.9 m) and faster swimming, and big or rare animals may circle the float first. They need more taps and have shorter bite windows. Easy mode and reduced motion add 0.35 s to the bite window.
-- **Reel taps.** `reelTapsFor(species, size)` picks within the rarity's range: the bigger this particular catch, the more taps.
-- **Resistance.** If you pause, a bigger animal pulls line back. The meter drops one step at a time and the Reel button says **Pull!** (hint: "It is pulling back! Hold on like a keeper: keep tapping Reel!").
+- **Reel taps.** Removed (15 Oct 2026): every hook starts the spin fight; the `Reel taps` columns above are history.
+- **Resistance.** Bigger animals fight harder through the spin fight (longer runs, stronger tension); the old tap-meter pull-back went with the Easy reel (15 Oct 2026).
 - **Kid-fair.**
   - Commons never pull.
   - Progress never drops below zero.
@@ -182,7 +182,7 @@ Fishing plays **in the 3D island view**. There is no modal; the only UI is a sma
    - Tapping on a nibble or while the shadow approaches scares the fish off.
    - Tapping late means it swims off.
    - Either way another shadow comes along after a moment. Nothing is lost.
-5. **Reel.** After the hook, tap Reel 2–3 times for a common catch and up to 10–14 for legendary animals and sharks. The meter on the Reel button fills one step per tap, and big animals pull back if you pause (see the rarity section).
+5. **Reel.** After the hook, spin the reel round and round to wind in; stop spinning when a fish runs. Holding Space / Enter is a steady full spin.
 6. **Catch.** The angler holds the fish up. A floating label next to them shows the name, the rarity word, the size, the coin value and the club with its fact line. **Keep fishing** casts again; **Stop** (or Escape) ends the session.
 - **Leaving.** Walking more than 1.3 m away, flying, a lesson or an overlay also ends the session, and the camera eases back.
 - **Idle.** If three fish in a row swim off with no tap at all, the line is reeled in (`IDLE_ESCAPES`), so the session never cycles forever.
@@ -297,16 +297,19 @@ Wording kept precise: the ocean sunfish is *not* called the heaviest bony fish (
 - `lib/town/fishing/fishCatalog.ts`: the shared species, rarity weights, spots, keeper lessons and the stand location.
 - `lib/town/fishing/fishSpecials.ts`: the 46 spot-exclusive specials with their verified football stories and source URLs.
 - `lib/town/fishing/fishingCore.ts`: the pure state machine (cast → float → approach → nibble → bite → reeling → caught / scared / escaped), plus the weighted catch roll, size, cast point, approach routes (`planApproach`, `inOpenWater`), reel taps and pull-back, and the Fishbook.
-- `lib/town/fishing/fishingSession.ts`: the HUD ↔ island bridge (commands, a snapshot per phase, lessons, cues).
+- `lib/town/fishing/fishingSession.ts`: the HUD ↔ island bridge (commands: tap / hold / spin / aim / stop, a snapshot per phase, lessons, cues, the Event API).
+- `lib/town/fishing/fishingFight.ts`: the pure tension-and-runs fight driven by the spin rate (styles per family, runs, slips, `fightStats`).
+- `lib/town/fishing/fishingOdds.ts`, `nightFish.ts`, `lures.ts`, `legendary.ts`, `requests.ts`, `fishingLog.ts` (+ `fishingLogStore.ts`), `waterMood.ts`, `timeOfDay.ts`: the content systems (see "Content systems").
+- `lib/analytics/fishingEvents.ts`, `fishingAdminMetrics.ts`, `app/admin/FishingSection.tsx`, `supabase/migrations/20261017_analytics_fishing.sql`: fishing analytics.
 - `lib/town/fishing/fishingStore.ts`: the Fishbook in localStorage, landing fish in the market basket, and the session singleton.
 - `lib/town/fishing/fishingWorld.ts`: posts, glows, floats and prompts, and the **driver** that steps the state machine and drives the camera and visuals.
 - `lib/town/fishing/fishingCamera.ts`: the low shoreline camera (ease in and out).
 - `lib/town/fishing/fishingVisuals.ts`: **placeholder art behind a small interface** (rod, line, float, rings, shadow, held fish, foam). The graphics agent owns this file; see `docs/fishing-visuals-HANDOFF.md`.
 - `lib/town/market/marketStand.ts`: Sell 1, unit price and the allowance meter.
 - The fish section of `lib/town/market/goods.ts`, generated from the catalogue.
-- Components: `FishingHost.tsx` (+ css) for the HUD and prompts, `Fishbook.tsx` (+ css), `MarketStand.tsx` (+ css), `FishArt.tsx`.
+- Components: `FishingHost.tsx` (+ css) for the HUD, the spin reel and prompts, `FishingLureButton.tsx` (+ css: the lure button, its panel and the catch toast), `FishingTutorial.tsx`, `Fishbook.tsx` (+ css) with `FishbookExtras.tsx` (Trophies and Requests pages), `MarketStand.tsx` (+ css), `FishArt.tsx`.
 - Deep Sea Boat: `lib/town/fishing/deepSeaFish.ts`, `deepSeaBoatData.ts`, `deepSeaBoat.ts` (see above).
-- Tests: `tests/fishing.cjs` (in `npm test`).
+- Tests: `tests/fishing.cjs`, `fishing-fight.cjs`, `fishing-content.cjs`, `fishing-aim.cjs`, `fishing-polish.cjs`, `fishing-backdrop.cjs`, `economy.cjs` §12, `admin-analytics-fishing.cjs` (all in `npm test`).
 
 ## Heat
 
@@ -351,40 +354,40 @@ User: *"spend more time polishing up the fishing experience. subtle animations a
 - **The biter** has a soft pale rim so its outline reads clearly against the reef.
 - **Deep-sea boats** (`deepSeaScene.ts`): the jellyfish bell glows as it contracts, the plankton twinkles, the light shafts breathe slowly, and the bait-ball fish roll as they turn.
 - **Sound and haptics** (`fishingStore.ts`): the cues reuse the island sound kit's existing events, so no new voices are added. The cast is a whoosh (job `throw`) and the float landing a plop (`undock`). Each reel tap clicks (job `snip`). The bite plays a plunge plus a splash hiss (`swish`), and the catch plays the finish jingle plus a splash. The phone vibrates briefly on the bite (14 ms) and gives a double pulse on the catch, but not with reduced motion.
-- **HUD** (`FishingHost.tsx` + css): the reel meter shows a notch per pull needed, flashes once on each pull and strains twice when a fish pulls back. These are one-shot animations, and there are none with reduced motion.
+- **HUD** (`FishingHost.tsx` + css): the reel is see-through glass with a spin trail (an arc plus four dots behind the knob, driven by `--spin`, `--spin-rate`, `--spin-dir`; none with reduced motion).
 - **Heat gate** (`fishingLife.ts`): sway, darters, bubbles and drops run only on heat tiers 0–1. They are off at tier 2+, with reduced motion and on the still-water path. Gameplay rings always show.
 - **Draws went down.** The 5 ring meshes and the spray mesh (up to 6 draws) moved into the overlay's one instanced draw. Darters share the sea life's one draw. Seabed triangles per spot stay within +15 % of before: the worst is +8.8 %, and the total fell from 74.4k to 72.8k on desktop.
 - **Tests:** `tests/fishing-polish.cjs` covers the heat gate, the shader hooks, the overlay sleeping at rest, the draw count, the per-spot triangle snapshot and the biter's path continuity.
 
 ## Event API (15 Oct 2026, for content features)
 
-The fishing session publishes discrete events so content features (records, islander requests, the derby, lures, night fish, Fishbook rewards …) can react to fishing **without touching the HUD, the world or the fight**. Source of truth: the comment at the top of `lib/town/fishing/fishingSession.ts`.
+The fishing session publishes discrete events so content features (islander requests, legends, lures, night fish, Fishbook rewards, analytics …) can react to fishing **without touching the HUD, the world or the fight**. Source of truth: the comment at the top of `lib/town/fishing/fishingSession.ts`.
 
 ```ts
 import {fishingSession,onFishingEvent,bestSize} from '@/lib/town/fishing/fishingStore';
 const off=onFishingEvent(e=>{ /* e: FishingEvent */ });   // same as fishingSession.onFishingEvent; returns an unsubscribe
 ```
 
-`FishingEvent = {type, fish, size, spot, at, rarity, shadow, easyReel, lure, derby, hot, dir?, isNew?, isBiggest?, inBasket?, how?}`
+`FishingEvent = {type, fish, size, spot, at, rarity, shadow, lure, hot, dir?, isNew?, isBiggest?, inBasket?, how?, hooked?, fight?}`
 
 | `type` | When | Extra fields |
 | --- | --- | --- |
 | `cast` | a cast starts | `fish`/`size` are null |
 | `nibble` | each nibble on the float | (the species is internal: never reveal it) |
 | `bite` | the real bite, the reaction window opens | `shadow` size class |
-| `hook` | the player hooked it; the fight (or Easy reel) starts | |
-| `run` | the fish makes a run in the fight | `dir` −1 left / 1 right on screen |
+| `hook` | the player hooked it; the spin fight starts | |
+| `run` | the fish makes a run in the fight (stop spinning and let it tire) | `dir` −1 left / 1 right on screen |
 | `slip` | too much tension: it slipped back one notch (never lost) | |
 | `warn` | the line twang before an idle escape | |
-| `catch` | landed (Fishbook + basket already updated) | `isNew`, `isBiggest` (a new size record for this species), `inBasket` |
-| `escape` | it swam off | `how`: `'scared'` (tapped on a nibble) or `'escaped'` (too late / idle) |
+| `catch` | landed (Fishbook + basket already updated) | `isNew`, `isBiggest` (a new size record for this species), `inBasket`, `fight` (the spin fight's `FightStats`: slips, runs stopped / spun through, average spin rate, seconds) |
+| `escape` | it swam off | `how`: `'scared'` (tapped on a nibble) or `'escaped'` (too late / idle); `hooked` (it had been hooked: an idle escape from the fight, with `fight` stats) |
 
-Common fields: `fish` species id or null, `size` cm or null, `spot` spot id, `at` `Date.now()`, `rarity`, `shadow`, `hot` (`'calm'|'hot'|'spooked'` water), and the options at the time (`easyReel`, `lure`, `derby`). Listeners run synchronously on these beats only (never per frame); a throwing listener is caught and ignored.
+Common fields: `fish` species id or null, `size` cm or null, `spot` spot id, `at` `Date.now()`, `rarity`, `shadow`, `hot` (`'calm'|'hot'|'spooked'` water), and the options at the time (`lure`). Listeners run synchronously on these beats only (never per frame); a throwing listener is caught and ignored.
 
 **Options and hooks**
-- `fishingSession.options` → `{lure, derby, easyReel}`; `fishingSession.setOptions({lure:'panenka', derby:true})`. The world passes `lure` and `derby` into `fishingCore`'s `SessionOptions` every step.
+- `fishingSession.options` → `{lure}`; `fishingSession.setOptions({lure:'panenka'})`. The world passes `lure` into `fishingCore`'s `SessionOptions` every step. (The `derby` flag went with the derby, 15 Oct 2026.)
 - `fishingSession.setCatchRoll(fn|null)`: replaces the internal `rollCatch` with `fn(spot, rand 0..1, hot 0..1) => FishId` (must return a species that lives at the spot). Use it for lures and night fish; keep it EV-neutral (`docs/fishing-research.md` §4).
-- `easyReel` is the HUD's toggle (`setEasyReel` in `fishingStore.ts`, device key `fi2-fish-easy-reel-v1`); content code should read it, not set it.
+- The float takes the chosen lure's colour (`lureById(log.lure)?.color`, else the float skin, classic = the default red): `fishingSession.setLook` bumps `lookRev` and the world re-applies it in its next frame, so a lure chosen mid-session recolours the float at once.
 
 **Shared helpers for the Fishbook and the stand**
 - `shadowShapeWord(f)` (`fishingFight.ts`): "Finned", "Wide", "Long and thin", "Round", "Many arms", "Fish-shaped" (the approach silhouette, A2). `FIGHT_WORD[fightStyle(f)]`: how it fights.
@@ -393,47 +396,47 @@ Common fields: `fish` species id or null, `size` cm or null, `spot` spot id, `at
 - `bestSize(id)` (`fishingStore.ts`): this player's biggest of a species (the Fishbook's `biggest`); the catch card's RECORD stamp is `isBiggest`.
 - `resetFishingTutorial()` (`fishingStore.ts`): replays the first-time tutorial (a Fishbook "How to fish" button can call it).
 
-## Content systems (15 Oct 2026: night fish, requests, records, legends, derby, lures, weather, rewards, photos, boat captains)
+## Content systems (15 Oct 2026: night fish, requests, legends, lures, rewards, boat captains)
 
-User ask: build every fishing improvement in [fishing-research.md](fishing-research.md). This section is the content half (Agent B); the feel half (bite, fight, catch reveal) is in "Event API" above. Everything is wired through that API (`onFishingEvent` for catches, `setCatchRoll` for the live roll, `setOptions({lure, derby})`) plus a handful of marked one-line hooks.
+User ask: build every fishing improvement in [fishing-research.md](fishing-research.md). This section is the content half; the feel half (bite, fight, catch reveal) is in "The feel of fishing" below. Everything is wired through the Event API above (`onFishingEvent` for catches, `setCatchRoll` for the live roll, `setOptions({lure})`) plus a handful of marked one-line hooks.
+
+**Removed the same day** (user decision, 15 Oct 2026: "it got too complicated with the derby, photo, and records. let's remove those … also remove the weather"): the Fishing Derby (`derby.ts`, the clock, cups and Tomás), photo mode (`photo.ts`, the Photos page, `fi2-fish-photos-v1`), the spot record boards (`records.ts`, the Records page and button, the "Spot record!" stamp), the weather (`weather.ts`, `rainStreaks.ts`, the weather half of `waterMood.ts`, the switch and `fi2-fish-weather-v1`) and the content HUD that held them (`FishingExtrasHud.tsx`). Old saves that still carry `records`, `derby` or `lures` load fine: `sanitizeLog` drops them. The day clock (`readTimeOfDay`, `dayKey`, `hash01`) moved to `timeOfDay.ts`.
 
 | Item | What the player gets | Where |
 | --- | --- | --- |
 | B3 night fish | **Stargazer**, **Bigeye** and **Flashlight Fish** come out at night and the **Golden Trevally** at sunset, read from the island's own Day / Sunset / Night setting (`fi2-time-of-day`). The squid also rises to three shore spots after dark. The Fishbook has a "Night and sunset fish" section and says "Comes out at night". | `nightFish.ts`, `fishCatalog.ts` (`when`), `fishModels.ts` (4 models), `Fishbook.tsx` |
-| B3 night water | Night, sunset and weather scale the reef theme's water uniforms once per session (darker and deeper blue at night, warm at sunset, greyer and murkier on cloudy or rainy days). `moodParams` also hands A a `floatGlow` and a `sparkle` number. | `waterMood.ts`, one hook line after `applyReefWater` in `fishingVisuals.ts` |
-| B4 requests | Three islander requests a day (Rosa, Nico, Jules, Maya, Nell, Captain Marina, Skipper Kofi): a species, any catch at a spot, a huge or giant shadow, 3 different kinds, or an animal group. Shown on the HUD chip and the Fishbook's Requests page, with a football "thank you" line. | `requests.ts`, `fishingLog.ts`, `FishingExtrasHud.tsx`, `FishbookExtras.tsx` |
-| B5 records | The 3 biggest catches per spot, on the HUD's Records button and the Fishbook's Records page. Records API for A's RECORD stamp: `isSpotRecord(spot, size)` (ask before landing) and `lastCatchEffects()` (rank 1 = new record). | `records.ts`, `fishingLogStore.ts` |
-| C1 legends | 18 named legends, one per spot, each with an island story and a real football "legend" fact (Pelé, Yashin, Ferguson, Banks, the Invincibles, Messi, Sinclair, Maradona, Dick, Kerr Ladies, Klose, Leicester, Marta, Zidane, the Lisbon Lions, Uruguay 1930, Real Madrid, Nottingham Forest, Ronaldo). A legend swims only after its clue is found (finish a request pointing at its spot, or catch 3 different kinds there), joins that spot's catch at a small fixed weight, is caught once and released. Never in `FISH`, never a market good, never counted. A's fight: `fightProfileFor(id)` returns `'legend'`; `isLegendId(id)` tells the catch card to say "Released". | `legendary.ts`, `fishingOdds.ts` |
-| C2 derby | Three minutes of "stoppage time" from the HUD's Derby button: 1 point a catch, +1 for each new kind; your best and Rosa's nephew Tomás's score for the day; Bronze / Silver / Gold cups at 20 / 60 / 120 total points. Leaving the spot blows the whistle. | `derby.ts`, `fishingLogStore.ts` |
-| C3 lures | Panenka (calm animals), Knuckleball (hunters), Rabona (bottom-dwellers), Nutmeg (small fish). Each changes only which kinds come; each lure card has a real fact. Chosen before casting on the HUD. | `lures.ts`, `fishingOdds.ts` `familyMixes` |
-| C4 weather | One state per local day (clear 40 %, breezy 25 %, cloudy 20 %, light rain 15 % of days, internal only), the same on every device, switchable off on the Fishbook's Requests page (`fi2-fish-weather-v1`, per device). It changes the mix (rain: crabs, eels, rays; breezy: slim fast fish; cloudy: hunters) and the water uniforms; light rain adds 48 thin streaks near the fishing camera. | `weather.ts`, `rainStreaks.ts`, hook in `fishingWorld.ts` |
-| C5 rewards | Milestones at a quarter, half, three quarters and all of the Fishbook (words, never percentages): the Nutmeg, Rabona and Knuckleball lures, then the **Golden Rod** and a golden float. Requests unlock the Panenka lure (1), the football float (3) and the seagull float (6). A Trophies page shows the legends (gold cards), derby cups, rod and float choice and lures. Not in the museum. `fishingCosmetics()` gives A the chosen rod and float. | `fishingLog.ts`, `FishbookExtras.tsx` |
-| C6 photo mode | The HUD's camera button copies the last rendered frame into a framed 4:3 photo with a caption, kept on this device only (newest 6, 300 KB budget), shown on the Fishbook's Photos page. | `photo.ts` |
-| Boat captains | **Captain Marina** (Deep Sea Boat) and **Skipper Kofi** (Summit Deep Boat) stand by the wheelhouse door on the port side. The first chat explains the boat (deep water, slower bites, hotspots, aiming, the fight and Easy reel); the topics cover the legend and the how-to; later chats rotate 10 sourced fish-and-football facts each. They ride the deck's live height (`floor` on `NpcDefinition`), never wander, and use the shared townsfolk runtime. | `boatCaptains.ts`, `npcDialogues.ts`, `islandNpcs.ts` |
+| B3 night water | Night and sunset scale the reef theme's water uniforms once per session (darker and deeper blue at night, warm at sunset). `moodParams(time)` also hands the visuals a `floatGlow` and a `sparkle` number. | `waterMood.ts`, one hook line after `applyReefWater` in `fishingVisuals.ts` |
+| B4 requests | Three islander requests a day (Rosa, Nico, Jules, Maya, Nell, Captain Marina, Skipper Kofi): a species, any catch at a spot, a huge or giant shadow, 3 different kinds, or an animal group. Shown on the Fishbook's Requests page, with a football "thank you" line; a finished one shows a short toast over the reel. Requests pay coins and reveal a legend's clue; they unlock nothing else any more. | `requests.ts`, `fishingLog.ts`, `FishbookExtras.tsx`, `FishingLureButton.tsx` (toast) |
+| C1 legends | 18 named legends, one per spot, each with an island story and a real football "legend" fact (Pelé, Yashin, Ferguson, Banks, the Invincibles, Messi, Sinclair, Maradona, Dick, Kerr Ladies, Klose, Leicester, Marta, Zidane, the Lisbon Lions, Uruguay 1930, Real Madrid, Nottingham Forest, Ronaldo). A legend swims only after its clue is found (finish a request pointing at its spot, or catch 3 different kinds there), joins that spot's catch at a small fixed weight, is caught once and released. Never in `FISH`, never a market good, never counted. The fight: `fightProfileFor(id)` returns `'legend'`; `isLegendId(id)` tells the catch card to say "Released". | `legendary.ts`, `fishingOdds.ts` |
+| C3 lures | Panenka (calm animals), Knuckleball (hunters), Rabona (bottom-dwellers), Nutmeg (small fish). Each changes only which kinds come; each lure card has a real football fact (the teaching hook). **All four are free from the first cast and can be changed at any moment** from the round lure button at the bottom right of the HUD (or the Fishbook's Trophies page); the choice takes effect at the next bite. (Before 15 Oct 2026 they were earned through requests and milestones, which left a new player with four locked buttons: "unable to change lure".) | `lures.ts`, `fishingOdds.ts` `familyMix`, `FishingLureButton.tsx` |
+| C5 rewards | Fishbook milestones (words, never percentages): a quarter → the football float, half → the seagull float, all → the **Golden Rod** and a golden float. A Trophies page shows the legends (gold cards), the rod and float choice and the lures. Not in the museum. `fishingCosmetics()` gives the visuals the chosen rod and float. | `fishingLog.ts`, `FishbookExtras.tsx` |
+| Boat captains | **Captain Marina** (Deep Sea Boat) and **Skipper Kofi** (Summit Deep Boat) stand by the wheelhouse door on the port side. The first chat explains the boat (deep water, slower bites, hotspots, aiming, the spin fight); the topics cover the legend and the how-to; later chats rotate 10 sourced fish-and-football facts each. They ride the deck's live height (`floor` on `NpcDefinition`), never wander, and use the shared townsfolk runtime. | `boatCaptains.ts`, `npcDialogues.ts`, `islandNpcs.ts` |
+
+**Fishbook pages**: Fish, Trophies (legends, rod and float, lures), Requests.
 
 **Economy** (docs/fishing-research.md §4; `tests/economy.cjs` §12):
-- Night and sunset fish are priced inside their rarity bands and never add weight: at their time each one takes the place of a resting *shared* day fish of the same rarity within 1 coin, and only if the spot's mean catch (catalogue price and Rosa's sell value) stays within 2 % of the day table. Every spot is checked in all 60 time × weather × lure mixes: within ±3 %, and the 3.75–4.26 band holds where the day table is in it.
-- Lures and weather reweight *inside* each rarity (rarity shares are unchanged, so `BOOST_CAP` is untouched) and are eased back together until the mean stays within ±2.5 %.
+- Night and sunset fish are priced inside their rarity bands and never add weight: at their time each one takes the place of a resting *shared* day fish of the same rarity within 1 coin, and only if the spot's mean catch (catalogue price and Rosa's sell value) stays within 2 % of the day table. Every spot is checked in all 15 time × lure mixes: within ±3 %, and the 3.75–4.26 band holds where the day table is in it.
+- Lures reweight *inside* each rarity (rarity shares are unchanged, so `BOOST_CAP` is untouched) and are eased back until the mean stays within ±2.5 %. A free lure therefore carries no value.
 - Legends are worth nothing (released): a found legend can only lower a spot's mean.
 - Requests pay `FISH_REQUEST_COINS` (3) as an `island-job:fish-request:<day>:<n>` jobs-wallet run, metered by the Training meter; never learning coins. Three a day at most.
-- The derby has no price bonus and no coins: `derby.ts` touches no price, market or wallet.
 
-**Saves**: one synced key, `fi2-fishing-log-v1` (records, legends, clues, kinds per spot, today's requests, lures, milestones, floats, the Golden Rod, derby bests: under 12 KB for a busy player). Device keys: `fi2-fish-photos-v1` (photos) and `fi2-fish-weather-v1` (the weather switch). Classified in `lib/saves/snapshot.ts` and `docs/accounts-design.md`.
+**Saves**: one synced key, `fi2-fishing-log-v1` (legends, clues, kinds per spot, today's requests, the lure on the line, milestones, floats, the Golden Rod: under 8 KB for a busy player). No fishing device key beyond the tutorial one (the Easy reel key was removed). Classified in `lib/saves/snapshot.ts` and `docs/accounts-design.md`.
 
-**Analytics**: `fi:legend`, `fi:record`, `fi:clue`, `fi:request`, `fi:derby_start`, `fi:derby_done`, `fi:lure`, `fi:photo` (`FISHING_COUNT_EVENTS` in `lib/analytics/countIds.ts`), totals only.
+**Analytics** (`lib/analytics/fishingEvents.ts`, ids in `lib/analytics/countIds.ts` `FISHING_COUNT_EVENTS`, shown by `app/admin/FishingSection.tsx`; totals only, never a fish, a spot or a size): `fi:lure_panenka` / `fi:lure_knuckleball` / `fi:lure_rabona` / `fi:lure_nutmeg` / `fi:lure_none` (the lure put on, by id, or taken off), `fi:hook_spin` (fights started; `fi:hook_easy` is retired, the already-run SQL migration still sums it harmlessly), `fi:land` / `fi:escape` / `fi:miss` (landed, a hooked fish lost to the idle escape, a bite missed before any hook), `fi:slips_0` / `fi:slips_1` / `fi:slips_2` / `fi:slips_3plus` (slips per spin fight), `fi:run_stopped` / `fi:run_spun` (runs the player stopped spinning for in time vs spun through), `fi:spin_slow` / `fi:spin_mid` / `fi:spin_full` (a spin fight's average spin rate: under 0.45 / under 0.8 / full), `fi:book` (the Fishbook opened from the HUD's bottom-left button), `fi:request`, `fi:clue`, `fi:legend`. Everything but the lure and the Fishbook button is counted by one Event API listener (`wireFishingAnalytics`), from the `fight` stats the `catch` / `escape` events carry (`fightStats` in `fishingFight.ts`). "Fights per fishing session" (1 / 2–3 / 4–6 / 7+) needs one new SQL function, `analytics_fishing_summary` in `supabase/migrations/20261017_analytics_fishing.sql` (additive; its last row must read "OK, fishing analytics installed"; /admin shows a banner until it has run). Removed with their features: `fi:record`, `fi:derby_start`, `fi:derby_done`, `fi:photo`, `fi:lure`. Tests: `tests/admin-analytics-fishing.cjs`.
 
-**Heat**: no new draw when not fishing (the two captains are ordinary townsfolk, drawn only near their boat). While fishing, the only new draw is the rain (one instanced draw of 48 streaks, light rain only, heat tiers 0–1 only, no reduced motion, animated in the vertex shader from one uniform). The water mood is uniforms written once per session. The content HUD renders only while fishing; its one timer is the derby's 1 s tick. The live roll and the log run once per bite or catch, never per frame.
+**Heat**: no new draw when not fishing (the two captains are ordinary townsfolk, drawn only near their boat), and no new draw while fishing either since the rain went. The water mood is uniforms written once per session. The lure button and toast render only while fishing, with no timers but the toast's one timeout. The live roll and the log run once per bite or catch, never per frame.
 
-**Tests**: `tests/fishing-content.cjs` (205 checks), `tests/economy.cjs` §12, plus `tests/fishing.cjs`, `game-saves.cjs`, `townsfolk-cast.cjs`.
+**Tests**: `tests/fishing-content.cjs`, `tests/economy.cjs` §12, plus `tests/fishing.cjs`, `game-saves.cjs`, `townsfolk-cast.cjs`.
 
-## The feel of fishing (15 Oct 2026, docs/fishing-research.md A1–A6, B1, B2, B6)
+## The feel of fishing (15 Oct 2026, docs/fishing-research.md A1–A6, B1, B2, B6; the spin reel the same day)
 
-- **The fight** (`fishingFight.ts`, default; tests `tests/fishing-fight.cjs`): hold Reel (or Space, or press anywhere on the water) to wind in against a tension arc round the Reel button. Swipe or drag the other way, or use ←/→, to turn a run ("jockey the winger"). Ease off in the red ("the weight of a pass"). Too much tension makes it slip back one notch (of 4) and shake its head for 0.9 s; the line never snaps. Families fight differently: steady crabs, zippy slim fish, long shark runs, wiggly eels, heavy rays and octopuses, leaping billfish, and B's Island Legends (3 runs with a leap each; they rest longer on a slip). Commons never run. The arc and progress are CSS variables written by the world (`--tension`, `--progress`): there is no React render per frame.
-- **Easy reel**: the old tap-to-reel is kept as a switch (`fi2-fish-easy-reel-v1`, a device key). It defaults on with reduced motion.
-- **Economy**: a typical child lands each rarity in 2.7 s, 3.9 s, 5.7 s and 9.7 s (common, uncommon, rare, legendary), against 0.9 s, 1.4 s, 2.0 s and 3.4 s of tapping. Every spot's catch-weighted mean is at least the old time (asserted), so coins per minute can only fall.
+- **The spin reel** (user, 15 Oct 2026: "change the way we reel in, make it like Pokémon GO where they have to spin. make the reel bigger and you have to spin the reel in circular motion in the center"): one big round control (200 px on desktop, 160 px on phones, 140 px on landscape phones) centred at the bottom of the screen between the Fishbook button (left) and the lure button (right), both at the island action size (72 / 58 px). It is the only centre control through the session: **Cast** while the line is in (a tap is a quick cast, a drag from it aims like a drag on the water), **Wait…** while a fish is scared off or escaping, **Hook!** on the bite (the press hooks), and in the fight it is the reel: circle a finger round its centre either way to wind in. The pointer handler tracks the finger's angle round the centre (a 10 px dead zone), turns wrap-safe angle deltas into a smoothed spin **rate** (0..1 of a full spin, one revolution per `FULL_SPIN_S` = 0.7 s; faster is capped) and turns the drawn crank through one CSS variable (`--spin`), with no React state per move. The session holds the rate for 140 ms after the last move, then fades it over 220 ms (`tickSpin`, called by the world once a frame while reeling), so a still finger is not a spinning reel. Space / Enter is a steady full spin (the crank turns by a CSS animation, none with reduced motion). The reel reads Spin! / Stop! / Ease!.
+- **The fight** (`fishingFight.ts`; tests `tests/fishing-fight.cjs`): winding and the line's tension both scale with the spin rate (`setHold(f, on, rate)`); a rate of 1 reproduces the hold-to-reel timing exactly, so the economy assertions below are unchanged. Ease off in the red ("the weight of a pass"). Bigger animals make **runs**: the shadow pulls off to one side and the hint says "It runs! Stop spinning and let it tire." A run ends by time, 1.6× sooner while the reel is still (`RUN_TIRE`); spinning through it piles on tension and steals most of the winding, so it ends in a slip. Too much tension makes it slip back one notch (of 4) and shake its head for 0.9 s; the line never snaps. The swipe-to-turn counter-steer, the run arrow and the ←/→ keys went with the hold reel. Families fight differently: steady crabs, zippy slim fish, long shark runs, wiggly eels, heavy rays and octopuses, leaping billfish, and the Island Legends (3 runs with a leap each; they rest longer on a slip). Commons never run. The tension arc (outer, green → red, notched where the red zone starts) and the progress ring (inner, notched in quarters) round the reel are CSS variables written by the world (`--tension`, `--progress`): there is no React render per frame.
+- **Economy**: a typical child (full spin, easing off in the red, stopping for runs) lands each rarity in about 2.7 s, 3.9 s, 5.9 s and 10.5 s (common, uncommon, rare, legendary), against 0.9 s, 1.4 s, 2.0 s and 3.4 s of tapping. Every spot's catch-weighted mean is at least the old time (asserted), so coins per minute can only fall. A slow spin never lands faster than a full one; playing it well is faster on average than spinning through everything, and slips less.
 - **Bite**: a bold "!" over the float for the bite window, a 6 ms haptic tick on each nibble, and a bite pulse of 14–30 ms scaled by the shadow. **Escape warning**: a line twang and "It's getting away, keep reeling!" at 5 s, before the 8 s idle escape.
 - **Shapes**: a shark's dorsal fin and a V-wake on the approach, and long thin eel silhouettes. `shadowShapeWord` is available to the Fishbook.
-- **Catch reveal**: the fish leaps out (higher for bigger fish) with a ~150 ms freeze at the top and a one-shot flash. The card then shows NEW / RECORD / Spot record / Island legend stamps, rarity stars and the size in football units. There is no leap or flash with reduced motion.
-- **Tutorial**: a one-time ghost-hand walk-through on this device (`fi2-fish-tutorial-v1`).
+- **Catch reveal**: the fish leaps out (higher for bigger fish) with a ~150 ms freeze at the top and a one-shot flash. The card then shows NEW / RECORD (this player's biggest of the species) / Island legend stamps, rarity stars and the size in football units; on phones it docks above the reel. There is no leap or flash with reduced motion.
+- **Tutorial**: a one-time ghost-hand walk-through on this device (`fi2-fish-tutorial-v1`); the reel step shows the hand circling the reel.
 - **Deep-sea boats** (`boatMotion.ts`): heave, pitch and roll on the water clock. The motion is bigger while you fish from the boat, a cast rocks it and a run leans it. The deck and angler ride the heave; the camera follows 30 % of the heave, smoothed, and none of the tilt. The waterline foam is pinned to the sea in the vertex shader, so there is no new draw. Reduced motion keeps only a tiny heave.
-- **Heat**: no new draws. The "!", fin and wakes are kinds in the overlay's one instanced draw. Work happens only while fishing.
+- **Layout** (checked at 390×844, 844×390 and 1440×900): Back top left, the status line top centre, the Fishbook / reel / lure row at the bottom, the lure panel above the lure button, the content toast above the reel. The old content HUD's request chip was dropped (requests live on the Fishbook's Requests page and in the catch toast).
+- **Heat**: no new draws. The "!", fin and wakes are kinds in the overlay's one instanced draw. Work happens only while fishing; the spin maths is a few operations per pointer move.

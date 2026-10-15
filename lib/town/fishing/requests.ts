@@ -1,5 +1,5 @@
 import {FISH,SHORE_SPOTS,SHADOW_LABEL,fishById,spotById,type AnimalGroup,type FishSpecies} from './fishCatalog';
-import {hash01} from './weather';
+import {hash01} from './timeOfDay';
 
 /**
  * B4 (docs/fishing-research.md): islanders ask for a fish ("Rosa wants a Mackerel"), A Short Hike style. Three requests a day,
@@ -7,8 +7,8 @@ import {hash01} from './weather';
  * Each one ends with a short football link (coaching wording, not a fact claim).
  *
  * Rewards (docs/fishing-research.md §4 "B4 requests"): a small FISH_REQUEST_COINS through the island JOBS wallet as a metered
- * `island-job:` run, so it counts against the Training meter (never learning coins, never outside the meter), plus progress
- * toward cosmetics and lures (fishingLog.ts REQUEST_UNLOCKS), and each finished request uncovers one legend's clue (C1).
+ * `island-job:` run, so it counts against the Training meter (never learning coins, never outside the meter), and each finished
+ * request uncovers one legend's clue (C1). (Since 15 Oct 2026 requests unlock nothing else: the lures are free from the start.)
  */
 export type RequestKind='species'|'spot'|'shadow'|'kinds'|'group';
 export type FishRequest={id:string;kind:RequestKind;who:string;text:string;

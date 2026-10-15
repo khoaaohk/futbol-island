@@ -55,7 +55,7 @@ export const RIDE_WAIT_NOTE='Island jobs are on foot. Your rides wait until the 
 
 // ---------------- Poses ----------------
 /** Rig poses (lib/graphics/player.ts PlayerMotion.job). One-shots run for POSE_TIME seconds; held poses come every frame. */
-export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake';
+export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick';
 /** Poses that move only the arms, torso and head: the legs keep walking, dribbling or juggling. */
 export const UPPER_POSES=new Set<JobPoseKind>(['carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
 /** `upper`: only the arms, torso and head (the legs keep walking). */
@@ -64,7 +64,7 @@ export type JobPose={kind:JobPoseKind;progress:number;tug?:number;upper?:boolean
  basket?:boolean;
  /** Held poses at a place (the root being pulled, the leaf pile, the pump): face it and step up to it. */
  target?:{x:number;z:number}};
-export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1};// treeshake: Summit Isle foraging (lib/graphics/fruitTrees.ts), not a job
+export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
 /** Which one-shot a job event plays (and at what: `spot` = a target index, `item` = the event's x/z, `deliver` = the drop-off). */
 export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'|'item'|'deliver';basket?:boolean}|null{
  const t=e.type;
@@ -106,9 +106,9 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  return null;
 }
 /** Poses that need free hands: the player's own ball is set down beside them first. */
-export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake']);
+export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick']);
 /** Poses that hold the player still (they end quickly, or when the button is released). */
-const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake']);
+const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick']);
 /** How close to its target the character steps for a pose (metres, target centre to feet). */
 const STAND_OFF:Partial<Record<JobPoseKind,number>>={gpick:1,reachpick:.55,headshake:1.1,tipbasket:.85,kneel:.6,rake:1.05,pull:.62,twist:.55,nope:.55,snip:.6,scoop:.55,place:.5,mallet:.75,drop:.8,take:.8,stuff:.6,toss:1.1,treeshake:.9};
 

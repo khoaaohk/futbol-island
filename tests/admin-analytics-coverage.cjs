@@ -77,7 +77,7 @@ const CLIENT_COUNTS=new Set([...CID.FIXED_COUNT_IDS,...lessonIds,...BUILT_COUNTS
 (async()=>{
 
 await ok('latest migration parsed',()=>{
- assert.equal(LATEST,'20261016_analytics_kit_shop_activity.sql','the newest analytics_ingest (update this when a newer one lands)');
+ assert.equal(LATEST,'20261017_analytics_water.sql','the newest analytics_ingest (update this when a newer one lands)');
  assert.equal(LISTS.length,3,'three allow-lists: area, place, activity');
  assert(COUNT_RE_SRC,'the counts regex is found');
  assert.equal(COUNT_RE_SRC,CID.COUNT_KEY_RE.source,'SQL counts regex = lib/analytics/countIds.ts COUNT_KEY_RE');
@@ -154,20 +154,22 @@ await ok('sql round trip: nothing the client sends is dropped',async()=>{
   const runFile=f=>cp.execFileSync(psqlBin,[...args,'-f',f],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim().split('\n').pop();
   psql('create role anon; create role authenticated; create role service_role bypassrls;');
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
-  const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
-  assert.equal(files[files.length-1],LATEST,'the analytics migration is the newest file');
-  // Production today: everything up to (not including) the newest file has run.
-  for(const f of files.slice(0,-1))runFile(path.join('supabase/migrations',f));
+  const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort(),at=files.indexOf(LATEST);
+  assert(at>=0,'the analytics_ingest migration is in the folder');
+  // Production today: everything before the newest analytics_ingest file has run; the additive files after it (Oct 17 2026:
+  // the fishing summary function and other agents' additions, none of which replace analytics_ingest) are replayed afterwards.
+  for(const f of files.slice(0,at))runFile(path.join('supabase/migrations',f));
   const day=new Date().toISOString().slice(0,10),q=s=>`'${s.replace(/'/g,"''")}'`;
   const ingest=p=>psql(`select analytics_ingest(${q(JSON.stringify(p))}::jsonb)`,{role:'service_role'});
   const start=s=>ingest({type:'start',session:s,path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct'});
   const E=300000,ms=k=>Object.fromEntries([...k].map(x=>[x,1000]));
-  // Before the new file runs: the app keeps working, the new Kit Shop activities are just not counted yet.
+  // Before the new file runs: the app keeps working, the new 'swim' activity is just not counted yet (the older keys still are).
   start('coveragepre000000001');
-  ingest({type:'beat',session:'coveragepre000000001',engaged_ms:20000,area_ms:{shop:20000},activity_ms:{kit_shop:12000,kit_studio:8000}});
-  assert.equal(psql(`select area_ms::text||'|'||activity_ms::text from analytics_beats where session_id='coveragepre000000001'`),'{"shop": 20000}|{}','before 20261016: the beat counts, the new activity keys are dropped (never an error)');
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, kit shop activities installed','self-check row');
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, kit shop activities installed','idempotent');
+  ingest({type:'beat',session:'coveragepre000000001',engaged_ms:20000,area_ms:{shop:20000},activity_ms:{kit_shop:12000,swim:8000}});
+  assert.equal(psql(`select area_ms::text||'|'||activity_ms::text from analytics_beats where session_id='coveragepre000000001'`),'{"shop": 20000}|{"kit_shop": 12000}','before 20261017_analytics_water: the beat counts, the new swim key is dropped (never an error)');
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, water analytics installed','self-check row');
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, water analytics installed','idempotent');
+  for(const f of files.slice(at+1))assert.match(runFile(path.join('supabase/migrations',f)),/^OK/,f+': its self-check row');
   // After: one session carrying every id the client can produce.
   const S='coverageall000000001';start(S);
   ingest({type:'beat',session:S,engaged_ms:E,pageviews:1,area_ms:ms(CLIENT_AREAS)});

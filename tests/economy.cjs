@@ -208,8 +208,8 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
  console.log('PASS economy rebalance (14 Oct 2026): 15 min ≈ '+X.sessionsToBuy(after,'typical15').coins+' coins (a pack + plays), Kit Shop ball/boots/jersey in 2–3 / 3–4 / 4–6 sessions, diminishing returns at Rosa\'s, learning pays best, floors kept, one economy table, no balance reduced');}
 console.log('PASS economy: learning beats repetition, one daily training budget across all jobs, deep-sea boat ≈ shore, +4 books only new sink, completion pace unchanged by Coral Cay, drink machines a small paced sink, warm-up + book-check coins capped and inside the pace targets, harvest share small and metered, fuel a small everyday sink with a free path');
 
-// 12. Fishing content (Oct 15 2026, docs/fishing-research.md §4 guard-rails; lib/town/fishing/*): night fish, lures, weather,
-// legends, requests and the derby never raise what fishing pays.
+// 12. Fishing content (Oct 15 2026, docs/fishing-research.md §4 guard-rails; lib/town/fishing/*): night fish, lures, legends and
+// requests never raise what fishing pays. (The weather and the derby were removed on 15 Oct 2026.)
 {const cat=require('../lib/town/fishing/fishCatalog.ts'),O=require('../lib/town/fishing/fishingOdds.ts'),E=require('../lib/economy.ts');
  const N=require('../lib/town/fishing/nightFish.ts'),L=require('../lib/town/fishing/legendary.ts'),G=require('../lib/town/market/goods.ts');
  const R=require('../lib/town/fishing/requests.ts'),LOG=require('../lib/town/fishing/fishingLog.ts'),fs=require('node:fs'),path=require('node:path');
@@ -219,24 +219,24 @@ console.log('PASS economy: learning beats repetition, one daily training budget 
  //    is in the 3.75–4.26 band stays in it.
  for(const f of N.NIGHT_FISH){const [lo,hi]=BAND[f.rarity];assert(f.price>=lo&&f.price<=hi,`${f.id}: priced inside the ${f.rarity} band`);
   assert(cat.FISH_SPOTS.every(s=>!(f.id in s.weights)),`${f.id}: never in a static day table`);}
- const ctxs=[];for(const time of ['day','sunset','night'])for(const weather of ['clear','breezy','overcast','rain'])for(const lure of [null,'panenka','knuckleball','rabona','nutmeg'])ctxs.push({time,weather,lure,legends:[]});
+ const ctxs=[];for(const time of ['day','sunset','night'])for(const lure of [null,'panenka','knuckleball','rabona','nutmeg'])ctxs.push({time,lure,legends:[]});
  const tierShare=(w)=>{const t={},all=Object.values(w).reduce((a,b)=>a+b,0);for(const [id,x] of Object.entries(w)){const r=cat.fishById(id).rarity;t[r]=(t[r]??0)+x/all;}return t;};
  for(const s of cat.FISH_SPOTS){const p0=O.meanPrice(s.weights),v0=O.meanSellValue(s.weights),inBand=p0>=3.75&&p0<=4.26,share0=tierShare(s.weights);
   for(const c of ctxs){const w=O.catchWeights(s,0,c),p=O.meanPrice(w),v=O.meanSellValue(w);
-   assert(Math.abs(p-p0)<=p0*.03+1e-9&&Math.abs(v-v0)<=v0*.03+1e-9,`${s.id} ${c.time}/${c.weather}/${c.lure}: mean catch within ±3 % (${p0.toFixed(2)} → ${p.toFixed(2)}, sell ${v0.toFixed(2)} → ${v.toFixed(2)})`);
-   if(inBand&&c.time!=='day'&&!c.lure&&c.weather==='clear')assert(p>=3.75-1e-9&&p<=4.26+1e-9,`${s.id} at ${c.time}: stays in the 3.75–4.26 band`);
-   // c) C3 lures and C4 weather never touch rarity: each rarity keeps exactly its share once the time swaps are applied.
-   if(c.lure||c.weather!=='clear'){const base=O.catchWeights(s,0,{...c,weather:'clear',lure:null}),a=tierShare(base),b=tierShare(w);for(const r of Object.keys(a))assert(Math.abs(a[r]-b[r])<1e-9,`${s.id} ${c.weather}/${c.lure}: ${r} share unchanged`);}}
-  // Hotspot + lure + weather together still never pass BOOST_CAP on any rarity.
-  const hot=O.catchWeights(s,1,{time:'day',weather:'rain',lure:'knuckleball',legends:[]}),base=tierShare(s.weights),boosted=tierShare(O.catchWeights(s,1));
-  for(const r of Object.keys(boosted))assert(Math.abs(tierShare(hot)[r]-boosted[r])<1e-9,`${s.id}: a lure + weather on a hotspot keep the hotspot's capped rarity mix (${r})`);void base;void share0;}
+   assert(Math.abs(p-p0)<=p0*.03+1e-9&&Math.abs(v-v0)<=v0*.03+1e-9,`${s.id} ${c.time}/${c.lure}: mean catch within ±3 % (${p0.toFixed(2)} → ${p.toFixed(2)}, sell ${v0.toFixed(2)} → ${v.toFixed(2)})`);
+   if(inBand&&c.time!=='day'&&!c.lure)assert(p>=3.75-1e-9&&p<=4.26+1e-9,`${s.id} at ${c.time}: stays in the 3.75–4.26 band`);
+   // c) C3 lures never touch rarity: each rarity keeps exactly its share once the time swaps are applied.
+   if(c.lure){const base=O.catchWeights(s,0,{...c,lure:null}),a=tierShare(base),b=tierShare(w);for(const r of Object.keys(a))assert(Math.abs(a[r]-b[r])<1e-9,`${s.id} ${c.lure}: ${r} share unchanged`);}}
+  // Hotspot + lure together still never pass BOOST_CAP on any rarity.
+  const hot=O.catchWeights(s,1,{time:'day',lure:'knuckleball',legends:[]}),base=tierShare(s.weights),boosted=tierShare(O.catchWeights(s,1));
+  for(const r of Object.keys(boosted))assert(Math.abs(tierShare(hot)[r]-boosted[r])<1e-9,`${s.id}: a lure on a hotspot keeps the hotspot's capped rarity mix (${r})`);void base;void share0;}
  // d) C1 legends: never goods, never in FISH or a static table, worth nothing at Rosa's (released), and only swim once found.
  assert.equal(L.LEGEND_FISH.length,cat.FISH_SPOTS.length,'one legend per spot');
  for(const f of L.LEGEND_FISH){assert(!G.goodById(f.id),`${f.id}: not a market good (never sold)`);assert(!cat.FISH.includes(f),`${f.id}: not a Fishbook species`);
   assert(cat.FISH_SPOTS.every(s=>!(f.id in s.weights)),`${f.id}: not in any static table`);assert.equal(f.price,0,`${f.id}: no price`);}
- {const s=cat.spotById('harbour-wall'),w=O.catchWeights(s,0,{time:'day',weather:'clear',lure:null,legends:['harbour-wall']}),id=L.legendId('harbour-wall');
+ {const s=cat.spotById('harbour-wall'),w=O.catchWeights(s,0,{time:'day',lure:null,legends:['harbour-wall']}),id=L.legendId('harbour-wall');
   assert(w[id]>0&&O.meanPrice(w)<O.meanPrice(s.weights),'a found legend can only LOWER the mean catch value (it is worth nothing)');
-  assert(!(id in O.catchWeights(s,0,{time:'day',weather:'clear',lure:null,legends:[]})),'no legend until its clue is found');}
+  assert(!(id in O.catchWeights(s,0,{time:'day',lure:null,legends:[]})),'no legend until its clue is found');}
  // e) B4 requests pay through the JOBS wallet as a metered `island-job:` run (Training meter), small, never learning coins.
  assert(E.FISH_REQUEST_COINS>0&&E.FISH_REQUEST_COINS<E.JOB_PAY_BAND[0],'a request pays less than the cheapest job');
  const runId=`island-job:fish-request:${R.requestsForDay('2026-10-15')[0].id}`;
@@ -244,9 +244,10 @@ console.log('PASS economy: learning beats repetition, one daily training budget 
  const store=fs.readFileSync(path.join(__dirname,'../lib/town/fishing/fishingLogStore.ts'),'utf8');
  assert(/islandJobWallet\.credit\(`island-job:fish-request:/.test(store)&&!/learnCoins|creditOnce|LEARN_COINS/.test(store),'requests credit the jobs wallet, never learning coins');
  assert.equal(R.REQUESTS_PER_DAY*E.FISH_REQUEST_COINS<=E.TRAINING.full/4,true,'a full day of requests is at most a quarter of the full-pay meter');
- // f) C2 derby: no price bonus. The derby module touches no price, sell value, market or wallet; derby catches sell as normal.
- const derbySrc=fs.readFileSync(path.join(__dirname,'../lib/town/fishing/derby.ts'),'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
- assert(!/price|fishSellValue|economy|market|wallet|credit|coins?\b/i.test(derbySrc),'the derby pays no coins and changes no price');
- // g) The log's rewards are cosmetics and lures only (no coins in the log).
- assert(![...LOG.REQUEST_UNLOCKS,...Object.values(LOG.MILESTONE_REWARDS)].some(u=>'coins' in u),'Fishbook and request unlocks are cosmetic');
- console.log('PASS economy §12 fishing content: night fish priced in band and each spot\'s mean catch within ±3 % (all 60 time × weather × lure mixes, 18 spots), lures and weather never move rarity (BOOST_CAP kept), legends never sold, requests metered through the jobs wallet, derby has no price bonus');}
+ // f) The log's rewards are cosmetics only (no coins, no lures: the lures are free and change no value).
+ assert(!Object.values(LOG.MILESTONE_REWARDS).some(u=>'coins' in u||'lure' in u)&&typeof LOG.REQUEST_UNLOCKS==='undefined','Fishbook rewards are cosmetic; requests unlock nothing');
+ // g) Lures are free from the start: a free choice must not raise the mean (covered by the ±3 % check on every lure above); the
+ //    lure module itself touches no price or wallet.
+ const lureSrc=fs.readFileSync(path.join(__dirname,'../lib/town/fishing/lures.ts'),'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+ assert(!/price|fishSellValue|economy|market|wallet|credit|coins?\b/i.test(lureSrc),'the lures touch no price or wallet');
+ console.log('PASS economy §12 fishing content: night fish priced in band and each spot\'s mean catch within ±3 % (all 15 time × lure mixes, 18 spots), lures never move rarity (BOOST_CAP kept), legends never sold, requests metered through the jobs wallet, free lures carry no value');}

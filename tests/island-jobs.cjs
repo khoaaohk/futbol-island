@@ -430,7 +430,7 @@ function environment(shared){
   assert.match(townSrc,/if\(!rideAllowed\(mode,jobActiveRef\.current\)\)\{jobNoteRef\.current\(RIDE_WAIT_NOTE\);return;\}/,'selectRide refuses rides during a job');
   assert.match(townSrc,/if\(!jobRun\)jobMoves\.end\(\);[^\n]*?jobFrame=NO_JOB_FRAME;walkBall\.reset/,'job end (quit, done, left the area) restores the ball; the last one-shot pose plays out (bug A9)');
   assert.match(townSrc,/if\(jobs\.holding&&rideRef\.current==='walk'\)\{player\.handPositions\(jobHandL,jobHandR\);jobs\.holdProps\(/,'what is in the hands follows them through the wind-down');
-  assert.match(townSrc,/if\(jobButtonsRef\.current\)\{input\.current\.kick=input\.current\.juggle=false/,'no kicks or juggles while the job buttons are up');
+  assert.match(townSrc,/if\(jobButtonsRef\.current\|\|water\.inWater\)\{input\.current\.kick=input\.current\.juggle=false/,'no kicks or juggles while the job buttons are up (or in the sea, Oct 15 2026)');
   assert.match(fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8'),/a\.actions\.length>0&&!a\.buttons/,'no duplicate action buttons in the job panel');
   // Oct 1 2026 (user): a two-row panel that fades to a chip (title · count, tap to open, round Stop) and still announces progress.
   {const src=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(src,/PANEL_DWELL_MS=3500/);assert.match(src,/aria-label="Stop job"/,'the chip keeps a Stop job control');

@@ -12,7 +12,7 @@
 import type {DailyRollup,Merged} from './core';
 import {MIN_SESSIONS,type Cell} from './learning';
 import {LESSON_TEXT} from './learningText.generated';
-import {BEACH_COUNT_EVENTS,FORAGE_FRUIT_KINDS,IDP_COUNT_EVENTS,LEARN_FORMATS,SANDBAR_COUNT_EVENTS,SHOP_COUNT_EVENTS,SUMMIT_COUNT_EVENTS,optionKey,questionKey} from './countIds';
+import {BEACH_COUNT_EVENTS,FISHING_COUNT_EVENTS,FORAGE_FRUIT_KINDS,IDP_COUNT_EVENTS,LEARN_FORMATS,SANDBAR_COUNT_EVENTS,SHOP_COUNT_EVENTS,SUMMIT_COUNT_EVENTS,WATER_COUNT_EVENTS,optionKey,questionKey} from './countIds';
 
 /** Average daily unique visitors over `days` complete days (`visitorDays` = their sum). */
 export type PerDay={value:number;days:number;visitorDays:number};
@@ -28,6 +28,11 @@ export type Overview={min:number;from:string;to:string;prevFrom:string;prevTo:st
  /** Oct 15 2026: Kit Shop (studio opens, designs saved, purchases, coins spent, My kit), the Sandbar, and Summit Isle
   *  (arrivals, Summit Kick rounds, zipline rides, fruit shaken, fishing, the kiosk) — lib/analytics/countIds.ts. */
  shop:CountRow[];sandbar:CountRow[];summit:CountRow[];beach:CountRow[];
+ /** Wading, swimming and splash-downs (Oct 15 2026, WATER_COUNT_EVENTS, app/admin/WaterSection.tsx). */
+ water:CountRow[];
+ /** Oct 15 2026: fishing (lib/analytics/fishingEvents.ts): lures by id, spin fights, landed / escaped / missed, slips,
+  *  runs, spin rate, Fishbook opens, requests, clues and legends — app/admin/FishingSection.tsx. */
+ fishing:CountRow[];
  /** Fruit shaken on Summit Isle, by kind and how (hand vs a kicked ball; lib/graphics/fruitTrees.ts). */
  fruit:{kind:string;label:string;hand:Cell;ball:Cell}[]};
 
@@ -68,6 +73,8 @@ export function buildOverview(cur:{merged:Merged;rollups:DailyRollup[];from:stri
   sandbar:SANDBAR_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'sb:'+id,label)),
   summit:SUMMIT_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'su:'+id,label)),
   beach:BEACH_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'bc:pickup_'+id,label)),
+  water:WATER_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'wa:'+id,label)),
+  fishing:FISHING_COUNT_EVENTS.map(([id,label])=>countRow(cur.merged,'fi:'+id,label)),
   fruit:FORAGE_FRUIT_KINDS.map(kind=>({kind,label:kind[0].toUpperCase()+kind.slice(1),
    hand:countRow(cur.merged,`su:fruit_${kind}:hand`,'').value,ball:countRow(cur.merged,`su:fruit_${kind}:ball`,'').value}))};
 }

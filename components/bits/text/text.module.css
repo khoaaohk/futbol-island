@@ -1,0 +1,121 @@
+/* components/bits/text: heat-safe one-shot text animations (adapted from React Bits, docs/third-party.md).
+   Every animation here is finite (no infinite iteration count) and uses transform / opacity / stroke-dashoffset, except
+   ShinyText's single background sweep and BlurText's optional one-shot blur. Reduced motion: final state, no animation. */
+.blur,.fold,.flap,.stroke,.decrypt,.type,.fall,.shuffle,.rotate,.focus,.echo,.shiny,.count{position:relative}
+
+/* BlurText */
+.part{display:inline-block;will-change:auto}
+.blur[data-state=idle] .part{opacity:0}
+.blur[data-state=run] .part{animation:tBlurIn var(--t-dur,.6s) cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * var(--t-step,70ms))}
+.blur[data-dir=down][data-state=run] .part{animation-name:tBlurInDown}
+.blur:not([data-blur])[data-state=run] .part{animation-name:tRise}
+@keyframes tBlurIn{from{opacity:0;filter:blur(8px);transform:translate3d(0,.45em,0)}60%{filter:blur(0)}to{opacity:1;filter:none;transform:none}}
+@keyframes tBlurInDown{from{opacity:0;filter:blur(8px);transform:translate3d(0,-.45em,0)}60%{filter:blur(0)}to{opacity:1;filter:none;transform:none}}
+@keyframes tRise{from{opacity:0;transform:translate3d(0,.45em,0)}to{opacity:1;transform:none}}
+
+/* SplitFlapText */
+.flap{display:inline-block;font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-weight:700;letter-spacing:.02em;line-height:1}
+.flapRow{display:inline-flex;flex-wrap:wrap;gap:.08em}
+.tile{position:relative;display:inline-grid;place-items:center;width:.82em;height:1.16em;border-radius:.12em;overflow:hidden;
+ background:var(--flap-tile,#1d1d1b);color:var(--flap-ink,#f6f4ef);perspective:300px}
+.tile::after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#0000004d}
+.tile[data-space]{background:transparent;width:.4em}
+.tile[data-space]::after{display:none}
+.glyph{display:block;transform-origin:50% 50%;animation:tFlap var(--t-flip,.1s) ease-out both}
+@keyframes tFlap{from{transform:rotateX(-80deg);opacity:.4}to{transform:none;opacity:1}}
+.flap[data-state=idle] .glyph{animation:none}
+
+/* StrokeText */
+.stroke{display:inline-block;line-height:0}
+.strokeText{stroke-dashoffset:0;fill-opacity:1}
+.stroke[data-state=idle] .strokeText{stroke-dashoffset:var(--t-dash);fill-opacity:0}
+.stroke[data-state=run] .strokeText{animation:tDraw var(--t-draw) cubic-bezier(.4,0,.2,1) both,tFill var(--t-fill) ease-out var(--t-fill-delay) both}
+@keyframes tDraw{from{stroke-dashoffset:var(--t-dash)}to{stroke-dashoffset:0}}
+@keyframes tFill{from{fill-opacity:0}to{fill-opacity:1}}
+
+/* FoldText */
+.fold{display:inline-block;perspective:700px}
+.foldBody{display:inline}
+.fold[data-by=lines] .foldPart{display:block}
+.foldPart{display:inline-block;position:relative;transform-origin:50% 0;backface-visibility:hidden}
+.fold[data-hinge=left] .foldPart{transform-origin:0 50%}
+.foldPart::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,#0000002e,#0000 70%);opacity:0}
+.fold[data-state=idle] .foldPart{opacity:0}
+.fold[data-state=run] .foldPart{animation:tFold var(--t-dur) cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(var(--i,0) * var(--t-step))}
+.fold[data-state=run] .foldPart::after{animation:tCrease var(--t-dur) ease-out both;animation-delay:calc(var(--i,0) * var(--t-step))}
+.fold[data-hinge=left][data-state=run] .foldPart{animation-name:tFoldLeft}
+@keyframes tFold{from{opacity:0;transform:rotateX(-92deg)}40%{opacity:1}to{opacity:1;transform:none}}
+@keyframes tFoldLeft{from{opacity:0;transform:rotateY(92deg)}40%{opacity:1}to{opacity:1;transform:none}}
+@keyframes tCrease{from{opacity:1}to{opacity:0}}
+
+/* CountUp */
+.count{display:inline-block;font-variant-numeric:tabular-nums}
+
+/* RotatingText */
+.rotate{display:inline-block;vertical-align:bottom}
+.rotateStage{display:inline-grid;overflow:hidden;vertical-align:bottom;padding-bottom:.08em}
+.rotateWord{grid-area:1/1;display:inline-block;white-space:nowrap}
+.rotateChar{display:inline-block}
+.rotateIn .rotateChar{animation:tCharIn .42s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * var(--t-step,28ms))}
+.rotateOut{animation:tWordOut .32s ease-in both}
+@keyframes tCharIn{from{opacity:0;transform:translate3d(0,110%,0)}to{opacity:1;transform:none}}
+@keyframes tWordOut{to{opacity:0;transform:translate3d(0,-110%,0)}}
+
+/* DecryptedText */
+.decrypt [data-scrambled]{opacity:.55}
+
+/* TextType */
+.caret{display:inline-block;width:.08em;height:1em;margin-left:.06em;vertical-align:-.12em;background:currentColor;opacity:0}
+.type[data-state=run] .caret{animation:tBlink .53s steps(1) var(--t-blinks,6) both}
+@keyframes tBlink{0%{opacity:1}50%{opacity:0}}
+
+/* FallingText */
+.fallWord{display:inline-block}
+.fall[data-state=idle] .fallWord{opacity:0}
+
+/* ShuffleText */
+.shuffle{display:inline-block;white-space:nowrap}
+.cell{display:inline-block;height:1.15em;line-height:1.15em;overflow:hidden;vertical-align:bottom}
+.reel{display:flex;flex-direction:column}
+.reel>span{display:block;height:1.15em}
+.shuffle[data-state=run] .reel{animation:tReelUp var(--t-dur) cubic-bezier(.25,.85,.3,1) both;animation-delay:calc(var(--i,0) * var(--t-step))}
+.shuffle[data-dir=down] .reel{transform:translate3d(0,calc(var(--n) * -1.15em),0)}
+.shuffle[data-dir=down][data-state=run] .reel{animation-name:tReelDown}
+@keyframes tReelUp{from{transform:none}to{transform:translate3d(0,calc(var(--n) * -1.15em),0)}}
+@keyframes tReelDown{from{transform:translate3d(0,calc(var(--n) * -1.15em),0)}to{transform:none}}
+
+/* TrueFocus */
+.focus{display:inline-block}
+.focusBody{position:relative;display:inline-block}
+.focusWord{display:inline-block;transition:opacity .35s ease,filter .35s ease;opacity:.35;filter:blur(var(--t-blur,2px))}
+.focusWord[data-focused]{opacity:1;filter:none}
+.focusFrame{position:absolute;left:0;top:0;pointer-events:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),width .38s cubic-bezier(.2,.8,.2,1),height .38s cubic-bezier(.2,.8,.2,1)}
+.focusFrame i{position:absolute;width:.45em;height:.45em;border:2px solid var(--t-accent,currentColor)}
+.focusFrame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+.focusFrame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.focusFrame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+.focusFrame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.focus[data-reduced] .focusWord{filter:none;transition:none}
+.focus[data-reduced] .focusFrame{transition:none}
+
+/* EchoText */
+.echo{display:inline-block}
+.echoMain{position:relative;z-index:1}
+.echoLayer{position:absolute;left:0;top:0;white-space:nowrap;color:var(--t-tint);pointer-events:none;opacity:0}
+.echo[data-mode=out] .echoLayer{animation:tEchoOut var(--t-dur) cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * var(--t-step))}
+.echo[data-mode=in] .echoLayer{animation:tEchoIn var(--t-dur) cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * var(--t-step))}
+@keyframes tEchoOut{from{opacity:var(--eo);transform:none}to{opacity:0;transform:translate3d(var(--ex),var(--ey),0)}}
+@keyframes tEchoIn{from{opacity:var(--eo);transform:translate3d(var(--ex),var(--ey),0)}to{opacity:0;transform:none}}
+
+/* ShinyText: one sweep, then plain text (no background paint at rest). */
+.shiny[data-state=run]{background:linear-gradient(110deg,currentColor 0 40%,var(--t-shine) 50%,currentColor 60% 100%) 0 0/250% 100% no-repeat;
+ -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:tShine var(--t-dur) ease-in-out var(--t-passes,1) both}
+@keyframes tShine{from{background-position:100% 0}to{background-position:0 0}}
+
+@media (prefers-reduced-motion:reduce){
+ .part,.foldPart,.fallWord,.glyph,.rotateChar,.rotateOut,.caret,.reel,.echoLayer,.strokeText,.focusWord,.focusFrame{animation:none!important;transition:none!important}
+ .blur .part,.fold .foldPart,.fall .fallWord{opacity:1!important}
+ .stroke .strokeText{stroke-dashoffset:0!important;fill-opacity:1!important}
+ .shiny{animation:none!important;background:none!important;-webkit-text-fill-color:currentColor!important}
+ .rotateOut,.echoLayer{display:none}
+}

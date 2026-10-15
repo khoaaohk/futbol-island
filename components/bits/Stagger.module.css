@@ -1,0 +1,6 @@
+/* Stagger (adapted from React Bits Animated List, docs/third-party.md): one finite entrance per child, transform/opacity only. */
+.stagger>*{animation:bitsRise .42s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--bits-i,0) * var(--bits-step,45ms))}
+.stagger[data-stagger=pop]>*{animation-name:bitsPop}
+@keyframes bitsRise{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:none}}
+@keyframes bitsPop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.stagger>*{animation:none}}

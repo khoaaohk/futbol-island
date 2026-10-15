@@ -6,6 +6,7 @@ import {getStore} from '@/lib/analytics/store';
 import {saveAdminLine} from '@/lib/saves/admin';
 import {loadSaveMetrics} from '@/lib/saves/metrics';
 import {loadSummitKickMetrics} from '@/lib/arcade/kickAdminMetrics';
+import {loadFishingMetrics} from '@/lib/analytics/fishingAdminMetrics';
 import AdminLogin from './AdminLogin';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
@@ -22,5 +23,6 @@ export default async function AdminPage(){
  // Save-code metrics (Oct 11 2026): aggregates only, after the session check; never throws (the status says what is missing).
  report.saves=await loadSaveMetrics(report.from,report.to,now);
  report.summitKick=await loadSummitKickMetrics(report.from,report.to);
+ report.fishing=await loadFishingMetrics(report.from,report.to);
  return <AnalyticsDashboard initial={report} initialRange="today" saves={await saveAdminLine()}/>;
 }

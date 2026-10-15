@@ -22,12 +22,15 @@ const lcg=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/2**32;};
 (async()=>{
 const e=environment();
 const cat=e.load('lib/town/fishing/fishCatalog.ts'),core=e.load('lib/town/fishing/fishingCore.ts');
+const FF=e.load('lib/town/fishing/fishingFight.ts');
+// Core-only landing: hold the spin when the tension is low, let go in a run or the red (the kid-fair fight always lands).
+const landFight=(s,sp,r,spawn,dt=.1)=>{for(let i=0;i<4000&&s.phase==='reeling';i++){const f=s.fight;if(f){if(FF.running(f)||f.tension>.85)FF.setHold(f,false);else if(f.tension<.5)FF.setHold(f,true);}core.stepSession(s,sp,dt,r,spawn);}};
 const {FISH,FISH_SPOTS,KEEPER_LESSONS,RARITY_LABEL,MARKET_STAND,fishById}=cat;
 const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SHADOW_LENGTH[f.shadow]*.5-.05)*i/8,z:0});return {points:pts,circles:false,angle:0};};
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=80,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026)');assert(FISH.every(f=>f.group!=='shark'||(core.reelRange(f)[0]===10&&core.reelRange(f)[1]===14)),'every shark, whatever its rarity, needs 10-14 taps');
+assert(FISH.length>=10&&FISH.length<=80,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026)');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -185,21 +188,6 @@ for(const s of FISH_SPOTS){const rand=lcg(11+s.id.length),n={},tier={common:0,un
  assert(avgLen('common')<avgLen('rare')&&avgLen('uncommon')<avgLen('legendary'),'rarer animals cast bigger shadows');
  for(let i=1;i<TIERS.length;i++){assert(core.SWIM_SPEED[TIERS[i]]>core.SWIM_SPEED[TIERS[i-1]],'rarer is faster');assert(core.BITE_WINDOW[TIERS[i]]<core.BITE_WINDOW[TIERS[i-1]],'rarer bites are shorter');}
  assert(core.BITE_WINDOW.legendary<core.BITE_WINDOW.common);void rank;}
-// Reel taps scale with the animal: commons 2-3, uncommon 4-5, rare 6-8, legendary and sharks 10-14.
-{const WANT={common:[2,3],uncommon:[4,5],rare:[6,8],legendary:[10,14]};
- for(const f of FISH){const want=f.group==='shark'?WANT.legendary:WANT[f.rarity],lo=core.reelTapsFor(f,f.size[0]),hi=core.reelTapsFor(f,f.size[1]),mid=core.reelTapsFor(f,(f.size[0]+f.size[1])/2);
-  assert.equal(lo,want[0],`${f.id}: smallest needs ${want[0]} taps`);assert.equal(hi,want[1],`${f.id}: biggest needs ${want[1]} taps`);assert(mid>=lo&&mid<=hi);}
- for(let i=1;i<TIERS.length;i++)assert(core.REEL_TAPS[TIERS[i]][0]>core.REEL_TAPS[TIERS[i-1]][1],'every tier needs more taps than the one below');}
-// Resistance: big animals pull back during a pause (never below zero); commons never do; tapping stops the pull.
-{const mk=id=>{const s=core.createSession(),f=fishById(id);s.fish={id,size:f.size[1]};s.phase='bite';s.window=1;core.tapSession(s);return s;};
- const common=FISH.find(f=>f.rarity==='common'),big=FISH.find(f=>f.group==='shark');
- for(const [f,pulls] of [[common,false],[big,true]]){const s=mk(f.id);const sp=FISH_SPOTS.find(x=>f.spots.includes(x.id));
-  for(let i=0;i<2;i++){for(let k=0;k<2;k++)core.stepSession(s,sp,.1,()=>.5,spawn);core.tapSession(s);}
-  const before=s.reelTaps;const ev=[];for(let i=0;i<18;i++)ev.push(...core.stepSession(s,sp,.1,()=>.5,spawn));
-  if(pulls){assert(s.reelTaps<before&&s.reelTaps>=0,`${f.id} pulls line back during a pause`);assert(ev.includes('pull')&&s.pulling);core.tapSession(s);assert(!s.pulling,'a tap stops the pull');}
-  else{assert.equal(s.reelTaps,before,'commons never pull back');assert(!ev.includes('pull'));}
-  assert.equal(s.phase,'reeling','a pause alone does not lose the fish');}}
-
 // ---- Catch rolls ----
 const pier=FISH_SPOTS[0];assert.equal(core.rollCatch(pier,0),Object.keys(pier.weights)[0]);
 {const rand=lcg(7),n={};for(let i=0;i<20000;i++){const id=core.rollCatch(pier,rand());n[id]=(n[id]??0)+1;}
@@ -247,7 +235,7 @@ const run=(s,spot,rand,until,max=40)=>{const ev=[];for(let t=0;t<max;t+=1/30){ev
  const ev=run(s,pier,r,x=>x.phase==='bite');
  assert.equal(s.phase,'bite','a real bite always comes');const order=ev.filter(x=>x!=='nibble');assert.deepEqual([...order],['splash','notice','bite']);
  const nib=ev.filter(x=>x==='nibble').length;assert(nib>=1&&nib<=4,`1-4 nibbles (${nib})`);
- assert.equal(core.tapSession(s),'reel');assert.equal(s.phase,'reeling');assert.equal(core.tapSession(s),null,'duplicate tap cannot reel instantly');while(s.phase==='reeling'){core.stepSession(s,pier,.1,r,spawn);core.stepSession(s,pier,.1,r,spawn);core.tapSession(s);}assert.equal(s.phase,'caught');assert(s.fish&&fishById(s.fish.id),'the hooked fish is known');
+ assert.equal(core.tapSession(s),'reel');assert.equal(s.phase,'reeling');assert.equal(core.tapSession(s),null,'taps do nothing in the fight (the reel is spun);');assert(s.fight,'the hook always starts the spin fight');landFight(s,pier,r,spawn);assert.equal(s.phase,'caught');assert(s.fish&&fishById(s.fish.id),'the hooked fish is known');
  const landedFish=s.fish;
  for(let i=0;i<120;i++){core.stepSession(s,pier,.05,r,spawn);assert.equal(core.tapSession(s),null,'rapid reel taps cannot dismiss a catch');}
  assert.equal(s.phase,'caught');assert.equal(s.fish,landedFish,'catch fact remains available throughout the tap burst');
@@ -284,9 +272,9 @@ for(const [r,w] of Object.entries(core.BITE_WINDOW)){assert(w>=.6&&w<=1,`${r} wi
  assert(renders-rendersBefore<20,'the HUD re-renders on phase changes only, not per frame');
  assert(cues.includes('tick')&&cues.includes('plunge')&&cues.includes('splash'));
  assert.equal(api.getView().hint,'Now! Reel it in!');assert(api.getView().lesson,'a keeper lesson was shown');
- // Oct 15 2026: tapping Reel N times is the Easy reel option now (the default fight is covered in tests/fishing-fight.cjs).
- api.setOptions({easyReel:true}); api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));api.tap();}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
- assert(cues.includes('fanfare'));assert.equal(api.drainTapEvents().filter(x=>x==='hooked').length,1);
+ // Oct 15 2026: the hook always starts the spin fight (the Easy reel tap meter is gone; the fight is covered in tests/fishing-fight.cjs).
+ api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){const f=api.session.fight;if(f){if(FF.running(f)||f.tension>.85)api.hold(false);else if(f.tension<.5)api.hold(true);}api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
+ assert(cues.includes('fanfare'));api.drainTapEvents();
  api.stop();assert(api.takeStop());api.end();assert.equal(api.getView().active,false);assert.equal(api.getView().catches,1);}
 
 // ---- Fishbook + persistence ----

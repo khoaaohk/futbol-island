@@ -2,7 +2,6 @@ import type {FishId,FishRarity,FishSpecies,FishSpot} from './fishCatalog';
 import {FISH,FISH_SPOTS,fishById} from './fishCatalog';
 import {fishSellValue} from '../../economy';
 import {applyTimeSwaps,timeSwaps,type TimeOfDayKey} from './nightFish';
-import {WEATHER_FAVORS,type Weather} from './weather';
 import {lureById,type LureId} from './lures';
 import {LEGEND_WEIGHT,legendForSpot} from './legendary';
 
@@ -22,31 +21,32 @@ export function hotFactor(spot:Pick<FishSpot,'rarityBoost'>,rarity:FishRarity,ho
  return Math.max(base,Math.min(BOOST_CAP,want))/base;
 }
 
-// ---- Oct 15 2026 content systems (docs/fishing-research.md B3, C1, C3, C4): what else shapes a cast's catch ----
+// ---- Oct 15 2026 content systems (docs/fishing-research.md B3, C1, C3): what else shapes a cast's catch ----
 /**
- * The catch context: the island's time of day (B3 night fish), the day's weather (C4), the lure on the line (C3) and the spots
- * whose legend's clue was found and which is not caught yet (C1). The browser store (fishingLog.ts) registers a source; pure
- * code and tests pass one explicitly. The neutral context (day, clear, no lure, no legends) leaves every table exactly as it is.
+ * The catch context: the island's time of day (B3 night fish), the lure on the line (C3) and the spots whose legend's clue was
+ * found and which is not caught yet (C1). (The weather was removed on 15 Oct 2026: user decision.) The browser store
+ * (fishingLogStore.ts) passes the live context; pure code and tests pass one explicitly. The neutral context (day, no lure, no
+ * legends) leaves every table exactly as it is.
  * In the game the live roll goes through Agent A's `fishingSession.setCatchRoll` (fishingLogStore.ts liveCatchRoll), which passes
  * the live context explicitly; no global source is registered, so fishingCore.rollCatch and every sim keep the neutral tables.
  */
-export type CatchContext={time:TimeOfDayKey;weather:Weather;lure:LureId|null;legends:readonly string[]};
-export const NEUTRAL_CONTEXT:CatchContext=Object.freeze({time:'day',weather:'clear',lure:null,legends:Object.freeze([])}) as CatchContext;
+export type CatchContext={time:TimeOfDayKey;lure:LureId|null;legends:readonly string[]};
+export const NEUTRAL_CONTEXT:CatchContext=Object.freeze({time:'day',lure:null,legends:Object.freeze([])}) as CatchContext;
 let source:(()=>CatchContext)|null=null;
 /** The browser store registers where the live context comes from (read once per bite, never per frame). */
 export function setCatchContextSource(fn:(()=>CatchContext)|null){source=fn;}
 export function catchContext():CatchContext{try{return source?.()??NEUTRAL_CONTEXT;}catch{return NEUTRAL_CONTEXT;}}
-const isNeutral=(c:CatchContext)=>c.time==='day'&&c.weather==='clear'&&!c.lure&&!c.legends.length;
+const isNeutral=(c:CatchContext)=>c.time==='day'&&!c.lure&&!c.legends.length;
 
-/** How strongly a lure or the weather pulls its favoured kinds (inside each rarity), before the value guard. */
-export const FAMILY_BOOST={lure:2.2,weather:1.6} as const;
+/** How strongly a lure pulls its favoured kinds (inside each rarity), before the value guard. */
+export const FAMILY_BOOST={lure:2.2} as const;
 /** The most a family mix may move a spot's mean catch value (catalogue price and Rosa's sell value), either way. */
 export const FAMILY_EV_GUARD=.025;
 const evOf=(w:Record<string,number>,value:(f:FishSpecies)=>number)=>{let t=0,v=0;for(const [id,x] of Object.entries(w)){const f=fishById(id);if(!f||!(x>0))continue;t+=x;v+=x*value(f);}return t?v/t:0;};
 export const meanPrice=(w:Record<string,number>)=>evOf(w,f=>f.price);
 export const meanSellValue=(w:Record<string,number>)=>evOf(w,f=>fishSellValue(f));
 /**
- * Family mix (lures and weather): inside EACH rarity, multiply the favoured kinds by `k` and scale that rarity's other kinds down
+ * Family mix (the lures): inside EACH rarity, multiply the favoured kinds by `k` and scale that rarity's other kinds down
  * so the rarity's total weight is unchanged. Rarity shares never move (so BOOST_CAP is untouched). `k` is then lowered, if it has
  * to be, until the mean catch value (price and sell value) is within FAMILY_EV_GUARD of the table it started from. Pure; a fresh
  * object; a rarity with no favoured kind (or only favoured kinds) is left as it is.
@@ -54,8 +54,8 @@ export const meanSellValue=(w:Record<string,number>)=>evOf(w,f=>fishSellValue(f)
 export function familyMix(w:Record<string,number>,favors:(f:FishSpecies)=>boolean,k:number):Record<string,number>{
  return familyMixes(w,[{favors,k}]);
 }
-/** Several family mixes at once (the weather, then the lure), guarded TOGETHER against the starting table, so a weather and a lure
- *  never stack past the guard: when they would, both pulls are eased back by the same fraction. */
+/** Several family mixes at once, guarded TOGETHER against the starting table (`ref`), so the pulls never stack past the guard:
+ *  when they would, every pull is eased back by the same fraction. (One mix today, the lure; kept general.) */
 export function familyMixes(w:Record<string,number>,mixes:readonly {favors:(f:FishSpecies)=>boolean;k:number}[],ref:Record<string,number>=w):Record<string,number>{
  if(!mixes.length)return w;
  const one=(src:Record<string,number>,favors:(f:FishSpecies)=>boolean,kk:number)=>{
@@ -78,7 +78,7 @@ export function familyMixes(w:Record<string,number>,mixes:readonly {favors:(f:Fi
 export const legendSwims=(spot:Pick<FishSpot,'id'>,ctx:CatchContext)=>ctx.legends.includes(spot.id)&&!!legendForSpot(spot.id);
 
 /** The spot's weights for a cast (a fresh object, once per bite: no per-frame work). `hot`: on a hotspot (0..1). `ctx`: time,
- *  weather, lure and legends (defaults to the live context; the neutral one returns the spot's own table untouched). */
+ *  lure and legends (defaults to the live context; the neutral one returns the spot's own table untouched). */
 export function catchWeights(spot:FishSpot,hot:number,ctx:CatchContext=catchContext()):Record<FishId,number>{
  if(!(hot>0)&&isNeutral(ctx))return spot.weights;
  let out:Record<FishId,number>=spot.weights;
@@ -86,10 +86,9 @@ export function catchWeights(spot:FishSpot,hot:number,ctx:CatchContext=catchCont
  const before=out;
  // B3: night / sunset fish take the place of a resting day fish of their rarity (never on the deep-sea boats).
  if(ctx.time!=='day'&&!spot.deep)out=applyTimeSwaps(out,timeSwaps(spot.id,ctx.time,spot.weights,FISH,fishById));
- // C4 then C3: the family mix (never rarity, value-guarded).
- const wf=WEATHER_FAVORS[ctx.weather],lure=ctx.lure?lureById(ctx.lure):undefined,mixes=[];
- if(wf)mixes.push({favors:wf,k:FAMILY_BOOST.weather});if(lure)mixes.push({favors:lure.favors,k:FAMILY_BOOST.lure});
- if(mixes.length)out=familyMixes(out,mixes,before);
+ // C3: the lure's family mix (never rarity, value-guarded against the table before the time swaps).
+ const lure=ctx.lure?lureById(ctx.lure):undefined;
+ if(lure)out=familyMixes(out,[{favors:lure.favors,k:FAMILY_BOOST.lure}],before);
  // C1: a found legend joins at a small fixed weight (worth 0 coins: never sold, so it can only lower the mean value).
  if(legendSwims(spot,ctx)){const L=legendForSpot(spot.id)!;out=out===spot.weights?{...out}:out;out[L.id]=LEGEND_WEIGHT*(1+.5*Math.max(0,Math.min(1,hot)));}
  return out;

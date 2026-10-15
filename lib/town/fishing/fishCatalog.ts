@@ -252,7 +252,7 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
   reef:'lookout-bommies',weights:{},story:'Four boulders set out like stepping stones along a straight stretch of beach, in sight of the island’s old lookout. Shoals of silvery fish pass close to shore here.'},
  // Drop-off Ledge (Oct 14 2026, user: "add one more fishing spot to the mountain island on the southeast side"): the south-east
  // shore at bearing 54° (SUMMIT_LEDGE_BEARING), in the gap between the south-east sharks' patrol (34–58°, 29 m+ out) and the
- // south bay's mantas; ≈ 21 m from the sea cave, ≈ 30 m from the beach hut. A shore spot with shore odds: like the East Jetty,
+ // south bay's mantas; ≈ 21 m from where the sea cave stood until Oct 15 2026 (it is now on the north-west beach), ≈ 30 m from the beach hut. A shore spot with shore odds: like the East Jetty,
  // no specials of its own, a table of the shared species that fits a rocky ledge over deeper water (no shrimp; cod, haddock and
  // a little shark), mean catch ≈ the shore's.
  {id:'summit-ledge',name:'Drop-off Ledge',area:'summit',x:SUMMIT_LEDGE_STAND.x,z:SUMMIT_LEDGE_STAND.z,buoy:{x:SUMMIT_LEDGE_BUOY.x,z:SUMMIT_LEDGE_BUOY.z},

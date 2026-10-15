@@ -11,7 +11,7 @@ import {notFound} from 'next/navigation';
  * Production builds answer 404 (Next's notFound), so a shared futbolisland.app link never reaches them. `next dev` keeps them.
  * Not labs: /controller (the phone-as-gamepad companion, linked by QR from the island) and /coffee (donations, parent-gated).
  */
-export const LAB_ROUTES=['/motion-lab','/skill-lab','/splash-lab','/museum-lab','/card-lab','/shop-lab'] as const;
+export const LAB_ROUTES=['/motion-lab','/skill-lab','/splash-lab','/museum-lab','/card-lab','/shop-lab','/bits-lab'] as const;
 export const labRoutesAllowed=(nodeEnv:string|undefined=process.env.NODE_ENV)=>nodeEnv!=='production';
 /** Call at the top of a lab page: 404 in production builds. */
 export function guardLabRoute(){if(!labRoutesAllowed())notFound();}

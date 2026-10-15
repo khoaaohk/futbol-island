@@ -143,3 +143,6 @@
  .reveal>.below.below{position:fixed;top:50%;bottom:auto;left:auto;right:calc(var(--phone-gutter) + env(safe-area-inset-right,0px));width:var(--side);padding:0;translate:0 -50%}
  .reveal>.below .primary{min-width:0;max-width:100%;padding:0 18px}
 }
+
+/* Oct 15 2026 (user): Done sits top right in the reveal, even while Flip has not loaded yet. */
+.reveal .doneRight{margin-left:auto}

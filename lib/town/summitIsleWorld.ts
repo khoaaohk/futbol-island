@@ -431,7 +431,9 @@ export function buildSummitIsle(t:SummitTools){
     bake(piece,new T.BoxGeometry(1.5,.9,.04),'#5f7f86',at((a.x+b.x)/2,(ay+by)/2-.48,(a.z+b.z)/2,0,Math.atan2(b.x-a.x,b.z-a.z)+Math.PI/2,0));
     const c=out(R+.5,-1.35);bakeBox(piece,.7,.55,.6,'#9d805b',c.x,yAt(c.x,c.z)+.27,c.z,0,yaw(h.door)+.3,0);obstacles.push({x:c.x,z:c.z,w:.8,d:.8});}}
   // Caves: two boulders frame the mouth, two more and a big back boulder close the sides and the back, a dark rock fills the
-  // recess and a flat capstone overhangs the back half only, so the follow camera (from the south-east) sees in.
+  // recess and a flat capstone overhangs the back half only, so the follow camera (behind a walker coming up to the mouth) sees in.
+  // Every part comes from SUMMIT_CAVES, so moving a cave there (the sea cave to the north-west beach, Oct 15 2026) moves its
+  // boulders, colliders and rock sites with it: nothing is left at the old spot.
   for(const c of SUMMIT_CAVES){const piece=propsAt(c.x,c.z),f=c.mouth,r={x:-f.z,z:f.x},ry=yaw(f);
    const P=(along:number,s2:number)=>({x:c.x+f.x*along+r.x*s2,z:c.z+f.z*along+r.z*s2});
    const tone=c.id==='sea'?['#a39c8c','#8e887a','#b4ad9e']:['#9b9e90','#878b7e','#b1b3a6'];

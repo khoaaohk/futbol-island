@@ -54,11 +54,17 @@ export function hutGroundTop(h:Pt){let hi=-Infinity;for(let a=0;a<16;a++)hi=Math
 /** The straw cone's tip (drawn height). */
 export const hutRoofTip=(h:Pt)=>hutGroundTop(h)+HUT_WALL+HUT_CONE_LIFT+HUT_CONE/2;
 // ---- Caves: a shallow walk-in alcove of low-poly boulders built onto the ground (no hole in the terrain), open toward the camera.
+// The sea cave moved (Oct 15 2026, "move the bottom cave to the north west side of the island") from the south-east beach (746, 237:
+// the bottom of the overhead map, +z is screen-down) to the grass edge at the back of the north-west beach, its back to the waves and
+// its mouth toward the follow camera (which always looks from the south-east), so the opening shows and a walker steps in from the
+// grass: ≥ 12 m from the lookout fishing spot, the beach-find spots and the orchard, no trail or landmark near.
+/** Toward the follow camera (it sits +18, +30 from the walker, Town.tsx): a mouth facing this way is always seen into. */
+const toCamera=unit(18,30);
 export type SummitCave={id:'hill'|'sea';name:string;x:number;z:number;/** the mouth faces this way (out of the cave) */mouth:Pt};
-const HILL_CAVE={x:706,z:191},SEA_CAVE={x:746,z:237};
+const HILL_CAVE={x:706,z:191},SEA_CAVE={x:546,z:52};
 export const SUMMIT_CAVES:readonly SummitCave[]=[
  {id:'hill',name:'Hillside cave',...HILL_CAVE,mouth:downhill(HILL_CAVE)},
- {id:'sea',name:'Sea cave',...SEA_CAVE,mouth:seaward(SEA_CAVE)},
+ {id:'sea',name:'Sea cave',...SEA_CAVE,mouth:toCamera},
 ];
 /** Cave shape (m): the mouth's two side boulders sit CAVE_SIDE either side of the centre line, the back boulder CAVE_BACK behind. */
 export const CAVE_SIDE=2.2,CAVE_BACK=3.4,CAVE_BALL_IN=.9;
@@ -118,8 +124,8 @@ export const SUMMIT_BALL_SPOTS:CoinSpot[]=[
   detail:'Climb the grassy south-east slope halfway up the mountain. Look for a pile of big boulders with a dark opening, and walk in.',
   teaching:'Shin guards on, jewellery off. The Laws say every player wears shin guards covered by their socks, and takes off watches, earrings and bracelets so nobody gets hurt.',lesson:'support'},
  {id:'summit-sea-cave',name:'Summit Isle · sea cave',...ground(inCave(cave('sea'))),kind:'hidden',summit:true,loose:true,concept:'law17-corner-goal',
-  clue:'At the back of the south-east beach, rocks make a little sea cave.',
-  detail:'Walk the south-east beach of Summit Isle. Where big rocks sit at the back of the sand, step into the cave mouth that faces the waves.',
+  clue:'At the back of the north-west beach, rocks make a little sea cave.',
+  detail:'Walk the north-west beach of Summit Isle, below the lookout. Where big rocks sit at the back of the sand with their backs to the waves, step into the cave mouth from the grass.',
   teaching:'You can score straight from a corner. A corner kick that curls into the goal without anyone touching it counts. Keepers, guard your near post when the corner swings in.',lesson:'support'},
  // ── Riddle board balls (3): the board at the sandbar landing reads out their riddles ──
  {id:'summit-cairn',name:'Summit Isle · lookout cairn',...ground({x:615.6,z:101.6}),kind:'hidden',summit:true,loose:true,riddle:'Where a red flag flies and five stones stand in a stack, look behind the pile and bring a ball back.',concept:'law8-kickoff-goal',

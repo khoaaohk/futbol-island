@@ -703,3 +703,17 @@ html[data-root-view=game] [data-root-landing],html:not([data-root-view=game]) [d
 /* Painting easel (components/PaintEasel.tsx sets html[data-easel=on]): the island's HUD (pocket, minimap, buttons, prompts, toasts)
    steps aside so only the view and the painting card show; "Just look" (the card hidden too) leaves nothing but the view. */
 html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:hidden!important;pointer-events:none!important}
+
+/* The sea (Oct 15 2026, lib/town/water): the splash-down's "under" moment is ONE full-screen aqua tint, opacity only (on the
+   compositor), UNDER_TINT_MS long, then hidden again; no backdrop-filter over the moving canvas. Reduced motion: the global
+   animation:none rule keeps it at opacity 0 (no flash). The travel button reads "Drop in" over splashable water. */
+.water-under{position:absolute;inset:0;z-index:5;pointer-events:none;background:#2fb8c9;opacity:0}
+.water-under.is-on{animation:waterUnder .45s ease-out both}
+@keyframes waterUnder{0%{opacity:0}35%{opacity:.35}100%{opacity:0}}
+.water-under[hidden]{display:none}
+/* Water P1a: the character's line over the head when sharks start circling ("Uh oh!", lib/town/water/sharks.ts SHARK_LINE).
+   One element, placed by the island loop (translate, half pixels) only while shown (SHARK_BUBBLE_S), then hidden; no animation. */
+.shark-bubble{position:absolute;left:0;top:0;z-index:6;pointer-events:none;transform:translate(-50%,-100%);padding:6px 12px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 17px/1.1 system-ui,sans-serif;border:2px solid #17323b;box-shadow:0 2px 0 #17323b;white-space:nowrap}
+.shark-bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;margin-left:-6px;background:#fffdf5;border-right:2px solid #17323b;border-bottom:2px solid #17323b;transform:rotate(45deg)}
+.shark-bubble[hidden]{display:none}
+.travel-mode[data-drop-in]{background:#2a6f79;border-color:#bff1f5}

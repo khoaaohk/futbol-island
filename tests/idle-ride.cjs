@@ -29,7 +29,8 @@ for(const [label,move] of [['slow drift',t=>({p:{x:t/1000*(IDLE_TRAVEL_MPS*2),y:
 {let slot=0,n=0;for(let t=0;t<10000;t+=1000/120){const s=frameCapSlot(t,slot,IDLE);if(s>=0){slot=s;n++;}}assert(n>=199&&n<=201,`20 fps on 120 Hz (${n}/10 s)`);}
 // Wiring: Town samples each rendered frame and caps at max(idle, heat tier) on every device.
 const town=fs.readFileSync('components/Town.tsx','utf8');
-assert.match(town,/const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\);\s*renderStats\.idleRide=idleFrame;\s*if\(idleFrame\|\|coarse\|\|heat\.cap30\)\{const slot=frameCapSlot\(now,lastRendered,Math\.max\(idleFrame,heat\.frameMs\)\)/);
+// Oct 15 2026: treading water / floating (lib/town/water) counts like an idle ride (water.resting()).
+assert.match(town,/const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\);\s*renderStats\.idleRide=idleFrame;[^\n]*\n[^\n]*\n\s*if\(idleFrame\|\|coarse\|\|heat\.cap30\)\{const slot=frameCapSlot\(now,lastRendered,Math\.max\(idleFrame,heat\.frameMs\)\)/);
 assert.match(town,/idleRide\.sample\(now,player\.root\.position,camera\.position\)/);
 assert.match(town,/for\(const type of \['pointerdown','pointermove','keydown','wheel'\]\)window\.addEventListener\(type,stir,\{capture:true,passive:true,signal:idleInput\.signal\}\)/);
 assert.match(town,/return\(\)=>\{idleInput\.abort\(\);/);

@@ -300,7 +300,7 @@ const run=(r,x,z,frames,extra)=>{for(let i=0;i<frames;i++){r.tick(1000/60);r.f.u
 
 // ---- 8. Wiring, goods and data.
 {const read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),town=read('components/Town.tsx'),art=read('components/ProduceArt.tsx');
- assert(town.includes('createSummitForage(')&&town.includes('forage.dispose()')&&town.includes('<ForagePrompt/>')&&town.includes("jobMoves.start('treeshake'"),'Town builds, shows and disposes it; the pose is a job pose');
+ assert(town.includes('createSummitForage(')&&town.includes('forage.dispose()')&&town.includes('<ForagePrompt/>')&&town.includes("jobMoves.start(how.kind??'treeshake'"),'Town builds, shows and disposes it; the pose is a job pose (the push, or the kick: tests/summit-tree-kick.cjs)');
  assert(town.includes("cands.push({kind:'enter',key:forageWant.key"),'the prompt competes in the HUD stack (one prompt at a time)');
  assert(/dismount:\(how,spot\)=>\{if\(how==='ride'\)[^\n]*selectRide\('walk'\)/.test(town),'riding: the usual switch to walking');
  assert(/pendingRide\.current='walk';[^\n]*flight\.landing=/.test(town),'flying: the usual guided jetpack landing, aimed beside the trunk');

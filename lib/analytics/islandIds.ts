@@ -39,7 +39,7 @@ export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','stadiums','
  'first-international-1872','offside-rules','formations-history','floodlights-1878','copa-america-1916','keeper-hands-1912','ballon-dor','free-kick-wall','ball-curve','throw-in'] as const;
 export const ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
 export const ACTIVITIES=[
- ['walk','Walking'],['ride','Riding (scooter, bike, moped, truck)'],['fly','Flying (jetpack, parachute)'],['boat','On a boat'],
+ ['walk','Walking'],['ride','Riding (scooter, bike, moped, truck)'],['fly','Flying (jetpack, parachute)'],['boat','On a boat'],['swim','In the sea (wading, swimming)'],
  ['fishing','Fishing'],['job','Island jobs'],['lesson','Watching a lesson'],['watch','Watching a match or play'],['quiz','Quiz'],
  ['book','Pop-up book'],['cards','Cards & binder'],['films','Card films & clips'],['vending','Vending machine'],['talk','Talking to islanders'],
  ['coaches','Coaches Centre'],['paths','Paths'],['menu','Menus & settings'],

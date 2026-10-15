@@ -1,1 +1,61 @@
-{"compilerOptions":{"target":"ES2020","lib":["dom","dom.iterable","esnext"],"allowJs":true,"skipLibCheck":true,"strict":true,"noEmit":true,"esModuleInterop":true,"module":"esnext","moduleResolution":"bundler","resolveJsonModule":true,"isolatedModules":true,"jsx":"preserve","incremental":true,"plugins":[{"name":"next"}],"paths":{"@/*":["./*"]}},"include":["next-env.d.ts","**/*.ts","**/*.tsx",".next/types/**/*.ts",".next-dev/types/**/*.ts"],"exclude":["node_modules"]}
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next-dev/types/**/*.ts",
+    ".next-agent-8251/types/**/*.ts",
+    ".next-agent-8261/types/**/*.ts",
+    ".next-agent-8262/types/**/*.ts",
+    ".next-agent-8263/types/**/*.ts",
+    ".next-agent-8265/types/**/*.ts",
+    ".next-agent-8264/types/**/*.ts",
+    ".next-agent-8267/types/**/*.ts",
+    ".next-agent-8266/types/**/*.ts",
+    ".next-agent-8270/types/**/*.ts",
+    ".next-agent-8271/types/**/*.ts",
+    ".next-agent-8269/types/**/*.ts",
+    ".next-agent-8272/types/**/*.ts",
+    ".next-agent-8273/types/**/*.ts",
+    ".next-agent-8274/types/**/*.ts",
+    ".next-agent-8275/types/**/*.ts",
+    ".next-agent-8276/types/**/*.ts",
+    ".next-agent-8279/types/**/*.ts",
+    ".next-agent-8277/types/**/*.ts",
+    ".next-agent-8278/types/**/*.ts",
+    ".next-agent-8280/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -122,13 +122,15 @@ assert.match(offerUi,/ArrowRight'\?active\+1:event\.key==='ArrowLeft'\?active-1/
 assert.match(offerUi,/onPointerUp=\{onPointerUp\}/,'swipe turns the deck');
 assert.match(offerUi,/import\('\.\/PlayerCard'\)/,'the full PlayerCard loads lazily for the reveal');
 assert.doesNotMatch(offerUi,/^import PlayerCard/m,'PlayerCard is never in the offer chunk itself');
-// Reveal (user, Sep 24 2026): the binder viewer's layout (top bar: Done left, Play centre, Flip right; its card size), no count line,
+// Reveal (user, Sep 24 2026): the binder viewer's layout (top bar: Flip left, Play centre, Done right since Oct 15 2026: "done should
+// always be on the right"; its card size), no count line,
 // no "Keep playing"; "Added to your binder!" above the card and "See it in my binder" under it (no sheet).
 const viewerBranch=offerUi.slice(offerUi.indexOf('{showViewer&&chosenEntry?'),offerUi.indexOf('{!landed&&<div className={styles.stage}'));
 assert.ok(viewerBranch.length>200,'the reveal is its own branch');
 assert.match(viewerBranch,/className=\{`\$\{viewerStyles\.viewer\} \$\{styles\.reveal\}`\}/,'the reveal reuses the binder viewer');
-assert.match(viewerBranch,/<div className=\{viewerStyles\.viewerBar\}>\s*<DoneButton ref=\{doneRef\}[^>]*onDone=\{onClose\}/,'Done (the animated DoneButton) at the top left of the viewer bar');
-assert.match(viewerBranch,/className=\{`\$\{viewerStyles\.viewerFlip\} \$\{navStyles\.button\}`\}[^>]*aria-pressed=\{flipped\}[^\n]*?>Flip</,'the viewer bar Flip at the top right');
+assert.match(viewerBranch,/<div className=\{viewerStyles\.viewerBar\}>\s*\{PlayerCard&&<button[^>]*className=\{`\$\{viewerStyles\.viewerFlip\} \$\{navStyles\.button\}`\}[^>]*aria-pressed=\{flipped\}[^\n]*?>Flip</,'the viewer bar Flip at the top left');
+assert.match(viewerBranch,/<DoneButton ref=\{doneRef\} className=\{`\$\{viewerStyles\.viewerBack\} \$\{styles\.doneRight\}`\}[^>]*onDone=\{onClose\}\/>\s*<\/div>/,'Done (the animated DoneButton) last in the viewer bar, at the top right');
+assert.match(require('node:fs').readFileSync('components/CardOffer.module.css','utf8'),/\.reveal \.doneRight\{margin-left:auto\}/,'Done keeps the right edge even before Flip loads');
 assert.doesNotMatch(viewerBranch,/countLine|Keep playing/,'no count line and no Keep playing on the reveal');
 assert.match(offerUi,/<p id=\{`\$\{uid\}-reason`\}>\{offerReason\([^\n]*<br\/>[^\n]*collected\. Collect them all!/,'the reason, then the count on its own line (user, Sep 25)');
 {const css=read('components/CardOffer.module.css');assert.match(css,/\.deck>\.caption\{[^}]*bottom:calc\(50% \+ var\(--w\) \* \.7 \+ 52px\)/,'caption 52px above the card');assert.match(css,/\.deck>\.choose\{[^}]*top:calc\(50% \+ var\(--w\) \* \.7 \+ 52px\)/,'Choose 52px below the card');}

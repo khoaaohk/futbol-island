@@ -31,20 +31,25 @@ export function jetpackTakeoffHeight(start:number,top:number,time:number,reduced
 }
 export function createJetpackActions(){
  const state={phase:'idle' as 'idle'|'dash'|'charge'|'blast'|'parachute'|'fall',age:0,scanAge:-1,scanYaw:0,scanSpeed:0,scanRadius:0,scanIntensity:0,juggleAge:-1,startHeight:0,yaw:0,target:null as Point|null};
- let aimX=NaN,aimZ=NaN,aimAge=0,fallSpeed=0,glideVX=0,glideVZ=0,spiralX=0,spiralZ=0,spiralRadius=0,settleAge=0,bestD=Infinity,bestH=Infinity,assistAge=-1;
+ let canopyCut=false,aimX=NaN,aimZ=NaN,aimAge=0,fallSpeed=0,glideVX=0,glideVZ=0,spiralX=0,spiralZ=0,spiralRadius=0,settleAge=0,bestD=Infinity,bestH=Infinity,assistAge=-1;
  const clearTricks=()=>{state.scanAge=-1;state.scanSpeed=0;state.scanRadius=0;state.scanIntensity=0;spiralX=spiralZ=spiralRadius=0;state.juggleAge=-1;};
  const parachuteAction=(action:number,yaw:number)=>{if(state.phase!=='parachute')return false;if(action===0){if(state.scanAge<0){state.scanAge=0;state.scanYaw=yaw;state.scanSpeed=.7;}}else{state.juggleAge=state.juggleAge<0?0:-1;}return true;};
- const cut=()=>{if(state.phase==='parachute'){clearTricks();state.phase='fall';state.age=0;fallSpeed=0;}};
- const crash=()=>{clearTricks();state.phase='fall';state.age=0;state.target=null;fallSpeed=0;glideVX=glideVZ=0;};
+ /** `height`: where the canopy was cut (a splash-down's entry style reads the drop). */
+ const cut=(height=state.startHeight)=>{if(state.phase==='parachute'){clearTricks();state.phase='fall';state.age=0;fallSpeed=0;state.startHeight=height;canopyCut=true;}};
+ /** `height`: where the fall starts (the splash size and entry style read it; it was unused before Oct 15 2026). */
+ const crash=(height=state.startHeight)=>{clearTricks();state.phase='fall';state.age=0;state.target=null;fallSpeed=0;glideVX=glideVZ=0;state.startHeight=height;canopyCut=false;};
  const reset=()=>{clearTricks();aimX=aimZ=NaN;aimAge=0;settleAge=0;bestD=bestH=Infinity;assistAge=-1;state.phase='idle';state.age=0;state.target=null;glideVX=glideVZ=0;};
  function start(action:number,height:number,yaw:number,target:Point|null){if(state.phase!=='idle'||action===1&&!target)return;state.phase=action===0?'dash':'charge';state.age=0;state.startHeight=height;state.yaw=yaw;state.target=target;}
- function update(dt:number,p:Point,height:number,env:{blocked:(x:number,z:number)=>boolean;floor:(x:number,z:number)=>number;steer?:Point;scanHeld?:boolean;reducedMotion?:boolean;findLanding?:(x:number,z:number)=>Point|null}){
+ /** `env.splash` (decision 4, Oct 15 2026; lib/town/water/waterDepth.ts canSplashDown): a fall that reaches the floor over water
+  *  within 60 m of land lands there (`splash:true`) instead of being moved to the nearest beach with `crashed:true`. */
+ function update(dt:number,p:Point,height:number,env:{blocked:(x:number,z:number)=>boolean;floor:(x:number,z:number)=>number;steer?:Point;scanHeld?:boolean;reducedMotion?:boolean;findLanding?:(x:number,z:number)=>Point|null;splash?:(x:number,z:number)=>boolean}){
   if(state.phase==='idle')return {height,landed:false};state.age+=dt;if(state.scanAge>=0){state.scanAge+=dt;state.scanSpeed=env.scanHeld?Math.min(4.5,state.scanSpeed+dt*2.2):state.scanSpeed*Math.exp(-dt*7);state.scanYaw+=state.scanSpeed*dt;if(!env.scanHeld&&state.scanSpeed<.02){state.scanAge=-1;state.scanSpeed=0;}}if(state.juggleAge>=0)state.juggleAge+=dt;
   if(state.phase==='dash'){
    const distance=128*dt,steps=Math.max(1,Math.ceil(distance/.25));for(let i=0;i<steps;i++){const x=p.x+Math.sin(state.yaw)*distance/steps,z=p.z+Math.cos(state.yaw)*distance/steps;if(env.blocked(x,z)){reset();break;}p.x=x;p.z=z;}if(state.age>=.45)reset();
   }else if(state.phase==='charge'){if(state.age>=.65){state.phase='blast';state.age=0;}}
   else if(state.phase==='blast'){const t=Math.min(1,state.age/1.05);height=state.startHeight+180*t*t*t*(t*(6*t-15)+10);/* smootherstep: arrives with no deceleration jolt at the canopy opening (Oct 14 2026) */if(t===1){state.phase='parachute';recordExploreActivity('parachute');state.age=0;glideVX=glideVZ=0;settleAge=0;bestD=bestH=Infinity;assistAge=-1;}}
   else if(state.phase==='fall'){if(state.age<.65)return{height,landed:false};fallSpeed+=75*dt;const floor=env.floor(p.x,p.z);height=Math.max(floor,height-fallSpeed*dt);if(height<=floor){
+    if(env.splash?.(p.x,p.z)){const drop=state.startHeight,canopy=canopyCut;reset();return{height:floor,landed:true,splash:true,drop,canopy};}
     const landing=env.findLanding?env.findLanding(p.x,p.z):p;
     if(!landing)return {height:floor+.5,landed:false};
     p.x=landing.x;p.z=landing.z;const landingHeight=env.floor(p.x,p.z);

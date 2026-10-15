@@ -1,0 +1,15 @@
+/* /bits-lab/text (dev only), museum modern palette. */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:16px;max-width:1300px;margin:24px auto 0}
+.demo{min-width:0;padding:18px;background:#fff;border:1px solid #d9d6cf;border-radius:6px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.demo h2{margin:0;font-size:16px}
+.for{margin:0;font-size:13px;color:#6b6a66}
+.big{margin:0;font-size:28px;font-weight:700;line-height:1.25}
+.huge{margin:8px 0;font-size:56px;font-weight:800;letter-spacing:.02em}
+.small{margin:0;font-size:15px;color:#6b6a66;line-height:1.5}
+.mono{margin:0;min-height:2.6em;font:500 18px/1.4 ui-monospace,Menlo,monospace}
+.board{font-size:clamp(14px,4.4vw,24px)}
+.ink{color:#1d1d1b;width:100%}
+.paper{font-size:18px;line-height:1.6}
+.accent{color:#2a5bd7}
+.noCard{color:#6b6a66}.yellow{color:#c99a12}.red{color:#e4322b}
+.mini{min-height:44px;padding:6px 12px;border:1px solid #d9d6cf;border-radius:999px;background:#fff;font:600 13px var(--btn-font);cursor:pointer}

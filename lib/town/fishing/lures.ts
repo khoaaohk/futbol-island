@@ -7,8 +7,8 @@ import type {FishSpecies} from './fishCatalog';
  * within ±2.5 % of no lure (tests/economy.cjs §12 asserts ±3 %). Rarity is never touched, so BOOST_CAP (boat × hotspot) is
  * unaffected.
  *
- * Earned, never bought (no new coin path): the first finished request gives the Panenka, the Fishbook's 25 / 50 / 75 % marks give
- * the Nutmeg, the Rabona and the Knuckleball (fishingLog.ts LURE_UNLOCKS).
+ * All four are free from the first cast (user, 15 Oct 2026: "keep the lure", and the earned-only lures left every new player with
+ * four locked buttons) and can be swapped at any moment: the choice takes effect at the next bite. No coin path.
  *
  * Real football history, checked 15 Oct 2026 against the pages in `source`. The animal hook is plain biology.
  */

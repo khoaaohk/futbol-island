@@ -1,8 +1,8 @@
-/* The Fishbook's new pages (Oct 15 2026): same paper cards as the species grid. */
+/* The Fishbook's content pages (Oct 15 2026): same paper cards as the species grid. */
 .tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0}
 .tabs button{min-height:40px;padding:6px 14px;border:2px solid #fff2cd;border-radius:999px;background:#244d40;color:#fff2cd;font:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .tabs button[aria-selected=true]{background:#fff0cc;color:#244d40}
-.tabs button:focus-visible,.choices button:focus-visible,.toggle:focus-visible,.photos button:focus-visible{outline:var(--btn-focus,3px solid #1f6feb);outline-offset:2px}
+.tabs button:focus-visible,.choices button:focus-visible,.lureList button:focus-visible{outline:var(--btn-focus,3px solid #1f6feb);outline-offset:2px}
 .page{display:flex;flex-direction:column;gap:14px}
 .card{padding:16px 18px;border-radius:20px 32px 20px 20px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;box-shadow:0 4px 0 #143f4140;color:#244d40}
 .card h3{margin:0 0 6px;font-size:19px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -27,30 +27,19 @@
 .released{font-weight:900;color:#a07a12}
 .fact{display:block;margin-top:6px;padding:8px 10px;border-radius:12px;background:#f7f0db;font-size:12.5px;line-height:1.45}
 .fact span{display:block;font-size:11px;font-weight:900;color:#7a5a12}
-.cups,.lureList,.reqs,.boards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.cups li{display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:12px;background:#fff8e8;font-size:13.5px}
-.cups li[data-got]{background:#f3da90;font-weight:800}
+.lureList,.reqs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .choices{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .choices button{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border:2px solid #e8d9b5;border-radius:12px;background:#fff;color:#244d40;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .choices button[aria-pressed=true]{border-color:#2f7a5f;background:#e5f4ec}
 .choices button[data-golden][aria-pressed=true]{border-color:#c99a2e;background:#fff1c2}
 .choices button:disabled{opacity:.65;cursor:default}
 .choices i,.lureList i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--float,var(--lure,#ccc));box-shadow:inset 0 0 0 1px #0003}
-.lureList li{padding:8px 10px;border-radius:12px;background:#fff8e8;font-size:13px;line-height:1.4}
-.lureList li[data-owned=false]{opacity:.75}
+/* Lures: every one is a choice (aria-pressed = on the line); the same card look as the rod and float buttons. */
+.lureList button{display:block;width:100%;min-height:44px;padding:8px 10px;border:2px solid #e8d9b5;border-radius:12px;background:#fff8e8;color:#244d40;font:inherit;font-size:13px;line-height:1.4;text-align:left;cursor:pointer}
+.lureList button[aria-pressed=true]{border-color:#2f7a5f;background:#e5f4ec}
 .lureList b{display:inline-flex;align-items:center;gap:6px}
 .reqs li{display:flex;flex-wrap:wrap;gap:2px 6px;padding:8px 10px;border-radius:12px;background:#fff8e8;font-size:13.5px}
 .reqs li[data-done=true]{background:#e5f4ec}
 .reqs em{font-style:normal;font-weight:800;color:#2f7a5f}
 .reqs span{flex-basis:100%;font-size:12.5px;color:#4b5f57}
-.toggle{min-height:44px;padding:8px 16px;border:2px solid #fff2cd;border-radius:999px;background:var(--btn-gold,#f2c14e);color:var(--btn-ink,#2a2a1e);font:inherit;font-weight:900;cursor:pointer}
-.boards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.boards>li{padding:12px 14px;border-radius:16px;background:#fff0cc url('/stories/films/assets/entry-grain.png') center/160px;box-shadow:0 4px 0 #143f4140;font-size:13px}
-.boards h4{margin:0 0 4px;font-size:15px}
-.boards ol{margin:0;padding-left:20px}
-.boards p{margin:0;color:#4b5f57}
-.photos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
-.photos li{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:14px;background:#fff0cc;box-shadow:0 4px 0 #143f4140}
-.photos img{width:100%;height:auto;border-radius:8px;display:block}
-.photos button{align-self:flex-end;min-height:36px;padding:4px 12px;border:2px solid #e8d9b5;border-radius:999px;background:#fff;color:#7a2e22;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer}
 .milestones li b{display:inline;font-size:inherit;margin:0}

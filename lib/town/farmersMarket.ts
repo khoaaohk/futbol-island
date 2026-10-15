@@ -31,6 +31,8 @@ export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildin
   if([...buildings,...roads,...obstacles].some(o=>overlap(footprint,o,1)))continue;
   path(226,z,6,4);
   const canopy=rosa?'#bf6658':colors[i%colors.length],roofY=rosa?3.55:2.75,depthScale=rosa?1.5:1; 
+  // Rosa's fish stall is one kickable prop (lib/graphics/propReactions.ts 'stall'): a ball hit wobbles the awning, sign and fish.
+  const stall=()=>{
   for(const dx of [-3,3])for(const dz of [-2.4,2.4])cylinder(rosa?.095:.065,roofY-.05,'#9d805b',x+dx,(roofY-.05)/2,z+dz*depthScale);
   // Striped awning, a solid produce counter facing west toward the promenade.
   for(let stripe=0;stripe<8;stripe++)box(rosa?7.4:6.7,.16,.7*depthScale,stripe%2?'#eddfbb':canopy,x,roofY,z+(-2.45+stripe*.7)*depthScale);
@@ -53,6 +55,18 @@ export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildin
    }
   }
   sign(rosa?'ROSA’S MARKET':labels[i],rosa?7:4.8,rosa?.8:.52,x-(rosa?3.78:3.12),rosa?2.88:2.16,z,canopy,'#fff0cf',-Math.PI/2);
+  if(rosa){
+   // Rosa's catch hangs off both ends of the awning (two fish a side, on a string): they jiggle when a ball hits the stall
+   // (propReactions 'stall'). Existing palette colours, so they batch into the stall's chunk with no new draw call.
+   for(const side of [-1,1])for(const [dx,len] of [[-2.55,.62],[-1.85,.5]] as const){
+    const fz=z+side*4.32,fx=x+dx,top=roofY-.1,fy=top-.3-len/2;
+    cylinder(.012,.32,'#384443',fx,top-.16,fz);
+    put(new T.IcosahedronGeometry(.5,0).scale(.16,len,.08),side<0?'#87b1ad':'#678f8d',fx,fy,fz);
+    put(new T.ConeGeometry(.11,.18,4),'#536b65',fx,fy-len*.5-.06,fz);// tail fan: apex into the body, wide end down
+   }
+  }
+  };
+  if(rosa)prop('stall',stall);else stall();
   // A seated vendor keeps each stall inhabited without adding animation loops.
   const vx=x+.25,vz=z;
   box(.55,.75,.38,canopy,vx,1.12,vz);

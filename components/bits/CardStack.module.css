@@ -1,0 +1,9 @@
+/* CardStack (adapted from React Bits Card Swap / Stack, docs/third-party.md). Every move is a CSS transition; no rAF. */
+.stack{display:grid;place-items:center;position:relative;isolation:isolate;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+.card{grid-area:1/1;display:grid;place-items:center;padding:0;margin:0;border:0;background:none;color:inherit;font:inherit;cursor:default;
+ transform-origin:50% 85%;transition:transform .42s cubic-bezier(.2,.8,.2,1),opacity .32s ease;pointer-events:none;
+ -webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
+.top{pointer-events:auto;cursor:grab;touch-action:pan-y}
+.top[data-dragging]{transition:none;cursor:grabbing}
+.top:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:12px}
+@media (prefers-reduced-motion:reduce){.card{transition:none}.card:not(.top){transform:none!important}}

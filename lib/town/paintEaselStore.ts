@@ -20,8 +20,8 @@ export type EaselView={
  /** Where the board sits on screen (client px), once the camera has arrived: the wide-screen tray stands beside it. */
  boardRect:null|{left:number;top:number;right:number;bottom:number};
  /** Snapshots taken once on arrival (again only if the screen shape changes): `canvas` the seated screen (the eyedropper on the
-  *  view; `rect` the client rectangle it covers) and `view` a 4:3 picture of the view from the easel ("trace", and the eyedropper
-  *  on bare paper). */
+  *  view; `rect` the client rectangle it covers) and `view` a 4:3 picture of the view from the easel at VIEW_W×VIEW_H ("trace", and
+  *  the eyedropper on bare paper); null when every try came back blank (the pink button stays disabled). */
  capture:null|{canvas:HTMLCanvasElement;view:HTMLCanvasElement|null;rect:{left:number;top:number;width:number;height:number};rev:number};
  /** The pink button's picture style (lib/town/paintStyles.ts) and, for an art style, its picture (PAINT_W×PAINT_H, made once from the
   *  view snapshot and cached): it sits under the paint on the board and is saved with it. Null for Blank paper and Trace. */

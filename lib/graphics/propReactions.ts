@@ -17,9 +17,9 @@ import type * as T from 'three';
  * Reduced motion: no vertex motion and no flicker; the sound still plays.
  */
 
-export type PropReactionKind='lamp'|'pole'|'signal'|'flag'|'sign'|'bench'|'table'|'tree'|'palm'|'bush'|'planter'|'fence'|'net'|'goal'|'post'|'bike'|'crate'|'bollard'|'lifebuoy';
+export type PropReactionKind='lamp'|'pole'|'signal'|'flag'|'sign'|'bench'|'table'|'tree'|'palm'|'bush'|'planter'|'fence'|'net'|'goal'|'post'|'bike'|'crate'|'bollard'|'lifebuoy'|'stall';
 /** Soft one-shot sounds already in lib/audio/islandSound.ts ('fi2-job-cue'). */
-export type PropReactionCue='clank'|'thunk'|'rustle'|'spring'|'tap'|'thud';
+export type PropReactionCue='clank'|'thunk'|'rustle'|'spring'|'tap'|'thud'|'stall';
 
 export type PropReactionStyle={
  /** Rigid tilt about the base, radians at full strength (a pole sways, a sign swings, a bench rocks). */
@@ -74,6 +74,11 @@ export const PROP_REACTIONS:Record<PropReactionKind,PropReactionStyle>={
  // East Pier kerb props (colliders added Oct 3 2026): iron bollards shiver, lifebuoy stands sway with the ring swinging.
  bollard: S({tilt:.06,jolt:.05,freq:9,damping:8,duration:.4,cue:'clank'}),
  lifebuoy:S({tilt:.12,shake:.12,freq:2.6,damping:3.4,duration:.8,cue:'tap'}),
+ // Rosa's fish stall (user Oct 15 2026: "add animation when kicking the ball against the fish stall"; lib/town/farmersMarket.ts):
+ // the awning, fascia, signs and hanging fish wobble for ~1 s (height-weighted, so the counter and posts' feet stay put), the fish
+ // and produce jiggle (rustle), wooden thunk + wet slap ('stall' cue). The fishing world's "we buy" sign and fish crate join
+ // the same reaction through attach() (components/Town.tsx), so the whole stall moves as one.
+ stall:   S({shake:.3,rustle:.07,tilt:.02,freq:3.3,damping:3.4,duration:1,cue:'stall',cooldown:.6,minSpeed:2}),
 };
 
 /** Builders wrap a prop's meshes in this so world.ts can find them after batching (identity when absent). */
@@ -111,7 +116,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
  // Coarse grid over the props' bounds; only read on an actual ball collision.
  const grid=new Map<number,number[]>(),key=(cx:number,cz:number)=>(cx+2048)*4096+(cz+2048);
  props.forEach((p,i)=>{for(let cx=Math.floor((p.min.x-PAD)/CELL);cx<=Math.floor((p.max.x+PAD)/CELL);cx++)for(let cz=Math.floor((p.min.z-PAD)/CELL);cz<=Math.floor((p.max.z+PAD)/CELL);cz++){const k=key(cx,cz);const list=grid.get(k);if(list)list.push(i);else grid.set(k,[i]);}});
- const capacity=props.reduce((n,p)=>p.animatable?Math.max(n,p.verts):n,0);
+ let capacity=props.reduce((n,p)=>p.animatable?Math.max(n,p.verts):n,0);
  type Slot={prop:number;age:number;strength:number;ux:number;uz:number;hx:number;hz:number;orig:Float32Array|null;lo:Int32Array;hi:Int32Array;light0:number;light2:number};
  const slots:Slot[]=Array.from({length:MAX_ACTIVE},()=>({prop:-1,age:0,strength:0,ux:0,uz:1,hx:0,hz:0,orig:null,lo:new Int32Array(MAX_PARTS),hi:new Int32Array(MAX_PARTS),light0:1,light2:1}));
  let clock=0,active=0;
@@ -209,6 +214,19 @@ export function createPropReactions(specs:readonly PropSpec[]){
   hit,find,update,stats,
   get count(){return props.length;},
   get active(){return active>0;},
+  /**
+   * Adds extra vertex runs (meshes built outside world.ts, in world space) to the registered prop of `kind` whose bounds hold
+   * (x, z), so they move with it (the fishing world's sign and crate on Rosa's stall). Before any reaction runs only (the slot
+   * buffers are sized on the first hit); returns false when nothing matched or a reaction is live. Bounds are unchanged.
+   */
+  attach(kind:PropReactionKind,x:number,z:number,parts:readonly PropPart[]){
+   if(active>0||!parts.length)return false;
+   const p=props.find(p=>p.kind===kind&&x>=p.min.x&&x<=p.max.x&&z>=p.min.z&&z<=p.max.z);if(!p||p.offset)return false;
+   p.parts=[...p.parts,...parts];p.verts=p.parts.reduce((n,q)=>n+q.count,0);
+   p.animatable=p.verts>0&&p.verts<=MAX_PROP_VERTICES&&p.parts.length<=MAX_PARTS;
+   const grown=p.animatable&&p.verts>capacity;if(grown){capacity=p.verts;for(const s of slots)s.orig=null;}
+   return true;
+  },
   /** Prop types registered, for the debug panel and tests. */
   kinds(){const n:Partial<Record<PropReactionKind,number>>={};for(const p of props)n[p.kind]=(n[p.kind]??0)+1;return n;},
   dispose(){for(const s of slots)if(s.prop>=0)restore(s);},

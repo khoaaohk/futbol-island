@@ -1,5 +1,5 @@
 /** Shared, text-free island controls. The parent button supplies its accessible name. */
-export default function TravelIcon({kind}:{kind:string}){
+export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  const paths:Record<string,string>={
  ballFeint:'M9 17a3 3 0 1 0 6 0 3 3 0 0 0-6 0 M4 14a8 8 0 0 1 16 0 M16 10l4 4 2-5',
  walk:'M14 4a1.5 1.5 0 1 0 0 .01 M10 21l2-7-3-3 2-4 4 2 3 1 M7 13l2-4 M12 14l5 6',
@@ -44,7 +44,16 @@ export default function TravelIcon({kind}:{kind:string}){
  // wave (one hand on the bar, the other up and waving).
  ziptuck:'M6 3h12 M9 3l2 5 M15 3l-2 5 M12 10a1.8 1.8 0 1 0 0 .01 M12 12v4l4-1-1 5 M2 13h4 M3 17h3',
  zipspin:'M6 3h12 M12 3v4 M17.6 13.5a5.5 5.5 0 1 1-1.7-3.9 M18.5 6.5v3.5H15',
- zipwave:'M3 3h10 M8 3v5 M8 10a1.8 1.8 0 1 0 0 .01 M8 12v5 M6 21l2-4 2 4 M8 13l5-4 M15 4l2-2 M16 8h3 M15 11l3 1'
+ zipwave:'M3 3h10 M8 3v5 M8 10a1.8 1.8 0 1 0 0 .01 M8 12v5 M6 21l2-4 2 4 M8 13l5-4 M15 4l2-2 M16 8h3 M15 11l3 1',
+ // Water actions (Oct 15 2026, lib/town/water/waterHud.ts WATER_BUTTONS). Redrawn Oct 15 2026 (user: "icons need to be larger and
+ // simplified to match with main actions"): the walk / shoot / juggle weight, 2–3 bold strokes over one wave. swim (the ride
+ // switcher's ride: head, body, one arm reaching over), swimfast (sprint: the arm stretched forward, speed lines behind), float (on
+ // the back, knees up). JobActionButton renders these at the land buttons' 32 px.
+ swim:'M16.5 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M15 13H4 M9 13l4-8 5 1.5 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ swimfast:'M16.5 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M15 13H8 M11 13l4-7h6 M2 8h6 M2 13h3 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ // letgo (water P1b, the ride's Let go): two open hands parting over the wave, arrows out.
+ letgo:'M9 4v6 M6 7l3-3 3 3 M15 4v6 M12 7l3-3 3 3 M3 13h4 M17 13h4 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ float:'M3 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M9 13h5l3-6 3 6 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0'
  };
- return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[kind]??paths.walk}/></svg>;
+ return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={size?{width:size,height:size}:undefined}><path d={paths[kind]??paths.walk}/></svg>;
 }

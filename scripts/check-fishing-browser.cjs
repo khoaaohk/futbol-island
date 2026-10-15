@@ -23,10 +23,13 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  await press('[data-fish-enter]');
  const phase=()=>page.evaluate(()=>document.querySelector('[data-fishing-hud]')?.dataset.phase??null);
  const waitPhase=(p,t=25000)=>page.waitForFunction(p=>document.querySelector('[data-fishing-hud]')?.dataset.phase===p,p,{timeout:t}).catch(async()=>{throw Error('Expected phase '+p+', found '+await phase());});
- await waitPhase('floating');await page.waitForTimeout(500);await shot('2-cast');
- const layout=await page.evaluate(()=>{const reel=document.querySelector('[data-fish-reel]').getBoundingClientRect(),back=document.querySelector('[data-fish-stop]'),book=document.querySelector('[aria-label="Fishbook"]'),b=book.getBoundingClientRect(),j=document.querySelector('.touch-controls');return{reel:{x:reel.x,y:reel.y,width:reel.width,height:reel.height},gap:reel.x-b.right,bookSize:b.width,back:back.textContent,backRect:{x:back.getBoundingClientRect().x,y:back.getBoundingClientRect().y},joystickVisible:j&&getComputedStyle(j).visibility!=='hidden'&&getComputedStyle(j).display!=='none'};});
+ await waitPhase('ready');await page.waitForTimeout(200);
+ await press('[data-fish-reel]');await waitPhase('floating');await page.waitForTimeout(500);await shot('2-cast');
+ // 15 Oct 2026 layout: the Fishbook bottom left, the big spin reel centred (160 px on phones), the lure bottom right at the island action size.
+ const layout=await page.evaluate(()=>{const reel=document.querySelector('[data-fish-reel]').getBoundingClientRect(),back=document.querySelector('[data-fish-stop]'),b=document.querySelector('[aria-label="Fishbook"]').getBoundingClientRect(),l=document.querySelector('[data-fish-lure]').getBoundingClientRect(),j=document.querySelector('.touch-controls');return{reel:{x:reel.x,y:reel.y,width:reel.width,height:reel.height},bookSize:b.width,bookRight:b.right,lureLeft:l.x,lureSize:l.width,lureBottom:l.bottom,back:back.textContent,backRect:{x:back.getBoundingClientRect().x,y:back.getBoundingClientRect().y},joystickVisible:j&&getComputedStyle(j).visibility!=='hidden'&&getComputedStyle(j).display!=='none'};});
  if(!layout.back.includes('Back')||layout.backRect.x>50||layout.backRect.y>60)throw Error('Fishing Back is not in the top-left');
- if(touch&&(layout.joystickVisible||Math.abs(layout.reel.x-originalControls.x)>1||Math.abs(layout.reel.y-originalControls.y)>1||layout.reel.width!==originalControls.width||layout.bookSize!==layout.reel.width||layout.gap!==16))throw Error('Fishing controls do not match island layout: '+JSON.stringify({layout,originalControls}));
+ const reelCentre=layout.reel.x+layout.reel.width/2;
+ if(touch&&(layout.joystickVisible||Math.abs(reelCentre-VP.width/2)>1||layout.reel.width<140||layout.bookSize!==originalControls.width||layout.lureSize!==originalControls.width||layout.bookRight>layout.reel.x||layout.lureLeft<layout.reel.x+layout.reel.width||Math.abs(layout.lureBottom-(originalControls.y+originalControls.height))>1))throw Error('Fishing controls do not match the island layout (book left, reel centred, lure right at the action size): '+JSON.stringify({layout,originalControls}));
  console.log('fishing controls',JSON.stringify(layout));
  await waitPhase('approach');await page.waitForTimeout(60);const start1=await shadowAt();await page.waitForTimeout(440);
  const fishPose=()=>page.evaluate(()=>{const fish=window.__fi2.scene.getObjectByName('fishing-swimming-shadow');fish.updateMatrixWorld(true);const m=fish.matrixWorld.elements;return {x:fish.position.x,z:fish.position.z,nx:-m[8],nz:-m[10],vertices:Array.from(fish.geometry.attributes.position.array)};});
@@ -46,19 +49,20 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  await page.waitForFunction(()=>['nibble','bite'].includes(document.querySelector('[data-fishing-hud]')?.dataset.phase),null,{timeout:40000});{const end=await shadowAt();if(start2&&end)approaches.push(Math.round(Math.atan2(start2.x-end.x,start2.z-end.z)*180/Math.PI));}
  console.log('approach bearings from the float (deg)',JSON.stringify(approaches));
  await waitPhase('bite');
- await press('[data-fish-reel]');
+ // The hook (a press on the reel) always starts the spin fight (the Easy reel was removed, 15 Oct 2026).
+ const reelBox=await page.evaluate(()=>{const r=document.querySelector('[data-fish-reel]').getBoundingClientRect();return {cx:r.x+r.width/2,cy:r.y+r.height/2,w:r.width};});
+ await page.mouse.move(reelBox.cx,reelBox.cy);await page.mouse.down();
  await waitPhase('reeling');await shot('5b-hooked');
+ // Spin the reel with pointer circles (about one turn per 0.7 s round the centre), stopping in a run or the red zone.
+ let ang=0,lastT=Date.now();const spinStep=async()=>{const st=await page.evaluate(()=>{const r=document.querySelector('[data-fish-reel]'),m=document.querySelector('[data-fishing-message]');return {phase:document.querySelector('[data-fishing-hud]')?.dataset.phase,strain:!!r?.dataset.strain,run:!!r?.dataset.run};});if(st.phase!=='reeling')return false;const now=Date.now();if(!st.run&&!st.strain){ang+=(now-lastT)/1000*(Math.PI*2/.7);await page.mouse.move(reelBox.cx+Math.cos(ang)*reelBox.w*.38,reelBox.cy+Math.sin(ang)*reelBox.w*.38);}lastT=now;await page.waitForTimeout(16);return true;};
  const rodPose=()=>page.evaluate(()=>{const rod=window.__fi2.scene.getObjectByName('fishing-rod'),crank=window.__fi2.scene.getObjectByName('fishing-reel-crank');return {vertices:Array.from(rod.geometry.attributes.position.array),turn:crank.rotation.z};});
- await page.waitForTimeout(350);const relaxed=await rodPose();await press('[data-fish-reel]');await page.waitForTimeout(110);const pulled=await rodPose();
- if(!pulled.vertices.some((v,i)=>Math.abs(v-relaxed.vertices[i])>.003))throw Error('Rod does not flex on a reel tap');
- if(Math.abs(pulled.turn-relaxed.turn)<.05)throw Error('Reel crank does not turn after accepted tap');
- console.log('accepted reel tap flexed rod and turned crank');
+ await page.waitForTimeout(350);const relaxed=await rodPose();for(let n=0;n<45&&await spinStep();n++);const pulled=await rodPose();
+ if(!pulled.vertices.some((v,i)=>Math.abs(v-relaxed.vertices[i])>.003)&&Math.abs(pulled.turn-relaxed.turn)<.05)throw Error('Neither the rod flexes nor the crank turns while the reel is spun');
+ console.log('spinning flexed the rod / turned the crank');
  const attachment=await page.evaluate(([x,z])=>{const fish=window.__fi2.scene.getObjectByName('fishing-reeled-fish'),line=window.__fi2.scene.getObjectByName('fishing-line');fish.updateWorldMatrix(true,false);line.updateWorldMatrix(true,false);const mouth=fish.localToWorld(fish.position.clone().set(-.5,0,0)),center=fish.getWorldPosition(fish.position.clone()),end=line.localToWorld(fish.position.clone().fromBufferAttribute(line.geometry.attributes.position,line.geometry.attributes.position.count-1));const nx=mouth.x-center.x,nz=mouth.z-center.z,px=x-center.x,pz=z-center.z;return{mouthGap:mouth.distanceTo(end),noseDotPull:(nx*px+nz*pz)/(Math.hypot(nx,nz)*Math.hypot(px,pz))};},[x,z]);
  if(attachment.mouthGap>.0001||attachment.noseDotPull<.9)throw Error('Fish mouth is not leading/attached to line: '+JSON.stringify(attachment));
- console.log('mouth attachment',JSON.stringify(attachment));const meter=()=>page.evaluate(()=>{const m=document.querySelector('[data-reel-meter]');return m?m.getAttribute('aria-valuetext'):null;});
- console.log('reel meter at start',await meter());
- for(let n=0;n<32&&await phase()==='reeling';n++){await page.waitForTimeout(240);await press('[data-fish-reel]');if(n===3){await shot('5c-reeling');console.log('reel meter after 4 taps',await meter());}}
- await waitPhase('caught');await page.waitForTimeout(700);await shot('6-catch');
+ console.log('mouth attachment',JSON.stringify(attachment));
+ for(let n=0;n<30*60&&await spinStep();n++){if(n===90)await shot('5c-reeling');}await page.mouse.up(); await waitPhase('caught');await page.waitForTimeout(700);await shot('6-catch');
  const caught=await page.evaluate(()=>localStorage.getItem('fi2-fishbook-v1'));
  console.log('catch card',JSON.stringify(await page.evaluate(()=>document.querySelector('[data-fish-catch]')?.innerText.replace(/\s+/g,' ').slice(0,220))));
  // The Fishbook: spot sections, "Found at", silhouettes for the undiscovered.

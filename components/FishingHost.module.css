@@ -1,7 +1,9 @@
-/* Live fishing HUD: small, at the edges, never covering the water. Shared --btn-* tokens (docs/ui/BUTTONS.md); no blur, no loops
-   except the bite pulse (at most ~1.4 s). The HUD layer ignores pointers except on its own buttons, so water taps remain available. */
+/* Live fishing HUD: at the edges, never covering the water. Shared --btn-* tokens (docs/ui/BUTTONS.md); no blur, no loops
+   except the bite pulse (at most ~1.4 s) and the keyboard crank spin while Space is held. The HUD layer ignores pointers except on
+   its own buttons, so water taps remain available. Bottom row (15 Oct 2026): Fishbook left, the big spin reel centred, the lure
+   right; --fish-action-size is the island action size (72 / 58 px), --fish-reel-size the reel (200 / 160 px). */
 @font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
-.hud{position:absolute;inset:0;z-index:30;pointer-events:none}
+.hud{--fish-action-size:72px;--fish-reel-size:200px;position:absolute;inset:0;z-index:30;pointer-events:none}
 .hint{position:absolute;left:50%;top:calc(22px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;max-width:min(520px,calc(100% - 200px));padding:8px 16px;border:2px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 #a8863d;font-size:14px;font-weight:800;text-align:center;line-height:1.3}
 .hud[data-phase=bite] .hint{background:var(--btn-gold-bright);box-shadow:0 3px 0 var(--btn-gold-bright-edge)}
 .toast{position:absolute;left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;max-width:min(480px,calc(100% - 40px));padding:9px 14px;border-radius:16px 24px 16px 16px;background:#244d40e8;color:#fff1d3;font-size:12.5px;line-height:1.45;box-shadow:0 4px 0 #17352b88;animation:toastIn .3s ease both}
@@ -12,24 +14,51 @@
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-6px)}}
 /* Match the island's bottom action row; navigation lives separately at top left. */
 .back{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(20px + env(safe-area-inset-top,0px));pointer-events:auto}
-.controls{--fish-action-size:72px;position:absolute;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;display:flex;align-items:center;gap:12px;pointer-events:none}
+.controls{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;pointer-events:none}
 .controls button{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;font:inherit;font-weight:800;cursor:pointer;width:var(--fish-action-size);height:var(--fish-action-size);min-width:var(--fish-action-size);min-height:var(--fish-action-size);padding:5px;border:3px solid #fff2cd;border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40;transition:translate .16s,box-shadow .16s}
 .controls button:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
 .controls button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-.reel{font-size:16px!important;line-height:1.1}
-.reel[data-phase=bite]{background-color:var(--btn-gold-bright);animation:pulse .35s ease-in-out 4 alternate}
-.reel[aria-disabled=true]{opacity:.6;cursor:default}
+/* The two side actions keep the island action size; the reel is the big one in the middle (no press-down translate: it is spun). */
+.action{position:relative}
 .controls .book{background-color:#a9cee1;box-shadow:0 5px 0 #6d98af,0 0 0 4px #fff2cd40}
 .controls .book:active{box-shadow:0 2px 0 #6d98af,0 0 0 4px #fff2cd40}
+.controls .reel{width:var(--fish-reel-size);height:var(--fish-reel-size);min-width:var(--fish-reel-size);min-height:var(--fish-reel-size);padding:0;font-size:18px;line-height:1.1;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.controls .reel:active{translate:none;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40}
+.reel[data-phase=bite]{background-color:var(--btn-gold-bright);animation:pulse .35s ease-in-out 4 alternate}
+.reel[aria-disabled=true]{opacity:.6;cursor:default}
 @keyframes pulse{to{box-shadow:0 5px 0 var(--btn-gold-bright-edge),0 0 0 10px #ffd45166}}
+/* The drawn reel: spool, line, hub and the crank (its group turns with --spin, set by the pointer handler; Space holds a CSS spin). */
+.reelArt{position:absolute;inset:7%;width:86%;height:86%;pointer-events:none;overflow:visible}
+.spoolRim{fill:#d6ab52;stroke:var(--btn-ink);stroke-width:2.5}
+.spoolFace{fill:#f3d989;stroke:var(--btn-ink);stroke-width:1.5}
+.spoolLine{fill:none;stroke:#244d4066;stroke-width:9;stroke-dasharray:2 3}
+.hub{fill:var(--btn-ink)}
+.crank,.spoolTurn,.ghosts,.ghost,.spoolGhost,.whirGhost,.hubRing{transform-box:view-box;transform-origin:50% 50%}
+.crank,.spoolTurn,.ghosts{transform:rotate(var(--spin,0deg))}
+/* The long handle: arm to ~81 % of the reel radius, a big knob the thumb grabs, a highlight along the arm, a counterweight stub opposite. */
+.crankArm{stroke:var(--btn-ink);stroke-width:6;stroke-linecap:round}
+.crankShine{stroke:#ffffff99;stroke-width:1.6;stroke-linecap:round}
+.crankStub{stroke:var(--btn-ink);stroke-width:5;stroke-linecap:round}
+.crankWeight{fill:#c9a24c;stroke:var(--btn-ink);stroke-width:2}
+.crankKnob{fill:#fff2cd;stroke:var(--btn-ink);stroke-width:2.5}
+.knobShine{fill:#ffffffb0}
+.reel[data-key-spin] .crank,.reel[data-key-spin] .spoolTurn,.reel[data-key-spin] .ghosts{animation:crankSpin .7s linear infinite}
+.reel[data-key-spin] .hubRing{animation:crankSpin 1.4s linear infinite reverse}
+@keyframes crankSpin{to{transform:rotate(360deg)}}
+/* The label sits on a cream pill over the hub, so it reads over the gold face in every state. */
+.reelLabel{position:relative;z-index:1;translate:0 calc(var(--fish-reel-size) * .15);padding:3px 12px;border-radius:999px;background:#fff2cdf0;box-shadow:0 2px 0 #a8863d66;font-weight:900;letter-spacing:.01em}
+.reel[data-fish-fight] .reelLabel{background:#fff2cd}
 @media(max-width:600px),(pointer:coarse){
+ .hud{--fish-action-size:58px;--fish-reel-size:160px}
  .back{left:calc(18px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}
- .controls{--fish-action-size:58px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,calc(28px + env(safe-area-inset-bottom,0px)));gap:16px}
- .reel{font-size:14px!important}
+ .controls{left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,calc(28px + env(safe-area-inset-bottom,0px)))}
+ .controls .reel{font-size:16px}
  .hint{top:calc(96px + env(safe-area-inset-top,0px));max-width:calc(100% - 40px);font-size:13px}
  .toast{top:calc(142px + env(safe-area-inset-top,0px))}
 }
-@media(max-width:350px){.controls{--fish-action-size:52px;right:calc(10px + env(safe-area-inset-right,0px));gap:12px}}
+@media(max-width:350px){.hud{--fish-action-size:52px;--fish-reel-size:140px}.controls{left:calc(10px + env(safe-area-inset-left,0px));right:calc(10px + env(safe-area-inset-right,0px))}}
+/* Landscape phones: a smaller reel so the water stays in view. */
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.hud{--fish-reel-size:140px}}
 @media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
  .hint{top:calc(72px + env(safe-area-inset-top,0px));max-width:calc(100% - 240px)}.toast{left:calc(var(--phone-gutter) + env(safe-area-inset-left,0px));transform:none;top:calc(118px + env(safe-area-inset-top,0px));max-width:min(300px,36vw);animation:none}
 }
@@ -65,10 +94,9 @@
 .catchClub span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:#61705b}
 .catchFact{font-size:12px;line-height:1.45;color:#48604c;margin-top:2px!important}
 @keyframes pop{from{opacity:0;scale:.85}}
-@media(prefers-reduced-motion:reduce){.catch,.toast{animation:none}.reel[data-phase=bite]{animation:none}.controls button{transition:none}}
+@media(prefers-reduced-motion:reduce){.catch,.toast{animation:none}.reel[data-phase=bite]{animation:none}.controls button{transition:none}.reel[data-key-spin] .crank,.reel[data-key-spin] .spoolTurn,.reel[data-key-spin] .ghosts,.reel[data-key-spin] .hubRing{animation:none}}
 
-.reelProgress{display:block;width:100%;height:5px;margin-top:4px;border-radius:99px;background:#244d4033;overflow:hidden}.reelProgress i{display:block;width:100%;height:100%;background:#244d40;transform-origin:left;transition:transform .12s ease-out}.reel[data-phase=reeling]{background-color:var(--btn-gold-bright)}.reel[data-pulling]{background-color:#f4a261}.reel[data-pulling] .reelProgress i{background:#b3263a}
-@media(prefers-reduced-motion:reduce){.reelProgress i{transition:none}}
+/* The Easy reel tap meter (whole pulls), under the label. */
 
 /* One status card below the navigation/wallet row, rather than two overlapping
    banners. The optional lesson expands inside this same surface. */
@@ -83,36 +111,31 @@
 
 /* Reel feedback polish (Oct 14 2026): notches show how many pulls the catch needs, each pull flashes the bar once, and a fish
    pulling back makes the button strain twice (one-shot animations, re-triggered by state changes; none with reduced motion). */
-.reelProgress{position:relative;height:6px}
-.reelProgress::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(100% - 1.5px),#fff1d3b3 0) 0 0/calc(100% / var(--reel-steps,1)) 100% repeat-x;pointer-events:none}
-.reelFlash{position:absolute;inset:-2px 0;border-radius:99px;background:#fff6dc;opacity:0;animation:reelFlash .28s ease-out}
-@keyframes reelFlash{from{opacity:.75}to{opacity:0}}
-.reel[data-pulling]{animation:reelStrain .16s ease-in-out 4 alternate}
 @keyframes reelStrain{from{rotate:-4deg}to{rotate:4deg}}
-@media(prefers-reduced-motion:reduce){.reelFlash{animation:none}.reel[data-pulling]{animation:none}}
 
 /* ---- Oct 15 2026: the feel of fishing (docs/fishing-research.md A1-A6, B1, B2, B6). All one-shot or short counted animations,
-   none with reduced motion; the fight's arc and progress read CSS variables the world writes (no React render per frame). ---- */
+   none with reduced motion; the fight's arc and progress ring read CSS variables the world writes (no React render per frame). ---- */
 .controls button{position:relative}
-/* B1: the tension arc round the Reel button: 270° from bottom-left, filling green → red with the line's tension; the white notch marks
-   where the red zone starts (position, not only colour); the label says Hold / Ease!. */
-.arc{position:absolute;inset:-9px;border-radius:50%;pointer-events:none;
+/* The tension arc round the reel: 270° from bottom-left, filling green → red with the line's tension; the white notch marks where the
+   red zone starts (position, not only colour); the label says Spin! / Stop! / Ease!. --r is the reel's padding-box radius. */
+.reel{--r:calc(var(--fish-reel-size) / 2 - 3px)}
+.arc{position:absolute;inset:-12px;border-radius:50%;pointer-events:none;
  --arc-col:color-mix(in srgb,#e8473a calc(var(--tension,0) * 100%),#3fae6a);
  background:conic-gradient(from 225deg,var(--arc-col) 0 calc(var(--tension,0) * 270deg),#244d4030 0 216deg,#e8473a55 216deg 270deg,transparent 0);
- -webkit-mask:radial-gradient(circle closest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));mask:radial-gradient(circle closest-side,transparent calc(100% - 8px),#000 calc(100% - 7px))}
-.arcNotch{position:absolute;left:calc(50% - 2px);top:-1px;width:4px;height:10px;border-radius:2px;background:#fffdf4;box-shadow:0 0 0 1px #244d40;transform-origin:2px calc(var(--fish-action-size) / 2 + 10px);transform:rotate(81deg)}
-.fightProgress{transform:scaleX(var(--progress,0))!important;transition:none!important}
-.reel[data-fish-fight]{background-color:var(--btn-gold-bright);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+ -webkit-mask:radial-gradient(circle closest-side,transparent calc(100% - 9px),#000 calc(100% - 8px));mask:radial-gradient(circle closest-side,transparent calc(100% - 9px),#000 calc(100% - 8px))}
+.arcNotch{position:absolute;left:calc(50% - 2px);top:-1px;width:4px;height:11px;border-radius:2px;background:#fffdf4;box-shadow:0 0 0 1px #244d40;transform-origin:2px calc(var(--r) + 13px);transform:rotate(81deg)}
+/* The progress ring just inside the rim: ink fills 270° with --progress over a faint track; three notches mark the quarters
+   (FIGHT_NOTCHES): a slip drops one notch. */
+.ring{position:absolute;inset:3px;border-radius:50%;pointer-events:none;
+ background:conic-gradient(from 225deg,var(--btn-ink) 0 calc(var(--progress,0) * 270deg),#244d402e 0 270deg,transparent 0);
+ -webkit-mask:radial-gradient(circle closest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));mask:radial-gradient(circle closest-side,transparent calc(100% - 7px),#000 calc(100% - 6px))}
+.ring i{position:absolute;left:calc(50% - 1.5px);top:0;width:3px;height:7px;background:#fff2cd;transform-origin:1.5px calc(var(--r) - 3px);transform:rotate(var(--n,0deg))}
+.reel[data-fish-fight]{background-color:var(--btn-gold-bright)}
+.reel[data-run]{background-color:#ffe9b0}
 .reel[data-strain]{background-color:#f4a261;animation:reelStrain .16s ease-in-out 4 alternate}
 .reel[data-warn]{animation:reelStrain .12s ease-in-out 6 alternate}
-.slipFlash{position:absolute;inset:-12px;border-radius:50%;border:3px solid #e8473a;opacity:0;animation:slipFlash .45s ease-out;pointer-events:none}
+.slipFlash{position:absolute;inset:-14px;border-radius:50%;border:3px solid #e8473a;opacity:0;animation:slipFlash .45s ease-out;pointer-events:none}
 @keyframes slipFlash{from{opacity:.9;scale:.9}to{opacity:0;scale:1.25}}
-/* B1: a run's arrow: the way to swipe to turn it (jockey the winger). */
-.runArrow{position:absolute;left:50%;top:56%;translate:-50% 0;pointer-events:none}
-.runArrow span{display:block;padding:8px 18px;border:3px solid #fff2cd;border-radius:999px;background:#244d40e8;color:#fff1d3;font-size:20px;font-weight:900;letter-spacing:.02em;box-shadow:0 4px 0 #17352b88;animation:runNudgeR .38s ease-in-out 4 alternate}
-.runArrow[data-fish-run=left] span{animation-name:runNudgeL}
-@keyframes runNudgeR{to{translate:14px 0}}
-@keyframes runNudgeL{to{translate:-14px 0}}
 .message[data-run]{background:#ffe9b0}
 .message[data-warn]{background:#ffd9c9}
 /* B2: the flash at the top of the leap, then the catch card slides in once the fish is in the angler's hands. */
@@ -130,31 +153,76 @@
 .stars{margin-right:2px}
 .stars[data-rarity=common]{color:#6f7f63}.stars[data-rarity=uncommon]{color:#2f7f9a}.stars[data-rarity=rare]{color:#7b4bb0}.stars[data-rarity=legendary]{color:#b07800}
 /* Fishing settings: the Easy reel switch (tap Reel instead of the fight), shown while the line is in. */
-.easyToggle{position:absolute;left:calc(24px + env(safe-area-inset-left,0px));top:calc(152px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 14px 6px 10px;border:2px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 #a8863d;font:inherit;font-size:13px;font-weight:800;pointer-events:auto;cursor:pointer;touch-action:manipulation}
-.easyToggle::after{content:'Off';font-size:11px;padding:1px 7px;border-radius:999px;background:#244d4022}
-.easyToggle[aria-checked=true]::after{content:'On';background:#2f8a5b;color:#fff}
-.easyDot{width:14px;height:14px;border-radius:50%;border:2.5px solid #244d40;box-sizing:border-box}
-.easyToggle[aria-checked=true] .easyDot{background:#2f8a5b;border-color:#2f8a5b;box-shadow:inset 0 0 0 2px #fff1d3}
-.easyToggle:focus-visible{outline:var(--btn-focus);outline-offset:3px}
-/* Phones: under the status card on the left (the bottom-left corner holds the weather / request card). */
-@media(max-width:600px),(pointer:coarse){.easyToggle{left:calc(18px + env(safe-area-inset-left,0px));top:calc(168px + env(safe-area-inset-top,0px));font-size:12px}}
-@media(orientation:landscape) and (max-height:500px){.easyToggle{top:calc(140px + env(safe-area-inset-top,0px))}}
+/* Phones: under the status card on the left. */
 /* A3: the first-time tutorial card and the dotted ghost hand. */
 .tutorial{position:absolute;left:50%;translate:-50% 0;top:calc(168px + env(safe-area-inset-top,0px));box-sizing:border-box;width:min(380px,calc(100% - 36px));display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px 10px 14px;border:3px solid #fff2cd;border-radius:18px;background:#244d40f0;color:#fff1d3;box-shadow:0 4px 0 #17352b88;pointer-events:auto;animation:toastIn .3s ease both}
 .tutorial p{flex:1 1 180px;margin:0;font-size:14px;font-weight:800;line-height:1.35}
 .tutorial[data-step=now] p{color:#ffd451;font-size:17px}
 .tutorialNum{font-size:11px;font-weight:900;padding:2px 8px;border-radius:999px;background:#fff1d3;color:#244d40}
-.tutorialSkip,.tutorialEasy{min-height:44px;padding:4px 12px;border:2px solid #fff1d3;border-radius:999px;background:transparent;color:#fff1d3;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;touch-action:manipulation}
-.tutorialEasy{background:#fff1d3;color:#244d40}
-.tutorialSkip:focus-visible,.tutorialEasy:focus-visible{outline:var(--btn-focus);outline-offset:2px}
+.tutorialSkip{min-height:44px;padding:4px 12px;border:2px solid #fff1d3;border-radius:999px;background:transparent;color:#fff1d3;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.tutorialSkip:focus-visible{outline:var(--btn-focus);outline-offset:2px}
 .ghostWater{position:absolute;left:50%;top:62%;color:#fff;pointer-events:none;filter:drop-shadow(0 2px 2px #0004);animation:ghostDrag 1.7s ease-in-out .3s 5 both}
 @keyframes ghostDrag{0%{opacity:0;translate:0 0}15%{opacity:1;translate:0 0;scale:.92}70%{opacity:1;translate:-46px -40px;scale:.92}85%{opacity:1;scale:1}100%{opacity:0;translate:-46px -40px}}
-.ghostButton{position:absolute;right:-14px;bottom:-30px;pointer-events:none;filter:drop-shadow(0 2px 2px #0004);animation:ghostTap .8s ease-in-out 8 alternate}
-.ghostButton[data-ghost=reel]{animation:ghostHold 1.6s ease-in-out 5}
+.ghostButton{position:absolute;left:50%;top:50%;margin:-10px 0 0 -6px;z-index:2;pointer-events:none;filter:drop-shadow(0 2px 2px #0004);animation:ghostTap .8s ease-in-out 8 alternate}
+/* The reel step: the hand circles the reel (a finger going round its centre). */
+.ghostButton[data-ghost=reel]{--gr:calc(var(--fish-reel-size) * .4);animation:ghostSpin 1.4s linear 6}
 @keyframes ghostTap{to{translate:-4px -8px;scale:.9}}
-@keyframes ghostHold{0%{translate:0 0}20%{translate:-4px -8px;scale:.9}55%{translate:-34px -8px;scale:.9}80%{translate:6px -8px;scale:.9}100%{translate:0 0}}
-/* Phones: left-aligned, clear of the content HUD's button column on the right. */
-@media(max-width:600px),(pointer:coarse){.tutorial{top:calc(158px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px));translate:none;width:calc(100% - 132px)}.tutorial p{font-size:13px}}
-@media(orientation:landscape) and (max-height:500px){.tutorial{top:auto;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100% - 300px))}.runArrow{top:46%}}
-@media(prefers-reduced-motion:reduce){.leapFlash{display:none}.catch{animation-delay:0s}.stamp,.slipFlash,.runArrow span,.ghostWater,.ghostButton,.tutorial,.reel[data-strain],.reel[data-warn]{animation:none}.slipFlash{display:none}}
+@keyframes ghostSpin{0%{translate:0 calc(-1 * var(--gr))}12.5%{translate:calc(var(--gr) * .707) calc(-1 * var(--gr) * .707)}25%{translate:var(--gr) 0}37.5%{translate:calc(var(--gr) * .707) calc(var(--gr) * .707)}50%{translate:0 var(--gr)}62.5%{translate:calc(-1 * var(--gr) * .707) calc(var(--gr) * .707)}75%{translate:calc(-1 * var(--gr)) 0}87.5%{translate:calc(-1 * var(--gr) * .707) calc(-1 * var(--gr) * .707)}100%{translate:0 calc(-1 * var(--gr))}}
+/* Phones: left-aligned under the status card. */
+@media(max-width:600px),(pointer:coarse){.tutorial{top:calc(158px + env(safe-area-inset-top,0px));left:calc(18px + env(safe-area-inset-left,0px));translate:none;width:calc(100% - 36px)}.tutorial p{font-size:13px}}
+/* Landscape phones: bottom left, beside the reel (the reel is centred, 140 px wide). */
+@media(orientation:landscape) and (max-height:500px){.tutorial{top:auto;left:calc(18px + env(safe-area-inset-left,0px));translate:none;bottom:calc(var(--control-bottom,16px) + var(--fish-action-size) + 12px);width:min(300px,calc(50% - 110px))}}
+@media(prefers-reduced-motion:reduce){.leapFlash{display:none}.catch{animation-delay:0s}.stamp,.slipFlash,.ghostWater,.ghostButton,.tutorial,.reel[data-strain],.reel[data-warn]{animation:none}.slipFlash{display:none}}
 .stamp[data-stamp=legend]{color:#b07800;background:#fff6d6}
+
+/* ---- See-through reel + spin trail (Oct 15 2026). The face is dark glass (water shows through; no blur: tests/fishing.cjs keeps blur off the island canvas), the rim stays crisp cream, the art turns cream/gold so it reads on top. The trail is a conic arc + four dots behind
+   the knob, anchored at --spin, longer/brighter with --spin-rate, mirrored by --spin-dir; all written by the pointer handler. ---- */
+.controls .reel{background:rgba(20,46,39,.42);background-image:none;box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40,inset 0 0 0 2px #00000026,inset 0 0 24px #fff2cd1f}
+.controls .reel:active{box-shadow:0 5px 0 #a8863d,0 0 0 4px #fff2cd40,inset 0 0 0 2px #00000026,inset 0 0 24px #fff2cd1f}
+.controls .reel[data-phase=bite]{background-color:rgba(120,92,18,.5)}
+.controls .reel[data-phase=reeling],.controls .reel[data-fish-fight]{background-color:rgba(38,56,36,.42)}
+.controls .reel[data-run]{background-color:rgba(36,84,100,.46)}
+.controls .reel[data-strain]{background-color:rgba(150,56,32,.56)}
+.spoolRim{fill:#f9d66540;stroke:#fff2cd}
+.spoolFace{fill:#f3d98914;stroke:#fff2cd99}
+.spoolLine{stroke:#fff2cd59}
+.hub{fill:#fff2cd;stroke:var(--btn-ink);stroke-width:2}
+.crankArm,.crankStub{stroke:#fff2cd}
+.crankWeight{fill:#ffd451;stroke:#fff2cd}
+.crankKnob{fill:#ffd451}
+/* The whir, all driven by --spin-rate (0 at rest: nothing shows), --spin-dir picking the trailing side; opacity is the only transition
+   so the spool and crank follow the finger with no lag. --lag is the trailing angle: ghosts sit behind the knob by fixed fractions of it. */
+.spoolTurn{--lag:calc(var(--spin-dir,1) * var(--spin-rate,0) * -1deg)}
+.spoolGhost{opacity:clamp(0, calc(var(--spin-rate,0) * .9), .7);transition:opacity .2s ease-out}
+.spoolGhost:nth-of-type(2){transform:rotate(calc(var(--lag) * 4))}
+.spoolGhost:nth-of-type(3){transform:rotate(calc(var(--lag) * 8));opacity:clamp(0, calc(var(--spin-rate,0) * .7), .5)}
+.whir{fill:none;stroke:#fffbe8;stroke-width:3.5;stroke-dasharray:.45 1.55;opacity:clamp(0, calc((var(--spin-rate,0) - .6) * 1.6), .55);transition:opacity .2s ease-out}
+.whirGhost{transform:rotate(calc(var(--lag) * 2));stroke-width:2.6;opacity:clamp(0, calc((var(--spin-rate,0) - .6) * 1.2), .35)}
+.ghosts{--lag:calc(var(--spin-dir,1) * var(--spin-rate,0) * -1deg)}
+.ghost{transition:opacity .2s ease-out}
+.ghost:nth-of-type(1){transform:rotate(calc(var(--lag) * 13));opacity:clamp(0, calc(var(--spin-rate,0) * .8), .72)}
+.ghost:nth-of-type(2){transform:rotate(calc(var(--lag) * 27));opacity:clamp(0, calc(var(--spin-rate,0) * .55), .48)}
+.ghost:nth-of-type(3){transform:rotate(calc(var(--lag) * 42));opacity:clamp(0, calc(var(--spin-rate,0) * .35), .3)}
+.ghostKnob{fill:#ffd451;stroke:#fff2cd;stroke-width:2}
+.ghostArm{stroke:#fff2cd;stroke-width:6;stroke-linecap:round}
+.ghostKnob{filter:drop-shadow(0 0 2px #ffd451)}
+.hubRing{fill:none;stroke:#fff2cd99;stroke-width:2.5;stroke-dasharray:1.6 2.1;transform:rotate(calc(var(--spin,0deg) * -.5))}
+.reelArt{filter:drop-shadow(0 1px 1.5px #0b1f1899)}
+.reel .reelLabel{text-shadow:none}
+.reel .arc{--arc-track:#fff2cd33}
+.arc{background:conic-gradient(from 225deg,var(--arc-col) 0 calc(var(--tension,0) * 270deg),#fff2cd33 0 216deg,#e8473a77 216deg 270deg,transparent 0)}
+.ring{background:conic-gradient(from 225deg,#f9d665 0 calc(var(--progress,0) * 270deg),#fff2cd38 0 270deg,transparent 0)}
+.ring i{box-shadow:0 0 0 1px #244d40}
+.trail{position:absolute;inset:0;border-radius:50%;pointer-events:none;--trail-len:calc(50deg + var(--spin-rate,0) * 95deg);
+ opacity:clamp(0, calc(var(--spin-rate,0) * 3), 1);transition:opacity .25s ease-out;transform:rotate(var(--spin,0deg)) scaleX(var(--spin-dir,1))}
+.reel[data-key-spin]{--spin-rate:1}
+.trail b{position:absolute;inset:0;border-radius:50%;
+ background:conic-gradient(from calc(-1 * var(--trail-len)),#ffd45100 0,color-mix(in srgb,#ffd451 calc(55% + var(--spin-rate,0) * 45%),transparent) calc(var(--trail-len) * .55),#fffbe8 var(--trail-len),transparent 0);filter:drop-shadow(0 0 calc(4px + var(--spin-rate,0) * 6px) #ffd451);
+ -webkit-mask:radial-gradient(circle closest-side,transparent 64%,#000 68%,#000 96%,transparent 99%);mask:radial-gradient(circle closest-side,transparent 64%,#000 68%,#000 96%,transparent 99%)}
+.trail i{position:absolute;left:calc(50% - 4px);top:calc(50% - var(--fish-reel-size) * .405 - 4px);width:8px;height:8px;border-radius:50%;background:#fffbe8;box-shadow:0 0 7px 2px #ffd451;
+ transform-origin:4px calc(var(--fish-reel-size) * .405 + 4px)}
+.trail i:nth-of-type(1){transform:rotate(calc(var(--trail-len) * -.22));opacity:.95}
+.trail i:nth-of-type(2){transform:rotate(calc(var(--trail-len) * -.44)) scale(.85);opacity:.7}
+.trail i:nth-of-type(3){transform:rotate(calc(var(--trail-len) * -.66)) scale(.7);opacity:.45}
+.trail i:nth-of-type(4){transform:rotate(calc(var(--trail-len) * -.88)) scale(.55);opacity:.25}
+@media(prefers-reduced-motion:reduce){.trail,.spoolGhost,.whir,.ghosts,.hubRing{display:none}.reelArt{filter:none}}

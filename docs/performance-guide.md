@@ -5168,8 +5168,9 @@ components/PaintEasel.tsx). The view stays live under a compact painting card, s
   is the view, so nothing is hidden); the loop is capped at 20 fps (`easel.frameMs`, its own frame-slot grid); with nothing moving
   (reduced motion or a static-ambience heat tier, while painting, or Just look with reduced motion) `easel.still()` lets the loop
   sleep; every UI command wakes it for a frame (`easel.revision` is in the sleep key).
-- **View snapshot:** one extra render when the camera arrives (drawImage from the drawing buffer right after the render, ≤ 360 px),
-  reused by the eyedropper and "trace"; redone only if the card's layout changes.
+- **View snapshot:** two extra renders when the camera arrives, each into an offscreen render target read back and disposed at once
+  (the 1024×768 view for trace and the styles, the ≤ 360 px screen for the eyedropper; see "Snapshot rework" below); redone only
+  if the screen's shape changes.
 - **Painting UI:** draws only on pointer events; coalesced points are flushed by one requestAnimationFrame per frame **only while a
   finger is down**. No timers. One ResizeObserver reports the card's size. Undo keeps at most 8 snapshots (512×384, ~0.8 MB each).
 - **Audio:** a very quiet looped surf wash (one 6 s noise buffer, a low-pass and an LFO) only while seated, plus a soft swish per
@@ -5180,12 +5181,29 @@ Validation: tests/paint-easel.cjs (placement, tools, save budget, device-only ke
 20 fps cap, sleep when still, camera restored). Reduced work only; not measured on an iPhone.
 
 **Picture styles (Oct 15 2026, local, not deployed).** The pink button cycles Blank paper → Trace → Pastel → Watercolour → Sketch →
-Oil paint → Comic → Dots (lib/town/paintStyles.ts). Each art style is a CPU filter over the ONE view snapshot (now 512×384, aimed
-lower so it is mostly scenery), run once when that style is first shown and cached per style for the seat (cycling round again
-costs nothing); then one board upload. No per-frame work, nothing at rest, no WebGL pass. Measured in headless desktop Chrome:
-tap → shown 35–200 ms (watercolour and oil the slowest); a phone will be a few times slower, once per style. Memory: up to six
-512×384 canvases (~0.8 MB each) while seated, dropped on leaving. The seated and Just look cameras tilt further down (horizon at
-~23–26% of the screen instead of ~38%); no change to what is rendered.
+Oil paint → Comic → Dots (lib/town/paintStyles.ts). Each art style is the whole view already painted in that style (user: "show the
+view painted in each of those styles and then the user can modify if they want, or paint their own using a blank"): one CPU filter
+over the ONE view snapshot, run when that style is first shown, scaled once to the paper's 512×384 and cached per style for the seat
+(cycling round again costs nothing); then one board upload. No per-frame work, nothing at rest, no WebGL pass.
+
+**Snapshot rework (Oct 15 2026, user: "each style is blank").** The snapshots no longer copy the drawing buffer (`drawImage` of the
+WebGL canvas gives whatever the browser last composited; WebKit can hand back nothing). Each is one `renderer.render` into an
+offscreen `WebGLRenderTarget` read back with `readRenderTargetPixels` in the same task and disposed at once; the target is flagged as
+an XR layer with an sRGB texture in plain RGBA8 storage, so three (r169) tone-maps, encodes and clears it exactly as it does the
+screen (the bytes match what the eyedropper sees). The view is 1024×768 (VIEW_W×VIEW_H: the town, the lighthouse, the beach line
+and the palms survive the styles' edge work), the screen snapshot ≤ 360 px. A snapshot with no brightness spread (`pixelSpread` <
+CAPTURE_MIN_SPREAD: an empty buffer, or sky alone) is rejected and taken again on the next frames, up to 10 times; still blank after
+that, trace and the styles stay off (the button disabled) and one console line says so. `__fi2.easel.capture` shows the verdict on a
+device, `__fi2.easel.styleMs` each style's run time. Two renders per seat (four at most with retries), only on arrival; redone only
+if the screen's CSS size or aspect changes (not when a phone's drawing buffer steps between its moving and still resolutions).
+
+Cost per style (one run per tap, cached; `__fi2.easel.styleMs`), measured on this Mac in headless Chrome, phone profile 390×844
+DPR 2 / desktop 1440×900, and in Playwright WebKit at heat tier 4 (Battery saver): Pastel 62 / 82 / 123 ms, Watercolour 82 / 69 /
+143, Sketch 78 / 103 / 141, Oil 74 / 62 / 107, Comic 88 / 75 / 106, Dots 91 / 62 / 84; tap → picture on the board 100–150 ms.
+The edge styles (Sketch, Comic, Dots) work at the full 1024×768; the soft ones (Pastel, Watercolour, Oil) at 512×384 from a box
+downsample. A phone CPU is a few times slower, once per style per seat. Memory while seated: the 1024×768 view canvas (3 MB) plus up
+to six 512×384 layers (~0.8 MB each), dropped on leaving; the render target (≈15 MB with 4× MSAA) exists only during the capture.
+Not measured on an iPhone.
 
 ## Zipline grip, body motion and ride actions (Oct 14 2026, local, not deployed)
 
@@ -5208,3 +5226,132 @@ and change those to three different actions that are more related to the zipline
   (four matrix updates, one inverse), two strap meshes and a handle group built with the trolley and disposed after it. A Tuck
   can raise the speed-line instance count from 28 to 44 (still one draw). Nothing at rest: motion() returns Town's motion
   untouched, pose() returns at once, keys pass through. Reduced work only; not measured on an iPhone.
+
+## Summit Isle tree kick (Oct 15 2026, local, not deployed)
+
+User (standing under a plain round tree and under a beach palm on Summit Isle): "update animation for kicking these trees and all
+trees on the mountain island". Before: only the forage pool's trees reacted to a kicked ball (`fruitTrees.ballHit`: sway + rustle;
+other baked sites just shed `treeDebris` leaves, silently), and the Kick action next to a trunk simply charged a shot. Rules:
+`lib/town/summitTreeKick.ts`; runtime inside the forage runtime `lib/graphics/fruitTrees.ts`; pose `treekick` in
+`lib/graphics/jobPoses.ts` (jobMoves); tests `tests/summit-tree-kick.cjs` (+ `tests/summit-forage.cjs`).
+
+- **What:** every baked tree and palm (`SUMMIT_TREE_SITES`: 134 sites, the island's round trees and palms and all seven orchard
+  forms) is kickable. A Kick press (Space / the big button) with a trunk within 1.6 m inside a ±66° cone of the facing is taken
+  over from the shot hold (`ports.kick`: Town passes `shotHold.current` and `cancelShotHold`); the character steps to a stance
+  clear of the trunk collider (`kickStance`: base radius + 0.3 clearance + 0.32 walker), plants the left boot and strikes the bark
+  with the right laces at 40 % of a 0.8 s pose (the toe lands 0.65 m ahead, 0.24 m up; measured on the real rig, ≤ 7 cm on every
+  site). At contact: `thunk` + `rustle` job cues, a 1.25 rad/s (palms 1.05) impulse on the ONE existing shader sway uniform
+  (`SUMMIT_TREE_SWAY`, damping ratio 0.26 vs the shake's 0.2: peak ≈ 4.7°, 4 swings, at rest in ≈ 1.2 s), 3–4 pooled jobFx leaves
+  (fronds for palms, bananas and papayas), the hidden-ball hook, and on a fruiting tree 1–3 fruit by the shake's rules. A kicked
+  ball on any site's trunk or canopy sways it too (8 m buckets, 3 × 3 cells, on collision only). The forage push stays the prompt /
+  E variant for fruit trees; the kick is a second way to shake them (counted as a hand shake in analytics).
+- **Cooldown / handover:** one 0.6 s cooldown per tree shared by kicks and ball hits (`hitAt`); within it the cue plays and nothing
+  else. The uniform is single-tree: a kick on another tree hands the sway over (and ends the first tree's).
+- **Teaching:** the first kick shows one line through the forage note (ForagePrompt, once per device, key
+  `fi2-tree-kick-lesson-v1`): plant the standing foot beside the target and swing through the middle with the laces, not a toe poke.
+- **Heat:** no new mesh, material, texture, draw, loop, timer or listener (the test counts meshes and materials before/after kicks and
+  rAF/timers at 0). At rest the added work on the island is one property read per frame (the shot hold); the trunk search (134
+  distances) runs once per press. During a kick (~1.2 s) the work is the existing sway spring, ≤ 4 particles and one fruit-matrix
+  pass only for a fruiting tree. Reduced motion: no sway, no leaves, the cue still plays. Desktop Chrome at the three test spots:
+  draw calls at rest unchanged before/after a kick (see the Oct 15 verification shots in the agent report). Reduced work only; not
+  measured on an iPhone, no thermal claim.
+
+## Wading, swimming and splash-downs (P0, Oct 15 2026, local, not deployed)
+
+User: "take a look at ability to walk near the shore, swim, and land in water … while in the water change the actions … key thing with
+all of this is to reduce heat." Design and the full survey: `docs/swimming-research.md` (its §6 lists the files and the decisions).
+This is P0 only: the sharks, the rides and the dive spots come later.
+
+- **What moves.** A walker may cross the coastline into the sea. Depth is a made-up shelf off the analytic distance to land
+  (`lib/town/water/waterDepth.ts`: `min(1.6, 0.45 · distanceToLand)`), read by ONE probe at 10 Hz while in the water and never on
+  land (`createWaterProbe`; `onLand` is a polygon test every tick). Ankle / knee / waist slow the walk (×0.9 / ×0.7 / ×0.5, no
+  sprint past the ankles) and lower the rig onto the shelf; past 1 m the rig swims (crawl 1.8 m/s, Swim fast 2.6, momentum) with its
+  root 1.27 m under the water line, so the opaque ocean plane hides what is under without any clipping, stencil or second pass.
+  The state machine (`waterState.ts`) has 0.05 m hysteresis on every zone line and a 0.25 s root blend. The ball stays parked on
+  the sand (decision 3). Falls, cut parachutes, rooftop jumps, ride launches and the jetpack "Drop in" that end over knee-deep
+  water within 60 m of land (decision 4, `SPLASH_RANGE`) land in it: a 0.85 s dip under the plane, a 450 ms DOM tint, a head-shake,
+  then treading water; no crater, no 4.2 s recovery lockout.
+- **Reused, not added.** No new instanced pool, material, shader, render target, audio context, timer or loop anywhere
+  (`tests/heat-water.cjs` greps for all of them). Ripples and splashes are the ball effects' existing five pooled rings
+  (`ballEffects.ripple` / `splash`); the splash sound is `sound.land()` plus the ball's `undock` plop; the 20 fps treading-water cap
+  is `idleRide` with one more input (`idleRide.interval(now, riding || water.resting())`); the belly-flop face is the knockdown
+  face set; the HUD swap is the `actionCluster` mechanism the zipline uses (`WATER_BUTTONS` through `JobActionButton`); Back to
+  shore is `rooftop.findLanding`; the lesson toast is the ride-unlock toast's lane and styles. The rig's swim poses
+  (`lib/graphics/swimPose.ts`) keep one Float32Array of 23 held joint values per rig and damp toward constant shapes: no per-frame
+  allocation, offscreen posing still skipped.
+- **Per-frame cost.** On land: zero (the walker's step consults the water test only where the ground already said blocked; the
+  state machine returns after one polygon test). In the water: the probe's `distanceToLand` ≤ 10/s (≈ 0.3 ms/s), the swim step
+  (a dozen float ops and two point tests), the pose (23 damped values), one `waterStore.set` at the 150 ms HUD tick written only on
+  change, and a pooled ring every 0.45–3 s. The under tint is one absolutely positioned element animating opacity for 450 ms,
+  then hidden; no `backdrop-filter`. Decorative ripples obey the fishingLife gate (reduced motion, static ambience, governor
+  slow, tier ≥ 2); the splash and surfacing rings do not.
+- **Idle.** Treading water or floating with no input for 4 s renders at 20 fps (`renderStats.idleRide` = 50), exactly the idle-ride
+  rule; the tread's bob is on the pelvis, not the root, so it never reads as travel. Any input restores 30 fps at once. Wading and
+  Back to shore never cap (walking's rule).
+- **Measured (this Mac, headless Chrome, production build on :8263, `--use-angle=metal`; phone profile 390×844 DPR 2 touch, desktop
+  1440×900; `__fi2.renderStats` and `renderer.info` over 2 s windows; NOT an iPhone):**
+
+  | Scene (North Beach, day) | Phone fps | Phone draws / tris | Desktop fps | Desktop draws / tris |
+  | --- | ---: | ---: | ---: | ---: |
+  | standing on the sand (before) | 30.0 | 41 / 36.7k | 60.4 | 41 / 35.3k |
+  | swimming (crawl, stick held) | 30.0 | 22 / 28.8k | 60.4 | 26 / 25.6k |
+  | treading water, 4 s no input | **20.0** (idleRide 50) | 21 / 28.8k | **20.0** (idleRide 50) | 26 / 25.6k |
+  | treading after Swim fast | 29.9 | 19 / 25.0k | 59.9 | 26 / 25.6k |
+  | back on the sand (after) | 29.9 | 28 / 25.8k | 59.9 | 36 / 34.2k |
+  | flying over the sea (jetpack, "Drop in" shown) | 30.4 | 26 / 26.2k | 59.9 | 26 / 26.3k |
+  | treading after the Drop in, idle | **20.0** (idleRide 50) | 18 / 24.9k | **20.0** (idleRide 50) | 25 / 25.6k |
+
+  The sea views draw fewer calls than the beach because the follow camera looks out to sea (fewer scenery chunks in view), not
+  because anything was removed; nothing new is drawn while swimming except a pooled ring now and then. Probe calls: 126 over the
+  first ~13 s in the water (≈ 10/s), 0 on land. The splash-down's under tint was seen in 20 of the 40 ms polls across the two
+  splash-downs (450 ms each); Swim fast, Float and Back to shore worked on both profiles. Heat tier stayed 0 throughout. No page or console errors on either profile.
+- **Validation.** `npx tsc --noEmit`; `node tests/water-depth.cjs` (the shelf, the zones and hysteresis, the 60 m rule on the real
+  coast, the 10 Hz probe, swim speeds), `tests/water-swim.cjs` (the state machine, the parked ball, the action swap, splash-downs by
+  source, reduced motion, Town wiring), `tests/heat-water.cjs` (no new pools/materials/loops, the 20 fps rule, no per-frame
+  allocation), `tests/admin-analytics-water.cjs`; `tests/idle-ride.cjs` and `tests/zipline.cjs` updated for the new idle input
+  and cluster order; `tests/admin-analytics-coverage.cjs` for the new `swim` activity key (`supabase/migrations/20261017_analytics_water.sql`).
+  Browser: `scratchpad/water-shots.cjs` (Playwright + Chrome): wade in at North Beach, swim, tread idle (20 fps confirmed), Float,
+  Swim fast, Back to shore, a forced 9 m fall over the sea (the rooftop-fall landing branch) and a jetpack Drop in from 28 m, on
+  both profiles, failing on any page error. Screenshots in that folder (`phone-*.png`, `desktop-*.png`).
+- **Tradeoffs.** Depth is fiction (no seabed exists): the sand skirt ends 1.4 m out while the shelf keeps sloping to 1.6 m at 3.6 m
+  out, so a wader's feet are "in" the painted water. The rig's body under the plane is still posed and drawn (hidden by the opaque
+  ocean), the same cost as on land. Wading has no gait of its own in P0 (the body lowers; the speed drops). Rides stop at the
+  waterline as before, and a player who drops in from a jetpack walks out (rides cannot swim). The lesson is a coaching metaphor,
+  shown once per device. Not measured on a phone: treat the 20 fps idle and the "nothing new drawn" as reduced work, not cooling.
+
+**Feedback round, same day (face up, the wake, Swim fast, Fly up; docs/swimming-research.md §6 "Feedback round").** Added cost: the
+wake is up to 7 pooled rings per stroke from the SAME five-ring pool (`ballEffects.ripple(…, size)`: one more float per ring, no new
+material), gated like the other decorative ripples; the head-up crawl and the lifted tread change joint targets only; Swim fast is
+3.1 m/s with a 9 rad/s stroke clock; Fly up reuses the splash rings and the existing jetpack take-off. Browser numbers after this
+round are in the table's second block below.
+
+  | After the feedback round (same method) | Phone fps | Phone draws / tris | Desktop fps | Desktop draws / tris |
+  | --- | ---: | ---: | ---: | ---: |
+  | swimming (head-up crawl, with the wake) | 30.0 | 22 / 28.8k | 59.9 | 34 / 26.0k |
+  | treading water, 4 s no input | **20.0** (idleRide 50) | 23 / 28.9k | **20.0** (idleRide 50) | 28 / 25.7k |
+  | treading after Swim fast | 30.0 | 20 / 25.0k | 59.9 | 20 / 25.0k |
+  | treading after the Drop in, idle | **20.0** (idleRide 50) | 18 / 24.9k | 20.4 (idleRide 50) | 25 / 25.6k |
+
+  Swim fast, measured as distance over 2 s from rest with the stick held straight out to sea: **3.02 m normal vs 5.98 m fast on the
+  phone profile (×1.98), 3.02 m vs 5.81 m on desktop (×1.93)** (the ×1.72 top speed plus the quicker acceleration). Fly up: the ride
+  slot read Fly up while auto-swimming, a tap switched to the jetpack and the climb reached 25.9 m within 0.45 s with no error;
+  switching back to walk over the sea splashed down (source `dropin`, a clean entry). The under tint was seen in 29–32 of the
+  40 ms polls across the two splash-downs. The wake's rings are the same pool: the crawl's draw count did not change on the phone
+  profile (22) and rose by at most the rings alive (34 vs 26 on desktop, where the camera also framed more of the beach).
+
+## Sharks circle a swimmer (water P1a, Oct 15 2026, local, not deployed)
+
+`lib/town/water/sharks.ts` (pure) + a hook in `lib/graphics/caySharks.ts` `place()`; docs/swimming-research.md §7. When a swimmer comes within 14 m of a causeway or Summit shark, up to 3 of that region's sharks leave their loops for a staggered ring (r ≈ 4.6 m, 1.2 m/s) round the swimmer for 12 s, then peel back (or at once at wading depth / a take-off). Added cost:
+- **Draws, meshes, materials: +0.** The ring writes the same instance matrices the region already composes every awake frame (the same `m.compose` per shark, the circling ones just get another x/z/yaw). Browser, phone profile (390×844, DPR 2, production build): **30 draws / 34,932 triangles before and 30 / 34,932 while circling** (a transient 32 is the existing ring pool's tread ripple, seen before and after).
+- **CPU:** the proximity test runs at the water probe's 10 Hz and only while the swimmer is in the sea (≤ 9 fin reads + one insertion pick per tick; 3 land tests per picked shark, once per circle); on land, wading-free flight or the menus it is not called. Per frame only while a circle or its peel-off is live (≤ 14.4 s): a centre ease, one angle step, ≤ 3 blends and ≤ 3 `place()` lookups. No allocation after creation (tests/water-sharks.cjs, tests/summit-sealife.cjs).
+- **Reduced motion / static ambience:** the loops still hold; only the circling region keeps uploading its matrix while busy (bounded by the 12 s hold + 2.4 s peel-off). No camera nudge with reduced motion.
+- **UI and sound:** one DOM bubble ("Uh oh!"), placed with `translate` on island frames only while shown (1.5 s), then `hidden`; the sting is one `fi2-job-cue` (`sting`: two triangle tones on the existing context); the lesson reuses SwimLessonToast (once per device). The camera nudge is the existing belly-flop shake (0.12 s). No timer, loop, render target or audio context added.
+- Not measured on an iPhone: this is reduced/bounded work in emulation only.
+
+## Rides on a manta or the whale shark (water P1b, Oct 15 2026, local, not deployed)
+
+`lib/town/water/animalRides.ts` (pure) + hooks in `lib/graphics/cayMantas.ts` / `lib/graphics/whaleShark.ts` (`friends` / `friend`: a `ridden` flag and the loop position `u`); docs/swimming-research.md §8. Swimming within 5 m of a manta's body (any loop) or the Summit whale shark's: a "Hang on!" world prompt (the `store-enter-prompt` button, HUD arbiter key `ride`); a tap holds on and the animal drags the swimmer along its own loop at 1.6× (manta, 9.9 m/s) / 1.3× (whale shark, 8.1 m/s) the 6.2 m/s sprint swim; ONE lap, then it lets go by itself (or Let go), with a small feet-first splash.
+- **Draws, meshes, materials: +0.** A ridden manta is drawn on its island's existing 1-instance surfacing mesh (its silhouette instance is scaled to zero; any wingtip / breach on that island ends first and none start while it is held); the whale shark is the same one mesh. The rider is the existing rig (a new `hold` shape in `swimPose.ts`, same damped held copy). `tests/water-rides.cjs` inventories meshes, materials and geometries before and during a ride: identical.
+- **CPU:** the prompt's proximity test runs at the water probe's 10 Hz and only while swimming (≤ 11 binary searches on the loops per tick, no allocation); the ride step is a handful of scalars per frame and only while riding. The ridden animal's island is kept awake (and moves with reduced motion: a ride is the player's own travel) only for the ride; everything sleeps again on release. Wake: 3 rings from the existing pool every 0.2 s (manta) / 0.24 s (whale shark), behind the fishingLife gate; the swim strokes' own wake is off while riding. No timers (the dismount splash cue is the existing feet cue), no loop of its own.
+- **Bounded:** one lap (the summit north-bay manta: 280 m ≈ 28 s; the whale shark: 474 m ≈ 59 s), then nothing runs. The idle-ride 20 fps cap never engages mid-ride (it is travel), as for the other rides.
+- **Browser (production build, headless Chrome, 390×844 touch DPR 2, tier 0):** swimming beside the summit north-bay manta with the prompt up: 47 draw calls (median of 20 frames); mid-ride 49 (+2: the surfaced manta and the wake rings); after the lap 45. By the whale shark: 75 before, 62 riding (the view moves on with the animal). Ride speed 9.91 m/s = 1.60× the sprint swim (manta), 8.05 m/s = 1.30× (whale shark); the lap ended itself after 28 s. No page errors. Not measured on an iPhone: reduced/bounded work in emulation only.

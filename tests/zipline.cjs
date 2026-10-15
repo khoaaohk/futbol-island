@@ -386,7 +386,7 @@ await ok('the ride counts as active: no idle 20 fps cap, no governor tier change
  const town=read('components/Town.tsx');
  // The idle-ride cap only ever applies on a ride (rideRef ≠ walk); the zipline is ridden on foot (a scooter or bike hops off first)
  // and R / the ride button cannot change the ride in mid-air.
- assert(town.includes("idleRide.interval(now,rideRef.current!=='walk')"),'Town: the idle cap is for rides only');
+ assert(town.includes("idleRide.interval(now,rideRef.current!=='walk'||waterIdle)"),'Town: the idle cap is for rides (and treading water, Oct 15 2026) only');
  assert(/dismount:\(\)=>\{if\(rideRef\.current==='walk'\|\|rideRef\.current==='jetpack'\)return false;selectRide\('walk'\)/.test(town),'the zipline starts on foot');
  assert(town.includes('hold:on=>{heat.hold(on);islandShadowFit.hold(on);}'),'Town: the ride holds the governor and the shadow box');
  {const holds=[];const r=makeRuntime({hold:on=>holds.push(on)}),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();
@@ -519,7 +519,7 @@ await ok('the three ride actions: Tuck (faster, within the safe top speed, never
   const rk=ev('KeyR','r');assert.equal(zip.key(rk,true),true);assert(rk.prevented,'R cannot change the ride in mid-air');assert.equal(zip.key(ev('ArrowLeft','ArrowLeft'),true),false,'the arrows still look around');zip.dispose();}
  // The HUD: while riding the cluster IS the three actions (same component, classes and slots), and the normal ones come back after.
  const town=read('components/Town.tsx');
- assert(/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:jobButtons;/.test(town),'Town: the zipline\'s actions replace the cluster while riding');
+ assert(/const actionCluster:readonly JobButton\[\]\|null=zipRiding\?ZIP_BUTTONS:waterCluster\?\?jobButtons;/.test(town),'Town: the zipline\'s actions replace the cluster while riding (the water\'s after it, Oct 15 2026)');
  assert(/useSyncExternalStore\(zipStore\.subscribe,\(\)=>zipStore\.get\(\)\.riding,\(\)=>false\)/.test(town),'… from the store (written only on changes)');
  assert(['travel-mode','touch-shoot','touch-juggle'].every(c=>town.includes(`className="${c}" onPress={pressCluster}/>`)),'… with the job cluster\'s button in the ride, shoot and juggle slots');
  assert(/if\(zipline\.key\(e,true\)\)return;/.test(town)&&/if\(zipline\.key\(e,false\)\)return;/.test(town),'Town hands the keys to the ride first');

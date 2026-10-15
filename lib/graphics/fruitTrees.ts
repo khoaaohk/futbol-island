@@ -24,11 +24,21 @@
  *  - Leaves and the pickup sparkle share one pooled particle mesh (jobFx: hidden when idle). No timers, no rAF of its own; one
  *    keydown listener (E shakes when the prompt shows).
  * Reduced motion: a small sway, no leaves; the fruit lands at once; the hop-off / landing is the host's reduced version.
+ *
+ * The tree kick (Oct 15 2026, user: "update animation for kicking these trees and all trees on the mountain island"; rules in
+ * lib/town/summitTreeKick.ts): EVERY baked tree and palm (SUMMIT_TREE_SITES: the island's round trees and palms and every orchard
+ * form), fruiting or not, reacts to the island's Kick action when a trunk is within reach in front of the player (the host's shot
+ * hold is taken over: `ports.kick`), and to a kicked ball on its trunk or canopy. The character steps to a stance the boot can reach
+ * from (kickStance), plays the `treekick` job pose and, at its contact, the trunk gets a thunk + rustle, a sway impulse through the
+ * same shader uniform (the sway hands over to the newest tree), a few pooled leaves or fronds, and a fruiting tree drops fruit by
+ * the shake's rules. One 0.6 s cooldown per tree. The first kick shows a one-line coaching note (ForagePrompt's note, once per
+ * device). At rest nothing changes: the press is read as one property per frame on the island, the trunk search runs only on a press.
  */
 import * as T from 'three';
 import {createJobFx,type JobFx} from '../town/jobs/jobFx';
 import {POSE_TIME} from '../town/jobs/jobMoves';
-import {TREE_SHAKE_PUSHES} from './jobPoses';
+import {TREE_SHAKE_PUSHES,TREE_KICK_CONTACT} from './jobPoses';
+import {TREE_KICK,kickStance,leanFor,kickTarget,kickLeaves,TREE_KICK_LESSON,TREE_KICK_LESSON_KEY} from '../town/summitTreeKick';
 import {FORAGE,FRUIT_LOOK,FORAGE_TIP,FOLLOW_CAMERA,fruitTreeSteps,hangingNow,capLeft,recordPick,dropCount,ballDropCount,readForage,writeForage,forageStore,forageActions,
  localForageDay,fruitingToday,fruitToday,dayHash,contactAt,type FruitLook,type FruitTree,type ForageSave,type TreeSite} from '../town/summitForage';
 import {SUMMIT_TREE_SITES,SUMMIT_TREE_SWAY,swayWeight} from '../town/summitIsleWorld';
@@ -44,7 +54,16 @@ type Ports={
  obstacles:readonly Obstacle[];
  /** Start the character's grip-and-shake at this trunk (Town: jobMoves.start('treeshake', …)): walk `lead` seconds to `stand`
   *  (the root, clear of the trunk's collider), face the trunk, and close the last `lean` metres to the bark with the body. */
- pose:(trunk:{x:number;z:number},how:{stand:{x:number;z:number};lean:number;lead:number})=>void;
+ pose:(trunk:{x:number;z:number},how:{stand:{x:number;z:number};lean:number;lead:number;
+  /** The forage push (default) or the tree kick (lib/town/summitTreeKick.ts). */
+  kind?:'treeshake'|'treekick'})=>void;
+ /** The island's Kick action (Town's shot hold): `pressed()` is the live press (a fresh object per press, null between presses);
+  *  `take()` cancels it so no shot follows when the kick goes to a trunk. */
+ kick?:{pressed:()=>unknown;take:()=>void};
+ /** The character's heading (Town: player.root.rotation.y; forward = (sin, cos)), to pick the trunk in front of the player. */
+ yaw?:()=>number;
+ /** The kick's one-time coaching note (default: localStorage TREE_KICK_LESSON_KEY). */
+ lessonSeen?:()=>boolean;lessonMark?:()=>void;
  /** Off the ride or out of the air: true when the host started it (a ground ride switches to walking at once; a flight lands at
   *  `spot`, a clear spot a step out from the trunk). */
  dismount?:(how:ForageArrival,spot:{x:number;z:number})=>boolean;
@@ -93,6 +112,8 @@ const ARRIVAL_WAIT=6;
 const OFF=typeof location!=='undefined'&&typeof URLSearchParams!=='undefined'&&new URLSearchParams(location.search).get('forage')==='0';
 const DUMMY=new T.Object3D(),Q=new T.Quaternion(),V=new T.Vector3(),M2=new T.Matrix4(),HIDE=new T.Matrix4(),HUE=new T.Color();
 const LEAF_TREE='#6f9a55',LEAF_PALM='#5b895e',SPARKLE=['#fff3b0','#ffe18a','#ffffff'];
+/** The sway spring's damping ratio (≈1.6 Hz): a shake or a ball hit rings ~3 swings; a kick is a sharper thump that rests in 2–3. */
+const SWAY_ZETA=.2,KICK_ZETA=.26;
 
 // ---- The fruit shapes: one shared sphere bent per instance (the shader below and its CPU twin fruitPoint, for tests). ----
 /** Where unit-sphere point (x, y, z) goes for a fruit of this look (units of r; y is the stem axis, the stem at +y): stretched to
@@ -178,12 +199,19 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
  /** Waiting for the hop-off or landing before the shake. */
  let arriving:{tree:number;how:ForageArrival;age:number}|null=null;
  /** The sway after a shake or a ball hit: a damped spring on the tree's tilt about its base (only while it moves). */
- let sway:{tree:number;ang:number;vel:number;axis:T.Vector3;pivot:T.Vector3;h:number;bend:number}|null=null;
- /** A bare tree hit by the ball today: the shader sway alone (no fruit to move). */
- let bareSway:{ang:number;vel:number}|null=null;
+ let sway:{tree:number;ang:number;vel:number;axis:T.Vector3;pivot:T.Vector3;h:number;bend:number;zeta:number}|null=null;
+ /** A tree without fruit today (or not a fruit tree at all) hit by the ball or kicked: the shader sway alone (no fruit to move). */
+ let bareSway:{tid:number;ang:number;vel:number;zeta:number}|null=null;
+ /** The tree kick under way (lib/town/summitTreeKick.ts): the site, its clock (negative while stepping in) and whether the boot
+  *  has met the bark; `lastPress` is the host's Kick press already looked at (one trunk search per press). */
+ let kick:{site:TreeSite;t:number;dur:number;dir:T.Vector2;struck:boolean}|null=null,lastPress:unknown=null;
+ /** Every baked tree and palm (kickable) in BUCKET m cells, and today's fruiting trees by their shader id. */
+ let allSites:readonly TreeSite[]=[];const siteBuckets=new Map<number,TreeSite[]>(),treeByTid=new Map<number,number>();
  let near=-1,promptShown=false,lastLabel='',moving=0;const hitAt=new Map<number,number>();
  const player={x:0,z:0,onFoot:false,reduced:false,arrival:null as ForageArrival|null};
- const stats={built:false,trees:0,fruiting:0,fruit:0,shakes:0,dropped:0,picked:0,ballHits:0,busyFrames:0,idleFrames:0,get swaying(){return !!sway;},get moving(){return moving;}};
+ const stats={built:false,trees:0,fruiting:0,fruit:0,shakes:0,dropped:0,picked:0,ballHits:0,kicks:0,kickImpulses:0,busyFrames:0,idleFrames:0,get swaying(){return !!sway||!!bareSway;},get moving(){return moving;}};
+ const lessonSeen=ports.lessonSeen??(()=>{try{return localStorage.getItem(TREE_KICK_LESSON_KEY)==='1';}catch{return true;}});
+ const lessonMark=ports.lessonMark??(()=>{try{localStorage.setItem(TREE_KICK_LESSON_KEY,'1');}catch{/* private mode: shown again next time */}});
  const persist=(s:ForageSave)=>{save=s;writeForage(s,ports.write);};
  const note=(text:string,tip=false)=>{const v=forageStore.get();forageStore.set({note:text,notes:v.notes+1,tip});};
  const ground=(x:number,z:number)=>summitGround(x,z)-SUMMIT_VISUAL_DROP;
@@ -192,24 +220,27 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
  const cells=new Map<number,Obstacle[]>(),CELL=4,key=(i:number,j:number)=>i*8192+j;
  const hits=(x:number,z:number)=>{const l=cells.get(key(Math.floor(x/CELL),Math.floor(z/CELL)));return !!l&&l.some(o=>insideObstacle(x,z,o,.32));};
  const walkable=(x:number,z:number)=>!hits(x,z)&&onSummitIsle(x,z);
- /** Today's fruiting trees in BUCKET m cells, for ball hits. */
- const buckets=new Map<number,number[]>();
+ const bucketKey=(x:number,z:number)=>Math.floor(x/BUCKET)*8192+Math.floor(z/BUCKET);
 
  /** The tree choice runs a few checks per frame (≤ ports.budgetMs, default 3 ms) the first time the player nears the island. */
  let chooser:Generator<void,FruitTree[],void>|null=null;
  const clock=()=>typeof performance!=='undefined'?performance.now():Date.now();
  function choose(){
-  if(!chooser){const sites=(ports.sites??(()=>SUMMIT_TREE_SITES))();
+  if(!chooser){const sites=(ports.sites??(()=>SUMMIT_TREE_SITES))();allSites=sites;
+   // Every tree and palm is kickable and a ball target (Oct 15 2026): BUCKET m cells, filled once.
+   siteBuckets.clear();for(const s of sites){const b=bucketKey(s.x,s.z);let l=siteBuckets.get(b);if(!l)siteBuckets.set(b,l=[]);l.push(s);}
    for(const o of ports.obstacles){if(o.x<SUMMIT_BOX.minX-5||o.x>SUMMIT_BOX.maxX+5||o.z<SUMMIT_BOX.minZ-5||o.z>SUMMIT_BOX.maxZ+5)continue;const r=Math.max(o.w,o.d)/2+.4;
     for(let i=Math.floor((o.x-r)/CELL);i<=Math.floor((o.x+r)/CELL);i++)for(let j=Math.floor((o.z-r)/CELL);j<=Math.floor((o.z+r)/CELL);j++){const k=key(i,j);let l=cells.get(k);if(!l)cells.set(k,l=[]);l.push(o);}}
    chooser=fruitTreeSteps(sites,{walkable:onSummitIsle,blocked:hits,ground,paths:SUMMIT_PATHS,landing:SUMMIT_LANDMARKS.sandbarLanding,
     beach:(x,z)=>beachPoint(Math.atan2(z-SUMMIT_CENTER.z,x-SUMMIT_CENTER.x),.5),view:(x,z,y)=>summitCameraPull(x,z,y,x+FOLLOW_CAMERA.x,y+FOLLOW_CAMERA.y,z+FOLLOW_CAMERA.z)});}
   const until=clock()+(ports.budgetMs??3);let r=chooser.next();while(!r.done&&clock()<until)r=chooser.next();
-  if(r.done){chooser=null;pool=r.value;built=true;stats.built=true;stats.trees=pool.length;if(pool.length){save=readForage(now(),ports.read);fx=createJobFx(root);scene.add(root);}buildDay();}
+  if(r.done){chooser=null;pool=r.value;built=true;stats.built=true;stats.trees=pool.length;if(pool.length)save=readForage(now(),ports.read);
+   // The leaves' and sparkle's particle pool (one instanced mesh, hidden when idle): the kick uses it on every tree, fruit or not.
+   if(allSites.length){fx=createJobFx(root);scene.add(root);}buildDay();}
  }
  /** Today's fruit: only the day's fruiting trees get slots (instances), with the day's count and positions. */
  function buildDay(){
-  if(mesh){mesh.removeFromParent();mesh.dispose();mesh=null;}geo?.dispose();geo=null;endSway();slots=[];trees=[];dawn=[];buckets.clear();
+  if(mesh){mesh.removeFromParent();mesh.dispose();mesh=null;}geo?.dispose();geo=null;endSway();slots=[];trees=[];dawn=[];treeByTid.clear();
   day=localForageDay(now());if(!pool.length)return;
   if(save&&save.day!==day)save=readForage(now(),()=>JSON.stringify(save));
   const fruiting=fruitingToday(pool,day);trees=pool.filter(t=>fruiting.has(t.id));stats.fruiting=trees.length;
@@ -220,7 +251,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
     // A banana hand: 4–6 fingers on the plant (the top hand the biggest, like a real bunch), 1–3 once it falls.
     const n=banana?Math.max(BANANA.hand[0],Math.min(BANANA.hand[1],6-k-(j<.5?1:0))):1,fallen=banana?BANANA.fallen[0]+(k+Math.floor(j*3))%(BANANA.fallen[1]-BANANA.fallen[0]+1):1;
     slots.push({tree:ti,k,mode:'hidden',hang:h,pos:h.clone(),vel:new T.Vector3(),bounces:0,age:0,spin:0,fly:new T.Vector3(),base:total,n,fallen,yaw:-(1.03+(k-1)*1.25+(j-.5)*1.2),tint:-1});total+=n;}
-   const b=Math.floor(t.x/BUCKET)*8192+Math.floor(t.z/BUCKET);let l=buckets.get(b);if(!l)buckets.set(b,l=[]);l.push(ti);});
+   treeByTid.set(t.tid,ti);});
   // The shared shape: 70 triangles (a 7-sided banana reads as its ridged skin), bent per instance (aForm: elong, width, bend, taper; aPattern) in the vertex shader.
   geo=new T.SphereGeometry(1,7,6);const N=Math.max(1,total),form=new Float32Array(N*4),pat=new Float32Array(N);
   for(const sl of slots){const L=FRUIT_LOOK[trees[sl.tree].fruit];for(let q=sl.base;q<sl.base+sl.n;q++){form.set([L.elong,L.width,L.bend,L.taper],q*4);pat[q]=L.pattern;}}
@@ -285,12 +316,41 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
   arriving={tree:ti,how:player.arrival,age:0};ports.haptic?.();return true;
  }
  function startSway(ti:number){bareSway=null;if(sway&&sway.tree===ti)return sway;if(sway)endSway();const t=trees[ti];
-  sway={tree:ti,ang:0,vel:0,axis:new T.Vector3(1,0,0),pivot:new T.Vector3(t.x,t.y,t.z),h:t.rig.sway.h,bend:t.rig.sway.bend};
+  sway={tree:ti,ang:0,vel:0,axis:new T.Vector3(1,0,0),pivot:new T.Vector3(t.x,t.y,t.z),h:t.rig.sway.h,bend:t.rig.sway.bend,zeta:SWAY_ZETA};
   U.tree.value=t.tid;U.pivot.value.copy(sway.pivot);U.height.value=sway.h;U.bend.value=sway.bend;U.angle.value=0;return sway;}
  function endSway(){if(!sway)return;const ti=sway.tree;sway=null;U.angle.value=0;U.tree.value=0;
   slots.forEach((s,i)=>{if(s.tree===ti&&s.mode==='hang')paint(i);});}
  /** A shove on tree ti along `dir` (player → trunk, or the ball's travel): the tree tilts away from it. */
- function shove(ti:number,dir:T.Vector2,strength:number){const sw=startSway(ti);sw.axis.set(dir.y,0,-dir.x).normalize();U.axis.value.copy(sw.axis);sw.vel+=strength*(player.reduced?.35:1);}
+ function shove(ti:number,dir:T.Vector2,strength:number,zeta=SWAY_ZETA){const sw=startSway(ti);sw.axis.set(dir.y,0,-dir.x).normalize();U.axis.value.copy(sw.axis);sw.vel+=strength*(player.reduced?.35:1);sw.zeta=zeta;}
+ /** A shove on ANY baked tree (the kick; a ball on a tree without fruit today): a fruiting tree's fruit swings with it (shove), any
+  *  other tree sways through the shader alone. The uniform is single-tree, so a shove on another tree hands the sway over to it. */
+ function swaySite(site:TreeSite,dir:T.Vector2,strength:number,zeta=SWAY_ZETA){
+  if(strength<=0)return;const ti=treeByTid.get(site.tid);
+  if(ti!==undefined){bareSway=null;shove(ti,dir,strength,zeta);return;}
+  if(sway)endSway();
+  if(!bareSway||bareSway.tid!==site.tid){bareSway={tid:site.tid,ang:0,vel:0,zeta};U.tree.value=site.tid;U.pivot.value.set(site.x,site.y,site.z);U.height.value=site.rig.sway.h;U.bend.value=site.rig.sway.bend;U.angle.value=0;}
+  U.axis.value.set(dir.y,0,-dir.x).normalize();bareSway.vel+=strength;bareSway.zeta=zeta;
+ }
+ /** Step to a kicking stance at `site` and play the kick (the host locks input; the boot meets the bark at TREE_KICK_CONTACT). */
+ function beginKick(site:TreeSite){
+  const a=Math.atan2(player.z-site.z,player.x-site.x);let st=kickStance(site,a);
+  // The stance must be walkable ground at the tree's level; otherwise kick from where you stand, the lean closing what it can.
+  if(!walkable(st.root.x,st.root.z)||Math.abs(ground(st.root.x,st.root.z)-site.y)>.6)st={root:{x:player.x,z:player.z},lean:leanFor(Math.hypot(player.x-site.x,player.z-site.z)-site.rig.baseR),face:st.face};
+  const walk=Math.hypot(st.root.x-player.x,st.root.z-player.z),lead=Math.min(TREE_KICK.maxLead,walk>.05?walk/TREE_KICK.stepSpeed:0);
+  const dir=new T.Vector2(site.x-st.root.x,site.z-st.root.z);if(dir.lengthSq()<1e-4)dir.set(0,1);dir.normalize();
+  kick={site,t:-lead,dur:(POSE_TIME.treekick??.8)*(player.reduced?.6:1),dir,struck:false};stats.kicks++;
+  ports.pose({x:site.x,z:site.z},{stand:st.root,lean:st.lean,lead,kind:'treekick'});ports.haptic?.();
+ }
+ /** The boot meets the bark: thunk + rustle, the sway impulse and leaves (once per cooldown), fruit by the shake's rules, the note. */
+ function strike(site:TreeSite,dir:T.Vector2){
+  cue('thunk');cue('rustle');ports.haptic?.();ports.shook?.(site.x,site.z);
+  const t0=now();if(t0-(hitAt.get(site.tid)??-1e9)<TREE_KICK.cooldown*1000)return;hitAt.set(site.tid,t0);stats.kickImpulses++;
+  if(!player.reduced){swaySite(site,dir,TREE_KICK.impulse[site.kind],KICK_ZETA);
+   const c=site.rig.crown,L=kickLeaves(site);fx?.burst(c.x,c.y+(L.size>2?0:.3),c.z,L.color,L.count,L.speed,L.up,true,L.size);}
+  const ti=treeByTid.get(site.tid);
+  if(ti!==undefined&&hangCount[ti]){const n=drop(ti,(h,a)=>dropCount(rand(),h,a),dir);if(n>0)countFruitShake(trees[ti].fruit,'hand');}
+  if(!lessonSeen()){lessonMark();note(TREE_KICK_LESSON,true);}
+ }
  function push(){const sh=shake!,t=trees[sh.tree],last=sh.pushes===TREE_SHAKE_PUSHES.length-1;
   cue('rustle');ports.haptic?.();if(last)ports.shook?.(t.x,t.z);
   // The strongest push is the last one: the fruit drops on it.
@@ -334,11 +394,12 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
  return {
   root,stats,
   get trees():readonly FruitTree[]{const b=ports.budgetMs;ports.budgetMs=Infinity;while(!built)choose();ports.budgetMs=b;return pool;},
-  get busy(){return !!shake||!!sway||!!arriving||moving>0;},
+  get busy(){return !!shake||!!sway||!!bareSway||!!arriving||!!kick||moving>0;},
   /** Debug and tests: today's fruiting trees (hanging fruit now), the whole pool, and the fruit on the ground or falling. */
   view(){return {day,pool:pool.map(t=>t.id),trees:trees.map((t,ti)=>({id:t.id,fruit:t.fruit,form:t.form??t.kind,x:t.x,z:t.z,y:t.y,tid:t.tid,stand:t.stand,grip:t.rig.grip,hanging:hangingSlots(ti).length,dawn:dawn[ti]})),
    fallen:slots.filter(s=>s.mode==='fall'||s.mode==='ground').map(s=>({tree:trees[s.tree].id,mode:s.mode,x:s.pos.x,y:s.pos.y,z:s.pos.z,bounces:s.bounces})),
-   swaying:!!sway,swayTree:sway?trees[sway.tree].tid:0,shaking:!!shake,arriving:arriving?{tree:trees[arriving.tree].id,how:arriving.how}:null,save};},
+   swaying:!!sway||!!bareSway,swayTree:sway?trees[sway.tree].tid:bareSway?bareSway.tid:0,swayAngle:U.angle.value,shaking:!!shake,kicking:!!kick,kickTree:kick?kick.site.tid:0,sites:allSites.length,
+   arriving:arriving?{tree:trees[arriving.tree].id,how:arriving.how}:null,save};},
   /** Dev and heat runs only (scratch probes): every tree full again and today's count back to 0. */
   refill(){if(!save)return;persist({...save,today:0,trees:{}});refresh();},
   /** Tap / E: shake the tree in reach (from a ride or the air: hop off or land first). */
@@ -347,16 +408,16 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
    *  fast enough, the tree sways and drops 1–2 fruit (today's fruiting trees only; a bare tree just sways). Called by the host
    *  only on a ball collision, so nothing runs at rest. */
   ballHit(x:number,y:number,z:number,vx:number,vz:number){
-   if(!built||!pool.length||OFF)return false;const speed=Math.hypot(vx,vz);if(speed<FORAGE.ballMin)return false;
-   let hit=-1,bare:FruitTree|null=null;
-   for(let i=-1;i<=1&&hit<0;i++)for(let j=-1;j<=1&&hit<0;j++){const l=buckets.get((Math.floor(x/BUCKET)+i)*8192+Math.floor(z/BUCKET)+j);if(!l)continue;
-    for(const ti of l){const t=trees[ti],c=t.rig.crown,d=Math.hypot(t.x-x,t.z-z);if(d<t.rig.baseR+.7&&y<t.y+3||c.hang==='canopy'&&Math.hypot(c.x-x,c.z-z)<c.rx&&Math.abs(c.y-y)<c.ry+.3){hit=ti;break;}}}
-   if(hit<0){for(const t of pool)if(Math.hypot(t.x-x,t.z-z)<t.rig.baseR+.7&&y<t.y+3){bare=t;break;}if(!bare)return false;}
-   const t0=now(),tid=hit>=0?trees[hit].tid:bare!.tid;if(t0-(hitAt.get(tid)??-1e9)<600)return true;hitAt.set(tid,t0);stats.ballHits++;
+   if(!built||!allSites.length||OFF)return false;const speed=Math.hypot(vx,vz);if(speed<FORAGE.ballMin)return false;
+   // The trunk or canopy the ball met: EVERY baked tree and palm (Oct 15 2026), 3 × 3 bucket cells.
+   let site:TreeSite|null=null;const b0=bucketKey(x,z);
+   for(let i=-1;i<=1&&!site;i++)for(let j=-1;j<=1&&!site;j++){const l=siteBuckets.get(b0+i*8192+j);if(!l)continue;
+    for(const s of l){const c=s.rig.crown;if(Math.hypot(s.x-x,s.z-z)<s.rig.baseR+.7&&y<s.y+3||c.hang==='canopy'&&Math.hypot(c.x-x,c.z-z)<c.rx&&Math.abs(c.y-y)<c.ry+.3){site=s;break;}}}
+   if(!site)return false;
+   const t0=now();if(t0-(hitAt.get(site.tid)??-1e9)<TREE_KICK.cooldown*1000)return true;hitAt.set(site.tid,t0);stats.ballHits++;
    const dir=new T.Vector2(vx,vz).normalize();cue('rustle');ports.haptic?.();
-   if(hit<0){// a bare tree today: it sways (shader only), nothing falls
-    const b=bare!;if(sway)endSway();U.tree.value=b.tid;U.pivot.value.set(b.x,b.y,b.z);U.height.value=b.rig.sway.h;U.bend.value=b.rig.sway.bend;U.axis.value.set(dir.y,0,-dir.x);
-    bareSway={ang:0,vel:Math.min(1.2,speed/9)*(player.reduced?.35:1)};return true;}
+   const hit=treeByTid.get(site.tid);
+   if(hit===undefined){swaySite(site,dir,Math.min(1.2,speed/9)*(player.reduced?.35:1));return true;}// no fruit today: sways, nothing falls
    bareSway=null;shove(hit,dir,Math.min(1.5,.5+speed/10));
    if(!shake){const n=drop(hit,(h,a)=>ballDropCount(speed,h,a),new T.Vector2(-dir.x,-dir.y));if(n>0)countFruitShake(trees[hit].fruit,'ball');}
    return true;},
@@ -365,13 +426,21 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
    const prompt=c.ui<HTMLButtonElement>('[data-summit-forage]');
    if(OFF){if(prompt&&!prompt.hidden)c.hide(prompt,true);return null;}
    const onIsle=c.x>SUMMIT_BOX.minX-NEAR_BOX&&c.x<SUMMIT_BOX.maxX+NEAR_BOX&&c.z>SUMMIT_BOX.minZ-NEAR_BOX&&c.z<SUMMIT_BOX.maxZ+NEAR_BOX;
-   if(c.frozen||!onIsle&&!shake&&!sway&&!bareSway&&!moving&&!arriving){if(promptShown&&prompt){c.hide(prompt,true);}promptShown=false;near=-1;stats.idleFrames++;return null;}
+   if(c.frozen||!onIsle&&!shake&&!sway&&!bareSway&&!moving&&!arriving&&!kick){if(promptShown&&prompt){c.hide(prompt,true);}promptShown=false;near=-1;stats.idleFrames++;return null;}
    if(!built){choose();if(!built){stats.idleFrames++;return null;}}
-   if(!mesh&&!pool.length){if(prompt&&!prompt.hidden)c.hide(prompt,true);return null;}
+   if(!allSites.length){if(prompt&&!prompt.hidden)c.hide(prompt,true);return null;}
    player.x=c.x;player.z=c.z;player.onFoot=c.onFoot;player.reduced=c.reduced;player.arrival=c.onFoot?null:c.arrival??null;
    // A new local day: a fresh set of fruiting trees (rare: only when playing across midnight).
-   if(!shake&&!arriving&&!moving&&localForageDay(now())!==day)buildDay();
+   if(!shake&&!arriving&&!moving&&!kick&&localForageDay(now())!==day)buildDay();
    let work=false;
+   // ---- the tree kick: a fresh Kick press with a trunk in reach ahead takes the press (one trunk search per press, nothing per
+   // frame but the read); the boot meets the bark at TREE_KICK_CONTACT of the pose
+   if(ports.kick){const h=ports.kick.pressed();// edge-triggered: a press held through a kick, a shake or a job never fires later
+    if(!h)lastPress=null;else if(h!==lastPress){lastPress=h;
+     if(c.onFoot&&c.canEnter&&!kick&&!shake&&!arriving&&!ports.busy?.()){const site=kickTarget(allSites,c.x,c.z,ports.yaw?.()??0);if(site){ports.kick.take();beginKick(site);}}}}
+   if(kick){work=true;kick.t+=c.dt;const k=kick.t/kick.dur;
+    if(!kick.struck&&k>=TREE_KICK_CONTACT){kick.struck=true;strike(kick.site,kick.dir);}
+    if(k>=1)kick=null;}
    // ---- off the ride / out of the air, then the shake (the host locks input meanwhile)
    if(arriving){work=true;arriving.age+=c.dt;
     if(c.onFoot){const a=arriving;arriving=null;if(a.how==='fly')ports.touchdown?.();if(hangCount[a.tree]&&!ports.busy?.())begin(a.tree);}
@@ -381,10 +450,10 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
     while(shake&&shake.pushes<TREE_SHAKE_PUSHES.length&&k>=TREE_SHAKE_PUSHES[shake.pushes]){push();shake.pushes++;if(shake.pushes===TREE_SHAKE_PUSHES.length&&!shake.dropped){shake.dropped=true;const n=drop(shake.tree,(h,a)=>dropCount(rand(),h,a),shake.dir);if(n>0)countFruitShake(trees[shake.tree].fruit,'hand');}}
     if(shake&&k>=1){if(!shake.dropped){const n=drop(shake.tree,(h,a)=>dropCount(rand(),h,a),shake.dir);if(n>0)countFruitShake(trees[shake.tree].fruit,'hand');}shake=null;}}
    // ---- the sway: a damped spring (≈1.6 Hz) on the shader's angle, back to exactly 0 once it settles
-   if(sway){work=true;const w=2*Math.PI*1.6,dt=Math.min(c.dt,.05);sway.vel+=(-w*w*sway.ang-2*.2*w*sway.vel)*dt;sway.ang+=sway.vel*dt;
+   if(sway){work=true;const w=2*Math.PI*1.6,dt=Math.min(c.dt,.05);sway.vel+=(-w*w*sway.ang-2*sway.zeta*w*sway.vel)*dt;sway.ang+=sway.vel*dt;
     if(!shake&&Math.abs(sway.ang)<.002&&Math.abs(sway.vel)<.03)endSway();
     else{U.angle.value=sway.ang;slots.forEach((s,i)=>{if(s.tree===sway!.tree&&s.mode==='hang')paint(i);});}}
-   if(bareSway){work=true;const w=2*Math.PI*1.6,dt=Math.min(c.dt,.05);bareSway.vel+=(-w*w*bareSway.ang-2*.2*w*bareSway.vel)*dt;bareSway.ang+=bareSway.vel*dt;
+   if(bareSway){work=true;const w=2*Math.PI*1.6,dt=Math.min(c.dt,.05);bareSway.vel+=(-w*w*bareSway.ang-2*bareSway.zeta*w*bareSway.vel)*dt;bareSway.ang+=bareSway.vel*dt;
     if(Math.abs(bareSway.ang)<.002&&Math.abs(bareSway.vel)<.03){bareSway=null;U.angle.value=0;U.tree.value=0;}else U.angle.value=bareSway.ang;}
    // ---- falling, lying and flying-to-hand fruit
    moving=0;
@@ -406,7 +475,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
    if(work)stats.busyFrames++;else stats.idleFrames++;
    // ---- the prompt: the nearest fruiting tree with fruit within reach (on foot, riding, or flying low; nothing else on)
    near=-1;const reach=c.onFoot?FORAGE.reach:player.arrival==='ride'?FORAGE.reachRide:player.arrival==='fly'?FORAGE.reachFly:0;let best=reach;
-   if(reach&&c.canEnter&&!shake&&!arriving)for(let ti=0;ti<trees.length;ti++){if(!hangCount[ti])continue;const t=trees[ti],dx=t.x-c.x,dz=t.z-c.z;if(Math.abs(dx)>best||Math.abs(dz)>best)continue;const d=Math.hypot(dx,dz);if(d<best){best=d;near=ti;}}
+   if(reach&&c.canEnter&&!shake&&!arriving&&!kick)for(let ti=0;ti<trees.length;ti++){if(!hangCount[ti])continue;const t=trees[ti],dx=t.x-c.x,dz=t.z-c.z;if(Math.abs(dx)>best||Math.abs(dz)>best)continue;const d=Math.hypot(dx,dz);if(d<best){best=d;near=ti;}}
    // Flying: only low over it (read the height only when a tree is in reach).
    if(near>=0&&player.arrival==='fly'&&!((c.air?.()??Infinity)<=FORAGE.flyHeight))near=-1;
    const want=near>=0?{key:'forage',distance:best}:null;
@@ -421,7 +490,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
   },
   dispose(){if(typeof window!=='undefined')window.removeEventListener('keydown',onKey);forageActions.shake=()=>{};forageStore.reset();
    endSway();bareSway=null;U.angle.value=0;U.tree.value=0;fx?.dispose();root.removeFromParent();geo?.dispose();mat?.dispose();mesh?.dispose();
-   mesh=null;geo=null;mat=null;fx=null;shake=null;arriving=null;slots=[];trees=[];pool=[];built=false;},
+   mesh=null;geo=null;mat=null;fx=null;shake=null;arriving=null;kick=null;lastPress=null;slots=[];trees=[];pool=[];allSites=[];siteBuckets.clear();treeByTid.clear();built=false;},
  };
 }
 export type SummitForage=ReturnType<typeof createSummitForage>;

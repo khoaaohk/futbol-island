@@ -1,0 +1,28 @@
+/* The lure button (bottom right, the island action size; its face takes the lure's colour) and its panel above it. Tokens: docs/ui/BUTTONS.md. */
+.lure[data-on]{background-color:var(--lure,var(--btn-gold))}
+/* The panel is a child of the HUD's bottom row (.controls, the reel's height), so it is anchored just above that row, on the right,
+   and painted over the reel. */
+.panel{position:absolute;z-index:2;right:0;bottom:calc(100% + 12px);box-sizing:border-box;width:min(330px,calc(100vw - 48px));max-height:min(60vh,440px);overflow:auto;padding:12px 14px;pointer-events:auto;border:2px solid #fff2cd;border-radius:18px;background:#fff8e8;color:#244d40;box-shadow:0 4px 0 #a8863d}
+.panel h3{margin:0 0 4px;font-size:15px}
+.note{margin:0 0 8px;font-size:12.5px;line-height:1.4;color:#3a5b50}
+.lures{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+/* The panel sits inside the HUD's .controls row, whose generic round-button rule (FishingHost.module.css .controls button) would
+   otherwise give these a fixed 58 px round face: every sizing / face property is set here on purpose. */
+.lures button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;min-width:0;height:auto;min-height:44px;padding:7px 9px;border:2px solid #e8d9b5;border-radius:12px;background:#fff;background-blend-mode:normal;box-shadow:none;color:inherit;font:inherit;font-weight:400;text-align:left;cursor:pointer;touch-action:manipulation;transition:none}
+.lures button:active{translate:none;box-shadow:none}
+.lures button[aria-pressed=true]{border-color:#2f7a5f;background:#e5f4ec}
+.lures button:focus-visible{outline:var(--btn-focus);outline-offset:2px}
+.lures b{display:flex;align-items:center;gap:6px;font-size:13px}
+.lures b i{width:12px;height:12px;border-radius:50%;background:var(--lure,#ccc);box-shadow:inset 0 0 0 1px #0002}
+.lures span{font-size:12px;line-height:1.35}
+.fact{display:block;margin-top:3px;font-size:11.5px;line-height:1.35;color:#4b5f57}
+.fact span{display:block;font-weight:800;color:#7a5a12}
+/* The catch toast: above the reel, centred. */
+.toast{position:absolute;left:50%;bottom:calc(24px + var(--fish-reel-size) + 18px);translate:-50% 0;box-sizing:border-box;width:max-content;max-width:min(440px,calc(100% - 40px));margin:0;padding:9px 14px;border-radius:16px;background:#244d40ee;color:#fff1d3;font-size:13px;font-weight:700;line-height:1.4;text-align:center;box-shadow:0 4px 0 #17352b88;animation:lureIn .3s ease both}
+@keyframes lureIn{from{opacity:0;translate:-50% 8px}}
+@media(max-width:600px),(pointer:coarse){
+ .panel{width:calc(100vw - 36px);max-height:min(50vh,400px)}
+ .toast{bottom:calc(var(--control-bottom,calc(28px + env(safe-area-inset-bottom,0px))) + var(--fish-reel-size) + 16px)}
+}
+@media(orientation:landscape) and (max-height:500px){.panel{max-height:min(55vh,220px);width:min(330px,calc(50vw - 40px))}}
+@media(prefers-reduced-motion:reduce){.toast{animation:none}}

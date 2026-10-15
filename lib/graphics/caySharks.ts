@@ -10,6 +10,7 @@ import {SHARK_LOOPS,type SharkLoop} from '../town/coralCay';
 import {SUMMIT_SHARK_LOOPS,summitSeaLifeCounts} from '../town/summitSeaLife';
 import {subscribeHeatTier,effectiveTier} from './heatTier';
 import {dynamicResolutionEnabled} from './quality';
+import type {SharkCircle,SharkSchools} from '../town/water/sharks';
 const WATER=-.43;
 function paint(g:T.BufferGeometry,color:string){const c=new T.Color(color),n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g.index?g.toNonIndexed():g;}
 /** Fin (swept back) and tail tip only, local +x forward, y 0 at the waterline. Exported for tests. */
@@ -56,13 +57,16 @@ export function createCaySharks(scene:T.Scene,options:{loops?:SharkLoop[];phone?
   const box=new T.Box3();for(const l of loops)for(const p of l.points)box.expandByPoint(new T.Vector3(p.x,WATER,p.z));box.expandByScalar(3);
   const sphere=box.getBoundingSphere(new T.Sphere());fins.boundingSphere=sphere.clone();bodies.boundingSphere=sphere.clone();
   const group=new T.Group();group.name=`sharks-${region}`;group.add(bodies,fins);root.add(group);
-  return {region,tracks,fins,bodies,group,box,sphere,time:0,placed:false,placedReduced:false,active:tracks.length};
+  return {region,index:0,tracks,fins,bodies,group,box,sphere,time:0,placed:false,placedReduced:false,active:tracks.length};
  });
+ regions.forEach((r,i)=>{r.index=i;});
  // Heat tiers: Summit Isle's sharks thin out on a hot phone (the causeway's six stay, as before). Only on a tier change.
  const applyTier=()=>{const tier=effectiveTier();for(const r of regions){r.active=r.region==='summit'?Math.min(r.tracks.length,summitSeaLifeCounts(tier,phone).sharks):r.tracks.length;r.fins.count=r.bodies.count=r.active;r.placed=false;}};
  applyTier();const offTier=subscribeHeatTier(applyTier);
  const m=new T.Matrix4(),q=new T.Quaternion(),pos=new T.Vector3(),scale=new T.Vector3(1.7,1.7,1.7)/* kid-readable from the follow camera */,up=new T.Vector3(0,1,0),frustum=new T.Frustum(),view=new T.Matrix4();
  const stats={awake:0,updated:0};
+ // Water P1a (lib/town/water/sharks.ts): the circle a swimmer can attract. It moves the same instances inside this same pass.
+ let circle:SharkCircle|null=null;const at={x:0,z:0,yaw:0};
  function place(r:typeof regions[number],dt:number,reduced:boolean){
   r.time+=reduced?0:dt;
   for(let i=0;i<r.active;i++){const t=r.tracks[i];
@@ -71,7 +75,9 @@ export function createCaySharks(scene:T.Scene,options:{loops?:SharkLoop[];phone?
    const a=pts[(k-1)%pts.length],b=pts[k%pts.length],f=(t.u-t.lengths[k-1])/((t.lengths[k]-t.lengths[k-1])||1);
    const dx=b.x-a.x,dz=b.z-a.z,l=Math.hypot(dx,dz)||1,sway=Math.sin(r.time*.9+t.phase*6)*.5;
    pos.set(a.x+dx*f-dz/l*sway,WATER-.02,a.z+dz*f+dx/l*sway);
-   const yaw=Math.atan2(-dz,dx)+Math.cos(r.time*.9+t.phase*6)*.12;q.setFromAxisAngle(up,yaw);
+   let yaw=Math.atan2(-dz,dx)+Math.cos(r.time*.9+t.phase*6)*.12;
+   if(circle?.busy){at.x=pos.x;at.z=pos.z;at.yaw=yaw;if(circle.place(r.index,i,at)){pos.x=at.x;pos.z=at.z;yaw=at.yaw;}}
+   q.setFromAxisAngle(up,yaw);
    m.compose(pos,q,scale);r.fins.setMatrixAt(i,m);
    // Now and then the whole shark swims shallow enough to see; otherwise its body sits under the opaque sea.
    const shallow=!reduced&&Math.sin(r.time*.33+t.phase*9)>.45;pos.y=shallow?WATER+.012:WATER-.08;m.compose(pos,q,scale);r.bodies.setMatrixAt(i,m);
@@ -80,15 +86,19 @@ export function createCaySharks(scene:T.Scene,options:{loops?:SharkLoop[];phone?
  }
  /** Called from the island's frame update. Regions within 220 m draw; only a near, on-screen region moves. */
  function update(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number}){
-  stats.awake=stats.updated=0;view.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(view);
+  stats.awake=stats.updated=0;if(circle?.busy)circle.frame(dt);view.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(view);
   for(const r of regions){
    const dx=Math.max(r.box.min.x-player.x,0,player.x-r.box.max.x),dz=Math.max(r.box.min.z-player.z,0,player.z-r.box.max.z),distance=Math.hypot(dx,dz);
    r.group.visible=distance<220&&r.active>0;if(!r.group.visible)continue;
    if(!r.placed||r.placedReduced!==reduced){place(r,0,reduced);r.placed=true;r.placedReduced=reduced;}
    if(distance>140||!frustum.intersectsSphere(r.sphere))continue;
    // Frozen (map open, a lesson: dt 0) or static ambience: already placed, so no matrix upload (code review finding 12).
-   stats.awake++;if(dt===0||reduced)continue;place(r,Math.min(dt,.1),reduced);stats.updated+=r.active;
+   // A circling region still moves with reduced motion (the loops hold still; only the ring turns), ≤ SHARK_HOLD + the peel-off.
+   stats.awake++;if(dt===0||(reduced&&!(circle?.busy&&circle.state.region===r.index)))continue;place(r,Math.min(dt,.1),reduced);stats.updated+=r.active;
   }
  }
- return {root,stats,update,regions,frustum,applyTier,dispose(){offTier();root.removeFromParent();for(const r of regions){r.fins.dispose();r.bodies.dispose();}finGeo.dispose();bodyGeo.dispose();finMat.dispose();bodyMat.dispose();}};
+ /** The fin positions the circle's proximity test reads (straight from the instance matrices: no copy, no allocation). */
+ const view1={active:0,awake:false},schools:SharkSchools={count:regions.length,region:(r)=>{const g=regions[r];view1.active=g.active;view1.awake=g.group.visible&&g.placed;return view1;},
+  at:(r,i,out)=>{const a=regions[r].fins.instanceMatrix.array;out.x=a[i*16+12];out.z=a[i*16+14];}};
+ return {root,stats,update,regions,frustum,applyTier,schools,attend(c:SharkCircle|null){circle=c;},dispose(){offTier();root.removeFromParent();for(const r of regions){r.fins.dispose();r.bodies.dispose();}finGeo.dispose();bodyGeo.dispose();finMat.dispose();bodyMat.dispose();}};
 }
