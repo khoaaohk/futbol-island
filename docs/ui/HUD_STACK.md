@@ -127,7 +127,7 @@ uncovered; back after Stop job).
 User decision: the card has **no buttons** (Go, My football and Later were removed; the next lesson stays in Paths → Continue).
 The whole card is one tap target that hides it (like the costume and ride notes), and it hides on its own after
 `WELCOME_BACK_SHOW_MS` (6 s, `lib/town/welcomeBack.ts`). The dwell is one timeout that runs only while the card is on screen:
-`blocked` (lesson, ceremony, modal, a running job) unmounts it, and `held` (Town passes `stackCovered`: menus, the Pocket, any
+`blocked` (lesson, ceremony, modal, a running job) hides it (`hidden`; since 15 October 2026 the node stays mounted), and `held` (Town passes `stackCovered`: menus, the Pocket, any
 overlay that hides the column) clears the timer; when it is back it gets a fresh dwell, the same rule as IslandJobs' notes. The
 daily-play line uses `text-wrap: balance` with a `30ch` measure, so it reads as two equal lines. The guide tier, the job rule
 and the landscape dock are unchanged. Guarded by `tests/oct1-ui.cjs`, `tests/hud-stack.cjs` and
@@ -146,3 +146,20 @@ positions, faces and press; line icons `ziptuck` / `zipspin` / `zipwave` (`Trave
 Keys: Space or 1 (hold), Q or 2, E or 3. The minimap toggle and the stick (look around) stay. The normal cluster comes back the
 moment the feet are on the roof deck. Guarded by `tests/zipline.cjs`.
 
+
+## Notes beside a docked job; one welcome-back node (15 October 2026, QA)
+
+- **Starter coins over Stop job** (landscape phones, 100% repro in `tests/e2e/gap-welcome-landscape.spec.ts`). The running
+  job's panel docks top-left *out of the column's flow* there (bug A1), so the column's centred note slot started at the same
+  top and covered the panel's Stop job: "Welcome! +N coins" is queued on the first boot and waits while the Start job card is
+  open, so it always appeared just as the job started. Garden picks, fuel, beachcombing and costume / ride notes could do the
+  same. Fix: Town marks the column `data-job-running` while a job runs, and on a landscape phone the toast slot docks top-right
+  (the mirror of the job dock, `min(270px, 50vw − 120px)` wide, clear of the centre and of the stick and action buttons). In
+  portrait and on desktop the note already sits below the panel in the column. Guarded by `tests/hud-stack.cjs`.
+- **Welcome-back card "detached from the DOM"** (desktop-chromium e2e). The card's e2e hold hook (`window.__fi2WelcomeMs`) was
+  dev-only, so against a production build (`next start`, FI_URL) the card left after its 6 s dwell while the test was still
+  reaching for it: the card shows as soon as the island is ready, part of the dwell is spent inside the boot helper, and
+  the click raced the timeout (timing-dependent, so it hit desktop-chromium hardest). The hook is
+  now also honoured when `navigator.webdriver` is true (automation only; players always get 6 s). The card is also mounted once
+  per showing: while `blocked` (a job, a lesson, a modal) it is `hidden` rather than unmounted, so the node a tap or a test holds
+  stays the same across a job. Guarded by `tests/hud-stack.cjs` and `tests/oct1-ui.cjs`.

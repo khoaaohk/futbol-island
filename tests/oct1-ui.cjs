@@ -12,12 +12,12 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  assert(W.WELCOME_BACK_SHOW_MS>=5000&&W.WELCOME_BACK_SHOW_MS<=7000,'about 6 s on screen');
  // No buttons inside the card: the whole card is the one tap target that hides it.
  assert.equal((card.match(/<button\b/g)||[]).length,1,'one button: the card itself');
- assert.match(card,/<button type="button" className=\{`\$\{toast\.toast\} \$\{styles\.card\}`\} role="status" data-hud-slot="guide" data-welcome-back onClick=\{\(\)=>setOpen\(false\)\}>/,'a tap on the card hides it');
+ assert.match(card,/<button type="button" className=\{`\$\{toast\.toast\} \$\{styles\.card\}`\} role="status" data-hud-slot="guide" data-welcome-back hidden=\{blocked\} onClick=\{\(\)=>setOpen\(false\)\}>/,'a tap on the card hides it');
  for(const gone of [/data-welcome-go/,/data-welcome-warmup/,/data-welcome-myfootball/,/>Go</,/>Later</,/Warm-up</,/openLearningReview/,/FORMAT_PATH_LAUNCH/,/styles\.actions/])assert.doesNotMatch(card,gone,`no ${gone} on the card`);
  assert.doesNotMatch(css,/\.actions|\.go\b|\.later\b/,'no button styles left');
  // Auto-dismiss: one timeout that runs only while the card is on screen (not blocked, stack not covered); fresh dwell on return.
  assert.match(card,/const onScreen=open&&!blocked&&!held;/);
- assert.match(card,/useEffect\(\(\)=>\{if\(!onScreen\)return;const t=setTimeout\(\(\)=>setOpen\(false\),welcomeDwellMs\(\)\);return\(\)=>clearTimeout\(t\);\},\[onScreen\]\);/,'one timer, cleared when covered');assert.match(card,/NODE_ENV!=='production'[^\n]*__fi2WelcomeMs[^\n]*return WELCOME_BACK_SHOW_MS/,'production always dwells WELCOME_BACK_SHOW_MS; only dev tests may hold the card');
+ assert.match(card,/useEffect\(\(\)=>\{if\(!onScreen\)return;const t=setTimeout\(\(\)=>setOpen\(false\),welcomeDwellMs\(\)\);return\(\)=>clearTimeout\(t\);\},\[onScreen\]\);/,'one timer, cleared when covered');assert.match(card,/\(process\.env\.NODE_ENV!=='production'\|\|navigator\.webdriver===true\)[^\n]*__fi2WelcomeMs[^\n]*return WELCOME_BACK_SHOW_MS/,'players always dwell WELCOME_BACK_SHOW_MS; only dev builds or automated browsers (e2e against a production build) may hold the card');
  assert.doesNotMatch(card,/setInterval|requestAnimationFrame/,'no loop');
  assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\} held=\{stackCovered\}\/>/,'Town pauses the dwell while the HUD stack is covered');
  // Balanced copy: the daily-play line wraps into two equal lines.

@@ -3,6 +3,8 @@
 .card{gap:6px;padding:12px 20px 14px;max-width:min(360px,calc(100vw - 2 * var(--phone-gutter)));width:calc(100vw - 2 * var(--phone-gutter))}
 /* Balanced lines: "Walk, ride or fly for 30 seconds today / for a 30-coin bonus." reads as two equal lines, never a long line and
    an orphaned "bonus." (the max-width keeps it to two lines on a wide card too). */
+/* Hidden (not unmounted) while blocked, so the same node comes back (Oct 15 2026); the stack also hides [hidden], this covers outside it. */
+.card[hidden]{display:none}
 .card span{text-wrap:balance}
 .card .note{font-weight:600;font-size:13px;line-height:1.35;max-width:30ch;margin-inline:auto}
 

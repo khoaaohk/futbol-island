@@ -37,7 +37,10 @@ test('settings: About opens and goes back; no For grown-ups button in Settings (
 
   await expect(dialog.locator('[data-open-grownups]'), 'Settings has no For grown-ups button (user, Oct 1 2026)').toHaveCount(0);
   await dialog.getByRole('button', { name: /About us/ }).click();
-  await dialog.locator('[data-donation-gate]').click();
+  // Oct 9 2026: About now shares content with the title screen's For grown-ups sheet via components/landing/Donate.tsx
+  // (components/about/AboutGrownUps.tsx), whose trigger is a `data-track="sg:donate"` "Donate" button, not the old
+  // `data-donation-gate` button from the now-unused components/DonationLinks.tsx.
+  await dialog.getByRole('button', { name: 'Donate', exact: true }).click();
   const gate = page.locator('[data-parent-gate]').first();
   await expect(gate).toBeVisible({ timeout: 10_000 });
   const input = gate.locator('[data-parent-gate-answer]');
@@ -50,7 +53,7 @@ test('settings: About opens and goes back; no For grown-ups button in Settings (
   await input.fill(String(WORDS.indexOf(m![1]) * WORDS.indexOf(m![2])));
   await gate.getByRole('button', { name: 'Continue' }).click();
   await expect(gate).toHaveCount(0, { timeout: 10_000 });
-  await expect(dialog.locator('[data-donation-gate]')).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Donate', exact: true })).toHaveCount(0);
   expectNoErrors(issues, info);
 });
 
@@ -58,8 +61,12 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   const errors: string[] = [];
   page.on('pageerror', e => errors.push(e.message));
   await page.routeWebSocket(/webpack-hmr|_next\/.*hmr/, () => {});
-  await page.addInitScript(m => { sessionStorage.setItem('fi2-in-game', '1'); /* `/` = title screen first; start in the game */ if (sessionStorage.getItem('gap-seeded')) return; sessionStorage.setItem('gap-seeded', '1'); localStorage.clear(); for (const [k, v] of Object.entries(m)) localStorage.setItem(k, v as string); }, MUTED);
-  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.addInitScript(m => { if (sessionStorage.getItem('gap-seeded')) return; sessionStorage.setItem('gap-seeded', '1'); localStorage.clear(); for (const [k, v] of Object.entries(m)) localStorage.setItem(k, v as string); }, MUTED);
+  // Oct 9 2026 rootView rewrite (lib/rootView.ts): `/` always shows the title screen now; sessionStorage fi2-in-game is no
+  // longer read by isInGame() (only an in-memory `entered` flag, <html data-island-handoff>, or a `from`/`panel` query key
+  // are). A `from=` query key is what the game's own links use to land straight in the game (the same key tests/e2e/gap-helpers.ts
+  // bootAt uses as `?from=konbini`), so use it here too instead of the dead flag.
+  await page.goto('/?from=e2e-first-run', { waitUntil: 'domcontentloaded' });
   const welcome = page.locator('dialog[data-onboarding-step][open]');
   await expect(welcome).toBeVisible({ timeout: 150_000 });
   await expect(welcome).toHaveAttribute('data-onboarding-step', 'welcome');
@@ -74,12 +81,21 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   for (let i = 0; i < 8 && await welcome.isVisible(); i++) {
     seen.push((await welcome.getAttribute('data-onboarding-step'))!);
     const explore = welcome.getByRole('button', { name: 'Explore', exact: true });
+    const getCode = welcome.locator('[data-get-code]');
+    const next = welcome.getByRole('button', { name: 'Next', exact: true });
+    // Save codes (Oct 10 2026): the save step's "Get my code" is a lazy-loaded chunk (SaveCodeCreate, dynamicImport in
+    // IslandOnboarding.tsx), so right after Next moves onto it, the button can take longer to mount than the other steps'
+    // Next/Explore. Poll for whichever of the three shows instead of a single non-waiting snapshot, which could race the chunk.
+    for (let t = 0; t < 40; t++) {
+      if (await getCode.isVisible().catch(() => false) || await explore.count() || await next.isVisible().catch(() => false)) break;
+      await page.waitForTimeout(500);
+    }
     // Save codes (Oct 9 2026): with saving switched on, a new player must make a code before the island (no Next, no Skip).
-    if (await welcome.locator('[data-get-code]').isVisible().catch(() => false)) {
-      await expect(welcome.getByRole('button', { name: 'Next', exact: true }), 'no way past the save step without a code').toHaveCount(0);
+    if (await getCode.isVisible().catch(() => false)) {
+      await expect(next, 'no way past the save step without a code').toHaveCount(0);
       await expect(welcome.locator('header').getByRole('button', { name: 'Skip' })).toHaveCount(0);
-      await welcome.locator('[data-get-code]').click();
-      await welcome.locator('[data-saved-it]').click();
+      await getCode.click();
+      await welcome.locator('[data-saved-it]').click({ timeout: 30_000 }); // the code itself is made over the network
       await page.waitForTimeout(500);
       continue;
     }
@@ -88,7 +104,7 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
       await expect(back, 'Back on the last step').toBeVisible();
       expect((await back.boundingBox())!.x, 'Back bottom left').toBeLessThan((await explore.boundingBox())!.x);
       await explore.click(); explored = true;
-    } else await welcome.getByRole('button', { name: 'Next', exact: true }).click();
+    } else await next.click();
     await page.waitForTimeout(500);
   }
   expect(explored, 'the last step ends with Explore').toBe(true);

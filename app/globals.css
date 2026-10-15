@@ -671,6 +671,14 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
 /* The pieces' own entrance animations slid in from translateX(-50%); in the column they drop in from just above instead. */
 @keyframes hudStackIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:no-preference){.town-app .hud-stack.hud-stack.hud-stack>:is([data-hud-slot=toast],[data-job-intro],[data-job-done],[data-spot-it],[data-welcome-back]){animation-name:hudStackIn;animation-duration:.3s;animation-timing-function:ease}}
+/* Notes beside a docked job (Oct 15 2026, QA): on a landscape phone the running job's panel docks top-left, out of the column's
+   flow (IslandJobs.module.css, bug A1), so a centred note (the starter coins, a garden pick, fuel, costume / ride unlocks) landed on
+   its Stop job. While a job runs (Town sets data-job-running) the toast slot docks top-right instead: the mirror of the job dock,
+   clear of the screen centre (the player) and of the stick and action buttons below. */
+@media (orientation:landscape) and (max-height:500px){
+ .town-app .hud-stack.hud-stack.hud-stack[data-job-running]>[data-hud-slot=toast]{position:absolute;top:0;left:auto;right:calc(50% - 50vw + 12px + env(safe-area-inset-right,0px));
+  width:max-content;max-width:min(270px,calc(50vw - 120px));max-height:calc(100dvh - var(--island-hud-row-top,16px) - var(--island-hud-row-height,44px) - var(--island-hud-row-gap,10px) - 150px);overflow:auto}
+}
 /* One toast timing (docs/ui/UI_SPEC.md): every stack piece drops in over .3s ease, whatever its own module said. */
 /* Door / post prompts (Enter, Fish, Sell, Go) follow their door on screen but never rise into the stack: Town publishes the stack's
    bottom edge as --hud-floor (one ResizeObserver; it fires only when the column's size changes). */

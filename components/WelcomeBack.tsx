@@ -20,8 +20,12 @@ import {SAVE_CODE_KEY,SAVE_NUDGE_KEY} from '@/lib/saves/snapshot';
  * One timeout, no loop; the toast's one entrance animation only. The next lesson itself stays one tap away in Paths (Continue).
  */
 let decided:boolean|null=null,shown=false;
-/** Dev-only: e2e tests that interact with the card can hold it longer (window.__fi2WelcomeMs); production always uses 6 s. */
-const welcomeDwellMs=()=>{if(process.env.NODE_ENV!=='production'&&typeof window!=='undefined'){const v=(window as unknown as {__fi2WelcomeMs?:number}).__fi2WelcomeMs;if(typeof v==='number'&&v>0)return v;}return WELCOME_BACK_SHOW_MS;};
+/** Test-only: e2e tests that interact with the card can hold it longer (window.__fi2WelcomeMs). Honoured in a dev build, or in a
+ *  production build driven by automation (navigator.webdriver: Playwright against `next start`, FI_URL). Before Oct 15 2026 it was
+ *  dev-only, so against a production build the card left after 6 s while a test was still reaching for it ("element was detached
+ *  from the DOM" on desktop-chromium: part of the dwell is spent inside the boot helper). A player's browser never sets webdriver:
+ *  players always get WELCOME_BACK_SHOW_MS. */
+const welcomeDwellMs=()=>{if(typeof window!=='undefined'&&(process.env.NODE_ENV!=='production'||navigator.webdriver===true)){const v=(window as unknown as {__fi2WelcomeMs?:number}).__fi2WelcomeMs;if(typeof v==='number'&&v>0)return v;}return WELCOME_BACK_SHOW_MS;};
 export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:boolean}){
  const [due,setDue]=useState(false),[open,setOpen]=useState(false),[nudge,setNudge]=useState(false);
  const evidence=useQuestEvidence(),answers=useQuizCompletions(),graduations=useGraduations();
@@ -34,11 +38,13 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
   markWelcomeBackSeen(storage);setOpen(true);setDue(false);}},[due,blocked]);
  const onScreen=open&&!blocked&&!held;
  useEffect(()=>{if(!onScreen)return;const t=setTimeout(()=>setOpen(false),welcomeDwellMs());return()=>clearTimeout(t);},[onScreen]);
- if(!open||blocked)return null;
+ // Mounted once (Oct 15 2026): while blocked (a job, a lesson, a modal) the card stays in the DOM, `hidden` (display:none in the
+ // stack), and the same node comes back after, instead of unmounting and remounting a new button each time `blocked` flips.
+ if(!open)return null;
  let storage:Storage|null=null;try{storage=localStorage;}catch{}
  const target=suggestedNextStep(storage,new Set(evidence.steps),answers);
  const title=target.kind==='lesson'?`${FORMAT_PATHS.find(p=>p.format===target.format)?.title??target.format} · ${target.index+1}. ${target.lesson.name}`:null;
- return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back onClick={()=>setOpen(false)}>
+ return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} onClick={()=>setOpen(false)}>
   <b>Welcome back!</b>
   <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
   <span className={styles.note}>Walk, ride or fly for {DAILY_PLAY_SECONDS} seconds today for a {DAILY_PLAY_COINS}-coin bonus.</span>

@@ -90,4 +90,29 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  const land=css.slice(css.indexOf('@media (orientation:landscape) and (max-height:500px)'));
  assert(land.length>40,'landscape dock rule');assert.match(land,/\.card\[data-welcome-back\]\{position:absolute;top:0;left:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-left,0px\)\)/,'docked at the left edge');
  assert.match(land,/max-height:calc\(100dvh[^;]*- 150px\);overflow:auto/,'stops above the stick');}
+// Notes beside a docked job (Oct 15 2026, QA: the starter-coins note covered Stop job on a landscape phone). The landscape job
+// panel docks top-left out of the column's flow, so while a job runs the toast slot docks top-right: the two docks never meet,
+// and neither covers the screen centre (the player, ±40 px) at any landscape-phone width.
+{const town=fs.readFileSync(path.resolve(__dirname,'../components/Town.tsx'),'utf8'),css=fs.readFileSync(path.resolve(__dirname,'../app/globals.css'),'utf8'),
+  jobsCss=fs.readFileSync(path.resolve(__dirname,'../components/IslandJobs.module.css'),'utf8');
+ assert.match(town,/<div className="hud-stack" data-hud-stack ref=\{setHudStackEl\} hidden=\{stackCovered\} data-job-running=\{jobRunning\|\|undefined\}>/,'Town marks the column while a job runs');
+ const land=css.slice(css.indexOf('/* Notes beside a docked job'));
+ const rule=land.match(/@media \(orientation:landscape\) and \(max-height:500px\)\{\s*\.town-app \.hud-stack\.hud-stack\.hud-stack\[data-job-running\]>\[data-hud-slot=toast\]\{([^}]*)\}/);
+ assert(rule,'landscape: every toast-slot note docks while a job runs');
+ assert.match(rule[1],/position:absolute;top:0;left:auto;right:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-right,0px\)\)/,'docked at the right edge');
+ assert.match(rule[1],/max-width:min\(270px,calc\(50vw - 120px\)\)/,'never reaches the centre');assert.match(rule[1],/- 150px\);overflow:auto/,'stops above the action buttons');
+ assert.match(jobsCss,/>\.hud\[data-job-active\]\{position:absolute;top:0;left:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-left,0px\)\);\s*width:min\(270px,calc\(50vw - 120px\)\)/,'the job panel docks left at the same width');
+ // Selector specificity: the dock beats the column's generic (0,4,0) "position:relative;inset:auto" rule.
+ assert.match(css,/\.town-app \.hud-stack\.hud-stack\.hud-stack>\*\{position:relative;inset:auto/);
+ for(const vw of [568,667,736,844,852,932]){const w=Math.min(270,vw/2-120),job=[12,12+w],note=[vw-12-w,vw-12],centre=[vw/2-40,vw/2+40];
+  assert(job[1]<=note[0],`${vw}px: the job dock and the note dock do not overlap`);assert(job[1]<=centre[0]&&note[0]>=centre[1],`${vw}px: both docks clear the centre`);}
+ // Every note that can show while a job runs uses the toast slot (so the rule above covers it).
+ for(const c of ['IslandJobs','CostumeMilestoneToast','RideUnlockToast','FuelToast','BeachcombHud'])assert.match(fs.readFileSync(path.resolve(__dirname,`../components/${c}.tsx`),'utf8'),/data-hud-slot="toast"/,`${c}'s note is in the toast slot`);}
+// Welcome-back card is mounted once per showing (Oct 15 2026, QA: "element was detached from the DOM" on desktop-chromium): while
+// blocked it is hidden, never unmounted and remounted as a new node, and nothing keys it.
+{const card=fs.readFileSync(path.resolve(__dirname,'../components/WelcomeBack.tsx'),'utf8'),css=fs.readFileSync(path.resolve(__dirname,'../components/WelcomeBack.module.css'),'utf8');
+ assert.match(card,/if\(!open\)return null;/,'only a finished showing unmounts it');assert.doesNotMatch(card,/if\(!open\|\|blocked\)return null/,'blocked no longer unmounts it');
+ assert.match(card,/data-welcome-back hidden=\{blocked\}/,'blocked hides the same node');assert.doesNotMatch(card,/\bkey=/,'no key to re-mount it');
+ assert.match(css,/\.card\[hidden\]\{display:none\}/,'hidden also outside the stack');
+ assert.match(card,/navigator\.webdriver===true/,'e2e against a production build can hold the card; players cannot');}
 console.log('HUD_STACK_PASS');

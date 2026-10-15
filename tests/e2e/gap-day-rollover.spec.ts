@@ -25,7 +25,7 @@ async function installClockShift(page: Page) {
 }
 
 test('new day on load: breakfast fills the tank, the market allowance resets, welcome back shows once', async ({ page }, info) => {
-  await page.addInitScript(() => { (window as unknown as { __fi2WelcomeMs: number }).__fi2WelcomeMs = 60_000; }); // hold the card while the test interacts (dev-only hook)
+  await page.addInitScript(() => { (window as unknown as { __fi2WelcomeMs: number }).__fi2WelcomeMs = 60_000; }); // hold the card while the test interacts (dev builds and automated browsers; WelcomeBack.tsx welcomeDwellMs)
   const yesterday = playDay(-1);
   const issues = await bootAt(page, { ...SQUARE, storage: {
     'fi2-fuel-v1': fuelSave(10, yesterday),
@@ -44,7 +44,8 @@ test('new day on load: breakfast fills the tank, the market allowance resets, we
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('fi2-open-market-stand', { detail: { tab: 'fish' } })));
   const stand = page.locator('dialog[data-market-stand]');
   await expect(stand).toBeVisible();
-  await expect(stand.locator('[aria-label^="Full-price sales today"]')).toHaveAttribute('aria-label', /: 0 of 40 coins/);
+  // Oct 14 2026 economy rebalance (lib/economy.ts MARKET.allowance): 40 → 30.
+  await expect(stand.locator('[aria-label^="Full-price sales today"]')).toHaveAttribute('aria-label', /: 0 of 30 coins/);
   await stand.getByRole('button', { name: /done/i }).first().click();
 
   // Same day again: no second welcome-back card.

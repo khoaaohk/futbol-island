@@ -1487,7 +1487,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     <div className="town-scene" ref={host}/>
     {/* HUD stack (docs/ui/HUD_STACK.md, lib/ui/hudStack.ts): one column under the coins bar. Slot order is CSS (task → focus → toast →
         guide); other components portal in with <HudSlot>. Town's own pieces render here; its HUD tick decides which one has the focus. */}
-    <div className="hud-stack" data-hud-stack ref={setHudStackEl} hidden={stackCovered}>
+    {/* data-job-running: on a landscape phone the running job's panel docks top-left, out of the column's flow, so the column's notes
+        (toast slot) dock top-right while it runs instead of landing on its Stop job (globals.css, docs/ui/HUD_STACK.md). */}
+    <div className="hud-stack" data-hud-stack ref={setHudStackEl} hidden={stackCovered} data-job-running={jobRunning||undefined}>
     <div data-knockout-status data-hud-slot="task" className="knockout-status" role="status" hidden/>
     <button type="button" className="store-enter-prompt" data-hud-slot="task" data-truck-exit hidden onPointerDown={e=>travelControlDown(e,()=>{truckExitRequested.current=true;})} onClick={e=>travelControlClick(e,()=>{truckExitRequested.current=true;})}>Hop off</button>
     <button type="button" className="store-enter-prompt" data-hud-slot="task" data-truck-land hidden onPointerDown={e=>travelControlDown(e,landOnTruck)} onClick={e=>travelControlClick(e,landOnTruck)}>Land on truck</button>

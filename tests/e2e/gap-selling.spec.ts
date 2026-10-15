@@ -20,7 +20,8 @@ test("Rosa's stand: the Sell prompt opens the stand; sell all fish, then one ban
   const stand = page.locator('dialog[data-market-stand]');
   await expect(stand).toBeVisible();
   await expect(stand).toHaveAttribute('data-market-place', 'rosa');
-  await expect(stand.getByRole('tab')).toHaveCount(3);
+  // Oct 14 2026: beachcombing added a Beach tab (components/MarketStand.tsx TABS), so Rosa's stand now has 4 tabs, not 3.
+  await expect(stand.getByRole('tab')).toHaveCount(4);
   await expect(stand.getByRole('tab', { name: /Fish/ })).toHaveAttribute('aria-selected', 'true');
 
   const sellFish = stand.locator('[data-market-sell-all="fish"]');
@@ -37,12 +38,15 @@ test("Rosa's stand: the Sell prompt opens the stand; sell all fish, then one ban
 
   await stand.getByRole('tab', { name: /Produce/ }).click();
   const price = goodById('banana')!.price;
-  await stand.getByRole('button', { name: new RegExp(`Sell one Banana for ${price} coins`) }).click();
+  // The per-item button's name is lib/economy.ts perItemText, e.g. "1 coin each" (Oct 14 2026 ladder rework: "2 for 1 coin" for
+  // a part-coin price), not the old "for N coins".
+  await stand.getByRole('button', { name: new RegExp(`Sell one Banana \\(${price} coin${price === 1 ? '' : 's'} each\\)`) }).click();
   await expect(stand.locator('[data-market-balance] b')).toHaveText(String(before + fishCoins + extra + price));
   const m = await savedJson(page, 'fi2-market-v1');
   expect(m.basket).toEqual({ banana: 2 });
   expect(m.soldToday).toBe(fishCoins + price);
-  await expect(stand.locator('[aria-label^="Full-price sales today"]')).toHaveAttribute('aria-label', new RegExp(`${fishCoins + price} of 40`));
+  // Oct 14 2026 economy rebalance (lib/economy.ts MARKET.allowance): 40 → 30.
+  await expect(stand.locator('[aria-label^="Full-price sales today"]')).toHaveAttribute('aria-label', new RegExp(`${fishCoins + price} of 30`));
 
   await stand.getByRole('button', { name: /done/i }).first().click();
   await expect(stand).toBeHidden();

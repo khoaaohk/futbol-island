@@ -54,6 +54,9 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   await freezeHmr(page);
   await page.addInitScript(seed => {
     // `/` shows the title screen first (Oct 9 2026, lib/rootView.ts); these tests start in the game, as a tab that pressed Play.
+    // This sessionStorage write is kept for anything else that still reads it, but it is NOT what decides the view: isInGame()
+    // (lib/rootView.ts) only checks an in-memory `entered` flag, <html data-island-handoff>, or a `from`/`panel` query key — the
+    // `query` the real navigation below now always carries one of those.
     sessionStorage.setItem('fi2-in-game', '1');
     localStorage.setItem('fi2-welcome-v1', 'completed');
     // Save codes are required before play (Oct 9 2026). A device whose save a grown-up deleted is not asked again, which keeps
@@ -73,12 +76,18 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
       if (s.trim()) w.__deviceProbe.selections.push(s.slice(0, 80));
     });
   }, storage);
+  // Oct 9 2026 rootView rewrite (lib/rootView.ts): `/` always shows the title screen now; a `from` or `panel` query key is
+  // what lands straight in the game (the same keys the game's own links use). Add one when the caller's query does not
+  // already carry one, instead of landing on the title screen and timing out waiting for the HUD.
+  const qs = new URLSearchParams(query.replace(/^\?/, ''));
+  if (!qs.has('from') && !qs.has('panel')) qs.set('from', 'e2e');
+  const url = `/?${qs.toString()}`;
   // The shared dev server recompiles while other work edits files; a boot can hit a transient ChunkLoadError or stall.
   // Retry the boot (not the test) up to 3 times, and only keep errors from the successful boot.
   for (let attempt = 1; ; attempt++) {
     issues.errors.length = 0; issues.known.length = 0; issues.http.length = 0;
     try {
-      await page.goto(`/${query}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
       await page.waitForFunction(() => {
         if (document.body?.innerText.includes('ChunkLoadError')) throw new Error('ChunkLoadError (dev server recompiling)');
         return (window as unknown as { __fi2?: { games?: { entries?: unknown[] } } }).__fi2?.games?.entries?.length;

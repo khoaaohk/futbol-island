@@ -22,12 +22,17 @@ async function clearOfCentre(page: Page, loc: Locator, label: string) {
 }
 
 test('landscape phone: the welcome-back card never covers the screen centre or the running job panel', async ({ page }, info) => {
-  await page.addInitScript(() => { (window as unknown as { __fi2WelcomeMs: number }).__fi2WelcomeMs = 60_000; }); // hold the card while the test interacts (dev-only hook)
+  // Hold the card while the test interacts (window.__fi2WelcomeMs: honoured in dev builds and, since Oct 15 2026, in any automated
+  // browser, so this also holds against a production build via FI_URL). Count card mounts: it is mounted once (Oct 15 2026).
+  await page.addInitScript(() => { const w = window as unknown as { __fi2WelcomeMs: number; __wbMounts: number }; w.__fi2WelcomeMs = 60_000; w.__wbMounts = 0;
+    new MutationObserver(ms => { for (const m of ms) m.addedNodes.forEach(n => { if (n instanceof Element && (n.matches('[data-welcome-back]') || n.querySelector('[data-welcome-back]'))) w.__wbMounts++; }); })
+      .observe(document, { childList: true, subtree: true }); });
   const def = jobById('cone-setup')!;
   const issues = await bootAt(page, { x: def.board.x, z: def.board.z + 2.2, ride: 'walk', storage: { 'fi2-last-visit-day-v1': playDay(-1) } });
   const card = page.locator('[data-welcome-back]');
   await expect(card, 'welcome-back card on a new day').toBeVisible({ timeout: 20_000 });
   await page.waitForTimeout(500);
+  await card.evaluate(el => { (el as HTMLElement).dataset.e2eNode = 'first'; }); // the same node must come back after the job
   const docked = await clearOfCentre(page, card, 'welcome-back card');
   // Docked compactly under the Paths button, above the stick. No buttons inside (Oct 1 2026): the card itself is the tap target.
   expect(docked.x, 'docked at the left edge').toBeLessThan(40);
@@ -50,6 +55,20 @@ test('landscape phone: the welcome-back card never covers the screen centre or t
   const stopBox = (await box(stop))!;
   const topAtStop = await page.evaluate(({ x, y }) => (document.elementFromPoint(x, y) as HTMLElement | null)?.closest('button')?.getAttribute('aria-label') ?? (document.elementFromPoint(x, y) as HTMLElement | null)?.closest('button')?.textContent?.trim() ?? null, { x: stopBox.x + stopBox.width / 2, y: stopBox.y + stopBox.height / 2 });
   expect(topAtStop, 'nothing covers Stop job (the faded chip\'s × is labelled Stop job)').toMatch(/Stop job/);
+  // QA Oct 15 2026: the starter-coins note ("Welcome! +N coins", queued on a first boot and held while the Start job card was open)
+  // appeared just as the job started, centred over the docked panel's Stop job. While a job runs, notes dock top-right on a
+  // landscape phone. The starter note may already have timed out before the job (its 5.2 s runs while the offer shows), so a
+  // learning-coins note is also raised now: either way a note is on screen during the job.
+  await page.evaluate(() => window.dispatchEvent(new CustomEvent('fi2-learn-coins-earned', { detail: { amount: 12, reason: 'a test lesson' } })));
+  const note = page.locator('[data-island-toast]');
+  await expect(note, 'a coin note shows during the job').toContainText(/coins/, { timeout: 10_000 });
+  await page.waitForTimeout(400); // entrance animation
+  const noteBox = await clearOfCentre(page, note, 'starter-coins note');
+  expect(overlap(noteBox, (await box(panel))!), `note ${JSON.stringify(noteBox)} vs job panel`).toBe(0);
+  const stopNow = (await box(stop))!;
+  expect(overlap(noteBox, stopNow), 'note vs Stop job').toBe(0);
+  const topAtStop2 = await page.evaluate(({ x, y }) => (document.elementFromPoint(x, y) as HTMLElement | null)?.closest('button')?.getAttribute('aria-label') ?? (document.elementFromPoint(x, y) as HTMLElement | null)?.closest('button')?.textContent?.trim() ?? null, { x: stopNow.x + stopNow.width / 2, y: stopNow.y + stopNow.height / 2 });
+  expect(topAtStop2, 'Stop job is still the top element with the note on screen').toMatch(/Stop job/);
 
   // Stopping the job brings the card back, still docked clear of the centre.
   await stop.click();
@@ -57,6 +76,9 @@ test('landscape phone: the welcome-back card never covers the screen centre or t
   await expect(card, 'the card returns after the job').toBeVisible({ timeout: 10_000 });
   await page.waitForTimeout(400);
   await clearOfCentre(page, card, 'welcome-back card after the job');
+  // Mounted once: the card that comes back is the same node (hidden during the job, never unmounted and remounted).
+  expect(await card.getAttribute('data-e2e-node'), 'the same card node after the job').toBe('first');
+  expect(await page.evaluate(() => (window as unknown as { __wbMounts: number }).__wbMounts), 'one card mount').toBe(1);
   // A tap hides it.
   await card.click();
   await expect(card).toBeHidden();
