@@ -59,7 +59,7 @@
     ".next-agent-8283/types/**/*.ts",
     ".next-agent-8284/types/**/*.ts",
     ".next-agent-8286/types/**/*.ts",
-    ".next-agent-8287/types/**/*.ts"
+    ".next-agent-8287/types/**/*.ts",
   ],
   "exclude": [
     "node_modules"

@@ -131,7 +131,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p className={styles.eyebrow}>{introJob.role} · {introJob.place}</p>
    <h2 id="job-intro-title">{introJob.title}</h2>
    <p>{introJob.intro}</p>
-   <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} coins{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
+   <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
    <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} onClick={()=>start(introJob.id)}>Start job</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button></div>
   </section></HudSlot>}
   {active&&view.active&&(()=>{const a=view.active,count=a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,
@@ -156,7 +156,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   {payday&&(()=>{const def=jobById(payday.id)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
    <p className={styles.eyebrow}>Job done · {def.role}</p>
    <h2 id="job-done-title">{def.title}</h2>
-   <div className={styles.payout} aria-live="polite">{[0,1,2,3,4].map(i=><span key={i} className={styles.burst} style={{'--i':i} as React.CSSProperties} aria-hidden="true"/>)}<b data-job-paid={pay?pay.credited:undefined}>+{pay?pay.credited:'…'}</b><small>coins{pay?` · balance ${pay.balance}`:''}</small></div>
+   <div className={styles.payout} aria-live="polite">{[0,1,2,3,4].map(i=><span key={i} className={styles.burst} style={{'--i':i} as React.CSSProperties} aria-hidden="true"/>)}<b data-job-paid={pay?pay.credited:undefined}>+{pay?pay.credited:'…'}</b><small>{pay?.credited===1?'coin':'coins'}{pay?` · balance ${pay.balance}`:''}</small></div>
    <p className={styles.lesson}><b>Football lesson</b>{def.lesson}</p>
    {pay&&pay.goods.length>0&&<p className={styles.note} data-job-share>{def.kind==='garden'?'Gardener':'Farmer'}&apos;s share, now in your basket: {pay.goods.map(g=>`${g.count} ${(g.count>1?goodById(g.id)?.plural:goodById(g.id)?.name)??g.id}`).join(', ')}. {def.kind==='garden'?'Sell them at Rosa\u2019s market, or eat them for fuel.':'Sell them at the farm stand or at Rosa\u2019s market.'}{pay.goods.reduce((n,g)=>n+g.count,0)<pay.offered.reduce((n,g)=>n+g.count,0)?` Your basket was full, so the ${def.kind==='garden'?'garden':'farmer'} kept the rest.`:''}</p>}
    {pay&&<p className={styles.note}>{pay.bonus?`Includes a +${pay.bonus} first-time bonus. `:''}{pay.message}{pay.credited<pay.coins?' Your Training meter is full for today, so extra jobs pay less. Lessons and hidden balls still pay in full.':''}</p>}

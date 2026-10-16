@@ -6,11 +6,15 @@
  * Every run id is deterministic, and the wallet keeps max(paid) per id, so retries and double calls never pay twice.
  */
 import {jobShare,type ShareLine} from './harvestShare';
+import {trainingPay} from '../dailyMeter';
 import {JOB_BASE_PAY,STARTER_COINS,jobPayout,localDay,payMessage,readJobLedger,recordCompletion,splitCredit,writeJobLedger,type JobId,type JobLedger,type PayTier} from './jobEconomy';
 type Credit=(id:string,game:string,target:number,reason:string)=>Promise<number>;
 export type JobWalletPorts={creditRun:Credit;balance:()=>number;caps:Record<string,number>;now?:()=>number;read?:(now:number)=>JobLedger;write?:(update:(l:JobLedger)=>JobLedger,now:number)=>JobLedger;
  /** Puts a job's goods share into the market basket once per `key` (idempotent); returns what was actually added. */
- grantGoods?:(key:string,items:ShareLine[])=>ShareLine[]};
+ grantGoods?:(key:string,items:ShareLine[])=>ShareLine[];
+ /** Training-meter coins already paid today (lib/town/dailyMeter.ts): the intro card's "Pays N coins" then shows what the shift
+  *  will really pay once the meter is in its half or tip tier (QA Oct 16 2026: it showed full pay, then paid less). */
+ trainingToday?:()=>number};
 /** `goods`: produce added to the basket (Harvest day's farmer's share, lib/town/jobs/harvestShare.ts); `offered`: the share before
  *  a full basket cut it down. */
 export type JobPayResult={coins:number;credited:number;tier:PayTier;bonus:number;message:string;balance:number;goods:ShareLine[];offered:ShareLine[]};
@@ -40,5 +44,7 @@ export function createJobWallet(ports:JobWalletPorts){
   if(!empty)return 0;
   return credit('island-starter-coins',STARTER_COINS,'Welcome coins · Island jobs board');
  }
- return {payJob,grantStarter,credit,preview:(id:JobId)=>jobPayout(id,read(now())),source,basePay:(id:JobId)=>JOB_BASE_PAY[id]};
+ return {payJob,grantStarter,credit,preview:(id:JobId)=>{const p=jobPayout(id,read(now()));if(!ports.trainingToday)return p;
+  // The first-time bonus is its own unmetered run (payJob above); only the shift pay is metered.
+  return {...p,coins:trainingPay(ports.trainingToday(),p.coins-p.bonus)+p.bonus};},source,basePay:(id:JobId)=>JOB_BASE_PAY[id]};
 }

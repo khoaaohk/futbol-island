@@ -651,16 +651,16 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       wakeLoop();};
     /** Fly up (user, Oct 15 2026): the jetpack takes off straight out of the water. A splash and a few drips from the ring pool,
      *  the swim ends (the ball rolls back to the feet on the next landing), the flight's climb starts from the water line. */
-    const flyUp=()=>{if(!water.inWater||rideRef.current!=='walk'||!fuelAllowsRide('jetpack'))return false;
+    const flyUp=()=>{if(!water.inWater||rideRef.current!=='walk'||!fuelStore.canUse('jetpack'))return false;// the silent check: the land fuel notice ("walk to a Konbini") hid SWIM_RIDE_NOTE from a swimmer (QA Oct 16 2026)
       if(!water.takeOff())return false;const x=location.x,z=location.z;ballEffects.splashDown(x,WATER_LEVEL,z,.6,reduced);
       playCues(SPLASH_CUES.feet);/* no land thud in the sea (Oct 15 2026) */rideBeforeWater=null;
       rooftop.reset(x,z,water.state.rootY);/* the climb begins from the water line (the ride change below reads this height) */
       rideSwapClickGuard.current=performance.now()+700;pendingRide.current=null;cancelLanding.current=true;rideRef.current='jetpack';setRideMode('jetpack');waterStore.set({inWater:false,swimming:false});wakeLoop();return true;};
     waterActions.press=(id,phase)=>{if(!water.inWater)return;
       // Riding a manta / the whale shark (water P1b): the one action is Let go; the ride slot only answers with a hint.
-      if(animalRides.riding){if(phase!=='tap')return;if(id==='letgo'){rideEnded(animalRides.letGo('off'));tapHaptic();sound.ui('click');}else if(id==='swimride')jobNoteRef.current(RIDING_NOTE);return;}
+      if(animalRides.riding){if(phase!=='tap')return;if(id==='letgo'){rideEnded(animalRides.letGo('off'));tapHaptic();sound.ui('click');}else if(id==='swimride')fuelStore.say('Hanging on',RIDING_NOTE);return;}
       // The ride switcher (user, Oct 15 2026: swimming and the jetpack only): a tap flies up when fuel allows, else the hint.
-      if(id==='swimride'){if(phase!=='tap')return;if(flyUp()){tapHaptic();sound.ui('click');}else jobNoteRef.current(SWIM_RIDE_NOTE);return;}
+      if(id==='swimride'){if(phase!=='tap')return;if(flyUp()){tapHaptic();sound.ui('click');}else fuelStore.say('No fuel',SWIM_RIDE_NOTE);return;}
       if(id!=='letgo'&&water.press(id,phase)){if(phase!=='up'){tapHaptic();sound.ui('click');}wakeLoop();}};
     /** Space / 1 = Sprint (hold), Q / J / 2 = Float (hold: the lazy circle), E / R / 3 = the ride switcher while in the sea. */
     const waterKey=(e:KeyboardEvent,down:boolean)=>{if(!water.inWater||fieldMenu.current||lessonRef.current)return false;const id=waterKeyAction(e.code,e.key);if(!id)return false;e.preventDefault();

@@ -309,6 +309,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const inPlay=view==='play'&&!replaying;
  /** Progress toward the taught move, always on screen (the brief card is gone once play starts). */
  const progressHud=passProgress(hud.passes,level?.require.minPasses??0);
+ // Escape like the other machines' cards: the puzzle map leaves for the arcade, a brief goes back to the map. Not while drawing/playing,
+ // and not under the board dialogs (they keep their own keys).
+ const exitRef=useRef(onExit);exitRef.current=onExit;
+ useEffect(()=>{if(view!=='levels'&&view!=='brief')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||e.defaultPrevented||boardsOpen||boardScore!==null||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();if(view==='brief')setView('levels');else{cancelDrawing.current();exitRef.current();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[view,boardsOpen,boardScore]);
 
  return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>

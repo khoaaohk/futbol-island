@@ -54,6 +54,7 @@ export default function CoffeePage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px" }}>
           {TIERS.map((t) => (
             <Link
+              prefetch={false /* a GET of /coffee/checkout creates a Stripe Checkout Session: never prefetch it (QA, Oct 16 2026) */}
               key={t.cents}
               href={`/coffee/checkout?amount=${t.cents}`}
               target="_blank"

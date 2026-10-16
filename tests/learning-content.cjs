@@ -30,7 +30,10 @@ assert(/loftPeak\(teaching\.lesson\.steps\[visualStep\]\?\.ballPathType/.test(fs
 // A wrong answer can go back to the lesson moment it came from (quiz and warm-up).
 {const fl=fs.readFileSync('components/FieldLearning.tsx','utf8'),qr=fs.readFileSync('components/QuizReplay.tsx','utf8'),lr=fs.readFileSync('components/LearningReview.tsx','utf8');
  assert(/onRewatch=\{watchThatPart\}/.test(fl)&&/Back to the question/.test(fl)&&/s\.answer!==q\.correct&&onRewatch/.test(qr)&&/Watch that part/.test(qr),'quiz: Watch that part on a wrong answer');
- assert(/openPathLesson\(item\.key,q\.step\)/.test(lr),'warm-up: a missed question opens its lesson moment');}
+ assert(/openPathLesson\(item\.key,q\.step\)/.test(lr),'warm-up: a missed question opens its lesson moment');
+ // QA Oct 16 2026: a pitch-tap question also offers its choices as real buttons (Tab / screen reader), lettered like the transcript.
+ assert(/className=\{styles\.pitchChoices\} role="group" aria-label="Answer choices">\{q\.options\.map\(\(option,i\)=><button[^>]*onClick=\{\(\)=>choose\(i\)\}>\{`\$\{String\.fromCharCode\(65\+i\)\} · \$\{option\}`\}/.test(fl),'quiz: pitch-tap choices are keyboard buttons');
+ assert(/\.pitchChoices:focus-within\{position:static/.test(fs.readFileSync('components/FieldLearning.module.css','utf8')),'quiz: pitch-tap choices show when focused');}
 for(const fmt of FORMATS){
  const catalog=JSON.parse(fs.readFileSync(`public/lessons/${fmt}.json`,'utf8'));const byId=new Map(catalog.map(l=>[l.id,l]));
  const pathLessons=paths.filter(p=>p.format===fmt).flatMap(p=>[...p.chapters.flatMap(c=>c.lessons),...p.depth]);

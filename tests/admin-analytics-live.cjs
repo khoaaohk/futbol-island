@@ -82,7 +82,7 @@ await ok('ingest: the marks reach the store on a start (memory store), unknown s
 await ok('rootView: ?from=flyer shows the title screen; the return trips still open the game',()=>{
  const R=load('lib/rootView.ts');
  assert.equal(R.isInGame('?from=flyer'),false);assert.equal(R.isInGame('?from=arcade'),true);assert.equal(R.isInGame('?panel=about'),true);
- assert.deepEqual([...R.GAME_FROM],[...T.RETURN_FROM],'one list of return trips');
+ assert.deepEqual([...R.GAME_FROM].filter(x=>x!=='e2e'),[...T.RETURN_FROM],'one list of return trips (plus the Playwright suite\'s ?from=e2e, which opens the game but is no return trip)');assert(R.isInGame('?from=e2e'),'?from=e2e opens the game');
  assert.match(read('next.config.mjs'),new RegExp(`value: '\\^\\(${T.RETURN_FROM.join('\\|')}\\)\\$'`),'= the next.config.mjs rewrite (unknown values fall through to the start page)');
 });
 

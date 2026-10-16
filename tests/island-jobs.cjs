@@ -638,3 +638,17 @@ async function auditRegressions(){
 {const fs=require('node:fs'),assert=require('node:assert/strict');const src=fs.readFileSync('components/IslandJobs.tsx','utf8');
  assert(src.split('\n').some(l=>{const i=l.indexOf('setPayday({id:def.id');return i>=0&&!l.slice(0,i).includes('//');}),'payday card is set in live code, not inside a comment');
  console.log('island jobs: payday card wired');}
+// Regression (QA Oct 16 2026): the intro card's "Pays N coins" (jobWallet.preview) ignored the Training meter, so late in a day
+// it promised full pay and the payday card then paid the metered amount. With the trainingToday port the preview is what payJob credits.
+(async()=>{const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),assert=require('node:assert/strict');
+ require.extensions['.ts']=require.extensions['.ts']||((m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:1,target:7}}).outputText,f));
+ const W=require(path.resolve(__dirname,'../lib/town/jobs/jobWallet.ts')),E=require(path.resolve(__dirname,'../lib/town/jobs/jobEconomy.ts')),M=require(path.resolve(__dirname,'../lib/town/dailyMeter.ts'));
+ let ledger=E.emptyJobLedger(E.localDay()),training=0;
+ const mk=t=>W.createJobWallet({creditRun:async(id,g,amt)=>{if(/^island-job:/.test(id)){const p=M.trainingPay(training,amt);training+=p;return p;}return amt;},balance:()=>0,caps:{island:20},
+  read:()=>ledger,write:(u)=>(ledger=u(ledger)),...(t?{trainingToday:()=>training}:{})});
+ const metered=mk(true),plain=mk(false);
+ for(const [t,label] of [[0,'fresh day'],[38,'crossing the full line'],[60,'half tier'],[90,'tip tier']]){training=t;ledger=E.emptyJobLedger(E.localDay());
+  const shown=metered.preview('leaf-rake').coins,legacy=plain.preview('leaf-rake').coins,paid=(await metered.payJob('leaf-rake','Rake the leaves',30)).credited;
+  assert.equal(shown,paid,`preview = credited (${label}): shown ${shown}, paid ${paid}`);
+  if(t===0)assert.equal(legacy,shown,'no meter used yet: same as before');}
+ console.log('island jobs: intro pay preview follows the Training meter');})().catch(e=>{console.error(e);process.exit(1);});

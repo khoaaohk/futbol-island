@@ -121,7 +121,10 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   if(!view.active||book||stand)return;
   const castable=()=>phaseRef.current==='ready'||phaseRef.current==='caught';
   const ndc=(e:PointerEvent)=>{const r=(e.target as HTMLCanvasElement).getBoundingClientRect();return {kind:'screen' as const,x:(e.clientX-r.left)/r.width*2-1,y:1-(e.clientY-r.top)/r.height*2};};
-  const key=(e:KeyboardEvent)=>{const t=e.target;if(t instanceof Element&&t.closest('input,textarea,select,dialog,button:not([data-fish-reel])'))return;
+  const key=(e:KeyboardEvent)=>{const t=e.target;if(t instanceof Element&&t.closest('input,textarea,select,dialog'))return;
+   // Escape is Back even with a HUD button focused (the Fishbook button gets focus back when the book closes; QA 16 Oct 2026).
+   if(e.key==='Escape'){if(e.type==='keydown'){e.stopImmediatePropagation();back.current?.click();}return;}
+   if(t instanceof Element&&t.closest('button:not([data-fish-reel])'))return;
    const k=keyAim.current;
    // The fight: hold Space / Enter for a steady full-rate spin. The hook's keydown keeps spinning until the key comes up.
    if(fightRef.current&&(e.key===' '||e.key==='Enter')){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)keySpin(e.type==='keydown');return;}
@@ -133,8 +136,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
      if(e.type==='keydown'&&!e.repeat){k.space=performance.now();fishingSession.aim({kind:'polar',u:k.u,v:k.v,charge:k.space});}
      else if(e.type==='keyup'&&k.space){const held=performance.now()-k.space;k.space=0;if(held<200){fishingSession.aim(null);fishingSession.tap();}else fishingSession.castAimed();}
      return;}
-    if(e.type==='keydown'&&!e.repeat){const hooking=phaseRef.current==='bite';fishingSession.tap();if(hooking&&fishingSession.getView().fight)keySpin(true);}}
-   else if(e.key==='Escape'&&e.type==='keydown'){e.stopImmediatePropagation();back.current?.click();}};
+    if(e.type==='keydown'&&!e.repeat){const hooking=phaseRef.current==='bite';fishingSession.tap();if(hooking&&fishingSession.getView().fight)keySpin(true);}}};
   let down:{x:number;y:number;aim:boolean}|null=null;
   const onCanvas=(e:PointerEvent)=>e.target instanceof HTMLCanvasElement&&!!e.target.closest('.town-app');
   const pdown=(e:PointerEvent)=>{down=onCanvas(e)?{x:e.clientX,y:e.clientY,aim:castable()&&e.button<=0}:null;if(down?.aim)fishingSession.aim(ndc(e));};
@@ -206,7 +208,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record)&&<p className={styles.stamps}>{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}</p>}
    <p className={styles.catchTop}><b>{fish.name}</b>{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    {legend?<p className={styles.catchMeta} data-rarity="legendary" data-fish-legend><RarityStars rarity="legendary" className={styles.stars}/> {legend.title} · caught once and released</p>
-   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · {fishSellValue(fish)} coins{view.caught.inBasket?'':' · basket full'}</p>}
+   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · {fishSellValue(fish)} coin{fishSellValue(fish)===1?'':'s'}{view.caught.inBasket?'':' · basket full'}</p>}
    {size&&<p className={styles.catchSize} data-fish-size data-unit={size.unit}><b>{view.caught.size} cm</b>: {size.text}</p>}
    <p className={styles.catchClub}><span>Real football fact</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
    <p className={styles.catchFact}>{fish.club.fact}</p>
@@ -220,8 +222,8 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {/* B2: the white flash at the top of the leap (one-shot CSS, after the leap's rise; none with reduced motion). */}
    {view.phase==='caught'&&catchKey&&<div className={styles.leapFlash} key={catchKey} aria-hidden="true"/>}
    {tutorial&&<FishingTutorial phase={view.phase} onDone={finishFishingTutorial}/>}
-   {/* Content toast (a request finished, a reward, a legend's clue or release): after the catch card, above the reel. */}
-   <FishingCatchToast cardUp={view.phase==='caught'}/>
+   {/* Content toast (a request finished, a reward, a legend's clue or release): after the catch card (or once it is dismissed), above the reel. */}
+   <FishingCatchToast cardUp={view.phase==='caught'&&dismissed!==catchKey}/>
    <div className={styles.controls}>
     <button type="button" className={`${styles.action} ${styles.book}`} aria-label="Fishbook" title="Fishbook" onClick={()=>{countFishbookOpen();setLoaded(l=>({...l,book:true}));setBook(true);}}><Icon name="book" size={28}/></button>
     <button type="button" ref={reelEl} className={styles.reel} data-fish-reel data-phase={view.phase} data-fish-fight={fighting?'':undefined} data-strain={fighting&&view.strain||undefined} data-run={fighting&&view.run||undefined} data-warn={view.warn||undefined}

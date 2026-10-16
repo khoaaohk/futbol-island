@@ -18,7 +18,7 @@ export const IN_GAME_KEY='fi2-in-game';
 export const GAME_QUERY_KEYS=['from','panel'] as const;
 /** Oct 15 2026: only the game's own return trips open the game with `?from=`; any other value (a printed link's tag, e.g. the QR
  *  card's ?from=flyer, read once by the visit counter) shows the title screen like a bare `/`. Same list as next.config.mjs. */
-export const GAME_FROM=['arcade','konbini','museum','shop'] as const;
+export const GAME_FROM=['arcade','konbini','museum','shop','e2e'] as const;// 'e2e' = the Playwright suite's straight-into-the-game link (tests/e2e/helpers.ts), Oct 16 2026
 const gameQuery=(q:URLSearchParams)=>q.has('panel')||(GAME_FROM as readonly string[]).includes(q.get('from')||'');
 export type RootView='landing'|'game';
 

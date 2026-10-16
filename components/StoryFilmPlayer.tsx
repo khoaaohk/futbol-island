@@ -14,6 +14,8 @@ type Status='ready'|'playing'|'paused'|'finished';
 export type StoryOrigin={x:number;y:number;size:number;height:number;radius:string;color:string};
 type Touch={x:number;y:number;at:number;seed:number};
 const TOUCH_LIFE=.8,MAX_TOUCHES=6;
+/** Reduced motion draws one still per chapter: the clock is checked ten times a second (dt stays under the 0.15 s cap). */
+const REDUCED_POLL_MS=100;
 /** The riso story player: one canvas, one Audio, 24 fps cap, DPR ≤ 1.5, sleeps when paused / hidden / offscreen. */
 export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story:RisoStory;onClose:()=>void;onComplete?:()=>void;origin?:StoryOrigin}){
  const completion=useRef(onComplete),reported=useRef(false);completion.current=onComplete;
@@ -42,7 +44,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   // a seek must clear the outgoing headline instantly (no drift-off), so scripted captures and scrubbing never show a stale word
   const cutHeadline=()=>{shownHeadline=null;cutNext=true;};
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let frame=0,last=0,lastDraw=0,lastUI=0,disposed=false,width=1,height=1,dpr=1,drawnChapter=-1,lastPaintTime=-1,visible=true,scripted=false,introTimer:ReturnType<typeof setTimeout>|undefined,burstUntil=0,lastMove=0;
+  let frame=0,burstFrame=0,wake:ReturnType<typeof setTimeout>|undefined,last=0,lastDraw=0,lastUI=0,disposed=false,width=1,height=1,dpr=1,drawnChapter=-1,lastPaintTime=-1,visible=true,scripted=false,introTimer:ReturnType<typeof setTimeout>|undefined,burstUntil=0,lastMove=0;
   const tray={bottom:0,right:0},touches:Touch[]=[];
   const seconds=(i:number)=>chapterSeconds(story,i);
   // chapters mode: the element may already hold the NEXT chapter's clip during the passage tail (see tick), which is not this chapter's clock
@@ -64,7 +66,7 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
    if(f.captionChapter!==shownCaption){shownCaption=f.captionChapter;setCaption(f.captionChapter);}
    lastPaintTime=time;drawnChapter=f.chapter;el.dataset.time=time.toFixed(2);el.dataset.draws=String(Number(el.dataset.draws??0)+1);
   };
-  const stopFrame=()=>{if(frame)cancelAnimationFrame(frame);frame=0;last=0;};
+  const stopFrame=()=>{if(frame)cancelAnimationFrame(frame);if(burstFrame)cancelAnimationFrame(burstFrame);clearTimeout(wake);frame=burstFrame=0;wake=undefined;last=0;};
   const failAudio=()=>{s.audioFailed=true;setAudioFailed(true);};media.addEventListener('error',failAudio);
   const loadAudio=(index:number)=>{s.audioFailed=false;setAudioFailed(false);loadedFor=index;const source=track?(story.audio.mode==='track'?story.audio.src:undefined):story.chapters[index].audio;if(source){if(sourceKey!==source||media.error){sourceKey=source;media.src=track?source:narrationBuffer.take(source);media.load();}else{media.currentTime=0;}}else{sourceKey='';media.removeAttribute('src');media.load();failAudio();}};
   const startAudio=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing'||media.ended||scripted)return;if(!track&&(!story.chapters[s.chapter].audio||loadedFor!==s.chapter))return;void media.play().then(()=>{if(disposed||!islandNarrationAllowed())media.pause();}).catch(error=>{if(disposed||error?.name==='AbortError')return;if(error?.name==='NotAllowedError'){pause();}else failAudio();});};
@@ -87,9 +89,12 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
     }}
    if((!reduced&&now-lastDraw>=1000/24-1&&(s.time!==lastPaintTime||touches.some(t=>lastDraw<t.at+TOUCH_LIFE*1000)))||drawnChapter!==(track?resolveFrame(story,s.time).chapter:s.chapter)){paint(now);lastDraw=now;}
    if(now-lastUI>=250){setClock(s.time);lastUI=now;}
-   frame=requestAnimationFrame(tick);
+   // Sleep on a timer until the next drawn frame is due (reduced motion: a slow poll for the chapter stills) instead of waking at
+   // display rate (60–120/s) to draw 24, as CardFilmPlayer does (QA Oct 16 2026: 60 rAF/s for 20 draws/s).
+   const wait=reduced?REDUCED_POLL_MS:lastDraw+1000/24-1-performance.now();
+   if(wait>4)wake=setTimeout(()=>{wake=undefined;if(!disposed&&!frame)frame=requestAnimationFrame(tick);},wait);else frame=requestAnimationFrame(tick);
   };
-  const resume=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing')return;last=0;startAudio();if(!frame)frame=requestAnimationFrame(tick);};
+  const resume=()=>{if(disposed||!islandNarrationAllowed()||document.hidden||!visible||s.status!=='playing')return;last=0;startAudio();if(burstFrame){cancelAnimationFrame(burstFrame);burstFrame=0;}if(!frame&&!wake)frame=requestAnimationFrame(tick);};
   const play=()=>{if(disposed)return;if(document.hidden||!visible){setPhase('paused');return;}if(s.status==='finished'){s.time=0;s.chapter=0;setChapter(0);setClock(0);if(track)media.currentTime=0;loadAudio(0);}setPhase('playing');resume();};
   const seek=(index:number)=>{stopFrame();media.pause();cutHeadline();s.chapter=index;s.time=starts[index];setChapter(index);setClock(Math.floor(starts[index]));loadAudio(index);paint();if(s.status==='finished')setPhase('paused');if(s.status==='playing')resume();};
   const seekTime=(time:number)=>{const at=Math.max(0,Math.min(duration,time));cutHeadline();s.time=at;if(media.getAttribute('src')&&!s.audioFailed){try{media.currentTime=at;}catch{}}setClock(at);if(s.status==='finished')setPhase('paused');paint();};
@@ -107,9 +112,9 @@ export default function StoryFilmPlayer({story,onClose,onComplete,origin}:{story
   const hide=()=>{if(document.hidden)pause();};document.addEventListener('visibilitychange',hide);
   const keys=(e:KeyboardEvent)=>{if(e.target instanceof HTMLElement&&e.target.closest('button,input,a,textarea,select'))return;if(e.code==='Space'){e.preventDefault();s.status==='playing'?pause():play();}};node.addEventListener('keydown',keys);
   // Micro-interactions: touches feed story.touch; while paused a touch wakes a bounded 0.8 s burst, then the canvas sleeps again.
-  const burst=(now:number)=>{frame=0;if(disposed||s.status==='playing')return;if(now>burstUntil){paint(now);return;}paint(now);frame=requestAnimationFrame(burst);};
+  const burst=(now:number)=>{burstFrame=0;if(disposed||s.status==='playing')return;if(now>burstUntil){paint(now);return;}paint(now);burstFrame=requestAnimationFrame(burst);};
   const addTouch=(e:PointerEvent)=>{if(!story.touch)return;const rect=el.getBoundingClientRect(),now=performance.now();touches.push({x:e.clientX-rect.left,y:e.clientY-rect.top,at:now,seed:Math.floor(now)%997});while(touches.length>MAX_TOUCHES)touches.shift();for(let i=touches.length-1;i>=0;i--)if(now-touches[i].at>TOUCH_LIFE*1000)touches.splice(i,1);
-   if(s.status!=='playing'){burstUntil=reduced?now:now+TOUCH_LIFE*1000;if(!frame)frame=requestAnimationFrame(burst);}};
+   if(s.status!=='playing'){burstUntil=reduced?now:now+TOUCH_LIFE*1000;if(!burstFrame)burstFrame=requestAnimationFrame(burst);}};
   const down=(e:PointerEvent)=>{if(e.button!==0&&e.pointerType==='mouse')return;try{el.setPointerCapture(e.pointerId);}catch{}addTouch(e);};
   const move=(e:PointerEvent)=>{if(!(e.buttons&1)&&e.pointerType==='mouse')return;const now=performance.now();if(now-lastMove<70)return;lastMove=now;addTouch(e);};
   el.addEventListener('pointerdown',down,{passive:true});el.addEventListener('pointermove',move,{passive:true});

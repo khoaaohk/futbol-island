@@ -279,3 +279,16 @@ console.log(`coaches-board: ${groups} groups passed`);
 {const src=require('fs').readFileSync(require('path').join(__dirname,'../components/coaches-board/TacticsBoard.tsx'),'utf8');
  require('assert').match(src,/const sh=formationsFor\(f\)\[0\];return sh\?loadFormation\(setFormat\(p,f\),sh\.id,'both'\)/,'format change loads the format\'s first shape for both teams');
  console.log('PASS format change loads a lineup');}
+
+// QA Oct 16 2026: a mouse click on a step number did nothing on desktop. The track took pointer capture on pointerdown, so the click
+// was retargeted to the track and the dot's onClick never ran. Capture now starts only once a drag moves (and ends on any release).
+{const src=require('fs').readFileSync(require('path').join(__dirname,'../components/coaches-board/TacticsBoard.tsx'),'utf8');
+ const scrub=src.slice(src.indexOf(' const scrub=(e:RPE<HTMLDivElement>)=>{'),src.indexOf('\n };\n',src.indexOf(' const scrub=(e:RPE<HTMLDivElement>)=>{')));
+ const assert=require('assert');
+ assert.ok(scrub.length>200,'found the scrub handler');
+ const down=scrub.slice(0,scrub.indexOf('const move='));
+ assert.ok(!/setPointerCapture/.test(down),'no pointer capture on pointerdown (it would swallow the step number\'s click)');
+ assert.match(scrub,/if\(!moving\)\{moving=true;try\{el\.setPointerCapture\(ev\.pointerId\);\}catch\{\}/,'capture starts with the drag');
+ assert.match(scrub,/window\.addEventListener\('pointerup',up\)/,'a release anywhere ends the gesture');
+ assert.match(scrub,/ev\.pointerId!==e\.pointerId/,'other pointers are ignored');
+ console.log('PASS step numbers take a mouse click (scrub capture starts on drag)');}

@@ -138,10 +138,10 @@ export const FUEL_COPY={
 } as const;
 
 // ---- Store core (ports, so the tests drive persistence and the clock; browser instance in fuelStore.ts) -----------------------
-export type FuelNotice={id:number;kind:'low'|'empty'|'blocked';title:string;detail:string};
+export type FuelNotice={id:number;kind:'low'|'empty'|'blocked'|'note';title:string;detail:string};
 /** Is this note still true at `fuel`? A low note stops applying above FUEL_LOW (on the bar), an empty or ride-refused note once
  *  the tank has at least FUEL_RIDE_MIN (bug A3: "Fuel running low" used to show after eating to a full tank). */
-export function noticeApplies(n:Pick<FuelNotice,'kind'>,fuel:number){return n.kind==='low'?fuelShown(fuel)<=FUEL_LOW:fuel<FUEL_RIDE_MIN;}
+export function noticeApplies(n:Pick<FuelNotice,'kind'>,fuel:number){return n.kind==='note'?true:n.kind==='low'?fuelShown(fuel)<=FUEL_LOW:fuel<FUEL_RIDE_MIN;}
 export type FuelPorts={read:()=>unknown;write:(s:FuelState)=>void;now:()=>number;day:(now:number)=>string};
 export function createFuelStore(ports:FuelPorts){
  let state:FuelState|null=null,notice:FuelNotice|null=null,seq=0;const listeners=new Set<()=>void>();
@@ -177,6 +177,9 @@ export function createFuelStore(ports:FuelPorts){
   eat(amount:number):number{const before=current(),after=refill(before,amount),gained=after.fuel-before.fuel;if(gained>0){save(after);dropStale();emit();}return Math.round(gained);},
   /** A ride or the jetpack was refused for lack of fuel: one gentle note. */
   blocked(mode:FuelMode){note('blocked',FUEL_COPY.blocked(FUEL_LABEL[mode]));emit();},
+  /** A one-off note through the same HUD toast lane, for moments outside a job (QA Oct 16 2026: the in-water ride notes went
+   *  through the job-note channel, which drops notes when no job runs). Always applies; shown once. */
+  say(title:string,detail:string){note('note',{title,detail});emit();},
   canUse:(mode:FuelMode)=>canUse(mode,current().fuel),
   /** Drop the cached state (a storage event from another tab). */
   refresh(){state=null;current();dropStale();emit();},

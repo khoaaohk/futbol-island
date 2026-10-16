@@ -376,14 +376,16 @@ export default function TacticsBoard({onBack}:{onBack?:()=>void;onProgress?:()=>
  const scrubbed=useRef(false);
  /** Dragging along the track scrubs through the play; a tap on a step number goes to that step (its click). */
  const scrub=(e:RPE<HTMLDivElement>)=>{
-  if(n<2||e.button>0)return;const el=e.currentTarget,r=el.getBoundingClientRect(),x0=e.clientX;el.setPointerCapture(e.pointerId);
+  if(n<2||e.button>0)return;const el=e.currentTarget,r=el.getBoundingClientRect(),x0=e.clientX;
+  // Capture only once the drag starts: a capture taken on pointerdown retargets the mouse click to the track, so a click on a
+  // step number did nothing on desktop (QA Oct 16 2026). The listeners sit on window so a release anywhere still ends the gesture.
   const onDot=(e.target as HTMLElement).closest('[data-cb^="step-"]');let moving=false;scrubbed.current=false;
   const at=(x:number)=>Math.max(0,Math.min(n-1,(x-r.left)/r.width*(n-1)));let t=at(x0);
   const show=()=>{stage.seek(t);if(knob.current)knob.current.style.transform=`translateX(${t/(n-1)*100}%)`;};
-  const move=(ev:PointerEvent)=>{if(!moving&&Math.abs(ev.clientX-x0)<5)return;if(!moving){moving=true;if(playing)setPlaying(false);setStepMenu(false);}t=at(ev.clientX);show();};
-  const up=()=>{el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);
+  const move=(ev:PointerEvent)=>{if(ev.pointerId!==e.pointerId||!moving&&Math.abs(ev.clientX-x0)<5)return;if(!moving){moving=true;try{el.setPointerCapture(ev.pointerId);}catch{}if(playing)setPlaying(false);setStepMenu(false);}t=at(ev.clientX);show();};
+  const up=(ev:PointerEvent)=>{if(ev.pointerId!==e.pointerId)return;window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);window.removeEventListener('pointercancel',up);
    if(moving){scrubbed.current=true;stopPlaying(Math.round(t));setAnnounce(`Step ${Math.round(t)+1} of ${n}`);}else if(!onDot)goStep(Math.round(t));};
-  el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);window.addEventListener('pointercancel',up);
  };
 
  // ── library ──
@@ -619,7 +621,7 @@ export default function TacticsBoard({onBack}:{onBack?:()=>void;onProgress?:()=>
   {fitChip}
   {timeline}
   {dock&&<nav className={s.dock} aria-label="Tools"><div className={s.dockStack} role="toolbar" aria-label="Board tools">{toolBtns}
-   {railBtn({id:'more',label:'More: plays, shapes, playback, share',short:'More',icon:'more',pressed:!!sheet,expanded:!!sheet,on:()=>setSheet(x=>x?null:'menu')})}</div></nav>}
+   {railBtn({id:'more',label:'More: shapes, playback, share',short:'More',icon:'more',pressed:!!sheet,expanded:!!sheet,on:()=>setSheet(x=>x?null:'menu')})}</div></nav>}
   {sheetEl}
   <div ref={ghostEl} className={s.dragGhost} hidden aria-hidden="true"><span className={s.chipFace}/></div>
   {toast&&<div className={s.toast} role="status">{toast}</div>}

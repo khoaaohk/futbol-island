@@ -477,7 +477,7 @@ export function createStrikerMatch(){
       else if(completed&&p.team===0&&state.queuedPass>0){state.queuedPass=0;const perfect=state.queuedPerfect;state.queuedPerfect=false;const returnTo=Math.hypot(state.queuedX,state.queuedZ)<.12?passer:-1;pass(p,state.queuedX,state.queuedZ,state.queuedThrough,returnTo,input.sprint);state.firstTime=true;
        // Perfectly timed: a crisper ball that defenders read a beat later.
        if(perfect){state.perfect++;if(state.passChain<4)addSpirit(0,T2.perfect);if(state.passChain<3)state.passAge=-.15;b.vx*=1.1;b.vz*=1.1;}
-       state.message=perfect?'PERFECT first touch! The press is a step behind.':returnTo>=0?'ONE-TWO! Follow your pass into space.':'FIRST-TIME PASS! Keep the move flowing.';}break;}}
+       state.message=returnTo>=0?(perfect?'ONE-TWO! Perfect first touch, now follow your pass into space.':'ONE-TWO! Follow your pass into space.'):perfect?'PERFECT first touch! The press is a step behind.':'FIRST-TIME PASS! Keep the move flowing.';}break;}}
    }b.spin+=Math.hypot(b.vx,b.vz)*h/.25;
   }
  }

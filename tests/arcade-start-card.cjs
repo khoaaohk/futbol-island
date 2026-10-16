@@ -23,4 +23,16 @@ assert.match(esc,/closest\('input,select,textarea'\)/,'not from a select or fiel
 assert.match(esc,/release\(\);exitRef\.current\(\)/,'releases input and exits');
 const live=read('components/LiveArcadeMatch.tsx');
 assert.match(live,/e\.code!=='Escape'\|\|\(!failed&&phaseRef\.current!=='ready'&&phaseRef\.current!=='finished'\)/,'Strikers: Escape exits on its start / full-time card too');
+// Oct 16 2026 QA: Pass Puzzles had no Escape at all. Its puzzle map now exits like the other start cards; a brief goes back to
+// the map; nothing while a puzzle is being drawn or played, or under the board dialogs.
+const puzzle=read('components/games/PassPuzzleGame.tsx'),pEsc=puzzle.slice(puzzle.indexOf('const exitRef=useRef(onExit)'));
+assert.ok(puzzle.includes('const exitRef=useRef(onExit)'),'Pass Puzzles: Escape handler present');
+assert.match(pEsc,/if\(view!=='levels'&&view!=='brief'\)return;/,'Pass Puzzles: Escape only on the map or a brief');
+assert.match(pEsc,/boardsOpen\|\|boardScore!==null/,'Pass Puzzles: not under the board dialogs');
+assert.match(pEsc,/if\(view==='brief'\)setView\('levels'\);else\{cancelDrawing\.current\(\);exitRef\.current\(\);\}/,'brief → map, map → arcade');
+// Oct 16 2026 QA: the cream Leaderboard button on the start / full-time card used var(--btn-ink), which .game redefines to
+// #e9f5ff for the dark buttons, so its label was near-white on cream (about 1.1:1). It keeps its own dark ink.
+const boards=css.match(/\.boards\{([^}]*)\}/);assert.ok(boards,'Leaderboard button rule');
+assert.match(boards[1],/background:var\(--btn-cream,#fff1d3\)/,'cream face');
+assert.match(boards[1],/(^|;)color:#244d40(;|$)/,'dark ink, not the .game-scoped light --btn-ink');
 console.log('PASS arcade start card: the Arcade button is tappable above the card and Escape exits');

@@ -18,7 +18,7 @@ export function sizeCompare(cm:number):SizeCompare{
  if(c>=GOAL_CM*.18){const frac=c/GOAL_CM,parts:[number,string][]=[[1/5,'a fifth'],[1/4,'a quarter'],[1/3,'a third'],[1/2,'half']];
   const [n,word]=parts.reduce((b,p)=>Math.abs(p[0]-frac)<Math.abs(b[0]-frac)?p:b);return {unit:'goal',count:n,text:`about ${word} of a goal wide`};}
  if(c>=40){const n=half(c/BOOT_CM);return {unit:'boot',count:n,text:`about ${say(n)} football boot${n>1?'s':''} long`};}
- if(c>=15){const n=half(c/BALL_CM);return {unit:'ball',count:n,text:n===1?'about as wide as a football':`about ${say(n)} footballs across`};}
+ if(c>=15){const n=half(c/BALL_CM);return {unit:'ball',count:n,text:n===1?'about as wide as a football':n<1?'about half a football across':`about ${say(n)} footballs across`};}
  if(c>=9)return {unit:'ball',count:.5,text:'about half a football across'};
  return {unit:'ball',count:.25,text:'smaller than half a football'};
 }

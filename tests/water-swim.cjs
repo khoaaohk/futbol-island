@@ -100,9 +100,11 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  // Water actions show only their icon (user, Oct 15 2026): the caption is skipped for the water ids.
  assert.match(fs.readFileSync('components/JobActionButton.tsx','utf8'),/WATER_IDS\.has\(b\.id\)\?null:<small>/,'water buttons are icon-only');
  const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','float','swimride'(,'letgo')?\]\)/);/* + water P1b's Let go */
- const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/const flyUp=\(\)=>\{if\(!water\.inWater\|\|rideRef\.current!=='walk'\|\|!fuelAllowsRide\('jetpack'\)\)return false;/,'fuel-gated');
+ const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/const flyUp=\(\)=>\{if\(!water\.inWater\|\|rideRef\.current!=='walk'\|\|!fuelStore\.canUse\('jetpack'\)\)return false;/,'fuel-gated');
+ // QA Oct 16 2026: the gate must not raise the land fuel notice ("Walk to a Konbini…"), which hid SWIM_RIDE_NOTE from a swimmer.
+ assert.doesNotMatch(town.match(/const flyUp=[^\n]*/)[0],/fuelAllowsRide/,'the swim switcher uses the silent fuel check, so SWIM_RIDE_NOTE is the one note');
  assert.match(town,/rooftop\.reset\(x,z,water\.state\.rootY\);/,'the climb starts from the water line');
- assert.match(town,/if\(id==='swimride'\)\{if\(phase!=='tap'\)return;if\(flyUp\(\)\)\{tapHaptic\(\);sound\.ui\('click'\);\}else jobNoteRef\.current\(SWIM_RIDE_NOTE\);return;\}/,'the switcher: fly up, or the hint');
+ assert.match(town,/if\(id==='swimride'\)\{if\(phase!=='tap'\)return;if\(flyUp\(\)\)\{tapHaptic\(\);sound\.ui\('click'\);\}else fuelStore\.say\('No fuel',SWIM_RIDE_NOTE\);return;\}/,'the switcher: fly up, or the hint');
  assert.match(town,/const selectRide=\(mode:TravelMode\)=>\{if\(waterStore\.get\(\)\.inWater\)return;/,'no land ride can be picked in the water');
  assert.match(town,/if\(id==='swimfast'\|\|id==='float'\)\{if\(down&&!e\.repeat\)waterActions\.press\(id,'down'\);else if\(!down\)waterActions\.press\(id,'up'\);\}/,'Q is a hold too');
  // A scooter / bike / moped that splashes down swims (walk), and the ride comes back on the first dry step (cheaper than parking it).

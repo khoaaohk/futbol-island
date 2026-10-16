@@ -58,7 +58,7 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
   event.preventDefault();
   if(action==='primary')pressPrimary();else if(action==='previous'){if(canGoBack(stepper))previous();}else setStepper(forwardLessonStep);
  };
- return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} onCancel={event=>{event.preventDefault();event.stopPropagation();}} onKeyDown={keys} data-hidden={hidden}>
+ return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} onCancel={event=>{event.preventDefault();event.stopPropagation();}} onClose={()=>{/* QA Oct 16 2026: Chrome's close-watcher lets a second Escape close the dialog despite onCancel, which left the island asleep (settingsRef) with no UI. A native close finishes the lesson if it is done, otherwise re-opens it. */const node=dialog.current;if(!node)return;if(finished)dismiss();else if(!node.open)node.showModal();}} onKeyDown={keys} data-hidden={hidden}>
   <section className={styles.panel}>
    <header className={styles.header}><p>{practice?'Practice idea':replay?'Ball hunt tip':'Ball found'} · {progress.collected.length}/{COIN_QUEST.length}</p><h2 id={`${id}-title`}>{title}</h2></header>
    <div className={styles.body}>

@@ -61,7 +61,7 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
     <div className={styles.tabs} role="tablist" aria-label="What to sell">{tabs.map(t=>{const n=t.id==='cards'?null:basketLines(market,t.id).reduce((a,l)=>a+l.count,0);return <button key={t.id} type="button" role="tab" id={`market-tab-${t.id}`} aria-selected={tab===t.id} aria-controls={`market-panel-${t.id}`} onClick={()=>{setTab(t.id);setNote(null);}}>{t.label}{n?<span>{n}</span>:null}</button>;})}</div>
     {note&&<p key={note.id} className={styles.note} role="status" data-market-note>
      {note.coins>0&&<span className={styles.burst} aria-hidden="true">{[0,1,2,3,4].map(i=><i key={i} style={{'--i':i} as CSSProperties}/>)}</span>}
-     {note.coins>0&&<b>+{note.coins} coins</b>} {note.text}{note.lesson&&<small><em>Football lesson</em>{note.lesson}</small>}
+     {note.coins>0&&<b>+{note.coins} coin{note.coins===1?'':'s'}</b>} {note.text}{note.lesson&&<small><em>Football lesson</em>{note.lesson}</small>}
     </p>}
     <div role="tabpanel" id={`market-panel-${tab}`} aria-labelledby={`market-tab-${tab}`}>
      {tab==='cards'?null:<Goods kind={tab} lines={basketLines(market,tab)} busy={busy} onOne={sellOne} onAll={()=>sellAll(tab)}/>}
@@ -82,7 +82,7 @@ function Goods({kind,lines,busy,onOne,onAll}:{kind:'fish'|'produce'|'beach';line
    <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b><small>{eachText}{fish?` · ${fish.club.name}`:''}</small>{plenty&&<small className={styles.plenty} data-plenty-note>{`${MARKET_STAND.seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
    <button type="button" className={styles.one} disabled={busy} onClick={()=>onOne(good.id)} aria-label={`Sell one ${good.name} (${eachText})`}>Sell 1</button>
   </li>;})}</ul>
-  <button type="button" className={styles.all} disabled={busy} onClick={onAll} data-market-sell-all={kind}>Sell all {kind==='beach'?'beach finds':kind} · {total} coins</button>
+  <button type="button" className={styles.all} disabled={busy} onClick={onAll} data-market-sell-all={kind}>Sell all {kind==='beach'?'beach finds':kind} · {total} coin{total===1?'':'s'}</button>
   {kind==='beach'&&<button type="button" className={styles.one} onClick={()=>window.dispatchEvent(new Event(OPEN_SHELLBOOK))} data-market-shellbook>Shellbook</button>}
  </section>;
 }

@@ -107,7 +107,7 @@ export function createLessonCues(scene:T.Scene){
    choices.forEach((choice,i)=>{const p=point(choice.at);if(!p)return;const color=session.answer===i?(choice.correct?[.4,.9,.62]:[1,.55,.4]):revealed&&choice.correct?[.4,.9,.62]:neutral;
     const from=choice.from?point(choice.from):null;const rx=choice.rx??1,rz=choice.rz??1;hitAreas.push({answer:i,at:p.clone(),from:from??undefined,rx,rz,rect:choice.rect});
     if(from&&!(choice.correct&&matchesPass(from,p)))route(from,p,color,true);
-    area(p,rx,rz,color,choice.rect,3);label(String(i+1),p.clone().add(new T.Vector3(0,1.25,0)),color,i);
+    area(p,rx,rz,color,choice.rect,3);label(String.fromCharCode(65+i),p.clone().add(new T.Vector3(0,1.25,0)),color,i);
    });
   }
   const highlighted=session.quiz?question?.feedback?.highlight:visualStep.highlight;

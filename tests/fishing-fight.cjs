@@ -169,6 +169,11 @@ for(const f of ['lib/town/fishing/fishingOverlay.ts','lib/town/fishing/deepSeaBo
  ok(s(62).unit==='boot'&&/2 football boots/.test(s(62).text),'62 cm: about 2 boots');ok(s(22).unit==='ball'&&/as wide as a football/.test(s(22).text),'22 cm: a football');
  ok(s(160).unit==='goal'&&/fifth of a goal/.test(s(160).text),'160 cm: a fifth of a goal');ok(/half a football/.test(s(10).text)&&/smaller than half/.test(s(5).text),'small catches');
  ok(FISH.every(f=>s(f.size[0]).text&&s(f.size[1]).text),'every size has words');
+ // QA 16 Oct 2026: 15-16.4 cm rounded to half a ball read "about half footballs across"; one coin read "1 coins".
+ ok([15,15.5,16,16.4].every(cm=>s(cm).text==='about half a football across')&&FISH.every(f=>[f.size[0],f.size[1],(f.size[0]+f.size[1])/2].every(cm=>!/half footballs/.test(s(cm).text))),'no "half footballs"');
+ {const h=src('components/FishingHost.tsx');ok(/if\(e\.key==='Escape'\)\{if\(e\.type==='keydown'\)\{[^}]*back\.current\?\.click\(\)/.test(h)&&h.indexOf("if(e.key==='Escape')")<h.indexOf("closest('button:not([data-fish-reel])')"),'Escape is Back even with a HUD button focused');
+  ok(/<FishingCatchToast cardUp=\{view\.phase==='caught'&&dismissed!==catchKey\}/.test(h),'the content toast shows once the catch card is dismissed');}
+ ok(/coin\{fishSellValue\(fish\)===1\?'':'s'\}/.test(src('components/FishingHost.tsx')),'the catch card says "1 coin"');
  ok(new Set(Object.values(card.RARITY_STARS)).size===4&&card.rarityStarText('rare')==='★★★☆','rarity is 1-4 stars');
  const host=src('components/FishingHost.tsx');
  ok(/data-stamp="new"/.test(host)&&/data-stamp="record"/.test(host)&&/view\.caught\.isBiggest/.test(host),'NEW and RECORD stamps on the card');

@@ -113,6 +113,11 @@
    route can sit under it); its own controls stay pressable. tests/e2e/paths.spec.ts checks the routes are tappable. */
 .playback .quizUnified[data-pitch-pick]{pointer-events:none}
 .playback .quizUnified[data-pitch-pick] :is(button,a,input,select,textarea,[role=button],[tabindex]){pointer-events:auto}
+/* Pitch-tap answers for keyboard and screen readers: visually hidden until a choice is focused (QA Oct 16 2026). */
+.pitchChoices{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.pitchChoices:focus-within{position:static;width:auto;height:auto;overflow:visible;clip-path:none;white-space:normal;display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+/* ...as pills like the quiz actions, not the 72px round transport buttons (.bottom button). */
+.bottom .pitchChoices button{width:auto;height:auto;min-height:44px;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:700;box-shadow:none;text-align:left}
 
 /* End-of-play choices (Quiz yourself / Watch again) are the shared gold primary pill (docs/ui/BUTTONS.md), matching
    the textured round transport controls beside them instead of a flat #f4cc7c face with a thin rim. */
