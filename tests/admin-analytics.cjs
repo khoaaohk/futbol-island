@@ -50,8 +50,9 @@ await ok('no PII',async()=>{
  const r=await ingest(store,{v:1,t:'start',s:SID,p:'/arcade?name=Sam#x',r:'https://www.google.com/search?q=sam+smith+age+9',u:{source:'News Letter',medium:'email',campaign:'Spring<script>'},tp:0});
  assert.equal(r.status,204);assert.equal(r.reason,'ok');
  const s=store.data.starts[SID];
- assert.deepEqual(Object.keys(s).sort(),['country','day','device','entryPath','flags','hasCode','id','referrerHost','region','returning','source','startedAt','utmCampaign','utmMedium','utmSource','visitorHash'].sort());
- assert.equal(s.returning,null);assert.equal(s.hasCode,null);// Oct 15 2026: yes/no marks only when the tab sends them (tests/admin-analytics-live.cjs)
+ assert.deepEqual(Object.keys(s).sort(),['country','day','device','entryPath','flags','hasCode','id','playerId','referrerHost','region','returning','source','startedAt','utmCampaign','utmMedium','utmSource','visitorHash'].sort());
+ assert.equal(s.returning,null);assert.equal(s.hasCode,null);assert.equal(s.playerId,null);// Oct 16 2026: a keyed one-way id only when the tab sends a key (tests/admin-analytics-day.cjs)
+ // Oct 15 2026: yes/no marks only when the tab sends them (tests/admin-analytics-live.cjs)
  assert.equal(s.entryPath,'/arcade');assert.equal(s.referrerHost,'google.com');assert.equal(s.source,'campaign');
  assert.equal(s.utmSource,'news-letter');assert.equal(s.utmCampaign,null,'an unsafe utm value is dropped, not stored');
  assert.equal(s.country,'GB');assert.equal(s.region,'ENG');assert.equal(s.device,'phone');assert.match(s.visitorHash,/^[0-9a-f]{32}$/);

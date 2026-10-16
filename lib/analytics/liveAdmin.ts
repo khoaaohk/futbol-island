@@ -13,7 +13,7 @@ export const LIVE_CACHE_MS=5_000;
 const cache=new Map<number,{at:number;report:LiveReport}>();
 export const liveMinutes=(raw:string|null|undefined)=>{const n=Number(raw);return (LIVE_WINDOWS as readonly number[]).includes(n)?n:5;};
 
-async function rpc(fn:string,args:unknown,fetchImpl:typeof fetch):Promise<{status:number;json:unknown}|null>{
+export async function rpc(fn:string,args:unknown,fetchImpl:typeof fetch):Promise<{status:number;json:unknown}|null>{
  const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.SUPABASE_SERVICE_ROLE_KEY;
  if(!url||!key)return null;
  const res=await fetchImpl(url.replace(/\/+$/,'')+'/rest/v1/rpc/'+fn,{method:'POST',cache:'no-store',

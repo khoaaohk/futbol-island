@@ -14,7 +14,7 @@ import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewS
 import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
 import PullToRefresh from './PullToRefresh';
-import LivePanel from './LivePanel';
+import LivePanel,{type PanelView} from './LivePanel';
 import SourcesSection from './SourcesSection';
 import liveStyles from './LivePanel.module.css';
 import styles from './admin.module.css';
@@ -56,9 +56,19 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const [report,setReport]=useState(initial),[preset,setPreset]=useState<Preset>(initialRange),[loading,setLoading]=useState(false),[error,setError]=useState('');
  const [from,setFrom]=useState(initial.from),[to,setTo]=useState(initial.to);
  const [updatedAt,setUpdatedAt]=useState<number|null>(null);
- // Oct 15 2026: the "N on now" tile opens the live slide-out (LivePanel.tsx).
- const [liveOpen,setLiveOpen]=useState(false),liveTile=useRef<HTMLButtonElement>(null);
- const closeLive=useCallback(()=>{setLiveOpen(false);requestAnimationFrame(()=>liveTile.current?.focus({preventScroll:true}));},[]);
+ // Oct 15 2026: the "N on now" tile opens the live slide-out (LivePanel.tsx). Oct 16 2026: the players hero tile opens the same
+ // slide-out on that day ("day" view), and the "N players" tile on the range's players ("players" view; each opens a player).
+ const [panel,setPanel]=useState<PanelView|null>(null),liveTile=useRef<HTMLButtonElement>(null),opener=useRef<HTMLElement|null>(null);
+ const openPanel=useCallback((v:PanelView)=>{opener.current=document.activeElement instanceof HTMLElement?document.activeElement:liveTile.current;setPanel(v);},[]);
+ const closeLive=useCallback(()=>{setPanel(null);requestAnimationFrame(()=>(opener.current??liveTile.current)?.focus({preventScroll:true}));},[]);
+ // Distinct players in the range (the "N players" tile): /api/admin/players, cached 30 s on the server.
+ const [playerCount,setPlayerCount]=useState<number|null>(null);
+ useEffect(()=>{
+  let gone=false;setPlayerCount(null);
+  fetch(`/api/admin/players?from=${report.from}&to=${report.to}`,{cache:'no-store'}).then(r=>r.ok?r.json():null)
+   .then(j=>{if(!gone&&j&&j.status==='ok'&&typeof j.players==='number')setPlayerCount(j.players);}).catch(()=>{});
+  return()=>{gone=true;};
+ },[report.from,report.to,report.generatedAt]);
  const query=useRef(`range=${initialRange}`);
  // The first paint's data came from the server moments ago; stamp it client-side once mounted (avoids an SSR/client
  // Date.now() hydration mismatch).
@@ -126,8 +136,11 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     </form>}
     <span className={styles.spacer}/>
     {updatedAt!=null&&<span className={styles.utc} data-updated-at>Updated {new Date(updatedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hourCycle:'h23'})}</span>}
-    <button type="button" ref={liveTile} className={`${styles.live} ${liveStyles.tile}`} data-live-tile aria-haspopup="dialog" aria-expanded={liveOpen} onClick={()=>setLiveOpen(true)}
+    <button type="button" ref={liveTile} className={`${styles.live} ${liveStyles.tile}`} data-live-tile aria-haspopup="dialog" aria-expanded={panel?.mode==='live'} onClick={()=>openPanel({mode:'live'})}
      data-tip="Tabs that sent anything in the last 5 minutes. Tap for who is on now." title="Tabs that sent anything in the last 5 minutes. Tap for who is on now."><i aria-hidden="true"/>{fmtInt(report.live)} on now</button>
+    <button type="button" className={`${styles.live} ${liveStyles.tile}`} data-players-tile aria-haspopup="dialog" aria-expanded={panel?.mode==='players'}
+     onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})} title="Anonymous players in this range (a save code, or one device without one). Tap for each player.">
+     {playerCount===null?'Players':`${fmtInt(playerCount)} player${playerCount===1?'':'s'}`} ›</button>
    </div>
    <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
 
@@ -167,7 +180,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <section className={styles.island} aria-labelledby="sec-headline">
      <div className={styles.sectionHead}><h2 id="sec-headline"><span className={styles.sectionNum}>1</span>Headline</h2>
       <p>Players, save codes and growth for {rangeText}, each compared with the same number of days just before. Save-code counts (active, returning, retention, stored) are as of today.</p></div>
-     <HeadlineTiles report={report}/>
+     <HeadlineTiles report={report} onOpenDay={day=>openPanel({mode:'day',day})}/>
      <ChartCard wide title="Visitors, sessions and page views" subtitle={`${hourly?'By hour':'By day'} (${clock}${tm?.utcDays.length?'; * = a UTC day, frozen before Pacific time':''}). Visitors are unique per ${hourly?'hour':'day'}.`} empty={empty}
       table={{columns:[hourly?`Hour (${clock})`:'Day','Visitors','Sessions','Page views'],rows:report.series.map((p,i)=>[tipLabels[i],p.visitors,p.sessions,p.pageviews])}}>
       <ul className={styles.legend}>
@@ -264,6 +277,6 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     </section>
    </div>
   </div>
-  <LivePanel open={liveOpen} onClose={closeLive} countryName={countryName}/>
+  <LivePanel view={panel} onClose={closeLive} countryName={countryName}/>
  </main>;
 }

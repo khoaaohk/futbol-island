@@ -77,7 +77,7 @@ const CLIENT_COUNTS=new Set([...CID.FIXED_COUNT_IDS,...lessonIds,...BUILT_COUNTS
 (async()=>{
 
 await ok('latest migration parsed',()=>{
- assert.equal(LATEST,'20261018_analytics_live.sql','the newest analytics_ingest (update this when a newer one lands)');
+ assert.equal(LATEST,'20261019_analytics_day_sessions.sql','the newest analytics_ingest (update this when a newer one lands)');
  assert.equal(LISTS.length,3,'three allow-lists: area, place, activity');
  assert(COUNT_RE_SRC,'the counts regex is found');
  assert.equal(COUNT_RE_SRC,CID.COUNT_KEY_RE.source,'SQL counts regex = lib/analytics/countIds.ts COUNT_KEY_RE');
@@ -163,14 +163,17 @@ await ok('sql round trip: nothing the client sends is dropped',async()=>{
   const ingest=p=>psql(`select analytics_ingest(${q(JSON.stringify(p))}::jsonb)`,{role:'service_role'});
   const start=s=>ingest({type:'start',session:s,path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct'});
   const E=300000,ms=k=>Object.fromEntries([...k].map(x=>[x,1000]));
-  // Before the new file runs: the app keeps working; a start carrying the new yes/no marks (Oct 15 2026, live sessions) is stored
-  // without them (the columns do not exist yet), never an error.
-  ingest({type:'start',session:'coveragepre000000001',path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct',is_returning:true,has_code:false});
+  // Before the new file runs: the app keeps working; a start carrying the new player id (Oct 16 2026, players) is stored without
+  // it (the column does not exist yet), never an error.
+  ingest({type:'start',session:'coveragepre000000001',path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct',is_returning:true,has_code:false,player_id:'d'.repeat(32)});
   ingest({type:'beat',session:'coveragepre000000001',engaged_ms:20000,area_ms:{shop:20000},activity_ms:{kit_shop:12000,swim:8000}});
-  assert.equal(psql(`select area_ms::text||'|'||activity_ms::text from analytics_beats where session_id='coveragepre000000001'`),'{"shop": 20000}|{"swim": 8000, "kit_shop": 12000}','before 20261018_analytics_live: starts and beats count as before');
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, live sessions installed','self-check row');
-  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, live sessions installed','idempotent');
-  assert.equal(psql(`select coalesce(is_returning::text,'null')||'|'||coalesce(has_code::text,'null') from analytics_sessions where id='coveragepre000000001'`),'null|null','older rows: unknown, not guessed');
+  assert.equal(psql(`select area_ms::text||'|'||activity_ms::text from analytics_beats where session_id='coveragepre000000001'`),'{"shop": 20000}|{"swim": 8000, "kit_shop": 12000}','before the newest ingest: starts and beats count as before');
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, day sessions installed','self-check row');
+  assert.equal(runFile(path.join('supabase/migrations',LATEST)),'OK, day sessions installed','idempotent');
+  assert.equal(psql(`select coalesce(is_returning::text,'null')||'|'||coalesce(has_code::text,'null')||'|'||coalesce(player_id,'null') from analytics_sessions where id='coveragepre000000001'`),'true|false|null','older rows: no player id, not guessed');
+  ingest({type:'start',session:'coveragepid000000001',path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct',player_id:'e'.repeat(32)});
+  ingest({type:'start',session:'coveragepid000000002',path:'/',day,visitor_hash:'c'.repeat(32),device:'phone',source:'direct',player_id:'not-a-hash'});
+  assert.equal(psql(`select string_agg(coalesce(player_id,'null'),'|' order by id) from analytics_sessions where id like 'coveragepid%'`),'e'.repeat(32)+'|null','a 32-hex player id is kept; anything else is null');
   for(const f of files.slice(at+1))assert.match(runFile(path.join('supabase/migrations',f)),/^OK/,f+': its self-check row');
   // After: one session carrying every id the client can produce.
   const S='coverageall000000001';start(S);

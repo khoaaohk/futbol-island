@@ -14,7 +14,7 @@ export default function AboutGrownUps({onOpenPrivacy,donateReturn}:{onOpenPrivac
   <h3>What your child learns</h3>
   <p>Positions, team shape and decisions in 7v7, 9v9, 11v11 and futsal, through short lessons and quizzes, plus the history and culture of the game in the museum.</p>
   <h3>Privacy</h3>
-  <p>No ads, no chat, no personal data. A save code (three words and a number) instead of an account. {onOpenPrivacy
+  <p>No ads, no chat, no names or contact details. A save code (three words and a number) instead of an account. {onOpenPrivacy
    ?<button type="button" className={styles.inlineLink} data-track="sg:privacy" onClick={onOpenPrivacy}>Read the privacy policy</button>
    :<a href="/privacy" target="_blank" rel="noopener noreferrer">Read the privacy policy</a>}.</p>
   <p className={styles.grownFree}>Free, always.</p>

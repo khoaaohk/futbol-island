@@ -7,6 +7,7 @@ import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
 import {checkFlags} from './countIds';
+import {derivePlayerId,type PlayerSecrets} from './playerId';
 import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,dayIn,validateEvent,type CleanEvent} from './core';
 
 export type HeaderBag={get(name:string):string|null};
@@ -42,7 +43,7 @@ export function createLimiter({capacity=60,refillPerSec=0.5,maxKeys=20_000}={}){
 }
 export type Limiter=ReturnType<typeof createLimiter>;
 
-export async function handleIngest({body,headers,store,limiter,now=new Date(),vercelEnv}:{body:string;headers:HeaderBag;store:AnalyticsStore|null;limiter:Limiter;now?:Date;vercelEnv?:string}):Promise<IngestResult>{
+export async function handleIngest({body,headers,store,limiter,now=new Date(),vercelEnv,secrets}:{body:string;headers:HeaderBag;store:AnalyticsStore|null;limiter:Limiter;now?:Date;vercelEnv?:string;secrets?:PlayerSecrets}):Promise<IngestResult>{
  if(!store)return {status:204,reason:'not-configured'};
  if(vercelEnv&&vercelEnv!=='production')return {status:204,reason:'non-production'};
  // Do-Not-Track and Global Privacy Control: nothing is read, hashed or stored.
@@ -78,6 +79,8 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   counts:start?{}:clampCounts(ev.k),flags:start?(checkFlags(ev.f)||{}):{},
   // Live sessions (Oct 15 2026): two yes/no marks on a start (validateEvent refuses them on a beat). Never a code or an id.
   returning:start&&ev.rt!==undefined?ev.rt===1:null,hasCode:start&&ev.hc!==undefined?ev.hc===1:null,
+  // Players (Oct 16 2026): the start's code or install id becomes a keyed one-way id here and is not kept (lib/analytics/playerId.ts).
+  playerId:start&&(ev.pc!==undefined||ev.pi!==undefined)?derivePlayerId({pc:ev.pc,pi:ev.pi},secrets):null,
  };
  // A beat with no time, no page views and no counters is not written. (A count-only beat is a hide that drained leftovers.)
  if(!start&&!engagedMs&&!clean.pageviews&&!Object.keys(clean.counts).length)return {status:204,reason:'empty-beat'};

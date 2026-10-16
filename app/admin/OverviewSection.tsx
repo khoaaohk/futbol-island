@@ -12,6 +12,8 @@ import {BarList,ChartCard,Delta,Sparkline,fmtDuration,fmtInt,fmtPct} from './cha
 import {Steps} from './StartSection';
 import {saveData,saveGap} from './SavesSection';
 import styles from './admin.module.css';
+import liveStyles from './LivePanel.module.css';
+import type {KeyboardEvent as ReactKeyboardEvent} from 'react';
 
 const show=(c:Cell|undefined)=>c===null||c===undefined?'<5':fmtInt(c);
 const num=(c:Cell|undefined)=>c===undefined?null:c;
@@ -27,7 +29,11 @@ const plural=(n:number,w:string)=>`${n} ${w}${n===1?'':'s'}`;
 const hours=(ms:number)=>ms>=3_600_000?`${(ms/3_600_000).toFixed(ms>=36_000_000?0:1)} h`:fmtDuration(ms);
 
 /** Row 1: the numbers an investor reads first. One hero (players: that day, or the total over a range); everything else a stat tile. */
-export function HeadlineTiles({report}:{report:Report}){
+/** "Oct 16" for a calendar date. */
+const onDay=(day:string)=>new Date(day+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+/** `onOpenDay` (Oct 16 2026; user: "for players today, can we have that be clickable ... and list each user"): the hero tile opens
+ *  the slide-out on that day (the range's last day over a longer range), listing each session (app/admin/LivePanel.tsx). */
+export function HeadlineTiles({report,onOpenDay}:{report:Report;onOpenDay?:(day:string)=>void}){
  const o=report.overview,c=o?.current,p=o?.previous??null,d=saveData(report),gap=saveGap(report.saves);
  const len=c?.days||1,label=compareLabel(report,len),partial=!!report.time?.partialToday;
  const r=d?.retention,ret=(k:'d1'|'d7'|'d30')=>r&&r[k].eligible?fmtPct(r[k].kept/r[k].eligible):'—';
@@ -39,13 +45,16 @@ export function HeadlineTiles({report}:{report:Report}){
  // New save codes: like for like when the range ends today (its complete days vs as many days before; lib/saves/metrics.ts).
  const sc=report.saves?.compare;
  return <section className={styles.kpis8} aria-label="Headline numbers">
-  <div className={`${styles.tile} ${styles.hero}`}>
-   <span>{single?(partial?'Players today so far':'Players that day'):'Players, total'}</span>
+  <div className={`${styles.tile} ${styles.hero} ${onOpenDay?liveStyles.hero:''}`} data-day-tile={report.to}
+   {...(onOpenDay?{role:'button',tabIndex:0,'aria-haspopup':'dialog' as const,'aria-label':`${single?(partial?'Players today so far':`Players on ${onDay(report.to)}`):'Players, total'}: open each player's sessions${single?'':` on ${onDay(report.to)}`}`,
+    onClick:()=>onOpenDay(report.to),onKeyDown:(e:ReactKeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onOpenDay(report.to);}}}:{})}>
+   <span>{single?(partial?'Players today so far':`Players on ${onDay(report.to)}`):'Players, total'}</span>
    <b>{c?fmtInt(single?Math.round(perDay(c)):c.visitors):'0'}</b>
    <small>{single?'unique visitors':`players added up day by day over ${plural(len,'day')}${partial?' (today so far included)':''}: someone who plays on 3 days counts 3 times · about ${fmtInt(Math.round(perDay(c!)))} a day`} · a visitor is one device and network on one day</small>
    {/* Totals (user, Oct 13 2026: "change that to total ... easier to understand than per day"); the change compares the same complete days, so a range that ends today isn't unfairly behind. */}
    {c&&<Delta cur={single?perDay(c):perDay(c)*(per?.days??full)} prev={p?(single?perDay(p):perDay(p)*(per?.days??full)):null} label={perLabel}/>}
    <Sparkline values={report.series.map(s=>s.visitors)} label="Visitors over the range"/>
+   {onOpenDay&&<span className={liveStyles.more} aria-hidden="true">{single?'Tap for each player ›':`Tap for each player on ${onDay(report.to)} ›`}</span>}
   </div>
   <div className={styles.tile}><span>Active save codes, 7 days</span><b>{d?fmtInt(d.active_7):'—'}</b>
    <small>{d?`weekly active · today ${fmtInt(d.active_1)} · 30 days ${fmtInt(d.active_30)} (UTC dates)`:gap}</small></div>

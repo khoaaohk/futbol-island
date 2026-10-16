@@ -193,6 +193,8 @@ await ok('allowlist',()=>{
  assert.deepEqual([...b.matchAll(/`([a-z0-9.-]+)`/g)].map(m=>m[1]).sort(),[...S.DEVICE_KEYS].sort(),'DEVICE_KEYS = table B');
  for(const k of [...S.DEVICE_KEYS,...S.NEVER_KEYS,'fi2-new-feature-v1','__proto__','','fi2-arcade-record--v1','fi2-arcade-record-../x-v1'])assert.equal(S.isSyncKey(k),false,k);
  assert.equal(S.isSyncKey('fi2-arcade-record-runner-v1'),true);
+ // Oct 16 2026: the analytics install id is a DEVICE key (never synced: a code restored elsewhere does not copy it).
+ assert(S.DEVICE_KEYS.includes(S.INSTALL_ID_KEY)&&S.INSTALL_ID_KEY==='fi2-install-v1'&&!S.isSyncKey('fi2-install-v1'),'fi2-install-v1 is a device key');
  const UNLOCK=load('lib/dev/unlockAll.ts');for(const k of S.SYNC_KEYS)assert(UNLOCK.SAVE_KEY_PATTERN.test(k),'prefix rule '+k);
  // Every versioned storage key in the code is classified (a new store must be added to one list on purpose).
  const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):/\.tsx?$/.test(e.name)?[path.join(d,e.name)]:[]);
@@ -662,8 +664,8 @@ await ok('sql',async()=>{
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
   // Later files are admin-only add-ons (20261011 save metrics, 20261012 Pacific time, 20261012 museum exhibit analytics keys,
-  // 20261015 Summit Isle + Kit Shop + more museum exhibit keys, 20261016 the Kit Shop's activity keys, 20261017 the fishing summary and the water activity keys, 20261018 the live sessions); none may touch the save tables (checked below).
-  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql','20261015_analytics_summit_kit.sql','20261016_analytics_kit_shop_activity.sql','20261017_analytics_fishing.sql','20261017_analytics_water.sql','20261018_analytics_live.sql'],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
+  // 20261015 Summit Isle + Kit Shop + more museum exhibit keys, 20261016 the Kit Shop's activity keys, 20261017 the fishing summary and the water activity keys, 20261018 the live sessions, 20261019 the day sessions and players); none may touch the save tables (checked below).
+  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql','20261015_analytics_summit_kit.sql','20261016_analytics_kit_shop_activity.sql','20261017_analytics_fishing.sql','20261017_analytics_water.sql','20261018_analytics_live.sql','20261019_analytics_day_sessions.sql'],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');

@@ -98,8 +98,9 @@ export default function PrivacyPolicy(){
     <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
     <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code.</li>
    </ul>
-   <p>We never record typed text, names, save codes, the order of a visitor’s actions, or anything that would let us follow one child. Small numbers are hidden in our day-by-day reports.</p>
-   <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, and its time and counts so far. Never a name, an account, a network address or a precise location.</p>
+   <p>We never record typed text, names, save codes or the order of a visitor’s actions. Small numbers are hidden in our day-by-day reports.</p>
+   <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, and its time and counts so far, and we can look back at each day’s visits the same way for the 14 days we keep them. Never a name, an account, a network address or a precise location.</p>
+   <p><b>Players:</b> the game keeps a random player number on the device (and, when a save code is in use, a number made one-way from the code), so our own reports can tell visits from the same player apart over time. It is not a name, an account, an email, a network address or a location, and it is never shared. Deleting the save or clearing this site’s data in the browser removes it from the device; the visits we already counted are deleted after 14 days.</p>
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>
   </section>
 

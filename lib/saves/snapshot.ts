@@ -69,6 +69,9 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  'fi2-tree-kick-lesson-v1',
  // Fish stall kick (Oct 15 2026): the once-per-device shooting lesson.
  'fi2-stall-kick-lesson-v1',
+ // Players in /admin (Oct 16 2026): this device's random install id (16 random bytes, lib/analytics/deviceMarks.ts). Never
+ // synced, so a code restored elsewhere does not copy it; deleting the save removes it (lib/saves/client.ts deleteSave).
+ 'fi2-install-v1',
  // Coaches Board plays stay on the device (user, Oct 9 2026): play names are typed text and could name a child. Share links move them.
  // Summit Isle easel paintings (Oct 14 2026): child-made pictures stay on the device (never synced, never sent anywhere).
  'fi2-paintings-v1',
@@ -76,6 +79,8 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  'fi2-fish-tutorial-v1',
  'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */
+/** The device's random install id for anonymous player counts (Oct 16 2026; DEVICE_KEYS above). */
+export const INSTALL_ID_KEY='fi2-install-v1';
 export const SAVE_CODE_KEY='fi2-save-code-v1',SAVE_SYNC_KEY='fi2-save-sync-v1',SAVE_BACKUP_KEY='fi2-save-backup-v1',
  SAVE_TRIES_KEY='fi2-save-tries-v1',SAVE_NUDGE_KEY='fi2-save-nudge-v1',SAVE_APPLIED_KEY='fi2-save-applied-v1',
  /** {hash,at}: when this device's island last changed (progressHash), so two copies can be told apart by "played last". */

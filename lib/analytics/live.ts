@@ -25,7 +25,10 @@ export type LiveRow={sid:string;startedAt:string;lastSeen:string;
  /** Seconds per area / per activity in this session. */areas:Record<string,number>;activities:Record<string,number>;
  counts:Record<LiveCountKey,number>;
  /** Sessions and foreground seconds today that share this session's visitor hash (the same network + browser today). */
- deviceTodaySessions:number;deviceTodaySeconds:number};
+ deviceTodaySessions:number;deviceTodaySeconds:number;
+ /** Oct 16 2026 (20261019_analytics_day_sessions.sql): 12 hex of a further hash of the session's anonymous player id (shown as 6;
+  *  opens the player view); null for sessions without one (older tabs, rows before that file, the live RPC before it). */
+ pid:string|null};
 export type Tally={key:string;n:number};
 export type CountryTally={country:string;n:number;regions:{region:string;name:string;n:number|null}[]};
 export type LiveReport={status:LiveStatus;minutes:number;generatedAt:string;sessions:number;byArea:Tally[];byCountry:CountryTally[];bySource:Tally[];rows:LiveRow[]};
@@ -33,31 +36,35 @@ export type SourcesSummary={status:LiveStatus;from:string;to:string;windowDays:n
  countries:CountryTally[];countriesSuppressed:number;sources:Tally[];sourcesSuppressed:number;
  returning:{new:number|null;returning:number|null;unknown:number|null};code:{with:number|null;without:number|null;unknown:number|null}};
 
-const obj=(v:unknown)=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
-const arr=(v:unknown)=>Array.isArray(v)?v:[];
-const num=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.floor(v)):typeof v==='string'&&/^\d+(\.\d+)?$/.test(v)?Math.floor(Number(v)):0;
-const nul=(v:unknown)=>v===null||v===undefined?null:num(v);
-const str=(v:unknown)=>typeof v==='string'&&v?v:null;
-const bool=(v:unknown)=>typeof v==='boolean'?v:null;
-const secs=(v:unknown)=>Object.fromEntries(Object.entries(obj(v)).map(([k,s])=>[k,num(s)]).filter(([,s])=>(s as number)>0));
-type Names=(country:string,code:string)=>string;
+export const obj=(v:unknown)=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
+export const arr=(v:unknown)=>Array.isArray(v)?v:[];
+export const num=(v:unknown)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.floor(v)):typeof v==='string'&&/^\d+(\.\d+)?$/.test(v)?Math.floor(Number(v)):0;
+export const nul=(v:unknown)=>v===null||v===undefined?null:num(v);
+export const str=(v:unknown)=>typeof v==='string'&&v?v:null;
+export const bool=(v:unknown)=>typeof v==='boolean'?v:null;
+export const secs=(v:unknown)=>Object.fromEntries(Object.entries(obj(v)).map(([k,s])=>[k,num(s)]).filter(([,s])=>(s as number)>0));
+export type Names=(country:string,code:string)=>string;
 const regionsOf=(v:unknown,country:string,names?:Names)=>arr(v).map(r=>{const o=obj(r),region=str(o.region)||'';return {region,name:names&&/^[A-Z]{2}$/.test(country)?names(country,region):region,n:nul(o.n)};}).filter(r=>r.region);
-const countriesOf=(v:unknown,names?:Names):CountryTally[]=>arr(v).map(c=>{const o=obj(c),country=str(o.country)||'(unknown)';return {country,n:num(o.n),regions:regionsOf(o.regions,country,names)};});
-const talliesOf=(v:unknown):Tally[]=>arr(v).map(t=>{const o=obj(t);return {key:str(o.key)||'',n:num(o.n)};}).filter(t=>t.key);
+export const countriesOf=(v:unknown,names?:Names):CountryTally[]=>arr(v).map(c=>{const o=obj(c),country=str(o.country)||'(unknown)';return {country,n:num(o.n),regions:regionsOf(o.regions,country,names)};});
+export const talliesOf=(v:unknown):Tally[]=>arr(v).map(t=>{const o=obj(t);return {key:str(o.key)||'',n:num(o.n)};}).filter(t=>t.key);
 
 export const emptyLive=(status:LiveStatus,minutes=5):LiveReport=>({status,minutes,generatedAt:new Date(0).toISOString(),sessions:0,byArea:[],byCountry:[],bySource:[],rows:[]});
 /** analytics_live_sessions' JSON → the panel's report. Pure (tests). `names` turns a region code into its name (server only). */
 export function shapeLive(raw:unknown,names?:Names):LiveReport{
  const r=obj(raw);
- const rows=arr(r.rows).map((x):LiveRow=>{const o=obj(x),c=obj(o.counts),country=str(o.country),region=str(o.region);
+ const rows=arr(r.rows).map(x=>shapeLiveRow(x,names));
+ return {status:'ok',minutes:num(r.minutes)||5,generatedAt:str(r.generated_at)||new Date().toISOString(),sessions:num(r.sessions),
+  byArea:talliesOf(r.by_area),byCountry:countriesOf(r.by_country,names),bySource:talliesOf(r.by_source),rows};
+}
+/** One per-session row (analytics_session_rows: the live, day and player reads share it). */
+export function shapeLiveRow(x:unknown,names?:Names):LiveRow{const o=obj(x),c=obj(o.counts),country=str(o.country),region=str(o.region);
   return {sid:(str(o.sid)||'').replace(/[^0-9a-f]/g,'').slice(0,6),startedAt:str(o.started_at)||'',lastSeen:str(o.last_seen)||str(o.started_at)||'',
    secondsActive:num(o.seconds_active),spanSeconds:num(o.span_seconds),device:str(o.device)||'unknown',country,region,
    regionName:country&&region?(names?names(country,region):region):null,source:str(o.source)||'direct',referrerHost:str(o.referrer_host),campaign:str(o.campaign),
    returning:bool(o.returning),hasCode:bool(o.has_code),area:str(o.area),activity:str(o.activity),previousArea:str(o.previous_area),spot:str(o.spot),
    areas:secs(o.areas),activities:secs(o.activities),counts:Object.fromEntries(LIVE_COUNT_KEYS.map(k=>[k,num(c[k])])) as Record<LiveCountKey,number>,
-   deviceTodaySessions:num(o.device_today_sessions),deviceTodaySeconds:num(o.device_today_seconds)};});
- return {status:'ok',minutes:num(r.minutes)||5,generatedAt:str(r.generated_at)||new Date().toISOString(),sessions:num(r.sessions),
-  byArea:talliesOf(r.by_area),byCountry:countriesOf(r.by_country,names),bySource:talliesOf(r.by_source),rows};
+   deviceTodaySessions:num(o.device_today_sessions),deviceTodaySeconds:num(o.device_today_seconds),
+   pid:typeof o.pid==='string'&&/^[0-9a-f]{12}$/.test(o.pid)?o.pid:null};
 }
 export const emptySources=(status:LiveStatus,from='',to=''):SourcesSummary=>({status,from,to,windowDays:14,minSessions:3,sessions:0,countries:[],countriesSuppressed:0,
  sources:[],sourcesSuppressed:0,returning:{new:null,returning:null,unknown:null},code:{with:null,without:null,unknown:null}});

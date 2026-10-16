@@ -58,3 +58,18 @@
 .tile:active{translate:0 1px}
 .tile i{animation:pulse 1.6s ease-out infinite}
 @media (prefers-reduced-motion:reduce){.tile i{animation:none}}
+/* Oct 16 2026: day, players and player views. */
+.head h2{flex:1;min-width:0}
+.windows button:disabled{opacity:.4;box-shadow:none}
+.dayName{font:700 16px var(--btn-font);min-width:92px;text-align:center}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.filters select,.search{min-height:40px;width:100%;min-width:0;padding:0 10px;border-radius:12px;border:1px solid var(--a-ring);background:var(--a-surface);color:var(--a-ink);font:600 14px/1 inherit}
+.search{font-size:16px}
+.cardFoot{display:flex;justify-content:flex-end}
+.playerLink{border:0;background:none;padding:6px 0;min-height:32px;font:700 13px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--a-link,#1d6b52);text-decoration:underline;cursor:pointer}
+.playerLink:focus-visible,.cardButton:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.cardButton{all:unset;display:grid;gap:6px;cursor:pointer;border-radius:12px}
+.summary{padding:12px;border-radius:16px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring)}
+.hero{cursor:pointer}
+.hero:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.more{display:block;margin-top:4px;font-size:12px;font-weight:700;color:var(--a-link,#1d6b52)}

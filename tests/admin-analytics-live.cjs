@@ -120,8 +120,8 @@ await ok('liveAdmin: not configured, needs migration, 5 s cache, windows',async(
 
 await ok('the panel and the day section are wired',()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),panel=read('app/admin/LivePanel.tsx');
- assert.match(dash,/<button type="button" ref=\{liveTile\}[^>]*data-live-tile[^>]*onClick=\{\(\)=>setLiveOpen\(true\)\}/,'the tile is a button');
- assert(dash.includes('<LivePanel open={liveOpen} onClose={closeLive} countryName={countryName}/>')&&dash.includes('<SourcesSection report={report} countryName={countryName}/>'));
+ assert.match(dash,/<button type="button" ref=\{liveTile\}[^>]*data-live-tile[^>]*onClick=\{\(\)=>openPanel\(\{mode:'live'\}\)\}/,'the tile is a button');
+ assert(dash.includes('<LivePanel view={panel} onClose={closeLive} countryName={countryName}/>')&&dash.includes('<SourcesSection report={report} countryName={countryName}/>'));
  assert.match(panel,/document\.visibilityState!=='visible'/,'polls only while visible');assert.match(panel,/POLL_MS=10_000/);
  assert.match(panel,/e\.key==='Escape'/);assert.match(panel,/<DoneButton ref=\{done\} onDone=\{onClose\}/);assert(panel.includes('Nobody right now.'));
  for(const p of ['app/admin/page.tsx','app/api/admin/analytics/route.ts'])assert.match(read(p),/report\.sources=await loadSources\(report\.from,report\.to\);/,p);
@@ -212,9 +212,10 @@ await ok('sql: live sessions and the sources summary on a throwaway Postgres',as
   assert(!/x-vercel-ip-city|city/i.test(sql),'never the city');
   // Nothing the previous ingest allowed is dropped.
   const ing=fs.readdirSync('supabase/migrations').filter(f=>/create or replace function public\.analytics_ingest/.test(read('supabase/migrations/'+f))).sort();
-  assert.equal(ing[ing.length-1],path.basename(MIGRATION));
+  // Oct 16 2026: 20261019_analytics_day_sessions.sql replaces the ingest again (tests/admin-analytics-day.cjs checks that one).
+  const at=ing.indexOf(path.basename(MIGRATION));assert(at>0,'this file replaces the ingest');
   const lists=s=>[...s.matchAll(/where key in \(([^)]*)\)/g)].map(m=>m[1]);
-  assert.deepEqual(lists(read(MIGRATION)),lists(read('supabase/migrations/'+ing[ing.length-2])),'the same allow-lists as '+ing[ing.length-2]);
+  assert.deepEqual(lists(read(MIGRATION)),lists(read('supabase/migrations/'+ing[at-1])),'the same allow-lists as '+ing[at-1]);
  }finally{
   try{cp.execFileSync(pgctl,['-D',path.join(dir,'data'),'-m','immediate','stop'],quiet);}catch{}
   fs.rmSync(dir,{recursive:true,force:true});

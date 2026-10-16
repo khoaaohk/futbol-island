@@ -54,6 +54,8 @@ export type TrackerEnv={
  flags?:()=>StartFlags|null;
  /** Oct 15 2026 (live sessions): two yes/no marks for the start (lib/analytics/deviceMarks.ts readDeviceMarks). Once per new session. */
  marks?:()=>{returning:boolean;hasCode:boolean}|null;
+ /** Oct 16 2026 (players): the start's one player key, a save code or the install id (lib/analytics/deviceMarks.ts readPlayerKey). */
+ player?:()=>{pc:string}|{pi:string}|null;
  allowLocalhost?:boolean;
 };
 
@@ -246,6 +248,7 @@ export function startTracker(env:TrackerEnv){
    const tag=campaignTag(w.location.search);if(tag&&!u.source)u.source=tag;
    if(Object.keys(u).length)body.u=u;
    try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;}}catch{}
+   try{const k=env.player?.();if(k)Object.assign(body,'pc' in k?{pc:k.pc}:{pi:k.pi});}catch{}
    if((n.maxTouchPoints||0)>1)body.tp=1;
    try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
   }

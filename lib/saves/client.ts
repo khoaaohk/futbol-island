@@ -30,7 +30,7 @@
  * One code is one island (user decision, Oct 12 2026): kids are never asked to choose. When two copies meet, the one played
  * most recently wins and the other is kept on this device for 7 days, for a grown-up to bring back from Settings (doc §4.4).
  */
-import {SAVE_APPLIED_KEY,SAVE_BACKUP_KEY,SAVE_CODE_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY,SAVE_SYNC_KEY,SAVE_TRIES_KEY,WALLET_KEY_NAME,KEEPALIVE_BYTES,applySnapshot,
+import {INSTALL_ID_KEY,SAVE_APPLIED_KEY,SAVE_BACKUP_KEY,SAVE_CODE_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY,SAVE_SYNC_KEY,SAVE_TRIES_KEY,WALLET_KEY_NAME,KEEPALIVE_BYTES,applySnapshot,
  buildSnapshot,diffKeys,hasProgress,localKeys,playedTime,progressHash,readBackup,readSnapshot,snapshotHash,writeBackup,type Backup,type Snapshot,type StoragePort} from './snapshot';
 import {compactWallet} from './walletCompact';
 import {progressRank,summarise,type IslandSummary} from './summary';
@@ -371,7 +371,7 @@ export async function deleteSave():Promise<boolean>{
  const code=getLocalCode();if(!code)return true;
  const r=await post('delete',{code});
  if(!r||r.json.ok!==true)return false;
- write(SAVE_CODE_KEY,null);write(SAVE_SYNC_KEY,null);write(SAVE_OPTOUT_KEY,new Date().toISOString().slice(0,10));setStatus('none');return true;
+ write(SAVE_CODE_KEY,null);write(SAVE_SYNC_KEY,null);write(INSTALL_ID_KEY,null);write(SAVE_OPTOUT_KEY,new Date().toISOString().slice(0,10));setStatus('none');return true;
 }
 /** One email with the code to the address a grown-up typed. The address is sent once and kept nowhere (not even here). */
 export async function sendCodeToGrownup(email:string):Promise<'sent'|'failed'|'busy'|'bad-email'|'unavailable'>{

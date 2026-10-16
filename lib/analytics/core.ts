@@ -77,7 +77,11 @@ export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e
  k?:Record<string,number>;f?:StartFlags;
  /** Oct 15 2026 (live sessions): on a start only, two yes/no marks read from the game's own storage on this device:
   *  rt = 1 when the device has played here before, hc = 1 when a save code is active on it. Never the code itself. */
- rt?:0|1;hc?:0|1};
+ rt?:0|1;hc?:0|1;
+ /** Oct 16 2026 (players; 20261019_analytics_day_sessions.sql): on a start only, ONE of: `pc` the save code active on this device,
+  *  or `pi` this device's random install id (fi2-install-v1, 32 hex). The server turns it into a keyed one-way player id
+  *  (lib/analytics/playerId.ts) and discards it; neither is ever stored, logged or sent on. */
+ pc?:string;pi?:string};
 /** Seconds per heat-map cell (key = cell index as a string). */
 export type CellMap=Record<string,number>;
 
@@ -92,6 +96,8 @@ export type CleanEvent={
  counts:Record<string,number>;flags:StartFlags;
  /** Oct 15 2026: starts only (null when the tab did not say, and on beats). */
  returning?:boolean|null;hasCode?:boolean|null;
+ /** Oct 16 2026: starts only. 32 hex, a keyed one-way hash (lib/analytics/playerId.ts); null when the tab sent nothing. */
+ playerId?:string|null;
 };
 
 const SESSION_RE=/^[A-Za-z0-9_-]{16,32}$/;
@@ -154,6 +160,8 @@ export function isBot(ua:string|null|undefined):boolean{
 export function sanitizeCountry(raw:string|null|undefined):string|null{const v=(raw||'').toUpperCase();return /^[A-Z]{2}$/.test(v)&&v!=='XX'?v:null;}
 export function sanitizeRegion(raw:string|null|undefined):string|null{const v=(raw||'').toUpperCase();return /^[A-Z0-9]{1,3}$/.test(v)?v:null;}
 
+/** The shapes a start's player key may take (a save code as the game stores it; a 16-byte install id in hex). */
+export const PLAYER_CODE_RE=/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}$/,INSTALL_ID_RE=/^[0-9a-f]{32}$/;
 export type Validated={ok:true;event:RawEvent}|{ok:false;reason:string};
 
 /** Strict schema: unknown keys, wrong types and out-of-range numbers are rejected rather than repaired. */
@@ -163,7 +171,7 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc','pc','pi']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
@@ -172,6 +180,8 @@ export function validateEvent(body:string):Validated{
  if(r.e!==undefined&&(typeof r.e!=='number'||!Number.isFinite(r.e)||r.e<0||r.e>3_600_000))return {ok:false,reason:'engaged'};
  if(r.tp!==undefined&&r.tp!==0&&r.tp!==1)return {ok:false,reason:'touch'};
  for(const k of ['rt','hc'] as const)if(r[k]!==undefined&&((r[k]!==0&&r[k]!==1)||r.t!=='start'))return {ok:false,reason:'marks'};
+ if((r.pc!==undefined||r.pi!==undefined)&&(r.t!=='start'||(r.pc!==undefined&&r.pi!==undefined)||(r.pc!==undefined&&(typeof r.pc!=='string'||!PLAYER_CODE_RE.test(r.pc)))
+  ||(r.pi!==undefined&&(typeof r.pi!=='string'||!INSTALL_ID_RE.test(r.pi)))))return {ok:false,reason:'player'};
  if(r.u!==undefined){
   if(!r.u||typeof r.u!=='object'||Array.isArray(r.u))return {ok:false,reason:'utm'};
   for(const [k,v] of Object.entries(r.u as Record<string,unknown>))if(!['source','medium','campaign'].includes(k)||typeof v!=='string'||v.length>100)return {ok:false,reason:'utm'};
@@ -302,7 +312,9 @@ export type StartRow={id:string;day:string;visitorHash:string;startedAt:string;e
  /** Oct 9 2026; absent on starts stored before the learning counters. */
  flags?:StartFlags;
  /** Oct 15 2026 (20261018_analytics_live.sql): played on this device before / a save code active; null = not sent (older tabs). */
- returning?:boolean|null;hasCode?:boolean|null};
+ returning?:boolean|null;hasCode?:boolean|null;
+ /** Oct 16 2026 (20261019_analytics_day_sessions.sql): the keyed one-way player id; null = none sent. */
+ playerId?:string|null};
 export type BeatRow={sessionId:string;ts:string;engagedMs:number;pageviews:number;areaMs:Partial<Record<Area,number>>;
  /** Oct 8 2026; absent on beats stored before the place split. */
  placeMs?:Partial<Record<PlaceId,number>>;activityMs?:Partial<Record<ActivityId,number>>;cells?:CellMap;
