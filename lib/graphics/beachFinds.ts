@@ -30,7 +30,7 @@ type Ports={
  reward?:(id:string,coins:number,reason:string)=>void;
  /** The character's crouch-and-pick (or a look and a head shake for a look-only find) toward the find. */
  pose:(kind:'gpick'|'headshake',at:{x:number;z:number})=>void;
- busy?:()=>boolean;cue?:(kind:string)=>void;haptic?:()=>void;
+ busy?:()=>boolean;dismount?:()=>boolean;cue?:(kind:string)=>void;haptic?:()=>void;
  now?:()=>number;read?:()=>string|null;write?:(v:string)=>void;
 };
 export type BeachUpdate={
@@ -150,6 +150,7 @@ export function createBeachFinds(scene:T.Scene,ports:Ports){
  const available=(s:BeachSpot,taken:readonly string[])=>!taken.includes(s.key);
  function take(){
   if(!near||!player.onFoot||ports.busy?.())return false;
+  ports.dismount?.();// riding a scooter / bike / moped (user Oct 17 2026): hop off the usual way, then pick it up
   const {isle,spot}=near,f=beachFindById(spot.find)!,t0=now(),first=!save.tip&&f.care==='sell',firstKind=!save.kind&&f.care==='putBack';
   let added=true;
   if(f.care==='sell'){added=ports.gather(f.id)>0;if(!added){beachStore.note(findNote(f,{added,first,firstKind,coins:0}));return false;}}

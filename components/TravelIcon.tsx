@@ -42,9 +42,9 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8',
  // Zipline ride actions (Oct 14 2026, lib/town/zipline.ts ZIP_BUTTONS): tuck (knees up, speed lines), spin (a turn under the bar),
  // wave (one hand on the bar, the other up and waving).
- ziptuck:'M6 3h12 M9 3l2 5 M15 3l-2 5 M12 10a1.8 1.8 0 1 0 0 .01 M12 12v4l4-1-1 5 M2 13h4 M3 17h3',
- zipspin:'M6 3h12 M12 3v4 M17.6 13.5a5.5 5.5 0 1 1-1.7-3.9 M18.5 6.5v3.5H15',
- zipwave:'M3 3h10 M8 3v5 M8 10a1.8 1.8 0 1 0 0 .01 M8 12v5 M6 21l2-4 2 4 M8 13l5-4 M15 4l2-2 M16 8h3 M15 11l3 1',
+ ziptuck:'M5 4h14 M12 4v5 M12 9a2.4 2.4 0 1 0 0 .01 M12 12v4l4 3 M12 16l-4 3',
+ zipspin:'M5 4h14 M12 4v3 M19 13a7 7 0 1 1-2.1-5 M19 5v4h-4',
+ zipwave:'M3 4h10 M8 4v5 M8 9a2.4 2.4 0 1 0 0 .01 M8 12v8 M8 13l7-5 M17 4l2 2 M19 9h3',
  // Water actions (Oct 15 2026, lib/town/water/waterHud.ts WATER_BUTTONS). Redrawn Oct 15 2026 (user: "icons need to be larger and
  // simplified to match with main actions"): the walk / shoot / juggle weight, 2–3 bold strokes over one wave. swim (the ride
  // switcher's ride: head, body, one arm reaching over), swimfast (sprint: the arm stretched forward, speed lines behind), float (on

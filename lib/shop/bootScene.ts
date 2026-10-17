@@ -436,9 +436,9 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
  }shadowTex.colorSpace=T.SRGBColorSpace;shadowTex.generateMipmaps=false;shadowTex.minFilter=T.LinearFilter;
  // DoubleSide: the pair's left shadow is mirrored (negative z scale, matching the left boot's own mirroring below) which flips
  // its winding; without this it would cull itself away.
- const shadowMat=new T.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,toneMapped:false,side:T.DoubleSide});
+ const shadowMat=new T.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false,toneMapped:false,side:T.DoubleSide,visible:false/* Oct 17 2026 (user): no drop shadow under the boots; the material is off however the meshes are toggled */});
  const shadowGeo=new T.PlaneGeometry(SHADOW_W,SHADOW_H).rotateX(-Math.PI/2);
- const shadows=[new T.Mesh(shadowGeo,shadowMat),new T.Mesh(shadowGeo,shadowMat)];for(const s of shadows){s.renderOrder=-1;scene.add(s);}
+ const shadows=[new T.Mesh(shadowGeo,shadowMat),new T.Mesh(shadowGeo,shadowMat)];for(const s of shadows){s.renderOrder=-1;s.visible=false;/* Oct 17 2026 (user): no drop shadow under the boots, it blends into the boot */scene.add(s);}
 
  /* ---- boot meshes (right, and the mirrored left) ---- */
  const pivot=new T.Group();scene.add(pivot);

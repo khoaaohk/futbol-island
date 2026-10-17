@@ -717,3 +717,7 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .shark-bubble::after{content:"";position:absolute;left:50%;bottom:-8px;width:12px;height:12px;margin-left:-6px;background:#fffdf5;border-right:2px solid #17323b;border-bottom:2px solid #17323b;transform:rotate(45deg)}
 .shark-bubble[hidden]{display:none}
 .travel-mode[data-drop-in]{background:#2a6f79;border-color:#bff1f5}
+
+/* Oct 17 2026 (user, Boot Studio screenshot): the phone's Copy / Search with Google bubble must never appear over game screens. The shops, studios, arcade and museum rooms and dialogs opt out of text selection; text fields keep it. */
+.studio,.studio *,[data-shop-room],[data-shop-room] *,dialog[open] button,dialog[open] [role=button]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.studio input,.studio textarea,[data-shop-room] input,[data-shop-room] textarea{-webkit-user-select:text;user-select:text}
