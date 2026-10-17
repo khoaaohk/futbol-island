@@ -1,34 +1,89 @@
-/* The static reading pages (/about, /learn, /fish, /cards, /exhibits): plain HTML and this one small sheet, no scripts.
-   Island tokens: cream paper, dark green ink, the brush face for headings (same file the title screen uses). */
+/* The static reading pages (/about, /learn, /fish, /cards, /exhibits): plain HTML and this one sheet, no scripts, no animation.
+   Island tokens: cream paper #fff8e7, dark green ink #244d40, the gold button tokens from app/globals.css (--btn-gold …) and the
+   brush face for the page title (same file and gold shadow family as the title screen). Design notes: docs/seo/DESIGN.md.
+   Type scale: title 40/56 · section 22/26 · sub 18/20 · body 17/18 (lh 1.55, ≤68ch) · lead 19/21 · caption 14 · eyebrow/label 12.
+   Spacing scale (8-pt): 8 / 16 / 24 / 40 / 64. Phone gutters 16, desktop 24; 24 between sections. */
 @font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
-.page{min-height:100dvh;margin:0;background:#fff8e7;color:#244d40;font:17px/1.6 Arial,Helvetica,sans-serif;display:flex;flex-direction:column}
-.header{background:#244d40;color:#fff8e7;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px}
-.headerInner{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px}
-.brand{font-family:IslandBrush,Arial,sans-serif;font-size:26px;line-height:1;color:#fff8e7;text-decoration:none;padding:8px 0}
-.nav{display:flex;flex-wrap:wrap;gap:2px 4px;margin:0;padding:0;list-style:none}
-.nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;border-radius:999px;color:#fff8e7;text-decoration:none;font-weight:700;font-size:15px}
-.nav a:hover,.nav a:focus-visible{background:#ffffff22}
-.main{flex:1;width:100%;max-width:860px;margin:0 auto;padding:20px 16px 40px;box-sizing:border-box;display:grid;gap:18px;align-content:start}
-.main h1{margin:0;font-family:IslandBrush,Arial,sans-serif;font-weight:400;font-size:clamp(32px,7vw,48px);line-height:1.1}
-.main h2{margin:10px 0 0;font-size:21px;line-height:1.3}
-.main h3{margin:6px 0 0;font-size:18px;line-height:1.3}
-.main p,.main li{margin:0}
-.main ul,.main ol{margin:0;padding-left:22px;display:grid;gap:6px}
-.main a{color:#1d6b55}
-.lead{font-size:19px}
-.muted{color:#5c6b58;font-size:15px}
-.tag{display:inline-block;font-size:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#7a5a1e}
-.card{background:#fff1d3;border-radius:20px 26px 18px 16px;padding:16px 18px;box-shadow:0 4px 0 #193f3722;display:grid;gap:8px}
-.list{list-style:none;padding:0!important;display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
-.list>li>a{display:grid;gap:2px;height:100%;box-sizing:border-box;padding:12px 14px;border-radius:16px;background:#fff1d3;text-decoration:none;color:#244d40;box-shadow:0 3px 0 #193f3722}
-.list>li>a b{font-size:17px}
-.list>li>a span{font-size:14px;color:#5c6b58}
+
+.page{
+ --ink:#244d40;--ink-soft:#4f6259;--paper:#fff8e7;--surface:#f7f0db;--rule:#e6d9b5;--accent:#7a5a1e;--link:#1d6b55;
+ --s1:8px;--s2:16px;--s3:24px;--s4:40px;--s5:64px;--gutter:16px;--measure:68ch;
+ --t-title:40px;--t-h2:22px;--t-h3:18px;--t-body:17px;--t-lead:19px;--t-cap:14px;--t-label:12px;
+ color-scheme:light;min-height:100dvh;margin:0;background:var(--paper);color:var(--ink);
+ font:var(--t-body)/1.55 Arial,Helvetica,sans-serif;display:flex;flex-direction:column;overflow-x:clip;-webkit-text-size-adjust:100%}
+@media(min-width:720px){.page{--gutter:24px;--t-title:56px;--t-h2:26px;--t-h3:20px;--t-body:18px;--t-lead:21px}}
+.page a{color:var(--link);text-underline-offset:.18em}
+.page a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:4px}
+
+/* Header: the brand only (no section navigation, Oct 16 2026). */
+.header{background:var(--ink);padding:calc(var(--s1) + env(safe-area-inset-top,0px)) var(--gutter) var(--s1)}
+.headerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto}
+.page .brand{display:inline-flex;align-items:center;min-height:44px;font-family:IslandBrush,Arial,sans-serif;font-size:24px;line-height:1;color:var(--paper);text-decoration:none}
+
+.main{flex:1;width:100%;max-width:1040px;margin:0 auto;padding:var(--s3) var(--gutter) var(--s5);box-sizing:border-box;display:grid;gap:var(--s3);align-content:start}
+.main>*{min-width:0}
+.main p,.main li,.main h1,.main h2,.main h3{margin:0}
+.main ul,.main ol{margin:0;padding-left:1.4em;display:grid;gap:var(--s1)}
+.main p,.main li{max-width:var(--measure)}
+.main li::marker{color:var(--accent)}
+
+/* Opening block: crumbs, eyebrow, title, lead and (index pages) the CTA. */
+.intro{display:grid;gap:var(--s2);justify-items:start;padding-bottom:var(--s2)}
+.crumbs{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+.crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:0 var(--s1)}
+.page .crumbs a{color:var(--ink-soft);text-decoration:none}
+.page .crumbs a:hover{text-decoration:underline}
+.crumbs li+li::before{content:'›';margin-right:var(--s1);opacity:.6}
+.crumbs [aria-current]{color:var(--ink)}
+.eyebrow{font-size:var(--t-label);line-height:1.4;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.title{font-family:IslandBrush,Arial,sans-serif;font-weight:400;font-size:var(--t-title);line-height:1.12;letter-spacing:-.01em;color:var(--ink);
+ text-shadow:0 3px 0 var(--btn-gold,#e9c16b),0 8px 22px #a8863d33;overflow-wrap:anywhere;text-wrap:balance}
+.lead{max-width:var(--measure);font-size:var(--t-lead);line-height:1.5}
+
+/* Sections: a heading, then its blocks 16 apart. */
+.section{display:grid;gap:var(--s2);align-content:start}
+.h2{font-size:var(--t-h2);line-height:1.25;font-weight:700;color:var(--ink);text-wrap:balance}
+.h3{font-size:var(--t-h3);line-height:1.3;font-weight:700;color:var(--ink)}
+.count{font-weight:400;color:var(--ink-soft)}
+.caption{max-width:var(--measure);font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
+.bare{list-style:none;padding-left:0!important}
+
+/* Cream card (the island's dialog surface, components/ModalShell.module.css): facts, quizzes, FAQ. */
+.card{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border:1px solid var(--rule);border-radius:16px;
+ padding:var(--s2);box-shadow:0 2px 0 #193f3712,0 8px 24px #193f3710;display:grid;gap:var(--s2);align-content:start}
+@media(min-width:720px){.card{padding:var(--s3)}}
+.stack{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
 .options{list-style:upper-alpha}
-.play{justify-self:start;display:inline-flex;align-items:center;min-height:44px;padding:8px 20px;border-radius:999px;background:#f2c230;color:#244d40!important;font-weight:700;text-decoration:none;box-shadow:0 4px 0 #c99a12}
-.art{display:flex;justify-content:center;background:#e9f3ee;border-radius:18px;padding:10px}
-.crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:4px 8px;font-size:14px}
-.crumbs li+li::before{content:'›';margin-right:8px;color:#5c6b58}
-.footer{background:#e9dcbb;color:#244d40;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));font-size:15px}
-.footerInner{max-width:860px;margin:0 auto;display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
-.footer a{color:#244d40;display:inline-flex;align-items:center;min-height:44px;font-weight:700}
-@media(max-width:600px){.main{padding:16px 16px 32px}.brand{font-size:23px}}
+/* The one label for what kind of text a card holds: "Real football fact" (true) or "Island story" (game fiction). */
+.label{justify-self:start;display:inline-block;padding:4px 10px;border-radius:999px;background:var(--ink);color:var(--paper);
+ font-size:var(--t-label);line-height:1.3;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+
+/* Picture panel (fish art). */
+.art{display:flex;justify-content:center;max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:#e9f3ee;border-radius:16px;padding:var(--s2)}
+.art svg{max-width:100%;height:auto}
+
+/* Index lists: a stacked list on phones (one cream card, hairline rows), a card grid from 720 px. */
+.list{list-style:none;padding:0!important;gap:0!important;background:var(--surface);border:1px solid var(--rule);border-radius:16px;overflow:hidden;box-shadow:0 2px 0 #193f3712}
+.list>li+li{border-top:1px solid var(--rule)}
+.page .list a{display:grid;gap:2px;min-height:44px;padding:12px var(--s2);box-sizing:border-box;color:var(--ink);text-decoration:none}
+.page .list a:hover .itemTitle{text-decoration:underline}
+.itemTitle{font-weight:700;line-height:1.3}
+.itemMeta{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+@media(min-width:720px){
+ .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--s2)!important;background:none;border:0;border-radius:0;overflow:visible;box-shadow:none}
+ .list>li+li{border-top:0}
+ .page .list a{height:100%;padding:var(--s2);background:var(--surface);border:1px solid var(--rule);border-radius:16px;box-shadow:0 2px 0 #193f3712,0 8px 24px #193f3710}
+}
+
+/* The one way into the game: the island's gold button (title screen .start). */
+.page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;max-width:100%;box-sizing:border-box;padding:6px var(--s3) 8px;
+ border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1.15;text-align:center;text-decoration:none;
+ transition:translate .16s,box-shadow .16s}
+.page .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+.end{padding-top:var(--s3)}
+
+/* Quiet footer: one line and the privacy link. */
+.footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+.footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s2);align-items:center}
+.page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:700}

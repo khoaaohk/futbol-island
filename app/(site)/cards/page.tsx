@@ -16,12 +16,15 @@ export default function CardsIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} player cards`,numberOfItems:SITE_CARDS.length,
    itemListElement:SITE_CARDS.map((c,i)=>({'@type':'ListItem',position:i+1,name:`#${c.number} ${c.displayName}`,url:abs(cardPath(c.number))}))}}/>
-  <Breadcrumbs crumbs={CRUMBS}/>
-  <h1>Player cards</h1>
-  <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
-  {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} aria-labelledby={`role-${role}`}>
-   <h2 id={`role-${role}`}>{ROLE_LABELS[role]??role} ({list.length})</h2>
-   <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><b>#{c.number} {c.displayName}</b><span>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={CRUMBS}/>
+   <h1 className={styles.title}>Player cards</h1>
+   <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
+   <a className={styles.cta} href="/">Collect cards on the island</a>
+  </header>
+  {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
+   <h2 className={styles.h2} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
+   <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><span className={styles.itemTitle}>#{c.number} {c.displayName}</span><span className={styles.itemMeta}>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>
   </section>;})}
  </>;
 }

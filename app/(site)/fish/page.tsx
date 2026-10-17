@@ -15,13 +15,16 @@ export default function FishIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} Fishbook`,numberOfItems:SITE_FISH.length,
    itemListElement:SITE_FISH.map((f,i)=>({'@type':'ListItem',position:i+1,name:f.name,url:abs(fishPath(f.id))}))}}/>
-  <Breadcrumbs crumbs={CRUMBS}/>
-  <h1>Fishbook</h1>
-  <p className={styles.lead}>{DESC} Fishing on the island also teaches a goalkeeper’s patience: wait for the real bite, like a keeper waits for the real shot.</p>
-  <p className={styles.muted}>Where each animal lives on the island is a made-up island story. The club facts are real.</p>
-  {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} aria-labelledby={`r-${r}`}>
-   <h2 id={`r-${r}`}>{rarityWord(list[0])} ({list.length})</h2>
-   <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><b>{f.name}</b><span>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={CRUMBS}/>
+   <h1 className={styles.title}>Fishbook</h1>
+   <p className={styles.lead}>{DESC} Fishing on the island also teaches a goalkeeper’s patience: wait for the real bite, like a keeper waits for the real shot.</p>
+   <p className={styles.caption}>Where each animal lives on the island is a made-up island story. The club facts are real.</p>
+   <a className={styles.cta} href="/">Go fishing on the island</a>
+  </header>
+  {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
+   <h2 className={styles.h2} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
+   <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><span className={styles.itemTitle}>{f.name}</span><span className={styles.itemMeta}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>
   </section>;})}
  </>;
 }

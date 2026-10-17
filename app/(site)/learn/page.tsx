@@ -14,13 +14,15 @@ export default function LearnIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} football lessons`,numberOfItems:LESSONS.length,
    itemListElement:LESSONS.map((l,i)=>({'@type':'ListItem',position:i+1,name:`${l.title} (${l.formatLabel})`,url:abs(lessonPath(l.id))}))}}/>
-  <Breadcrumbs crumbs={CRUMBS}/>
-  <h1>Football lessons</h1>
-  <p className={styles.lead}>{DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
-  <p><a className={styles.play} href="/">Play the lessons on the island</a></p>
-  {FORMAT_ORDER.map(f=>{const list=LESSONS.filter(l=>l.format===f);return <section key={f} aria-labelledby={`fmt-${f}`}>
-   <h2 id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons ({list.length})</h2>
-   <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={lessonPath(l.id)}><b>{l.title}</b><span>{l.concept}</span></a></li>)}</ul>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={CRUMBS}/>
+   <h1 className={styles.title}>Football lessons</h1>
+   <p className={styles.lead}>{DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
+   <a className={styles.cta} href="/">Play the lessons on the island</a>
+  </header>
+  {FORMAT_ORDER.map(f=>{const list=LESSONS.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
+   <h2 className={styles.h2} id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons <span className={styles.count}>({list.length})</span></h2>
+   <ul className={styles.list}>{list.map(l=><li key={l.id}><a href={lessonPath(l.id)}><span className={styles.itemTitle}>{l.title}</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>
   </section>;})}
  </>;
 }

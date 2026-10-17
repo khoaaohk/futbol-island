@@ -20,20 +20,21 @@ export default function ExhibitPage({params}:{params:{id:string}}){
   <JsonLd data={creativeWorkLd({name:e.title,path:exhibitPath(e.id),description:e.facts.join(' '),
    about:{'@type':'Thing',name:`${e.title} (${e.year})`,description:e.galleryTitle}})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <Breadcrumbs crumbs={crumbs}/>
-  <p className={styles.tag}>{e.galleryTitle} · {e.year}</p>
-  <h1>{e.title}</h1>
-  <section className={styles.card} aria-labelledby="facts"><h2 id="facts">The facts</h2>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={crumbs}/>
+   <p className={styles.eyebrow}>{e.galleryTitle} · {e.year}</p>
+   <h1 className={styles.title}>{e.title}</h1>
+  </header>
+  <section className={styles.card} aria-labelledby="facts"><span className={styles.label}>Real football fact</span><h2 className={styles.h2} id="facts">The facts</h2>
    <ul>{e.facts.map(f=><li key={f}>{f}</li>)}</ul>
   </section>
-  {e.story.length>0&&<section aria-labelledby="story"><h2 id="story">The story</h2>
+  {e.story.length>0&&<section className={styles.section} aria-labelledby="story"><h2 className={styles.h2} id="story">The story</h2>
    <ul>{e.story.map((s,i)=><li key={i}>{s.head&&<b>{s.head}: </b>}{s.text}</li>)}</ul>
   </section>}
-  <section className={styles.card} aria-labelledby="game"><h2 id="game">Take it to your game</h2><p>{e.forYourGame}</p></section>
-  {e.sources.length>0&&<section aria-labelledby="sources"><h2 id="sources">Sources</h2>
-   <ul className={styles.muted}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
+  <section className={styles.card} aria-labelledby="game"><h2 className={styles.h2} id="game">Take it to your game</h2><p>{e.forYourGame}</p></section>
+  {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={styles.h3} id="sources">Sources</h2>
+   <ul className={styles.caption}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
   </section>}
-  <p><a className={styles.play} href="/museum">See it in the museum on the island</a></p>
-  <p><a href="/exhibits">All exhibits</a></p>
+  <p className={styles.end}><a className={styles.cta} href="/museum">See it in the museum on the island</a></p>
  </>;
 }

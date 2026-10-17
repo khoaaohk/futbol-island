@@ -21,24 +21,26 @@ export default function CardPage({params}:{params:{number:string}}){
   <JsonLd data={creativeWorkLd({name:`${c.displayName} · Futbol Island card #${c.number}`,path:cardPath(c.number),description:c.blurb,
    about:{'@type':'Person',name:c.displayName,jobTitle:c.coach?'Football coach':`Football ${c.futsal?'(futsal) ':''}player · ${c.roleLabel}`,...(c.country?{nationality:{'@type':'Country',name:c.country}}:{})}})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <Breadcrumbs crumbs={crumbs}/>
-  <p className={styles.tag}>Card #{c.number} · {c.roleLabel} · {eraWord(c)}</p>
-  <h1>{c.displayName}</h1>
-  <p className={styles.lead}>{c.blurb}</p>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={crumbs}/>
+   <p className={styles.eyebrow}>Card #{c.number} · {c.roleLabel} · {eraWord(c)}</p>
+   <h1 className={styles.title}>{c.displayName}</h1>
+   {c.blurb&&<p className={styles.lead}>{c.blurb}</p>}
+  </header>
   <section className={styles.card} aria-labelledby="facts">
-   <h2 id="facts">On the card</h2>
-   <ul>
+   <span className={styles.label}>Real football fact</span>
+   <h2 className={styles.h2} id="facts">On the card</h2>
+   <ul className={styles.bare}>
     <li><b>Position:</b> {c.roleLabel}</li>
     {c.country&&<li><b>Country:</b> {c.country}</li>}
     {c.national&&<li><b>National team:</b> {c.national}</li>}
    </ul>
-   {c.strengths.length>0&&<><h3>Strengths</h3><ul>{c.strengths.map(s=><li key={s}>{s}</li>)}</ul></>}
+   {c.strengths.length>0&&<><h3 className={styles.h3}>Strengths</h3><ul>{c.strengths.map(s=><li key={s}>{s}</li>)}</ul></>}
   </section>
   {c.career.length>0&&<section className={styles.card} aria-labelledby="career">
-   <h2 id="career">{c.coach?'Coaching career':'Clubs'}</h2>
+   <h2 className={styles.h2} id="career">{c.coach?'Coaching career':'Clubs'}</h2>
    <ul>{c.career.map(s=><li key={s}>{s}</li>)}</ul>
   </section>}
-  <p><a className={styles.play} href="/">Collect cards on the island</a></p>
-  <p><a href="/cards">All cards</a></p>
+  <p className={styles.end}><a className={styles.cta} href="/">Collect cards on the island</a></p>
  </>;
 }

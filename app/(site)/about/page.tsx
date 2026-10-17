@@ -7,7 +7,6 @@ import {SITE_FISH} from '@/lib/site/fish';
 import {SITE_CARDS} from '@/lib/site/cards';
 import {SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {breadcrumbLd,pageMeta,siteLd} from '@/lib/site/seo';
-import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import styles from '../site.module.css';
 
 /**
@@ -29,23 +28,24 @@ const FAQ:[string,string][]=[
 ];
 
 export default function About(){
- preloadIslandBrush();
  return <>
   <JsonLd data={siteLd()}/>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(([q,a])=>({'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}))}}/>
-  <Breadcrumbs crumbs={CRUMBS}/>
-  <h1>About Futbol Island</h1>
-  <p className={styles.lead}>{DESC}</p>
-  <p><a className={styles.play} href="/">Play Futbol Island</a></p>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={CRUMBS}/>
+   <h1 className={styles.title}>About Futbol Island</h1>
+   <p className={styles.lead}>{DESC}</p>
+   <a className={styles.cta} href="/">Play on the island</a>
+  </header>
 
-  <section aria-labelledby="who"><h2 id="who">Who it is for</h2>
+  <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Who it is for</h2>
    <p>Kids who love football (soccer) and want to understand the game better: where to stand, when to pass, how a team keeps its shape. It is also for parents, carers and coaches who want a calm, ad-free way for children to learn the ideas behind the game between practices.</p>
   </section>
 
-  <section aria-labelledby="why"><h2 id="why">{G.whyTitle}</h2><p>{G.why}</p></section>
+  <section className={styles.section} aria-labelledby="why"><h2 className={styles.h2} id="why">{G.whyTitle}</h2><p>{G.why}</p></section>
 
-  <section aria-labelledby="learn"><h2 id="learn">What it teaches</h2>
+  <section className={styles.section} aria-labelledby="learn"><h2 className={styles.h2} id="learn">What it teaches</h2>
    <p>{G.learns}</p>
    <ul>
     <li><b>Positions and tactics:</b> <a href="/learn">{LESSONS.length} short lessons</a> in 7v7, 9v9, 11v11 and futsal. Each one plays out on a pitch with moving players, a coach explains every step, and a quick quiz checks the idea.</li>
@@ -58,7 +58,7 @@ export default function About(){
    </ul>
   </section>
 
-  <section aria-labelledby="how"><h2 id="how">How it works</h2>
+  <section className={styles.section} aria-labelledby="how"><h2 className={styles.h2} id="how">How it works</h2>
    <ul>
     <li><b>{G.free}</b> {G.freeWhy}</li>
     <li><b>Phone first.</b> It runs in the web browser on phones, tablets and computers. No download, no sign-up.</li>
@@ -68,17 +68,17 @@ export default function About(){
    </ul>
   </section>
 
-  <section aria-labelledby="partners"><h2 id="partners">{G.partnerTitle}</h2>
+  <section className={styles.section} aria-labelledby="partners"><h2 className={styles.h2} id="partners">{G.partnerTitle}</h2>
    <p>{G.partnerLead}<b>{G.partnerName}</b>{G.partnerRest}</p>
    <ul>{WSV_LINKS.map(l=><li key={l.href}><a href={l.href} rel="noopener noreferrer">{l.label}</a></li>)}</ul>
-   <h3>{G.nonprofitsTitle}</h3>
+   <h3 className={styles.h3}>{G.nonprofitsTitle}</h3>
    <p>{G.nonprofitsLead}{NONPROFITS.map(n=>n.name).join(', ').replace(/, ([^,]+)$/,' and $1')}, all in San Diego.</p>
    <ul>{NONPROFITS.map(n=><li key={n.name}><a href={n.href} rel="noopener noreferrer">{n.name}</a></li>)}</ul>
   </section>
 
-  <section aria-labelledby="faq"><h2 id="faq">Questions grown-ups ask</h2>
-   {FAQ.map(([q,a])=><div key={q} className={styles.card}><h3>{q}</h3><p>{a}</p></div>)}
-   <p><a href="/privacy">Read the privacy policy</a></p>
+  <section className={styles.section} aria-labelledby="faq"><h2 className={styles.h2} id="faq">Questions grown-ups ask</h2>
+   <ul className={styles.stack}>{FAQ.map(([q,a])=><li key={q} className={styles.card}><h3 className={styles.h3}>{q}</h3><p>{a}</p></li>)}</ul>
+   <p className={styles.caption}><a href="/privacy">Read the privacy policy</a></p>
   </section>
  </>;
 }
