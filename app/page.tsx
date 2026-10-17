@@ -3,6 +3,8 @@ import Landing from '@/components/landing/Landing';
 import IslandLoadingStatic from '@/components/IslandLoadingStatic';
 import RootSwitch from '@/components/root/RootSwitch';
 import {ROOT_VIEW_BOOT} from '@/lib/rootView';
+import JsonLd from '@/components/seo/JsonLd';
+import {siteLd} from '@/lib/site/seo';
 
 /**
  * https://futbolisland.app/ (Oct 9 2026): the title screen (components/landing: what the game is, and a save code, required to
@@ -29,5 +31,6 @@ export default function Page(){
  return <>
   <script dangerouslySetInnerHTML={{__html:ROOT_VIEW_BOOT}}/>
   <RootSwitch landing={<Landing/>} loader={<IslandLoadingStatic/>}/>
+  <JsonLd data={siteLd()}/>
  </>;
 }
