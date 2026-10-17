@@ -11,7 +11,7 @@
 import type {JobButton} from '../jobs/jobMoves';
 import type {EntryStyle} from '../../graphics/swimPose';
 
-export type WaterActionId='swimfast'|'float'|'swimride'|'letgo';
+export type WaterActionId='swimfast'|'float'|'swimride'|'letgo'|'surface';
 /**
  * The ride switcher in the water (user, Oct 15 2026: "don't allow walking, biking, scooter or moped. change icon to swimming and
  * jetpack only"): the ride slot shows the swim icon (the current ride); a tap switches to the only other choice, the jetpack,
@@ -42,6 +42,12 @@ export const RIDE_LET_GO:JobButton={slot:'shoot',key:'Space',id:'letgo',label:'L
 export const RIDE_HOLDING:JobButton={slot:'ride',key:'R',id:'swimride',label:'Hanging on: let go to swim',icon:'swim',enabled:false};
 export const RIDING_BUTTONS:readonly JobButton[]=[RIDE_LET_GO,RIDE_HOLDING] as const;
 export const RIDING_NOTE='Hanging on! Tap Let go to swim again.';
+/** Diving (water P2, lib/town/water/diveSession.ts): the one action is Surface (Space / 1, and Escape), icon-only; the ride slot keeps
+ *  the swim icon (the ride you go back to), answering a tap with a hint. E uses the find in reach (its floating prompt). */
+export const DIVE_SURFACE:JobButton={slot:'shoot',key:'Space',id:'surface',label:'Surface: swim back up for air',icon:'surface',enabled:true};
+export const DIVE_HOLDING:JobButton={slot:'ride',key:'R',id:'swimride',label:'Diving: surface to swim or fly',icon:'swim',enabled:false};
+export const DIVING_BUTTONS:readonly JobButton[]=[DIVE_SURFACE,DIVE_HOLDING] as const;
+export const DIVING_NOTE='Diving! Tap Surface to swim back up.';
 export function waterKeyAction(code:string,key:string):WaterActionId|null{
  if(code==='Space'||code==='Digit1'||code==='Numpad1')return 'swimfast';
  const k=key.toLowerCase();if(k==='q'||k==='j'||code==='Digit2'||code==='Numpad2')return 'float';if(k==='e'||k==='r'||code==='Digit3'||code==='Numpad3')return 'swimride';return null;
@@ -83,8 +89,12 @@ export type WaterView={
  riding:boolean;
  /** Bumped on a first ride: the once-per-device ride lesson (animalRides.ts RIDE_LESSON). */
  rideLesson:number;
+ /** Under the water at a diving spot (water P2): the cluster is Surface. */
+ diving:boolean;
+ /** Bumped on a dive: the once-per-device breath lesson (diveSession.ts DIVE_LESSON). */
+ diveLesson:number;
 };
-const IDLE_VIEW:WaterView={inWater:false,swimming:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0};
+const IDLE_VIEW:WaterView={inWater:false,swimming:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0,diving:false,diveLesson:0};
 let view=IDLE_VIEW;const listeners=new Set<()=>void>();
 export const waterStore={
  get:()=>view,server:()=>IDLE_VIEW,
@@ -96,8 +106,9 @@ export const waterStore={
 /** The three actions; the island runtime installs the real one while the island is up. */
 export const waterActions={press:(_id:WaterActionId,_phase:'tap'|'down'|'up')=>{}};
 /** Which cluster the HUD shows for a view (null = the land cluster). In the water the ride slot is Swim, or Swim → Jetpack with fuel. */
-export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{riding?:boolean}):readonly JobButton[]|null{
+export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{riding?:boolean;diving?:boolean}):readonly JobButton[]|null{
  if(!v.inWater)return null;
+ if(v.diving)return DIVING_BUTTONS;
  if(v.riding)return RIDING_BUTTONS;
  return v.swimming?(v.flyOk?WATER_BUTTONS_FLY:WATER_BUTTONS):(v.flyOk?WADE_BUTTONS_FLY:WADE_BUTTONS);
 }

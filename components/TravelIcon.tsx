@@ -53,6 +53,8 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  swimfast:'M16.5 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M15 13H8 M11 13l4-7h6 M2 8h6 M2 13h3 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
  // letgo (water P1b, the ride's Let go): two open hands parting over the wave, arrows out.
  letgo:'M9 4v6 M6 7l3-3 3 3 M15 4v6 M12 7l3-3 3 3 M3 13h4 M17 13h4 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ // surface (water P2, the dive's Surface): one bold arrow up through the wave line, two bubbles beside it.
+ surface:'M12 21V7 M7 12l5-5 5 5 M2 5c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0 M5 15.5a1.2 1.2 0 1 0 0 .01 M19 17.5a1.5 1.5 0 1 0 0 .01',
  float:'M3 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M9 13h5l3-6 3 6 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0'
  };
  return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={size?{width:size,height:size}:undefined}><path d={paths[kind]??paths.walk}/></svg>;

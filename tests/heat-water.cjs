@@ -86,7 +86,7 @@ ok('the probe never asks distanceToLand per frame; the swim pose allocates nothi
 ok('Town wiring: the idle rule, the activity, the 10 Hz probe is the only depth source, the splash sound reuses existing cues',()=>{
  const town=read('components/Town.tsx');
  assert.match(town,/const waterIdle=water\.resting\(\);const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\);/);
- assert.match(town,/if\(waterIdle&&idleFrame&&!waterIdleWas\)countWaterIdleCap\(\);/);
+ assert.match(town,/if\(waterIdle&&idleFrame&&!waterIdleWas(&&!dive\.diving)?\)countWaterIdleCap\(\);/);
  assert.match(town,/:water\.inWater\?'swim':'walk',placeAt\);/,'the frame books swimming time as its own activity');
  assert(!/waterDepthAt\(/.test(town),'Town reads depth through the probe only');
  assert.match(town,/playCues\(SPLASH_CUES\[water\.state\.entry\]\);/,'the splash is the cue table by entry');assert.doesNotMatch(town,/sound\.land\(ev\.splash\);playCues/,'no land thud in the sea (Oct 15 2026)');assert.match(fs.readFileSync('lib/audio/islandSound.ts','utf8'),/case 'splash-soft':case 'splash':case 'splash-big':/,'the splash is synthesized on the existing effects bus (no samples, no new context)');
