@@ -4,6 +4,7 @@ import ParentGate from './ParentGate';
 import {Icon} from './Icon';
 import {parentGatePassed} from '@/lib/parentGate';
 import styles from './IslandSettings.module.css';
+import {NONPROFITS} from '@/lib/site/aboutCopy';
 /**
  * About → "Support Futbol Island" (G-17, Sep 30 2026). Donations and links that leave the game sit behind the shared grown-up
  * check (components/ParentGate.tsx, lib/parentGate.ts), the usual kids'-app pattern (COPPA-minded; app-store kids' category
@@ -11,8 +12,8 @@ import styles from './IslandSettings.module.css';
  * Also used by /coffee (app/coffee/CoffeeGate.tsx wraps its tiers the same way).
  */
 export const DONATION_AMOUNTS=[5,10,15,25] as const;
-/** The local non-profits donations go to (shared with the title screen's For grown-ups sheet). */
-export const NONPROFITS=[{name:'FC YAP',href:'https://www.instagram.com/fc_yap/'},{name:'Street Soccer San Diego',href:'https://www.instagram.com/streetsoccersd/'},{name:'Ronin Futsal',href:'https://www.instagram.com/roninfutsal/'}] as const;
+/** The local non-profits donations go to: lib/site/aboutCopy.ts (shared with the title screen and the static /about page). */
+export {NONPROFITS};
 export default function DonationLinks(){
  const [step,setStep]=useState<'closed'|'gate'|'open'>('closed');
  useEffect(()=>{if(parentGatePassed())setStep('open');},[]);

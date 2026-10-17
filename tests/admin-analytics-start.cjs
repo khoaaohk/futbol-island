@@ -57,7 +57,7 @@ await ok('ids allowlisted',()=>{
  assert.deepEqual(literal.sort(),['sg:donate','sg:instagram','sg:open','sg:privacy','sg:wsv','sp:open','st:have','st:other_code','st:start'].sort());
  for(const id of literal)assert(SI.isStartId(id),id);
  // Computed ids: the non-profits, the amounts and the privacy contents match their sources.
- const np=[...read('components/DonationLinks.tsx').match(/NONPROFITS=\[(.*?)\] as const/)[1].matchAll(/name:'([^']+)'/g)].map(m=>SI.nonprofitSlug(m[1]));
+ const np=[...read('lib/site/aboutCopy.ts').match(/NONPROFITS=\[(.*?)\] as const/)[1].matchAll(/name:'([^']+)'/g)].map(m=>SI.nonprofitSlug(m[1]));
  assert.deepEqual(np,J(SI.START_NONPROFITS),'non-profit slugs');
  assert.deepEqual(read('components/DonationLinks.tsx').match(/DONATION_AMOUNTS=\[([^\]]+)\]/)[1].split(',').map(Number),J(SI.START_AMOUNTS),'amount tiers');
  assert(/data-track=\{'sg:'\+nonprofitSlug\(n\.name\)\}/.test(read('components/landing/Donate.tsx'))&&/data-track=\{'sg:amt_'\+a\}/.test(read('components/landing/Donate.tsx')));

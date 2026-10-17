@@ -1,0 +1,33 @@
+# Futbol Island
+
+> Futbol Island (https://futbolisland.app) is a free, phone-first football (soccer) learning game for kids aged 7 to 12. Players explore an island and learn positions, team shape, tactics and the Laws of the Game in 7v7, 9v9, 11v11 and futsal through short animated lessons with quizzes, then discover football history and culture: a hidden-ball hunt where every ball teaches one idea, fishing where every sea animal links to a real club fact, player cards and a History Museum. No ads, no chat, no accounts: progress is kept with a save code that carries no personal details. Built in San Diego with White Sports Ventures (founded by former U.S. Men's National Team player Jeremiah White III) and the local non-profits FC YAP, Street Soccer San Diego and Ronin Futsal.
+
+## About
+
+- [About Futbol Island](https://futbolisland.app/about): who it is for, what it teaches, how it works, the partners and a short FAQ for parents and coaches.
+- [Play the game](https://futbolisland.app/): the title screen and the island itself (runs in the web browser).
+
+## Learn
+
+- [Football lessons](https://futbolisland.app/learn): every lesson in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions.
+
+## Fish
+
+- [Fishbook](https://futbolisland.app/fish): every sea animal on the island and the real football club, team or story it is linked to, with a source credit.
+
+## Cards
+
+- [Player cards](https://futbolisland.app/cards): the card binder of current stars, all-time greats, futsal players and coaches, with position, country, strengths and career.
+
+## Museum
+
+- [History Museum exhibits](https://futbolisland.app/exhibits): the museum's cases on the Laws of the Game, World Cup history, balls and kits, legends, firsts, tactics and the science of the game.
+
+## Privacy
+
+- [Privacy policy](https://futbolisland.app/privacy): what the game keeps, why and for how long. Designed for children under 13 (COPPA and the UK Age Appropriate Design Code principles).
+
+## Optional
+
+- [Full text for AI assistants](https://futbolisland.app/llms-full.txt): the About text and the full lesson index in one plain-text file.
+- [Sitemap](https://futbolisland.app/sitemap.xml): every page.
