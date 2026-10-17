@@ -20,7 +20,8 @@ export type RawSaveMetrics={
  syncs:number;avg_bytes:number;total_bytes:number;
  /** pg_total_relation_size('game_saves') (table + indexes + TOAST); null for the local preview store. */
  table_bytes:number|null;
- range:{created:number;returned:number;prev_created:number;prev_returned:number};
+ /** returning / prev_returning (20261020): codes made before the window whose LATEST use date falls inside it (this range / the one before). */
+ range:{created:number;returned:number;prev_created:number;prev_returned:number;returning:number;prev_returning:number};
  by_day:{day:string;created:number}[];
  weeks:{week:string;created:number}[];
  throttle:{failed_tries:number;ip_locks:number;breaker_hours:number;hard_stop_hours:number;create_cap_ip:number;create_cap_day:number;mail_cap_ip:number;mail_cap_day:number;creates:number};
@@ -82,7 +83,8 @@ export function memorySaveMetrics(data:MemorySaveData,pFrom:string,pTo:string,no
   expiring_30:exp(30),expiring_90:exp(90),idle_180:n(r=>r.lastUsedOn<addDays(t,-180)),
   syncs:rows.reduce((a,r)=>a+r.rev-1,0),avg_bytes:rows.length?Math.round(rows.reduce((a,r)=>a+r.bytes,0)/rows.length):0,total_bytes:rows.reduce((a,r)=>a+r.bytes,0),
   table_bytes:null,
-  range:{created:n(r=>inRange(r,f,e)),returned:n(r=>inRange(r,f,e)&&r.lastUsedOn>r.createdOn),prev_created:n(r=>inRange(r,pf,pe)),prev_returned:n(r=>inRange(r,pf,pe)&&r.lastUsedOn>r.createdOn)},
+  range:{created:n(r=>inRange(r,f,e)),returned:n(r=>inRange(r,f,e)&&r.lastUsedOn>r.createdOn),prev_created:n(r=>inRange(r,pf,pe)),prev_returned:n(r=>inRange(r,pf,pe)&&r.lastUsedOn>r.createdOn),
+   returning:n(r=>r.createdOn<f&&r.lastUsedOn>=f&&r.lastUsedOn<=e),prev_returning:n(r=>r.createdOn<pf&&r.lastUsedOn>=pf&&r.lastUsedOn<=pe)},
   by_day:days.map(day=>({day,created:n(r=>r.createdOn===day)})),
   weeks:weeks.map(week=>({week,created:n(r=>r.createdOn>=week&&r.createdOn<addDays(week,7))})),
   throttle:th,

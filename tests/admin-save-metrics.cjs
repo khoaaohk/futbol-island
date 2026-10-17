@@ -26,7 +26,7 @@ const NOW=new Date(),TODAY=NOW.toISOString().slice(0,10),D=n=>C.addDays(TODAY,n)
 const hex=i=>i.toString(16).padStart(64,'0');
 /** Fixture rows: [created (days from today), last used (days from today), bytes, rev]. */
 const FIX=[[0,0,300,1],[0,0,500,2],[-1,-1,400,1],[-1,0,420,3],[-2,-2,200,1],[-3,0,800,5],[-8,-1,1000,9],[-8,-8,350,1],[-10,-2,650,4],[-31,-1,900,12],[-31,-31,250,1],
- [-40,-35,300,2],[-200,-190,700,3],[-360,-345,333,2],[-364,-364,111,1],[-15,-15,222,1]];
+ [-40,-35,300,2],[-200,-190,700,3],[-360,-345,333,2],[-364,-364,111,1],[-15,-15,222,1],[-100,-10,260,3],[-100,-50,270,2]];
 function memData(){const saves={};FIX.forEach(([c,u,b,r],i)=>{saves[hex(i+1)]={hash:hex(i+1),snapshot:{format:1,game:'',keys:{}},bytes:b,rev:r,createdOn:D(c),lastUsedOn:D(u),codeVersion:1,guardianId:null};});
  const win=(min,agoMs=0)=>Math.floor((NOW.getTime()-agoMs)/(min*60_000))*min*60_000,ip=x=>'ip:'+x.repeat(32);
  const throttle={[`f:${ip('a')}|${win(10)}`]:10,[`f:${ip('b')}|${win(10)}`]:4,[`f:global|${win(60)}`]:520,[`f:global|${win(60,3_600_000)}`]:30,[`f:global|${win(60,30*3_600_000)}`]:999,
@@ -38,18 +38,28 @@ function memData(){const saves={};FIX.forEach(([c,u,b,r],i)=>{saves[hex(i+1)]={h
 await ok('definitions',()=>{
  const m=M.memorySaveMetrics(memData(),D(-6),TODAY,NOW);
  assert.equal(m.total,FIX.length);
- assert.equal(m.active_1,4,'used today');assert.equal(m.active_7,9,'used in the last 7 days');assert.equal(m.active_30,11,'used in the last 30 days');
+ assert.equal(m.active_1,4,'used today');assert.equal(m.active_7,9,'used in the last 7 days');assert.equal(m.active_30,12,'used in the last 30 days');
  assert.equal(m.returning,FIX.filter(([c,u])=>u>c).length,'returning = used on a later day');
  assert.equal(m.eligible,FIX.filter(([c])=>c<0).length);assert.equal(m.never_returned,FIX.filter(([c,u])=>c<0&&u===c).length);
  assert.equal(m.returning+m.never_returned,m.eligible,'every code made before today either came back or did not');
- assert.deepEqual(J(m.retention.d1),{eligible:14,kept:FIX.filter(([c,u])=>c<=-1&&u-c>=1).length});
+ assert.deepEqual(J(m.retention.d1),{eligible:FIX.filter(([c])=>c<=-1).length,kept:FIX.filter(([c,u])=>c<=-1&&u-c>=1).length});
  assert.deepEqual(J(m.retention.d7),{eligible:FIX.filter(([c])=>c<=-7).length,kept:FIX.filter(([c,u])=>c<=-7&&u-c>=7).length});
  assert.deepEqual(J(m.retention.d30),{eligible:FIX.filter(([c])=>c<=-30).length,kept:FIX.filter(([c,u])=>c<=-30&&u-c>=30).length});
  assert.equal(m.median_lifetime_days,M.median(FIX.map(([c,u])=>u-c)));assert.equal(m.median_age_days,M.median(FIX.map(([c])=>-c)));
  assert.equal(M.median([1,2,3,4]),2.5,'percentile_cont interpolates');assert.equal(M.median([]),0);
  assert.equal(m.expiring_30,2,'last used ~345 and ~364 days ago go within 30 days');assert.equal(m.expiring_90,2);assert.equal(m.idle_180,3);
  assert.equal(m.syncs,FIX.reduce((a,f)=>a+f[3]-1,0));assert.equal(m.total_bytes,FIX.reduce((a,f)=>a+f[2],0));assert.equal(m.avg_bytes,Math.round(m.total_bytes/FIX.length));
- assert.deepEqual(J(m.range),{created:FIX.filter(([c])=>c>=-6).length,returned:FIX.filter(([c,u])=>c>=-6&&u>c).length,prev_created:FIX.filter(([c])=>c>=-13&&c<=-7).length,prev_returned:FIX.filter(([c,u])=>c>=-13&&c<=-7&&u>c).length});
+ assert.deepEqual(J(m.range),{created:FIX.filter(([c])=>c>=-6).length,returned:FIX.filter(([c,u])=>c>=-6&&u>c).length,prev_created:FIX.filter(([c])=>c>=-13&&c<=-7).length,prev_returned:FIX.filter(([c,u])=>c>=-13&&c<=-7&&u>c).length,
+  returning:FIX.filter(([c,u])=>c<-6&&u>=-6&&u<=0).length,prev_returning:FIX.filter(([c,u])=>c<-13&&u>=-13&&u<=-7).length});
+ // Oct 20 2026: returning follows the range (made before it, last used inside it); the all-time figure is unchanged and range-independent.
+ for(const [lo,hi] of [[0,0],[-1,-1],[-6,0],[-29,0]]){
+  const r=M.memorySaveMetrics(memData(),D(lo),D(hi),NOW),len=hi-lo+1,pf=lo-len,pe=lo-1;
+  assert.equal(r.range.returning,FIX.filter(([c,u])=>c<lo&&u>=lo&&u<=hi).length,`returning for ${lo}…${hi}`);
+  assert.equal(r.range.prev_returning,FIX.filter(([c,u])=>c<pf&&u>=pf&&u<=pe).length,`prev returning for ${lo}…${hi}`);
+  assert.equal(r.returning,m.returning,'all-time returning does not depend on the range');
+ }
+ const tday=M.memorySaveMetrics(memData(),TODAY,TODAY,NOW);assert(tday.range.returning>0&&tday.range.returning<tday.returning,'Today: made before today, used today (not the all-time figure)');
+ assert(M.memorySaveMetrics(memData(),D(-6),TODAY,NOW).range.prev_returning>0&&M.memorySaveMetrics(memData(),D(-29),TODAY,NOW).range.prev_returning>0,'previous-window counts are exercised');
  assert.equal(m.by_day.length,7);assert.equal(m.by_day.reduce((a,r)=>a+r.created,0),m.range.created);assert.equal(m.by_day[6].day,TODAY);
  assert.equal(m.weeks.length,12);assert.equal(new Date(m.weeks[11].week+'T00:00:00Z').getUTCDay(),1,'weeks start on Monday');assert(m.weeks[11].week<=TODAY);
  assert.deepEqual(J(m.throttle),{failed_tries:550,ip_locks:1,breaker_hours:1,hard_stop_hours:0,create_cap_ip:1,create_cap_day:0,mail_cap_ip:1,mail_cap_day:0,creates:75},'only the last 24 hours count');
@@ -119,13 +129,22 @@ await ok('sql',async()=>{
   const runFile=f=>cp.execFileSync(psqlBin,[...args,'-f',f],{encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim().split('\n').pop();
   psql('create role anon; create role authenticated; create role service_role bypassrls;');
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
-  const FILE='supabase/migrations/20261011_admin_save_metrics.sql';
+  const FILE='supabase/migrations/20261011_admin_save_metrics.sql',FILE2='supabase/migrations/20261020_admin_save_returning_range.sql';
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   assert(files.indexOf('20261011_admin_save_metrics.sql')>files.indexOf('20261010_game_saves.sql'),'runs after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261011_admin_save_metrics.sql')],'OK, admin save metrics installed','self-check row');
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','the save migration still passes');
   assert.equal(runFile(FILE),'OK, admin save metrics installed','idempotent');
+  assert(files.indexOf('20261020_admin_save_returning_range.sql')>files.indexOf('20261011_admin_save_metrics.sql'),'the range migration runs after the metrics one');
+  assert.equal(results[files.indexOf('20261020_admin_save_returning_range.sql')],'OK, returning in range installed','range migration self-check row');
+  assert.equal(runFile(FILE2),'OK, returning in range installed','range migration idempotent');
+  const sql2=read(FILE2);
+  assert(!/\bdrop\b|\btruncate\b|\brename\b|\balter table\b|\binsert\b|\bupdate\b|\bdelete\b/i.test(sql2.replace(/--.*$/gm,'').replace(/'[^']*'/g,"''")),'range migration is additive and read-only');
+  assert.match(sql2.trim().split('\n').slice(-1)[0],/\) as missing\) x;$/,'range migration ends with the self-check select');
+  runFile(FILE);
+  assert.match(psql(sql2.slice(sql2.lastIndexOf('select case when missing'))),/^NOT INSTALLED: save_admin_metrics without returning in range$/,'the old function fails the new self-check');
+  assert.equal(runFile(FILE2),'OK, returning in range installed','re-running the range migration repairs it');
   const sql=read(FILE);
   assert(!/\bdrop\b|\btruncate\b|\brename\b|\balter table\b|\binsert\b|\bupdate\b|\bdelete\b/i.test(sql.replace(/--.*$/gm,'').replace(/'[^']*'/g,"''")),'additive and read-only: no table changes, no writes');
   assert.match(sql.trim().split('\n').slice(-1)[0],/\) as missing\) x;$/,'the file ends with the self-check select');
@@ -135,6 +154,7 @@ await ok('sql',async()=>{
   psql('drop function public.save_admin_metrics(date, date)');
   assert.match(psql(sql.slice(sql.lastIndexOf('select case when missing'))),/^NOT INSTALLED: save_admin_metrics$/);
   assert.equal(runFile(FILE),'OK, admin save metrics installed','re-running repairs it');
+  assert.equal(runFile(FILE2),'OK, returning in range installed','the range migration restores the full function');
   // The same rows in both stores → the same answer (table_bytes is Postgres-only).
   const data=memData();
   for(const r of Object.values(data.saves))psql(`insert into game_saves (code_hash, snapshot, snapshot_bytes, rev, created_on, last_used_on) values (decode('${r.hash}','hex'), '{}', ${r.bytes}, ${r.rev}, '${r.createdOn}', '${r.lastUsedOn}')`);

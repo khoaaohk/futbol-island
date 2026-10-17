@@ -62,8 +62,12 @@ export function HeadlineTiles({report,onOpenDay}:{report:Report;onOpenDay?:(day:
    {!d?<small>{gap}</small>:sc?<Delta cur={sc.created} prev={sc.prevCreated} label={`${plural(sc.days,'complete day')} vs the ${sc.days} before`}/>
     :d.to===d.today&&d.from===d.to?<small>today so far (UTC date)</small>:<Delta cur={d.range.created} prev={d.range.prev_created} label={prevLabel(len)}/>}
    {d&&<Sparkline values={d.by_day.map(x=>x.created)} label="New save codes per day"/>}</div>
-  <div className={styles.tile}><span>Returning save codes</span><b>{d?fmtInt(d.returning):'—'}</b>
-   <small>{d?`all time · ${d.eligible?fmtPct(d.returning/d.eligible):'—'} of codes made before today came back on a later day`:gap}</small></div>
+  {/* Returning (Oct 20 2026): range-aware. Codes made before the range whose last use falls inside it. Only the LATEST use date is stored. */}
+  <div className={styles.tile}><span>Returning save codes</span><b>{d?fmtInt(d.range.returning??0):'—'}</b>
+   {!d?<small>{gap}</small>:d.range.returning===undefined?<small>run supabase/migrations/20261020_admin_save_returning_range.sql to count this range</small>
+    :<><small>{d.from===d.to?(d.to===d.today?'made before today and used today':'made before this day and used on it'):'came back in this range, made before it'} (UTC dates; only the latest use date of each code is stored, so a code used again later counts in the later range)</small>
+     <Delta cur={d.range.returning} prev={d.range.prev_returning} label={prevLabel(len)}/></>}
+   {d&&<small>all time {fmtInt(d.returning)} · {d.eligible?fmtPct(d.returning/d.eligible):'—'} of codes made before today came back on a later day</small>}</div>
   <div className={styles.tile}><span>Day-7 retention (rolling)</span><b>{d?ret('d7'):'—'}</b>
    <small>{d?`codes used again 7+ days after they were made · day 1 ${ret('d1')} · day 30 ${ret('d30')}`:gap}</small></div>
   <div className={styles.tile}><span>Save codes stored</span><b>{d?fmtInt(d.total):'—'}</b>
