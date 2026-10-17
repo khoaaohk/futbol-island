@@ -6,6 +6,7 @@ import * as T from 'three';
 import {trunkCollider,type Obstacle} from './simulation';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {tintGroundMesh} from '../graphics/groundTint';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 type Mesh=T.Mesh;
@@ -45,13 +46,13 @@ export function buildCoralCay(t:CayTools){
  // ---- Curved strips along the centre line. Each strip is cut into ≤12-sample (~24 m) pieces, built relative to the
  // piece's middle and placed there, so it joins its own 50 m chunk. inner/outer are signed offsets (+ = right of
  // travel) and may vary along the road (beach widths); yInner/yOuter give sloped faces (the beach running into the sea).
- function strip(from:number,to:number,inner:(p:PathSample)=>number,outer:(p:PathSample)=>number,yInner:number,yOuter:number,color:string,shadow=false,piece=12){
+ function strip(from:number,to:number,inner:(p:PathSample)=>number,outer:(p:PathSample)=>number,yInner:number,yOuter:number,color:string,shadow=false,piece=12,tint?:'sand'|'path'){
   for(let a=from;a<to;a+=piece){
    const b=Math.min(to,a+piece),mid=P[(a+b)>>1],positions:number[]=[],indices:number[]=[];
    for(let i=a;i<=b;i++){const p=P[i],q=offsetPoint(p,inner(p)),r=offsetPoint(p,outer(p));positions.push(q.x-mid.x,yInner,q.z-mid.z,r.x-mid.x,yOuter,r.z-mid.z);if(i<b){const k=(i-a)*2;indices.push(k,k+2,k+1,k+1,k+2,k+3);}}
    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
    if(g.getAttribute('normal').getY(0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];g.setIndex(indices);g.computeVertexNormals();}
-   const m=put(g,color,mid.x,0,mid.z);m.castShadow=shadow;
+   const m=put(g,color,mid.x,0,mid.z);m.castShadow=shadow;if(tint)tintGroundMesh(m,tint);
   }
  }
  const last=P.length-1,firstWater=P.findIndex(p=>p.s>=CAUSEWAY.sWater0-3),lastWater=P.findIndex(p=>p.s>=CAUSEWAY.sWater1);
@@ -63,7 +64,7 @@ export function buildCoralCay(t:CayTools){
  const iW=P.findIndex(inRing),iE=P.length-1-[...P].reverse().findIndex(inRing);
  for(const [a,b] of [[0,iW],[iE,last]] as [number,number][]){
   strip(a,b,()=>-4,()=>4,-.01,-.01,'#737c75');
-  for(const side of [-1,1])strip(a,b,()=>side*4,()=>side*deck,-.02,-.02,'#eddfbb');
+  for(const side of [-1,1])strip(a,b,()=>side*4,()=>side*deck,-.02,-.02,'#eddfbb',false,12,'path');
  }
  // Over the water the embankment slopes gently into the sea (no vertical cliff): a stone skirt, then — wherever sand or
  // stone meets the sea — a soft foam line (the main coast's pale waterline colour) and two shallow-water tints.
@@ -96,7 +97,7 @@ export function buildCoralCay(t:CayTools){
  for(const side of [-1,1] as RoadSide[])for(const [a,b] of causewayRuns(p=>shoulderWidth(p.s,side)>0)){
   const w=(p:PathSample)=>shoulderWidth(p.s,side);
   // Sand top, then a wet-sand slope into the sea whose width tapers with the bank, so bank tips stay pointed and soft.
-  strip(a,b,()=>side*deck,p=>side*(deck+w(p)),-.09,-.09,'#f1d6a1');
+  strip(a,b,()=>side*deck,p=>side*(deck+w(p)),-.09,-.09,'#f1d6a1',false,12,'sand');
   strip(a,b,p=>side*(deck+w(p)),p=>side*(deck+w(p)+slopeOf(w(p))),-.09,-.47,'#dfc99e');
   // Palms and a few umbrellas on the widest banks; shells at the tide line.
   for(let i=a+3;i<=b-3;i+=4){const p=P[i],wi=w(p);if(wi<5.5)continue;
@@ -248,7 +249,7 @@ export function buildCoralCay(t:CayTools){
  /** Flat outline slab (built relative to its centre) — the sandbars' irregular sand and wet rim. */
  function outlineSlab(points:{x:number;z:number}[],cx:number,cz:number,scale:number,top:number,depth:number,color:string){
   const shape=new T.Shape();points.forEach((p,i)=>{const x=(p.x-cx)*scale,z=-(p.z-cz)*scale;i?shape.lineTo(x,z):shape.moveTo(x,z);});shape.closePath();
-  const m=flat(put(new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1}),color,cx,top-depth,cz));m.rotation.x=-Math.PI/2;return m;
+  const m=flat(put(new T.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1}),color,cx,top-depth,cz));m.rotation.x=-Math.PI/2;if(color==='#f1d6a1')tintGroundMesh(m,'sand');return m;
  }
  /** Soft shoreline round a star-shaped outline (sandbars, the cay): a wet-sand skirt sloping into the sea, a foam line
   *  where it meets the water and two shallow-water tints, offset along each point's outward radial direction. One mesh
@@ -296,12 +297,12 @@ export function buildCoralCay(t:CayTools){
  // centre and placed there, so the three big surfaces sit in the cay's own chunk (never inflating a main-island batch).
  const C=CAY_CENTER;
  {const outline=new T.Shape();CAY_SHORE.forEach((p,i)=>i?outline.lineTo(p.x-C.x,-(p.z-C.z)):outline.moveTo(p.x-C.x,-(p.z-C.z)));outline.closePath();
-  const land=flat(put(new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1}),'#dfc99e',C.x,-.82,C.z));land.rotation.x=-Math.PI/2;land.name='coral-cay-foundation';}
+  const land=flat(put(new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1}),'#dfc99e',C.x,-.82,C.z));land.rotation.x=-Math.PI/2;land.name='coral-cay-foundation';tintGroundMesh(land,'land');}
  {const positions:number[]=[],indices:number[]=[];
   CAY_SAND.forEach((s,i)=>{positions.push(s.outer.x-C.x,-.105,s.outer.z-C.z,s.inner.x-C.x,-.105,s.inner.z-C.z);const a=i*2,b=((i+1)%CAY_SAND.length)*2;indices.push(a,b,a+1,b,b+1,a+1);});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(positions,3));g.setIndex(indices);g.computeVertexNormals();
   if(g.getAttribute('normal').getY(0)<0){for(let i=0;i<indices.length;i+=3)[indices[i+1],indices[i+2]]=[indices[i+2],indices[i+1]];g.setIndex(indices);g.computeVertexNormals();}
-  const sand=flat(put(g,'#f1d6a1',C.x,0,C.z));sand.name='coral-cay-sand';
+  const sand=flat(put(g,'#f1d6a1',C.x,0,C.z));sand.name='coral-cay-sand';tintGroundMesh(sand,'sand');
   // Glitchy from above (Oct 13 2026) was fixed with a slope-scaled polygon offset on this cached '#f1d6a1' material. That
   // offset (factor -2) also outranked the Coral Cay roundabout and causeway paving 8-10 cm ABOVE the sand ring (Oct 15 2026,
   // user: "fix the roundabout, the road is covering that"): at the phone's reduced resolution the beach drew over the ring,
@@ -309,7 +310,7 @@ export function buildCoralCay(t:CayTools){
   // ring meets the lawn edge to edge (no overlap), and the beach-court sand sits 3 cm over the lawn (below). No offset.
  }
  {const lawnShape=new T.Shape();CAY_LAWN.forEach((p,i)=>i?lawnShape.lineTo(p.x-C.x,-(p.z-C.z)):lawnShape.moveTo(p.x-C.x,-(p.z-C.z)));lawnShape.closePath();
-  const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';}
+  const g=new T.ShapeGeometry(lawnShape);g.rotateX(-Math.PI/2);const lawn=flat(put(g,INTERIOR_GRASS_COLOR,C.x,-.112,C.z));lawn.name='coral-cay-lawn';tintGroundMesh(lawn,'grass');}
  // A soft coast all round: wet sand sloping into the sea, the main coast's pale waterline colour as foam, and shallows.
  shoreRings(CAY_SHORE,C.x,C.z,-.11,3,true);
 
@@ -346,7 +347,7 @@ export function buildCoralCay(t:CayTools){
  // No sand box on a lawn: the court sits on COURT_BEACH, one organic sand surface that runs east into the beach ring
  // (same sand colour, 2.5 cm over the ring and 3 cm over the lawn: real height gaps, no polygon offset; Oct 15 2026). Built relative to the cay centre (cay chunk).
  {const shape=new T.Shape();COURT_BEACH.forEach((p,i)=>i?shape.lineTo(p.x-C.x,-(p.z-C.z)):shape.moveTo(p.x-C.x,-(p.z-C.z)));shape.closePath();
-  const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);flat(put(g,'#f1d6a1',C.x,-.08,C.z)).name='beach-court-sand';}
+  const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);tintGroundMesh(flat(put(g,'#f1d6a1',C.x,-.08,C.z)),'sand').name='beach-court-sand';}
  surfaceAreas.push({kind:'sand',x:K.x,z:K.z,w:K.length+16,d:K.width+13});assets.push({kind:'beach-soccer-court',x:K.x,z:K.z,w:K.length,d:K.width});
  for(const side of [-1,1])box(K.length,.014,.1,blue,K.x,-.07,K.z+side*halfW);
  for(const end of [-1,1])for(const side of [-1,1]){const inner=K.goalWidth/2,len=halfW-inner;box(.1,.014,len,blue,K.x+end*halfL,-.07,K.z+side*(inner+len/2));}

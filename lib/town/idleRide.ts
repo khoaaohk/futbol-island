@@ -12,6 +12,8 @@
  * simulation's dt clamp (frameCap.ts FRAME_DT_MAX, 1/15 s) covers a late 20 fps frame, so nothing runs slower, only less often. */
 export const IDLE_RIDE_AFTER_MS = 4000;
 export const IDLE_RIDE_FRAME_MS = 1000 / 20;
+/** Heat audit Oct 17 2026: a player standing still ON FOOT (nothing else moving near/on screen, Town decides) rests after this long. */
+export const IDLE_FOOT_AFTER_MS = 3000;
 export const IDLE_TRAVEL_MPS = 0.35;
 export const IDLE_CLIMB_MPS = 1.5;
 
@@ -23,7 +25,7 @@ export type IdleRide = {
   /** Record a rendered frame's player and camera positions; real travel counts as activity. */
   sample(now: number, player: Point, camera: Point): void;
   /** The frame interval to cap at while riding idle, or 0 for the normal rate. */
-  interval(now: number, riding: boolean): number;
+  interval(now: number, riding: boolean, afterMs?: number): number;
 };
 
 export function createIdleRide(): IdleRide {
@@ -39,10 +41,10 @@ export function createIdleRide(): IdleRide {
       } else stirAt = Math.max(stirAt, now); // first sample or after a pause: start the idle wait from here
       at = now; px = p.x; py = p.y; pz = p.z; cx = c.x; cy = c.y; cz = c.z;
     },
-    interval(now, riding) {
+    interval(now, riding, afterMs = IDLE_RIDE_AFTER_MS) {
       // Walking, or the first frame ever: the 4 s wait starts now.
       if (!riding || stirAt === -Infinity) { stirAt = Math.max(stirAt, now); return 0; }
-      return now - stirAt >= IDLE_RIDE_AFTER_MS ? IDLE_RIDE_FRAME_MS : 0;
+      return now - stirAt >= afterMs ? IDLE_RIDE_FRAME_MS : 0;
     },
   };
 }

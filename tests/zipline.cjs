@@ -386,7 +386,7 @@ await ok('the ride counts as active: no idle 20 fps cap, no governor tier change
  const town=read('components/Town.tsx');
  // The idle-ride cap only ever applies on a ride (rideRef ≠ walk); the zipline is ridden on foot (a scooter or bike hops off first)
  // and R / the ride button cannot change the ride in mid-air.
- assert(town.includes("idleRide.interval(now,rideRef.current!=='walk'||waterIdle)"),'Town: the idle cap is for rides (and treading water, Oct 15 2026) only');
+ assert(town.includes("idleRide.interval(now,rideRef.current!=='walk'||waterIdle||footRest,footRest?IDLE_FOOT_AFTER_MS:undefined)")&&town.includes("!zipline.active&&!jobMoves.busy"),'Town: the idle cap is for rides, treading water (Oct 15 2026) and a still player on foot (Oct 17 2026, never mid-zipline)');
  assert(/dismount:\(\)=>\{if\(rideRef\.current==='walk'\|\|rideRef\.current==='jetpack'\)return false;selectRide\('walk'\)/.test(town),'the zipline starts on foot');
  assert(town.includes('hold:on=>{heat.hold(on);islandShadowFit.hold(on);}'),'Town: the ride holds the governor and the shadow box');
  {const holds=[];const r=makeRuntime({hold:on=>holds.push(on)}),{zip,loc,ctx}=r,L=ZS.ZIP_LAUNCH;loc.x=L.x+1;loc.z=L.z;zip.update(ctx(loc.x,loc.z));zip.ride();

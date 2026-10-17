@@ -35,7 +35,7 @@ import TravelIcon from './TravelIcon';
 import {createSpinGesture} from '@/lib/town/spinGesture';
 import {tapHaptic} from '@/lib/town/haptics';
 import {frameCapSlot,FRAME_DT_MAX} from '@/lib/town/frameCap';
-import {createIdleRide} from '@/lib/town/idleRide';
+import {createIdleRide,IDLE_FOOT_AFTER_MS} from '@/lib/town/idleRide';
 import {createIslandHeat} from '@/lib/graphics/islandHeat';
 import {createFocusMode} from '@/lib/graphics/focusMode';
 import {setWaterDetail} from '@/lib/graphics/waterSurface';
@@ -1109,7 +1109,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       if(easel.frameMs){const slot=frameCapSlot(now,easelSlot,Math.max(easel.frameMs,heat.frameMs));if(slot<0)return;easelSlot=slot;}else easelSlot=0;// seated at the easel: the 20 fps idle cap
       // Treading water or floating counts like an idle ride (docs/swimming-research.md §2.3): 20 fps after 4 s without input.
-      const waterIdle=water.resting();const idleFrame=idleRide.interval(now,rideRef.current!=='walk'||waterIdle);
+      const waterIdle=water.resting();
+      // Heat audit Oct 17 2026: standing still on foot for 3 s (no input, nothing moving near or on screen) rests at 20 fps like an idle ride.
+      const footRest=rideRef.current==='walk'&&!waterIdle&&!paused&&!pendingRide.current&&!rooftop.state.air&&!rooftop.state.falling&&walkBall.state.mode==='attached'&&jetActions.state.phase==='idle'&&!zipline.active&&!jobMoves.busy&&!jobMoves.kicking&&summitFun.kickPhase!=='playing'&&!fishing.focused&&!heat.focused&&islandNpcs.stats.moving===0&&games.stats.visiblePlayers===0&&streetTraffic.rider.index<0&&!streetTraffic.cars.some(c=>c.group.visible&&Math.hypot(c.group.position.x-location.x,c.group.position.z-location.z)<45);
+      const idleFrame=idleRide.interval(now,rideRef.current!=='walk'||waterIdle||footRest,footRest?IDLE_FOOT_AFTER_MS:undefined);
       renderStats.idleRide=idleFrame;if(waterIdle&&idleFrame&&!waterIdleWas)countWaterIdleCap();waterIdleWas=waterIdle&&idleFrame>0;
       if(waterTintUntil&&now>=waterTintUntil){waterTintUntil=0;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=true;tint.classList.remove('is-on');}}
       if(idleFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(idleFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;

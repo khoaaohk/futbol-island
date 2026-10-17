@@ -8,6 +8,7 @@
 import * as T from 'three';
 import {trunkCollider,bushCollider,type Obstacle} from './simulation';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {applyGroundTint} from '../graphics/groundTint';
 import {stripePlan,stripedSlabGeometry} from '../graphics/pitchStripes';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {ORCHARD_OFF,planOrchard,orchardParts,orchardRig,roundTreeRig,palmRig,type TreeRig,type OrchardForm} from './summitOrchard';
@@ -106,7 +107,7 @@ export function buildSummitIsle(t:SummitTools){
  const lampSites:SummitLampSite[]=[];
  // ONE material for every ground piece (terrain, plateau, pitch, lines, paths, sandbar): vertex colours, no texture, no emissive,
  // so it compiles to the same program as the island's batched palette paint. Ground casts no shadows (it only receives them).
- const groundMat=new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.95});groundMat.name='summit-isle-ground';
+ const groundMat=applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.95}),'mixed');groundMat.name='summit-isle-ground';
  const ground=(piece:Piece,name:string)=>{if(!piece.idx.length)return;const m=new T.Mesh(piece.geometry(),groundMat);m.name=name;m.position.set(piece.ox,0,piece.oz);m.castShadow=false;m.receiveShadow=true;town.add(m);};
  const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
  const yAt=(x:number,z:number)=>summitGround(x,z)-DROP;

@@ -43,7 +43,7 @@ function detachClassic(root:T.Object3D){const off:T.Object3D[]=[];const visit=(o
  * position every frame, so it glides smoothly; only the skeletal solve is spaced out (poseDt carries the time since the last
  * solve, so gait phase is unchanged). Riders and runners (travel), stunned townsfolk, truck witnesses and anyone within FAR_POSE
  * pose every frame; court freestylers keep the older 32 m rule (their ball follows the solved feet). */
-const FAR_POSE=20,POSE_HZ=10;
+const FAR_POSE=20,POSE_HZ=10,MOVING_RANGE=35;
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[];
@@ -86,7 +86,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  for(const [a,b] of FREESTYLE_PAIRS){const A=entryById.get(a),B=entryById.get(b);if(A?.freestyle&&B?.freestyle)linkFreestylePair(A.freestyle,B.freestyle,A.position,B.position);}
  let freestyleClock=0,poseClock=0;
  const viewFrustum=new T.Frustum(),viewMatrix=new T.Matrix4(),viewSphere=new T.Sphere();
- const stats={posed:0,offscreenSkipped:0,slowRoutine:0};
+ const stats={posed:0,offscreenSkipped:0,slowRoutine:0,moving:0};/* Heat audit Oct 17 2026: townsfolk near, drawn and on screen that are visibly animating (see MOVING_RANGE) */const seenXZ=new Float32Array(entries.length*2).fill(1e9);
  const truckWitnesses=new Map<string,{remaining:number;x:number;z:number}>();
  const reactToTruck=(id:string,x:number,z:number)=>{truckWitnesses.set(id,{remaining:4.8,x,z});};
  // One name tag at a time (user, Oct 1 2026; lib/graphics/npcTagFocus.ts): the closest townsperson, held with the HUD arbiter's
@@ -142,6 +142,14 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    if(witness&&!stunned)applyTruckProtest(entry.rig.root,time,reduced);else if(!stunned)entry.rig.root.rotation.z=0;
    reactions?.apply('npc:'+entry.id,entry.rig.root,reduced);
   }
+  // Heat audit Oct 17 2026: how many townsfolk within MOVING_RANGE metres are drawn, on screen and animating (route position changed, or
+  // not resting: walking, talking, working, riding, freestyling, stunned). Town reads it to let a still player on foot rest at 20 fps.
+  stats.moving=0;
+  for(let i=0;i<entries.length;i++){const e=entries[i],k=i*2,dx=e.position.x-seenXZ[k],dz=e.position.z-seenXZ[k+1];seenXZ[k]=e.position.x;seenXZ[k+1]=e.position.z;
+   if(!e.rig.root.visible||e.distance>MOVING_RANGE)continue;
+   if(!(dx*dx+dz*dz>1e-6||e.stunned||e.freestyle||e.ride||e.routine.mode!=='rest'||truckWitnesses.has(e.id)))continue;
+   if(camera){viewSphere.center.set(e.position.x,e.position.y+1.5,e.position.z);viewSphere.radius=3;if(!viewFrustum.intersectsSphere(viewSphere))continue;}
+   stats.moving++;}
   // Name tag: only the closest townsperson's, within the tag range (desktop 14 m, phone 12 m), held with hysteresis. None while
   // flying over the island or while the camera is on a vending machine (`hideTags`: a nearby tag sat huge and clipped in the
   // machine view, the "…LK" panel of the Sep 30 E2E audit), during a truck protest, or when that townsperson is off screen.

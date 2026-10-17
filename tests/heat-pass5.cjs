@@ -30,7 +30,7 @@ function load(file,globals={}){const m={exports:{}};vm.runInNewContext(ts.transp
  assert.equal(hat.parent,joint,'a hidden BEAN part stays (the skin may show it)');assert.equal(hand.parent,joint,'joints stay');assert.equal(handMesh.parent,null);
  assert.equal(longHair.parent,null,'the classic long-hair group leaves with its strands');
  // NPC heat fix 1: beyond 20 m walking and idle townsfolk pose at ~10 Hz, staggered; their root still follows the route every frame.
- assert.match(npcs,/const FAR_POSE=20,POSE_HZ=10;/);
+ assert.match(npcs,/const FAR_POSE=20,POSE_HZ=10,MOVING_RANGE=35;/);
  assert.match(npcs,/const bucket=Math\.floor\(\(poseClock\+entry\.poseSlot\)\*POSE_HZ\);if\(bucket===entry\.poseBucket&&!entry\.definition\.travel&&!entry\.stunned&&!truckWitnesses\.has\(entry\.id\)&&\(entry\.freestyle\?distance>32&&entry\.routine\.mode!=='walk'&&entry\.routine\.mode!=='approach':distance>FAR_POSE\)\)\{entry\.rig\.root\.position\.set\(entry\.position\.x,entry\.position\.y,entry\.position\.z\);continue;\}entry\.poseBucket=bucket;const poseDt=Math\.min\(entry\.rigElapsed,\.1\);entry\.rigElapsed=0;/);
  assert.match(npcs,/rigElapsed:0,poseSlot:\(index\*\.618034\)%1\/POSE_HZ,poseBucket:-1,/,'spread offsets');
  assert.match(npcs,/poseClock\+=paused\?0:dt;/,'one shared pose clock (stops while paused)');

@@ -85,7 +85,7 @@ ok('the probe never asks distanceToLand per frame; the swim pose allocates nothi
 
 ok('Town wiring: the idle rule, the activity, the 10 Hz probe is the only depth source, the splash sound reuses existing cues',()=>{
  const town=read('components/Town.tsx');
- assert.match(town,/const waterIdle=water\.resting\(\);const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\);/);
+ assert.match(town,/const waterIdle=water\.resting\(\);[\s\S]*?const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\|\|footRest,footRest\?IDLE_FOOT_AFTER_MS:undefined\);/);
  assert.match(town,/if\(waterIdle&&idleFrame&&!waterIdleWas\)countWaterIdleCap\(\);/);
  assert.match(town,/:water\.inWater\?'swim':'walk',placeAt\);/,'the frame books swimming time as its own activity');
  assert(!/waterDepthAt\(/.test(town),'Town reads depth through the probe only');

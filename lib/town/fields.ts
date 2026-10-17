@@ -2,6 +2,7 @@ import * as T from 'three';
 import {SEVEN_PENALTY_DEPTH,sevenBuildOutLocalZ} from './buildOut';
 import {createFieldLighting} from './fieldLighting';
 import {ISLAND_SHORE,shoreSandWidth,INTERIOR_GRASS,INTERIOR_GRASS_COLOR} from './shoreline';
+import {applyGroundTint} from '../graphics/groundTint';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
 import {GOAL_DEPTH,goalPostRadius} from './goalCollisions';
@@ -64,13 +65,13 @@ export function buildFormatFields(scene:T.Scene){
  const lineGeo=new T.BufferGeometry();lineGeo.setAttribute('position',new T.Float32BufferAttribute(pts,3));owned.push(lineGeo);root.add(new T.LineSegments(lineGeo,cream));
  }
  const outline=new T.Shape();ISLAND_SHORE.forEach((p,i)=>i?outline.lineTo(p.x,-p.z):outline.moveTo(p.x,-p.z));outline.closePath();
- const landMat=new T.MeshStandardMaterial({color:'#dfc99e',roughness:1}),landGeo=new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1});owned.push(landMat,landGeo);const land=new T.Mesh(landGeo,landMat);land.name='curved-island-foundation';land.rotation.x=-Math.PI/2;land.position.y=-.82;land.receiveShadow=true;scene.add(land);
+ const landMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1}/* the sand colour: the land base is the inner beach band (user Oct 17 2026) */),'land'),landGeo=new T.ExtrudeGeometry(outline,{depth:.64,bevelEnabled:false,steps:1});owned.push(landMat,landGeo);const land=new T.Mesh(landGeo,landMat);land.name='curved-island-foundation';land.rotation.x=-Math.PI/2;land.position.y=-.82;land.receiveShadow=true;scene.add(land);
 
  // Keep 6.8 cm between the lawn and foundation top: the former 8 mm gap
  // was vulnerable to depth fighting at shallow flight angles. Roads/sand stay in place.
  const lawnShape=new T.Shape();INTERIOR_GRASS.forEach((p,i)=>i?lawnShape.lineTo(p.x,-p.z):lawnShape.moveTo(p.x,-p.z));lawnShape.closePath();
  const lawnGeo=new T.ShapeGeometry(lawnShape);lawnGeo.rotateX(-Math.PI/2);
- const lawnMat=new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94});owned.push(lawnGeo,lawnMat);
+ const lawnMat=applyGroundTint(new T.MeshStandardMaterial({color:INTERIOR_GRASS_COLOR,roughness:.94}),'grass');owned.push(lawnGeo,lawnMat);
  const lawn=new T.Mesh(lawnGeo,lawnMat);lawn.name='interior-island-grass';lawn.position.y=-.112;lawn.receiveShadow=true;scene.add(lawn);
 
  // A continuous sand ribbon follows the coast, including the sheltered inlet. Its outer edge rounds over and slopes into the
@@ -83,7 +84,7 @@ export function buildFormatFields(scene:T.Scene){
  for(const [o,y] of [[SKIRT,-.5],[0,-.125],[-.5,-.105],[-width,-.105]])sandPositions.push(p.x+ox*o,y,p.z+oz*o);
  const a=i*SAND_ROWS,b=((i+1)%n)*SAND_ROWS;for(let r=0;r<SAND_ROWS-1;r++)sandIndices.push(a+r,b+r,a+r+1,b+r,b+r+1,a+r+1);
  });
- const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide});owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
+ const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'sand');owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
  const floodlights=createFieldLighting(scene,roots,surfaces,frameMaterial,cream);
  return {roots,propSpecs:[...goalSpecs,...floodlights.propSpecs],updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
 }
