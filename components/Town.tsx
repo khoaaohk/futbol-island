@@ -206,6 +206,7 @@ import {earnForBall} from '@/lib/town/cardRewardTriggers';
 import {enterActivity,islandFrame} from '@/lib/analytics/tracker';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
+import {installHudFocusRule} from '@/lib/town/hudFocus';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
@@ -303,6 +304,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const onJobCardChange=useRef((open:boolean)=>{jobCardOpen.current=open;setJobCardShown(open);wakeLoopRef.current?.();}).current;
   // Door / post prompts never rise into the stack: its bottom edge is --hud-floor (globals.css). One ResizeObserver on the column
   // (it fires only when a piece appears, goes or rewraps), replacing the old per-toast observer and the :has() offset chains.
+  useEffect(()=>installHudFocusRule(),[]);/* pointer presses never leave focus on a HUD button, so Space stays the kick (lib/town/hudFocus.ts) */
   useEffect(()=>{const el=hudStackEl,app=el?.closest<HTMLElement>('.town-app');if(!el||!app||typeof ResizeObserver==='undefined')return;
    const publish=()=>{if(el.hidden)return;const top=app.getBoundingClientRect().top,r=el.getBoundingClientRect();app.style.setProperty('--hud-floor',`${Math.round((r.height>0?r.bottom+10:r.top)-top)}px`);};
    const ro=new ResizeObserver(publish);ro.observe(el);return()=>{ro.disconnect();app.style.removeProperty('--hud-floor');};},[hudStackEl]);
