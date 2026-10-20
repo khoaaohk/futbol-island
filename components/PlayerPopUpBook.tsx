@@ -8,6 +8,7 @@ import {holdVideoPlayback} from '@/lib/videoPlayback';
 import StoryPlaybackBar from './StoryPlaybackBar';
 import {BackButton} from './BackButton';
 import {enterActivity} from '@/lib/analytics/tracker';
+import {countBookEnd,countBookOpen,startReadClock} from '@/lib/analytics/sponsorEvents';
 import {Icon} from './Icon';
 import {getSoundVolume,isSoundEnabled} from '@/lib/games/sound';
 import {createBookAudio} from '@/lib/books/bookAudio';
@@ -21,7 +22,8 @@ function savedPage(bookId:PlayerBookId){return boundedBookPage(readProgress()[bo
 
 /** Purchased paper story. Only finite scene interactions render; narration uses native media events. */
 export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;onClose:()=>void}){
- useEffect(()=>enterActivity('book'),[]);// admin analytics: time in the pop-up book (module variable, no render)
+ useEffect(()=>{countBookOpen(bookId);const stopClock=startReadClock(),stop=enterActivity('book');return()=>{stopClock();stop();};},[]);// eslint-disable-line react-hooks/exhaustive-deps -- sponsor analytics: one open + one reading-time bucket per visit (sponsorEvents.ts)
+ const endCounted=useRef(false);// admin analytics: the book's time is the 'book' activity (module variable, no render)
  const audio=useRef<ReturnType<typeof createBookAudio>|null>(null);
  const [musicMuted,setMusicMuted]=useState(()=>!isSoundEnabled()||getSoundVolume()===0);
  const [turning,setTurning]=useState(false);
@@ -42,7 +44,7 @@ export default function PlayerPopUpBook({bookId,onClose}:{bookId:PlayerBookId;on
  // asks Coach Bella to start the new page once the flip has landed. `seen` notes that the flip began, so narration never
  // starts mid-fold; a one-shot fallback covers turns that don't animate (reduced motion, spreads still loading).
  const autoPlay=useRef<{page:number;seen:boolean;at:number}|null>(null);
- const turn=(next:number)=>{if(turning||next<0||next>=story.pages.length)return;narration.onPause();autoPlay.current={page:next,seen:false,at:performance.now()};audio.current?.setMuted(musicMuted);void audio.current?.play(next,'turn');setPage(next);stage.current?.scrollTo({top:0});try{localStorage.setItem(BOOK_PROGRESS_KEY,JSON.stringify({...readProgress(),version:1,[bookId]:next}));}catch{/* Reading remains available without storage. */}};
+ const turn=(next:number)=>{if(turning||next<0||next>=story.pages.length)return;if(next===story.pages.length-1&&!endCounted.current){endCounted.current=true;countBookEnd(bookId);}/* sponsor analytics: reached the last spread (once per visit) */narration.onPause();autoPlay.current={page:next,seen:false,at:performance.now()};audio.current?.setMuted(musicMuted);void audio.current?.play(next,'turn');setPage(next);stage.current?.scrollTo({top:0});try{localStorage.setItem(BOOK_PROGRESS_KEY,JSON.stringify({...readProgress(),version:1,[bookId]:next}));}catch{/* Reading remains available without storage. */}};
  useEffect(()=>{const a=autoPlay.current;if(!a||a.page!==page||closing)return;if(turning){a.seen=true;return;}
   const start=()=>{if(autoPlay.current!==a)return;autoPlay.current=null;narration.onReplay();};
   if(a.seen||matchMedia('(prefers-reduced-motion: reduce)').matches){start();return;}

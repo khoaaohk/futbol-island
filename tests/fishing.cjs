@@ -451,8 +451,8 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  assert(new Set(themes.map(t=>t.fish.schools.join()+'|'+t.fish.cruisers.join())).size===themes.length,'each spot has its own fish mix');
  for(const t of themes){for(const f of [...t.fish.schools,...t.fish.cruisers])assert(sea.LOOKS[f],`${t.id}: fish look ${f} exists`);
   assert(t.coral.length>=3&&t.coral.every(c=>/^#[0-9a-f]{6}$/i.test(c)),`${t.id}: a reef palette`);
-  // Tropical: every palette has at least one vivid, saturated colour.
-  assert(t.coral.some(c=>{const hsl={};new T.Color(c).getHSL(hsl);return hsl.s>.75&&hsl.l>.4;}),`${t.id}: vivid reef colours`);}
+  // Oct 19 2026: muted to match the clear water window (CLEAR_LOOK), but still coloured: at least one colour with real saturation.
+  assert(t.coral.some(c=>{const hsl={};new T.Color(c).getHSL(hsl);return hsl.s>.4&&hsl.l>.3;}),`${t.id}: coloured reef`);}
  assert(uw.reefSeed('coral-garden')===uw.reefSeed('coral-garden')&&uw.reefSeed('coral-garden')!==uw.reefSeed('sharks-beach'),'seeded by spot id');
  // Prop budget on a synthetic straight shore: the old per-style seabed (cay ≈ 10.2k / 5.9k triangles desktop / phone, every other
  // spot ≤ 5.3k / 3.2k; all 16 spots 90.7k / 52.7k) may grow at most 15 % per spot, and the total stays flat.
@@ -484,6 +484,8 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
   for(const hex of t.coral){const c0=new T.Color(hex),rgb=[c0.r,c0.g,c0.b],s0=hsl(rgb).s;if(s0<.5)continue;
    // The piece's own colour loses saturation (no water: clear 0), and what reaches the eye moves toward the water's tint.
    const H=[.25,.8,1.5,2.4,3.2],look=H.map(h=>uw.uwDepthLook(rgb,h,h/.6,t,'reef')),sat=H.map(h=>hsl(uw.uwDepthLook(rgb,h,0,{...t,clear:0},'reef')).s),tint=look.map(c=>dist(c,t.water[1]));
+   // Oct 19 2026: the shared palette (CLEAR_CORAL) has teal corals already close to the water's own tint; the pull toward it is moot there.
+   if(tint[0]<.15)continue;
    for(let i=1;i<look.length;i++){assert(sat[i]<sat[i-1]+1e-6,`${t.id} ${hex}: saturation falls with depth (${sat.map(x=>x.toFixed(2))})`);
     assert(tint[i]<tint[i-1]+1e-6,`${t.id} ${hex}: closer to the water's deep tint with depth (${tint.map(x=>x.toFixed(2))})`);}
    assert(sat[0]>s0*.75,`${t.id} ${hex}: vivid in the shallows (${sat[0].toFixed(2)} vs ${s0.toFixed(2)})`);

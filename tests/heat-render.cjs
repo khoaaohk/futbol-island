@@ -60,7 +60,7 @@ assert.match(fs.readFileSync(path.join(__dirname,'..','components/Town.tsx'),'ut
  const j=new MotionResolution(2,true);let switches=0;for(let k=0;k<5000;k+=33){if(j.update(k,Math.floor(k/100)%2===0))switches++;}assert.equal(switches,1,'jittery move/still input never thrashes back to sharp');assert.equal(j.ratio,1.5);
  const town=fs.readFileSync(path.join(__dirname,'..','components/Town.tsx'),'utf8');
  assert.match(town,/new MotionResolution\(quality\.pixelRatio,dynamicResolutionEnabled\(/,'Town builds the helper from the existing quality cap');
- assert.match(town,/motionResolution\.update\(now,viewMoved\|\|Math\.hypot\(velocity\.x,velocity\.z\)>\.1\|\|Boolean\(learning&&!quiz\?\.quiz\),paused\|\|Boolean\(quiz\?\.quiz\)\|\|aimWaiting\)/,'moving = camera/player/live view; menus, quizzes and aim are sharp');
+ assert.match(town,/motionResolution\.update\(now,viewMoved\|\|Math\.hypot\(velocity\.x,velocity\.z\)>\.1\|\|Boolean\(learning&&!quiz\?\.quiz\),paused\|\|Boolean\(quiz\?\.quiz\)\|\|aimWaiting,idleFrame>0\)/,'moving = camera/player/live view; menus, quizzes and aim are sharp');
  assert.match(town,/if\(resolution\)\{renderer\.setPixelRatio\(resolution\);renderer\.setViewport\([^)]*\);\}\n\s*(heat\.beforeRender\(location[^;]*\);)?renderer\.render\(scene,camera\)/,'switch happens at the frame boundary right before drawing');}
 console.log('PASS heat pass 2: dynamic resolution (move 1.5 / still 2 / desktop off / no thrash); spot pool out of day shaders, night lessons keep it; dynamic shadow culling + restore; rooftop static index parity (20000 points) with live dynamic boxes');
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -2,6 +2,7 @@
 import {registerIslandNarration,islandNarrationAllowed} from '@/lib/audio/islandNarration';
 import {useEffect,useRef} from 'react';
 import {enterActivity} from '@/lib/analytics/tracker';
+import {countFilmEnd,countFilmOpen} from '@/lib/analytics/sponsorEvents';
 import {acquireSheet,releaseSheet,setSheetDots,type DotMode} from '@/lib/paths/riso/sheet';
 import {chapterSeconds,chapterStarts,cueAt,resolveFrame,storyDuration,type RisoStory} from '@/lib/paths/riso/story';
 import {holdVideoPlayback} from '@/lib/videoPlayback';
@@ -54,7 +55,7 @@ function sentenceFor(narration:string,words:string,progress:number){
  * stays on the canvas so the host can fade it out. At the natural end it draws the final frame and calls onEnd.
  */
 export default function CardFilmPlayer({story,audio,running,className,onEnd,onCaption}:{story:RisoStory;audio:HTMLAudioElement;running:boolean;className?:string;onEnd:()=>void;onCaption:(caption:CardCaption)=>void}){
- useEffect(()=>enterActivity('films'),[]);// admin analytics: time watching a card film (module variable, no render)
+ useEffect(()=>{countFilmOpen();return enterActivity('films');},[]);// admin analytics: time watching a card film (module variable, no render)
  const ref=useRef<HTMLCanvasElement>(null);
  const endRef=useRef(onEnd),captionRef=useRef(onCaption);endRef.current=onEnd;captionRef.current=onCaption;
  // Unmount (after the fade): free the visible canvas's backing store at once (iOS counts it against the canvas memory budget until GC).
@@ -94,7 +95,8 @@ export default function CardFilmPlayer({story,audio,running,className,onEnd,onCa
    const sentence=sentenceFor(ch.narration,words,seconds(c)>0?local/seconds(c):0),key=`${c}|${sentence}|${words}`;
    if(key!==captionKey){captionKey=key;captionRef.current({chapter:c,sentence,words});}};
   const stop=()=>{disposed=true;if(raf)cancelAnimationFrame(raf);raf=0;clearTimeout(timer);timer=undefined;media.pause();};
-  const finish=()=>{time=duration;chapter=lastChapter;draw();caption();stop();endRef.current();};
+  let ended=false;// sponsor analytics: one "watched to the end" per film shown
+  const finish=()=>{time=duration;chapter=lastChapter;draw();caption();stop();if(!ended){ended=true;countFilmEnd();}endRef.current();};
   /** Advances the clock like StoryFilmPlayer's chapters mode: narration time when it is live, a clock when there is none, and a chapter never cuts unfinished narration. */
   const advance=(dt:number)=>{
    if(track){if(audioLive())time=media.currentTime;else if(media.ended)time=duration;else if(audioFailed)time+=dt;if(time>=duration&&(audioFailed||media.ended)){finish();return false;}return true;}

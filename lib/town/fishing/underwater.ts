@@ -49,7 +49,7 @@ export const UW_UNIFORMS={uWaterNoise:{value:null as T.Texture|null},
  */
 // Oct 14 2026 (user chose the middle ground): about half of the vividness back after the depth pass; deep coral stays visibly
 // underwater but keeps more colour (was absorb .22 / deep saturation .88; now .155 / .92).
-export const UW_LOOK={reefSat:[1.35,.92] as [number,number],fishSat:[1.2,.85] as [number,number],depthK:[.4,3] as [number,number],
+export const UW_LOOK={reefSat:[1.35,.92] as [number,number],fishSat:[1.08,.8] as [number,number],depthK:[.4,3] as [number,number],
  /** How much of the water's own colour the reef takes where the water absorbed its light (the sand takes 1): less, so deep
   *  pieces go darker and bluer instead of grey (pink + cyan = grey). */
  reefHaze:.5,
@@ -196,8 +196,9 @@ export function createOceanClear(scene:T.Scene){
   set(on:boolean){
    if(on===!!saved)return;
    ocean??=(scene.getObjectByName('surrounding-ocean') as T.Mesh|undefined)??null;const m=ocean?.material as T.Material|undefined;if(!ocean||!m||Array.isArray(m))return;
-   if(on){saved={depthWrite:m.depthWrite,renderOrder:ocean.renderOrder};m.depthWrite=false;ocean.renderOrder=Math.max(ocean.renderOrder,.25);}
-   else if(saved){m.depthWrite=saved.depthWrite;ocean.renderOrder=saved.renderOrder;saved=null;}
+   // renderOrder is shared with swimClear.ts (a late-draw count + the base order in userData), so the two never restore a stale value.
+   if(on){const u=ocean.userData;u.oceanBaseOrder??=ocean.renderOrder;u.oceanLate=(u.oceanLate??0)+1;saved={depthWrite:m.depthWrite,renderOrder:ocean.renderOrder};m.depthWrite=false;ocean.renderOrder=Math.max(u.oceanBaseOrder,.25);}
+   else if(saved){const u=ocean.userData;m.depthWrite=saved.depthWrite;u.oceanLate=Math.max(0,(u.oceanLate??1)-1);if(!u.oceanLate)ocean.renderOrder=u.oceanBaseOrder;saved=null;}
   },
  };
 }
@@ -336,6 +337,72 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a9080',algae:'#8a9a5a',urchin:['#2a1a3a','#6a4f90'],sand:[[.7,.64,.52],[.8,.74,.6]],weed:[.26,.32,.18,.25],
   water:[[0,.44,.66],[0,.16,.38]],clear:.9,fish:{schools:['blueTang','sardine','sergeant'],cruisers:['queenAngel','garibaldi','barracuda','parrot'],glider:'ray'},signature:['clam']},
 };
+/**
+ * One water (Oct 19 2026, user: "these fishing spots don't match with the coral and items; also the colour doesn't match either"):
+ * the clear water window (lib/town/water/clearWindow.ts) is what the player walks beside, so every shore spot's water, sand, rocks,
+ * grass and coral are pulled toward its look at module load: the water tint / clarity / sand 70 % of the way (CLEAR_LOOK), the
+ * coral to the clear window's own palette (CLEAR_CORAL, same colours and mix; was a muted ramp until the Oct 19 audit), grass and rocks to its
+ * sea-grass green and grey-teal. Each spot keeps its layout, counts, signature props and a hint of its own hue. Deep-sea themes are
+ * untouched. Data only: no extra draws, no new triangles.
+ */
+export const CLEAR_LOOK={shallow:[.02,.42,.5] as V3,deep:[.004,.2,.36] as V3,clear:.75,sandA:[.66,.65,.54] as V3,sandB:[.8,.78,.66] as V3,weed:[.17,.3,.2] as V3,
+ coralTeal:'#3fb3b0',grass:['#4f7d4c','#7fa866'] as [string,string],rock:'#6d7f7e',algae:'#6f9a82',pull:.7,
+ /** The clear window's seabed floor depth (m; clearWindow.ts CLEAR_BED.floor reads this). */
+ floor:4.2};
+/**
+ * ONE coral palette (Oct 19 2026, user: "more colourful coral", "match the coral scene with the fishing spot"): the clear water
+ * window (clearWindow.ts) paints its coral from it (accentShare of the formations take an accent), and every shore fishing theme's
+ * `coral` list below is the same colours in the same mix (each spot only rotates the order, so its lead colours differ). Grass too.
+ */
+export const CLEAR_CORAL={teal:['#2a9f9a','#3fb3b0','#2a8c94','#55afc4','#79c4b2','#3a9a86','#3aa6b5','#4bb5a2','#2b93a6','#6bbfbc'],
+ // Oct 20 2026 (user: "more concentration of coral and more colours" at the fishing spots): a wider range (oranges, yellows,
+ // lime, blue and cyan, magenta and purple joined the pinks); the reef shaders still mute them with depth.
+ accents:['#e8799f','#9f86d6','#ee9477','#d9709c','#8d7fd0','#f0a8c4','#cd6f98','#f2a65a','#f4c75e','#ff7a6b','#c25fd1','#7fc96b','#5f9be8',
+  '#f08a3c','#f2d04a','#a8d65a','#4a86e0','#4cc6d6','#d4489a','#8a5cc8'],
+ accentShare:.5,grass:['#6a9c58','#84ae5c','#5a9468']} as const;
+/**
+ * Each fishing spot's reef character (Oct 20 2026): a hue family its boosted reef leans on (the clear window's reef boost round
+ * the spot's float, clearWindow.ts REEF_BOOST, and the spot's own props via clearCoralMix), so no two neighbouring spots look alike.
+ */
+export const CORAL_FAMILIES={
+ warm:['#f08a3c','#f2a65a','#f4c75e','#ff7a6b','#ee9477','#f2d04a'],
+ pink:['#e8799f','#d4489a','#f0a8c4','#c25fd1','#d9709c','#9f86d6'],
+ blue:['#4a86e0','#5f9be8','#4cc6d6','#55afc4','#8d7fd0','#3aa6b5'],
+ lime:['#a8d65a','#7fc96b','#f2d04a','#4bb5a2','#f4c75e','#4cc6d6'],
+ violet:['#8a5cc8','#9f86d6','#c25fd1','#5f9be8','#f0a8c4','#d4489a'],
+} as const;
+export type CoralFamily=keyof typeof CORAL_FAMILIES;
+/** Reef theme id → hue family (shore themes; deep-sea themes have no reef). */
+export const REEF_HUE:Record<string,CoralFamily>={'barnacle-pilings':'blue','lifebuoy-lagoon':'warm','harbour-fan-wall':'violet','tidepool-flat':'pink',
+ 'stream-channel':'lime','jetty-kelp':'blue','seawall-rubble':'warm','channel-tables':'blue','turtle-meadow':'lime','pink-ring':'pink',
+ 'sunlit-patches':'warm','fruit-garden':'lime','boulder-cove':'violet','palm-staghorn':'warm','lookout-bommies':'blue','ledge-dropoff':'violet'};
+export const coralFamily=(themeId:string|undefined)=>CORAL_FAMILIES[REEF_HUE[themeId??'']??'pink'];
+/** The fishing reefs' palette: accents and teals interleaved 1:1 (= the window's 50 % accent share), rotated per spot, plus the
+ *  spot's hue family three times over (about a third of the pieces lead with it). */
+export const clearCoralMix=(rot:number,family?:readonly string[])=>{const A=CLEAR_CORAL.accents,Tl=CLEAR_CORAL.teal,m=A.flatMap((a,i)=>[a,Tl[i%Tl.length]]),k=((rot%m.length)+m.length)%m.length;
+ const out:string[]=[...m.slice(k),...m.slice(0,k)];if(family)for(let r=0;r<3;r++)family.forEach((c,i)=>out.splice((i*7+r*3+1)%out.length,0,c));return out;};
+/**
+ * One shore (Oct 19 2026, user: "fishing and the same shore when not fishing is not the same... they need to match"): at a shore
+ * spot inside the clear water window's reach, the window itself IS the fishing water. The fishing strip and the spot's seabed props
+ * stand down (the window's bed, coral, grass and surface stay exactly as they were while walking), the catch and the spot's fish
+ * schools swim over it, tinted by the window's own water (`windowWater`). Written once per frame, no allocation:
+ *  - `available`: clearWindow.ts, whether the window can show the water round the player now (heat tier 0-2, near the shallows).
+ *  - `served`: shoreWater.ts, 0..1, how much of a fishing session the window is serving (its ambient sea life fades out by it).
+ * Out of reach (tiers 3-4 / Battery saver, a pier or boat out of the shallows, the deep-sea boats), fishing keeps its own strip.
+ */
+export const CLEAR_SHARE={available:false,served:0};
+/** The spot's theme with the clear window's water, clarity, sand and floor (so the catch and the fish schools sit in the same water). */
+export function windowWater(t:ReefTheme):ReefTheme{return {...t,water:[CLEAR_LOOK.shallow,CLEAR_LOOK.deep],clear:CLEAR_LOOK.clear,sand:[CLEAR_LOOK.sandA,CLEAR_LOOK.sandB],floor:CLEAR_LOOK.floor};}
+{
+ const mixV=(a:V3,b:V3,k:number)=>a.map((x,i)=>x+(b[i]-x)*k) as V3;
+ const toward=(hex:string,to:string,k:number)=>'#'+new T.Color(hex).lerp(new T.Color(to),k).getHexString();
+ let ti=0;for(const t of Object.values(REEF_THEMES)){if(t.layout==='abyss')continue;const k=CLEAR_LOOK.pull;
+  t.water=[mixV(t.water[0],CLEAR_LOOK.shallow,k),mixV(t.water[1],CLEAR_LOOK.deep,k)];t.clear=t.clear+(CLEAR_LOOK.clear-t.clear)*k;
+  t.sand=[mixV(t.sand[0],CLEAR_LOOK.sandA,.6),mixV(t.sand[1],CLEAR_LOOK.sandB,.6)];
+  const w=mixV([t.weed[0],t.weed[1],t.weed[2]],CLEAR_LOOK.weed,.7);t.weed=[w[0],w[1],w[2],t.weed[3]];
+  t.coral=clearCoralMix(ti++,coralFamily(t.id));t.grassCol=[toward(t.grassCol[0],CLEAR_CORAL.grass[0],.85),toward(t.grassCol[1],CLEAR_CORAL.grass[1],.85)];
+  t.rock=toward(t.rock,CLEAR_LOOK.rock,.7);t.algae=toward(t.algae,CLEAR_LOOK.algae,.7);}
+}
 /** Old per-style look, for a spot without a `reef` id. */
 const STYLE_THEME:Record<SeabedStyle,string>={cay:'sunlit-patches',causeway:'seawall-rubble',beach:'stream-channel',pier:'barnacle-pilings'};
 export function reefTheme(spot:{id:string;area?:string;reef?:string}):ReefTheme{return REEF_THEMES[spot.reef??'']??REEF_THEMES[STYLE_THEME[seabedStyle(spot)]];}
@@ -475,6 +542,26 @@ function clam(r:Rng,mantle:T.Color){const shellC=C('#e8e2d2');
 function goal(r:Rng){const w=C('#efeee6'),moss=C('#7a9a4a'),parts=[new T.CylinderGeometry(.03,.03,.62,5,1,true).translate(-.55,.31,0),new T.CylinderGeometry(.03,.03,.62,5,1,true).translate(.55,.31,0),new T.CylinderGeometry(.03,.03,1.13,5,1,true).rotateZ(Math.PI/2).translate(0,.62,0)];
  const g=paint(merged(parts),w.clone().lerp(moss,.6),w,0,false,.15);g.rotateZ((r()-.5)*.2);g.rotateX(-.25);g.rotateY(r()*6);g.translate(0,-.08,0);return [g];}
 
+/**
+ * The clear water window's reef kit (Oct 19 2026, lib/town/water/clearWindow.ts): four formation shapes built ONCE from the same
+ * prop pieces, painted in a light neutral (base darker, tips lighter) so each instance's colour (InstancedMesh instanceColor) gives
+ * the hue. Base at y 0, about 1 m across; the window scales them up into chunky low-poly blobs seen from the game camera.
+ * Attributes: position, normal, color, aSway (0 rigid … 1 at the tips of fronds and blades).
+ */
+export type ClearReefKind='mound'|'branch'|'fan'|'grass';
+export function clearReefKit():Record<ClearReefKind,T.BufferGeometry>{
+ let s=7;const r:Rng=()=>{s=(s*16807)%2147483647;return (s-1)/2147483646;};jitSeed=3;
+ const g=C('#d8d8d8');
+ // A boulder coral with organ-pipe tubes and a stag tuft on it (four plain domes read as a turtle's shell from above).
+ const mound=merged([...brain(r,.4,g),...tube(r,.62,g).map(x=>put(x,.3,0,.14)),...tube(r,.5,g).map(x=>put(x,-.26,0,-.2)),put(stag(r,.4,g)[0],.02,.14,-.05)]);
+ const branchG=merged([...branch(r,.7,g),put(stag(r,.55,g)[0],.32,0,-.2),put(brain(r,.16,g)[0],-.28,0,.24)]);
+ const fanG=merged([...fan(r,.62,g),put(soft(r,.5,g)[0],.3,0,.22),put(soft(r,.42,g)[0],-.3,0,.18)]);
+ const grassG=merged([grass(r,.55,C('#9a9a9a'),C('#f2f2f2')),put(grass(r,.45,C('#9a9a9a'),C('#f2f2f2')),.22,0,.14),put(grass(r,.5,C('#9a9a9a'),C('#f2f2f2')),-.18,0,-.16)]);
+ return {mound,branch:branchG,fan:fanG,grass:grassG};
+}
+
+/** The spot props' reef boost (Oct 20 2026): extra clusters (× the theme's count), a clear disc round the float (m), triangle budget. */
+export const REEF_BOOST_PROPS={clusters:.6,clear:4.5,budget:.05} as const;
 export type SeabedProps={mesh:T.Mesh;triangles:number;
  /** Every placed piece (Oct 14 2026, tests): its base point (on the seabed) and its top (m, world y). */
  pieces:{x:number;y:number;z:number;top:number}[];
@@ -584,6 +671,20 @@ export function buildSeabedProps(field:Field,themeIn:ReefTheme|SeabedStyle,stand
  for(const sig of theme.signature){const p=at(2.2,99,aView,.5,cast*.4);if(!p)continue;
   if(sig==='football')add(football(r),p);else if(sig==='anchor')add(anchor(r),p);else if(sig==='clam')add(clam(r,pal[0]),p);else if(sig==='goal')add(goal(r),p);
   else for(let i=0;i<6;i++){const q=near(p,.45,.6);if(q)add(star(r,.07+r()*.06),q);}}
+ // ---- Reef boost (Oct 20 2026, user: "at each of the fishing spots, we need to have more concentration of coral and more colours"):
+ // the same feel as the clear window's boost round a served spot (clearWindow.ts REEF_BOOST): a couple of big hero clumps and
+ // small satellites in the spot's hue family, never within REEF_BOOST_PROPS.clear m of the float (fish, float and rings stay
+ // readable). Placed last (every other piece keeps its seeded place) and capped at +REEF_BOOST_PROPS.budget of the triangles.
+ if(nC>0){const tri=(g:T.BufferGeometry)=>(g.index?g.index.count:g.getAttribute('position').count)/3,base=parts.reduce((a,g)=>a+tri(g),0),fam=coralFamily(theme.id).map(C);
+  const fx=stand.x+ux*cast,fz=stand.z+uz*cast,cap=base*(1+REEF_BOOST_PROPS.budget);let used=base,full=false;
+  for(let i=0;i<N(Math.round(theme.clusters*REEF_BOOST_PROPS.clusters))&&!full;i++){let c:P|null=null;
+   for(let t=0;t<6&&!c;t++){const p=at(2.5,99,far,1);if(p&&Math.hypot(p.x-fx,p.z-fz)>=REEF_BOOST_PROPS.clear)c=p;}if(!c)continue;
+   const hero=i<2,lead=Math.floor(r()*fam.length),items=hero?theme.items[1]:2+Math.floor(r()*2);
+   for(let j=0;j<items&&!full;j++){const q=near(c,hero?theme.spread*1.2:theme.spread*.7);if(!q||q.depth<(hero?1:.7)||Math.hypot(q.x-fx,q.z-fz)<REEF_BOOST_PROPS.clear)continue;
+    const col=(r()<.75?fam[r()<.7?lead:Math.floor(r()*fam.length)]:pal[Math.floor(r()*pal.length)]).clone().multiplyScalar(.8+r()*.4),from=parts.length;
+    coral(q,pickKind(),col,theme.scale*(hero?1.25:.7)*(.75+r()*.5));let add=0;for(let k2=from;k2<parts.length;k2++)add+=tri(parts[k2]);
+    // The budget is a hard ceiling: the piece that would cross it is taken back and the boost stops (still deterministic).
+    if(used+add>cap){parts.splice(from).forEach(g=>g.dispose());pieces.pop();full=true;}else used+=add;}}}
  const geometry=parts.length?mergeGeometries(parts)!:new T.BufferGeometry();parts.forEach(g=>g.dispose());geometry.computeBoundingSphere();
  const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,transparent:true});
  material.onBeforeCompile=sh=>patchUnderwater(sh,{vertexHead:'attribute float aSway;uniform float uUwSway;',

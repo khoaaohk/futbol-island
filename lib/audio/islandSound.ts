@@ -41,7 +41,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** 3D scene hover (character, NPC, building, ferry under the cursor). Only a pointer that just moved: a held key moving the
    * camera sweeps a resting cursor's ray across the world. Off in flight (camera always drifts; flight is engine + music only). */
   function sceneHover(flying=false){if(flying||performance.now()-lastPointer>HOVER_INPUT_MS)return;ui('hover');}
-  const debug={unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,rush:false,counts:{} as Record<string,number>};
+  const debug={water:null as unknown,unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,rush:false,counts:{} as Record<string,number>};
   function getContext(){
     if(disposed)return null;
     try{
@@ -59,8 +59,11 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   }
   /** Heat pass 4 (user decision Sep 26 2026): the shared context suspends 2 s after nothing is audible (no music, one-shot, engine or
    * ride hum), so the audio thread sleeps; any input unlock, or a sound the game wants to play, resumes it. */
+  // The sea (lib/audio/islandSound.ts (createWaterSound)): swim wash + strokes, the dive plunge, the muffled underwater bed; nothing exists until the swimmer is in the water.
+  const water=createWaterSound({ctx:()=>context,master:()=>master,noise:()=>noise,ok:()=>!!context&&!!master&&context.state==='running'&&!muted&&!idleFaded&&volume>0&&!hidden&&!disposed,changed:()=>{if(!audible())scheduleIdle();}});
+  debug.water=water.debug;
   const IDLE_SUSPEND_MS=2000;let musicAudible=false,idleSuspended=false,idleTimer:ReturnType<typeof setTimeout>|undefined;
-  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush;
+  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush||water.active();
   function scheduleIdle(){if(typeof setTimeout!=='function')return;if(idleTimer!==undefined)clearTimeout(idleTimer);idleTimer=setTimeout(checkIdle,IDLE_SUSPEND_MS);}
   function checkIdle(){idleTimer=undefined;if(disposed||!context||context.state!=='running')return;if(audible())return;idleSuspended=true;debug.idleSuspends++;void context.suspend().catch(()=>{});}
   function wakeIdle(){if(!idleSuspended||!context||hidden||muted||disposed)return;idleSuspended=false;if(context.state==='suspended')void context.resume().catch(()=>{});}
@@ -73,7 +76,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
     const c=context,g=master;
     if(on){
-      stopEngine();stopTravelHum();stopRush();
+      stopEngine();stopTravelHum();stopRush();water.stop(false);
       if(c&&g&&c.state==='running'){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+IDLE_FADE);}
       idleFadeTimer=setTimeout(()=>{idleFadeTimer=undefined;if(!idleFaded||!context)return;silence(true);if(context.state==='running'){idleSuspended=true;void context.suspend().catch(()=>{});}},IDLE_FADE*1000+100);
       return;
@@ -326,10 +329,165 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     rushWant=0;if(kind==='ride-dart')stopRush(1.3,true);else stopRush();return true;
   }
   /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
-  function silence(now=false){stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
+  function silence(now=false){water.stop(now);stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
   function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();else resumeRush();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
-  function dispose(){if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
-  return {setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  function dispose(){water.dispose();if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
+  /** The sea, once per frame while swimming (a frame with `in:false` winds everything down). */
+  function swim(dt:number,frame:WaterSoundFrame){if(frame.in&&idleSuspended&&context?.state==='suspended')wakeIdle();water.update(dt,frame);}
+  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+}
+
+// ---- lib/audio/waterSound (kept in this file: the tests load islandSound.ts alone) ----
+// The sea's sound (user, Oct 19 2026: "change the sounds for diving and swimming beneath the water" and "also change the sound for
+// swimming"). Fully procedural on the island sound's shared context and master gain (no files, no new context), so mute, the
+// volume setting, hide / idle / suspend all apply unchanged. Replaces the old swim sound (nothing but splash-downs) with:
+//   surface: one looping "wash" bed (a baked lap-swell noise loop whose filter, rate and level glide with the stroke effort; a
+//            stronger rush on Swim fast; a calm quiet lap while treading), a bright watery slap + a few droplets per arm stroke,
+//            an occasional soft lap while treading;
+//   diving:  a plunge (low whoosh + muffled splash + three bubbles) and a "whoosh up" on surfacing (one-shots);
+//   under:   a low-pass on the whole SFX bus (master -> lowpass -> destination, eased in ~0.4 s, out ~0.3 s), the same bed re-tuned
+//            to a slow deep swell, one soft ~85 Hz hum, rounder muffled stroke whooshes on the swim pose's stroke clock and a
+//            small pitched bubble gurgle every 1.5-4 s. At most 3 steady underwater voices (bed + hum + one one-shot at a time).
+// Heat / battery: nothing is created until the swimmer is in the sea, no per-frame allocation (a counter and a few comparisons;
+// param glides every 0.1 s), lite (heat tier 2+, battery saver, slow governor, reduced motion) drops droplets, treading laps and
+// thins the bubbles 2.2x; reduced motion also drops the bubbles (the decorative twin of the bubble rings). Leaving the sea (or a
+// mute / hide / idle) fades the loops, stops pending one-shots and restores the master's route.
+export type WaterSoundHost={ctx:()=>AudioContext|null;master:()=>GainNode|null;noise:()=>AudioBuffer|null;ok:()=>boolean;changed:()=>void};
+export type WaterSoundFrame={in:boolean;under:number;kind:string;phase:number;speed:number;fast:boolean;lite:boolean;reduced:boolean};
+export const WATER_SOUND={muffleHz:760,openHz:18000,muffleTc:.12,openTc:.08,openMs:400,tick:.1,voiceCap:3,subOn:.4,subOff:.25,bubbleMin:1.5,bubbleSpan:2.5,liteBubble:2.2,hum:84} as const;
+export function createWaterSound(host:WaterSoundHost){
+ type Bed={src:AudioBufferSourceNode;filter:BiquadFilterNode;gain:GainNode};
+ type Hum={osc:OscillatorNode;gain:GainNode};
+ let bed:Bed|null=null,hum:Hum|null=null,lp:BiquadFilterNode|null=null,lpTimer:ReturnType<typeof setTimeout>|undefined,buf:AudioBuffer|null=null;
+ let live=0,submerged=false,tick=0,bubbleIn=2,lapIn=1,last=-1;
+ const shots=new Set<AudioScheduledSourceNode>();
+ const debug={bed:false,hum:false,muffled:false,live:0,created:0,disconnected:0,plunges:0,surfaces:0,strokes:0,bubbles:0};
+ const active=()=>!!bed||!!hum||live>0||!!lp;
+ const underVoices=()=>(bed?1:0)+(hum?1:0)+live;
+ const ep=(p:AudioParam,v:number,t:number,tc:number)=>{p.cancelScheduledValues(t);p.setTargetAtTime(v,t,tc);};
+ /** A 4 s loop of soft low noise with a lap swell every second (4 whole swells, so the loop is seamless); played slower it is a deep slow swell. */
+ function bedBuffer(c:AudioContext){
+  if(buf)return buf;const rate=11025,n=rate*4,b=c.createBuffer(1,n,rate),d=b.getChannelData(0);let lp1=0;
+  for(let i=0;i<n;i++){d[i]=Math.random()*2-1;lp1=lp1*.9+d[i]*.1;}
+  for(let i=0;i<n;i++){const w=d[i];lp1=lp1*.9+w*.1;const ph=i/n*4%1,swell=.55+.45*Math.sin(Math.PI*ph)**2;d[i]=(lp1*2.4+w*.18)*swell;}
+  return buf=b;
+ }
+ function muffle(on:boolean){
+  const c=host.ctx(),m=host.master();if(!c||!m)return;const t=c.currentTime;
+  if(on){
+   if(lpTimer!==undefined){clearTimeout(lpTimer);lpTimer=undefined;}
+   if(!lp){lp=c.createBiquadFilter();debug.created++;lp.type='lowpass';lp.Q.value=.5;lp.frequency.value=WATER_SOUND.openHz;m.disconnect();m.connect(lp);lp.connect(c.destination);}
+   ep(lp.frequency,WATER_SOUND.muffleHz,t,WATER_SOUND.muffleTc);debug.muffled=true;return;
+  }
+  if(!lp||lpTimer!==undefined)return;
+  ep(lp.frequency,WATER_SOUND.openHz,t,WATER_SOUND.openTc);debug.muffled=false;lpTimer=setTimeout(unmuffle,WATER_SOUND.openMs);
+ }
+ function unmuffle(){
+  if(lpTimer!==undefined){clearTimeout(lpTimer);lpTimer=undefined;}debug.muffled=false;
+  const f=lp;if(!f)return;lp=null;const m=host.master(),c=host.ctx();
+  try{m?.disconnect();f.disconnect();}catch{}debug.disconnected++;if(m&&c)m.connect(c.destination);
+ }
+ function startBed(c:AudioContext,m:GainNode){
+  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),t=c.currentTime;
+  src.buffer=bedBuffer(c);src.loop=true;filter.type='bandpass';filter.Q.value=.6;filter.frequency.value=420;src.playbackRate.value=.8;
+  gain.gain.setValueAtTime(.0001,t);src.connect(filter);filter.connect(gain);gain.connect(m);src.start(t,Math.random()*3);debug.created+=3;
+  src.onended=()=>{src.disconnect();filter.disconnect();gain.disconnect();debug.disconnected+=3;if(bed?.src===src)bed=null;host.changed();};
+  bed={src,filter,gain};debug.bed=true;
+ }
+ function stopBed(fade:number){
+  const b=bed,c=host.ctx();if(!b)return;bed=null;debug.bed=false;
+  if(!c){try{b.src.stop();}catch{}return;}
+  const t=c.currentTime;b.gain.gain.cancelScheduledValues(t);b.gain.gain.setValueAtTime(b.gain.gain.value,t);b.gain.gain.linearRampToValueAtTime(0,t+fade);try{b.src.stop(t+fade+.02);}catch{}
+ }
+ function startHum(c:AudioContext,m:GainNode){
+  const osc=c.createOscillator(),gain=c.createGain(),t=c.currentTime;osc.type='sine';osc.frequency.value=WATER_SOUND.hum;
+  gain.gain.setValueAtTime(.0001,t);gain.gain.setTargetAtTime(.014,t,.25);osc.connect(gain);gain.connect(m);osc.start(t);debug.created+=2;
+  osc.onended=()=>{osc.disconnect();gain.disconnect();debug.disconnected+=2;if(hum?.osc===osc)hum=null;host.changed();};
+  hum={osc,gain};debug.hum=true;
+ }
+ function stopHum(fade:number){
+  const h=hum,c=host.ctx();if(!h)return;hum=null;debug.hum=false;
+  if(!c){try{h.osc.stop();}catch{}return;}
+  const t=c.currentTime;h.gain.gain.cancelScheduledValues(t);h.gain.gain.setValueAtTime(h.gain.gain.value,t);h.gain.gain.linearRampToValueAtTime(0,t+fade);try{h.osc.stop(t+fade+.02);}catch{}
+ }
+ /** A short noise burst through one filter swept hz0 -> hz1: one source, one filter, one gain. */
+ function shot(type:BiquadFilterType,hz0:number,hz1:number,dur:number,vol:number,attack=.01,delay=0,q=1){
+  const c=host.ctx(),m=host.master(),noise=host.noise();if(!c||!m||!noise)return;
+  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),t=c.currentTime+delay;
+  src.buffer=noise;filter.type=type;filter.Q.value=q;filter.frequency.setValueAtTime(hz0,t);filter.frequency.exponentialRampToValueAtTime(Math.max(40,hz1),t+dur);
+  gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+attack);gain.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  src.connect(filter);filter.connect(gain);gain.connect(m);src.start(t,Math.random()*Math.max(0,1-dur-.05));src.stop(t+dur+.02);
+  live++;debug.live=live;debug.created+=3;shots.add(src);
+  src.onended=()=>{src.disconnect();filter.disconnect();gain.disconnect();shots.delete(src);live--;debug.live=live;debug.disconnected+=3;host.changed();};
+ }
+ /** A soft sine blip (a bubble or droplet) gliding hz0 -> hz1. */
+ function blip(hz0:number,hz1:number,dur:number,vol:number,delay=0,wobble=false){
+  const c=host.ctx(),m=host.master();if(!c||!m)return;
+  const osc=c.createOscillator(),gain=c.createGain(),t=c.currentTime+delay;osc.type='sine';
+  osc.frequency.setValueAtTime(hz0,t);
+  if(wobble){osc.frequency.exponentialRampToValueAtTime(hz0*1.6,t+dur*.3);osc.frequency.exponentialRampToValueAtTime(hz0*1.2,t+dur*.55);osc.frequency.exponentialRampToValueAtTime(hz1,t+dur);}
+  else osc.frequency.exponentialRampToValueAtTime(hz1,t+dur);
+  gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+.012);gain.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  osc.connect(gain);gain.connect(m);osc.start(t);osc.stop(t+dur+.02);
+  live++;debug.live=live;debug.created+=2;shots.add(osc);
+  osc.onended=()=>{osc.disconnect();gain.disconnect();shots.delete(osc);live--;debug.live=live;debug.disconnected+=2;host.changed();};
+ }
+ function leave(hard:boolean){
+  stopBed(hard?.02:.12);stopHum(hard?.02:.12);
+  for(const s of shots){try{s.stop(hard?undefined:(host.ctx()?.currentTime??0)+.1);}catch{}}// Oct 19 2026: no swim tail over a take-off
+  if(hard)unmuffle();else muffle(false);
+  submerged=false;last=-1;tick=0;
+ }
+ const lowRoom=()=>underVoices()<WATER_SOUND.voiceCap;
+ return {
+  debug,active,
+  /** Called every frame while swimming (cheap: a few comparisons; the audio params move every 0.1 s). */
+  update(dt:number,f:WaterSoundFrame){
+   if(!f.in){if(active())leave(false);return;}
+   const c=host.ctx(),m=host.master();
+   if(!host.ok()||!c||!m){if(active())leave(true);return;}
+   const sub=f.under>(submerged?WATER_SOUND.subOff:WATER_SOUND.subOn);
+   if(sub!==submerged){submerged=sub;muffle(sub);bubbleIn=1+Math.random()*1.5;}
+   if(!bed)startBed(c,m);
+   if(sub){if(!hum)startHum(c,m);}else if(hum)stopHum(.4);
+   tick+=dt;
+   if(tick>=WATER_SOUND.tick&&bed){
+    tick=0;const t=c.currentTime,b=bed,e=Math.max(0,Math.min(1,f.speed));
+    if(sub){ep(b.filter.frequency,170,t,.2);ep(b.src.playbackRate,.3,t,.3);ep(b.gain.gain,.05,t,.25);}
+    else if(f.kind==='crawl'){const fast=f.fast;ep(b.filter.frequency,fast?1500:480+700*e,t,.15);ep(b.src.playbackRate,fast?1.2:.9+.3*e,t,.15);ep(b.gain.gain,fast?.1:.015+.045*e,t,.15);}
+    else{ep(b.filter.frequency,400,t,.25);ep(b.src.playbackRate,.75,t,.25);ep(b.gain.gain,.016,t,.25);}
+   }
+   // The arm strokes ride the swim pose's stroke clock (one per π, the same cadence swimRipples.ts uses); a still clock is silent.
+   if(f.kind==='crawl'){
+    const idx=Math.floor(f.phase/Math.PI);
+    if(idx!==last){const first=last<0;last=idx;if(!first)stroke(idx%2,sub,f);}
+   }else{
+    last=-1;
+    if(!sub&&!f.lite&&f.kind==='tread'){lapIn-=dt;if(lapIn<=0){lapIn=1.6+Math.random()*1.1;shot('bandpass',900,420,.4,.02,.08,0,.8);}}
+   }
+   if(sub&&!f.reduced){bubbleIn-=dt;if(bubbleIn<=0){bubbleIn=(WATER_SOUND.bubbleMin+Math.random()*WATER_SOUND.bubbleSpan)*(f.lite?WATER_SOUND.liteBubble:1);if(lowRoom()){debug.bubbles++;blip(380+Math.random()*420,900,.2,.026,0,true);}}}
+  },
+  /** Going under: a low whoosh, a muffled splash and a quick bubble burst (about 0.6 s), distinct from the surface splash-down. */
+  plunge(){
+   if(!host.ok())return;debug.plunges++;
+   shot('bandpass',700,170,.6,.18,.05,0,.7);shot('bandpass',1250,480,.3,.1,.012,.02);
+   blip(380+Math.random()*120,760,.1,.034,.1);blip(480+Math.random()*160,980,.09,.03,.2);blip(560+Math.random()*200,1100,.08,.026,.32);
+  },
+  /** Coming up: a soft "whoosh up" and a few droplets (no gasp). */
+  surface(){
+   if(!host.ok())return;debug.surfaces++;
+   shot('bandpass',260,1400,.38,.13,.09,0,.8);shot('bandpass',2800,1300,.4,.055,.02,.14);blip(1500,2300,.045,.016,.22);blip(1900,2800,.04,.014,.3);
+  },
+  stop(hard=true){if(active())leave(hard);},
+  dispose(){leave(true);},
+ };
+ function stroke(side:number,sub:boolean,f:WaterSoundFrame){
+  debug.strokes++;const e=.7+.5*Math.max(0,Math.min(1,f.speed)),g=f.fast?1.5:1;
+  if(sub){if(lowRoom())shot('lowpass',520,240,.3,.07*e,.07,0,.5);return;}
+  // Surface: a bright slap of the hand on the water, a rounder lap under it and two or three tiny droplets.
+  shot('bandpass',side?2500:2100,side?1500:1300,.14,.045*e*g,.008,0,1.2);shot('bandpass',560,330,.24,.03*e*g,.02,.01,.7);
+  if(!f.lite){blip(1800+Math.random()*1400,2400+Math.random()*1800,.035,.007,.05+Math.random()*.05);if(f.fast)blip(2200+Math.random()*1200,3200,.03,.011,.12+Math.random()*.06);}
+ }
 }

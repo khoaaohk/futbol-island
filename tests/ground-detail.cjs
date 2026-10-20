@@ -39,14 +39,14 @@ assert.ok(tint.GROUND_TINT.grass.amp>tint.GROUND_TINT.sand.amp);
 // 2) the shader snippet matches the JS noise and the tier switch exists in the source
 assert.ok(tint.GROUND_TINT_GLSL.includes('sin(q.x*.31+sin(q.y*.23)*1.3)*.4')&&tint.GROUND_TINT_GLSL.includes('sin(q.y*.47-q.x*.29+1.7)*.3')&&tint.GROUND_TINT_GLSL.includes('sin(q.x*.83+q.y*.71+.9)*.3'),'GLSL harmonics match groundMottle');
 const src=read('lib/graphics/groundTint.ts');
-assert.ok(/effectiveTier\(\)>=GROUND_GRAIN_OFF_TIER/.test(src)&&tint.GROUND_GRAIN_OFF_TIER===3,'grain is off at tier 3 and above (and Battery saver is tier 4)');
+assert.ok(/effectiveTier\(\)>=GROUND_GRAIN_OFF_TIER/.test(src)&&tint.GROUND_GRAIN_OFF_TIER===1,'grain is off at tier 1 and above (heat offsets Oct 19 2026; Battery saver is tier 4)');
 assert.ok(/if\(uGroundGrain>0\.\)/.test(src),'the grain branch is skipped by a uniform');
 assert.ok(/subscribeHeatTier\(syncGrain\)/.test(src),'tier changes update the uniform');
 const heat=load('lib/graphics/heatTier.ts');
 heat.forceHeatTier(0);tint.applyGroundTint(new T.MeshStandardMaterial(),'grass');assert.equal(tint.GROUND_GRAIN.value,1);
-heat.forceHeatTier(2);assert.equal(tint.GROUND_GRAIN.value,1);
+heat.forceHeatTier(2);assert.equal(tint.GROUND_GRAIN.value,0);
 heat.forceHeatTier(3);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier(4);assert.equal(tint.GROUND_GRAIN.value,0);
-heat.forceHeatTier(1);assert.equal(tint.GROUND_GRAIN.value,1);heat.forceHeatTier(null);
+heat.forceHeatTier(1);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier(0);assert.equal(tint.GROUND_GRAIN.value,1);heat.forceHeatTier(null);
 // the materials are wired
 assert.ok(/applyGroundTint\(new T\.MeshStandardMaterial\(\{color:INTERIOR_GRASS_COLOR/.test(read('lib/town/fields.ts')),'main lawn tinted');
 assert.ok(/'sand'\)/.test(read('lib/town/fields.ts'))&&/tintGroundMesh\(sand,'sand'\)/.test(read('lib/town/coralCayWorld.ts'))&&/'mixed'\)/.test(read('lib/town/summitIsleWorld.ts')),'sand/cay/summit tinted');

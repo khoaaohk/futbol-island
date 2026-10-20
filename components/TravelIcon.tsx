@@ -53,7 +53,10 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  swimfast:'M16.5 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M15 13H8 M11 13l4-7h6 M2 8h6 M2 13h3 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
  // letgo (water P1b, the ride's Let go): two open hands parting over the wave, arrows out.
  letgo:'M9 4v6 M6 7l3-3 3 3 M15 4v6 M12 7l3-3 3 3 M3 13h4 M17 13h4 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
- float:'M3 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M9 13h5l3-6 3 6 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0'
+ float:'M3 12a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0 M9 13h5l3-6 3 6 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ // dive / surface (Oct 19 2026, the Dive toggle that replaced Float): one bold arrow down into the wave, and back up out of it.
+ dive:'M12 3v12 M7.5 10.5 12 15l4.5-4.5 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0',
+ surface:'M12 15V3 M7.5 7.5 12 3l4.5 4.5 M2 19c2-2 4-2 6.5 0s4.5 2 6.5 0 4.5-2 6.5 0'
  };
  return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={size?{width:size,height:size}:undefined}><path d={paths[kind]??paths.walk}/></svg>;
 }

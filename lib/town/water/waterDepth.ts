@@ -41,8 +41,9 @@ export const WADE_SPEED={ankle:.9,knee:.7,waist:.5} as const;
 /** Swim speeds (m/s): the head-up crawl, and the Swim fast hold (user, Oct 15 2026: "swim fast isn't moving faster": 1.72× now);
  *  acceleration (quicker on the hold) and braking per second (water carries momentum). */
 export const SWIM_SPEED=3.7,SWIM_FAST_SPEED=6.2,SWIM_ACCEL=5.5,SWIM_FAST_ACCEL=8,SWIM_BRAKE=3;// Oct 15 2026 (user: "make the swimming speed faster and also make the faster speed even faster"): was 1.8 / 3.1, then 2.6 / 4.6; now the walk speed 3.7 and a sprint well above it (user: "increase the swim speed to match the walking speeds")
-/** The rig root while swimming sits this far under the water line (shoulders at the surface, head above it). */
-export const SWIM_ROOT_DEPTH=1.27;
+/** The rig root while swimming sits this far under the water line (shoulders at the surface, head above it). 1.0 since Oct 19 2026
+ *  (was 1.27): the body is seen through the swimmer's clear disc now (swimClear.ts); the pose heights follow swimPose WATER_LINE. */
+export const SWIM_ROOT_DEPTH=1.0;
 /** Wading: the feet stand on the virtual seabed (the beach outline sits at −0.12). */
 export const WADE_FOOT_Y=-.12;
 /** Root height blend between zones (s): never a pop. */

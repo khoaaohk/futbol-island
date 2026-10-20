@@ -1,5 +1,6 @@
 import * as T from 'three';
 import {patchUnderwater,reefTheme,uwDepthAt,UW_SURFACE,type ReefTheme} from './underwater';
+import {SUN_OFFSET_GLSL} from './fishSilhouette';
 
 /**
  * Sea life in the fishing view (Oct 12 2026: "more fish", then "see the coral and the fish and not just shadows").
@@ -114,7 +115,8 @@ function turtleBody(p:Part){
   tri(p,[s*.2,.02,.25],[s*.36,0,.42],[s*.14,.02,.33],skin,3,flip);tri(p,[s*.2,.02,.25],[s*.14,.02,.33],[s*.36,0,.42],skin,3,flip);
  }
 }
-function shadowQuad(p:Part){const a=[-.3,0,-.52],b=[.3,0,-.52],c=[-.3,0,.52],d=[.3,0,.52];tri(p,a,c,b,[0,0,0],9,()=>0);tri(p,b,c,d,[0,0,0],9,()=>0);}
+/** The seabed-shadow quad (covers the widest body: the ray's wings and tail); the fragment draws the animal's outline in it. */
+function shadowQuad(p:Part){const a=[-.62,0,-.56],b=[.62,0,-.56],c=[-.62,0,1.08],d=[.62,0,1.08];tri(p,a,c,b,[0,0,0],9,()=>0);tri(p,b,c,d,[0,0,0],9,()=>0);}
 function creatureGeometry(phone:boolean){
  const p=part();shadowQuad(p);fishBody(p,phone);crabBody(p);rayBody(p);turtleBody(p);
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.pos,3));g.setAttribute('color',new T.Float32BufferAttribute(p.col,3));
@@ -139,21 +141,43 @@ export function createFishSchools(scene:T.Scene,phone=false){
  const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,transparent:true});
  const uShadow={value:1};
  material.onBeforeCompile=sh=>patchUnderwater(sh,{uniforms:{uShadow},
-  vertexHead:'attribute vec4 iMotion;attribute vec3 iColA;attribute vec4 iColB;attribute float aKind,aBend;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  vertexHead:'uniform vec3 uSunDir;attribute vec4 iMotion;attribute vec3 iColA;attribute vec4 iColB;attribute float aKind,aBend;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha,vSKind,vAsp;'+SUN_OFFSET_GLSL,
   // iMotion: phase, alpha, kind + 0.45 × swim strength (0..1, polish: the undulation follows the speed), shadow drop.
   vertexBody:/* glsl */`vLocal=position;vShadow=step(8.5,aKind);vColA=iColA;vColB=iColB;vAlpha=iMotion.y;
-   float uwKind=floor(iMotion.z+.01),uwAmp=fract(iMotion.z+.01)/.45;
+   float uwKind=floor(iMotion.z+.01),uwAmp=fract(iMotion.z+.01)/.45;vSKind=uwKind;vAsp=1.;
    if(aKind<8.5&&abs(aKind-uwKind)>.5)transformed=vec3(0.);
-   else if(vShadow>.5)transformed.y-=iMotion.w;
+   else if(vShadow>.5){
+    // Oct 20 2026: the shadow drops to the sand and is pushed a little away from the sun (fishSilhouette.ts SEABED_SUN), in world
+    // metres whatever the instance's scale / pitch. vAsp: a fish outline's width follows its body height.
+    mat3 im=mat3(instanceMatrix);float sy=length(im[1]),dW=iMotion.w*sy;vAsp=length(im[0])/max(sy,1e-4);
+    if(dW>0.){vec2 so=seabedSunOffset(dW);transformed+=inverse(im)*vec3(so.x,-dW,so.y);}
+    // Tail wag (fish): the outline swings like the body above it.
+    if(uwKind<.5){float tw=clamp((position.z+.1)/.7,0.,1.);transformed.x+=sin(iMotion.x-position.z*6.)*.07*tw*tw*(.55+.9*uwAmp);}}
    else{float ph=iMotion.x;
     // Tail-driven S-curve: the wave runs head to tail, small at the head, growing to the tail; stronger when swimming fast.
     if(aKind<.5)transformed.x+=sin(ph-position.z*6.)*(.085*aBend+.012)*(.55+.9*uwAmp);
     else if(aKind<1.5){float s=sin(ph+position.z*40.);transformed.y+=aBend*.03*max(0.,s);transformed.z+=aBend*.025*cos(ph+position.z*40.);}
     else if(aKind<2.5)transformed.y+=sin(ph-position.z*2.5)*.17*aBend;
     else{transformed.y+=sin(ph+position.z*4.)*.08*aBend;transformed.z+=cos(ph+position.z*4.)*.07*aBend;}}`,
-  fragmentHead:'uniform float uShadow;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha;',
+  fragmentHead:'uniform float uShadow;varying vec3 vLocal,vColA;varying vec4 vColB;varying float vShadow,vAlpha,vSKind,vAsp;',
   colorBody:/* glsl */`
-   if(vShadow>.5){diffuseColor=vec4(0.,0.,0.,(1.-smoothstep(.2,1.,length(vec2(vLocal.x/.3,vLocal.z/.52))))*.34*vAlpha*uShadow);}
+   if(vShadow>.5){
+    // Oct 20 2026 ("not sure if they are fish or not, based on the shape"): each shadow is its animal's outline, soft-edged (was a
+    // round blob). Head toward -z. Fish: body (its height across), forked tail, two side fins; ray: diamond + tail; turtle: shell,
+    // head and flippers; crab: shell and legs.
+    vec2 p=vLocal.xz;float cov;
+    if(vSKind<.5){p.x*=vAsp;
+     float t=(p.y+.1)/.42,hw=.2*sqrt(max(0.,1.-t*t))*(p.y<-.38?.85:1.);
+     float body=smoothstep(.03,-.015,abs(p.x)-hw)*smoothstep(1.,.9,abs(t));
+     float tail=smoothstep(.03,-.01,max(abs(p.x)-(.035+(p.y-.27)*.75),max(p.y-.6,.27-p.y)))*(1.-smoothstep(-.02,.02,(p.y-.47)*1.5-abs(p.x)));
+     float fin=smoothstep(.025,-.01,max(abs(p.x)-(.1+.17*clamp((p.y+.26)/.24,0.,1.)),max(-.26-p.y,p.y+.03)));
+     cov=max(max(body,tail),fin);}
+    else if(vSKind<1.5)cov=max(smoothstep(1.08,.9,length(p/vec2(.17,.13))),smoothstep(1.1,.85,length(p/vec2(.31,.07)))*.8);
+    else if(vSKind<2.5){float d=abs(p.x)/.58+(p.y<.02?(.02-p.y)/.44:(p.y-.02)/.3);
+     cov=max(smoothstep(1.06,.94,d),smoothstep(.03,.01,abs(p.x))*step(.25,p.y)*smoothstep(1.06,.9,p.y));}
+    else{cov=max(smoothstep(1.08,.92,length(p/vec2(.3,.38))),smoothstep(1.1,.85,length((p-vec2(0.,-.46))/vec2(.09,.1))));
+     vec2 q=vec2(abs(p.x),p.y);cov=max(cov,max(smoothstep(1.1,.85,length((q-vec2(.4,-.17))/vec2(.22,.065))),smoothstep(1.1,.85,length((q-vec2(.25,.34))/vec2(.11,.06)))));}
+    diffuseColor=vec4(0.,0.,0.,cov*.4*vAlpha*uShadow);}
    else{vec3 base=vec3(1.);float pat=vColB.a;
     if(pat>-.5){float belly=smoothstep(.02,-.1,vLocal.y);vec3 b=vColB.rgb;
      if(pat<.5)base=mix(vColA,b,belly);
@@ -171,7 +195,7 @@ export function createFishSchools(scene:T.Scene,phone=false){
   // school down between the coral is bluer and fainter than one near the surface.
   absorb:'uUwFish',
  });
- material.customProgramCacheKey=()=>'fishing-sea-life-v4'+(phone?'p':'');
+ material.customProgramCacheKey=()=>'fishing-sea-life-v5'+(phone?'p':'');
  const mesh=new T.InstancedMesh(geometry,material,COUNT);mesh.name='fishing-ambient-fish';mesh.renderOrder=.6;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};scene.add(mesh);
  const fish:Fish[]=[],leaders:Leader[]=[],crabs:Crab[]=[],glider:Glider={kind:KIND.ray,on:false,wait:3,x:0,z:0,vx:0,vz:0,phase:0,len:1,y:0,t:0,life:1},dummy=new T.Object3D();
  // viewDepth (Oct 13 2026, farther casts): how far out schools and cruisers roam, in metres (default 11, the old fixed

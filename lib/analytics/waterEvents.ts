@@ -24,7 +24,10 @@ export function countSwimStart(){count('wa:swim_start');if(markFirst('s'))count(
 export const countSplashDown=(source:SplashSource)=>count(`wa:splash_${source}`);
 export const countBackToShore=()=>count('wa:shore');
 export const countSwimFast=()=>count('wa:fast');
+/** Retired Oct 19 2026 (Float became Dive): kept so the history's 'wa:float' id still has its writer and label. */
 export const countFloat=()=>count('wa:float');
+/** Dive (Oct 19 2026, replaces Float): one per dive under. */
+export const countDive=()=>count('wa:dive');
 /** A swim ended after `seconds` in the water: one of the five time buckets (waterState.ts swimTimeBucket). */
 export const countSwimTime=(seconds:number)=>{if(seconds>0)count(`wa:${swimTimeBucket(seconds)}`);};
 /** The 20 fps idle cap engaged while treading water or floating (once per rest). */

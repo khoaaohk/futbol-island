@@ -20,6 +20,8 @@ import {regionNamesFor} from './regions';
 import {buildLearning} from './learning';
 import {buildStart} from './startReport';
 import {buildOverview,type PerDay} from './overview';
+import {buildSponsor} from './sponsor';
+import {sponsorLabels} from './sponsorLabels';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
 
@@ -102,6 +104,12 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  let prevPer:PerDay|null=null;
  if(prev&&prevFull){const used=(len===1?prev.rollups:prevFull).slice(curPer.skip,curPer.take),vd=used.reduce((a,r)=>a+r.visitors,0);prevPer={value:used.length?vd/used.length:0,days:used.length,visitorDays:vd};}
  report.overview=buildOverview({merged,rollups,from:range.from,to:range.to,perDay:curPer},prev&&prevPer?{...prev,perDay:prevPer}:null);
+ // Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts) from the same rollups. A range under a week also gets the 7 days
+ // ending on its last day for the tiles' trend lines (best effort: without them the trend is just the range).
+ let trendRollups:DailyRollup[]|undefined;
+ if(len<7)try{trendRollups=(await loadRollups(store,dayList(addDays(range.to,-6),range.to),now,mode)).rollups;}catch{}
+ report.sponsor=buildSponsor({from:range.from,to:range.to,merged,rollups,prev:prev?{from:prev.from,to:prev.to,merged:prev.merged}:null,
+  trendRollups,firstTry:report.overview.current.firstTry,labels:sponsorLabels});
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

@@ -1,7 +1,7 @@
 // The water state machine and HUD (Oct 15 2026, lib/town/water/waterState.ts, waterHud.ts; docs/swimming-research.md §2.1–2.3):
 // land → wade → swim → back out, the ball parked on the sand (decision 3), the action swap (the ride switcher: swim + jetpack
-// only), the splash-down sequence (fall / roof / launch / jetpack "Drop in") and its splash + cue, Float (tap) and the lazy
-// circle (hold), Sprint, reduced motion, analytics buckets and the Town wiring.
+// only), the splash-down sequence (fall / roof / launch / jetpack "Drop in") and its splash + cue, Dive (tap; replaced Float and
+// its lazy circle Oct 19 2026), Sprint, reduced motion, analytics buckets and the Town wiring.
 // Run: node tests/water-swim.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {createLoader}=require('./summit-harness.cjs');
@@ -42,27 +42,14 @@ ok('land → ankle → knee → waist → swim, then back out: zones, root heigh
  assert(Math.abs(water.state.rootY-W.SWIM_ROOT_Y)<.01,'root on the swim line '+water.state.rootY);
  // Stop: treading water; resting = the idle rule may apply.
  for(let i=0;i<60;i++)water.step(1/60,23,0,input());assert.equal(water.pose.kind,'tread');assert.equal(water.resting(),true);
- // Float: a little bob under, then the back float; stick input ends it.
- assert.equal(water.press('float','tap'),true);assert.equal(water.events.floated,false,'a press raises its event on the next step');
- assert.equal(water.step(1/60,23,0,input()).floated,true);assert.equal(water.step(1/60,23,0,input()).floated,false,'once');assert.equal(water.state.floating,true);assert.equal(water.pose.kind,'float');assert(water.state.rootY<=W.SWIM_ROOT_Y);
- for(let i=0;i<60;i++)water.step(1/60,23,0,input());assert(Math.abs(water.state.rootY-W.SWIM_ROOT_Y)<.05,'back up after the bob');
- water.step(1/60,23,0,input({stick:.5}));assert.equal(water.state.floating,false,'the stick ends the float');
+ // Dive (Oct 19 2026, replaced Float): a tap goes under (its event on the next step), a second tap comes back up (tests/water-dive.cjs has the rest).
+ assert.equal(water.press('dive','tap'),true);assert.equal(water.events.dived,false,'a press raises its event on the next step');
+ assert.equal(water.step(1/60,23,0,input()).dived,true);assert.equal(water.step(1/60,23,0,input()).dived,false,'once');assert.equal(water.state.diving,true);
+ for(let i=0;i<120;i++)water.step(1/60,23,0,input());assert(water.state.rootY<W.SWIM_ROOT_Y-1,'under: '+water.state.rootY);assert.equal(water.pose.kind,'crawl');
+ assert.equal(water.press('dive','tap'),true);let rose=false;for(let i=0;i<120;i++)if(water.step(1/60,23,0,input()).rose)rose=true;assert(rose,'back up');assert(Math.abs(water.state.rootY-W.SWIM_ROOT_Y)<.05,'on the swim line again');
  // Swim fast: the hold, only while swimming and moving.
  water.press('swimfast','down');assert.equal(water.step(1/60,23,0,input({stick:1,moving:true,speed:2.6})).sped,true);assert.equal(water.pose.fast,1);assert.equal(water.pose.kind,'crawl');
  water.press('swimfast','up');water.step(1/60,23,0,input({stick:1,moving:true,speed:1.8}));assert.equal(water.pose.fast,0);
- // Float held (user, Oct 15 2026: "holding floats makes you float in a circle"): a hold past FLOAT_HOLD_S starts the lazy circle on
- // the back (one turn per CIRCLE_PERIOD s, soft rings), the stick is ignored, resting() is false; release = treading again.
- for(let i=0;i<30;i++)water.step(1/60,23,0,input());assert.equal(water.state.floating,false);
- assert.equal(water.press('float','down'),true);for(let i=0;i<10;i++)water.step(1/60,23,0,input());assert.equal(water.state.circling,false,'not yet: a tap window');
- let circled=false,rings=0,headings=[];for(let i=0;i<Math.round(S.CIRCLE_PERIOD*60);i++){const ev=water.step(1/60,23,0,input({stick:1}));if(ev.circled)circled=true;if(ev.ripple)rings++;if(i%60===0)headings.push(Math.atan2(water.state.circleZ,water.state.circleX));}
- assert(circled,'the circle event');assert.equal(water.state.circling,true);assert.equal(water.state.floating,true,'on the back');assert.equal(water.pose.kind,'float');assert.equal(water.resting(),false,'drifting round is travel, not idle');
- assert(rings>=5&&rings<=8,'soft rings while circling: '+rings);assert(Math.hypot(water.state.circleX,water.state.circleZ)>.99,'a unit heading');
- assert(new Set(headings.map(h=>Math.round(h*2))).size>=5,'the heading sweeps round: '+headings.map(h=>h.toFixed(1)));
- assert(S.CIRCLE_PERIOD>=6&&S.CIRCLE_PERIOD<=8&&S.CIRCLE_INPUT>0&&S.CIRCLE_INPUT<1,'one turn per 6–8 s at a slow drift');
- assert.equal(water.press('float','up'),true);assert.equal(water.state.circling,false);assert.equal(water.state.floating,false,'release: treading');water.step(1/60,23,0,input());assert.equal(water.pose.kind,'tread');
- // A short press is the tap: on the back; a second short press: off again.
- water.press('float','down');water.step(1/60,23,0,input());water.press('float','up');water.step(1/60,23,0,input());assert.equal(water.state.floating,true,'a short press floats');
- water.press('float','down');water.step(1/60,23,0,input());water.press('float','up');assert.equal(water.state.floating,false,'and again: treading');
  // Swim and wade back in: swim → waist → … → land; the swim's seconds come out once; the ball park is released.
  const r5=walk(water,23,12,1.8);assert(r5.raised.some(e=>e.startsWith('swimSeconds')),'swim time on leaving the swim zone: '+r5.raised.join(' '));assert.equal(water.state.phase,'wade');
  const r6=walk(water,12,9.5,1);assert(r6.raised.includes('left'),'left the water');assert.equal(water.state.phase,'land');assert.equal(water.state.park,null);assert.equal(water.inWater,false);assert.equal(typeof water.backToShore,'undefined','no auto-swim to shore any more (the jetpack and swimming cover it)');
@@ -92,27 +79,27 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  // jetpack only"): the ride slot is the swim icon; with fuel a tap is the jetpack (fly up), without fuel the same swim icon answers
  // with a hint (aria-disabled); never walk / scooter / bike / moped. The same two choices while wading.
  const fly=H.waterButtonsFor({inWater:true,swimming:true,flyOk:true}),noFuel=H.waterButtonsFor({inWater:true,swimming:true,flyOk:false}),wadeFly=H.waterButtonsFor({inWater:true,swimming:false,flyOk:true});
- assert.deepEqual(fly.map(b=>b.id),['swimfast','float','swimride']);assert.deepEqual(fly.map(b=>b.slot),['shoot','juggle','ride']);assert.equal(fly[2].icon,'swim');assert.equal(fly[2].enabled,true);assert.match(fly[2].label,/jetpack/i);
- assert.deepEqual(noFuel.map(b=>b.id),['swimfast','float','swimride']);assert.equal(noFuel[2].icon,'swim');assert.equal(noFuel[2].enabled,false,'no fuel: the jetpack is not offered (the swim icon stays, with a hint)');
+ assert.deepEqual(fly.map(b=>b.id),['swimfast','dive','swimride']);assert.deepEqual(fly.map(b=>b.slot),['shoot','juggle','ride']);assert.equal(fly[2].icon,'swim');assert.equal(fly[2].enabled,true);assert.match(fly[2].label,/jetpack/i);
+ assert.deepEqual(noFuel.map(b=>b.id),['swimfast','dive','swimride']);assert.equal(noFuel[2].icon,'swim');assert.equal(noFuel[2].enabled,false,'no fuel: the jetpack is not offered (the swim icon stays, with a hint)');
  assert.equal(wadeFly[2].id,'swimride');assert.equal(wadeFly[2].enabled,true);
  for(const row of [fly,noFuel,wadeFly])for(const b of row){assert(!['walk','scooter','bike','moped'].includes(b.icon),'no land ride in the water: '+b.icon);assert.notEqual(b.id,'shore','To shore is gone from the cluster');}
  assert.equal(H.waterKeyAction('KeyR','r'),'swimride','R (the land ride key) is the switcher');assert.equal(H.waterKeyAction('KeyE','e'),'swimride');
  // Water actions show only their icon (user, Oct 15 2026): the caption is skipped for the water ids.
  assert.match(fs.readFileSync('components/JobActionButton.tsx','utf8'),/WATER_IDS\.has\(b\.id\)\?null:<small>/,'water buttons are icon-only');
- const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','float','swimride'(,'letgo')?(,'tuck','spin','wave')?\]\)/);/* + water P1b's Let go */
+ const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','dive','swimride'(,'letgo')?(,'tuck','spin','wave')?\]\)/);/* + water P1b's Let go */
  const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/const flyUp=\(\)=>\{if\(!water\.inWater\|\|rideRef\.current!=='walk'\|\|!fuelStore\.canUse\('jetpack'\)\)return false;/,'fuel-gated');
  // QA Oct 16 2026: the gate must not raise the land fuel notice ("Walk to a Konbini…"), which hid SWIM_RIDE_NOTE from a swimmer.
  assert.doesNotMatch(town.match(/const flyUp=[^\n]*/)[0],/fuelAllowsRide/,'the swim switcher uses the silent fuel check, so SWIM_RIDE_NOTE is the one note');
  assert.match(town,/rooftop\.reset\(x,z,water\.state\.rootY\);/,'the climb starts from the water line');
  assert.match(town,/if\(id==='swimride'\)\{if\(phase!=='tap'\)return;if\(flyUp\(\)\)\{tapHaptic\(\);sound\.ui\('click'\);\}else fuelStore\.say\('No fuel',SWIM_RIDE_NOTE\);return;\}/,'the switcher: fly up, or the hint');
  assert.match(town,/const selectRide=\(mode:TravelMode\)=>\{if\(waterStore\.get\(\)\.inWater\)return;/,'no land ride can be picked in the water');
- assert.match(town,/if\(id==='swimfast'\|\|id==='float'\)\{if\(down&&!e\.repeat\)waterActions\.press\(id,'down'\);else if\(!down\)waterActions\.press\(id,'up'\);\}/,'Q is a hold too');
+ assert.match(town,/if\(id==='swimfast'\)\{if\(down&&!e\.repeat\)waterActions\.press\(id,'down'\);else if\(!down\)waterActions\.press\(id,'up'\);\}else if\(down&&!e\.repeat\)waterActions\.press\(id,'tap'\);/,'Space is a hold, Q (Dive) a tap');
  // A scooter / bike / moped that splashes down swims (walk), and the ride comes back on the first dry step (cheaper than parking it).
  assert.match(town,/if\(rideRef\.current!=='walk'\)\{if\(rideRef\.current!=='jetpack'\)rideBeforeWater=rideRef\.current;rideRef\.current='walk';setRideMode\('walk'\);\}/,'a mid-ride drop swims');
  assert.match(town,/if\(ev\.left&&rideBeforeWater\)\{const m=rideBeforeWater;rideBeforeWater=null;if\(rideRef\.current==='walk'&&rideAllowed\(m,jobActiveRef\.current\)&&fuelAllowsRide\(m\)\)\{rideRef\.current=m;setRideMode\(m\);\}\}/,'handed back on the sand');
- assert.match(town,/if\(water\.state\.circling\)\{mx=water\.state\.circleX\*CIRCLE_INPUT;mz=water\.state\.circleZ\*CIRCLE_INPUT;\}/,'the circle steers the swim step');assert(!/backToShore|state\.shore/.test(town),'no auto-swim left in Town');
+ assert(!/circling|CIRCLE_INPUT|countFloat/.test(town),'the Float circle is gone from Town');assert(!/backToShore|state\.shore/.test(town),'no auto-swim left in Town');
  assert.match(town,/if\(waterKey\(e,true\)\)return;[^\n]*if\(e\.target instanceof HTMLButtonElement&&\['Enter',' '\]\.includes\(e\.key\)\)return;/,'water keys before the focused-button rule');
- assert.match(town,/if\(\(ev\.wake\|\|ev\.stroke\)&&waterFxOn\(\)\)/,'the wake obeys the fx gate');
+ assert.match(town,/si\.mode=reduced\?2:waterFxOn\(\)\?0:1/,'the swim ripples obey the fx gate (Oct 19 2026: they replaced the stroke / wake rings)');
 });
 
 ok('hysteresis holds the zone on the line',()=>{
@@ -123,14 +110,14 @@ ok('hysteresis holds the zone on the line',()=>{
  assert.deepEqual([...zones],['knee']);
 });
 
-ok('the HUD: Swim ride · Sprint (hold) · Float (tap / hold) while swimming; Sprint and Float wait while wading; nothing on land',()=>{
+ok('the HUD: Swim ride · Sprint (hold) · Dive (tap) while swimming; Sprint and Dive wait while wading; nothing on land',()=>{
  assert.equal(H.waterButtonsFor({inWater:false,swimming:false,flyOk:false}),null);
  const swim=H.waterButtonsFor({inWater:true,swimming:true,flyOk:false});
- assert.deepEqual(swim.map(b=>b.slot),['shoot','juggle','ride']);const wade=H.waterButtonsFor({inWater:true,swimming:false,flyOk:false});assert.deepEqual(swim.map(b=>b.id),['swimfast','float','swimride']);
- assert.equal(swim[0].hold,true,'Sprint is a hold');assert.equal(swim[1].hold,true,'Float is a hold too (tap = on the back, hold = the circle)');assert.match(swim[1].label,/circle/);
+ assert.deepEqual(swim.map(b=>b.slot),['shoot','juggle','ride']);const wade=H.waterButtonsFor({inWater:true,swimming:false,flyOk:false});assert.deepEqual(swim.map(b=>b.id),['swimfast','dive','swimride']);
+ assert.equal(swim[0].hold,true,'Sprint is a hold');assert.equal(!!swim[1].hold,false,'Dive is a tap');assert.equal(swim[1].icon,'dive');
  assert.deepEqual(wade.map(b=>b.enabled),[false,false,false],'wading without fuel: nothing live (the stick walks you out)');
  assert.deepEqual(swim.map(b=>b.key),['Space','Q','R'],'Space / Q as the zipline, R the ride key');
- assert.equal(H.waterKeyAction('Space',' '),'swimfast');assert.equal(H.waterKeyAction('KeyQ','q'),'float');assert.equal(H.waterKeyAction('KeyJ','j'),'float');assert.equal(H.waterKeyAction('KeyE','e'),'swimride');assert.equal(H.waterKeyAction('KeyR','r'),'swimride');assert.equal(H.waterKeyAction('KeyW','w'),null,'the stick keys stay the stick');
+ assert.equal(H.waterKeyAction('Space',' '),'swimfast');assert.equal(H.waterKeyAction('KeyQ','q'),'dive');assert.equal(H.waterKeyAction('KeyJ','j'),'dive');assert.equal(H.waterKeyAction('KeyE','e'),'swimride');assert.equal(H.waterKeyAction('KeyR','r'),'swimride');assert.equal(H.waterKeyAction('KeyW','w'),null,'the stick keys stay the stick');
  // The store writes only on changes.
  let n=0;const off=H.waterStore.subscribe(()=>n++);H.waterStore.set({inWater:true});H.waterStore.set({inWater:true});assert.equal(n,1);H.waterStore.set({inWater:true,swimming:true});assert.equal(n,2);H.waterStore.reset();assert.equal(n,3);off();
  // Every icon the buttons name exists, and every id has a short word under it.
@@ -211,12 +198,12 @@ ok('any position past wading depth is the swim state, by every route (never deep
  for(const [name,setup] of Object.entries(routes))for(const d of [12,40,90,200]){
   const w=S.createWaterState(island(),()=>false);setup(w);w.step(1/60,10+d,0,input());
   assert.equal(w.inWater&&w.swimming,true,`${name}, ${d} m out: swimming`);assert.equal(w.state.phase==='swim'||w.state.phase==='under'||w.state.phase==='surface',true,name);
-  const cluster=H.waterButtonsFor({inWater:w.inWater,swimming:w.swimming,flyOk:false});assert(cluster&&cluster.every(b=>['swimfast','float','swimride'].includes(b.id)),name+': the water cluster');}
+  const cluster=H.waterButtonsFor({inWater:w.inWater,swimming:w.swimming,flyOk:false});assert(cluster&&cluster.every(b=>['swimfast','dive','swimride'].includes(b.id)),name+': the water cluster');}
  // Airborne over the sea is the only exception (the landing decides), and it ends the moment the body is not airborne.
  const w=S.createWaterState(island(),()=>false);w.step(1/60,5,0,input({landY:0}));w.step(1/60,80,0,input({airborne:true}));assert.equal(w.inWater,false,'airborne: wait for the landing');w.step(1/60,80,0,input());assert.equal(w.swimming,true,'landed: swimming');
  // The Town side: every landing path asks canSplashDown, which has no range any more (tests/water-depth.cjs), and the HUD store
  // is written from water.inWater / water.swimming on the HUD tick.
- const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/if\(hudTick\)waterStore\.set\(\{inWater:water\.inWater,swimming:water\.swimming,flyOk:fuelStore\.canUse\('jetpack'\),dropIn:/);
+ const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/if\(hudTick\)waterStore\.set\(\{inWater:water\.inWater,swimming:water\.swimming,diving:water\.diveActive,diveOk:water\.canDive\(\),flyOk:fuelStore\.canUse\('jetpack'\),dropIn:/);
  assert(!/SPLASH_RANGE/.test(fs.readFileSync('lib/town/water/waterDepth.ts','utf8')),'no splash range');
 });
 
@@ -246,4 +233,4 @@ ok('the splash: its size by drop and entry, the burst from the ring pool, a cue 
 });
 
 if(failed){console.log(`WATER_SWIM_FAIL ${failed}`);process.exit(1);}
-console.log('WATER_SWIM_PASS land→wade→swim→out, parked ball, swim+jetpack switcher, Float hold circle, splash-downs anywhere + splash/cue, reduced motion, wiring');
+console.log('WATER_SWIM_PASS land→wade→swim→out, parked ball, swim+jetpack switcher, Dive tap, splash-downs anywhere + splash/cue, reduced motion, wiring');

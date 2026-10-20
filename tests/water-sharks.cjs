@@ -41,27 +41,46 @@ ok('at most three sharks, the nearest ones, each in its own staggered slot',()=>
  const offsets=S.SHARK_SLOTS.map(s=>s[0]);const gaps=[offsets[1]-offsets[0],offsets[2]-offsets[1],Math.PI*2-offsets[2]];
  assert(gaps.every(g=>g>1.5&&g<2.6)&&new Set(gaps.map(g=>g.toFixed(2))).size===3,'staggered, not evenly spaced: '+gaps);});
 
-ok('ring geometry: radius ~4.6 m, slots staggered in radius, turning at ~1.2 m/s, following the swimmer',()=>{
+ok('ring geometry: radius ~6-8 m, slots staggered in radius, turning slowly (~1.1 m/s), following the swimmer',()=>{
  const c=S.createSharkCircle(land);const sch=school([0,3,6,9,12,15]);run(c,.2,sw(7,3),sch);
- assert(c.state.radius>=4&&c.state.radius<=5,'radius '+c.state.radius);
+ assert(c.state.radius>=6&&c.state.radius<=8,'radius '+c.state.radius);
  run(c,S.SHARK_JOIN+.2,sw(7,3),sch);const p={x:0,z:0};
- for(let m=0;m<c.state.n;m++){c.ringPoint(m,p);const d=Math.hypot(p.x-7,p.z-3);assert(d>=S.SHARK_RING_MIN*.85&&d<=S.SHARK_RING*1.15,`slot ${m} at ${d.toFixed(2)} m`);}
+ for(let m=0;m<c.state.n;m++){c.ringPoint(m,p);const d=Math.hypot(p.x-7,p.z-3);assert(d>=6&&d<=8,`slot ${m} at ${d.toFixed(2)} m`);}
  const a0=c.state.angle;run(c,1,sw(7,3),sch);const da=((c.state.angle-a0)+Math.PI*2)%(Math.PI*2);
  assert(Math.abs(da*c.state.radius-S.SHARK_SPEED)<.05,'arc speed '+(da*c.state.radius).toFixed(2)+' m/s');
- assert(S.SHARK_SPEED>=1&&S.SHARK_SPEED<=1.4);
+ assert(S.SHARK_SPEED>=.9&&S.SHARK_SPEED<=1.3);
  // The swimmer moves 6 m: the ring centre follows.
- run(c,3,sw(13,3),sch);assert(Math.hypot(c.state.cx-13,c.state.cz-3)<.5,'the ring follows: '+c.state.cx.toFixed(2));
+ run(c,5,sw(13,3),sch);assert(Math.hypot(c.state.cx-13,c.state.cz-3)<.5,'the ring follows: '+c.state.cx.toFixed(2));
  // place(): fully blended, the shark sits on its ring slot, heading along the tangent.
- const pos={x:0,z:0,yaw:0};assert.equal(c.place(0,c.ids[0],pos),true);c.ringPoint(0,p);assert(Math.hypot(pos.x-p.x,pos.z-p.z)<1e-6);
+ const pos={x:0,z:0,yaw:0,roll:0,cap:Infinity};assert.equal(c.place(0,c.ids[0],pos),true);c.ringPoint(0,p);assert(Math.hypot(pos.x-p.x,pos.z-p.z)<1e-6);
  assert.equal(c.place(0,0,{x:0,z:0,yaw:0}),false,'a shark not in the circle is untouched');assert.equal(c.place(1,c.ids[0],{x:0,z:0,yaw:0}),false,'another region is untouched');});
 
-ok('the ring stays in the water: shrinks near land, never below the minimum; a shark whose path crosses land is skipped',()=>{
- const c=S.createSharkCircle(land);run(c,.2,sw(7,3,{distanceToLand:3.4}),school([0,3,6,9,12,15]));
- assert(c.state.radius*S.SHARK_SLOTS[1][1]<=3.4-S.SHARK_SHORE_GAP+1e-6,'the widest slot stays off the bank: '+c.state.radius);
- const d=S.createSharkCircle(land);run(d,.2,sw(7,3,{distanceToLand:.5}),school([0,3,6,9,12,15]));assert.equal(d.state.radius,S.SHARK_RING_MIN);
+ok('the ring stays in the water: each shark eases in off a bank or a shallow bed and back out; a shark whose path crosses land is skipped',()=>{
+ // Land east of x 12 (the swimmer at x 7): the sharks on that side swim a tighter arc, never over the bank, never under the minimum.
+ const bank=(x,z)=>x>12;const c=S.createSharkCircle(bank);const sch=school([0,3,6,9,10.5,11]);const swimmer=sw(7,3,{distanceToLand:5});
+ run(c,.2,swimmer,sch);assert(c.state.active);const p={x:0,z:0};let minR=Infinity,maxR=0;
+ for(let t=0;t<S.SHARK_HOLD-.5;t+=1/30){c.tick(1/30,swimmer,sch);c.frame(1/30);if(t<S.SHARK_JOIN)continue;
+  for(let m=0;m<c.state.n;m++){c.ringPoint(m,p);assert(p.x<=12.6,`slot ${m} over the bank at x ${p.x.toFixed(2)}`);const r=c.slotRadius(m);minR=Math.min(minR,r);maxR=Math.max(maxR,r);}}
+ assert(minR>=S.SHARK_RING_MIN-1e-3&&minR<6,'eases in near the bank: '+minR.toFixed(2));assert(maxR>6,'back out on the open side: '+maxR.toFixed(2));
+ // A shallow bed (1.2 m) north of z 8: same, plus the depth cap keeps the body off the bed where it is shallower than the swim depth.
+ const bed=(x,z)=>z>8?1.2:2.3;const d=S.createSharkCircle(()=>false,bed);run(d,.2,swimmer,sch);
+ for(let t=0;t<S.SHARK_HOLD-.5;t+=1/30){d.tick(1/30,swimmer,sch);d.frame(1/30);if(t<S.SHARK_JOIN+1)continue;for(let m=0;m<d.state.n;m++){d.ringPoint(m,p);assert(p.z<=8.8,'slot '+m+' over the shallow bed at z '+p.z.toFixed(2));assert(d.slotCap(m)<=2.3-S.SHARK_BED_CLEAR+.05,'depth cap above the bed: '+d.slotCap(m));}}
  // A bank (a wall x 4..5) between the swimmer and sharks on the far side: those are not picked.
  const wall=(x,z)=>x>4&&x<5;const e=S.createSharkCircle(wall);run(e,.2,sw(9,0),school([0,1,2,10,11,12]));
  assert([...e.ids].filter(i=>i>=0).every(i=>i>=3),'only sharks on the swimmer\'s side: '+[...e.ids]);});
+
+ok('smooth: an eased glide in (no pop), heading along its own motion (never backwards) as the ring follows a moving swimmer, a gentle bank',()=>{
+ const c=S.createSharkCircle(land);const sch=school([0,3,6,9,12,15]);const pos=[],prev=[];let maxStep=0,maxBank=0,back=0,samples=0;
+ const swimmer=sw(7,3);run(c,.2,swimmer,sch);
+ for(let f=0;f<60*11;f++){const dt=1/60;if(f>60*6)swimmer.x+=3.7*dt;// swims east at walking pace after 6 s
+  c.tick(dt,swimmer,sch);c.frame(dt);
+  for(let m=0;m<c.state.n;m++){const i=c.ids[m],o={x:i*3,z:0,yaw:0,roll:0,cap:Infinity};c.place(0,i,o);
+   if(prev[m]){const dx=o.x-prev[m].x,dz=o.z-prev[m].z,step=Math.hypot(dx,dz);maxStep=Math.max(maxStep,step);
+    if(step>1e-3&&f>60*2){samples++;const hx=Math.cos(o.yaw),hz=-Math.sin(o.yaw);if((hx*dx+hz*dz)/step< -.2)back++;}}
+   maxBank=Math.max(maxBank,Math.abs(o.roll));prev[m]={x:o.x,z:o.z};}}
+ assert(maxStep<.2,'no pop: largest per-frame move '+maxStep.toFixed(3)+' m');
+ assert(samples>100&&back===0,`never swims backwards (${back} of ${samples})`);
+ assert(maxBank>.005&&maxBank<=S.SHARK_BANK_MAX+1e-6,'banks gently: '+maxBank.toFixed(3));});
 
 ok('peel-off timer: they lose interest after 12 s, blend back to the loop, then cool down',()=>{
  const c=S.createSharkCircle(land);const sch=school([0,3,6,9,12,15]);
@@ -96,7 +115,7 @@ ok('the real caySharks: same instances, 0 new meshes or materials; the ring move
  const swimmer={x:p.x+4,z:p.z+3,swimming:true,distanceToLand:30};
  for(let i=0;i<20;i++){c.tick(1/60,swimmer,sharks.schools);sharks.update(1/60,false,cam,swimmer);}
  assert.equal(c.state.active,true,'started from the real fin positions');assert.equal(c.state.region,r);
- for(let i=0;i<200;i++){c.tick(1/60,swimmer,sharks.schools);sharks.update(1/60,false,cam,swimmer);}
+ for(let i=0;i<400;i++){c.tick(1/60,swimmer,sharks.schools);sharks.update(1/60,false,cam,swimmer);}
  for(let m=0;m<c.state.n;m++){sharks.schools.at(r,c.ids[m],p);const d=Math.hypot(p.x-swimmer.x,p.z-swimmer.z);assert(d<S.SHARK_RING*1.2,`shark ${c.ids[m]} circles at ${d.toFixed(2)} m`);}
  // Reduced motion: the loops hold still, but the circling sharks keep turning.
  sharks.schools.at(r,c.ids[0],p);const x0=p.x,z0=p.z;for(let i=0;i<30;i++){c.tick(1/60,swimmer,sharks.schools);sharks.update(1/60,true,cam,swimmer);}
@@ -104,17 +123,33 @@ ok('the real caySharks: same instances, 0 new meshes or materials; the ring move
  const after=count();assert.deepEqual(after,before,'no new meshes or materials');
  sharks.attend(null);sharks.dispose();});
 
+ok('the look: one solid slate shark, fins attached on one matrix and one veiled material, the whole animal under the line',()=>{
+ const scene=new T.Scene(),sharks=createCaySharks(scene,{phone:false});const cay=load('lib/graphics/caySharks.ts');
+ for(const r of sharks.regions)assert.equal(r.fins.material,r.bodies.material,r.region+': fins and body share one material');
+ const reg=sharks.regions[0],cam=new T.PerspectiveCamera(60,1,.1,1000);const t0=reg.tracks[0].loop.points[0];cam.position.set(t0.x,40,t0.z+1);cam.lookAt(t0.x,0,t0.z);cam.updateMatrixWorld();
+ sharks.update(1/60,false,cam,t0);const a=new T.Matrix4(),b=new T.Matrix4();
+ for(let i=0;i<reg.active;i++){reg.fins.getMatrixAt(i,a);reg.bodies.getMatrixAt(i,b);assert(a.equals(b),'shark '+i+': the fins ride the body\'s own matrix');}
+ const fin=cay.finGeometry(),body=cay.bodyGeometry();fin.computeBoundingBox();body.computeBoundingBox();const fb=fin.boundingBox,bb=body.boundingBox;
+ assert(bb.max.x-bb.min.x>3.2&&bb.max.x-bb.min.x<3.6,'about 3.4 m nose to tail before scale');assert(bb.max.z-bb.min.z>1.4,'pectorals spread out from the flanks');
+ assert(bb.max.y-bb.min.y>.5,'a 3D body, not a flat cut-out: '+(bb.max.y-bb.min.y).toFixed(2));
+ // The dorsal's base sits in the back (the body's top is ~.29), the tail lobe meets the tail stock.
+ const P=fin.getAttribute('position');let baseY=Infinity;for(let i=0;i<P.count;i++)if(P.getX(i)>-.5)baseY=Math.min(baseY,P.getY(i));assert(baseY>.2&&baseY<.29,'dorsal base on the back: '+baseY);
+ assert(fb.min.x>=bb.min.x-.1,'tail lobe joins the body');
+ const top=(cay.SHARK_DEPTH.mean-cay.SHARK_DEPTH.bob)-fb.max.y*1.7;assert(top>0,'the dorsal tip stays under the surface: '+top.toFixed(2)+' m');
+ const lum=h=>{const c=new T.Color(h);return .3*c.r+.59*c.g+.11*c.b;};for(const k of ['back','fin','tail'])assert(lum(cay.SHARK_COLORS[k])<.12,k+' is dark slate');assert(lum(cay.SHARK_COLORS.belly)<.3,'belly grey, not pastel');
+ sharks.dispose();});
+
 ok('source: no timers, loops, audio contexts, meshes or materials in sharks.ts; caySharks place/update allocate nothing',()=>{
  const src=read('lib/town/water/sharks.ts');
  for(const bad of ['requestAnimationFrame','setInterval','setTimeout','AudioContext','Material','InstancedMesh','from \'three\'','document.'])assert(!src.includes(bad),'sharks.ts has no '+bad);
- const cay=read('lib/graphics/caySharks.ts');assert.equal((cay.match(/new T\.Mesh\w*Material/g)||[]).length,2,'still the two shark materials');assert.equal((cay.match(/new T\.InstancedMesh/g)||[]).length,2,'still two instanced meshes per region');
+ const cay=read('lib/graphics/caySharks.ts');assert(/patchSeaVeil\(/.test(cay)&&!/gl_Position/.test(cay),'sharks drawn through the shared sea veil depth trick (always whole under the water)');assert.equal((cay.match(/new T\.Mesh\w*Material/g)||[]).length,1,'one shared shark material (body and fins veiled alike)');assert.equal((cay.match(/new T\.InstancedMesh/g)||[]).length,2,'still two instanced meshes per region');
  const body=name=>{const i=cay.indexOf('function '+name+'(');let depth=0,j=cay.indexOf('{',i);const s=j;for(;j<cay.length;j++){if(cay[j]==='{')depth++;else if(cay[j]==='}'&&--depth===0)break;}return cay.slice(s,j);};
  for(const n of ['place','update'])assert(!/\bnew\s|\[\s*\]|\.map\(|\.filter\(/.test(body(n)),n+' allocates nothing');
  const tick=src.slice(src.indexOf('tick(dt'),src.indexOf('release()'));assert(!/\bnew\s|\[\s*\]|\.map\(|\.filter\(/.test(tick),'tick allocates nothing');});
 
 ok('Town wiring: the tick in the water step, the bubble, the sting, the lesson toast, analytics ids in the Water section',()=>{
  const town=read('components/Town.tsx');
- assert.match(town,/createSharkCircle\(onLand\)/);assert.match(town,/world\.sharks\.attend\(sharkCircle\)/);assert.match(town,/world\.sharks\.attend\(null\)/);
+ assert.match(town,/createSharkCircle\(onLand,\(x,z\)=>\{const f=world\.islandShore\.field;return f\?clearBedDepthAt\(f,x,z\)/,'the drawn seabed bounds the circling sharks');assert.match(town,/world\.sharks\.attend\(sharkCircle\)/);assert.match(town,/world\.sharks\.attend\(null\)/);
  assert.match(town,/sharkCircle\.tick\(dt,\{x:location\.x,z:location\.z,swimming:water\.state\.phase==='swim'[^}]*distanceToLand:waterProbe\.d\},world\.sharks\.schools\)/);
  assert.match(town,/sharkCircle\.release\(\)/);assert.match(town,/data-shark-bubble hidden role="status">\{SHARK_LINE\}/);
  assert.match(town,/playCues\(\[\['fi2-job-cue','sting',0\]\]\)/);assert.match(town,/if\(!reduced\)water\.state\.shake=BELLY_SHAKE_TIME/,'the camera nudge is skipped with reduced motion');
@@ -123,6 +158,6 @@ ok('Town wiring: the tick in the water step, the bubble, the sting, the lesson t
  const ids=read('lib/analytics/countIds.ts');assert.match(ids,/\['sharks_circle',/);assert.match(ids,/\['sharks_escape',/);
  const ev=read('lib/analytics/waterEvents.ts');assert.match(ev,/count\('wa:sharks_circle'\)/);assert.match(ev,/count\('wa:sharks_escape'\)/);
  const admin=read('app/admin/WaterSection.tsx');assert.match(admin,/wa:sharks_circle/);assert.match(admin,/wa:sharks_escape/);
- assert.match(read('package.json'),/node tests\/water-swim\.cjs && node tests\/water-sharks\.cjs/);});
+ assert.match(read('package.json'),/node tests\/water-swim\.cjs( && node tests\/[\w-]+\.cjs)* && node tests\/water-sharks\.cjs/);});
 
 if(failed){console.log(`\n${failed} failed`);process.exit(1);}console.log('\nwater sharks: all passed');

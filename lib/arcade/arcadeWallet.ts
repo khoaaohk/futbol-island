@@ -1,6 +1,7 @@
 'use client';
 import {useSyncExternalStore} from 'react';
-import {ALL_PLAYERS,CARD_STORAGE_KEY,addToCollection} from '../town/cardCollection';
+import {ALL_PLAYERS,CARD_STORAGE_KEY,addToCollection,cardNumber} from '../town/cardCollection';
+import {countCardFound} from '../analytics/sponsorEvents';
 import {createArcadeWallet,EMPTY_ARCADE_WALLET} from './arcadeWalletCore';
 import {isTrainingRun} from '../town/dailyMeter';
 export {arcadeCoinTarget,ARCADE_COIN_CAPS,ARCADE_PLAY_COST,type ArcadeCoinGame,type ArcadeWalletSnapshot,type LegendPack,type CoinHistory} from './arcadeWalletCore';
@@ -13,7 +14,7 @@ const wallet=createArcadeWallet({
  read:()=>JSON.parse(localStorage.getItem(ARCADE_WALLET_KEY)??'null'),write:value=>localStorage.setItem(ARCADE_WALLET_KEY,JSON.stringify(value)),
  lock:<T,>(fn:()=>T|Promise<T>,purchase:boolean):Promise<T>=>{const work=()=>{if(typeof navigator!=='undefined'&&navigator.locks)return navigator.locks.request(ARCADE_WALLET_KEY,fn);if(purchase)return Promise.reject(new Error('No cross-tab lock'));return Promise.resolve().then(fn);};const result=queue.then(work,work);queue=result.catch(()=>{});return result;},
  valid:new Set(ALL_PLAYERS),now:()=>Date.now(),id:()=>globalThis.crypto?.randomUUID?.()??`arcade-${Date.now()}-${Math.random().toString(36).slice(2)}`,random:()=>Math.random(),
- grant:name=>{try{const before=JSON.parse(localStorage.getItem(CARD_STORAGE_KEY)??'[]');if(!Array.isArray(before)||!before.includes(name))addToCollection(name);const after=JSON.parse(localStorage.getItem(CARD_STORAGE_KEY)??'[]');return Array.isArray(after)&&after.includes(name);}catch{return false;}},
+ grant:name=>{try{const before=JSON.parse(localStorage.getItem(CARD_STORAGE_KEY)??'[]');if((!Array.isArray(before)||!before.includes(name))&&addToCollection(name))countCardFound('pack',null,cardNumber(name));/* sponsor analytics: a NEW card from a pack */const after=JSON.parse(localStorage.getItem(CARD_STORAGE_KEY)??'[]');return Array.isArray(after)&&after.includes(name);}catch{return false;}},
  notify:name=>window.dispatchEvent(new CustomEvent('fi2-card-added',{detail:{name}})),
 });
 let watching=0,reconcileQueued=false;

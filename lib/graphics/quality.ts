@@ -25,26 +25,36 @@ export function graphicsQuality() {
  * needs continuous stillness, so jittery input cannot thrash the drawing buffer. `sharpNow` (menus, quizzes: a frozen
  * or read-carefully frame) returns to full sharpness at once. Desktop (fine pointer, DPR ≤ 2) is never enabled. */
 export const MOVING_PIXEL_RATIO = 1.5, SHARP_SETTLE_MS = 500;
+/** Heat offsets Oct 19 2026: once a rest (Town's 20 fps idle cap: no input, nothing travelling) has held this long, a phone draws at the
+ *  REST_PIXEL_RATIO (1.75 -> 1.5, 27 % fewer pixels) until the next input or movement. Works on phones whose moving step is off. Tier 1+ already caps at 1.5, so this only bites a
+ *  cool phone at tier 0; desktop (never enabled) is untouched. */
+export const REST_SOFT_MS = 8000, REST_PIXEL_RATIO = 1.5;
 export function dynamicResolutionEnabled(devicePixelRatio: number, coarsePointer: boolean) { return coarsePointer || devicePixelRatio > 2; }
 export class MotionResolution {
   readonly sharp: number; readonly moving: number; readonly enabled: boolean;
-  private current: number; private stillSince = -1; switches = 0;
+  /** Phones/tablets (the `enabled` device flag) whose sharp ratio is above REST_PIXEL_RATIO: the rest step applies (even with the moving step off). */
+  readonly restEnabled: boolean;
+  private current: number; private stillSince = -1; private restSince = -1; switches = 0;
   constructor(sharp: number, enabled: boolean, moving = MOVING_PIXEL_RATIO, private settleMs = SHARP_SETTLE_MS) {
-    this.sharp = sharp; this.moving = Math.min(moving, sharp); this.enabled = enabled && this.moving < sharp; this.current = sharp;
+    this.sharp = sharp; this.moving = Math.min(moving, sharp); this.enabled = enabled && this.moving < sharp; this.restEnabled = enabled && REST_PIXEL_RATIO < sharp; this.current = sharp;
   }
   get ratio() { return this.current; }
   /** Heat pass 4: a hot-phone tier (lib/graphics/heatTier) caps the ratio, on every device; Infinity = no cap (default). */
   private limit = Infinity;
   setLimit(max: number) { this.limit = max > 0 ? max : Infinity; }
   /** Call once per rendered frame before drawing. Returns the pixel ratio to switch to, or 0 when unchanged. */
-  update(now: number, moving: boolean, sharpNow = false): number {
-    if (!this.enabled && this.limit === Infinity && this.current === this.sharp) return 0;
+  update(now: number, moving: boolean, sharpNow = false, resting = false): number {
+    if (!this.enabled && !this.restEnabled && this.limit === Infinity && this.current === this.sharp) return 0;
     let next = this.sharp;
     if (this.enabled) {
       next = this.current;
       if (sharpNow) { next = this.sharp; this.stillSince = -1; }
       else if (moving) { next = this.moving; this.stillSince = -1; }
       else { if (this.stillSince < 0) this.stillSince = now; if (now - this.stillSince >= this.settleMs) next = this.sharp; }
+    }
+    if (this.restEnabled) {
+      if (resting && !sharpNow && !moving) { if (this.restSince < 0) this.restSince = now; if (now - this.restSince >= REST_SOFT_MS) next = Math.min(next, REST_PIXEL_RATIO); }
+      else this.restSince = -1;
     }
     next = Math.min(next, this.limit);
     if (next === this.current) return 0;

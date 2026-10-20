@@ -2,7 +2,7 @@ import * as T from 'three';
 import {distanceToLandableDeck} from '../landableDecks';
 import {WATER_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,setShore,shoreDrape,shoreRough} from '../../graphics/waterSurface';
 import {dropOverheadLines} from '../../graphics/islandShore';
-import {UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,reefSeed,reefTheme,type SeabedProps} from './underwater';
+import {CLEAR_SHARE,UNDERWATER_GLSL,UW_UNIFORMS,buildSeabedProps,createOceanClear,reefSeed,reefTheme,type SeabedProps} from './underwater';
 
 /**
  * Moving shoreline for the fishing view (Oct 12 2026, "animate the water so it's moving and washing ashore … more realistic").
@@ -174,6 +174,9 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // Sand tone and weed patches per spot (the theme's light / dark sand, weed colour and amount: a meadow covers more).
    vec3 sand=mix(uSandA,uSandB,n2)*(.9+.14*rip*rip);float wlo=mix(.74,.42,uSandWeed.a);
    sand=mix(sand,uSandWeed.rgb,smoothstep(wlo,wlo+.18,n1)*smoothstep(1.2,3.,d)*mix(.35,.8,uSandWeed.a));
+   // Oct 19 2026: the clear water window's bed ramp (clearWindow.ts): sand at the beach, teal over the first metres, deep blue by 9-24 m, so the fishing bed
+   // and the walking bed are one seabed at the box edge.
+   sand=mix(sand,vec3(.2,.5,.52),smoothstep(1.5,9.,d)*.75);sand=mix(sand,vec3(.08,.36,.42),smoothstep(9.,24.,d));
    // Depth (Oct 14 2026): caustics fade fast with depth (squared), and less light reaches the deeper sand, so the seabed visibly
    // slopes away and darkens.
    // Polish (Oct 14 2026): right at the waterline the low camera's rays all meet nearly the same seabed point, so the caustic network
@@ -238,7 +241,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    float waterLight=(foam*.22+glint*.9)*edgeFade;vec3 waterGlow=(col*.08+vTint*(1.-uwT)*UW_GLOW)*sea*alpha*edgeFade;`)
    .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
  };
- material.customProgramCacheKey=()=>'fishing-shore-strip-v11';
+ material.customProgramCacheKey=()=>'fishing-shore-strip-v12';
  const mesh=new T.Mesh(geometry,material);mesh.name='fishing-shore-water';mesh.renderOrder=.5;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;mesh.raycast=()=>{};
  return {mesh,dispose(){geometry.dispose();material.dispose();}};
 }
@@ -247,7 +250,9 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
 export function createFishingWater(scene:T.Scene,renderer:T.WebGLRenderer,phone=false){
  type Entry={field:ShoreField;strip:ReturnType<typeof createShoreStrip>;props:SeabedProps|null};
  const fields=new Map<string,Entry>(),ocean=createOceanClear(scene);let noise:T.Texture|null=null;
- let current:Entry|null=null,strength=0,target=0;
+ // `own` (Oct 19 2026, one shore: underwater.ts CLEAR_SHARE): 1 = this strip and the seabed props draw the fishing water, 0 = the
+ // clear water window does (it stays exactly as it was while walking). Eases like the strength, so a heat tier change cross-fades.
+ let current:Entry|null=null,strength=0,target=0,own=1,windowOk=false;
  return {
   get field(){return current?.field??null;},
   get busy(){return strength>0||target>0;},
@@ -260,7 +265,10 @@ export function createFishingWater(scene:T.Scene,renderer:T.WebGLRenderer,phone=
   /** Show the moving shore round the angler at `stand` casting along `dir`; `spot` picks the seabed (coral, sea grass, piles).
    *  `viewDepth` (Oct 13 2026, farther casts): how far out the seabed scatter reaches, in metres; the caller passes the
    *  spot's real cast distance plus a few metres, so coral and rocks still surround a float cast much farther out. */
-  begin(stand:{x:number;z:number},dir:{x:number;z:number},spot?:{id:string;area?:string;reef?:string;x:number;z:number}|null,halfWidth=9,viewDepth?:number){
+  /** Whether the clear water window serves this session (set at begin, before the water fades in: deep-sea spots never). */
+  get windowServes(){return windowOk&&CLEAR_SHARE.available;},
+  begin(stand:{x:number;z:number},dir:{x:number;z:number},spot?:{id:string;area?:string;reef?:string;x:number;z:number}|null,halfWidth=9,viewDepth?:number,useWindow=false){
+   windowOk=useWindow;if(strength<=0)own=windowOk&&CLEAR_SHARE.available?0:1;
    const cx=Math.round((stand.x+dir.x*14)/4)*4,cz=Math.round((stand.z+dir.z*14)/4)*4,key=cx+':'+cz;
    let entry=fields.get(key);
    if(!entry){const field=buildShoreField(renderer,scene,cx,cz);noise??=createWaterNoise();UW_UNIFORMS.uWaterNoise.value=noise;
@@ -271,10 +279,15 @@ export function createFishingWater(scene:T.Scene,renderer:T.WebGLRenderer,phone=
   },
   end(){target=0;},
   frame(dt:number,reduced:boolean){
-   if(!current)return;strength=reduced?target:T.MathUtils.clamp(strength+Math.sign(target-strength)*Math.min(Math.abs(target-strength),dt/.8),0,1);
-   const on=strength>0;current.strip.mesh.visible=on;setShore(on?current.field.texture:null,current.field.box,strength);ocean.set(on);
-   const props=current.props;if(props){props.mesh.visible=on;(props.mesh.material as T.Material).opacity=strength;}
+   if(!current){CLEAR_SHARE.served=0;return;}const ease=(v:number,to:number)=>reduced?to:T.MathUtils.clamp(v+Math.sign(to-v)*Math.min(Math.abs(to-v),dt/.8),0,1);
+   strength=ease(strength,target);own=ease(own,windowOk&&CLEAR_SHARE.available?0:1);
+   // Served by the window: the shore texture stays bound (the catch and the schools read the field) but uShore is 0, so the ocean,
+   // the island's shore strip and the window look exactly as while walking; no strip or props draw. The ocean still stops writing
+   // depth (createOceanClear), or the transparent catch and fish schools under it would fail the depth test.
+   const on=strength>0,s=strength*own,mine=s>0;CLEAR_SHARE.served=strength*(1-own);
+   current.strip.mesh.visible=mine;setShore(on?current.field.texture:null,current.field.box,s);ocean.set(on);
+   const props=current.props;if(props){props.mesh.visible=mine;(props.mesh.material as T.Material).opacity=s;}
   },
-  dispose(){setShore(null,null,0);ocean.set(false);for(const e of fields.values()){e.strip.mesh.removeFromParent();e.strip.dispose();e.props?.dispose();e.field.texture.dispose();}fields.clear();noise?.dispose();noise=null;UW_UNIFORMS.uWaterNoise.value=null;current=null;},
+  dispose(){setShore(null,null,0);CLEAR_SHARE.served=0;ocean.set(false);for(const e of fields.values()){e.strip.mesh.removeFromParent();e.strip.dispose();e.props?.dispose();e.field.texture.dispose();}fields.clear();noise?.dispose();noise=null;UW_UNIFORMS.uWaterNoise.value=null;current=null;},
  };
 }

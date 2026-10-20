@@ -16,7 +16,7 @@ const near=(a,b,eps,msg)=>assert(Math.abs(a-b)<=eps,`${msg}: ${a} vs ${b}`);
 /** A fake friend on a circle of radius `r` round (cx, 0): 96 samples, like a manta loop. */
 function circleFriend(kind='manta',r=30,cx=0){const points=[],n=96;for(let i=0;i<n;i++){const a=i/n*Math.PI*2;points.push({x:cx+Math.cos(a)*r,z:Math.sin(a)*r});}
  const lengths=[0];for(let i=1;i<=n;i++){const a=points[i-1],b=points[i%n];lengths.push(lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z));}
- return {kind,id:kind+'-test',points,lengths,total:lengths[n],u:0,available:true,ridden:false,speed:kind==='whale'?.9:1.4,boost:1,bend:0,bendYaw:0};}
+ return {kind,id:kind+'-test',points,lengths,total:lengths[n],u:0,available:true,ridden:false,free:false,fx:0,fz:0,fyaw:0,speed:kind==='whale'?.9:1.4,boost:1,bend:0,bendYaw:0};}
 
 ok('the prompt and Let go copy, the range, the speed multipliers and the lesson',()=>{
  assert.equal(R.RIDE_PROMPT,'Hang on!');assert.equal(R.LET_GO_LABEL,'Let go');
@@ -52,73 +52,73 @@ ok('the "Hang on!" prompt range: within 5 m of the body, swimming only, at most 
  both.scan(.2,240+R.RIDE_BODY.whale+4,0,true);assert.equal(both.state.near,w,'the whale shark reaches farther (its 13 m body)');
 });
 
-ok('attach: the rider is held at the grip point and dragged along the loop at 1.6× / 1.3× the sprint swim',()=>{
+const STICK={x:0,z:0},OPEN=()=>true;
+ok('attach: the rider is held at the grip point, the animal is FREE (steered) and eases up to 1.6x / 1.3x the sprint swim with the stick pushed',()=>{
  for(const kind of ['manta','whale']){
   const f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind],z:0},vel={x:0,z:0};
   rides.scan(.2,pos.x,pos.z,true);const g=rides.grab(W.SWIM_SPEED);
-  assert.equal(g.grabbed,kind);assert.equal(rides.riding,true);assert.equal(f.ridden,true,'the graphics module holds the animal');
+  assert.equal(g.grabbed,kind);assert.equal(rides.riding,true);assert.equal(f.ridden,true,'the graphics module holds the animal');assert.equal(f.free,true,'free mode: the ride owns its pose');
   assert.equal(rides.scan(.2,pos.x,pos.z,true),null,'no prompt while riding');
-  let maxRoll=0;for(let i=0;i<300;i++){rides.step(1/60,pos,vel);maxRoll=Math.max(maxRoll,Math.abs(rides.state.roll));}
+  const stick={x:0,z:1};// keep pushing along +z (straight on from the start heading, within the turn limit)
+  for(let i=0;i<300;i++)rides.step(1/60,pos,vel,{x:Math.sin(f.fyaw),z:Math.cos(f.fyaw)},OPEN,50);
   near(Math.hypot(vel.x,vel.z),R.rideSpeed(kind),.06*R.rideSpeed(kind),kind+' ride speed after 5 s');
-  // The rider sits on the animal: the loop point plus the grip offset ahead along the heading.
-  const o={x:0,z:0,yaw:0};R.loopPoint(f.points,f.lengths,f.total,f.u,o);
-  near(Math.hypot(pos.x-o.x-Math.sin(o.yaw)*R.RIDE_GRIP[kind],pos.z-o.z-Math.cos(o.yaw)*R.RIDE_GRIP[kind]),0,1e-6,kind+' at the grip point');
-  near(Math.atan2(vel.x,vel.z),o.yaw,1e-6,'moving along the heading');
-  // A steady circle turns at v/r: the body leans into it, bounded.
-  assert(maxRoll>.1&&maxRoll<=R.RIDE_ROLL_MAX+1e-9,`${kind} rolls with the turns (${maxRoll.toFixed(2)} rad)`);
+  const gr=R.RIDE_GRIP[kind];near(Math.hypot(pos.x-f.fx-Math.sin(f.fyaw)*gr,pos.z-f.fz-Math.cos(f.fyaw)*gr),0,1e-6,kind+' at the grip point of the free animal');
+  near(Math.atan2(vel.x,vel.z),f.fyaw,1e-6,'moving along the heading');void stick;
  }
 });
 
-ok('one lap, then the ride ends itself (heat rule); the animal goes back to its own pace',()=>{
- const f=circleFriend('manta',30),rides=R.createAnimalRides(()=>[f]),vel={x:0,z:0};
- f.u=50;const o={x:0,z:0,yaw:0};R.loopPoint(f.points,f.lengths,f.total,f.u,o);const pos={x:o.x+1,z:o.z};rides.scan(.2,pos.x,pos.z,true);assert.equal(rides.grab(0).grabbed,'manta');let ended='',t=0;
- while(!ended&&t<120){const e=rides.step(1/60,pos,vel);ended=e.ended;t+=1/60;}
- assert.equal(ended,'lap','ended after its one lap');
- near(rides.state.travelled,f.total,R.rideSpeed('manta')/60+1e-6,'exactly one lap of the loop');
- assert(t<f.total/W.SWIM_FAST_SPEED,'quicker than sprinting the same lap');
- assert.equal(rides.riding,false);assert.equal(f.ridden,false,'released: the manta glides on by itself');
- assert(rides.events.speed>0&&Number.isFinite(rides.events.x),'the dismount knows where and how fast (the splash + the glide out)');
- const again=rides.step(1/60,pos,vel);assert.equal(again.ended,'','nothing runs after the ride');
+ok('free steer: the heading follows the stick at a limited, smooth turn rate; the body rolls into the turn; released = slower, same heading',()=>{
+ const f=circleFriend('manta',30),rides=R.createAnimalRides(()=>[f]),pos={x:32.6,z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(3);
+ const y0=f.fyaw;let maxTurn=0,maxRoll=0,prev=f.fyaw;
+ for(let i=0;i<30;i++){rides.step(1/60,pos,vel,{x:Math.sin(y0+Math.PI/2),z:Math.cos(y0+Math.PI/2)},OPEN,50);maxTurn=Math.max(maxTurn,Math.abs(Math.atan2(Math.sin(f.fyaw-prev),Math.cos(f.fyaw-prev)))*60);prev=f.fyaw;maxRoll=Math.max(maxRoll,Math.abs(rides.state.roll));}
+ assert(maxTurn<=R.RIDE_TURN+1e-6,'turn rate limited ('+maxTurn.toFixed(2)+')');assert(maxTurn>.3,'it does turn');assert(maxRoll>.05&&maxRoll<=R.RIDE_ROLL_MAX+1e-9,'leans into the turn');
+ for(let i=0;i<240;i++)rides.step(1/60,pos,vel,{x:Math.sin(y0+Math.PI/2),z:Math.cos(y0+Math.PI/2)},OPEN,50);
+ near(Math.atan2(Math.sin(f.fyaw-y0-Math.PI/2),Math.cos(f.fyaw-y0-Math.PI/2)),0,.02,'settles on the stick bearing');
+ for(let i=0;i<300;i++)rides.step(1/60,pos,vel,STICK,OPEN,50);
+ near(Math.hypot(vel.x,vel.z),R.rideSpeed('manta')*R.RIDE_IDLE,.2,'stick released: it cruises slower');near(f.fyaw,y0+Math.PI/2,.02,'and keeps its heading');
+});
+
+ok('shore stop: land ahead brakes it to a stop (turning still works), the shallows end the ride, the range edge holds it; the time cap ends a long ride',()=>{
+ const f=circleFriend('whale',30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY.whale,z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(3);
+ const wall=x=>x<30+R.RIDE_BODY.whale+60&&true;// land from x >= startX + 40 onwards: nothing swimmable there
+ const startX=f.fx,ok2=(x,z)=>x<startX+40;
+ for(let i=0;i<60*20;i++)rides.step(1/60,pos,vel,{x:1,z:0},ok2,50);// push at the land
+ assert.equal(rides.riding,true,'still riding');assert(f.fx<startX+40,'never onto land');assert(Math.hypot(vel.x,vel.z)<.05,'stopped');void wall;
+ for(let i=0;i<120;i++)rides.step(1/60,pos,vel,{x:-1,z:0},ok2,50);assert(Math.hypot(vel.x,vel.z)>2,'turned away and swims off again');
+ assert.equal(rides.step(1/60,pos,vel,STICK,ok2,R.RIDE_SHORE_D-.1).ended,'shore','clearance under the swim depth ends the ride');
+ const g=circleFriend('manta'),r2=R.createAnimalRides(()=>[g]),p2={x:32.6,z:0};r2.scan(.2,p2.x,p2.z,true);r2.grab(1);let ended='',t=0;
+ while(!ended&&t<200){ended=r2.step(.1,p2,vel,{x:Math.sin(g.fyaw),z:Math.cos(g.fyaw)},OPEN,50).ended;t+=.1;if(g.fx*g.fx>1e12)break;}
+ assert.equal(ended,'time');near(t,R.RIDE_MAX_TIME,.2,'the ~90 s cap');assert.equal(g.ridden,false);
+});
+
+ok('exit: Let go swims the animal back to its loop and hands over without a pop; the swimmer is untouched',()=>{
+ for(const kind of ['manta','whale']){
+  const f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind],z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(3);
+  for(let i=0;i<60*12;i++)rides.step(1/60,pos,vel,{x:0,z:-1},OPEN,50);// swim well off the loop
+  const away=Math.hypot(f.fx,f.fz);assert(Math.abs(away-30)>15,'far from its loop ('+away.toFixed(1)+')');
+  rides.letGo();assert.equal(rides.darting,true);assert.equal(f.ridden,false);assert.equal(f.free,true,'the mesh stays free while it swims back');
+  assert.equal(rides.scan(.2,pos.x,pos.z,true),null,'no Hang on! while it swims back');
+  let t=0,maxJump=0,px=f.fx,pz=f.fz,wakes=0,out={x:0,z:0,yaw:0},lastFree=true,handover=null;
+  while(rides.darting&&t<40){rides.dartStep(1/60);t+=1/60;
+   let x,z;if(f.free){x=f.fx;z=f.fz;}else{const o={x:0,z:0,yaw:0};R.loopPoint(f.points,f.lengths,f.total,f.u,o);x=o.x+Math.cos(o.yaw)*f.bend;z=o.z-Math.sin(o.yaw)*f.bend;if(lastFree)handover=Math.hypot(x-px,z-pz);}
+   maxJump=Math.max(maxJump,Math.hypot(x-px,z-pz));px=x;pz=z;lastFree=f.free;if(rides.dartWakeDue(out))wakes++;}
+  assert(t<20,kind+' is back in time ('+t.toFixed(1)+' s)');assert.equal(f.free,false);assert.equal(f.boost,1);assert.equal(f.bend,0);assert.equal(f.bendYaw,0);
+  assert(maxJump<R.dartSpeed(0,0,20,1)/30+1,'no teleport pop (largest step '+maxJump.toFixed(2)+' m)');assert(handover!==null&&handover<4,'handover step small');assert(wakes>=2,'a wake while it is fast');
+ }
+ // No allocation while riding / returning: the state record's keys never change.
+ {const f=circleFriend('manta'),rides=R.createAnimalRides(()=>[f]),pos={x:32.6,z:0},vel={x:0,z:0},keys=JSON.stringify(Object.keys(rides.state));rides.scan(.2,pos.x,pos.z,true);rides.grab(1);
+  for(let i=0;i<120;i++)rides.step(1/60,pos,vel,{x:1,z:1},OPEN,50);rides.letGo();for(let i=0;i<600;i++)rides.dartStep(1/60);assert.equal(JSON.stringify(Object.keys(rides.state)),keys,'no new state');
+  const src=read('lib/town/water/animalRides.ts'),body=src.slice(src.indexOf('step(dt:number,pos'),src.indexOf('One frame of the dart'));assert(!/new |\[\.\.\.|\.map\(|\.filter\(|=>/.test(body.replace(/=>/g,'')),'step allocates nothing');}
 });
 
 ok('Let go ends early; a vanished animal lets go too',()=>{
  const f=circleFriend('whale',40),rides=R.createAnimalRides(()=>[f]),pos={x:40+R.RIDE_BODY.whale,z:0},vel={x:0,z:0};
- rides.scan(.2,pos.x,pos.z,true);rides.grab(1);for(let i=0;i<60;i++)rides.step(1/60,pos,vel);
+ rides.scan(.2,pos.x,pos.z,true);rides.grab(1);for(let i=0;i<60;i++)rides.step(1/60,pos,vel,STICK,OPEN,50);
  assert.equal(rides.letGo().ended,'off');assert.equal(f.ridden,false);assert.equal(rides.riding,false);
  assert.equal(rides.letGo().ended,'','letting go twice does nothing');
  while(rides.darting)rides.dartStep(.1);/* it darts off first (no prompt over it meanwhile) */
- rides.scan(.2,pos.x,pos.z,true);rides.grab(1);f.available=false;assert.equal(rides.step(1/60,pos,vel).ended,'gone');assert.equal(f.ridden,false);
+ rides.scan(.2,pos.x,pos.z,true);rides.grab(1);f.available=false;assert.equal(rides.step(1/60,pos,vel,STICK,OPEN,50).ended,'gone');assert.equal(f.ridden,false);
  const g=R.createAnimalRides(()=>[]);assert.equal(g.grab(1).grabbed,'','nothing near: no grab');
-});
-
-ok('the dart: on Let go / the lap end the animal shoots off (2.5× its loop pace or faster), bends aside, then eases back to its own pace in 3 s',()=>{
- assert.equal(R.DART_TIME,3);assert.equal(R.DART_MULT,2.5);
- for(const [kind,how] of [['manta','lap'],['whale','off'],['manta','off']]){
-  const f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind],z:0},vel={x:0,z:0};
-  rides.scan(.2,pos.x,pos.z,true);rides.grab(2);let e={ended:''};for(let i=0;i<20000&&!e.ended;i++){e=rides.step(1/60,pos,vel);if(how==='off'&&i===240)e=rides.letGo();}
-  assert.equal(e.ended,how);assert.equal(rides.darting,true,kind+' darts off after '+how);assert.equal(f.ridden,false,'the graphics module moves it again');
-  const ride=rides.events.speed,peak=Math.max(R.DART_MULT*f.speed,ride*R.DART_RIDE);
-  assert(peak>=2.5*f.speed,'at least 2.5× its loop speed');
-  // The graphics module advances u by speed × boost; follow it like the island update does.
-  const state=rides.state,snapshot=JSON.stringify(Object.keys(state));let maxBoost=0,maxBend=0,t=0,wakes=0,out={x:0,z:0,yaw:0},u=f.u;
-  while(rides.darting&&t<5){rides.dartStep(1/60);t+=1/60;u+=f.speed*f.boost/60;maxBoost=Math.max(maxBoost,f.boost);maxBend=Math.max(maxBend,Math.abs(f.bend));if(rides.dartWakeDue(out))wakes++;}
-  near(t,R.DART_TIME,1/30,kind+' darts for 3 s');near(maxBoost*f.speed,peak,1e-6,kind+' peak dart speed');
-  assert(maxBoost*f.speed>ride,'it pulls away faster than the ride it gave (never brakes onto the swimmer)');
-  near(maxBend,R.DART_BEND[kind],.05,kind+' bends aside');
-  assert.equal(f.boost,1,'back to its own loop speed');assert.equal(f.bend,0,'back on its loop');assert.equal(f.bendYaw,0);
-  assert(wakes>=4,'a burst of bigger rings while it is still fast ('+wakes+')');
-  assert.equal(JSON.stringify(Object.keys(state)),snapshot,'no new state while darting (no allocation)');
- }
- // The speed curve: from the ride speed up to the peak, held, eased back to the loop speed.
- near(R.dartSpeed(0,9,12,1.4),9,1e-9,'starts at the ride speed');near(R.dartSpeed(.5,9,12,1.4),12,1e-9,'the peak');near(R.dartSpeed(3,9,12,1.4),1.4,1e-9,'back to the loop speed');
- for(let t=R.DART_HOLD;t<R.DART_TIME;t+=.05)assert(R.dartSpeed(t+.05,9,12,1.4)<=R.dartSpeed(t,9,12,1.4)+1e-9,'eases down monotonically');
- // A vanished animal (map trip / hot tier) does not dart; grabbing a darting animal ends its dart.
- {const f=circleFriend('manta'),rides=R.createAnimalRides(()=>[f]),pos={x:32.6,z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(1);rides.step(1/60,pos,vel);
-  rides.letGo('gone');assert.equal(rides.darting,false,'gone: no dart');assert.equal(f.boost,1);
-  rides.scan(.2,pos.x,pos.z,true);rides.grab(1);rides.step(1/60,pos,vel);rides.letGo();assert.equal(rides.darting,true);rides.scan(.2,pos.x,pos.z,true);assert.equal(rides.state.near,null,'no Hang on! over an animal darting away');f.available=false;rides.dartStep(1/60);assert.equal(rides.darting,false,'its island went away: the dart ends');assert.equal(f.boost,1);}
- // The swimmer is untouched: the dart only writes the animal.
- const src=read('lib/town/water/animalRides.ts'),body=src.slice(src.indexOf('dartStep(dt:number)'),src.indexOf('get darting'));
- assert(!/pos\.|vel\.|state\.x=|state\.speed=/.test(body),'dartStep never moves the swimmer');
 });
 
 ok('the real animals: every manta and the whale shark are friends; a ridden manta stays its soft silhouette like the whale shark (no dark mesh, no new mesh or material)',()=>{
@@ -139,22 +139,21 @@ ok('the real animals: every manta and the whale shark are friends; a ridden mant
  const rides=R.createAnimalRides(()=>[...mantas.friends,whale.friend]);rides.scan(.2,player.x,player.z,true);assert.equal(rides.state.near,f,'the near manta prompts');
  rides.grab(2);assert.equal(isle.surface.visible,false,'no dark surfacing mesh while ridden (user: "no black")');
  const pos={x:player.x,z:player.z},vel={x:0,z:0},m=new T.Matrix4(),p=new T.Vector3(),s=new T.Vector3(),q=new T.Quaternion();
- for(let i=0;i<30;i++){rides.step(1/30,pos,vel);mantas.update(1/30,true/* reduced motion: the ride still moves */,new T.Frustum()/* looking away */,pos);}
+ for(let i=0;i<30;i++){rides.step(1/30,pos,vel,STICK,OPEN,50);mantas.update(1/30,true/* reduced motion: the ride still moves */,new T.Frustum()/* looking away */,pos);}
  const idx=isle.tracks.indexOf(isle.tracks.find(t=>t.loop.id===f.id));
- isle.under.getMatrixAt(idx,m);m.decompose(p,q,s);near(s.x,1.2,1e-6,'drawn as its silhouette instance while held');near(s.y,.02,1e-6,'flat: just under the surface');
- near(p.x,R.loopPoint(f.points,f.lengths,f.total,f.u,o).x,1e-3,'the silhouette is where the ride put it');assert.equal(isle.surface.visible,false,'never also drawn as the dark mesh');
+ isle.under.getMatrixAt(idx,m);m.decompose(p,q,s);near(s.x,1.2,1e-6,'drawn as its silhouette instance while held');near(s.y,1.2,1e-6,'a full 3D manta, swimming 0.9-1.5 m under the surface (MANTA_DEPTH)');near(p.y,-.43-R.RIDE_BACK.manta-.26,.02,'ridden (Oct 20 2026, "same with ray"): risen until its back is RIDE_BACK under the water line, right under the rider');
+ near(p.x,f.fx,1e-3,'the silhouette is where the ride put it (the free pose)');assert.equal(f.free,true);assert.equal(isle.surface.visible,false,'never also drawn as the dark mesh');
  // The same treatment as the whale shark: a translucent water-tinted basic material, no vertex colours (the dark top), no lighting.
  const mm=isle.under.material,wm=whale.mesh.material;
- assert(mm.isMeshBasicMaterial&&wm.isMeshBasicMaterial&&mm.transparent&&mm.depthWrite===false&&!mm.vertexColors,'the whale shark\'s silhouette treatment');
- assert.equal(mm.color.getHexString(),wm.color.getHexString(),'the same water tint as the whale shark');assert(mm.opacity<=.45&&mm.opacity>=.3,'soft, see-through');
+ assert(mm.isMeshBasicMaterial&&wm.isMeshBasicMaterial&&!mm.transparent&&mm.depthWrite===true&&mm.vertexColors&&wm.depthWrite===true,'the whale shark\'s silhouette treatment, solid (Oct 19 2026: coral never shows through)');
+ assert.equal(mm.opacity,1,'solid');assert.equal(wm.opacity,1);assert(wm.depthWrite===true);
  assert(mantas.islands.every(r=>r.under.material===mm),'one shared material for every manta');
  assert.deepEqual(inventory(),before,'no new mesh, material or geometry');
  rides.letGo();assert.equal(isle.surface.visible,false,'let go: still no surfacing mesh');
  // The dart moves the real manta: faster than its loop pace, bent aside, then back.
- const ua=f.u;for(let i=0;i<15;i++){rides.dartStep(1/30);mantas.update(1/30,false,frustum,player);}
- assert(f.u-ua>15/30*f.speed*2.5,'the manta shoots off along its loop');
- isle.under.getMatrixAt(idx,m);m.decompose(p,q,s);R.loopPoint(f.points,f.lengths,f.total,f.u,o);near(Math.hypot(p.x-o.x,p.z-o.z),Math.abs(f.bend),1e-3,'bent aside by the dart');
- for(let i=0;i<120;i++){rides.dartStep(1/30);mantas.update(1/30,false,frustum,player);}assert.equal(rides.darting,false);assert.equal(f.boost,1);
+ const fx0=f.fx,fz0=f.fz;for(let i=0;i<15;i++){rides.dartStep(1/30);mantas.update(1/30,false,frustum,player);}
+ assert(f.free&&Math.hypot(f.fx-fx0,f.fz-fz0)>15/30*f.speed*1.4,'the manta swims back toward its loop');isle.under.getMatrixAt(idx,m);m.decompose(p,q,s);near(p.x,f.fx,1e-3,'drawn at the free pose');
+ for(let i=0;i<900&&rides.darting;i++){rides.dartStep(1/30);mantas.update(1/30,false,frustum,player);}assert.equal(rides.darting,false);assert.equal(f.boost,1);assert.equal(f.free,false);
  // The whale shark: the ride owns u, the one mesh follows.
  const u0=whale.friend.u;whale.friend.ridden=true;whale.friend.u=(u0+30)%whale.friend.total;whale.update(1/30,true,new T.Frustum(),{x:whale.mesh.position.x,z:whale.mesh.position.z});
  R.loopPoint(whale.friend.points,whale.friend.lengths,whale.friend.total,whale.friend.u,o);near(whale.mesh.position.x,o.x,1e-3,'the whale shark follows the ride');near(whale.mesh.position.z,o.z,1e-3,'the whale shark follows the ride');
@@ -216,7 +215,7 @@ ok('heat + wiring: the scan on the probe tick only, the ride step only while rid
  assert(!/setTimeout|setInterval|requestAnimationFrame|new T\.|from 'three'/.test(src),'pure: no timers, loops or three.js');
  const town=read('components/Town.tsx');
  assert(/animalRides\.scan\(dt,location\.x,location\.z,water\.inWater&&water\.state\.phase==='swim'\)/.test(town),'the scan runs only while swimming (10 Hz inside)');
- assert(/if\(animalRides\.riding&&water\.swimming&&rideRef\.current==='walk'\)\{rideEnded\(animalRides\.step\(dt,location,velocity\)\)/.test(town),'the ride drives the movement');
+ assert(/if\(animalRides\.riding&&water\.swimming&&rideRef\.current==='walk'\)\{rideEnded\(animalRides\.step\(dt,location,velocity,rideSteer,waterWalk\.allow,waterProbe\.d\)\)/.test(town),'the ride drives the movement');
  assert(/pose\.kind='hold'/.test(town)&&/s\.kind==='hold'/.test(read('lib/graphics/swimPose.ts')),'the hold-on pose');
  assert(/pose\.kind='hold';pose\.effort=rs\.roll;pose\.fast=0;ev\.wake=false;ev\.stroke=0;/.test(town),'the swim strokes\' wake is off while riding (the ride has its own)');
  assert(/RIDE_CAM_LIFT/.test(town),'a slightly higher follow while riding');
@@ -225,6 +224,64 @@ ok('heat + wiring: the scan on the probe tick only, the ride step only while rid
  assert(/counters[\s\S]*ride the[\s\S]*existing learning-counter channel \(`k`\) and need no migration/.test(read('supabase/migrations/20261017_analytics_water.sql')),'wa: ids ride the k channel (no migration)');
  assert(/wa:ride_manta/.test(read('app/admin/WaterSection.tsx')),'the admin Water section shows the rides');
  assert(/ride\.cjs|water-rides\.cjs/.test(read('package.json')),'registered in npm test');
+});
+
+// Oct 20 2026 (user, screenshots: "when riding the whale, they are not together", "same with ray"): the rider sits ON the animal.
+ok('the seat: a grab glides from the swimmer onto the back (no pop); the drawn pose is ONE interpolation for the animal and the rider; the rider faces its heading',()=>{
+ assert(R.RIDE_GRIP.whale>.5&&R.RIDE_GRIP.whale+.1<3.4,'the whale shark seat: behind the head (x 3.4), ahead of the first dorsal (x .5)');
+ assert(Math.abs(R.RIDE_GRIP.manta)<.3,'the manta seat: the disc centre');
+ assert(R.RIDE_BACK.whale<=.2&&R.RIDE_BACK.manta<=.2&&R.RIDE_SEAT_LIFT>0&&R.RIDE_RISE>=4,'risen to just under the rider, quickly');
+ for(const kind of ['manta','whale']){
+  const f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind]+2,z:-1},vel={x:0,z:0},start={...pos};
+  rides.scan(.2,pos.x,pos.z,true);rides.grab(1,pos.x,pos.z,Math.PI/2);
+  rides.step(1/60,pos,vel,STICK,OPEN,50);
+  assert(Math.hypot(pos.x-start.x,pos.z-start.z)<.3,kind+': the first frame stays where the swimmer was (a glide, not a jump): '+Math.hypot(pos.x-start.x,pos.z-start.z));
+  for(let i=0;i<60;i++)rides.step(1/60,pos,vel,{x:1,z:0},OPEN,50);
+  const gr=R.RIDE_GRIP[kind],seat=()=>({x:f.fx+Math.sin(f.fyaw)*gr,z:f.fz+Math.cos(f.fyaw)*gr});
+  near(Math.hypot(pos.x-seat().x,pos.z-seat().z),0,.01,kind+' on the seat after 1 s');
+  near(f.dx,f.fx,1e-9,'without present() the drawn pose is the tick pose');near(f.bank,rides.state.roll,1e-9,'the animal banks with the rider');
+  assert(Math.abs(f.bank)>.05,'steering banks it');
+  // present: halfway between two ticks, the animal and the rider are drawn from the same interpolated pose.
+  const px=f.fx,pz=f.fz,pyaw=f.fyaw;rides.step(1/60,pos,vel,{x:1,z:0},OPEN,50);const out={x:0,z:0};
+  assert.equal(rides.present(.5,out),true);near(f.dx,(px+f.fx)/2,1e-9,'drawn x interpolated');near(f.dz,(pz+f.fz)/2,1e-9,'drawn z interpolated');
+  near(out.x,f.dx+Math.sin(f.dyaw)*gr,.002,kind+' rider drawn on the drawn animal (x)');near(out.z,f.dz+Math.cos(f.dyaw)*gr,.002,kind+' rider drawn on the drawn animal (z)');
+  near(rides.state.drawYaw,f.dyaw,.01,'the rider faces the drawn heading');void pyaw;
+  rides.letGo('off');assert.equal(rides.present(.5,out),false,'not riding: nothing drawn');assert(Math.abs(f.bank)<=Math.abs(rides.state.roll)+1,'bank kept to ease out');
+  for(let i=0;i<120;i++)rides.dartStep(1/60);assert(Math.abs(f.bank)<.01,'the bank eases out after the ride');
+ }
+});
+
+ok('the risen animal: the whale shark / manta rise until the back is RIDE_BACK under the water, the seat on the back, banking about the back, sinking after',()=>{
+ const {createCayMantas}=load('lib/graphics/cayMantas.ts'),{createWhaleShark,WHALE_DEPTH,STATIONS}=load('lib/graphics/whaleShark.ts');
+ const scene=new T.Scene(),whale=createWhaleShark(scene),mantas=createCayMantas(scene,{phone:true}),f=whale.friend,WATER=-.43;
+ // The model's back at the seat (+x forward): the body's top there is the back (STATIONS x, ht), within a few cm of backTop.
+ const at=x=>{for(let i=1;i<STATIONS.length;i++){const [x0,,h0]=STATIONS[i-1],[x1,,h1]=STATIONS[i];if(x<=x0&&x>=x1)return h0+(h1-h0)*(x0-x)/(x0-x1);}return 0;};
+ near(at(R.RIDE_GRIP.whale+.1),WHALE_DEPTH.backTop,.06,'the seat is on the highest part of the back');
+ const o={x:0,z:0,yaw:0};R.loopPoint(f.points,f.lengths,f.total,f.u,o);const player={x:o.x,z:o.z},fr=new T.Frustum();
+ const rides=R.createAnimalRides(()=>[f]);rides.scan(.2,o.x+1,o.z,true);assert.equal(rides.state.near,f);rides.grab(1,o.x+1,o.z,0);
+ const pos={x:o.x+1,z:o.z},vel={x:0,z:0},back=()=>whale.mesh.position.y+WHALE_DEPTH.backTop;
+ whale.update(1/60,false,fr,player);assert(back()<WATER-1,'starts at its swimming depth: '+back());
+ for(let i=0;i<60;i++){rides.step(1/60,pos,vel,{x:1,z:0},OPEN,50);rides.present(1,pos);whale.update(1/60,false,fr,pos);}
+ near(back(),WATER-R.RIDE_BACK.whale,.05,'risen: the back just under the rider');
+ // The seat in model space, through the drawn matrix: under the rider (horizontal gap < 1 cm, banked or not).
+ const seat=new T.Vector3(R.RIDE_GRIP.whale,WHALE_DEPTH.backTop,0).applyMatrix4(whale.mesh.matrix);
+ assert(Math.abs(f.bank)>.05,'banking in the turn');near(Math.hypot(seat.x-pos.x,seat.z-pos.z),0,.01,'the rider on the seat (horizontal gap)');near(seat.y,WATER-R.RIDE_BACK.whale,.05,'the seat height');
+ rides.letGo('off');for(let i=0;i<150;i++){rides.dartStep(1/60);whale.update(1/60,false,fr,pos);}
+ assert(back()<WATER-1,'sinks back to its swimming depth after the ride: '+back());
+ const src=read('lib/graphics/cayMantas.ts');assert.match(src,/t\.rise\+=\(\(t\.ridden\?1:0\)-t\.rise\)\*\(1-Math\.exp\(-dt\*RIDE_RISE\)\)/,'the manta rises the same way');
+ assert.match(src,/pos\.x=t\.dx;pos\.z=t\.dz;yaw=t\.dyaw-Math\.PI\/2;/,'the manta is drawn at the drawn pose');void mantas;
+ assert.match(read('lib/graphics/whaleShark.ts'),/if\(fx&&!reduced&&!state\.ridden/,'no own trail ripples between the whale and its rider while ridden');
+});
+
+ok('Town wiring: one interpolation, the seat lift, the rider facing the animal, the ride wake ON the animal, no swim ripples while riding',()=>{
+ const town=read('components/Town.tsx');
+ assert.match(town,/animalRides\.grab\(Math\.hypot\(velocity\.x,velocity\.z\),location\.x,location\.z,player\.root\.rotation\.y\)/,'the grab glides from the swimmer');
+ assert.match(town,/visualLocation\.z=active\?T\.MathUtils\.lerp\(previousLocation\.z,location\.z,blend\):location\.z;\n\s*animalRides\.present\(active\?blend:1,visualLocation\);/,'present right after the rider\'s own interpolation');
+ assert(town.indexOf('animalRides.present(')<town.indexOf('world.updateSharks('),'before the animals are placed');
+ assert.match(town,/if\(animalRides\.riding\)player\.root\.rotation\.y=animalRides\.state\.drawYaw;/,'the rider faces the drawn heading');
+ assert.match(town,/groundY\+=rideSeat\*RIDE_SEAT_LIFT;/,'the seat lift');
+ assert.match(town,/RIDE_WAKE_AT\[f\.kind\]/,'the ride wake rings sit on the animal');
+ assert.match(town,/ring\.visible=[^;]*!\(water\.inWater&&water\.state\.phase==='swim'\)/,'no foot ring in the sea (riding included)');
 });
 
 if(failed){console.log(`\n${failed} failed`);process.exit(1);}

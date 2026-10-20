@@ -28,6 +28,9 @@ import {createHiddenTransformGate} from '@/lib/graphics/hiddenTransformGate';
 import {Icon} from './Icon';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {createIslandSound} from '@/lib/audio/islandSound';
+import type {WaterSoundFrame} from '@/lib/audio/islandSound';
+const SWIM_SOUND_IN:WaterSoundFrame={in:false,under:0,kind:'tread',phase:0,speed:0,fast:false,lite:false,reduced:false};// reused every frame (lib/audio/waterSound.ts)
+const SWIM_SOUND_OFF:WaterSoundFrame={in:false,under:0,kind:'tread',phase:0,speed:0,fast:false,lite:false,reduced:false};// Oct 19 2026: fed every frame the swim block is skipped, so the wash stops when a jetpack take-off returns early
 import {stopIslandNarration} from '@/lib/audio/islandNarration';
 import {createIslandMusic} from '@/lib/audio/islandMusic';
 import * as T from 'three';
@@ -38,7 +41,7 @@ import {frameCapSlot,FRAME_DT_MAX} from '@/lib/town/frameCap';
 import {createIdleRide,IDLE_FOOT_AFTER_MS} from '@/lib/town/idleRide';
 import {createIslandHeat} from '@/lib/graphics/islandHeat';
 import {createFocusMode} from '@/lib/graphics/focusMode';
-import {setWaterDetail} from '@/lib/graphics/waterSurface';
+import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,setWaterDetail} from '@/lib/graphics/waterSurface';
 import {heatOptions} from '@/lib/graphics/heatTier';
 import {applyLambertScenery,sharpenSceneTextures} from '@/lib/graphics/lambertScenery';
 import {emitIslandFrame} from '@/lib/town/islandFrames';
@@ -159,6 +162,7 @@ import {createRideRampVisuals} from '@/lib/graphics/rideRamps';
 import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
 import {createWalkBall,SHOT_WINDUP} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
+import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';
 import { createPlayer, profileFor } from '@/lib/graphics/player';
 import { sideGameDress, mainPlayerDress } from '@/lib/town/beanLooks';
 import { DEFAULT_PLAYER_NUMBER } from '@/lib/graphics/shirtNumbers';
@@ -175,14 +179,19 @@ import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
-import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND} from '@/lib/town/water/waterDepth';
+import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH} from '@/lib/town/water/waterDepth';
+import {createSwimClear,SWIM_DIVE_CLEAR} from '@/lib/graphics/swimClear';
+import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clearWindow';
+import {UW_SURFACE} from '@/lib/town/fishing/underwater';
+import {uwDepthAt} from '@/lib/town/fishing/underwater';
+import {beanSkinOf} from '@/lib/graphics/beanSkin';
 import {onLand} from '@/lib/town/landmass';
-import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,CIRCLE_INPUT,type SplashSource} from '@/lib/town/water/waterState';
+import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
-import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countFloat,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff} from '@/lib/analytics/waterEvents';
+import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
+import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff} from '@/lib/analytics/waterEvents';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
-import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
+import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
 import SwimLessonToast from './SwimLessonToast';
 import PaintEasel from './PaintEasel';
 import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';// Summit Isle Ball Cannon (Oct 14 2026)
@@ -631,15 +640,17 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // The sea (Oct 15 2026): one 10 Hz depth probe (lib/town/water/waterDepth.ts), the wade/swim/splash state machine
     // (waterState.ts), the water test the walker's step reads (the shallows and the swim zone are walkable), and where the
     // ball waits on the sand (decision 3). Ride launches may end over splashable water (rooftopJump.ts canSplash).
-    const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced),waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};
+    const clearWin=createClearWindow(scene,()=>world.islandShore.field);// the clear water window over the shallows (lib/town/water/clearWindow.ts)
+    const swimClear=createSwimClear(scene);// the swimmer's clear disc + seabed shadow + underwater body tint (lib/graphics/swimClear.ts)
+    const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}),/* the dive keeps the body above the drawn seabed (Oct 19 2026, diving to a shore lost the diver in the bed) */waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};
     // Water P1a (lib/town/water/sharks.ts): sharks circle a swimmer; the "Uh oh!" bubble, the sting, the lesson, a camera nudge.
-    const sharkCircle=createSharkCircle(onLand),sharkHead=new T.Vector3();let sharkBubbleUntil=0;world.sharks.attend(sharkCircle);
+    const sharkCircle=createSharkCircle(onLand,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}/* the drawn seabed: orbiting sharks stay above it (Oct 20 2026) */),sharkHead=new T.Vector3();let sharkBubbleUntil=0;world.sharks.attend(sharkCircle);
     const sharkEvents=(se:SharkEvents)=>{if(se.ended)countSharksEscape();if(!se.started)return;countSharksCircle();sharkBubbleUntil=performance.now()+SHARK_BUBBLE_S*1000;
       playCues([['fi2-job-cue','sting',0]]);waterStore.set({sharkLesson:waterStore.get().sharkLesson+1});if(!reduced)water.state.shake=BELLY_SHAKE_TIME;};
     rooftop.setSplashTest(canSplashDown);let splashSource:SplashSource='fall',launchFall=false,waterTintUntil=0,waterIdleWas=false;
     /** A scooter / bike / moped that splashed down (a ride launch into the sea): the swim state takes over and the ride is handed
      *  back on the first dry step (cheaper than parking it on the sand like the ball: nothing to draw, nothing to walk back to). */
-    let rideBeforeWater:TravelMode|null=null;
+    let rideBeforeWater:TravelMode|null=null,flyAfterDive=false;/* R / the jetpack while diving: surface first (quick), then launch */
     /** The splash-down sound: existing cues through the island sound's event channels (waterHud.ts SPLASH_CUES), the only timers
      *  the sea runs (≤ 5 short ones per splash, cleared on unmount). */
     const cueTimers=new Set<ReturnType<typeof setTimeout>>();
@@ -654,6 +665,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     /** Fly up (user, Oct 15 2026): the jetpack takes off straight out of the water. A splash and a few drips from the ring pool,
      *  the swim ends (the ball rolls back to the feet on the next landing), the flight's climb starts from the water line. */
     const flyUp=()=>{if(!water.inWater||rideRef.current!=='walk'||!fuelStore.canUse('jetpack'))return false;// the silent check: the land fuel notice ("walk to a Konbini") hid SWIM_RIDE_NOTE from a swimmer (QA Oct 16 2026)
+      if(water.diveActive){water.surfaceDive(true);flyAfterDive=true;return true;}// diving: ease up first (DIVE.quick), the water step launches at the surface
       if(!water.takeOff())return false;const x=location.x,z=location.z;ballEffects.splashDown(x,WATER_LEVEL,z,.6,reduced);
       playCues(SPLASH_CUES.feet);/* no land thud in the sea (Oct 15 2026) */rideBeforeWater=null;
       rooftop.reset(x,z,water.state.rootY);/* the climb begins from the water line (the ride change below reads this height) */
@@ -663,23 +675,25 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(animalRides.riding){if(phase!=='tap')return;if(id==='letgo'){rideEnded(animalRides.letGo('off'));tapHaptic();sound.ui('click');}else if(id==='swimride')fuelStore.say('Hanging on',RIDING_NOTE);return;}
       // The ride switcher (user, Oct 15 2026: swimming and the jetpack only): a tap flies up when fuel allows, else the hint.
       if(id==='swimride'){if(phase!=='tap')return;if(flyUp()){tapHaptic();sound.ui('click');}else fuelStore.say('No fuel',SWIM_RIDE_NOTE);return;}
+      if(id==='dive'&&phase==='tap'&&!water.diveActive&&!water.canDive()){if(water.state.phase==='swim'||water.state.phase==='wade')fuelStore.say('Too shallow',DIVE_SHALLOW_NOTE);return;}// greyed Dive answers with a hint
       if(id!=='letgo'&&water.press(id,phase)){if(phase!=='up'){tapHaptic();sound.ui('click');}wakeLoop();}};
-    /** Space / 1 = Sprint (hold), Q / J / 2 = Float (hold: the lazy circle), E / R / 3 = the ride switcher while in the sea. */
+    /** Space / 1 = Sprint (hold), Q / J / 2 = Dive / Surface (tap), E / R / 3 = the ride switcher while in the sea. */
     const waterKey=(e:KeyboardEvent,down:boolean)=>{if(!water.inWater||fieldMenu.current||lessonRef.current)return false;const id=waterKeyAction(e.code,e.key);if(!id)return false;e.preventDefault();
-      if(animalRides.riding){if(down&&!e.repeat&&id!=='float')waterActions.press('letgo','tap');return true;}if(id==='swimride'&&ridePromptShown){if(down&&!e.repeat)grabRide();return true;}/* water P1b: Let go / Hang on! */
-      if(id==='swimfast'||id==='float'){if(down&&!e.repeat)waterActions.press(id,'down');else if(!down)waterActions.press(id,'up');}else if(down&&!e.repeat)waterActions.press(id,'tap');return true;};
+      if(animalRides.riding){if(down&&!e.repeat&&id!=='dive')waterActions.press('letgo','tap');return true;}if(id==='swimride'&&ridePromptShown){if(down&&!e.repeat)grabRide();return true;}/* water P1b: Let go / Hang on! */
+      if(id==='swimfast'){if(down&&!e.repeat)waterActions.press(id,'down');else if(!down)waterActions.press(id,'up');}else if(down&&!e.repeat)waterActions.press(id,'tap');return true;};
     // Water P1b (lib/town/water/animalRides.ts): hang on to a manta or the whale shark (the "island friends", never hooked by fishing).
     // The "Hang on!" proximity test runs at the probe's 10 Hz while swimming; a ride is a few scalars a frame and ends after one lap.
-    const rideFriends=[...world.mantas.friends,world.whaleShark.friend],animalRides=createAnimalRides(()=>rideFriends),ridePromptPoint={x:0,z:0,yaw:0},dartPoint={x:0,z:0,yaw:0},ridePromptV=new T.Vector3();let ridePromptShown=false,ridePromptKind='';
+    const rideFriends=[...world.mantas.friends,world.whaleShark.friend],animalRides=createAnimalRides(()=>rideFriends),ridePromptPoint={x:0,z:0,yaw:0},rideSteer={x:0,z:0},dartPoint={x:0,z:0,yaw:0},ridePromptV=new T.Vector3();let ridePromptShown=false,ridePromptKind='',rideSeat=0;/* 0..1: the rider's root lifted onto the animal's back (RIDE_SEAT_LIFT, eased at RIDE_RISE) */
     // The ride's sound (islandSound.ts rideCue): a rushing-water bed while held; Let go / the lap's end swells it as the animal darts off.
     const rideSound=(cue:'ride-start'|'ride-stop'|'ride-dart',gain=1)=>document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue,gain}}));
-    const rideEnded=(re:RideEvents)=>{if(!re.ended)return;if(re.ended==='lap')countRideLap();else if(re.ended==='off')countRideOff();rideSound(re.ended==='gone'?'ride-stop':'ride-dart');
+    const rideEnded=(re:RideEvents)=>{if(!re.ended)return;if(re.ended==='lap'||re.ended==='time')countRideLap();else if(re.ended==='off'||re.ended==='shore')countRideOff();rideSound(re.ended==='gone'?'ride-stop':'ride-dart');
       // The dismount: a little splash from the ring pool and the feet-first cue; the swimmer glides on a little, treading water.
       ballEffects.splashDown(re.x,WATER_LEVEL,re.z,RIDE_DISMOUNT_SPLASH,reduced);playCues(SPLASH_CUES.feet);
       velocity.x=Math.sin(re.yaw)*re.speed*RIDE_DISMOUNT_CARRY;velocity.z=Math.cos(re.yaw)*re.speed*RIDE_DISMOUNT_CARRY;waterStore.set({riding:false});wakeLoop();};
-    const grabRide=()=>{if(water.state.phase!=='swim'||animalRides.riding)return false;const re=animalRides.grab(Math.hypot(velocity.x,velocity.z));if(!re.grabbed)return false;
-      countRideStart(re.grabbed);water.state.fast=false;water.state.floating=false;water.state.circling=false;tapHaptic();sound.ui('click');playCues(SPLASH_CUES.feet);rideSound('ride-start',re.grabbed==='whale'?.8:1);
-      waterStore.set({riding:true,rideLesson:waterStore.get().rideLesson+1});wakeLoop();return true;};
+    const grabRide=()=>{if(water.state.phase!=='swim'||animalRides.riding)return false;const re=animalRides.grab(Math.hypot(velocity.x,velocity.z),location.x,location.z,player.root.rotation.y);/* glides from here onto the seat */if(!re.grabbed)return false;
+      countRideStart(re.grabbed);water.state.fast=false;water.surfaceDive();/* a grab while diving eases back up */tapHaptic();sound.ui('click');playCues(SPLASH_CUES.feet);rideSound('ride-start',re.grabbed==='whale'?.8:1);
+      waterStore.set({riding:true,rideLesson:waterStore.get().rideLesson+1});wakeLoop();
+      try{if(!localStorage.getItem('fi2-ride-steer-hint-v1')){localStorage.setItem('fi2-ride-steer-hint-v1','1');fuelStore.say('Steer with the stick','Push the stick to turn. Tap Let go to swim again.');}}catch{}return true;};
     rideActions.current=()=>{grabRide();};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
     shadowVisibility.addDynamicRoots([islandNpcs.root,streetTraffic.root]);npcShadows.addRoots([islandNpcs.root]);
@@ -692,6 +706,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    const swimRipples=createSwimRipples({spawn:(x,z,r,life,op,stretch,angle,still)=>ballEffects.swimRipple(x,WATER_LEVEL,z,r,life,op,stretch,angle,still)}),swimRippleIn:SwimRippleInput={on:false,kind:'tread',phase:0,effort:0,fast:0,under:0,x:0,z:0,yaw:0,mode:0};// swim ripples: arm-stroke rings in world space (swimRipples.ts)
+    // The whale shark swims UNDER the surface (whaleShark.ts): its seabed shadow shows only over the clear window's bed, and it reuses the pooled ring FX for its trail and fin wake.
+    world.whaleShark.setClearBed({strength:()=>clearWin.strength,depth:(x,z)=>{const f=world.islandShore.field;return f?uwDepthAt(f.distance(x,z),CLEAR_BED.floor):-1;}});world.whaleShark.setFx(ballEffects);
     // Kicked vending machines shake and vibrate with a thunk (lib/graphics/vendingKick.ts); idle = no work.
     const vendingKick=createVendingKick({scene,entries:vending.entries,material:vending.material,size:vending.size,host:parent.parentElement});
     const walkingFrameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
@@ -714,7 +731,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // brings back the old live ring (anything within FOCUS_LIVE_M of the angler kept moving) and ?fishfocus=0 turns it off (A/B).
     const focusParam=new URLSearchParams(window.location.search).get('fishfocus'),focus=createFocusMode(scene,renderer,camera),focusAllowed=focusParam!=='0',focusNearLive=focusParam==='near',FOCUS_LIVE_M=30;
     const focusLive={games:true,traffic:true,volleyball:true,coaches:true};
-    const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.focus=focus;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.islandWater=world.islandShore;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propReactions=propReactions;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propSpecs=propSpecs;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
+    const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.focus=focus;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.islandWater=world.islandShore;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.clearWin=clearWin;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propReactions=propReactions;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propSpecs=propSpecs;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
     sharpenSceneTextures(scene,renderer.capabilities.getMaxAnisotropy());// quality pass: crisp textures at grazing angles
     const targetMovement=(target:BallHitTarget):{canMove:(nx:number,nz:number)=>boolean;move:(nx:number,nz:number)=>void}=>( {canMove:(nx,nz)=>rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-target.y)<.3,move:(nx,nz)=>{const npc=islandNpcs.entries.find(e=>'npc:'+e.id===target.id);if(npc){npc.position.x=nx;npc.position.z=nz;return;}const volleyball=volleyballGame.entries.find(e=>'npc:'+e.id===target.id);if(volleyball){volleyball.position.x=nx;volleyball.position.z=nz;return;}const coach=coachPractice.entries.find(e=>'npc:'+e.id===target.id);if(coach){coach.offset.x+=nx-coach.position.x;coach.offset.z+=nz-coach.position.z;coach.position.x=nx;coach.position.z=nz;return;}for(const field of games.entries){const prefix='field:'+field.venue.id+':';if(target.id.startsWith(prefix)){const actor=field.sim.players[target.id.slice(prefix.length)];if(actor){const f=liveFieldPoint(field.venue,nx,nz);actor.x=f.x;actor.y=f.y;actor.vx=actor.vy=0;}break;}}}} );
     let truckHitAge=0,lastHitTruck=-1;const lastTruckHitPosition={x:0,z:0},lightRidePosition=new T.Vector3();
@@ -830,6 +847,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     function tick(dt:number){
       liveKnockout.buttons(input.current);// Rooftop Knockout: kick on press (buffered) and Dodge, before anything clears the buttons.
       if(liveKnockout.frozen){input.current.kick=input.current.juggle=false;velocity.x=velocity.z=0;}const arenaPosition=liveKnockout.playerPosition();if(arenaPosition){location.x=arenaPosition.x;location.z=arenaPosition.z;rooftop.reset(location.x,location.z,arenaPosition.y);velocity.x=velocity.z=0;if(liveKnockout.frozen){input.current.kick=input.current.juggle=false;return;}}
+      if(animalRides.darting)animalRides.dartStep(dt);// the animal shoots off / swims back to its loop after a ride (animalRides.ts DART_*, RET_*): only while it does, and before any early return (a take-off must not freeze it mid-sea)
       if(liveKnockout.frozen)return;
       if(summitFun.holdPlayer(input.current,keys,dt)){velocity.x=velocity.z=0;return;}
       if(zipline.holdPlayer(input.current,keys,dt)){velocity.x=velocity.z=0;return;}// riding the zipline: input locked, the stick looks around
@@ -971,9 +989,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const holdStill=walkBall.state.mode==='windup'||parachute.covering()||jobFrame.still&&rideRef.current==='walk';
       if(liveKnockout.joined)liveKnockout.steer(velocity,ix,iz,dt);
       // Float held (lib/town/water): the lazy circle steers instead of the stick, at the circle's slow drift.
-      let mx=ix,mz=iz;if(water.state.circling){mx=water.state.circleX*CIRCLE_INPUT;mz=water.state.circleZ*CIRCLE_INPUT;}
-      if(animalRides.darting)animalRides.dartStep(dt);// the animal shoots off after a ride (animalRides.ts DART_*): only for those 3 s
-      if(animalRides.riding&&water.swimming&&rideRef.current==='walk'){rideEnded(animalRides.step(dt,location,velocity));}// water P1b: the animal drags the rider along its loop (the stick is ignored)
+      const mx=ix,mz=iz;
+      rideSteer.x=ix;rideSteer.z=iz;// the same camera-relative stick / keys / joystick vector the truck reads
+      if(animalRides.riding&&water.swimming&&rideRef.current==='walk'){rideEnded(animalRides.step(dt,location,velocity,rideSteer,waterWalk.allow,waterProbe.d));}// water P1b: the rider steers the animal with the stick like the truck (animalRides.ts)
       else if(water.swimming&&rideRef.current==='walk'){
         // Swimming: no obstacles in the sea; momentum, the Swim fast hold, the soft 60 m edge (waterDepth.ts swimStep). The dip and
         // the surfacing hold the body still.
@@ -1015,15 +1033,22 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(ev.entered){countWade();rooftop.state.recovery=0;rooftop.state.impact=false;/* the sea takes over from any knockdown (a fall outside the splash test still lands in water) */if(!water.state.park){const p=rooftop.findLanding(location.x,location.z);if(p)water.state.park={x:p.x,z:p.z,y:rooftop.surface(p.x,p.z),yaw:player.root.rotation.y};}}
         if(ev.swimStarted){countSwimStart();waterStore.set({lesson:waterStore.get().lesson+1});}
         if(ev.swimSeconds>0)countSwimTime(ev.swimSeconds);
-        if(ev.floated)countFloat();if(ev.sped)countSwimFast();
+        if(ev.sped)countSwimFast();
+        // Dive (waterState.ts DIVE): a soft splash going under, drips + the plip + the head-shake coming up, a small bubble ring over
+        // the diver now and then (the same ring pool, ≤ ~2 a second, decorative: waterFxOn), the jetpack launch once back up.
+        if(ev.dived){countDive();ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.45,reduced);sound.waterPlunge();
+          try{if(!localStorage.getItem('fi2-dive-hint-v1')){localStorage.setItem('fi2-dive-hint-v1','1');fuelStore.say('Breathe in, then go under','Tap the up arrow to swim back up.');}}catch{}}
+        if(ev.rose&&water.inWater){ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);playCues(SURFACE_CUES);sound.waterSurface();}
+        if(ev.bubble&&!reduced&&!animalRides.riding)/* the diver's marker: on every tier (≤ ~2 pooled rings a second) */ballEffects.ripple(location.x+(Math.random()-.5)*.5,WATER_LEVEL,location.z+(Math.random()-.5)*.5,.08,.3);
+        if(flyAfterDive&&(!water.inWater||!water.diveActive)){flyAfterDive=false;if(water.inWater)flyUp();}
         if(water.inWater&&!ev.flew)sharkEvents(sharkCircle.tick(dt,{x:location.x,z:location.z,swimming:water.state.phase==='swim'&&!animalRides.riding/* water P1b: not while riding */,distanceToLand:waterProbe.d},world.sharks.schools));else if(sharkCircle.state.active)sharkEvents(sharkCircle.release());
         // Water P1b (animalRides.ts): the hold-on pose rolling with the animal's turns, its bigger wake from the same ring pool, letting
         // go if the swim ends under the ride, and the "Hang on!" proximity test (10 Hz, swimming only).
         if(animalRides.riding){if(!water.inWater||water.state.phase!=='swim')rideEnded(animalRides.letGo('off'));else{const pose=water.pose,rs=animalRides.state;pose.kind='hold';pose.effort=rs.roll;pose.fast=0;ev.wake=false;ev.stroke=0;/* no swim strokes: the ride has its own wake */
-          if(animalRides.wakeDue()&&waterFxOn()&&rs.riding){const k=RIDE_WAKE[rs.riding.kind],fx=Math.sin(rs.yaw),fz=Math.cos(rs.yaw),rx=fz,rz=-fx;
-            ballEffects.ripple(location.x+fx*1.6,WATER_LEVEL,location.z+fz*1.6,.3*k,.5);ballEffects.ripple(location.x-fx*1.4+rx*.8,WATER_LEVEL,location.z-fz*1.4+rz*.8,.42*k,.7);ballEffects.ripple(location.x-fx*1.4-rx*.8,WATER_LEVEL,location.z-fz*1.4-rz*.8,.42*k,.7);}}}
+          if(animalRides.wakeDue()&&waterFxOn()&&rs.riding){const f=rs.riding,k=RIDE_WAKE[f.kind],at=RIDE_WAKE_AT[f.kind],fx=Math.sin(f.fyaw),fz=Math.cos(f.fyaw),rx=fz,rz=-fx;/* Oct 20 2026: on the ANIMAL (its snout / wings), not between it and the rider */
+            ballEffects.ripple(f.fx+fx*at.bow,WATER_LEVEL,f.fz+fz*at.bow,.3*k,.5);ballEffects.ripple(f.fx+fx*at.back+rx*at.side,WATER_LEVEL,f.fz+fz*at.back+rz*at.side,.42*k,.7);ballEffects.ripple(f.fx+fx*at.back-rx*at.side,WATER_LEVEL,f.fz+fz*at.back-rz*at.side,.42*k,.7);}}}
         // The dart's bigger wake behind the departing animal (the same ring pool), while it is still fast.
-        if(animalRides.darting&&animalRides.dartWakeDue(dartPoint)&&waterFxOn()&&animalRides.state.dart){const k=RIDE_WAKE[animalRides.state.dart.kind]*DART_WAKE,fx=Math.sin(dartPoint.yaw),fz=Math.cos(dartPoint.yaw),rx=fz,rz=-fx;
+        if(animalRides.darting&&animalRides.dartWakeDue(dartPoint)&&waterFxOn()&&(animalRides.state.dart||animalRides.state.ret)){const k=RIDE_WAKE[(animalRides.state.dart||animalRides.state.ret)!.kind]*DART_WAKE,fx=Math.sin(dartPoint.yaw),fz=Math.cos(dartPoint.yaw),rx=fz,rz=-fx;
           ballEffects.ripple(dartPoint.x-fx*1.4+rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4+rz*.9,.42*k,.7);ballEffects.ripple(dartPoint.x-fx*1.4-rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4-rz*.9,.42*k,.7);}
         animalRides.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim');
         if(ev.left&&walkBall.state.mode==='attached'){walkBall.state.mode='return';walkBall.state.age=0;}/* the parked ball rolls back to the feet */
@@ -1034,12 +1059,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           const size=(.6+ev.splash*.9)*SPLASH_SCALE[water.state.entry];ballEffects.splashDown(location.x,WATER_LEVEL,location.z,size,reduced);
           playCues(SPLASH_CUES[water.state.entry]);/* no land thud in the sea (Oct 15 2026) */document.dispatchEvent(new CustomEvent('fi2-water-splash',{detail:{entry:water.state.entry,source:water.state.source,size}}));if(!reduced)navigator.vibrate?.([30,20,40]);
           if(ev.tint){const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+UNDER_TINT_MS;}}}
-        else if(ev.ripple>0&&(ev.surfaced||waterFxOn())){ballEffects.ripple(location.x,WATER_LEVEL,location.z,ev.ripple);if(ev.surfaced){ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);playCues(SURFACE_CUES);}}
-        // The wake (user, Oct 15 2026: "animation for the water moving"): a bow ripple ahead, a V pair behind, an arm splash per
-        // stroke; all pooled rings at a bounded rate (≤ 7 per stroke), none on the still path / reduced motion / tier ≥ 2.
-        if((ev.wake||ev.stroke)&&waterFxOn()){const yaw=player.root.rotation.y,fx=Math.sin(yaw),fz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw),big=water.state.fast?1.25:1;
-          if(ev.wake){ballEffects.ripple(location.x+fx*1.1,WATER_LEVEL,location.z+fz*1.1,.3*big,.55);ballEffects.ripple(location.x-fx*.9+rx*.55,WATER_LEVEL,location.z-fz*.9+rz*.55,.4*big,.7);ballEffects.ripple(location.x-fx*.9-rx*.55,WATER_LEVEL,location.z-fz*.9-rz*.55,.4*big,.7);}
-          if(ev.stroke)ballEffects.ripple(location.x+fx*.5+rx*.42*ev.stroke,WATER_LEVEL,location.z+fz*.5+rz*.42*ev.stroke,.15,.4);}}
+        else if(ev.ripple>0&&!animalRides.riding/* riding: the ride's own wake on the animal */&&(ev.surfaced||waterFxOn()&&water.state.phase!=='swim')){ballEffects.ripple(location.x,WATER_LEVEL,location.z,ev.ripple);if(ev.surfaced){ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);playCues(SURFACE_CUES);}}
+        // Swim ripples (user, Oct 19 2026): the foot ring is hidden in the sea; thin rings spread from the hands per arm entry (the
+        // pose's stroke clock), a slow one treading, a V behind Swim fast. World space, ≤ 6 live, lite on heat tier 2+, still when reduced.
+        {const si=swimRippleIn,p=water.pose;si.on=water.state.phase==='swim'&&!animalRides.riding;si.kind=p.kind;si.phase=p.phase;si.effort=p.effort;si.fast=p.fast;si.under=p.under??0;si.x=location.x;si.z=location.z;si.yaw=player.root.rotation.y;si.mode=reduced?2:waterFxOn()?0:1;swimRipples.update(dt,si);
+          {const ss=SWIM_SOUND_IN;ss.in=si.on;ss.under=si.under;ss.kind=p.kind;ss.phase=p.phase;ss.speed=p.effort;ss.fast=p.fast>0;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(dt,ss);}}}
       const ballPlayer=water.inWater&&BALL_STAYS_ON_SAND&&water.state.park?water.state.park:{...location,y:rooftop.state.height,yaw:player.root.rotation.y};
       if(rideRef.current!=='walk'){if(rampMotion.state.phase==='idle'&&input.current.kick)rideTricks.start(rideRef.current,0);if(rampMotion.state.phase==='idle'&&input.current.juggle)rideTricks.start(rideRef.current,1);input.current.kick=input.current.juggle=false;walkBall.reset(ballPlayer);orb.x=location.x+.7;orb.z=location.z;orb.vx=orb.vz=0;return;}
       // A job's own buttons own the ball while it runs: no kicks, juggles or charged shots; a set-down or kicked ball is placed
@@ -1111,8 +1135,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Treading water or floating counts like an idle ride (docs/swimming-research.md §2.3): 20 fps after 4 s without input.
       const waterIdle=water.resting();
       // Heat audit Oct 17 2026: standing still on foot for 3 s (no input, nothing moving near or on screen) rests at 20 fps like an idle ride.
-      const footRest=rideRef.current==='walk'&&!waterIdle&&!paused&&!pendingRide.current&&!rooftop.state.air&&!rooftop.state.falling&&walkBall.state.mode==='attached'&&jetActions.state.phase==='idle'&&!zipline.active&&!jobMoves.busy&&!jobMoves.kicking&&summitFun.kickPhase!=='playing'&&!fishing.focused&&!heat.focused&&islandNpcs.stats.moving===0&&games.stats.visiblePlayers===0&&streetTraffic.rider.index<0&&!streetTraffic.cars.some(c=>c.group.visible&&Math.hypot(c.group.position.x-location.x,c.group.position.z-location.z)<45);
-      const idleFrame=idleRide.interval(now,rideRef.current!=='walk'||waterIdle||footRest,footRest?IDLE_FOOT_AFTER_MS:undefined);
+      // Heat offsets Oct 19 2026: "quiet" = nothing moving near or on screen (townsfolk within 35 m, field players, a carried truck, cars within 45 m).
+      // On a phone the 20 fps foot rest also accepts walking townsfolk (as an idle ride always has); field players and near cars still block it.
+      const restNear=!paused&&games.stats.visiblePlayers===0&&streetTraffic.rider.index<0&&!streetTraffic.cars.some(c=>c.group.visible&&Math.hypot(c.group.position.x-location.x,c.group.position.z-location.z)<45),quietNear=restNear&&islandNpcs.stats.moving===0;
+      const footRest=rideRef.current==='walk'&&!waterIdle&&!paused&&!pendingRide.current&&!rooftop.state.air&&!rooftop.state.falling&&walkBall.state.mode==='attached'&&jetActions.state.phase==='idle'&&!zipline.active&&!jobMoves.busy&&!jobMoves.kicking&&summitFun.kickPhase!=='playing'&&!fishing.focused&&!heat.focused&&(coarse?restNear:quietNear);
+      // A quiet rest also refreshes shadows at half rate, and after 30 s without input drops to 15 fps (idleRide IDLE_DEEP_*).
+      const idleFrame=idleRide.interval(now,rideRef.current!=='walk'||waterIdle||footRest,footRest?IDLE_FOOT_AFTER_MS:undefined,quietNear);heat.setRest(idleFrame>0&&quietNear,idleFrame);
       renderStats.idleRide=idleFrame;if(waterIdle&&idleFrame&&!waterIdleWas)countWaterIdleCap();waterIdleWas=waterIdle&&idleFrame>0;
       if(waterTintUntil&&now>=waterTintUntil){waterTintUntil=0;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=true;tint.classList.remove('is-on');}}
       if(idleFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(idleFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
@@ -1207,12 +1235,14 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       sound.move(rideRef.current,Math.hypot(velocity.x,velocity.z),active&&!animalRides.riding/* water P1b: the ride's own rushing-water bed, no footsteps */&&!fieldMenu.current&&!lessonRef.current&&!['parachute','fall'].includes(jetActions.state.phase)&&(rideRef.current==='jetpack'||!rooftop.state.falling&&rooftop.state.recovery===0));
       const blend=accumulator*60;
       visualLocation.x=active?T.MathUtils.lerp(previousLocation.x,location.x,blend):location.x;visualLocation.z=active?T.MathUtils.lerp(previousLocation.z,location.z,blend):location.z;
+      animalRides.present(active?blend:1,visualLocation);// riding (Oct 20 2026, "not together"): the animal's drawn pose and the rider's seat on it, from ONE interpolation
       const customizationChanged=appliedCustomization!==customizationRef.current;
       if(appliedCustomization!==customizationRef.current){appliedCustomization=customizationRef.current;player.setAppearance(appliedCustomization);player.setBeanLook(beanLookFor(appliedCustomization),playerOutfit(appliedCustomization));vehicle.setCustomization(appliedCustomization);ballAppearance.setStyle(appliedCustomization.ball);}
       // Team colours for the player's own character while the draw-the-pass lesson or rooftop knockout is on (lib/town/beanLooks mainPlayerDress); own look restored after.
       {const inTeam=Boolean(lessonRef.current)||liveKnockout.joined;if(inTeam!==appliedTeamLook||inTeam&&customizationChanged){appliedTeamLook=inTeam;const c=customizationRef.current,d=mainPlayerDress(beanLookFor(c),playerOutfit(c),inTeam,DEFAULT_PLAYER_NUMBER);player.setBeanLook(d.look,d.outfit);}}
       const isParachuting=jetActions.state.phase==='parachute',airJuggling=isParachuting&&jetActions.state.juggleAge>=0,airJuggleCycle=jetActions.state.juggleAge/.8,airJugglePhase=airJuggleCycle-Math.floor(airJuggleCycle),airJuggleSide=(Math.floor(airJuggleCycle)%2===0?1:-1) as -1|1;if(skyJugglingRef.current!==airJuggling){skyJugglingRef.current=airJuggling;setSkyJuggling(airJuggling);}if(parachutingRef.current!==isParachuting){parachutingRef.current=isParachuting;setParachuting(isParachuting);}
-      const vendingHide=vending.hidesPlayer;player.root.visible=!fieldMenu.current&&!vendingHide;ring.visible=!fieldMenu.current&&!vendingHide&&rideRef.current!=='jetpack';ball.visible=!fieldMenu.current&&!vendingHide&&(rideRef.current==='walk'||airJuggling);
+      const vendingHide=vending.hidesPlayer;player.root.visible=!fieldMenu.current&&!vendingHide;ring.visible=!fieldMenu.current&&!vendingHide&&rideRef.current!=='jetpack'&&!(water.inWater&&water.state.phase==='swim');// no static foot ring in the sea: swim ripples instead
+      ball.visible=!fieldMenu.current&&!vendingHide&&(rideRef.current==='walk'||airJuggling);
       if(Math.hypot(velocity.x,velocity.z)>.1)arrivalFacing=undefined;
       const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced,location.x,location.z,flight.height,jetActions.state.phase,customizationRef.current.jetpack):undefined;
       if(rooftop.state.falling||rooftop.state.recovery>0)rideTricks.reset();
@@ -1232,6 +1262,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const intentSX=input.current.x+(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0),intentSZ=input.current.z+(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0);
       const walkBrake=rideRef.current==='walk'&&!steering&&!rooftop.state.falling&&streetTraffic.rider.index<0?T.MathUtils.smoothstep(Math.hypot(velocity.x,velocity.z),1,3.2):0;
       player.update(visualLocation.x,visualLocation.z,active?dt:0,elapsed,reduced,zipline.motion(cannon.pose(withJob({skill:liveKnockout.joined?liveKnockout.dodgeSkill:undefined,called:lessonRef.current==='aim'?1:lessonRef.current==='passing'||lessonRef.current==='replay'?lessonCalled:lessonRef.current?0:undefined,intentHeading:rideRef.current==='walk'&&Math.hypot(intentSX,intentSZ)>.05?Math.atan2(intentSX*.857+intentSZ*.515,-intentSX*.515+intentSZ*.857):undefined,brake:walkBrake,truckRiding:streetTraffic.rider.index>=0,truckSpeed:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].driveSpeed:0,turnSmoothing:water.swimming?7:jetActions.state.phase==='parachute'?(jetActions.state.scanAge>=0?18:3):undefined,swim:water.pose.w>0?water.pose:undefined,juggleTouch:walkBall.state.mode==='juggle'?walkBall.state.juggleTouch:'foot',parachute:jetActions.state.phase==='parachute',parachuteSpin:jetActions.state.scanIntensity,parachuteJuggle:airJuggling?{phase:airJugglePhase,side:airJuggleSide}:undefined,wallSplat:rampMotion.state.phase==='splat',mopedStand:trickPose.stand,mopedSuperman:reduced?0:rampMotion.state.trickStretch,flyingCar:['flying-car','mini-plane'].includes(customizationRef.current.jetpack),rocketboard:customizationRef.current.jetpack==='rocketboard',jump:roofJumpMotion(rooftop.jump,rideRef.current),rooftopPose:jetActions.state.phase==='fall'?(jetActions.state.age<.65?'hang':'fall'):rideRef.current==='jetpack'?undefined:rooftop.state.falling?(rooftop.state.hangTime>0?'hang':'fall'):rooftop.state.recovery>0?'dizzy':undefined,flight:flightPose,facing:jetActions.state.scanAge>=0&&!reduced?jetActions.state.scanYaw:streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.y:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.kick>0)?walkBall.state.yaw:arrivalFacing,travelMode:rideRef.current,shotStep:steppingBack?(walkBall.state.age-.18)/.47:steppingIn?walkBall.state.age/(SHOT_WINDUP*.55):undefined,actionKind:rideRef.current==='walk'&&walkBall.state.kick>0?'shot':undefined,strikeX:rideRef.current==='walk'&&walkBall.state.kick>0?0:undefined,strikeZ:rideRef.current==='walk'&&walkBall.state.kick>0?.65/Math.max(.1,player.root.scale.x):undefined,shotPower:walkBall.state.charge,shotCharge:rideRef.current==='walk'&&walkBall.state.mode==='charging'?walkBall.state.charge:undefined,powerKick:rideRef.current==='walk'&&(walkBall.state.mode==='windup'||walkBall.state.mode==='shot'&&walkBall.state.kick>0),dribbling:liveKnockout.joined?liveKnockout.hasBall:rideRef.current==='walk'&&Math.hypot(orb.x-visualLocation.x,orb.z-visualLocation.z)<1.3,kick:rideRef.current==='walk'?(liveKnockout.joined?liveKnockout.kickPose:walkBall.state.kick):undefined,juggle:rideRef.current==='walk'&&(walkBall.state.mode==='juggle'||walkBall.state.mode==='wall-juggle'&&(walkBall.state.wallPhase==='receive'||walkBall.state.wallPhase==='kick'))?walkBall.state.jugglePhase:undefined,kickSide:walkBall.state.juggleSide}),player.root.scale.x),active?blend:1));
+      if(animalRides.riding)player.root.rotation.y=animalRides.state.drawYaw;// riding (Oct 20 2026): face the animal's drawn heading exactly (the grab's turn glides in at RIDE_RISE)
       flightHeading=player.root.rotation.y;
       vehicle.update(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,active?dt:0,Math.hypot(velocity.x,velocity.z),flightPose);vehicle.root.visible=vehicle.root.visible&&!fieldMenu.current&&!vending.hidesPlayer&&(customizationRef.current.jetpack==='ironman'||!['parachute','fall'].includes(jetActions.state.phase));
       let groundY=rooftop.state.height;let ridePitch=0,slopeRoll=0;
@@ -1245,7 +1276,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&rooftop.state.height>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
       if(rideRef.current==='jetpack')groundY=active?flightRenderHeight(previousFlightHeight,flight.height,blend):flight.height;
       if(streetTraffic.rider.index>=0){const truck=streetTraffic.cars[streetTraffic.rider.index],bed=streetTraffic.bedPoint(truck.index);groundY=bed.y;ridePitch=truck.group.rotation.x;player.root.position.x=bed.x;player.root.position.z=bed.z;}
-      if(water.inWater&&rideRef.current==='walk'&&streetTraffic.rider.index<0&&!rooftop.state.falling)groundY=water.state.rootY;// wading: the feet on the shelf; swimming: the root under the water line
+      if(water.inWater&&rideRef.current==='walk'&&streetTraffic.rider.index<0&&!rooftop.state.falling){groundY=water.state.rootY;// wading: the feet on the shelf; swimming: the root under the water line
+        rideSeat+=((animalRides.riding?1:0)-rideSeat)*(1-Math.exp(-(active?dt:0)*RIDE_RISE));if(rideSeat<1e-3&&!animalRides.riding)rideSeat=0;groundY+=rideSeat*RIDE_SEAT_LIFT;}/* riding: prone on the risen animal's back */else rideSeat=0;
       player.root.rotation.order='YXZ';player.root.rotation.x=ridePitch;vehicle.root.rotation.order='YXZ';vehicle.root.rotation.x=ridePitch;player.root.position.y=groundY;vehicle.root.position.y=groundY;
       const crash=rideRef.current==='jetpack'?0:rooftop.state.recovery/ROOF_RECOVERY_TIME;
       const collapse=Number.isFinite(spinCrashAge)?T.MathUtils.smoothstep(spinCrashAge,.15,.65):1;
@@ -1350,7 +1382,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       islandNpcs.root.visible=!fieldMenu.current&&!lessonRef.current;
       islandNpcs.update(active?dt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,(rideRef.current==='jetpack'&&flight.height>1.2)||vending.focused!==null);fieldBump.applyNpcNudges();
       const hudTick=now-lastHud>150;
-      if(hudTick)waterStore.set({inWater:water.inWater,swimming:water.swimming,flyOk:fuelStore.canUse('jetpack'),dropIn:rideRef.current==='jetpack'&&jetActions.state.phase==='idle'&&!flight.landing&&!pendingRide.current&&flight.takeoffTime>=1.05&&streetTraffic.rider.index<0&&canSplashDown(location.x,location.z),riding:animalRides.riding});
+      if(hudTick)waterStore.set({inWater:water.inWater,swimming:water.swimming,diving:water.diveActive,diveOk:water.canDive(),flyOk:fuelStore.canUse('jetpack'),dropIn:rideRef.current==='jetpack'&&jetActions.state.phase==='idle'&&!flight.landing&&!pendingRide.current&&flight.takeoffTime>=1.05&&streetTraffic.rider.index<0&&canSplashDown(location.x,location.z),riding:animalRides.riding});
       if(hudTick){const visitor={x:visualLocation.x,y:groundY,z:visualLocation.z};const next=[islandNpcs.root.visible?islandNpcs.nearest(visitor):null,coachPractice.nearest(visitor),volleyballGame.nearest(visitor)].filter((npc):npc is NpcDefinition=>npc!==null).sort((a,b)=>Math.hypot(a.x-visitor.x,a.z-visitor.z)-Math.hypot(b.x-visitor.x,b.z-visitor.z))[0]??null;if(next?.id!==nearbyNpcRef.current?.id){nearbyNpcRef.current=next;setNearbyNpc(next);}}
       npcs.forEach((rig,i)=>{
         rig.root.visible=Boolean(lessonRef.current);if(!lessonRef.current)return;
@@ -1390,6 +1422,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       
       onboardingNpcFocus.restore(camera);
       // One consistent island view. Walking/travel changes position, never zoom or angle.
+      if(rideRef.current==='jetpack'||!(water.inWater&&water.state.phase==='swim'))sound.swim(dt,SWIM_SOUND_OFF);
       const flying=rideRef.current==='jetpack',rampCamera=['climb','air','splat'].includes(rampMotion.state.phase),mobileTravel=coarse&&(rideRef.current!=='walk'||streetTraffic.rider.index>=0);
       // Through a hop the camera's height eases (no jolt at take-off or touchdown); otherwise it is the ground height exactly.
       // Flying: the flight height is already smooth (eased take-off and landing, the summit lift's spring, the parachute's eased
@@ -1399,7 +1432,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       else{const prevY=Number.isFinite(camGroundY)?camGroundY:groundY;let off=prevY-groundY;if(Math.abs(off)>4)off=0;
        off=rooftop.state.air||hopAge<.7?(prevY+(groundY-prevY)*(1-Math.exp(-(active?dt:0)*6)))-groundY:off*Math.exp(-(active?dt:0)*6);if(Math.abs(off)<1e-4)off=0;camGroundY=groundY+off;}
       walkCameraOffset(camera.aspect,walkOffset);camTarget.set(visualLocation.x+(flying||mobileTravel?16:walkOffset.x),23+camGroundY+(rampCamera?rampMotion.state.lift:0)+(mobileTravel?1:0),visualLocation.z+(flying||mobileTravel?33:walkOffset.z));
-      if(water.inWater){camTarget.y+=water.state.camDip;if(animalRides.riding)camTarget.y+=RIDE_CAM_LIFT;/* water P1b: a little higher while riding */if(water.state.shake>0&&!reduced){camTarget.x+=(Math.random()-.5)*2*BELLY_SHAKE;camTarget.z+=(Math.random()-.5)*2*BELLY_SHAKE;}}// the splash-down's dip and a belly-flop's shake
+      if(water.inWater){camTarget.y+=water.state.camDip;if(animalRides.riding)camTarget.y+=RIDE_CAM_LIFT;/* water P1b: a little higher while riding */if(water.pose.under){const f=1-.12*(water.pose.under??0);/* diving: the root already took the camera down; dolly in a little */camTarget.x=visualLocation.x+(camTarget.x-visualLocation.x)*f;camTarget.y=camGroundY+(camTarget.y-camGroundY)*f;camTarget.z=visualLocation.z+(camTarget.z-visualLocation.z)*f;}if(water.pose.under){/* Oct 19 2026: diving, the root (camGroundY) already carries the body down; slide the follow offset onto the fixed view axis (16,23,33) so the view line runs through the diver: centred on every aspect */const u=Math.min(1,water.pose.under*SWIM_DIVE_CLEAR),hy=(camTarget.y-camGroundY)/23;camTarget.x+=(visualLocation.x+16*hy-camTarget.x)*u;camTarget.z+=(visualLocation.z+33*hy-camTarget.z)*u;}if(water.state.shake>0&&!reduced){camTarget.x+=(Math.random()-.5)*2*BELLY_SHAKE;camTarget.z+=(Math.random()-.5)*2*BELLY_SHAKE;}}// the splash-down's dip and a belly-flop's shake
       // A7: portrait views centre the walker; walking looks a little ahead of travel (lib/town/walkControl.ts).
       if(rideRef.current==='walk'&&streetTraffic.rider.index<0&&!reduced&&!lessonRef.current){walkCameraLead(velocity.x,velocity.z,walkLead);camTarget.x+=walkLead.x;camTarget.z+=walkLead.z;}
       // Coach lesson on a portrait phone: frame passer, marker and receiver above the coach card (same view angle).
@@ -1407,7 +1440,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         camTarget.set(fx+16*shift+16*scale,groundY+23*scale,fz+33*shift+33*scale);}
       // Summit Isle's tower (lib/town/summitIsle.ts summitCameraFrame): when the hill would come between, the follow camera rises a
       // little, then dollies in along its view line (never closer than 35%), then rises further. Eased.
-      {const f=summitCamera.update(visualLocation.x,visualLocation.z,groundY,camTarget.x,camTarget.y,camTarget.z,dt);if(f<1){camTarget.x=visualLocation.x+(camTarget.x-visualLocation.x)*f;camTarget.y=groundY+(camTarget.y-groundY)*f;camTarget.z=visualLocation.z+(camTarget.z-visualLocation.z)*f;}camTarget.y+=summitCamera.lift;}
+      // In the sea (Oct 20 2026, user: "when diving near the shore, the player is not in view"): the sight line starts at the water
+      // line, not at the swimming / diving root under it (that read the sea as hill between: the camera rose up to 30 m, the diver
+      // left the frame off the bottom near Summit Isle's shores). tests/swim-clear.cjs pins it.
+      {const f=summitCamera.update(visualLocation.x,visualLocation.z,water.inWater?Math.max(groundY,WATER_LEVEL):groundY,camTarget.x,camTarget.y,camTarget.z,dt);if(f<1){camTarget.x=visualLocation.x+(camTarget.x-visualLocation.x)*f;camTarget.y=groundY+(camTarget.y-groundY)*f;camTarget.z=visualLocation.z+(camTarget.z-visualLocation.z)*f;}camTarget.y+=summitCamera.lift;}
       if(!learningFormat.current){camera.position.lerp(camTarget,reduced?1:1-Math.exp(-dt*(mobileTravel?20:flying?14:rampCamera?10:4)));
         // Bound follow lag on phones so boosted rides stay near the center.
         if(mobileTravel){const lag=camera.position.distanceTo(camTarget);if(lag>1.2)camera.position.lerp(camTarget,1-1.2/lag);}
@@ -1481,7 +1517,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(fieldMenu.current||mapRef.current||settingsRef.current&&!onboardingRef.current||lessonRef.current)visibleVenue=null;
 
       world.updateArcade(elapsed,reduced);
-      {const stillWater=reduced||heat.staticAmbience||heat.governor.last.state==='slow';world.updateWater(active&&!learning?dt:0,stillWater);setWaterDetail(stillWater?0:quality.phone?1:2);}// water: lib/graphics/waterSurface.ts (still = the cheap static path, no recompile)
+      {const stillWater=reduced||heat.staticAmbience||heat.governor.last.state==='slow';world.updateWater(active&&!learning?dt:0,stillWater);setWaterDetail(stillWater?0:quality.phone?1:2);
+       clearWin.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),WATER_UNIFORMS.uShore.value,camera);swimClear.hideBed=clearWin.strength>0;
+       swimClear.update(dt,player.root.position.x,player.root.position.z,player.root.rotation.y,water.inWater?water.pose.w:0,waterProbe.depth,WATER_LEVEL,SWIM_ROOT_DEPTH+water.state.dive,beanSkinOf(player)?.meshes??null,water.state.under);
+       // Diving: open the disc where the view ray to the body crosses the surface (toward the camera), so the deeper body stays in it.
+       if(water.state.dive>.05&&swimClear.strength>0){const px=player.root.position.x,pz=player.root.position.z,dx=camera.position.x-px,dz=camera.position.z-pz,hd=Math.hypot(dx,dz),h=Math.max(1,camera.position.y-WATER_LEVEL),D=water.state.dive+.2,k=hd>1e-3?D/(h+D):0;SWIM_CLEAR_UNIFORMS.uSwimXZ.value.set(px+dx*k,pz+dz*k);
+         // A visibility floor: the deeper body keeps some of its own colour (beanUnder ≤ 1 − 0.5 × under; the depth absorption still tints it).
+         const parts=beanSkinOf(player)?.meshes,cap=1-.5*Math.min(1,(water.pose.under??0)*SWIM_DIVE_CLEAR);if(parts)for(let i=0;i<parts.length;i++){const bu=(parts[i].material as {beanUniforms?:{beanUnder?:{value:number}}}).beanUniforms?.beanUnder;if(bu&&bu.value>cap)bu.value=cap;}}}// water: lib/graphics/waterSurface.ts (still = the cheap static path, no recompile)
       world.updateFerry(active&&!learning&&!backgroundFrozen?dt:0,reduced||heat.staticAmbience);
       world.updateSharks(active&&!learning?dt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen
       world.updateLighthouse(active&&!learning&&!backgroundFrozen?dt:0,timeRef.current,reduced||heat.staticAmbience||heat.governor.last.state==='slow',camera,location);// East Jetty beam: night/dusk only, sleeps far/off-screen
@@ -1569,7 +1611,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
 
       // Dynamic resolution switches at this frame boundary; the canvas CSS size is unchanged, only the drawing buffer.
       const viewMoved=camera.position.distanceToSquared(lastCameraPosition)>1e-6||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-9||camera.zoom!==lastCameraZoom;
-      const resolution=motionResolution.update(now,viewMoved||Math.hypot(velocity.x,velocity.z)>.1||Boolean(learning&&!quiz?.quiz),paused||Boolean(quiz?.quiz)||aimWaiting);
+      const resolution=motionResolution.update(now,viewMoved||Math.hypot(velocity.x,velocity.z)>.1||Boolean(learning&&!quiz?.quiz),paused||Boolean(quiz?.quiz)||aimWaiting,idleFrame>0);// a rest of 8 s+ on a phone: the moving ratio (REST_SOFT_MS)
       updateHorizonHaze(scene,camera);// the camera is final for this frame (lib/graphics/horizonHaze.ts)
       if(resolution){renderer.setPixelRatio(resolution);renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);}
       heat.beforeRender(location,Boolean(learning&&!quiz?.quiz)||(!learning&&!viewMoved&&Math.hypot(velocity.x,velocity.z)<.05&&games.stats.visiblePlayers>0));renderer.render(scene,camera);renderStats.rendered++;heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,learning??'');positionStore.frame(location.x,location.z);emitIslandFrame(now);islandFrameAt.current=performance.now();if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}// minimap and thumb move on this frame (heat pass 3)
@@ -1586,7 +1628,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     });
     bootMark('town:built');
     camera.position.set(sceneSpawn.x+(initialFlying?16:18),23+initialHeight,sceneSpawn.z+(initialFlying?33:30));if(departure?.camera)camera.position.set(departure.camera.x,departure.camera.y,departure.camera.z);camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
-    return()=>{idleInput.abort();saveArcadeDeparture.current=()=>{};clearTimeout(pierNoteTimer);for(const t of cueTimers)clearTimeout(t);cueTimers.clear();pierTarget.dispose();fishing.dispose();heat.dispose();waterStore.reset();world.sharks.attend(null);rideActions.current=()=>{};if(animalRides.riding)animalRides.letGo('gone');waterActions.press=()=>{};focus.dispose();summitFun.dispose();zipline.dispose();easel.dispose();cannon.dispose();forage.dispose();beach.dispose();hiddenMarker.dispose();propReactions.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();viewGate.dispose();shadowVisibility.dispose();shadowBatches.dispose();npcShadows.dispose();characterArrival.dispose();coinHunt.dispose();offJobView();offJobEvents();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vendingKick.dispose();vending.dispose();vendingRef.current=null;ferryGlow.dispose();window.removeEventListener(GRADUATIONS_CHANGED,showFerryLock);jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
+    return()=>{idleInput.abort();swimClear.dispose();clearWin.dispose();saveArcadeDeparture.current=()=>{};clearTimeout(pierNoteTimer);for(const t of cueTimers)clearTimeout(t);cueTimers.clear();pierTarget.dispose();fishing.dispose();heat.dispose();waterStore.reset();world.sharks.attend(null);rideActions.current=()=>{};if(animalRides.riding)animalRides.letGo('gone');waterActions.press=()=>{};focus.dispose();summitFun.dispose();zipline.dispose();easel.dispose();cannon.dispose();forage.dispose();beach.dispose();hiddenMarker.dispose();propReactions.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();viewGate.dispose();shadowVisibility.dispose();shadowBatches.dispose();npcShadows.dispose();characterArrival.dispose();coinHunt.dispose();offJobView();offJobEvents();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vendingKick.dispose();vending.dispose();vendingRef.current=null;ferryGlow.dispose();window.removeEventListener(GRADUATIONS_CHANGED,showFerryLock);jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();ballEffects.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
   },[]);
   useEffect(()=>{musicRef.current?.setDucked(Boolean(fieldCatalog||lesson));},[fieldCatalog,lesson]);
   // The card code (PlayerCard, PlayerArt, photo manifests, film registry) is no longer in the island bundle: warm it while

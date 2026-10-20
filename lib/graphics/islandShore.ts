@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {WATER_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
+import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
 
 // Self-contained (the fishing shoreline in lib/town/fishing/shoreWater.ts has its own copies and its own owner).
 const WATER_Y=-.42,STRIP_Y=-.403;
@@ -173,7 +173,19 @@ function buildIslandField(renderer:T.WebGLRenderer,scene:T.Scene){
  const texture=new T.DataTexture(data,TX,TZ,T.RGBAFormat,T.HalfFloatType);texture.magFilter=texture.minFilter=T.LinearFilter;texture.generateMipmaps=false;texture.wrapS=texture.wrapT=T.ClampToEdgeWrapping;texture.needsUpdate=true;texture.name='island-shore-field';
  // The shader's copy of the true distance (the strip's fade into the ocean and its depth pull) is smoothed the same way.
  const sdfSmooth=sdf.slice();smooth121(sdfSmooth,NX,NZ,2);
- return {sdf,sdfSmooth,vis,lift,texture,box:new T.Vector4(MIN_X,MIN_Z,SIZE_X,SIZE_Z)};
+ // The CPU copy of what the shaders read (Oct 19 2026, clear water window, lib/town/water/clearWindow.ts): the 2 m drawn-waterline
+ // distance (the texture's R) and the highest ground in each 2 m cell (decks, rocks, sandbars). Two small arrays (~0.6 MB each).
+ const high2=new Float32Array(TX*TZ);for(let y=0;y<TZ;y++)for(let x=0;x<TX;x++){const a=(2*y)*NX+2*x,b=a+NX;high2[y*TX+x]=Math.max(lift[a],lift[a+1],lift[b],lift[b+1]);}
+ const cpu=isleCpuField(coarse,high2);
+ return {sdf,sdfSmooth,vis,lift,texture,cpu,box:new T.Vector4(MIN_X,MIN_Z,SIZE_X,SIZE_Z)};
+}
+/** CPU lookups on the 2 m field, bilinear like the GPU's LinearFilter (texel centres), open sea (40 m) outside its rect. */
+export type IsleCpuField={distance(x:number,z:number):number;lift(x:number,z:number):number};
+function isleCpuField(dist:Float32Array,high:Float32Array):IsleCpuField{
+ const at=(f:Float32Array,x:number,z:number,out:number)=>{const fx=(x-MIN_X)/STEP-.5,fz=(z-MIN_Z)/STEP-.5;if(fx<0||fz<0||fx>TX-1||fz>TZ-1)return out;
+  const ix=Math.min(TX-2,Math.floor(fx)),iz=Math.min(TZ-2,Math.floor(fz)),tx=fx-ix,tz=fz-iz,i=iz*TX+ix;
+  return (f[i]*(1-tx)+f[i+1]*tx)*(1-tz)+(f[i+TX]*(1-tx)+f[i+TX+1]*tx)*tz;};
+ return {distance:(x,z)=>at(dist,x,z,40),lift:(x,z)=>{const fx=Math.floor((x-MIN_X)/STEP),fz=Math.floor((z-MIN_Z)/STEP);return fx<0||fz<0||fx>=TX||fz>=TZ?-.5:high[fz*TX+fx];}};
 }
 
 const STRIP_GLSL=/* glsl */`
@@ -210,6 +222,8 @@ const STRIP_GLSL=/* glsl */`
  // Water: a clear sheet over the sand at its edge, turquoise over the sand slope and out to where the ocean takes over.
  vec3 waterC=mix(sheetC,shallowC,smoothstep(-.1,1.1,max(d,0.)+wd*.4));
  float waterA=mix(.5,.95,smoothstep(0.,.8,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
+ // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
+ waterA*=1.-.55*clearWinMask(vWaterXZ,1.);
  vec3 col=mix(wetSand,waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
  // Foam: a bright soft edge with some body, lacy patches trailing behind it, breaking up as the wave slides back.
  float fw=mix(.3,.75,rush);
@@ -223,13 +237,15 @@ const STRIP_GLSL=/* glsl */`
 
 /** The island shoreline: call `bake` once with the renderer (Town, at mount). `group` is a scenery root (world.setVisible). */
 export function createIslandShore(group:T.Group){
- let noise:T.Texture|null=null,texture:T.Texture|null=null;const geometries:T.BufferGeometry[]=[];let material:T.MeshLambertMaterial|null=null;
+ let noise:T.Texture|null=null,texture:T.Texture|null=null,cpu:IsleCpuField|null=null;const geometries:T.BufferGeometry[]=[];let material:T.MeshLambertMaterial|null=null;
  const stats={bakeMs:0,tiles:0,triangles:0,baked:false};
  return {
   stats,
+  /** The baked field on the CPU (null before the bake). */
+  get field(){return cpu;},
   bake(renderer:T.WebGLRenderer,scene:T.Scene){
    if(stats.baked)return;stats.baked=true;const t0=performance.now();
-   const field=buildIslandField(renderer,scene);texture=field.texture;noise=laceNoise();
+   const field=buildIslandField(renderer,scene);texture=field.texture;cpu=field.cpu;noise=laceNoise();
    setIsleField(field.texture,field.box);
    const {sdf,sdfSmooth,vis,lift}=field,rough=shoreRough(lift,NX,NZ,1),keepTall=(k:number)=>sdf[k]<=0&&lift[k]>.75;
    // Sand skirts drawn as shallow water (vis > 0, above the true water): shoreDrape keeps the strip off a boulder or a kerb and off
@@ -275,14 +291,14 @@ export function createIslandShore(group:T.Group){
    material=new T.MeshLambertMaterial({color:'#ffffff',transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
    const waterNoise=noise;
    material.onBeforeCompile=shader=>{
-    Object.assign(shader.uniforms,WATER_UNIFORMS,{uWaterNoise:{value:waterNoise}});
+    Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,{uWaterNoise:{value:waterNoise}});
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue;varying vec2 vWaterXZ;'+SHORE_PULL_GLSL)
      .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;shorePull(mvPosition,shore,open);');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue;varying vec2 vWaterXZ;uniform sampler2D uWaterNoise;\n'+SHORE_GLSL)
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue;varying vec2 vWaterXZ;uniform sampler2D uWaterNoise;\n'+SHORE_GLSL+CLEAR_WIN_GLSL)
      .replace('#include <map_fragment>',STRIP_GLSL)
      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
    };
-   material.customProgramCacheKey=()=>'island-shore-strip-v3';
+   material.customProgramCacheKey=()=>'island-shore-strip-v5';
    for(const tile of tiles.values()){
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(tile.positions,3));g.setAttribute('lift',new T.Float32BufferAttribute(tile.lifts,1));g.setAttribute('shore',new T.Float32BufferAttribute(tile.shores,1));g.setAttribute('vis',new T.Float32BufferAttribute(tile.viss,1));g.setAttribute('open',new T.Float32BufferAttribute(tile.opens,1));
     g.setAttribute('normal',new T.Float32BufferAttribute(new Float32Array(tile.positions.length).map((_,i)=>i%3===1?1:0),3));g.setIndex(tile.indices);g.computeBoundingSphere();geometries.push(g);

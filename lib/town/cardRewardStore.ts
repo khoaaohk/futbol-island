@@ -1,6 +1,7 @@
 'use client';
 import {useSyncExternalStore} from 'react';
-import {ALL_PLAYERS,CARD_ENTRIES,CARD_STORAGE_KEY,addToCollection,cardDevEarn,readCollection} from './cardCollection';
+import {ALL_PLAYERS,CARD_ENTRIES,CARD_STORAGE_KEY,addToCollection,cardDevEarn,cardNumber,readCollection} from './cardCollection';
+import {countCardFound} from '../analytics/sponsorEvents';
 import {isLearningPreview} from './learningProgress';
 import {CARD_REWARDS_ENABLED,OFFERS_STORAGE_KEY,dayKey,drawThemedOffer,emptyOfferState,mergeOfferState,npcPickState,refreshOffer,sanitizeOfferState,sourceKey,tierGate,type CardOffer,type OfferState,type RewardKind,type Theme} from './cardRewards';
 import {cardTier,readPathProgress} from './cardTiers';
@@ -90,7 +91,8 @@ export function showCardInBinder(name:string){spotRequest=name;window.dispatchEv
 /** The child picks `name` from offer `id`: the card joins the collection, the offer is resolved, and the binder is told. */
 export function chooseOfferCard(id:string,name:string):boolean{
  const offer=read().offers.find(o=>o.id===id);if(!offer||!offer.cards.includes(name))return false;
- addToCollection(name);resolveOffer(id);spotRequest=name;
+ if(addToCollection(name))countCardFound(offer.kind,cardTier(name),cardNumber(name));// sponsor analytics: a NEW card, how it was found, tier, binder number
+ resolveOffer(id);spotRequest=name;
  window.dispatchEvent(new CustomEvent(CARD_ADDED,{detail:{name}}));
  return true;
 }

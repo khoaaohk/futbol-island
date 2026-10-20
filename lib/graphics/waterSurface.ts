@@ -12,7 +12,7 @@ import * as T from 'three';
  * - The ocean (one plane, island-wide) samples its painted ripple tile once (phones) or twice in two directions and speeds
  *   (desktop), and reads ONE whole-island signed distance-to-shore texture (`uIsleTex`, baked once at load by islandShore.ts):
  *   a sand-to-turquoise-to-teal depth gradient, Animal Crossing-style ripple lines drifting toward every beach, whitecaps close in
- *   and, on desktop only, sun sparkles.
+ *   light streaks and, as an accent, sun glitter (WATER_GLIMMER_GLSL).
  * - While fishing, a sharper local field round the spot (`uShoreTex` in `uShoreBox`, lib/town/fishing/shoreWater.ts) overrides the
  *   island field inside its box (blended over the box's edge), and the fishing strip takes over from the island strip there.
  *
@@ -106,17 +106,111 @@ export const SHORE_PULL_GLSL=/* glsl */`
 void shorePull(vec4 mv,float d,float open){float k=open*mix(.15,.3,smoothstep(-1.5,-.3,d))*(1.-smoothstep(.6,1.6,d));gl_Position=projectionMatrix*vec4(mv.xyz*(1.-k/max(length(mv.xyz),1.)),1.);}
 `;
 
+/**
+ * The swimmer's clear disc (lib/graphics/swimClear.ts, Oct 19 2026, docs/water-look-research.md §4): within SWIM_CLEAR.radius of
+ * `uSwimXZ` the ocean's alpha falls to SWIM_CLEAR.minAlpha (soft over the last SWIM_CLEAR.edge m), scaled by the eased strength
+ * `uSwimClear`. It is read only by the blended program swimClear switches to while swimming; the normal (opaque) program never
+ * runs it, so the sea is exactly today's whenever nobody swims.
+ */
+// Oct 19 2026 (deep-sea circle): wider, softer disc; out past the shallows (shore distance 7-20 m) it only thins to deepAlpha, so the
+// quad under it never reads as a pale patch on the dark sea (swimClear.ts darkens the quad with depth too).
+export const SWIM_CLEAR={radius:9.5,edge:5.5,minAlpha:.32,deepAlpha:.86,diveAlpha:.36} as const;
+// Diving (uSwimDive 0..1, swimClear.ts eases it with the dive): out in deep water the disc clears down to SWIM_CLEAR.diveAlpha so the
+// submerged body reads (not a faint shape under a bubble ring); same radius and soft edge.
+export const SWIM_CLEAR_UNIFORMS={uSwimClear:{value:0},uSwimXZ:{value:new T.Vector2()},uSwimDive:{value:0}};
+const SWIM_CLEAR_GLSL=/* glsl */`
+uniform float uSwimClear,uSwimDive;uniform vec2 uSwimXZ;
+float swimClearAlpha(vec2 xz,float d){float r=distance(xz,uSwimXZ),a=mix(${SWIM_CLEAR.minAlpha.toFixed(2)},mix(${SWIM_CLEAR.deepAlpha.toFixed(2)},${SWIM_CLEAR.diveAlpha.toFixed(2)},uSwimDive),smoothstep(7.,20.,d));
+ return 1.-uSwimClear*(1.-smoothstep(${(SWIM_CLEAR.radius-SWIM_CLEAR.edge).toFixed(2)},${SWIM_CLEAR.radius.toFixed(2)},r))*(1.-a);}
+`;
+/**
+ * The clear water window (lib/town/water/clearWindow.ts, Oct 19 2026, docs/water-look-research.md §3): round the player
+ * (`uClearWin` x, z), only over the shallows of the shore field (drawn-waterline distance CLEAR_WIN.band), the ocean's alpha drops
+ * so the seabed, coral and sharks under it show, fading back to opaque over the last CLEAR_WIN.fade of its radius (no edge). Centre .xy (the point the camera looks at), strength in .z
+ * (eased; 0 = the window is off), radius in .w (m, set per heat tier and camera height). ONE vec4 uniform. Like the swim disc, only the blended program runs it.
+ */
+export const CLEAR_WIN={radius:35,fade:.3,band:[16,26] as const,alpha:[.14,.42] as const} as const;// Oct 19 2026 audit: .16/.5 -> .14/.42, the coral colour reads through
+/**
+ * Low-frequency world noise (two octaves, ~90 m and ~140 m, domain-warped sines; GLSL `clearWinW` is the same formula) that
+ * gently varies the clear band's outer edge: `clearWinK` scales the shore distance (0.85 = a long smooth bay about 5 m wider,
+ * 1.2 = about 5 m narrower; no jagged or patchy edge). The coral scatter (clearWindow.ts) uses the same functions, so coral and the clear water agree.
+ */
+export function clearWinNoise(x:number,z:number,s1=.07,s2=.045,o=31){
+ const w=(a:number,b:number)=>.5+.5*Math.sin(a+1.7*Math.sin(b*.8))*Math.sin(b*1.2+1.7*Math.sin(a*.7));
+ const n=w(x*s1,z*s1)*.62+w(x*s2+o,z*s2+o*.55)*.38;return Math.min(1,Math.max(0,(n-.5)*1.9+.5));}
+export const clearWinK=(x:number,z:number)=>.85+.35*clearWinNoise(x,z);
+export const CLEAR_WIN_UNIFORMS={uClearWin:{value:new T.Vector4(0,0,0,0)}};
+export const CLEAR_WIN_GLSL=/* glsl */`
+uniform vec4 uClearWin;
+float clearWinW(vec2 p,float s1,float s2,float o){vec2 a=p*s1,b=p*s2+vec2(o,o*.55);
+ float n1=.5+.5*sin(a.x+1.7*sin(a.y*.8))*sin(a.y*1.2+1.7*sin(a.x*.7)),n2=.5+.5*sin(b.x+1.7*sin(b.y*.8))*sin(b.y*1.2+1.7*sin(b.x*.7));
+ return clamp((n1*.62+n2*.38-.5)*1.9+.5,0.,1.);}
+/** The shore distance as the window sees it: scaled by the low-frequency noise so the band's edge meanders (bays and hugging stretches). */
+float clearWinD(vec2 xz,float d){float n=clearWinW(xz,.07,.045,31.);return d>0.?d*(.85+.35*n):d;}
+/** 1 - how see-through the window is here (d = drawn-waterline distance, + at sea). */
+float clearWinMask(vec2 xz,float d0){if(uClearWin.z<=0.)return 0.;float r=distance(xz,uClearWin.xy),d=clearWinD(xz,d0);
+ return uClearWin.z*(1.-smoothstep(uClearWin.w*${(1-CLEAR_WIN.fade).toFixed(2)},uClearWin.w,r))*(1.-smoothstep(${CLEAR_WIN.band[0].toFixed(1)},${CLEAR_WIN.band[1].toFixed(1)},d))*smoothstep(-.6,.4,d0);}
+float clearWinAlpha(float m,float d){return mix(1.,mix(${CLEAR_WIN.alpha[0].toFixed(2)},${CLEAR_WIN.alpha[1].toFixed(2)},smoothstep(1.,${CLEAR_WIN.band[0].toFixed(1)},d)),m);}
+`;
+/**
+ * Surface glimmer (Oct 19 2026, "what about the glimmer on top of the water?" then "more like the light streaks you can see in
+ * the water", the Tide Bound reference; docs/performance-guide.md "Surface light streaks").
+ * - Light streaks (the main look, Oct 19 2026 retune): a sparse caustic net of thin pale lines round ~6 m cells (waterRibbon:
+ *   drifting Voronoi edges, ALU only; earlier lozenge ribbons and a warped-sine net both read as thick stripes from high up). Bent by the field and sea noise so they never line up, drifting slowly sideways. Desktop: two layers at two
+ *   sizes and headings; phone and the still path (heat tiers 3-4, reduced motion, governor slow): one layer, the still path
+ *   faint and static (the clock is held). A diffuse tint, not glare, strongest within ~100 m of the camera's look point (from
+ *   viewMatrix), soft right under the camera, out of the foam, none on land, a little brighter toward the sun's reflection.
+ *   Over the clear window the alpha rises on them so they sit ON the water above the coral (not over the swim disc).
+ * - Glitter: a very light accent of sun specks (one cell layer, ALU only, a 0.33-0.8 s flash each, >= ~1.3 px and faded out
+ *   before the cells get small, so no aliasing), coloured by the sun light (directionalLights[0] = colour x intensity from
+ *   islandLighting's time of day): warm white by day, honey at sunset, moon-pale and ~a quarter as bright at night.
+ */
+export const WATER_GLIMMER_GLSL=/* glsl */`
+float glimHash(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+/** The point the camera looks at on the water (the view ray through the screen centre). */
+vec2 waterLook(){vec3 fw=-vec3(viewMatrix[0][2],viewMatrix[1][2],viewMatrix[2][2]);return cameraPosition.xz+fw.xz*(max(cameraPosition.y+.43,1.)/max(-fw.y,.15));}
+/** Sun-reflection weight, a wide lobe for a steep (jetpack) camera so it never vanishes. */
+float waterSunLobe(vec2 xz){vec3 v=normalize(vec3(xz.x,-.43,xz.y)-cameraPosition);float r=max(dot(vec3(v.x,-v.y,v.z),uSunDir),0.);
+ return mix(.35+.65*r*r*r,.7+.3*r,smoothstep(.7,.95,-v.y));}
+/** One layer of the caustic net (q: world, turned; sc: size): a sparse web of thin pale lines round ~6 m cells (x sc), like
+ *  sunlight on a pool floor: the edges of a drifting Voronoi net (9 hashes, ALU only), bent by a slow warp and the field / sea
+ *  noise n. Lines ~0.27 m wide (never under ~1.5 px: they widen and fade with the pixel footprint), each stretch breathing in
+ *  and out on its own, so most of the water stays clear and the coral / sand read through. */
+float waterRibbon(vec2 q,float n,float t,float sc,float pxm){
+ // Oct 19 2026 (user, "Tide Bound" caustic reference; the warped-sine net read as thick parallel stripes from the jetpack).
+ float cs=sc*2.1;vec2 p=q/cs;p+=.18*vec2(sin(p.y*2.1+t*.6+n*3.),sin(p.x*1.9-t*.5-n*3.));
+ vec2 c=floor(p),f=p-c;float d1=8.,d2=8.;
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(x,y),h=fract(vec2(glimHash(c+o),glimHash(c+o+17.3)));
+  vec2 r=o+.5+.38*sin(t*(.3+.3*h)+6.2832*h)-f;float e=dot(r,r);if(e<d1){d2=d1;d1=e;}else d2=min(d2,e);}
+ float w=.034+1.5*pxm/cs;// pxm: the pixel footprint (m), taken outside any branch
+ return (1.-smoothstep(0.,w,sqrt(d2)-sqrt(d1)))*min(1.,.045/w*1.6)*(.3+.7*smoothstep(-.4,.9,sin(t*.7+p.x*2.3-p.y*1.7+n*4.)));}
+/** Sparse sun glitter (accent only): additive light, ALU only. */
+vec3 waterGlimmer(vec2 xz,float d,float lobe){
+ #if NUM_DIR_LIGHTS>0
+ if(uWaterDetail<.5)return vec3(0.);
+ return vec3(0.);// Oct 20 2026 (user: "remove those blinking glimmer"): the sparkle specks are off; the light net is the surface light now
+ float pxm=max(length(dFdx(xz)),length(dFdy(xz))),k=(1.-smoothstep(.08,.2,pxm/.75))*smoothstep(1.5,6.,d);if(k<=0.)return vec3(0.);
+ vec2 p=xz/.75+uWaterTime*vec2(.07,.03),c=floor(p),f=p-c;float h=glimHash(c),dens=.04+.06*lobe;if(h>dens)return vec3(0.);
+ float h2=fract(h*61.7+.13),h3=fract(h*23.3+.37),ph=fract(uWaterTime*(1.25+1.75*h2)+h3),rad=max(.11,1.3*pxm/.75);
+ float g=smoothstep(0.,.18,ph)*(1.-smoothstep(.18,.5,ph))*(1.-smoothstep(rad*.4,rad,length(f-.2-.6*vec2(h2,h3))));
+ vec3 sunL=directionalLights[0].color*.333;return vec3(1.,.96,.88)*mix(vec3(dot(sunL,vec3(.3,.59,.11))),sunL,.3)*(g*k*lobe*1.1);
+ #else
+ return vec3(0.);
+ #endif
+}
+`;
 /** Patch the island ocean material (MeshStandardMaterial with the ripple tile as `map`). Safe to call once per material. */
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
  material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,WATER_UNIFORMS);
+  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,CLEAR_WIN_UNIFORMS);
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;\n'+SHORE_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;\n'+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
+   .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
     if(uShore>.999&&shoreEdge(vWaterXZ)>.999){float cd=shoreSample(vWaterXZ).r;if(cd>.02&&cd<14.9){gl_FragColor=vec4(0.,0.,0.,1.);return;}}
-    float waterGlint=0.;vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
+    float waterStreak=0.,waterLobe=.5;vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
     #ifdef USE_MAP
     // Two drifting layers of the painted ripple tile (one on phones and on the still path), their strokes bent by the field's
     // noise so they read as wavy ripples instead of long straight streaks.
@@ -124,8 +218,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     vec2 wq=vWaterXZ*.11;float seaN=.5+.5*sin(wq.x+1.7*sin(wq.y*.8))*sin(wq.y*1.2+1.7*sin(wq.x*.7));
     vec2 rUv=vMapUv+(s.gb-.5)*.24+(seaN-.5)*vec2(.12,-.1);
     vec4 rippleA=texture2D(map,rUv+uWaterTime*vec2(.014,.006));ripple=rippleA;
-    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));ripple=max(rippleA,rippleB);
-     waterGlint=smoothstep(.93,1.,min(rippleA.g,rippleB.g)+.02);}
+    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));ripple=max(rippleA,rippleB);}
     // The tile repeats every 32 m: patches of it fade out on the 14 m noise, so its strokes never line up into long streaks.
     diffuseColor*=mix(vec4(.95),ripple,.3+.7*smoothstep(.3,.7,s.g*.45+s.b*.4+seaN*.5-.15));
     #endif
@@ -134,6 +227,8 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      vec3 shallowC=mix(vec3(.17,.56,.57),vec3(.05,.42,.53),smoothstep(.3,5.,d));
      float nearK=1.-smoothstep(3.,24.,d);
      diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
+     // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
+     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.02,.19,.4),smoothstep(25.,110.,d)*.55);
      float crest=0.;
      if(uWaterDetail>.5){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
@@ -146,14 +241,43 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       diffuseColor.rgb+=reach*crest*vec3(.1,.14,.12);
       // Animal Crossing-style white ripple lines on the crest close in, broken up by the ripple tile and the noise.
       diffuseColor.rgb+=reach*smoothstep(.9,1.,ph)*smoothstep(11.,3.,d)*smoothstep(.9,1.,ripple.r+.1*s.b)*vec3(.35);
-      // Sun sparkle (desktop only): glints where the two ripple layers cross, brightest toward the sun's reflection.
-      if(uWaterDetail>1.5){vec3 v=normalize(vec3(vWaterXZ.x,-.43,vWaterXZ.y)-cameraPosition);float sun=max(dot(vec3(v.x,-v.y,v.z),uSunDir),0.);
-       waterGlint*=(.3+.7*sun*sun*sun)*(.6+.8*crest)*smoothstep(4.,9.,d);}
      }
-     if(uWaterDetail<1.5)waterGlint=0.;
+     #ifdef USE_MAP
+     // Light streaks (WATER_GLIMMER_GLSL notes): soft ribbons, ALU only (no texture read), one layer on phones / the still path,
+     // two on desktop; each fades to its mean sheen before its bands get thinner than ~2 px (no moire out at sea).
+     float H=max(cameraPosition.y+.43,8.),lr=distance(vWaterXZ,waterLook()),cr=distance(vWaterXZ,cameraPosition.xz);
+     float reachS=smoothstep(1.5,7.,d)*(1.-smoothstep(.5*H+15.,1.5*H+50.,lr))*(.5+.5*smoothstep(3.,.8*H+8.,cr));
+     waterLobe=waterSunLobe(vWaterXZ);
+     float pxS=max(length(dFdx(vWaterXZ)),length(dFdy(vWaterXZ))),nS=seaN+s.g-.5;
+     if(reachS>0.){float t=uWaterTime;
+      float k1=1.-smoothstep(.25,.6,pxS),st=k1*waterRibbon(mat2(.86,.51,-.51,.86)*vWaterXZ,nS,t,1.,pxS)+.04*(1.-k1);
+      if(uWaterDetail>1.5){float k2=1.-smoothstep(.4,.9,pxS);st=max(st,.6*k2*waterRibbon(mat2(.93,.37,-.37,.93)*vWaterXZ+vec2(37.,11.),-nS,-t*.8,1.45,pxS));}
+      float nearS=1.-smoothstep(10.,45.,d);// Oct 19 2026: the net reads strongest in the shallows by the beaches
+      // A low camera (the fishing view, ~5 m up; Oct 19 2026 one shore) sees the ribbons big and near: they read as a white fog
+      // over the clear window, so they fade to a hint below ~18 m of camera height (the walking / flying views are unchanged).
+      // A high (jetpack) camera sees many cells at once: the net eases to ~60% above ~20 m so it never becomes a sheet.
+      waterStreak=st*reachS*(.75+.25*waterLobe)*(.2+1.3*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
+     #endif
     }`)
-   .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterGlint*vec3(1.,.96,.88)*1.4;');
+   // Swimming (swimClear.ts) and the clear window (clearWindow.ts): only the blended program (no OPAQUE define, used while either
+   // is open) writes an alpha: it follows depth (clearer over the sand, bluer further out) and rises on the light streaks, so they
+   // read as ribbons on the surface above the coral (they replace the window's old stretched light bands: one read fewer).
+   .replace('#include <opaque_fragment>',`vec3 waterGlim=waterGlimmer(vWaterXZ,d,waterLobe);
+    #ifndef OPAQUE
+    {float wm=clearWinMask(vWaterXZ,d);outgoingLight+=min(waterStreak,1.2)*wm*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
+     diffuseColor.a=min(swimClearAlpha(vWaterXZ,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d)));
+     diffuseColor.a+=(1.-diffuseColor.a)*min(waterStreak*.2,.25)*(1.-uSwimClear*(1.-smoothstep(4.,${SWIM_CLEAR.radius.toFixed(1)},distance(vWaterXZ,uSwimXZ))));}
+    #endif
+    // Glimmer last, ON the surface: over the see-through window the blend would scale it by the low alpha, so the alpha rises
+    // by the glimmer's own brightness and the colour is rebalanced (= src*a + glimmer over the coral, an exact additive speck).
+    #ifdef OPAQUE
+    outgoingLight+=waterGlim;
+    #else
+    {float ga=diffuseColor.a,a2=ga+(1.-ga)*clamp(dot(waterGlim,vec3(.3,.59,.11)),0.,1.);outgoingLight=(outgoingLight*ga+waterGlim)/max(a2,.001);diffuseColor.a=a2;}
+    #endif
+    #include <opaque_fragment>`);
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v3';
+ material.customProgramCacheKey=()=>'island-ocean-water-v8';
  material.needsUpdate=true;
 }

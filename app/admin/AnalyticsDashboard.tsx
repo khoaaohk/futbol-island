@@ -18,11 +18,16 @@ import LivePanel,{type PanelView} from './LivePanel';
 import SourcesSection from './SourcesSection';
 import liveStyles from './LivePanel.module.css';
 import styles from './admin.module.css';
+import SponsorOverview from './SponsorOverview';
+import so from './SponsorOverview.module.css';
 
-type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'custom';
-const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'custom',label:'Custom'}];
-/** Oct 11 2026: the dashboard order, most important for investors first. */
-const SECTIONS:[string,string][]=[['sec-headline','Headline'],['sec-engagement','Engagement'],['sec-acquisition','Acquisition'],['sec-product','Product usage'],['sec-health','Save health'],['sec-detail','Detail']];
+type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'all'|'custom';
+const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'all',label:'All'},{id:'custom',label:'Custom'}];
+/** Oct 20 2026: tabs instead of one long page (owner: "fix the admin portal so it's easier to find this"). Overview = the sponsor
+ *  view (SponsorOverview.tsx); Engagement = engagement, product usage and the learning / title-screen detail; Players = headline,
+ *  acquisition and save health; Live = who is on now and each day's players. The sections keep their investor order in source. */
+type Tab='overview'|'engagement'|'players'|'live';
+const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],['players','Players'],['live','Live']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',shop:'Kit Shop',controller:'Phone controller',other:'Other pages'};
@@ -69,6 +74,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
    .then(j=>{if(!gone&&j&&j.status==='ok'&&typeof j.players==='number')setPlayerCount(j.players);}).catch(()=>{});
   return()=>{gone=true;};
  },[report.from,report.to,report.generatedAt]);
+ const [tab,setTabState]=useState<Tab>('overview');
+ // The tab lives in the URL hash (#engagement …) so a reload or a shared link opens the same tab.
+ useEffect(()=>{const h=location.hash.slice(1);if(TABS.some(([t])=>t===h))setTabState(h as Tab);},[]);
+ const setTab=(t:Tab)=>{setTabState(t);try{history.replaceState(null,'',t==='overview'?location.pathname+location.search:'#'+t);}catch{}};
  const query=useRef(`range=${initialRange}`);
  // The first paint's data came from the server moments ago; stamp it client-side once mounted (avoids an SSR/client
  // Date.now() hydration mismatch).
@@ -127,6 +136,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <h1><small>Admin</small>Analytics</h1>
    </header>
 
+   <div className={so.tabs} role="tablist" aria-label="Admin sections">
+    {TABS.map(([id,label])=><button key={id} type="button" role="tab" id={'tab-'+id} aria-selected={tab===id} aria-controls="admin-tabpanel" className={so.tab} data-tab={id} onClick={()=>setTab(id)}>{label}</button>)}
+   </div>
+
    <div className={styles.filters} role="group" aria-label="Date range">
     {PRESETS.map(p=><button key={p.id} type="button" className={styles.chip} aria-pressed={preset===p.id} onClick={()=>choose(p.id)}>{p.label}</button>)}
     {preset==='custom'&&<form className={styles.custom} onSubmit={e=>{e.preventDefault();applyCustom();}}>
@@ -173,12 +186,20 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
    </section>}
    {error&&<section className={styles.banner} role="alert">{error}</section>}
 
-   <nav aria-label="Sections"><ol className={styles.toc}>{SECTIONS.map(([id,label],i)=><li key={id}><a href={'#'+id}>{i+1}. {label}</a></li>)}</ol></nav>
-
-   {/* Oct 11 2026: ordered for investors, most important first (headline → engagement → acquisition → product → save health → detail). */}
-   <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading}>
-    <section className={styles.island} aria-labelledby="sec-headline">
-     <div className={styles.sectionHead}><h2 id="sec-headline"><span className={styles.sectionNum}>1</span>Headline</h2>
+   {/* Oct 11 2026: ordered for investors, most important first (headline → engagement → acquisition → product → save health → detail);
+       Oct 20 2026: each section shows on its tab (TABS above). */}
+   <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading} role="tabpanel" id="admin-tabpanel" aria-labelledby={'tab-'+tab}>
+    {tab==='overview'&&<SponsorOverview report={report} rangeText={rangeText} playerCount={playerCount} countryName={countryName}/>}
+    {tab==='live'&&<section className={styles.island} aria-labelledby="sec-live">
+     <div className={styles.sectionHead}><h2 id="sec-live">Live</h2><p>Who is playing right now, and each day’s players one by one (anonymous; the last 14 days).</p></div>
+     <div className={so.liveGrid}>
+      <button type="button" className={so.liveCard} aria-haspopup="dialog" onClick={()=>openPanel({mode:'live'})}><span>On now</span><b>{fmtInt(report.live)}</b><small>Tabs that sent anything in the last 5 minutes. Tap for each session.</small></button>
+      <button type="button" className={so.liveCard} aria-haspopup="dialog" onClick={()=>openPanel({mode:'day',day:tm?.today??report.to})}><span>Today’s players</span><b>Today ›</b><small>Every session that started today, newest first.</small></button>
+      <button type="button" className={so.liveCard} aria-haspopup="dialog" onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})}><span>Players in this range</span><b>{playerCount===null?'Players':fmtInt(playerCount)} ›</b><small>One row per anonymous player; tap one for their sessions.</small></button>
+     </div>
+    </section>}
+    {tab==='players'&&    <section className={styles.island} aria-labelledby="sec-headline">
+     <div className={styles.sectionHead}><h2 id="sec-headline">Headline</h2>
       <p>Players, save codes and growth for {rangeText}, each compared with the same number of days just before. Save-code counts (active, returning, retention, stored) are as of today.</p></div>
      <HeadlineTiles report={report} onOpenDay={day=>openPanel({mode:'day',day})}/>
      <ChartCard wide title="Visitors, sessions and page views" subtitle={`${hourly?'By hour':'By day'} (${clock}${tm?.utcDays.length?'; * = a UTC day, frozen before Pacific time':''}). Visitors are unique per ${hourly?'hour':'day'}.`} empty={empty}
@@ -195,10 +216,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
       <WeeklyCodesCard d={sd} saves={report.saves}/>
       <RetentionCard d={sd} saves={report.saves}/>
      </div>
-    </section>
+    </section>}
 
-    <section className={styles.island} aria-labelledby="sec-engagement">
-     <div className={styles.sectionHead}><h2 id="sec-engagement"><span className={styles.sectionNum}>2</span>Engagement</h2>
+    {tab==='engagement'&&    <section className={styles.island} aria-labelledby="sec-engagement">
+     <div className={styles.sectionHead}><h2 id="sec-engagement">Engagement</h2>
       <p>How long and how often they play, what they learn, and which save codes keep coming back.</p></div>
      <EngagementTiles report={report}/>
      <div className={styles.grid}>
@@ -210,10 +231,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
        <Columns rows={report.distribution.map(b=>({label:b.label,value:b.sessions}))} unit="sessions"/>
       </ChartCard>
      </div>
-    </section>
+    </section>}
 
-    <section className={styles.island} aria-labelledby="sec-acquisition">
-     <div className={styles.sectionHead}><h2 id="sec-acquisition"><span className={styles.sectionNum}>3</span>Acquisition</h2>
+    {tab==='players'&&    <section className={styles.island} aria-labelledby="sec-acquisition">
+     <div className={styles.sectionHead}><h2 id="sec-acquisition">Acquisition</h2>
       <p>From the title screen to a code that comes back, and where visitors come from.</p></div>
      <InvestorFunnel report={report}/>
      <div className={styles.grid}>
@@ -240,10 +261,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
       </ChartCard>
      </div>
      <SourcesSection report={report} countryName={countryName}/>
-    </section>
+    </section>}
 
-    <section className={styles.island} aria-labelledby="sec-product">
-     <div className={styles.sectionHead}><h2 id="sec-product"><span className={styles.sectionNum}>4</span>Product usage</h2>
+    {tab==='engagement'&&    <section className={styles.island} aria-labelledby="sec-product">
+     <div className={styles.sectionHead}><h2 id="sec-product">Product usage</h2>
       <p>Which parts of the game get used: places on the island (Coaches Board included), the arcade, the museum and the Football plan.</p></div>
      <div className={styles.grid}>
       <ChartCard title="Where they spend time" subtitle="Foreground minutes by area" empty={empty||!report.areas.length}
@@ -256,10 +277,10 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      <SummitKitSection report={report}/>
      <FishingSection report={report}/>
      <WaterSection report={report}/>
-    </section>
+    </section>}
 
-    <section className={styles.island} aria-labelledby="sec-health">
-     <div className={styles.sectionHead}><h2 id="sec-health"><span className={styles.sectionNum}>5</span>Save health and operations</h2>
+    {tab==='players'&&    <section className={styles.island} aria-labelledby="sec-health">
+     <div className={styles.sectionHead}><h2 id="sec-health">Save health and operations</h2>
       <p>Rate limits, the breaker, the saving-break card, storage and the 12-month expiry pipeline.</p>
       {saves&&<p className={styles.note} data-save-status>{saves}</p>}</div>
      <SaveMetricsBanner saves={report.saves}/>
@@ -267,14 +288,14 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
       <SaveHealthCard report={report}/>
       <SaveStorageCard d={sd} saves={report.saves}/>
      </div>
-    </section>
+    </section>}
 
-    <section className={styles.island} aria-labelledby="sec-detail">
-     <div className={styles.sectionHead}><h2 id="sec-detail"><span className={styles.sectionNum}>6</span>Detail</h2>
+    {tab==='engagement'&&    <section className={styles.island} aria-labelledby="sec-detail">
+     <div className={styles.sectionHead}><h2 id="sec-detail">Detail</h2>
       <p>The full title-screen breakdown (every funnel, For grown-ups, donations, privacy) and the learning detail (lesson funnels, question analysis, settings).</p></div>
      <StartSection report={report} countryName={countryName}/>
      <LearningSection report={report}/>
-    </section>
+    </section>}
    </div>
   </div>
   <LivePanel view={panel} onClose={closeLive} countryName={countryName}/>

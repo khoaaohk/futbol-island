@@ -94,6 +94,7 @@ export default function PrivacyPolicy(){
     <li>which part of the game was opened first, from a fixed list;</li>
     <li>time spent while the game is on screen, in total and by area (for example the island, the arcade or the museum), by place on the island, by activity (such as walking, fishing or a lesson), and by 20-metre square of the island map. These are totals; we never record a route or the order in which places were visited (only, for a visit still under way, the part of the game it is in now and the one before);</li>
     <li>counts of learning steps from fixed lists: lessons opened and finished, which answer was chosen first on each quiz question, steps of the welcome walkthrough, football-plan actions, and broad progress bands (such as “1–3 lessons done”);</li>
+    <li>counts of play from fixed lists: arcade games started, designs saved by their pattern or boot model (never the colours, name, number or drawing), cards added to the binder (how they were found and which footballer’s card), card films and pop-up books opened, finished or bought, and how long a book stayed open in broad bands (such as “1–3 minutes”);</li>
     <li>which buttons and links on the start page are tapped (for example Start, For grown-ups or Donate), counted as totals;</li>
     <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
     <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code.</li>

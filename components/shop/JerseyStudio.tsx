@@ -30,6 +30,7 @@ import type {JerseySceneApi,JerseyFocus,JerseyAngle,DrawConfig,DrawTool,PaintLoc
 import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
 import type {StageInsets} from '@/lib/shop/studioSheet';
 import {countDesignSave} from '@/lib/analytics/shopEvents';
+import {countJerseyStyle} from '@/lib/analytics/sponsorEvents';
 
 type Step='style'|'colours'|'pattern'|'draw'|'crest'|'name'|'done';
 const STEPS:{id:Step;label:string}[]=[{id:'style',label:'Style'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'draw',label:'Draw'},{id:'crest',label:'Crest'},{id:'name',label:'Name & number'},{id:'done',label:'Done'}];
@@ -218,7 +219,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
  const saveToSlot=(i:number)=>{
   const named=`${d.name.trim()?`${d.name.trim()} `:''}${d.number??''}`.trim()||`Design ${i+1}`;
   setSave(s=>{const slots=s.slots.slice();slots[i]={name:cleanName(named)||`Design ${i+1}`,design:d,savedAt:Date.now()};const n={...s,slots,current:d};writeJerseySave(n);return n;});
-  setSlot(i);setSlotPicker(false);setReplaceArm(null);say(`Saved in slot ${i+1}`);countDesignSave('jersey');
+  setSlot(i);setSlotPicker(false);setReplaceArm(null);say(`Saved in slot ${i+1}`);countDesignSave('jersey');countJerseyStyle(d.pattern);
  };
  const loadSlot=(i:number)=>{const sl=save.slots[i];if(!sl)return;pulseNext.current=true;const v=validateJersey(sl.design).design;dispatch({type:'set',design:v,key:'load'});setNameDraft(v.name);setSlot(i);setSlotPicker(false);say(`Loaded slot ${i+1}`);};
  const randomise=()=>{pulseNext.current=true;dispatch({type:'set',design:randomJersey({name:d.name,number:d.number,art:d.art,crest:d.crest})});say('Shuffled!');};

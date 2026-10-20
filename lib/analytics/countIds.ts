@@ -20,6 +20,8 @@
  *   fi:<event>                     fishing (FISHING_COUNT_EVENTS, lib/analytics/fishingEvents.ts): legends, clues, requests, the
  *                                  lure put on by id, fights started (spin reel), landed / escaped / missed, slips
  *                                  per fight (bucketed), runs stopped vs spun through, average spin rate (bucketed), Fishbook opens
+ *   en:<event>                     sponsor engagement (ENGAGE_FIXED_IDS below, Oct 20 2026): arcade games, design styles,
+ *                                  cards found, films, pop-up books opened / finished / bought, reading-time buckets
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  */
@@ -113,12 +115,44 @@ export const WATER_COUNT_EVENTS=[
  ['first_wade','First time wading (per device)'],['first_swim','First time swimming (per device)'],
  ['swim_start','Swims started'],
  ['splash_fall','Splash-down: a fall or cut parachute'],['splash_roof','Splash-down: a rooftop jump'],['splash_launch','Splash-down: a ride launch'],['splash_dropin','Splash-down: jetpack “Drop in”'],
- ['shore','“Back to shore” used'],['fast','“Swim fast” used'],['float','“Float” used'],
+ ['shore','“Back to shore” used'],['fast','“Swim fast” used'],['float','“Float” used (retired Oct 19 2026)'],['dive','“Dive” used'],
  ['time_10s','Swims under 10 s'],['time_30s','Swims 10–30 s'],['time_60s','Swims 30–60 s'],['time_120s','Swims 1–2 min'],['time_long','Swims over 2 min'],
  ['idle_cap','Treading water: 20 fps idle cap engaged'],['lesson','Swim lesson shown'],
  ['sharks_circle','Sharks circled a swimmer'],['sharks_escape','Sharks peeled off (shore reached or lost interest)'],
  ['ride_manta','Rides on a manta ray'],['ride_whale','Rides on the whale shark'],['ride_lap','Rides finished (one lap)'],['ride_off','Rides let go early'],
 ] as const;
+
+
+/**
+ * Sponsor engagement (Oct 20 2026, lib/analytics/sponsorEvents.ts, docs/admin-sponsor-insights.md): the `en:` family behind the
+ * /admin Overview's "games played, shirts and boots designed, cards found, videos and stories, books bought, reading time".
+ * Totals per fixed bucket only, like every id above: an arcade game BY NAME, a saved design's PATTERN (or a boot's model) but
+ * never its colours, name, number or drawing; how a card was found and its tier; a card by its binder NUMBER (public footballers,
+ * a fixed list); a pop-up book by its fixed key; a reading visit's foreground length in four buckets. Nothing per child.
+ * The lists below are repeated (not imported) so the every-page tracker bundle never loads the shop, the books or the card
+ * data; tests/admin-sponsor.cjs checks they match the real ones.
+ */
+export const ENGAGE_ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
+export const ENGAGE_JERSEY_PATTERNS=['solid','stripes','hoops','pinstripes','sash','halves','quarters','chevron','checkers','fade','waves'] as const;
+export const ENGAGE_BOOT_PATTERNS=['solid','fade','speckle','stripes','camo','zigzag'] as const;
+export const ENGAGE_BOOT_MODELS=['speed','retro','classic','feather','fins','track','longflap','cage','offset','wrap','pro','knit','sock','laceless','indoor'] as const;
+/** How a card joined the binder: the card-offer kinds (lib/town/cardRewards.ts REWARD_KINDS), a card pack, the starter kit. */
+export const ENGAGE_CARD_SOURCES=['ball','npc','quiz','explore','journey','story','path','pack','starter'] as const;
+export const ENGAGE_CARD_TIERS=['icon','elite','regular'] as const;
+/** lib/books/catalog.ts PLAYER_BOOKS keys, in order. */
+export const ENGAGE_BOOKS=['island','messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala'] as const;
+/** A reading visit's foreground time (the pop-up book open, tab visible): under 1 min, 1–3, 3–10, 10+ minutes. */
+export const ENGAGE_READ_BUCKETS=[['read_1m','Under 1 minute'],['read_3m','1–3 minutes'],['read_10m','3–10 minutes'],['read_long','10+ minutes']] as const;
+export const ENGAGE_FIXED_IDS:readonly string[]=[
+ ...ENGAGE_ARCADE_GAMES.map(g=>'en:game_'+g),
+ ...ENGAGE_JERSEY_PATTERNS.map(p=>'en:jerseyp_'+p),...ENGAGE_BOOT_PATTERNS.map(p=>'en:bootp_'+p),...ENGAGE_BOOT_MODELS.map(m=>'en:bootm_'+m),
+ ...ENGAGE_CARD_SOURCES.map(k=>'en:card_'+k),...ENGAGE_CARD_TIERS.map(t=>'en:cardtier_'+t),
+ 'en:film_open','en:film_end',
+ ...ENGAGE_BOOKS.flatMap(b=>['en:bookopen_'+b,'en:bookend_'+b,'en:bookbuy_'+b]),
+ ...ENGAGE_READ_BUCKETS.map(([b])=>'en:'+b),
+];
+/** A card by its binder number (lib/town/cardCollection.ts cardNumber, 1-based): `en:cardn_<n>`, n 1..999. */
+export const ENGAGE_CARD_NUMBER_RE=/^en:cardn_[1-9][0-9]{0,2}$/;
 
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
@@ -129,6 +163,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...BEACH_COUNT_EVENTS.map(([e])=>'bc:pickup_'+e),...TUTORIAL_COUNT_EVENTS.map(([e])=>'tu:'+e),
  ...FISHING_COUNT_EVENTS.map(([e])=>'fi:'+e),
  ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
+ ...ENGAGE_FIXED_IDS,
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
@@ -149,7 +184,7 @@ export const lessonsOf=(format:LearnFormat)=>LESSON_TABLE.filter(l=>l[0]===forma
 /** True only for an id on the allowlist (lesson, question and option indices included). */
 export function isCountId(id:string):boolean{
  if(typeof id!=='string'||!COUNT_KEY_RE.test(id))return false;
- if(FIXED.has(id))return true;
+ if(FIXED.has(id)||ENGAGE_CARD_NUMBER_RE.test(id))return true;
  const p=id.split(':');
  if(p.length===2&&/^l[oesfa]$/.test(p[0]))return !!lessonInfo(p[1]);
  const l=lessonInfo(p[1]);if(!l)return false;

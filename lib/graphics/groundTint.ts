@@ -22,9 +22,10 @@ export const GROUND_TINT:Record<GroundKind,{amp:number;grain:number;wet:boolean}
  land:{amp:.09,grain:.16,wet:false},
  mixed:{amp:.095,grain:.09,wet:false},
 };
-/** Shared by every ground material: 1 = grain on, 0 = off (tiers 3-4, Battery saver). */
+/** Shared by every ground material: 1 = grain on, 0 = off (tiers 1-4, Battery saver). Heat offsets Oct 19 2026: off from tier 1
+ * (was 3): a warm phone already draws at 1.5 or less, where the fine grain is barely visible; tier 0 (and desktop) keep it. */
 export const GROUND_GRAIN={value:1};
-export const GROUND_GRAIN_OFF_TIER=3;
+export const GROUND_GRAIN_OFF_TIER=1;
 const syncGrain=()=>{GROUND_GRAIN.value=effectiveTier()>=GROUND_GRAIN_OFF_TIER?0:1;};
 let subscribed=false;
 function ensureSubscribed(){if(subscribed)return;subscribed=true;syncGrain();subscribeHeatTier(syncGrain);}

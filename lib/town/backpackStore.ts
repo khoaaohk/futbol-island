@@ -1,7 +1,8 @@
 'use client';
 import {useMemo,useSyncExternalStore} from 'react';
 import {readArcadeWallet,useArcadeWallet} from '../arcade/arcadeWallet';
-import {CARD_STORAGE_KEY,addToCollection,readCollection} from './cardCollection';
+import {CARD_STORAGE_KEY,addToCollection,cardNumber,readCollection} from './cardCollection';
+import {countCardFound} from '../analytics/sponsorEvents';
 import {CARD_ADDED} from './cardRewardStore';
 import {CARD_REMOVED} from './market/cardSellingStore';
 import {readVending,useVending} from './vendingWallet';
@@ -42,7 +43,7 @@ export function ensureStarterKit(now=Date.now()):boolean{
  const state=readState(),plan=planStarterKit(state,currentSources(state),now);if(!plan)return false;
  if(readState().starter)return false;
  writeState(plan.state);
- let last:string|null=null;for(const name of plan.addCards)if(addToCollection(name))last=name;
+ let last:string|null=null;for(const name of plan.addCards)if(addToCollection(name)){last=name;countCardFound('starter',null,cardNumber(name));}// sponsor analytics: starter-kit cards
  if(last)window.dispatchEvent(new CustomEvent(CARD_ADDED,{detail:{name:last,starter:true}}));
  return true;
 }

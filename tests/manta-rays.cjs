@@ -49,8 +49,8 @@ same(count(true),{cay:2,starfish:2,turtle:2,summit:2},'phone: 2 per island');
 // ---- Model: shared, low-poly, dark top / pale belly, no shadows, one draw per island while gliding.
 const geo=G.mantaGeometry(),tris=geo.getAttribute('position').count/3;assert(tris<=160,'low-poly manta ('+tris+' triangles)');
 {const pos=geo.getAttribute('position'),col=geo.getAttribute('color'),nor=geo.getAttribute('normal');let topDark=0,bellyPale=0;
- for(let i=0;i<pos.count;i++){const lum=col.getX(i)+col.getY(i)+col.getZ(i);if(nor.getY(i)>.5&&lum<.9)topDark++;if(nor.getY(i)<-.5&&lum>2)bellyPale++;}
- assert(topDark>40&&bellyPale>40,'dark top and pale belly');
+ for(let i=0;i<pos.count;i++){const lum=col.getX(i)+col.getY(i)+col.getZ(i);if(nor.getY(i)>.5&&lum<.9)topDark++;if(nor.getY(i)<-.5&&lum>.75&&lum<1.2)bellyPale++;}
+ assert(topDark>40&&bellyPale>40,'slate top and a pale-slate belly (Oct 20 2026: not cream, not glowing)');
  let fins=0;for(let i=0;i<pos.count;i++)if(pos.getX(i)>1.3)fins++;assert(fins>=8,'cephalic fins reach forward of the head');}
 assert(/aPhase/.test(G.WING_WAVE)&&/uMantaTime/.test(G.WING_WAVE),'wing wave runs in the vertex shader');
 function make(phone){const scene=new T.Scene();return {scene,mantas:G.createCayMantas(scene,{phone})};}
@@ -118,4 +118,21 @@ mantas.update(1/30,false,frustum,nearTurtle);assert(ver(turtle)>placed&&mantas.t
  assert(t&&/plankton/.test(t.answer)&&/first touch/i.test(t.followUp.answer),'Nia teaches the manta / first-touch link');
  assert(/manta/i.test(nia.greeting),'Nia mentions the mantas when you meet her');}
 
+// ---- Oct 20 2026 (user: mantas "disappearing at some angles", "glitchy"): always drawn whole under the water.
+{const SV=load('lib/graphics/seaVeil.ts'),V=SV.SEA_VEIL_VERTEX,num=n=>+SV.SEA_VEIL_VERTEX_HEAD.match(new RegExp(n+'=([\\d.]+)'))[1];
+ const span=num('SEA_DEPTH_SPAN'),k=num('SEA_DEPTH_STEP'),c=num('SEA_DEPTH_NEAR');
+ assert(/min\(vlD,SEA_DEPTH_SPAN\)\*SEA_DEPTH_STEP-SEA_DEPTH_NEAR/.test(V),'the depth trick offset is clamped by depth');
+ for(let d=0;d<=12;d+=.1)assert(Math.min(d,span)*k-c<=-.025,`a body ${d.toFixed(1)} m deep stays >= 2.5 cm in front of the sea plane (else the wings vanish behind it)`);
+ assert(k>=.01,'a body\'s own parts keep their depth order (>= 1 cm per metre, no top/belly z-fight)');
+ // Oct 20 2026 (third report, measured 28% of the whale lost): a corner moved off its own view ray after the squeeze lands on a
+ // farther patch of sea and fails the depth test. The refraction wobble is a world-space shift BEFORE the squeeze; no xy shift after.
+ assert(!/gl_Position\.xy/.test(V),'no screen-space shift after the depth squeeze');
+ const wob=V.indexOf('vlW.xz+='),proj=V.indexOf('gl_Position=projectionMatrix*viewMatrix*vlW'),sq=V.indexOf('vec3 vlS=');
+ assert(wob>0&&proj>wob&&sq>proj,'the wobble moves the world point, re-projects, THEN squeezes along that same ray');
+ assert(/vlNear/.test(V),'a camera just over the water clamps the surface point past the near plane (no pop under 20 cm)');
+ const sc=new T.Scene(),mm=G.createCayMantas(sc,{phone:false});const isle=mm.islands[0];
+ assert(isle.under.material.side===T.FrontSide&&isle.surface.material.side===T.FrontSide,'front faces only: the closed model never z-fights its own belly through the wing');
+ const f=mm.friends.find(x=>x.id===isle.tracks[0].loop.id);f.ridden=true;mm.update(1/30,false,new T.Frustum(),{x:1e5,z:1e5});
+ assert(isle.group.visible&&isle.under.frustumCulled===false,'a ridden manta is never hidden or culled when it leaves its loop bound');
+ f.ridden=false;mm.update(1/30,false,new T.Frustum(),{x:1e5,z:1e5});assert(isle.under.frustumCulled===true,'culled again once let go');mm.dispose();}
 console.log(`PASS manta rays: ${loops.length} loops (cay 3/2 phone, sandbars 2 each, Summit Isle 3/2 phone), ${tris} triangles, open water ≥ 10 m from land, clear of causeway/sharks/buoy/boat, culling + sleep + reduced motion, rare bounded surfacing, Nia's first-touch lesson`);

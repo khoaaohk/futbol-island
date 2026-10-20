@@ -28,6 +28,7 @@ import type {VendingMachines} from '@/lib/graphics/vendingMachines';
 import type {CharacterCustomization} from '@/lib/town/customization';
 import type {TravelMode} from '@/lib/town/travelModes';
 import {countKioskPurchase} from '@/lib/analytics/summitEvents';
+import {countBookBuy} from '@/lib/analytics/sponsorEvents';
 import jobStyles from './IslandJobs.module.css';
 import styles from './VendingMachine.module.css';
 
@@ -206,6 +207,7 @@ export default function VendingMachine({open,machineId,onOpenChange,value,onChan
    if(purchaseVisit!==visit.current)return;
    if(!result.ok){setPhase('idle');setCoinDrop(null);setLed({msg:result.reason,tone:'warn'});cue('buzz');return;}
    if(machineId==='summit')countKioskPurchase(item.price);// admin analytics: the summit kiosk only
+   if(item.storyId)countBookBuy(item.storyId);// sponsor analytics: a pop-up book bought (its fixed key only)
    setVendingSlot(item.id);setDispense({item,key:Date.now(),packId:result.packId});setPhase('drop');setLed({msg:'Thank you! ありがとう',sub:'Your item is dropping…',tone:'ok'});
    later(()=>{cue('thunk');setPhase('tray');setVendingSlot(null);setCoinDrop(null);setLed({msg:'Tap the tray to take it',sub:item.kind==='pack'?'Your pack is in the tray.':`${item.label} is in the tray.`,tone:'ok'});},quick?0:t.drop);
   }finally{if(purchaseVisit===visit.current)busy.current=false;}

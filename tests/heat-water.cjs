@@ -25,7 +25,7 @@ ok('no loops, timers, targets, audio contexts, pools or materials in the water c
  const town=read('components/Town.tsx');assert.match(town,/ballEffects\.ripple\(location\.x,WATER_LEVEL,location\.z,ev\.ripple\)/);assert.match(town,/ballEffects\.splashDown\(location\.x,WATER_LEVEL,location\.z,size,reduced\)/);
  // The splash-down's instance budget: the pool's own 5 rings, 14 ghost spheres and 8 charge spheres, the same 6 materials as
  // before, a burst that ends itself after SPLASH_BURST_S (< 1 s) and leaves nothing visible; reduced motion: one ring.
- assert.match(fx,/ghosts=Array\.from\(\{length:14\}/);assert.match(fx,/energy=Array\.from\(\{length:8\}/);assert.equal((fx.match(/new T\.MeshBasicMaterial/g)||[]).length,5,'no new materials for the splash (the same five MeshBasicMaterial literals as before)');
+ assert.match(fx,/ghosts=Array\.from\(\{length:14\}/);assert.match(fx,/energy=Array\.from\(\{length:8\}/);assert.equal((fx.match(/new T\.MeshBasicMaterial/g)||[]).length,6,'no new materials for the splash (the same five MeshBasicMaterial literals as before, plus the one swim-ripple pool literal, Oct 19 2026)');
  assert.match(fx,/const SPLASH_BURST_S=\.95,/);assert.match(fx,/if\(k>=1\)burst\.age=SPLASH_BURST_S;\n  \}else if\(burstWas\)\{burstWas=false;burst\.age=SPLASH_BURST_S;lastColor='';for\(const mesh of ghosts\)mesh\.visible=false;for\(const mesh of energy\)mesh\.visible=false;\}/,'the burst hides everything when it ends');
  assert.match(fx,/if\(burst\.age<SPLASH_BURST_S&&!shot&&charging<0&&!reduced\)\{/,'no burst with reduced motion, never over the ball trail');
  assert(!/splashDown\([^)]*\)\{[\s\S]*?new (T\.|Float32Array|Array)/.test(fx.split('splashDown(')[1].split('drips(')[0]),'splashDown allocates nothing');
@@ -39,7 +39,7 @@ ok('no loops, timers, targets, audio contexts, pools or materials in the water c
  assert.match(town,/if\(waterTintUntil&&now>=waterTintUntil\)\{waterTintUntil=0;const tint=uiElement<HTMLElement>\('\[data-water-under\]'\);if\(tint\)\{tint\.hidden=true;/);
  // Decorative ripples obey the fishingLife-style gate (reduced / static ambience / governor slow / tier ≥ 2); splash rings never do.
  assert.match(town,/const waterFxOn=\(\)=>!\(reduced\|\|heat\.staticAmbience\|\|heat\.governor\.last\.state==='slow'\)&&heat\.tier<2;/);
- assert.match(town,/else if\(ev\.ripple>0&&\(ev\.surfaced\|\|waterFxOn\(\)\)\)\{ballEffects\.ripple/);
+ assert.match(town,/else if\(ev\.ripple>0&&!animalRides\.riding\/\* riding: the ride's own wake on the animal \*\/&&\(ev\.surfaced\|\|waterFxOn\(\)&&water\.state\.phase!=='swim'\)\)\{ballEffects\.ripple/);
 });
 
 ok('treading water for 4 s with no input engages the 20 fps idle cap; input restores it; wading never caps',()=>{
@@ -64,10 +64,11 @@ ok('treading water for 4 s with no input engages the 20 fps idle cap; input rest
  t+=F;assert.equal(frame(F,0,false),IDLE_RIDE_FRAME_MS,'treading water: 20 fps');
  // The treading pose bobs the pelvis, not the root: no "travel" wakes it.
  for(let i=0;i<60;i++){t+=F;assert.equal(frame(F,0,false),IDLE_RIDE_FRAME_MS,'stays capped while bobbing');}
- // A tap wakes it; moving (the stick) keeps it awake; the Float hold's lazy circle (drifting) is never idle; release: idle again.
+ // A tap wakes it; a dive on its way down or up is never idle (the body travels); settled under, the idle rule applies again.
  idle.stir(t);t+=F;assert.equal(frame(F,0,false),0,'input restores the rate');
- water.press('float','down');for(let i=0;i<30;i++){t+=F;frame(F,0,false);}assert.equal(water.state.circling,true);t+=IDLE_RIDE_AFTER_MS+F;assert.equal(frame(F,0,false),0,'floating round the circle is travel');
- water.press('float','up');assert.equal(water.state.circling,false);
+ water.press('dive','tap');for(let i=0;i<20;i++){t+=F;frame(F,0,false);}assert(water.state.under>0&&water.state.under<1);assert.equal(water.resting(),false,'mid-dive is travel');
+ for(let i=0;i<120;i++){t+=F;frame(F,0,false);}assert.equal(water.state.under,1);assert.equal(water.resting(),true,'settled under: resting');
+ water.press('dive','tap');for(let i=0;i<120;i++){t+=F;frame(F,0,false);}assert.equal(water.state.under,0);
  // With the 50 ms slots, 120 Hz timestamps render 20 a second (the same grid as idle rides).
  let slot=0,n=0;for(let u=0;u<10000;u+=1000/120){const s=frameCapSlot(u,slot,IDLE_RIDE_FRAME_MS);if(s>=0){slot=s;n++;}}assert(n>=199&&n<=201);
 });
@@ -85,7 +86,7 @@ ok('the probe never asks distanceToLand per frame; the swim pose allocates nothi
 
 ok('Town wiring: the idle rule, the activity, the 10 Hz probe is the only depth source, the splash sound reuses existing cues',()=>{
  const town=read('components/Town.tsx');
- assert.match(town,/const waterIdle=water\.resting\(\);[\s\S]*?const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\|\|footRest,footRest\?IDLE_FOOT_AFTER_MS:undefined\);/);
+ assert.match(town,/const waterIdle=water\.resting\(\);[\s\S]*?const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\|\|footRest,footRest\?IDLE_FOOT_AFTER_MS:undefined,quietNear\);/);
  assert.match(town,/if\(waterIdle&&idleFrame&&!waterIdleWas\)countWaterIdleCap\(\);/);
  assert.match(town,/:water\.inWater\?'swim':'walk',placeAt\);/,'the frame books swimming time as its own activity');
  assert(!/waterDepthAt\(/.test(town),'Town reads depth through the probe only');

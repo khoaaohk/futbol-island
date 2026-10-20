@@ -1,14 +1,16 @@
 /**
  * Swim poses for the procedural rig (P0, Oct 15 2026; docs/swimming-research.md §2.3, docs/body-mechanics/BODY_MECHANICS.md):
  * treading water (idle), the front crawl (moving; faster and flatter on the Swim fast hold, with a breath every third stroke),
- * floating on the back (the Float toggle) and the splash-down entry (feet first, a belly-flop or a clean streamlined entry)
+ * floating on the back (kept as a shape; the Float toggle became Dive on Oct 19 2026, which levels the crawl under water) and the splash-down entry (feet first, a belly-flop or a clean streamlined entry)
  * with the head-shake on surfacing. Applied from one optional `PlayerMotion.swim` field, like the zipline's pose: the keyframe
  * shapes are module constants, every joint is damped toward its target from a held copy (so wade → swim → float never pop),
  * nothing is allocated per frame, and offscreen posing stays skipped (the rig's host does not call update offscreen).
  *
  * Frame: the rig root sits SWIM_ROOT_DEPTH under the water line (lib/town/water/waterDepth.ts), so the water line is at
- * WATER_LINE above the root. Pelvis +x is the right hip; pelvis.rotation.x > 0 pitches the body forward (torso toward +z,
- * the legs trailing behind); hip.rotation.x > 0 swings a leg backward. The opaque sea hides whatever is under the line.
+ * WATER_LINE above the root (every pelvis height is relative to it, so the body keeps its place against the water whatever the
+ * root depth). Pelvis +x is the right hip; pelvis.rotation.x > 0 pitches the body forward (torso toward +z, the legs trailing
+ * behind); hip.rotation.x > 0 swings a leg backward. Under the line the ocean opens a clear disc round the swimmer and the body
+ * takes the underwater tint (lib/graphics/swimClear.ts, Oct 19 2026).
  */
 import type * as T from 'three';
 
@@ -22,13 +24,16 @@ export type SwimRigPose={
  /** 0..1 how hard the crawl is going; `fast` 1 on the Swim fast hold. */
  effort:number;fast:number;
  entry:EntryStyle;
- /** 1 → 0 over the surfacing head-shake. */
+ /** 1 → 0 over the surfacing head-shake (the splash-down's, and on the way back up from a dive). */
  shake:number;
+ /** Dive (Oct 19 2026, waterState.ts DIVE): 0..1 how far under (the crawl levels out, the head lines up with the body) and the
+  *  extra body pitch (rad, + = head down on the way down, − = head up on the way back up). Optional: 0 when absent. */
+ under?:number;tilt?:number;
 };
 export type SwimJoints={pelvis:T.Group;torso:T.Group;head:T.Group;legs:{hip:T.Group;knee:T.Group;ankle:T.Group}[];arms:{shoulder:T.Group;elbow:T.Group;hand:T.Group}[]};
 
 /** The water line above the rig root while swimming (= waterDepth.ts SWIM_ROOT_DEPTH; tests pin them equal). */
-export const WATER_LINE=1.27;
+export const WATER_LINE=1.0;
 /** How fast a new swim shape blends in (per second: ~.25 s to 90 %), and the fade-out when swimming ends. */
 export const SWIM_SETTLE=9,SWIM_FADE=.2;
 /** Treading water (user, Oct 15 2026: "wade in the water more with the arm movements"): one sculling cycle in seconds; with
@@ -81,7 +86,7 @@ export function createSwimPoser(j:SwimJoints){
    // roll ±.05; the head counters so the face stays front), the legs eggbeater (alternating knee circles: knee ±.32 with the hip
    // turning in/out ±.3, thighs apart) and the body bobs 4 cm (±2) with each push. Reduced motion: slower sculling only.
    const a0=tread,m=reduced?0:1,sweepL=Math.sin(a0),sweepR=-sweepL;
-   target[P_Y]=1.0+m*.02*Math.sin(2*a0-.6);target[P_Z]=0;target[P_PITCH]=-.04;
+   target[P_Y]=WATER_LINE-.27+m*.02*Math.sin(2*a0-.6);target[P_Z]=0;target[P_PITCH]=-.04;
    target[T_X]=-.06;target[T_Y]=m*.09*sweepR;target[T_Z]=m*.05*Math.cos(a0)+rollTurn*.3;
    target[H_X]=-.42;target[H_Y]=-.7*target[T_Y];target[H_Z]=-.6*target[T_Z];
    for(let i=0;i<2;i++){const side=i===0?-1:1,o=LEG+i*5,a=a0+i*Math.PI,c=Math.sin(a),sw=i===0?sweepL:sweepR;
@@ -95,12 +100,14 @@ export function createSwimPoser(j:SwimJoints){
    // with the stroke, the recovering arm's shoulder lifting: hips ±.17 rad (~10°), shoulders ±.37 (~21°; hips + torso); the
    // whole body sways ±3.5 cm; a breath to the right every second stroke (the face turns .6 rad, the head otherwise counters the
    // roll so the face stays forward and clear). Swim fast: flatter, quicker (the clock), the roll and sway 20 % smaller.
-   const fast=s.fast,e=s.effort,rs=1-.2*fast,rec1=-Math.sin(ph);
-   target[P_Y]=WATER_LINE+.02-.04*fast;target[P_Z]=.08;target[P_PITCH]=1.0+.12*fast;
+   // Under water (a dive): the body levels out (pitch toward 1.5), pitched further head-down / head-up by `tilt` on the way, the
+   // head in line with the body, no breath; the same arms and flutter kick, so the stroke reads through the clear water.
+   const fast=s.fast,e=s.effort,rs=1-.2*fast,rec1=-Math.sin(ph),uw=s.under??0;
+   target[P_Y]=WATER_LINE+.02-.04*fast;target[P_Z]=.08;target[P_PITCH]=1.0+.12*fast+(1.5-1.0-.12*fast)*uw+(s.tilt??0);
    target[P_X]=.035*rs*Math.cos(ph);target[P_ROLL]=.17*rs*rec1;
    target[T_X]=.1-.04*fast;target[T_Y]=.2*rs*rec1;target[T_Z]=rollTurn;
-   const breathe=reduced?0:Math.pow(Math.max(0,Math.sin(ph-.3)*-1),3),bodyRoll=target[P_ROLL]+target[T_Y];
-   target[H_X]=-1.45-.12*fast+.08*breathe;target[H_Y]=.6*breathe;target[H_Z]=-bodyRoll*(1-.5*breathe);
+   const breathe=reduced?0:Math.pow(Math.max(0,Math.sin(ph-.3)*-1),3)*(1-uw),bodyRoll=target[P_ROLL]+target[T_Y];
+   target[H_X]=(-1.45-.12*fast+.08*breathe)*(1-uw)-.45*uw;target[H_Y]=.6*breathe;target[H_Z]=-bodyRoll*(1-.5*breathe);
    for(let i=0;i<2;i++){const side=i===0?-1:1,o=LEG+i*5,k=Math.sin(ph*1.5+i*Math.PI);
     target[o]=.12+.28*k*(.5+.5*e);target[o+1]=side*.06;target[o+3]=.2+.22*Math.max(0,-k);target[o+4]=-.35;
     const q=ARM+i*4,a=ph+i*Math.PI,rec=Math.max(0,Math.sin(a));
@@ -124,11 +131,13 @@ export function createSwimPoser(j:SwimJoints){
    // Entry: clean = arms together over the head, body straight (a streamlined drop); belly = flat and spread; feet = the fall's
    // upright shape with the arms up. Then the surfacing head-shake (shake 1 → 0).
    const clean=s.entry==='clean',belly=s.entry==='belly',shake=reduced?0:s.shake*Math.sin(s.phase*26)*.3;
-   target[P_Y]=belly?WATER_LINE-.1:.9;target[P_Z]=0;target[P_PITCH]=belly?1.2:0;
+   target[P_Y]=belly?WATER_LINE-.1:WATER_LINE-.37;target[P_Z]=0;target[P_PITCH]=belly?1.2:0;
    target[T_X]=belly?.1:0;target[T_Y]=0;target[T_Z]=shake*.3;target[H_X]=belly?-.9:clean?.25:-.15;target[H_Y]=shake;target[H_Z]=-shake*.5;
    for(let i=0;i<2;i++){const side=i===0?-1:1,o=LEG+i*5;target[o]=belly?.1:clean?0:-.2;target[o+1]=side*(belly?.45:clean?.02:.1);target[o+3]=clean?.02:belly?.15:.5;target[o+4]=clean?-.3:0;
     const q=ARM+i*4;target[q]=clean?-2.95:belly?-1.3:-.6;target[q+1]=side*(clean?.12:belly?1.3:2.2);target[q+3]=clean?-.05:belly?-.4:-.6;}
   }
+  // The surfacing head-shake on the everyday shapes too (a dive coming back up); the entry shape has its own.
+  if(s.kind!=='entry'&&s.shake>0&&!reduced){const sh=s.shake*Math.sin(s.shake*40)*.3;target[H_Y]+=sh;target[H_Z]-=sh*.5;}
  };
  return {
   /** Apply the swim pose over the solved body. Call every rig update (also with `swim` undefined, so the fade-out runs). */

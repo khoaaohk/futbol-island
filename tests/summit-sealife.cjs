@@ -10,7 +10,7 @@ const base=path.resolve(__dirname,'..'),T=require('node:module').createRequire(b
 const loaded=new Map();function load(file){file=path.resolve(base,file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,Map,Set,Uint8Array,Float32Array,Float64Array,require:id=>id==='three'?T:id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});loaded.set(file,mod.exports);return mod.exports;}
 const S=load('lib/town/summitIsle.ts'),cay=load('lib/town/coralCay.ts'),L=load('lib/town/summitSeaLife.ts'),M=load('lib/town/mantaLoops.ts');
 const {flightBlocked}=load('lib/town/simulation.ts'),{onLand,distanceToLand}=load('lib/town/landmass.ts'),{FISH_SPOTS}=load('lib/town/fishing/fishCatalog.ts');
-const heat=load('lib/graphics/heatTier.ts'),{createCaySharks}=load('lib/graphics/caySharks.ts'),{createCayMantas}=load('lib/graphics/cayMantas.ts'),W=load('lib/graphics/whaleShark.ts');
+const heat=load('lib/graphics/heatTier.ts'),{createCaySharks}=load('lib/graphics/caySharks.ts'),{createCayMantas}=load('lib/graphics/cayMantas.ts'),W=load('lib/graphics/whaleShark.ts'),SV=load('lib/graphics/seaVeil.ts');
 const same=(a,b,msg)=>assert.equal(JSON.stringify(a),JSON.stringify(b),msg);
 
 // ---- Paths.
@@ -63,14 +63,24 @@ for(const phone of [false,true]){const w=make(phone),sr=w.sharks.regions.find(r=
 // ---- The whale shark's look: one low-poly mesh, broad flat head with a dark mouth across it, tall tail, spotted back.
 const geo=W.whaleSharkGeometry(),tris=geo.getAttribute('position').count/3;
 {geo.computeBoundingBox();const b=geo.boundingBox,len=b.max.x-b.min.x;
- assert(tris<=400,`low-poly (${tris} triangles)`);
- assert(len>=11&&len<=15,`about 13 m long (${len.toFixed(1)} m), 2–3× a shark (${(3.4*1.7).toFixed(1)} m)`);
- assert(b.max.y>=2.4,'the tall upper tail lobe stands clear of the water');
- const pos=geo.getAttribute('position'),col=geo.getAttribute('color');let headW=0,mouth=0,dark=0;
- for(let i=0;i<pos.count;i++){const x=pos.getX(i),lum=col.getX(i)+col.getY(i)+col.getZ(i);if(x>5.4)headW=Math.max(headW,Math.abs(pos.getZ(i)));if(x>6&&lum<.4)mouth++;if(pos.getY(i)>.3&&x<5&&lum<1.2)dark++;}
- {const nor=geo.getAttribute('normal');let up=0,down=0;for(let i=0;i<pos.count;i++){if(pos.getX(i)>.5&&pos.getX(i)<5.5&&Math.abs(pos.getZ(i))<1.4&&pos.getY(i)>.2){if(nor.getY(i)>.5)up++;else if(nor.getY(i)<-.5)down++;}}
-  assert(up>40&&down===0,`the back faces up (front faces, so it is not culled): ${up} up, ${down} down`);}
- assert(headW>=1.3,`broad flat head (${(headW*2).toFixed(1)} m across the front)`);assert(mouth>=12,'a dark, wide mouth across the front');assert(dark>50,'dark blue-grey back');}
+ // Oct 19 2026 (user: "too flat"): a real rounded body. Budget: the old pancake was 266 triangles, +400 at most.
+ assert(tris<=666,`low-poly (${tris} triangles, budget 666 = the old 266 + 400)`);
+ assert(len>=11&&len<=15,`about 13 m long (${len.toFixed(1)} m), 2-3x a shark (${(3.4*1.7).toFixed(1)} m)`);
+ assert(b.max.y>=1.8&&b.max.y<=2.1,`the first dorsal fin is the highest part (${b.max.y.toFixed(2)} m over the body axis)`);
+ const pos=geo.getAttribute('position'),col=geo.getAttribute('color');let headW=0,mouth=0,belly=0,backTop=0,bellyLow=0,slate=0;
+ for(let i=0;i<pos.count;i++){const x=pos.getX(i),y=pos.getY(i),lum=col.getX(i)+col.getY(i)+col.getZ(i);if(x>5.4)headW=Math.max(headW,Math.abs(pos.getZ(i)));if(x>6&&lum<.4)mouth++;
+  if(x>-2&&x<4&&Math.abs(pos.getZ(i))<1.7){if(y>0)backTop=Math.max(backTop,y);if(y<0)bellyLow=Math.min(bellyLow,y);if(lum>.75&&lum<1.2)belly++;if(y>.3&&lum<.6)slate++;}}
+ assert(backTop>=.95&&bellyLow<=-.9,`a real 3D body: the trunk is ${(backTop-bellyLow).toFixed(2)} m deep (back ${backTop.toFixed(2)}, belly ${bellyLow.toFixed(2)}), not a thin pancake`);
+ assert(belly>40&&slate>40,'slate back, pale-slate belly (Oct 20 2026: lighter, not glowing)');
+ assert(headW>=1.3,`broad flat head (${(headW*2).toFixed(1)} m across the front)`);assert(mouth>=12,'a dark, wide mouth across the front');
+ // Pectoral fins angle down from the flank; two dorsals; the tail crescent is tall.
+ let pecDown=0;for(let i=0;i<pos.count;i++)if(Math.abs(pos.getZ(i))>3&&pos.getY(i)<-1)pecDown++;assert(pecDown>=6,'big pectoral fins angled down');}
+assert(W.WHALE_DEPTH.mean-W.WHALE_DEPTH.bob>=1.4-1e-9&&W.WHALE_DEPTH.mean+W.WHALE_DEPTH.bob<=2.2+1e-9,'the back sits 1.4-2.2 m under the water line');
+assert(W.WHALE_DEPTH.finTop-(W.WHALE_DEPTH.mean-W.WHALE_DEPTH.bob+W.WHALE_DEPTH.backTop)<=0,'the fin tip stays under the surface even at the swell crest');
+assert(/gl_Position\.z/.test(SV.SEA_VEIL_VERTEX),'under-sea depth trick in the vertex shader (opaque ocean tiers 3-4 still show the shape)');
+assert(/VEIL_COLOR/.test(SV.seaVeilFragment(true))&&/exp\(-dep/.test(SV.seaVeilFragment(true))&&/face/.test(SV.seaVeilFragment(true))&&!/face/.test(SV.seaVeilFragment(false)),'depth veil toward the sea colour, light bands and a rim fade in the shared fragment patch');
+assert(/uVeilTime/.test(SV.SEA_VEIL_VERTEX)&&/vlW\.xz\+=/.test(SV.SEA_VEIL_VERTEX)&&!/gl_Position\.xy/.test(SV.SEA_VEIL_VERTEX),'refraction wobble of the outline, in world space before the depth squeeze (a screen-space shift cut the whale shark into strips)');
+for(const f of ['whaleShark','cayMantas','caySharks']){const src=fs.readFileSync(path.join(base,'lib/graphics/'+f+'.ts'),'utf8');assert(/patchSeaVeil\(/.test(src)&&!/gl_Position/.test(src),f+': the one shared depth trick (seaVeil.ts), none of its own');}
 assert(/wsHash/.test(W.PATTERN_FRAGMENT)&&/stripe/.test(W.PATTERN_FRAGMENT)&&/spot/.test(W.PATTERN_FRAGMENT),'spots and stripes in the fragment shader (no texture)');
 assert(/uWhaleTime/.test(W.TAIL_SWEEP),'tail sweep in the vertex shader');
 
@@ -79,8 +89,13 @@ const {scene,sharks,mantas,whale}=make(true);
 {const draws=[];scene.traverse(o=>{if(o.isMesh)draws.push(o);});
  assert(draws.every(m=>!m.castShadow&&!m.receiveShadow&&m.frustumCulled),'no shadows, culled');
  // Oct 14 2026 (user: "more of just a shadow"): a flat, see-through dark silhouette just under the surface, like the mantas'.
- assert(!whale.mesh.material.map&&whale.mesh.material.transparent&&whale.mesh.material.opacity<=.45&&!whale.mesh.material.depthWrite,'whale shark: a soft underwater shadow, no texture');
- assert(whale.mesh.scale.y<=.06,'whale shark: flattened, nothing stands out of the water');
+ assert(!whale.mesh.material.map&&whale.mesh.material.depthWrite&&whale.mesh.material.side===2,'whale shark: depth-writing, double-sided body, no texture map');
+ // Oct 20 2026 (user: "pale, glassy", fins "see-through"): opaque, no rim alpha, after the sea like the sharks; spots, not stripes.
+ assert(!whale.mesh.material.transparent&&whale.mesh.material.opacity===1&&whale.mesh.renderOrder>=1,'whale shark: opaque body and fins, drawn after the sea');
+ assert(/fade:false/.test(fs.readFileSync(path.resolve(base,'lib/graphics/whaleShark.ts'),'utf8'))&&!/band/.test(W.PATTERN_FRAGMENT)&&/atan\(p\.y,p\.z\)/.test(W.PATTERN_FRAGMENT),'no rim fade; round spots wrapped round the body, no stripe bands');
+ assert(whale.shadow.material.polygonOffset,'the seabed shadow never z-fights the bed');
+ assert(whale.mesh.scale.y===1,'whale shark: a full 3D body (not squashed flat)');
+ assert(!whale.shadow.visible&&whale.shadow.material.transparent,'seabed shadow: one quad, hidden unless the clear window is open');
  const summitDraws=[sharks.regions.find(r=>r.region==='summit').fins,sharks.regions.find(r=>r.region==='summit').bodies,mantas.islands.find(r=>r.island==='summit').under,whale.mesh];
  assert.equal(summitDraws.length,4,'Summit Isle sea life: 4 draw calls (shark fins, shark bodies, manta silhouettes, the whale shark), +1 only during a rare manta surfacing');}
 const cam=new T.PerspectiveCamera(60,390/844,.1,900),frustum=new T.Frustum(),vp=new T.Matrix4();
@@ -93,6 +108,15 @@ assert(!sr.group.visible&&!mr.group.visible&&!whale.root.visible&&whale.stats.up
 // On the north-west beach looking out to sea: the whale shark swims.
 const west=S.beachPoint(-2.6,.3);step(0,false,west);const at=()=>({x:whale.mesh.position.x,z:whale.mesh.position.z});look(west,at());const p0=whale.mesh.position.clone();step(1/30,false,west);step(1/30,false,west);
 assert(whale.root.visible&&whale.stats.awake&&whale.stats.updated===1&&whale.mesh.position.distanceTo(p0)>0,'whale shark swims when near and on screen');
+// Under the surface: the back is 0.8-1.4 m below the water line the whole swim (a slow swell), the shape is not squashed.
+{let lo=1e9,hi=-1e9;for(let i=0;i<500;i++){step(.1,false,west);const d=-.43-(whale.mesh.position.y+W.WHALE_DEPTH.backTop);lo=Math.min(lo,d);hi=Math.max(hi,d);}
+ assert(lo>=1.39&&hi<=2.21&&hi-lo>.3,`back depth under the water line ${lo.toFixed(2)}-${hi.toFixed(2)} m (1.4-2.2, swelling)`);}
+// Trail ripples and the fin's V wake reuse the pooled rings, near the player only; the seabed shadow only over a clear bed.
+{const uSave=whale.friend.u,rings=[];whale.setFx({ripple:(x,y,z,p,s)=>rings.push({x,y,z,p,s})});for(let i=0;i<600;i++){look(west,at());step(.1,false,at());}
+ assert(rings.length>=3&&rings.length<=260,`ripples are sparse (${rings.length} in 60 s)`);assert(rings.every(r=>r.y===-.43),'ripples on the water line');
+ const none=rings.length;whale.setFx(null);for(let i=0;i<50;i++){look(west,at());step(.1,false,at());}assert.equal(rings.length,none,'no ripples without the FX pool');
+ whale.setClearBed({strength:()=>1,depth:()=>3});step(.1,false,west);assert(whale.shadow.visible&&Math.abs(whale.shadow.position.y-(-.42-3+.04))<1e-6,'seabed shadow sits on the clear bed');
+ whale.setClearBed({strength:()=>0,depth:()=>3});step(.1,false,west);assert(!whale.shadow.visible,'no shadow with the clear window shut (tiers 3-4)');whale.setClearBed(null);whale.friend.u=uSave;look(west,at());step(1e-4,false,west);}
 // The summit lookout, looking west over the sea: whale shark in view and awake (the lookout is within its wake-up range).
 {const lk=S.SUMMIT_LANDMARKS.lookout;const g=S.summitGround(lk.x,lk.z);look({x:lk.x+18,z:lk.z+30},lk,g+23,g);step(1/30,false,lk);assert(whale.stats.awake,'awake as seen from the summit lookout');}
 // Same beach, looking inland (east, up the mountain): drawn (cheap) but asleep, nothing uploads.

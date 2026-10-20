@@ -60,7 +60,7 @@ assert.match(fs.readFileSync('lib/town/islandWarm.ts','utf8'),/const quality=gra
  assert.match(read('components/MovingIslandMap.tsx'),/useSyncExternalStore\(props\.active===false\?unsubscribed:store\.subscribe,key,key\)/);}
 // 7. Audio: the shared context suspends 2 s after nothing is audible, resumes on demand; music pauses after 30 s without input.
 {const sound=read('lib/audio/islandSound.ts'),music=read('lib/audio/islandMusic.ts');
- assert.match(sound,/const audible=\(\)=>musicAudible\|\|sources\.size>0\|\|!!engine\|\|!!travelHum\|\|!!rush;/);// + the sea-ride rush loop (Oct 15 2026)
+ assert.match(sound,/const audible=\(\)=>musicAudible\|\|sources\.size>0\|\|!!engine\|\|!!travelHum\|\|!!rush\|\|water\.active\(\);/);// + the sea-ride rush loop (Oct 15 2026)
  assert.match(sound,/if\(context\.state!=='running'\)\{if\(!\(idleSuspended&&context\.state==='suspended'\)\)return false;wakeIdle\(\);\}/,'a game sound resumes an idle-suspended context');
  assert.match(music,/export const MUSIC_IDLE_MS=30000;/);assert.match(music,/const allowed=\(\)=>enabled&&!bottleOpen&&!mediaPaused&&!ducked&&!idle&&/);
  assert.match(read('components/Town.tsx'),/createIslandMusic\(savedMusic,initialMusicVolume,sound\.getContext,sound\.setMusicAudible[,)]/);}

@@ -2,9 +2,11 @@
 // counts as walkable ground (simulation.blocked), as land for landing searches (landmass.onLand / distanceToLand) and
 // as a floor at its `height` (rooftopTravel.surface). The owner may mutate x/z/yaw/height in place each frame (sway),
 // like the ferry deck; nothing here runs per frame. Each check skips a deck with a box test before any trig.
+/** `distance` (optional, Oct 19 2026): the real distance to the finer shape for a deck with `contains`. Without it the rectangle is
+ *  the distance, which for a curved jetty read 0 m in the open sea inside its bounding box (walking upright out at sea). */
 /** `contains` (optional, Sep 30 2026, East Jetty): a finer shape inside the rectangle (e.g. a curved walkway). The rectangle
  *  stays the cheap first test and the bound used by distanceToLandableDeck (a lower bound, fine for landing searches). */
-export type LandableDeck={id:string;x:number;z:number;w:number;d:number;yaw:number;height:number;contains?:(x:number,z:number)=>boolean};
+export type LandableDeck={id:string;x:number;z:number;w:number;d:number;yaw:number;height:number;contains?:(x:number,z:number)=>boolean;distance?:(x:number,z:number)=>number};
 const decks:LandableDeck[]=[];
 /** Register a deck; returns an unregister function. Registering the same id again replaces the old entry. */
 export function registerLandableDeck(deck:LandableDeck){
@@ -27,5 +29,5 @@ export const onLandableDeck=(x:number,z:number)=>decks.length>0&&landableDeckAt(
 export const landableDeckHeight=(x:number,z:number)=>{const deck=decks.length?landableDeckAt(x,z):null;return deck?deck.height:0;};
 /** Distance to the nearest deck edge (Infinity when none; 0 on a deck). */
 export function distanceToLandableDeck(x:number,z:number){
- let best=Infinity;for(const deck of decks){if(Math.max(Math.abs(x-deck.x),Math.abs(z-deck.z))-reach(deck)>=best)continue;const {u,v}=local(deck,x,z);best=Math.min(best,Math.hypot(Math.max(0,Math.abs(u)-deck.w/2),Math.max(0,Math.abs(v)-deck.d/2)));}return best;
+ let best=Infinity;for(const deck of decks){if(Math.max(Math.abs(x-deck.x),Math.abs(z-deck.z))-reach(deck)>=best)continue;const {u,v}=local(deck,x,z);const box=Math.hypot(Math.max(0,Math.abs(u)-deck.w/2),Math.max(0,Math.abs(v)-deck.d/2));best=Math.min(best,deck.distance?Math.max(box,deck.distance(x,z)):box);}return best;
 }

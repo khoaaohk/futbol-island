@@ -64,7 +64,7 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  // The sea (Oct 15 2026): the once-per-device swim lesson toast, and the analytics "first wade / first swim" device flags.
  'fi2-swim-lesson-v1','fi2-water-firsts-v1',
  // The sea (Oct 15 2026): the once-per-device shark ("Uh oh!") and manta/whale-shark ride lesson toasts.
- 'fi2-shark-lesson-v1','fi2-ride-lesson-v1',
+ 'fi2-shark-lesson-v1','fi2-ride-lesson-v1','fi2-ride-steer-hint-v1','fi2-dive-hint-v1',
  // Summit Isle tree kick (Oct 15 2026): the once-per-device strike lesson.
  'fi2-tree-kick-lesson-v1',
  // Fish stall kick (Oct 15 2026): the once-per-device shooting lesson.

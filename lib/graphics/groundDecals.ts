@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {effectiveTier,subscribeHeatTier} from './heatTier';
 
 /**
  * Ground decals (Oct 17 2026): static, opaque, low-poly detail on the beaches and beside trails/buildings so the lawn and sand are
@@ -103,8 +104,12 @@ function stripGeometry(){ // one flat quad (2 tris), long axis x, facing up
 
 /** Builds the instanced meshes under `parent` (call AFTER the static batching pass: it merges every plain Mesh, instanced ones included).
  *  Macro sites are appended to the mesh of their host kind (so only the flat-strip mesh is new: +1 draw per island, and only when it has sites). */
+/** Heat offsets Oct 19 2026: from this heat tier (a hot phone, already at 1.25; Battery saver = 4) the decal and macro layers are not
+ *  drawn: -4 draws and ~5-9k triangles in a beach view. Tiers 0-1 (and desktop) keep them. Pure visibility, no rebuild. */
+export const DECALS_OFF_TIER=2;
 export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const group=new T.Group();group.name=name;const owned:{dispose():void}[]=[];
+ const syncTier=()=>{group.visible=effectiveTier()<DECALS_OFF_TIER;};syncTier();const unsubscribe=subscribeHeatTier(syncTier);
  type Inst={x:number;y:number;z:number;r:number;sx:number;sy:number;sz:number;col:string};
  const from=(list:Site[],palette:readonly string[],stone:boolean):Inst[]=>list.map(s=>({x:s.x,y:s.y+(stone?s.s*.15:0),z:s.z,r:s.r,sx:s.s,sy:stone?s.s*.45:s.s,sz:stone?s.s*1.3:s.s,col:palette[s.c%palette.length]}));
  const macro=(h:MacroHost):Inst[]=>plan.macro.filter(m=>MACRO_HOST[m.k]===h);
@@ -123,5 +128,5 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const macroTris=plan.macro.reduce((a,m)=>a+MACRO_HOST_TRIS[MACRO_HOST[m.k]],0);
  return {group,count:plan.stones.length+plan.tufts.length+plan.flowers.length+plan.macro.length,macroCount:plan.macro.length,macroTriangles:macroTris,
   triangles:plan.stones.length*DECAL_TRIS.stone+plan.tufts.length*DECAL_TRIS.tuft+plan.flowers.length*DECAL_TRIS.flower+macroTris,
-  dispose(){group.removeFromParent();for(const o of owned)o.dispose();}};
+  dispose(){unsubscribe();group.removeFromParent();for(const o of owned)o.dispose();}};
 }

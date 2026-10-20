@@ -44,13 +44,14 @@ export function HeadlineTiles({report,onOpenDay}:{report:Report;onOpenDay?:(day:
  const perLabel=single?label:`the same ${per?.days??full} days ${len===7?'a week':plural(len,'day')} earlier`;
  // New save codes: like for like when the range ends today (its complete days vs as many days before; lib/saves/metrics.ts).
  const sc=report.saves?.compare;
+ const allMadeInRange=!!d&&d.total>0&&d.range.created>=d.total;// every stored code was made inside the range: 'made before it' is 0 by construction
  return <section className={styles.kpis8} aria-label="Headline numbers">
   <div className={`${styles.tile} ${styles.hero} ${onOpenDay?liveStyles.hero:''}`} data-day-tile={report.to}
    {...(onOpenDay?{role:'button',tabIndex:0,'aria-haspopup':'dialog' as const,'aria-label':`${single?(partial?'Players today so far':`Players on ${onDay(report.to)}`):'Players, total'}: open each player's sessions${single?'':` on ${onDay(report.to)}`}`,
     onClick:()=>onOpenDay(report.to),onKeyDown:(e:ReactKeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onOpenDay(report.to);}}}:{})}>
-   <span>{single?(partial?'Players today so far':`Players on ${onDay(report.to)}`):'Players, total'}</span>
+   <span>{single?(partial?'Players today so far':`Players on ${onDay(report.to)}`):'Player-days (visits)'}</span>
    <b>{c?fmtInt(single?Math.round(perDay(c)):c.visitors):'0'}</b>
-   <small>{single?'unique visitors':`players added up day by day over ${plural(len,'day')}${partial?' (today so far included)':''}: someone who plays on 3 days counts 3 times · about ${fmtInt(Math.round(perDay(c!)))} a day`} · a visitor is one device and network on one day</small>
+   <small>{single?'unique visitors':`players added up day by day over ${plural(len,'day')}${partial?' (today so far included)':''}: someone who plays on 3 days counts 3 times · about ${fmtInt(Math.round(perDay(c!)))} a day`} · a visitor is one device and network on one day{!single&&d&&d.total>0?` · distinct people can't be counted across days (the visitor id changes daily, on purpose); at least ${fmtInt(d.total)} distinct players have a save code`:''}</small>
    {/* Totals (user, Oct 13 2026: "change that to total ... easier to understand than per day"); the change compares the same complete days, so a range that ends today isn't unfairly behind. */}
    {c&&<Delta cur={single?perDay(c):perDay(c)*(per?.days??full)} prev={p?(single?perDay(p):perDay(p)*(per?.days??full)):null} label={perLabel}/>}
    <Sparkline values={report.series.map(s=>s.visitors)} label="Visitors over the range"/>
@@ -63,8 +64,8 @@ export function HeadlineTiles({report,onOpenDay}:{report:Report;onOpenDay?:(day:
     :d.to===d.today&&d.from===d.to?<small>today so far (UTC date)</small>:<Delta cur={d.range.created} prev={d.range.prev_created} label={prevLabel(len)}/>}
    {d&&<Sparkline values={d.by_day.map(x=>x.created)} label="New save codes per day"/>}</div>
   {/* Returning (Oct 20 2026): range-aware. Codes made before the range whose last use falls inside it. Only the LATEST use date is stored. */}
-  <div className={styles.tile}><span>Returning save codes</span><b>{d?fmtInt(d.range.returning??0):'—'}</b>
-   {!d?<small>{gap}</small>:d.range.returning===undefined?<small>run supabase/migrations/20261020_admin_save_returning_range.sql to count this range</small>
+  <div className={styles.tile}><span>Returning save codes</span><b>{d?fmtInt(allMadeInRange?d.returning:d.range.returning??0):'—'}</b>
+   {!d?<small>{gap}</small>:allMadeInRange?<small>came back on a later day. Every save code was made inside this range, so none were made before it (Oct 20 2026: the range definition would show a false 0); this is the all-time count</small>:d.range.returning===undefined?<small>run supabase/migrations/20261020_admin_save_returning_range.sql to count this range</small>
     :<><small>{d.from===d.to?(d.to===d.today?'made before today and used today':'made before this day and used on it'):'came back in this range, made before it'} (UTC dates; only the latest use date of each code is stored, so a code used again later counts in the later range)</small>
      <Delta cur={d.range.returning} prev={d.range.prev_returning} label={prevLabel(len)}/></>}
    {d&&<small>all time {fmtInt(d.returning)} · {d.eligible?fmtPct(d.returning/d.eligible):'—'} of codes made before today came back on a later day</small>}</div>

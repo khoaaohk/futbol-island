@@ -2,6 +2,7 @@ import * as T from 'three';
 import {LUMBAR_HEIGHT,CHEST_HEIGHT} from './spineSurface';
 import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT} from './shirtNumbers';
 import {styleIndexRange} from './playerBatch';
+import {WATER_UNIFORMS} from './waterSurface';
 import {BEAN_EYES,BEAN_MOUTHS,BEAN_EXPRESSIONS,defaultBeanLookFor,defaultOutfitForTeam,
  type BeanLook,type Outfit,type BeanExpression,type BeanBuild,type BeanEyes,type BeanMouth} from './beanLook';
 
@@ -589,6 +590,33 @@ const CLAY=/* glsl */`
  outgoingLight=mix(outgoingLight,diffuseColor.rgb*(lo/la),.5);
 }`;
 
+/*
+ * Swimming (Oct 19 2026, docs/water-look-research.md §4): below the water line the swimming player's parts take the sea's look
+ * (absorption toward the water colour with depth, a little desaturation, a soft caustic shimmer), seen through the clear disc
+ * the ocean opens round the swimmer (swimClear.ts). Gated per material by `beanUnder` (0 for every other bean and on land:
+ * one uniform branch, no recompiles). The world position comes from one extra varying.
+ */
+const BEAN_WORLD_VERTEX=/* glsl */`
+{vec4 beanWp=vec4(transformed,1.);
+#ifdef USE_INSTANCING
+beanWp=instanceMatrix*beanWp;
+#endif
+vBeanW=(modelMatrix*beanWp).xyz;}`;
+const BEAN_UNDER_PARS=/* glsl */`
+varying vec3 vBeanW;uniform float beanUnder,uWaterTime;`;
+const BEAN_UNDER=/* glsl */`
+if(beanUnder>0.){
+ float uh=${(-.43).toFixed(2)}-vBeanW.y,uk=beanUnder*smoothstep(-.015,.05,uh);
+ if(uk>0.){
+  float l=dot(outgoingLight,vec3(.2126,.7152,.0722)),ab=min(1.-exp(-max(uh,0.)*1.6-.5),.6);// floor: a deep diver stays readable
+  vec3 o=mix(outgoingLight,vec3(l),.45)*vec3(.55,.85,.95);
+  o=mix(o,vec3(.05,.34,.44)*(.5+.5*l),ab*.7);
+  vec2 cq=vBeanW.xz*2.3;float t=uWaterTime;
+  float cs=sin(cq.x+1.6*sin(cq.y*.9+t*1.1)+t*.7)*sin(cq.y*1.15+1.4*sin(cq.x*.8-t*.9)-t*.6);
+  o+=vec3(.5,.78,.8)*smoothstep(.55,.95,abs(cs))*.22*exp(-max(uh,0.)*1.1);
+  outgoingLight=mix(outgoingLight,o,uk);
+ }
+}`;
 export type BeanKind='body'|'limbs'|'hair'|'hat';
 const viewport={value:800};
 const _size=new T.Vector2();
@@ -598,9 +626,11 @@ function patchVertex(src:string,kind:BeanKind,depth:boolean){
  if(depth)src=src.replace('#include <begin_vertex>','beanShape();vec3 transformed=beanP;');
  else src=src.replace('#include <beginnormal_vertex>','beanShape();vec3 objectNormal=beanN;').replace('#include <begin_vertex>','vec3 transformed=beanP;');
  const lod=kind==='body'?(depth?'':LOD_BODY):kind==='limbs'?LOD_LIMB:LOD_HEAD;
+ if(!depth)src=src.replace('#include <common>','#include <common>\nvarying vec3 vBeanW;').replace('#include <project_vertex>','#include <project_vertex>\n'+BEAN_WORLD_VERTEX);
  return src.replace('#include <project_vertex>','#include <project_vertex>\n'+lod);
 }
-type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null}};
+type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};
+ /** 0..1 underwater look below the water line (swimClear.ts; the swimming player only, 0 = no-op for every other bean). */beanUnder:{value:number};uWaterTime:{value:number}};
 const EMPTY_ROW=new Float32Array(BD.size*4);
 /** A rig's row wrapped as a texture handle: identifies the row for code that clones bean materials; never uploaded. */
 export function beanRowHandle(row:Float32Array){const t=new T.DataTexture(row,BD.size,1,T.RGBAFormat,T.FloatType);t.userData.beanRow=true;t.name='bean-row-handle';return t;}
@@ -614,7 +644,7 @@ const isBatchTexture=(source:RowSource)=>!!source&&!(source instanceof Float32Ar
  * frame re-uploads only the small dynamic texture.
  */
 function uniformsFor(kind:BeanKind,row:Float32Array|null,texture:T.Texture|null):BeanUniforms{
- return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null}};
+ return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
 }
 /** Clay MeshStandardMaterial for one bean part; clones (playerBatch) keep the shader with their own data texture. */
 export class BeanMaterial extends T.MeshStandardMaterial{
@@ -634,9 +664,9 @@ export class BeanMaterial extends T.MeshStandardMaterial{
    Object.assign(shader.uniforms,this.beanUniforms);
    shader.vertexShader=patchVertex(shader.vertexShader,kind,false);
    const pars=kind==='body'?BODY_FRAG_PARS:kind==='limbs'?LIMB_FRAG_PARS:HEAD_FRAG_PARS,body=kind==='body'?BODY_FRAG:kind==='limbs'?LIMB_FRAG:HEAD_FRAG;
-   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+FRAG_COMMON+pars).replace('#include <color_fragment>',body).replace('#include <opaque_fragment>',CLAY+'\n#include <opaque_fragment>');
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+FRAG_COMMON+pars+BEAN_UNDER_PARS).replace('#include <color_fragment>',body).replace('#include <opaque_fragment>',CLAY+BEAN_UNDER+'\n#include <opaque_fragment>');
   };
-  this.customProgramCacheKey=()=>'bean-'+kind+'-v1';
+  this.customProgramCacheKey=()=>'bean-'+kind+'-v2';
   this.onBeforeRender=(renderer:T.WebGLRenderer)=>{viewport.value=renderer.getSize(_size).y||800;};
  }
  copy(source:T.MeshStandardMaterial){

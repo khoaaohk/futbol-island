@@ -157,7 +157,7 @@ await ok('sql: day sessions, players and one player on a throwaway Postgres',asy
   psql('create role anon; create role authenticated; create role service_role bypassrls;');
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
-  assert.equal(files.filter(f=>f>path.basename(MIGRATION)).join(),'20261020_admin_save_returning_range.sql','only the save-metrics range migration (a separate function) runs after it');
+  assert.equal(files.filter(f=>f>path.basename(MIGRATION)).join(),'20261020_admin_save_returning_range.sql,20261021_analytics_sponsor_split.sql','only the save-metrics range and the sponsor split (separate read functions) run after it');
   const results=files.map(f=>[f,runFile(path.join('supabase/migrations',f))]);
   assert.equal(results.find(([f])=>f===path.basename(MIGRATION))[1],OK_ROW,'self-check row');
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');

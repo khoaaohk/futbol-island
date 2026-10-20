@@ -1,5 +1,32 @@
 # Performance reference for future Futbol Island updates
 
+## Water design audit fixes, Oct 19 2026 (local, not deployed)
+
+`docs/water-design-audit-2026-10-19.md`. Constants and palette only: reef `CLEAR_UNDER` weights, `CLEAR_WIN.alpha` .14/.42, shared
+coral palette `CLEAR_CORAL` (window + fishing themes), `seaVeil SEA_COLOR`, the ocean's open-sea deep-blue mix (+2 ALU) and a weaker
+net at sea. No new draws, passes, textures or uniforms; draw counts identical before/after in all nine audit views. Not measured on an iPhone.
+
+## Heat offsets for the water look, Oct 19 2026 (local, not deployed)
+
+Brief: offset the swim clear disc, the clear water window (whole ocean blended near a beach at tiers 0-2), the rides and the Oct 17 ground detail so net phone heat does not rise. Method: production build, headless Chrome/Metal (`--mute-audio --use-angle=metal`), 390 x 844 DPR 2 touch, teleport via `fi2-arcade-departure-v1`; counters from `window.__fi2` (draws/triangles averaged over 40 rendered frames, rendered frames/s, shadow refreshes/s by wrapping `renderer.render`), busy % = CDP `TaskDuration`. GPU-synced `renderer.render` timings were taken again and are NOT usable (the Mac GPU clock and other agents' builds moved them by +-2-7 ms run to run); busy % moved +-10 points between identical runs. Use frames, pixels, draws and triangles as the evidence.
+
+Audit (tier 0, before): south beach (143, 214) 124-131 draws / 127-133k tris, clear window open, 30 fps at rest (field players on screen block any rest); Coral Cay Hostel bay (556, -104) 101-104 / 151-152k, window open, 30 fps at rest (townsfolk moving within 35 m); plaza (80, -40) 142-150 / 96-112k, 30 fps (cars within 45 m); north beach 51 draws, 30 fps at rest (1-2 townsfolk always walking near: the Oct 17 foot rest almost never engaged); treading water 33 draws, 20 fps, shadows refreshed every frame. In-page A/B costs per view: clear window +8 draws/+16k tris (south), +11/+21k (Cay), +7/+22k (swimming); decal + macro layers 4 draws and 5-9k tris; HUD 0 React renders/s at rest, ~2/s moving (fine). **Bug found:** the thermal governor judged a 20 fps rest frame (50 ms) against the 33 ms baseline it learned while playing, so 12 s of treading water or an idle ride after normal play stepped a phone to tier 1 ("throttling: median 50 ms vs baseline 33 ms") and it needed 75 s of calm to come back.
+
+| Saving (implemented) | Where | Measured after | Risk |
+|---|---|---|---|
+| 1. Phone foot rest accepts walking townsfolk (20 fps after 3 s still; field players, a carried truck and cars < 45 m still block it; desktop keeps the strict gate) | `Town.tsx` `restNear` / `footRest` | north beach at rest 30 -> 20 fps; Coral Cay bay at rest 30 -> 20 fps (busy at 4x 78.5 -> 47.3 %, one run) | low-medium: townsfolk near you step at 20 fps while you stand still (idle rides always did) |
+| 2. Rest soft resolution: after 8 s of a rest a phone draws at 1.5 instead of 1.75 (27 % fewer pixels); any input/movement/menu is sharp at once | `quality.ts` `REST_SOFT_MS`, `REST_PIXEL_RATIO`, `restEnabled` | north beach, bay and treading water: 1.75 -> 1.5 about 12 s after the last touch; tap -> 1.75 in the next frame | low: a slight softening on a still phone at tier 0 (tiers 1+ are already at 1.5 or less); desktop never |
+| 3. Quiet rest: shadow map every 2nd frame, and 15 fps after 30 s without input when nothing moves near | `islandHeat.ts` `setRest`, `idleRide.ts` `IDLE_DEEP_*` | treading water: shadow refreshes 20 -> 10/s, then 15 fps / 7.5 shadows/s after 30 s (was 20 / 20) | low: only with no townsfolk, players or cars moving near; the dt clamp covers a 15 fps frame |
+| 4. Governor paced against the rest slot | `islandHeat.ts` `setRest(on,capMs)` | a rest after play stays tier 0 (was tier 1 after ~12 s) | low; it removes an accidental quality drop, so a rested phone is sharper again after it wakes (savings 2-3 cover the rest itself) |
+| 5. Ground grain off from tier 1 (was 3) | `groundTint.ts` `GROUND_GRAIN_OFF_TIER` | uniform 0 at tier 1 (1 `sin` + ~8 ALU per ground fragment) | very low: grain is invisible at <= 1.5 |
+| 6. Decal + macro layers hidden from tier 2 | `groundDecals.ts` `DECALS_OFF_TIER` | swimming view tier 2: 32 -> 26 draws (decals 0/3 groups), -4 draws / 5-9k tris in beach views; restored on cooling | low: hot phones lose pebbles/tufts |
+
+Desktop at tier 0 draws exactly as before (items 1-2 are phone-only, 3 needs a quiet 20 fps rest, 5-6 need a hot tier). Tests: `tests/heat-offsets.cjs` (new: deep rest, soft resolution incl. the real phone setup, rest shadows, governor pacing incl. the old misjudgement, grain/decal tiers, Town wiring); updated `ground-detail`, `idle-ride`, `heat-water`, `heat-render`, `zipline` pins. `test:quiet` 213/214 (game-saves failed once under load, passes alone), `build:quiet` OK, tsc clean.
+
+**Recommended, NOT done (files under other agents' work):** (a) `lib/town/water/clearWindow.ts`: open the window only at tier < 2 (today `tier<3`): a hot phone stops blending the whole ocean, -7 to -11 draws, -16 to -22k tris; (b) `waterSurface.ts` / `clearWindow.ts`: keep the ocean OPAQUE and draw only a disc mesh (window radius, about 70 m) with the blended program, so the blend covers the window's pixels instead of every ocean pixel (largest GPU item of the week; check that the opaque program does not need `discard`, which costs hidden-surface removal on Apple GPUs; measure on the phone); (c) `waterSurface.ts`: skip the light-band ripple read while `uWaterDetail < 1` (phones from tier 1); (d) `clearWindow.ts`: close the window while the camera is above ~25 m (jetpack) where the seabed reads as noise; (e) `islandWarm.ts`: pre-compile the blended ocean (v5), strip (v4) and the two reef Lambert programs so the first beach approach does not hitch; (f) `caySharks.ts`, `cayMantas.ts`, `whaleShark.ts`, `animalRides.ts`: check that off-screen or > 60 m animals update at 10 Hz (the frustum test exists) and that a ride's animal is the only one at full rate. Other ideas not done: deep rest also with townsfolk moving; letting field players on screen (south beach beach soccer) allow a rest; a desktop foot rest with townsfolk.
+
+**Not verified on an iPhone.** All numbers are headless desktop Chrome; fewer frames and pixels are reduced work, not a measured cooling. Device test (Safari Web Inspector attached, `?heat=1` readout): (1) stand still on the north beach and in the Coral Cay bay for 1 min each without touching: the readout should show 20 fps after ~3 s and `res 1.50` after ~12 s, touch once and it must read 30 fps / `res 1.75` at once; (2) tread water 1 min: 15 fps after ~30 s, and after swimming again for 1 min the readout still says `heat tier 0`; (3) 15 min of mixed play (beach, swim, a manta ride, town) on battery, out of the case, compare CPU % in Web Inspector Timelines and the case warmth by hand with a build from before Oct 19.
+
 ## Heat audit and offsets, Oct 17 2026 (local, not deployed)
 
 User: "do another audit and see how we can reduce the heat even further to offset these new changes (ground detail)". Method: production build, headless Chrome/Metal, 390 x 844, DPR 2, touch, the island's real resolution logic (tier 0: 1.75 at rest), teleport via `fi2-arcade-departure-v1`; busy % = CDP `TaskDuration` over 8 s at 4x CPU throttle (headless Mac, not an iPhone). Baseline = working tree with the ground detail, before this pass.
@@ -5388,3 +5415,166 @@ round are in the table's second block below.
 - **CPU:** the prompt's proximity test runs at the water probe's 10 Hz and only while swimming (≤ 11 binary searches on the loops per tick, no allocation); the ride step is a handful of scalars per frame and only while riding. The ridden animal's island is kept awake (and moves with reduced motion: a ride is the player's own travel) only for the ride; everything sleeps again on release. Wake: 3 rings from the existing pool every 0.2 s (manta) / 0.24 s (whale shark), behind the fishingLife gate; the swim strokes' own wake is off while riding. No timers (the dismount splash cue is the existing feet cue), no loop of its own.
 - **Bounded:** one lap (the summit north-bay manta: 280 m ≈ 28 s; the whale shark: 474 m ≈ 59 s), then nothing runs. The idle-ride 20 fps cap never engages mid-ride (it is travel), as for the other rides.
 - **Browser (production build, headless Chrome, 390×844 touch DPR 2, tier 0):** swimming beside the summit north-bay manta with the prompt up: 47 draw calls (median of 20 frames); mid-ride 49 (+2: the surfaced manta and the wake rings); after the lap 45. By the whale shark: 75 before, 62 riding (the view moves on with the animal). Ride speed 9.91 m/s = 1.60× the sprint swim (manta), 8.05 m/s = 1.30× (whale shark); the lap ended itself after 28 s. No page errors. Not measured on an iPhone: reduced/bounded work in emulation only.
+
+## Swimmer clear disc: the body is visible under the water (water look phase 1, Oct 19 2026, local, not deployed)
+
+Design: docs/water-look-research.md §4. The opaque ocean hid everything below the water line, so a swimmer's legs and kick were never drawn.
+
+- **Clear disc** (`lib/graphics/swimClear.ts`, ocean shader `SWIM_CLEAR_GLSL` in `waterSurface.ts`): while the swim pose weight is > 0
+  the ocean material switches to normal alpha blending (`CustomBlending` SrcAlpha / OneMinusSrcAlpha; the alpha channel is kept at 1 with
+  Zero/One alpha factors, otherwise the page behind the canvas shows through) and `renderOrder` .25 (createOceanClear's order: after the
+  other opaque meshes). Its alpha drops to .32 inside a 7 m disc round the swimmer (soft over the last 2.2 m), driven by two uniforms
+  (`uSwimClear` eased over .35 s, `uSwimXZ`). It keeps writing depth, so rings, splash bits and the ground marker under the surface stay
+  hidden as before. The disc code sits under `#ifndef OPAQUE`: the normal opaque ocean program never runs it.
+- **Seabed quad**: one 22 × 22 m plane (2 triangles, 1 draw) under the disc at the shelf depth (`waterProbe.depth`, at least 1.55 m),
+  shaded with the ocean's material values and depth gradient (one island-field read) so the disc does not read, plus a soft dark ellipse
+  (the swimmer's shadow, .6 at full strength). Hidden whenever the disc is off.
+- **Body tint** (`beanSkin.ts` `BEAN_UNDER`): below the water line the player's bean parts get absorption toward the sea colour with
+  depth, some desaturation and a two-sine caustic shimmer. Per-material `beanUnder` uniform: only the local player's 4 materials are set;
+  NPCs and batches (clones get their own 0) skip it with one uniform branch. Cost for every bean: one extra vec3 varying and one
+  model-matrix multiply per vertex (cache key now `bean-*-v2`).
+- **Root depth** `SWIM_ROOT_DEPTH` / `WATER_LINE` 1.27 → 1.0 (tests pin them equal). The tread and feet-entry pelvis heights are now
+  relative to `WATER_LINE`, so the body keeps its place against the water (no pop); the wade → swim root drop is smaller (0.31 m vs 0.58).
+- **Cost while swimming**: +1 draw (seabed), the ocean blended over the screen (one blend per ocean pixel), two uniform writes per frame,
+  no allocation, no render target, no new texture, no new sprite system. Same on every heat tier and Battery saver (it is one disc).
+  **Off (not swimming)**: exactly today's ocean (blending, factors and render order restored; opaque program), quad hidden, `beanUnder` 0.
+- **One-time cost**: the first swim of a session compiles the blended ocean program (it differs only by the OPAQUE define) and switching
+  afterwards reuses the cached programs. Not pre-warmed in `islandWarm.ts`; a short hitch on the first splash on a slow phone is possible.
+- Validation: `tests/swim-clear.cjs` (gate, eased in/out, exact restore on exit and dispose, shader gating, bean gate per material,
+  depth pin, Town wiring, no allocation in update); `npm run test:quiet`, `build:quiet`, tsc. Screenshots (desktop Chrome, rendered
+  close-ups): docs/water/swim-clear-desktop.png, docs/water/swim-clear-phone.png. **No iPhone heat test has been done**: the costs above
+  are reasoned, not measured on a device.
+
+## Clear water window: see-through shallows with a seabed and coral (water look phase 2, Oct 19 2026, local, not deployed)
+
+Design: docs/water-look-research.md §3. User: the turquoise bay water near the beaches should be see-through, with a sea floor and coral.
+
+- **Window** (`lib/town/water/clearWindow.ts`, ocean shader `CLEAR_WIN_GLSL` in `waterSurface.ts`): within 35 m of the player (soft over
+  the last 12 m) and only over the shallows (drawn-waterline distance 0-16 m, back to opaque by 26 m), the ocean's blended program lowers
+  its alpha (.16 over the sand, .5 further out) and adds soft light bands (one more read of the ripple tile, stretched and slow, only in
+  the blended program, not on the still path). ONE `vec4` uniform (`uClearWin`: x, z, eased strength) written per frame. The blend
+  state is shared with the swim disc (`swimClear.ts` `createOceanBlend`: a holder count on the ocean's userData, plus the shared
+  `oceanBaseOrder` / `oceanLate` render-order counters that fishing's `createOceanClear` uses), so whichever lets go last restores it.
+  The island shore strip thins its water sheet by up to 55 % inside the window (same uniform), so the skirt does not read as a band.
+- **Seabed**: ONE 108 × 108 m grid (2 m cells, 5,832 triangles, 1 draw), re-snapped to the player in 16 m steps; its vertex shader drops
+  each vertex to `uwDepthAt(d, 4.2)` of the island field's distance (one field read per vertex; no CPU rebuild). Pale sand, a caustic
+  network on the window's scale (1 noise read on phones, 2 desktop, none on the still path), the fishing depth look (desaturation,
+  absorption, tint) with its own fixed water colours.
+- **Coral + sea grass**: the fishing reef kit (`underwater.ts clearReefKit`: mound 320, branch 242, fan 88, grass 48 triangles), ONE
+  InstancedMesh per kind (4 draws at most), seeded on a world grid (same coral every visit), nearest first, capped at 40 formations +
+  56 grass tufts, only at depth .8-4.2 m (grass .6-4.1), at least 1.5 m off the sand, off rocks (field lift) and 2.5 m from landable decks.
+  Scattered only on a 16 m snap or a tier change (no allocation in `update()` or the scatter loop). Tips sway off the water clock (still
+  with reduced motion and on the still path).
+- **Measured** (production build, desktop Chrome 1280×800, Coral Cay Hostel bay, player on the beach): tier 0 176 draws / 205.7k
+  triangles with the window on (22 formations), tier 3 171 / 194.5k with it off: about +5 draws and +11-14k triangles (worst case at
+  the caps: +5 draws, ~21k triangles). Phone profile (390×844 DPR 2) swimming in the bay: 72 draws.
+- **Tiers**: 0-1 full; 2: coral only within 28 m of the snapped centre (seabed and caustics as the phone's 1 read); 3-4 and Battery saver
+  (effective tier 4): window off, exactly today's opaque sea (checked in the browser: blending and render order back to 1 / 0 on the
+  beach); the swim disc still works there. Off while fishing (its own clear water owns the ocean) and far from the shallows.
+- **Not free**: whenever the window is open the island ocean draws blended and late over the whole screen (one blend per ocean pixel;
+  before, only while swimming). One-time: the blended ocean program (cache key v5), the strip (v4) and two new Lambert programs compile
+  the first time; not pre-warmed in `islandWarm.ts`.
+- Validation: `tests/clear-window.cjs` (gate by tier / fishing / shallows / field, exact restore incl. sharing with the swim disc,
+  instance caps, depth band, under the surface, seeded re-snap, tier 2 radius, shader gating, no allocation, Town wiring);
+  `npm run test:quiet` (211/211), `build:quiet`, tsc. Screenshots: docs/water/clear-window-desktop.png, clear-window-phone.png,
+  clear-window-high.png (jetpack 15 m). **No iPhone heat test has been done**: the costs above are desktop measurements and reasoning.
+
+
+- **Oct 19 2026 update: bigger window, sea life, depth look** (`clearWindow.ts`, `clearCreatures.ts`, `waterSurface.ts`, `swimClear.ts`; no new textures or passes):
+  - **Centre and size**: the window centres on the water point the camera looks at (forward ray to the water, clamped to `reach` of the player, eased 3/s;
+    `update(..., camera)` in Town.tsx), radius by tier `CLEAR_TIERS`: tier 0 100 m, tier 1 70 m, tier 2 28 m (0.7x with a low camera, full above ~30 m),
+    tiers 3-4 / Battery saver off. The radius rides in `uClearWin.w`; the alpha fades back to opaque over its last 30 %, and every coral / creature instance
+    shrinks to nothing over its outer 15 % (so the placement set never pops). Seabed: one 232 m square, 4 m cells (6,728 triangles), snapped to 20 m (a
+    cell multiple) so the floor never swims; sand to teal to deep over ~9-24 m, darker toward the outer edge.
+  - **World-anchored placement**: coral and grass come from the seeded 4.5 m world grid, the kind / size / colour a function of the cell only (no camera
+    LOD); creatures from per-kind world grids (fish 20 m, turtle 40 m, jelly 30 m, crab 10 m cells). Moving the window only adds / removes content at the
+    fringe (`tests/clear-window.cjs` "stable"). Caps: tier 0 200 formations + 260 grass, tier 1 70 + 90, tier 2 40 + 56.
+  - **Sea life** (ONE InstancedMesh per kind, 4 draws at most, looped in the vertex shader off the water clock, periods dividing its 3500 s wrap; no CPU
+    per frame, solid, same depth look): reef fish (24 / 12, schools of 6, ~44 triangles each, loops 6-12 m), sea turtles (3 / 2, ~100, loops 8-13 m, flipper
+    flap), jellyfish (6 / 3, ~50, pulse + drift), crabs (10 / 5, ~60, shuffle in bursts on the sand). Off at tier 2+, reduced motion and the still path.
+    The fishing models (herring 393 triangles) were too heavy for this budget, so these are simplified shapes. Rays / sharks / seahorses: not added.
+  - **Depth look** (the clear shaders only): stronger absorption, saturation and facet contrast fall with depth, silhouettes melt into the water, the
+    fishing `uwSurfaceOver` (shafts, swell and ripple lines, sky reflection, glints) drawn last (full on the bed, 0.6 on coral, 0.4 on creatures), a slow
+    vertex refraction wobble scaling with depth, wider twinkling caustic lines, soft diagonal light bands on the bed, a cooler muted coral palette.
+    Phones (detail 1) also get a one-read sun glint inside the window. Not done: instance alpha, drifting motes (a depth-tested Points draw would hide under
+    the opaque ocean; skipped), specular streaks.
+  - **Swim disc fix**: the deep-sea pale circle was the window's sand bed seen through the disc; the sand now sinks to deep teal past ~9 m, and the
+    disc is 9.5 m wide (5.5 m soft edge) and only thins to alpha .86 beyond 7-20 m off the shore.
+  - **Measured** (dev build, desktop Chrome 1280x800, jetpack 37 m at the Coral Cay causeway shallows (330,-159)): the window's own draws / triangles
+    (summed from its visible meshes): tier 0 8 / 45.5k (24 fish, 2 turtles, 6 jellies; 175 formations, 122 grass), tier 1 8 / 24.7k, tier 2 5 / 14.2k.
+    Phone 390x844 tier 1: 97 draws in the whole frame at that spot in the desktop profile, 50 in the phone profile. Added fragment ALU: one `isleSample` read and
+    one to two noise reads (`uwSurfaceOver`) on the bed and coral; the vertex wobble is ~10 ALU per vertex. **No iPhone heat test has been done**; the tier 1
+    number (24.7k triangles, 8 draws) is the phone cost to watch.
+
+### Fishing-spot reef boost (Oct 20 2026, local)
+
+User: "at each of the fishing spots, we need to have more concentration of coral and more colours" (and: the above view must match the fishing view).
+- **Window** (`clearWindow.ts` `REEF_BOOST`, `reefBoostAt`): within 11 m of each shore spot's buoy (eased out by 21 m) up to 3 extra formations per 4.5 m world cell (patchy, a few big hero mounds, small satellites), 60 % in the spot's hue family (`underwater.ts` `CORAL_FAMILIES` / `REEF_HUE`: warm, pink, blue, lime, violet). Clear sandy pool: nothing within 6 m of the buoy or of the quick-cast stretch of the cast line, no boost pieces within 2.5 m of the line. Seeded per world cell, so walking and fishing show the same coral (measured: the same formations within 25 m of the float in both views at Coral Garden, South Pier, Sharks Beach). Formations near the float about ×3 (14→34, 8→22, 20→66); the window's total stays 72-143, under the unchanged caps (tier 0 200, tier 1 70, tier 2 40). Same four InstancedMeshes: **0 extra draw calls**, no cap change.
+- **Palette**: `CLEAR_CORAL.accents` 13 → 20 (orange, yellow, lime, blue, cyan, magenta, purple); the window's reef shader (`CLEAR_UNDER(.3,.8,'1.15,.85',.4,.35)`) still mutes them with depth.
+- **Unserved spots** (tiers 3-4 / Battery saver: the spot's own merged props): `REEF_BOOST_PROPS` adds two hero clumps and small satellites in the hue family (`clearCoralMix(rot, family)`), 4.5 m clear of the float, hard-capped at +5 % of the spot's triangles (synthetic shore total 72.8k → 76.1k desktop, 41.3k → 42.9k phone, every spot under its test cap). Same one draw.
+- Shots: `docs/water/fishing-reef-{before,after}-*.png`, view match pairs `docs/water/fishing-reef-match-*-{normal,fishing}.png`.
+
+
+## Steered rides on a manta or the whale shark (Oct 19 2026, local, not deployed)
+User: "when riding the whale and manta ray, allow controlling where they go like the truck." `animalRides.step` now takes the same camera-relative stick vector the truck reads (keys and joystick), turns the animal at <= RIDE_TURN rad/s with an eased turn rate, cruises at the ride speed (RIDE_IDLE of it with the stick released), brakes to a stop when a two-point look-ahead (`waterProbe.allowed`, no distanceToLand scans) finds land or the range edge, and ends on Let go, on `probe.d < RIDE_SHORE_D`, or at RIDE_MAX_TIME (90 s). While riding, `RideFriend.free` hands the mesh pose (fx, fz, fyaw) to the graphics module (same instance, same draw); on exit `retStep` (inside the existing `darting` slot) swims it back to the nearest loop point and blends the offset away with the existing bend/bendYaw. Heat: a handful of scalars per frame, only while riding or returning; no allocation, timers or loops. The submerged manta, whale shark and shark bodies are now solid (opaque, depth-writing, double-sided; same draw counts) so coral shows through nothing.
+
+## Dive replaces Float (Oct 19 2026, local, not deployed)
+User: "change the float on your back action to dive down into the water." The water cluster's juggle slot (Q / J / 2) is now Dive (a down arrow into the wave), which reads Surface (an up arrow) while under; the Float toggle and its held lazy circle are gone (the water HUD store and action hook now live on globalThis so a dev hot reload cannot split the loop's store from the HUD's: that showed the land cluster in the sea) (swimPose keeps the 'float' shape; analytics keeps `wa:float` for history and adds `wa:dive`). Cost:
+- **No new draws, passes, materials, pools or timers.** The dive is a few scalars in `waterState.step` (`DIVE`: eased progress, depth, pitch, a 45 s clock), allocation-free (tests/water-dive-toggle.cjs scans step/press). The body is seen through the existing swimmer clear disc; while under, Town moves the disc's centre (`SWIM_CLEAR_UNIFORMS.uSwimXZ`, one Vector2 write) to where the camera's view ray to the body crosses the surface, and passes the deeper root to `swimClear.update` so its seabed quad stays under the diver. The underwater tint is the existing `beanUnder` path (its absorption already deepens with depth below the line). No underwater camera: the follow camera only drops with the root and dollies in 12 %.
+- **Depth bound:** `diveRoom(d)` = the clear window's seabed curve (CLEAR_BED.floor 4.2) minus 0.45 m, at most 1.6 m over the clear shallows easing to 1.1 m in the open sea (8 → 20 m out); `diveShore` fades it out over the shelf (waterDepthAt 1.1 → 1.6 m), so a diver rises toward a beach; under 1.2 m of shelf water Dive is greyed with a hint.
+- **Heat bound:** auto-surface after 45 s, at a shore, on a ride grab (eased) and on R / the jetpack (quick 0.5 s, then the launch). Mid-dive is never "resting" (no 20 fps idle cap while the body travels); settled under, the idle cap applies again.
+- **Effects:** going under = one small `splashDown` + the feet-first splash cue; coming up = the drips + plip and the swimPose head-shake (now also on the crawl / tread shapes); bubbles = one tiny pooled surface ring every 0.45 s while under, on every tier (the diver's marker; none with reduced motion). The body keeps a visibility floor (its `beanUnder` capped at 1 − 0.5 × under after swimClear writes it). The stick, Sprint, R and ride grabs all work while under. No surface wake or arm splashes while under. No muffled-audio filter (none exists).
+
+## Swim ripples — October 19, 2026 (local, not deployed)
+
+User: "when swimming, can we change this ring to more of water rippling out when character moves the arms". The static `player-foot-ring` is hidden while `water.state.phase==='swim'` (no change on land or wading). In its place `lib/graphics/swimRipples.ts` (pure scheduler, no allocation) asks `ballEffects.swimRipple` for thin wobbling rings: one per arm entry (every π of the swim pose's stroke clock, at the entering hand, about 2-3 a second at full effort), one per 0.8 s treading, a faint one per 1.6 s floating, and a stretched V pair behind the Swim-fast hold. They live in world space (a moving swimmer leaves them behind), spread to at most 1.6 m over about a second and fade (opacity <= 0.35, `renderOrder` 1 so they draw after the clear-water ocean at 0.25 and shore water at 0.5). Cost: a separate pool of 6 `MeshBasicMaterial` rings sharing one 40-segment ring geometry, hidden (not drawn) when idle, so 0 extra draws on land and at most 6 while swimming; it replaces the old per-stroke arm splash and bow/V wake rings (up to 7 per stroke from the shared 5-ring pool), so swimming spawns fewer pooled rings than before. Gate: full when `waterFxOn()`; heat tier 2+ or slow governor = one slow ripple every 2 s; reduced motion = one static faint ring; none while diving (the bubble rings stay). Test: `tests/swim-ripples.cjs`.
+
+## Sea sound: swim wash, dive plunge, muffled underwater (Oct 19 2026, local, not deployed)
+
+`createWaterSound` at the end of `lib/audio/islandSound.ts` (inline so the audio tests that load that file alone keep working), driven from the swim-ripples block in `Town.tsx` through `sound.swim(dt, frame)` (+ `waterPlunge()` / `waterSurface()`). Procedural on the island context and master gain: mute, volume, hide, idle and the 2 s suspend all apply. Nothing exists out of the sea.
+- Surface: one looping wash (baked 4 s lap-swell noise, filter/rate/level glide with effort every 0.1 s; stronger on Swim fast; calm quiet lap treading), a slap + lap + 1-2 droplets per arm stroke on the swim pose's stroke clock.
+- Under: master -> lowpass (760 Hz, eased in ~0.4 s, out ~0.3 s, route restored after) -> speaker; the same bed re-tuned deep and slow, one 84 Hz hum, a rounded stroke whoosh, a bubble gurgle every 1.5-4 s. At most 3 steady voices (bed + hum + one one-shot).
+- Heat: lite (tier 2+, saver, slow governor, reduced motion) drops droplets and treading laps and thins bubbles 2.2x; reduced motion also drops bubbles. No per-frame allocation (a counter + comparisons). Leaving the sea / mute / hide fades the loops, stops pending one-shots, clears the one restore timer. Test: `tests/water-sound.cjs`.
+
+## Fishing spots match the clear water (Oct 19 2026, local, not deployed)
+
+User: the fishing view did not match the new clear shallows (greener, brighter water, lime tall grass, yellow-brown rocks, bright fish, a pop on entering).
+
+- **One palette** (`underwater.ts CLEAR_LOOK`, applied once at module load to every non-abyss `REEF_THEMES` entry): water tint and clarity 70 % toward the
+  clear window's (`uUwShallow` .02/.42/.5, `uUwDeep` .004/.2/.36, clear .75), sand 60 % toward its pale sand, weed toward cool green, coral
+  saturation x0.62 and a quarter toward its teal, grass to its sea-grass greens, rocks and algae to grey-teal. Layouts, counts, signature
+  props and each spot's own hint of hue stay. Data only: same triangles, same draws. Deep-sea themes untouched.
+- **Fish**: `UW_LOOK.fishSat` 1.2/.85 -> 1.08/.8 (a little softer, still readable; depth tint unchanged).
+- **Hand-off**: `clearWin.update` now takes the fishing strength (`WATER_UNIFORMS.uShore`, eases over .8 s), not a boolean: the window's
+  target is `1 - uShore`, so the two cross-fade instead of the window snapping off. Inside the fishing shore box the clear window's coral,
+  grass and sea life shrink by `uShore` in their vertex shaders (`cwBoxK`, two uniforms the water already shares), so nothing double-draws
+  under the fishing props. No extra draws or triangles.
+
+## Sea creatures seen through the water (whale shark, mantas, reef sharks) — October 19, 2026 (local, not deployed)
+
+User: the whale shark was "too flat ... floating on top of the water", then "glitchy" and not "beneath the water", then the same for the manta rays and sharks.
+
+- **One shared patch: `lib/graphics/seaVeil.ts`** (used by `whaleShark.ts`, `cayMantas.ts` under and surfacing meshes, `caySharks.ts` bodies). Depth: the vertex shader keeps each vertex at its true screen position but gives it the ocean plane's own depth at that pixel (the view ray meets the water at the same pixel), a hair nearer, so the opaque ocean (tiers 3-4, open sea) and the blended clear window let the body show: a darker shape UNDER the surface, no coplanar decal and no flat squash. Parts above the line and a camera under the water keep real depth. Veil: below the line, desaturate then mix 55-75% (by depth) toward the sea teal, never 100% (a faint shape and the whale's spots stay readable); slow light bands slide over it; the whale also fades its rim (normals) and every creature wobbles its outline a few pixels (refraction). No new draws, textures or uniforms except one shared clock value per consumer.
+- **Depths (m under the water line, mean ± slow swell):** whale shark back 1.45-2.15, manta back 0.9-1.5, reef shark body 0.8-1.4 (the shark fin and tail tip still cut the water). The mantas' silhouette instance is now the real 3D manta (it was squashed to y 0.02); rides keep their pose (the rider is at the surface, the body just beneath).
+- **Whale shape:** a 12-ring torpedo body (rounded belly, flat-topped head, keel ridges), down-angled pectorals, two dorsals, crescent tail: 340 triangles (was 266). Tail sweep, S-bend and a slow pitch are vertex-shader terms on the existing clock (nothing uploaded). Spots are a smooth shader pattern at about 30% of the old contrast.
+- **Seabed shadow:** ONE translucent quad under the whale, visible only while the clear water window is open over a bed (`setClearBed` from `Town.tsx`); hidden at tiers 3-4. The whale's trail ripples reuse the pooled ring FX (`setFx`), ≤ 1 a second, only within 70 m of the player.
+- **Tradeoff:** the whale is now alpha-blended (rim fade) with depth writing on; mantas and sharks are still opaque. Not verified on an iPhone: this is reduced overdraw and flat draw counts, not a measured cooling.
+
+## Surface light streaks + glitter accent, deeper dive clearing (Oct 19 2026, local, not deployed)
+User: "what about the glimmer on top of the water?" then "more like the light streaks you can see in the water" (Tide Bound
+reference). All in the existing ocean fragment (lib/graphics/waterSurface.ts `WATER_GLIMMER_GLSL`): **no draw, no pass, no render
+target, no texture, no texture read added** (the clear window's old stretched light-band read was removed: one read fewer there).
+- **Light streaks**: `waterRibbon`, a warped sine band cut into soft lozenges (~4-9 m x 0.7-1.1 m), bent by the field/sea noise,
+  turned to run roughly screen-horizontal from the island camera, drifting slowly. A diffuse tint (mix 0.2 toward light cyan), so
+  it dims with the time-of-day light; strongest within ~100 m of the look point (viewMatrix ray), soft under the camera, out of
+  the foam (d < 1.5 m: none), each layer fades to its mean before its bands drop under ~2 px (no moire). Over the window its alpha
+  rises with the ribbon (not inside the swim disc) so it sits on the surface above the coral.
+  Desktop: 2 layers (~70 ALU incl. the look point and lobe); phone: 1 layer (~45 ALU); still path (heat 3-4, reduced motion,
+  governor slow): the phone layer at 55 %, static (clock held). A first try with the ripple tile stretched read as sharp flecks.
+- **Glitter accent**: one hashed cell layer (Hoskins hash, no sin), ~5-10 % of 0.75 m cells, a 0.33-0.8 s flash each, >= ~1.3 px,
+  faded before cells get small, colour = `directionalLights[0].color` (warm by day, honey at sunset, moon-pale ~1/4 at night);
+  ~30 ALU, early-outs on most pixels; off on the still path. Replaces the old ripple-crossing desktop glint and the phone window glint.
+- **Bed caustics** (clearWindow.ts `cwCaustic`): crisper white web core, same reads.
+- **Dive**: `uSwimDive` (one float, eased in swimClear.ts from waterState `under`) clears the swim disc in deep water from alpha
+  0.86 to 0.36 (`SWIM_CLEAR.diveAlpha`); beanSkin's underwater absorption is capped at 0.6 so a deep diver stays readable.
+- Pinned: tests/swim-clear.cjs (blended tail, ALU-only ribbons, still path, uSwimDive, program key v8).

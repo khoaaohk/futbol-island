@@ -276,3 +276,5 @@
 .countryList button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .countryList ul{list-style:none;margin:4px 0 6px 16px;padding:0;display:grid;gap:2px}
 .countryList ul li{display:flex;justify-content:space-between;font-size:13px;color:var(--a-ink-2);padding:2px 10px}
+/* Oct 20 2026: phones fit the date chips in two rows, so the Overview's numbers start higher up. */
+@media (max-width:600px){.filters{gap:8px}.chip{min-height:40px;padding:0 12px;font-size:14px}.filters .live{min-height:40px;padding:0 12px;font-size:13px}}

@@ -58,7 +58,7 @@ export const underEastPier=(x:number,z:number)=>jettyOffset(x,z)<=P.flankHalf;
 /** Bounding rectangle of the whole jetty (walkable part). */
 const BOX={x0:P.x0,x1:P.cx+P.r0+P.walkHalf,z0:P.cz-P.r0-P.walkHalf,z1:P.z+P.walkHalf};
 export const EAST_PIER_DECKS=[{id:'east-jetty',x:(BOX.x0+BOX.x1)/2,z:(BOX.z0+BOX.z1)/2,w:BOX.x1-BOX.x0,d:BOX.z1-BOX.z0,yaw:0,height:P.deckY}];
-registerLandableDeck({...EAST_PIER_DECKS[0],contains:onEastPier});
+registerLandableDeck({...EAST_PIER_DECKS[0],contains:onEastPier,distance:(x,z)=>Math.max(0,jettyOffset(x,z)-P.walkHalf)});
 
 /** Centre-line samples (about every metre) from the seawall to the spiral's inner end: position, unit tangent, arc length. */
 export type JettySample={x:number;z:number;tx:number;tz:number;s:number};

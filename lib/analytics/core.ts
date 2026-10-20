@@ -29,6 +29,7 @@ import type {SaveMetricsReport} from '../saves/metrics';
 import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import type {SourcesSummary} from './live';
+import type {SponsorReport} from './sponsor';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -556,6 +557,8 @@ export type Report={
  fishing?:FishingAdminMetrics|null;
  /** Oct 15 2026: "Where players come from" (lib/analytics/liveAdmin.ts loadSources, supabase/migrations/20261018_analytics_live.sql). */
  sources?:SourcesSummary|null;
+ /** Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts): games, designs, cards, videos and stories, books, reading, quizzes. */
+ sponsor?:SponsorReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */
@@ -588,6 +591,8 @@ export function emptyReport(from:string,to:string,now:Date,configured:boolean):R
  * "yesterday" the whole Pacific day before, 23 or 25 hours on a DST change); `mode` 'utc' is the pre-migration fallback.
  * Custom ranges are capped at 366 days and never end after today.
  */
+/** The first day analytics could record anything (supabase/migrations/20261007_analytics.sql): the start of the "All" range. */
+export const TRACKING_START='2026-10-07';
 export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|null},now:Date,mode:TimeZoneMode='pacific'):{from:string;to:string}{
  const today=dayIn(mode,now),day=/^\d{4}-\d{2}-\d{2}$/;
  switch(q.range){
@@ -595,6 +600,8 @@ export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|
   case 'yesterday':{const y=addDays(today,-1);return {from:y,to:y};}
   case '30d':return {from:addDays(today,-29),to:today};
   case '90d':return {from:addDays(today,-89),to:today};
+  // Oct 20 2026: everything since analytics began (the first migration, Oct 7 2026).
+  case 'all':return {from:TRACKING_START<today?TRACKING_START:today,to:today};
   case 'custom':{
    let from=q.from&&day.test(q.from)&&!isNaN(Date.parse(q.from))?q.from:addDays(today,-6);
    let to=q.to&&day.test(q.to)&&!isNaN(Date.parse(q.to))?q.to:today;
