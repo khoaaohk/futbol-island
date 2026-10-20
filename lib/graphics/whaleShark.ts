@@ -99,21 +99,29 @@ function addShaders(material:T.Material,uniform:{value:number}){
  material.customProgramCacheKey=()=>'whale-shark-3d';
 }
 
-export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {x:number;z:number}[];speed:number}}={}){
- const loop=options.loop??WHALE_SHARK_LOOP,pts=loop.points,n=pts.length;
- const lengths=new Float64Array(n+1);for(let i=1;i<=n;i++){const a=pts[i-1],b=pts[i%n];lengths[i]=lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z);}
- const total=lengths[n],time={value:0};
+/** The one geometry, material (tail-sweep time uniform) and seabed-silhouette texture, shareable by several whale sharks
+ *  (Oct 20 2026: the open-sea whale sharks, openSeaLife.ts, draw from ONE set; whoever shares it owns `time`). */
+export function createWhaleSharkShared(){
+ const time={value:0};
  // Oct 19 2026 (user: "too flat ... floating on top of the water"): a real rounded body swimming UNDER the surface (WHALE_DEPTH),
  // opaque and depth-writing (SEA_DEPTH makes the sea's depth test let it show through), tinted by depth in the fragment.
  const geometry=whaleSharkGeometry(),material=new T.MeshBasicMaterial({side:T.DoubleSide,vertexColors:true,transparent:false,depthWrite:true});addShaders(material,time);// Oct 19 2026: solid from every angle, slate back with the pale spots and stripes (pattern on), flanks pale not teal
- const mesh=new T.Mesh(geometry,material);mesh.name='summit-whale-shark';mesh.renderOrder=1;/* opaque, after the sea like the sharks */mesh.castShadow=mesh.receiveShadow=false;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;
- const root=new T.Group();root.name='summit-whale-shark-root';root.add(mesh);scene.add(root);
+ const sil=silhouetteOf(geometry,'top');
+ return {time,geometry,material,sil,dispose(){geometry.dispose();material.dispose();sil.geometry.dispose();sil.texture.dispose();}};
+}
+export type WhaleSharkShared=ReturnType<typeof createWhaleSharkShared>;
+export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {x:number;z:number}[];speed:number};id?:string;name?:string;start?:number;shared?:WhaleSharkShared}={}){
+ const loop=options.loop??WHALE_SHARK_LOOP,pts=loop.points,n=pts.length;
+ const lengths=new Float64Array(n+1);for(let i=1;i<=n;i++){const a=pts[i-1],b=pts[i%n];lengths[i]=lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z);}
+ const own=!options.shared,res=options.shared??createWhaleSharkShared(),total=lengths[n],time=res.time,geometry=res.geometry,material=res.material;
+ const mesh=new T.Mesh(geometry,material);mesh.name=options.name??'summit-whale-shark';mesh.renderOrder=1;/* opaque, after the sea like the sharks */mesh.castShadow=mesh.receiveShadow=false;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;
+ const root=new T.Group();root.name=mesh.name+'-root';root.add(mesh);scene.add(root);
  // A soft translucent shadow on the seabed (ONE mesh): only while the clear water window is open over a bed (setClearBed from
  // Town.tsx); hidden otherwise, so tiers 3-4 and the open sea pay nothing. Oct 20 2026: the whale shark's own outline seen from above
  // (fishSilhouette.ts, its geometry rasterized once into a soft alpha texture; was a round disc), turned and placed with the body.
- const sil=silhouetteOf(geometry,'top');const shadowTex=sil.texture;
+ const sil=res.sil,shadowTex=sil.texture;
  const shadowMat=new T.MeshBasicMaterial({map:shadowTex,color:'#04141c',transparent:true,opacity:.34,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-4/* Oct 20 2026: no z-fight with the bed */});
- const shadow=new T.Mesh(sil.geometry,shadowMat);shadow.name='summit-whale-shark-seabed-shadow';shadow.visible=false;shadow.castShadow=shadow.receiveShadow=false;shadow.matrixAutoUpdate=false;shadow.renderOrder=2;root.add(shadow);
+ const shadow=new T.Mesh(sil.geometry,shadowMat);shadow.name=mesh.name+'-seabed-shadow';shadow.visible=false;shadow.castShadow=shadow.receiveShadow=false;shadow.matrixAutoUpdate=false;shadow.renderOrder=2;root.add(shadow);
  const sunOff={x:0,z:0};
  let clearBed:{strength:()=>number;depth:(x:number,z:number)=>number}|null=null;
  /** Trail ripples / bubbles and the fin's small V wake reuse the island's pooled ring FX (ballEffects.ripple), set from Town.tsx. */
@@ -123,7 +131,7 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
  const xs=pts.map(p=>p.x),zs=pts.map(p=>p.z),box={minX:Math.min(...xs)-8,maxX:Math.max(...xs)+8,minZ:Math.min(...zs)-8,maxZ:Math.max(...zs)+8};
  const sphere=new T.Sphere(new T.Vector3(),9);
  // Starts in the stretch the summit lookout's camera frames (on desktop and phones).
- const state={u:.45*total,k:1,clock:0,placed:false,placedReduced:false,ridden:false,free:false,fx:0,fz:0,fyaw:0,dx:0,dz:0,dyaw:0,bank:0,rise:0,/* the dart after a ride (animalRides.ts DART_*) */boost:1,bend:0,bendYaw:0,bubbleT:1.2,finT:0,finUp:false};
+ const state={u:(options.start??.45)*total,enabled:true,k:1,clock:0,placed:false,placedReduced:false,ridden:false,free:false,fx:0,fz:0,fyaw:0,dx:0,dz:0,dyaw:0,bank:0,rise:0,/* the dart after a ride (animalRides.ts DART_*) */boost:1,bend:0,bendYaw:0,bubbleT:1.2,finT:0,finUp:false};
  const stats={awake:false,updated:0,visible:false};
  const up=new T.Vector3(0,1,0),ax=new T.Vector3(1,0,0),qBank=new T.Quaternion(),pivot=new T.Vector3();
  function place(dt:number){
@@ -150,12 +158,12 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
  /** Called from the island's frame update with the frustum the sharks just built. */
  function update(dt:number,reduced:boolean,frustum:T.Frustum,player:{x:number;z:number}){
   const d=Math.hypot(Math.max(box.minX-player.x,0,player.x-box.maxX),Math.max(box.minZ-player.z,0,player.z-box.maxZ));
-  root.visible=stats.visible=d<DRAW;stats.awake=false;stats.updated=0;if(!root.visible)return;
+  root.visible=stats.visible=(state.enabled||state.ridden||state.free)&&d<DRAW;stats.awake=false;stats.updated=0;if(!root.visible)return;
   if(!state.placed||state.placedReduced!==reduced){place(0);state.placed=true;state.placedReduced=reduced;}
   sphere.center.copy(mesh.position);if(!state.ridden&&!state.free&&(d>NEAR||!frustum.intersectsSphere(sphere)))return;
   // Frozen (dt 0) or static ambience / reduced motion: already placed, so nothing uploads.
   stats.awake=true;if(dt===0||reduced&&!state.ridden&&!state.free&&state.rise<.005)return;// a ride is the player's own travel: it moves with reduced motion too
-  const step=Math.min(dt,.1);state.clock=(state.clock+step)%(2*Math.PI/1.15*400);time.value=state.clock;place(step);stats.updated=1;
+  const step=Math.min(dt,.1);state.clock=(state.clock+step)%(2*Math.PI/1.15*400);if(own)time.value=state.clock;place(step);stats.updated=1;
   // Near the player only (pooled rings, <= ~2 a second): small trail ripples over the back, and a V wake while the fin cuts the surface.
   if(fx&&!reduced&&!state.ridden/* ridden: the ride's own wake (Town.tsx RIDE_WAKE_AT) */&&Math.hypot(mesh.position.x-player.x,mesh.position.z-player.z)<70){
    if((state.bubbleT-=step)<=0){state.bubbleT=1.1;wakeAt.set(2.6,0,(Math.sin(state.clock*2.3))*.6).applyMatrix4(mesh.matrix);fx.ripple(wakeAt.x,WATER,wakeAt.z,.07,.5);}
@@ -164,14 +172,16 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
   }
  }
  /** Water P1b (lib/town/water/animalRides.ts): the whale shark as a ridable "island friend" (the same one mesh). */
- const friend:RideFriend={kind:'whale',id:loop===WHALE_SHARK_LOOP?WHALE_SHARK_LOOP.id:'whale-shark',points:pts,lengths,total,
+ const friend:RideFriend={kind:'whale',id:options.id??(loop===WHALE_SHARK_LOOP?WHALE_SHARK_LOOP.id:'whale-shark'),points:pts,lengths,total,
   get u(){return state.u;},set u(v:number){state.u=v;},get available(){return root.visible;},
   get free(){return state.free;},set free(v:boolean){state.free=v;},get fx(){return state.fx;},set fx(v:number){state.fx=v;},get fz(){return state.fz;},set fz(v:number){state.fz=v;},get fyaw(){return state.fyaw;},set fyaw(v:number){state.fyaw=v;},get dx(){return state.dx;},set dx(v:number){state.dx=v;},get dz(){return state.dz;},set dz(v:number){state.dz=v;},get dyaw(){return state.dyaw;},set dyaw(v:number){state.dyaw=v;},get bank(){return state.bank;},set bank(v:number){state.bank=v;},get ridden(){return state.ridden;},set ridden(v:boolean){state.ridden=v;},speed:loop.speed,
   get boost(){return state.boost;},set boost(v:number){state.boost=v;},get bend(){return state.bend;},set bend(v:number){state.bend=v;},get bendYaw(){return state.bendYaw;},set bendYaw(v:number){state.bendYaw=v;}};
- return {root,mesh,shadow,stats,update,time,box,friend,
+ return {root,mesh,shadow,stats,update,time,box,friend,state,
+  /** Open-sea cap (openSeaLife.ts): a whale over the drawn cap is hidden (never one being ridden or swimming back). */
+  setEnabled(v:boolean){state.enabled=v;},
   /** Town.tsx: the clear window's strength and the bed's depth under a point (m, -1 off the bed), for the seabed shadow. */
   setClearBed(b:typeof clearBed){clearBed=b;if(!b)shadow.visible=false;},
   /** Town.tsx: the island's pooled ring FX (ballEffects), for the trail ripples and the fin's V wake. */
   setFx(f:typeof fx){fx=f;},
-  dispose(){root.removeFromParent();geometry.dispose();material.dispose();shadow.geometry.dispose();shadowMat.dispose();shadowTex.dispose();}};
+  dispose(){root.removeFromParent();shadowMat.dispose();if(own)res.dispose();}};
 }

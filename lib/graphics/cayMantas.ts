@@ -19,7 +19,8 @@
 //  - Summit Isle (Oct 14 2026) is a fourth island: 3 mantas on desktop, 2 on phones, thinned on hot tiers (summitSeaLifeCounts:
 //    2 at tiers 1–2, 1 at tier 3, none at the hottest), one `count` change when the tier changes.
 import * as T from 'three';
-import {MANTA_ISLANDS,mantaLoopsFor,type MantaIsland,type MantaLoop} from '../town/mantaLoops';
+import {MANTA_ISLANDS,mantaLoopsFor,type RayLoop} from '../town/mantaLoops';
+import type {HeatTier} from './heatTier';
 import {dynamicResolutionEnabled} from './quality';
 import {subscribeHeatTier,effectiveTier} from './heatTier';
 import {summitSeaLifeCounts} from '../town/summitSeaLife';
@@ -74,19 +75,22 @@ function addWingWave(material:T.Material,uniform:{value:number}){
  material.onBeforeCompile=shader=>{shader.uniforms.uMantaTime=uniform;patchSeaVeil(shader,uniform,{vertexHead:'attribute float aPhase;uniform float uMantaTime;',vertexAnim:WING_WAVE});};
  material.customProgramCacheKey=()=>'manta-wing-wave-sea';
 }
-type Track={loop:MantaLoop;lengths:number[];total:number;u:number;k:number;phase:number;/** Held by a rider (water P1b, lib/town/water/animalRides.ts): the ride owns `u`. */ridden:boolean;/** Free (steered ride / swim back, animalRides.ts): the ride owns the pose (fx, fz, fyaw) instead of the loop. */free:boolean;fx:number;fz:number;fyaw:number;/** The drawn (tick-interpolated) pose while free, the ride's bank, and how far it has risen to the rider's seat (0..1, animalRides.ts RIDE_RISE). */dx:number;dz:number;dyaw:number;bank:number;rise:number;/** The dart after a ride (animalRides.ts DART_*): speed multiplier, sideways offset (m, + = right), extra heading. */boost:number;bend:number;bendYaw:number;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
-function track(loop:MantaLoop,start:number,phase:number):Track{
+type Track={loop:RayLoop;/** The drawn size (SCALE × the loop's own scale: open-sea eagle / sting rays are smaller). */scaleV:T.Vector3;lengths:number[];total:number;u:number;k:number;phase:number;/** Held by a rider (water P1b, lib/town/water/animalRides.ts): the ride owns `u`. */ridden:boolean;/** Free (steered ride / swim back, animalRides.ts): the ride owns the pose (fx, fz, fyaw) instead of the loop. */free:boolean;fx:number;fz:number;fyaw:number;/** The drawn (tick-interpolated) pose while free, the ride's bank, and how far it has risen to the rider's seat (0..1, animalRides.ts RIDE_RISE). */dx:number;dz:number;dyaw:number;bank:number;rise:number;/** The dart after a ride (animalRides.ts DART_*): speed multiplier, sideways offset (m, + = right), extra heading. */boost:number;bend:number;bendYaw:number;box:{minX:number;maxX:number;minZ:number;maxZ:number};sphere:T.Sphere};
+function track(loop:RayLoop,start:number,phase:number):Track{
  const lengths=[0],n=loop.points.length;for(let i=1;i<=n;i++){const a=loop.points[i-1],b=loop.points[i%n];lengths.push(lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z));}
  const xs=loop.points.map(p=>p.x),zs=loop.points.map(p=>p.z),box={minX:Math.min(...xs),maxX:Math.max(...xs),minZ:Math.min(...zs),maxZ:Math.max(...zs)};
  const b3=new T.Box3(new T.Vector3(box.minX-4,WATER-3,box.minZ-4),new T.Vector3(box.maxX+4,WATER+3,box.maxZ+4));
- const total=lengths[n];return {loop,lengths,total,u:start*total,k:1,phase,ridden:false,free:false,fx:0,fz:0,fyaw:0,dx:0,dz:0,dyaw:0,bank:0,rise:0,boost:1,bend:0,bendYaw:0,box,sphere:b3.getBoundingSphere(new T.Sphere())};
+ const total=lengths[n],s=SCALE*(loop.scale??1);return {loop,scaleV:new T.Vector3(s,s,s),lengths,total,u:start*total,k:1,phase,ridden:false,free:false,fx:0,fz:0,fyaw:0,dx:0,dz:0,dyaw:0,bank:0,rise:0,boost:1,bend:0,bendYaw:0,box,sphere:b3.getBoundingSphere(new T.Sphere())};
 }
 const boxDistance=(b:{minX:number;maxX:number;minZ:number;maxZ:number},x:number,z:number)=>Math.hypot(Math.max(b.minX-x,0,x-b.maxX),Math.max(b.minZ-z,0,z-b.maxZ));
 
-export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
+/** Options. Default: the islands' mantas (mantaLoops.ts). Oct 20 2026 (seaLifeAreas.ts): a second instance draws the open-sea
+ *  rays with its own `groups` (one instanced mesh per area), `name`, and `groupCount` (rays kept per group at a heat tier). */
+export type RayGroupsOptions={phone?:boolean;groups?:{island:string;loops:RayLoop[]}[];name?:string;groupCount?:(tier:HeatTier,phone:boolean)=>number};
+export function createCayMantas(scene:T.Scene,options:RayGroupsOptions={}){
  // Same phone rule as graphicsQuality().phone (coarse pointer or DPR > 2).
  const phone=options.phone??(typeof window!=='undefined'&&typeof window.matchMedia==='function'&&dynamicResolutionEnabled(window.devicePixelRatio||1,window.matchMedia('(pointer: coarse)').matches));
- const root=new T.Group();root.name='island-mantas';scene.add(root);
+ const root=new T.Group();root.name=options.name??'island-mantas';scene.add(root);
  const geometry=mantaGeometry(),time={value:0};
  // Oct 20 2026 (user: "disappearing at some angles", "glitchy"): FrontSide. The model is closed (top faces +y, belly -y, fins and
  // tail have both windings), and seaVeil.ts squeezes a submerged body's depth into a few cm, so double-sided top and belly z-fought.
@@ -95,11 +99,15 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
  addWingWave(underMat,time);addWingWave(surfaceMat,time);
  // Per-mesh geometries share the one set of vertex buffers (same attribute objects, uploaded once) and add a phase.
  const withPhase=(phases:number[])=>{const g=new T.BufferGeometry();for(const name of ['position','color','normal'])g.setAttribute(name,geometry.getAttribute(name));g.boundingSphere=geometry.boundingSphere;g.setAttribute('aPhase',new T.InstancedBufferAttribute(new Float32Array(phases),1));return g;};
- const islands=MANTA_ISLANDS.map((island,ii)=>{
-  const loops=mantaLoopsFor(island,phone),tracks=loops.map((l,i)=>track(l,hash(ii*7+i),ii*1.7+i*2.3));
+ const groups=options.groups??MANTA_ISLANDS.map(island=>({island:island as string,loops:mantaLoopsFor(island,phone) as RayLoop[]}));
+ const white=new T.Color(1,1,1),tintC=new T.Color();
+ const islands=groups.map(({island,loops},ii)=>{
+  const tracks=loops.map((l,i)=>track(l,hash(ii*7+i),ii*1.7+i*2.3));
   const under=new T.InstancedMesh(withPhase(tracks.map(t=>t.phase)),underMat,tracks.length),surface=new T.InstancedMesh(withPhase([0]),surfaceMat,1);
   under.name=`manta-shadows-${island}`;surface.name=`manta-surfacing-${island}`;under.renderOrder=1;surface.visible=false;
   for(const m of [under,surface]){m.castShadow=false;m.receiveShadow=false;m.frustumCulled=true;}
+  // Eagle / sting rays: a per-instance multiply tint on the shared palette (no texture); white for a manta in the same group.
+  if(loops.some(l=>l.tint)){tracks.forEach((t,i)=>under.setColorAt(i,t.loop.tint?tintC.set(t.loop.tint):white));surface.setColorAt(0,white);}
   // A fixed bound over every loop (plus breach height): culling needs no per-frame bounds work.
   const box=new T.Box3();for(const l of loops)for(const p of l.points)box.expandByPoint(new T.Vector3(p.x,WATER,p.z));box.expandByScalar(4);box.max.y+=3;
   const sphere=box.getBoundingSphere(new T.Sphere());under.boundingSphere=sphere.clone();surface.boundingSphere=sphere.clone();
@@ -110,13 +118,14 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
  });
  type Island=typeof islands[number];
  // Heat tiers: Summit Isle's mantas thin out on a hot phone (the cay's and sandbars' stay as before). Only on a tier change.
- const applyTier=()=>{const tier=effectiveTier();for(const r of islands){if(r.island!=='summit')continue;r.active=Math.min(r.tracks.length,summitSeaLifeCounts(tier,phone).mantas);r.under.count=r.active;if(r.event.active)endEvent(r);r.placed=false;}};
- const m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),pos=new T.Vector3(),full=new T.Vector3(SCALE,SCALE,SCALE),zero=new T.Vector3(0,0,0);
+ const applyTier=()=>{const tier=effectiveTier();for(const r of islands){if(!options.groupCount&&r.island!=='summit')continue;r.active=Math.min(r.tracks.length,options.groupCount?options.groupCount(tier,phone):summitSeaLifeCounts(tier,phone).mantas);r.under.count=r.active;if(r.event.active)endEvent(r);r.placed=false;}};
+ const m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),pos=new T.Vector3(),zero=new T.Vector3(0,0,0);
  const stats={awake:0,updated:0,surfacing:0,events:0,visibleIslands:0};
  function startEvent(r:Island){
   const ev=r.event,n=r.active,h=hash(r.events*3.1+r.tracks[0].phase);
   ev.active=true;ev.manta=r.events%n;ev.kind=h<MANTA_EVENT.breachChance?'breach':'wingtip';ev.t=0;ev.duration=ev.kind==='breach'?MANTA_EVENT.breach:MANTA_EVENT.wingtip;ev.side=r.events%2?1:-1;
   const phase=r.surface.geometry.getAttribute('aPhase') as T.InstancedBufferAttribute;phase.setX(0,r.tracks[ev.manta].phase);phase.needsUpdate=true;
+  const tm=r.tracks[ev.manta];if(r.surface.instanceColor){r.surface.setColorAt(0,tm.loop.tint?tintC.set(tm.loop.tint):white);r.surface.instanceColor.needsUpdate=true;}
   r.events++;stats.events++;r.surface.visible=true;
  }
  function endEvent(r:Island){r.event.active=false;r.surface.visible=false;r.next=MANTA_EVENT.minGap+hash(r.events*5.7+r.tracks[0].phase)*MANTA_EVENT.spread;}
@@ -145,12 +154,12 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
     const s=Math.min(1,ev.t/ev.duration),arc=Math.sin(Math.PI*s);let pitch=0,roll=0;
     if(ev.kind==='breach'){const h=-.9+3.3*arc;airborne=h>.1;pos.y=WATER+h;pitch=Math.atan2(3.3*Math.PI/ev.duration*Math.cos(Math.PI*s),t.loop.speed*2)*.75;roll=.25*arc*ev.side;}
     else{pos.y=WATER-.32;roll=.38*arc*ev.side;}
-    e.set(roll,yaw,pitch,'YZX');q.setFromEuler(e);m.compose(pos,q,full);r.surface.setMatrixAt(0,m);r.surface.instanceMatrix.needsUpdate=true;
+    e.set(roll,yaw,pitch,'YZX');q.setFromEuler(e);m.compose(pos,q,t.scaleV);r.surface.setMatrixAt(0,m);r.surface.instanceMatrix.needsUpdate=true;
     pos.y=deep;
    }
    // The ride's bank: a roll about the long axis through the BACK (MANTA_DEPTH.top above the centre), so the rider's seat stays put.
    const bank=t.free?t.bank*RIDE_BANK.manta:0;if(bank!==0){const h=MANTA_DEPTH.top,zl=-h*Math.sin(bank);pos.y+=h*(1-Math.cos(bank));pos.x+=zl*Math.sin(yaw);pos.z+=zl*Math.cos(yaw);}
-   e.set(bank,yaw,0,'YZX');q.setFromEuler(e);m.compose(pos,q,airborne||surfacing?zero:full);r.under.setMatrixAt(i,m);
+   e.set(bank,yaw,0,'YZX');q.setFromEuler(e);m.compose(pos,q,airborne||surfacing?zero:t.scaleV);r.under.setMatrixAt(i,m);
   }
   r.under.instanceMatrix.needsUpdate=true;
  }
@@ -174,7 +183,7 @@ export function createCayMantas(scene:T.Scene,options:{phone?:boolean}={}){
  /** Water P1b (lib/town/water/animalRides.ts): every manta as a ridable "island friend". `ridden` holds it on its
   *  silhouette instance, like the whale shark (any wingtip / breach on its island ends first, none start while it is held). */
  const friends:RideFriend[]=[];
- for(const r of islands)r.tracks.forEach((t,i)=>friends.push({kind:'manta',id:t.loop.id,points:t.loop.points,lengths:t.lengths,total:t.total,
+ for(const r of islands)r.tracks.forEach((t,i)=>t.loop.ridable!==false&&friends.push({kind:'manta',id:t.loop.id,points:t.loop.points,lengths:t.lengths,total:t.total,
   get u(){return t.u;},set u(v:number){t.u=v;},get available(){return i<r.active&&r.group.visible;},get free(){return t.free;},set free(v:boolean){if(v===t.free)return;t.free=v;r.ridden=r.tracks.some(x=>x.ridden||x.free);r.placed=false;},get fx(){return t.fx;},set fx(v:number){t.fx=v;},get fz(){return t.fz;},set fz(v:number){t.fz=v;},get fyaw(){return t.fyaw;},set fyaw(v:number){t.fyaw=v;},get dx(){return t.dx;},set dx(v:number){t.dx=v;},get dz(){return t.dz;},set dz(v:number){t.dz=v;},get dyaw(){return t.dyaw;},set dyaw(v:number){t.dyaw=v;},get bank(){return t.bank;},set bank(v:number){t.bank=v;},get ridden(){return t.ridden;},speed:t.loop.speed,
   get boost(){return t.boost;},set boost(v:number){t.boost=v;},get bend(){return t.bend;},set bend(v:number){t.bend=v;},get bendYaw(){return t.bendYaw;},set bendYaw(v:number){t.bendYaw=v;},
   set ridden(v:boolean){if(v===t.ridden)return;t.ridden=v;r.ridden=r.tracks.some(x=>x.ridden||x.free);if(r.event.active)endEvent(r);

@@ -1,5 +1,12 @@
 # Performance reference for future Futbol Island updates
 
+## Open-sea whale sharks and rays, Oct 20 2026 (local, not deployed)
+
+Six more whale sharks (one per big open-water area) and eleven rays (manta, eagle, sting) to balance the areas: `lib/town/seaLifeAreas.ts` (areas, loops, caps, the per-area table `getSeaLifeAreas()`), `lib/graphics/openSeaLife.ts`, one hook in `components/Town.tsx` after `world.updateSharks`. Added cost and its bounds:
+- Whale sharks share ONE geometry, ONE material (one tail-sweep clock) and ONE seabed-silhouette texture (`createWhaleSharkShared`); no new texture. At most 2 drawn at once on a cool desktop, 1 on a phone or at tiers 1–4 (the nearest; a ridden one always stays). Each keeps the whale shark's own rules (hidden > 260 m, asleep > 140 m or off screen, frozen frames and static ambience upload nothing); beyond 60 m it steps at 15 Hz.
+- Rays are a second `cayMantas.ts` instance: one instanced mesh per area (6 areas, ≤ 3 rays each; 2 at tiers 1–2 and on a cool phone, 1 at tier 3, 0 at tier 4/battery saver), per-instance scale and multiply tint for eagle/sting rays on the shared geometry. The set steps at 15 Hz while no ray area is within 60 m.
+- The ray-spot analytics check runs twice a second, only while in the water. No per-frame allocation, timer or loop of its own. Validation: `tests/sea-life-areas.cjs` (caps by tier, nearest-only drawing, 15 Hz far stepping, frozen frames). Not measured on an iPhone.
+
 ## Water design audit fixes, Oct 19 2026 (local, not deployed)
 
 `docs/water-design-audit-2026-10-19.md`. Constants and palette only: reef `CLEAR_UNDER` weights, `CLEAR_WIN.alpha` .14/.42, shared
