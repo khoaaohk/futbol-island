@@ -77,7 +77,7 @@ export const SUMMIT_COUNT_EVENTS=[
  // One job since Oct 20 2026: the fireflies are the Bug squad's Night set (the ids kept, so older counts still add up).
  ['firefly_catch','Bug squad: firefly caught (Night set)'],['firefly_shift','Bug squad: Night set finished, fireflies released'],
  // Bug extras (Oct 20 2026): the Bug book opened / completed, and a wild meadow bug fluttering away from the player.
- ['bugbook_open','Bug book opened'],['bugbook_complete','Bug book completed (all 8 bugs and 8 fireflies)'],['wild_flutter','Wild meadow bug fluttered away'],
+ ['bugbook_open','Bug book opened'],['bugbook_complete','Bug book completed (all 20 bugs)'],['bug_swing','Bug squad net swung'],['bug_miss','Bug squad swing missed'],['bug_story','Bug story card shown (Real football fact)'],['bug_hint','Bug squad nearest-bug hint used'],['wild_flutter','Wild meadow bug fluttered away'],
 ] as const;
 /** `su:fruit_<kind>:hand` / `:ball` — the two ways a fruit tree is shaken (lib/graphics/fruitTrees.ts drop()). */
 export const FRUIT_SHAKE_IDS:readonly string[]=FORAGE_FRUIT_KINDS.flatMap(k=>[`fruit_${k}:hand`,`fruit_${k}:ball`]);

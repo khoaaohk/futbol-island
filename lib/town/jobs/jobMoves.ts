@@ -17,9 +17,9 @@ import type {JobDef} from './jobCatalog';
 
 // ---------------- Buttons ----------------
 /** `slot`: where it sits in the default cluster (shoot = the big primary, juggle, ride). `key`: its desktop key. */
-export type JobButton={slot:'shoot'|'juggle'|'ride';key:'Space'|'J'|'R'|'Q'|'E';id:string;label:string;icon:string;hold?:boolean;enabled:boolean};
+export type JobButton={slot:'shoot'|'juggle'|'ride'|'extra';key:'Space'|'J'|'R'|'Q'|'E';id:string;label:string;icon:string;hold?:boolean;enabled:boolean};
 type SlotDef={ids:string[];label:string;icon:string|Record<string,string>};
-const SLOT_KEYS=[['shoot','Space'],['juggle','J'],['ride','R']] as const;
+const SLOT_KEYS=[['shoot','Space'],['juggle','J'],['ride','R'],['extra','E']] as const;
 /** Each job's action slots (index 0 = the primary button). Wall rebounds is a football drill: it keeps Juggle / Shoot. */
 export const JOB_SLOTS:Record<string,SlotDef[]|null>={
  'farm-harvest':[{ids:['kick'],label:'Kick the tree',icon:'treekick'},{ids:['pull','twist','cut'],label:'Pull · twist · snip',icon:{pull:'pull',twist:'twist',cut:'snip'}},{ids:['pickup','unload'],label:'Pick up',icon:{pickup:'basket',unload:'basket'}}],
@@ -33,7 +33,9 @@ export const JOB_SLOTS:Record<string,SlotDef[]|null>={
  // Bug squad (Oct 20 2026, bugScout.ts; one job since the merge, its set follows the time of day): hold the net (bugs) or cup the
  // jar (fireflies) at each one, release them all at the drop-off. The third slot (where the ride / On foot button sits) is the
  // net toggle: Net down = the stalk (net held low, slow careful steps, bugs settle faster); Net up = carried on the shoulder.
- 'bug-scout':[{ids:['net','jar'],label:'Hold Net',icon:{net:'net',jar:'jar'}},{ids:['letfree','glow'],label:'Release',icon:'release'},{ids:['netlow','netup'],label:'Net down',icon:{netlow:'netlow',netup:'netup'}}],
+ // Catching lane (Oct 20 2026): Swing net (Space), Release (J), Ride (R: walk / scooter / bike / moped, never flying; user: "allow to
+ // switch to scooter, bike riding, and moped with the net"), and the net toggle on its own key (E, a chip in the job panel).
+ 'bug-scout':[{ids:['net','jar'],label:'Swing net',icon:{net:'net',jar:'net'}},{ids:['letfree','glow'],label:'Release',icon:'release'},{ids:['ride'],label:'Ride',icon:'bike'},{ids:['netlow','netup'],label:'Net down',icon:{netlow:'netlow',netup:'netup'}}],
  'offside-flag':[{ids:['flag'],label:'Raise the flag',icon:'flag'},{ids:['play-on'],label:'Keep flag down',icon:'flagdown'},{ids:['next'],label:'Next replay',icon:'next'}],
  'ball-pump':[{ids:['pump'],label:'Pump',icon:'pump'},{ids:['release'],label:'Let air out',icon:'air'},{ids:['ready'],label:'Ball ready',icon:'check'}],
  'goal-anchor':[{ids:['hammer'],label:'Hammer',icon:'hammer'}],
@@ -55,21 +57,23 @@ function harvestButtonActions(r:JobRun):JobAction[]{
  return out;
 }
 /** Every job is on foot (Sep 30 2026, user): rides wait until the job ends. */
-export function rideAllowed(mode:string,jobActive:boolean){return !jobActive||mode==='walk';}
+export function rideAllowed(mode:string,jobActive:boolean,jobId?:string|null){return !jobActive||mode==='walk'||(jobId==='bug-scout'&&BUG_RIDE_MODES.includes(mode));}
+/** The Bug squad keeps the scooter, bike and moped (never flying; catching lane, Oct 20 2026). */
+export const BUG_RIDE_MODES:readonly string[]=['scooter','bike','moped'];
 export const RIDE_WAIT_NOTE='Island jobs are on foot. Your rides wait until the job is done (or tap Stop job).';
 
 // ---------------- Poses ----------------
 /** Rig poses (lib/graphics/player.ts PlayerMotion.job). One-shots run for POSE_TIME seconds; held poses come every frame. */
-export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick';
+export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak';
 /** Poses that move only the arms, torso and head: the legs keep walking, dribbling or juggling. */
-export const UPPER_POSES=new Set<JobPoseKind>(['carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
+export const UPPER_POSES=new Set<JobPoseKind>(['netcarry','netsneak','carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
 /** `upper`: only the arms, torso and head (the legs keep walking). */
 export type JobPose={kind:JobPoseKind;progress:number;tug?:number;upper?:boolean;
  /** Garden shift: the left hand carries the basket through the pose (free picking has no basket). */
  basket?:boolean;
  /** Held poses at a place (the root being pulled, the leaf pile, the pump): face it and step up to it. */
  target?:{x:number;z:number}};
-export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
+export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:.62,netcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
 /** Which one-shot a job event plays (and at what: `spot` = a target index, `item` = the event's x/z, `deliver` = the drop-off). */
 export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'|'item'|'deliver';basket?:boolean}|null{
  const t=e.type;
@@ -89,7 +93,8 @@ export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'
   case 'cone-setup':return t==='collect'?{kind:'place',at:'spot'}:null;
   case 'court-cleanup':return t==='collect'?{kind:'pick',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   // Bugs drift into the jar at chest height (scoop); fireflies are reached for on tiptoe; the jar is opened at the drop-off.
-  case 'bug-scout':return t==='collect'?{kind:def.prop==='firefly'?'reachpick':'scoop',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
+  // Catching lane: the net swing (wind-up, sweep, follow-through) at the aim point, the raised catch pose, the jar opened at the drop-off.
+  case 'bug-scout':return t==='swing'?{kind:'netswing',at:e.x!==undefined?'item':undefined}:t==='netcatch'?{kind:'netcatch',at:e.x!==undefined?'item':undefined}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   case 'goal-anchor':return t==='work'?{kind:'mallet',at:'spot'}:null;
   case 'match-day-snacks':return t==='pickup'?{kind:'take',at:'deliver'}:t==='return'||t==='wrong'?{kind:'drop',at:'spot'}:null;
   case 'offside-flag':return t==='call'?{kind:e.value===1?'flagup':'flagdown'}:null;
@@ -102,8 +107,9 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  if(!r||r.phase==='done')return null;const id=r.def.id;
  const task=r.def.task;
  if(r.harvest&&r.harvest.pulling>=0&&task?.type==='harvest'){const sp=task.spots[r.harvest.pulling];return {kind:'pull',progress:0,tug:Math.min(1,r.harvest.pull/1.1),target:{x:sp.x,z:sp.z}};}
- // Bug squad: the net sweeps gently while held (the rake's sweep, aimed at the bug).
- if(id==='bug-scout'&&r.def.prop==='bug'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*.8)%1,target:t?{x:t.x,z:t.z}:undefined};}
+ // Bug squad (catching lane, user: "fix the body mechanics to hold the net while walking"): both hands on the pole, a relaxed carry
+ // over the right shoulder (or Net down: stalking, net forward and low), swaying with the walk; the legs keep walking (upper body).
+ if(id==='bug-scout'&&(r.phase==='work'||r.phase==='deliver'))return {kind:r.stalk&&r.phase==='work'?'netsneak':'netcarry',progress:(clock*1.7)%1,upper:true};
  if(id==='leaf-rake'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*1.6)%1,target:t?{x:t.x,z:t.z}:undefined};}
  if(id==='line-painter'&&r.phase==='work')return {kind:'push',progress:0,upper:true,tug:r.holding?1:0};
  if(id==='ball-kid'&&r.carrying>=0)return {kind:'carryball',progress:0,upper:true};
@@ -115,9 +121,9 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  return null;
 }
 /** Poses that need free hands: the player's own ball is set down beside them first. */
-export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick']);
+export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick','netswing','netcatch']);
 /** Poses that hold the player still (they end quickly, or when the button is released). */
-const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick']);
+const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick','netswing','netcatch']);
 /** How close to its target the character steps for a pose (metres, target centre to feet). */
 const STAND_OFF:Partial<Record<JobPoseKind,number>>={gpick:1,reachpick:.55,headshake:1.1,tipbasket:.85,kneel:.6,rake:1.05,pull:.62,twist:.55,nope:.55,snip:.6,scoop:.55,place:.5,mallet:.75,drop:.8,take:.8,stuff:.6,toss:1.1,treeshake:.9};
 

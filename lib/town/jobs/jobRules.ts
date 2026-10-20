@@ -46,6 +46,8 @@ export type GardenShiftState={
  /** Crops whose nutrition lesson was shown this shift (the first pick of each crop teaches it). */
  taught:string[]};
 export type JobRun={def:JobDef;got:boolean[];
+ /** Bug squad swing shifts (catching lane): catches needed this shift (bugCatch.shiftGoal); default every target. */
+ goal?:number;
  /** Bug squad (Oct 20 2026): the net is held low (the stalk: slow, careful steps; bugs settle into the jar faster). */
  stalk?:boolean;next:number;carrying:number;phase:JobPhase;passes:number;shots:number;seconds:number;
  /** Task jobs: the current shirt / replay / ball. */
@@ -71,7 +73,7 @@ export type JobRun={def:JobDef;got:boolean[];
  /** Wall rebounds (Sep 30 2026, user): the glowing shooting circle for the next target shot, whether the shot now flying was
   *  struck from inside it, and the seed that places the next circle. */
  spot:{x:number;z:number}|null;shotArmed:boolean;spotSeed:number};
-export type JobEvent={type:'collect'|'pickup'|'return'|'deliver'|'pass'|'shot'|'phase'|'done'|'wrong'|'call'|'pump'
+export type JobEvent={type:'swing'|'netcatch'|'collect'|'pickup'|'return'|'deliver'|'pass'|'shot'|'phase'|'done'|'wrong'|'call'|'pump'
  |'work'|'step'|'hold'|'release'|'shake'|'drop'|'miss'|'tug'|'pop'|'snap'|'twist'|'unripe'|'snip'|'cut'|'gather'|'clear'|'pluck'|'stalk';
  index?:number;stage?:number;value?:number;good?:string;spot?:number;
  /** Garden: a free pick outside a shift (no basket in the hands; the produce goes to the market basket). */
@@ -107,6 +109,7 @@ export function runProgress(r:JobRun):{value:number;total:number}{
  if(r.garden){const t=taskTotal(r.def);return {value:r.phase==='work'?Math.min(t,r.garden.fruit+r.garden.veg):t,total:t};}
  // Offside: a right call counts the moment it is made (the replay then freezes to explain it); a wrong call never counts.
  if(r.def.task)return {value:r.phase==='done'?taskTotal(r.def):r.step+(r.def.kind==='offside'&&r.phase==='explain'&&r.right?1:0),total:taskTotal(r.def)};
+ if(r.def.swing){const t=r.goal??r.def.targets.length;return {value:Math.min(t,r.got.filter(Boolean).length),total:t};}
  return {value:r.got.filter(Boolean).length,total:r.def.targets.length};
 }
 /** Fruit / veg still needed that are not already lying on the ground. */
@@ -134,7 +137,7 @@ export function trailOffset(r:JobRun,x:number,z:number){
 }
 const doneWith=(r:JobRun,ev:JobEvent[])=>{r.phase='done';r.at=-1;r.holding=false;ev.push({type:'done'});};
 /** Collect jobs: when every target is done, head for the drop-off (or finish). */
-function afterCollect(r:JobRun,ev:JobEvent[]){const d=r.def;if(!r.got.every(Boolean)||r.phase!=='work')return;if(d.deliver){r.phase='deliver';r.at=-1;r.holding=false;ev.push({type:'phase'});}else doneWith(r,ev);}
+function afterCollect(r:JobRun,ev:JobEvent[]){const d=r.def;if(r.got.filter(Boolean).length<(r.goal??d.targets.length)||r.phase!=='work')return;if(d.deliver){r.phase='deliver';r.at=-1;r.holding=false;ev.push({type:'phase'});}else doneWith(r,ev);}
 /** Finish the current step at target i (and the target itself after its last step). */
 function completeStep(r:JobRun,i:number,ev:JobEvent[]){
  const steps=r.def.work?.target??[];r.stage[i]++;r.work[i]=0;r.holding=false;ev.push({type:'step',index:i,stage:r.stage[i]-1});
@@ -152,7 +155,8 @@ export function stepRun(r:JobRun,p:Vec,dt:number,floor:(x:number,z:number)=>numb
  if(r.garden)return stepGarden(r,p,floor,ev);
  const steps=w?.target;
  if(d.kind==='collect'){
-  if(steps){let best=-1,bd=Infinity;d.targets.forEach((q,i)=>{if(r.got[i]||!reach(q))return;const dd=Math.hypot(p.x-q.x,p.z-q.z);if(dd<bd){bd=dd;best=i;}});
+  if(d.swing){r.at=-1;}
+  else if(steps){let best=-1,bd=Infinity;d.targets.forEach((q,i)=>{if(r.got[i]||!reach(q))return;const dd=Math.hypot(p.x-q.x,p.z-q.z);if(dd<bd){bd=dd;best=i;}});
    r.at=best;const step=best>=0?steps[r.stage[best]]:undefined;
    if(step?.mode==='hold'&&r.holding){r.work[best]+=t/(step.time??1)*(r.stalk?STALK.rate:1);if(r.work[best]>=1)completeStep(r,best,ev);}}
   else{d.targets.forEach((q,i)=>{if(!r.got[i]&&reach(q)){r.got[i]=true;ev.push({type:'collect',index:i});}});afterCollect(r,ev);}}
@@ -379,8 +383,13 @@ export function currentStep(r:JobRun):WorkStep|null{
 export const STALK={rate:1.35,walk:.55} as const;
 const isBugRun=(r:JobRun)=>r.def.prop==='bug'||r.def.prop==='firefly';
 export function runActions(r:JobRun):JobAction[]{const out=baseActions(r);
+ if(r.def.swing&&r.phase==='work'){const step=r.def.work?.target?.[0];if(step)out.push({id:step.id,label:step.label,primary:true});}
  if(isBugRun(r)&&r.phase==='work')out.push(r.stalk?{id:'netup',label:'Net up'}:{id:'netlow',label:'Net down'});
+ if(r.def.swing&&r.phase!=='done')out.push({id:'ride',label:'Ride'});
  return out;}
+/** Bug squad swing shifts: the scene's net swing caught roster target i (once per shift). */
+export function swingCatch(r:JobRun,i:number):JobEvent[]{const ev:JobEvent[]=[];
+ if(r.phase!=='work'||i<0||i>=r.got.length||r.got[i])return ev;r.got[i]=true;ev.push({type:'collect',index:i});afterCollect(r,ev);return ev;}
 function baseActions(r:JobRun):JobAction[]{
  if(r.def.kind==='offside'){if(r.phase==='call')return [{id:'flag',label:'Raise the flag',primary:true},{id:'play-on',label:'Keep flag down'}];
   if(r.phase==='explain')return [{id:'next',label:r.right?(r.step+1>=taskTotal(r.def)?'Finish':'Next replay'):'Watch again',primary:true}];}

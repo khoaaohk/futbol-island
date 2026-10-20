@@ -11,7 +11,8 @@ import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
 import styles from './Fishbook.module.css';
 import own from './BugBook.module.css';
-import {BUG_BOOK_PAGES,BUG_BOOK_SIZE,bugBookComplete,caughtKinds,emptyBugBook,pageCaught,readBugBook,type BugBookPage,type BugBookSave} from '@/lib/town/jobs/bugBook';
+import {BUG_BOOK_PAGES,BUG_IDS,bugBookComplete,bugsCaught,firefliesCaught,nightBookComplete,emptyBugBook,pageCaught,readBugBook,type BugBookPage,type BugBookSave} from '@/lib/town/jobs/bugBook';
+import {storyFor} from '@/lib/town/jobs/bugCatch';
 import {BUG_JOB_LESSON,FIREFLY_JOB_LESSON} from '@/lib/town/jobs/bugScout';
 import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
 import {countBugBookOpen} from '@/lib/analytics/summitEvents';
@@ -47,26 +48,27 @@ export default function BugBook({open,onClose}:{open:boolean;onClose:()=>void}){
   setLeaving(true);timer.current=setTimeout(onClose,240);};
  useEffect(()=>{const el=dialog.current;if(!el)return;if(open&&!el.open){closing.current=false;setLeaving(false);const s=readBugBook();setSave(s);countBugBookOpen();
    // A complete book always holds its bonus (paid once ever by the wallet id), even if the catch-time event was missed.
-   if(bugBookComplete(s)&&!s.reward)void claimBugBookReward().then(()=>setSave(readBugBook())).catch(()=>{});
+   if((bugBookComplete(s)&&!s.reward)||(nightBookComplete(s)&&!s.nightReward))void claimBugBookReward().then(()=>setSave(readBugBook())).catch(()=>{});
    restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;el.showModal();close.current?.focus();}
   else if(!open&&el.open){el.close();restore.current?.focus({preventScroll:true});}},[open]);
- const got=caughtKinds(save),done=bugBookComplete(save);
- const sections=[{id:'bug',title:'Bug squad · Day',lesson:BUG_JOB_LESSON,where:'Catch it on a Bug squad shift: the sign in the Summit Isle meadow, by Day or at Sunset.'},
-  {id:'firefly',title:'Fireflies · Night',lesson:FIREFLY_JOB_LESSON,where:'Catch it on a Firefly floodlights shift: the sign in the Summit Isle meadow, at Night.'}] as const;
+ const got=bugsCaught(save),nights=firefliesCaught(save),done=bugBookComplete(save);
+ const sections=[{id:'bug',title:'Bug squad · Day',lesson:BUG_JOB_LESSON,where:'Catch it on a Bug squad shift (the sign on the summit\'s south-west corner), by Day or at Sunset: up on the mountain, along the trails or near the water.'},
+  {id:'firefly',title:'Fireflies · Night',lesson:FIREFLY_JOB_LESSON,where:'Catch it on a Bug squad shift at Night (the same sign on the summit).'}] as const;
  return <dialog ref={dialog} className={`${styles.dialog} ${leaving?styles.leaving:styles.entering}`} aria-labelledby="bugbook-title" data-bugbook onCancel={e=>{e.preventDefault();requestClose();}} onClick={e=>{if(e.target===e.currentTarget)requestClose();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}>
    <header className={`${shell.header} ${styles.header}`}><div><h2 id="bugbook-title">Bug book</h2></div><DoneButton ref={close} onDone={requestClose}/></header>
    <div className={shell.body}>{open&&<div className={styles.book}>
     <div className={`${styles.intro} ${own.cover}`}>
      <div className={own.sticker} data-earned={done||undefined} data-bugbook-sticker aria-label={done?'Full squad sticker earned':'Full squad sticker: not earned yet'}><span aria-hidden="true">★</span><small>Full squad</small></div>
-     <p><b data-bugbook-count>{got} / {BUG_BOOK_SIZE} caught</b>{done?`You found the whole squad and every football call! The Full squad sticker is yours${save.reward?`, with a +${LEARN_COINS.book} coin bonus`:''}.`:`Every bug plays a football position and every firefly flashes a football call. Catch all ${BUG_BOOK_SIZE} on the Summit Isle bug jobs to earn the Full squad sticker and +${LEARN_COINS.book} coins.`}</p>
+     <p><b data-bugbook-count>{got} / {BUG_IDS.length} bugs · {nights} / 8 fireflies</b>{done?`You found the whole 20-bug squad! The Full squad sticker is yours${save.reward?`, with a +${LEARN_COINS.book} coin bonus`:''}.${save.squads?` Squads completed: ${save.squads}.`:''}`:`Every bug plays a squad role (11 starters, the subs and the staff) and has a real football story. Catch all ${BUG_IDS.length} on Bug squad shifts for the Full squad sticker and +${LEARN_COINS.book} coins; all 8 fireflies earn +${LEARN_COINS.book} more.`}</p>
     </div>
     {sections.map(sec=>{const list=BUG_BOOK_PAGES.filter(p=>p.kind===sec.id),n=list.filter(p=>pageCaught(save,p)>0).length;return <section key={sec.id} className={styles.spot} data-bugbook-section={sec.id}>
      <h3 className={styles.spotTitle}>{sec.title} <small>{n} / {list.length}</small></h3>
-     <ul className={styles.grid}>{list.map(p=>{const c=pageCaught(save,p);return <li key={`${p.kind}${p.index}`} data-caught={c>0} data-bugbook-page={`${p.kind}-${p.index}`} className={p.kind==='firefly'&&c>0?own.night:undefined}>
+     <ul className={styles.grid}>{list.map(p=>{const c=pageCaught(save,p);return <li key={p.id} data-caught={c>0} data-bugbook-page={p.id} className={p.kind==='firefly'&&c>0?own.night:undefined}>
       <BugArt page={p} hidden={!c}/>
       {c?<><h3>{p.name}</h3><p className={styles.eyebrow}>{p.role} · caught {c} time{c===1?'':'s'}</p>
-       <div className={styles.fact}><span className={styles.tag}>{p.kind==='bug'?'Football position':'Football call'}</span><p>{p.lesson}</p></div></>
+       <div className={styles.fact}><span className={styles.tag}>{p.kind==='bug'?'Squad role':'Football call'}</span><p>{p.lesson}</p></div>
+       {storyFor(p.stories,c)&&<div className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact</span><p>{storyFor(p.stories,c)!.text}</p></div>}</>
       :<><h3>Not caught yet</h3><p className={styles.eyebrow}>{p.kind==='bug'?'A squad player':'A football call'}</p><p className={styles.found}>{sec.where}</p></>}
      </li>;})}</ul>
     </section>;})}

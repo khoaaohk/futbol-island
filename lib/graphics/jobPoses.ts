@@ -33,6 +33,15 @@ const KICK_STRIKE={py:.82,pz:.1,tx:.2,hx:.35,fl:[.06,.07] as [number,number],fr:
 const KICK_THROUGH={py:.83,pz:.08,tx:.12,hx:.3,fl:[.06,.07] as [number,number],fr:[.3,.2] as [number,number],al:[-.3,.4,-.3] as Arm,ar:[-.6,.35,-.4] as Arm};
 /** One-shot keyframes (progress 0 → 1). Held poses are computed below from their live value (`tug`). */
 const KEYS:Partial<Record<JobPoseKind,Key[]>>={
+ // ---- Bug squad catching (Oct 20 2026, catching lane: "the net needs to have a swing") ----
+ // Net swing, both hands on the pole: wind-up (torso turned, net raised up and back over the right shoulder, weight on the back
+ // foot), the sweep across the front (torso unwinds, arms reach forward and low, a step in: the hit frame is ~0.48), follow-through.
+ netswing:[[0,{al:[-.9,.15,-.6],ar:[-1,.05,-.5]}],[.26,{py:.84,pz:-.04,tx:-.12,ty:-.55,hx:-.15,fl:[.12,.07],fr:[-.22,.07],al:[-2.35,.35,-.9],ar:[-2.55,.2,-.7]}],
+  [.48,{py:.8,pz:.06,tx:.32,ty:.1,hx:.2,fl:[.24,.07],fr:[-.14,.07],al:[-1.35,.12,-.25],ar:[-1.3,.02,-.2]}],
+  [.68,{py:.79,pz:.08,tx:.38,ty:.55,hx:.25,fl:[.24,.07],fr:[-.14,.07],al:[-1,.05,-.3],ar:[-.95,-.15,-.35]}],[1,{tx:.1,ty:.15,al:[-.9,.15,-.6],ar:[-1,.05,-.5]}]],
+ // Catch! The net raised high in both hands, up on tiptoe and looking up at it, a joyful little bounce, then down again.
+ netcatch:[[0,{}],[.25,{...TIPTOE,tx:-.12,hx:-.5,al:[-2.85,.25,-.25],ar:[-2.95,.15,-.2]}],[.45,{py:.98,toe:.7,fl:[.04,.16],fr:[-.04,.16],tx:-.15,hx:-.55,al:[-2.95,.3,-.15],ar:[-3.05,.2,-.1]}],
+  [.62,{...TIPTOE,tx:-.1,hx:-.45,al:[-2.8,.25,-.3],ar:[-2.9,.15,-.25]}],[.8,{py:.84,tx:.05,hx:-.1,al:[-1.6,.2,-.6],ar:[-1.7,.1,-.5]}],[1,{}]],
  // ---- Garden (Sep 30 2026, docs/island-jobs.md §13) ----
  // Bed crop: crouch and reach down to the plant, two small tugs, rise and bring it across into the basket in the left hand.
  gpick:[[0,{al:BASKET}],[.3,{py:.6,pz:-.04,tx:.85,hx:.4,fl:[.16,.07],fr:[-.12,.07],al:[-.55,.3,-.6],ar:[-1.05,.02,-.1]}],
@@ -108,6 +117,11 @@ export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean):PoseTarg
   case 'pull':{const t=Math.sin(time*22)*.035*tug*wob;set({py:.6+.06*tug,pz:-.06-.16*tug+t,tx:.45-.73*tug+t*2,hx:.35-.15*tug,fl:[.26,.07],fr:[-.05,.07],al:[-.9+.1*tug,.14,-.12],ar:[-.9+.1*tug,.14,-.12]});break;}
   // Two-handed rake: the torso turns and the arms sweep across in front while Rake is held.
   case 'rake':{const s=Math.sin(k*Math.PI*2)*wob;set({py:.8,tx:.38+.08*Math.cos(k*Math.PI*4)*wob,ty:.28*s,hx:.3,fl:[.22,.07],fr:[-.16,.07],al:[-.75+.25*s,.25,-.55],ar:[-1.05+.25*s,.05,-.3]});break;}
+  // Bug squad net carry: right hand by the right shoulder, left hand low across the chest, so the pole runs up over the right shoulder
+  // through both hands; a gentle sway with the walk replaces the arm swing.
+  case 'netcarry':{const s=Math.sin(k*Math.PI*2)*wob;set({tx:.06,ty:-.12+.06*s,hx:.05,al:[-.95+.06*s,-.3,-1.15],ar:[-1.55+.05*s,.08,-1.95]});break;}
+  // Net down (stalking): lean in, both hands forward and low, the front (left) hand further out so the net points ahead at the grass.
+  case 'netsneak':{const s=Math.sin(k*Math.PI*2)*wob;set({tx:.34,hx:.28,ty:.05*s,al:[-1.05+.04*s,.05,-.3],ar:[-.75+.04*s,.0,-.75]});break;}
   case 'push':set({tx:.18,hx:.1,al:[-1.05+.25*(1-tug),-.05,-.4],ar:[-1.05+.25*(1-tug),-.05,-.4]});break;
   case 'carryball':set({tx:.04,al:CARRY_BALL,ar:CARRY_BALL});break;
   case 'carrycard':set({tx:.04,al:CARD,ar:CARD});break;

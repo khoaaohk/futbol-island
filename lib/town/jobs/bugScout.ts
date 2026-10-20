@@ -15,11 +15,18 @@
  * collider, slopes under 0.5. Pay: lib/economy.ts JOB_PAY (5 each, like Trail clean-up), metered by the usual full / half / tip
  * tiers and the Training meter. Runtime: lib/town/jobs/jobScene.ts (one instanced draw of ≤ 8 bugs while a shift runs, nothing idle).
  */
+import {BUG_SPECIES,BUG_HOMES,FIREFLY_SET,FIREFLY_HOMES,type BugStory} from './bugSpecies';
 export type BugSpot={x:number;z:number;
+ /** Species id (bugSpecies.ts BUG_SPECIES / FIREFLY_SET): the Bug book, the swarm and the catch all key on it. */
+ id:string;
+ /** Display name ("Goalie Ladybug", "“Man on!” firefly") and the squad role / call label. */
+ name:string;role:string;
  /** Shown in the job panel when you reach it ("Goalie Ladybug: the squad's goalkeeper."). */
  hint:string;
  /** Shown when it is in the jar: the football lesson for this bug. */
  note:string;
+ /** The species' real football stories (the catch card's "Real football fact", rotating on repeat catches). */
+ stories:readonly BugStory[];
  /** Wing tint (instance colour; the body and the pentagon spots stay dark). */
  color:string;
  /** Shape: wing span, body length, wing lift (radians, how high the wings are raised). */
@@ -35,39 +42,24 @@ export const BUG_BOARD={x:606,z:130,yaw:0} as const;
 export const BUG_HOTEL={x:604.5,z:126.5,label:'bug hotel'} as const;
 export const LANTERN_GOAL={x:607.6,z:126,label:'lantern goal'} as const;
 
-/** The day squad, in the order kids meet them on the walk round the meadow. */
-export const BUG_SQUAD:readonly BugSpot[]=[
- {x:591,z:36,color:'#e2453c',span:.62,length:.36,lift:.15,hint:'Goalie Ladybug: the squad\'s goalkeeper (GK).',
-  note:'Goalie Ladybug is in the jar! The goalkeeper is the only player allowed to handle the ball, and only inside their own penalty area.'},
- {x:576,z:40,color:'#8a95a3',span:.5,length:.42,lift:.05,hint:'Pill-bug Centre-back: a defender.',
-  note:'Pill-bug Centre-back is in the jar! A pill bug curls into a ball to stay safe. Centre-backs stay compact too: keep goal-side of the striker and stay on your feet.'},
- {x:585,z:43,color:'#7cc043',span:.6,length:.6,lift:.25,hint:'Full-back Grasshopper: a defender who runs the wing.',
-  note:'Full-back Grasshopper is in the jar! Full-backs spring up and down the wing: defend first, then overlap to help the attack.'},
- {x:603,z:45,color:'#3fa7c9',span:.9,length:.7,lift:.05,hint:'Midfield Dragonfly: a midfielder.',
-  note:'Midfield Dragonfly is in the jar! Dragonflies see nearly all the way round. Midfielders scan too: check over your shoulder before the ball arrives.'},
- {x:618,z:45,color:'#f4f1e8',span:.85,length:.34,lift:.45,hint:'Football Butterfly, black and white like a classic ball: the winger.',
-  note:'Football Butterfly is in the jar! Its wings have dark pentagons like a classic football. Wingers stay wide by the touchline to stretch the defence and make space.'},
- {x:630,z:46,color:'#f08a24',span:.85,length:.34,lift:.4,hint:'Captain Monarch: the squad\'s captain.',
-  note:'Captain Monarch is in the jar! Monarch butterflies travel thousands of kilometres together. A captain leads by example, encourages teammates and speaks calmly to the referee.'},
- {x:642,z:48,color:'#2fae6a',span:.52,length:.44,lift:.1,hint:'Striker Beetle: the squad\'s striker.',
-  note:'Striker Beetle is in the jar! Strikers stay alert in the box, ready to finish the chance with a calm first-time shot.'},
- {x:654,z:48,color:'#f2c230',span:.56,length:.4,lift:.3,hint:'Referee Bumblebee: the match official.',
-  note:'Referee Bumblebee is in the jar! Every match needs a fair referee (Law 5), and the referee\'s decisions are final. Bright stripes help everyone spot the official, like a referee\'s own kit.'},
-];
+/** The day squad (catching lane, Oct 20 2026): the 20 realistic species of bugSpecies.ts at their island homes (up high on the
+ *  mountain, along the trails, near the water; nothing on the north end but beaches): 11 starters in a 4-3-3, the subs and the staff.
+ *  A shift catches FROM THE SWARM (lib/graphics/bugSwarm.ts); each species fills its page in the squad once per squad completion. */
+export const BUG_SQUAD:readonly BugSpot[]=BUG_SPECIES.map(sp=>{const h=BUG_HOMES.find(q=>q.id===sp.id)!;
+ return {x:h.x,z:h.z,id:sp.id,name:sp.name,role:sp.role.label+(sp.role.shirt?` (No. ${sp.role.shirt})`:''),
+  hint:`${sp.name}: the squad's ${sp.role.label.toLowerCase()}.`,note:`${sp.name} is in the jar! ${sp.role.lesson}`,stories:sp.stories,
+  color:sp.look.palette[0],span:.4+sp.look.size,length:.2+sp.look.size*.5,lift:sp.look.wings==='scaled'?.4:.15};});
 
-/** The night's fireflies: meadow, beach grass and the lower foothills. Each catch teaches one football call. */
-export const FIREFLY_CALLS:readonly BugSpot[]=[
- ['Man on!','a defender is right behind you, so protect the ball or pass it quickly'],
- ['Time!','nobody is close, so you can take a touch and look up'],
- ['Turn!','you have space to turn and face the goal'],
- ['Square!','a teammate is level with you, ready for a sideways pass'],
- ['Switch!','play the ball across to the far side, where there is space'],
- ['Away!','clear the ball far from your own goal'],
- ['Keeper\'s!','the goalkeeper is coming to collect it, so get out of the way'],
- ['Mine!','you are taking it, so teammates do not collide'],
-].map(([call,meaning],i)=>({...([{x:579,z:45},{x:588,z:40},{x:597,z:46},{x:612,z:34},{x:630,z:35},{x:639,z:35},{x:651,z:30},{x:663,z:33}][i]),
- color:'#e9ff6b',span:.3,length:.22,lift:.3,hint:`A firefly flashing: "${call}"`,
- note:`Firefly in the jar! It flashed "${call}": that call means ${meaning}. Fireflies talk with light; footballers talk with clear, early calls.`}));
+/** The night's fireflies: eight calls at their homes. Each catch teaches one football call (and a real football story). */
+export const FIREFLY_CALLS:readonly BugSpot[]=FIREFLY_SET.map(f=>{const h=FIREFLY_HOMES.find(q=>q.id===f.id)!;
+ return {x:h.x,z:h.z,id:f.id,name:`“${f.call}” firefly`,role:'Football call',color:'#e9ff6b',span:.3,length:.22,lift:.3,stories:f.stories,
+  hint:`A firefly flashing: "${f.call}"`,note:`Firefly in the jar! It flashed "${f.call}": that call means ${f.meaning}. Fireflies talk with light; footballers talk with clear, early calls.`};});
+
+/** The Bug book's old (index-based, v1) page order, for migrating saved counts to species ids (bugBook.ts). The first lane's eight
+ *  bugs map to the species that took their place (Pill-bug Centre-back → the Rhino Beetle centre-back, Football Butterfly winger →
+ *  the Swallowtail winger, Striker Beetle → the Stag Beetle striker). */
+export const LEGACY_BUG_IDS:readonly string[]=['ladybug','rhino-beetle','grasshopper','dragonfly','swallowtail','monarch','stag-beetle','bumblebee'];
+export const LEGACY_FIREFLY_IDS:readonly string[]=['man-on','time','turn','square','switch','away','keepers','mine'];
 
 export const BUG_JOB_LESSON='A football team is a squad where everyone has a job: the goalkeeper guards the goal, defenders protect it, full-backs run the wings, midfielders scan and link the play, wingers stretch the pitch wide and the striker finishes. In 7v7 every player still attacks and defends together, and the referee keeps the game fair.';
 export const FIREFLY_JOB_LESSON='Fireflies flash light signals to find each other in the dark. Footballers signal too: call early and clearly ("Man on!", "Time!", "Turn!"), point where you want the pass, and wave when you are free. Under the floodlights, a loud, clear call helps your team find you.';

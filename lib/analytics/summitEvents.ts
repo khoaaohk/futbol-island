@@ -34,6 +34,11 @@ export const countBugShift=(kind:'bug'|'firefly')=>count(kind==='bug'?'su:bug_sq
  *  fluttering away as the player walks up (at most once per bug every few seconds). Totals only. */
 export const countBugBookOpen=()=>count('su:bugbook_open');
 export const countBugBookComplete=()=>count('su:bugbook_complete');
+/** Bug squad catching (Oct 20 2026 catching lane): a net swing, a swing that missed, and a catch's story card shown. Totals only. */
+export const countBugSwing=()=>count('su:bug_swing');
+export const countBugMiss=()=>count('su:bug_miss');
+export const countBugStory=()=>count('su:bug_story');
+export const countBugHint=()=>count('su:bug_hint');
 export const countWildFlutter=()=>count('su:wild_flutter');
 /** A kicked ball dropping fruit vs the player shaking the tree by hand (lib/graphics/fruitTrees.ts drop() call sites). */
 export const countFruitShake=(kind:FruitKind,method:'hand'|'ball')=>count(`su:fruit_${kind}:${method}`);

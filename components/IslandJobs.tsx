@@ -28,9 +28,10 @@ import {FruitArt} from './PocketArt';
 import {OPEN_MARKET_STAND} from './FishingHost';
 import styles from './IslandJobs.module.css';
 import dynamic from 'next/dynamic';
-import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT} from '@/lib/town/jobs/bugBook';
+import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib/town/jobs/bugBook';
+import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
-import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
+import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
@@ -103,11 +104,26 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  // learning-coin toast above shows it); a wild meadow bug fluttering away tells the player where bugs are caught (once a visit).
  const [bugBook,setBugBook]=useState(false),[bugBookLoaded,setBugBookLoaded]=useState(false);
  useEffect(()=>{const open=()=>{setBugBookLoaded(true);setBugBook(true);};const done=()=>{void claimBugBookReward().catch(()=>{});};
-  const wild=()=>setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
-  window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);window.addEventListener(WILD_BUG_HINT,wild);
-  return()=>{window.removeEventListener(OPEN_BUG_BOOK,open);document.removeEventListener(BUG_BOOK_COMPLETE_EVENT,done);window.removeEventListener(WILD_BUG_HINT,wild);};
+  // On a Bug squad shift the bugs ARE catchable: no 'only on a shift' note then.
+  const wild=()=>getJobRuntime()?.run?undefined:setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
+  // A species' first catch ever: a small one-time learning bonus (bugBookReward.ts claimNewSpecies).
+  const fresh=(e:Event)=>{const id=(e as CustomEvent<string>).detail;if(id)void claimNewSpecies(id).catch(()=>{});};
+  window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.addEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.addEventListener(WILD_BUG_HINT,wild);
+  return()=>{window.removeEventListener(OPEN_BUG_BOOK,open);document.removeEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.removeEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.removeEventListener(WILD_BUG_HINT,wild);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
+ // Bug squad catching (catching lane): the story card after each catch (like the fish catch card: "Real football fact"), shown once
+ // the catch zoom ends, then it slides away after ~7 s (tap to dismiss); the auto-end toast; End job asks once more if the jar has bugs.
+ const [bugCard,setBugCard]=useState<NonNullable<typeof view.caught>|null>(null),[cardOut,setCardOut]=useState(false),[endAsk,setEndAsk]=useState(false);
+ useEffect(()=>{const c=view.caught;if(!c||view.zooming)return;setBugCard(c);setCardOut(false);countBugStory();
+  const out=setTimeout(()=>setCardOut(true),7000),gone=setTimeout(()=>setBugCard(null),7400);return()=>{clearTimeout(out);clearTimeout(gone);};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[view.caught?.nonce,view.zooming]);
+ useEffect(()=>{const e=view.ended;if(e)setToast({title:'Bug squad ended',detail:e.text.replace(/^Bug squad ended: /,''),merge:'bug-ended'});
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[view.ended?.nonce]);
+ useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
+ const endJob=()=>{const r=runtime?.run;if(r&&r.def.swing&&r.got.some(Boolean)&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
@@ -159,28 +175,39 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
    <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button>{isBugJob(introJob.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>}
-  {active&&view.active&&(()=>{const a=view.active,count=a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,
+  {active&&view.active&&(()=>{const a=view.active,count=a.squad?`${a.squad.value}/${a.squad.total}`:a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,netChip=a.buttons?.find(b=>b.slot==='extra'),
     unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=panel==='chip';
    return <HudSlot><section className={styles.hud} data-hud-slot="task" data-job-active={active.id} data-job-phase={a.phase} data-job-panel={panel} data-compact={chip||undefined} aria-label={`${active.title}: ${unit} ${a.value} of ${a.total}`}>
    {/* Progress and the next step are announced even while the panel is a chip. */}
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
     <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}><b>{active.title}</b><em data-job-count={a.value}>{count}</em></button>
-    <button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>
+    {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label="Show nearest bug" title="Show nearest bug" disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
+    {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
+    :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
    </>:<>
     <div className={styles.head} title={`${active.role} · ${unit}`}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
     <p data-job-hint data-open={hintOpen||undefined} onClick={()=>setHintOpen(o=>!o)}>{phaseText()}</p>
+    {a.squad&&<p className={styles.bugMeta} data-bug-shift>Today&apos;s jar {a.phase==='deliver'?a.total:a.value}/{a.total} · squad {a.squad.value}/{a.squad.total}</p>}
+    {(a.guide||netChip)&&<div className={styles.taskActions}>{a.guide&&<button type="button" className={styles.secondary} data-bug-hint disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}>➤ Nearest bug</button>}{netChip&&<button type="button" className={styles.secondary} data-bug-net={netChip.id} aria-keyshortcuts="E" disabled={!netChip.enabled} onClick={()=>runtime?.act(netChip.id)}>{netChip.label} (E)</button>}</div>}
     {a.gauge&&(()=>{const g=a.gauge,max=1.4,pct=(v:number)=>`${Math.min(100,v/max*100)}%`;return <div className={styles.gauge} role="meter" aria-label={g.label??"Ball pressure in atmospheres"} aria-valuemin={0} aria-valuemax={max} aria-valuenow={g.value} data-job-gauge={g.value}>
      <span className={styles.zone} style={{left:pct(g.min),width:`calc(${pct(g.max)} - ${pct(g.min)})`}}/><i style={{left:pct(g.value)}}/><small>{g.label??`${g.value.toFixed(2)} atm · green zone ${g.min}–${g.max}`}</small></div>;})()}
     {/* A job with its own action cluster (jobMoves.ts jobButtons) acts from the Kick / Juggle / Ride buttons instead (Town.tsx):
         no duplicate controls in the panel. Wall rebounds keeps the ball buttons and has no panel actions. */}
     {a.actions.length>0&&!a.buttons&&<div className={styles.taskActions}>{a.actions.map(x=><button key={x.id} type="button" data-job-action={x.id} className={x.primary?styles.primary:styles.secondary} {...jobActionProps(x,id=>runtime?.act(id))}>{x.label}</button>)}</div>}
-    <button type="button" className={styles.stop} onClick={()=>runtime?.quit()}>Stop job</button>
+    <button type="button" className={styles.stop} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
    </>}
   </section></HudSlot>;})()}
   {/* Bug squad release cinematic (Oct 20 2026): the controls are held while the bugs fly off; a tap anywhere (or Space / Enter /
       Esc) skips to the end. Transparent, over the game only; the HUD stays readable. Only a NEW press skips: the Release tap's own trailing click lands on
       this overlay (it appears under the finger), so pointer clicks are ignored (keyboard clicks, detail 0, still skip). */}
+  {bugCard&&<button type="button" className={styles.bugCard} data-bug-card={bugCard.id} data-out={cardOut||undefined} data-night={bugCard.kind==='firefly'||undefined} role="status" aria-live="polite" onClick={()=>setCardOut(true)}>
+   {(bugCard.isNew||bugCard.squadComplete)&&<span className={styles.bugStamps}>{bugCard.isNew&&<em data-stamp="new">New!</em>}{bugCard.squadComplete&&<em data-stamp="squad">Squad complete!</em>}</span>}
+   <b className={styles.bugName}>{bugCard.name}</b>
+   <small className={styles.bugRole}>{bugCard.role}{bugCard.coins?` · +${bugCard.coins} coin`:''}{bugCard.kind==='bug'&&bugCard.squad?` · squad ${bugCard.squad}/${bugCard.squadSize}`:''}</small>
+   {bugCard.story&&<span className={styles.bugFact}><span>Real football fact</span>{bugCard.story}</span>}
+  </button>}
+  {view.zooming&&<button type="button" className={styles.skip} data-job-skip data-bug-zoom aria-label="Skip the catch" onPointerDown={e=>{e.preventDefault();runtime?.skipZoom();}} onClick={e=>{if(e.detail===0)runtime?.skipZoom();}}><span>Tap to skip</span></button>}
   {view.releasing&&<button type="button" className={styles.skip} data-job-skip aria-label="Skip the release" onPointerDown={e=>{e.preventDefault();runtime?.skipRelease();}} onClick={e=>{if(e.detail===0)runtime?.skipRelease();}}><span>Tap to skip</span></button>}
   {payday&&(()=>{const def=jobVariant(payday.id,payday.set)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
    <p className={styles.eyebrow}>Job done · {def.role}</p>
