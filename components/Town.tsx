@@ -1086,7 +1086,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(animalRides.darting&&animalRides.dartWakeDue(dartPoint)&&waterFxOn()&&(animalRides.state.dart||animalRides.state.ret)){const k=RIDE_WAKE[(animalRides.state.dart||animalRides.state.ret)!.kind]*DART_WAKE,fx=Math.sin(dartPoint.yaw),fz=Math.cos(dartPoint.yaw),rx=fz,rz=-fx;
           ballEffects.ripple(dartPoint.x-fx*1.4+rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4+rz*.9,.42*k,.7);ballEffects.ripple(dartPoint.x-fx*1.4-rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4-rz*.9,.42*k,.7);}
         animalRides.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim');
-        dive.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim'&&!animalRides.riding);// water P2: the Dive prompt's patch test (10 Hz) and the breath refill
+        dive.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim'&&!animalRides.riding&&(rideRef.current as string)!=='jetpack');/* Oct 20 2026 (user): no Dive button while flying, only when swimming */// water P2: the Dive prompt's patch test (10 Hz) and the breath refill
         if(ev.left&&walkBall.state.mode==='attached'){walkBall.state.mode='return';walkBall.state.age=0;}/* the parked ball rolls back to the feet */
         if(ev.left&&rideBeforeWater){const m=rideBeforeWater;rideBeforeWater=null;if(rideRef.current==='walk'&&rideAllowed(m,jobActiveRef.current)&&fuelAllowsRide(m)){rideRef.current=m;setRideMode(m);}}/* the ride that splashed down comes back on the sand */
         if(ev.splash>0){
