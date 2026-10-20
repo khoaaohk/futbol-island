@@ -5,7 +5,7 @@
 import type {JobId} from './jobEconomy';
 import {GARDEN_SPOTS,GARDEN_SHIFT} from './garden';
 import {SUMMIT_PATHS,SUMMIT_LANDMARKS} from '../summitIsle';
-import {BUG_BOARD,FIREFLY_BOARD,BUG_HOTEL,LANTERN_GOAL,BUG_SQUAD,FIREFLY_CALLS,BUG_JOB_LESSON,FIREFLY_JOB_LESSON} from './bugScout';
+import {BUG_BOARD,BUG_SETS,bugRoster,activeSet,BUG_JOB_ALIASES,BUG_JOB_LESSON,FIREFLY_JOB_LESSON,type BugSetId} from './bugScout';
 import type {TimeOfDay} from '../fishing/timeOfDay';
 export type JobPoint={x:number;z:number};
 export type JobKind='collect'|'trail'|'carry'|'rebound'|'sort'|'offside'|'pump'|'harvest'|'garden';
@@ -61,6 +61,10 @@ export type JobDef={
  areaMargin?:number;
  /** When the job runs (Oct 20 2026, the Summit Isle bug jobs): 'day' = the Day and Sunset settings, 'night' = Night. Default: always. */
  when?:'day'|'night';
+ /** The merged Bug squad (Oct 20 2026): which target set this definition catches, and the card line saying it changes at night. */
+ set?:BugSetId;nightNote?:string;
+ /** How close (m) counts as at the drop-off (default 1.8). The Bug squad's is wider: the whole patch by the bug hotel / lantern goal. */
+ deliverReach?:number;
  /** Collect jobs: a line per target shown in the panel at that target, and a note when it is collected (bugScout.ts). */
  spotHints?:readonly string[];spotNotes?:readonly string[];
 };
@@ -203,30 +207,42 @@ JOBS.push((()=>{
   work:{target:[{id:'pick',label:'Pick up',mode:'tap',hint:'Pick the litter up and pop it in your bag.'}],deliver:{id:'toss',label:'Toss in the bin',mode:'tap',hint:'Toss the full bag into the litter bin.'}},
   lesson:'Leave no trace: a trail only stays open for everyone if hikers carry out everything they carry in. A clear path is safer underfoot, just like a clear pitch is safer to play on.'};
  return def;})());
-// ---- Added 20 Oct 2026 (user: "catching butterflies and other bugs ... for nighttime add catching fireflies"): Summit Isle's two
-// bug jobs (lib/town/jobs/bugScout.ts). Bug squad by day (and sunset), Firefly floodlights at night; each sign still offers its job
-// at the other time, and the card says when to come back (jobOpenAt).
-JOBS.push({id:'bug-scout',title:'Bug squad',role:'Bug scout',place:'Summit Isle meadow',board:{...BUG_BOARD},color:'#c8462f',kind:'collect',prop:'bug',when:'day',
- targets:BUG_SQUAD.map(({x,z})=>({x,z})),deliver:{...BUG_HOTEL},radius:1.7,
- spotHints:BUG_SQUAD.map(b=>b.hint),spotNotes:BUG_SQUAD.map(b=>b.note),
- intro:'The island club wants a Bug squad! Eight bugs in the meadow play like footballers: a goalkeeper, defenders, a midfielder, a winger, a captain, a striker and even a referee. At each one, hold Net and keep it still, like a soft first touch, until the bug drifts into your jar. Then let the whole squad go at the bug hotel by this sign. We only look, learn and let them go.',
- howTo:'Follow the arrow to each bug, hold Net until it drifts into your jar, then release the squad at the bug hotel.',unit:'Bugs in the squad',
- work:{target:[{id:'net',label:'Hold Net',busy:'Steady…',mode:'hold',time:.8,hint:'Hold Net and keep it still, like a soft first touch.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
- lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'});
-JOBS.push({id:'firefly-floodlights',title:'Firefly floodlights',role:'Night bug scout',place:'Summit Isle meadow',board:{...FIREFLY_BOARD},color:'#2d3f6e',kind:'collect',prop:'firefly',when:'night',
- targets:FIREFLY_CALLS.map(({x,z})=>({x,z})),deliver:{...LANTERN_GOAL},radius:1.7,
- spotHints:FIREFLY_CALLS.map(b=>b.hint),spotNotes:FIREFLY_CALLS.map(b=>b.note),
- intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk to a glowing firefly and hold Cup the jar, calm and still, until it drifts in. When all eight are in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
- howTo:'Follow the arrow to each firefly, hold Cup the jar until it drifts in, then light up the lantern goal.',unit:'Fireflies in the jar',
- work:{target:[{id:'jar',label:'Cup the jar',busy:'Wait for the glow…',mode:'hold',time:.7,hint:'Hold Cup the jar and stay still: fireflies drift in when you are calm.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
- lesson:FIREFLY_JOB_LESSON});
-export const jobById=(id:string)=>JOBS.find(j=>j.id===id);
+// ---- Added 20 Oct 2026 (user: "catching butterflies and other bugs ... for nighttime add catching fireflies"), merged the same day
+// (user: "don't have two separate jobs, the bug squad changes to catching the fireflies if switching to night mode"): ONE job, one
+// sign, id `bug-scout`. Day / Sunset catch the bug squad; at Night the same shift catches fireflies (bugScout.ts activeSet). The
+// catalog entry is the bugs set; `bugJobFor(set)` gives each set's definition (targets, drop-off, buttons, copy), built from the
+// roster getter so a longer species table plugs straight in. Old id `firefly-floodlights` resolves here (BUG_JOB_ALIASES).
+const BUG_NIGHT_NOTE='Changes at night: switch the island to Night (Settings, Time of day) and the same shift catches fireflies instead. Each set keeps its own progress.';
+const BUG_SET_COPY:Record<BugSetId,Pick<JobDef,'intro'|'howTo'|'work'|'lesson'|'lessonSource'>>={
+ bugs:{intro:'The island club wants a Bug squad! Bugs on the slopes and in the meadow below play like footballers: a goalkeeper, defenders, a midfielder, a winger, a captain, a striker and even a referee. At each one, hold Net and keep it still, like a soft first touch, until the bug drifts into your jar. Then let the whole squad go at the bug hotel by this sign. We only look, learn and let them go.',
+  howTo:'Follow the arrow to each bug, hold Net until it drifts into your jar, then release the squad at the bug hotel.',
+  work:{target:[{id:'net',label:'Hold Net',busy:'Steady…',mode:'hold',time:.8,hint:'Hold Net and keep it still, like a soft first touch.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
+  lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'},
+ fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk to a glowing firefly and hold Cup the jar, calm and still, until it drifts in. When they are all in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
+  howTo:'Follow the arrow to each firefly, hold Cup the jar until it drifts in, then light up the lantern goal.',
+  work:{target:[{id:'jar',label:'Cup the jar',busy:'Wait for the glow…',mode:'hold',time:.7,hint:'Hold Cup the jar and stay still: fireflies drift in when you are calm.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
+  lesson:FIREFLY_JOB_LESSON},
+};
+const bugSetDefs=new Map<BugSetId,JobDef>();
+/** The Bug squad definition for one target set (memoised: the same object every time, so runs and views compare by identity). */
+export function bugJobFor(set:BugSetId):JobDef{let d=bugSetDefs.get(set);if(d)return d;const meta=BUG_SETS[set],roster=bugRoster(set);
+ d={id:'bug-scout',title:meta.title,role:'Bug scout',place:'Summit Isle summit',board:{...BUG_BOARD},color:set==='fireflies'?'#2d3f6e':'#c8462f',kind:'collect',prop:meta.prop,set,
+  targets:roster.map(({x,z})=>({x,z})),deliver:{...meta.drop},deliverReach:2.8,radius:1.7,spotHints:roster.map(b=>b.hint),spotNotes:roster.map(b=>b.note),
+  unit:meta.unit,nightNote:BUG_NIGHT_NOTE,...BUG_SET_COPY[set]};
+ bugSetDefs.set(set,d);return d;}
+JOBS.push(bugJobFor('bugs'));
+/** Current id for a job id from an older save or counter (firefly-floodlights → bug-scout). */
+export const canonicalJobId=(id:string)=>BUG_JOB_ALIASES[id]??id;
+/** The definition to run for a job right now: the Bug squad follows the time of day (or an explicit set); others are as listed. */
+export function jobVariant(id:string,at?:TimeOfDay|BugSetId|null):JobDef|undefined{const c=canonicalJobId(id);
+ if(c==='bug-scout'&&at)return bugJobFor(at==='bugs'||at==='fireflies'?at:activeSet(at));return jobById(c);}
+export const jobById=(id:string)=>{const c=canonicalJobId(id);return JOBS.find(j=>j.id===c);};
 /** Whether a job runs at this time of day (`when`: 'day' covers the Day and Sunset settings; 'night' only Night). */
 export function jobOpenAt(def:Pick<JobDef,'when'>,time:TimeOfDay){return !def.when||(def.when==='night')===(time==='night');}
 /** The intro card's line when a job is closed for now. */
 export function jobClosedNote(def:Pick<JobDef,'when'|'id'>){
- return def.when==='night'?'The fireflies only come out at night. Switch the island to Night (Settings, Time of day), or catch the Bug squad at the next sign while it is light.'
-  :'The day bugs are tucked up asleep at night. Come back in the day (Settings, Time of day), or catch fireflies at the next sign: they only come out at night.';
+ return def.when==='night'?'This job only runs at night. Switch the island to Night (Settings, Time of day).'
+  :'This job only runs in the day. Come back in the day (Settings, Time of day).';
 }
 /** Rebound job: the Coaches Centre practice wall face (lib/town/world.ts) and its painted target square. */
 export const REBOUND_WALL={x:156,z:-29.5,halfWidth:13,face:-29.32,target:{x:156,halfWidth:2,bottom:.25,top:1.7},passes:50,shots:15,

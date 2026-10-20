@@ -5,13 +5,13 @@
  * Idle cost is one throttled distance check every 0.25 s; nothing animates unless a job is running.
  */
 import * as T from 'three';
-import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,type JobDef} from './jobCatalog';
-import {BUG_SQUAD,FIREFLY_CALLS} from './bugScout';
+import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,jobVariant,bugJobFor,type JobDef} from './jobCatalog';
+import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId} from './bugScout';
 import {createBugGeometry,mergeColoured} from './bugShape';
 import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT} from './bugBook';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
 import {countBugCatch,countBugShift,countBugBookComplete} from '@/lib/analytics/summitEvents';
-import {outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
+import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
 import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
 import {jobButtons,type JobButton} from './jobMoves';
@@ -21,6 +21,7 @@ import {readJobLedger} from './jobEconomy';
 import {tapHaptic} from '../haptics';
 import {OFFSIDE_PITCH,toWorld,actorAt,ballAt,secondLastDefender} from './offsideClips';
 import {createShotCamera} from '../shotCamera';
+import {SUMMIT_PEAK} from '../summitIsle';
 import {GARDEN_SPOTS,GARDEN_CENTRE,GARDEN_RANGE,GARDEN_STORAGE_KEY,sanitizeGarden,isRipe,minutesLeft,pickSpot,markPicked,shiftRipeness,isTreeSpot,type GardenState} from './garden';
 import {goodById} from '../market/goods';
 import {fieldSurfaceHeight} from '../venues';
@@ -32,9 +33,13 @@ export type JobView={
  other:string|null;
  active:{id:string;value:number;total:number;phase:JobPhase;carrying:boolean;hint:string;actions:JobAction[];gauge:{value:number;min:number;max:number;label?:string}|null;right:boolean|null;
   /** The job's own action cluster (replaces the Kick / Juggle / Ride buttons, jobMoves.ts); null = keep the ball buttons. */
-  buttons:JobButton[]|null}|null;
+  buttons:JobButton[]|null;
+  /** The Bug squad's target set (Oct 20 2026 merge): its title and unit change with it ('Bug squad' / 'Night squad: fireflies'). */
+  set?:BugSetId;title?:string}|null;
  /** `bag`: Harvest day's picks this shift (the farmer's share comes from these). */
- done:{id:string;seconds:number;nonce:number;bag?:string[]}|null;
+ done:{id:string;seconds:number;nonce:number;bag?:string[];set?:BugSetId}|null;
+ /** The Bug squad's release cinematic is playing (controls held, tap to skip). */
+ releasing?:boolean;
  garden:string;
  pick:{good:string;nonce:number}|null;
  /** On foot at the Coral Cay farm stand with no job running: produce can be sold here too (same market rules as Rosa's). */
@@ -84,6 +89,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const box=keep(new T.BoxGeometry(1,1,1)),cyl=keep(new T.CylinderGeometry(1,1,1,10));
  // ---- Static signs, bins, rebound-wall paint: one merged mesh. ----
  const parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]=[];
+ // The Bug squad's night drop-off (one job since Oct 20 2026: the fireflies set is let go here): white posts and bar, a warm lamp on
+ // each post, a chalk goal line. Part of the static mesh (no draw of its own).
+ function lanternGoal(d:{x:number;z:number}){const dy=floor(d.x,d.z);for(const sx of [-1,1]){parts.push({geometry:box,matrix:m4(d.x+sx*.9,dy+.6,d.z,0,.09,1.2,.09),color:'#f5f1e4'},{geometry:box,matrix:m4(d.x+sx*.9,dy+1.3,d.z,0,.2,.2,.2),color:'#ffe48a'});}
+  parts.push({geometry:box,matrix:m4(d.x,dy+1.17,d.z,0,1.89,.09,.09),color:'#f5f1e4'},{geometry:box,matrix:m4(d.x,dy+.03,d.z-.6,0,1.8,.05,.05),color:'#d8d2c0'});}
  for(const job of JOBS){const {x,z,yaw}=job.board,y=floor(x,z),s=Math.sin(yaw),c=Math.cos(yaw);
   {
   for(const side of [-1,1])parts.push({geometry:box,matrix:m4(x+c*side*1.25,y+1.1,z-s*side*1.25,yaw,.12,2.2,.12),color:'#6e5540'});
@@ -102,11 +111,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     for(const sz of [-1,1])parts.push({geometry:box,matrix:m4(d.x,dy+.5,d.z+sz*.37,0,1.24,.05,.08),color:'#f5eed5'},{geometry:box,matrix:m4(d.x+sz*.57,dy+.5,d.z,0,.08,.05,.84),color:'#f5eed5'});}
    // Summit Isle bug jobs (Oct 20 2026): a timber bug hotel (a roofed box, its front packed with dark nesting holes) and a little
    // lantern goal (white posts and bar, a warm lamp on each post) where the fireflies are let go.
-   else if(job.prop==='bug'){
+   else if(job.prop==='bug'){lanternGoal(LANTERN_GOAL);
     parts.push({geometry:box,matrix:m4(d.x,dy+.6,d.z,0,.9,1.2,.45),color:'#9a7350'},{geometry:box,matrix:m4(d.x,dy+1.28,d.z,0,1.08,.12,.6),color:'#6e4f36'});
     for(const [hx,hy] of [[-.25,.35],[0,.35],[.25,.35],[-.25,.65],[0,.65],[.25,.65],[-.25,.95],[0,.95],[.25,.95]])parts.push({geometry:box,matrix:m4(d.x+hx,dy+hy,d.z-.23,0,.16,.16,.02),color:hx===0?'#c9a26b':'#3a2a1c'});}
-   else if(job.prop==='firefly'){for(const sx of [-1,1]){parts.push({geometry:box,matrix:m4(d.x+sx*.9,dy+.6,d.z,0,.09,1.2,.09),color:'#f5f1e4'},{geometry:box,matrix:m4(d.x+sx*.9,dy+1.3,d.z,0,.2,.2,.2),color:'#ffe48a'});}
-    parts.push({geometry:box,matrix:m4(d.x,dy+1.17,d.z,0,1.89,.09,.09),color:'#f5f1e4'},{geometry:box,matrix:m4(d.x,dy+.03,d.z-.6,0,1.8,.05,.05),color:'#d8d2c0'});}
    else{parts.push({geometry:cyl,matrix:m4(d.x,dy+.45,d.z,0,.42,.9,.42),color:bin});parts.push({geometry:cyl,matrix:m4(d.x,dy+.92,d.z,0,.46,.06,.46),color:'#e9dfc0'});}}
  }
  // Painted target square on the practice wall and a standing box on the grass (static paint, no draw of its own).
@@ -146,7 +153,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(!changed)return;view={...view,...patch};listeners.forEach(f=>f());};
 
  // ---- Active job props (built on start, disposed on finish) ----
- let bugHalo:T.InstancedMesh|null=null,bugClock=0,bugAt=-1;const bugPos:{x:number;y:number;z:number}[]=[];
+ let bugHalo:T.InstancedMesh|null=null,bugClock=0,bugAt=-1,setFade=1;const bugPos:{x:number;y:number;z:number}[]=[];
  let run:JobRun|null=null,props:T.Group|null=null,propDisposables:{dispose:()=>void}[]=[],targetsMesh:T.InstancedMesh|null=null,placedMesh:T.InstancedMesh|null=null,carried:T.Mesh|null=null,beacon:T.Group|null=null,time=0;
  const hidden=new T.Matrix4().makeScale(0,0,0);
  function propGeometry(def:JobDef){const own=<G extends T.BufferGeometry>(g:G)=>{propDisposables.push(g);return g;};
@@ -160,7 +167,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    case 'firefly':return {g:own(new T.IcosahedronGeometry(.16,1)),color:'#e9ff6b',scale:[1,1,1] as const,lift:1};
    default:return {g:own(new T.BoxGeometry(1.2,.02,.22)),color:'#ffffff',scale:[1,1,1] as const,lift:.02};}}
  /** The species list for a bug job's targets (Bug squad's eight, or the fireflies). */
- const bugList=(def:JobDef)=>def.prop==='bug'?BUG_SQUAD:def.prop==='firefly'?FIREFLY_CALLS:null;
+ const bugList=(def:JobDef)=>def.prop==='bug'?bugRoster(def.set??'bugs'):def.prop==='firefly'?bugRoster(def.set??'fireflies'):null;
  /** Task-job props (kit room, offside strip, pump station): built on start, all disposed by clearProps. */
  let task:{shirts?:T.Mesh[];actors?:T.InstancedMesh;ball?:T.Mesh;ring?:T.Mesh;offLine?:T.Mesh;flag?:T.Group;pumpBall?:T.Mesh;rack?:T.InstancedMesh;key?:string}={};
  const own=<X extends {dispose:()=>void}>(x:X)=>{propDisposables.push(x);return x;};
@@ -289,7 +296,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // Bug jobs: a glass jar with an air-hole lid at your side (it glows brighter with each firefly), and Bug squad's net.
   if(def.prop==='bug'||def.prop==='firefly'){const jar=new T.Mesh(own(new T.CylinderGeometry(.17,.17,.34,12)),own(new T.MeshStandardMaterial({color:'#cfe9f2',roughness:.15,transparent:true,opacity:.55,emissive:def.prop==='firefly'?'#d9ff5a':'#000000',emissiveIntensity:0})));
    const lid=new T.Mesh(own(new T.CylinderGeometry(.18,.18,.05,12)),std('#b98f62'));lid.position.y=.19;jar.add(lid);jar.name='job-jar';jar.visible=false;group.add(jar);gear.bag=jar;}
-  if(def.prop==='bug'){const n=new T.Group();const pole=new T.Mesh(own(new T.CylinderGeometry(.02,.02,1.1,6)),std('#9d805b'));pole.position.y=.45;
+  if(def.prop==='bug'||def.prop==='firefly'){const n=new T.Group();const pole=new T.Mesh(own(new T.CylinderGeometry(.02,.02,1.1,6)),std('#9d805b'));pole.position.y=.45;
    const ring=new T.Mesh(own(new T.TorusGeometry(.21,.016,5,16)),std('#3f7a8c'));ring.rotation.x=Math.PI/2;ring.position.y=1.12;
    const mesh=new T.Mesh(own(new T.ConeGeometry(.2,.34,10,1,true)),own(new T.MeshStandardMaterial({color:'#f5f1e4',transparent:true,opacity:.55,side:T.DoubleSide,depthWrite:false})));mesh.position.y=1.12-.17;mesh.rotation.x=Math.PI;
    n.add(pole,ring,mesh);n.name='job-net';n.visible=false;group.add(n);gear.net=n;}
@@ -357,14 +364,16 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   *  span), and settles while the net / jar is held at it; fireflies wander slowly and blink. ≤ 8 matrices (16 with the glow).
   *  Reduced motion: they hover still. Caught ones are left to the jar arc (intoBag), then hidden. */
  function flutterBugs(r:JobRun,dt:number,reduced:boolean){const def=r.def,bugs=bugList(def),mesh=targetsMesh;if(!bugs||!mesh)return;
+  // A set swapped in (night fell or day broke mid-shift) grows in over ~0.8 s; Net down calms the bugs (smaller drift).
+  if(setFade<1)setFade=reduced?1:Math.min(1,setFade+dt/.8);const fade=setFade<1?ease.out(setFade):1,calm=r.stalk?.6:1;
   bugClock+=reduced?0:dt;const T0=bugClock,fly=def.prop==='firefly';
   // Reaching the next bug after the last catch note has shown for 2 s: the panel names the new bug instead.
   if(r.at>=0&&r.at!==bugAt&&bugAt>=0&&banner&&bannerAge>0){banner='';viewKey='';bugAt=-1;}
-  for(let i=0;i<bugs.length;i++){if(r.got[i])continue;const b=bugs[i],t=def.targets[i],g=floor(t.x,t.z),ph=i*1.7,still=r.at===i&&r.holding,amp=still?.12:fly?.9:.55;
+  for(let i=0;i<bugs.length;i++){if(r.got[i])continue;const b=bugs[i],t=def.targets[i],g=floor(t.x,t.z),ph=i*1.7,still=r.at===i&&r.holding,amp=still?.12:(fly?.9:.55)*calm;
    const x=t.x+Math.sin(T0*(fly?.35:.7)+ph)*amp,z=t.z+Math.cos(T0*(fly?.28:.55)+ph*1.3)*amp,y=g+(fly?1.15:1)+Math.sin(T0*(fly?1.1:2.1)+ph)*(still?.05:.22);
    const sc=bugScale(def,b),beat=fly?Math.max(.5,Math.pow(Math.max(0,Math.sin(T0*2.4+ph)),2)):1-b.lift*.8*Math.abs(Math.sin(T0*(still?5:13)+ph));
    const p=bugPos[i]??(bugPos[i]={x,y,z});p.x=x;p.y=y;p.z=z;
-   mesh.setMatrixAt(i,fly?m4(x,y,z,0,beat,beat,beat):m4(x,y,z,T0*(still?.2:.6)+ph,sc*beat,sc,sc*b.length/.46));}
+   mesh.setMatrixAt(i,fly?m4(x,y,z,0,beat*fade,beat*fade,beat*fade):m4(x,y,z,T0*(still?.2:.6)+ph,sc*beat*fade,sc*fade,sc*b.length/.46*fade));}
   mesh.instanceMatrix.needsUpdate=true;
   if(bugHalo){const m=haloM;for(let i=0;i<bugs.length;i++){mesh.getMatrixAt(i,m);bugHalo.setMatrixAt(i,m.multiply(HALO_SCALE));}bugHalo.instanceMatrix.needsUpdate=true;}
   if(gear.bag&&def.prop==='firefly')(gear.bag.material as T.MeshStandardMaterial).emissiveIntensity=Math.min(1.4,gear.bagCount*.18);}
@@ -445,7 +454,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(!run&&gear.basket===b)b.visible=false;});});}
  function applyEvents(ev:JobEvent[]){
   if(!run||!ev.length)return;const def=run.def;
-  if(eventListeners.size)for(const e of ev)eventListeners.forEach(f=>f(e,def));
+  if(eventListeners.size)for(const e of ev){if(skipJarRelease&&e.type==='deliver')continue;eventListeners.forEach(f=>f(e,def));}
   for(const e of ev){
    if(def.kind==='garden'){
     if(e.type==='pluck'&&e.index!==undefined){const s=GARDEN_SPOTS[e.index];if(!garden)garden=readGarden();saveGarden(markPicked(garden,s,now()));flyFruit(e.index,true);jobCue(isTreeSpot(s)?'pop':'pick');tapHaptic();cue('fi2-path-cue','path-pop');}
@@ -486,7 +495,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     cue('fi2-path-cue','path-pop');
    }
    if(e.type==='return'&&def.kind==='carry'&&e.index!==undefined){boxBall(def,e.index);tapHaptic();}
-   if(e.type==='deliver'){if(def.prop==='bug'||def.prop==='firefly'){releaseJar(def);countBugShift(def.prop);}else unloadBag(def);}
+   if(e.type==='deliver'){if(def.prop==='bug'||def.prop==='firefly'){if(!skipJarRelease)releaseJar(def);countBugShift(def.prop);}else unloadBag(def);}
    if(e.type==='pass'){const w=lastWallTarget??{x:REBOUND_WALL.target.x,z:REBOUND_WALL.z};pulse(w.x,1,REBOUND_WALL.face+.05,'#ffffff',true,.8);jobCue('thunk');}
    if(e.type==='shot'&&gear.flash){const f=gear.flash,mat=f.material as T.MeshBasicMaterial;f.visible=true;fx.tween(.55,k=>{mat.opacity=.85*(1-k);},()=>{f.visible=false;});pulse(REBOUND_WALL.target.x,(REBOUND_WALL.target.top+REBOUND_WALL.target.bottom)/2,REBOUND_WALL.face+.05,'#ffd36c',true,1.6);jobCue('ding');tapHaptic();}
    if(e.type==='call'){const spot=def.targets[0],flagUp=e.value===1,flag=task.flag;
@@ -508,7 +517,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(def.kind==='pump')paintPump(def);
   if(ev.some(e=>e.type==='done')){const seconds=run.seconds,id=def.id,bag=run.harvest?[...run.harvest.bag]:run.garden?[...run.garden.bag]:undefined;endingRun=run;run=null;refCam.end();if(carried)carried.visible=false;if(reducedMotion&&gear.basket)gear.basket.visible=false;if(def.kind==='garden'&&inGarden)paintGarden();
    // Let the last throw / toss / wobble finish (at most ~1.2 s), then dispose the props (update → clearProps).
-   ending=1.2;if(beacon)beacon.visible=false;setView({active:null,done:{id,seconds:Math.round(seconds*10)/10,nonce:++doneNonce,...(bag?{bag}:{})}});return;}
+   ending=1.2;if(beacon)beacon.visible=false;setStash={};setView({active:null,done:{id,seconds:Math.round(seconds*10)/10,nonce:++doneNonce,...(bag?{bag}:{}),...(def.set?{set:def.set}:{})}});return;}
   publishActive();
  }
  let activeKey='',handleStroke:Tween|null=null;
@@ -517,11 +526,14 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   return {value:v,min:b.min,max:b.max,label:`Ball ${r.step+1}/${n} · ${v.toFixed(2)} atm · green ${b.min.toFixed(2)}–${b.max.toFixed(2)}${left?` · ~${left} to go`:v>b.max?' · too hard':''}`};}
  function publishActive(){if(!run){setView({active:null});return;}const p=runProgress(run),t=run.def.task,h=run.harvest;
   const next:JobView['active']={id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:banner||runHint(run),actions:runActions(run),
-   gauge:t?.type==='pump'&&run.phase==='pump'?pumpGauge(run):h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:jobButtons(run)};
+   gauge:t?.type==='pump'&&run.phase==='pump'?pumpGauge(run):h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:jobButtons(run),...(run.def.set?{set:run.def.set,title:run.def.title}:{})};
   // Only here (on a frame-key change, an event or a note), never per frame: an unchanged panel keeps the same object.
   const key=JSON.stringify(next);if(view.active&&key===activeKey)return;activeKey=key;setView({active:next});}
  /** A HUD button for task jobs and work steps (hold steps send `id` then `id:up`). */
- function act(id:string){if(!run)return;applyEvents(runAction(run,id));if(run?.def.kind==='offside')paintOffside();}
+ function act(id:string){if(!run||rel)return;
+  // Bug squad: Release / Light up the goal plays the release cinematic first; the shift completes when it ends (or is skipped).
+  const w=run.def.work;if((run.def.prop==='bug'||run.def.prop==='firefly')&&run.phase==='deliver'&&run.at===-2&&w?.deliver&&id===w.deliver.id){beginRelease(run);return;}
+  applyEvents(runAction(run,id));if(run?.def.kind==='offside')paintOffside();}
 
  // ---- Garden ----
  const readGarden=():GardenState=>{let raw:unknown=null;try{raw=JSON.parse(store?.getItem(GARDEN_STORAGE_KEY)??'null');}catch{}return sanitizeGarden(raw,now());};
@@ -572,6 +584,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(!active){return;}
   lastP={x:p.x,y:p.y,z:p.z};reducedMotion=reduced;
   if(fx.busy)fx.update(dt);
+  if(fading)tickFading(dt);
   // A finished job keeps its props for its last animation (≤ 1.2 s), then disposes them.
   if(!run&&ending>0){ending-=dt;if(ending<=0||!fx.busy)clearProps();}
   // Leaving the job's area ends the shift (Sep 30 2026: the Harvest day panel followed the player to the main island). The
@@ -593,6 +606,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    if(run&&carried){carried.visible=run.carrying>=0;if(carried.visible){const k=liftK(dt),f=gear.lift?.from;
     if(f&&k<1)carried.position.set(f.x+(p.x-f.x)*k,f.y+(p.y+1.35-f.y)*ease.out(k),f.z+(p.z-f.z)*k);else carried.position.set(p.x,p.y+1.35,p.z);}}
    if(run)updateGear(run,p,dt,reduced);
+   if(rel){tickRelease(dt);if(beacon)beacon.visible=false;arrowOn=false;}
    if(run)flutterBugs(run,dt,reduced);
    if(banner){bannerAge+=dt;if(bannerAge>4){banner='';viewKey='';}}
    if(run&&frameKeyChanged(run))publishActive();
@@ -604,6 +618,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   updateGarden(p);
   boardTimer+=tick;if(boardTimer<.25)return;boardTimer=0;refreshBadges();
   // The time of day was switched mid-shift (Settings): the day bugs fly home at night, the fireflies at daybreak.
+  // The Bug squad follows the time of day (Oct 20 2026 merge): switching to Night mid-shift swaps the bugs for the fireflies (and
+  // back at Day / Sunset) without ending the shift; each set keeps its own progress. Never mid-release (the release finishes first).
+  if(run&&run.def.id==='bug-scout'&&!rel){const want=activeSet(timeOfDay());if((run.def.set??'bugs')!==want)swapSet(want);}
   if(run&&!openNow(run.def)){quit();return;}
   let near:JobDef|null=null,best=BOARD_RANGE;
   for(const job of JOBS){const d=Math.hypot(p.x-job.board.x,p.z-job.board.z);if(d<best&&Math.abs(p.y-floor(job.board.x,job.board.z))<2){best=d;near=job;}}
@@ -655,13 +672,91 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   lastContact={x:Math.round(x*10)/10,y:Math.round(y*10)/10,z:Math.round(z*10)/10};
   if(hitsReboundTarget(x,y,z,0)){shotCounted=true;applyEvents(reboundEvent(run,'shot'));}
  }
- function start(id:string){const def=jobById(id);if(!def||!openNow(def))return false;
+ // ---- Bug squad sets (Oct 20 2026 merge: one job, its targets follow the Time of day) ----
+ /** The other set's run, put away while the time of day has the other set out (each set keeps its own progress within a shift). */
+ let setStash:Partial<Record<BugSetId,JobRun>>={};
+ /** The old set's bugs after a swap: their last matrices, lifted and shrunk over FADE_OUT s, then disposed (one or two draws). */
+ let fading:{meshes:T.InstancedMesh[];base:Float32Array[];t:number;own:{dispose:()=>void}[]}|null=null;
+ const FADE_OUT=.7,fadeM=new T.Matrix4(),SCALE_IDX=[0,1,2,4,5,6,8,9,10];
+ function dropFading(){if(!fading)return;for(const m of fading.meshes)m.removeFromParent();for(const d of fading.own)d.dispose();fading=null;}
+ function tickFading(dt:number){const f=fading;if(!f)return;f.t+=dt;const k=Math.min(1,f.t/FADE_OUT);if(k>=1){dropFading();return;}
+  const sc=1-ease.inOut(k);for(let j=0;j<f.meshes.length;j++){const m=f.meshes[j],b=f.base[j];
+   for(let i=0;i<m.count;i++){fadeM.fromArray(b,i*16);const e=fadeM.elements;for(const c of SCALE_IDX)e[c]*=sc;e[13]+=k*1.6;m.setMatrixAt(i,fadeM);}m.instanceMatrix.needsUpdate=true;}}
+ /** Swap the running Bug squad shift to `next` (night fell / day broke): the old set's bugs fly off and fade, the new set grows in. */
+ function swapSet(next:BugSetId){const cur=run;if(!cur)return;const from=cur.def.set??'bugs';if(from===next)return;
+  cur.holding=false;cur.at=-1;setStash[from]=cur;dropFading();
+  if(!reducedMotion&&props&&targetsMesh){const ms=[targetsMesh,...(bugHalo?[bugHalo]:[])],own:{dispose:()=>void}[]=[];
+   for(const m of ms){root.attach(m);own.push(m.geometry,m.material as T.Material);}
+   propDisposables=propDisposables.filter(d=>!own.includes(d));
+   fading={meshes:ms,base:ms.map(m=>(m.instanceMatrix.array as Float32Array).slice()),t:0,own};}
+  clearProps();
+  const def=bugJobFor(next),back=setStash[next];delete setStash[next];run=back??startRun(def,1+Math.floor(now()%100000));run.holding=false;
+  buildProps(def);
+  if(targetsMesh){const tm=targetsMesh;run.got.forEach((g,i)=>{if(g)tm.setMatrixAt(i,hidden);});tm.instanceMatrix.needsUpdate=true;}
+  gear.bagCount=run.got.filter(Boolean).length;setFade=0;bugAt=-1;
+  banner=next==='fireflies'?'Night fell: the bugs are tucked up and the fireflies are out! Your bug squad is saved for the morning.':'Day broke: the fireflies are asleep and the bug squad is back! Your fireflies are saved for tonight.';
+  bannerAge=-2;viewKey='';jobCue('squad');refreshBadges();publishActive();}
+
+ // ---- Bug squad release cinematic (Oct 20 2026, user: "when tapping that it will have animation to zoom in on the main character
+ // releasing all the bugs and then zoom out to see them spread out and fly away"). Two eased shot cameras (shotCamera.ts, like the
+ // assistant-referee view): close on the player while the jar is lifted and opened, then up and out over the slope while the set's
+ // bugs fan out on curved paths and shrink away. Reuses the shift's own instanced draw (≤ roster size, the on-map cap) and the pooled
+ // job FX; no new meshes. Controls are held (walkScale 0); a tap skips to the end; reduced motion = the quick jar release, no camera.
+ // Quit, a set swap or leaving the area end it safely: the cameras ease back by themselves.
+ const relClose=createShotCamera(.8,1.1),relWide=createShotCamera(1.3,.8);
+ const REL={lift:.7,pop:1,pour:1.15,wide:1.55,fly:3,end:4.7} as const;
+ type Rel={run:JobRun;def:JobDef;t:number;popped:boolean;lit:boolean;wide:boolean;n:number;p:{x:number;y:number;z:number};face:{x:number;z:number};out:{x:number;z:number}};
+ let rel:Rel|null=null,skipJarRelease=false;
+ function beginRelease(r:JobRun){const def=r.def;
+  if(reducedMotion){finishRelease(r,false);return;}
+  const p={...lastP},d=def.deliver!,fl=Math.hypot(d.x-p.x,d.z-p.z)||1,face={x:(d.x-p.x)/fl,z:(d.z-p.z)/fl};
+  // The bugs fly out and away, downhill from the summit (any spot works: away from the peak, or along the facing if at the peak).
+  const ox=p.x-SUMMIT_PEAK.x,oz=p.z-SUMMIT_PEAK.z,ol=Math.hypot(ox,oz),out=ol>2?{x:ox/ol,z:oz/ol}:face;
+  rel={run:r,def,t:0,popped:false,lit:false,wide:false,n:Math.min(targetsMesh?.count??0,bugList(def)?.length??0),p,face,out};
+  gear.tossing=true;
+  if(eventListeners.size){const e:JobEvent={type:'deliver'};eventListeners.forEach(f=>f(e,def));}
+  const R=rel;
+  relClose.begin(aspect=>{const side={x:-R.face.z,z:R.face.x},portrait=aspect<1,dist=portrait?4.6:3.6;
+   return {target:{x:R.p.x,y:R.p.y+1.45,z:R.p.z},eye:{x:R.p.x+R.face.x*dist+side.x*1.6,y:R.p.y+2.3,z:R.p.z+R.face.z*dist+side.z*1.6},fov:portrait?58:45};});
+  banner='';viewKey='';jobCue('jar');tapHaptic();setView({releasing:true});publishActive();}
+ function wideShot(aspect:number){const R=rel!;const portrait=aspect<1,ahead=7;
+  return {target:{x:R.p.x+R.out.x*ahead,y:R.p.y+3.2,z:R.p.z+R.out.z*ahead},eye:{x:R.p.x-R.out.x*(portrait?12:9),y:R.p.y+(portrait?10:8),z:R.p.z-R.out.z*(portrait?12:9)},fov:portrait?62:48};}
+ function tickRelease(dt:number){const R=rel;if(!R)return;R.t+=dt;const t=R.t,jar=gear.bag,mesh=targetsMesh,def=R.def,bugs=bugList(def),p=R.p;
+  const top={x:p.x+R.face.x*.3,y:p.y+2.05,z:p.z+R.face.z*.3};
+  // 1. Both hands lift the jar over the head; 2. the lid pops off with a sparkle.
+  if(jar){jar.visible=true;const k=ease.inOut(Math.min(1,t/REL.lift)),hx=p.x-.38,hy=p.y+.85,hz=p.z+.05;jar.position.set(hx+(top.x-hx)*k,hy+(top.y-hy)*k,hz+(top.z-hz)*k);jar.rotation.set(0,0,0);
+   const lid=jar.children[0];if(lid&&R.popped){const k2=Math.min(1,(t-REL.pop)/.6);lid.position.set(k2*.3,.19+k2*1.1-k2*k2*.7,0);lid.rotation.set(k2*5,0,k2*3);lid.visible=k2<1;}}
+  if(!R.popped&&t>=REL.pop){R.popped=true;jobCue('squad');tapHaptic();fx.burst(top.x,top.y+.25,top.z,'#fff6c8',10,1.6,.8,true,1);if(def.prop==='firefly')fx.burst(top.x,top.y+.3,top.z,'#e9ff6b',8,1.2,1,true,1.2);}
+  // 3. The set pours out of the jar and fans out on curved paths, shrinking away with distance (species-agnostic: the roster's order).
+  if(t>=REL.pour&&mesh&&bugs){const fly=def.prop==='firefly';
+   for(let i=0;i<R.n;i++){const s=t-REL.pour-i*.07;if(s<0){mesh.setMatrixAt(i,hidden);continue;}const k=Math.min(1,s/REL.fly);if(k>=1){mesh.setMatrixAt(i,hidden);continue;}
+    const a=(R.n>1?i/(R.n-1)-.5:0)*1.7,ca=Math.cos(a),sa=Math.sin(a),dx=R.out.x*ca-R.out.z*sa,dz=R.out.x*sa+R.out.z*ca,far=13+(i%3)*3,up=4.5+(i%4)*1.1;
+    const c1x=top.x+dx*1.6,c1y=top.y+1.6,c1z=top.z+dz*1.6,ex=top.x+dx*far,ey=top.y+up,ez=top.z+dz*far,u=1-k,wob=Math.sin(k*9+i*1.3)*.5*u;
+    const x=u*u*top.x+2*u*k*c1x+k*k*ex-dz*wob,y=u*u*top.y+2*u*k*c1y+k*k*ey,z=u*u*top.z+2*u*k*c1z+k*k*ez+dx*wob;
+    const grow=Math.min(1,k/.08),size=grow*(1-k*k),b=bugs[i],sc=bugScale(def,b)*size,yaw=Math.atan2(dx,dz),beat=fly?1:1-b.lift*.8*Math.abs(Math.sin(t*13+i));
+    mesh.setMatrixAt(i,fly?m4(x,y,z,0,size,size,size):m4(x,y,z,yaw,sc*beat,sc,sc*b.length/.46));}
+   mesh.instanceMatrix.needsUpdate=true;}
+  if(!R.lit&&t>=REL.pour+.5){R.lit=true;const d=def.deliver!,y=floor(d.x,d.z);
+   if(def.prop==='firefly'){for(const sx of [-1,1])fx.burst(d.x+sx*.9,y+1.35,d.z,'#ffe48a',8,.6,1.6,true,1.4);pulse(d.x,y+.05,d.z,'#ffe48a',false,2.2);}
+   else pulse(d.x,y+.05,d.z,'#9fd68a',false,1.8);}
+  // 4. Up and out: the wide shot frames the slope while they fly away.
+  if(!R.wide&&t>=REL.wide){R.wide=true;relWide.begin(wideShot);}
+  if(t>=REL.end)finishRelease(R.run,true);}
+ /** End of the cinematic (or skipped, or reduced motion): hide the flyers, ease the cameras back, then complete the shift as before. */
+ function finishRelease(r:JobRun,cine:boolean){const R=rel;rel=null;
+  if(R){relWide.end();relClose.end();const mesh=targetsMesh;if(mesh){for(let i=0;i<mesh.count;i++)mesh.setMatrixAt(i,hidden);mesh.instanceMatrix.needsUpdate=true;}
+   if(gear.bag){gear.bag.visible=false;const lid=gear.bag.children[0];if(lid){lid.position.set(0,.19,0);lid.rotation.set(0,0,0);lid.visible=true;}}gear.tossing=false;gear.bagCount=0;
+   if(R.def.prop==='firefly'&&!R.lit){const d=R.def.deliver!;pulse(d.x,floor(d.x,d.z)+.05,d.z,'#ffe48a',false,2.2);}}
+  setView({releasing:false});
+  if(run!==r||r.phase!=='deliver'||r.at!==-2)return;
+  skipJarRelease=cine&&!!R;try{applyEvents(runAction(r,r.def.work!.deliver!.id));}finally{skipJarRelease=false;}}
+ function start(id:string){const def=jobVariant(id,timeOfDay());if(!def||!openNow(def))return false;
   // One job at a time (bug A2): starting another never silently ends the running one. Finish it or tap Stop job first.
-  if(run)return false;quit();banner='';if(props)clearProps();
+  if(run)return false;quit();banner='';if(props)clearProps();dropFading();setStash={};setFade=1;
   // Garden shift: what is pickable this shift (ripe now, plus spots made ripe for the shift if too few are: never a dead end).
   let ripe:boolean[]|undefined;if(def.kind==='garden'){garden=readGarden();ripe=shiftRipeness(garden,now()).ripe;}
   run=startRun(def,1+Math.floor(now()%100000),ripe);if(def.kind==='garden'&&inGarden)paintGarden();viewKey='';lastShooting=false;lastWallPhase='';shotCounted=false;buildProps(def);refreshBadges();setView({done:null,near:null});offerRing.visible=false;publishActive();return true;}
- function quit(){refCam.end();if(!run){if(props&&ending>0)clearProps();return;}const wasGarden=!!run.garden;run=null;clearProps();refreshBadges();setView({active:null});if(wasGarden&&inGarden)paintGarden();}
+ function quit(){refCam.end();if(rel){rel=null;relClose.end();relWide.end();setView({releasing:false});}setStash={};dropFading();if(!run){if(props&&ending>0)clearProps();return;}const wasGarden=!!run.garden;run=null;clearProps();refreshBadges();setView({active:null});if(wasGarden&&inGarden)paintGarden();}
  /** A short friendly line in the job panel (e.g. "Island jobs are on foot"): shown until the next note. */
  /** After the character is posed (Town.tsx): what the job has you carry sits in your hands. `l`/`r` = world hand points. */
  const hv=new T.Vector3(),hq=new T.Quaternion(),UP=new T.Vector3(0,1,0),DOWN=new T.Vector3(0,-1,0),NEGX=new T.Vector3(-1,0,0);
@@ -672,7 +767,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(def.kind==='sort'&&task.shirts&&jr.carrying>=0&&!gear.lift){const sh=task.shirts[jr.step];if(sh){sh.position.set(mx+fx0*.2,my+.12,mz+fz0*.2);sh.rotation.set(0,yaw,0);}}
   if(gear.stack){const left=def.targets.length-jr.got.filter(Boolean).length;for(let i=0;i<def.targets.length;i++)gear.stack.setMatrixAt(i,i<left?m4(l.x+fx0*.06,l.y+.02+i*.07,l.z+fz0*.06):hidden);gear.stack.instanceMatrix.needsUpdate=true;}
   if(gear.hammer&&def.prop==='peg'&&(run||gear.hammer.visible)){const h=gear.hammer;h.visible=true;h.position.set(r.x,r.y,r.z);aim(h,NEGX,r.x+(r.x-p.x)*.3,r.y+(r.y-(p.y+1.35))*1.2,r.z+(r.z-p.z)*.3);}
-  if(gear.net){const g=gear.net;g.visible=jr.phase==='work';if(g.visible){g.position.set(mx,my,mz);aim(g,UP,mx+fx0*1.1,my+.55,mz+fz0*1.1);}}
+  // Bug squad's net (Oct 20 2026): out in front while catching; Net down (the stalk) = held low and forward, hoop just over the grass;
+  // Net up = carried on the shoulder, hoop up behind the head.
+  if(gear.net){const g=gear.net;g.visible=jr.phase==='work';if(g.visible){g.position.set(mx,my,mz);
+   if(jr.holding)aim(g,UP,mx+fx0*1.1,my+.55,mz+fz0*1.1);else if(jr.stalk)aim(g,UP,mx+fx0*1.25,my-.6,mz+fz0*1.25);else aim(g,UP,mx-fx0*.45,my+1.1,mz-fz0*.45);}}
   if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
   if(gear.handFlag){const g=gear.handFlag;g.visible=true;g.position.set(r.x,r.y,r.z);aim(g,UP,r.x+(r.x-p.x)*.4,r.y+(r.y-(p.y+1.3))*1.2,r.z+(r.z-p.z)*.4);}
   if(gear.basket&&(run||gear.basket.visible)){const b=gear.basket;b.visible=true;b.position.set(l.x,l.y-.23,l.z);b.rotation.set(gear.basketTilt,yaw,0);}
@@ -685,6 +783,19 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const api={root,start,quit,update,ballContact,act,note,holdProps,
   /** Whether a job runs at the current time of day (the Summit Isle bug jobs: day or night only). */
   isOpen:(id:string)=>{const d=jobById(id);return !!d&&openNow(d);},
+  /** The definition a job would start with now (the Bug squad's bugs or fireflies set, by the time of day). */
+  variant:(id:string)=>jobVariant(id,timeOfDay()),
+  /** Bug squad: walking pace (Net down = careful steps; 0 while the release cinematic holds the player). */
+  get walkScale(){return rel?0:run?.stalk&&run.phase==='work'?STALK.walk:1;},
+  /** The release cinematic holds the controls. */
+  get locked(){return !!rel;},
+  /** Tap to skip the release cinematic: straight to the end (the bugs are away, the shift is paid). */
+  skipRelease(){if(rel)finishRelease(rel.run,true);},
+  /** A short hint for a tapped button that is not armed yet (null = none). */
+  disabledHint:(id:string)=>{const d=run?.def;if(!d)return null;const w=d.work;
+   if(w?.deliver&&id===w.deliver.id)return run!.phase==='deliver'?`Walk right up to the ${d.deliver?.label??'drop-off'} (follow the arrow), then tap ${w.deliver.label}.`:`Catch them all first, then ${w.deliver.label.toLowerCase()} at the ${d.deliver?.label??'drop-off'}.`;
+   if(id==='netlow'||id==='netup')return 'The net goes back on your shoulder for the release.';
+   return null;},
   onEvent:(fn:(e:JobEvent,def:JobDef)=>void)=>{eventListeners.add(fn);return()=>{eventListeners.delete(fn);};},
   /** The run's target point by index (harvest spot or job target) and the drop-off, for the character's facing. */
   spot:(i:number)=>{const d=run?.def;if(!d)return null;const h=d.task?.type==='harvest'?d.task.spots[i]:d.targets[i];return h?{x:h.x,z:h.z}:null;},
@@ -692,7 +803,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   /** Harvest day: the armed orchard tree (the Kick the tree target), or null. */
   armedTree:()=>{const h=run?.harvest,d=run?.def;if(!h||!d||d.task?.type!=='harvest'||run!.phase!=='work')return null;const s=d.task.spots[h.near];return s&&s.action==='shake'?{x:s.x,z:s.z,index:h.near}:null;},
   /** Call right after the follow camera is placed (like fishing.applyCamera): the assistant-referee view while flagging. */
-  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{const r=refCam.apply(camera,dt,reduced);badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
   /** A job runs, or the one that just ended is winding down (its last pose): Town keeps calling holdProps. */
   get holding(){return !!run||ending>0&&!!props;},
   /** Where the current step wants the player (the beacon's targets); read-only, for play-tests. */

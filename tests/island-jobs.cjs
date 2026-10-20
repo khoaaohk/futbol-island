@@ -48,7 +48,7 @@ function environment(shared){
  // of the other jobs instead of the bottom (it paid 8: ~2 a minute). Same tiers: half pay 13, then the 1-coin tip.
  {assert.equal(JOB_BASE_PAY['wall-rebounds'],16,'Wall rebounds pays 16 (26 until the 14 Oct 2026 rebalance)');assert.equal(E.JOB_MINUTES['wall-rebounds'],3.5);
   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),h=others.length>>1,mid=others.length%2?others[h]:(others[h-1]+others[h])/2;
-  assert.equal(others.length,14,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026) + Summit Isle\'s Bug squad and Firefly floodlights (20 Oct 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
+  assert.equal(others.length,13,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026) + Summit Isle\'s Bug squad (20 Oct 2026; one job since the day / night merge)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
   assert(rate('wall-rebounds')>others[0]&&rate('wall-rebounds')<others[others.length-1],'neither the lowest nor the highest per minute');
   assert(8/E.jobShiftMinutes('wall-rebounds')<others[0],'the old pay (8) was the lowest per minute: the reason for the raise');
   const short=JOB_IDS.filter(id=>id!=='wall-rebounds').map(E.jobShiftMinutes);assert(Math.abs(short.reduce((a,b)=>a+b,0)/short.length-1.5)<.05,'the short jobs still average 1.5 min a shift (the sim assumption)');
@@ -99,8 +99,8 @@ function environment(shared){
   assert.match(cones.intro,/beside the pitch, so the match can keep going/);assert(Math.hypot(cones.board.x-t[4].x,cones.board.z-t[4].z)<8,'the sign stands by the session');
   for(const q of t)assert(!R.outsideJobArea(cones,q.x,q.z),'every mark is inside the job area');}
  // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
- // Summit Isle's ranger job (12 Oct 2026) makes 13; its two bug jobs (20 Oct 2026, day and night) make 15.
- assert.equal(C.JOBS.length,15,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up, Bug squad and Firefly floodlights');
+ // Summit Isle's ranger job (12 Oct 2026) makes 13; the Bug squad (20 Oct 2026, one job whose set follows Day / Night) makes 14.
+ assert.equal(C.JOBS.length,14,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up and Bug squad');
  {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],5);}
  {const farm=C.jobById('farm-harvest');assert(farm&&farm.kind==='harvest'&&farm.prop==='produce'&&farm.task.type==='harvest'&&farm.task.fruitGoal===5&&farm.task.vegGoal===5&&farm.deliver&&farm.deliver.label==='farm stand','Harvest day: shake 5 fruit and pull/pick/snip 5 veg, then unload at the farm stand');
   const goodsReg=env.load('lib/town/market/goods.ts');assert(farm.task.spots.every(sp=>goodsReg.goodById(sp.good)?.kind==='produce'),'every harvest crop is a sellable produce good');
@@ -239,7 +239,7 @@ function environment(shared){
    if(job.work){
     // Every job has an action now: standing on a target does nothing until the action is done.
     const g0=R.runGoals(run)[0],before=R.runProgress(run).value;for(let k=0;k<5;k++)R.stepRun(run,at(g0),.2,floor);
-    assert.equal(R.runProgress(run).value,before,`${job.id}: walking onto the spot alone does not finish it`);assert(R.runActions(run).length===1,`${job.id}: one clear action button at the spot`);
+    assert.equal(R.runProgress(run).value,before,`${job.id}: walking onto the spot alone does not finish it`);assert(R.runActions(run).filter(a=>a.id!=='netlow'&&a.id!=='netup').length===1,`${job.id}: one clear action button at the spot (the Bug squad's net toggle sits in the ride slot)`);
     if(job.kind==='trail'){
      // The marker paints only while held: a dash walked with the marker up stays faded (a gap to come back for).
      const n0=run.next;R.stepRun(run,at(job.targets[n0]),.1,floor);assert.equal(run.next,n0,'marker up: no paint');assert.match(R.runHint(run),/Hold Paint/);

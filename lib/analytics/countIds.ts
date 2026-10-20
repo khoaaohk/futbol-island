@@ -72,9 +72,10 @@ export const SUMMIT_COUNT_EVENTS=[
  ['ball_find','Hidden ball found on Summit Isle'],
  ['easel_open','Painting easel: sat down to paint'],['easel_save','Painting easel: painting saved'],
  ['cannon_sit','Ball cannon: sat in the seat'],['cannon_hit','Ball cannon: clay disc knocked out'],
- // The bug jobs (Oct 20 2026, lib/town/jobs/bugScout.ts): catches and finished shifts, day and night.
- ['bug_catch','Bug squad: bug caught (day)'],['bug_squad','Bug squad: shift finished, squad released'],
- ['firefly_catch','Firefly floodlights: firefly caught (night)'],['firefly_shift','Firefly floodlights: shift finished, fireflies released'],
+ // The Bug squad job (Oct 20 2026, lib/town/jobs/bugScout.ts): catches and finished shifts, day and night sets.
+ ['bug_catch','Bug squad: bug caught (Day / Sunset set)'],['bug_squad','Bug squad: shift finished, squad released'],
+ // One job since Oct 20 2026: the fireflies are the Bug squad's Night set (the ids kept, so older counts still add up).
+ ['firefly_catch','Bug squad: firefly caught (Night set)'],['firefly_shift','Bug squad: Night set finished, fireflies released'],
  // Bug extras (Oct 20 2026): the Bug book opened / completed, and a wild meadow bug fluttering away from the player.
  ['bugbook_open','Bug book opened'],['bugbook_complete','Bug book completed (all 8 bugs and 8 fireflies)'],['wild_flutter','Wild meadow bug fluttered away'],
 ] as const;

@@ -125,3 +125,8 @@
  .chipMain b,.chipMain em{font-size:16px}
 }
 
+
+/* Bug squad release cinematic (Oct 20 2026): a transparent full-screen tap target with a small hint at the bottom. */
+.skip{position:fixed;inset:0;z-index:40;background:transparent;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
+.skip span{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:rgba(20,32,28,.55);color:#fff8e6;font:600 14px/1.2 system-ui,sans-serif;white-space:nowrap}
+.skip:focus-visible span{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}

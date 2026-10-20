@@ -65,7 +65,7 @@ export default function SummitKitSection({report}:{report:Report}){
     table={{columns:['Fruit · method','Count'],rows:fruitRows.map(r=>[r.label,r.text??r.value])}}>
     <BarList rows={fruitRows} unit="times shaken" share={false} limit={fruitRows.length}/>
    </ChartCard>
-   <CountCard title="Summit Isle hidden balls, easel, cannon and bugs" subtitle="Hidden balls found on Summit Isle, the painting easel (sat down, saved), the Ball Cannon (sat down, discs knocked out) and the bug jobs (Bug squad by day, Firefly floodlights at night: catches and finished shifts)"
+   <CountCard title="Summit Isle hidden balls, easel, cannon and bugs" subtitle="Hidden balls found on Summit Isle, the painting easel (sat down, saved), the Ball Cannon (sat down, discs knocked out) and the Bug squad job (one job: bugs by Day / Sunset, fireflies at Night; catches and finished sets)"
     rows={summitRows.filter(r=>SUMMIT_FUN.includes(r.id))}/>
    <CountCard title="Beach finds picked up" subtitle="Beachcombing by island (totals only, never which find or where)" rows={beachRows}/>
   </div>

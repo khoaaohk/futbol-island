@@ -10,7 +10,8 @@ import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 import HudSlot from './HudStack';
 import {useVending} from '@/lib/town/vendingWallet';
 import {getJobRuntime,subscribeJobRuntime,emptyJobView,type JobView} from '@/lib/town/jobs/jobScene';
-import {jobById,jobClosedNote} from '@/lib/town/jobs/jobCatalog';
+import {jobById,jobClosedNote,jobVariant,canonicalJobId} from '@/lib/town/jobs/jobCatalog';
+import type {BugSetId} from '@/lib/town/jobs/bugScout';
 import {islandJobWallet,islandMarket} from '@/lib/town/jobs/islandWallet';
 import {readJobLedger,FIRST_JOB_BONUS,type JobId} from '@/lib/town/jobs/jobEconomy';
 import {goodById} from '@/lib/town/market/goods';
@@ -32,7 +33,7 @@ import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
-const isBugJob=(id:string)=>id==='bug-scout'||id==='firefly-floodlights';
+const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
 const openBugBook=()=>window.dispatchEvent(new Event(OPEN_BUG_BOOK));
 /** Same fish + fruit art as the onboarding "Earn coins" step (the sardine is FishArt's drawing, inlined in PocketFishIcon). */
 
@@ -64,7 +65,7 @@ const BUSY_NOTE:HudToast={title:'Finish or stop your current job first',detail:'
 export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,onCardChange,onRequestWalk,onOpenBalances}:{blocked:boolean;holdToasts?:boolean;offerAllowed?:boolean;/** a job card (Start job / Job done) is open: it holds the stack's task slot */onCardChange?:(open:boolean)=>void;onRequestWalk:()=>void;onOpenBalances:()=>void}){
  const view=useJobView(),wallet=useVending(),fish=useBasket('fish'),fruit=useBasket('produce');
  const fuel=useFuel(); // fuel counter in the coins bar (docs/economy/FUEL_2026-09-30.md)
- const [intro,setIntro]=useState<JobId|null>(null),[payday,setPayday]=useState<{id:JobId;seconds:number;pay:JobPayResult|null;best?:number}|null>(null);
+ const [intro,setIntro]=useState<JobId|null>(null),[payday,setPayday]=useState<{id:JobId;seconds:number;pay:JobPayResult|null;best?:number;set?:BugSetId}|null>(null);
  // Notes (docs/ui/HUD_STACK.md): one on screen, a short queue behind it, rapid garden picks of one crop merged ("+3 Strawberry").
  // They sit in the stack's toast slot, below the task and the focus action, so a note never covers a button.
  const [toasts,setToastQueue]=useState<HudToast[]>([]),toast=toasts[0]??null;
@@ -110,7 +111,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
-  setPayday({id:def.id,seconds:done.seconds,pay:null,best});
+  setPayday({id:def.id,seconds:done.seconds,pay:null,best,set:done.set});
   creditConceptTick(conceptForJob(def.id),`job:${def.id}`); // Lane 3: a job whose lesson maps to a Paths lesson ticks it (evidence only)
   void islandJobWallet.payJob(def.id,def.title,done.seconds,done.bag).then(pay=>{setPayday(p=>p&&p.id===def.id?{...p,pay}:p);try{document.dispatchEvent(new CustomEvent('fi2-story-cue',{detail:'finish'}));}catch{}});},[view.done]);
  // Garden pick notes: the first pick of each produce this session teaches its lesson.
@@ -125,12 +126,15 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    if(view.near){e.preventDefault();setIntro(view.near as JobId);}}};
   window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[blocked,view.near,view.other,view.active,intro]);
  useEffect(()=>{if(intro)startButton.current?.focus();},[intro]);
+ useEffect(()=>{if(!view.releasing)return;const key=(e:KeyboardEvent)=>{if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();getJobRuntime()?.skipRelease();}};
+  window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[view.releasing]);
  useEffect(()=>{onCardChange?.(!!intro||!!payday);},[intro,payday,onCardChange]);
  // Assistant-referee replays use a fixed camera: hide the minimap and ride buttons so every player stays visible.
  const jobCamera=!!view.active&&view.active.id==='offside-flag'&&view.active.phase!=='work';
  useEffect(()=>{const app=document.querySelector('.town-app');if(!app)return;app.toggleAttribute('data-job-camera',jobCamera);return()=>app.removeAttribute('data-job-camera');},[jobCamera]);
  if(blocked)return null;
- const runtime=getJobRuntime(),active=view.active?jobById(view.active.id):null,offer=view.near?jobById(view.near):null,introJob=intro?jobById(intro):null;
+ // The Bug squad's definition follows its target set (bugs by day, fireflies at night; Oct 20 2026 merge): title, unit and copy.
+ const runtime=getJobRuntime(),active=view.active?jobVariant(view.active.id,view.active.set)??null:null,offer=view.near?jobById(view.near):null,introJob=intro?(runtime?.variant(intro)??jobById(intro)):null;
  const start=(id:JobId)=>{if(view.active&&runtime?.run){busyNote();setIntro(null);return;}onRequestWalk();if(runtime&&!runtime.start(id)){busyNote();setIntro(null);return;}setIntro(null);setPayday(null);};
  const preview=introJob?islandJobWallet.preview(introJob.id):null;
  // The Summit Isle bug jobs run by day (Bug squad) or at night (Firefly floodlights): the card says when to come back.
@@ -150,6 +154,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p className={styles.eyebrow}>{introJob.role} · {introJob.place}</p>
    <h2 id="job-intro-title">{introJob.title}</h2>
    <p>{introJob.intro}</p>
+   {introJob.nightNote&&<p className={styles.note} data-job-night-note>{introJob.nightNote}</p>}
    {introClosed&&<p className={styles.note} data-job-closed>{jobClosedNote(introJob)}</p>}
    <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
    <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button>{isBugJob(introJob.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
@@ -173,7 +178,11 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
     <button type="button" className={styles.stop} onClick={()=>runtime?.quit()}>Stop job</button>
    </>}
   </section></HudSlot>;})()}
-  {payday&&(()=>{const def=jobById(payday.id)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
+  {/* Bug squad release cinematic (Oct 20 2026): the controls are held while the bugs fly off; a tap anywhere (or Space / Enter /
+      Esc) skips to the end. Transparent, over the game only; the HUD stays readable. Only a NEW press skips: the Release tap's own trailing click lands on
+      this overlay (it appears under the finger), so pointer clicks are ignored (keyboard clicks, detail 0, still skip). */}
+  {view.releasing&&<button type="button" className={styles.skip} data-job-skip aria-label="Skip the release" onPointerDown={e=>{e.preventDefault();runtime?.skipRelease();}} onClick={e=>{if(e.detail===0)runtime?.skipRelease();}}><span>Tap to skip</span></button>}
+  {payday&&(()=>{const def=jobVariant(payday.id,payday.set)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
    <p className={styles.eyebrow}>Job done · {def.role}</p>
    <h2 id="job-done-title">{def.title}</h2>
    <div className={styles.payout} aria-live="polite">{[0,1,2,3,4].map(i=><span key={i} className={styles.burst} style={{'--i':i} as React.CSSProperties} aria-hidden="true"/>)}<b data-job-paid={pay?pay.credited:undefined}>+{pay?pay.credited:'…'}</b><small>{pay?.credited===1?'coin':'coins'}{pay?` · balance ${pay.balance}`:''}</small></div>
