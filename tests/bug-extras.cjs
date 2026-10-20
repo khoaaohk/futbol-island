@@ -68,33 +68,24 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
  assert.match(read('lib/town/jobs/jobScene.ts'),/recordBugCatch\(def\.prop,i\)\.completed\)\{countBugBookComplete\(\);cue\(BUG_BOOK_COMPLETE_EVENT/);
  storage.clear();}
 
-// ---- 3. Wild bugs ----
+// ---- 3. Wild bugs (since Bug flight: the island's bug swarm, lib/graphics/bugSwarm.ts; details in tests/bug-flight.cjs) ----
 {const W=load('lib/graphics/wildBugsCore.ts'),SI=load('lib/town/summitIsle.ts');
- same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:false})),[12,6,6,0,0],'12 cool, 6 warm, none hot or on Battery saver (tier 4)');
- same([0,1,3].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[6,3,0],'a few fireflies at night');
+ same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:false})),[12,10,8,0,0],'12 / 10 / 8 by heat tier (pickBugsOnMap caps), none hot or on Battery saver (tier 4)');
+ same([0,1,3].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[8,6,0],'fireflies at night');
  assert.equal(W.wildBugCount({tier:0,reduced:true,night:false}),0,'none with reduced motion');
- assert.equal(W.WILD_HOMES.length,12);for(const h of W.WILD_HOMES)assert(SI.onSummitIsle(h.x,h.z),`home (${h.x}, ${h.z}) on Summit Isle`);
- const {createWildBugs}=load('lib/graphics/wildBugs.ts'),scene=new T.Scene(),wb=createWildBugs(scene,()=>0);
+ const {createWildBugs}=load('lib/graphics/wildBugs.ts'),scene=new T.Scene(),wb=createWildBugs(scene,()=>0,99);
  const step=(o,n=1)=>{for(let i=0;i<n;i++)wb.update({dt:1/60,night:false,tier:0,reduced:false,busy:false,...o});};
- step({x:0,z:0},5);assert.equal(wb.mesh,null,'nothing built far away (main island)');assert.equal(scene.children.length,0);
- const far={x:W.MEADOW.x+60,z:W.MEADOW.z};step(far);const m=wb.mesh;assert(m&&m.isInstancedMesh&&m.count===12,'one instanced draw of 12 near the meadow');
- assert.equal(scene.children.filter(o=>o.isInstancedMesh).length,1);assert(m.boundingSphere&&m.boundingSphere.radius===60,'a fixed bound');
- assert(m.geometry.getAttribute('color'),'the shared bug shape (vertex colours), no textures');assert(!m.material.map);
- const u0=wb.updates;step(far,60);assert(wb.updates>=13&&wb.updates<=17,'15 Hz when not close: '+(wb.updates-u0));
- const near={x:W.MEADOW.x,z:W.MEADOW.z+20};const u1=wb.updates;step(near,30);assert.equal(wb.updates-u1,30,'every frame when close');
- step({...near,tier:1});assert.equal(wb.mesh.count,6,'heat tier 1: rebuilt with 6');step({...near,tier:3});assert.equal(wb.mesh,null,'tier 3: disposed');assert.equal(scene.children.length,0);
- step({...near,night:true});assert.equal(wb.mesh.count,6,'night: a few fireflies');assert(!wb.mesh.geometry.getAttribute('color'),'fireflies are plain unlit dots');
- step({...near,busy:true});assert.equal(wb.mesh.visible,false,'hidden while a bug job runs');step(near);assert.equal(wb.mesh.visible,true);
- step({x:W.MEADOW.x+80,z:W.MEADOW.z});assert(wb.mesh,'kept between BUILD_M and DROP_M (hysteresis)');step({x:W.MEADOW.x+95,z:W.MEADOW.z});assert.equal(wb.mesh,null,'disposed after leaving');
- // Walk up to a bug: it flutters away, counted, and the hint is sent once a visit.
- step(near);winEvents.length=0;const mt=new T.Matrix4(),pos=new T.Vector3();wb.mesh.getMatrixAt(0,mt);pos.setFromMatrixPosition(mt);
- const by={x:pos.x+.5,z:pos.z};step(by,3);wb.mesh.getMatrixAt(0,mt);const p1=new T.Vector3().setFromMatrixPosition(mt);step(by,60);wb.mesh.getMatrixAt(0,mt);const p2=new T.Vector3().setFromMatrixPosition(mt);
- assert(Math.hypot(p2.x-by.x,p2.z-by.z)>Math.hypot(p1.x-by.x,p1.z-by.z)+1,'the bug flutters away from the player');assert(p2.y>p1.y,'and up');
- assert.equal(winEvents.filter(e=>e===W.WILD_BUG_HINT).length,1,'one hint');step(by,200);assert.equal(winEvents.filter(e=>e===W.WILD_BUG_HINT).length,1,'still one hint a visit');
- // No per-frame allocation: the update loop never calls new.
- const src=read('lib/graphics/wildBugs.ts'),loop=src.slice(src.indexOf('function update('),src.indexOf('return {update'));assert(!/\bnew (?!Event\(WILD_BUG_HINT)|\[\]|[(=,]\s*\{\s*\w+:/.test(loop),'no allocation in update() (only the once-a-visit hint event)');
+ const C=SI.SUMMIT_CENTER;
+ step({x:0,z:0},5);assert.equal(wb.set,null,'nothing built far away (main island)');assert.equal(scene.children.length,0);
+ const off={x:C.x+200,z:C.z};step(off);assert.equal(wb.count,12,'12 bugs out when nearing Summit Isle');assert.equal(scene.children.length,1);
+ const far=wb.far;assert(far.isInstancedMesh&&far.boundingSphere,'one far-silhouette draw with a fixed bound');
+ assert(far.geometry.getAttribute('color'),'vertex colours, no textures');assert(!far.material.map);
+ const f0=wb.farSteps;step(off,60);assert(wb.farSteps-f0>=13&&wb.farSteps-f0<=17,'15 Hz for bugs not close: '+(wb.farSteps-f0));
+ step({...off,tier:1});assert.equal(wb.count,10,'heat tier 1: rebuilt with 10');step({...off,tier:3});assert.equal(wb.set,null,'tier 3: disposed');assert.equal(scene.children.length,0);
+ step({...off,busy:true});assert.equal(wb.root.visible,false,'hidden while a bug job runs');step(off);assert.equal(wb.root.visible,true);
+ step({x:C.x+270,z:C.z});assert(wb.set,'kept between BUILD_M and DROP_M (hysteresis)');step({x:C.x+300,z:C.z});assert.equal(wb.set,null,'disposed after leaving');
  wb.dispose();assert.equal(scene.children.length,0);
- const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,busy:!!jobs\.run\}\)/,'Town drives it with the heat tier and the job');assert.match(town,/wildBugs\.dispose\(\)/);}
+ const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,busy:!!jobs\.run\}\)/,'Town drives it with the heat tier and the job');assert.match(town,/wildBugs\.dispo/);}
 
 // ---- 4. Sounds, analytics, UI ----
 {let now=0;const param=()=>({value:1,setValueAtTime(v){this.value=v},linearRampToValueAtTime(v){this.value=v},exponentialRampToValueAtTime(v){this.value=v},cancelScheduledValues(){},setTargetAtTime(v){this.value=v}});
@@ -111,8 +102,8 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
  const scene=read('lib/town/jobs/jobScene.ts');for(const c of ["'net'","'cup'","'jar'","'squad'","`firefly-${i}`"])assert(scene.includes(c),'jobScene sends '+c);
  const CID=load('lib/analytics/countIds.ts'),ev=read('lib/analytics/summitEvents.ts'),admin=read('app/admin/SummitKitSection.tsx');
  for(const id of ['su:bugbook_open','su:bugbook_complete','su:wild_flutter']){assert(CID.isCountId(id),'allowlisted '+id);assert(ev.includes(`'${id}'`),'call site '+id);assert(admin.includes(`'${id}'`),'in /admin '+id);}
- assert.match(read('components/BugBook.tsx'),/countBugBookOpen\(\)/);assert.match(read('lib/graphics/wildBugs.ts'),/countWildFlutter\(\)/);
+ assert.match(read('components/BugBook.tsx'),/countBugBookOpen\(\)/);assert.match(read('lib/graphics/bugSwarm.ts'),/countWildFlutter\(\)/);
  const jobsUi=read('components/IslandJobs.tsx');assert.match(jobsUi,/data-job-bugbook/);assert.match(jobsUi,/addEventListener\(OPEN_BUG_BOOK/);assert.match(jobsUi,/addEventListener\(WILD_BUG_HINT/);}
-console.log('PASS bug extras: the Bug book (16 pages, saved and synced, tiny, completes once with a once-ever bonus), wild meadow bugs (one instanced draw, 12/6/0 by heat tier, near the meadow only, flutter away), and the net / jar / firefly chime / squad sounds');
+console.log('PASS bug extras: the Bug book (16 pages, saved and synced, tiny, completes once with a once-ever bonus), wild bugs (the island bug swarm, 12/10/8/0 by heat tier, near Summit Isle only), and the net / jar / firefly chime / squad sounds');
 function same(a,b,m){assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);}
 })().catch(e=>{console.error(e);process.exit(1);});

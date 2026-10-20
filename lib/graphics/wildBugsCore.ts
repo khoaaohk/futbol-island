@@ -1,35 +1,33 @@
 /**
- * Wild meadow bugs (Oct 20 2026, docs/island-jobs.md §15 "Bug extras"): pure rules for lib/graphics/wildBugs.ts, no three.js.
- * Butterflies and bugs flutter round the Summit Isle meadow by Day and Sunset, and a few fireflies blink there at Night (the
- * player's own Day / Sunset / Night setting), so the Bug squad's bugs feel part of the world. Look only: walking up makes one
- * flutter away (no catching outside a shift); the first time in a visit, a note points to the Bug squad job.
+ * Summit Isle bugs (Oct 20 2026, docs/island-jobs.md §15 "Bug flight"): pure rules for the bug swarm (lib/graphics/bugSwarm.ts,
+ * wrapped as the wild bugs in wildBugs.ts), no three.js. The wild bugs and the Bug squad's bugs are the same creatures: the 20
+ * species of lib/town/jobs/bugSpecies.ts, each at its BUG_HOMES spot spread over the island's four bands (the rotating
+ * pickBugsOnMap set), and the eight firefly calls at their FIREFLY_HOMES at Night (the player's own Day / Sunset / Night setting).
  *
- * Heat first (AGENTS.md "Mobile heat is a primary requirement"): one instanced draw, built only while the player is near the meadow,
- * a hard cap by heat tier (12 cool, 6 at tiers 1–2, none at tiers 3–4, Battery saver or reduced motion), 15 Hz matrix updates
- * when not close, nothing while a bug job runs (the job draws its own), no textures, no per-frame allocation.
+ * Heat first (AGENTS.md "Mobile heat is a primary requirement"): built only while the player is on or near Summit Isle, a hard cap
+ * by heat tier (bugs 12 / 10 / 8, pickBugsOnMap's caps; fireflies 8 / 6 / 4; none at tiers 3–4, Battery saver or reduced motion),
+ * every frame only for bugs within NEAR_M of the player and 15 Hz for the rest, nothing simulated or drawn beyond SIM_M, no
+ * textures, no per-frame allocation. Draws: one far-silhouette draw plus one per species within FULL_IN_M (full model), or two
+ * at Night (firefly bodies + glows).
  */
-import {BUG_SQUAD,FIREFLY_CALLS} from '../town/jobs/bugScout';
+import {bugMapCount} from '../town/jobs/bugSpecies';
 
 /** Window event: a wild bug fluttered away from the player (IslandJobs shows the "Try the Bug squad job" note, once a visit). */
 export const WILD_BUG_HINT='fi2-wild-bug-hint';
-/** The meadow's middle (between the two job signs and the bugs' spots, bugScout.ts). */
-export const MEADOW={x:614,z:41} as const;
-/** Built inside BUILD_M of the meadow's middle, disposed beyond DROP_M (hysteresis); full-rate updates inside NEAR_M. */
-export const WILD_BUG_RANGE={BUILD_M:70,DROP_M:90,NEAR_M:35,FAR_HZ:15} as const;
-/** How close the player walks before a bug flutters away, how long it flees, and how often one bug may count it. */
-export const WILD_FLEE={NEAR_M:2.6,SECONDS:2.2,COUNT_EVERY_S:8,SPEED:3.2} as const;
-export const WILD_BUG_CAP={cool:12,warm:6} as const;
+/** Built within BUILD_M of the Summit Isle middle (640, 130), disposed beyond DROP_M; per-bug: every frame within NEAR_M of the
+ *  player, FAR_HZ beyond, frozen and hidden beyond SIM_M. Full model within FULL_IN_M (kept to FULL_OUT_M), silhouette beyond. */
+export const WILD_BUG_RANGE={BUILD_M:250,DROP_M:290,NEAR_M:35,FAR_HZ:15,SIM_M:120,FULL_IN_M:14,FULL_OUT_M:20} as const;
+/** How often (s) one bug may count a flutter for analytics. */
+export const WILD_FLEE={COUNT_EVERY_S:8} as const;
+/** Fireflies on the map by heat tier 0 / 1 / 2. */
+export const FIREFLY_MAP_CAP:readonly number[]=[8,6,4];
+/** On-screen size (m, the longer of length and wingspan) from look.size: bigger than life and evened out, so even the little
+ *  spider and ladybird read from the follow camera ~40 m away (ladybird ~1 m, dragonfly ~1.6 m; the old wild bug was 1.5 m). */
+export const bugVisualSize=(size:number)=>(size+.25)*1.7;
+export const FIREFLY_SIZE=.5;
 
-/** How many wild bugs to draw: 12 cool, 6 at heat tiers 1–2, 0 at tiers 3–4 (Battery saver is tier 4) or with reduced motion.
- *  At Night only half as many fireflies ("a few"). */
+/** How many to draw: bugs 12 / 10 / 8 at heat tiers 0 / 1 / 2 (pickBugsOnMap), fireflies 8 / 6 / 4 at Night, none at tiers 3–4
+ *  (Battery saver is tier 4) or with reduced motion (bugs stay still and none are drawn). */
 export function wildBugCount(o:{tier:number;reduced:boolean;night:boolean}):number{
- if(o.reduced||o.tier>=3)return 0;const cap=o.tier>=1?WILD_BUG_CAP.warm:WILD_BUG_CAP.cool;return o.night?Math.ceil(cap/2):cap;
+ if(o.reduced||o.tier>=3)return 0;const t=Math.max(0,Math.min(2,Math.floor(o.tier)||0));return o.night?FIREFLY_MAP_CAP[t]:bugMapCount(t);
 }
-/** Home spots: a little off each job spot (the job's verified walkable meadow), so wild bugs and the shift's bugs never overlap. */
-export const WILD_HOMES:readonly {x:number;z:number}[]=[
- ...BUG_SQUAD.map((b,i)=>({x:b.x+(i%2?1.8:-1.6),z:b.z+(i%3?1.4:-1.2)})),
- ...FIREFLY_CALLS.filter((_,i)=>i%2===0).map((f,i)=>({x:f.x+(i%2?-1.5:1.7),z:f.z+1.3})),
-];
-/** Day colours: the squad's own wing tints (the Football Butterfly and Captain Monarch twice, butterflies being most common). */
-export const WILD_COLORS:readonly string[]=[BUG_SQUAD[4].color,BUG_SQUAD[5].color,BUG_SQUAD[0].color,BUG_SQUAD[3].color,BUG_SQUAD[4].color,BUG_SQUAD[5].color,BUG_SQUAD[2].color,BUG_SQUAD[7].color,BUG_SQUAD[1].color,BUG_SQUAD[6].color,BUG_SQUAD[4].color,BUG_SQUAD[5].color];
-export const distToMeadow=(x:number,z:number)=>Math.hypot(x-MEADOW.x,z-MEADOW.z);
