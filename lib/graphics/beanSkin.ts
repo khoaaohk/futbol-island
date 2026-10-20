@@ -1050,7 +1050,7 @@ export function attachBeanSkin<R extends HookedRig>(rig:R,j:BeanJoints,id:string
  if(style!=='bean')return rig;
  const skin=createBeanSkin(j,id,team,articulatedHands),bean=new Set<T.Object3D>(skin.meshes),intended=new Map<T.Mesh,boolean>();
  let costume=false;
- const classic=()=>{const out:T.Mesh[]=[];j.root.traverse(o=>{if(o instanceof T.Mesh&&!bean.has(o)&&!(o.parent&&bean.has(o.parent))&&o.name!=='character-selection-glow')out.push(o);});return out;};
+ const classic=()=>{const out:T.Mesh[]=[];j.root.traverse(o=>{if(o instanceof T.Mesh&&!bean.has(o)&&!(o.parent&&bean.has(o.parent))&&o.name!=='character-selection-glow'&&!o.userData.rigGear/* gear worn on the bean (backpack.ts) */)out.push(o);});return out;};
  // userData.beanHidden (heat pass 4, audit F8): a hidden childless classic mesh whose matrices playerBatch may skip (joints are Groups).
  const restore=()=>{for(const [m,v] of intended){m.visible=v;delete m.userData.beanHidden;}intended.clear();};
  const capture=()=>{for(const m of classic()){intended.set(m,m.visible);if(!costume){m.visible=false;if(!m.children.length)m.userData.beanHidden=true;}}};
