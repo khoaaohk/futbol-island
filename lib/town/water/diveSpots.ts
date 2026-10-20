@@ -222,7 +222,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(5,-14,'A ferry token','A ticket token dropped from the ferry by a fan on the way to a match.'),
   ]},
  {id:'moon-arch',name:'Moon Arch',area:5,x:835,z:-14,radius:13,blob:53,tint:'#8fdcf0',near:'summit-palm',surface:{x:835,z:-11.5},
-  floor:{kind:'twin',cx:0,cz:-5.5,rx:13,rz:9,yaw:0,bend:1,rim:5.2,crest:2,seed:4.7},
+  floor:{kind:'twin',cx:-10,cz:-5.5,rx:13,rz:9,yaw:0,bend:1,rim:5.2,crest:2,seed:4.7},
   theme:{id:'rock-arch-jellies',water:'#2a6f98',fog:[9,34],...BASE,sand:['#b7ab8f','#d6cbb0'],rock:['#6a6f82','#9096a8'],coral:['#b88be0','#8f5bd6','#9de0c8','#ffb4a2'],
    fan:['#8f5bd6','#6f7bd8','#c4407a'],anemone:['#c8b8ff','#9de0c8','#ffb4d0'],light:['#c8dcff','#c8c0d8',2.6],
    mix:{coral:.6,fans:1.2,anemones:1,kelp:.3,grass:.3},fish:['blue-tang','bigeye','jelly','anthias'],signature:'arch',
@@ -230,7 +230,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
   lesson:'Through the gap: a pass through a gap between two defenders is like swimming through the arch. Look for the gap.',
   story:'Island story: the jellies glow a little brighter when someone swims through the arch, like a crowd cheering a nutmeg.',
   finds:[
-   find('relic','relic',0,.6,-4,{prompt:'Look',aria:'Look at the old boot under the arch',title:'The arch boot',label:'Coaching idea',
+   find('relic','relic',-10,.6,-4,{prompt:'Look',aria:'Look at the old boot under the arch',title:'The arch boot',label:'Coaching idea',
     text:'A football boot has studs to grip the grass. Short studs for hard ground, longer ones for soft, muddy pitches.'}),
    burst(-9,8,'Everyone moves together','The shoal darts out at once. Press together when your team loses the ball.'),
    clam(9,8,'Calm under pressure','The clam stays shut until it is safe. Stay calm with the ball, even with players around you.'),
