@@ -18,9 +18,11 @@ const loop=(a0:number,a1:number,dIn:number,dOut:number)=>coastRing(SUMMIT_SHORE,
  * mantas), and the summit's north-bay mantas have it. Order matters: low heat tiers keep the first ones.
  */
 export const SUMMIT_SHARK_LOOPS:SharkLoop[]=[
- {id:'summit-east',region:'summit',points:loop(-16,22,30,40),speed:1.5},
+ // Oct 20 2026: was -16°..22°; ends at 10° now, 8 m+ off the Turtle Pool dive zone (water/diveSpots.ts).
+ {id:'summit-east',region:'summit',points:loop(-22,10,30,40),speed:1.5},
  {id:'summit-south',region:'summit',points:loop(78,120,29,38),speed:1.4},
- {id:'summit-south-east',region:'summit',points:loop(34,58,29,38),speed:1.6},
+ // Oct 20 2026: was loop(34,58,29,38); trimmed and pulled in to make room for the humpback off the south-east (seaLifeAreas.ts).
+ {id:'summit-south-east',region:'summit',points:loop(42,62,27,36),speed:1.6},
 ];
 /**
  * The whale shark: one long, slow loop off the west coast, the side the summit lookout faces (towards Coral Cay and the main

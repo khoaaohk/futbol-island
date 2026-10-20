@@ -1,5 +1,15 @@
 # Performance reference for future Futbol Island updates
 
+## Humpback, dive map marks and ray lessons, Oct 20 2026 (local, not deployed)
+
+Two humpbacks (`lib/graphics/humpback.ts`; South Bay replaces its whale shark, a new one off Summit Isle's south-east) run on the
+whale-shark kit (`whaleShark.ts createWhaleShark`, kind `'humpback'`): one more shared geometry (~300 triangles, vertex colours, no
+texture) and one more material/program, under the same open-sea drawn cap (`MAX_WHALES_DRAWN`, nearest only; phones draw one), the
+same 140 m sleep / 260 m hide / 15 Hz far stepping and frozen-frame rules. The fluke beat and the ~46 s tail lift are vertex-shader
+terms on the shared clock (no CPU work). Net draw count in South Bay is unchanged (a humpback instead of a whale shark); Summit's
+south-east adds one capped whale. The map's seven D marks are static SVG in the memoized terrain. The ray lesson toast is driven
+by the existing 2 Hz ray spot test (no new timer). Not measured on an iPhone.
+
 ## Open-sea whale sharks and rays, Oct 20 2026 (local, not deployed)
 
 Six more whale sharks (one per big open-water area) and eleven rays (manta, eagle, sting) to balance the areas: `lib/town/seaLifeAreas.ts` (areas, loops, caps, the per-area table `getSeaLifeAreas()`), `lib/graphics/openSeaLife.ts`, one hook in `components/Town.tsx` after `world.updateSharks`. Added cost and its bounds:

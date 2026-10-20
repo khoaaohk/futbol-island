@@ -48,8 +48,8 @@ ok('areas: every big area has a whale shark, every area a ray or a whale; the ge
  const after=A.getSeaLifeAreas(),before=A.seaLifeInventory(false);
  assert.equal(A.getSeaLifeAreas(),after,'built once');assert.equal(after.length,A.SEA_AREAS.length);
  for(const a of after){const s=a.species,raysN=s.mantas+s.eagleRays+s.stingrays;
-  if(a.big)assert(s.whaleSharks>=1,a.id+' (big) has a whale shark');
-  assert(raysN+s.whaleSharks>=1,a.id+' has at least one ray or whale');
+  if(a.big)assert(s.whaleSharks+s.humpbacks>=1,a.id+' (big) has a whale');
+  assert(raysN+s.whaleSharks+s.humpbacks>=1,a.id+' has at least one ray or whale');
   assert(raysN<=A.MAX_RAYS_PER_AREA+3||a.id==='coral-cay','no area is swamped with rays');}
  for(const l of A.OPEN_SEA_WHALE_LOOPS){let x=0,z=0;for(const p of l.points){x+=p.x;z+=p.z;}assert.equal(A.seaAreaAt(x/l.points.length,z/l.points.length).id,l.area,l.id+' sits in its own area');}
  for(const l of A.OPEN_SEA_RAY_LOOPS){let x=0,z=0;for(const p of l.points){x+=p.x;z+=p.z;}assert.equal(A.seaAreaAt(x/l.points.length,z/l.points.length).id,l.area,l.id+' sits in its own area');}
@@ -62,8 +62,10 @@ ok('areas: every big area has a whale shark, every area a ray or a whale; the ge
 ok('caps per heat tier, battery-saver tier included; whale sharks share ONE geometry/material; nearest drawn only',()=>{
  for(const phone of [false,true])for(const t of [0,1,2,3,4]){const c=A.openSeaCounts(t,phone);assert(c.whales>=1&&c.whales<=A.MAX_WHALES_DRAWN&&c.raysPerArea<=A.MAX_RAYS_PER_AREA,'caps at tier '+t);}
  for(const phone of [false,true]){const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone}),fr=new T.Frustum();
-  const geo=new Set(sea.whales.map(w=>w.mesh.geometry)),mat=new Set(sea.whales.map(w=>w.mesh.material));assert.equal(geo.size,1,'one whale geometry');assert.equal(mat.size,1,'one whale material');
-  assert.equal(new Set(sea.whales.map(w=>w.shadow.material.map)).size,1,'one seabed silhouette texture');
+  const ws=sea.whales.filter((w,i)=>A.OPEN_SEA_WHALE_LOOPS[i].kind==='whale-shark'),hb=sea.whales.filter((w,i)=>A.OPEN_SEA_WHALE_LOOPS[i].kind==='humpback');
+  for(const [set,name] of [[ws,'whale shark'],[hb,'humpback']]){assert(set.length>=1,name);assert.equal(new Set(set.map(w=>w.mesh.geometry)).size,1,'one '+name+' geometry');assert.equal(new Set(set.map(w=>w.mesh.material)).size,1,'one '+name+' material');}
+  assert.notEqual(ws[0].mesh.geometry,hb[0].mesh.geometry,'the humpback has its own shape');
+  assert.equal(new Set(ws.map(w=>w.shadow.material.map)).size,1,'one seabed silhouette texture');assert.equal(new Set(hb.map(w=>w.shadow.material.map)).size,1,'one humpback silhouette');
   assert(sea.rays.islands.every(r=>r.under.isInstancedMesh),'one instanced mesh per ray area');
   for(const tier of [0,1,2,3,4]){heat.forceHeatTier(tier);const c=A.openSeaCounts(tier,phone);
    for(const r of sea.rays.islands)assert(r.under.count<=c.raysPerArea&&r.active<=c.raysPerArea,`tier ${tier}: ≤ ${c.raysPerArea} rays in ${r.island}`);
@@ -75,7 +77,7 @@ ok('caps per heat tier, battery-saver tier included; whale sharks share ONE geom
 });
 
 ok('only near animals animate; far ones step at 15 Hz; frozen frames upload nothing',()=>{
- const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone:false}),w=sea.whales.find(x=>x.friend.id==='whale-main-south');
+ const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone:false}),w=sea.whales.find(x=>x.friend.id==='humpback-main-south');
  const cam=new T.PerspectiveCamera(60,1,1,1000);const f=new T.Frustum();
  const look=(px,pz,tx,tz)=>{cam.position.set(px,30,pz);cam.lookAt(tx,0,tz);cam.updateMatrixWorld();f.setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));};
  // 100 m off the loop's box, looking at it: awake but stepping at FAR_HZ.
@@ -105,9 +107,49 @@ ok('analytics + wiring: count ids, the ray spot, the minimal Town hook',()=>{
  const ids=load('lib/analytics/countIds.ts');for(const id of ['wa:ride_open_whale','wa:ray_spot','wa:ride_whale'])assert(ids.FIXED_COUNT_IDS.includes(id),id+' is a known counter');
  const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone:false}),f=new T.Frustum();const r=sea.rays.islands[0],t=r.tracks[0],o={x:0,z:0,yaw:0};
  R.loopPoint(t.loop.points,t.lengths,t.total,t.u,o);sea.update(1/60,false,f,o);
- assert.equal(sea.spot(.6,o.x,o.z,false),false,'not while on land/out of the water');assert.equal(sea.spot(.6,o.x,o.z,true),true,'a near ray is spotted');assert.equal(sea.spot(.6,o.x,o.z,true),false,'once per ray');sea.dispose();
+ assert.equal(sea.spot(.6,o.x,o.z,false),false,'not while on land/out of the water');assert.equal(sea.spot(.6,o.x,o.z,true),true,'a near ray is spotted');assert.equal(sea.lastSpotted(),t.loop.species,'its kind is known (the ray lesson)');assert.equal(sea.spot(.6,o.x,o.z,true),false,'once per ray');sea.dispose();
  const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
  assert.match(town,/const openSea=createOpenSeaLife\(scene\);/);assert.match(town,/\.\.\.openSea\.friends\]/);assert.match(town,/openSea\.update\(active&&!learning\?dt:0,reduced\|\|heat\.staticAmbience,world\.sharks\.frustum,location\)/);
+ const sec=fs.readFileSync(path.join(base,'app/admin/WaterSection.tsx'),'utf8');
+ for(const id of ['wa:ride_open_whale','wa:ray_spot'])assert(sec.includes(`value(rows,'${id}')`),id+' has its own tile in the admin Water section');
  assert.match(town,/openSea\.dispose\(\)/);assert.match(town,/countOpenSeaWhaleRide\(\)/);assert.match(town,/countRaySpot\(\)/);
 });
-console.log(`sea-life-areas: ${groups} groups passed (${A.OPEN_SEA_WHALE_LOOPS.length} open-sea whale sharks, ${A.OPEN_SEA_RAY_LOOPS.length} rays in ${A.OPEN_SEA_RAY_GROUPS.length} areas)`);
+ok('the ray lesson: 1–2 short coaching lines per ray kind, once per kind per visit, the shared toast',()=>{
+ for(const k of Object.keys(A.RAY_SPECIES)){const l=A.RAY_LESSONS[k];assert(l&&l.length>=1&&l.length<=2,k+' has 1–2 lines');
+  for(const x of l){assert(x.title.length<=24&&x.text.length<=130,`${k}: "${x.title}" is short`);assert(!/[<>]|https?:/.test(x.text),'plain text');}
+  assert.equal(A.rayLessonFor(k,0),l[0]);assert.equal(A.rayLessonFor(k,l.length),l[0],'alternates');}
+ assert.equal(A.RAY_LESSON_KIND,'Coaching idea');assert(A.RAY_LESSONS.manta.some(x=>/space/.test(x.text))&&A.RAY_LESSONS.eagle.some(x=>/space/.test(x.text)),'gliding = passing / moving into space');
+ const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8'),toast=fs.readFileSync(path.join(base,'components/RayLessonToast.tsx'),'utf8');
+ assert.match(town,/const raysTaught=new Set<string>\(\);let rayLessons=0;/);assert.match(town,/if\(k&&!raysTaught\.has\(k\)\)\{raysTaught\.add\(k\);waterStore\.set\(\{rayLesson:\+\+rayLessons,rayKind:k\}\);\}/);
+ assert.match(town,/<RayLessonToast blocked=\{toastBlocked\}\/>/);
+ assert.match(toast,/export default function RayLessonToast/);assert(!/localStorage/.test(toast),'per visit: nothing saved');assert.equal((toast.match(/setTimeout\(/g)||[]).length,2,'one wait + one hide timeout');
+ assert.match(toast,/toastLane\.request\('ray'\)/);
+});
+
+// Merge hygiene (Oct 20 2026): the seven dive zones (water/diveSpots.ts) landed with the open-sea animals and overlapped some
+// island loops by 2–14 m. No animal loop may cross a zone's blob: sharks keep 8 m off its edge, every other animal 5 m. Fixed by
+// nudging the loops (mantaLoops.ts, summitSeaLife.ts), never the zones.
+ok('dive zones: no shark, manta, ray or whale loop crosses a dive patch',()=>{
+ const Dv=load('lib/town/water/diveSpots.ts');
+ const every=[...old,...fresh.map(l=>({k:l.kind==='whale'?'whale':'ray',id:l.id,p:l.points}))];
+ for(const z of Dv.DIVE_SPOTS)for(const l of every){let g=Infinity;for(const p of l.p){const dx=p.x-z.x,dz=p.z-z.z;g=Math.min(g,Math.hypot(dx,dz)-Dv.diveBlobR(z,Math.atan2(dz,dx)));}
+  const m=l.k==='shark'?8:5;assert(g>=m,`${l.id} (${l.k}) is ${g.toFixed(1)} m from the ${z.id} dive patch (≥ ${m})`);}
+});
+// The humpback (Oct 20 2026): a low-poly procedural whale from the whale-shark kit, South Bay's whale and the one off Summit Isle's
+// south-east; no texture, one geometry, a surface cruiser whose tail lift is a shader term (no CPU), ridable like the whale sharks.
+ok('the humpback: South Bay and Summit south-east, low-poly, no texture, surface cruiser with a shader tail lift, ridable',()=>{
+ const H=load('lib/graphics/humpback.ts'),W=load('lib/graphics/whaleShark.ts'),hb=A.OPEN_SEA_WHALE_LOOPS.filter(l=>l.kind==='humpback');
+ assert.equal(hb.map(l=>l.area).sort().join(),'main-south,summit-isle','South Bay (big) and Summit Isle');
+ const se=hb.find(l=>l.area==='summit-isle');let cx=0,cz=0;for(const p of se.points){cx+=p.x;cz+=p.z;}cx/=se.points.length;cz/=se.points.length;
+ assert(cx>S.SUMMIT_CENTER.x&&cz>S.SUMMIT_CENTER.z,'south-east of Summit Isle');assert(se.points.every(p=>Math.hypot(p.x-S.SUMMIT_CENTER.x,p.z-S.SUMMIT_CENTER.z)<230),'round Summit Isle');
+ assert.equal(L.SUMMIT_SHARK_LOOPS.length,3,'Summit keeps three shark patrols');
+ const g=H.humpbackGeometry(),tris=g.attributes.position.count/3;assert(tris>=150&&tris<=400,`low-poly (${tris} triangles)`);assert(!g.index&&g.attributes.color,'vertex colours');
+ const sh=W.createWhaleSharkShared('humpback');assert.equal(sh.material.map,null,'no texture');assert.equal(sh.depth,H.HUMP_DEPTH);
+ assert(H.HUMP_DEPTH.mean+H.HUMP_DEPTH.bob<.3&&H.HUMP_DEPTH.finTop-H.HUMP_DEPTH.backTop>H.HUMP_DEPTH.mean+H.HUMP_DEPTH.bob,'a surface cruiser: the fin breaks the surface');
+ assert(/hbLift/.test(H.HUMP_SWIM)&&/mod\(uWhaleTime,46\.0\)/.test(H.HUMP_SWIM),'the tail lift is a vertex term on the shared clock');
+ const prog={uniforms:{},vertexShader:'#include <common>\n#include <begin_vertex>\n#include <project_vertex>',fragmentShader:'#include <common>\n#include <color_fragment>'};sh.material.onBeforeCompile(prog);
+ assert(prog.vertexShader.includes('hbLift')&&prog.fragmentShader.includes('knob'),'the humpback shader');assert.equal(sh.material.customProgramCacheKey(),'humpback-3d');sh.dispose();
+ const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone:true});assert(hb.every(l=>sea.friends.some(f=>f.id===l.id&&f.kind==='whale')),'ridable (wa:ride_open_whale)');
+ assert(A.OPEN_SEA_WHALE_LOOPS.length+1<=12&&A.MAX_WHALES_DRAWN===2,'the drawn cap is unchanged');sea.dispose();
+});
+console.log(`sea-life-areas: ${groups} groups passed (${A.OPEN_SEA_WHALE_LOOPS.length} open-sea whales incl. ${A.OPEN_SEA_WHALE_LOOPS.filter(l=>l.kind==='humpback').length} humpbacks, ${A.OPEN_SEA_RAY_LOOPS.length} rays in ${A.OPEN_SEA_RAY_GROUPS.length} areas)`);

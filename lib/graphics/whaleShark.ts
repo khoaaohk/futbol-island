@@ -18,6 +18,7 @@ import {RIDE_BACK,RIDE_BANK,RIDE_RISE,type RideFriend} from '../town/water/anima
 import {WHALE_SHARK_LOOP} from '../town/summitSeaLife';
 import {silhouetteOf,sunShadowOffset} from '../town/fishing/fishSilhouette';
 import {patchSeaVeil} from './seaVeil';
+import {HUMP_DEPTH,HUMP_PATTERN,HUMP_SWIM,humpbackGeometry} from './humpback';
 
 const WATER=-.43,NEAR=140,DRAW=260,UW_SURFACE=-.42;
 /** Oct 19 2026 (user: "too flat ... floating on top of the water", then "glitchy ... doesn't feel beneath the water"): the body
@@ -91,29 +92,33 @@ export const PATTERN_FRAGMENT=`
  shade=mix(shade,vec3(.05,.06,.08),eye*.7);
  diffuseColor.rgb=shade;
 }`;
-function addShaders(material:T.Material,uniform:{value:number}){
+function addShaders(material:T.Material,uniform:{value:number},kind:WhaleKind='whale-shark'){
+ const hump=kind==='humpback';
  material.onBeforeCompile=shader=>{shader.uniforms.uWhaleTime=uniform;
   // The sweep + pattern are the whale's own; the depth trick, veil, light bands, rim fade and wobble are the shared seaVeil.ts.
-  patchSeaVeil(shader,uniform,{fade:false/* Oct 20 2026: no rim alpha (it made the body and fins glassy) */,vertexHead:'uniform float uWhaleTime;varying vec3 vWhaleLocal;',vertexAnim:TAIL_SWEEP,
-   fragmentHead:'varying vec3 vWhaleLocal;\nfloat wsHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',colorBody:PATTERN_FRAGMENT});};
- material.customProgramCacheKey=()=>'whale-shark-3d';
+  patchSeaVeil(shader,uniform,{fade:false/* Oct 20 2026: no rim alpha (it made the body and fins glassy) */,vertexHead:'uniform float uWhaleTime;varying vec3 vWhaleLocal;',vertexAnim:hump?HUMP_SWIM:TAIL_SWEEP,
+   fragmentHead:'varying vec3 vWhaleLocal;\nfloat wsHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',colorBody:hump?HUMP_PATTERN:PATTERN_FRAGMENT});};
+ material.customProgramCacheKey=()=>hump?'humpback-3d':'whale-shark-3d';
 }
 
 /** The one geometry, material (tail-sweep time uniform) and seabed-silhouette texture, shareable by several whale sharks
  *  (Oct 20 2026: the open-sea whale sharks, openSeaLife.ts, draw from ONE set; whoever shares it owns `time`). */
-export function createWhaleSharkShared(){
- const time={value:0};
+/** Oct 20 2026: the same kit draws the humpback (humpback.ts): its own geometry, swim terms and surface depth. */
+export type WhaleKind='whale-shark'|'humpback';
+export function createWhaleSharkShared(kind:WhaleKind='whale-shark'){
+ const time={value:0},hump=kind==='humpback';
+ const depth:{mean:number;bob:number;backTop:number;finTop:number;finX:number;rate:number}=hump?HUMP_DEPTH:{...WHALE_DEPTH,finX:-1.25};
  // Oct 19 2026 (user: "too flat ... floating on top of the water"): a real rounded body swimming UNDER the surface (WHALE_DEPTH),
  // opaque and depth-writing (SEA_DEPTH makes the sea's depth test let it show through), tinted by depth in the fragment.
- const geometry=whaleSharkGeometry(),material=new T.MeshBasicMaterial({side:T.DoubleSide,vertexColors:true,transparent:false,depthWrite:true});addShaders(material,time);// Oct 19 2026: solid from every angle, slate back with the pale spots and stripes (pattern on), flanks pale not teal
+ const geometry=hump?humpbackGeometry():whaleSharkGeometry(),material=new T.MeshBasicMaterial({side:T.DoubleSide,vertexColors:true,transparent:false,depthWrite:true});addShaders(material,time,kind);// Oct 19 2026: solid from every angle, slate back with the pale spots and stripes (pattern on), flanks pale not teal
  const sil=silhouetteOf(geometry,'top');
- return {time,geometry,material,sil,dispose(){geometry.dispose();material.dispose();sil.geometry.dispose();sil.texture.dispose();}};
+ return {kind,depth,time,geometry,material,sil,dispose(){geometry.dispose();material.dispose();sil.geometry.dispose();sil.texture.dispose();}};
 }
 export type WhaleSharkShared=ReturnType<typeof createWhaleSharkShared>;
-export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {x:number;z:number}[];speed:number};id?:string;name?:string;start?:number;shared?:WhaleSharkShared}={}){
+export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {x:number;z:number}[];speed:number};id?:string;name?:string;start?:number;shared?:WhaleSharkShared;kind?:WhaleKind}={}){
  const loop=options.loop??WHALE_SHARK_LOOP,pts=loop.points,n=pts.length;
  const lengths=new Float64Array(n+1);for(let i=1;i<=n;i++){const a=pts[i-1],b=pts[i%n];lengths[i]=lengths[i-1]+Math.hypot(b.x-a.x,b.z-a.z);}
- const own=!options.shared,res=options.shared??createWhaleSharkShared(),total=lengths[n],time=res.time,geometry=res.geometry,material=res.material;
+ const own=!options.shared,res=options.shared??createWhaleSharkShared(options.kind),DEP=res.depth,total=lengths[n],time=res.time,geometry=res.geometry,material=res.material;
  const mesh=new T.Mesh(geometry,material);mesh.name=options.name??'summit-whale-shark';mesh.renderOrder=1;/* opaque, after the sea like the sharks */mesh.castShadow=mesh.receiveShadow=false;mesh.frustumCulled=true;mesh.matrixAutoUpdate=false;
  const root=new T.Group();root.name=mesh.name+'-root';root.add(mesh);scene.add(root);
  // A soft translucent shadow on the seabed (ONE mesh): only while the clear water window is open over a bed (setClearBed from
@@ -142,14 +147,14 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
   // Ridden (Oct 20 2026, user: "when riding the whale, they are not together"): it rises (rise 0 → 1 at RIDE_RISE) until its back
   // is RIDE_BACK.whale under the water line, right under the rider's seat (animalRides.ts RIDE_GRIP), and sinks back after.
   if(dt>0)state.rise+=((state.ridden?1:0)-state.rise)*(1-Math.exp(-dt*RIDE_RISE));
-  const swimDepth=WHALE_DEPTH.mean+WHALE_DEPTH.bob*Math.sin(state.clock*WHALE_DEPTH.rate),rise=state.rise;
-  mesh.position.set(a.x+dx*f,WATER-WHALE_DEPTH.backTop-(swimDepth+(RIDE_BACK.whale-swimDepth)*rise),a.z+dz*f);
+  const swimDepth=DEP.mean+DEP.bob*Math.sin(state.clock*DEP.rate),rise=state.rise;
+  mesh.position.set(a.x+dx*f,WATER-DEP.backTop-(swimDepth+(RIDE_BACK.whale-swimDepth)*rise),a.z+dz*f);
   if(state.free){mesh.position.x=state.dx;mesh.position.z=state.dz;}// steered (animalRides.ts): the drawn (tick-interpolated) pose
   else if(state.bend!==0){const l=Math.hypot(dx,dz)||1;mesh.position.x+=dz/l*state.bend;mesh.position.z-=dx/l*state.bend;}// the dart's sideways bend
   mesh.quaternion.setFromAxisAngle(up,(state.free?state.dyaw-Math.PI/2:Math.atan2(-dz,dx)+state.bendYaw)+.05*(1-rise)*Math.sin(state.clock*.37));// no yaw wobble under a rider
   // The bank into a steered turn: a roll about the long axis through the BACK (the rider's seat stays put).
   const bank=state.bank*RIDE_BANK.whale;
-  if(bank!==0){qBank.setFromAxisAngle(ax,bank);mesh.quaternion.multiply(qBank);pivot.set(0,-WHALE_DEPTH.backTop,0).applyQuaternion(qBank);pivot.y+=WHALE_DEPTH.backTop;pivot.applyAxisAngle(up,state.free?state.dyaw-Math.PI/2:0);mesh.position.add(pivot);}
+  if(bank!==0){qBank.setFromAxisAngle(ax,bank);mesh.quaternion.multiply(qBank);pivot.set(0,-DEP.backTop,0).applyQuaternion(qBank);pivot.y+=DEP.backTop;pivot.applyAxisAngle(up,state.free?state.dyaw-Math.PI/2:0);mesh.position.add(pivot);}
   mesh.updateMatrix();
   // The seabed shadow: only over a clear-window bed.
   const bk=clearBed?clearBed.strength():0,bd=bk>.05&&clearBed?clearBed.depth(mesh.position.x,mesh.position.z):-1;
@@ -167,8 +172,8 @@ export function createWhaleShark(scene:T.Scene,options:{loop?:{points:readonly {
   // Near the player only (pooled rings, <= ~2 a second): small trail ripples over the back, and a V wake while the fin cuts the surface.
   if(fx&&!reduced&&!state.ridden/* ridden: the ride's own wake (Town.tsx RIDE_WAKE_AT) */&&Math.hypot(mesh.position.x-player.x,mesh.position.z-player.z)<70){
    if((state.bubbleT-=step)<=0){state.bubbleT=1.1;wakeAt.set(2.6,0,(Math.sin(state.clock*2.3))*.6).applyMatrix4(mesh.matrix);fx.ripple(wakeAt.x,WATER,wakeAt.z,.07,.5);}
-   state.finUp=mesh.position.y+WHALE_DEPTH.finTop>WATER-.04;
-   if(state.finUp&&(state.finT-=step)<=0){state.finT=.45;finAt.set(-1.25,WHALE_DEPTH.finTop,0).applyMatrix4(mesh.matrix);fx.ripple(finAt.x,WATER,finAt.z,.12,.8);}
+   state.finUp=mesh.position.y+DEP.finTop>WATER-.04;
+   if(state.finUp&&(state.finT-=step)<=0){state.finT=.45;finAt.set(DEP.finX,DEP.finTop,0).applyMatrix4(mesh.matrix);fx.ripple(finAt.x,WATER,finAt.z,.12,.8);}
   }
  }
  /** Water P1b (lib/town/water/animalRides.ts): the whale shark as a ridable "island friend" (the same one mesh). */
