@@ -39,6 +39,7 @@ export default function WaterSection({report}:{report:Report}){
    <div><span>Idle at 20 fps</span><b>{show(value(rows,'wa:idle_cap'))}</b><small>treading water with no input for 4 s</small></div>
    <div><span>Swim lesson shown</span><b>{show(value(rows,'wa:lesson'))}</b><small>once per device</small></div>
    <div><span>Island friend rides</span><b>{show(value(rows,'wa:ride_manta')+value(rows,'wa:ride_whale'))}</b><small>{show(value(rows,'wa:ride_manta'))} manta · {show(value(rows,'wa:ride_whale'))} whale shark · {show(value(rows,'wa:ride_lap'))} full laps · {show(value(rows,'wa:ride_off'))} let go</small></div>
+   <div><span>Dives</span><b>{show(value(rows,'wa:dive_start'))}</b><small>{show(value(rows,'wa:dive_surface'))} surfaced · {show(value(rows,'wa:dive_breath_out'))} breath ran out · {show(value(rows,'wa:dive_find'))} finds · {show(value(rows,'wa:dive_lesson'))} breath lessons · {show(value(rows,'wa:dive_deep'))} went deep · {show(value(rows,'wa:dive_wreck_visit'))} wreck dives · {show(value(rows,'wa:dive_wreck_find'))} wreck finds · {show(value(rows,'wa:dive_fly'))} jetpack take-offs</small></div>
    <div><span>Sharks circled</span><b>{show(value(rows,'wa:sharks_circle'))}</b><small>{show(value(rows,'wa:sharks_escape'))} escapes (shore, take-off or the sharks lost interest)</small></div>
   </div>
   <div className={styles.grid}>

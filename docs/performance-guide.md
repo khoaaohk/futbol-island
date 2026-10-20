@@ -5578,3 +5578,32 @@ target, no texture, no texture read added** (the clear window's old stretched li
 - **Dive**: `uSwimDive` (one float, eased in swimClear.ts from waterState `under`) clears the swim disc in deep water from alpha
   0.86 to 0.36 (`SWIM_CLEAR.diveAlpha`); beanSkin's underwater absorption is capped at 0.6 so a deep diver stays readable.
 - Pinned: tests/swim-clear.cjs (blended tail, ALU-only ribbons, still path, uSwimDive, program key v8).
+
+## Diving spots: one spot to test first (water P2, Oct 16 2026, local, not deployed)
+
+`lib/town/water/diveSpots.ts` (data), `diveSession.ts` (pure state), `diveRuntime.ts` (glue), `lib/graphics/diveRoom.ts`, `lib/graphics/diveBuoys.ts`; docs/swimming-research.md §9. One spot, Paul's Grotto (84, −272) off North Beach Rocks.
+- **Surface cues at rest.** The lighter patch is a uniform-driven tint inside the existing ocean shader (`WATER_UNIFORMS.uDiveSpots[4]` / `uDiveTint[4]`, written once by `setDiveSpots` at build, never per frame): per ocean fragment one compare per slot and one `length` for the lit slot; no second water pass, no new mesh or texture, not in the shore strips. It also draws on the still path (it is colour, not motion). The buoy is ONE `InstancedMesh` for every spot (~150 triangles each, vertex colours, no shadow cast or received); its bob and flag ripple are a vertex-shader term on `uWaterTime`, so it only moves while the island renders and the water clock runs; hidden past 220 m (one compare on the HUD tick). **Added CPU per frame at rest: 0.** The Dive prompt's patch test runs at the water probe's 10 Hz, only while swimming (one distance per spot).
+- **Diving.** The island is neither stepped nor rendered (the dive branch returns from `animate` before any island work). The sealed room is built on Dive and fully disposed on surfacing (tests/water-dive.cjs listens for every geometry and material `dispose`). Headless build (node, three 0.169): **phone 20 draw objects, 73,205 triangles, 76 fish**; desktop 20 / 108,849 / 80. Browser (production build, headless Chromium SwiftShader, 390×844 touch, phone profile): `renderer.info` **20 calls, 72,731 triangles** per dive frame including the diver's rig (the island frame it replaces is 30–220 draws). Instanced: every fish species (7 school draws: anchovy, blue tang, yellow tang, snapper, bigeye, trevally, anthias; ray, grouper, parrotfish and octopus 1 each; the coral burst 1, hidden until touched). Every fish path is a closed loop or figure-eight evaluated in the vertex shader from per-instance attributes plus one time uniform (no CPU per fish, no matrix uploads). The reef (sand, ~100 coral pieces of five kinds, rocks, relic, chest, vent) is one merged draw; fans, anemones, kelp and seagrass are one swaying draw (vertex sway); god rays one static additive mesh; bubbles one Points draw. One hemisphere light, `THREE.Fog`, no shadows, reflections or render targets. Per dive frame on the CPU: the swim step (a few scalars), one time uniform, the follow camera, the rig pose, ≤ 4 find distances, the clam lid / coin only while they animate; the breath ring's CSS variable ≤ 10 Hz.
+- **Sleeps.** Under the surface the water state keeps its swim phase, so the existing idle rule caps the dive at **20 fps after 4 s without input**; menus hold it (dt 0, so the breath waits too). Building the room costs ~200 ms headless on the phone profile, once per dive, under the tint flash. Nothing runs between dives.
+- **Tradeoff.** The room's ~73k triangles on phones is above the design's 20k budget, chosen for the user's "robust with coral and fish" request; it is close to the Deep Sea Boat's 79k and replaces a costlier island frame. If phones run warm in a dive, the first levers are `coralCount` and the brain-coral detail (the `phone` branch in diveRoom.ts).
+- **Not measured on an iPhone.** All of the above is reduced/bounded work in desktop emulation; phone heat was NOT measured in the cloud.
+
+## Dive zones: seven themed zones, blob patches, two depth levels, wrecks (Oct 20 2026, local, not deployed)
+
+User follow-ups to water P2: an irregular, bigger patch; a larger room with a reef shelf and a deeper level; swim up / down; R and the
+switcher still fly out of a zone; "build the diving zones in these areas" (7 map circles); wrecks on the bigger zones; "make each spot different".
+- **Data** (`lib/town/water/diveSpots.ts`): 7 rows (`DIVE_SPOTS`), each a centre, base radius (12.5-19 m, was 9), blob seed, theme
+  (palette, plant mix, schools, signature, optional wreck), depth profile (`floor`: wall / terrace / canyon / bowl, 4.5-8 m below the shelf).
+- **Surface patch**: the ocean shader holds `DIVE_SLOTS` = 2 slots (was 4); the runtime writes the 2 nearest zones on the HUD tick, only
+  when the set changes. Per ocean fragment: 2 compares (distance reject); inside a lit slot's reach one `atan` + 3 sines (the blob). Program key v9.
+- **Room** (`lib/graphics/diveRoom.ts`): one builder for every zone, 48 m across (was 30), built on Dive and disposed on surfacing, so only
+  the dived zone exists. Counts capped by `DIVE_CAPS` whatever the theme asks; heat tier 2+ / Battery saver builds lite (`DIVE_LITE` 0.6).
+  Wrecks (galleon / trawler / cargo) are merged into the static reef draw. Turtles and jellies are hand-built low-poly models in the
+  instanced fish shader. Measured (node + headless Chrome): phone 13-16 draws, 34k-75k triangles (lite 28k-57k); desktop 52k-107k.
+  The biggest wreck zone (75k phone) is the one to watch; the first lever is its `mix.coral`.
+- **3D swim**: ▲ / ▼ (held) or Q / Z; neutral buoyancy otherwise; clamped per level to its own sand and under the surface. Breath drain
+  × (1 + 0.6 × depth fraction). A few scalars per frame; the 20 fps idle cap still applies under water.
+- **Far zones** (3 of 7 lie > 60 m from land): `waterProbe.allowed` treats water inside a zone blob as swimmable (a distance reject per
+  zone, only past the swim range), so a jetpack Drop in reaches them.
+- Validation: tests/water-dive.cjs (zones, blob containment, placement, depth clamping, breath by depth, room caps, jetpack take-off),
+  full suite 218/218, build, headless Chrome (390x844 and 1280x800): 0 console errors. **No iPhone heat test has been done.**

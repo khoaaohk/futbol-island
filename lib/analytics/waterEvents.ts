@@ -42,5 +42,19 @@ export const countSharksEscape=()=>count('wa:sharks_escape');
 export const countRideStart=(kind:'manta'|'whale')=>count(kind==='manta'?'wa:ride_manta':'wa:ride_whale');
 export const countRideLap=()=>count('wa:ride_lap');
 export const countRideOff=()=>count('wa:ride_off');
+/** Water P2 (lib/town/water/diveSession.ts): a dive began at a spot; it ended (Surface / Escape, or the breath ran out: that one
+ *  also counts wa:dive_breath_out); a find was used for the first time (once ever per find per player); the breath lesson showed.
+ *  Never the spot's position or which find: totals only. */
+export const countDiveStart=()=>count('wa:dive_start');
+export const countDiveSurface=()=>count('wa:dive_surface');
+export const countDiveFind=()=>count('wa:dive_find');
+export const countDiveBreathOut=()=>count('wa:dive_breath_out');
+export const countDiveLesson=()=>count('wa:dive_lesson');
+/** Dive zones (Oct 20 2026): the deep level reached (once per dive), a jetpack take-off from inside a zone (R / the switcher), a dive
+ *  at a wreck zone, and a wreck's cargo find used for the first time. */
+export const countDiveDeep=()=>count('wa:dive_deep');
+export const countDiveFly=()=>count('wa:dive_fly');
+export const countDiveWreckVisit=()=>count('wa:dive_wreck_visit');
+export const countDiveWreckFind=()=>count('wa:dive_wreck_find');
 /** Tests: forget the device flags. */
 export function resetWaterFirsts(){firsts=null;try{localStorage.removeItem(FIRSTS_KEY);}catch{}}

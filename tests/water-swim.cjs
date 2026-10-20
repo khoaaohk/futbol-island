@@ -86,7 +86,7 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  assert.equal(H.waterKeyAction('KeyR','r'),'swimride','R (the land ride key) is the switcher');assert.equal(H.waterKeyAction('KeyE','e'),'swimride');
  // Water actions show only their icon (user, Oct 15 2026): the caption is skipped for the water ids.
  assert.match(fs.readFileSync('components/JobActionButton.tsx','utf8'),/WATER_IDS\.has\(b\.id\)\?null:<small>/,'water buttons are icon-only');
- const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','dive','swimride'(,'letgo')?(,'tuck','spin','wave')?\]\)/);/* + water P1b's Let go */
+ const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','dive','swimride'(,'letgo')?(,'surface')?(,'tuck','spin','wave')?\]\)/);/* + water P1b's Let go */
  const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/const flyUp=\(\)=>\{if\(!water\.inWater\|\|rideRef\.current!=='walk'\|\|!fuelStore\.canUse\('jetpack'\)\)return false;/,'fuel-gated');
  // QA Oct 16 2026: the gate must not raise the land fuel notice ("Walk to a Konbini…"), which hid SWIM_RIDE_NOTE from a swimmer.
  assert.doesNotMatch(town.match(/const flyUp=[^\n]*/)[0],/fuelAllowsRide/,'the swim switcher uses the silent fuel check, so SWIM_RIDE_NOTE is the one note');

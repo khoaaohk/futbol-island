@@ -43,6 +43,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
+ 'fi2-dive-finds-v1',// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
  'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
@@ -65,6 +66,8 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volum
  'fi2-swim-lesson-v1','fi2-water-firsts-v1',
  // The sea (Oct 15 2026): the once-per-device shark ("Uh oh!") and manta/whale-shark ride lesson toasts.
  'fi2-shark-lesson-v1','fi2-ride-lesson-v1','fi2-ride-steer-hint-v1','fi2-dive-hint-v1',
+ // Diving spots (Oct 16 2026): the once-per-device breath (pace) lesson toast.
+ 'fi2-dive-lesson-v1',
  // Summit Isle tree kick (Oct 15 2026): the once-per-device strike lesson.
  'fi2-tree-kick-lesson-v1',
  // Fish stall kick (Oct 15 2026): the once-per-device shooting lesson.
