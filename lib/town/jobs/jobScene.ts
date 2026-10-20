@@ -7,8 +7,10 @@
 import * as T from 'three';
 import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,type JobDef} from './jobCatalog';
 import {BUG_SQUAD,FIREFLY_CALLS} from './bugScout';
+import {createBugGeometry,mergeColoured} from './bugShape';
+import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT} from './bugBook';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
-import {countBugCatch,countBugShift} from '@/lib/analytics/summitEvents';
+import {countBugCatch,countBugShift,countBugBookComplete} from '@/lib/analytics/summitEvents';
 import {outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
 import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
@@ -58,13 +60,6 @@ const cue=(name:string,detail:string)=>{try{document.dispatchEvent(new CustomEve
 /** Job action sounds (lib/audio/islandSound.ts 'fi2-job-cue': short tone/noise voices from the island kit, rate-limited). */
 const jobCue=(kind:string)=>cue('fi2-job-cue',kind);
 
-/** Merge coloured parts into one non-indexed geometry with vertex colours. */
-function mergeColoured(parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]){
- const pos:number[]=[],nor:number[]=[],col:number[]=[],c=new T.Color();
- for(const p of parts){const g=(p.geometry.index?p.geometry.toNonIndexed():p.geometry.clone()).applyMatrix4(p.matrix);c.set(p.color);const a=g.getAttribute('position'),n=g.getAttribute('normal');
-  for(let i=0;i<a.count;i++){pos.push(a.getX(i),a.getY(i),a.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));col.push(c.r,c.g,c.b);}g.dispose();}
- const out=new T.BufferGeometry();out.setAttribute('position',new T.Float32BufferAttribute(pos,3));out.setAttribute('normal',new T.Float32BufferAttribute(nor,3));out.setAttribute('color',new T.Float32BufferAttribute(col,3));out.computeBoundingSphere();return out;
-}
 const m4=(x:number,y:number,z:number,yaw=0,sx=1,sy=1,sz=1,pitch=0)=>new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(pitch,yaw,0,'YXZ')),new T.Vector3(sx,sy,sz));
 
 /** Sign label atlas: two labels per 1024-px row (10 jobs = 5 rows, 1024×640). */
@@ -161,17 +156,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    case 'ball':return {g:own(new T.IcosahedronGeometry(.22,1)),color:'#f7f3e6',scale:[1,1,1] as const,lift:.22};
    case 'bottle':return {g:own(new T.CylinderGeometry(.09,.09,.36,8)),color:'#5aa7c8',scale:[1,1,1] as const,lift:.18};
    case 'produce':return {g:own(new T.IcosahedronGeometry(.34,0)),color:'#e8be71',scale:[1,.9,1] as const,lift:.45};
-   case 'bug':return {g:own(bugGeometry()),color:'#ffffff',scale:[1,1,1] as const,lift:1};
+   case 'bug':return {g:own(createBugGeometry()),color:'#ffffff',scale:[1,1,1] as const,lift:1};
    case 'firefly':return {g:own(new T.IcosahedronGeometry(.16,1)),color:'#e9ff6b',scale:[1,1,1] as const,lift:1};
    default:return {g:own(new T.BoxGeometry(1.2,.02,.22)),color:'#ffffff',scale:[1,1,1] as const,lift:.02};}}
- /** One bug for every species (one instanced draw): a dark body and head, two wings (white, so the instance colour tints them,
-  *  bugScout.ts) each with three dark pentagon spots, a football's patches (a ladybird's spots, a beetle's markings). */
- function bugGeometry(){const parts:{geometry:T.BufferGeometry;matrix:T.Matrix4;color:string}[]=[],tmp:T.BufferGeometry[]=[];const k=<G extends T.BufferGeometry>(g:G)=>{tmp.push(g);return g;};
-  const body=k(new T.BoxGeometry(.1,.09,.46)),head=k(new T.BoxGeometry(.12,.1,.11)),wing=k(new T.BoxGeometry(.38,.018,.3)),spot=k(new T.CircleGeometry(.06,5));
-  parts.push({geometry:body,matrix:new T.Matrix4(),color:'#2b2620'},{geometry:head,matrix:new T.Matrix4().makeTranslation(0,.01,.27),color:'#211d19'});
-  for(const sd of [-1,1]){const w=new T.Matrix4().makeTranslation(sd*.22,.04,-.02).multiply(new T.Matrix4().makeRotationZ(sd*.22));parts.push({geometry:wing,matrix:w,color:'#ffffff'});
-   for(const [sx,sz] of [[.07,.06],[-.06,-.05],[.09,-.09]] as const)parts.push({geometry:spot,matrix:w.clone().multiply(new T.Matrix4().makeTranslation(sd*sx,.011,sz)).multiply(new T.Matrix4().makeRotationX(-Math.PI/2)),color:'#1d1b1b'});}
-  const g=mergeColoured(parts);for(const t of tmp)t.dispose();return g;}
  /** The species list for a bug job's targets (Bug squad's eight, or the fireflies). */
  const bugList=(def:JobDef)=>def.prop==='bug'?BUG_SQUAD:def.prop==='firefly'?FIREFLY_CALLS:null;
  /** Task-job props (kit room, offside strip, pump station): built on start, all disposed by clearProps. */
@@ -382,15 +369,15 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(bugHalo){const m=haloM;for(let i=0;i<bugs.length;i++){mesh.getMatrixAt(i,m);bugHalo.setMatrixAt(i,m.multiply(HALO_SCALE));}bugHalo.instanceMatrix.needsUpdate=true;}
   if(gear.bag&&def.prop==='firefly')(gear.bag.material as T.MeshStandardMaterial).emissiveIntensity=Math.min(1.4,gear.bagCount*.18);}
  /** Bug jobs at the drop-off: the jar is opened and the squad (or the fireflies) float up and away. Never thrown. */
- function releaseJar(def:JobDef){const d=def.deliver,jar=gear.bag,bugs=bugList(def);jobCue('bag');tapHaptic();if(!d||!jar)return;const y=floor(d.x,d.z);
+ function releaseJar(def:JobDef){const d=def.deliver,jar=gear.bag,bugs=bugList(def);jobCue('jar');tapHaptic();if(!d||!jar)return;const y=floor(d.x,d.z);
   const lift=()=>{if(def.prop==='firefly')for(let k=0;k<3;k++)fx.burst(d.x+(k-1)*.9,y+1.2,d.z,'#e9ff6b',6,.7,1.2,true,1.1);
-   else if(bugs)for(const b of bugs.slice(0,6))fx.burst(d.x,y+1,d.z,b.color,2,1.3,1.6,true,1.3);jobCue('ding');};
+   else if(bugs)for(const b of bugs.slice(0,6))fx.burst(d.x,y+1,d.z,b.color,2,1.3,1.6,true,1.3);jobCue('squad');};
   if(reducedMotion||!jar.visible){jar.visible=false;gear.bagCount=0;lift();return;}
   gear.tossing=true;const from={x:jar.position.x,y:jar.position.y,z:jar.position.z},to={x:d.x,y:y+1.05,z:d.z+(def.prop==='firefly'?0:-.6)};
   fx.tween(.5,k=>{jar.position.set(from.x+(to.x-from.x)*k,from.y+(to.y-from.y)*k,from.z+(to.z-from.z)*k);jar.rotation.set(0,0,k*1.1);},()=>{lift();fx.tween(.4,()=>{},()=>{jar.visible=false;gear.tossing=false;gear.bagCount=0;});});}
  /** Leaves / bottles fly from the ground into the bag at the player's side. */
  function intoBag(def:JobDef,i:number){const t=def.targets[i],y=floor(t.x,t.z),mesh=targetsMesh;if(!mesh)return;const sc=gear.pile[i]??1,yaw=gear.pileYaw[i]??0;
-  const done=()=>{mesh.setMatrixAt(i,hidden);mesh.instanceMatrix.needsUpdate=true;gear.bagCount++;jobCue('bag');};
+  const done=()=>{mesh.setMatrixAt(i,hidden);mesh.instanceMatrix.needsUpdate=true;gear.bagCount++;jobCue(bugList(def)?'jar':'bag');};
   if(reducedMotion){done();return;}
   const bug=bugList(def)?.[i],from=bug&&bugPos[i]?bugPos[i]:{x:t.x,y:y+.2,z:t.z};
   // A bug drifts gently into the jar (no spin, a low arc), shrinking as it goes in.
@@ -482,7 +469,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(e.type==='wrong'&&e.index!==undefined){const t=def.targets[e.index];lidWobble(e.index,false);pulse(t.x,floor(t.x,t.z)+.05,t.z,'#e0613f');jobCue('nope');}
     if(e.type==='pickup'||e.type==='return'||e.type==='wrong')cue('fi2-path-cue','path-pop');continue;
    }
-   if(e.type==='hold'){tapHaptic();jobCue(def.prop==='chalk'?'paint':'swish');}
+   if(e.type==='hold'){tapHaptic();jobCue(def.prop==='chalk'?'paint':def.prop==='bug'?'net':def.prop==='firefly'?'cup':'swish');}
    if(e.type==='work'&&e.index!==undefined){tapHaptic();if(def.prop==='peg')hammerHit(def,e.index,e.value??1);}
    if(e.type==='step'&&def.prop==='leaf'&&e.stage===0){jobCue('rustle');tapHaptic();}
    if((e.type==='collect'||e.type==='pickup')&&targetsMesh&&e.index!==undefined){const i=e.index;
@@ -491,7 +478,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     else if(def.prop==='peg'){targetsMesh.setMatrixAt(i,hidden);targetsMesh.instanceMatrix.needsUpdate=true;const t=def.targets[i];pulse(t.x,floor(t.x,t.z)+.05,t.z,'#ffd36c');}
     else if(def.kind==='carry'){targetsMesh.setMatrixAt(i,hidden);targetsMesh.instanceMatrix.needsUpdate=true;const t=def.targets[i];gear.lift={t:0,from:{x:t.x,y:floor(t.x,t.z)+.22,z:t.z}};jobCue('pick');tapHaptic();}
     else if(def.prop==='leaf'||def.prop==='bottle'){intoBag(def,i);tapHaptic();}
-    else if(def.prop==='bug'||def.prop==='firefly'){intoBag(def,i);tapHaptic();countBugCatch(def.prop);const n=def.spotNotes?.[i];if(n){banner=n;bannerAge=-2;viewKey='';bugAt=i;}}
+    else if(def.prop==='bug'||def.prop==='firefly'){intoBag(def,i);tapHaptic();countBugCatch(def.prop);if(def.prop==='firefly')jobCue(`firefly-${i}`);
+     // The Bug book (bugBook.ts): every catch is remembered across shifts; the 16th new one completes it (reward paid by the book's UI).
+     if(recordBugCatch(def.prop,i).completed){countBugBookComplete();cue(BUG_BOOK_COMPLETE_EVENT,'complete');}const n=def.spotNotes?.[i];if(n){banner=n;bannerAge=-2;viewKey='';bugAt=i;}}
     else{targetsMesh.setMatrixAt(i,hidden);targetsMesh.instanceMatrix.needsUpdate=true;}
     if(placedMesh&&def.prop!=='cone'&&def.prop!=='peg'){const t=def.targets[i];placedMesh.setMatrixAt(i,m4(t.x,floor(t.x,t.z)+.25,t.z));placedMesh.instanceMatrix.needsUpdate=true;}
     cue('fi2-path-cue','path-pop');

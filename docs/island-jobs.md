@@ -398,3 +398,58 @@ nighttime add catching fireflies instead since it's night time." Data: `lib/town
   additive glow draw; ≤ 16 matrices per frame, frozen under reduced motion; disposed at the end.
 - **Analytics:** `su:bug_catch`, `su:bug_squad`, `su:firefly_catch`, `su:firefly_shift` (lib/analytics/summitEvents.ts), shown in
   /admin's Summit Isle card. No migration: the SQL only checks the id shape.
+
+### Bug extras: the Bug book, wild meadow bugs, job sounds (20 Oct 2026, local, not deployed)
+
+User: "also do these". Test: `tests/bug-extras.cjs`.
+
+- **Bug book** (`lib/town/jobs/bugBook.ts`, `components/BugBook.tsx`): every bug and firefly call caught on a shift is counted in
+  `fi2-bug-book-v1` (SYNC_KEYS; two arrays of eight counts and a reward flag, at most ~130 bytes). The book uses the Fishbook /
+  Shellbook drawer (side drawer on desktop, full screen on phones), opened with the "Bug book" button on both bug jobs' intro and
+  payday cards (`OPEN_BUG_BOOK`). Sixteen pages: each bug's name, football position and lesson, each firefly's call and its
+  meaning; locked pages are flat silhouettes saying where to catch them. Completing all sixteen shows the "Full squad" sticker on
+  the cover and pays a one-time learning bonus (`learn:book:bug-book`, LEARN_COINS.book = 5, creditOnce: once ever, never metered;
+  `lib/town/jobs/bugBookReward.ts`), paid on the 16th catch and checked again whenever the book opens. The island has no shared
+  badge system, so the sticker lives in the book.
+- **Wild bugs** (superseded by "Bug flight" below; `lib/graphics/wildBugs.ts`, rules in `wildBugsCore.ts`): butterflies and bugs flutter round the meadow by Day and
+  Sunset, a few fireflies blink at Night (the player's own setting). One InstancedMesh with the job's shared bug shape
+  (`lib/town/jobs/bugShape.ts`), built only within 70 m of the meadow and disposed beyond 90 m; 12 at heat tier 0, 6 at tiers 1–2,
+  none at tiers 3–4 / Battery saver / reduced motion, half as many fireflies; 15 Hz matrix updates unless within 35 m; hidden
+  while a job runs; a fixed bounding sphere; no textures and no per-frame allocation. Walking within 2.6 m makes one flutter away
+  and drift back; the first time in a visit a note says bugs are caught on the Bug squad shift. Not catchable outside a shift.
+  Runtime cost while near: one draw of ≤ 12 instances (≤ 12 matrix writes per update); nothing anywhere else on the island.
+- **Sounds** (`lib/audio/islandSound.ts` job cues): `net` (Bug squad hold), `cup` (firefly hold), `jar` (a bug drifting in, the jar
+  opening), `squad` (release: a rising four-note cheer) and `firefly-0…7` (each call chimes its own pentatonic note,
+  FIREFLY_CHIME_HZ). Synthesized, through the master gain (mute and volume apply), counted as audible like every cue.
+- **Analytics:** `su:bugbook_open`, `su:bugbook_complete`, `su:wild_flutter` (at most once per bug per 8 s) in /admin's Summit card.
+  No migration: the SQL only checks the id shape.
+
+### Bug flight: real bug models and Animal Crossing motion (20 Oct 2026, local, not deployed)
+
+User: "each bug needs to look realistic and fluid motion when flying", "Animal Crossing" feel; the wild bugs and the job bugs are
+the same bugs, spread over Summit Isle. Test: `tests/bug-flight.cjs` (plus the updated `tests/bug-extras.cjs` section 3).
+
+- **Models** (`lib/graphics/bugModels.ts`): one merged low-poly vertex-colour geometry per BUG_SPECIES entry and the firefly
+  (500-1100 triangles each, ~730 on average; no textures): head / thorax / abdomen, six legs (eight on the spider), antennae and
+  species wings and patterns (monarch veins and dotted borders with a gold "armband", swallowtail bars, tails and eye-spot, morpho
+  iridescent blue, luna-moth tails, the ladybird's seven spots, beetle horns / antler jaws, the dragonfly's four glassy wings and
+  ringed tail, bumblebee bands, the physio honeybee's tiny red cross). The futbol accent is a small white disc with a dark
+  pentagon on the back. Far silhouette (26 triangles, tinted per instance) beyond 14-20 m of the player.
+- **Shader** (`bugMaterial.ts`): one MeshStandardMaterial program for all bugs; the vertex shader flaps fore / hind wings (hind
+  lagging), lifts wing cases and spreads folded hind wings, walks legs, from two per-instance vec4s; the fragment adds the morpho /
+  dragonfly sheen and the firefly lantern. Fireflies also get one additive camera-facing glow sprite each.
+- **Motion** (`bugFlight.ts`, pure): velocity-integrated, eased steering on curved paths round the BUG_HOMES spot (top speed 7 m/s,
+  so no step can teleport), yaw from velocity, pitch from climb or slope, roll into turns; 15 movement profiles (butterfly glides,
+  moth flutter, bee buzz-and-hover, dragonfly hover-and-dart, beetle trundle with clumsy flights, hop arcs, ant march, inchworm,
+  stick-insect sway, mantis scan, spider jumps, firefly drift). Perch / land / take off are eased, never snapped.
+- **Sneaking**: running (> 2.4 m/s) is noticed at the species' `alert` metres; walking slowly shrinks it to alert × sneak × 0.7 and
+  standing still to × 0.35, so commons let you walk right up and rare bugs are skittish. A startled bug flies / scurries / hops away
+  (the side farthest from the player within its leash), then eases home.
+- **Swarm** (`bugSwarm.ts`, wrapped by `wildBugs.ts`; Town unchanged except passing `sunset`): built within 250 m of Summit Isle,
+  pickBugsOnMap's set (12 / 10 / 8 by heat tier), the eight fireflies at Night (8 / 6 / 4), none at tiers 3-4 / Battery saver /
+  reduced motion. Day draws: 1 far draw + 1 per species within FULL range (measured ≤ 2 over 347 island spots); Night: 2.
+  Per frame within 35 m, 15 Hz beyond, frozen and hidden beyond 120 m; no per-frame allocation. Day / Night switches fade out,
+  rebuild and fade in. Still hidden while a bug job runs (`busy`) until the job catches from the swarm.
+- **API for the catching lane**: `query(x, y, z, r)` (reused array, nearest first: id, kind, species / call, x y z, dist, flying),
+  `startle(id, {x, z})`, `catch(id)` → {id, kind, species, call, x, y, z} (the bug disappears and a new one turns up at home after
+  45 s), `setSet('bugs' | 'fireflies')`, `position(id, out)` and `heading(id)` for the zoom camera. In the page: `__fi2.wildBugs`.

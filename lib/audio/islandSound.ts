@@ -12,6 +12,8 @@ export function sampleBottleOcean(time:number,out:BottleOceanSample){
 export const ISLAND_SFX_MASTER=.64;
 /** The one UI "click" (Enter / Go / Done / any button): a short rising sine. Shared with the Konbini page (lib/konbini/konbiniSound.ts
  *  konbiniSfx.click), which has no island runtime, so its buttons sound the same. `level` is before the bus (ISLAND_SFX_MASTER). */
+/** Firefly floodlights (Oct 20 2026): one chime per firefly call (jobCue `firefly-<index>`), a C-major pentatonic run. */
+export const FIREFLY_CHIME_HZ=[1047,1175,1319,1568,1760,2093,2349,2637] as const;
 export const UI_CLICK={from:520,to:760,duration:.095,level:.1,attack:.009} as const;
 /** Quiet, self-contained game Foley. One gesture-unlocked context, no downloads. */
 export function createIslandSound(initialMuted=false,initialVolume=.5){
@@ -168,7 +170,16 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const jobCue=(event:Event):void=>{if(rideCue(event))return;if(deferUntilAwake(()=>jobCue(event)))return;const d=(event as CustomEvent).detail as string|{cue:string;gain?:number};
     // Oct 15 2026 (user: "increase the sound if they crank it faster"): a cue may carry a gain (the fishing reel's ratchet sends 0.5…1.5 with the spin rate).
     const kind=typeof d==='string'?String(d):String(d?.cue),gain=typeof d==='object'&&d&&typeof d.gain==='number'?Math.max(.2,Math.min(2,d.gain)):1;if(!ready('job:'+kind,kind==='rustle'||kind==='tap'?.07:kind==='snip'?.06:kind.startsWith('splash')?.2:.1))return;
+    // Summit bug jobs (Oct 20 2026, lib/town/jobs/bugScout.ts): each firefly call chimes its own note (a C-major pentatonic run,
+    // FIREFLY_CHIME_HZ), a soft sine with a fifth above, so the eight calls sound like eight different lights.
+    if(kind.startsWith('firefly-')){const hz=FIREFLY_CHIME_HZ[Number(kind.slice(8))%FIREFLY_CHIME_HZ.length]??FIREFLY_CHIME_HZ[0];tone(hz,hz,.32,.045);tone(hz*1.5,hz*1.5,.24,.02,'sine',.06);return;}
     switch(kind){
+      // Summit bug jobs (Oct 20 2026): the net's soft swish (Bug squad), cupping the jar (fireflies), the jar's lid pop as a bug
+      // drifts in, and the release: a rising four-note squad cheer. Synthesized from the same tone/noise kit, no samples.
+      case 'net':hiss(2200,.2,.07);hiss(900,.12,.04,.05);tone(520,380,.08,.025,'triangle',.03);return;
+      case 'cup':hiss(1100,.16,.05);tone(300,260,.06,.03,'sine',.04);return;
+      case 'jar':tone(620,1240,.06,.06);tone(1860,1860,.05,.025,'sine',.05);return;
+      case 'squad':tone(523,523,.12,.05,'triangle');tone(659,659,.12,.05,'triangle',.1);tone(784,784,.12,.05,'triangle',.2);tone(1047,1047,.3,.05,'triangle',.3);hiss(5200,.25,.03,.3);return;
       case 'rustle':hiss(2600,.18,.1);hiss(1400,.12,.05,.04);return;          // leaves shaking
       case 'swish':hiss(1800,.22,.09);return;                                   // rake / broom sweep
       case 'thud':tone(140,70,.12,.12);hiss(300,.06,.08);return;               // something lands on grass
