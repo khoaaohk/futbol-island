@@ -5684,3 +5684,33 @@ User: "the dive zone is not really diving deep, but more about going through a c
   the duck-dive plunge and feeds `sound.swim` under (low-pass bed, 0 new voices), surfacing plays `waterSurface`; a 0.65 s blend through
   the zone's water colour replaces the bright flash for the reef. Validation: tests/water-dive.cjs, full suite, build, headless Chrome.
   **No iPhone heat test has been done.**
+
+## Dive zones: one shared layout, surface tells, far shoal decals (Oct 20 2026, local, not deployed)
+
+User: "the dive spots don't look like the area from above" (the reef you explore did not match the shoal seen from the island).
+- **One layout per zone** (`lib/town/water/diveLayout.ts`, pure data, seeded from the zone's blob, built once and cached): the footprint
+  (blob outline in room metres), crest / slope contours, coral clusters (position, radius, height cap under the surface, hue), boulders,
+  sea-grass patches, sand lanes (the channel `diveDepthAt` carves, solved exactly, plus a lane from the start to the crest), kelp stands,
+  the arch, the pitch, crates and balls, ray loops, the turtle bowl, the wreck pose (`diveWreckPose`), the finds, the signature prop set and
+  the surface tell. Room -> island is `× radius / 24` (the wreck's existing convention). The buoy column and the come-up point stay clear.
+- **Consumers**: `diveRoom.ts` places its coral (shared over the clusters by area, 60 % in the cluster's hue, each kind's height capped so
+  nothing breaks the surface), boulders, grass, kelp, pitch, arch, crates and the ray / turtle paths from it; `divePreview.ts` paints the
+  same layout into the shelf's vertex colours (pale crest and lanes, darker hue-tinted coral patches, dark grass / kelp) plus low muted
+  props, the pitch lines + goal frame, kelp tops 0.3 m under the surface, crates, the arch's under-water ring and the hull;
+  `diveWreckTop.ts` adds Moon Arch's crown (`addDiveArch` cut at the waterline). Moon Arch's reef and arch moved to room x = -10 so the
+  crown stands 6 m off the buoy.
+- **Moving tells** (one more small mesh per slot, one Lambert material, moved in the vertex shader on `uWaterTime` like the buoys, 0 CPU
+  per frame): Ball Crate Reef's 4 footballs bobbing, Turtle Pool's turtle surfacing every 20 s, Ray Meadow's ray silhouette gliding a loop.
+  Shown with the preview only (off at tiers 3-4 / Battery saver, out of range, while diving). Preview + tells per zone: 1736-2135
+  triangles (cap 2600). Draws: up to 2 previews + 2 tells.
+- **Far shoal decals**: every zone not in one of the 2 ocean slots and within 260 m (full within 190 m) gets a flat, alpha-faded blob decal
+  with its coral patches, lanes and grass painted in: ONE merged mesh for all 7 zones (2464 triangles), MeshBasic, no texture, no pass,
+  per-zone fade by one uniform array (7 floats eased per frame). Any heat tier (one cheap draw), off while diving. Replaces "a third zone
+  is a bare flag".
+- **Opaque look** (`waterSurface.ts`): where the preview is off the shoal heart reads as `SHOAL_OPAQUE_D` (8 m) instead of the 2.5 m sandy
+  shallows, so tier 3 / Battery saver shows a muted turquoise patch, not a khaki sandbar. 2 ALU.
+- **Tokens**: `lib/graphics/waterTokens.ts` (`WATER_Y`, `UNDER_SURFACE_Y`, the shoal / decal / room ceiling colours); the dive files use
+  them. Fix: the preview's fade no longer dips a step every other frame at full strength.
+- **Validation**: tests/dive-layout.cjs (determinism, unique props / tells, nothing above the surface, buoy / start / lanes clear, room and
+  preview at the same places, caps, gating, tokens), dive-see-through, water-dive, full suite, build, headless shots in /tmp/dive-layout.
+  **No iPhone heat test has been done.**
