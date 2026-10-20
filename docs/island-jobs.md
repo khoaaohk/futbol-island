@@ -375,29 +375,57 @@ round 44 px × Stop; tapping the chip opens it again, and any progress / phase /
 meter (pump gauge, pull meter) or its own buttons are in use, while an offside replay is explained and while a sorting clue is in
 the hands. A hidden live line keeps announcing progress. Reduced motion: no fade. Landscape docking keeps the chip top-left.
 
-## 15. Summit Isle bug jobs: Bug squad (day) and Firefly floodlights (night) (20 Oct 2026, local, not deployed)
+## 15. Summit Isle's Bug squad: one job, bugs by day, fireflies at night (20 Oct 2026, local, not deployed)
 
 User: "add new jobs on the mountain island. catching butterflies and other bugs. tie the bugs into the concept of futbol. for
-nighttime add catching fireflies instead since it's night time." Data: `lib/town/jobs/bugScout.ts`; catalog entries in
-`jobCatalog.ts`; test: `tests/summit-bugs.cjs`.
+nighttime add catching fireflies instead since it's night time." Then, the same day: "don't have two separate jobs, the bug squad
+changes to catching the fireflies if switching to night mode", "place the bug job at the top of the mountain on the south west end",
+"for bug squad, it doesn't make sense to have the on foot button, add another action for that related to walking around with a net"
+and "release bugs doesn't work, when tapping that it will have animation to zoom in on the main character releasing all the bugs and
+then zoom out to see them spread out and fly away". Data: `lib/town/jobs/bugScout.ts`; catalog: `jobCatalog.ts` (`bugJobFor`,
+`jobVariant`, `canonicalJobId`); runtime: `jobScene.ts`; test: `tests/summit-bugs.cjs`.
 
-- **Signs:** two signs in the meadow inland of the sandbar landing (597, 39) and (608.5, 40), facing the beach. Each always offers
-  its job; the intro card says when to come back if it is the wrong time (`jobOpenAt`, `jobClosedNote`), and Start is disabled.
-- **Day / night:** the player's own Day / Sunset / Night setting (`timeRef` in Town, `fi2-time-of-day`), never the real clock.
-  Bug squad runs at Day and Sunset; Firefly floodlights only at Night. Switching the time mid-shift ends the shift.
-- **Bug squad (collect, prop `bug`):** eight bugs, a 7v7 squad plus the referee: Goalie Ladybug (GK), Pill-bug Centre-back,
-  Full-back Grasshopper, Midfield Dragonfly, Football Butterfly (black-and-white pentagon wings, the winger), Captain Monarch,
-  Striker Beetle, Referee Bumblebee (Law 5). Hold Net (0.8 s, "like a soft first touch") until the bug drifts into the jar; the
-  panel names each bug and each catch shows its position lesson. Release the squad at the bug hotel. Bugs are never hurt.
-- **Firefly floodlights (collect, prop `firefly`):** eight fireflies, each flashing a football call (Man on!, Time!, Turn!,
-  Square!, Switch!, Away!, Keeper's!, Mine!). Hold Cup the jar (0.7 s), then light up the lantern goal and let them fly free.
-- **Pay:** 5 coins each (lib/economy.ts JOB_PAY, like Trail clean-up), ~0.9 min of play, the usual full / half / tip tiers and the
-  Training meter.
-- **Heat:** nothing exists while no shift runs (the drop-offs are part of the merged static sign mesh). During a shift: one instanced
-  draw of 8 bugs (one shared merged vertex-colour geometry: body, wings, pentagon spots; no textures), plus for fireflies one
-  additive glow draw; ≤ 16 matrices per frame, frozen under reduced motion; disposed at the end.
-- **Analytics:** `su:bug_catch`, `su:bug_squad`, `su:firefly_catch`, `su:firefly_shift` (lib/analytics/summitEvents.ts), shown in
-  /admin's Summit Isle card. No migration: the SQL only checks the id shape.
+- **One job, one sign:** id `bug-scout`, role Bug scout, one sign and one Bug book. The sign stands on the flat south-west corner of
+  the summit terrace (606, 130), west of the Summit 5s fence and a few metres off the trail's arrival, facing south (north is -z on
+  the map, west is -x). Its two drop-offs stand behind it on the same flat: the bug hotel (604.5, 126.5) and the lantern goal
+  (607.6, 126). The map's "J" follows the sign by itself (JOBS). The bugs and fireflies stay out on the slopes and the meadow below
+  (their spots belong to the roster; the content work spreads them across height bands, so a summit sign is fine).
+- **Sets follow the Time of day:** the player's own Day / Sunset / Night setting (`fi2-time-of-day`, never the real clock).
+  `activeSet(timeOfDay)` returns `'bugs'` (Day, Sunset) or `'fireflies'` (Night); `bugRoster(set)` returns that set's species list
+  and `BUG_SETS` its title, look (`prop`), drop-off and unit. `bugJobFor(set)` builds each set's definition from the roster (targets,
+  hints, notes: any length, no fixed count) and memoises it; the catalog lists the bugs set. The intro card shows the set for the
+  current time and the line "Changes at night: ..." (`nightNote`).
+- **Switching mid-shift** swaps the set without ending the shift (board tick, ≤ 0.25 s): the old set's bugs lift and shrink away over
+  0.7 s (their last matrices, then disposed), the new set grows in over 0.8 s, and the panel title changes ("Bug squad" / "Night
+  squad: fireflies") with a note that the other set is saved. Each set keeps its own progress within the shift (`setStash`); either
+  set finished and released completes the shift. Never mid-release: the release finishes first.
+- **Bugs (prop `bug`):** the 7v7 squad plus the referee (goalkeeper, centre-back, full-back, midfielder, winger, captain, striker,
+  Referee Bumblebee, Law 5). Hold Net (0.8 s, "like a soft first touch"); release the squad at the bug hotel. Bugs are never hurt.
+- **Fireflies (prop `firefly`):** each flashes a football call (Man on!, Time!, Turn!, Square!, Switch!, Away!, Keeper's!, Mine!).
+  Hold Cup the jar (0.7 s), then light up the lantern goal and let them fly free.
+- **Buttons:** Hold Net / Cup the jar (Space), Release / Light up (J), and in the third slot, where the ride / "On foot" button sat,
+  the net toggle (R): **Net down** = the stalk (net held low and forward, the walk slowed to 55 %, bugs drift less and settle into the
+  jar 1.35× faster) / **Net up** = carried on the shoulder. Available while roaming (`jobRules.STALK`, `walkScale` read by Town).
+- **Release fix:** the Release button was armed only within 1.8 m of the drop-off and a tap on it anywhere else did nothing at all
+  (Town ignored unarmed taps silently, except Kick). Now the drop-off reach is 2.8 m (`deliverReach`) and any unarmed job button
+  answers with a hint ("Walk right up to the bug hotel (follow the arrow), then tap Release the squad.", `disabledHint`).
+- **Release cinematic:** the tap holds the controls (`locked`, `walkScale` 0), eases a shot camera in on the player (two
+  `createShotCamera`s, like the assistant-referee view), lifts the jar over the head, pops the lid with a sparkle, pours the set out
+  and fans it on curved paths that shrink away with distance, then eases a second shot up and out over the slope; at Night the lantern
+  goal lights up. After ~4.7 s the shift completes and pays as before. A tap anywhere (or Space / Enter / Esc) skips to the end;
+  reduced motion is the quick jar release with no camera; quitting, leaving the area or a time switch can never strand the camera
+  (the shots ease back by themselves). It reuses the shift's own instanced draw (≤ the roster size, the on-map cap) and the pooled
+  job FX: no new meshes, nothing while idle.
+- **Pay:** 5 coins (lib/economy.ts JOB_PAY), the usual full / half / tip tiers and the Training meter; a bugs or a fireflies
+  shift each pay like one shift.
+- **Old id:** `firefly-floodlights` (its own job until the merge) resolves to `bug-scout` (`BUG_JOB_ALIASES`, `canonicalJobId`,
+  `jobById`); the job ledger folds its today / lifetime counts into `bug-scout` and keeps the faster best time
+  (`JOB_ID_ALIASES`, `sanitizeJobLedger`). Server earning ids only check the id shape (no migration).
+- **Heat:** nothing exists while no shift runs (the sign, hotel and lantern goal are part of the merged static sign mesh). During a
+  shift: one instanced draw of the set (plus one additive glow draw for fireflies); ≤ 2 × roster matrices per frame, frozen under
+  reduced motion; for 0.7 s after a swap one more draw (the old set fading); disposed at the end.
+- **Analytics:** `su:bug_catch`, `su:bug_squad` (bugs set), `su:firefly_catch`, `su:firefly_shift` (fireflies set), shown in /admin's
+  Summit Isle card as the Bug squad's Day and Night sets.
 
 ### Bug extras: the Bug book, wild meadow bugs, job sounds (20 Oct 2026, local, not deployed)
 
@@ -405,7 +433,7 @@ User: "also do these". Test: `tests/bug-extras.cjs`.
 
 - **Bug book** (`lib/town/jobs/bugBook.ts`, `components/BugBook.tsx`): every bug and firefly call caught on a shift is counted in
   `fi2-bug-book-v1` (SYNC_KEYS; two arrays of eight counts and a reward flag, at most ~130 bytes). The book uses the Fishbook /
-  Shellbook drawer (side drawer on desktop, full screen on phones), opened with the "Bug book" button on both bug jobs' intro and
+  Shellbook drawer (side drawer on desktop, full screen on phones), opened with the "Bug book" button on the Bug squad's intro and
   payday cards (`OPEN_BUG_BOOK`). Sixteen pages: each bug's name, football position and lesson, each firefly's call and its
   meaning; locked pages are flat silhouettes saying where to catch them. Completing all sixteen shows the "Full squad" sticker on
   the cover and pays a one-time learning bonus (`learn:book:bug-book`, LEARN_COINS.book = 5, creditOnce: once ever, never metered;

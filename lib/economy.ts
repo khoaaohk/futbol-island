@@ -61,7 +61,7 @@ export const JOBS={fullPerDay:2,halfPerDay:2,tip:1,firstBonus:4} as const;
 export const JOB_PAY={'leaf-rake':6,'wall-rebounds':16,'ball-kid':7,'cone-setup':4,'line-painter':5,'court-cleanup':5,'offside-flag':6,
  'ball-pump':6,'goal-anchor':5,'farm-harvest':6,'match-day-snacks':5,'garden-shift':6,'trail-cleanup':5,
  /** Summit Isle's bug jobs (Oct 20 2026, lib/town/jobs/bugScout.ts): Bug squad by day, Firefly floodlights at night; like Trail clean-up. */
- 'bug-scout':5,'firefly-floodlights':5} as const;
+ 'bug-scout':5}/* firefly-floodlights merged into bug-scout (Oct 20 2026): one shift of either set pays like one shift */ as const;
 /** Islander fishing requests (Oct 15 2026, lib/town/fishing/requests.ts, docs/fishing-research.md B4): coins per finished request,
  *  paid through the island JOBS wallet as a metered `island-job:fish-request:` run, so it counts against the Training meter (never
  *  learning coins). At most REQUESTS_PER_DAY (3) a day, each below the cheapest job's pay (JOB_PAY_BAND[0]). Lures and float skins

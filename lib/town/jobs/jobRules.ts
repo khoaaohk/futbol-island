@@ -45,7 +45,9 @@ export type GardenShiftState={
  bag:string[];
  /** Crops whose nutrition lesson was shown this shift (the first pick of each crop teaches it). */
  taught:string[]};
-export type JobRun={def:JobDef;got:boolean[];next:number;carrying:number;phase:JobPhase;passes:number;shots:number;seconds:number;
+export type JobRun={def:JobDef;got:boolean[];
+ /** Bug squad (Oct 20 2026): the net is held low (the stalk: slow, careful steps; bugs settle into the jar faster). */
+ stalk?:boolean;next:number;carrying:number;phase:JobPhase;passes:number;shots:number;seconds:number;
  /** Task jobs: the current shirt / replay / ball. */
  step:number;
  /** Kit room: the last wrong peg tried (−1 = none); after one wrong try the beacon shows the right peg. */
@@ -70,7 +72,7 @@ export type JobRun={def:JobDef;got:boolean[];next:number;carrying:number;phase:J
   *  struck from inside it, and the seed that places the next circle. */
  spot:{x:number;z:number}|null;shotArmed:boolean;spotSeed:number};
 export type JobEvent={type:'collect'|'pickup'|'return'|'deliver'|'pass'|'shot'|'phase'|'done'|'wrong'|'call'|'pump'
- |'work'|'step'|'hold'|'release'|'shake'|'drop'|'miss'|'tug'|'pop'|'snap'|'twist'|'unripe'|'snip'|'cut'|'gather'|'clear'|'pluck';
+ |'work'|'step'|'hold'|'release'|'shake'|'drop'|'miss'|'tug'|'pop'|'snap'|'twist'|'unripe'|'snip'|'cut'|'gather'|'clear'|'pluck'|'stalk';
  index?:number;stage?:number;value?:number;good?:string;spot?:number;
  /** Garden: a free pick outside a shift (no basket in the hands; the produce goes to the market basket). */
  free?:boolean;
@@ -143,7 +145,7 @@ function completeStep(r:JobRun,i:number,ev:JobEvent[]){
 export function stepRun(r:JobRun,p:Vec,dt:number,floor:(x:number,z:number)=>number):JobEvent[]{
  if(r.phase==='done')return [];const t=Math.max(0,Math.min(dt,.1));r.seconds+=t;r.px=p.x;r.pz=p.z;const d=r.def,ev:JobEvent[]=[],w=d.work;
  const reach=(q:{x:number;z:number},rad=d.radius)=>near(p,q,floor(q.x,q.z),rad);
- if(r.phase==='deliver'){if(!d.deliver)return ev;const at=reach(d.deliver,1.8);
+ if(r.phase==='deliver'){if(!d.deliver)return ev;const at=reach(d.deliver,d.deliverReach??1.8);
   if(w?.deliver){r.at=at?-2:-1;return ev;}
   if(at){r.phase='done';ev.push({type:'deliver'},{type:'done'});}return ev;}
  if(r.harvest)return stepHarvest(r,p,t,floor,ev);
@@ -152,7 +154,7 @@ export function stepRun(r:JobRun,p:Vec,dt:number,floor:(x:number,z:number)=>numb
  if(d.kind==='collect'){
   if(steps){let best=-1,bd=Infinity;d.targets.forEach((q,i)=>{if(r.got[i]||!reach(q))return;const dd=Math.hypot(p.x-q.x,p.z-q.z);if(dd<bd){bd=dd;best=i;}});
    r.at=best;const step=best>=0?steps[r.stage[best]]:undefined;
-   if(step?.mode==='hold'&&r.holding){r.work[best]+=t/(step.time??1);if(r.work[best]>=1)completeStep(r,best,ev);}}
+   if(step?.mode==='hold'&&r.holding){r.work[best]+=t/(step.time??1)*(r.stalk?STALK.rate:1);if(r.work[best]>=1)completeStep(r,best,ev);}}
   else{d.targets.forEach((q,i)=>{if(!r.got[i]&&reach(q)){r.got[i]=true;ev.push({type:'collect',index:i});}});afterCollect(r,ev);}}
  else if(d.kind==='trail'){const q=d.targets[r.next];
   if(steps){r.at=q&&reach(q)?r.next:-1;
@@ -373,7 +375,13 @@ export function currentStep(r:JobRun):WorkStep|null{
  if(r.at<0||!w.target)return null;if(r.def.kind==='sort'||r.def.kind==='carry')return w.target[0];return w.target[r.stage[r.at]]??null;
 }
 /** Buttons the HUD shows right now. */
-export function runActions(r:JobRun):JobAction[]{
+/** Bug squad's net toggle (Net down = the stalk, Net up = carried on the shoulder), available while roaming. */
+export const STALK={rate:1.35,walk:.55} as const;
+const isBugRun=(r:JobRun)=>r.def.prop==='bug'||r.def.prop==='firefly';
+export function runActions(r:JobRun):JobAction[]{const out=baseActions(r);
+ if(isBugRun(r)&&r.phase==='work')out.push(r.stalk?{id:'netup',label:'Net up'}:{id:'netlow',label:'Net down'});
+ return out;}
+function baseActions(r:JobRun):JobAction[]{
  if(r.def.kind==='offside'){if(r.phase==='call')return [{id:'flag',label:'Raise the flag',primary:true},{id:'play-on',label:'Keep flag down'}];
   if(r.phase==='explain')return [{id:'next',label:r.right?(r.step+1>=taskTotal(r.def)?'Finish':'Next replay'):'Watch again',primary:true}];}
  if(r.def.kind==='pump'&&r.phase==='pump')return [{id:'pump',label:'Pump',primary:true},{id:'release',label:'Let air out'},{id:'ready',label:'Ball ready'}];
@@ -413,6 +421,7 @@ export function runAction(r:JobRun,id:string):JobEvent[]{
 /** Work-step buttons (and the drop-off action). A hold step sends `id` on press and `id:up` on release. */
 function workAction(r:JobRun,id:string,ev:JobEvent[]){
  const d=r.def,w=d.work!;
+ if((id==='netlow'||id==='netup')&&isBugRun(r)){if(r.phase==='work'){r.stalk=id==='netlow';ev.push({type:'stalk',value:r.stalk?1:0});}return;}
  if(r.at===-2&&w.deliver&&id===w.deliver.id){
   if(d.kind==='sort'){const item=d.task?.type==='sort'?d.task.items[r.step]:undefined;if(item&&r.carrying<0){r.carrying=r.step;r.wrong=-1;r.note=item.clue;ev.push({type:'pickup',index:r.step});}return;}
   if(d.kind==='carry'){if(r.carrying<0)return;r.got[r.carrying]=true;ev.push({type:'return',index:r.carrying});r.carrying=-1;r.next++;r.at=-1;if(r.next>=d.targets.length)doneWith(r,ev);return;}

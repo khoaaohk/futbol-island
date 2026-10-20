@@ -41,6 +41,9 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  // Summit Isle bug jobs (Oct 20 2026): a butterfly net, a jar with fireflies, and an open jar with bugs flying out.
  net:'M15 9a5 5 0 1 0-10 0 5 5 0 0 0 10 0 M13.5 12.5 21 20 M7 7l6 4 M7 11l6-4',
  jar:'M8 3h8 M7 6h10v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z M10 11h.01 M14 13h.01 M11 16h.01',
+ /* Bug squad's net toggle (Oct 20 2026): net held low and forward (the stalk) / net carried upright on the shoulder. */
+ netlow:'M4 4l9 9 M19 16a4 3 0 1 0-8 0 4 3 0 0 0 8 0 M3 21h18 M13 18l2 2 M17 18l-2 2',
+ netup:'M16 7a4 4 0 1 0-8 0 4 4 0 0 0 8 0 M12 11v11 M9 5l6 4 M9 9l6-4',
  release:'M7 11h10v8a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z M12 8V3 M9 5l3-2 3 2 M5 8 3 5 M19 8l2-3',
  crate:'M3 10h18v10H3z M3 14h18 M8 10V7h8v3 M12 4v6 M9 7l3 3 3-3',
  take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8',

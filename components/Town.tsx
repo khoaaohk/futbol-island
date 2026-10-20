@@ -839,7 +839,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const offJobEvents=jobs.onEvent((e,def)=>{if(e.type==='pump')jobStroke=0;if(rideRef.current!=='walk')return;const p=poseForEvent(def,e);if(!p)return;
       const target=p.at==='spot'&&e.index!==undefined?jobs.spot(e.index):p.at==='item'&&e.x!==undefined&&e.z!==undefined?{x:e.x,z:e.z}:p.at==='deliver'?jobs.deliverPoint():null;
       jobMoves.start(p.kind,jobPlayer(),target,jobFloor,reduced,jobBallNow(),!!p.basket);wakeLoop();});
-    jobPressRef.current=(b,phase)=>{if(!b.enabled&&phase!=='up'){if(b.id==='kick')jobs.note('Walk up to a tree with ripe fruit (follow the arrow), then Kick the tree.');return;}
+    jobPressRef.current=(b,phase)=>{if(!b.enabled&&phase!=='up'){if(b.id==='kick')jobs.note('Walk up to a tree with ripe fruit (follow the arrow), then Kick the tree.');else{const h=jobs.disabledHint(b.id);if(h)jobs.note(h);}return;}
       if(rideRef.current!=='walk'||!jobs.run)return;tapHaptic();wakeLoop();
       if(b.id==='kick'){const tree=jobs.armedTree();if(!tree||jobMoves.kicking)return;
         jobMoves.startKick(tree,jobPlayer(),reduced,jobBallNow(),()=>{sound.ball('bounce');ballEffects.impact(ball.position.x,ball.position.y,ball.position.z);jobs.act('kick');},canStandJob);return;}
@@ -1001,7 +1001,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x;
       const sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
       // Screen-relative controls follow the fixed camera heading.
-      const ix=sx*.857+sy*.515,iz=-sx*.515+sy*.857;
+      // Bug squad (Oct 20 2026): Net down slows the walk to careful steps; the release cinematic holds the player still.
+      const jw=rideRef.current==='walk'?jobs.walkScale:1,ix=(sx*.857+sy*.515)*jw,iz=(-sx*.515+sy*.857)*jw;
       if(streetTraffic.rider.index>=0){
         const index=streetTraffic.rider.index,bed=streetTraffic.bedPoint(index);
         if(truckExitRequested.current){
@@ -1016,7 +1017,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const wasFalling=rooftop.state.falling;
       const moveLength=Math.hypot(ix,iz);
       if(moveLength>.01&&!rooftop.state.falling&&rooftop.state.recovery===0){const bx=location.x+ix/moveLength*.65,bz=location.z+iz/moveLength*.65;if(groundBlocked(bx,bz,[],0)&&!(rideRef.current==='walk'&&waterProbe.allowed(bx,bz)))sound.boundary();}
-      if((walkBall.state.mode==='windup'||parachute.covering()||jobFrame.still)&&rideRef.current==='walk')velocity.x=velocity.z=0;
+      if((walkBall.state.mode==='windup'||parachute.covering()||jobFrame.still||jobs.locked)&&rideRef.current==='walk')velocity.x=velocity.z=0;
       if(rideRef.current==='walk'&&walkBall.state.mode==='windup'&&walkBall.state.age<SHOT_WINDUP*.55&&!rooftop.state.falling&&rooftop.state.recovery===0){
         const dx=Math.sin(walkBall.state.yaw)*2.8,dz=Math.cos(walkBall.state.yaw)*2.8,nx=location.x+dx*dt,nz=location.z+dz*dt;
         if(rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-rooftop.state.height)<.35){velocity.x=dx;velocity.z=dz;}

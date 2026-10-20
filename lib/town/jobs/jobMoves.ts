@@ -30,8 +30,10 @@ export const JOB_SLOTS:Record<string,SlotDef[]|null>={
  'court-cleanup':[{ids:['pick'],label:'Pick up',icon:'scoop'},{ids:['toss'],label:'Toss in the bin',icon:'bin'}],
  'trail-cleanup':[{ids:['pick'],label:'Pick up',icon:'scoop'},{ids:['toss'],label:'Toss in the bin',icon:'bin'}],
  // Summit Isle bug jobs (Oct 20 2026, bugScout.ts): hold the net / the jar still at a bug, then let them all go at the drop-off.
- 'bug-scout':[{ids:['net'],label:'Hold Net',icon:'net'},{ids:['letfree'],label:'Release the squad',icon:'release'}],
- 'firefly-floodlights':[{ids:['jar'],label:'Cup the jar',icon:'jar'},{ids:['glow'],label:'Light up the goal',icon:'release'}],
+ // Bug squad (Oct 20 2026, bugScout.ts; one job since the merge, its set follows the time of day): hold the net (bugs) or cup the
+ // jar (fireflies) at each one, release them all at the drop-off. The third slot (where the ride / On foot button sits) is the
+ // net toggle: Net down = the stalk (net held low, slow careful steps, bugs settle faster); Net up = carried on the shoulder.
+ 'bug-scout':[{ids:['net','jar'],label:'Hold Net',icon:{net:'net',jar:'jar'}},{ids:['letfree','glow'],label:'Release',icon:'release'},{ids:['netlow','netup'],label:'Net down',icon:{netlow:'netlow',netup:'netup'}}],
  'offside-flag':[{ids:['flag'],label:'Raise the flag',icon:'flag'},{ids:['play-on'],label:'Keep flag down',icon:'flagdown'},{ids:['next'],label:'Next replay',icon:'next'}],
  'ball-pump':[{ids:['pump'],label:'Pump',icon:'pump'},{ids:['release'],label:'Let air out',icon:'air'},{ids:['ready'],label:'Ball ready',icon:'check'}],
  'goal-anchor':[{ids:['hammer'],label:'Hammer',icon:'hammer'}],
@@ -87,8 +89,7 @@ export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'
   case 'cone-setup':return t==='collect'?{kind:'place',at:'spot'}:null;
   case 'court-cleanup':return t==='collect'?{kind:'pick',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   // Bugs drift into the jar at chest height (scoop); fireflies are reached for on tiptoe; the jar is opened at the drop-off.
-  case 'bug-scout':return t==='collect'?{kind:'scoop',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
-  case 'firefly-floodlights':return t==='collect'?{kind:'reachpick',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
+  case 'bug-scout':return t==='collect'?{kind:def.prop==='firefly'?'reachpick':'scoop',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   case 'goal-anchor':return t==='work'?{kind:'mallet',at:'spot'}:null;
   case 'match-day-snacks':return t==='pickup'?{kind:'take',at:'deliver'}:t==='return'||t==='wrong'?{kind:'drop',at:'spot'}:null;
   case 'offside-flag':return t==='call'?{kind:e.value===1?'flagup':'flagdown'}:null;
@@ -102,7 +103,7 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  const task=r.def.task;
  if(r.harvest&&r.harvest.pulling>=0&&task?.type==='harvest'){const sp=task.spots[r.harvest.pulling];return {kind:'pull',progress:0,tug:Math.min(1,r.harvest.pull/1.1),target:{x:sp.x,z:sp.z}};}
  // Bug squad: the net sweeps gently while held (the rake's sweep, aimed at the bug).
- if(id==='bug-scout'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*.8)%1,target:t?{x:t.x,z:t.z}:undefined};}
+ if(id==='bug-scout'&&r.def.prop==='bug'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*.8)%1,target:t?{x:t.x,z:t.z}:undefined};}
  if(id==='leaf-rake'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*1.6)%1,target:t?{x:t.x,z:t.z}:undefined};}
  if(id==='line-painter'&&r.phase==='work')return {kind:'push',progress:0,upper:true,tug:r.holding?1:0};
  if(id==='ball-kid'&&r.carrying>=0)return {kind:'carryball',progress:0,upper:true};
