@@ -211,6 +211,7 @@ export function createVehicle() {
   };
   const flightExtras=createFlightExtras();root.add(flightExtras.armor,flightExtras.board,flightExtras.plane);
   let customization={...DEFAULT_CUSTOMIZATION};
+  let backpackJet=false;
   const setCustomization=(value:CharacterCustomization)=>{customization={...value};};
   let angle=0,thrustClock=0,rotorAngle=0,tailAngle=0,lastPaint='';
   const displaced:{mesh:T.Object3D;position:T.Vector3;rotation:T.Euler}[]=[];
@@ -279,7 +280,8 @@ export function createVehicle() {
     for(const key of ['scooter','bike','moped'] as const)for(const [id,group] of Object.entries(extras[key]!))group.visible=customization[key]===id;
     helicopter.visible=mode==='jetpack'&&customization.jetpack==='helicopter';
     car.visible=mode==='jetpack'&&customization.jetpack==='flying-car';
-    pack.visible=mode==='jetpack'&&customization.jetpack==='classic';
+    // The worn backpack (backpack.ts) morphs into the classic twin jet in the town: this pack then stays hidden.
+    pack.visible=mode==='jetpack'&&customization.jetpack==='classic'&&!backpackJet;
     flightExtras.armor.visible=wearingArmor;
     flightExtras.board.visible=mode==='jetpack'&&customization.jetpack==='rocketboard';
     flightExtras.plane.visible=mode==='jetpack'&&customization.jetpack==='mini-plane';
@@ -315,6 +317,8 @@ export function createVehicle() {
     }
   },/** Bean-fit Iron Man face: 'open' shows the bean's face through the helmet, 'plate' closes it with a faceplate. */
   setArmorFace:flightExtras.setBeanFace,harnessAnchor,
+  /** True when the rider wears lib/graphics/backpack.ts: its morph replaces the classic jet pack (Oct 20 2026). */
+  setBackpackJet(on:boolean){backpackJet=on;},
   get beanFit(){return !!beanFit;},
   dispose(){root.removeFromParent();flightExtras.dispose();geometries.forEach(g=>g.dispose());harness.forEach(h=>h.belts.forEach(b=>b.geometry.dispose()));[metal,rubber,paint,cream,exhaustMaterial,carAccent].forEach(m=>m.dispose());}};
 }
