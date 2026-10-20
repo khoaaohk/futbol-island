@@ -56,8 +56,9 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  const v=new T.Vector3(),motion={facing:0,swim:pose,turnSmoothing:5};
  const breathEl=()=>ports.ui<HTMLElement>('[data-dive-breath]');
  /** The breath ring (a CSS variable, at most BREATH_UI_HZ a second) and whether it shows (diving, or refilling after a dive). */
+ let swimmingNow=false;
  function drawBreath(force=false){
-  const b=session.state.breath,show=session.diving||b<.999,el=breathEl();if(!el)return;
+  const b=session.state.breath,show=session.diving||(b<.999&&swimmingNow),el=breathEl();/* Oct 20 2026 (user: the Breath pill showed while walking on land): the refill pill only shows while swimming */if(!el)return;
   if(show!==breathShown||force){breathShown=show;ports.hide(el,!show);}
   if(!show)return;const q=Math.round(b*100)/100;if(q===lastBreath&&!force)return;lastBreath=q;
   el.style.setProperty('--breath',String(q));el.dataset.low=b<=BREATH_LOW?'1':'';el.setAttribute('aria-valuenow',String(Math.round(b*100)));
@@ -84,7 +85,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   /** The patch test at the surface (the island step, at the probe's 10 Hz), plus the breath refill there. */
   /** The ocean's patch slots: the DIVE_SLOTS nearest zones (Town's HUD tick; a write only when the set changes). */
   slots(x:number,z:number){nearestDiveSpots(x,z,near);let k='';for(const s of near)k+=s.id+'|';if(k!==slotKey){slotKey=k;setDiveSpots(near);}},
-  scan(dt:number,x:number,z:number,swimming:boolean){const s=session.scan(dt,x,z,swimming);if(session.events.breathUi)drawBreath();return s;},
+  scan(dt:number,x:number,z:number,swimming:boolean){const s=session.scan(dt,x,z,swimming);if(swimming!==swimmingNow){swimmingNow=swimming;drawBreath(true);}else if(session.events.breathUi)drawBreath();return s;},
   /** The arbiter candidate (Town's HUD tick): the Dive prompt wants the focus slot while in a patch. */
   want(){const s=session.state.near;return s&&!session.diving?{key:'dive',distance:0}:null;},
   /** The floating Dive prompt over the buoy (each island frame while in a patch; `allowed` = the arbiter gave it the slot). */
