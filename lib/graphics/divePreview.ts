@@ -1,93 +1,110 @@
 import * as T from 'three';
-import {DIVE_ROOM_R,DIVE_SLOTS,DIVE_SPOTS,diveBlobR,type DiveSpot} from '../town/water/diveSpots';
-import {UW_SURFACE} from '../town/fishing/underwater';
-import {DIVE_SHOAL,WATER_UNIFORMS,clearWinNoise} from './waterSurface';
+import {DIVE_ROOM_R,DIVE_SLOTS,DIVE_SPOTS,diveBlobR,diveRipple,type DiveSpot} from '../town/water/diveSpots';
+import {UW_SURFACE,clearReefKit} from '../town/fishing/underwater';
+import {DIVE_SHOAL,WATER_UNIFORMS,clearWinNoise,diveShoreD} from './waterSurface';
 import {createOceanBlend} from './swimClear';
 
 /**
  * The dive shoal's seabed preview (Oct 20 2026, user: "these dive spots need to look more like the shore where it's see through",
- * then "blend in more on the edges ... it needs to feel like a shallow coral area").
+ * "blend in more on the edges", "the items in the water need to be more blurred so there's depth", "it needs to match what the shore
+ * looks like", "shallow places in the middle of dark ocean").
  *
- * The dive room itself is a sealed scene built only on Dive (diveRoom.ts), so from the surface there was nothing under the patch: the
- * ocean drew an opaque tinted blob. Now, for the DIVE_SLOTS (2) nearest zones within DIVE_PREVIEW.view m of the player, ONE merged
- * mesh per zone sits under the water: a blob-shaped sand shelf (shoaling up toward the heart, dappled sand and darker coral / rock
- * blotches in its vertex colours), scattered low-poly coral heads and rocks (denser toward the heart, thinning at the edge) and, for a
- * wreck zone, a sunken hull outline. The ocean's blended program (the shared createOceanBlend, as the shore window and the swim disc)
- * turns see-through over it (waterSurface.ts uDiveClear, DIVE_SHOAL.alpha at the heart, back to opaque through the soft edge).
+ * A shoal is drawn as the shore's own shallows rising out of the dark sea. The ocean shader reads a shore distance that eases from
+ * the open sea's to DIVE_SHOAL.heart toward the heart (waterSurface.ts diveShoreD). Under it, for the DIVE_SLOTS (2) nearest zones in
+ * range, this module lays ONE merged mesh per zone:
+ *  - a blob-shaped sand shelf at the shore bed's depth for that shore distance. The sandy heart is about 1.6 m down. It sinks toward
+ *    the edge, and past the outline it drops below the shore bed's 4.2 m floor. Its colours are the shore bed's own sand, teal and deep
+ *    palette, with faint sand ripples;
+ *  - the shore's seabed props, muted: sea-grass tufts (the shore's reef-kit tuft), fans and low coral heads in dull browns, olive and
+ *    mauve, and dark rocks, clustered in patches toward the heart;
+ *  - the wreck's dark hull, on wreck zones only.
+ * Its material is the shore seabed's (clearWindow.ts underMaterial 'shoal'): moving caustic light lines, depth absorption and
+ * desaturation, soft silhouettes, the surface pattern over it and the refraction shimmer. So the props read as down on the seabed.
  *
- * Cost: no textures, no extra pass; MeshBasicMaterial with baked shade + depth tint (one shared material, vertex colours); per zone
- * <= DIVE_PREVIEW.maxTris triangles (tests/dive-preview.cjs), at most 2 draws. Geometry is built once per zone on first need (<= 7
- * zones, kept). Off (meshes hidden, the blend released, uDiveClear 0 = the opaque lighter shoal) at heat tiers 3-4 / Battery saver
- * (Town passes the effective tier, a phone's tier 2 counts as 3) and while diving. Per frame: two distance tests and two uniform writes.
+ * Cost: no new textures (it uses the shore window's noise texture) and no extra pass. Per zone it stays under DIVE_PREVIEW.maxTris
+ * triangles (tests/dive-see-through.cjs), with at most 2 draws in all. Geometry is built once per zone on first need (≤ 7 zones,
+ * kept). Off means meshes hidden, the blend released and uDiveClear 0 (the opaque shoal colour only). It is off at heat tiers 3-4
+ * and Battery saver (Town passes the effective tier; a phone's tier 2 counts as 3) and while diving. Per frame: two distance tests
+ * and two uniform writes.
  */
-export const DIVE_PREVIEW={view:[170,120,80] as const,fade:.6,rings:8,segs:48,reach:1.3,depth:[1.25,3.4] as const,maxTris:2600} as const;
+export const DIVE_PREVIEW={view:[170,120,80] as const,fade:.6,rings:8,segs:40,reach:1.3,floor:3,far:40,maxTris:2600} as const;
 
 const hash=(i:number,k:number)=>{const s=Math.sin(i*127.1+k*311.7)*43758.5453;return s-Math.floor(s);};
-const WATER=new T.Color('#1aa3ae'),DEEP=new T.Color('#1f6f7e');// sRGB hex (linear in the vertex colours)// DEEP ~ the open sea's teal, so a rim seen through the swim disc reads as deep water
-/** The seabed's depth below the surface at blob fraction t (0 heart .. 1 the dive outline .. DIVE_PREVIEW.reach). */
-// Past the dive outline the shelf drops below the shore window's seabed floor (clearWindow.ts CLEAR_BED.floor 4.2 m), so near a
-// beach that bed covers the preview's rim instead of the rim cutting a dark edge across it.
-export const previewDepth=(t:number)=>{const u=Math.min(1,Math.max(0,(t-.15)/(1.05-.15))),o=Math.min(1,Math.max(0,(t-1)/(DIVE_PREVIEW.reach-1)));
- return DIVE_PREVIEW.depth[0]+(DIVE_PREVIEW.depth[1]-DIVE_PREVIEW.depth[0])*u*u*(3-2*u)+1.6*o;};
+const sm=(a:number,b:number,x:number)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
+/** The shoal weight at blob fraction t, as the ocean shader draws it (without the edge noise). */
+export const shoalK=(t:number)=>{const a=1-sm(DIVE_SHOAL.inner,DIVE_SHOAL.fade,t);return a*a*(3-2*a);};
+/** The shore distance the shoal looks like at blob fraction t (the open sea taken as DIVE_PREVIEW.far m). */
+export const shoalD=(t:number)=>diveShoreD(DIVE_PREVIEW.far,shoalK(t));
+/** The seabed's depth below the surface at blob fraction t. It follows the shore bed's curve (clearWindow.ts) for that shore distance,
+ *  on a shallower floor. Past the outline it drops below the shore window's bed floor (4.2 m), so a beach's bed covers the rim. */
+export const previewDepth=(t:number)=>.05+DIVE_PREVIEW.floor*(1-Math.exp(-shoalD(t)/3.4))+1.6*sm(1,DIVE_PREVIEW.reach,t);
+/** Dull reef colours, multiplied by the kit's neutral paint: browns and rust, olive, muted mauve. Dark rocks. The grass greens. */
+const MUTED=['#6f5640','#7b5a43','#66683f','#6e5f68','#5b6248'].map(c=>new T.Color(c)),ROCK=['#3f4746','#4a514c','#3a3f3d'].map(c=>new T.Color(c));
+const GRASS=['#3f6b45','#4d7a48','#5b7d3e'].map(c=>new T.Color(c));
+/** The stranded wreck's under-water hull in the preview: `hull` false skips it (for when the above-water wreck piece draws its own hull);
+ *  `under` = how far under the surface its top stays (m). */
+export const DIVE_PREVIEW_WRECK={hull:true,under:.15};
 
-/** Build one zone's merged preview (island coordinates, y = world). Non-indexed: position + color. */
-/** `bedAt` (optional): the shore window's seabed depth there (clearWindow.ts clearBedDepthAt; Infinity far out). Near a beach that bed
- *  can be shallower than the shelf: the shelf rides just over it (never hidden under the shore's sand) and keeps its sand at the rim. */
+/** Build one zone's merged preview (island coordinates, y = world). Non-indexed: position, color, normal.
+ *  `bedAt` (optional) is the shore window's seabed depth there (clearWindow.ts clearBedDepthAt; Infinity far out). Near a beach that
+ *  bed can be shallower than the shelf: the shelf rides just over it inside the outline and tucks under it past the outline. */
 export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>number){
  const depthAt=(x:number,z:number,t:number)=>{const b=bedAt?bedAt(x,z):Infinity,pd=previewDepth(t);if(!Number.isFinite(b))return pd;
-  // Over a shallower shore bed: just above it inside the outline, tucked under it past the outline (the shore's sand covers the rim).
   const o=Math.min(1,Math.max(0,(t-.95)/.2));return Math.min(pd,b-.15)*(1-o)+(b+.4)*o;};
- const bedFar=(x:number,z:number)=>{const b=bedAt?bedAt(x,z):Infinity;return Number.isFinite(b)?Math.min(1,Math.max(0,(b-3.4)/.8)):1;};
- const P:number[]=[],C:number[]=[],col=new T.Color(),tmp=new T.Color(),sea=WATER;
- const sandA=new T.Color(spot.theme.sand[0]),sandB=new T.Color(spot.theme.sand[1]),rockA=new T.Color(spot.theme.rock[0]),rockB=new T.Color(spot.theme.rock[1]);
- const tint=(c:T.Color,depth:number,shade:number,base=.18)=>{const w=Math.min(1,depth/DIVE_PREVIEW.depth[1]);tmp.copy(c).multiplyScalar(shade);const f=base>.25?1:.45;tmp.r*=1-f*(.6+.15*w);tmp.g*=1-.1*f;tmp.b=Math.max(tmp.b,tmp.g*(.95*f));tmp.lerp(sea,base+.25*w);return tmp;};// water absorbs red first: the sand reads turquoise, as at the shore
+ const P:number[]=[],C:number[]=[],col=new T.Color(),TEAL=new T.Color().setRGB(.2,.5,.52),DEEP=new T.Color().setRGB(.08,.36,.42);
  const push=(x:number,y:number,z:number,c:T.Color)=>{P.push(x,y,z);C.push(c.r,c.g,c.b);};
- // 1. The sand shelf: a polar grid bent to the blob, out to `reach` x the outline (the ocean is opaque again before its rim).
+ // 1. The sand shelf: a polar grid bent to the blob, out to `reach` × the outline. Its colour is the shore bed's (clearWindow.ts
+ //    underMaterial 'bed'): pale patchy sand, teal past ~1.5 m of shore distance, the deep teal by ~9-24 m (linear values).
  const {rings,segs,reach}=DIVE_PREVIEW,V:{x:number;y:number;z:number;c:T.Color}[][]=[];
- for(let r=0;r<=rings;r++){const row:typeof V[number]=[];const t=r/rings*reach;
+ for(let r=0;r<=rings;r++){const row:typeof V[number]=[];const t=r/rings*reach,sd=shoalD(t);
   for(let s=0;s<(r?segs:1);s++){const a=s/segs*Math.PI*2,R=diveBlobR(spot,a)*t,x=spot.x+Math.cos(a)*R,z=spot.z+Math.sin(a)*R,dp=depthAt(x,z,t);
-   // Dappled sand (two noises) and darker coral / rock blotches, more of them toward the heart.
-   const n=clearWinNoise(x,z,.21,.47,spot.blob),m=clearWinNoise(x,z,.33,.17,spot.blob*3+5);
-   col.copy(sandA).lerp(sandB,n);const blot=Math.max(0,(m-.58)/.42)*(1.15-Math.min(1,t));
-   if(blot>0)col.lerp(rockA.clone().lerp(new T.Color(spot.theme.coral[Math.floor(hash(r*61+s,spot.blob)*spot.theme.coral.length)]),.35),Math.min(.8,blot*2.2));
-   // The shelf's rim sinks into the deep-water colour, so where the swim disc / shore window clears past it there is no edge.
-   const rim=Math.min(1,Math.max(0,(t-.8)/(reach-.8)));row.push({x,y:UW_SURFACE-dp,z,c:tint(col,dp,.9+.1*n,.28).clone().lerp(DEEP,rim*rim*(3-2*rim)*bedFar(x,z))});}
+   const n=sm(.3,.75,clearWinNoise(x,z,.21,.47,spot.blob)*.6+clearWinNoise(x,z,.09,.33,spot.blob+3)*.5)*.85+.15*diveRipple(x*.6,z*.6);
+   col.setRGB(.72+.14*n,.68+.14*n,.52+.14*n).lerp(TEAL,sm(1.5,9,sd)*.75).lerp(DEEP,sm(9,24,sd));
+   row.push({x,y:UW_SURFACE-dp,z,c:col.clone()});}
   V.push(row);}
  const vtx=(v:{x:number;y:number;z:number;c:T.Color})=>push(v.x,v.y,v.z,v.c);
  for(let r=1;r<=rings;r++)for(let s=0;s<segs;s++){const s1=(s+1)%segs,a=V[r][s],b=V[r][s1];
   if(r===1){vtx(V[0][0]);vtx(b);vtx(a);continue;}const c=V[r-1][s],d=V[r-1][s1];vtx(c);vtx(d);vtx(a);vtx(d);vtx(b);vtx(a);}
- // 2. Coral heads and rocks: seeded, denser toward the heart (t = u^1.15 over the outline), thinning out by the edge.
- const shapes={mound:new T.IcosahedronGeometry(1,0),branch:new T.ConeGeometry(.45,1,5,1),rock:new T.DodecahedronGeometry(1,0)};
- const M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),PO=new T.Vector3(),N=new T.Vector3(),E=new T.Euler();
- const addShape=(g:T.BufferGeometry,m:T.Matrix4,c:T.Color,depth:number)=>{const pos=g.getAttribute('position'),idx=g.getIndex(),cnt=idx?idx.count:pos.count,A=new T.Vector3(),B=new T.Vector3(),D=new T.Vector3();
-  for(let i=0;i<cnt;i+=3){const ia=idx?idx.getX(i):i,ib=idx?idx.getX(i+1):i+1,ic=idx?idx.getX(i+2):i+2;
-   A.fromBufferAttribute(pos,ia).applyMatrix4(m);B.fromBufferAttribute(pos,ib).applyMatrix4(m);D.fromBufferAttribute(pos,ic).applyMatrix4(m);
-   N.subVectors(B,A).cross(PO.subVectors(D,A)).normalize();const k=tint(c,depth,.6+.45*Math.max(0,N.y)+.08*N.x).clone();
-   push(A.x,A.y,A.z,k);push(B.x,B.y,B.z,k);push(D.x,D.y,D.z,k);}};
- const heads=Math.round(spot.radius*2.8),coral=spot.theme.coral,fan=spot.theme.fan,an=spot.theme.anemone;
- for(let i=0;i<heads;i++){const a=hash(i,spot.blob+1)*Math.PI*2,t=Math.pow(hash(i,spot.blob+2),1.15)*1.02,R=diveBlobR(spot,a)*t*.96,x=spot.x+Math.cos(a)*R,z=spot.z+Math.sin(a)*R;
-  const dp=depthAt(x,z,t),y=UW_SURFACE-dp,h=hash(i,spot.blob+3),sz=Math.min((.55+.7*hash(i,spot.blob+4))*(1.1-.45*t)*(spot.radius>15?1.15:1),(dp-.5)/1.2);if(sz<.2)continue;// never up through the surface
-  if(h<.42){col.set(coral[Math.floor(hash(i,7)*coral.length)]);S.set(sz*1.1,sz*.55,sz);E.set(0,hash(i,8)*6.28,0);M.compose(PO.set(x,y,z),Q.setFromEuler(E),S);addShape(shapes.mound,M,col,dp-sz*.5);}
-  else if(h<.72){col.set(fan[Math.floor(hash(i,9)*fan.length)]);for(let b=0;b<3;b++){const ba=hash(i*3+b,10)*6.28,bo=sz*.45;E.set((hash(i*3+b,11)-.5)*.7,0,(hash(i*3+b,12)-.5)*.7);S.set(sz*.8,sz*1.3,sz*.8);
-   M.compose(PO.set(x+Math.cos(ba)*bo,y+sz*.5,z+Math.sin(ba)*bo),Q.setFromEuler(E),S);addShape(shapes.branch,M,col,dp-sz);}}
-  else if(h<.86){col.set(an[Math.floor(hash(i,13)*an.length)]);S.set(sz*.6,sz*.35,sz*.6);M.compose(PO.set(x,y,z),Q.identity(),S);addShape(shapes.mound,M,col,dp-.3);}
-  else{col.copy(rockA).lerp(rockB,hash(i,14));S.set(sz*1.4,sz*.7,sz*1.2);E.set(0,hash(i,15)*6.28,0);M.compose(PO.set(x,y,z),Q.setFromEuler(E),S);addShape(shapes.rock,M,col,dp-.4);}}
- // 3. A wreck zone: the sunken hull's outline where the room puts it (room metres scaled to the blob), tilted, a broken mast across it.
+ // 2. Props in patches toward the heart: each patch has grass tufts, a fan or a low coral head, and a rock.
+ const kit=clearReefKit(),ico=new T.IcosahedronGeometry(1,0),rock=new T.DodecahedronGeometry(1,0);
+ const M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),PO=new T.Vector3(),E=new T.Euler(),A=new T.Vector3(),paint=new T.Color(),k=new T.Color();
+ const addShape=(g:T.BufferGeometry,m:T.Matrix4,c:T.Color)=>{const pos=g.getAttribute('position'),pc=g.getAttribute('color'),idx=g.getIndex(),cnt=idx?idx.count:pos.count;
+  for(let i=0;i<cnt;i++){const v=idx?idx.getX(i):i;A.fromBufferAttribute(pos,v).applyMatrix4(m);k.copy(c);if(pc)k.multiply(paint.fromBufferAttribute(pc as T.BufferAttribute,v));push(A.x,A.y,A.z,k);}};
+ const fracAt=(x:number,z:number)=>Math.hypot(x-spot.x,z-spot.z)/Math.max(1,diveBlobR(spot,Math.atan2(z-spot.z,x-spot.x)));
+ const clusters=Math.max(3,Math.round(spot.radius*.32)),tufts=3,seed=spot.blob*7;
+ for(let c=0;c<clusters;c++){const a=hash(c,seed+1)*Math.PI*2,tc=Math.pow(hash(c,seed+2),1.4)*.8,Rc=diveBlobR(spot,a)*tc,cx=spot.x+Math.cos(a)*Rc,cz=spot.z+Math.sin(a)*Rc;
+  for(let m=0;m<tufts+2;m++){const j=c*13+m,h=hash(j,seed+3),ba=hash(j,seed+4)*6.283,bd=.6+hash(j,seed+5)*2.6,x=cx+Math.cos(ba)*bd,z=cz+Math.sin(ba)*bd,t=fracAt(x,z);
+   if(t>1)continue;const dp=depthAt(x,z,t),y=UW_SURFACE-dp,room=dp-.45;if(room<.3)continue;Q.setFromEuler(E.set(0,hash(j,seed+6)*6.283,0));
+   if(m<tufts-1){const sc=Math.min(1.3+h*1.2,room/.6);M.compose(PO.set(x,y,z),Q,S.set(sc,sc,sc));addShape(kit.grass,M,GRASS[Math.floor(h*GRASS.length)]);}
+   else if(m===tufts-1){const sc=Math.min(.5+.5*h,room/.7);M.compose(PO.set(x,y-sc*.2,z),Q,S.set(sc*1.4,sc*.8,sc*1.2));addShape(ico,M,MUTED[Math.floor(hash(j,seed+9)*MUTED.length)]);}
+   else if(m===tufts&&h<.55){const sc=Math.min(1.1+h,room/.62);M.compose(PO.set(x,y,z),Q,S.set(sc,sc,sc));addShape(kit.fan,M,MUTED[Math.floor(hash(c,seed+7)*MUTED.length)]);}
+   else if(m===tufts){const sc=Math.min(.45+.4*h,room/.7);M.compose(PO.set(x,y-sc*.15,z),Q,S.set(sc*1.3,sc*.7,sc*1.3));addShape(ico,M,MUTED[Math.floor(hash(c,seed+8)*MUTED.length)]);}
+   else{const sc=Math.min(.35+.45*h,room/.6);M.compose(PO.set(x,y-sc*.3,z),Q,S.set(sc*1.3,sc*.6,sc));addShape(rock,M,ROCK[Math.floor(h*ROCK.length)]);}}}
+ // A few lone tufts and pebbles on the open sand between the patches.
+ for(let i=0;i<Math.round(spot.radius*.4);i++){const a=hash(i,seed+20)*6.283,t=.2+hash(i,seed+21)*.75,R=diveBlobR(spot,a)*t,x=spot.x+Math.cos(a)*R,z=spot.z+Math.sin(a)*R,h=hash(i,seed+22);
+  const dp=depthAt(x,z,t),y=UW_SURFACE-dp;if(dp<.8)continue;Q.setFromEuler(E.set(0,h*6.283,0));
+  if(h<.6){const sc=Math.min(1+h,(dp-.45)/.6);M.compose(PO.set(x,y,z),Q,S.set(sc,sc,sc));addShape(kit.grass,M,GRASS[i%GRASS.length]);}
+  else{const sc=.25+.3*h;M.compose(PO.set(x,y-sc*.3,z),Q,S.set(sc*1.2,sc*.6,sc));addShape(rock,M,ROCK[i%ROCK.length]);}}
+ // 3. A wreck zone: the boat stranded on the reef crest (Oct 20 2026, user: the wrecks are boats stranded on the reef, part of the
+ //    hull out of the water). The preview draws only its under-water hull: on the crest's seabed where the room puts it (room metres
+ //    scaled to the blob), heeled over, its top just under the surface. The part above the water is a separate piece; once that piece
+ //    draws the under-water hull too, set DIVE_PREVIEW_WRECK.hull = false so the preview skips it (no double draw).
  const w=spot.theme.wreck;
- if(w){const sc=spot.radius/DIVE_ROOM_R,wx=spot.x+w.x*sc,wz=spot.z+w.z*sc,L=Math.max(7,spot.radius*.55),t=Math.hypot(w.x,w.z)/DIVE_ROOM_R,dp=Math.min(Math.max(previewDepth(t),2.2),depthAt(wx,wz,0)+1),y=UW_SURFACE-dp;
-  const wood=new T.Color('#6e4b2c'),deck=new T.Color('#4a3320'),box=new T.BoxGeometry(1,1,1);Q.setFromEuler(E.set(.06,w.yaw,.12));
-  M.compose(PO.set(wx,y+.35,wz),Q,S.set(L*.32,1.1,L));addShape(box,M,wood,dp-1);
-  M.compose(PO.set(wx,y+.95,wz),Q,S.set(L*.24,.12,L*.8));addShape(box,M,deck,dp-1);
-  const prow=new T.ConeGeometry(.5,1,4,1);prow.rotateX(Math.PI/2);M.compose(PO.set(wx+Math.sin(w.yaw)*L*.6,y+.35,wz+Math.cos(w.yaw)*L*.6),Q,S.set(L*.45,1.1,L*.25));addShape(prow,M,wood,dp-1);
-  const mast=new T.CylinderGeometry(.18,.22,1,5,1);mast.rotateZ(Math.PI/2);Q.setFromEuler(E.set(0,w.yaw+.9,.08));M.compose(PO.set(wx,y+1.1,wz),Q,S.set(L*.8,1,1));addShape(mast,M,deck,dp-1.2);
+ if(w&&DIVE_PREVIEW_WRECK.hull){const sc=spot.radius/DIVE_ROOM_R,wx=spot.x+w.x*sc,wz=spot.z+w.z*sc,L=Math.max(7,spot.radius*.55),t=Math.min(.9,Math.hypot(w.x,w.z)/DIVE_ROOM_R),sb=depthAt(wx,wz,t),hh=Math.max(.6,sb-DIVE_PREVIEW_WRECK.under-L*(.16*.24+.6*.1)),yc=UW_SURFACE-sb+hh/2;
+  const wood=new T.Color('#3a2a1c'),deck=new T.Color('#2a1f15'),box=new T.BoxGeometry(1,1,1);Q.setFromEuler(E.set(.1,w.yaw,.24));
+  M.compose(PO.set(wx,yc,wz),Q,S.set(L*.32,hh,L));addShape(box,M,wood);
+  M.compose(PO.set(wx,yc+hh/2-.06,wz),Q,S.set(L*.24,.1,L*.8));addShape(box,M,deck);
+  const prow=new T.ConeGeometry(.5,1,4,1);prow.rotateX(Math.PI/2);M.compose(PO.set(wx+Math.sin(w.yaw)*L*.6,yc,wz+Math.cos(w.yaw)*L*.6),Q,S.set(L*.45,hh,L*.25));addShape(prow,M,wood);
+  const mast=new T.CylinderGeometry(.18,.22,1,5,1);mast.rotateZ(Math.PI/2);Q.setFromEuler(E.set(0,w.yaw+.9,.08));M.compose(PO.set(wx+L*.3,UW_SURFACE-sb+.25,wz-L*.2),Q,S.set(L*.8,1,1));addShape(mast,M,deck);
   box.dispose();prow.dispose();mast.dispose();}
- for(const g of Object.values(shapes))g.dispose();
- const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(P,3));geo.setAttribute('color',new T.Float32BufferAttribute(C,3));geo.computeBoundingSphere();
+ for(const g of Object.values(kit))g.dispose();ico.dispose();rock.dispose();
+ const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(P,3));geo.setAttribute('color',new T.Float32BufferAttribute(C,3));geo.computeVertexNormals();geo.computeBoundingSphere();
  return geo;
 }
 
-export function createDivePreview(scene:T.Scene,bedAt?:(x:number,z:number)=>number,spots:readonly DiveSpot[]=DIVE_SPOTS){
- const blend=createOceanBlend(scene),mat=new T.MeshBasicMaterial({vertexColors:true,fog:false});mat.name='dive-preview';// no fog: the island's haze would wash it milky under the water
+/** `material` is the shore seabed's look (Town passes clearWin.shoalMaterial(), owned by the window). Without one (tests) it uses a plain unlit one. */
+export function createDivePreview(scene:T.Scene,bedAt?:(x:number,z:number)=>number,material?:T.Material,spots:readonly DiveSpot[]=DIVE_SPOTS){
+ const blend=createOceanBlend(scene),own=!material,mat=material??new T.MeshBasicMaterial({vertexColors:true,fog:false});if(own)mat.name='dive-preview';
  const cache=new Map<string,T.BufferGeometry>(),meshes:T.Mesh[]=[],k:number[]=[],cur:(DiveSpot|null)[]=[];
  for(let i=0;i<DIVE_SLOTS;i++){const m=new T.Mesh(new T.BufferGeometry(),mat);m.name='dive-preview-'+i;m.visible=false;m.castShadow=m.receiveShadow=false;m.matrixAutoUpdate=false;m.raycast=()=>{};scene.add(m);meshes.push(m);k.push(0);cur.push(null);}
  const empty=meshes[0].geometry;
@@ -95,7 +112,7 @@ export function createDivePreview(scene:T.Scene,bedAt?:(x:number,z:number)=>numb
  const U=WATER_UNIFORMS.uDiveSpots.value,CL=WATER_UNIFORMS.uDiveClear.value;
  let tris=0;
  return {
-  /** Once per rendered frame: the player's (x, z), the effective heat tier (Battery saver = 4) and whether the island is live (not diving). */
+  /** Once per rendered frame, with the player's (x, z), the effective heat tier (Battery saver = 4) and whether the island is live (not diving). */
   update(dt:number,x:number,z:number,tier:number,live=true){
    const view=tier<3?DIVE_PREVIEW.view[Math.max(0,tier)]:0;let any=false;tris=0;
    for(let i=0;i<DIVE_SLOTS;i++){const u=U[i];let spot:DiveSpot|null=null;
@@ -109,7 +126,7 @@ export function createDivePreview(scene:T.Scene,bedAt?:(x:number,z:number)=>numb
   },
   get stats(){return {draws:meshes.filter(m=>m.visible).length,triangles:tris,built:cache.size,clear:[...CL]};},
   meshes,
-  dispose(){blend.release();for(let i=0;i<DIVE_SLOTS;i++){CL[i]=0;meshes[i].removeFromParent();}for(const g of cache.values())g.dispose();cache.clear();empty.dispose();mat.dispose();},
+  dispose(){blend.release();for(let i=0;i<DIVE_SLOTS;i++){CL[i]=0;meshes[i].removeFromParent();}for(const g of cache.values())g.dispose();cache.clear();empty.dispose();if(own)mat.dispose();},
  };
 }
 export type DivePreview=ReturnType<typeof createDivePreview>;

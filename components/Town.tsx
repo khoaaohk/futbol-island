@@ -756,7 +756,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // draw, bobbing on the water clock in the vertex shader). Swimming into a patch shows "Dive"; a tap swaps the island for the
     // sealed underwater room (the island is neither stepped nor drawn while you dive) until you surface; the room is then disposed.
     const diveBuoys=createDiveBuoys(DIVE_SPOTS);scene.add(diveBuoys.root);
-    const divePreview=createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;});// the see-through shoal's seabed preview under the 2 nearest patches (lib/graphics/divePreview.ts)
+    const divePreview=createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;},clearWin.shoalMaterial());// the see-through shoal's seabed preview under the 2 nearest patches (lib/graphics/divePreview.ts)
     const showUnderTint=()=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+UNDER_TINT_MS;}};
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
       entered:spot=>{countDiveStart();if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
