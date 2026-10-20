@@ -5667,3 +5667,20 @@ nothing lay under the patch.
 - **Validation:** tests/dive-see-through.cjs, water-dive, swim-clear (alpha pin `min(..., mix(1.,clearWinAlpha(1.,dd),diveClr))`),
   heat-water and water-swim pass. Headless shots (top-down, a follow-height camera and a jetpack-height camera; 390x844 and 1280x800)
   show 0 console errors. **No iPhone heat test has been done.**
+
+## Shallow reef, stranded wrecks, Explore (Oct 20 2026, local, not deployed)
+
+User: "the dive zone is not really diving deep, but more about going through a coral reef area ... should not have a drop off",
+"the boat can stick out of the water because it got stranded", "change the word dive to explore". Supersedes the two depth levels above.
+- **Seabed** (`diveSpots.ts` `diveDepthAt`): one smooth surface per zone, 4.4-5.4 m at the rim rising to a 1.6-2.7 m crest (dome / plateau /
+  ridge / twin / ring), max slope 0.7 m/m (test: <= 0.8), past the room it keeps sloping down gently into the fog. No levels, no walls.
+- **Glide** (`diveSession.ts`): `depthT` (0 under the surface .. 1 over the sand) is kept while the reef rises and falls, so the diver follows
+  the seabed; Q / Z and the arrows rise / dip at 1.2 m/s. Breath 70 s, no depth penalty, a sip of air at the top refills it. `wa:dive_crest`
+  replaces `wa:dive_deep` (kept for old rows). The duck-dive (Q at the surface) drains the same breath ring. A few scalars per frame.
+- **Stranded wrecks** (`lib/graphics/diveWreckTop.ts`): the room's own wreck build (`addDiveWreck`) cut to the triangles above the
+  waterline, one merged mesh per wreck zone within 260 m (at most 2), 185-339 triangles, no shadows, no animation, built on the HUD
+  tick, hidden at heat tier 3+ / Battery saver. Room (node, phone): 13-16 draws, 36k-76k triangles, unchanged caps.
+- **Transitions**: R / the switcher is always the jetpack (E or the pill explores); the prompt waits 2 s after surfacing; going under plays
+  the duck-dive plunge and feeds `sound.swim` under (low-pass bed, 0 new voices), surfacing plays `waterSurface`; a 0.65 s blend through
+  the zone's water colour replaces the bright flash for the reef. Validation: tests/water-dive.cjs, full suite, build, headless Chrome.
+  **No iPhone heat test has been done.**

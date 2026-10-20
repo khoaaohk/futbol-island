@@ -55,7 +55,7 @@ export const DIVE_TICK=1/WATER_PROBE_HZ;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
 export const DIVE_LESSON={title:'Pace your breath',text:'Glide slowly and your breath lasts longer, and rise to the top for a quick breath. Sprint everywhere and it runs out fast, like a midfielder’s legs in a long match.',kind:'Coaching idea'} as const;
 export const DIVE_LESSON_KEY='fi2-dive-lesson-v1';
-export const DIVE_LOW_NOTE='Running low on breath: rise to the top for air.',DIVE_OUT_NOTE='Good dive! You floated up for a breath.';
+export const DIVE_LOW_NOTE='Running low on breath: rise to the top for air.',DIVE_OUT_NOTE='Well done! You floated up for a breath.';
 
 export type DivePhase='surface'|'diving'|'rising';
 export type SurfaceReason='tap'|'breath'|'leave'|'fly';

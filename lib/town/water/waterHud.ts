@@ -24,7 +24,7 @@ export const RIDE_SWIM_NO_FUEL:JobButton={slot:'ride',key:'R',id:'swimride',labe
 export const SWIM_RIDE_NOTE='The jetpack needs fuel. Swim to a beach, then pick a ride on land.';
 /** Space / 1 = Sprint (hold), Q / J / 2 = Dive / Surface (tap; the key Float used), R / E / 3 = the ride switcher (fly up). */
 export const SPRINT:JobButton={slot:'shoot',key:'Space',id:'swimfast',label:'Hold to swim faster (front crawl)',icon:'swimfast',hold:true,enabled:true};
-export const DIVE_BUTTON:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Dive under the water',icon:'dive',enabled:true};
+export const DIVE_BUTTON:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Dive: a quick dip under the water',icon:'dive',enabled:true};
 export const SURFACE_BUTTON:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Swim back up',icon:'surface',enabled:true};
 export const DIVE_SHALLOW:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Dive: swim out to deeper water first',icon:'dive',enabled:false};
 /** The hint a tap of the greyed Dive shows (the job note lane). */

@@ -32,10 +32,10 @@ const {JOBS}=load('lib/town/jobs/jobCatalog.ts'),M=load('lib/town/mapMarkers.ts'
 assert.equal(M.legendTipText('vending'),'Vending machines: spend coins on books, packs and gear');
 assert.equal(M.legendTipText('fishing'),'Fishing spots: catch fish to sell at Rosa’s market');
 assert.equal(M.legendTipText('job'),'Jobs: help out to earn coins');
-assert.equal(M.legendTipText('dive'),'Dive spots: swim in and dive under the sea to explore');
+assert.equal(M.legendTipText('dive'),'Reefs to explore: swim out to the flag and explore the shallow coral reef');
 // 3. The key: V, F, J (tap targets with a tooltip) and You; Rosa's market and "Places: tap to travel" are gone.
 {const map=read('components/IslandTravelMap.tsx'),legend=map.slice(map.indexOf('const LEGEND:'),map.indexOf('function LegendMark'));
- for(const [mark,label,kind] of [['V','Vending','vending'],['F','Fishing','fishing'],['J','Jobs','job'],['D','Dive','dive']])assert(legend.includes(`{mark:'${mark}',`)&&legend.includes(`label:'${label}',tip:'${kind}'`),`${mark} in the key with a tooltip`);
+ for(const [mark,label,kind] of [['V','Vending','vending'],['F','Fishing','fishing'],['J','Jobs','job'],['E','Explore','dive']])assert(legend.includes(`{mark:'${mark}',`)&&legend.includes(`label:'${label}',tip:'${kind}'`),`${mark} in the key with a tooltip`);
  assert(!/Rosa|Places: tap to travel/.test(legend),'no Rosa’s market or Places entry in the key');
  assert.match(map,/data-legend-tip=\{kind\}/,'key entries are buttons');
  assert.match(map,/role="tooltip"/,'one tooltip element');
@@ -116,6 +116,6 @@ assert.equal(M.legendTipText('dive'),'Dive spots: swim in and dive under the sea
 }
 // 8. Dive zones (Oct 20 2026): one D per zone (lib/town/water/diveSpots.ts) at its buoy, drawn like the F marks.
 {const o=read('components/IslandOverview.tsx');
- assert.match(o,/\{DIVE_SPOTS\.map\(spot=><g key=\{spot\.id\} aria-label=\{`\$\{spot\.name\} dive spot`\} data-dive-marker=\{spot\.id\}>\s*<circle cx=\{spot\.x\} cy=\{spot\.z\}/,'one D mark per dive zone, at the zone');
- assert(o.slice(o.indexOf('className="map-dive-markers"')).includes('>D</text>'),'the mark reads D');}
+ assert.match(o,/\{DIVE_SPOTS\.map\(spot=><g key=\{spot\.id\} aria-label=\{`\$\{spot\.name\}: a reef to explore`\} data-dive-marker=\{spot\.id\}>\s*<circle cx=\{spot\.x\} cy=\{spot\.z\}/,'one D mark per dive zone, at the zone');
+ assert(o.slice(o.indexOf('className="map-dive-markers"')).includes('>E</text>'),'the mark reads E (Explore; was D for Dive)');}
 console.log('map markers ok');

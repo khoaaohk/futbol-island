@@ -31,7 +31,8 @@ export const DIVE_SLOTS=2;
 /** The blob's widest reach over its base radius (the patch test's quick reject and the shader's). */
 export const DIVE_BLOB_MAX=1.42;
 /** The floating prompts' words. */
-export const DIVE_PROMPT='Dive',DIVE_PROMPT_LABEL='Dive here: swim under the water and explore';
+/** User, Oct 20 2026: "change the word dive to explore, it's not really diving, it's more exploring" (code ids stay dive*). */
+export const DIVE_PROMPT='Explore',DIVE_PROMPT_LABEL='Explore here: swim over the reef and look around';
 export const DIVE_REST_PROMPT='Catch your breath';
 /** Underwater, a find's prompt shows within this distance of it (m, 3D). */
 export const DIVE_FIND_RANGE=2.6;

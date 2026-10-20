@@ -22,7 +22,7 @@ const ARROWS:{dir:Direction;label:string;rotate:number}[]=[{dir:'up',label:'Move
  *  The marks on the map are plain drawings; tapping V, F or J here shows what it is (Sep 30 2026, user: "the legend above is
  *  enough"). Rosa's market and "Places: tap to travel" left the key (the market and places keep their labels on the map). */
 const LEGEND:{mark:string;fill:string;label:string;ring?:boolean;tip?:MapMarkKind}[]=[
- {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'D',fill:'#a9dcf5',label:'Dive',tip:'dive'},
+ {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},
  {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
 function LegendMark({mark,fill,ring}:{mark:string;fill:string;ring?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/><text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text></>}</svg>;}
 /** One key tooltip at a time, in dialog px: `x` the mark's centre, `top`/`bottom` its edges (above, or below if no room). */

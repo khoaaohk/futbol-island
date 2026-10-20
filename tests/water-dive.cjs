@@ -65,7 +65,7 @@ ok('placement: every zone is open sea (no land, jetty or deck in the blob), clea
 });
 
 ok('the Dive prompt range: inside the blob, swimming only, at the probe rate (10 Hz); the ocean slots take the nearest zones',()=>{
- assert.equal(D.DIVE_PROMPT,'Dive');assert.equal(S.DIVE_TICK,1/W.WATER_PROBE_HZ);
+ assert.equal(D.DIVE_PROMPT,'Explore','the user: explore, not dive');assert.equal(S.DIVE_TICK,1/W.WATER_PROBE_HZ);
  const s=S.createDiveSession();assert.equal(s.scan(.01,spot.x,spot.z,true)?.id,spot.id,'the first scan is immediate');
  assert.equal(s.scan(.05,spot.x+40,spot.z,true)?.id,spot.id,'between ticks the last answer stands');assert.equal(s.scan(.06,spot.x+40,spot.z,true),null);
  s.scan(.2,spot.x,spot.z,true);assert.equal(s.scan(.01,spot.x,spot.z,false),null,'only while swimming');
