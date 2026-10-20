@@ -1,8 +1,14 @@
 import * as T from 'three';
 import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
-const DIVE_GLSL=`uniform vec4 uDiveSpots[${DIVE_SLOTS}];uniform vec3 uDiveTint[${DIVE_SLOTS}];uniform vec4 uDiveBlob[${DIVE_SLOTS}];
-float diveBlobQ(vec2 xz,int i){vec4 sp=uDiveSpots[i];vec2 d=xz-sp.xy;float l=length(d);if(l>sp.z*${DIVE_BLOB_MAX.toFixed(2)})return 2.;
+// Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
+// the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
+// reaches DIVE_BLOB_MAX x fade (q is meaningful there; 2 = far).
+/** The see-through shoal look: the soft edge's start / end (in blob q, 1 = the dive outline), how much the edge noise moves it, the
+ *  ocean's alpha at the shoal's heart (blended program only; the shore window is .14-.42) and the opaque-path tint strength. */
+export const DIVE_SHOAL={inner:.25,fade:1.32,wobble:.34,alpha:.2,tint:.82} as const;
+const DIVE_GLSL=`uniform vec4 uDiveSpots[${DIVE_SLOTS}];uniform vec3 uDiveTint[${DIVE_SLOTS}];uniform vec4 uDiveBlob[${DIVE_SLOTS}];uniform float uDiveClear[${DIVE_SLOTS}];
+float diveBlobQ(vec2 xz,int i){vec4 sp=uDiveSpots[i];vec2 d=xz-sp.xy;float l=length(d);if(l>sp.z*${(DIVE_BLOB_MAX*DIVE_SHOAL.fade).toFixed(2)})return 2.;
  vec4 b=uDiveBlob[i];float a=atan(d.y,d.x);return l/(sp.z*(1.+b.x*sin(2.*a+b.w)+b.y*sin(3.*a+1.7*b.w+1.)+b.z*sin(5.*a+2.3*b.w+2.)));}
 `;
 
@@ -42,6 +48,8 @@ export const WATER_UNIFORMS={
  /** Diving spots (water P2, lib/town/water/diveSpots.ts): per slot (x, z, radius, strength 0 = off) and the patch colour. Written
   *  once when the island is built (setDiveSpots); the ocean tints a soft lighter disc there. Ocean only (not SHORE_GLSL). */
  uDiveSpots:{value:Array.from({length:DIVE_SLOTS},()=>new T.Vector4(0,0,1,0))},uDiveTint:{value:Array.from({length:DIVE_SLOTS},()=>new T.Color())},uDiveBlob:{value:Array.from({length:DIVE_SLOTS},()=>new T.Vector4())},
+ /** Per slot 0..1: how see-through the shoal is (lib/graphics/divePreview.ts eases it while its seabed preview draws; blended program only). */
+ uDiveClear:{value:Array.from({length:DIVE_SLOTS},()=>0)},
 };
 /** Light the diving spots' patches on the ocean: one write per slot, at build time only (never per frame). Unused slots are off. */
 export function setDiveSpots(spots:readonly {x:number;z:number;radius:number;blob:number;tint:string}[]){
@@ -224,6 +232,13 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
     if(uShore>.999&&shoreEdge(vWaterXZ)>.999){float cd=shoreSample(vWaterXZ).r;if(cd>.02&&cd<14.9){gl_FragColor=vec4(0.,0.,0.,1.);return;}}
     float waterStreak=0.,waterLobe=.5;vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
+    // Dive shoals (water P2; Oct 20 2026 see-through rework): diveK = the shoal's weight here (1 at the heart, dissolving over a wide
+    // band broken by low-frequency noise: no rim, no hard line), diveClr = how see-through (uDiveClear, the preview's seabed under it).
+    // DIVE_SLOTS (2) nearest zones; a distance reject per slot, the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
+    float diveK=0.,diveClr=0.;vec3 diveT=vec3(0.);
+    for(int i=0;i<${DIVE_SLOTS};i++){vec4 sp=uDiveSpots[i];if(sp.w>0.){float q=diveBlobQ(vWaterXZ,i);if(q<${DIVE_SHOAL.fade.toFixed(2)}){
+     float qn=q+(clearWinW(vWaterXZ,.19,.31,7.)-.5)*${DIVE_SHOAL.wobble.toFixed(2)}*smoothstep(.3,.8,q),k=sp.w*(1.-smoothstep(${DIVE_SHOAL.inner.toFixed(2)},${DIVE_SHOAL.fade.toFixed(2)},qn));k*=k*(3.-2.*k);
+     if(k>diveK){diveK=k;diveT=uDiveTint[i];}diveClr=max(diveClr,uDiveClear[i]*k);}}}
     #ifdef USE_MAP
     // Two drifting layers of the painted ripple tile (one on phones and on the still path), their strokes bent by the field's
     // noise so they read as wavy ripples instead of long straight streaks.
@@ -265,27 +280,26 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      if(reachS>0.){float t=uWaterTime;
       float k1=1.-smoothstep(.25,.6,pxS),st=k1*waterRibbon(mat2(.86,.51,-.51,.86)*vWaterXZ,nS,t,1.,pxS)+.04*(1.-k1);
       if(uWaterDetail>1.5){float k2=1.-smoothstep(.4,.9,pxS);st=max(st,.6*k2*waterRibbon(mat2(.93,.37,-.37,.93)*vWaterXZ+vec2(37.,11.),-nS,-t*.8,1.45,pxS));}
-      float nearS=1.-smoothstep(10.,45.,d);// Oct 19 2026: the net reads strongest in the shallows by the beaches
+      float nearS=max(1.-smoothstep(10.,45.,d),.6*diveK);// the shoals get the shallows' light net too (no extra reads)// Oct 19 2026: the net reads strongest in the shallows by the beaches
       // A low camera (the fishing view, ~5 m up; Oct 19 2026 one shore) sees the ribbons big and near: they read as a white fog
       // over the clear window, so they fade to a hint below ~18 m of camera height (the walking / flying views are unchanged).
       // A high (jetpack) camera sees many cells at once: the net eases to ~60% above ~20 m so it never becomes a sheet.
       waterStreak=st*reachS*(.75+.25*waterLobe)*(.2+1.3*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
      #endif
-     // Dive zones (water P2; Oct 20 2026: an irregular blob, bigger): a soft lighter turquoise patch with a faint brighter rim, so it
-     // reads as "you can dive here" from the follow camera and the beach. DIVE_SLOTS (2) nearest zones; a distance reject per slot,
-     // the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
-     for(int i=0;i<${DIVE_SLOTS};i++){vec4 sp=uDiveSpots[i];if(sp.w>0.){float q=diveBlobQ(vWaterXZ,i);if(q<1.){
-      float k=sp.w*(1.-smoothstep(.62,1.,q));diffuseColor.rgb=mix(diffuseColor.rgb,uDiveTint[i]*(.88+.12*ripple.r),k*.72);
-      diffuseColor.rgb+=sp.w*smoothstep(.8,.92,q)*(1.-smoothstep(.92,1.,q))*vec3(.1,.13,.12);}}}
+     // Dive shoals: the shore's shallow turquoise (the waterline colour, a touch of the zone's tint) over the heart, sinking back to the
+     // sea's teal through the soft band, the ripple tile's light strokes on top. Opaque path (no preview): this lighter shoal alone.
+     if(diveK>0.){vec3 shoal=mix(vec3(.05,.42,.53),mix(vec3(.13,.52,.56),diveT,.1),smoothstep(.15,.85,diveK));
+      diffuseColor.rgb=mix(diffuseColor.rgb,shoal*(.9+.1*ripple.r),diveK*${DIVE_SHOAL.tint.toFixed(2)});
+      diffuseColor.rgb+=diveK*smoothstep(.86,1.,ripple.r)*vec3(.05,.07,.07);}
     }`)
    // Swimming (swimClear.ts) and the clear window (clearWindow.ts): only the blended program (no OPAQUE define, used while either
    // is open) writes an alpha: it follows depth (clearer over the sand, bluer further out) and rises on the light streaks, so they
    // read as ribbons on the surface above the coral (they replace the window's old stretched light bands: one read fewer).
    .replace('#include <opaque_fragment>',`vec3 waterGlim=waterGlimmer(vWaterXZ,d,waterLobe);
     #ifndef OPAQUE
-    {float wm=clearWinMask(vWaterXZ,d);outgoingLight+=min(waterStreak,1.2)*wm*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
-     diffuseColor.a=min(swimClearAlpha(vWaterXZ,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d)));
+    {float wm=clearWinMask(vWaterXZ,d);outgoingLight+=min(waterStreak,1.2)*max(wm,diveClr)*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
+     diffuseColor.a=min(min(swimClearAlpha(vWaterXZ,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d))),1.-diveClr*${(1-DIVE_SHOAL.alpha).toFixed(2)});
      diffuseColor.a+=(1.-diffuseColor.a)*min(waterStreak*.2,.25)*(1.-uSwimClear*(1.-smoothstep(4.,${SWIM_CLEAR.radius.toFixed(1)},distance(vWaterXZ,uSwimXZ))));}
     #endif
     // Glimmer last, ON the surface: over the see-through window the blend would scale it by the low alpha, so the alpha rises

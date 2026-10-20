@@ -5624,3 +5624,32 @@ switcher still fly out of a zone; "build the diving zones in these areas" (7 map
   zone, only past the swim range), so a jetpack Drop in reaches them.
 - Validation: tests/water-dive.cjs (zones, blob containment, placement, depth clamping, breath by depth, room caps, jetpack take-off),
   full suite 218/218, build, headless Chrome (390x844 and 1280x800): 0 console errors. **No iPhone heat test has been done.**
+
+## Dive shoals see-through: shallow coral seen from the surface (Oct 20 2026, local, not deployed)
+
+User: "these dive spots need to look more like the shore where it's see through", then "blend in more on the edges ... it needs to
+feel like a shallow coral area". Before, each patch was an opaque milky tint with a grey rim band. The dive room is a sealed scene
+built only on Dive, so nothing lay under the patch.
+
+- Ocean shader (`waterSurface.ts` `DIVE_SHOAL`, same 2 slots, key still `island-ocean-water-v9`): the patch weight `diveK`
+  dissolves from q .25 to q 1.32 of the dive outline. Low-frequency sine noise (`clearWinW`, ALU only, no texture read) moves the
+  edge. The rim band is gone. The colour is the shore's waterline turquoise with 10% of the zone tint. The shallows light net
+  reaches the shoal (`nearS` takes the max with `.6*diveK`, no extra read). In the blended program only, `uDiveClear[slot]` (one float per slot)
+  lowers the alpha to `DIVE_SHOAL.alpha` (.2) at the heart, close to the shore window's .14-.42.
+- Seabed preview (`lib/graphics/divePreview.ts`): one merged non-indexed mesh per slot zone. It uses one shared MeshBasicMaterial with
+  vertex colours, no fog and no textures, and bakes the shade and a red-first absorption into the colours. The mesh holds:
+  - a blob-shaped sand shelf, 8 rings × 48 segments, shoaling to 1.25 m at the heart, with dappled sand and coral/rock blotches;
+  - coral heads and rocks, 2.8 × the radius, denser toward the heart and clamped under the surface;
+  - the hull outline on wreck zones.
+
+  Measured: 2110 triangles for a radius-19 wreck zone and 1536 for radius 12.5; the cap is 2600 per zone (tests/dive-see-through.cjs).
+  It costs at most 2 draws. Each zone's mesh is built once on first need and kept (≤ 7). Near a beach the shelf rides just over the shore
+  window's seabed and tucks under it past the outline, so there is no seam. Its rim sinks below the 4.2 m bed floor and fades to the
+  sea's teal.
+- Gate: the view range is 170 / 120 / 80 m at tiers 0 / 1 / 2. The preview is off at effective tiers 3-4 and Battery saver (a phone
+  at tier 2 counts as 3), out of range and while diving. Off means: meshes hidden, `createOceanBlend` released, the opaque soft shoal
+  only. When on, it holds the same blended ocean state as the shore window and the swim disc. It adds no pass. Per frame: two
+  distance tests and two uniform writes.
+- Validation: tests/dive-see-through.cjs, water-dive, swim-clear (alpha pin updated to `min(..., 1.-diveClr*.80)`), heat-water and
+  water-swim pass. Headless before/after shots (top-down and the near camera, 390x844 and 1280x800) show 0 console errors.
+  **No iPhone heat test has been done.**
