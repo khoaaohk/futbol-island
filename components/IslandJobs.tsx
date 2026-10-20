@@ -10,7 +10,7 @@ import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 import HudSlot from './HudStack';
 import {useVending} from '@/lib/town/vendingWallet';
 import {getJobRuntime,subscribeJobRuntime,emptyJobView,type JobView} from '@/lib/town/jobs/jobScene';
-import {jobById} from '@/lib/town/jobs/jobCatalog';
+import {jobById,jobClosedNote} from '@/lib/town/jobs/jobCatalog';
 import {islandJobWallet,islandMarket} from '@/lib/town/jobs/islandWallet';
 import {readJobLedger,FIRST_JOB_BONUS,type JobId} from '@/lib/town/jobs/jobEconomy';
 import {goodById} from '@/lib/town/market/goods';
@@ -116,6 +116,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  const runtime=getJobRuntime(),active=view.active?jobById(view.active.id):null,offer=view.near?jobById(view.near):null,introJob=intro?jobById(intro):null;
  const start=(id:JobId)=>{if(view.active&&runtime?.run){busyNote();setIntro(null);return;}onRequestWalk();if(runtime&&!runtime.start(id)){busyNote();setIntro(null);return;}setIntro(null);setPayday(null);};
  const preview=introJob?islandJobWallet.preview(introJob.id):null;
+ // The Summit Isle bug jobs run by day (Bug squad) or at night (Firefly floodlights): the card says when to come back.
+ const introClosed=!!introJob&&!!runtime&&!runtime.isOpen(introJob.id);
  const phaseText=()=>{if(!active||!view.active)return '';const a=view.active;if(a.hint)return a.hint;
   if(a.phase==='deliver')return active.kind==='garden'?`Basket full! Tip it into the ${active.deliver?.label} by the gate.`:`Bag full! Take it to the ${active.deliver?.label} by the sign.`;
   if(active.kind==='rebound')return a.phase==='shots'?`Shoot from the glowing circle into the painted target square (${a.value}/${a.total}).`:'Face the wall and press Juggle.';
@@ -131,8 +133,9 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p className={styles.eyebrow}>{introJob.role} · {introJob.place}</p>
    <h2 id="job-intro-title">{introJob.title}</h2>
    <p>{introJob.intro}</p>
+   {introClosed&&<p className={styles.note} data-job-closed>{jobClosedNote(introJob)}</p>}
    <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
-   <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} onClick={()=>start(introJob.id)}>Start job</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button></div>
+   <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button></div>
   </section></HudSlot>}
   {active&&view.active&&(()=>{const a=view.active,count=a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,
     unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=panel==='chip';

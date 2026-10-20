@@ -26,6 +26,10 @@ export const countCannonSit=()=>count('su:cannon_sit');
 export const countCannonHit=()=>count('su:cannon_hit');
 /** A Summit Isle hidden ball collected (lib/graphics/coinHunt.ts, Oct 15 2026): which one is never sent. */
 export const countSummitBall=()=>count('su:ball_find');
+/** The Summit Isle bug jobs (lib/town/jobs/bugScout.ts, Oct 20 2026): a bug caught in the jar (Bug squad by day, a firefly at
+ *  night) and a shift's jar released at the drop-off (a finished shift). Totals only: never which bug or where. */
+export const countBugCatch=(kind:'bug'|'firefly')=>count(kind==='bug'?'su:bug_catch':'su:firefly_catch');
+export const countBugShift=(kind:'bug'|'firefly')=>count(kind==='bug'?'su:bug_squad':'su:firefly_shift');
 /** A kicked ball dropping fruit vs the player shaking the tree by hand (lib/graphics/fruitTrees.ts drop() call sites). */
 export const countFruitShake=(kind:FruitKind,method:'hand'|'ball')=>count(`su:fruit_${kind}:${method}`);
 const FISH_SPOT_EVENT:Record<string,string>={'summit-cove':'su:fish_cove','summit-palm':'su:fish_palm','summit-lookout':'su:fish_look','summit-ledge':'su:fish_ledge'};

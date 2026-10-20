@@ -61,7 +61,7 @@ export const FORAGE_FRUIT_KINDS=['mango','orange','coconut','banana','papaya','l
  * Summit Isle events (Oct 15 2026, lib/analytics/summitEvents.ts): how players arrive, Summit Kick rounds played (its best
  * score is read straight from the arcade leaderboard instead: lib/arcade/kickAdminMetrics.ts), zipline rides, fruit
  * shaken by kind and method, catches at the four summit fishing spots, the summit kiosk, Summit Isle's hidden balls, the
- * painting easel and the Ball Cannon.
+ * painting easel, the Ball Cannon and the bug jobs (Bug squad / Firefly floodlights, Oct 20 2026).
  */
 export const SUMMIT_COUNT_EVENTS=[
  ['arrive_walk','Arrived via the Sandbar (on foot or a ride)'],['arrive_fly','Arrived by jetpack or parachute'],
@@ -72,6 +72,9 @@ export const SUMMIT_COUNT_EVENTS=[
  ['ball_find','Hidden ball found on Summit Isle'],
  ['easel_open','Painting easel: sat down to paint'],['easel_save','Painting easel: painting saved'],
  ['cannon_sit','Ball cannon: sat in the seat'],['cannon_hit','Ball cannon: clay disc knocked out'],
+ // The bug jobs (Oct 20 2026, lib/town/jobs/bugScout.ts): catches and finished shifts, day and night.
+ ['bug_catch','Bug squad: bug caught (day)'],['bug_squad','Bug squad: shift finished, squad released'],
+ ['firefly_catch','Firefly floodlights: firefly caught (night)'],['firefly_shift','Firefly floodlights: shift finished, fireflies released'],
 ] as const;
 /** `su:fruit_<kind>:hand` / `:ball` — the two ways a fruit tree is shaken (lib/graphics/fruitTrees.ts drop()). */
 export const FRUIT_SHAKE_IDS:readonly string[]=FORAGE_FRUIT_KINDS.flatMap(k=>[`fruit_${k}:hand`,`fruit_${k}:ball`]);

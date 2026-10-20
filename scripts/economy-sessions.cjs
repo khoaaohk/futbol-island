@@ -92,7 +92,8 @@ function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^
 const pick=(entries,r)=>{const tot=entries.reduce((n,[,w])=>n+w,0);let v=r()*tot;for(const [k,w] of entries){v-=w;if(v<=0)return k;}return entries[entries.length-1][0];};
 const median=a=>{const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2;};
 /** Jobs in the order a kid would pick them (best coins a minute first); a rotation keeps every shift at full pay. */
-const jobOrder=cfg=>[...jobs.JOB_IDS].sort((a,b)=>cfg.jobPay[b]/jobs.jobShiftMinutes(b)-cfg.jobPay[a]/jobs.jobShiftMinutes(a));
+// Only the jobs that existed in that config (the 'before' table predates Summit Isle's bug jobs, 20 Oct 2026).
+const jobOrder=cfg=>[...jobs.JOB_IDS].filter(id=>cfg.jobPay[id]!=null).sort((a,b)=>cfg.jobPay[b]/jobs.jobShiftMinutes(b)-cfg.jobPay[a]/jobs.jobShiftMinutes(a));
 const fishTable=spots=>{const w=new Map();for(const s of spots){const ent=Object.entries(s.weights),tot=ent.reduce((n,[,x])=>n+x,0);for(const [id,x] of ent)w.set(id,(w.get(id)||0)+x/tot/spots.length);}return [...w];};
 const FRUIT=forage.FRUIT_KINDS??['mango','orange','coconut'];
 const GARDEN_GOODS=garden.GARDEN_SPOTS.map(s=>s.good);
@@ -174,7 +175,7 @@ function fullRates(cfg){
  const FT=fishTable(cfg.fishSpots),fishEV=FT.reduce((n,[id,w])=>n+w*cfg.fishValue(fish.fishById(id)),0);
  const fruitEV=FRUIT.reduce((n,id)=>n+cfg.produceValue(id),0)/FRUIT.length,gardenEV=GARDEN_GOODS.reduce((n,id)=>n+cfg.produceValue(id),0)/GARDEN_GOODS.length;
  const pool=beachPool(),tot=pool.reduce((n,[,w])=>n+w,0),beachEV=cfg.beachValue&&tot?pool.reduce((n,[f,w])=>n+w/tot*cfg.beachValue(f),0):0;
- const jobRates=jobs.JOB_IDS.map(id=>cfg.jobPay[id]/jobs.jobShiftMinutes(id));
+ const jobRates=jobs.JOB_IDS.filter(id=>cfg.jobPay[id]!=null).map(id=>cfg.jobPay[id]/jobs.jobShiftMinutes(id));
  const arcade=Object.fromEntries(['runner','pinball','tennis','live'].map(g=>[g,(E.ARCADE_COIN_CAPS[g]*ASSUME.arcadeSkill.typical-cfg.prices.arcade)/(g==='live'?ASSUME.min.liveRound:ASSUME.min.arcadeRound)]));
  const r=x=>+x.toFixed(2);
  return {quiz:r((cfg.learn.quiz+cfg.learn.quizPerfect*ASSUME.perfectFirstTry)/ASSUME.min.lesson),ball:r(cfg.learn.ball/ASSUME.min.ball),

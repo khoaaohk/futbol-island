@@ -14,7 +14,7 @@ import {BarList,ChartCard,fmtInt,type BarRow} from './charts';
 import styles from './admin.module.css';
 
 /** The Summit Isle pastimes shown together (lib/analytics/countIds.ts SUMMIT_COUNT_EVENTS); the rest have their own tile or card. */
-const SUMMIT_FUN=['su:ball_find','su:easel_open','su:easel_save','su:cannon_sit','su:cannon_hit'];
+const SUMMIT_FUN=['su:ball_find','su:easel_open','su:easel_save','su:cannon_sit','su:cannon_hit','su:bug_catch','su:bug_squad','su:firefly_catch','su:firefly_shift'];
 const EMPTY='No activity in this range yet. It starts once supabase/migrations/20261015_analytics_summit_kit.sql has run, and a visit’s numbers arrive after the player leaves the tab, or every few minutes while they play.';
 const show=(c:Cell)=>c===null?'<5':fmtInt(c);
 const rowsOf=(rows:CountRow[]):BarRow[]=>rows.map(r=>({key:r.id,label:r.label,value:r.value??0,text:r.value===null?'<5':undefined,detail:r.value===null?'fewer than 5 sessions':undefined}));
@@ -65,7 +65,7 @@ export default function SummitKitSection({report}:{report:Report}){
     table={{columns:['Fruit · method','Count'],rows:fruitRows.map(r=>[r.label,r.text??r.value])}}>
     <BarList rows={fruitRows} unit="times shaken" share={false} limit={fruitRows.length}/>
    </ChartCard>
-   <CountCard title="Summit Isle hidden balls, easel and cannon" subtitle="Hidden balls found on Summit Isle, the painting easel (sat down, saved) and the Ball Cannon (sat down, discs knocked out)"
+   <CountCard title="Summit Isle hidden balls, easel, cannon and bugs" subtitle="Hidden balls found on Summit Isle, the painting easel (sat down, saved), the Ball Cannon (sat down, discs knocked out) and the bug jobs (Bug squad by day, Firefly floodlights at night: catches and finished shifts)"
     rows={summitRows.filter(r=>SUMMIT_FUN.includes(r.id))}/>
    <CountCard title="Beach finds picked up" subtitle="Beachcombing by island (totals only, never which find or where)" rows={beachRows}/>
   </div>

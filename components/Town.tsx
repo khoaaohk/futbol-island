@@ -477,7 +477,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     const focusArbiter=createFocusArbiter();let hudFocusNow:HudFocus|null=null;// HUD stack arbiter (lib/ui/hudStack.ts), decided on the HUD tick
     let coinHintShown=false,seaNoteShown=false,pierNoteTimer:ReturnType<typeof setTimeout>|undefined;const pierTarget=createPierTarget(scene);// East Pier shooting ring (eastPierChallenge.ts): static, moved only on a hit.
 const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHintShown=!!text;setCoinNear(text);},c=>{earnForBall(c);setBallLessons(queue=>queue.includes(c.id)?queue:[...queue,c.id]);});
-    const jobs=createJobScene(scene);// island jobs + Community Garden (docs/island-jobs.md)
+    const jobs=createJobScene(scene,{timeOfDay:()=>timeRef.current});// island jobs + Community Garden (docs/island-jobs.md)
     let suppressInitialArrival=returningFromArcade;const characterArrival=createCharacterArrival(scene);arrivalRestartRef.current=()=>{suppressInitialArrival=false;characterArrival.restart();wakeLoopRef.current();};
     const camera=new T.PerspectiveCamera(40,1,1,500);if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
     const hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0);scene.add(hemi);

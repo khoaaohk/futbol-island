@@ -38,6 +38,10 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  air:'M3 9h11a3 3 0 1 0-3-3 M3 14h15a3 3 0 1 1-3 3 M3 19h6',
  check:'M4 12l5 5L20 6',
  hammer:'M13 7 4 20 M10 3l9 9 2-2-9-9z',
+ // Summit Isle bug jobs (Oct 20 2026): a butterfly net, a jar with fireflies, and an open jar with bugs flying out.
+ net:'M15 9a5 5 0 1 0-10 0 5 5 0 0 0 10 0 M13.5 12.5 21 20 M7 7l6 4 M7 11l6-4',
+ jar:'M8 3h8 M7 6h10v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z M10 11h.01 M14 13h.01 M11 16h.01',
+ release:'M7 11h10v8a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z M12 8V3 M9 5l3-2 3 2 M5 8 3 5 M19 8l2-3',
  crate:'M3 10h18v10H3z M3 14h18 M8 10V7h8v3 M12 4v6 M9 7l3 3 3-3',
  take:'M3 14h18v6H3z M12 11V3 M9 6l3-3 3 3 M8 17h8',
  // Zipline ride actions (Oct 14 2026, lib/town/zipline.ts ZIP_BUTTONS): tuck (knees up, speed lines), spin (a turn under the bar),

@@ -48,7 +48,7 @@ function environment(shared){
  // of the other jobs instead of the bottom (it paid 8: ~2 a minute). Same tiers: half pay 13, then the 1-coin tip.
  {assert.equal(JOB_BASE_PAY['wall-rebounds'],16,'Wall rebounds pays 16 (26 until the 14 Oct 2026 rebalance)');assert.equal(E.JOB_MINUTES['wall-rebounds'],3.5);
   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),h=others.length>>1,mid=others.length%2?others[h]:(others[h-1]+others[h])/2;
-  assert.equal(others.length,12,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
+  assert.equal(others.length,14,'eleven short jobs (incl. Summit Isle\'s trail clean-up, 12 Oct 2026) + the Garden shift (30 Sep 2026) + Summit Isle\'s Bug squad and Firefly floodlights (20 Oct 2026)');assert(Math.abs(rate('wall-rebounds')-mid)/mid<=.1,`wall rebounds ${rate('wall-rebounds').toFixed(2)} coins/min is within 10% of the other jobs' median ${mid.toFixed(2)}`);
   assert(rate('wall-rebounds')>others[0]&&rate('wall-rebounds')<others[others.length-1],'neither the lowest nor the highest per minute');
   assert(8/E.jobShiftMinutes('wall-rebounds')<others[0],'the old pay (8) was the lowest per minute: the reason for the raise');
   const short=JOB_IDS.filter(id=>id!=='wall-rebounds').map(E.jobShiftMinutes);assert(Math.abs(short.reduce((a,b)=>a+b,0)/short.length-1.5)<.05,'the short jobs still average 1.5 min a shift (the sim assumption)');
@@ -99,8 +99,8 @@ function environment(shared){
   assert.match(cones.intro,/beside the pitch, so the match can keep going/);assert(Math.hypot(cones.board.x-t[4].x,cones.board.z-t[4].z)<8,'the sign stands by the session');
   for(const q of t)assert(!R.outsideJobArea(cones,q.x,q.z),'every mark is inside the job area');}
  // The Coral Cay Farm job (Sep 29 2026): 10 jobs in the catalog, a nutrition lesson with its source, pay in the 7–10 band.
- // Summit Isle's ranger job (12 Oct 2026) makes 13.
- assert.equal(C.JOBS.length,13,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up');
+ // Summit Isle's ranger job (12 Oct 2026) makes 13; its two bug jobs (20 Oct 2026, day and night) make 15.
+ assert.equal(C.JOBS.length,15,'nine island jobs + Harvest day + Match-day snacks on Coral Cay + the Garden shift + Summit Isle\'s Trail clean-up, Bug squad and Firefly floodlights');
  {const snacks=C.jobById('match-day-snacks');assert(snacks&&snacks.kind==='sort'&&snacks.task.style==='crates'&&snacks.targets.length===3&&snacks.place==='The Farm, Coral Cay','Match-day snacks: sort six snacks into three crates');assert.match(snacks.lessonSource,/sportsdietitians/);assert.equal(JOB_BASE_PAY['match-day-snacks'],5);}
  {const farm=C.jobById('farm-harvest');assert(farm&&farm.kind==='harvest'&&farm.prop==='produce'&&farm.task.type==='harvest'&&farm.task.fruitGoal===5&&farm.task.vegGoal===5&&farm.deliver&&farm.deliver.label==='farm stand','Harvest day: shake 5 fruit and pull/pick/snip 5 veg, then unload at the farm stand');
   const goodsReg=env.load('lib/town/market/goods.ts');assert(farm.task.spots.every(sp=>goodsReg.goodById(sp.good)?.kind==='produce'),'every harvest crop is a sellable produce good');
@@ -514,7 +514,7 @@ function environment(shared){
   // Pay: 6 (+4 the first time), half 3, then tips (10 / 5 until the 14 Oct 2026 rebalance); per-minute parity with the other jobs; the daily ceiling stays bounded.
   {let l=E.emptyJobLedger(day);const p=[];for(let i=0;i<6;i++){const x=E.jobPayout('garden-shift',l);p.push(x.coins);l=E.recordCompletion(l,'garden-shift',x.coins,60);}
    same(p,[10,6,3,3,1,1],'first-time bonus, full, half, half, then 1-coin tips');assert.equal(E.JOB_MINUTES['garden-shift'],1);
-   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='garden-shift'&&id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),mid=(others[4]+others[5])/2;
+   const rate=E.jobCoinsPerMinute,others=JOB_IDS.filter(id=>id!=='garden-shift'&&id!=='wall-rebounds').map(rate).sort((a,b)=>a-b),h=others.length>>1,mid=others.length%2?others[h]:(others[h-1]+others[h])/2;
    assert(Math.abs(rate('garden-shift')-mid)/mid<=.1,`garden shift ${rate('garden-shift').toFixed(2)} coins/min within 10% of the other short jobs' median ${mid.toFixed(2)}`);
    assert.match(E.payMessage('garden-shift',l),/garden crate is full/);}
   // The gardener's share: 2 / 1 / 1 items from the picks, worth ≤ the pay, granted once per shift.
@@ -586,16 +586,19 @@ function sceneEnvironment(shared){
 async function auditRegressions(){
  const T=require('three'),env=sceneEnvironment(),S=env.load('lib/town/jobs/jobScene.ts'),C=env.load('lib/town/jobs/jobCatalog.ts'),R=env.load('lib/town/jobs/jobRules.ts'),V=env.load('lib/town/venues.ts'),JM=env.load('lib/town/jobs/jobMoves.ts');
  const floor=(x,z)=>V.fieldSurfaceHeight(x,z),at=(q)=>({x:q.x,y:floor(q.x,q.z),z:q.z}),DT=1/60;
- const make=()=>S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-09-30T10:00:00')});
+ // The island's time of day (Oct 20 2026): the Summit Isle bug jobs run by day or at night only; `tod` follows the job under test.
+ let tod='day';const timeFor=j=>j.when==='night'?'night':'day';
+ const make=()=>S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-09-30T10:00:00'),timeOfDay:()=>tod});
  const frames=(api,p,seconds,hands)=>{for(let t=0;t<seconds-1e-9;t+=DT){api.update(DT,p,null,true,true,false);if(hands&&api.holding)api.holdProps(hands(),hands(),0);}};
  // A2: a job runs, the player walks to another job's sign inside its area: no offer, `other` names it, start() refuses.
  {const pairs=[];for(const a of C.JOBS)for(const b of C.JOBS)if(a!==b&&!R.outsideJobArea(a,b.board.x,b.board.z))pairs.push([a,b]);
   assert(pairs.length>0,'some signs sit inside another job\'s area (Wall rebounds / Offside)');
-  for(const [a,b] of pairs){const api=make();frames(api,at(a.board),.5);assert.equal(api.getView().near,a.id,`${a.id}: the sign offers`);
+  for(const [a,b] of pairs){tod=timeFor(a);const api=make();frames(api,at(a.board),.5);assert.equal(api.getView().near,a.id,`${a.id}: the sign offers`);
    assert.equal(api.start(a.id),true);frames(api,at(b.board),.6);const v=api.getView();
    assert.equal(api.run?.def.id,a.id,`${a.id} still runs at the ${b.id} sign`);assert.equal(v.near,null,`no ${b.id} offer while ${a.id} runs`);assert.equal(v.other,b.id,'G there can explain');
    assert.equal(api.start(b.id),false,`start(${b.id}) refuses while ${a.id} runs`);assert.equal(api.run?.def.id,a.id,'the running job is untouched');assert.equal(api.getView().active?.id,a.id);
-   api.quit();frames(api,at(b.board),.6);assert.equal(api.getView().near,b.id,'after Stop job the other sign offers again');assert.equal(api.start(b.id),true);api.dispose();}
+   api.quit();tod=timeFor(b);frames(api,at(b.board),.6);assert.equal(api.getView().near,b.id,'after Stop job the other sign offers again');assert.equal(api.start(b.id),true);api.dispose();}
+  tod='day';
   const jobsSrc=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');
   assert.match(jobsSrc,/if\(view\.active\)\{if\(view\.other\)\{e\.preventDefault\(\);busyNote\(\);\}return;\}/,'G during a job shows the note instead of opening another job');
   assert.match(jobsSrc,/if\(runtime&&!runtime\.start\(id\)\)\{busyNote\(\);/,'Start job that is refused shows the note');

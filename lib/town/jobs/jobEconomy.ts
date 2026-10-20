@@ -5,8 +5,8 @@
  */
 import {signalExplore} from '../exploreSignals';
 import {JOBS,JOB_PAY,STARTER_COINS as STARTER} from '../../economy';
-export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor'|'farm-harvest'|'match-day-snacks'|'garden-shift'|'trail-cleanup';
-export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor','farm-harvest','match-day-snacks','garden-shift','trail-cleanup'];
+export type JobId='leaf-rake'|'wall-rebounds'|'ball-kid'|'cone-setup'|'line-painter'|'court-cleanup'|'offside-flag'|'ball-pump'|'goal-anchor'|'farm-harvest'|'match-day-snacks'|'garden-shift'|'trail-cleanup'|'bug-scout'|'firefly-floodlights';
+export const JOB_IDS:readonly JobId[]=['leaf-rake','wall-rebounds','ball-kid','cone-setup','line-painter','court-cleanup','offside-flag','ball-pump','goal-anchor','farm-harvest','match-day-snacks','garden-shift','trail-cleanup','bug-scout','firefly-floodlights'];
 /** One-time welcome coins: exactly one 40-coin card pack, or a few arcade plays or a small vending item (user, Sep 27 2026;
  *  raised 30 → 40 with pack prices in the economy pass, docs/economy/ECONOMY_PROPOSAL.md, 28 Sep 2026). */
 export const STARTER_COINS=STARTER;// lib/economy.ts
@@ -36,9 +36,10 @@ export const JOB_BASE_PAY:Record<JobId,number>=JOB_PAY;
  * passes + ~2.5 min of shots. Garden shift: ~95 m of paths between 8 spread-out picks and the crate (~26 s) plus 8 pick poses,
  * a not-ripe check and the crate (~25 s) + looking around for ripe ones (~10 s) ≈ 1 min. Pump the balls (1 Oct 2026): the walk to
  * the station (~3 s), ~78 strokes to reach five narrowing green zones plus a few top-ups after the slow leak or an over-pump (~85
- * taps at ~3 a second ≈ 28 s), five gauge checks and Ball ready presses (~20 s) ≈ 0.85 min. Used only for pay balance (per-minute parity) and the economy sim, never at runtime.
+ * taps at ~3 a second ≈ 28 s), five gauge checks and Ball ready presses (~20 s) ≈ 0.85 min. Bug squad / Firefly floodlights (Summit Isle, Oct 20 2026): ~150 m round the meadow from
+ * the sign (~40 s), eight net / jar holds (~0.8 s each) plus circling a fluttering bug, and the release ≈ 0.9 min. Used only for pay balance (per-minute parity) and the economy sim, never at runtime.
  */
-export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.85,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1,'trail-cleanup':.7};
+export const JOB_MINUTES:Record<JobId,number>={'leaf-rake':1.2,'wall-rebounds':3.5,'ball-kid':1.8,'cone-setup':.45,'line-painter':.5,'court-cleanup':.85,'offside-flag':.8,'ball-pump':.85,'goal-anchor':.5,'farm-harvest':1.75,'match-day-snacks':.7,'garden-shift':1,'trail-cleanup':.7,'bug-scout':.9,'firefly-floodlights':.9};
 /** Per shift, on top of the play: walk to the sign, the intro card and the payday card. With it, the short jobs average 1.5 min a
  *  shift, the economy sim's long-standing job assumption. */
 export const JOB_SHIFT_OVERHEAD_MINUTES=.6;
@@ -67,7 +68,7 @@ export function jobPayout(id:JobId,ledger:JobLedger):{coins:number;tier:PayTier;
 }
 /** The friendly line under the payout. Never guilt, never a countdown. */
 export function payMessage(id:JobId,ledger:JobLedger):string{
- const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!','farm-harvest':'The harvest is in and the stand is full!','match-day-snacks':'Every snack is in the right crate!','garden-shift':'The garden crate is full for the market!','trail-cleanup':'The trail is clear for the next hiker!'};
+ const next=payTier(ledger.today[id]??0),done:Record<JobId,string>={'leaf-rake':'The pitch is spotless!','wall-rebounds':'The wall needs a rest!','ball-kid':'Every ball is back in play!','cone-setup':'The coach has every drill ready!','line-painter':'The lines are bright and fresh!','court-cleanup':'The court is sparkling!','offside-flag':'The linesman needs a rest!','ball-pump':'Every ball is match-ready!','goal-anchor':'Both goals are safe and steady!','farm-harvest':'The harvest is in and the stand is full!','match-day-snacks':'Every snack is in the right crate!','garden-shift':'The garden crate is full for the market!','trail-cleanup':'The trail is clear for the next hiker!','bug-scout':'The whole Bug squad is back in the meadow!','firefly-floodlights':'The fireflies lit up the lantern goal!'};
  if(next==='full')return 'Full pay for the next shift too.';
  if(next==='half')return `${done[id]} The next shifts today pay half — try a different job for full pay.`;
  return `${done[id]} Come back tomorrow for full pay. You can still help for a 1-coin thank-you tip.`;

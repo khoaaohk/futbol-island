@@ -9,7 +9,7 @@
 import type {JobButton} from '@/lib/town/jobs/jobMoves';
 import TravelIcon from './TravelIcon';
 const SHORT:Record<string,string>={kick:'Kick',pull:'Pull',twist:'Twist',cut:'Snip',pickup:'Pick up',unload:'Unload',rake:'Rake',bag:'Bag',empty:'Empty',roll:'Throw',place:'Place',paint:'Paint',pick:'Pick up',toss:'Toss',flag:'Flag',
- 'play-on':'Play on',next:'Next',pump:'Pump',release:'Air out',ready:'Ready',box:'Box',hammer:'Hammer',drop:'Drop',take:'Take',pluck:'Pick',crate:'Drop',
+ 'play-on':'Play on',next:'Next',pump:'Pump',release:'Air out',ready:'Ready',box:'Box',hammer:'Hammer',drop:'Drop',take:'Take',pluck:'Pick',crate:'Drop',net:'Net',letfree:'Release',jar:'Jar',glow:'Light up',/* the Summit Isle bug jobs */
  tuck:'Tuck',spin:'Spin',wave:'Wave',/* the zipline's ride actions (lib/town/zipline.ts ZIP_BUTTONS) */
  swimfast:'Sprint',dive:'Dive',swimride:'Swim',letgo:'Let go'/* the water actions (lib/town/water/waterHud.ts WATER_BUTTONS) */};
 /** Oct 15 2026 (user): the water actions show only their icon (the label stays as the accessible name and the title), at the land

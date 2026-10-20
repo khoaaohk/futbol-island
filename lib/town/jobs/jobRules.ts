@@ -448,7 +448,7 @@ export function runHint(r:JobRun):string{
  if(d.work){const step=currentStep(r);
   if(d.kind==='trail'&&r.phase==='work')return r.note||(r.holding?'Keep walking over the faded dashes in order.':step?.hint??'');
   if(r.at===-2&&step)return step.hint;
-  if(r.at>=0&&step&&!(d.kind==='carry'&&r.carrying>=0)){const n=step.count??1;return n>1?`${step.hint} (${Math.round(r.work[r.at]*n)}/${n})`:step.hint;}
+  if(r.at>=0&&step&&!(d.kind==='carry'&&r.carrying>=0)){const n=step.count??1,spot=d.spotHints?.[r.at];const hint=spot?`${spot} ${step.hint}`:step.hint;return n>1?`${hint} (${Math.round(r.work[r.at]*n)}/${n})`:hint;}
  }
  return '';
 }

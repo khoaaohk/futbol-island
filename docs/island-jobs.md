@@ -374,3 +374,27 @@ the unit is in the accessible name). After 3.5 s (longer for a long hint, up to 
 round 44 px × Stop; tapping the chip opens it again, and any progress / phase / hint change shows it again. It stays open while a
 meter (pump gauge, pull meter) or its own buttons are in use, while an offside replay is explained and while a sorting clue is in
 the hands. A hidden live line keeps announcing progress. Reduced motion: no fade. Landscape docking keeps the chip top-left.
+
+## 15. Summit Isle bug jobs: Bug squad (day) and Firefly floodlights (night) (20 Oct 2026, local, not deployed)
+
+User: "add new jobs on the mountain island. catching butterflies and other bugs. tie the bugs into the concept of futbol. for
+nighttime add catching fireflies instead since it's night time." Data: `lib/town/jobs/bugScout.ts`; catalog entries in
+`jobCatalog.ts`; test: `tests/summit-bugs.cjs`.
+
+- **Signs:** two signs in the meadow inland of the sandbar landing (597, 39) and (608.5, 40), facing the beach. Each always offers
+  its job; the intro card says when to come back if it is the wrong time (`jobOpenAt`, `jobClosedNote`), and Start is disabled.
+- **Day / night:** the player's own Day / Sunset / Night setting (`timeRef` in Town, `fi2-time-of-day`), never the real clock.
+  Bug squad runs at Day and Sunset; Firefly floodlights only at Night. Switching the time mid-shift ends the shift.
+- **Bug squad (collect, prop `bug`):** eight bugs, a 7v7 squad plus the referee: Goalie Ladybug (GK), Pill-bug Centre-back,
+  Full-back Grasshopper, Midfield Dragonfly, Football Butterfly (black-and-white pentagon wings, the winger), Captain Monarch,
+  Striker Beetle, Referee Bumblebee (Law 5). Hold Net (0.8 s, "like a soft first touch") until the bug drifts into the jar; the
+  panel names each bug and each catch shows its position lesson. Release the squad at the bug hotel. Bugs are never hurt.
+- **Firefly floodlights (collect, prop `firefly`):** eight fireflies, each flashing a football call (Man on!, Time!, Turn!,
+  Square!, Switch!, Away!, Keeper's!, Mine!). Hold Cup the jar (0.7 s), then light up the lantern goal and let them fly free.
+- **Pay:** 5 coins each (lib/economy.ts JOB_PAY, like Trail clean-up), ~0.9 min of play, the usual full / half / tip tiers and the
+  Training meter.
+- **Heat:** nothing exists while no shift runs (the drop-offs are part of the merged static sign mesh). During a shift: one instanced
+  draw of 8 bugs (one shared merged vertex-colour geometry: body, wings, pentagon spots; no textures), plus for fireflies one
+  additive glow draw; ≤ 16 matrices per frame, frozen under reduced motion; disposed at the end.
+- **Analytics:** `su:bug_catch`, `su:bug_squad`, `su:firefly_catch`, `su:firefly_shift` (lib/analytics/summitEvents.ts), shown in
+  /admin's Summit Isle card. No migration: the SQL only checks the id shape.
