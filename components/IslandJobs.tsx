@@ -104,7 +104,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  // learning-coin toast above shows it); a wild meadow bug fluttering away tells the player where bugs are caught (once a visit).
  const [bugBook,setBugBook]=useState(false),[bugBookLoaded,setBugBookLoaded]=useState(false);
  useEffect(()=>{const open=()=>{setBugBookLoaded(true);setBugBook(true);};const done=()=>{void claimBugBookReward().catch(()=>{});};
-  const wild=()=>setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
+  // On a Bug squad shift the bugs ARE catchable: no 'only on a shift' note then.
+  const wild=()=>getJobRuntime()?.run?undefined:setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
   // A species' first catch ever: a small one-time learning bonus (bugBookReward.ts claimNewSpecies).
   const fresh=(e:Event)=>{const id=(e as CustomEvent<string>).detail;if(id)void claimNewSpecies(id).catch(()=>{});};
   window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.addEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.addEventListener(WILD_BUG_HINT,wild);

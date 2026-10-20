@@ -132,7 +132,7 @@
 .skip:focus-visible span{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 
 /* Bug squad catch card (catching lane, Oct 20 2026): like the fish catch card (FishingHost .catch): cream card, "Real football fact". */
-.bugCard{position:fixed;z-index:31;left:50%;top:calc(env(safe-area-inset-top,0px) + 96px);transform:translateX(-50%);width:min(330px,calc(100vw - 32px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;animation:bugCardIn .38s cubic-bezier(.2,1.4,.4,1) both;transition:opacity .35s ease,translate .35s ease}
+.bugCard{position:fixed;z-index:31;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 128px);transform:translateX(-50%);width:min(330px,calc(100vw - 32px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;animation:bugCardIn .38s cubic-bezier(.2,1.4,.4,1) both;transition:opacity .35s ease,translate .35s ease}
 .bugCard[data-out]{opacity:0;translate:0 -18px;pointer-events:none}
 .bugCard[data-night]{background:#1f2c4ef2;border-color:#e9ff6b;color:#f4f6ea}
 .bugStamps{display:flex;gap:6px}.bugStamps em{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--btn-pink,#ffb3c7);color:#5a1f33}
@@ -145,3 +145,4 @@
 .chipStop[data-on]{background:#ffd36c}
 @keyframes bugCardIn{from{opacity:0;scale:.85}}
 @media (prefers-reduced-motion:reduce){.bugCard{animation:none;transition:opacity .3s}.bugCard[data-out]{translate:none}}
+@media (max-width:600px){.bugCard{bottom:calc(env(safe-area-inset-bottom,0px) + 196px)}}

@@ -55,8 +55,8 @@ export const BUG_WALK_NOTE='Walk to catch bugs: hop off, sneak up, then Swing ne
 export const BUG_ISLAND_MARGIN=25;
 /** Nearest-bug hint (the pill's hint button): the guide shows this long, then cools down; it ends early within net range. */
 export const HINT={show:7,cooldown:3,near:3} as const;
-/** No bug within this many metres for RECALL.wait s: the farthest one is called over to a home spot within RECALL.within m. */
-export const RECALL={near:40,wait:2,within:90,far:100} as const;
+/** Fewer than RECALL.min bugs within RECALL.near metres (checked every RECALL.wait s): the farthest one is called over to a home spot within RECALL.within m. */
+export const RECALL={near:40,min:6,wait:1.5,within:90,far:45} as const;
 /** The nearest uncaught target for the hint: swarm hits first (nearest first), else the nearest home of an uncaught species.
  *  `got(id)` = caught this shift. Null when everything is caught. */
 export function nearestUncaught<H extends {x:number;z:number;id:string}>(hits:readonly H[],idOf:(h:H)=>string,homes:readonly {id:string;x:number;z:number}[],got:(id:string)=>boolean,px:number,pz:number):{id:string;x:number;z:number;dist:number;live:boolean}|null{

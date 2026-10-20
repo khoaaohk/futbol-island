@@ -20,7 +20,8 @@ import {createBugFarGeometry,createBugModel,triangleCount} from './bugModels';
 import {bugMaterial,glowMaterial} from './bugMaterial';
 import {Mode,createFlightBug,hideBug,startle as startleBug,stepBug,type FlightBug,type StepCtx} from './bugFlight';
 import {FIREFLY_SIZE,bugVisualSize,WILD_BUG_HINT,WILD_BUG_RANGE,WILD_FLEE,wildBugCount,FIREFLY_MAP_CAP} from './wildBugsCore';
-import {bugMapCount} from '../town/jobs/bugSpecies';
+import {bugMapCount,inBugNorthZone,onSummitSand} from '../town/jobs/bugSpecies';
+import {onSummitIsle} from '../town/summitIsle';
 import {hideBug as hideFor} from './bugFlight';
 
 export type SwarmSet='bugs'|'fireflies';
@@ -47,7 +48,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
  let slots:Slot[]=[],far:T.InstancedMesh|null=null,farFlap:T.InstancedBufferAttribute|null=null,farPose:T.InstancedBufferAttribute|null=null;
  let glow:T.InstancedMesh|null=null,lantern=new T.Vector3();
  let built:SwarmSet|null=null,want:SwarmSet='bugs',cap=0,fading=false,lastNight:boolean|null=null,time:'day'|'sunset'='day';
- let seedOverride:number|null=null,pinned:{sl:Slot;at:{x:number;y:number;z:number};t:number}|null=null;
+ let recalls=0,seedOverride:number|null=null,pinned:{sl:Slot;at:{x:number;y:number;z:number};t:number}|null=null;
  let clock=0,farAcc=0,farSteps=0,px=0,pz=0,pspeed=0,havePlayer=false,builds=0,updates=0,tris=0;
  const owned:{dispose():void}[]=[];
  const m4=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(0,0,0,'YXZ'),p=new T.Vector3(),s=new T.Vector3(),one=new T.Vector3(1,1,1);
@@ -173,8 +174,13 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   recall(x:number,z:number,within=90,far=100):string|null{if(!built)return null;const homes=built==='bugs'?BUG_HOMES:FIREFLY_HOMES;
    let best:Slot|null=null,bd=far;for(const sl of slots){if(pinned?.sl===sl)continue;const d=Math.hypot(sl.bug.x-x,sl.bug.z-z);if(d>bd){bd=d;best=sl;}}
    if(!best)return null;let hx=0,hz=0,hd=within;
-   for(const h of homes){const d=Math.hypot(h.x-x,h.z-z);if(d>=hd||d<8)continue;if(slots.some(sl=>sl!==best&&Math.hypot(sl.bug.hx-h.x,sl.bug.hz-h.z)<10))continue;hd=d;hx=h.x;hz=h.z;}
-   if(hd>=within)return null;best.bug.hx=hx;best.bug.hz=hz;hideFor(best.bug,.05);return best.bug.id;},
+   const taken=(px:number,pz:number)=>slots.some(sl=>sl!==best&&Math.hypot(sl.bug.hx-px,sl.bug.hz-pz)<10);
+   for(const h of homes){const d=Math.hypot(h.x-x,h.z-z);if(d>=hd||d<3)continue;if(taken(h.x,h.z))continue;hd=d;hx=h.x;hz=h.z;}
+   // No free home near (homes are 18+ m apart over a big island): a spot on a ring 16-28 m round the player, on Summit Isle ground
+   // (north of the summit only on the sand, like the homes), so a shift always has bugs about.
+   if(hd>=within)for(let k=0;k<12;k++){const a=(k*2.399+recalls*.7)%(Math.PI*2),r=16+(k%3)*6,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;
+    if(!onSummitIsle(px,pz)||(inBugNorthZone(px,pz)&&!onSummitSand(px,pz))||taken(px,pz))continue;hd=r;hx=px;hz=pz;break;}
+   if(hd>=within)return null;recalls++;best.bug.hx=hx;best.bug.hz=hz;hideFor(best.bug,.05);return best.bug.id;},
   /** Swap between the day bugs and the night fireflies (fades out, rebuilds, fades in). Town drives it from Day / Night. */
   setSet(set:SwarmSet){want=set;},
   /** World position of a bug for the zoom camera (null when caught or not out). */

@@ -803,7 +803,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function tickHint(dt:number,p:{x:number;y:number;z:number}){if(hintCool>0){hintCool-=dt;if(hintCool<=0)viewKey='';}
   // Nobody near for a while: call the farthest bug over (the user: "I don't see any bugs to catch when walking around").
   recallAcc+=dt;if(recallAcc>=RECALL.wait){recallAcc=0;const sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null})|null;
-   if(sw&&sw.recall&&!zoom&&!rel&&!sw.query(p.x,p.y,p.z,RECALL.near).length)sw.recall(p.x,p.z,RECALL.within,RECALL.far);}
+   const n=sw&&sw.recall&&!zoom&&!rel?sw.query(p.x,p.y,p.z,RECALL.near).length:RECALL.min;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw!.recall!(p.x,p.z,RECALL.within,RECALL.far);}
   if(hintT<=0)return;hintT-=dt;hintAcc+=dt;
   if(hintAcc>=.25){hintAcc=0;const sw=bugSwarm();if(sw&&sw.position(hintId,tq)){hintGoal.x=tq.x;hintGoal.z=tq.z;}
    const d=Math.hypot(hintGoal.x-p.x,hintGoal.z-p.z);if(d<HINT.near||hintT<=0){stopHint();publishActive();return;}
@@ -831,8 +831,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   zoom={t:0,id:h.id,burst:false,p:{x:h.x,y:h.y,z:h.z}};
   if(reducedMotion){endZoom();return;}
   const Z=zoom,P={...lastP};
-  zoomCam.begin(aspect=>{const dx=P.x-Z.p.x,dz=P.z-Z.p.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,portrait=aspect<1,d=portrait?2.9:2.3;
-   return {target:{x:Z.p.x,y:Math.max(Z.p.y,P.y+1.2)+.25,z:Z.p.z},eye:{x:Z.p.x+ux*d-uz*1.1,y:Math.max(Z.p.y,P.y+1.2)+.95,z:Z.p.z+uz*d+ux*1.1},fov:portrait?52:40};});
+  // Framed on the net held up over the player (where the bug wiggles), from the bug's side and a little above, never inside a slope.
+  zoomCam.begin(aspect=>{const dx=Z.p.x-P.x,dz=Z.p.z-P.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,portrait=aspect<1,d=portrait?4.2:3.4;
+   const tx=P.x+ux*.4,tz=P.z+uz*.4,ty=P.y+2.4,ex=tx+ux*d-uz*1.4,ez=tz+uz*d+ux*1.4,ey=Math.max(ty+.9,floor(ex,ez)+1.4);
+   return {target:{x:tx,y:ty,z:tz},eye:{x:ex,y:ey,z:ez},fov:portrait?50:38};});
   setView({zooming:true});publishActive();}
  function tickZoom(dt:number){const Z=zoom;if(!Z)return;Z.t+=dt;
   if(!Z.burst&&Z.t>=ZOOM.in*.85){Z.burst=true;const q=net?net.bagCentre(bagPos):Z.p,night=run?.def.prop==='firefly';
