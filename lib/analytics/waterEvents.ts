@@ -41,6 +41,10 @@ export const countSharksEscape=()=>count('wa:sharks_escape');
  *  lap; let go early (the Let go button, or the swim ending under it). */
 export const countRideStart=(kind:'manta'|'whale')=>count(kind==='manta'?'wa:ride_manta':'wa:ride_whale');
 export const countRideLap=()=>count('wa:ride_lap');
+/** Oct 20 2026 (lib/town/seaLifeAreas.ts): a ride on one of the open-sea whale sharks (also counted as wa:ride_whale above), and a
+ *  ray spotted (a swimmer within RAY_SPOT_RANGE of an open-sea ray; once per ray per visit). Totals only, never which area. */
+export const countOpenSeaWhaleRide=()=>count('wa:ride_open_whale');
+export const countRaySpot=()=>count('wa:ray_spot');
 export const countRideOff=()=>count('wa:ride_off');
 /** Tests: forget the device flags. */
 export function resetWaterFirsts(){firsts=null;try{localStorage.removeItem(FIRSTS_KEY);}catch{}}

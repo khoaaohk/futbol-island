@@ -7,7 +7,12 @@ import {SUMMIT_CENTER,SUMMIT_SHORE} from './summitIsle';
 
 export type MantaIsland='cay'|'starfish'|'turtle'|'summit';
 export type MantaLoop={id:string;island:MantaIsland;points:CayPoint[];speed:number;
- /** Dropped on phones (heat): each island keeps at least 2 mantas everywhere. */desktopOnly?:boolean};
+ /** Dropped on phones (heat): each island keeps at least 2 mantas everywhere. */desktopOnly?:boolean;
+ /** Open-sea rays (Oct 20 2026, seaLifeAreas.ts): the size against a manta (1 = SCALE), a multiply tint on the slate palette
+  *  (eagle / sting rays; no texture) and whether it offers a ride (only mantas do). Absent = a manta as before. */
+ scale?:number;tint?:string;ridable?:boolean};
+/** A glide loop in any group of rays: an island's mantas, or an open-sea area's rays (seaLifeAreas.ts, `island` = the area id). */
+export type RayLoop=Omit<MantaLoop,'island'>&{island:string};
 
 /** Farthest distance from (cx, cz) to the outline along the ray at angle `a` (the island's edge in that direction). */
 function rayRadius(poly:CayPoint[],cx:number,cz:number,a:number){

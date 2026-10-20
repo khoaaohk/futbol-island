@@ -120,6 +120,7 @@ export const WATER_COUNT_EVENTS=[
  ['idle_cap','Treading water: 20 fps idle cap engaged'],['lesson','Swim lesson shown'],
  ['sharks_circle','Sharks circled a swimmer'],['sharks_escape','Sharks peeled off (shore reached or lost interest)'],
  ['ride_manta','Rides on a manta ray'],['ride_whale','Rides on the whale shark'],['ride_lap','Rides finished (one lap)'],['ride_off','Rides let go early'],
+ ['ride_open_whale','Rides on an open-sea whale shark (Oct 20 2026)'],['ray_spot','Rays spotted while swimming (Oct 20 2026)'],
 ] as const;
 
 
