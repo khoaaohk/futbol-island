@@ -22,15 +22,18 @@ ok('the ocean patch: a wide soft noise-broken edge (no rim line), see-through on
  assert(ws.includes('uniform float uDiveClear[${DIVE_SLOTS}]')&&WS.WATER_UNIFORMS.uDiveClear.value.length===D.DIVE_SLOTS&&D.DIVE_SLOTS===2,'one float per slot, 2 slots');
  assert(WS.DIVE_SHOAL.fade-WS.DIVE_SHOAL.inner>=1,'the edge dissolves over a wide band (q '+WS.DIVE_SHOAL.inner+' to '+WS.DIVE_SHOAL.fade+')');
  assert(/clearWinW\(vWaterXZ,[^)]*\)-\.5\)\*\$\{DIVE_SHOAL\.wobble/.test(ws),'the edge is broken by low-frequency noise (ALU, no texture read)');
- assert(ws.includes('1.-diveClr*${(1-DIVE_SHOAL.alpha).toFixed(2)}'),'the blended program clears the shoal by uDiveClear');
- assert(WS.DIVE_SHOAL.alpha>=.14&&WS.DIVE_SHOAL.alpha<=.42,'about as see-through as the shore window (CLEAR_WIN.alpha .14-.42)');
- assert(ws.includes('max(1.-smoothstep(10.,45.,d),.6*diveK)'),'the shallows light net reaches the shoal (no extra reads)');
+ assert(ws.includes('mix(1.,clearWinAlpha(1.,dd),diveClr)'),'the blended program clears the shoal by uDiveClear, as the shore window at that shore distance');
+ // The shoal is the shore's shallows: the depth colour, the light net and the alpha read the shoal's shore distance dd.
+ assert(ws.includes('float dd=mix(d,${DIVE_SHOAL.heart.toFixed(1)},diveK);'));
+ for(const k of ['smoothstep(.3,5.,dd)','1.-smoothstep(3.,24.,dd)','smoothstep(25.,110.,dd)','float nearS=1.-smoothstep(10.,45.,dd);','smoothstep(1.5,7.,dd)'])assert(ws.includes(k),k);
+ assert(!/uDiveTint\[i\]/.test(ws.split('#include <map_fragment>')[1]||''),'no milky tint of its own');
+ assert.equal(WS.diveShoreD(40,1),WS.DIVE_SHOAL.heart);assert.equal(WS.diveShoreD(40,0),40);
 });
 ok('the seabed preview per zone: bounded triangles, under the surface, shoaling to the heart, rim under the shore bed floor; wrecks drawn',()=>{
  for(const s of D.DIVE_SPOTS){const g=P.buildDivePreview(s),pos=g.getAttribute('position'),tris=pos.count/3;
   assert(tris<=P.DIVE_PREVIEW.maxTris,'cap '+s.id+' '+tris);let top=-Infinity;for(let i=0;i<pos.count;i++)top=Math.max(top,pos.getY(i));
-  assert(top<UW.UW_SURFACE-.3,'all under the water '+s.id+' '+top);g.dispose();}
- assert(P.previewDepth(0)<P.previewDepth(.6)&&P.previewDepth(.6)<P.previewDepth(1),'deeper toward the edge');
+  assert(top<UW.UW_SURFACE-.1,'all under the water (a stranded hull reaches up to just under it) '+s.id+' '+top);g.dispose();}
+ assert(P.previewDepth(0)<P.previewDepth(.6)&&P.previewDepth(.6)<P.previewDepth(1),'deeper toward the edge');assert(P.previewDepth(0)>1.2&&P.previewDepth(0)<2.2,'a sandy heart a metre or two down');
  assert(P.previewDepth(P.DIVE_PREVIEW.reach)>4.2,'the rim sinks below the shore window floor (CLEAR_BED.floor)');
  const wreck=D.DIVE_SPOTS.find(s=>s.theme.wreck),plain=D.DIVE_SPOTS.find(s=>!s.theme.wreck&&s.radius===wreck.radius);
  if(plain){const a=P.buildDivePreview(wreck),b=P.buildDivePreview(plain);assert(a.getAttribute('position').count>b.getAttribute('position').count-200,'the wreck adds geometry');a.dispose();b.dispose();}
@@ -54,7 +57,8 @@ ok('gating: off at heat tier 3-4 / Battery saver, out of range and while diving;
 ok('Town wires it: per frame after the shore window with the effective tier, off while diving, the shore bed depth, disposed',()=>{
  const t=read('components/Town.tsx');
  assert(/divePreview\.update\(dt,player\.root\.position\.x,player\.root\.position\.z,heat\.tier\+\(quality\.phone&&heat\.tier>=2\?1:0\),!dive\.diving\)/.test(t));
- assert(t.includes('createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;})'));
+ assert(t.includes('createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;},clearWin.shoalMaterial())'),'the shore seabed material (caustic light lines, depth look)');
+ const cw=read('lib/town/water/clearWindow.ts');assert(cw.includes("kind==='bed'||kind==='shoal'?CLEAR_UNDER(.7,1.5,'1.,.7',.25,1)"),'the shoal seabed is shaded exactly as the shore bed');
  assert(t.includes('divePreview.dispose()'));
 });
 if(failed){console.log(failed+' failed');process.exit(1);}

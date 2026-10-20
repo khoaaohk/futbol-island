@@ -759,7 +759,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // sealed underwater room (the island is neither stepped nor drawn while you dive) until you surface; the room is then disposed.
     const diveBuoys=createDiveBuoys(DIVE_SPOTS);scene.add(diveBuoys.root);
     const diveWreckTops=createDiveWreckTops(scene);// the stranded wrecks' tops out of the water near a wreck zone (lib/graphics/diveWreckTop.ts; HUD tick, hidden at heat tier 3+)
-    const divePreview=createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;});// the see-through shoal's seabed preview under the 2 nearest patches (lib/graphics/divePreview.ts)
+    const divePreview=createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;},clearWin.shoalMaterial());// the see-through shoal's seabed preview under the 2 nearest patches (lib/graphics/divePreview.ts)
     // The reef's going under / coming up (water audit #6): a short soft blend through the zone's own water colour (the room's fog),
     // never brighter than the water (`.water-under.is-reef`, app/globals.css), instead of the bright splash-down flash.
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};

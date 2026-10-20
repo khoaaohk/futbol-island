@@ -162,23 +162,25 @@ const LIFE_GLSL:Record<CreatureKind,{normal:string;body:string}>={
 };
 const lifeBody=(kind:CreatureKind)=>LIFE_GLSL[kind].body+`transformed=vec3(-fq.x*fv.x+fq.z*fv.y+fo.x,fq.y+fy,-fq.x*fv.y-fq.z*fv.x+fo.y);\n`;
 const lifeNormal=(kind:CreatureKind)=>LIFE_GLSL[kind].normal+`\n objectNormal=vec3(-objectNormal.x*fv.x+objectNormal.z*fv.y,objectNormal.y,-objectNormal.x*fv.y-objectNormal.z*fv.x);\n`;
-function underMaterial(kind:'bed'|'reef'|CreatureKind,uniforms:Record<string,T.IUniform>){
+/** 'shoal' (Oct 20 2026): the dive shoal's seabed preview (lib/graphics/divePreview.ts): a plain mesh with vertex colours and the bed's
+ *  look (caustics, depth absorption, soft silhouettes, the surface over it, the refraction shimmer), so it reads under the water. */
+export function underMaterial(kind:'bed'|'reef'|'shoal'|CreatureKind,uniforms:Record<string,T.IUniform>){
  const m=new T.MeshLambertMaterial({color:'#ffffff',vertexColors:kind!=='bed'});
  m.onBeforeCompile=sh=>{
   Object.assign(sh.uniforms,WATER_UNIFORMS,UW_UNIFORMS,CLEAR_WIN_UNIFORMS,uniforms);
-  const vHead='varying vec3 vCwPos;varying vec2 vCwN;\n'+(kind==='bed'?SHORE_GLSL:kind!=='reef'?LIFE_HEAD:FISH_BOX+'uniform float uWaterTime,uWaterDetail;uniform vec4 uClearWin;\nattribute float aSway;\n');
+  const vHead='varying vec3 vCwPos;varying vec2 vCwN;\n'+(kind==='bed'?SHORE_GLSL:kind!=='reef'&&kind!=='shoal'?LIFE_HEAD:FISH_BOX+'uniform float uWaterTime,uWaterDetail;uniform vec4 uClearWin;\nattribute float aSway;\n');
   const vBody=kind==='bed'
    // The seabed: each vertex at the field's depth (the same texture and curve the CPU scatter uses).
    ?`{vec2 wxz=(modelMatrix*vec4(transformed,1.)).xz;vec4 f=isleSample(wxz);vCwN=f.gb;transformed.y-=.05+${CLEAR_BED.floor.toFixed(2)}*(1.-exp(-max(f.r,0.)/3.4));}`
    // Coral and grass: tips sway off the water clock (periods 5 s and 4 s divide its wrap), not on the still path.
-   :kind!=='reef'?lifeBody(kind)+'vCwN=vec2(0.);'
+   :kind!=='reef'&&kind!=='shoal'?lifeBody(kind)+'vCwN=vec2(0.);'
    :`vCwN=vec2(0.);
     #ifdef USE_INSTANCING
     // Shrinks to nothing over the window's outer fringe (where the sea is opaque anyway), so the placement set never pops.
     transformed*=cwBoxK(instanceMatrix[3].xz)*(1.-smoothstep(.85,1.,distance(instanceMatrix[3].xz,uClearWin.xy)/max(uClearWin.w,1.)));
     if(uWaterDetail>.5){vec2 ip=instanceMatrix[3].xz;transformed.xz+=aSway*vec2(sin(uWaterTime*1.256637+ip.x*.7),cos(uWaterTime*1.570796+ip.y*.6))*.07;}
     #endif`;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+vHead).replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\n'+(kind!=='bed'&&kind!=='reef'?lifeNormal(kind):''))
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+vHead).replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\n'+(kind!=='bed'&&kind!=='reef'&&kind!=='shoal'?lifeNormal(kind):''))
    .replace('#include <begin_vertex>','#include <begin_vertex>\n'+vBody)
    .replace('#include <project_vertex>',`#include <project_vertex>\n{vec4 cwp=vec4(transformed,1.);\n#ifdef USE_INSTANCING\ncwp=instanceMatrix*cwp;\n#endif\nvCwPos=(modelMatrix*cwp).xyz;
 // Refraction: seen through moving water, deeper things shimmer more (display only; vCwPos stays put).
@@ -192,7 +194,7 @@ float cwWh=min(max(0.,${UW_SURFACE.toFixed(3)}-vCwPos.y),2.5);if(cwWh>0.&&uWater
     {float cwD=clearWinD(vCwPos.xz,isleSample(vCwPos.xz).r);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.2,.5,.52),smoothstep(1.5,9.,cwD)*.75);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.08,.36,.42),smoothstep(9.,24.,cwD));
      diffuseColor.rgb*=1.-.45*smoothstep(.7,1.,distance(vCwPos.xz,uClearWin.xy)/max(uClearWin.w,1.));}`
     :'#include <color_fragment>')
-   .replace('#include <opaque_fragment>',(kind==='bed'?CLEAR_UNDER(.7,1.5,'1.,.7',.25,1):kind==='reef'?CLEAR_UNDER(.3,.8,'1.15,.85',.4,.35)/* Oct 19 2026 audit: less absorb / desat / surface-over so the coral keeps its colour */:CLEAR_UNDER(.4,.6,'1.,.7',.35,.4))+'\n#include <opaque_fragment>');
+   .replace('#include <opaque_fragment>',(kind==='bed'||kind==='shoal'?CLEAR_UNDER(.7,1.5,'1.,.7',.25,1):kind==='reef'?CLEAR_UNDER(.3,.8,'1.15,.85',.4,.35)/* Oct 19 2026 audit: less absorb / desat / surface-over so the coral keeps its colour */:CLEAR_UNDER(.4,.6,'1.,.7',.35,.4))+'\n#include <opaque_fragment>');
  };
  m.customProgramCacheKey=()=>'clear-window-'+kind+'-v4';
  return m;
@@ -206,6 +208,7 @@ export function createClearWindow(scene:T.Scene,field:()=>IsleCpuField|null){
  const n=Math.round(CLEAR_BED.half*2/CLEAR_BED.cell),bedGeo=new T.PlaneGeometry(CLEAR_BED.half*2,CLEAR_BED.half*2,n,n);bedGeo.rotateX(-Math.PI/2);bedGeo.deleteAttribute('uv');
  const bedMat=underMaterial('bed',uniforms),bed=new T.Mesh(bedGeo,bedMat);bed.name='clear-window-seabed';
  bed.frustumCulled=false;bed.castShadow=bed.receiveShadow=false;bed.matrixAutoUpdate=false;bed.raycast=()=>{};group.add(bed);
+ let shoalMat:T.Material|null=null;
  const kit=clearReefKit(),reefMat=underMaterial('reef',uniforms),meshes={} as Record<ClearReefKind,T.InstancedMesh>,kitTop={} as Record<ClearReefKind,number>;
  for(const kind of ALL){
   const g=kit[kind];g.computeBoundingBox();kitTop[kind]=g.boundingBox!.max.y;
@@ -328,7 +331,9 @@ export function createClearWindow(scene:T.Scene,field:()=>IsleCpuField|null){
   get open(){return blend.held;},
   get stats(){return {fish:life.fish.found,turtles:life.turtle.found,jellies:life.jelly.found,crabs:life.crab.found,formations,grass:meshes.grass.count,bedTriangles:n*n*2,center:[cx,cz] as const,radius,look:[lx,lz] as const,winRadius:winR};},
   meshes,bed,life,
-  dispose(){off();group.removeFromParent();bedGeo.dispose();bedMat.dispose();reefMat.dispose();for(const kind of LIFE_KINDS){life[kind].mesh.geometry.dispose();(life[kind].mesh.material as T.Material).dispose();}for(const g of Object.values(kit))g.dispose();noise.dispose();},
+  /** The dive shoal preview's material (shares this window's noise texture and look; built on first use, disposed with the window). */
+  shoalMaterial(){return shoalMat??=underMaterial('shoal',uniforms);},
+  dispose(){off();group.removeFromParent();bedGeo.dispose();bedMat.dispose();reefMat.dispose();shoalMat?.dispose();for(const kind of LIFE_KINDS){life[kind].mesh.geometry.dispose();(life[kind].mesh.material as T.Material).dispose();}for(const g of Object.values(kit))g.dispose();noise.dispose();},
  };
 }
 export type ClearWindow=ReturnType<typeof createClearWindow>;
