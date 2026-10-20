@@ -1,4 +1,10 @@
 import * as T from 'three';
+import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
+/** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
+const DIVE_GLSL=`uniform vec4 uDiveSpots[${DIVE_SLOTS}];uniform vec3 uDiveTint[${DIVE_SLOTS}];uniform vec4 uDiveBlob[${DIVE_SLOTS}];
+float diveBlobQ(vec2 xz,int i){vec4 sp=uDiveSpots[i];vec2 d=xz-sp.xy;float l=length(d);if(l>sp.z*${DIVE_BLOB_MAX.toFixed(2)})return 2.;
+ vec4 b=uDiveBlob[i];float a=atan(d.y,d.x);return l/(sp.z*(1.+b.x*sin(2.*a+b.w)+b.y*sin(3.*a+1.7*b.w+1.)+b.z*sin(5.*a+2.3*b.w+2.)));}
+`;
 
 /**
  * Animated water, shared by the island ocean, the island-wide shoreline (lib/graphics/islandShore.ts) and the fishing shoreline
@@ -33,7 +39,14 @@ export const WATER_UNIFORMS={
  /** Direction toward the sun (world). */uSunDir:{value:new T.Vector3(-288,252,198).normalize()},
  /** Whole-island shore field (islandShore.ts), its world rect (minX, minZ, sizeX, sizeZ) and 1 once baked. */
  uIsleTex:{value:empty as T.Texture},uIsleBox:{value:new T.Vector4(0,0,1,1)},uIsle:{value:0},
+ /** Diving spots (water P2, lib/town/water/diveSpots.ts): per slot (x, z, radius, strength 0 = off) and the patch colour. Written
+  *  once when the island is built (setDiveSpots); the ocean tints a soft lighter disc there. Ocean only (not SHORE_GLSL). */
+ uDiveSpots:{value:Array.from({length:DIVE_SLOTS},()=>new T.Vector4(0,0,1,0))},uDiveTint:{value:Array.from({length:DIVE_SLOTS},()=>new T.Color())},uDiveBlob:{value:Array.from({length:DIVE_SLOTS},()=>new T.Vector4())},
 };
+/** Light the diving spots' patches on the ocean: one write per slot, at build time only (never per frame). Unused slots are off. */
+export function setDiveSpots(spots:readonly {x:number;z:number;radius:number;blob:number;tint:string}[]){
+ for(let i=0;i<DIVE_SLOTS;i++){const s=spots[i];if(s){WATER_UNIFORMS.uDiveSpots.value[i].set(s.x,s.z,s.radius,1);WATER_UNIFORMS.uDiveTint.value[i].set(s.tint);WATER_UNIFORMS.uDiveBlob.value[i].fromArray(diveBlobParams(s.blob));}else WATER_UNIFORMS.uDiveSpots.value[i].w=0;}
+}
 /** Advance the shared water clock. Call once per rendered frame; `still` (reduced motion, static-ambience heat tiers) holds it. */
 export function stepWaterTime(dt:number,still:boolean){if(!still&&dt>0)WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;}
 export function setWaterDetail(level:number){WATER_UNIFORMS.uWaterDetail.value=level;}
@@ -205,7 +218,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
   Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,CLEAR_WIN_UNIFORMS);
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;\n'+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
    .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
@@ -259,6 +272,12 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       waterStreak=st*reachS*(.75+.25*waterLobe)*(.2+1.3*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
      #endif
+     // Dive zones (water P2; Oct 20 2026: an irregular blob, bigger): a soft lighter turquoise patch with a faint brighter rim, so it
+     // reads as "you can dive here" from the follow camera and the beach. DIVE_SLOTS (2) nearest zones; a distance reject per slot,
+     // the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
+     for(int i=0;i<${DIVE_SLOTS};i++){vec4 sp=uDiveSpots[i];if(sp.w>0.){float q=diveBlobQ(vWaterXZ,i);if(q<1.){
+      float k=sp.w*(1.-smoothstep(.62,1.,q));diffuseColor.rgb=mix(diffuseColor.rgb,uDiveTint[i]*(.88+.12*ripple.r),k*.72);
+      diffuseColor.rgb+=sp.w*smoothstep(.8,.92,q)*(1.-smoothstep(.92,1.,q))*vec3(.1,.13,.12);}}}
     }`)
    // Swimming (swimClear.ts) and the clear window (clearWindow.ts): only the blended program (no OPAQUE define, used while either
    // is open) writes an alpha: it follows depth (clearer over the sand, bluer further out) and rises on the light streaks, so they
@@ -278,6 +297,6 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #endif
     #include <opaque_fragment>`);
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v8';
+ material.customProgramCacheKey=()=>'island-ocean-water-v9';
  material.needsUpdate=true;
 }

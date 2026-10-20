@@ -11,7 +11,7 @@
 import type {JobButton} from '../jobs/jobMoves';
 import type {EntryStyle} from '../../graphics/swimPose';
 
-export type WaterActionId='swimfast'|'dive'|'swimride'|'letgo';
+export type WaterActionId='swimfast'|'dive'|'swimride'|'letgo'|'surface';
 /**
  * The ride switcher in the water (user, Oct 15 2026: "don't allow walking, biking, scooter or moped. change icon to swimming and
  * jetpack only"): the ride slot shows the swim icon (the current ride); a tap switches to the only other choice, the jetpack,
@@ -49,6 +49,14 @@ export const RIDE_LET_GO:JobButton={slot:'shoot',key:'Space',id:'letgo',label:'L
 export const RIDE_HOLDING:JobButton={slot:'ride',key:'R',id:'swimride',label:'Hanging on: let go to swim',icon:'swim',enabled:false};
 export const RIDING_BUTTONS:readonly JobButton[]=[RIDE_LET_GO,RIDE_HOLDING] as const;
 export const RIDING_NOTE='Hanging on! Tap Let go to swim again.';
+/** Diving (water P2, lib/town/water/diveSession.ts): the one action is Surface (Space / 1, and Escape), icon-only; the ride slot keeps
+ *  the swim icon (the ride you go back to), answering a tap with a hint. E uses the find in reach (its floating prompt). */
+export const DIVE_SURFACE:JobButton={slot:'shoot',key:'Space',id:'surface',label:'Surface: swim back up for air',icon:'surface',enabled:true};
+/** Oct 20 2026 (user: "R and the switcher must still take off with the jetpack inside the dive zone"): the ride slot is the same
+ *  swim → jetpack switcher as at the surface; with fuel it surfaces at once and flies up, without fuel it answers with the hint. */
+export const REEF_BUTTONS:readonly JobButton[]=[DIVE_SURFACE,RIDE_SWIM_NO_FUEL] as const;
+export const REEF_BUTTONS_FLY:readonly JobButton[]=[DIVE_SURFACE,RIDE_SWIM] as const;
+export const REEF_NOTE='Diving! Tap Surface to swim back up.';
 export function waterKeyAction(code:string,key:string):WaterActionId|null{
  if(code==='Space'||code==='Digit1'||code==='Numpad1')return 'swimfast';
  const k=key.toLowerCase();if(k==='q'||k==='j'||code==='Digit2'||code==='Numpad2')return 'dive';if(k==='e'||k==='r'||code==='Digit3'||code==='Numpad3')return 'swimride';return null;
@@ -94,8 +102,12 @@ export type WaterView={
  riding:boolean;
  /** Bumped on a first ride: the once-per-device ride lesson (animalRides.ts RIDE_LESSON). */
  rideLesson:number;
+ /** Inside a dive zone's reef room (water P2): the cluster is Surface + the jetpack switcher. */
+ reef:boolean;
+ /** Bumped on a dive: the once-per-device breath lesson (diveSession.ts DIVE_LESSON). */
+ reefLesson:number;
 };
-const IDLE_VIEW:WaterView={inWater:false,swimming:false,diving:false,diveOk:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0};
+const IDLE_VIEW:WaterView={inWater:false,swimming:false,diving:false,diveOk:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0,reef:false,reefLesson:0};
 let view=IDLE_VIEW;const listeners=new Set<()=>void>();
 /**
  * One store and one action hook per page (Oct 19 2026, user: "the swim controls/actions are not showing" while swimming): a dev
@@ -115,8 +127,9 @@ export const waterStore=shared.__fiWaterStore??=store;
 /** The three actions; the island runtime installs the real one while the island is up. */
 export const waterActions=shared.__fiWaterActions??={press:(_id:WaterActionId,_phase:'tap'|'down'|'up')=>{}};
 /** Which cluster the HUD shows for a view (null = the land cluster). In the water the ride slot is Swim, or Swim → Jetpack with fuel. */
-export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{riding?:boolean;diving?:boolean;diveOk?:boolean}):readonly JobButton[]|null{
+export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{riding?:boolean;diving?:boolean;diveOk?:boolean;reef?:boolean}):readonly JobButton[]|null{
  if(!v.inWater)return null;
+ if(v.reef)return v.flyOk?REEF_BUTTONS_FLY:REEF_BUTTONS;
  if(v.riding)return RIDING_BUTTONS;
  if(!v.swimming)return v.flyOk?WADE_BUTTONS_FLY:WADE_BUTTONS;
  if(v.diving)return v.flyOk?DIVING_BUTTONS_FLY:DIVING_BUTTONS;

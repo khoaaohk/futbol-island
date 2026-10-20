@@ -123,6 +123,8 @@ export const WATER_COUNT_EVENTS=[
  ['idle_cap','Treading water: 20 fps idle cap engaged'],['lesson','Swim lesson shown'],
  ['sharks_circle','Sharks circled a swimmer'],['sharks_escape','Sharks peeled off (shore reached or lost interest)'],
  ['ride_manta','Rides on a manta ray'],['ride_whale','Rides on the whale shark'],['ride_lap','Rides finished (one lap)'],['ride_off','Rides let go early'],
+ ['dive_start','Dives started (a diving spot)'],['dive_surface','Dives ended (surfaced)'],['dive_find','Dive finds used (first time each)'],['dive_breath_out','Dives where the breath ran out (floated up)'],['dive_lesson','Dive breath lesson shown'],
+ ['dive_deep','Dives that reached the deep level'],['dive_fly','Jetpack take-offs from inside a dive zone'],['dive_wreck_visit','Dives at a wreck zone'],['dive_wreck_find','Wreck cargo finds used (first time each)'],
 ] as const;
 
 

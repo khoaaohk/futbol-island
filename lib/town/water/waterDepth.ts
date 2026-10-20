@@ -11,6 +11,7 @@
  *
  * Heat (AGENTS.md): no loop, no timer, no allocation in step functions; every function here is a few comparisons.
  */
+import {diveSpotAt} from './diveSpots';
 import {onLand,distanceToLand} from '../landmass';
 import {flightBlocked} from '../simulation';
 
@@ -127,6 +128,9 @@ export function createWaterProbe(distance:(x:number,z:number)=>number=distanceTo
    if(blockedAt(x,z)||land(x,z))return false;
    const reach=Number.isFinite(px)?d+Math.hypot(x-px,z-pz):Infinity;
    if(reach<=SWIM_RANGE)return true;
+   // Dive zones out at sea (Oct 20 2026, the user's map circles; lib/town/water/diveSpots.ts): open water inside a zone's blob is
+   // swimmable however far from land (you reach them with the jetpack's Drop in). A distance reject per zone; only past the range.
+   if(diveSpotAt(x,z))return true;
    if(!Number.isFinite(px))return false;
    const limit=Math.max(SWIM_RANGE,d+.02);/* 2 cm of slack per sample: sliding along the edge, never a swim outward */
    if(d-Math.hypot(x-px,z-pz)>limit)return false;

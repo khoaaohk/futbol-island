@@ -11,10 +11,10 @@ import TravelIcon from './TravelIcon';
 const SHORT:Record<string,string>={kick:'Kick',pull:'Pull',twist:'Twist',cut:'Snip',pickup:'Pick up',unload:'Unload',rake:'Rake',bag:'Bag',empty:'Empty',roll:'Throw',place:'Place',paint:'Paint',pick:'Pick up',toss:'Toss',flag:'Flag',
  'play-on':'Play on',next:'Next',pump:'Pump',release:'Air out',ready:'Ready',box:'Box',hammer:'Hammer',drop:'Drop',take:'Take',pluck:'Pick',crate:'Drop',net:'Net',letfree:'Release',jar:'Jar',glow:'Light up',/* the Summit Isle bug jobs */
  tuck:'Tuck',spin:'Spin',wave:'Wave',/* the zipline's ride actions (lib/town/zipline.ts ZIP_BUTTONS) */
- swimfast:'Sprint',dive:'Dive',swimride:'Swim',letgo:'Let go'/* the water actions (lib/town/water/waterHud.ts WATER_BUTTONS) */};
+ swimfast:'Sprint',dive:'Dive',swimride:'Swim',letgo:'Let go',surface:'Surface'/* the water actions (lib/town/water/waterHud.ts WATER_BUTTONS) */};
 /** Oct 15 2026 (user): the water actions show only their icon (the label stays as the accessible name and the title), at the land
  *  buttons' 32 px (the .job-action rule's 24 px is for icon + word). */
-const WATER_IDS=new Set(['swimfast','dive','swimride','letgo','tuck','spin','wave']);/* + the zipline actions (user Oct 17 2026: icon only, simpler glyphs); 'spin' / 'wave' / 'tuck' ids are zipline-only */
+const WATER_IDS=new Set(['swimfast','dive','swimride','letgo','surface','tuck','spin','wave']);/* + the zipline actions (user Oct 17 2026: icon only, simpler glyphs); 'spin' / 'wave' / 'tuck' ids are zipline-only */
 export default function JobActionButton({b,className,onPress}:{b:JobButton;className:string;onPress:(b:JobButton,phase:'tap'|'down'|'up')=>void}){
  const word=SHORT[b.id]??b.label,title=`${b.label} · ${b.key==='Space'?'Space':b.key}${b.hold?' (hold)':''}`;
  const common={type:'button' as const,className:`${className} job-action`,'aria-label':b.label,title,'aria-disabled':!b.enabled||undefined,'aria-keyshortcuts':b.key==='Space'?'Space':b.key,
