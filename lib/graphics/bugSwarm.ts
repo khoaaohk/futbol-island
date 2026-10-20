@@ -19,10 +19,15 @@ import {countWildFlutter} from '../analytics/summitEvents';
 import {createBugFarGeometry,createBugModel,triangleCount} from './bugModels';
 import {bugMaterial,glowMaterial} from './bugMaterial';
 import {Mode,createFlightBug,hideBug,startle as startleBug,stepBug,type FlightBug,type StepCtx} from './bugFlight';
-import {FIREFLY_SIZE,bugVisualSize,WILD_BUG_HINT,WILD_BUG_RANGE,WILD_FLEE,wildBugCount} from './wildBugsCore';
+import {FIREFLY_SIZE,bugVisualSize,WILD_BUG_HINT,WILD_BUG_RANGE,WILD_FLEE,wildBugCount,FIREFLY_MAP_CAP} from './wildBugsCore';
+import {bugMapCount} from '../town/jobs/bugSpecies';
+import {hideBug as hideFor} from './bugFlight';
 
 export type SwarmSet='bugs'|'fireflies';
-export type SwarmFrame={dt:number;x:number;z:number;night:boolean;sunset?:boolean;tier:number;reduced:boolean;busy:boolean};
+export type SwarmFrame={dt:number;x:number;z:number;night:boolean;sunset?:boolean;tier:number;reduced:boolean;busy:boolean;
+ /** A Bug squad shift is catching from the swarm (catching lane): its set is always out (even at heat tiers 3-4 / reduced motion,
+  *  at the tier-2 count) whatever the sky, so a shift can never run out of bugs. */
+ job?:SwarmSet|null};
 export type SwarmHit={id:string;index:number;kind:'bug'|'firefly';species:BugSpecies|null;call:FireflyCall|null;x:number;y:number;z:number;dist:number;flying:boolean};
 export type SwarmCatch={id:string;kind:'bug'|'firefly';species:BugSpecies|null;call:FireflyCall|null;x:number;y:number;z:number};
 
@@ -42,6 +47,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
  let slots:Slot[]=[],far:T.InstancedMesh|null=null,farFlap:T.InstancedBufferAttribute|null=null,farPose:T.InstancedBufferAttribute|null=null;
  let glow:T.InstancedMesh|null=null,lantern=new T.Vector3();
  let built:SwarmSet|null=null,want:SwarmSet='bugs',cap=0,fading=false,lastNight:boolean|null=null,time:'day'|'sunset'='day';
+ let seedOverride:number|null=null,pinned:{sl:Slot;at:{x:number;y:number;z:number};t:number}|null=null;
  let clock=0,farAcc=0,farSteps=0,px=0,pz=0,pspeed=0,havePlayer=false,builds=0,updates=0,tris=0;
  const owned:{dispose():void}[]=[];
  const m4=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(0,0,0,'YXZ'),p=new T.Vector3(),s=new T.Vector3(),one=new T.Vector3(1,1,1);
@@ -49,14 +55,14 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
  const hits:SwarmHit[]=[];const hitPool:SwarmHit[]=[];const ask={tier:0,reduced:false,night:false};
 
  function drop(){
-  if(!built)return;root.removeFromParent();for(const c of [...root.children]){root.remove(c);(c as T.InstancedMesh).dispose?.();}for(const o of owned)o.dispose();owned.length=0;
+  pinned=null;if(!built)return;root.removeFromParent();for(const c of [...root.children]){root.remove(c);(c as T.InstancedMesh).dispose?.();}for(const o of owned)o.dispose();owned.length=0;
   slots=[];far=null;farFlap=farPose=null;glow=null;material=null;glowMat=null;built=null;cap=0;
  }
  function own<X extends {dispose():void}>(x:X){owned.push(x);return x;}
  function build(set:SwarmSet,n:number,tier:number){
   built=set;cap=n;builds++;U.uFade.value=0;fading=false;
   material=own(bugMaterial(U));tris=0;
-  const seed=opts.seed??bugRotationSeed(Math.floor(Date.now()/864e5));
+  const seed=seedOverride??opts.seed??bugRotationSeed(Math.floor(Date.now()/864e5));
   if(set==='bugs'){
    const list=pickBugsOnMap(seed,tier,time).slice(0,n);
    slots=list.map((sp,i)=>{const h=BUG_HOMES.find(h=>h.id===sp.id)!;
@@ -97,10 +103,12 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
  /** Per frame (components/Town.tsx). */
  function update(f:SwarmFrame){
   const night=f.night;if(night!==lastNight){lastNight=night;want=night?'fireflies':'bugs';}
+  if(f.job)want=f.job;
   time=f.sunset?'sunset':'day';
   const dc=Math.hypot(f.x-SUMMIT_CENTER.x,f.z-SUMMIT_CENTER.z);
   ask.tier=f.tier;ask.reduced=f.reduced;ask.night=want==='fireflies';
-  const n=dc<(built?WILD_BUG_RANGE.DROP_M:WILD_BUG_RANGE.BUILD_M)?wildBugCount(ask):0;
+  const ti=Math.min(2,Math.max(0,Math.floor(f.tier)||0)),jobN=f.job?(f.job==='fireflies'?FIREFLY_MAP_CAP[ti]:bugMapCount(ti)):0;
+  const n=f.job?Math.max(jobN,wildBugCount(ask)):dc<(built?WILD_BUG_RANGE.DROP_M:WILD_BUG_RANGE.BUILD_M)?wildBugCount(ask):0;
   if(built&&(!n||(n!==cap&&!fading&&built===want)))drop();
   if(!n){havePlayer=false;return;}
   if(built&&built!==want)fading=true;// fade out, then swap sets
@@ -121,7 +129,8 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   for(let i=0;i<slots.length;i++){const sl=slots[i],b=sl.bug,d=Math.hypot(b.x-f.x,b.z-f.z);
    if(d>WILD_BUG_RANGE.SIM_M&&b.mode!==Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
    const near=d<WILD_BUG_RANGE.NEAR_M,step=near?dt:farStep?fdt:0;
-   if(step>0&&stepBug(b,step,ctx))flutter(sl);
+   if(pinned&&pinned.sl===sl){const a=pinned.at;pinned.t+=dt;b.x=a.x;b.y=a.y;b.z=a.z;b.yaw+=Math.sin(pinned.t*14)*.08;b.roll=Math.sin(pinned.t*19)*.35;b.pitch=Math.sin(pinned.t*11)*.25;b.fade=1;}
+   else if(step>0&&stepBug(b,step,ctx))flutter(sl);
    if(b.mode===Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
    if(isBugs){sl.near=sl.near?d<WILD_BUG_RANGE.FULL_OUT_M:d<WILD_BUG_RANGE.FULL_IN_M;
     if(sl.near&&sl.mesh){sl.mesh.visible=true;sl.mesh.setMatrixAt(0,matrixOf(sl));sl.mesh.instanceMatrix.needsUpdate=true;writeAttrs(sl.flap!,sl.pose!,0,b);sl.flap!.needsUpdate=true;sl.pose!.needsUpdate=true;continue;}
@@ -143,7 +152,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   /** Bugs within r metres of (x, y, z), nearest first (a reused array: copy what you keep). Caught (hidden) bugs are left out. */
   query(x:number,y:number,z:number,r:number):readonly SwarmHit[]{
    hits.length=0;
-   for(let i=0;i<slots.length;i++){const sl=slots[i],b=sl.bug;if(b.mode===Mode.Hidden||b.fade<.5)continue;const d=Math.hypot(b.x-x,b.y-y,b.z-z);if(d>r)continue;
+   for(let i=0;i<slots.length;i++){const sl=slots[i],b=sl.bug;if(b.mode===Mode.Hidden||b.fade<.5||pinned?.sl===sl)continue;const d=Math.hypot(b.x-x,b.y-y,b.z-z);if(d>r)continue;
     const h=hitPool[hits.length]??(hitPool[hits.length]={id:'',index:0,kind:'bug',species:null,call:null,x:0,y:0,z:0,dist:0,flying:false});
     h.id=b.id;h.index=i;h.kind=sl.sp?'bug':'firefly';h.species=sl.sp;h.call=sl.call;h.x=b.x;h.y=b.y;h.z=b.z;h.dist=d;h.flying=b.mode===Mode.Fly||b.mode===Mode.Hover||b.mode===Mode.Hop;
     let j=hits.length;hits.push(h);while(j>0&&hits[j-1].dist>h.dist){hits[j]=hits[j-1];hits[j-1]=h;j--;}}
@@ -152,7 +161,20 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   startle(id:string,from:{x:number;z:number}){const sl=find(id);if(sl)startleBug(sl.bug,from.x,from.z,floor);return !!sl;},
   /** Catch one: it disappears (a new one turns up at its home later); returns where it was and what it is. */
   catch(id:string):SwarmCatch|null{const sl=find(id);if(!sl||sl.bug.mode===Mode.Hidden)return null;const b=sl.bug;
-   const out={id:b.id,kind:sl.sp?'bug' as const:'firefly' as const,species:sl.sp,call:sl.call,x:b.x,y:b.y,z:b.z};hideBug(b);if(sl.mesh)sl.mesh.visible=false;return out;},
+   const out={id:b.id,kind:sl.sp?'bug' as const:'firefly' as const,species:sl.sp,call:sl.call,x:b.x,y:b.y,z:b.z};if(pinned?.sl===sl)pinned=null;hideBug(b);if(sl.mesh)sl.mesh.visible=false;return out;},
+  /** Hold one bug in the net (the catch zoom): it follows `at` (a live point the caller moves) and wiggles; null lets it go. */
+  pin(id:string|null,at?:{x:number;y:number;z:number}){if(!id||!at){pinned=null;return true;}const sl=find(id);if(!sl||sl.bug.mode===Mode.Hidden)return false;pinned={sl,at,t:0};return true;},
+  /** A new rotation seed for the day bugs (a Bug squad shift's own set, pickBugsOnMap); null = the daily seed. Rebuilds the set. */
+  reseed(seed:number|null){if(seed===seedOverride)return;seedOverride=seed;if(built==='bugs')drop();},
+  get pinned(){return pinned?.sl.bug.id??null;},
+  /** Bug squad (catching lane): when no bug is near the player, call one over. The farthest bug (> `far` m away, not pinned) moves
+   *  its home to the free home spot (this set's BUG_HOMES / FIREFLY_HOMES) nearest the player within `within` m, out of sight, and
+   *  fades in there. Returns its id, or null. One call = O(slots × homes); the caller throttles it (≤ every 2 s). */
+  recall(x:number,z:number,within=90,far=100):string|null{if(!built)return null;const homes=built==='bugs'?BUG_HOMES:FIREFLY_HOMES;
+   let best:Slot|null=null,bd=far;for(const sl of slots){if(pinned?.sl===sl)continue;const d=Math.hypot(sl.bug.x-x,sl.bug.z-z);if(d>bd){bd=d;best=sl;}}
+   if(!best)return null;let hx=0,hz=0,hd=within;
+   for(const h of homes){const d=Math.hypot(h.x-x,h.z-z);if(d>=hd||d<8)continue;if(slots.some(sl=>sl!==best&&Math.hypot(sl.bug.hx-h.x,sl.bug.hz-h.z)<10))continue;hd=d;hx=h.x;hz=h.z;}
+   if(hd>=within)return null;best.bug.hx=hx;best.bug.hz=hz;hideFor(best.bug,.05);return best.bug.id;},
   /** Swap between the day bugs and the night fireflies (fades out, rebuilds, fades in). Town drives it from Day / Night. */
   setSet(set:SwarmSet){want=set;},
   /** World position of a bug for the zoom camera (null when caught or not out). */

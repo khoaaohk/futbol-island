@@ -127,6 +127,6 @@ for(const [tier,n] of [[0,12],[1,10],[2,8]]){const sc=new T.Scene(),sw=S.createB
  assert(!/\bnew (?!Event\(WILD_BUG_HINT)|\[\]|[(=,]\s*\{\s*\w+:/.test(loop.replace(/build\([^)]*\)/g,'')),'no allocation in the swarm update');
  const fl=read('lib/graphics/bugFlight.ts'),step=fl.slice(fl.indexOf('export function stepBug'),fl.indexOf('/** Catch:'));
  assert(!/\bnew |\[[^\]]*,[^\]]*\]\s*\)|[(=,]\s*\{\s*\w+:/.test(step),'no allocation in the flight step');
- const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*night:timeRef\.current==='night',sunset:timeRef\.current==='sunset',tier:heat\.tier,reduced,busy:!!jobs\.run\}\)/,'Town drives it');}
+ const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*night:timeRef\.current==='night',sunset:timeRef\.current==='sunset',tier:heat\.tier,reduced,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it');}
 console.log('PASS bug flight: 20 species + firefly modelled (wings, cases, legs), caps 12/10/8 + fireflies 8/6/4, draw budget, 60 s flights with no NaN or teleport, sneaking vs running, the catching API, no per-frame allocation');
 function same(a,b,m){assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);}

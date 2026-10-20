@@ -481,3 +481,47 @@ the same bugs, spread over Summit Isle. Test: `tests/bug-flight.cjs` (plus the u
 - **API for the catching lane**: `query(x, y, z, r)` (reused array, nearest first: id, kind, species / call, x y z, dist, flying),
   `startle(id, {x, z})`, `catch(id)` → {id, kind, species, call, x, y, z} (the bug disappears and a new one turns up at home after
   45 s), `setSet('bugs' | 'fireflies')`, `position(id, out)` and `heading(id)` for the zoom camera. In the page: `__fi2.wildBugs`.
+  Added by the catching lane: `pin(id, at)`, `reseed(seed)`, `recall(x, z)`, and the frame's `job` set.
+
+### Catching lane: Animal Crossing swings from the swarm (20 Oct 2026, local, not deployed)
+
+User: "it needs to be more like animal crossing ... the net needs to have a swing ... make the radius for catching the bug bigger",
+"the net looks like a cone", "when catching animate and zoom into the bug being caught", "each bug caught should have a story related
+to futbol like catching fish", then "allow to switch to scooter, bike riding, and moped with the net. not flying", "you must walk to
+catch the bugs", "it shouldn't end the job unless I start to enter the water or hit end job" and "add a hint button next to the close
+button". Rules: `lib/town/jobs/bugCatch.ts`; net: `bugNet.ts`; runtime: `jobScene.ts`; tests: `tests/summit-bugs.cjs` (rewritten),
+`tests/bug-extras.cjs`; browser: `scripts/check-bug-squad-browser.cjs`.
+
+- **From the swarm:** the job owns no bug meshes. Town passes the swarm (`bugs:()=>wildBugs`) and keeps it visible during the shift
+  (`busy` only for other jobs, `job: jobs.swarmJob`): the shift's set is always out, even at heat tiers 3-4 / reduced motion (at the
+  tier-2 count). Each shift reseeds `pickBugsOnMap` (`shiftSeed`: the best of 8 seeds for species missing from the squad). When no
+  bug is within 40 m for 2 s, the farthest one is called over to a free home spot within 90 m (`swarm.recall`).
+- **Roster:** the 20 species (11 starters, subs, staff) at their homes; fireflies = the 8 calls. A shift catches `SHIFT_GOAL` (6 bugs /
+  5 fireflies, or all that are out); the pill counts the squad (N/20; fireflies N/8) and the panel shows "Today's jar n/6 · squad
+  n/20". Each species fills the squad once per completion; the 20th starts a new squad and the release shows the 20-bug formation
+  (4-3-3 + bench and staff, `FORMATION_CAP` 20 / 14 / 11 by heat tier, one temporary instanced draw of the shared bug shape). Pay
+  unchanged (5); a species' first catch ever pays `NEW_SPECIES_COINS` (1, creditOnce `learn:book:bug-new-<id>`); all 20 bugs and all
+  8 fireflies each pay LEARN_COINS.book once.
+- **Swing:** Swing net (Space) or a tap near a bug: wind-up 0.16 s, sweep with a swoosh ribbon, hit frame 0.3 s, recovery to 0.62 s.
+  Sweep sphere `NET_SWEEP_RADIUS` 2.4 m (2 × the old 1.2 m reach) round a point 1.3 m ahead (± 2.6 m vertical), Net down × 1.15;
+  auto-aim to the nearest bug within 5 m in a ±75° cone; a locked target lunges the sweep up to 3.6 m out with 1.35 × slack; taps
+  reach 6.5 m. A miss startles the nearest bug. Poses: `netswing`, `netcatch` (one-shots), `netcarry` / `netsneak` (held, upper body,
+  both hands on the pole, swaying with the walk).
+- **Net:** a merged frame (wooden pole, rubber grip, dark collar band, 0.42 m hoop, a little football on the butt) and a deep mesh bag
+  (stretched hemisphere, vertex-colour mesh lines) on a spring that lags through swings and turns and flips closed on a catch. The
+  pole runs through both hands (`NET_GRIP`, `NET_HAND_FOLLOW`); riding, it is strapped to the side of the backpack (`NET_PACK`,
+  `netCarryMode` 'pack', to be wired to the backpack lane's sockets).
+- **Catch:** the bug is pinned in the bag (`swarm.pin`), a shot camera eases in (0.9 s), holds 1.1 s with the bug wiggling, sparkle +
+  confetti bursts from the pooled job FX and a ground pulse, then eases out; the bug goes into the jar (`swarm.catch`, jar pop) and the
+  story card (name, role, NEW, +coin, squad n/20, "Real football fact" rotating by catch count) slides in for 7 s. Controls are held
+  only during the zoom; a tap skips; reduced motion = no zoom (the card fades). Quit / set swap / leaving end it safely (`endZoom`).
+- **Rides:** Ride (R) cycles walk / scooter / bike / moped, never the jetpack (`BUG_FLY_NOTE`). Bugs are caught on foot: riding, the
+  swing button reads "Hop off" and dismounts. Net down / up moved to E (a chip in the job panel).
+- **Ending:** never by area radius, trail, slopes or riding: only stepping into the sea (`water.inWater`), leaving the island another
+  way (> 25 m past the coastline: zipline, ferry, teleport) with a toast, or End job (asks once more when the jar has bugs).
+- **Hint:** the pill's ➤ button (and "Nearest bug" in the panel): the nearest uncaught bug (or its home) for 7 s with a pulsing ground
+  chevron, the beacon and edge arrow and "Name, N m"; 3 s cooldown; ends within 3 m or on a catch.
+- **Analytics:** `su:bug_swing`, `su:bug_miss`, `su:bug_story`, `su:bug_hint` (allowlist + /admin Summit card; no migration: the SQL
+  only checks the id shape). Bug book: same key, version 2 keyed by species id, v1 index arrays migrated (≤ ~1 KB).
+- **Heat:** one swarm query per swing, the arrow / hint at 4 Hz, the recall check every 2 s; the net is 3 draws (frame, bag, swoosh
+  only while swinging) + the hint chevron while shown; release flyers one draw for ~5-6 s. No per-frame allocation.

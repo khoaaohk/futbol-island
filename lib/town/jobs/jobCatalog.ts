@@ -65,6 +65,9 @@ export type JobDef={
  set?:BugSetId;nightNote?:string;
  /** How close (m) counts as at the drop-off (default 1.8). The Bug squad's is wider: the whole patch by the bug hotel / lantern goal. */
  deliverReach?:number;
+ /** Bug squad (catching lane, Oct 20 2026): catches come from net swings at the island's bug swarm (jobScene.ts), not from
+  *  standing at a target; `targets` are the roster's homes (arrow fallback and the job area). */
+ swing?:boolean;
  /** Collect jobs: a line per target shown in the panel at that target, and a note when it is collected (bugScout.ts). */
  spotHints?:readonly string[];spotNotes?:readonly string[];
 };
@@ -214,19 +217,19 @@ JOBS.push((()=>{
 // roster getter so a longer species table plugs straight in. Old id `firefly-floodlights` resolves here (BUG_JOB_ALIASES).
 const BUG_NIGHT_NOTE='Changes at night: switch the island to Night (Settings, Time of day) and the same shift catches fireflies instead. Each set keeps its own progress.';
 const BUG_SET_COPY:Record<BugSetId,Pick<JobDef,'intro'|'howTo'|'work'|'lesson'|'lessonSource'>>={
- bugs:{intro:'The island club wants a Bug squad! Bugs on the slopes and in the meadow below play like footballers: a goalkeeper, defenders, a midfielder, a winger, a captain, a striker and even a referee. At each one, hold Net and keep it still, like a soft first touch, until the bug drifts into your jar. Then let the whole squad go at the bug hotel by this sign. We only look, learn and let them go.',
-  howTo:'Follow the arrow to each bug, hold Net until it drifts into your jar, then release the squad at the bug hotel.',
-  work:{target:[{id:'net',label:'Hold Net',busy:'Steady…',mode:'hold',time:.8,hint:'Hold Net and keep it still, like a soft first touch.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
+ bugs:{intro:'The island club wants a Bug squad of 20: eleven starters, the subs and the staff! Real bugs fly all over Summit Isle: up high on the mountain, along the trails and near the water. Sneak up, then tap Swing net (or tap the bug) to sweep it into your net, like a clean tackle. Each shift, catch a few for the squad, then let them all go at the bug hotel by this sign. You can ride your scooter, bike or moped between them. We only look, learn and let them go.',
+  howTo:'Find a bug (follow the arrow), sneak close, then Swing net. Catch the shift\'s bugs, then release the squad at the bug hotel.',
+  work:{target:[{id:'net',label:'Swing net',mode:'tap',hint:'Sneak up, face the bug and Swing net: a clean sweep, like a well-timed tackle.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
   lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'},
- fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk to a glowing firefly and hold Cup the jar, calm and still, until it drifts in. When they are all in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
-  howTo:'Follow the arrow to each firefly, hold Cup the jar until it drifts in, then light up the lantern goal.',
-  work:{target:[{id:'jar',label:'Cup the jar',busy:'Wait for the glow…',mode:'hold',time:.7,hint:'Hold Cup the jar and stay still: fireflies drift in when you are calm.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
+ fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk up to a glowing firefly and Swing net to catch it gently. When the shift\'s fireflies are in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
+  howTo:'Find a glowing firefly (follow the arrow), Swing net to catch it, then light up the lantern goal.',
+  work:{target:[{id:'jar',label:'Swing net',mode:'tap',hint:'Walk up calmly and Swing net: fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
   lesson:FIREFLY_JOB_LESSON},
 };
 const bugSetDefs=new Map<BugSetId,JobDef>();
 /** The Bug squad definition for one target set (memoised: the same object every time, so runs and views compare by identity). */
 export function bugJobFor(set:BugSetId):JobDef{let d=bugSetDefs.get(set);if(d)return d;const meta=BUG_SETS[set],roster=bugRoster(set);
- d={id:'bug-scout',title:meta.title,role:'Bug scout',place:'Summit Isle summit',board:{...BUG_BOARD},color:set==='fireflies'?'#2d3f6e':'#c8462f',kind:'collect',prop:meta.prop,set,
+ d={id:'bug-scout',title:meta.title,role:'Bug scout',place:'Summit Isle summit',board:{...BUG_BOARD},color:set==='fireflies'?'#2d3f6e':'#c8462f',kind:'collect',prop:meta.prop,set,swing:true,
   targets:roster.map(({x,z})=>({x,z})),deliver:{...meta.drop},deliverReach:2.8,radius:1.7,spotHints:roster.map(b=>b.hint),spotNotes:roster.map(b=>b.note),
   unit:meta.unit,nightNote:BUG_NIGHT_NOTE,...BUG_SET_COPY[set]};
  bugSetDefs.set(set,d);return d;}

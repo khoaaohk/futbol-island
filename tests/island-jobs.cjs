@@ -239,7 +239,7 @@ function environment(shared){
    if(job.work){
     // Every job has an action now: standing on a target does nothing until the action is done.
     const g0=R.runGoals(run)[0],before=R.runProgress(run).value;for(let k=0;k<5;k++)R.stepRun(run,at(g0),.2,floor);
-    assert.equal(R.runProgress(run).value,before,`${job.id}: walking onto the spot alone does not finish it`);assert(R.runActions(run).filter(a=>a.id!=='netlow'&&a.id!=='netup').length===1,`${job.id}: one clear action button at the spot (the Bug squad's net toggle sits in the ride slot)`);
+    assert.equal(R.runProgress(run).value,before,`${job.id}: walking onto the spot alone does not finish it`);assert(R.runActions(run).filter(a=>a.id!=='netlow'&&a.id!=='netup'&&a.id!=='ride').length===1,`${job.id}: one clear action button at the spot (the Bug squad's net toggle sits in the ride slot)`);
     if(job.kind==='trail'){
      // The marker paints only while held: a dash walked with the marker up stays faded (a gap to come back for).
      const n0=run.next;R.stepRun(run,at(job.targets[n0]),.1,floor);assert.equal(run.next,n0,'marker up: no paint');assert.match(R.runHint(run),/Hold Paint/);
@@ -248,6 +248,8 @@ function environment(shared){
    while(run.phase!=='done'&&guard++<3000){
     if(job.kind==='offside'&&run.phase==='call'){events.push(...R.runAction(run,R.offsideClip(run).flag?'flag':'play-on'));continue;}
     if(job.kind==='offside'&&run.phase==='explain'){events.push(...R.runAction(run,'next'));continue;}
+    // The Bug squad catches with net swings at the island's swarm (jobScene.ts; tests/summit-bugs.cjs): here, the rule's catch.
+    if(job.swing&&run.phase==='work'){events.push(...R.swingCatch(run,run.got.indexOf(false)));continue;}
     const g=R.runGoals(run)[0]??job.targets[0];assert(g,`${job.id} has an active target or action`);events.push(...R.stepRun(run,at(g),.1,floor));
     const a=R.runActions(run)[0];if(!a)continue;
     if(a.hold){events.push(...R.runAction(run,a.id));for(let k=0;k<30&&run.holding;k++)events.push(...R.stepRun(run,at(g),.1,floor));events.push(...R.runAction(run,a.id+':up'));}
@@ -404,7 +406,7 @@ function environment(shared){
    same(JM.jobButtons(r3).map(b=>`${b.slot}:${b.id}:${b.enabled?1:0}`),['shoot:kick:0','juggle:pull:0','ride:unload:1']);R.runAction(r3,'unload');assert.equal(r3.phase,'done');assert.equal(JM.jobButtons(r3),null,'job complete: default buttons');}
   assert.equal(JM.jobButtons(null),null,'no job (quit): default buttons');
   assert.equal(JM.jobButtons(R.startRun(C.jobById('wall-rebounds'))),null,'Wall rebounds is a ball drill: it keeps Juggle / Shoot');
-  for(const j of C.JOBS){const slots=JM.JOB_SLOTS[j.id];assert(slots!==undefined,`${j.id} has a button layout`);if(slots)assert(slots.length>=1&&slots.length<=3,`${j.id}: 1–3 job buttons`);}
+  for(const j of C.JOBS){const slots=JM.JOB_SLOTS[j.id];assert(slots!==undefined,`${j.id} has a button layout`);if(slots)assert(slots.length>=1&&slots.length<=(j.id==="bug-scout"?4:3),`${j.id}: 1–3 job buttons (the Bug squad adds the E net chip)`);}
   // Leaving the farm ends the job (the host then restores the ride, ball and buttons).
   assert(!R.outsideJobArea(job,spots[0].x,spots[0].z)&&!R.outsideJobArea(job,job.deliver.x,job.deliver.z));assert(R.outsideJobArea(job,520,-112),'the main-island side is outside the farm');
   // Poses: which job events play which bounded pose.
@@ -427,9 +429,9 @@ function environment(shared){
    assert(!m.kicking&&m.update(.02,{x:0,z:0,y:0,yaw:0},()=>0,null).ball===null);}
   // Town wiring: the ride request, the job-end restore and the cluster owning the ball.
   const townSrc=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
-  assert.match(townSrc,/if\(!rideAllowed\(mode,jobActiveRef\.current\)\)\{jobNoteRef\.current\(RIDE_WAIT_NOTE\);return;\}/,'selectRide refuses rides during a job');
+  assert.match(townSrc,/if\(!rideAllowed\(mode,jobActiveRef\.current,jobId\)\)\{jobNoteRef\.current\(jobId==='bug-scout'\?BUG_FLY_NOTE:RIDE_WAIT_NOTE\);return;\}/,'selectRide refuses rides during a job (the Bug squad keeps scooter / bike / moped)');
   assert.match(townSrc,/if\(!jobRun\)jobMoves\.end\(\);[^\n]*?jobFrame=NO_JOB_FRAME;walkBall\.reset/,'job end (quit, done, left the area) restores the ball; the last one-shot pose plays out (bug A9)');
-  assert.match(townSrc,/if\(jobs\.holding&&rideRef\.current==='walk'\)\{player\.handPositions\(jobHandL,jobHandR\);jobs\.holdProps\(/,'what is in the hands follows them through the wind-down');
+  assert.match(townSrc,/if\(jobs\.holding&&\(rideRef\.current==='walk'\|\|jobs\.swarmJob\)\)\{player\.handPositions\(jobHandL,jobHandR\);jobs\.holdProps\(/,'what is in the hands follows them through the wind-down');
   assert.match(townSrc,/if\(jobButtonsRef\.current\|\|water\.inWater\)\{input\.current\.kick=input\.current\.juggle=false/,'no kicks or juggles while the job buttons are up (or in the sea, Oct 15 2026)');
   assert.match(fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8'),/a\.actions\.length>0&&!a\.buttons/,'no duplicate action buttons in the job panel');
   // Oct 1 2026 (user): a two-row panel that fades to a chip (title · count, tap to open, round Stop) and still announces progress.

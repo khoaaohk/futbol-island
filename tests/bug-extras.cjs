@@ -30,43 +30,23 @@ function load(name){
 const read=f=>fs.readFileSync(path.join(base,f),'utf8');
 const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN=load('lib/saves/snapshot.ts');
 
-// ---- 1. The Bug book ----
-{assert.equal(BB.BUG_BOOK_SIZE,16);assert.equal(BB.BUG_BOOK_PAGES.length,16,'8 bugs + 8 firefly calls');
- for(const p of BB.BUG_BOOK_PAGES){assert(p.name.length>3&&p.role.length>3,'a name and a role');assert(p.lesson.length>40&&!/in the jar/i.test(p.lesson),'the lesson without the catch line: '+p.lesson);}
- for(const role of ['Goalkeeper','Centre-back','Full-back','Midfielder','Winger','Captain','Striker','Referee'])assert(BB.BUG_BOOK_PAGES.some(p=>p.role.startsWith(role)),'a page for the '+role);
+// ---- 1. The Bug book (catching lane: 20 bug + 8 firefly pages keyed by species id; details in tests/summit-bugs.cjs §3) ----
+{assert.equal(BB.BUG_BOOK_SIZE,28);assert.equal(BB.BUG_BOOK_PAGES.length,28,'20 bugs + 8 firefly calls');
+ for(const p of BB.BUG_BOOK_PAGES){assert(p.name.length>3&&p.role.length>3,'a name and a role');assert(p.lesson.length>30&&!/in the jar/i.test(p.lesson),'the lesson without the catch line: '+p.lesson);}
  assert(BB.BUG_BOOK_PAGES.some(p=>p.name.includes('Man on!')),'firefly pages are named by their call');
- // Fresh, then a garbage save, then catches across "shifts".
  same(BB.readBugBook(),BB.emptyBugBook());storage.set(BB.BUG_BOOK_KEY,'{"bugs":[1,"x",-4,1e9],"fireflies":"no","reward":"yes","extra":1}');
- same(BB.readBugBook(),{version:1,bugs:[1,0,0,9999,0,0,0,0],fireflies:[0,0,0,0,0,0,0,0],reward:false},'sanitised: counts clamped, junk dropped');
+ const s1=BB.readBugBook();same([s1.version,s1.bugs.ladybug,s1.bugs.dragonfly,Object.keys(s1.fireflies).length,s1.reward],[2,1,9999,0,false],'v1 sanitised and migrated: counts clamped, junk dropped');
  storage.set(BB.BUG_BOOK_KEY,'not json');same(BB.readBugBook(),BB.emptyBugBook(),'unreadable: an empty book');storage.delete(BB.BUG_BOOK_KEY);
- let r=BB.recordBugCatch('bug',0);assert(r.first&&!r.completed);r=BB.recordBugCatch('bug',0);assert(!r.first,'second catch of the same bug');
- assert.equal(BB.recordBugCatch('bug',8).first,false,'out of range ignored');assert.equal(BB.readBugBook().bugs[0],2,'counted twice, remembered');
- let completed=0;for(let i=0;i<8;i++){if(BB.recordBugCatch('bug',i).completed)completed++;if(BB.recordBugCatch('firefly',i).completed)completed++;}
- assert.equal(completed,1,'the 16th new kind completes the book, once');assert(BB.bugBookComplete(BB.readBugBook()));
- assert.equal(BB.recordBugCatch('firefly',3).completed,false,'never completes twice');
- assert.equal(BB.markBugBookReward().reward,true);
- // Synced and tiny: a full book, worst-case counts, inside a full snapshot under the 192 KB gzip cap, and round-tripped.
  assert(SN.SYNC_KEYS.includes(BB.BUG_BOOK_KEY)&&SN.isSyncKey(BB.BUG_BOOK_KEY),'the book syncs with the save');
  assert(read('docs/accounts-design.md').includes('`fi2-bug-book-v1`'),'documented in the save allowlist doc');
- const worst={version:1,bugs:Array(8).fill(9999),fireflies:Array(8).fill(9999),reward:true};BB.writeBugBook(worst);
- assert(storage.get(BB.BUG_BOOK_KEY).length<140,'the whole book is under 140 bytes: '+storage.get(BB.BUG_BOOK_KEY).length);
- storage.set('fi2-backpack-v1','x'.repeat(40000));// other progress in the save
+ const worst={version:2,bugs:Object.fromEntries(BB.BUG_IDS.map(i=>[i,9999])),fireflies:Object.fromEntries(BB.FIREFLY_IDS.map(i=>[i,9999])),squad:BB.BUG_IDS.slice(0,19),squads:9999,reward:true,nightReward:true};BB.writeBugBook(worst);
+ assert(storage.get(BB.BUG_BOOK_KEY).length<1100,'the whole book is about 1 KB at worst: '+storage.get(BB.BUG_BOOK_KEY).length);
+ storage.set('fi2-backpack-v1','x'.repeat(40000));
  const snap=SN.buildSnapshot(localStorage,Date.parse('2026-10-20T10:00:00'));assert.equal(snap.keys[BB.BUG_BOOK_KEY],storage.get(BB.BUG_BOOK_KEY));
  assert(zlib.gzipSync(JSON.stringify(snap)).length<SN.MAX_GZIP_BYTES,'within the gzip cap');
- const before=storage.get(BB.BUG_BOOK_KEY);storage.clear();SN.applySnapshot(localStorage,snap);same(BB.readBugBook(),worst,'restored from the save code: '+before);storage.clear();}
-
-// ---- 2. A real shift fills the book; the bonus is the once-ever learning id ----
-{const C=load('lib/town/jobs/jobCatalog.ts'),V=load('lib/town/venues.ts'),floor=(x,z)=>V.fieldSurfaceHeight(x,z),S=load('lib/town/jobs/jobScene.ts'),DT=1/30;
- const api=S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-10-20T10:00:00'),timeOfDay:()=>'day'}),day=C.jobById('bug-scout');
- const at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),frames=(p,s)=>{for(let t=0;t<s-1e-9;t+=DT)api.update(DT,p,null,true,true,false);};
- frames(at(day.board),.5);assert(api.start('bug-scout'));docEvents.length=0;
- for(const i of [0,1]){frames(at(day.targets[i]),2.2);api.act('net');frames(at(day.targets[i]),1);api.act('net:up');}
- same(BB.readBugBook().bugs.slice(0,3),[1,1,0],'two bugs caught on the shift are in the book');
- const cues=docEvents.filter(([n])=>n==='fi2-job-cue').map(([,d])=>d);assert(cues.includes('net')&&cues.includes('jar'),'net and jar cues: '+cues.join(','));
- api.stop?.();api.dispose();
- const reward=read('lib/town/jobs/bugBookReward.ts');assert.match(reward,/learnCoins\.pay\('book',BUG_BOOK_REWARD_ID/,'the bonus is learn:book:bug-book (creditOnce, once ever)');
- assert.match(read('lib/town/jobs/jobScene.ts'),/recordBugCatch\(def\.prop,i\)\.completed\)\{countBugBookComplete\(\);cue\(BUG_BOOK_COMPLETE_EVENT/);
- storage.clear();}
+ storage.clear();SN.applySnapshot(localStorage,snap);same(BB.readBugBook(),worst,'restored from the save code');storage.clear();
+ const reward=read('lib/town/jobs/bugBookReward.ts');assert.match(reward,/learnCoins\.pay\('book',BUG_BOOK_REWARD_ID/,'the 20-bug bonus is learn:book:bug-book (creditOnce, once ever)');
+ assert.match(reward,/BUG_BOOK_NIGHT_REWARD_ID/,'and one for the 8 fireflies');assert.match(reward,/learn:book:\$\{bugNewRewardId\(id\)\}/,'a small once-per-species bonus');}
 
 // ---- 3. Wild bugs (since Bug flight: the island's bug swarm, lib/graphics/bugSwarm.ts; details in tests/bug-flight.cjs) ----
 {const W=load('lib/graphics/wildBugsCore.ts'),SI=load('lib/town/summitIsle.ts');
@@ -85,7 +65,7 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
  step({...off,busy:true});assert.equal(wb.root.visible,false,'hidden while a bug job runs');step(off);assert.equal(wb.root.visible,true);
  step({x:C.x+270,z:C.z});assert(wb.set,'kept between BUILD_M and DROP_M (hysteresis)');step({x:C.x+300,z:C.z});assert.equal(wb.set,null,'disposed after leaving');
  wb.dispose();assert.equal(scene.children.length,0);
- const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,busy:!!jobs\.run\}\)/,'Town drives it with the heat tier and the job');assert.match(town,/wildBugs\.dispo/);}
+ const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it with the heat tier and the job (the Bug squad catches from it)');assert.match(town,/wildBugs\.dispo/);}
 
 // ---- 4. Sounds, analytics, UI ----
 {let now=0;const param=()=>({value:1,setValueAtTime(v){this.value=v},linearRampToValueAtTime(v){this.value=v},exponentialRampToValueAtTime(v){this.value=v},cancelScheduledValues(){},setTargetAtTime(v){this.value=v}});
@@ -104,6 +84,6 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
  for(const id of ['su:bugbook_open','su:bugbook_complete','su:wild_flutter']){assert(CID.isCountId(id),'allowlisted '+id);assert(ev.includes(`'${id}'`),'call site '+id);assert(admin.includes(`'${id}'`),'in /admin '+id);}
  assert.match(read('components/BugBook.tsx'),/countBugBookOpen\(\)/);assert.match(read('lib/graphics/bugSwarm.ts'),/countWildFlutter\(\)/);
  const jobsUi=read('components/IslandJobs.tsx');assert.match(jobsUi,/data-job-bugbook/);assert.match(jobsUi,/addEventListener\(OPEN_BUG_BOOK/);assert.match(jobsUi,/addEventListener\(WILD_BUG_HINT/);}
-console.log('PASS bug extras: the Bug book (16 pages, saved and synced, tiny, completes once with a once-ever bonus), wild bugs (the island bug swarm, 12/10/8/0 by heat tier, near Summit Isle only), and the net / jar / firefly chime / squad sounds');
+console.log('PASS bug extras: the Bug book (28 pages by species id, v1 migrated, saved and synced, ~1 KB, once-ever bonuses), wild bugs (the island bug swarm, 12/10/8/0 by heat tier, near Summit Isle only), and the net / jar / firefly chime / squad sounds');
 function same(a,b,m){assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);}
 })().catch(e=>{console.error(e);process.exit(1);});

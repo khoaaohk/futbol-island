@@ -130,3 +130,18 @@
 .skip{position:fixed;inset:0;z-index:40;background:transparent;border:0;padding:0;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
 .skip span{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:rgba(20,32,28,.55);color:#fff8e6;font:600 14px/1.2 system-ui,sans-serif;white-space:nowrap}
 .skip:focus-visible span{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+
+/* Bug squad catch card (catching lane, Oct 20 2026): like the fish catch card (FishingHost .catch): cream card, "Real football fact". */
+.bugCard{position:fixed;z-index:31;left:50%;top:calc(env(safe-area-inset-top,0px) + 96px);transform:translateX(-50%);width:min(330px,calc(100vw - 32px));box-sizing:border-box;padding:10px 14px 12px;border:3px solid #fff2cd;border-radius:18px 26px 18px 18px;background:#fff1d3f2;color:#244d40;box-shadow:0 5px 0 #183b3440;text-align:left;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px;animation:bugCardIn .38s cubic-bezier(.2,1.4,.4,1) both;transition:opacity .35s ease,translate .35s ease}
+.bugCard[data-out]{opacity:0;translate:0 -18px;pointer-events:none}
+.bugCard[data-night]{background:#1f2c4ef2;border-color:#e9ff6b;color:#f4f6ea}
+.bugStamps{display:flex;gap:6px}.bugStamps em{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;background:var(--btn-pink,#ffb3c7);color:#5a1f33}
+.bugStamps em[data-stamp=squad]{background:#ffd36c;color:#4a3410}
+.bugName{font-family:IslandBrush,sans-serif;font-weight:400;font-size:24px;line-height:1.1}
+.bugRole{font-size:11.5px;font-weight:700;opacity:.8}
+.bugFact{display:block;margin-top:6px;font-size:12.5px;line-height:1.45}
+.bugFact span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;opacity:.75}
+.bugMeta{margin:2px 0 0;font-size:11.5px;font-weight:700;opacity:.8}
+.chipStop[data-on]{background:#ffd36c}
+@keyframes bugCardIn{from{opacity:0;scale:.85}}
+@media (prefers-reduced-motion:reduce){.bugCard{animation:none;transition:opacity .3s}.bugCard[data-out]{translate:none}}

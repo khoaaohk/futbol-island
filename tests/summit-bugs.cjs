@@ -1,14 +1,6 @@
-// Summit Isle's Bug squad (Oct 20 2026, user: "add new jobs on the mountain island. catching butterflies and other bugs ... for
-// nighttime add catching fireflies"; merged the same day: "don't have two separate jobs, the bug squad changes to catching the
-// fireflies if switching to night mode"; moved: "place the bug job at the top of the mountain on the south west end"; and "release
-// bugs doesn't work ... zoom in on the main character releasing all the bugs and then zoom out"). Headless, on the real island:
-//  1. the data: ONE job (bug-scout) with two target sets from the roster getter (bugs by Day / Sunset, fireflies at Night), each
-//     teaching football; the old firefly-floodlights id resolves to it;
-//  2. the sign and both drop-offs on the flat south-west corner of the summit, every spot walkable and clear of colliders;
-//  3. a whole shift on the real job scene: catch some bugs, switch to Night (the set swaps, the shift goes on, progress is kept per
-//     set), back to Day, finish, Net down / Net up, then the release cinematic (camera in and out, controls held, then payday);
-//     skipping it, quitting mid-cinematic and reduced motion are safe;
-//  5. pay unchanged (5, metered), the ledger migration of the old id, buttons (the net toggle replaces On foot), poses, analytics.
+// Summit Isle's Bug squad, catching lane (Oct 20 2026): one job (bugs by Day / Sunset, fireflies at Night) catching FROM THE island's
+// bug swarm with real net swings, the catch zoom + story card, the squad of 20 + formation release, the Bug book by species id, rides
+// (never flying; caught on foot), the hint, and the end rules (only the water or leaving the island). usage: node tests/summit-bugs.cjs
 // usage: node tests/summit-bugs.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire(base+'/package.json'),T=req('three');
@@ -28,114 +20,145 @@ function load(name){
  vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,r);cache.set(file,mod.exports);return mod.exports;}
 const read=f=>fs.readFileSync(path.join(base,f),'utf8');
 const B=load('lib/town/jobs/bugScout.ts'),C=load('lib/town/jobs/jobCatalog.ts'),E=load('lib/town/jobs/jobEconomy.ts'),M=load('lib/town/jobs/jobMoves.ts'),R=load('lib/town/jobs/jobRules.ts');
+const K=load('lib/town/jobs/bugCatch.ts'),BB=load('lib/town/jobs/bugBook.ts'),SP=load('lib/town/jobs/bugSpecies.ts'),NET=load('lib/town/jobs/bugNet.ts'),JP=load('lib/graphics/jobPoses.ts');
 const SI=load('lib/town/summitIsle.ts'),V=load('lib/town/venues.ts'),floor=(x,z)=>V.fieldSurfaceHeight(x,z);
 const day=C.jobVariant('bug-scout','bugs'),night=C.jobVariant('bug-scout','fireflies');
 
-// ---- 1. One job, two sets, data-driven ----
-{assert(day&&night,'both sets resolve');assert.equal(C.JOBS.filter(j=>j.id==='bug-scout').length,1,'one catalog entry');
- assert(!C.JOBS.some(j=>j.id==='firefly-floodlights'),'no second job');assert.equal(C.jobById('firefly-floodlights')?.id,'bug-scout','the old id resolves to the merged job');
- assert.equal(C.canonicalJobId('firefly-floodlights'),'bug-scout');assert.equal(C.jobById('bug-scout'),day,'the catalog entry is the bugs set');
- same(['day','sunset','night'].map(B.activeSet),['bugs','bugs','fireflies']);
- same(['day','sunset','night'].map(t=>C.jobVariant('bug-scout',t).set),['bugs','bugs','fireflies'],'the variant follows the time of day');
- assert.equal(C.jobVariant('bug-scout','night'),night,'memoised');assert(C.jobOpenAt(day,'night')&&C.jobOpenAt(night,'day'),'always open: the set changes instead');
- assert.equal(day.title,'Bug squad');assert.match(night.title,/^Night squad/);assert.equal(day.board.x,night.board.x,'one sign');
- assert(day.nightNote&&/night/i.test(day.nightNote)&&/firefl/i.test(day.nightNote),'the card says it changes at night');
- for(const [job,set,prop] of [[day,'bugs','bug'],[night,'fireflies','firefly']]){const list=B.bugRoster(set);
-  assert.equal(job.kind,'collect');assert.equal(job.prop,prop);assert.equal(job.id,'bug-scout');assert.equal(job.set,set);assert(!job.when,'no time gate');
-  assert.equal(job.targets.length,list.length,'targets come from the roster getter (no fixed count)');assert.equal(job.spotHints.length,list.length);assert.equal(job.spotNotes.length,list.length);
-  assert(job.deliver&&job.work.target.length===1&&job.work.target[0].mode==='hold'&&job.work.deliver,`${set}: hold at each, one tap at the drop-off`);
-  assert(job.lesson.length>120&&/footballer|squad|team/i.test(job.lesson),`${set}: a football lesson`);
-  for(const b of list){assert(b.note.length>60&&b.hint.length>8);assert(/^#[0-9a-f]{6}$/i.test(b.color));assert(!/\b(sting|kill|squash|hurt|die|dead)\b/i.test(b.note+b.hint),'friendly copy');}}
- for(const w of ['goalkeeper','defender','midfielder','winger','captain','striker','referee'])assert(B.BUG_SQUAD.some(b=>(b.hint+b.note).toLowerCase().includes(w)),`the squad has a ${w}`);
- for(const call of ['Man on!','Time!','Turn!'])assert(B.FIREFLY_CALLS.some(f=>f.note.includes(call)),`a firefly teaches "${call}"`);
- assert(/let.{0,20}go|release/i.test(day.intro)&&/fly free/i.test(night.intro),'bugs are let go, never kept');}
+// ---- 1. One job, two sets, the 20 realistic species and the 8 fireflies ----
+{assert(day&&night);assert.equal(C.JOBS.filter(j=>j.id==='bug-scout').length,1,'one catalog entry');assert.equal(C.jobById('firefly-floodlights')?.id,'bug-scout');
+ same(['day','sunset','night'].map(B.activeSet),['bugs','bugs','fireflies']);assert.equal(C.jobVariant('bug-scout','night'),night,'memoised');
+ assert.equal(B.bugRoster('bugs').length,20,'a roster of 20');assert.equal(B.bugRoster('fireflies').length,8,'8 fireflies');
+ same(B.bugRoster('bugs').map(b=>b.id),SP.BUG_SPECIES.map(b=>b.id),'the roster is the species table');
+ const groups=SP.BUG_SPECIES.reduce((o,b)=>(o[b.role.group]=(o[b.role.group]??0)+1,o),{});assert.equal(groups.starter,11,'11 starters');assert(groups.sub>0&&groups.staff>0,'subs and staff');
+ for(const job of [day,night]){assert(job.swing,'catches with net swings');assert.equal(job.work.target[0].mode,'tap','a swing, not a hold');assert(job.deliver&&job.work.deliver);
+  for(const b of B.bugRoster(job.set)){assert(b.stories.length>=1,'every species has a real football story: '+b.id);assert(b.name&&b.role&&b.note.length>30);}
+  for(const t of job.targets){const h=t;assert(SI.onSummitIsle(h.x,h.z)||SP.onSummitSand(h.x,h.z),'homes on Summit Isle');}}
+ for(const h of SP.BUG_HOMES)assert(SP.bugHomeAllowed(h),'none on the north end except beaches: '+h.id);
+ assert.equal(K.shiftGoal('bugs',12),6);assert.equal(K.shiftGoal('fireflies',4),4,'fewer out (heat) = fewer to catch');}
 
-// ---- 2. The summit's south-west corner (north is -z, west is -x) ----
-{const world=load('lib/town/world.ts').buildTown(new T.Scene()),P=SI.SUMMIT_PEAK,H=SI.TERRACE.h;
- const gap=(q,o)=>Math.hypot(Math.max(0,Math.abs(q.x-o.x)-o.w/2),Math.max(0,Math.abs(q.z-o.z)-o.d/2));
- for(const [q,what] of [[day.board,'sign'],[day.deliver,'bug hotel'],[night.deliver,'lantern goal']]){
-  assert(q.x<P.x-15&&q.z>P.z+5,`${what} (${q.x}, ${q.z}) is on the summit's south-west end`);
-  assert(floor(q.x,q.z)>H-1,`${what} is on top of the mountain (${(floor(q.x,q.z)-H).toFixed(2)} m from the terrace)`);
-  assert(SI.summitSlope(q.x,q.z)<.2,`${what}: flat (${SI.summitSlope(q.x,q.z).toFixed(2)})`);}
- assert.equal(day.board.yaw,0,'the sign faces south, toward the trail arriving');assert(SI.summitTrailDistance(day.board.x+2,day.board.z+5)<6,'beside the trail');
- for(const job of [day,night])for(const [q,what] of [[job.board,'sign'],[job.deliver,job.deliver.label],...job.targets.map((t,i)=>[t,`spot ${i}`])]){
-  assert(SI.onSummitIsle(q.x,q.z),`${job.set} ${what} on Summit Isle`);assert(SI.summitSlope(q.x,q.z)<.5,`${job.set} ${what}: gentle slope`);
-  const clear=Math.min(...world.obstacles.map(o=>gap(q,o)));assert(clear>=1.6,`${job.set} ${what} (${q.x}, ${q.z}) ≥ 1.6 m from every collider (${clear.toFixed(2)})`);
-  assert(!R.outsideJobArea(job,q.x,q.z));}
- // Bug homes are spread down the slopes (the content work's bands); the sign on the summit is the start and the finish.
- for(const t of [...day.targets,...night.targets])assert(Math.hypot(t.x-day.board.x,t.z-day.board.z)<140,'every bug within the job area walk');
- assert(Math.hypot(day.deliver.x-night.deliver.x,day.deliver.z-night.deliver.z)>2.5,'the two drop-offs apart');
- for(const j of C.JOBS)if(j.id!=='bug-scout')assert(Math.hypot(j.board.x-day.board.x,j.board.z-day.board.z)>2*C.BOARD_RANGE,'clear of '+j.id);}
+// ---- 2. Swing rules: a bigger sweep, generous auto-aim and tap range (named constants) ----
+{assert(K.NET_SWEEP_RADIUS>=2*K.NET_BASE_REACH,'the sweep is about 2x the first lane reach');assert(K.AUTO_AIM_HALF_ANGLE>=Math.PI/3,'a wide auto-aim cone');
+ assert(K.TAP_RANGE>=K.AUTO_AIM_RANGE&&K.TAP_RANGE<=K.LUNGE_MAX+K.NET_SWEEP_RADIUS*K.LOCKED_SLACK,'a tapped bug is always within the lunge');
+ const hit=(id,x,z,y=1)=>({id,x,y,z});
+ assert.equal(K.autoAim([hit('a',0,3),hit('b',0,-2)].sort((p,q)=>Math.hypot(p.x,p.z)-Math.hypot(q.x,q.z)),0,0,0)?.id,'a','the nearest IN FRONT, not the one behind');
+ assert.equal(K.autoAim([hit('a',3,1)],0,0,0)?.id,'a','a wide cone (72 degrees off the facing)');assert.equal(K.autoAim([hit('a',0,9)],0,0,0),null,'out of range');
+ const c=K.sweepCentre(0,0,0,0,{x:0,y:0,z:0});assert(K.inSweep(c,hit('a',1.2,3,2)),'2.4 m round the sweep centre');assert(!K.inSweep(c,hit('a',0,5)),'too far');
+ assert(K.inSweep(c,hit('a',0,4),true),'Net down reaches further');
+ assert.equal(K.swingResult([hit('a',0,4.5)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,4.5)],c,null),null,'unlocked: a miss');
+ // The swing timeline and the 20-bug formation.
+ same(['windup','sweep','sweep','recover','done'].map((ph,i)=>K.swingPhase([.05,.25,K.SWING.hit,.5,.7][i]).phase),['windup','sweep','sweep','recover','done']);
+ same(K.FORMATION_CAP,[20,14,11]);const ord=K.formationOrder();assert.equal(ord.length,20);assert.equal(new Set(ord).size,20);assert.equal(ord[0],'ladybug','the goalkeeper first');
+ assert.equal(K.formationSlots(20).length,20);
+ assert.equal(K.storyFor([{text:'a'},{text:'b'}],1).text,'a');assert.equal(K.storyFor([{text:'a'},{text:'b'}],2).text,'b','rotates on repeat catches');assert.equal(K.storyFor([{text:'a'},{text:'b'}],3).text,'a');
+ // Rides: scooter / bike / moped allowed on the Bug squad, never the jetpack; other jobs stay on foot.
+ same(['walk','scooter','bike','moped','jetpack'].map(m=>M.rideAllowed(m,true,'bug-scout')),[true,true,true,true,false]);same(['bike','walk'].map(m=>M.rideAllowed(m,true,'leaf-rake')),[false,true]);
+ same(['walk','bike'].map(r=>K.netCarryMode({ride:r,stalk:false,swinging:false,raised:false})),['carry','pack'],'riding: strapped to the backpack');
+ assert.equal(K.netCarryMode({ride:'walk',stalk:true,swinging:false,raised:false}),'low');
+ // Hint: the nearest uncaught (live first, then homes), all caught = none.
+ const homes=[{id:'x',x:100,z:0},{id:'y',x:10,z:0}];
+ assert.equal(K.nearestUncaught([{id:'a',x:5,z:0},{id:'b',x:2,z:0}],h=>h.id,homes,id=>id==='b',0,0).id,'a','skips the caught');
+ assert.equal(K.nearestUncaught([],h=>h.id,homes,()=>false,0,0).id,'y','not out: the nearest home');assert.equal(K.nearestUncaught([],h=>h.id,homes,()=>true,0,0),null,'all caught');}
 
-// ---- 3. A whole shift on the real job scene ----
-const S=load('lib/town/jobs/jobScene.ts'),DT=1/30;let tod='day',reduced=false;
-const api=S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-10-20T10:00:00'),timeOfDay:()=>tod});
+// ---- 3. The Bug book: 20 + 8 pages by species id, migration from the old index format, size cap ----
+{const port=()=>{let v=null;return {get:()=>v,set:x=>{v=x;}};};
+ assert.equal(BB.BUG_BOOK_PAGES.length,28,'20 bug pages + 8 firefly pages');assert(BB.BUG_BOOK_PAGES.every(p=>p.id&&p.stories.length),'keyed by id, with stories');
+ const old={version:1,bugs:[2,0,1,0,3,0,0,1],fireflies:[0,1,0,0,0,0,0,4],reward:false};const v2=BB.sanitizeBugBook(old);
+ same([v2.version,v2.bugs.ladybug,v2.bugs.grasshopper,v2.bugs.swallowtail,v2.bugs.bumblebee,v2.fireflies.time,v2.fireflies.mine],[2,2,1,3,1,1,4],'old index order maps to species ids');
+ same(v2.squad.sort(),['bumblebee','grasshopper','ladybug','swallowtail'],'old catches start the squad');
+ same(BB.sanitizeBugBook(JSON.parse(JSON.stringify(v2))),v2,'round-trips');
+ const p=port();let r=BB.recordBugCatch('bug','ladybug',p);assert(r.first&&r.squadNew&&r.count===1);r=BB.recordBugCatch('bug','ladybug',p);assert(!r.first&&!r.squadNew&&r.count===2,'once per squad');
+ assert.equal(BB.recordBugCatch('bug','nope',p).count,0,'unknown ids ignored');
+ let done=0,squad=0;for(const id of BB.BUG_IDS){const x=BB.recordBugCatch('bug',id,p);if(x.completed)done++;if(x.squadComplete)squad++;}
+ assert.equal(done,1,'the 20th species completes the book once');assert.equal(squad,1,'and the squad');const s=BB.readBugBook(p);same([s.squad.length,s.squads],[0,1],'a new squad starts');
+ for(const id of BB.FIREFLY_IDS)BB.recordBugCatch('firefly',id,p);assert(BB.nightBookComplete(BB.readBugBook(p)));
+ const worst={version:2,bugs:Object.fromEntries(BB.BUG_IDS.map(i=>[i,9999])),fireflies:Object.fromEntries(BB.FIREFLY_IDS.map(i=>[i,9999])),squad:BB.BUG_IDS.slice(0,19),squads:9999,reward:true,nightReward:true};
+ assert(JSON.stringify(BB.sanitizeBugBook(worst)).length<1100,'the whole book stays tiny: '+JSON.stringify(worst).length);}
+
+// ---- 4. A shift on the real job scene, catching from a (fake) swarm ----
+function fakeSwarm(list){const bugs=list.map(b=>({...b,hidden:false}));let pinned=null;
+ return {bugs,reseeds:[],startled:[],caught:[],
+  query(x,y,z,r){return bugs.filter(b=>!b.hidden&&b!==pinned&&Math.hypot(b.x-x,b.y-y,b.z-z)<=r).map(b=>({id:b.id,kind:b.kind,species:b.kind==='bug'?{id:b.id}:null,call:b.kind==='firefly'?{id:b.id}:null,x:b.x,y:b.y,z:b.z,dist:Math.hypot(b.x-x,b.y-y,b.z-z)})).sort((a,b)=>a.dist-b.dist);},
+  startle(id){this.startled.push(id);return true;},catch(id){const b=bugs.find(q=>q.id===id);if(b){b.hidden=true;this.caught.push(id);}return b;},
+  pin(id){pinned=id?bugs.find(q=>q.id===id):null;return true;},reseed(s){this.reseeds.push(s);},
+  position(id,out){const b=bugs.find(q=>q.id===id);if(!b||b.hidden)return null;out.x=b.x;out.y=b.y;out.z=b.z;return out;}};}
+const S=load('lib/town/jobs/jobScene.ts'),DT=1/30;let tod='day',reduced=false,tier=0;const book=new Map(),store={getItem:k=>book.get(k)??null,setItem:(k,v)=>book.set(k,v)};
+let swarm=null;const api=S.createJobScene(new T.Scene(),{storage:store,now:()=>Date.parse('2026-10-20T10:00:00'),timeOfDay:()=>tod,bugs:()=>swarm,tier:()=>tier});
 const cam=new T.PerspectiveCamera(50,1.6,.1,500);
-const at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),frames=(p,s)=>{for(let t=0;t<s-1e-9;t+=DT){api.update(DT,p,null,true,true,reduced);cam.position.set(p.x,p.y+12,p.z+18);cam.lookAt(p.x,p.y,p.z);api.applyCamera(cam,DT,reduced);}};
-const catchAt=(def,i,id)=>{frames(at(def.targets[i]),.2);assert.equal(api.run.at,i,`at ${def.set} ${i}`);api.act(id);frames(at(def.targets[i]),1);api.act(id+':up');assert.equal(api.run.got[i],true,`${def.set} ${i} in the jar`);};
-{const kids=api.root.children.length;
- frames(at(day.board),.5);assert.equal(api.getView().near,'bug-scout','the one sign offers the job');assert.equal(api.variant('bug-scout'),day);
- tod='night';assert.equal(api.variant('bug-scout'),night,'the card shows the night set at night');tod='day';
- assert.equal(api.root.children.length,kids,'nothing built while idle');
- assert.equal(api.start('bug-scout'),true);const props=api.root.getObjectByName('job-props-bug-scout'),bugs=props.children.find(o=>o.isInstancedMesh&&o.count===day.targets.length);
- assert(bugs,'one instanced draw of the roster');assert(props.getObjectByName('job-net')&&props.getObjectByName('job-jar'),'a net and a jar');
- assert.equal(api.getView().active.title,'Bug squad');
- const v0=bugs.instanceMatrix.version;frames(at(day.board),.2);assert(bugs.instanceMatrix.version>v0,'the bugs flutter');
- for(const i of [0,1,2])catchAt(day,i,'net');
- // Net down / Net up (the ride slot): careful steps, calmer bugs; disabled outside the roaming phase.
- let btn=api.getView().active.buttons;assert.equal(btn.length,3);assert.equal(btn[2].slot,'ride');assert.equal(btn[2].id,'netlow');assert.equal(btn[2].key,'R');assert(btn[2].enabled);
- api.act('netlow');assert.equal(api.run.stalk,true);assert(api.walkScale<1&&api.walkScale>0,'Net down slows the walk');frames(at(day.board),.3);
- assert.equal(api.getView().active.buttons[2].id,'netup');api.act('netup');assert.equal(api.run.stalk,false);assert.equal(api.walkScale,1);
- // Night falls mid-shift: the set swaps, the shift goes on, the bugs fly off and the fireflies grow in.
- tod='night';frames(at(day.board),.4);assert(api.run,'the shift does NOT end');assert.equal(api.run.def.set,'fireflies');
- assert.equal(api.getView().active.title,night.title,'the panel title changes');assert.equal(api.getView().active.value,0,'the fireflies have their own progress');
- assert(api.root.getObjectByName('job-props-bug-scout').getObjectByName('firefly-glow'),'the fireflies glow');
- assert(api.root.children.some(o=>o.isInstancedMesh&&o.count===day.targets.length),'the old bugs fly off (fading)');frames(at(day.board),1);
- assert(!api.root.children.some(o=>o.isInstancedMesh&&o.parent===api.root&&o.count===day.targets.length),'and are disposed after the fade');
- catchAt(night,0,'jar');
- tod='day';frames(at(day.board),.4);assert.equal(api.run.def.set,'bugs');assert.equal(api.getView().active.value,3,'the bug squad progress was kept');
- for(let i=3;i<day.targets.length;i++)catchAt(day,i,'net');
- assert.equal(api.run.phase,'deliver','all caught: off to the bug hotel');
- // Regression (user: "release bugs doesn't work"): the Release button explains itself until you are at the hotel, and the hotel's
- // reach covers the patch around it.
- frames(at(day.board),.3);assert.equal(api.getView().active.buttons[1].enabled,false);assert.match(api.disabledHint('letfree'),/bug hotel/);
- const d=day.deliver;frames({x:d.x+2.2,y:floor(d.x+2.2,d.z),z:d.z},.3);assert.equal(api.getView().active.buttons[1].enabled,true,'armed within 2.8 m of the hotel');
- const fov=cam.fov,p0=at({x:d.x+2.2,z:d.z});
- api.act('letfree');assert.equal(api.getView().releasing,true,'the release cinematic starts');assert.equal(api.locked,true);assert.equal(api.walkScale,0,'controls held');
- frames(p0,1.2);assert(Math.hypot(cam.position.x-p0.x,cam.position.z-(p0.z+18))>3,'the camera moved in on the player');assert(api.run&&!api.getView().done,'not paid yet');
- const jar=api.root.getObjectByName('job-jar');assert(jar.visible&&jar.position.y>p0.y+1.5,'the jar is lifted over the head');
- frames(p0,3.8);const done=api.getView().done;assert(done&&done.id==='bug-scout'&&done.set==='bugs','payday after the cinematic');
- assert.equal(api.getView().releasing,false);assert.equal(api.locked,false);frames(p0,1.5);assert.equal(cam.fov,fov,'the camera is back');
- assert.equal(api.root.getObjectByName('job-props-bug-scout'),undefined,'props disposed');
- // Night shift: tap to skip; then quitting mid-cinematic; then reduced motion (a quick release, no camera).
- api.dismissDone();tod='night';frames(at(day.board),.3);assert.equal(api.start('bug-scout'),true);assert.equal(api.run.def.set,'fireflies');
- const fill=()=>{api.run.got=api.run.got.map(()=>true);api.run.phase='deliver';api.run.at=-1;};const g=night.deliver,pg=at(g);
- fill();frames(pg,.2);api.act('glow');assert.equal(api.getView().releasing,true);frames(pg,.5);api.skipRelease();
- assert(api.getView().done&&api.getView().done.set==='fireflies','skipping goes straight to payday');assert.equal(api.locked,false);frames(pg,1.5);assert.equal(cam.fov,fov);
- api.dismissDone();frames(at(day.board),.3);api.start('bug-scout');fill();frames(pg,.2);api.act('glow');frames(pg,1.6);api.quit();
- assert.equal(api.locked,false);assert.equal(api.getView().releasing,false);assert.equal(api.run,null);frames(pg,1.5);assert.equal(cam.fov,fov,'quitting mid-cinematic restores the camera');
- reduced=true;api.start('bug-scout');fill();frames(pg,.2);api.act('glow');assert(api.getView().done,'reduced motion: released at once');assert.equal(api.locked,false);reduced=false;
- api.dispose();}
+const at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),frames=(p,s,water=false)=>{for(let t=0;t<s-1e-9;t+=DT){api.setPlayer(0,ride,water);api.update(DT,p,null,true,true,reduced);cam.position.set(p.x,p.y+12,p.z-18);cam.lookAt(p.x,p.y,p.z);api.applyCamera(cam,DT,reduced);}};
+let ride='walk';
+// Bugs placed round a test spot on the meadow, the player facing +z (yaw 0).
+const P0=at({x:SP.BUG_HOMES[0].x,z:SP.BUG_HOMES[0].z}),ids=B.bugRoster('bugs').map(b=>b.id);
+const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
+{swarm=fakeSwarm([put(ids[0],0,2),put(ids[1],.5,-5),put(ids[2],3,3.5),put(ids[3],-1,2.5),put(ids[4],0,3),put(ids[5],1,2),put(ids[6],-.5,2),put(ids[7],60,60)]);
+ frames(at(day.board),.4);assert.equal(api.start('bug-scout'),true);assert(swarm.reseeds.length===1,'a per-shift seed for the swarm');
+ assert.equal(api.swarmJob,'bugs','the swarm shows the job set (not hidden)');assert.equal(api.run.goal,6,'catch 6 this shift (12 out at tier 0)');
+ const props=api.root.getObjectByName('job-props-bug-scout');assert(!props.children.some(o=>o.isInstancedMesh&&o.count===20),'no job-owned bug meshes');
+ const net=props.getObjectByName('job-net');assert(net&&net.getObjectByName('job-net-bag')&&net.getObjectByName('job-net-frame'),'the new net: frame + mesh bag');
+ const hoop=api.net;assert(NET.NET_HOOP_RADIUS>=.42,'a hoop twice as wide as the old 0.21 m');
+ assert.equal(api.getView().active.squad.total,20,'the pill counts the squad of 20');
+ const btn=api.getView().active.buttons;same(btn.map(b=>[b.slot,b.key,b.id]),[['shoot','Space','net'],['juggle','J','letfree'],['ride','R','ride'],['extra','E','netlow']]);assert(btn[0].enabled&&btn[2].enabled);
+ // A swing at a bug right in front: hit → zoom (controls held) → into the jar, the story card, the book.
+ api.act('net');assert(api.swinging,'a real swing');frames(P0,.4);assert(api.zooming,'the catch zoom');assert.equal(api.locked,true);assert.equal(api.walkScale,0);
+ const c0=api.getView().caught;assert(c0&&c0.id===ids[0]&&c0.story.length>20&&c0.isNew&&c0.coins===K.NEW_SPECIES_COINS,'the story card: name, story, NEW, +coin');
+ assert.equal(api.run.got[0],true,'caught from the swarm');frames(P0,1.2);assert(Math.hypot(cam.position.x-P0.x,cam.position.z-(P0.z-18))>3,'the camera eased in on the bug');
+ frames(P0,1.5);assert(!api.zooming&&!api.locked,'zoom over');assert(swarm.caught.includes(ids[0]),'the swarm bug went into the jar');
+ assert.equal(JSON.parse(book.get(BB.BUG_BOOK_KEY)).bugs[ids[0]],1,'in the Bug book by id');frames(P0,1.5);assert.equal(cam.fov,50,'camera back');
+ // Tap skip.
+ api.act('net');frames(P0,.4);assert(api.zooming);api.skipZoom();assert(!api.zooming&&!api.locked,'tap skips the zoom');frames(P0,1);
+ // A miss: nothing in the sweep → the nearest bug startles.
+ swarm.bugs.forEach(b=>{if(!b.hidden&&b.id!==ids[1])b.hidden=true;});frames(P0,.1);api.act('net');frames(P0,.7);assert(!api.zooming,'a miss');assert(swarm.startled.includes(ids[1]),'the bug behind startles');
+ assert.match(api.getView().active.hint,/missed/i);
+ // Tap near a bug on screen swings at it (even 5 m away: the lunge).
+ swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[2];});const b2=swarm.bugs.find(b=>b.id===ids[2]);cam.updateMatrixWorld();const v=new T.Vector3(b2.x,b2.y,b2.z).project(cam);
+ assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.4);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);
+ // Riding: no swing (bugs are caught on foot), the button reads Hop off; the net rides on the backpack.
+ ride='bike';frames(P0,.2);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[3];});api.act('net');assert(!api.swinging,'no swing from a bike');
+ assert.equal(api.getView().active.buttons[0].label,'Hop off');ride='walk';frames(P0,.2);
+ // The hint: nearest uncaught, cooldown.
+ swarm.bugs.forEach(b=>{b.hidden=true;});frames(at(day.board),.1);const exp=K.nearestUncaught([],h=>h.id,B.bugRoster('bugs'),id=>api.run.got[ids.indexOf(id)],day.board.x,day.board.z);
+ assert.equal(api.hint(),true);assert.equal(api.hinting.name,SP.bugSpeciesById(exp.id).name,'no bug out: the nearest home of an uncaught species');assert(api.root.getObjectByName('bug-hint-arrow').visible);assert.equal(api.hint(),false,'cooling down');
+ // The shift never ends on the trail, slopes, beaches or far from the sign; only in the water or off the island.
+ for(const h of [...SP.BUG_HOMES,...SP.FIREFLY_HOMES])frames(at(h),.05);assert(api.run,'walked to every bug home: still on shift');
+ const got=api.run.got.filter(Boolean).length;assert.equal(got,3);
+ frames(P0,.1,true);assert.equal(api.run,null,'stepping into the water ends it');assert.match(api.getView().ended.text,/water/);
+ assert.equal(JSON.parse(book.get(BB.BUG_BOOK_KEY)).squad.length,3,'progress kept');
+ // Off the island another way (zipline, ferry): ends too.
+ api.start('bug-scout');frames(at({x:SI.SUMMIT_CENTER.x+400,z:SI.SUMMIT_CENTER.z}),.1);assert.equal(api.run,null);assert.match(api.getView().ended.text,/left Summit Isle/);
+ // A full shift: catch the goal, Release at the hotel (regression: Release always works), payday.
+ swarm=fakeSwarm(ids.slice(3,9).map((id,i)=>put(id,0,2)));frames(at(day.board),.2);api.start('bug-scout');
+ for(let i=0;i<6;i++){api.act('net');frames(P0,.4);api.skipZoom();frames(P0,.7);}
+ assert.equal(api.run.phase,'deliver','the jar is full: off to the bug hotel');assert.match(api.disabledHint('letfree'),/bug hotel/);
+ const d=day.deliver,pd=at({x:d.x+2,z:d.z});frames(pd,.3);assert.equal(api.getView().active.buttons[1].enabled,true);api.act('letfree');assert.equal(api.getView().releasing,true);
+ frames(pd,6);assert(api.getView().done&&api.getView().done.id==='bug-scout','payday after the release');assert.equal(api.locked,false);api.dismissDone();
+ // Squad completion: the 20th species → the formation release with 20 (tier 0) or 11 (tier 2).
+ const bk=JSON.parse(book.get(BB.BUG_BOOK_KEY));bk.squad=ids.slice(0,19);book.set(BB.BUG_BOOK_KEY,JSON.stringify(bk));
+ tier=2;swarm=fakeSwarm([put(ids[19],0,2)]);frames(at(day.board),.2);api.start('bug-scout');api.act('net');frames(P0,.4);assert.equal(api.getView().caught.squadComplete,true,'squad complete');api.skipZoom();
+ api.run.got=api.run.got.map(()=>true);api.run.phase='deliver';frames(pd,.3);api.act('letfree');const fl=api.root.getObjectByName('bug-release-flyers');assert.equal(fl.count,11,'formation capped at tier 2');
+ frames(pd,8);assert(api.getView().done);api.dismissDone();tier=0;
+ // Night: the same job catches fireflies.
+ tod='night';swarm=fakeSwarm([{id:'man-on',kind:'firefly',x:P0.x,y:P0.y+1,z:P0.z+2}]);frames(at(day.board),.3);api.start('bug-scout');assert.equal(api.run.def.set,'fireflies');assert.equal(api.swarmJob,'fireflies');
+ api.act('jar');frames(P0,.4);assert.equal(api.getView().caught.kind,'firefly');assert.equal(api.getView().caught.story.length>20,true,'a story per call');api.skipZoom();
+ // Day breaks mid-shift: the set swaps, the shift goes on.
+ tod='day';frames(P0,.4);assert.equal(api.run.def.set,'bugs');api.quit();
+ // Reduced motion: no zoom, caught at once.
+ tod='day';reduced=true;swarm=fakeSwarm([put(ids[5],0,2)]);api.start('bug-scout');api.act('net');frames(P0,.4);assert(!api.zooming&&swarm.caught.includes(ids[5]),'reduced motion: no zoom');reduced=false;
+ api.quit();assert.equal(api.locked,false);api.dispose();}
 
-// ---- 5. Pay, migration, buttons, poses, analytics, admin ----
-{const j=day;assert.equal(E.JOB_BASE_PAY[j.id],5,'pays 5, like Trail clean-up');assert(E.JOB_IDS.includes(j.id));assert(!E.JOB_IDS.includes('firefly-floodlights'));
- const [lo,hi]=load('lib/economy.ts').JOB_PAY_BAND;assert(E.JOB_BASE_PAY[j.id]>=lo&&E.JOB_BASE_PAY[j.id]<=hi);
- let l=E.emptyJobLedger('2026-10-20');const p=[];for(let i=0;i<6;i++){const x=E.jobPayout(j.id,l);p.push(x.coins);l=E.recordCompletion(l,j.id,x.coins,60);}
- same(p,[9,5,3,3,1,1],'either set pays like one shift: first-time bonus, full, half, half, then tips');
- const old=E.sanitizeJobLedger({version:1,day:'2026-10-20',today:{'firefly-floodlights':2,'bug-scout':1},lifetime:{'firefly-floodlights':5,'bug-scout':3},best:{'firefly-floodlights':40,'bug-scout':55},earned:30},'2026-10-20');
- same([old.today['bug-scout'],old.lifetime['bug-scout'],old.best['bug-scout'],old.today['firefly-floodlights']],[3,8,40,undefined],'old firefly shifts fold into the Bug squad (no lost progress)');
- const only=E.sanitizeJobLedger({version:1,day:'2026-10-19',today:{'firefly-floodlights':2},lifetime:{'firefly-floodlights':4}},'2026-10-20');same([only.lifetime['bug-scout'],only.today['bug-scout']],[4,undefined]);
- assert.equal(M.JOB_SLOTS['bug-scout'].length,3,'net / jar, release, and the net toggle in the ride slot (no On foot button)');assert.equal(M.JOB_SLOTS['firefly-floodlights'],undefined);
- assert.equal(M.poseForEvent(day,{type:'collect',index:0}).kind,'scoop');assert.equal(M.poseForEvent(night,{type:'collect',index:0}).kind,'reachpick');assert.equal(M.poseForEvent(night,{type:'deliver'}).kind,'toss');
- const icons=read('components/TravelIcon.tsx');for(const k of ['net','jar','release','netlow','netup'])assert(new RegExp(`\\n ${k}:'`).test(icons),`icon ${k}`);
+// ---- 5. Net in both hands, poses, pay, analytics, wiring ----
+{const net=NET.createBugNet(x=>x,false),o={x:0,y:0,z:0},dd={x:0,y:0,z:0},dist=(h)=>{const vx=h.x-o.x,vy=h.y-o.y,vz=h.z-o.z,t=vx*dd.x+vy*dd.y+vz*dd.z;return Math.hypot(vx-t*dd.x,vy-t*dd.y,vz-t*dd.z);};
+ for(const [mode,l,r] of [['carry',{x:.1,y:1,z:.2},{x:-.2,y:1.35,z:.05}],['low',{x:0,y:.9,z:.45},{x:-.1,y:1,z:.15}],['swing',{x:.05,y:1.1,z:.35},{x:-.15,y:1.15,z:.1}]]){
+  net.layout(l,r,0,mode==='swing'?.2:-1,mode,1/60,false);net.poleLine(o,dd);for(const h of [l,r])assert(dist(h)<.1,`${mode}: both hands on the pole (${dist(h).toFixed(3)} m)`);}
+ net.pack({x:0,y:0,z:0},0,1/60,false);net.poleLine(o,dd);assert(o.z<0&&o.x>0&&dd.z<0,'riding: on the side of the backpack, pointing back');
+ for(const kind of ['netswing','netcatch']){assert(M.POSE_TIME[kind]>0);let prev=null;for(let k=0;k<=1;k+=.02){const t=JP.jobPoseTarget({kind,progress:k},0,false),v=[t.py,t.tx,t.ty,...t.al,...t.ar];if(prev)assert(v.every((x,i)=>Math.abs(x-prev[i])<.5),`${kind}: continuous at ${k.toFixed(2)}`);prev=v;}}
+ for(const kind of ['netcarry','netsneak'])assert(M.UPPER_POSES.has(kind),'the legs keep walking: '+kind);
+ const run=R.startRun(day,1);assert.equal(M.heldPose(run,0,0).kind,'netcarry');run.stalk=true;assert.equal(M.heldPose(run,0,0).kind,'netsneak');
+ assert.equal(M.poseForEvent(day,{type:'swing',x:1,z:1}).kind,'netswing');assert.equal(M.poseForEvent(day,{type:'netcatch',x:1,z:1}).kind,'netcatch');
+ assert.equal(E.JOB_BASE_PAY['bug-scout'],5,'pay unchanged');let l=E.emptyJobLedger('2026-10-20');const p=[];for(let i=0;i<4;i++){const x=E.jobPayout('bug-scout',l);p.push(x.coins);l=E.recordCompletion(l,'bug-scout',x.coins,60);}same(p,[9,5,3,3]);
  const CID=load('lib/analytics/countIds.ts'),ev=read('lib/analytics/summitEvents.ts'),admin=read('app/admin/SummitKitSection.tsx');
- for(const id of ['su:bug_catch','su:bug_squad','su:firefly_catch','su:firefly_shift']){assert(CID.isCountId(id),'allowlisted '+id);assert(ev.includes(`'${id}'`),'a call site for '+id);assert(admin.includes(`'${id}'`),'shown in /admin: '+id);}
- assert.match(admin,/Bug squad job \(one job/);
- const scene=read('lib/town/jobs/jobScene.ts');assert.match(scene,/countBugCatch\(def\.prop\)/);assert.match(scene,/countBugShift\(def\.prop\)/);
- const town=read('components/Town.tsx');assert.match(town,/createJobScene\(scene,\{timeOfDay:\(\)=>timeRef\.current\}\)/,'Town passes its time of day');
- assert.match(town,/jobs\.walkScale/,'Town slows the walk for Net down and holds it in the cinematic');assert.match(town,/jobs\.locked/);assert.match(town,/jobs\.disabledHint\(b\.id\)/,'a tapped unarmed button explains itself');
- const ij=read('components/IslandJobs.tsx');assert.match(ij,/introJob\.nightNote/,'the card says it changes at night');assert.match(ij,/skipRelease/,'tap to skip');
- assert.match(ij,/onClick=\{e=>\{if\(e\.detail===0\)runtime\?\.skipRelease\(\);\}\}/,'regression: the Release tap\'s own trailing click must not skip the cinematic (the overlay appears under the finger)');}
-console.log('PASS summit bugs: one Bug squad job (bugs by day, fireflies at night, data-driven sets, old id aliased) on the summit\'s south-west corner, set swap mid-shift with progress per set, Net down/up, the release cinematic (skip, quit, reduced motion), paid 5 and metered, ledger migrated, analytics shown in /admin');
+ for(const id of ['su:bug_catch','su:bug_squad','su:firefly_catch','su:firefly_shift','su:bug_swing','su:bug_miss','su:bug_story','su:bug_hint']){assert(CID.isCountId(id),'allowlisted '+id);assert(ev.includes(`'${id}'`),'call site '+id);assert(admin.includes(`'${id}'`),'in /admin '+id);}
+ const town=read('components/Town.tsx');assert.match(town,/createJobScene\(scene,\{timeOfDay:\(\)=>timeRef\.current,bugs:\(\)=>wildBugs,tier:\(\)=>heat\.tier\}\)/,'the job catches from the swarm');
+ assert.match(town,/busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob/,'the swarm stays visible during the shift');assert.match(town,/jobs\.tapSwing\(/);assert.match(town,/jobs\.setPlayer\(player\.root\.rotation\.y,rideRef\.current,water\.inWater\)/);
+ const ij=read('components/IslandJobs.tsx');assert.match(ij,/Real football fact/);assert.match(ij,/aria-label="Show nearest bug"/);assert.match(ij,/skipZoom/);assert.match(ij,/onClick=\{e=>\{if\(e\.detail===0\)runtime\?\.skipRelease\(\);\}\}/,'the Release tap\'s trailing click never skips');}
+console.log('PASS summit bugs: 20 species + 8 fireflies caught from the swarm with real net swings (2x sweep, auto-aim, tap, lunge), catch zoom + story card, squad of 20 with the formation release, book by id with migration, rides (no flying, catch on foot), hint, ends only in the water or off the island, pay unchanged');
 function same(a,b,m){assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);}
 })().catch(e=>{console.error(e);process.exit(1);});

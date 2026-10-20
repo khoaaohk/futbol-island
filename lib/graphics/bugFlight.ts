@@ -111,7 +111,8 @@ function pickTarget(b:FlightBug,floor:Floor,far=1){
 
 /** How far (m) this bug notices the player at their current speed (Animal Crossing sneaking). */
 export function noticeRadius(alert:number,sneak:number,playerSpeed:number){
- return playerSpeed>PLAYER_RUN?alert:playerSpeed>PLAYER_STILL?alert*sneak*.7:alert*sneak*.35;
+ // A rider (scooter / bike / moped on a Bug squad shift) is noticed a little earlier the faster they go (≤ 1.6 × at 10 m/s).
+ return playerSpeed>PLAYER_RUN?alert*Math.min(1.6,1+Math.max(0,playerSpeed-5)*.12):playerSpeed>PLAYER_STILL?alert*sneak*.7:alert*sneak*.35;
 }
 const TURNS=[0,1.2,-1.2] as const;
 /** Scare a bug away from (fx, fz): fliers take off up and away, crawlers scurry, hoppers spring. Smooth: it only sets targets. */
