@@ -56,7 +56,9 @@ export const countDiveBreathOut=()=>count('wa:dive_breath_out');
 export const countDiveLesson=()=>count('wa:dive_lesson');
 /** Dive zones (Oct 20 2026): the deep level reached (once per dive), a jetpack take-off from inside a zone (R / the switcher), a dive
  *  at a wreck zone, and a wreck's cargo find used for the first time. */
+/** Retired Oct 20 2026 (the reef is shallow, no deep level): kept so old rows still read; the reef crest reached is counted instead. */
 export const countDiveDeep=()=>count('wa:dive_deep');
+export const countDiveCrest=()=>count('wa:dive_crest');
 export const countDiveFly=()=>count('wa:dive_fly');
 export const countDiveWreckVisit=()=>count('wa:dive_wreck_visit');
 export const countDiveWreckFind=()=>count('wa:dive_wreck_find');

@@ -2,8 +2,11 @@
  * Dive zones (water phase P2, Oct 16 2026; zones Oct 20 2026). User, Oct 16 2026: "For the diving spots, have some type of marker
  * on the top of the water, and also the water spot for the diving area should also be a different shade ... entering this will allow
  * the character to swim under water and interact with the different areas." Oct 20 2026 follow-ups: the patch is an irregular blob
- * and bigger; the room is larger with two depth levels (a shallow reef shelf and a deeper level); "build the diving zones in these
- * areas" (7 circles on the travel map); "for the bigger zones add ship wreck"; "make each spot different".
+ * and bigger; the room is larger; "build the diving zones in these areas" (7 circles on the travel map); "for the bigger zones add
+ * ship wreck"; "make each spot different". Later on Oct 20: "the dive zone is not really diving deep, but more about going through a
+ * coral reef area. so it shouldn't be deep. the scenery should not have a drop off", and "the boat can stick out of the water because
+ * it got stranded": each zone is now ONE shallow reef rising gently from deeper water to a crest just under the surface (no levels,
+ * no drop), and the wrecks are stranded on the crest with their tops out of the water.
  *
  * Pure data and a few pure helpers (no three.js, no DOM; tests/water-dive.cjs). Each zone is ONE row of DIVE_SPOTS: where it floats
  * on the island sea (centre, base radius and blob seed of the lighter patch, the buoy), its THEME (layout, depth profile, water tint,
@@ -15,12 +18,13 @@
  * metaphor, and *Island story* is the game's own fiction.
  */
 
-/** Room-local frame: x right, z toward the camera at the start, y up; the reef shelf's sand is around y 0, the surface at DIVE_SURFACE_Y. */
-export const DIVE_SURFACE_Y=8.4;
-/** How far the room reaches (m): the diver stays inside DIVE_ROOM_R; the rock ring and the fog wall sit beyond it. (15 before Oct 20.) */
+/** Room-local frame: x right, z toward the camera at the start, y up; the surface at DIVE_SURFACE_Y, the reef crest's sand about
+ *  1.5-3 m under it, the rim's sand 4-6 m under it. (Before the Oct 20 2026 shallow reef: the surface 8.4 m over a deep level.) */
+export const DIVE_SURFACE_Y=3.2;
+/** How far the room reaches (m): the diver stays inside DIVE_ROOM_R; past it the seabed keeps sloping gently down into the haze. */
 export const DIVE_ROOM_R=24;
-/** The diver keeps at least this much water under them and this much over their head (m). */
-export const DIVE_FLOOR_GAP=.7,DIVE_CEILING_GAP=.9;
+/** The diver keeps at least this much water under them and their head this far under the surface (m). */
+export const DIVE_FLOOR_GAP=.6,DIVE_CEILING_GAP=.45;
 /** The ocean shader holds this many patch slots: the runtime writes the NEAREST zones into them on its 10 Hz tick, so the per-pixel
  *  cost stays two compares however many zones there are. */
 export const DIVE_SLOTS=2;
@@ -46,8 +50,13 @@ export type DiveFind={
  /** Coins, once ever, through the Training meter (`dive:` wallet runs, lib/town/dailyMeter.ts). Never more than a hidden ball. */
  coins?:number;
 };
-/** The two depth levels: the seabed's profile. `deep` m below the shelf; the drop's shape and where it starts (room z). */
-export type DiveFloorShape={kind:'wall'|'terrace'|'canyon'|'bowl';edge:number;deep:number;seed:number};
+/** The reef's profile (Oct 20 2026, user: "the dive zone is not really diving deep, but more about going through a coral reef area
+ *  ... it goes from deeper water to higher due to the reef"): ONE smooth seabed, `rim` m under the surface at the room's edge, rising
+ *  gently (no drop, no vertical face) to a shallow crest `crest` m under the surface. The crest's shape: a `dome`, a flat `plateau`,
+ *  a long bent `ridge`, `twin` heads with a sand channel between them, or a `ring` round a shallow sandy pool. (cx, cz) its centre,
+ *  rx along its long axis (direction (sin yaw, cos yaw), the wreck's and the surface preview's convention), rz across, `bend` the
+ *  ridge's wiggle. */
+export type DiveFloorShape={kind:'dome'|'plateau'|'ridge'|'twin'|'ring';cx:number;cz:number;rx:number;rz:number;yaw:number;bend:number;rim:number;crest:number;seed:number};
 export type DiveSignature='garden'|'goal'|'kelp'|'rays'|'arch'|'crates'|'turtles';
 export type DiveWreck={style:'galleon'|'trawler'|'cargo';x:number;z:number;yaw:number;
  /** The cargo it lost (the futbol tie-in, the relic find inside the hull). */
@@ -97,31 +106,46 @@ export function inDiveBlob(s:Pick<DiveSpot,'x'|'z'|'radius'|'blob'>,x:number,z:n
  return Math.sqrt(d2)<=diveBlobR(s,Math.atan2(dz,dx));
 }
 
-/** How deep (0 shelf .. 1 deep level) the floor is at a room point. */
-export function diveDeepMask(x:number,z:number,f:DiveFloorShape){
- if(f.kind==='wall')return sm(f.edge+1.6,f.edge-1.6,z);
- if(f.kind==='terrace')return .5*sm(f.edge+1,f.edge-1,z)+.5*sm(f.edge-8,f.edge-10,z);
- if(f.kind==='canyon'){const c=f.edge-7+2.5*Math.sin(x*.18+f.seed);return sm(6.5,3.2,Math.abs(z-c));}
- const d=Math.hypot(x*.85,z-(f.edge-9));return sm(11,7.5,d);// bowl
+/** How much of the reef crest a room point is on (0 the deeper rim water .. 1 the crest top); smooth, so the slope stays gentle. */
+export function diveCrestMask(x:number,z:number,f:DiveFloorShape){
+ const c=Math.cos(f.yaw),s=Math.sin(f.yaw),dx=x-f.cx,dz=z-f.cz,u=dx*s+dz*c,v=dx*c-dz*s-f.bend*Math.sin(u*.16+f.seed);
+ if(f.kind==='twin'){const a=f.rx*.6,q=Math.min(Math.hypot((u-a)/(f.rx*.6),v/f.rz),Math.hypot((u+a)/(f.rx*.6),v/f.rz));return sm(1.4,.35,q);}
+ const q=Math.hypot(u/f.rx,v/f.rz);
+ if(f.kind==='ring'){const d=Math.abs(q-1)*Math.min(f.rx,f.rz);return Math.max(.5*sm(1.3,.4,q),sm(7.5,.8,d));}
+ return f.kind==='plateau'?sm(1.4,.55,q):sm(1.4,.3,q);
 }
-/** 0 = the reef shelf, 1 = the deep level. */
-export const diveLevelAt=(x:number,z:number,f:DiveFloorShape)=>diveDeepMask(x,z,f)>.5?1:0;
-/** The sand's height in the room (m, room-local): the shelf's gentle mounds and ripples, the drop to the deep level, the rim wall.
- *  Shared by the room builder (the seabed mesh) and the swim step (the diver's floor), so both always agree. */
-export function diveFloor(x:number,z:number,f:DiveFloorShape=DEFAULT_FLOOR){
- const r=Math.hypot(x,z),s=f.seed;
- return .35*Math.sin(x*.21+1.3+s)*Math.cos(z*.17-.4+s*.7)+.8*Math.exp(-((x-7)**2+(z-6)**2)/30)+.6*Math.exp(-((x+8)**2+(z-3)**2)/22)
-  -f.deep*diveDeepMask(x,z,f)+3.6*Math.max(0,(r-DIVE_ROOM_R+3)/6)**2;
+/** On the reef crest (reaching it once per dive is analytics wa:dive_crest). */
+export const diveOnCrest=(x:number,z:number,f:DiveFloorShape)=>diveCrestMask(x,z,f)>.8;
+/** How far under the surface the sand is at a room point (m): the rim's depth easing up to the crest's, low sand mounds, a winding
+ *  sand channel over the crest, and past the room a gentle slope on down into the haze (never a wall, a step or a drop). */
+export function diveDepthAt(x:number,z:number,f:DiveFloorShape=DEFAULT_FLOOR){
+ const t=diveCrestMask(x,z,f),s=f.seed,r=Math.hypot(x,z);
+ const ca=Math.cos(s*1.7),sa=Math.sin(s*1.7),w=x*ca+z*sa+2.4*Math.sin((z*ca-x*sa)*.17+s),chan=.35*t*sm(2.6,.5,Math.abs(w));
+ const mound=.28*Math.sin(x*.21+1.3+s)*Math.cos(z*.17-.4+s*.7)*(.4+.6*t);
+ return f.rim+(f.crest-f.rim)*t+chan-mound+.012*Math.max(0,r-DIVE_ROOM_R+4)**2;
 }
-/** The diver's height range at a room point: over the sand there (each level has its own floor) and under the surface. */
+/** The sand's height in the room (m, room-local). Shared by the room builder (the seabed mesh) and the swim step (the diver's
+ *  floor), so both always agree. */
+export const diveFloor=(x:number,z:number,f:DiveFloorShape=DEFAULT_FLOOR)=>DIVE_SURFACE_Y-diveDepthAt(x,z,f);
+/** The diver's height range at a room point: over the sand there and just under the surface (about 1-4 m of water on the reef). */
 export function diveDepthRange(x:number,z:number,f:DiveFloorShape,out:{min:number;max:number}={min:0,max:0}){
- out.min=diveFloor(x,z,f)+DIVE_FLOOR_GAP;out.max=DIVE_SURFACE_Y-DIVE_CEILING_GAP;return out;
+ out.max=DIVE_SURFACE_Y-DIVE_CEILING_GAP;out.min=Math.min(out.max-.3,diveFloor(x,z,f)+DIVE_FLOOR_GAP);return out;
 }
+/** A wreck stranded on the reef (Oct 20 2026, user: "the boat can stick out of the water because it got stranded"): its room-local
+ *  pose. The hull's long axis runs along (sin yaw, cos yaw); its keel sits half buried in the crest's sand (y), bow lifted (pitch)
+ *  and listing (roll), so the bow, a broken mast and part of the hull stand out of the water. The island's above-water piece
+ *  (lib/graphics/diveWreckTop.ts) uses the same pose, so the two always agree. */
+export function diveWreckPose(w:DiveWreck,f:DiveFloorShape){
+ const pitch=w.style==='trawler'?.3:w.style==='galleon'?.2:-.14,roll=w.style==='galleon'?.26:w.style==='trawler'?-.22:.18;
+ return {x:w.x,y:diveFloor(w.x,w.z,f)-.55,z:w.z,yaw:w.yaw,pitch,roll};
+}
+/** Room metres to island metres for the stranded wreck's top (the surface preview's scale: the room's 24 m radius onto the blob). */
+export const diveWreckIslandScale=(s:Pick<DiveSpot,'radius'>)=>s.radius/DIVE_ROOM_R;
 /** A find's 3D room point (its y measured over the sand at its x, z). */
 export function diveFindPoint(fd:Pick<DiveFind,'x'|'y'|'z'>,out:{x:number;y:number;z:number}={x:0,y:0,z:0},f:DiveFloorShape=DEFAULT_FLOOR){out.x=fd.x;out.y=diveFloor(fd.x,fd.z,f)+fd.y;out.z=fd.z;return out;}
 /** The ripple lines on the sand (paint only), 0..1. */
 export const diveRipple=(x:number,z:number)=>.5+.5*Math.sin(x*2.1+Math.sin(z*.6)*1.8+z*.5);
-const DEFAULT_FLOOR:DiveFloorShape={kind:'wall',edge:2,deep:6,seed:0};
+const DEFAULT_FLOOR:DiveFloorShape={kind:'dome',cx:0,cz:-4,rx:14,rz:10,yaw:0,bend:0,rim:5,crest:2,seed:0};
 
 // ---- The palettes (island colours, never neon) and the themes.
 const CORAL_WARM=['#ff7a6b','#ff9f5a','#f2c14e','#e86a9a','#b88be0','#ff5a7a','#ffb4a2','#4fc7b0'];
@@ -138,14 +162,14 @@ const coin=(x:number,z:number,title:string,text:string)=>find('treasure','treasu
  */
 export const DIVE_SPOTS:readonly DiveSpot[]=[
  {id:'captains-cup',name:'Captain’s Cup Wreck',area:1,x:342,z:-282,radius:19,blob:11,tint:'#63e6d4',near:'causeway-channel',surface:{x:342,z:-279},
-  floor:{kind:'wall',edge:2,deep:6.5,seed:.4},
+  floor:{kind:'dome',cx:-1,cz:-5,rx:16,rz:14,yaw:1.81,bend:2,rim:5.2,crest:1.8,seed:.4},
   theme:{id:'coral-garden-galleon',water:'#2a8a9c',fog:[12,40],...BASE,coral:CORAL_WARM,light:['#c8f6ff','#e6d2a6',2.9],
    mix:{coral:.75,fans:1,anemones:1,kelp:.5,grass:.6},fish:['anchovy','blue-tang','yellow-tang','snapper','anthias','trevally','grouper'],signature:'garden',
-   wreck:{style:'galleon',x:-2,z:-12,yaw:.5,cargo:'trophy'},tagline:'A coral garden and an old sailing ship down the drop.'},
+   wreck:{style:'galleon',x:-3,z:-12,yaw:1.81,cargo:'trophy'},tagline:'A coral garden and an old sailing ship stranded on the reef.'},
   lesson:'Never give up on a lost cause: a lost trophy was found by a dog called Pickles.',
   story:'Island story: the old ship carried the island’s first cup. It sank in a storm, and the coral grew all over it.',
   finds:[
-   find('relic','relic',-1,1,-12.5,{prompt:'Look',aria:'Look at the cup in the old ship',title:'The lost cup',label:'Real football fact',
+   find('relic','relic',-2.6,.9,-12.2,{prompt:'Look',aria:'Look at the cup in the old ship',title:'The lost cup',label:'Real football fact',
     text:'In 1966 the World Cup trophy was stolen in London. A dog called Pickles sniffed it out under a hedge a week later!',credit:'Wikipedia, “Pickles (dog)”',
     story:'Island story: this cup is the island’s own, lost with the old ship. Keep looking, like Pickles did.'}),
    burst(8,6,'Everyone moves together','The whole shoal darts out at once. When your team loses the ball, press together straight away.'),
@@ -153,7 +177,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(6,-15,'A captain’s coin','A coin from the old ship’s captain, who tossed it before every match.'),
   ]},
  {id:'pauls-grotto',name:'Paul’s Grotto',area:2,x:594,z:-289,radius:12.5,blob:23,tint:'#5fe3d6',near:'coral-garden',surface:{x:594,z:-286.5},
-  floor:{kind:'terrace',edge:4,deep:5,seed:1.3},
+  floor:{kind:'plateau',cx:0,cz:1,rx:14,rz:12,yaw:0,bend:0,rim:4.8,crest:2.5,seed:1.3},
   theme:{id:'sunken-pitch',water:'#2b8fa6',fog:[11,36],...BASE,sand:['#d4c095','#f0e2bc'],coral:['#ff9f5a','#f2c14e','#4fc7b0','#ffb4a2','#e86a9a'],light:['#d2f8ff','#efdcae',3],
    mix:{coral:.6,fans:.7,anemones:1.2,kelp:.3,grass:.4},fish:['anthias','yellow-tang','bigeye','octopus','parrotfish'],signature:'goal',
    tagline:'An old pitch on the sand, with a goal and an octopus.'},
@@ -168,22 +192,22 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(4,-10,'An old matchday coin','A coin from the island’s very first beach match, lost overboard on the boat home.'),
   ]},
  {id:'kelp-trawler',name:'Kelp Forest Wreck',area:3,x:812,z:-255,radius:19,blob:37,tint:'#6fe0c0',near:'sharks-beach',surface:{x:812,z:-252},
-  floor:{kind:'canyon',edge:0,deep:7,seed:2.1},
+  floor:{kind:'ridge',cx:1,cz:-7,rx:18,rz:9,yaw:1.39,bend:3,rim:5.4,crest:1.8,seed:2.1},
   theme:{id:'kelp-forest-trawler',water:'#1f7f86',fog:[9,34],...BASE,sand:['#b9a87e','#d9c99f'],rock:['#5d6a63','#7f8d84'],coral:['#f29a3a','#e8604c','#f2c14e','#9de0c8'],
    kelp:['#4f8f3a','#6aa543','#8bb04a','#3f7f3a'],light:['#c8f0dc','#c9c49a',2.7],
    mix:{coral:.45,fans:.5,anemones:.7,kelp:1.3,grass:.5},fish:['anchovy','snapper','trevally','bigeye','seahorse'],signature:'kelp',
-   wreck:{style:'trawler',x:2,z:-7,yaw:1.57,cargo:'kitbag'},tagline:'Tall kelp on the shelf, a fishing boat in the canyon.'},
+   wreck:{style:'trawler',x:2,z:-11,yaw:1.39,cargo:'kitbag'},tagline:'Tall kelp up the reef slope, a fishing boat stranded on the ridge.'},
   lesson:'Stay in your lane: a kelp forest only works because every plant keeps its own space. So does a good team shape.',
   story:'Island story: the old trawler was taking the team’s kit to an away match when it ran onto the rocks.',
   finds:[
-   find('relic','relic',3,1,-7,{prompt:'Look',aria:'Look at the kit bag in the boat',title:'The away kit',label:'Coaching idea',
+   find('relic','relic',2.6,.8,-11,{prompt:'Look',aria:'Look at the kit bag in the boat',title:'The away kit',label:'Coaching idea',
     text:'Away teams bring a second kit so both teams look different. The referee and your teammates must see who is who in a flash.'}),
    burst(-9,7,'Spread out','The fish fan out to fill the water. In attack, spread wide and make the pitch big.'),
    clam(9,9,'Shield the ball','The clam keeps its pearl safe behind its shell. Keep your body between the ball and the defender.'),
    coin(-6,-16,'A lucky net float','A float from the trawler’s nets. The crew said it brought them a goal every Saturday.'),
   ]},
  {id:'ray-meadow',name:'Ray Meadow',area:4,x:733,z:-72,radius:12.5,blob:41,tint:'#7ee8c8',near:'farm-beach',surface:{x:733,z:-69.5},
-  floor:{kind:'bowl',edge:0,deep:4.5,seed:3.3},
+  floor:{kind:'plateau',cx:0,cz:-3,rx:17,rz:15,yaw:.3,bend:1.5,rim:4.4,crest:2.7,seed:3.3},
   theme:{id:'seagrass-rays',water:'#3299a0',fog:[12,42],...BASE,sand:['#d8c79a','#f4e8c4'],coral:['#ffb4a2','#f2c14e','#b88be0'],kelp:['#5aa652','#7aa83a','#8fbf5a'],
    light:['#d9fbff','#f2e2b6',3.1],mix:{coral:.35,fans:.4,anemones:.5,kelp:.2,grass:1.3},fish:['yellow-tang','anthias','ray','eagle-ray','ray-small'],signature:'rays',
    tagline:'A sandy seagrass meadow where the rays glide.'},
@@ -197,7 +221,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(5,-14,'A ferry token','A ticket token dropped from the ferry by a fan on the way to a match.'),
   ]},
  {id:'moon-arch',name:'Moon Arch',area:5,x:835,z:-14,radius:13,blob:53,tint:'#8fdcf0',near:'summit-palm',surface:{x:835,z:-11.5},
-  floor:{kind:'canyon',edge:3,deep:6,seed:4.7},
+  floor:{kind:'twin',cx:0,cz:-5.5,rx:13,rz:9,yaw:0,bend:1,rim:5.2,crest:2,seed:4.7},
   theme:{id:'rock-arch-jellies',water:'#2a6f98',fog:[9,34],...BASE,sand:['#b7ab8f','#d6cbb0'],rock:['#6a6f82','#9096a8'],coral:['#b88be0','#8f5bd6','#9de0c8','#ffb4a2'],
    fan:['#8f5bd6','#6f7bd8','#c4407a'],anemone:['#c8b8ff','#9de0c8','#ffb4d0'],light:['#c8dcff','#c8c0d8',2.6],
    mix:{coral:.6,fans:1.2,anemones:1,kelp:.3,grass:.3},fish:['blue-tang','bigeye','jelly','anthias'],signature:'arch',
@@ -212,14 +236,14 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(-7,-12,'A glowing pebble','A smooth pebble the jellies light up. Island kids rub it before a penalty.'),
   ]},
  {id:'ball-crate',name:'Ball Crate Reef',area:6,x:349,z:222,radius:19,blob:67,tint:'#68e2dc',near:'deep-sea-boat-west',surface:{x:349,z:225},
-  floor:{kind:'wall',edge:-2,deep:8,seed:5.9},
+  floor:{kind:'dome',cx:2,cz:-5,rx:17,rz:14,yaw:-1.79,bend:2.5,rim:5.4,crest:1.6,seed:5.9},
   theme:{id:'ball-crate-cargo',water:'#23809e',fog:[11,40],...BASE,coral:['#ff7a6b','#f2c14e','#4fc7b0','#ff9f5a','#e86a9a','#ffffff'],light:['#c8f2ff','#e2d6b0',2.8],
    mix:{coral:.9,fans:.8,anemones:.9,kelp:.4,grass:.5},fish:['anchovy','yellow-tang','snapper','trevally','grouper','eel'],signature:'crates',
-   wreck:{style:'cargo',x:3,z:-14,yaw:-.35,cargo:'balls'},tagline:'Crates of footballs spilled from a cargo ship, now a reef.'},
+   wreck:{style:'cargo',x:3,z:-13,yaw:-1.79,cargo:'balls'},tagline:'Crates of footballs spilled from a cargo ship, now a reef.'},
   lesson:'Two balls, one final: the first World Cup final used a different ball in each half.',
   story:'Island story: the cargo ship was bringing new balls for the island league. The crates broke open and coral grew on every ball.',
   finds:[
-   find('relic','relic',2,1,-13,{prompt:'Look',aria:'Look at the match ball in the crate',title:'The two-ball final',label:'Real football fact',
+   find('relic','relic',3.3,.9,-12.8,{prompt:'Look',aria:'Look at the match ball in the crate',title:'The two-ball final',label:'Real football fact',
     text:'At the first World Cup final in 1930, Argentina and Uruguay each wanted their own ball, so they used one in each half!',credit:'Wikipedia, “1930 FIFA World Cup final”',
     story:'Island story: these crates held the island league’s new balls.'}),
    burst(-9,6,'Close the space','The fish shut every gap at once. Step up together and the space is gone.'),
@@ -227,7 +251,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    coin(-8,-16,'A shipping tag','A brass tag from a ball crate: “Island League, handle with care”.'),
   ]},
  {id:'turtle-pool',name:'Turtle Pool',area:7,x:812,z:204,radius:12.5,blob:79,tint:'#7fe6d8',near:'summit-ledge',surface:{x:812,z:206.5},
-  floor:{kind:'bowl',edge:2,deep:5.5,seed:7.1},
+  floor:{kind:'ring',cx:0,cz:-3,rx:12,rz:10,yaw:.4,bend:0,rim:4.6,crest:2,seed:7.1},
   theme:{id:'sea-turtle-pool',water:'#2b93a2',fog:[11,38],...BASE,sand:['#e0d0a6','#f6ecc8'],coral:['#4fc7b0','#9de0c8','#f2c14e','#ff9f5a'],light:['#d2fbff','#f0e0b0',3.1],
    mix:{coral:.7,fans:.6,anemones:.8,kelp:.4,grass:.9},fish:['turtle','yellow-tang','anthias','parrotfish'],signature:'turtles',
    tagline:'A calm sandy pool where sea turtles swim laps.'},

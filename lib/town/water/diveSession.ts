@@ -12,11 +12,12 @@
  * nothing is lost and nobody is hurt. Breath refills at the surface over BREATH_REFILL_S, and a new dive waits for
  * BREATH_MIN_DIVE of it (recover before the next sprint). DIVE_LESSON shows once per device.
  */
-import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveLevelAt,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
+import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveOnCrest,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
 import {WATER_PROBE_HZ} from './waterDepth';
 
-/** One full breath at an easy swim (s), and how fast it drains: gliding (stick still), an easy swim, the stick pushed all the way. */
-export const BREATH_SECONDS=45;
+/** One full breath at an easy swim (s), and how fast it drains: gliding (stick still), an easy swim, the stick pushed all the way.
+ *  (45 s before the Oct 20 2026 shallow reef: the reef is shallow and for young kids, so the breath lasts longer.) */
+export const BREATH_SECONDS=70;
 export const BREATH_DRAIN={glide:.6,swim:1,push:1.8} as const;
 /** The calm "time to head up" note, and the gentle float up at 0. */
 export const BREATH_LOW=.2;
@@ -26,22 +27,35 @@ export const BREATH_REFILL_S=6,BREATH_MIN_DIVE=.25;
 export const BREATH_UI_HZ=10;
 /** The swim (m/s): top speed, how fast it gets there and how fast the water slows you (floaty); turning (rad/s at full stick). */
 export const DIVE_SPEED=2.4,DIVE_ACCEL=2.2,DIVE_DRAG=1.4,DIVE_TURN=1.9;
-/** 3D swimming (Oct 20 2026, user: "swimming up/down inside the dive zone"): ▲ / ▼ (phone) or Q / Z (desktop) swim up / down at
- *  DIVE_VSPEED m/s; with neither held the diver holds their depth (neutral, like a real diver), always clamped to the level's range
- *  (diveDepthRange: over that level's sand, under the surface). */
-export const DIVE_VSPEED=1.7;
-/** Breath respects depth: the drain grows by up to DIVE_DEPTH_DRAIN (×) at the deep level's floor (the pace lesson, deeper = harder). */
-export const DIVE_DEPTH_DRAIN=.6;
-/** Surfacing: the room's going-up fade (s) before the island shows again. */
-export const DIVE_SURFACE_S=.6;
-/** Where the diver starts (room-local, just under the surface, over the start of the reef) and the facing (toward −z, the relic). */
-export const DIVE_START={x:0,y:DIVE_SURFACE_Y-1.6,z:13,yaw:Math.PI} as const;
+/** Gliding over the shallow reef (Oct 20 2026, user: "not really diving deep, but more about going through a coral reef area"): the
+ *  diver keeps a place in the water between the surface and the sand (`depthT`: 0 just under the surface .. 1 low over the sand)
+ *  and follows the seabed, so a rising reef lifts them (no clipping, no hard step). ▲ / ▼ (phone) or Q / Z (desktop) rise or dip
+ *  lower at about DIVE_VSPEED m/s; neither held keeps the place. DIVE_FOLLOW is how fast the body eases onto the followed height. */
+export const DIVE_VSPEED=1.2,DIVE_FOLLOW=4;
+/** Where a dive starts in the water column (depthT). */
+export const DIVE_START_T=.45;
+/** "Surface to breathe": the reef is shallow, so the surface is always right above. At the top (depthT under DIVE_TOP_T) the diver
+ *  sips air and the breath refills over BREATH_TOP_REFILL_S instead of draining. */
+export const DIVE_TOP_T=.06,BREATH_TOP_REFILL_S=8;
+/** After surfacing the Dive prompt waits this long (s) before it shows again (water audit P0: R / E dived straight back in). */
+export const DIVE_REARM_S=2;
+/** ONE breath for both dives (Oct 20 2026, user decision "unify the two Dives"):
+ *  - the REEF dive (the floating Dive pill over a zone's buoy, or E): the sealed reef room, ▲ ▼ / Q Z rise and dip, finds;
+ *  - the DUCK-DIVE (the water cluster's Dive button / Q at the surface anywhere, waterState.ts DIVE): a short dip under the swimmer,
+ *    lighter: no room, no finds; it drains the same breath at the easy-swim rate × DUCK_DRAIN, waits on BREATH_MIN_DIVE like the reef,
+ *    and when the breath runs out the diver pops up with the same calm note (and the same wa:dive_breath_out count).
+ *  Both refill at the surface over BREATH_REFILL_S and show the same Breath ring (only while swimming or diving). */
+export const DUCK_DRAIN=1;
+/** Surfacing: the room's going-up fade (s) before the island shows again (quick: the surface is right above). */
+export const DIVE_SURFACE_S=.45;
+/** Where the diver starts (room-local, just under the surface at the reef's deeper edge) and the facing (toward −z, the crest). */
+export const DIVE_START={x:0,y:DIVE_SURFACE_Y-1.2,z:13,yaw:Math.PI} as const;
 /** The proximity tick at the surface (s): the water probe's own rate. */
 export const DIVE_TICK=1/WATER_PROBE_HZ;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
-export const DIVE_LESSON={title:'Pace your breath',text:'Glide slowly and your breath lasts longer. Sprint everywhere and it runs out fast, like a midfielder’s legs in a long match.',kind:'Coaching idea'} as const;
+export const DIVE_LESSON={title:'Pace your breath',text:'Glide slowly and your breath lasts longer, and rise to the top for a quick breath. Sprint everywhere and it runs out fast, like a midfielder’s legs in a long match.',kind:'Coaching idea'} as const;
 export const DIVE_LESSON_KEY='fi2-dive-lesson-v1';
-export const DIVE_LOW_NOTE='Running low on breath: time to head up.',DIVE_OUT_NOTE='Good dive! You floated up for a breath.';
+export const DIVE_LOW_NOTE='Running low on breath: rise to the top for air.',DIVE_OUT_NOTE='Good dive! You floated up for a breath.';
 
 export type DivePhase='surface'|'diving'|'rising';
 export type SurfaceReason='tap'|'breath'|'leave'|'fly';
@@ -54,13 +68,13 @@ export type DiveEvents={
  find:string;firstFind:boolean;coins:number;
  /** The breath meter changed enough to redraw (≤ BREATH_UI_HZ). */
  breathUi:boolean;
- /** The diver reached the deep level for the first time this dive (analytics wa:dive_deep). */
- deep:boolean;
+ /** The diver reached the reef crest for the first time this dive (analytics wa:dive_crest; wa:dive_deep is kept for old data). */
+ crest:boolean;
 };
 export type DiveInput={
  /** Stick: x right, y DOWN (the island's convention: −1 = forward), each −1..1 (keys + joystick). */
  sx:number;sy:number;
- /** Swim up (+1) / down (−1): ▲ ▼ on phones, Q / Z on desktop. */
+ /** Rise (+1) / dip lower (−1): ▲ ▼ on phones, Q / Z on desktop. */
  lift:number;
 };
 
@@ -79,29 +93,48 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   time:0,dives:0,
   /** How hard the diver is swimming (0..1, for the pose and the bubbles). */
   effort:0,
-  /** The depth level under the diver (0 the reef shelf, 1 the deep level) and whether the deep level was reached this dive. */
-  level:0 as 0|1,wentDeep:false};
+  /** Seconds before the Dive prompt re-arms after surfacing; whether the near-shore duck-dive is under (it shares the breath). */
+  hold:0,ducking:false,
+  /** The place in the water column (0 just under the surface .. 1 low over the sand), whether the diver is at the top sipping air,
+   *  and whether the reef crest was reached this dive. */
+  depthT:DIVE_START_T,atTop:false,onCrest:false};
  const range={min:0,max:0};
- const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,deep:false};
- const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.deep=false;events.surfaced='';events.find='';events.coins=0;};
+ const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false};
+ const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=false;events.surfaced='';events.find='';events.coins=0;};
+ const heightFor=(t:number)=>range.max-(range.max-range.min)*t;
  const markUi=(dt:number)=>{state.uiAcc+=dt;if(state.uiAcc>=1/BREATH_UI_HZ-1e-6&&Math.abs(state.breath-state.uiBreath)>.002){state.uiAcc=0;state.uiBreath=state.breath;events.breathUi=true;}};
  return {state,events,
   /** The Dive prompt's proximity test: at most WATER_PROBE_HZ a second, only while swimming at the surface (else it clears). Also
    *  refills the breath while at the surface. */
   scan(dt:number,x:number,z:number,swimming:boolean){
    clear();
-   if(state.phase==='surface'&&state.breath<1){state.breath=Math.min(1,state.breath+dt/BREATH_REFILL_S);markUi(dt);}
-   if(!swimming||state.phase!=='surface'){state.near=null;state.acc=Infinity;return state.near;}
+   if(state.phase==='surface'&&state.breath<1&&!state.ducking){state.breath=Math.min(1,state.breath+dt/BREATH_REFILL_S);markUi(dt);}
+   if(state.hold>0)state.hold=Math.max(0,state.hold-dt);// just surfaced: the Dive prompt waits (R stays the jetpack, no instant re-dive)
+   if(!swimming||state.phase!=='surface'||state.hold>0){state.near=null;state.acc=Infinity;return state.near;}
    state.acc+=dt;if(state.acc<DIVE_TICK-1e-6)return state.near;state.acc=0;
    state.near=diveSpotAt(x,z,spots);return state.near;
   },
+  /** The near-shore duck-dive's frame (Town, each island frame while in the sea): `under` = waterState's dive is going / gone under.
+   *  Drains the shared breath while under (no refill meanwhile); `events.low` / `events.out` as in the reef (the host then surfaces
+   *  the duck-dive). Does nothing during a reef dive. */
+  duck(dt:number,under:boolean){
+   clear();if(state.phase!=='surface'){state.ducking=false;return events;}
+   state.ducking=under;if(!under){if(state.breath>BREATH_LOW)state.lowSaid=false;return events;}
+   state.breath=Math.max(0,state.breath-Math.max(0,dt)*BREATH_DRAIN.swim*DUCK_DRAIN/BREATH_SECONDS);markUi(dt);
+   if(!state.lowSaid&&state.breath<=BREATH_LOW){state.lowSaid=true;events.low=true;}
+   if(state.breath<=0){events.out=true;state.ducking=false;}
+   return events;
+  },
+  /** The duck-dive may start (shared rule with the reef: enough breath). */
+  get duckReady(){return state.breath>=BREATH_MIN_DIVE;},
   /** Enough breath to go under (else the prompt reads "Catch your breath"). */
   get ready(){return state.breath>=BREATH_MIN_DIVE;},
   /** "Dive": go under at the near spot. False when not in a patch, already diving or out of breath. */
   start(){
    clear();const s=state.near;if(!s||state.phase!=='surface'||state.breath<BREATH_MIN_DIVE)return false;
    state.phase='diving';state.spot=s;state.x=DIVE_START.x;state.y=DIVE_START.y;state.z=DIVE_START.z;state.yaw=DIVE_START.yaw;state.vx=state.vy=state.vz=0;
-   state.pitch=state.roll=state.lift=0;state.level=0;state.wentDeep=false;state.lowSaid=false;state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
+   state.pitch=state.roll=state.lift=0;state.depthT=DIVE_START_T;state.atTop=false;state.onCrest=false;state.lowSaid=false;
+   diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
    events.started=true;events.breathUi=true;state.uiBreath=state.breath;return true;
   },
   /** One frame underwater (the host calls it only while diving or rising). */
@@ -112,7 +145,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
     // The gentle way up (a tap of Surface, Escape, or the breath running out): drift up with the bubbles, then the island.
     state.rise+=dt;state.vy+=(1.6-state.vy)*(1-Math.exp(-dt*3));state.y=Math.min(DIVE_SURFACE_Y-.2,state.y+state.vy*dt);
     state.vx*=Math.exp(-dt*2);state.vz*=Math.exp(-dt*2);state.x+=state.vx*dt;state.z+=state.vz*dt;state.pitch+=(-.5-state.pitch)*(1-Math.exp(-dt*3));
-    if(state.rise>=DIVE_SURFACE_S){state.phase='surface';state.spot=null;state.find=null;state.findDist=Infinity;events.surfaced=state.risingFor;}
+    if(state.rise>=DIVE_SURFACE_S){state.phase='surface';state.hold=DIVE_REARM_S;state.spot=null;state.find=null;state.findDist=Infinity;events.surfaced=state.risingFor;}
     return events;
    }
    state.time+=dt;
@@ -126,20 +159,25 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz);
    if(r>DIVE_ROOM_R){nx*=DIVE_ROOM_R/r;nz*=DIVE_ROOM_R/r;const n=(state.vx*nx+state.vz*nz)/(DIVE_ROOM_R||1);if(n>0){state.vx-=nx/DIVE_ROOM_R*n;state.vz-=nz/DIVE_ROOM_R*n;}}
    state.x=nx;state.z=nz;
-   // Up / down (3D swimming): the held direction, else hold the depth; clamped to this level's range (its own sand, the surface).
+   // Rise / dip lower, then follow the seabed: the place in the water column (depthT) is kept while the reef rises or falls
+   // under the diver, so a rising crest lifts them smoothly; the sand and the surface are hard limits (never clipped).
    const fl=state.spot!.floor,lift=Math.max(-1,Math.min(1,input.lift));state.lift=lift;
-   state.vy+=(lift*DIVE_VSPEED-state.vy)*(1-Math.exp(-dt*(lift?4:3)));
-   diveDepthRange(state.x,state.z,fl,range);
-   let y=state.y+state.vy*dt;if(y<range.min){y+=Math.min(range.min-y,dt*2.5+Math.max(0,range.min-y-.4));if(state.vy<0)state.vy=0;}if(y>range.max){y=range.max;if(state.vy>0)state.vy=0;}
-   state.y=y;const lv=diveLevelAt(state.x,state.z,fl) as 0|1;state.level=lv;if(lv===1&&!state.wentDeep&&state.y<-.5){state.wentDeep=true;events.deep=true;}
+   diveDepthRange(state.x,state.z,fl,range);const span=Math.max(.3,range.max-range.min);
+   state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*dt/span));
+   const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW));
+   if(y<range.min)y=range.min;if(y>range.max)y=range.max;
+   state.y=y;state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
+   if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
    // The body pitches with the climb / dive and rolls a little into turns (auto-level: both ease back to flat).
    const speed=Math.hypot(state.vx,state.vz);state.effort+=(stick-state.effort)*(1-Math.exp(-dt*4));
    state.pitch+=(Math.max(-.5,Math.min(.5,-state.vy*.35))-state.pitch)*(1-Math.exp(-dt*3));
    state.roll+=(Math.max(-.35,Math.min(.35,sx*.3*Math.min(1,speed)))-state.roll)*(1-Math.exp(-dt*3));
-   // Breath: the pace lesson. Glide slow, it lasts; push the stick all the way, it goes fast.
-   const base=Math.max(stick,Math.abs(input.lift)*.6),depth=Math.max(0,Math.min(1,(DIVE_SURFACE_Y-state.y)/(DIVE_SURFACE_Y+fl.deep)));
-   const drain=(base<.08?BREATH_DRAIN.glide:base>.85?BREATH_DRAIN.push:BREATH_DRAIN.swim)*(1+DIVE_DEPTH_DRAIN*depth);
-   state.breath=Math.max(0,state.breath-dt*drain/BREATH_SECONDS);markUi(dt);
+   // Breath: the pace lesson. Glide slow, it lasts; push the stick all the way, it goes fast; at the top, a sip of air refills it.
+   // No depth penalty: the whole reef is shallow.
+   const base=Math.max(stick,Math.abs(input.lift)*.6);
+   if(state.atTop)state.breath=Math.min(1,state.breath+dt/BREATH_TOP_REFILL_S);
+   else state.breath=Math.max(0,state.breath-dt*(base<.08?BREATH_DRAIN.glide:base>.85?BREATH_DRAIN.push:BREATH_DRAIN.swim)/BREATH_SECONDS);
+   markUi(dt);
    if(!state.lowSaid&&state.breath<=BREATH_LOW){state.lowSaid=true;events.low=true;}
    if(state.breath<=0){events.out=true;rise('breath');return events;}
    // The find in reach (3D): a few distance checks per frame, no allocation.
@@ -159,7 +197,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   surface(reason:SurfaceReason='tap'){
    if(reason==='fly')reason='leave';
    clear();if(state.phase!=='diving'&&!(reason==='leave'&&state.phase==='rising'))return events;
-   if(reason==='leave'){state.phase='surface';state.spot=null;state.find=null;events.surfaced='leave';return events;}
+   if(reason==='leave'){state.phase='surface';state.hold=DIVE_REARM_S;state.spot=null;state.find=null;events.surfaced='leave';return events;}
    rise(reason);return events;
   },
   get diving(){return state.phase!=='surface';},

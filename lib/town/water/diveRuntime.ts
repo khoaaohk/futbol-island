@@ -43,8 +43,8 @@ export type DiveRuntimePorts={
  entered:(spot:DiveSpot)=>void;surfaced:(spot:DiveSpot,reason:SurfaceReason)=>void;
  found:(find:DiveFind,first:boolean)=>void;credit:(runId:string,coins:number,reason:string)=>void;
  low:()=>void;out:()=>void;
- /** First time down at the deep level this dive (analytics), and R / the switcher's jetpack take-off from under the water. */
- deep?:(spot:DiveSpot)=>void;fly:()=>boolean;
+ /** First time over the reef crest this dive (analytics wa:dive_crest), and R / the switcher's jetpack take-off from under the water. */
+ crest?:(spot:DiveSpot)=>void;fly:()=>boolean;
 };
 
 export function createDiveRuntime(ports:DiveRuntimePorts){
@@ -97,13 +97,16 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    if(el.hidden!==hidden)ports.hide(el,hidden);promptShown=!hidden;
   },
   get promptShown(){return promptShown;},
+  /** The near-shore duck-dive shares the reef's breath (diveSession.ts DUCK_DRAIN): drain while under, the ring redrawn ≤ 10 Hz.
+   *  Returns the session's events (low / out) for the host's note and the pop-up. */
+  duck(dt:number,under:boolean){const ev=session.duck(dt,under);if(ev.breathUi)drawBreath();return ev;},
   /** "Dive" (the prompt's tap or E): go under. False when not in a patch or out of breath. */
   start(){if(!session.start())return false;enter();return true;},
   /** One dive frame instead of the island's: the swim, the breath, the room, the rig, the find prompt, one render. */
   frame(dt:number,input:DiveInput,width:number,height:number){
    if(!room)return;const s=session.state.spot;
    input.lift=Math.max(-1,Math.min(1,input.lift+(diveLift.up?1:0)-(diveLift.down?1:0)));
-   const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.deep&&s)ports.deep?.(s);
+   const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.crest&&s)ports.crest?.(s);
    if(ev.low)ports.low();if(ev.out)ports.out();
    if(ev.surfaced){leave(ev.surfaced as SurfaceReason,s!);return;}
    const st=session.state,reduced=ports.reduced();clock+=dt;

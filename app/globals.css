@@ -711,6 +711,10 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .water-under.is-on{animation:waterUnder .45s ease-out both}
 @keyframes waterUnder{0%{opacity:0}35%{opacity:.35}100%{opacity:0}}
 .water-under[hidden]{display:none}
+/* The reef dive's going under / coming up (Oct 20 2026, water audit #6): a softer, slower blend through the zone's own water colour
+   (set inline from the theme, the room's fog), never brighter than the water; still opacity only. */
+.water-under.is-reef.is-on{animation:waterUnderReef .65s ease-in-out both}
+@keyframes waterUnderReef{0%{opacity:.55}30%{opacity:.5}100%{opacity:0}}
 /* Water P1a: the character's line over the head when sharks start circling ("Uh oh!", lib/town/water/sharks.ts SHARK_LINE).
    One element, placed by the island loop (translate, half pixels) only while shown (SHARK_BUBBLE_S), then hidden; no animation. */
 .shark-bubble{position:absolute;left:0;top:0;z-index:6;pointer-events:none;transform:translate(-50%,-100%);padding:6px 12px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 17px/1.1 system-ui,sans-serif;border:2px solid #17323b;box-shadow:0 2px 0 #17323b;white-space:nowrap}

@@ -25,13 +25,14 @@ ok('seven data-driven zones (the user’s map circles), each a unique theme id, 
  assert.equal(Z.length,7);assert.equal(Z.map(s=>s.area).sort().join(),'1,2,3,4,5,6,7');
  for(const k of ['id','name','blob'])assert.equal(new Set(Z.map(s=>s[k])).size,7,'unique '+k);
  assert.equal(new Set(Z.map(s=>s.theme.id)).size,7,'unique theme ids');assert.equal(new Set(Z.map(s=>s.theme.signature)).size,7,'a different signature landmark / creature each');
- assert.equal(new Set(Z.map(s=>s.theme.water)).size,7,'a different water tint each');assert.equal(new Set(Z.map(s=>s.floor.kind+s.floor.edge+s.floor.deep)).size,7,'a different depth profile each');
+ assert.equal(new Set(Z.map(s=>s.theme.water)).size,7,'a different water tint each');assert.equal(new Set(Z.map(s=>JSON.stringify(s.floor))).size,7,'a different reef profile each');
  assert.equal(new Set(Z.map(s=>s.finds.find(f=>f.kind==='relic').title)).size,7,'a unique football find each');
  const wrecks=Z.filter(s=>s.theme.wreck),sizes=Z.map(s=>s.radius).sort((a,b)=>b-a);
  assert.equal(wrecks.length,3);for(const w of wrecks)assert(w.radius>=sizes[2],'wrecks only on the biggest zones: '+w.id);
  for(const s of Z.filter(s=>!s.theme.wreck))assert(s.radius<Math.min(...wrecks.map(w=>w.radius)),'clearly bigger blobs for wrecks');
  assert.equal(new Set(wrecks.map(w=>w.theme.wreck.style)).size,3,'each wreck its own hull style');assert.equal(new Set(wrecks.map(w=>w.theme.wreck.yaw)).size,3,'and orientation');
- for(const w of wrecks){const r=w.finds.find(f=>f.kind==='relic');assert.equal(D.diveLevelAt(r.x,r.z,w.floor),1,'the wreck’s cargo find is on the deep level: '+w.id);assert.equal(D.diveLevelAt(w.theme.wreck.x,w.theme.wreck.z,w.floor),1,'the wreck lies deep');}
+ for(const w of wrecks){const r=w.finds.find(f=>f.kind==='relic'),wk=w.theme.wreck;assert(D.diveOnCrest(wk.x,wk.z,w.floor),'the wreck is stranded on the reef crest: '+w.id);
+  assert(D.diveDepthAt(wk.x,wk.z,w.floor)<2.6,'shallow under the wreck '+w.id);assert(Math.hypot(r.x-wk.x,r.z-wk.z)<1.5,'the cargo find is inside the hull: '+w.id);}
  const ECON=load('lib/economy.ts');
  for(const s of Z){assert(s.radius>=12,'bigger patches (were 9 m)');const c=new T.Color(s.tint),hsl={};c.getHSL(hsl,T.SRGBColorSpace);assert(hsl.l>.55&&hsl.h>.42&&hsl.h<.6,'lighter turquoise '+s.id);
   assert(D.inDiveBlob(s,s.surface.x,s.surface.z),'you come up inside the patch');
@@ -73,38 +74,47 @@ ok('the Dive prompt range: inside the blob, swimming only, at the probe rate (10
  const bp=WS.WATER_UNIFORMS.uDiveBlob.value[0].toArray();D.diveBlobParams(spot.blob).forEach((x,i)=>near(bp[i],x,1e-9,'blob param'));
 });
 
-ok('two depth levels: the shelf and the deep level; up / down is clamped per level (over that level’s sand, under the surface)',()=>{
- for(const z of Z){const f=z.floor;assert.equal(D.diveLevelAt(0,13,f),0,'the start is over the shelf '+z.id);
-  let deepPts=0;for(let x=-20;x<=20;x+=2)for(let zz=-20;zz<=20;zz+=2)if(Math.hypot(x,zz)<D.DIVE_ROOM_R-3&&D.diveLevelAt(x,zz,f)===1){deepPts++;assert(D.diveFloor(x,zz,f)<D.diveFloor(0,13,f)-f.deep*.4,'the deep level is lower');}
-  assert(deepPts>15,'a real deep level '+z.id);}
- assert(D.DIVE_ROOM_R>=24,'a larger room (was 15 m)');
- const zone=D.diveSpotById('captains-cup'),s=S.createDiveSession();s.scan(.2,zone.x,zone.z,true);assert(s.start());
- for(let i=0;i<200;i++)s.step(1/30,{sx:0,sy:0,lift:-1});const shelfMin=D.diveDepthRange(s.state.x,s.state.z,zone.floor).min;
- near(s.state.y,shelfMin,.05,'clamped at the shelf floor');assert.equal(s.state.level,0);
- for(let i=0;i<300;i++)s.step(1/30,{sx:0,sy:0,lift:1});near(s.state.y,D.DIVE_SURFACE_Y-D.DIVE_CEILING_GAP,.02,'clamped under the surface');
- s.state.x=-6;s.state.z=-14;s.state.vx=s.state.vz=0;assert.equal(D.diveLevelAt(-6,-14,zone.floor),1);for(let i=0;i<500;i++)s.step(1/30,{sx:0,sy:0,lift:-1});
- near(s.state.y,D.diveDepthRange(-6,-14,zone.floor).min,.05,'clamped at the deep floor');assert(s.state.y<shelfMin-4,'deeper than the shelf allows');assert.equal(s.state.level,1);
- const y=s.state.y+2;s.state.y=y;s.state.vy=0;s.state.breath=1;for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:0,lift:0});near(s.state.y,y,.01,'holds its depth');
+ok('one shallow reef (Oct 20 2026: no deep level, no drop): a smooth seabed rising gently from the rim to a shallow crest; the diver follows it',()=>{
+ assert.equal(D.diveLevelAt,undefined,'no depth levels any more');assert.equal(D.diveDeepMask,undefined);
+ for(const z of Z){const f=z.floor;let slope=0,crest=Infinity,rim=0;
+  for(let x=-24;x<=24;x+=.5)for(let zz=-24;zz<=24;zz+=.5){const r=Math.hypot(x,zz);if(r>D.DIVE_ROOM_R)continue;const d=D.diveDepthAt(x,zz,f);crest=Math.min(crest,d);if(r>21)rim=Math.max(rim,d);
+   slope=Math.max(slope,Math.hypot(D.diveDepthAt(x+.05,zz,f)-D.diveDepthAt(x-.05,zz,f),D.diveDepthAt(x,zz+.05,f)-D.diveDepthAt(x,zz-.05,f))/.1);
+   near(D.diveFloor(x,zz,f),D.DIVE_SURFACE_Y-d,1e-9,'floor = surface − depth');}
+  assert(slope<=.8,'no drop steeper than 0.8 m per metre: '+z.id+' '+slope.toFixed(2));
+  assert(crest>=1.5&&crest<=3,'a shallow crest 1.5-3 m under the surface: '+z.id+' '+crest.toFixed(2));assert(rim>=3.8&&rim<=6.5,'deeper water at the rim (4-6 m): '+z.id+' '+rim.toFixed(2));
+  let on=0;for(let x=-20;x<=20;x+=2)for(let zz=-20;zz<=20;zz+=2)if(Math.hypot(x,zz)<20&&D.diveOnCrest(x,zz,f))on++;assert(on>12,'a real crest to swim over '+z.id);
+  for(let a=0;a<36;a++){const t=a/36*Math.PI*2,d1=D.diveDepthAt(Math.cos(t)*24,Math.sin(t)*24,f),d2=D.diveDepthAt(Math.cos(t)*32,Math.sin(t)*32,f);assert(d2>=d1-.05&&d2-d1<3,'past the room it slopes on down gently (no wall) '+z.id);}}
+ assert(D.DIVE_ROOM_R>=24,'a large room to explore (was 15 m)');
+ // Terrain following: swim from the deeper rim up onto the crest without touching the stick's lift; the reef lifts the diver.
+ const zone=D.diveSpotById('captains-cup'),s=S.createDiveSession();s.scan(.2,zone.x,zone.z,true);assert(s.start());const y0=s.state.y,R={min:0,max:0};let crested=0;
+ for(let i=0;i<360;i++){s.step(1/30,{sx:0,sy:-.6,lift:0});s.state.breath=1;D.diveDepthRange(s.state.x,s.state.z,zone.floor,R);if(s.events.crest)crested++;
+  assert(s.state.y>=R.min-1e-9&&s.state.y<=R.max+1e-9,'never into the sand or out of the surface');assert(s.state.y-D.diveFloor(s.state.x,s.state.z,zone.floor)>=D.DIVE_FLOOR_GAP-1e-9,'a safe clearance');}
+ assert(s.state.y>y0+1,'the rising reef lifted the diver: '+y0.toFixed(2)+' → '+s.state.y.toFixed(2));assert.equal(crested,1,'wa:dive_crest once per dive');
+ // ▼ dips lower (to the clearance over the sand), ▲ rises to just under the surface: 1-4 m of vertical room on this reef.
+ for(let i=0;i<120;i++)s.step(1/30,{sx:0,sy:0,lift:-1});D.diveDepthRange(s.state.x,s.state.z,zone.floor,R);near(s.state.y,R.min,.03,'dipped to the sand clearance');
+ for(let i=0;i<120;i++)s.step(1/30,{sx:0,sy:0,lift:1});near(s.state.y,D.DIVE_SURFACE_Y-D.DIVE_CEILING_GAP,.03,'risen to just under the surface');assert(s.state.atTop);
+ for(const z of Z)for(let x=-22;x<=22;x+=4)for(let zz=-22;zz<=22;zz+=4){if(Math.hypot(x,zz)>D.DIVE_ROOM_R)continue;D.diveDepthRange(x,zz,z.floor,R);const room=R.max-R.min;assert(room>=.3&&room<=4.6,'vertical room '+room.toFixed(2));}
+ s.state.depthT=.5;for(let i=0;i<30;i++)s.step(1/30,{sx:0,sy:0,lift:0});const t=s.state.depthT;for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:0,lift:0});near(s.state.depthT,t,1e-9,'holds its place in the water');
  const rt=read('lib/town/water/diveRuntime.ts');assert(rt.includes("(diveLift.up?1:0)-(diveLift.down?1:0)"),'the phone ▲ ▼ feed the same lift');assert(rt.includes("k==='q'||k==='z'"),'Q / Z on desktop (the room’s keys run first)');
  const hud=read('components/DiveHud.tsx');assert(hud.includes('data-dive-depth={dir}')&&hud.includes('onPointerDown={hold(dir,true)}'),'held ▲ ▼');assert(!/<small>|<span>/.test(hud.slice(hud.indexOf('const depthBtn'),hud.indexOf('return <>'))),'icon-only');
 });
 
-ok('swim → dive → surface, and the deep level is counted once per dive',()=>{
+ok('swim → dive → surface, and the reef crest is counted once per dive',()=>{
  const s=S.createDiveSession();assert.equal(s.start(),false,'not in a patch');
- s.scan(.2,spot.x,spot.z,true);assert.equal(s.start(),true);assert.equal(s.state.phase,'diving');near(s.state.y,S.DIVE_START.y,1e-9,'starts under the surface');
+ s.scan(.2,spot.x,spot.z,true);assert.equal(s.start(),true);assert.equal(s.state.phase,'diving');assert(s.state.y<D.DIVE_SURFACE_Y-D.DIVE_CEILING_GAP+1e-9&&s.state.y>D.diveFloor(0,13,s.state.spot.floor),'starts in the water, just under the surface');
  for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:-1,lift:0});assert(s.state.z<S.DIVE_START.z-1,'the stick swims forward');
  s.surface('tap');assert.equal(s.state.phase,'rising');let surfaced='';for(let i=0;i<40&&!surfaced;i++){s.step(1/30,{sx:0,sy:0,lift:0});surfaced=s.events.surfaced;}assert.equal(surfaced,'tap');
  s.scan(.2,spot.x,spot.z,true);for(let t=0;t<7;t+=.1)s.scan(.1,spot.x,spot.z,true);s.start();s.surface('leave');assert.equal(s.events.surfaced,'leave');assert.equal(s.diving,false);
- const z=D.diveSpotById('kelp-trawler'),s2=S.createDiveSession();s2.scan(.2,z.x,z.z,true);s2.start();s2.state.x=3;s2.state.z=-7;let deep=0;for(let i=0;i<400;i++){s2.step(1/30,{sx:0,sy:0,lift:-1});if(s2.events.deep)deep++;}assert.equal(deep,1,'wa:dive_deep once');
+ const z=D.diveSpotById('kelp-trawler'),s2=S.createDiveSession();s2.scan(.2,z.x,z.z,true);s2.start();s2.state.x=2;s2.state.z=-11;let crest=0;for(let i=0;i<400;i++){s2.step(1/30,{sx:i%60<30?.5:-.5,sy:0,lift:-1});if(s2.events.crest)crest++;}assert.equal(crest,1,'wa:dive_crest once');
 });
 
-ok('breath: the pace lesson (glide > swim > push) and it respects depth (deeper drains faster); a gentle float up at 0; refills at the surface',()=>{
- assert.equal(S.BREATH_SECONDS,45);assert.deepEqual({...S.BREATH_DRAIN},{glide:.6,swim:1,push:1.8});assert(S.DIVE_DEPTH_DRAIN>0);
+ok('breath: the pace lesson (glide > swim > push), gentler on the shallow reef (no depth penalty), a sip of air at the top; a gentle float up at 0; refills at the surface',()=>{
+ assert.equal(S.BREATH_SECONDS,70);assert.deepEqual({...S.BREATH_DRAIN},{glide:.6,swim:1,push:1.8});assert.equal(S.DIVE_DEPTH_DRAIN,undefined,'no deep penalty');
  const run=(input,setup)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);s.start();if(setup)setup(s);let t=0;while(s.state.phase==='diving'&&t<300){s.step(.05,input);t+=.05;}return {t,s};};
  const glide=run({sx:0,sy:0,lift:0}),swim=run({sx:0,sy:-.5,lift:0}),push=run({sx:0,sy:-1,lift:0});
- assert(glide.t>swim.t&&swim.t>push.t,'pace: '+[glide.t,swim.t,push.t].map(x=>x.toFixed(1)));assert(glide.t>55&&glide.t<76&&push.t>15&&push.t<26,'times '+[glide.t,push.t]);
- const shallow=run({sx:0,sy:0,lift:0},s=>{s.state.y=D.DIVE_SURFACE_Y-1;}),deep=run({sx:0,sy:0,lift:0},s=>{s.state.x=0;s.state.z=-9;s.state.y=D.diveDepthRange(0,-9,spot.floor).min;});
- assert(deep.t<shallow.t*.85,'deeper drains faster: '+deep.t.toFixed(1)+' vs '+shallow.t.toFixed(1));
+ assert(glide.t>swim.t&&swim.t>push.t,'pace: '+[glide.t,swim.t,push.t].map(x=>x.toFixed(1)));assert(glide.t>100&&glide.t<125&&push.t>32&&push.t<45,'times '+[glide.t,push.t]);
+ const high=run({sx:0,sy:0,lift:0},s=>{s.state.depthT=.15;}),low=run({sx:0,sy:0,lift:0},s=>{s.state.depthT=1;});near(low.t,high.t,.2,'the same drain at any depth');
+ const s0=S.createDiveSession();s0.scan(.2,spot.x,spot.z,true);s0.start();s0.state.breath=.3;for(let i=0;i<90;i++)s0.step(1/30,{sx:0,sy:0,lift:1});assert(s0.state.atTop&&s0.state.breath>.3,'rising to the top refills the breath (the surface is always right above)');
  assert.equal(push.s.state.phase,'rising');let ev='';for(let i=0;i<40&&!ev;i++){push.s.step(1/30,{sx:0,sy:0,lift:0});ev=push.s.events.surfaced;}assert.equal(ev,'breath');
  const s=push.s;s.scan(.2,spot.x,spot.z,true);assert.equal(s.ready,false);for(let t=0;t<S.BREATH_REFILL_S+.3;t+=.1)s.scan(.1,spot.x,spot.z,true);near(s.state.breath,1,1e-9,'full after 6 s');
  assert.equal(S.DIVE_LESSON.kind,'Coaching idea');assert.equal(S.DIVE_LESSON_KEY,'fi2-dive-lesson-v1');
@@ -126,11 +136,53 @@ ok('every zone’s room: rich but bounded by the same caps (draws, triangles, fi
   const fish=[];room.scene.traverse(o=>{if(o.name.startsWith('dive-fish-'))fish.push(o);});
   for(const m of fish)assert(m.geometry.isInstancedBufferGeometry,'instanced: '+m.name);
   const before=fish.map(m=>m.geometry.getAttribute('aPA').version);for(let i=0;i<5;i++)room.frame(i/30,1/30,{x:0,y:6,z:13,yaw:Math.PI});assert.deepEqual(fish.map(m=>m.geometry.getAttribute('aPA').version),before);
-  let lights=0;room.scene.traverse(o=>{if(o.isLight)lights++;});assert.equal(lights,1);
+  let lights=0;room.scene.traverse(o=>{if(o.isLight)lights++;if(o.name==='dive-bubbles')assert(!/[-+]-\d/.test(o.material.vertexShader),'no "--" in the baked bubble numbers (a negative vent height broke the shader)');});assert.equal(lights,1);
   const lite=R.createDiveRoom(z,{phone,reduced:false,found:[],lite:true});assert(lite.stats().triangles<st.triangles,'lite (heat tier 2+ / Battery saver) is lighter '+z.id);lite.dispose();
   room.dispose();}
  const t=tris.map(x=>+x.split('/')[1]);assert(Math.max(...t)/Math.min(...t)<2.4&&Math.max(...t)<80000,'cost bounded the same way in every zone (the caps): '+tris.join(' '));console.log('     phone rooms (draws/triangles): '+tris.join(' '));
  const src=read('lib/graphics/diveRoom.ts');for(const kind of ['galleon','trawler','cargo','trophy','kitbag','balls'])assert(src.includes(kind),kind);assert(!/skeleton|skull/i.test(src),'kid-friendly wrecks');
+});
+
+ok('stranded wrecks: wedged on the crest, tilted, part of the hull out of the water (seen from the island), clear of the buoy; built only near, hidden when hot',()=>{
+ const R=load('lib/graphics/diveRoom.ts'),WT=load('lib/graphics/diveWreckTop.ts'),tops=[];
+ for(const s of Z){const g=WT.wreckTopGeometry(s);if(!s.theme.wreck){assert.equal(g,null,'no wreck top in '+s.id);continue;}
+  const p=D.diveWreckPose(s.theme.wreck,s.floor);assert(Math.abs(p.pitch)>.1&&Math.abs(p.roll)>.1,'tilted and listing: '+s.id);
+  const bb=g.boundingBox;assert(bb.max.y>W.WATER_LEVEL+1,'part of the wreck stands out of the water: '+s.id+' '+(bb.max.y-W.WATER_LEVEL).toFixed(2));assert(bb.min.y<W.WATER_LEVEL,'and runs down under the waterline');
+  const P=g.getAttribute('position');let cx=0,cz=0;for(let i=0;i<P.count;i++){const d=Math.hypot(P.getX(i)-s.x,P.getZ(i)-s.z);assert(d>=WT.WRECK_TOP.buoyGap,'clear of the buoy / Dive prompt: '+s.id+' '+d.toFixed(2));cx+=P.getX(i);cz+=P.getZ(i);}
+  assert(D.inDiveBlob(s,cx/P.count,cz/P.count),'over the zone’s shoal: '+s.id);assert(Math.hypot(cx/P.count-s.surface.x,cz/P.count-s.surface.z)>WT.WRECK_TOP.buoyGap,'not on the surfacing point');
+  const tri=P.count/3;assert(tri>40&&tri<3000,'a small merged piece: '+s.id+' '+tri);tops.push(s.id+':'+tri);g.dispose();
+  // The room's hull reaches out of the surface too (the same build).
+  const M=new R.Merge();R.addDiveWreck(M,s,true,null);let top=-Infinity;for(let i=1;i<M.pos.length;i+=3)top=Math.max(top,M.pos[i]);assert(top>D.DIVE_SURFACE_Y+.8,'the room’s wreck pierces the surface: '+s.id);}
+ console.log('     wreck tops (triangles): '+tops.join(' '));
+ const scene=new T.Scene(),wt=WT.createDiveWreckTops(scene),cup=D.diveSpotById('captains-cup');
+ wt.update(0,0,0);assert.equal(wt.built.size,0,'nothing far away');wt.update(cup.x,cup.z+60,0);assert(wt.built.has('captains-cup'),'built near the zone');
+ const m=wt.built.get('captains-cup');assert.equal(m.castShadow,false);assert.equal(m.receiveShadow,false);
+ wt.update(cup.x,cup.z+60,3);assert.equal(m.visible,false,'hidden at heat tier 3+ / Battery saver');wt.update(cup.x,cup.z+60,0);assert.equal(m.visible,true);
+ let freed=0;m.geometry.addEventListener('dispose',()=>freed++);wt.update(cup.x+1000,cup.z,0);assert.equal(freed,1,'dropped when far');assert.equal(wt.built.size,0);wt.dispose();
+ const town=read('components/Town.tsx');assert(town.includes('diveWreckTops.update(location.x,location.z,heat.tier)')&&town.includes('diveWreckTops.dispose()'),'Town: HUD tick and unmount');
+ assert(!/setTimeout|setInterval|requestAnimationFrame|skeleton|skull/i.test(read('lib/graphics/diveWreckTop.ts')));
+});
+
+ok('one breath for both dives (the near-shore duck-dive is a lighter dip on the same ring); the Dive prompt waits 2 s after surfacing; R is always the jetpack',()=>{
+ const s=S.createDiveSession();assert.equal(s.state.breath,1);
+ for(let i=0;i<300;i++)s.duck(1/30,true);near(s.state.breath,1-10/S.BREATH_SECONDS*S.DUCK_DRAIN,.01,'the duck-dive drains the shared breath');
+ const b=s.state.breath;s.scan(.5,0,0,true);assert.equal(s.state.breath,b,'no refill while under');s.duck(1/30,false);s.scan(.5,0,0,true);assert(s.state.breath>b,'refills at the surface');
+ s.state.breath=.05;let out=0,low=0;for(let i=0;i<300;i++){s.duck(1/30,true);if(s.events.out)out++;if(s.events.low)low++;}assert(out>=1&&low===1,'the same low note and pop-up at 0');assert.equal(s.duckReady,false,'and the same wait before the next dive');
+ const r=S.createDiveSession();r.scan(.2,spot.x,spot.z,true);assert(r.start());r.surface('tap');for(let i=0;i<40&&r.diving;i++)r.step(1/30,{sx:0,sy:0,lift:0});assert.equal(r.diving,false);
+ assert.equal(r.scan(.5,spot.x,spot.z,true),null,'no Dive prompt right after surfacing');for(let t=0;t<S.DIVE_REARM_S;t+=.1)r.scan(.1,spot.x,spot.z,true);r.scan(.2,spot.x,spot.z,true);assert.equal(r.scan(.2,spot.x,spot.z,true)?.id,spot.id,'it re-arms after DIVE_REARM_S');
+ const town=read('components/Town.tsx');assert(town.includes("if(id==='swimride'&&dive.promptShown&&e.key.toLowerCase()==='e')"),'only E dives from the keys; R stays the jetpack');assert(!town.includes("if(id==='swimride'&&dive.promptShown){"));
+ assert(town.includes('dive.duck(dt,water.inWater&&water.state.diving&&!dive.diving)')&&town.includes('!dive.session.duckReady'),'Town feeds the duck-dive into the shared breath');
+ assert(town.includes('sound.waterPlunge();showUnderTint(spot.theme.water)')&&town.includes('sound.waterSurface();showUnderTint(spot.theme.water)')&&town.includes('ss.in=dive.diving'),'the reef goes under with the duck-dive’s sounds and a soft water-coloured blend');
+ assert(/\.water-under\.is-reef\.is-on\{animation:waterUnderReef/.test(read('app/globals.css')));
+});
+
+ok('the Breath pill only shows while diving or swimming (refilling), never on land',()=>{
+ const RT=load('lib/town/water/diveRuntime.ts'),el={hidden:true,style:{setProperty(){}},dataset:{},setAttribute(){}};
+ const ports={scene:new T.Scene(),renderer:{render(){}},camera:new T.PerspectiveCamera(),player:{root:new T.Group(),update(){}},phone:true,reduced:()=>false,
+  ui:sel=>sel==='[data-dive-breath]'?el:null,place(){},hide:(e,h)=>{e.hidden=h;},entered(){},surfaced(){},found(){},credit(){},low(){},out(){},fly:()=>false};
+ const rt=RT.createDiveRuntime(ports);rt.session.state.breath=.5;
+ rt.scan(.1,0,0,false);assert.equal(el.hidden,true,'not on land, even while refilling');rt.scan(.1,0,0,true);assert.equal(el.hidden,false,'shows while swimming and refilling');
+ rt.scan(.1,0,0,false);assert.equal(el.hidden,true,'hidden again on land');rt.dispose();
 });
 
 ok('dispose leaves no meshes, materials, geometries or timers (the runtime with a fake renderer)',()=>{
@@ -174,13 +226,13 @@ ok('Town wiring: the dive frame replaces the island frame, disposes on unmount a
  const dive=anim.indexOf('if(dive.diving){'),island=anim.indexOf('renderer.render(scene,camera)');assert(dive>0&&dive<island,'the dive branch returns before the island steps or renders');
  assert(/dive\.frame\(active\?dt:0/.test(anim),'menus hold the dive');assert(/!waterIdleWas&&!dive\.diving\)countWaterIdleCap/.test(anim));
  assert(/dive\.dispose\(\);diveBuoys\.dispose\(\);/.test(town));assert(/if\(dive\.diving\)dive\.dispose\(\)/.test(town));
- assert(town.includes('diveBuoys.near(location.x,location.z);dive.slots(location.x,location.z);'),'nearest zones into the shader slots on the HUD tick');
+ assert(town.includes('diveBuoys.near(location.x,location.z);diveWreckTops.update(location.x,location.z,heat.tier);dive.slots(location.x,location.z);'),'nearest zones into the shader slots on the HUD tick');
  assert(/<DiveHud\/>/.test(town));
 });
 
-ok('analytics: wa:dive_* ids kept, new ones (deep, fly, wreck visit / find) registered and on the admin tile (no migration: TS registry)',()=>{
+ok('analytics: wa:dive_* ids kept (deep retired, kept for old data), new ones (crest, fly, wreck visit / find) registered and on the admin tile (no migration: TS registry)',()=>{
  const C=load('lib/analytics/countIds.ts'),ev=read('lib/analytics/waterEvents.ts'),admin=read('app/admin/WaterSection.tsx');
- for(const id of ['dive_start','dive_surface','dive_find','dive_breath_out','dive_lesson','dive_deep','dive_fly','dive_wreck_visit','dive_wreck_find']){assert(C.WATER_COUNT_EVENTS.some(([e])=>e===id),id);assert.equal(C.isCountId('wa:'+id),true,id);assert(ev.includes(`'wa:${id}'`),id);assert(admin.includes(`'wa:${id}'`),'admin '+id);}
+ for(const id of ['dive_start','dive_surface','dive_find','dive_breath_out','dive_lesson','dive_deep','dive_crest','dive_fly','dive_wreck_visit','dive_wreck_find']){assert(C.WATER_COUNT_EVENTS.some(([e])=>e===id),id);assert.equal(C.isCountId('wa:'+id),true,id);assert(ev.includes(`'wa:${id}'`),id);assert(admin.includes(`'wa:${id}'`),'admin '+id);}
 });
 
 ok('saves: the finds are a SYNC key (with its docs row), the lesson flag a DEVICE key',()=>{
