@@ -12,6 +12,7 @@ import {onLand} from '@/lib/town/landmass';
 import {CAY_SHORE,CAY_SAND,CAY_LAWN,CAUSEWAY_PATH,CAUSEWAY_BEACHES,SANDBARS,FARM,HOSTEL,ROUNDABOUT,CAY_HOMES,HOSTEL_PATHS,CAY_PLAZA,BEACH_COURT,COURT_BEACH,CAY_HUTS,CAY_HUT_RADIUS,CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
 import {VENDING_MACHINES} from '@/lib/town/vendingCatalog';
 import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
+import {DIVE_SPOTS} from '@/lib/town/water/diveSpots';
 import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers} from '@/lib/town/mapMarkers';
@@ -110,6 +111,11 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <g className="map-fishing-markers" pointerEvents="none">{FISH_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name} fishing spot`} data-fishing-marker={spot.id}>
    <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#b9e1df" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
    <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>F</text>
+  </g>)}</g>
+  {/* Dive zones (Oct 20 2026): one D per zone at its buoy, the same plain mark as F (the map key explains it). */}
+  <g className="map-dive-markers" pointerEvents="none">{DIVE_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name} dive spot`} data-dive-marker={spot.id}>
+   <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#a9dcf5" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
+   <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>D</text>
   </g>)}</g>
   {/* Island job boards (G-13, Sep 30 2026): one "J" per JOBS board on the full travel map only (the minimap stays uncluttered). Static, in the memoized terrain. */}
   {!localMap&&<g className="map-job-markers" pointerEvents="none">{JOB_MARKERS.map(job=><g key={job.id} aria-label={`${job.title} job`} data-job-marker={job.id}>

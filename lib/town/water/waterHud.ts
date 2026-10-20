@@ -102,12 +102,14 @@ export type WaterView={
  riding:boolean;
  /** Bumped on a first ride: the once-per-device ride lesson (animalRides.ts RIDE_LESSON). */
  rideLesson:number;
+ /** Bumped the first time each ray kind is spotted in a visit (seaLifeAreas.ts RAY_LESSONS): the ray lesson toast and its kind. */
+ rayLesson:number;rayKind:string|null;
  /** Inside a dive zone's reef room (water P2): the cluster is Surface + the jetpack switcher. */
  reef:boolean;
  /** Bumped on a dive: the once-per-device breath lesson (diveSession.ts DIVE_LESSON). */
  reefLesson:number;
 };
-const IDLE_VIEW:WaterView={inWater:false,swimming:false,diving:false,diveOk:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0,reef:false,reefLesson:0};
+const IDLE_VIEW:WaterView={inWater:false,swimming:false,diving:false,diveOk:false,dropIn:false,flyOk:false,lesson:0,sharkLesson:0,riding:false,rideLesson:0,rayLesson:0,rayKind:null,reef:false,reefLesson:0};
 let view=IDLE_VIEW;const listeners=new Set<()=>void>();
 /**
  * One store and one action hook per page (Oct 19 2026, user: "the swim controls/actions are not showing" while swimming): a dev

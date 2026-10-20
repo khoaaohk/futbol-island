@@ -1,8 +1,8 @@
 /**
- * Travel-map marks (V vending, F fishing, J jobs): the map key's tap tooltips and where the J marks sit.
+ * Travel-map marks (V vending, F fishing, J jobs, D dive spots): the map key's tap tooltips and where the J marks sit.
  * The marks on the map are plain drawings (not buttons); the key explains them in general, not per place (tests/map-markers.cjs).
  */
-export type MapMarkKind='vending'|'fishing'|'job';
+export type MapMarkKind='vending'|'fishing'|'job'|'dive';
 type Point={x:number;z:number};
 
 /** The key's tooltips, one per kind, in words a child can read: shown as "<title>: <text>". */
@@ -10,6 +10,7 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
  vending:{title:'Vending machines:',text:'spend coins on books, packs and gear'},
  fishing:{title:'Fishing spots:',text:'catch fish to sell at Rosa’s market'},
  job:{title:'Jobs:',text:'help out to earn coins'},
+ dive:{title:'Dive spots:',text:'swim in and dive under the sea to explore'},
 };
 export const legendTipText=(kind:MapMarkKind)=>`${LEGEND_TIPS[kind].title} ${LEGEND_TIPS[kind].text}`;
 

@@ -1,17 +1,21 @@
 // Browser check for the first diving spot (water P2, Oct 16 2026; docs/swimming-research.md "P2 implemented: one spot").
 // Needs a running server (FUTBOL_BASE_URL, default http://localhost:3000, e.g. `npx next start -p 3000`).
 //   node scripts/check-dive-browser.cjs            → phone 390×844, screenshots into docs/water/ (DIVE_SHOTS overrides)
-// Flow: seed a save and stand on North Beach facing Paul's Grotto (shot 1: the buoy and the lighter patch), swim into the patch
-// (shot 2: the Dive prompt), dive (shot 3: the reef and the schools), swim to the relic and the coral and use them (shot 4: a find),
-// Surface with the button, catch a breath, dive again, swim to the clam and the treasure, surface with Escape. Asserts zero page /
-// console errors, the room's draws, that the island stops rendering while under and resumes after, and that the room is disposed.
+// Flow (the seven zones of Oct 20 2026, read from lib/town/water/diveSpots.ts): seed a save and stand on Coral Cay's north shore
+// facing Paul's Grotto (shot 1: the buoy and the lighter patch), swim into the patch (shot 2: the Dive prompt), dive (shot 3: the
+// reef and the schools), swim to the relic and the coral and use them (shot 4: a find), Surface with the button, catch a breath,
+// dive again, swim to the clam and the treasure, surface with Escape; then swim into every other zone and check its Dive prompt.
+// Asserts zero page / console errors, the room's draws, that the island stops rendering while under and resumes after, and that
+// the room is disposed.
 const {chromium}=require('playwright');
-const fs=require('fs'),path=require('path');
+const fs=require('fs'),path=require('path'),ts=require('typescript');
 const OUT=process.env.DIVE_SHOTS||path.join(__dirname,'..','docs','water');fs.mkdirSync(OUT,{recursive:true});
 const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:3000';
-const SPOT={x:84,z:-272},BEACH={x:94,z:-236};
+const ZONES=(()=>{const m={exports:{}};new Function('exports','module',ts.transpileModule(fs.readFileSync(path.join(__dirname,'..','lib/town/water/diveSpots.ts'),'utf8'),
+ {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m);return m.exports.DIVE_SPOTS;})();
+const FIRST=ZONES.find(z=>z.id==='pauls-grotto'),SPOT={x:FIRST.x,z:FIRST.z},BEACH={x:FIRST.x,z:-256};
 (async()=>{
- const exe=['/opt/pw-browsers/chromium'].find(p=>{try{return fs.statSync(p).isFile();}catch{return false;}});
+ const exe=[process.env.PW_EXE,'/opt/pw-browsers/chromium'].filter(Boolean).find(p=>{try{return fs.statSync(p).isFile();}catch{return false;}});
  const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'],...(exe?{executablePath:exe}:{})});
  const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  const page=await ctx.newPage();const errors=[];
@@ -30,7 +34,7 @@ const SPOT={x:84,z:-272},BEACH={x:94,z:-236};
  // 1. From the beach: the buoy and the lighter patch.
  console.log('start',JSON.stringify(await state()));
  // The follow camera sees ~25 m ahead: step down the beach toward the water until the buoy's flag is framed under the HUD.
- for(const z of [-236,-240,-242,-244,-246,-248,-250]){await page.evaluate(({x,z})=>{const l=window.__fi2.location;l.x=x;l.z=z;},{x:BEACH.x,z});await page.waitForTimeout(1600);
+ for(const z of [0,-2,-4,-6,-8].map(d=>BEACH.z+d)){await page.evaluate(({x,z})=>{const l=window.__fi2.location;l.x=x;l.z=z;},{x:BEACH.x,z});await page.waitForTimeout(1600);
   const y=await page.evaluate(({x,z})=>{const v=new window.__fi2.camera.position.constructor(x,2.4,z).project(window.__fi2.camera);return (1-v.y)/2*innerHeight;},SPOT);
   console.log('standpoint z',z,'flag at y',Math.round(y),JSON.stringify(await state()).slice(0,120));if(y>200)break;}
  for(const t of await page.locator('[role=status]').all())await t.tap({timeout:1000}).catch(()=>{});await page.waitForTimeout(400);
@@ -56,10 +60,10 @@ const SPOT={x:84,z:-272},BEACH={x:94,z:-236};
  console.log('island sim clock while diving',JSON.stringify(islandFrozen));
  await shot('dive-3-reef.png');
  // Swim underwater to a find: turn with A / D, swim with W, until it is in reach.
- const swimTo=async id=>{const t0=Date.now();const keys=new Set();const set=async want=>{for(const k of ['w','a','d'])if(want.has(k)!==keys.has(k)){if(want.has(k)){await page.keyboard.down(k);keys.add(k);}else{await page.keyboard.up(k);keys.delete(k);}}};
-  try{while(Date.now()-t0<30000){const s=await state();if(!s.diving)throw Error('surfaced before reaching '+id);if(s.find===id)return s;
+ const swimTo=async id=>{const t0=Date.now();const keys=new Set();const set=async want=>{for(const k of ['w','a','d','z'])if(want.has(k)!==keys.has(k)){if(want.has(k)){await page.keyboard.down(k);keys.add(k);}else{await page.keyboard.up(k);keys.delete(k);}}};
+  try{while(Date.now()-t0<30000){const s=await state();if(!s.diving)throw Error('surfaced before reaching '+id+': '+JSON.stringify(s));if(s.find===id)return s;
    const f=await page.evaluate(id=>window.__fi2.dive.session.state.spot.finds.find(q=>q.id===id),id);
-   let d=Math.atan2(f.x-s.x,f.z-s.z)-s.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));const want=new Set();if(d>.18)want.add('a');else if(d< -.18)want.add('d');if(Math.abs(d)<.9)want.add('w');
+   let d=Math.atan2(f.x-s.x,f.z-s.z)-s.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));const want=new Set();if(d>.18)want.add('a');else if(d< -.18)want.add('d');if(Math.abs(d)<.9)want.add('w');if(s.y>f.y+1.4||Math.hypot(f.x-s.x,f.z-s.z)<3)want.add('z');// Z sinks (the finds sit on the shelf or the deep level)
    await set(want);await page.waitForTimeout(90);}}finally{await set(new Set());}
   throw Error('did not reach '+id+': '+JSON.stringify(await state()));};
  const useFind=async id=>{await page.waitForFunction(id=>{const b=document.querySelector('[data-dive-go]');return b&&!b.hidden&&b.dataset.diveGo===id;},id,{timeout:5000});
@@ -79,6 +83,10 @@ const SPOT={x:84,z:-272},BEACH={x:94,z:-236};
  st=await state();console.log('surfaced (Escape)',JSON.stringify(st));if(st.room)throw Error('room still allocated after surfacing');
  const back=await page.evaluate(()=>({loc:{x:window.__fi2.location.x,z:window.__fi2.location.z},player:window.__fi2.player.root.parent===window.__fi2.scene,hud:document.querySelector('[data-water-actions]')?[...document.querySelectorAll('[data-job-action]')].map(b=>b.dataset.jobAction):null}));
  console.log('back at the buoy',JSON.stringify(back));if(!back.player)throw Error('the rig did not come back to the island');
+ // Every zone: swim in from just outside its patch and wait for its own Dive prompt.
+ for(const z of ZONES){await page.evaluate(({x,z})=>{const l=window.__fi2.location;l.x=x;l.z=z;},{x:z.x,z:z.z+z.radius*.4});
+  await page.waitForFunction(id=>{const d=window.__fi2.dive,b=document.querySelector('[data-dive-go]');return d.session.state.near?.id===id&&b&&!b.hidden&&b.textContent==='Dive';},z.id,{timeout:8000})
+   .catch(async()=>{throw Error('no Dive prompt at '+z.id+': '+JSON.stringify(await state()));});console.log('zone prompt ok',z.id);}
  console.log('errors',errors.length?errors:'none');
  await browser.close();if(errors.length)process.exit(1);
 })().catch(e=>{console.error(e);process.exit(1);});

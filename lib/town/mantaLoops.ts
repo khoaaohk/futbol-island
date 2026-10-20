@@ -51,25 +51,29 @@ const D=Math.PI/180;
 /** Summit Isle's manta bays: bearings (degrees, atan2(z, x) round SUMMIT_CENTER) and offsets past the waterline (m). */
 const SUMMIT_MANTA_BAYS=[
  {id:'summit-north-bay',a0:-88,a1:-46,dIn:11,dOut:20,speed:1.4,desktopOnly:false},
- {id:'summit-east-bay',a0:-10,a1:30,dIn:11,dOut:19,speed:1.5,desktopOnly:false},
+ {id:'summit-east-bay',a0:-16,a1:12,dIn:11,dOut:19,speed:1.5,desktopOnly:false},
  {id:'summit-south-bay',a0:72,a1:112,dIn:11,dOut:19,speed:1.35,desktopOnly:true},
 ];
 /** Sandbar loops wrap the seaward side, away from the causeway (the road bends away from both sandbars there). */
-function sandbarLoops(index:0|1){
+/** `outer`: the outer loop's span (degrees either side of the far point: from, to) and offsets. Starfish's outer loop stays off
+ *  its north tip (Oct 20 2026): the Captain's Cup dive zone (water/diveSpots.ts) floats straight north of it. */
+function sandbarLoops(index:0|1,outer:[number,number,number,number]=[68,-68,27,33]){
  const s=SANDBARS[index],far=s.side>0?90*D:-90*D,c={x:s.x,z:s.z},island=s.id as MantaIsland;
  return [coastLoop(`${s.id}-inner`,island,s.outline,c,far-78*D,far+78*D,11,16,1.35,.3),
-  coastLoop(`${s.id}-outer`,island,s.outline,c,far+68*D,far-68*D,27,33,1.55,.3)];
+  coastLoop(`${s.id}-outer`,island,s.outline,c,far+outer[0]*D,far+outer[1]*D,outer[2],outer[3],1.55,.3)];
 }
 /**
  * Coral Cay: three stretches of coast, never the west side where the causeway lands. North shore, Sharks Beach (the
  * north-east bay by the court) and the south cove. Phones keep two (heat): Sharks Beach and the south cove.
  */
 export const MANTA_LOOPS:MantaLoop[]=[
- coastLoop('cay-north','cay',CAY_SHORE,CAY_CENTER,-132*D,-88*D,16,24,1.5,.22,true),
+ // Oct 20 2026: cay-north was -132°..-88° and cay-south 22°..76°; nudged off Paul's Grotto (-98°) and Ray Meadow (36°), the dive
+ // zones (water/diveSpots.ts, tests/sea-life-areas.cjs). Summit's east bay (was -10°..30°) clears Turtle Pool (23°) the same way.
+ coastLoop('cay-north','cay',CAY_SHORE,CAY_CENTER,-134*D,-110*D,16,24,1.5,.34,true),
  coastLoop('cay-sharks-beach','cay',CAY_SHORE,CAY_CENTER,-14*D,-66*D,15,23,1.4),
  // South cove: east of the Summit Isle sandbar (Oct 12 2026; was 48°–112°, which crossed the new sandbar at ~90°).
- coastLoop('cay-south','cay',CAY_SHORE,CAY_CENTER,22*D,76*D,15,23,1.6),
- ...sandbarLoops(0),...sandbarLoops(1),
+ coastLoop('cay-south','cay',CAY_SHORE,CAY_CENTER,49*D,77*D,15,23,1.6),
+ ...sandbarLoops(0,[-28,-80,27,33]),...sandbarLoops(1),
  // Summit Isle (Oct 14 2026, user: "add some sharks, manta rays and even a whale shark around the mountain island"): the
  // shallower bays, inside the island's sharks (summitSeaLife.ts) and away from its three fishing floats. Phones keep two.
  ...SUMMIT_MANTA_BAYS.map(b=>coastLoop(b.id,'summit',SUMMIT_SHORE,SUMMIT_CENTER,b.a0*D,b.a1*D,b.dIn,b.dOut,b.speed,.2,b.desktopOnly,6)),
