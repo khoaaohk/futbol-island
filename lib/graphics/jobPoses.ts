@@ -92,6 +92,46 @@ export const TREE_SHAKE_PUSHES=[.3,.62] as const;
 export const TREE_KICK_CONTACT=.4;
 const out:PoseTarget={...N,fl:[0,.07],fr:[0,.07],al:[0,0,0,0],ar:[0,0,0,0],upper:false};
 const lerp=(a:number,b:number,k:number)=>a+(b-a)*k;
+/** The live gait (player.ts): the walk cycle's phase (rad, one stride pair per 2π), how much the body is moving (0 still → 1
+ *  walking) and sprinting (0 → 1). Held carry poses sway with it instead of a clock, so the sway lands on the steps. */
+export type Gait={phase:number;amount:number;sprint:number};
+const IDLE_GAIT:Gait={phase:0,amount:0,sprint:0};
+
+// ---- Bug squad net grip (bug-polish, Oct 20 2026; user: "fix the body mechanics to hold the net while walking", "while walking
+// around with the net, have it held with both hands"). Rig-local (+z forward, +y up from the feet, arms[0] on −x, arms[1] on +x).
+// The pole line is fixed first and both hands are solved onto it (player.ts poseNetGrip, the zipline's two-bone solve), so no
+// hand can float off the pole and nothing stretches: every target is inside the arm's reach from its shoulder (tests check it).
+//  - carry: a relaxed diagonal across the body, the rear (+x) hand low by the hip, the front (−x) hand at the chest, the hoop up
+//    front and to the side, high and clear of the face. Still = "low and ready" (the pole tipped forward); sprinting tucks it up.
+//  - sneak (Net down): both hands forward and low, the pole pointing ahead and down so the hoop skims the grass; knees bent.
+type GripKey={l:readonly [number,number,number];d:readonly [number,number,number]};
+const GRIP_IDLE:GripKey={l:[.13,.92,.22],d:[-.3,.5,.81]};
+const GRIP_WALK:GripKey={l:[.13,.93,.29],d:[-.36,.8,.48]};
+const GRIP_SPRINT:GripKey={l:[.14,.97,.25],d:[-.3,.9,.32]};
+const GRIP_SNEAK:GripKey={l:[.04,1,.24],d:[-.16,-.38,.91]};
+/** Hands apart along the pole (m): carry / Net down. */
+export const NET_HAND_GAP={idle:.3,carry:.34,sneak:.18} as const;
+/** Net down: how far the pelvis drops (m); player.ts bends both knees to match while the legs keep stepping. */
+export const NET_SNEAK_CROUCH=.08;
+export type NetGrip={h0:[number,number,number];h1:[number,number,number];dir:[number,number,number];crouch:number};
+const gripOut:NetGrip={h0:[0,0,0],h1:[0,0,0],dir:[0,1,0],crouch:0};
+/** The pole line and both hand targets for a held net pose (the same object is reused). `sneakW` 0 = carry, 1 = Net down
+ *  (callers ease it, so switching never snaps). */
+export function netGrip(sneakW:number,g:Gait,reduced:boolean):NetGrip{
+ const a=Math.max(0,Math.min(1,g.amount)),sp=Math.max(0,Math.min(1,g.sprint)),k=Math.max(0,Math.min(1,sneakW)),wob=reduced?0:1;
+ const sw=Math.sin(g.phase)*a*wob,bob=Math.cos(g.phase*2)*a*wob;
+ const o=gripOut;let lx=0,ly=0,lz=0,dx=0,dy=0,dz=0;
+ for(let i=0;i<3;i++){// idle → walk → sprint, then toward Net down
+  const c=lerp(lerp(GRIP_IDLE.l[i],GRIP_WALK.l[i],a),GRIP_SPRINT.l[i],sp),cd=lerp(lerp(GRIP_IDLE.d[i],GRIP_WALK.d[i],a),GRIP_SPRINT.d[i],sp);
+  const v=lerp(c,GRIP_SNEAK.l[i],k),vd=lerp(cd,GRIP_SNEAK.d[i],k);
+  if(i===0){lx=v;dx=vd;}else if(i===1){ly=v;dy=vd;}else{lz=v;dz=vd;}}
+ // The carry sway: the pole rocks across with each stride and the hands bob on the steps (softer when stalking or sprinting).
+ const amp=(1-.5*sp)*(1-.6*k);lx+=.012*sw*amp;ly+=.016*bob*amp;dx+=.06*sw*amp;dz+=.02*bob*amp;
+ const n=Math.hypot(dx,dy,dz)||1;dx/=n;dy/=n;dz/=n;
+ const gap=lerp(lerp(NET_HAND_GAP.idle,NET_HAND_GAP.carry,a),NET_HAND_GAP.sneak,k);
+ o.h1[0]=lx;o.h1[1]=ly;o.h1[2]=lz;o.h0[0]=lx+dx*gap;o.h0[1]=ly+dy*gap;o.h0[2]=lz+dz*gap;o.dir[0]=dx;o.dir[1]=dy;o.dir[2]=dz;o.crouch=NET_SNEAK_CROUCH*k;
+ return o;
+}
 function set(p:Partial<Omit<PoseTarget,'upper'>>){
  out.py=p.py??N.py;out.pz=p.pz??N.pz;out.tx=p.tx??N.tx;out.ty=p.ty??N.ty;out.hx=p.hx??N.hx;out.hy=p.hy??N.hy;out.toe=p.toe??N.toe;
  const fl=p.fl??N.fl,fr=p.fr??N.fr,al=p.al??N.al,ar=p.ar??N.ar;out.fl[0]=fl[0];out.fl[1]=fl[1];out.fr[0]=fr[0];out.fr[1]=fr[1];
@@ -104,7 +144,7 @@ function mixKeys(a:Partial<Omit<PoseTarget,'upper'>>,b:Partial<Omit<PoseTarget,'
  for(let i=0;i<4;i++){out.al[i]=lerp(A.al[i]??0,B.al[i]??0,k);out.ar[i]=lerp(A.ar[i]??0,B.ar[i]??0,k);}
 }
 /** The pose target for `pose` (the same object is reused: copy what you keep). `time` drives the tug / sweep rhythm. */
-export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean):PoseTarget{
+export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean,gait?:Gait):PoseTarget{
  const k=Math.max(0,Math.min(1,pose.progress)),tug=Math.max(0,Math.min(1,pose.tug??0)),wob=reduced?0:1;out.upper=!!pose.upper||UPPER_POSES.has(pose.kind);
  const keys=KEYS[pose.kind];
  if(keys){let i=0;while(i<keys.length-2&&k>keys[i+1][0])i++;const [t0,a]=keys[i],[t1,b]=keys[i+1],u=t1>t0?Math.max(0,Math.min(1,(k-t0)/(t1-t0))):1;mixKeys(a,b,u*u*(3-2*u));
@@ -117,11 +157,13 @@ export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean):PoseTarg
   case 'pull':{const t=Math.sin(time*22)*.035*tug*wob;set({py:.6+.06*tug,pz:-.06-.16*tug+t,tx:.45-.73*tug+t*2,hx:.35-.15*tug,fl:[.26,.07],fr:[-.05,.07],al:[-.9+.1*tug,.14,-.12],ar:[-.9+.1*tug,.14,-.12]});break;}
   // Two-handed rake: the torso turns and the arms sweep across in front while Rake is held.
   case 'rake':{const s=Math.sin(k*Math.PI*2)*wob;set({py:.8,tx:.38+.08*Math.cos(k*Math.PI*4)*wob,ty:.28*s,hx:.3,fl:[.22,.07],fr:[-.16,.07],al:[-.75+.25*s,.25,-.55],ar:[-1.05+.25*s,.05,-.3]});break;}
-  // Bug squad net carry: right hand by the right shoulder, left hand low across the chest, so the pole runs up over the right shoulder
-  // through both hands; a gentle sway with the walk replaces the arm swing.
-  case 'netcarry':{const s=Math.sin(k*Math.PI*2)*wob;set({tx:.06,ty:-.12+.06*s,hx:.05,al:[-.95+.06*s,-.3,-1.15],ar:[-1.55+.05*s,.08,-1.95]});break;}
-  // Net down (stalking): lean in, both hands forward and low, the front (left) hand further out so the net points ahead at the grass.
-  case 'netsneak':{const s=Math.sin(k*Math.PI*2)*wob;set({tx:.34,hx:.28,ty:.05*s,al:[-1.05+.04*s,.05,-.3],ar:[-.75+.04*s,.0,-.75]});break;}
+  // Bug squad net carry (bug-polish, Oct 20 2026): the arms are solved onto the pole by player.ts (netGrip below); these angles are
+  // only the fallback. The torso counter-rotates against the walk (the arms no longer swing) and leans a little more with speed.
+  case 'netcarry':{const g=gait??IDLE_GAIT,s=Math.sin(g.phase)*g.amount*wob;
+   set({tx:.03+.05*g.amount+.08*g.sprint,ty:-.1+.07*s,hx:.02-.03*g.amount,al:[-1.25,.1,-1.2],ar:[-.9,.1,-1.3]});break;}
+  // Net down (stalking): lean in and look down the pole, both hands forward and low, the net ahead at the grass (legs bent by
+  // player.ts, NET_SNEAK_CROUCH); a small sway with the creeping steps.
+  case 'netsneak':{const g=gait??IDLE_GAIT,s=Math.sin(g.phase)*g.amount*wob;set({tx:.3,hx:.12,ty:-.05+.04*s,al:[-1.1,.05,-.5],ar:[-.9,.05,-.9]});break;}
   case 'push':set({tx:.18,hx:.1,al:[-1.05+.25*(1-tug),-.05,-.4],ar:[-1.05+.25*(1-tug),-.05,-.4]});break;
   case 'carryball':set({tx:.04,al:CARRY_BALL,ar:CARRY_BALL});break;
   case 'carrycard':set({tx:.04,al:CARD,ar:CARD});break;

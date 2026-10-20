@@ -45,8 +45,9 @@ Hands for a two-handed hold (`HAND_JOINTS`): `left-shoulder`/`right-shoulder` (o
 built with articulated hands, so a prop can be parented to `right-hand` and aimed at `left-hand` each frame.
 
 Per ride (`BACKPACK_RIDE_OFFSETS`): scooter / bike / moped need no seat or lean change (`seatDy 0`, `leanAdd 0`; the test
-checks no pack point sits inside any saddle, cargo box or body). Suggested pole tilt back from vertical when resting on
-`backpack-side-right`: scooter .35, bike .55, moped .6 rad.
+checks no pack point sits inside any saddle, cargo box or body). Pole tilt back from vertical when resting on
+`backpack-side-right`: scooter .35, bike .55, moped .6 rad. Used by the Bug squad net (`bugNet.pack`, wired through
+`jobs.setBackpack` in Town; docs/island-jobs.md §15 "Bug polish"), which also hides the net while the pack morphs (> .02).
 
 ## Tests
 

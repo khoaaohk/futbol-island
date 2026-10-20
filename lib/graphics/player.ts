@@ -17,7 +17,7 @@ import {attachBeanSkin} from './beanSkin';
 import {attachBeanCostumes} from './beanCostumes';
 import type {BeanLook,Outfit,BeanExpression} from './beanLook';
 import {createSkillDriver,type SkillMotion} from './skillMoves';
-import {jobPoseTarget,type PoseTarget} from './jobPoses';
+import {jobPoseTarget,netGrip,NET_SNEAK_CROUCH,type PoseTarget,type Gait} from './jobPoses';
 import type {JobPose} from '../town/jobs/jobMoves';
 import type {ZipRigPose} from '../town/zipline';
 import {createSwimPoser,type SwimRigPose} from './swimPose';
@@ -337,6 +337,16 @@ const ZIP_UPPER=.28,ZIP_FORE=.285;
 const zipChest=new T.Matrix4(),zipInv=new T.Matrix4(),zipBasis=new T.Matrix4(),zipT=new T.Vector3(),zipN=new T.Vector3(),zipE=new T.Vector3(),zipF=new T.Vector3(),
  zipX=new T.Vector3(),zipY=new T.Vector3(),zipZ=new T.Vector3(),zipPole=new T.Vector3(),zipQ=new T.Quaternion(),zipQ2=new T.Quaternion(),zipEuler=new T.Euler();
 const zipMix=(o:T.Euler|T.Vector3,k:'x'|'y'|'z',v:number,w:number)=>{o[k]+=(v-o[k])*w;};
+/** Job pose cross-fade time between kinds (carry ↔ sneak ↔ wind-up / swing / catch / release) and the net grip's ease. */
+export const NET_BLEND_S=.2;
+/** The chest joint's rig-local origin standing upright on the regular build: netGrip's targets are drawn round it. */
+export const NET_CHEST_REST=[0,1.196,0] as const;
+function copyPose(o:PoseTarget,a:PoseTarget){o.py=a.py;o.pz=a.pz;o.tx=a.tx;o.ty=a.ty;o.hx=a.hx;o.hy=a.hy;o.toe=a.toe;o.upper=a.upper;
+  for(let i=0;i<2;i++){o.fl[i]=a.fl[i];o.fr[i]=a.fr[i];}for(let i=0;i<4;i++){o.al[i]=a.al[i]??0;o.ar[i]=a.ar[i]??0;}}
+/** o = a → b at k (o may be a; b is read before o is written per field). */
+function blendPose(o:PoseTarget,a:PoseTarget,b:PoseTarget,k:number){const L=(x:number,y:number)=>x+(y-x)*k;
+  o.py=L(a.py,b.py);o.pz=L(a.pz,b.pz);o.tx=L(a.tx,b.tx);o.ty=L(a.ty,b.ty);o.hx=L(a.hx,b.hx);o.hy=L(a.hy,b.hy);o.toe=L(a.toe,b.toe);o.upper=b.upper;
+  for(let i=0;i<2;i++){o.fl[i]=L(a.fl[i],b.fl[i]);o.fr[i]=L(a.fr[i],b.fr[i]);}for(let i=0;i<4;i++){o.al[i]=L(a.al[i]??0,b.al[i]??0);o.ar[i]=L(a.ar[i]??0,b.ar[i]??0);}}
 /** The middle of a hand's mitten in the elbow's frame (the zipline grip point; tests and the runtime read it). */
 export const ZIP_GRIP_POINT=[0,-ZIP_FORE,0] as const;
 
@@ -495,6 +505,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   let ws=1,pelvisY=.88,kickSupport=-1,sitBackBlend=0,gaitFwd=1,gaitSide=0,dutyState=.6;
   // Island job pose (docs/island-jobs.md §10): blend weight and the last target (kept for the fade-out).
   let jobW=0,jobHeld:PoseTarget|null=null;
+  // Job pose cross-fade between kinds and the net grip (bug-polish): the pose a moment ago, its leg weight, the blend clock.
+  const jobFrom:PoseTarget={py:.86,pz:0,tx:0,ty:0,hx:0,hy:0,toe:0,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0],upper:false};
+  let jobKind='',jobX=1,jobFromLegs=0,jobLegs=0,netGripW=0,netSneakW=0;const gaitNow:Gait={phase:0,amount:0,sprint:0};
   // Freestyle trick pose (optional; motion.trick): the last pose held for the fade-out, and scratch for the leg solve.
   const trickHeld=createTrickPose(),trickLeg:TrickLegAngles={hipZ:0,hipX:0,knee:0,ankle:0,reach:0};let trickFade=0,trickBase=0;
   const anchorFoot=(index:number,px:number,pz:number,heading:number,lx:number,lz:number)=>{
@@ -754,15 +767,29 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   };
   /** Job pose over the finished gait pose: pelvis height/offset, a two-bone leg solve (boots on the grass, or a knee down),
    *  torso and head pitch, both arms. Fades in (~.1 s) and out (~.15 s); reduced motion snaps. */
-  const poseJob=(pose:PlayerMotion['job'],dt:number,time:number,reduced:boolean)=>{
-    if(pose){const t=jobPoseTarget(pose,time,reduced);jobHeld=jobHeld??{...t,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0]};
-      Object.assign(jobHeld,{py:t.py,pz:t.pz,tx:t.tx,ty:t.ty,hx:t.hx,hy:t.hy,toe:t.toe,upper:t.upper});for(let i=0;i<2;i++){jobHeld.fl[i]=t.fl[i];jobHeld.fr[i]=t.fr[i];}for(let i=0;i<4;i++){jobHeld.al[i]=t.al[i]??0;jobHeld.ar[i]=t.ar[i]??0;}
+  const poseJob=(pose:PlayerMotion['job'],dt:number,time:number,reduced:boolean,gaitAmount:number,gaitSprint:number)=>{
+    // Net grip weight (bug-polish): both hands solved onto the pole (poseNetGrip) while carrying or stalking, eased over .2 s.
+    const netHeld=!!pose&&(pose.kind==='netcarry'||pose.kind==='netsneak');
+    netGripW=reduced?(netHeld?1:0):Math.max(0,Math.min(1,netGripW+(netHeld?dt:-dt)/NET_BLEND_S));
+    if(netHeld)netSneakW=reduced?(pose!.kind==='netsneak'?1:0):Math.max(0,Math.min(1,netSneakW+(pose!.kind==='netsneak'?dt:-dt)/NET_BLEND_S));
+    gaitNow.phase=phase;gaitNow.amount=gaitAmount;gaitNow.sprint=gaitSprint;
+    if(pose){const t=jobPoseTarget(pose,time,reduced,gaitNow);const fresh=!jobHeld;jobHeld=jobHeld??{...t,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0]};
+      // Kind changes (carry → sneak, carry → wind-up / swing, swing → catch, …) cross-fade from the pose held a moment ago over
+      // NET_BLEND_S instead of snapping (bug-polish); a fresh pose fades in with jobW as before.
+      if(pose.kind!==jobKind){if(!fresh&&!reduced&&jobW>0){copyPose(jobFrom,jobHeld);jobFromLegs=jobHeld.upper?0:1;jobX=0;}else jobX=1;jobKind=pose.kind;}
+      jobX=Math.min(1,jobX+dt/NET_BLEND_S);const x=jobX*jobX*(3-2*jobX);
+      if(x<1){blendPose(jobHeld,jobFrom,t,x);jobLegs=jobFromLegs+((t.upper?0:1)-jobFromLegs)*x;}else{copyPose(jobHeld,t);jobLegs=t.upper?0:1;}
       jobW=reduced?1:Math.min(1,jobW+dt/.1);}
-    else jobW=reduced?0:Math.max(0,jobW-dt/.15);
+    else{jobW=reduced?0:Math.max(0,jobW-dt/.15);jobKind='';}
     const t=jobHeld;if(!t||jobW<=0){if(jobW<=0)jobHeld=null;return;}
     const w=jobW*jobW*(3-2*jobW),mix=(o:T.Euler|T.Vector3,k:'x'|'y'|'z',v:number)=>{o[k]+=(v-o[k])*w;};
     const legOff=(P.legs-1)*.83,py=t.py+legOff;
-    if(!t.upper){
+    // Net down: a lower stance under the walking legs (pelvis down, both knees bent to match, the feet stay put).
+    const crouch=NET_SNEAK_CROUCH*netSneakW*netGripW*w*(1-jobLegs);
+    if(crouch>1e-4){const th=Math.acos(Math.max(-1,Math.min(1,1-crouch/(.83*P.legs))));pelvis.position.y-=crouch;
+      for(const leg of legs){leg.hip.rotation.x-=th;leg.knee.rotation.x+=th*2;leg.ankle.rotation.x-=th;}}
+    if(jobLegs>0){const lw=w*jobLegs,lmix=(o:T.Euler|T.Vector3,k:'x'|'y'|'z',v:number)=>{o[k]+=(v-o[k])*lw;};
+      const mix=lmix;
       mix(pelvis.position,'y',py);mix(pelvis.position,'z',t.pz);mix(pelvis.position,'x',0);mix(pelvis.rotation,'x',0);mix(pelvis.rotation,'y',0);mix(pelvis.rotation,'z',0);
       const L1=.43*P.legs,L2=.40*P.legs,clamp=(v:number)=>Math.max(-1,Math.min(1,v));
       for(let i=0;i<2;i++){const f=i===0?t.fl:t.fr,leg=legs[i],dy=py-f[1],dz=f[0]-t.pz;
@@ -773,6 +800,33 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     mix(torso.rotation,'x',t.tx);mix(torso.rotation,'y',t.ty);mix(torso.rotation,'z',0);mix(head.rotation,'x',t.hx);mix(head.rotation,'y',-t.ty*.5+t.hy);
     for(let i=0;i<2;i++){const a=i===0?t.al:t.ar,arm=arms[i],side=i===0?-1:1;
       mix(arm.shoulder.rotation,'x',a[0]);mix(arm.shoulder.rotation,'y',0);mix(arm.shoulder.rotation,'z',side*a[1]);mix(arm.elbow.rotation,'x',a[2]);mix(arm.elbow.rotation,'y',0);mix(arm.hand.rotation,'y',side*(a[3]??0));}
+  };
+  /** Bug squad net grip (bug-polish, Oct 20 2026): after the spine, both arms are solved onto the pole line from netGrip()
+   *  (jobPoses.ts) with the zipline's two-bone solve, so the middle of each mitten sits on the pole through the walk cycle; the
+   *  elbows hang out and down, never through the torso. Weighted by the job pose and netGripW (eased in / out over .2 s, so the
+   *  wind-up and swing take over from it smoothly). No allocation. */
+  const poseNetGrip=(reduced:boolean)=>{
+    const w=netGripW*netGripW*(3-2*netGripW)*(jobW*jobW*(3-2*jobW));if(w<=0)return;
+    const g=netGrip(netSneakW,gaitNow,reduced);
+    pelvis.updateMatrix();torso.updateMatrix();lumbar.updateMatrix();chest.updateMatrix();
+    zipChest.multiplyMatrices(pelvis.matrix,torso.matrix).multiply(lumbar.matrix).multiply(chest.matrix);zipInv.copy(zipChest).invert();
+    for(let i=0;i<2;i++){const side=i===0?-1:1,arm=arms[i],h=i===0?g.h0:g.h1;
+      // Targets ride with the chest (its offset from the upright rest, so the lean, the crouch, the bob and the build carry them).
+      zipT.set(h[0]+zipChest.elements[12]-NET_CHEST_REST[0],h[1]+zipChest.elements[13]-NET_CHEST_REST[1],h[2]+zipChest.elements[14]-NET_CHEST_REST[2]).applyMatrix4(zipInv).sub(arm.shoulder.position);
+      let d=zipT.length();const reach=ZIP_UPPER+ZIP_FORE-.003;if(d>reach){zipT.multiplyScalar(reach/d);d=reach;}if(d<.1){zipT.setLength(.1);d=.1;}
+      zipN.copy(zipT).divideScalar(d);
+      // Elbows out to the side and down (a relaxed hold), a little back for the rear hand.
+      zipPole.set(side*.8,-.75,i===1?-.25:-.05).transformDirection(zipInv);zipPole.addScaledVector(zipN,-zipPole.dot(zipN));
+      if(zipPole.lengthSq()<1e-8)zipPole.set(side,0,0);zipPole.normalize();
+      const along=(ZIP_UPPER*ZIP_UPPER-ZIP_FORE*ZIP_FORE+d*d)/(2*d),out=Math.sqrt(Math.max(0,ZIP_UPPER*ZIP_UPPER-along*along));
+      zipE.copy(zipN).multiplyScalar(along).addScaledVector(zipPole,out);
+      zipY.copy(zipE).divideScalar(-ZIP_UPPER);zipF.copy(zipT).sub(zipE).divideScalar(ZIP_FORE);
+      zipZ.copy(zipF).addScaledVector(zipY,-zipF.dot(zipY));if(zipZ.lengthSq()<1e-8)zipZ.copy(zipPole).negate();zipZ.normalize();
+      zipX.crossVectors(zipY,zipZ);zipBasis.makeBasis(zipX,zipY,zipZ);zipQ.setFromRotationMatrix(zipBasis);
+      const elbow=-Math.acos(Math.max(-1,Math.min(1,-zipF.dot(zipY))));
+      arm.shoulder.quaternion.slerp(zipQ,w);
+      arm.elbow.rotation.set(arm.elbow.rotation.x+(elbow-arm.elbow.rotation.x)*w,arm.elbow.rotation.y*(1-w),arm.elbow.rotation.z*(1-w));
+      arm.hand.rotation.set(arm.hand.rotation.x*(1-w),arm.hand.rotation.y*(1-w),arm.hand.rotation.z*(1-w));}
   };
   /** Zipline (Oct 14 2026, user: "the arms are not on the handle"): the body hangs under the handle bar (legs, hips, torso, head
    *  from the runtime's ZipRigPose), then both arms are solved onto the bar: a two-bone solve in the chest's own frame (after the
@@ -1691,7 +1745,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         legs[i].knee.rotation.x=(.85*down+Math.cos(age*17+i)*flail*.25)*weight;legs[i].ankle.rotation.x=(-.18*down-flutter*.15)*weight;
       }
     }
-    if(motion?.job||jobW>0)poseJob(motion?.job,dt,time,reduced);
+    if(motion?.job||jobW>0)poseJob(motion?.job,dt,time,reduced,amount,sprint);
     if(motion?.wallSplat){pelvis.position.set(0,.94,0);pelvis.rotation.set(0,0,0);torso.rotation.set(0,0,0);head.rotation.set(0,0,0);for(let i=0;i<2;i++){const side=i===0?-1:1;arms[i].shoulder.rotation.set(0,0,side*2);arms[i].elbow.rotation.x=-.12;legs[i].hip.rotation.set(0,0,side*.5);legs[i].knee.rotation.x=.1;legs[i].ankle.rotation.x=0;}}
     // Gait-specific spine coupling. The carrier still owns balance/action lean;
     // the waist and ribcage articulate independently without disturbing leg IK.
@@ -1717,6 +1771,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     head.rotation.x-=(lumbar.rotation.x+chest.rotation.x)*.65;
     head.rotation.z-=(lumbar.rotation.z+chest.rotation.z)*.65;
     if(motion?.zipline)poseZipArms(motion.zipline);
+    if(netGripW>0&&jobW>0)poseNetGrip(reduced);
     // "To me!": the receiver raises the ball-side arm high and waves it; the rig eases in and out.
     const calledTarget=reactOK?T.MathUtils.clamp(motion?.called??0,0,1):0;
     if(calledTarget>0||calledBlend>0){

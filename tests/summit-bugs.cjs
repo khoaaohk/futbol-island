@@ -148,7 +148,13 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
 {const net=NET.createBugNet(x=>x,false),o={x:0,y:0,z:0},dd={x:0,y:0,z:0},dist=(h)=>{const vx=h.x-o.x,vy=h.y-o.y,vz=h.z-o.z,t=vx*dd.x+vy*dd.y+vz*dd.z;return Math.hypot(vx-t*dd.x,vy-t*dd.y,vz-t*dd.z);};
  for(const [mode,l,r] of [['carry',{x:.1,y:1,z:.2},{x:-.2,y:1.35,z:.05}],['low',{x:0,y:.9,z:.45},{x:-.1,y:1,z:.15}],['swing',{x:.05,y:1.1,z:.35},{x:-.15,y:1.15,z:.1}]]){
   net.layout(l,r,0,mode==='swing'?.2:-1,mode,1/60,false);net.poleLine(o,dd);for(const h of [l,r])assert(dist(h)<.1,`${mode}: both hands on the pole (${dist(h).toFixed(3)} m)`);}
- net.pack({x:0,y:0,z:0},0,1/60,false);net.poleLine(o,dd);assert(o.z<0&&o.x>0&&dd.z<0,'riding: on the side of the backpack, pointing back');
+ // Riding (bug-polish): the pole rests on the backpack's side socket (its world matrix; pack axes = rig axes, +z into the body),
+ // tilted back by the ride's poleTilt, the strap point on the socket, the hoop behind and above.
+ {const sock=new T.Matrix4().makeTranslation(.25,1.16,-.3);net.pack(sock,0,.55,1/60,false);net.poleLine(o,dd);
+  const sx=o.x+dd.x*NET.NET_PACK.strap,sy=o.y+dd.y*NET.NET_PACK.strap,sz=o.z+dd.z*NET.NET_PACK.strap;
+  assert(Math.hypot(sx-.25-NET.NET_PACK.out,sy-1.16,sz+.3)<.01,'riding: the pole rests on the backpack side socket');
+  assert(dd.z<0&&dd.y>0&&Math.abs(Math.acos(dd.y)-.55)<.01,'riding: tilted back by the ride tilt');
+  const hc={x:0,y:0,z:0};net.hoopCentre(hc);assert(hc.z<-.5&&hc.y>1.9,'riding: the hoop rides behind and above');}
  for(const kind of ['netswing','netcatch']){assert(M.POSE_TIME[kind]>0);let prev=null;for(let k=0;k<=1;k+=.02){const t=JP.jobPoseTarget({kind,progress:k},0,false),v=[t.py,t.tx,t.ty,...t.al,...t.ar];if(prev)assert(v.every((x,i)=>Math.abs(x-prev[i])<.5),`${kind}: continuous at ${k.toFixed(2)}`);prev=v;}}
  for(const kind of ['netcarry','netsneak'])assert(M.UPPER_POSES.has(kind),'the legs keep walking: '+kind);
  const run=R.startRun(day,1);assert.equal(M.heldPose(run,0,0).kind,'netcarry');run.stalk=true;assert.equal(M.heldPose(run,0,0).kind,'netsneak');

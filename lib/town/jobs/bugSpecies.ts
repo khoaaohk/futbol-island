@@ -15,7 +15,7 @@
  *  - pickBugsOnMap: 8-12 on the map at once from a rotating, seeded set, capped by heat tier (12 / 10 / 8).
  */
 
-import {TERRACE,SUMMIT_CENTER,coastRadius,beachWidth,distanceToSummitShore} from '../summitIsle';
+import {TERRACE,SUMMIT_CENTER,coastRadius,beachWidth,distanceToSummitShore,summitTrailDistance,summitGround} from '../summitIsle';
 
 export type BugBand='high'|'trail'|'water'|'meadow';
 export type BugHabitat=BugBand|'orchard';
@@ -284,6 +284,14 @@ export const BUG_NORTH_LINE_Z=TERRACE.z-TERRACE.b;
 /** On Summit Isle's sand strip (between the grass edge and the waterline). */
 export function onSummitSand(x:number,z:number){const dx=x-SUMMIT_CENTER.x,dz=z-SUMMIT_CENTER.z,a=Math.atan2(dz,dx);return Math.hypot(dx,dz)>=coastRadius(a)-beachWidth(a);}
 export const inBugNorthZone=(x:number,z:number)=>z<BUG_NORTH_LINE_Z;
+/** The terrain band at a spot (the same rules the homes were placed by): within 10 m of a trail = trail, ground ≥ 30 m up = high,
+ *  within 24 m of the shore = water, else meadow. Used by the shift's local density (bug-polish) to send the right bugs over. */
+export function bugBandAt(x:number,z:number):BugBand{
+ if(summitTrailDistance(x,z)<10)return 'trail';if(summitGround(x,z)>=30)return 'high';if(distanceToSummitShore(x,z)<24)return 'water';return 'meadow';}
+/** Local density during a shift (bug-polish, user: "can't see bugs to catch when walking around"): at least `want` bugs within
+ *  `radius` m of the player (9: one spare over the asked-for 8, so a startled or just-caught bug never drops it below) (never more than are out), checked every `every` s; spawns land `minR`..radius-`edge` m away, out of
+ *  the camera's view, and fade in. Heat tiers 3-4 still keep `floor` out during a shift (the job needs them). */
+export const BUG_LOCAL={want:9,radius:35,every:.5,minR:14,edge:5,spacing:5,floor:4} as const;
 /** The placement rule for a home: south of the north line, or a beach home on the sand. */
 export const bugHomeAllowed=(h:{band:BugBand;x:number;z:number})=>!inBugNorthZone(h.x,h.z)||(h.band==='water'&&onSummitSand(h.x,h.z)&&distanceToSummitShore(h.x,h.z)>=3);
 /** The Bug squad sign, bug hotel and lantern goal at the south-west end of the summit top (being placed by the merge lane in

@@ -509,8 +509,7 @@ button". Rules: `lib/town/jobs/bugCatch.ts`; net: `bugNet.ts`; runtime: `jobScen
   both hands on the pole, swaying with the walk).
 - **Net:** a merged frame (wooden pole, rubber grip, dark collar band, 0.42 m hoop, a little football on the butt) and a deep mesh bag
   (stretched hemisphere, vertex-colour mesh lines) on a spring that lags through swings and turns and flips closed on a catch. The
-  pole runs through both hands (`NET_GRIP`, `NET_HAND_FOLLOW`); riding, it is strapped to the side of the backpack (`NET_PACK`,
-  `netCarryMode` 'pack', to be wired to the backpack lane's sockets).
+  pole runs through both hands (`NET_GRIP`, `NET_HAND_FOLLOW`); riding, it rests on the backpack's side socket (see "Bug polish").
 - **Catch:** the bug is pinned in the bag (`swarm.pin`), a shot camera eases in (0.9 s), holds 1.1 s with the bug wiggling, sparkle +
   confetti bursts from the pooled job FX and a ground pulse, then eases out; the bug goes into the jar (`swarm.catch`, jar pop) and the
   story card (name, role, NEW, +coin, squad n/20, "Real football fact" rotating by catch count) slides in for 7 s. Controls are held
@@ -525,3 +524,44 @@ button". Rules: `lib/town/jobs/bugCatch.ts`; net: `bugNet.ts`; runtime: `jobScen
   only checks the id shape). Bug book: same key, version 2 keyed by species id, v1 index arrays migrated (≤ ~1 KB).
 - **Heat:** one swarm query per swing, the arrow / hint at 4 Hz, the recall check every 2 s; the net is 3 draws (frame, bag, swoosh
   only while swinging) + the hint chevron while shown; release flyers one draw for ~5-6 s. No per-frame allocation.
+
+### Bug polish: net carry on the backpack, the walking hold, bugs near the player (20 Oct 2026, local, not deployed)
+
+User: "have it be to the side of the backpack" (riding), "fix the body mechanics to hold the net while walking", "while walking
+around with the net, have it held with both hands", "can't see bugs to catch when walking around". Tests: `tests/bug-net-hold.cjs`,
+`tests/bug-local.cjs` (both in `npm test`), `tests/summit-bugs.cjs` (riding section rewritten); browser:
+`scripts/check-bug-net-browser.cjs` (side + back close-ups, density at 8 spots).
+
+- **Riding carry** (`bugNet.pack`): the pole rests on `backpack-side-right` (docs/backpack.md; Town hands the jobs the socket and the
+  pack's morph with `jobs.setBackpack`), `NET_PACK.strap` 0.42 m up the pole, 3.5 cm out from the socket, tilted back from vertical
+  by `BACKPACK_RIDE_OFFSETS[ride].poleTilt` (scooter .35, bike .55, moped .6 rad), whatever the rider's lean; the hoop rides 0.7-1.0 m
+  behind and ~0.45 m over the head, the bag streaming back and lagging on turns. The test checks pole and hoop points against the
+  rider's body (+12 %), the pack box and every ride mesh. While the pack opens into the jetpack (morph > `NET_HIDE_MORPH` .02; the
+  shift refuses flying, this covers a take-off at the very start / end of a shift) the net hides.
+- **Walking hold** (`jobPoses.netGrip`, `player.ts poseNetGrip`): the pole line is set first (rig-local, riding with the chest so
+  the lean, the crouch and the build carry it) and both arms are solved onto it with the zipline's two-bone solve (elbows out and
+  down): the mittens stay within ~2 cm of the pole through the walk cycle, so no hand floats off it and nothing stretches. Carry =
+  a relaxed diagonal across the body (rear hand low by the hip, front hand at the chest), the hoop up front and to the side, ~2.1 m
+  up and ~1 m ahead, ≥ 0.95 m from the face; still = low and ready (pole tipped forward); sprinting tucks it up. The pole's tail stays
+  outside the body and the pack (`NET_GRIP_BY_MODE`: hands 0.27 m up the pole carrying, 0.15 m in Net down). The torso
+  counter-rotates against the steps and leans with speed, the hold sways and bobs on the walk phase (replacing the arm swing); the
+  bag lags on turns and swings on starts and stops (a spring on the hands' acceleration). Net down: knees bent (pelvis 8 cm lower,
+  `NET_SNEAK_CROUCH`) under the stepping legs, leaning in, the net forward and low (hoop ~1.7 m ahead, just over the grass).
+- **Blends:** job poses cross-fade between kinds over `NET_BLEND_S` 0.2 s (carry ↔ sneak ↔ wind-up / swing ↔ catch ↔ carry; the legs
+  fade between walking and posed), the grip eases in and out over the same time, and the net's hand-follow / grip ease too: no
+  snapping (the test's largest per-frame hand move at a switch is 14 cm, from the raised catch back to the carry).
+- **Bugs near the player** (`bugSwarm.ambient`, `BUG_LOCAL`): the 20 species keep their homes by band, but during a shift the swarm
+  keeps at least 9 bugs (the asked-for 8 plus one spare; never more than are out) within 35 m, checked every 0.5 s (replacing the
+  recall). When short it re-homes the best others: uncaught species first, those whose band matches the terrain here first
+  (`bugBandAt`: trail / high / water / meadow), farthest first; caught ones only as a fallback, shown with a green check ("already in
+  your jar", not counted twice). Spawns land 14-30 m away on Summit Isle ground (north end only on the sand), ≥ 5 m apart, outside the
+  camera's view (`swarm.setCamera`; headless: 100 % on phone, ~93 % on desktop, else the farthest in-view spot) and fade in. Heat caps
+  unchanged (12 / 10 / 8 by tier; 8 during a shift at tiers 3-4, ≥ `BUG_LOCAL.floor` 4). Measured headless at 10 spots over all four
+  bands: 9-10 within 40 m (phone and desktop cameras); walking 60 s, never below 8.
+- **Spotting FX** (`lib/graphics/bugSpotFx.ts`, only during a bugs shift): a soft contact-shadow dot under each flying bug (smaller
+  and fainter the higher it flies), a gentle glint every 2.4 s (staggered) on uncaught bugs within 25 m, a check over a caught
+  species' bug, and for 2.5 s after a bug turns up near the player a pulsing ground ring and a bouncing "!". Two pooled instanced
+  draws (ground ≤ 2 × the set, marks ≤ the set), no textures, no per-frame allocation; nothing without a shift.
+- **Heat:** the local density is O(slots × 24) twice a second; the FX are ≤ 24 + 12 instance writes per frame and 2 draws while a
+  shift runs; the net hold adds one two-bone solve per arm per frame while carrying.
+

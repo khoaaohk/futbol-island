@@ -10,6 +10,8 @@ import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId,type BugSpot} from './bug
 import {createBugGeometry,mergeColoured} from './bugShape';
 import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT,BUG_BOOK_KEY,BUG_NEW_SPECIES_EVENT} from './bugBook';
 import {createBugNet,type BugNet} from './bugNet';
+import {BACKPACK_RIDE_OFFSETS} from '../../graphics/backpack';
+import {BUG_LOCAL} from './bugSpecies';
 import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,LUNGE_MAX,SWING,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught} from './bugCatch';
 import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
@@ -30,6 +32,9 @@ import {GARDEN_SPOTS,GARDEN_CENTRE,GARDEN_RANGE,GARDEN_STORAGE_KEY,sanitizeGarde
 import {goodById} from '../market/goods';
 import {fieldSurfaceHeight} from '../venues';
 import {islandMarket} from './islandWallet';
+/** Net hides once the pack has started opening into the jetpack (morph 0 = backpack, 1 = twin jet). */
+export const NET_HIDE_MORPH=.02;
+const packTilt=(ride:string)=>(BACKPACK_RIDE_OFFSETS as Record<string,{poleTilt:number}>)[ride]?.poleTilt??.55;
 
 export type JobView={
  near:string|null;
@@ -801,9 +806,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   hintName=(bugList(r.def)??[]).find(b=>b.id===t.id)?.name??'A bug';tickHint(0,lastP);viewKey='';publishActive();return true;}
  function stopHint(){if(hintT<=0)return;hintT=0;if(gear.hint)gear.hint.visible=false;banner='';viewKey='';}
  function tickHint(dt:number,p:{x:number;y:number;z:number}){if(hintCool>0){hintCool-=dt;if(hintCool<=0)viewKey='';}
-  // Nobody near for a while: call the farthest bug over (the user: "I don't see any bugs to catch when walking around").
-  recallAcc+=dt;if(recallAcc>=RECALL.wait){recallAcc=0;const sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null})|null;
-   const n=sw&&sw.recall&&!zoom&&!rel?sw.query(p.x,p.y,p.z,RECALL.near).length:RECALL.min;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw!.recall!(p.x,p.z,RECALL.within,RECALL.far);}
+  // Local density (bug-polish; user: "can't see bugs to catch when walking around"): every BUG_LOCAL.every s the swarm keeps at least
+  // BUG_LOCAL.want bugs within BUG_LOCAL.radius m (uncaught species first, spawned out of view, fading in). A swarm without it
+  // (tests' fakes) falls back to the older recall: nobody near for a while, call the farthest one over.
+  recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{caught:(id:string)=>boolean})=>number})|null;
+   if(sw&&r&&!zoom&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
+    else if(sw.recall){const n=sw.query(p.x,p.y,p.z,RECALL.near).length;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw.recall(p.x,p.z,RECALL.within,RECALL.far);}}}
   if(hintT<=0)return;hintT-=dt;hintAcc+=dt;
   if(hintAcc>=.25){hintAcc=0;const sw=bugSwarm();if(sw&&sw.position(hintId,tq)){hintGoal.x=tq.x;hintGoal.z=tq.z;}
    const d=Math.hypot(hintGoal.x-p.x,hintGoal.z-p.z);if(d<HINT.near||hintT<=0){stopHint();publishActive();return;}
@@ -945,9 +953,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // Net up = carried on the shoulder, hoop up behind the head.
   // Bug squad's net (catching lane): both hands on the pole while walking (the pole runs through the hands: carry over the shoulder,
   // Net down low and forward, the swing, raised on a catch); while riding it is strapped to the side of the backpack (netCarryMode).
-  if(net&&gear.net){const g=net.group;g.visible=jr.phase==='work'||jr.phase==='deliver'||!!zoom||!!swing;
+  // Riding, the pole rests on the backpack's side socket (bug-polish; docs/backpack.md); while the pack is morphing into the jetpack
+  // (never during a shift, but a take-off right at the start / end of one) the net hides rather than float in the air.
+  if(net&&gear.net){const g=net.group;const jet=!!packPort&&packPort.morph()>NET_HIDE_MORPH;
+   g.visible=!jet&&(jr.phase==='work'||jr.phase==='deliver'||!!zoom||!!swing);
    if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:!!zoom});
-    if(mode==='pack')net.pack(p,yaw,lastDt,reducedMotion);
+    if(mode==='pack'){if(packPort){const s=packPort.socket;s.updateWorldMatrix(true,false);net.pack(s.matrixWorld,yaw,packTilt(rideMode),lastDt,reducedMotion);}else g.visible=false;}
     else net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);
     net.bagCentre(bagPos);}}
   if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
@@ -959,7 +970,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** Where the beacon points now (the nearest goal), for the off-screen edge arrow (Town.tsx); copied, no allocation per frame. */
  const arrowGoal={x:0,z:0};let arrowOn=false;
  function note(text:string){if(!run)return;banner=text;bannerAge=0;viewKey='';publishActive();}
+ /** The worn backpack's side socket and morph (Town.tsx, lib/graphics/backpack.ts): where the net rests while riding. */
+ let packPort:{socket:T.Object3D;morph:()=>number}|null=null;
  const api={root,start,quit,update,ballContact,act,note,holdProps,
+  setBackpack(p:{socket:T.Object3D;morph:()=>number}|null){packPort=p;},
   /** Whether a job runs at the current time of day (the Summit Isle bug jobs: day or night only). */
   isOpen:(id:string)=>{const d=jobById(id);return !!d&&openNow(d);},
   /** The definition a job would start with now (the Bug squad's bugs or fireflies set, by the time of day). */
