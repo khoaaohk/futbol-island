@@ -26,6 +26,14 @@ import {useFuel} from '@/lib/town/fuelStore';
 import {FruitArt} from './PocketArt';
 import {OPEN_MARKET_STAND} from './FishingHost';
 import styles from './IslandJobs.module.css';
+import dynamic from 'next/dynamic';
+import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT} from '@/lib/town/jobs/bugBook';
+import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
+import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
+// The Bug book (Oct 20 2026): loaded the first time it opens.
+const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
+const isBugJob=(id:string)=>id==='bug-scout'||id==='firefly-floodlights';
+const openBugBook=()=>window.dispatchEvent(new Event(OPEN_BUG_BOOK));
 /** Same fish + fruit art as the onboarding "Earn coins" step (the sardine is FishArt's drawing, inlined in PocketFishIcon). */
 
 const subscribeView=(fn:()=>void)=>{let off=getJobRuntime()?.subscribe(fn);const unreg=subscribeJobRuntime(()=>{off?.();off=getJobRuntime()?.subscribe(fn);fn();});return()=>{off?.();unreg();};};
@@ -90,6 +98,15 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  useEffect(()=>{const earned=(event:Event)=>{const amount=(event as CustomEvent<{amount:number}>).detail?.amount;if(amount===DAILY_PLAY_COINS)setToast({title:`+${DAILY_PLAY_COINS} daily play coins`,detail:`You explored and played today. Come back tomorrow for another ${DAILY_PLAY_COINS}.`});};window.addEventListener('fi2-daily-play-earned',earned);return()=>window.removeEventListener('fi2-daily-play-earned',earned);},[]);
  // Learning coins (lib/town/learnCoins.ts): "+12 coins · You passed ‘…’". Learning always pays in full.
  useEffect(()=>{const earned=(event:Event)=>{const d=(event as CustomEvent<LearnCoinsEarned>).detail;if(d&&d.amount>0)setToast({title:learnToastTitle(d.amount,d.reason),detail:'Spend your coins at any vending machine.'});};window.addEventListener(LEARN_COINS_EARNED,earned);return()=>window.removeEventListener(LEARN_COINS_EARNED,earned);},[]);
+ // The Bug book (lib/town/jobs/bugBook.ts): opened from the bug jobs' cards; the 16th new catch pays its one-time bonus (the
+ // learning-coin toast above shows it); a wild meadow bug fluttering away tells the player where bugs are caught (once a visit).
+ const [bugBook,setBugBook]=useState(false),[bugBookLoaded,setBugBookLoaded]=useState(false);
+ useEffect(()=>{const open=()=>{setBugBookLoaded(true);setBugBook(true);};const done=()=>{void claimBugBookReward().catch(()=>{});};
+  const wild=()=>setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
+  window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);window.addEventListener(WILD_BUG_HINT,wild);
+  return()=>{window.removeEventListener(OPEN_BUG_BOOK,open);document.removeEventListener(BUG_BOOK_COMPLETE_EVENT,done);window.removeEventListener(WILD_BUG_HINT,wild);};
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
@@ -135,7 +152,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p>{introJob.intro}</p>
    {introClosed&&<p className={styles.note} data-job-closed>{jobClosedNote(introJob)}</p>}
    <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
-   <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button></div>
+   <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button>{isBugJob(introJob.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>}
   {active&&view.active&&(()=>{const a=view.active,count=a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,
     unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=panel==='chip';
@@ -164,9 +181,10 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    {pay&&pay.goods.length>0&&<p className={styles.note} data-job-share>{def.kind==='garden'?'Gardener':'Farmer'}&apos;s share, now in your basket: {pay.goods.map(g=>`${g.count} ${(g.count>1?goodById(g.id)?.plural:goodById(g.id)?.name)??g.id}`).join(', ')}. {def.kind==='garden'?'Sell them at Rosa\u2019s market, or eat them for fuel.':'Sell them at the farm stand or at Rosa\u2019s market.'}{pay.goods.reduce((n,g)=>n+g.count,0)<pay.offered.reduce((n,g)=>n+g.count,0)?` Your basket was full, so the ${def.kind==='garden'?'garden':'farmer'} kept the rest.`:''}</p>}
    {pay&&<p className={styles.note}>{pay.bonus?`Includes a +${pay.bonus} first-time bonus. `:''}{pay.message}{pay.credited<pay.coins?' Your Training meter is full for today, so extra jobs pay less. Lessons and hidden balls still pay in full.':''}</p>}
    <p className={styles.note}>Your time {time(payday.seconds)}{newBest?' · personal best!':` · best ${time(payday.best!)}`}</p>
-   <div className={styles.actions}><button type="button" className={styles.primary} autoFocus onClick={()=>{setPayday(null);runtime?.dismissDone();}}>Nice!</button><button type="button" className={styles.secondary} onClick={()=>start(def.id)}>Work again</button></div>
+   <div className={styles.actions}><button type="button" className={styles.primary} autoFocus onClick={()=>{setPayday(null);runtime?.dismissDone();}}>Nice!</button><button type="button" className={styles.secondary} onClick={()=>start(def.id)}>Work again</button>{isBugJob(def.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>;})()}
   {/* The garden line rests in the toast slot; a note replaces it while it shows. */}
   {(view.garden||toast&&!toastHeld)&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" data-island-toast role="status" aria-live="polite" onClick={()=>setToast(null)}>{toast&&!toastHeld?<><b>{toast.title}</b><span>{toast.detail}</span></>:<span>{view.garden}</span>}</button></HudSlot>}
+  {bugBookLoaded&&<BugBook open={bugBook} onClose={()=>setBugBook(false)}/>}
  </>;
 }

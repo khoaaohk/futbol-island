@@ -75,6 +75,8 @@ export const SUMMIT_COUNT_EVENTS=[
  // The bug jobs (Oct 20 2026, lib/town/jobs/bugScout.ts): catches and finished shifts, day and night.
  ['bug_catch','Bug squad: bug caught (day)'],['bug_squad','Bug squad: shift finished, squad released'],
  ['firefly_catch','Firefly floodlights: firefly caught (night)'],['firefly_shift','Firefly floodlights: shift finished, fireflies released'],
+ // Bug extras (Oct 20 2026): the Bug book opened / completed, and a wild meadow bug fluttering away from the player.
+ ['bugbook_open','Bug book opened'],['bugbook_complete','Bug book completed (all 8 bugs and 8 fireflies)'],['wild_flutter','Wild meadow bug fluttered away'],
 ] as const;
 /** `su:fruit_<kind>:hand` / `:ball` — the two ways a fruit tree is shaken (lib/graphics/fruitTrees.ts drop()). */
 export const FRUIT_SHAKE_IDS:readonly string[]=FORAGE_FRUIT_KINDS.flatMap(k=>[`fruit_${k}:hand`,`fruit_${k}:ball`]);

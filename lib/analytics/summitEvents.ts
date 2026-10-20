@@ -30,6 +30,11 @@ export const countSummitBall=()=>count('su:ball_find');
  *  night) and a shift's jar released at the drop-off (a finished shift). Totals only: never which bug or where. */
 export const countBugCatch=(kind:'bug'|'firefly')=>count(kind==='bug'?'su:bug_catch':'su:firefly_catch');
 export const countBugShift=(kind:'bug'|'firefly')=>count(kind==='bug'?'su:bug_squad':'su:firefly_shift');
+/** The Bug book (lib/town/jobs/bugBook.ts): opened, and completed (once per player), and a wild meadow bug (lib/graphics/wildBugs.ts)
+ *  fluttering away as the player walks up (at most once per bug every few seconds). Totals only. */
+export const countBugBookOpen=()=>count('su:bugbook_open');
+export const countBugBookComplete=()=>count('su:bugbook_complete');
+export const countWildFlutter=()=>count('su:wild_flutter');
 /** A kicked ball dropping fruit vs the player shaking the tree by hand (lib/graphics/fruitTrees.ts drop() call sites). */
 export const countFruitShake=(kind:FruitKind,method:'hand'|'ball')=>count(`su:fruit_${kind}:${method}`);
 const FISH_SPOT_EVENT:Record<string,string>={'summit-cove':'su:fish_cove','summit-palm':'su:fish_palm','summit-lookout':'su:fish_look','summit-ledge':'su:fish_ledge'};

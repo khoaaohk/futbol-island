@@ -398,3 +398,28 @@ nighttime add catching fireflies instead since it's night time." Data: `lib/town
   additive glow draw; ≤ 16 matrices per frame, frozen under reduced motion; disposed at the end.
 - **Analytics:** `su:bug_catch`, `su:bug_squad`, `su:firefly_catch`, `su:firefly_shift` (lib/analytics/summitEvents.ts), shown in
   /admin's Summit Isle card. No migration: the SQL only checks the id shape.
+
+### Bug extras: the Bug book, wild meadow bugs, job sounds (20 Oct 2026, local, not deployed)
+
+User: "also do these". Test: `tests/bug-extras.cjs`.
+
+- **Bug book** (`lib/town/jobs/bugBook.ts`, `components/BugBook.tsx`): every bug and firefly call caught on a shift is counted in
+  `fi2-bug-book-v1` (SYNC_KEYS; two arrays of eight counts and a reward flag, at most ~130 bytes). The book uses the Fishbook /
+  Shellbook drawer (side drawer on desktop, full screen on phones), opened with the "Bug book" button on both bug jobs' intro and
+  payday cards (`OPEN_BUG_BOOK`). Sixteen pages: each bug's name, football position and lesson, each firefly's call and its
+  meaning; locked pages are flat silhouettes saying where to catch them. Completing all sixteen shows the "Full squad" sticker on
+  the cover and pays a one-time learning bonus (`learn:book:bug-book`, LEARN_COINS.book = 5, creditOnce: once ever, never metered;
+  `lib/town/jobs/bugBookReward.ts`), paid on the 16th catch and checked again whenever the book opens. The island has no shared
+  badge system, so the sticker lives in the book.
+- **Wild bugs** (`lib/graphics/wildBugs.ts`, rules in `wildBugsCore.ts`): butterflies and bugs flutter round the meadow by Day and
+  Sunset, a few fireflies blink at Night (the player's own setting). One InstancedMesh with the job's shared bug shape
+  (`lib/town/jobs/bugShape.ts`), built only within 70 m of the meadow and disposed beyond 90 m; 12 at heat tier 0, 6 at tiers 1–2,
+  none at tiers 3–4 / Battery saver / reduced motion, half as many fireflies; 15 Hz matrix updates unless within 35 m; hidden
+  while a job runs; a fixed bounding sphere; no textures and no per-frame allocation. Walking within 2.6 m makes one flutter away
+  and drift back; the first time in a visit a note says bugs are caught on the Bug squad shift. Not catchable outside a shift.
+  Runtime cost while near: one draw of ≤ 12 instances (≤ 12 matrix writes per update); nothing anywhere else on the island.
+- **Sounds** (`lib/audio/islandSound.ts` job cues): `net` (Bug squad hold), `cup` (firefly hold), `jar` (a bug drifting in, the jar
+  opening), `squad` (release: a rising four-note cheer) and `firefly-0…7` (each call chimes its own pentatonic note,
+  FIREFLY_CHIME_HZ). Synthesized, through the master gain (mute and volume apply), counted as audible like every cue.
+- **Analytics:** `su:bugbook_open`, `su:bugbook_complete`, `su:wild_flutter` (at most once per bug per 8 s) in /admin's Summit card.
+  No migration: the SQL only checks the id shape.

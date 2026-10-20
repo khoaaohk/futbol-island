@@ -1,0 +1,16 @@
+/* The Bug book (components/BugBook.tsx): the Fishbook's drawer and cards (Fishbook.module.css) plus the cover sticker, the art
+   and a night tint for caught fireflies. */
+.art{display:block;flex-shrink:0}
+.art[data-locked]{opacity:.7}
+.cover{display:flex;gap:14px;align-items:center}
+.cover p{margin:0;font-size:14px;line-height:1.5}
+.cover b{display:block;font-size:20px;margin-bottom:5px}
+.sticker{flex:0 0 76px;width:76px;height:76px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ background:#e3dbbd;color:#9a937a;border:3px dashed #c9bf9c;font-weight:800;text-align:center;line-height:1}
+.sticker span{font-size:30px}
+.sticker small{font-size:10.5px;letter-spacing:.02em;margin-top:2px}
+.sticker[data-earned]{background:#f6c445;color:#5a3a06;border:3px solid #fff2cd;box-shadow:0 4px 0 #b4801c;transform:rotate(-8deg)}
+li.night{background:#24395c url('/stories/films/assets/entry-grain.png') center/160px!important}
+li.night>h3,li.night>p{color:#f4f7d8!important}
+li.night .art{filter:drop-shadow(0 0 6px #e9ff6b88)}
+@media(max-width:420px){.sticker{flex-basis:62px;width:62px;height:62px}.sticker span{font-size:24px}}
