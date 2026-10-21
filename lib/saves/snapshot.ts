@@ -55,7 +55,7 @@ export const SYNC_KEYS:readonly string[]=[
 ];
 export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,24}){0,2}-v1$/;
 /** Doc §4.1 table B: each device keeps its own. */
-export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
+export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-bug-pill-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),

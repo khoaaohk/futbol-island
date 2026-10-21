@@ -586,3 +586,42 @@ radius is smaller ... the check marks and shadows with sparkles is confusing", "
   with no lesson stayed queued and kept Town's HUD stack hidden (BallHuntLesson rendered null); it now dismisses itself. Esc ends a
   Bug squad shift (same two-step ask). Browser check: `scripts/check-bug-visible-browser.cjs`.
 - Draws by day during a shift: 1 far + near models (0-4) + 1 halo; night unchanged (2).
+
+### Catch stage and one UI thing at a time (21 Oct 2026, local, not deployed)
+User (screenshot of the catch zoom: net bag over the face, a head-sized ant sprawled on the bag, the job panel covering the shot):
+"fix the catching animation", then "this needs to zoom in on the character first then show the actual catching ... an isolated
+animation to show the catch, it doesn't need to have the background on it", and "this UI with bug squad and the bug info is too
+much. only show one at a time". Rules: `bugCatch.ts` (CATCH_STAGE, stageShot, catchScale), stage: `lib/graphics/catchStage.ts`,
+runtime: `jobScene.ts` (beginStage / stageFrame / exitStage), HUD rules: `bugUi.ts`; tests: `tests/bug-catch-stage.cjs` (in
+`npm test`), `tests/summit-bugs.cjs`; browser frames: `scripts/check-bug-catch-stage-browser.cjs` (→ /tmp/bug-catch-anim).
+- **Causes:** after the 0.9 s `netcatch` one-shot the arms went back to the walking carry while the net stayed in 'raise' mode
+  (85 % following the hands), so the hoop and bag sat in front of the face; the zoom camera was in front of the player on the bug's
+  side, low, with no occlusion check; `bagCentre` ignored the bag's flip, so the pinned bug (still at its island size, ×1.6 for
+  readability) sat on top of the closed bag; the zoom started after the hit, so it showed a bug already caught.
+- **When:** at swing start the locked target's hit test is decided (`predictCatch`: the target holds still once locked). A catch
+  plays as the stage; a miss (or no target) keeps the island swing; an unlocked swing that still meets a bug, and reduced motion,
+  count it at once on the island (no camera move, the card fades in).
+- **Sequence (4.95 s, Tap to skip / Space / Enter / Esc jump to the card):** push-in 0.6 s along the follow camera's own line of
+  sight to the head (`pushInShot`: never closer to anything it could not already see past, kept ≥ 0.9 m over the ground); the
+  island dissolves into the stage colour (0.22 s); on the stage: settle 0.25 s, the swing (wind-up, swoosh, hit at 0.58 s of the
+  swing), 70 ms hit-stop, the bug sucked into the hoop on a spiral while shrinking to fit (0.4 s), the bag flips closed (0.3 s), the
+  net raised beside the head with a hop (0.45 s), hold 1 s (wiggle, name label, star burst), the story card (0.8 s), dissolve back
+  (0.5 s) and the push-in eases out. The catch counts at the stage's hit frame.
+- **Stage:** a gradient backdrop + fading floor disc with a soft contact shadow + pollen / star specks (Day warm cream, Sunset
+  peach, Night deep blue; not tone mapped), two lights, the player's own rig (moved in like the dive room, put back after), the net,
+  one model of the caught species with the swarm's shader (fireflies + glow sprite) and a 16-star burst. Camera: three-quarter from
+  the front-left (the net is on the right), 17° down, pulled back until the feet, head, the raised net, the presented net and the
+  bug are inside 90 % of the frame and the character is ≤ 48 % of the height (`stageShot`; tests: 16 angles × phone + desktop).
+- **Pose:** `netshow` (jobPoses.ts): both hands solved onto the pole (netGrip's show keys): presented = hoop out in front at arm's
+  length on the right at shoulder height (1.4 m ahead), raised = beside and above the head (0.78 m to the side), face clear; the net
+  follows the hands exactly. Blends 0.2 s between carry → swing → show.
+- **Bug size:** on the stage the bug flies at ≤ 0.5 m long; caught, its longest side is ≤ 60 % of the hoop's diameter
+  (`catchScale`), wings folded and legs wiggling inside the semi-transparent bag (opacity .55); `bagPoint` follows the flip.
+- **HUD:** while the push-in and the stage play, `html[data-catch-stage]` hides everything but the stage, the story card and Tap to
+  skip (pill, coin bar, buttons, minimap, arrows). The pill is one line (`Bug squad n/20` + ➤ + ×); the first shift ever shows a
+  one-line tip for 8 s; a tap opens the full panel (help, today's jar, Net down) for 6 s. Notes (miss, repeat catch, set swap, the
+  nearest bug) are one short line in the single toast slot (2.5 s), never in the pill. One message surface at a time (`pickSurface`:
+  story card > payday > toast; the others wait); the new-species coin is on the story card (no "New in the Bug book" banner).
+- **Heat:** while the stage plays the island is neither stepped nor drawn: one stage render (≈ 4-6 draws + the rig and the net);
+  nothing allocated per frame; the stage is built at the push-in and disposed at the end; no textures.
+- **Not done:** the fireflies are caught with the net (glowing in the bag), not cupped with the jar.
