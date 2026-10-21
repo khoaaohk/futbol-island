@@ -8,7 +8,7 @@
  * (components/Town.tsx) owns movement and the rig; this only decides what the water is doing to the player.
  * Tests: tests/water-swim.cjs, tests/heat-water.cjs.
  */
-import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,wadeRootY,wadeSpeedScale,wadeZone,type WadeZone,type WaterProbe} from './waterDepth';
+import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,wadeRootY,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
 import type {SwimRigPose,EntryStyle} from '../../graphics/swimPose';
 
 export type WaterPhase='land'|'wade'|'swim'|'under'|'surface';
@@ -243,10 +243,14 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   *  (the host then lets the swimmer come up at the surface). */
  function underNow(){if(!canDive())return false;state.diving=true;state.under=1;state.diveFor=0;diveRate=1/DIVE.ease;state.fast=false;state.tilt=0;
   state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.dive=state.room;state.rootY=SWIM_ROOT_Y-state.dive;pose.under=1;pose.tilt=0;return true;}
+ /** Seamless Explore: what the water at (x, z) allows for the way out of a reef room (once per crossing, never per frame): 'dive'
+  *  (the duck-dive's shelf and drawn-seabed bounds), 'swim' (too shallow to stay under) or 'no' (land, a pier, past the swim range). */
+ function edgeWaterAt(x:number,z:number):'dive'|'swim'|'no'{if(probe.isLand(x,z)||!probe.allowed(x,z))return 'no';
+  return waterDepthAt(x,z)>=DIVE.minWater&&diveBedRoom(seabed?seabed(x,z):Infinity)>=DIVE.minRoom?'dive':'swim';}
  /** Fly up: the jetpack takes off straight out of the water (the host checks fuel, switches the ride and splashes). Raised on the
   *  next step as `flew`, like the presses; false when not in the water. */
  function takeOff(){if(state.phase==='land')return false;pendFly=true;return true;}
- return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,underNow,
+ return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,underNow,edgeWaterAt,
   get inWater(){return state.phase!=='land';},
   get swimming(){return state.phase==='swim'||state.phase==='under'||state.phase==='surface';},
   /** Swimming (at the surface or settled under, not mid-dive): the 20 fps idle rule may apply once the stick has been still for 4 s

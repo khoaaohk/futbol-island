@@ -106,7 +106,7 @@ ok('runtime: edgeEnter builds the room at the matching point (banner, no tap), t
 });
 
 ok('frame loop + HUD + analytics wiring (Town.tsx)',()=>{
- const town=read('components/Town.tsx'),a=town.indexOf('    function animate(now:number){'),body=town.slice(a);
+ const town=read('components/Town.tsx'),a=town.indexOf('    function animate(now:number){'),body=town.slice(a),W=read('lib/town/water/waterState.ts');
  const duck=town.indexOf('const de=dive.duck(dt,water.inWater&&water.state.diving&&!dive.diving)'),enter=town.indexOf("dive.edgeEnter(location.x,location.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z),water.state.dive)");
  assert(duck>0&&enter>duck&&enter-duck<900,'edge entry right after the duck-dive breath, in the island step');
  assert(town.slice(duck,enter).includes("water.state.diving&&water.state.under>.35&&water.state.phase==='swim'&&!animalRides.riding&&rideRef.current==='walk'"),'only a walking duck-diver');
@@ -114,9 +114,9 @@ ok('frame loop + HUD + analytics wiring (Town.tsx)',()=>{
  assert(town.includes("if(reason==='edge'){const e=dive.edgeExit,")&&town.includes('if(!(e.under&&water.underNow()))'),'the way out: under at once (or swim up)');
  assert(town.includes('camera.position.x+=e.x-visualLocation.x;camera.position.z+=e.z-visualLocation.z;'),'the camera moves with the diver');
  assert(town.includes("if(edge){showUnderTint(spot.theme.water);}"),'the soft blend in, no splash');
- assert(town.includes("water:(x,z)=>{if(waterProbe.isLand(x,z)||!waterProbe.allowed(x,z))return 'no';"),'no land, no pier');
+ assert(town.includes('water:(x,z)=>water.edgeWaterAt(x,z),')&&W.includes("function edgeWaterAt(x:number,z:number):'dive'|'swim'|'no'{if(probe.isLand(x,z)||!probe.allowed(x,z))return 'no';"),'no land, no pier');
  assert(town.includes('swimClear.dispose();clearWin.dispose();'),'dispose order kept');
- const W=read('lib/town/water/waterState.ts');assert(W.includes('function underNow(){if(!canDive())return false;state.diving=true;state.under=1;'));
+ assert(W.includes('function underNow(){if(!canDive())return false;state.diving=true;state.under=1;'));
  const CID=load('lib/analytics/countIds.ts');for(const id of ['wa:dive_enter_edge','wa:dive_exit_edge'])assert(CID.isCountId(id),id);
  assert(read('app/admin/WaterSection.tsx').includes("value(rows,'wa:dive_enter_edge')")&&read('app/admin/WaterSection.tsx').includes("value(rows,'wa:dive_exit_edge')"),'admin Water tile');
  assert(read('components/DiveHud.tsx').includes('className="dive-edge-chip"')&&read('app/globals.css').includes('@media(prefers-reduced-motion:reduce){.dive-edge-chip{animation:none}}'),'the edge chip (still with reduced motion)');

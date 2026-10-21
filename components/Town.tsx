@@ -183,14 +183,14 @@ import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
-import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED,waterDepthAt} from '@/lib/town/water/waterDepth';
+import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED} from '@/lib/town/water/waterDepth';
 import {createSwimClear,SWIM_DIVE_CLEAR} from '@/lib/graphics/swimClear';
 import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clearWindow';
 import {UW_SURFACE} from '@/lib/town/fishing/underwater';
 import {uwDepthAt} from '@/lib/town/fishing/underwater';
 import {beanSkinOf} from '@/lib/graphics/beanSkin';
 import {onLand} from '@/lib/town/landmass';
-import {createWaterState,DIVE as DUCK_DIVE,diveBedRoom,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
+import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
 import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
@@ -779,7 +779,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
       /* Seamless Explore: the way out across the edge lands in water deep enough for the duck-dive (else swims up; never land or a pier) */
-      water:(x,z)=>{if(waterProbe.isLand(x,z)||!waterProbe.allowed(x,z))return 'no';const f=world.islandShore.field,bed=f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;return waterDepthAt(x,z)>=DUCK_DIVE.minWater&&diveBedRoom(bed)>=DUCK_DIVE.minRoom?'dive':'swim';},
+      water:(x,z)=>water.edgeWaterAt(x,z),
       entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);/* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
         if(edge){showUnderTint(spot.theme.water);}/* Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge: no splash or plunge, only the soft blend through the zone's water colour (none with reduced motion: an instant swap) */
         else{ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();}/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
