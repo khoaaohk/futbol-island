@@ -44,7 +44,6 @@ const SIGN={x:606,z:133.5};
    const quest=await page.locator('text=/Finish an island job/i').count();report.questCard=quest;
    await start(page);await shot(page,'1-net-at-rest');await pillCheck(page,'start',report);
    const pillMain=page.locator('[data-job-active] button').first();await tap(page,pillMain);await wait(500);await pillCheck(page,'pill-open',report);await wait(6500);await pillCheck(page,'pill-fold',report);
-   await page.keyboard.press('Escape');await wait(300);await pillCheck(page,'end-ask',report);await wait(3800);await pillCheck(page,'end-ask-timeout',report);
    await page.evaluate(()=>{document.querySelector('[data-hud-stack]').hidden=true;});await wait(1300);await pillCheck(page,'stack-stuck-hidden',report);report.rescues=await page.evaluate(()=>window.__fi2PillRescues??0);
    // Bugs within 40 m at six spots (the swarm builds the shift's set across the island).
    const spots=[[606,133],[640,140],[584,24],[700,150],[540,190],[740,115]];report.within40=[];
@@ -56,7 +55,8 @@ const SIGN={x:606,z:133.5};
    bugs=await page.evaluate(()=>{const f=window.__fi2,l=f.location;return f.wildBugs.query(l.x,0,l.z,3000).map(b=>({id:b.id,x:b.x,y:b.y,z:b.z,sp:b.species?.id}));});
    await page.keyboard.press('Space');await wait(130);await shot(page,'2-mid-swing');await wait(500);
    report.zoom=await page.evaluate(()=>window.__fi2Jobs.zooming);await shot(page,'3-catch-zoom');await wait(700);await shot(page,'4-success-burst');
-   await wait(1400);await pillCheck(page,'catch',report);const card=page.locator('[data-bug-card]');report.card=await card.count();if(report.card)report.cardText=(await card.innerText()).slice(0,140);await shot(page,'5-story-card');
+   await wait(1400);await pillCheck(page,'catch',report);await wait(7500);
+   await page.keyboard.press('Escape');await wait(300);await pillCheck(page,'end-ask (jar has a bug: Sure?)',report);report.endAsk=await page.locator('[data-job-end-mini] small').textContent().catch(()=>null);await wait(3800);await pillCheck(page,'end-ask-timeout',report);const card=page.locator('[data-bug-card]');report.card=await card.count();if(report.card)report.cardText=(await card.innerText()).slice(0,140);await shot(page,'5-story-card');
    // The 20th species: mark the rest of the squad caught, then catch one more → the formation release.
    const caughtId=await page.evaluate(()=>window.__fi2Jobs.getView().caught?.id);report.firstCatch=caughtId;
    for(let k=0;k<4;k++){bugs=await page.evaluate(()=>{const f=window.__fi2,l=f.location;return f.wildBugs.query(l.x,0,l.z,3000).map(b=>({id:b.id,x:b.x,y:b.y,z:b.z,sp:b.species?.id}));});
