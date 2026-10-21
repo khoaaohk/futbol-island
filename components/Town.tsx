@@ -183,17 +183,17 @@ import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
-import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH} from '@/lib/town/water/waterDepth';
+import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED,waterDepthAt} from '@/lib/town/water/waterDepth';
 import {createSwimClear,SWIM_DIVE_CLEAR} from '@/lib/graphics/swimClear';
 import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clearWindow';
 import {UW_SURFACE} from '@/lib/town/fishing/underwater';
 import {uwDepthAt} from '@/lib/town/fishing/underwater';
 import {beanSkinOf} from '@/lib/graphics/beanSkin';
 import {onLand} from '@/lib/town/landmass';
-import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
+import {createWaterState,DIVE as DUCK_DIVE,diveBedRoom,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
+import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
@@ -778,10 +778,19 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // never brighter than the water (`.water-under.is-reef`, app/globals.css), instead of the bright splash-down flash.
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
-      entered:spot=>{countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);/* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
-        ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
+      /* Seamless Explore: the way out across the edge lands in water deep enough for the duck-dive (else swims up; never land or a pier) */
+      water:(x,z)=>{if(waterProbe.isLand(x,z)||!waterProbe.allowed(x,z))return 'no';const f=world.islandShore.field,bed=f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;return waterDepthAt(x,z)>=DUCK_DIVE.minWater&&diveBedRoom(bed)>=DUCK_DIVE.minRoom?'dive':'swim';},
+      entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);/* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
+        if(edge){showUnderTint(spot.theme.water);}/* Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge: no splash or plunge, only the soft blend through the zone's water colour (none with reduced motion: an instant swap) */
+        else{ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();}/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
         waterStore.set({reef:true,reefLesson:waterStore.get().reefLesson+1});wakeLoop();},
-      surfaced:(spot,reason)=>{countDiveSurface();music.setDucked(false);waterStore.set({reef:false});if(reason==='leave')return;
+      surfaced:(spot,reason)=>{if(reason==='edge')countDiveExitEdge();else countDiveSurface();music.setDucked(false);waterStore.set({reef:false});if(reason==='leave')return;
+        // Seamless Explore (diveEdge.ts): swum out across the zone's edge. The island wakes with the diver just outside the blob on the
+        // bearing they left by, still under (the duck-dive goes on: tint, fog, bubbles, the breath ring, Q to come up), heading on outward;
+        // the follow camera moves with them (no swoop across the zone). Too shallow there: they come up and swim.
+        if(reason==='edge'){const e=dive.edgeExit,st=dive.session.state,sp=Math.min(SEA_SWIM_SPEED,Math.hypot(st.vx,st.vz));camera.position.x+=e.x-visualLocation.x;camera.position.z+=e.z-visualLocation.z;
+          location.x=previousLocation.x=visualLocation.x=e.x;location.z=previousLocation.z=visualLocation.z=e.z;velocity.x=Math.sin(e.yaw)*sp;velocity.z=Math.cos(e.yaw)*sp;player.root.rotation.y=e.yaw;
+          if(!(e.under&&water.underNow())){ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);sound.waterSurface();}showUnderTint(spot.theme.water);wakeLoop();return;}
         if(reason==='fly'){location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;return;}/* R / the switcher: back at the buoy, then flyUp() launches */
         // Back at the buoy, treading water: a splash and drips from the ring pool, the surfacing plip; the island resumes.
         location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;
@@ -1119,7 +1128,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(animalRides.darting&&animalRides.dartWakeDue(dartPoint)&&waterFxOn()&&(animalRides.state.dart||animalRides.state.ret)){const k=RIDE_WAKE[(animalRides.state.dart||animalRides.state.ret)!.kind]*DART_WAKE,fx=Math.sin(dartPoint.yaw),fz=Math.cos(dartPoint.yaw),rx=fz,rz=-fx;
           ballEffects.ripple(dartPoint.x-fx*1.4+rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4+rz*.9,.42*k,.7);ballEffects.ripple(dartPoint.x-fx*1.4-rx*.9,WATER_LEVEL,dartPoint.z-fz*1.4-rz*.9,.42*k,.7);}
         animalRides.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim');
-        {const de=dive.duck(dt,water.inWater&&water.state.diving&&!dive.diving);if(de.low)diveStore.set({note:DIVE_LOW_NOTE});if(de.out){countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});water.surfaceDive();}}/* one breath for both dives: the duck-dive drains the reef's breath ring (diveSession.ts DUCK_DRAIN) */
+        {const de=dive.duck(dt,water.inWater&&water.state.diving&&!dive.diving);if(de.low)diveStore.set({note:DIVE_LOW_NOTE});if(de.out){countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});water.surfaceDive();}
+          /* Seamless Explore (diveEdge.ts): duck-diving across a zone's edge (1 m into its blob) swims straight into its reef room, no tap */
+          else if(water.state.diving&&water.state.under>.35&&water.state.phase==='swim'&&!animalRides.riding&&rideRef.current==='walk')dive.edgeEnter(location.x,location.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z),water.state.dive);}/* one breath for both dives: the duck-dive drains the reef's breath ring (diveSession.ts DUCK_DRAIN) */
         dive.scan(dt,location.x,location.z,water.inWater&&water.state.phase==='swim'&&!animalRides.riding&&(rideRef.current as string)!=='jetpack');/* Oct 20 2026 (user): no Dive button while flying, only when swimming */// water P2: the Dive prompt's patch test (10 Hz) and the breath refill
         if(ev.left&&walkBall.state.mode==='attached'){walkBall.state.mode='return';walkBall.state.age=0;}/* the parked ball rolls back to the feet */
         if(ev.left&&rideBeforeWater){const m=rideBeforeWater;rideBeforeWater=null;if(rideRef.current==='walk'&&rideAllowed(m,jobActiveRef.current)&&fuelAllowsRide(m)){rideRef.current=m;setRideMode(m);}}/* the ride that splashed down comes back on the sand */

@@ -16,12 +16,15 @@ import {setDiveSpots} from '../../graphics/waterSurface';
 import {WATER_LEVEL} from './waterDepth';
 import {DIVE_REEF_KEY,REEF_RESTORE_CARD,REEF_RESTORE_COINS,addPickup,journeyPickups,markRestored,nextTarget,parseDiveReef,reach,reefColour,reefHealth,reefRunId,type DivePickup,type DiveReefSave} from './diveJourney';
 import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveFloor} from './diveSpots';
+import {diveEdgeDepthT,diveEdgeSpotAt,diveEdgeToIsland,diveEdgeToRoom,type DiveEdgeExit,type DiveEdgeWater} from './diveEdge';
 
 /** The find card and the calm notes (components/DiveHud.tsx); written only when one changes. */
 export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string};
 /** `reef`: the zone's journey progress ("5/12"), `restored`: the zone is fully restored (Explore v2). */
-export type DiveView={diving:boolean;card:DiveCard|null;note:string;spot:string;reef:string;restored:boolean};
-const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:false};
+/** `banner`: Seamless Explore's soft chip at the zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); it fades by itself. */
+export type DiveView={diving:boolean;card:DiveCard|null;note:string;spot:string;reef:string;restored:boolean;banner:string};
+const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:false,banner:''};
+export const DIVE_EDGE_LEAVING='Leaving the reef';export const diveEdgeEntering=(name:string)=>`Entering: ${name}`;
 /** The phone's ▲ / ▼ (components/DiveHud.tsx, held: pointer down / up) and Q / Z on desktop feed this; the dive frame reads it. */
 export const diveLift={up:false,down:false,
  /** Explore v2: the Dart button / F / Shift asked for a dart (an edge: the next dive frame takes it and clears it). */
@@ -51,7 +54,10 @@ export type DiveRuntimePorts={
  /** DOM helpers (Town's cached query, the entry-prompt placement and hide). */
  ui:<E extends HTMLElement>(selector:string)=>E|null|undefined;place:(el:HTMLElement,left:number,top:number)=>void;hide:(el:HTMLElement,hidden:boolean)=>void;
  /** The island side of going under / coming up (splash, tint, sound, HUD, analytics), and a find's coins (the wallet). */
- entered:(spot:DiveSpot)=>void;surfaced:(spot:DiveSpot,reason:SurfaceReason)=>void;
+ entered:(spot:DiveSpot,edge?:boolean)=>void;surfaced:(spot:DiveSpot,reason:SurfaceReason)=>void;
+ /** Seamless Explore (diveEdge.ts): what the island offers at a point for the way out across the edge (deep enough to stay under,
+  *  swim only, or no). Without it every exit point counts as diveable. */
+ water?:(x:number,z:number)=>DiveEdgeWater;
  found:(find:DiveFind,first:boolean)=>void;credit:(runId:string,coins:number,reason:string)=>void;
  low:()=>void;out:()=>void;
  /** First time over the reef crest this dive (analytics wa:dive_crest), and R / the switcher's jetpack take-off from under the water. */
@@ -88,17 +94,17 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   el.style.setProperty('--breath',String(q));el.dataset.low=b<=BREATH_LOW?'1':'';el.setAttribute('aria-valuenow',String(Math.round(b*100)));
  }
  function hidePrompt(){const el=ports.ui<HTMLButtonElement>('[data-dive-go]');if(el&&!el.hidden)ports.hide(el,true);promptShown=false;promptLabel='';findPrompt='';}
- function enter(){
+ function enter(edge=false){
   const s=session.state.spot!;picks=journeyPickups(s);const have=reefSave.zones[s.id]??[];got=picks.map(p=>have.includes(p.i));
   room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got});clock=0;
   formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
   room.scene.add(ports.player.root);pose.phase=0;hidePrompt();findPrompt='';
-  diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id});drawProgress(s,false);ports.entered(s);drawBreath(true);
+  diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):''});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
   if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;}
-  diveLift.up=diveLift.down=false;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:''});ports.surfaced(spot,reason);drawBreath(true);
+  diveLift.up=diveLift.down=false;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:''});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;
@@ -107,6 +113,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.story,coins:ev.coins}});
   ports.found(f,ev.firstFind);joy=DIVE_JOY_S;drawProgress(s,true);return true;
  }
+ const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
  return {session,
   get diving(){return session.diving;},get room(){return room;},
   /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no dart, no ball rolling,
@@ -132,6 +139,14 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   /** The near-shore duck-dive shares the reef's breath (diveSession.ts DUCK_DRAIN): drain while under, the ring redrawn ≤ 10 Hz.
    *  Returns the session's events (low / out) for the host's note and the pop-up. */
   duck(dt:number,under:boolean){const ev=session.duck(dt,under);if(ev.breathUi)drawBreath();return ev;},
+  /** Seamless Explore: the island's duck-diver at (x, z), facing `yaw` at `speed` m/s, `islandDive` m under the swim line: crossing
+   *  DIVE_EDGE.enterIn m into a zone's blob enters its room at the matching point (no tap). The host calls it each island frame while
+   *  duck-diving; a quick distance reject keeps it cheap. True when the room was entered. */
+  edgeEnter(x:number,z:number,yaw:number,speed:number,islandDive:number){
+   const st=session.state;if(session.diving||st.edgeCd>0||st.hold>0)return false;const s=diveEdgeSpotAt(x,z,DIVE_SPOTS);if(!s)return false;
+   diveEdgeToRoom(s,x,z,yaw,toRoom);if(!session.enterAt(s,toRoom.x,toRoom.z,toRoom.yaw,speed,diveEdgeDepthT(islandDive)))return false;enter(true);return true;},
+  /** Where the last swim out across the edge put the diver on the island (Town's surfaced('edge') reads it). */
+  get edgeExit():Readonly<DiveEdgeExit>{return exitPt;},
   /** "Dive" (the prompt's tap or E): go under. False when not in a patch or out of breath. */
   start(){if(!session.start())return false;enter();return true;},
   /** One dive frame instead of the island's: the swim, the breath, the room, the rig, the find prompt, one render. */
@@ -141,7 +156,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    if(diveLift.dart){input.dart=true;diveLift.dart=false;}
    const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.dart)ports.dart?.(session.state.darts===1);if(ev.crest&&s)ports.crest?.(s);
    if(ev.low)ports.low();if(ev.out)ports.out();
-   if(ev.surfaced){leave(ev.surfaced as SurfaceReason,s!);return;}
+   if(ev.surfaced){if(ev.surfaced==='edge'&&s)diveEdgeToIsland(s,session.state.x,session.state.z,session.state.yaw,ports.water??anyWater,exitPt,DIVE_SPOTS,s.surface);leave(ev.surfaced as SurfaceReason,s!);return;}
    const st=session.state,reduced=ports.reduced();clock+=dt;
    // The rig: the crawl while swimming, treading water at rest; tipped with the climb and the turn.
    // Explore v2: the body lies along the swim (the crawl's under-water shape, under 1): a flutter-kick crawl while swimming, a slow

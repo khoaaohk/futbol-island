@@ -12,6 +12,8 @@ export default function DiveHud(){
  const v=useSyncExternalStore(diveStore.subscribe,diveStore.get,diveStore.server);
  // A note fades by itself after a few seconds (one timer while one shows; none at rest).
  useEffect(()=>{if(!v.note)return;const t=setTimeout(()=>diveStore.set({note:''}),5000);return ()=>clearTimeout(t);},[v.note]);
+ // Seamless Explore (Oct 21 2026): the edge chip ("Entering: …" / "Leaving the reef") clears itself after its 2.4 s fade.
+ useEffect(()=>{if(!v.banner)return;const t=setTimeout(()=>diveStore.set({banner:''}),2400);return ()=>clearTimeout(t);},[v.banner]);
  // Oct 20 2026 (user): swim up / down inside the dive zone; later that day the reef became shallow, so these rise to the top (air) or dip lower over the reef, and the diver follows the seabed. Icon-only, held (pointer down / up), the water buttons' look; Q / Z on desktop.
  const hold=(dir:'up'|'down',on:boolean)=>(e:React.PointerEvent<HTMLButtonElement>)=>{e.preventDefault();if(on)e.currentTarget.setPointerCapture?.(e.pointerId);diveLift[dir]=on;};
  const depthBtn=(dir:'up'|'down')=><button type="button" className="dive-depth-btn" data-dive-depth={dir} aria-label={dir==='up'?'Rise toward the top (hold) · Q':'Dip lower over the reef (hold) · Z'} title={dir==='up'?'Rise · Q':'Dip lower · Z'}
@@ -28,6 +30,7 @@ export default function DiveHud(){
   <div className="dive-breath" data-dive-breath hidden role="meter" aria-label="Breath" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
    <i aria-hidden="true"/><span>Breath</span>
   </div>
+  {v.banner?<p className="dive-edge-chip" role="status" data-dive-edge key={v.banner}>{v.banner}</p>:null}
   {v.note?<p className="dive-note" role="status" data-dive-note>{v.note}</p>:null}
   {v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
    <small>{v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>

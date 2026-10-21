@@ -238,10 +238,15 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  function canDive(){return state.phase==='swim'&&state.depth>=DIVE.minWater&&state.bedRoom>=DIVE.minRoom;}
  /** Ease back up (Surface, a ride grab: `quick` for the jetpack). False when already at the surface. */
  function surfaceDive(quick=false){if(!state.diving&&state.under===0)return false;state.diving=false;diveRate=1/(quick?DIVE.quick:DIVE.ease);return true;}
+ /** Seamless Explore (diveEdge.ts): back from a reef room across the zone's edge, already under. The duck-dive goes on at once (no
+  *  ease down, no plunge): settled under at the dive the water here allows. False when not swimming or the water is too shallow
+  *  (the host then lets the swimmer come up at the surface). */
+ function underNow(){if(!canDive())return false;state.diving=true;state.under=1;state.diveFor=0;diveRate=1/DIVE.ease;state.fast=false;state.tilt=0;
+  state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.dive=state.room;state.rootY=SWIM_ROOT_Y-state.dive;pose.under=1;pose.tilt=0;return true;}
  /** Fly up: the jetpack takes off straight out of the water (the host checks fuel, switches the ride and splashes). Raised on the
   *  next step as `flew`, like the presses; false when not in the water. */
  function takeOff(){if(state.phase==='land')return false;pendFly=true;return true;}
- return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,
+ return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,underNow,
   get inWater(){return state.phase!=='land';},
   get swimming(){return state.phase==='swim'||state.phase==='under'||state.phase==='surface';},
   /** Swimming (at the surface or settled under, not mid-dive): the 20 fps idle rule may apply once the stick has been still for 4 s
