@@ -840,9 +840,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(reducedMotion){endZoom();return;}
   const Z=zoom,P={...lastP};
   // Framed on the net held up over the player (where the bug wiggles), from the bug's side and a little above, never inside a slope.
-  zoomCam.begin(aspect=>{const dx=Z.p.x-P.x,dz=Z.p.z-P.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,portrait=aspect<1,d=portrait?4.2:3.4;
+  zoomCam.begin(aspect=>{const dx=Z.p.x-P.x,dz=Z.p.z-P.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,portrait=aspect<1,d=portrait?7.2:6;
    const tx=P.x+ux*.4,tz=P.z+uz*.4,ty=P.y+2.4,ex=tx+ux*d-uz*1.4,ez=tz+uz*d+ux*1.4,ey=Math.max(ty+.9,floor(ex,ez)+1.4);
-   return {target:{x:tx,y:ty,z:tz},eye:{x:ex,y:ey,z:ez},fov:portrait?50:38};});
+   return {target:{x:tx,y:ty,z:tz},eye:{x:ex,y:ey,z:ez},fov:portrait?56:44};});
   setView({zooming:true});publishActive();}
  function tickZoom(dt:number){const Z=zoom;if(!Z)return;Z.t+=dt;
   if(!Z.burst&&Z.t>=ZOOM.in*.85){Z.burst=true;const q=net?net.bagCentre(bagPos):Z.p,night=run?.def.prop==='firefly';

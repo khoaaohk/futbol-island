@@ -36,9 +36,11 @@ export const TAP_SCREEN_SLOP=.16;
 /** A locked target (auto-aim or tap) counts as caught if it is within this many sweep radii of the sweep centre at the hit frame. */
 export const LOCKED_SLACK=1.35;
 /** Swing timeline (seconds): wind-up, the sweep (hit frame inside it), recovery. One swing at a time. */
-export const SWING={windup:.16,hit:.3,sweepEnd:.42,end:.62} as const;
-/** Catch zoom (seconds): ease in, hold (wiggle, name, burst), ease out; total ≤ 2.4 s. Tap skips; reduced motion = no zoom. */
-export const ZOOM={in:.9,hold:1.1,out:.8} as const;
+/* Oct 20 2026 (user: the swing was too fast): about twice as slow so the arc and the catch read clearly. */
+export const SWING={windup:.3,hit:.58,sweepEnd:.85,end:1.25} as const;
+/** Catch zoom (seconds): ease in, hold (wiggle, name, burst), ease out; total ≤ 4.2 s. Tap skips; reduced motion = no zoom. */
+/* Oct 20 2026 (user: show it more, and it was too zoomed in): a longer, wider framing. */
+export const ZOOM={in:1.3,hold:2,out:.9} as const;
 /** Each shift catches this many (or all that are out, if fewer): bugs by day, fireflies at night. Pay is per shift (unchanged). */
 export const SHIFT_GOAL={bugs:6,fireflies:5} as const;
 /** Coins for a species caught for the first time ever (a small learning bonus, once per species, never metered). */
