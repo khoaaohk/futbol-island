@@ -2,7 +2,7 @@
  * Travel-map marks (V vending, F fishing, J jobs, E reefs to explore; was D for dive spots before Oct 20 2026): the map key's tap tooltips and where the J marks sit.
  * The marks on the map are plain drawings (not buttons); the key explains them in general, not per place (tests/map-markers.cjs).
  */
-export type MapMarkKind='vending'|'fishing'|'job'|'dive';
+export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far';
 type Point={x:number;z:number};
 
 /** The key's tooltips, one per kind, in words a child can read: shown as "<title>: <text>". */
@@ -11,6 +11,8 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
  fishing:{title:'Fishing spots:',text:'catch fish to sell at Rosa’s market'},
  job:{title:'Jobs:',text:'help out to earn coins'},
  dive:{title:'Reefs to explore:',text:'swim out to the flag and explore the shallow coral reef'},
+ // Oct 21 2026 (reefDiscovery.ts): the jetpack badge on the E marks whose reef is beyond the 60 m swim range.
+ far:{title:'Fly there:',text:'too far to swim, so take your jetpack to these reefs'},
 };
 export const legendTipText=(kind:MapMarkKind)=>`${LEGEND_TIPS[kind].title} ${LEGEND_TIPS[kind].text}`;
 

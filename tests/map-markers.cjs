@@ -116,6 +116,16 @@ assert.equal(M.legendTipText('dive'),'Reefs to explore: swim out to the flag and
 }
 // 8. Dive zones (Oct 20 2026): one D per zone (lib/town/water/diveSpots.ts) at its buoy, drawn like the F marks.
 {const o=read('components/IslandOverview.tsx');
- assert.match(o,/\{DIVE_SPOTS\.map\(spot=><g key=\{spot\.id\} aria-label=\{`\$\{spot\.name\}: a reef to explore`\} data-dive-marker=\{spot\.id\}>\s*<circle cx=\{spot\.x\} cy=\{spot\.z\}/,'one D mark per dive zone, at the zone');
- assert(o.slice(o.indexOf('className="map-dive-markers"')).includes('>E</text>'),'the mark reads E (Explore; was D for Dive)');}
+ assert.match(o,/\{DIVE_SPOTS\.map\(spot=>\{const done=discovered\.has\(spot\.id\),fly=far\.has\(spot\.id\);\s*return <g key=\{spot\.id\} aria-label=\{`\$\{spot\.name\}: a reef to explore[^`]*`\} data-dive-marker=\{spot\.id\}[^>]*>\s*<circle cx=\{spot\.x\} cy=\{spot\.z\}/,'one E mark per dive zone, at the zone');
+ assert(o.slice(o.indexOf('className="map-dive-markers"')).includes('>E</text>'),'the mark reads E (Explore; was D for Dive)');
+ // 9. Oct 21 2026 (reefDiscovery.ts): the jetpack badge on the zones too far to swim to (from the data: the whole outline beyond
+ // SWIM_RANGE from land), an explored zone filled with a check, the key's "Fly there" entry and the travel map's nearest-reef line.
+ assert.match(o,/<ExploreMarks localMap=\{localMap\}\/>/,'the E marks are their own component (the memoized terrain stays put)');
+ assert.match(o,/useSyncExternalStore\(reefStore\.subscribe,\(\)=>reefStore\.get\(\)\.discovered/,'explored zones come from the reef store');
+ assert.match(o,/\{fly&&<g data-jetpack-badge="">/,'jetpack badge on far zones');assert.match(o,/\{done&&<g data-dive-check="">/,'a tiny check on explored zones');
+ const R=load('lib/town/water/reefDiscovery.ts');assert.deepEqual([...R.farDiveSpotIds()].sort(),['ball-crate','kelp-trawler','moon-arch'],'the three far zones, from the data');
+ assert.equal(M.legendTipText('far'),'Fly there: too far to swim, so take your jetpack to these reefs');
+ const map=read('components/IslandTravelMap.tsx');assert(map.includes(`{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'}`),'"Fly there" in the key with a tooltip');
+ assert.match(map,/<NearestReef position=\{position\} open=\{open\}\/>/,'the nearest reef line under the key');
+ assert.match(map,/nearestUndiscovered\(position\.x,position\.z,discovered\)/);}
 console.log('map markers ok');
