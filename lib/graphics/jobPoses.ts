@@ -158,7 +158,7 @@ const JAR_IDLE:V3=[0,.98,.3],JAR_WALK:V3=[0,.99,.32],JAR_SPRINT:V3=[0,1.03,.27],
 const JAR_CUP:readonly [number,V3|null][]=[[0,null],[.26,[.18,.82,.26]],[.48,[0,1.38,.42]],[.68,[0,1.18,.37]],[1,null]];
 const JAR_UP:V3=[0,1.72,.17],JAR_PRESENT:V3=[0,1.12,.4];
 /** Mitten centres either side of the jar (m). */
-export const JAR_HAND_GAP=.25;
+export const JAR_HAND_GAP=.28;
 const jarC=[0,0,0];
 export type JarGripIn={w:number;cupW:number;cupK:number;catchW:number;catchK:number};
 /** Overrides `o` (netGrip's result) with the jar hold, weighted by `j.w`. */

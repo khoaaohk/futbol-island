@@ -20,8 +20,8 @@ import {swingPhase,SWING,type NetCarry} from './bugCatch';
 import {createSwoosh} from './bugSwoosh';
 import {NET_PACK} from './bugNet';
 
-export const JAR_RADIUS=.1;
-export const JAR_HEIGHT=.22;
+export const JAR_RADIUS=.115;
+export const JAR_HEIGHT=.25;
 /** Lid hinge angle when open (rad, swung back over the hinge). */
 export const JAR_LID_OPEN=-2.1;
 const R=JAR_RADIUS,H=JAR_HEIGHT;
