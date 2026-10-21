@@ -14,7 +14,7 @@
 import * as T from 'three';
 import {mergeColoured} from './bugShape';
 import {swingPhase,SWING,type NetCarry} from './bugCatch';
-import {createSwoosh} from './bugSwoosh';
+import {createPathSwoosh} from './bugSwoosh';
 
 export const NET_HOOP_RADIUS=.42;
 export const NET_POLE=1.15;
@@ -60,7 +60,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
  const bagPivot=new T.Group();bagPivot.position.set(0,top,0);const bag=new T.Mesh(bagG,bagMat);bag.name='job-net-bag';bag.frustumCulled=false;bagPivot.add(bag);group.add(bagPivot);
  // Swoosh: a ribbon arc (24 segments), revealed with the sweep by draw range, in world space.
  // Oct 21 2026: a glowing ribbon (bugSwoosh.ts) revealed by a uniform: warm white on the island, bright warm yellow at Night.
- const trail=createSwoosh(own,1.35,1.95),swoosh=trail.mesh;trail.setLook(night?'night':'island');
+ const trail=createPathSwoosh(own),swoosh=trail.mesh;trail.setLook(night?'night':'island');
  // Spring state for the bag's lag, and the catch flip (0 open → 1 closed).
  let lag=0,lagV=0,lastA=0,lastYaw=0,flip=0,flipWant=0,follow=1,grip:number=NET_GRIP_BY_MODE.carry,surge=0,surgeV=0,lastVf=0,haveMid=false;
  const lastMid=new T.Vector3(),sx=new T.Vector3(),sy=new T.Vector3(),sz=new T.Vector3();
@@ -108,10 +108,10 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    flip+=(flipWant-flip)*Math.min(1,dt*(reduced?60:12));
    bagPivot.rotation.set(flip*.9,lag*.8,-.22+lag*.25+surge*.45+flip*.4);
    // The swoosh follows the sweep: a flat arc round the player's chest, revealed along the swing, fading in the recovery.
-   if(swingT>=0&&!reduced){const s=swingPhase(swingT);swoosh.visible=s.phase==='sweep'||s.phase==='recover';
-    if(swoosh.visible){swoosh.position.set(mid.x-fx*.2,mid.y+.15,mid.z-fz*.2);swoosh.rotation.set(-Math.PI/2+.25,yaw-Math.PI*.15,0);
-     trail.show(s.phase==='sweep'?Math.max(.04,s.k):1,s.phase==='sweep'?1:1-s.k);}}
-   else swoosh.visible=false;
+   // The swoosh follows the HOOP's own path (bugSwoosh.ts createPathSwoosh): a sample of the hoop centre each frame of the sweep, the
+   // tail thinning out behind it; after the swing it just fades.
+   if(!reduced&&swingT>=0&&swingPhase(swingT).phase==='sweep'){tmpV.set(0,top,0).applyMatrix4(group.matrix);trail.add(dt,tmpV.x,tmpV.y,tmpV.z,by.x*.3,by.y*.3,by.z*.3);}
+   else trail.fade(dt);
   },
   /** Riding (scooter / bike / moped; bug-polish wiring to the backpack lane): the pole rests on the pack's side socket
    *  (`backpack-side-right`), `socket` = its world matrix (the pack's own axes: +x out of that side, +z into the body), tilted
@@ -127,7 +127,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    bx.copy(sz);bx.addScaledVector(by,-bx.dot(by)).normalize();bz.crossVectors(bx,by);
    pos.setFromMatrixPosition(socket).addScaledVector(sx,NET_PACK.out).addScaledVector(by,-NET_PACK.strap);
    group.matrix.makeBasis(bx,by,bz).setPosition(pos);group.matrixWorldNeedsUpdate=true;haveMid=false;
-   flip+=(0-flip)*Math.min(1,dt*12);bagPivot.rotation.set(0,lag*.6,-.12+lag*.2);swoosh.visible=false;
+   flip+=(0-flip)*Math.min(1,dt*12);bagPivot.rotation.set(0,lag*.6,-.12+lag*.2);trail.clear();
   },
   /** For tests: the pole's line (origin, unit direction) in world space. */
   poleLine(o:{x:number;y:number;z:number},d:{x:number;y:number;z:number}){const e=group.matrix.elements;o.x=e[12];o.y=e[13];o.z=e[14];d.x=e[4];d.y=e[5];d.z=e[6];},
@@ -146,7 +146,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    *  (bugSwoosh.ts: additive glow at Night, a warm normal-blended stroke on the pale backdrops where additive light vanishes). */
   stageLook(look:'day'|'sunset'|'night'|false){trail.setLook(night||look==='night'?'night':look==='day'?'stage-day':look==='sunset'?'stage-sunset':'island');},
   trail,
-  reset(){lag=lagV=flip=flipWant=0;lastA=0;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;swoosh.visible=false;},
+  reset(){lag=lagV=flip=flipWant=0;lastA=0;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;trail.clear();},
   get swingTime(){return SWING.end;},
  };
  return api;
