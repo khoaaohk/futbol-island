@@ -33,6 +33,11 @@ export const DIVE_SPEED=3.2,DIVE_ACCEL=3,DIVE_DRAG=1.6,DIVE_TURN=2.2;
  *  and follows the seabed, so a rising reef lifts them (no clipping, no hard step). ▲ / ▼ (phone) or Q / Z (desktop) rise or dip
  *  lower at about DIVE_VSPEED m/s; neither held keeps the place. DIVE_FOLLOW is how fast the body eases onto the followed height. */
 export const DIVE_VSPEED=1.6,DIVE_FOLLOW=4;
+/** Explore v2 (Oct 21 2026) swim feel: with the stick let go the diver GLIDES (a lower drag, DIVE_GLIDE_DRAG, so a kick carries);
+ *  a DART (the phone's Dart button, F / Shift on desktop) is a quick burst forward: +DIVE_DART_KICK m/s along the facing, the top
+ *  speed raised to DIVE_DART_SPEED for DIVE_DART_S, then a DIVE_DART_COOLDOWN wait; it costs DIVE_DART_BREATH of the breath (the pace
+ *  lesson: a sprint has a price). DIVE_BANK is the roll into a turn at full stick and speed (rad). */
+export const DIVE_GLIDE_DRAG=.75,DIVE_DART_KICK=2.6,DIVE_DART_SPEED=5.4,DIVE_DART_S=.7,DIVE_DART_COOLDOWN=1.1,DIVE_DART_BREATH=.012,DIVE_BANK=.5;
 /** Where a dive starts in the water column (depthT). */
 export const DIVE_START_T=.45;
 /** "Surface to breathe": the reef is shallow, so the surface is always right above. At the top (depthT under DIVE_TOP_T) the diver
@@ -71,12 +76,16 @@ export type DiveEvents={
  breathUi:boolean;
  /** The diver reached the reef crest for the first time this dive (analytics wa:dive_crest; wa:dive_deep is kept for old data). */
  crest:boolean;
+ /** Explore v2: a dart started this frame. */
+ dart:boolean;
 };
 export type DiveInput={
  /** Stick: x right, y DOWN (the island's convention: −1 = forward), each −1..1 (keys + joystick). */
  sx:number;sy:number;
  /** Rise (+1) / dip lower (−1): ▲ ▼ on phones, Q / Z on desktop. */
  lift:number;
+ /** A dart was asked for this frame (an edge, not held). */
+ dart?:boolean;
 };
 
 export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(spot:string)=>readonly string[]=()=>[]){
@@ -98,10 +107,12 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   hold:0,ducking:false,
   /** The place in the water column (0 just under the surface .. 1 low over the sand), whether the diver is at the top sipping air,
    *  and whether the reef crest was reached this dive. */
-  depthT:DIVE_START_T,atTop:false,onCrest:false};
+  depthT:DIVE_START_T,atTop:false,onCrest:false,
+  /** Explore v2: the dart's remaining burst (s) and its cooldown (s); darts this dive (analytics: the first one). */
+  dartT:0,dartCd:0,darts:0};
  const range={min:0,max:0};
- const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false};
- const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=false;events.surfaced='';events.find='';events.coins=0;};
+ const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false,dart:false};
+ const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=events.dart=false;events.surfaced='';events.find='';events.coins=0;};
  const heightFor=(t:number)=>range.max-(range.max-range.min)*t;
  const markUi=(dt:number)=>{state.uiAcc+=dt;if(state.uiAcc>=1/BREATH_UI_HZ-1e-6&&Math.abs(state.breath-state.uiBreath)>.002){state.uiAcc=0;state.uiBreath=state.breath;events.breathUi=true;}};
  return {state,events,
@@ -134,7 +145,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   start(){
    clear();const s=state.near;if(!s||state.phase!=='surface'||state.breath<BREATH_MIN_DIVE)return false;
    state.phase='diving';state.spot=s;state.x=DIVE_START.x;state.y=DIVE_START.y;state.z=DIVE_START.z;state.yaw=DIVE_START.yaw;state.vx=state.vy=state.vz=0;
-   state.pitch=state.roll=state.lift=0;state.depthT=DIVE_START_T;state.atTop=false;state.onCrest=false;state.lowSaid=false;
+   state.pitch=state.roll=state.lift=0;state.dartT=state.dartCd=0;state.darts=0;state.depthT=DIVE_START_T;state.atTop=false;state.onCrest=false;state.lowSaid=false;
    diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
    events.started=true;events.breathUi=true;state.uiBreath=state.breath;return true;
   },
@@ -153,8 +164,13 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    // Steering: stick left / right turns, forward / back swims along the facing (the follow camera stays behind).
    const sx=Math.max(-1,Math.min(1,input.sx)),fwd=Math.max(-1,Math.min(1,-input.sy)),stick=Math.min(1,Math.hypot(sx,fwd));
    state.yaw+=-sx*DIVE_TURN*dt*(.45+.55*Math.min(1,Math.abs(fwd)+.3));
-   const target=fwd*DIVE_SPEED*(fwd<0?.5:1),fx=Math.sin(state.yaw),fz=Math.cos(state.yaw);
-   const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(Math.abs(target)>Math.abs(along)?DIVE_ACCEL:DIVE_DRAG));
+   const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw);
+   // The dart (Explore v2): a kick along the facing and a higher top speed for a moment, then the glide carries it off.
+   state.dartCd=Math.max(0,state.dartCd-dt);state.dartT=Math.max(0,state.dartT-dt);
+   if(input.dart&&state.dartCd<=0&&dt>0){state.dartT=DIVE_DART_S;state.dartCd=DIVE_DART_COOLDOWN;state.darts++;events.dart=true;state.breath=Math.max(.001,state.breath-DIVE_DART_BREATH);
+    state.vx+=fx*DIVE_DART_KICK;state.vz+=fz*DIVE_DART_KICK;}
+   const darting=state.dartT>0,target=darting?Math.max(fwd,0)*DIVE_DART_SPEED+(fwd<=0?DIVE_SPEED*.6:0):fwd*DIVE_SPEED*(fwd<0?.5:1);
+   const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(darting&&along>target?.6:Math.abs(target)>Math.abs(along)?DIVE_ACCEL:stick<.08?DIVE_GLIDE_DRAG:DIVE_DRAG));
    const nextAlong=along+(target-along)*k,side=(state.vx*fz-state.vz*fx)*Math.exp(-dt*3);
    state.vx=fx*nextAlong+fz*side;state.vz=fz*nextAlong-fx*side;
    let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz);
@@ -170,9 +186,9 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    state.y=y;state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
    if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
    // The body pitches with the climb / dive and rolls a little into turns (auto-level: both ease back to flat).
-   const speed=Math.hypot(state.vx,state.vz);state.effort+=(stick-state.effort)*(1-Math.exp(-dt*4));
+   const speed=Math.hypot(state.vx,state.vz);state.effort+=((state.dartT>0?1:stick)-state.effort)*(1-Math.exp(-dt*4));
    state.pitch+=(Math.max(-.5,Math.min(.5,-state.vy*.35))-state.pitch)*(1-Math.exp(-dt*3));
-   state.roll+=(Math.max(-.35,Math.min(.35,sx*.3*Math.min(1,speed)))-state.roll)*(1-Math.exp(-dt*3));
+   state.roll+=(Math.max(-DIVE_BANK,Math.min(DIVE_BANK,sx*DIVE_BANK*Math.min(1,.25+speed/DIVE_SPEED)))-state.roll)*(1-Math.exp(-dt*3));
    // Breath: the pace lesson. Glide slow, it lasts; push the stick all the way, it goes fast; at the top, a sip of air refills it.
    // No depth penalty: the whole reef is shallow.
    const base=Math.max(stick,Math.abs(input.lift)*.6);
