@@ -99,4 +99,18 @@ pack.setKit({shorts:'#356478',shirt:'#bcd9d3'});{const c=pack.mesh.geometry.attr
   const bad=body.replace(/if\(hasBean&&[^\n]*rebuild\(\);/,'').match(/new |\[\]|\.map\(|\.filter\(|\.\.\.|=>|\{\s*[a-z]+:/g);
   assert.equal(bad,null,'update() allocates: '+bad);}
 pack.dispose();assert(!pack.root.parent,'dispose detaches');vehicle.dispose();
+// Rooms and portraits (Oct 21 2026): wearBackpack — attached folded in the room's rig, kit colours, refresh on a kit change; one
+// line in the shop, konbini, museum, arcade room and the customizer preview; the classic-jet crash debris includes the pack.
+{const room=createPlayer('you','home',true,true);room.setBeanLook({...DEFAULT_BEAN_LOOK,build:'regular'},{kind:'kit',shirt:'#edb957',shirt2:'#fff4cd',shorts:'#1d4f9a',socks:'#edb957',boots:'#27342f',number:10});
+ const w=BP.wearBackpack(room.root,{shorts:'#1d4f9a',shirt:'#edb957'});assert(w&&w.pack.root.parent,'worn in a room');assert.equal(w.pack.morph,0,'folded (never the jet in a room)');assert(w.pack.root.visible,'shown');
+ const col=w.pack.mesh.geometry.attributes.color,roles=w.pack.roles,i0=[...roles].indexOf(BP.BACKPACK_ROLE.body),c=new T.Color('#1d4f9a');
+ assert(Math.abs(col.getX(i0)-c.r)<.02&&Math.abs(col.getZ(i0)-c.b)<.02,'body in the kit shorts colour');w.refresh({shorts:'#b0302a',shirt:'#ffffff'});c.set('#b0302a');assert(Math.abs(col.getX(i0)-c.r)<.02,'refresh recolours');
+ w.dispose();assert(!w.pack.root.parent,'disposed with the room');
+ for(const f of ['lib/shop/shopScene.ts','lib/konbini/konbiniScene.ts','lib/museum/museumScene.ts','lib/arcade/arcadeRoomScene.ts','components/CharacterPreview.tsx']){const src=fs.readFileSync(base+'/'+f,'utf8');
+  assert(/wearBackpack\(/.test(src)&&/pack\?\.dispose\(\)/.test(src),f+': wears the pack and disposes it');}
+ assert(/jetpackBreakup\.trigger\(vehicle\.root,reduced,customizationRef\.current\.jetpack==='classic'\?backpack\.root:null\)/.test(fs.readFileSync(base+'/components/Town.tsx','utf8')),'classic crash debris includes the pack');
+ const JB=load(base+'/lib/graphics/jetpackBreakup.ts').createJetpackBreakup(),v2=createVehicle(),host=new T.Group(),pk=BP.createBackpack(),r2=createPlayer('you','home',true,true);
+ r2.setBeanLook({...DEFAULT_BEAN_LOOK},{kind:'kit',shirt:'#edb957',shirt2:'#fff4cd',shorts:'#26453e',socks:'#edb957',boots:'#27342f',number:10});pk.attach(r2.root);host.add(r2.root);v2.setBackpackJet(true);
+ JB.trigger(v2.root,false,pk.root);assert(JB.root.children.length>=1,'the crash throws the pack copy');JB.dispose();pk.dispose();v2.dispose();
+ report.push('rooms: worn folded in the kit colours (shop, konbini, museum, arcade, customizer), refresh recolours; crash debris includes the pack');}
 console.log('backpack-wear ok\n  '+report.join('\n  '));
