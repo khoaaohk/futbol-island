@@ -160,9 +160,14 @@ const coin=(x:number,z:number,title:string,text:string)=>find('treasure','treasu
 /**
  * The seven zones (Oct 20 2026, the user's circles on the travel map, converted with IslandTravelMap's projection and checked
  * clear of land, fishing floats / stands and the zipline: tests/water-dive.cjs). The three biggest (base radius 19) carry wrecks.
+ * Oct 21 2026 (user: "the explore spots need to blend in more with the shore, if we need to move it away ... do that"): every
+ * shoal's outer fade edge (DIVE_BLOB_MAX × radius × waterSurface.ts DIVE_SHOAL.fade) now ends at least DIVE_SHORE_CLEAR m from
+ * land, past the beaches' ~24 m turquoise shallows, so a shoal never overlaps the shore window. Moved: Captain's Cup (342,-282 →
+ * 309,-291), Paul's Grotto (594,-289 → 512,-296), Ray Meadow (733,-72 → 761,-62), Turtle Pool (812,204 → 842,204).
  */
+export const DIVE_SHORE_CLEAR=30;
 export const DIVE_SPOTS:readonly DiveSpot[]=[
- {id:'captains-cup',name:'Captain’s Cup Wreck',area:1,x:342,z:-282,radius:19,blob:11,tint:'#63e6d4',near:'causeway-channel',surface:{x:342,z:-279},
+ {id:'captains-cup',name:'Captain’s Cup Wreck',area:1,x:309,z:-291,radius:19,blob:11,tint:'#63e6d4',near:'causeway-channel',surface:{x:309,z:-288},
   floor:{kind:'dome',cx:-1,cz:-5,rx:16,rz:14,yaw:1.81,bend:2,rim:5.2,crest:1.8,seed:.4},
   theme:{id:'coral-garden-galleon',water:'#2a8a9c',fog:[12,40],...BASE,coral:CORAL_WARM,light:['#c8f6ff','#e6d2a6',2.9],
    mix:{coral:.75,fans:1,anemones:1,kelp:.5,grass:.6},fish:['anchovy','blue-tang','yellow-tang','snapper','anthias','trevally','grouper'],signature:'garden',
@@ -177,7 +182,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    clam(-8,8,'Wait for your moment','A clam only opens when the water is calm. A good striker waits for the right moment too, then strikes.'),
    coin(6,-15,'A captain’s coin','A coin from the old ship’s captain, who tossed it before every match.'),
   ]},
- {id:'pauls-grotto',name:'Paul’s Grotto',area:2,x:594,z:-289,radius:12.5,blob:23,tint:'#5fe3d6',near:'coral-garden',surface:{x:594,z:-286.5},
+ {id:'pauls-grotto',name:'Paul’s Grotto',area:2,x:512,z:-296,radius:12.5,blob:23,tint:'#5fe3d6',near:'coral-garden',surface:{x:512,z:-293.5},
   floor:{kind:'plateau',cx:0,cz:1,rx:14,rz:12,yaw:0,bend:0,rim:4.8,crest:2.5,seed:1.3},
   theme:{id:'sunken-pitch',water:'#2b8fa6',fog:[11,36],...BASE,sand:['#d4c095','#f0e2bc'],coral:['#ff9f5a','#f2c14e','#4fc7b0','#ffb4a2','#e86a9a'],light:['#d2f8ff','#efdcae',3],
    mix:{coral:.6,fans:.7,anemones:1.2,kelp:.3,grass:.4},fish:['anthias','yellow-tang','bigeye','octopus','parrotfish'],signature:'goal',
@@ -207,7 +212,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    clam(9,9,'Shield the ball','The clam keeps its pearl safe behind its shell. Keep your body between the ball and the defender.'),
    coin(-6,-16,'A lucky net float','A float from the trawler’s nets. The crew said it brought them a goal every Saturday.'),
   ]},
- {id:'ray-meadow',name:'Ray Meadow',area:4,x:733,z:-72,radius:12.5,blob:41,tint:'#7ee8c8',near:'farm-beach',surface:{x:733,z:-69.5},
+ {id:'ray-meadow',name:'Ray Meadow',area:4,x:761,z:-62,radius:12.5,blob:41,tint:'#7ee8c8',near:'farm-beach',surface:{x:761,z:-59.5},
   floor:{kind:'plateau',cx:0,cz:-3,rx:17,rz:15,yaw:.3,bend:1.5,rim:4.4,crest:2.7,seed:3.3},
   theme:{id:'seagrass-rays',water:'#3299a0',fog:[12,42],...BASE,sand:['#d8c79a','#f4e8c4'],coral:['#ffb4a2','#f2c14e','#b88be0'],kelp:['#5aa652','#7aa83a','#8fbf5a'],
    light:['#d9fbff','#f2e2b6',3.1],mix:{coral:.35,fans:.4,anemones:.5,kelp:.2,grass:1.3},fish:['yellow-tang','anthias','ray','eagle-ray','ray-small'],signature:'rays',
@@ -251,7 +256,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    clam(9,8,'Patience on the ball','A clam opens slowly. Keep the ball and wait for a gap.'),
    coin(-8,-16,'A shipping tag','A brass tag from a ball crate: “Island League, handle with care”.'),
   ]},
- {id:'turtle-pool',name:'Turtle Pool',area:7,x:812,z:204,radius:12.5,blob:79,tint:'#7fe6d8',near:'summit-ledge',surface:{x:812,z:206.5},
+ {id:'turtle-pool',name:'Turtle Pool',area:7,x:842,z:204,radius:12.5,blob:79,tint:'#7fe6d8',near:'summit-ledge',surface:{x:842,z:206.5},
   floor:{kind:'ring',cx:0,cz:-3,rx:12,rz:10,yaw:.4,bend:0,rim:4.6,crest:2,seed:7.1},
   theme:{id:'sea-turtle-pool',water:'#2b93a2',fog:[11,38],...BASE,sand:['#e0d0a6','#f6ecc8'],coral:['#4fc7b0','#9de0c8','#f2c14e','#ff9f5a'],light:['#d2fbff','#f0e0b0',3.1],
    mix:{coral:.7,fans:.6,anemones:.8,kelp:.4,grass:.9},fish:['turtle','yellow-tang','anthias','parrotfish'],signature:'turtles',

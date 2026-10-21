@@ -26,7 +26,7 @@ ok('the ocean patch: a wide soft noise-broken edge (no rim line), see-through on
  // The shoal is the shore's shallows: the depth colour, the light net and the alpha read the shoal's shore distance dd.
  // The heart reads as the shore's sandy shallows only where the preview is on (diveClr); off (tier 3-4, Battery saver, far) it is a
  // flat muted turquoise (SHOAL_OPAQUE_D), never a khaki sandbar.
- assert(ws.includes('float dd=mix(d,mix(${SHOAL_OPAQUE_D.toFixed(1)},${DIVE_SHOAL.heart.toFixed(1)},clamp(diveClr/max(diveK,1e-3),0.,1.)),diveK);'));
+ assert(ws.includes('float dd=min(d,mix(d,mix(${SHOAL_OPAQUE_D.toFixed(1)},${DIVE_SHOAL.heart.toFixed(1)},clamp(diveClr/max(diveK,1e-3),0.,1.)),diveK));'),'never deeper than the shore (no ring over the shallows)');assert(/diveClr\*=smoothstep\(/.test(ws),'the see-through part eases out at grazing views (Fresnel)');
  const TK=load('lib/graphics/waterTokens.ts');assert(TK.SHOAL_OPAQUE_D>=6&&TK.SHOAL_OPAQUE_D<=12,'the opaque heart is turquoise water, not the sandy shallows');assert.equal(WS.DIVE_SHOAL.heart,TK.SHOAL_HEART_D);
  for(const k of ['smoothstep(.3,5.,dd)','1.-smoothstep(3.,24.,dd)','smoothstep(25.,110.,dd)','float nearS=1.-smoothstep(10.,45.,dd);','smoothstep(1.5,7.,dd)'])assert(ws.includes(k),k);
  assert(!/uDiveTint\[i\]/.test(ws.split('#include <map_fragment>')[1]||''),'no milky tint of its own');

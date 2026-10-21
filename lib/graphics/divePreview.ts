@@ -40,7 +40,10 @@ import {DIVE_TELL_TINT,PITCH_TURF,SHOAL_DECAL,SHOAL_DEEP_LIN,SHOAL_GRASS,SHOAL_K
  * opaque muted shoal only: waterTokens.ts SHOAL_OPAQUE_D). It is off at heat tiers 3-4 and Battery saver (Town passes the effective
  * tier; a phone's tier 2 counts as 3) and while diving. Per frame: two distance tests and two uniform writes, plus 7 for the decal.
  */
-export const DIVE_PREVIEW={view:[170,120,80] as const,fade:.6,rings:10,segs:44,reach:1.3,floor:3,far:40,maxTris:2600} as const;
+export const DIVE_PREVIEW={view:[170,120,80] as const,fade:.6,rings:10,segs:44,reach:1.3,floor:3,far:40,maxTris:2600,skirt:[2.6] as const,skirtDepth:[10] as const} as const;
+/** How much the preview mutes a prop / the pitch turf toward the shelf's deep teal (Oct 21 2026: "flat dark-green hexagon slabs",
+ *  "a bright flat rectangle"): they read as down under clear water, not laid on it. */
+export const DIVE_PREVIEW_MUTE={rock:.35,coral:.25,turf:.35,turfMute:.4} as const;
 /** The far shoal decal: rings × segs per zone, fully shown within `near` m and gone by `far` m; its fade time (s). */
 export const DIVE_DECAL={rings:6,segs:32,reach:1.25,near:190,far:260,fade:.8,lift:.05} as const;
 
@@ -74,7 +77,7 @@ export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>numbe
  const depthAt=(x:number,z:number,t=fracAt(x,z))=>{const [rx,rz]=toRoom(x,z),b=bedAt?bedAt(x,z):Infinity,pd=shelfDepth(spot,rx,rz,t);if(!Number.isFinite(b))return pd;
   const o=Math.min(1,Math.max(0,(t-.95)/.2));return Math.min(pd,b-.15)*(1-o)+(b+.4)*o;};
  const P:number[]=[],C:number[]=[],col=new T.Color(),TEAL=new T.Color().setRGB(...SHOAL_TEAL_LIN),DEEP=new T.Color().setRGB(...SHOAL_DEEP_LIN),LANE=new T.Color().setRGB(...SHOAL_LANE_LIN);
- const KELP=new T.Color(SHOAL_KELP_TOP),TURF=new T.Color(PITCH_TURF),hues=spot.theme.coral.map((_,i)=>previewCoralColor(spot,i));
+ const KELP=new T.Color(SHOAL_KELP_TOP),TURF=new T.Color(PITCH_TURF).lerp(TEAL,DIVE_PREVIEW_MUTE.turfMute),hues=spot.theme.coral.map((_,i)=>previewCoralColor(spot,i).lerp(TEAL,DIVE_PREVIEW_MUTE.coral)),rocks=ROCK.map(c=>c.clone().lerp(TEAL,DIVE_PREVIEW_MUTE.rock));
  const push=(x:number,y:number,z:number,c:T.Color)=>{P.push(x,y,z);C.push(c.r,c.g,c.b);};
  // 1. The sand shelf: a polar grid bent to the blob, out to `reach` × the outline, painted with the layout.
  const {rings,segs,reach}=DIVE_PREVIEW,V:{x:number;y:number;z:number;c:T.Color}[][]=[];
@@ -82,14 +85,20 @@ export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>numbe
   for(let s=0;s<(r?segs:1);s++){const a=s/segs*Math.PI*2,R=diveBlobR(spot,a)*t,x=spot.x+Math.cos(a)*R,z=spot.z+Math.sin(a)*R,dp=depthAt(x,z,t),[rx,rz]=toRoom(x,z);
    const n=sm(.3,.75,clearWinNoise(x,z,.21,.47,spot.blob)*.6+clearWinNoise(x,z,.09,.33,spot.blob+3)*.5)*.85+.15*diveRipple(x*.6,z*.6),m=diveCrestMask(rx,rz,spot.floor),cv=diveLayoutCover(L,rx,rz),inside=1-sm(.95,1.1,t);
    col.setRGB(.72+.14*n,.68+.14*n,.52+.14*n).lerp(TEAL,sm(1.5,9,sd)*.75*(1-.4*m)).lerp(DEEP,sm(9,24,sd));
-   col.lerp(LANE,cv.lane*.4*inside);if(cv.hue>=0)col.lerp(hues[cv.hue],cv.coral*.6*inside);col.lerp(GRASS[0],cv.grass*.5*inside).lerp(KELP,cv.kelp*.45*inside).lerp(TURF,cv.turf*.55*inside);
+   col.lerp(LANE,cv.lane*.4*inside);if(cv.hue>=0)col.lerp(hues[cv.hue],cv.coral*.6*inside);col.lerp(GRASS[0],cv.grass*.5*inside).lerp(KELP,cv.kelp*.45*inside).lerp(TURF,cv.turf*DIVE_PREVIEW_MUTE.turf*inside);
    row.push({x,y:UNDER_SURFACE_Y-dp,z,c:col.clone()});}
   V.push(row);}
+ // The skirt (Oct 21 2026, user: "from far away there looks to be sand on the north end"): through the see-through fringe a low
+ // view looks PAST the shelf's rim (a 4 m deep floor seen at ~15° runs out ~15 m further on), where nothing was drawn and the
+ // sky's clear colour showed through the water as a warm khaki band beyond the far edge. Two more rings sink into the deep
+ // (DIVE_PREVIEW.skirt × the outline, skirtDepth m), deep teal, so every ray through the fringe ends on dark sea floor.
+ DIVE_PREVIEW.skirt.forEach((t,j)=>{const row:typeof V[number]=[];for(let s=0;s<segs;s++){const a=s/segs*Math.PI*2,R=diveBlobR(spot,a)*t,x=spot.x+Math.cos(a)*R,z=spot.z+Math.sin(a)*R;
+  const b=bedAt?bedAt(x,z):Infinity,dp=Math.max(DIVE_PREVIEW.skirtDepth[j],Number.isFinite(b)?b+.4:0);row.push({x,y:UNDER_SURFACE_Y-dp,z,c:DEEP.clone().multiplyScalar(.8-.15*j)});}V.push(row);});
  const vtx=(v:{x:number;y:number;z:number;c:T.Color})=>push(v.x,v.y,v.z,v.c);
- for(let r=1;r<=rings;r++)for(let s=0;s<segs;s++){const s1=(s+1)%segs,a=V[r][s],b=V[r][s1];
+ for(let r=1;r<V.length;r++)for(let s=0;s<segs;s++){const s1=(s+1)%segs,a=V[r][s],b=V[r][s1];
   if(r===1){vtx(V[0][0]);vtx(b);vtx(a);continue;}const c=V[r-1][s],d=V[r-1][s1];vtx(c);vtx(d);vtx(a);vtx(d);vtx(b);vtx(a);}
  // 2. The layout's props, low and muted.
- const kit=clearReefKit(),ico=new T.IcosahedronGeometry(1,0),box=new T.BoxGeometry(1,1,1);
+ const kit=clearReefKit(),ico=new T.IcosahedronGeometry(1,0),stone=new T.DodecahedronGeometry(1,0),box=new T.BoxGeometry(1,1,1);
  const M=new T.Matrix4(),Q=new T.Quaternion(),S=new T.Vector3(),PO=new T.Vector3(),E=new T.Euler(),A=new T.Vector3(),paint=new T.Color(),k=new T.Color();
  const addShape=(g:T.BufferGeometry,m:T.Matrix4,c:T.Color)=>{const pos=g.getAttribute('position'),pc=g.getAttribute('color'),idx=g.getIndex(),cnt=idx?idx.count:pos.count;
   for(let i=0;i<cnt;i++){const v=idx?idx.getX(i):i;A.fromBufferAttribute(pos,v).applyMatrix4(m);k.copy(c);if(pc)k.multiply(paint.fromBufferAttribute(pc as T.BufferAttribute,v));push(A.x,A.y,A.z,k);}};
@@ -99,7 +108,7 @@ export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>numbe
   const dp=depthAt(x,z),room=dp-.45;if(room<.3)continue;const w=Math.min(c.r*sc*(j?.45:.6),1.8),h=Math.min(c.h*sc*.9,room);
   Q.setFromEuler(E.set(0,hash(ci,seed+3)*6.283,0));M.compose(PO.set(x,UNDER_SURFACE_Y-dp-h*.15,z),Q,S.set(w,h,w*.85));addShape(ico,M,hues[c.hue]);}});
  L.rocks.forEach((r,i)=>{const [x,z]=I(r.x,r.z),dp=depthAt(x,z),s=Math.min(r.s*sc*.9,(dp-.45)/.8);if(s<.1)return;Q.setFromEuler(E.set(0,hash(i,seed+4)*6.283,0));
-  M.compose(PO.set(x,UNDER_SURFACE_Y-dp-s*.2,z),Q,S.set(s*1.3,s*.7,s));addShape(ico,M,ROCK[i%ROCK.length]);});
+  M.compose(PO.set(x,UNDER_SURFACE_Y-dp-s*.25,z),Q,S.set(s*1.2,s*.6,s));addShape(stone,M,rocks[i%rocks.length]);});// rounded (12-sided from above), muted toward the water
  L.grass.forEach((g,i)=>{const n=g.r>3?2:1;for(let j=0;j<n;j++){const a=hash(i*5+j,seed+5)*6.283,[x,z]=I(g.x+Math.cos(a)*g.r*.4*j,g.z+Math.sin(a)*g.r*.4*j),dp=depthAt(x,z),sc2=Math.min(1+g.r*.25,(dp-.45)/.6);
   if(sc2<.3)continue;Q.setFromEuler(E.set(0,a,0));M.compose(PO.set(x,UNDER_SURFACE_Y-dp,z),Q,S.set(sc2,sc2,sc2));addShape(kit.grass,M,GRASS[i%GRASS.length]);}});
  // The signature from above.
@@ -115,7 +124,7 @@ export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>numbe
   M.compose(PO.set(gx,UNDER_SURFACE_Y-gdp+gh,gz),Q,S.set(g.w*sc,.1,.1));addShape(box,M,pale);}
  if(L.crates.length){const wood=new T.Color('#4a3524');L.crates.forEach((c,i)=>{const [x,z]=I(c.x,c.z),dp=depthAt(x,z);Q.setFromEuler(E.set(0,c.yaw,0));
   M.compose(PO.set(x,UNDER_SURFACE_Y-dp+.15,z),Q,S.set(1.1*sc*1.4,.4,.8*sc*1.4));addShape(box,M,i%3?wood:MUTED[1]);});}
- for(const a of L.arches){const rock=ROCK[0];for(let i=0;i<=6;i++){const t=i/6*Math.PI,[x,z]=I(a.x,a.z+Math.cos(t)*a.R),dp=depthAt(x,z),y=UNDER_SURFACE_Y-dp+Math.sin(t)*Math.max(0,dp-.5);
+ for(const a of L.arches){const rock=rocks[0];for(let i=0;i<=6;i++){const t=i/6*Math.PI,[x,z]=I(a.x,a.z+Math.cos(t)*a.R),dp=depthAt(x,z),y=UNDER_SURFACE_Y-dp+Math.sin(t)*Math.max(0,dp-.5);
   Q.setFromEuler(E.set(0,i,0));M.compose(PO.set(x,Math.min(y,UNDER_SURFACE_Y-.72),z),Q,S.set(.7,.55,.8));addShape(ico,M,rock);}}
  // 3. A wreck zone: the boat stranded on the reef crest (its layout pose, room metres scaled to the blob), the under-water hull only;
  //    the part above the water is diveWreckTop.ts. Once that piece draws the under-water hull too, set DIVE_PREVIEW_WRECK.hull = false.
@@ -127,7 +136,7 @@ export function buildDivePreview(spot:DiveSpot,bedAt?:(x:number,z:number)=>numbe
   const prow=new T.ConeGeometry(.5,1,4,1);prow.rotateX(Math.PI/2);M.compose(PO.set(wx+Math.sin(w.yaw)*len*.6,yc,wz+Math.cos(w.yaw)*len*.6),Q,S.set(len*.45,hh,len*.25));addShape(prow,M,wood);
   const mast=new T.CylinderGeometry(.18,.22,1,5,1);mast.rotateZ(Math.PI/2);Q.setFromEuler(E.set(0,w.yaw+.9,.08));M.compose(PO.set(wx+len*.3,UNDER_SURFACE_Y-sb+.25,wz-len*.2),Q,S.set(len*.8,1,1));addShape(mast,M,deck);
   prow.dispose();mast.dispose();}
- for(const g of Object.values(kit))g.dispose();ico.dispose();box.dispose();
+ for(const g of Object.values(kit))g.dispose();ico.dispose();stone.dispose();box.dispose();
  const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(P,3));geo.setAttribute('color',new T.Float32BufferAttribute(C,3));geo.computeVertexNormals();geo.computeBoundingSphere();
  return geo;
 }

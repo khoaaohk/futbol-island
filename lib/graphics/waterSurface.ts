@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
-import {SHOAL_HEART_D,SHOAL_OPAQUE_D} from './waterTokens';
+import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
 // Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
 // the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
@@ -8,6 +8,9 @@ import {SHOAL_HEART_D,SHOAL_OPAQUE_D} from './waterTokens';
 /** The see-through shoal look: the soft edge's start / end (in blob q, 1 = the dive outline), how much the edge noise moves it, the
  *  ocean's alpha at the shoal's heart (blended program only; the shore window is .14-.42) and the opaque-path tint strength. */
 export const DIVE_SHOAL={inner:.25,fade:1.32,wobble:.34,heart:SHOAL_HEART_D} as const;
+/** View elevation (degrees) over a shoal: fully see-through above [0], opaque water (the shoal's colour only) below [1]. */
+export const DIVE_GRAZE=[16,6] as const;
+const WATER_LEVEL_GLSL=WATER_Y.toFixed(2);
 /** Oct 20 2026 (user: "shallow places in the middle of dark ocean"): a shoal is drawn as the shore's own shallows. Its heart reads as
  *  water DIVE_SHOAL.heart m off a beach, and the open sea's distance eases back in through the soft band (the same palette, depth
  *  tint, light net and see-through alpha as the shore window). Shared with divePreview.ts so the seabed under it agrees. */
@@ -247,7 +250,13 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // The shore distance the shoal looks like (diveShoreD): the depth colour, light net and alpha below all read it.
     // Where the seabed preview is off (heat tiers 3-4, Battery saver, out of range, the opaque program) the heart reads as
     // SHOAL_OPAQUE_D instead: a flat muted turquoise a little lighter than the sea, never a pale khaki sandbar (water audit #10).
-    float dd=mix(d,mix(${SHOAL_OPAQUE_D.toFixed(1)},${DIVE_SHOAL.heart.toFixed(1)},clamp(diveClr/max(diveK,1e-3),0.,1.)),diveK);
+    // Oct 21 2026 (user: "a clear border" where a shoal meets a beach's shallows): never deeper than the shore's own distance, so
+    // where the shoal overlaps the shallows the shore's colour wins and no darker ring crosses them.
+    float dd=min(d,mix(d,mix(${SHOAL_OPAQUE_D.toFixed(1)},${DIVE_SHOAL.heart.toFixed(1)},clamp(diveClr/max(diveK,1e-3),0.,1.)),diveK));
+    // Fresnel (Oct 21 2026, "sand on the north end"): looked at across the water (the far side, a low or distant camera) the surface
+    // reflects instead of letting the seabed show; through a see-through fringe a flat view reached past the preview's floor. The
+    // see-through part eases out between ~${DIVE_GRAZE[1]}° and ~${DIVE_GRAZE[0]}° of view elevation (the shoal colour above, dd, stays).
+    {vec3 ev=cameraPosition-vec3(vWaterXZ.x,${WATER_LEVEL_GLSL},vWaterXZ.y);diveClr*=smoothstep(${Math.sin(DIVE_GRAZE[1]*Math.PI/180).toFixed(3)},${Math.sin(DIVE_GRAZE[0]*Math.PI/180).toFixed(3)},ev.y/max(length(ev),1e-3));}
     #ifdef USE_MAP
     // Two drifting layers of the painted ripple tile (one on phones and on the still path), their strokes bent by the field's
     // noise so they read as wavy ripples instead of long straight streaks.

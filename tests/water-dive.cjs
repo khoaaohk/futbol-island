@@ -64,6 +64,14 @@ ok('placement: every zone is open sea (no land, jetty or deck in the blob), clea
   const p=W.createWaterProbe();p.sample(s.x,s.z,1,true);assert(p.allowed(s.x+1,s.z+1),'swimmable inside the blob (a Drop in reaches far zones): '+s.id);}
 });
 
+ok('shore clearance (Oct 21 2026, "blend in more with the shore"): every shoal fade edge ends ≥ DIVE_SHORE_CLEAR m from land, apart from the other zones',()=>{
+ const WS=read('lib/graphics/waterSurface.ts'),fade=+/fade:([\d.]+)/.exec(WS.slice(WS.indexOf('DIVE_SHOAL=')))[1];assert(D.DIVE_SHORE_CLEAR>=25);
+ for(const s of Z){let land=Infinity;// the nearest land point: rings 1 m apart, 96 bearings each, out to the required clearance
+  for(let r=1;r<=s.radius*D.DIVE_BLOB_MAX*fade+D.DIVE_SHORE_CLEAR&&land===Infinity;r++)for(let a=0;a<96;a++){const t=a/96*Math.PI*2;if(L.onLand(s.x+Math.cos(t)*r,s.z+Math.sin(t)*r)){land=r;break;}}
+  assert.equal(land,Infinity,`${s.id}: land ${land} m from the centre, inside the fade edge + ${D.DIVE_SHORE_CLEAR} m`);
+  for(const o of Z)if(o!==s)assert(Math.hypot(o.x-s.x,o.z-s.z)>(o.radius+s.radius)*D.DIVE_BLOB_MAX*fade+20,'shoals apart '+s.id+' / '+o.id);}
+});
+
 ok('the Dive prompt range: inside the blob, swimming only, at the probe rate (10 Hz); the ocean slots take the nearest zones',()=>{
  assert.equal(D.DIVE_PROMPT,'Explore','the user: explore, not dive');assert.equal(S.DIVE_TICK,1/W.WATER_PROBE_HZ);
  const s=S.createDiveSession();assert.equal(s.scan(.01,spot.x,spot.z,true)?.id,spot.id,'the first scan is immediate');
