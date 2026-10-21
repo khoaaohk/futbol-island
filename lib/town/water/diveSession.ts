@@ -26,12 +26,13 @@ export const BREATH_REFILL_S=6,BREATH_MIN_DIVE=.25;
 /** The breath meter's CSS variable is written at most this often (Hz) by the host. */
 export const BREATH_UI_HZ=10;
 /** The swim (m/s): top speed, how fast it gets there and how fast the water slows you (floaty); turning (rad/s at full stick). */
-export const DIVE_SPEED=2.4,DIVE_ACCEL=2.2,DIVE_DRAG=1.4,DIVE_TURN=1.9;
+/* Oct 21 2026 (user: swim a little faster underwater): 2.4 -> 3.2 m/s, quicker pick-up, a little quicker turning and depth change. */
+export const DIVE_SPEED=3.2,DIVE_ACCEL=3,DIVE_DRAG=1.6,DIVE_TURN=2.2;
 /** Gliding over the shallow reef (Oct 20 2026, user: "not really diving deep, but more about going through a coral reef area"): the
  *  diver keeps a place in the water between the surface and the sand (`depthT`: 0 just under the surface .. 1 low over the sand)
  *  and follows the seabed, so a rising reef lifts them (no clipping, no hard step). ▲ / ▼ (phone) or Q / Z (desktop) rise or dip
  *  lower at about DIVE_VSPEED m/s; neither held keeps the place. DIVE_FOLLOW is how fast the body eases onto the followed height. */
-export const DIVE_VSPEED=1.2,DIVE_FOLLOW=4;
+export const DIVE_VSPEED=1.6,DIVE_FOLLOW=4;
 /** Where a dive starts in the water column (depthT). */
 export const DIVE_START_T=.45;
 /** "Surface to breathe": the reef is shallow, so the surface is always right above. At the top (depthT under DIVE_TOP_T) the diver
