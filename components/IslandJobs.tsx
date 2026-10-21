@@ -32,7 +32,7 @@ import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib
 import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
-import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,initialPill,bugBookCoinNote} from '@/lib/town/jobs/bugUi';
+import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,BUG_TIP_NIGHT,initialPill,bugBookCoinNote} from '@/lib/town/jobs/bugUi';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
@@ -142,6 +142,10 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  },[view.ended?.nonce]);
  useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
  const endJob=()=>{const r=runtime?.run;if(r&&r.def.swing&&r.got.some(Boolean)&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
+ // The action cluster's End button (Town.tsx, Oct 21 2026) asks through the same two-tap confirm, and mirrors its state.
+ const endRef=useRef(endJob);useEffect(()=>{endRef.current=endJob;});
+ useEffect(()=>{const on=()=>{const r=getJobRuntime()?.run;if(r&&r.def.swing&&!payday&&!view.releasing&&!view.zooming)endRef.current();};document.addEventListener('fi2-bug-end',on);return()=>document.removeEventListener('fi2-bug-end',on);},[payday,view.releasing,view.zooming]);
+ useEffect(()=>{try{document.dispatchEvent(new CustomEvent('fi2-bug-end-ask',{detail:endAsk}));}catch{}},[endAsk]);
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
@@ -204,7 +208,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    {/* Progress and the next step are announced even while the panel is a chip. */}
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
-    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
+    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{a.set==='fireflies'?BUG_TIP_NIGHT:BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
     {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label="Show nearest bug" title="Show nearest bug" disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
     {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
     :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}

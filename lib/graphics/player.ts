@@ -17,7 +17,7 @@ import {attachBeanSkin} from './beanSkin';
 import {attachBeanCostumes} from './beanCostumes';
 import type {BeanLook,Outfit,BeanExpression} from './beanLook';
 import {createSkillDriver,type SkillMotion} from './skillMoves';
-import {jobPoseTarget,netGrip,NET_SNEAK_CROUCH,type PoseTarget,type Gait} from './jobPoses';
+import {jobPoseTarget,netGrip,NET_SNEAK_CROUCH,JAR_POSES,type PoseTarget,type Gait,type JarGripIn} from './jobPoses';
 import type {JobPose} from '../town/jobs/jobMoves';
 import type {ZipRigPose} from '../town/zipline';
 import {createSwimPoser,type SwimRigPose} from './swimPose';
@@ -507,7 +507,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   let jobW=0,jobHeld:PoseTarget|null=null;
   // Job pose cross-fade between kinds and the net grip (bug-polish): the pose a moment ago, its leg weight, the blend clock.
   const jobFrom:PoseTarget={py:.86,pz:0,tx:0,ty:0,hx:0,hy:0,toe:0,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0],upper:false};
-  let jobKind='',jobX=1,jobFromLegs=0,jobLegs=0,netGripW=0,netSneakW=0,netShowW=0,netShowK=0;const gaitNow:Gait={phase:0,amount:0,sprint:0};
+  let jobKind='',jobX=1,jobFromLegs=0,jobLegs=0,netGripW=0,netSneakW=0,netShowW=0,netShowK=0;const jarIn:JarGripIn={w:0,cupW:0,cupK:0,catchW:0,catchK:0};const gaitNow:Gait={phase:0,amount:0,sprint:0};
   // Freestyle trick pose (optional; motion.trick): the last pose held for the fade-out, and scratch for the leg solve.
   const trickHeld=createTrickPose(),trickLeg:TrickLegAngles={hipZ:0,hipX:0,knee:0,ankle:0,reach:0};let trickFade=0,trickBase=0;
   const anchorFoot=(index:number,px:number,pz:number,heading:number,lx:number,lz:number)=>{
@@ -769,11 +769,16 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
    *  torso and head pitch, both arms. Fades in (~.1 s) and out (~.15 s); reduced motion snaps. */
   const poseJob=(pose:PlayerMotion['job'],dt:number,time:number,reduced:boolean,gaitAmount:number,gaitSprint:number)=>{
     // Net grip weight (bug-polish): both hands solved onto the pole (poseNetGrip) while carrying or stalking, eased over .2 s.
-    const netHeld=!!pose&&(pose.kind==='netcarry'||pose.kind==='netsneak'||pose.kind==='netshow');
+    // The firefly jar (Oct 21 2026): every jar pose keeps both hands on the jar (the Cup and the hold-up too), eased like the net's.
+    const jarPose=!!pose&&JAR_POSES.has(pose.kind);
+    const netHeld=!!pose&&(pose.kind==='netcarry'||pose.kind==='netsneak'||pose.kind==='netshow'||jarPose);
+    const ease=(v:number,on:boolean)=>reduced?(on?1:0):Math.max(0,Math.min(1,v+(on?dt:-dt)/NET_BLEND_S));
+    if(netHeld){jarIn.w=ease(jarIn.w,jarPose);const cup=pose!.kind==='jarcup',ct=pose!.kind==='jarcatch';jarIn.cupW=ease(jarIn.cupW,cup);jarIn.catchW=ease(jarIn.catchW,ct);
+     if(cup)jarIn.cupK=pose!.progress;if(ct)jarIn.catchK=pose!.progress;}
     netGripW=reduced?(netHeld?1:0):Math.max(0,Math.min(1,netGripW+(netHeld?dt:-dt)/NET_BLEND_S));
-    if(netHeld)netSneakW=reduced?(pose!.kind==='netsneak'?1:0):Math.max(0,Math.min(1,netSneakW+(pose!.kind==='netsneak'?dt:-dt)/NET_BLEND_S));
+    if(netHeld)netSneakW=reduced?(pose!.kind==='netsneak'||pose!.kind==='jarsneak'?1:0):Math.max(0,Math.min(1,netSneakW+(pose!.kind==='netsneak'||pose!.kind==='jarsneak'?dt:-dt)/NET_BLEND_S));
     // The catch stage's show (catch stage, Oct 21 2026): blended in over NET_BLEND_S, its raise read from the pose's progress.
-    if(netHeld){const sh=pose!.kind==='netshow';netShowW=reduced?(sh?1:0):Math.max(0,Math.min(1,netShowW+(sh?dt:-dt)/NET_BLEND_S));if(sh)netShowK=Math.max(0,Math.min(1,pose!.progress));}
+    if(netHeld){const sh=pose!.kind==='netshow'||pose!.kind==='jarshow';netShowW=reduced?(sh?1:0):Math.max(0,Math.min(1,netShowW+(sh?dt:-dt)/NET_BLEND_S));if(sh)netShowK=Math.max(0,Math.min(1,pose!.progress));}
     gaitNow.phase=phase;gaitNow.amount=gaitAmount;gaitNow.sprint=gaitSprint;
     if(pose){const t=jobPoseTarget(pose,time,reduced,gaitNow);const fresh=!jobHeld;jobHeld=jobHeld??{...t,fl:[0,0],fr:[0,0],al:[0,0,0,0],ar:[0,0,0,0]};
       // Kind changes (carry → sneak, carry → wind-up / swing, swing → catch, …) cross-fade from the pose held a moment ago over
@@ -809,7 +814,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
    *  wind-up and swing take over from it smoothly). No allocation. */
   const poseNetGrip=(reduced:boolean)=>{
     const w=netGripW*netGripW*(3-2*netGripW)*(jobW*jobW*(3-2*jobW));if(w<=0)return;
-    const g=netGrip(netSneakW,gaitNow,reduced,netShowW,netShowK);
+    const g=netGrip(netSneakW,gaitNow,reduced,netShowW,netShowK,jarIn);
     pelvis.updateMatrix();torso.updateMatrix();lumbar.updateMatrix();chest.updateMatrix();
     zipChest.multiplyMatrices(pelvis.matrix,torso.matrix).multiply(lumbar.matrix).multiply(chest.matrix);zipInv.copy(zipChest).invert();
     for(let i=0;i<2;i++){const side=i===0?-1:1,arm=arms[i],h=i===0?g.h0:g.h1;

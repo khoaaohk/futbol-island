@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {wearBackpack} from '@/lib/graphics/backpack';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createPlayer,profileFor,type PlayerMotion} from '../graphics/player';
 import {loadCustomization,beanLookFor,playerOutfit} from '../town/customization';
@@ -252,7 +253,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  const shadowGeo=new T.CircleGeometry(1,24),shadowMat=new T.MeshBasicMaterial({color:'#20403c',transparent:true,opacity:.2,depthWrite:false});
  const disc=(sx:number)=>{const d=new T.Mesh(shadowGeo,shadowMat);d.rotation.x=-Math.PI/2;d.scale.set(sx,sx*.7,1);scene.add(d);return d;};
  const progress=getQuizProgress(),custom=loadCustomization(progress.completed,progress.total);
- const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));player.root.name='konbini-player';scene.add(player.root);const playerShadow=disc(.42);
+ const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));const pack=wearBackpack(player.root,playerOutfit(custom));/* Oct 21 2026: the always-worn pack, folded (docs/backpack.md) */player.root.name='konbini-player';scene.add(player.root);const playerShadow=disc(.42);
  // The player's own ball (same mesh, patches and customised skin as outside, lib/graphics/ballAppearance.ts). Indoors it dribbles
  // gently, and the two ball actions (a soft capped shot, keep-ups) run through lib/konbini/konbiniBall.ts.
  const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7}),ballLook=createBallAppearance(ballMaterial);ballLook.setStyle(custom.ball);
@@ -471,7 +472,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
   get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id)};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
-   sound.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
+   sound.dispose();pack?.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
 }
 export type KonbiniScene=ReturnType<typeof createKonbiniScene>;

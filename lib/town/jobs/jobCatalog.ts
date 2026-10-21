@@ -221,9 +221,9 @@ const BUG_SET_COPY:Record<BugSetId,Pick<JobDef,'intro'|'howTo'|'work'|'lesson'|'
   howTo:'Follow the arrow, sneak close, then Swing. Release them at the bug hotel.',
   work:{target:[{id:'net',label:'Swing net',mode:'tap',hint:'Sneak up, face the bug and Swing net: a clean sweep, like a well-timed tackle.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
   lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'},
- fireflies:{intro:'The fireflies are out! Catch a few, then light up the lantern goal.',
-  howTo:'Follow the glow, catch a few, then light up the lantern goal.',
-  work:{target:[{id:'jar',label:'Swing net',mode:'tap',hint:'Walk up calmly and Swing net: fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
+ fireflies:{intro:'The fireflies are out! Cup a few in your jar, then light up the lantern goal.',
+  howTo:'Follow the glow, Cup a few, then light up the lantern goal.',
+  work:{target:[{id:'jar',label:'Cup the jar',mode:'tap',hint:'Walk up calmly and Cup: scoop the jar up over the firefly, like cushioning a high ball. Fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
   lesson:FIREFLY_JOB_LESSON},
 };
 const bugSetDefs=new Map<BugSetId,JobDef>();
