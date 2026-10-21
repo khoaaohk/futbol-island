@@ -18,7 +18,7 @@ const WATER_IDS=new Set(['swimfast','dive','swimride','letgo','surface','tuck','
 export default function JobActionButton({b,className,onPress}:{b:JobButton;className:string;onPress:(b:JobButton,phase:'tap'|'down'|'up')=>void}){
  const word=b.label==='Hop off'||b.label.startsWith('Jar ')?b.label:SHORT[b.id]??b.label,title=`${b.label} · ${b.key==='Space'?'Space':b.key}${b.hold?' (hold)':''}`;
  const common={type:'button' as const,className:`${className} job-action`,'aria-label':b.label,title,'aria-disabled':!b.enabled||undefined,'aria-keyshortcuts':b.key==='Space'?'Space':b.key,
-  'data-job-action':b.id,'data-job-slot':b.slot,onContextMenu:(e:React.MouseEvent)=>e.preventDefault(),children:<><TravelIcon kind={b.icon} size={WATER_IDS.has(b.id)?32:undefined}/>{WATER_IDS.has(b.id)?null:<small>{word}</small>}</>};
+  'data-job-action':b.id,'data-job-slot':b.slot,onContextMenu:(e:React.MouseEvent)=>e.preventDefault(),children:<><TravelIcon kind={b.icon} size={32}/>{/* Oct 21 2026 (user: "remove the text from the actions, only have the icons"): every job action is icon only; the label stays as the accessible name and the title */}</>};
  if(b.hold){const key=(e:React.KeyboardEvent)=>e.key===' '||e.key==='Enter';
   return <button {...common} data-job-hold="" style={{touchAction:'none',userSelect:'none',WebkitUserSelect:'none',WebkitTouchCallout:'none'}}
    onPointerDown={e=>{e.preventDefault();try{e.currentTarget.setPointerCapture(e.pointerId);}catch{}onPress(b,'down');}}

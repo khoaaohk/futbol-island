@@ -19,21 +19,22 @@ export const NET_BASE_REACH=1.2;
 /** The sweep volume: a sphere this far round the sweep centre (about 2 × the first lane's reach). */
 /* Oct 20 2026 (user playtest: "catch radius is smaller. need to increase it"): 2.4 → 3.5 m, vertical 2.6 → 4 m, auto-aim 5 → 8 m all
    round (nearest uncaught first), tap 6.5 → 10 m with a wider slop; a locked target holds still until the hit frame. */
-export const NET_SWEEP_RADIUS=3.5;
+/* Oct 21 2026 (user: "you can catch bugs just by swinging near it, decrease the radius, you have to be closer"): the sweep, auto-aim, tap and lunge reaches are pulled in (3.5 / 8 / 10 / 5.6 -> 2.2 / 4.2 / 5.5 / 3.4 m) */
+export const NET_SWEEP_RADIUS=2.2;
 /** The sweep centre: this far in front of the player, at this height (the hoop's path at the hit frame). */
 export const NET_SWEEP_AHEAD=1.3;
 export const NET_SWEEP_HEIGHT=1;
 /** Bugs this much above / below the sweep centre still count (they hover and hop). */
-export const NET_SWEEP_VERTICAL=4;
+export const NET_SWEEP_VERTICAL=2.6;
 /** Net down (the stalk): the sweep reaches a little further. */
 export const NET_STALK_REACH=1.15;
 /** Auto-aim: the swing turns to the nearest bug within this range and this half-angle in front of the player. */
-export const AUTO_AIM_RANGE=8;
+export const AUTO_AIM_RANGE=4.2;
 export const AUTO_AIM_HALF_ANGLE=Math.PI;
 /** Tap near a bug on the screen: it must be within this many metres of the player, and the tap within this share of the screen. */
-export const TAP_RANGE=10;
+export const TAP_RANGE=5.5;
 /** A locked swing (auto-aim or tap) lunges: its sweep centre moves out toward the bug, up to this far in front. */
-export const LUNGE_MAX=5.6;
+export const LUNGE_MAX=3.4;
 export const TAP_SCREEN_SLOP=.24;
 /** A locked target (auto-aim or tap) counts as caught if it is within this many sweep radii of the sweep centre at the hit frame. */
 export const LOCKED_SLACK=1.35;
