@@ -593,3 +593,27 @@ island's music kept playing under the reef bed. Built, in order of impact:
   tests/water-dive.cjs, tests/dive-layout.cjs, full suite, `build:quiet`, headless phone + desktop shots (/tmp/explore-v2), 0 console errors.
 - **Not done / next.** A whale-shadow surprise, per-zone friend emotes (wave / high five), a daily sparkle spot and a photo mode were left
   out to keep the draw budget; the Dart button could pulse once on the first dive. iPhone heat not measured.
+
+## 11. Explore zone links: the map, discovery and the zone neighbourhoods (21 Oct 2026, local)
+
+User: "the jetpack badge on the map for the three far zones, discovery hints for the zones, and sea-life loops near zones"
+(audit /tmp/water-audit §1 #9 and #14, lane E).
+- **Fly there.** `lib/town/water/reefDiscovery.ts` `diveSpotFar`: a zone whose whole blob outline is beyond `SWIM_RANGE` (60 m) from
+  land is jetpack-only. Computed from the zone data, so a moved zone is re-classified: Kelp Forest Wreck (edge ~90 m), Ball Crate Reef
+  (~89 m), Moon Arch (~69 m). Their E marks (travel map and minimap) wear a small jetpack badge; the map key gains "Fly there: too far
+  to swim, so take your jetpack to these reefs".
+- **Explored.** No new save key: a zone with a saved find (`fi2-dive-finds-v1`) or a collected pickup / restore (`fi2-dive-reef-v1`)
+  is explored, and so is any zone entered this visit. Its E is filled deeper with a tiny check. The travel map shows one line under the
+  key: "Nearest reef to explore: <zone>, <n> m away" (plus "Too far to swim: fly there"), or "You have explored every reef".
+- **Shimmer hint.** Flying or swimming (never in a job, lesson, menu, room or the dive) within 300 m of an unexplored zone's edge, the
+  first time per visit per zone: one toast "Something shimmers over there" with an arrow that turns toward the zone (2 Hz), 6 s, on the
+  shared toast lane (`components/ReefHintToast.tsx`).
+- **Neighbourhoods.** Each zone's signature animal now swims within 60 m of its centre (`seaLifeAreas.ts` `ZONE_SIGNATURE`;
+  `zoneEllipse` places loops from the zone outline): Captain's Cup the north-sea whale shark (loop moved beside it, 27 m), Paul's Grotto
+  the Coral Cay manta (20 m), Ray Meadow an eagle ray + a stingray (19 m), Turtle Pool two turtles that surface to breathe every 20 s
+  (18 m), Kelp Forest Wreck and Ball Crate Reef fish schools (23 m), Moon Arch jellies (15 m). Turtles / fish / jellies reuse the clear
+  window's creature shapes (`clearCreatures.ts`) in `lib/graphics/zoneLife.ts`. Clearances unchanged: sharks ≥ 8 m and other animals
+  ≥ 5 m off every patch; zone life ≥ 2 m off patches, ≥ 8 m from sharks, ≥ 4 m from other animals.
+- **Not done.** The humpback (8 m) and the summit-east shark patrol (18 m) still pass close to Turtle Pool (inside the tested
+  clearances); fishing / other water talk does not mention the reefs yet. iPhone heat not measured.
+- **Validation.** tests/reef-discovery.cjs, tests/sea-life-areas.cjs (zone neighbourhood group), tests/map-markers.cjs.

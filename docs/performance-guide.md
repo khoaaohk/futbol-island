@@ -1,5 +1,20 @@
 # Performance reference for future Futbol Island updates
 
+## Explore zone links: jetpack badge, reef hints, zone sea life (Oct 21 2026, local, not deployed)
+
+- **Map** (`IslandOverview.tsx` `ExploreMarks`, `lib/town/water/reefDiscovery.ts`): the E marks are their own small component
+  reading the reef store, so the memoized terrain is untouched; it re-renders only when a zone becomes explored. Far zones (whole
+  blob outline beyond `SWIM_RANGE` from land, 72 samples once per load) wear a jetpack badge: Kelp Forest Wreck, Ball Crate Reef,
+  Moon Arch. Explored = the existing `fi2-dive-finds-v1` / `fi2-dive-reef-v1` saves (no new key), read once, on map open and after a dive.
+- **Hint** (`ReefHintToast.tsx`): `reefHints.step` runs every frame but tests at 2 Hz: a box reject and one `atan2` per zone within
+  300 m, no allocation; the arrow re-aims at 2 Hz in 10° steps (a React update only when it visibly turns). The shared toast lane,
+  one wait + one hide timeout.
+- **Zone sea life** (`lib/graphics/zoneLife.ts`, from `openSeaLife.update`): turtles / fish / jellies from the clear window's
+  shapes, ONE InstancedMesh per kind (≤ 3 draws, only while a zone is within 160 m), caps by tier (`zoneLifeCounts`: desktop tier 0
+  2/7/5, phone 2/5/4, tiers 1–2 2/4/3, tier 3 1/3/2, tier 4 none), far (> 60 m) at 15 Hz, nothing uploaded on frozen frames.
+  Ray Meadow's two rays are a separate cayMantas group (one more instanced draw near it); the north-sea whale shark's loop moved
+  beside Captain's Cup (same count). Desktop-only validation (tests/sea-life-areas.cjs, tests/reef-discovery.cjs); no phone thermal claim.
+
 ## Explore shoals: no sand band, clear of the shore (Oct 21 2026, local, not deployed)
 
 - **Cause of the khaki band past the far edge:** the scene's clear colour (the warm sky) seen through the see-through shoal water. From a low or distant camera a view ray past the shallow crest descends more slowly than the preview shelf falls away, so it reached no geometry. Confirmed by turning the background magenta.
