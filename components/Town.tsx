@@ -593,6 +593,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const splat=new T.Mesh(new T.RingGeometry(.6,1,16),splatMaterial);splat.rotation.x=-Math.PI/2;splat.visible=false;scene.add(splat);
     const rideTrail=createRideTrail(),flightTrail=createFlightTrail();scene.add(rideTrail.root,flightTrail.root);
     const stairRidePose={height:0,pitch:0},slopeRidePose={height:0,pitch:0,roll:0},slopeGrad={gx:0,gz:0};
+    // The Bug squad's catch stage (Oct 21 2026, lib/graphics/catchStage.ts): it borrows the rig and draws with the island's renderer.
+    jobs.setStagePorts({player,renderer,scene,host:()=>host.current});
     const vehicle=createVehicle();scene.add(vehicle.root);/* Oct 20 2026: the always-worn backpack (backpack.ts) morphs into the classic jet */const backpack=createBackpack();backpack.attach(player.root);jobs.setBackpack({socket:backpack.sockets.sideRight,morph:()=>backpack.morph});wildBugs.setCamera(camera);/* bug-polish: the net rests on the pack's side socket while riding; the swarm spawns bugs out of the camera's view */backpack.setKit(playerOutfit(customizationRef.current));vehicle.setBackpackJet(true);const knockFace=createKnockdownFace(e=>player.setExpression(e));vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null;let appliedTeamLook=false;let previousRide:TravelMode=rideRef.current;let arrivalFacing:number|undefined=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));
     const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
     const ballMaterial=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});const ballAppearance=createBallAppearance(ballMaterial);const ball=new T.Mesh(new T.SphereGeometry(.19,20,16),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
@@ -1215,6 +1217,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(dive.diving){const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
         dive.frame(active?dt:0,{sx,sy,lift:(keys.has('q')?1:0)-(keys.has('z')?1:0)},viewportW,viewportH);{const ss=SWIM_SOUND_IN,st=dive.session.state;ss.in=dive.diving;ss.under=st.phase==='rising'?Math.max(0,1-st.rise/.45):1;ss.kind=st.effort>.12?'crawl':'tread';ss.phase=0;ss.speed=st.effort;ss.fast=false;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(active?dt:0,ss);}/* the reef sounds under water: the duck-dive's low-pass bed */renderStats.rendered++;
         if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}return;}
+      // The Bug squad's catch stage (Oct 21 2026; jobScene.ts stageFrame): a swing that connects plays on a sealed stage; the island is
+      // neither stepped nor drawn while it does (one stage render instead). Menus hold it (dt 0).
+      if(jobs.staging){if(active)elapsed+=dt;jobs.stageFrame(active?dt:0,elapsed);renderStats.rendered++;return;}
       // Focus mode: on once the fishing camera has arrived, off the moment fishing stops (the camera eases out over a live island).
       const focusWanted=focusAllowed&&(fishing.focused||easel.focused)&&!learningFormat.current&&!lessonRef.current&&!fieldMenu.current;
       if(focusWanted!==focus.active){

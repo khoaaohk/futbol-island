@@ -109,6 +109,11 @@ const GRIP_IDLE:GripKey={l:[.13,.92,.22],d:[-.3,.5,.81]};
 const GRIP_WALK:GripKey={l:[.13,.93,.29],d:[-.36,.8,.48]};
 const GRIP_SPRINT:GripKey={l:[.14,.97,.25],d:[-.3,.9,.32]};
 const GRIP_SNEAK:GripKey={l:[.04,1,.24],d:[-.16,-.38,.91]};
+/** The catch stage's show (Oct 21 2026, user: the net covered the face): `present` = both hands on the pole, the hoop held out in
+ *  front at arm's length on the right, at about shoulder height (open toward the bug); `raised` = lifted up beside the head on the
+ *  right (lower hand at the chest, upper hand over the right shoulder), the hoop above and to the side, the face clear. */
+const GRIP_PRESENT:GripKey={l:[.04,.98,.26],d:[-.32,.32,.89]};
+const GRIP_RAISED:GripKey={l:[-.1,1.26,.12],d:[-.38,.9,.2]};
 /** Hands apart along the pole (m): carry / Net down. */
 export const NET_HAND_GAP={idle:.3,carry:.34,sneak:.18} as const;
 /** Net down: how far the pelvis drops (m); player.ts bends both knees to match while the legs keep stepping. */
@@ -117,7 +122,7 @@ export type NetGrip={h0:[number,number,number];h1:[number,number,number];dir:[nu
 const gripOut:NetGrip={h0:[0,0,0],h1:[0,0,0],dir:[0,1,0],crouch:0};
 /** The pole line and both hand targets for a held net pose (the same object is reused). `sneakW` 0 = carry, 1 = Net down
  *  (callers ease it, so switching never snaps). */
-export function netGrip(sneakW:number,g:Gait,reduced:boolean):NetGrip{
+export function netGrip(sneakW:number,g:Gait,reduced:boolean,showW=0,showK=0):NetGrip{
  const a=Math.max(0,Math.min(1,g.amount)),sp=Math.max(0,Math.min(1,g.sprint)),k=Math.max(0,Math.min(1,sneakW)),wob=reduced?0:1;
  const sw=Math.sin(g.phase)*a*wob,bob=Math.cos(g.phase*2)*a*wob;
  const o=gripOut;let lx=0,ly=0,lz=0,dx=0,dy=0,dz=0;
@@ -128,7 +133,12 @@ export function netGrip(sneakW:number,g:Gait,reduced:boolean):NetGrip{
  // The carry sway: the pole rocks across with each stride and the hands bob on the steps (softer when stalking or sprinting).
  const amp=(1-.5*sp)*(1-.6*k);lx+=.012*sw*amp;ly+=.016*bob*amp;dx+=.06*sw*amp;dz+=.02*bob*amp;
  const n=Math.hypot(dx,dy,dz)||1;dx/=n;dy/=n;dz/=n;
- const gap=lerp(lerp(NET_HAND_GAP.idle,NET_HAND_GAP.carry,a),NET_HAND_GAP.sneak,k);
+ let gap=lerp(lerp(NET_HAND_GAP.idle,NET_HAND_GAP.carry,a),NET_HAND_GAP.sneak,k);
+ // The catch stage's show: present → raised by showK, blended in by showW (both eased by the caller).
+ const sw2=Math.max(0,Math.min(1,showW)),sk=Math.max(0,Math.min(1,showK));
+ if(sw2>0){const L=(i:number)=>lerp(GRIP_PRESENT.l[i],GRIP_RAISED.l[i],sk),D=(i:number)=>lerp(GRIP_PRESENT.d[i],GRIP_RAISED.d[i],sk);
+  lx=lerp(lx,L(0),sw2);ly=lerp(ly,L(1),sw2);lz=lerp(lz,L(2),sw2);dx=lerp(dx,D(0),sw2);dy=lerp(dy,D(1),sw2);dz=lerp(dz,D(2),sw2);
+  const m=Math.hypot(dx,dy,dz)||1;dx/=m;dy/=m;dz/=m;gap=lerp(gap,.3,sw2);}
  o.h1[0]=lx;o.h1[1]=ly;o.h1[2]=lz;o.h0[0]=lx+dx*gap;o.h0[1]=ly+dy*gap;o.h0[2]=lz+dz*gap;o.dir[0]=dx;o.dir[1]=dy;o.dir[2]=dz;o.crouch=NET_SNEAK_CROUCH*k;
  return o;
 }
@@ -163,6 +173,9 @@ export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean,gait?:Gai
    set({tx:.03+.05*g.amount+.08*g.sprint,ty:-.1+.07*s,hx:.02-.03*g.amount,al:[-1.25,.1,-1.2],ar:[-.9,.1,-1.3]});break;}
   // Net down (stalking): lean in and look down the pole, both hands forward and low, the net ahead at the grass (legs bent by
   // player.ts, NET_SNEAK_CROUCH); a small sway with the creeping steps.
+  // The catch stage's show (bugCatch.ts CATCH_STAGE): progress = the raise (0 = net presented in front, 1 = raised beside the head),
+  // tug = the hop of joy (0..1, up on the toes); the arms are solved onto the pole by player.ts (netGrip's show keys).
+  case 'netshow':{const r=k,h=tug;set({py:.84+.02*r+.13*h,pz:.02,tx:.1-.16*r,ty:-.08*r,hx:.12-.42*r,hy:.18*r,toe:.5*h,fl:[.12,.07+.13*h],fr:[-.12,.07+.13*h],al:[-1.2-1.2*r,.15,-.6],ar:[-1.1-1.2*r,.1,-.5]});break;}
   case 'netsneak':{const g=gait??IDLE_GAIT,s=Math.sin(g.phase)*g.amount*wob;set({tx:.3,hx:.12,ty:-.05+.04*s,al:[-1.1,.05,-.5],ar:[-.9,.05,-.9]});break;}
   case 'push':set({tx:.18,hx:.1,al:[-1.05+.25*(1-tug),-.05,-.4],ar:[-1.05+.25*(1-tug),-.05,-.4]});break;
   case 'carryball':set({tx:.04,al:CARRY_BALL,ar:CARRY_BALL});break;

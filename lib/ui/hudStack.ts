@@ -71,7 +71,7 @@ export function createFocusArbiter({margin=1.5,holdMs=300}:{margin?:number;holdM
 
 /** Transient notes: one visible at a time. A note with the same `merge` key as the one on screen folds into it ("+3 Strawberry"),
  *  anything else waits in a short queue (oldest dropped past `max`). Pure data; IslandJobs owns the timer. */
-export type HudToast={title:string;detail:string;merge?:string;count?:number;/** builds the merged title from the running count */retitle?:(count:number)=>string};
+export type HudToast={title:string;detail:string;merge?:string;count?:number;/** shown this long (ms) instead of the default */ms?:number;/** builds the merged title from the running count */retitle?:(count:number)=>string};
 export function pushToast(queue:readonly HudToast[],next:HudToast,max=3):HudToast[]{
  const head=queue[0];
  if(head&&next.merge&&head.merge===next.merge){const count=(head.count??1)+(next.count??1);

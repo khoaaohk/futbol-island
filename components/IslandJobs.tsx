@@ -32,6 +32,7 @@ import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib
 import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
+import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,initialPill,bugBookCoinNote} from '@/lib/town/jobs/bugUi';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
@@ -78,28 +79,44 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  const [panel,setPanel]=useState<'full'|'fading'|'chip'>('full'),[peek,setPeek]=useState(0);
  const act0=view.active,holdOpen=!!act0&&(!!act0.gauge||act0.actions.length>0&&!act0.buttons||act0.phase==='explain'||act0.carrying&&jobById(act0.id)?.kind==='sort');
  const panelKey=act0?`${act0.id}|${act0.value}|${act0.phase}|${act0.carrying}|${act0.hint}`:'';
- useEffect(()=>{if(!panelKey)return;setPanel('full');if(holdOpen)return;
+ // Bug squad (Oct 21 2026, user: "only show one at a time"): the pill stays one line. The first shift ever shows a one-line tip for
+ // a few seconds; a tap on the pill opens the full panel (the help, today's jar, Net down) and it folds back by itself; progress
+ // and notes never reopen it (notes go to the single toast slot).
+ const squadPill=!!act0?.squad,squadKey=squadPill?act0!.id:'';
+ const [pill,setPill]=useState<'chip'|'tip'|'full'>('chip');
+ useEffect(()=>{if(!squadKey)return;let seen=true;try{seen=!!localStorage.getItem(BUG_PILL.key);}catch{}
+  const first=peek===0;const next=first?initialPill(seen):'full';setPill(next);if(next==='chip')return;
+  const t=setTimeout(()=>{setPill('chip');if(next==='tip')try{localStorage.setItem(BUG_PILL.key,'1');}catch{}},next==='tip'?BUG_PILL.tipMs:BUG_PILL.openMs);return()=>clearTimeout(t);
+ },[squadKey,peek]);
+ useEffect(()=>{if(!panelKey||squadPill)return;setPanel('full');if(holdOpen)return;
   const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const dwell=Math.min(9000,Math.max(PANEL_DWELL_MS,(act0?.hint.length??0)*45));let t2:ReturnType<typeof setTimeout>|undefined;
   const t=setTimeout(()=>{if(reduced){setPanel('chip');return;}setPanel('fading');t2=setTimeout(()=>setPanel('chip'),PANEL_FADE_MS);},dwell);
   return()=>{clearTimeout(t);if(t2)clearTimeout(t2);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
- },[panelKey,holdOpen,peek]);
+ },[panelKey,holdOpen,peek,squadPill]);
  const setToast=(next:HudToast|null)=>setToastQueue(q=>next?pushToast(q,next):q.slice(1));
  const busyNote=()=>setToast(BUSY_NOTE);
  // Notes also wait (timer paused) while a job card is open: the card holds the child's attention and the stack's top.
- const laneBusy=useToastLaneBusy('jobs'),toastHeld=blocked||holdToasts||laneBusy||!!intro||!!payday;
+ const laneBusy=useToastLaneBusy('jobs'),[cardUp,setCardUp]=useState(false),toastHeld=blocked||holdToasts||laneBusy||!!intro||!!payday||cardUp;
  // The shared toast lane: while one of ours shows, the costume / ride unlock notes wait (and the other way round).
  useEffect(()=>{if(toast&&!toastHeld)toastLane.request('jobs');else toastLane.release('jobs');},[toast,toastHeld]);
  useEffect(()=>()=>toastLane.release('jobs'),[]);
  const startButton=useRef<HTMLButtonElement>(null),paidNonce=useRef(0);
+ // Bug squad notes (a miss, a repeat catch, the set swapping, the nearest bug): one short line in the single toast slot.
+ const note=view.active?.note??'';
+ useEffect(()=>{if(note)setToast({title:note,detail:'',merge:'bug-note',ms:BUG_NOTE_MS});
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[note]);
  // One-time welcome coins (idempotent: ledger flag + fixed wallet run id).
  useEffect(()=>{let live=true;void islandJobWallet.grantStarter().then(n=>{if(live&&n>0)setToast({title:`Welcome! +${n} coins`,detail:'Spend them in the arcade, or earn more at the island job signs.'});});return()=>{live=false;};},[]);
  // The toast's short timer starts once the HUD is visible again, so a coin toast earned inside a lesson is still seen after it.
- useEffect(()=>{if(!toast||toastHeld)return;const t=setTimeout(()=>setToast(null),toastDuration(toasts.length-1));return()=>clearTimeout(t);},[toast,toastHeld,toasts.length]);
+ useEffect(()=>{if(!toast||toastHeld)return;const t=setTimeout(()=>setToast(null),toast.ms??toastDuration(toasts.length-1));return()=>clearTimeout(t);},[toast,toastHeld,toasts.length]);
  useEffect(()=>{const earned=(event:Event)=>{const amount=(event as CustomEvent<{amount:number}>).detail?.amount;if(amount===DAILY_PLAY_COINS)setToast({title:`+${DAILY_PLAY_COINS} daily play coins`,detail:`You explored and played today. Come back tomorrow for another ${DAILY_PLAY_COINS}.`});};window.addEventListener('fi2-daily-play-earned',earned);return()=>window.removeEventListener('fi2-daily-play-earned',earned);},[]);
  // Learning coins (lib/town/learnCoins.ts): "+12 coins · You passed ‘…’". Learning always pays in full.
- useEffect(()=>{const earned=(event:Event)=>{const d=(event as CustomEvent<LearnCoinsEarned>).detail;if(d&&d.amount>0)setToast({title:learnToastTitle(d.amount,d.reason),detail:'Spend your coins at any vending machine.'});};window.addEventListener(LEARN_COINS_EARNED,earned);return()=>window.removeEventListener(LEARN_COINS_EARNED,earned);},[]);
+ useEffect(()=>{const earned=(event:Event)=>{const d=(event as CustomEvent<LearnCoinsEarned>).detail;
+  // A new species' coin is on its story card (New! · +1 coin): no second banner for it (Oct 21 2026, "only show one at a time").
+  if(d&&d.amount>0&&!bugBookCoinNote(d.reason))setToast({title:learnToastTitle(d.amount,d.reason),detail:/Bug book/.test(d.reason)?'':'Spend your coins at any vending machine.'});};window.addEventListener(LEARN_COINS_EARNED,earned);return()=>window.removeEventListener(LEARN_COINS_EARNED,earned);},[]);
  // The Bug book (lib/town/jobs/bugBook.ts): opened from the bug jobs' cards; the 16th new catch pays its one-time bonus (the
  // learning-coin toast above shows it); a wild meadow bug fluttering away tells the player where bugs are caught (once a visit).
  const [bugBook,setBugBook]=useState(false),[bugBookLoaded,setBugBookLoaded]=useState(false);
@@ -115,7 +132,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  // Bug squad catching (catching lane): the story card after each catch (like the fish catch card: "Real football fact"), shown once
  // the catch zoom ends, then it slides away after ~7 s (tap to dismiss); the auto-end toast; End job asks once more if the jar has bugs.
  const [bugCard,setBugCard]=useState<NonNullable<typeof view.caught>|null>(null),[cardOut,setCardOut]=useState(false),[endAsk,setEndAsk]=useState(false);
- useEffect(()=>{const c=view.caught;if(!c||view.zooming)return;setBugCard(c);setCardOut(false);countBugStory();
+ useEffect(()=>setCardUp(!!bugCard),[bugCard]);
+ useEffect(()=>{const c=view.caught;if(!c||view.zooming)return;setBugCard(c);setCardOut(false);countBugStory();setPill('chip');try{localStorage.setItem(BUG_PILL.key,'1');}catch{}
   const out=setTimeout(()=>setCardOut(true),7000),gone=setTimeout(()=>setBugCard(null),7400);return()=>{clearTimeout(out);clearTimeout(gone);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[view.caught?.nonce,view.zooming]);
@@ -145,8 +163,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);// eslint-disable-next-line react-hooks/exhaustive-deps
  },[blocked,view.near,view.other,view.active,intro,payday,view.releasing,view.zooming,endAsk]);
  useEffect(()=>{if(intro)startButton.current?.focus();},[intro]);
- useEffect(()=>{if(!view.releasing)return;const key=(e:KeyboardEvent)=>{if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();getJobRuntime()?.skipRelease();}};
-  window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[view.releasing]);
+ useEffect(()=>{if(!view.releasing&&!view.zooming)return;const key=(e:KeyboardEvent)=>{if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();getJobRuntime()?.skipRelease();}};
+  window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[view.releasing,view.zooming]);
  useEffect(()=>{onCardChange?.(!!intro||!!payday);},[intro,payday,onCardChange]);
  // Assistant-referee replays use a fixed camera: hide the minimap and ride buttons so every player stays visible.
  const jobCamera=!!view.active&&view.active.id==='offside-flag'&&view.active.phase!=='work';
@@ -156,6 +174,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  const runtime=getJobRuntime(),active=view.active?jobVariant(view.active.id,view.active.set)??null:null,offer=view.near?jobById(view.near):null,introJob=intro?(runtime?.variant(intro)??jobById(intro)):null;
  const start=(id:JobId)=>{if(view.active&&runtime?.run){busyNote();setIntro(null);return;}onRequestWalk();if(runtime&&!runtime.start(id)){busyNote();setIntro(null);return;}setIntro(null);setPayday(null);};
  const preview=introJob?islandJobWallet.preview(introJob.id):null;
+ // One message surface at a time (bugUi.ts): the story card, then payday, then the toast slot.
+ const surface=pickSurface({card:!!bugCard,payday:!!payday,toast:!!toast&&!toastHeld});
  // The Summit Isle bug jobs run by day (Bug squad) or at night (Firefly floodlights): the card says when to come back.
  const introClosed=!!introJob&&!!runtime&&!runtime.isOpen(introJob.id);
  const phaseText=()=>{if(!active||!view.active)return '';const a=view.active;if(a.hint)return a.hint;
@@ -179,17 +199,17 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button>{isBugJob(introJob.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>}
   {active&&view.active&&(()=>{const a=view.active,count=a.squad?`${a.squad.value}/${a.squad.total}`:a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,netChip=a.buttons?.find(b=>b.slot==='extra'),
-    unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=panel==='chip';
-   return <HudSlot><section className={styles.hud} data-hud-slot="task" data-job-active={active.id} data-job-phase={a.phase} data-job-panel={panel} data-compact={chip||undefined} aria-label={`${active.title}: ${unit} ${a.value} of ${a.total}`}>
+    unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=a.squad?pill!=='full':panel==='chip',tip=!!a.squad&&pill==='tip';
+   return <HudSlot><section className={styles.hud} data-hud-slot="task" data-job-active={active.id} data-job-phase={a.phase} data-job-panel={a.squad?pill:panel} data-compact={chip||undefined} aria-label={`${active.title}: ${unit} ${a.value} of ${a.total}`}>
    {/* Progress and the next step are announced even while the panel is a chip. */}
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
-    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}><b>{active.title}</b><em data-job-count={a.value}>{count}</em></button>
+    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
     {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label="Show nearest bug" title="Show nearest bug" disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
     {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
     :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
    </>:<>
-    <div className={styles.head} title={`${active.role} · ${unit}`}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
+    <div className={styles.head} title={`${active.role} · ${unit}`} onClick={a.squad?()=>setPill('chip'):undefined}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
     <p data-job-hint data-open={hintOpen||undefined} onClick={()=>setHintOpen(o=>!o)}>{phaseText()}</p>
     {a.squad&&<p className={styles.bugMeta} data-bug-shift>Today&apos;s jar {a.phase==='deliver'?a.total:a.value}/{a.total} · squad {a.squad.value}/{a.squad.total}</p>}
     {(a.guide||netChip)&&<div className={styles.taskActions}>{a.guide&&<button type="button" className={styles.secondary} data-bug-hint disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}>➤ Nearest bug</button>}{netChip&&<button type="button" className={styles.secondary} data-bug-net={netChip.id} aria-keyshortcuts="E" disabled={!netChip.enabled} onClick={()=>runtime?.act(netChip.id)}>{netChip.label} (E)</button>}</div>}
@@ -204,7 +224,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   {/* Bug squad release cinematic (Oct 20 2026): the controls are held while the bugs fly off; a tap anywhere (or Space / Enter /
       Esc) skips to the end. Transparent, over the game only; the HUD stays readable. Only a NEW press skips: the Release tap's own trailing click lands on
       this overlay (it appears under the finger), so pointer clicks are ignored (keyboard clicks, detail 0, still skip). */}
-  {bugCard&&<button type="button" className={styles.bugCard} data-bug-card={bugCard.id} data-out={cardOut||undefined} data-night={bugCard.kind==='firefly'||undefined} role="status" aria-live="polite" onClick={()=>setCardOut(true)}>
+  {bugCard&&surface==='card'&&<button type="button" className={styles.bugCard} data-bug-card={bugCard.id} data-out={cardOut||undefined} data-night={bugCard.kind==='firefly'||undefined} role="status" aria-live="polite" onClick={()=>setCardOut(true)}>
    {(bugCard.isNew||bugCard.squadComplete)&&<span className={styles.bugStamps}>{bugCard.isNew&&<em data-stamp="new">New!</em>}{bugCard.squadComplete&&<em data-stamp="squad">Squad complete!</em>}</span>}
    <b className={styles.bugName}>{bugCard.name}</b>
    <small className={styles.bugRole}>{bugCard.role}{bugCard.coins?` · +${bugCard.coins} coin`:''}{bugCard.kind==='bug'&&bugCard.squad?` · squad ${bugCard.squad}/${bugCard.squadSize}`:''}</small>
@@ -212,7 +232,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   </button>}
   {view.zooming&&<button type="button" className={styles.skip} data-job-skip data-bug-zoom aria-label="Skip the catch" onPointerDown={e=>{e.preventDefault();runtime?.skipZoom();}} onClick={e=>{if(e.detail===0)runtime?.skipZoom();}}><span>Tap to skip</span></button>}
   {view.releasing&&<button type="button" className={styles.skip} data-job-skip aria-label="Skip the release" onPointerDown={e=>{e.preventDefault();runtime?.skipRelease();}} onClick={e=>{if(e.detail===0)runtime?.skipRelease();}}><span>Tap to skip</span></button>}
-  {payday&&(()=>{const def=jobVariant(payday.id,payday.set)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
+  {payday&&surface==='payday'&&(()=>{const def=jobVariant(payday.id,payday.set)!,pay=payday.pay,newBest=!payday.best||payday.seconds<payday.best;return <HudSlot><section className={styles.card} role="dialog" aria-modal="false" aria-labelledby="job-done-title" data-hud-slot="task" data-job-done={def.id}>
    <p className={styles.eyebrow}>Job done · {def.role}</p>
    <h2 id="job-done-title">{def.title}</h2>
    <div className={styles.payout} aria-live="polite">{[0,1,2,3,4].map(i=><span key={i} className={styles.burst} style={{'--i':i} as React.CSSProperties} aria-hidden="true"/>)}<b data-job-paid={pay?pay.credited:undefined}>+{pay?pay.credited:'…'}</b><small>{pay?.credited===1?'coin':'coins'}{pay?` · balance ${pay.balance}`:''}</small></div>
@@ -223,7 +243,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <div className={styles.actions}><button type="button" className={styles.primary} autoFocus onClick={()=>{setPayday(null);runtime?.dismissDone();}}>Nice!</button><button type="button" className={styles.secondary} onClick={()=>start(def.id)}>Work again</button>{isBugJob(def.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>;})()}
   {/* The garden line rests in the toast slot; a note replaces it while it shows. */}
-  {(view.garden||toast&&!toastHeld)&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" data-island-toast role="status" aria-live="polite" onClick={()=>setToast(null)}>{toast&&!toastHeld?<><b>{toast.title}</b><span>{toast.detail}</span></>:<span>{view.garden}</span>}</button></HudSlot>}
+  {(view.garden||toast&&!toastHeld&&surface==='toast')&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" data-island-toast role="status" aria-live="polite" onClick={()=>setToast(null)}>{toast&&!toastHeld?<><b>{toast.title}</b><span>{toast.detail}</span></>:<span>{view.garden}</span>}</button></HudSlot>}
   {bugBookLoaded&&<BugBook open={bugBook} onClose={()=>setBugBook(false)}/>}
  </>;
 }

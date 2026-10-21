@@ -64,7 +64,7 @@ export const RIDE_WAIT_NOTE='Island jobs are on foot. Your rides wait until the 
 
 // ---------------- Poses ----------------
 /** Rig poses (lib/graphics/player.ts PlayerMotion.job). One-shots run for POSE_TIME seconds; held poses come every frame. */
-export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak';
+export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak'|'netshow';
 /** Poses that move only the arms, torso and head: the legs keep walking, dribbling or juggling. */
 export const UPPER_POSES=new Set<JobPoseKind>(['netcarry','netsneak','carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
 /** `upper`: only the arms, torso and head (the legs keep walking). */

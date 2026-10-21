@@ -7,10 +7,10 @@ const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire
 (async()=>{
 const utils=await import(base+'/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js');
 const storage=new Map(),localStorage={getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,String(v)),removeItem:k=>storage.delete(k)};
-const cache=new Map(),gradient={addColorStop(){}};
+const cache=new Map(),gradient={addColorStop(){}},docEl={attrs:new Set(),toggleAttribute(n,on){if(on)this.attrs.add(n);else this.attrs.delete(n);}};
 const ctx=new Proxy({measureText:t=>({width:t.length*20}),createLinearGradient:()=>gradient,createRadialGradient:()=>gradient},{get:(o,k)=>o[k]??(()=>{})});
 const context=vm.createContext({console,Math,Set,Map,WeakMap,Date,JSON,Promise,queueMicrotask,performance,Float32Array,Uint8Array,Uint16Array,Uint32Array,Int32Array,Array,Object,Number,String,Error,Symbol,
- window:{addEventListener(){},removeEventListener(){},matchMedia:()=>({matches:false})},localStorage,document:{createElement:()=>({width:0,height:0,getContext:()=>ctx})}});
+ window:{addEventListener(){},removeEventListener(){},matchMedia:()=>({matches:false})},localStorage,document:{documentElement:docEl,createElement:()=>({width:0,height:0,getContext:()=>ctx})}});
 function load(name){
  let file=path.isAbsolute(name)?name:path.resolve(base,name);if(!fs.existsSync(file)||fs.statSync(file).isDirectory())for(const ext of ['.ts','.tsx','.js'])if(fs.existsSync(file+ext)){file+=ext;break;}
  if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
@@ -84,7 +84,11 @@ function fakeSwarm(list){const bugs=list.map(b=>({...b,hidden:false}));let pinne
 const S=load('lib/town/jobs/jobScene.ts'),DT=1/30;let tod='day',reduced=false,tier=0;const book=new Map(),store={getItem:k=>book.get(k)??null,setItem:(k,v)=>book.set(k,v)};
 let swarm=null;const api=S.createJobScene(new T.Scene(),{storage:store,now:()=>Date.parse('2026-10-20T10:00:00'),timeOfDay:()=>tod,bugs:()=>swarm,tier:()=>tier});
 const cam=new T.PerspectiveCamera(50,1.6,.1,500);
-const at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),frames=(p,s,water=false)=>{for(let t=0;t<s-1e-9;t+=DT){api.setPlayer(0,ride,water);api.update(DT,p,null,true,true,reduced);cam.position.set(p.x,p.y+12,p.z-18);cam.lookAt(p.x,p.y,p.z);api.applyCamera(cam,DT,reduced);}};
+// The catch stage's ports (Town.tsx): a stand-in rig (hands either side of the chest), a counting renderer, the island scene.
+const world=new T.Scene(),rigRoot=new T.Object3D();world.add(rigRoot);let stageRenders=0,stageClock=0;
+api.setStagePorts({player:{root:rigRoot,update(x,z){rigRoot.position.x=x;rigRoot.position.z=z;rigRoot.updateMatrixWorld(true);},handPositions(l,r){l.set(rigRoot.position.x-.15,rigRoot.position.y+1.1,rigRoot.position.z+.3);r.set(rigRoot.position.x+.1,rigRoot.position.y+.95,rigRoot.position.z+.15);}},
+ renderer:{render(){stageRenders++;},domElement:{clientWidth:800,clientHeight:500,width:800,height:500}},scene:world,host:()=>null});
+const at=q=>({x:q.x,y:floor(q.x,q.z),z:q.z}),frames=(p,s,water=false)=>{for(let t=0;t<s-1e-9;t+=DT){stageClock+=DT;if(api.staging){api.stageFrame(DT,stageClock);continue;}api.setPlayer(0,ride,water);api.update(DT,p,null,true,true,reduced);cam.position.set(p.x,p.y+12,p.z-18);cam.lookAt(p.x,p.y,p.z);api.applyCamera(cam,DT,reduced);}};
 let ride='walk';
 // Bugs placed round a test spot on the meadow, the player facing +z (yaw 0).
 const P0=at({x:SP.BUG_HOMES[0].x,z:SP.BUG_HOMES[0].z}),ids=B.bugRoster('bugs').map(b=>b.id);
@@ -98,19 +102,24 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  assert.equal(api.getView().active.squad.total,20,'the pill counts the squad of 20');
  const btn=api.getView().active.buttons;same(btn.map(b=>[b.slot,b.key,b.id]),[['shoot','Space','net'],['juggle','J','letfree'],['ride','R','ride'],['extra','E','netlow']]);assert(btn[0].enabled&&btn[2].enabled);
  // A swing at a bug right in front: hit → zoom (controls held) → into the jar, the story card, the book.
- api.act('net');assert(api.swinging,'a real swing');frames(P0,.7);assert(api.zooming,'the catch zoom');assert.equal(api.locked,true);assert.equal(api.walkScale,0);
+ // The catch stage (Oct 21 2026): a swing that will connect pushes in on the character, then the whole swing and catch play on the
+ // sealed stage (the island not drawn), the catch counting at the stage's hit frame.
+ frames(P0,.1);const r0=stageRenders;api.act('net');assert(!api.swinging&&api.zooming,'a swing that connects plays as the catch stage');assert.equal(api.locked,true);assert(docEl.attrs.has('data-catch-stage'),'the HUD hides for the catch');assert.equal(api.walkScale,0);
+ frames(P0,.3);assert(!api.staging&&Math.hypot(cam.position.x-P0.x,cam.position.z-(P0.z-18))>1,'first the camera pushes in on the character');
+ frames(P0,.4);assert(api.staging,'then the stage');assert.equal(rigRoot.parent?.name,'catch-stage','the rig is on the stage');assert(!api.getView().caught,'not counted before the hit frame');
+ frames(P0,.3);assert(stageRenders>r0,'the stage renders instead of the island');frames(P0,.7);
  const c0=api.getView().caught;assert(c0&&c0.id===ids[0]&&c0.story.length>20&&c0.isNew&&c0.coins===K.NEW_SPECIES_COINS,'the story card: name, story, NEW, +coin');
- assert.equal(api.run.got[0],true,'caught from the swarm');frames(P0,1.2);assert(Math.hypot(cam.position.x-P0.x,cam.position.z-(P0.z-18))>3,'the camera eased in on the bug');
- frames(P0,3.6);assert(!api.zooming&&!api.locked,'zoom over');assert(swarm.caught.includes(ids[0]),'the swarm bug went into the jar');
+ assert.equal(api.run.got[0],true,'caught from the swarm');assert(api.zooming,'the card waits for the card phase');
+ frames(P0,3.6);assert(!api.zooming&&!api.locked&&!api.staging,'stage over');assert.equal(rigRoot.parent,world,'the rig is back on the island');assert(!docEl.attrs.has('data-catch-stage'),'and comes back after');assert(swarm.caught.includes(ids[0]),'the swarm bug went into the jar');
  assert.equal(JSON.parse(book.get(BB.BUG_BOOK_KEY)).bugs[ids[0]],1,'in the Bug book by id');frames(P0,1.5);assert.equal(cam.fov,50,'camera back');
  // Tap skip.
- api.act('net');frames(P0,.7);assert(api.zooming);api.skipZoom();assert(!api.zooming&&!api.locked,'tap skips the zoom');frames(P0,1);
+ api.act('net');frames(P0,.8);assert(api.staging);api.skipZoom();assert(!api.zooming,'tap skips to the card');frames(P0,.7);assert(!api.locked&&!api.staging&&rigRoot.parent===world,'and back');frames(P0,1);
  // A miss: nothing within auto-aim range (8 m, all round) → the nearest bug (9 m behind) startles.
  swarm.bugs.forEach(b=>{if(!b.hidden&&b.id!==ids[1])b.hidden=true;if(b.id===ids[1])b.z=P0.z-9;});frames(P0,.1);api.act('net');frames(P0,.7);assert(!api.zooming,'a miss');assert(swarm.startled.includes(ids[1]),'the bug behind startles');
- assert.match(api.getView().active.hint,/missed/i);
+ assert.match(api.getView().active.note,/missed/i);assert(!/missed/i.test(api.getView().active.hint),'notes are a toast, not the pill');
  // Tap near a bug on screen swings at it (even 5 m away: the lunge).
  frames(P0,.7);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[2];});const b2=swarm.bugs.find(b=>b.id===ids[2]);cam.updateMatrixWorld();const v=new T.Vector3(b2.x,b2.y,b2.z).project(cam);
- assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.7);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);
+ assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.7);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);assert(!api.staging);
  // Riding: no swing (bugs are caught on foot), the button reads Hop off; the net rides on the backpack.
  ride='bike';frames(P0,.2);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[3];});api.act('net');assert(!api.swinging,'no swing from a bike');
  assert.equal(api.getView().active.buttons[0].label,'Hop off');ride='walk';frames(P0,.2);
@@ -141,7 +150,7 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  // Day breaks mid-shift: the set swaps, the shift goes on.
  tod='day';frames(P0,.4);assert.equal(api.run.def.set,'bugs');api.quit();
  // Reduced motion: no zoom, caught at once.
- tod='day';reduced=true;swarm=fakeSwarm([put(ids[5],0,2)]);api.start('bug-scout');api.act('net');frames(P0,.7);assert(!api.zooming&&swarm.caught.includes(ids[5]),'reduced motion: no zoom');reduced=false;
+ tod='day';reduced=true;swarm=fakeSwarm([put(ids[5],0,2)]);api.start('bug-scout');frames(P0,.05);api.act('net');frames(P0,.7);assert(!api.zooming&&swarm.caught.includes(ids[5]),'reduced motion: no zoom');reduced=false;
  api.quit();assert.equal(api.locked,false);api.dispose();}
 
 // ---- 5. Net in both hands, poses, pay, analytics, wiring ----

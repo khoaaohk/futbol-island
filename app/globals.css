@@ -744,3 +744,10 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .dive-card .dive-card-credit,.dive-card .dive-card-story{font-size:12px;color:#61705b}
 .dive-card .dive-card-coins{font-weight:800;color:#a8740c}
 .dive-card .dive-card-close{font-size:11px;color:#8a958a}
+/* Bug squad catch stage (Oct 21 2026, lib/town/jobs/jobScene.ts): one UI thing at a time. While the catch plays, only the stage, the
+   story card and "Tap to skip" show; the job pill, coin bar, buttons, minimap, hint arrow and notes come back after. */
+html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([data-bug-card]){visibility:hidden!important;pointer-events:none!important}
+.catch-stage-fade{position:absolute;inset:0;pointer-events:none;z-index:1;background:#fff1d6;opacity:0}
+.catch-stage-fade[data-look=sunset]{background:#ffe4c4}.catch-stage-fade[data-look=night]{background:#2b3d78}
+.catch-stage-fade[hidden],.catch-stage-label[hidden]{display:none}
+.catch-stage-label{position:absolute;left:0;top:0;z-index:2;pointer-events:none;padding:7px 14px;border-radius:999px;background:#fff8e6;color:#2b4a3e;font:400 19px/1.1 IslandBrush,Arial,sans-serif;box-shadow:0 3px 0 rgba(43,74,62,.25);white-space:nowrap}

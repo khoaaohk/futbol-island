@@ -9,10 +9,13 @@ import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,jobVariant,bugJobFor,typ
 import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId,type BugSpot} from './bugScout';
 import {createBugGeometry,mergeColoured} from './bugShape';
 import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT,BUG_BOOK_KEY,BUG_NEW_SPECIES_EVENT} from './bugBook';
-import {createBugNet,type BugNet} from './bugNet';
+import {createBugNet,NET_HOOP_RADIUS,type BugNet} from './bugNet';
 import {BACKPACK_RIDE_OFFSETS} from '../../graphics/backpack';
 import {BUG_LOCAL} from './bugSpecies';
-import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught} from './bugCatch';
+import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught,predictCatch,CATCH_STAGE,CATCH_STAGE_AT,catchStagePhase,stageSwingTime,stageShot,stageFit,pushInShot,catchScale,stageFlightScale} from './bugCatch';
+import {createCatchStage,type CatchStage} from '../../graphics/catchStage';
+import {BUG_SPECIES} from './bugSpecies';
+import {bugVisualSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
 import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
@@ -20,7 +23,7 @@ import {countBugCatch,countBugShift,countBugBookComplete,countBugSwing,countBugM
 import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
 import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
-import {jobButtons,type JobButton} from './jobMoves';
+import {jobButtons,type JobButton,type JobPose} from './jobMoves';
 import {createBuildingGlow} from '@/lib/graphics/buildingGlow';
 import {createJobBadges} from './jobBadges';
 import {readJobLedger} from './jobEconomy';
@@ -47,6 +50,8 @@ export type JobView={
   set?:BugSetId;title?:string;
   /** Bug squad: the squad's progress (bugs: species in the current squad / 20; fireflies: calls in the book / 8) for the pill. */
   squad?:{value:number;total:number};
+  /** Bug squad: a short one-line note (a miss, a repeat catch, the set swapping): IslandJobs shows it as one toast, never in the pill. */
+  note?:string;
   /** Bug squad: the nearest-bug hint is showing, and when it can be used again (s). */
   guide?:{on:boolean;ready:boolean}}|null;
  /** `bag`: Harvest day's picks this shift (the farmer's share comes from these). */
@@ -564,12 +569,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(rideMode!=='walk')return b.map(x=>x.id==='net'||x.id==='jar'?{...x,label:'Hop off',icon:'walk',enabled:true}:x);
   return b.map(x=>x.id==='net'||x.id==='jar'?{...x,enabled:r.phase==='work'||r.phase==='deliver'}:w?.deliver&&x.id===w.deliver.id?{...x,enabled:x.enabled||r.got.some(Boolean)}:x);}
  function publishActive(){if(!run){setView({active:null});return;}const p=runProgress(run),t=run.def.task,h=run.harvest;
-  const next:JobView['active']={id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:banner||runHint(run),actions:runActions(run),
+  const next:JobView['active']={id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:run.def.swing?runHint(run):banner||runHint(run),...(run.def.swing&&banner?{note:banner}:{}),actions:runActions(run),
    gauge:t?.type==='pump'&&run.phase==='pump'?pumpGauge(run):h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:hopOff(jobButtons(run)),...(run.def.set?{set:run.def.set,title:run.def.title}:{}),...(run.def.swing?{squad:squadProgress(run),guide:{on:hintT>0,ready:hintCool<=0}}:{})};
   // Only here (on a frame-key change, an event or a note), never per frame: an unchanged panel keeps the same object.
   const key=JSON.stringify(next);if(view.active&&key===activeKey)return;activeKey=key;setView({active:next});}
  /** A HUD button for task jobs and work steps (hold steps send `id` then `id:up`). */
- function act(id:string){if(!run||rel||zoom)return;
+ function act(id:string){if(!run||rel||cs)return;
   // Bug squad (catching lane): Swing net is a real swing (bugCatch.ts); Ride is Town's (scooter / bike / moped).
   if(run.def.swing&&(run.phase==='work'||run.phase==='deliver')&&(id==='net'||id==='jar')){beginSwing(null);return;}
   if(id==='ride')return;
@@ -656,7 +661,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     if(f&&k<1)carried.position.set(f.x+(p.x-f.x)*k,f.y+(p.y+1.35-f.y)*ease.out(k),f.z+(p.z-f.z)*k);else carried.position.set(p.x,p.y+1.35,p.z);}}
    if(run)updateGear(run,p,dt,reduced);
    if(rel){tickRelease(dt);if(beacon)beacon.visible=false;arrowOn=false;}
-   if(run&&run.def.swing){tickSwing(dt);tickZoom(dt);}
+   if(run&&run.def.swing)tickSwing(dt);
+   tickStagePush(dt);
    if(run)flutterBugs(run,dt,reduced);
    if(banner){bannerAge+=dt;if(bannerAge>4){banner='';viewKey='';}}
    if(run&&frameKeyChanged(run))publishActive();
@@ -746,7 +752,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   buildProps(def);
   if(targetsMesh){const tm=targetsMesh;run.got.forEach((g,i)=>{if(g)tm.setMatrixAt(i,hidden);});tm.instanceMatrix.needsUpdate=true;}
   gear.bagCount=run.got.filter(Boolean).length;setFade=0;bugAt=-1;
-  banner=next==='fireflies'?'Night fell: the bugs are tucked up and the fireflies are out! Your bug squad is saved for the morning.':'Day broke: the fireflies are asleep and the bug squad is back! Your fireflies are saved for tonight.';
+  banner=next==='fireflies'?'Night fell: the fireflies are out! Your bug squad is saved.':'Day broke: the bug squad is back! Fireflies saved for tonight.';
   bannerAge=-2;viewKey='';jobCue('squad');refreshBadges();publishActive();}
 
 // ---- Bug squad catching (catching lane, Oct 20 2026; bugCatch.ts rules, bugNet.ts net) ----
@@ -760,8 +766,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const bookPort={get:()=>{try{return store?store.getItem(BUG_BOOK_KEY):localStorage.getItem(BUG_BOOK_KEY);}catch{return null;}},set:(v:string)=>{try{if(store)store.setItem(BUG_BOOK_KEY,v);else localStorage.setItem(BUG_BOOK_KEY,v);}catch{}}};
  let wading=false,net:BugNet|null=null,relMesh:T.InstancedMesh|null=null,lastDt=1/60,playerYaw=0,rideMode='walk',jarPop=0,caughtNonce=0,endedNonce=0,shiftNo=0,formationNext=false;
  let swing:{t:number;target:string|null;resolved:boolean;yaw:number;seen:boolean;k:number}|null=null;
- let zoom:{t:number;id:string;burst:boolean;p:{x:number;y:number;z:number}}|null=null;
- const zoomCam=createShotCamera(ZOOM.in,ZOOM.out),bagPos={x:0,y:0,z:0},sc0={x:0,y:0,z:0},tq={x:0,y:0,z:0},projV=new T.Vector3();
+ const bagPos={x:0,y:0,z:0},sc0={x:0,y:0,z:0},tq={x:0,y:0,z:0},projV=new T.Vector3();
  let bugGoalOn=false,bugGoalT=0;const bugGoal={x:0,z:0};
  const leftSummit=(x:number,z:number)=>{const dx=x-SUMMIT_CENTER.x,dz=z-SUMMIT_CENTER.z;return Math.hypot(dx,dz)>coastRadius(Math.atan2(dz,dx))+BUG_ISLAND_MARGIN;};
  /** End the shift by itself (left Summit Isle): no pay, the Bug book keeps every catch, a short toast. */
@@ -778,16 +783,18 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** The arrow points at the nearest bug still to catch this shift (4 Hz). */
  function updateBugGoal(dt:number,p:{x:number;y:number;z:number}){bugGoalT+=dt;if(bugGoalT<.25)return;bugGoalT=0;const sw=bugSwarm(),r=run;if(!sw||!r)return;
   const list=bugList(r.def)??[];bugGoalOn=false;for(const h of sw.query(p.x,p.y,p.z,400)){const id=h.species?.id??h.call?.id??'',i=list.findIndex(b=>b.id===id);if(i<0||r.got[i])continue;bugGoal.x=h.x;bugGoal.z=h.z;bugGoalOn=true;break;}}
- function beginSwing(targetId:string|null,hit?:BugSwarmHit){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||zoom||rel)return false;
+ function beginSwing(targetId:string|null,hit?:BugSwarmHit){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||cs||rel)return false;
   if(rideMode!=='walk'){banner=BUG_WALK_NOTE;bannerAge=0;viewKey='';publishActive();return false;}
   const sw=bugSwarm(),p=lastP;let tgt:BugSwarmHit|null=hit??null;
   if(!tgt&&sw){const list=bugList(r.def)??[];tgt=autoAim(sw.query(p.x,p.y,p.z,AUTO_AIM_RANGE+3),p.x,p.z,playerYaw,AUTO_AIM_RANGE,h=>{const i=list.findIndex(b=>b.id===(h.species?.id??h.call?.id));return i>=0&&!!r.got[i];});}
   // The locked bug notices the net and holds still until the hit frame (Animal Crossing: it only flees after a miss).
   if(tgt&&sw)(sw as BugSwarmPort&{hold?:(id:string,s:number)=>void}).hold?.(tgt.id,SWING.hit+.15);
+  // A swing that will connect plays as the catch stage (the whole swing and catch there); a miss swings here on the island.
+  if(tgt&&predictCatch(p.x,p.y,p.z,tgt,!!r.stalk)&&beginStage(tgt)){net?.close(false);return true;}
   const yaw=tgt?headingTo(p.x,p.z,tgt.x,tgt.z):playerYaw;
   swing={t:0,target:tgt?.id??targetId,resolved:false,yaw,seen:false,k:0};countBugSwing();jobCue('swish');tapHaptic();net?.close(false);
   applyEvents([{type:'swing',x:p.x+Math.sin(yaw)*2,z:p.z+Math.cos(yaw)*2}]);return true;}
- function tapSwing(nx:number,ny:number,camera:T.Camera){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||zoom||rel||rideMode!=='walk')return false;const sw=bugSwarm();if(!sw)return false;
+ function tapSwing(nx:number,ny:number,camera:T.Camera){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||cs||rel||rideMode!=='walk')return false;const sw=bugSwarm();if(!sw)return false;
   let best:BugSwarmHit|null=null,bd=TAP_SCREEN_SLOP;
   for(const h of sw.query(lastP.x,lastP.y,lastP.z,TAP_RANGE)){projV.set(h.x,h.y,h.z).project(camera);if(projV.z>1)continue;const d=Math.hypot(projV.x-nx,projV.y-ny);if(d<bd){bd=d;best=h;}}
   if(!best)return false;const id=best.id;return beginSwing(id,{...best});}
@@ -821,7 +828,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // BUG_LOCAL.want bugs within BUG_LOCAL.radius m (uncaught species first, spawned out of view, fading in). A swarm without it
   // (tests' fakes) falls back to the older recall: nobody near for a while, call the farthest one over.
   recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{caught:(id:string)=>boolean})=>number})|null;
-   if(sw&&r&&!zoom&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
+   if(sw&&r&&!cs&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
     else if(sw.recall){const n=sw.query(p.x,p.y,p.z,RECALL.near).length;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw.recall(p.x,p.z,RECALL.within,RECALL.far);}}}
   if(hintT<=0)return;hintT-=dt;hintAcc+=dt;
   if(hintAcc>=.25){hintAcc=0;const sw=bugSwarm();if(sw&&sw.position(hintId,tq)){hintGoal.x=tq.x;hintGoal.z=tq.z;}
@@ -832,39 +839,129 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    (g.material as T.MeshBasicMaterial).opacity=reducedMotion?.85:.55+.35*Math.sin(hintT*7);}}
  function onMiss(hits:readonly BugSwarmHit[]){countBugMiss();const sw=bugSwarm(),p=lastP,near=hits.find(h=>h.dist<10);
   if(near&&sw)sw.startle(near.id,{x:p.x,z:p.z});
-  banner=near?'Whoosh! Just missed, and it fluttered off. Walk a little closer (it settles in a moment), then Swing again.':'No bug close. Tap ➤ Nearest bug and follow the arrow, then Swing.';bannerAge=0;viewKey='';publishActive();}
- function onHit(h:BugSwarmHit){const r=run;if(!r)return;const kind=h.kind,id=h.species?.id??h.call?.id??'',list=bugList(r.def)??[],i=list.findIndex(b=>b.id===id),b=list[i];
-  if(!b||(kind==='firefly')!==(r.def.prop==='firefly'))return;
-  const sw=bugSwarm();net?.close(true);if(net){net.bagCentre(bagPos);}else{bagPos.x=h.x;bagPos.y=h.y;bagPos.z=h.z;}
-  if(sw)sw.pin(h.id,bagPos);
+  banner=near?'Whoosh! Just missed. Sneak a little closer, then Swing.':'No bug close. Tap ➤ to find the nearest one.';bannerAge=0;viewKey='';publishActive();}
+ /** Count a catch (the Bug book, the shift's jar, the story card's data); false if the bug is not this set's. `world` = the quick catch
+  *  on the island (reduced motion, or a bug the swing met without a lock): sparkles there and the netcatch pose. */
+ function registerCatch(h:{id:string;kind:'bug'|'firefly';species:{id:string}|null;call:{id:string}|null;x:number;y:number;z:number},world:boolean){const r=run;if(!r)return false;
+  const kind=h.kind,id=h.species?.id??h.call?.id??'',list=bugList(r.def)??[],i=list.findIndex(b=>b.id===id),b=list[i];
+  if(!b||(kind==='firefly')!==(r.def.prop==='firefly'))return false;
   const rec=recordBugCatch(kind,id,bookPort),story=storyFor(b.stories,rec.count),dup=r.got[i]||r.phase!=='work';
   if(rec.squadComplete)formationNext=true;stopHint();
   if(rec.first)cue(BUG_NEW_SPECIES_EVENT,id);
   if(rec.completed){countBugBookComplete();cue(BUG_BOOK_COMPLETE_EVENT,'complete');}else if(rec.nightCompleted)cue(BUG_BOOK_COMPLETE_EVENT,'night');
   setView({caught:{nonce:++caughtNonce,id,kind,name:b.name,role:b.role,story:story?.text??'',source:story?.source??'',isNew:rec.first,count:rec.count,coins:rec.first?NEW_SPECIES_COINS:0,
    squad:kind==='bug'?(rec.squadComplete?20:rec.squadSize):0,squadSize:list.length,squadComplete:rec.squadComplete,dup}});
-  tapHaptic();jobCue('jar');fx.burst(h.x,h.y,h.z,r.def.prop==='firefly'?'#f4ff8a':'#fff6c8',8,1.4,1.2,true,.8);
-  applyEvents([{type:'netcatch',x:h.x,z:h.z}]);
-  if(dup&&!r.got[i]){banner=`${b.name} is in your Bug book! The jar is full, so it flies home: Release the squad at the ${r.def.deliver?.label??'drop-off'}.`;bannerAge=-1;viewKey='';}
-  else if(dup){banner=`${b.name} again! It is already in today's jar, so it flies straight home (it still counts in your Bug book).`;bannerAge=-1;viewKey='';}
+  tapHaptic();jobCue('jar');
+  if(world){fx.burst(h.x,h.y,h.z,r.def.prop==='firefly'?'#f4ff8a':'#fff6c8',8,1.4,1.2,true,.8);applyEvents([{type:'netcatch',x:h.x,z:h.z}]);}
+  // One short line (shown as a toast, never in the panel): the story card carries the rest.
+  if(dup&&!r.got[i]){banner=`${b.name}: in your Bug book. Jar full: release at the ${r.def.deliver?.label??'drop-off'}.`;bannerAge=-1;viewKey='';}
+  else if(dup){banner=`${b.name} again! Already in today's jar.`;bannerAge=-1;viewKey='';}
   else applyEvents(swingCatch(r,i));
-  zoom={t:0,id:h.id,burst:false,p:{x:h.x,y:h.y,z:h.z}};
-  if(reducedMotion){endZoom();return;}
-  const Z=zoom,P={...lastP};
-  // Framed on the net held up over the player (where the bug wiggles), from the bug's side and a little above, never inside a slope.
-  zoomCam.begin(aspect=>{const dx=Z.p.x-P.x,dz=Z.p.z-P.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,portrait=aspect<1,d=portrait?7.2:6;
-   const tx=P.x+ux*.4,tz=P.z+uz*.4,ty=P.y+2.4,ex=tx+ux*d-uz*1.4,ez=tz+uz*d+ux*1.4,ey=Math.max(ty+.9,floor(ex,ez)+1.4);
-   return {target:{x:tx,y:ty,z:tz},eye:{x:ex,y:ey,z:ez},fov:portrait?56:44};});
-  setView({zooming:true});publishActive();}
- function tickZoom(dt:number){const Z=zoom;if(!Z)return;Z.t+=dt;
-  if(!Z.burst&&Z.t>=ZOOM.in*.85){Z.burst=true;const q=net?net.bagCentre(bagPos):Z.p,night=run?.def.prop==='firefly';
-   fx.burst(q.x,q.y+.2,q.z,'#ffe066',8,1.8,2,true,.9);fx.burst(q.x,q.y+.2,q.z,'#ffffff',7,2,2.2,true,.8);fx.burst(q.x,q.y+.2,q.z,night?'#e9ff6b':'#1d1b1b',5,1.6,2,true,.7);
-   pulse(lastP.x,floor(lastP.x,lastP.z)+.05,lastP.z,night?'#e9ff6b':'#ffd36c',false,1.4);jobCue('squad');}
-  if(Z.t>=ZOOM.in+ZOOM.hold)endZoom();}
- /** End the zoom (or skip it, or the shift ended / the set swapped / reduced motion): the bug goes into the jar, the camera eases back. */
- function endZoom(){const Z=zoom;if(!Z)return;zoom=null;zoomCam.end();const sw=bugSwarm();if(sw){sw.pin(null);sw.catch(Z.id);}net?.close(false);
-  jarPop=1;const jar=gear.bag;if(jar&&run&&!reducedMotion)fx.burst(lastP.x-.38,lastP.y+1.05,lastP.z+.05,run.def.prop==='firefly'?'#f4ff8a':'#fff6c8',6,1,1.4,true,.6);
+  return true;}
+ /** A catch on the island itself (reduced motion, or an unlocked swing that met a bug): counted at once, the bug into the jar. */
+ function onHit(h:BugSwarmHit){if(!registerCatch(h,true))return;const sw=bugSwarm();if(sw){sw.pin(null);sw.catch(h.id);}net?.close(false);jarPop=1;publishActive();}
+ // ---- The catch stage (Oct 21 2026; bugCatch.ts CATCH_STAGE, lib/graphics/catchStage.ts). User: "this needs to zoom in on the
+ // character first then show the actual catching ... an isolated animation to show the catch, it doesn't need to have the background
+ // on it". A swing that will connect (predictCatch) does not swing on the island: the follow camera pushes in on the character, the
+ // island dissolves into a plain stage, and the swing and the catch play there live; the catch counts at the stage's hit frame. A miss
+ // keeps the island swing. Town hands over the frame while it plays (stageFrame): the island is neither stepped nor drawn. ----
+ type StagePorts={player:{root:T.Object3D;update:(x:number,z:number,dt:number,time:number,reduced:boolean,motion?:{facing?:number;turnSmoothing?:number;job?:JobPose})=>void;handPositions:(l:T.Vector3,r:T.Vector3)=>void};
+  renderer:T.WebGLRenderer;scene:T.Scene;host:()=>HTMLElement|null};
+ let stagePorts:StagePorts|null=null;
+ let cs:{t:number;push:number;on:boolean;hit:{id:string;kind:'bug'|'firefly';species:{id:string}|null;call:{id:string}|null;x:number;y:number;z:number};name:string;
+  p:{x:number;y:number;z:number};yaw:number;registered:boolean;cardShown:boolean;burst:boolean;flipped:boolean;stage:CatchStage|null;sF:number;sC:number;
+  bugAt:{x:number;y:number;z:number};netParent:T.Object3D|null;rigParent:T.Object3D|null;eye:T.Vector3;target:T.Vector3}|null=null;
+ const pushCam=createShotCamera(CATCH_STAGE.pushIn,ZOOM.out),followCam=new T.Vector3(),stageL=new T.Vector3(),stageR=new T.Vector3(),bagQ={x:0,y:0,z:0};
+ const STAGE_POSE:JobPose={kind:'netcarry',progress:0,upper:true},stageMotion:{facing:number;turnSmoothing:number;job:JobPose}={facing:0,turnSmoothing:30,job:STAGE_POSE};
+ let followFov=50,fadeEl:HTMLDivElement|null=null,fadeOut=0;
+ function fade(o:number,look:string){const host=stagePorts?.host();if(!host||typeof document==='undefined')return;if(!fadeEl){if(o<=0)return;fadeEl=document.createElement('div');fadeEl.className='catch-stage-fade';fadeEl.dataset.catchFade='';host.appendChild(fadeEl);}
+  if(fadeEl.dataset.look!==look)fadeEl.dataset.look=look;const v=String(Math.round(Math.max(0,Math.min(1,o))*1000)/1000);if(fadeEl.style.opacity!==v)fadeEl.style.opacity=v;const hide=o<=0;if(fadeEl.hidden!==hide)fadeEl.hidden=hide;}
+ const stageLook=()=>run?.def.prop==='firefly'?'night':timeOfDay()==='sunset'?'sunset':'day';
+ function hudHidden(on:boolean){if(typeof document==='undefined')return;document.documentElement?.toggleAttribute?.("data-catch-stage",on);}
+ /** Start the catch stage for a locked target the swing will catch. False (play the island swing) when it cannot. */
+ function beginStage(tgt:BugSwarmHit){const r=run;if(!r||!stagePorts||!net||reducedMotion||cs)return false;
+  const id=tgt.species?.id??tgt.call?.id??'',list=bugList(r.def)??[],b=list.find(x=>x.id===id);if(!b||(tgt.kind==='firefly')!==(r.def.prop==='firefly'))return false;
+  const sw=bugSwarm() as (BugSwarmPort&{hold?:(id:string,s:number)=>void})|null;sw?.hold?.(tgt.id,30);
+  const p={...lastP},yaw=headingTo(p.x,p.z,tgt.x,tgt.z);
+  cs={t:0,push:0,on:false,hit:{id:tgt.id,kind:tgt.kind,species:tgt.species,call:tgt.call,x:tgt.x,y:tgt.y,z:tgt.z},name:b.name,p,yaw,registered:false,cardShown:false,burst:false,flipped:false,stage:null,sF:1,sC:1,
+   bugAt:{x:0,y:0,z:0},netParent:null,rigParent:null,eye:new T.Vector3(),target:new T.Vector3()};
+  stopHint();countBugSwing();tapHaptic();fadeOut=0;
+  const head={x:p.x,y:p.y+1.35,z:p.z},from={x:followCam.x,y:followCam.y,z:followCam.z};
+  pushCam.begin(()=>{const s=pushInShot(from,head,floor);return {eye:s.eye,target:s.target,fov:followFov};});
+  hudHidden(true);setView({zooming:true});publishActive();return true;}
+ /** Into the stage (the push-in has arrived and the island is covered): build it, borrow the rig and the net, aim the stage camera. */
+ function enterStage(){const C=cs,ports=stagePorts;if(!C||!ports||!net){exitStage(true);return;}const p=C.p,look=stageLook();
+  const sp=C.hit.kind==='bug'?BUG_SPECIES.find(s=>s.id===C.hit.species?.id)??null:null;
+  const st=createCatchStage({at:p,look,species:sp,host:ports.host()});C.stage=st;
+  const world=sp?bugVisualSize(sp.look.size):FIREFLY_SIZE;C.sF=stageFlightScale(st.longest,world);C.sC=catchScale(st.longest,C.sF,NET_HOOP_RADIUS);
+  const fx0=Math.sin(C.yaw),fz0=Math.cos(C.yaw),rx=-fz0,rz=fx0;
+  // The bug hovers where the hoop's sweep passes at the hit frame (ahead, a little right, about hand height).
+  C.bugAt.x=p.x+fx0*1.45+rx*.2;C.bugAt.y=p.y+1.05;C.bugAt.z=p.z+fz0*1.45+rz*.2;
+  C.rigParent=ports.player.root.parent;C.netParent=net.group.parent;st.scene.add(ports.player.root,net.group,net.swoosh);
+  // Frame the whole character, the net's reach (held out in front, raised over the head on the right) and the bug, from the front-left.
+  const fit=stageFit(p,C.yaw,C.bugAt),el=ports.renderer.domElement;
+  const shot=stageShot(p,C.yaw,(el.clientWidth||el.width)/Math.max(1,el.clientHeight||el.height),fit);
+  C.eye.set(shot.eye.x,shot.eye.y,shot.eye.z);C.target.set(shot.target.x,shot.target.y,shot.target.z);st.camera.fov=shot.fov;st.camera.updateProjectionMatrix();
+  C.on=true;jobCue('swish');}
+ /** Back to the island (the stage is covered, or skipped / ended): the rig and the net go home, the bug is in the jar, the camera eases
+  *  back from the push-in. `instant` = quit / set swap / leaving: no fade. */
+ function exitStage(instant=false){const C=cs;if(!C)return;cs=null;
+  if(!C.registered){C.registered=true;registerCatch(C.hit,false);}
+  const ports=stagePorts;if(ports&&C.on){(C.rigParent??ports.scene).add(ports.player.root);if(net){(C.netParent??ports.scene).add(net.group,net.swoosh);}}
+  C.stage?.dispose();net?.close(false);net?.reset();
+  const sw=bugSwarm() as (BugSwarmPort&{hold?:(id:string,s:number)=>void})|null;if(sw){sw.hold?.(C.hit.id,0);sw.pin(null);sw.catch(C.hit.id);}
+  jarPop=1;pushCam.end();hudHidden(false);fadeOut=instant||!C.on?0:CATCH_STAGE.dissolve;fade(fadeOut>0?1:0,stageLook());
   setView({zooming:false});if(run)publishActive();}
+ /** The push-in (island frames): ease in, then cover the island with the stage's colour and switch; after the stage, uncover it. */
+ function tickStagePush(dt:number){const C=cs;if(fadeOut>0){fadeOut=Math.max(0,fadeOut-dt);fade(fadeOut/CATCH_STAGE.dissolve,stageLook());}
+  if(!C||C.on)return;C.push+=dt;const d=CATCH_STAGE.dissolve,k=(C.push-(CATCH_STAGE.pushIn-d))/d;fade(k,stageLook());if(C.push>=CATCH_STAGE.pushIn)enterStage();}
+ const smooth=(k:number)=>{const t=Math.max(0,Math.min(1,k));return t*t*(3-2*t);};
+ /** One stage frame instead of the island's (Town.tsx): the timeline, the rig, the net, the bug, one render. */
+ function stageFrame(dt:number,time:number){const C=cs,ports=stagePorts;if(!C||!C.on||!ports||!net||!C.stage)return;
+  const st=C.stage,R0=Math.min(dt,.05);C.t+=R0;const t=C.t,{phase,k}=catchStagePhase(t),A=CATCH_STAGE_AT,p=C.p;
+  // Fades: the stage's colour clears off at the start and covers it again at the end.
+  fade(t<CATCH_STAGE.dissolve?1-t/CATCH_STAGE.dissolve:phase==='out'?smooth(k/.8):phase==='done'?1:0,stageLook());
+  if(phase==='done'){exitStage();return;}
+  const swingT=stageSwingTime(t),swinging=swingT>=0&&(t<A.suck||swingT<SWING.sweepEnd);
+  // The body: ready (the carry), the swing, then the show (presented in front, raised with a hop), blended by player.ts.
+  if(swingT<0){STAGE_POSE.kind='netcarry';STAGE_POSE.progress=(time*1.7)%1;STAGE_POSE.upper=true;STAGE_POSE.tug=0;}
+  else if(swinging){STAGE_POSE.kind='netswing';STAGE_POSE.upper=false;STAGE_POSE.tug=0;STAGE_POSE.progress=swingT<SWING.hit?swingT/SWING.hit*.48:.48+(swingT-SWING.hit)/(SWING.end-SWING.hit)*.52;}
+  else{STAGE_POSE.kind='netshow';STAGE_POSE.upper=false;STAGE_POSE.progress=t<A.raise?0:t<A.hold?smooth((t-A.raise)/CATCH_STAGE.raise):1;
+   STAGE_POSE.tug=t>=A.raise&&t<A.hold+.15?Math.sin(Math.min(1,(t-A.raise)/(CATCH_STAGE.raise+.15))*Math.PI):0;}
+  stageMotion.facing=C.yaw;const frozen=phase==='hitstop';
+  ports.player.update(p.x,p.z,frozen?0:R0,time,reducedMotion,stageMotion);ports.player.root.position.y=p.y;
+  ports.player.handPositions(stageL,stageR);
+  net.layout(stageL,stageR,C.yaw,swinging?swingT:-1,swinging?'swing':'raise',frozen?0:R0,reducedMotion);
+  // The hit frame: the catch counts (the card waits for the card phase).
+  if(!C.registered&&t>=A.hit){C.registered=true;registerCatch(C.hit,false);}
+  if(!C.flipped&&t>=A.flip){C.flipped=true;net.close(true);}
+  // The bug: hovering by the net, frozen for the hit-stop, sucked into the hoop with a spiral (shrinking to fit the net), then
+  // wiggling in the closed bag with its wings folded.
+  const w=st.wings;let bx:number,by:number,bz:number,yaw=C.yaw+Math.PI*.5,pitch=0,roll=0,s=C.sF,amp=w.amp,base=w.base,open=1,legAmp=.02,hz=w.hz;
+  if(t<A.hit){const bob=reducedMotion?0:Math.sin(time*5)*.05;bx=C.bugAt.x;by=C.bugAt.y+bob;bz=C.bugAt.z;roll=Math.sin(time*3)*.12;}
+  else if(t<A.suck){bx=C.bugAt.x;by=C.bugAt.y;bz=C.bugAt.z;amp=0;}
+  else if(t<A.flip){const e=smooth(k);net.bagPoint(.4*e,bagQ);const sp=(1-e)*.18,a=e*Math.PI*3;
+   bx=C.bugAt.x+(bagQ.x-C.bugAt.x)*e+Math.cos(a)*sp;by=C.bugAt.y+(bagQ.y-C.bugAt.y)*e+Math.sin(a)*sp;bz=C.bugAt.z+(bagQ.z-C.bugAt.z)*e;
+   yaw+=a;s=C.sF+(C.sC-C.sF)*e;amp=w.amp*(1-e);open=1-e;}
+  else{net.bagPoint(.5,bagQ);const wt=t-A.flip,wig=reducedMotion?0:1;bx=bagQ.x+Math.sin(wt*13)*.025*wig;by=bagQ.y+Math.sin(wt*17)*.02*wig;bz=bagQ.z+Math.cos(wt*11)*.025*wig;
+   s=C.sC;yaw+=Math.sin(wt*9)*.35*wig;roll=Math.sin(wt*14)*.3*wig;pitch=Math.sin(wt*7)*.2*wig;amp=.1;base=w.base+.5;open=0;legAmp=.035;hz=8;}
+  st.setBug(bx,by,bz,yaw,pitch,roll,s,{amp,base,open,legAmp,hz});
+  // The hold: a star burst round the raised net, the name over it, the cheer.
+  if(!C.burst&&t>=A.hold){C.burst=true;net.hoopCentre(bagQ);st.burst(bagQ.x,bagQ.y,bagQ.z);jobCue('squad');}
+  const host=ports.host(),cw=host?.clientWidth??0,ch=host?.clientHeight??0;
+  if(t>=A.hold&&phase!=='out'){net.hoopCentre(bagQ);st.label(C.name,bagQ.x,bagQ.y+NET_HOOP_RADIUS+.3,bagQ.z,cw,ch);}else st.label(null);
+  if(!C.cardShown&&t>=A.card){C.cardShown=true;setView({zooming:false});}
+  st.update(R0,reducedMotion);
+  // The camera: the three-quarter shot, drifting in a little over the catch.
+  st.setAspect(cw&&ch?cw/ch:ports.renderer.domElement.width/Math.max(1,ports.renderer.domElement.height));
+  st.camera.position.copy(C.eye).lerp(C.target,Math.min(1,t/A.done)*.06);st.camera.lookAt(C.target);
+  ports.renderer.render(st.scene,st.camera);}
+ /** Tap to skip: straight to the end (the bug counted, the story card); from the push-in, back at once. */
+ function skipStage(){const C=cs;if(!C)return;if(!C.on){exitStage();return;}
+  if(!C.registered){C.registered=true;registerCatch(C.hit,false);}if(!C.cardShown){C.cardShown=true;setView({zooming:false});}
+  if(C.t<CATCH_STAGE_AT.out)C.t=CATCH_STAGE_AT.out;}
+ /** End any catch in progress (quit, a set swap, leaving): the stage closes at once. */
+ function endZoom(){if(cs)exitStage(true);}
  /** The bugs that fly in the release: the 20-bug formation when the squad was just completed (capped by heat tier), else the
   *  shift's catches. */
  function releaseList(r:JobRun):BugSpot[]{const list=bugList(r.def)??[];
@@ -896,7 +993,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   const top0={x:p.x+face.x*.3,y:p.y+2.05,z:p.z+face.z*.3},across={x:-out.z,z:out.x},slots=formationSlots(list.length);
   const form=formation?slots.map(q=>({x:top0.x+out.x*7.5+across.x*q.x*.95+out.x*q.z*.75,y:top0.y+1.6,z:top0.z+out.z*7.5+across.z*q.x*.95+out.z*q.z*.75})):null;
   rel={run:r,def,t:0,popped:false,lit:false,wide:false,n:list.length,p,face,out,list,form,end:formation?REL.end+.05*list.length+2:REL.end};
-  if(formation){banner=`Squad complete! All ${list.length<20?list.length+' of the 20':'20'} line up in a 4-3-3 with the subs and staff, then fly home.`;bannerAge=-3;viewKey='';}
+  if(formation){banner=`Squad complete! All ${list.length<20?list.length+' of the 20':'20'} line up in a 4-3-3, then fly home.`;bannerAge=-3;viewKey='';}
   gear.tossing=true;
   if(eventListeners.size){const e:JobEvent={type:'deliver'};eventListeners.forEach(f=>f(e,def));}
   const R=rel;
@@ -968,8 +1065,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // Riding, the pole rests on the backpack's side socket (bug-polish; docs/backpack.md); while the pack is morphing into the jetpack
   // (never during a shift, but a take-off right at the start / end of one) the net hides rather than float in the air.
   if(net&&gear.net){const g=net.group;const jet=!!packPort&&packPort.morph()>NET_HIDE_MORPH;
-   g.visible=!jet&&(jr.phase==='work'||jr.phase==='deliver'||!!zoom||!!swing);
-   if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:!!zoom});
+   g.visible=!jet&&(jr.phase==='work'||jr.phase==='deliver'||!!swing);
+   if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:false});
     if(mode==='pack'){if(packPort){const s=packPort.socket;s.updateWorldMatrix(true,false);net.pack(s.matrixWorld,yaw,packTilt(rideMode),lastDt,reducedMotion);}else g.visible=false;}
     else net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);
     net.bagCentre(bagPos);}}
@@ -991,19 +1088,24 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   /** The definition a job would start with now (the Bug squad's bugs or fireflies set, by the time of day). */
   variant:(id:string)=>jobVariant(id,timeOfDay()),
   /** Bug squad: walking pace (Net down = careful steps; 0 while the release cinematic holds the player). */
-  get walkScale(){return rel||zoom?0:run?.stalk&&run.phase==='work'?STALK.walk:1;},
+  get walkScale(){return rel||cs?0:run?.stalk&&run.phase==='work'?STALK.walk:1;},
   /** The release cinematic holds the controls. */
-  get locked(){return !!rel||!!zoom;},
+  get locked(){return !!rel||!!cs;},
   /** Tap to skip the release cinematic: straight to the end (the bugs are away, the shift is paid). */
-  skipRelease(){if(zoom){endZoom();return;}if(rel)finishRelease(rel.run,true);},
+  skipRelease(){if(cs){skipStage();return;}if(rel)finishRelease(rel.run,true);},
   /** Tap to skip the catch zoom (the catch still counts). */
-  skipZoom(){endZoom();},
+  skipZoom(){skipStage();},
   /** Bug squad: a tap on the screen near a bug (normalised device coords) swings at it (TAP_RANGE). True if it swung. */
   tapSwing,
   /** Bug squad: start a swing as if Swing net was pressed (play-tests). */
   swing:()=>beginSwing(null),
   get swinging(){return swing?{t:swing.t,target:swing.target}:null;},
-  get zooming(){return !!zoom;},
+  get zooming(){return !!cs&&!cs.cardShown;},
+  /** The catch stage has the frame (Town.tsx draws stageFrame instead of the island). */
+  get staging(){return !!cs&&cs.on;},
+  stageFrame,
+  /** Town's rig, renderer, island scene and the canvas host, for the catch stage. */
+  setStagePorts(p:StagePorts|null){stagePorts=p;},
   /** Which set the swarm should show for the running shift (Town passes it to the swarm), or null. */
   get swarmJob(){return run&&run.def.swing?run.def.set??'bugs':null;},
   /** Town: the player's facing (rad) and ride ('walk', 'scooter', 'bike', 'moped') each frame, for the swing and the net. */
@@ -1025,14 +1127,14 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   /** Harvest day: the armed orchard tree (the Kick the tree target), or null. */
   armedTree:()=>{const h=run?.harvest,d=run?.def;if(!h||!d||d.task?.type!=='harvest'||run!.phase!=='work')return null;const s=d.task.spots[h.near];return s&&s.action==='shake'?{x:s.x,z:s.z,index:h.near}:null;},
   /** Call right after the follow camera is placed (like fishing.applyCamera): the assistant-referee view while flagging. */
-  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(zoomCam.active)r=zoomCam.apply(camera,dt,reduced)||r;badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{if(!pushCam.active){followCam.copy(camera.position);followFov=camera.fov;}let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(pushCam.active)r=pushCam.apply(camera,dt,reduced)||r;badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
   /** A job runs, or the one that just ended is winding down (its last pose): Town keeps calling holdProps. */
   get holding(){return !!run||ending>0&&!!props;},
   /** Where the current step wants the player (the beacon's targets); read-only, for play-tests. */
   goals:()=>run?runGoals(run):[],
   /** The beacon's goal (Oct 1 2026: every job's "follow the arrow" also gets an edge arrow when it is off screen), or null. */
   get arrowGoal(){return run&&arrowOn&&beacon?.visible?arrowGoal:null;},get lastContact(){return lastContact;},catalog:JOBS,garden:GARDEN_SPOTS,
-  dispose(){quit();badges.dispose();fx.dispose();root.removeFromParent();for(const d of disposables)d.dispose();fruit.dispose();if(current===api){current=null;registry.forEach(f=>f());}}};
+  dispose(){quit();fadeEl?.remove();fadeEl=null;hudHidden(false);badges.dispose();fx.dispose();root.removeFromParent();for(const d of disposables)d.dispose();fruit.dispose();if(current===api){current=null;registry.forEach(f=>f());}}};
  current=api;registry.forEach(f=>f());
  if(typeof window!=='undefined')(window as unknown as {__fi2Jobs?:unknown}).__fi2Jobs=api;
  return api;

@@ -43,6 +43,70 @@ export const SWING={windup:.3,hit:.58,sweepEnd:.85,end:1.25} as const;
 /** Catch zoom (seconds): ease in, hold (wiggle, name, burst), ease out; total ≤ 4.2 s. Tap skips; reduced motion = no zoom. */
 /* Oct 20 2026 (user: show it more, and it was too zoomed in): a longer, wider framing. */
 export const ZOOM={in:1.3,hold:2,out:.9} as const;
+/** The catch stage (Oct 21 2026, user: "this needs to zoom in on the character first then show the actual catching ... an isolated
+ *  animation to show the catch, it doesn't need to have the background"). A swing that will connect plays as a short cinematic:
+ *  the follow camera pushes in on the character (`pushIn`), the island dissolves into a plain stage (`dissolve`), and on the stage the
+ *  whole catch plays live: settle, the swing (wind-up, sweep), a 70 ms hit-stop, the bug sucked into the hoop with a spiral, the bag
+ *  flipping closed, the net raised with a hop, the hold (wiggle, name, burst), the story card, then the stage dissolves back.
+ *  Seconds, stage-local (0 = the stage shows). Reduced motion: no stage (the quick catch). */
+export const CATCH_STAGE={pushIn:.6,dissolve:.22,settle:.25,hitStop:.07,suck:.4,flip:.3,raise:.45,hold:1,card:.8,out:.5} as const;
+export type CatchStagePhase='settle'|'swing'|'hitstop'|'suck'|'flip'|'raise'|'hold'|'card'|'out'|'done';
+/** Stage-local phase starts (s): the swing's hit frame lands at settle + SWING.hit. */
+export const CATCH_STAGE_AT=(()=>{const C=CATCH_STAGE,swing=C.settle,hit=swing+SWING.hit,hitStop=hit,suck=hit+C.hitStop,flip=suck+C.suck,raise=flip+C.flip,
+ hold=raise+C.raise,card=hold+C.hold,out=card+C.card,done=out+C.out;return {settle:0,swing,hit,hitStop,suck,flip,raise,hold,card,out,done} as const;})();
+/** The order the phases play in (tests check the starts only ever increase). */
+export const CATCH_STAGE_ORDER:readonly CatchStagePhase[]=['settle','swing','hitstop','suck','flip','raise','hold','card','out','done'];
+/** Phase at stage time t (s) and its progress 0..1. */
+export function catchStagePhase(t:number):{phase:CatchStagePhase;k:number}{const A=CATCH_STAGE_AT;
+ const seg=(phase:CatchStagePhase,a:number,b:number)=>({phase,k:b>a?Math.max(0,Math.min(1,(t-a)/(b-a))):1});
+ if(t<A.swing)return seg('settle',0,A.swing);if(t<A.hit)return seg('swing',A.swing,A.hit);if(t<A.suck)return seg('hitstop',A.hitStop,A.suck);
+ if(t<A.flip)return seg('suck',A.suck,A.flip);if(t<A.raise)return seg('flip',A.flip,A.raise);if(t<A.hold)return seg('raise',A.raise,A.hold);
+ if(t<A.card)return seg('hold',A.hold,A.card);if(t<A.out)return seg('card',A.card,A.out);if(t<A.done)return seg('out',A.out,A.done);return {phase:'done',k:1};}
+/** The swing's own clock (bugNet / the netswing pose) at stage time t: it runs from the swing start, freezes for the hit-stop, then
+ *  carries on to the end of the sweep while the bug is sucked in. */
+export function stageSwingTime(t:number){const A=CATCH_STAGE_AT;if(t<A.swing)return -1;if(t<A.hit)return t-A.swing;if(t<A.suck)return SWING.hit;
+ return Math.min(SWING.sweepEnd,SWING.hit+(t-A.suck));}
+/** A caught bug fits the net: its longest side is at most CATCH_FIT of the hoop's diameter (and never bigger than it flew). */
+export const CATCH_FIT=.6;
+/** On the stage the bug flies at a believable size beside the character: its longest side at most this (m). */
+export const STAGE_BUG_MAX=.5;
+/** Scale for a bug model whose longest side is `longest` model units, flying at `flight` scale, so it fits a hoop of radius hoopR. */
+export function catchScale(longest:number,flight:number,hoopR:number,fit=CATCH_FIT){if(!(longest>0))return flight;return Math.min(flight,fit*2*hoopR/longest);}
+/** The stage's in-flight scale: the island's (readable from the follow camera) capped to STAGE_BUG_MAX. */
+export function stageFlightScale(longest:number,world:number,max=STAGE_BUG_MAX){if(!(longest>0))return world;return Math.min(world,max/longest);}
+type V3={x:number;y:number;z:number};
+/** The stage camera: a three-quarter view from the character's front-left (the net is held on the right, so it never comes between
+ *  the camera and the face), a little above, pulled back until every point of `fit` (the character's box, the net's reach, the
+ *  bug) is inside the frame with `margin` to spare, and the character no taller than `maxShare` of the screen. Pure: tests check it.
+ *  `yaw` = the character's facing (0 = +z). Returns the eye, the target and the vertical fov (deg). */
+export function stageShot(p:V3,yaw:number,aspect:number,fit:readonly V3[],o:{height?:number;maxShare?:number;margin?:number;side?:number;fov?:number}={}){
+ const H=o.height??1.5,share=o.maxShare??.48,margin=o.margin??.1,side=o.side??.62,fov=o.fov??(aspect<1?50:38);
+ const fx=Math.sin(yaw),fz=Math.cos(yaw),lx=fz,lz=-fx;// forward, the character's left
+ // From the front-left: forward rotated `side` rad toward the left, looking back at the character, 18° down.
+ const dx=fx*Math.cos(side)+lx*Math.sin(side),dz=fz*Math.cos(side)+lz*Math.sin(side),pitch=.3;
+ const target={x:p.x+fx*.35,y:p.y+H*.95,z:p.z+fz*.35};
+ // View basis: look = toward the target from the eye (−d horizontally, tipped down by pitch).
+ const cp=Math.cos(pitch),sp=Math.sin(pitch),look={x:-dx*cp,y:-sp,z:-dz*cp},right={x:-look.z,y:0,z:look.x};const rl=Math.hypot(right.x,right.z)||1;right.x/=rl;right.z/=rl;
+ const up={x:right.y*look.z-right.z*look.y,y:right.z*look.x-right.x*look.z,z:right.x*look.y-right.y*look.x};
+ const tv=Math.tan(fov*Math.PI/360),th=tv*aspect,lim=1-margin;let d=0;
+ for(const q of fit){const vx=q.x-target.x,vy=q.y-target.y,vz=q.z-target.z,along=vx*look.x+vy*look.y+vz*look.z,x=vx*right.x+vy*right.y+vz*right.z,y=vx*up.x+vy*up.y+vz*up.z;
+  d=Math.max(d,along+Math.abs(x)/(th*lim),along+Math.abs(y)/(tv*lim));}
+ // The character no taller than `share` of the screen height: visible height at the target ≥ H / share.
+ d=Math.max(d,H/share/(2*tv),2.2);
+ return {eye:{x:target.x-look.x*d,y:target.y-look.y*d,z:target.z-look.z*d},target,fov,dist:d};
+}
+/** The points the stage shot keeps in frame for a character at p facing yaw with the bug at `bug`: the feet either side, the head,
+ *  the raised net's top (over the right shoulder), the hoop held out in front, the bag behind the shoulders, and the bug. */
+export function stageFit(p:V3,yaw:number,bug:V3):V3[]{const fx=Math.sin(yaw),fz=Math.cos(yaw),rx=-fz,rz=fx;
+ return [{x:p.x+rx*.35,y:p.y,z:p.z+rz*.35},{x:p.x-rx*.35,y:p.y,z:p.z-rz*.35},{x:p.x,y:p.y+1.6,z:p.z},{x:p.x+rx*.95+fx*.3,y:p.y+3,z:p.z+rz*.95+fz*.3},
+  {x:p.x+fx*1.9+rx*.6,y:p.y+1.5,z:p.z+fz*1.9+rz*.6},{x:p.x-fx*.6,y:p.y+1.2,z:p.z-fz*.6},bug];}
+/** The push-in before the stage: the follow camera slides along its own line of sight toward the character's head (so it can never
+ *  pass through anything the follow camera did not already see past), to `dist` m, never lower than `clear` m over the floor. */
+export function pushInShot(cam:V3,head:V3,floorAt:(x:number,z:number)=>number,dist=4.2,clear=.9){
+ const vx=cam.x-head.x,vy=cam.y-head.y,vz=cam.z-head.z,l=Math.hypot(vx,vy,vz)||1,k=Math.min(1,dist/l);
+ const eye={x:head.x+vx*k,y:head.y+vy*k,z:head.z+vz*k};eye.y=Math.max(eye.y,floorAt(eye.x,eye.z)+clear);
+ return {eye,target:{x:head.x,y:head.y-.2,z:head.z}};
+}
 /** Each shift catches this many (or all that are out, if fewer): bugs by day, fireflies at night. Pay is per shift (unchanged). */
 export const SHIFT_GOAL={bugs:6,fireflies:5} as const;
 /** Coins for a species caught for the first time ever (a small learning bonus, once per species, never metered). */
@@ -54,7 +118,7 @@ export const formationCount=(tier:number)=>FORMATION_CAP[Math.max(0,Math.min(FOR
 export const BUG_RIDES:readonly string[]=['walk','scooter','bike','moped'];
 export const bugRideAllowed=(mode:string)=>BUG_RIDES.includes(mode);
 export const BUG_WATER_NOTE='Bug squad ended: you went into the water. Your Bug book keeps every bug you caught. Come back to the sign to start again.';
-export const BUG_WALK_NOTE='Walk to catch bugs: hop off, sneak up, then Swing net. Rides are for getting around the island.';
+export const BUG_WALK_NOTE='Hop off to catch bugs: they are caught on foot.';
 /** Leaving Summit Isle by land / air (zipline, ferry, teleport): this far past the coastline (the trail and beaches never count). */
 export const BUG_ISLAND_MARGIN=25;
 /** Nearest-bug hint (the pill's hint button): the guide shows this long, then cools down; it ends early within net range. */
@@ -63,6 +127,11 @@ export const HINT={show:7,cooldown:3,near:3} as const;
 export const RECALL={near:40,min:6,wait:1.5,within:90,far:45} as const;
 /** The nearest uncaught target for the hint: swarm hits first (nearest first), else the nearest home of an uncaught species.
  *  `got(id)` = caught this shift. Null when everything is caught. */
+/** Will a locked swing at a target connect? The target holds still once the swing locks on (swarm.hold), so the hit test at swing
+ *  start with its current position is the outcome: in the lunging sweep (LOCKED_SLACK) = a catch. Used to decide whether the swing
+ *  plays as the catch stage (a hit) or as the normal swing on the island (a miss). */
+export function predictCatch(px:number,py:number,pz:number,t:{x:number;y:number;z:number}|null,stalk=false){
+ if(!t)return false;const c={x:0,y:0,z:0};lungeCentre(px,py,pz,t.x,t.z,c);return inSweep(c,t,stalk,LOCKED_SLACK);}
 export function nearestUncaught<H extends {x:number;z:number;id:string}>(hits:readonly H[],idOf:(h:H)=>string,homes:readonly {id:string;x:number;z:number}[],got:(id:string)=>boolean,px:number,pz:number):{id:string;x:number;z:number;dist:number;live:boolean}|null{
  let best:{id:string;x:number;z:number;dist:number;live:boolean}|null=null;
  for(const h of hits){const id=idOf(h);if(got(id))continue;const d=Math.hypot(h.x-px,h.z-pz);if(!best||d<best.dist)best={id,x:h.x,z:h.z,dist:d,live:true};}

@@ -55,7 +55,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
   for(let i=0;i<n;i++){const u=uv.getX(i),v=uv.getY(i),line=Math.round(u*28)%2===0||Math.round(v*10)%3===0,c=line?b:a;col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
   bagG.setAttribute('color',new T.BufferAttribute(col,3));
   bagG.scale(1,-BAG_DEPTH,1);bagG.rotateZ(-Math.PI/2);}
- const bagMat=own(new T.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.72,side:T.DoubleSide,depthWrite:false,roughness:.9}));
+ const bagMat=own(new T.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.55,side:T.DoubleSide,depthWrite:false,roughness:.9}));
  const bagPivot=new T.Group();bagPivot.position.set(0,top,0);const bag=new T.Mesh(bagG,bagMat);bag.name='job-net-bag';bag.frustumCulled=false;bagPivot.add(bag);group.add(bagPivot);
  // Swoosh: a ribbon arc (24 segments), revealed with the sweep by draw range, in world space.
  const swooshG=own(new T.RingGeometry(1.35,1.95,24,1,0,Math.PI*1.25));
@@ -90,7 +90,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    lag=reduced?0:Math.max(-1.2,Math.min(1.2,lag+lagV*dt));
    // Held carry / Net down (bug-polish): the arms are solved onto the pole, so the pole is exactly the hands' line (follow 1);
    // swings / the raise keep the swing aim blended with the hands (NET_HAND_FOLLOW). Both ease over NET_MODE_BLEND_S.
-   const held=pose==='carry'||pose==='low',k=reduced?1:Math.min(1,dt/NET_MODE_BLEND_S*3);
+   const held=pose==='carry'||pose==='low'||pose==='raise'&&swingT<0,k=reduced?1:Math.min(1,dt/NET_MODE_BLEND_S*3);
    follow+=((held?1:NET_HAND_FOLLOW)-follow)*k;grip+=((NET_GRIP_BY_MODE[pose==='pack'?'carry':pose])-grip)*k;
    const ca=Math.cos(a),sa=Math.sin(a),dx=fx*ca+rx*sa,dz=fz*ca+rz*sa;
    by.set(dx,h,dz).normalize();
@@ -135,7 +135,12 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
   /** Close the bag over the catch (true) or open it again (false). */
   close(on:boolean){flipWant=on?1:0;},
   /** World point in the middle of the bag (where a caught bug wiggles). */
-  bagCentre(out:{x:number;y:number;z:number}){tmpV.set(-R*.75,NET_POLE+R,0).applyMatrix4(group.matrix);out.x=tmpV.x;out.y=tmpV.y;out.z=tmpV.z;return out;},
+  bagCentre(out:{x:number;y:number;z:number}){return api.bagPoint(.5,out);},
+  /** World point `k` of the way down the bag's middle (0 = the hoop's centre, 1 = the bottom of the bag), following the bag's lag
+   *  and the catch flip (the old centre ignored the flip, so a caught bug sat outside the closed bag). */
+  bagPoint(k:number,out:{x:number;y:number;z:number}){bagPivot.updateMatrix();tmpV.set(-R*BAG_DEPTH*.98*k,0,0).applyMatrix4(bagPivot.matrix).applyMatrix4(group.matrix);out.x=tmpV.x;out.y=tmpV.y;out.z=tmpV.z;return out;},
+  /** The bag's closing flip now (0 open → 1 closed), for the stage's timeline. */
+  get flip(){return flip;},
   /** World point at the hoop's centre. */
   hoopCentre(out:{x:number;y:number;z:number}){tmpV.set(0,NET_POLE+R,0).applyMatrix4(group.matrix);out.x=tmpV.x;out.y=tmpV.y;out.z=tmpV.z;return out;},
   reset(){lag=lagV=flip=flipWant=0;lastA=0;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;swoosh.visible=false;},
