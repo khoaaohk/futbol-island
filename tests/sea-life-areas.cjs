@@ -152,4 +152,45 @@ ok('the humpback: South Bay and Summit south-east, low-poly, no texture, surface
  const scene=new T.Scene(),sea=createOpenSeaLife(scene,{phone:true});assert(hb.every(l=>sea.friends.some(f=>f.id===l.id&&f.kind==='whale')),'ridable (wa:ride_open_whale)');
  assert(A.OPEN_SEA_WHALE_LOOPS.length+1<=12&&A.MAX_WHALES_DRAWN===2,'the drawn cap is unchanged');sea.dispose();
 });
+// Zone neighbourhoods (Oct 21 2026, user: "sea-life loops near zones"): every Explore zone's signature animal swims within
+// SIGNATURE_RANGE m of its centre; the zone loops come from the zone data (zoneEllipse); turtles / fish / jellies (zoneLife.ts) keep
+// off land, the zone blobs (2 m), the sharks (8 m) and the other animals (4 m); one instanced mesh per kind, capped per tier, 0 at tier 4.
+ok('zone neighbourhoods: signature animals near every zone, data-placed, clear, capped',()=>{
+ const Dv=load('lib/town/water/diveSpots.ts'),Z=load('lib/graphics/zoneLife.ts');
+ const byAnimal={whale:[L.WHALE_SHARK_LOOP,...A.OPEN_SEA_WHALE_LOOPS],manta:[...M.MANTA_LOOPS,...A.OPEN_SEA_RAY_LOOPS.filter(l=>l.species==='manta')],ray:[...M.MANTA_LOOPS,...A.OPEN_SEA_RAY_LOOPS]};
+ for(const k of ['turtle','fish','jelly'])byAnimal[k]=A.ZONE_LIFE_LOOPS.filter(l=>l.kind===k);
+ const rows=[];
+ for(const z of Dv.DIVE_SPOTS){const animal=A.ZONE_SIGNATURE[z.theme.signature];assert(animal,z.id+' has a signature animal');
+  let near=Infinity;for(const l of byAnimal[animal])for(const p of l.points)near=Math.min(near,Math.hypot(p.x-z.x,p.z-z.z));
+  rows.push(`${z.id} ${animal} ${near.toFixed(0)} m`);assert(near<=A.SIGNATURE_RANGE,`${z.id}: its ${animal} swims ${near.toFixed(1)} m from the centre (≤ ${A.SIGNATURE_RANGE})`);}
+ if(process.env.SEA_LIFE_TABLE)console.log('signature: '+rows.join(', '));
+ // Ray Meadow's rays and Captain's Cup's whale are placed from the zone data.
+ const rm=Dv.DIVE_SPOTS.find(s=>s.id==='ray-meadow');for(const id of ['ray-meadow-eagle','ray-meadow-sting']){const l=A.OPEN_SEA_RAY_LOOPS.find(x=>x.id===id);assert.equal(l.zone,'ray-meadow');assert(l.points.every(p=>Math.hypot(p.x-rm.x,p.z-rm.z)<70));}
+ assert(A.OPEN_SEA_RAY_GROUPS.some(g=>g.island==='zone-ray-meadow'&&g.loops.length===2),'Ray Meadow rays: their own group (never dropped by the area cap)');
+ const e=A.zoneEllipse('captains-cup',10,18,14,6),cup=Dv.DIVE_SPOTS.find(s=>s.id==='captains-cup');assert(Math.abs(e[0]-cup.x-Math.cos(10*Math.PI/180)*(Dv.diveBlobR(cup,10*Math.PI/180)+24))<1e-9,'zoneEllipse reads the zone outline');
+ assert.throws(()=>A.zoneEllipse('nowhere',0,0,1,1));
+ // Zone life loops: open water, clear of every zone blob, the sharks and the other animals; ids unique.
+ const animals=[...old,...fresh.map(l=>({k:l.kind==='whale'?'whale':'ray',id:l.id,p:l.points}))];
+ for(const l of A.ZONE_LIFE_LOOPS){assert(l.points.length>=40&&l.count>=1&&l.speed>0&&l.speed<2,l.id);
+  for(const p of l.points){assert(!onLand(p.x,p.z),l.id+' in the water');assert(!flightBlocked(p.x,p.z),l.id+' inside the flight zone');}
+  for(const z of Dv.DIVE_SPOTS)for(const p of l.p??l.points){const dx=p.x-z.x,dz=p.z-z.z,g=Math.hypot(dx,dz)-Dv.diveBlobR(z,Math.atan2(dz,dx));assert(g>=2,`${l.id} is ${g.toFixed(1)} m from the ${z.id} patch`);}
+  for(const o of animals){const g=gapOf(l.points,o.p),m=o.k==='shark'?8:4;assert(g>=m,`${l.id} and ${o.id} are ${g.toFixed(1)} m apart (≥ ${m})`);}}
+ assert.equal(new Set(A.ZONE_LIFE_LOOPS.map(l=>l.id)).size,A.ZONE_LIFE_LOOPS.length);
+ // Caps: tier 4 / Battery saver draws none; every tier within the loop counts; one instanced mesh per kind; no texture.
+ for(const phone of [false,true])for(const t of [0,1,2,3,4]){const c=A.zoneLifeCounts(t,phone);for(const k of ['turtle','fish','jelly'])assert(c[k]>=0&&c[k]<=8,'cap '+k);if(t===4)assert.equal(c.turtle+c.fish+c.jelly,0,'tier 4: none');}
+ const scene=new T.Scene(),zl=Z.createZoneLife(scene,{phone:false});
+ for(const k of ['turtle','fish','jelly']){const m=zl.meshes[k];assert(m&&m.isInstancedMesh,k+': one instanced mesh');assert.equal(m.material.map,null,'no texture');}
+ assert.equal(new Set(Object.values(zl.meshes).map(m=>m.material)).size,1,'one shared material');
+ const tp=Dv.DIVE_SPOTS.find(s=>s.id==='turtle-pool');
+ for(const tier of [0,3,4]){heat.forceHeatTier(tier);const c=A.zoneLifeCounts(tier,false);zl.update(1/60,false,{x:tp.x,z:tp.z});
+  assert(zl.meshes.turtle.count<=c.turtle,`tier ${tier}: ≤ ${c.turtle} turtles`);if(tier===4)assert.equal(zl.stats.drawn,0,'tier 4: nothing drawn');else assert(zl.meshes.turtle.count>=1,'turtles near Turtle Pool');}
+ heat.forceHeatTier(null);zl.update(1/60,false,{x:tp.x,z:tp.z});
+ const before=zl.meshes.turtle.instanceMatrix.version;zl.update(0,false,{x:tp.x,z:tp.z});assert.equal(zl.meshes.turtle.instanceMatrix.version,before,'frozen frame: no upload');
+ zl.update(1/60,false,{x:1e5,z:1e5});assert.equal(zl.stats.drawn,0,'far away: nothing drawn');assert(Object.values(zl.meshes).every(m=>!m.visible));
+ // The breath: a turtle rests below and comes up for a few seconds every period.
+ let up=0;for(let t=0;t<Z.BREATH.period;t+=.1)if(Z.breathLift(t,0)>.99)up++;assert(up>=Z.BREATH.hold*10-2&&up<=Z.BREATH.hold*10+8,'a 3 s breath per 20 s');assert.equal(Z.breathLift(Z.BREATH.period-1,0),0);
+ zl.dispose();
+ const src=fs.readFileSync(path.join(base,'lib/graphics/zoneLife.ts'),'utf8');assert(!/new T\.(Vector3|Matrix4|Quaternion|Euler)\(/.test(src.slice(src.indexOf('function place('))),'no per-frame allocation in place/update');
+ const os=fs.readFileSync(path.join(base,'lib/graphics/openSeaLife.ts'),'utf8');assert.match(os,/const zoneLife=createZoneLife\(scene,\{phone\}\);/);assert.match(os,/zoneLife\.update\(dt,reduced,player\);/);assert.match(os,/zoneLife\.dispose\(\)/);
+});
 console.log(`sea-life-areas: ${groups} groups passed (${A.OPEN_SEA_WHALE_LOOPS.length} open-sea whales incl. ${A.OPEN_SEA_WHALE_LOOPS.filter(l=>l.kind==='humpback').length} humpbacks, ${A.OPEN_SEA_RAY_LOOPS.length} rays in ${A.OPEN_SEA_RAY_GROUPS.length} areas)`);

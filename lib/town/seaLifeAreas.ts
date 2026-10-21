@@ -17,6 +17,7 @@ import {SHARK_LOOPS,type CayPoint} from './coralCay';
 import {MANTA_LOOPS,type RayLoop} from './mantaLoops';
 import {SUMMIT_SHARK_LOOPS,WHALE_SHARK_LOOP} from './summitSeaLife';
 import {FISH_SPOTS} from './fishing/fishCatalog';
+import {DIVE_SPOTS,diveBlobR,type DiveSignature} from './water/diveSpots';
 import type {HeatTier} from '../graphics/heatTier';
 
 export type SeaAreaId='main-west'|'main-north'|'main-south'|'north-sea'|'causeway-channel'|'jetty-south'|'coral-cay'|'cay-east'|'summit-west'|'summit-isle';
@@ -37,6 +38,14 @@ export const SEA_AREAS:readonly SeaArea[]=[
  {id:'summit-isle',name:'Summit Isle',x:690,z:170,radius:170,big:false},
 ];
 
+/** An ellipse beside an Explore zone (Oct 21 2026), from the zone's own data, never hard-coded: `bearing` (deg, from +x towards +z)
+ *  from the zone centre, its centre `gap + rz` metres past the blob edge (diveSpots.ts diveBlobR; with turn π/2 the near side is
+ *  `gap` off the edge), half-lengths, and a turn (rad) relative to the bearing (0 = the rx axis points away from the zone). A zone
+ *  moved later carries its animals along; tests/sea-life-areas.cjs re-checks every clearance. */
+export function zoneEllipse(zone:string,bearing:number,gap:number,rx:number,rz:number,turn=0):[number,number,number,number,number]{
+ const s=DIVE_SPOTS.find(z=>z.id===zone);if(!s)throw new Error('unknown dive zone '+zone);
+ const b=bearing*Math.PI/180,R=diveBlobR(s,b)+gap+rz;return [s.x+Math.cos(b)*R,s.z+Math.sin(b)*R,rx,rz,b+turn];
+}
 /** A closed, smooth ellipse loop (n samples): centre, half-lengths and rotation (rad, from +x towards +z). */
 export function ellipseLoop(cx:number,cz:number,rx:number,rz:number,rot:number,n=72):CayPoint[]{
  const c=Math.cos(rot),s=Math.sin(rot),out:CayPoint[]=[];
@@ -50,7 +59,9 @@ export type OpenSeaWhaleLoop={readonly id:string;readonly area:SeaAreaId;readonl
 const whale=(id:string,area:SeaAreaId,e:[number,number,number,number,number],speed:number,start:number,kind:WhaleKind='whale-shark'):OpenSeaWhaleLoop=>({id,area,points:ellipseLoop(...e,96),speed,start,kind});
 /** The open-sea whales: one long, slow loop in each big area (South Bay's is the humpback) and the humpback off Summit's south-east (slower than Summit's .9 m/s whale shark and every shark). */
 export const OPEN_SEA_WHALE_LOOPS:readonly OpenSeaWhaleLoop[]=[
- whale('whale-north-sea','north-sea',[235,-245,25,12,.8],.8,.1),
+ // Oct 21 2026 (zone neighbourhoods): the north sea's whale shark cruises just east of Captain's Cup (was a loop 75 m off it),
+ // its shadow sliding past the wreck: a short loop squeezed between the starfish mantas, the shore band and the shark patrols.
+ whale('whale-north-sea','north-sea',zoneEllipse('captains-cup',10,18,14,6),.8,.1),
  whale('whale-main-north','main-north',[120,-280,32,12,0],.75,.6),
  whale('whale-main-west','main-west',[-130,-90,45,12,1.57],.8,.3),
  // Oct 20 2026: South Bay's whale is the humpback (a slow surface cruiser with a tail lift), on the whale shark's old loop.
@@ -83,9 +94,9 @@ export const RAY_LESSONS:Record<RaySpecies,readonly {title:string;text:string}[]
 };
 export const RAY_LESSON_KIND='Coaching idea';
 export const rayLessonFor=(species:RaySpecies,n:number)=>{const l=RAY_LESSONS[species];return l[Math.abs(n)%l.length];};
-export type OpenSeaRayLoop=RayLoop&{readonly species:RaySpecies;readonly area:SeaAreaId};
-const ray=(id:string,area:SeaAreaId,species:RaySpecies,e:[number,number,number,number,number]):OpenSeaRayLoop=>{const k=RAY_SPECIES[species];
- return {id,island:area,area,species,points:ellipseLoop(...e),speed:k.speed,scale:k.scale,tint:species==='manta'?undefined:k.tint,ridable:k.ridable};};
+export type OpenSeaRayLoop=RayLoop&{readonly species:RaySpecies;readonly area:SeaAreaId;/** The Explore zone it lives beside (Oct 21 2026): its own instanced group, so the area cap never drops it. */readonly zone?:string};
+const ray=(id:string,area:SeaAreaId,species:RaySpecies,e:[number,number,number,number,number],zone?:string):OpenSeaRayLoop=>{const k=RAY_SPECIES[species];
+ return {id,island:area,area,species,points:ellipseLoop(...e),speed:k.speed,scale:k.scale,tint:species==='manta'?undefined:k.tint,ridable:k.ridable,zone};};
 /** The open-sea rays, added where the sea was thin (see seaLifeInventory): each area gets its own mix. */
 export const OPEN_SEA_RAY_LOOPS:readonly OpenSeaRayLoop[]=[
  ray('ray-west-sting','main-west','sting',[-130,80,22,10,1.57]),
@@ -99,9 +110,46 @@ export const OPEN_SEA_RAY_LOOPS:readonly OpenSeaRayLoop[]=[
  ray('ray-cay-east-manta','cay-east','manta',[705,-280,12,5,.8]),
  ray('ray-summit-west-sting','summit-west','sting',[470,85,22,10,2]),
  ray('ray-summit-west-sting-2','summit-west','sting',[575,-10,16,10,2]),
+ // Oct 21 2026 (zone neighbourhoods, audit: "Ray Meadow's nearest ray loop is 100 m off"): an eagle ray and a stingray gliding
+ // just off Ray Meadow's landward edge, placed from the zone's own data.
+ ray('ray-meadow-eagle','cay-east','eagle',zoneEllipse('ray-meadow',270,13,10,5),'ray-meadow'),
+ ray('ray-meadow-sting','cay-east','sting',zoneEllipse('ray-meadow',200,9,10,5,1),'ray-meadow'),
 ];
-/** The areas that have open-sea rays, in a fixed order (one instanced mesh each). */
-export const OPEN_SEA_RAY_GROUPS=SEA_AREAS.map(a=>({island:a.id as string,loops:OPEN_SEA_RAY_LOOPS.filter(l=>l.area===a.id) as RayLoop[]})).filter(g=>g.loops.length>0);
+/** The areas that have open-sea rays, in a fixed order (one instanced mesh each), then one group per Explore zone with rays of its
+ *  own (Oct 21 2026: the zone's rays never lose their place to the area's cap; the same per-group tier cap, 0 at tier 4). */
+export const OPEN_SEA_RAY_GROUPS=[
+ ...SEA_AREAS.map(a=>({island:a.id as string,loops:OPEN_SEA_RAY_LOOPS.filter(l=>l.area===a.id&&!l.zone) as RayLoop[]})),
+ ...DIVE_SPOTS.map(s=>({island:'zone-'+s.id,loops:OPEN_SEA_RAY_LOOPS.filter(l=>l.zone===s.id) as RayLoop[]})),
+].filter(g=>g.loops.length>0);
+
+/** Explore zone neighbourhoods (Oct 21 2026, user: "sea-life loops near zones"): each zone's signature animal swims in the open
+ *  water around it, so the surface promises what the reef below holds. Rays, mantas and whales are the open-sea / island systems'
+ *  own loops (above, mantaLoops.ts); turtles, fish and jellies are ZONE_LIFE_LOOPS, drawn by lib/graphics/zoneLife.ts with the
+ *  clear-water window's creature shapes (clearCreatures.ts). tests/sea-life-areas.cjs: every zone has its signature animal within
+ *  SIGNATURE_RANGE m of its centre. */
+export type ZoneAnimal='whale'|'manta'|'ray'|'turtle'|'fish'|'jelly';
+export const ZONE_SIGNATURE:Record<DiveSignature,ZoneAnimal>={garden:'whale',goal:'manta',kelp:'fish',rays:'ray',arch:'jelly',crates:'fish',turtles:'turtle'};
+export const SIGNATURE_RANGE=60;
+export type ZoneCreature='turtle'|'fish'|'jelly';
+export type ZoneLifeLoop={readonly id:string;readonly zone:string;readonly kind:ZoneCreature;readonly points:CayPoint[];
+ /** m/s along the loop. */readonly speed:number;/** Animals on the loop (spread evenly; a fish school keeps formation). */readonly count:number};
+const life=(id:string,zone:string,kind:ZoneCreature,e:[number,number,number,number,number],speed:number,count:number):ZoneLifeLoop=>({id,zone,kind,points:ellipseLoop(...e),speed,count});
+/** Turtles at Turtle Pool (they come up to breathe), fish schools off Kelp Forest Wreck and Ball Crate Reef, jellies drifting by
+ *  Moon Arch. Each sits a few metres off its zone's edge on the side away from the shark patrols and whales. */
+export const ZONE_LIFE_LOOPS:readonly ZoneLifeLoop[]=[
+ life('turtle-pool-turtles','turtle-pool','turtle',zoneEllipse('turtle-pool',180,4,9,5,Math.PI/2),.55,2),
+ life('kelp-trawler-fish','kelp-trawler','fish',zoneEllipse('kelp-trawler',300,4,10,5,Math.PI/2),1.3,7),
+ life('ball-crate-fish','ball-crate','fish',zoneEllipse('ball-crate',300,4,10,5,Math.PI/2),1.3,7),
+ life('moon-arch-jellies','moon-arch','jelly',zoneEllipse('moon-arch',90,3,8,4,Math.PI/2),.22,5),
+];
+/** Zone-life caps by heat tier (animals drawn per kind; tier 4 / Battery saver: none). Only zones within ZONE_LIFE_DRAW m draw. */
+export const ZONE_LIFE_DRAW=160;
+export function zoneLifeCounts(tier:HeatTier,phone:boolean){
+ if(tier===0)return phone?{turtle:2,fish:5,jelly:4}:{turtle:2,fish:7,jelly:5};
+ if(tier<=2)return {turtle:2,fish:4,jelly:3};
+ if(tier===3)return {turtle:1,fish:3,jelly:2};
+ return {turtle:0,fish:0,jelly:0};
+}
 
 /** Hard caps (heat): whale sharks DRAWN at once (the nearest; the rest hidden), and rays kept per area, by heat tier. Static
  *  ambience (tiers 3–4) freezes whatever stays anyway. Never more than MAX_RAYS_PER_AREA rays in one area. */
