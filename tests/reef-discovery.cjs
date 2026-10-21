@@ -39,6 +39,10 @@ assert.equal(R.REEF_HINT_RANGE,300);assert.equal(R.REEF_HINT_HZ,2);assert.equal(
  const again=h.tick(.5,x,z,true,none);assert(!again||again.id!=='ray-meadow','once per zone per visit');
  const h2=R.createReefHints();assert.equal(h2.tick(.5,x,z,true,new Set(['ray-meadow']))?.id==='ray-meadow',false,'explored zones are never hinted');
  const h3=R.createReefHints();assert.equal(h3.tick(.5,rm.x,rm.z,true,new Set(Dv.DIVE_SPOTS.filter(s=>s.id!=='ray-meadow').map(s=>s.id))),null,'not from inside the zone');
+ // Two zones in range never chain: REEF_HINT_GAP quiet seconds after a hint.
+ {const t=R.createReefHints(),tp=Dv.DIVE_SPOTS.find(s=>s.id==='turtle-pool'),ma=Dv.DIVE_SPOTS.find(s=>s.id==='moon-arch');const px=tp.x-30,pz=tp.z;
+  assert.equal(t.tick(.5,px,pz,true,none).id,'turtle-pool');assert.equal(t.tick(.5,px,pz,true,none),null,'quiet after a hint');
+  let next=null;for(let s=0;s<R.REEF_HINT_GAP+2&&!next;s+=.5)next=t.tick(.5,px,pz,true,none);assert(next&&next.id!=='turtle-pool'&&R.REEF_HINT_GAP>=30,'the next zone after the gap');assert(ma);}
  const h4=R.createReefHints();assert.equal(h4.tick(.5,-2000,-2000,true,none),null,'nothing beyond 300 m');}
 // The screen bearing: ahead = 0, right = +90°.
 assert(Math.abs(R.screenBearing(0,-1,1,0,0,-10))<1e-9);assert(Math.abs(R.screenBearing(0,-1,1,0,10,0)-Math.PI/2)<1e-9);

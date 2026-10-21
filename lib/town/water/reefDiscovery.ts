@@ -57,20 +57,22 @@ export function nearestUndiscovered(x:number,z:number,discovered:ReadonlySet<str
 
 /** The hint: within this many metres of an undiscovered zone's edge (well past the surface preview), checked this often, shown this long. */
 export const REEF_HINT_RANGE=300,REEF_HINT_HZ=2,REEF_HINT_MS=6000;
+/** Quiet seconds after a hint before the next zone's (so two zones in range never chain one toast after another). */
+export const REEF_HINT_GAP=60;
 export const REEF_HINT_TITLE='Something shimmers over there';
 export const reefHintText=(spot:Pick<DiveSpot,'id'|'name'>,far:boolean)=>far?`A reef to explore: ${spot.name}. Too far to swim, so fly there!`:`A reef to explore: ${spot.name}. Follow the arrow!`;
 
 /** The hint tracker for one visit: tick() at the HUD tick; returns the zone to hint (once per zone per visit) or null. */
 export function createReefHints(spots:readonly DiveSpot[]=DIVE_SPOTS){
- const hinted=new Set<string>();let acc=0,aimAcc=0,wasDiving=false;
+ const hinted=new Set<string>();let acc=0,aimAcc=0,wasDiving=false,wait=0;
  /** The 2 Hz test: the zone to hint (once per zone per visit) or null. `eligible`: flying or swimming, not in a job, lesson, room,
   *  menu or the dive itself. A box reject, then one atan2 per near zone; no allocation. */
  function tick(dt:number,x:number,z:number,eligible:boolean,discovered:ReadonlySet<string>):DiveSpot|null{
-  acc+=dt;if(acc<1/REEF_HINT_HZ)return null;acc=0;if(!eligible)return null;
+  wait=Math.max(0,wait-dt);acc+=dt;if(acc<1/REEF_HINT_HZ)return null;acc=0;if(!eligible||wait>0)return null;
   let best:DiveSpot|null=null,bd=REEF_HINT_RANGE;
   for(const s of spots){if(discovered.has(s.id)||hinted.has(s.id))continue;const dx=x-s.x,dz=z-s.z;if(Math.abs(dx)>bd+40||Math.abs(dz)>bd+40)continue;
    if(inDiveBlob(s,x,z))continue;const d=diveEdgeDistance(s,x,z);if(d<bd){bd=d;best=s;}}
-  if(best)hinted.add(best.id);
+  if(best){hinted.add(best.id);wait=REEF_HINT_GAP;}
   return best;
  }
  /** Town.tsx's one call per frame: marks the zone a dive starts in, re-reads the saves when a dive ends, raises the hint and keeps
