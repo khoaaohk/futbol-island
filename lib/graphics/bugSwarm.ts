@@ -43,7 +43,9 @@ type Slot={score?:number;bug:FlightBug;sp:BugSpecies|null;call:FireflyCall|null;
  mesh:T.InstancedMesh|null;flap:T.InstancedBufferAttribute|null;pose:T.InstancedBufferAttribute|null;
  /** Seconds since it turned up near the player (local density; < 0 = not a local spawn) and whether its species is already in
   *  today's jar (shown with a check, not a glint). */
- spawnT:number;dup:boolean};
+ spawnT:number;dup:boolean;
+ /** Seconds it holds still (a swing locked on to it: it notices the net and waits for the hit frame). */
+ holdT:number};
 
 export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>number;seed?:number}={}){
  const floor=opts.floor??fieldSurfaceHeight;
@@ -73,11 +75,11 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    const list=pickBugsOnMap(seed,tier,time).slice(0,n);
    slots=list.map((sp,i)=>{const h=BUG_HOMES.find(h=>h.id===sp.id)!;
     const bug=createFlightBug({id:sp.id,move:sp.move,x:h.x,z:h.z,wander:h.wander,alert:sp.alert,sneak:sp.sneak,seed:(seed^Math.imul(i+1,0x9e3779b1))>>>0},floor);
-    return {bug,sp,call:null,size:bugVisualSize(sp.look.size),color:new T.Color(sp.look.palette[0]),near:false,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false};});
+    return {bug,sp,call:null,size:bugVisualSize(sp.look.size),color:new T.Color(sp.look.palette[0]),near:false,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false,holdT:0};});
    const fg=own(createBugFarGeometry());farFlap=attr(n);farPose=attr(n);fg.setAttribute('iFlap',farFlap);fg.setAttribute('iPose',farPose);
    far=new T.InstancedMesh(fg,material,n);far.name='bug-swarm-far';far.instanceMatrix.setUsage(T.DynamicDrawUsage);far.setColorAt(0,new T.Color('#ffffff'));
    far.instanceColor!.setUsage(T.DynamicDrawUsage);far.boundingSphere=new T.Sphere(new T.Vector3(SUMMIT_CENTER.x,30,SUMMIT_CENTER.z),220);far.count=0;root.add(far);
-   fx=own(createBugSpotFx(n));root.add(fx.ground,fx.marks);fx.hide();
+   fx=own(createBugSpotFx());root.add(fx.halo);fx.hide();
    for(const sl of slots){// one full-model mesh per species out today (drawn only while near)
     const g=own(createBugModel(sl.sp));tris+=triangleCount(g);sl.flap=attr(1);sl.pose=attr(1);g.setAttribute('iFlap',sl.flap);g.setAttribute('iPose',sl.pose);
     const mm=new T.InstancedMesh(g,material,1);mm.name='bug-'+sl.bug.id;mm.instanceMatrix.setUsage(T.DynamicDrawUsage);mm.visible=false;
@@ -86,7 +88,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    const homes=FIREFLY_HOMES.slice(0,n);
    slots=homes.map((h,i)=>{const call=FIREFLY_SET.find(f=>f.id===h.id)??null;
     const bug=createFlightBug({id:h.id,move:'firefly-drift',x:h.x,z:h.z,wander:h.wander,alert:3,sneak:.3,seed:(seed^Math.imul(i+7,0x85ebca6b))>>>0},floor);
-    return {bug,sp:null,call,size:FIREFLY_SIZE,color:new T.Color('#ffffff'),near:true,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false};});
+    return {bug,sp:null,call,size:FIREFLY_SIZE,color:new T.Color('#ffffff'),near:true,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false,holdT:0};});
    const g=own(createBugModel(null));tris=triangleCount(g);farFlap=attr(n);farPose=attr(n);g.setAttribute('iFlap',farFlap);g.setAttribute('iPose',farPose);
    // The lantern's middle in model space (the glow-flagged vertices), where each glow sprite sits.
    const pa=g.getAttribute('position'),ma=g.getAttribute('aMisc');let k=0;lantern.set(0,0,0);for(let i=0;i<pa.count;i++)if(ma.getW(i)>0){lantern.x+=pa.getX(i);lantern.y+=pa.getY(i);lantern.z+=pa.getZ(i);k++;}if(k)lantern.multiplyScalar(1/k);
@@ -103,9 +105,9 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   a.setXYZW(i,b.fhz,b.famp,b.fbase,(b.flap-t*b.fhz*TAU)%(TAU*1000));
   pa.setXYZW(i,b.open,(b.leg-t*b.legHz)%(TAU*1000),b.legAmp,b.legHz);
  }
- function matrixOf(sl:Slot){const b=sl.bug;
+ function matrixOf(sl:Slot,boost=1){const b=sl.bug;
   const bob=b.mode===Mode.Fly||b.mode===Mode.Hover?-Math.sin(b.flap)*.035*b.famp*sl.size:0;
-  e.set(b.pitch,b.yaw,b.roll);q.setFromEuler(e);s.setScalar(sl.size*b.fade);return m4.compose(p.set(b.x,b.y+bob,b.z),q,s);}
+  e.set(b.pitch,b.yaw,b.roll);q.setFromEuler(e);s.setScalar(sl.size*b.fade*boost);return m4.compose(p.set(b.x,b.y+bob,b.z),q,s);}
 
  /** Per frame (components/Town.tsx). */
  function update(f:SwarmFrame){
@@ -132,34 +134,27 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   clock=(clock+dt)%CLOCK_WRAP;U.uTime.value=clock;
   farAcc+=dt;const farStep=farAcc>=1/WILD_BUG_RANGE.FAR_HZ;const fdt=Math.min(farAcc,.25);if(farStep){farAcc=0;farSteps++;}
   ctx.px=f.x;ctx.pz=f.z;ctx.pspeed=pspeed;updates++;
-  const live=far!;let fi=0;const isBugs=built==='bugs';jobOn=!!f.job;const spot=fx&&jobOn&&isBugs?fx:null;if(spot)spot.begin(clock);else fx?.hide();
+  const live=far!;let fi=0,haloD:number=SPOT_FX.haloRange,haloSl:Slot|null=null;const isBugs=built==='bugs';jobOn=!!f.job;const spot=fx&&jobOn&&isBugs?fx:null;if(spot)spot.begin(clock);else fx?.hide();
   for(let i=0;i<slots.length;i++){const sl=slots[i],b=sl.bug,d=Math.hypot(b.x-f.x,b.z-f.z);
    if(d>WILD_BUG_RANGE.SIM_M&&b.mode!==Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
    const near=d<WILD_BUG_RANGE.NEAR_M,step=near?dt:farStep?fdt:0;
    if(pinned&&pinned.sl===sl){const a=pinned.at;pinned.t+=dt;b.x=a.x;b.y=a.y;b.z=a.z;b.yaw+=Math.sin(pinned.t*14)*.08;b.roll=Math.sin(pinned.t*19)*.35;b.pitch=Math.sin(pinned.t*11)*.25;b.fade=1;}
+   else if(sl.holdT>0){sl.holdT-=dt;b.vx=b.vy=b.vz=0;}
    else if(step>0&&stepBug(b,step,ctx))flutter(sl);
    if(b.mode===Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
-   if(sl.spawnT>=0){sl.spawnT+=dt;if(sl.spawnT>SPOT_FX.spawnShow)sl.spawnT=-1;}
-   if(spot&&d<SPOT_FX.shadowRange)spotFx(spot,sl,d,i);
+   if(sl.spawnT>=0){sl.spawnT+=dt;if(sl.spawnT>2.5)sl.spawnT=-1;}
+   if(spot&&!sl.dup&&b.fade>.3&&d<haloD&&pinned?.sl!==sl){haloD=d;haloSl=sl;}
    if(isBugs){sl.near=sl.near?d<WILD_BUG_RANGE.FULL_OUT_M:d<WILD_BUG_RANGE.FULL_IN_M;
-    if(sl.near&&sl.mesh){sl.mesh.visible=true;sl.mesh.setMatrixAt(0,matrixOf(sl));sl.mesh.instanceMatrix.needsUpdate=true;writeAttrs(sl.flap!,sl.pose!,0,b);sl.flap!.needsUpdate=true;sl.pose!.needsUpdate=true;continue;}
+    // The near model's culling sphere follows the bug: local density and recalls move a bug far from the home its sphere was built
+    // round, and a stale sphere culled the body (user: "some of the bugs have check marks", only the mark was drawn).
+    if(sl.near&&sl.mesh){sl.mesh.visible=true;sl.mesh.boundingSphere!.center.set(b.x,b.y,b.z);sl.mesh.boundingSphere!.radius=sl.size*1.5+.5;sl.mesh.setMatrixAt(0,matrixOf(sl));sl.mesh.instanceMatrix.needsUpdate=true;writeAttrs(sl.flap!,sl.pose!,0,b);sl.flap!.needsUpdate=true;sl.pose!.needsUpdate=true;continue;}
     if(sl.mesh)sl.mesh.visible=false;}
-   live.setMatrixAt(fi,matrixOf(sl));if(isBugs)live.setColorAt(fi,sl.color);writeAttrs(farFlap!,farPose!,fi,b);
+   live.setMatrixAt(fi,matrixOf(sl,isBugs?1+.45*Math.min(1,Math.max(0,(d-WILD_BUG_RANGE.FULL_IN_M)/26)):1));if(isBugs)live.setColorAt(fi,sl.color);writeAttrs(farFlap!,farPose!,fi,b);
    if(glow){p.copy(lantern).applyMatrix4(m4);glow.setMatrixAt(fi,m4.compose(p,q.identity(),s.setScalar(2.6*b.fade)));}
    fi++;}
   live.count=fi;live.visible=fi>0;live.instanceMatrix.needsUpdate=true;if(live.instanceColor)live.instanceColor.needsUpdate=true;farFlap!.needsUpdate=true;farPose!.needsUpdate=true;
   if(glow){glow.count=fi;glow.visible=fi>0;glow.instanceMatrix.needsUpdate=true;}
-  if(spot)spot.end();
- }
- /** One bug's spotting FX (bug-polish): its contact shadow (flying / hopping), the spawn ring and "!" for a few seconds after it
-  *  turned up near the player, and the periodic glint (uncaught) or check (already in the jar) within SPOT_FX.glintRange. */
- function spotFx(fxs:BugSpotFx,sl:Slot,d:number,i:number){const b=sl.bug,g=floor(b.x,b.z),fade=b.fade;if(fade<.05)return;
-  const up=Math.max(0,b.y-g),air=b.mode===Mode.Fly||b.mode===Mode.Hover||b.mode===Mode.Hop;
-  if(air&&up>.08)fxs.groundAt(b.x,g+.04,b.z,sl.size*(1.15-Math.min(.55,up*.1)),0,fade*(1-Math.min(.6,up*.09)));
-  const fresh=sl.spawnT>=0;
-  if(fresh)fxs.groundAt(b.x,g+.05,b.z,2.2,1,fade*(1-sl.spawnT/SPOT_FX.spawnShow*.5));
-  if(fresh)fxs.markAt(b.x,b.y+sl.size*.5+.45,b.z,.75,2,0,fade);
-  else if(d<SPOT_FX.glintRange)fxs.markAt(b.x,b.y+sl.size*(sl.dup?.5:.15)+(sl.dup?.35:0),b.z,sl.dup?.6:sl.size*1.4+.25,sl.dup?1:0,(i*.37)%1,fade);
+  if(spot){if(haloSl){const b=haloSl.bug;spot.haloAt(b.x,b.y+haloSl.size*.25,b.z,haloSl.size*2.4+.6,Math.min(1,b.fade));}spot.end();}
  }
  function flutter(sl:Slot){
   if(sl.bug.clock-sl.counted>WILD_FLEE.COUNT_EVERY_S){sl.counted=sl.bug.clock;countWildFlutter();}
@@ -198,6 +193,8 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   catch(id:string):SwarmCatch|null{const sl=find(id);if(!sl||sl.bug.mode===Mode.Hidden)return null;const b=sl.bug;
    const out={id:b.id,kind:sl.sp?'bug' as const:'firefly' as const,species:sl.sp,call:sl.call,x:b.x,y:b.y,z:b.z};if(pinned?.sl===sl)pinned=null;hideBug(b);if(sl.mesh)sl.mesh.visible=false;return out;},
   /** Hold one bug in the net (the catch zoom): it follows `at` (a live point the caller moves) and wiggles; null lets it go. */
+  /** A swing locked on to this bug: it holds still for `secs` (until the hit frame). */
+  hold(id:string,secs:number){const sl=find(id);if(sl)sl.holdT=secs;return !!sl;},
   pin(id:string|null,at?:{x:number;y:number;z:number}){if(!id||!at){pinned=null;return true;}const sl=find(id);if(!sl||sl.bug.mode===Mode.Hidden)return false;pinned={sl,at,t:0};return true;},
   /** A new rotation seed for the day bugs (a Bug squad shift's own set, pickBugsOnMap); null = the daily seed. Rebuilds the set. */
   reseed(seed:number|null){if(seed===seedOverride)return;seedOverride=seed;if(built==='bugs')drop();},
@@ -232,7 +229,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
     if(pinned?.sl===sl||(b.mode===Mode.Hidden?b.respawn<=.6&&Math.hypot(b.hx-x,b.hz-z)<R:Math.hypot(b.x-x,b.z-z)<R)){near++;continue;}}
    let need=Math.min(o.want??BUG_LOCAL.want,slots.length)-near;if(need<=0)return 0;
    cand.length=0;
-   for(const sl of slots){const b=sl.bug;if(pinned?.sl===sl)continue;
+   for(const sl of slots){const b=sl.bug;if(pinned?.sl===sl||sl.dup)continue;// caught species are never sent over (user: no bug you can't catch)
     if(b.mode===Mode.Hidden?b.respawn<=.6&&Math.hypot(b.hx-x,b.hz-z)<R:Math.hypot(b.x-x,b.z-z)<R)continue;
     const waiting=b.mode===Mode.Hidden&&b.respawn>.6;// caught: its 45 s are not up
     sl.score=(sl.dup?100:0)+(waiting?50:0)+(band&&sl.sp&&sl.sp.band!==band?10:0)-Math.min(1000,Math.hypot(b.x-x,b.z-z))/2000;

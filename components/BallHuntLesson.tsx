@@ -22,6 +22,9 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
  const dialog=useRef<HTMLDialogElement>(null),primary=useRef<HTMLButtonElement>(null),[stepper,setStepper]=useState(()=>startLessonStepper(stepCount)),[hidden,setHidden]=useState(false),id=useId().replace(/:/g,''),progress=useCoinProgress();
  useEffect(()=>{const node=dialog.current,previous=document.activeElement as HTMLElement|null;node?.showModal();const visibility=()=>setHidden(document.hidden);visibility();document.addEventListener('visibilitychange',visibility);return()=>{document.removeEventListener('visibilitychange',visibility);node?.close();previous?.focus?.({preventScroll:true});};},[]);
  useEffect(()=>setStepper(startLessonStepper(stepCount)),[spotId,stepCount]);
+ // A ball without a lesson renders nothing: leave the queue at once, or Town's stack stays hidden behind an invisible card (the job
+ // pill, its hint and End job vanished, Oct 20 2026).
+ const missing=!spot||!lesson;useEffect(()=>{if(missing)onDismiss();},[missing,onDismiss]);
  // Previous and Next grow to fit the longer label (≈22 px each side, 128 px minimum) and stay the same width (docs/ui/BUTTONS.md);
  // if that is wider than the room, both take the room and the labels wrap onto two balanced lines. Measured on label or size change.
  const footer=useRef<HTMLElement>(null),measure=useRef<CanvasRenderingContext2D|null>(),primaryText=lesson?lessonPrimaryLabel(stepper,lesson.actions):'';

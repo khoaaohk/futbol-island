@@ -112,7 +112,7 @@ function pickTarget(b:FlightBug,floor:Floor,far=1){
 /** How far (m) this bug notices the player at their current speed (Animal Crossing sneaking). */
 export function noticeRadius(alert:number,sneak:number,playerSpeed:number){
  // A rider (scooter / bike / moped on a Bug squad shift) is noticed a little earlier the faster they go (≤ 1.6 × at 10 m/s).
- return playerSpeed>PLAYER_RUN?alert*Math.min(1.6,1+Math.max(0,playerSpeed-5)*.12):playerSpeed>PLAYER_STILL?alert*sneak*.7:alert*sneak*.35;
+ return playerSpeed>PLAYER_RUN?alert*Math.min(1.6,1+Math.max(0,playerSpeed-5)*.12):playerSpeed>PLAYER_STILL?alert*sneak*.5:alert*sneak*.25;/* Oct 20 2026 playtest: calmer (was .7 / .35) */
 }
 const TURNS=[0,1.2,-1.2] as const;
 /** Scare a bug away from (fx, fz): fliers take off up and away, crawlers scurry, hoppers spring. Smooth: it only sets targets. */
@@ -157,7 +157,7 @@ export function stepBug(b:FlightBug,dt:number,c:StepCtx):boolean{
  const p=b.prof;let noticed=false;
  if(b.fleeT>0)b.fleeT-=dt;
  else{const d=Math.hypot(c.px-b.x,c.pz-b.z);if(d<noticeRadius(b.alert,b.sneak,c.pspeed)){startle(b,c.px,c.pz,c.floor);noticed=true;}}
- const fleeing=b.fleeT>0,boost=fleeing?2.2:1;
+ const fleeing=b.fleeT>0,boost=fleeing?1.6:1;/* Oct 20 2026 playtest: a gentler flee (was 2.2), still catchable on the next swing */
  b.timer-=dt;
  let flying=false,walking=false;
  switch(b.mode){

@@ -4,7 +4,11 @@
 //     smaller), the 20 species' homes unchanged, the heat caps 12 / 10 / 8 by tier and at least BUG_LOCAL.floor at tiers 3-4;
 //  2. walking a long loop over the island: the count within 40 m never drops below 8 after the first seconds;
 //  3. local spawns land out of the camera's view (when any spot is), on Summit Isle ground, and uncaught species are sent first;
-//  4. FX: contact shadows / spawn rings / glints / checks within the pooled caps, 2 extra draws at most, none without a shift.
+//  4. the one spotting cue (Oct 20 2026 playtest): a single halo on the nearest uncaught bug (no shadows, rings, '!', glints or checks),
+//     never on a caught species, never without a body; caught species are never sent over;
+//  5. every shown bug has a built model and its draw is not culled (the near model's sphere follows the bug: the stale sphere left
+//     only the check mark on screen); the far silhouette is ≥ 14 px tall at 40 m on a phone;
+//  6. catch simulation (bugCatch.ts rules on the real swarm): every species, a child walking up then pressing Swing at 2-8 m.
 // usage: node tests/bug-local.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire(base+'/package.json'),T=req('three');
@@ -69,16 +73,62 @@ for(const [tier,cap] of [[1,10],[2,8],[3,8],[4,8]]){const s=spots[2],sc=new T.Sc
  // Every uncaught species not already near was sent before any caught one.
  const uncaughtSent=new Set(sent.filter(id=>!caughtIds.has(id)));
  if(firstCaught>=0)for(const id of sw.ids)if(!caughtIds.has(id))assert(uncaughtSent.has(id)||sw.bugs.find(b=>b.id===id)&&Math.hypot(sw.bugs.find(b=>b.id===id).hx-s.x,sw.bugs.find(b=>b.id===id).hz-s.z)<40,'uncaught '+id+' sent (or already near) before a caught one');
- report.push(`caught 4: sent ${sent.length} (${sent.filter(id=>caughtIds.has(id)).length} caught, shown with a check)`);sw.dispose();}
+ assert.equal(sent.filter(id=>caughtIds.has(id)).length,0,'caught species are never sent over');
+ report.push(`caught 4: sent ${sent.length} (${sent.filter(id=>caughtIds.has(id)).length} caught: never)`);sw.dispose();}
 
-// ---- 4. FX budget ----
-{const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(1.78);sw.setCamera(cam);const s=spots[1];let maxG=0,maxM=0,maxD=0,rings=0;
- run(sw,cam,s.x,s.z,8,{each:()=>{const c=sw.spotFx.counts;maxG=Math.max(maxG,c.ground);maxM=Math.max(maxM,c.marks);maxD=Math.max(maxD,sw.drawCalls);}});
- assert(maxG>0&&maxG<=sw.count*2,`ground FX within the pool (${maxG} ≤ ${sw.count*2})`);assert(maxM>0&&maxM<=sw.count,`marks within the pool (${maxM} ≤ ${sw.count})`);
- // the shadow sits on the ground under a flying bug; glints only within SPOT_FX.glintRange.
- assert.equal(FX.SPOT_FX.glintRange,25);
- sw.update({dt:1/30,x:s.x,z:s.z,night:false,tier:0,reduced:false,busy:false,job:null});assert.equal(sw.spotFx.counts.ground+sw.spotFx.counts.marks,0,'no FX without a shift');
- report.push(`FX: ≤ ${maxG} ground marks, ≤ ${maxM} glints/checks, ≤ ${maxD} draws in all`);sw.dispose();}
+// ---- 4. The one cue: a halo on the nearest uncaught bug ----
+{const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(1.78);sw.setCamera(cam);const s=spots[1];let maxH=0,maxD=0,frames=0,withHalo=0;
+ const caughtIds=new Set();sw.update({dt:1/30,x:s.x,z:s.z,night:false,tier:0,reduced:false,busy:false,job:'bugs'});sw.ids.slice(0,3).forEach(id=>caughtIds.add(id));sw.ambient(s.x,s.z,{caught:id=>caughtIds.has(id)});// a shift starts with an empty jar; here 3 are already in it
+ const m4=new T.Matrix4(),hp=new T.Vector3();
+ run(sw,cam,s.x,s.z,8,{caught:id=>caughtIds.has(id),each:(x,z)=>{frames++;const h=sw.spotFx.halo;maxH=Math.max(maxH,h.count);maxD=Math.max(maxD,sw.drawCalls);
+  if(h.count){withHalo++;h.getMatrixAt(0,m4);hp.setFromMatrixPosition(m4);
+   const b=sw.bugs.filter(b=>b.mode!==F.Mode.Hidden).sort((p,q)=>Math.hypot(p.x-hp.x,p.z-hp.z)-Math.hypot(q.x-hp.x,q.z-hp.z))[0];
+   assert(b&&Math.hypot(b.x-hp.x,b.z-hp.z)<.01,'the halo sits on a shown bug');assert(!caughtIds.has(b.id),'never on a caught species');
+   assert(Math.hypot(b.x-x,b.z-z)<=FX.SPOT_FX.haloRange,'within the halo range');}}});
+ assert(maxH<=1,'one halo at most');assert(withHalo>frames*.5,`the halo is up most of the shift (${withHalo}/${frames})`);
+ assert(!sw.root.getObjectByName('bug-spot-marks')&&!sw.root.getObjectByName('bug-spot-ground'),'no shadows, rings, "!", glints or checks');
+ sw.update({dt:1/30,x:s.x,z:s.z,night:false,tier:0,reduced:false,busy:false,job:null});assert.equal(sw.spotFx.counts.halo,0,'no cue without a shift');
+ report.push(`cue: one halo (≤ ${maxH}), up ${Math.round(withHalo/frames*100)}% of frames, ≤ ${maxD} draws in all`);sw.dispose();}
+// ---- 5. Every shown bug is a drawn body ----
+{const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(.46);sw.setCamera(cam);const fr=new T.Frustum(),pm=new T.Matrix4();let checked=0,maxD=0;
+ for(const s of spots.slice(0,6))run(sw,cam,s.x,s.z,5,{each:()=>{maxD=Math.max(maxD,sw.drawCalls);
+  pm.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);fr.setFromProjectionMatrix(pm);
+  for(const o of sw.root.children){if(!o.isInstancedMesh||!o.name.startsWith('bug-')||o.name==='bug-swarm-far'||o.name.startsWith('bug-spot')||!o.visible)continue;
+   const b=sw.bugs.find(b=>'bug-'+b.id===o.name);assert(b&&b.mode!==F.Mode.Hidden,'a shown full model is a live bug');
+   const sph=o.boundingSphere.clone().applyMatrix4(o.matrixWorld);assert(sph.distanceToPoint(new T.Vector3(b.x,b.y,b.z))<=0,'the culling sphere holds the bug ('+o.name+')');
+   if(fr.containsPoint(new T.Vector3(b.x,b.y,b.z))){assert(fr.intersectsObject(o),'a bug in view is never culled ('+o.name+')');checked++;}}}});
+ // every slot has its built model; each shown bug is either its full model or a far instance
+ for(const id of sw.ids)assert(sw.root.getObjectByName('bug-'+id),'built model for '+id);
+ // the far silhouette at 40 m on a phone (fov 40, 844 px tall): the smallest species, at the far boost, ≥ 14 px
+ const W=load('lib/graphics/wildBugsCore.ts'),minSize=Math.min(...SP.BUG_SPECIES.map(b=>W.bugVisualSize(b.look.size))),boost=1.45;
+ const px=minSize*boost/(2*40*Math.tan(20*Math.PI/180))*844;assert(px>=14,`silhouette at 40 m: ${px.toFixed(1)} px`);
+ report.push(`bodies: ${checked} in-view full models all drawn (sphere follows the bug), ≤ ${maxD} draws; smallest silhouette at 40 m ≈ ${px.toFixed(0)} px (phone)`);sw.dispose();}
+// ---- 6. Catch simulation: walk up at 1.6 m/s, press Swing at d m (auto-aim, hold, samples, lunge) ----
+{const K=load('lib/town/jobs/bugCatch.ts'),dt=1/30,rates={};const fast=new Set(['monarch','swallowtail','blue-morph','dragonfly','moth','bumblebee','honeybee']);
+ const seen=new Set();const swarms=[];for(const time of ['day','sunset'])for(let seed=1;seen.size<20&&seed<400;seed++){const ids=SP.pickBugsOnMap(seed,0,time).map(b=>b.id);if(ids.some(id=>!seen.has(id))){ids.forEach(id=>seen.add(id));swarms.push({seed,time});}}
+ assert.equal(seen.size,20,'all 20 species covered');const pos={x:0,y:0,z:0};
+ for(const {seed,time} of swarms){const sunset=time==='sunset';const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed});sw.reseed(seed);const s=spots[0];sw.update({dt,x:s.x,z:s.z,night:false,sunset,tier:0,reduced:false,busy:false,job:'bugs'});
+  for(const id of sw.ids){const sp=SP.BUG_SPECIES.find(b=>b.id===id);if(rates[id])continue;rates[id]={};
+   for(const D of [2,4,5,6,8]){let ok=0,n=0;
+    for(let k=0;k<10;k++){// the others away; this one settled at home; the child walks up from 14 m
+     sw.bugs.forEach(b=>{if(b.id!==id)F.hideBug(b,1e6);});const b=sw.bugs.find(b=>b.id===id);F.placeHome(b,floor);b.fade=1;
+     const a=k*2.4+D,px0=b.x+Math.sin(a)*14,pz0=b.z+Math.cos(a)*14;let x=px0,z=pz0;
+     for(let t=0;t<.5;t+=dt)sw.update({dt,x,z,night:false,sunset,tier:0,reduced:false,busy:false,job:'bugs'});
+     for(let t=0;t<20&&Math.hypot(b.x-x,b.z-z)>D;t+=dt){const l=Math.hypot(b.x-x,b.z-z);x+=(b.x-x)/l*1.6*dt;z+=(b.z-z)/l*1.6*dt;sw.update({dt,x,z,night:false,sunset,tier:0,reduced:false,busy:false,job:'bugs'});}
+     const yaw=K.headingTo(x,z,b.x,b.z)+((k%3)-1)*.6,py=floor(x,z);
+     const tgt=K.autoAim(sw.query(x,py,z,K.AUTO_AIM_RANGE+3),x,z,yaw);n++;if(!tgt)continue;sw.hold(tgt.id,K.SWING.hit+.15);
+     let si=0,seenIn=false,c={x:0,y:0,z:0};
+     for(let t=0;t<K.SWING.hit+1e-6;t+=dt){sw.update({dt,x,z,night:false,sunset,tier:0,reduced:false,busy:false,job:'bugs'});
+      while(si<K.SWING_SAMPLES.length&&t+dt>=K.SWING_SAMPLES[si]){si++;if(sw.position(tgt.id,pos)&&K.inSweep(K.lungeCentre(x,py,z,pos.x,pos.z,c),pos,false,K.LOCKED_SLACK))seenIn=true;}}
+     sw.position(tgt.id,pos);K.lungeCentre(x,py,z,pos.x,pos.z,c);const hits=sw.query(x,py,z,12);let res=K.swingResult(hits,c,tgt.id);if(seenIn&&(!res||res.id!==tgt.id))res=hits.find(h=>h.id===tgt.id)??res;
+     if(res&&res.id===id)ok++;}
+    rates[id][D]=ok/n;}}
+  sw.dispose();}
+ const fails=[];for(const [id,r] of Object.entries(rates)){if(r[2]<.95||r[4]<.95||r[5]<.95)fails.push(id+' ≤5 m '+[r[2],r[4],r[5]].join('/'));if(r[8]<.8)fails.push(id+' 8 m '+r[8]);}
+ assert.equal(fails.length,0,'catch rates: '+fails.join('; '));
+ const avg=D=>Math.round(Object.values(rates).reduce((a,r)=>a+r[D],0)/Object.keys(rates).length*100);
+ const fastMin=D=>Math.round(Math.min(...[...fast].map(id=>rates[id][D]))*100);
+ report.push(`catch sim (20 species × 10 walk-ups): mean ${[2,4,5,6,8].map(D=>D+' m '+avg(D)+'%').join(', ')}; fast fliers min ${[2,4,6,8].map(D=>D+' m '+fastMin(D)+'%').join(', ')}`);}
 // Night shift: fireflies get the same local density.
 {const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(.46);sw.setCamera(cam);const s=spots[4];run(sw,cam,s.x,s.z,6,{night:true});
  const n=near(sw,s.x,s.z,40);assert(n>=Math.min(8,sw.count),`night: ${n} fireflies within 40 m`);report.push(`night: ${n}/${sw.count} fireflies within 40 m`);sw.dispose();}

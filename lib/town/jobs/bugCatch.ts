@@ -17,22 +17,24 @@ import {BUG_SPECIES,FIREFLY_SET,pickBugsOnMap,bugRotationSeed} from './bugSpecie
 /** The first lane's hold-still reach (jobCatalog radius 1.7 m around a bug's spot, i.e. ~1.2 m of real net reach). */
 export const NET_BASE_REACH=1.2;
 /** The sweep volume: a sphere this far round the sweep centre (about 2 × the first lane's reach). */
-export const NET_SWEEP_RADIUS=2.4;
+/* Oct 20 2026 (user playtest: "catch radius is smaller. need to increase it"): 2.4 → 3.5 m, vertical 2.6 → 4 m, auto-aim 5 → 8 m all
+   round (nearest uncaught first), tap 6.5 → 10 m with a wider slop; a locked target holds still until the hit frame. */
+export const NET_SWEEP_RADIUS=3.5;
 /** The sweep centre: this far in front of the player, at this height (the hoop's path at the hit frame). */
 export const NET_SWEEP_AHEAD=1.3;
 export const NET_SWEEP_HEIGHT=1;
 /** Bugs this much above / below the sweep centre still count (they hover and hop). */
-export const NET_SWEEP_VERTICAL=2.6;
+export const NET_SWEEP_VERTICAL=4;
 /** Net down (the stalk): the sweep reaches a little further. */
 export const NET_STALK_REACH=1.15;
 /** Auto-aim: the swing turns to the nearest bug within this range and this half-angle in front of the player. */
-export const AUTO_AIM_RANGE=5;
-export const AUTO_AIM_HALF_ANGLE=Math.PI*.42;
+export const AUTO_AIM_RANGE=8;
+export const AUTO_AIM_HALF_ANGLE=Math.PI;
 /** Tap near a bug on the screen: it must be within this many metres of the player, and the tap within this share of the screen. */
-export const TAP_RANGE=6.5;
+export const TAP_RANGE=10;
 /** A locked swing (auto-aim or tap) lunges: its sweep centre moves out toward the bug, up to this far in front. */
-export const LUNGE_MAX=3.6;
-export const TAP_SCREEN_SLOP=.16;
+export const LUNGE_MAX=5.6;
+export const TAP_SCREEN_SLOP=.24;
 /** A locked target (auto-aim or tap) counts as caught if it is within this many sweep radii of the sweep centre at the hit frame. */
 export const LOCKED_SLACK=1.35;
 /** Swing timeline (seconds): wind-up, the sweep (hit frame inside it), recovery. One swing at a time. */
@@ -80,11 +82,18 @@ const wrap=(a:number)=>{while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI
 /** Heading (rad, 0 = +z, like the player's rotation.y) from the player to a point. */
 export const headingTo=(px:number,pz:number,x:number,z:number)=>Math.atan2(x-px,z-pz);
 /** Auto-aim: the nearest bug within AUTO_AIM_RANGE and the cone in front (null = swing straight ahead). `hits` nearest first. */
-export function autoAim<H extends SwingHit>(hits:readonly H[],px:number,pz:number,yaw:number,range=AUTO_AIM_RANGE):H|null{
- for(const h of hits){const d=Math.hypot(h.x-px,h.z-pz);if(d>range)continue;if(d<.6)return h;
-  if(Math.abs(wrap(headingTo(px,pz,h.x,h.z)-yaw))<=AUTO_AIM_HALF_ANGLE)return h;}
- return null;
+export function autoAim<H extends SwingHit>(hits:readonly H[],px:number,pz:number,yaw:number,range=AUTO_AIM_RANGE,skip?:(h:H)=>boolean):H|null{
+ // Nearest wins, but one behind the player costs 2 m and an already-caught one 6 m (a kid presses Swing and the net turns to the bug).
+ let best:H|null=null,bs=Infinity;
+ for(const h of hits){const d=Math.hypot(h.x-px,h.z-pz);if(d>range)continue;const off=Math.abs(wrap(headingTo(px,pz,h.x,h.z)-yaw));
+  if(d>=.6&&off>AUTO_AIM_HALF_ANGLE)continue;const sc=d+(off>Math.PI/2?2:0)+(skip&&skip(h)?6:0);if(sc<bs){bs=sc;best=h;}}
+ return best;
 }
+/** A locked swing samples the target at these times (s) between the wind-up and the hit frame: in the sweep at any of them = caught. */
+export const SWING_SAMPLES:readonly number[]=[SWING.windup,(SWING.windup+SWING.hit)/2,SWING.hit];
+/** The lunging sweep centre toward a target at (tx, tz): out to the target, between NET_SWEEP_AHEAD and LUNGE_MAX. */
+export function lungeCentre(px:number,py:number,pz:number,tx:number,tz:number,out:{x:number;y:number;z:number}){
+ return sweepCentre(px,py,pz,headingTo(px,pz,tx,tz),out,Math.max(NET_SWEEP_AHEAD,Math.min(LUNGE_MAX,Math.hypot(tx-px,tz-pz))));}
 /** The sweep centre for a player at (px, py, pz) facing yaw. */
 export function sweepCentre(px:number,py:number,pz:number,yaw:number,out:{x:number;y:number;z:number},ahead=NET_SWEEP_AHEAD){
  out.x=px+Math.sin(yaw)*ahead;out.y=py+NET_SWEEP_HEIGHT;out.z=pz+Math.cos(yaw)*ahead;return out;}

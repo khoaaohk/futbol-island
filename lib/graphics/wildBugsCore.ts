@@ -23,7 +23,8 @@ export const WILD_FLEE={COUNT_EVERY_S:8} as const;
 export const FIREFLY_MAP_CAP:readonly number[]=[8,6,4];
 /** On-screen size (m, the longer of length and wingspan) from look.size: bigger than life and evened out, so even the little
  *  spider and ladybird read from the follow camera ~40 m away (ladybird ~1 m, dragonfly ~1.6 m; the old wild bug was 1.5 m). */
-export const bugVisualSize=(size:number)=>(size+.25)*1.7;
+/** Oct 20 2026 (user: "can't see bugs"): 1.6x bigger than the first pass (was × 1.7), so a bug reads as a bug from the follow camera. */
+export const bugVisualSize=(size:number)=>(size+.25)*2.7;
 export const FIREFLY_SIZE=.5;
 
 /** How many to draw: bugs 12 / 10 / 8 at heat tiers 0 / 1 / 2 (pickBugsOnMap), fireflies 8 / 6 / 4 at Night, none at tiers 3–4

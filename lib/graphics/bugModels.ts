@@ -347,8 +347,9 @@ export function createBugModel(sp:BugSpecies|null):T.BufferGeometry{
 /** The far silhouette (one for all species): a dark-ish body and two wings that spread with iPose.x, tinted per instance. */
 export function createBugFarGeometry():T.BufferGeometry{
  const b=new Builder();
- ell(b,[.07,.07,.42],[0,.1,0],'#a8a39a',{},[5,3]);
- for(const s of [-1,1])flat(b,mirror([[.03,.2],[.48,.26],[.42,-.02],[.3,-.3],[.04,-.12]],s),.12,'#ffffff',{wing:W(s,4,.03,.12)});
+ // Oct 20 2026 (user: far bugs read as "small dark slashes"): a plumper body and broader wings, so the tinted shape reads as a bug.
+ ell(b,[.13,.11,.42],[0,.1,0],'#8a857c',{},[5,3]);
+ for(const s of [-1,1])flat(b,mirror([[.05,.26],[.5,.36],[.5,.02],[.36,-.32],[.06,-.16]],s),.12,'#ffffff',{wing:W(s,4,.03,.12)});
  return b.finish();
 }
 export const triangleCount=(g:T.BufferGeometry)=>g.getAttribute('position').count/3;

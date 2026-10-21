@@ -42,11 +42,11 @@ const day=C.jobVariant('bug-scout','bugs'),night=C.jobVariant('bug-scout','firef
  const hit=(id,x,z,y=1)=>({id,x,y,z});
  assert.equal(K.autoAim([hit('a',0,3),hit('b',0,-2)].sort((p,q)=>Math.hypot(p.x,p.z)-Math.hypot(q.x,q.z)),0,0,0)?.id,'a','the nearest IN FRONT, not the one behind');
  assert.equal(K.autoAim([hit('a',3,1)],0,0,0)?.id,'a','a wide cone (72 degrees off the facing)');assert.equal(K.autoAim([hit('a',0,9)],0,0,0),null,'out of range');
- const c=K.sweepCentre(0,0,0,0,{x:0,y:0,z:0});assert(K.inSweep(c,hit('a',1.2,3,2)),'2.4 m round the sweep centre');assert(!K.inSweep(c,hit('a',0,5)),'too far');
+ const c=K.sweepCentre(0,0,0,0,{x:0,y:0,z:0});assert(K.inSweep(c,hit('a',1.2,3,2)),'3.5 m round the sweep centre');assert(!K.inSweep(c,hit('a',0,5)),'too far');
  assert(K.inSweep(c,hit('a',0,4),true),'Net down reaches further');
- assert.equal(K.swingResult([hit('a',0,4.5)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,4.5)],c,null),null,'unlocked: a miss');
+ assert.equal(K.swingResult([hit('a',0,5.6)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,5.6)],c,null),null,'unlocked: a miss');
  // The swing timeline and the 20-bug formation.
- same(['windup','sweep','sweep','recover','done'].map((ph,i)=>K.swingPhase([.05,.25,K.SWING.hit,.5,.7][i]).phase),['windup','sweep','sweep','recover','done']);
+ same(['windup','sweep','sweep','recover','done'].map((ph,i)=>K.swingPhase([.1,.4,K.SWING.hit,1,1.3][i]).phase),['windup','sweep','sweep','recover','done']);
  same(K.FORMATION_CAP,[20,14,11]);const ord=K.formationOrder();assert.equal(ord.length,20);assert.equal(new Set(ord).size,20);assert.equal(ord[0],'ladybug','the goalkeeper first');
  assert.equal(K.formationSlots(20).length,20);
  assert.equal(K.storyFor([{text:'a'},{text:'b'}],1).text,'a');assert.equal(K.storyFor([{text:'a'},{text:'b'}],2).text,'b','rotates on repeat catches');assert.equal(K.storyFor([{text:'a'},{text:'b'}],3).text,'a');
@@ -98,19 +98,19 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  assert.equal(api.getView().active.squad.total,20,'the pill counts the squad of 20');
  const btn=api.getView().active.buttons;same(btn.map(b=>[b.slot,b.key,b.id]),[['shoot','Space','net'],['juggle','J','letfree'],['ride','R','ride'],['extra','E','netlow']]);assert(btn[0].enabled&&btn[2].enabled);
  // A swing at a bug right in front: hit → zoom (controls held) → into the jar, the story card, the book.
- api.act('net');assert(api.swinging,'a real swing');frames(P0,.4);assert(api.zooming,'the catch zoom');assert.equal(api.locked,true);assert.equal(api.walkScale,0);
+ api.act('net');assert(api.swinging,'a real swing');frames(P0,.7);assert(api.zooming,'the catch zoom');assert.equal(api.locked,true);assert.equal(api.walkScale,0);
  const c0=api.getView().caught;assert(c0&&c0.id===ids[0]&&c0.story.length>20&&c0.isNew&&c0.coins===K.NEW_SPECIES_COINS,'the story card: name, story, NEW, +coin');
  assert.equal(api.run.got[0],true,'caught from the swarm');frames(P0,1.2);assert(Math.hypot(cam.position.x-P0.x,cam.position.z-(P0.z-18))>3,'the camera eased in on the bug');
- frames(P0,1.5);assert(!api.zooming&&!api.locked,'zoom over');assert(swarm.caught.includes(ids[0]),'the swarm bug went into the jar');
+ frames(P0,3.6);assert(!api.zooming&&!api.locked,'zoom over');assert(swarm.caught.includes(ids[0]),'the swarm bug went into the jar');
  assert.equal(JSON.parse(book.get(BB.BUG_BOOK_KEY)).bugs[ids[0]],1,'in the Bug book by id');frames(P0,1.5);assert.equal(cam.fov,50,'camera back');
  // Tap skip.
- api.act('net');frames(P0,.4);assert(api.zooming);api.skipZoom();assert(!api.zooming&&!api.locked,'tap skips the zoom');frames(P0,1);
- // A miss: nothing in the sweep → the nearest bug startles.
- swarm.bugs.forEach(b=>{if(!b.hidden&&b.id!==ids[1])b.hidden=true;});frames(P0,.1);api.act('net');frames(P0,.7);assert(!api.zooming,'a miss');assert(swarm.startled.includes(ids[1]),'the bug behind startles');
+ api.act('net');frames(P0,.7);assert(api.zooming);api.skipZoom();assert(!api.zooming&&!api.locked,'tap skips the zoom');frames(P0,1);
+ // A miss: nothing within auto-aim range (8 m, all round) → the nearest bug (9 m behind) startles.
+ swarm.bugs.forEach(b=>{if(!b.hidden&&b.id!==ids[1])b.hidden=true;if(b.id===ids[1])b.z=P0.z-9;});frames(P0,.1);api.act('net');frames(P0,.7);assert(!api.zooming,'a miss');assert(swarm.startled.includes(ids[1]),'the bug behind startles');
  assert.match(api.getView().active.hint,/missed/i);
  // Tap near a bug on screen swings at it (even 5 m away: the lunge).
- swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[2];});const b2=swarm.bugs.find(b=>b.id===ids[2]);cam.updateMatrixWorld();const v=new T.Vector3(b2.x,b2.y,b2.z).project(cam);
- assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.4);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);
+ frames(P0,.7);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[2];});const b2=swarm.bugs.find(b=>b.id===ids[2]);cam.updateMatrixWorld();const v=new T.Vector3(b2.x,b2.y,b2.z).project(cam);
+ assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.7);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);
  // Riding: no swing (bugs are caught on foot), the button reads Hop off; the net rides on the backpack.
  ride='bike';frames(P0,.2);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[3];});api.act('net');assert(!api.swinging,'no swing from a bike');
  assert.equal(api.getView().active.buttons[0].label,'Hop off');ride='walk';frames(P0,.2);
@@ -126,22 +126,22 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  api.start('bug-scout');frames(at({x:SI.SUMMIT_CENTER.x+400,z:SI.SUMMIT_CENTER.z}),.1);assert.equal(api.run,null);assert.match(api.getView().ended.text,/left Summit Isle/);
  // A full shift: catch the goal, Release at the hotel (regression: Release always works), payday.
  swarm=fakeSwarm(ids.slice(3,9).map((id,i)=>put(id,0,2)));frames(at(day.board),.2);api.start('bug-scout');
- for(let i=0;i<6;i++){api.act('net');frames(P0,.4);api.skipZoom();frames(P0,.7);}
+ for(let i=0;i<6;i++){api.act('net');frames(P0,.7);api.skipZoom();frames(P0,.7);}
  assert.equal(api.run.phase,'deliver','the jar is full: off to the bug hotel');assert.match(api.disabledHint('letfree'),/bug hotel/);
  const d=day.deliver,pd=at({x:d.x+2,z:d.z});frames(pd,.3);assert.equal(api.getView().active.buttons[1].enabled,true);api.act('letfree');assert.equal(api.getView().releasing,true);
  frames(pd,6);assert(api.getView().done&&api.getView().done.id==='bug-scout','payday after the release');assert.equal(api.locked,false);api.dismissDone();
  // Squad completion: the 20th species → the formation release with 20 (tier 0) or 11 (tier 2).
  const bk=JSON.parse(book.get(BB.BUG_BOOK_KEY));bk.squad=ids.slice(0,19);book.set(BB.BUG_BOOK_KEY,JSON.stringify(bk));
- tier=2;swarm=fakeSwarm([put(ids[19],0,2)]);frames(at(day.board),.2);api.start('bug-scout');api.act('net');frames(P0,.4);assert.equal(api.getView().caught.squadComplete,true,'squad complete');api.skipZoom();
+ tier=2;swarm=fakeSwarm([put(ids[19],0,2)]);frames(at(day.board),.2);api.start('bug-scout');api.act('net');frames(P0,.7);assert.equal(api.getView().caught.squadComplete,true,'squad complete');api.skipZoom();
  api.run.got=api.run.got.map(()=>true);api.run.phase='deliver';frames(pd,.3);api.act('letfree');const fl=api.root.getObjectByName('bug-release-flyers');assert.equal(fl.count,11,'formation capped at tier 2');
  frames(pd,8);assert(api.getView().done);api.dismissDone();tier=0;
  // Night: the same job catches fireflies.
  tod='night';swarm=fakeSwarm([{id:'man-on',kind:'firefly',x:P0.x,y:P0.y+1,z:P0.z+2}]);frames(at(day.board),.3);api.start('bug-scout');assert.equal(api.run.def.set,'fireflies');assert.equal(api.swarmJob,'fireflies');
- api.act('jar');frames(P0,.4);assert.equal(api.getView().caught.kind,'firefly');assert.equal(api.getView().caught.story.length>20,true,'a story per call');api.skipZoom();
+ api.act('jar');frames(P0,.7);assert.equal(api.getView().caught.kind,'firefly');assert.equal(api.getView().caught.story.length>20,true,'a story per call');api.skipZoom();
  // Day breaks mid-shift: the set swaps, the shift goes on.
  tod='day';frames(P0,.4);assert.equal(api.run.def.set,'bugs');api.quit();
  // Reduced motion: no zoom, caught at once.
- tod='day';reduced=true;swarm=fakeSwarm([put(ids[5],0,2)]);api.start('bug-scout');api.act('net');frames(P0,.4);assert(!api.zooming&&swarm.caught.includes(ids[5]),'reduced motion: no zoom');reduced=false;
+ tod='day';reduced=true;swarm=fakeSwarm([put(ids[5],0,2)]);api.start('bug-scout');api.act('net');frames(P0,.7);assert(!api.zooming&&swarm.caught.includes(ids[5]),'reduced motion: no zoom');reduced=false;
  api.quit();assert.equal(api.locked,false);api.dispose();}
 
 // ---- 5. Net in both hands, poses, pay, analytics, wiring ----

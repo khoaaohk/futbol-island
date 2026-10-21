@@ -565,3 +565,24 @@ around with the net, have it held with both hands", "can't see bugs to catch whe
 - **Heat:** the local density is O(slots × 24) twice a second; the FX are ≤ 24 + 12 instance writes per frame and 2 draws while a
   shift runs; the net hold adds one two-bone solve per arm per frame while carrying.
 
+
+### Bug visible: bodies, one cue, a bigger net (20 Oct 2026, local, not deployed)
+User playtest: "some of the bugs have check marks. they need to look like bugs", "unable to catch butterfly", "can't see bugs, catch
+radius is smaller ... the check marks and shadows with sparkles is confusing", "there are exclamation points for the bugs".
+- **Cause of the missing bodies (measured):** each species' near model (`bugSwarm.ts`, drawn within FULL_IN_M) kept the culling
+  sphere built round its first home; local density and recalls move bugs 50-150 m away, so three.js frustum-culled the body and only
+  the check / shadow drew. The sphere now follows the bug every frame.
+- **Readable bugs:** `bugVisualSize` × 1.6 (2.7 instead of 1.7), a warm rim light + a little self-light in the shared bug material,
+  a plumper far silhouette (still 26 tris) that grows up to × 1.45 by 40 m (smallest species ≈ 51 px tall at 40 m on a phone).
+- **One cue:** `bugSpotFx.ts` is now a single pulsing halo on the nearest uncaught bug within 30 m (one instance, one draw). The
+  contact shadows, spawn rings, "!" marks, glints and checks are gone. Caught species are never sent over by local density.
+- **Catching:** sweep 2.4 → 3.5 m, vertical 2.6 → 4 m, auto-aim 5 → 8 m all round (nearest uncaught first, one behind costs 2 m),
+  tap 6.5 → 10 m (slop .24), lunge 5.6 m. The locked bug holds still until the hit frame (`swarm.hold`), and the target is sampled
+  3 times (SWING_SAMPLES) between the wind-up and the hit. Calmer bugs: notice radius walking × .5 / still × .25, flee boost 1.6.
+  Swing is never greyed on a shift (in the jar-full phase too: the catch goes to the Bug book); the greyed Swing + Release in the
+  user's shots match the jar-full (deliver) phase. Release looks live once the jar has a bug and says where to go away from the
+  hotel. Sim (tests/bug-local.cjs §6): 100% at ≤ 6 m, 99% mean / 90% fast-flier min at 8 m.
+- **Pill:** not reproduced in headless Chrome (visible and uncovered at every step, phone + desktop). Hardening: a ball-hunt id
+  with no lesson stayed queued and kept Town's HUD stack hidden (BallHuntLesson rendered null); it now dismisses itself. Esc ends a
+  Bug squad shift (same two-step ask). Browser check: `scripts/check-bug-visible-browser.cjs`.
+- Draws by day during a shift: 1 far + near models (0-4) + 1 halo; night unchanged (2).

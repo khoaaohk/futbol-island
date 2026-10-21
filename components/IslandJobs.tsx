@@ -137,10 +137,13 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  // G opens the nearby job (J is Juggle), Escape closes cards. One job at a time (bug A2): G at another sign while a job runs
  // explains instead of opening (and swapping) it.
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.target instanceof HTMLElement&&e.target.closest('input,textarea,select,[contenteditable=true]'))return;
-  if(e.key==='Escape')setIntro(null);
+  if(e.key==='Escape'){if(intro){setIntro(null);return;}
+   // Esc ends a running Bug squad shift (the same two-step ask as End job when the jar has bugs): a fallback for the pill's ×.
+   const r=getJobRuntime()?.run;if(r&&r.def.swing&&!payday&&!view.releasing&&!view.zooming){e.preventDefault();endJob();}}
   if((e.key==='g'||e.key==='G')&&!blocked&&!intro){if(view.active){if(view.other){e.preventDefault();busyNote();}return;}
    if(view.near){e.preventDefault();setIntro(view.near as JobId);}}};
-  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[blocked,view.near,view.other,view.active,intro]);
+  window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);// eslint-disable-next-line react-hooks/exhaustive-deps
+ },[blocked,view.near,view.other,view.active,intro,payday,view.releasing,view.zooming,endAsk]);
  useEffect(()=>{if(intro)startButton.current?.focus();},[intro]);
  useEffect(()=>{if(!view.releasing)return;const key=(e:KeyboardEvent)=>{if(e.key===' '||e.key==='Enter'||e.key==='Escape'){e.preventDefault();e.stopPropagation();getJobRuntime()?.skipRelease();}};
   window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[view.releasing]);

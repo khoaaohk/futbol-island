@@ -5,7 +5,7 @@
  */
 import * as T from 'three';
 
-const SHADER_KEY='bug-swarm-shader-v1';
+const SHADER_KEY='bug-swarm-shader-v1-rim';
 export type BugUniforms={uTime:{value:number};uFade:{value:number}};
 /** The shared bug material: flapping / walking vertex shader, sheen and lantern glow in the fragment. */
 export function bugMaterial(u:BugUniforms){
@@ -33,7 +33,9 @@ vec3 bugP=position;
   s.fragmentShader=s.fragmentShader.replace('#include <common>','#include <common>\nvarying float vSheen;varying float vGlow;')
    .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
 {float fr=1.-abs(dot(normalize(vNormal),normalize(vViewPosition)));
- totalEmissiveRadiance+=vSheen*vec3(.10,.34,.95)*(.12+1.3*fr*fr);totalEmissiveRadiance+=vGlow*vec3(.85,1.,.35)*2.6;}`);};
+ totalEmissiveRadiance+=vSheen*vec3(.10,.34,.95)*(.12+1.3*fr*fr);
+ /* readable from the follow camera (Oct 20 2026, user: "can't see bugs"): a warm rim light on every bug plus a little self-light of its own colour */
+ totalEmissiveRadiance+=vec3(1.,.93,.7)*.75*fr*fr*fr+diffuseColor.rgb*.22;totalEmissiveRadiance+=vGlow*vec3(.85,1.,.35)*2.6;}`);};
  m.customProgramCacheKey=()=>SHADER_KEY;
  return m;
 }

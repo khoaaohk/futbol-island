@@ -12,7 +12,7 @@ import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT,BUG_BOOK_KEY,BUG_NEW_SPECIES_EVEN
 import {createBugNet,type BugNet} from './bugNet';
 import {BACKPACK_RIDE_OFFSETS} from '../../graphics/backpack';
 import {BUG_LOCAL} from './bugSpecies';
-import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,LUNGE_MAX,SWING,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught} from './bugCatch';
+import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught} from './bugCatch';
 import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
@@ -558,7 +558,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function pumpGauge(r:JobRun){const b=pumpBall(r)!,v=pumpShown(r.pressure),left=pumpTapsLeft(r),n=r.def.task?.type==='pump'?r.def.task.balls.length:5;
   return {value:v,min:b.min,max:b.max,label:`Ball ${r.step+1}/${n} · ${v.toFixed(2)} atm · green ${b.min.toFixed(2)}–${b.max.toFixed(2)}${left?` · ~${left} to go`:v>b.max?' · too hard':''}`};}
  /** Bug squad while riding: the swing button reads Hop off (bugs are caught on foot; Town dismounts). */
- function hopOff(b:ReturnType<typeof jobButtons>){if(!b||!run?.def.swing||rideMode==='walk')return b;return b.map(x=>x.id==='net'||x.id==='jar'?{...x,label:'Hop off',icon:'walk',enabled:true}:x);}
+ function hopOff(b:ReturnType<typeof jobButtons>){if(!b||!run?.def.swing)return b;const r=run,w=r.def.work;
+  // Oct 20 2026 (user: Swing / Release looked greyed out): Swing is always live on a shift (a swing with nothing close just whooshes and
+  // says so); Release looks live once the jar has a bug (away from the drop-off it says where to go).
+  if(rideMode!=='walk')return b.map(x=>x.id==='net'||x.id==='jar'?{...x,label:'Hop off',icon:'walk',enabled:true}:x);
+  return b.map(x=>x.id==='net'||x.id==='jar'?{...x,enabled:r.phase==='work'||r.phase==='deliver'}:w?.deliver&&x.id===w.deliver.id?{...x,enabled:x.enabled||r.got.some(Boolean)}:x);}
  function publishActive(){if(!run){setView({active:null});return;}const p=runProgress(run),t=run.def.task,h=run.harvest;
   const next:JobView['active']={id:run.def.id,value:p.value,total:p.total,phase:run.phase,carrying:run.carrying>=0,hint:banner||runHint(run),actions:runActions(run),
    gauge:t?.type==='pump'&&run.phase==='pump'?pumpGauge(run):h&&h.pulling>=0?{value:Math.round(h.pull*100)/100,min:HARVEST.green[0],max:HARVEST.green[1],label:'Pull strength · let go in the green'}:null,right:run.right,buttons:hopOff(jobButtons(run)),...(run.def.set?{set:run.def.set,title:run.def.title}:{}),...(run.def.swing?{squad:squadProgress(run),guide:{on:hintT>0,ready:hintCool<=0}}:{})};
@@ -567,10 +571,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** A HUD button for task jobs and work steps (hold steps send `id` then `id:up`). */
  function act(id:string){if(!run||rel||zoom)return;
   // Bug squad (catching lane): Swing net is a real swing (bugCatch.ts); Ride is Town's (scooter / bike / moped).
-  if(run.def.swing&&run.phase==='work'&&(id==='net'||id==='jar')){beginSwing(null);return;}
+  if(run.def.swing&&(run.phase==='work'||run.phase==='deliver')&&(id==='net'||id==='jar')){beginSwing(null);return;}
   if(id==='ride')return;
   // Bug squad: Release / Light up the goal plays the release cinematic first; the shift completes when it ends (or is skipped).
   const w=run.def.work;if((run.def.prop==='bug'||run.def.prop==='firefly')&&run.phase==='deliver'&&run.at===-2&&w?.deliver&&id===w.deliver.id){beginRelease(run);return;}
+  if(run.def.swing&&w?.deliver&&id===w.deliver.id){const h=api.disabledHint(id);if(h){banner=h;bannerAge=0;viewKey='';publishActive();}return;}
   applyEvents(runAction(run,id));if(run?.def.kind==='offside')paintOffside();}
 
  // ---- Garden ----
@@ -754,7 +759,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  const bugSwarm=options.bugs??(()=>null),heatTier=options.tier??(()=>0);
  const bookPort={get:()=>{try{return store?store.getItem(BUG_BOOK_KEY):localStorage.getItem(BUG_BOOK_KEY);}catch{return null;}},set:(v:string)=>{try{if(store)store.setItem(BUG_BOOK_KEY,v);else localStorage.setItem(BUG_BOOK_KEY,v);}catch{}}};
  let wading=false,net:BugNet|null=null,relMesh:T.InstancedMesh|null=null,lastDt=1/60,playerYaw=0,rideMode='walk',jarPop=0,caughtNonce=0,endedNonce=0,shiftNo=0,formationNext=false;
- let swing:{t:number;target:string|null;resolved:boolean;yaw:number}|null=null;
+ let swing:{t:number;target:string|null;resolved:boolean;yaw:number;seen:boolean;k:number}|null=null;
  let zoom:{t:number;id:string;burst:boolean;p:{x:number;y:number;z:number}}|null=null;
  const zoomCam=createShotCamera(ZOOM.in,ZOOM.out),bagPos={x:0,y:0,z:0},sc0={x:0,y:0,z:0},tq={x:0,y:0,z:0},projV=new T.Vector3();
  let bugGoalOn=false,bugGoalT=0;const bugGoal={x:0,z:0};
@@ -773,22 +778,28 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  /** The arrow points at the nearest bug still to catch this shift (4 Hz). */
  function updateBugGoal(dt:number,p:{x:number;y:number;z:number}){bugGoalT+=dt;if(bugGoalT<.25)return;bugGoalT=0;const sw=bugSwarm(),r=run;if(!sw||!r)return;
   const list=bugList(r.def)??[];bugGoalOn=false;for(const h of sw.query(p.x,p.y,p.z,400)){const id=h.species?.id??h.call?.id??'',i=list.findIndex(b=>b.id===id);if(i<0||r.got[i])continue;bugGoal.x=h.x;bugGoal.z=h.z;bugGoalOn=true;break;}}
- function beginSwing(targetId:string|null,hit?:BugSwarmHit){const r=run;if(!r||!r.def.swing||r.phase!=='work'||swing||zoom||rel)return false;
+ function beginSwing(targetId:string|null,hit?:BugSwarmHit){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||zoom||rel)return false;
   if(rideMode!=='walk'){banner=BUG_WALK_NOTE;bannerAge=0;viewKey='';publishActive();return false;}
   const sw=bugSwarm(),p=lastP;let tgt:BugSwarmHit|null=hit??null;
-  if(!tgt&&sw)tgt=autoAim(sw.query(p.x,p.y,p.z,AUTO_AIM_RANGE+.5),p.x,p.z,playerYaw);
+  if(!tgt&&sw){const list=bugList(r.def)??[];tgt=autoAim(sw.query(p.x,p.y,p.z,AUTO_AIM_RANGE+3),p.x,p.z,playerYaw,AUTO_AIM_RANGE,h=>{const i=list.findIndex(b=>b.id===(h.species?.id??h.call?.id));return i>=0&&!!r.got[i];});}
+  // The locked bug notices the net and holds still until the hit frame (Animal Crossing: it only flees after a miss).
+  if(tgt&&sw)(sw as BugSwarmPort&{hold?:(id:string,s:number)=>void}).hold?.(tgt.id,SWING.hit+.15);
   const yaw=tgt?headingTo(p.x,p.z,tgt.x,tgt.z):playerYaw;
-  swing={t:0,target:tgt?.id??targetId,resolved:false,yaw};countBugSwing();jobCue('swish');tapHaptic();net?.close(false);
+  swing={t:0,target:tgt?.id??targetId,resolved:false,yaw,seen:false,k:0};countBugSwing();jobCue('swish');tapHaptic();net?.close(false);
   applyEvents([{type:'swing',x:p.x+Math.sin(yaw)*2,z:p.z+Math.cos(yaw)*2}]);return true;}
- function tapSwing(nx:number,ny:number,camera:T.Camera){const r=run;if(!r||!r.def.swing||r.phase!=='work'||swing||zoom||rel||rideMode!=='walk')return false;const sw=bugSwarm();if(!sw)return false;
+ function tapSwing(nx:number,ny:number,camera:T.Camera){const r=run;if(!r||!r.def.swing||(r.phase!=='work'&&r.phase!=='deliver')||swing||zoom||rel||rideMode!=='walk')return false;const sw=bugSwarm();if(!sw)return false;
   let best:BugSwarmHit|null=null,bd=TAP_SCREEN_SLOP;
   for(const h of sw.query(lastP.x,lastP.y,lastP.z,TAP_RANGE)){projV.set(h.x,h.y,h.z).project(camera);if(projV.z>1)continue;const d=Math.hypot(projV.x-nx,projV.y-ny);if(d<bd){bd=d;best=h;}}
   if(!best)return false;const id=best.id;return beginSwing(id,{...best});}
  function tickSwing(dt:number){const S=swing,r=run;if(!S||!r)return;S.t+=dt;
-  if(!S.resolved&&S.t>=SWING.hit){S.resolved=true;const sw=bugSwarm(),p=lastP;let yaw=S.yaw,ahead=NET_SWEEP_AHEAD;
-   if(S.target&&sw&&sw.position(S.target,tq)){yaw=headingTo(p.x,p.z,tq.x,tq.z);ahead=Math.max(NET_SWEEP_AHEAD,Math.min(LUNGE_MAX,Math.hypot(tq.x-p.x,tq.z-p.z)));}
-   sweepCentre(p.x,p.y,p.z,yaw,sc0,ahead);
-   const hits=sw?sw.query(p.x,p.y,p.z,9):[],res=swingResult(hits,sc0,S.target,!!r.stalk);
+  // A locked swing samples its target between the wind-up and the hit frame (SWING_SAMPLES): in the lunging sweep at any of them = caught,
+  // so a bug that drifts in the last few frames is still in the net.
+  const sw=bugSwarm(),p=lastP;
+  if(!S.resolved&&S.target&&sw)while(S.k<SWING_SAMPLES.length&&S.t>=SWING_SAMPLES[S.k]){S.k++;if(sw.position(S.target,tq)&&inSweep(lungeCentre(p.x,p.y,p.z,tq.x,tq.z,sc0),tq,!!r.stalk,LOCKED_SLACK))S.seen=true;}
+  if(!S.resolved&&S.t>=SWING.hit){S.resolved=true;
+   if(S.target&&sw&&sw.position(S.target,tq))lungeCentre(p.x,p.y,p.z,tq.x,tq.z,sc0);else sweepCentre(p.x,p.y,p.z,S.yaw,sc0,NET_SWEEP_AHEAD);
+   const hits=sw?sw.query(p.x,p.y,p.z,12):[];let res=swingResult(hits,sc0,S.target,!!r.stalk);
+   if(S.seen&&S.target&&(!res||res.id!==S.target))res=hits.find(h=>h.id===S.target)??res;
    if(res)onHit(res);else onMiss(hits);}
   if(S.t>=SWING.end)swing=null;}
  // ---- Nearest-bug hint (the job pill's hint button; user: "since the island is big add a hint button ... which will show the
@@ -819,14 +830,14 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   const g=gear.hint;if(g){const dx=hintGoal.x-p.x,dz=hintGoal.z-p.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l,x=p.x+ux*1.7,z=p.z+uz*1.7;
    g.visible=true;g.position.set(x,floor(x,z)+.07,z);g.rotation.set(-Math.PI/2,0,Math.atan2(ux,uz)+Math.PI);
    (g.material as T.MeshBasicMaterial).opacity=reducedMotion?.85:.55+.35*Math.sin(hintT*7);}}
- function onMiss(hits:readonly BugSwarmHit[]){countBugMiss();const sw=bugSwarm(),p=lastP,near=hits.find(h=>h.dist<6);
+ function onMiss(hits:readonly BugSwarmHit[]){countBugMiss();const sw=bugSwarm(),p=lastP,near=hits.find(h=>h.dist<10);
   if(near&&sw)sw.startle(near.id,{x:p.x,z:p.z});
-  banner=near?'Whoosh! Just missed, and it fluttered off. Sneak a little closer, face it, then swing.':'Whoosh! Nothing in the net. Walk up to a bug first (follow the arrow).';bannerAge=0;viewKey='';publishActive();}
+  banner=near?'Whoosh! Just missed, and it fluttered off. Walk a little closer (it settles in a moment), then Swing again.':'No bug close. Tap ➤ Nearest bug and follow the arrow, then Swing.';bannerAge=0;viewKey='';publishActive();}
  function onHit(h:BugSwarmHit){const r=run;if(!r)return;const kind=h.kind,id=h.species?.id??h.call?.id??'',list=bugList(r.def)??[],i=list.findIndex(b=>b.id===id),b=list[i];
   if(!b||(kind==='firefly')!==(r.def.prop==='firefly'))return;
   const sw=bugSwarm();net?.close(true);if(net){net.bagCentre(bagPos);}else{bagPos.x=h.x;bagPos.y=h.y;bagPos.z=h.z;}
   if(sw)sw.pin(h.id,bagPos);
-  const rec=recordBugCatch(kind,id,bookPort),story=storyFor(b.stories,rec.count),dup=r.got[i];
+  const rec=recordBugCatch(kind,id,bookPort),story=storyFor(b.stories,rec.count),dup=r.got[i]||r.phase!=='work';
   if(rec.squadComplete)formationNext=true;stopHint();
   if(rec.first)cue(BUG_NEW_SPECIES_EVENT,id);
   if(rec.completed){countBugBookComplete();cue(BUG_BOOK_COMPLETE_EVENT,'complete');}else if(rec.nightCompleted)cue(BUG_BOOK_COMPLETE_EVENT,'night');
@@ -834,7 +845,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    squad:kind==='bug'?(rec.squadComplete?20:rec.squadSize):0,squadSize:list.length,squadComplete:rec.squadComplete,dup}});
   tapHaptic();jobCue('jar');fx.burst(h.x,h.y,h.z,r.def.prop==='firefly'?'#f4ff8a':'#fff6c8',8,1.4,1.2,true,.8);
   applyEvents([{type:'netcatch',x:h.x,z:h.z}]);
-  if(dup){banner=`${b.name} again! It is already in today's jar, so it flies straight home (it still counts in your Bug book).`;bannerAge=-1;viewKey='';}
+  if(dup&&!r.got[i]){banner=`${b.name} is in your Bug book! The jar is full, so it flies home: Release the squad at the ${r.def.deliver?.label??'drop-off'}.`;bannerAge=-1;viewKey='';}
+  else if(dup){banner=`${b.name} again! It is already in today's jar, so it flies straight home (it still counts in your Bug book).`;bannerAge=-1;viewKey='';}
   else applyEvents(swingCatch(r,i));
   zoom={t:0,id:h.id,burst:false,p:{x:h.x,y:h.y,z:h.z}};
   if(reducedMotion){endZoom();return;}
