@@ -1651,6 +1651,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           if(!hidden){placeEntryPrompt(prompt,T.MathUtils.clamp((ridePromptV.x+1)*fullWidth/2,90,fullWidth-90),T.MathUtils.clamp((1-ridePromptV.y)*fullHeight/2,90,fullHeight-160));
             if(ridePromptKind!==rideNear.kind){ridePromptKind=rideNear.kind;prompt.setAttribute('aria-label',RIDE_PROMPT_LABEL[rideNear.kind]);prompt.dataset.rideGrab=rideNear.kind;}}}
         if(prompt.hidden!==hidden)setUIHidden(prompt,hidden);ridePromptShown=!hidden;}}
+      if((rideRef.current as string)==='jetpack')dive.scan(0,location.x,location.z,false);/* Oct 20 2026 (user: Explore + Breath stayed on screen after flying away): the water step that runs the scan is skipped while flying, so clear the patch and the breath pill here */
       dive.prompt(camera,fullWidth,fullHeight,canEnter&&hudFocusNow==='enter'&&focusArbiter.current?.key==='dive');// water P2: "Dive" over the buoy (while in the patch)
       if(fishingHover.hoverStarted)sound.sceneHover(false);if(fishingHover.hovered)renderer.domElement.style.cursor='pointer';
       // HUD stack arbiter (lib/ui/hudStack.ts, docs/ui/HUD_STACK.md): on the HUD tick, every prompt that wants the focus slot
