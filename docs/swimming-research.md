@@ -552,3 +552,44 @@ User (16 Oct 2026): "For the diving spots, have some type of marker on the top o
 - **Saves and analytics.** Finds: SYNC key `fi2-dive-finds-v1` (docs/accounts-design.md table A); lesson flag: DEVICE key `fi2-dive-lesson-v1`. Ids on the `k` channel (no migration): `wa:dive_start`, `wa:dive_surface`, `wa:dive_find` (first use of each find), `wa:dive_breath_out`, `wa:dive_lesson`, shown in a **Dives** tile in the admin Water section.
 - **Adding the next spot** is data: a row in `DIVE_SPOTS` (centre, radius, tint, surface point, theme, finds with room positions, the fact and its credit). The shader has 2 slots (`DIVE_SLOTS`; farther zones are the shoal decal), the buoys are one instanced draw, the room is built from the theme. Where everything sits comes from the zone's shared layout (`lib/town/water/diveLayout.ts`), read by the room, the shoal preview, the decal and the above-water pieces. Each new fact must be verified before it ships.
 - **Validation.** tests/water-dive.cjs (14 groups); the browser driver `scripts/check-dive-browser.cjs` (production build, 390×844 touch): swim into the patch, Dive, swim to all four finds and use them, Surface with the button, catch a breath, dive again, Escape; zero page or console errors; screenshots in docs/water/. Phone heat was NOT measured (cloud only).
+
+
+## 10. Explore v2: swim feel, the reef journey, the frozen island (21 Oct 2026, local)
+
+Critique first (headless phone + desktop, Paul's Grotto, Captain's Cup, Kelp Forest Wreck): the diver was drawn upright (a tread / head-up
+crawl, so it read as walking in fog), the top of the screen was one flat pale band, the god rays were hard glass slabs, there was no
+caustic light, nothing moved past you (no motes), fish ignored you, nothing guided you to the four finds and there was no progress, and the
+island's music kept playing under the reef bed. Built, in order of impact:
+- **Swimming.** The body lies along the swim (the crawl's under-water shape, `under` 1, pitched with the climb): a flutter-kick crawl
+  while swimming, a slow glide flutter when the stick is let go (a lower drag, `DIVE_GLIDE_DRAG`, so a kick carries), a gentle hover bob,
+  banking into turns (`DIVE_BANK` 0.5 rad). **Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
+  to 5.4 m/s for 0.7 s, 1.1 s cooldown, 1.2 % breath (the pace lesson: a sprint has a price), a longer bubble trail, a 6° FOV kick, sand
+  puffs low over the sand. The camera sits a little lower and looks farther ahead, and is kept over the sand under it and halfway to the
+  diver (never inside a rising reef).
+- **The reef journey (diveJourney.ts).** Each zone has 8 pickups on a guided path through its finds (from the zone's own data, never
+  hard-coded positions): 4 bits of litter (a can, a bottle, a lost net, a bottle cap) and 4 treasures (a spiral shell, a starfish, sea
+  glass, a lost kit badge) that twinkle. Swim through one to collect it (no button): it spins up and away, a short note ("You cleared an
+  old can: the reef says thank you!"). The **Reef n/12** chip counts pickups + finds; the coral's colour comes back as it fills (uReef 0.72
+  → 1). At 12/12 the zone is **restored**, once ever: a *Real football fact* card (Forest Green Rovers, the first club certified carbon
+  neutral by the UN, 2018; source Wikipedia), a "Reef Keeper" sticker line, **3 coins** (`dive:<zone>:reef`, Training-metered, once ever:
+  at most 21 over all seven zones) and the zone's biggest school swims into a turning football in front of you for 8 s.
+- **Dot, the buddy fish.** A small damselfish swims beside you; hover for 2 s and it swims toward the nearest thing left to find and back
+  (it leads), so a young child always has a next step. No arrows, no map.
+- **Underwater football (the pitch zone, Paul's Grotto).** A ball on the old centre spot: nudge it with your body (water drag, a slow sink,
+  soft sand bounces) into the sunken goal: "GOAL!" and a *Coaching idea* card (a soaked pitch slows the ball: pass firmer). The ball
+  resets after 3 s. No coins (play only).
+- **Fish and plants react.** Schools part round the diver (more on a dart) and close up behind; fans, kelp and grass bend away as you swim
+  through. All in the vertex shaders.
+- **Water.** The room's water colour now follows the camera's place in the water column (clear turquoise near the surface, the zone's own
+  tint low over the rim; waterTokens ROOM_SHALLOW / ROOM_SHALLOW_MIX), the surface from below is a clear aqua window with moving shimmer
+  lines fading into that colour, caustic light lines move over the sand and the reef, the rays are soft and breathe, plankton motes drift
+  past (parallax: you can feel yourself move), a soft static vignette.
+- **Calm by design.** No fail states: the breath still floats you up gently; no timers on the journey; nothing scary.
+- **Saves / analytics.** `fi2-dive-reef-v1` (SYNC, docs/accounts-design.md table A): each zone's collected pickup indices and the restored
+  zones. `wa:dive_dart` / `wa:dive_pick` (once per dive), `wa:dive_restore`, `wa:dive_goal` on the `k` channel (countIds.ts registry,
+  admin Water tile): **no migration**.
+- **Freeze.** While in the room the whole island is suspended (docs/performance-guide.md "Explore v2").
+- **Validation.** tests/explore-v2.cjs (frozen-island source checks, rest, swim feel, journey, runtime restore, room caps and colour),
+  tests/water-dive.cjs, tests/dive-layout.cjs, full suite, `build:quiet`, headless phone + desktop shots (/tmp/explore-v2), 0 console errors.
+- **Not done / next.** A whale-shadow surprise, per-zone friend emotes (wave / high five), a daily sparkle spot and a photo mode were left
+  out to keep the draw budget; the Dart button could pulse once on the first dive. iPhone heat not measured.

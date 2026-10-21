@@ -193,7 +193,7 @@ import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
+import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
@@ -778,10 +778,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // never brighter than the water (`.water-under.is-reef`, app/globals.css), instead of the bright splash-down flash.
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};
     const dive=createDiveRuntime({scene,renderer,camera,player,phone:quality.phone,reduced:()=>reduced,lite:()=>heat.tier>=2,ui:sel=>uiElement(sel),place:(el,l,t)=>placeEntryPrompt(el,l,t),hide:(el,h)=>setUIHidden(el,h),
-      entered:spot=>{countDiveStart();if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
+      entered:spot=>{countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);/* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
         ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
         waterStore.set({reef:true,reefLesson:waterStore.get().reefLesson+1});wakeLoop();},
-      surfaced:(spot,reason)=>{countDiveSurface();waterStore.set({reef:false});if(reason==='leave')return;
+      surfaced:(spot,reason)=>{countDiveSurface();music.setDucked(false);waterStore.set({reef:false});if(reason==='leave')return;
         if(reason==='fly'){location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;return;}/* R / the switcher: back at the buoy, then flyUp() launches */
         // Back at the buoy, treading water: a splash and drips from the ring pool, the surfacing plip; the island resumes.
         location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;
@@ -789,7 +789,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       found:(f,first)=>{if(first){countDiveFind();if(f.kind==='relic'&&dive.session.state.spot?.theme.wreck)countDiveWreckFind();}tapHaptic();sound.ui('click');if(f.kind==='treasure'||f.kind==='clam')document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'path-pop'}));},
       credit:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},
       low:()=>diveStore.set({note:DIVE_LOW_NOTE}),out:()=>{countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});},
-      crest:()=>countDiveCrest(),fly:()=>flyFromReef()});
+      crest:()=>countDiveCrest(),fly:()=>flyFromReef(),
+      /* Explore v2: the dart, a pickup, a restored reef, an underwater goal (sounds from the existing set, haptics, totals-only analytics) */
+      dart:first=>{if(first)countDiveDart();tapHaptic();},picked:(kind,first)=>{if(first)countDivePick();tapHaptic();sound.ui(kind==='treasure'?'path-pop':'click');},
+      restored:()=>{countDiveRestore();tapHaptic();sound.ui('expand');},goal:()=>{countDiveGoal();tapHaptic();sound.ui('expand');}});
     dive.slots(location.x,location.z);
     diveActions.current=()=>{if(dive.diving){dive.use();return;}if(water.state.phase==='swim'&&!animalRides.riding&&dive.start())sound.ui('click');};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.dive=dive;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.diveBuoys=diveBuoys;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.divePreview=divePreview;
@@ -1200,6 +1203,21 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       if(easel.frameMs){const slot=frameCapSlot(now,easelSlot,Math.max(easel.frameMs,heat.frameMs));if(slot<0)return;easelSlot=slot;}else easelSlot=0;// seated at the easel: the 20 fps idle cap
       // Treading water or floating counts like an idle ride (docs/swimming-research.md §2.3): 20 fps after 4 s without input.
+      // Explore (water P2; Explore v2 Oct 21 2026, user: "freeze everything else with the island while this is running"): under the water the
+      // island is FROZEN. This branch runs before any island work, so nothing below it runs while diving: no island rest heuristics (the
+      // players, every car's distance, the townsfolk), no island step (NPCs, traffic, sea life, sharks, rides, bugs, ball, jobs, the water
+      // and its clock), no HUD tick, no shadow refresh, no island render. Only: the room's own rest cap (dive.resting: hovering with nothing
+      // the player moved still moving → 20 fps after 3 s, 15 fps after 30 s), the heat governor fed with the room's frames (so heat tiers
+      // and Battery saver keep adapting underwater), the motion resolution, the dive step and ONE room render (tests/explore-v2.cjs).
+      if(dive.diving){const restFrame=idleRide.interval(now,dive.resting,IDLE_FOOT_AFTER_MS,true);heat.setRest(restFrame>0,restFrame);renderStats.idleRide=restFrame;
+        if(restFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(restFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
+        idleRide.sample(now,player.root.position,player.root.position);
+        const ms=now-last;last=now;const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
+        {const res=motionResolution.update(now,!dive.resting,!active,restFrame>0);if(res){renderer.setPixelRatio(res);renderer.setViewport(0,0,viewportW,viewportH);}}
+        const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
+        dive.frame(active?dt:0,{sx,sy,lift:(keys.has('q')?1:0)-(keys.has('z')?1:0)},viewportW,viewportH);{const ss=SWIM_SOUND_IN,st=dive.session.state;ss.in=dive.diving;ss.under=st.phase==='rising'?Math.max(0,1-st.rise/.45):1;ss.kind=st.effort>.12?'crawl':'tread';ss.phase=0;ss.speed=st.effort;ss.fast=false;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(active?dt:0,ss);}/* the reef sounds under water: the duck-dive's low-pass bed */
+        heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,'dive');renderStats.rendered++;
+        if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}return;}
       const waterIdle=water.resting();
       // Heat audit Oct 17 2026: standing still on foot for 3 s (no input, nothing moving near or on screen) rests at 20 fps like an idle ride.
       // Heat offsets Oct 19 2026: "quiet" = nothing moving near or on screen (townsfolk within 35 m, field players, a carried truck, cars within 45 m).
@@ -1214,11 +1232,6 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       idleRide.sample(now,player.root.position,camera.position);
       const ms=now-last;last=now;
       const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
-      // Diving (water P2): the island is neither stepped nor drawn; the sealed room takes the frame (lib/town/water/diveRuntime.ts).
-      // Menus hold it (dt 0: the breath waits too).
-      if(dive.diving){const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
-        dive.frame(active?dt:0,{sx,sy,lift:(keys.has('q')?1:0)-(keys.has('z')?1:0)},viewportW,viewportH);{const ss=SWIM_SOUND_IN,st=dive.session.state;ss.in=dive.diving;ss.under=st.phase==='rising'?Math.max(0,1-st.rise/.45):1;ss.kind=st.effort>.12?'crawl':'tread';ss.phase=0;ss.speed=st.effort;ss.fast=false;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(active?dt:0,ss);}/* the reef sounds under water: the duck-dive's low-pass bed */renderStats.rendered++;
-        if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y);stickPaint.current=null;}return;}
       // The Bug squad's catch stage (Oct 21 2026; jobScene.ts stageFrame): a swing that connects plays on a sealed stage; the island is
       // neither stepped nor drawn while it does (one stage render instead). Menus hold it (dt 0).
       if(jobs.staging){if(active)elapsed+=dt;jobs.stageFrame(active?dt:0,elapsed);renderStats.rendered++;return;}

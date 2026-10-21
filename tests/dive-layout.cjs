@@ -94,7 +94,7 @@ ok('caps: preview + tells under the per-zone cap; one decal draw for every zone,
 });
 ok('tokens: one water line; the dive files use them (no duplicated literals)',()=>{
  assert.equal(TK.WATER_Y,WD.WATER_LEVEL);assert.equal(TK.UNDER_SURFACE_Y,UW.UW_SURFACE);
- assert(!read('lib/graphics/diveRoom.ts').includes("'#bfeef5'")&&read('lib/graphics/diveRoom.ts').includes('ROOM_CEILING'));
+ assert(!read('lib/graphics/diveRoom.ts').includes("'#bfeef5'")&&read('lib/graphics/diveRoom.ts').includes('ROOM_WINDOW')&&read('lib/graphics/diveRoom.ts').includes('ROOM_SHALLOW'));
  assert(!/WATER_LEVEL|-\.43\b/.test(read('lib/graphics/diveWreckTop.ts'))&&!/UW_SURFACE|-\.42\b|setRGB\(\.2,\.5,\.52\)/.test(read('lib/graphics/divePreview.ts')));
  assert(read('lib/graphics/waterSurface.ts').includes('heart:SHOAL_HEART_D'));
 });

@@ -18,7 +18,13 @@ export default function DiveHud(){
   onPointerDown={hold(dir,true)} onPointerUp={hold(dir,false)} onPointerCancel={hold(dir,false)} onLostPointerCapture={()=>{diveLift[dir]=false;}} onContextMenu={e=>e.preventDefault()}>
   <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={dir==='up'?'M5 15l7-7 7 7':'M5 9l7 7 7-7'}/></svg></button>;
  return <>
+  {v.diving?<div className="dive-vignette" aria-hidden="true"/>:null}
   {v.diving?<div className="dive-depth" data-dive-depth-pad role="group" aria-label="Rise or dip lower">{depthBtn('up')}{depthBtn('down')}</div>:null}
+  {/* Explore v2 (Oct 21 2026): a quick burst forward (tap; F / Shift on desktop), and the zone's journey progress (pickups + finds). */}
+  {v.diving?<button type="button" className="dive-dart-btn" data-dive-dart aria-label="Dart: a quick burst forward · F" title="Dart · F"
+   onPointerDown={e=>{e.preventDefault();diveLift.dart=true;}} onContextMenu={e=>e.preventDefault()}>
+   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h9M9 7l5 5-5 5M15 7l5 5-5 5"/></svg></button>:null}
+  {v.diving&&v.reef?<p className="dive-reef" data-dive-reef data-restored={v.restored?'':undefined} role="status" aria-label={`Reef ${v.reef}${v.restored?', restored':''}`}><i aria-hidden="true">{v.restored?'★':'✦'}</i>Reef {v.reef}</p>:null}
   <div className="dive-breath" data-dive-breath hidden role="meter" aria-label="Breath" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
    <i aria-hidden="true"/><span>Breath</span>
   </div>

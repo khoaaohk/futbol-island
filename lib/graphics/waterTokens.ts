@@ -34,3 +34,14 @@ export const SHOAL_DECAL={heart:'#5aa89c',patch:'#2f716c',lane:'#86c2b2',grass:'
 
 /** The reef room's bright surface overhead (seen from below). */
 export const ROOM_CEILING='#bfeef5';
+
+/** Explore v2 (Oct 21 2026; user: "the room's background is still a fixed colour"): the room's water is no longer one flat colour. The
+ *  fog and the background are mixed each frame from the zone's deep tint (theme.water) toward ROOM_SHALLOW by how high the camera is in
+ *  the water column (just under the surface over the crest: clear turquoise like the shore shoal; low over the rim: the zone's tint).
+ *  ROOM_SHALLOW_MIX is the turquoise share at the top / at the bottom of the column. */
+export const ROOM_SHALLOW='#5cc7c4',ROOM_SHALLOW_MIX=[.62,.18] as const;
+/** The surface seen from below: the bright window overhead (Snell's window; a clear aqua, not the old near-white band) and the caustic
+ *  shimmer lines across it; far off it fades into the fog colour (no flat pale band on a phone's tall view). */
+export const ROOM_WINDOW='#8fdcdc',ROOM_SHIMMER='#d8fbf6';
+/** The light lines on the sand (the shore's sun-net, moving): colour and peak strength (0 at heat tier 2+ / Battery saver: static). */
+export const ROOM_CAUSTIC='#bff3e6',ROOM_CAUSTIC_K=.34;

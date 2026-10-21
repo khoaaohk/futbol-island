@@ -5721,3 +5721,39 @@ User: "the dive spots don't look like the area from above" (the reef you explore
 - **Validation**: tests/dive-layout.cjs (determinism, unique props / tells, nothing above the surface, buoy / start / lanes clear, room and
   preview at the same places, caps, gating, tokens), dive-see-through, water-dive, full suite, build, headless shots in /tmp/dive-layout.
   **No iPhone heat test has been done.**
+
+
+## Explore v2: frozen island, room rest cap, water colour, journey (Oct 21 2026, local, not deployed)
+
+User: "improve the visuals, swimming movements, controls, animations, water realism, interactions ... keeping down the heat ... freeze
+everything else with the island while this is running", and "the room's background is still a fixed colour".
+- **Frozen island audit (before).** The dive branch returned from `animate` only AFTER the island's rest heuristics: every frame under
+  water still ran `games.stats` / the cars' distance scan (`streetTraffic.cars.some`) / `islandNpcs.stats`, the foot-rest test and the
+  island idle rule (the room only reached ~20 fps at rest by accident: `water.resting()` stayed true from the surface). The heat governor
+  was NOT fed underwater (no `heat.afterRender` in the branch), so heat tiers never adapted during a dive; the motion resolution was not
+  applied; the island music kept playing and the footstep / wind bed (`sound.move`) kept its last state. Everything else (the island step,
+  NPCs, traffic, sharks, open sea, wild bugs / swarm, ferry, lighthouse, water clock, shadows, HUD tick, island render) was already skipped.
+- **After.** `if(dive.diving)` is the FIRST thing after the easel cap in `animate` (components/Town.tsx): under the water only the room's
+  own rest cap (`dive.resting`: no stick, lift, dart, ball, pickup or formation moving → `idleRide` 20 fps after 3 s, 15 fps after 30 s),
+  `heat.setRest`, the frame-cap slot, `motionResolution.update`, the dive step, the reef sound bed, ONE room render and
+  `heat.afterRender(...,'dive')` (the governor judges the room's frames, so tiers / Battery saver keep working) run. Going under ducks the
+  island music (`music.setDucked(true)`, back on surfacing) and stops the move bed. tests/explore-v2.cjs pins the branch's position and
+  contents and that 13 island systems' per-frame calls sit after it.
+- **Water colour (tokens, waterTokens.ts ROOM_*).** `scene.background` IS the fog colour, rewritten each frame from the zone's
+  `theme.water` toward `ROOM_SHALLOW` by the camera's place in the water column (clear turquoise near the surface, the zone tint low over
+  the rim): one lerp per frame. The surface seen from below is a small ShaderMaterial (the ceiling plane, 12x12 segments on phones): a
+  clear aqua window over the camera fading into the fog colour with moving shimmer lines (no pale band on a phone's tall view).
+- **Light and life (same draws).** Caustic light lines on everything facing up (reef material, ALU only, off when lite / reduced); god rays
+  as soft two-quad streaks breathing on the time uniform; plankton motes (70 phone / 120 desktop, × lite) and a sand puff added to the
+  existing bubble Points draw; the swimmer's bubble trail longer on a dart; plants bend away from the diver and schools part round them
+  (one distance per vertex on `uDiver`); the buddy fish is instance 0 of the coral-burst draw (whose 14 fish are drawn only once touched).
+- **New draws.** The journey pickups (ONE InstancedMesh, 8 instances, two shapes in one geometry) and, at the pitch zone only, the ball.
+  Counted as VISIBLE draws (the hidden pearl is not drawn). Node, phone profile (draws / triangles): before 13-16 / 34k-75k; after
+  captains-cup 16/63.4k, pauls-grotto 15/46.4k, kelp-trawler 14/51.5k, ray-meadow 14/30.3k, moon-arch 13/40.9k, ball-crate 15/67.6k,
+  turtle-pool 13/41.3k (fewer triangles: the burst fish are no longer drawn before the touch).
+- **Headless (production build, SwiftShader, 390x844, phone profile, Captain's Cup).** rAF callback CPU median: island swimming 1.5 ms
+  (30 calls, 81k tris, 17 fps rendered in SwiftShader), room swimming 0.3 ms (20 calls incl. the rig, 71k tris, 30 fps), room hovering
+  ~20-23 fps (the rest cap). Before: room 0.2 ms, 18 calls, 70.7k. The extra ~0.1 ms is the buddy, the pickups test and the fog lerp.
+- **Per frame CPU added:** ~8 distance tests (pickups), the buddy spring, the ball's few lines (pitch zone only), one Color lerp, a few
+  uniform writes. No allocation in the room frame or the session step (tests/explore-v2.cjs). Nothing runs between dives.
+- **Not measured on an iPhone.** All of the above is reduced/bounded work in desktop emulation; phone heat was NOT measured.
