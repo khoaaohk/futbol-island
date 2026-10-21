@@ -98,4 +98,43 @@ for(const ride of ['scooter','bike','moped']){
  assert(/jobs\.setBackpack\(\{socket:backpack\.sockets\.sideRight,morph:\(\)=>backpack\.morph\}\)/.test(town),'Town passes backpack-side-right and the morph');
  assert(/packPort\.morph\(\)>NET_HIDE_MORPH/.test(js)&&/net\.pack\(s\.matrixWorld/.test(js),'holdProps: socket carry and jetpack hide');
  assert(!/NET_PACK\.(back|side|up|tilt)/.test(read('lib/town/jobs/bugNet.ts')),'the placeholder offsets are gone');}
+// ---- 4. The firefly jar at Night (Oct 21 2026): both hands on the jar's sides through the walk, Jar low, the Cup, the hold-up and
+// the stage's show; the jar between the mittens, clear of the face; every grip target within reach; riding on the side socket ----
+{const JAR=load(base+'/lib/town/jobs/bugJar.ts'),jar=JAR.createBugJar(x=>x),jc={x:0,y:0,z:0},jd={x:0,y:0,z:0};
+ const jframe=(job,mode,speed,swingT=-1)=>{x+=Math.sin(yawWant)*speed/60;z+=Math.cos(yawWant)*speed/60;t+=1/60;
+  rig.update(x,z,1/60,t,false,{travelMode:'walk',job,...(speed>3?{runIntensity:1}:{})});rig.root.position.set(x,0,z);rig.root.scale.setScalar(1.12);rig.root.updateMatrixWorld(true);
+  pack.update(1/60,'walk',D.jetpack,true,1,speed,0,false);rig.root.updateMatrixWorld(true);rig.handPositions(L,R);arms[0].localToWorld(ML.set(0,-.285,0));arms[1].localToWorld(MR.set(0,-.285,0));
+  jar.layout(L,R,rig.root.rotation.y,swingT,mode,1/60,false);jar.poleLine(jc,jd);};
+ let cup=0,ct=0,sh=0;
+ for(const [label,n,f] of [['jar carry',120,()=>[{kind:'jarcarry',progress:0,upper:true},'carry',1.6,-1]],['jar idle',60,()=>[{kind:'jarcarry',progress:0,upper:true},'carry',0,-1]],
+  ['jar sprint',60,()=>[{kind:'jarcarry',progress:0,upper:true},'carry',6,-1]],['Jar low',60,()=>[{kind:'jarsneak',progress:0,upper:true},'low',.9,-1]],
+  ['Cup',38,()=>{cup+=1/60;return [{kind:'jarcup',progress:Math.min(1,cup/.62)},'swing',0,cup];}],['jar held up',54,()=>{ct+=1/60;return [{kind:'jarcatch',progress:Math.min(1,ct/.9)},'raise',0,-1];}],
+  ['stage show',60,()=>{sh+=1/60;return [{kind:'jarshow',progress:Math.min(1,sh/.6),tug:0},'raise',0,-1];}]]){
+  let worst=0,minFace=9,peak=-9;for(let i=0;i<n;i++){const [job,mode,speed,st]=f();jframe(job,mode,speed,st);if(i<14)continue;assert(finiteRig(),label+': no NaN');
+   // Each mitten sits at the jar's side: about the jar's radius + a mitten from its axis, one either side.
+   for(const M of [ML,MR]){const vx=M.x-jc.x,vy=M.y-jc.y,vz=M.z-jc.z,along=vx*jd.x+vy*jd.y+vz*jd.z,rad=Math.hypot(vx-along*jd.x,vy-along*jd.y,vz-along*jd.z);worst=Math.max(worst,Math.abs(rad-(JAR.JAR_RADIUS+.04)),Math.abs(along)-JAR.JAR_HEIGHT/2);}
+   const sideL=(ML.x-jc.x)*Math.cos(rig.root.rotation.y)-(ML.z-jc.z)*Math.sin(rig.root.rotation.y),sideR=(MR.x-jc.x)*Math.cos(rig.root.rotation.y)-(MR.z-jc.z)*Math.sin(rig.root.rotation.y);
+   assert(sideL*sideR<0,label+': one mitten either side of the jar');head.getWorldPosition(v);minFace=Math.min(minFace,Math.hypot(jc.x-v.x,jc.y-v.y,jc.z-v.z));peak=Math.max(peak,jc.y);}
+  assert(worst<.09,`${label}: both mittens on the jar's sides (worst ${worst.toFixed(3)} m off)`);assert(minFace>.2,`${label}: jar clear of the face (${minFace.toFixed(2)} m)`);
+  report.push(`${label}: mittens ≤ ${(worst*100).toFixed(1)} cm off the jar's sides, ${minFace.toFixed(2)} m from the head, jar up to ${peak.toFixed(2)} m`);}
+ // The Cup sweeps the jar up over the firefly (head height) and tips its mouth forward / down; the lid snaps shut and reopens.
+ {cup=0;let top=0,tip=0;for(let i=0;i<38;i++){cup+=1/60;jframe({kind:'jarcup',progress:Math.min(1,cup/.62)},'swing',0,cup);top=Math.max(top,jc.y);const f=Math.sin(rig.root.rotation.y)*jd.x+Math.cos(rig.root.rotation.y)*jd.z;tip=Math.max(tip,f);}
+  assert(top>1.4,`Cup: the jar sweeps up to head height (${top.toFixed(2)} m)`);assert(tip>.7,`Cup: the mouth tips forward over the firefly (${tip.toFixed(2)})`);
+  jar.close(true);for(let i=0;i<20;i++)jframe({kind:'jarcarry',progress:0,upper:true},'carry',0);assert(jar.flip>.97,'the lid snaps shut ('+jar.flip.toFixed(2)+')');
+  jar.close(false);for(let i=0;i<30;i++)jframe({kind:'jarcarry',progress:0,upper:true},'carry',0);assert(jar.flip<.05,'and opens again');
+  jar.setFill(1);jframe({kind:'jarcarry',progress:0,upper:true},'carry',0);assert(jar.group.getObjectByName('job-jar-glow').visible,'a full jar glows (sprite, no light)');jar.setFill(0);
+  let lights=0;jar.group.traverse(o=>{if(o.isLight)lights++;});assert.equal(lights,0,'no lights in the jar');
+  report.push(`Cup: jar up to ${top.toFixed(2)} m, mouth tipped ${tip.toFixed(2)} forward; lid snaps shut / reopens; glows when full`);}
+ for(const k of [0,1])for(const a of [0,1])for(const sp of [0,1])for(const [cw,ck,kw,kk,hw,hk] of [[0,0,0,0,0,0],[1,.26,0,0,0,0],[1,.48,0,0,0,0],[1,.68,0,0,0,0],[0,0,1,.45,0,0],[0,0,0,0,1,0],[0,0,0,0,1,1]]){
+  const g=JP.netGrip(k,{phase:1,amount:a,sprint:sp},false,hw,hk,{w:1,cupW:cw,cupK:ck,catchW:kw,catchK:kk});
+  for(const [h,sx] of [[g.h0,-.235],[g.h1,.235]]){const d=Math.hypot(h[0]-sx,h[1]-1.261,h[2]);assert(d<.59,`jar grip target within reach (${d.toFixed(3)})`);}
+  assert(Math.abs(g.h1[0]-g.h0[0]-JP.JAR_HAND_GAP)<1e-6,'hands the jar width apart');}
+ // Riding: the jar hangs upright on backpack-side-right, lid shut, outside the rider and the pack.
+ for(const ride of ['scooter','bike','moped']){for(let i=0;i<30;i++){rig.update(0,0,1/60,i/60,false,{travelMode:ride});rig.root.position.set(0,0,0);rig.root.scale.setScalar(1.12);
+   vehicle.update(ride,0,0,0,1/60,6);vehicle.root.scale.setScalar(1.12);vehicle.syncArmor(rig.root,true);pack.update(1/60,ride,D.jetpack,true,1,6,0,false);}
+  rig.root.updateMatrixWorld(true);jar.close(false);for(let i=0;i<20;i++)jar.pack(sock.matrixWorld,rig.root.rotation.y,0,1/60,false);jar.poleLine(jc,jd);const sp=sock.getWorldPosition(new T.Vector3());
+  assert(Math.hypot(jc.x-sp.x,jc.y-sp.y,jc.z-sp.z)<.2,ride+': the jar hangs on the side socket');assert(jd.y>.99,ride+': upright');assert(jar.flip>.97,ride+': lid shut');
+  const pts=[];for(let k=0;k<12;k++){const a=k/12*Math.PI*2;for(const yy of [-.1,0,.1])pts.push(P(jc.x+Math.cos(a)*JAR.JAR_RADIUS,jc.y+yy,jc.z+Math.sin(a)*JAR.JAR_RADIUS));}
+  assert.equal(pts.filter(p=>inBody(p)).length,0,ride+': the jar is not inside the rider');assert.equal(pts.filter(inPack).length,0,ride+': nor inside the pack');}
+ report.push('riding: the jar hangs upright on the side socket, lid shut, clear of the rider and the pack');}
 console.log('bug net hold ok\n  '+report.join('\n  '));

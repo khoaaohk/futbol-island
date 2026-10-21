@@ -81,6 +81,22 @@ const read=f=>fs.readFileSync(path.join(base,f),'utf8');const report=[];
  for(const k of [0,.5,1]){const g=JP.netGrip(0,{phase:0,amount:0,sprint:0},false,1,k);for(const [h,sx] of [[g.h0,-.235],[g.h1,.235]])assert(Math.hypot(h[0]-sx,h[1]-1.261,h[2])<.59,'show grip within reach');}
  report.push(`show pose: hands ≤ ${(worst*100).toFixed(1)} cm from the pole, presented ${present.z.toFixed(2)} m ahead at ${present.y.toFixed(2)} m, raised ${hc.y.toFixed(2)} m (head ${hv.y.toFixed(2)}), ${side.toFixed(2)} m to the side`);}
 
+// ---- 4b. Night: the firefly jar on the stage (Oct 21 2026) ----
+{const JAR=load('lib/town/jobs/bugJar.ts'),rig=G('player').createPlayer('you','home',true,true),jar=JAR.createBugJar(x=>x),{DEFAULT_BEAN_LOOK}=G('beanLook');
+ rig.setBeanLook({...DEFAULT_BEAN_LOOK,build:'regular',headwear:'none'},{kind:'kit',shirt:'#edb957',shirt2:'#fff4cd',shorts:'#26453e',socks:'#edb957',boots:'#27342f',number:10});
+ const L=new T.Vector3(),Rr=new T.Vector3(),c={x:0,y:0,z:0},d={x:0,y:0,z:0},mouth={x:0,y:0,z:0},hv=new T.Vector3();let t=0;
+ const frame=(pose,mode,st=-1)=>{t+=1/60;rig.update(0,0,1/60,t,false,{job:pose,facing:0});rig.root.updateMatrixWorld(true);rig.handPositions(L,Rr);jar.layout(L,Rr,0,st,mode,1/60,false);jar.poleLine(c,d);jar.hoopCentre(mouth);rig.root.getObjectByName('player-head').getWorldPosition(hv);};
+ for(let i=0;i<30;i++)frame({kind:'jarcarry',progress:0,upper:true},'carry');
+ // The Cup at the stage's hit: the jar's mouth meets the firefly where jobScene puts it (.72 m ahead, 1.42 m up).
+ let best=9;for(let i=0;i<38;i++){const sw=i/60;frame({kind:'jarcup',progress:Math.min(1,sw/.62)},'swing',sw);best=Math.min(best,Math.hypot(mouth.x,mouth.y-1.42,mouth.z-.72));}
+ assert(best<.35,`Cup: the mouth sweeps over the firefly's spot (closest ${best.toFixed(2)} m)`);
+ jar.close(true);for(let i=0;i<40;i++)frame({kind:'jarshow',progress:Math.min(1,i/30),tug:Math.sin(Math.min(1,i/30)*Math.PI)},'raise');
+ assert(jar.flip>.97,'the lid is shut');assert(c.y>hv.y,`raised: the jar held up over the head line (${c.y.toFixed(2)} vs ${hv.y.toFixed(2)})`);
+ const inside=jar.bagPoint(.5,{x:0,y:0,z:0});assert(Math.hypot(inside.x-c.x,inside.y-c.y,inside.z-c.z)<JAR.JAR_HEIGHT/2,'the firefly glows inside the jar');
+ const sF=K.stageFlightScale(1,W.FIREFLY_SIZE),sC=K.catchScale(1,sF,JAR.JAR_RADIUS);assert(sC<=K.CATCH_FIT*2*JAR.JAR_RADIUS+1e-9,'the firefly fits the jar');
+ const js=read('lib/town/jobs/jobScene.ts');assert(/jar\?'jarcup':'netswing'/.test(js)&&/jar\?'jarshow':'netshow'/.test(js)&&/jarTool\(\)\?JAR_RADIUS:NET_HOOP_RADIUS/.test(js),'the stage plays the jar at night');
+ report.push(`night jar: the Cup's mouth passes ${best.toFixed(2)} m from the firefly, lid shut, jar raised to ${c.y.toFixed(2)} m (head ${hv.y.toFixed(2)})`);}
+
 // ---- 5. The stage scene ----
 {for(const [look,sp] of [['day',SP.BUG_SPECIES[0]],['night',null]]){const st=CS.createCatchStage({at:{x:5,y:2,z:5},look,species:sp});let tex=0,draws=0;
   st.scene.traverse(o=>{const m=o.material;if(m)for(const k of ['map','alphaMap','emissiveMap','normalMap'])if(m[k])tex++;if((o.isMesh||o.isPoints)&&o.visible&&!(o.isInstancedMesh&&o.count===0))draws++;});
