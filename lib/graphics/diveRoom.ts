@@ -375,9 +375,10 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  for(const k of th.fish)SCHOOLS[k]?.();
  // The burst: damselfish hidden in the coral until it is touched.
  const coralAt=findPt('coral')??{x:7,y:1,z:6};
- const burst=school(undefined,'round','#1f8bff',Array.from({length:14},(_,i)=>{const a=i/14*Math.PI*2+r()*.3,up=.2+r()*.6;
-  return {cx:coralAt.x,cy:coralAt.y+.4+(r()-.5)*.6,cz:coralAt.z,r:1.3+r()*.6,omega:.55+r()*.2,phase:a,eight:false,stretch:1,yaw:0,bob:.2,wag:16,seed:r()*6.28,scale:.22+r()*.08,dir:[Math.cos(a),up,Math.sin(a)] as [number,number,number]} as Swimmer;})
-  .concat([{buddy:true,cx:0,cy:0,cz:0,r:0,omega:0,phase:0,eight:false,stretch:1,yaw:0,bob:0,wag:18,seed:1,scale:.42}]),'burst');
+ const burst=school(undefined,'round','#1f8bff',([{buddy:true,cx:0,cy:0,cz:0,r:0,omega:0,phase:0,eight:false,stretch:1,yaw:0,bob:0,wag:18,seed:1,scale:.42}] as Swimmer[]).concat(Array.from({length:14},(_,i)=>{const a=i/14*Math.PI*2+r()*.3,up=.2+r()*.6;
+  return {cx:coralAt.x,cy:coralAt.y+.4+(r()-.5)*.6,cz:coralAt.z,r:1.3+r()*.6,omega:.55+r()*.2,phase:a,eight:false,stretch:1,yaw:0,bob:.2,wag:16,seed:r()*6.28,scale:.22+r()*.08,dir:[Math.cos(a),up,Math.sin(a)] as [number,number,number]} as Swimmer;})),'burst');
+ // The buddy is instance 0; the 14 burst fish are drawn only once the coral is touched (instanceCount 1 until then).
+ const burstGeo=burst.geometry as T.InstancedBufferGeometry,burstN=burstGeo.instanceCount;burstGeo.instanceCount=1;
  // The formation school (a restored reef): the biggest school there is.
  const formSchool=forms.slice(0,-1).reduce((a,b)=>b.n>a.n?b:a,forms[0]);
 
@@ -478,7 +479,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  // ---- The follow camera: behind and a little above the diver, eased; kept under the surface and over the sand.
  const camPos=new T.Vector3(0,DIVE_SURFACE_Y-1,8),camLook=new T.Vector3(),tmp=new T.Vector3();let camInit=false;
  function follow(dt:number,d:{x:number;y:number;z:number;yaw:number}){
-  const fx=Math.sin(d.yaw),fz=Math.cos(d.yaw);tmp.set(d.x-fx*5.6,d.y+.75,d.z-fz*5.6);
+  const fx=Math.sin(d.yaw),fz=Math.cos(d.yaw);tmp.set(d.x-fx*6,d.y+1,d.z-fz*6);
   {const cr=Math.hypot(tmp.x,tmp.z),lim=DIVE_ROOM_R+1.5;if(cr>lim){tmp.x*=lim/cr;tmp.z*=lim/cr;}}// never back into the rock ring
   tmp.y=Math.min(DIVE_SURFACE_Y-.55,Math.max(F(tmp.x,tmp.z)+.6,F((tmp.x+d.x)/2,(tmp.z+d.z)/2)+.5,tmp.y));// over the sand under it and halfway to the diver (never in a rising reef)
   const k=camInit?1-Math.exp(-dt*3.2):1;camPos.lerp(tmp,k);camLook.lerp(tmp.set(d.x+fx*3.6,d.y-.2,d.z+fz*3.6),camInit?1-Math.exp(-dt*5):1);camInit=true;
@@ -487,8 +488,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const triangles=()=>{let t=0;scene.traverse(o=>{const m=o as T.Mesh;if(!m.isMesh||!o.name.startsWith('dive-'))return;const g=m.geometry as T.BufferGeometry&{instanceCount?:number};const n=(g.index?g.index.count:g.getAttribute('position').count)/3;t+=n*(g.instanceCount&&Number.isFinite(g.instanceCount)?g.instanceCount:1);});return Math.round(t);};
  let disposed=false;
  return {scene,camera,uTime,
-  /** Draws (meshes and points in the room, not counting the diver's rig) and triangles, for the budget test and the docs. */
-  stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
+  /** Draws (VISIBLE meshes and points in the room: the hidden pearl is not drawn; not counting the diver's rig) and triangles, for the budget test and the docs. */
+  stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / coin while they animate. */
   frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;dartT?:number}){
    uTime.value=t;uPlayer.value.set(diver.x,diver.y+.9,diver.z);follow(dt,diver);
@@ -519,7 +520,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   setViewport(width:number,height:number,aspect:number){uBubbleScale.value=height;if(camera.aspect!==aspect){camera.aspect=aspect;camera.updateProjectionMatrix();}void width;},
   /** The find's interaction: the coral's burst, the clam opening (visual only), the coin rising into your coins. */
   use(find:DiveFind,t:number){
-   if(find.kind==='burst')uBurst.value.set(coralAt.x,coralAt.y+.3,coralAt.z,t);
+   if(find.kind==='burst'){uBurst.value.set(coralAt.x,coralAt.y+.3,coralAt.z,t);burstGeo.instanceCount=burstN;}
    else if(find.kind==='clam'){lidT=0;pearl.visible=true;}
    else if(find.kind==='treasure'&&coin.visible&&coinT<0)coinT=0;
   },

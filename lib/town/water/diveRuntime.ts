@@ -111,7 +111,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   get diving(){return session.diving;},get room(){return room;},
   /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no dart, no ball rolling,
    *  no pickup or formation playing (the fish and plants are shader time only: they keep swimming at the capped rate). */
-  get resting(){const st=session.state;return st.phase==='diving'&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.05&&Math.hypot(st.vx,st.vz)<.05;},
+  get resting(){const st=session.state;return st.phase==='diving'&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
   /** Explore v2: the journey's pickups this dive and which are collected (tests). */
   get pickups(){return picks;},get got(){return got;},
   /** The patch test at the surface (the island step, at the probe's 10 Hz), plus the breath refill there. */
