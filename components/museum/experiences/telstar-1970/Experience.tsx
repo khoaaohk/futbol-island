@@ -14,6 +14,8 @@ import {BallShadeDefs,Ghost,PitchLive,PitchStatic,StudioBall,StudioStatic,Tally,
 import {BEATS,BEST_KEY,CHECK,EXTRA,EXTRA_SOURCES,MODEL_NOTE} from './content';
 import {HALF_S,PANELS,PIECES,START_Q,STEPS,ballPanels,bringToFront,counts,easeOut,follow,frameBox,inFrame,match,nextGap,pct,slerp,stillTimes,stitch,tapHit,verdict,type BallKind,type Picture,type Quat} from './model';
 import {polygon,type PanelKind} from './geometry';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import {makeTelstarFigure} from './figure';
 import s from './Experience.module.css';
 
 /**
@@ -27,11 +29,14 @@ import s from './Experience.module.css';
  *  2. On air (two halves of the same seeded pretend match on a table-top pitch): drag to steer the viewfinder and keep the ball in
  *     shot. The picture is black and white: the brown leather ball melts into the grass greys; the Telstar's black and white
  *     don't. ON AIR % per half; a Picture switch (B&W / colour) for a replay. Reduced motion: eight still frames, tap the ball.
+ *  Look (Oct 21 2026, figure kit v2): "Turn the ball" from the intro or once it is stitched: drag the finished Telstar all the way
+ *     round, Roll it, See-through (the rubber bladder and the valve), Labels that light when touched, colour the pentagons.
  *  3. Full time: both percentages, the quick check, then the gallery ending (onComplete once, via Ending `reached`).
  * Heat: SVG drawn by React only when something changes; the frame loop (anatomy/paper-loop.ts, via bench useRaf) runs only while the ball turns or a half is
  * played, pauses off screen or in a hidden tab, and is cancelled on unmount. 0 frames at rest.
  */
-type Phase='intro'|'stitch'|'ready'|'air'|'half'|'score';
+type Phase='intro'|'stitch'|'ready'|'air'|'half'|'score'|'look';
+const LOOK_SAY:Record<string,string>={pentagon:'12 black pentagons: 5 sides each.',hexagon:'20 white hexagons: 6 sides each.',seam:'Every edge is stitched to the next panel.',bladder:'The rubber bladder inside holds the air.',valve:'Pump the bladder up through the valve.'};
 const BALLS:readonly BallKind[]=['leather','telstar'];
 const BALL_NAME:Record<BallKind,string>={leather:'Brown leather',telstar:'Telstar'};
 const keyOf=(b:BallKind,p:Picture)=>`${b}-${p}`;
@@ -65,6 +70,12 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const ball=BALLS[half]??'telstar';
  const ballRef=useRef(ball);ballRef.current=ball;const picRef=useRef(picture);picRef.current=picture;
  useEffect(()=>{setBest(readBest());},[]);
+ // Look: the turnable figure (figure kit v2), made once; `lookFrom` is the phase to go back to.
+ const fig=useMemo(()=>makeTelstarFigure(),[]),figHandle=useRef<FigureHandle|null>(null),lookFrom=useRef<Phase>('intro');
+ const [lit,setLit]=useState<string[]>([]),[lookNote,setLookNote]=useState<string>(EXTRA.inside);
+ const openLook=()=>{lookFrom.current=phaseRef.current;setPhase('look');museumSfx.card();};
+ const touchPart=(id:string)=>{setLit([id]);setLookNote(LOOK_SAY[id]??EXTRA.inside);museumSfx.tick();later(()=>setLit(l=>l[0]===id?[]:l),1800);};
+ const rollBall=()=>{fig.roll(reduced);setLit(['pentagon']);figHandle.current?.invalidate();later(()=>setLit([]),1200);};
  const timers=useRef<ReturnType<typeof setTimeout>[]>([]);
  const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
@@ -151,8 +162,8 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const lp=results[keyOf('leather',picture)],tp=results[keyOf('telstar',picture)];
  const checked=picked!=null;
  const sources=useMemo(()=>{const seen=new Set<string>();return [...exhibit.sources,...EXTRA_SOURCES].filter(x=>seen.has(x.url)?false:(seen.add(x.url),true));},[exhibit.sources]);
- const hint=phase==='stitch'?'Drag the panel that fits onto the red gap':phase==='air'?(reduced?'Tap the ball on each still frame':'Drag to keep the ball in the frame'):phase==='half'?'Half time':phase==='ready'?'The camera is ready':'Mexico 70';
- const label=studioView?`A big studio Telstar on a turntable, ${c.total} of 32 panels stitched: ${c.pent} black pentagons and ${c.hex} white hexagons. A 1970 TV camera points at it.`
+ const hint=phase==='stitch'?'Drag the panel that fits onto the red gap':phase==='air'?(reduced?'Tap the ball on each still frame':'Drag to keep the ball in the frame'):phase==='half'?'Half time':phase==='ready'?'The camera is ready':phase==='look'?'Drag to turn the ball':'Mexico 70';
+ const label=phase==='look'?'The finished Telstar on a display cup, 12 black pentagons and 20 white hexagons stitched together.':studioView?`A big studio Telstar on a turntable, ${c.total} of 32 panels stitched: ${c.pent} black pentagons and ${c.hex} white hexagons. A 1970 TV camera points at it.`
   :`A table-top pitch filmed from the touchline on a ${picture==='bw'?'black-and-white':'colour'} picture. The ball is the ${BALL_NAME[ball].toLowerCase()}.`;
 
  // Live air drawing.
@@ -177,7 +188,9 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <span data-corner="fig">Fig. 1970</span><span data-corner="title">Mexico 70 · on air</span>
       <span data-corner="hint">{hint}</span><span data-corner="readout" ref={readRef}>Panels 0 / 32</span>
      </div>
-     {ready&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}
+     {phase==='look'&&<FigureStage spec={fig.spec} active={lit} reduced={reduced} onLabel={touchPart} handle={figHandle} top={28} label="The Telstar on a display cup"
+      extra={<button type="button" className={s.rollBtn} data-roll onClick={rollBall}>Roll it</button>}/>}
+     {ready&&phase!=='look'&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} data-drag={drag?'':undefined}>
       <BallShadeDefs/>
       {studioView?<g>
@@ -246,12 +259,17 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
        <dl className={s.stats}><div><dt>Ball</dt><dd>{ball==='leather'?'Leather':'Telstar'}</dd></div><div><dt>Picture</dt><dd>{picture==='bw'?'B&W':'Colour'}</dd></div><div><dt>Half</dt><dd>{half+1}/2</dd></div></dl>
        <p className={s.say}>{reduced?'Find the ball in each still frame and tap it.':ball==='leather'?'Follow the brown ball. On a grey picture it hides in the grass.':'Follow the Telstar: black and white panels on a grey picture.'}</p>
       </>
-      :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startStitch}>Stitch the Telstar</button><p className={s.say}>Mexico, 1970: the first World Cup shown live around the world.</p></div>
+      :phase==='look'?<>
+       <p className={s.say} aria-live="polite" data-look-note>{lookNote}</p>
+       <button type="button" className={g.btn} data-look-back onClick={()=>{setPhase(lookFrom.current);setLookNote(EXTRA.inside);}}>{lookFrom.current==='intro'?'Back to the start':'Back to the camera'}</button>
+      </>
+      :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startStitch}>Stitch the Telstar</button><button type="button" className={g.ghost} data-look onClick={openLook}>Turn the ball</button><p className={s.say}>Mexico, 1970: the first World Cup shown live around the world.</p></div>
       :phase==='score'?<p className={s.say}>Same match, same passes: only the ball changed.</p>
       :<>
        <div className={s.toggle} role="group" aria-label="Picture">
         {(['bw','colour'] as const).map(v=><button key={v} type="button" aria-pressed={picture===v} data-picture-opt={v} onClick={()=>setPicture(v)} aria-label={v==='bw'?'Black-and-white picture':'Colour picture'}>{v==='bw'?'B&W':'Colour'}</button>)}
        </div>
+       {phase==='ready'&&!Object.keys(results).length&&<button type="button" className={g.ghost} data-look onClick={openLook}>Look inside the ball</button>}
        {phase==='half'&&half===0?<button type="button" className={g.btn} data-second-half onClick={secondHalf}>2nd half: the Telstar</button>
         :<button type="button" className={g.btn} data-kick-off onClick={()=>replay(picture)}>Kick off</button>}
        <p className={s.say} aria-live="polite">{phase==='half'&&half===0?<>Half time: <b>{lp??0}%</b> on air with the brown leather ball. Same match, same passes: now the Telstar.</>
@@ -264,7 +282,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     <section className={g.section} aria-labelledby="ts-facts">
      <p className={g.kicker}>The real story</p>
      <h2 id="ts-facts" className={g.h2}>Why the ball went black and white</h2>
-     <ol className={g.steps}>{[exhibit.facts[0],exhibit.facts[1],EXTRA.live,EXTRA.panels,EXTRA.name,exhibit.facts[2],EXTRA.made].map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}</ol>
+     <ol className={g.steps}>{[exhibit.facts[0],exhibit.facts[1],EXTRA.live,EXTRA.panels,EXTRA.inside,EXTRA.name,exhibit.facts[2],EXTRA.made].map((f,i)=><li key={f}><span>{String(i+1).padStart(2,'0')}</span><p className={g.body}>{f}</p></li>)}</ol>
      {Object.keys(best).length>0&&<p className={g.small} data-best>Your best on air: {BALLS.flatMap(b=>(['bw','colour'] as const).map(p=>best[keyOf(b,p)]!=null?`${BALL_NAME[b]} (${p==='bw'?'B&W':'colour'}) ${best[keyOf(b,p)]}%`:null)).filter(Boolean).join(' · ')}</p>}
      <p className={g.small}>{MODEL_NOTE}</p>
     </section>

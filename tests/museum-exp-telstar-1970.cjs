@@ -49,7 +49,7 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 // 3. Style: no pixel kit anywhere; the anatomy kit in the Paper tint; one red accent.
 {for(const f of files){const src=read(dir+f);assert.doesNotMatch(src,/pixeliso/,f+' imports no pixeliso / pixeliso-laws');
   assert.doesNotMatch(src,/#000048|PK Press Start|PK Pixelify|Mega Drive colours only|image-rendering:pixelated/i,f+': no pixel palette, fonts or navy ground');}
- assert.deepEqual(files,['Experience.module.css','Experience.tsx','content.ts','geometry.ts','model.ts','scene.tsx']);
+ assert.deepEqual(files,['Experience.module.css','Experience.tsx','content.ts','figure.ts','geometry.ts','model.ts','scene.tsx']);
  assert.match(bench,/from '\.\/iso-kit'/);assert.match(exp,/from '\.\.\/anatomy\/bench'/);assert.match(bench,/from '\.\/draw'/);assert.match(exp,/dangerouslySetInnerHTML=\{\{__html:ISO_CSS\}\}/,'the kit CSS, injected once');
  assert.match(exp,/className=\{`\$\{g\.room\} iso \$\{s\.root\}`\} data-theme="light"/,'the kit light theme on the room');
  assert.match(css,/\.root\.root\[data-theme\]\{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3/,'Paper: warm grey ground, off-white solids');
@@ -131,3 +131,31 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.match(exp,/const tapStill=/);assert.match(exp,/endHalf\(pct\(a\.hits,STEPS\)\)/,'the still-frame score');
  assert.match(exp,/\(e\.key==='Enter'\|\|e\.key===' '\)&&reduced/,'keyboard: Enter taps at the cursor');assert.match(exp,/e\.key==='5'\|\|e\.key==='6'/,'keyboard: 5 / 6 stitch');
  console.log('PASS reduced motion: instant turns, eight still frames, keyboard play');}
+
+// 10. Turn the ball (Oct 21 2026, figure kit v2): the finished Telstar turns all the way round (every panel can be seen), the
+//     see-through shows only verified insides (bladder, valve), labels name real parts and light while touched, swatches
+//     recolour only the pentagons, and the figure stays under the 120-part cap at every view.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),TF=require('../'+dir+'figure.ts');
+ const fig=TF.makeTelstarFigure(),c=FK.centreOf(TF.POINTS),P0=FK.fitTurn(TF.POINTS,900,700,45,30,{pad:24,top:80});
+ const view=(yaw,pitch,xray,swatch=null)=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch,active:new Set(['seam']),w:900,h:700};};
+ const seen=new Set();const count=svg=>(svg.match(/data-panel=/g)||[]).length;
+ for(const roll of [0,1,2])for(const yaw of [0,45,90,135,180,225,270,315])for(const pitch of [20,60]){const v=view(yaw,pitch,0),d=fig.spec.draw(v);
+  assert.ok(FK.countParts(d.svg)<=FK.MAX_PARTS,'≤ 120 parts at '+yaw+' ('+FK.countParts(d.svg)+')');assert.ok(count(d.svg)>=12&&count(d.svg)<=24,'about half the ball faces you');
+  // which panels face the viewer from here (the ball's own maths)
+  const M=require('../'+dir+'model.ts');M.PANELS.forEach((p,i)=>{const w=M.rotate(fig.q,p.c),ww=[w[2],w[0],w[1]];if(FK.dot(ww,v.V)>.3)seen.add(i);});
+  if(yaw===315&&pitch===60)fig.roll(true);}
+ assert.equal(seen.size,32,'turning and rolling shows all 32 panels');fig.reset();
+ const closed=fig.spec.draw(view(45,30,0)),open=fig.spec.draw(view(45,30,1));
+ assert.doesNotMatch(closed.svg,/data-bladder/,'closed: the real closed ball');assert.match(open.svg,/data-bladder/,'see-through: the bladder');assert.match(open.svg,/data-valve-stem/);
+ assert.ok(FK.countParts(open.svg)<=FK.MAX_PARTS,'see-through under the cap ('+FK.countParts(open.svg)+')');
+ const ids=d=>d.labels.map(l=>l.id).sort();assert.deepEqual(ids(closed),['hexagon','pentagon','seam','valve']);assert.deepEqual(ids(open),['bladder','hexagon','pentagon','seam','valve'],'the bladder is named only when drawn');
+ for(const l of open.labels)assert.ok(['Black pentagon','White hexagon','Stitched seam','Bladder','Valve'].includes(l.text));
+ const v=fig.spec.draw(view(45,30,0)).labels.find(l=>l.id==='valve');const back=FK.aimAt(v.normal.map(x=>-x));
+ assert.doesNotMatch(fig.spec.draw(view(back.yaw,back.pitch,0)).svg,/data-valve /,'the valve hole is drawn only while its panel faces you');
+ const tinted=fig.spec.draw(view(45,30,0,'cobalt')).svg;assert.ok(/#2f55c9|#[0-9a-f]{6}/.test(tinted));assert.notEqual(tinted,closed.svg,'swatch recolours the pentagons');
+ assert.equal((tinted.match(/data-panel="hex"[^>]*fill="#(fbfbf8|ecece7|d3d3ce)"/g)||[]).length,(closed.svg.match(/data-panel="hex"[^>]*fill="#(fbfbf8|ecece7|d3d3ce)"/g)||[]).length,'hexagons stay white');
+ assert.match(C.EXTRA.inside,/rubber bladder/);assert.match(C.EXTRA.inside,/valve/);assert.ok(exp.includes('EXTRA.inside'));
+ assert.ok(C.EXTRA_SOURCES.some(s=>/dpma/.test(s.url))&&C.EXTRA_SOURCES.some(s=>/Ball_\(association_football\)/.test(s.url)),'inside facts cited');
+ assert.match(exp,/<FigureStage spec=\{fig\.spec\}/);assert.match(exp,/data-look /);assert.match(exp,/data-roll/);assert.match(exp,/setPhase\(lookFrom\.current\)/,'Back returns to where you were');
+ assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval/);
+ console.log('PASS turn the ball: all 32 panels seen, see-through = bladder + valve only, 5 real labels, swatches on pentagons, ≤ 120 parts');}
