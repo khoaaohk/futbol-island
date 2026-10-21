@@ -90,7 +90,7 @@ export function stageShot(p:V3,yaw:number,aspect:number,fit:readonly V3[],o:{hei
  const up={x:right.y*look.z-right.z*look.y,y:right.z*look.x-right.x*look.z,z:right.x*look.y-right.y*look.x};
  const tv=Math.tan(fov*Math.PI/360),th=tv*aspect,lim=1-margin;let d=0;
  for(const q of fit){const vx=q.x-target.x,vy=q.y-target.y,vz=q.z-target.z,along=vx*look.x+vy*look.y+vz*look.z,x=vx*right.x+vy*right.y+vz*right.z,y=vx*up.x+vy*up.y+vz*up.z;
-  d=Math.max(d,along+Math.abs(x)/(th*lim),along+Math.abs(y)/(tv*lim));}
+  d=Math.max(d,Math.abs(x)/(th*lim)-along,Math.abs(y)/(tv*lim)-along);}
  // The character no taller than `share` of the screen height: visible height at the target ≥ H / share.
  d=Math.max(d,H/share/(2*tv),2.2);
  return {eye:{x:target.x-look.x*d,y:target.y-look.y*d,z:target.z-look.z*d},target,fov,dist:d};
