@@ -100,6 +100,6 @@
 /* One start button, centred with its line under it (Oct 14 2026, user: no second copy above). */
 .introDock{flex:1 1 100%;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.introDock .say{flex:none}
 /* Look (figure kit v2): the Roll button sits with the stage's Paper pills. */
-.rollBtn{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;border:1.5px solid #1d1d1b;background:#fbfbf8;color:#1d1d1b;font:600 14px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;cursor:pointer}
+.rollBtn{display:inline-flex;align-items:center;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #1d1d1b;background:#fbfbf8;color:#1d1d1b;font:600 14px/1 "Helvetica Neue",Helvetica,Arial,sans-serif;cursor:pointer}
 .rollBtn:active{transform:scale(.95)}
-@media (max-width:560px){.rollBtn{min-height:38px;padding:0 12px;font-size:13px}}
+@media (max-width:560px){.rollBtn{padding:0 12px;font-size:13px}}
