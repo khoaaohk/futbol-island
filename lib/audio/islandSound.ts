@@ -275,6 +275,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(context.currentTime-engineUpdate>.1){engineUpdate=context.currentTime;engine.osc.frequency.setTargetAtTime(48+Math.abs(speed)*5,context.currentTime,.12);engine.gain.gain.setTargetAtTime(.045+Math.min(Math.abs(speed),12)*.002,context.currentTime,.08);}
     if(speed<-.2&&ready('truck-reverse',.8))tone(850,850,.22,.09,'sine',0,.015);
   }
+  /** Explore delight (Oct 21 2026): the whale passing over the reef: a low, quiet, slow two-note song (soft sine swells, no samples). */
+  function whaleSong(){if(!ready('whale',8))return;tone(196,146,2.4,.045,'sine',0,.7);tone(147,165,1.9,.035,'sine',1.5,.6);tone(294,262,1.6,.012,'sine',1.6,.5);}
   function honk(){if(!ready('honk',.7))return;tone(350,345,.42,.1,'sawtooth',0,.012);tone(440,435,.42,.085,'sawtooth',0,.012);tone(700,690,.35,.025,'sine',0,.01);}
   const bottlePop=()=>{if(!ready('bottle-pop',.3))return;tone(420,170,.12,.14,'sine');hiss(1600,.08,.06);};
   document.addEventListener('fi2-bottle-pop',bottlePop);
@@ -347,7 +349,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function dispose(){water.dispose();if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   /** The sea, once per frame while swimming (a frame with `in:false` winds everything down). */
   function swim(dt:number,frame:WaterSoundFrame){if(frame.in&&idleSuspended&&context?.state==='suspended')wakeIdle();water.update(dt,frame);}
-  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }
 
 // ---- lib/audio/waterSound (kept in this file: the tests load islandSound.ts alone) ----

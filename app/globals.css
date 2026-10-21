@@ -747,6 +747,13 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 @media(max-width:600px),(pointer:coarse){.dive-dart-btn{right:calc(18px + 50px + 12px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 99px);width:54px;height:54px}}
 .dive-reef{position:absolute;left:calc(16px + env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 96px);z-index:7;margin:0;display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:999px;background:#0f3d4acc;color:#e9fbff;font:800 14px/1 system-ui,sans-serif;pointer-events:none}
 .dive-reef i{font-style:normal;color:#ffd36b}
+.dive-hearts{margin-left:4px;color:#ff8fa3;font-weight:800;letter-spacing:1px}
+/* Explore delight (Oct 21 2026): Wave / High five, two small round icon buttons in a row ABOVE the Dart button (never over Dart or the
+   rise / dip pad); shown only while the zone's friend is within reach. */
+.dive-emote{position:absolute;z-index:9;right:calc(24px + 58px + 14px + env(safe-area-inset-right,0px));bottom:221px;display:flex;flex-direction:row-reverse;gap:10px}
+.dive-emote-btn{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #ffd3dc;background:#d9577a;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.dive-emote-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
+@media(max-width:600px),(pointer:coarse){.dive-emote{right:calc(18px + 50px + 12px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 165px);gap:8px}.dive-emote-btn{width:46px;height:46px}}
 .dive-reef[data-restored]{background:#1f7a5ccc}
 .dive-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,#06303a59 100%)}
 .dive-note{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 15px/1.2 system-ui,sans-serif;max-width:min(320px,86vw);text-align:center;pointer-events:none}

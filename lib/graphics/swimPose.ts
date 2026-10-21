@@ -29,6 +29,9 @@ export type SwimRigPose={
  /** Dive (Oct 19 2026, waterState.ts DIVE): 0..1 how far under (the crawl levels out, the head lines up with the body) and the
   *  extra body pitch (rad, + = head down on the way down, − = head up on the way back up). Optional: 0 when absent. */
  under?:number;tilt?:number;
+ /** Explore delight (Oct 21 2026, diveDelight.ts): a friendly WAVE (0..1: the right arm up and out, the hand swinging) or a HIGH FIVE
+  *  (0..1: the right arm reaching straight ahead, palm forward) over any shape; `emoteT` the gesture's clock (s). Optional: 0 when absent. */
+ wave?:number;five?:number;emoteT?:number;
 };
 export type SwimJoints={pelvis:T.Group;torso:T.Group;head:T.Group;legs:{hip:T.Group;knee:T.Group;ankle:T.Group}[];arms:{shoulder:T.Group;elbow:T.Group;hand:T.Group}[]};
 
@@ -136,6 +139,12 @@ export function createSwimPoser(j:SwimJoints){
    for(let i=0;i<2;i++){const side=i===0?-1:1,o=LEG+i*5;target[o]=belly?.1:clean?0:-.2;target[o+1]=side*(belly?.45:clean?.02:.1);target[o+3]=clean?.02:belly?.15:.5;target[o+4]=clean?-.3:0;
     const q=ARM+i*4;target[q]=clean?-2.95:belly?-1.3:-.6;target[q+1]=side*(clean?.12:belly?1.3:2.2);target[q+3]=clean?-.05:belly?-.4:-.6;}
   }
+  // Explore delight: the wave / high five take over one arm (the other keeps its stroke), blended by their amounts.
+  const wv=Math.max(0,Math.min(1,s.wave??0)),fv=Math.max(0,Math.min(1,s.five??0));
+  if(wv>0||fv>0){const q=ARM+4,swing=reduced?0:Math.sin((s.emoteT??0)*11),mixT=(i:number,v:number,k:number)=>{target[i]+=(v-target[i])*k;};
+   mixT(q,-2.5,wv);mixT(q+1,.95+.35*swing,wv);mixT(q+2,0,wv);mixT(q+3,-.75,wv);
+   mixT(q,-2.95,fv);mixT(q+1,.3,fv);mixT(q+2,0,fv);mixT(q+3,-.08,fv);
+   target[H_X]+=(-.2)*Math.max(wv,fv);}
   // The surfacing head-shake on the everyday shapes too (a dive coming back up); the entry shape has its own.
   if(s.kind!=='entry'&&s.shake>0&&!reduced){const sh=s.shake*Math.sin(s.shake*40)*.3;target[H_Y]+=sh;target[H_Z]-=sh*.5;}
  };

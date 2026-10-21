@@ -15,20 +15,27 @@ import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,nearestDiveSpo
 import {setDiveSpots} from '../../graphics/waterSurface';
 import {WATER_LEVEL} from './waterDepth';
 import {DIVE_REEF_KEY,REEF_RESTORE_CARD,REEF_RESTORE_COINS,addPickup,journeyPickups,markRestored,nextTarget,parseDiveReef,reach,reefColour,reefHealth,reefRunId,type DivePickup,type DiveReefSave} from './diveJourney';
-import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveFloor} from './diveSpots';
+import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveFloor} from './diveSpots';
+import {setHearts,markWhale} from './diveJourney';
+import {DIVE_FRIENDS,EMOTE,WHALE,WHALE_NOTE,emoteAmount,emoteHeart,emoteNote,emoteReady,friendDoneNote,friendFarNote,friendHome,friendRunId,whaleGo,whalePlan,whalePose,whaleRunId,type DiveEmote,type DiveFriend} from './diveDelight';
+import {SPARKLE,localDate,markSparkle,sparkleCardTitle,sparkleDone,sparkleReach,sparkleRunId,sparkleSpot,type SparkleSpot} from './diveSparkle';
 import {diveEdgeDepthT,diveEdgeSpotAt,diveEdgeToIsland,diveEdgeToRoom,type DiveEdgeExit,type DiveEdgeWater} from './diveEdge';
 
 /** The find card and the calm notes (components/DiveHud.tsx); written only when one changes. */
 export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string};
 /** `reef`: the zone's journey progress ("5/12"), `restored`: the zone is fully restored (Explore v2). */
 /** `banner`: Seamless Explore's soft chip at the zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); it fades by itself. */
-export type DiveView={diving:boolean;card:DiveCard|null;note:string;spot:string;reef:string;restored:boolean;banner:string};
-const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:false,banner:''};
+/** Explore delight: `friend` the zone friend's name while it is within EMOTE.range (the Wave / High five buttons show), `hearts` its
+ *  friendship hearts (0..3, on the reef chip). */
+export type DiveView={diving:boolean;card:DiveCard|null;note:string;spot:string;reef:string;restored:boolean;banner:string;friend:string;hearts:number};
+const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:false,banner:'',friend:'',hearts:0};
 export const DIVE_EDGE_LEAVING='Leaving the reef';export const diveEdgeEntering=(name:string)=>`Entering: ${name}`;
 /** The phone's ▲ / ▼ (components/DiveHud.tsx, held: pointer down / up) and Q / Z on desktop feed this; the dive frame reads it. */
 export const diveLift={up:false,down:false,
  /** Explore v2: the Dart button / F / Shift asked for a dart (an edge: the next dive frame takes it and clears it). */
- dart:false};
+ dart:false,
+ /** Explore delight: the Wave / High five buttons, G / H asked for an emote (an edge, taken by the next dive frame). */
+ emote:'' as ''|DiveEmote};
 export function readDiveReef():DiveReefSave{try{return parseDiveReef(JSON.parse(localStorage.getItem(DIVE_REEF_KEY)??'null'),DIVE_SPOTS);}catch{return parseDiveReef(null,DIVE_SPOTS);}}
 function writeDiveReef(s:DiveReefSave){try{localStorage.setItem(DIVE_REEF_KEY,JSON.stringify(s));}catch{/* private mode */}}
 /** Explore v2 tuning: the buddy fish's follow / lead (it leads after the diver has hovered DIVE_BUDDY_LEAD_S), the ball's water drag and
@@ -64,6 +71,11 @@ export type DiveRuntimePorts={
  crest?:(spot:DiveSpot)=>void;fly:()=>boolean;
  /** Explore v2: a dart (sound, the first per dive counted), a pickup collected, the zone restored, a goal with the underwater ball. */
  dart?:(first:boolean)=>void;picked?:(kind:DivePickup['kind'],first:boolean)=>void;restored?:(spot:DiveSpot)=>void;goal?:()=>void;
+ /** Explore delight: heat tier 3+ / Battery saver / reduced motion (no whale, a still sparkle); the whale's pass starting ('pass': the
+  *  whale song, analytics) and its once-per-zone stamp ('stamp': the chime); an emote starting ('start', `first` = first this dive:
+  *  analytics) and the high five's hands meeting ('meet': the pop); today's sparkle found. `date` / `rand` for tests. */
+ calm?:()=>boolean;whale?:(event:'pass'|'stamp')=>void;emote?:(kind:DiveEmote,event:'start'|'meet',first:boolean)=>void;sparkle?:()=>void;
+ date?:()=>string;rand?:()=>number;
 };
 
 export function createDiveRuntime(ports:DiveRuntimePorts){
@@ -76,7 +88,11 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  // Explore v2: the journey (pickups collected, progress, restore), the buddy fish, the ball, the formation and the delight wiggle.
  let reefSave=readDiveReef(),picks:DivePickup[]=[],got:boolean[]=[],formT=-1,joy=0,pickedThisDive=0,still=0,ballGoalT=-1;
  const form={x:0,y:0,z:0},bud={x:0,y:0,z:0,vx:0,vy:0,vz:0},tgt={x:0,z:0},ball={x:0,y:0,z:0,vx:0,vy:0,vz:0,lz:0};
- const ax=new T.Vector3();
+  const ax=new T.Vector3();
+ // Explore delight: the zone friend (home, place, heading), the emote, the whale's pass and today's sparkle spot.
+ let friend:DiveFriend|null=null,friendNear=false,emotedThisDive=false,spark:SparkleSpot|null=null,sparkDate='';
+ const home={x:0,y:0,z:0},fr={x:0,y:0,z:0,yaw:0},emo={kind:'' as ''|DiveEmote,t:0,cd:0,met:false},heart={n:0,done:false};
+ const whale={at:-1,t:-1,done:false,stamped:false,cx:0,cz:0,yaw:0},wp={x:0,z:0,k:0},fp={x:0,y:0,z:0};
  function progress(spot:DiveSpot){const found=save.spots[spot.id]??[];const n=got.filter(Boolean).length+found.length,total=picks.length+spot.finds.length;return {n,total,found};}
  function drawProgress(spot:DiveSpot,celebrate:boolean){
   const {n,total}=progress(spot),done=reefSave.restored.includes(spot.id);room?.setReef(reefColour(done?1:reefHealth(n,0,total)));diveStore.set({reef:`${n}/${total}`,restored:done});
@@ -96,15 +112,20 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  function hidePrompt(){const el=ports.ui<HTMLButtonElement>('[data-dive-go]');if(el&&!el.hidden)ports.hide(el,true);promptShown=false;promptLabel='';findPrompt='';}
  function enter(edge=false){
   const s=session.state.spot!;picks=journeyPickups(s);const have=reefSave.zones[s.id]??[];got=picks.map(p=>have.includes(p.i));
-  room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got});clock=0;
+  const calm=(ports.calm?.()??false)||ports.reduced(),rnd=ports.rand??Math.random;
+  friend=DIVE_FRIENDS[s.id]??null;if(friend){friendHome(s,home);fr.x=home.x;fr.y=home.y;fr.z=home.z;fr.yaw=Math.atan2(-home.x,13-home.z);}friendNear=false;emotedThisDive=false;emo.kind='';emo.t=emo.cd=0;
+  sparkDate=ports.date?.()??localDate();spark=sparkleDone(reefSave.spark,s.id,sparkDate)?null:sparkleSpot(s,sparkDate);
+  whale.at=calm?-1:whalePlan(rnd(),rnd(),!!reefSave.whale?.includes(s.id));whale.t=-1;whale.done=whale.stamped=false;
+  room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
+   friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;
   formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
   room.scene.add(ports.player.root);pose.phase=0;hidePrompt();findPrompt='';
-  diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):''});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
+  diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):'',friend:'',hearts:reefSave.hearts?.[s.id]??0});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
   if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;}
-  diveLift.up=diveLift.down=false;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:''});ports.surfaced(spot,reason);drawBreath(true);
+  diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;
@@ -118,7 +139,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   get diving(){return session.diving;},get room(){return room;},
   /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no dart, no ball rolling,
    *  no pickup or formation playing (the fish and plants are shader time only: they keep swimming at the capped rate). */
-  get resting(){const st=session.state;return st.phase==='diving'&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
+  get resting(){const st=session.state;return st.phase==='diving'&&emo.kind===''&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
   /** Explore v2: the journey's pickups this dive and which are collected (tests). */
   get pickups(){return picks;},get got(){return got;},
   /** The patch test at the surface (the island step, at the probe's 10 Hz), plus the breath refill there. */
@@ -154,6 +175,13 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    if(!room)return;const s=session.state.spot;
    input.lift=Math.max(-1,Math.min(1,input.lift+(diveLift.up?1:0)-(diveLift.down?1:0)));
    if(diveLift.dart){input.dart=true;diveLift.dart=false;}
+   const ask=diveLift.emote;diveLift.emote='';
+   // Explore delight: the nearest thing still to collect (pickups, unfound finds, today's sparkle) slows the glide (diveSession findSlow).
+   if(s){const st0=session.state,fd=save.spots[s.id];let nd=Infinity;
+    for(let i=0;i<picks.length;i++){if(got[i])continue;const p=picks[i],d=Math.hypot(p.x-st0.x,p.y-st0.y,p.z-st0.z);if(d<nd)nd=d;}
+    for(const f of s.finds){if(fd?.includes(f.id)||st0.used.has(f.id))continue;diveFindPoint(f,fp,s.floor);const d=Math.hypot(fp.x-st0.x,fp.y-st0.y,fp.z-st0.z);if(d<nd)nd=d;}
+    if(spark){const d=Math.hypot(spark.x-st0.x,spark.z-st0.z);if(d<nd)nd=d;}
+    input.near=nd;}
    const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.dart)ports.dart?.(session.state.darts===1);if(ev.crest&&s)ports.crest?.(s);
    if(ev.low)ports.low();if(ev.out)ports.out();
    if(ev.surfaced){if(ev.surfaced==='edge'&&s)diveEdgeToIsland(s,session.state.x,session.state.z,session.state.yaw,ports.water??anyWater,exitPt,DIVE_SPOTS,s.surface);leave(ev.surfaced as SurfaceReason,s!);return;}
@@ -164,6 +192,36 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    const moving=st.effort>.12,dartK=st.dartT>0?1:0;joy=Math.max(0,joy-dt);still=moving||Math.abs(input.lift)>0?0:still+dt;
    pose.kind='crawl';pose.under=1;pose.tilt=st.pitch*.7;pose.effort=Math.max(st.effort,joy>0?.8:0);pose.fast=Math.max(dartK,joy>0?1:0);
    pose.phase=(pose.phase+dt*(reduced?0:moving||joy>0?5.5*(.5+.5*pose.effort)*(1+.6*pose.fast):1.1))%(Math.PI*12);
+   // Explore delight: the zone friend's wave / high five (G / H, the round buttons): within EMOTE.range, EMOTE.cooldown apart; a heart
+   // each (up to 3, the reward once); the diver's arm (pose.wave / five) and the friend's own gesture; the hands meet with a sparkle ring.
+   const tk=reduced?.4:1;pose.wave=pose.five=0;
+   if(friend&&s){const dx=st.x-fr.x,dz=st.z-fr.z,dist=Math.hypot(dx,st.y-fr.y,dz);emo.cd=Math.max(0,emo.cd-dt);
+    if(ask&&st.phase==='diving'){
+     if(emoteReady(dist,emo.cd)){emo.kind=ask;emo.t=0;emo.met=false;emo.cd=EMOTE.cooldown;const had=reefSave.hearts?.[s.id]??0;emoteHeart(had,heart);
+      if(heart.n!==had){reefSave=setHearts(reefSave,s.id,heart.n);writeDiveReef(reefSave);}
+      if(heart.done)ports.credit(friendRunId(s.id),EMOTE.coins,`Reef Pal · ${s.name}`);
+      diveStore.set({note:heart.done?friendDoneNote(friend):emoteNote(friend,ask),hearts:heart.n});ports.emote?.(ask,'start',!emotedThisDive);emotedThisDive=true;}
+     else if(dist>EMOTE.range)diveStore.set({note:friendFarNote(friend)});}
+    if(emo.kind){emo.t+=dt;if(emo.kind==='five'&&!emo.met&&emo.t>=EMOTE.meet){emo.met=true;room.ring((st.x+fr.x)/2,(st.y+fr.y)/2+.15,(st.z+fr.z)/2,clock*tk);ports.emote?.('five','meet',false);}if(emo.t>EMOTE.dur)emo.kind='';}
+    const amt=emo.kind?emoteAmount(emo.t):0,wave=emo.kind==='wave'?amt:0,five=emo.kind==='five'?amt:0;pose.wave=wave;pose.five=five;pose.emoteT=emo.t;
+    const want=dist<7?Math.atan2(dx,dz):fr.yaw+(reduced?0:dt*.12);let dy=want-fr.yaw;dy=Math.atan2(Math.sin(dy),Math.cos(dy));fr.yaw+=dy*(1-Math.exp(-dt*(emo.kind?6:2.5)));
+    const reach=five*Math.max(0,dist-1.2)*.45,ux=dist>1e-3?dx/dist:0,uz=dist>1e-3?dz/dist:0,bob=reduced?0:Math.sin(clock*1.1)*.08;
+    fr.x=home.x+ux*reach;fr.z=home.z+uz*reach;fr.y=home.y+bob+five*.15;
+    const k=friend.kind,gw=reduced?0:Math.sin(emo.t*10),idle=reduced?0:.5+.5*Math.sin(clock*1.6);
+    const ux2=k==='ray'?Math.max(wave,.25*idle):k==='seahorse'?wave*.6:k==='puffer'?0:wave,uy=k==='puffer'?five*.4:five;
+    const puff=k==='puffer'?Math.max(wave,five)*.6:k==='jelly'?wave*.25*(.5+.5*gw)+five*.15+.05*idle:0,pitch=k==='seahorse'?wave*.35*gw+five*.25:k==='turtle'?-five*.2:0;
+    room.setFriend(fr.x,fr.y,fr.z,fr.yaw,pitch,0,ux2,uy,puff,clock*tk);
+    const nearF=dist<=EMOTE.range&&st.phase==='diving';if(nearF!==friendNear){friendNear=nearF;diveStore.set({friend:nearF?friend.name:''});}}
+   // Explore delight: the whale's shadow, once in a visit at its planned time when nothing else is going on; its stamp once ever per zone.
+   if(s){const busy=emo.kind!==''||joy>0||formT>=0||!!diveStore.get().card;
+    if(whale.t<0&&whaleGo(clock,whale.at,whale.done,busy)){whale.t=0;whale.cx=st.x;whale.cz=st.z;whale.yaw=st.yaw+Math.PI/2;ports.whale?.('pass');}
+    if(whale.t>=0){whale.t+=dt;const u=whale.t/WHALE.dur;whalePose(u,whale.cx,whale.cz,whale.yaw,wp);room.setWhale(wp.x,wp.z,whale.yaw,wp.k);
+     if(!whale.stamped&&u>=.45){whale.stamped=true;if(!reefSave.whale?.includes(s.id)){reefSave=markWhale(reefSave,s.id);writeDiveReef(reefSave);ports.credit(whaleRunId(s.id),WHALE.coins,`Whale friend · ${s.name}`);diveStore.set({note:`${WHALE_NOTE} +${WHALE.coins} coin`});ports.whale?.('stamp');}}
+     if(u>=1){whale.t=-1;whale.done=true;room.setWhale(0,0,0,0);}}}
+   // Explore delight: today's sparkle spot: swim into it for a bubble burst, a tiny treasure and a fact (1 coin, once per day per zone).
+   if(spark&&s&&st.phase==='diving'&&sparkleReach(spark,st.x,st.y-.3,st.z)){const sp=spark;spark=null;room.setSparkle(false);room.puff(sp.x,sp.y,sp.z,clock*tk);room.ring(sp.x,sp.y+.5,sp.z,clock*tk);
+    reefSave={...reefSave,spark:markSparkle(reefSave.spark,s.id,sparkDate)};writeDiveReef(reefSave);ports.credit(sparkleRunId(s.id,sparkDate),SPARKLE.coins,`Today’s sparkle · ${s.name}`);
+    joy=DIVE_JOY_S;diveStore.set({card:{id:'sparkle',title:sparkleCardTitle(sp.treasure),text:sp.fact,label:'Ocean fact',coins:SPARKLE.coins}});ports.sparkle?.();}
    motion.facing=st.yaw;ports.player.update(st.x,st.z,dt,clock,reduced,motion);
    const bob=reduced?0:Math.sin(clock*1.7)*.06*Math.min(1,still),wig=reduced?0:Math.sin(joy*28)*.3*joy/DIVE_JOY_S;
    const root=ports.player.root;root.position.y=st.y-1.15+bob;root.rotation.order='YXZ';root.rotation.x=0;root.rotation.z=st.roll+wig;
@@ -212,6 +270,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    if(!session.diving)return false;const k=e.key.toLowerCase();
    if(k==='q'||k==='z'){if(down)held.add(k);else held.delete(k);e.preventDefault();return true;}
    if(k==='f'||k==='shift'){if(down&&!e.repeat)diveLift.dart=true;e.preventDefault();return true;}// Explore v2: the dart (a quick burst)
+   if(k==='g'||k==='h'){if(down&&!e.repeat)diveLift.emote=k==='g'?'wave':'five';e.preventDefault();return true;}// Explore delight: wave / high five
    if(!down)return ['escape',' ','e','1','j','2','3'].includes(k)||e.code==='Space';
    if(e.repeat)return true;
    if(k==='escape'||e.code==='Space'||e.code==='Digit1'||e.code==='Numpad1'){e.preventDefault();session.surface('tap');return true;}
