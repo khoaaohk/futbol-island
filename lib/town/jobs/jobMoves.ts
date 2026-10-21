@@ -35,7 +35,7 @@ export const JOB_SLOTS:Record<string,SlotDef[]|null>={
  // net toggle: Net down = the stalk (net held low, slow careful steps, bugs settle faster); Net up = carried on the shoulder.
  // Catching lane (Oct 20 2026): Swing net (Space), Release (J), Ride (R: walk / scooter / bike / moped, never flying; user: "allow to
  // switch to scooter, bike riding, and moped with the net"), and the net toggle on its own key (E, a chip in the job panel).
- 'bug-scout':[{ids:['net','jar'],label:'Swing net',icon:{net:'net',jar:'net'}},{ids:['letfree','glow'],label:'Release',icon:'release'},{ids:['ride'],label:'Ride',icon:'bike'},{ids:['netlow','netup'],label:'Net down',icon:{netlow:'netlow',netup:'netup'}}],
+ 'bug-scout':[{ids:['net','jar'],label:'Swing net',icon:{net:'net',jar:'cup'}},{ids:['letfree','glow'],label:'Release',icon:'release'},{ids:['ride'],label:'Ride',icon:'bike'},{ids:['netlow','netup'],label:'Net down',icon:{netlow:'netlow',netup:'netup'}}],
  'offside-flag':[{ids:['flag'],label:'Raise the flag',icon:'flag'},{ids:['play-on'],label:'Keep flag down',icon:'flagdown'},{ids:['next'],label:'Next replay',icon:'next'}],
  'ball-pump':[{ids:['pump'],label:'Pump',icon:'pump'},{ids:['release'],label:'Let air out',icon:'air'},{ids:['ready'],label:'Ball ready',icon:'check'}],
  'goal-anchor':[{ids:['hammer'],label:'Hammer',icon:'hammer'}],
@@ -64,16 +64,16 @@ export const RIDE_WAIT_NOTE='Island jobs are on foot. Your rides wait until the 
 
 // ---------------- Poses ----------------
 /** Rig poses (lib/graphics/player.ts PlayerMotion.job). One-shots run for POSE_TIME seconds; held poses come every frame. */
-export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak'|'netshow';
+export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak'|'netshow'|'jarcarry'|'jarsneak'|'jarcup'|'jarcatch'|'jarshow';
 /** Poses that move only the arms, torso and head: the legs keep walking, dribbling or juggling. */
-export const UPPER_POSES=new Set<JobPoseKind>(['netcarry','netsneak','carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
+export const UPPER_POSES=new Set<JobPoseKind>(['netcarry','netsneak','jarcarry','jarsneak','carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
 /** `upper`: only the arms, torso and head (the legs keep walking). */
 export type JobPose={kind:JobPoseKind;progress:number;tug?:number;upper?:boolean;
  /** Garden shift: the left hand carries the basket through the pose (free picking has no basket). */
  basket?:boolean;
  /** Held poses at a place (the root being pulled, the leaf pile, the pump): face it and step up to it. */
  target?:{x:number;z:number}};
-export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:.62,netcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
+export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:.62,netcatch:.9,jarcup:.62,jarcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
 /** Which one-shot a job event plays (and at what: `spot` = a target index, `item` = the event's x/z, `deliver` = the drop-off). */
 export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'|'item'|'deliver';basket?:boolean}|null{
  const t=e.type;
@@ -94,7 +94,8 @@ export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'
   case 'court-cleanup':return t==='collect'?{kind:'pick',at:'spot'}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
   // Bugs drift into the jar at chest height (scoop); fireflies are reached for on tiptoe; the jar is opened at the drop-off.
   // Catching lane: the net swing (wind-up, sweep, follow-through) at the aim point, the raised catch pose, the jar opened at the drop-off.
-  case 'bug-scout':return t==='swing'?{kind:'netswing',at:e.x!==undefined?'item':undefined}:t==='netcatch'?{kind:'netcatch',at:e.x!==undefined?'item':undefined}:t==='deliver'?{kind:'toss',at:'deliver'}:null;
+  // Oct 21 2026: at Night (fireflies) the tool is the jar: Cup (the scoop) and the jar held up, both hands on the jar.
+  case 'bug-scout':{const jar=def.prop==='firefly';return t==='swing'?{kind:jar?'jarcup':'netswing',at:e.x!==undefined?'item':undefined}:t==='netcatch'?{kind:jar?'jarcatch':'netcatch',at:e.x!==undefined?'item':undefined}:t==='deliver'?{kind:'toss',at:'deliver'}:null;}
   case 'goal-anchor':return t==='work'?{kind:'mallet',at:'spot'}:null;
   case 'match-day-snacks':return t==='pickup'?{kind:'take',at:'deliver'}:t==='return'||t==='wrong'?{kind:'drop',at:'spot'}:null;
   case 'offside-flag':return t==='call'?{kind:e.value===1?'flagup':'flagdown'}:null;
@@ -109,7 +110,7 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  if(r.harvest&&r.harvest.pulling>=0&&task?.type==='harvest'){const sp=task.spots[r.harvest.pulling];return {kind:'pull',progress:0,tug:Math.min(1,r.harvest.pull/1.1),target:{x:sp.x,z:sp.z}};}
  // Bug squad (catching lane, user: "fix the body mechanics to hold the net while walking"): both hands on the pole, a relaxed carry
  // over the right shoulder (or Net down: stalking, net forward and low), swaying with the walk; the legs keep walking (upper body).
- if(id==='bug-scout'&&(r.phase==='work'||r.phase==='deliver'))return {kind:r.stalk&&r.phase==='work'?'netsneak':'netcarry',progress:(clock*1.7)%1,upper:true};
+ if(id==='bug-scout'&&(r.phase==='work'||r.phase==='deliver')){const jar=r.def.prop==='firefly',low=r.stalk&&r.phase==='work';return {kind:jar?(low?'jarsneak':'jarcarry'):low?'netsneak':'netcarry',progress:(clock*1.7)%1,upper:true};}
  if(id==='leaf-rake'&&r.holding){const t=r.def.targets[r.at];return {kind:'rake',progress:(clock*1.6)%1,target:t?{x:t.x,z:t.z}:undefined};}
  if(id==='line-painter'&&r.phase==='work')return {kind:'push',progress:0,upper:true,tug:r.holding?1:0};
  if(id==='ball-kid'&&r.carrying>=0)return {kind:'carryball',progress:0,upper:true};
@@ -121,9 +122,9 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
  return null;
 }
 /** Poses that need free hands: the player's own ball is set down beside them first. */
-export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick','netswing','netcatch']);
+export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick','netswing','jarcup','netcatch','jarcatch']);
 /** Poses that hold the player still (they end quickly, or when the button is released). */
-const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick','netswing','netcatch']);
+const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick','netswing','jarcup','netcatch','jarcatch']);
 /** How close to its target the character steps for a pose (metres, target centre to feet). */
 const STAND_OFF:Partial<Record<JobPoseKind,number>>={gpick:1,reachpick:.55,headshake:1.1,tipbasket:.85,kneel:.6,rake:1.05,pull:.62,twist:.55,nope:.55,snip:.6,scoop:.55,place:.5,mallet:.75,drop:.8,take:.8,stuff:.6,toss:1.1,treeshake:.9};
 

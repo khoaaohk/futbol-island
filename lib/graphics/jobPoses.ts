@@ -39,6 +39,11 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  netswing:[[0,{al:[-.9,.15,-.6],ar:[-1,.05,-.5]}],[.26,{py:.84,pz:-.04,tx:-.12,ty:-.55,hx:-.15,fl:[.12,.07],fr:[-.22,.07],al:[-2.35,.35,-.9],ar:[-2.55,.2,-.7]}],
   [.48,{py:.8,pz:.06,tx:.32,ty:.1,hx:.2,fl:[.24,.07],fr:[-.14,.07],al:[-1.35,.12,-.25],ar:[-1.3,.02,-.2]}],
   [.68,{py:.79,pz:.08,tx:.38,ty:.55,hx:.25,fl:[.24,.07],fr:[-.14,.07],al:[-1,.05,-.3],ar:[-.95,-.15,-.35]}],[1,{tx:.1,ty:.15,al:[-.9,.15,-.6],ar:[-1,.05,-.5]}]],
+ // The firefly jar's Cup (Oct 21 2026): the body for the scoop (both hands are solved onto the jar by player.ts, jarGrip below):
+ // crouch and turn to the right with the jar low, rise up on the toes as it sweeps up and over the firefly, then settle.
+ jarcup:[[0,{}],[.26,{py:.76,pz:-.02,tx:.35,ty:-.4,hx:.15,fl:[.14,.07],fr:[-.2,.07],al:[-.6,.15,-.9],ar:[-.5,.1,-.9]}],
+  [.48,{py:.9,pz:.08,tx:-.08,ty:.05,hx:-.35,toe:.25,fl:[.26,.09],fr:[-.12,.09],al:[-2.2,.1,-.4],ar:[-2.2,.1,-.4]}],
+  [.68,{py:.84,pz:.06,tx:.05,hx:-.15,fl:[.24,.07],fr:[-.14,.07],al:[-1.6,.15,-.9],ar:[-1.6,.15,-.9]}],[1,{}]],
  // Catch! The net raised high in both hands, up on tiptoe and looking up at it, a joyful little bounce, then down again.
  netcatch:[[0,{}],[.25,{...TIPTOE,tx:-.12,hx:-.5,al:[-2.85,.25,-.25],ar:[-2.95,.15,-.2]}],[.45,{py:.98,toe:.7,fl:[.04,.16],fr:[-.04,.16],tx:-.15,hx:-.55,al:[-2.95,.3,-.15],ar:[-3.05,.2,-.1]}],
   [.62,{...TIPTOE,tx:-.1,hx:-.45,al:[-2.8,.25,-.3],ar:[-2.9,.15,-.25]}],[.8,{py:.84,tx:.05,hx:-.1,al:[-1.6,.2,-.6],ar:[-1.7,.1,-.5]}],[1,{}]],
@@ -122,7 +127,8 @@ export type NetGrip={h0:[number,number,number];h1:[number,number,number];dir:[nu
 const gripOut:NetGrip={h0:[0,0,0],h1:[0,0,0],dir:[0,1,0],crouch:0};
 /** The pole line and both hand targets for a held net pose (the same object is reused). `sneakW` 0 = carry, 1 = Net down
  *  (callers ease it, so switching never snaps). */
-export function netGrip(sneakW:number,g:Gait,reduced:boolean,showW=0,showK=0):NetGrip{
+export function netGrip(sneakW:number,g:Gait,reduced:boolean,showW=0,showK=0,jar?:JarGripIn):NetGrip{
+ if(jar&&jar.w>=1){const o=gripOut;return jarGrip(o,sneakW,g,reduced,showW,showK,jar);}
  const a=Math.max(0,Math.min(1,g.amount)),sp=Math.max(0,Math.min(1,g.sprint)),k=Math.max(0,Math.min(1,sneakW)),wob=reduced?0:1;
  const sw=Math.sin(g.phase)*a*wob,bob=Math.cos(g.phase*2)*a*wob;
  const o=gripOut;let lx=0,ly=0,lz=0,dx=0,dy=0,dz=0;
@@ -140,6 +146,37 @@ export function netGrip(sneakW:number,g:Gait,reduced:boolean,showW=0,showK=0):Ne
   lx=lerp(lx,L(0),sw2);ly=lerp(ly,L(1),sw2);lz=lerp(lz,L(2),sw2);dx=lerp(dx,D(0),sw2);dy=lerp(dy,D(1),sw2);dz=lerp(dz,D(2),sw2);
   const m=Math.hypot(dx,dy,dz)||1;dx/=m;dy/=m;dz/=m;gap=lerp(gap,.3,sw2);}
  o.h1[0]=lx;o.h1[1]=ly;o.h1[2]=lz;o.h0[0]=lx+dx*gap;o.h0[1]=ly+dy*gap;o.h0[2]=lz+dz*gap;o.dir[0]=dx;o.dir[1]=dy;o.dir[2]=dz;o.crouch=NET_SNEAK_CROUCH*k;
+ if(jar&&jar.w>0)jarGrip(o,sneakW,g,reduced,showW,showK,jar);
+ return o;
+}
+// ---- The firefly jar's grip (Oct 21 2026, user: "the player holds the jar in both hands"). Both mittens on the jar's sides
+// (JAR_HAND_GAP apart, across the body), the jar's centre on a path (rig-local, from the feet): carried in front of the chest, a
+// little lower and further out in Jar low, the Cup's scoop (low on the right → up and over in front at head height → back), the
+// catch's hold-up and the stage's show (presented → raised over the head). Every point is inside both arms' reach (tests check it).
+type V3=readonly [number,number,number];
+const JAR_IDLE:V3=[0,.98,.3],JAR_WALK:V3=[0,.99,.32],JAR_SPRINT:V3=[0,1.03,.27],JAR_SNEAK:V3=[0,.88,.37];
+const JAR_CUP:readonly [number,V3|null][]=[[0,null],[.26,[.18,.82,.26]],[.48,[0,1.38,.42]],[.68,[0,1.18,.37]],[1,null]];
+const JAR_UP:V3=[0,1.56,.2],JAR_PRESENT:V3=[0,1.12,.4];
+/** Mitten centres either side of the jar (m). */
+export const JAR_HAND_GAP=.25;
+const jarC=[0,0,0];
+export type JarGripIn={w:number;cupW:number;cupK:number;catchW:number;catchK:number};
+/** Overrides `o` (netGrip's result) with the jar hold, weighted by `j.w`. */
+function jarGrip(o:NetGrip,sneakW:number,g:Gait,reduced:boolean,showW:number,showK:number,j:JarGripIn){
+ const a=Math.max(0,Math.min(1,g.amount)),sp=Math.max(0,Math.min(1,g.sprint)),k=Math.max(0,Math.min(1,sneakW)),wob=reduced?0:1;
+ const sw=Math.sin(g.phase)*a*wob,bob=Math.cos(g.phase*2)*a*wob,amp=(1-.5*sp)*(1-.6*k);
+ const c=jarC;for(let i=0;i<3;i++)c[i]=lerp(lerp(lerp(JAR_IDLE[i],JAR_WALK[i],a),JAR_SPRINT[i],sp),JAR_SNEAK[i],k);
+ c[0]+=.01*sw*amp;c[1]+=.014*bob*amp;
+ const cw=Math.max(0,Math.min(1,j.cupW));if(cw>0){const q=Math.max(0,Math.min(1,j.cupK));let i=0;while(i<JAR_CUP.length-2&&q>JAR_CUP[i+1][0])i++;
+  const [t0,p0]=JAR_CUP[i],[t1,p1]=JAR_CUP[i+1],u0=t1>t0?Math.max(0,Math.min(1,(q-t0)/(t1-t0))):1,u=u0*u0*(3-2*u0);
+  for(let d=0;d<3;d++){const A=p0?p0[d]:c[d],B=p1?p1[d]:c[d];c[d]=lerp(c[d],lerp(A,B,u),cw);}}
+ const kw=Math.max(0,Math.min(1,j.catchW));if(kw>0){const q=Math.max(0,Math.min(1,j.catchK)),up=q<.25?q/.25:q<.62?1:q<.85?1-(q-.62)/.23:0,e=up*up*(3-2*up);
+  for(let d=0;d<3;d++)c[d]=lerp(c[d],lerp(c[d],JAR_UP[d],e),kw);}
+ const hw=Math.max(0,Math.min(1,showW));if(hw>0){const s=Math.max(0,Math.min(1,showK));for(let d=0;d<3;d++)c[d]=lerp(c[d],lerp(JAR_PRESENT[d],JAR_UP[d],s),hw);}
+ const w=Math.max(0,Math.min(1,j.w)),h=JAR_HAND_GAP/2;
+ o.h0[0]=lerp(o.h0[0],c[0]-h,w);o.h0[1]=lerp(o.h0[1],c[1],w);o.h0[2]=lerp(o.h0[2],c[2],w);
+ o.h1[0]=lerp(o.h1[0],c[0]+h,w);o.h1[1]=lerp(o.h1[1],c[1],w);o.h1[2]=lerp(o.h1[2],c[2],w);
+ if(w>=.5){o.dir[0]=-1;o.dir[1]=0;o.dir[2]=0;}o.crouch=lerp(o.crouch,NET_SNEAK_CROUCH*k*.6,w);
  return o;
 }
 function set(p:Partial<Omit<PoseTarget,'upper'>>){
@@ -154,15 +191,19 @@ function mixKeys(a:Partial<Omit<PoseTarget,'upper'>>,b:Partial<Omit<PoseTarget,'
  for(let i=0;i<4;i++){out.al[i]=lerp(A.al[i]??0,B.al[i]??0,k);out.ar[i]=lerp(A.ar[i]??0,B.ar[i]??0,k);}
 }
 /** The pose target for `pose` (the same object is reused: copy what you keep). `time` drives the tug / sweep rhythm. */
+/** The firefly jar's held poses use the net's body (the arms are solved onto the jar instead of the pole). */
+const JAR_BODY:Partial<Record<JobPoseKind,JobPoseKind>>={jarcarry:'netcarry',jarsneak:'netsneak',jarshow:'netshow',jarcatch:'netcatch'};
+export const JAR_POSES=new Set<JobPoseKind>(['jarcarry','jarsneak','jarcup','jarcatch','jarshow']);
 export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean,gait?:Gait):PoseTarget{
  const k=Math.max(0,Math.min(1,pose.progress)),tug=Math.max(0,Math.min(1,pose.tug??0)),wob=reduced?0:1;out.upper=!!pose.upper||UPPER_POSES.has(pose.kind);
- const keys=KEYS[pose.kind];
+ const kind=JAR_BODY[pose.kind]??pose.kind;
+ const keys=KEYS[kind];
  if(keys){let i=0;while(i<keys.length-2&&k>keys[i+1][0])i++;const [t0,a]=keys[i],[t1,b]=keys[i+1],u=t1>t0?Math.max(0,Math.min(1,(k-t0)/(t1-t0))):1;mixKeys(a,b,u*u*(3-2*u));
   // Garden: free picking has no basket, so the left arm balances instead; reduced motion keeps the look but not the shake.
   if(GARDEN_POSES.has(pose.kind)&&!pose.basket)for(let j=0;j<4;j++)out.al[j]=BALANCE[j]??0;
   if(reduced&&pose.kind==='headshake')out.hy=0;
   return out;}
- switch(pose.kind){
+ switch(kind){
   // Crouch, grip the leaves with both hands and lean back as the meter fills; small tugs in rhythm with it.
   case 'pull':{const t=Math.sin(time*22)*.035*tug*wob;set({py:.6+.06*tug,pz:-.06-.16*tug+t,tx:.45-.73*tug+t*2,hx:.35-.15*tug,fl:[.26,.07],fr:[-.05,.07],al:[-.9+.1*tug,.14,-.12],ar:[-.9+.1*tug,.14,-.12]});break;}
   // Two-handed rake: the torso turns and the arms sweep across in front while Rake is held.

@@ -14,6 +14,7 @@
 import * as T from 'three';
 import {mergeColoured} from './bugShape';
 import {swingPhase,SWING,type NetCarry} from './bugCatch';
+import {createSwoosh} from './bugSwoosh';
 
 export const NET_HOOP_RADIUS=.42;
 export const NET_POLE=1.15;
@@ -58,10 +59,8 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
  const bagMat=own(new T.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.55,side:T.DoubleSide,depthWrite:false,roughness:.9}));
  const bagPivot=new T.Group();bagPivot.position.set(0,top,0);const bag=new T.Mesh(bagG,bagMat);bag.name='job-net-bag';bag.frustumCulled=false;bagPivot.add(bag);group.add(bagPivot);
  // Swoosh: a ribbon arc (24 segments), revealed with the sweep by draw range, in world space.
- const swooshG=own(new T.RingGeometry(1.35,1.95,24,1,0,Math.PI*1.25));
- const swooshMat=own(new T.MeshBasicMaterial({color:night?'#f4ff8a':'#ffffff',transparent:true,opacity:0,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}));
- const swoosh=new T.Mesh(swooshG,swooshMat);swoosh.name='job-net-swoosh';swoosh.frustumCulled=false;swoosh.visible=false;swoosh.rotation.order='YXZ';
- const SEG_IDX=6;let swooshK=1;
+ // Oct 21 2026: a glowing ribbon (bugSwoosh.ts) revealed by a uniform: warm white on the island, bright warm yellow at Night.
+ const trail=createSwoosh(own,1.35,1.95),swoosh=trail.mesh;trail.setLook(night?'night':'island');
  // Spring state for the bag's lag, and the catch flip (0 open → 1 closed).
  let lag=0,lagV=0,lastA=0,lastYaw=0,flip=0,flipWant=0,follow=1,grip:number=NET_GRIP_BY_MODE.carry,surge=0,surgeV=0,lastVf=0,haveMid=false;
  const lastMid=new T.Vector3(),sx=new T.Vector3(),sy=new T.Vector3(),sz=new T.Vector3();
@@ -111,7 +110,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    // The swoosh follows the sweep: a flat arc round the player's chest, revealed along the swing, fading in the recovery.
    if(swingT>=0&&!reduced){const s=swingPhase(swingT);swoosh.visible=s.phase==='sweep'||s.phase==='recover';
     if(swoosh.visible){swoosh.position.set(mid.x-fx*.2,mid.y+.15,mid.z-fz*.2);swoosh.rotation.set(-Math.PI/2+.25,yaw-Math.PI*.15,0);
-     const segs=s.phase==='sweep'?Math.max(1,Math.ceil(s.k*24)):24;swooshG.setDrawRange(0,segs*SEG_IDX);swooshMat.opacity=(s.phase==='sweep'?.55:.55*(1-s.k))*swooshK;}}
+     trail.show(s.phase==='sweep'?Math.max(.04,s.k):1,s.phase==='sweep'?1:1-s.k);}}
    else swoosh.visible=false;
   },
   /** Riding (scooter / bike / moped; bug-polish wiring to the backpack lane): the pole rests on the pack's side socket
@@ -143,8 +142,10 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
   get flip(){return flip;},
   /** World point at the hoop's centre. */
   hoopCentre(out:{x:number;y:number;z:number}){tmpV.set(0,NET_POLE+R,0).applyMatrix4(group.matrix);out.x=tmpV.x;out.y=tmpV.y;out.z=tmpV.z;return out;},
-  /** The catch stage's pale backdrop: the swoosh drawn as a soft warm trail (additive white vanishes on it), back to normal after. */
-  stageLook(on:boolean){on=on&&!night;swooshK=on?.5:1;swooshMat.blending=on?T.NormalBlending:T.AdditiveBlending;swooshMat.color.set(night?'#f4ff8a':on?'#f2c14e':'#ffffff');swooshMat.needsUpdate=true;},
+  /** The catch stage's backdrop (Day cream, Sunset peach, Night deep blue; false = back on the island): the trail's look follows it
+   *  (bugSwoosh.ts: additive glow at Night, a warm normal-blended stroke on the pale backdrops where additive light vanishes). */
+  stageLook(look:'day'|'sunset'|'night'|false){trail.setLook(night||look==='night'?'night':look==='day'?'stage-day':look==='sunset'?'stage-sunset':'island');},
+  trail,
   reset(){lag=lagV=flip=flipWant=0;lastA=0;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;swoosh.visible=false;},
   get swingTime(){return SWING.end;},
  };

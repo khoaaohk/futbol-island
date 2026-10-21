@@ -384,7 +384,7 @@ export const STALK={rate:1.35,walk:.55} as const;
 const isBugRun=(r:JobRun)=>r.def.prop==='bug'||r.def.prop==='firefly';
 export function runActions(r:JobRun):JobAction[]{const out=baseActions(r);
  if(r.def.swing&&r.phase==='work'){const step=r.def.work?.target?.[0];if(step)out.push({id:step.id,label:step.label,primary:true});}
- if(isBugRun(r)&&r.phase==='work')out.push(r.stalk?{id:'netup',label:'Net up'}:{id:'netlow',label:'Net down'});
+ if(isBugRun(r)&&r.phase==='work')out.push(r.def.prop==='firefly'?(r.stalk?{id:'netup',label:'Jar up'}:{id:'netlow',label:'Jar low'}):r.stalk?{id:'netup',label:'Net up'}:{id:'netlow',label:'Net down'});
  if(r.def.swing&&r.phase!=='done')out.push({id:'ride',label:'Ride'});
  return out;}
 /** Bug squad swing shifts: the scene's net swing caught roster target i (once per shift). */

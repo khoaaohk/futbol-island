@@ -221,9 +221,9 @@ const BUG_SET_COPY:Record<BugSetId,Pick<JobDef,'intro'|'howTo'|'work'|'lesson'|'
   howTo:'Find a bug (follow the arrow), sneak close, then Swing net. Catch the shift\'s bugs, then release the squad at the bug hotel.',
   work:{target:[{id:'net',label:'Swing net',mode:'tap',hint:'Sneak up, face the bug and Swing net: a clean sweep, like a well-timed tackle.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
   lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'},
- fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk up to a glowing firefly and Swing net to catch it gently. When the shift\'s fireflies are in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
-  howTo:'Find a glowing firefly (follow the arrow), Swing net to catch it, then light up the lantern goal.',
-  work:{target:[{id:'jar',label:'Swing net',mode:'tap',hint:'Walk up calmly and Swing net: fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
+ fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk up to a glowing firefly and Cup it in your glass jar: scoop it up gently and the lid snaps shut. When the shift\'s fireflies are in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
+  howTo:'Find a glowing firefly (follow the arrow), Cup it with the jar, then light up the lantern goal.',
+  work:{target:[{id:'jar',label:'Cup the jar',mode:'tap',hint:'Walk up calmly and Cup: scoop the jar up over the firefly, like cushioning a high ball. Fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
   lesson:FIREFLY_JOB_LESSON},
 };
 const bugSetDefs=new Map<BugSetId,JobDef>();
