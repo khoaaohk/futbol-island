@@ -4,11 +4,11 @@
 // the island. Frames are captured in slow motion (the probe's stageRate) to $BUG_SHOTS (default /tmp/bug-catch-anim). Checks: the
 // HUD is hidden during the stage (only the card and Tap to skip), the rig comes back, the catch counts; the compact pill + one toast
 // after a miss. Fails on console / page errors.
-// usage: FUTBOL_BASE_URL=http://localhost:8141 node scripts/check-bug-catch-stage-browser.cjs [--mobile] [--night]
+// usage: FUTBOL_BASE_URL=http://localhost:8141 node scripts/check-bug-catch-stage-browser.cjs [--mobile] [--night|--sunset]
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const OUT=process.env.BUG_SHOTS||'/tmp/bug-catch-anim',base=process.env.FUTBOL_BASE_URL||'http://localhost:8141';
-const mobile=process.argv.includes('--mobile'),night=process.argv.includes('--night'),tag=(mobile?'phone':'desktop')+(night?'-night':'-day');fs.mkdirSync(OUT,{recursive:true});
+const mobile=process.argv.includes('--mobile'),night=process.argv.includes('--night'),sunset=process.argv.includes('--sunset'),tag=(mobile?'phone':'desktop')+(night?'-night':sunset?'-sunset':'-day');fs.mkdirSync(OUT,{recursive:true});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const SIGN={x:606,z:133.5},RATE=.2;
 const WANT=night?['firefly']:(process.env.BUG_SPECIES||'ant,monarch,stag-beetle,dragonfly').split(',');
@@ -22,7 +22,7 @@ const MARKS=[['0-push-in',-.3],['1-stage-settle',.12],['2-wind-up',.5],['3-hit',
   await page.addInitScript(({SIGN,time})=>{if(sessionStorage.getItem('bug-test-seeded'))return;sessionStorage.setItem('bug-test-seeded','1');
    localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-time-of-day',time);
    for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
-   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN,time:night?'night':'day'});
+   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN,time:night?'night':sunset?'sunset':'day'});
   await page.goto(base+'/?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
   await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:90000}).catch(()=>{});await wait(1500);
   const tap=async loc=>mobile?loc.tap():loc.click();
