@@ -118,7 +118,7 @@ ok('swim → dive → surface, and the reef crest is counted once per dive',()=>
 
 ok('breath: the pace lesson (glide > swim > push), gentler on the shallow reef (no depth penalty), a sip of air at the top; a gentle float up at 0; refills at the surface',()=>{
  assert.equal(S.BREATH_SECONDS,70);assert.deepEqual({...S.BREATH_DRAIN},{glide:.6,swim:1,push:1.8});assert.equal(S.DIVE_DEPTH_DRAIN,undefined,'no deep penalty');
- const run=(input,setup)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);s.start();if(setup)setup(s);let t=0;while(s.state.phase==='diving'&&t<300){s.step(.05,input);t+=.05;}return {t,s};};
+ const run=(input,setup)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);s.start();s.state.edgeCd=1e9;/* the edge holds like a wall (no seamless exit mid-measure) */if(setup)setup(s);let t=0;while(s.state.phase==='diving'&&t<300){s.step(.05,input);t+=.05;}return {t,s};};
  const glide=run({sx:0,sy:0,lift:0}),swim=run({sx:0,sy:-.5,lift:0}),push=run({sx:0,sy:-1,lift:0});
  assert(glide.t>swim.t&&swim.t>push.t,'pace: '+[glide.t,swim.t,push.t].map(x=>x.toFixed(1)));assert(glide.t>100&&glide.t<125&&push.t>32&&push.t<45,'times '+[glide.t,push.t]);
  const high=run({sx:0,sy:0,lift:0},s=>{s.state.depthT=.15;}),low=run({sx:0,sy:0,lift:0},s=>{s.state.depthT=1;});near(low.t,high.t,.2,'the same drain at any depth');

@@ -14,6 +14,7 @@
  */
 import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveOnCrest,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
 import {WATER_PROBE_HZ} from './waterDepth';
+import {DIVE_EDGE,diveEdgeBeyond,diveEdgeRim} from './diveEdge';
 
 /** One full breath at an easy swim (s), and how fast it drains: gliding (stick still), an easy swim, the stick pushed all the way.
  *  (45 s before the Oct 20 2026 shallow reef: the reef is shallow and for young kids, so the breath lasts longer.) */
@@ -64,7 +65,8 @@ export const DIVE_LESSON_KEY='fi2-dive-lesson-v1';
 export const DIVE_LOW_NOTE='Running low on breath: rise to the top for air.',DIVE_OUT_NOTE='Well done! You floated up for a breath.';
 
 export type DivePhase='surface'|'diving'|'rising';
-export type SurfaceReason='tap'|'breath'|'leave'|'fly';
+/** `edge` (Seamless Explore, diveEdge.ts): swum out across the zone's edge, still under the water (the island's duck-dive goes on). */
+export type SurfaceReason='tap'|'breath'|'leave'|'fly'|'edge';
 export type DiveEvents={
  /** The dive just began (the host builds the room, sleeps the island) / ended (the host disposes it, wakes the island). */
  started:boolean;surfaced:SurfaceReason|'';
@@ -109,7 +111,10 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    *  and whether the reef crest was reached this dive. */
   depthT:DIVE_START_T,atTop:false,onCrest:false,
   /** Explore v2: the dart's remaining burst (s) and its cooldown (s); darts this dive (analytics: the first one). */
-  dartT:0,dartCd:0,darts:0};
+  dartT:0,dartCd:0,darts:0,
+  /** Seamless Explore: seconds before the zone's edge may be crossed again (DIVE_EDGE.cooldown after each crossing, both ways), and
+   *  whether this dive came in across the edge. */
+  edgeCd:0,viaEdge:false};
  const range={min:0,max:0};
  const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false,dart:false};
  const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=events.dart=false;events.surfaced='';events.find='';events.coins=0;};
@@ -130,7 +135,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    *  Drains the shared breath while under (no refill meanwhile); `events.low` / `events.out` as in the reef (the host then surfaces
    *  the duck-dive). Does nothing during a reef dive. */
   duck(dt:number,under:boolean){
-   clear();if(state.phase!=='surface'){state.ducking=false;return events;}
+   clear();if(state.edgeCd>0)state.edgeCd=Math.max(0,state.edgeCd-Math.max(0,dt));if(state.phase!=='surface'){state.ducking=false;return events;}
    state.ducking=under;if(!under){if(state.breath>BREATH_LOW)state.lowSaid=false;return events;}
    state.breath=Math.max(0,state.breath-Math.max(0,dt)*BREATH_DRAIN.swim*DUCK_DRAIN/BREATH_SECONDS);markUi(dt);
    if(!state.lowSaid&&state.breath<=BREATH_LOW){state.lowSaid=true;events.low=true;}
@@ -144,10 +149,14 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   /** "Dive": go under at the near spot. False when not in a patch, already diving or out of breath. */
   start(){
    clear();const s=state.near;if(!s||state.phase!=='surface'||state.breath<BREATH_MIN_DIVE)return false;
-   state.phase='diving';state.spot=s;state.x=DIVE_START.x;state.y=DIVE_START.y;state.z=DIVE_START.z;state.yaw=DIVE_START.yaw;state.vx=state.vy=state.vz=0;
-   state.pitch=state.roll=state.lift=0;state.dartT=state.dartCd=0;state.darts=0;state.depthT=DIVE_START_T;state.atTop=false;state.onCrest=false;state.lowSaid=false;
-   diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
-   events.started=true;events.breathUi=true;state.uiBreath=state.breath;return true;
+   begin(s,DIVE_START.x,DIVE_START.z,DIVE_START.yaw,0,DIVE_START_T);state.lowSaid=false;state.viaEdge=false;state.edgeCd=DIVE_EDGE.cooldown;return true;
+  },
+  /** Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge. Arrives at the room point (x, z) with the facing
+   *  and speed carried on and the place in the water column from the island dive; the breath goes on as it was (no refill). False
+   *  while the edge waits (DIVE_EDGE.cooldown), just after surfacing (DIVE_REARM_S), already in a room, or nearly out of breath. */
+  enterAt(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
+   clear();if(state.phase!=='surface'||state.edgeCd>0||state.hold>0||state.breath<DIVE_EDGE.minBreath)return false;
+   begin(s,x,z,yaw,Math.max(0,Math.min(DIVE_SPEED,speed)),Math.max(0,Math.min(1,depthT)));state.lowSaid=state.breath<=BREATH_LOW;state.viaEdge=true;state.edgeCd=DIVE_EDGE.cooldown;state.ducking=false;return true;
   },
   /** One frame underwater (the host calls it only while diving or rising). */
   step(dt:number,input:DiveInput){
@@ -173,8 +182,12 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(darting&&along>target?.6:Math.abs(target)>Math.abs(along)?DIVE_ACCEL:stick<.08?DIVE_GLIDE_DRAG:DIVE_DRAG));
    const nextAlong=along+(target-along)*k,side=(state.vx*fz-state.vz*fx)*Math.exp(-dt*3);
    state.vx=fx*nextAlong+fz*side;state.vz=fz*nextAlong-fx*side;
-   let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz);
-   if(r>DIVE_ROOM_R){nx*=DIVE_ROOM_R/r;nz*=DIVE_ROOM_R/r;const n=(state.vx*nx+state.vz*nz)/(DIVE_ROOM_R||1);if(n>0){state.vx-=nx/DIVE_ROOM_R*n;state.vz-=nz/DIVE_ROOM_R*n;}}
+   // Seamless Explore (diveEdge.ts): the rim (the zone's blob outline in room metres) is a doorway. DIVE_EDGE.exitOut m past it the
+   // diver leaves for the island (still under: the duck-dive); while the edge waits after a crossing it holds there like a wall.
+   if(state.edgeCd>0)state.edgeCd=Math.max(0,state.edgeCd-dt);
+   let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
+   if(r>=lim&&state.edgeCd<=0){state.x=nx;state.z=nz;state.phase='surface';state.hold=DIVE_REARM_S;state.edgeCd=DIVE_EDGE.cooldown;state.spot=null;state.find=null;state.findDist=Infinity;state.ducking=true;events.surfaced='edge';return events;}
+   if(r>lim){nx*=lim/r;nz*=lim/r;const n=(state.vx*nx+state.vz*nz)/(lim||1);if(n>0){state.vx-=nx/lim*n;state.vz-=nz/lim*n;}}
    state.x=nx;state.z=nz;
    // Rise / dip lower, then follow the seabed: the place in the water column (depthT) is kept while the reef rises or falls
    // under the diver, so a rising crest lifts them smoothly; the sand and the surface are hard limits (never clipped).
@@ -218,8 +231,16 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    rise(reason);return events;
   },
   get diving(){return state.phase!=='surface';},
+  /** How far past the rim the diver is (room m; negative inside): the HUD's "Leaving the reef" hint and the tests. */
+  get beyond(){return state.spot?diveEdgeBeyond(state.spot,state.x,state.z):-Infinity;},
   reset(){clear();state.phase='surface';state.spot=null;state.near=null;state.find=null;state.breath=1;state.uiBreath=1;state.acc=Infinity;},
  };
+ function begin(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
+  state.phase='diving';state.spot=s;state.x=x;state.z=z;state.yaw=yaw;state.vx=Math.sin(yaw)*speed;state.vz=Math.cos(yaw)*speed;state.vy=0;
+  state.pitch=state.roll=state.lift=0;state.dartT=state.dartCd=0;state.darts=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
+  diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
+  events.started=true;events.breathUi=true;state.uiBreath=state.breath;
+ }
  function rise(reason:SurfaceReason){state.phase='rising';state.rise=0;state.risingFor=reason;state.find=null;state.findDist=Infinity;}
 }
 export type DiveSession=ReturnType<typeof createDiveSession>;

@@ -68,5 +68,9 @@ export const countDiveDart=()=>count('wa:dive_dart');
 export const countDivePick=()=>count('wa:dive_pick');
 export const countDiveRestore=()=>count('wa:dive_restore');
 export const countDiveGoal=()=>count('wa:dive_goal');
+/** Seamless Explore (Oct 21 2026, lib/town/water/diveEdge.ts): a reef room entered by swimming in under the water across the zone's
+ *  edge (no tap; counted instead of wa:dive_start), and left by swimming out across it (instead of wa:dive_surface). Totals only. */
+export const countDiveEnterEdge=()=>count('wa:dive_enter_edge');
+export const countDiveExitEdge=()=>count('wa:dive_exit_edge');
 /** Tests: forget the device flags. */
 export function resetWaterFirsts(){firsts=null;try{localStorage.removeItem(FIRSTS_KEY);}catch{}}

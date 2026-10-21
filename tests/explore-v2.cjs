@@ -30,8 +30,8 @@ ok('the island is frozen while under: the dive branch runs first in the frame an
  for(const [name,needle] of Object.entries(FROZEN)){const i=body.indexOf(needle);assert(i>0,'found '+name);assert(i>after,name+' runs after the dive branch (frozen while under)');}
  assert.equal((body.match(/dive\.frame\(/g)||[]).length,1,'one dive frame call');
  // The island's audio goes quiet: the music is ducked on the way under and back on surfacing; the footstep / wind bed is stopped.
- assert(town.includes('entered:spot=>{countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);'));
- assert(town.includes('surfaced:(spot,reason)=>{countDiveSurface();music.setDucked(false);'));
+ assert(town.includes('entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);'));
+ assert(town.includes("surfaced:(spot,reason)=>{if(reason==='edge')countDiveExitEdge();else countDiveSurface();music.setDucked(false);"));
  // Kept pins: the dispose order other tests rely on.
  assert(town.includes('swimClear.dispose();clearWin.dispose();'));
 });

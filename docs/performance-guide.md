@@ -1,5 +1,14 @@
 # Performance reference for future Futbol Island updates
 
+## Seamless Explore edge (Oct 21 2026, local, not deployed)
+
+Swimming in / out of a reef zone across its edge (lib/town/water/diveEdge.ts, docs/swimming-research.md §11). Added cost: while
+duck-diving on the island, one 7-zone distance reject per tick (an atan2 + 3 sines only within 1.45 × a zone's radius); in the room one
+atan2 + 3 sines per step for the rim. No allocation per frame (reused out objects). Crossing out wakes the island in one frame with
+nothing pre-warmed: the room is disposed as on surfacing and the island's frame resumes; the frozen-island rule is unchanged (the dive
+branch still runs first). The way out probes at most 9 points (distanceToLand) once per crossing. tests/dive-edge.cjs. iPhone heat not
+measured.
+
 ## Explore shoals: no sand band, clear of the shore (Oct 21 2026, local, not deployed)
 
 - **Cause of the khaki band past the far edge:** the scene's clear colour (the warm sky) seen through the see-through shoal water. From a low or distant camera a view ray past the shallow crest descends more slowly than the preview shelf falls away, so it reached no geometry. Confirmed by turning the background magenta.
