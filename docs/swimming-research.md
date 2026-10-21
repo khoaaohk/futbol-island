@@ -593,3 +593,21 @@ island's music kept playing under the reef bed. Built, in order of impact:
   tests/water-dive.cjs, tests/dive-layout.cjs, full suite, `build:quiet`, headless phone + desktop shots (/tmp/explore-v2), 0 console errors.
 - **Not done / next.** A whale-shadow surprise, per-zone friend emotes (wave / high five), a daily sparkle spot and a photo mode were left
   out to keep the draw budget; the Dart button could pulse once on the first dive. iPhone heat not measured.
+
+## 11. Seamless Explore: in and out across the zone's edge (21 Oct 2026, local)
+
+User: "when diving and outside of the explore, allow swimming right into it. when in the explore and exiting the boundary exit out and
+show diving outside ... without having to tap explore". `lib/town/water/diveEdge.ts` (pure; tests/dive-edge.cjs):
+- **In:** a walking duck-diver (waterState DIVE, under > 0.35) 1 m inside a zone's blob (`diveEdgeSpotAt`) enters its room at the
+  matching point: room = (island - centre) / scale (the layout's mapping), held 1.5 m inside the rim; heading and speed carry on (turned
+  inward when arriving at the rim facing out); the island dive depth maps to the room's water column. The breath goes on as it was.
+  No splash: the 0.65 s blend through the zone's water colour (none with reduced motion). Pressing Dive (Q) inside a zone therefore
+  also goes straight in; the Explore pill / E tap path is unchanged.
+- **Out:** the room's rim is the zone's blob outline in room metres (diveLayout `outline`), capped at DIVE_ROOM_R - 2. 2 m past it the
+  room hands back: the island 3 m outside the blob on the same bearing, still under (`water.underNow()`), facing outward, the follow
+  camera moved with the diver. Land / a pier / another zone there: it looks up to 12 m further out; only too-shallow water: the diver
+  comes up and swims; nothing: the buoy.
+- **No ping-pong:** in at 1 m inside, out lands 3 m outside (4 m back in); room 1.5 m in, out at 2 m past (3.5 m); a 1.5 s cooldown
+  after each crossing (the rim holds like a wall meanwhile) and the 2 s Explore re-arm after leaving. The 7 zones are far apart.
+- HUD: a soft chip "Entering: <zone>" / "Leaving the reef" (2.4 s). Analytics: `wa:dive_enter_edge` (instead of wa:dive_start) and
+  `wa:dive_exit_edge` (instead of wa:dive_surface), in the admin Water tile.
