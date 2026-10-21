@@ -9,7 +9,9 @@ import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
  *  ocean's alpha at the shoal's heart (blended program only; the shore window is .14-.42) and the opaque-path tint strength. */
 export const DIVE_SHOAL={inner:.25,fade:1.32,wobble:.34,heart:SHOAL_HEART_D} as const;
 /** View elevation (degrees) over a shoal: fully see-through above [0], opaque water (the shoal's colour only) below [1]. */
-export const DIVE_GRAZE=[16,6] as const;
+export const DIVE_GRAZE=[12,4] as const;
+/** The see-through test: the view ray carried `depth` m under the surface must land inside the preview (blob fraction `cover`). */
+export const DIVE_SEE={depth:6,cover:[1.35,1.9] as const} as const;
 const WATER_LEVEL_GLSL=WATER_Y.toFixed(2);
 /** Oct 20 2026 (user: "shallow places in the middle of dark ocean"): a shoal is drawn as the shore's own shallows. Its heart reads as
  *  water DIVE_SHOAL.heart m off a beach, and the open sea's distance eases back in through the soft band (the same palette, depth
@@ -244,9 +246,13 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // band broken by low-frequency noise: no rim, no hard line), diveClr = how see-through (uDiveClear, the preview's seabed under it).
     // DIVE_SLOTS (2) nearest zones; a distance reject per slot, the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
     float diveK=0.,diveClr=0.;
+    // Oct 21 2026 ("sand on the north end"): the see-through only where the view ray, carried on to the seabed preview's depth
+    // (DIVE_SEE.depth m), still lands on the preview (q < DIVE_SEE.cover). A low or far view looks past the far crest into nothing,
+    // and the sky's clear colour showed through the water as a khaki band beyond the far edge. One more blob test per lit slot.
+    vec3 dvE=vec3(vWaterXZ.x,${WATER_LEVEL_GLSL},vWaterXZ.y)-cameraPosition;vec2 dvHit=vWaterXZ+dvE.xz*(${DIVE_SEE.depth.toFixed(1)}/max(-dvE.y,.05));
     for(int i=0;i<${DIVE_SLOTS};i++){vec4 sp=uDiveSpots[i];if(sp.w>0.){float q=diveBlobQ(vWaterXZ,i);if(q<${DIVE_SHOAL.fade.toFixed(2)}){
      float qn=q+(clearWinW(vWaterXZ,.19,.31,7.)-.5)*${DIVE_SHOAL.wobble.toFixed(2)}*smoothstep(.3,.8,q),k=sp.w*(1.-smoothstep(${DIVE_SHOAL.inner.toFixed(2)},${DIVE_SHOAL.fade.toFixed(2)},qn));k*=k*(3.-2.*k);
-     diveK=max(diveK,k);diveClr=max(diveClr,uDiveClear[i]*k);}}}
+     diveK=max(diveK,k);diveClr=max(diveClr,uDiveClear[i]*k*(1.-smoothstep(${DIVE_SEE.cover[0].toFixed(2)},${DIVE_SEE.cover[1].toFixed(2)},diveBlobQ(dvHit,i))));}}}
     // The shore distance the shoal looks like (diveShoreD): the depth colour, light net and alpha below all read it.
     // Where the seabed preview is off (heat tiers 3-4, Battery saver, out of range, the opaque program) the heart reads as
     // SHOAL_OPAQUE_D instead: a flat muted turquoise a little lighter than the sea, never a pale khaki sandbar (water audit #10).
