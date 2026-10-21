@@ -98,7 +98,7 @@ export function stageShot(p:V3,yaw:number,aspect:number,fit:readonly V3[],o:{hei
 /** The points the stage shot keeps in frame for a character at p facing yaw with the bug at `bug`: the feet either side, the head,
  *  the raised net's top (over the right shoulder), the hoop held out in front, the bag behind the shoulders, and the bug. */
 export function stageFit(p:V3,yaw:number,bug:V3):V3[]{const fx=Math.sin(yaw),fz=Math.cos(yaw),rx=-fz,rz=fx;
- return [{x:p.x+rx*.35,y:p.y,z:p.z+rz*.35},{x:p.x-rx*.35,y:p.y,z:p.z-rz*.35},{x:p.x,y:p.y+1.6,z:p.z},{x:p.x+rx*.95+fx*.3,y:p.y+3,z:p.z+rz*.95+fz*.3},
+ return [{x:p.x+rx*.35,y:p.y,z:p.z+rz*.35},{x:p.x-rx*.35,y:p.y,z:p.z-rz*.35},{x:p.x,y:p.y+1.6,z:p.z},{x:p.x+rx*.95+fx*.3,y:p.y+3.5,z:p.z+rz*.95+fz*.3},
   {x:p.x+fx*1.9+rx*.6,y:p.y+1.5,z:p.z+fz*1.9+rz*.6},{x:p.x-fx*.6,y:p.y+1.2,z:p.z-fz*.6},bug];}
 /** The push-in before the stage: the follow camera slides along its own line of sight toward the character's head (so it can never
  *  pass through anything the follow camera did not already see past), to `dist` m, never lower than `clear` m over the floor. */

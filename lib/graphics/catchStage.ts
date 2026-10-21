@@ -35,17 +35,17 @@ export function createCatchStage(o:{at:{x:number;y:number;z:number};look:StageLo
  {const g=own(new T.SphereGeometry(45,24,12)),pa=g.getAttribute('position'),col=new Float32Array(pa.count*3),top=new T.Color(C.top),hz=new T.Color(C.horizon),c=new T.Color();
   for(let i=0;i<pa.count;i++){const k=Math.max(0,pa.getY(i)/45);c.copy(hz).lerp(top,Math.pow(k,.7));col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
   g.setAttribute('color',new T.BufferAttribute(col,3));
-  const m=new T.Mesh(g,own(new T.MeshBasicMaterial({vertexColors:true,side:T.BackSide,depthWrite:false,fog:false})));m.name='catch-stage-backdrop';m.position.set(P.x,P.y,P.z);m.renderOrder=-2;m.frustumCulled=false;scene.add(m);}
+  const m=new T.Mesh(g,own(new T.MeshBasicMaterial({vertexColors:true,side:T.BackSide,depthWrite:false,fog:false,toneMapped:false})));m.name='catch-stage-backdrop';m.position.set(P.x,P.y,P.z);m.renderOrder=-2;m.frustumCulled=false;scene.add(m);}
  // Floor: a disc whose colour fades into the horizon at its rim, darker in the middle (a soft contact shadow under the character).
  {const g=own(new T.RingGeometry(.001,6,40,10)),pa=g.getAttribute('position'),col=new Float32Array(pa.count*3),fl=new T.Color(C.floor),hz=new T.Color(C.horizon),sh=new T.Color(C.floor).multiplyScalar(night?.6:.72),c=new T.Color();
   for(let i=0;i<pa.count;i++){const r=Math.hypot(pa.getX(i),pa.getY(i));const shadow=1-Math.min(1,r/.75);c.copy(fl).lerp(hz,Math.min(1,Math.max(0,(r-2.2)/3.6)));c.lerp(sh,shadow*shadow*.9);col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
   g.setAttribute('color',new T.BufferAttribute(col,3));
-  const m=new T.Mesh(g,own(new T.MeshBasicMaterial({vertexColors:true,fog:false})));m.name='catch-stage-floor';m.rotation.x=-Math.PI/2;m.position.set(P.x,P.y+.005,P.z);m.renderOrder=-1;scene.add(m);}
+  const m=new T.Mesh(g,own(new T.MeshBasicMaterial({vertexColors:true,fog:false,toneMapped:false})));m.name='catch-stage-floor';m.rotation.x=-Math.PI/2;m.position.set(P.x,P.y+.005,P.z);m.renderOrder=-1;scene.add(m);}
  // Specks: pollen by day, little stars at night, in a shell round the character; the cloud turns slowly (no per-frame writes).
  const specks=(()=>{const pos=new Float32Array(SPECKS*3);let s=7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647;};
   for(let i=0;i<SPECKS;i++){const a=rnd()*Math.PI*2,r=1.6+rnd()*3.4;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=.3+rnd()*3.2;pos[i*3+2]=Math.sin(a)*r;}
   const g=own(new T.BufferGeometry());g.setAttribute('position',new T.BufferAttribute(pos,3));
-  const m=new T.Points(g,own(new T.PointsMaterial({color:C.speck,size:night?.07:.055,sizeAttenuation:true,transparent:true,opacity:.85,depthWrite:false,fog:false})));
+  const m=new T.Points(g,own(new T.PointsMaterial({color:C.speck,size:night?.07:.055,sizeAttenuation:true,transparent:true,opacity:.85,depthWrite:false,fog:false,toneMapped:false})));
   m.name='catch-stage-specks';m.position.set(P.x,P.y,P.z);m.frustumCulled=false;scene.add(m);return m;})();
  // Lights: a soft sky / ground fill and a key light from the camera's side, above.
  const hemi=new T.HemisphereLight(C.sky,C.ground,night?1.5:1.75);scene.add(hemi);

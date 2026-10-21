@@ -18,7 +18,7 @@ export const BUG_NOTE_MS=2500;
 export type BugPill='chip'|'tip'|'full';
 /** First shift ever: the tip shows this long (ms), then the pill folds; an expanded pill folds back after this long. */
 export const BUG_PILL={tipMs:8000,openMs:6000,key:'fi2-bug-pill-v1'} as const;
-export const BUG_TIP='Sneak up on a bug, then tap Swing.';
+export const BUG_TIP='Sneak up, then tap Swing.';
 /** The pill's state when a shift starts: the tip only until the player has seen it once (or caught a bug). */
 export function initialPill(seen:boolean):BugPill{return seen?'chip':'tip';}
 /** Learning-coin notes from the Bug book are already on the story card (New! + coin): no separate banner for them. */

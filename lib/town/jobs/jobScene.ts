@@ -873,7 +873,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   bugAt:{x:number;y:number;z:number};netParent:T.Object3D|null;rigParent:T.Object3D|null;eye:T.Vector3;target:T.Vector3}|null=null;
  const pushCam=createShotCamera(CATCH_STAGE.pushIn,ZOOM.out),followCam=new T.Vector3(),stageL=new T.Vector3(),stageR=new T.Vector3(),bagQ={x:0,y:0,z:0};
  const STAGE_POSE:JobPose={kind:'netcarry',progress:0,upper:true},stageMotion:{facing:number;turnSmoothing:number;job:JobPose}={facing:0,turnSmoothing:30,job:STAGE_POSE};
- let followFov=50,fadeEl:HTMLDivElement|null=null,fadeOut=0;
+ let followFov=50,fadeEl:HTMLDivElement|null=null,fadeOut=0,stageRate=1;
  function fade(o:number,look:string){const host=stagePorts?.host();if(!host||typeof document==='undefined')return;if(!fadeEl){if(o<=0)return;fadeEl=document.createElement('div');fadeEl.className='catch-stage-fade';fadeEl.dataset.catchFade='';host.appendChild(fadeEl);}
   if(fadeEl.dataset.look!==look)fadeEl.dataset.look=look;const v=String(Math.round(Math.max(0,Math.min(1,o))*1000)/1000);if(fadeEl.style.opacity!==v)fadeEl.style.opacity=v;const hide=o<=0;if(fadeEl.hidden!==hide)fadeEl.hidden=hide;}
  const stageLook=()=>run?.def.prop==='firefly'?'night':timeOfDay()==='sunset'?'sunset':'day';
@@ -887,7 +887,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    bugAt:{x:0,y:0,z:0},netParent:null,rigParent:null,eye:new T.Vector3(),target:new T.Vector3()};
   stopHint();countBugSwing();tapHaptic();fadeOut=0;
   const head={x:p.x,y:p.y+1.35,z:p.z},from={x:followCam.x,y:followCam.y,z:followCam.z};
-  pushCam.begin(()=>{const s=pushInShot(from,head,floor);return {eye:s.eye,target:s.target,fov:followFov};});
+  pushCam.begin(()=>{const el=stagePorts?.renderer.domElement,s=pushInShot(from,head,floor,el&&el.clientWidth<el.clientHeight?5.6:4.2);return {eye:s.eye,target:s.target,fov:followFov};});
   hudHidden(true);setView({zooming:true});publishActive();return true;}
  /** Into the stage (the push-in has arrived and the island is covered): build it, borrow the rig and the net, aim the stage camera. */
  function enterStage(){const C=cs,ports=stagePorts;if(!C||!ports||!net){exitStage(true);return;}const p=C.p,look=stageLook();
@@ -902,23 +902,23 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   const fit=stageFit(p,C.yaw,C.bugAt),el=ports.renderer.domElement;
   const shot=stageShot(p,C.yaw,(el.clientWidth||el.width)/Math.max(1,el.clientHeight||el.height),fit);
   C.eye.set(shot.eye.x,shot.eye.y,shot.eye.z);C.target.set(shot.target.x,shot.target.y,shot.target.z);st.camera.fov=shot.fov;st.camera.updateProjectionMatrix();
-  C.on=true;jobCue('swish');}
+  net.stageLook(true);C.on=true;jobCue('swish');}
  /** Back to the island (the stage is covered, or skipped / ended): the rig and the net go home, the bug is in the jar, the camera eases
   *  back from the push-in. `instant` = quit / set swap / leaving: no fade. */
  function exitStage(instant=false){const C=cs;if(!C)return;cs=null;
   if(!C.registered){C.registered=true;registerCatch(C.hit,false);}
   const ports=stagePorts;if(ports&&C.on){(C.rigParent??ports.scene).add(ports.player.root);if(net){(C.netParent??ports.scene).add(net.group,net.swoosh);}}
-  C.stage?.dispose();net?.close(false);net?.reset();
+  C.stage?.dispose();net?.stageLook(false);net?.close(false);net?.reset();
   const sw=bugSwarm() as (BugSwarmPort&{hold?:(id:string,s:number)=>void})|null;if(sw){sw.hold?.(C.hit.id,0);sw.pin(null);sw.catch(C.hit.id);}
   jarPop=1;pushCam.end();hudHidden(false);fadeOut=instant||!C.on?0:CATCH_STAGE.dissolve;fade(fadeOut>0?1:0,stageLook());
   setView({zooming:false});if(run)publishActive();}
  /** The push-in (island frames): ease in, then cover the island with the stage's colour and switch; after the stage, uncover it. */
  function tickStagePush(dt:number){const C=cs;if(fadeOut>0){fadeOut=Math.max(0,fadeOut-dt);fade(fadeOut/CATCH_STAGE.dissolve,stageLook());}
-  if(!C||C.on)return;C.push+=dt;const d=CATCH_STAGE.dissolve,k=(C.push-(CATCH_STAGE.pushIn-d))/d;fade(k,stageLook());if(C.push>=CATCH_STAGE.pushIn)enterStage();}
+  if(!C||C.on)return;C.push+=dt*stageRate;const d=CATCH_STAGE.dissolve,k=(C.push-(CATCH_STAGE.pushIn-d))/d;fade(k,stageLook());if(C.push>=CATCH_STAGE.pushIn)enterStage();}
  const smooth=(k:number)=>{const t=Math.max(0,Math.min(1,k));return t*t*(3-2*t);};
  /** One stage frame instead of the island's (Town.tsx): the timeline, the rig, the net, the bug, one render. */
  function stageFrame(dt:number,time:number){const C=cs,ports=stagePorts;if(!C||!C.on||!ports||!net||!C.stage)return;
-  const st=C.stage,R0=Math.min(dt,.05);C.t+=R0;const t=C.t,{phase,k}=catchStagePhase(t),A=CATCH_STAGE_AT,p=C.p;
+  const st=C.stage,R0=Math.min(dt,.05)*stageRate;C.t+=R0;const t=C.t,{phase,k}=catchStagePhase(t),A=CATCH_STAGE_AT,p=C.p;
   // Fades: the stage's colour clears off at the start and covers it again at the end.
   fade(t<CATCH_STAGE.dissolve?1-t/CATCH_STAGE.dissolve:phase==='out'?smooth(k/.8):phase==='done'?1:0,stageLook());
   if(phase==='done'){exitStage();return;}
@@ -1104,6 +1104,9 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   /** The catch stage has the frame (Town.tsx draws stageFrame instead of the island). */
   get staging(){return !!cs&&cs.on;},
   stageFrame,
+  /** Probes: the catch stage's clock (s; negative = still pushing in; null = none) and a slow-motion rate for frame captures. */
+  get stageTime(){return cs?(cs.on?cs.t:cs.push-CATCH_STAGE.pushIn):null;},
+  set stageRate(v:number){stageRate=Math.max(.05,Math.min(1,v||1));},
   /** Town's rig, renderer, island scene and the canvas host, for the catch stage. */
   setStagePorts(p:StagePorts|null){stagePorts=p;},
   /** Which set the swarm should show for the running shift (Town passes it to the swarm), or null. */
