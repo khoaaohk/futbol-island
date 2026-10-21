@@ -1,5 +1,12 @@
 # Performance reference for future Futbol Island updates
 
+## Explore shoals: no sand band, clear of the shore (Oct 21 2026, local, not deployed)
+
+- **Cause of the khaki band past the far edge:** the scene's clear colour (the warm sky) seen through the see-through shoal water. From a low or distant camera a view ray past the shallow crest descends more slowly than the preview shelf falls away, so it reached no geometry. Confirmed by turning the background magenta.
+- **Fix:** `waterSurface.ts` carries the view ray `DIVE_SEE.depth` (6 m) under the surface and keeps the see-through only where that point lands on the preview (`diveBlobQ` < `DIVE_SEE.cover`). That is one more blob test per lit slot, inside a lit slot's reach only. The see-through also eases out below ~12°–4° of view elevation (`DIVE_GRAZE`, Fresnel). `dd=min(d,…)`: a shoal is never deeper than the shore's own distance, so no darker ring crosses the shallows. The preview shelf gains one deep skirt ring (`DIVE_PREVIEW.skirt` 2.6× the outline, 10 m deep, +88 triangles). Rocks are dodecahedra (rounded), and rocks, coral and the pitch turf are muted toward the shelf teal (`DIVE_PREVIEW_MUTE`). Per zone the preview and tells stay at 1,888–2,415 triangles (cap 2,600). Draws, slots, tiers and decals are unchanged.
+- **Moved zones:** each fade edge now ends at least `DIVE_SHORE_CLEAR` (30 m) from land (test in `tests/water-dive.cjs`). Captain's Cup moved from 342,-282 to 309,-291; Paul's Grotto from 594,-289 to 512,-296; Ray Meadow from 733,-72 to 761,-62; Turtle Pool from 812,204 to 842,204.
+- **Validation:** before and after screenshots of all 7 zones, taken 100 m out from the south and north and from the game camera (desktop, plus phone for Paul's Grotto and Ball Crate), are in `/tmp/explore-sand/`. A sweep at 30, 250 and 500 m from the east and west and from a 3 m camera shows no band. No phone heat claim.
+
 ## Humpback, dive map marks and ray lessons, Oct 20 2026 (local, not deployed)
 
 Two humpbacks (`lib/graphics/humpback.ts`; South Bay replaces its whale shark, a new one off Summit Isle's south-east) run on the
