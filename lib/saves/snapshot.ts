@@ -44,7 +44,8 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
  'fi2-bug-book-v1',// The Bug book (Oct 20 2026, lib/town/jobs/bugBook.ts): catch counts for the 8 Summit bugs + 8 fireflies and the reward flag (≤ ~130 bytes)
- 'fi2-dive-finds-v1',// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)
+ 'fi2-dive-finds-v1',
+ 'fi2-dive-reef-v1',// Explore v2 (Oct 21 2026, lib/town/water/diveJourney.ts): each zone's collected pickups and the restored zones (the reward pays once ever)// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
  'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
