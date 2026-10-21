@@ -10,11 +10,13 @@ import Ending from '../modern/Ending';
 import {useReduced} from '../modern/hooks';
 import {Corners,Items,PaperDefs,Parts,Room,Shadow,Sheet,useBox,useFrames} from '../anatomy/PaperStage';
 import s from '../anatomy/PaperStage.module.css';
-import {CASE_FACTS,CHECKS,FOR_YOUR_GAME,IFAB_MOTTO,IFAB_QUOTE,PRACTICE_NOTE,QUIZ,REAL_CASE,SOURCES,TOURNAMENT_NUMBERS} from './content';
+import {STATION,CASE_FACTS,CHECKS,FOR_YOUR_GAME,IFAB_MOTTO,IFAB_QUOTE,PRACTICE_NOTE,QUIZ,REAL_CASE,SOURCES,TOURNAMENT_NUMBERS} from './content';
 import {LAST,clipTruth,timecode,type Clip} from './goalline';
 import {REPLAY_FPS,clipPoints,maxShift,shiftVerdict} from './scoring';
 import {SHIFT_N,ZOOMS,ballItems,benchParts,cameraFor,hitFrame,makeShift,monitorOf,rng,signalPath,type Cam,type VarView} from './model';
 import {MonitorPicture} from './Monitor';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import {STEPS,makeStation} from './station';
 import v from './var.module.css';
 
 /**
@@ -30,6 +32,9 @@ import v from './var.module.css';
  *     frame (each frame nudged costs a little), switch cameras (LINE / TOP, or tap a camera on the model) and zoom the magnifier
  *     (×1 ×2 ×4), then call GOAL or NO GOAL. The review screen lights and the TV signal is drawn: VAR advises, the referee
  *     decides. Then the truth, measured on the monitor in cm.
+ *  The review chain (Oct 21 2026, figure kit v2): from the story sheet, a table-top model of how one review travels (cameras →
+ *     fibre → video room → replay operator → VAR → radio → review monitor). Turn it all the way round, see through the room's
+ *     walls, read the labels; "Run a review" lights the chain step by step: camera angle → replay → check → decision.
  *  3. End of shift sheet: total, best, what VAR may check, a quick check, then the ending → onComplete (once, only then).
  * Heat: one frame loop (anatomy/paper-loop.ts useFrames) runs only while the replay rolls or the review signal is drawn, pauses
  * off-screen, is cancelled on unmount. Reduced motion: no roll; the replay starts frozen on frame 0 and you step it (turn-based).
@@ -43,7 +48,7 @@ const BEATS=[
  {when:'The first VAR penalty',head:REAL_CASE.lesson,text:`${REAL_CASE.story[2]} ${CASE_FACTS.decides}`},
 ];
 const HOW=[['Freeze','Stop the replay when the ball is deepest.'],['Find it','Scrub frame by frame to the deepest moment.'],['Look','Switch cameras and zoom the magnifier.'],['Call it','Goal or no goal? The referee decides.']] as const;
-type Phase='intro'|'roll'|'frozen'|'review'|'verdict'|'score';
+type Phase='intro'|'roll'|'frozen'|'review'|'verdict'|'score'|'station';
 type Res={pts:number;right:boolean;off:number|null;nudges:number;call:'goal'|'nogoal'};
 const CAMS:{cam:Cam;label:string;key:string}[]=[{cam:'line',label:'Line cam',key:'l'},{cam:'top',label:'Top cam',key:'t'}];
 
@@ -58,6 +63,16 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const done=useRef(false),cb=useRef(onComplete);cb.current=onComplete;
  const readout=useRef<HTMLSpanElement>(null),say=(t:string)=>{if(readout.current)readout.current.textContent=t;};
  useEffect(()=>{setBest(readBest());},[]);
+ // The review chain (figure kit v2): made once; a review lights one link set per step (timers, no frame loop of its own).
+ const station=useMemo(()=>makeStation(),[]),fig=useRef<FigureHandle|null>(null),stTimers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ const [stStep,setStStep]=useState(-1),[stLit,setStLit]=useState<string[]>([]);
+ useEffect(()=>()=>stTimers.current.forEach(clearTimeout),[]);
+ const runReview=()=>{stTimers.current.forEach(clearTimeout);stTimers.current=[];fig.current?.setSeeThrough(true);fig.current?.setLabels(true);
+  STEPS.forEach((st,i)=>stTimers.current.push(setTimeout(()=>{setStStep(i);setStLit([...st.lit]);i===STEPS.length-1?museumSfx.reveal():museumSfx.tick();},i*1900)));
+  stTimers.current.push(setTimeout(()=>setStLit([]),STEPS.length*1900+1400));};
+ const touchLink=(id:string)=>{setStLit([id]);museumSfx.tick();};
+ const openStation=()=>{setStStep(-1);setStLit([]);setPhase('station');museumSfx.look();};
+ const closeStation=()=>{stTimers.current.forEach(clearTimeout);stTimers.current=[];setStLit([]);setPhase('intro');};
  const [boxRef,box]=useBox<HTMLDivElement>(),[scrRef,scr]=useBox<HTMLDivElement>();
  const draw=()=>setTick(t=>t+1);
  const setFrame=(f:number)=>{const n=Math.max(0,Math.min(LAST,Math.round(f)));view.current.frame=n;setFrameS(n);say(timecode(n));};
@@ -165,6 +180,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
    </>}
   </svg>}
   {monitor}
+  {phase==='station'&&<FigureStage spec={station.spec} active={stLit} reduced={reduced} onLabel={touchLink} handle={fig} top={24} label="A table-top model of a VAR review: camera masts, the video room, the review monitor on its stand and the radio link"/>}
   {banner&&<div className={v.banner} data-kind={banner.kind} role="status"><b>{banner.big}</b><span>{banner.line}</span></div>}
   <Corners fig={`Fig. ${exhibit.year}`} title={side?'The goal-line desk':''} hint={live?'Tap a camera · ± zoom':'Freeze · look · call'} readoutRef={readout} readout="00:00:00:00"/>
   {phase==='intro'&&<Sheet label="The story" wide>
@@ -172,7 +188,8 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
    <h2 className={s.big}>You are the <em>VAR</em>.</h2>
    <p className={s.lead}>{CASE_FACTS.rule} {PRACTICE_NOTE}</p>
    <ol className={v.how}>{HOW.map(([h,t],i)=><li key={h}><i>{i+1}</i><b>{h}</b><span>{t}</span></li>)}</ol>
-   <div className={s.buttons} style={{justifyContent:'flex-start'}}><button type="button" className={s.btn} data-accent data-start onClick={()=>startClip(0)}>Start the shift ▸</button></div>
+   <div className={s.buttons} style={{justifyContent:'flex-start'}}><button type="button" className={s.btn} data-accent data-start onClick={()=>startClip(0)}>Start the shift ▸</button>
+    <button type="button" className={s.ghost} data-station onClick={openStation}>See the review chain</button></div>
    <p className={s.kicker}>The real story</p>
    <ol className={s.beats}>{BEATS.map(b=><li key={b.head}><span>{b.when}</span><p style={{margin:0}}><b>{b.head.replace(/\.$/,'')}.</b> {b.text}</p></li>)}</ol>
   </Sheet>}
@@ -211,6 +228,9 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
      :<><button type="button" className={s.btn} data-call="goal" onClick={()=>call('goal')}>Goal</button>
       <button type="button" className={s.ghost} data-call="nogoal" onClick={()=>call('nogoal')}>No goal</button></>}
    </div></>
+  :phase==='station'?<><p className={s.say} style={{flexBasis:"100%"}} aria-live="polite" data-station-say>{stStep<0?STATION.intro:STATION.steps[STEPS[stStep].id]} {stStep===STEPS.length-1?STATION.room:''}</p>
+   <div className={s.buttons}><button type="button" className={s.btn} data-accent data-run-review onClick={runReview}>Run a review</button>
+    <button type="button" className={s.ghost} data-station-back onClick={closeStation}>Back to the story</button></div></>
   :<><p className={s.say} aria-live="polite">{sayLine}</p>
    <div className={s.buttons}>{phase==='verdict'&&<button type="button" className={s.btn} data-next onClick={next}>{ci+1<clips.length?'Next replay ▸':'End shift ▸'}</button>}</div></>}
  </>;
@@ -223,7 +243,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
   <p className={s.kicker}>{exhibit.year} · Russia</p>
   <h2 className={s.h2}>VAR spotted it. The referee decided it.</h2>
   <ol className={s.facts}>{[CASE_FACTS.first,CASE_FACTS.checks,CASE_FACTS.decides,CASE_FACTS.rule].map((f,i)=><li key={i}><span>{String(i+1).padStart(2,'0')}</span><p style={{margin:0}}>{f}</p></li>)}</ol>
-  <ul className={v.list}>{CHECKS.map(x=><li key={x.label}><b>{x.yes?'Yes':'No'}</b> · {x.label}: {x.why}</li>)}<li>{TOURNAMENT_NUMBERS}</li><li>“{IFAB_QUOTE}”</li></ul>
+  <ul className={v.list}>{CHECKS.map(x=><li key={x.label}><b>{x.yes?'Yes':'No'}</b> · {x.label}: {x.why}</li>)}<li>{TOURNAMENT_NUMBERS}</li><li>{STATION.room}</li><li>“{IFAB_QUOTE}”</li></ul>
   <p className={s.small}>Take it to your game: {FOR_YOUR_GAME} {PRACTICE_NOTE} (the {SHIFT_N} practice replays are made-up, played on a goal-mouth model).</p>
   <Sources list={[...SOURCES,...exhibit.sources]}/>
  </Room>;

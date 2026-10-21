@@ -67,6 +67,30 @@ const paper=read('components/museum/experiences/anatomy/PaperStage.tsx'),pcss=re
   assert.ok(M.signalPath(P,0)===''&&M.signalPath(P,1).length>20,'the review signal is traced on the screen');}
  console.log('PASS no people: goal-mouth bench, goal, line cam mast, top cam boom, cable and review screen; the ball is the only moving thing');}
 
+// 5b. The review chain (Oct 21 2026, figure kit v2): a table-top model that turns all the way round, sorted correctly from every
+//    side, see-through showing the two desks inside the video room, labels for the six links, a review that lights the chain
+//    step by step (camera angle → replay → check → decision), the true 2018 facts with FIFA's source, and ≤ 120 parts.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),ST=require(`../${dir}/station.ts`);
+ const {spec}=ST.makeStation(),c=FK.centreOf(spec.points),P0=FK.fitTurn(spec.points,900,700,30,34,{pad:24,top:80});
+ const view=(yaw,pitch,xray,lit=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch:null,active:new Set(lit),w:900,h:700};};
+ for(const yaw of [0,45,90,135,180,225,270,315])for(const x of [0,1]){const d=spec.draw(view(yaw,35,x,['radio','monitor']));const n=FK.countParts(d.svg)+d.labels.length*4;
+  assert.ok(n<=FK.MAX_PARTS,`≤ 120 parts at yaw ${yaw} (${n})`);
+  const lens=(d.svg.match(/data-lens/g)||[]).length,V=FK.viewVector(yaw,35);
+  assert.equal(lens>0,FK.isFacing([-1,0,0],V,.02),'a camera lens only while it looks at you');assert.ok((d.svg.match(/data-screen/g)||[]).length<=4);}
+ const closed=spec.draw(view(30,34,0)),open=spec.draw(view(30,34,1));
+ assert.ok(!/data-inside/.test(closed.svg)&&/data-inside/.test(open.svg),'see-through opens the video room');
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Cameras','Radio link','Review monitor','Video room']);
+ assert.deepEqual(open.labels.map(l=>l.text).sort(),['Cameras','Radio link','Replay operator','Review monitor','VAR','Video room'],'the desks are named only when drawn');
+ assert.deepEqual(ST.STEPS.map(s=>s.id),['cameras','replay','check','decision'],'camera angle → replay → check → decision');
+ assert.match(spec.draw(view(30,34,1,['radio','monitor'])).svg,/data-radio data-on/);assert.doesNotMatch(closed.svg,/data-on/);
+ for(const s of ST.STEPS)assert.ok(C.STATION.steps[s.id],'step text: '+s.id);
+ assert.match(C.STATION.steps.decision,/referee makes the final decision/);assert.match(C.STATION.room,/Moscow/);assert.match(C.STATION.room,/12 stadiums/);
+ assert.match(C.STATION.room,/one VAR, three assistant VARs and four replay operators/);assert.match(C.STATION.steps.cameras,/33 camera feeds/);
+ assert.ok(C.SOURCES.some(s=>s.url==='https://inside.fifa.com/innovation/standards/video-assistant-referee/var-at-the-2018-fifa-world-cup'),'FIFA source');
+ assert.match(src,/<FigureStage spec=\{station\.spec\}/);for(const h of ['data-station ','data-run-review','data-station-back','data-station-say'])assert.ok(src.includes(h),'hook '+h);
+ assert.match(src,/useEffect\(\(\)=>\(\)=>stTimers\.current\.forEach\(clearTimeout\),\[\]\)/,'review timers cleared on unmount');
+ console.log('PASS review chain: turns all the way round (8 yaws), lens only when facing, see-through desks, 6 labels, 4 lit steps, FIFA 2018 facts, ≤ 120 parts');}
+
 // 6. Style, fill-screen layout, scoring and the contract.
 {assert.equal(SC.clipPoints(0,true,0),150);assert.equal(SC.clipPoints(2,true,3),115);assert.equal(SC.clipPoints(null,false,9),0);assert.equal(SC.maxShift(5),750);
  assert.doesNotMatch(all,/pixeliso|PixelStage|Press Start|Pixelify|#000048|Mega ?Drive/i,'no pixel kit, fonts or dark cabinet');assert.match(all,/from '\.\.\/anatomy\/iso-kit'/);

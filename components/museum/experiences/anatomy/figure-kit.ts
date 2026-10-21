@@ -41,15 +41,17 @@ export function aimAt(n:readonly number[],pitch:readonly [number,number]=[PITCH_
  const h=Math.hypot(n[0],n[1]);return {yaw:wrapYaw(h<1e-9?FRONT_YAW:Math.atan2(n[1],n[0])*180/Math.PI),pitch:clamp(Math.atan2(n[2],h)*180/Math.PI,pitch[0],pitch[1])};}
 
 /**
- * A fixed fit for every view: the figure's bounding sphere fills the card, so it never jumps or rescales while it turns.
+ * A fixed fit for every view: the figure's widest extent over all yaws fills the card, so it never jumps or rescales while it turns.
  * `points` are the figure's true extremes (box corners, the top of a lifted part).
  */
-export function fitTurn(points:readonly V3[],w:number,h:number,yaw:number,pitch:number,{pad=24,top=0,bottom=0}:{pad?:number;top?:number;bottom?:number}={}):Projection{
- let cx=0,cy=0,cz=0;for(const p of points){cx+=p[0];cy+=p[1];cz+=p[2];}const n=points.length||1;cx/=n;cy/=n;cz/=n;
- let r=1e-6;for(const p of points)r=Math.max(r,Math.hypot(p[0]-cx,p[1]-cy,p[2]-cz));
- const availW=Math.max(40,w-pad*2),availH=Math.max(40,h-pad*2-top-bottom),k=Math.min(availW,availH)/(2*r);
+export function fitTurn(points:readonly V3[],w:number,h:number,yaw:number,pitch:number,{pad=24,top=0,bottom=0,range=[PITCH_MIN,PITCH_MAX]}:{pad?:number;top?:number;bottom?:number;range?:readonly [number,number]}={}):Projection{
+ const c=centreOf(points);let mx=1e-6,my=1e-6;
+ // The widest the figure gets on screen over every yaw (30° steps) at both ends of its pitch range, measured from its centre.
+ for(let a=0;a<360;a+=30)for(const e of [range[0],(range[0]+range[1])/2,range[1]]){const {R,U}=basis(a,e);
+  for(const p of points){const d:V3=[p[0]-c[0],p[1]-c[1],p[2]-c[2]];mx=Math.max(mx,Math.abs(dot(d,R)));my=Math.max(my,Math.abs(dot(d,U)));}}
+ const availW=Math.max(40,w-pad*2),availH=Math.max(40,h-pad*2-top-bottom),k=Math.min(availW/(2*mx),availH/(2*my))*.96;
  const P:Projection={origin:[0,0],scale:k/Math.sqrt(1.6),azimuth:yaw,elevation:pitch};
- const [sx,sy]=iso([cx,cy,cz],P);P.origin=[w/2-sx,top+pad+availH/2-sy];return P;}
+ const [sx,sy]=iso(c,P);P.origin=[w/2-sx,top+pad+availH/2-sy];return P;}
 /** The same fit turned to another view (the origin keeps the bounding sphere's centre in place). */
 export function turnProjection(P:Projection,centre:V3,yaw:number,pitch:number):Projection{
  const before=iso(centre,P),Q:Projection={origin:[0,0],scale:P.scale,azimuth:yaw,elevation:pitch},[sx,sy]=iso(centre,Q);

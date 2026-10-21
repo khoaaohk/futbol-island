@@ -47,7 +47,7 @@ export function FigureStage({spec,active,reduced,onLabel,handle,top=0,extra,labe
  const [xrOn,setXr]=useState(false),[lbOn,setLb]=useState(false),[swatch,setSwatch]=useState<string|null>(null),[used,setUsed]=useState(false);
  const narrow=w<560,font=narrow?13:14,ctlH=(narrow?92:52)+(spec.swatches?.length?(narrow?40:0):0);
  const centre=useMemo(()=>centreOf(spec.points),[spec.points]);
- const P0=useMemo(()=>w>0?fitTurn(spec.points,w,h,front.yaw,front.pitch,{pad:narrow?14:28,top:top+ctlH,bottom:28}):null,
+ const P0=useMemo(()=>w>0?fitTurn(spec.points,w,h,front.yaw,front.pitch,{pad:narrow?14:28,top:top+ctlH,bottom:28,range}):null,
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [spec.points,w,h,top,ctlH,narrow]);
  const P0ref=useRef(P0);P0ref.current=P0;const specRef=useRef(spec);specRef.current=spec;

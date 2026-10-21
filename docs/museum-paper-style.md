@@ -23,6 +23,7 @@ entire screen", "the rest of the game should be in this style".
 | `figure.ts` | Paper mannequins (capsule bodies, poses, runs, ball, depth sort) | cards, var, backpass |
 | `bench.tsx` | Frames (wide / tall model orientation), `Base`, `Tint`, `Sphere`, `LabelPlate`, `useBox(ref)`, `useLive` | telstar, laced-leather, shirts |
 | `hooks.ts` | `useSize` (an element's live px size) | hall-of-fame, timeline |
+| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain) |
 
 Hall-of-fame and timeline keep their own `Draw.tsx` (their display lists differ); everything else that was copied between
 exhibits now lives here. Two room components remain (`PaperRoom`, `PaperStage`): they share tokens and behaviour but differ in
