@@ -42,6 +42,8 @@ function writeDiveReef(s:DiveReefSave){try{localStorage.setItem(DIVE_REEF_KEY,JS
  *  sink, the restored reef's football formation (s), the delight wiggle after a find or a pickup (s). */
 export const DIVE_BUDDY_LEAD_S=2,DIVE_BALL={drag:1.1,sink:.7,r:.3,push:1.1},DIVE_FORM_S=8,DIVE_JOY_S=.7;
 export const DIVE_GOAL_CARD={title:'Goal under the sea!',label:'Coaching idea' as const,text:'Water slows the ball, like a soaked pitch. On a rainy day pass a little firmer, so the ball still reaches your teammate.'};
+/** Explore delight: the whale crosses this far (m) ahead of where the diver faces when it starts. */
+const X_AHEAD=5;
 let view=IDLE;const listeners=new Set<()=>void>();
 export const diveStore={get:()=>view,server:()=>IDLE,
  set(patch:Partial<DiveView>){let changed=false;for(const k in patch)if(!Object.is((view as Record<string,unknown>)[k],(patch as Record<string,unknown>)[k])){changed=true;break;}if(!changed)return;view={...view,...patch};listeners.forEach(f=>f());},
@@ -142,6 +144,9 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   get resting(){const st=session.state;return st.phase==='diving'&&emo.kind===''&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
   /** Explore v2: the journey's pickups this dive and which are collected (tests). */
   get pickups(){return picks;},get got(){return got;},
+  /** Explore delight (tests and headless checks): the friend's home, today's sparkle (null once found), and bring the whale now. */
+  get friendAt():Readonly<{x:number;y:number;z:number}>|null{return friend?home:null;},get sparkle():Readonly<SparkleSpot>|null{return spark;},
+  whaleNow(){if(session.diving){whale.at=clock;whale.done=false;whale.stamped=false;}},
   /** The patch test at the surface (the island step, at the probe's 10 Hz), plus the breath refill there. */
   /** The ocean's patch slots: the DIVE_SLOTS nearest zones (Town's HUD tick; a write only when the set changes). */
   slots(x:number,z:number){nearestDiveSpots(x,z,near);let k='';for(const s of near)k+=s.id+'|';if(k!==slotKey){slotKey=k;setDiveSpots(near);}},
@@ -214,7 +219,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
     const nearF=dist<=EMOTE.range&&st.phase==='diving';if(nearF!==friendNear){friendNear=nearF;diveStore.set({friend:nearF?friend.name:''});}}
    // Explore delight: the whale's shadow, once in a visit at its planned time when nothing else is going on; its stamp once ever per zone.
    if(s){const busy=emo.kind!==''||joy>0||formT>=0||!!diveStore.get().card;
-    if(whale.t<0&&whaleGo(clock,whale.at,whale.done,busy)){whale.t=0;whale.cx=st.x;whale.cz=st.z;whale.yaw=st.yaw+Math.PI/2;ports.whale?.('pass');}
+    if(whale.t<0&&whaleGo(clock,whale.at,whale.done,busy)){whale.t=0;whale.cx=st.x+Math.sin(st.yaw)*X_AHEAD;whale.cz=st.z+Math.cos(st.yaw)*X_AHEAD;whale.yaw=st.yaw+Math.PI/2;/* across the diver's view, a little ahead (the surface is seen ahead, not straight up) */ports.whale?.('pass');}
     if(whale.t>=0){whale.t+=dt;const u=whale.t/WHALE.dur;whalePose(u,whale.cx,whale.cz,whale.yaw,wp);room.setWhale(wp.x,wp.z,whale.yaw,wp.k);
      if(!whale.stamped&&u>=.45){whale.stamped=true;if(!reefSave.whale?.includes(s.id)){reefSave=markWhale(reefSave,s.id);writeDiveReef(reefSave);ports.credit(whaleRunId(s.id),WHALE.coins,`Whale friend · ${s.name}`);diveStore.set({note:`${WHALE_NOTE} +${WHALE.coins} coin`});ports.whale?.('stamp');}}
      if(u>=1){whale.t=-1;whale.done=true;room.setWhale(0,0,0,0);}}}

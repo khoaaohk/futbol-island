@@ -441,8 +441,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
      if(uWhale.w>0.){// Explore delight: the whale's soft shadow gliding over the surface (x, z, heading, strength): a long body, two
       // pectoral fins and the tail flukes, all soft-edged ellipses (no texture)
       vec2 q=vW.xz-uWhale.xy;float cs=cos(uWhale.z),sn=sin(uWhale.z),al=q.x*sn+q.y*cs,ac=q.x*cs-q.y*sn;
-      float b=length(vec2(ac/(1.9-.06*al),al/6.2)),fl=length(vec2((abs(ac)-1.3)/2.4,(al+6.9)/.75)),fn=length(vec2((abs(ac)-2.1)/1.7,(al-1.6+abs(ac)*.35)/.5));
-      c*=1.-.5*uWhale.w*(1.-smoothstep(.7,1.2,min(b,min(fl,fn))));}
+      al/=1.35;ac/=1.35;float b=length(vec2(ac/(1.9-.06*al),al/6.2)),fl=length(vec2((abs(ac)-1.3)/2.4,(al+6.9)/.75)),fn=length(vec2((abs(ac)-2.1)/1.7,(al-1.6+abs(ac)*.35)/.5));
+      c*=1.-.7*uWhale.w*(1.-smoothstep(.7,1.2,min(b,min(fl,fn))));}
      gl_FragColor=vec4(c,1.);
      #include <colorspace_fragment>
     }`});m.name='dive-surface';
@@ -471,8 +471,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
       p=uCam+q;p.y=min(p.y,${(DIVE_SURFACE_Y-.15).toFixed(2)});life=.5;sz=.028;}
      else if(aKind<3.5){float a=uDiveTime-uPuff.w;life=clamp(a/1.3,0.,1.);p=uPuff.xyz+vec3(aB.x,0.,aB.z)*(1.-exp(-2.5*a))*.9+vec3(0.,aB.y*life*.6,0.);sz=.16*(1.+life);}
      else if(aKind<4.5){// the sparkle spot: glints over a 0.9 m patch of sand, twinkling (still with calm), seen within ~12 m of the diver
-      p=uSpark.xyz+vec3(aB.x*.9,.06+aB.y*.5+sin(uDiveTime*1.3+aB.w)*.06*uTwinkle,aB.z*.9);life=.5;sz=.085;
-      float tw=uTwinkle>.5?pow(.5+.5*sin(uDiveTime*3.1+aB.w*6.3),3.):.55;vS=uSpark.w*(.3+.7*tw)*(1.-smoothstep(${(SPARKLE_SEE-2).toFixed(1)},${SPARKLE_SEE.toFixed(1)},length(p-uPlayer)));}
+      p=uSpark.xyz+vec3(aB.x*.9,.08+aB.y*.6+sin(uDiveTime*1.3+aB.w)*.08*uTwinkle,aB.z*.9);life=.5;sz=.15;
+      float tw=uTwinkle>.5?pow(.5+.5*sin(uDiveTime*3.1+aB.w*6.3),3.):.55;vS=uSpark.w*(.45+.55*tw)*(1.-smoothstep(${(SPARKLE_SEE-2).toFixed(1)},${SPARKLE_SEE.toFixed(1)},length(p-uPlayer)));}
      else{float a=uDiveTime-uRing.w;life=clamp(a/.9,0.,1.);p=uRing.xyz+aB.xyz*(.12+.6*(1.-exp(-4.*a)));sz=.09;vS=(1.-life)*step(0.,a);}// the high five's sparkle ring
      vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uScale*sz*(.7+.6*fract(aB.w))/max(.5,-mv.z);
      vA=aKind>3.5?vS:aKind>2.5?(1.-life)*step(0.,uDiveTime-uPuff.w)*.55:aKind>1.5?.32*(1.-smoothstep(uFogFar*.25,uFogFar*.45,-mv.z)):(1.-smoothstep(.75,1.,life))*smoothstep(0.,.06,life)*(1.-smoothstep(uFogFar*.5,uFogFar,-mv.z));

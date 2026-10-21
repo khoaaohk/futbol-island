@@ -18,6 +18,8 @@ export default function DiveHud(){
  // one-time lesson card (SwimLessonToast, same lane) waits for it, and the chip waits for a card already showing. Never both at once.
  const laneBusy=useToastLaneBusy('dive-edge'),chip=v.banner&&!laneBusy?v.banner:'';
  useEffect(()=>{if(!chip)return;if(!toastLane.request('dive-edge'))return;const t=setTimeout(()=>diveStore.set({banner:''}),2400);return ()=>{clearTimeout(t);toastLane.release('dive-edge');};},[chip]);
+ // A chip that waited 4 s behind other notes is stale (the arrival note already names the zone): it is dropped, never shown late.
+ useEffect(()=>{if(!v.banner||chip)return;const t=setTimeout(()=>diveStore.set({banner:''}),4000);return ()=>clearTimeout(t);},[v.banner,chip]);
  // Oct 20 2026 (user): swim up / down inside the dive zone; later that day the reef became shallow, so these rise to the top (air) or dip lower over the reef, and the diver follows the seabed. Icon-only, held (pointer down / up), the water buttons' look; Q / Z on desktop.
  const hold=(dir:'up'|'down',on:boolean)=>(e:React.PointerEvent<HTMLButtonElement>)=>{e.preventDefault();if(on)e.currentTarget.setPointerCapture?.(e.pointerId);diveLift[dir]=on;};
  const depthBtn=(dir:'up'|'down')=><button type="button" className="dive-depth-btn" data-dive-depth={dir} aria-label={dir==='up'?'Rise toward the top (hold) · Q':'Dip lower over the reef (hold) · Z'} title={dir==='up'?'Rise · Q':'Dip lower · Z'}
@@ -41,8 +43,11 @@ export default function DiveHud(){
   <div className="dive-breath" data-dive-breath hidden role="meter" aria-label="Breath" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
    <i aria-hidden="true"/><span>Breath</span>
   </div>
-  {chip?<p className="dive-edge-chip" role="status" data-dive-edge key={chip}>{chip}</p>:null}
-  {v.note?<p className="dive-note" role="status" data-dive-note>{v.note}</p>:null}
+  {/* Explore delight: the edge chip and the note share one column (the chip on top), so neither can sit on the other. */}
+  {chip||v.note?<div className="dive-msgs">
+   {chip?<p className="dive-edge-chip" role="status" data-dive-edge key={chip}>{chip}</p>:null}
+   {v.note?<p className="dive-note" role="status" data-dive-note>{v.note}</p>:null}
+  </div>:null}
   {v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
    <small>{v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>
    {v.card.credit?<span className="dive-card-credit">Source: {v.card.credit}</span>:null}
