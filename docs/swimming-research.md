@@ -611,3 +611,44 @@ show diving outside ... without having to tap explore". `lib/town/water/diveEdge
   after each crossing (the rim holds like a wall meanwhile) and the 2 s Explore re-arm after leaving. The 7 zones are far apart.
 - HUD: a soft chip "Entering: <zone>" / "Leaving the reef" (2.4 s). Analytics: `wa:dive_enter_edge` (instead of wa:dive_start) and
   `wa:dive_exit_edge` (instead of wa:dive_surface), in the admin Water tile.
+
+## 12. Explore delight: a whale, zone friends, a daily sparkle, a gentler glide near finds (21 Oct 2026, local)
+
+User: "Explore: a whale-shadow surprise, wave and high-five emotes for each zone's friend, a daily sparkle spot, and slowing the glide
+near finds." Pure rules in `lib/town/water/diveDelight.ts` (whale, friends, emotes) and `diveSparkle.ts` (the sparkle spot); the
+slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
+- **Whale shadow.** Once in a while (45-120 s after entering, at most once a visit; once that zone's whale has been met only 40 % of
+  visits get one; never while a pickup, an emote or a card is going on) a big soft whale silhouette (body, pectoral fins, flukes: soft
+  ellipses in the surface shader, no texture) glides 64 m across the surface overhead in 16 s, right over the diver. The god rays dim
+  (to 45 %), the schools lift and tilt up toward it, and a quiet, slow two-note whale song plays (synthesized, islandSound `whaleSong`).
+  The first time in each zone: "Whale friend! Whales call to each other across the sea, like teammates calling for the ball." and
+  **1 coin** (`dive:<zone>:whale`, Training-metered, once ever). Off with heat tier 3+ / Battery saver / reduced motion.
+- **Zone friends: wave and high five.** Every zone has a named friend near the first leg of its journey: Captain Crab (Captain's Cup),
+  Otto the octopus (Paul's Grotto), Sunny the seahorse (Kelp Forest Wreck), Rae the ray (Ray Meadow), Luna the moon jelly (Moon Arch),
+  Puff the pufferfish (Ball Crate Reef), Shelly the turtle (Turtle Pool); Dot the buddy fish still swims with you everywhere. Within
+  4 m two small round icon buttons show above Dart (Wave, High five; G / H on desktop). The diver's right arm waves (up and out, the hand
+  swinging) or reaches straight ahead; the friend turns to face you and answers in its own way (the crab and turtle wave a claw /
+  flipper, the octopus raises a tentacle, the ray flaps, the seahorse nods, the jelly pulses, the puffer puffs up softly); on a high five
+  it swims in to meet your hand and a little gold sparkle ring pops with a pop sound. 2 s cooldown. Each emote adds a friendship heart
+  (♥ on the Reef chip, up to 3); the third gives "Best friends ...: Reef Pal sticker! Players high-five to show respect: that is fair
+  play." and **1 coin** once ever (`dive:<zone>:friend`).
+- **Daily sparkle spot.** Each local calendar day every zone hides one soft glittering patch on the sand (a seeded pick from the date
+  and the zone id: stable all day, somewhere else tomorrow; clear of the buoy, the start, the finds, the pickups, the wreck, the pitch,
+  the arch and the rocks). It twinkles within ~12 m (holds still with calm / reduced motion). Swim into it: a bubble burst and a sparkle
+  ring, a tiny treasure (a pearl or a pink shell) and a "Today's sparkle" card with one of 7 short, true ocean facts (three hearts of an
+  octopus, coral polyps, seahorse dads, parrotfish sand, starfish arms, clownfish and anemones, the blue whale); **1 coin** once per day
+  per zone (`dive:<zone>:sparkle:<date>`, Training-metered).
+- **Slower glide near finds.** Within 4 m of anything still to collect (a journey pickup, an unfound find, today's sparkle) the water
+  gets a little thicker on an eased curve (smoothstep 4 m -> 1.4 m): drag up to ×1.6, the top speed down up to 25 %, a dart there is a
+  shorter "precision" dash (kick and burst × 0.55). The find prompt shows from 3.2 m (was 2.6) and a pickup collects within 1.6 m (was
+  1.35), so a slow drift still gets it. Elsewhere the swim is exactly as before.
+- **One thing at a time.** The "Entering: <zone>" / "Leaving the reef" chip now takes the HUD stack's toast lane while it shows, so the
+  one-time "Pace your breath" lesson card waits for it (and the chip waits for a card already showing): they never cover each other.
+- **Saves / analytics.** `fi2-dive-reef-v1` gains optional `hearts` (per zone, 1-3), `whale` (zones met) and `spark` ({d: date, m:
+  zone bitmask}); a full save of all seven zones is under 1.5 KB; older saves read unchanged. `wa:dive_whale` (each pass),
+  `wa:dive_emote` (once per dive), `wa:dive_sparkle` on the `k` channel (countIds.ts, admin Water tile): no migration. Economy: at most
+  2 coins once ever per zone (whale, friend) plus 1 a day per zone for the sparkle, all through the Training meter.
+- **Cost.** No new draw: the friend is one more instance of the pickups' instanced draw, the whale is a few lines in the surface
+  shader, the sparkle glitter and the ring are 14-20 + 12 more points in the bubbles' draw (docs/performance-guide.md "Explore delight").
+- **Not done.** iPhone heat not measured; no photo mode.
+
