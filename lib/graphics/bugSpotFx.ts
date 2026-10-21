@@ -7,7 +7,10 @@
  */
 import * as T from 'three';
 
-export const SPOT_FX={haloRange:30,period:1.4} as const;
+export const SPOT_FX={haloRange:30,period:1.4,haloMin:1.6} as const;
+/** The halo's diameter (m) round a bug of on-screen size `size`. Oct 21 2026: the island bugs are now believable sizes (≈ .26-.7 m),
+ *  so the halo, not the body, carries the readability: never under SPOT_FX.haloMin (≈ 62 px tall at 30 m on a phone). */
+export const haloSize=(size:number)=>Math.max(SPOT_FX.haloMin,size*3+.9);
 
 function haloMaterial(){
  return new T.ShaderMaterial({transparent:true,depthWrite:false,depthTest:false,uniforms:{uTime:{value:0}},

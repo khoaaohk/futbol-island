@@ -23,8 +23,15 @@ export const WILD_FLEE={COUNT_EVERY_S:8} as const;
 export const FIREFLY_MAP_CAP:readonly number[]=[8,6,4];
 /** On-screen size (m, the longer of length and wingspan) from look.size: bigger than life and evened out, so even the little
  *  spider and ladybird read from the follow camera ~40 m away (ladybird ~1 m, dragonfly ~1.6 m; the old wild bug was 1.5 m). */
-/** Oct 20 2026 (user: "can't see bugs"): 1.6x bigger than the first pass (was × 1.7), so a bug reads as a bug from the follow camera. */
-export const bugVisualSize=(size:number)=>(size+.25)*2.7;
+/** Oct 21 2026 (user: "bugs on the island are still drawn at large size"): believable sizes by real-relative class. look.size is
+ *  already the species' relative size (spider .2, ant .24, ladybird .32 … dragonfly .7); the island draws it with a gentle
+ *  readability boost of × 1.3 for the tiniest down to × 1.0 for the biggest (spider ≈ .26 m, ladybird ≈ .39 m, monarch ≈ .43 m,
+ *  dragonfly .7 m), instead of the old (size + .25) × 2.7 (a 1.5 m ladybird). Finding them is the halo's and the hint arrow's job
+ *  (bugSpotFx haloSize), not the body's. The caught-bug stage keeps the old scale (bugStageSize). */
+export const bugReadBoost=(size:number)=>1.3-.3*Math.min(1,Math.max(0,(size-.2)/.5));
+export const bugVisualSize=(size:number)=>size*bugReadBoost(size);
+/** The catch stage's source size (the earlier island scale; stageFlightScale caps it to STAGE_BUG_MAX on the stage). */
+export const bugStageSize=(size:number)=>(size+.25)*2.7;
 export const FIREFLY_SIZE=.5;
 
 /** How many to draw: bugs 12 / 10 / 8 at heat tiers 0 / 1 / 2 (pickBugsOnMap), fireflies 8 / 6 / 4 at Night, none at tiers 3–4

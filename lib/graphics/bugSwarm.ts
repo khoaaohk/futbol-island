@@ -24,7 +24,7 @@ import {bugMapCount,inBugNorthZone,onSummitSand} from '../town/jobs/bugSpecies';
 import {onSummitIsle} from '../town/summitIsle';
 import {hideBug as hideFor} from './bugFlight';
 import {BUG_LOCAL,bugBandAt,type BugBand} from '../town/jobs/bugSpecies';
-import {createBugSpotFx,SPOT_FX,type BugSpotFx} from './bugSpotFx';
+import {createBugSpotFx,SPOT_FX,haloSize,type BugSpotFx} from './bugSpotFx';
 
 export type SwarmSet='bugs'|'fireflies';
 export type SwarmFrame={dt:number;x:number;z:number;night:boolean;sunset?:boolean;tier:number;reduced:boolean;busy:boolean;
@@ -154,7 +154,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    fi++;}
   live.count=fi;live.visible=fi>0;live.instanceMatrix.needsUpdate=true;if(live.instanceColor)live.instanceColor.needsUpdate=true;farFlap!.needsUpdate=true;farPose!.needsUpdate=true;
   if(glow){glow.count=fi;glow.visible=fi>0;glow.instanceMatrix.needsUpdate=true;}
-  if(spot){if(haloSl){const b=haloSl.bug;spot.haloAt(b.x,b.y+haloSl.size*.25,b.z,haloSl.size*2.4+.6,Math.min(1,b.fade));}spot.end();}
+  if(spot){if(haloSl){const b=haloSl.bug;spot.haloAt(b.x,b.y+haloSl.size*.25,b.z,haloSize(haloSl.size),Math.min(1,b.fade));}spot.end();}
  }
  function flutter(sl:Slot){
   if(sl.bug.clock-sl.counted>WILD_FLEE.COUNT_EVERY_S){sl.counted=sl.bug.clock;countWildFlutter();}

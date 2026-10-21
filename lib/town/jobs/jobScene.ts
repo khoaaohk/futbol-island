@@ -15,7 +15,7 @@ import {BUG_LOCAL} from './bugSpecies';
 import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught,predictCatch,CATCH_STAGE,CATCH_STAGE_AT,catchStagePhase,stageSwingTime,stageShot,stageFit,pushInShot,catchScale,stageFlightScale} from './bugCatch';
 import {createCatchStage,type CatchStage} from '../../graphics/catchStage';
 import {BUG_SPECIES} from './bugSpecies';
-import {bugVisualSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
+import {bugStageSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
 import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
@@ -893,7 +893,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function enterStage(){const C=cs,ports=stagePorts;if(!C||!ports||!net){exitStage(true);return;}const p=C.p,look=stageLook();
   const sp=C.hit.kind==='bug'?BUG_SPECIES.find(s=>s.id===C.hit.species?.id)??null:null;
   const st=createCatchStage({at:p,look,species:sp,host:ports.host()});C.stage=st;
-  const world=sp?bugVisualSize(sp.look.size):FIREFLY_SIZE;C.sF=stageFlightScale(st.longest,world);C.sC=catchScale(st.longest,C.sF,NET_HOOP_RADIUS);
+  const world=sp?bugStageSize(sp.look.size):FIREFLY_SIZE;C.sF=stageFlightScale(st.longest,world);C.sC=catchScale(st.longest,C.sF,NET_HOOP_RADIUS);
   const fx0=Math.sin(C.yaw),fz0=Math.cos(C.yaw),rx=-fz0,rz=fx0;
   // The bug hovers where the hoop's sweep passes at the hit frame (ahead, a little right, about hand height).
   C.bugAt.x=p.x+fx0*1.45+rx*.2;C.bugAt.y=p.y+1.05;C.bugAt.z=p.z+fz0*1.45+rz*.2;

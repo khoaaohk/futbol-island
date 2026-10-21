@@ -101,8 +101,13 @@ for(const [tier,cap] of [[1,10],[2,8],[3,8],[4,8]]){const s=spots[2],sc=new T.Sc
  for(const id of sw.ids)assert(sw.root.getObjectByName('bug-'+id),'built model for '+id);
  // the far silhouette at 40 m on a phone (fov 40, 844 px tall): the smallest species, at the far boost, ≥ 14 px
  const W=load('lib/graphics/wildBugsCore.ts'),minSize=Math.min(...SP.BUG_SPECIES.map(b=>W.bugVisualSize(b.look.size))),boost=1.45;
- const px=minSize*boost/(2*40*Math.tan(20*Math.PI/180))*844;assert(px>=14,`silhouette at 40 m: ${px.toFixed(1)} px`);
- report.push(`bodies: ${checked} in-view full models all drawn (sphere follows the bug), ≤ ${maxD} draws; smallest silhouette at 40 m ≈ ${px.toFixed(0)} px (phone)`);sw.dispose();}
+ // Oct 21 2026: believable sizes (gentle × 1.0-1.3 boost by size class); the halo carries the readability, not the body
+ const maxSize=Math.max(...SP.BUG_SPECIES.map(b=>W.bugVisualSize(b.look.size)));assert(minSize>=.2&&maxSize<=.8,`island sizes believable: ${minSize.toFixed(2)}-${maxSize.toFixed(2)} m`);
+ for(const b of SP.BUG_SPECIES){const k=W.bugVisualSize(b.look.size)/b.look.size;assert(k>=1-1e-9&&k<=1.3+1e-9,'readability boost 1.0-1.3 for '+b.id);}
+ const tiny=SP.BUG_SPECIES.find(b=>b.look.body==='ant'),fly=SP.BUG_SPECIES.find(b=>b.look.body==='dragonfly');assert(W.bugVisualSize(tiny.look.size)<W.bugVisualSize(fly.look.size)*.6,'an ant is much smaller than a dragonfly');
+ const ppm=(d)=>844/(2*d*Math.tan(20*Math.PI/180)),px=minSize*boost*ppm(40);assert(px>=8,`silhouette at 40 m: ${px.toFixed(1)} px`);
+ const hpx=FX.haloSize(minSize)*ppm(FX.SPOT_FX.haloRange);assert(hpx>=50,`halo on the nearest bug at its 30 m range: ${hpx.toFixed(0)} px`);
+ report.push(`bodies: ${checked} in-view full models all drawn (sphere follows the bug), ≤ ${maxD} draws; sizes ${minSize.toFixed(2)}-${maxSize.toFixed(2)} m; smallest at 40 m ≈ ${px.toFixed(0)} px, halo at 30 m ≈ ${hpx.toFixed(0)} px (phone)`);sw.dispose();}
 // ---- 6. Catch simulation: walk up at 1.6 m/s, press Swing at d m (auto-aim, hold, samples, lunge) ----
 {const K=load('lib/town/jobs/bugCatch.ts'),dt=1/30,rates={};const fast=new Set(['monarch','swallowtail','blue-morph','dragonfly','moth','bumblebee','honeybee']);
  const seen=new Set();const swarms=[];for(const time of ['day','sunset'])for(let seed=1;seen.size<20&&seed<400;seed++){const ids=SP.pickBugsOnMap(seed,0,time).map(b=>b.id);if(ids.some(id=>!seen.has(id))){ids.forEach(id=>seen.add(id));swarms.push({seed,time});}}

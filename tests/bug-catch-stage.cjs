@@ -31,7 +31,7 @@ const read=f=>fs.readFileSync(path.join(base,f),'utf8');const report=[];
 // ---- 2. Bug size: fits the net ----
 {const R=NET.NET_HOOP_RADIUS;let worst=0;
  for(const sp of [...SP.BUG_SPECIES,null]){const g=M.createBugModel(sp);g.computeBoundingBox();const s=g.boundingBox.getSize(new T.Vector3()),longest=Math.max(s.x,s.y,s.z);
-  const world=sp?W.bugVisualSize(sp.look.size):W.FIREFLY_SIZE,fly=K.stageFlightScale(longest,world),inNet=K.catchScale(longest,fly,R);
+  const world=sp?W.bugStageSize(sp.look.size):W.FIREFLY_SIZE,fly=K.stageFlightScale(longest,world),inNet=K.catchScale(longest,fly,R);
   assert(longest*inNet<=K.CATCH_FIT*2*R+1e-6,`${sp?.id??'firefly'} fits the net (${(longest*inNet).toFixed(2)} m)`);assert(inNet<=fly+1e-9&&fly<=world+1e-9,'never grows');
   assert(longest*fly<=K.STAGE_BUG_MAX+1e-6,`${sp?.id??'firefly'}: a believable size on the stage`);worst=Math.max(worst,longest*inNet/(2*R));g.dispose();}
  assert(K.catchScale(0,2,R)===2&&K.catchScale(1,.1,R)===.1,'degenerate sizes are safe');
