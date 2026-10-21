@@ -8,6 +8,7 @@ export const EXTRA={
  made:'Only 20 Telstars were made for the 1970 World Cup. The 32-panel pattern was not new (a Danish company, Select, made one in 1962), but the World Cup on TV made it famous.',
  live:'In 1970, World Cup games were shown live around the world by satellite. A few places saw them in colour, but many families still watched in black and white.',
  panels:'The 32 panels are 12 black pentagons (5 sides) and 20 white hexagons (6 sides).',
+ inside:'A leather ball like the Telstar is a shell of panels stitched together around a rubber bladder that holds the air. You pump it up through a small valve.',
 } as const;
 export const EXTRA_SOURCES=[
  {title:'Wikipedia · Telstar 1',url:'https://en.wikipedia.org/wiki/Telstar_1'},
@@ -15,6 +16,8 @@ export const EXTRA_SOURCES=[
  {title:'Britannica · Telstar communications satellite',url:'https://www.britannica.com/technology/Telstar-communications-satellite'},
  {title:'Smithsonian National Museum of American History · Soccer ball',url:'https://americanhistory.si.edu/collections/object/nmah_682185'},
  {title:'Wikipedia · List of FIFA World Cup official match balls',url:'https://en.wikipedia.org/wiki/List_of_FIFA_World_Cup_official_match_balls'},
+ {title:'Wikipedia · Ball (association football)',url:'https://en.wikipedia.org/wiki/Ball_(association_football)'},
+ {title:'German Patent and Trade Mark Office · Football and technology: the valve',url:'https://galerie.dpma.de/fussballundtechnik/en/technik/fussball/ventil.html'},
 ] as const;
 export const BEATS=[
  {when:'Mexico · 1970',head:'Live by satellite',text:EXTRA.live},

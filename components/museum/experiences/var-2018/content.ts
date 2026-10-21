@@ -52,7 +52,19 @@ export const QUIZ:readonly {q:string;options:readonly string[];answer:number;why
 ];
 export const TOURNAMENT_NUMBERS='In the first 62 matches of Russia 2018, VAR quietly made more than 440 checks, but asked for a second look only 19 times.';
 
+/** The review chain (figure kit v2, Oct 21 2026): FIFA, "VAR at the 2018 FIFA World Cup"; IFAB VAR protocol. */
+export const STATION={
+ intro:'How does one VAR review travel? Run a review and watch each link light up.',
+ steps:{
+  cameras:'Camera angle: the TV cameras around the pitch film the moment from many sides. At Russia 2018 the video team had 33 camera feeds.',
+  replay:'Replay: the pictures travel by fibre-optic cable to the video room. Replay operators find the best angles.',
+  check:'Check: the VAR watches the replays. A clear mistake? The VAR tells the referee by radio.',
+  decision:'Decision: the referee can watch the replay at the review monitor by the pitch. The referee makes the final decision.',
+ },
+ room:'In 2018 there was one video room for every match, in Moscow, linked to all 12 stadiums by fibre-optic cable. Each team had one VAR, three assistant VARs and four replay operators. (Our model puts the room beside the pitch.)',
+} as const;
 export const SOURCES:readonly {title:string;url:string}[]=[
+ {title:'FIFA · VAR at the 2018 FIFA World Cup',url:'https://inside.fifa.com/innovation/standards/video-assistant-referee/var-at-the-2018-fifa-world-cup'},
  {title:'IFAB Laws of the Game · Video Assistant Referee (VAR) protocol',url:'https://www.theifab.com/laws/latest/video-assistant-referee-var-protocol/'},
  {title:'IFAB Laws of the Game · Law 10 Determining the Outcome of a Match',url:'https://www.theifab.com/laws/latest/determining-the-outcome-of-a-match/'},
  {title:'IFAB Laws of the Game · Law 11 Offside',url:'https://www.theifab.com/laws/latest/offside/'},
