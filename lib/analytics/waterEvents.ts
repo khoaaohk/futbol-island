@@ -68,6 +68,12 @@ export const countDiveDart=()=>count('wa:dive_dart');
 export const countDivePick=()=>count('wa:dive_pick');
 export const countDiveRestore=()=>count('wa:dive_restore');
 export const countDiveGoal=()=>count('wa:dive_goal');
+/** Explore delight (Oct 21 2026, lib/town/water/diveDelight.ts / diveSparkle.ts): a whale's shadow passing over a reef room (at most once a
+ *  visit), a dive with a wave / high five to the zone's friend (once per dive), today's sparkle spot found (once per day per zone). Totals
+ *  only, `k` channel: no migration. */
+export const countDiveWhale=()=>count('wa:dive_whale');
+export const countDiveEmote=()=>count('wa:dive_emote');
+export const countDiveSparkle=()=>count('wa:dive_sparkle');
 /** Seamless Explore (Oct 21 2026, lib/town/water/diveEdge.ts): a reef room entered by swimming in under the water across the zone's
  *  edge (no tap; counted instead of wa:dive_start), and left by swimming out across it (instead of wa:dive_surface). Totals only. */
 export const countDiveEnterEdge=()=>count('wa:dive_enter_edge');

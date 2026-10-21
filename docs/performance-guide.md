@@ -1,5 +1,23 @@
 # Performance reference for future Futbol Island updates
 
+## Explore delight (Oct 21 2026, local, not deployed)
+
+The whale shadow, the zone friends' wave / high five, the daily sparkle spot and the find slow-down (docs/swimming-research.md §12) add
+**no draw call** to the reef room: phone rooms stay 12-16 draws (tests/explore-v2.cjs cap 16, unchanged).
+- **Friend:** one more instance of the pickups' InstancedMesh (its own part 2 with an `aLimb` attribute, gestures from one `uFriend`
+  vec4). Its body is 116-256 triangles per zone (room stats: captains-cup +256, pauls-grotto +184, kelp-trawler +196, ray-meadow +116,
+  moon-arch +154, ball-crate +196, turtle-pool +188); because the 9 instances share the geometry, the GPU also runs ~1-2.3k collapsed
+  (zero-area) vertices' worth of the friend on the 8 pickup instances: vertex work only, no fill. CPU: one instance matrix upload
+  (9 × 64 bytes) per frame and a few distance checks; nothing allocates (tests/explore-delight.cjs).
+- **Whale:** a soft silhouette in the surface's fragment shader behind a uniform branch (`uWhale.w > 0` only during the 16 s pass, at
+  most once a visit), the rays' alpha × `uRayK`, the schools' tilt from one float. Off (never scheduled) at heat tier 3+ / Battery saver /
+  reduced motion (`calm`).
+- **Sparkle and ring:** 14 (phone) / 20 (desktop) glitter points + 12 ring points in the existing bubbles Points draw; the glitter is
+  still with `calm` or reduced motion; gone once found.
+- **Slow-down:** pure arithmetic in `diveSession.step` (findSlow), the runtime's nearest-thing distance over 8 pickups + 4 finds + 1
+  sparkle per frame.
+- Not measured on an iPhone.
+
 ## Seamless Explore edge (Oct 21 2026, local, not deployed)
 
 Swimming in / out of a reef zone across its edge (lib/town/water/diveEdge.ts, docs/swimming-research.md §11). Added cost: while
