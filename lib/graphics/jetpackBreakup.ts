@@ -6,10 +6,14 @@ export function createJetpackBreakup(){
  const pieces:{mesh:T.Object3D;velocity:T.Vector3;spin:T.Vector3;materials:T.Material[];resting:boolean}[]=[];
  let age=Infinity;
  const clear=()=>{for(const p of pieces){p.mesh.removeFromParent();p.materials.forEach(m=>m.dispose());}pieces.length=0;};
- return {root,trigger(vehicle:T.Group,reduced:boolean){
+ return {root,trigger(vehicle:T.Group,reduced:boolean,pack?:T.Object3D|null){
   clear();age=0;root.visible=true;vehicle.updateWorldMatrix(true,true);
-  const source=vehicle.children.find(group=>group.visible&&['jetpack','helicopter-pack','flying-car','ironman','rocketboard','mini-plane'].includes(group.name));if(!source)return;
-  source.children.filter(part=>part.visible).forEach((part,i)=>{
+  const source=vehicle.children.find(group=>group.visible&&['jetpack','helicopter-pack','flying-car','ironman','rocketboard','mini-plane'].includes(group.name));
+  // Oct 21 2026: the town's classic jet is the worn backpack's morph (backpack.ts; the old jet group stays hidden), so its crash
+  // debris is a copy of the pack as it was (geometry shared, materials cloned and faded like the other pieces).
+  const parts=source?source.children.filter(part=>part.visible):[];if(pack&&pack.visible&&pack.parent){pack.updateWorldMatrix(true,true);parts.push(pack);}
+  if(!parts.length)return;
+  parts.forEach((part,i)=>{
    const mesh=part.clone(true),materials:T.Material[]=[];
    part.matrixWorld.decompose(mesh.position,mesh.quaternion,mesh.scale);
    mesh.traverse(object=>{if(object instanceof T.Mesh){const copy=(material:T.Material)=>{const next=material.clone();next.transparent=true;materials.push(next);return next;};object.material=Array.isArray(object.material)?object.material.map(copy):copy(object.material);}});

@@ -1,4 +1,5 @@
 'use client';
+import {wearBackpack} from '@/lib/graphics/backpack';
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
 import {createPlayer} from '@/lib/graphics/player';
@@ -43,7 +44,7 @@ export default function CharacterPreview({open,value,move=0}:{open:boolean;value
   const camera=new T.PerspectiveCamera(32,1,.1,20);camera.position.set(2.2,1.85,4.7);camera.lookAt(0,.9,0);
   const hemi=new T.HemisphereLight(),sun=new T.DirectionalLight();sun.position.set(-3,6,4);sun.castShadow=true;sun.shadow.mapSize.set(512,512);Object.assign(sun.shadow.camera,{left:-2.2,right:2.2,top:2.2,bottom:-2.2,near:.1,far:15});sun.shadow.bias=-.001;scene.add(hemi,sun);
   createIslandLighting(scene,hemi,sun,renderer).update('sunset',0,true);
-  const turntable=new T.Group(),rig=createPlayer('you','home');rig.setShirtNumber(MAIN_PLAYER_NUMBER);rig.setExpression('neutral');turntable.add(rig.root);scene.add(turntable);
+  const turntable=new T.Group(),rig=createPlayer('you','home');let pack:ReturnType<typeof wearBackpack>=null;rig.setShirtNumber(MAIN_PLAYER_NUMBER);rig.setExpression('neutral');turntable.add(rig.root);scene.add(turntable);
   // No coloured ground (user, Sep 26 2026): the bean stands on the plain background. An invisible shadow catcher keeps
   // the sun's soft shadows (feet and ball), and a small radial blob under the player gives a contact shadow.
   const groundGeometry=new T.CircleGeometry(2.1,48),groundMaterial=new T.ShadowMaterial({color:'#1d3b33',opacity:.22});
@@ -116,7 +117,7 @@ export default function CharacterPreview({open,value,move=0}:{open:boolean;value
   const poseStill=()=>{syncProbe();const f=driver.still(PREVIEW_MOVES[moveRef.current]?.id??'showcase',probe);for(let i=0;i<12;i++){elapsed+=1/60;apply(f,1/60,true);}still=true;};
   const draw=(dt=0)=>{
    if(!awake())return;
-   if(needsAppearance){const value=appearance.current,male=value.character!=='female';scene.background=new T.Color(male?'#a9cfe5':'#e8b6aa');rig.setAppearance(value);rig.setBeanLook(beanLookFor(value),playerOutfit(value));needsAppearance=false;syncProbe();}
+   if(needsAppearance){const value=appearance.current,male=value.character!=='female';scene.background=new T.Color(male?'#a9cfe5':'#e8b6aa');rig.setAppearance(value);rig.setBeanLook(beanLookFor(value),playerOutfit(value));/* Oct 21 2026: the always-worn pack follows the kit (docs/backpack.md) */if(pack)pack.refresh(playerOutfit(value));else pack=wearBackpack(rig.root,playerOutfit(value));needsAppearance=false;syncProbe();}
    if(reduced.matches){if(!still)poseStill();}
    else{still=false;elapsed+=dt;syncProbe();apply(driver.step(dt,probe),dt,false);if(driver.id==='showcase'&&driver.stepIndex!==framedStep)needsFit=true;}
    if(needsFit){fit();needsFit=false;}
@@ -165,7 +166,7 @@ export default function CharacterPreview({open,value,move=0}:{open:boolean;value
   resize();resume();
   // Dev/test hook (strips): seek the current move to t seconds and draw one frame.
   (window as unknown as {__fiPreview?:unknown}).__fiPreview={seek:(t:number)=>{stop();driver.set(PREVIEW_MOVES[moveRef.current].id);for(let s=0;s<t;s+=1/30){elapsed+=1/30;syncProbe();apply(driver.step(1/30,probe),1/30,false);}needsFit=true;cameraSnap=true;fit();renderer.render(scene,camera);},get sleeping(){return frame===0&&timer===0;},get step(){return driver.finished?'idle':'playing';}};
-  return()=>{disposed=true;refresh.current=null;selectMove.current=null;stop();cancelAnimationFrame(turnFrame);observer.disconnect();intersection.disconnect();document.removeEventListener('visibilitychange',resume);reduced.removeEventListener('change',motionChange);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',release);canvas.removeEventListener('pointercancel',release);canvas.removeEventListener('lostpointercapture',release);delete (window as unknown as {__fiPreview?:unknown}).__fiPreview;rig.dispose();groundGeometry.dispose();groundMaterial.dispose();blobGeometry.dispose();blobMaterial.dispose();blobMap.dispose();ballGeometry.dispose();ballMaterial.dispose();ballMap.dispose();sun.shadow.map?.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();};
+  return()=>{disposed=true;refresh.current=null;selectMove.current=null;stop();cancelAnimationFrame(turnFrame);observer.disconnect();intersection.disconnect();document.removeEventListener('visibilitychange',resume);reduced.removeEventListener('change',motionChange);canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',release);canvas.removeEventListener('pointercancel',release);canvas.removeEventListener('lostpointercapture',release);delete (window as unknown as {__fiPreview?:unknown}).__fiPreview;pack?.dispose();rig.dispose();groundGeometry.dispose();groundMaterial.dispose();blobGeometry.dispose();blobMaterial.dispose();blobMap.dispose();ballGeometry.dispose();ballMaterial.dispose();ballMap.dispose();sun.shadow.map?.dispose();renderer.dispose();renderer.forceContextLoss();canvas.remove();};
  },[open]);
  const option=(key:keyof CharacterCustomization)=>CUSTOMIZATION_OPTIONS[key].find(item=>item.id===value[key])?.label.toLowerCase();
  const name=value.character==='female'?'female':'male',kit=option('clothing');

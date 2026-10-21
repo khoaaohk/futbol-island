@@ -922,7 +922,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(Number.isFinite(spinCrashAge)){spinCrashAge+=dt;if(rooftop.state.recovery<=0)spinCrashAge=Infinity;}
       if(spinRequested.current){spinRequested.current=false;if(coarse&&!liveKnockout.joined&&!fieldMenu.current&&!lessonRef.current&&!rooftop.state.falling&&rooftop.state.recovery<=0&&!water.inWater){
         const mode=rideRef.current;resetInputs();velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});rideTricks.reset();tapHaptic();
-        if(mode==='jetpack'&&jetActions.state.phase!=='fall'){jetpackBreakup.trigger(vehicle.root,reduced);sonicBurst.trigger(location.x,flight.height,location.z,0,true,'#ffb65b');rideChange.trigger(1.4);sound.impact();pendingRide.current='walk';flight.landing=null;flight.landTime=-1;jetActions.crash();}
+        if(mode==='jetpack'&&jetActions.state.phase!=='fall'){jetpackBreakup.trigger(vehicle.root,reduced,customizationRef.current.jetpack==='classic'?backpack.root:null);sonicBurst.trigger(location.x,flight.height,location.z,0,true,'#ffb65b');rideChange.trigger(1.4);sound.impact();pendingRide.current='walk';flight.landing=null;flight.landTime=-1;jetActions.crash();}
         else if(mode!=='jetpack'){spinCrashAge=0;rooftop.state.recovery=ROOF_RECOVERY_TIME;sound.fall();}
       }}
 
