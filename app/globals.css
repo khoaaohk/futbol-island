@@ -670,7 +670,10 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
 .town-app .hud-stack.hud-stack.hud-stack>[data-job-offer]:active{translate:0 var(--btn-press)}
 /* The pieces' own entrance animations slid in from translateX(-50%); in the column they drop in from just above instead. */
 @keyframes hudStackIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes hudStackOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-8px)}}
 @media(prefers-reduced-motion:no-preference){.town-app .hud-stack.hud-stack.hud-stack>:is([data-hud-slot=toast],[data-job-intro],[data-job-done],[data-spot-it],[data-welcome-back]){animation-name:hudStackIn;animation-duration:.3s;animation-timing-function:ease}}
+/* the exit: HudStack.tsx plays this on an inert clone of a closed card (Oct 21 2026) */
+@media(prefers-reduced-motion:no-preference){.town-app .hud-stack.hud-stack.hud-stack>[data-hud-exit]{animation:hudStackOut .26s ease forwards;pointer-events:none}}
 /* Notes beside a docked job (Oct 15 2026, QA): on a landscape phone the running job's panel docks top-left, out of the column's
    flow (IslandJobs.module.css, bug A1), so a centred note (the starter coins, a garden pick, fuel, costume / ride unlocks) landed on
    its Stop job. While a job runs (Town sets data-job-running) the toast slot docks top-right instead: the mirror of the job dock,
