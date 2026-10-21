@@ -18,7 +18,7 @@ import {createCatchStage,type CatchStage} from '../../graphics/catchStage';
 import {BUG_SPECIES} from './bugSpecies';
 import {bugStageSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
 import {bugMapCount} from './bugSpecies';
-import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
+import {FIREFLY_MAP_CAP,FIREFLY_LOCAL_WANT} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
 import {countBugCatch,countBugShift,countBugBookComplete,countBugSwing,countBugMiss,countBugHint} from '@/lib/analytics/summitEvents';
 import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
@@ -828,8 +828,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // Local density (bug-polish; user: "can't see bugs to catch when walking around"): every BUG_LOCAL.every s the swarm keeps at least
   // BUG_LOCAL.want bugs within BUG_LOCAL.radius m (uncaught species first, spawned out of view, fading in). A swarm without it
   // (tests' fakes) falls back to the older recall: nobody near for a while, call the farthest one over.
-  recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{caught:(id:string)=>boolean})=>number})|null;
-   if(sw&&r&&!cs&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
+  recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{want?:number;caught:(id:string)=>boolean})=>number})|null;
+   if(sw&&r&&!cs&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{want:r.def.prop==='firefly'?FIREFLY_LOCAL_WANT:undefined,caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
     else if(sw.recall){const n=sw.query(p.x,p.y,p.z,RECALL.near).length;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw.recall(p.x,p.z,RECALL.within,RECALL.far);}}}
   if(hintT<=0)return;hintT-=dt;hintAcc+=dt;
   if(hintAcc>=.25){hintAcc=0;const sw=bugSwarm();if(sw&&sw.position(hintId,tq)){hintGoal.x=tq.x;hintGoal.z=tq.z;}

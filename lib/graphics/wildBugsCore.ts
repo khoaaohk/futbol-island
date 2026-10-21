@@ -5,7 +5,7 @@
  * pickBugsOnMap set), and the eight firefly calls at their FIREFLY_HOMES at Night (the player's own Day / Sunset / Night setting).
  *
  * Heat first (AGENTS.md "Mobile heat is a primary requirement"): built only while the player is on or near Summit Isle, a hard cap
- * by heat tier (bugs 12 / 10 / 8, pickBugsOnMap's caps; fireflies 8 / 6 / 4; none at tiers 3–4, Battery saver or reduced motion),
+ * by heat tier (bugs 12 / 10 / 8, pickBugsOnMap's caps, none at tiers 3–4; fireflies FIREFLY_AMBIENT 48 / 30 / 20 / 8 desktop, 28 / 16 / 16 / 8 phone; none on Battery saver or with reduced motion),
  * every frame only for bugs within NEAR_M of the player and 15 Hz for the rest, nothing simulated or drawn beyond SIM_M, no
  * textures, no per-frame allocation. Draws: one far-silhouette draw plus one per species within FULL_IN_M (full model), or two
  * at Night (firefly bodies + glows).
@@ -36,6 +36,15 @@ export const FIREFLY_SIZE=.5;
 
 /** How many to draw: bugs 12 / 10 / 8 at heat tiers 0 / 1 / 2 (pickBugsOnMap), fireflies 8 / 6 / 4 at Night, none at tiers 3–4
  *  (Battery saver is tier 4) or with reduced motion (bugs stay still and none are drawn). */
-export function wildBugCount(o:{tier:number;reduced:boolean;night:boolean}):number{
- if(o.reduced||o.tier>=3)return 0;const t=Math.max(0,Math.min(2,Math.floor(o.tier)||0));return o.night?FIREFLY_MAP_CAP[t]:bugMapCount(t);
+/** Oct 21 2026 (user: "need more fireflies flying around on the mountain island"): the Night sky over Summit Isle is busy. Every
+ *  firefly shown is one of the eight calls (ambient ones are extra copies of a call, so the jar and the squad still count calls);
+ *  by heat tier 0-4, desktop / phone. Tier 3 keeps a few; Battery saver (tier 4) and reduced motion: none (a shift still keeps its
+ *  FIREFLY_MAP_CAP catchable ones). One instanced body draw + one glow draw whatever the count. */
+export const FIREFLY_AMBIENT={desktop:[48,30,20,8,0],phone:[28,16,16,8,0]} as const;
+/** A night shift keeps at least this many fireflies within BUG_LOCAL.radius of the player (tier 0; fewer when fewer are out). */
+export const FIREFLY_LOCAL_WANT=14;
+export function wildBugCount(o:{tier:number;reduced:boolean;night:boolean;phone?:boolean}):number{
+ if(o.reduced)return 0;const t4=Math.max(0,Math.min(4,Math.floor(o.tier)||0));
+ if(o.night)return FIREFLY_AMBIENT[o.phone?'phone':'desktop'][t4];
+ if(o.tier>=3)return 0;return bugMapCount(Math.min(2,t4));
 }
