@@ -619,7 +619,7 @@ near finds." Pure rules in `lib/town/water/diveDelight.ts` (whale, friends, emot
 slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
 - **Whale shadow.** Once in a while (45-120 s after entering, at most once a visit; once that zone's whale has been met only 40 % of
   visits get one; never while a pickup, an emote or a card is going on) a big soft whale silhouette (body, pectoral fins, flukes: soft
-  ellipses in the surface shader, no texture) glides 64 m across the surface overhead in 16 s, right over the diver. The god rays dim
+  ellipses in the surface shader, no texture) glides 64 m across the surface overhead in 16 s, crossing 5 m ahead of the diver (in view). The god rays dim
   (to 45 %), the schools lift and tilt up toward it, and a quiet, slow two-note whale song plays (synthesized, islandSound `whaleSong`).
   The first time in each zone: "Whale friend! Whales call to each other across the sea, like teammates calling for the ball." and
   **1 coin** (`dive:<zone>:whale`, Training-metered, once ever). Off with heat tier 3+ / Battery saver / reduced motion.
@@ -643,7 +643,7 @@ slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
   shorter "precision" dash (kick and burst × 0.55). The find prompt shows from 3.2 m (was 2.6) and a pickup collects within 1.6 m (was
   1.35), so a slow drift still gets it. Elsewhere the swim is exactly as before.
 - **One thing at a time.** The "Entering: <zone>" / "Leaving the reef" chip now takes the HUD stack's toast lane while it shows, so the
-  one-time "Pace your breath" lesson card waits for it (and the chip waits for a card already showing): they never cover each other.
+  one-time lesson cards wait for it (and the chip waits up to 4 s for a card already showing, then drops: the arrival note names the zone anyway); it sits in one column with the note, off the Breath pill: nothing covers it.
 - **Saves / analytics.** `fi2-dive-reef-v1` gains optional `hearts` (per zone, 1-3), `whale` (zones met) and `spark` ({d: date, m:
   zone bitmask}); a full save of all seven zones is under 1.5 KB; older saves read unchanged. `wa:dive_whale` (each pass),
   `wa:dive_emote` (once per dive), `wa:dive_sparkle` on the `k` channel (countIds.ts, admin Water tile): no migration. Economy: at most
