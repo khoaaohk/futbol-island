@@ -14,7 +14,7 @@ import * as T from 'three';
 export type SwooshLook='island'|'night'|'stage-day'|'stage-sunset';
 export const SWOOSH_LOOKS:Record<SwooshLook,{core:string;edge:string;additive:boolean;strength:number}>={
  island:{core:'#ffffff',edge:'#fff1b8',additive:true,strength:.75},
- night:{core:'#fffbe6',edge:'#ffd24a',additive:true,strength:1},
+ night:{core:'#fff3c0',edge:'#ffb020',additive:true,strength:1},
  'stage-day':{core:'#ffc93a',edge:'#d9770f',additive:false,strength:.92},
  'stage-sunset':{core:'#fff0a8',edge:'#c2410f',additive:false,strength:.92},
 };
