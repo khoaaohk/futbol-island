@@ -142,6 +142,10 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  },[view.ended?.nonce]);
  useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
  const endJob=()=>{const r=runtime?.run;if(r&&r.def.swing&&r.got.some(Boolean)&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
+ // The action cluster's End button (Town.tsx, Oct 21 2026) asks through the same two-tap confirm, and mirrors its state.
+ const endRef=useRef(endJob);useEffect(()=>{endRef.current=endJob;});
+ useEffect(()=>{const on=()=>{const r=getJobRuntime()?.run;if(r&&r.def.swing&&!payday&&!view.releasing&&!view.zooming)endRef.current();};document.addEventListener('fi2-bug-end',on);return()=>document.removeEventListener('fi2-bug-end',on);},[payday,view.releasing,view.zooming]);
+ useEffect(()=>{try{document.dispatchEvent(new CustomEvent('fi2-bug-end-ask',{detail:endAsk}));}catch{}},[endAsk]);
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift

@@ -5,6 +5,8 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  walk:'M14 4a1.5 1.5 0 1 0 0 .01 M10 21l2-7-3-3 2-4 4 2 3 1 M7 13l2-4 M12 14l5 6',
  map:'m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5 M9 3v16 M15 5v16',
  minus:'M5 12h14',stop:'M7 7h10v10H7z',
+ /* End job on the Bug squad's action cluster (Oct 21 2026): out through a door. */
+ endjob:'M13 4H6v16h7 M10 12h11 M17 8l4 4-4 4',
  shoot:'M3 8h7 M2 12h6 M3 16h7 M19 8a5 5 0 1 1-6 8 5 5 0 0 1 6-8 M16 10l2 2-1 3h-3l-1-3z',
  juggle:'M9 6a3 3 0 1 0 6 0 3 3 0 0 0-6 0 M6 20l3-5 3 3 3-3 3 5 M12 10v3',
  scooter:'M4 18h11l4-12h-4 M3 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0 M17 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0',
