@@ -215,14 +215,14 @@ JOBS.push((()=>{
 // sign, id `bug-scout`. Day / Sunset catch the bug squad; at Night the same shift catches fireflies (bugScout.ts activeSet). The
 // catalog entry is the bugs set; `bugJobFor(set)` gives each set's definition (targets, drop-off, buttons, copy), built from the
 // roster getter so a longer species table plugs straight in. Old id `firefly-floodlights` resolves here (BUG_JOB_ALIASES).
-const BUG_NIGHT_NOTE='Changes at night: switch the island to Night (Settings, Time of day) and the same shift catches fireflies instead. Each set keeps its own progress.';
+const BUG_NIGHT_NOTE='At night you catch fireflies instead.';
 const BUG_SET_COPY:Record<BugSetId,Pick<JobDef,'intro'|'howTo'|'work'|'lesson'|'lessonSource'>>={
- bugs:{intro:'The island club wants a Bug squad of 20: eleven starters, the subs and the staff! Real bugs fly all over Summit Isle: up high on the mountain, along the trails and near the water. Sneak up, then tap Swing net (or tap the bug) to sweep it into your net, like a clean tackle. Each shift, catch a few for the squad, then let them all go at the bug hotel by this sign. You can ride your scooter, bike or moped between them. We only look, learn and let them go.',
-  howTo:'Find a bug (follow the arrow), sneak close, then Swing net. Catch the shift\'s bugs, then release the squad at the bug hotel.',
+ bugs:{intro:'Help the island club build a squad of 20 bugs! Sneak up, tap Swing, then let them go at the bug hotel.',
+  howTo:'Follow the arrow, sneak close, then Swing. Release them at the bug hotel.',
   work:{target:[{id:'net',label:'Swing net',mode:'tap',hint:'Sneak up, face the bug and Swing net: a clean sweep, like a well-timed tackle.'}],deliver:{id:'letfree',label:'Release the squad',mode:'tap',hint:'Open the jar at the bug hotel and let the squad fly home.'}},
   lesson:BUG_JOB_LESSON,lessonSource:'https://www.theifab.com/laws/latest/the-players/'},
- fireflies:{intro:'Night has fallen on Summit Isle and the fireflies are out! Each one flashes a football call. Walk up to a glowing firefly and Swing net to catch it gently. When the shift\'s fireflies are in your jar, let them glow over the little lantern goal by this sign, like floodlights, and then fly free.',
-  howTo:'Find a glowing firefly (follow the arrow), Swing net to catch it, then light up the lantern goal.',
+ fireflies:{intro:'The fireflies are out! Catch a few, then light up the lantern goal.',
+  howTo:'Follow the glow, catch a few, then light up the lantern goal.',
   work:{target:[{id:'jar',label:'Swing net',mode:'tap',hint:'Walk up calmly and Swing net: fireflies glow brighter when you are close.'}],deliver:{id:'glow',label:'Light up the goal',mode:'tap',hint:'Open the jar over the lantern goal: the fireflies light it up, then fly free.'}},
   lesson:FIREFLY_JOB_LESSON},
 };
