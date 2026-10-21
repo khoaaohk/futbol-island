@@ -28,6 +28,8 @@ import {createBugSpotFx,SPOT_FX,haloSize,type BugSpotFx} from './bugSpotFx';
 
 export type SwarmSet='bugs'|'fireflies';
 export type SwarmFrame={dt:number;x:number;z:number;night:boolean;sunset?:boolean;tier:number;reduced:boolean;busy:boolean;
+ /** A phone (lower firefly caps, FIREFLY_AMBIENT.phone). */
+ phone?:boolean;
  /** A Bug squad shift is catching from the swarm (catching lane): its set is always out (even at heat tiers 3-4 / reduced motion,
   *  at the tier-2 count) whatever the sky, so a shift can never run out of bugs. */
  job?:SwarmSet|null};
@@ -47,6 +49,18 @@ type Slot={score?:number;bug:FlightBug;sp:BugSpecies|null;call:FireflyCall|null;
  /** Seconds it holds still (a swing locked on to it: it notices the net and waits for the hit frame). */
  holdT:number};
 
+/** Firefly homes for n fireflies: the eight calls' FIREFLY_HOMES, then ambient copies (call~k) at the day bugs' BUG_HOMES and on
+ *  rings round them (kept on Summit Isle ground, nothing north of the summit but the sand). Pure and deterministic. */
+export function fireflyHomes(n:number):{id:string;call:string;x:number;z:number;wander:number}[]{
+ const out=FIREFLY_HOMES.slice(0,n).map(h=>({id:h.id,call:h.id,x:h.x,z:h.z,wander:h.wander}));
+ const ok=(x:number,z:number)=>onSummitIsle(x,z)&&!(inBugNorthZone(x,z)&&!onSummitSand(x,z));
+ for(let k=0;out.length<n&&k<n*6;k++){const base=BUG_HOMES[k%BUG_HOMES.length],ring=Math.floor(k/BUG_HOMES.length);
+  const a=k*2.399,r=ring?6+((ring*5)%10):0,x=base.x+Math.cos(a)*r,z=base.z+Math.sin(a)*r;if(!ok(x,z))continue;
+  const call=FIREFLY_HOMES[out.length%FIREFLY_HOMES.length].id,roam=out.length%5===0;
+  out.push({id:`${call}~${out.length}`,call,x,z,wander:roam?9:Math.min(6,base.wander)});}
+ return out;
+}
+
 export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>number;seed?:number}={}){
  const floor=opts.floor??fieldSurfaceHeight;
  const U={uTime:{value:0},uFade:{value:1}};
@@ -60,7 +74,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
  const owned:{dispose():void}[]=[];
  const m4=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(0,0,0,'YXZ'),p=new T.Vector3(),s=new T.Vector3(),one=new T.Vector3(1,1,1);
  const ctx:StepCtx={px:0,pz:0,pspeed:0,floor};
- const hits:SwarmHit[]=[];const hitPool:SwarmHit[]=[];const ask={tier:0,reduced:false,night:false};
+ const hits:SwarmHit[]=[];const hitPool:SwarmHit[]=[];const ask={tier:0,reduced:false,night:false,phone:false};
 
  function drop(){
   pinned=null;if(!built)return;root.removeFromParent();for(const c of [...root.children]){root.remove(c);(c as T.InstancedMesh).dispose?.();}for(const o of owned)o.dispose();owned.length=0;
@@ -85,8 +99,11 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
     const mm=new T.InstancedMesh(g,material,1);mm.name='bug-'+sl.bug.id;mm.instanceMatrix.setUsage(T.DynamicDrawUsage);mm.visible=false;
     mm.boundingSphere=new T.Sphere(new T.Vector3(sl.bug.hx,floor(sl.bug.hx,sl.bug.hz)+2,sl.bug.hz),sl.bug.wander+8);sl.mesh=mm;root.add(mm);}
   }else{
-   const homes=FIREFLY_HOMES.slice(0,n);
-   slots=homes.map((h,i)=>{const call=FIREFLY_SET.find(f=>f.id===h.id)??null;
+   // The eight calls at their homes first, then (Oct 21 2026, "more fireflies on the mountain island") ambient copies of the calls
+   // over the whole island: the day bugs' homes (four bands, already checked walkable and clear), then rings round them, every
+   // fifth a free roamer with a wider drift. Ids stay unique (call~k); the hit's call is what the jar counts.
+   const homes=fireflyHomes(n);
+   slots=homes.map((h,i)=>{const call=FIREFLY_SET.find(f=>f.id===h.call)??null;
     const bug=createFlightBug({id:h.id,move:'firefly-drift',x:h.x,z:h.z,wander:h.wander,alert:3,sneak:.3,seed:(seed^Math.imul(i+7,0x85ebca6b))>>>0},floor);
     return {bug,sp:null,call,size:FIREFLY_SIZE,color:new T.Color('#ffffff'),near:true,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false,holdT:0};});
    const g=own(createBugModel(null));tris=triangleCount(g);farFlap=attr(n);farPose=attr(n);g.setAttribute('iFlap',farFlap);g.setAttribute('iPose',farPose);
@@ -115,7 +132,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   if(f.job)want=f.job;
   time=f.sunset?'sunset':'day';
   const dc=Math.hypot(f.x-SUMMIT_CENTER.x,f.z-SUMMIT_CENTER.z);
-  ask.tier=f.tier;ask.reduced=f.reduced;ask.night=want==='fireflies';
+  ask.tier=f.tier;ask.reduced=f.reduced;ask.night=want==='fireflies';ask.phone=!!f.phone;
   const ti=Math.min(2,Math.max(0,Math.floor(f.tier)||0)),jobN=f.job?(f.job==='fireflies'?FIREFLY_MAP_CAP[ti]:bugMapCount(ti)):0;
   const n=f.job?Math.max(jobN,wildBugCount(ask)):dc<(built?WILD_BUG_RANGE.DROP_M:WILD_BUG_RANGE.BUILD_M)?wildBugCount(ask):0;
   if(built&&(!n||(n!==cap&&!fading&&built===want)))drop();
@@ -150,7 +167,8 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
     if(sl.near&&sl.mesh){sl.mesh.visible=true;sl.mesh.boundingSphere!.center.set(b.x,b.y,b.z);sl.mesh.boundingSphere!.radius=sl.size*1.5+.5;sl.mesh.setMatrixAt(0,matrixOf(sl));sl.mesh.instanceMatrix.needsUpdate=true;writeAttrs(sl.flap!,sl.pose!,0,b);sl.flap!.needsUpdate=true;sl.pose!.needsUpdate=true;continue;}
     if(sl.mesh)sl.mesh.visible=false;}
    live.setMatrixAt(fi,matrixOf(sl,isBugs?1+.45*Math.min(1,Math.max(0,(d-WILD_BUG_RANGE.FULL_IN_M)/26)):1));if(isBugs)live.setColorAt(fi,sl.color);writeAttrs(farFlap!,farPose!,fi,b);
-   if(glow){p.copy(lantern).applyMatrix4(m4);glow.setMatrixAt(fi,m4.compose(p,q.identity(),s.setScalar(2.6*b.fade)));}
+   // Glows read brighter (bigger) near the player: × 1.35 at the player easing to × 1 by 24 m.
+   if(glow){p.copy(lantern).applyMatrix4(m4);glow.setMatrixAt(fi,m4.compose(p,q.identity(),s.setScalar(2.6*b.fade*(1+.35*Math.max(0,1-d/24)))));}
    fi++;}
   live.count=fi;live.visible=fi>0;live.instanceMatrix.needsUpdate=true;if(live.instanceColor)live.instanceColor.needsUpdate=true;farFlap!.needsUpdate=true;farPose!.needsUpdate=true;
   if(glow){glow.count=fi;glow.visible=fi>0;glow.instanceMatrix.needsUpdate=true;}

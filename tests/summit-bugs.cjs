@@ -37,14 +37,14 @@ const day=C.jobVariant('bug-scout','bugs'),night=C.jobVariant('bug-scout','firef
  assert.equal(K.shiftGoal('bugs',12),6);assert.equal(K.shiftGoal('fireflies',4),4,'fewer out (heat) = fewer to catch');}
 
 // ---- 2. Swing rules: a bigger sweep, generous auto-aim and tap range (named constants) ----
-{assert(K.NET_SWEEP_RADIUS>=2*K.NET_BASE_REACH,'the sweep is about 2x the first lane reach');assert(K.AUTO_AIM_HALF_ANGLE>=Math.PI/3,'a wide auto-aim cone');
+{assert(K.NET_SWEEP_RADIUS>=1.8*K.NET_BASE_REACH,'the sweep is about 2x the first lane reach (2.2 m after the Oct 21 pull-in)');assert(K.AUTO_AIM_HALF_ANGLE>=Math.PI/3,'a wide auto-aim cone');
  assert(K.TAP_RANGE>=K.AUTO_AIM_RANGE&&K.TAP_RANGE<=K.LUNGE_MAX+K.NET_SWEEP_RADIUS*K.LOCKED_SLACK,'a tapped bug is always within the lunge');
  const hit=(id,x,z,y=1)=>({id,x,y,z});
  assert.equal(K.autoAim([hit('a',0,3),hit('b',0,-2)].sort((p,q)=>Math.hypot(p.x,p.z)-Math.hypot(q.x,q.z)),0,0,0)?.id,'a','the nearest IN FRONT, not the one behind');
  assert.equal(K.autoAim([hit('a',3,1)],0,0,0)?.id,'a','a wide cone (72 degrees off the facing)');assert.equal(K.autoAim([hit('a',0,9)],0,0,0),null,'out of range');
  const c=K.sweepCentre(0,0,0,0,{x:0,y:0,z:0});assert(K.inSweep(c,hit('a',1.2,3,2)),'3.5 m round the sweep centre');assert(!K.inSweep(c,hit('a',0,5)),'too far');
- assert(K.inSweep(c,hit('a',0,4),true),'Net down reaches further');
- assert.equal(K.swingResult([hit('a',0,5.6)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,5.6)],c,null),null,'unlocked: a miss');
+ assert(K.inSweep(c,hit('a',0,3.7),true)&&!K.inSweep(c,hit('a',0,3.7)),'Net down reaches further');
+ assert.equal(K.swingResult([hit('a',0,4)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,4)],c,null),null,'unlocked: a miss');
  // The swing timeline and the 20-bug formation.
  same(['windup','sweep','sweep','recover','done'].map((ph,i)=>K.swingPhase([.1,.4,K.SWING.hit,1,1.3][i]).phase),['windup','sweep','sweep','recover','done']);
  same(K.FORMATION_CAP,[20,14,11]);const ord=K.formationOrder();assert.equal(ord.length,20);assert.equal(new Set(ord).size,20);assert.equal(ord[0],'ladybug','the goalkeeper first');

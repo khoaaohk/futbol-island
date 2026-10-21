@@ -774,4 +774,6 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .travel-actions .job-end-mini small{font:700 8px/1 system-ui;letter-spacing:0;margin-top:1px;}
 .travel-actions .job-end-mini[data-ask]{background:#8a2d23e6;border-color:#ffd9c9;}
 .travel-actions .job-end-mini:active{filter:brightness(1.15);}
+/* The Bug squad count on the End button (Oct 21 2026): a small badge, so the count and the exit are always with the action cluster. */
+.travel-actions .job-end-mini .job-end-count{position:absolute;top:-9px;left:50%;translate:-50% 0;min-width:30px;padding:1px 5px;border-radius:9px;background:#ffd36c;color:#173e34;border:1.5px solid #fff0c4;font:800 10px/1.2 system-ui;white-space:nowrap;text-align:center;pointer-events:none;box-shadow:0 1px 0 #0f2a2340;}
 html[data-catch-stage] .travel-actions .job-end-mini{visibility:hidden;pointer-events:none;}

@@ -44,7 +44,7 @@ export function glowMaterial(u:BugUniforms){
  return new T.ShaderMaterial({uniforms:{uTime:u.uTime,uFade:u.uFade},transparent:true,depthWrite:false,blending:T.AdditiveBlending,
   vertexShader:`attribute vec4 iPose;uniform float uTime;uniform float uFade;varying vec2 vUv;varying float vA;
 void main(){vUv=uv-.5;float pulse=pow(max(0.,sin(uTime*(1.3+fract(iPose.y*.173)*.8)+iPose.y)),4.);
- vec4 mv=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);float sc=length(instanceMatrix[0].xyz)*(.6+pulse*.6)*uFade;
- mv.xy+=position.xy*sc;vA=(.3+pulse*.9)*uFade;gl_Position=projectionMatrix*mv;}`,
+ vec4 mv=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);float sc=length(instanceMatrix[0].xyz)*(.7+pulse*.6)*uFade;
+ mv.xy+=position.xy*sc;vA=(.42+pulse*.85)*uFade;gl_Position=projectionMatrix*mv;}`,
   fragmentShader:`varying vec2 vUv;varying float vA;void main(){float d=length(vUv)*2.;float a=(exp(-d*d*9.)*.8+exp(-d*d*2.5)*.35)*vA;gl_FragColor=vec4(vec3(.82,1.,.38)*a,a);}`});
 }
