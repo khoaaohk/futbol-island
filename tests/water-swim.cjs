@@ -65,7 +65,7 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  const slow=count(false,4),fast=count(true,4);
  assert(slow.wakes>=9&&slow.wakes<=12,'wake pairs at ~0.38 s: '+slow.wakes);assert(slow.strokes>=5&&slow.strokes<=9,'strokes: '+slow.strokes);assert.deepEqual([...slow.sides].sort(),[-1,1],'both arms');
  assert(fast.wakes>slow.wakes&&fast.strokes>slow.strokes,'Swim fast: a quicker wake and stroke');
- assert(W.SWIM_FAST_SPEED/W.SWIM_SPEED>=1.6&&W.SWIM_FAST_SPEED/W.SWIM_SPEED<=1.8,'Swim fast is 1.6–1.8× the crawl');
+ assert(W.SWIM_SPRINT/W.SWIM_SPEED>=1.6&&W.SWIM_SPRINT/W.SWIM_SPEED<=1.8,'Swim fast is 1.6–1.8× the crawl');
  // Treading: soft rings only, no wake.
  water.press('swimfast','up');let wakes=0,rings=0;for(let i=0;i<300;i++){const ev=water.step(1/60,20,0,input());if(ev.wake||ev.stroke)wakes++;if(ev.ripple)rings++;}assert.equal(wakes,0);assert(rings>=2&&rings<=4,'tread rings '+rings);
  // Reduced motion: the stroke clock stands still, so no arm splashes; the wake pairs still mark the way (the host gates them off anyway).

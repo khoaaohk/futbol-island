@@ -22,8 +22,8 @@ ok('the prompt and Let go copy, the range, the speed multipliers and the lesson'
  assert.equal(R.RIDE_PROMPT,'Hang on!');assert.equal(R.LET_GO_LABEL,'Let go');
  assert.equal(R.RIDE_RANGE,5,'~5 m from the animal');
  assert.equal(R.RIDE_MULT.manta,1.6);assert.equal(R.RIDE_MULT.whale,1.3);
- near(R.rideSpeed('manta'),1.6*W.SWIM_FAST_SPEED,1e-9,'manta = 1.6 × the sprint swim');near(R.rideSpeed('whale'),1.3*W.SWIM_FAST_SPEED,1e-9,'whale shark = 1.3 × the sprint swim');
- assert(R.rideSpeed('manta')>R.rideSpeed('whale')&&R.rideSpeed('whale')>W.SWIM_FAST_SPEED,'both faster than sprinting');
+ near(R.rideSpeed('manta'),1.6*W.SWIM_FAST_SPEED,1e-9,'manta = 1.6 × the sprint swim');near(R.rideSpeed('whale'),1.3*W.SWIM_FAST_SPEED,1e-9,'whale shark = 1.3 × the ride baseline');
+ assert(R.rideSpeed('manta')>R.rideSpeed('whale')&&R.rideSpeed('whale')>W.SWIM_FAST_SPEED,'both faster than the ride baseline sprint');
  assert(R.RIDE_WAKE.whale>R.RIDE_WAKE.manta&&R.RIDE_WAKE.manta>1.25,'a bigger wake than the sprint swim, biggest behind the whale shark');
  assert.equal(`${R.RIDE_LESSON.title}: ${R.RIDE_LESSON.text[0].toLowerCase()+R.RIDE_LESSON.text.slice(1)}`,/* the toast: the title in bold, then the line */'Ride the wave: a counter-attack is fastest when you move with the play, not against it.');
  assert.equal(R.RIDE_LESSON.kind,'Coaching idea');assert.equal(R.RIDE_LESSON_KEY,'fi2-ride-lesson-v1');
