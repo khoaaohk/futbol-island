@@ -1,7 +1,7 @@
 // Party socket: Hello with look + resume token, backoff reconnect, hidden-tab close, send throttle, heartbeat.
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
-  C, PROTOCOL_VERSION, S, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
+  C, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
   type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
@@ -16,6 +16,9 @@ export interface PartyConnection {
   host: { resetName(id: MemberId): void; kick(id: MemberId): void; lock(on: boolean): void; rotate(): void; end(): void };
   leave(): void;
   onMessage(fn: (m: ServerMsg) => void): () => void;
+  /** Called on every 5 s beat tick before the beat is sent (the island bridge sends a Busy pose from here while the frame loop sleeps;
+   *  anything it sends counts as the beat). No extra timer. */
+  onBeforeBeat(fn: (() => void) | null): void;
   readonly status: PartyStatus;
   dispose(): void;
   /** Extras beyond the design API (used by index.ts bindConnection). */
@@ -78,6 +81,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let last: PoseBody | null = null;
   let lastPoseAt = -1e12;
   let localHidden = false;
+  let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
   const pingBucket = new TokenBucket(0.33, 2);
   const msgSubs = new Set<(m: ServerMsg) => void>();
@@ -211,14 +215,20 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     beatTimer = st(() => {
       beatTimer = null;
       if (!open()) return;
+      if (beforeBeat) { try { beforeBeat(); } catch { /* the bridge must never stop the beat */ } }
       if (now() - lastSendAt >= BEAT_MS - 50) raw([C.Beat, Math.round(now() / 1000)]);
       scheduleBeat();
-    }, BEAT_MS);
+    }, Math.max(50, Math.min(BEAT_MS, BEAT_MS - (now() - lastSendAt)))); // due 5 s after the LAST frame sent (never a ~10 s gap)
   }
 
   const offVis = vis.on(() => {
     if (disposed || !code) return;
     if (vis.hidden()) {
+      // Away at once (design 4.4.1): the last pose again with the Hidden flag, so friends see the zzz field instead of a statue.
+      if (status === 'live' && last && (last[7] & PoseFlag.Hidden) === 0) {
+        const away = last.slice() as PoseBody; away[7] = (away[7] | PoseFlag.Hidden) & ~PoseFlag.Warp;
+        if (raw([C.Pose, seq, ...away] as ClientMsg)) { seq++; last = away; }
+      }
       if (hiddenTimer || status === 'idle' || status === 'ended' || status === 'error') return;
       hiddenTimer = st(() => {
         hiddenTimer = null;
@@ -230,6 +240,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       }, HIDDEN_CLOSE_MS);
     } else {
       if (hiddenTimer) { ct(hiddenTimer); hiddenTimer = null; }
+      last = null; // back: the next frame's pose (no Hidden flag) is sent at once
       if (pendingResume || (!ws && !retryTimer && (status === 'reconnecting' || status === 'connecting'))) {
         if (retryTimer) { ct(retryTimer); retryTimer = null; }
         attempt = 0;
@@ -264,9 +275,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       setStatus('idle'); // reset, then connecting
       connect();
     },
+    onBeforeBeat(fn) { beforeBeat = fn; },
     sendPose(body, nowMs) {
+      // Hidden (away) is sent like any flag change (once); while hidden, emotes and pings stay off.
       localHidden = (body[7] & 2) !== 0;
-      if (localHidden || !open() || status !== 'live') return;
+      if (!open() || status !== 'live') return;
       let send = false;
       if (!last) send = true;
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate

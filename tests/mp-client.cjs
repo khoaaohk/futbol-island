@@ -158,9 +158,10 @@ t('send throttle: walking 10 s -> 45-55 poses; standing 10 s -> <= 3 messages af
   assert.equal(np(),2,'7 units = 9.8 degrees is sent');
 });
 
-t('never sends while hidden flag set; emote limit 1 per 2 s; ping',()=>{
+t('hidden (away) pose is sent once, emotes / pings off while hidden; emote limit 1 per 2 s; ping',()=>{
   const e=makeEnv();const s=goLive(e);
-  e.c.sendPose(pose(500,0,2),e.clock.now());assert.equal(e.msgs(s).filter(m=>m[0]===1).length,0);
+  e.c.sendPose(pose(500,0,2),e.clock.now());assert.equal(e.msgs(s).filter(m=>m[0]===1).length,1,'away is a flag change: sent once (design 4.4.1)');
+  e.c.sendPose(pose(500,0,2),e.clock.now()+50);assert.equal(e.msgs(s).filter(m=>m[0]===1).length,1,'and not again while unchanged');
   assert.equal(e.c.sendEmote(1),false);assert.equal(e.c.sendPing(0,1,1),false);
   e.c.sendPose(pose(500),e.clock.now());e.clock.advance(100);
   assert.equal(e.c.sendEmote(1),true);assert.equal(e.c.sendEmote(1),false);e.clock.advance(1999);assert.equal(e.c.sendEmote(2),false);e.clock.advance(1);assert.equal(e.c.sendEmote(2),true);
@@ -234,13 +235,16 @@ t('store emits only on membership/status/emote/ping/error, never on Poses',()=>{
   off();st.partyStore.reset();assert.equal(st.partyStore.get().status,'idle');
 });
 
-t('bindConnection: messages -> store, Poses -> onPoses only',()=>{
+t('bindConnection: messages -> store, Poses -> onPoses (+ store presence flips only)',()=>{
   st.partyStore.reset();const e=makeEnv();let emits=0;const off=st.partyStore.subscribe(()=>emits++);
   const got=[];const offP=idx.onPoses((id,body,at)=>got.push([id,body,at]));
   const unbind=idx.bindConnection(e.c,()=>42);
   const s=goLive(e);assert.equal(st.partyStore.get().status,'live');assert.equal(st.partyStore.get().code,'K7MQ4R');
   const em=emits;s.recv([23,1,1,10,0,20,0,3,0,0,0]);
   assert.equal(emits,em);assert.deepEqual(plain(got),[[1,[10,0,20,0,3,0,0,0],42]]);
+  // a presence flip in a Poses batch reaches the store too (the party list's activity line), once
+  s.recv([23,2,1,10,0,20,0,P.Activity.Quiz,P.Mode.Busy,0,0]);assert.equal(emits,em+1);assert.equal(st.partyStore.get().members.find(x=>x.id===1).presence,'busy');
+  s.recv([23,3,1,10,0,20,0,P.Activity.Quiz,P.Mode.Busy,0,0]);assert.equal(emits,em+1,'unchanged: no emit');
   unbind();offP();off();st.partyStore.reset();
 });
 
@@ -399,6 +403,69 @@ t('nick is never persisted or logged (source scan)',()=>{
   const sess=JSON.stringify({code:'K7MQ4R',resumeToken:null,at:1});assert.ok(!/nick/i.test(sess));
   const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});e.last().open();e.last().recv(welcome());
   assert.ok(!/Emma/.test(e.storage.getItem('fi-party-session')||''),'session storage payload has no nick');
+});
+
+// ---- presence (design 4.4.1) ----
+const pr=L('presence');
+t('townActivity: Town flags -> one Activity (priority: room > quiz > lesson > the rest)',()=>{
+  const A=P.Activity,f=pr.townFlags();
+  assert.equal(pr.townActivity(f),pr.NOT_BUSY,'playing');assert.equal(pr.isBusy(pr.NOT_BUSY),false);
+  const one=(k,want)=>{const g=pr.townFlags();g[k]=true;assert.equal(pr.townActivity(g),want,k);};
+  one('lesson',A.Lesson);one('learning',A.Lesson);one('quiz',A.Quiz);one('settings',A.Settings);one('map',A.Map);one('arcade',A.Arcade);one('museum',A.Museum);
+  one('shop',A.Shop);one('konbini',A.Konbini);one('reef',A.Reef);one('fishing',A.Fishing);one('vending',A.Vending);one('zoom',A.Vending);one('chat',A.Chat);one('wardrobe',A.Wardrobe);one('other',A.None);
+  const g=pr.townFlags();g.lesson=g.quiz=true;assert.equal(pr.townActivity(g),A.Quiz,'a quiz inside a lesson reads Quiz time');
+  g.museum=true;assert.equal(pr.townActivity(g),A.Museum,'leaving for a room wins');
+  assert.equal(pr.isRoom(A.Museum),true);assert.equal(pr.isRoom(A.Lesson),false);
+  assert.equal(pr.presenceText('busy',A.Lesson),'Taking a lesson');assert.equal(pr.presenceText('busy',A.Quiz),'Quiz time');assert.equal(pr.presenceText('busy',A.Settings),'In Settings');
+  assert.equal(pr.presenceText('indoors',A.Museum),'In the museum');assert.equal(pr.presenceText('busy',A.Reef),'Exploring the reef');assert.equal(pr.presenceText('away',A.Lesson),'Away');
+  assert.equal(pr.presenceText('active',0),'');assert.equal(pr.presenceIcon('away',0),'\u{1F4A4}');
+  for(let a=0;a<=P.ACTIVITY_MAX;a++){assert.ok(pr.presenceText('busy',a).length>0&&pr.presenceText('busy',a).length<=20,'short line '+a);assert.ok(pr.presenceIcon('busy',a),'one icon '+a);}
+});
+t('local pose source: Busy freezes at the last outdoor pose, rooms are Indoors, back far = one warp',()=>{
+  const A=P.Activity,s=pr.localPoseState(),body=[0,0,0,0,0,13,0,0];
+  const L0=(x,z,act=-1,extra={})=>Object.assign({x,y:0,z,facing:0,speed:2,mode:P.Mode.Walk,zone:P.Zone.Main,warp:false,hidden:false,activity:act},extra);
+  pr.fillLocalBody(s,L0(10,10),body);assert.deepEqual(body.slice(0,8),[100,0,100,0,8,P.Mode.Walk,0,0]);
+  // the lesson starts in the same frame it teleports the player to (11, 9): friends keep the last outdoor spot
+  pr.fillLocalBody(s,L0(11,9,A.Lesson),body);assert.deepEqual(body.slice(0,8),[100,0,100,0,A.Lesson,P.Mode.Busy,0,0],'frozen, Busy, activity in the speed byte');
+  pr.fillLocalBody(s,L0(5,9,A.Lesson),body);assert.deepEqual(body.slice(0,3),[100,0,100],'scripted lesson motion is never sent');
+  pr.fillLocalBody(s,L0(5,9,A.Quiz),body);assert.equal(body[4],A.Quiz);assert.equal(body[7]&1,0,'no warp while busy');
+  // back at (-7, 14): one warp, then normal
+  pr.fillLocalBody(s,L0(-7,14),body);assert.equal(body[7]&1,1,'warp once on return far from the anchor');assert.equal(body[5],P.Mode.Walk);
+  pr.fillLocalBody(s,L0(-7,14.1),body);assert.equal(body[7]&1,0);
+  // Settings and back at the same spot: no warp
+  pr.fillLocalBody(s,L0(-7,14.1,A.Settings),body);pr.fillLocalBody(s,L0(-7,14.1),body);assert.equal(body[7]&1,0,'same spot: no warp');
+  // a room on another page: Zone.Indoors at the door
+  pr.fillLocalBody(s,L0(30,40),body);pr.fillLocalBody(s,L0(30,40,A.Museum),body);assert.deepEqual([body[0],body[2],body[4],body[5],body[6]],[300,400,A.Museum,P.Mode.Busy,P.Zone.Indoors]);
+  // in the sea: Busy keeps the Sea zone (the friend treads water inside the field)
+  const s2=pr.localPoseState();pr.fillLocalBody(s2,L0(1,1,-1,{zone:P.Zone.Sea,mode:P.Mode.Swim}),body);pr.fillLocalBody(s2,L0(1,1,A.Settings,{zone:P.Zone.Sea}),body);assert.equal(body[6],P.Zone.Sea);
+  // every body is a valid wire pose
+  assert.ok(P.clampPose(body.slice()));
+});
+t('connection: tab hidden sends the last pose as away at once; visible again resends; beat hook samples without a timer',()=>{
+  const e=makeEnv();const s=goLive(e);
+  e.c.sendPose(pose(500),e.clock.now());const before=e.msgs(s).filter(m=>m[0]===1).length;
+  e.setHidden(true);const ps=e.msgs(s).filter(m=>m[0]===1);assert.equal(ps.length,before+1,'away pose sent on hide');assert.equal(ps[ps.length-1][9]&2,2,'with the Hidden flag');
+  e.setHidden(false);e.c.sendPose(pose(500),e.clock.now()+10);const ps2=e.msgs(s).filter(m=>m[0]===1);assert.equal(ps2[ps2.length-1][9]&2,0,'back: the next pose clears it');
+  let calls=0;e.c.onBeforeBeat(()=>{calls++;e.c.sendPose(pose(500,P.Mode.Busy),e.clock.now());});
+  e.clock.advance(conn.BEAT_MS+10);assert.equal(calls,1,'sampled on the 5 s beat');
+  const last=e.msgs(s).filter(m=>m[0]===1).pop();assert.equal(last[7],P.Mode.Busy,'the Busy pose went out from the beat tick');
+  const beats=e.msgs(s).filter(m=>m[0]===9).length;e.clock.advance(conn.BEAT_MS+10);assert.equal(e.msgs(s).filter(m=>m[0]===9).length,beats+1,'unchanged busy pose: only a beat every 5 s');
+  e.c.onBeforeBeat(null);
+});
+t('store: presence + activity per member, emits only when they flip',()=>{
+  st.partyStore.reset();st.partyStore.apply([20,1,1,'tok-abcdefghij012345',1,2,0,[[1,[2,0],LOOK,1,null],[2,[3,0],LOOK,0,[0,0,0,0,P.Activity.Quiz,P.Mode.Busy,0,0]]]],1);
+  let m=st.partyStore.get().members.find(x=>x.id===2);assert.equal(m.presence,'busy');assert.equal(m.activity,P.Activity.Quiz);
+  let emits=0;const off=st.partyStore.subscribe(()=>emits++);
+  st.partyStore.apply([23,1,2,0,0,0,0,P.Activity.Quiz,P.Mode.Busy,0,0],2);assert.equal(emits,0,'same presence: no emit');
+  st.partyStore.apply([23,2,2,0,0,0,0,P.Activity.Lesson,P.Mode.Busy,0,0],3);assert.equal(emits,1);assert.equal(st.partyStore.get().members.find(x=>x.id===2).activity,P.Activity.Lesson);
+  st.partyStore.apply([23,3,2,0,0,0,0,0,P.Mode.Idle,0,2],4);m=st.partyStore.get().members.find(x=>x.id===2);assert.equal(m.presence,'away');assert.equal(m.away,true);
+  st.partyStore.apply([23,4,2,0,0,0,0,P.Activity.Museum,P.Mode.Busy,P.Zone.Indoors,0],5);m=st.partyStore.get().members.find(x=>x.id===2);assert.equal(m.presence,'indoors');assert.equal(m.activity,P.Activity.Museum);
+  st.partyStore.apply([23,5,2,0,0,0,0,4,P.Mode.Walk,0,0],6);m=st.partyStore.get().members.find(x=>x.id===2);assert.equal(m.presence,'active');assert.equal(m.activity,0,'a walking speed byte is not an activity');
+  off();st.partyStore.reset();
+});
+t('interp carries flags + activity',()=>{
+  const it=ip.createInterp({delayMs:0});it.push(7,[10,0,10,0,P.Activity.Settings,P.Mode.Busy,0,2|1],1000);
+  const o={x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0};it.sample(7,1200,o);assert.equal(o.flags,2,'Hidden kept, Warp stripped');assert.equal(o.activity,P.Activity.Settings);
 });
 
 console.log(`mp-client: ${n} groups passed`);

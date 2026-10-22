@@ -343,6 +343,60 @@ at most 1 Hz and only on change, `Beat` every 5 s; nothing while the loop sleeps
 150 ms would underrun), Hermite between snapshots in a 4-slot ring (no allocation), extrapolate at most 250 ms then ease to a
 stop; a Warp flag or a > 25 m jump fades out/in.
 
+### 4.4.1 Presence: busy, indoors, away (Oct 22 2026)
+
+User question: "when one player while friends is playing takes a lesson or quiz, or in settings, what happens to their character?"
+Before this, nothing told friends: the island loop sleeps in Settings / the map / a waiting quiz, so the last pose stayed (a statue,
+sometimes still in a run cycle); a lesson broadcast its scripted walk and teleports (11, 9) and back (-7, 14) live; the Arcade /
+Museum / Shop / Konbini leave the page, so the friend stood still for 60 s and then vanished (Left / Timeout). Mode.Busy,
+Zone.Indoors and PoseFlag.Hidden existed on the wire but were never produced (review #17).
+
+**Wire (no new fields; old clients and the old relay parse every frame).** `multiplayer/protocol/presence.ts`:
+- `Mode.Busy` = a lesson, quiz, learning format, Settings, map, fishing, vending, a talk, the wardrobe or any other full-screen menu.
+  While mode is Busy the speed byte (`body[4]`) carries the **Activity** code (`Activity`: 1 Lesson, 2 Quiz, 3 Settings, 4 Map,
+  5 Arcade, 6 Museum, 7 Shop, 8 Konbini, 9 Reef, 10 Fishing, 11 Vending, 12 Chat, 13 Wardrobe; 0 = Busy, no name). A Busy player
+  never moves, so the byte is free. `activityOf(mode, speedQ)` reads it; unknown codes read as 0.
+- The position is **frozen at the last outdoor pose** (the frame before the activity began): scripted lesson motion and lesson /
+  field teleports are never sent. Back from busy more than 1 m from that spot, the first pose carries Warp (friends cut, no slide).
+  `lib/multiplayer/presence.ts` `fillLocalBody` (pure, tested).
+- A room on another page (Arcade, Museum, Shop, Konbini): Mode.Busy + `Zone.Indoors` + the room's Activity, at the door. Sent by
+  the frame loop and again on `pagehide`; the relay ends the grace with `LeaveReason.Indoors` (unchanged).
+- `PoseFlag.Hidden` = **away**: the client sends its last pose with Hidden the moment the tab is hidden (connection.ts), and the
+  relay sets Hidden itself on any member it has heard nothing from for `AWAY_SILENCE_MS` (12 s: a live client now sends a frame at
+  least 5 s after its last one; older clients' beat could leave a ~10 s gap, so 8 s flickered idle players Away),
+  connected or inside the 60 s resume grace (not for Indoors). Any frame from them (beat, pose, resume) clears the relay's flag.
+- `presenceOf(mode, zone, flags)`: indoors > away > busy > active. `shielded()` = busy or away.
+
+**Heat / bandwidth.** A busy body never changes, so the connection's delta check sends nothing; only the 5 s beat goes out. When the
+island loop sleeps (Settings, map, quiz) the bridge samples the local pose from the connection's own beat tick
+(`conn.onBeforeBeat`): no new timer, no per-frame work. The loop also runs one frame after a menu opens, which sends Busy at once.
+
+**What friends see** (`lib/graphics/remoteAvatars.ts`, `lib/graphics/forceField.ts`): the friend stands still (no run cycle, no
+ride; treading water in the sea) inside a soft **green force field**: ONE instanced sphere mesh for every busy friend (one draw
+call, additive fresnel rim, slow pulse; reduced motion = static), the ground ring keeps the friend's colour. Over the name a status
+line: "📖 Taking a lesson", "❓ Quiz time", "⚙️ In Settings", "🗺️ Looking at the map", "🕹️ Playing arcade", "🏛️ In the museum",
+"🛍️ In the shop", "🐠 Exploring the reef", "💤 Away"… (one cached canvas texture per line, shared). The field grows in over
+0.35 s and pops (swells + fades) when they come back; indoors friends fade out at the door over 0.6 s (reduced motion: no fades).
+The Party tab shows the same line under the name (`memberActivityLine`).
+
+**Not touchable.** `PartyRuntime.friends()` lists only active friends, so the Emote button, the friend-pair emotes and anything that
+picks a nearby friend skip busy / away / indoors friends; their wire emotes are not shown, and the relay drops `C.Emote` from a
+member whose pose is Busy or Hidden. **Ball:** the island ball (`walkBall` 'shot') bounces off a busy friend's field
+(`lib/town/forceFieldBounce.ts`: sphere r 1.15 m centred 1 m up, a cylinder below the centre so a rolling ball is pushed out
+sideways; reflection with restitution 0.78; a ball already leaving is only pushed out, never stuck); the dome shakes for 0.4 s and
+ripples from the impact point, with the ball bounce sound. Local only (balls are not shared).
+
+**View gate fix (found by the presence check).** `createPartyRuntime` registered the whole remote root with the view gate, so the
+batch, the rings and the fields (all at the world origin) were "units" around (0, 0, 0): every friend vanished whenever the origin
+was off screen. Only the label group is registered now (each sprite sits at its friend). Also fixed: Poses never reached the store
+(index.ts returned early), so the party list's zone / away state never changed; the store now gets every Poses batch and emits only
+on a zone / away / presence flip.
+
+**Edge cases.** The host in a lesson: the party lives on (the relay needs only the socket + beat; host migration only after the
+host is gone 30 s). Backgrounded tab / phone asleep: away at once (Hidden), socket closed after 15 s, the relay keeps the slot 60 s
+and shows them away; reconnect inside 60 s resumes the same slot and clears it. Network drop: the local chip dims ("Reconnecting"),
+friends see them away after 12 s, not a vanish. Limit: after 60 s in a room the slot lapses (Left / Indoors) and they rejoin as new.
+
 ### 4.5 Server authority (roomCore)
 - Validate every inbound frame with `parseClient`; > 512 bytes or bad shape -> drop + count; 5 bad frames -> close.
 - Clamp/reject poses (`clampPose`, `speedOk`); token buckets per socket (`RATE`); > 30 msg/s -> close.

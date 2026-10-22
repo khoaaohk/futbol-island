@@ -1,9 +1,12 @@
 // Remote pose interpolation: 4-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
 // past, extrapolate at most extrapolateMs then ease to a stop. A Warp flag or a >25 m jump fades out/in over 300 ms.
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
-import type { MemberId, Mode, PoseBody, Zone } from '../../multiplayer/protocol';
+import { activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
-export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number };
+/** flags: the pose flags of the newest snapshot at or before the render time (Hidden = away; design 4.4.1). Optional for old callers. */
+export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number; flags?: number;
+  /** The Activity a Busy pose carries in its speed byte (0 otherwise). */
+  activity?: number };
 export interface Interp {
   push(id: MemberId, body: PoseBody, recvMs: number): void;
   /** renderMs is the current clock (same base as recvMs); the delay is subtracted inside. */
@@ -12,7 +15,7 @@ export interface Interp {
 }
 
 const SLOTS = 4;
-const F = 8; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone
+const F = 9; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone, flags
 const FADE_HALF_MS = 150;
 const JUMP_M = 25;
 const TAU = Math.PI * 2;
@@ -41,7 +44,7 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
     }
     const s = r.head * F;
     r.d[s] = recvMs; r.d[s + 1] = x; r.d[s + 2] = y; r.d[s + 3] = z;
-    r.d[s + 4] = (body[3] * TAU) / 256; r.d[s + 5] = body[4] * 0.25; r.d[s + 6] = body[5]; r.d[s + 7] = body[6];
+    r.d[s + 4] = (body[3] * TAU) / 256; r.d[s + 5] = body[4] * 0.25; r.d[s + 6] = body[5]; r.d[s + 7] = body[6]; r.d[s + 8] = body[7] & ~1;
     r.cut[r.head] = cut;
     r.head = (r.head + 1) % SLOTS;
     if (r.n < SLOTS) r.n++;
@@ -56,7 +59,7 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
 
   function put(out: RemotePose, r: Ring, s: number, x: number, y: number, z: number, yaw: number): void {
     out.x = x; out.y = y; out.z = z; out.yaw = yaw; out.speed = r.d[s + 5];
-    out.mode = r.d[s + 6] as Mode; out.zone = r.d[s + 7] as Zone;
+    out.mode = r.d[s + 6] as Mode; out.zone = r.d[s + 7] as Zone; out.flags = r.d[s + 8]; out.activity = activityOf(r.d[s + 6], r.d[s + 5] * 4);
   }
 
   function sample(id: MemberId, renderMs: number, out: RemotePose): boolean {

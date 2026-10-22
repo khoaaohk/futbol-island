@@ -26,6 +26,17 @@ t('flag gating: PartyHost returns null when multiplayerEnabled() is false, befor
  assert(/if\s*\(!multiplayerEnabled\(\)\)\s*return null/.test(m[0]),'null when off');
  assert(!/use[A-Z]\w*\(/.test(m[0].replace(/<Host[^>]*>/,'')),'no hooks in the gate wrapper (rules of hooks)');
 });
+t('party list: the activity line under a friend\'s name (Taking a lesson / In the museum / Away), small text, read by screen readers',()=>{
+ const pr=load(path.join(ROOT,'lib/multiplayer/presence.ts')),P=load(path.join(ROOT,'multiplayer/protocol/index.ts'));
+ const fn=/export function memberActivityLine[\s\S]*?\n\}/.exec(host);assert(fn,'memberActivityLine helper');
+ const line=new Function('presenceText','presenceIcon','return '+fn[0].replace(/export function memberActivityLine\(m[^)]*\): string/,'function(m)').replace(/^function/,'function'))(pr.presenceText,pr.presenceIcon);
+ assert.equal(line({presence:'busy',activity:P.Activity.Lesson}),'\u{1F4D6} Taking a lesson');
+ assert.equal(line({presence:'indoors',activity:P.Activity.Museum}),'\u{1F3DB}️ In the museum');
+ assert.equal(line({presence:'away',activity:0}),'\u{1F4A4} Away');assert.equal(line({presence:'active',activity:0}),'');
+ assert(/<small className=\{styles\.activity\} data-party-activity/.test(host),'rendered as small text inside the name');
+ assert(/data-presence=\{m\.presence\}/.test(host)&&/presenceText\(m\.presence, m\.activity\)\.toLowerCase\(\)/.test(host),'aria-label says it too');
+ assert(/\.activity\{[^}]*font-size:12px/.test(css),'small');
+});
 t('parent gate before create and before join',()=>{
  assert(host.indexOf('ParentGate')>=0&&host.indexOf("from '@/components/ParentGate'")<host.indexOf('createParty('),'ParentGate imported before createParty is called');
  assert(/afterGate\(\{ kind: 'create' \}\)/.test(host)&&/afterGate\(\{ kind: 'join', code: c \}\)/.test(host),'both entries go through the gate');
@@ -107,6 +118,7 @@ t('grown-up gate: the same card shell as Play with friends, Back top left (no bo
  assert(/onEscape=\{view === 'gate'/.test(host),'Escape goes Back from the gate');
 });
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
+ assert(/\.codeActions\{[^}]*width:100%/.test(css)&&/\.codeActions>button\{[^}]*width:calc\(100% - 6px\)[^}]*margin-inline:3px/.test(css)&&/\.pairRow\{[^}]*width:calc\(100% - 6px\)/.test(css),'lock button and Share/New code row share the toggle track edges (3px inset)');
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
  assert(/grow from=\{[^}]*\bfrom\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
  assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function Card'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');

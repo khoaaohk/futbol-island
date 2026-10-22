@@ -237,4 +237,77 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.equal(ringsMesh.count,0,'saver: no rings');assert.equal(h.avatars.shown,0);
  h.avatars.dispose();
 }
+// 9. presence (design 4.4.1): a busy / away friend stands still inside ONE shared green force field with a status line; indoors fades at the door
+{
+ const h=harness(),look=new Array(12).fill(0),P=load('multiplayer/protocol/index.ts');
+ const fieldOf=()=>h.avatars.root.children.find(o=>o.name==='remote-force-fields');
+ const statusOf=()=>h.avatars.root.children.find(o=>o.name==='remote-avatar-labels').children.filter(o=>o.name==='remote-status');
+ const f=fieldOf();assert.ok(f&&f.isInstancedMesh&&f.instanceMatrix.count===P.PARTY_MAX,'one instanced field mesh, capacity party max');
+ assert.equal(f.castShadow,false);assert.equal(f.count,0);
+ assert.equal(f.material.uniforms.uColor.value.getHexString(),new T.Color('#5fe39a').getHexString(),'the field is green (the ring keeps the friend colour)');
+ for(const id of [1,2])h.avatars.upsert(id,look,'Red',{hex:'#D55E00'});
+ const busy=(i,act,extra={})=>Object.assign({x:i-2,y:0,z:0,yaw:0,speed:act*.25,mode:P.Mode.Busy,zone:0,fade:1,flags:0,activity:act},extra);
+ h.poses.set(1,busy(1,P.Activity.Lesson));h.poses.set(2,{x:0,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1,flags:0});
+ h.avatars.update(.1,h.poses,h.camera,false);assert.equal(f.count,1,'only the busy friend has a field');
+ const a=f.geometry.getAttribute('aField');assert.ok(a.getX(0)>0&&a.getX(0)<1,'the field fades in (not a pop)');
+ for(let i=0;i<5;i++)h.avatars.update(.1,h.poses,h.camera,false);assert.ok(Math.abs(a.getX(0)-1)<1e-6,'fully in after ~0.35 s');
+ const st=statusOf();assert.equal(st.length,2,'a status sprite per friend');const vis=st.filter(o=>o.visible);
+ assert.equal(vis.length,1,'status line only over the busy friend');assert.ok(vis[0].material.map,'with its text texture');
+ assert.ok(vis[0].position.y>2.5,'above the name label');
+ // two friends on the same line share one texture
+ h.poses.set(2,busy(2,P.Activity.Lesson));h.avatars.update(.016,h.poses,h.camera,false);
+ const v2=statusOf().filter(o=>o.visible);assert.equal(v2.length,2);assert.equal(v2[0].material.map,v2[1].material.map,'one cached texture per line');
+ // a ball hit: shake + ripple, then they settle
+ h.avatars.bumpField(1,1,0,0);h.avatars.update(.016,h.poses,h.camera,false);assert.ok(a.getY(0)>.8,'shake right after the hit');assert.ok(a.getZ(0)<.1,'ripple starts');
+ for(let i=0;i<6;i++)h.avatars.update(.1,h.poses,h.camera,false);assert.equal(a.getY(0),0,'shake gone after ~0.4 s');
+ // emotes from inside the field are ignored
+ const bubbleVis=()=>h.avatars.root.children.find(o=>o.name==='remote-avatar-labels').children.filter(o=>o.name==='remote-emote'&&o.visible).length;
+ h.avatars.emote(1,P.Emote.Wave);h.avatars.update(.3,h.poses,h.camera,false);assert.equal(bubbleVis(),0,'no emote bubble from a busy friend');
+ // away (Hidden flag) is shielded too
+ h.poses.set(2,busy(2,0,{mode:13,speed:0,flags:2}));h.avatars.update(.016,h.poses,h.camera,false);assert.equal(f.count,2,'away friend also inside the field');
+ // back: the field pops out (swells while fading), the status line goes
+ h.poses.set(1,{x:-1,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1,flags:0});h.avatars.update(.1,h.poses,h.camera,false);
+ assert.equal(f.count,2,'still fading out');const m=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),sc=new T.Vector3();f.getMatrixAt(0,m);m.decompose(p,q,sc);assert.ok(sc.x>1.15,'pop: the dome swells as it fades');
+ for(let i=0;i<5;i++)h.avatars.update(.1,h.poses,h.camera,false);assert.equal(f.count,1,'gone after the pop');
+ h.avatars.emote(1,P.Emote.Wave);h.avatars.update(.3,h.poses,h.camera,false);assert.equal(bubbleVis(),1,'emotes again once back');
+ // reduced motion: no fade (instant), no shake
+ h.poses.set(1,busy(1,P.Activity.Quiz));h.avatars.update(.016,h.poses,h.camera,true);f.getMatrixAt(0,m);assert.equal(a.getX(0),1,'reduced motion: the field is just there');
+ h.avatars.bumpField(1,0,1,0);h.avatars.update(.016,h.poses,h.camera,true);assert.equal(a.getY(0),0,'reduced motion: no shake');
+ // indoors: fades out at the door over ~0.6 s (avatar drawn, then gone); reduced motion = gone at once
+ h.poses.set(2,busy(2,P.Activity.Museum,{zone:P.Zone.Indoors}));const d0=h.state.drawn;
+ h.avatars.update(.2,h.poses,h.camera,false);assert.equal(h.avatars.shown,2,'still visible while fading at the door');
+ for(let i=0;i<4;i++)h.avatars.update(.2,h.poses,h.camera,false);assert.equal(h.avatars.shown,1,'gone indoors');
+ h.poses.set(2,busy(2,0,{mode:13,speed:0}));h.avatars.update(.016,h.poses,h.camera,false);h.poses.set(2,busy(2,P.Activity.Shop,{zone:P.Zone.Indoors}));h.avatars.update(.016,h.poses,h.camera,true);
+ assert.equal(h.avatars.shown,1,'reduced motion: no door fade');void d0;
+ h.avatars.dispose();
+}
+// 10. the ball vs a busy friend's force field (pure): reflect off the dome, lose a little energy, never through, never stuck
+{
+ const B=load('lib/town/forceFieldBounce.ts');
+ const ball={x:-1.3,y:1,z:0,vx:10,vy:0,vz:0};
+ assert.equal(B.bounceOffField(ball,0,1,0),true,'touching the dome');
+ assert.ok(ball.vx<0&&Math.abs(ball.vx+10*B.FIELD_RESTITUTION)<1e-9,'head-on: reversed with the restitution loss');
+ assert.ok(Math.hypot(ball.x,ball.y-1,ball.z)>=B.FIELD_RADIUS+.2,'pushed back to the surface');
+ assert.deepEqual([B.fieldHit.nx,B.fieldHit.ny,B.fieldHit.nz],[-1,0,0]);assert.equal(B.fieldHit.speed,10);
+ // glancing: tangential speed kept, normal part reflected
+ const g={x:0,y:1+1.3*Math.SQRT1_2,z:-1.3*Math.SQRT1_2,vx:0,vy:0,vz:6};B.bounceOffField(g,0,1,0);
+ assert.ok(g.vz>0&&g.vy>0,'deflected up and over');const sp=Math.hypot(g.vx,g.vy,g.vz);assert.ok(sp<6&&sp>3,'some energy lost');
+ // already leaving (inside, moving out): only pushed out, velocity untouched (never stuck)
+ const out={x:.5,y:1,z:0,vx:3,vy:0,vz:0};B.bounceOffField(out,0,1,0);assert.equal(out.vx,3);assert.ok(out.x>=B.FIELD_RADIUS+.2-1e-9);
+ // a rolling ball near the feet is pushed out sideways, never into the ground
+ const roll={x:.4,y:.2,z:0,vx:-4,vy:0,vz:0};B.bounceOffField(roll,0,1,0);assert.equal(roll.y,.2,'keeps its height');assert.ok(roll.vx>0&&roll.x>1.3);
+ // far away: nothing
+ const far={x:5,y:1,z:0,vx:-1,vy:0,vz:0};assert.equal(B.bounceOffField(far,0,1,0),false);assert.equal(far.vx,-1);
+ // a 40 m/s shot stepped at 1/60 s through a field never ends inside
+ const shot={x:-4,y:1.1,z:.3,vx:40,vy:0,vz:0};for(let i=0;i<30;i++){shot.x+=shot.vx/60;shot.y+=shot.vy/60;shot.z+=shot.vz/60;B.bounceOffField(shot,0,1,0);assert.ok(Math.hypot(shot.x,Math.max(0,shot.y-1),shot.z)>=B.FIELD_RADIUS+.2-1e-6,'never inside');}
+ assert.ok(shot.x<0,'bounced back');
+}
+// 11. sources: friends() lists only friends outside a field (emote button / friend-pair emotes / NPC picks), the bridge adds no timer
+{
+ const br=read('lib/multiplayer/townBridge.ts');
+ assert(/friends: \(\) => active\.values\(\)/.test(br),'friends() = active (not busy / away / indoors) friends only');
+ assert(/presenceOf\(p\.mode, p\.zone, p\.flags \?\? 0\) === 'active'/.test(br));
+ assert(/onBeforeBeat/.test(br),'sleeping-loop presence rides the connection beat (no timer)');
+ const town=read('components/Town.tsx');assert(/party\.ballVsFields\(walkBall\.state\)/.test(town),'Town bounces the island ball off busy friends');
+}
 console.log('mp-avatars ok');
