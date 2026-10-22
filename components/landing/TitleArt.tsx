@@ -106,7 +106,7 @@ export default function TitleArt(){
   {/* Foreground props: a wave mark (nearest). The floating ball was removed (user, Oct 9 2026). */}
   <div className={`${styles.layer} ${styles.props}`} data-depth="60">
    <div className={styles.propsIn} data-enter="props" data-x="props">
-    <svg className={styles.waves} viewBox="755 535 110 62" aria-hidden="true" focusable="false"><path d="M762 565C802 539 831 543 857 564M779 591C811 572 839 578 858 590" stroke="#F9D55D" strokeWidth="10" strokeLinecap="round" fill="none"/></svg>
+    {/* Oct 22 2026 (user: remove the yellow wave mark): removed */}
    </div>
   </div>
  </>;
