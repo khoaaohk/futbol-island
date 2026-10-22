@@ -16,7 +16,9 @@ export default function EmoteControl({ ride = 'walk' }: { ride?: string }) {
   const box = useRef<HTMLSpanElement>(null);
   const view = useSyncExternalStore(emoteCtxStore.subscribe, emoteCtxStore.get, emoteCtxStore.server);
   const state = emoteButtonState(view); // flying alone = disabled; flying with a friend / swimming = their own wheel (lib/town/emoteContexts.ts)
-  const shown = open && !state.disabled;
+  const hidden = state.hidden; // nobody to emote with: the cell stays reserved, the button just fades out (lib/town/emoteContexts.ts)
+  const shown = open && !hidden;
+  useEffect(() => { if (hidden) setOpen(false); }, [hidden]); // the last candidate left while the wheel was open
   useEffect(() => {
     if (!open) return;
     const away = (e: Event) => { if (!box.current?.contains(e.target as Node)) setOpen(false); };
@@ -26,10 +28,10 @@ export default function EmoteControl({ ride = 'walk' }: { ride?: string }) {
   }, [open]);
   return (
     <span ref={box} className="emote-control">
-      <button type="button" className="touch-emote" data-emote-btn data-emote-ctx={state.ctx} aria-label="Emotes" title={state.disabled ? state.why : 'Emotes'} aria-disabled={state.disabled || undefined} data-disabled={state.disabled ? '' : undefined} aria-expanded={open} aria-haspopup="true" onClick={() => { if (!state.disabled) setOpen((o) => !o); }}>
+      <button type="button" className="touch-emote" data-emote-btn data-emote-ctx={state.ctx} aria-label="Emotes" title="Emotes" aria-hidden={hidden || undefined} tabIndex={hidden ? -1 : undefined} data-hidden={hidden ? '' : undefined} aria-expanded={open} aria-haspopup="true" onClick={() => { if (!hidden) setOpen((o) => !o); }}>
         <Glyph name="hand" size={32} />
       </button>
-      {shown && <EmoteWheel ride={ride} ctx={state.ctx} onPick={(e) => { emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
+      {shown && <EmoteWheel ride={ride} ctx={state.ctx} npcKind={view.npcKind} onPick={(e) => { emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
     </span>
   );
 }

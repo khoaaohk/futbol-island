@@ -46,12 +46,19 @@ export const CTX_EMOTE_EMOJI: Record<number, string> = Object.fromEntries(CTX_SC
 
 /** Flying = the jetpack / glide ride, or any jetpack action (charge, blast, parachute...). */
 export const isFlying = (ride: string, jetPhase: string) => ride === 'jetpack' || (jetPhase !== 'idle' && jetPhase !== '');
-export interface EmoteButtonState {disabled: boolean; ctx: EmoteContext; why: string}
-/** The Emote button: flying alone = disabled; flying with a friend flying near = the FLYING set; swimming = the SWIM set; else ground / rides. */
-export function emoteButtonState(s: {flying: boolean; friendFlyingNear: boolean; swimming: boolean}): EmoteButtonState {
-  if (s.flying) return s.friendFlyingNear ? {disabled: false, ctx: 'fly', why: ''} : {disabled: true, ctx: 'fly', why: 'Emotes while flying need a friend flying nearby'};
-  if (s.swimming) return {disabled: false, ctx: 'swim', why: ''};
-  return {disabled: false, ctx: 'ground', why: ''};
+export interface EmoteButtonState {hidden: boolean; disabled: boolean; ctx: EmoteContext; why: string}
+/** What the island can offer right now (written by Town at ~4 Hz): a townsperson that would answer (within 9 m, `npcNear`), a party friend within FLY_RANGE (`friendNear`), flying / swimming friends, and the set of the townsperson you would emote at. */
+export interface EmoteReach {flying: boolean; swimming: boolean; npcNear: boolean; friendNear: boolean; friendFlyingNear: boolean; friendSwimmingNear: boolean}
+/**
+ * The Emote button (user, Oct 22 2026: "emote btn only show when there is a npc or friend to interact with"; this reverses the earlier always-on rule):
+ * HIDDEN (its grid cell stays reserved) unless there is someone to emote at. Flying: only beside a flying friend (the FLYING set). Swimming: only beside
+ * a swimming friend (the SWIM set; no townsfolk swim). On the ground or a ride: a townsperson that would answer or any party friend nearby.
+ */
+export function emoteButtonState(s: Pick<EmoteReach, 'flying' | 'swimming'> & Partial<EmoteReach>): EmoteButtonState {
+  if (s.flying) return s.friendFlyingNear ? {hidden: false, disabled: false, ctx: 'fly', why: ''} : {hidden: true, disabled: false, ctx: 'fly', why: 'Emotes while flying need a friend flying nearby'};
+  if (s.swimming) return s.friendSwimmingNear ? {hidden: false, disabled: false, ctx: 'swim', why: ''} : {hidden: true, disabled: false, ctx: 'swim', why: 'Emotes in the water need a swimming friend nearby'};
+  const some = Boolean(s.npcNear || s.friendNear);
+  return {hidden: !some, disabled: false, ctx: 'ground', why: some ? '' : 'Nobody to emote with'};
 }
 export const ctxWheelFor = (ctx: EmoteContext): CtxScript[] => ctx === 'fly' ? [...FLY_SCRIPTS] : ctx === 'swim' ? [...SWIM_SCRIPTS] : [];
 
@@ -106,17 +113,18 @@ export function flourishAt(emote: number, age: number, dur: number, out: Flouris
 /** Does the flourish need the emote to end now? Landing ends a flying one, leaving the water ends a swimming one. */
 export const ctxStillValid = (emote: number, flying: boolean, swimming: boolean) => isFlyEmote(emote) ? flying : isSwimEmote(emote) ? swimming : true;
 
-/** A tiny external store so the React button follows the island without Town re-rendering (written on the HUD tick, only on a change). */
-export interface EmoteCtxView {flying: boolean; friendFlyingNear: boolean; swimming: boolean}
-const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false};
+/** A tiny external store so the React button follows the island without Town re-rendering (written on the HUD tick, only on a change). `npcKind` = the set of the townsperson you would emote at ('' = the ordinary ground wheel). */
+export interface EmoteCtxView extends EmoteReach {npcKind: '' | 'skater' | 'scooter' | 'juggler'}
+const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false, npcNear: false, friendNear: false, friendSwimmingNear: false, npcKind: ''};
 let ctxView: EmoteCtxView = IDLE_CTX;
 const ctxSubs = new Set<() => void>();
+const CTX_KEYS = Object.keys(IDLE_CTX) as (keyof EmoteCtxView)[];
 export const emoteCtxStore = {
   get: () => ctxView, server: () => IDLE_CTX,
   subscribe(f: () => void) { ctxSubs.add(f); return () => { ctxSubs.delete(f); }; },
   set(next: Partial<EmoteCtxView>) {
     const n = {...ctxView, ...next};
-    if (n.flying === ctxView.flying && n.friendFlyingNear === ctxView.friendFlyingNear && n.swimming === ctxView.swimming) return;
+    if (CTX_KEYS.every(k => n[k] === ctxView[k])) return;
     ctxView = n; for (const f of Array.from(ctxSubs)) f();
   },
 };

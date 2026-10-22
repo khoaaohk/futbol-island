@@ -19,15 +19,20 @@ t('wire modes match the multiplayer protocol and every ctx emote maps to an exis
  assert.equal(C.WIRE_MODE.Jetpack,mode('Jetpack'));assert.equal(C.WIRE_MODE.Parachute,mode('Parachute'));assert.equal(C.WIRE_MODE.Swim,mode('Swim'));
  for(const s of C.CTX_SCRIPTS){assert(s.wire>=0&&s.wire<=9,s.label);assert(s.emote>=20&&s.emote<=34);}
 });
-t('flying: disabled alone, the FLYING set beside a flying friend; swimming has its own set; ground is untouched',()=>{
- assert.deepEqual([C.emoteButtonState({flying:true,friendFlyingNear:false,swimming:false}).disabled,C.emoteButtonState({flying:true,friendFlyingNear:true,swimming:false}).disabled],[true,false]);
- assert.equal(C.emoteButtonState({flying:true,friendFlyingNear:true,swimming:false}).ctx,'fly');
- assert.equal(C.emoteButtonState({flying:false,friendFlyingNear:false,swimming:true}).ctx,'swim');
- assert.equal(C.emoteButtonState({flying:false,friendFlyingNear:true,swimming:false}).ctx,'ground');
+t('Emote button rule: HIDDEN (cell reserved) unless someone can answer; flying needs a FLYING friend (ground NPCs / walking friends do not count), swimming a swimming friend',()=>{
+ const R=(o)=>C.emoteButtonState({flying:false,swimming:false,npcNear:false,friendNear:false,friendFlyingNear:false,friendSwimmingNear:false,...o});
+ assert.equal(R({}).hidden,true,'alone: no button');assert.equal(R({npcNear:true}).hidden,false);assert.equal(R({friendNear:true}).hidden,false);assert.equal(R({npcNear:true}).ctx,'ground');
+ assert.equal(R({flying:true,npcNear:true,friendNear:true}).hidden,true,'flying: a townsperson or a walking friend does not show it');
+ assert.equal(R({flying:true,friendFlyingNear:false}).hidden,true);assert.equal(R({flying:true,friendFlyingNear:true}).hidden,false);assert.equal(R({flying:true,friendFlyingNear:true}).ctx,'fly');
+ assert.equal(R({swimming:true,npcNear:true,friendNear:true}).hidden,true,'swimming: only a swimming friend');
+ assert.equal(R({swimming:true,friendSwimmingNear:true}).hidden,false);assert.equal(R({swimming:true,friendSwimmingNear:true}).ctx,'swim');
+ for(const o of [{},{flying:true},{swimming:true},{npcNear:true}])assert.equal(R(o).disabled,false,'never a greyed button: it is shown or hidden');
  assert.equal(C.ctxWheelFor('fly').length,5);assert.equal(C.ctxWheelFor('swim').length,5);assert.equal(C.ctxWheelFor('ground').length,0);
  const labels=[...C.ctxWheelFor('fly'),...C.ctxWheelFor('swim')].map(s=>s.label);
  for(const l of ['Barrel roll','Wing wave','Loop-de-loop','Fly-by high five','Side-by-side glide','Splash wave','Water spray cheer','Duck-dive pop-up','Back float','Tread & laugh'])assert(labels.includes(l),l);
  assert.equal(C.isFlying('jetpack','idle'),true);assert.equal(C.isFlying('walk','idle'),false);assert.equal(C.isFlying('walk','parachute'),true);
+ // the store only notifies on a change
+ let calls=0;const off=C.emoteCtxStore.subscribe(()=>calls++);C.emoteCtxStore.set({npcNear:true});C.emoteCtxStore.set({npcNear:true});C.emoteCtxStore.set({npcNear:false});off();assert.equal(calls,2);
 });
 t('nearest flying friend within 40 m (3D); walkers and far flyers do not count',()=>{
  const out={x:0,y:0,z:0},me={x:0,y:30,z:0};
@@ -68,7 +73,7 @@ t('the emote camera allows a flying / swim emote in the air / water and never la
 });
 t('wiring: the button, the wheel, Town, remote avatars and the party bridge use the context rules',()=>{
  const ec=read('components/EmoteControl.tsx'),ew=read('components/party/EmoteWheel.tsx'),town=read('components/Town.tsx'),ra=read('lib/graphics/remoteAvatars.ts'),br=read('lib/multiplayer/townBridge.ts');
- assert(/aria-disabled=\{state\.disabled/.test(ec)&&/if \(!state\.disabled\)/.test(ec)&&/shown = open && !state\.disabled/.test(ec),'disabled button: aria-disabled, no wheel');
+ assert(/data-hidden=\{hidden/.test(ec)&&/aria-hidden=\{hidden/.test(ec)&&/if \(!hidden\)/.test(ec)&&/shown = open && !hidden/.test(ec)&&/if \(hidden\) setOpen\(false\)/.test(ec),'hidden button: no wheel, the open wheel closes');
  assert(/ctxWheelFor\(ctx\)/.test(ew));
  assert(/emoteCtxStore\.set\(/.test(town)&&/nearestFlyingFriend\(/.test(town)&&/flourishAt\(/.test(town)&&/ctxStillValid\(/.test(town),'Town feeds the store, flourishes, cancels on landing');
  assert(/flourishForWire\(/.test(ra),'friends pick the flourish from the sender mode');
@@ -194,5 +199,63 @@ t('wiring: Town stands a seated townsperson up first, fires the emote when she i
  assert(/stepSeat\(sm,paused\?0:dt,entry\.fx\.kind>=0/.test(npcs)&&/entry\.seat\.w=sm\.w;entry\.seat\.torsoPitch=entry\.seatTorso\+sm\.lean/.test(npcs),'only the pose blend and a lean are driven');
  assert(/npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\)/.test(npcs),'the seat-fit solve is unchanged');
  assert(!/seatTorso:seat\?[^,]*\.pelvis/.test(npcs));
+});
+
+// ---- C / D / E: skaters, scooters, jugglers, busy field players ----
+const NS=load('lib/town/npcEmoteSets.ts');
+t('NPC classes: skateboard / scooter / freestyle (juggler) / field players / lying; walkers and runners stay ordinary',()=>{
+ assert.equal(NS.npcEmoteClass({travel:'skateboard'}),'skater');assert.equal(NS.npcEmoteClass({travel:'scooter'}),'scooter');assert.equal(NS.npcEmoteClass({freestyle:0}),'juggler');assert.equal(NS.npcEmoteClass({freestyle:3}),'juggler');
+ assert.equal(NS.npcEmoteClass({travel:'run'}),'walker');assert.equal(NS.npcEmoteClass({}),'walker');assert.equal(NS.npcEmoteClass({pose:'lie'}),'lie');assert.equal(NS.npcEmoteClass({},true),'field');
+ // the real casts: two skaters, two scooters, four court freestylers
+ const npcs=read('lib/town/npcDialogues.ts'),cf=read('lib/town/courtFreestylers.ts');
+ assert.equal((npcs.match(/travel:'skateboard'/g)||[]).length,2);assert.equal((npcs.match(/travel:'scooter'/g)||[]).length,2);assert.equal((cf.match(/freestyle:\d/g)||[]).length,4);
+});
+t('NPC sets: skater 3, scooter 3, juggler 4 emotes with distinct labels, existing wire values, short lengths; the wheel follows the class and the ride',()=>{
+ assert.deepEqual(['skater','scooter','juggler'].map(k=>NS.npcWheelFor(k).length),[3,3,4]);
+ const labels=NS.NPC_SCRIPTS.map(s=>s.label);assert.equal(new Set(labels).size,10);
+ for(const l of ['Skate high five','Trick exchange','Wave while gliding','Ride-by wave','Bell ring','Side-by-side glide','Count my keep-ups','Nice header','Catch & bow','Nice touch'])assert(labels.includes(l),l);
+ for(const s of NS.NPC_SCRIPTS){assert(s.wire>=0&&s.wire<=9&&s.seconds>=2&&s.seconds<=4&&s.slow>0&&s.slow<=1,s.label);assert(NS.isNpcSetEmote(s.emote));}
+ assert.equal(NS.npcSetFor('skater','walk'),'skater');assert.equal(NS.npcSetFor('skater','bike'),'','a rider keeps the ride wheel');assert.equal(NS.npcSetFor('scooter','scooter'),'scooter','both on scooters: the pair set');assert.equal(NS.npcSetFor('scooter','moped'),'');
+ assert.equal(NS.npcSetFor('juggler','walk'),'juggler');assert.equal(NS.npcSetFor('walker','walk'),'');assert.equal(NS.npcSetFor('field','walk'),'','field players use the ordinary wheel and refuse');
+});
+t('skater / scooter overlays: the townsperson only slows then resumes its own speed, raises a hand / spins / rings, never moves itself',()=>{
+ const o={slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0},S=e=>NS.npcScriptFor(e);
+ for(const s of NS.NPC_SCRIPTS){NS.npcIxAt(s,0,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' starts at its own speed');NS.npcIxAt(s,s.seconds,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' resumes its speed');
+  let min=1;for(let a=0;a<=s.seconds;a+=.02){NS.npcIxAt(s,a,o);min=Math.min(min,o.slow);assert(o.slow>0);}assert(Math.abs(min-s.slow)<.02,s.label+' dips to '+s.slow);}
+ NS.npcIxAt(S(NS.NPC_SET.SkateFive),1.2,o);assert.equal(o.arm,2);assert(o.armW>.9,'a high five: the hand is up as it rolls past');
+ NS.npcIxAt(S(NS.NPC_SET.TrickSwap),2.1,o);assert(o.spin>.95,'a full small spin');NS.npcIxAt(S(NS.NPC_SET.TrickSwap),.2,o);assert.equal(o.spin,0);
+ NS.npcIxAt(S(NS.NPC_SET.BellRing),1,o);assert.equal(o.arm,1);NS.npcIxAt(S(NS.NPC_SET.GlideWave),1,o);assert.equal(o.arm,0);
+ let sawBow=0;for(let a=0;a<=3;a+=.05){NS.npcIxAt(S(NS.NPC_SET.CatchBow),a,o);sawBow=Math.max(sawBow,o.bow);}assert(sawBow>.9,'a bow');
+ let nod=0;for(let a=0;a<=2.4;a+=.02){NS.npcIxAt(S(NS.NPC_SET.NodHeader),a,o);nod=Math.max(nod,o.nod);}assert(nod>.5,'a header nod');
+ // juggler overlays never touch the ball: the module has no ball / position outputs, and the NPC code only adds arm / body offsets
+ assert.deepEqual(Object.keys(o).sort(),['arm','armW','bow','nod','slow','spin'].sort());
+});
+t('juggler keep-up counter: "7... 8... 9!" counting up one per beat and ending on "!"',()=>{
+ const lines=[];for(let a=0;a<4;a+=.05){const l=NS.keepUpLine(a,4,7);if(lines[lines.length-1]!==l)lines.push(l);}
+ assert.equal(lines[0],'7...');assert.equal(lines[1],'8...');assert(/^\d+!$/.test(lines[lines.length-1]),'ends on !: '+lines.join(' '));
+ for(let i=1;i<lines.length;i++)assert(parseInt(lines[i])>=parseInt(lines[i-1]),'counts up');assert(NS.juggleCounterStart(.5)>=4&&NS.juggleCounterStart(.99)<=9);
+});
+t('busy field players: ten distinct short lines, a shuffled bag that never repeats back to back, 3 s per-player cooldown, nearest within 9 m',()=>{
+ assert.equal(NS.REFUSALS.length,10);assert.equal(new Set(NS.REFUSALS).size,10);
+ for(const l of NS.REFUSALS)assert(l.split(/\s+/).length<=8&&l.length>8,'short: '+l);
+ for(const l of ["Hey, leave me alone, I'm playing!","Get off the field, I'm busy!","Not now, game's on!","Can't talk, I'm mid-match!"])assert(NS.REFUSALS.includes(l),l);
+ let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};const bag=NS.createRefusalBag(rnd);
+ let prev='',run=[];for(let i=0;i<1000;i++){const l=bag.next();assert.notEqual(l,prev,'no back-to-back repeat at '+i);prev=l;run.push(l);}
+ for(let k=0;k<5;k++)assert.equal(new Set(run.slice(k*10,k*10+10)).size,10,'every line once per bag');
+ assert.notEqual(run.slice(0,10).join(),run.slice(10,20).join(),'a fresh order each bag');
+ const L=[{id:'a',x:5,y:0,z:0,cooldownUntil:0},{id:'b',x:3,y:0,z:0,cooldownUntil:10},{id:'c',x:12,y:0,z:0,cooldownUntil:0},{id:'d',x:2,y:6,z:0,cooldownUntil:0}];
+ assert.equal(NS.pickFieldPlayer(L,{x:0,y:0,z:0},0).id,'a','b cooling, c too far, d on another floor');assert.equal(NS.pickFieldPlayer(L,{x:0,y:0,z:0},11).id,'b','b is back after its cooldown');assert.equal(NS.pickFieldPlayer([],{x:0,y:0,z:0},0),null);
+ assert.equal(NS.FIELD_COOLDOWN,3);assert.equal(NS.FIELD_RANGE,9);
+ assert.equal(NS.fieldWins(4,-1),true,'no friendlier townsperson');assert.equal(NS.fieldWins(4,6),true,'nearer than the friendly one');assert.equal(NS.fieldWins(6,4),false,'a friendlier townsperson is nearer');assert.equal(NS.fieldWins(-1,3),false);
+});
+t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays without touching routes or balls, the field players are the volleyball rally',()=>{
+ const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts'),vb=read('lib/graphics/volleyballGame.ts');
+ assert(/islandNpcs\.interact\(id,ns\.emote,reduced\)/.test(town)&&/npcEmoteClass\(e\.definition\)!==ns\.kind/.test(town),'an NPC-set pick targets the nearest townsperson of that class');
+ assert(/pickFieldPlayer\(refuse\.list/.test(town)&&/fieldWins\(fp\.d/.test(town)&&/emoteBubbles\.showText\(refuse\.bag\.next\(\)/.test(town),'one refusal bubble from the shuffled bag');
+ assert(/volleyballGame\.entries/.test(town)&&/entries/.test(vb),'the rally players');
+ assert(/entry\.routine\.speed=entry\.baseSpeed\*entry\.ixOut\.slow/.test(npcs)&&/entry\.routine\.speed=entry\.baseSpeed;/.test(npcs),'speed dips and returns; the route is untouched');
+ assert(!/freestyle\.(ball|motion)\s*=/.test(npcs),'the freestyle ball logic is not written to');
+ assert(/emoteReachTick\(performance\.now\(\)\/1000\)/.test(town)&&/nowS-reach\.at<\.25/.test(town),'the button flag is computed at ~4 Hz');
+ assert(/RIDE_EMOTE\.ScooterGlide/.test(town)&&/ns\.emote===NPC_SET\.SideGlide&&rideRef\.current==='scooter'/.test(town),'both on scooters: the existing scripted glide runs for the player too');
 });
 console.log('emote-contexts: '+n+' tests passed');
