@@ -87,6 +87,19 @@ const near=(a,b,e=1e-9)=>Math.abs(a-b)<e;
  const p=K.cylinder(0,0,10,0,10,{origin:[100,100],scale:2,azimuth:200,elevation:40},16);const s=F.tintSvg(p,'#e5533d');assert.ok(F.countParts(s)<=8,'a tinted solid is a handful of paths');
  console.log('PASS swatches: 6 swatches, only designated parts, three tones, light from the top left at any yaw');}
 
+// 5b. museum-figures-2 free solids: a prism from any two rings draws only its facing faces in ≤ 6 elements and shades with the
+//     light; tilting its vertices (a bent sole) still works; the hull is convex; sphere panels close on the rim; custom swatches.
+{const sq=(z,dx=0)=>[[0+dx,0,z],[20+dx,0,z],[20+dx,10,z],[0+dx,10,z]];
+ for(const yaw of [0,90,180,270]){const P={origin:[200,200],scale:2,azimuth:yaw,elevation:30},V=F.viewVector(yaw,30),L=F.lightOf(yaw,30);
+  const s=F.prismSvg(sq(0),sq(8),'#e5533d',{P,V,L});assert.ok(F.countParts(s)<=6,'≤ 6 elements at '+yaw);assert.match(s,/stroke="#3a3a3c"/,'ink silhouette');
+  const g=F.prismSvg(sq(0),sq(8),'#e5533d',{P,V,L},{ghost:.18});assert.equal(F.countParts(g),1,'the ghost is one path');
+  const bent=F.prismSvg(sq(0),sq(8,4),'#e5533d',{P,V,L});assert.ok(F.countParts(bent)<=6,'a sheared prism too');}
+ const h=F.hull([[0,0],[10,0],[10,10],[0,10],[5,5],[3,7]]);assert.equal(h.length,4,'inner points dropped');
+ const b=F.boxOf(sq(0),sq(8));assert.deepEqual(b,[[0,0,0],[20,10,8]]);
+ const d=F.spherePath([[1,0,0],[0,1,0],[0,0,1]],[100,100],50,{V:[1,0,0],R:[0,1,0],U:[0,0,1]});assert.match(d,/^M[\d.]+ [\d.]+L.*Z$/);
+ const sw=F.swatchList(['mint',{id:'tan',name:'Tan',hex:'#b9834c'},'nope']);assert.deepEqual(sw.map(s=>s.id),['mint','tan'],'SWATCHES ids and an exhibit own colours');
+ console.log('PASS free solids: facing faces only, ≤ 6 elements, ghost = 1 path, bent prisms, convex hull, sphere panels, custom swatches');}
+
 // 6. Heat: the stage paints through a ref with ONE sleeping loop; the tick allocates nothing; no rAF of its own; caps documented.
 {const src=read(A+'FigureStage.tsx'),kit=read(A+'figure-kit.ts');
  assert.doesNotMatch(src+kit,/requestAnimationFrame|setInterval/,'no loop of its own');assert.match(src,/usePaperLoop\(tick,box,reduced\)/,'the one Paper loop (parks off screen, disposed on unmount)');

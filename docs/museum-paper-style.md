@@ -23,7 +23,7 @@ entire screen", "the rest of the game should be in this style".
 | `figure.ts` | Paper mannequins (capsule bodies, poses, runs, ball, depth sort) | cards, var, backpass |
 | `bench.tsx` | Frames (wide / tall model orientation), `Base`, `Tint`, `Sphere`, `LabelPlate`, `useBox(ref)`, `useLive` | telstar, laced-leather, shirts |
 | `hooks.ts` | `useSize` (an element's live px size) | hall-of-fame, timeline |
-| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain) |
+| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain), laced-leather (Turn the old ball, Old vs New), boots (Run, plant, kick) |
 
 Hall-of-fame and timeline keep their own `Draw.tsx` (their display lists differ); everything else that was copied between
 exhibits now lives here. Two room components remain (`PaperRoom`, `PaperStage`): they share tokens and behaviour but differ in
@@ -63,21 +63,36 @@ User: research Colorfigures (https://april-zhu.com/colorfigures) and make the ex
 the shared kit first". An opt-in layer on the anatomy kit: a figure you can turn all the way round, see through, label and
 recolour. Exhibits that don't use it keep their fixed view. Files: `anatomy/figure-kit.ts` (pure maths, tested in Node) and
 `anatomy/FigureStage.tsx` + `FigureStage.module.css` (the React stage). Pilots: telstar-1970 ("Turn the ball"), var-2018
-("The review chain").
+("The review chain"). Batch 1 (museum-figures-2, Oct 21 2026; user: "go with your recommendation"): laced-leather
+("Turn the old ball": 18 leather panels, the lace and lace-up opening; see-through = the bladder and its inflation tube tucked
+under the laces; "Old vs New" swaps in a modern ball with a valve and a sealed bladder; leather swatches) and boots ("Run, plant,
+kick": a boot on turf; see-through = insole, heel counter, toe box over the soleplate and studs; moulded / screw-in studs; the
+Kit Shop's boot colours as swatches; three steps bend the sole, sink the studs and swing the kick). Next candidates:
+floodlights-1878, ball-curve, stadiums.
 
 **API.** `<FigureStage spec active reduced onLabel handle label top extra/>` fills its card (absolute, inset 0). `spec`:
 `{id, points, front?, turn?:'full'|'fixed', pitch?:[20,60], seeThrough?, labels?, swatches?, swatchLabel?, draw(view), tick?}`.
 `draw(view)` returns `{svg, labels?, obj?}` as ONE SVG string; `view` carries `yaw, pitch, P` (an iso-kit Projection, so every
 iso-kit solid shades and hides its back faces at any yaw), `V` (toward the viewer), `L` (light, always the viewer's top left),
-`xray` (0…1), `swatch`, `active` (ids of the parts working now). `handle.current` gives `turnTo`, `aim(n)`, `front`,
+`xray` (0…1), `swatch`, `swatchHex`, `active` (ids of the parts working now). `handle.current` gives `turnTo`, `aim(n)`, `front`,
 `invalidate`, `setSeeThrough`, `setLabels`. The stage adds ⟲ ⟳ (45°), Front view, See-through, Labels, the swatch row, a
-"Drag to turn" hint that goes after first use, drag/touch with inertia, arrow keys (15° / 8°) and Home.
+"Drag to turn" hint (just under the controls) that goes after first use, drag/touch with inertia, arrow keys (15° / 8°) and
+Home. `swatches` takes SWATCHES ids or an exhibit's own `{id,name,hex}` (leather tones, the Kit Shop's PALETTE). Free solids
+(museum-figures-2): `prismSvg(bottomRing, topRing, hex, view)` draws any near-convex prism from two rings of 3D points (so a
+sole can bend by moving vertices) in ≤ 6 elements (3 tones, 2 caps, a hull silhouette; `ghost` = one path); `boxOf` gives its
+depth box; `spherePath` draws a ball panel that closes on the rim; `hull` is the convex hull.
 
 **Layers and labels.** Tag a part `layer:'shell'` (fades to `GHOST` .18 with its ink outline, `shellAlpha(k)`) or `'inner'`
-(drawn over the ghost at `innerAlpha(k)`); the cross-fade is 250 ms. Labels are `{id, text, at, normal?}`: a tag whose
-`normal` faces away is hidden; tags sit in two columns either side of `obj`, sorted by height (leaders never cross), pushed
+(drawn over the ghost at `innerAlpha(k)`); the cross-fade is 250 ms. Labels are `{id, text, at, normal?, centre?, keep?, on?}`: a
+tag whose `normal` faces away slides to the silhouette if it has a `centre` (a round part: the Telstar's Valve no longer
+disappears near the edge), stays with a dashed leader if `keep`, else hides; `on` lights it from the drawing (a part turned to
+face you). Tags sit in two columns either side of `obj`, sorted by height (leaders never cross), pushed
 apart (no overlaps), kept in the card, 13-14 px mono; a tag lights in the accent while its id is in `active`; tapping a tag
-turns the figure to face it and calls `onLabel(id)`.
+turns the figure to face it and calls `onLabel(id)`. When a column has no room beside the figure (a phone card the figure
+fills), the tags collapse to numbered badges on the parts plus a legend of numbered pills along the card's bottom edge, so no
+tag covers the model (`compact:'auto'`); every tag and badge has a 44 px hit area. Pilot fixes (museum-figures-2): VAR's
+review chain now stands on a round plinth with a tighter layout (a square base lost a third of the card to its diagonal at
+every yaw) and shorter tags (Cameras, Video room, Replays, VAR, Radio, Monitor); Telstar's Valve tag is clamped to the rim.
 
 **Depth rules (no depth buffer).** Never a fixed back-to-front order: every part has a `box` and goes through `byDepth(parts, V)`
 (separated boxes by the viewer's side, overlapping ones by centre depth). Draw a face, and anything on it, only while
