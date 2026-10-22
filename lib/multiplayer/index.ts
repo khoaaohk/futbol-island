@@ -9,6 +9,7 @@ export * from './store';
 export * from './interp';
 export * from './look';
 export * from './names';
+export * from './nick';
 
 export type PoseListener = (id: MemberId, body: PoseBody, recvMs: number) => void;
 const poseSubs = new Set<PoseListener>();

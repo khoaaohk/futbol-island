@@ -16,7 +16,7 @@ export const START_NONPROFITS=['fc_yap','street_soccer_san_diego','ronin_futsal'
 export const START_AMOUNTS=[5,10,15,25] as const;
 export const START_GROWN_IDS=['open','wsv','instagram',...START_NONPROFITS,'privacy','donate','gate_ok','gate_no',...START_AMOUNTS.map(a=>'amt_'+a),'paid'] as const;
 /** The privacy policy's table of contents, in order (tests check it matches PrivacyPolicy.tsx). */
-export const PRIVACY_SECTION_IDS=['short','children','device','codes','plan','email','visits','tech','never','use','cookies','services','sharing',
+export const PRIVACY_SECTION_IDS=['short','children','device','codes','plan','email','visits','friends','tech','never','use','cookies','services','sharing',
  'retention','security','rights','regions','changes','contact'] as const;
 export const START_COUNT_IDS:readonly string[]=[...START_TITLE_IDS.map(s=>'st:'+s),...START_GROWN_IDS.map(s=>'sg:'+s),'sp:open',...PRIVACY_SECTION_IDS.map(s=>'sp:'+s)];
 const SET=new Set(START_COUNT_IDS);

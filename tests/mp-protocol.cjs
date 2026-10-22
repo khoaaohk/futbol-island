@@ -67,7 +67,7 @@ const tok='abcdefgh_ijklmnop-1234';
 const name=[3,5];
 const clientSamples=[
   [P.C.Hello,1,look,null,null],[P.C.Hello,1,look,tok,tok],[P.C.Hello,1,look,null,null,null],[P.C.Hello,1,look,null,null,0],[P.C.Hello,1,look,tok,null,31],[P.C.Pose,42,...body],[P.C.Emote,P.Emote.Cheer],[P.C.Ping,P.PingKind.MeetHere,1000,-500],
-  [P.C.Kick,3],[P.C.Lock,1],[P.C.Rotate],[P.C.End],[P.C.Leave],[P.C.Beat,123456],
+  [P.C.Hello,1,look,null,null,3,'Emma'],[P.C.Hello,1,look,null,null,null,null],[P.C.ResetName,4],[P.C.Kick,3],[P.C.Lock,1],[P.C.Rotate],[P.C.End],[P.C.Leave],[P.C.Beat,123456],
 ];
 const member=[2,name,look,0,body];
 const serverSamples=[
@@ -75,6 +75,7 @@ const serverSamples=[
   [P.S.Joined,member],[P.S.Left,2,P.LeaveReason.Timeout],[P.S.Poses,7,1,...body,2,...body],[P.S.Poses,8],[P.S.Emote,1,P.Emote.Wave],
   [P.S.Ping,1,P.PingKind.FollowMe,10,20],[P.S.Host,4],[P.S.Code,'K7MQ4R',1760000000000],[P.S.Ended,P.EndReason.Expired],
   [P.S.Error,P.ErrorCode.Full],[P.S.Beat,99],
+  [P.S.Welcome,1,0,tok,1760000000000,1760007200000,0,[[0,[1,2],look,1,null,'Emma'],[...member,null]]],[P.S.Joined,[...member,'Élodie']],[P.S.Renamed,3,null],
 ];
 t('round trip client',()=>{for(const m of clientSamples)assert.deepEqual(plain(P.parseClient(P.encode(m))),m,JSON.stringify(m));});
 t('round trip server',()=>{for(const m of serverSamples)assert.deepEqual(plain(P.parseServer(P.encode(m))),m,JSON.stringify(m));});
@@ -84,6 +85,38 @@ t('Hello animal is optional and backward compatible',()=>{
   assert.deepEqual(plain(P.parseClient(JSON.stringify([0,1,look,null,null,7]))),[0,1,look,null,null,7]);
   assert.equal(P.PROTOCOL_VERSION,1,'no version bump');
   for(const bad of [32,-1,2.5,'1',[1],{},true])assert.equal(P.parseClient(JSON.stringify([0,1,look,null,null,bad])),null,JSON.stringify(bad));
+});
+
+t('normalizeNick table',()=>{
+  const ok={'Emma':'Emma','EMMA':'Emma','emma':'Emma','  emma  ':'Emma','élodie':'Élodie','ÉLODIE':'Élodie','Zoë':'Zoë','Ñandú':'Ñandú','Al':'Al','Abcdefghijkl':'Abcdefghijkl','øystein':'Øystein'};
+  for(const [i,o] of Object.entries(ok))assert.equal(P.normalizeNick(i),o,i);
+  for(const o of Object.values(ok))assert.equal(P.normalizeNick(o),o,'idempotent '+o);
+  const bad=['a','','  ','Emma Lou','12345','Emma2','Mary-Ann',"O'Neil",'Abcdefghijklm','http://x.co','http.','.http','www.x.com','a.b','h.t.t.p','\u{1F600}','Em\u{1F600}','\u00D7ab','ab\u00F7','\u0152uvre','Emma\nLou','Em\u0301ma','<b>','ßß'.repeat(7),'x'.repeat(100),'Emma\u200B','ab\u0000'];
+  for(const b of bad)assert.equal(P.normalizeNick(b),null,JSON.stringify(b));
+  for(const b of [null,undefined,5,{},[],true,['Emma']])assert.equal(P.normalizeNick(b),null);
+  assert.equal(P.normalizeNick('ÿo'),'ÿo','a letter whose capital is outside Latin-1 stays as typed');
+  assert.equal(P.NICK_MAX,12);
+});
+
+t('Hello nick: optional, normalised, bad nick becomes null (join never blocked)',()=>{
+  const parse=x=>P.parseClient(JSON.stringify(x));
+  assert.equal(parse([0,1,look,null,null,null,'EMMA'])[6],'Emma');
+  assert.equal(parse([0,1,look,null,null,5,'élodie'])[6],'Élodie');
+  for(const b of ['Emma Lou','12345','http://x.y','a','','x'.repeat(100),'\u{1F600}'])assert.equal(parse([0,1,look,null,null,null,b])[6],null,b);
+  for(const b of [5,{},['Emma'],true])assert.equal(parse([0,1,look,null,null,null,b]),null,JSON.stringify(b));
+  assert.equal(parse([0,1,look,null,null,null,'Emma',1]),null);
+  assert.ok(parse([0,1,look,null,null]).length===5&&parse([0,1,look,null,null,3]).length===6);
+  const biggest=[0,1,look,tok,tok,31,'ÀÀÀÀÀÀÀÀÀÀÀÀ'];assert.ok(P.encode(biggest).length<=512);
+});
+
+t('ResetName / Renamed shapes',()=>{
+  assert.equal(P.C.ResetName,10);assert.equal(P.S.Renamed,31);
+  for(const b of [[10],[10,16],[10,'1'],[10,1,2],[10,-1]])assert.equal(P.parseClient(JSON.stringify(b)),null,JSON.stringify(b));
+  for(const b of [[31],[31,1],[31,1,'Emma'],[31,16,null],[31,1,null,0]])assert.equal(P.parseServer(JSON.stringify(b)),null,JSON.stringify(b));
+  const w=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null,'Emma Lou']]];assert.equal(P.parseServer(JSON.stringify(w)),null,'roster nick must be valid');
+  const w2=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null,'emma']]];assert.equal(P.parseServer(JSON.stringify(w2)),null,'roster nick must be normalised');
+  const w3=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null]]];assert.ok(P.parseServer(JSON.stringify(w3)),'5-element member still fine');
+  const full=[20,1,0,tok,1,2,0,new Array(6).fill([5,[15,31],look,0,body,'Abcdefghijkl'])];assert.ok(P.encode(full).length<4096);
 });
 
 t('malformed inputs rejected (client)',()=>{
@@ -165,11 +198,11 @@ t('WORLD_BOUNDS contains island, Cay, Summit with 100 m margin',()=>{
   for(const [x,z] of [[612,-160],[640,130]])assert.ok(B.minX<=(x-M)*10&&B.maxX>=(x+M)*10&&B.minZ<=(z-M)*10&&B.maxZ>=(z+M)*10,x+','+z);
 });
 
-t('types.ts has no free string fields except tokens/code',()=>{
+t('types.ts has no free string fields except tokens/code and the one typed first name (nick)',()=>{
   const src=fs.readFileSync(path.join(ROOT,'multiplayer/protocol/types.ts'),'utf8').split('\n');
   const hits=src.filter(l=>!/^\s*\/\//.test(l)&&/\bstring\b/.test(l.replace(/\/\/.*$/,'')));
   assert.ok(hits.length>0);
-  for(const l of hits)assert.match(l,/resumeToken|hostKey|code: string/,l);
+  for(const l of hits)assert.match(l,/resumeToken|hostKey|code: string|nick\??: string \| null/,l);
 });
 
 t('purity: protocol imports only sibling files, no DOM/Node APIs',()=>{

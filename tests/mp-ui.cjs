@@ -38,6 +38,18 @@ t('pending link waits for the island and the intro',()=>{
  assert(/!islandReady\s*\|\|\s*!introDone/.test(host),'islandReady && introDone');
  assert(host.lastIndexOf('readPendingParty()')>host.search(/!islandReady\s*\|\|\s*!introDone/),'read after the guard');
 });
+t('first-name field: the only other text input, in the grown-up steps, never on the title screen',()=>{
+ const nf=read('components/party/NickField.tsx');
+ const inp=(nf.match(/<input[\s\S]*?\/>/g)||[]);assert.equal(inp.length,1,'one input');
+ for(const a of [/maxLength=\{NICK_MAX\}/,/inputMode="text"/,/autoCapitalize="words"/,/autoComplete="off"/,/autoCorrect="off"/,/spellCheck=\{false\}/,/placeholder="Your first name"/])assert(a.test(inp[0]),String(a));
+ assert(/First name \(optional\)/.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
+ assert(/filterNickInput/.test(nf)&&/aria-label="Clear first name"/.test(nf),'live filter and clear button');
+ assert(!/localStorage|sessionStorage|document\.cookie|console\.|analytics|lib\/saves/.test(nf.replace(/\/\*[\s\S]*?\*\//g,'')),'memory only, no logging');
+ assert(/<NickField \/>/.test(join)&&/<NickField \/>/.test(host),'shown with the animal picker in the join card and the start card');
+ for(const f of fs.readdirSync(path.join(ROOT,'components')).filter(x=>/^landing$/.test(x)).flatMap(d=>fs.readdirSync(path.join(ROOT,'components',d)).map(x=>'components/'+d+'/'+x)).filter(x=>/\.tsx$/.test(x)))assert(!/NickField/.test(read(f)),f+' must not show the name field');
+ assert(/Reset name to \$\{m\.name\}/.test(host)&&/host\.resetName\(m\.id\)/.test(host)&&/state\.isHost && m\.nick/.test(host)&&/Name reset/.test(host),'host-only Reset name button with toast');
+ assert(/<small>\{m\.name\}<\/small>/.test(host),'made-up name shown small for context');
+});
 t('only the code boxes take text',()=>{
  for(const f of ['PartyHost','PartyInvite','PartyChip','EmoteWheel']){const s=read(`components/party/${f}.tsx`);assert(!/<input|<textarea|contentEditable/i.test(s),f+' has no text input');}
  const inputs=join.match(/<input[\s\S]*?\/>/g)||[];assert.equal(inputs.length,1,'one input element (rendered 6 times)');
@@ -88,12 +100,13 @@ t('animal picker: 12-16 fixed options, no typing, Surprise me, labels, >= 44px, 
  assert(!/localStorage|sessionStorage|document\.cookie/.test(pk),'choice kept in memory only');
  assert(/<AnimalPicker \/>/.test(join),'join card shows the picker')&&assert(/<AnimalPicker \/>/.test(host),'host start card shows the picker');
  assert(/animal: getAnimalChoice\(\)/.test(host)&&host.split('animal: getAnimalChoice()').length===3,'create and join both send the choice');
+ assert(host.split('nick: getNick()').length===3,'create and join both send the first name (memory only)');
  const inputs=(join.match(/<input/g)||[]).length;assert.equal(inputs,1,'picker adds no input to the join card');
 });
 t('party sheet rows: coloured dot + animal glyph + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
  assert(/colourName\(m\.colourIdx\)/.test(host)&&/colourName\(me\.colourIdx\)/.test(host),'aria-label includes the colour');
- assert(/You \(\{me\.name\}\)/.test(host),"local row says 'You'");
+ assert(/You \(\{displayName\(me\)\}\)/.test(host),"local row says 'You'");
  assert(/styles\.badge[^<]*Host/.test(host),'host badge stays');
 });
 t('relay calls: offline / not found behave, nothing thrown',async()=>{});
@@ -116,7 +129,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  t('icon-only chip with aria-labels',()=>{
   assert(/aria-label=\{label\}/.test(chip)&&/aria-expanded/.test(chip),'chip label');assert(!/>\s*[A-Za-z]{3,}\s*</.test(chip.replace(/<svg[\s\S]*?<\/svg>/g,'')),'no visible words on the chip');
   assert(/aria-label=\{x\.label\}/.test(wheel)&&(read('lib/town/emoteReact.ts').match(/emote: EMOTE\./g)||[]).length===4,'four labelled emotes (Wave, High five, Cheer, Well played)');
-  assert(/Hide \$\{m\.name\}|Hide/.test(host)&&/Mute|Unmute/.test(host)&&/Remove \$\{m\.name\}/.test(host),'hide / mute / remove per friend');
+  assert(/Hide \$\{m\.name\}|Hide/.test(host)&&/Mute|Unmute/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'hide / mute / remove per friend');
   for(const w of ['Lock party','New code','End party for everyone','Leave party','Invite'])assert(host.includes(w),w);
  });
  t('messages go through toastLane at note priority; no analytics / saves',()=>{

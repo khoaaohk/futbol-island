@@ -25,7 +25,7 @@ export type StartReport={
 };
 
 export const PRIVACY_SECTION_LABEL:Record<(typeof PRIVACY_SECTION_IDS)[number],string>={short:'1. The short version',children:'2. Children and grown-ups',device:'3. What stays on the device',
- codes:'4. Save codes',plan:'5. The football plan and QR links',email:'6. Sending a code to a grown-up',visits:'7. Visit counts and learning statistics',tech:'8. Technical information',
+ codes:'4. Save codes',plan:'5. The football plan and QR links',email:'6. Sending a code to a grown-up',visits:'7. Visit counts and learning statistics',friends:'7a. Play with friends (optional)',tech:'8. Technical information',
  never:'9. What we never collect',use:'10. How we use information',cookies:'11. Cookies and browser storage',services:'12. Services that help run the game',sharing:'13. Sharing and selling',
  retention:'14. How long we keep things',security:'15. How we protect it',rights:'16. Your choices and rights',regions:'17. UK, EU and US states',changes:'18. Changes to this policy',contact:'19. Contact'};
 const LINKS:[string,string][]=[['wsv','White Sports Ventures site'],['instagram','@jeremiahwhiteiii on Instagram'],['fc_yap','FC YAP'],['street_soccer_san_diego','Street Soccer San Diego'],

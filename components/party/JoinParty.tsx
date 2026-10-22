@@ -4,6 +4,7 @@ import { CODE_LENGTH } from '../../multiplayer/protocol';
 import { NOT_IN_CODES_HINT } from '@/lib/multiplayer/invite';
 import CodeBoxes from './CodeBoxes';
 import AnimalPicker from './AnimalPicker';
+import NickField from './NickField';
 import styles from './party.module.css';
 
 /**
@@ -19,6 +20,7 @@ export default function JoinParty({ initial = '', message, busy, onJoin, onClose
       <h3 id="party-join-title">Join with a code</h3>
       <CodeBoxes initial={initial} onChange={(c, rejected) => { setCode(c); setHint(rejected); }} onEnter={(c) => { if (!busy) onJoin(c); }} />
       <AnimalPicker />
+      <NickField />
       <p className={styles.status} role="status" aria-live="polite">{hint ? NOT_IN_CODES_HINT : message ?? 'Ask your friend for their code.'}</p>
       <div className={styles.row}>
         <button type="button" className={styles.primary} disabled={!complete || busy} onClick={() => onJoin(code)}>{busy ? 'Checking' : 'Join'}</button>

@@ -2,7 +2,7 @@
 import { C, S, LOOK_LEN, MAX_INBOUND_BYTES, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
-import { NAME_ANIMALS, NAME_COLOURS, validAnimal } from './names';
+import { NAME_ANIMALS, NAME_COLOURS, normalizeNick, validAnimal } from './names';
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,32}$/;
 const MAX_SERVER_BYTES = 4096;
@@ -42,8 +42,12 @@ function isPose(v: unknown): boolean {
   return Array.isArray(v) && v.length === 8 && clampPose(v as PoseBody) !== null;
 }
 
+function isNickField(v: unknown): boolean {
+  return v === null || (typeof v === 'string' && normalizeNick(v) === v);
+}
+
 function isMember(v: unknown): v is MemberInfo {
-  return Array.isArray(v) && v.length === 5 && inRange(v[0], 0, 15) && isName(v[1]) && isLook(v[2]) && isBit(v[3]) &&
+  return Array.isArray(v) && (v.length === 5 || (v.length === 6 && isNickField(v[5]))) && inRange(v[0], 0, 15) && isName(v[1]) && isLook(v[2]) && isBit(v[3]) &&
     (v[4] === null || isPose(v[4]));
 }
 
@@ -67,10 +71,17 @@ export function parseClient(raw: string): ClientMsg | null {
   const a = parseJsonArray(raw);
   if (!a) return null;
   switch (a[0]) {
-    case C.Hello:
-      if ((a.length === 5 || (a.length === 6 && (a[5] === null || validAnimal(a[5])))) && inRange(a[1], 0, 65535) && isLook(a[2]) &&
-        isTokenOrNull(a[3]) && isTokenOrNull(a[4])) return a as ClientMsg;
+    case C.Hello: {
+      const animalOk = a.length < 6 || a[5] === null || validAnimal(a[5]);
+      // nick (7th element): any string or null is accepted here and normalised; a bad name becomes null so a typo never blocks a join.
+      const nickOk = a.length < 7 || a[6] === null || typeof a[6] === 'string';
+      if (a.length >= 5 && a.length <= 7 && animalOk && nickOk && inRange(a[1], 0, 65535) && isLook(a[2]) &&
+        isTokenOrNull(a[3]) && isTokenOrNull(a[4])) {
+        if (a.length === 7) a[6] = normalizeNick(a[6]);
+        return a as ClientMsg;
+      }
       return null;
+    }
     case C.Pose:
       if (a.length === 10 && inRange(a[1], 0, 0x7fffffff) && clampPose(a.slice(2) as PoseBody)) return a as ClientMsg;
       return null;
@@ -79,6 +90,7 @@ export function parseClient(raw: string): ClientMsg | null {
     case C.Ping:
       return a.length === 4 && inRange(a[1], 0, 1) && inBoundsXZ(a[2], a[3]) ? (a as ClientMsg) : null;
     case C.Kick:
+    case C.ResetName:
       return a.length === 2 && inRange(a[1], 0, 15) ? (a as ClientMsg) : null;
     case C.Lock:
       return a.length === 2 && isBit(a[1]) ? (a as ClientMsg) : null;
@@ -130,6 +142,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 2 && inRange(a[1], 0, 8) ? (a as ServerMsg) : null;
     case S.Beat:
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ServerMsg) : null;
+    case S.Renamed:
+      return a.length === 3 && inRange(a[1], 0, 15) && a[2] === null ? (a as ServerMsg) : null;
     default:
       return null;
   }

@@ -1,4 +1,5 @@
-// Reviewed, kid-friendly name parts. Clients only ever send indexes; nobody can type a name.
+// Reviewed, kid-friendly name parts (the made-up names are indexes). The one free-text field is the optional typed first name
+// (normalizeNick below): letters only, 2 to 12, owner decision, see docs/multiplayer-design.md.
 import type { NameIdx } from './types';
 
 export const NAME_COLOURS: readonly string[] = [
@@ -67,4 +68,23 @@ function pickAnyPair(taken: NameIdx[], rand: () => number): NameIdx {
     k--;
   }
   return [0, 0];
+}
+
+const NICK_RE = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]{2,12}$/;
+const NICK_LETTER_RE = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]$/;
+export const NICK_MAX = 12;
+
+/**
+ * The typed first name: trimmed, letters only (A-Z, a-z, Latin-1 accented), 2 to 12 long; first letter upper case, the rest lower.
+ * Anything else (digits, spaces, hyphens, symbols, emoji, URLs, wrong types) returns null. Never throws. No block-list by owner decision.
+ * Shared by the client and the relay; idempotent.
+ */
+export function normalizeNick(raw: unknown): string | null {
+  if (typeof raw !== 'string' || raw.length > 64) return null;
+  const t = raw.trim();
+  if (!NICK_RE.test(t)) return null;
+  const first = t.charAt(0), up = first.toUpperCase();
+  const head = up.length === 1 && NICK_LETTER_RE.test(up) ? up : first;
+  const out = head + t.slice(1).toLowerCase();
+  return NICK_RE.test(out) && out.length === t.length ? out : null;
 }

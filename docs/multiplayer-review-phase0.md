@@ -37,3 +37,15 @@ go only to their owner; no saves/install id/analytics touched; session storage h
 plus the pending code; the parent gate covers create, join by code and join by link; wire validation is tight (512 B cap before parse,
 arrays only, integer checks, CSPRNG codes + blocklist, constant-time compares); flood handling and token buckets; interpolation clock
 shared (performance.now()); hot paths allocate nothing; Town dispose order kept; flag-off runtime cost zero.
+
+## Addendum (22 Oct 2026): the typed first name is a new free-text surface
+
+Owner decision: players may type a **first name only** (letters only, 2 to 12, Latin-1 accented letters allowed), with NO naughty-words block-list. Built as: `normalizeNick` (shared client / relay), optional `Hello.nick`, nick in roster messages, host-only `ResetName` + `Renamed`, in-memory only on both sides (not in DO storage, attachments, snapshots, logs, sessionStorage, analytics or saves), set only at join (no rename), Hide drops avatar + label, Mute drops emotes.
+
+Residual risks to accept knowingly (or revisit before public launch):
+- **Filter-evasion spellings:** with no block-list, an offensive word spelled in plain letters ("Poo", a slur, a rude word in another language) is a valid name. Letters-only removes digits, symbols, spaces and URLs, but not words. Mitigations are structural (cap 6, code + grown-up gate, host Reset name / Remove / Lock, Hide / Mute, set-at-join only, falls back to the made-up name).
+- **Impersonation:** two players may type the same name, or a name like a classmate's or a host's; the colour dot, animal and the small made-up name under the label are the tie-breakers. Hosts can reset.
+- **Lookalike letters:** Latin-1 accented letters (e.g. "Élodie" vs "Elodie", "I" vs "l") and mixed-case lookalikes pass the filter; Cyrillic / Greek / full-width lookalikes do NOT (outside the allowed ranges), which is deliberate.
+- **Personal information:** a first name is personal information under COPPA / GDPR-K. Mitigated by: optional, grown-up-gated step, shown only inside the party, never persisted or logged, not in analytics; the privacy page 7a discloses it. Needs the legal review already pending.
+- **A reset can be undone by a reconnect only if the client still holds the name:** the client clears its own copy on `Renamed`, and a resume Hello never changes the relay's stored name, so a reset sticks.
+- **Memory only means a Durable Object eviction drops names** (members keep their made-up name); acceptable by design.

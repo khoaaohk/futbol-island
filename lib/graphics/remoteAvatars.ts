@@ -29,13 +29,17 @@ export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
  return tier<=1?5:tier===2?3:tier===3?1:0;
 }
 
-export interface MemberStyle{hex:string;glyph:string}
+/** `sub`: the made-up name ('Red Zebra'), drawn small under the label when the friend typed a first name (the label text). */
+export interface MemberStyle{hex:string;glyph:string;sub?:string}
 export interface LocalRing{x:number;y:number;z:number;hex:string}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
  /** `style` = the member's name colour (hex) and animal glyph: drawn on the label and as the ground ring. */
  upsert(id:MemberId,look:Look,name:string,style?:MemberStyle):void;
  remove(id:MemberId):void;
+ /** Local choices (PartyHost Hide / Mute): hidden friends are not drawn at all (avatar, ring, label, emote bubble); muted friends' emotes are not shown. */
+ setHidden(ids:ReadonlySet<MemberId>):void;
+ setMuted(ids:ReadonlySet<MemberId>):void;
  emote(id:MemberId,e:Emote):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
  update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null):void;
@@ -69,27 +73,32 @@ type Entry={
  rig:PlayerRig|null;label:T.Sprite|null;labelTexture:T.CanvasTexture|null;bubble:T.Sprite|null;
  admitted:boolean;shown:boolean;
  motion:PlayerMotion;swim:SwimPose;
- emote:number;emoteAge:number;
+ emote:number;emoteAge:number;hidden:boolean;muted:boolean;
  /** The high five variation this friend is playing (0..9; -1 none). The wire format has no spare field, so each screen picks its own. */
  hf:number;
  acc:number;slot:number;needResume:boolean;
 };
 
+const LABEL_W=256;
+const labelH=(style:MemberStyle|null)=>style&&style.sub?88:64;
 function makeLabelTexture(text:string,style:MemberStyle|null){
- const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
+ const H=labelH(style),sub=style&&style.sub?style.sub:'';
+ const canvas=document.createElement('canvas');canvas.width=LABEL_W;canvas.height=H;
  const g=canvas.getContext('2d');
  if(g){
   const label=style&&style.glyph?style.glyph+' '+text:text;
-  g.clearRect(0,0,256,64);g.font='700 27px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
+  g.clearRect(0,0,LABEL_W,H);g.font='700 27px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
   const dot=style?30:0;
-  const w=Math.min(244,g.measureText(label).width+28+dot);
-  const x0=128-w/2;
-  g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,48,24):g.rect(x0,8,w,48);g.fill();
+  let w=Math.min(244,g.measureText(label).width+28+dot);
+  if(sub){g.font='600 19px system-ui, sans-serif';w=Math.max(w,Math.min(244,g.measureText(sub).width+28));g.font='700 27px system-ui, sans-serif';}
+  const x0=128-w/2,ph=H-16,cy=sub?30:32;
+  g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,ph,24):g.rect(x0,8,w,ph);g.fill();
   if(style){
    g.lineWidth=3;g.strokeStyle=style.hex;g.stroke(); // coloured rim = the ring colour
-   g.fillStyle=style.hex;g.beginPath();g.arc(x0+22,32,9,0,Math.PI*2);g.fill();g.lineWidth=2;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
+   g.fillStyle=style.hex;g.beginPath();g.arc(x0+22,cy,9,0,Math.PI*2);g.fill();g.lineWidth=2;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
   }
-  g.fillStyle='#ffffff';g.fillText(label,128+dot/2,33,230-dot);
+  g.fillStyle='#ffffff';g.fillText(label,128+dot/2,cy+1,230-dot);
+  if(sub){g.font='600 19px system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.82)';g.fillText(sub,128,63,230);}
  }
  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;return texture;
 }
@@ -146,7 +155,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   releaseHiddenClassic(rig.root);rig.root.scale.setScalar(BODY_SCALE);
   e.rig=rig;e.admitted=true;
   const mat=new T.SpriteMaterial({map:e.labelTexture,transparent:true,depthWrite:false});
-  const label=new T.Sprite(mat);label.scale.set(1.5,.375,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
+  const label=new T.Sprite(mat);label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
   const bubble=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false}));bubble.scale.set(.6,.6,1);bubble.visible=false;bubble.raycast=()=>{};bubble.name='remote-emote';labels.add(bubble);e.bubble=bubble;
  }
  const capNow=()=>batterySaverOn()?0:opts.maxFor(effectiveTier(),opts.phone);
@@ -154,7 +163,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function tryAdmit(e:Entry){if(!e.admitted&&admittedCount()<capNow())admit(e);}
  function setLabel(e:Entry){
   e.labelTexture?.dispose();e.labelTexture=makeLabelTexture(e.name,e.style);
-  if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;}
+  if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;e.label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);}
  }
  function release(e:Entry){
   e.rig?.dispose();e.rig=null;e.label?.removeFromParent();(e.label?.material as T.SpriteMaterial|undefined)?.dispose();
@@ -175,17 +184,19 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,hf:-1,acc:0,slot:(id*.618034)%1,needResume:true};
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);tryAdmit(e);return;
    }
-   if(e.name!==name||(st?.hex!==e.style?.hex)||(st?.glyph!==e.style?.glyph)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
+   if(e.name!==name||(st?.hex!==e.style?.hex)||(st?.glyph!==e.style?.glyph)||(st?.sub!==e.style?.sub)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
    if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);}}
   },
   remove(id){
    const e=byId.get(id);if(!e)return;
    byId.delete(id);const i=list.indexOf(e);if(i>=0)list.splice(i,1);release(e);
   },
-  emote(id,em){const e=byId.get(id);if(!e)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
+  setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
+  setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;
@@ -207,6 +218,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
     if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.hf>=0?HIGH_FIVES[e.hf].duration:EMOTE_SECONDS)){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
     if(!rig||!e.label||!e.bubble)continue;
+    if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
     const pose=poses.get(e.id);
     if(!pose||saverFade<=0||pose.zone===Zone.Indoors){hideEntry(e);continue;}
     const dx=pose.x-camPos.x,dz=pose.z-camPos.z,d2=dx*dx+dz*dz;

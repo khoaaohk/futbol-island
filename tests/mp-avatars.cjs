@@ -165,4 +165,37 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  const off0=load('lib/multiplayer/townBridge.ts',over,{NEXT_PUBLIC_MULTIPLAYER:'0'});
  assert.equal(off0.createPartyRuntime({scene:new T.Scene(),viewGate:{addUnitRoots(){}},local:()=>({}),phone:false,reducedMotion:()=>false}),null);
 }
+
+// 8. first-name labels + Hide / Mute are applied to the drawn avatars
+{
+ const h=harness(),look=new Array(12).fill(0);
+ const labels=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-name');
+ h.avatars.upsert(1,look,'Red Zebra',{hex:'#D62828',glyph:'Z'});
+ h.avatars.upsert(2,look,'Emma',{hex:'#0072B2',glyph:'F',sub:'Blue Fox'});
+ h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.avatars.shown,2);
+ const [l1,l2]=labels();
+ assert.ok(l2.scale.y>l1.scale.y,'a label with the made-up name underneath is taller');
+ const tex2=l2.material.map;
+ h.avatars.upsert(2,look,'Blue Fox',{hex:'#0072B2',glyph:'F'}); // the host reset the name
+ assert.notEqual(l2.material.map,tex2,'label texture is rebuilt on reset');
+ assert.ok(Math.abs(l2.scale.y-l1.scale.y)<1e-9,'label back to the single-line size');
+ // Hide: not drawn at all (avatar, label, bubble); Show brings it back
+ h.avatars.emote(2,1);
+ h.avatars.setHidden(new Set([2]));h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.avatars.shown,1,'hidden friend is not drawn');
+ assert.equal(l2.visible,false,'hidden friend label is hidden');
+ const bubbles=h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-emote');
+ assert.ok(bubbles.every(b=>!b.visible||b===bubbles[0]),'bubble state');assert.equal(bubbles[1].visible,false,'hidden friend emote bubble is hidden');
+ h.avatars.emote(2,1);h.avatars.update(.016,h.poses,h.camera,false);assert.equal(bubbles[1].visible,false,'no emote while hidden');
+ h.avatars.setHidden(new Set());h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.avatars.shown,2,'Show brings the friend back');
+ // Mute: emotes are not shown, the friend stays visible
+ h.avatars.setMuted(new Set([2]));h.avatars.emote(2,1);h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.avatars.shown,2,'muted friend stays drawn');assert.equal(bubbles[1].visible,false,'muted friend emote not shown');
+ h.avatars.emote(1,1);h.avatars.update(.016,h.poses,h.camera,false);assert.equal(bubbles[0].visible,true,'other friends emotes still show');
+ const bridge=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx');
+ assert(/setHiddenFriends/.test(bridge)&&/avatars\.setHidden\(hiddenIds\)/.test(bridge)&&/onHiddenChange=\{setHiddenFriends\}/.test(town)&&/onMutedChange=\{setMutedFriends\}/.test(town),'PartyHost Hide / Mute reach the avatars');
+ assert(/displayName\(m\)/.test(bridge)&&/sub: m\.nick \? m\.name/.test(bridge),'label uses the first name with the made-up name small underneath');
+}
 console.log('mp-avatars ok');
