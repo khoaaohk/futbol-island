@@ -421,6 +421,38 @@ friend clamp; `caps.fieldRadius` -> field r; `wake.remote*` -> the layer's remot
 `multiplayer/relay/src/roomCore.ts`, `multiplayer/dev-relay`; tests `tests/mp-room-core.cjs` and `tests/mp-protocol.cjs`. Deploy order: relay first (it is
 backward compatible), then clients. Risk: `S.Joined` re-broadcast on resume with old clients (test before deploy).
 
+#### Phase 4 client status (branch `mp-rooms-shop`, 22 Oct 2026; prep + integration in one go; relay NOT redeployed)
+Works against the CURRENT deployed relay (v1): the shared room encoding (`roomBody`, code 7 = `RoomCode.Shop` = `Activity.Shop`),
+entry Warp + one retry 5.5 s later, no new message, no protocol change. Relay v1.1 (another lane) is not needed for anything below.
+- `lib/multiplayer/rooms/shop.ts` (pure): `SHOP_ROOM` descriptor (bounds = the shop clamp x -8..8, z -7..4.5, same box as
+  `roomPos.ROOM_BOUNDS[7]`, inside relay v1.1's 12 x 10; areas: the three studio stands, the till, the bench corner, the door, the
+  floor; door + `SHOP_ARRIVAL` (today's walk-in target); 9 `SHOP_SPAWNS` on two arcs round the doors; wake rule remote / 20 fps /
+  300 ms / no Battery-saver wake; caps max 5, field r 0.8, station r 2.5; busy table `studio` > `talking` > `myKit` from
+  ShopRoom's `covered` flags). Helpers: `shopBusyFlag/Text` (sender), `shopStationAt(x,z)` (receiver: within 1.75 m of a studio
+  wall "Designing a kit", at the till "Talking to Femi", elsewhere "Looking at my kit"; local codes `STATION.ShopDesign/ShopKit/
+  ShopClerk` 120-122, words registered with the new `presence.defineStationText`), `clampToShop`, `pickShopSpawn`,
+  `shopCrowdCount`, `shopDoorHintText`.
+- `lib/multiplayer/rooms/shopHooks.ts`: the seam. `shopScene.ts` registers a source (scene, camera, pose reader, `wakeRemote`,
+  `arrive`, local emote, `setFriendSlots`) and calls `frame()` before render, `pushOut()` in its collision, `meRing` for its blob
+  shadow; `ShopRoom.tsx` calls `setBusy(studio, myKit, talking?.id)` and `useRoomParty(shopRoomHooks.hostRef, RoomCode.Shop, ready,
+  covered)`. No layer: every hook is a no-op (`frame()` false, the shop sleeps exactly as before). `useRoomParty`'s `stationAt` now
+  also accepts a STATION code (the shop's), the Konbini's words are unchanged.
+- In the shop: friends walk the floor (party ring, labels, emote bubbles, no camera zoom: your emote plays on your rig + bubble);
+  studios / My kit / chats are Busy (a force field at your spot; at a studio stand it reads "Designing a kit" and blocks walking,
+  r 0.6 + body); **friends replace shoppers** (one shopper steps out per friend drawn, order Tane, Yuna, Yusuf, Oskar, Nadia: a kid
+  before its parent; hidden, unposed, not solid, not a prompt); a friend already standing inside re-aims your walk-in to a free
+  spawn slot (only before your first input). Leave-only chip (header item on wide screens, own row under the title on phones).
+- Island: "2 in the Kit Shop" over the shop door (`lib/town/shopDoorHint.ts`, the Konbini hint mechanism: Town passes
+  `[...KONBINI_DOOR_HINTS, SHOP_DOOR_HINT]` to `createPartyRuntime`); the party list says "In the Kit Shop" (`Activity.Shop` text).
+- **Outfits:** a friend's look is the one in their Hello (join / resume). Live try-on in a studio is NOT shared (v1), and bought kit
+  never changes the player's look anyway (owner, Oct 12: "Don't show on player"). With relay v1.1 item 5 (resume Hello updates
+  `m.look` and re-broadcasts `S.Joined`) a new outfit becomes visible after the friend's next page change. No `C.Look` message.
+- Limits: a chat with a shopper reads "Looking at my kit" on other screens (shoppers are per player, so the receiver cannot place
+  them; the sender sees "Chatting"); shoppers step out instantly (no walk-out); the first Warp can still be dropped by the v1 relay
+  inside its 5 s window, the 5.5 s retry covers it (a friend may appear up to ~6 s late).
+- Tests: `tests/mp-rooms-shop.cjs` (in `npm test`); `tests/shop-room.cjs` guards updated for the remote-frame rule. Headless:
+  `scripts/check-mp-rooms-shop.cjs <app> <relay>` (the Konbini check with the bot `--room 7`).
+
 ### Phase 5: Explore reefs (optional) - effort L, ~10-12 h + 3 h verify, no relay change (v1.1 nice to have)
 `Town.tsx` (runtime room switch), `lib/town/water/diveRuntime.ts`, `lib/graphics/diveRoom.ts` (host the friend layer), surface
 proxy on the island. Risk: dive-room heat; Town.tsx is large and shared by every lane (merge conflicts).

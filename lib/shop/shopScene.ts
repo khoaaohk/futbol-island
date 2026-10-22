@@ -13,6 +13,15 @@ import {ROOM,DOOR,COUNTER,CLERK,CLERK_ZONE,PODIUMS,BENCH,PLANTS,SHOP_STATIONS,sh
  NEAR_STATION,NEAR_NPC,type ShopPoi,type ShopStation} from './shopLayout';
 import type {NpcDefinition} from '../town/npcDialogues';
 import {SHOP_CLERK,SHOP_SHOPPERS,SHOP_SHOPPER_CAP,type ShopSpot} from './shopCast';
+import {emoteBody,applyEmoteArms} from '../graphics/emotePose';
+import {emoteSeconds} from '../town/emoteReact';
+import type {EmoteBubbles} from '../graphics/emoteBubbles';
+// Party in the Kit Shop (docs/multiplayer-rooms-design.md Phase 4): the scene only talks to the hooks seam; with no layer attached
+// (flag off, no party) frame() is false, pushOut() moves nothing and nothing below runs.
+import {shopRoomHooks,type ShopHookSource,type ShopLocalPose} from '../multiplayer/rooms/shopHooks';
+import {shopCrowdCount} from '../multiplayer/rooms/shop';
+/** Remote-only frames (a friend walks while you stand still) run at <= 20 fps: the shop's npc-only rate. */
+export const SHOP_REMOTE_FRAME_MS=50;
 export type {ShopStation,ShopPoi} from './shopLayout';
 export {SHOP_STATIONS} from './shopLayout';
 
@@ -46,7 +55,9 @@ export {SHOP_STATIONS} from './shopLayout';
  */
 export type ShopSceneState={sleeping:boolean;resting:boolean;frames:number;draws:number;covered:boolean;leaving:boolean;x:number;z:number;yaw:number;near:string|null;doorOpen:number;
  npcs:{id:string;name:string;x:number;z:number;mode:'hold'|'walk';clerk:boolean}[];poses:number;
- render:{calls:number;triangles:number;geometries:number;textures:number};pixelRatio:number;frameMs:number};
+ render:{calls:number;triangles:number;geometries:number;textures:number};pixelRatio:number;frameMs:number;
+ /** Party (rooms Phase 4): remote-only frames, your emote, shoppers stepped out for friends, the friend layer (null: no party). */
+ remoteOnly:boolean;remoteFrames:number;emote:number;shoppersOut:number;party:{shown:number;meRing:boolean;friends:unknown[]}|null};
 export type ShopSceneCallbacks={onFirstFrame?:()=>void;onNear?:(poi:ShopPoi|null)=>void;onPrompt?:(x:number,y:number,visible:boolean)=>void;onArrive?:(poi:ShopPoi)=>void;onExit?:()=>void};
 
 /** Modern store palette. */
@@ -266,7 +277,9 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  const progress=getQuizProgress(),custom=loadCustomization(progress.completed,progress.total);
  const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));const pack=wearBackpack(player.root,playerOutfit(custom));/* Oct 21 2026: the always-worn pack, folded (docs/backpack.md) */player.root.name='shop-player';scene.add(player.root);
  type Actor={id:string;name:string;rig:PlayerRig;clerk:boolean;spots:ShopSpot[];spot:number;x:number;z:number;facing:number;mode:'hold'|'walk';holdUntil:number;speed:number;
-  motion:PlayerMotion;settle:number;wave:number;nearYou:boolean;elapsed:number;bucket:number;slot:number;leader:Actor|null;follower:Actor|null;height:number;expr:string;shadow:number;poi:ShopPoi|null};
+  motion:PlayerMotion;settle:number;wave:number;nearYou:boolean;elapsed:number;bucket:number;slot:number;leader:Actor|null;follower:Actor|null;height:number;expr:string;shadow:number;poi:ShopPoi|null;
+  /** Stepped out for a party friend (rooms Phase 4: friends replace shoppers): hidden, not posed, not solid, not a prompt. */
+  away:boolean};
  let rngSeed=1234567;const rand=()=>{rngSeed=(rngSeed*16807)%2147483647;return rngSeed/2147483647;};
  const clock=()=>performance.now()/1000,born=clock();
  function makeActor(def:NpcDefinition,top:string,top2:string,age:'kid'|'teen'|'adult'|'elder',spots:ShopSpot[],clerk:boolean,i:number):Actor{
@@ -275,7 +288,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
   rig.root.name=`shop-npc-${def.id}`;scene.add(rig.root);
   const s=spots[0],a:Actor={id:def.id,name:def.name,rig,clerk,spots,spot:0,x:s.x,z:s.z,facing:s.yaw,mode:'hold',holdUntil:clerk?Infinity:born+5+i*4+rand()*2,speed:age==='kid'?.95:age==='elder'?.7:.85,
    motion:{travelMode:'walk',facing:s.yaw,lookX:s.look.x,lookY:s.look.y,lookZ:s.look.z,ready:clerk?.15:0},settle:0,wave:0,nearYou:false,elapsed:0,bucket:-1,slot:(i*.618034)%1/POSE_HZ,leader:null,follower:null,
-   height:1.8*rig.profileScale,expr:'neutral',shadow:i+1,poi:null};
+   height:1.8*rig.profileScale,expr:'neutral',shadow:i+1,poi:null,away:false};
   if(s.holdBoot)a.motion.called=1;
   rig.update(s.x,s.z,0,0,reduced,{...a.motion,resumePose:true});placeShadow(a.shadow,s.x,s.z,.4*rig.profileScale);
   return a;
@@ -290,18 +303,21 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  for(const a of shoppers)a.poi={id:a.id,kind:'npc',npc:a.id,label:`Talk to ${a.name}`,a:{x:a.x,z:a.z},b:{x:a.x,z:a.z},face:{x:a.x,z:a.z},anchor:{x:a.x,y:a.height+.35,z:a.z},
   box:{minX:a.x-.35,maxX:a.x+.35,minZ:a.z-.35,maxZ:a.z+.35,h:a.height}};
  const stations=stationPois();
- const pois=():ShopPoi[]=>[...stations,clerkPoiValue,...shoppers.map(a=>a.poi!)];
+ const pois=():ShopPoi[]=>[...stations,clerkPoiValue,...shoppers.filter(a=>!a.away).map(a=>a.poi!)];
 
  // ---- State ------------------------------------------------------------------------------------------------------------------
  const obstacles=shopObstacles(),blocked=(px:number,pz:number)=>shopBlocked(px,pz,obstacles);
  let x:number=DOOR.x,z=ROOM.front+.4,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,poses=0;
  let firstFrameSent=false,npcOnly=false,npcTimer:ReturnType<typeof setTimeout>|undefined;const stuck=createStuckWatch(.5);
+ // Party: remote-only frames (counted for the heat checks), the local emote (lazy bubble), the shoppers stepped out for friends.
+ let ringHid=false,remoteOnly=false,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null,friendSlots=0;
+ const pushPt={x:0,z:0};
  let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:ShopPoi|null=null,near:ShopPoi|null=null,promptVisible=false;
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'};
  const ray=new T.Raycaster(),ndc=new T.Vector2(),floor=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3(),projected=new T.Vector3(),hand=[new T.Vector3(),new T.Vector3()],box3=new T.Box3();
  const baseFrameMs=()=>{const t=tierSettings();return mobile?Math.max(1000/30,t.frameMs):t.cap30Everywhere?t.frameMs:0;};
  /** Only the shoppers are moving (you and the camera are still): 20 fps is plenty for a walk across the shop. */
- const frameMs=()=>npcOnly?Math.max(1000/20,baseFrameMs()):baseFrameMs();
+ const frameMs=()=>npcOnly||remoteOnly?Math.max(SHOP_REMOTE_FRAME_MS,baseFrameMs()):baseFrameMs();
 
  // ---- Camera: the shop's perspective view from the front, following you (eased like the Museum's, clamped to the room) -------
  let aspect=1,camX=0,camZ=0,dist=12.5,pitch=.66,xr=0,viewportW=1,viewportH=1,viewportLeft=0,viewportTop=0;
@@ -317,7 +333,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  function nearest(){let best:ShopPoi|null=null,bd=Infinity;
   for(const p of stations){const s=segPoint(p,x,z),d=Math.hypot(s.x-x,s.z-z);if(d<NEAR_STATION&&d<bd){bd=d;best=p;}}
   {const s=segPoint(clerkPoiValue,x,z),d=Math.hypot(s.x-x,s.z-z)-.3;if(d<NEAR_NPC-.3&&d<bd){bd=d;best=clerkPoiValue;}}
-  for(const a of shoppers){const d=Math.hypot(a.x-x,a.z-z)-.3;if(d<NEAR_NPC-.3&&d<bd){bd=d;best=a.poi;}}
+  for(const a of shoppers){if(a.away)continue;const d=Math.hypot(a.x-x,a.z-z)-.3;if(d<NEAR_NPC-.3&&d<bd){bd=d;best=a.poi;}}
   return best;}
  function faceOf(p:ShopPoi){if(p.npc&&p.npc!=='clerk'){const a=shoppers.find(s=>s.id===p.npc);if(a)return {x:a.x,z:a.z};}return p.face;}
  function arrive(p:ShopPoi){const f=faceOf(p);yaw=Math.atan2(f.x-x,f.z-z);callbacks.onArrive?.(p);}
@@ -340,7 +356,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
   const dx=x-a.x,dz=z-a.z,dYou=Math.hypot(dx,dz);
   if(!a.clerk&&a.mode==='hold'&&!a.leader&&a.spots.length>1&&t>=a.holdUntil){
    if(resting()){/* resting: no new walk until you are back */}
-   else if((!walker||walker===a)&&t>=nextWalkAt){walker=a;beginWalk(a);if(a.follower)beginWalk(a.follower);}else a.holdUntil=Math.max(t,nextWalkAt)+.5+rand()*3;}
+   else if((!walker||walker===a)&&t>=nextWalkAt){walker=a;beginWalk(a);if(a.follower&&!a.follower.away)beginWalk(a.follower);}else a.holdUntil=Math.max(t,nextWalkAt)+.5+rand()*3;}
   let want=a.facing;
   if(a.mode==='walk'){const s=a.spots[a.spot],tx=s.x-a.x,tz=s.z-a.z,d=Math.hypot(tx,tz);
    if(d<.04){a.x=s.x;a.z=s.z;a.mode='hold';a.holdUntil=t+12+rand()*8;a.settle=.9;if(walker===a){walker=null;nextWalkAt=t+WALK_GAP;}}
@@ -368,7 +384,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  }
  /** While the room sleeps, the next shopper's walk is a timer (no frames in between). */
  function scheduleNpcs(){clearTimeout(npcTimer);npcTimer=undefined;if(covered||disposed||leaving)return;
-  let next=Infinity;for(const a of shoppers)if(a.mode==='hold'&&!a.leader&&a.spots.length>1)next=Math.min(next,a.holdUntil);
+  let next=Infinity;for(const a of shoppers)if(!a.away&&a.mode==='hold'&&!a.leader&&a.spots.length>1)next=Math.min(next,a.holdUntil);
   if(next<Infinity&&next<lastInput+IDLE_REST)npcTimer=setTimeout(()=>{npcTimer=undefined;if(!resting())wake();},Math.max(50,(next-clock())*1000+20));}
 
  function tick(now:number){frame=0;if(disposed||covered||document.hidden)return;
@@ -383,25 +399,54 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
   const len=Math.max(1,Math.hypot(ix,iz)),resp=1-Math.exp(-dt*12),top=3;vx+=(ix/len*top-vx)*resp;vz+=(iz/len*top-vz)*resp;
   const ox=x,oz=z,pos={x:x+vx*dt,z:z+vz*dt};shopCollide(pos,obstacles);
   // People are solid too: you step round a shopper (they wait if you stand in their way).
-  for(const a of shoppers){const dx=pos.x-a.x,dz=pos.z-a.z,d=Math.hypot(dx,dz);if(d<.6&&d>1e-4){pos.x=a.x+dx/d*.6;pos.z=a.z+dz/d*.6;}}
+  for(const a of shoppers){if(a.away)continue;const dx=pos.x-a.x,dz=pos.z-a.z,d=Math.hypot(dx,dz);if(d<.6&&d>1e-4){pos.x=a.x+dx/d*.6;pos.z=a.z+dz/d*.6;}}
+  // A busy party friend's force field (a studio stand, the till) is solid too (design 3.4: r 0.6 + your body).
+  pushPt.x=pos.x;pushPt.z=pos.z;if(shopRoomHooks.pushOut(pushPt,.3)){pos.x=pushPt.x;pos.z=pushPt.z;}
   shopCollide(pos,obstacles);x=pos.x;z=pos.z;vx=(x-ox)/dt;vz=(z-oz)/dt;const speed=Math.hypot(vx,vz);
   if(!leaving&&z>ROOM.front-.1&&Math.abs(x-DOOR.x)<DOOR.half&&vz>.15){leaving=true;keys.clear();stick.x=stick.z=0;target=null;route=[];doorTarget=1;callbacks.onExit?.();}
   if(Math.hypot(ix,iz)>.08)yaw=Math.atan2(ix,iz);
   doorTarget=leaving||Math.hypot(x-DOOR.x,z-ROOM.front)<2.6?1:0;const prevDoor=doorOpen;doorOpen=reduced?doorTarget:T.MathUtils.damp(doorOpen,doorTarget,7,dt);if(Math.abs(doorOpen-doorTarget)<.003)doorOpen=doorTarget;if(doorOpen!==prevDoor)placeDoors();
   const youMoving=speed>.03||!!target;
   motion.facing=yaw;motion.intentHeading=speed>.08?Math.atan2(vx,vz):undefined;motion.stopDistance=target?Math.hypot(target.x-x,target.z-z):undefined;motion.dribbling=false;
-  if(youMoving||settle>0){player.update(x,z,dt,time,reduced,motion);placeShadow(0,x,z,.42);poses++;}
-  let crowd=false;for(const a of actors)if(stepActor(a,dt,t,youMoving))crowd=true;
+  // A wire emote from the party chip plays on your own rig (no camera change in rooms), with its bubble.
+  if(emote){emote.age+=dt;if(emote.age>=emote.dur){emote=null;motion.jump=undefined;motion.called=0;player.setExpression('neutral');settle=Math.max(settle,.3);}
+   else if(!reduced){const b=emoteBody(emote.kind,emote.age,emote.dur);motion.called=b.called;motion.jump=b.jump;}}
+  if(youMoving||settle>0||emote){player.update(x,z,dt,time,reduced,motion);if(emote&&!reduced)applyEmoteArms(player.root,emote.kind,emote.age,emote.dur);placeShadow(0,x,z,ringHid?0:.42);poses++;}
+  if(bubbles&&(emote||bubbles.active(0))){bubbles.follow(0,x,2.55,z);bubbles.update(dt,reduced);}
+  let crowd=false;for(const a of actors)if(!a.away&&stepActor(a,dt,t,youMoving))crowd=true;
   const n=leaving?null:nearest();if(n!==near){near=n;callbacks.onNear?.(n);const st=n?.station;stationRing.visible=!!st;if(st){const p=PODIUMS[st];stationRing.position.set(p.x,.015,p.z);}}
   const follow=reduced?1:1-Math.exp(-dt*5),cx=wantX(),cz=wantZ();camX+=(cx-camX)*follow;camZ+=(cz-camZ)*follow;placeCamera();
   if(near){const a=near.anchor;projected.set(a.x,a.y,a.z).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8&&projected.z<1;
    callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
+  // Friends in this room (zero cost without a party). One ring rule: while the party draws your colour ring, your blob shadow hides.
+  const remoteKeep=shopRoomHooks.frame(dt,performance.now(),camera);
+  if(shopRoomHooks.meRing!==ringHid){ringHid=!ringHid;placeShadow(0,x,z,ringHid?0:.42);}
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
-  const you=youMoving||keys.size>0||Math.hypot(stick.x,stick.z)>.02||doorOpen!==doorTarget||Math.abs(camX-cx)>.005||Math.abs(camZ-cz)>.005;
+  const you=youMoving||keys.size>0||Math.hypot(stick.x,stick.z)>.02||doorOpen!==doorTarget||Math.abs(camX-cx)>.005||Math.abs(camZ-cz)>.005||!!emote||!!bubbles?.active(0);
   if(you)settle=.5;else settle-=dt;npcOnly=!you&&settle<=0&&crowd;
-  if(settle>0||crowd||leaving)frame=requestAnimationFrame(tick);else{last=0;slot=0;scheduleNpcs();}
+  // Friends moving here keep frames too, at the remote rate (20 fps) when nothing of yours moves.
+  remoteOnly=!you&&settle<=0&&!crowd&&remoteKeep;if(remoteOnly)remoteFrames++;
+  if(settle>0||crowd||leaving||remoteKeep)frame=requestAnimationFrame(tick);else{last=0;slot=0;remoteOnly=false;scheduleNpcs();}
  }
- function wake(){clearTimeout(npcTimer);npcTimer=undefined;if(!frame&&!covered&&!disposed&&!document.hidden){settle=Math.max(settle,.3);last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ function wake(){clearTimeout(npcTimer);npcTimer=undefined;remoteOnly=false;if(!frame&&!covered&&!disposed&&!document.hidden){settle=Math.max(settle,.3);last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ /** A friend here moved: frames without the local 0.5 s settle (the layer says how long), at the remote rate. */
+ function wakeRemote(){if(!frame&&!covered&&!disposed&&!document.hidden){clearTimeout(npcTimer);npcTimer=undefined;remoteOnly=true;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ /** Friends replace shoppers (heat-neutral, design 4): the last shoppers in this order step out; a kid steps out before its parent. */
+ const STEP_OUT=['shop-tane','shop-yuna','shop-yusuf','shop-oskar','shop-nadia'];
+ const outOrder=[...shoppers].sort((a,b)=>{const i=STEP_OUT.indexOf(a.id),j=STEP_OUT.indexOf(b.id);return (i<0?99:i)-(j<0?99:j);});
+ function setFriendSlots(n:number){
+  const out=shoppers.length-shopCrowdCount(n,shoppers.length);if(out===friendSlots)return;friendSlots=out;
+  outOrder.forEach((a,i)=>{const away=i<out;if(away===a.away)return;a.away=away;a.rig.root.visible=!away;
+   if(away){if(walker===a){walker=null;nextWalkAt=clock()+WALK_GAP;}if(heldBoot.userData.by===a.id)heldBoot.visible=false;placeShadow(a.shadow,a.x,a.z,0);}
+   else{if(a.leader){a.spot=a.leader.spot;const sp=a.spots[a.spot%a.spots.length];a.x=sp.x;a.z=sp.z;a.mode='hold';}a.settle=.9;placeShadow(a.shadow,a.x,a.z,.4*a.rig.profileScale);}});
+  wake();}
+ /** The local player as the party sends it (one reused object). */
+ function readPose(out:ShopLocalPose){out.x=x;out.z=z;out.facing=yaw;out.speed=Math.hypot(vx,vz);}
+ /** A friend already stands inside when you arrive: re-aim the walk-in to a free slot (only before your first input). */
+ function arriveAt(tx:number,tz:number){if(lastInput!==born||leaving||disposed)return;route=findPath(tx,tz);target=route.shift()??{x:tx,z:tz};arrivePoi=null;stuck.reset();wake();}
+ async function playEmote(kind:number,face?:{x:number;z:number}|null){if(disposed||leaving)return;
+  if(!bubbles){const m=await import('../graphics/emoteBubbles');if(disposed)return;bubbles=bubbles??m.createEmoteBubbles(scene);}
+  if(face)yaw=Math.atan2(face.x-x,face.z-z);const dur=emoteSeconds(kind);emote={kind,age:0,dur};player.setExpression('happy');bubbles.show(0,kind,dur);wake();}
  function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setPixelRatio(pixelRatio());renderer.setSize(w,h,false);viewportW=w;viewportH=h;const r=canvas.getBoundingClientRect();viewportLeft=r.left;viewportTop=r.top;
   aspect=w/h;frameRoom();if(draws===0){camX=wantX();camZ=wantZ();}placeCamera();wake();}
  function clearInput(){keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;vx=vz=0;wake();}
@@ -413,6 +458,9 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  player.update(x,z,0,0,reduced,{facing:yaw,resumePose:true,travelMode:'walk'});placeShadow(0,x,z,.42);resize();
  // Arrival: a few steps in from the doors (already open from the door slide); the clerk waves hello (greet()).
  target={x:DOOR.x,z:ROOM.front-1.8};
+ // The party seam (lib/multiplayer/rooms/shopHooks.ts): registered now, a layer attaches only when this tab is in a party.
+ const hookSource:ShopHookSource={scene,camera,phone:mobile,reduced,readPose,wakeRemote,arrive:arriveAt,emote:(k,f)=>{void playEmote(k,f);},setFriendSlots,sleeping:()=>frame===0};
+ shopRoomHooks.register(hookSource);
 
  return {
   get pois(){return pois();},
@@ -433,11 +481,21 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
   clearInput,
   /** Test/measurement hooks. */
   measureRender(n=60){const t0=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);return (performance.now()-t0)/n;},
+  /** Heat check hook (scripts/check-mp-rooms-shop.cjs): ms per friend-layer update and per render, friends drawn vs hidden. */
+  measureParty(n=60){if(!shopRoomHooks.attached)return null;let t0=performance.now();for(let i=0;i<n;i++)shopRoomHooks.update(1/60,performance.now(),camera,false);const update=(performance.now()-t0)/n;
+   t0=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const withF=(performance.now()-t0)/n,calls=renderer.info.render.calls;shopRoomHooks.update(0,performance.now(),camera,true);
+   t0=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const without=(performance.now()-t0)/n,callsWithout=renderer.info.render.calls;shopRoomHooks.update(0,performance.now(),camera,false);
+   return {update,renderWith:withF,renderWithout:without,calls,callsWithout};},
+  /** The local emote (party chip): exposed for checks. */
+  emote:(kind:number)=>{void playEmote(kind,null);},
+  threeScene:scene,
   debugPlace(px:number,pz:number,a=yaw){if(leaving)return;poke();x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;settle=.5;wake();},
   get state():ShopSceneState{return {sleeping:frame===0,resting:resting(),frames,draws,covered,leaving,x,z,yaw,near:near?.id??null,doorOpen,poses,
-   npcs:actors.map(a=>({id:a.id,name:a.name,x:a.x,z:a.z,mode:a.mode,clerk:a.clerk})),
+   npcs:actors.filter(a=>!a.away).map(a=>({id:a.id,name:a.name,x:a.x,z:a.z,mode:a.mode,clerk:a.clerk})),
+   remoteOnly,remoteFrames,emote:emote?.kind??-1,shoppersOut:friendSlots,
+   party:shopRoomHooks.attached?{shown:shopRoomHooks.shown,meRing:shopRoomHooks.meRing,friends:shopRoomHooks.debugFriends()}:null,
    render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs()};},
-  dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;clearTimeout(npcTimer);observer.disconnect();
+  dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;clearTimeout(npcTimer);observer.disconnect();shopRoomHooks.unregister(hookSource);bubbles?.dispose();bubbles=null;
    window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    pack?.dispose();player.dispose();for(const a of actors)a.rig.dispose();
    for(const mesh of merged)mesh.geometry.dispose();stationRing.geometry.dispose();propGeo.dispose();doorGeo.dispose();shadowGeo.dispose();

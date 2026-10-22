@@ -22,6 +22,10 @@ import {SHOP_CLERK,SHOW_ME,shopNpcDefs} from '@/lib/shop/shopCast';
 import {createShopAmbience,shopClickCue,shopSfx,unlockShopAudio,type ShopAmbience} from '@/lib/shop/shopSound';
 import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shopEvents';
 import {enterActivity} from '@/lib/analytics/tracker';
+// Party in rooms (docs/multiplayer-rooms-design.md Phase 4): friends in the Kit Shop walk the floor with you; studios, My kit and
+// chats are Busy (a force field at your spot, "Designing a kit" at a studio stand); Leave-only chip.
+import {useRoomParty} from '../party/useRoomParty';import RoomPartyChip from '../party/RoomPartyChip';import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {shopRoomHooks} from '@/lib/multiplayer/rooms/shopHooks';
 const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
 
 /**
@@ -86,6 +90,9 @@ export default function ShopRoom(){
  useEffect(()=>studio?enterActivity('kit_studio'):undefined,[studio]);// admin analytics: time designing in a studio (module variable, no render); the rest of /shop is 'kit_shop'
  const covered=!!studio||myKit||!!talking;
  const joyRect=useJoystickBounds(joy,ready&&!covered);
+ // Busy flags for the party layer (what friends read is looked up from your spot on THEIR side: the kind is never on the wire).
+ useEffect(()=>{shopRoomHooks.setBusy(studio,myKit,talking?.id??null);},[studio,myKit,talking]);
+ const party=useRoomParty(shopRoomHooks.hostRef,RoomCode.Shop,ready,covered);// before the scene effect: the layer is disposed before the scene on unmount
 
  // Done (or walking out of the doors) exits straight away: door slide, then the island at the shop door, like the Museum.
  const leave=useCallback(()=>{if(leavingRef.current)return;leavingRef.current=true;setStudio(null);setMyKit(false);setTalking(null);room.current?.clearInput();refreshShopDeparture();setLeaving(true);
@@ -151,7 +158,7 @@ export default function ShopRoom(){
  // Any tap or key in the room wakes resting shoppers (the scene rests them after 60 s with no input) and, on the very first one,
  // unlocks and starts the store ambience (iOS autoplay rules: only a real gesture may start audio).
  const wake=()=>{room.current?.poke();unlockShopAudio();ambience.current?.input();};
- return <main className={styles.root} aria-label="Kit Shop" data-shop-room data-ready={ready} onPointerDownCapture={wake} onKeyDownCapture={wake}
+ return <main className={styles.root} aria-label="Kit Shop" data-shop-room data-ready={ready} data-party={party?'':undefined} onPointerDownCapture={wake} onKeyDownCapture={wake}
   onClickCapture={e=>{const cue=shopClickCue(e.target);if(cue)shopSfx[cue]();}}>
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Walkable Kit Shop: jersey wall, boot wall, ball wall and the till. Use WASD or the arrow keys to walk, then E or Enter at a wall to design. Tap a wall or a person to walk there." data-shop-canvas
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerCancel={()=>{tap.current=null;}}
@@ -159,6 +166,8 @@ export default function ShopRoom(){
   {!studio&&<header className={styles.top}>
    <NavigationButton className={styles.doneRight} label="Done" data-shop-done onNavigate={leave}/>
    <p className={styles.title}><b>KIT SHOP</b><span>Design your own kit</span></p>
+   {/* The party chip (Leave only): in the header row on wide screens, its own row under the title on phones (the row is full). */}
+   {party&&<div className={styles.partySlot} data-shop-party><RoomPartyChip party={party} hidden={covered}/></div>}
    <div className={styles.topRight}>
     <CoinPill balance={wallet.balance} data-shop-coins/>
     <button type="button" className={styles.myKitButton} onClick={()=>{setMyKit(true);countMyKitOpen();}} data-shop-mykit-open>My kit{owned.items.length?<b>{owned.items.length}</b>:null}</button>

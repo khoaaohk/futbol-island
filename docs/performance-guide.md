@@ -5861,3 +5861,17 @@ everything else with the island while this is running", and "the room's backgrou
 - **Measured (headless Chrome, `scripts/check-mp-rooms.cjs`, desktop, 1 friend):** layer update 0.03 ms, render +0.005 ms,
   draw calls 17 -> 24 (fixed batch groups + ring + label + bubble; another friend adds its label only), idle 0 frames in 2 s with
   the friend standing, phone (touch emulation) remote-only 20 fps. Reduced work, not a measured iPhone temperature.
+
+## Friends in the Kit Shop (multiplayer rooms Phase 4, client) — October 22, 2026 (local, not deployed; relay v1 unchanged)
+
+- **What runs:** only with the flag on AND a stored party: `useRoomParty` attaches the same friend layer through
+  `lib/multiplayer/rooms/shopHooks.ts`. No party: `shopScene.ts` makes one null check per frame (`frame()` false, `pushOut()` false).
+- **Heat-neutral crowd:** one shopper steps out per friend drawn (`shopCrowdCount`, max 5): hidden, never posed, not solid, no
+  prompt. Rig count on screen never rises (6 people + you before, 5 + 1 friend + you with one friend).
+- **Sleep kept:** the shop still renders 0 frames at rest with a still friend inside. A changed same-room pose wakes it
+  (`wakeRemote`, no 0.5 s local settle); remote-only frames run at 20 fps (`SHOP_REMOTE_FRAME_MS` = the shop's npc-only rate, on
+  phones and desktop); frames stop <= 550 ms after the last change; covered (studio / My kit / chat) or hidden: no remote wake;
+  Battery saver: never. The 5 s connection beat carries the Busy pose while a studio covers the shop (no new timer).
+- **Measured (headless Chrome, `scripts/check-mp-rooms-shop.cjs`, 1 friend):** desktop layer update 0.04-0.06 ms, render with vs
+  without the friend within noise (0.15-0.3 ms), draw calls 29 -> 36 (batch groups + ring + label + bubble); idle 0 frames in 2 s
+  with the friend standing; phone (touch emulation) remote-only 20 fps, 22 draw calls. Reduced work, not an iPhone temperature.

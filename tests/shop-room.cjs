@@ -93,11 +93,11 @@ const C=require('../lib/shop/shopCast.ts');
 
  // 4. Static guards.
  const scene=read('lib/shop/shopScene.ts'),room=read('components/shop/ShopRoom.tsx'),studios=read('components/shop/studios.tsx');
- assert(/if\(settle>0\|\|crowd\|\|leaving\)frame=requestAnimationFrame\(tick\);else\{last=0;slot=0;scheduleNpcs\(\);\}/.test(scene),'the room loop only continues while something moves (0 rAF at rest; the next shopper walk is a timer)');
+ assert(/if\(settle>0\|\|crowd\|\|leaving\|\|remoteKeep\)frame=requestAnimationFrame\(tick\);else\{last=0;slot=0;remoteOnly=false;scheduleNpcs\(\);\}/.test(scene),'the room loop only continues while something moves (0 rAF at rest; the next shopper walk is a timer; a party friend moving here keeps frames: rooms Phase 4)');
  assert(/const needs=a\.mode==='walk'\|\|Math\.abs\(turn\)>\.01\|\|a\.wave>0\|\|a\.settle>0\|\|\(close&&youMoving\);\s*if\(!needs\)\{a\.elapsed=0;return false;\}/.test(scene),'a still person is never posed');
  assert(/if\(dYou>NEAR_POSE&&bucket===a\.bucket\)/.test(scene)&&/POSE_HZ=15/.test(scene),'far walkers pose at 15 Hz (the island’s far-pose rule)');
  assert(/if\(\(!walker\|\|walker===a\)&&t>=nextWalkAt\)/.test(scene)&&/WALK_GAP=12/.test(scene),'one shopper walks at a time, with a rest between walks');
- assert(/npcOnly\?Math\.max\(1000\/20,baseFrameMs\(\)\)/.test(scene),'only shoppers moving: 20 fps');
+ assert(/npcOnly\|\|remoteOnly\?Math\.max\(SHOP_REMOTE_FRAME_MS,baseFrameMs\(\)\)/.test(scene)&&/SHOP_REMOTE_FRAME_MS=50;/.test(scene),'only shoppers (or party friends) moving: 20 fps');
  // Idle rest (fix pass Oct 13 2026, heat audit): ~60 s with no input from you and the shoppers stop walking, no walk timer is
  // left, so the room reaches 0 rAF (like the Museum); any input or tap (keys, the stick, a tap, walkTo, closing a studio, any
  // pointer or key on the room's UI) restarts the clock and wakes them.

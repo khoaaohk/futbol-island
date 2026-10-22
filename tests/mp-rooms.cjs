@@ -316,7 +316,7 @@ t('museum layer: museum friends only, wake on a changed pose, Battery saver neve
   h.clock.t += 50; assert.equal(layer.update(.05, h.clock.t, new T.OrthographicCamera()), false, 'Battery saver: no remote frames');
   layer.dispose();
   // island door hint for the museum
-  assert.ok(/MUSEUM_DOOR_HINT/.test(read('components/Town.tsx')) && /ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT\]/.test(read('components/Town.tsx')), 'Town passes the museum door hint');
+  assert.ok(/MUSEUM_DOOR_HINT/.test(read('components/Town.tsx')) && /ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT(?:,SHOP_DOOR_HINT)?(?:,ARCADE_DOOR_HINT)?\]/.test(read('components/Town.tsx')), 'Town passes the museum door hint');
 });
 
 // ---- 6. UI + wiring (source) ----------------------------------------------------------------------------------------------

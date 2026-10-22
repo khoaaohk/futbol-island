@@ -3,6 +3,7 @@ import {createDailyPlay,dailyPlayCounts} from '@/lib/town/dailyPlay';
 import {grantDailyPlayCoins} from '@/lib/arcade/arcadeWallet';
 import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
 import {KONBINI_DOORS,KONBINI_BUILDINGS,KONBINI_DOOR_HINTS,konbiniDoorNear,saveKonbiniDeparture,konbiniUrl,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
+import {SHOP_DOOR_HINT} from '@/lib/town/shopDoorHint';
 import KonbiniDoorSlide from './KonbiniDoorSlide';
 import {saveMuseumDeparture,MUSEUM_URL,museumExitPoint,MUSEUM_DOOR_HINT} from '@/lib/museum/museumDoors';
 import {saveShopDeparture,SHOP_URL,SHOP_DOOR,KIT_SHOP,KIT_SHOP_BOUNDS,shopDoorNear,shopExitPoint} from '@/lib/shop/shopDoors';
@@ -235,8 +236,8 @@ let hiddenN=0,mutedN=0;
 const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
 const onMutedFriends=(s:ReadonlySet<number>)=>{if(s.size>mutedN)countParty('mute');mutedN=s.size;setMutedFriends(s);};
 import {installHudFocusRule} from '@/lib/town/hudFocus';
-/** Party door hints on the island: each Konbini + the Museum ("2 in the Museum", docs/multiplayer-rooms-design.md Phase 2). */
-const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT] as const;
+/** Party door hints on the island: each Konbini, the Museum and the Kit Shop ("2 in the Kit Shop"; docs/multiplayer-rooms-design.md Phases 1, 2 and 4). */
+const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT] as const;
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
