@@ -810,7 +810,8 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .town-app .travel-actions[data-emote-grid] .touch-emote[aria-expanded=true]{background-color:#fff0c3!important}
 .town-app .travel-actions[data-emote-grid]{display:grid;grid-template-columns:var(--action-size) var(--action-size);grid-template-rows:var(--action-size) var(--action-size);gap:12px;align-items:center;justify-items:center;transition:none}
 .town-app .travel-actions[data-emote-grid] .travel-mode{grid-column:1;grid-row:1;justify-self:center}
-.town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:1;grid-row:2;justify-self:center}
+.town-app .travel-actions[data-emote-grid] .touch-emote{grid-column:1;grid-row:2}/* user, Oct 22 2026: the Emote button bottom-left, the up arrow takes its old top-right place */
+.town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:2;grid-row:1;justify-self:center}
 .town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
 @media(max-width:600px),(pointer:coarse){
  /* Phones (user, Oct 22 2026): 3 columns x 2 rows. Top: Fly (over the parachute), map toggle (where Emote was, over Sprint).

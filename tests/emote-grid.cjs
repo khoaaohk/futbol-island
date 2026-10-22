@@ -83,9 +83,9 @@ t('icon-only, labelled, >= 44 px, upward wheel',()=>{
  assert(/\.emote-wheel\{[^}]*bottom:calc\(100% \+ 12px/.test(css),'opens upward from the grid');
  assert(/prefers-reduced-motion:reduce\)\{\.emote-wheel\{animation:none\}/.test(css));
 });
-t('grid CSS: desktop 2x2 (Fly, Parachute / Emote, kick); phones 3x2: Parachute + map toggle over Fly + Sprint, Emote left of Fly',()=>{
+t('grid CSS: desktop 2x2 (Fly, Parachute / Emote, kick; Emote bottom-left); phones 3x2: Parachute + map toggle over Fly + Sprint, Emote left of Fly',()=>{
  assert(/\[data-emote-grid\] \.travel-mode\{grid-column:1;grid-row:1/.test(css)&&/\[data-emote-grid\] \.touch-emote\{grid-column:1;grid-row:2\}/.test(css));
- assert(/\[data-emote-grid\] \.touch-actions \.touch-juggle\{grid-column:1;grid-row:2/.test(css)&&/\[data-emote-grid\] \.touch-actions \.touch-shoot\{grid-column:2;grid-row:2/.test(css));
+ assert(/\[data-emote-grid\] \.touch-actions \.touch-juggle\{grid-column:2;grid-row:1/.test(css)&&/\[data-emote-grid\] \.touch-actions \.touch-shoot\{grid-column:2;grid-row:2/.test(css));
  assert(/\[data-emote-grid\]\{display:grid;grid-template-columns:var\(--action-size\) var\(--action-size\);[^}]*gap:12px/.test(css));
  const ph=css.slice(css.indexOf('3 columns x 2 rows'),css.indexOf('@media(min-width:601px) and (pointer:fine){\n .town-app .travel-actions[data-emote-grid]'));
  assert(/grid-template-columns:repeat\(3,var\(--action-size\)\)/.test(ph));
