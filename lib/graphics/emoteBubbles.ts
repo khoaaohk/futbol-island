@@ -66,7 +66,7 @@ export function createEmoteBubbles(scene: T.Scene): EmoteBubbles {
         g.beginPath(); g.moveTo(244, 73); g.lineTo(256, 90); g.lineTo(268, 73); g.fill(); // the little tail
         g.fillStyle = '#3a2a12'; g.fillText(str, 256, 43); tTex.needsUpdate = true;
       }
-      tSprite.scale.set(2.6, 2.6 * 96 / 512, 1); tSprite.position.set(x, y, z); tSprite.visible = true; text.left = text.total = Math.max(.8, seconds);
+      tSprite.scale.set(2.1, 2.1 * 96 / 512, 1); tSprite.position.set(x, y, z); tSprite.visible = true; text.left = text.total = Math.max(.8, seconds);
     },
     followText(x, y, z) { tSprite.position.set(x, y, z); },
     textActive: () => text.left > 0,
