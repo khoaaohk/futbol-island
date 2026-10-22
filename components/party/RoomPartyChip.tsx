@@ -26,7 +26,8 @@ export function roomMemberLine(m: Pick<Member, 'presence' | 'activity' | 'room' 
   return ZONE_LINE[m.zone] ?? '';
 }
 
-export default function RoomPartyChip({ party, hidden = false }: { party: RoomPartyHandle; hidden?: boolean }) {
+/** `align`: which edge the wheel / roster open from (the chip's side of the header; the Konbini keeps its HUD on the left). */
+export default function RoomPartyChip({ party, hidden = false, align = 'left' }: { party: RoomPartyHandle; hidden?: boolean; align?: 'left' | 'right' }) {
   const state = usePartyState();
   const [open, setOpen] = useState<'none' | 'roster' | 'wheel'>('none');
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -44,7 +45,7 @@ export default function RoomPartyChip({ party, hidden = false }: { party: RoomPa
   const leave = () => { partyConnection().leave(); setOpen('none'); setConfirmLeave(false); };
   const label = `Party: ${here} ${here === 1 ? 'friend' : 'friends'} here${state.status === 'reconnecting' ? ', reconnecting' : ''}`;
   return (
-    <div className={styles.roomParty} data-room-party data-hidden={hidden || undefined} aria-hidden={hidden || undefined}>
+    <div className={styles.roomParty} data-room-party data-align={align} data-hidden={hidden || undefined} aria-hidden={hidden || undefined}>
       <button type="button" className={styles.roomChip} data-room-party-chip data-here={here} data-reconnecting={state.status === 'reconnecting' || undefined}
         aria-label={label} aria-expanded={open === 'roster'} aria-haspopup="dialog" onClick={() => { setConfirmLeave(false); setOpen(open === 'roster' ? 'none' : 'roster'); }}>
         <span className={styles.dot} style={{ background: me?.colourHex ?? '#fff' }} aria-hidden="true" />

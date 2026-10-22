@@ -177,6 +177,10 @@ export interface RoomParty {
   /** True while the party draws the local player's colour ring (the room's own foot disc then hides: one ring only). */
   readonly meRing: boolean;
   readonly room: number;
+  /** Friends drawn as rigs last frame (heat checks). */
+  readonly shown: number;
+  /** Check hook (scripts/check-mp-rooms.cjs; allocates, never per frame): every sampled friend with its drawn presence. */
+  debugFriends(): { id: number; x: number; z: number; presence: string; fade: number; gone: boolean }[];
   dispose(): void;
 }
 
@@ -257,6 +261,8 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
   return {
     room,
     get meRing() { return meRingOn; },
+    get shown() { return avatars.shown; },
+    debugFriends() { return ids.filter((id) => poses.has(id)).map((id) => { const p = poses.get(id)!; return { id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), presence: presenceOf(p.mode, p.zone, p.flags ?? 0), fade: +p.fade.toFixed(2), gone: gone.has(id) }; }); },
     friendsHere: () => active.values(),
     nearestFriend(x, z, maxM) {
       let best: RemotePose | null = null, bd = maxM * maxM;

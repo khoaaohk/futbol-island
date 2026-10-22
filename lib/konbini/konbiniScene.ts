@@ -24,7 +24,7 @@ import type {EmoteBubbles} from '../graphics/emoteBubbles';
 
 /** The party friend layer a room hosts (lib/multiplayer/roomParty.ts createRoomParty; docs/multiplayer-rooms-design.md 3.2). The scene
  *  only calls it: nothing here imports multiplayer code, and with no layer (flag off, no party) nothing below runs. */
-export interface KonbiniFriendLayer{update(dt:number,nowMs:number,camera:T.Camera,hideFriends?:boolean):boolean;readonly meRing:boolean;pushOut(p:{x:number;z:number},r:number):boolean;nearestFriend(x:number,z:number,maxM:number):{x:number;z:number}|null;}
+export interface KonbiniFriendLayer{update(dt:number,nowMs:number,camera:T.Camera,hideFriends?:boolean):boolean;readonly meRing:boolean;readonly shown?:number;debugFriends?():unknown[];pushOut(p:{x:number;z:number},r:number):boolean;nearestFriend(x:number,z:number,maxM:number):{x:number;z:number}|null;}
 /** Remote-only frames (a friend walks while you stand still) run at <= 20 fps on phones (the Kit Shop's npc-only precedent). */
 export const REMOTE_FRAME_MS=50;
 
@@ -496,6 +496,11 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    return {hidden:!!hidden&&hidden.from===vStart[pr.bi]&&collapsed,lift:liftMesh.visible,offset:liftMesh.position.distanceTo(pr.base),scale:liftMesh.scale.x/pr.scale};},
   /** Test/measurement hook (scripts/check-konbini-browser.cjs): time N renders of the current view. */
   measureRender(n=60){const t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);return (performance.now()-t)/n;},
+  /** Heat check hook (scripts/check-mp-rooms.cjs): ms per friend-layer update and per render, with the friends drawn vs not. */
+  measureParty(n=60){if(!friends)return null;let t=performance.now();for(let i=0;i<n;i++)friends.update(1/60,performance.now(),camera,false);const update=(performance.now()-t)/n;
+   t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const withF=(performance.now()-t)/n,calls=renderer.info.render.calls;friends.update(0,performance.now(),camera,true);
+   t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const without=(performance.now()-t)/n,callsWithout=renderer.info.render.calls;friends.update(0,performance.now(),camera,false);
+   return {update,renderWith:withF,renderWithout:without,calls,callsWithout};},
   /** The ball actions (the Shoot / Keep-ups buttons and Space / J): press-and-hold shot and a keep-up touch. */
   beginShot,endShot,keepUp,
   /** A quick tap shot (a soft pass): press and release at once. */
@@ -506,7 +511,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   debugShotSpots(){const out:{fi:number;x:number;z:number;yaw:number}[]=[];for(const o of obstacles){if(o.fi<0||!bayProducts.get(o.fi)?.length)continue;const cx=(o.minX+o.maxX)/2,cz=(o.minZ+o.maxZ)/2;
    for(const [px,pz] of [[cx,o.maxZ+.9],[cx,o.minZ-.9],[o.maxX+.9,cz],[o.minX-.9,cz]] as const)if(!blocked(px,pz,.35)){out.push({fi:o.fi,x:px,z:pz,yaw:Math.atan2(cx-px,cz-pz)});break;}}return out;},
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
-  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id),remoteOnly,remoteFrames,party:!!friends,emote:emote?.kind??-1};},
+  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id),remoteOnly,remoteFrames,party:friends?{shown:friends.shown??0,meRing:friends.meRing,friends:friends.debugFriends?.()??[]}:null,emote:emote?.kind??-1};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;friends=null;bubbles?.dispose();bubbles=null;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    sound.dispose();pack?.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
  };

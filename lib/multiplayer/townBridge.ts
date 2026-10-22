@@ -47,7 +47,7 @@ export function partyLocal(
 }
 
 
-const HINT_W = 256, HINT_H = 64, HINT_SCREEN = .2, HINT_RANGE = 120;
+const HINT_W = 320, HINT_H = 64, HINT_SCREEN = .16, HINT_RANGE = 120;
 function hintTexture(text: string): T3.CanvasTexture {
   const canvas = document.createElement('canvas'); canvas.width = HINT_W; canvas.height = HINT_H; const g = canvas.getContext('2d');
   if (g) {
@@ -106,7 +106,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     for (let i = 0; i < ctx.doors.length; i++) {
       const d = ctx.doors[i];
       let h = hints[i];
-      if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, sizeAttenuation: false })); sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
+      if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false })); sp.renderOrder = 4; sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
       let n = 0;
       if (live) for (const m of s.members) if (m.id !== s.you && m.room === d.room && !hid.has(m.id)) n++;
       if (n !== h.n) {
