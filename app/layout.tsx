@@ -12,6 +12,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 const description = 'Explore Futbol Island to learn futsal, 7v7, 9v9, and 11v11 through lessons, quizzes, and stories.';
 export const metadata: Metadata = {
   metadataBase: new URL('https://futbolisland.app'),
+  referrer: 'strict-origin', // a ?party= code never leaves in a Referer header to another site
   title: 'Futbol Island',
   description,
   applicationName: 'Futbol Island',

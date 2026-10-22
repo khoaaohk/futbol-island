@@ -13,7 +13,7 @@ import ParentGate from './ParentGate';
 import {parentGatePassed} from '@/lib/parentGate';
 import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {multiplayerAllowed,setMultiplayerAllowed,subscribeMultiplayerAllowed} from '@/lib/multiplayerAllowed';
-import {openPartyMenu} from '@/lib/multiplayer/invite';
+import {openPartyMenu,stripPartyParam} from '@/lib/multiplayer/invite';
 import {useSceneryRest} from '@/lib/sceneryRest';
 import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
@@ -79,6 +79,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
   // Battery saver (heat pass 4): read after mount (localStorage), and follow changes made elsewhere.
   const friendsAllowed=useSyncExternalStore(subscribeMultiplayerAllowed,multiplayerAllowed,()=>true),friendsOn=multiplayerEnabled()&&friendsAllowed;
   const [friendsGate,setFriendsGate]=useState(false);
+  useEffect(()=>{if(!multiplayerEnabled())stripPartyParam();},[]);// flag off: a shared ?party= link never lingers in the address bar
   const [saver,setSaver]=useState(false);useEffect(()=>{setSaver(batterySaverOn());return subscribeHeatTier(()=>setSaver(batterySaverOn()));},[]);
   useEffect(()=>{const sync=()=>{if(triggers.current)triggers.current.dataset.pageHidden=String(document.hidden);};sync();document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
   const mapAfterClose=useRef(false),learnAfterClose=useRef(false),storeAfterClose=useRef(false),welcomeAfterClose=useRef(false);

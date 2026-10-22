@@ -91,6 +91,11 @@ for(const f of files){
 assert(/playerBatch\(drawn,BATCH_CAPACITY\)/.test(read('lib/graphics/remoteAvatars.ts'))&&/BATCH_CAPACITY=8/.test(read('lib/graphics/remoteAvatars.ts')),'one playerBatch of 8');
 assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched friends never cast shadows');
 
+{ // review #22: an emote ages (and expires) even when the friend is off screen, indoors or too far to draw
+ const ra=read('lib/graphics/remoteAvatars.ts'),age=ra.indexOf('e.emoteAge+=dt'),early=ra.indexOf('if(!rig||!e.label||!e.bubble)continue'),hide=ra.indexOf('hideEntry(e);continue');
+ assert(age>0&&age<early&&early<hide&&ra.split('e.emoteAge+=dt').length===2,'emote age advances once per update, before the visibility early-outs');
+}
+
 // 4. Town.tsx: at most 6 lines of party glue, and the pinned dispose order is intact
 {
  const town=read('components/Town.tsx'),lines=town.split('\n').filter(l=>/createPartyRuntime|partyLocal|\bparty\?\.|PartyHost|townBridge/.test(l));

@@ -36,7 +36,7 @@ t('parent gate before create and before join',()=>{
 });
 t('pending link waits for the island and the intro',()=>{
  assert(/!islandReady\s*\|\|\s*!introDone/.test(host),'islandReady && introDone');
- assert(host.indexOf('readPendingParty()')>host.search(/!islandReady\s*\|\|\s*!introDone/),'read after the guard');
+ assert(host.lastIndexOf('readPendingParty()')>host.search(/!islandReady\s*\|\|\s*!introDone/),'read after the guard');
 });
 t('only the code boxes take text',()=>{
  for(const f of ['PartyHost','PartyInvite','PartyChip','EmoteWheel']){const s=read(`components/party/${f}.tsx`);assert(!/<input|<textarea|contentEditable/i.test(s),f+' has no text input');}
@@ -66,10 +66,13 @@ t('display and links',()=>{
  assert.equal(I.expiryText(0,0),'');assert.equal(I.expiryText(112*60000,0),'1 h 52 min');assert.equal(I.expiryText(30*60000,0),'30 min');assert.equal(I.expiryText(120*60000,0),'2 h');
 });
 t('readPendingParty: ?party= moves to sessionStorage and leaves the URL; invalid codes are rejected',()=>{
- assert.equal(I.readPendingParty(),'K7MQ4R');assert.equal(store.get('fi-party-pending'),'K7MQ4R');assert(!/party=/.test(href),'removed from the URL: '+href);assert(/x=1/.test(href),'other params kept');
+ assert.equal(I.readPendingParty(),'K7MQ4R');assert(/^K7MQ4R:\d+$/.test(store.get('fi-party-pending')),'stored with a time stamp');assert(!/party=/.test(href),'removed from the URL: '+href);assert(/x=1/.test(href),'other params kept');
  assert.equal(I.readPendingParty(),'K7MQ4R','survives a reload via sessionStorage');
  I.clearPendingParty();assert.equal(I.readPendingParty(),null);
  for(const bad of ['O0O0O0','K7MQ4','K7MQ4RR','<script>','..%2f','1234567'.slice(0,6)]){store.clear();href='https://futbolisland.app/?party='+encodeURIComponent(bad);assert.equal(I.readPendingParty(),null,'rejects '+bad);assert.equal(store.has('fi-party-pending'),false);}
+ {const w=Date.now;store.set('fi-party-pending','K7MQ4R:'+(w()-31*60*1000));href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null,'a pending code older than 30 min is dropped (#19)');assert.equal(store.has('fi-party-pending'),false);
+  store.set('fi-party-pending','K7MQ4R:'+(w()-60*1000));assert.equal(I.readPendingParty(),'K7MQ4R','a fresh one stays');store.clear();
+  href='https://futbolisland.app/?party=K7MQ4R&x=1';I.stripPartyParam();assert(!/party=/.test(href)&&/x=1/.test(href),'stripPartyParam removes it without storing');assert.equal(store.has('fi-party-pending'),false);}
  store.set('fi-party-pending','nope!!');href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null);assert.equal(store.has('fi-party-pending'),false,'a bad stored value is dropped');
 });
 t('relay calls: offline / not found behave, nothing thrown',async()=>{});

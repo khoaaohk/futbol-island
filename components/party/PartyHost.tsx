@@ -156,6 +156,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   // ---- open from the HUD, and from a pending link ----
   const openMenu = useCallback(() => { setPending(null); setView('menu'); }, []);
   useEffect(() => { window.addEventListener(PARTY_EVENT, openMenu); return () => window.removeEventListener(PARTY_EVENT, openMenu); }, [openMenu]);
+  // Take ?party= out of the URL as soon as the island mounts (the code waits in sessionStorage for the intro to finish).
+  useEffect(() => { readPendingParty(); }, []);
   const linkChecked = useRef(false);
   useEffect(() => {
     if (!islandReady || !introDone || linkChecked.current || live) return;

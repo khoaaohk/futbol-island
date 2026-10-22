@@ -5,6 +5,7 @@ import { SITE_URL } from '../site/seo';
 import { relayHttpUrl } from './config';
 
 export const PENDING_KEY = 'fi-party-pending'; // sessionStorage; deliberately not a fi2-* save key, so it is never synced
+export const PENDING_TTL_MS = 30 * 60 * 1000; // an invite link opened long ago is stale
 export const PARTY_EVENT = 'fi-party-open'; // window event: anything in the HUD can ask PartyHost to open the Play with friends card
 export const NOT_IN_CODES_HINT = "That letter isn't used in codes";
 
@@ -102,18 +103,31 @@ export function readPendingParty(): string | null {
         url.searchParams.delete('party');
         try { history.replaceState(history.state, '', url.pathname + url.search + url.hash); } catch { /* ignore */ }
         const c = normalizeCode(raw);
-        if (c) { try { s?.setItem(PENDING_KEY, c); } catch { /* ignore */ } return c; }
+        if (c) { try { s?.setItem(PENDING_KEY, `${c}:${Date.now()}`); } catch { /* ignore */ } return c; }
       }
     }
   } catch { /* ignore */ }
   try {
     const stored = s?.getItem(PENDING_KEY) ?? null;
-    const c = stored ? normalizeCode(stored) : null;
-    if (stored && !c) s?.removeItem(PENDING_KEY);
+    const [rawCode, rawAt] = stored ? stored.split(':') : [null, null];
+    const c = rawCode ? normalizeCode(rawCode) : null;
+    const at = rawAt ? Number(rawAt) : Date.now(); // a bare code (no stamp) counts as fresh
+    if (stored && (!c || !(Date.now() - at < PENDING_TTL_MS))) { s?.removeItem(PENDING_KEY); return null; } // bad or older than 30 min
     return c;
   } catch {
     return null;
   }
+}
+
+/** Flag off (or any caller that must not join): take ?party= out of the address bar without keeping it. */
+export function stripPartyParam(): void {
+  try {
+    if (typeof location === 'undefined') return;
+    const url = new URL(location.href);
+    if (url.searchParams.get('party') === null) return;
+    url.searchParams.delete('party');
+    history.replaceState(history.state, '', url.pathname + url.search + url.hash);
+  } catch { /* ignore */ }
 }
 
 export function clearPendingParty(): void {
