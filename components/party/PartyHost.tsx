@@ -7,7 +7,7 @@ import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplay
 import { bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createJoinBuffer, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
-import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
+import { ErrorCode, PARTY_MAX, Zone, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
@@ -17,7 +17,7 @@ import { DoneButton } from '@/components/DoneButton';
 import styles from './party.module.css';
 
 type Track = 'mp_party_created' | 'mp_party_joined' | 'mp_party_ended' | 'mp_join_failed';
-type View = 'none' | 'menu' | 'gate' | 'invite' | 'join' | 'sheet';
+type View = 'none' | 'menu' | 'gate' | 'join' | 'sheet';
 type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
 
@@ -215,7 +215,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   }, [state.error, connection]);
 
   // ---- open from the HUD, and from a pending link ----
-  const openMenu = useCallback(() => { setPending(null); setFrom(openerRect()); setView('menu'); }, []);
+  // In a party the HUD button opens the party sheet (members, Invite, Lock, New code, End / Leave), never the Start menu again.
+  const liveRef = useRef(live); liveRef.current = live;
+  const openMenu = useCallback(() => { setPending(null); setFrom(openerRect()); setView(liveRef.current ? 'sheet' : 'menu'); }, []);
   useEffect(() => { window.addEventListener(PARTY_EVENT, openMenu); return () => window.removeEventListener(PARTY_EVENT, openMenu); }, [openMenu]);
   // Take ?party= out of the URL as soon as the island mounts (the code waits in sessionStorage for the intro to finish).
   useEffect(() => { readPendingParty(); }, []);
@@ -232,14 +234,13 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const run = (p: Pending) => { setPending(null); if (p.kind === 'create') void startCreate(); else void startJoin(p.code); };
   async function startCreate() {
     if (!getNick()) { setView('menu'); return; } // the first name is required
-    setBusy(true); setView('menu'); setJoinMsg(null);
+    setBusy(true); setView('sheet'); setJoinMsg(null); // the same dialog never disappears: the party card shows 'Making your code' until the code arrives
     const r = await createParty();
-    setBusy(false);
-    if ('error' in r) { text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('mp_join_failed', r.error); return; }
+    if ('error' in r) { setBusy(false); setView('menu'); text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('mp_join_failed', r.error); return; }
     joining.current = 'host';
     connection.join(r.code, { look: look(), hostKey: r.hostKey, nick: getNick() });
     track.current?.('mp_party_created');
-    setView('invite');
+    setView('sheet'); setBusy(false);
   }
   async function startJoin(code: string) {
     if (!getNick()) { setJoinCode(code); setView('join'); return; } // the first name is required
@@ -253,6 +254,10 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     connection.join(code, { look: look(), nick: getNick() });
   }
 
+  // A create that ended without a live party (connection dropped first) goes back to the menu rather than leaving an empty card.
+  useEffect(() => { if (view === 'sheet' && !busy && !live && state.status !== 'connecting') setView('menu'); }, [view, busy, live, state.status]);
+  const manageHint = useRef(false);
+  useEffect(() => { if (!live) manageHint.current = false; }, [live]);
   const close = useCallback(() => { setView('none'); setPending(null); setConfirmEnd(false); }, []);
   const closeJoin = useCallback(() => { clearPendingParty(); setBusy(false); setView('none'); }, []);
   const toggle = (set: ReadonlySet<number>, id: number, cb?: (s: ReadonlySet<number>) => void, apply?: (s: ReadonlySet<number>) => void) => {
@@ -264,11 +269,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
 
   return (
     <>
-      {live && (
-        <div className={styles.corner} data-party-corner>
-          <PartyChip count={state.members.length} reconnecting={state.status === 'reconnecting'} open={view === 'sheet'} onClick={() => setView(view === 'sheet' ? 'none' : 'sheet')} />
-        </div>
-      )}
+      {/* The live-party chip is the HUD Play with friends button (IslandSettings badge); it opens the sheet while a party runs. */}
       {shown && <p className={styles.toast} role="status" data-party-toast>{shown}</p>}
 
       {(view === 'menu' || (view === 'gate' && pending)) && (
@@ -297,21 +298,22 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
           {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => afterGate({ kind: 'join', code: c })} />}
         </Card>
       )}
-      {view === 'invite' && state.code && (
-        <Card label="Invite friends" onClose={close} grow from={null}>
-          {(requestClose) => <PartyInvite code={state.code!} expiresAt={state.codeExpiresAt} onNote={text} onClose={requestClose} />}
-        </Card>
-      )}
-      {view === 'sheet' && live && (
-        <Card label="Party" onClose={close} grow from={null}>
-          {(requestClose) => <section className={`${styles.card} ${styles.menuCard}`} data-party-sheet aria-labelledby="party-sheet-title">
+      {view === 'sheet' && (live || busy || state.status === 'connecting') && (
+        <Card label="Your party" onClose={() => { close(); if (live && state.isHost && !manageHint.current) { manageHint.current = true; text('Tap the friends button to manage your party'); } }} grow from={null}>
+          {(requestClose) => !live ? (
+            <section className={`${styles.card} ${styles.menuCard}`} data-party-sheet data-party-creating aria-busy="true">
+              <header className={styles.menuHeader}><span aria-hidden="true" /><h2>Your party</h2><DoneButton onDone={requestClose} /></header>
+              <p className={styles.small} role="status">Making your code...</p>
+            </section>
+          ) : <section className={`${styles.card} ${styles.menuCard}`} data-party-sheet aria-labelledby="party-sheet-title">
             <header className={styles.menuHeader}>
               <span aria-hidden="true" />
               <h2 id="party-sheet-title">Your party</h2>
               <DoneButton onDone={requestClose} />
             </header>
             <FadeScroll>
-            {friends.length > 0 && <p className={styles.small} data-party-count>{friends.length} {friends.length === 1 ? 'friend' : 'friends'} here</p>}
+            {state.isHost && state.code && <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} />}
+            <p className={styles.small} data-party-count>Friends here: {state.members.length} of {PARTY_MAX}</p>
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
@@ -336,7 +338,6 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               </div>
             )}
             <div className={styles.stack}>
-              {state.isHost && state.code && <button type="button" className={styles.primary} onClick={() => setView('invite')}><Glyph name="link" size={20} /> Invite</button>}
               {state.isHost && <button type="button" className={styles.secondary} aria-pressed={state.locked} onClick={() => { connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }}><Glyph name="lock" size={20} /> {state.locked ? 'Party is locked' : 'Lock party'}</button>}
               {state.isHost && <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code'); }}><Icon name="rotate" size={20} /> New code</button>}
               {state.isHost && (confirmEnd

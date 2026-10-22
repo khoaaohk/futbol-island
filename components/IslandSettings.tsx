@@ -14,6 +14,7 @@ import {parentGatePassed} from '@/lib/parentGate';
 import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {multiplayerAllowed,setMultiplayerAllowed,subscribeMultiplayerAllowed} from '@/lib/multiplayerAllowed';
 import {openPartyMenu,stripPartyParam} from '@/lib/multiplayer/invite';
+import {usePartyState} from '@/lib/multiplayer';
 import {useSceneryRest} from '@/lib/sceneryRest';
 import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
@@ -78,6 +79,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
   useSceneryRest(triggers,styles.hudRest,hudSettle,hudHold);
   // Battery saver (heat pass 4): read after mount (localStorage), and follow changes made elsewhere.
   const friendsAllowed=useSyncExternalStore(subscribeMultiplayerAllowed,multiplayerAllowed,()=>true),friendsOn=multiplayerEnabled()&&friendsAllowed;
+  const party=usePartyState(),partyLive=friendsOn&&(party.status==='live'||party.status==='reconnecting');
   const [friendsGate,setFriendsGate]=useState(false);
   useEffect(()=>{if(!multiplayerEnabled())stripPartyParam();},[]);// flag off: a shared ?party= link never lingers in the address bar
   const [saver,setSaver]=useState(false);useEffect(()=>{setSaver(batterySaverOn());return subscribeHeatTier(()=>setSaver(batterySaverOn()));},[]);
@@ -125,7 +127,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     <nav ref={triggers} className={styles.triggers} data-hud-triggers aria-label="Island information" onPointerEnter={warmPanels} onPointerDown={warmPanels} onFocus={warmPanels}>
       <button type="button" className={styles.circle} aria-label="Settings" aria-haspopup="dialog" aria-expanded={open&&tab==='settings'} onClick={()=>show('settings')}><Symbol kind="settings"/></button>
       <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label={`Paths${pendingPicksLabel(picks)}`} aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards')} onClick={()=>show('quests')}><CardOfferDot/><span className={styles.pathIconCycle} aria-hidden="true">{['bolt','book','play'].map(name=><span key={name} data-path-icon={name}><Icon name={name} size={24}/></span>)}</span></button>
-      {friendsOn&&<button type="button" className={styles.circle} data-party-open aria-label="Play with friends" onClick={openPartyMenu}><Icon name="people" size={24}/></button>}
+      {friendsOn&&<button type="button" className={styles.circle} data-party-open data-party-live={partyLive?'true':undefined} aria-label={partyLive?`Your party, ${party.members.length} playing`:'Play with friends'} onClick={openPartyMenu} style={partyLive?{position:'relative'}:undefined}><Icon name="people" size={24}/>{partyLive&&<span data-party-badge aria-hidden="true" style={{position:'absolute',right:-4,bottom:-4,minWidth:20,height:20,padding:'0 5px',borderRadius:10,background:'#1f8a4c',color:'#fff',font:'700 12px/20px system-ui,sans-serif',textAlign:'center'}}>{party.members.length}</span>}</button>}
     </nav>
     <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();backPage();}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
       <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?shell.white:shell.drawer}`}>
