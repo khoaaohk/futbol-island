@@ -113,8 +113,10 @@ t('new store: a friend walking in a room reads "In the Konbini" (both shops), an
 });
 
 // ---- 3. entry warp + 5.5 s retry against the deployed relay rules (fake clock) ------------------------------------------
-t('entry warp: first room pose warps, one retry 5.5 s later; a dropped first warp is recovered by the retry', () => {
-  const { RoomCore } = loadTs(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts'));
+// v1 = the deployed relay (frozen copy, tests/fixtures/mp-roomCore-v1.ts): the first warp lands in the 5 s window and is dropped, the
+// retry recovers it. v1.1 (multiplayer/relay/src/roomCore.ts, design 2.3 item 2): a room change is an implicit warp, accepted at once.
+for (const [ver, file] of [['v1', 'tests/fixtures/mp-roomCore-v1.ts'], ['v1.1', 'multiplayer/relay/src/roomCore.ts']]) t('entry warp (' + ver + ' relay): first room pose warps, one retry 5.5 s later; a dropped first warp is recovered by the retry', () => {
+  const { RoomCore } = loadTs(path.join(ROOT, file));
   let seed = 7; const random = (k) => { const a = new Uint8Array(k); for (let i = 0; i < k; i++) { seed = (seed * 1103515245 + 12345) & 0x7fffffff; a[i] = (seed >> 8) & 255; } return a; };
   const clock = { t: 1_000_000, now() { return this.t; } };
   const room = new RoomCore({ code: 'K7MQ4R', createdAt: clock.t, clock, random });
@@ -131,9 +133,11 @@ t('entry warp: first room pose warps, one retry 5.5 s later; a dropped first war
   const L = { x: -2, y: 0, z: 4.9, facing: Math.PI, speed: 0, busy: false, hidden: false };
   let body = pres.fillRoomBody(st, L, RoomCode.Konbini, [0, 0, 0, 0, 0, 0, 0, 0], clock.t);
   assert.equal(body[7] & 1, 1, 'first pose after the Welcome carries Warp'); send(body);
-  assert.equal(P.roomOf(relayPose()), -1, 'the relay dropped it (one warp per 5 s)');
+  if (ver === 'v1') assert.equal(P.roomOf(relayPose()), -1, 'the v1 relay dropped it (one warp per 5 s)');
+  else assert.equal(P.roomOf(relayPose()), RoomCode.Konbini, 'v1.1: entering a room is an implicit warp, accepted at once');
   for (let i = 1; i <= 50; i++) { clock.t += 100; L.z = 4.9 - i * .02; body = pres.fillRoomBody(st, L, RoomCode.Konbini, body, clock.t); assert.equal(body[7] & 1, 0, 'no warp in between'); send(body); }
-  assert.equal(P.roomOf(relayPose()), -1, 'speed check keeps refusing the room poses');
+  if (ver === 'v1') assert.equal(P.roomOf(relayPose()), -1, 'speed check keeps refusing the room poses');
+  else assert.equal(relayPose()[2], body[2], 'v1.1: walking in the room accepted throughout');
   clock.t += 600; body = pres.fillRoomBody(st, L, RoomCode.Konbini, body, clock.t);
   assert.equal(body[7] & 1, 1, 'the retry warp 5.5 s after the first'); send(body);
   assert.equal(P.roomOf(relayPose()), RoomCode.Konbini, 'retry accepted: the friend is in the Konbini');

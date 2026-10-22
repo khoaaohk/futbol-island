@@ -1,5 +1,6 @@
 // Rate limits, world bounds, speed checks and pose clamping (design 4.4 / 4.5).
 import { Mode, Zone, type PoseBody } from './types';
+import { RoomCode, roomOf } from './rooms';
 
 export const RATE = {
   pose: [8, 12],
@@ -43,6 +44,34 @@ export function clampPose(body: PoseBody): PoseBody | null {
   if (!inRange(mode, Mode.Walk, Mode.Idle) || !inRange(zone, Zone.Main, Zone.Indoors)) return null;
   if (!inRange(flags, 0, 3)) return null;
   return [x, y, z, yaw, sp, mode, zone, flags];
+}
+
+/**
+ * Relay v1.1 (docs/multiplayer-rooms-design.md 2.3 item 1, "ROOM_BOUNDS"; renamed so it never shadows the client's roomPos ROOM_BOUNDS): half extents (m) of each room's floor, room-local and centred on 0,
+ * = the client clamp (lib/multiplayer/roomPos.ts ROOM_BOUNDS, lib/multiplayer/rooms/*.ts) + a 3 m margin, rounded up. A room pose
+ * (roomOf(body) >= 0) outside its room is DROPPED by the relay (never bad(): a layout change must never kick anyone). Rooms with
+ * no entry (future codes 33..63) are only held to ROOM_XZ_MAX / WORLD_BOUNDS, so a new room never needs a relay deploy first.
+ * tests/mp-rooms.cjs keeps every client clamp + 3 m inside these.
+ */
+export const RELAY_ROOM_BOUNDS: Readonly<Record<number, { hx: number; hz: number }>> = (() => {
+  const t: Record<number, { hx: number; hz: number }> = {
+    [RoomCode.Konbini]: { hx: 11, hz: 10 }, // client clamp |x| 7.4, |z| 6.3 (+3 = 9.3, so 10, not the 9 in the design table)
+    [RoomCode.KonbiniCay]: { hx: 11, hz: 10 },
+    [RoomCode.Museum]: { hx: 25, hz: 22 }, // |x| 21, |z| 18
+    [RoomCode.Arcade]: { hx: 18, hz: 16 }, // |x| 14, |z| 12
+    [RoomCode.Shop]: { hx: 12, hz: 10 }, // |x| 8, |z| 7
+  };
+  for (let a = 1; a <= 7; a++) t[RoomCode.Reef + a] = { hx: 28, hz: 28 }; // Reef spots 41..47 (Phase 5, reserved)
+  return t;
+})();
+
+/** True unless `body` is a room pose standing outside its room's RELAY_ROOM_BOUNDS (island poses and unknown rooms: true). */
+export function roomBoundsOk(body: ArrayLike<number>): boolean {
+  const room = roomOf(body);
+  if (room < 0) return true;
+  const b = RELAY_ROOM_BOUNDS[room];
+  if (!b) return true;
+  return Math.abs(body[0]) <= b.hx * 10 && Math.abs(body[2]) <= b.hz * 10;
 }
 
 /** Distance (m) <= MAX_SPEED_MS[next mode] * 1.5 * dt + 2. Always true with Warp (caller limits Warp to 1 per 5 s). */

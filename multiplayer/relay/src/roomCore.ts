@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
-  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
+  parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
@@ -27,11 +27,13 @@ export interface RoomSnapshot { code: string; codeIssuedAt: number; locked: bool
 /** Aggregate counters only (no codes, names, ids, tokens or times). Persisted in the snapshot so an eviction keeps them. */
 export interface RoomCounters {
   peak: number; joins: number; resumes: number; kicks: number; rotates: number; locks: number; nameResets: number; rateCloses: number; msgs: number;
+  /** Relay v1.1: room poses dropped for standing outside their room's bounds (a count only; never a kick). */
+  roomOob: number;
   fails: Record<string, number>; errs: Record<string, number>; endReason: number; // endReason -1 while the party is live
 }
 /** The counters plus their fixed bucket names as they stand now. */
 export interface RoomStatsSnapshot extends RoomCounters { buckets: { peak: string; len: string; joins: string; msgs: string } }
-const newCounters = (): RoomCounters => ({ peak: 0, joins: 0, resumes: 0, kicks: 0, rotates: 0, locks: 0, nameResets: 0, rateCloses: 0, msgs: 0, fails: {}, errs: {}, endReason: -1 });
+const newCounters = (): RoomCounters => ({ peak: 0, joins: 0, resumes: 0, kicks: 0, rotates: 0, locks: 0, nameResets: 0, rateCloses: 0, msgs: 0, roomOob: 0, fails: {}, errs: {}, endReason: -1 });
 const FAIL_OF: Partial<Record<number, FailReason>> = {
   [ErrorCode.Expired]: 'expired', [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.BadName]: 'bad_name',
   [ErrorCode.Locked]: 'locked', [ErrorCode.RateLimited]: 'rate_limited',
@@ -47,6 +49,8 @@ export const CLOSE = {
 const HELLO_TIMEOUT_MS = 5000;
 const BAD_FRAME_LIMIT = 5;
 const WARP_MIN_GAP_MS = 5000;
+/** Relay v1.1: a change of room (island <-> room, room <-> room) is an implicit warp, at most one per second (no page loads faster). */
+const ROOM_FLIP_MIN_GAP_MS = 1000;
 export const KICK_LOCK_MS = 60_000; // auto-lock after a kick (review #6)
 
 interface Member {
@@ -54,6 +58,8 @@ interface Member {
   id: number; name: NameIdx; nick: string | null; look: number[]; token: string; joinSeq: number;
   peer: Peer | null; goneAt: number | null; // goneAt: disconnected since (resume grace)
   pose: PoseBody | null; poseAt: number; lastSeq: number; dirty: boolean; farDirty: boolean; lastWarpAt: number;
+  /** Relay v1.1: roomOf(pose) (-1 = island or a legacy door pose), when the room last changed, and whether it changed this tick. */
+  room: number; lastFlipAt: number; flipped: boolean;
   poseBucket: TokenBucket; emoteBucket: TokenBucket; pingBucket: TokenBucket; ctlBucket: TokenBucket;
   emoteTimes: number[]; bad: number; secStart: number; secCount: number;
   /** Presence (design 4.4.1): last frame heard from this member, and whether the relay itself set the away (Hidden) flag on its pose. */
@@ -143,13 +149,13 @@ export class RoomCore {
   summary(): RoomSummary {
     const c = this.counters;
     return { endReason: c.endReason < 0 ? EndReason.Expired : c.endReason, peak: c.peak, lenMs: this.lenMs(), joins: c.joins, resumes: c.resumes,
-      kicks: c.kicks, rotates: c.rotates, locks: c.locks, nameResets: c.nameResets, rateCloses: c.rateCloses, msgs: c.msgs, fails: { ...c.fails }, errs: { ...c.errs } };
+      kicks: c.kicks, rotates: c.rotates, locks: c.locks, nameResets: c.nameResets, rateCloses: c.rateCloses, msgs: c.msgs, roomOob: c.roomOob || 0, fails: { ...c.fails }, errs: { ...c.errs } };
   }
   /** Members with a live socket (the live players gauge). */
   get liveMembers(): number { let n = 0; this.members.forEach((m) => { if (m.peer) n++; }); return n; }
   /** End the party from outside (the 12 h cap found on wake-up). */
   expire(): void { this.end(EndReason.Expired); }
-  private count(k: 'joins' | 'resumes' | 'kicks' | 'rotates' | 'locks' | 'nameResets' | 'rateCloses' | 'msgs'): void { this.counters[k]++; this.countersDirty = true; }
+  private count(k: 'joins' | 'resumes' | 'kicks' | 'rotates' | 'locks' | 'nameResets' | 'rateCloses' | 'msgs' | 'roomOob'): void { this.counters[k] = (this.counters[k] || 0) + 1; this.countersDirty = true; }
   private notePeak(): void { const n = this.liveMembers; if (n > this.counters.peak) { this.counters.peak = n; this.countersDirty = true; } }
   private fail(code: ErrorCode): void { const r = FAIL_OF[code]; if (r) { this.counters.fails[r] = (this.counters.fails[r] || 0) + 1; this.countersDirty = true; } }
   /** 'current' | 'retired' | null for a code that is neither. */
@@ -306,6 +312,9 @@ export class RoomCore {
    * Interest management. Every 5 Hz tick each recipient gets the NEAREST INTEREST_NEAR (12) members whose pose changed this tick (horizontal distance
    * from the recipient's last pose; ties by id, so it is deterministic). Every BEACON_EVERY-th tick (1 Hz) it gets EVERY member that changed since the
    * last beacon instead, so far friends still move on the roster / map. Up to 12 near friends is the old behaviour unchanged.
+   * Relay v1.1 (rooms design 2.3 item 3): the 5 Hz near set only holds members in the recipient's OWN room (roomOf; island and legacy door
+   * poses are room -1), so island players stop hearing room walking and room members stop hearing island running; everyone else arrives on
+   * the 1 Hz beacon. A member whose room changed this tick is sent to everyone at once (their door step, so the old room sees them leave).
    */
   private fanOutPoses(): void {
     const beacon = ++this.beaconCount % BEACON_EVERY === 0;
@@ -329,16 +338,20 @@ export class RoomCore {
         try { r.peer.send(body + ']'); this.stats.poseFrames++; this.stats.poseEntries += list.length; } catch { /* peer already gone */ }
       });
     }
-    this.members.forEach((m) => { m.dirty = false; if (beacon) m.farDirty = false; });
+    this.members.forEach((m) => { m.dirty = false; m.flipped = false; if (beacon) m.farDirty = false; });
   }
 
-  /** Who `r` hears about this tick: never itself; on a normal tick only the nearest INTEREST_NEAR of the changed members; on a beacon tick all of them. */
+  /** Who `r` hears about this tick: never itself; on a beacon tick all changed members; on a normal tick the nearest INTEREST_NEAR of the
+   *  changed members in r's own room, plus anyone who changed room this tick. */
   private interest(r: Member, pool: Member[], beacon: boolean): Member[] {
-    const out = pool.filter((d) => d !== r);
-    if (beacon || out.length <= INTEREST_NEAR) return out;
+    if (beacon) return pool.filter((d) => d !== r);
+    const out: Member[] = [], flips: Member[] = [];
+    for (const d of pool) { if (d === r) continue; if (d.room === r.room) out.push(d); else if (d.flipped) flips.push(d); }
+    if (out.length <= INTEREST_NEAR) return flips.length ? out.concat(flips) : out;
     const ox = r.pose ? r.pose[0] : 0, oz = r.pose ? r.pose[2] : 0;
     const dist = (d: Member): number => { const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz; return dx * dx + dz * dz; };
-    return out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, INTEREST_NEAR).map((e) => e.d);
+    const near = out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, INTEREST_NEAR).map((e) => e.d);
+    return flips.length ? near.concat(flips) : near;
   }
 
   /** New code for the same room (TTL restarts); the caller retires the old code so it no longer finds the room. */
@@ -373,7 +386,13 @@ export class RoomCore {
         m.heardAt = now; if (m.relayAway) this.unAway(m);
         this.byPeer.set(peer, m);
         this.count('resumes'); this.notePeak();
+        // Relay v1.1 (rooms design 2.3 item 5): a resume may carry a new look (a Kit Shop outfit). Only a CHANGED look is re-announced, as
+        // S.Joined for the same id: every client store since the first one upserts Joined by id (tests/mp-room-core.cjs checks the old
+        // reducer), so the row is replaced, never doubled. An unchanged look keeps the resume invisible to others, as before.
+        const changed = Array.isArray(look) && (look.length !== m.look.length || look.some((v, i) => v !== m.look[i]));
+        if (changed) m.look = look.slice();
         this.welcome(m);
+        if (changed) this.broadcast([S.Joined, this.memberInfo(m)], m);
         return;
       }
       // unknown / lapsed token: fall through to a fresh join (graceful after a Durable Object eviction)
@@ -403,18 +422,20 @@ export class RoomCore {
   private newMember(id: number, name: NameIdx, nick: string | null, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
     return {
       id, name, nick, look: look.slice(), token, joinSeq,
-      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, farDirty: false, lastWarpAt: -1e12,
+      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, farDirty: false, lastWarpAt: -1e12, room: -1, lastFlipAt: -1e12, flipped: false,
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
       emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false,
     };
   }
 
-  /** Silence (no frame for AWAY_SILENCE_MS, connected or within the resume grace) shows the member as Away: the Hidden flag on their pose. */
+  /** Silence (no frame for AWAY_SILENCE_MS, connected or within the resume grace) shows the member as Away: the Hidden flag on their pose.
+   *  The legacy door pose (Indoors, y above the room band: a page without the room layer) is never marked; a silent member walking in a
+   *  room (room pose, relay v1.1 item 4) is, like everyone else. */
   private markAway(now: number): void {
     this.members.forEach((m) => {
       const p = m.pose;
-      if (!p || m.relayAway || (p[7] & PoseFlag.Hidden) !== 0 || p[6] === Zone.Indoors || now - m.heardAt < AWAY_SILENCE_MS) return;
+      if (!p || m.relayAway || (p[7] & PoseFlag.Hidden) !== 0 || (p[6] === Zone.Indoors && m.room < 0) || now - m.heardAt < AWAY_SILENCE_MS) return;
       const q = p.slice() as PoseBody; q[7] = (q[7] | PoseFlag.Hidden) & ~PoseFlag.Warp;
       m.pose = q; m.relayAway = true; m.dirty = true; m.farDirty = true;
     });
@@ -455,13 +476,21 @@ export class RoomCore {
     if (seq <= m.lastSeq) return;
     const body = clampPose(msg.slice(2) as PoseBody);
     if (!body) { this.bad(m); return; }
-    if (body[7] & PoseFlag.Warp) {
+    // Relay v1.1 item 1: a room pose outside its room is dropped (counted), never bad(): a layout change must not kick anyone.
+    if (!roomBoundsOk(body)) { this.count('roomOob'); return; }
+    const room = roomOf(body);
+    // Relay v1.1 item 2: a change of room is an implicit warp (no 5 s Warp gap, no speed check: room-local and island coordinates do
+    // not compare), at most one per ROOM_FLIP_MIN_GAP_MS; inside one room or on the island the Warp / speed checks stay.
+    const flip = m.pose !== null && room !== m.room && now - m.lastFlipAt >= ROOM_FLIP_MIN_GAP_MS;
+    if (flip) {
+      m.lastFlipAt = now; m.flipped = true;
+    } else if (body[7] & PoseFlag.Warp) {
       if (now - m.lastWarpAt < WARP_MIN_GAP_MS) return; // at most one teleport per 5 s
       m.lastWarpAt = now;
     } else if (m.pose && !speedOk(m.pose, body, now - m.poseAt)) {
       return; // speed cheat: dropped, never relayed; the last good pose stays
     }
-    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false;
+    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false; m.room = room;
   }
 
   private bad(m: Member): void {

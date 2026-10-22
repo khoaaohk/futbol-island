@@ -44,6 +44,7 @@ export const END_REASONS = ['host', 'expired', 'empty'] as const; // index = pro
 
 const ids: string[] = [
   'rl:created', 'rl:welcome', 'rl:resume', 'rl:kick', 'rl:rotate', 'rl:lock', 'rl:name_reset', 'rl:rate_close', 'rl:msgs',
+  'rl:room_oob', // relay v1.1: room poses dropped for standing outside their room (count only)
   'rl:origin_refused', 'rl:create_rate', 'rl:lookup_miss', 'rl:join_rate',
   'rl:live_parties_max', 'rl:live_players_max',
 ];
@@ -68,6 +69,7 @@ export interface RoomSummary {
   resumes: number;
   kicks: number; rotates: number; locks: number; nameResets: number; rateCloses: number;
   msgs: number; // inbound messages
+  roomOob?: number; // relay v1.1: room poses dropped out of bounds (optional: summaries from before v1.1 have none)
   fails: Record<string, number>; // by FailReason
   errs: Record<string, number>; // by ERR_NAMES name
 }
@@ -98,6 +100,7 @@ export function summaryIncrements(s: RoomSummary): Row {
   bump(row, 'rl:lock', num(s.locks));
   bump(row, 'rl:name_reset', num(s.nameResets));
   bump(row, 'rl:rate_close', num(s.rateCloses));
+  bump(row, 'rl:room_oob', num(s.roomOob));
   for (const r of FAIL_REASONS) bump(row, 'rl:fail_' + r, num(s.fails && s.fails[r]));
   for (const e of ERR_NAMES) bump(row, 'rl:err_' + e, num(s.errs && s.errs[e]));
   return row;
