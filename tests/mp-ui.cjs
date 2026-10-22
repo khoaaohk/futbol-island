@@ -42,7 +42,7 @@ t('first-name field: the only other text input, in the grown-up steps, never on 
  const nf=read('components/party/NickField.tsx');
  const inp=(nf.match(/<input[\s\S]*?\/>/g)||[]);assert.equal(inp.length,1,'one input');
  for(const a of [/maxLength=\{NICK_MAX\}/,/inputMode="text"/,/autoCapitalize="words"/,/autoComplete="off"/,/autoCorrect="off"/,/spellCheck=\{false\}/,/placeholder="Your first name"/])assert(a.test(inp[0]),String(a));
- assert(/>First name</.test(nf)&&!/optional/i.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
+ assert(/aria-label="First name"/.test(nf)&&!/>First name</.test(nf)&&!/optional/i.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
  assert(/filterNickInput/.test(nf)&&/aria-label="Clear first name"/.test(nf),'live filter and clear button');
  assert(!/localStorage|sessionStorage|document\.cookie|console\.|analytics|lib\/saves/.test(nf.replace(/\/\*[\s\S]*?\*\//g,'')),'memory only, no logging');
  assert(/<NickField onChange/.test(join)&&/<NickField onChange/.test(host),'shown in the join card and the start card');

@@ -17,10 +17,9 @@ export default function NickField({ onChange }: { onChange?: (nick: string | nul
   const commit = (raw: string) => { const t = filterNickInput(raw); setText(t); setNick(t); onChange?.(getNick()); };
   return (
     <div className={styles.nick} data-nick-field>
-      <label className={styles.nickLabel} htmlFor={id}>First name</label>
       <div className={styles.nickRow}>
         <input
-          id={id} type="text" className={styles.nickInput} value={text} placeholder="Your first name" maxLength={NICK_MAX}
+          id={id} aria-label="First name" type="text" className={styles.nickInput} value={text} placeholder="Your first name" maxLength={NICK_MAX}
           inputMode="text" autoCapitalize="words" autoComplete="off" autoCorrect="off" spellCheck={false} enterKeyHint="done"
           aria-required="true" aria-invalid={!valid && text.length > 0 ? true : undefined} aria-describedby={id + '-hint'} onChange={(e) => commit(e.target.value)}
         />
