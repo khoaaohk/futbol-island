@@ -2,7 +2,7 @@
 import { C, S, LOOK_LEN, MAX_INBOUND_BYTES, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
-import { NAME_ANIMALS, NAME_COLOURS, normalizeNick, validAnimal } from './names';
+import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,32}$/;
 const MAX_SERVER_BYTES = 4096;
@@ -35,7 +35,7 @@ function isLook(v: unknown): boolean {
 }
 
 function isName(v: unknown): v is NameIdx {
-  return Array.isArray(v) && v.length === 2 && inRange(v[0], 0, NAME_COLOURS.length - 1) && inRange(v[1], 0, NAME_ANIMALS.length - 1);
+  return Array.isArray(v) && v.length === 2 && inRange(v[0], 0, NAME_COLOURS.length - 1) && inRange(v[1], 0, RESERVED_NAME_SLOTS - 1);
 }
 
 function isPose(v: unknown): boolean {
@@ -72,8 +72,9 @@ export function parseClient(raw: string): ClientMsg | null {
   if (!a) return null;
   switch (a[0]) {
     case C.Hello: {
-      const animalOk = a.length < 6 || a[5] === null || validAnimal(a[5]);
-      // nick (7th element): any string or null is accepted here and normalised; a bad name becomes null so a typo never blocks a join.
+      // slot 5 is the reserved old animal index: null or an integer 0..31 is accepted and ignored.
+      const animalOk = a.length < 6 || a[5] === null || inRange(a[5], 0, RESERVED_NAME_SLOTS - 1);
+      // nick (7th element): a string or null parses; it is normalised here and a bad one becomes null, which the relay then REFUSES (BadName) for a 7-element Hello.
       const nickOk = a.length < 7 || a[6] === null || typeof a[6] === 'string';
       if (a.length >= 5 && a.length <= 7 && animalOk && nickOk && inRange(a[1], 0, 65535) && isLook(a[2]) &&
         isTokenOrNull(a[3]) && isTokenOrNull(a[4])) {

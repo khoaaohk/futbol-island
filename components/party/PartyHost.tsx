@@ -4,17 +4,15 @@ import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { bindConnection, colourName, displayName, getNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
+import { bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
-import AnimalPicker, { getAnimalChoice } from './AnimalPicker';
 import NickField from './NickField';
 import { DoneButton } from '@/components/DoneButton';
-import pickerStyles from './animalPicker.module.css';
 import styles from './party.module.css';
 
 type Track = 'mp_party_created' | 'mp_party_joined' | 'mp_party_ended' | 'mp_join_failed';
@@ -26,7 +24,7 @@ const ZONE_ICON: Record<number, string> = { [Zone.Main]: 'home', [Zone.Cay]: 'su
 const ZONE_LABEL: Record<number, string> = { [Zone.Main]: 'on the island', [Zone.Cay]: 'at Coral Cay', [Zone.Summit]: 'at the Summit', [Zone.Sea]: 'in the sea', [Zone.Indoors]: 'indoors' };
 const ERROR_TEXT: Record<number, string> = {
   [ErrorCode.Full]: 'This party is full (6/6)', [ErrorCode.NotFound]: "We couldn't find that party", [ErrorCode.Expired]: 'That code has run out. Ask for a new one',
-  [ErrorCode.Locked]: 'This party is closed', [ErrorCode.RateLimited]: 'Please wait a moment and try again', [ErrorCode.BadVersion]: 'Please reload the game',
+  [ErrorCode.Locked]: 'This party is closed', [ErrorCode.RateLimited]: 'Please wait a moment and try again', [ErrorCode.BadVersion]: 'Please reload the game', [ErrorCode.BadName]: 'Type your first name to play',
 };
 const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked' };
 
@@ -136,6 +134,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const [pending, setPending] = useState<Pending | null>(null);
   const [from, setFrom] = useState<DOMRect | null>(null);
   const [joinCode, setJoinCode] = useState('');
+  const [named, setNamed] = useState(hasValidNick);
   const [joinMsg, setJoinMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -246,16 +245,18 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const afterGate = (p: Pending) => { if (parentGatePassed()) run(p); else { setPending(p); setView('gate'); } };
   const run = (p: Pending) => { setPending(null); if (p.kind === 'create') void startCreate(); else void startJoin(p.code); };
   async function startCreate() {
+    if (!getNick()) { setView('menu'); return; } // the first name is required
     setBusy(true); setView('menu'); setJoinMsg(null);
     const r = await createParty();
     setBusy(false);
     if ('error' in r) { text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('mp_join_failed', r.error); return; }
     joining.current = 'host';
-    connection.join(r.code, { look: look(), hostKey: r.hostKey, animal: getAnimalChoice(), nick: getNick() });
+    connection.join(r.code, { look: look(), hostKey: r.hostKey, nick: getNick() });
     track.current?.('mp_party_created');
     setView('invite');
   }
   async function startJoin(code: string) {
+    if (!getNick()) { setJoinCode(code); setView('join'); return; } // the first name is required
     setBusy(true); setJoinCode(code); setJoinMsg(null); setView('join');
     const info = await checkParty(code);
     if (!info) { setBusy(false); setJoinMsg("We couldn't find that party"); track.current?.('mp_join_failed', 'not_found'); return; }
@@ -263,7 +264,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('mp_join_failed', 'closed'); return; }
     clearPendingParty();
     joining.current = 'guest';
-    connection.join(code, { look: look(), animal: getAnimalChoice(), nick: getNick() });
+    connection.join(code, { look: look(), nick: getNick() });
   }
 
   const close = useCallback(() => { setView('none'); setPending(null); setConfirmEnd(false); }, []);
@@ -294,11 +295,10 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             </header>
             <FadeScroll>
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
-            <AnimalPicker />
-            <NickField />
+            <NickField onChange={(n) => setNamed(n !== null)} />
             <div className={styles.stack}>
-              <button type="button" className={styles.primary} disabled={busy} onClick={() => afterGate({ kind: 'create' })}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
-              <button type="button" className={styles.secondary} disabled={busy} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); }}>Join with a code</button>
+              <button type="button" className={styles.primary} disabled={busy || !named} onClick={() => afterGate({ kind: 'create' })}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
+              <button type="button" className={styles.secondary} disabled={busy || !named} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); }}>Join with a code</button>
             </div>
             </FadeScroll>
           </section>}
@@ -324,11 +324,11 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
           <section className={styles.card} data-party-sheet aria-labelledby="party-sheet-title">
             <h3 id="party-sheet-title">Your party</h3>
             <ul className={styles.members}>
-              {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={pickerStyles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{me.animalGlyph} </span>You ({displayName(me)}){me.nick && <small>{me.name}</small>}</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
+              {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
                 <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}`}>
                   <span className={styles.zone} role="img" aria-label={ZONE_LABEL[m.zone] ?? 'on the island'}><Icon name={ZONE_ICON[m.zone] ?? 'home'} size={18} /></span>
-                  <span className={pickerStyles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{m.animalGlyph} </span>{displayName(m)}{m.nick && <small>{m.name}</small>}</span>
+                  <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}>{displayName(m)}</span>
                   {m.isHost && <span className={styles.badge}>Host</span>}
                   <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
                   <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>

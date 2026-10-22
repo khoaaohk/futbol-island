@@ -1,15 +1,15 @@
 // Party socket: Hello with look + resume token, backoff reconnect, hidden-tab close, send throttle, heartbeat.
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
-  C, PROTOCOL_VERSION, S, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer, validAnimal,
+  C, PROTOCOL_VERSION, S, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
   type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
 
 export type PartyStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'ended' | 'error';
 export interface PartyConnection {
-  /** nick: the typed first name (memory only: sent in Hello, never stored; a bad one is dropped). */
-  join(code: string, opts: { look: Look; hostKey?: string; animal?: number | null; nick?: string | null }): void;
+  /** nick: the typed first name (memory only: sent in Hello, never stored; the UI requires a valid one, the relay refuses a bad one with BadName). */
+  join(code: string, opts: { look: Look; hostKey?: string; nick?: string | null }): void;
   sendPose(body: PoseBody, nowMs: number): void;
   sendEmote(e: Emote): boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
@@ -63,7 +63,6 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let code: string | null = null;
   let look: Look = [];
   let hostKey: string | null = null;
-  let animal: number | null = null;
   let nick: string | null = null; // in memory only; cleared if the host resets it, so a reconnect never sends it back
   let you: number | null = null;
   let resumeToken: string | null = null;
@@ -133,8 +132,9 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     ws = w;
     w.onopen = () => {
       if (ws !== w) return;
-      const hello: ClientMsg = nick !== null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, animal, nick]
-        : animal === null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey] : [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, animal];
+      // Slot 5 is the reserved old animal field: always null. With no name (never from the UI; after a host reset) send the old 5-element Hello = colour name only.
+      const hello: ClientMsg = nick !== null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, nick]
+        : [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey];
       raw(hello);
       scheduleBeat();
     };
@@ -182,7 +182,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     } else if (m[0] === S.Error) {
       const e = m[1];
       if (e === ErrorCode.Full || e === ErrorCode.NotFound || e === ErrorCode.Expired || e === ErrorCode.Kicked ||
-        e === ErrorCode.BadVersion || e === ErrorCode.Locked) {
+        e === ErrorCode.BadVersion || e === ErrorCode.Locked || e === ErrorCode.BadName) {
         clearSession();
         setStatus('error');
         dropSocket();
@@ -255,7 +255,6 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       const same = sess && sess.code === norm;
       code = norm;
       look = opts.look;
-      animal = validAnimal(opts.animal) ? opts.animal : null;
       nick = normalizeNick(opts.nick ?? null);
       you = null;
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;

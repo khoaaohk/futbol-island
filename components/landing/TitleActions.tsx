@@ -94,7 +94,7 @@ export default function TitleActions(){
   setIntro(mode==='create');setMaking(false);setCreatePhase('');setSheet({mode,from:el});
  };
  // "Join friends" (Oct 22 2026): the same sheet and morph as "Use a different code"; it stores the typed code as the pending party and
- // then continues into the game exactly as Play / Start would (PartyHost does the grown-up check, the animal picker and the join).
+ // then continues into the game exactly as Play / Start would (PartyHost does the grown-up check and the join).
  const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
  const joinParty=(c:string)=>{
   const stored=setPendingParty(c);if(!stored)return;

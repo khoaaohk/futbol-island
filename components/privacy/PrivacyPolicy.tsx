@@ -8,7 +8,7 @@ import styles from './PrivacyPolicy.module.css';
  * components/OfficialClipPlayer.tsx (YouTube privacy-enhanced clips on tap), app/coffee/* (Stripe donations behind the grown-up check).
  * COPPA 2025 notice items: internal operations (§312.5(c)(7)), retention policy (§312.10), security program summary (§312.8).
  * [LAWYER] Review before public launch: operator name/address, the YouTube-on-tap disclosure, state-law and UK/EU sections, and section 7a
- * (Play with friends: an optional typed FIRST NAME ONLY, shown to the friends in the same party; added Oct 22 2026 at the owner's request).
+ * (Play with friends: a typed FIRST NAME ONLY, asked for when a grown-up starts or joins a party and shown to the friends in the same party; added Oct 22 2026 at the owner's request).
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
 export const POLICY_UPDATED='October 22, 2026';
@@ -46,7 +46,7 @@ export default function PrivacyPolicy(){
   </ol></nav>
 
   <section id="pp-short"><h2 tabIndex={-1}>1. The short version</h2><ul>
-   <li><b>No accounts and almost no personal details.</b> We never ask a child for a last name, age, birthday, email, phone number, photo, voice, school or location. The one exception is the optional <i>Play with friends</i> feature, where a grown-up may type a <b>first name only</b> so friends can tell each other apart (section 7a).</li>
+   <li><b>No accounts and almost no personal details.</b> We never ask a child for a last name, age, birthday, email, phone number, photo, voice, school or location. The one exception is the <i>Play with friends</i> feature, which asks a grown-up to type a <b>first name only</b> so friends can tell each other apart (section 7a).</li>
    <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>
    <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We count visits without identifying anyone.</b> Totals only, with a scrambled visitor code that changes every day.</li>
@@ -109,16 +109,16 @@ export default function PrivacyPolicy(){
 
   <section id="pp-friends"><h2 tabIndex={-1}>7a. Play with friends (optional)</h2>
    <p>Play with friends lets a small group of friends see each other on the island. It works only after a grown-up passes the grown-up check, and a grown-up can switch it off in Settings.</p>
-   <p><b>What the other players in a party can see:</b> a made-up name chosen by the game (a colour and an animal, such as “Red Zebra”), an animal picture the player picks from a fixed list, their outfit, where they are on the island, and simple preset emotes such as a wave. A player may also type a <b>first name only</b> (letters only, up to 12 letters) so friends can tell each other apart. There is no free-text chat, no voice, no photos, and no way to send a link or a message. Please type only a first name: never a last name, school, address or contact details.</p>
+   <p><b>What the other players in a party can see:</b> a colour chosen by the game (such as Red or Blue), the <b>first name only</b> that the player typed when starting or joining (letters only, 2 to 12 letters, needed to play with friends so friends can tell each other apart), their outfit, where they are on the island, and simple preset emotes such as a wave. There is no free-text chat, no voice, no photos, and no way to send a link or a message. Please type only a first name: never a last name, school, address or contact details.</p>
    <p><b>What we keep:</b> nothing about who the players are. A party exists only while it is in use (an invite code works for 2 hours and a party lasts at most 4 hours). The first name is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. Like any website, the party service sees the internet address a connection comes from; it keeps only a short-lived scrambled version in memory to stop abuse.</p>
-   <p><b>Controls:</b> whoever starts a party can remove a player, lock the party, change the code, reset a player’s name back to the made-up one, or end the party. Any player can leave, or hide or mute another player. If you see a name that should not be there, tell a grown-up.</p>
+   <p><b>Controls:</b> whoever starts a party can remove a player, lock the party, change the code, reset a player’s name back to their colour, or end the party. Any player can leave, or hide or mute another player. If you see a name that should not be there, tell a grown-up.</p>
   </section>
   <section id="pp-tech"><h2 tabIndex={-1}>8. Technical information</h2>
    <p>Like every website, our host receives standard technical information with each request (such as the network address, browser type and the page asked for) so it can deliver the page and protect the site from abuse. Our host keeps these logs for a short time under its own policy; we use them only to keep the service running and secure, and we do not combine them with save codes or visit counts.</p>
   </section>
 
   <section id="pp-never"><h2 tabIndex={-1}>9. What we never collect</h2>
-   <p>Last names, usernames, ages or birthdays, email addresses or phone numbers (other than the one-time email in section 6; and other than the optional first name described in section 7a), home or school addresses, photos, video, voice recordings, precise location, contacts, chat messages, or advertising identifiers.</p>
+   <p>Last names, usernames, ages or birthdays, email addresses or phone numbers (other than the one-time email in section 6; and other than the first name described in section 7a), home or school addresses, photos, video, voice recordings, precise location, contacts, chat messages, or advertising identifiers.</p>
   </section>
 
   <section id="pp-use"><h2 tabIndex={-1}>10. How we use information</h2><ul>

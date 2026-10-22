@@ -184,28 +184,22 @@ t('fatal errors stop retries; Ended clears the session; onMessage fan-out',()=>{
   e3.c.dispose();assert.equal(s3.readyState,3);
 });
 
-// ---- identity: animal in Hello, colour / animal in the store ----
-t('Hello carries the chosen animal (trailing field), omitted when none',()=>{
-  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,animal:4});e.last().open();
-  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,4]);assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
-  const e2=makeEnv();e2.c.join('k7m-q4r',{look:LOOK,animal:99});e2.last().open();
-  assert.deepEqual(e2.msgs(e2.last())[0],[0,1,LOOK,null,null],'invalid animal is dropped client side (old 5-element shape)');
-  const e3=makeEnv();e3.c.join('k7m-q4r',{look:LOOK,animal:null});e3.last().open();assert.equal(e3.msgs(e3.last())[0].length,5);
-  e.last().recv(welcome());e.last().drop();e.clock.advance(60000);e.last().open();
-  assert.equal(e.msgs(e.last())[0][5],4,'reconnect Hello keeps the animal');
+// ---- identity: colour only (no animals), colour in the store ----
+t('Hello never sends an animal: reserved slot is null, old 5-element shape when there is no name',()=>{
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,animal:4,nick:'Emma'});e.last().open();
+  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,null,'Emma'],'an animal option is ignored');assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
+  const e3=makeEnv();e3.c.join('k7m-q4r',{look:LOOK});e3.last().open();assert.equal(e3.msgs(e3.last())[0].length,5);
 });
-t('store exposes colour and animal per member',()=>{
+t('store exposes colour per member (no animal fields)',()=>{
   st.partyStore.reset();st.partyStore.apply(welcome(),1000);
   const m=st.partyStore.get().members[0];
-  assert.equal(m.colourIdx,2);assert.equal(m.animalIdx,3);assert.equal(m.colourHex,nm.COLOUR_HEX[2]);assert.equal(m.animalGlyph,nm.ANIMAL_GLYPH[3]);assert.equal(m.name,'Green Otter');
+  assert.equal(m.colourIdx,2);assert.equal(m.colourHex,nm.COLOUR_HEX[2]);assert.equal(m.name,'Green');
+  assert.ok(!('animalIdx' in m)&&!('animalGlyph' in m));
   st.partyStore.reset();
 });
-t('names tables: hex per colour, one grapheme per animal, first 6 assigned colours well separated',()=>{
-  assert.equal(nm.COLOUR_HEX.length,P.NAME_COLOURS.length);assert.equal(nm.ANIMAL_GLYPH.length,P.NAME_ANIMALS.length);
+t('names tables: hex per colour, first 6 assigned colours well separated',()=>{
+  assert.equal(nm.COLOUR_HEX.length,P.NAME_COLOURS.length);assert.equal(nm.ANIMAL_GLYPH,undefined);
   assert.equal(new Set(nm.COLOUR_HEX).size,16);assert.ok(nm.COLOUR_HEX.every(h=>/^#[0-9A-F]{6}$/.test(h)));
-  const seg=new Intl.Segmenter('en',{granularity:'grapheme'});
-  for(const g of nm.ANIMAL_GLYPH){assert.equal([...seg.segment(g)].length,1,'one grapheme: '+g);}
-  assert.equal(new Set(nm.ANIMAL_GLYPH).size,32,'every animal has its own glyph');
   const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   const lin=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);};
   const lab=h=>{const [r,g,b]=rgb(h).map(lin);const f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;
@@ -361,26 +355,26 @@ t('privacy: no forbidden imports or storage keys in lib/multiplayer',()=>{
 
 // ---- first-name nick: Hello, store, never persisted ----
 t('Hello carries the nick (7th field), re-sent on reconnect, normalised, dropped when bad',()=>{
-  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,animal:4,nick:'EMMA'});e.last().open();
-  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,4,'Emma']);assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,nick:'EMMA'});e.last().open();
+  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,null,'Emma']);assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
   const e2=makeEnv();e2.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});e2.last().open();
-  assert.deepEqual(e2.msgs(e2.last())[0],[0,1,LOOK,null,null,null,'Emma'],'nick without animal -> null animal slot');
+  assert.deepEqual(e2.msgs(e2.last())[0],[0,1,LOOK,null,null,null,'Emma'],'reserved animal slot is null');
   for(const bad of ['Emma Lou','12345','a',null,undefined,'']){const e3=makeEnv();e3.c.join('k7m-q4r',{look:LOOK,nick:bad});e3.last().open();assert.equal(e3.msgs(e3.last())[0].length,5,String(bad));}
   e.last().recv(welcome());e.last().drop();e.clock.advance(60000);e.last().open();
   assert.equal(e.msgs(e.last())[0][6],'Emma','reconnect Hello keeps the nick');
   // the host resets MY name: a later reconnect must not put it back
   e.last().recv(welcome());e.last().recv([31,1,null]);e.last().drop();e.clock.advance(60000);e.last().open();
-  assert.equal(e.msgs(e.last())[0].length,6,'after a reset the nick is no longer sent');
+  assert.equal(e.msgs(e.last())[0].length,5,'after a reset the nick is no longer sent');
   e.c.leave();const e4=makeEnv();e4.c.join('k7m-q4r',{look:LOOK});e4.last().open();assert.equal(e4.msgs(e4.last())[0].length,5);
 });
 t('store exposes nick, displayName, and Renamed clears it',()=>{
   st.partyStore.reset();
   st.partyStore.apply([20,1,1,'tok-abcdefghij012345',Date.now()+7200000,Date.now()+14400000,0,[[1,[2,3],LOOK,1,null,'Emma'],[2,[0,0],LOOK,0,null],[3,[1,1],LOOK,0,null,null]]],1000);
   let ms=st.partyStore.get().members;
-  assert.equal(ms[0].nick,'Emma');assert.equal(ms[0].name,'Green Otter');assert.equal(st.displayName(ms[0]),'Emma');
-  assert.equal(ms[1].nick,null);assert.equal(st.displayName(ms[1]),'Red Zebra');assert.equal(ms[2].nick,null);
+  assert.equal(ms[0].nick,'Emma');assert.equal(ms[0].name,'Green');assert.equal(st.displayName(ms[0]),'Emma');
+  assert.equal(ms[1].nick,null);assert.equal(st.displayName(ms[1]),'Red');assert.equal(ms[2].nick,null);
   st.partyStore.apply([31,1,null],2000);
-  ms=st.partyStore.get().members;assert.equal(ms[0].nick,null);assert.equal(st.displayName(ms[0]),'Green Otter');
+  ms=st.partyStore.get().members;assert.equal(ms[0].nick,null);assert.equal(st.displayName(ms[0]),'Green');
   st.partyStore.apply([21,[4,[2,2],LOOK,0,null,'Zoë']],3000);
   assert.equal(st.partyStore.get().members.find(x=>x.id===4).nick,'Zoë');
   st.partyStore.reset();

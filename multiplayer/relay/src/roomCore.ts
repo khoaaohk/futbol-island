@@ -260,7 +260,8 @@ export class RoomCore {
 
   // ---- internals ----
   private hello(peer: Peer, msg: ClientMsg, now: number): void {
-    const [, v, look, resumeToken, hostKey, animal, rawNick] = msg as [number, number, number[], string | null, string | null, (number | null)?, (string | null)?];
+    const [, v, look, resumeToken, hostKey, , rawNick] = msg as [number, number, number[], string | null, string | null, (number | null)?, (string | null)?];
+    const hasNickSlot = (msg as unknown[]).length >= 7; // new clients always send the name; old Hellos (5 / 6 elements) are colour-only
     const nick = normalizeNick(rawNick ?? null); // parseClient already normalised; a name is only ever set here, at Hello
     if (v !== PROTOCOL_VERSION) return this.refuse(peer, ErrorCode.BadVersion);
     if (now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
@@ -283,6 +284,7 @@ export class RoomCore {
       }
       // unknown / lapsed token: fall through to a fresh join (graceful after a Durable Object eviction)
     }
+    if (hasNickSlot && nick === null) return this.refuse(peer, ErrorCode.BadName); // a new client must send a valid first name
     if (viaRetired && !isHostKey) return this.refuse(peer, ErrorCode.NotFound); // a leaked old code never admits a new face
     if (!isHostKey) {
       if (this.isLocked(now)) return this.refuse(peer, ErrorCode.Locked);
@@ -295,7 +297,7 @@ export class RoomCore {
     const r = this.random(4);
     const rnd = () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
     const id = this.freeId();
-    const m = this.newMember(id, pickNameWith(taken, rnd, animal ?? null), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
+    const m = this.newMember(id, pickNameWith(taken, rnd), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }

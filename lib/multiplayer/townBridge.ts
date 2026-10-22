@@ -82,7 +82,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       known.add(m.id);
       if (!spare.has(m.id)) { spare.set(m.id, { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Idle, zone: Zone.Main, fade: 1 }); ids.push(m.id); }
       // Label: the typed first name if set (the made-up name goes small under it), else the made-up name.
-      avatars.upsert(m.id, m.look, displayName(m), { hex: m.colourHex, glyph: m.animalGlyph, sub: m.nick ? m.name : undefined });
+      avatars.upsert(m.id, m.look, displayName(m), { hex: m.colourHex });
     }
     for (let i = ids.length - 1; i >= 0; i--) {
       const id = ids[i];

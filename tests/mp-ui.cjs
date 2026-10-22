@@ -42,13 +42,13 @@ t('first-name field: the only other text input, in the grown-up steps, never on 
  const nf=read('components/party/NickField.tsx');
  const inp=(nf.match(/<input[\s\S]*?\/>/g)||[]);assert.equal(inp.length,1,'one input');
  for(const a of [/maxLength=\{NICK_MAX\}/,/inputMode="text"/,/autoCapitalize="words"/,/autoComplete="off"/,/autoCorrect="off"/,/spellCheck=\{false\}/,/placeholder="Your first name"/])assert(a.test(inp[0]),String(a));
- assert(/First name \(optional\)/.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
+ assert(/>First name</.test(nf)&&!/optional/i.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
  assert(/filterNickInput/.test(nf)&&/aria-label="Clear first name"/.test(nf),'live filter and clear button');
  assert(!/localStorage|sessionStorage|document\.cookie|console\.|analytics|lib\/saves/.test(nf.replace(/\/\*[\s\S]*?\*\//g,'')),'memory only, no logging');
- assert(/<NickField \/>/.test(join)&&/<NickField \/>/.test(host),'shown with the animal picker in the join card and the start card');
+ assert(/<NickField onChange/.test(join)&&/<NickField onChange/.test(host),'shown in the join card and the start card');
  for(const f of fs.readdirSync(path.join(ROOT,'components')).filter(x=>/^landing$/.test(x)).flatMap(d=>fs.readdirSync(path.join(ROOT,'components',d)).map(x=>'components/'+d+'/'+x)).filter(x=>/\.tsx$/.test(x)))assert(!/NickField/.test(read(f)),f+' must not show the name field');
  assert(/Reset name to \$\{m\.name\}/.test(host)&&/host\.resetName\(m\.id\)/.test(host)&&/state\.isHost && m\.nick/.test(host)&&/Name reset/.test(host),'host-only Reset name button with toast');
- assert(/<small>\{m\.name\}<\/small>/.test(host),'made-up name shown small for context');
+ assert(!/<small>\{m\.name\}<\/small>/.test(host),'no made-up name line any more');
 });
 t('only the code boxes take text',()=>{
  for(const f of ['PartyHost','PartyInvite','PartyChip','EmoteWheel']){const s=read(`components/party/${f}.tsx`);assert(!/<input|<textarea|contentEditable/i.test(s),f+' has no text input');}
@@ -74,7 +74,7 @@ t('display and links',()=>{
  origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
  assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/stops working/.test(invite)&&/partyQr/.test(invite),'invite card content');
- assert.equal(I.joinNote(['Red Zebra']),'Red Zebra joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
+ assert.equal(I.joinNote(['Red']),'Red joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
  assert.equal(I.expiryText(0,0),'');assert.equal(I.expiryText(112*60000,0),'1 hour 52 minutes');assert.equal(I.expiryText(30*60000,0),'30 minutes');assert.equal(I.expiryText(120*60000,0),'2 hours');assert.equal(I.expiryText(61*60000,0),'1 hour 1 minute');assert.equal(I.expiryText(60000,0),'1 minute');
 });
 t('readPendingParty: ?party= moves to sessionStorage and leaves the URL; invalid codes are rejected',()=>{
@@ -87,21 +87,17 @@ t('readPendingParty: ?party= moves to sessionStorage and leaves the URL; invalid
   href='https://futbolisland.app/?party=K7MQ4R&x=1';I.stripPartyParam();assert(!/party=/.test(href)&&/x=1/.test(href),'stripPartyParam removes it without storing');assert.equal(store.has('fi-party-pending'),false);}
  store.set('fi-party-pending','nope!!');href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null);assert.equal(store.has('fi-party-pending'),false,'a bad stored value is dropped');
 });
-t('animal picker: 12-16 fixed options, no typing, Surprise me, labels, >= 44px, remembered in memory only',()=>{
- const pk=read('components/party/AnimalPicker.tsx'),pcss=read('components/party/animalPicker.module.css'),P=load(path.join(ROOT,'multiplayer/protocol/names.ts'));
- assert(P.PICKER_ANIMALS.length>=12&&P.PICKER_ANIMALS.length<=16&&P.PICKER_ANIMALS.every(P.validAnimal),'12-16 valid options');
- assert(/PICKER_ANIMALS\.map/.test(pk),'options come from the fixed list');
- assert(!/<input|<textarea|contentEditable/i.test(pk),'no text input');
- assert(/Surprise me/.test(pk)&&/pick\(null\)/.test(pk),'Surprise me = random (null)');
- assert(/aria-label=\{`Be a \$\{name\}`\}/.test(pk),"aria-label 'Be a Zebra'");
- assert(/aria-pressed=\{value === idx\}/.test(pk),'one selection highlighted');
- assert(/\.animal\{[^}]*width:clamp\(56px,17vw,76px\);height:clamp\(56px,17vw,76px\)/.test(pcss)&&/\.surprise\{[^}]*min-height:44px/.test(pcss),'round buttons clamp(56px,17vw,76px) (>= 56px), >= 44px surprise');
- assert(/\.animal:focus-visible/.test(pcss)&&/prefers-reduced-motion/.test(pcss),'focus ring, reduced motion');
- assert(!/localStorage|sessionStorage|document\.cookie/.test(pk),'choice kept in memory only');
- assert(/<AnimalPicker \/>/.test(join),'join card shows the picker')&&assert(/<AnimalPicker \/>/.test(host),'host start card shows the picker');
- assert(/animal: getAnimalChoice\(\)/.test(host)&&host.split('animal: getAnimalChoice()').length===3,'create and join both send the choice');
+t('no animals: picker gone, create and join send only the first name; the name is required',()=>{
+ assert(!fs.existsSync(path.join(ROOT,'components/party/AnimalPicker.tsx'))&&!fs.existsSync(path.join(ROOT,'components/party/animalPicker.module.css')),'picker files removed');
+ for(const f of ['PartyHost','JoinParty','PartyChip','NickField'])assert(!/animal|Animal|Surprise/.test(read(`components/party/${f}.tsx`)),f+' has no animal');
  assert(host.split('nick: getNick()').length===3,'create and join both send the first name (memory only)');
- const inputs=(join.match(/<input/g)||[]).length;assert.equal(inputs,1,'picker adds no input to the join card');
+ const inputs=(join.match(/<input/g)||[]).length;assert.equal(inputs,1,'join card has the code boxes only (the name is NickField)');
+ const nf=read('components/party/NickField.tsx');
+ assert(/Type your first name to play/.test(read('lib/multiplayer/nick.ts'))&&/NICK_HINT/.test(nf),'hint when the name is missing');
+ assert(/disabled=\{busy \|\| !named\}/.test(host)&&host.split('busy || !named').length===3,'Start a party and Join with a code are disabled until a valid name');
+ assert(/!complete \|\| busy/.test(join)&&/code\.length === CODE_LENGTH && named/.test(join),'Join is disabled until a valid name and a full code');
+ assert(/if \(!getNick\(\)\)/.test(host),'create / join also guard in code');
+ assert(/\[ErrorCode\.BadName\]/.test(host),'a relay BadName refusal has a message');
 });
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
@@ -115,7 +111,7 @@ t('Play with friends card: wide, grows out of the HUD button, animated close, Do
  assert(/\.nickInput\{[^}]*width:100%;box-sizing:border-box/.test(css),'name field as wide as the buttons');
  assert(/\.fadeScroll\{[^}]*mask-image/.test(css)&&/dataset\.top/.test(host)&&/dataset\.bottom/.test(host),'scroll area fades only where content continues');
 });
-t('party sheet rows: coloured dot + animal glyph + name, aria-labels carry the colour',()=>{
+t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
  assert(/colourName\(m\.colourIdx\)/.test(host)&&/colourName\(me\.colourIdx\)/.test(host),'aria-label includes the colour');
  assert(/You \(\{displayName\(me\)\}\)/.test(host),"local row says 'You'");

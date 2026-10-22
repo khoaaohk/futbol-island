@@ -29,12 +29,12 @@ export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
  return tier<=1?5:tier===2?3:tier===3?1:0;
 }
 
-/** `sub`: the made-up name ('Red Zebra'), drawn small under the label when the friend typed a first name (the label text). */
-export interface MemberStyle{hex:string;glyph:string;sub?:string}
+/** The member's colour (hex): the label's dot and rim and the ground ring. The label text is the first name (or the colour name). */
+export interface MemberStyle{hex:string}
 export interface LocalRing{x:number;y:number;z:number;hex:string}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
- /** `style` = the member's name colour (hex) and animal glyph: drawn on the label and as the ground ring. */
+ /** `style` = the member's name colour (hex): drawn on the label and as the ground ring. */
  upsert(id:MemberId,look:Look,name:string,style?:MemberStyle):void;
  remove(id:MemberId):void;
  /** Local choices (PartyHost Hide / Mute): hidden friends are not drawn at all (avatar, ring, label, emote bubble); muted friends' emotes are not shown. */
@@ -80,25 +80,23 @@ type Entry={
 };
 
 const LABEL_W=256;
-const labelH=(style:MemberStyle|null)=>style&&style.sub?88:64;
+const labelH=(_style:MemberStyle|null)=>64;
 function makeLabelTexture(text:string,style:MemberStyle|null){
- const H=labelH(style),sub=style&&style.sub?style.sub:'';
+ const H=labelH(style);
  const canvas=document.createElement('canvas');canvas.width=LABEL_W;canvas.height=H;
  const g=canvas.getContext('2d');
  if(g){
-  const label=style&&style.glyph?style.glyph+' '+text:text;
+  const label=text;
   g.clearRect(0,0,LABEL_W,H);g.font='700 27px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
   const dot=style?30:0;
   let w=Math.min(244,g.measureText(label).width+28+dot);
-  if(sub){g.font='600 19px system-ui, sans-serif';w=Math.max(w,Math.min(244,g.measureText(sub).width+28));g.font='700 27px system-ui, sans-serif';}
-  const x0=128-w/2,ph=H-16,cy=sub?30:32;
+  const x0=128-w/2,ph=H-16,cy=32;
   g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,ph,24):g.rect(x0,8,w,ph);g.fill();
   if(style){
    g.lineWidth=3;g.strokeStyle=style.hex;g.stroke(); // coloured rim = the ring colour
    g.fillStyle=style.hex;g.beginPath();g.arc(x0+22,cy,9,0,Math.PI*2);g.fill();g.lineWidth=2;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
   }
   g.fillStyle='#ffffff';g.fillText(label,128+dot/2,cy+1,230-dot);
-  if(sub){g.font='600 19px system-ui, sans-serif';g.fillStyle='rgba(255,255,255,.82)';g.fillText(sub,128,63,230);}
  }
  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;return texture;
 }
@@ -187,7 +185,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);tryAdmit(e);return;
    }
-   if(e.name!==name||(st?.hex!==e.style?.hex)||(st?.glyph!==e.style?.glyph)||(st?.sub!==e.style?.sub)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
+   if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
    if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);}}
   },
   remove(id){
