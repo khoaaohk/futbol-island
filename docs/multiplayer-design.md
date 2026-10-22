@@ -107,17 +107,43 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 |---|---|
 | Friends in different zones | Each receives all poses (party is small); a friend more than 160 m away is not drawn, shown as a map/edge pin. |
 | Different time of day | Local only; friends are drawn under your own lighting. |
-| Inside the Arcade/Konbini/Museum/Shop (separate pages) | Page unload closes the socket; friends see "Red is in the Arcade" (zone `indoors` sent just before leaving), the slot is kept 60 s, then they show as away; coming back resumes. |
+| Inside the Arcade/Konbini/Museum/Shop (separate pages) | Page unload closes the socket; friends see "Red is in the Arcade" (zone `indoors` sent just before leaving), the slot is kept 10 min (party persistence, below); coming back resumes it automatically. |
 | Different devices / heat tiers | Remote cap by effective tier at **admission only**: tier 0-1: 5, tier 2: 3, tier 3: 1, tier 4: 0 new (already drawn stay), Battery saver: 0 (fade 1 s). Desktop: 5. Capped friends show as a pin, never vanish. |
 | Reduced motion | Emotes use the still pose + an icon bubble, no confetti; arrival ring replaced by a fade. |
 | Slow / offline network | Poses extrapolate up to 250 ms then ease to a stop; after 8 s silent a friend dims; chip shows a dim dot "reconnecting"; the island plays exactly as today. |
 | Joining late | Welcome contains the full roster and last pose of everyone. |
-| Host leaves | 30 s grace (reconnect), then host moves to the longest-present member; the party never ends because the host left. |
+| Host leaves | 30 s grace on a plain drop (10 min after announcing a room / menu / background tab), then host moves to the longest-present member; the party never ends because the host left. |
 | Party ends | When everyone has left for 2 min, at the 12 h hard cap (10-min warning toast), or host taps **End party for everyone**. |
 | Code expiry | The code accepts new joiners for 8 h; people already in stay. Host can **New code** (rotates, old code dead). |
-| Tab hidden | After 15 s hidden the client closes the socket (radio sleeps, heat rule); server keeps the slot 60 s; return resumes. |
+| Tab hidden | After 15 s hidden the client closes the socket (radio sleeps, heat rule); the Hidden pose sent first gives a 10 min slot; return resumes. |
 | Full party | Join card: "This party is full (20/20)". |
 | Kick | Host taps a friend -> Remove. Removed kid sees "You left the party". Host is prompted to rotate the code. |
+
+### 2.6 Party persistence (Oct 22 2026, branch `party-persist`, not pushed)
+Owner rule: once a party is on, nothing the player does ends it for them. It ends only by **End party for everyone** (host),
+**Leave party** (guest), a kick, or expiry (relay: 12 h cap `PARTY_MAX_MS`, 2 min empty `EMPTY_CLOSE_MS`; the 8 h code TTL only stops new joins).
+- **Before (found Oct 22 2026):** every full page load ended the party for that player: the Arcade / Museum / Shop / Konbini doors
+  (`location.assign`), a reload and back / forward. The `sessionStorage` session (`fi-party-session`) survived, but nothing called a
+  resume on the next island mount, so the HUD showed "Play with friends" and the relay dropped the slot after 60 s (friends saw Left).
+  The Settings walkthrough replay did NOT end it (same page; checked headless, every step, with a bot friend).
+- **Client:** `PartyConnection.resume({look})` reconnects with the stored `{code, resumeToken, hostKey}`; `PartyHost` calls it on every
+  mount (status `reconnecting` -> the "Reconnecting" note -> `live`). No grown-up gate and no name: the resume Hello is the old 5-element
+  one (no name slot); the relay keeps the name on the slot. The session TTL is the party cap (`SESSION_TTL_MS = PARTY_MAX_MS`, 12 h),
+  per tab (`sessionStorage`, so two tabs never fight; a second tab taking the slot is the existing 4005 Replace). It is cleared only by
+  Leave, End / Ended (any reason), Kicked (error or 4003), 4004, 4005, a join error, or a resume that fails `RESUME_ATTEMPTS` (4, ~15 s)
+  sockets while online (the relay refuses the upgrade once a party is gone; offline keeps it). A failed resume shows "The party ended".
+  Town / PartyHost unmount and the runtime's `dispose()` never leave or close the shared connection.
+- **Relay (`roomCore.graceFor`):** a gone member keeps the slot `AWAY_GRACE_MS` (10 min) when their last pose announced stepping away on
+  purpose: `Zone.Indoors` (a room page), `Mode.Busy` (menu, lesson, quiz, walkthrough) or a client-set Hidden flag (background tab);
+  a plain drop keeps `RESUME_GRACE_MS` (60 s). The host uses the same rule (10 min announced, else `HOST_GRACE_MS` 30 s) before migrating.
+  Ended parties never resume (Error Expired + 4004); kicked tokens are refused. A lapsed slot falls through to a fresh colour-only join.
+- **Checks:** `tests/mp-room-core.cjs` (70 s Indoors / Busy host / Hidden kept, 10 min limit, plain host still migrates at 30 s, ended and
+  kicked refused), `tests/mp-client.cjs` (auto-resume Hello shape, 12 h TTL, clearing rules, dispose keeps), `tests/mp-ui.cjs`,
+  `scripts/check-party-persist.cjs` (headless with a bot friend: Konbini door round trip, walkthrough every step, Arcade trip, reload,
+  back, forward-back; `LONG=1` adds a 70 s Konbini stay).
+- **Limits:** a slot held only in Durable Object memory is lost if the object is evicted while that member is away (the friends'
+  sockets normally keep it awake); the resume then becomes a fresh colour-only join (new slot). Away longer than 10 min, or a plain
+  drop over 60 s, likewise rejoins as a new colour-only slot (no name, privacy rule: names are memory only).
 
 ### 2.9 Party size 20 (22 Oct 2026, branch `party-cap-20`, not pushed)
 
