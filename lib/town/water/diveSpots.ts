@@ -17,6 +17,7 @@
  * Labels follow AGENTS.md: a **Real football fact** carries a plain-text credit (no links in kid UI), a *Coaching idea* is a
  * metaphor, and *Island story* is the game's own fiction.
  */
+import {DIVE_BALLS,DIVE_BALL_COINS,DIVE_BALL_FIND,DIVE_BALL_R} from './diveBalls';
 
 /** Room-local frame: x right, z toward the camera at the start, y up; the surface at DIVE_SURFACE_Y, the reef crest's sand about
  *  1.5-3 m under it, the rim's sand 4-6 m under it. (Before the Oct 20 2026 shallow reef: the surface 8.4 m over a deep level.) */
@@ -37,7 +38,7 @@ export const DIVE_REST_PROMPT='Catch your breath';
 /** Underwater, a find's prompt shows within this distance of it (m, 3D). */
 export const DIVE_FIND_RANGE=2.6;
 
-export type DiveFindKind='relic'|'burst'|'clam'|'treasure';
+export type DiveFindKind='relic'|'burst'|'clam'|'treasure'|'ball';
 export type DiveLabel='Real football fact'|'Coaching idea'|'Island story';
 export type DiveFind={
  id:string;kind:DiveFindKind;
@@ -166,7 +167,9 @@ const coin=(x:number,z:number,title:string,text:string)=>find('treasure','treasu
  * 309,-291), Paul's Grotto (594,-289 → 512,-296), Ray Meadow (733,-72 → 761,-62), Turtle Pool (812,204 → 842,204).
  */
 export const DIVE_SHORE_CLEAR=30;
-export const DIVE_SPOTS:readonly DiveSpot[]=[
+/** Each zone's hidden explore ball (Oct 21 2026; diveBalls.ts): one more find, its own look and a lesson nothing else teaches. */
+const withBalls=(spots:DiveSpot[]):DiveSpot[]=>spots.map(s=>{const b=DIVE_BALLS.find(q=>q.spot===s.id);return b?{...s,finds:[...s.finds,find(DIVE_BALL_FIND,'ball',b.x,DIVE_BALL_R,b.z,{prompt:'Pick up',aria:`Pick up ${b.name.toLowerCase()}`,title:b.title,text:b.text,label:'Real football fact',credit:b.credit,coins:DIVE_BALL_COINS,story:`You found ${b.name.toLowerCase()}!`})]}:s;});
+export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
  {id:'captains-cup',name:'Captain’s Cup Wreck',area:1,x:309,z:-291,radius:19,blob:11,tint:'#63e6d4',near:'causeway-channel',surface:{x:309,z:-288},
   floor:{kind:'dome',cx:-1,cz:-5,rx:16,rz:14,yaw:1.81,bend:2,rim:5.2,crest:1.8,seed:.4},
   theme:{id:'coral-garden-galleon',water:'#2a8a9c',fog:[12,40],...BASE,coral:CORAL_WARM,light:['#c8f6ff','#e6d2a6',2.9],
@@ -270,7 +273,7 @@ export const DIVE_SPOTS:readonly DiveSpot[]=[
    clam(8,7,'Wait for your moment','A clam opens when the water is calm. Wait for the right moment, then strike.'),
    coin(6,-13,'A turtle-shell token','A token a fan made after watching the turtles: “slow and steady wins the league”.'),
   ]},
-];
+]);
 
 export const diveSpotById=(id:string)=>DIVE_SPOTS.find(s=>s.id===id);
 /** The zone whose blob (x, z) is inside, or null: what the 10 Hz prompt test asks (a distance reject, then one atan for a near zone). */

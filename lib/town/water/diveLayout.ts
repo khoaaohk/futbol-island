@@ -99,7 +99,7 @@ export function buildLayout(spot:DiveSpot):DiveLayout{
  const outline:LP[]=[];for(let i=0;i<DIVE_LAYOUT.outlineN;i++){const a=i/DIVE_LAYOUT.outlineN*Math.PI*2,R=diveBlobR(spot,a)/scale;outline.push({x:Math.cos(a)*R,z:Math.sin(a)*R});}
  const relic=spot.finds.find(q=>q.kind==='relic')??{x:0,z:-6};
  const L:DiveLayout={id:spot.id,seed:spot.blob,scale,outline,crest:contour(f,.8),slope:contour(f,.3),clusters:[],rocks:[],grass:[],lanes:[],kelp:[],arches:[],
-  pitch:null,crates:[],balls:[],raySpots:[],bowl:null,wreck:null,finds:spot.finds.map(q=>({id:q.id,x:q.x,z:q.z})),start:{...DIVE_LAYOUT_START},buoy:{x:0,z:0},
+  pitch:null,crates:[],balls:[],raySpots:[],bowl:null,wreck:null,finds:spot.finds.filter(q=>q.kind!=='ball'/* the explore ball hides in a nook of this layout (diveBalls.ts), so it never moves it */).map(q=>({id:q.id,x:q.x,z:q.z})),start:{...DIVE_LAYOUT_START},buoy:{x:0,z:0},
   props:[],tell:{kind:'mast',pts:[],r:1}};
  const depth=(x:number,z:number)=>diveDepthAt(x,z,f),inside=(x:number,z:number,k:number=DIVE_LAYOUT.keepIn)=>Math.hypot(x,z)*scale<=diveBlobR(spot,Math.atan2(z,x))*k;
  const free=(x:number,z:number,gap:number,o?:{lanes?:boolean;finds?:boolean;keep?:number})=>diveLayoutFree(L,spot,x,z,gap,o);
