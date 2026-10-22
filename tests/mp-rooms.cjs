@@ -271,6 +271,12 @@ t('island: a friend entering a room fades at their last island spot; a friend fi
   assert.equal(p.zone, Zone.Indoors); assert.ok(Math.abs(p.x - 70.5) < .01 && Math.abs(p.z + 52) < .01, 'indoors at the door spot, never at the room origin');
   assert.equal(hints[0].userData.text, '2 in the Konbini');
   assert.equal(tb.doorHintText(3, RoomCode.Konbini), '3 in the Konbini'); assert.equal(tb.doorHintText(1, RoomCode.Museum), '1 in the museum'); assert.equal(tb.doorHintText(0, 8), '');
+  // Arcade (Phase 3): the building's own name, and a LEGACY door pose (old client: Indoors + Activity.Arcade, room -1) counts too.
+  assert.equal(tb.doorHintText(1, RoomCode.Arcade), '1 in the Arcade'); assert.equal(tb.doorHintText(0, RoomCode.Arcade), '');
+  assert.equal(tb.atRoomDoor({ room: RoomCode.Arcade, presence: 'active', activity: 5 }, RoomCode.Arcade), true);
+  assert.equal(tb.atRoomDoor({ room: -1, presence: 'indoors', activity: P.Activity.Arcade }, RoomCode.Arcade), true);
+  assert.equal(tb.atRoomDoor({ room: -1, presence: 'busy', activity: P.Activity.Arcade }, RoomCode.Arcade), false, 'busy at an island cabinet is not the Arcade');
+  assert.equal(tb.atRoomDoor({ room: -1, presence: 'indoors', activity: P.Activity.Konbini }, RoomCode.Konbini), false, 'Konbini: room poses only (unchanged)');
   assert.equal(h.conn.sent[0].b[7] & 1, 1, 'island: the first pose after a Welcome warps too (back from a room)');
   rt.dispose();
 });

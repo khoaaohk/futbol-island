@@ -16,7 +16,8 @@ import styles from './ArcadeRoom.module.css';
 import {setArcadeBusy} from '@/lib/arcade/arcadeRoomHooks';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 3): friends in the Arcade walk about the hub; a friend in a game shows at its
 // cabinet in a force field. The layer lives for the PAGE (a game replaces the hub); Leave-only chip under the header.
-import {useArcadeRoomParty} from './party/useArcadeRoomParty';import RoomPartyChip from './party/RoomPartyChip';
+import {useArcadeRoomParty} from './party/useArcadeRoomParty';
+const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});// only rendered with a live party (flag on)
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 const Tennis=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});

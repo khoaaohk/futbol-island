@@ -6,12 +6,13 @@
 // nothing renders and the connection's 5 s beat (plus sendNow on every busy flip) carries "Busy at the cabinet".
 // Zero cost without a party: createArcadeParty returns null and the hub's hooks stay no-ops.
 import * as T from 'three';
-import { createRoomParty, type RoomParty } from '../multiplayer/roomParty';
+import { createRoomParty, partyConnection, partyLook, type RoomParty } from '../multiplayer/roomParty';
+import type { RoomPartyHandle } from '../../components/party/useRoomParty';
 import { RoomCode } from '../multiplayer/roomPos';
 import { setStationText, type RoomLocal } from '../multiplayer/presence';
 import { Emote } from '../../multiplayer/protocol';
 import { arcadeHubCabinets, type ArcadeCabinetId } from './arcadeCatalog';
-import { arcadeRoomHooks, type ArcadeBusyFlags, type ArcadeHubPose, type ArcadeRoomHost, type ArcadeRoomLayer } from './arcadeRoomHooks';
+import { arcadeRoomHooks, attachArcadeLayer, type ArcadeBusyFlags, type ArcadeHubPose, type ArcadeRoomHost, type ArcadeRoomLayer } from './arcadeRoomHooks';
 import { ARCADE_GAME_LABEL, ARCADE_ROOM, arcadeBusyCabinet, arcadeBusyPose, createArcadeBusyPose, pickArcadeSpawn } from '../multiplayer/rooms/arcade';
 
 /** Local station codes (presence.ts, never on the wire): 120 = high scores / choosing a game, 121+ = the hub cabinets in catalog order. */
@@ -129,4 +130,18 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
     },
     dispose() { group.removeFromParent(); party.dispose(); host = null; },
   };
+}
+
+/** Page side (components/party/useArcadeRoomParty.ts, loaded only with the flag on): resume the stored party as the page loads (party
+ *  persistence), or leave it when the grown-up switch is Off; then create + attach the layer. Returns the cleanup (detach + dispose;
+ *  the connection stays open for the next page). */
+export function startArcadeParty(allowed: boolean, onHandle: (h: RoomPartyHandle | null) => void): () => void {
+  const conn = partyConnection();
+  if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return () => {}; }
+  conn.resume({ look: partyLook() });
+  const p = createArcadeParty({ phone: matchMedia('(pointer:coarse)').matches, reduced: matchMedia('(prefers-reduced-motion:reduce)').matches });
+  if (!p) return () => {};
+  const detach = attachArcadeLayer(p.layer);
+  onHandle({ layer: p.party, room: RoomCode.Arcade, emote: (kind) => p.emote(kind) });
+  return () => { detach(); p.dispose(); onHandle(null); };
 }
