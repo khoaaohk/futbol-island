@@ -109,7 +109,7 @@ t('dispatcher: Wave / Cheer / Laugh go to the whole-body writer for you, friends
  const ep=read('lib/graphics/emotePose.ts');
  assert(/if \(applyBodyEmote\(root, kind, age, dur\)\) return;/.test(ep),'applyEmoteArms hands the three to applyBodyEmote');
  for(const k of KINDS){const b=P.emoteBody(k,1.0,DUR);assert.equal(b.called,0);assert.equal(b.jump,undefined,'no rig hop on top of the pelvis hop');}
- assert(/emoteFx\.kind>=0&&!reduced\)\{[^\n]*applyEmoteArms\(player\.root/.test(read('components/Town.tsx'))&&/!reduced&&!stunned&&!entry\.pass\)applyEmoteArms\(entry\.rig\.root/.test(read('lib/graphics/islandNpcs.ts'))&&/!reduced&&e\.hf<0&&!fs0\)applyEmoteArms\(rig\.root/.test(read('lib/graphics/remoteAvatars.ts')),'all three actors pose through applyEmoteArms, never under reduced motion');
+ assert(/emoteFx\.kind>=0&&!reduced\)\{[^\n]*applyEmoteArms\(player\.root/.test(read('components/Town.tsx'))&&/!reduced&&!stunned&&!entry\.pass\)applyEmoteArms\(entry\.rig\.root/.test(read('lib/graphics/islandNpcs.ts'))&&/!reduced&&e\.hf<0&&!fs0[^\n]*\)applyEmoteArms\(rig\.root/.test(read('lib/graphics/remoteAvatars.ts')),'all three actors pose through applyEmoteArms, never under reduced motion');
 });
 t('writer: fake rig with every joint moves pelvis, torso, head, legs and arms; roles: you, a friend, a townsperson',()=>{
  const W2=load('lib/graphics/bodyEmotePose.ts');

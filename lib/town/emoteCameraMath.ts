@@ -11,7 +11,7 @@ export const EMOTE_CAM = {
   fov: 40,
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
   minDist: 3.2, maxDist: 18,
-  /** A wide pair (Juggle with me, 6-8 m apart) may sit this far back so BOTH characters, the high arcs and the emoji headroom fit. */
+  /** A wide pair (> 5 m apart: a townsperson that could not step in; the ball emotes now keep <= 3.6 m, lib/town/emoteBallPlay.ts) may sit this far back so BOTH characters and the emoji headroom fit. */
   wideMaxDist: 32,
   /** Back the fitted distance off a little (user, Oct 22 2026: "for the emote zoom out just a bit more"). */
   backoff: 1.3,

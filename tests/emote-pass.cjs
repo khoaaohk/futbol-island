@@ -40,54 +40,50 @@ t('Dance has a 4 s routine (one of ten whole-body dances, tests/emote-dance-show
 });
 const SM=load('lib/graphics/strikeMotion.ts');
 const ballOut=()=>PB.createPassBallOut();
-function GROUND_ROLL(){return PB.GROUND.roll+.01;}
-t('Pass it: a GROUND pass, five passes alternate player -> partner, the ball leaves the foot on the contact frame and rolls low',()=>{
- const a={x:0,y:0,z:0},b={x:3.5,y:0,z:0},o=ballOut(),froms=[],idx=new Set();
- let maxY=0,prev=-1;
- for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);if(o.index>=0){idx.add(o.index);if(o.index!==prev){froms.push(o.from);prev=o.index;}}maxY=Math.max(maxY,o.y);}
- assert.equal(idx.size,5);assert.equal(froms.join(),'0,1,0,1,0');assert(maxY<.4,'a rolling pass along the ground (tiny bounce at most): '+maxY);
- // contact timing: the ball stays on the foot until the strike reaches STRIKE_CONTACT, then moves
- const s0=PB.PASS_LEAD,W=PB.GROUND.windup,K=PB.GROUND.kick,tc=W+PB.contactAfterWindup(K);
- PB.passBallAt(s0+tc-.02,a,b,o);const bx=o.x;assert(Math.abs(bx-PB.PASS_REACH)<1e-6,'before the contact frame the ball is on the passer\'s foot: '+bx);
- assert(o.actors[0].kick!==undefined&&Math.abs((o.actors[0].kick-.15)/.85*K-(tc-W-.02))<1e-6,'the swing runs on the rig\'s kick phase');
- PB.passBallAt(s0+tc+.03,a,b,o);assert(o.x>bx+.02,'after the contact frame the ball has left the foot');
- const kickAtContact=.15+.85*PB.contactAfterWindup(K)/K;assert(Math.abs(kickAtContact-SM.STRIKE_CONTACT)<1e-9,'contact = the rig\'s STRIKE_CONTACT ('+SM.STRIKE_CONTACT+')');
- PB.passBallAt(s0+tc+GROUND_ROLL(),a,b,o);assert(o.x>2.8&&o.x<3.1,'pass 1 lands at the partner\'s foot: '+o.x);
- PB.passBallAt(s0+PB.PASS_PERIOD+tc+GROUND_ROLL(),a,b,o);assert(o.x<.8&&o.x>.2,'pass 2 comes back to you: '+o.x);
+t('Pass it: GROUND passing routines; the passes alternate between you and the partner, leave the foot on the strike contact frame and roll low',()=>{
+ const a={x:0,y:0,z:0},b={x:3.3,y:0,z:0},o=ballOut();
+ for(let i=0;i<PB.PASS_ROUTINES.length;i++){const r=PB.PASS_ROUTINES[i];o.routine=i;
+  const sends=r.contacts.filter(c=>c.how!=='trap'&&c.how!=='catch'),froms=new Set(sends.map(c=>c.who));
+  assert(sends.length>=3&&froms.size===2,r.id+': both actors play the ball ('+sends.length+' touches)');
+  let low=0,all=0;for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);all++;if(o.y<.4)low++;assert(Number.isFinite(o.x+o.y+o.z));}
+  assert(low/all>.8,r.id+' rolls along the ground: '+(low/all).toFixed(2));
+ }
+ const kickAtContact=PB.KICK_FROM+(1-PB.KICK_FROM)*PB.contactAfterWindup(.42)/.42;assert(Math.abs(kickAtContact-SM.STRIKE_CONTACT)<1e-9,'contact = the rig\'s STRIKE_CONTACT ('+SM.STRIKE_CONTACT+')');
+ o.routine=0;const first=PB.PASS_ROUTINES[0].contacts[0];PB.passBallAt(first.t-.02,a,b,o);const bx=o.x;assert(Math.abs(bx-PB.PASS_REACH*1)<.05,'before the contact frame the ball is on the passer\'s foot: '+bx);
+ PB.passBallAt(first.t+.05,a,b,o);assert(o.x>bx+.05,'after the contact frame the ball has left the foot');
  assert.equal(PB.passBallAt(0,a,a,o).x===o.x,true);assert(Number.isFinite(o.x),'a partner on top of you does not blow up (NaN)');
 });
-t('Pass it: the NPC half = a real kick (wind-up, swing, follow-through) on its passes and a trap before it passes back',()=>{
- const a={x:0,y:0,z:0},b={x:3.5,y:0,z:0},o=ballOut();
- let npcKick=0,playerKick=0,npcWind=0,npcRecv=0,maxKick=0;
- for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);
-  if(o.actors[1].kick!==undefined){npcKick++;maxKick=Math.max(maxKick,o.actors[1].kick);}
-  if(o.actors[0].kick!==undefined)playerKick++;if(o.actors[1].windup!==undefined)npcWind++;if(o.actors[1].receive>0)npcRecv++;
-  assert(!(o.actors[0].kick!==undefined&&o.actors[1].kick!==undefined),'only one kicker at a time');}
- assert(npcKick>20&&playerKick>30,'both swing through (the player kicks 3 passes, the NPC 2)');assert(Math.abs(maxKick-1)<.02,'a full follow-through');assert(npcWind>10,'a wind-up');assert(npcRecv>20,'the receiver cushions the ball (receive)');
- let trapEnd=-1,windStart=-1;for(let age=PB.PASS_LEAD;age<PB.PASS_LEAD+PB.PASS_PERIOD*2;age+=1/120){PB.passBallAt(age,a,b,o);if(o.index===0&&o.actors[1].receive===1&&o.actors[1].receiveProgress>=.93&&trapEnd<0)trapEnd=age;if(o.index===1&&o.actors[1].windup!==undefined&&windStart<0)windStart=age;}
- assert(trapEnd>0&&windStart>=trapEnd-.02,'trap then pass back: '+trapEnd+' / '+windStart);
+t('Pass it: the NPC half = real kicks (wind-up, swing, follow-through) and traps, one kicker at a time',()=>{
+ const a={x:0,y:0,z:0},b={x:3.3,y:0,z:0},o=ballOut();
+ for(let i=0;i<PB.PASS_ROUTINES.length;i++){o.routine=i;let npcKick=0,maxKick=0,npcWind=0,npcRecv=0,npcBody=0;
+  for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);const n=o.actors[1];
+   if(n.kick!==undefined){npcKick++;maxKick=Math.max(maxKick,n.kick);}if(n.windup!==undefined)npcWind++;if(n.receive>0)npcRecv++;if(n.skill||n.move||n.jump&&n.jump.height>.1||Math.abs(Math.sin(n.turn))>.3)npcBody++;
+   assert(!(o.actors[0].kick!==undefined&&n.kick!==undefined),'only one kicker at a time');}
+  const r=PB.PASS_ROUTINES[i].id;assert(npcRecv>15||npcKick>40,r+' the partner cushions the ball (or plays it first time)');assert(npcKick+npcBody>20,r+' the partner kicks or moves');
+ }
  const sp={forward:0,height:0,open:0,pitch:0,load:0,drive:0,follow:0};let lo=9,hi=-9;for(let p=0;p<=1;p+=.02){SM.strikePose(p,'pass',.5,sp);lo=Math.min(lo,sp.forward);hi=Math.max(hi,sp.forward);}
  assert(lo<-.1&&hi>.4,'foot-pose amplitude: back-lift '+lo.toFixed(2)+' to forward swing '+hi.toFixed(2));
 });
-t('Juggle with me: far apart (6-8 m), the ball goes back and forth IN THE AIR in high arcs, each holder keeps it up 2 times (foot / knee / head) before a loft kick',()=>{
- assert(PB.JUGGLE_GAP.min===6&&PB.JUGGLE_GAP.max===8&&PB.PASS_GAP.min===3&&PB.PASS_GAP.max===4);
- const a={x:0,y:0,z:0},b={x:7,y:0,z:0},o=ballOut();let maxY=0,touches=0,lastJ=-1;const kinds=new Set(),flights=[];let prevAir=false,airStart=0;
- for(let age=0;age<=E.emoteSeconds(E.EMOTE.JuggleWithMe);age+=1/60){PB.juggleBallAt(age,a,b,o);maxY=Math.max(maxY,o.y);
-  for(const ac of o.actors)if(ac.juggle!==undefined){kinds.add(ac.juggleTouch);const j=Math.floor(ac.juggle)+1000*o.from+10*o.index;if(j!==lastJ){lastJ=j;touches++;}}
-  if(o.air&&!prevAir)airStart=age;if(!o.air&&prevAir)flights.push(age-airStart);prevAir=o.air;
-  assert(Number.isFinite(o.x+o.y+o.z));}
- assert(maxY>3,'high arcs: '+maxY.toFixed(1));assert(kinds.has('foot')&&kinds.has('knee')&&kinds.has('head'),'foot, knee and head touches');
- assert.equal(flights.length,PB.JUGGLE_TRANSFERS,'four transfers');assert(touches>=PB.JUGGLE_KEEPS*(PB.JUGGLE_TRANSFERS+1)-1,'2 keep-ups per holder: '+touches);
+t('Juggle with me: close (2.7-3.4 m, the pair fits the zoomed frame), the ball goes back and forth IN THE AIR, foot / knee / head / chest touches',()=>{
+ assert(PB.JUGGLE_GAP.min>=2.5&&PB.JUGGLE_GAP.max<=3.5&&PB.PASS_GAP.max<=3.8);
+ const a={x:0,y:0,z:0},b={x:3,y:0,z:0},o=ballOut(),kinds=new Set();
+ for(let i=0;i<PB.JUGGLE_ROUTINES.length;i++){o.routine=i;let maxY=0,flights=0,prevAir=false,touches0=0,touches1=0;
+  for(let age=0;age<=E.emoteSeconds(E.EMOTE.JuggleWithMe);age+=1/60){PB.juggleBallAt(age,a,b,o);maxY=Math.max(maxY,o.y);
+   o.actors.forEach(ac=>{if(ac.juggle!==undefined)kinds.add(ac.juggleTouch);if(ac.reaction)kinds.add(ac.reaction);});
+   if(o.air&&!prevAir)flights++;prevAir=o.air;assert(Number.isFinite(o.x+o.y+o.z));}
+  for(const c of PB.JUGGLE_ROUTINES[i].contacts){if(c.who===0)touches0++;else touches1++;}
+  assert(maxY>1.9&&maxY<3,PB.JUGGLE_ROUTINES[i].id+' high but short arcs: '+maxY.toFixed(2));assert(touches0+touches1>=9,'many touches');assert(touches0>=3&&touches1>=3,'both keep it up');
+ }
+ for(const k of ['foot','knee','head','chest'])assert(kinds.has(k),k);
  assert(E.emoteSeconds(E.EMOTE.JuggleWithMe)>=8&&E.emoteSeconds(E.EMOTE.JuggleWithMe)<=10);
- const hold=PB.JUGGLE_LEAD+PB.JUGGLE_KEEPS*PB.JUGGLE_TOUCH,lc=PB.JUGGLE_LOFT.windup+PB.contactAfterWindup(PB.JUGGLE_LOFT.kick);
- PB.juggleBallAt(hold+lc-.02,a,b,o);assert(Math.abs(o.x-PB.PASS_REACH)<.01&&!o.air,'on the foot until contact');PB.juggleBallAt(hold+lc+.1,a,b,o);assert(o.x>PB.PASS_REACH+.3&&o.air,'then flying');
- PB.juggleBallAt(hold+lc+PB.JUGGLE_FLIGHT,a,b,o);assert(o.x>6&&o.x<6.8,'lands at the partner\'s foot: '+o.x);
- PB.juggleBallAt(E.emoteSeconds(E.EMOTE.JuggleWithMe),a,b,o);assert(Math.abs(o.x-PB.PASS_REACH)<.2,'ends settled at your feet');
+ o.routine=0;PB.juggleBallAt(E.emoteSeconds(E.EMOTE.JuggleWithMe),a,b,o);assert(Math.hypot(o.x-PB.PASS_REACH,o.z)<.3&&o.y<.4,'ends settled at your feet');
 });
-t('Juggle with me alone: a solo keep-up routine of about 5-6 s at your feet, no partner needed',()=>{
- const a={x:2,y:0,z:3},o=ballOut();const kinds=new Set();let maxY=0;
- for(let age=0;age<=PB.JUGGLE_SOLO_SECONDS;age+=1/60){PB.juggleSoloAt(age,a,0,o);maxY=Math.max(maxY,o.y);if(o.actors[0].juggle!==undefined)kinds.add(o.actors[0].juggleTouch);assert(Math.abs(o.x-2)<.3&&Math.abs(o.z-3.5)<.3,'stays at the feet');}
- assert(kinds.size===3);assert(maxY>1.6);assert(PB.JUGGLE_SOLO_SECONDS>=5&&PB.JUGGLE_SOLO_SECONDS<=6.5);
+t('Juggle with me alone: solo keep-up routines of about 5-6 s at your feet, no partner needed',()=>{
+ const a={x:2,y:0,z:3},o=ballOut();const kinds=new Set();
+ for(let i=0;i<PB.JUGGLE_SOLO_ROUTINES.length;i++){o.routine=i;let maxY=0;
+  for(let age=0;age<=PB.JUGGLE_SOLO_SECONDS;age+=1/60){PB.juggleSoloAt(age,a,0,o);maxY=Math.max(maxY,o.y);if(o.actors[0].juggle!==undefined)kinds.add(o.actors[0].juggleTouch);assert(Math.hypot(o.x-2,o.z-3)<.8,'stays at the feet');}
+  assert(maxY>1.2,'keep-ups at least knee high');}
+ assert(kinds.size>=4);assert(PB.JUGGLE_SOLO_SECONDS>=5&&PB.JUGGLE_SOLO_SECONDS<=6.5);
 });
 t('ONE ball: Pass it / Juggle with me move the player\'s own ball; the pooled pass ball mesh is gone; the sequences end by handing the ball back at the feet',()=>{
  const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts');

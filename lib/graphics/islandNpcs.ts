@@ -20,7 +20,7 @@ import {applyHighFive} from './highFivePose';
 import {HIGH_FIVES,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {EMOTE,NPC_STEP_SPEED,emoteSeconds,npcStepDistance} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyApplause,applyCelebrationArms,applyRideEmote} from './celebrations';import {npcIxAt,npcScriptFor,type NpcIx,type NpcScript} from '../town/npcEmoteSets';import type {ActorPose} from '../town/emotePass';import {SEAT_TIMES,createSeatSM,openFront,seatFacing,standUp as seatStandUp,stepSeat} from '../town/npcStandUp';
+import {applyApplause,applyCelebrationArms,applyRideEmote} from './celebrations';import {npcIxAt,npcScriptFor,type NpcIx,type NpcScript} from '../town/npcEmoteSets';import {actorMotion,type ActorPose,type BallRigMotion} from '../town/emotePass';import {SEAT_TIMES,createSeatSM,openFront,seatFacing,standUp as seatStandUp,stepSeat} from '../town/npcStandUp';
 type Position={x:number;y:number;z:number};
 type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:number)=>number};
 /** Heat pass 5: a townsperson's appearance is set once and never takes a costume, so the classic body meshes the bean skin hides
@@ -53,10 +53,10 @@ const FAR_POSE=20,POSE_HZ=10,MOVING_RANGE=35;
 /** Emote answer (user, Oct 22 2026): a raised arm for Wave / High five, a hop for Cheer / Well played; nothing while idle or with reduced motion (the bubble stays). */
 const HF_SKILL={type:'highFive' as const,progress:0,side:-1 as -1|1},HF_MOTION={skill:HF_SKILL as SkillMotion};
 /** The townsperson's half of Pass it / Juggle with me (lib/town/emotePass.ts): the rig's own strike (wind-up, planted foot, swing through, ball released on the contact frame), the trap and the keep-up touches. Reused object: no allocation per frame. */
-const PASS_MOTION:{actionKind:'pass'|'loft';windup:number|undefined;kick:number|undefined;kickSide:-1|1;receive:number;receiveProgress:number;juggle:number|undefined;juggleTouch:'foot'|'knee'|'head';lookX:number;lookY:number;lookZ:number;strikeX:number;strikeZ:number}={actionKind:'pass',windup:undefined,kick:undefined,kickSide:1,receive:0,receiveProgress:0,juggle:undefined,juggleTouch:'foot',lookX:0,lookY:.3,lookZ:0,strikeX:0,strikeZ:.5};
+const PASS_MOTION:BallRigMotion&{lookX:number;lookY:number;lookZ:number;strikeX:number;strikeZ:number}={lookX:0,lookY:.3,lookZ:0,strikeX:0,strikeZ:.5};
 function npcPassMotion(a:ActorPose|null,ball:{x:number;y:number;z:number},scale:number,reduced:boolean){
  if(!a||reduced)return null;const m=PASS_MOTION;
- m.actionKind=a.actionKind;m.windup=a.windup;m.kick=a.kick;m.kickSide=a.side;m.receive=a.receive;m.receiveProgress=a.receiveProgress;m.juggle=a.juggle;m.juggleTouch=a.juggleTouch;m.lookX=ball.x;m.lookY=ball.y;m.lookZ=ball.z;m.strikeZ=.5/Math.max(.1,scale);return m;
+ actorMotion(a,0,m);m.lookX=ball.x;m.lookY=ball.y;m.lookZ=ball.z;m.strikeZ=.5/Math.max(.1,scale);return m;
 }
 function npcEmoteMotion(fx:{kind:number;age:number;v:number},reduced:boolean):{called?:number;jump?:{progress:number;height:number};skill?:SkillMotion}|null{
  // a high five sequence poses the arms itself (lib/graphics/highFivePose.ts); its arcade windows (highFive / fistBump) go through the rig's skill layer
@@ -156,7 +156,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    const witness=truckWitnesses.get(entry.id);if(witness)facing=Math.atan2(witness.x-entry.position.x,witness.z-entry.position.z);
    const speed=poseDt>0?Math.hypot(entry.position.x-entry.lastPosition.x,entry.position.z-entry.lastPosition.z)/poseDt:0;
    entry.freestyle?.prepare(paused||stunned?0:poseDt,!paused&&!stunned&&distance>2.2,reduced,freestyleClock);
-   stats.posed++;entry.rig.update(entry.position.x,entry.position.z,paused||stunned?0:poseDt,witness?time:r.clock,reduced,{...entry.freestyle?.motion,...(entry.seat?{trick:entry.seat}:null),travelMode:entry.ride?'scooter':'walk',...(entry.pass?npcPassMotion(entry.pass,entry.passBall,entry.rig.profileScale,reduced):npcEmoteMotion(entry.fx,reduced)),stunAge:stunned?.age,rooftopPose:stunned&&stunned.age>1.85?'dizzy':undefined,facing});entry.rig.root.position.y=entry.position.y;
+   stats.posed++;entry.rig.update(entry.position.x,entry.position.z,paused||stunned?0:poseDt,witness?time:r.clock,reduced,{...entry.freestyle?.motion,...(entry.seat?{trick:entry.seat}:null),travelMode:entry.ride?'scooter':'walk',...(entry.pass?npcPassMotion(entry.pass,entry.passBall,entry.rig.profileScale,reduced):npcEmoteMotion(entry.fx,reduced)),stunAge:stunned?.age,rooftopPose:stunned&&stunned.age>1.85?'dizzy':undefined,facing:entry.pass&&!reduced&&facing!==undefined?facing+entry.pass.turn:facing});entry.rig.root.position.y=entry.position.y;
    const working=!witness&&!paused&&!entry.near&&!stunned&&r.mode==='work';if(working)entry.workTime+=poseDt;entry.activity?.update(poseDt,entry.workTime,reduced,working);
    if(!paused&&!stunned&&!reduced&&entry.rightShoulder&&entry.rightElbow){
     if(entry.near&&r.waveTime<2.1&&(!entry.freestyle||distance<=2.2)&&entry.definition.pose!=='lie'){entry.rightShoulder.rotation.set(-.25,0,2.15+Math.sin(r.waveTime*10)*.15);entry.rightElbow.rotation.x=-.8;}
