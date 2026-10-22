@@ -19,7 +19,7 @@ import {createPitchVisibility} from '@/lib/town/pitchVisibility';
 import {createObstacleGrid} from '@/lib/town/obstacleGrid';
 import {createShadowVisibility} from '@/lib/graphics/shadowVisibility';
 import {createViewGate} from '@/lib/graphics/viewGate';
-import {createPartyRuntime,partyLocal} from '@/lib/multiplayer/townBridge';
+import {createPartyRuntime,partyLocal,partyConnection,partyLook} from '@/lib/multiplayer/townBridge';import {multiplayerEnabled} from '@/lib/multiplayer/config';import PartyHost from '@/components/party/PartyHost';
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {shapeStick,walkCameraOffset,walkCameraLead,createOcclusionProbe} from '@/lib/town/walkControl';
 import {createHiddenPlayerMarker} from '@/lib/graphics/hiddenPlayerMarker';
@@ -1845,6 +1845,6 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     <div data-position-tip className="live-position-tip" role="status" hidden/>
     <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay'||destination==='museum'||destination==='summit'||destination==='shop')go(destination);else goField(destination);}}/>
     </HudStackContext.Provider>
-    {/* TODO(party): after Task D merges: {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook}/>} (import PartyHost from '@/components/party/PartyHost'; multiplayerEnabled from '@/lib/multiplayer/config'; partyConnection, partyLook from townBridge) */}
+    {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook}/>}
   </main>;
 }

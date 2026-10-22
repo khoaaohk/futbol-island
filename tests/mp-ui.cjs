@@ -102,8 +102,10 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(!/^import[^\n]*['"]qrcode['"]/m.test(all)&&!/require\(['"]qrcode['"]\)/.test(all),'no static import');
   assert(/await import\('qrcode'\)/.test(inv),'dynamic import');assert.equal((all.match(/qrcode'/g)||[]).length,1);
  });
- t('not mounted in Town; no edits outside the owned files',()=>{
-  assert(!/components\/party/.test(read('components/Town.tsx')),'Town.tsx untouched by Task D');
+ t('mounted in Town only behind the flag (Task E / coordinator, Oct 22 2026)',()=>{
+  const town=read('components/Town.tsx');
+  assert(/import PartyHost from '@\/components\/party\/PartyHost'/.test(town),'imported');
+  assert(/\{multiplayerEnabled\(\)&&<PartyHost /.test(town),'mounted behind multiplayerEnabled()');
  });
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});
