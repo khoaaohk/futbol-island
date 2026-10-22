@@ -676,3 +676,26 @@ slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
   shader, the sparkle glitter and the ring are 14-20 + 12 more points in the bubbles' draw (docs/performance-guide.md "Explore delight").
 - **Not done.** iPhone heat not measured; no photo mode.
 
+
+## 13. Explore life: alive, solid, calm controls (Oct 21-22 2026, local)
+
+User: "improve the explore swimming scenes ... more life like ... without additional heat", "shouldn't be able to swim through
+wreckage", "it needs to be see through", "let's remove the dart action", "When holding the up btn, it will rise up all the way",
+"remove the pink action btn, that is replaced by the up btn", "a grid of 4 up and down on the left, jetpack on the top right and emote
+bottom right", "the same size ... same style". tests/explore-life.cjs; heat in docs/performance-guide.md "Explore life".
+- **Dart removed** (normal swim only; `wa:dive_dart` retired, kept for old rows).
+- **Held ▲ / Q** eases to 2x and rises all the way; **at the top, holding 0.35 s (or a fresh tap) surfaces** the old Surface way; the
+  Surface button is gone; Escape still surfaces on desktop. ▼ / Z eases to 1.3x.
+- **Solid things:** the wreck (keel, ribs, planks, posts, masts, cabins, containers), rocks and boulders, the arch (its passage stays
+  open), the goal's posts and bar, crates, chest, clam, vent, big brain / table coral. The diver slides along them; a 1.3 m gap is the
+  narrowest that passes; the camera pulls in instead of looking through a plank. Every pickup, find, friend and sparkle stays reachable.
+- **See-through soft things:** fish, turtles, jellies, rays, the friend, kelp, grass, fans and anemones fade to 15 % within 0.8 m of the
+  diver or the camera's line to the diver.
+- **Water:** one slow current and 10 s swell sways the plants in sequence, drifts the plankton, sways the light shafts; the camera
+  breathes with the swell. **Light:** wide soft shafts along one sun direction, Snell's window with a bright rim, red-first colour
+  absorption with depth. **Coral:** polyp speckle, darker bases, lighter tips; sea stars, urchins, rubble. **Fish:** schools surge and
+  coast, low-poly countershaded school fish. **Diver:** arms sweep back into a streamlined glide when coasting, a little body
+  undulation with the kick, breath bubbles in bursts from the face. **Lessons:** dive "Glide to save breath; rise up for air. Sprint
+  everywhere and you tire, like a midfielder." (no longer repeats the swim lesson).
+- **Room buttons:** see docs/ui/HUD_STACK.md "Explore room layout".
+- Not done: iPhone heat; the friend creatures' own idle polish; per-zone signature animation polish.

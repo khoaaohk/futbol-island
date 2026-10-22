@@ -95,7 +95,7 @@ export function divePushOutLevel(w:DiveSolidWorld,p:{x:number;y:number;z:number}
   if(!hit)return;}}
 /** How far the point is inside the nearest solid (0 = free): the tests' check after resolving. */
 export function divePenetration(w:DiveSolidWorld,x:number,y:number,z:number,R:number){
- let deepest=0;const c=cellOf(z)*W+cellOf(x);for(let k=w.start[c];k<w.start[c+1];k++){const d=pen(w.solids[w.items[k]],x,y,z,R);if(d>deepest)deepest=d;}return deepest;}
+ let deepest=0;const c=cellOf(z)*W+cellOf(x);for(let k=w.start[c];k<w.start[c+1];k++){const s=w.solids[w.items[k]],dx=x-s.cx,dy=y-s.cy,dz=z-s.cz,lim=s.br+R;if(dx*dx+dy*dy+dz*dz>lim*lim)continue;const d=pen(s,x,y,z,R);if(d>deepest)deepest=d;}return deepest;}
 /** The camera: the fraction (0..1) of the way from (ax, ay, az) toward (bx, by, bz) that is clear for a point of radius R (marched in
  *  DIVE_BODY.step steps; the follow camera pulls in to it so a plank never sits between the camera and the diver). */
 export function diveClearFrac(w:DiveSolidWorld,ax:number,ay:number,az:number,bx:number,by:number,bz:number,R:number){
