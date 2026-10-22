@@ -29,8 +29,8 @@ require('fs').mkdirSync(out, { recursive: true });
   for (let i = 0; i < 4 && !(await p.evaluate(() => document.querySelector('input[aria-label="First name"]').value)); i++) { await p.fill('input[aria-label="First name"]', 'Sam'); await p.waitForTimeout(600); }
   await p.click('text=Start a party');
   await p.waitForSelector('[data-parent-gate-answer]'); await p.waitForTimeout(400);
-  const q = (await p.textContent('[data-parent-gate] label')).toLowerCase();
-  const w = { two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
+  const q = (await p.textContent('[data-parent-gate]')).toLowerCase();
+  const w = { zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12 };
   const mm = q.match(/(\w+) times (\w+)/); const nn = q.match(/\d+/g);
   await p.fill('[data-parent-gate-answer]', String(mm ? (w[mm[1]] ?? +mm[1]) * (w[mm[2]] ?? +mm[2]) : nn ? +nn[0] * +nn[1] : 0));
   await p.click('[data-parent-gate] button[type=submit]');
@@ -103,6 +103,14 @@ require('fs').mkdirSync(out, { recursive: true });
   if (process.env.LONG) {
     await konbini(70000); await check('indoors-70s');
   }
+  // Explicit ending still works: End party for everyone (tap twice) clears the stored session; a reload does not bring it back.
+  await p.click('[data-party-open]'); await p.waitForSelector('[data-party-sheet]'); await p.click('#party-tab-party').catch(() => {}); await p.waitForTimeout(500);
+  await p.click('[data-party-end]'); await p.waitForTimeout(300); await p.click('[data-party-end]'); await p.waitForTimeout(2000);
+  const ended = await state();
+  console.log('end-party    ', JSON.stringify({ live: ended.live, stored: !!ended.code }));
+  if (ended.live || ended.code) bad('End party did not end / clear the stored session');
+  await p.reload({ waitUntil: 'domcontentloaded', timeout: 90000 }); await p.waitForTimeout(8000);
+  if ((await state()).live) bad('an ended party came back after a reload');
   console.log('waiting for the bot report (' + Math.max(0, Math.round((botMs - (Date.now() - botStart)) / 1000)) + ' s)');
   await Promise.race([botDone, new Promise((r) => setTimeout(r, botMs + 8000))]);
   const line = botOut.trim().split('\n').pop();
@@ -110,7 +118,7 @@ require('fs').mkdirSync(out, { recursive: true });
     const r = JSON.parse(line).bots[0];
     console.log('bot', JSON.stringify({ welcomed: r.welcomed, left: r.left, ended: r.ended, errors: r.errors }));
     if (r.left.length) bad('the bot heard the host leave');
-    if (r.ended !== null) bad('the party ended for the bot');
+    if (r.ended !== 0) bad('the party should end for the bot only by the host End (HostEnded), got ' + r.ended);
   } catch { console.log('bot report not available (killed early); relying on the host checks'); }
   console.log('page errors:', errs.length ? errs.slice(0, 3).join(' ; ') : 'none');
   await b.close();
