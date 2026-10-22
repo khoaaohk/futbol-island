@@ -34,6 +34,14 @@ export const DIVE_SPEED=3.2,DIVE_ACCEL=3,DIVE_DRAG=1.6,DIVE_TURN=2.2;
  *  and follows the seabed, so a rising reef lifts them (no clipping, no hard step). ▲ / ▼ (phone) or Q / Z (desktop) rise or dip
  *  lower at about DIVE_VSPEED m/s; neither held keeps the place. DIVE_FOLLOW is how fast the body eases onto the followed height. */
 export const DIVE_VSPEED=1.6,DIVE_FOLLOW=4;
+/** Holding ▲ / Q (Oct 22 2026, user: "When holding the up btn, it will rise up all the way"): the rise eases in over `ease` s to `up` ×
+ *  DIVE_VSPEED and carries on to the top of the water (depthT 0, the surface where the breath refills); holding ▼ / Z eases to `down` ×
+ *  (gentler) down to the sand clearance. Let go: the depth holds. A tap is a small step (the first frames are at the normal speed).
+ *  While held the body follows its depth `follow` × faster, so it never lags behind the button. */
+export const DIVE_LIFT={up:2,down:1.3,ease:1.2,follow:2} as const;
+/** The rise / dip speed multiplier after holding for `held` s in direction `dir` (+1 up, -1 down): 1 at the press, easing (smoothstep)
+ *  to DIVE_LIFT.up / .down by DIVE_LIFT.ease s. */
+export function diveLiftSpeed(held:number,dir:number){const k=Math.max(0,Math.min(1,held/DIVE_LIFT.ease)),e=k*k*(3-2*k);return 1+((dir>0?DIVE_LIFT.up:DIVE_LIFT.down)-1)*e;}
 /** Explore v2 (Oct 21 2026) swim feel: with the stick let go the diver GLIDES (a lower drag, DIVE_GLIDE_DRAG, so a kick carries).
  *  DIVE_BANK is the roll into a turn at full stick and speed (rad). The Dart burst (5.4 m/s, F / Shift, the Dart button) was REMOVED
  *  Oct 21/22 2026 by user decision ("let's remove the dart action"): normal swimming only. */
@@ -99,7 +107,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   /** The patch the swimmer is in at the surface (the Dive prompt), by the 10 Hz test. */
   near:null as DiveSpot|null,acc:Infinity,
   /** Room-local diver: position, velocity, facing (rig yaw: forward = (sin, cos)), pitch (rad, + nose down), roll, lift offset. */
-  x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,roll:0,lift:0,
+  x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,roll:0,lift:0,liftHeld:0,lift0:0,
   /** Breath 0..1 (refills at the surface), the last value the UI drew, its clock; whether the low note fired this dive. */
   breath:1,uiBreath:1,uiAcc:0,lowSaid:false,
   /** The find in reach (3D, DIVE_FIND_RANGE) and its distance; finds used this dive; the rising fade (s). */
@@ -194,8 +202,10 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    // under the diver, so a rising crest lifts them smoothly; the sand and the surface are hard limits (never clipped).
    const fl=state.spot!.floor,lift=Math.max(-1,Math.min(1,input.lift));state.lift=lift;
    diveDepthRange(state.x,state.z,fl,range);const span=Math.max(.3,range.max-range.min);
-   state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*dt/span));
-   const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW));
+   // Held ▲ / ▼: the speed eases in (diveLiftSpeed) and carries on to the top / the sand; the direction's hold clock resets on release.
+   state.liftHeld=lift===0||Math.sign(lift)!==Math.sign(state.lift0)?0:state.liftHeld+dt;state.lift0=lift;
+   state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*diveLiftSpeed(state.liftHeld,lift)*dt/span));
+   const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW*(lift!==0?DIVE_LIFT.follow:1)));
    if(y<range.min)y=range.min;if(y>range.max)y=range.max;
    state.y=y;state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
    if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
@@ -238,7 +248,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
  };
  function begin(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
   state.phase='diving';state.spot=s;state.x=x;state.z=z;state.yaw=yaw;state.vx=Math.sin(yaw)*speed;state.vz=Math.cos(yaw)*speed;state.vy=0;
-  state.pitch=state.roll=state.lift=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
+  state.pitch=state.roll=state.lift=0;state.liftHeld=state.lift0=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
   diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();for(const f of s.finds)if(f.kind==='ball'&&found(s.id).includes(f.id))state.used.add(f.id);state.rise=0;state.time=0;state.effort=0;state.dives++;
   events.started=true;events.breathUi=true;state.uiBreath=state.breath;
  }
