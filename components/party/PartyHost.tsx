@@ -162,6 +162,11 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const live = state.status === 'live' || state.status === 'reconnecting';
 
   useEffect(() => bindConnection(connection), [connection]);
+  // Party persistence (docs/multiplayer-design.md "Party persistence"): a party this tab was in comes back by itself on every island
+  // mount (a reload, a room page round trip, back / forward, a remount). Same slot and colour, no grown-up gate, no name prompt;
+  // the stored session is cleared only by End / Leave / Kicked / the party ending or expiring. Unmounting never leaves.
+  const resumed = useRef(false);
+  useEffect(() => { if (connection.resume({ look: look() })) resumed.current = true; }, [connection]); // eslint-disable-line react-hooks/exhaustive-deps
   // Member slots are reused: a friend who left must not leave their Hide / Mute behind for the next face in that slot.
   useEffect(() => {
     const ids = new Set(state.members.map((m) => m.id));
@@ -177,6 +182,12 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     return q.length >= 3 ? q : [...q, n];
   }), []);
   const text = useCallback((t: string) => note({ kind: 'text', text: t }), [note]);
+  useEffect(() => {
+    if (state.status === 'live') { resumed.current = false; return; }
+    // The party ended or expired while this player was away (a room page, a reload): say so once, never a join error.
+    if (state.status !== 'error' || !resumed.current || state.error === ErrorCode.Kicked) return;
+    resumed.current = false; text('The party ended'); prevIds.current = null; setView('none'); setConfirmEnd(false);
+  }, [state.status, state.error, text]);
 
   // ---- one message at a time, through the shared lane (note priority) ----
   const busyLane = useToastLaneBusy('party');

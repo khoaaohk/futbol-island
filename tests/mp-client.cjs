@@ -94,7 +94,7 @@ t('reconnect schedule 1,2,4,8,15,15 s with +/-30% jitter bounds',()=>{
   e4.last().open();e4.last().recv(welcome());e4.clock.delays.length=0;e4.last().drop();assert.equal(e4.clock.delays[0],1000);
 });
 
-t('resume token reuse (reconnect and page reload) and 30 min TTL',()=>{
+t('resume token reuse (reconnect and page reload) and 12 h TTL',()=>{
   const e=makeEnv();const s1=goLive(e,'tok-abcdefghij012345');
   const sess=JSON.parse(e.storage.getItem('fi-party-session'));
   assert.equal(sess.code,'K7MQ4R');assert.equal(sess.resumeToken,'tok-abcdefghij012345');assert.equal(typeof sess.at,'number');
@@ -109,8 +109,10 @@ t('resume token reuse (reconnect and page reload) and 30 min TTL',()=>{
   const e4=makeEnv();e4.c.join('K7MQ4R',{look:LOOK,hostKey:'hostkey-abcdefgh'});e4.last().open();e4.last().recv(welcome('tok-second-0123456789'));
   assert.equal(JSON.parse(e4.storage.getItem('fi-party-session')).hostKey,'hostkey-abcdefgh');
   const e5=makeEnv({storage:e4.storage});e5.c.join('K7MQ4R',{look:LOOK});e5.last().open();assert.deepEqual(e5.msgs(e5.last())[0].slice(3),['tok-second-0123456789','hostkey-abcdefgh']);
-  // stale (> 30 min) is ignored
-  const e6=makeEnv({storage:e.storage});e6.clock.advance(31*60*1000);e6.c.join('K7MQ4R',{look:LOOK});e6.last().open();assert.equal(e6.msgs(e6.last())[0][3],null);
+  // party persistence: the session lives as long as the party cap (12 h): kept after 31 min, ignored past 12 h
+  assert.equal(conn.SESSION_TTL_MS,P.PARTY_MAX_MS);
+  const e6=makeEnv({storage:e4.storage});e6.clock.advance(31*60*1000);e6.c.join('K7MQ4R',{look:LOOK});e6.last().open();assert.equal(e6.msgs(e6.last())[0][3],'tok-second-0123456789');
+  const e7=makeEnv({storage:e4.storage});e7.clock.advance(P.PARTY_MAX_MS+40*60000);e7.c.join('K7MQ4R',{look:LOOK});e7.last().open();assert.equal(e7.msgs(e7.last())[0][3],null);
   // leave clears the session
   e.c.leave();assert.equal(e.storage.getItem('fi-party-session'),null);assert.equal(e.c.status,'idle');
 });
@@ -466,6 +468,55 @@ t('store: presence + activity per member, emits only when they flip',()=>{
 t('interp carries flags + activity',()=>{
   const it=ip.createInterp({delayMs:0});it.push(7,[10,0,10,0,P.Activity.Settings,P.Mode.Busy,0,2|1],1000);
   const o={x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0};it.sample(7,1200,o);assert.equal(o.flags,2,'Hidden kept, Warp stripped');assert.equal(o.activity,P.Activity.Settings);
+});
+
+
+// ---- party persistence (docs/multiplayer-design.md "Party persistence") ----
+t('persistence: auto-resume of the stored session on a fresh page / mount',()=>{
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,hostKey:'hostkey-abcdefgh',nick:'Emma'});e.last().open();e.last().recv(welcome('tok-keep-0123456789'));
+  assert.equal(e.c.hasSession(),true);
+  // a reload / room page round trip: a NEW connection object on the same tab storage; the island mount calls resume()
+  const r=makeEnv({storage:e.storage});const seen=[];r.c.onStatus(x=>seen.push(x));
+  assert.equal(r.c.resume({look:LOOK}),true);assert.equal(r.c.status,'reconnecting','Reconnecting chip, not a fresh join');
+  r.last().open();const hello=r.msgs(r.last())[0];
+  assert.deepEqual(hello.slice(3),['tok-keep-0123456789','hostkey-abcdefgh'],'resume token + host key');
+  assert.equal(hello.length,5,'no name on a resume (the relay keeps it on the slot): the old 5-element Hello');
+  r.last().recv(welcome('tok-keep-0123456789'));assert.equal(r.c.status,'live');assert.deepEqual(seen,['reconnecting','live']);
+  assert.equal(r.c.code,'K7MQ4R');
+  // resume is a no-op when there is nothing stored or already in a party
+  assert.equal(r.c.resume({look:LOOK}),false,'already live');
+  assert.equal(makeEnv().c.resume({look:LOOK}),false,'nothing stored');
+});
+t('persistence: unmount / dispose never leaves; only explicit endings clear the session',()=>{
+  const e=makeEnv();const s=goLive(e,'tok-keep-0123456789');
+  e.c.dispose();assert.ok(!e.msgs(s).some(m=>m[0]===P.C.Leave),'dispose sends no Leave');
+  assert.ok(e.storage.getItem('fi-party-session'),'dispose keeps the stored session');
+  // a plain drop / hidden tab keeps it
+  const e2=makeEnv();const s2=goLive(e2);s2.drop();assert.ok(e2.storage.getItem('fi-party-session'),'drop keeps');
+  // explicit: Leave, Ended, Kicked (error + 4003), ended 4004, replaced 4005
+  const l=makeEnv();goLive(l);l.c.leave();assert.equal(l.storage.getItem('fi-party-session'),null);
+  const en=makeEnv();goLive(en).recv([P.S.Ended,P.EndReason.HostEnded]);assert.equal(en.storage.getItem('fi-party-session'),null);
+  const ex=makeEnv();goLive(ex).recv([P.S.Ended,P.EndReason.Expired]);assert.equal(ex.storage.getItem('fi-party-session'),null);
+  const k=makeEnv();goLive(k).recv([P.S.Error,P.ErrorCode.Kicked]);assert.equal(k.storage.getItem('fi-party-session'),null);
+  for(const code of [4003,4004,4005]){const z=makeEnv();goLive(z).dropWith(code);assert.equal(z.storage.getItem('fi-party-session'),null,'close '+code);}
+});
+t('persistence: a resume into a gone party gives up (~15 s) and clears; offline keeps it',()=>{
+  const e=makeEnv();goLive(e,'tok-keep-0123456789');
+  const r=makeEnv({storage:e.storage});r.c.resume({look:LOOK});
+  for(let i=0;i<conn.RESUME_ATTEMPTS+1;i++){r.last().drop();r.clock.advance(20000);}
+  assert.equal(r.c.status,'error');assert.equal(r.storage.getItem('fi-party-session'),null,'online: cleared (relay refused the upgrade)');
+  // the relay answers an ended room with Error Expired + 4004 on a resume
+  const e2=makeEnv();goLive(e2,'tok-keep-0123456789');const r2=makeEnv({storage:e2.storage});r2.c.resume({look:LOOK});r2.last().open();
+  r2.last().recv([P.S.Error,P.ErrorCode.Expired]);assert.equal(r2.c.status,'error');assert.equal(r2.storage.getItem('fi-party-session'),null);
+});
+t('persistence: PartyHost resumes on mount and never leaves on unmount (source)',()=>{
+  const host=fs.readFileSync(path.join(ROOT,'components/party/PartyHost.tsx'),'utf8');
+  assert.ok(/connection\.resume\(\{ look: look\(\) \}\)/.test(host),'PartyHost calls resume on mount');
+  // the only leave() calls: the grown-up switch Off, a failed join, the Leave button
+  assert.equal((host.match(/\.leave\(\)/g)||[]).length,3);
+  assert.ok(!/useEffect\(\(\) => \(\) => [^\n]*\.leave\(/.test(host),'no leave in an unmount cleanup');
+  const bridge=fs.readFileSync(path.join(ROOT,'lib/multiplayer/townBridge.ts'),'utf8');
+  const disp=bridge.slice(bridge.indexOf('dispose()'));assert.ok(!/conn\.(leave|dispose)\(/.test(disp),'runtime dispose keeps the shared connection');
 });
 
 console.log(`mp-client: ${n} groups passed`);

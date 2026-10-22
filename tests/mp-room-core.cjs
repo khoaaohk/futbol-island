@@ -607,6 +607,8 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   room.disconnect(a2); clock.t += AWAY_SILENCE_MS + 200; room.tick();
   assert.equal(last(host, ia)[6], Zone.Indoors); assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0, 'indoors stays indoors');
   clock.t += 60_000; send(room, host, [C.Beat, 3]); room.tick();
+  assert.equal(host.of(S.Left).filter((m) => m[1] === ia).length, 0, 'indoors keeps the slot past 60 s (party persistence: 10 min)');
+  clock.t += P.AWAY_GRACE_MS; send(room, host, [C.Beat, 4]); room.tick();
   assert.deepEqual(host.of(S.Left).filter((m) => m[1] === ia)[0].slice(1), [ia, LeaveReason.Indoors]);
 }
 
@@ -643,5 +645,52 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   assert.equal(r3.summary().fails.locked, 1);
   send(r3, h3, [C.End]); join(r3);
   assert.equal(r3.summary().fails.closed, 1); assert.equal(r3.summary().endReason, EndReason.HostEnded);
+}
+
+// Party persistence (docs/multiplayer-design.md "Party persistence"): a member who announced a room (Zone.Indoors), a menu / lesson /
+// the walkthrough (Mode.Busy) or a background tab (Hidden flag) keeps the slot for AWAY_GRACE_MS (10 min), host included (no migration);
+// a plain drop keeps 60 s (30 s before a host migrates). Ended parties and kicked members never resume.
+{
+  assert.equal(P.AWAY_GRACE_MS, 10 * 60_000);
+  const { clock, room } = mk();
+  const host = join(room, room.hostKey), a = join(room), b = join(room), c = join(room);
+  const wh = welcome(host), wa = welcome(a), wb = welcome(b), wc = welcome(c);
+  clock.t += 200; send(room, a, [C.Pose, 1, 100, 0, 100, 0, 0, Mode.Busy, Zone.Indoors, 0]); // walked into the Konbini
+  clock.t += 200; send(room, b, [C.Pose, 1, 120, 0, 100, 0, 0, Mode.Walk, Zone.Main, PoseFlag.Hidden]); // phone went to sleep
+  clock.t += 200; send(room, host, [C.Pose, 1, 140, 0, 100, 0, 3, Mode.Busy, Zone.Main, 0]); // host replays the walkthrough
+  clock.t += 200; send(room, c, pose(1, 160, 100)); // plain player
+  room.disconnect(a); room.disconnect(b); room.disconnect(host); room.disconnect(c);
+  clock.t += 70_000; room.tick(); // 70 s: past the old 60 s grace
+  assert.deepEqual(host.of(S.Left).map((m) => m[1]), [], 'nobody sees a Left yet (host socket is gone too)');
+  assert.equal(room.info().size, 3, 'the plain member lapsed; Indoors, Hidden and Busy-host slots held');
+  const a2 = peer(); hello(room, a2, wa[3]);
+  assert.equal(welcome(a2)[2], wa[2], 'Indoors member resumes the same slot after 70 s');
+  assert.equal(welcome(a2)[7].find((m) => m[0] === wa[2])[1].join(), wa[7].find((m) => m[0] === wa[2])[1].join(), 'same colour name');
+  assert.equal(a2.of(S.Host).length, 0, 'no host migration while the Busy host is away');
+  const b2 = peer(); hello(room, b2, wb[3]); assert.equal(welcome(b2)[2], wb[2], 'Hidden (background) member resumes');
+  const h2 = peer(); hello(room, h2, wh[3]);
+  assert.equal(welcome(h2)[7].find((m) => m[0] === wh[2])[3], 1, 'host is still host after 70 s away');
+  const c2 = peer(); hello(room, c2, wc[3]); assert.notEqual(welcome(c2)[3], wc[3], 'the plain member lapsed (fresh token)');
+  // 10 min is the limit even for an announced room trip
+  clock.t += 200; send(room, a2, [C.Pose, 2, 100, 0, 100, 0, 0, Mode.Busy, Zone.Indoors, 0]); room.disconnect(a2);
+  clock.t += P.AWAY_GRACE_MS - 1000; room.tick(); assert.ok(room.info().size >= 4, 'held just under 10 min');
+  clock.t += 2000; room.tick(); assert.ok(h2.of(S.Left).some((m) => m[1] === wa[2] && m[2] === LeaveReason.Indoors), 'lapsed after 10 min (Indoors)');
+  // host announced a room then the 30 s plain host grace: no migration; a plain host drop still migrates after 30 s
+  clock.t += 200; send(room, h2, [C.Pose, 2, 140, 0, 100, 0, 0, Mode.Busy, Zone.Indoors, 0]); room.disconnect(h2);
+  clock.t += HOST_GRACE_MS + 5000; room.tick(); assert.equal(b2.of(S.Host).length, 0, 'Indoors host keeps host role past 30 s');
+  const h3 = peer(); hello(room, h3, wh[3]); clock.t += 200; send(room, h3, pose(3, 140, 100)); room.disconnect(h3);
+  clock.t += HOST_GRACE_MS + 500; room.tick(); assert.equal(b2.of(S.Host).length, 1, 'a plain host drop migrates after 30 s');
+}
+// ended parties are not resumable; kicked members cannot resume
+{
+  const { room } = mk();
+  const host = join(room, room.hostKey), a = join(room), k = join(room);
+  const wa = welcome(a), wk = welcome(k);
+  send(room, a, [C.Pose, 1, 100, 0, 100, 0, 0, Mode.Busy, Zone.Indoors, 0]); room.disconnect(a);
+  send(room, host, [C.Kick, wk[2]]);
+  const k2 = peer(); hello(room, k2, wk[3]); assert.deepEqual(errs(k2), [ErrorCode.Kicked], 'kicked token refused');
+  send(room, host, [C.End]);
+  const a2 = peer(); hello(room, a2, wa[3]);
+  assert.equal(welcome(a2), undefined, 'no Welcome after End'); assert.deepEqual(errs(a2), [ErrorCode.Expired]); assert.equal(a2.closed, CLOSE.Ended);
 }
 console.log('mp-room-core: ok');

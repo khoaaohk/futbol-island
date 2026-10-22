@@ -26,6 +26,14 @@ t('flag gating: PartyHost returns null when multiplayerEnabled() is false, befor
  assert(/if\s*\(!multiplayerEnabled\(\)\)\s*return null/.test(m[0]),'null when off');
  assert(!/use[A-Z]\w*\(/.test(m[0].replace(/<Host[^>]*>/,'')),'no hooks in the gate wrapper (rules of hooks)');
 });
+t('party persistence: resume on mount (no gate, no name prompt), "The party ended" when it ended while away, unmount never leaves',()=>{
+ const i=host.indexOf('connection.resume(');assert(i>0,'resume on mount');
+ const eff=host.slice(host.lastIndexOf('useEffect',i),host.indexOf('\n',i));
+ assert(!/getNick|parentGatePassed|setView\('gate'\)|setView\('menu'\)/.test(eff),'the resume needs no name and no grown-up gate');
+ assert(/resumed\.current[\s\S]{0,200}text\('The party ended'\)/.test(host),'a failed resume says The party ended');
+ assert(!/return \(\) => \{?[^\n]*\.leave\(/.test(host),'no Leave in any unmount cleanup');
+ const town=read('components/Town.tsx');assert(!/partyConnection\(\)\.(leave|dispose)\(/.test(town),'Town never leaves / closes the shared connection');
+});
 t('party list: the activity line under a friend\'s name (Taking a lesson / In the museum / Away), small text, read by screen readers',()=>{
  const pr=load(path.join(ROOT,'lib/multiplayer/presence.ts')),P=load(path.join(ROOT,'multiplayer/protocol/index.ts'));
  const fn=/export function memberActivityLine[\s\S]*?\n\}/.exec(host);assert(fn,'memberActivityLine helper');
