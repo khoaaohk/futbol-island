@@ -41,7 +41,7 @@ export default function WaterPill({label='Play',sub,card,autoStart=false,apply}:
     <svg className={`${styles.waterCrest} ${styles.waterCrestBack}`} viewBox="0 0 240 24" preserveAspectRatio="none" focusable="false"><path d="M0 12C20 4 40 4 60 12S100 20 120 12 160 4 180 12 220 20 240 12V24H0Z"/></svg>
     <svg className={styles.waterCrest} viewBox="0 0 240 24" preserveAspectRatio="none" focusable="false"><path d="M0 12C20 4 40 4 60 12S100 20 120 12 160 4 180 12 220 20 240 12V24H0Z"/></svg>
    </i></i>
-   <span>{loading?'Loading…':label}</span>{sub&&!loading&&<small>{sub}</small>}
+   <span data-long={!loading&&label.length>10?'':undefined}>{loading?'Loading…':label}</span>{sub&&!loading&&<small>{sub}</small>}
   </button>
  </div>;
 }

@@ -34,9 +34,9 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert(!/PlayButton|data-landing-play/.test(block('new')),'new players see Start and "I have a save code", no Play');
  assert.match(block('new'),/data-title-start/);assert.match(block('new'),/data-title-restore/);
  // Every Play is the gold water pill (WaterPill): returning (tap), ready / restored (straight from the save flow), break (tap).
- assert.match(block('returning'),/<WaterPill card="returning" label="Play"/);
+ assert.match(block('returning'),/<WaterPill card="returning" label="Welcome back, let’s play"/);
  assert.match(block('ready'),/<WaterPill card="ready" label="Play" sub="You’re all set!" autoStart\/>/);
- assert.match(block('restored'),/<WaterPill card="restored" label="Play" sub="Welcome back!" autoStart apply=\{\(\)=>applyRestore\.current\?\.\(\)\}\/>/);
+ assert.match(block('restored'),/<WaterPill card="restored" label="Welcome back, let’s play" autoStart apply=\{\(\)=>applyRestore\.current\?\.\(\)\}\/>/);
  assert.match(block('break'),/<WaterPill card="break" label="Play"\/>/);
  assert.equal((strip(actions).match(/<WaterPill /g)||[]).length,4,'Play appears only in returning, ready, restored and break');
  assert(!/PlayButton/.test(strip(actions)),'the title screen no longer uses the nav-button Play');
