@@ -38,7 +38,7 @@ export const isBusy = (a: number): boolean => a >= 0;
 
 const TEXT: Record<number, string> = {
   [Activity.None]: 'Busy', [Activity.Lesson]: 'Taking a lesson', [Activity.Quiz]: 'Quiz time', [Activity.Settings]: 'In Settings',
-  [Activity.Map]: 'Looking at the map', [Activity.Arcade]: 'Playing arcade', [Activity.Museum]: 'In the museum', [Activity.Shop]: 'In the shop',
+  [Activity.Map]: 'Looking at the map', [Activity.Arcade]: 'Playing arcade', [Activity.Museum]: 'In the museum', [Activity.Shop]: 'In the Kit Shop',
   [Activity.Konbini]: 'In the Konbini', [Activity.Reef]: 'Exploring the reef', [Activity.Fishing]: 'Fishing', [Activity.Vending]: 'Getting a drink',
   [Activity.Chat]: 'Chatting', [Activity.Wardrobe]: 'Changing clothes',
   // Stations inside a room (docs/multiplayer-rooms-design.md 3.4): LOCAL codes, never on the wire; a receiver looks up the
@@ -107,7 +107,15 @@ export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody):
 
 // ---- rooms (docs/multiplayer-rooms-design.md 2.2, 2.4, 3.4) ----
 /** Busy kinds inside a room: local Activity-like codes (101+), shown over a busy friend's field. Never sent. */
-export const STATION = { Counter: 101, Shelves: 102, Snack: 103 } as const;
+export const STATION = { Counter: 101, Shelves: 102, Snack: 103,
+  // The Kit Shop (Phase 4, lib/multiplayer/rooms/shop.ts registers the words: the clerk's name lives in the shop's cast).
+  ShopDesign: 120, ShopKit: 121, ShopClerk: 122 } as const;
+/** A room registers the words / icon of its own local station codes (101+; never on the wire). The first definition wins only
+ *  until a later call replaces it, so a room module can be imported twice (HMR, tests) without harm. */
+export function defineStationText(code: number, text: string, icon: string): void {
+  if (code < 101) return; // the wire Activities are fixed
+  TEXT[code] = text; ICON[code] = icon;
+}
 
 /** The Activity a room code reads as in the party list ("In the Konbini"): both Konbinis are the Konbini; unknown rooms: None. */
 export function roomActivity(room: number): number {

@@ -3,6 +3,7 @@ import {createDailyPlay,dailyPlayCounts} from '@/lib/town/dailyPlay';
 import {grantDailyPlayCoins} from '@/lib/arcade/arcadeWallet';
 import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
 import {KONBINI_DOORS,KONBINI_BUILDINGS,KONBINI_DOOR_HINTS,konbiniDoorNear,saveKonbiniDeparture,konbiniUrl,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
+import {SHOP_DOOR_HINT} from '@/lib/town/shopDoorHint';
 import KonbiniDoorSlide from './KonbiniDoorSlide';
 import {saveMuseumDeparture,MUSEUM_URL,museumExitPoint} from '@/lib/museum/museumDoors';
 import {saveShopDeparture,SHOP_URL,SHOP_DOOR,KIT_SHOP,KIT_SHOP_BOUNDS,shopDoorNear,shopExitPoint} from '@/lib/shop/shopDoors';
@@ -235,6 +236,8 @@ let hiddenN=0,mutedN=0;
 const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
 const onMutedFriends=(s:ReadonlySet<number>)=>{if(s.size>mutedN)countParty('mute');mutedN=s.size;setMutedFriends(s);};
 import {installHudFocusRule} from '@/lib/town/hudFocus';
+/** Party door hints on the island: "2 in the Konbini" over each Konbini, "2 in the Kit Shop" over the shop (rooms Phase 4). */
+const PARTY_DOOR_HINTS=[...KONBINI_DOOR_HINTS,SHOP_DOOR_HINT];
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
@@ -872,7 +875,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
 
     const fakeFriends:{x:number;y:number;z:number;mode:number}[]=[];const friendsNow=():Iterable<{x:number;y:number;z:number;mode:number}>=>fakeFriends.length?fakeFriends:party?party.friends():[];// fakeFriends: play-test hook (__fi2.emoteTest.fakeFriends), empty in play
     let partyPitch=0;// the body's real flight pitch (flightPose.pitch), for the party colour ring
-    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},phone:quality.phone,reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen,doors:KONBINI_DOOR_HINTS});
+    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},phone:quality.phone,reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen,doors:PARTY_DOOR_HINTS});
     const noObstacles:Parameters<typeof blocked>[2]=[],fieldBumpCtx={entries:games.entries,npcs:islandNpcs.entries,height:0,ride:'walk',disabled:false,canMove:(x:number,z:number)=>!blocked(x,z,noObstacles,0)};
     const onboardingNpcFocus=createOnboardingNpcFocus(islandNpcs),npcHover=createNpcHover(scene);
     let hoveredNpcId:string|null=null;
