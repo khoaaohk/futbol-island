@@ -225,7 +225,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    if(state.breath<=0){events.out=true;rise('breath');return events;}
    // The find in reach (3D): a few distance checks per frame, no allocation.
    let best:DiveFind|null=null,bestD=DIVE_FIND_RANGE;
-   for(const f of state.spot!.finds){diveFindPoint(f,p,fl);const d=Math.hypot(p.x-state.x,p.y-state.y,p.z-state.z);if(d<bestD){bestD=d;best=f;}}
+   for(const f of state.spot!.finds){if(f.kind==='ball'&&state.used.has(f.id))continue;/* the hidden explore ball is gone once picked up (diveBalls.ts) */diveFindPoint(f,p,fl);const d=Math.hypot(p.x-state.x,p.y-state.y,p.z-state.z);if(d<bestD){bestD=d;best=f;}}
    state.find=best;state.findDist=best?bestD:Infinity;
    return events;
   },
@@ -251,7 +251,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
  function begin(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
   state.phase='diving';state.spot=s;state.x=x;state.z=z;state.yaw=yaw;state.vx=Math.sin(yaw)*speed;state.vz=Math.cos(yaw)*speed;state.vy=0;
   state.pitch=state.roll=state.lift=0;state.dartT=state.dartCd=0;state.darts=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
-  diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();state.rise=0;state.time=0;state.effort=0;state.dives++;
+  diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();for(const f of s.finds)if(f.kind==='ball'&&found(s.id).includes(f.id))state.used.add(f.id);state.rise=0;state.time=0;state.effort=0;state.dives++;
   events.started=true;events.breathUi=true;state.uiBreath=state.breath;
  }
  function rise(reason:SurfaceReason){state.phase='rising';state.rise=0;state.risingFor=reason;state.find=null;state.findDist=Infinity;}
