@@ -158,7 +158,7 @@ export default function ShopRoom(){
  // Any tap or key in the room wakes resting shoppers (the scene rests them after 60 s with no input) and, on the very first one,
  // unlocks and starts the store ambience (iOS autoplay rules: only a real gesture may start audio).
  const wake=()=>{room.current?.poke();unlockShopAudio();ambience.current?.input();};
- return <main className={styles.root} aria-label="Kit Shop" data-shop-room data-ready={ready} onPointerDownCapture={wake} onKeyDownCapture={wake}
+ return <main className={styles.root} aria-label="Kit Shop" data-shop-room data-ready={ready} data-party={party?'':undefined} onPointerDownCapture={wake} onKeyDownCapture={wake}
   onClickCapture={e=>{const cue=shopClickCue(e.target);if(cue)shopSfx[cue]();}}>
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Walkable Kit Shop: jersey wall, boot wall, ball wall and the till. Use WASD or the arrow keys to walk, then E or Enter at a wall to design. Tap a wall or a person to walk there." data-shop-canvas
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerCancel={()=>{tap.current=null;}}
@@ -166,8 +166,9 @@ export default function ShopRoom(){
   {!studio&&<header className={styles.top}>
    <NavigationButton className={styles.doneRight} label="Done" data-shop-done onNavigate={leave}/>
    <p className={styles.title}><b>KIT SHOP</b><span>Design your own kit</span></p>
+   {/* The party chip (Leave only): in the header row on wide screens, its own row under the title on phones (the row is full). */}
+   {party&&<div className={styles.partySlot} data-shop-party><RoomPartyChip party={party} hidden={covered}/></div>}
    <div className={styles.topRight}>
-    {party&&<RoomPartyChip party={party} hidden={covered} align="right"/>}
     <CoinPill balance={wallet.balance} data-shop-coins/>
     <button type="button" className={styles.myKitButton} onClick={()=>{setMyKit(true);countMyKitOpen();}} data-shop-mykit-open>My kit{owned.items.length?<b>{owned.items.length}</b>:null}</button>
    </div>

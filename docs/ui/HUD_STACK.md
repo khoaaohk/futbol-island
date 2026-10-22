@@ -352,3 +352,9 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   reveal, pack reveal, cashier chat, stamp card) and on the shelf zoom: one calm header at a time.
 - **Island side:** a small screen-sized "N in the Konbini" label over each Konbini roof while party friends are inside THAT shop
   (world-anchored, client-only, from the roster; `townBridge.ts` door hints); the Party list line says "In the Konbini".
+- **Kit Shop (rooms Phase 4, 22 Oct 2026):** wide screens: the chip is a header item right after the KIT SHOP title, before the
+  coin pill and My kit (Done stays the last item, top-right). Phones (<= 560 px): that row is already full, so the chip takes its
+  own row under the title (`.partySlot`, top-left, safe-area + 58 px) and Femi's hello / the walk hint move down below it
+  (`.root[data-party]`). Hidden with the whole header while a studio is open, and hidden (popovers closed) under My kit or a chat.
+  Island side: "N in the Kit Shop" over the shop's double door (above the canopy, `lib/town/shopDoorHint.ts`); the Party list
+  says "In the Kit Shop".
