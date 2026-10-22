@@ -11,6 +11,7 @@ import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
+import FadeScroll from './FadeScroll';
 import NickField from './NickField';
 import { DoneButton } from '@/components/DoneButton';
 import styles from './party.module.css';
@@ -46,25 +47,6 @@ function growFrame(box: DOMRect | null, el: HTMLElement): Keyframe {
   return { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, clipPath: `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${Math.min(r, box.width / 2)}px)` };
 }
 
-/** The card's scrolling body: edges fade softly (mask) only where more content waits, never a hard clip. Padding keeps button
- *  edges / focus rings from being cut at rest. */
-function FadeScroll({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const update = useCallback(() => {
-    const el = ref.current; if (!el) return;
-    el.dataset.top = el.scrollTop > 2 ? '1' : '0';
-    el.dataset.bottom = el.scrollHeight - el.clientHeight - el.scrollTop > 2 ? '1' : '0';
-  }, []);
-  useLayoutEffect(() => {
-    update();
-    const el = ref.current; if (!el) return;
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
-    ro?.observe(el); if (el.firstElementChild) ro?.observe(el.firstElementChild);
-    window.addEventListener('resize', update);
-    return () => { ro?.disconnect(); window.removeEventListener('resize', update); };
-  }, [update]);
-  return <div ref={ref} className={styles.fadeScroll} data-party-scroll onScroll={update}><div>{children}</div></div>;
-}
 
 /**
  * Dialog shell: backdrop, Esc closes, focus moves in. Same cream card look as the other island cards.
@@ -308,19 +290,24 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
         </Card>
       )}
       {view === 'join' && (
-        <Card label="Join with a code" onClose={closeJoin}>
-          <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={closeJoin} onJoin={(c) => afterGate({ kind: 'join', code: c })} />
+        <Card label="Join with a code" onClose={closeJoin} grow from={null}>
+          {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => afterGate({ kind: 'join', code: c })} />}
         </Card>
       )}
       {view === 'invite' && state.code && (
-        <Card label="Invite friends" onClose={close}>
-          <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} onClose={close} />
+        <Card label="Invite friends" onClose={close} grow from={null}>
+          {(requestClose) => <PartyInvite code={state.code!} expiresAt={state.codeExpiresAt} onNote={text} onClose={requestClose} />}
         </Card>
       )}
       {view === 'sheet' && live && (
-        <Card label="Party" onClose={close}>
-          <section className={styles.card} data-party-sheet aria-labelledby="party-sheet-title">
-            <h3 id="party-sheet-title">Your party</h3>
+        <Card label="Party" onClose={close} grow from={null}>
+          {(requestClose) => <section className={`${styles.card} ${styles.menuCard}`} data-party-sheet aria-labelledby="party-sheet-title">
+            <header className={styles.menuHeader}>
+              <span aria-hidden="true" />
+              <h2 id="party-sheet-title">Your party</h2>
+              <DoneButton onDone={requestClose} />
+            </header>
+            <FadeScroll>
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
@@ -353,8 +340,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                 : <button type="button" className={styles.secondary} onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
               <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>
             </div>
-            <button type="button" className={styles.ghost} onClick={close}>Close</button>
-          </section>
+            </FadeScroll>
+          </section>}
         </Card>
       )}
     </>

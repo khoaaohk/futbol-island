@@ -109,14 +109,26 @@ t('grown-up gate: the same card shell as Play with friends, Back top left (no bo
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
  assert(/grow from=\{[^}]*\bfrom\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
- assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function FadeScroll'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');
+ assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function Card'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');
  assert(/borderRadius: '999px'/.test(host)===false&&/GROW_IN_MS \* 0\.4/.test(host)&&/GROW_IN_MS \* 0\.6/.test(host),'content fades in over the last 60% of the grow; no 999px radius morph');
  assert(/reducedMotion\(\)\) \{ closeRef\.current\(\)/.test(host)&&/prefers-reduced-motion: reduce/.test(host),'reduced motion: no morph, close at once');
  assert(/e\.key === 'Escape'\) \{ e\.stopPropagation\(\); if \(escRef\.current\) escRef\.current\(\); else requestClose\(\)/.test(host)&&/role="dialog" aria-modal="true"/.test(host),'Escape / backdrop use the animated close; dialog aria kept');
  assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Close<\/button>/.test(host.slice(host.indexOf('data-party-menu'),host.indexOf("view === 'join' && ("))),'Done (shared DoneButton) replaces the bottom Close');
  assert(/\.menuHeader h2\{[^}]*IslandBrush[^}]*font-weight:400;font-size:clamp\(24px,3vw,38px\)/.test(css)&&/grid-template-columns:76px minmax\(0,1fr\) 76px/.test(css),'title matches the other sheet titles');
  assert(/\.nickInput\{[^}]*width:100%;box-sizing:border-box/.test(css),'name field as wide as the buttons');
- assert(/\.fadeScroll\{[^}]*mask-image/.test(css)&&/dataset\.top/.test(host)&&/dataset\.bottom/.test(host),'scroll area fades only where content continues');
+ assert(/\.fadeScroll\{[^}]*mask-image/.test(css)&&/dataset\.top/.test(read('components/party/FadeScroll.tsx'))&&/dataset\.bottom/.test(read('components/party/FadeScroll.tsx')),'scroll area fades only where content continues');
+});
+t('shared modal header: Play with friends, grown-ups gate, Join, Invite and the party sheet use one header geometry',()=>{
+ const gcss=read('components/ParentGate.module.css'),rule=(c,re)=>{const m=re.exec(c);assert(m,'rule '+re);return m[1];};
+ const mh=rule(css,/\.menuHeader\{([^}]*)\}/),gh=rule(gcss,/\.header\{([^}]*)\}/);
+ for(const d of ['display:grid','grid-template-columns:76px minmax(0,1fr) 76px','align-items:center','gap:8px','min-height:44px']){assert(mh.includes(d)&&gh.includes(d),'both headers share '+d);}
+ const mt=rule(css,/\.menuHeader h2\{([^}]*)\}/),gt=rule(gcss,/\.header h2,\.header h3\{([^}]*)\}/);assert.equal(mt,gt.replace('var(--btn-font,sans-serif)','var(--btn-font)'),'identical title rules');
+ const pad=rule(gcss,/\.shell\{[^}]*(padding:[^;}]*)/);assert(css.includes('.card.menuCard{gap:16px;'+pad+'}'),'same card padding (menuCard must out-rank .card, which is declared later)');
+ assert(/@media\(max-width:600px\)\{\.card\.menuCard\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(css)&&/@media\(max-width:600px\)\{\.shell\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(gcss),'same phone padding');
+ for(const [f,id] of [['PartyHost','party-menu-title'],['PartyInvite','party-invite-title'],['JoinParty','party-join-title'],['PartyHost','party-sheet-title']]){const src=read('components/party/'+f+'.tsx');assert(new RegExp('<header className=\\{styles\\.menuHeader\\}>[\\s\\S]{0,260}<h2 id="'+id+'"').test(src),id+' uses the shared header + h2');}
+ assert(!/<h3 id="party-/.test(all),'no party title still uses the old h3');
+ assert(/<DoneButton onDone=\{onClose\} \/>/.test(read('components/party/PartyInvite.tsx'))&&!/>Done<\/button>/.test(read('components/party/PartyInvite.tsx')),'Invite: Done top right (shared DoneButton)');
+ assert(/Card label="Invite friends"[^>]*grow/.test(host)&&/Card label="Join with a code"[^>]*grow/.test(host),'Invite and Join use the wide grow card');
 });
 t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');

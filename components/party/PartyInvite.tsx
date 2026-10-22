@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { expiryText, groupCode, partyLink, partyQr, sharePartyLink } from '@/lib/multiplayer/invite';
 import { Glyph } from './PartyChip';
+import { DoneButton } from '@/components/DoneButton';
+import FadeScroll from './FadeScroll';
 import styles from './party.module.css';
 
 /** The host's invite card body: big code XXX-XXX, Share / Copy link, QR, a line for grown-ups, expiry. Rendered inside a dialog. */
@@ -18,8 +20,13 @@ export default function PartyInvite({ code, expiresAt, onNote, onClose }: { code
     else if (r === 'failed') onNote("Couldn't share. Read the code out instead");
   };
   return (
-    <section className={styles.card} data-party-invite aria-labelledby="party-invite-title">
-      <h3 id="party-invite-title">Invite friends</h3>
+    <section className={`${styles.card} ${styles.menuCard}`} data-party-invite aria-labelledby="party-invite-title">
+      <header className={styles.menuHeader}>
+        <span aria-hidden="true" />
+        <h2 id="party-invite-title">Invite friends</h2>
+        <DoneButton onDone={onClose} />
+      </header>
+      <FadeScroll>
       <p className={styles.codeLabel}>Your party code</p>
       <p className={styles.bigCode} data-party-code aria-label={`Party code ${code.split('').join(' ')}`}>{groupCode(code)}</p>
       <div className={styles.row}>
@@ -30,7 +37,7 @@ export default function PartyInvite({ code, expiresAt, onNote, onClose }: { code
         <p className={styles.small}>Or scan with a camera.</p>
       </div>
       <p className={styles.grownup}>Share only with friends you know.<br />{left ? `The code stops working in ${left}.` : 'The code has stopped working. Ask for a new code.'}</p>
-      <button type="button" className={styles.ghost} onClick={onClose}>Done</button>
+      </FadeScroll>
     </section>
   );
 }
