@@ -23,7 +23,9 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
    *  Friends inside a force field (busy / away) and friends indoors are NOT listed: nothing can emote at them or pick them. */
   friends(): Iterable<RemotePose>;
   /** The island ball against busy friends' force fields: bounces it off (mutates `ball`) and shakes the dome. True on a hit. */
-  ballVsFields(ball: FieldBall): boolean }
+  ballVsFields(ball: FieldBall): boolean;
+  /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
+  readonly meRing: boolean }
 
 // One connection per page, shared by Town (this bridge) and the React PartyHost (props.connection).
 let shared: PartyConnection | null = null;
@@ -79,6 +81,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
   const ring = { x: 0, y: 0, z: 0, hex: '' };
   let meHex = '';
+  let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const active = new Map<MemberId, RemotePose>(); // friends outside any force field (what friends() lists)
   const st = localPoseState();
   let live = false, you: MemberId | null = null, lastEmoteAt = -1, lastUpdateAt = -1e12;
@@ -105,7 +108,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     }
     const e = s.lastEmote;
     if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you) avatars.emote(e.id, e.emote); }
-    if (!live) { st.lastX = st.lastZ = NaN; }
+    if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; }
   }
   const applyFilters = () => { avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
   filterSubs.add(applyFilters);
@@ -126,6 +129,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide);
 
   return {
+    get meRing() { return meRingOn; },
     friends: () => active.values(),
     ballVsFields(ball) {
       if (!live) return false;
@@ -153,8 +157,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       // friends and my own ring; the friend layer skips its whole update (no posing work behind the lesson).
       const busyMe = (l.activity ?? NOT_BUSY) >= 0;
       avatars.root.visible = !busyMe;
+      if (busyMe) meRingOn = false;
       if (!busyMe) {
         const showRing = conn.status === 'live' && meHex !== '' && !l.hidden && l.zone !== Zone.Indoors;
+        meRingOn = showRing;
         if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; }
         avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
       }
