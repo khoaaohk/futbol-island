@@ -117,6 +117,42 @@ try {
     h.w.close(); g.w.close();
   }
   assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');
+  // relay v1.1 rooms (docs/multiplayer-rooms-design.md 2.3): two bots walking in the museum hear each other at 5 Hz; an island bot
+  // hears them only on the 1 Hz beacon (and they hear the island bot only on the beacon); an out-of-room pose is dropped, not kicked
+  {
+    const p4 = await (await fetch(base + '/party', { method: 'POST' })).json();
+    const wsBase = 'ws://127.0.0.1:' + port + '/party/';
+    const open = (c) => new Promise((res, rej) => { const w = new WebSocket(wsBase + c + '/ws'); const msgs = []; w.onmessage = (e) => msgs.push(JSON.parse(e.data)); w.onopen = () => res({ w, msgs }); w.onerror = () => rej(new Error('ws')); });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const L = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const isl = await open(p4.code); isl.w.send(JSON.stringify([0, 1, L, null, p4.hostKey, null, 'Ana']));
+    const ra = await open(p4.code); ra.w.send(JSON.stringify([0, 1, L, null, null, null, 'Bo']));
+    const rb = await open(p4.code); rb.w.send(JSON.stringify([0, 1, L, null, null, null, 'Cy']));
+    await wait(300);
+    const id = (b) => b.msgs.find((m) => m[0] === 20)[2];
+    const [ii, ia, ib] = [id(isl), id(ra), id(rb)];
+    const heard = (b, who, from) => b.msgs.slice(from).filter((m) => { if (m[0] !== 23) return false; for (let k = 2; k < m.length; k += 9) if (m[k] === who) return true; return false; }).length;
+    const mark = [isl.msgs.length, ra.msgs.length, rb.msgs.length];
+    const MUSEUM = 6, INDOORS = 4, WALK = 0; // RoomCode.Museum, Zone.Indoors, Mode.Walk
+    for (let i = 0; i < 15; i++) { // 3 s at 5 Hz
+      isl.w.send(JSON.stringify([1, i, 1000 + i * 8, 0, 0, 0, 0, WALK, 0, 0]));
+      ra.w.send(JSON.stringify([1, i, i * 8, -350, 0, 0, MUSEUM, WALK, INDOORS, 0]));
+      rb.w.send(JSON.stringify([1, i, i * 8, -350, 20, 0, MUSEUM, WALK, INDOORS, 0]));
+      await wait(200);
+    }
+    await wait(250);
+    const aHearsB = heard(ra, ib, mark[1]), bHearsA = heard(rb, ia, mark[2]), islHearsA = heard(isl, ia, mark[0]), aHearsIsl = heard(ra, ii, mark[1]);
+    assert.ok(aHearsB >= 10 && bHearsA >= 10, 'same room: ~5 Hz (' + aHearsB + ', ' + bHearsA + ' frames in 3 s)');
+    assert.ok(islHearsA >= 1 && islHearsA <= 4, 'island bot hears room walking only on the 1 Hz beacon (' + islHearsA + ' in 3 s)');
+    assert.ok(aHearsIsl >= 1 && aHearsIsl <= 4, 'room bot hears island running only on the beacon (' + aHearsIsl + ' in 3 s)');
+    for (let i = 15; i < 25; i++) { ra.w.send(JSON.stringify([1, i, 300, -350, 0, 0, 8, WALK, INDOORS, 0])); await wait(60); } // Konbini x 30 m: out of the room
+    await wait(300);
+    assert.ok(!ra.msgs.some((m) => m[0] === 29), 'out-of-room poses: no error, no kick');
+    const lastA = rb.msgs.filter((m) => m[0] === 23).map((m) => { for (let k = 2; k < m.length; k += 9) if (m[k] === ia) return m[k + 1]; return null; }).filter((x) => x !== null).pop();
+    assert.ok(lastA < 300, 'the out-of-room pose was never relayed (last x ' + lastA + ')');
+    isl.w.close(); ra.w.close(); rb.w.close();
+    console.log('mp-relay-smoke: rooms: same-room ' + aHearsB + '/' + bHearsA + ' frames in 3 s, island<->room ' + islHearsA + '/' + aHearsIsl + ' (beacon only)');
+  }
   // 20 players: every seat taken by a moving bot spread 30 m apart, the 21st is refused, interest management keeps frames small
   {
     const big = await (await fetch(base + '/party', { method: 'POST' })).json();
@@ -147,7 +183,7 @@ try {
       ', ' + (outBytes / 20 / (DUR / 1000) / 1024).toFixed(2) + ' KB/s per client, biggest frame ' + Math.max(...bots.map((b) => b.maxFrame)) + ' B; mid-party bot saw ' + mid.poseFrames + ' Poses frames');
     void secs;
   }
-  console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots + 20-bot party, 21st Full, cheat dropped, flood closed)');
+  console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots + 20-bot party, 21st Full, cheat dropped, flood closed, v1.1 room interest)');
 } catch (e) {
   console.error('mp-relay-smoke: FAILED', e && e.stack ? e.stack : e);
   process.exitCode = 1;
