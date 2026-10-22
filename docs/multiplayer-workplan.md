@@ -113,7 +113,7 @@ A first (~0.5 day). B, C, D can run in parallel after A merges (they only import
 **Acceptance:**
 - `node tests/mp-room-core.cjs`: join, Welcome roster, Joined/Left, Full at 7, Lock, Kick (kicked can't resume), host-only
   ops rejected for non-host (`NotHost`), host migration after 30 s, resume within 60 s keeps id/name, code TTL rejects new
-  joins after 2 h, party ends at 4 h and after 2 min empty, batching sends only dirty poses, a peer never receives its own pose,
+  joins after 8 h, party ends at 12 h and after 2 min empty, batching sends only dirty poses, a peer never receives its own pose,
   no token appears in any message sent to another peer.
 - `node --experimental-websocket scripts/mp-relay-smoke.mjs` passes in < 30 s and leaves no process behind.
 - `npx tsc -p multiplayer/relay --noEmit` passes **if** `typescript` resolves (it does from the repo root); not deployed.

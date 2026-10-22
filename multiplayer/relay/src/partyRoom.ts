@@ -1,7 +1,7 @@
 // Durable Object shell around RoomCore (one object per party, named by the party code).
 //
 // ROTATE (decision, Phase 0): "New code" keeps the SAME room and its members. RoomCore.rotate() issues a new code and
-// restarts the 2 h join window. The OLD code is RETIRED, not deleted: /ws still accepts it, but a socket that came in through
+// restarts the 8 h join window. The OLD code is RETIRED, not deleted: /ws still accepts it, but a socket that came in through
 // a retired code is admitted only with a valid resume token or the host key (so a leaked old code never admits a stranger,
 // while a guest whose connection drops after a Rotate can still resume). /info answers 404 for a retired code. The new code is
 // served by a tiny alias object: PARTY.idFromName(newCode) stores `alias = <this object's name>` and forwards every request
@@ -9,7 +9,7 @@
 // does the same with a plain Map (see multiplayer/dev-relay/server.mjs).
 //
 // STORAGE (review #2, #14): 'saved' = {name, createdAt, hostKeyHash, code, codeIssuedAt, locked, revoked, retired}: the
-// host key is kept only as a SHA-256 digest, no member data. On End (or past the 4 h cap) everything is deleted and a tiny
+// host key is kept only as a SHA-256 digest, no member data. On End (or past the 12 h cap) everything is deleted and a tiny
 // 'tombstone' is written, so an eviction can never revive an ended party. Members survive an eviction through the per-socket
 // attachment (serializeAttachment: id, server-picked name, look, resume token); only members whose socket is gone are lost
 // (they re-Hello as new faces). Phase 0 caveat: not exercised on real Cloudflare.
@@ -142,7 +142,7 @@ export class PartyRoom {
     if (await this.state.storage.get('tombstone')) return null; // ended: never revived
     const s = await this.state.storage.get<Saved>('saved');
     if (!s) return null;
-    if (Date.now() >= s.createdAt + PARTY_MAX_MS) { await this.finish(); return null; } // past the 4 h cap
+    if (Date.now() >= s.createdAt + PARTY_MAX_MS) { await this.finish(); return null; } // past the 12 h cap
     this.base = { name: s.name, createdAt: s.createdAt, hostKeyHash: s.hostKeyHash };
     const core = this.build(s.name, s.createdAt, s.hostKeyHash, s);
     // a hibernated object wakes with its sockets still attached: put the members back on them

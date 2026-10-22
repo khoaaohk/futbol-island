@@ -51,7 +51,7 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
    - the code, big, grouped `K7M-Q4R` (6 chars, unambiguous alphabet, see §3.3);
    - **Share link** button (Web Share API; falls back to **Copy link**): `https://futbolisland.app/?party=K7MQ4R`;
    - a **QR code** of the link (for "hand your phone to a friend" in person; `qrcode` package already in the repo, dynamic import as in `lib/saves/printCard.ts:42`);
-   - a line for grown-ups: "Share only with friends you know. The code stops working in 2 hours."
+   - a line for grown-ups: "Share only with friends you know. The code stops working in 8 hours."
 4. The host is already in the party (connected) while the card is open; friends appear as they join.
 
 ### 2.2 Joining (friend)
@@ -113,8 +113,8 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 | Slow / offline network | Poses extrapolate up to 250 ms then ease to a stop; after 8 s silent a friend dims; chip shows a dim dot "reconnecting"; the island plays exactly as today. |
 | Joining late | Welcome contains the full roster and last pose of everyone. |
 | Host leaves | 30 s grace (reconnect), then host moves to the longest-present member; the party never ends because the host left. |
-| Party ends | When everyone has left for 2 min, at the 4 h hard cap (10-min warning toast), or host taps **End party for everyone**. |
-| Code expiry | The code accepts new joiners for 2 h; people already in stay. Host can **New code** (rotates, old code dead). |
+| Party ends | When everyone has left for 2 min, at the 12 h hard cap (10-min warning toast), or host taps **End party for everyone**. |
+| Code expiry | The code accepts new joiners for 8 h; people already in stay. Host can **New code** (rotates, old code dead). |
 | Tab hidden | After 15 s hidden the client closes the socket (radio sleeps, heat rule); server keeps the slot 60 s; return resumes. |
 | Full party | Join card: "This party is full (6/6)". |
 | Kick | Host taps a friend -> Remove. Removed kid sees "You left the party". Host is prompted to rotate the code. |
@@ -126,7 +126,7 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 ### 3.1 Options compared
 | Option | Works remote | Works in person | Kid can do it alone | Persistent id? | v1 |
 |---|---|---|---|---|---|
-| 6-char party code (read out / typed) | yes | yes | yes | no (expires 2 h) | **yes** |
+| 6-char party code (read out / typed) | yes | yes | yes | no (expires 8 h) | **yes** |
 | Share link `?party=CODE` (Web Share / Copy) | yes (parent's messages) | AirDrop | needs a messaging app, usually a parent's | no | **yes** |
 | QR code of the link | no | **yes** (scan with camera) | yes | no | **yes** |
 | Picture code (4 pictures, 19 Oct idea) | yes | yes | best for 6-year-olds | no | later, as an alternate display of the same code |
@@ -149,7 +149,7 @@ opens a link plays the intro, then joins. No email or phone number is ever asked
   no U (so no U/V mix-up). 28^6 = 481,890,304 codes. Plus a small blocklist test for unlucky consonant combos.
 - **Display** `XXX-XXX`; input accepts lower case, spaces and dashes; characters outside the alphabet are rejected with a gentle
   "That letter isn't used in codes" hint (no silent guessing of O->0).
-- **Lifetime:** new joins 2 h from creation (or rotation); party session max 4 h.
+- **Lifetime:** new joins 8 h from creation (or rotation); party session max 12 h.
 - **Generation:** on the server (`crypto.getRandomValues`); the worker retries if the code's room is live.
 
 ### 3.4 Abuse controls
@@ -158,7 +158,7 @@ opens a link plays the intro, then joins. No email or phone number is ever asked
 | Party size cap | 6 (host + 5) |
 | Create rate | 5 parties / hour per IP hash (daily salt), 1 live party per connection |
 | Join attempts | 10 / min per IP hash; 20 unknown-code failures / hour -> 1 h block (stops code guessing) |
-| Code expiry | 2 h for new joins; rotate on demand |
+| Code expiry | 8 h for new joins; rotate on demand |
 | Host controls | Remove friend, New code, Lock party (no new joins), End party |
 | Everyone | Leave; Hide a friend (local); Mute a friend's emotes (local) |
 | Content | No strings from clients ever relayed; names come from a reviewed list by index |
@@ -238,8 +238,8 @@ export const PROTOCOL_VERSION = 1;
 export const PARTY_MAX = 6;
 export const CODE_ALPHABET = '23456789BCDFGHJKMNPQRSTVWXYZ';
 export const CODE_LENGTH = 6;
-export const CODE_TTL_MS = 2 * 60 * 60 * 1000;      // new joins
-export const PARTY_MAX_MS = 4 * 60 * 60 * 1000;     // session hard cap
+export const CODE_TTL_MS = 8 * 60 * 60 * 1000;      // new joins
+export const PARTY_MAX_MS = 12 * 60 * 60 * 1000;     // session hard cap
 export const RESUME_GRACE_MS = 60_000;
 export const HOST_GRACE_MS = 30_000;
 export const EMPTY_CLOSE_MS = 120_000;
@@ -475,7 +475,7 @@ export function remoteCap(tier: HeatTier, phone: boolean, saver: boolean): numbe
 
 **Players: playing with friends (DRAFT).** "A child can invite friends to play on the same island at the same time, or join a
 friend, after a grown-up answers the grown-up check. They share a 6-character party code, a link or a QR code; the code stops
-accepting new players after 2 hours. While playing together, the other players in that party see the child's character and its
+accepting new players after 8 hours. While playing together, the other players in that party see the child's character and its
 outfit colours, where it moves on the island and which preset waves or cheers it taps. Each player gets a colour chosen by the game (such as Red or Blue) that changes every party, and types a first name only (letters only, 2 to 12 letters, needed to play with friends) so friends can tell each other apart; it is shown only to the other players in that party, is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. There is no chat, no voice and no photos, and players cannot give or trade
 anything. We do not ask for or keep last names, contact details or friend lists. (Matches components/privacy/PrivacyPolicy.tsx section 7a.) Our relay (Cloudflare) passes these live positions
 between the players in the party and keeps nothing after the party ends; it uses the device's internet address only for a few
@@ -528,7 +528,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 1. **Hosting:** Cloudflare Workers + Durable Objects ($5/mo Workers Paid, $20 alert, account on khoa0aohk@gmail.com). *Recommend yes.*
 2. **Party size cap:** *6* (host + 5).
 3. **Parent gate for joiners too** (not only hosts): *yes*, every create and join (10-min pass).
-4. **Code expiry:** *2 h* for new joins, 4 h party max, host can rotate.
+4. **Code expiry:** *8 h* for new joins, 12 h party max (owner decision Oct 22 2026: longer than the first draft's 2 h / 4 h so friends can play across an afternoon), host can rotate.
 5. **Names:** server-assigned unique colour per party, no stable names in v1: *yes*. PLUS (owner, 22 Oct 2026) a typed first name, letters only, no block-list, memory only, REQUIRED (animals and made-up names removed the same day): *decided, built*.
 6. **Default setting:** "Play with friends" *allowed* (each use is gated), lockable off by a grown-up. (Alternative: off until a grown-up turns it on.)
 7. **Identity:** *no identifier at all in v1* (stricter than an install-id hash); revisit for Phase 4.
@@ -543,7 +543,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 | # | Risk | Mitigation |
 |---|---|---|
 | 1 | iPhone heat/battery (extra rigs + socket keeps radio awake) | One batch, no shadows, caps at admission, send only on change, close socket when hidden, owner's two-iPhone run gates Phase 1 |
-| 2 | Child safety: a code leaks to a stranger | 2 h expiry, cap 6, gate on join, host Remove/Lock/New code, no voice, only a required letters-only first name (host Reset name, Hide / Mute), nothing to take or change |
+| 2 | Child safety: a code leaks to a stranger | 8 h expiry, cap 6, gate on join, host Remove/Lock/New code, no voice, only a required letters-only first name (host Reset name, Hide / Mute), nothing to take or change |
 | 3 | Legal: notice/consent wording wrong | Draft marked for review, nothing ships until counsel + DPIA; no identifiers collected |
 | 4 | `Town.tsx` merge conflicts with other lanes | One glue task owns the 4 Town edits, lands last; flag off by default |
 | 5 | Desync looks bad (jitter, popping) | 250 ms buffer, Hermite, extrapolation cap, fades on warp/arrival; tune in Phase 1 on real networks |

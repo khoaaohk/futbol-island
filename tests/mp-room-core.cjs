@@ -192,7 +192,7 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const hh2 = peer(); hello(m2.room, hh2, welcome(hh)[3]); m2.clock.t += 20000; m2.room.tick();
   assert.equal(o.of(S.Host).length, 0);
 }
-// code TTL 2 h rejects new joins; party ends at 4 h
+// code TTL 8 h rejects new joins; party ends at 12 h
 {
   const { clock, room } = mk();
   const host = join(room, room.hostKey);

@@ -8,7 +8,7 @@ let n=0;const t=(name,fn)=>{fn();n++;};
 
 t('constants',()=>{
   assert.equal(P.PROTOCOL_VERSION,1);assert.equal(P.PARTY_MAX,6);assert.equal(P.CODE_ALPHABET,'23456789BCDFGHJKMNPQRSTVWXYZ');
-  assert.equal(P.CODE_ALPHABET.length,28);assert.equal(P.CODE_LENGTH,6);assert.equal(P.CODE_TTL_MS,7200000);assert.equal(P.PARTY_MAX_MS,14400000);
+  assert.equal(P.CODE_ALPHABET.length,28);assert.equal(P.CODE_LENGTH,6);assert.equal(P.CODE_TTL_MS,28800000);assert.equal(P.PARTY_MAX_MS,43200000);
   assert.equal(P.RESUME_GRACE_MS,60000);assert.equal(P.HOST_GRACE_MS,30000);assert.equal(P.EMPTY_CLOSE_MS,120000);assert.equal(P.MAX_INBOUND_BYTES,512);assert.equal(P.LOOK_LEN,12);
   assert.equal(P.Mode.Idle,13);assert.equal(P.Mode.Swim,8);assert.equal(P.Zone.Indoors,4);assert.equal(P.Emote.WellPlayed,5);assert.equal(P.ErrorCode.Kicked,8);
   assert.equal(P.PoseFlag.Warp,1);assert.equal(P.PoseFlag.Hidden,2);assert.equal(P.C.Beat,9);assert.equal(P.S.Welcome,20);assert.equal(P.S.Beat,30);

@@ -36,7 +36,7 @@ export default function PartyInvite({ code, expiresAt, onNote, onClose }: { code
         {qr ? <img className={styles.qr} src={qr} width={160} height={160} alt={`QR code for ${partyLink(code)}`} /> : <span className={styles.qrWait} aria-hidden="true" />}
         <p className={styles.small}>Or scan with a camera.</p>
       </div>
-      <p className={styles.grownup}>Share only with friends you know.<br />{left ? `Works for ${left} more. After that, tap New code.` : expiresAt > 0 ? 'This code stopped working. Tap New code.' : 'Works for 2 hours. After that, tap New code.'}</p>
+      <p className={styles.grownup}>Share only with friends you know.<br />{left ? `Works for ${left} more. After that, tap New code.` : expiresAt > 0 ? 'This code stopped working. Tap New code.' : 'Works for 8 hours. After that, tap New code.'}</p>
       </FadeScroll>
     </section>
   );
