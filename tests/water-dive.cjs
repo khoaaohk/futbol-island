@@ -37,8 +37,8 @@ ok('seven data-driven zones (the user’s map circles), each a unique theme id, 
  for(const s of Z){assert(s.radius>=12,'bigger patches (were 9 m)');const c=new T.Color(s.tint),hsl={};c.getHSL(hsl,T.SRGBColorSpace);assert(hsl.l>.55&&hsl.h>.42&&hsl.h<.6,'lighter turquoise '+s.id);
   assert(D.inDiveBlob(s,s.surface.x,s.surface.z),'you come up inside the patch');
   for(const f of s.finds)assert(Math.hypot(f.x,f.z)<D.DIVE_ROOM_R-2,'finds inside the room '+s.id+' '+f.id);
-  assert.equal(JSON.stringify(s.finds.map(f=>f.kind).sort()),JSON.stringify(['burst','clam','relic','treasure']));
-  for(const f of s.finds){assert(['Real football fact','Coaching idea','Island story'].includes(f.label));for(const t of [f.title,f.text,f.credit??'',f.story??'',f.prompt,f.aria])assert(!/https?:|www\.|\.com/.test(t),'no links: '+t);if(f.label==='Real football fact')assert(/^Wikipedia/.test(f.credit),'a plain-text credit');}
+  assert.equal(JSON.stringify(s.finds.map(f=>f.kind).sort()),JSON.stringify(['ball','burst','clam','relic','treasure']));
+  for(const f of s.finds){assert(['Real football fact','Coaching idea','Island story'].includes(f.label));for(const t of [f.title,f.text,f.credit??'',f.story??'',f.prompt,f.aria])assert(!/https?:|www\.|\.com/.test(t),'no links: '+t);if(f.label==='Real football fact')assert(f.kind==='ball'?/^[A-Z].{3,}$/.test(f.credit):/^Wikipedia/.test(f.credit),'a plain-text credit');}
   for(const f of s.finds)assert((f.coins??0)<=ECON.LEARN_COINS.ball);}
  const paul=spot.finds.find(f=>f.kind==='relic');assert(read('lib/town/fishing/fishCatalog.ts').includes(paul.text),'Paul’s fact is the catalogue’s verified sentence');
 });

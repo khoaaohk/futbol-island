@@ -66,7 +66,7 @@ ok('the reef journey: 8 pickups per zone on the path, on the sand, inside the ro
   assert.equal(p.filter(q=>q.kind==='litter').length,4);for(const q of p){assert(Math.hypot(q.x,q.z)<=D.DIVE_ROOM_R-1.99,'inside '+z.id);assert(Math.abs(q.y-(D.diveFloor(q.x,q.z,z.floor)+.28))<1e-9,'on the sand');assert(q.y<D.DIVE_SURFACE_Y-.5);}
   assert.equal(new Set(p.map(q=>q.x.toFixed(2)+','+q.z.toFixed(2))).size,8,'no two in one place');
   const got=p.map(()=>false);assert.equal(J.reach(p,got,p[3].x,p[3].y,p[3].z),3);got[3]=true;assert.notEqual(J.reach(p,got,p[3].x,p[3].y,p[3].z),3);
-  const out={x:0,z:0};assert(J.nextTarget(z,p,got,[],0,13,out));assert.equal(J.nextTarget(z,p,p.map(()=>true),z.finds.map(f=>f.id),0,13,out),null,'done: nothing left to lead to');}
+  const out={x:0,z:0};assert(J.nextTarget(z,p,got,[],0,13,out));assert.equal(J.nextTarget(z,p,p.map(()=>true),D.diveTaskFinds(z).map(f=>f.id),0,13,out),null,'done: nothing left to lead to');}
  assert.equal(J.reefColour(0),J.REEF_DULL);assert.equal(J.reefColour(1),1);assert.equal(J.reefHealth(4,4,12),8/12);
  const save=J.parseDiveReef({zones:{'captains-cup':[1,1,99,-1,'x',2],nope:[1]},restored:['captains-cup','nope']},D.DIVE_SPOTS);
  assert.equal(JSON.stringify(save.zones),'{"captains-cup":[1,2]}');assert.equal(JSON.stringify(save.restored),'["captains-cup"]');assert.equal(J.markRestored(save,'captains-cup'),save);
@@ -85,7 +85,7 @@ ok('the runtime: swim through a pickup collects it, finishing the zone restores 
  for(const p of rt.pickups){st.x=p.x;st.z=p.z;st.y=p.y+.2;st.depthT=1;rt.frame(1/30,{sx:0,sy:0,lift:0},390,844);st.breath=1;}
  assert.equal(rt.got.filter(Boolean).length,8,'every pickup collected by swimming through');assert.equal(events.filter(e=>e.startsWith('pick')).length,8);
  assert.equal(RT.diveStore.get().reef,'8/12');
- for(const f of spot.finds){const p=D.diveFindPoint(f,{x:0,y:0,z:0},spot.floor);st.x=p.x;st.z=p.z;st.y=p.y;rt.session.state.find=f;rt.use();st.breath=1;}
+ for(const f of D.diveTaskFinds(spot)){const p=D.diveFindPoint(f,{x:0,y:0,z:0},spot.floor);st.x=p.x;st.z=p.z;st.y=p.y;rt.session.state.find=f;rt.use();st.breath=1;}/* the hidden explore ball is not a reef task (diveBalls.ts) */
  assert(events.includes('restored'),'restored at 12/12');assert(credits.some(([id,c])=>id==='dive:pauls-grotto:reef'&&c===3),'the restore pays once');
  assert.equal(RT.diveStore.get().restored,true);assert.equal(RT.diveStore.get().card.id,'reef');
  // The ball: put it just in front of the goal line, moving through it.
@@ -100,7 +100,7 @@ ok('the room: water colour from the tokens (no fixed background), within the exi
  assert(src.includes('ROOM_SHALLOW_MIX')&&src.includes('ROOM_WINDOW')&&src.includes('ROOM_CAUSTIC'));assert(W.ROOM_SHALLOW_MIX[0]>W.ROOM_SHALLOW_MIX[1],'clearer near the surface');
  const rows=[];
  for(const z of D.DIVE_SPOTS){const picks=J.journeyPickups(z);const room=R.createDiveRoom(z,{phone:true,reduced:false,found:[],pickups:picks}),st=room.stats();
-  assert(st.draws<=16,'phone draws '+st.draws+' '+z.id);assert(st.triangles<76000,'phone triangles '+st.triangles+' '+z.id);rows.push(`${z.id}:${st.draws}/${st.triangles}`);
+  assert(st.draws<=17,'phone draws '+st.draws+' '+z.id);/* 16 + the hidden explore ball (one small mesh until found; diveBall.ts, Oct 21 2026) */assert(st.triangles<76000,'phone triangles '+st.triangles+' '+z.id);rows.push(`${z.id}:${st.draws}/${st.triangles}`);
   const c0=room.scene.background.clone();room.camera.position.set(0,D.DIVE_SURFACE_Y-.6,10);room.frame(1,1/30,{x:0,y:1,z:13,yaw:Math.PI});const top=room.scene.background.clone();
   room.frame(2,1/30,{x:0,y:D.diveFloor(0,13,z.floor)+.6,z:13,yaw:Math.PI});assert(top.r+top.g+top.b>room.scene.background.r+room.scene.background.g+room.scene.background.b-1e-6,'lighter near the surface');void c0;
   room.collect(0,1);room.setReef(.8);room.form(1,0,1,0);room.setBuddy(0,1,0,1,0,0,true);

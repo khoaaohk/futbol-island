@@ -124,7 +124,7 @@ ok('the room: the friend is an instance of the pickups draw and the sparkle and 
  const rows=[];
  for(const z of D.DIVE_SPOTS){const picks=J.journeyPickups(z),h=X.friendHome(z),sp=SP.sparkleSpot(z,DATE);
   const a=R.createDiveRoom(z,{phone:true,reduced:false,found:[],pickups:picks}),b=R.createDiveRoom(z,{phone:true,reduced:false,found:[],pickups:picks,friend:{kind:X.DIVE_FRIENDS[z.id].kind,...h},sparkle:sp});
-  const sa=a.stats(),sb=b.stats();assert.equal(sb.draws,sa.draws,'no extra draw '+z.id);assert(b.hasFriend);assert(sb.draws<=16&&sb.triangles<76000,z.id);
+  const sa=a.stats(),sb=b.stats();assert.equal(sb.draws,sa.draws,'no extra draw '+z.id);assert(b.hasFriend);assert(sb.draws<=17&&sb.triangles<76000,z.id+" "+sb.draws+" "+sb.triangles);/* 16 + the hidden explore ball (one small mesh until found; diveBall.ts, Oct 21 2026) */
   b.setFriend(h.x,h.y,h.z,1,0,0,1,0,.2,1);b.setWhale(0,0,0,1);b.ring(0,1,0,1);b.setSparkle(false);b.frame(1,1/30,{x:0,y:1,z:13,yaw:Math.PI});
   rows.push(`${z.id}:+${sb.triangles-sa.triangles}`);assert(sb.triangles-sa.triangles<4000,'friend cost (9 instances share its geometry) '+z.id);a.dispose();b.dispose();}
  for(const k of Object.values(X.DIVE_FRIENDS).map(f=>f.kind)){let t=0;for(const q of R.friendParts(k)){const g=q.g;t+=(g.index?g.index.count:g.getAttribute('position').count)/3;g.dispose();}assert(t>=60&&t<=340,k+' '+t+' triangles');}
