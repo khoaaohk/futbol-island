@@ -1076,7 +1076,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:false});
     if(mode==='pack'){if(packPort){const s=packPort.socket;s.updateWorldMatrix(true,false);net.pack(s.matrixWorld,yaw,packTilt(rideMode),lastDt,reducedMotion);}else g.visible=false;}
     if('setFill' in net){let n=0;for(const g of jr.got)if(g)n++;jarFill=n/Math.max(1,jr.got.length);net.setFill(jarFill);}
-    else net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);
+    /* Oct 22 2026 (user: the jar stayed behind after a catch and was not in the hand): the jar needs its layout every island frame too (it was an `else` of the fill branch, so only the net was laid out) */
+    if(mode!=='pack'||!('setFill' in net))net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);/* the jar rests on the pack socket while riding (net.pack above) */
     net.bagCentre(bagPos);}}
   if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
   if(gear.handFlag){const g=gear.handFlag;g.visible=true;g.position.set(r.x,r.y,r.z);aim(g,UP,r.x+(r.x-p.x)*.4,r.y+(r.y-(p.y+1.3))*1.2,r.z+(r.z-p.z)*.4);}
