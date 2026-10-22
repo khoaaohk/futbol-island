@@ -19,17 +19,25 @@ export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = 
 ];
 export const EMOTE_EMOJI: Record<number, string> = {0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{261D}\u{FE0F}', 4: '\u{1F4A8}', 6: '\u{1F44D}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
 /** Your own pose + bubble last 1.5 s (same as a friend's); a townsperson answers for 2 s. */
-export const EMOTE_SECONDS = 1.5, NPC_EMOTE_SECONDS = 2, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 5;
+export const EMOTE_SECONDS = 1.5, NPC_EMOTE_SECONDS = 2, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
+/** A townsperson farther than NPC_STEP_FROM (m) takes up to NPC_STEP_MAX steps toward you (never closer than NPC_STEP_TO) at NPC_STEP_SPEED m/s. */
+export const NPC_STEP_FROM = 3, NPC_STEP_TO = 2.2, NPC_STEP_MAX = 2.5, NPC_STEP_SPEED = 3.6;
+/** How far a townsperson at distance `d` walks toward the player so the two fit one close frame (0 when already close). */
+export const npcStepDistance = (d: number): number => d <= NPC_STEP_FROM ? 0 : Math.min(NPC_STEP_MAX, d - NPC_STEP_TO);
 
 export interface EmoteCandidate {id: string; x: number; y: number; z: number; busy: boolean; cooldownUntil: number}
-/** The nearest townsperson within `range` metres (3D, like the Talk prompt) that is not busy and not cooling down. */
-export function pickEmoteNpc(list: readonly EmoteCandidate[], p: {x: number; y: number; z: number}, now: number, range = NPC_EMOTE_RANGE): string | null {
-  let best: string | null = null, bestD = range;
+/** The best townsperson within `range` metres (3D) that is not busy and not cooling down: the nearest, with a bonus of up to 2 m for one
+ *  in front of you (`facing` = your unit heading on the ground). A merely walking townsperson counts; only `busy` ones are skipped. */
+export function pickEmoteNpc(list: readonly EmoteCandidate[], p: {x: number; y: number; z: number}, now: number, range = NPC_EMOTE_RANGE, facing?: {x: number; z: number}): string | null {
+  let best: string | null = null, bestScore = Infinity;
   for (let i = 0; i < list.length; i++) {
     const c = list[i];
     if (c.busy || now < c.cooldownUntil) continue;
     const d = Math.hypot(c.x - p.x, c.y - p.y, c.z - p.z);
-    if (d <= bestD) { bestD = d; best = c.id; }
+    if (d > range) continue;
+    let score = d;
+    if (facing && d > .05) score -= 2 * Math.max(0, ((c.x - p.x) * facing.x + (c.z - p.z) * facing.z) / d);
+    if (score < bestScore) { bestScore = score; best = c.id; }
   }
   return best;
 }
@@ -44,7 +52,11 @@ export function emoteCalled(emote: number, age: number, dur: number): number {
 }
 /** Cheer / Well played: celebration progress 0..1 (or -1 when the emote is not a celebration). */
 export function emoteCelebration(emote: number, age: number, dur: number): number {
-  return emote === EMOTE.Cheer || emote === EMOTE.WellPlayed || emote === EMOTE.Dance ? Math.min(1, age / dur) : -1;
+  return emote === EMOTE.Cheer || emote === EMOTE.Dance ? Math.min(1, age / dur) : -1;
+}
+/** Well played: the clap (0 = not a clap, else the ramped weight 0..1). Thumbs up on a ride shares the same single-arm pose. */
+export function emoteClap(emote: number, age: number, dur: number): number {
+  return emote === EMOTE.WellPlayed ? ramp(age, dur) : 0;
 }
 export const emoteHop = (p: number) => celebrationJump(p);
 

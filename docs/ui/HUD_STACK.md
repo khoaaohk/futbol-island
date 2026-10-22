@@ -234,9 +234,15 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
 - The Emote button (`components/EmoteControl.tsx`) is icon-only (aria-label "Emotes"), >= 44 px, same style as the other action
   buttons. It opens a wheel of four round buttons upward (Wave, High five, Cheer, Well played; `lib/town/emoteReact.ts`); a pick
   plays on you at once (raised arm or cheer arms, icon bubble, 1.5 s), is sent to friends only while a party is live, and the
-  nearest free townsperson within 5 m answers for 2 s (wave back, raised hand + a small spark ring, or a hop for Cheer / Well
-  played; 2 s cooldown per townsperson; riding, driving, sleeping, hidden, stunned and court-freestyle townsfolk ignore it;
-  reduced motion = bubble only). One pooled bubble pair + one ring (`lib/graphics/emoteBubbles.ts`), updated only while active.
+  best free townsperson within 9 m answers for 2 s (user, 22 Oct 2026: "the emotes are not interacting with the npcs": 5 m was too
+  tight and a walker was never in reach; now the nearest wins with a bonus of up to 2 m for one in front of you). Wave: a waving
+  hand; High five: the sequence / raised hand + spark ring; Cheer: hop + arms up; Well played: a clap. The townsperson counts as
+  near: its routine stops, it turns to face you and holds still, a bubble floats over it, and its name tag hides. Beyond 3 m it
+  takes up to 2.5 m of steps toward you (never closer than 2.2 m, only on a clear path). Walking townsfolk answer; only riding /
+  driving, sleeping, hidden, stunned and court-freestyle ones ignore it (2 s cooldown each; reduced motion = bubble only).
+  **On a scooter, bike or moped** all four emotes work at normal speed: the right arm only (wave, air five, fist pump, thumbs-up;
+  the left hand stays on the bar, the vehicle is never touched, no spin / hop / crouch high five). Jetpack, zipline, truck rides,
+  swimming and jobs stay blocked. One pooled bubble pair + one ring (`lib/graphics/emoteBubbles.ts`), updated only while active.
 - The party chip stays top-left (members / menu); its separate Emotes button is gone. Guarded by `tests/emote-grid.cjs`.
 - **High five variations** (user, 22 Oct 2026: "the high five emote only waves ... ten variations, randomized"). High five plays a
   real sequence, 1.5-2.5 s, one of TEN (`lib/town/highFive.ts`, shuffled bag `nextHighFive`: all ten before any repeat, never the
@@ -249,8 +255,12 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   hands (an "air five" toward the camera side when nobody is within 5 m). You turn to face the partner; walking away ends it.
   Friends: the wire format is unchanged (no spare field in `Emote`), so each screen picks its own variation for a friend's high five
   (air five, `remoteAvatars.ts`). Reduced motion: no sequence, bubble + a single raised arm. No new draw calls or per-frame allocation.
-- **Emote camera** (`lib/town/emoteCamera.ts` + `emoteCameraMath.ts`, reusing `shotCamera.ts`): every emote eases the island camera in
+- **Emote camera** (zoom closer, frame both: user, 22 Oct 2026, "each emote should zoom in more and show the interaction") (`lib/town/emoteCamera.ts` + `emoteCameraMath.ts`, reusing `shotCamera.ts`): every emote eases the island camera in
   (0.45 s) to a closer three-quarter view of you (and the answering townsperson), holds for the emote, and eases back out (0.5 s) to
-  exactly the follow camera. Never fights the player: movement, a menu, a ride, flying, swimming, a job, a lesson, a tap on the
+  exactly the follow camera. The distance is solved so the feet and raised hands of BOTH characters fit at the phone or desktop
+  aspect (min 3.2 m), from the heading that frames the pair closest (side by side preferred); the pair is tracked for the whole
+  emote and a townsperson that reacts a moment later fades into the shot. On a ride it frames rider + vehicle a bit wider and ends
+  above 16 m/s, on a turn sharper than 1.8 rad/s, or on dismount. Never fights the player: movement on foot, a menu, a jetpack /
+  zipline / truck ride, flying, swimming, a job, a lesson, a tap on the
   screen cancel it at once; reduced motion and already-close (room) cameras skip it; trees / buildings in the sight line shrink the
   zoom (or skip it); a new emote extends the zoom; 0.6 s cooldown after it ends. Guarded by `tests/high-five.cjs`.

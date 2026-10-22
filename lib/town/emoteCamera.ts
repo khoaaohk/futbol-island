@@ -6,7 +6,7 @@
 // Allocation-free per frame (the output objects are made once).
 import type * as T from 'three';
 import {createShotCamera, type Shot} from './shotCamera';
-import {EMOTE_CAM, emoteCamBlocked, emoteCamSkip, frameEmote, type EmoteCamState, type V3} from './emoteCameraMath';
+import {EMOTE_CAM, bestEmoteYaw, emoteCamBlocked, emoteCamSkip, frameEmote, type EmoteCamState, type V3} from './emoteCameraMath';
 
 /** Is the sight line from the eye to the target clear of buildings and trees? (Town: the wall / obstacle grids.) And the ground under a point. */
 export interface EmoteCamWorld {clear(ex: number, ey: number, ez: number, tx: number, ty: number, tz: number): boolean; floorAt(x: number, z: number): number}
@@ -14,27 +14,37 @@ export interface EmoteCamWorld {clear(ex: number, ey: number, ez: number, tx: nu
 export function createEmoteCamera(makeShot: typeof createShotCamera = createShotCamera) {
   const shot = makeShot(EMOTE_CAM.inSeconds, EMOTE_CAM.outSeconds);
   const out = {eye: {x: 0, y: 0, z: 0}, target: {x: 0, y: 0, z: 0}, fov: EMOTE_CAM.fov} as Shot & {eye: V3; target: V3};
-  const p = {x: 0, y: 0, z: 0}, q = {x: 0, y: 0, z: 0}, follow = {x: 0, y: 0, z: 0};
-  let hasQ = false, factor = 1, hold = 0, cooldown = 0, holding = false, restoring = false, tapped = false;
-  const frame = (aspect: number): Shot => { frameEmote(out, p.x, p.y, p.z, hasQ, q.x, q.y, q.z, aspect, factor); return out; };
+  const p = {x: 0, y: 0, z: 0}, q = {x: 0, y: 0, z: 0}, qe = {x: 0, y: 0, z: 0}, follow = {x: 0, y: 0, z: 0};
+  // qw = how much the partner counts (0..1, eased so a reaction that starts a moment later, or an NPC that is left behind, never jerks the shot); yaw eases to the best heading
+  let hasQ = false, qw = 0, qGoal = 0, yaw: number = EMOTE_CAM.yaw, yawGoal: number = EMOTE_CAM.yaw, wide = 0, aspectNow = 1.6, factor = 1, hold = 0, cooldown = 0, holding = false, restoring = false, tapped = false;
+  const effQ = () => { qe.x = p.x + (q.x - p.x) * qw; qe.y = p.y + (q.y - p.y) * qw; qe.z = p.z + (q.z - p.z) * qw; };
+  const frame = (aspect: number): Shot => { effQ(); aspectNow = aspect; frameEmote(out, p.x, p.y, p.z, hasQ, qe.x, qe.y, qe.z, aspect, factor, yaw, wide); return out; };
   const stop = () => { if (holding) { holding = false; hold = 0; cooldown = EMOTE_CAM.cooldown; shot.end(); } };
   return {
     /** An emote starts: zoom in (or extend the zoom that is running) for `seconds`. Returns whether the camera is zooming. */
-    begin(s: EmoteCamState, px: number, py: number, pz: number, partner: V3 | null, seconds: number, world: EmoteCamWorld | null, aspect = 1.6): boolean {
+    begin(s: EmoteCamState, px: number, py: number, pz: number, partner: V3 | null, seconds: number, world: EmoteCamWorld | null, aspect = 1.6, riding = false): boolean {
       if (holding) { // each new emote extends the zoom instead of restarting it
         if (emoteCamBlocked(s)) { stop(); return false; }
         hold = Math.max(hold, seconds); return true;
       }
       if (cooldown > 0 || shot.active || emoteCamSkip(s)) return false;
-      p.x = px; p.y = py; p.z = pz; hasQ = !!partner; if (partner) { q.x = partner.x; q.y = partner.y; q.z = partner.z; }
+      p.x = px; p.y = py; p.z = pz; hasQ = !!partner; wide = riding ? EMOTE_CAM.rideWide : 0; aspectNow = aspect;
+      if (partner) { q.x = partner.x; q.y = partner.y; q.z = partner.z; }
+      qw = qGoal = partner ? 1 : 0; yaw = yawGoal = bestEmoteYaw(px, py, pz, hasQ, q.x, q.y, q.z, aspect, wide);
       // Do not clip into trees / buildings: a gentler zoom until the sight line is clear; none at all if it never is.
       let ok = !world; factor = 1;
       for (let i = 0; i < EMOTE_CAM.shrink.length && !ok; i++) {
-        factor = EMOTE_CAM.shrink[i]; frameEmote(out, p.x, p.y, p.z, hasQ, q.x, q.y, q.z, aspect, factor);
+        factor = EMOTE_CAM.shrink[i]; frameEmote(out, p.x, p.y, p.z, hasQ, q.x, q.y, q.z, aspect, factor, yaw, wide);
         ok = world!.clear(out.eye.x, out.eye.y, out.eye.z, out.target.x, out.target.y, out.target.z) && out.eye.y > world!.floorAt(out.eye.x, out.eye.z) + 1;
       }
       if (!ok) return false;
       holding = true; hold = seconds; tapped = false; shot.begin(frame); return true;
+    },
+    /** Every frame while it runs: the player now, and the partner (null = none / out of reach). A partner that appears later fades into the framing. */
+    track(px: number, py: number, pz: number, partner: V3 | null) {
+      p.x = px; p.y = py; p.z = pz;
+      if (partner) { q.x = partner.x; q.y = partner.y; q.z = partner.z; if (!hasQ) { hasQ = true; qw = 0; q.x = partner.x; q.z = partner.z; } if (qGoal === 0) yawGoal = bestEmoteYaw(px, py, pz, true, partner.x, partner.y, partner.z, aspectNow, wide); }
+      qGoal = partner ? 1 : 0;
     },
     /** A tap / click on the screen: cancel and ease out at once. */
     tap() { tapped = true; },
@@ -44,6 +54,7 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
     apply(camera: T.PerspectiveCamera, dt: number, s: EmoteCamState, reduced: boolean): boolean {
       if (cooldown > 0 && !shot.active) cooldown = Math.max(0, cooldown - dt); // counts from the moment the camera is back
       if (!holding && !shot.active) { restoring = false; tapped = false; return false; }
+      if (holding) { const k = Math.min(1, dt * 4); qw += (qGoal - qw) * k; yaw += (yawGoal - yaw) * k; }
       if (holding) { if (tapped || emoteCamBlocked(s)) stop(); else { hold -= dt; if (hold <= 0) stop(); } }
       tapped = false;
       follow.x = camera.position.x; follow.y = camera.position.y; follow.z = camera.position.z; restoring = true;

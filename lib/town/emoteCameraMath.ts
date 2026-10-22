@@ -10,49 +10,70 @@ export const EMOTE_CAM = {
   /** The camera's vertical field of view (deg, Town's follow camera). */
   fov: 40,
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
-  minDist: 3.7, maxDist: 15,
+  minDist: 3.2, maxDist: 18,
   /** Tried in order when something stands between the camera and the characters: a gentler zoom (distance x factor). */
   shrink: [1, 1.35, 1.8] as readonly number[],
   /** Rapid taps do not pump the camera: no new zoom for this long after one ends. */
   cooldown: .6,
   /** The follow camera is already this close (m): indoors / arcade / shop rooms use their own cameras, so skip. */
   closeCameraDist: 14,
-  /** The characters' framed height (m): chest-high target, room for raised hands, a hop and the feet. */
-  halfHeight: 1.6, targetLift: 1.05,
+  /** The characters' framed top (raised hands, a hop) and feet (m), the target lift and the room kept for the HUD / controls (multipliers). */
+  top: 2.45, feet: -.1, targetLift: 1.15, marginH: 1.12, marginV: 1.3,
+  /** Riding (scooter / bike / moped): the emote keeps going up to this speed (m/s); turning faster than `rideSteer` (rad/s) ends it; the characters are this much wider (m). */
+  rideMaxSpeed: 16, rideSteer: 1.8, rideWide: .5,
   /** A character's half width including the arms out (m). */
   halfWidth: .85,
 } as const;
 
-const C = Math.cos(EMOTE_CAM.pitch);
-/** The camera-to-subject direction (unit). */
-const DIR: V3 = {x: Math.sin(EMOTE_CAM.yaw) * C, y: Math.sin(EMOTE_CAM.pitch), z: Math.cos(EMOTE_CAM.yaw) * C};
+const COS_P = Math.cos(EMOTE_CAM.pitch), SIN_P = Math.sin(EMOTE_CAM.pitch);
 const TAN_V = Math.tan(EMOTE_CAM.fov * Math.PI / 360);
-export const emoteDir = (): V3 => ({x: DIR.x, y: DIR.y, z: DIR.z});
+/** The camera-to-subject direction (unit) for a heading `yaw`. */
+export const emoteDir = (yaw: number = EMOTE_CAM.yaw): V3 => ({x: Math.sin(yaw) * COS_P, y: SIN_P, z: Math.cos(yaw) * COS_P});
 
 /**
- * The close three-quarter framing for the player at (px, py, pz) and, when `hasQ`, the partner at (qx, qy, qz): `target` is the middle
- * of the two (chest high), `eye` sits `dist` metres from it along the view direction. Both characters fit inside the frame at
- * `aspect` (width / height) for the returned distance (unless it hits `maxDist`). `factor` > 1 is a gentler zoom. Returns the distance.
+ * The close framing for the player at (px, py, pz) and, when `hasQ`, the partner at (qx, qy, qz), seen from heading `yaw`: `target` is the
+ * middle of the two, `eye` sits the returned distance from it. The distance is solved exactly: the feet and the raised hands (top corners,
+ * `halfWidth` + `wide` either side) of BOTH characters stay inside the frame at `aspect` (width / height), with room for the HUD above and the
+ * controls below. `factor` > 1 is a gentler zoom, `wide` (m) widens each character (a rider and the vehicle).
  */
-export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1): number {
+export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1, yaw: number = EMOTE_CAM.yaw, wide = 0): number {
   const mx = hasQ ? (px + qx) / 2 : px, mz = hasQ ? (pz + qz) / 2 : pz, my = (hasQ ? (py + qy) / 2 : py) + EMOTE_CAM.targetLift;
-  // Half the characters' spread across the screen (the camera's right vector is (cos yaw, 0, -sin yaw)) plus their own half width.
-  const spread = hasQ ? Math.abs((qx - px) * Math.cos(EMOTE_CAM.yaw) - (qz - pz) * Math.sin(EMOTE_CAM.yaw)) / 2 : 0;
-  const rise = hasQ ? Math.abs(qy - py) / 2 : 0;
-  // The nearer character sits closer to the camera (bigger, lower on screen): add their depth offset.
-  const fwd = hasQ ? Math.abs((qx - px) * Math.sin(EMOTE_CAM.yaw) + (qz - pz) * Math.cos(EMOTE_CAM.yaw)) / 2 : 0;
-  const dv = (EMOTE_CAM.halfHeight + rise + fwd * .5) / TAN_V + fwd, dh = (spread + EMOTE_CAM.halfWidth) * 1.1 / (TAN_V * Math.max(.3, aspect)) + fwd;
-  const dist = Math.min(EMOTE_CAM.maxDist, Math.max(EMOTE_CAM.minDist, dv, dh)) * Math.max(1, factor);
+  const sy = Math.sin(yaw), cy = Math.cos(yaw), dx0 = sy * COS_P, dz0 = cy * COS_P, hw = EMOTE_CAM.halfWidth + wide, a = Math.max(.3, aspect);
+  let need: number = EMOTE_CAM.minDist;
+  for (let c = 0; c < (hasQ ? 2 : 1); c++) {
+    const ox = (c ? qx : px) - mx, oz = (c ? qz : pz) - mz, oy = (c ? qy : py) - (my - EMOTE_CAM.targetLift);
+    for (let i = 0; i < 4; i++) {
+      const side = i & 1 ? 1 : -1, y = (i & 2 ? EMOTE_CAM.top : EMOTE_CAM.feet) - EMOTE_CAM.targetLift + oy;
+      const dx = ox + side * hw * cy, dz = oz - side * hw * sy; // the character's width along the camera's right vector
+      const right = dx * cy - dz * sy, up = y * COS_P - (dx * sy + dz * cy) * SIN_P, dot = dx * dx0 + y * SIN_P + dz * dz0;
+      need = Math.max(need, Math.abs(right) * EMOTE_CAM.marginH / (TAN_V * a) + dot, Math.abs(up) * EMOTE_CAM.marginV / TAN_V + dot);
+    }
+  }
+  const dist = Math.min(EMOTE_CAM.maxDist, need) * Math.max(1, factor);
   out.target.x = mx; out.target.y = my; out.target.z = mz;
-  out.eye.x = mx + DIR.x * dist; out.eye.y = my + DIR.y * dist; out.eye.z = mz + DIR.z * dist;
+  out.eye.x = mx + dx0 * dist; out.eye.y = my + SIN_P * dist; out.eye.z = mz + dz0 * dist;
   return dist;
 }
 
-/** Does a point at offset (dx, dy, dz) from the camera target land inside the frame at `dist` / `aspect`? */
-export function insideFrame(dx: number, dy: number, dz: number, dist: number, aspect: number): boolean {
-  const right = dx * Math.cos(EMOTE_CAM.yaw) - dz * Math.sin(EMOTE_CAM.yaw);
-  const up = dy * Math.cos(EMOTE_CAM.pitch) - (dx * Math.sin(EMOTE_CAM.yaw) + dz * Math.cos(EMOTE_CAM.yaw)) * Math.sin(EMOTE_CAM.pitch);
-  const depth = dist - (dx * DIR.x + dy * DIR.y + dz * DIR.z);
+/** The heading (rad) that frames the pair closest: the default three-quarter view, or up to ~1.6 rad around it when that fits a closer shot (the pair side by side on a portrait phone). */
+export function bestEmoteYaw(px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, wide = 0): number {
+  if (!hasQ) return EMOTE_CAM.yaw;
+  const o = {eye: {x: 0, y: 0, z: 0}, target: {x: 0, y: 0, z: 0}};
+  let best: number = EMOTE_CAM.yaw, bestScore = Infinity;
+  for (let i = -8; i <= 8; i++) {
+    const yaw = EMOTE_CAM.yaw + i * .2, score = frameEmote(o, px, py, pz, true, qx, qy, qz, aspect, 1, yaw, wide) + Math.abs(i) * .35
+      + .9 * Math.abs((qx - px) * Math.sin(yaw) + (qz - pz) * Math.cos(yaw)); // one character in front of the other is bigger and hides it: prefer side by side
+    if (score < bestScore) { bestScore = score; best = yaw; }
+  }
+  return best;
+}
+
+/** Does a point at offset (dx, dy, dz) from the camera target land inside the frame at `dist` / `aspect` (heading `yaw`)? */
+export function insideFrame(dx: number, dy: number, dz: number, dist: number, aspect: number, yaw: number = EMOTE_CAM.yaw): boolean {
+  const sy = Math.sin(yaw), cy = Math.cos(yaw);
+  const right = dx * cy - dz * sy;
+  const up = dy * COS_P - (dx * sy + dz * cy) * SIN_P;
+  const depth = dist - (dx * sy * COS_P + dy * SIN_P + dz * cy * COS_P);
   if (depth <= .1) return false;
   return Math.abs(right) <= depth * TAN_V * aspect && Math.abs(up) <= depth * TAN_V;
 }
@@ -61,7 +82,10 @@ export function insideFrame(dx: number, dy: number, dz: number, dist: number, as
 export interface EmoteCamState {
   reduced: boolean;
   /** Anything but walking on foot: a ride, a vehicle, a zipline. */
-  riding: boolean; swimming: boolean; flying: boolean;
+  riding: boolean;
+  /** On a scooter, bike or moped (a ground ride): emotes work; `rideSpeed` m/s, `steer` rad/s (turn rate), `rideChanged` = dismounted / changed ride since the emote began. */
+  onRide: boolean; rideSpeed: number; steer: number; rideChanged: boolean;
+  swimming: boolean; flying: boolean;
   inJob: boolean; cutscene: boolean; lesson: boolean;
   /** A menu, dialog, map, shop or the Explore room is open (Town's `active` is false). */
   menuOpen: boolean;
@@ -80,6 +104,12 @@ export function emoteCamBlocked(s: EmoteCamState): string {
   if (s.cutscene) return 'cutscene';
   if (s.lesson) return 'lesson';
   if (s.menuOpen) return 'menu';
+  if (s.onRide) {
+    if (s.rideChanged) return 'dismount';
+    if (s.rideSpeed > EMOTE_CAM.rideMaxSpeed) return 'fast';
+    if (s.steer > EMOTE_CAM.rideSteer) return 'steering';
+    return '';
+  }
   if (s.moving) return 'moving';
   return '';
 }
