@@ -1,8 +1,13 @@
-# Futbol Island party relay (Phase 0: written, not deployed). No secrets, no vars.
+# Futbol Island party relay (Phase 0: written, not deployed). No secrets.
+# MP_ALLOWED_ORIGINS: comma-separated exact origins (one `*` per entry = one label chunk), e.g. add the team's preview pattern.
+# MP_DEV=1 only for local `wrangler dev` (allows localhost and a missing Origin).
 name = "futbol-party-relay"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 workers_dev = true
+
+[vars]
+MP_ALLOWED_ORIGINS = "https://futbolisland.app,https://www.futbolisland.app"
 
 [[durable_objects.bindings]]
 name = "PARTY"

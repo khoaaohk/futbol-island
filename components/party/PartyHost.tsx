@@ -4,7 +4,7 @@ import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { bindConnection, multiplayerEnabled, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
+import { bindConnection, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { ErrorCode, Zone, type Emote, type Look } from '../../multiplayer/protocol';
@@ -76,6 +76,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const [muted, setMuted] = useState<ReadonlySet<number>>(new Set());
   const [queue, setQueue] = useState<Note[]>([]);
   const [shown, setShown] = useState<string | null>(null);
+  const [kickPrompt, setKickPrompt] = useState(false);
+  const everLive = useRef(false);
   const track = useRef(onTrack); track.current = onTrack;
   const joining = useRef<'host' | 'guest' | null>(null);
   const prevIds = useRef<Set<number> | null>(null);
@@ -132,6 +134,17 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       prevIds.current = null; setView('none'); setEmotesOpen(false); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.members.length, text]);
+  useEffect(() => {
+    if (live) everLive.current = true;
+    if (!live) setKickPrompt(false);
+  }, [live]);
+  useEffect(() => {
+    // Kicked: the connection ends in status 'error' (not 'ended'), so the "left" note is raised here (review #16).
+    if (state.error !== ErrorCode.Kicked || !everLive.current) return;
+    everLive.current = false;
+    track.current?.('mp_party_ended'); text('You left the party');
+    prevIds.current = null; setView('none'); setEmotesOpen(false); setConfirmEnd(false);
+  }, [state.error, text]);
   useEffect(() => {
     if (state.error === null || state.error === ErrorCode.Kicked) return;
     if (!joining.current) return;
@@ -236,14 +249,22 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                   {m.isHost && <span className={styles.badge}>Host</span>}
                   <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${m.name}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
                   <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${m.name}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>
-                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${m.name}`} onClick={() => connection.host.kick(m.id)}><Icon name="close" size={20} /></button>}
+                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${m.name}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); }}><Icon name="close" size={20} /></button>}
                 </li>
               ))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
             </ul>
+            {kickPrompt && state.isHost && (
+              <div className={styles.stack} data-party-kick-prompt>
+                <p className={styles.small}>Friend removed. Keep others out?</p>
+                <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code'); setKickPrompt(false); }}><Icon name="rotate" size={20} /> New code</button>
+                <button type="button" className={styles.secondary} onClick={() => { connection.host.lock(true); partyStore.setLocked(true); setKickPrompt(false); }}><Glyph name="lock" size={20} /> Lock party</button>
+                <button type="button" className={styles.ghost} onClick={() => setKickPrompt(false)}>Not now</button>
+              </div>
+            )}
             <div className={styles.stack}>
               {state.isHost && state.code && <button type="button" className={styles.primary} onClick={() => setView('invite')}><Glyph name="link" size={20} /> Invite</button>}
-              {state.isHost && <button type="button" className={styles.secondary} aria-pressed={state.locked} onClick={() => connection.host.lock(!state.locked)}><Glyph name="lock" size={20} /> {state.locked ? 'Party is locked' : 'Lock party'}</button>}
+              {state.isHost && <button type="button" className={styles.secondary} aria-pressed={state.locked} onClick={() => { connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }}><Glyph name="lock" size={20} /> {state.locked ? 'Party is locked' : 'Lock party'}</button>}
               {state.isHost && <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code'); }}><Icon name="rotate" size={20} /> New code</button>}
               {state.isHost && (confirmEnd
                 ? <button type="button" className={styles.secondary} onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>

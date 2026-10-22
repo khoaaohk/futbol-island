@@ -118,5 +118,10 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/Play with friends: \{friendsAllowed\?'Allowed':'Off'\}/.test(sett)&&/parentGatePassed\(\)\)setMultiplayerAllowed/.test(sett)&&/<ParentGate/.test(sett),'gated toggle');
   assert(/fi2-multiplayer-allowed-v1/.test(pa)&&/function Allowed/.test(host)&&/if \(!allowed\) return null/.test(host),'PartyHost returns null when Off');
  });}
+ t('kick prompt, optimistic lock, Kicked note (#5 #6 #16)',()=>{
+  assert(/setKickPrompt\(true\)/.test(host)&&/data-party-kick-prompt/.test(host)&&/New code/.test(host.slice(host.indexOf('data-party-kick-prompt')))&&/Lock party/.test(host.slice(host.indexOf('data-party-kick-prompt'))),'post-kick New code / Lock prompt');
+  assert(/connection\.host\.lock\(!state\.locked\); partyStore\.setLocked\(!state\.locked\)/.test(host),'host lock updates the store at once');
+  assert(/state\.error !== ErrorCode\.Kicked \|\| !everLive\.current/.test(host)&&/text\('You left the party'\)/.test(host),'Kicked raises the left note');
+ });
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});

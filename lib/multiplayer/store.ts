@@ -91,6 +91,8 @@ export const partyStore = {
         return; // Beat
     }
   },
+  /** Optimistic: the host sees "locked" at once (the relay sends no echo). */
+  setLocked(locked: boolean): void { if (state.locked !== locked) set({ ...state, locked }); },
   reset(): void { set(initial()); },
 };
 

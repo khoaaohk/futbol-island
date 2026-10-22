@@ -9,6 +9,8 @@ declare global {
     delete(key: string): Promise<boolean>;
     setAlarm(scheduledTime: number): Promise<void>;
     deleteAlarm(): Promise<void>;
+    getAlarm(): Promise<number | null>;
+    deleteAll(): Promise<void>;
   }
   interface HibernatableWebSocket extends WebSocket {
     serializeAttachment(value: unknown): void;

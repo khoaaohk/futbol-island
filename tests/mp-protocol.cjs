@@ -165,9 +165,13 @@ t('purity: protocol imports only sibling files, no DOM/Node APIs',()=>{
   const dir=path.join(ROOT,'multiplayer/protocol');
   for(const f of fs.readdirSync(dir)){
     const s=fs.readFileSync(path.join(dir,f),'utf8');
-    for(const m of s.matchAll(/(?:from|require\()\s*['"]([^'"]+)['"]/g))assert.match(m[1],/^\.\/[a-z]+$/,f+' imports '+m[1]);
+    for(const m of s.matchAll(/(?:from|require\()\s*['"]([^'"]+)['"]/g))assert.match(m[1],/^\.\/[a-z0-9]+$/,f+' imports '+m[1]);
     assert.doesNotMatch(s,/\b(window|document|process|Buffer|TextEncoder|crypto)\b\s*[.(]/,f);
   }
+});
+
+t('sha256Hex matches node crypto (host key digest, review #14)',()=>{
+  for(const x of ['','abc','h\u00e9llo \u{1F600}','x'.repeat(100),'y'.repeat(55),'z'.repeat(56),'q'.repeat(64)])assert.equal(P.sha256Hex(x),crypto.createHash('sha256').update(x).digest('hex'));
 });
 
 console.log('mp-protocol: '+n+' groups passed');
