@@ -15,4 +15,4 @@ class_name = "PartyRoom"
 
 [[migrations]]
 tag = "v1"
-new_classes = ["PartyRoom"]
+new_sqlite_classes = ["PartyRoom"] # SQLite-backed Durable Object: the only kind the Workers Free plan allows (Oct 22 2026)
