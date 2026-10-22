@@ -581,9 +581,9 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 /* One coin look everywhere (Oct 13 2026, user): the Kit Shop's CoinPill coin. Face + rim used by every coin icon. */
 :root{--coin-face:radial-gradient(circle at 35% 35%,#ffe58a,#f2c230 60%,#c99a12);--coin-rim:inset 0 0 0 2px rgba(150,110,0,.35)}
 :root{--island-control-face:var(--btn-gold) var(--btn-grain);--island-control-shadow:var(--btn-shadow-gold)}
-:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]){background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;border-radius:50%;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
-:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]):active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40!important}
-@media(prefers-reduced-motion:reduce){:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,button[aria-label*="radar" i]){transition:none}}
+:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,.touch-emote,button[aria-label*="radar" i]){background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;border-radius:50%;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
+:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,.touch-emote,button[aria-label*="radar" i]):active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40!important}
+@media(prefers-reduced-motion:reduce){:is(.town-app,[data-arcade-room],[data-konbini-room]) :is(.travel-mode,.minimap-toggle,.touch-shoot,.touch-juggle,.touch-emote,button[aria-label*="radar" i]){transition:none}}
 /* Close controls follow the same gold control treatment. */
 .town-app button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Done"]){background:var(--island-control-face)!important;background-blend-mode:soft-light;color:#244d40!important;border:3px solid #fff2cd!important;box-shadow:var(--island-control-shadow)!important;transition:translate .16s,box-shadow .16s}
 .town-app button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Done"]):active{translate:0 3px;box-shadow:0 2px 0 #a8863d!important}
@@ -800,3 +800,38 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .catch-stage-fade[data-look=sunset]{background:#ffe4c4}.catch-stage-fade[data-look=night]{background:#2b3d78}
 .catch-stage-fade[hidden],.catch-stage-label[hidden]{display:none}
 .catch-stage-label{position:absolute;left:0;top:0;z-index:2;pointer-events:none;padding:7px 14px;border-radius:999px;background:#fff8e6;color:#2b4a3e;font:400 19px/1.1 IslandBrush,Arial,sans-serif;box-shadow:0 3px 0 rgba(43,74,62,.25);white-space:nowrap}
+
+/* Island action grid with the Emote button (user, Oct 22 2026): ALWAYS 2 x 2, Fly (the ride button) top-left, Emote top-right, the
+ * two action buttons below (juggle-side left, kick-side right). Scoped to the island's cluster by [data-emote-grid] (the Arcade and
+ * Konbini rooms reuse .travel-actions unchanged). On phones the map toggle sits just left of the grid (above it on a 320 px phone,
+ * where the joystick would touch it); on desktop it stays at the lower left. The wheel opens upward and never covers the grid. */
+.emote-control{display:contents}
+.town-app .travel-actions[data-emote-grid] .touch-emote{position:static;display:grid;place-items:center;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);padding:4px;border-radius:50%;border:1px solid #ecdfb5;background:#f4cc7c;color:#244d40;box-shadow:2px 3px 0 #17352b38;touch-action:manipulation;grid-column:2;grid-row:1;z-index:1}
+.town-app .travel-actions[data-emote-grid] .touch-emote[aria-expanded=true]{background-color:#fff0c3!important}
+.town-app .travel-actions[data-emote-grid]{display:grid;grid-template-columns:var(--action-size) var(--action-size);grid-template-rows:var(--action-size) var(--action-size);gap:12px;align-items:center;justify-items:center;transition:none}
+.town-app .travel-actions[data-emote-grid] .travel-mode{grid-column:1;grid-row:1;justify-self:center}
+.town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:1;grid-row:2;justify-self:center}
+.town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
+@media(max-width:600px),(pointer:coarse){
+ .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:absolute;grid-column:auto;grid-row:auto;top:0;right:calc(100% + 12px);left:auto;bottom:auto;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);margin:0}
+ .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{right:auto;left:calc(100% + 12px)}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 152px)}
+}
+@media(max-width:350px){
+ .town-app .travel-actions[data-emote-grid] .minimap-toggle{top:auto;right:0;bottom:calc(100% + 12px)}
+ .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{right:auto;left:0}
+ .town-app .travel-actions[data-emote-grid]{--wheel-lift:calc(var(--action-size) + 12px)}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 212px)}
+}
+@media(min-width:601px) and (pointer:fine){
+ .town-app .travel-actions[data-emote-grid]{grid-template-columns:repeat(2,var(--action-size));grid-template-rows:repeat(2,var(--action-size));gap:12px;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px}
+ .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:fixed;grid-column:auto;grid-row:auto}
+}
+.emote-wheel{position:absolute;z-index:12;right:0;bottom:calc(100% + 12px + var(--wheel-lift,0px));display:flex;gap:8px;padding:8px;border:3px solid #fff2cd;border-radius:34px;background:#fff6dd;box-shadow:0 4px 0 #b8923f55;animation:emoteIn .16s ease-out}
+.controls-flipped .emote-wheel{right:auto;left:0}
+.emote-wheel-btn{display:grid;place-items:center;width:52px;height:52px;min-width:44px;min-height:44px;padding:0;border-radius:50%;border:3px solid #fff2cd;background:var(--btn-gold) var(--btn-grain);background-blend-mode:soft-light;color:#244d40;box-shadow:0 4px 0 #b8923f;cursor:pointer;touch-action:manipulation;transition:translate .12s,box-shadow .12s}
+.emote-wheel-btn:active{translate:0 3px;box-shadow:0 1px 0 #b8923f}
+.emote-wheel-btn:focus-visible,.touch-emote:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.town-app[data-job-camera] :is(.touch-emote,.emote-wheel){visibility:hidden;pointer-events:none}
+@keyframes emoteIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.emote-wheel{animation:none}.emote-wheel-btn{transition:none}}

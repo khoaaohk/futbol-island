@@ -7,8 +7,7 @@ import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplay
 import { bindConnection, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
-import { ErrorCode, Zone, type Emote, type Look } from '../../multiplayer/protocol';
-import EmoteWheel from './EmoteWheel';
+import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
@@ -42,7 +41,7 @@ function Card({ children, onClose, label }: { children: ReactNode; onClose: () =
 
 /**
  * Town mounts this once, behind the flag. Owns: the Play with friends card (create / join), the parent gates, the invite card,
- * the party chip + sheet + emote wheel, and the join / leave notes (toastLane, note priority). Open the card from anywhere with
+ * the party chip + sheet, and the join / leave notes (toastLane, note priority). Open the card from anywhere with
  * `openPartyMenu()` (lib/multiplayer/invite.ts). Returns null when the flag is off.
  */
 export default function PartyHost(props: {
@@ -70,7 +69,6 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const [joinCode, setJoinCode] = useState('');
   const [joinMsg, setJoinMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [emotesOpen, setEmotesOpen] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [hidden, setHidden] = useState<ReadonlySet<number>>(new Set());
   const [muted, setMuted] = useState<ReadonlySet<number>>(new Set());
@@ -131,7 +129,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     }
     if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
       if (was === 'live' || was === 'reconnecting') { track.current?.('mp_party_ended'); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
-      prevIds.current = null; setView('none'); setEmotesOpen(false); setConfirmEnd(false);
+      prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.members.length, text]);
   useEffect(() => {
@@ -143,7 +141,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (state.error !== ErrorCode.Kicked || !everLive.current) return;
     everLive.current = false;
     track.current?.('mp_party_ended'); text('You left the party');
-    prevIds.current = null; setView('none'); setEmotesOpen(false); setConfirmEnd(false);
+    prevIds.current = null; setView('none'); setConfirmEnd(false);
   }, [state.error, text]);
   useEffect(() => {
     if (state.error === null || state.error === ErrorCode.Kicked) return;
@@ -204,8 +202,6 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       {live && (
         <div className={styles.corner} data-party-corner>
           <PartyChip count={state.members.length} reconnecting={state.status === 'reconnecting'} open={view === 'sheet'} onClick={() => setView(view === 'sheet' ? 'none' : 'sheet')} />
-          <button type="button" className={styles.round} data-party-emotes aria-label="Emotes" aria-expanded={emotesOpen} onClick={() => setEmotesOpen((o) => !o)}><Glyph name="hand" size={22} /></button>
-          {emotesOpen && <EmoteWheel onPick={(e: Emote) => { connection.sendEmote(e); }} onClose={() => setEmotesOpen(false)} />}
         </div>
       )}
       {shown && <p className={styles.toast} role="status" data-party-toast>{shown}</p>}
