@@ -3,8 +3,9 @@
 import { useSyncExternalStore } from 'react';
 import { S, nameFor, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
 import type { PartyStatus } from './connection';
+import { animalGlyph, colourHex } from './names';
 
-export type Member = { id: MemberId; name: string; look: Look; isHost: boolean; zone: Zone; away: boolean };
+export type Member = { id: MemberId; name: string; colourIdx: number; animalIdx: number; colourHex: string; animalGlyph: string; look: Look; isHost: boolean; zone: Zone; away: boolean };
 export type PartyState = {
   status: PartyStatus; code: string | null; codeExpiresAt: number; you: MemberId | null; isHost: boolean; locked: boolean;
   members: Member[]; lastEmote: { id: MemberId; emote: Emote; at: number } | null;
@@ -19,7 +20,7 @@ const initial = (): PartyState => ({
 
 function toMember(m: MemberInfo): Member {
   const pose = m[4];
-  return { id: m[0], name: nameFor(m[1]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false };
+  return { id: m[0], name: nameFor(m[1]), colourIdx: m[1][0], animalIdx: m[1][1], colourHex: colourHex(m[1][0]), animalGlyph: animalGlyph(m[1][1]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false };
 }
 
 let state: PartyState = initial();

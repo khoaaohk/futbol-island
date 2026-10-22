@@ -115,6 +115,35 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   assert.equal(room.info().size, 2);
   void ida;
 }
+// identity: colours unique across 6 joins (best-separated first), animal honoured, invalid ignored, resume keeps the name
+{
+  const { room } = mk();
+  const helloA = (animal, resume = null, hostKey = null) => { const p = peer(); room.connect(p); room.message(p, JSON.stringify(animal === undefined ? [C.Hello, PROTOCOL_VERSION, LOOK, resume, hostKey] : [C.Hello, PROTOCOL_VERSION, LOOK, resume, hostKey, animal])); return p; };
+  const ps = [helloA(3, null, room.hostKey), helloA(3), helloA(undefined), helloA(null), helloA(31), helloA(7)];
+  const ws = ps.map(welcome);
+  const mine = (w) => w[7].find((m) => m[0] === w[2])[1];
+  const names = ws.map(mine);
+  assert.equal(new Set(names.map((n) => n[0])).size, PARTY_MAX, 'colours unique across 6 joins');
+  assert.deepEqual(names.map((n) => n[0]), P.COLOUR_ORDER.slice(0, PARTY_MAX), 'best-separated colours first');
+  assert.equal(names[0][1], 3); assert.equal(names[1][1], 3, 'same animal allowed for two kids');
+  assert.equal(names[4][1], 31); assert.equal(names[5][1], 7);
+  assert.ok(names[2][1] >= 0 && names[2][1] < 32 && names[3][1] >= 0, 'absent / null animal -> random valid animal');
+  // an invalid animal never reaches the room: the Hello is a bad message
+  const bad = peer(); room.connect(bad); room.message(bad, JSON.stringify([C.Hello, PROTOCOL_VERSION, LOOK, null, null, 99]));
+  assert.ok(bad.closed, 'out-of-range animal is refused (BadMessages), not honoured');
+  // a leaver frees their colour
+  send(room, ps[1], [C.Leave]);
+  const again = helloA(5); assert.equal(mine(welcome(again))[0], names[1][0], 'freed colour is reused'); assert.equal(mine(welcome(again))[1], 5);
+  // resume keeps colour + animal even if the Hello carries a different wish
+  room.disconnect(ps[4]);
+  const back = helloA(0, ws[4][3]);
+  assert.deepEqual(mine(welcome(back)), names[4], 'resume keeps the same name');
+}
+// pickNameWith directly: invalid wish ignored, deterministic colour
+{
+  assert.deepEqual(JSON.parse(JSON.stringify(P.pickNameWith([], () => 0.5, 99))), [P.COLOUR_ORDER[0], 16], 'invalid animal ignored -> random');
+  assert.deepEqual(JSON.parse(JSON.stringify(P.pickNameWith([[P.COLOUR_ORDER[0], 2]], () => 0, 9))), [P.COLOUR_ORDER[1], 9]);
+}
 // resume within 60 s keeps id and name; after 60 s the slot is gone (Left/Timeout)
 {
   const { clock, room } = mk();

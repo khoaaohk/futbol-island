@@ -44,7 +44,8 @@ export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1
 // client -> server
 export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9 } as const;
 export type C = (typeof C)[keyof typeof C];
-export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null];
+export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
+  animal?: number | null]; // animal: optional trailing index into NAME_ANIMALS (absent / null = random); old 5-element Hello still valid
 export type CPose = [typeof C.Pose, seq: number, ...body: PoseBody];
 export type CEmote = [typeof C.Emote, emote: Emote];
 export type CPing = [typeof C.Ping, kind: PingKind, x_dm: number, z_dm: number];

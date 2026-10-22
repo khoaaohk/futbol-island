@@ -80,6 +80,54 @@ function harness(){
  h.avatars.upsert(2,look,'Blue Fox');assert.equal(h.state.created,1,'saver: cap 0 admits nobody new');
 }
 
+// 2b. colour rings: ONE instanced mesh, colour per member, hidden with the avatar, local ring only when asked
+{
+ const h=harness(),look=new Array(12).fill(0),ringsOf=()=>h.avatars.root.children.filter(o=>o.name==='remote-avatar-rings');
+ assert.equal(ringsOf().length,1,'one ring mesh in the whole remote layer');
+ const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===8,'instanced, capacity 8');
+ assert.equal(ring.castShadow,false);assert.equal(ring.frustumCulled,false);
+ h.avatars.upsert(1,look,'Blue Fox',{hex:'#0072B2',glyph:'F'});h.avatars.upsert(2,look,'Orange Owl',{hex:'#E69F00',glyph:'O'});
+ h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(ring.count,2,'a ring per shown friend');
+ const c=new T.Color(),c0=new T.Color(),c1=new T.Color();ring.getColorAt(0,c0);ring.getColorAt(1,c1);
+ assert.equal(c0.getHexString(),new T.Color('#0072B2').getHexString(),'ring 0 = member 1 colour');assert.equal(c1.getHexString(),new T.Color('#E69F00').getHexString(),'ring 1 = member 2 colour');
+ // ring sits at the feet and grows with camera distance (capped 4x)
+ const m=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),s=new T.Vector3();
+ ring.getMatrixAt(0,m);m.decompose(p,q,s);assert.ok(Math.abs(p.x-(-1))<1e-6&&p.y>0&&p.y<.2,'flat at the avatar feet');const near=s.x;
+ h.camera.position.set(0,5,80);h.camera.lookAt(0,0,0);h.avatars.update(.016,h.poses,h.camera,false);
+ ring.getMatrixAt(0,m);m.decompose(p,q,s);assert.ok(s.x>near*2.5&&s.x<=.55*4+1e-6,'bigger from far, capped at 4x');
+ // hidden when culled (behind the camera), too far, or Battery saver
+ h.camera.position.set(0,5,10);h.camera.lookAt(0,0,0);
+ h.poses.set(1,{x:500,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1});h.avatars.update(.016,h.poses,h.camera,false);assert.equal(ring.count,1,'beyond 160 m: no ring');
+ h.poses.set(1,{x:0,y:0,z:400,yaw:0,speed:0,mode:13,zone:0,fade:1});h.avatars.update(.016,h.poses,h.camera,false);assert.equal(ring.count,1,'off screen: no ring');
+ h.all([1,2]);
+ // the local ring: only when passed, in its own colour, counted in the same mesh
+ const local={x:3,y:0,z:0,hex:'#009E73'};
+ h.avatars.update(.016,h.poses,h.camera,false,local);assert.equal(ring.count,3,'friends + local in the same mesh');
+ ring.getColorAt(2,c);assert.equal(c.getHexString(),new T.Color('#009E73').getHexString(),'local ring colour');
+ h.avatars.update(.016,h.poses,h.camera,false,null);assert.equal(ring.count,2,'no local ring when null');
+ h.state.saver=true;for(let i=0;i<4;i++)h.avatars.update(.5,h.poses,h.camera,false,local);assert.equal(ring.count,0,'Battery saver: no rings at all');
+ h.state.saver=false;
+ // before any friend exists the local ring still shows (host alone in a live party)
+ const h2=harness();const r2=h2.avatars.root.children.find(o=>o.name==='remote-avatar-rings');
+ h2.avatars.update(.016,h2.poses,h2.camera,false,{x:0,y:0,z:0,hex:'#0072B2'});assert.equal(r2.count,1);
+ h2.avatars.update(.016,h2.poses,h2.camera,false);assert.equal(r2.count,0);
+ h2.avatars.dispose();h.avatars.dispose();
+}
+// source scan: update() allocates nothing per frame (no `new`, no object / array literals, no closures), one extra draw call
+{
+ const src=read('lib/graphics/remoteAvatars.ts'),body=src.slice(src.indexOf('update(dt,poses,camera,reduced,local){'),src.indexOf('dispose(){'));
+ const ring=src.slice(src.indexOf('function ringAdd'),src.indexOf('const labels='));
+ assert.ok(body.length>500);
+ for(const [what,b] of [['update',body],['ringAdd',ring]]){assert(!/\bnew\s/.test(b),what+' allocates nothing (no new)');assert(!/\.clone\(|\.map\(|\.filter\(|=>\s*\{?[^;]*\}/.test(b.replace(/=>\s*\{\s*\}/g,'')),what+' no closures / array copies');}
+ assert.equal((src.match(/new T\.InstancedMesh/g)||[]).length,1,'exactly one instanced ring mesh');
+ assert(/RING_CAPACITY=8/.test(src)&&/castShadow=false/.test(src.slice(src.indexOf('rings.name'),src.indexOf('rings.name')+300)),'capacity 8, no shadows');
+ assert(/polygonOffset/.test(src)&&!/new T\.(Sprite|Mesh)\([^)]*ring/i.test(src),'no per-friend ring meshes');
+ const bridge=read('lib/multiplayer/townBridge.ts');
+ assert(/conn\.status === 'live' && meHex !== ''/.test(bridge)&&/showRing \? ring : null/.test(bridge),'local ring only while live');
+ assert(/glyph:\s*m\.animalGlyph/.test(bridge),'label gets the glyph and colour');
+}
+
 // 3. sources: no shadow registration, one batch (capacity 8), no forbidden imports
 const files=['lib/graphics/remoteAvatars.ts','lib/multiplayer/townBridge.ts'];
 for(const f of files){

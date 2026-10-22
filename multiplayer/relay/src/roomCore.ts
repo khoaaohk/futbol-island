@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
-  parseClient, encode, clampPose, speedOk, generateCode, pickName, sha256Hex,
+  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex,
 } from '../../protocol';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
@@ -254,7 +254,7 @@ export class RoomCore {
 
   // ---- internals ----
   private hello(peer: Peer, msg: ClientMsg, now: number): void {
-    const [, v, look, resumeToken, hostKey] = msg as [number, number, number[], string | null, string | null];
+    const [, v, look, resumeToken, hostKey, animal] = msg as [number, number, number[], string | null, string | null, (number | null)?];
     if (v !== PROTOCOL_VERSION) return this.refuse(peer, ErrorCode.BadVersion);
     if (now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
     const viaRetired = this.retiredPeers.delete(peer);
@@ -288,7 +288,7 @@ export class RoomCore {
     const r = this.random(4);
     const rnd = () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
     const id = this.freeId();
-    const m = this.newMember(id, pickName(taken, rnd), look, b64url(this.random(16)), this.joinSeq++, peer, now);
+    const m = this.newMember(id, pickNameWith(taken, rnd, animal ?? null), look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }

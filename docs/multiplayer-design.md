@@ -30,7 +30,7 @@ walk/ride/swim around together, send preset emotes and "meet here / follow me" p
 on top: no collision, no shared objects, no effect on anyone's save. The server owns only party membership and the latest pose.
 
 **v1 non-goals (explicit):**
-- free text chat, voice chat, typed or chosen names, custom signs;
+- free text chat, voice chat, typed names, custom signs (the kid may pick an animal icon from a fixed list; see Identity below);
 - global/public lobbies, matchmaking with strangers, browsing parties;
 - persistent friend lists (Phase 4, parent-approved only);
 - competitive PvP, scores against each other;
@@ -71,7 +71,8 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 | Element | v1 behaviour |
 |---|---|
 | Friend avatar | Their bean + kit colours + hair/headwear (look indexes on join). Costumes: base bean in v1 (Phase 2 if assets loaded). |
-| Name label | Auto-generated, nameless, friendly: colour + animal ("Red Zebra"), assigned by the server, unique in the party, new each party. Small label above the head, hidden beyond 40 m. |
+| Name label | Friendly, never typed: colour + animal ("Red Zebra"). The COLOUR is assigned by the server and is unique in the party (handed out in a fixed best-separated order, `COLOUR_ORDER`, so a party of 6 always gets the six most distinguishable colours, also for colour-blind kids). The ANIMAL is the kid's pick from a fixed list of 16 icons in the join / start card (an index into the 32 reviewed `NAME_ANIMALS`; `Hello` field `animal`, optional, null / absent = "Surprise me" = random); two kids may share an animal, the colour keeps names unique. New each party. Small label above the head (animal glyph, coloured dot and rim), hidden beyond 40 m. |
+| Colour ring | One instanced ring (capacity 8, no shadows) on the ground under each shown friend and under the local player while the party is live, in the member's colour; it grows with camera distance (up to 4x) so friends can be found from far away, pulses briefly on an emote, and is hidden with the avatar (culled, > 160 m, Battery saver). The party sheet shows the same colour as a dot beside the animal glyph and name. |
 | Movement | Walk/run/ride poses from mode + speed; vehicles drawn as pose only in v1 (merged ride proxies in Phase 2). |
 | Emotes | Preset only: wave, cheer, high-five, "Pass to me!", "Space!", "Well played!". Reuse `PlayerMotion.called`, celebrations, `setExpression`. |
 | Pings | "Meet here" (a pin at my spot for 20 s) and "Follow me" (others get an edge arrow to me for 60 s). |
@@ -290,7 +291,10 @@ export function encode(msg: ClientMsg | ServerMsg): string;    // JSON.stringify
 export function clampPose(body: PoseBody): PoseBody | null;    // null if outside WORLD_BOUNDS / bad enums
 export function speedOk(prev: PoseBody, next: PoseBody, dtMs: number): boolean; // maxSpeed[mode]*1.5*dt + 2 m; Warp bypass max 1 per 5 s (caller tracks)
 export function nameFor(idx: NameIdx): string;                 // 'Red Zebra'
-export function pickName(taken: NameIdx[], rand: () => number): NameIdx;
+export function pickName(taken: NameIdx[], rand: () => number): NameIdx;   // = pickNameWith(taken, rand, null)
+export function pickNameWith(taken: NameIdx[], rand: () => number, animalWanted?: number | null): NameIdx; // free colour first (COLOUR_ORDER), then the wished animal if valid, else random
+export const COLOUR_ORDER: readonly number[]; export const PICKER_ANIMALS: readonly number[]; export function validAnimal(n: unknown): n is number;
+// Hello = [C.Hello, v, look, resumeToken, hostKey, animal?]: the trailing animal (0..31 or null) is optional; the old 5-element Hello still parses; PROTOCOL_VERSION unchanged (1).
 export class TokenBucket { constructor(perSec: number, burst: number); take(nowMs: number): boolean }
 export const RATE: { pose: [8, 12]; emote: [0.5, 2]; ping: [0.33, 2]; control: [1, 3]; closeAbovePerSec: 30;
   emotePerMin: 10 };
@@ -451,8 +455,8 @@ export function remoteCap(tier: HeatTier, phone: boolean, saver: boolean): numbe
 **Players: playing with friends (DRAFT).** "A child can invite friends to play on the same island at the same time, or join a
 friend, after a grown-up answers the grown-up check. They share a 6-character party code, a link or a QR code; the code stops
 accepting new players after 2 hours. While playing together, the other players in that party see the child's character and its
-outfit colours, where it moves on the island and which preset waves or cheers it taps. Each player gets a made-up name like
-'Red Zebra' that changes every party. There is no chat, no typing, no voice and no photos, and players cannot give or trade
+outfit colours, where it moves on the island and which preset waves or cheers it taps. Each player gets a name made of a colour chosen by the game and an animal picked from a fixed list of icons, like
+'Red Zebra', that changes every party. Players pick an animal icon from a fixed list; names are a colour and an animal chosen by the game and the child, never typed. There is no chat, no typing, no voice and no photos, and players cannot give or trade
 anything. We do not ask for or keep names, contact details or friend lists. Our relay (Cloudflare) passes these live positions
 between the players in the party and keeps nothing after the party ends; it uses the device's internet address only for a few
 minutes to stop misuse, and does not store it. A grown-up can turn 'Play with friends' off in Settings."
@@ -505,7 +509,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 2. **Party size cap:** *6* (host + 5).
 3. **Parent gate for joiners too** (not only hosts): *yes*, every create and join (10-min pass).
 4. **Code expiry:** *2 h* for new joins, 4 h party max, host can rotate.
-5. **Names:** auto colour + animal per party ("Red Zebra"), no stable names in v1: *yes*.
+5. **Names:** server-assigned unique colour + kid-picked animal icon from a fixed list (no typing) per party ("Red Zebra"), no stable names in v1: *yes*.
 6. **Default setting:** "Play with friends" *allowed* (each use is gated), lockable off by a grown-up. (Alternative: off until a grown-up turns it on.)
 7. **Identity:** *no identifier at all in v1* (stricter than an install-id hash); revisit for Phase 4.
 8. **Privacy/legal:** have the §5.5 draft and COPPA notes reviewed by counsel before the flag goes on in production; short DPIA.

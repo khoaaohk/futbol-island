@@ -75,6 +75,27 @@ t('readPendingParty: ?party= moves to sessionStorage and leaves the URL; invalid
   href='https://futbolisland.app/?party=K7MQ4R&x=1';I.stripPartyParam();assert(!/party=/.test(href)&&/x=1/.test(href),'stripPartyParam removes it without storing');assert.equal(store.has('fi-party-pending'),false);}
  store.set('fi-party-pending','nope!!');href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null);assert.equal(store.has('fi-party-pending'),false,'a bad stored value is dropped');
 });
+t('animal picker: 12-16 fixed options, no typing, Surprise me, labels, >= 44px, remembered in memory only',()=>{
+ const pk=read('components/party/AnimalPicker.tsx'),pcss=read('components/party/animalPicker.module.css'),P=load(path.join(ROOT,'multiplayer/protocol/names.ts'));
+ assert(P.PICKER_ANIMALS.length>=12&&P.PICKER_ANIMALS.length<=16&&P.PICKER_ANIMALS.every(P.validAnimal),'12-16 valid options');
+ assert(/PICKER_ANIMALS\.map/.test(pk),'options come from the fixed list');
+ assert(!/<input|<textarea|contentEditable/i.test(pk),'no text input');
+ assert(/Surprise me/.test(pk)&&/pick\(null\)/.test(pk),'Surprise me = random (null)');
+ assert(/aria-label=\{`Be a \$\{name\}`\}/.test(pk),"aria-label 'Be a Zebra'");
+ assert(/aria-pressed=\{value === idx\}/.test(pk),'one selection highlighted');
+ assert(/\.animal\{[^}]*width:56px;height:56px/.test(pcss)&&/\.surprise\{[^}]*min-height:44px/.test(pcss),'56px round buttons, >= 44px surprise');
+ assert(/\.animal:focus-visible/.test(pcss)&&/prefers-reduced-motion/.test(pcss),'focus ring, reduced motion');
+ assert(!/localStorage|sessionStorage|document\.cookie/.test(pk),'choice kept in memory only');
+ assert(/<AnimalPicker \/>/.test(join),'join card shows the picker')&&assert(/<AnimalPicker \/>/.test(host),'host start card shows the picker');
+ assert(/animal: getAnimalChoice\(\)/.test(host)&&host.split('animal: getAnimalChoice()').length===3,'create and join both send the choice');
+ const inputs=(join.match(/<input/g)||[]).length;assert.equal(inputs,1,'picker adds no input to the join card');
+});
+t('party sheet rows: coloured dot + animal glyph + name, aria-labels carry the colour',()=>{
+ assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
+ assert(/colourName\(m\.colourIdx\)/.test(host)&&/colourName\(me\.colourIdx\)/.test(host),'aria-label includes the colour');
+ assert(/You \(\{me\.name\}\)/.test(host),"local row says 'You'");
+ assert(/styles\.badge[^<]*Host/.test(host),'host badge stays');
+});
 t('relay calls: offline / not found behave, nothing thrown',async()=>{});
 (async()=>{
  const r=await I.createParty();assert.deepEqual(JSON.parse(JSON.stringify(r)),{error:'offline'});assert.equal(calls[0][0],'http://localhost:8790/party');assert.equal(calls[0][1],'POST');

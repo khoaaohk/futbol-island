@@ -1,14 +1,14 @@
 // Party socket: Hello with look + resume token, backoff reconnect, hidden-tab close, send throttle, heartbeat.
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
-  C, PROTOCOL_VERSION, S, TokenBucket, ErrorCode, encode, normalizeCode, parseServer,
+  C, PROTOCOL_VERSION, S, TokenBucket, ErrorCode, encode, normalizeCode, parseServer, validAnimal,
   type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
 
 export type PartyStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'ended' | 'error';
 export interface PartyConnection {
-  join(code: string, opts: { look: Look; hostKey?: string }): void;
+  join(code: string, opts: { look: Look; hostKey?: string; animal?: number | null }): void;
   sendPose(body: PoseBody, nowMs: number): void;
   sendEmote(e: Emote): boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
@@ -62,6 +62,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let code: string | null = null;
   let look: Look = [];
   let hostKey: string | null = null;
+  let animal: number | null = null;
   let resumeToken: string | null = null;
   let ws: WSLike | null = null;
   let attempt = 0;
@@ -129,7 +130,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     ws = w;
     w.onopen = () => {
       if (ws !== w) return;
-      raw([C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey]);
+      raw(animal === null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey] : [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, animal]);
       scheduleBeat();
     };
     w.onmessage = (ev: { data: unknown }) => {
@@ -246,6 +247,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       const same = sess && sess.code === norm;
       code = norm;
       look = opts.look;
+      animal = validAnimal(opts.animal) ? opts.animal : null;
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;
       resumeToken = same ? sess!.resumeToken : null;
       attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;

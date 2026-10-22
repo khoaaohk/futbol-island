@@ -59,6 +59,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const known = new Set<MemberId>();
   const ids: MemberId[] = [];
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
+  const ring = { x: 0, y: 0, z: 0, hex: '' };
+  let meHex = '';
   let live = false, you: MemberId | null = null, lastEmoteAt = -1, lastX = NaN, lastZ = NaN;
 
   // Membership / status / emotes change rarely: sync here, never per frame.
@@ -68,11 +70,12 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     live = s.status === 'live' || s.status === 'reconnecting';
     const want = live ? s.members : [];
     known.clear();
+    meHex = '';
     for (const m of want) {
-      if (m.id === s.you) continue; // the Welcome roster includes the local player
+      if (m.id === s.you) { meHex = m.colourHex; continue; } // the Welcome roster includes the local player
       known.add(m.id);
       if (!spare.has(m.id)) { spare.set(m.id, { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Idle, zone: Zone.Main, fade: 1 }); ids.push(m.id); }
-      avatars.upsert(m.id, m.look, m.name);
+      avatars.upsert(m.id, m.look, m.name, { hex: m.colourHex, glyph: m.animalGlyph });
     }
     for (let i = ids.length - 1; i >= 0; i--) {
       const id = ids[i];
@@ -95,10 +98,13 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
         const id = ids[i], p = spare.get(id)!;
         if (interp.sample(id, nowMs, p)) { if (!poses.has(id)) poses.set(id, p); } else if (poses.has(id)) poses.delete(id);
       }
-      avatars.update(dt, poses, camera, ctx.reducedMotion());
+      // Me: my own colour ring only while the party is live (a kid sees which colour they are).
+      const l = ctx.local();
+      const showRing = conn.status === 'live' && meHex !== '' && !l.hidden && l.zone !== Zone.Indoors;
+      if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; }
+      avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.
       if (conn.status === 'live') {
-        const l = ctx.local();
         const warp = l.warp || (lastX === lastX && Math.hypot(l.x - lastX, l.z - lastZ) > WARP_M);
         lastX = l.x; lastZ = l.z;
         body[0] = Math.round(l.x * 10); body[1] = Math.round(l.y * 10); body[2] = Math.round(l.z * 10);

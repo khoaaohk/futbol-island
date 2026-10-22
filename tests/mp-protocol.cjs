@@ -54,7 +54,11 @@ t('names',()=>{
   const taken=[];let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
   for(let i=0;i<512;i++){const nm=P.pickName(taken,rnd);assert.ok(!taken.some(x=>x[0]===nm[0]&&x[1]===nm[1]),'dup at '+i);taken.push(nm);}
   assert.equal(P.pickName(taken,rnd).length,2); // all taken -> still returns a pair
-  assert.deepEqual(plain(P.pickName([[0,0]],()=>0)),[0,1]);
+  assert.deepEqual(plain(P.pickName([[0,0]],()=>0)),[P.COLOUR_ORDER[0],0]);
+  // colour order: a permutation of 0..15; the animal picker subset is valid and has 12-16 entries
+  assert.deepEqual([...P.COLOUR_ORDER].sort((a,b)=>a-b),Array.from({length:16},(_,i)=>i));
+  assert.ok(P.PICKER_ANIMALS.length>=12&&P.PICKER_ANIMALS.length<=16&&P.PICKER_ANIMALS.every(P.validAnimal));
+  assert.ok(P.validAnimal(0)&&P.validAnimal(31)&&!P.validAnimal(32)&&!P.validAnimal(-1)&&!P.validAnimal(1.5)&&!P.validAnimal(null)&&!P.validAnimal('3'));
 });
 
 const look=[0,1,2,3,4,5,6,7,8,9,10,63];
@@ -62,7 +66,7 @@ const body=[100,0,-200,128,12,P.Mode.Walk,P.Zone.Main,0];
 const tok='abcdefgh_ijklmnop-1234';
 const name=[3,5];
 const clientSamples=[
-  [P.C.Hello,1,look,null,null],[P.C.Hello,1,look,tok,tok],[P.C.Pose,42,...body],[P.C.Emote,P.Emote.Cheer],[P.C.Ping,P.PingKind.MeetHere,1000,-500],
+  [P.C.Hello,1,look,null,null],[P.C.Hello,1,look,tok,tok],[P.C.Hello,1,look,null,null,null],[P.C.Hello,1,look,null,null,0],[P.C.Hello,1,look,tok,null,31],[P.C.Pose,42,...body],[P.C.Emote,P.Emote.Cheer],[P.C.Ping,P.PingKind.MeetHere,1000,-500],
   [P.C.Kick,3],[P.C.Lock,1],[P.C.Rotate],[P.C.End],[P.C.Leave],[P.C.Beat,123456],
 ];
 const member=[2,name,look,0,body];
@@ -75,12 +79,19 @@ const serverSamples=[
 t('round trip client',()=>{for(const m of clientSamples)assert.deepEqual(plain(P.parseClient(P.encode(m))),m,JSON.stringify(m));});
 t('round trip server',()=>{for(const m of serverSamples)assert.deepEqual(plain(P.parseServer(P.encode(m))),m,JSON.stringify(m));});
 
+t('Hello animal is optional and backward compatible',()=>{
+  const old=P.parseClient(JSON.stringify([0,1,look,null,null]));assert.ok(old&&old.length===5,'old 5-element Hello still parses');
+  assert.deepEqual(plain(P.parseClient(JSON.stringify([0,1,look,null,null,7]))),[0,1,look,null,null,7]);
+  assert.equal(P.PROTOCOL_VERSION,1,'no version bump');
+  for(const bad of [32,-1,2.5,'1',[1],{},true])assert.equal(P.parseClient(JSON.stringify([0,1,look,null,null,bad])),null,JSON.stringify(bad));
+});
+
 t('malformed inputs rejected (client)',()=>{
   const j=JSON.stringify,pose=(...o)=>j([1,1,...o]);
   const bodyWith=(i,v)=>{const b=[...body];b[i]=v;return b;};
   const bad=[
     '', 'null', '{}', '[]', '1', '"x"', 'not json', '[1', '{"0":1}', 'undefined',
-    j([99]), j([-1]), j(['0']), j([0.5]), j([0,1,look,null]), j([0,1,look,null,null,null]),
+    j([99]), j([-1]), j(['0']), j([0.5]), j([0,1,look,null]), j([0,1,look,null,null,32]), j([0,1,look,null,null,-1]), j([0,1,look,null,null,1.5]), j([0,1,look,null,null,'3']), j([0,1,look,null,null,3,0]), j([0,1,look,null,null,[3]]), j([0,1,look,null,null,true]),
     j([0,1.5,look,null,null]), j([0,1,look.slice(1),null,null]), j([0,1,[...look.slice(0,11),64],null,null]), j([0,1,[...look.slice(0,11),-1],null,null]),
     j([0,1,[...look.slice(0,11),1.5],null,null]), j([0,1,look,'short',null]), j([0,1,look,'has space 123456789012',null]), j([0,1,look,tok+tok,null]), j([0,1,look,null,5]),
     j([0,1,look,{a:1},null]),

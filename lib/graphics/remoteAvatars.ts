@@ -5,6 +5,8 @@
 //  - the batched meshes never cast shadows and nothing here is registered with any shadow culling;
 //  - the cap is applied when a friend is ADMITTED (never removes a friend already shown); Battery saver fades everyone out;
 //  - a name label is one Sprite per friend with a CanvasTexture made once on upsert (hidden beyond 40 m);
+//  - ONE instanced colour ring (capacity 8, no shadows, one draw call) lies at each shown friend's feet, and at the local player's
+//    while in a party; the instance colour is the member's name colour, so friends can be told apart from far away;
 //  - update() allocates nothing for ordinary movement (scratch objects are module level / per entry).
 import * as T from 'three';
 import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
@@ -24,17 +26,21 @@ export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
  return tier<=1?5:tier===2?3:tier===3?1:0;
 }
 
+export interface MemberStyle{hex:string;glyph:string}
+export interface LocalRing{x:number;y:number;z:number;hex:string}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
- upsert(id:MemberId,look:Look,name:string):void;
+ /** `style` = the member's name colour (hex) and animal glyph: drawn on the label and as the ground ring. */
+ upsert(id:MemberId,look:Look,name:string,style?:MemberStyle):void;
  remove(id:MemberId):void;
  emote(id:MemberId,e:Emote):void;
- update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean):void;
+ /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
+ update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null):void;
  readonly shown:number;
  dispose():void;
 }
 
-const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=40,EMOTE_SECONDS=1.5,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12;
+const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=40,EMOTE_SECONDS=1.5,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=8,RING_RADIUS=.55,RING_FAR_M=25,RING_MAX_GROW=4,RING_LIFT=.05;
 const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.PassToMe]:'\u{261D}\u{FE0F}',[Emote.Space]:'\u{1F4A8}',[Emote.WellPlayed]:'\u{1F44F}'};
 
 // Released hidden classic geometry (copied from islandNpcs.ts: heat pass 5 + NPC heat fix 2). A friend never takes a costume,
@@ -54,7 +60,7 @@ function travelFor(mode:number):TravelMode|undefined{
 
 type SwimPose=NonNullable<PlayerMotion['swim']>;
 type Entry={
- id:MemberId;name:string;lookKey:string;look:Look;
+ id:MemberId;name:string;lookKey:string;look:Look;style:MemberStyle|null;colour:T.Color;
  rig:PlayerRig|null;label:T.Sprite|null;labelTexture:T.CanvasTexture|null;bubble:T.Sprite|null;
  admitted:boolean;shown:boolean;
  motion:PlayerMotion;swim:SwimPose;
@@ -62,14 +68,21 @@ type Entry={
  acc:number;slot:number;needResume:boolean;
 };
 
-function makeLabelTexture(text:string){
+function makeLabelTexture(text:string,style:MemberStyle|null){
  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=64;
  const g=canvas.getContext('2d');
  if(g){
-  g.clearRect(0,0,256,64);g.font='700 30px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
-  const w=Math.min(244,g.measureText(text).width+28);
-  g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(128-w/2,8,w,48,24):g.rect(128-w/2,8,w,48);g.fill();
-  g.fillStyle='#ffffff';g.fillText(text,128,33,230);
+  const label=style&&style.glyph?style.glyph+' '+text:text;
+  g.clearRect(0,0,256,64);g.font='700 27px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
+  const dot=style?30:0;
+  const w=Math.min(244,g.measureText(label).width+28+dot);
+  const x0=128-w/2;
+  g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,48,24):g.rect(x0,8,w,48);g.fill();
+  if(style){
+   g.lineWidth=3;g.strokeStyle=style.hex;g.stroke(); // coloured rim = the ring colour
+   g.fillStyle=style.hex;g.beginPath();g.arc(x0+22,32,9,0,Math.PI*2);g.fill();g.lineWidth=2;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
+  }
+  g.fillStyle='#ffffff';g.fillText(label,128+dot/2,33,230-dot);
  }
  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;return texture;
 }
@@ -86,15 +99,38 @@ function iconTexture(e:number){
 
 function hideEntry(e:Entry){e.shown=false;if(e.label)e.label.visible=false;if(e.bubble)e.bubble.visible=false;e.needResume=true;}
 // Per-frame scratch (module level: nothing allocated while updating).
+const ringM=new T.Matrix4(),ringPos=new T.Vector3(),ringScale=new T.Vector3(),ringQ=new T.Quaternion(),localColour=new T.Color();
 const frustum=new T.Frustum(),projection=new T.Matrix4(),sphere=new T.Sphere(),camPos=new T.Vector3();
+
+/** A flat annulus with a soft outer glow: vertex alpha only (no texture), r 0.62..1.0 in the XZ plane. */
+function ringGeometry(){
+ const radii=[.6,.68,.86,1],alpha=[0,1,1,0],seg=40,pos:number[]=[],col:number[]=[],idx:number[]=[];
+ for(let r=0;r<radii.length;r++)for(let i=0;i<=seg;i++){const a=i/seg*Math.PI*2;pos.push(Math.cos(a)*radii[r],0,Math.sin(a)*radii[r]);col.push(1,1,1,alpha[r]);}
+ for(let r=0;r<radii.length-1;r++)for(let i=0;i<seg;i++){const a=r*(seg+1)+i,b=a+seg+1;idx.push(a,a+1,b,a+1,b+1,b);}
+ const geo=new T.BufferGeometry();
+ geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('color',new T.Float32BufferAttribute(col,4));geo.setIndex(idx);
+ return geo;
+}
 
 export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number}):RemoteAvatars{
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
  const batch=playerBatch(drawn,BATCH_CAPACITY);
+ const ringGeo=ringGeometry();
+ const ringMat=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+ const rings=new T.InstancedMesh(ringGeo,ringMat,RING_CAPACITY);rings.name='remote-avatar-rings';rings.frustumCulled=false;rings.castShadow=false;rings.receiveShadow=false;rings.count=0;rings.renderOrder=2;
+ rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
+ let ringN=0;
+ function ringAdd(x:number,y:number,z:number,dist:number,c:T.Color,pulse:number,k:number){
+  if(ringN>=RING_CAPACITY)return;
+  const sc=RING_RADIUS*Math.min(RING_MAX_GROW,Math.max(1,dist/RING_FAR_M))*pulse*k;
+  ringScale.set(sc,1,sc);ringPos.set(x,y+RING_LIFT,z);ringM.compose(ringPos,ringQ,ringScale);
+  rings.setMatrixAt(ringN,ringM);rings.setColorAt(ringN,c);ringN++;
+ }
+ function ringsEnd(){rings.count=ringN;rings.instanceMatrix.needsUpdate=true;if(rings.instanceColor)rings.instanceColor.needsUpdate=true;}
  const labels=new T.Group();labels.name='remote-avatar-labels';root.add(labels);
  const byId=new Map<MemberId,Entry>();const list:Entry[]=[];
- let clock=0,recheck=0,saverFade=1,shownCount=0,disposed=false;
+ let localHex='',clock=0,recheck=0,saverFade=1,shownCount=0,disposed=false;
 
  function admit(e:Entry){
   if(e.admitted||disposed)return;
@@ -110,7 +146,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const admittedCount=()=>{let n=0;for(let i=0;i<list.length;i++)if(list[i].admitted)n++;return n;};
  function tryAdmit(e:Entry){if(!e.admitted&&admittedCount()<capNow())admit(e);}
  function setLabel(e:Entry){
-  e.labelTexture?.dispose();e.labelTexture=makeLabelTexture(e.name);
+  e.labelTexture?.dispose();e.labelTexture=makeLabelTexture(e.name,e.style);
   if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;}
  }
  function release(e:Entry){
@@ -119,18 +155,23 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   e.labelTexture?.dispose();e.label=e.bubble=null;e.labelTexture=null;e.admitted=false;
  }
 
+ function addLocalRing(l:LocalRing,cam:T.Vector3){
+  if(l.hex!==localHex){localHex=l.hex;localColour.set(l.hex);}
+  const dx=l.x-cam.x,dz=l.z-cam.z;
+  ringAdd(l.x,l.y,l.z,Math.sqrt(dx*dx+dz*dz),localColour,1,1);
+ }
  return {
   root,
   get shown(){return shownCount;},
-  upsert(id,look,name){
+  upsert(id,look,name,style){
    if(disposed)return;
-   let e=byId.get(id);const key=look.join(',');
+   let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
-    e={id,name,lookKey:key,look:look.slice(),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
+    e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,acc:0,slot:(id*.618034)%1,needResume:true};
-    byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name);tryAdmit(e);return;
+    byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);tryAdmit(e);return;
    }
-   if(e.name!==name){e.name=name;if(e.labelTexture)setLabel(e);}
+   if(e.name!==name||(st?.hex!==e.style?.hex)||(st?.glyph!==e.style?.glyph)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
    if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);}}
   },
   remove(id){
@@ -138,9 +179,14 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    byId.delete(id);const i=list.indexOf(e);if(i>=0)list.splice(i,1);release(e);
   },
   emote(id,em){const e=byId.get(id);if(!e)return;e.emote=em;e.emoteAge=0;e.rig?.setExpression('happy');},
-  update(dt,poses,camera,reduced){
+  update(dt,poses,camera,reduced,local){
    if(disposed)return;
-   if(list.length===0){shownCount=0;return;}
+   ringN=0;
+   if(list.length===0){
+    shownCount=0;
+    if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
+    ringsEnd();return;
+   }
    clock+=dt;
    const saver=batterySaverOn();
    saverFade=saver?Math.max(0,saverFade-dt/SAVER_FADE_SECONDS):Math.min(1,saverFade+dt/SAVER_FADE_SECONDS);
@@ -187,6 +233,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      root3.position.set(pose.x,pose.y,pose.z);e.needResume=false;
     }
     batch.draw(root3);e.shown=true;shown++;
+    // Colour ring at the feet; the emote pulse is skipped under reduced motion.
+    ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1,k);
     const near=d2<LABEL_RANGE*LABEL_RANGE;
     const label=e.label;label.visible=near;
     if(near){label.position.set(pose.x,pose.y+2.35*k,pose.z);(label.material as T.SpriteMaterial).opacity=k;}
@@ -196,6 +244,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      bubble.visible=true;bubble.position.set(pose.x,pose.y+2.9*k,pose.z);
     }else bubble.visible=false;
    }
+   if(local&&saverFade>0)addLocalRing(local,camPos);
+   ringsEnd();
    batch.end();shownCount=shown;
    // The batch makes its meshes lazily and defaults them to casting: friends never cast (no shadow registration anywhere).
    for(let i=0;i<drawn.children.length;i++)drawn.children[i].castShadow=false;
@@ -203,7 +253,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
    root.removeFromParent();
   },

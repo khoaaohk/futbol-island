@@ -11,7 +11,7 @@ function load(file){if(cache.has(file))return cache.get(file);const mod={exports
   cache.set(file,mod.exports);return mod.exports;}
 const L=p=>load(path.join(ROOT,'lib/multiplayer',p+'.ts'));
 const P=load(path.join(ROOT,'multiplayer/protocol/index.ts'));
-const cfg=L('config'),conn=L('connection'),st=L('store'),ip=L('interp'),lk=L('look'),idx=L('index');
+const nm=L('names'),cfg=L('config'),conn=L('connection'),st=L('store'),ip=L('interp'),lk=L('look'),idx=L('index');
 const CUST=load(path.join(ROOT,'lib/town/customization.ts'));
 const plain=x=>JSON.parse(JSON.stringify(x));
 let n=0;const t=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);throw e;}};
@@ -182,6 +182,36 @@ t('fatal errors stop retries; Ended clears the session; onMessage fan-out',()=>{
   // garbage is ignored
   const e3=makeEnv();const s3=goLive(e3);s3.recv('not json');s3.recv([99]);assert.equal(e3.c.status,'live');
   e3.c.dispose();assert.equal(s3.readyState,3);
+});
+
+// ---- identity: animal in Hello, colour / animal in the store ----
+t('Hello carries the chosen animal (trailing field), omitted when none',()=>{
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,animal:4});e.last().open();
+  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,4]);assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
+  const e2=makeEnv();e2.c.join('k7m-q4r',{look:LOOK,animal:99});e2.last().open();
+  assert.deepEqual(e2.msgs(e2.last())[0],[0,1,LOOK,null,null],'invalid animal is dropped client side (old 5-element shape)');
+  const e3=makeEnv();e3.c.join('k7m-q4r',{look:LOOK,animal:null});e3.last().open();assert.equal(e3.msgs(e3.last())[0].length,5);
+  e.last().recv(welcome());e.last().drop();e.clock.advance(60000);e.last().open();
+  assert.equal(e.msgs(e.last())[0][5],4,'reconnect Hello keeps the animal');
+});
+t('store exposes colour and animal per member',()=>{
+  st.partyStore.reset();st.partyStore.apply(welcome(),1000);
+  const m=st.partyStore.get().members[0];
+  assert.equal(m.colourIdx,2);assert.equal(m.animalIdx,3);assert.equal(m.colourHex,nm.COLOUR_HEX[2]);assert.equal(m.animalGlyph,nm.ANIMAL_GLYPH[3]);assert.equal(m.name,'Green Otter');
+  st.partyStore.reset();
+});
+t('names tables: hex per colour, one grapheme per animal, first 6 assigned colours well separated',()=>{
+  assert.equal(nm.COLOUR_HEX.length,P.NAME_COLOURS.length);assert.equal(nm.ANIMAL_GLYPH.length,P.NAME_ANIMALS.length);
+  assert.equal(new Set(nm.COLOUR_HEX).size,16);assert.ok(nm.COLOUR_HEX.every(h=>/^#[0-9A-F]{6}$/.test(h)));
+  const seg=new Intl.Segmenter('en',{granularity:'grapheme'});
+  for(const g of nm.ANIMAL_GLYPH){assert.equal([...seg.segment(g)].length,1,'one grapheme: '+g);}
+  assert.equal(new Set(nm.ANIMAL_GLYPH).size,32,'every animal has its own glyph');
+  const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  const lin=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);};
+  const lab=h=>{const [r,g,b]=rgb(h).map(lin);const f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;
+    const X=f((.4124*r+.3576*g+.1805*b)/.95047),Y=f(.2126*r+.7152*g+.0722*b),Z=f((.0193*r+.1192*g+.9505*b)/1.08883);return[116*Y-16,500*(X-Y),200*(Y-Z)];};
+  const first=P.COLOUR_ORDER.slice(0,6).map(i=>lab(nm.COLOUR_HEX[i]));
+  for(let i=0;i<6;i++)for(let j=i+1;j<6;j++){const d=Math.hypot(first[i][0]-first[j][0],first[i][1]-first[j][1],first[i][2]-first[j][2]);assert.ok(d>=25,`colours ${i},${j} too close (${d.toFixed(1)})`);}
 });
 
 // ---- store ----

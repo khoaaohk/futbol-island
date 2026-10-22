@@ -2,7 +2,7 @@
 import { C, S, LOOK_LEN, MAX_INBOUND_BYTES, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
-import { NAME_ANIMALS, NAME_COLOURS } from './names';
+import { NAME_ANIMALS, NAME_COLOURS, validAnimal } from './names';
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,32}$/;
 const MAX_SERVER_BYTES = 4096;
@@ -68,7 +68,8 @@ export function parseClient(raw: string): ClientMsg | null {
   if (!a) return null;
   switch (a[0]) {
     case C.Hello:
-      if (a.length === 5 && inRange(a[1], 0, 65535) && isLook(a[2]) && isTokenOrNull(a[3]) && isTokenOrNull(a[4])) return a as ClientMsg;
+      if ((a.length === 5 || (a.length === 6 && (a[5] === null || validAnimal(a[5])))) && inRange(a[1], 0, 65535) && isLook(a[2]) &&
+        isTokenOrNull(a[3]) && isTokenOrNull(a[4])) return a as ClientMsg;
       return null;
     case C.Pose:
       if (a.length === 10 && inRange(a[1], 0, 0x7fffffff) && clampPose(a.slice(2) as PoseBody)) return a as ClientMsg;

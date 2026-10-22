@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import { CODE_LENGTH } from '../../multiplayer/protocol';
 import { NOT_IN_CODES_HINT, acceptCodeChar, filterCodeText } from '@/lib/multiplayer/invite';
+import AnimalPicker from './AnimalPicker';
 import styles from './party.module.css';
 
 const SLOTS = Array.from({ length: CODE_LENGTH }, (_, i) => i);
@@ -61,6 +62,7 @@ export default function JoinParty({ initial = '', message, busy, onJoin, onClose
           </span>
         ))}
       </div>
+      <AnimalPicker />
       <p className={styles.status} role="status" aria-live="polite">{hint ? NOT_IN_CODES_HINT : message ?? 'Ask your friend for their code.'}</p>
       <div className={styles.row}>
         <button type="button" className={styles.primary} disabled={!complete || busy} onClick={() => onJoin(code)}>{busy ? 'Checking' : 'Join'}</button>
