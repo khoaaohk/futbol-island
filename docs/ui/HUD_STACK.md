@@ -211,3 +211,21 @@ User: "there's so much going on ... only show one at a time", "it's looking way 
 - **Fishing**: while the tutorial shows its step, the message (the same words) is hidden, so the two never overlap.
 
 Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, stack rules, copy caps, names, >= 44 px targets).
+
+### Island action grid and the Emote button (22 October 2026)
+- User: "move the emote btn to the bottom and group them together. grid of 2 by 2. flying, top left, emote, top right", then "the
+  emote btn should show all the time, even when not in a party. that way it's more interactive".
+- The island's bottom-right cluster (`.travel-actions[data-emote-grid]`, Town.tsx) is ALWAYS a 2 x 2 grid of round buttons, 12 px
+  gaps, `--action-size` cells (58 px phone, 52 px at <= 350 px, 72 px desktop): row 1 **Fly** (the ride/jetpack button) left,
+  **Emote** right; row 2 the two action buttons (juggle-side left, kick-side right). No reserved or empty cells: it is the same in
+  every state, flag on or off, party or not. The map toggle left the grid: on phones it sits just left of it (above it on a
+  320 px phone, where the joystick would touch it); on desktop it stays at the lower left. The grid hides with the other action
+  buttons (lessons, fishing, job camera, menus). The Arcade and Konbini rooms and the Explore room (reef: its own Say hi grid in
+  `DiveHud`) are unchanged.
+- The Emote button (`components/EmoteControl.tsx`) is icon-only (aria-label "Emotes"), >= 44 px, same style as the other action
+  buttons. It opens a wheel of four round buttons upward (Wave, High five, Cheer, Well played; `lib/town/emoteReact.ts`); a pick
+  plays on you at once (raised arm or cheer arms, icon bubble, 1.5 s), is sent to friends only while a party is live, and the
+  nearest free townsperson within 5 m answers for 2 s (wave back, raised hand + a small spark ring, or a hop for Cheer / Well
+  played; 2 s cooldown per townsperson; riding, driving, sleeping, hidden, stunned and court-freestyle townsfolk ignore it;
+  reduced motion = bubble only). One pooled bubble pair + one ring (`lib/graphics/emoteBubbles.ts`), updated only while active.
+- The party chip stays top-left (members / menu); its separate Emotes button is gone. Guarded by `tests/emote-grid.cjs`.

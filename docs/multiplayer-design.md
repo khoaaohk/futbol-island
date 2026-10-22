@@ -444,7 +444,11 @@ export function remoteCap(tier: HeatTier, phone: boolean, saver: boolean): numbe
 - **PartyChip:** fixed corner (top-left under Paths on phones, beside the minimap on desktop), icon-only (stacked faces + count),
   >= 44 px, not in `.hud-stack`; hidden when not in a party.
 - **Play with friends** button: icon-only in the existing action grid style; aria-label "Play with friends".
-- **Emote wheel:** one button in the action cluster while in a party -> row of 6 big picture buttons; closes on pick.
+- **Emote button (22 Oct 2026, supersedes "one button in the action cluster while in a party"):** the island's Emote button is
+  always in the 2 x 2 action grid (Fly top-left, Emote top-right; `docs/ui/HUD_STACK.md`), with or without the flag or a party. It
+  opens a row of 4 round preset buttons (Wave, High five, Cheer, Well played) that plays on you and on the nearest townsperson; it
+  is sent to friends (`connection.sendEmote`, 2 s limit) only while the party is live. The party chip keeps the top-left corner
+  and no longer carries an Emotes button. PassToMe / Space stay in the protocol for pings and the reef.
 - **Messages** ("Red Zebra joined", "Party ends in 10 min", "Reconnecting") go through `lib/ui/toastLane.ts` at note priority
   (1); join bursts merge ("2 friends joined"). Never more than one message on screen.
 - Invite/Join cards are dialogs (like the job card), dismissible, Esc on desktop.
