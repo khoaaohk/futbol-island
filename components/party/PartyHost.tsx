@@ -377,8 +377,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             {kickPrompt && state.isHost && kickBlock}
             <div className={styles.stack}>
               {state.isHost && (confirmEnd
-                ? <button type="button" className={styles.secondary} onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
-                : <button type="button" className={styles.secondary} onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
+                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
+                : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
               {!state.isHost && <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>}
             </div>
               </FadeScroll>

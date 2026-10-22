@@ -65,15 +65,24 @@ require('fs').mkdirSync(out, { recursive: true });
       const sel = await p.evaluate(() => [document.activeElement.id, document.activeElement.getAttribute('aria-selected'), document.querySelector('#party-panel-party').getAttribute('data-active') === 'true' ? false : true]);
       console.log(name, 'after ArrowRight', JSON.stringify(sel)); if (sel[0] !== 'party-tab-party' || sel[1] !== 'true' || sel[2]) { fail++; console.log(name, 'FAIL: arrow key tab switch'); }
       await p.screenshot({ path: `${out}/${name}-5d-party-tab.png` });
-      // Same size: the card box is identical on both tabs, after Show QR, and the toggle slides (3 frames).
+      // Same size: the card box is identical on both tabs, with 0, 1 and 8 members, and the toggle slides (3 frames).
       const box = () => p.evaluate(() => { const r = document.querySelector('[data-party-sheet]').getBoundingClientRect(); const st = document.querySelector('[data-party-stage]').getBoundingClientRect(); return [r.x, r.y, r.width, r.height, st.height].map((v) => Math.round(v * 10) / 10).join(','); });
       const boxes = { party: await box() };
       await p.click('#party-tab-code'); await p.waitForTimeout(500); boxes.code = await box();
       const inert = await p.evaluate(() => [document.querySelector('#party-panel-party').hasAttribute('inert'), document.querySelector('#party-panel-party').getAttribute('aria-hidden'), getComputedStyle(document.querySelector('#party-panel-party')).visibility]);
       if (!inert[0] || inert[1] !== 'true' || inert[2] !== 'hidden') { fail++; console.log(name, 'FAIL: inactive panel not inert/aria-hidden/hidden', JSON.stringify(inert)); }
-      await p.click('[data-party-qr-toggle]'); await p.waitForTimeout(500); boxes.qr = await box();
-      await p.screenshot({ path: `${out}/${name}-5e-qr.png` });
-      await p.click('[data-party-qr-toggle]'); await p.waitForTimeout(300);
+      const codeNow = (await p.textContent('[data-party-code]')).replace(/[^A-Z0-9]/gi, '');
+      const bots = [];
+      for (const [label, n, total] of [['m2', 1, 2], ['m8', 7, 8]]) {
+        bots.push(require('child_process').spawn('node', ['--experimental-websocket', 'multiplayer/bots/bot.mjs', '--url', process.env.RELAY_URL || 'http://127.0.0.1:8871', '--code', codeNow, '--n', String(n), '--ms', '25000'], { stdio: 'ignore' }));
+        await p.waitForFunction((t) => new RegExp('^Party \\(' + t + '\\)$').test(document.querySelector('#party-tab-party').innerText), total, { timeout: 15000 }).catch(() => { fail++; console.log(name, 'FAIL: bots did not join', label); });
+        await p.waitForTimeout(600);
+        boxes[label + 'code'] = await box();
+        await p.click('#party-tab-party'); await p.waitForTimeout(500); boxes[label + 'party'] = await box();
+        if (total === 8) await p.screenshot({ path: `${out}/${name}-5e-8members.png` });
+        await p.click('#party-tab-code'); await p.waitForTimeout(500);
+      }
+      bots.forEach((b) => b.kill());
       const pill = () => p.evaluate(() => Math.round(document.querySelector('[data-party-pill]').getBoundingClientRect().x));
       const x0 = await pill();
       await p.evaluate(() => document.querySelector('#party-tab-party').click());
@@ -82,7 +91,7 @@ require('fs').mkdirSync(out, { recursive: true });
       console.log(name, 'pill x', x0, xs, x1, 'boxes', JSON.stringify(boxes));
       if (!(xs > x0 && xs < x1 + 1) || x1 <= x0) { fail++; console.log(name, 'FAIL: pill did not slide'); }
       if (new Set(Object.values(boxes)).size !== 1) { fail++; console.log(name, 'FAIL: card box differs between tabs / QR'); }
-      if (!/End party for everyone/.test(await p.innerText('#party-panel-party'))) { fail++; console.log(name, 'FAIL: no End party on Party tab'); }
+      if (!/End party for everyone/.test(await p.innerText('#party-panel-party')) || /End party/.test(await p.evaluate(() => document.querySelector('#party-panel-code').innerText))) { fail++; console.log(name, 'FAIL: no End party on Party tab'); }
       await p.click('[data-party-sheet] button:has-text("Done")'); await p.waitForTimeout(1200);
       await p.screenshot({ path: `${out}/${name}-6-hud.png` });
       await p.click('[data-party-open]'); await p.waitForTimeout(900);

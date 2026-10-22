@@ -79,7 +79,7 @@
 .pill{position:absolute;z-index:-1;left:4px;top:4px;width:calc(50% - 4px);height:var(--btn-height);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:0 3px 0 var(--btn-gold-edge);transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),translate .12s ease-out;will-change:transform}
 .tabs[data-active=party] .pill{transform:translateX(100%)}
 .tabs:has(.tab[aria-selected=true]:active) .pill{translate:0 2px;box-shadow:0 1px 0 var(--btn-gold-edge)}
-.tab{min-height:var(--btn-height);padding:0 12px;border:0;border-radius:var(--btn-radius);background:transparent;color:#244d4099;font:700 15px/1 var(--btn-font);cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
+.tab{min-height:var(--btn-height);padding:0 12px;border:0;border-radius:var(--btn-radius);background:transparent;color:color-mix(in srgb,var(--btn-ink) 62%,transparent);font:700 15px/1 var(--btn-font);cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
 .tab[aria-selected=true]{color:var(--btn-ink)}
 .tab:active{transform:translateY(2px)}
 .tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
@@ -91,6 +91,8 @@
 .panel{grid-area:1/1;display:flex;flex-direction:column;min-height:0;min-width:0;opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
 .panel[data-active=false]{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(6px);transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s .15s}
 .panel[data-party-panel=code][data-active=false]{transform:translateX(-6px)}
+.endLink{align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:rgb(163 38 28);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
+.endLink:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:8px}
 .codeActions{margin-top:8px;align-items:stretch}
 .codeActions .small{opacity:.85}
 .codeFresh{animation:codeGlow 1.3s ease-out}

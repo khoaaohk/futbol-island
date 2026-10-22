@@ -157,7 +157,7 @@ t('party card tabs: Code | Party toggle, a11y, host/guest split, new code + clos
   assert(/styles\.pill/.test(host)&&/\.pill\{[^}]*transition:transform \.22s cubic-bezier\(\.2,\.8,\.2,1\)/.test(css)&&/\.tabs\[data-active=party\] \.pill\{transform:translateX\(100%\)\}/.test(css)&&/\.tab:active\{transform:translateY\(2px\)\}/.test(css)&&/tabPop/.test(css)&&/prefers-reduced-motion:reduce\)\{[^\n]*\.pill/.test(css),'sliding gold pill, press, count pop, reduced motion');
   assert(/var\(--btn-gold\) var\(--btn-grain\)/.test(css.slice(css.indexOf('.pill{')))&&/\.tabs\{[^}]*var\(--btn-cream\)/.test(css),'toggle uses the shared button tokens');
  }
- assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
+ assert(/styles\.endLink[\s\S]{0,80}>End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&/\.endLink\{[^}]*background:transparent;color:rgb\(163 38 28\)/.test(read('components/party/party.module.css'))&&!/End party/.test(host.slice(host.indexOf('id="party-panel-code"'),host.indexOf('id="party-panel-party"'))),'End party is a small red text link at the bottom of the Party tab, never on Code'); assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
  assert(!/max-height:min\(46vh/.test(read('components/party/party.module.css')),'member list scrolls in the card FadeScroll, no separate list scroller');
 });
 t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
