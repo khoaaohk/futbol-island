@@ -145,5 +145,5 @@ export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{
  * The swim lesson (AGENTS.md: every feature teaches football; docs/swimming-research.md §3). A coaching metaphor, labelled as
  * one; shown once per device the first time the player swims (components/SwimLessonToast.tsx, key SWIM_LESSON_KEY).
  */
-export const SWIM_LESSON={title:'Pace yourself',text:'Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn’t.',kind:'Coaching idea'} as const;
+export const SWIM_LESSON={title:'Pace yourself',text:'Swim smooth and steady: a calm rhythm lasts, like a team keeping its shape all match.',kind:'Coaching idea'} as const;
 export const SWIM_LESSON_KEY='fi2-swim-lesson-v1';

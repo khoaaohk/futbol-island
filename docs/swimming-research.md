@@ -501,7 +501,7 @@ Lane A + B + D of §4 (and the `swimFx` pool of lane C replaced by a reuse), on 
 
 **Analytics (`lib/analytics/waterEvents.ts`, ids in `countIds.ts` `WATER_COUNT_EVENTS`, admin "Water" section):** `wa:first_wade`, `wa:first_swim` (once per device, `fi2-water-firsts-v1`), `wa:swim_start`, `wa:splash_fall` / `wa:splash_roof` / `wa:splash_launch` / `wa:splash_dropin`, `wa:shore`, `wa:fast`, `wa:float`, `wa:time_10s` / `wa:time_30s` / `wa:time_60s` / `wa:time_120s` / `wa:time_long` (a swim's seconds, bucketed when it ends), `wa:idle_cap` (the 20 fps cap engaging while treading water), `wa:lesson`. Time in the sea is the new `swim` activity in "What they're doing" (`islandFrame(…, 'swim')`), which needs `supabase/migrations/20261017_analytics_water.sql` (the counters ride the existing `k` channel and need no migration).
 
-**Teaching:** the first swim shows `SWIM_LESSON` once per device (`fi2-swim-lesson-v1`): "Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn't." labelled *Coaching idea* (§3's pool-recovery fact stays unshown until verified).
+**Teaching:** (copy shortened Oct 22 2026: swim "Swim smooth and steady: a calm rhythm lasts, like a team keeping its shape all match.", dive "Glide to save breath; rise up for air. Sprint everywhere and you tire, like a midfielder.": the two no longer repeat each other) the first swim shows `SWIM_LESSON` once per device (`fi2-swim-lesson-v1`): "Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn't." labelled *Coaching idea* (§3's pool-recovery fact stays unshown until verified).
 
 Heat numbers and the browser validation are in `docs/performance-guide.md`, "Wading, swimming and splash-downs (P0)".
 

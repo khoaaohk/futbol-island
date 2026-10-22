@@ -33,8 +33,6 @@ const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:fal
 export const DIVE_EDGE_LEAVING='Leaving the reef';export const diveEdgeEntering=(name:string)=>`Entering: ${name}`;
 /** The phone's ▲ / ▼ (components/DiveHud.tsx, held: pointer down / up) and Q / Z on desktop feed this; the dive frame reads it. */
 export const diveLift={up:false,down:false,
- /** RETIRED (the Dart was removed Oct 21/22 2026 by user decision): kept only so an older HUD that still sets it compiles; ignored. */
- dart:false,
  /** Explore delight: the Wave / High five buttons, G / H asked for an emote (an edge, taken by the next dive frame). */
  emote:'' as ''|DiveEmote};
 export function readDiveReef():DiveReefSave{try{return parseDiveReef(JSON.parse(localStorage.getItem(DIVE_REEF_KEY)??'null'),DIVE_SPOTS);}catch{return parseDiveReef(null,DIVE_SPOTS);}}
@@ -180,7 +178,6 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   frame(dt:number,input:DiveInput,width:number,height:number){
    if(!room)return;const s=session.state.spot;
    input.lift=Math.max(-1,Math.min(1,input.lift+(diveLift.up?1:0)-(diveLift.down?1:0)));
-   diveLift.dart=false;
    const ask=diveLift.emote;diveLift.emote='';
    // Explore delight: the nearest thing still to collect (pickups, unfound finds, today's sparkle) slows the glide (diveSession findSlow).
    if(s){const st0=session.state,fd=save.spots[s.id];let nd=Infinity;
