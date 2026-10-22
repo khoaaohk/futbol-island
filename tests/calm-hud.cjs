@@ -54,6 +54,7 @@ const load=(f,req=()=>({}))=>{const m={exports:{}};new Function('exports','modul
 {const hud=read('components/DiveHud.tsx'),css=read('app/globals.css');
  assert(!/dive-dart-btn|data-dive-dart/.test(hud+css),'the Dart button is gone (user, Oct 21 2026)');
  assert(/\.town-app:has\(\.dive-depth\) \.travel-actions\.travel-actions \.minimap-toggle\{grid-column:1;grid-row:1\}/.test(css)&&/\.travel-mode\{grid-column:1;grid-row:2\}/.test(css),'room grid: minimap top right, Fly bottom right');
- assert(/\.town-app:has\(\.dive-depth\) \.dive-depth\{right:calc\(18px \+ 58px \+ 12px/.test(css),'▲ ▼ are the grid\'s left column (12 px gap)');
+ assert(css.includes('.town-app:has(.dive-depth) .dive-depth{right:var(--room-c2);bottom:var(--room-r2)')&&css.includes('[data-job-action=surface]{position:fixed;right:var(--room-c1);bottom:var(--room-r1)'),'2x3 room grid: ▲ ▼ the middle column, Surface c1-r1');
+ assert(/--room-cell:58px;--room-gap:12px/.test(css),'58 px cells, 12 px gaps');
  const H=load('lib/town/water/waterHud.ts',()=>({}));assert.equal(H.REEF_BUTTONS_FLY.find(b=>b.slot==='ride').icon,'jetpack','the room\'s Fly button shows the jetpack');}
 console.log('calm-hud: ok');

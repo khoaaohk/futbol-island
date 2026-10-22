@@ -11,6 +11,8 @@ import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
  */
 /** Whether an edge chip has shown yet this page visit (the first one may wait longer for the welcome toast and lesson cards). */
 let edgeChipSeen=false;
+/** When the Say hi button last waved (a second tap within 2 s is the high five). */
+let lastWave=0;
 export default function DiveHud(){
  const v=useSyncExternalStore(diveStore.subscribe,diveStore.get,diveStore.server);
  // Calm HUD (Oct 21 2026, user: "only show one at a time"): the note takes the one toast lane too (a lesson card or the edge chip
@@ -38,13 +40,14 @@ export default function DiveHud(){
  return <>
   {v.diving?<div className="dive-vignette" aria-hidden="true"/>:null}
   {v.diving?<div className="dive-depth" data-dive-depth-pad role="group" aria-label="Rise or dip lower">{depthBtn('up')}{depthBtn('down')}</div>:null}
-  {/* The Dart button was removed (Oct 21 2026, user: "let's remove the dart action"); the right column is ▲ ▼ and the friend row. */}
-  {/* Explore delight (Oct 21 2026): wave / high five the zone's friend (shown only while it is within reach; G / H on desktop). */}
+  {/* The Dart button was removed (Oct 21 2026, user: "let's remove the dart action").
+      The room's action grid (Calm HUD, Oct 21 2026, user: "move the emote btn to the left of the down btn ... a grid of 2 rows and 3
+      columns"; cells in globals.css / docs/ui/HUD_STACK.md): ONE "Say hi" button in cell c1-r2, only while the zone's friend is in
+      reach (G / H on desktop still wave / high five). A tap waves; a second tap within 2 s is the high five. */}
   {v.diving&&v.friend?<div className="dive-emote" data-dive-emote role="group" aria-label={`Say hi to ${v.friend}`}>
-   <button type="button" className="dive-emote-btn" data-dive-emote-btn="wave" aria-label={`Wave to ${v.friend} · G`} title="Wave · G" onPointerDown={e=>{e.preventDefault();diveLift.emote='wave';}} onContextMenu={e=>e.preventDefault()}>
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V5a1.5 1.5 0 0 1 3 0v6M14 11V6.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 6.5-6 6.5-2.6 0-4.2-1.3-5.5-3.6L4 14a1.4 1.4 0 0 1 2.3-1.5L8 14.5"/><path d="M19 3.5c1 .8 1.6 1.9 1.7 3.1M3.5 5.5C4 4.4 4.9 3.6 6 3.2"/></svg></button>
-   <button type="button" className="dive-emote-btn" data-dive-emote-btn="five" aria-label={`High five ${v.friend} · H`} title="High five · H" onPointerDown={e=>{e.preventDefault();diveLift.emote='five';}} onContextMenu={e=>e.preventDefault()}>
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 21v-9.5a1.5 1.5 0 0 1 3 0V10V4.5a1.5 1.5 0 0 1 3 0V10V5.5a1.5 1.5 0 0 1 3 0v5V8a1.5 1.5 0 0 1 3 0v6c0 4-2.7 7-6.5 7H7"/><path d="M4 9l-1.5-1M4.5 5.5 3 3.5M8 2.5V1"/></svg></button>
+   <button type="button" className="dive-emote-btn" data-dive-emote-btn="hi" aria-label={`Say hi to ${v.friend}: tap to wave, tap again for a high five · G / H`} title="Wave · G, then High five · H"
+    onPointerDown={e=>{e.preventDefault();const t=performance.now(),again=t-lastWave<2000;if(again){diveLift.emote='five';lastWave=0;}else{diveLift.emote='wave';lastWave=t;}}} onContextMenu={e=>e.preventDefault()}>
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V5a1.5 1.5 0 0 1 3 0v6M14 11V6.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 6.5-6 6.5-2.6 0-4.2-1.3-5.5-3.6L4 14a1.4 1.4 0 0 1 2.3-1.5L8 14.5"/><path d="M19 3.5c1 .8 1.6 1.9 1.7 3.1M3.5 5.5C4 4.4 4.9 3.6 6 3.2"/></svg></button>
   </div>:null}
   {/* The "Reef n/12" chip and its hearts were removed (Oct 21 2026, user: "remove this, we don't need it"); the journey, hearts and
       the restore card still count and save, and their rewards arrive as the one note / card in the toast lane. */}

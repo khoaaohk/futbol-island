@@ -752,21 +752,26 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .dive-emote{position:absolute;z-index:9;right:calc(24px + env(safe-area-inset-right,0px));bottom:250px;display:flex;flex-direction:row-reverse;gap:10px}
 .dive-emote-btn{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #ffd3dc;background:#d9577a;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .dive-emote-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
-/* Calm HUD (Oct 21 2026, user: "on mobile this looks messy, the btns are covering", then "let's have the up and down arrows in the
-   grid of four icons. they are on the left. top right will be the mini map. and bottom right will be the fly btn"): on touch screens
-   the room's controls are the island's 2x2 action grid: ▲ / ▼ in the left column, the minimap toggle top right, the Fly button
-   (jetpack) bottom right; Surface sits left of ▼ on the bottom row and the friend row (Wave / High five, only near a friend) above
-   Surface. 58 px circles, 12 px steps; the minimap circle sits 12 px above the grid. Nothing overlaps; the joystick is untouched. */
+/* Calm HUD (Oct 21 2026). User: "on mobile this looks messy, the btns are covering", "let's have the up and down arrows in the grid
+   of four icons ... top right will be the mini map. and bottom right will be the fly btn", then "move the emote btn to the left of
+   the down btn. in the future we can have more actions so a grid of 2 rows and 3 columns". On touch screens the room's controls are
+   ONE 2x3 grid at the bottom right, 58 px cells, 12 px gaps; cells are named by column (c1 left .. c3 right) and row (r1 top, r2
+   bottom) through the --room-c* (right offset) and --room-r* (bottom offset) variables, so an action drops into a cell by using them:
+     r1: c1 Surface        c2 ▲ rise   c3 minimap toggle
+     r2: c1 Say hi (friend) c2 ▼ dip    c3 Fly (jetpack)
+   The Say hi cell stays reserved when no friend is near (nothing moves). The minimap circle sits 12 px above the grid; the grid's
+   left edge (18 + 3x58 + 2x12 = 216 px from the right) stays clear of the joystick. */
 @media(max-width:600px),(pointer:coarse){
- .town-app:has(.dive-depth) .travel-actions.travel-actions{display:grid;grid-template-columns:var(--action-size);grid-template-rows:var(--action-size) var(--action-size);gap:12px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom)}
+ .town-app:has(.dive-depth){--room-cell:58px;--room-gap:12px;--room-c3:calc(18px + env(safe-area-inset-right,0px));--room-c2:calc(var(--room-c3) + var(--room-cell) + var(--room-gap));--room-c1:calc(var(--room-c2) + var(--room-cell) + var(--room-gap));--room-r2:var(--control-bottom,24px);--room-r1:calc(var(--room-r2) + var(--room-cell) + var(--room-gap))}
+ .town-app:has(.dive-depth) .travel-actions.travel-actions{--action-size:58px;display:grid;grid-template-columns:var(--room-cell);grid-template-rows:var(--room-cell) var(--room-cell);gap:var(--room-gap);right:var(--room-c3);bottom:var(--room-r2)}
  .town-app:has(.dive-depth) .travel-actions.travel-actions .minimap-toggle{grid-column:1;grid-row:1}
  .town-app:has(.dive-depth) .travel-actions.travel-actions .travel-mode{grid-column:1;grid-row:2}
- .town-app:has(.dive-depth) .travel-actions.travel-actions [data-job-action=surface]{position:fixed;right:calc(18px + 2 * (var(--action-size) + 12px) + env(safe-area-inset-right,0px));bottom:var(--control-bottom);width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);margin:0}
- .town-app:has(.dive-depth) .dive-depth{right:calc(18px + 58px + 12px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,24px);gap:12px}
- .town-app:has(.dive-depth) .dive-depth-btn{width:58px;height:58px}
- .town-app:has(.dive-depth) .dive-emote{right:calc(18px + 2 * (58px + 12px) + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 58px + 12px);gap:12px}
- .dive-emote-btn{width:52px;height:52px}
- .town-app:has(.dive-depth):not(.in-lesson) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 2 * 58px + 12px + 12px)}
+ .town-app:has(.dive-depth) .travel-actions.travel-actions [data-job-action=surface]{position:fixed;right:var(--room-c1);bottom:var(--room-r1);width:var(--room-cell);height:var(--room-cell);min-width:var(--room-cell);min-height:var(--room-cell);margin:0}
+ .town-app:has(.dive-depth) .dive-depth{right:var(--room-c2);bottom:var(--room-r2);gap:var(--room-gap)}
+ .town-app:has(.dive-depth) .dive-depth-btn{width:var(--room-cell);height:var(--room-cell)}
+ .town-app:has(.dive-depth) .dive-emote{right:var(--room-c1);bottom:var(--room-r2);gap:0}
+ .town-app:has(.dive-depth) .dive-emote-btn{width:var(--room-cell);height:var(--room-cell)}
+ .town-app:has(.dive-depth):not(.in-lesson) .town-minimap:not(.is-collapsed){bottom:calc(var(--room-r1) + var(--room-cell) + var(--room-gap))}
 }
 .dive-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,#06303a59 100%)}
 .dive-note{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 15px/1.2 system-ui,sans-serif;max-width:min(320px,86vw);text-align:center;pointer-events:none}
