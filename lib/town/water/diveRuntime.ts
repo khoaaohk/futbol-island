@@ -120,14 +120,14 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   sparkDate=ports.date?.()??localDate();spark=sparkleDone(reefSave.spark,s.id,sparkDate)?null:sparkleSpot(s,sparkDate);
   whale.at=calm?-1:whalePlan(rnd(),rnd(),!!reefSave.whale?.includes(s.id));whale.t=-1;whale.done=whale.stamped=false;
   room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
-   friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;
+   friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;session.setSolids(room.solids);/* Explore (Oct 22 2026): solid wreck, rocks, arch, goal, crates */
   formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
   room.scene.add(ports.player.root);pose.phase=0;hidePrompt();findPrompt='';
   diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):'',friend:'',hearts:reefSave.hearts?.[s.id]??0});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
-  if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;}
+  if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;session.setSolids(null);}
   diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){

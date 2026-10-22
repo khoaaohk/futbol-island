@@ -12,6 +12,7 @@
  * nothing is lost and nobody is hurt. Breath refills at the surface over BREATH_REFILL_S, and a new dive waits for
  * BREATH_MIN_DIVE of it (recover before the next sprint). DIVE_LESSON shows once per device.
  */
+import {DIVE_BODY,divePushOut,divePushOutLevel,type DiveSolidWorld} from './diveSolids';
 import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveOnCrest,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
 import {WATER_PROBE_HZ} from './waterDepth';
 import {DIVE_EDGE,diveEdgeBeyond,diveEdgeRim} from './diveEdge';
@@ -127,11 +128,25 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    *  whether this dive came in across the edge. */
   edgeCd:0,viaEdge:false};
  const range={min:0,max:0};
+ // Explore (Oct 22 2026): the room's solids (diveSolids.ts; set by the runtime with the room) and the collision scratch (no allocation).
+ let solids:DiveSolidWorld|null=null;const cp={x:0,y:0,z:0},cn={x:0,y:0,z:0};
+ /** Move the body from (x0, y0, z0) to the state's position in sub-steps of at most DIVE_BODY.step m, pushed out of every solid on the
+  *  way; the inward part of the velocity is removed (the diver slides along a plank). True when something was hit. */
+ function collide(x0:number,y0:number,z0:number){
+  if(!solids)return false;const dx=state.x-x0,dy=state.y-y0,dz=state.z-z0,n=Math.max(1,Math.ceil(Math.hypot(dx,dy,dz)/DIVE_BODY.step));
+  let mx=dx/n,my=dy/n,mz=dz/n,hit=false;cp.x=x0;cp.y=y0+DIVE_BODY.cy;cp.z=z0;
+  for(let i=0;i<n;i++){cp.x+=mx;cp.y+=my;cp.z+=mz;
+   if(divePushOut(solids,cp,DIVE_BODY.r,cn)>0){hit=true;const l=Math.hypot(cn.x,cn.y,cn.z)||1,nx=cn.x/l,ny=cn.y/l,nz=cn.z/l;
+    const vn=state.vx*nx+state.vz*nz;if(vn<0){state.vx-=nx*vn;state.vz-=nz*vn;}
+    const mn=mx*nx+my*ny+mz*nz;if(mn<0){mx-=nx*mn;my-=ny*mn;mz-=nz*mn;}}}
+  state.x=cp.x;state.y=cp.y-DIVE_BODY.cy;state.z=cp.z;return hit;}
  const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false};
  const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=false;events.surfaced='';events.find='';events.coins=0;};
  const heightFor=(t:number)=>range.max-(range.max-range.min)*t;
  const markUi=(dt:number)=>{state.uiAcc+=dt;if(state.uiAcc>=1/BREATH_UI_HZ-1e-6&&Math.abs(state.breath-state.uiBreath)>.002){state.uiAcc=0;state.uiBreath=state.breath;events.breathUi=true;}};
  return {state,events,
+  /** Explore (Oct 22 2026): the room's solids for the collision (null: none, e.g. tests of the open water). */
+  setSolids(w:DiveSolidWorld|null){solids=w;},
   /** The Dive prompt's proximity test: at most WATER_PROBE_HZ a second, only while swimming at the surface (else it clears). Also
    *  refills the breath while at the surface. */
   scan(dt:number,x:number,z:number,swimming:boolean){
@@ -176,7 +191,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    if(state.phase==='rising'){
     // The gentle way up (a tap of Surface, Escape, or the breath running out): drift up with the bubbles, then the island.
     state.rise+=dt;state.vy+=(1.6-state.vy)*(1-Math.exp(-dt*3));state.y=Math.min(DIVE_SURFACE_Y-.2,state.y+state.vy*dt);
-    state.vx*=Math.exp(-dt*2);state.vz*=Math.exp(-dt*2);state.x+=state.vx*dt;state.z+=state.vz*dt;state.pitch+=(-.5-state.pitch)*(1-Math.exp(-dt*3));
+    {const x0=state.x,y0=state.y-state.vy*dt,z0=state.z;state.vx*=Math.exp(-dt*2);state.vz*=Math.exp(-dt*2);state.x+=state.vx*dt;state.z+=state.vz*dt;collide(x0,y0,z0);}state.pitch+=(-.5-state.pitch)*(1-Math.exp(-dt*3));
     if(state.rise>=DIVE_SURFACE_S){state.phase='surface';state.hold=DIVE_REARM_S;state.spot=null;state.find=null;state.findDist=Infinity;events.surfaced=state.risingFor;}
     return events;
    }
@@ -194,7 +209,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    // Seamless Explore (diveEdge.ts): the rim (the zone's blob outline in room metres) is a doorway. DIVE_EDGE.exitOut m past it the
    // diver leaves for the island (still under: the duck-dive); while the edge waits after a crossing it holds there like a wall.
    if(state.edgeCd>0)state.edgeCd=Math.max(0,state.edgeCd-dt);
-   let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
+   const px0=state.x,py0=state.y,pz0=state.z;let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
    if(r>=lim&&state.edgeCd<=0){state.x=nx;state.z=nz;state.phase='surface';state.hold=DIVE_REARM_S;state.edgeCd=DIVE_EDGE.cooldown;state.spot=null;state.find=null;state.findDist=Infinity;state.ducking=true;events.surfaced='edge';return events;}
    if(r>lim){nx*=lim/r;nz*=lim/r;const n=(state.vx*nx+state.vz*nz)/(lim||1);if(n>0){state.vx-=nx/lim*n;state.vz-=nz/lim*n;}}
    state.x=nx;state.z=nz;
@@ -207,7 +222,10 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*diveLiftSpeed(state.liftHeld,lift)*dt/span));
    const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW*(lift!==0?DIVE_LIFT.follow:1)));
    if(y<range.min)y=range.min;if(y>range.max)y=range.max;
-   state.y=y;state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
+   state.y=y;
+   // Solid things (the wreck, rocks, the arch, the goal, crates, big coral): slide along them; a push up / down keeps that depth.
+   if(collide(px0,py0,pz0)){diveDepthRange(state.x,state.z,fl,range);const sp2=Math.max(.3,range.max-range.min);const yc=Math.max(range.min,Math.min(range.max,state.y));if(yc!==state.y){state.y=yc;cp.x=state.x;cp.y=yc+DIVE_BODY.cy;cp.z=state.z;if(solids){divePushOutLevel(solids,cp,DIVE_BODY.r);state.x=cp.x;state.z=cp.z;}}y=state.y;state.depthT=Math.max(0,Math.min(1,(range.max-y)/sp2));}
+   state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
    if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
    // The body pitches with the climb / dive and rolls a little into turns (auto-level: both ease back to flat).
    const speed=Math.hypot(state.vx,state.vz);state.effort+=(stick-state.effort)*(1-Math.exp(-dt*4));
