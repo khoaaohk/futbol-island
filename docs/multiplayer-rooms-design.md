@@ -132,6 +132,48 @@ nearest-12 interest rule only bites when > 12 members move in one tick (the 1 Hz
    test first that an old client does not show the row twice). This is
    what makes a new shop outfit visible after leaving the studio.
 
+**Relay v1.1 status (Oct 22 2026): code + tests DONE on branch `mp-relay-v11`, NOT deployed.** What was built, item by item:
+1. `multiplayer/protocol/limits.ts` `RELAY_ROOM_BOUNDS` (named so it never shadows the client's `roomPos.ts` `ROOM_BOUNDS`) +
+   `roomBoundsOk(body)`, checked in `RoomCore.pose()` right after `clampPose` (a `clampPose` null is still `bad()`; out of a room is a
+   silent drop + the `roomOob` counter -> `rl:room_oob`). Konbini is 11 x **10** m (its client clamp |z| 6.3 + 3 = 9.3 > 9). Room codes
+   with no entry (33..63 except Reef 41..47) are held only to `ROOM_XZ_MAX`, so a new room never needs a relay deploy first.
+   `tests/mp-rooms.cjs` fails if any client clamp (`roomPos.ts`, `rooms/arcade.ts`, `rooms/museum.ts`) + 3 m outgrows the table.
+2. A room change is an implicit warp (no Warp flag needed, does not use the 5 s Warp budget), rate-limited to one per second; inside a
+   room and on the island the Warp / speed rules are unchanged. The client's entry Warp + 5.5 s retry stays (harmless on v1.1, needed
+   on v1): `tests/mp-rooms.cjs` replays it against both the v1 relay (frozen copy `tests/fixtures/mp-roomCore-v1.ts`) and v1.1.
+3. `interest()`: the 5 Hz near set is the recipient's own room (nearest 12 among them); everyone else on the 1 Hz beacon; a member
+   who changed room this tick goes to everyone once, so the old room sees them leave at once.
+4. `markAway` skips only the legacy door pose (Indoors, y above the band).
+5. A resume Hello whose look DIFFERS updates `m.look` (and the hibernation attachment) and broadcasts `S.Joined` with the new
+   MemberInfo to the others; an unchanged look keeps the resume invisible (as v1). **Old-client check:** every version of
+   `lib/multiplayer/store.ts` since the first (d65c5a4e) handles `S.Joined` as `members.filter(id !== mem.id) + mem` (an upsert), the
+   island avatars `upsert(id, look)` rebuilds the rig on a look change, and PartyHost's "joined" note only fires for NEW ids.
+   `tests/mp-room-core.cjs` replays the host's frames through the frozen first reducer and the current store: one row, new look.
+   The validators from ad24951c on parse the frame; pre-nick validators (7428be0f, e5510978) reject every current MemberInfo, so
+   such a client already ignores all Joined frames (no row at all, never a duplicate).
+Stats: `RoomCounters.roomOob` / `RoomSummary.roomOob?` (optional: a snapshot or summary from v1 restores as 0); `rl:room_oob` is
+allow-listed. Dev relay: same `RoomCore`, nothing else to change. Tests: `tests/mp-room-core.cjs` (bounds drop, implicit warp,
+same-room interest, away rule, resume look + old reducer), `tests/mp-rooms.cjs`, `tests/mp-protocol.cjs`, `tests/mp-relay-stats.cjs`,
+`scripts/mp-relay-smoke.mjs` (room scenario: two museum bots ~5 Hz, the island bot beacon only, an out-of-room pose dropped).
+
+**Relay v1.1 deploy checklist (owner, one `wrangler deploy`; ships with the party-persist grace rules and the relay stats already on
+this branch).** Order:
+1. Merge `mp-relay-v11` into the integration branch; on the merged tree run `npm run test:quiet`, `node --experimental-websocket
+   scripts/mp-relay-smoke.mjs` and `npx tsc -p multiplayer/relay/tsconfig.json --noEmit`.
+2. Secret (only if the relay stats are not deployed yet): `cd multiplayer/relay && wrangler secret put STATS_TOKEN` (>= 16 random
+   chars); put the same value in the Next admin env as `RELAY_STATS_TOKEN` (+ `RELAY_STATS_URL`).
+3. Migrations: review `wrangler.toml`: `[[migrations]] tag = "v1"` (PartyRoom) untouched; `tag = "v2"` `new_sqlite_classes =
+   ["RelayStats"]` with the `STATS -> RelayStats` binding. v1.1 itself needs NO migration and no new secret.
+4. `wrangler deploy` from `multiplayer/relay` (applies v2 if new). Live parties reconnect through resume (60 s / 10 min grace);
+   counters snapshotted by the old code restore with `roomOob = 0`.
+5. Check: `curl -H "Authorization: Bearer $STATS_TOKEN" https://<worker>/stats` returns totals; two devices: one in the museum, one
+   on the island; the island friend fades at the door, the party list still shows "In the museum"; a second friend entering the
+   museum appears at once (no 5 s wait).
+6. Then deploy clients (relay first, it is backward compatible). Clients need no change for v1.1.
+**Roll back:** `wrangler rollback` (or `wrangler deployments list` + `wrangler rollback <id>`) to the previous worker version.
+Clients work unchanged against v1 (entry warp + retry still on). Do NOT delete the v2 migration / RelayStats class on a rollback (a
+`deleted_classes` migration destroys its data); an older worker without the STATS binding simply stops writing stats.
+
 Interest **on the client** (always, no relay needed): a friend is drawn iff `roomOf(friend) === myRoom` (island: `myRoom = -1`, and
 the existing non-Indoors rule). Everyone else is roster-only.
 

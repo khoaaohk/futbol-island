@@ -432,6 +432,16 @@ friends see them away after 12 s, not a vanish. Limit: after 60 s in a room the 
   revoked).
 - Host migration after `HOST_GRACE_MS`; end after `EMPTY_CLOSE_MS` empty; DO storage holds only `{codeHash?, createdAt,
   codeExpiresAt, locked}` (the code itself is the object name); nothing about members is written to storage.
+- **Relay v1.1 (rooms, code + tests on branch `mp-relay-v11`, Oct 22 2026, NOT deployed).** Wire-compatible (no `PROTOCOL_VERSION`
+  bump, no new fields); island play is unchanged. (1) A room pose (`roomOf(body) >= 0`) outside `RELAY_ROOM_BOUNDS[room]` (limits.ts:
+  half extents = client clamp + 3 m: Konbini / Cay 11 x 10, Museum 25 x 22, Arcade 18 x 16, Shop 12 x 10, Reef 41..47 28 x 28 m;
+  unknown room codes only `ROOM_XZ_MAX`) is dropped and counted (`rl:room_oob`), never `bad()`. (2) A change of `roomOf` (island <->
+  room, room <-> room, room -> legacy door pose) is an implicit warp: no 5 s Warp gap, no speed check, at most one per second.
+  (3) The 5 Hz near set holds only members in the recipient's own room (island and door poses = room -1; nearest 12 still applies);
+  everyone else arrives on the 1 Hz beacon; a member who changed room this tick is sent to everyone once (the door step).
+  (4) `markAway` skips only the legacy door pose, so a silent member in a room shows Away. (5) A resume Hello with a CHANGED look
+  updates the slot and re-announces it as `S.Joined` (same id; every client store version upserts Joined by id, tested against the
+  first reducer). Status and the deploy checklist: `docs/multiplayer-rooms-design.md` "Relay v1.1 status".
 
 ### 4.6 Scaling, cost, observability, failures, security
 - **Scale:** one DO per party, at most 6 sockets, ~30 in-msgs/s per busy party: far under DO limits. Unknown-code lookups cost one
