@@ -6,6 +6,14 @@ portal".
 
 Research and spec only. No app code changed. Base: `integrate-dive-bugs-sealife` @ 3dc81033.
 
+**Status (Oct 22 2026, later): Phase A is built** (branch `analytics-phase-a`; see "Phase A: P0" in §10 for the file list). Notes
+from the build: emote ids carry the LOCAL emote number (`pickIn`: 0–9, 10–18, 20–24, 30–34, 40–49), not the protocol value;
+Hide / Mute are counted in Town from PartyHost's `onHiddenChange` / `onMutedChange` (the member rows stay untouched); the
+title-screen step is the start-page id `st:friends`; `mp:end_tap` (first tap) and `mp:tab_code` / `mp:tab_list` (once per visit) were
+added; the host's end bands ride the final beat through a new tracker `onPageHide` hook. The privacy policy was rewritten the same
+day to say plainly that anonymous usage data IS collected, for running the game and for combined sponsor totals (legal review
+pending, `[LAWYER]` comment in components/privacy/PrivacyPolicy.tsx). The sponsor report stays internal: no sponsor export in Phase A.
+
 ## 0. Decision summary
 
 **Finding 1: no multiplayer data is collected today.**

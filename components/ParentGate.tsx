@@ -9,10 +9,11 @@ import styles from './ParentGate.module.css';
  *  - `<ParentGate onPass onCancel reason/>` shows the question and calls onPass when answered.
  *  - `<ParentGate.Guard reason>{children}</ParentGate.Guard>` renders children only after a pass (remembered ~10 min in memory).
  * `onCancel` shows a Back button at the top left of the card header (same BackButton as the title sheets); Escape is handled by the host dialog.
+ * `onWrong` (optional, Oct 22 2026): called once per wrong answer (Play with friends counts it; nothing typed is passed).
  * `shell` makes the gate the Play with friends card (same width, padding, header grid) so it can sit inside the party Card.
  * Nothing typed here is stored or sent anywhere.
  */
-export default function ParentGate({onPass,onCancel,title='For grown-ups',reason,shell=false}:{onPass:()=>void;onCancel?:()=>void;title?:string;reason?:ReactNode;shell?:boolean}){
+export default function ParentGate({onPass,onCancel,onWrong,title='For grown-ups',reason,shell=false}:{onPass:()=>void;onCancel?:()=>void;onWrong?:()=>void;title?:string;reason?:ReactNode;shell?:boolean}){
  const [q,setQ]=useState<GateQuestion|null>(null);
  const [answer,setAnswer]=useState(''),[wrong,setWrong]=useState(0),[waitUntil,setWaitUntil]=useState(0),[now,setNow]=useState(0);
  const input=useRef<HTMLInputElement>(null);
@@ -27,7 +28,7 @@ export default function ParentGate({onPass,onCancel,title='For grown-ups',reason
  const submit=()=>{
   if(!q||waiting)return;
   if(checkGateAnswer(q,answer)){passParentGate();onPass();return;}
-  const r=recordGateWrong();setWrong(r.tries);setAnswer('');
+  const r=recordGateWrong();onWrong?.();setWrong(r.tries);setAnswer('');
   if(r.lockedUntil)setWaitUntil(r.lockedUntil);else{setQ(makeGateQuestion());input.current?.focus();}
  };
  const Title=shell?'h2':'h3';

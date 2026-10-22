@@ -91,6 +91,10 @@ export function islandFrame(x:number,z:number,mode:ActivityId,lookup:(x:number,z
  live.sample(x,z,lookup);
 }
 
+/** Hooks run at the start of a real pagehide (the tab closing or navigating away), before its final beat, so a last count()
+ *  still rides it (lib/analytics/partyEvents.ts: the host's party bands). Not run on a mere hide. Returns the cleanup. */
+const pageHideHooks=new Set<()=>void>();
+export function onPageHide(fn:()=>void):()=>void{pageHideHooks.add(fn);return()=>{pageHideHooks.delete(fn);};}
 /** Learning counters waiting for the next beat (id → n). Only filled while a tracker runs. */
 const countAcc=new Map<string,number>();
 /**
@@ -257,7 +261,7 @@ export function startTracker(env:TrackerEnv){
  const onInput=()=>{const t=env.now();if(visibleSince!==null&&t-lastInput>IDLE_MS){flush();visibleSince=t;}lastInput=t;markActive(t);schedule();};
  /** Counts that did not fit the hide beat go out in up to MAX_DRAIN_BEATS small count-only beats (no time, no page views). */
  const drain=()=>{for(let i=0;i<MAX_DRAIN_BEATS&&countAcc.size;i++){const body:Record<string,unknown>={v:1,t:'beat',s:session,p:path};const k=takeCounts(BEACON_BUDGET-JSON.stringify(body).length);if(!k)break;body.k=k;send(body);}};
- const onHide=()=>{beat();drain();visibleSince=null;stopTimer();};
+ const onHide=(e?:Event)=>{if(e?.type==='pagehide')for(const f of pageHideHooks)try{f();}catch{}beat();drain();visibleSince=null;stopTimer();};
  function onVisibility(){
   if(d.visibilityState==='visible'){
    if(visibleSince!==null)return;

@@ -24,6 +24,12 @@
  *                                  cards found, films, pop-up books opened / finished / bought, reading-time buckets
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
+ *   mp:<event>                     Play with friends (PARTY_COUNT_EVENTS, lib/analytics/partyEvents.ts; Oct 22 2026): the funnel,
+ *                                  join failures by reason, party controls, party size / length / first-friend bands (host only,
+ *                                  one per party), minutes in a party and the per-session minute thresholds
+ *   em:<event>  em:e<n>            emotes (EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS, lib/analytics/emoteEvents.ts; Oct 22 2026): plays by
+ *                                  local emote number, context, target (townsperson / party / solo / refused), button → wheel → pick,
+ *                                  per-session thresholds. docs/analytics-multiplayer-plan.md is the spec for both families.
  */
 import {LESSON_TABLE} from './learningIds.generated';
 import {START_COUNT_IDS} from './startIds';
@@ -163,6 +169,54 @@ export const ENGAGE_FIXED_IDS:readonly string[]=[
 /** A card by its binder number (lib/town/cardCollection.ts cardNumber, 1-based): `en:cardn_<n>`, n 1..999. */
 export const ENGAGE_CARD_NUMBER_RE=/^en:cardn_[1-9][0-9]{0,2}$/;
 
+/**
+ * Play with friends (Oct 22 2026, Phase A of docs/analytics-multiplayer-plan.md; lib/analytics/partyEvents.ts). The party code
+ * never imports analytics (tests/mp-isolation.cjs): PartyHost raises an EVENT NAME (plus, for a few, a fixed bucket) through its
+ * `onTrack` prop and Town.tsx turns it into one of these ids. Totals and fixed bands only: never a code, link, name, nick length,
+ * member id, host key, network address or a party's own start/end time. Size and length are ONE band increment per party, sent
+ * by the host only (guests never send them, so a party is counted once).
+ */
+export const PARTY_FAIL_REASONS=['not_found','full','closed','expired','locked','bad_name','rate','offline','version','other'] as const;
+export const PARTY_PEAK_BUCKETS=[['peak_1','Only the host'],['peak_2','2 players'],['peak_3_4','3–4 players'],['peak_5_8','5–8 players'],['peak_9_12','9–12 players'],['peak_13_20','13–20 players']] as const;
+export const PARTY_LEN_BUCKETS=[['len_5m','Under 5 min'],['len_15m','5–15 min'],['len_30m','15–30 min'],['len_60m','30–60 min'],['len_3h','1–3 hours'],['len_long','3 hours or more']] as const;
+export const PARTY_FF_BUCKETS=[['ff_1m','Under 1 min'],['ff_5m','1–5 min'],['ff_15m','5–15 min'],['ff_60m','15–60 min'],['ff_long','Over an hour'],['ff_none','Nobody came']] as const;
+/** Minutes in a live party this session crossed N (each once per tab session): a cumulative histogram from countSessions. */
+export const PARTY_MIN_REACH=[5,15,30,60,120] as const;
+export const PARTY_COUNT_EVENTS=[
+ ['open','Play with friends opened (HUD)'],['sheet','Party card opened while live'],['open_link','Invite link opened (reached the island)'],
+ ['gate_show','Grown-up check shown'],['gate_skip','Grown-up check skipped (passed earlier this visit)'],['gate_ok','Grown-up check passed'],['gate_back','Grown-up check: Back'],['gate_wrong','Grown-up check: wrong answer'],
+ ['name_ok','First name accepted (once per visit)'],['create_tap','“Start a party” tapped'],['created','Party created (code received)'],['join_tap','Join with a code submitted'],
+ ['live_host','Live as host'],['live_guest','Live as guest'],['live_guest_link','Guest live via a link or the title screen'],['live_guest_typed','Guest live via a typed code'],
+ ['in','Sessions that played in a party'],
+ ...PARTY_FF_BUCKETS,
+ ['share_tap','Share / Copy link tapped'],['share_ok','Link shared'],['copy_ok','Link copied'],['share_fail','Share failed or cancelled'],
+ ['new_code','New code'],['lock','Closed to new friends'],['unlock','Opened to new friends'],['kick','Player removed'],['name_reset','Name reset by the host'],
+ ['hide','Friend hidden'],['mute','Friend’s emotes muted'],['tab_code','Code tab used (once per visit)'],['tab_list','List tab used (once per visit)'],
+ ['end_tap','“End party for everyone” tapped'],['end','Party ended by the host'],['leave','Guest left'],['ended','Party ended for me (remotely)'],['kicked','I was removed'],
+ ...PARTY_FAIL_REASONS.map(r=>[`fail_${r}`,`Join failed: ${r.replace('_',' ')}`] as const),['fail_create_rate','Create failed: too many parties'],['fail_create_offline','Create failed: party service unreachable'],
+ ...PARTY_PEAK_BUCKETS,...PARTY_LEN_BUCKETS,
+ ['min','Minutes played in a party'],...PARTY_MIN_REACH.map(m=>[`min_reach_${m}`,`Sessions with ${m}+ party minutes`] as const),
+] as const;
+/**
+ * Emotes (Oct 22 2026, lib/analytics/emoteEvents.ts): which preset emote was played by its LOCAL emote number, where, and what
+ * answered. The numeric ranges are repeated here (not imported) so the every-page tracker never loads the emote content;
+ * tests/admin-analytics-party.cjs checks them against lib/town/emoteReact.ts EMOTE (0–9), rideEmotes.ts RIDE_EMOTE (10–18),
+ * emoteContexts.ts CTX_EMOTE (20–24 flying, 30–34 swimming) and npcEmoteSets.ts NPC_SET (40–49). Never who it was aimed at.
+ */
+export const EMOTE_WIRE_IDS:readonly number[]=[[0,9],[10,18],[20,24],[30,34],[40,49]].flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
+export const EMOTE_CONTEXTS=['ground','scooter','bike','moped','fly','swim'] as const;
+export type EmoteCtx=typeof EMOTE_CONTEXTS[number];
+/** Picks in this session crossed N (each once per tab session). "Emoting sessions" = countSessions('em:reach_1'). */
+export const EMOTE_REACH=[1,5,20,50] as const;
+export const EMOTE_COUNT_EVENTS=[
+ ['pick','Emotes played'],['btn','Emote button shown (once per visit)'],['wheel','Emote wheel opened'],['wheel_close','Wheel closed with no pick'],
+ ['to_npc','A townsperson answered'],['to_party','Sent to a live party'],['solo','Nobody near (solo)'],['refused','Field player said “not now”'],
+ ...EMOTE_CONTEXTS.map(c=>[`ctx_${c}`,`Context: ${c}`] as const),
+ ...EMOTE_REACH.map(n=>[`reach_${n}`,`Sessions with ${n}+ emotes`] as const),
+] as const;
+export const PARTY_FIXED_IDS:readonly string[]=PARTY_COUNT_EVENTS.map(([e])=>'mp:'+e);
+export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n)];
+
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -173,6 +227,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...FISHING_COUNT_EVENTS.map(([e])=>'fi:'+e),
  ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
  ...ENGAGE_FIXED_IDS,
+ ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

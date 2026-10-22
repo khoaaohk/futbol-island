@@ -226,6 +226,13 @@ import {earnForBall} from '@/lib/town/cardRewardTriggers';
 import {enterActivity,islandFrame} from '@/lib/analytics/tracker';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
+// Play with friends + emote analytics (Oct 22 2026, docs/analytics-multiplayer-plan.md Phase A): the party code never imports
+// analytics, so PartyHost's onTrack names and the Hide / Mute choices become mp: counts here; emotes are counted in the emoteBus handler.
+import {countParty,partyFrame,watchPartyEnd} from '@/lib/analytics/partyEvents';
+import {countEmote,emoteCtx} from '@/lib/analytics/emoteEvents';
+let hiddenN=0,mutedN=0;
+const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
+const onMutedFriends=(s:ReadonlySet<number>)=>{if(s.size>mutedN)countParty('mute');mutedN=s.size;setMutedFriends(s);};
 import {installHudFocusRule} from '@/lib/town/hudFocus';
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
 const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
@@ -267,6 +274,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, Spot it) or the
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
   const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
+  useEffect(()=>watchPartyEnd(),[]);// the host's party bands ride the final beat when the tab closes mid-party
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;countPathLaunch(detail.format);primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
   const [learningRequest,setLearningRequest]=useState<{id:LearningId;nonce:number}|null>(null);
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent<{id:LearningId;nonce:number}>).detail,j=journeyById(detail?.id);if(!j)return;primeLessonVoice();setFormatPathRequest(null);setLearningRequest(detail);closeForLesson();setFieldCatalog(j.format);};window.addEventListener(LEARNING_LAUNCH,launch);return()=>window.removeEventListener(LEARNING_LAUNCH,launch);},[]);
@@ -785,6 +793,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const ballEmote=pick===EMOTE.PassBall||pick===EMOTE.JuggleWithMe;if(ballEmote&&(rideRef.current!=='walk'||water.inWater||lessonRef.current||liveKnockout.joined||animalRides.riding||streetTraffic.rider.index>=0||zipline.active))return;/* the ball emotes need feet on the ground and the player's own ball */
       if(ballEmote){endBallEmote();pickBallRoutine(passOut,pick===EMOTE.PassBall?'pass':'juggle',Math.random,reduced);if(walkBall.state.mode!=='attached'){dribblePlayer.x=location.x;dribblePlayer.y=player.root.position.y;dribblePlayer.z=location.z;dribblePlayer.yaw=player.root.rotation.y;walkBall.reset(dribblePlayer);}}
       emoteFx.kind=rs&&rs.arm<0?-1:pick;emoteFx.age=0;onRideNow=rideRef.current==='scooter'||rideRef.current==='bike'||rideRef.current==='moped';emoteRide=rideRef.current;emoteFx.v=cs||ns?-1:highFivePlan(pick,reduced||onRideNow,Math.random,hfBag);/* on a ride: one arm only, a plain air five (no spin / hop / crouch variations) */emoteFx.dur=cs?cs.seconds:rs?rs.seconds:ns?ns.seconds:emoteFx.v>=0?highFiveSeconds(emoteFx.v):emoteSeconds(pick);rideScript.armFrom=cs?cs.armFrom:rs?rs.armFrom:0;if(pick===EMOTE.PassBall&&reduced)emoteFx.dur=1.5;/* reduced motion: the bubble and one pass */emoteYaw0=player.root.rotation.y;emoteBubbles.show(0,cs?cs.emote:ns?ns.emote:rs?rs.emote:pick,emoteFx.dur);if(rs&&!reduced){rideScript.s=rs;rideScript.age=0;rideScript.tricked=false;rideScript.ctl=.25;rideScript.why='';rideScript.rideWas=rideRef.current;rideScript.h=Math.hypot(velocity.x,velocity.z)>1.5?Math.atan2(velocity.x,velocity.z):player.root.rotation.y;}
+      const toParty=multiplayerEnabled()&&partyConnection().status==='live';// analytics: this pick goes to the party
       if(multiplayerEnabled()){const conn=partyConnection();if(conn.status==='live')conn.sendEmote(pick as Parameters<typeof conn.sendEmote>[0]);}
       const now=performance.now()/1000,me=player.root.position;emoteCands.length=0;if(emoteNpc)npcCool.delete(emoteNpc.id);passAirOn=false;
       buildEmoteCands(now);
@@ -794,6 +803,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(id&&ns){emoteNpc=islandNpcs.interact(id,ns.emote,reduced);if(emoteNpc){npcCool.set(id,now+ns.seconds+NPC_COOLDOWN_SECONDS);emoteBubbles.show(1,ns.emote,ns.seconds);ixText.line='';ixText.start=juggleCounterStart(Math.random());const lx=emoteNpc.position.x,ly=emoteNpc.position.y+2.6,lz=emoteNpc.position.z;if(ns.emote===NPC_SET.NiceTouch)emoteBubbles.showText('Nice touch!',2,lx,ly,lz);else if(ns.emote===NPC_SET.NodHeader)emoteBubbles.showText('Great header!',1.8,lx,ly,lz);else if(ns.emote===NPC_SET.CatchBow)emoteBubbles.showText('Thank you!',2.4,lx,ly,lz);else if(ns.emote===NPC_SET.BellRing)playCues([['fi2-job-cue','sting',0]]);}}
       else if(id){npcCool.set(id,now+emoteFx.dur+NPC_COOLDOWN_SECONDS);emoteNpc=islandNpcs.react(id,pick,reduced,emoteFx.v,Math.hypot(velocity.x,velocity.z)<4?{x:me.x,y:me.y,z:me.z}:undefined,pick===EMOTE.PassBall?PASS_GAP:pick===EMOTE.JuggleWithMe?JUGGLE_GAP:undefined);if(emoteNpc)emoteNpc.pass=null;if(emoteNpc){emoteBubbles.show(1,pick,emoteFx.dur);}}
       if(!id)emoteNpc=null;if(pick===EMOTE.JuggleWithMe){if(!emoteNpc)pickBallRoutine(passOut,'solo',Math.random,reduced);emoteFx.dur=reduced?1.5:emoteNpc?JUGGLE_SECONDS:JUGGLE_SOLO_SECONDS;emoteBubbles.show(0,pick,emoteFx.dur);if(emoteNpc)emoteBubbles.show(1,pick,emoteFx.dur);}/* a solo keep-up routine when nobody is near */if(pick===EMOTE.PassBall&&!emoteNpc){passAirOn=true;passAir.x=me.x+Math.sin(emoteYaw0)*AIR_PARTNER;passAir.z=me.z+Math.cos(emoteYaw0)*AIR_PARTNER;passAir.y=fieldSurfaceHeight(passAir.x,passAir.z);}{const pe=id&&!rs?emoteNpc:null,airPair=cs&&cs.ctx==='fly'&&ctxFx.friendD>=0&&ctxFx.friendD<=FLY_CAMERA_PAIR_RANGE;emoteCam.begin(emoteCamSync(),me.x,me.y,me.z,airPair?friendFly:refV?refV.position:pe?(pe.emoteStep??pe.position):passAirOn?passAir:null,emoteFx.dur+(pe?.15:0),emoteCamWorld,camera.aspect,onRideNow,ballEmote,emoteYaw0);}// the gentle emote zoom (lib/town/emoteCamera.ts)
+      countEmote({wire:pickIn,ctx:emoteCtx(rideRef.current,flyNow,swimNow),npc:!!emoteNpc,party:toParty,refused:!!refV});// analytics: the local emote number, context and target (lib/analytics/emoteEvents.ts)
     });
     // High five + emote camera (user, Oct 22 2026): the local half of the sequence (lib/town/highFive.ts), the spark at each hit, the camera zoom.
     const emoteCam=createEmoteCamera(),ecs:EmoteCamState={reduced:false,riding:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:false,cameraDist:99,onRide:false,rideSpeed:0,steer:0,rideChanged:false};
@@ -1381,6 +1391,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(active&&!exploreZones.finished)exploreZones.step(dt,location.x,location.z,rideRef.current==='jetpack');
       // Admin analytics: base activity + a place/heat-map sample every ~5 s (lib/analytics/tracker.ts; a no-op when not counting).
       islandFrame(location.x,location.z,fieldSession.current?(fieldSession.current.quiz?'quiz':'lesson'):lessonRef.current?'lesson':fieldMenu.current?'watch':rideRef.current==='jetpack'||jetActions.state.phase==='parachute'?'fly':rideRef.current!=='walk'||streetTraffic.rider.index>=0?'ride':water.inWater?'swim':'walk',placeAt);
+      partyFrame(performance.now());// minutes in a live party: a comparison per frame, a sample every ~5 s (lib/analytics/partyEvents.ts)
       summitTravel.sample(location.x,location.z,rideRef.current==='jetpack'||jetActions.state.phase==='parachute',dt);
       if(streetTraffic.root.visible&&(!backgroundFrozen||focusLive.traffic))streetTraffic.update(active?dt:0,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},{drive:{x:driveX*.857+driveZ*.515,z:-driveX*.515+driveZ*.857},vx:rooftop.state.recovery>0?0:velocity.x,vz:rooftop.state.recovery>0?0:velocity.z,reduced,onCrash:()=>{resetInputs();velocity.x=velocity.z=0;rideTricks.reset();rampMotion.reset();spinCrashAge=0;rooftop.state.recovery=ROOF_RECOVERY_TIME;sound.impact();tapHaptic();}});
       const hitTruck=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index]:null;
@@ -1958,6 +1969,6 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     <div data-position-tip className="live-position-tip" role="status" hidden/>
     <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay'||destination==='museum'||destination==='summit'||destination==='shop')go(destination);else goField(destination);}}/>
     </HudStackContext.Provider>
-    {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook} onHiddenChange={setHiddenFriends} onMutedChange={setMutedFriends}/>}
+    {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook} onTrack={countParty} onHiddenChange={onHiddenFriends} onMutedChange={onMutedFriends}/>}
   </main>;
 }

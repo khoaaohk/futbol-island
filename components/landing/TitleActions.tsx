@@ -10,7 +10,7 @@ import {setPendingParty} from '@/lib/multiplayer/invite';
 import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {SPRING_EASE,flipTransform,invert} from './motion';
 import styles from './Title.module.css';
-import {startTitleState} from '@/lib/analytics/startEvents';
+import {startTitleState,trackStart} from '@/lib/analytics/startEvents';
 import {prefetchIslandWhenSettled,warmIsland} from '../root/islandPreload';
 
 type Saves=typeof import('./saveCodeAdapter');
@@ -95,7 +95,7 @@ export default function TitleActions(){
  };
  // "Join friends" (Oct 22 2026): the same sheet and morph as "Use a different code"; it stores the typed code as the pending party and
  // then continues into the game exactly as Play / Start would (PartyHost does the grown-up check and the join).
- const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
+ const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;trackStart('st:friends');/* the Play with friends funnel's title-screen step: a tap total, never the code */opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
  const joinParty=(c:string)=>{
   const stored=setPendingParty(c);if(!stored)return;
   window.dispatchEvent(new Event(TITLE_PENDING_EVENT));
