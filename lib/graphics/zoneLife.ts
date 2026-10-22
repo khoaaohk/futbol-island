@@ -1,7 +1,7 @@
 // Explore zone neighbourhoods (Oct 21 2026, user: "sea-life loops near zones"): turtles that come up to breathe beside Turtle Pool,
 // fish schools off Kelp Forest Wreck and Ball Crate Reef, jellies drifting by Moon Arch. The loops are data (seaLifeAreas.ts
 // ZONE_LIFE_LOOPS, placed from each zone's own outline); the shapes are the clear-water window's low-poly creatures
-// (clearCreatures.ts: turtle ~100 triangles, fish ~44, jelly ~50), no texture, seen through the water with the shared seaVeil.ts.
+// (clearCreatures.ts: the realistic turtle of seaTurtle.ts, LOD bands 442 / 160 / 31 triangles, stroking in the shader; fish ~44, jelly ~50), no texture, seen through the water with the shared seaVeil.ts.
 // Heat: ONE InstancedMesh per kind (at most 3 draws, only while a zone is within ZONE_LIFE_DRAW m), capped per heat tier
 // (zoneLifeCounts: 0 at tier 4 / Battery saver, nothing drawn or moved), beyond FAR_UPDATE m stepping at FAR_HZ, nothing uploaded
 // on frozen frames or static ambience. Matrices are composed into preallocated objects: no per-frame allocation.

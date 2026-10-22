@@ -172,7 +172,7 @@ function tail(o:Out,lod:number){const P=new Part(5),b=[[.29,-.005,0],[.29,-.035,
 function build(o:Out,detail:TurtleDetail,lod:number){
  const d=DETAIL[detail];shell(o,d,lod);head(o,d,lod);
  for(const sd of [-1,1]){
-  flipper(o,lod,2,sd,[-.17,-.02,.19*sd],SEA_TURTLE.front,.32,.75,t=>.068+.05*Math.sin(Math.PI*Math.pow(t,.7))-.03*t,t=>.034-.026*t,d.front,d.fsec,d.claw);
+  flipper(o,lod,2,sd,[-.17,-.02,.19*sd],SEA_TURTLE.front,.32,.75,t=>.075+.065*Math.sin(Math.PI*Math.pow(t,.7))-.035*t,t=>.038-.029*t,d.front,d.fsec,d.claw);
   flipper(o,lod,3,sd,[.22,-.035,.1*sd],SEA_TURTLE.hind,.8,1.05,t=>.075+.04*Math.sin(Math.PI*t)-.02*t,t=>.02-.012*t,d.hind,d.fsec,false);
  }
  if(d.tail)tail(o,lod);
