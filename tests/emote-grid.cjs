@@ -2,9 +2,10 @@
 // is always rendered inside the island's action cluster (not under the party chip), needs no flag, and the CSS grid order holds.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
+const ld=f=>{const m={exports:{}};vm.runInNewContext(ts.transpileModule(read(f),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m.exports,module:m,Math,Object,require:id=>ld(path.relative(ROOT,path.resolve(path.dirname(path.join(ROOT,f)),id)+'.ts'))});return m.exports;};
 const mod={exports:{}};
 vm.runInNewContext(ts.transpileModule(read('lib/town/emoteReact.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,
- {exports:mod.exports,module:mod,Math,Object,require:id=>{if(id==='./rideEmotes'){const m2={exports:{}};vm.runInNewContext(ts.transpileModule(read('lib/town/rideEmotes.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m2.exports,module:m2,Math});return m2.exports;}return {celebrationJump:p=>p>=0&&p<=.36?{progress:p/.36,height:.3}:undefined};}});
+ {exports:mod.exports,module:mod,Math,Object,require:id=>{if(id==='./rideEmotes'){const m2={exports:{}};vm.runInNewContext(ts.transpileModule(read('lib/town/rideEmotes.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m2.exports,module:m2,Math});return m2.exports;}if(id==='./emoteContexts')return ld('lib/town/emoteContexts.ts');if(id==='./emotePass')return ld('lib/town/emotePass.ts');return {celebrationJump:p=>p>=0&&p<=.36?{progress:p/.36,height:.3}:undefined};}});
 const E=mod.exports;let n=0;const t=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);throw e;}};
 const npc=(id,x,o={})=>({id,x,y:0,z:0,busy:false,cooldownUntil:0,...o}),me={x:0,y:0,z:0};
 
@@ -51,9 +52,9 @@ t('busy rules: riding, driving, sleeping, hidden, stunned, freestyle',()=>{
  for(const bad of [{travel:'scooter'},{travel:'skateboard'},{pose:'lie'},{visible:false},{stunned:true},{freestyle:true}])assert.equal(E.npcBusy({...base,...bad}),true,JSON.stringify(bad));
 });
 t('ten presets, protocol numbers, timing',()=>{
- assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Pass it','Laugh','Dance','Thanks','Pass to me','Space']));
+ assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Pass it','Laugh','Dance','Thanks','Juggle with me','Space']));
  assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.emote)),JSON.stringify([0,2,1,5,6,7,8,9,3,4]));
- assert.equal(E.EMOTE_SECONDS,4);assert.equal(E.NPC_EMOTE_SECONDS,4);assert.equal(E.emoteSeconds(E.EMOTE.PassBall),E.PASS_SECONDS);assert(E.PASS_SECONDS>=5.5&&E.PASS_SECONDS<=6.2);assert.equal(E.emoteSeconds(E.EMOTE.Dance),4);assert.equal(E.NPC_EMOTE_RANGE,9);
+ assert.equal(E.EMOTE_SECONDS,4);assert.equal(E.NPC_EMOTE_SECONDS,4);assert.equal(E.emoteSeconds(E.EMOTE.PassBall),E.PASS_SECONDS);assert(E.PASS_SECONDS>=6.5&&E.PASS_SECONDS<=8);assert.equal(E.emoteSeconds(E.EMOTE.Dance),4);assert.equal(E.NPC_EMOTE_RANGE,9);
  assert(E.emoteCalled(E.EMOTE.Wave,.1,4)>0&&E.emoteCalled(E.EMOTE.Wave,0,4)===0&&E.emoteCalled(E.EMOTE.Cheer,.5,4)===0&&E.emoteCalled(E.EMOTE.PassBall,.5,4)===0);
  assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,1,4)-.5)<1e-9&&E.emoteCelebration(E.EMOTE.Wave,.5,4)===-1);assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,3,4)-.5)<1e-9,'two cheers back to back fill 4 s');assert.equal(E.emoteCelebration(E.EMOTE.Dance,1,4),-1,'Dance has its own moves');
  assert.equal(E.emoteCelebration(E.EMOTE.WellPlayed,.75,4),-1,'Well played is a clap, not the cheer');
@@ -73,7 +74,7 @@ t('Emote button is rendered inside the action cluster, after the action buttons,
 t('always present: not behind multiplayerEnabled() or a live party; sending is gated on a live party',()=>{
  assert(!/multiplayerEnabled|partyStore|usePartyState/.test(ctl),'the button needs no flag');
  assert(/emoteBus\.set\(pickIn=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick as/.test(town),'friends get it only while live');
- assert(/emoteBubbles\.show\(0,rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs&&rs\.arm<0\?-1:pick/.test(town),'your own pose + bubble are immediate');
+ assert(/emoteBubbles\.show\(0,cs\?cs\.emote:ns\?ns\.emote:rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs&&rs\.arm<0\?-1:pick/.test(town),'your own pose + bubble are immediate');
  assert(/islandNpcs\.react\(id,pick,reduced,emoteFx\.v,/.test(town)&&/pickEmoteNpc\(emoteCands,\{x:me\.x,y:me\.y,z:me\.z\},now,undefined,emoteFacing\)/.test(town),'the best free townsperson (nearest, in front) reacts');
  assert(/emoteBubbles\.show\(1,pick,/.test(town),'a bubble over the townsperson');
 });
@@ -98,8 +99,8 @@ t('grid CSS: desktop 2x2 (Fly, Parachute / Emote, kick; Emote bottom-left); phon
  assert(/data-job-camera\] :is\(\.touch-emote,\.emote-wheel\)\{visibility:hidden/.test(css),'hidden with the job camera like the other action buttons');
 });
 t('townsfolk answer: pooled bubble, no per-frame allocation while idle, reduced motion = bubble only',()=>{
- assert(/const react=\(id:string,emote:number,reduced:boolean,variation=-1,player\?:Position\)/.test(npcs)&&/if\(fx\.kind<0\|\|reduced\|\|fx\.v>=0\)return null/.test(npcs));
- assert(/emoteBubbles\.update\(active\?dt:0,reduced\)/.test(town)&&(read('lib/graphics/emoteBubbles.ts').match(/new T\.Sprite\(/g)||[]).length===1,'one sprite factory, two pooled sprites');
+ assert(/const react=\(id:string,emote:number,reduced:boolean,variation=-1,player\?:Position,spacing\?:\{min:number;max:number\}\)/.test(npcs)&&/if\(fx\.kind<0\|\|reduced\|\|fx\.v>=0\)return null/.test(npcs));
+ assert(/emoteBubbles\.update\(active\?dt:0,reduced\)/.test(town)&&(read('lib/graphics/emoteBubbles.ts').match(/new T\.Sprite\(/g)||[]).length===2,'one pooled-copy sprite factory + the one text sprite');
 });
 t('townsfolk hold still, face you and step in; the name tag hides; riding emotes use one arm and keep the vehicle',()=>{
  assert(/entry\.near=entry\.distance<7\|\|entry\.fx\.kind>=0/.test(npcs),'an answering townsperson is "near": the routine stops it and it faces you');
@@ -110,6 +111,6 @@ t('townsfolk hold still, face you and step in; the name tag hides; riding emotes
  assert(/applyRideEmote\(player\.root,k,/.test(town)&&/emoteCam\.begin\([^;]*onRideNow[,)]/.test(town)&&/emoteCam\.track\(/.test(town));
  const cel=read('lib/graphics/celebrations.ts'),ride=cel.slice(cel.indexOf('export function applyRideEmote'));
  assert(!/j\.ls|j\.le/.test(ride),'the ride emote never touches the left arm (it stays on the bar)');
- assert(/\.react\(id,pick|ecs\.onRide=/.test(town)&&/ecs\.riding=rideRef\.current==='jetpack'\|\|streetTraffic\.rider\.index>=0\|\|zipline\.active/.test(town),'the jetpack, truck and zipline stay blocked');
+ assert(/\.react\(id,pick|ecs\.onRide=/.test(town)&&/ecs\.riding=\(rideRef\.current==='jetpack'&&ecs\.ctx!=='fly'\)\|\|streetTraffic\.rider\.index>=0\|\|zipline\.active/.test(town),'the jetpack, truck and zipline stay blocked');
 });
 console.log(`emote-grid: ${n} checks passed`);

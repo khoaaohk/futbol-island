@@ -24,6 +24,7 @@ const GLYPHS: Record<string, string> = {
   'ride-bell': 'M6 17h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v5zM10 20h4',
   'ride-wheelie': 'M4 19a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM15 14a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM7 16l5-5 4 3M12 11l-1-5',
   'ride-weave': 'M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0',
+  'juggle-air': 'M12 3.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zM6 20.5v-6m0 0-2.5 2.5M6 14.5l2.5 2.5M18 20.5v-6m0 0-2.5 2.5M18 14.5l2.5 2.5',
   wind: 'M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7a2.5 2.5 0 1 1-2.5 2.5',
 };
 export function Glyph({ name, size = 22 }: { name: string; size?: number }) {

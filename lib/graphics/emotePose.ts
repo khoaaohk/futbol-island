@@ -44,7 +44,7 @@ function danceJump(u: number, age: number): {progress: number; height: number} |
 const set = (s: T.Object3D, e: T.Object3D, k: number, sx: number, sz: number, el: number) => {
   s.rotation.x += (sx - s.rotation.x) * k; s.rotation.y *= 1 - k; s.rotation.z += (sz - s.rotation.z) * k; e.rotation.x += (el - e.rotation.x) * k;
 };
-export const emoteHasMove = (kind: number) => kind === EMOTE.PassToMe || kind === EMOTE.Space || kind === EMOTE.Laugh || kind === EMOTE.Dance || kind === EMOTE.Thanks;
+export const emoteHasMove = (kind: number) => kind === EMOTE.JuggleWithMe || kind === EMOTE.Space || kind === EMOTE.Laugh || kind === EMOTE.Dance || kind === EMOTE.Thanks;
 /** Arms for the moves that are not the wave / celebration / clap: Pass to me (point), Space (palms out), Laugh (hands on belly, shaking), Dance, Thanks (hands together, bowing). Call after `rig.update`. */
 export function applyEmoteMove(root: T.Object3D, kind: number, age: number, dur: number) {
   if (!emoteHasMove(kind)) return;
@@ -63,7 +63,7 @@ export function applyEmoteMove(root: T.Object3D, kind: number, age: number, dur:
     const bow = .5 + .5 * Math.sin(age / dur * Math.PI * 6 - Math.PI / 2);
     set(j.ls, j.le, k, -.95 - .25 * bow, -.12, -1.95); set(j.rs, j.re, k, -.95 - .25 * bow, .12, -1.95); return;
   }
-  if (kind === EMOTE.PassToMe) { // the right arm points out, jabbing twice a second
+  if (kind === EMOTE.JuggleWithMe) { // the right arm points out, jabbing twice a second
     const jab = .12 * Math.max(0, Math.sin(age * Math.PI * 4));
     set(j.rs, j.re, k, -1.5 - jab, .25, -.15); return;
   }

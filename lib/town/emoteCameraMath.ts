@@ -11,8 +11,10 @@ export const EMOTE_CAM = {
   fov: 40,
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
   minDist: 3.2, maxDist: 18,
+  /** A wide pair (Juggle with me, 6-8 m apart) may sit this far back so BOTH characters, the high arcs and the emoji headroom fit. */
+  wideMaxDist: 32,
   /** Back the fitted distance off a little (user, Oct 22 2026: "for the emote zoom out just a bit more"). */
-  backoff: 1.6,
+  backoff: 1.3,
   /** Tried in order when something stands between the camera and the characters: a gentler zoom (distance x factor). */
   shrink: [1, 1.35, 1.8] as readonly number[],
   /** Rapid taps do not pump the camera: no new zoom for this long after one ends. */
@@ -20,7 +22,7 @@ export const EMOTE_CAM = {
   /** The follow camera is already this close (m): indoors / arcade / shop rooms use their own cameras, so skip. */
   closeCameraDist: 14,
   /** The characters' framed top (raised hands, a hop) and feet (m), the target lift and the room kept for the HUD / controls (multipliers). */
-  top: 2.45, feet: -.1, targetLift: 1.15, marginH: 1.12, marginV: 1.3,
+  top: 4, feet: -.1, targetLift: 1.95, marginH: 1.12, marginV: 1.3,
   /** Riding (scooter / bike / moped): the emote keeps going up to this speed (m/s); turning faster than `rideSteer` (rad/s) ends it; the characters are this much wider (m). */
   rideMaxSpeed: 16, rideSteer: 1.8, rideWide: .5,
   /** A character's half width including the arms out (m). */
@@ -28,6 +30,22 @@ export const EMOTE_CAM = {
 } as const;
 
 const COS_P = Math.cos(EMOTE_CAM.pitch), SIN_P = Math.sin(EMOTE_CAM.pitch);
+/**
+ * Framing by screen shape (user, Oct 22 2026: "for mobile and desktop, make sure to have better angles where we can see both characters better").
+ * The characters are kept inside a SAFE AREA: not under the top HUD (~18 %), the joystick (bottom-left) or the action grid (bottom-right).
+ *  - portrait phone (aspect < .75): a slightly HIGHER pitch and a tall margin (the pair uses the middle ~57 % of the height, 21 %..79 %);
+ *  - landscape phone (aspect > 1.95): the controls sit in the corners, so a wide side margin (the pair uses the middle ~67 % each way);
+ *  - desktop / tablet: a lower, cinematic pitch and moderate margins.
+ */
+export interface EmoteLayout {kind: 'portrait' | 'landscape' | 'desktop'; marginH: number; marginV: number; pitch: number}
+const LAYOUTS: Record<EmoteLayout['kind'], EmoteLayout> = {
+  portrait: {kind: 'portrait', marginH: 1.12, marginV: 1.75, pitch: .5},
+  landscape: {kind: 'landscape', marginH: 1.5, marginV: 1.5, pitch: .32},
+  desktop: {kind: 'desktop', marginH: 1.25, marginV: 1.4, pitch: .26},
+};
+export const emoteLayout = (aspect: number): EmoteLayout => aspect < .75 ? LAYOUTS.portrait : aspect > 1.95 ? LAYOUTS.landscape : LAYOUTS.desktop;
+/** The fraction of the screen height (from the top) the framed characters occupy at most: their feet and raised hands stay inside [1 - 1/marginV)/2 .. (1 + 1/marginV)/2]. */
+export const emoteSafeBand = (aspect: number): [number, number] => { const m = emoteLayout(aspect).marginV; return [(1 - 1 / m) / 2, (1 + 1 / m) / 2]; };
 const TAN_V = Math.tan(EMOTE_CAM.fov * Math.PI / 360);
 /** The camera-to-subject direction (unit) for a heading `yaw`. */
 export const emoteDir = (yaw: number = EMOTE_CAM.yaw): V3 => ({x: Math.sin(yaw) * COS_P, y: SIN_P, z: Math.cos(yaw) * COS_P});
@@ -38,8 +56,8 @@ export const emoteDir = (yaw: number = EMOTE_CAM.yaw): V3 => ({x: Math.sin(yaw) 
  * `halfWidth` + `wide` either side) of BOTH characters stay inside the frame at `aspect` (width / height), with room for the HUD above and the
  * controls below. `factor` > 1 is a gentler zoom, `wide` (m) widens each character (a rider and the vehicle).
  */
-export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1, yaw: number = EMOTE_CAM.yaw, wide = 0, pitch: number = EMOTE_CAM.pitch): number {
-  const COS_P = Math.cos(pitch), SIN_P = Math.sin(pitch);
+export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1, yaw: number = EMOTE_CAM.yaw, wide = 0, pitchIn?: number): number {
+  const L = emoteLayout(aspect), pitch = pitchIn ?? L.pitch, COS_P = Math.cos(pitch), SIN_P = Math.sin(pitch);
   const mx = hasQ ? (px + qx) / 2 : px, mz = hasQ ? (pz + qz) / 2 : pz, my = (hasQ ? (py + qy) / 2 : py) + EMOTE_CAM.targetLift;
   const sy = Math.sin(yaw), cy = Math.cos(yaw), dx0 = sy * COS_P, dz0 = cy * COS_P, hw = EMOTE_CAM.halfWidth + wide, a = Math.max(.3, aspect);
   let need: number = EMOTE_CAM.minDist;
@@ -49,30 +67,63 @@ export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, p
       const side = i & 1 ? 1 : -1, y = (i & 2 ? EMOTE_CAM.top : EMOTE_CAM.feet) - EMOTE_CAM.targetLift + oy;
       const dx = ox + side * hw * cy, dz = oz - side * hw * sy; // the character's width along the camera's right vector
       const right = dx * cy - dz * sy, up = y * COS_P - (dx * sy + dz * cy) * SIN_P, dot = dx * dx0 + y * SIN_P + dz * dz0;
-      need = Math.max(need, Math.abs(right) * EMOTE_CAM.marginH / (TAN_V * a) + dot, Math.abs(up) * EMOTE_CAM.marginV / TAN_V + dot);
+      need = Math.max(need, Math.abs(right) * L.marginH / (TAN_V * a) + dot, Math.abs(up) * L.marginV / TAN_V + dot);
     }
   }
-  const dist = Math.min(EMOTE_CAM.maxDist, need * EMOTE_CAM.backoff) * Math.max(1, factor);
+  const cap = hasQ && Math.hypot(qx - px, qz - pz) > 5 ? EMOTE_CAM.wideMaxDist : EMOTE_CAM.maxDist;
+  const dist = Math.min(cap, need * EMOTE_CAM.backoff) * Math.max(1, factor);
   out.target.x = mx; out.target.y = my; out.target.z = mz;
   out.eye.x = mx + dx0 * dist; out.eye.y = my + SIN_P * dist; out.eye.z = mz + dz0 * dist;
   return dist;
 }
 
-/** The heading (rad) that frames the pair closest: the default three-quarter view, or up to ~1.6 rad around it when that fits a closer shot (the pair side by side on a portrait phone). */
-export function bestEmoteYaw(px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, wide = 0, sideWeight = 1.8): number {
-  if (!hasQ) return EMOTE_CAM.yaw;
+const TAU = Math.PI * 2;
+/** Signed shortest angle a - b in (-pi, pi]. */
+export const angleDiff = (a: number, b: number): number => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; else if (d <= -Math.PI) d += TAU; return d; };
+/** The most heading change per second the camera may make while it follows a moving partner (rad/s): no whipping. */
+export const YAW_RATE = 1.1;
+/** Solo (no partner): a three-quarter FRONT-side view of the player (camera `FRONT` rad off the facing, on the side nearest the follow camera's heading) so the animation is seen, not a back view. */
+export const SOLO_FRONT = .8;
+export function soloYaw(facing: number, from: number = EMOTE_CAM.yaw): number {
+  const a = facing + SOLO_FRONT, b = facing - SOLO_FRONT;
+  return Math.abs(angleDiff(a, from)) <= Math.abs(angleDiff(b, from)) ? a : b;
+}
+/** A rider and their vehicle: a SIDE-on view (the vehicle's length across the screen), on the side nearest the follow camera. */
+export function rideYaw(facing: number, from: number = EMOTE_CAM.yaw): number {
+  const a = facing + 1.4, b = facing - 1.4;
+  return Math.abs(angleDiff(a, from)) <= Math.abs(angleDiff(b, from)) ? a : b;
+}
+/**
+ * The heading (rad) for a pair: the camera looks ACROSS the line between the two characters (side-on / three-quarter: the pair side by side
+ * on the screen at a similar size and height), on the side that is clear, with the smallest turn from `from` (the follow camera's heading, or
+ * the current one while it follows a moving partner). Every heading round the circle (0.13 rad steps) is scored:
+ *   frame distance (tight is good) + depth difference between the two (a stacked pair is bad, weight `sideWeight`) + turn away from `from`
+ *   - screen separation, and a heading that `ok` rejects (a wall, prop or bench between the eye and either character) is skipped.
+ * With the two almost on top of each other the axis means nothing, so the player's FRONT-side view (`facing`) is used instead.
+ */
+export function bestEmoteYaw(px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, wide = 0, sideWeight = 1.8, from: number = EMOTE_CAM.yaw, facing?: number, ok?: (yaw: number) => boolean): number {
+  if (!hasQ) return facing === undefined ? EMOTE_CAM.yaw : wide > 0 ? rideYaw(facing, from) : soloYaw(facing, from);
   const o = {eye: {x: 0, y: 0, z: 0}, target: {x: 0, y: 0, z: 0}};
-  let best: number = EMOTE_CAM.yaw, bestScore = Infinity;
-  for (let i = -8; i <= 8; i++) {
-    const yaw = EMOTE_CAM.yaw + i * .2, score = frameEmote(o, px, py, pz, true, qx, qy, qz, aspect, 1, yaw, wide) + Math.abs(i) * .35
-      + sideWeight * Math.abs((qx - px) * Math.sin(yaw) + (qz - pz) * Math.cos(yaw)); // one character in front of the other is bigger and hides it: prefer side by side
-    if (score < bestScore) { bestScore = score; best = yaw; }
+  const ax = qx - px, az = qz - pz, apart = Math.hypot(ax, az);
+  let best = NaN, bestScore = Infinity;
+  const STEPS = 48;
+  for (let pass = 0; pass < 2 && Number.isNaN(best); pass++) {
+    for (let i = 0; i < STEPS; i++) {
+      const yaw = from + angleDiff(i * TAU / STEPS, from); // candidates spread over the whole circle
+      if (pass === 0 && ok && !ok(yaw)) continue;
+      const dist = frameEmote(o, px, py, pz, true, qx, qy, qz, aspect, 1, yaw, wide);
+      const along = Math.abs(ax * Math.sin(yaw) + az * Math.cos(yaw)), lateral = Math.abs(ax * Math.cos(yaw) - az * Math.sin(yaw));
+      let score = dist * .6 + Math.abs(angleDiff(yaw, from)) * .7 + sideWeight * 1.2 * along - Math.min(lateral, 4) * .5;
+      if (apart < 1.2 && facing !== undefined) score += 1.5 * Math.abs(angleDiff(yaw, soloYaw(facing, from))); // too close for an axis: the front-side view
+      if (score < bestScore) { bestScore = score; best = yaw; }
+    }
   }
-  return best;
+  return Number.isNaN(best) ? from : best;
 }
 
 /** Does a point at offset (dx, dy, dz) from the camera target land inside the frame at `dist` / `aspect` (heading `yaw`)? */
-export function insideFrame(dx: number, dy: number, dz: number, dist: number, aspect: number, yaw: number = EMOTE_CAM.yaw): boolean {
+export function insideFrame(dx: number, dy: number, dz: number, dist: number, aspect: number, yaw: number = EMOTE_CAM.yaw, pitchIn?: number): boolean {
+  const pitch = pitchIn ?? emoteLayout(aspect).pitch, COS_P = Math.cos(pitch), SIN_P = Math.sin(pitch), TAN_V = Math.tan(EMOTE_CAM.fov * Math.PI / 360);
   const sy = Math.sin(yaw), cy = Math.cos(yaw);
   const right = dx * cy - dz * sy;
   const up = dy * COS_P - (dx * sy + dz * cy) * SIN_P;
@@ -89,6 +140,8 @@ export interface EmoteCamState {
   /** On a scooter, bike or moped (a ground ride): emotes work; `rideSpeed` m/s, `steer` rad/s (turn rate), `rideChanged` = dismounted / changed ride since the emote began. */
   onRide: boolean; rideSpeed: number; steer: number; rideChanged: boolean;
   swimming: boolean; flying: boolean;
+  /** A context emote is running (lib/town/emoteContexts.ts): a FLYING one is allowed while flying / on the jetpack ride, a SWIM one while swimming; neither is cancelled by the movement that goes with it. */
+  ctx?: 'fly' | 'swim' | '';
   inJob: boolean; cutscene: boolean; lesson: boolean;
   /** A menu, dialog, map, shop or the Explore room is open (Town's `active` is false). */
   menuOpen: boolean;
@@ -100,9 +153,11 @@ export interface EmoteCamState {
 /** Why the zoom must not run (or must stop at once): '' = it may run. Reduced motion: no zoom at all, just the bubble. */
 export function emoteCamBlocked(s: EmoteCamState): string {
   if (s.reduced) return 'reduced';
-  if (s.riding) return 'riding';
-  if (s.swimming) return 'swimming';
-  if (s.flying) return 'flying';
+  if (s.riding) return 'riding'; // (a flying emote: Town leaves the jetpack ride out of `riding`, only a truck / zipline ride counts)
+  if (s.swimming && s.ctx !== 'swim') return 'swimming';
+  if (s.flying && s.ctx !== 'fly') return 'flying';
+  if (s.ctx === 'fly' && !s.flying) return 'landed';
+  if (s.ctx === 'swim' && !s.swimming) return 'left the water';
   if (s.inJob) return 'job';
   if (s.cutscene) return 'cutscene';
   if (s.lesson) return 'lesson';
@@ -113,7 +168,7 @@ export function emoteCamBlocked(s: EmoteCamState): string {
     if (s.steer > EMOTE_CAM.rideSteer) return 'steering';
     return '';
   }
-  if (s.moving) return 'moving';
+  if (s.moving && !s.ctx) return 'moving';
   return '';
 }
 /** To START: the cancel rules plus "the camera is already close" (an indoor / room camera). */

@@ -861,6 +861,10 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .emote-wheel-btn:active{translate:0 3px;box-shadow:0 1px 0 #b8923f}
 .emote-wheel-btn:focus-visible,.touch-emote:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .town-app[data-job-camera] :is(.touch-emote,.emote-wheel){visibility:hidden;pointer-events:none}
+.town-app .touch-emote{transition:translate .16s,box-shadow .16s,opacity .18s,scale .18s,visibility 0s}
+/* user, Oct 22 2026: "emote btn only show when there is a npc or friend to interact with": hidden, its grid cell stays reserved (nothing moves) */
+.town-app .touch-emote[data-hidden]{opacity:0;scale:.8;visibility:hidden;pointer-events:none;transition:translate .16s,box-shadow .16s,opacity .18s,scale .18s,visibility 0s .18s}
+@media(prefers-reduced-motion:reduce){.town-app .touch-emote,.town-app .touch-emote[data-hidden]{transition:none}}
 @keyframes emoteIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .emote-wheel{align-items:center;gap:4px}
 .emote-wheel-strip{display:flex;gap:8px;width:calc(5 * 52px + 4 * 8px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding:0 0 4px;margin-bottom:-4px}

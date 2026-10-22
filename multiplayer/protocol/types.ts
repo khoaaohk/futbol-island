@@ -18,7 +18,7 @@ export const Mode = {
   Zipline: 7, Swim: 8, Dive: 9, AnimalRide: 10, Fishing: 11, Busy: 12, Idle: 13,
 } as const;
 export type Mode = (typeof Mode)[keyof typeof Mode];
-export const Emote = { Wave: 0, Cheer: 1, HighFive: 2, PassToMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9 } as const;
+export const Emote = { Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9 } as const;
 export type Emote = (typeof Emote)[keyof typeof Emote];
 export const PingKind = { MeetHere: 0, FollowMe: 1 } as const;
 export type PingKind = (typeof PingKind)[keyof typeof PingKind];
