@@ -27,10 +27,10 @@ t('all ten emotes animate the body or the called arm, at several moments of the 
  }
 });
 t('each simple emote lasts about 4 s, Pass it about 6, and the moves differ from each other',()=>{
- for(const k of [0,1,3,4,5,7,8,9])assert.equal(E.emoteSeconds(k),4);
- assert(E.emoteSeconds(E.EMOTE.PassBall)>=5.5);
+ for(const k of [0,1,4,5,7,8,9])assert.equal(E.emoteSeconds(k),4);
+ assert(E.emoteSeconds(E.EMOTE.PassBall)>=6.5&&E.emoteSeconds(E.EMOTE.JuggleWithMe)>=8);
  const sig=k=>{const r=rig();P.applyEmoteArms(r,k,2,4);return Object.values(r.j).map(o=>o.rotation.x.toFixed(2)+'/'+o.rotation.z.toFixed(2)).join(',');};
- const set=new Set([E.EMOTE.PassToMe,E.EMOTE.Space,E.EMOTE.Laugh,E.EMOTE.Dance,E.EMOTE.Thanks,E.EMOTE.WellPlayed].map(sig));
+ const set=new Set([E.EMOTE.JuggleWithMe,E.EMOTE.Space,E.EMOTE.Laugh,E.EMOTE.Dance,E.EMOTE.Thanks,E.EMOTE.WellPlayed].map(sig));
  assert.equal(set.size,6,'six distinct arm poses');
 });
 t('Dance has a 4 s routine: arm changes, a spin in the middle, hops, a final pose; no motion changes at a high rate',()=>{
@@ -39,24 +39,76 @@ t('Dance has a 4 s routine: arm changes, a spin in the middle, hops, a final pos
  assert.equal(P.danceTurn(.45),0);assert.equal(P.danceTurn(.8),1);assert(P.danceTurn(.62)>.3&&P.danceTurn(.62)<.7);
  assert(P.emoteBody(E.EMOTE.Dance,.5,4).jump,'beat hops');
 });
-t('Pass it: five passes alternate player -> partner, the ball really travels between the feet and ends within the sequence',()=>{
- const a={x:0,y:0,z:0},b={x:3,y:0,z:0},o=PB.createPassBallOut(),froms=[],idx=new Set();
+const SM=load('lib/graphics/strikeMotion.ts');
+const ballOut=()=>PB.createPassBallOut();
+function GROUND_ROLL(){return PB.GROUND.roll+.01;}
+t('Pass it: a GROUND pass, five passes alternate player -> partner, the ball leaves the foot on the contact frame and rolls low',()=>{
+ const a={x:0,y:0,z:0},b={x:3.5,y:0,z:0},o=ballOut(),froms=[],idx=new Set();
  let maxY=0,prev=-1;
  for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);if(o.index>=0){idx.add(o.index);if(o.index!==prev){froms.push(o.from);prev=o.index;}}maxY=Math.max(maxY,o.y);}
- assert.equal(idx.size,5);assert.equal(froms.join(),'0,1,0,1,0');assert(maxY>.4&&maxY<1.2,'a lifted pass, not a rocket: '+maxY);
- PB.passBallAt(PB.PASS_LEAD+.01,a,b,o);assert(o.x<1,'pass 1 starts at your feet');
- PB.passBallAt(PB.PASS_LEAD+PB.PASS_FLIGHT+.05,a,b,o);assert(o.x>2&&o.x<3,'pass 1 lands at the partner: '+o.x);
- PB.passBallAt(PB.PASS_LEAD+PB.PASS_PERIOD+PB.PASS_FLIGHT+.05,a,b,o);assert(o.x<1&&o.x>0,'pass 2 comes back to you: '+o.x);
- assert(PB.PASS_LEAD+PB.PASS_COUNT*PB.PASS_PERIOD<=E.PASS_SECONDS,'all five fit the emote length');
- assert.equal(PB.passBallAt(0,a,a,o).x===o.x,true,'a partner on top of you does not blow up (NaN)');assert(Number.isFinite(o.x));
+ assert.equal(idx.size,5);assert.equal(froms.join(),'0,1,0,1,0');assert(maxY<.4,'a rolling pass along the ground (tiny bounce at most): '+maxY);
+ // contact timing: the ball stays on the foot until the strike reaches STRIKE_CONTACT, then moves
+ const s0=PB.PASS_LEAD,W=PB.GROUND.windup,K=PB.GROUND.kick,tc=W+PB.contactAfterWindup(K);
+ PB.passBallAt(s0+tc-.02,a,b,o);const bx=o.x;assert(Math.abs(bx-PB.PASS_REACH)<1e-6,'before the contact frame the ball is on the passer\'s foot: '+bx);
+ assert(o.actors[0].kick!==undefined&&Math.abs((o.actors[0].kick-.15)/.85*K-(tc-W-.02))<1e-6,'the swing runs on the rig\'s kick phase');
+ PB.passBallAt(s0+tc+.03,a,b,o);assert(o.x>bx+.02,'after the contact frame the ball has left the foot');
+ const kickAtContact=.15+.85*PB.contactAfterWindup(K)/K;assert(Math.abs(kickAtContact-SM.STRIKE_CONTACT)<1e-9,'contact = the rig\'s STRIKE_CONTACT ('+SM.STRIKE_CONTACT+')');
+ PB.passBallAt(s0+tc+GROUND_ROLL(),a,b,o);assert(o.x>2.8&&o.x<3.1,'pass 1 lands at the partner\'s foot: '+o.x);
+ PB.passBallAt(s0+PB.PASS_PERIOD+tc+GROUND_ROLL(),a,b,o);assert(o.x<.8&&o.x>.2,'pass 2 comes back to you: '+o.x);
+ assert.equal(PB.passBallAt(0,a,a,o).x===o.x,true);assert(Number.isFinite(o.x),'a partner on top of you does not blow up (NaN)');
 });
-t('source: Pass it is wired (bubble, ball, no rides, camera hold, cancel on walk, rename ThumbsUp -> PassBall)',()=>{
+t('Pass it: the NPC half = a real kick (wind-up, swing, follow-through) on its passes and a trap before it passes back',()=>{
+ const a={x:0,y:0,z:0},b={x:3.5,y:0,z:0},o=ballOut();
+ let npcKick=0,playerKick=0,npcWind=0,npcRecv=0,maxKick=0;
+ for(let age=0;age<=E.PASS_SECONDS;age+=1/60){PB.passBallAt(age,a,b,o);
+  if(o.actors[1].kick!==undefined){npcKick++;maxKick=Math.max(maxKick,o.actors[1].kick);}
+  if(o.actors[0].kick!==undefined)playerKick++;if(o.actors[1].windup!==undefined)npcWind++;if(o.actors[1].receive>0)npcRecv++;
+  assert(!(o.actors[0].kick!==undefined&&o.actors[1].kick!==undefined),'only one kicker at a time');}
+ assert(npcKick>20&&playerKick>30,'both swing through (the player kicks 3 passes, the NPC 2)');assert(Math.abs(maxKick-1)<.02,'a full follow-through');assert(npcWind>10,'a wind-up');assert(npcRecv>20,'the receiver cushions the ball (receive)');
+ let trapEnd=-1,windStart=-1;for(let age=PB.PASS_LEAD;age<PB.PASS_LEAD+PB.PASS_PERIOD*2;age+=1/120){PB.passBallAt(age,a,b,o);if(o.index===0&&o.actors[1].receive===1&&o.actors[1].receiveProgress>=.93&&trapEnd<0)trapEnd=age;if(o.index===1&&o.actors[1].windup!==undefined&&windStart<0)windStart=age;}
+ assert(trapEnd>0&&windStart>=trapEnd-.02,'trap then pass back: '+trapEnd+' / '+windStart);
+ const sp={forward:0,height:0,open:0,pitch:0,load:0,drive:0,follow:0};let lo=9,hi=-9;for(let p=0;p<=1;p+=.02){SM.strikePose(p,'pass',.5,sp);lo=Math.min(lo,sp.forward);hi=Math.max(hi,sp.forward);}
+ assert(lo<-.1&&hi>.4,'foot-pose amplitude: back-lift '+lo.toFixed(2)+' to forward swing '+hi.toFixed(2));
+});
+t('Juggle with me: far apart (6-8 m), the ball goes back and forth IN THE AIR in high arcs, each holder keeps it up 2 times (foot / knee / head) before a loft kick',()=>{
+ assert(PB.JUGGLE_GAP.min===6&&PB.JUGGLE_GAP.max===8&&PB.PASS_GAP.min===3&&PB.PASS_GAP.max===4);
+ const a={x:0,y:0,z:0},b={x:7,y:0,z:0},o=ballOut();let maxY=0,touches=0,lastJ=-1;const kinds=new Set(),flights=[];let prevAir=false,airStart=0;
+ for(let age=0;age<=E.emoteSeconds(E.EMOTE.JuggleWithMe);age+=1/60){PB.juggleBallAt(age,a,b,o);maxY=Math.max(maxY,o.y);
+  for(const ac of o.actors)if(ac.juggle!==undefined){kinds.add(ac.juggleTouch);const j=Math.floor(ac.juggle)+1000*o.from+10*o.index;if(j!==lastJ){lastJ=j;touches++;}}
+  if(o.air&&!prevAir)airStart=age;if(!o.air&&prevAir)flights.push(age-airStart);prevAir=o.air;
+  assert(Number.isFinite(o.x+o.y+o.z));}
+ assert(maxY>3,'high arcs: '+maxY.toFixed(1));assert(kinds.has('foot')&&kinds.has('knee')&&kinds.has('head'),'foot, knee and head touches');
+ assert.equal(flights.length,PB.JUGGLE_TRANSFERS,'four transfers');assert(touches>=PB.JUGGLE_KEEPS*(PB.JUGGLE_TRANSFERS+1)-1,'2 keep-ups per holder: '+touches);
+ assert(E.emoteSeconds(E.EMOTE.JuggleWithMe)>=8&&E.emoteSeconds(E.EMOTE.JuggleWithMe)<=10);
+ const hold=PB.JUGGLE_LEAD+PB.JUGGLE_KEEPS*PB.JUGGLE_TOUCH,lc=PB.JUGGLE_LOFT.windup+PB.contactAfterWindup(PB.JUGGLE_LOFT.kick);
+ PB.juggleBallAt(hold+lc-.02,a,b,o);assert(Math.abs(o.x-PB.PASS_REACH)<.01&&!o.air,'on the foot until contact');PB.juggleBallAt(hold+lc+.1,a,b,o);assert(o.x>PB.PASS_REACH+.3&&o.air,'then flying');
+ PB.juggleBallAt(hold+lc+PB.JUGGLE_FLIGHT,a,b,o);assert(o.x>6&&o.x<6.8,'lands at the partner\'s foot: '+o.x);
+ PB.juggleBallAt(E.emoteSeconds(E.EMOTE.JuggleWithMe),a,b,o);assert(Math.abs(o.x-PB.PASS_REACH)<.2,'ends settled at your feet');
+});
+t('Juggle with me alone: a solo keep-up routine of about 5-6 s at your feet, no partner needed',()=>{
+ const a={x:2,y:0,z:3},o=ballOut();const kinds=new Set();let maxY=0;
+ for(let age=0;age<=PB.JUGGLE_SOLO_SECONDS;age+=1/60){PB.juggleSoloAt(age,a,0,o);maxY=Math.max(maxY,o.y);if(o.actors[0].juggle!==undefined)kinds.add(o.actors[0].juggleTouch);assert(Math.abs(o.x-2)<.3&&Math.abs(o.z-3.5)<.3,'stays at the feet');}
+ assert(kinds.size===3);assert(maxY>1.6);assert(PB.JUGGLE_SOLO_SECONDS>=5&&PB.JUGGLE_SOLO_SECONDS<=6.5);
+});
+t('ONE ball: Pass it / Juggle with me move the player\'s own ball; the pooled pass ball mesh is gone; the sequences end by handing the ball back at the feet',()=>{
+ const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts');
+ assert(!fs.existsSync(path.join(ROOT,'lib/graphics/passBall.ts'))&&!/createPassBall\b|passBall\.set|passBall\.hide/.test(town),'no second ball mesh');
+ assert(/if\(passOnBall&&walkingBall&&emoteFx\.kind>=0\)\{ball\.position\.set\(passOut\.x,passOut\.y,passOut\.z\)/.test(town),'the existing ball is driven');
+ assert(/walkBall\.reset\(dribblePlayer\)/.test(town),'a ball that is away is summoned to the feet first');
+ assert(/const endBallEmote=\(\)=>\{passOnBall=false/.test(town)&&/emoteFx\.age>=emoteFx\.dur\)\{emoteFx\.kind=-1;endBallEmote\(\)/.test(town),'normal dribble resumes at the feet');
+ assert(/\.\.\.passMotionNow\(\)/.test(town)&&/PlayerMotion/.test(town),'the player\'s kick / trap / keep-up poses come from the rig motion');
+ assert(/pick===EMOTE\.PassBall&&ecsRide\(\)\)return/.test(town)&&/ballEmote&&\(rideRef\.current!=='walk'\|\|water\.inWater/.test(town),'skipped on rides, flying, swimming');
+ assert(/npcPassMotion\(entry\.pass,entry\.passBall/.test(npcs)&&/spacing\?:\{min:number;max:number\}/.test(npcs),'the townsperson kicks / juggles and steps to the right gap');
+ assert(/EMOTE\.JuggleWithMe/.test(read('lib/town/emoteReact.ts'))&&/label: 'Juggle with me'/.test(read('lib/town/emoteReact.ts'))&&!/PassToMe/.test(read('multiplayer/protocol/types.ts')+read('lib/town/emoteReact.ts')),'renamed');
+ assert(/JuggleWithMe: 3/.test(read('multiplayer/protocol/types.ts')),'wire value 3 unchanged');
+ assert(/'juggle-air':/.test(read('components/party/PartyChip.tsx')));
+});
+t('source: Pass it is wired (bubble, camera hold, cancel on walk, renamed ThumbsUp -> PassBall)',()=>{
  const town=read('components/Town.tsx'),proto=read('multiplayer/protocol/types.ts'),npcs=read('lib/graphics/islandNpcs.ts');
  assert(/PassBall: 6/.test(proto)&&!/ThumbsUp/.test(proto+read('lib/graphics/remoteAvatars.ts')+read('lib/town/emoteReact.ts')),'wire value 6 unchanged, renamed');
- assert(/pick===EMOTE\.PassBall&&ecsRide\(\)\)return/.test(town),'never on a ride');
  assert(/pick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town),'reduced motion: bubble + one pass');
- assert(/emoteFx\.kind===EMOTE\.PassBall\)passStep\(\)/.test(town)&&/passBall\.hide\(\)/.test(town));
- assert(/if\(!onRideNow&&emoteMoving\(\)\)\{emoteFx\.kind=-1;passBall\.hide\(\)/.test(town),'walking away cancels');
+ assert(/emoteFx\.kind===EMOTE\.PassBall\|\|emoteFx\.kind===EMOTE\.JuggleWithMe\)passStep\(\)/.test(town));
+ assert(/if\(!onRideNow&&emoteMoving\(\)\)\{emoteFx\.kind=-1;endBallEmote\(\)/.test(town),'walking away cancels');
  assert(/emoteSeconds\(entry\.fx\.kind\)/.test(npcs)&&/applyEmoteArms/.test(npcs),'the townsperson answers every kind for the same length');
  assert(/pass:\s*'/.test(read('components/party/PartyChip.tsx')),'the Pass it glyph exists');
 });
@@ -65,7 +117,7 @@ t('ride emotes: each vehicle gets its own three scripted rides on the wheel; foo
  for(const ride of ['moped','scooter','bike']){
   const w=E.wheelEmotesFor(ride),labels=w.map(x=>x.label);
   assert.equal(w.length,5,ride+' wheel: Wave, three scripts, Cheer');assert(labels.includes('Wave')&&labels.includes('Cheer'));
-  assert(!labels.some(l=>/Pass it|Dance|Laugh|Thanks|Space|Pass to me/.test(l)),ride+' hides the foot-only emotes');
+  assert(!labels.some(l=>/Pass it|Dance|Laugh|Thanks|Space|Juggle with me/.test(l)),ride+' hides the foot-only emotes');
   assert.equal(R.rideScriptsFor(ride).length,3);
  }
  assert.equal(E.wheelEmotesFor('walk').length,10);assert.equal(E.wheelEmotesFor('jetpack').length,10);

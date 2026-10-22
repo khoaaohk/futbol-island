@@ -3,9 +3,10 @@
 import {celebrationJump} from '../graphics/celebrations';
 import {RIDE_SCRIPTS, rideScriptsFor} from './rideEmotes';
 import {CTX_EMOTE_EMOJI} from './emoteContexts';
+import {JUGGLE_SECONDS, PASS_SECONDS as PASS_LEN} from './emotePass';
 
 /** The ten preset emotes (the wheel shows five at a time and scrolls). The numbers are the multiplayer protocol's Emote values (multiplayer/protocol/types.ts). */
-export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, PassToMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
+export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
 export type LocalEmote = (typeof EMOTE)[keyof typeof EMOTE];
 export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = [
   {emote: EMOTE.Wave, icon: 'hand', label: 'Wave'},
@@ -16,7 +17,7 @@ export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = 
   {emote: EMOTE.Laugh, icon: 'smile', label: 'Laugh'},
   {emote: EMOTE.Dance, icon: 'music', label: 'Dance'},
   {emote: EMOTE.Thanks, icon: 'thanks', label: 'Thanks'},
-  {emote: EMOTE.PassToMe, icon: 'point', label: 'Pass to me'},
+  {emote: EMOTE.JuggleWithMe, icon: 'juggle-air', label: 'Juggle with me'},
   {emote: EMOTE.Space, icon: 'wind', label: 'Space'},
 ];
 /** What the wheel shows: on foot the ten presets; on a scooter, bike or moped (user, Oct 22 2026) Wave, Cheer and the three scripted rides that fit that vehicle (foot-only emotes are hidden). */
@@ -26,9 +27,9 @@ export function wheelEmotesFor(ride: string): WheelEmote[] {
   if (!scripts.length) return LOCAL_EMOTES;
   return [{emote: EMOTE.Wave, icon: 'hand', label: 'Wave'}, ...scripts.map(r => ({emote: r.emote, icon: r.icon, label: r.label})), {emote: EMOTE.Cheer, icon: 'star', label: 'Cheer'}];
 }
-export const EMOTE_EMOJI: Record<number, string> = {...CTX_EMOTE_EMOJI, ...Object.fromEntries(RIDE_SCRIPTS.map(r => [r.emote, r.emoji])), 0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{261D}\u{FE0F}', 4: '\u{1F4A8}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
+export const EMOTE_EMOJI: Record<number, string> = {...CTX_EMOTE_EMOJI, ...Object.fromEntries(RIDE_SCRIPTS.map(r => [r.emote, r.emoji])), 0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{1F939}', 4: '\u{1F4A8}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
 /** Every simple emote lasts about 4 s (user, Oct 22 2026), for you, a friend and a townsperson alike; Pass it ~5.9 s (five passes); a high five with a variation keeps its own length. */
-export const EMOTE_SECONDS = 4, NPC_EMOTE_SECONDS = 4, PASS_SECONDS = 5.9, NPC_BUBBLE_SECONDS = 4, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
+export const EMOTE_SECONDS = 4, NPC_EMOTE_SECONDS = 4, PASS_SECONDS = PASS_LEN, NPC_BUBBLE_SECONDS = 4, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
 /** A townsperson farther than NPC_STEP_FROM (m) takes up to NPC_STEP_MAX steps toward you (never closer than NPC_STEP_TO) at NPC_STEP_SPEED m/s. */
 export const NPC_STEP_FROM = 3, NPC_STEP_TO = 2.2, NPC_STEP_MAX = 2.5, NPC_STEP_SPEED = 3.6;
 /** How far a townsperson at distance `d` walks toward the player so the two fit one close frame (0 when already close). */
@@ -56,7 +57,7 @@ export function npcBusy(e: {travel?: string; pose?: string; visible: boolean; st
   return Boolean(e.travel && e.travel !== 'run') || e.pose === 'lie' || !e.visible || e.stunned || e.freestyle;
 }
 /** How long an emote runs (s). */
-export const emoteSeconds = (emote: number): number => emote === EMOTE.PassBall ? PASS_SECONDS : emote === EMOTE.HighFive ? 2.2 : EMOTE_SECONDS;
+export const emoteSeconds = (emote: number): number => emote === EMOTE.PassBall ? PASS_SECONDS : emote === EMOTE.JuggleWithMe ? JUGGLE_SECONDS : emote === EMOTE.HighFive ? 2.2 : EMOTE_SECONDS;
 const ramp = (age: number, dur: number) => Math.max(0, Math.min(1, age / .2, (dur - age) / .2));
 /** The raised "called" arm for a wave or a high five (0 for the celebration emotes). */
 export function emoteCalled(emote: number, age: number, dur: number): number {

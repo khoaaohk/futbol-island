@@ -11,6 +11,8 @@ export const EMOTE_CAM = {
   fov: 40,
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
   minDist: 3.2, maxDist: 18,
+  /** A wide pair (Juggle with me, 6-8 m apart) may sit this far back so BOTH characters, the high arcs and the emoji headroom fit. */
+  wideMaxDist: 32,
   /** Back the fitted distance off a little (user, Oct 22 2026: "for the emote zoom out just a bit more"). */
   backoff: 1.3,
   /** Tried in order when something stands between the camera and the characters: a gentler zoom (distance x factor). */
@@ -68,7 +70,8 @@ export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, p
       need = Math.max(need, Math.abs(right) * L.marginH / (TAN_V * a) + dot, Math.abs(up) * L.marginV / TAN_V + dot);
     }
   }
-  const dist = Math.min(EMOTE_CAM.maxDist, need * EMOTE_CAM.backoff) * Math.max(1, factor);
+  const cap = hasQ && Math.hypot(qx - px, qz - pz) > 5 ? EMOTE_CAM.wideMaxDist : EMOTE_CAM.maxDist;
+  const dist = Math.min(cap, need * EMOTE_CAM.backoff) * Math.max(1, factor);
   out.target.x = mx; out.target.y = my; out.target.z = mz;
   out.eye.x = mx + dx0 * dist; out.eye.y = my + SIN_P * dist; out.eye.z = mz + dz0 * dist;
   return dist;
