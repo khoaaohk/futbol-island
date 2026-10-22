@@ -66,7 +66,7 @@ export const countDiveWreckFind=()=>count('wa:dive_wreck_find');
 export const countDiveBallFind=()=>count('wa:dive_ball_find');
 /** Explore v2 (Oct 21 2026): a dive with a dart (once per dive), a dive with a pickup collected (once per dive), a zone restored (once
  *  ever per zone), a goal with the underwater ball. Totals only, `k` channel: no migration. */
-export const countDiveDart=()=>count('wa:dive_dart');
+/** Retired Oct 21/22 2026 (the Dart was removed): `wa:dive_dart` stays in countIds.ts so old rows still read. */
 export const countDivePick=()=>count('wa:dive_pick');
 export const countDiveRestore=()=>count('wa:dive_restore');
 export const countDiveGoal=()=>count('wa:dive_goal');

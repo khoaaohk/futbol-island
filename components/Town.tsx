@@ -194,7 +194,7 @@ import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
+import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
@@ -811,8 +811,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       credit:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},
       low:()=>diveStore.set({note:DIVE_LOW_NOTE}),out:()=>{countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});},
       crest:()=>countDiveCrest(),fly:()=>flyFromReef(),
-      /* Explore v2: the dart, a pickup, a restored reef, an underwater goal (sounds from the existing set, haptics, totals-only analytics) */
-      dart:first=>{if(first)countDiveDart();tapHaptic();},picked:(kind,first)=>{if(first)countDivePick();tapHaptic();sound.ui(kind==='treasure'?'path-pop':'click');},
+      /* Explore v2: a pickup, a restored reef, an underwater goal (sounds from the existing set, haptics, totals-only analytics) */
+      picked:(kind,first)=>{if(first)countDivePick();tapHaptic();sound.ui(kind==='treasure'?'path-pop':'click');},
       restored:()=>{countDiveRestore();tapHaptic();sound.ui('expand');},goal:()=>{countDiveGoal();tapHaptic();sound.ui('expand');}});
     dive.slots(location.x,location.z);
     diveActions.current=()=>{if(dive.diving){dive.use();return;}if(water.state.phase==='swim'&&!animalRides.riding&&dive.start())sound.ui('click');};

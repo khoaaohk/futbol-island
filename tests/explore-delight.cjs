@@ -24,19 +24,17 @@ const hold=st=>{st.breath=1;st.vx=st.vz=0;};
 // A clean save for each case (the runtime reads localStorage; the vm has none, so every runtime starts empty unless we give it one).
 const fresh=()=>mem.clear();
 
-ok('findSlow: an eased curve (0 beyond 4 m, 1 within 1.4 m), and the swim near a find is slower, thicker and a shorter dart; unchanged elsewhere',()=>{
+ok('findSlow: an eased curve (0 beyond 4 m, 1 within 1.4 m), and the swim near a find is slower and thicker (the Dart was removed Oct 21/22 2026); unchanged elsewhere',()=>{
  assert.equal(S.findSlow(Infinity),0);assert.equal(S.findSlow(4),0);assert.equal(S.findSlow(10),0);assert.equal(S.findSlow(1.4),1);assert.equal(S.findSlow(0),1);
  let prev=1;for(let d=0;d<=4.2;d+=.05){const k=S.findSlow(d);assert(k<=prev+1e-12,'monotonic');assert(k>=0&&k<=1);prev=k;}
  assert(Math.abs(S.findSlow(2.7)-.5)<.01,'smooth middle');assert(S.findSlow(3.9)<.02&&S.findSlow(1.5)>.98,'no sudden brake at either end');
  const spot=D.diveSpotById('ray-meadow');
- const swim=(near,dart)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());for(let i=0;i<90;i++)s.step(1/30,{sx:0,sy:-1,lift:0,near});
-  const top=Math.hypot(s.state.vx,s.state.vz);let dt=0;if(dart){s.step(1/30,{sx:0,sy:-1,lift:0,dart:true,near});dt=s.state.dartT;}
-  const x0=s.state.x,z0=s.state.z;for(let i=0;i<45;i++)s.step(1/30,{sx:0,sy:0,lift:0,near});return {top,dt,coast:Math.hypot(s.state.x-x0,s.state.z-z0),slow:s.state.slow};};
- const far=swim(undefined,false),inf=swim(Infinity,false),close=swim(1,false);
+ const swim=(near)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());for(let i=0;i<90;i++)s.step(1/30,{sx:0,sy:-1,lift:0,near});
+  const top=Math.hypot(s.state.vx,s.state.vz);  const x0=s.state.x,z0=s.state.z;for(let i=0;i<45;i++)s.step(1/30,{sx:0,sy:0,lift:0,near});return {top,coast:Math.hypot(s.state.x-x0,s.state.z-z0),slow:s.state.slow};};
+ const far=swim(undefined),inf=swim(Infinity),close=swim(1);
  assert.equal(far.top,inf.top,'nothing near: the swim is exactly as before');assert(Math.abs(far.top-S.DIVE_SPEED)<.05,'full speed far away');
  assert(Math.abs(close.top-S.DIVE_SPEED*(1-S.FIND_SLOW.speed))<.08,'top speed eased down 25% by a find: '+close.top.toFixed(2));assert.equal(close.slow,1);
  assert(close.coast<far.coast*.75,'the glide stops sooner by a find (thicker water): '+close.coast.toFixed(2)+' vs '+far.coast.toFixed(2));
- const dFar=swim(undefined,true),dNear=swim(1,true);assert(dNear.dt<dFar.dt*.7,'a precision dart near a find is shorter');
  assert(D.DIVE_FIND_RANGE>=3.2&&J.PICKUP_RANGE>=1.6,'the find prompt and the pickup reach are a little larger, so slow drifting still gets them');
  const src=read('lib/town/water/diveSession.ts'),step=src.slice(src.indexOf('  step(dt:number'),src.indexOf('  use(){'));assert(!/new [A-Z]/.test(step),'no allocation in step');
 });

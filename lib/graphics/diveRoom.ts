@@ -138,7 +138,7 @@ const FISH_BASIS=/* glsl */`
   float bt=max(0.,dvT-uBurst.w);vec3 bd=normalize(aPC.xyz);vec3 bp=uBurst.xyz+bd*3.4*(1.-exp(-1.5*bt))+vec3(0.,bt*.18,0.);
   float home=smoothstep(1.4,3.4,bt);dvP=mix(bp,dvP,home);dvF=mix(bd,normalize(dvF+vec3(1e-4)),home);if(uBurst.w<-1000.)dvHide=0.;}
  else if(aPB.z>2.5){dvP=uBuddy.xyz;dvF=uBuddyF;dvHide=uBuddy.w;}// Explore v2: the buddy fish (moved on the CPU, one uniform)
- else{// Explore v2: the school parts round the diver (uDiver.w = how strongly: more on a dart) and, at a restored reef, forms a ball
+ else{// Explore v2: the school parts round the diver (uDiver.w = how strongly) and, at a restored reef, forms a ball
   vec3 dvD=dvP-uDiver.xyz;float dvL=length(dvD);dvP+=dvD/max(dvL,.01)*(1.-smoothstep(.8,3.,dvL))*uDiver.w*1.5;
   dvP.y+=uWhaleK*.3;dvF.y+=uWhaleK*.6*length(dvF);// Explore delight: the school lifts and tilts up toward the whale passing overhead
   if(uForm.w>0.){vec3 sp=normalize(vec3(sin(aPD.w*7.1+1.3),cos(aPD.w*3.7),sin(aPD.w*5.3+.4))+vec3(1e-4));float ca=cos(dvT*.7),sa=sin(dvT*.7);sp.xz=mat2(ca,-sa,sa,ca)*sp.xz;
@@ -448,9 +448,9 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
      #include <colorspace_fragment>
     }`});m.name='dive-surface';
   const surf=new T.Mesh(g,m);surf.name='dive-surface';surf.matrixAutoUpdate=false;scene.add(surf);}
- // ---- Bubbles: the vent's stream and the diver's breath (a longer trail on a dart), drifting plankton motes round the camera and a
+ // ---- Bubbles: the vent's stream and the diver's breath, drifting plankton motes round the camera and a
  // sand puff. ONE Points draw; everything moves in the vertex shader (Explore v2 added the motes and the puff to the same draw).
- const uPlayer={value:new T.Vector3(0,DIVE_SURFACE_Y-1,0)},uBubbleScale={value:300},uTrail={value:0},uPuff={value:new T.Vector4(0,-50,0,-1e4)};
+ const uPlayer={value:new T.Vector3(0,DIVE_SURFACE_Y-1,0)},uBubbleScale={value:300},uPuff={value:new T.Vector4(0,-50,0,-1e4)};
  // Explore delight: today's sparkle spot (glitter on the sand, kind 4; uSpark w = shown) and the high five's sparkle ring (kind 5, uRing w =
  // its start time), in this same draw. With `calm` the glitter holds still.
  const sp0=opt.sparkle??null,uSpark={value:new T.Vector4(sp0?.x??0,(sp0?.y??-50)+.05,sp0?.z??0,sp0?1:0)},uRing={value:new T.Vector4(0,-50,0,-1e4)};
@@ -462,11 +462,11 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
    else{const a=(i%NR)/NR*Math.PI*2;A.set([Math.cos(a),(r()-.5)*.6,Math.sin(a),r()],i*4);}K[i]=kind;}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('aB',new T.BufferAttribute(A,4));g.setAttribute('aKind',new T.BufferAttribute(K,1));
   const ventY=F(vent.x,vent.z)+.85;
-  const m=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uDiveTime:uTime,uPlayer,uScale:uBubbleScale,uFogFar:{value:th.fog[1]},uCam,uTrail,uPuff,uDrift:{value:opt.reduced?0:1},uSpark,uRing,uTwinkle:{value:opt.calm||opt.reduced?0:1}},
-   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar,uTrail,uDrift,uTwinkle;uniform vec3 uPlayer,uCam;uniform vec4 uPuff,uSpark,uRing;varying float vA,vK;
+  const m=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uDiveTime:uTime,uPlayer,uScale:uBubbleScale,uFogFar:{value:th.fog[1]},uCam,uPuff,uDrift:{value:opt.reduced?0:1},uSpark,uRing,uTwinkle:{value:opt.calm||opt.reduced?0:1}},
+   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar,uDrift,uTwinkle;uniform vec3 uPlayer,uCam;uniform vec4 uPuff,uSpark,uRing;varying float vA,vK;
     void main(){vec3 p;float life,sz,vS=0.;vK=aKind;
      if(aKind<.5){float h=${(DIVE_SURFACE_Y-ventY).toFixed(2)};float y=mod(uDiveTime*aB.z+aB.w,h);life=y/h;p=vec3((${vent.x.toFixed(2)})+aB.x+sin(y*2.+aB.w)*.12,(${ventY.toFixed(2)})+y,(${vent.z.toFixed(2)})+aB.y);sz=.07;}
-     else if(aKind<1.5){float c=2.6-1.2*uTrail,a=mod(uDiveTime+aB.w,c);life=a/c;p=uPlayer+vec3(aB.x*(1.+uTrail*2.)+sin(a*5.+aB.w)*.08,.4+a*aB.z,aB.y*(1.+uTrail*2.));sz=.05*(1.+uTrail*.6);}
+     else if(aKind<1.5){float c=2.6,a=mod(uDiveTime+aB.w,c);life=a/c;p=uPlayer+vec3(aB.x+sin(a*5.+aB.w)*.08,.4+a*aB.z,aB.y);sz=.05;}
      else if(aKind<2.5){// plankton: a 16 x 8 x 16 m box of motes wrapped round the camera, drifting with a slow current
       vec3 q=aB.xyz+vec3(uDiveTime*.12,sin(uDiveTime*.3+aB.w)*.25,uDiveTime*.05)*uDrift;q=mod(q-uCam+vec3(8.,4.,8.),vec3(16.,8.,16.))-vec3(8.,4.,8.);
       p=uCam+q;p.y=min(p.y,${(DIVE_SURFACE_Y-.15).toFixed(2)});life=.5;sz=.028;}
@@ -477,7 +477,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
      else{float a=uDiveTime-uRing.w;life=clamp(a/.9,0.,1.);p=uRing.xyz+aB.xyz*(.12+.6*(1.-exp(-4.*a)));sz=.09;vS=(1.-life)*step(0.,a);}// the high five's sparkle ring
      vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uScale*sz*(.7+.6*fract(aB.w))/max(.5,-mv.z);
      vA=aKind>3.5?vS:aKind>2.5?(1.-life)*step(0.,uDiveTime-uPuff.w)*.55:aKind>1.5?.32*(1.-smoothstep(uFogFar*.25,uFogFar*.45,-mv.z)):(1.-smoothstep(.75,1.,life))*smoothstep(0.,.06,life)*(1.-smoothstep(uFogFar*.5,uFogFar,-mv.z));
-     if(aKind>.5&&aKind<1.5)vA*=.55+.45*uTrail+.3;}`,
+     if(aKind>.5&&aKind<1.5)vA*=.85;}`,
    fragmentShader:/* glsl */`varying float vA,vK;void main(){vec2 d=gl_PointCoord-.5;float r=length(d);if(r>.5)discard;
     if(vK>3.5){float s=1.-smoothstep(0.,.5,r),x=max(0.,1.-abs(d.x)*7.)*max(0.,1.-abs(d.y)*1.6)+max(0.,1.-abs(d.y)*7.)*max(0.,1.-abs(d.x)*1.6);gl_FragColor=vec4(1.,.93,.64,min(1.,s*s*.9+x*.8)*vA);return;}
     if(vK>1.5){float s=1.-smoothstep(0.,.5,r);gl_FragColor=vec4(vK>2.5?vec3(.86,.82,.68):vec3(.9,1.,.95),s*vA);return;}
@@ -549,11 +549,10 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   /** Draws (VISIBLE meshes and points in the room: the hidden pearl is not drawn; not counting the diver's rig) and triangles, for the budget test and the docs. */
   stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / coin while they animate. */
-  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;dartT?:number}){hiddenBall?.frame(t,dt);
+  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number}){hiddenBall?.frame(t,dt);
    uTime.value=t;uPlayer.value.set(diver.x,diver.y+.9,diver.z);follow(dt,diver);
-   // Explore v2: the fish and plants feel the diver (stronger on a dart), the dart's trail, the camera's FOV kick, the water's colour.
-   const dart=Math.min(1,(diver.dartT??0)/.5);uDiver.value.set(diver.x,diver.y+.3,diver.z,.5+.5*dart);uTrail.value+=(dart-uTrail.value)*Math.min(1,dt*6);uCam.value.copy(camera.position);
-   const fov=58+6*uTrail.value;if(Math.abs(camera.fov-fov)>.05){camera.fov=fov;camera.updateProjectionMatrix();}
+   // Explore v2: the fish and plants feel the diver, the water's colour. (The Dart's trail and FOV kick went with the Dart, Oct 21/22 2026.)
+   uDiver.value.set(diver.x,diver.y+.3,diver.z,.5);uCam.value.copy(camera.position);
    {const cr=Math.max(.5,DIVE_SURFACE_Y-F(camera.position.x,camera.position.z)),ct=Math.max(0,Math.min(1,(DIVE_SURFACE_Y-camera.position.y)/cr));
     fog.color.copy(deepC).lerp(shallowC,ROOM_SHALLOW_MIX[0]+(ROOM_SHALLOW_MIX[1]-ROOM_SHALLOW_MIX[0])*ct);}
    for(let k=pickAnim.length-1;k>=0;k--){const a=pickAnim[k],p=picks[a.i];a.t+=dt;const u=Math.min(1,a.t/.7);
@@ -565,7 +564,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   },
   /** Explore v2: a pickup collected (index): it rises, spins and shrinks away; a sand puff where it lay. */
   collect(i:number,t:number){const p=picks[i];if(!p||got[i])return;got[i]=true;pickAnim.push({i,t:0});uPuff.value.set(p.x,p.y-.2,p.z,t);},
-  /** A soft sand puff (the ball landing, a dart low over the sand). */
+  /** A soft sand puff (the ball landing, a pickup). */
   puff(x:number,y:number,z:number,t:number){if(t-uPuff.value.w>.9)uPuff.value.set(x,y,z,t);},
   /** The reef's colour (diveJourney.ts reefColour) and, at a restored reef, the big school's football (0..1) in front of the diver. */
   setReef(v:number){uReef.value=v;},

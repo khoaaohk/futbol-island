@@ -1,5 +1,7 @@
 # Performance reference for future Futbol Island updates
 
+> Dart removed Oct 21/22 2026 by user decision ("let's remove the dart action"): no burst, trail, FOV kick or precision dash in the reef room; `wa:dive_dart` stays in countIds.ts (retired) so old rows read.
+
 ## Explore delight (Oct 21 2026, local, not deployed)
 
 The whale shadow, the zone friends' wave / high five, the daily sparkle spot and the find slow-down (docs/swimming-research.md §12) add

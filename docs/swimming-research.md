@@ -562,10 +562,10 @@ caustic light, nothing moved past you (no motes), fish ignored you, nothing guid
 island's music kept playing under the reef bed. Built, in order of impact:
 - **Swimming.** The body lies along the swim (the crawl's under-water shape, `under` 1, pitched with the climb): a flutter-kick crawl
   while swimming, a slow glide flutter when the stick is let go (a lower drag, `DIVE_GLIDE_DRAG`, so a kick carries), a gentle hover bob,
-  banking into turns (`DIVE_BANK` 0.5 rad). **Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
+  banking into turns (`DIVE_BANK` 0.5 rad). **(Dart removed Oct 21/22 2026 by user decision: normal swim only; `wa:dive_dart` kept, retired.)** ~~**Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
   to 5.4 m/s for 0.7 s, 1.1 s cooldown, 1.2 % breath (the pace lesson: a sprint has a price), a longer bubble trail, a 6° FOV kick, sand
   puffs low over the sand. The camera sits a little lower and looks farther ahead, and is kept over the sand under it and halfway to the
-  diver (never inside a rising reef).
+  diver (never inside a rising reef).~~ (the camera rule still holds)
 - **The reef journey (diveJourney.ts).** Each zone has 8 pickups on a guided path through its finds (from the zone's own data, never
   hard-coded positions): 4 bits of litter (a can, a bottle, a lost net, a bottle cap) and 4 treasures (a spiral shell, a starfish, sea
   glass, a lost kit badge) that twinkle. Swim through one to collect it (no button): it spins up and away, a short note ("You cleared an
