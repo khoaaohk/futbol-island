@@ -50,7 +50,7 @@
 .boxWrap{display:inline-flex;align-items:center;gap:6px}
 .dash{font:800 22px/1 system-ui,sans-serif}
 .box{width:44px;height:56px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:800 26px/1 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;text-transform:uppercase;caret-color:transparent}
-.members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left}
+.members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left;max-height:min(46vh,380px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .member{display:flex;align-items:center;gap:6px;min-height:44px}
 .member[data-away]{opacity:.55}
 .zone{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--btn-mint)}

@@ -13,17 +13,17 @@ shards (16/24 rooms, lobby, area of interest, reports) stay deferred. That is al
 
 | Topic | 19 Oct plan | This design (v1) | Why |
 |---|---|---|---|
-| First release | Public shards of 16/24 | **Private parties of 2-6 friends, by invite only** | User asked for friends; no strangers = far smaller safety/legal surface |
+| First release | Public shards of 16/24 | **Private parties of 2-20 friends, by invite only** (cap raised from 6 to 20 on 22 Oct 2026, see 2.9) | User asked for friends; no strangers = far smaller safety/legal surface |
 | Invite | Picture "together codes" | **6-character code + share link + QR**, picture display optional later | Works by text/AirDrop/school chat-of-parents and in person; QR lib already in repo |
-| Wire | Binary 12-byte frames | **JSON compact arrays** (numbers only, plus opaque tokens) | 6 players = ~1 KB/s, binary not needed yet; easier to debug; `v` field allows binary later |
+| Wire | Binary 12-byte frames | **JSON compact arrays** (numbers only, plus opaque tokens) | 6 players = ~1 KB/s (20 players: ~1.8 KB/s per client with interest management), binary not needed yet; easier to debug; `v` field allows binary later |
 | Identity | Save-code HMAC `presenceKey` | **No identifier at all** (no save code, no install id, no hash of either) | Parties are ephemeral; blocks/reports across sessions are a public-room need |
-| Heat caps | 8/8/6/4/0-new | **5/5/3/1/0-new** (max party 6 = 5 remotes) | Brief; capped friends show as a map pin, never vanish mid-view |
+| Heat caps | 8/8/6/4/0-new | **5/5/3/1/0-new** (party of 20 = 19 remotes; only the nearest 5 get a rig) | Brief; capped friends show as a colour ring + label (and a map pin), never vanish mid-view |
 
 ---
 
 ## 1. Goals and non-goals
 
-**v1 goal:** a small group (2-6) of friends are on the **same island at the same time**, see each other's avatars (own kit),
+**v1 goal:** a group (2-20, cap raised from 6 on 22 Oct 2026, see 2.9) of friends are on the **same island at the same time**, see each other's avatars (own kit),
 walk/ride/swim around together, send preset emotes and "meet here / follow me" pings, and leave at any time.
 
 **Model:** the 19 Oct "ghost presence" model (b). Every kid still runs their own island exactly as today. Friends are drawn
@@ -116,8 +116,24 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 | Party ends | When everyone has left for 2 min, at the 12 h hard cap (10-min warning toast), or host taps **End party for everyone**. |
 | Code expiry | The code accepts new joiners for 8 h; people already in stay. Host can **New code** (rotates, old code dead). |
 | Tab hidden | After 15 s hidden the client closes the socket (radio sleeps, heat rule); server keeps the slot 60 s; return resumes. |
-| Full party | Join card: "This party is full (6/6)". |
+| Full party | Join card: "This party is full (20/20)". |
 | Kick | Host taps a friend -> Remove. Removed kid sees "You left the party". Host is prompted to rotate the code. |
+
+### 2.9 Party size 20 (22 Oct 2026, branch `party-cap-20`, not pushed)
+
+Owner: "can we make it also 20 people area allowed to be on one island?" The cap goes from 6 to **20** (`PARTY_MAX`, protocol `types.ts`). Nothing else about the design changes: private invite-only parties, no chat, no accounts.
+
+**Cap rationale.** A class, a team or two families fit on one island. 20 is the point where the relay and a phone are still cheap if the fan-out is bounded (below); beyond it the roster stops being readable. The cap is one constant, enforced in `RoomCore` (`Full` for the 21st joiner) and read by the UI texts ("This party is full (20/20)").
+
+**Wire.** Slot ids are 0..31 (`MAX_MEMBER_ID`; 5 bits would do, JSON is plain numbers so there is no bitmask anywhere); the validators accept 0..31 for ids in Welcome / Joined / Left / Poses / Emote / Ping / Host / Renamed / Kick / ResetName. Colours: 20 unique (`NAME_COLOURS` / `COLOUR_ORDER` / `COLOUR_HEX`; the first 6 handed out are still the best separated; every pair is at least ~14 CIELAB apart, tested). Server frames: cap raised from 4 KB to **8 KB**. A full 20-member Welcome is ~3 KB; a 19-friend Poses frame is ~0.9 KB (19 x ~46 B). Client frames are unchanged (Pose ~50 B, hard cap 512 B; per-socket token buckets unchanged).
+
+**Interest management** (`RoomCore.fanOutPoses`, constants `INTEREST_NEAR = 12`, `BEACON_EVERY = 5`). At the 5 Hz tick each recipient gets only the nearest 12 members whose pose changed (horizontal distance from the recipient's last pose, ties by id: deterministic). Every 5th tick (the **1 Hz beacon**) it gets every member that changed since the last beacon, so far friends still move on the roster / map. Up to 12 moving friends nothing changes. Each pose's JSON text is built once per tick and shared by all recipients (relay CPU). Caveat: a far friend moves in 1 s steps (the client interpolation delay is 250 ms, so it hops; they are ring + label markers or far away anyway).
+
+**Cost model** (measured by `scripts/mp-relay-smoke.mjs`, 20 moving bots, 30 m apart, 5 Hz poses): incoming ~100 msg/s per party (5 per player); outgoing ~7 frames/s per client, ~13 pose entries per frame, ~1.8 KB/s per client, biggest frame ~1.3 KB. Without interest management a client would receive 19 entries per frame (~95 poses/s vs ~67 now, about -30 %). Cloudflare Workers free plan: incoming WebSocket messages count 20:1 as requests, outgoing are free: 100 msg/s x 3600 s = **~360k messages per hour = ~18k requests per hour** for a full, fully moving party (free plan: 100k requests/day, so about 5 such party-hours a day; a typical party stands still often and the client sends only on change at 5 Hz, 1 Hz idle). Durable Object duration billing is per active hour, unchanged. One DO per party, so a 20-player party is still one single-threaded object: ~20 recipients x a string concat per tick, trivially cheap.
+
+**Phone heat.** Unchanged: the rig caps stay 5 / 5 / 3 / 1 / 0 by heat tier (one `playerBatch`, no shadows), admitted nearest-first. With 19 friends the rest are **ring + label only** (the single instanced ring mesh now holds 21 instances, one draw call, no extra cost), within 90 m. Name labels: only the nearest 8 on screen within 25 m (the rest hide), and at most 6 emote bubbles at once. Join toasts coalesce within 1.5 s ("3 friends joined"). The roster list scrolls on its own (max ~46 % of the screen) so Invite / Lock / New code / End stay in reach, and every row keeps one-tap Hide, Mute and (host) Reset name / Remove.
+
+**Safety.** A bigger group does not change the stranger risk: codes stay private, 8 h expiry, parent gate on join. It does make the host controls matter more: Remove, Lock, New code and Reset name are the tools for a crowded island, and the auto-lock after a Remove (60 s) still applies. Parents should still share the code only with people they know.
 
 ---
 
@@ -168,7 +184,7 @@ opens a link plays the intro, then joins. No email or phone number is ever asked
 ## 4. Architecture
 
 ### 4.1 Transport choice
-| Option | Fit for 2-6 friend parties | Cost | Server logic next to room | Verdict |
+| Option | Fit for 2-20 friend parties | Cost | Server logic next to room | Verdict |
 |---|---|---|---|---|
 | **Cloudflare Worker + one Durable Object per party, hibernating WebSockets** | exact fit: one object = one party, addressed by `idFromName("party:"+code)` | ~$5/mo minimum; outgoing messages free; 19 Oct table: ~$6 / $63 / $635 at 100 / 1k / 10k concurrent | yes (validate, clamp, rate-limit, assign names) | **Recommended** |
 | PartyServer (Cloudflare's PartyKit successor, on DO) | same runtime | same | yes | optional helper; adds a dependency for little code saved |
@@ -235,7 +251,7 @@ The numeric values are the contract and must not change.
 
 ```ts
 export const PROTOCOL_VERSION = 1;
-export const PARTY_MAX = 6;
+export const PARTY_MAX = 20;           // was 6 until 22 Oct 2026 (section 2.9); slot ids 0..31
 export const CODE_ALPHABET = '23456789BCDFGHJKMNPQRSTVWXYZ';
 export const CODE_LENGTH = 6;
 export const CODE_TTL_MS = 8 * 60 * 60 * 1000;      // new joins
@@ -318,7 +334,7 @@ export const RATE: { pose: [8, 12]; emote: [0.5, 2]; ping: [0.33, 2]; control: [
 export const WORLD_BOUNDS: { minX: -4000; maxX: 10000; minZ: -6000; maxZ: 6000; minY: -400; maxY: 2000 }; // dm; must contain main, Cay (612,-160), Summit (640,130) + flight margins
 export const MAX_SPEED_MS: Record<Mode, number>;  // walk 3.7*1.7 sprint, scooter 14, bike 20, moped 28, jetpack 34, swim 3, others 6
 ```
-**Sizes:** a pose up ~40 B; a batched `Poses` with 5 friends ~200 B. At 5 Hz: **~0.2 KB/s up, ~1 KB/s down**, ~3.6 MB/h with
+**Sizes:** a pose up ~40 B; a batched `Poses` with 5 friends ~200 B (19 friends ~0.9 KB; interest management caps a tick at the nearest 12, see 2.9). At 5 Hz: **~0.2 KB/s up, ~1 KB/s down**, ~3.6 MB/h with
 TLS overhead (state it in the grown-ups copy). Target < 2 KB/s each way: met.
 
 **Update rates:** moving -> pose at 5 Hz, only if moved > 0.15 m or yaw > 8 deg; mode/zone/emote changes immediately; idle ->
@@ -366,7 +382,7 @@ stop; a Warp flag or a > 25 m jump fades out/in.
 |---|---|---|
 | Protocol | `tests/mp-protocol.cjs`: codes (alphabet, no vowels, normalize, blocklist), parse/encode round trips, every bad shape rejected, clamps, speed, buckets, names unique, no string fields relayed | 0 |
 | Room logic | `tests/mp-room-core.cjs`: join/full/lock/kick/rotate/end, host migration, resume, TTLs with a fake clock, rate closes | 0 |
-| Relay integration | `scripts/mp-relay-smoke.mjs`: dev relay on its own port + 6 bots, all see each other, 7th gets Full, cheat bot rejected | 0 |
+| Relay integration | `scripts/mp-relay-smoke.mjs`: dev relay on its own port + 6 bots (cheat / flood bots), then a 20-bot party: all see each other, 21st gets Full, frames small, msg/s printed | 0 |
 | Client | `tests/mp-client.cjs`: mock socket, reconnect/backoff, throttle, interpolation, store events | 0 |
 | UI + wiring | `tests/mp-ui.cjs` (source checks like `calm-hud.cjs`: flag gating, gate before create/join, >= 44 px, icon-only), `tests/mp-avatars.cjs` (caps by tier at admission, no shadow roots, dispose order) | 0 |
 | Isolation | `tests/mp-isolation.cjs`: `lib/multiplayer/**`, `components/party/**`, `multiplayer/**` never import `lib/saves`, `lib/analytics`, `deviceMarks` or read `fi2-install-v1`/`fi2-save-code-v1` | 0 |
@@ -543,7 +559,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 | # | Risk | Mitigation |
 |---|---|---|
 | 1 | iPhone heat/battery (extra rigs + socket keeps radio awake) | One batch, no shadows, caps at admission, send only on change, close socket when hidden, owner's two-iPhone run gates Phase 1 |
-| 2 | Child safety: a code leaks to a stranger | 8 h expiry, cap 6, gate on join, host Remove/Lock/New code, no voice, only a required letters-only first name (host Reset name, Hide / Mute), nothing to take or change |
+| 2 | Child safety: a code leaks to a stranger | 8 h expiry, cap 20 (larger group: the host Remove / Lock controls matter more), gate on join, host Remove/Lock/New code, no voice, only a required letters-only first name (host Reset name, Hide / Mute), nothing to take or change |
 | 3 | Legal: notice/consent wording wrong | Draft marked for review, nothing ships until counsel + DPIA; no identifiers collected |
 | 4 | `Town.tsx` merge conflicts with other lanes | One glue task owns the 4 Town edits, lands last; flag off by default |
 | 5 | Desync looks bad (jitter, popping) | 250 ms buffer, Hermite, extrapolation cap, fades on warp/arrival; tune in Phase 1 on real networks |

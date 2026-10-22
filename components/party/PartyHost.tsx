@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
 import { bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
-import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
+import { PARTY_EVENT, checkParty, clearPendingParty, createJoinBuffer, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
@@ -24,7 +24,7 @@ type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
 const ZONE_ICON: Record<number, string> = { [Zone.Main]: 'home', [Zone.Cay]: 'sun', [Zone.Summit]: 'up', [Zone.Sea]: 'globe', [Zone.Indoors]: 'book' };
 const ZONE_LABEL: Record<number, string> = { [Zone.Main]: 'on the island', [Zone.Cay]: 'at Coral Cay', [Zone.Summit]: 'at the Summit', [Zone.Sea]: 'in the sea', [Zone.Indoors]: 'indoors' };
 const ERROR_TEXT: Record<number, string> = {
-  [ErrorCode.Full]: 'This party is full (6/6)', [ErrorCode.NotFound]: "We couldn't find that party", [ErrorCode.Expired]: 'That code has run out. Ask for a new one',
+  [ErrorCode.Full]: 'This party is full (20/20)', [ErrorCode.NotFound]: "We couldn't find that party", [ErrorCode.Expired]: 'That code has run out. Ask for a new one',
   [ErrorCode.Locked]: 'This party is closed', [ErrorCode.RateLimited]: 'Please wait a moment and try again', [ErrorCode.BadVersion]: 'Please reload the game', [ErrorCode.BadName]: 'Type your first name to play',
 };
 const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked' };
@@ -131,6 +131,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const joining = useRef<'host' | 'guest' | null>(null);
   const prevIds = useRef<Set<number> | null>(null);
   const prevStatus = useRef(state.status);
+  const joinBuf = useRef<ReturnType<typeof createJoinBuffer> | null>(null);
   const live = state.status === 'live' || state.status === 'reconnecting';
 
   useEffect(() => bindConnection(connection), [connection]);
@@ -175,8 +176,10 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     prevIds.current = ids;
     if (!before) return; // the first roster is not news
     const added = state.members.filter((m) => !before.has(m.id) && m.id !== state.you).map((m) => displayName(m));
-    if (added.length) note({ kind: 'join', names: added });
+    // Big parties: joins within 1.5 s become ONE note ('3 friends joined'), never a stream of toasts.
+    if (added.length) (joinBuf.current ??= createJoinBuffer((names) => note({ kind: 'join', names }))).add(added);
   }, [state.members, state.status, state.you, note]);
+  useEffect(() => () => joinBuf.current?.cancel(), []);
   useEffect(() => {
     const was = prevStatus.current;
     prevStatus.current = state.status;
@@ -243,7 +246,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     setBusy(true); setJoinCode(code); setJoinMsg(null); setView('join');
     const info = await checkParty(code);
     if (!info) { setBusy(false); setJoinMsg("We couldn't find that party"); track.current?.('mp_join_failed', 'not_found'); return; }
-    if (info.full) { setBusy(false); setJoinMsg('This party is full (6/6)'); track.current?.('mp_join_failed', 'full'); return; }
+    if (info.full) { setBusy(false); setJoinMsg('This party is full (20/20)'); track.current?.('mp_join_failed', 'full'); return; }
     if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('mp_join_failed', 'closed'); return; }
     clearPendingParty();
     joining.current = 'guest';
@@ -308,6 +311,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <DoneButton onDone={requestClose} />
             </header>
             <FadeScroll>
+            {friends.length > 0 && <p className={styles.small} data-party-count>{friends.length} {friends.length === 1 ? 'friend' : 'friends'} here</p>}
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (

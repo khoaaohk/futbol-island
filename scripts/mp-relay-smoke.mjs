@@ -1,4 +1,4 @@
-// Spawns the dev relay on a free port, runs 6 bots (incl. a speed cheater and a flooder) and a 7th joiner.
+// Spawns the dev relay on a free port, runs 6 bots (incl. a speed cheater and a flooder), then a FULL 20-bot party (21st refused as Full) and prints the measured message rates.
 // Run: node --experimental-websocket scripts/mp-relay-smoke.mjs   (< 30 s, kills only its own server PID)
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
@@ -16,7 +16,7 @@ let srvOut = '';
 srv.stdout.on('data', (d) => { srvOut += d; });
 const killServer = () => { try { srv.kill('SIGTERM'); } catch { /* already gone */ } };
 process.on('exit', killServer);
-const hardStop = setTimeout(() => { console.error('smoke: timeout'); killServer(); process.exit(1); }, 28000);
+const hardStop = setTimeout(() => { console.error('smoke: timeout'); killServer(); process.exit(1); }, 50000);
 
 try {
   const port = await new Promise((resolve, reject) => {
@@ -50,10 +50,7 @@ try {
   await new Promise((r) => setTimeout(r, 1500));
   const status = await (await fetch(base + '/party/' + code)).json();
   assert.equal(status.size, undefined, 'the info endpoint does not reveal the party size');
-  assert.equal(status.full, true);
-  const seventh = (await runBots({ ...common, n: 1, ms: 500 }))[0];
-  assert.ok(seventh.errors.includes(2), '7th joiner gets Full: ' + JSON.stringify(seventh.errors));
-  assert.equal(seventh.welcomed, false);
+  assert.equal(status.full, false, 'six of twenty seats are taken: not full');
 
   const [[host], friends, [cheater], [flooder]] = await group;
   const all = [host, ...friends, cheater];
@@ -120,7 +117,37 @@ try {
     h.w.close(); g.w.close();
   }
   assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');
-  console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots, 7th Full, cheat dropped, flood closed)');
+  // 20 players: every seat taken by a moving bot spread 30 m apart, the 21st is refused, interest management keeps frames small
+  {
+    const big = await (await fetch(base + '/party', { method: 'POST' })).json();
+    const DUR = 5000;
+    const bigGroup = runBots({ url: base, code: big.code, hostKey: big.hostKey, n: 20, ms: DUR, spread: 300, stagger: 25 });
+    await new Promise((r) => setTimeout(r, 1500));
+    const st = await (await fetch(base + '/party/' + big.code)).json();
+    assert.equal(st.full, true, 'all 20 seats taken');
+    const twentyFirst = (await runBots({ url: base, code: big.code, n: 1, ms: 500 }))[0];
+    assert.ok(twentyFirst.errors.includes(2), '21st joiner gets Full: ' + JSON.stringify(twentyFirst.errors));
+    assert.equal(twentyFirst.welcomed, false);
+    const bots = await bigGroup;
+    assert.equal(bots.filter((b) => b.welcomed).length, 20, '20 bots welcomed');
+    for (const b of bots) {
+      assert.equal(b.seen, 19, `bot ${b.index} sees all 19 others on the roster (saw ${b.seen})`);
+      assert.ok(b.posesFrom.length >= 12, `bot ${b.index} gets poses from at least its 12 nearest (${b.posesFrom.length})`);
+      assert.ok(!b.posesFrom.includes(b.id), 'no self echo');
+      assert.ok(b.maxFrame < 2048, 'server frames stay small (' + b.maxFrame + ' B)');
+      assert.equal(b.errors.length, 0, 'no errors for a well-behaved bot: ' + JSON.stringify(b.errors));
+    }
+    const secs = (DUR - 800) / 1000; // bots pose from their Welcome to ~DUR
+    const inMsgs = bots.reduce((a, b) => a + b.sent, 0);
+    const outFrames = bots.reduce((a, b) => a + b.msgs, 0), outEntries = bots.reduce((a, b) => a + b.poseEntries, 0), outBytes = bots.reduce((a, b) => a + b.bytes, 0);
+    const pf = bots.reduce((a, b) => a + b.poseFrames, 0);
+    const mid = bots[10];
+    console.log('mp-relay-smoke: 20 bots: incoming ~' + (inMsgs / (DUR / 1000)).toFixed(0) + ' msg/s per party (' + (inMsgs / 20 / (DUR / 1000)).toFixed(1) + ' per player), outgoing ~' +
+      (outFrames / (DUR / 1000)).toFixed(0) + ' frames/s per party (' + (outFrames / 20 / (DUR / 1000)).toFixed(1) + ' per client), pose entries/frame ' + (outEntries / Math.max(1, pf)).toFixed(1) +
+      ', ' + (outBytes / 20 / (DUR / 1000) / 1024).toFixed(2) + ' KB/s per client, biggest frame ' + Math.max(...bots.map((b) => b.maxFrame)) + ' B; mid-party bot saw ' + mid.poseFrames + ' Poses frames');
+    void secs;
+  }
+  console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots + 20-bot party, 21st Full, cheat dropped, flood closed)');
 } catch (e) {
   console.error('mp-relay-smoke: FAILED', e && e.stack ? e.stack : e);
   process.exitCode = 1;

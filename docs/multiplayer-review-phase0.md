@@ -58,3 +58,10 @@ Owner decision ("make it simple and not have animals", then "make the name not o
 - **Host Reset name** now falls back to the colour name ('Red'); the member must rejoin to type a new one. Names stay memory only (client module variable, relay member object).
 - Fewer identity cues for a child with a very common name: the colour dot and ring remain the tie-breaker; the made-up name line is gone.
 
+## Addendum (22 Oct 2026, party-cap-20): party cap 6 -> 20
+
+Owner request. Review notes:
+- **Safety is not widened by the number.** Codes stay private, expire after 2 h, the join is parent-gated, the only free text is the letters-only first name. 20 players is 20 first names, not more kinds of data. What changes is moderation load: the host's Remove / Lock / New code / Reset name matter more (the roster scrolls on its own so they stay reachable; the 60 s auto-lock after a Remove stays).
+- **Abuse surface of the relay.** Per-socket token buckets and the 512 B inbound cap are unchanged. Server frames may be up to 8 KB (a full Welcome is ~3 KB); the client parser rejects larger ones. Fan-out is bounded by interest management (nearest 12 per tick + 1 Hz beacon), so one noisy member cannot multiply into 19 x 5 Hz of traffic per recipient beyond ~13 poses per frame.
+- **Cost.** A full, fully moving party is ~100 incoming msg/s (~360k msgs/h, ~18k Cloudflare requests/h at the 20:1 rule). Documented in design 2.9. Still no deploy, no account; the free plan is fine for tests.
+- **Heat.** No new rigs: the 5 / 5 / 3 / 1 / 0 caps and nearest-first admission stay; extra friends are one instanced ring + one label sprite each (labels and emote bubbles are capped to 8 / 6 visible).

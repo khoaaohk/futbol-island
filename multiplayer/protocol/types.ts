@@ -1,6 +1,10 @@
 // Multiplayer wire protocol: constants and types (design docs/multiplayer-design.md section 4.4). Pure TS, no imports.
 export const PROTOCOL_VERSION = 1;
-export const PARTY_MAX = 6;
+export const PARTY_MAX = 20; // players per island party (raised from 6, Oct 22 2026: docs/multiplayer-design.md section 2.9)
+export const MAX_MEMBER_ID = 31; // slot ids are 0..31 on the wire (5 bits): room for 20 live members with spare ids
+/** Interest management (RoomCore.tick): each client gets the nearest INTEREST_NEAR moving friends' poses every 5 Hz tick; everyone who changed is sent once per BEACON_EVERY ticks (1 Hz). */
+export const INTEREST_NEAR = 12;
+export const BEACON_EVERY = 5;
 export const CODE_ALPHABET = '23456789BCDFGHJKMNPQRSTVWXYZ';
 export const CODE_LENGTH = 6;
 export const CODE_TTL_MS = 8 * 60 * 60 * 1000; // new joins (8 h; owner decision Oct 22 2026, was 2 h)
@@ -35,7 +39,7 @@ export const PoseFlag = { Warp: 1, Hidden: 2 } as const;
 export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
 
 export type Look = number[]; // length LOOK_LEN, ints 0..63
-export type MemberId = number; // 0..15, server-assigned slot
+export type MemberId = number; // 0..MAX_MEMBER_ID (31), server-assigned slot
 /** [colour, reserved]: the second slot used to be an animal index; the relay now always sends 0 and receivers ignore it. */
 export type NameIdx = [colour: number, reserved: number];
 /** Pose body: [x_dm, y_dm, z_dm, yaw256, speedQ, mode, zone, flags] */

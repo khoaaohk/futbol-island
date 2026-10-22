@@ -177,6 +177,19 @@ export function joinNote(names: string[]): string {
   return names.length === 1 ? `${names[0]} joined` : `${names.length} friends joined`;
 }
 
+/** Collects the names that join within `windowMs` (from the first one) and hands them over together, so a big party's joins show as one note. */
+export function createJoinBuffer(flush: (names: string[]) => void, windowMs = 1500): { add(names: string[]): void; cancel(): void } {
+  let names: string[] = [];
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return {
+    add(n) {
+      names = names.concat(n);
+      if (timer === null) timer = setTimeout(() => { const out = names; names = []; timer = null; if (out.length) flush(out); }, windowMs);
+    },
+    cancel() { if (timer !== null) clearTimeout(timer); timer = null; names = []; },
+  };
+}
+
 /** "1 h 52 min" style text for the invite card; '' once it is over. */
 export function expiryText(expiresAt: number, now: number): string {
   const min = Math.ceil((expiresAt - now) / 60000);

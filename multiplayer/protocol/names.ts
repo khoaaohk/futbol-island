@@ -5,6 +5,7 @@ import type { NameIdx } from './types';
 export const NAME_COLOURS: readonly string[] = [
   'Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Purple', 'Pink', 'Teal',
   'Gold', 'Silver', 'Coral', 'Mint', 'Navy', 'Lime', 'Sky', 'Peach',
+  'Brown', 'Maroon', 'White', 'Black',
 ];
 /** Wire compatibility only: the roster's NameIdx still has a second slot (it used to be an animal index, 0..31). It is reserved: the relay always sends 0, receivers accept 0..31 and ignore it. */
 export const RESERVED_NAME_SLOTS = 32;
@@ -14,11 +15,11 @@ export function nameFor(idx: NameIdx): string {
   return NAME_COLOURS[idx[0]] ?? 'Friend';
 }
 
-/** Colour indexes in the order the relay hands them out: the first 6 (the party cap) are the best separated, also for colour-blind kids. */
-export const COLOUR_ORDER: readonly number[] = [1, 4, 6, 2, 3, 0, 5, 7, 14, 13, 12, 10, 8, 11, 15, 9];
+/** Colour indexes in the order the relay hands them out: the first 6 are the best separated; 20 colours cover the whole party cap, also for colour-blind kids. */
+export const COLOUR_ORDER: readonly number[] = [1, 4, 6, 2, 3, 0, 5, 7, 14, 13, 12, 10, 8, 11, 15, 9, 16, 17, 18, 19];
 /**
  * Picks the colour for a joiner: always the next free one in COLOUR_ORDER (unique within the party, so rings and dots never clash).
- * The second slot is reserved and always 0. Only if all 16 colours are taken (impossible under the party cap) does it reuse one.
+ * The second slot is reserved and always 0. Only if all 20 colours are taken (impossible under the party cap) does it reuse one.
  * `rand` returns [0,1).
  */
 export function pickNameWith(taken: NameIdx[], rand: () => number): NameIdx {

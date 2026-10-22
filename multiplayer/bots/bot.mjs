@@ -1,6 +1,8 @@
 // Scripted multiplayer bots. Needs a WebSocket client: `node --experimental-websocket` on Node 20.
 //   node --experimental-websocket multiplayer/bots/bot.mjs --url http://127.0.0.1:8790 --code K7MQ4R --n 3 \
-//        [--path circle|line] [--cheat speed|flood|bounds] [--host-key KEY] [--ms 3000]
+//        [--path circle|line] [--cheat speed|flood|bounds] [--host-key KEY] [--ms 3000] [--spread 300]
+// --n up to 20 (the party cap). --spread = decimetres between bots along X (default 0: everyone on one spot), to exercise interest management.
+// Each bot also counts its received frames (msgs, bytes, poseFrames, poseEntries) so a run can report messages per second.
 // Prints one JSON line: { bots: [ { id, welcomed, seen, posesFrom, maxXFrom, errors, closeCode, ... } ] }
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
@@ -15,11 +17,11 @@ const { C, S, PROTOCOL_VERSION, Mode, Zone } = P;
 const LOOK = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8];
 const wsUrl = (url, code) => url.replace(/^http/, 'ws').replace(/\/$/, '') + '/party/' + code + '/ws';
 
-function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = null, ms = 3000, index = 0 }) {
+function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = null, ms = 3000, index = 0, spread = 0 }) {
   return new Promise((resolve) => {
     const out = {
       index, cheat, welcomed: false, id: -1, host: false, token: null, seen: 0, posesFrom: [], maxXFrom: {}, errors: [],
-      closeCode: null, ended: null, left: [], sent: 0,
+      closeCode: null, ended: null, left: [], sent: 0, msgs: 0, bytes: 0, poseFrames: 0, poseEntries: 0, maxFrame: 0,
     };
     const seen = new Set();
     const posesFrom = new Set();
@@ -37,8 +39,8 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
       t++;
       seq++;
       let x, z;
-      if (shape === 'line') { const k = t % 100; x = 1000 + (k < 50 ? k : 100 - k) * 4; z = 500; }
-      else { x = 1000 + Math.round(60 * Math.cos(t * 0.1)); z = 500 + Math.round(60 * Math.sin(t * 0.1)); }
+      if (shape === 'line') { const k = t % 100; x = 1000 + index * spread + (k < 50 ? k : 100 - k) * 4; z = 500; }
+      else { x = 1000 + index * spread + Math.round(60 * Math.cos(t * 0.1)); z = 500 + Math.round(60 * Math.sin(t * 0.1)); }
       if (cheat === 'speed' && t % 5 === 0) x = 9000; // 800 m in 200 ms
       if (cheat === 'bounds' && t > 2) x = 99999; // outside WORLD_BOUNDS
       send([C.Pose, seq, x, 0, z, (t * 3) & 255, 8, Mode.Walk, Zone.Main, 0]);
@@ -49,6 +51,7 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
     ws.onclose = (ev) => { out.closeCode = ev.code; finish(); };
     ws.onmessage = (ev) => {
       let m;
+      out.msgs++; out.bytes += ev.data.length; out.maxFrame = Math.max(out.maxFrame, ev.data.length);
       try { m = JSON.parse(ev.data); } catch { return; }
       switch (m[0]) {
         case S.Welcome:
@@ -61,6 +64,7 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
         case S.Joined: if (m[1][0] !== out.id) seen.add(m[1][0]); break;
         case S.Left: out.left.push(m[1]); break;
         case S.Poses:
+          out.poseFrames++; out.poseEntries += (m.length - 2) / 9;
           for (let i = 2; i + 8 < m.length + 0; i += 9) {
             const id = m[i];
             posesFrom.add(id);
@@ -90,7 +94,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   const get = (k, d) => { const i = a.indexOf('--' + k); return i >= 0 ? a[i + 1] : d; };
   const bots = await runBots({
     url: get('url', 'http://127.0.0.1:8790'), code: get('code'), n: Number(get('n', 1)), path: get('path', 'circle'),
-    cheat: get('cheat', null), hostKey: get('host-key', null), ms: Number(get('ms', 3000)),
+    cheat: get('cheat', null), hostKey: get('host-key', null), ms: Number(get('ms', 3000)), spread: Number(get('spread', 0)),
   });
   console.log(JSON.stringify({ bots: bots.map((b) => ({ ...b, token: undefined })) }));
 }

@@ -108,10 +108,10 @@ A first (~0.5 day). B, C, D can run in parallel after A merges (they only import
   via `typescript` transpile), CORS for localhost only, `MP_PORT` env, logs counts only.
 - `multiplayer/bots/bot.mjs`: `--url --code --n --path circle|line --cheat speed|flood|bounds`, prints a one-line JSON summary.
 - `tests/mp-room-core.cjs` (fake peers + fake clock) and `scripts/mp-relay-smoke.mjs` (spawns dev relay on a free port,
-  POST /party, 6 bots join, asserts everyone sees 5 others within 2 s, 7th gets `Full`, a speed-cheat bot's poses are not
+  POST /party, 6 bots join, asserts everyone sees 5 others within 2 s (22 Oct 2026: then a 20-bot party, the 21st gets `Full`, msg/s printed), a speed-cheat bot's poses are not
   relayed, flood bot is closed; kills the server by PID in `finally`).
 **Acceptance:**
-- `node tests/mp-room-core.cjs`: join, Welcome roster, Joined/Left, Full at 7, Lock, Kick (kicked can't resume), host-only
+- `node tests/mp-room-core.cjs`: join, Welcome roster, Joined/Left, Full at 21 (party cap 20), Lock, Kick (kicked can't resume), host-only
   ops rejected for non-host (`NotHost`), host migration after 30 s, resume within 60 s keeps id/name, code TTL rejects new
   joins after 8 h, party ends at 12 h and after 2 min empty, batching sends only dirty poses, a peer never receives its own pose,
   no token appears in any message sent to another peer.
@@ -219,3 +219,7 @@ a short Sonnet follow-up task.
 3. Vercel **preview** env: `NEXT_PUBLIC_MULTIPLAYER=1`, `NEXT_PUBLIC_MULTIPLAYER_URL=https://<worker>.workers.dev`.
 4. Two phones on the preview: create, share, join, walk together; then the two-iPhone heat run.
 5. Send the privacy draft (design §5.5) to counsel; DPIA.
+
+## Party cap 20 (22 Oct 2026, branch `party-cap-20`, not pushed)
+
+`PARTY_MAX` 6 -> 20. Done: protocol ids 0..31, 8 KB server frame cap, 20 unique colours (names + hex), `RoomCore` interest management (nearest 12 per 5 Hz tick + 1 Hz beacon), ring capacity 21 with ring + label only beyond the rig cap, label cap (nearest 8 within 25 m), emote bubble cap 6, join-toast coalescing (1.5 s), scrolling roster, "N friends" chip label, bots `--n 20 --spread`, tests (`mp-protocol`, `mp-room-core`, `mp-client`, `mp-avatars`, `mp-ui`) and the 20-bot smoke. Design: `docs/multiplayer-design.md` 2.9. Still to check on a real device: a 20-player party on an iPhone (heat, label legibility), and the Cloudflare request count on the first real party.

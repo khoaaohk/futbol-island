@@ -35,7 +35,7 @@ export function Glyph({ name, size = 22 }: { name: string; size?: number }) {
 
 /** Icon-only round chip in a fixed corner: stacked faces and a count. Dims while reconnecting. */
 export default function PartyChip({ count, reconnecting, open, onClick }: { count: number; reconnecting: boolean; open: boolean; onClick: () => void }) {
-  const label = reconnecting ? 'Party, reconnecting' : `Party, ${count} ${count === 1 ? 'player' : 'players'}`;
+  const label = reconnecting ? 'Party, reconnecting' : `Party, ${Math.max(0, count - 1)} ${count === 2 ? 'friend' : 'friends'}`;
   return (
     <button type="button" className={styles.chip} data-party-chip data-reconnecting={reconnecting ? '1' : undefined} aria-label={label} aria-expanded={open} aria-haspopup="dialog" onClick={onClick}>
       <Icon name="people" size={22} />
