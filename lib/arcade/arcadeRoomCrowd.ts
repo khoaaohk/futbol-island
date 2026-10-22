@@ -20,15 +20,30 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   const motion:PlayerMotion={travelMode:'walk',facing:station.yaw,lookY:1.95};
   const arms=['left','right'].map(side=>({shoulder:rig.root.getObjectByName(`${side}-shoulder`)!,elbow:rig.root.getObjectByName(`${side}-elbow`)!}));
   const entering=i===count-1,entryX=clampX(2),entryZ=clampZ(bounds.maxZ-4);if(entering)shadow.position.set(entryX,.083,entryZ);
-  return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
- const debugStates=members.map((m,i)=>({id:i,x:m.x,z:m.z,phase:m.phase as string,cabinet:m.cabinet,yielding:false,greeting:false,visits:0,social:false,socialAge:-1,facing:0,attentive:false}));
+  return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive'|'exitAisle'|'exit'|'away',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
+ const debugStates=members.map((m,i)=>({id:i,x:m.x,z:m.z,phase:m.phase as string,cabinet:m.cabinet,yielding:false,greeting:false,visits:0,social:false,socialAge:-1,facing:0,attentive:false,away:false}));
  const contact={x:0,z:0},human={x:0,z:0};
- let disposed=false,focusedId:number|null=null;
+ let disposed=false,focusedId:number|null=null,friendSlots=0,restoreWait=0;
+ // Multiplayer rooms (docs/multiplayer-rooms-design.md Phase 3): party friends REPLACE visitors so the rig count never rises.
+ // A replaced visitor walks out through the door (no pop at its station) and then costs nothing (no rig update); when friends
+ // leave, it walks back in from the door and finds a free cabinet. Visitors in a social exchange, focused or knocked down are
+ // never picked; the reconcile retries next update.
+ const doorX=clampX(aisleX),doorZ=clampZ(bounds.maxZ-.4),AWAY_X=0,AWAY_Z=1e4;// parked far outside: the room's proximity / body / floor checks never see it
+ const leaving=(m:typeof members[number])=>m.phase==='exitAisle'||m.phase==='exit'||m.phase==='away';
+ function reconcileFriends(dt:number){
+  restoreWait=Math.max(0,restoreWait-dt);
+  let out=0;for(const m of members)if(leaving(m))out++;
+  while(out<friendSlots){let pick=-1,best=Infinity;for(let i=0;i<members.length;i++){const m=members[i];if(leaving(m)||m.social||i===focusedId||reactions?.get(`arcade-visitor-${i}`))continue;const d=Math.hypot(m.x-doorX,m.z-doorZ);if(d<best){best=d;pick=i;}}if(pick<0)break;const m=members[pick];if(stations[m.cabinet].owner===pick)stations[m.cabinet].owner=-1;m.previous=m.cabinet;m.phase='exitAisle';m.tx=m.laneX;m.tz=clampZ(m.z);m.detour=null;m.age=0;out++;}
+  // Returning visitors come back one at a time (1.6 s apart) on their own lane, like the original single entering visitor.
+  if(out>friendSlots){let pick=-1;for(let i=members.length-1;i>=0;i--)if(members[i].phase==='exitAisle'||members[i].phase==='exit'){pick=i;break;}if(pick<0&&restoreWait===0)for(let i=members.length-1;i>=0;i--)if(members[i].phase==='away'){pick=i;break;}if(pick>=0){const m=members[pick];
+   if(m.phase==='away'){restoreWait=1.6;m.x=m.laneX;m.z=doorZ;m.vx=m.vz=0;m.rig.root.visible=true;m.shadow.visible=true;debugStates[pick].away=false;}
+   m.phase='aisle';m.age=0;m.tx=m.laneX;m.tz=clampZ(bounds.maxZ-4);}}
+ }
  function update(dt:number,time:number,playerX:number,playerZ:number){
-  if(disposed||dt<=0)return;dt=Math.min(dt,.1);human.x=playerX;human.z=playerZ;
+  if(disposed||dt<=0)return;dt=Math.min(dt,.1);human.x=playerX;human.z=playerZ;reconcileFriends(dt);
   for(let i=0;i<members.length;i++){
-   const m=members[i],stunned=reactions?.get(`arcade-visitor-${i}`),station=stations[m.cabinet],engaged=!!stunned||!!m.social||i===focusedId;if(!engaged)m.age+=dt;
-   if(!engaged&&m.phase==='play'&&m.age>m.deadline){station.owner=-1;m.phase='leave';m.age=0;m.tx=station.ax;m.tz=station.az;m.previous=m.cabinet;}
+   const m=members[i];if(m.phase==='away')continue;const stunned=reactions?.get(`arcade-visitor-${i}`),station=stations[m.cabinet],engaged=!!stunned||!!m.social||i===focusedId;if(!engaged)m.age+=dt;
+   if(!engaged&&m.phase==='play'&&m.age>m.deadline&&!leaving(m)){station.owner=-1;m.phase='leave';m.age=0;m.tx=station.ax;m.tz=station.az;m.previous=m.cabinet;}
    const playerDistance=Math.hypot(m.x-playerX,m.z-playerZ);m.yielding=playerDistance<1.25;
    m.greet=Math.max(0,m.greet-dt);m.greetCooldown=Math.max(0,m.greetCooldown-dt);
    if(playerDistance<2.6&&!m.playerNearby){m.playerNearby=true;if(m.greetCooldown===0){m.greet=1.4;m.greetCooldown=8;}}
@@ -42,7 +57,9 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    if(engaged){tx=m.x;tz=m.z;m.vx=m.vz=0;}
    let dx=tx-m.x,dz=tz-m.z,distance=Math.hypot(dx,dz);
    if(!engaged&&distance<.12&&m.phase!=='play'){
-    if(m.phase==='entry'){m.phase='cross';m.tx=m.laneX;m.tz=station.az;}
+    if(m.phase==='exitAisle'){m.phase='exit';m.tx=doorX;m.tz=doorZ;}
+    else if(m.phase==='exit'){m.phase='away';m.vx=m.vz=0;m.x=AWAY_X;m.z=AWAY_Z;m.rig.root.visible=false;m.shadow.visible=false;const away=debugStates[i];away.away=true;away.phase='away';away.x=AWAY_X;away.z=AWAY_Z;away.yielding=away.greeting=away.attentive=false;continue;}
+    else if(m.phase==='entry'){m.phase='cross';m.tx=m.laneX;m.tz=station.az;}
     else if(m.phase==='leave'){m.phase='aisle';m.tx=m.laneX;m.tz=station.az;}
     else if(m.phase==='aisle'){
      let next=-1;for(let k=1;k<=stations.length;k++){const j=(m.previous+k)%stations.length;if(j!==m.previous&&stations[j].owner<0){next=j;break;}}
@@ -63,7 +80,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
     if(!m.detour&&m.detourCooldown===0&&distance>.2){
      let blockerX=0,blockerZ=0,nearest=Infinity;
      for(let j=0;j<=members.length;j++){
-      const other=members[j];if(j===i)continue;
+      const other=members[j];if(j===i||other?.phase==='away')continue;
       if(other&&!(j<i||other.phase==='play'||other.social||j===focusedId||reactions?.get(`arcade-visitor-${j}`)))continue;
       const bx=other?other.x:playerX,bz=other?other.z:playerZ,ox=bx-m.x,oz=bz-m.z,along=sx*ox+sz*oz,across=Math.abs(sz*ox-sx*oz);
       if(along>0&&along<Math.min(1.7,distance+.2)&&across<.92&&along<nearest){nearest=along;blockerX=bx;blockerZ=bz;}
@@ -81,11 +98,11 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    // A positional guard closes the gap left by steering inertia. The maximum
    // travel step is 0.105m, much smaller than the 0.84m body separation.
    for(let pass=0;pass<3;pass++){contact.x=nx;contact.z=nz;separateArcadeBody(contact,human);nx=clampX(contact.x);nz=clampZ(contact.z);for(let j=0;j<members.length;j++){
-    if(j===i)continue;const other=members[j],ox=nx-other.x,oz=nz-other.z,d=Math.hypot(ox,oz);
+    if(j===i||members[j].phase==='away')continue;const other=members[j],ox=nx-other.x,oz=nz-other.z,d=Math.hypot(ox,oz);
     if(d<.84){const ux=d>.0001?ox/d:Math.cos(i*2.4),uz=d>.0001?oz/d:Math.sin(i*2.4);nx=clampX(other.x+ux*.84);nz=clampZ(other.z+uz*.84);}
    }
    }
-   for(let j=0;j<members.length;j++)if(j!==i&&Math.hypot(nx-members[j].x,nz-members[j].z)<.83){nx=m.x;nz=m.z;break;}
+   for(let j=0;j<members.length;j++)if(j!==i&&members[j].phase!=='away'&&Math.hypot(nx-members[j].x,nz-members[j].z)<.83){nx=m.x;nz=m.z;break;}
    m.vx=(nx-m.x)/dt;m.vz=(nz-m.z)/dt;m.x=nx;m.z=nz;
    const moving=Math.hypot(m.vx,m.vz)>.06,facing=engaged?Math.atan2(playerX-m.x,playerZ-m.z):moving?Math.atan2(m.vx,m.vz):stations[m.cabinet].yaw;
    m.yaw+=Math.atan2(Math.sin(facing-m.yaw),Math.cos(facing-m.yaw))*(1-Math.exp(-dt*8));
@@ -102,5 +119,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
  }
  // Initial pose without creating an independent animation clock.
  for(const m of members)m.rig.update(m.x,m.z,0,0,reduced,m.motion);
- return{update,debugStates,jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},reserve(id:number,routine:SocialRoutine){const m=members[id];if(!m||disposed)return false;m.social=routine;m.socialAge=-1;m.vx=m.vz=0;return true;},setSocialAge(id:number,age:number){const m=members[id];if(m)m.socialAge=age;},release(id:number){const m=members[id];if(m){m.social=null;m.socialAge=-1;m.greetCooldown=4;m.greet=0;}},dispose(){if(disposed)return;disposed=true;for(const m of members){m.rig.dispose();m.shadow.removeFromParent();}shadowGeometry.dispose();shadowMaterial.dispose();}};
+ return{update,debugStates,jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},
+ /** Party friends shown in the hub: that many visitors walk out (nearest the door first) and come back when friends leave. */
+ setFriendSlots(n:number){friendSlots=Math.max(0,Math.min(members.length,Math.floor(n)||0));},get friendSlots(){return friendSlots;},reserve(id:number,routine:SocialRoutine){const m=members[id];if(!m||disposed)return false;m.social=routine;m.socialAge=-1;m.vx=m.vz=0;return true;},setSocialAge(id:number,age:number){const m=members[id];if(m)m.socialAge=age;},release(id:number){const m=members[id];if(m){m.social=null;m.socialAge=-1;m.greetCooldown=4;m.greet=0;}},dispose(){if(disposed)return;disposed=true;for(const m of members){m.rig.dispose();m.shadow.removeFromParent();}shadowGeometry.dispose();shadowMaterial.dispose();}};
 }
