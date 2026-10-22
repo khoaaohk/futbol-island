@@ -245,4 +245,13 @@ t('presence on the wire (design 4.4.1): Busy / Indoors / Hidden, the activity in
   const b=busy.slice(2);assert.equal(P.speedOk(b,b,60000),true,'a frozen position is never a speed cheat, however long');
   assert.ok(P.parseServer(JSON.stringify([23,5,3,...b])),'a Poses batch with a Busy friend parses');
 });
+t('relay v1.1 (rooms design 2.3): wire unchanged; room bounds are a relay check, not a parse rule',()=>{
+  assert.equal(P.PROTOCOL_VERSION,1,'no version bump for relay v1.1');
+  const far=[1,0,110*1,-350,0,0,P.RoomCode.Konbini,P.Mode.Walk,P.Zone.Indoors,0];far[2]=200; // Konbini x 20 m: out of the room
+  assert.ok(P.parseClient(JSON.stringify(far)),'an out-of-room pose still PARSES (the relay drops it; no bad frame, no kick)');
+  assert.ok(P.clampPose(far.slice(2)),'and clampPose accepts it (WORLD_BOUNDS)');
+  assert.equal(P.roomBoundsOk(far.slice(2)),false,'roomBoundsOk is the v1.1 drop');
+  assert.equal(P.roomBoundsOk(body),true,'island bodies always pass');
+  assert.equal(P.RELAY_ROOM_BOUNDS[P.RoomCode.Konbini].hx,11);assert.equal(P.RELAY_ROOM_BOUNDS[P.RoomCode.Museum].hx,25);assert.equal(P.RELAY_ROOM_BOUNDS[P.RoomCode.Reef+1].hz,28);
+});
 console.log('mp-protocol: '+n+' groups passed');

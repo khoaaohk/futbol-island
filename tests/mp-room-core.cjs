@@ -693,4 +693,144 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const a2 = peer(); hello(room, a2, wa[3]);
   assert.equal(welcome(a2), undefined, 'no Welcome after End'); assert.deepEqual(errs(a2), [ErrorCode.Expired]); assert.equal(a2.closed, CLOSE.Ended);
 }
+// ---- Relay v1.1 (docs/multiplayer-rooms-design.md 2.3 items 1-5) ----
+{
+  const { RoomCode, AWAY_SILENCE_MS, RELAY_ROOM_BOUNDS, roomOf, parseServer } = P;
+  const rpose = (seq, room, x, z, flags = 0, mode = Mode.Walk) => [C.Pose, seq, x, -350, z, 0, room, mode, Zone.Indoors, flags];
+  const relayPose = (room, id) => { let p = null; room.members.forEach((m) => { if (m.id === id) p = m.pose; }); return p; };
+  const heard = (p, id) => p.of(S.Poses).filter((m) => { for (let k = 2; k < m.length; k += 9) if (m[k] === id) return true; return false; }).length;
+  const idOf = (p) => welcome(p)[2];
+
+  // 1. room bounds: out of bounds = dropped and counted, never bad(); island poses, unknown rooms and in-bounds room poses pass
+  {
+    const { clock, room } = mk();
+    const host = join(room, room.hostKey), a = join(room), ia = idOf(a);
+    send(room, a, rpose(0, RoomCode.Konbini, 50, 40));
+    assert.equal(roomOf(relayPose(room, ia)), RoomCode.Konbini);
+    for (let i = 1; i <= 12; i++) { clock.t += 200; send(room, a, rpose(i, RoomCode.Konbini, 115, 40)); } // 11.5 m > 11 m half extent
+    assert.equal(a.closed, null, 'out-of-bounds room poses never kick (12 sent, BAD_FRAME_LIMIT is 5)');
+    assert.equal(relayPose(room, ia)[0], 50, 'out-of-bounds room pose dropped: the last good pose stays');
+    assert.equal(room.summary().roomOob, 12, 'drops counted (count only)');
+    clock.t += 200; send(room, a, rpose(13, RoomCode.Konbini, 108, -95)); assert.equal(relayPose(room, ia)[0], 108, 'inside 11 x 10 m: accepted');
+    clock.t += 1200; send(room, a, rpose(14, RoomCode.Museum, -240, 210)); assert.equal(relayPose(room, ia)[0], -240, 'museum 25 x 22 m');
+    clock.t += 200; send(room, a, rpose(15, RoomCode.Museum, -240, 230)); assert.equal(relayPose(room, ia)[2], 210, 'museum z 23 m: dropped');
+    clock.t += 1200; send(room, a, rpose(16, 33, 370, -370)); assert.equal(relayPose(room, ia)[0], 370, 'an unknown room (33) is held only to ROOM_XZ_MAX: new rooms need no relay deploy');
+    clock.t += 1200; send(room, a, rpose(17, RoomCode.Reef + 3, 280, 0)); assert.equal(relayPose(room, ia)[0], 280, 'reef 28 m');
+    clock.t += 200; send(room, a, rpose(18, RoomCode.Reef + 3, 290, 0)); assert.equal(relayPose(room, ia)[0], 280, 'reef 29 m: dropped');
+    clock.t += 1200; send(room, a, [C.Pose, 19, 4300, 0, 300, 0, 0, Mode.Walk, Zone.Main, 0]); assert.equal(relayPose(room, ia)[0], 4300, 'island poses: no room bounds');
+    assert.equal(room.summary().roomOob, 14);
+    assert.equal(host.closed, null);
+    for (const code of [RoomCode.Konbini, RoomCode.KonbiniCay, RoomCode.Museum, RoomCode.Arcade, RoomCode.Shop]) assert.ok(RELAY_ROOM_BOUNDS[code], 'bounds for ' + code);
+  }
+
+  // 2. a change of room is an implicit warp (no 5 s gap, no speed check); ordinary moves keep the Warp / speed rules
+  {
+    const { clock, room } = mk();
+    join(room, room.hostKey); const a = join(room), ia = idOf(a);
+    send(room, a, [C.Pose, 0, 4300, 0, 300, 0, 0, Mode.Walk, Zone.Main, 0]);
+    clock.t += 1000; send(room, a, [C.Pose, 1, 4300, 0, 300, 0, 0, Mode.Walk, Zone.Main, PoseFlag.Warp]); // a lesson pop-out warp
+    clock.t += 1500; send(room, a, rpose(2, RoomCode.Konbini, -20, 49)); // no Warp flag, 1.5 s after a warp
+    assert.equal(roomOf(relayPose(room, ia)), RoomCode.Konbini, 'island -> room accepted at once (implicit warp)');
+    clock.t += 200; send(room, a, rpose(3, RoomCode.Konbini, 90, -90)); assert.equal(relayPose(room, ia)[0], -20, 'a 14 m jump inside the room is still a speed cheat');
+    clock.t += 200; send(room, a, rpose(4, RoomCode.Konbini, 90, -90, PoseFlag.Warp)); assert.equal(relayPose(room, ia)[0], -20, 'and a Warp inside the 5 s window is still dropped');
+    clock.t += 3200; send(room, a, rpose(5, RoomCode.Konbini, 90, -90, PoseFlag.Warp)); assert.equal(relayPose(room, ia)[0], 90, 'a Warp 5 s after the last one passes');
+    clock.t += 200; send(room, a, [C.Pose, 6, -3000, 0, 300, 0, 0, Mode.Walk, Zone.Main, 0]); assert.equal(roomOf(relayPose(room, ia)), -1, 'room -> island accepted at once');
+    clock.t += 200; send(room, a, rpose(7, RoomCode.Museum, 0, 0)); assert.equal(roomOf(relayPose(room, ia)), -1, 'a second flip within 1 s falls back to the speed check (no teleport spam)');
+    clock.t += 1000; send(room, a, rpose(8, RoomCode.Museum, 0, 0)); assert.equal(roomOf(relayPose(room, ia)), RoomCode.Museum, 'island -> museum after 1 s');
+    clock.t += 1000; send(room, a, rpose(9, RoomCode.Arcade, 0, 100)); assert.equal(roomOf(relayPose(room, ia)), RoomCode.Arcade, 'room -> room');
+    clock.t += 1000; send(room, a, [C.Pose, 10, 4300, 0, 300, 0, 8, Mode.Busy, Zone.Indoors, 0]); assert.equal(relayPose(room, ia)[0], 4300, 'room -> legacy door pose (room -1)');
+    assert.equal(a.closed, null);
+  }
+
+  // 3. interest: same room at 5 Hz (nearest 12), everyone else on the 1 Hz beacon; a room change reaches everyone at once
+  {
+    const { clock, room } = mk();
+    const host = join(room, room.hostKey), a = join(room), b = join(room), c = join(room);
+    const ih = idOf(host), ia = idOf(a), ib = idOf(b), ic = idOf(c);
+    let seq = 1;
+    const step = (i) => {
+      send(room, host, [C.Pose, seq, 1000 + i * 10, 0, 0, 0, 0, Mode.Walk, Zone.Main, 0]);
+      send(room, c, [C.Pose, seq, 1200 + i * 10, 0, 0, 0, 0, Mode.Walk, Zone.Main, 0]);
+      send(room, a, rpose(seq, RoomCode.Museum, i * 10, 0));
+      send(room, b, rpose(seq, RoomCode.Museum, i * 10, 20));
+      seq++;
+    };
+    for (let i = 0; i < 10; i++) { step(i); room.tick(); clock.t += 200; } // 10 ticks = 8 normal + 2 beacons
+    assert.equal(heard(a, ib), 10, 'room members hear each other every tick (5 Hz)');
+    assert.equal(heard(b, ia), 10);
+    assert.equal(heard(a, ih), 2, 'room members hear island running only on the 1 Hz beacon');
+    assert.equal(heard(a, ic), 2);
+    assert.equal(heard(host, ic), 10, 'island members hear each other at 5 Hz');
+    assert.equal(heard(host, ia), 2, 'island members hear room walking only on the beacon');
+    assert.equal(heard(c, ib), 2);
+    // c steps into the museum: everyone hears the door step on the next normal tick; then c is a museum member
+    const before = { h: heard(host, ic), a: heard(a, ic) };
+    send(room, c, rpose(seq++, RoomCode.Museum, 0, 100)); room.tick(); clock.t += 200; // tick 11: normal
+    assert.equal(heard(host, ic), before.h + 1, 'the island hears c leave at once');
+    assert.equal(heard(a, ic), before.a + 1, 'the museum hears c arrive at once');
+    for (let i = 0; i < 3; i++) { send(room, c, rpose(seq++, RoomCode.Museum, 0, 110 + i * 10)); room.tick(); clock.t += 200; } // ticks 12-14: normal
+    assert.equal(heard(host, ic), before.h + 1, 'then no 5 Hz room walking on the island');
+    assert.equal(heard(a, ic), before.a + 4, 'c now at 5 Hz for the museum');
+    // the nearest-12 cap still applies inside one room: 14 museum members, all moving
+    const { clock: k2, room: r2 } = mk();
+    const ps = []; for (let i = 0; i < 14; i++) ps.push(join(r2, i === 0 ? r2.hostKey : null));
+    const isl = join(r2);
+    for (let i = 0; i < 14; i++) send(r2, ps[i], rpose(1, RoomCode.Museum, i * 10, 0));
+    send(r2, isl, [C.Pose, 1, 0, 0, 0, 0, 0, Mode.Walk, Zone.Main, 0]);
+    r2.tick(); k2.t += 200;
+    const entries = (p) => { const m = p.of(S.Poses).pop(); const ids = []; for (let k = 2; m && k < m.length; k += 9) ids.push(m[k]); return ids; };
+    assert.equal(entries(ps[0]).length, 12, 'nearest 12 of the 13 other museum members');
+    assert.ok(!entries(ps[0]).includes(idOf(isl)), 'the island member is not in the near set');
+    assert.equal(isl.of(S.Poses).length, 0, 'the island member hears no room walking on a normal tick');
+  }
+
+  // 4. away: a silent in-room member shows Away; the legacy door pose never does
+  {
+    const { clock, room } = mk();
+    const host = join(room, room.hostKey), a = join(room), d = join(room), ia = idOf(a), id = idOf(d);
+    send(room, a, rpose(0, RoomCode.Arcade, 0, 0));
+    send(room, d, [C.Pose, 0, 4300, 0, 300, 0, 8, Mode.Busy, Zone.Indoors, 0]); // legacy door pose (a page without the room layer)
+    clock.t += AWAY_SILENCE_MS + 200; send(room, host, [C.Beat, 1]); room.tick();
+    assert.equal(relayPose(room, ia)[7] & PoseFlag.Hidden, PoseFlag.Hidden, 'silent in-room member: Away');
+    assert.equal(relayPose(room, id)[7] & PoseFlag.Hidden, 0, 'legacy door pose: never Away');
+    clock.t += 200; send(room, a, [C.Beat, 1]); room.tick();
+    assert.equal(relayPose(room, ia)[7] & PoseFlag.Hidden, 0, 'a beat clears it');
+  }
+
+  // 5. a resume Hello with a new look updates the slot and re-announces it as S.Joined (same id); an unchanged look stays invisible
+  {
+    const { clock, room } = mk();
+    const host = join(room, room.hostKey), a = join(room);
+    const wa = welcome(a), ia = wa[2], L2 = LOOK.map((v) => v + 1);
+    room.disconnect(a); clock.t += 5000;
+    const a2 = peer(); hello(room, a2, wa[3]);
+    assert.equal(host.of(S.Joined).length, 1, 'unchanged look: resume invisible to others');
+    room.disconnect(a2); clock.t += 5000;
+    const a3 = peer(); room.connect(a3); room.message(a3, JSON.stringify([C.Hello, PROTOCOL_VERSION, L2, wa[3], null]));
+    assert.equal(welcome(a3)[2], ia, 'same slot');
+    assert.deepEqual(welcome(a3)[7].find((m) => m[0] === ia)[2], L2, 'own Welcome carries the new look');
+    const js = host.of(S.Joined);
+    assert.equal(js.length, 2, 'new look: one S.Joined to the others');
+    assert.equal(js[1][1][0], ia); assert.deepEqual(js[1][1][2], L2);
+    assert.equal(a3.of(S.Joined).length, 0, 'never to the resumer');
+    const late = join(room); assert.deepEqual(welcome(late)[7].find((m) => m[0] === ia)[2], L2, 'later joiners get the new look');
+    // OLD client: the first client reducer (d65c5a4e, unchanged in every later version) replays the host's frames: one row, new look
+    const raw = host.msgs.map((m) => JSON.stringify(m)).map(parseServer).filter(Boolean);
+    let st = { members: [] };
+    const toMember = (m) => ({ id: m[0], look: m[2], isHost: m[3] === 1 });
+    for (const m of raw) {
+      if (m[0] === S.Welcome) st = { ...st, members: m[7].map(toMember) };
+      else if (m[0] === S.Joined) { const mem = toMember(m[1]); st = { ...st, members: [...st.members.filter((x) => x.id !== mem.id), mem].sort((x, y) => x.id - y.id) }; }
+    }
+    assert.equal(st.members.filter((x) => x.id === ia).length, 1, 'old client reducer: the resumed member is ONE row');
+    assert.deepEqual(st.members.find((x) => x.id === ia).look, L2, 'old client reducer: with the new look');
+    assert.equal(st.members.length, 3, 'host, a, late');
+    // CURRENT client store (lib/multiplayer/store.ts): same result
+    const { partyStore } = loadTs(path.join(ROOT, 'lib/multiplayer/store.ts'));
+    partyStore.reset(); for (const m of raw) partyStore.apply(m, 0);
+    assert.equal(partyStore.get().members.filter((x) => x.id === ia).length, 1, 'current store: one row');
+    assert.deepEqual(partyStore.get().members.find((x) => x.id === ia).look, L2);
+    partyStore.reset();
+  }
+}
 console.log('mp-room-core: ok');

@@ -310,4 +310,24 @@ t('Konbini wiring: layer in the loop, 20 fps remote frames on phones, one ring, 
   assert.ok(/KONBINI_DOOR_HINTS/.test(read('components/Town.tsx')), 'Town passes the door hints');
 });
 
+// ---- relay v1.1 room bounds (design 2.3 item 1): every client clamp + 3 m margin sits inside the relay's RELAY_ROOM_BOUNDS ---------
+t('relay v1.1: RELAY_ROOM_BOUNDS hold every client room clamp (roomPos + room descriptors) with a 3 m margin', () => {
+  const check = (code, b, src) => {
+    const r = P.RELAY_ROOM_BOUNDS[code];
+    assert.ok(r, src + ': relay bounds for room ' + code);
+    const hx = Math.max(-b.minX, b.maxX) + 3, hz = Math.max(-b.minZ, b.maxZ) + 3;
+    assert.ok(hx <= r.hx && hz <= r.hz, src + ' room ' + code + ': client |x| ' + hx + ' / |z| ' + hz + ' (incl. 3 m) must fit ' + r.hx + ' x ' + r.hz);
+    // the farthest legal client pose, encoded as the client sends it, passes the relay check
+    for (const [x, z] of [[b.minX, b.minZ], [b.maxX, b.maxZ], [b.minX, b.maxZ], [b.maxX, b.minZ]]) {
+      const body = RP.encodeRoomPose([0, 0, 0, 0, 0, 0, 0, 0], code, { x, y: 0, z, facing: 0 }, Mode.Walk, 0);
+      assert.ok(P.roomBoundsOk(body), src + ' room ' + code + ' corner ' + x + ',' + z);
+    }
+  };
+  for (const code of Object.keys(RP.ROOM_BOUNDS)) check(Number(code), RP.ROOM_BOUNDS[code], 'roomPos');
+  for (const [f, k] of [['lib/multiplayer/rooms/arcade.ts', 'ARCADE_ROOM'], ['lib/multiplayer/rooms/museum.ts', 'MUSEUM_ROOM']]) {
+    const d = load(f)[k]; check(d.code, d.bounds, k);
+  }
+  assert.equal(P.roomBoundsOk(P.roomBody([0, 0, 0, 0, 0, 0, 0, 0], RoomCode.Konbini, 11.5, 0, 0, 0, Mode.Walk, 0)), false, 'past 11 m: out');
+  assert.equal(P.roomBoundsOk([4300, 0, 300, 0, 8, Mode.Busy, Zone.Indoors, 0]), true, 'legacy door pose: no room bounds');
+});
 console.log(`mp-rooms: ${n} groups passed`);

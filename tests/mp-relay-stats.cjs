@@ -165,5 +165,14 @@ const DAY = 86400000;
   const off = await startServer({ port: 0, quiet: true, statsToken: '' });
   try { assert.equal((await fetch('http://127.0.0.1:' + off.port + '/stats')).status, 404, 'no token configured -> 404'); } finally { off.close(); }
 
+  // relay v1.1: out-of-room pose drops are one allow-listed count; summaries from before v1.1 (no roomOob) still add up
+  {
+    assert.ok(SC.ALLOWED.has('rl:room_oob'));
+    const base = { endReason: EndReason.Empty, peak: 2, lenMs: 60000, joins: 2, resumes: 0, kicks: 0, rotates: 0, locks: 0, nameResets: 0, rateCloses: 0, msgs: 10, fails: {}, errs: {} };
+    assert.equal(SC.summaryIncrements({ ...base, roomOob: 7 })['rl:room_oob'], 7);
+    assert.equal(SC.summaryIncrements(base)['rl:room_oob'], undefined, 'a v1 summary has no room_oob row');
+    const restored = new RoomCore({ code: 'K7MQ4R', createdAt: 0, clock: { now: () => 1000 }, random: (n) => new Uint8Array(n), restore: { code: 'K7MQ4R', codeIssuedAt: 0, locked: false, revoked: [], retired: [], stats: { peak: 1, joins: 1, resumes: 0, kicks: 0, rotates: 0, locks: 0, nameResets: 0, rateCloses: 0, msgs: 3, fails: {}, errs: {}, endReason: -1, buckets: {} } } });
+    assert.equal(restored.summary().roomOob, 0, 'a snapshot saved by the v1 relay restores with roomOob 0');
+  }
   console.log('mp-relay-stats: ok');
 })().catch((e) => { console.error(e); process.exit(1); });
