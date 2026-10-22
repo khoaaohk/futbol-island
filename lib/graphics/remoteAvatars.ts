@@ -181,7 +181,9 @@ export function ringPlacement(x:number,y:number,z:number,pitch:number,yaw:number
 const ringSizeFor=(mode:number):number=>mode===Mode.Scooter?1.65:mode===Mode.Bike?2.15:mode===Mode.Moped?2.3:1;
 
 const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible:false,dx:0,dy:0,scale:1,opacity:0};
-export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number}):RemoteAvatars{
+/** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m). */
+export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number}):RemoteAvatars{
+ const FS=opts.fieldScale??1;
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
  const batch=playerBatch(drawn,BATCH_CAPACITY);
@@ -326,7 +328,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const k=Math.max(.001,pose.fade*saverFade*e.door);
     e.d2=d2;
     // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
-    if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,shield?.86+.14*e.field:1+(1-e.field)*.28,reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
+    if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,FS*(shield?.86+.14*e.field:1+(1-e.field)*.28),reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
      e.shown=false;e.needResume=true;
      if(d2<=RING_ONLY_RANGE*RING_ONLY_RANGE)ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);

@@ -2,18 +2,17 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Mode, Zone, presenceOf, shielded, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Mode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
-import { NOT_BUSY, fillLocalBody, localPoseState } from './presence';
-import { createRemoteAvatars, remoteCap } from '../graphics/remoteAvatars';
-import { batterySaverOn } from '../graphics/heatTier';
-import { loadCustomization } from '../town/customization';
+import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
-import { createPartyConnection, type PartyConnection } from './connection';
-import { bindConnection, onPoses } from './index';
-import { createInterp, type RemotePose } from './interp';
-import { lookToWire } from './look';
-import { displayName, partyStore } from './store';
+import type { RemotePose } from './interp';
+import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends } from './roomParty';
+import { partyStore } from './store';
+import * as T3 from 'three';
+
+// The shared parts (one connection per page, Hide / Mute, the look, the friend core) live in roomParty.ts, used by rooms too.
+export { partyConnection, setHiddenFriends, setMutedFriends, partyLook } from './roomParty';
 
 /** activity: NOT_BUSY (-1) while playing, else the Activity code (lib/multiplayer/presence.ts townActivity); optional for old callers. */
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
@@ -26,22 +25,9 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   ballVsFields(ball: FieldBall): boolean;
   /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
   readonly meRing: boolean }
-
-// One connection per page, shared by Town (this bridge) and the React PartyHost (props.connection).
-let shared: PartyConnection | null = null;
-let unbind: (() => void) | null = null;
-export function partyConnection(): PartyConnection {
-  if (!shared) { shared = createPartyConnection(); unbind = bindConnection(shared); }
-  return shared;
-}
-// Local Hide / Mute choices from the party sheet (PartyHost). Module-level so a runtime created later still applies them.
-let hiddenIds: ReadonlySet<MemberId> = new Set();
-let mutedIds: ReadonlySet<MemberId> = new Set();
-const filterSubs = new Set<() => void>();
-export function setHiddenFriends(ids: ReadonlySet<MemberId>): void { hiddenIds = ids; for (const f of Array.from(filterSubs)) f(); }
-export function setMutedFriends(ids: ReadonlySet<MemberId>): void { mutedIds = ids; for (const f of Array.from(filterSubs)) f(); }
-/** The local player's look on the wire (what PartyHost passes to join). */
-export function partyLook(): Look { return lookToWire(loadCustomization()); }
+/** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
+ *  friends are in THAT room. Client-only, from the roster. */
+export type RoomDoorHint = { room: number; x: number; y: number; z: number };
 
 // Town helper: assembles the local pose from values Town already has, into one reused object (no allocation per call).
 const SUMMIT = { x: 640, z: 130, r: 150 }, CAY = { x: 612, z: -160, r: 120 };
@@ -61,102 +47,116 @@ export function partyLocal(
 }
 
 
-/** The frame loop counts as asleep (Settings, map, a waiting quiz) after this long without update(): the beat tick samples the pose then. */
-export const SLEEP_SAMPLE_MS = 500;
+const HINT_W = 256, HINT_H = 64, HINT_SCREEN = .2, HINT_RANGE = 120;
+function hintTexture(text: string): T3.CanvasTexture {
+  const canvas = document.createElement('canvas'); canvas.width = HINT_W; canvas.height = HINT_H; const g = canvas.getContext('2d');
+  if (g) {
+    g.font = '700 26px system-ui, "Apple Color Emoji", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    const w = Math.min(HINT_W - 8, g.measureText(text).width + 32), x0 = HINT_W / 2 - w / 2;
+    g.fillStyle = 'rgba(20,34,46,.78)'; g.beginPath(); if (g.roundRect) g.roundRect(x0, 8, w, HINT_H - 16, 22); else g.rect(x0, 8, w, HINT_H - 16); g.fill();
+    g.fillStyle = '#ffffff'; g.fillText(text, HINT_W / 2, 33, HINT_W - 24);
+  }
+  const t = new T3.CanvasTexture(canvas); t.colorSpace = T3.SRGBColorSpace; return t;
+}
+/** The door hint's words: "3 in the Konbini" (pure, exported for tests). */
+export function doorHintText(n: number, room: number): string { return n > 0 ? `${n} ${roomText(room).replace(/^In /, 'in ')}` : ''; }
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
   /** A friend's emote was shown (Town counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
-  onEmoteSeen?: () => void }): PartyRuntime | null {
+  onEmoteSeen?: () => void;
+  /** Room doors for the "3 in the Konbini" hint (none = no hint). */
+  doors?: readonly RoomDoorHint[] }): PartyRuntime | null {
   if (!multiplayerEnabled()) return null;
-  const conn = partyConnection();
-  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()) });
+  // The island keeps a friend's last ISLAND spot: a room pose (room-local x / z, design 2.2) is drawn as "indoors at their last island
+  // spot", so they fade out where they went in (at the door) as today; a friend first heard inside a room stays roster-only here.
+  const lastIsland = new Map<MemberId, number[]>(), door: PoseBody = [0, 0, 0, 0, 0, Mode.Busy, Zone.Indoors, 0];
+  const ew = entryWarp(); // the first pose after a Welcome (back from a room page) warps, + one retry (design 2.2)
+  const st = localPoseState();
+  let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
+  const hints: { d: RoomDoorHint; sprite: T3.Sprite; n: number }[] = [];
+  let ready = false; // the core's first sync runs inside createFriendCore (before `avatars` below exists)
+  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen,
+    admit(id, b) {
+      const room = roomOf(b);
+      if (room < 0) { const k = lastIsland.get(id); if (k) for (let i = 0; i < 8; i++) k[i] = b[i]; else lastIsland.set(id, b.slice()); return b; }
+      const k = lastIsland.get(id);
+      if (!k) return null;
+      door[0] = k[0]; door[1] = k[1]; door[2] = k[2]; door[3] = k[3]; door[4] = roomActivity(room); door[5] = Mode.Busy; door[6] = Zone.Indoors; door[7] = b[7] & 2;
+      return door;
+    },
+    onSync(live, welcome) {
+      if (welcome) armEntryWarp(ew);
+      if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; }
+      syncHints();
+    } });
+  const { conn, avatars, poses, active, ids } = core;
   // The labels are the only units the view gate can measure: register the LABEL group (each sprite sits at its friend). Registering the
   // whole root made the batch, the rings and the force fields units at the world origin, so the gate hid every friend whenever the
   // origin was off screen (found Oct 22 2026 with the presence check); the remote layer already culls itself per friend.
   ctx.viewGate.addUnitRoots([avatars.labels]);
-  const interp = createInterp();
-  const poses = new Map<MemberId, RemotePose>();
-  const spare = new Map<MemberId, RemotePose>(); // one preallocated pose per known friend
-  const known = new Set<MemberId>();
-  const ids: MemberId[] = [];
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
   const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0, pitch: 0, yaw: 0 };
-  let meHex = '';
   let drawnLast = false; // the friend layer drew something last frame
-  let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
-  const active = new Map<MemberId, RemotePose>(); // friends outside any force field (what friends() lists)
-  const st = localPoseState();
-  let live = false, you: MemberId | null = null, lastEmoteAt = -1, lastUpdateAt = -1e12;
-
-  // Membership / status / emotes change rarely: sync here, never per frame.
-  function sync() {
-    const s = partyStore.get();
-    you = s.you;
-    live = s.status === 'live' || s.status === 'reconnecting';
-    const want = live ? s.members : [];
-    known.clear();
-    meHex = '';
-    for (const m of want) {
-      if (m.id === s.you) { meHex = m.colourHex; continue; } // the Welcome roster includes the local player
-      known.add(m.id);
-      if (!spare.has(m.id)) { spare.set(m.id, { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Idle, zone: Zone.Main, fade: 1 }); ids.push(m.id); }
-      // Label: the typed first name if set (the made-up name goes small under it), else the made-up name.
-      avatars.upsert(m.id, m.look, displayName(m), { hex: m.colourHex });
+  let lastUpdateAt = -1e12;
+  // Door hints: one screen-sized sprite per door, its texture redrawn only when that room's count changes (store emits on room flips).
+  function syncHints() {
+    if (!ready || !ctx.doors?.length) return;
+    const s = partyStore.get(), live = s.status === 'live' || s.status === 'reconnecting', hid = hiddenFriends();
+    for (let i = 0; i < ctx.doors.length; i++) {
+      const d = ctx.doors[i];
+      let h = hints[i];
+      if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, sizeAttenuation: false })); sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
+      let n = 0;
+      if (live) for (const m of s.members) if (m.id !== s.you && m.room === d.room && !hid.has(m.id)) n++;
+      if (n !== h.n) {
+        h.n = n; const mat = h.sprite.material as T3.SpriteMaterial; mat.map?.dispose(); mat.map = n > 0 ? hintTexture(doorHintText(n, d.room)) : null; mat.needsUpdate = true;
+        h.sprite.userData.text = doorHintText(n, d.room);
+      }
+      h.sprite.visible = n > 0;
     }
-    for (let i = ids.length - 1; i >= 0; i--) {
-      const id = ids[i];
-      if (known.has(id)) continue;
-      avatars.remove(id); interp.drop(id); poses.delete(id); active.delete(id); spare.delete(id); ids.splice(i, 1);
-    }
-    const e = s.lastEmote;
-    if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you && avatars.emote(e.id, e.emote)) ctx.onEmoteSeen?.(); }
-    if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; }
   }
-  const applyFilters = () => { avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
-  filterSubs.add(applyFilters);
-  const offStore = partyStore.subscribe(sync);
-  const offPoses = onPoses((id, b, recvMs) => { if (id !== you && known.has(id)) interp.push(id, b, recvMs); });
-  sync();
-  applyFilters();
+  ready = true;
+  syncHints();
+
   // Me while the island loop sleeps (Settings, map, a waiting quiz) or the page is leaving for a room: the frame loop is not running,
   // so the connection's own 5 s beat tick (no new timer) and pagehide send the Busy / Indoors pose. The connection's delta check sends
   // nothing when it did not change, and then the beat itself keeps the slot alive. (The loop also runs one frame after a menu opens.)
+  function fill(nowMs: number, l: ReturnType<LocalPoseSource>): PoseBody {
+    fillLocalBody(st, l, body);
+    if (entryWarpDue(ew, nowMs)) body[7] |= 1;
+    return body;
+  }
   function sendLocal(nowMs: number) {
     if (conn.status !== 'live') return;
-    conn.sendPose(fillLocalBody(st, ctx.local(), body), nowMs);
+    conn.sendPose(fill(nowMs, ctx.local()), nowMs);
   }
   const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
-  conn.onBeforeBeat(() => { if (live && now() - lastUpdateAt > SLEEP_SAMPLE_MS) sendLocal(now()); });
-  const onPageHide = () => { if (live) sendLocal(now()); };
+  conn.onBeforeBeat(() => { if (core.live && now() - lastUpdateAt > SLEEP_SAMPLE_MS) sendLocal(now()); });
+  const onPageHide = () => { if (core.live) sendLocal(now()); };
   if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide);
 
   return {
     get meRing() { return meRingOn; },
     friends: () => active.values(),
     ballVsFields(ball) {
-      if (!live) return false;
+      if (!core.live) return false;
       let hit = false;
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = poses.get(id);
-        if (!p || p.zone === Zone.Indoors || hiddenIds.has(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
+        if (!p || p.zone === Zone.Indoors || hiddenFriends().has(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
         if (bounceOffField(ball, p.x, p.y + 1.0, p.z)) { avatars.bumpField(id, fieldHit.nx, fieldHit.ny, fieldHit.nz); hit = true; }
       }
       return hit;
     },
     update(dt, nowMs, camera) {
+      const live = core.live, meHex = core.meHex;
       // The party is over (or never started): draw one last EMPTY frame so the colour ring and every friend layer disappear at once,
       // then sleep (the instanced ring mesh keeps its last count until it is told to draw nothing).
       if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, ctx.reducedMotion(), null); } return; }
       drawnLast = true;
-      // Friends: sample the interpolators into preallocated poses.
-      for (let i = 0; i < ids.length; i++) {
-        const id = ids[i], p = spare.get(id)!;
-        if (interp.sample(id, nowMs, p)) {
-          if (!poses.has(id)) poses.set(id, p);
-          if (presenceOf(p.mode, p.zone, p.flags ?? 0) === 'active') { if (!active.has(id)) active.set(id, p); } else if (active.has(id)) active.delete(id);
-        } else if (poses.has(id)) { poses.delete(id); active.delete(id); }
-      }
+      // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
+      core.sample(nowMs);
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();
       // While I am busy (a lesson's learning view, a quiz, a menu) the island's people are hidden (islandNpcs does the same): so are my
@@ -169,16 +169,16 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
         meRingOn = showRing;
         if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; ring.pitch = l.pitch ?? 0; ring.yaw = l.facing; }
         avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
+        if (hints.length) for (const h of hints) if (h.n > 0) { const dx = h.d.x - camera.position.x, dz = h.d.z - camera.position.z; h.sprite.visible = dx * dx + dz * dz < HINT_RANGE * HINT_RANGE; }
       }
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.
       lastUpdateAt = nowMs;
-      if (conn.status === 'live') conn.sendPose(fillLocalBody(st, l, body), nowMs);
+      if (conn.status === 'live') conn.sendPose(fill(nowMs, l), nowMs);
     },
     dispose() {
-      offStore(); offPoses(); filterSubs.delete(applyFilters); avatars.dispose(); poses.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
+      for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
+      core.dispose(); lastIsland.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
-      // The shared connection (and its binding) belongs to the page / PartyHost: it closes on unload and via leave().
-      void unbind;
     },
   };
 }

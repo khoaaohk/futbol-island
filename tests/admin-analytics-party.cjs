@@ -78,7 +78,7 @@ ok("PartyHost's Track names equal partyEvents' list, and each has a call site",(
 
 ok('party / ParentGate / invite / townBridge import no analytics',()=>{
  const importRe=/(?:import[^'"`]*from\s*|import\s*\(\s*|require\s*\(\s*)['"`]([^'"`]+)['"`]/g;
- for(const f of ['components/party/PartyHost.tsx','components/party/PartyInvite.tsx','lib/multiplayer/townBridge.ts','components/landing/JoinFriends.tsx'])
+ for(const f of ['components/party/PartyHost.tsx','components/party/PartyInvite.tsx','lib/multiplayer/townBridge.ts','lib/multiplayer/roomParty.ts','components/party/RoomPartyChip.tsx','components/party/useRoomParty.ts','components/landing/JoinFriends.tsx'])
   for(const x of read(f).matchAll(importRe))assert(!/lib\/analytics/.test(x[1]),`${f} imports ${x[1]}`);
 });
 
@@ -262,8 +262,8 @@ ok('Phase B wiring: Town, townBridge (analytics-free callback), NickField, the v
  assert(/if\(emoteCam\.begin\([^;]*\)\)countEmoteCam\(\);/.test(bus),'em:cam only when the camera engaged');
  assert(/onEmoteVariant\(\(family,v,root\)=>\{if\(family==='react'\|\|root===player\.root\)countEmoteVariant\(family,v\);\}\);/.test(town),'only your own picks (and a reaction to yours)');
  assert(/emoteBus\.set\(null\);onEmoteVariant\(null\);/.test(town),'listener cleared on unmount');
- assert(/reducedMotion:\(\)=>reduced,onEmoteSeen:countEmoteSeen\}\)/.test(town),'em:seen through the runtime option');
- const tb=read('lib/multiplayer/townBridge.ts');
+ assert(/reducedMotion:\(\)=>reduced,onEmoteSeen:countEmoteSeen,doors:KONBINI_DOOR_HINTS\}\)/.test(town),'em:seen through the runtime option');
+ const tb=read('lib/multiplayer/townBridge.ts')+read('lib/multiplayer/roomParty.ts');
  assert(/onEmoteSeen\?: \(\) => void/.test(tb)&&/if \(e\.id !== s\.you && avatars\.emote\(e\.id, e\.emote\)\) ctx\.onEmoteSeen\?\.\(\);/.test(tb),'callback only, when the emote is really shown');
  assert(/emote\(id:MemberId,e:Emote\):boolean;/.test(read('lib/graphics/remoteAvatars.ts')));
  const nf=read('components/party/NickField.tsx');assert(/if \(t !== raw\.slice\(0, NICK_MAX\)\) onRejected\?\.\(\);/.test(nf)&&/onRejected\?: \(\) => void/.test(nf),'a count, never the text');

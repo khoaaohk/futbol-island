@@ -110,3 +110,17 @@
 .codeFresh{animation:codeGlow 1.3s ease-out}
 @keyframes codeGlow{0%{opacity:0;transform:translateY(8px) scale(.96);text-shadow:0 0 18px var(--btn-gold)}35%{opacity:1;transform:none;text-shadow:0 0 18px var(--btn-gold)}100%{text-shadow:0 0 0 transparent}}
 @media(prefers-reduced-motion:reduce){.codeFresh{animation:none;text-shadow:0 0 14px var(--btn-gold)}.tab,.pill,.panel,.panel[data-active=false]{transition:none}.tabs:has(.tab[aria-selected=true]:active) .pill{translate:none}.tabCount{animation:none}}
+
+/* Rooms (docs/multiplayer-rooms-design.md 3.3): the light chip in the room header's top-right slot (docs/ui/HUD_STACK.md), Leave only. */
+.roomParty{position:relative;display:flex;align-items:center;gap:6px}
+.roomParty[data-hidden]{display:none}
+.roomChip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 12px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:24px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge);font:700 15px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
+.roomChip small{font-weight:600;font-size:13px;opacity:.8}
+.roomChip[data-reconnecting]{opacity:.7}
+.roomEmote{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation}
+.roomChip:active,.roomEmote:active{transform:translateY(3px);box-shadow:none}
+.roomChip:focus-visible,.roomEmote:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
+.roomWheel{position:absolute;top:calc(100% + 10px);right:0;z-index:12}
+.roomWheel :global(.emote-wheel){position:static;bottom:auto}
+.roomSheet{position:absolute;top:calc(100% + 10px);right:0;z-index:12;display:flex;flex-direction:column;gap:10px;width:min(320px,calc(100vw - 32px));max-height:min(60dvh,420px);overflow:auto;padding:14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 18px #193f3733;animation:partyIn .2s ease-out}
+.roomSheet .secondary,.roomSheet .primary{min-height:44px;border-radius:22px;font:700 15px/1 var(--btn-font);cursor:pointer}

@@ -18,6 +18,15 @@ import {findFloorPath,createStuckWatch} from './konbiniPath';
 import {createKonbiniBall,type BallEvent} from './konbiniBall';
 import {konbiniSfx} from './konbiniSound';
 import {zoomTargets,nearestTarget,easeZoom,ZOOM_IN_SECONDS,ZOOM_OUT_SECONDS,type ZoomSection,type ZoomTarget} from './konbiniZoom';
+import {emoteBody,applyEmoteArms} from '../graphics/emotePose';
+import {emoteSeconds} from '../town/emoteReact';
+import type {EmoteBubbles} from '../graphics/emoteBubbles';
+
+/** The party friend layer a room hosts (lib/multiplayer/roomParty.ts createRoomParty; docs/multiplayer-rooms-design.md 3.2). The scene
+ *  only calls it: nothing here imports multiplayer code, and with no layer (flag off, no party) nothing below runs. */
+export interface KonbiniFriendLayer{update(dt:number,nowMs:number,camera:T.Camera,hideFriends?:boolean):boolean;readonly meRing:boolean;pushOut(p:{x:number;z:number},r:number):boolean;nearestFriend(x:number,z:number,maxM:number):{x:number;z:number}|null;}
+/** Remote-only frames (a friend walks while you stand still) run at <= 20 fps on phones (the Kit Shop's npc-only precedent). */
+export const REMOTE_FRAME_MS=50;
 
 /**
  * The Konbini interior (one engine, two data-driven variants: konbiniVariants.ts). Heat (docs/performance-guide.md,
@@ -288,12 +297,15 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  // ---- State ---------------------------------------------------------------------------------------------------------------
  let x=V.doorX,z=4.9,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
  let leaveStarted=0,firstFrameSent=false;
+ // Party (rooms Phase 1): the friend layer, remote-only frames, the local emote (lazy bubble), friend frames counted for the heat checks.
+ let friends:KonbiniFriendLayer|null=null,remoteOnly=false,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null;
+ const pushPt={x:0,z:0},localOut={x:0,y:0,z:0,facing:0,speed:0,eating:false,zoomed:false};
  const stuck=createStuckWatch(.5);
  let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:KonbiniPoi|null=null,near:KonbiniPoi|null=null,promptVisible=false,eat:{age:number;sprite:boolean}|null=null;
  let cameraX=0,cameraZ=0,halfW=8,halfH=6,viewportW=1,viewportH=1,viewportLeft=0,viewportTop=0;
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'},sound=createKonbiniSound();
  const ray=new T.Raycaster(),pointer=new T.Vector2(),floor=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3(),projected=new T.Vector3();
- const frameMs=()=>{const t=tierSettings();return mobile?Math.max(1000/30,t.frameMs):t.cap30Everywhere?t.frameMs:0;};
+ const frameMs=()=>{const t=tierSettings(),base=mobile?Math.max(1000/30,t.frameMs):t.cap30Everywhere?t.frameMs:0;return remoteOnly&&mobile?Math.max(base,REMOTE_FRAME_MS):base;};
  void tier;
  // ---- Shelf zoom (the vending-machine pattern: an eased, angled camera move onto the real shelf; no modal) ----------------
  type Cam={pos:T.Vector3;look:T.Vector3;hw:number;hh:number};
@@ -326,7 +338,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  function setSpriteCell(cellIndex:number){const r=cellRect(cellIndex),uv=(foodSprite.geometry.attributes.uv as T.BufferAttribute),u0=r.x/ATLAS_W,u1=(r.x+r.w)/ATLAS_W,v1=1-r.y/ATLAS_H,v0=1-(r.y+r.h)/ATLAS_H;uv.setXY(0,u0,v1);uv.setXY(1,u1,v1);uv.setXY(2,u0,v0);uv.setXY(3,u1,v0);uv.needsUpdate=true;}
 
  function blocked(px:number,pz:number,r=.3){if(px<-7.7+r||px>7.7-r||pz< -5.9+r||pz>6.4)return true;for(const o of obstacles)if(px>o.minX-r&&px<o.maxX+r&&pz>o.minZ-r&&pz<o.maxZ+r)return true;return false;}
- function collide(){for(let pass=0;pass<2;pass++)for(const o of obstacles){const r=.3;if(x>o.minX-r&&x<o.maxX+r&&z>o.minZ-r&&z<o.maxZ+r){const dl=x-(o.minX-r),dr=o.maxX+r-x,db=z-(o.minZ-r),df=o.maxZ+r-z,mn=Math.min(dl,dr,db,df);if(mn===dl)x=o.minX-r;else if(mn===dr)x=o.maxX+r;else if(mn===db)z=o.minZ-r;else z=o.maxZ+r;}}x=T.MathUtils.clamp(x,-7.4,7.4);z=T.MathUtils.clamp(z,-5.6,Math.abs(x-V.doorX)<1.05?6.3:5.7);}
+ function collide(){for(let pass=0;pass<2;pass++)for(const o of obstacles){const r=.3;if(x>o.minX-r&&x<o.maxX+r&&z>o.minZ-r&&z<o.maxZ+r){const dl=x-(o.minX-r),dr=o.maxX+r-x,db=z-(o.minZ-r),df=o.maxZ+r-z,mn=Math.min(dl,dr,db,df);if(mn===dl)x=o.minX-r;else if(mn===dr)x=o.maxX+r;else if(mn===db)z=o.minZ-r;else z=o.maxZ+r;}}if(friends){pushPt.x=x;pushPt.z=z;if(friends.pushOut(pushPt,.3)){x=pushPt.x;z=pushPt.z;}}x=T.MathUtils.clamp(x,-7.4,7.4);z=T.MathUtils.clamp(z,-5.6,Math.abs(x-V.doorX)<1.05?6.3:5.7);}
  /** Grid A* (0.25 m) for tap-to-walk; runs only on a tap. An unreachable goal (behind the counter) walks to the closest
   *  reachable spot instead (lib/konbini/konbiniPath.ts). */
  function findPath(tx:number,tz:number){return findFloorPath({x,z},{x:tx,z:tz},(a,b)=>blocked(a,b));}
@@ -366,13 +378,16 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   motion.kick=shooting?kb.state.kick:undefined;motion.shotCharge=nm==='charging'?kb.state.charge:undefined;motion.shotPower=shooting?kb.state.charge:undefined;motion.powerKick=nm==='windup'||nm==='shot'&&kb.state.kick>0;motion.actionKind=shooting?'shot':undefined;
   motion.juggle=kb.state.mode==='keepup'?kb.jugglePhase():undefined;motion.juggleTouch=kb.state.mode==='keepup'?'foot':undefined;motion.kickSide=shooting?1:kb.state.mode==='keepup'?kb.state.side:undefined;
   stepWobble(dt);
-  motion.dribbling=!eat&&kb.state.mode==='feet';player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);
+  if(emote){emote.age+=dt;if(emote.age>=emote.dur){emote=null;motion.jump=undefined;if(!eat)motion.called=0;player.setExpression('neutral');}else if(!eat&&!reduced){const b=emoteBody(emote.kind,emote.age,emote.dur);motion.called=b.called;motion.jump=b.jump;}}
+  motion.dribbling=!eat&&!emote&&kb.state.mode==='feet';player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);
+  if(emote&&!reduced&&!eat)applyEmoteArms(player.root,emote.kind,emote.age,emote.dur);
+  if(bubbles&&(emote||bubbles.active(0))){bubbles.follow(0,x,2.55,z);bubbles.update(dt,reduced);}
   // Dribble: the ball follows the rig's own dribble contact, stays out of shelves and rests at the feet when you stop.
   if(kb.state.mode!=='feet'){const ox=ball.position.x,oz=ball.position.z;ball.position.set(kb.state.x,kb.state.y,kb.state.z);ballReady=true;const bd=Math.hypot(ball.position.x-ox,ball.position.z-oz);if(bd>.0001){rollAxis.set(ball.position.z-oz,0,-(ball.position.x-ox)).normalize();ball.rotateOnWorldAxis(rollAxis,bd/.19);}else if(kb.state.mode==='keepup'&&!reduced)ball.rotateX(dt*5);ballShadow.position.set(ball.position.x,.028,ball.position.z);ballMoving=true;}
   else{player.dribbleContact(ballAim);ballAim.y=.19;for(const o of obstacles){const r=.2;if(ballAim.x>o.minX-r&&ballAim.x<o.maxX+r&&ballAim.z>o.minZ-r&&ballAim.z<o.maxZ+r){const dl=ballAim.x-(o.minX-r),dr=o.maxX+r-ballAim.x,db=ballAim.z-(o.minZ-r),df=o.maxZ+r-ballAim.z,mn=Math.min(dl,dr,db,df);if(mn===dl)ballAim.x=o.minX-r;else if(mn===dr)ballAim.x=o.maxX+r;else if(mn===db)ballAim.z=o.minZ-r;else ballAim.z=o.maxZ+r;}}
   {const ox=ball.position.x,oz=ball.position.z;if(!ballReady){ball.position.copy(ballAim);ballReady=true;}else ball.position.lerp(ballAim,1-Math.exp(-dt*18));const bd=Math.hypot(ball.position.x-ox,ball.position.z-oz);ballMoving=bd>.0015||ball.position.distanceTo(ballAim)>.01;if(bd>.0001){rollAxis.set(ball.position.z-oz,0,-(ball.position.x-ox)).normalize();ball.rotateOnWorldAxis(rollAxis,bd/.19);}ballShadow.position.set(ball.position.x,.028,ball.position.z);}}
   // Cashier: faces you when you're close, a bow-and-wave greeting when you arrive.
-  greet=Math.max(0,greet-dt);const cd=Math.hypot(x-V.cashier.x,z-V.cashier.z),wantFace=cd<4.5?Math.atan2(x-V.cashier.x,z-V.cashier.z):V.cashier.yaw;
+  greet=Math.max(0,greet-dt);const cd=Math.hypot(x-V.cashier.x,z-V.cashier.z),fr=cd>=4.5&&friends?friends.nearestFriend(V.cashier.x,V.cashier.z,3.2):null,wantFace=cd<4.5?Math.atan2(x-V.cashier.x,z-V.cashier.z):fr?Math.atan2(fr.x-V.cashier.x,fr.z-V.cashier.z):V.cashier.yaw;/* the clerk is shared: with you away, they turn to a friend at the counter */
   const cf=cashierMotion.facing??V.cashier.yaw;const turn=Math.atan2(Math.sin(wantFace-cf),Math.cos(wantFace-cf));cashierMotion.facing=Math.abs(turn)<.002?wantFace:cf+turn*(1-Math.exp(-dt*6));
   cashierMotion.called=greet>0?Math.sin(Math.min(1,greet/1.6)*Math.PI)*.9:0;cashierMotion.lookX=cd<4.5?x:undefined;cashierMotion.lookZ=cd<4.5?z:undefined;cashier.setExpression(greet>0||cd<2.6?'happy':'neutral');
   cashier.update(V.cashier.x,V.cashier.z,dt,time,reduced,cashierMotion);
@@ -386,6 +401,9 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   else if(zoomIndex!==null){const c=zoomCam(targets[zoomIndex]);applyCam(c.pos,c.look,c.hw,c.hh);}
   else placeCamera();
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=ball.visible=ballShadow.visible=!hidePlayer;
+  // Friends in this room (zero cost without a party): drawn with the room's camera, hidden with you on the shelf zoom. One ring rule:
+  // while the party draws your colour ring, the room's own foot disc hides.
+  const remoteKeep=friends?friends.update(dt,performance.now(),camera,zoomIndex!==null):false;if(friends?.meRing)playerShadow.visible=false;
   // A tapped product lifts toward the camera (a magazine keeps coming, then its lesson opens).
   if(highlight){highlight.age+=dt;const h=highlight,k=Math.min(1,h.age/(h.lift?.45:.22)),hop=h.lift||reduced?0:Math.max(0,Math.sin(Math.min(1,h.age/.3)*Math.PI))*.045,toCam=tmpPos.copy(camera.position).sub(h.slot.pos).normalize();
    const pr=h.slot.product;
@@ -394,13 +412,19 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    if(k>=1&&h.done){const d=h.done;h.done=undefined;d();}}
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.3,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
-  const busy=ballMoving||kb.moving||!!wobble||!!zoom||!!highlight&&highlight.age<.5||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||!!eat||greet>0||doorOpen!==doorTarget||Math.abs(cameraX-dxCam)>.005||Math.abs(cameraZ-dzCam)>.005||Math.abs(turn)>.01;
+  const busy=ballMoving||kb.moving||!!wobble||!!zoom||!!highlight&&highlight.age<.5||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||!!eat||!!emote||greet>0||doorOpen!==doorTarget||Math.abs(cameraX-dxCam)>.005||Math.abs(cameraZ-dzCam)>.005||Math.abs(turn)>.01;
   if(busy)settle=.5;else settle-=dt;
-  if(settle>0||leaving)frame=requestAnimationFrame(tick);else{last=0;slot=0;}
+  // Friends moving here keep frames too, but only at the remote rate on phones when nothing of yours moves.
+  remoteOnly=!busy&&settle<=0&&remoteKeep;if(remoteOnly)remoteFrames++;
+  if(settle>0||leaving||remoteKeep)frame=requestAnimationFrame(tick);else{last=0;slot=0;remoteOnly=false;}
  }
  // Each store is seen from its own front corner (main: front-left, cay: front-right) so shelf fronts face the camera.
  function placeCamera(){camera.position.set(cameraX+Math.sin(V.camYaw)*12.5,10.8,cameraZ+Math.cos(V.camYaw)*12.5);curLook.set(cameraX,.6,cameraZ);camera.lookAt(curLook);camera.updateMatrixWorld();}
- function wake(){if(!frame&&!covered&&!disposed&&!document.hidden){settle=.5;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ function wake(){remoteOnly=false;if(!frame&&!covered&&!disposed&&!document.hidden){settle=.5;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ /** A friend here moved: run frames without the local 0.5 s settle (the layer says how long), at the remote rate on phones. */
+ function wakeRemote(){if(!frame&&!covered&&!disposed&&!document.hidden){remoteOnly=true;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ /** The busy kind at a room-local spot (a busy friend's station): the counter / hot counter, a shelf, or none. */
+ function stationAt(px:number,pz:number):'counter'|'shelves'|null{let best:KonbiniPoi|null=null,bd=2.5;for(const p of pois){const sp=segPoint(p,px,pz),d=Math.hypot(sp.x-px,sp.z-pz);if(d<bd){bd=d;best=p;}}return best?(best.id==='counter'||best.id==='hot'?'counter':'shelves'):null;}
  function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setPixelRatio(pixelRatio());renderer.setSize(w,h,false);viewportW=w;viewportH=h;const r=canvas.getBoundingClientRect();viewportLeft=r.left;viewportTop=r.top;
   const a=w/h;halfH=a<1?7.2:a<1.25?6.4:6;halfW=halfH*a;if(halfW>9.2){halfW=9.2;halfH=halfW/a;}
   camera.left=-halfW;camera.right=halfW;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix();
@@ -448,6 +472,18 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    // Swap in ONE copy in the same frame: hide the product's own triangles and show liftMesh at its spot (no first-frame double).
    if(sl.product){liftMesh.geometry=products.get(sl.product.key);hideProduct(sl.product.bi);placeLift(sl.product,0);}else if(sl.cell>=0)setSpriteCell(sl.cell);highlight={slot:sl,age:reduced?1:0,lift,done};wake();if(reduced&&done){highlight.done=undefined;done();}},
   greet(){greet=reduced?0:1.6;wake();},
+  // ---- party hooks (lib/multiplayer/roomParty.ts via components/party/useRoomParty.ts) ----
+  /** The three.js scene and camera the friend layer draws into. */
+  threeScene:scene,camera,phone:mobile,reduced,
+  /** Attach / detach the friend layer (null on Leave or unmount). */
+  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(!layer)remoteOnly=false;},
+  wakeRemote,stationAt,
+  /** The local player, room-local (one reused object): what the party sends. */
+  localPose(){localOut.x=x;localOut.z=z;localOut.facing=yaw;localOut.speed=Math.hypot(vx,vz);localOut.eating=!!eat;localOut.zoomed=zoomIndex!==null;return localOut;},
+  /** Plays a wire emote on your own rig (no camera change in rooms) with its bubble; `face` turns you toward a friend (high five). */
+  async emote(kind:number,face?:{x:number;z:number}|null){if(disposed||leaving)return;
+   if(!bubbles){const m=await import('../graphics/emoteBubbles');if(disposed)return;bubbles=bubbles??m.createEmoteBubbles(scene);}
+   settleBall();if(face)yaw=Math.atan2(face.x-x,face.z-z);const dur=emoteSeconds(kind);emote={kind,age:0,dur};player.setExpression('happy');bubbles.show(0,kind,dur);wake();},
   setCovered(value:boolean){covered=value;if(value){settleBall();keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();},
   clearInput,sound,
   /** Test hook (scripts/check-konbini-taps.cjs): every placed FRONT product of the zoomed fixture that faces the camera and is
@@ -470,8 +506,8 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   debugShotSpots(){const out:{fi:number;x:number;z:number;yaw:number}[]=[];for(const o of obstacles){if(o.fi<0||!bayProducts.get(o.fi)?.length)continue;const cx=(o.minX+o.maxX)/2,cz=(o.minZ+o.maxZ)/2;
    for(const [px,pz] of [[cx,o.maxZ+.9],[cx,o.minZ-.9],[o.maxX+.9,cz],[o.minX-.9,cz]] as const)if(!blocked(px,pz,.35)){out.push({fi:o.fi,x:px,z:pz,yaw:Math.atan2(cx-px,cz-pz)});break;}}return out;},
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
-  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id)};},
-  dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
+  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id),remoteOnly,remoteFrames,party:!!friends,emote:emote?.kind??-1};},
+  dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;friends=null;bubbles?.dispose();bubbles=null;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    sound.dispose();pack?.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
 }

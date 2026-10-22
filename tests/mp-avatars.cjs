@@ -1,6 +1,8 @@
 // Multiplayer Phase 0, Task E: remote avatars + Town glue (docs/multiplayer-workplan.md). Source + pure checks, no browser.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript'),T=require('three');
-const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const root=path.join(__dirname,'..'),read0=f=>fs.readFileSync(path.join(root,f),'utf8');
+// The island bridge's shared core moved to lib/multiplayer/roomParty.ts (rooms Phase 1): source checks read both files.
+const read=f=>f==='lib/multiplayer/townBridge.ts'?read0(f)+'\n'+read0('lib/multiplayer/roomParty.ts'):read0(f);
 const stub=()=>new Proxy(function(){},{get:(_,k)=>k==='__esModule'?false:stub(),apply:()=>stub(),construct:()=>({})});
 // TS loader: relative imports resolve to .ts; `over` maps a module's file name (no extension) to a replacement export object.
 function load(file,over={},env={}){
@@ -129,7 +131,7 @@ function harness(){
 }
 
 // 3. sources: no shadow registration, one batch (capacity 8), no forbidden imports
-const files=['lib/graphics/remoteAvatars.ts','lib/multiplayer/townBridge.ts'];
+const files=['lib/graphics/remoteAvatars.ts','lib/multiplayer/townBridge.ts','lib/multiplayer/roomParty.ts'];
 for(const f of files){
  const src=read(f);
  assert(!/shadowVisibility|npcShadows/.test(src),f+' must not reference shadowVisibility/npcShadows');

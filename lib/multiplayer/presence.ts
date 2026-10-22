@@ -1,6 +1,6 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
-import { Activity, Mode, ROOM_ACTIVITIES, Zone, type Presence, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, Mode, ROOM_ACTIVITIES, RoomCode, Zone, roomBody, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */
 export interface TownFlags {
@@ -41,12 +41,16 @@ const TEXT: Record<number, string> = {
   [Activity.Map]: 'Looking at the map', [Activity.Arcade]: 'Playing arcade', [Activity.Museum]: 'In the museum', [Activity.Shop]: 'In the shop',
   [Activity.Konbini]: 'In the Konbini', [Activity.Reef]: 'Exploring the reef', [Activity.Fishing]: 'Fishing', [Activity.Vending]: 'Getting a drink',
   [Activity.Chat]: 'Chatting', [Activity.Wardrobe]: 'Changing clothes',
+  // Stations inside a room (docs/multiplayer-rooms-design.md 3.4): LOCAL codes, never on the wire; a receiver looks up the
+  // nearest station in its own copy of the room layout, so the words are always its own.
+  [101]: 'At the counter', [102]: 'Looking at the shelves', [103]: 'Having a snack',
 };
 const ICON: Record<number, string> = {
   [Activity.None]: '⏳', [Activity.Lesson]: '\u{1F4D6}', [Activity.Quiz]: '❓', [Activity.Settings]: '⚙️',
   [Activity.Map]: '\u{1F5FA}️', [Activity.Arcade]: '\u{1F579}️', [Activity.Museum]: '\u{1F3DB}️', [Activity.Shop]: '\u{1F6CD}️',
   [Activity.Konbini]: '\u{1F3EA}', [Activity.Reef]: '\u{1F420}', [Activity.Fishing]: '\u{1F3A3}', [Activity.Vending]: '\u{1F964}',
   [Activity.Chat]: '\u{1F4AC}', [Activity.Wardrobe]: '\u{1F455}',
+  [101]: '\u{1F6CE}️', [102]: '\u{1F440}', [103]: '\u{1F359}',
 };
 export const AWAY_TEXT = 'Away', AWAY_ICON = '\u{1F4A4}';
 
@@ -99,4 +103,48 @@ export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody):
   body[4] = speedQ; body[5] = mode as Mode; body[6] = zone as Zone;
   body[7] = (warp ? 1 : 0) | (l.hidden ? 2 : 0);
   return body;
+}
+
+// ---- rooms (docs/multiplayer-rooms-design.md 2.2, 2.4, 3.4) ----
+/** Busy kinds inside a room: local Activity-like codes (101+), shown over a busy friend's field. Never sent. */
+export const STATION = { Counter: 101, Shelves: 102, Snack: 103 } as const;
+
+/** The Activity a room code reads as in the party list ("In the Konbini"): both Konbinis are the Konbini; unknown rooms: None. */
+export function roomActivity(room: number): number {
+  if (room === RoomCode.KonbiniCay) return Activity.Konbini;
+  return room >= Activity.Arcade && room <= Activity.Konbini ? room : Activity.None;
+}
+/** "In the Konbini" / "In the museum" / ... for a room code ('' for an island pose, room -1). */
+export function roomText(room: number): string {
+  if (room < 0) return '';
+  if (room === RoomCode.Shop) return 'In the Kit Shop';
+  if (room === RoomCode.Arcade) return 'In the arcade';
+  return TEXT[roomActivity(room)] ?? TEXT[Activity.None];
+}
+
+/** Entry warp (design 2.2): the relay accepts one Warp per 5 s and compares every other pose with the last ACCEPTED one, so the
+ *  first pose after a Welcome (door -> room, room -> island) carries Warp, and ONE retry Warp follows ENTRY_RETRY_MS later in case
+ *  the first one landed inside a 5 s window and was dropped. */
+export const ENTRY_RETRY_MS = 5500;
+export type EntryWarp = { stage: 0 | 1 | 2; retryAt: number };
+export function entryWarp(): EntryWarp { return { stage: 2, retryAt: 0 }; }
+/** Arm on every Welcome (the status turned live). */
+export function armEntryWarp(w: EntryWarp): void { w.stage = 0; w.retryAt = 0; }
+/** True when this pose must carry Warp (call once per pose actually built for sending). */
+export function entryWarpDue(w: EntryWarp, nowMs: number): boolean {
+  if (w.stage === 0) { w.stage = 1; w.retryAt = nowMs + ENTRY_RETRY_MS; return true; }
+  if (w.stage === 1 && nowMs >= w.retryAt) { w.stage = 2; return true; }
+  return false;
+}
+
+/** What a room page knows about the local player (room-local metres). `busy` = an overlay, the shelf zoom, the counter, eating. */
+export type RoomLocal = { x: number; y: number; z: number; facing: number; speed: number; busy: boolean; hidden: boolean };
+export type RoomPoseState = { warp: EntryWarp };
+export function roomPoseState(): RoomPoseState { return { warp: entryWarp() }; }
+/** The room pose the local player sends (pure). Busy in a room = mode Busy at the room-local spot (no frozen outdoor anchor: the spot
+ *  IS the anchor); the speed byte is the room code in every case; zone Indoors; y in the reserved band. */
+export function fillRoomBody(st: RoomPoseState, l: RoomLocal, room: number, body: PoseBody, nowMs: number): PoseBody {
+  const mode = l.busy ? Mode.Busy : l.speed > 2.6 ? Mode.Run : l.speed > 0.15 ? Mode.Walk : Mode.Idle;
+  const warp = entryWarpDue(st.warp, nowMs);
+  return roomBody(body, room, l.x, l.y, l.z, l.facing, mode, (warp ? 1 : 0) | (l.hidden ? 2 : 0));
 }
