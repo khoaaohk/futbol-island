@@ -19,7 +19,7 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  assert.match(card,/const onScreen=open&&!blocked&&!held;/);
  assert.match(card,/useEffect\(\(\)=>\{if\(!onScreen\)return;const t=setTimeout\(\(\)=>setOpen\(false\),welcomeDwellMs\(\)\);return\(\)=>clearTimeout\(t\);\},\[onScreen\]\);/,'one timer, cleared when covered');assert.match(card,/\(process\.env\.NODE_ENV!=='production'\|\|navigator\.webdriver===true\)[^\n]*__fi2WelcomeMs[^\n]*return WELCOME_BACK_SHOW_MS/,'players always dwell WELCOME_BACK_SHOW_MS; only dev builds or automated browsers (e2e against a production build) may hold the card');
  assert.doesNotMatch(card,/setInterval|requestAnimationFrame/,'no loop');
- assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\} held=\{stackCovered\}\/>/,'Town pauses the dwell while the HUD stack is covered');
+ assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\|\|actionFocus\} held=\{stackCovered\}\/>/,'Town pauses the dwell while the HUD stack is covered');
  // Balanced copy: the daily-play line wraps into two equal lines.
  assert.match(css,/\.card span\{text-wrap:balance\}/);assert.match(css,/\.card \.note\{[^}]*max-width:30ch;margin-inline:auto\}/,'the note has a sensible measure');
  // Landscape docking kept (the hud-stack test pins the exact rule).
