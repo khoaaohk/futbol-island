@@ -18,7 +18,9 @@ import {usePaperLoop} from '../anatomy/paper-loop';
 import {axisVector,fitProjection,type Projection} from '../anatomy/iso-kit';
 import {GX,GY,LIT,OMEGA_FULL,PARTS,READY_V,START_YAW,TOWER_AT,TOWER_NAME,angleStep,coast,coverage,crankSpeed,grid,isReady,lightAt,onWhenApart,pct,power,snapYaw,verdict,volts,type Coverage,type PartId,type Task} from './model';
 import {AZ,EL,GX_RANGE,GY_RANGE,fitPoints,render,stationProj,towerFitPoints,type Anchors} from './scene';
-import {BEATS,CHECKS,EXTRA,MODEL_NOTE,SOURCES} from './content';
+import {BEATS,CHECKS,EXTRA,FIGURE_INTRO,FIGURE_SAY,MODEL_NOTE,SOURCES} from './content';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import {STEPS,makeFloodlightFigure} from './figure';
 import s from './Experience.module.css';
 
 /**
@@ -37,11 +39,14 @@ import s from './Experience.module.css';
  *  - TAKE A TOWER APART (a slider): footing, mast, platform, arc lamp (carbon rods), reflector and cable lift apart, numbered;
  *    tap a number to read what that part does.
  * Then the quick check (StepCheck) and the Ending (onComplete once).
+ * SWITCH ON A FLOODLIGHT (museum-figures-3, figure kit v2; figure.ts): from the intro or the rig, one floodlight mast that turns
+ * all the way round; See-through shows the reflector, the lamps and the cable up the mast; Labels; "Switch on" plays three steps
+ * (power on, the lamps glow, the pitch is lit) on the figure's own clock, so this folder still has no timers or loop of its own.
  * Heat: one SVG string written into the card by paint(); the shared loop (anatomy/paper-loop.ts) runs only while a control is
  * being used or something settles (the flywheel running down, a lamp swinging to its detent, the tower coming apart) and stops
  * at rest: with the motor holding full power the wheel is drawn as a blur, still. Reduced motion: every settle lands at once.
  */
-type Phase='intro'|'play'|'check';
+type Phase='intro'|'play'|'check'|'figure';
 const ACC=ACCENT.yellow;
 const sfx=(f:()=>void)=>{try{if(isSoundEnabled())f();}catch{/* no audio */}};
 type Drag={kind:'crank';id:number;a:number;acc:number}|{kind:'lamp';id:number;i:number}|{kind:'probe';id:number};
@@ -69,6 +74,16 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const R=useRef({yaw:[...START_YAW],yawT:[...START_YAW],omega:0,wheel:-.6,motor:false,gx:-20,gy:-12,apart:0,apartT:0,drag:null as Drag|null,
   lightKey:'',href:undefined as string|undefined,cov:coverage(new Float32Array(GX*GY)) as Coverage,word:'',focus:null as PartId|null,cue:'crank' as 'crank'|'knob'|'probe'|null,done:{power:false,aim:false,probe:false,apart:false} as Record<Task,boolean>});
  const closeRef=useRef(onClose);closeRef.current=onClose;
+ // Switch on a floodlight (figure kit v2): made once; `figFrom` is the phase to go back to. The steps report back through onStep.
+ const flood=useMemo(()=>makeFloodlightFigure(),[]),figHandle=useRef<FigureHandle|null>(null),figFrom=useRef<Phase>('intro');
+ const [figLit,setFigLit]=useState<string[]>([]),[figNote,setFigNote]=useState(FIGURE_INTRO),[figStep,setFigStep]=useState(-1);
+ useEffect(()=>{flood.onStep=i=>{setFigStep(i);const st=STEPS[i];if(st){setFigLit([...st.lit]);setFigNote(FIGURE_SAY[st.id]);sfx(i===STEPS.length-1?museumSfx.reveal:museumSfx.tick);}};return()=>{flood.onStep=null;};},[flood]);
+ const openFigure=(from:Phase)=>{figFrom.current=from;setPhase('figure');sfx(museumSfx.flapBook);};
+ const closeFigure=()=>{flood.switchOff(true);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase(figFrom.current);};
+ const touchFlood=(id:string)=>{if(flood.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id]??FIGURE_INTRO);sfx(museumSfx.tick);};
+ const switchFlood=()=>{const h=figHandle.current;
+  if(figStep>=STEPS.length-1&&!flood.running){flood.switchOff(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);sfx(museumSfx.tick);h?.invalidate();return;}
+  if(figStep<0){h?.setLabels(true);h?.front();}flood.switchOn(reduced);h?.invalidate();};
  useEffect(()=>{const kd=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();closeRef.current();}};window.addEventListener('keydown',kd);return()=>window.removeEventListener('keydown',kd);},[]);
  useEffect(()=>{cvRef.current=document.createElement('canvas');cvRef.current.width=GX;cvRef.current.height=GY;},[]);
 
@@ -198,26 +213,37 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  return <PaperRoom id="floodlights-1878" accent={ACC} ariaLabel={`${exhibit.year} · ${exhibit.title}`} onClose={onClose}
   rootProps={{'data-phase':phase,'data-motor':motor||undefined,'data-apart':apart.toFixed(2),'data-tasks':TASKS.filter(t=>done[t.id]).map(t=>t.id).join(' '),'data-orient':wide?'wide':'tall','data-reduced':reduced||undefined}}
   head={<WallLabel as="h1" title={exhibit.title} meta={<>{exhibit.year} · Bramall Lane, Sheffield</>}/>}
-  card={<PaperCard ref={cardRef} className={`${p.card} iso ${s.card}`} fig={`Fig. ${exhibit.year}`} title="The night rig"
-    hint={phase==='play'?(apart>.3?'Tap a number to read a part':'Crank · point the lamps · drag the meter'):'A model ground at night'} readout="0 V · 0% LIT" readoutRef={readRef} cover={intro||check||null}>
-   <div className={s.stage} data-stage>
+  card={<PaperCard ref={cardRef} className={`${p.card} iso ${s.card}`} fig={`Fig. ${exhibit.year}`} title={phase==='figure'?'A floodlight':'The night rig'}
+    hint={phase==='figure'?'Drag to turn':phase==='play'?(apart>.3?'Tap a number to read a part':'Crank · point the lamps · drag the meter'):'A model ground at night'} readout="0 V · 0% LIT" readoutRef={readRef} cover={intro||check||null}>
+   {phase==='figure'&&<FigureStage spec={flood.spec} active={figLit} reduced={reduced} onLabel={touchFlood} handle={figHandle} top={28}
+    label="A floodlight on a tall mast beside the grass: the lamps, the mast, the cable and the power box"/>}
+   {phase!=='figure'&&<div className={s.stage} data-stage>
     {box.w>0&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${Hh}`} width={W} height={Hh} role="img" aria-label={label}
      onPointerMove={move} onPointerUp={up} onPointerCancel={up}>
      <g ref={modelRef} data-model=""/>{overlay}{badges}
     </svg>}
-   </div>
+   </div>}
    {showParts&&<div className={s.parts} data-parts data-wide={wide||undefined}>
     {wide?<ol>{PARTS.map((pt,i)=><li key={pt.id}><button type="button" aria-pressed={focus===pt.id} data-part-label={pt.id} onClick={()=>setFocus(f=>f===pt.id?null:pt.id)}>
       <b><i>{i+1}</i>{pt.name}</b><span>{pt.line}</span></button></li>)}</ol>
      :<p>{focus?<><b>{PARTS.findIndex(x=>x.id===focus)+1} · {PARTS.find(x=>x.id===focus)!.name}.</b> {PARTS.find(x=>x.id===focus)!.line}</>:<>A light tower in six parts. <b>Tap a number</b> to read what each part does.</>}</p>}
    </div>}
   </PaperCard>}
-  dock={phase==='intro'?<StartDock label="Switch on the rig" line="Crank the dynamo, aim four lamps, measure the light, take a tower apart." onStart={start}/>
+  dock={phase==='intro'?<><StartDock label="Switch on the rig" line="Crank the dynamo, aim four lamps, measure the light, take a tower apart." onStart={start}/>
+   <div className={p.row}><button type="button" className={p.ghost} data-flood-figure onClick={()=>openFigure('intro')}>Look at a floodlight</button></div></>
+  :phase==='figure'?<>
+   <p className={p.say} aria-live="polite" data-fig-note>{figNote}</p>
+   <div className={p.row}>
+    <button type="button" className={p.btn} data-tone="acc" data-switch-on aria-pressed={figStep>=STEPS.length-1} onClick={switchFlood}>{figStep>=STEPS.length-1&&!flood.running?'Switch off':reduced&&figStep>=0?'Next step':'Switch on'}</button>
+    <button type="button" className={p.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the rig'}</button>
+   </div>
+  </>
   :phase==='play'?<>
    <div className={s.tasks} role="list" aria-label="Your jobs">{TASKS.map((t,i)=><span key={t.id} role="listitem" className={s.task} data-done={done[t.id]||undefined} data-task={t.id}><i>{i+1}</i>{t.label}</span>)}</div>
    <p className={p.say} aria-live="polite" data-verdict={word.kind}><b>{word.big}.</b> {word.line}{done.probe&&!done.apart?<> The meter reads <b>{probeVal.toFixed(1)}</b>{probeVal<LIT?': a dark spot.':': enough to play.'}</>:null}</p>
    <div className={p.row}>
     <button type="button" className={p.ghost} aria-pressed={motor} data-motor-btn onClick={toggleMotor}>{motor?'Motor on':'Motor off'}</button>
+    <button type="button" className={p.ghost} data-flood-figure onClick={()=>openFigure('play')}>A floodlight</button>
     <Slider name="apart" label="Take a tower apart" value={Math.round(apart*100)} min={0} max={100} step={1} show={`${Math.round(apart*100)}%`} onChange={x=>{setApart(x/100);setApartTo(x/100,false);}}/>
     <button type="button" className={`${p.btn} ${s.go}`} data-tone="acc" data-to-check data-museum-own-cue disabled={!canCheck} onClick={toCheck}>Quick check<StepIcon kind="next"/></button>
    </div>

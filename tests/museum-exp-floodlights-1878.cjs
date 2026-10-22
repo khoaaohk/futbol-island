@@ -134,4 +134,33 @@ const C=require('../'+dir+'content.ts'),M=require('../'+dir+'model.ts'),S=requir
 {assert.match(read('components/museum/experiences/index.tsx'),new RegExp(`'${id}':load\\(\\(\\)=>import\\('\\./${id}/Experience'\\)\\)`));
  assert.match(read(`app/museum-lab/${id}/page.tsx`),new RegExp(`guardLabRoute\\(\\);return <Lab id="${id}"`));
  console.log('PASS registry + lab route');}
+
+// 10. Switch on a floodlight (museum-figures-3, figure kit v2): one mast that turns all the way round; see-through shows the
+// reflector, the lamps and the cable up the mast; five labels reachable from every yaw; "Switch on" = power on, lamps glow,
+// pitch lit (a pool of light that grows); the figure's own clock (no timers); ≤ 120 parts; the rig flow kept.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),FF=require('../'+dir+'figure.ts');
+ const fig=FF.makeFloodlightFigure(),spec=fig.spec,c=FK.centreOf(spec.points),P0=FK.fitTurn(spec.points,900,700,35,24,{pad:24,top:80,range:spec.pitch});
+ const view=(yaw,pitch,xray,active=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch:null,swatchHex:null,active:new Set(active),w:900,h:700};};
+ assert.equal(spec.turn??'full','full');assert.ok(spec.seeThrough&&spec.labels);assert.ok(!spec.swatches,'no swatches: kept simple');
+ for(const lit of [false,true]){if(lit)fig.switchOn(true),fig.switchOn(true),fig.switchOn(true);
+  for(let yaw=0;yaw<360;yaw+=45)for(const x of [0,1]){const d=spec.draw(view(yaw,24,x,lit?['lamp','mast']:[]));const n=FK.countParts(d.svg)+d.labels.length*7;
+   assert.ok(n<=FK.MAX_PARTS,yaw+'/'+x+': '+n+' parts');for(const l of d.labels)assert.ok(FK.anchorFor(l,FK.viewVector(yaw,24)),l.id+' reachable at yaw '+yaw);}}
+ fig.switchOff(true);const closed=spec.draw(view(35,24,0)),open=spec.draw(view(35,24,1));
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Cable','Lamps','Mast','Power box']);
+ assert.deepEqual(open.labels.map(l=>l.text).sort(),['Cable','Lamps','Mast','Power box','Reflector'],'the reflector is named only when drawn');
+ for(const id of ['reflector','cable-up'])assert.ok(open.svg.includes('data-part="'+id+'"')&&!closed.svg.includes('data-part="'+id+'"'),'see-through layer '+id);
+ assert.equal((open.svg.match(/data-lamp /g)||[]).length,FF.LAMPS.length,'the lamps show through the ghost');assert.doesNotMatch(closed.svg,/data-pool|data-beam/,'dark at rest');
+ assert.deepEqual(FF.STEPS.map(s=>s.id),['power','warm','lit']);for(const s of FF.STEPS){for(const id of s.lit)assert.ok(open.labels.some(l=>l.id===id),s.id+' lights a real label '+id);assert.ok(C.FIGURE_SAY[s.id]);}
+ for(const k of ['lamp','reflector','mast','cable','box'])assert.ok(C.FIGURE_SAY[k],'says '+k);
+ // reduced motion: one step per press, landing at once
+ const seen=[];fig.onStep=i=>seen.push(i);fig.switchOn(true);assert.equal(fig.state.p,1);assert.equal(fig.state.g,0);fig.switchOn(true);assert.equal(fig.state.g,1);assert.equal(fig.state.r,0);
+ fig.switchOn(true);assert.equal(fig.state.r,1);assert.deepEqual(seen,[0,1,2]);const litSvg=spec.draw(view(35,24,0)).svg;assert.match(litSvg,/data-pool/);assert.match(litSvg,/data-beam/);
+ // the clock: three steps in order, then the loop sleeps
+ fig.switchOff(true);seen.length=0;fig.switchOn(false);let n=0;while(spec.tick(1/60)&&n<2000)n++;
+ assert.deepEqual(seen,[0,1,2],'power on → lamps glow → pitch lit');assert.ok(n>FF.STEPS.length*FF.STEP_S*60-2&&n<1200,'runs the sequence then sleeps ('+n+')');assert.equal(spec.tick(1/60),false);assert.equal(fig.state.r,1);
+ fig.switchOff(false);n=0;while(spec.tick(1/60)&&n<600)n++;assert.ok(n>5&&n<400,'fades back to dark then sleeps');assert.equal(fig.state.r,0);fig.onStep=null;
+ assert.match(C.FIGURE_SAY.mast,/wooden towers/);assert.match(C.FIGURE_SAY.box,/no grid/);assert.match(C.FIGURE_SAY.warm,/LED/);assert.ok(C.SOURCES.some(s=>/sheffieldhomeoffootball/.test(s.url)));
+ assert.match(exp,/<FigureStage spec=\{flood\.spec\}/);for(const h of ['data-flood-figure','data-switch-on','data-fig-back','data-fig-note'])assert.ok(exp.includes(h),'hook '+h);
+ assert.match(exp,/type Phase='intro'\|'play'\|'check'\|'figure'/);assert.match(exp,/flood\.onStep=null/,'the step callback is dropped on unmount');
+ console.log('PASS switch on a floodlight: turns all the way round (8 yaws), see-through reflector / lamps / cable, 5 labels from every yaw, 3 steps on the figure clock, reduced = one step a press, ≤ 120 parts');}
 console.log('museum-exp-floodlights-1878: all passed');

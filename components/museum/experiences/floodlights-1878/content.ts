@@ -20,6 +20,7 @@ export const SOURCES=[
  {title:'Wikipedia · Floodlight',url:'https://en.wikipedia.org/wiki/Floodlight'},
  {title:'Wikipedia · Floodlights (sport)',url:'https://en.wikipedia.org/wiki/Floodlights_(sport)'},
  {title:'Wikipedia · Arc lamp',url:'https://en.wikipedia.org/wiki/Arc_lamp'},
+ {title:'Sheffield, home of football · John Tasker: the very first football match played under floodlights',url:'https://sheffieldhomeoffootball.org/plaques/7-john-tasker-the-very-first-football-match-played-under-floodlights'},
 ] as const;
 export const BEATS=[
  {when:'14 October 1878',head:'Bramall Lane, Sheffield',text:'The first football match ever played under floodlights. About 20,000 people came to watch.'},
@@ -34,4 +35,20 @@ export const CHECKS=[
  {q:'Why do floodlights shine from more than one corner?',options:['Each lamp fills in the dark spots and shadows the others leave','One lamp would be too hot','So the lights look nice'],right:0,
   why:'With one lamp a player’s shadow is black. With lamps all round, the other lamps fill every shadow in.'},
 ] as const;
+/**
+ * "Switch on a floodlight" (museum-figures-3, figure kit v2). Checked Oct 21 2026: the Bramall Lane lamps stood on wooden towers
+ * and generators at the ground made the power (Sheffield, home of football · John Tasker plaque; Wikipedia · Floodlight); older
+ * floodlights needed a warm-up, LED floodlights light at once (Wikipedia · Floodlight). No counts or sizes are claimed.
+ */
+export const FIGURE_INTRO='A floodlight on a tall mast. Turn it round, look inside, then switch it on.';
+export const FIGURE_SAY:Record<string,string>={
+ power:'Power on! Electricity runs from the power box along the cable, under the grass and up inside the mast. In 1878 there was no power grid: generators at the ground made it.',
+ warm:'The lamps glow. The shiny reflector behind them sends the light forward, onto the pitch. Older floodlights took minutes to warm up; LED lamps light at once.',
+ lit:'Pitch lit! The mast holds the lamps up high, so the light spreads wide over the grass. Stadiums put lights on more than one side to fill in the shadows.',
+ lamp:'Lamps: today they are often LEDs. At Bramall Lane in 1878 they were arc lamps: electricity jumps a gap between two carbon rods and makes a white-hot light.',
+ reflector:'The reflector is a shiny bowl behind the lamps. Light that would go backwards bounces off it and goes forward, onto the pitch.',
+ mast:'The mast holds the lamps up high. In 1878 the lamps stood on wooden towers; today they sit on tall steel masts or on the stadium roof.',
+ cable:'The cable carries the electricity from the power box, under the grass and up inside the mast to the lamps.',
+ box:'The power box sends electricity to the lamps. In 1878 there was no grid, so generators at the ground made the power.',
+};
 export const MODEL_NOTE='The rig is a model made for this museum. Its four corner towers, the crank, the motor lever and the numbers on the meters are a teaching model, not a plan of Bramall Lane in 1878: the sources tell us about generators, but not how many lamps stood where that night.';
