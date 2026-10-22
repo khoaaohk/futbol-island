@@ -334,4 +334,9 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.equal(RA.friendFlightPitch(0),0);assert.ok(RA.friendFlightPitch(30)>1.05&&RA.friendFlightPitch(30)<=1.1&&RA.friendFlightPitch(9)>0&&RA.friendFlightPitch(9)<RA.friendFlightPitch(15),'friend estimate: hover 0, rises smoothly with speed to ~1.1');
  const br=read('lib/multiplayer/townBridge.ts');assert(/ring\.pitch = l\.pitch/.test(br)&&/partyPitch/.test(read('components/Town.tsx')),'the local flight pitch reaches the ring');
 }
+{ // Rooms Phase 1: rooms draw a smaller dome (r ~0.8 m) through the same instanced field; the island default stays 1.
+ const ra=read('lib/graphics/remoteAvatars.ts'),rp=read0('lib/multiplayer/roomParty.ts');
+ assert(/const FS=opts\.fieldScale\?\?1;/.test(ra)&&/FS\*\(shield\?/.test(ra),'field scale option, default 1');
+ assert(/fieldScale: ROOM_FIELD_SCALE/.test(rp)&&/ROOM_FIELD_SCALE = 0\.8 \/ 1\.15/.test(rp),'rooms pass 0.8 / 1.15');
+}
 console.log('mp-avatars ok');

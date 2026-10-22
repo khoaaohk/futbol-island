@@ -7,7 +7,7 @@ import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBoun
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
-import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends } from './roomParty';
+import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, onFriendFilters } from './roomParty';
 import { partyStore } from './store';
 import * as T3 from 'three';
 
@@ -118,6 +118,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   }
   ready = true;
   syncHints();
+  const offFilters = onFriendFilters(syncHints);
 
   // Me while the island loop sleeps (Settings, map, a waiting quiz) or the page is leaving for a room: the frame loop is not running,
   // so the connection's own 5 s beat tick (no new timer) and pagehide send the Busy / Indoors pose. The connection's delta check sends
@@ -177,7 +178,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     dispose() {
       for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
-      core.dispose(); lastIsland.clear();
+      offFilters(); core.dispose(); lastIsland.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
     },
   };

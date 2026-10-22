@@ -32,6 +32,8 @@ const filterSubs = new Set<() => void>();
 export function setHiddenFriends(ids: ReadonlySet<MemberId>): void { hiddenIds = ids; for (const f of Array.from(filterSubs)) f(); }
 export function setMutedFriends(ids: ReadonlySet<MemberId>): void { mutedIds = ids; for (const f of Array.from(filterSubs)) f(); }
 export function hiddenFriends(): ReadonlySet<MemberId> { return hiddenIds; }
+/** Hide / Mute changed (the island's door hints recount). */
+export function onFriendFilters(fn: () => void): () => void { filterSubs.add(fn); return () => { filterSubs.delete(fn); }; }
 export function mutedFriends(): ReadonlySet<MemberId> { return mutedIds; }
 /** The local player's look on the wire (what PartyHost passes to join, and what a room page resumes with). */
 export function partyLook(): Look { return lookToWire(loadCustomization()); }
@@ -234,7 +236,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
     },
     onSync(live, welcome) {
       if (welcome) { armEntryWarp(st.warp); wake(); } // the first pose after every Welcome is a Warp (+ one retry 5.5 s later)
-      if (!live) meRingOn = false;
+      if (!live) { meRingOn = false; if (drawnLast) ctx.wake(); } // Leave / End: one last empty frame clears the friends and my ring
       if (coreIds) for (const id of Array.from(last.keys())) if (coreIds.indexOf(id) < 0) { last.delete(id); gone.delete(id); }
     },
   });
