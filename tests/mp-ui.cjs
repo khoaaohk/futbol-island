@@ -73,7 +73,7 @@ t('display and links',()=>{
  origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R','unknown origins fall back to SITE_URL');
  origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
- assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/Works for/.test(invite)&&/New code/.test(invite)&&/expiresAt > 0/.test(invite)&&/partyQr/.test(invite),'invite card content');
+ assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/Show QR/.test(invite)&&/Works for/.test(invite)&&/New code/.test(invite)&&/expiresAt > 0/.test(invite)&&/partyQr/.test(invite),'invite card content');
  assert.equal(I.joinNote(['Red']),'Red joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
  assert.equal(I.expiryText(0,0),'');assert.equal(I.expiryText(112*60000,0),'1 hour 52 minutes');assert.equal(I.expiryText(30*60000,0),'30 minutes');assert.equal(I.expiryText(120*60000,0),'2 hours');assert.equal(I.expiryText(61*60000,0),'1 hour 1 minute');assert.equal(I.expiryText(60000,0),'1 minute');
 });
@@ -125,10 +125,21 @@ t('shared modal header: Play with friends, grown-ups gate, Join, Invite and the 
  const mt=rule(css,/\.menuHeader h2\{([^}]*)\}/),gt=rule(gcss,/\.header h2,\.header h3\{([^}]*)\}/);assert.equal(mt,gt.replace('var(--btn-font,sans-serif)','var(--btn-font)'),'identical title rules');
  const pad=rule(gcss,/\.shell\{[^}]*(padding:[^;}]*)/);assert(css.includes('.card.menuCard{gap:16px;'+pad+'}'),'same card padding (menuCard must out-rank .card, which is declared later)');
  assert(/@media\(max-width:600px\)\{\.card\.menuCard\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(css)&&/@media\(max-width:600px\)\{\.shell\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(gcss),'same phone padding');
- for(const [f,id] of [['PartyHost','party-menu-title'],['PartyInvite','party-invite-title'],['JoinParty','party-join-title'],['PartyHost','party-sheet-title']]){const src=read('components/party/'+f+'.tsx');assert(new RegExp('<header className=\\{styles\\.menuHeader\\}>[\\s\\S]{0,260}<h2 id="'+id+'"').test(src),id+' uses the shared header + h2');}
+ for(const [f,id] of [['PartyHost','party-menu-title'],['JoinParty','party-join-title'],['PartyHost','party-sheet-title']]){const src=read('components/party/'+f+'.tsx');assert(new RegExp('<header className=\\{styles\\.menuHeader\\}>[\\s\\S]{0,260}<h2 id="'+id+'"').test(src),id+' uses the shared header + h2');}
  assert(!/<h3 id="party-/.test(all),'no party title still uses the old h3');
- assert(/<DoneButton onDone=\{onClose\} \/>/.test(read('components/party/PartyInvite.tsx'))&&!/>Done<\/button>/.test(read('components/party/PartyInvite.tsx')),'Invite: Done top right (shared DoneButton)');
- assert(/Card label="Invite friends"[^>]*grow/.test(host)&&/Card label="Join with a code"[^>]*grow/.test(host),'Invite and Join use the wide grow card');
+ assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Done<\/button>/.test(host),'party card: Done top right (shared DoneButton)');
+ assert(/Card label="Your party"[\s\S]{0,330}grow from/.test(host)&&/Card label="Join with a code"[^>]*grow/.test(host),'Invite and Join use the wide grow card');
+});
+t('gate -> party card state machine (regression: the dialog closed after a correct answer)',()=>{
+ assert(/setBusy\(true\); setView\('sheet'\)/.test(host),'create shows the party card at once (no menu/none gap)');
+ assert(!/'invite'/.test(host),'one live-party card: no separate invite view');
+ assert(/data-party-creating/.test(host)&&/Making your code/.test(host),'placeholder inside the same card until live');
+ assert(/if \('error' in r\) \{ setBusy\(false\); setView\('menu'\); text\(/.test(host),'a create error returns to the menu with the toast');
+ assert(/join\(r\.code[\s\S]{0,160}setView\('sheet'\); setBusy\(false\)/.test(host),'busy stays on until the join has started (no bounce to the menu)');
+ assert(/setView\(liveRef\.current \? 'sheet' : 'menu'\)/.test(host),'HUD button opens the party card while live');
+ assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/state\.isHost && state\.code/.test(host),'code block is host-only inside the party card');
+ assert(/Tap the friends button to manage your party/.test(host)&&/manageHint/.test(host),'one-time manage hint after Done');
+ assert(/data-party-badge/.test(read('components/IslandSettings.tsx')),'HUD button shows a live count badge');
 });
 t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
@@ -177,7 +188,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  });
  {const sett=read('components/IslandSettings.tsx'),pa=read('lib/multiplayerAllowed.ts');
  t('Play with friends button + gated Settings switch (#8)',()=>{
-  assert(/\{friendsOn&&<button[^>]*aria-label="Play with friends"[^>]*onClick=\{openPartyMenu\}/.test(sett),'icon-only circle button calling openPartyMenu');
+  assert(/\{friendsOn&&<button[^>]*aria-label=\{partyLive\?[\s\S]*?'Play with friends'\}[^>]*onClick=\{openPartyMenu\}/.test(sett),'icon-only circle button calling openPartyMenu');
   assert(/friendsOn=multiplayerEnabled\(\)&&friendsAllowed/.test(sett),'behind the flag and the switch');
   assert(/Play with friends: \{friendsAllowed\?'Allowed':'Off'\}/.test(sett)&&/parentGatePassed\(\)\)setMultiplayerAllowed/.test(sett)&&/<ParentGate/.test(sett),'gated toggle');
   assert(/fi2-multiplayer-allowed-v1/.test(pa)&&/function Allowed/.test(host)&&/if \(!allowed\) return null/.test(host),'PartyHost returns null when Off');
