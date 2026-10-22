@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { LOCAL_EMOTES, wheelEmotesFor } from '@/lib/town/emoteReact';
 import { ctxWheelFor, type EmoteContext } from '@/lib/town/emoteContexts';
 import { npcWheelFor, type NpcSetKind } from '@/lib/town/npcEmoteSets';
+import { moveWheel } from '@/lib/town/moveEmotes';
 import { Glyph } from './PartyChip';
 
 /** The ten preset emotes (no free text anywhere). Order matches the wheel; the first five show, the rest scroll in. Closes itself on a pick. */
@@ -17,7 +18,7 @@ export default function EmoteWheel({ onPick, onClose, ride = 'walk', ctx = 'grou
     <div className="emote-wheel" role="group" aria-label="Emotes" data-emote-wheel data-emote-ctx={ctx} data-emote-npc={npcKind || undefined}>
       <button type="button" className="emote-wheel-arrow" aria-label="Earlier emotes" onClick={() => page(-1)}>‹</button>
       <div className="emote-wheel-strip" ref={strip}>
-        {(ctx !== 'ground' ? ctxWheelFor(ctx) : npcKind ? npcWheelFor(npcKind) : wheelEmotesFor(ride)).map((x) => (
+        {(ctx === 'move' ? moveWheel() : ctx !== 'ground' ? ctxWheelFor(ctx) : npcKind ? npcWheelFor(npcKind) : wheelEmotesFor(ride)).map((x) => (
           <button key={x.emote} type="button" className="emote-wheel-btn" aria-label={x.label} title={x.label} onClick={() => { onPick(x.emote); onClose(); }}>
             <Glyph name={x.icon} size={26} />
           </button>

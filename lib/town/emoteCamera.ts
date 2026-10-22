@@ -7,7 +7,7 @@
 import type * as T from 'three';
 import {createShotCamera, type Shot} from './shotCamera';
 import {YAW_TRIES, eyeBlocked, viewClear, type Solid} from './emoteCamClear';
-import {EMOTE_CAM, YAW_RATE, angleDiff, bestEmoteYaw, emoteCamBlocked, emoteCamSkip, emoteLayout, frameEmote, type EmoteCamState, type V3} from './emoteCameraMath';
+import {EMOTE_CAM, MOVE_NUDGE, YAW_RATE, angleDiff, bestEmoteYaw, emoteCamBlocked, emoteCamSkip, emoteLayout, frameEmote, type EmoteCamState, type V3} from './emoteCameraMath';
 
 /** The island follow camera's heading (rad): the view the player already has, so the emote view turns as little as it can from it. */
 const FOLLOW_YAW = Math.atan2(16, 33);
@@ -97,5 +97,25 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
     get why() { return why; },
     get active() { return holding || shot.active; },
     cancel: stop,
+  };
+}
+
+/**
+ * The moving-emote nudge (user, Oct 22 2026): the follow camera keeps following; this only slides it a little toward the player (`goal`, a
+ * fraction <= MOVE_NUDGE.max from moveNudgeGoal) and back, eased at MOVE_NUDGE.rate. Like the zoom above: restore() just before the follow
+ * camera moves (so the nudge never feeds back into it), apply() right after it. Allocation-free.
+ */
+export function createMoveNudge() {
+  const saved = {x: 0, y: 0, z: 0};
+  let k = 0, applied = false;
+  return {
+    restore(camera: T.PerspectiveCamera) { if (applied) { camera.position.set(saved.x, saved.y, saved.z); applied = false; } },
+    apply(camera: T.PerspectiveCamera, dt: number, goal: number, tx: number, ty: number, tz: number): boolean {
+      k += (Math.min(MOVE_NUDGE.max, Math.max(0, goal)) - k) * Math.min(1, dt * MOVE_NUDGE.rate);
+      if (k < 1e-4) { k = 0; return false; }
+      const p = camera.position; saved.x = p.x; saved.y = p.y; saved.z = p.z; applied = true;
+      p.x += (tx - p.x) * k; p.y += (ty - p.y) * k; p.z += (tz - p.z) * k; return true;
+    },
+    get amount() { return k; },
   };
 }

@@ -32,7 +32,8 @@
  *   em:<event>  em:e<n>            emotes (EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS, lib/analytics/emoteEvents.ts; Oct 22 2026): plays by
  *                                  local emote number, context, target (townsperson / party / solo / refused), button → wheel → pick,
  *                                  per-session thresholds; Phase B adds variants by table index (em:dance_<n> …), streaks, the
- *                                  emote camera and friends' emotes seen, plus mp: learning-in-a-party, first-party and ping ids.
+ *                                  emote camera and friends' emotes seen, plus mp: learning-in-a-party, first-party and ping ids;
+ *                                  moving emotes (Oct 22 2026): em:e50..e54, em:ctx_walk, em:move_<n>.
  *                                  docs/analytics-multiplayer-plan.md is the spec for both families.
  */
 import {LESSON_TABLE} from './learningIds.generated';
@@ -227,10 +228,11 @@ export const PARTY_RETENTION_IDS:readonly string[]=PARTY_RETENTION_EVENTS.map(([
  * Emotes (Oct 22 2026, lib/analytics/emoteEvents.ts): which preset emote was played by its LOCAL emote number, where, and what
  * answered. The numeric ranges are repeated here (not imported) so the every-page tracker never loads the emote content;
  * tests/admin-analytics-party.cjs checks them against lib/town/emoteReact.ts EMOTE (0–9), rideEmotes.ts RIDE_EMOTE (10–18),
- * emoteContexts.ts CTX_EMOTE (20–24 flying, 30–34 swimming) and npcEmoteSets.ts NPC_SET (40–49). Never who it was aimed at.
+ * emoteContexts.ts CTX_EMOTE (20–24 flying, 30–34 swimming), npcEmoteSets.ts NPC_SET (40–49) and moveEmotes.ts MOVE_EMOTE (50–54,
+ * walking / running). Never who it was aimed at.
  */
-export const EMOTE_WIRE_IDS:readonly number[]=[[0,9],[10,18],[20,24],[30,34],[40,49]].flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
-export const EMOTE_CONTEXTS=['ground','scooter','bike','moped','fly','swim'] as const;
+export const EMOTE_WIRE_IDS:readonly number[]=[[0,9],[10,18],[20,24],[30,34],[40,49],[50,54]].flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
+export const EMOTE_CONTEXTS=['ground','scooter','bike','moped','fly','swim','walk'] as const;
 export type EmoteCtx=typeof EMOTE_CONTEXTS[number];
 /** Picks in this session crossed N (each once per tab session). "Emoting sessions" = countSessions('em:reach_1'). */
 export const EMOTE_REACH=[1,5,20,50] as const;
@@ -247,9 +249,10 @@ export const EMOTE_COUNT_EVENTS=[
  * imported, so the tracker never loads the emote content; tests/admin-analytics-party.cjs checks every count against the source):
  * dance = lib/town/emoteDance.ts DANCES, show = emoteShowOff.ts SHOW_OFFS, react = SHOW_OFF_REACTIONS (a townsperson answering
  * your show-off), hf = emoteHandshakes.ts HANDSHAKES (high fives, thanks, well played), wave / cheer / laugh = emoteBody.ts
- * BODY_VARIANTS[0 / 1 / 7], pass / juggle / keepup = emoteBallPlay.ts PASS_ROUTINES / JUGGLE_ROUTINES / JUGGLE_SOLO_ROUTINES.
+ * BODY_VARIANTS[0 / 1 / 7], pass / juggle / keepup = emoteBallPlay.ts PASS_ROUTINES / JUGGLE_ROUTINES / JUGGLE_SOLO_ROUTINES,
+ * move = moveEmotes.ts MOVE_SCRIPTS (emote order × 3 + variant: the moving emotes' 15 variants).
  */
-export const EMOTE_VARIANT_COUNTS={dance:10,show:10,react:4,hf:20,wave:6,cheer:6,laugh:6,pass:6,juggle:6,keepup:3} as const;
+export const EMOTE_VARIANT_COUNTS={dance:10,show:10,react:4,hf:20,wave:6,cheer:6,laugh:6,pass:6,juggle:6,keepup:3,move:15} as const;
 export type EmoteVariantFamily=keyof typeof EMOTE_VARIANT_COUNTS;
 export const EMOTE_VARIANT_IDS:readonly string[]=(Object.entries(EMOTE_VARIANT_COUNTS) as [EmoteVariantFamily,number][]).flatMap(([f,n])=>Array.from({length:n},(_,i)=>`em:${f}_${i}`));
 export const PARTY_FIXED_IDS:readonly string[]=PARTY_COUNT_EVENTS.map(([e])=>'mp:'+e);

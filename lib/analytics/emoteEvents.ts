@@ -3,7 +3,7 @@
  * pick is accepted (countEmote) and from components/EmoteControl.tsx (countEmoteUi). Each call is a tracker count() (a map
  * increment that rides the next beat): no request, no timer, nothing per frame. Ids: lib/analytics/countIds.ts
  * EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS (the LOCAL emote number: 0–9 the wheel, 10–18 rides, 20–24 flying, 30–34 swimming,
- * 40–49 townsperson sets). Labels live on the admin side (app/admin/EmoteSection.tsx).
+ * 40–49 townsperson sets, 50–54 moving emotes while walking / running). Labels live on the admin side (app/admin/EmoteSection.tsx).
  *
  * Privacy: a preset emote number, where it was played (a fixed context) and what answered (a townsperson, the party, nobody).
  * Never who it was aimed at, never a position.

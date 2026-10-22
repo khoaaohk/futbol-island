@@ -145,8 +145,10 @@ export interface EmoteCamState {
   inJob: boolean; cutscene: boolean; lesson: boolean;
   /** A menu, dialog, map, shop or the Explore room is open (Town's `active` is false). */
   menuOpen: boolean;
-  /** Any movement input (stick, keys). */
+  /** Any movement input (stick, keys). Ends a STANDING emote's zoom; a moving emote never zooms (`moveEmote`). */
   moving: boolean;
+  /** A MOVING emote is playing (lib/town/moveEmotes.ts): no pair zoom at all (it would fight the follow camera): only the gentle nudge below. */
+  moveEmote?: boolean;
   /** The distance from the follow camera to the player (m). */
   cameraDist: number;
 }
@@ -172,4 +174,17 @@ export function emoteCamBlocked(s: EmoteCamState): string {
   return '';
 }
 /** To START: the cancel rules plus "the camera is already close" (an indoor / room camera). */
-export const emoteCamSkip = (s: EmoteCamState): string => emoteCamBlocked(s) || (s.cameraDist < EMOTE_CAM.closeCameraDist ? 'close' : '');
+export const emoteCamSkip = (s: EmoteCamState): string => s.moveEmote ? 'move' : emoteCamBlocked(s) || (s.cameraDist < EMOTE_CAM.closeCameraDist ? 'close' : '');
+
+/**
+ * Moving emotes (user, Oct 22 2026): the follow camera stays; at most a gentle zoom-in NUDGE of `max` (a fraction of the follow distance,
+ * <= 15%) that eases in and back out with the emote and fades away as you speed up (none at all from `fastSpeed` m/s: running fast). Never
+ * a cut, never a snap: Town eases the applied amount toward this goal at `rate` per second (emoteCamera.ts createMoveNudge).
+ */
+export const MOVE_NUDGE = {max: .1, slowSpeed: 2.6, fastSpeed: 3.8, rate: 2.2} as const;
+export function moveNudgeGoal(s: {reduced: boolean; zooming: boolean; speed: number; age: number; end: number}): number {
+  if (s.reduced || s.zooming || s.speed >= MOVE_NUDGE.fastSpeed || s.age >= s.end) return 0;
+  const env = Math.max(0, Math.min(1, s.age / .6, (s.end - s.age) / .9));
+  const slow = 1 - Math.max(0, Math.min(1, (s.speed - MOVE_NUDGE.slowSpeed) / (MOVE_NUDGE.fastSpeed - MOVE_NUDGE.slowSpeed)));
+  return MOVE_NUDGE.max * env * slow;
+}

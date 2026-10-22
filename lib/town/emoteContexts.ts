@@ -13,7 +13,7 @@ export const CTX_EMOTE = {
   SplashWave: 30, SprayCheer: 31, DuckDive: 32, BackFloat: 33, TreadLaugh: 34,
 } as const;
 export type CtxEmote = (typeof CTX_EMOTE)[keyof typeof CTX_EMOTE];
-export type EmoteContext = 'ground' | 'fly' | 'swim';
+export type EmoteContext = 'ground' | 'fly' | 'swim' | 'move';
 
 export interface CtxScript {
   emote: number; ctx: 'fly' | 'swim'; label: string; icon: string; emoji: string;
@@ -48,7 +48,9 @@ export const CTX_EMOTE_EMOJI: Record<number, string> = Object.fromEntries(CTX_SC
 export const isFlying = (ride: string, jetPhase: string) => ride === 'jetpack' || (jetPhase !== 'idle' && jetPhase !== '');
 export interface EmoteButtonState {hidden: boolean; disabled: boolean; ctx: EmoteContext; why: string}
 /** What the island can offer right now (written by Town at ~4 Hz): a townsperson that would answer (within 9 m, `npcNear`), a party friend within FLY_RANGE (`friendNear`), flying / swimming friends, and the set of the townsperson you would emote at. */
-export interface EmoteReach {flying: boolean; swimming: boolean; npcNear: boolean; friendNear: boolean; friendFlyingNear: boolean; friendSwimmingNear: boolean}
+export interface EmoteReach {flying: boolean; swimming: boolean; npcNear: boolean; friendNear: boolean; friendFlyingNear: boolean; friendSwimmingNear: boolean;
+  /** Walking / running on foot above the wheel threshold (lib/town/moveEmotes.ts moveWheelOn): the wheel shows the MOVING set. */
+  moving?: boolean}
 /**
  * The Emote button (user, Oct 22 2026: "emote btn only show when there is a npc or friend to interact with"; this reverses the earlier always-on rule):
  * HIDDEN (its grid cell stays reserved) unless there is someone to emote at. Flying: only beside a flying friend (the FLYING set). Swimming: only beside
@@ -58,7 +60,8 @@ export function emoteButtonState(s: Pick<EmoteReach, 'flying' | 'swimming'> & Pa
   if (s.flying) return s.friendFlyingNear ? {hidden: false, disabled: false, ctx: 'fly', why: ''} : {hidden: true, disabled: false, ctx: 'fly', why: 'Emotes while flying need a friend flying nearby'};
   if (s.swimming) return s.friendSwimmingNear ? {hidden: false, disabled: false, ctx: 'swim', why: ''} : {hidden: true, disabled: false, ctx: 'swim', why: 'Emotes in the water need a swimming friend nearby'};
   const some = Boolean(s.npcNear || s.friendNear);
-  return {hidden: !some, disabled: false, ctx: 'ground', why: some ? '' : 'Nobody to emote with'};
+  // Walking / running on foot: the MOVING set (lib/town/moveEmotes.ts), same rule: only with a townsperson or a friend to answer.
+  return {hidden: !some, disabled: false, ctx: s.moving ? 'move' : 'ground', why: some ? '' : 'Nobody to emote with'};
 }
 export const ctxWheelFor = (ctx: EmoteContext): CtxScript[] => ctx === 'fly' ? [...FLY_SCRIPTS] : ctx === 'swim' ? [...SWIM_SCRIPTS] : [];
 
@@ -115,7 +118,7 @@ export const ctxStillValid = (emote: number, flying: boolean, swimming: boolean)
 
 /** A tiny external store so the React button follows the island without Town re-rendering (written on the HUD tick, only on a change). `npcKind` = the set of the townsperson you would emote at ('' = the ordinary ground wheel). */
 export interface EmoteCtxView extends EmoteReach {npcKind: '' | 'skater' | 'scooter' | 'juggler'}
-const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false, npcNear: false, friendNear: false, friendSwimmingNear: false, npcKind: ''};
+const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false, npcNear: false, friendNear: false, friendSwimmingNear: false, moving: false, npcKind: ''};
 let ctxView: EmoteCtxView = IDLE_CTX;
 const ctxSubs = new Set<() => void>();
 const CTX_KEYS = Object.keys(IDLE_CTX) as (keyof EmoteCtxView)[];
