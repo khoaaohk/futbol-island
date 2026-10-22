@@ -12,6 +12,7 @@ import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
 import FadeScroll from './FadeScroll';
+import { presenceIcon, presenceText } from '@/lib/multiplayer/presence';
 import NickField from './NickField';
 import { DoneButton } from '@/components/DoneButton';
 import styles from './party.module.css';
@@ -22,6 +23,11 @@ type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
 
 const ZONE_ICON: Record<number, string> = { [Zone.Main]: 'home', [Zone.Cay]: 'sun', [Zone.Summit]: 'up', [Zone.Sea]: 'globe', [Zone.Indoors]: 'book' };
+/** The small line under a friend's name in the Party tab: what they are doing ('Taking a lesson', 'In the museum', 'Away'); '' when playing. */
+export function memberActivityLine(m: Pick<Member, 'presence' | 'activity'>): string {
+  const t = presenceText(m.presence, m.activity);
+  return t ? `${presenceIcon(m.presence, m.activity)} ${t}` : '';
+}
 const ZONE_LABEL: Record<number, string> = { [Zone.Main]: 'on the island', [Zone.Cay]: 'at Coral Cay', [Zone.Summit]: 'at the Summit', [Zone.Sea]: 'in the sea', [Zone.Indoors]: 'indoors' };
 const ERROR_TEXT: Record<number, string> = {
   [ErrorCode.Full]: 'This party is full (20/20)', [ErrorCode.NotFound]: "We couldn't find that party", [ErrorCode.Expired]: 'That code has run out. Ask for a new one',
@@ -357,9 +363,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
-                <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}`}>
+                <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} data-presence={m.presence} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}${memberActivityLine(m) ? ', ' + presenceText(m.presence, m.activity).toLowerCase() : ''}`}>
                   <span className={styles.zone} role="img" aria-label={ZONE_LABEL[m.zone] ?? 'on the island'}><Icon name={ZONE_ICON[m.zone] ?? 'home'} size={18} /></span>
-                  <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}>{displayName(m)}</span>
+                  <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}>{displayName(m)}{memberActivityLine(m) && <small className={styles.activity} data-party-activity aria-hidden="true">{memberActivityLine(m)}</small>}</span>
                   {m.isHost && <span className={styles.badge}>Host</span>}
                   <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
                   <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>

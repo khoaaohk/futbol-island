@@ -231,4 +231,18 @@ t('20 players: ids to 31, a 19-friend Poses frame parses and fits, a 21st roster
   assert.equal(P.NAME_COLOURS.length,P.PARTY_MAX,'a unique colour name for every seat');
   for(const n of ['Red','Teal','Brown','Maroon','White','Black'])assert.ok(P.NAME_COLOURS.includes(n),n);
 });
+t('presence on the wire (design 4.4.1): Busy / Indoors / Hidden, the activity in the speed byte',()=>{
+  const {Mode,Zone,PoseFlag,Activity}=P;
+  assert.equal(P.AWAY_SILENCE_MS,12000);assert.equal(Activity.Lesson,1);assert.equal(Activity.Quiz,2);assert.equal(Activity.Settings,3);assert.equal(P.ACTIVITY_MAX,13);
+  assert.deepEqual(plain(P.ROOM_ACTIVITIES),[Activity.Arcade,Activity.Museum,Activity.Shop,Activity.Konbini]);
+  assert.equal(P.presenceOf(Mode.Walk,Zone.Main,0),'active');assert.equal(P.presenceOf(Mode.Busy,Zone.Main,0),'busy');
+  assert.equal(P.presenceOf(Mode.Busy,Zone.Indoors,PoseFlag.Hidden),'indoors','indoors wins');assert.equal(P.presenceOf(Mode.Busy,Zone.Sea,PoseFlag.Hidden),'away','away beats busy');
+  assert.equal(P.activityOf(Mode.Busy,Activity.Quiz),Activity.Quiz);assert.equal(P.activityOf(Mode.Walk,Activity.Quiz),0,'only a Busy pose carries one');assert.equal(P.activityOf(Mode.Busy,200),0,'unknown code -> none');
+  assert.equal(P.shielded('busy'),true);assert.equal(P.shielded('away'),true);assert.equal(P.shielded('active'),false);assert.equal(P.shielded('indoors'),false);
+  const busy=[1,7,300,0,300,64,Activity.Lesson,Mode.Busy,Zone.Main,0];
+  assert.deepEqual(P.parseClient(JSON.stringify(busy)),busy,'a Busy pose parses (old relay too: same 8 numbers)');
+  assert.ok(P.parseClient(JSON.stringify([1,8,300,0,300,64,Activity.Museum,Mode.Busy,Zone.Indoors,PoseFlag.Hidden])),'indoors + hidden parses');
+  const b=busy.slice(2);assert.equal(P.speedOk(b,b,60000),true,'a frozen position is never a speed cheat, however long');
+  assert.ok(P.parseServer(JSON.stringify([23,5,3,...b])),'a Poses batch with a Busy friend parses');
+});
 console.log('mp-protocol: '+n+' groups passed');

@@ -38,12 +38,15 @@ export function bindConnection(conn: PartyConnection, now: () => number = () => 
 function bindOnce(conn: PartyConnection, now: () => number): () => void {
   const offMsg = conn.onMessage((m) => {
     if (m[0] === S.Poses) {
-      if (poseSubs.size === 0) return;
       const t = now();
-      for (let i = 2; i + 8 < m.length; i += 9) {
-        const body = [m[i + 1], m[i + 2], m[i + 3], m[i + 4], m[i + 5], m[i + 6], m[i + 7], m[i + 8]] as PoseBody;
-        for (const f of Array.from(poseSubs)) f(m[i] as number, body, t);
+      if (poseSubs.size) {
+        for (let i = 2; i + 8 < m.length; i += 9) {
+          const body = [m[i + 1], m[i + 2], m[i + 3], m[i + 4], m[i + 5], m[i + 6], m[i + 7], m[i + 8]] as PoseBody;
+          for (const f of Array.from(poseSubs)) f(m[i] as number, body, t);
+        }
       }
+      // The store keeps only zone / away / presence per member and emits only when one flips (the party list's activity line).
+      partyStore.apply(m, t);
       return;
     }
     partyStore.apply(m, now());

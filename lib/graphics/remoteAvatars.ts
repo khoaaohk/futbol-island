@@ -8,7 +8,10 @@
 //  - a friend beyond the rig cap (5 on most phones) is not a rig: the colour ring + label only (ring-only, within 90 m), same one ring draw call;
 //  - ONE instanced colour ring (capacity party max + 1 = 21, no shadows, one draw call) lies at each shown friend's feet, and at the local player's
 //    while in a party; the instance colour is the member's name colour, so friends can be told apart from far away;
-//  - update() allocates nothing for ordinary movement (scratch objects are module level / per entry).
+//  - update() allocates nothing for ordinary movement (scratch objects are module level / per entry);
+//  - presence (design 4.4.1): a busy / away friend stands still inside ONE shared instanced green force field (forceField.ts) with a
+//    status line over the name ("Taking a lesson", "Away"; one cached texture per line, shared); emotes to / from them are ignored;
+//    a friend who goes indoors fades out at the door (no fade with reduced motion); the field pops when they come back.
 import * as T from 'three';
 import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
@@ -20,7 +23,9 @@ import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
-import {Emote,Mode,Zone,PARTY_MAX,type Look,type MemberId} from '../../multiplayer/protocol';
+import {Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
+import {presenceIcon,presenceText} from '../multiplayer/presence';
+import {createForceFields} from './forceField';
 import type {TravelMode} from '../town/travelModes';
 
 /** Remotes shown at once by effective heat tier at admission: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). */
@@ -35,6 +40,8 @@ export interface MemberStyle{hex:string}
 export interface LocalRing{x:number;y:number;z:number;hex:string}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
+ /** The label / status / emote sprites (each at its friend's position): the only children the view gate may treat as units. */
+ readonly labels:T.Object3D;
  /** `style` = the member's name colour (hex): drawn on the label and as the ground ring. */
  upsert(id:MemberId,look:Look,name:string,style?:MemberStyle):void;
  remove(id:MemberId):void;
@@ -42,6 +49,8 @@ export interface RemoteAvatars{
  setHidden(ids:ReadonlySet<MemberId>):void;
  setMuted(ids:ReadonlySet<MemberId>):void;
  emote(id:MemberId,e:Emote):void;
+ /** The island ball hit this friend's force field: a short damped shake and a ripple from the impact normal (dome space). */
+ bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
  update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null):void;
  readonly shown:number;
@@ -80,6 +89,8 @@ type Entry={
  /** The high five variation this friend is playing (0..9; -1 none). The wire format has no spare field, so each screen picks its own. */
  hf:number;
  acc:number;slot:number;needResume:boolean;d2:number;
+ /** Presence: inside the force field now; field 0..1 (eased), door 1..0 (indoors fade), shake / ripple of a ball hit, the status sprite + its line. */
+ shield:boolean;field:number;door:number;shake:number;ripple:number;hx:number;hy:number;hz:number;status:T.Sprite|null;statusKey:string;
 };
 
 const LABEL_W=256;
@@ -114,7 +125,25 @@ function iconTexture(e:number){
  return t;
 }
 
-function hideEntry(e:Entry){e.shown=false;if(e.label)e.label.visible=false;if(e.bubble)e.bubble.visible=false;e.needResume=true;}
+function hideEntry(e:Entry){e.shown=false;if(e.label)e.label.visible=false;if(e.bubble)e.bubble.visible=false;if(e.status)e.status.visible=false;e.needResume=true;}
+// Status lines over a busy friend's name ("📖 Taking a lesson", "💤 Away"): one canvas texture per distinct line, shared by every friend.
+const STATUS_W=320,STATUS_H=64,STATUS_RANGE=70,STATUS_SCREEN=.21,FIELD_FADE=.35,DOOR_FADE=.6,SHAKE_SECONDS=.4,RIPPLE_SECONDS=.5;
+const statusTextures=new Map<string,T.CanvasTexture>();
+function statusTexture(line:string){
+ let t=statusTextures.get(line);
+ if(!t){
+  const canvas=document.createElement('canvas');canvas.width=STATUS_W;canvas.height=STATUS_H;const g=canvas.getContext('2d');
+  if(g){
+   g.font='700 26px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif';g.textAlign='center';g.textBaseline='middle';
+   const w=Math.min(STATUS_W-8,g.measureText(line).width+34),x0=STATUS_W/2-w/2;
+   g.fillStyle='rgba(236,255,244,.94)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,STATUS_H-16,22):g.rect(x0,8,w,STATUS_H-16);g.fill();
+   g.lineWidth=3;g.strokeStyle='#38c87a';g.stroke();
+   g.fillStyle='#14412a';g.fillText(line,STATUS_W/2,33,STATUS_W-24);
+  }
+  t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;statusTextures.set(line,t);
+ }
+ return t;
+}
 // Per-frame scratch (module level: nothing allocated while updating).
 const ringM=new T.Matrix4(),ringPos=new T.Vector3(),ringScale=new T.Vector3(),ringQ=new T.Quaternion(),localColour=new T.Color();
 const frustum=new T.Frustum(),projection=new T.Matrix4(),sphere=new T.Sphere(),camPos=new T.Vector3();
@@ -138,6 +167,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const ringMat=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
  const rings=new T.InstancedMesh(ringGeo,ringMat,RING_CAPACITY);rings.name='remote-avatar-rings';rings.frustumCulled=false;rings.castShadow=false;rings.receiveShadow=false;rings.count=0;rings.renderOrder=2;
  rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
+ const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
  let ringN=0;
  function ringAdd(x:number,y:number,z:number,dist:number,c:T.Color,pulse:number,k:number){
   if(ringN>=RING_CAPACITY)return;
@@ -152,6 +182,10 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const label=e.label!,bubble=e.bubble!,d2=e.d2;
   label.visible=false;bubble.visible=false;
   if(d2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+2.35*k,pose.z);(label.material as T.SpriteMaterial).opacity=k;candL.push(e);}
+  // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
+  // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
+  if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE;e.status.visible=show;
+   if(show){e.status.position.set(pose.x,pose.y+2.35*k+.3,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
   if(e.emote>=0){
    if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
    const fs=e.rig?flourishForWire(e.emote,e.lastMode):undefined;
@@ -181,6 +215,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const mat=new T.SpriteMaterial({map:e.labelTexture,transparent:true,depthWrite:false});
   const label=new T.Sprite(mat);label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
   const bubble=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false}));bubble.scale.set(.6,.6,1);bubble.visible=false;bubble.raycast=()=>{};bubble.name='remote-emote';labels.add(bubble);e.bubble=bubble;
+  const status=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false,sizeAttenuation:false}));status.scale.set(STATUS_SCREEN,STATUS_SCREEN*STATUS_H/STATUS_W,1);status.renderOrder=4;status.visible=false;status.raycast=()=>{};status.name='remote-status';labels.add(status);e.status=status;
  }
  const capNow=()=>batterySaverOn()?0:opts.maxFor(effectiveTier(),opts.phone);
  const admittedCount=()=>{let n=0;for(let i=0;i<list.length;i++)if(list[i].admitted)n++;return n;};
@@ -192,6 +227,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function release(e:Entry){
   e.rig?.dispose();e.rig=null;e.label?.removeFromParent();(e.label?.material as T.SpriteMaterial|undefined)?.dispose();
   e.bubble?.removeFromParent();(e.bubble?.material as T.SpriteMaterial|undefined)?.dispose();
+  e.status?.removeFromParent();(e.status?.material as T.SpriteMaterial|undefined)?.dispose();e.status=null;e.statusKey='';
   e.labelTexture?.dispose();e.label=e.bubble=null;e.labelTexture=null;e.admitted=false;
  }
 
@@ -201,14 +237,15 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   ringAdd(l.x,l.y,l.z,Math.sqrt(dx*dx+dz*dz),localColour,1,1);
  }
  return {
-  root,
+  root,labels,
   get shown(){return shownCount;},
   upsert(id,look,name,style){
    if(disposed)return;
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,d2:0};
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,d2:0,
+     shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:''};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -220,12 +257,13 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   },
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive&&!flourishForWire(em,e.lastMode)?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
+  bumpField(id,nx,ny,nz){const e=byId.get(id);if(!e||!e.shield)return;e.shake=1;e.ripple=0;e.hx=nx;e.hy=ny;e.hz=nz;},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive&&!flourishForWire(em,e.lastMode)?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
    if(list.length===0){
-    shownCount=0;
+    shownCount=0;fields.begin();fields.end(dt,reduced);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
    }
@@ -236,7 +274,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(recheck>=ADMIT_RECHECK){recheck=0;if(!saver)for(let i=0;i<list.length;i++)tryAdmit(list[i]);}
    camera.updateMatrixWorld();projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(projection);
    camPos.setFromMatrixPosition(camera.matrixWorld);
-   batch.begin();let shown=0;
+   batch.begin();fields.begin();let shown=0;
    for(let i=0;i<list.length;i++){
     const e=list[i],rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
@@ -245,13 +283,23 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     if(!e.label||!e.bubble)continue;
     if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
     const pose=poses.get(e.id);
-    if(!pose||saverFade<=0||pose.zone===Zone.Indoors){hideEntry(e);continue;}
+    if(!pose||saverFade<=0){hideEntry(e);continue;}
+    // Presence: indoors = fade out at the door; busy / away = inside the green force field, still, with a status line.
+    const pr=presenceOf(pose.mode,pose.zone,pose.flags??0),shield=shielded(pr);
+    if(pose.zone===Zone.Indoors){e.door=reduced?0:Math.max(0,e.door-dt/DOOR_FADE);if(e.door<=0){e.field=0;hideEntry(e);continue;}}else e.door=1;
+    if(shield!==e.shield){e.shield=shield;if(shield&&e.emote>=0){e.emote=-1;e.hf=-1;}rig?.setExpression(shield&&pr==='busy'?'focused':'neutral');}
+    const line=pr==='active'?'':presenceIcon(pr,pose.activity??0)+' '+presenceText(pr,pose.activity??0);
+    if(line!==e.statusKey&&e.status){e.statusKey=line;if(line){const m=e.status.material as T.SpriteMaterial;m.map=statusTexture(line);m.needsUpdate=true;}}
+    e.field=reduced?(shield?1:0):shield?Math.min(1,e.field+dt/FIELD_FADE):Math.max(0,e.field-dt/FIELD_FADE);
+    e.shake=Math.max(0,e.shake-dt/SHAKE_SECONDS);e.ripple=Math.min(1,e.ripple+dt/RIPPLE_SECONDS);
     const dx=pose.x-camPos.x,dz=pose.z-camPos.z,d2=dx*dx+dz*dz;
     if(d2>DRAW_RANGE*DRAW_RANGE){hideEntry(e);continue;}
     sphere.center.set(pose.x,pose.y+1,pose.z);sphere.radius=2;
     if(!frustum.intersectsSphere(sphere)){hideEntry(e);continue;}
-    const k=Math.max(.001,pose.fade*saverFade);
+    const k=Math.max(.001,pose.fade*saverFade*e.door);
     e.d2=d2;
+    // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
+    if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,shield?.86+.14*e.field:1+(1-e.field)*.28,reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
      e.shown=false;e.needResume=true;
      if(d2<=RING_ONLY_RANGE*RING_ONLY_RANGE)ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,1,k);
@@ -262,14 +310,14 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k);
     e.acc+=dt;
     const period=e.hf>=0&&!reduced?0:d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
-    const moving=pose.speed>.3;
+    const moving=!shield&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1);e.acc=0;
      const mode=pose.mode;e.lastMode=mode;
-     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=travelFor(mode);
-     motion.parachute=mode===Mode.Parachute||mode===Mode.Zipline;
+     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield?undefined:travelFor(mode);
+     motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&e.emote===Emote.HighFive&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
-     if(mode===Mode.Swim||mode===Mode.Dive){
+     if(mode===Mode.Swim||mode===Mode.Dive||shield&&pose.zone===Zone.Sea){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
      }else motion.swim=undefined;
      // Emotes: JuggleWithMe/Space/Wave/HighFive raise the "called" arm; Cheer/WellPlayed celebrate. Reduced motion keeps only the bubble.
@@ -295,7 +343,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    }
    pickVisible(candL,LABEL_MAX);pickVisible(candB,BUBBLE_MAX);
    if(local&&saverFade>0)addLocalRing(local,camPos);
-   ringsEnd();
+   ringsEnd();fields.end(dt,reduced);
    batch.end();shownCount=shown;
    // The batch makes its meshes lazily and defaults them to casting: friends never cast (no shadow registration anywhere).
    for(let i=0;i<drawn.children.length;i++)drawn.children[i].castShadow=false;
@@ -303,7 +351,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();
+   for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
    root.removeFromParent();
   },
