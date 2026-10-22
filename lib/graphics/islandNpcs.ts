@@ -15,6 +15,9 @@ import {NPC_DIALOGUES,type NpcDefinition} from '../town/npcDialogues';
 import {pickTagFocus} from './npcTagFocus';
 import {npcSeatPose} from './npcSeatPose';
 import {AGE_PROFILES} from '../town/townsfolkCast';
+import {applyHighFive} from './highFivePose';
+import {HIGH_FIVES,highFiveSkill} from '../town/highFive';
+import type {SkillMotion} from './skillMoves';
 import {EMOTE,NPC_EMOTE_SECONDS,emoteCalled,emoteCelebration,emoteHop} from '../town/emoteReact';
 import {applyCelebrationArms} from './celebrations';
 type Position={x:number;y:number;z:number};
@@ -47,8 +50,11 @@ function detachClassic(root:T.Object3D){const off:T.Object3D[]=[];const visit=(o
  * pose every frame; court freestylers keep the older 32 m rule (their ball follows the solved feet). */
 const FAR_POSE=20,POSE_HZ=10,MOVING_RANGE=35;
 /** Emote answer (user, Oct 22 2026): a raised arm for Wave / High five, a hop for Cheer / Well played; nothing while idle or with reduced motion (the bubble stays). */
-function npcEmoteMotion(fx:{kind:number;age:number},reduced:boolean):{called?:number;jump?:{progress:number;height:number}}|null{
- if(fx.kind<0||reduced)return null;
+const HF_SKILL={type:'highFive' as const,progress:0,side:-1 as -1|1},HF_MOTION={skill:HF_SKILL as SkillMotion};
+function npcEmoteMotion(fx:{kind:number;age:number;v:number},reduced:boolean):{called?:number;jump?:{progress:number;height:number};skill?:SkillMotion}|null{
+ // a high five sequence poses the arms itself (lib/graphics/highFivePose.ts); its arcade windows (highFive / fistBump) go through the rig's skill layer
+ if(fx.kind>=0&&!reduced&&fx.v>=0)return highFiveSkill(HF_SKILL,fx.v,1,fx.age)?HF_MOTION:null;
+ if(fx.kind<0||reduced||fx.v>=0)return null;
  const c=emoteCelebration(fx.kind,fx.age,NPC_EMOTE_SECONDS);
  return c>=0?{jump:emoteHop(c)}:{called:emoteCalled(fx.kind,fx.age,NPC_EMOTE_SECONDS)};
 }
@@ -86,7 +92,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(authoredRoute){route.splice(0,route.length,...authoredRoute.map(p=>({...p})));routine.speed=.9;routine.socialCooldown=Infinity;
    if(definition.id==='cafe-oren'){routine.waypoint=authoredRoute.findIndex(p=>p.pause===7);Object.assign(position,route[routine.waypoint]);routine.target={...position};rig.root.position.set(position.x,position.y,position.z);}
   }
-  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat),seat,seatHeld:0,route,routine,near:false,stunned:false,fx:{kind:-1,age:0},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
+  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat),seat,seatHeld:0,route,routine,near:false,stunned:false,fx:{kind:-1,age:0,v:-1},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  // Freestyle pairs on the court (freestyleRoutine.ts): one shared timeline, so the ball they pass meets both. `freestyleClock` is
@@ -116,7 +122,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const floored=entries.filter(e=>!!e.definition.floor);
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera,hideTags=false)=>{
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
-  for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7;entry.stunned=Boolean(reactions?.get('npc:'+entry.id));if(entry.fx.kind>=0){entry.fx.age+=paused?0:dt;if(entry.fx.age>=NPC_EMOTE_SECONDS||entry.stunned)entry.fx.kind=-1;}}
+  for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7;entry.stunned=Boolean(reactions?.get('npc:'+entry.id));if(entry.fx.kind>=0){entry.fx.age+=paused?0:dt;if(entry.fx.age>=(entry.fx.v>=0?HIGH_FIVES[entry.fx.v].duration:NPC_EMOTE_SECONDS)||entry.stunned)entry.fx.kind=-1;}}
   neighborhood.length=0;frozen.clear();
   for(const entry of entries){if(isThinned(entry)||heldByFocus(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
   for(const [id,witness] of truckWitnesses){witness.remaining-=paused?0:dt;if(witness.remaining<=0)truckWitnesses.delete(id);else frozen.add(id);}
@@ -145,6 +151,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
     if(entry.near&&r.waveTime<2.1&&(!entry.freestyle||distance<=2.2)&&entry.definition.pose!=='lie'){entry.rightShoulder.rotation.set(-.25,0,2.15+Math.sin(r.waveTime*10)*.15);entry.rightElbow.rotation.x=-.8;}
     else if(r.mode==='social'&&partner&&((Math.floor(r.age/1.5)%2===0)===(entry.id<partner.id))){entry.rightShoulder.rotation.set(-.55-Math.sin(r.age*5)*.12,0,.3);entry.rightElbow.rotation.x=-.85;}
    }
+   if(entry.fx.kind>=0&&entry.fx.v>=0&&!reduced&&!stunned)applyHighFive(entry.rig.root,entry.fx.v,1,entry.fx.age,-1,Math.atan2(player.x-entry.position.x,player.z-entry.position.z),entry.rig.profileScale);// the townsperson's half of the player's variation, on the same clock
    if(entry.fx.kind>=0&&!reduced&&!stunned){const c=emoteCelebration(entry.fx.kind,entry.fx.age,NPC_EMOTE_SECONDS);if(c>=0)applyCelebrationArms(entry.rig.root,c);}
    entry.ride?.update(entry.position.x,entry.position.y,entry.position.z,entry.rig.root.rotation.y,paused?0:poseDt,speed,entry.rig.root.visible&&!stunned);entry.lastPosition.x=entry.position.x;entry.lastPosition.z=entry.position.z;
    if(entry.definition.travel==='skateboard'&&!stunned){entry.leftShoulder?.rotation.set(.15,0,-.25);entry.rightShoulder?.rotation.set(.15,0,.25);}
@@ -176,11 +183,11 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  /** Answer a player's emote (user, Oct 22 2026): the townsperson turns to you (near ones already face the player), then waves back,
   * raises a hand for a high five (with a small spark ring), or hops and claps for a cheer. Reduced motion keeps only the bubble.
   * Returns the entry (Town anchors the pooled bubble to it) or null when it is busy. */
- const react=(id:string,emote:number,reduced:boolean)=>{
+ const react=(id:string,emote:number,reduced:boolean,variation=-1)=>{
   const entry=entryById.get(id);if(!entry||entry.stunned||!entry.rig.root.visible)return null;
-  entry.fx.kind=emote;entry.fx.age=0;
+  entry.fx.kind=emote;entry.fx.age=0;entry.fx.v=emote===EMOTE.HighFive&&!reduced?variation:-1;
   if(!reduced&&emote===EMOTE.Wave&&entry.near)entry.routine.waveTime=0;// the greeting wave plays again
-  if(!reduced&&emote===EMOTE.HighFive)sparkHook?.(entry.position.x,entry.position.y+1.6*entry.rig.profileScale,entry.position.z);
+  if(!reduced&&emote===EMOTE.HighFive&&variation<0)sparkHook?.(entry.position.x,entry.position.y+1.6*entry.rig.profileScale,entry.position.z);
   return entry;
  };
  let sparkHook:((x:number,y:number,z:number)=>void)|null=null;

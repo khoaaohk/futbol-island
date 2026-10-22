@@ -13,6 +13,9 @@ import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {applyCelebrationArms,celebrationMotion} from './celebrations';
+import {applyHighFive} from './highFivePose';
+import {HIGH_FIVES,createHighFiveBag,nextHighFive,highFiveSkill} from '../town/highFive';
+import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
@@ -40,6 +43,8 @@ export interface RemoteAvatars{
  dispose():void;
 }
 
+const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
+const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
 const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=40,EMOTE_SECONDS=1.5,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=8,RING_RADIUS=.55,RING_FAR_M=25,RING_MAX_GROW=4,RING_LIFT=.05;
 const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.PassToMe]:'\u{261D}\u{FE0F}',[Emote.Space]:'\u{1F4A8}',[Emote.WellPlayed]:'\u{1F44F}'};
 
@@ -65,6 +70,8 @@ type Entry={
  admitted:boolean;shown:boolean;
  motion:PlayerMotion;swim:SwimPose;
  emote:number;emoteAge:number;
+ /** The high five variation this friend is playing (0..9; -1 none). The wire format has no spare field, so each screen picks its own. */
+ hf:number;
  acc:number;slot:number;needResume:boolean;
 };
 
@@ -168,7 +175,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,acc:0,slot:(id*.618034)%1,needResume:true};
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,hf:-1,acc:0,slot:(id*.618034)%1,needResume:true};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)||(st?.glyph!==e.style?.glyph)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -178,7 +185,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    const e=byId.get(id);if(!e)return;
    byId.delete(id);const i=list.indexOf(e);if(i>=0)list.splice(i,1);release(e);
   },
-  emote(id,em){const e=byId.get(id);if(!e)return;e.emote=em;e.emoteAge=0;e.rig?.setExpression('happy');},
+  emote(id,em){const e=byId.get(id);if(!e)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;
@@ -198,7 +205,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    for(let i=0;i<list.length;i++){
     const e=list[i],rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
-    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=EMOTE_SECONDS){e.emote=-1;rig?.setExpression('neutral');}}
+    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.hf>=0?HIGH_FIVES[e.hf].duration:EMOTE_SECONDS)){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
     if(!rig||!e.label||!e.bubble)continue;
     const pose=poses.get(e.id);
     if(!pose||saverFade<=0||pose.zone===Zone.Indoors){hideEntry(e);continue;}
@@ -211,14 +218,14 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     const root3=rig.root,motion=e.motion;
     root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k);
     e.acc+=dt;
-    const period=d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
+    const period=e.hf>=0&&!reduced?0:d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
     const moving=pose.speed>.3;
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1);e.acc=0;
      const mode=pose.mode;
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=travelFor(mode);
      motion.parachute=mode===Mode.Parachute||mode===Mode.Zipline;
-     motion.called=0;motion.jump=undefined;
+     motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&e.emote===Emote.HighFive&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
      if(mode===Mode.Swim||mode===Mode.Dive){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
      }else motion.swim=undefined;
@@ -226,11 +233,14 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      if(e.emote>=0&&!reduced){
       const em=e.emote,age=e.emoteAge;
       if(em===Emote.Cheer||em===Emote.WellPlayed)celebrationMotion(Math.min(1,age/EMOTE_SECONDS),motion,false);
-      else motion.called=Math.min(1,age/.2,(EMOTE_SECONDS-age)/.2);
+      else if(e.hf<0)motion.called=Math.min(1,age/.2,(EMOTE_SECONDS-age)/.2);
      }
      rig.update(pose.x,pose.z,step,clock,reduced,motion);
      if(e.emote>=0&&!reduced&&(e.emote===Emote.Cheer||e.emote===Emote.WellPlayed))applyCelebrationArms(rig.root,Math.min(1,e.emoteAge/EMOTE_SECONDS));
-     root3.position.set(pose.x,pose.y,pose.z);e.needResume=false;
+     root3.position.set(pose.x,pose.y,pose.z);
+     // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
+     if(e.hf>=0&&!reduced&&e.emote===Emote.HighFive)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);
+     e.needResume=false;
     }
     batch.draw(root3);e.shown=true;shown++;
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
