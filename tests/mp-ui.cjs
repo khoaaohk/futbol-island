@@ -189,9 +189,8 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(!/lib\/saves|lib\/analytics|localStorage/.test(all.replace(/\/\/[^\n]*/g,'')),'privacy: no saves / analytics / persistent storage');
   assert(/sessionStorage/.test(inv)&&!/localStorage/.test(inv),'pending code in sessionStorage only');
  });
- t('qrcode is imported dynamically only',()=>{
-  assert(!/^import[^\n]*['"]qrcode['"]/m.test(all)&&!/require\(['"]qrcode['"]\)/.test(all),'no static import');
-  assert(/await import\('qrcode'\)/.test(inv),'dynamic import');assert.equal((all.match(/qrcode'/g)||[]).length,1);
+ t('no QR code in the party UI (owner decision Oct 22 2026)',()=>{
+  assert(!/qrcode/.test(all),'the party UI does not load the qrcode package');assert(!/partyQr|data-party-qr/.test(all));
  });
  t('mounted in Town only behind the flag (Task E / coordinator, Oct 22 2026)',()=>{
   const town=read('components/Town.tsx');
