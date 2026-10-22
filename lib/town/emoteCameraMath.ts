@@ -6,11 +6,11 @@ export const EMOTE_CAM = {
   /** Ease in / out (s): the in-ease is 0.35-0.5 s, the way back 0.4-0.6 s. */
   inSeconds: .45, outSeconds: .5,
   /** Three-quarter view: heading (rad, the follow camera sits at atan2(16, 33) = .45) and pitch above the horizon (rad). */
-  yaw: .62, pitch: .42,
+  yaw: .62, pitch: .36,
   /** The camera's vertical field of view (deg, Town's follow camera). */
   fov: 40,
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
-  minDist: 5.8, maxDist: 15,
+  minDist: 3.7, maxDist: 15,
   /** Tried in order when something stands between the camera and the characters: a gentler zoom (distance x factor). */
   shrink: [1, 1.35, 1.8] as readonly number[],
   /** Rapid taps do not pump the camera: no new zoom for this long after one ends. */
@@ -18,9 +18,9 @@ export const EMOTE_CAM = {
   /** The follow camera is already this close (m): indoors / arcade / shop rooms use their own cameras, so skip. */
   closeCameraDist: 14,
   /** The characters' framed height (m): chest-high target, room for raised hands, a hop and the feet. */
-  halfHeight: 2.2, targetLift: 1.05,
+  halfHeight: 1.6, targetLift: 1.05,
   /** A character's half width including the arms out (m). */
-  halfWidth: 1.0,
+  halfWidth: .85,
 } as const;
 
 const C = Math.cos(EMOTE_CAM.pitch);
@@ -41,7 +41,7 @@ export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, p
   const rise = hasQ ? Math.abs(qy - py) / 2 : 0;
   // The nearer character sits closer to the camera (bigger, lower on screen): add their depth offset.
   const fwd = hasQ ? Math.abs((qx - px) * Math.sin(EMOTE_CAM.yaw) + (qz - pz) * Math.cos(EMOTE_CAM.yaw)) / 2 : 0;
-  const dv = (EMOTE_CAM.halfHeight + rise + fwd * .5) / TAN_V + fwd, dh = (spread + EMOTE_CAM.halfWidth) * 1.2 / (TAN_V * Math.max(.3, aspect)) + fwd;
+  const dv = (EMOTE_CAM.halfHeight + rise + fwd * .5) / TAN_V + fwd, dh = (spread + EMOTE_CAM.halfWidth) * 1.1 / (TAN_V * Math.max(.3, aspect)) + fwd;
   const dist = Math.min(EMOTE_CAM.maxDist, Math.max(EMOTE_CAM.minDist, dv, dh)) * Math.max(1, factor);
   out.target.x = mx; out.target.y = my; out.target.z = mz;
   out.eye.x = mx + DIR.x * dist; out.eye.y = my + DIR.y * dist; out.eye.z = mz + DIR.z * dist;

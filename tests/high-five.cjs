@@ -116,7 +116,7 @@ t('framing keeps both characters inside the frame at phone and desktop aspects; 
  }
  const out={eye:{x:0,y:0,z:0},target:{x:0,y:0,z:0}};
  const near=M.frameEmote(out,0,0,0,false,0,0,0,1.6,1),far=M.frameEmote(out,0,0,0,false,0,0,0,1.6,1.8);assert(far>near,'a gentler zoom is farther');
- assert(near<15&&near>=5.8,'a real zoom (the follow camera is ~43 m away)');
+ assert(near<15&&near>=M.EMOTE_CAM.minDist,'a real zoom (the follow camera is ~43 m away)');
 });
 t('start / cancel / skip rules',()=>{
  const ok={reduced:false,riding:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:false,cameraDist:43};
