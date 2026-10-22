@@ -67,12 +67,12 @@ function waveArc(t: number, o: O) {
   o[BC.hop] = .035 * pos(sin(TAU * 3 * t)) * e;
   arm(o, false, e, -2.75, .5 + .6 * ws, -.25 - .25 * ws); free(o, true);
 }
-/** Two-hand hello: both arms up in a V, the hands wiping side to side over the head together, a nodding head and a bounce on every wipe. */
+/** Two-hand hello: both arms wide in a big V with bent "hello" hands, wiping side to side together, the whole upper body swaying with them. */
 function waveTwoHand(t: number, o: O) {
   const e = win(t, .05, 3.35, .35), s = sin(TAU * 1.3 * t);
-  o[BC.pitch] = -.14 * e; o[BC.hx] = (-.18 + .14 * abs(s)) * e; o[BC.hz] = -.15 * s * e; o[BC.roll] = .09 * s * e; o[BC.side] = -.12 * s * e;
-  o[BC.hop] = .07 * abs(s) * e;
-  arm(o, true, e, -2.55, .95 + .6 * s, -.35); arm(o, false, e, -2.55, .95 - .6 * s, -.35);
+  o[BC.pitch] = -.14 * e; o[BC.hx] = (-.18 + .14 * abs(s)) * e; o[BC.hz] = -.2 * s * e; o[BC.roll] = .11 * s * e; o[BC.side] = -.24 * s * e;
+  o[BC.hop] = .04 * abs(s) * e;
+  arm(o, true, e, -2.05, 1.4 + .55 * s, -.95); arm(o, false, e, -2.05, 1.4 - .55 * s, -.95);
 }
 /** Look-back wave: twisted round over the right shoulder, waving back at someone you just passed (hand low behind), the other arm pumping on. */
 function waveLookBack(t: number, o: O) {
@@ -113,7 +113,7 @@ function skipSwing(t: number, o: O) {
 /** Arm-circle skip: both arms circling forward together like a windmill while skipping, head bobbing. */
 function skipCircles(t: number, o: O) {
   const e = win(t, .05, 3.15, .3), w = TAU * 1.15 * t, h = pos(sin(TAU * 2 * t + .4));
-  o[BC.hop] = .13 * h * e; o[BC.hx] = .14 * sin(2 * w) * e; o[BC.pitch] = (.1 + .08 * sin(w)) * e; o[BC.roll] = .06 * sin(TAU * t) * e;
+  o[BC.hop] = .13 * h * e; o[BC.hx] = .14 * sin(2 * w) * e; o[BC.pitch] = (.1 + .08 * sin(w)) * e; o[BC.side] = .1 * cos(w) * e; o[BC.roll] = .06 * sin(TAU * t) * e;
   arm(o, true, e, -1.35 - 1.3 * sin(w), .45 + .2 * cos(w), -.3); arm(o, false, e, -1.35 - 1.3 * sin(w), .45 + .2 * cos(w), -.3);
 }
 /** Clap skip: a hop every half second with a clap high over the head at the top of each hop. */
@@ -158,7 +158,7 @@ function fiveSide(t: number, o: O) {
 function fiveLow(t: number, o: O) {
   const reach = win(t, .15, HIT + .2, .35), hit = arc(t, HIT - .05, .3), shake = win(t, HIT + .25, 2.75, .25), sh = sin(TAU * 7 * t);
   o[BC.side] = .3 * reach + .1 * shake; o[BC.pitch] = .22 * reach + .18 * shake; o[BC.hx] = .2 * reach + (.25 + .08 * sh) * shake; o[BC.hy] = .35 * reach;
-  o[BC.hop] = .05 * hit; o[BC.twist] = -.15 * shake;
+  o[BC.hop] = .05 * hit + .05 * pos(sin(TAU * 3 * t)) * shake; o[BC.twist] = -.15 * shake; o[BC.roll] = .08 * sin(TAU * 1.5 * t) * shake;
   arm(o, false, reach, -.35 + .25 * hit, .95, -.1); armTo(o, false, shake, -1.1, .35, -1.9 + .35 * sh); arm(o, true, shake, -.9, .3, -1.5);
 }
 /** Jump five: both hands thrown up for a two-hand air five with a jump, then pointing back at your friend. */
