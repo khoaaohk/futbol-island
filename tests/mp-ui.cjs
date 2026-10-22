@@ -136,7 +136,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  });
  t('icon-only chip with aria-labels',()=>{
   assert(/aria-label=\{label\}/.test(chip)&&/aria-expanded/.test(chip),'chip label');assert(!/>\s*[A-Za-z]{3,}\s*</.test(chip.replace(/<svg[\s\S]*?<\/svg>/g,'')),'no visible words on the chip');
-  assert(/aria-label=\{x\.label\}/.test(wheel)&&(read('lib/town/emoteReact.ts').match(/emote: EMOTE\./g)||[]).length===10,'ten labelled emotes (Wave, High five, Cheer, Well played, ...)');
+  assert(/aria-label=\{x\.label\}/.test(wheel)&&(read('lib/town/emoteReact.ts').split('/** What the wheel shows')[0].split('export const LOCAL_EMOTES')[1].match(/emote: EMOTE\./g)||[]).length===10,'ten labelled emotes (Wave, High five, Cheer, Well played, ...)');
   assert(/Hide \$\{m\.name\}|Hide/.test(host)&&/Mute|Unmute/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'hide / mute / remove per friend');
   for(const w of ['Lock party','New code','End party for everyone','Leave party','Invite'])assert(host.includes(w),w);
  });

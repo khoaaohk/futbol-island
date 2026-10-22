@@ -12,7 +12,7 @@ import * as T from 'three';
 import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
-import {applyCelebrationArms,celebrationMotion} from './celebrations';
+import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
 import {applyHighFive} from './highFivePose';
 import {HIGH_FIVES,createHighFiveBag,nextHighFive,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
@@ -49,8 +49,8 @@ export interface RemoteAvatars{
 
 const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
 const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
-const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=40,EMOTE_SECONDS=1.5,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=8,RING_RADIUS=.55,RING_FAR_M=25,RING_MAX_GROW=4,RING_LIFT=.05;
-const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.PassToMe]:'\u{261D}\u{FE0F}',[Emote.Space]:'\u{1F4A8}',[Emote.WellPlayed]:'\u{1F44F}',[Emote.ThumbsUp]:'\u{1F44D}',[Emote.Laugh]:'\u{1F602}',[Emote.Dance]:'\u{1F483}',[Emote.Thanks]:'\u{1F64F}'};
+const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=40,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=8,RING_RADIUS=.55,RING_FAR_M=25,RING_MAX_GROW=4,RING_LIFT=.05;
+const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.PassToMe]:'\u{261D}\u{FE0F}',[Emote.Space]:'\u{1F4A8}',[Emote.WellPlayed]:'\u{1F44F}',[Emote.PassBall]:'\u{26BD}',[Emote.Laugh]:'\u{1F602}',[Emote.Dance]:'\u{1F483}',[Emote.Thanks]:'\u{1F64F}'};
 
 // Released hidden classic geometry (copied from islandNpcs.ts: heat pass 5 + NPC heat fix 2). A friend never takes a costume,
 // so the classic body the bean skin hides can never show again.
@@ -214,7 +214,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    for(let i=0;i<list.length;i++){
     const e=list[i],rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
-    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.hf>=0?HIGH_FIVES[e.hf].duration:EMOTE_SECONDS)){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
+    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
     if(!rig||!e.label||!e.bubble)continue;
     if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
     const pose=poses.get(e.id);
@@ -242,11 +242,10 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      // Emotes: PassToMe/Space/Wave/HighFive raise the "called" arm; Cheer/WellPlayed celebrate. Reduced motion keeps only the bubble.
      if(e.emote>=0&&!reduced){
       const em=e.emote,age=e.emoteAge;
-      if(em===Emote.Cheer||em===Emote.WellPlayed||em===Emote.Dance)celebrationMotion(Math.min(1,age/EMOTE_SECONDS),motion,false);
-      else if(e.hf<0)motion.called=Math.min(1,age/.2,(EMOTE_SECONDS-age)/.2);
+      if(e.hf<0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=b.jump;motion.called=b.called;}
      }
      rig.update(pose.x,pose.z,step,clock,reduced,motion);
-     if(e.emote>=0&&!reduced&&(e.emote===Emote.Cheer||e.emote===Emote.WellPlayed||e.emote===Emote.Dance))applyCelebrationArms(rig.root,Math.min(1,e.emoteAge/EMOTE_SECONDS));
+     if(e.emote>=0&&!reduced&&e.hf<0)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));
      root3.position.set(pose.x,pose.y,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
      if(e.hf>=0&&!reduced&&e.emote===Emote.HighFive)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);

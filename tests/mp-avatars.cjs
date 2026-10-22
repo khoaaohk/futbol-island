@@ -22,7 +22,7 @@ function load(file,over={},env={}){
 
 // 1. remoteCap table
 {
- const {remoteCap}=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},customization:{},look:{}});
+ const {remoteCap}=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},emotePose:{},customization:{},look:{}});
  assert.deepEqual([0,1,2,3,4].map(t=>remoteCap(t,true,false)),[5,5,3,1,0],'phone cap by tier 5/5/3/1/0');
  assert.deepEqual([0,1,2,3,4].map(t=>remoteCap(t,false,false)),[5,5,5,5,5],'desktop cap is 5');
  for(const t of [0,1,2,3,4]){assert.equal(remoteCap(t,true,true),0,'saver phone');assert.equal(remoteCap(t,false,true),0,'saver desktop');}
@@ -35,7 +35,7 @@ function harness(){
   player:{createPlayer:()=>{state.created++;return {root:new T.Group(),setAppearance(){},setBeanLook(){},setExpression(){},update(){},dispose(){}};}},
   playerBatch:{playerBatch:()=>({begin(){state.drawn=0;},draw(){state.drawn++;},end(){},dispose(){state.batchDisposed=true;}})},
   heatTier:{effectiveTier:()=>state.tier,batterySaverOn:()=>state.saver},
-  celebrations:{applyCelebrationArms(){},celebrationMotion(){}},
+  celebrations:{applyCelebrationArms(){},celebrationMotion(){}},emotePose:{applyEmoteArms(){},emoteBody(){return {called:0,jump:undefined};}},
   customization:{beanLookFor:()=>({}),playerOutfit:()=>({})},
   look:{wireToLook:l=>l},
  };

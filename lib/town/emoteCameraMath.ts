@@ -38,7 +38,8 @@ export const emoteDir = (yaw: number = EMOTE_CAM.yaw): V3 => ({x: Math.sin(yaw) 
  * `halfWidth` + `wide` either side) of BOTH characters stay inside the frame at `aspect` (width / height), with room for the HUD above and the
  * controls below. `factor` > 1 is a gentler zoom, `wide` (m) widens each character (a rider and the vehicle).
  */
-export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1, yaw: number = EMOTE_CAM.yaw, wide = 0): number {
+export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, factor = 1, yaw: number = EMOTE_CAM.yaw, wide = 0, pitch: number = EMOTE_CAM.pitch): number {
+  const COS_P = Math.cos(pitch), SIN_P = Math.sin(pitch);
   const mx = hasQ ? (px + qx) / 2 : px, mz = hasQ ? (pz + qz) / 2 : pz, my = (hasQ ? (py + qy) / 2 : py) + EMOTE_CAM.targetLift;
   const sy = Math.sin(yaw), cy = Math.cos(yaw), dx0 = sy * COS_P, dz0 = cy * COS_P, hw = EMOTE_CAM.halfWidth + wide, a = Math.max(.3, aspect);
   let need: number = EMOTE_CAM.minDist;
@@ -58,13 +59,13 @@ export function frameEmote(out: {eye: V3; target: V3}, px: number, py: number, p
 }
 
 /** The heading (rad) that frames the pair closest: the default three-quarter view, or up to ~1.6 rad around it when that fits a closer shot (the pair side by side on a portrait phone). */
-export function bestEmoteYaw(px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, wide = 0): number {
+export function bestEmoteYaw(px: number, py: number, pz: number, hasQ: boolean, qx: number, qy: number, qz: number, aspect: number, wide = 0, sideWeight = 1.8): number {
   if (!hasQ) return EMOTE_CAM.yaw;
   const o = {eye: {x: 0, y: 0, z: 0}, target: {x: 0, y: 0, z: 0}};
   let best: number = EMOTE_CAM.yaw, bestScore = Infinity;
   for (let i = -8; i <= 8; i++) {
     const yaw = EMOTE_CAM.yaw + i * .2, score = frameEmote(o, px, py, pz, true, qx, qy, qz, aspect, 1, yaw, wide) + Math.abs(i) * .35
-      + .9 * Math.abs((qx - px) * Math.sin(yaw) + (qz - pz) * Math.cos(yaw)); // one character in front of the other is bigger and hides it: prefer side by side
+      + sideWeight * Math.abs((qx - px) * Math.sin(yaw) + (qz - pz) * Math.cos(yaw)); // one character in front of the other is bigger and hides it: prefer side by side
     if (score < bestScore) { bestScore = score; best = yaw; }
   }
   return best;

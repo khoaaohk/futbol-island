@@ -36,7 +36,7 @@ export function celebrationMotion(p:number,motion:PlayerMotion,reduced=false){
 }
 type Joints={ls:T.Object3D;rs:T.Object3D;le:T.Object3D;re:T.Object3D};
 const cache=new WeakMap<T.Object3D,Joints|null>();
-function joints(root:T.Object3D):Joints|null{
+export function joints(root:T.Object3D):Joints|null{
   if(cache.has(root))return cache.get(root)!;
   const ls=root.getObjectByName('left-shoulder'),rs=root.getObjectByName('right-shoulder'),le=root.getObjectByName('left-elbow'),re=root.getObjectByName('right-elbow');
   const j=ls&&rs&&le&&re?{ls,rs,le,re}:null;cache.set(root,j);return j;
