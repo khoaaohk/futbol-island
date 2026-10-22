@@ -704,7 +704,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const flyFromReef=()=>{if(!dive.diving||!water.inWater||rideRef.current!=='walk'||!fuelStore.canUse('jetpack'))return false;if(!dive.exitForFlight())return false;if(flyUp()){countDiveFly();return true;}return false;};
     waterActions.press=(id,phase)=>{if(!water.inWater)return;
       // Diving (water P2): the one action is Surface; the ride slot only answers with a hint.
-      if(dive.diving){if(phase!=='tap')return;if(id==='surface'){if(dive.surface()){tapHaptic();sound.ui('click');}}else if(id==='swimride'){if(flyFromReef()){tapHaptic();sound.ui('click');}else fuelStore.say('No fuel',SWIM_RIDE_NOTE);}return;}
+      if(dive.diving){if(phase!=='tap')return;if(id==='swimride'){if(flyFromReef()){tapHaptic();sound.ui('click');}else fuelStore.say('No fuel',SWIM_RIDE_NOTE);}return;}
       if(id==='surface')return;
       // Riding a manta / the whale shark (water P1b): the one action is Let go; the ride slot only answers with a hint.
       if(animalRides.riding){if(phase!=='tap')return;if(id==='letgo'){rideEnded(animalRides.letGo('off'));tapHaptic();sound.ui('click');}else if(id==='swimride')fuelStore.say('Hanging on',RIDING_NOTE);return;}

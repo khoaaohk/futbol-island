@@ -265,16 +265,16 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   },
   /** The prompt's tap / E: use the find in reach underwater. */
   use,
-  /** Surface (the button, Space, Escape): drift up, then the island. */
+  /** Surface (Escape; on screen: hold ▲ at the top, diveSession DIVE_TOP_SURFACE_S): drift up, then the island. */
   surface(){session.surface('tap');return session.state.phase==='rising';},
-  /** The dive keys (before the water keys): Escape / Space / 1 surface, E uses the find, Q / Z rise and sink (held, into `held`). */
+  /** The dive keys (before the water keys): Escape surfaces (Space / 1 retired with the Surface button, Oct 22 2026), E uses the find, Q / Z rise and sink (held, into `held`). */
   key(e:KeyboardEvent,down:boolean,held:Set<string>){
    if(!session.diving)return false;const k=e.key.toLowerCase();
    if(k==='q'||k==='z'){if(down)held.add(k);else held.delete(k);e.preventDefault();return true;}
    if(k==='g'||k==='h'){if(down&&!e.repeat)diveLift.emote=k==='g'?'wave':'five';e.preventDefault();return true;}// Explore delight: wave / high five
-   if(!down)return ['escape',' ','e','1','j','2','3'].includes(k)||e.code==='Space';
+   if(!down)return ['escape','e','j','2','3'].includes(k);
    if(e.repeat)return true;
-   if(k==='escape'||e.code==='Space'||e.code==='Digit1'||e.code==='Numpad1'){e.preventDefault();session.surface('tap');return true;}
+   if(k==='escape'){e.preventDefault();session.surface('tap');return true;}
    if(k==='e'||e.code==='Digit3'||e.code==='Numpad3'){e.preventDefault();use();return true;}
    // R (Oct 20 2026, user): the jetpack still takes off from inside the dive zone (fuel allowing; else the swim switcher's hint).
    if(k==='r'){e.preventDefault();ports.fly();return true;}

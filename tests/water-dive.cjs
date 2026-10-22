@@ -100,7 +100,7 @@ ok('one shallow reef (Oct 20 2026: no deep level, no drop): a smooth seabed risi
  assert(s.state.y>y0+1,'the rising reef lifted the diver: '+y0.toFixed(2)+' → '+s.state.y.toFixed(2));assert.equal(crested,1,'wa:dive_crest once per dive');
  // ▼ dips lower (to the clearance over the sand), ▲ rises to just under the surface: 1-4 m of vertical room on this reef.
  for(let i=0;i<120;i++)s.step(1/30,{sx:0,sy:0,lift:-1});D.diveDepthRange(s.state.x,s.state.z,zone.floor,R);near(s.state.y,R.min,.03,'dipped to the sand clearance');
- for(let i=0;i<120;i++)s.step(1/30,{sx:0,sy:0,lift:1});near(s.state.y,D.DIVE_SURFACE_Y-D.DIVE_CEILING_GAP,.03,'risen to just under the surface');assert(s.state.atTop);
+ {let n=0;while(!s.state.atTop&&n<300){s.step(1/30,{sx:0,sy:0,lift:1});n++;}for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:0,lift:0});}/* held ▲ at the top for 0.35 s surfaces (Oct 22 2026): let go there */near(s.state.y,D.DIVE_SURFACE_Y-D.DIVE_CEILING_GAP,.03,'risen to just under the surface');assert(s.state.atTop);assert.equal(s.state.phase,'diving');
  for(const z of Z)for(let x=-22;x<=22;x+=4)for(let zz=-22;zz<=22;zz+=4){if(Math.hypot(x,zz)>D.DIVE_ROOM_R)continue;D.diveDepthRange(x,zz,z.floor,R);const room=R.max-R.min;assert(room>=.3&&room<=4.6,'vertical room '+room.toFixed(2));}
  s.state.depthT=.5;for(let i=0;i<30;i++)s.step(1/30,{sx:0,sy:0,lift:0});const t=s.state.depthT;for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:0,lift:0});near(s.state.depthT,t,1e-9,'holds its place in the water');
  const rt=read('lib/town/water/diveRuntime.ts');assert(rt.includes("(diveLift.up?1:0)-(diveLift.down?1:0)"),'the phone ▲ ▼ feed the same lift');assert(rt.includes("k==='q'||k==='z'"),'Q / Z on desktop (the room’s keys run first)');
@@ -223,9 +223,9 @@ ok('jetpack takeoff in the zone: R and the switcher fly up from under the water 
  assert.equal(rt.key(key('r'),true,new Set()),false,'at the surface R is the island’s again');
  const town=read('components/Town.tsx');
  assert(town.includes("const flyFromReef=()=>{if(!dive.diving||!water.inWater||rideRef.current!=='walk'||!fuelStore.canUse('jetpack'))return false;if(!dive.exitForFlight())return false;if(flyUp()){countDiveFly();return true;}"),'fuel-gated, then the normal fly-up');
- assert(town.includes("else if(id==='swimride'){if(flyFromReef())"),'the switcher in the room flies');assert(town.includes('fly:()=>flyFromReef()'),'R in the room flies');
+ assert(town.includes("if(id==='swimride'){if(flyFromReef())"),'the switcher in the room flies');assert(town.includes('fly:()=>flyFromReef()'),'R in the room flies');
  assert.equal(H.waterButtonsFor({inWater:true,swimming:true,flyOk:true,reef:true}),H.REEF_BUTTONS_FLY);assert.equal(H.REEF_BUTTONS_FLY.find(b=>b.slot==='ride').enabled,true,'the switcher is live in the zone');
- assert.equal(H.waterButtonsFor({inWater:true,swimming:true,flyOk:false,reef:true}),H.REEF_BUTTONS);assert.equal(H.DIVE_SURFACE.id,'surface');
+ assert.equal(H.waterButtonsFor({inWater:true,swimming:true,flyOk:false,reef:true}),H.REEF_BUTTONS);assert(!('DIVE_SURFACE' in H),'no Surface button in the room (hold ▲ at the top, Oct 22 2026)');
  assert(/WATER_IDS=new Set\(\[[^\]]*'surface'/.test(read('components/JobActionButton.tsx')),'icon-only');
 });
 

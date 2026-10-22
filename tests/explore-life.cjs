@@ -113,4 +113,12 @@ ok('life: living coral colour, bottom dwellers in the reef draw, fish surge and 
  const src=read('lib/graphics/diveRoom.ts');assert(src.includes('const live=(c:C')&&src.includes('sea stars, urchins'));assert(src.includes('float dvTp=dvT+'));assert(src.includes('mod(uDiveTime-fract(aB.w)*.45,3.4)'));
  assert(read('lib/graphics/swimPose.ts').includes('streamlined glide'));
 });
+ok('▲ at the top surfaces: held there 0.35 s (or a fresh tap at the top) rises out the old Surface way; no Surface button remains',()=>{
+ assert.equal(S.DIVE_TOP_SURFACE_S,.35);let h=0;for(let i=0;i<10;i++)h=S.diveTopHold(h,true,1,1/30);assert(!S.diveTopSurfaces(h,1,1,true));for(let i=0;i<1;i++)h=S.diveTopHold(h,true,1,1/30);assert(S.diveTopSurfaces(h,1,1,true),'0.35 s');
+ assert.equal(S.diveTopHold(.3,false,1,.1),0);assert.equal(S.diveTopHold(.3,true,0,.1),0);assert(S.diveTopSurfaces(0,1,0,true),'a fresh tap at the top');assert(!S.diveTopSurfaces(0,1,0,false));
+ const spot=D.diveSpotById('ray-meadow'),s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());let n=0;while(s.state.phase==='diving'&&n<400){s.step(1/30,{sx:0,sy:0,lift:1});n++;}
+ assert.equal(s.state.phase,'rising');assert.equal(s.state.risingFor,'tap','the same exit as the old Surface button');
+ const H=load('lib/town/water/waterHud.ts');assert(!('DIVE_SURFACE' in H)&&!H.REEF_BUTTONS.some(b=>b.id==='surface')&&!H.REEF_BUTTONS_FLY.some(b=>b.id==='surface'));
+ assert(!/\[data-job-action=surface\]/.test(read('app/globals.css')),'no Surface cell');
+});
 console.log(`\nexplore-life: ${passed} passed`);

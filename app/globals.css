@@ -757,7 +757,7 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
    the down btn. in the future we can have more actions so a grid of 2 rows and 3 columns". On touch screens the room's controls are
    ONE 2x3 grid at the bottom right, 58 px cells, 12 px gaps; cells are named by column (c1 left .. c3 right) and row (r1 top, r2
    bottom) through the --room-c* (right offset) and --room-r* (bottom offset) variables, so an action drops into a cell by using them:
-     r1: c1 Surface        c2 ▲ rise   c3 minimap toggle
+     r1: c1 (empty, reserved: the Surface button was removed Oct 22 2026; hold ▲ at the top to surface)   c2 ▲ rise   c3 minimap toggle
      r2: c1 Say hi (friend) c2 ▼ dip    c3 Fly (jetpack)
    The Say hi cell stays reserved when no friend is near (nothing moves). The minimap circle sits 12 px above the grid; the grid's
    left edge (18 + 3x58 + 2x12 = 216 px from the right) stays clear of the joystick. */
@@ -766,7 +766,6 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
  .town-app:has(.dive-depth) .travel-actions.travel-actions{--action-size:58px;display:grid;grid-template-columns:var(--room-cell);grid-template-rows:var(--room-cell) var(--room-cell);gap:var(--room-gap);right:var(--room-c3);bottom:var(--room-r2)}
  .town-app:has(.dive-depth) .travel-actions.travel-actions .minimap-toggle{grid-column:1;grid-row:1}
  .town-app:has(.dive-depth) .travel-actions.travel-actions .travel-mode{grid-column:1;grid-row:2}
- .town-app:has(.dive-depth) .travel-actions.travel-actions [data-job-action=surface]{position:fixed;right:var(--room-c1);bottom:var(--room-r1);width:var(--room-cell);height:var(--room-cell);min-width:var(--room-cell);min-height:var(--room-cell);margin:0}
  .town-app:has(.dive-depth) .dive-depth{right:var(--room-c2);bottom:var(--room-r2);gap:var(--room-gap)}
  .town-app:has(.dive-depth) .dive-depth-btn{width:var(--room-cell);height:var(--room-cell)}
  .town-app:has(.dive-depth) .dive-emote{right:var(--room-c1);bottom:var(--room-r2);gap:0}
