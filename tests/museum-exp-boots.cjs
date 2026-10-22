@@ -50,9 +50,9 @@ const PARTS=['studs','sole','midsole','insole','counter','lining','upper','toeca
  console.log('PASS contract: dialog, shared Back, Escape, onComplete once via Ending after the quick check, best key fi2-museum-boots-best, hooks');}
 
 // 3. Style: the anatomy kit in the Paper tint, no figures, no pixel kit, no brand marks; one blue accent.
-{for(const [f,src] of Object.entries(srcs)){assert.doesNotMatch(src,/anatomy\/figure|from '\.\.\/anatomy\/figure'/,f+': no human figures');assert.doesNotMatch(src,/pixeliso|PK Press Start|crispEdges/,f+': no pixel kit');
+{for(const [f,src] of Object.entries(srcs)){assert.doesNotMatch(src,/anatomy\/figure(\.ts)?['"]/,f+': no human figures (the figure kit is fine: it draws objects)');assert.doesNotMatch(src,/pixeliso|PK Press Start|crispEdges/,f+': no pixel kit');
   assert.doesNotMatch(code(src),/swoosh|three stripes|logo\(/i,f+': no brand marks drawn');}
- assert.deepEqual(files,['Experience.module.css','Experience.tsx','boot.ts','facts.ts','game.ts','mesh.ts','scene.tsx','stage.ts']);
+ assert.deepEqual(files,['Experience.module.css','Experience.tsx','boot.ts','facts.ts','figure.ts','game.ts','mesh.ts','scene.tsx','stage.ts']);
  assert.match(srcs['mesh.ts'],/from '\.\.\/anatomy\/iso-kit'/,'the renderer uses the kit camera');assert.match(exp,/from '\.\.\/anatomy\/bench'/);assert.match(exp,/__html:ISO_CSS\+BOOT_CSS/);
  assert.match(exp,/className=\{`\$\{g\.room\} iso \$\{s\.root\}`\} data-theme="light"/);
  assert.match(css,/\.root\.root\[data-theme\]\{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3/,'Paper ground and solids');
@@ -220,3 +220,33 @@ const PARTS=['studs','sole','midsole','insole','counter','lining','upper','toeca
  assert.match(exp,/if\(reduced\)\{G\.force=/,'the grip test shows its result at once');assert.match(exp,/if\(reduced\)\{B\.tilt=B\.to;\}/,'the balance settles at once');
  assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
  console.log('PASS reduced motion: 8 fixed angles, instant explode / see-through / build / grip / balance');}
+
+// Run, plant, kick (museum-figures-2, figure kit v2): one boot that turns all the way round; see-through shows the layers (insole,
+// heel counter, toe box) over the soleplate and studs; moulded or screw-in studs; swatches = the Kit Shop's boot colours; three
+// steps that bend the sole, sink the studs and swing the kick, each lighting its parts; ≤ 120 parts; the flow kept.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),BF=require('../'+dir+'figure.ts'),SHOP=require('../lib/shop/boots.ts');
+ const fig=BF.makeBootFigure(),spec=fig.spec,c=FK.centreOf(spec.points),P0=FK.fitTurn(spec.points,900,700,60,28,{pad:24,top:80});
+ const view=(yaw,pitch,xray,swatch=null,active=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);
+  return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch,swatchHex:FK.swatchList(spec.swatches).find(s=>s.id===swatch)?.hex??null,active:new Set(active),w:900,h:700};};
+ for(const screw of [false,true]){fig.setScrew(screw);
+  for(let yaw=0;yaw<360;yaw+=45)for(const x of [0,1]){const d=spec.draw(view(yaw,30,x));const n=FK.countParts(d.svg)+d.labels.length*7;
+   assert.ok(n<=FK.MAX_PARTS,yaw+'/'+x+': '+n+' parts');for(const l of d.labels)assert.ok(FK.anchorFor(l,FK.viewVector(yaw,30)),l.id+' reachable at yaw '+yaw);}}
+ fig.setScrew(false);const closed=spec.draw(view(60,28,0)),open=spec.draw(view(60,28,1));
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Laces','Moulded studs','Soleplate','Upper']);
+ assert.deepEqual(open.labels.map(l=>l.text).sort(),['Heel counter','Insole','Laces','Moulded studs','Soleplate','Toe box','Upper'],'the layers inside are named only when drawn');
+ for(const id of ['insole','heel','toebox'])assert.ok(open.svg.includes('data-part="'+id+'"')&&!closed.svg.includes('data-part="'+id+'"'),'see-through layer '+id);
+ assert.equal((closed.svg.match(/data-stud="moulded"/g)||[]).length,BF.STUDS.length);fig.setScrew(true);const sc=spec.draw(view(60,28,1));
+ assert.equal((sc.svg.match(/data-stud="screw"/g)||[]).length,BF.STUDS.length);assert.match(sc.svg,/data-screws/,'see-through shows the screws');assert.ok(sc.labels.some(l=>l.text==='Screw-in studs'));fig.setScrew(false);
+ const names=FK.swatchList(spec.swatches).map(s=>s.name);assert.deepEqual(names,['White','Red','Royal','Volt','Gold']);
+ for(const s of FK.swatchList(spec.swatches))assert.equal(s.hex,SHOP.PALETTE.find(p=>p.name===s.name).hex,'the Kit Shop colour '+s.name);
+ assert.notEqual(spec.draw(view(60,28,0,'red')).svg,closed.svg,'swatches recolour the upper');
+ const sole0=spec.draw(view(60,28,0)).svg;fig.pose('run',true);assert.ok(fig.state.flex>0,'run: the sole bends');assert.notEqual(spec.draw(view(60,28,0)).svg,sole0);
+ fig.pose('plant',true);assert.ok(fig.state.sink>0&&fig.state.flex===0,'plant: the studs bite');fig.pose('kick',true);assert.ok(fig.state.swing>0,'kick: the boot swings');
+ fig.pose(null,false);let n=0;while(spec.tick(1/60)&&n<400)n++;assert.ok(n>5&&n<200,'eases back then sleeps ('+n+')');assert.equal(spec.tick(1/60),false);
+ assert.deepEqual(BF.STEPS.map(s=>s.id),['run','plant','kick']);for(const s of BF.STEPS){for(const id of s.lit)assert.ok(open.labels.some(l=>l.id===id),s.id+' lights a real label '+id);assert.ok(F.FIGURE_SAY[s.id]);}
+ for(const k of ['upper','laces','soleplate','studs','screw','insole','heel','toebox'])assert.ok(F.FIGURE_SAY[k],'says '+k);
+ assert.match(F.FIGURE_SAY.screw,/1954 World Cup/);assert.match(F.FIGURE_SAY.studs,/hammered/);assert.doesNotMatch(Object.values(F.FIGURE_SAY).join(' '),/adidas|puma|nike|million|\$/i,'no brands or sales');
+ assert.match(exp,/<FigureStage spec=\{bootFig\.spec\}/);for(const h of ['data-boot-figure','data-run-plant-kick','data-fig-back','data-fig-screw','data-fig-note'])assert.ok(exp.includes(h),'hook '+h);
+ assert.match(exp,/figTimers\.current\.forEach\(clearTimeout\)/,'the step timers are cleared');assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval/);
+ console.log('PASS run, plant, kick: turns all the way round (8 yaws), see-through layers, moulded / screw-in studs, Kit Shop swatches, 3 lit steps, labels from every yaw, ≤ 120 parts');}
+

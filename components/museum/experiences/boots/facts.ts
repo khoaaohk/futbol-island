@@ -221,6 +221,26 @@ export const CHECK:readonly {q:string;options:readonly string[];answer:number;wh
 ];
 
 // ── Sources ────────────────────────────────────────────────────────────────────────────────────────────────────────────
+/**
+ * "Run, plant, kick" (museum-figures-2, figure kit v2): what each part of the turnable boot says. Plain and verified (the sources
+ * below: Wikipedia "Football boot", UEFA "Tools of the trade", DPMA screw-in studs, Sneaker Freaker): early boots were heavy
+ * leather with studs or nails hammered into the sole; screw-in studs, swapped for the pitch, became famous at the 1954 World
+ * Cup; boots got lighter and lower after the war; today most uppers are light synthetics or knit. No brands, no numbers.
+ */
+export const FIGURE_SAY:Record<string,string>={
+ upper:'The upper wraps your foot and meets the ball. The first boots were heavy leather; today most uppers are light synthetics or knit.',
+ laces:'Laces pull the upper snug, so your foot does not slide around inside the boot.',
+ soleplate:'The soleplate is the stiff plate under your foot. It carries the studs and bends under the ball of your foot when you run.',
+ studs:'Moulded studs are part of the sole, so they never come loose. The first boots had studs or nails hammered into the sole.',
+ screw:'Screw-in studs can be swapped: longer ones for a soft, muddy pitch. They became famous at the 1954 World Cup.',
+ insole:'The insole is the soft layer your foot stands on.',
+ heel:'The heel counter is a stiff cup round your heel. It holds your heel steady when you plant your foot.',
+ toebox:'The toe box keeps the front of the boot in shape, so your toes have room when you strike the ball.',
+ run:'Run: the boot bends at the ball of your foot, where the soleplate flexes.',
+ plant:'Plant: the studs bite into the grass so you do not slip, and the heel counter holds your heel steady.',
+ kick:'Kick: the upper meets the ball, and the toe box keeps the front in shape.',
+};
+export const FIGURE_INTRO='Turn the boot all the way round. Tap See-through to see its layers, or press Run, plant, kick.';
 export const SOURCES:{title:string;url:string}[]=[
  {title:'Wikipedia · Football boot',url:'https://en.wikipedia.org/wiki/Football_boot'},
  {title:'Wikisource · Laws of the Game (1863), Law 13',url:'https://en.wikisource.org/wiki/Laws_of_the_Game_(1863)_(as_submitted_for_adoption)'},

@@ -17,6 +17,10 @@ import {BOOT_CSS,BalanceLive,BalanceStatic,GripLive,GripStatic,Swatch,balPoints,
 import {ACCENT,BEST_KEY,BUILD_NOTE,CHECK,COMPARE,COMPARE_NOTE,ERAS,GRIP_NOTE,GRIP_ROUNDS,GRIP_STUDS,ICONS,ICON_NOTE,MATS,MAX_NEW,NEW_G,OLD_G,PLATES,POWERS,SOURCES,SURFACES,
  balanceOf,verdictOf,type CompareLayer,type EraId,type GripStud,type PlateId,type Power,type Verdict} from './facts';
 import {matOf,namesFor,withPlate,MAX_SCORE,buildOrder,buildScore,degOf,ease,flip,matchRound,newSpin,nudge,release,shuffled,stepSpin,total,tryPlace,verdict as scoreVerdict,DRAG_RAD_PX,ROLL_RAD_PX,STEP} from './game';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import fs from '../anatomy/FigureStage.module.css';
+import {STEPS,makeBootFigure} from './figure';
+import {FIGURE_INTRO,FIGURE_SAY} from './facts';
 import s from './Experience.module.css';
 
 /**
@@ -40,7 +44,7 @@ import s from './Experience.module.css';
  * the boot turns or settles, a layer moves, the tester pulls or the beam swings; it parks off screen or in a hidden tab and is
  * cancelled on unmount. 0 frames at rest. Reduced motion: 8 fixed angles, instant explode and see-through, instant results.
  */
-type Phase='intro'|'bench'|'build'|'grip'|'weigh'|'icons'|'score';
+type Phase='intro'|'bench'|'build'|'grip'|'weigh'|'icons'|'score'|'figure';
 const STATIONS:[Exclude<Phase,'intro'>,string][]=[['bench','Timeline'],['build','Build'],['grip','Grip test'],['weigh','Weigh'],['icons','Icons'],['score','Finish']];
 const capture=(e:{currentTarget:EventTarget;pointerId:number})=>{try{(e.currentTarget as Element).setPointerCapture?.(e.pointerId);}catch{/* no active pointer */}};
 const readBest=()=>{try{const n=Number(localStorage.getItem(BEST_KEY));return Number.isFinite(n)&&n>0?n:0;}catch{return 0;}};
@@ -58,6 +62,19 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const timers=useRef<ReturnType<typeof setTimeout>[]>([]);
  const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
+ // Run, plant, kick (museum-figures-2, figure kit v2): one turnable boot, made once; `figFrom` is the phase to go back to. The
+ // three steps run on timers (no frame loop of their own: the figure's tick eases the pose, then the Paper loop sleeps).
+ const bootFig=useMemo(()=>makeBootFigure(),[]),figHandle=useRef<FigureHandle|null>(null),figFrom=useRef<Phase>('intro'),figTimers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ const [figLit,setFigLit]=useState<string[]>([]),[figNote,setFigNote]=useState(FIGURE_INTRO),[screw,setScrew]=useState(false),[running,setRunning]=useState(false);
+ const stopRun=()=>{figTimers.current.forEach(clearTimeout);figTimers.current=[];setRunning(false);};
+ useEffect(()=>()=>figTimers.current.forEach(clearTimeout),[]);
+ const openFigure=()=>{figFrom.current=phaseRef.current;setPhase('figure');phaseRef.current='figure';museumSfx.card();};
+ const touchBoot=(id:string)=>{if(running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id==='studs'&&bootFig.screw?'screw':id]??FIGURE_INTRO);museumSfx.tick();later(()=>setFigLit(l=>l[0]===id?[]:l),1800);};
+ const swapStuds=()=>{const on=!bootFig.screw;bootFig.setScrew(on);setScrew(on);setFigLit(['studs']);setFigNote(FIGURE_SAY[on?'screw':'studs']);figHandle.current?.invalidate();museumSfx.card();};
+ const runPlantKick=()=>{stopRun();setRunning(true);const h=figHandle.current;h?.setLabels(true);h?.setSeeThrough(true);
+  STEPS.forEach((st,i)=>figTimers.current.push(setTimeout(()=>{bootFig.pose(st.id,reduced);setFigLit([...st.lit]);setFigNote(FIGURE_SAY[st.id]);museumSfx.tick();figHandle.current?.invalidate();},i*1500)));
+  figTimers.current.push(setTimeout(()=>{bootFig.pose(null,reduced);setFigLit([]);setRunning(false);figHandle.current?.invalidate();},STEPS.length*1500+300));};
+ const closeFigure=()=>{stopRun();bootFig.pose(null,true);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase(figFrom.current);phaseRef.current=figFrom.current;later(()=>paint(),0);};
  useEffect(()=>{const kk=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();onClose();}};window.addEventListener('keydown',kk);return()=>window.removeEventListener('keydown',kk);},[onClose]);
  const [best,setBest]=useState(0);useEffect(()=>{setBest(readBest());},[]);
 
@@ -295,6 +312,9 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <p className={s.does} aria-live="polite">{nNew===0?'Add a modern boot.':Math.abs(nNew*NEW_G-OLD_G)<60?`Nearly level: ${nNew} modern boots weigh about as much as one old boot!`:nNew*NEW_G<OLD_G?`${nNew*NEW_G} g: still lighter. Add another.`:`${nNew*NEW_G} g: now the modern side is heavier.`}</p>
      </div>}
 
+     {phase==='figure'&&<FigureStage spec={bootFig.spec} active={figLit} reduced={reduced} onLabel={touchBoot} handle={figHandle} top={28}
+      label="A football boot on a patch of turf: the upper, laces, soleplate and studs"
+      extra={<button type="button" className={fs.pill} aria-pressed={screw} data-fig-screw onClick={swapStuds}>{screw?'Screw-in studs':'Moulded studs'}</button>}/>}
      {phase==='intro'&&<div className={s.panel} data-intro>
       <p className={g.kicker}>{exhibit.year}</p>
       <h2 className={s.panelTitle}>From heavy leather to knit.</h2>
@@ -314,7 +334,10 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock>
-     {phase==='intro'&&<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={()=>goto('bench')}>Open the bench</button><p className={s.say}>Boots have changed a lot. Let’s take five of them apart.</p></div>}
+     {phase==='figure'&&<div className={s.introDock}><p className={s.say} aria-live="polite" data-fig-note>{figNote}</p>
+      <span className={s.tools}><button type="button" className={g.btn} data-run-plant-kick disabled={running} onClick={runPlantKick}>Run, plant, kick</button>
+      <button type="button" className={g.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the bench'}</button></span></div>}
+     {phase==='intro'&&<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={()=>goto('bench')}>Open the bench</button><button type="button" className={g.ghost} data-boot-figure onClick={openFigure}>Run, plant, kick</button><p className={s.say}>Boots have changed a lot. Let’s take five of them apart.</p></div>}
      {(phase==='bench'||phase==='icons')&&<>
       {phase==='bench'?<span className={s.eras} role="group" aria-label="Boot">{ERAS.map(e=><button key={e.id} type="button" aria-pressed={era===e.id} data-era-btn={e.id} onClick={()=>chooseEra(e.id)}>{e.when}</button>)}</span>
        :<span className={s.eras} role="group" aria-label="Boot line">{ICONS.map(i=><button key={i.id} type="button" aria-pressed={icon===i.id} data-icon-btn={i.id} onClick={()=>{setIcon(i.id);setSel(null);museumSfx.card();}}>{i.name.replace(/^(adidas|Nike|Puma) /,'')}</button>)}</span>}
@@ -324,6 +347,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
        <button type="button" className={s.tool} aria-pressed={spin.current.phiTo>1.5} onClick={()=>{roll();redraw();}} data-sole>Sole</button>
        <label className={s.slider}><span>Apart</span><input type="range" min={0} max={100} step={1} value={Math.round(exTo*100)} onChange={e=>setExplode(Number(e.target.value)/100)} data-explode-slider aria-label="Lift the layers apart"/></label>
        <button type="button" className={s.tool} aria-pressed={xray} onClick={()=>setSee(!xray)} data-see>See-through</button>
+       {phase==='bench'&&<button type="button" className={s.tool} data-boot-figure onClick={openFigure}>Run, plant, kick</button>}
        {phase==='bench'&&<button type="button" className={s.tool} aria-pressed={!!compare} onClick={()=>setCompare(c=>c?null:'upper')} data-compare-btn>Materials</button>}
        {phase==='icons'&&<button type="button" className={s.tool} aria-pressed={powerOpen} onClick={()=>setPowerOpen(v=>!v)} data-power-btn>Superpowers</button>}
       </span>
