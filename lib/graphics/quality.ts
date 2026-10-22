@@ -42,9 +42,10 @@ export class MotionResolution {
   /** Heat pass 4: a hot-phone tier (lib/graphics/heatTier) caps the ratio, on every device; Infinity = no cap (default). */
   private limit = Infinity;
   setLimit(max: number) { this.limit = max > 0 ? max : Infinity; }
-  /** Call once per rendered frame before drawing. Returns the pixel ratio to switch to, or 0 when unchanged. */
-  update(now: number, moving: boolean, sharpNow = false, resting = false): number {
-    if (!this.enabled && !this.restEnabled && this.limit === Infinity && this.current === this.sharp) return 0;
+  /** Call once per rendered frame before drawing. Returns the pixel ratio to switch to, or 0 when unchanged. `cap` (Explore life, Oct 2026):
+   *  a scene's own ceiling (the reef room on a phone: lib/town/water/diveCurrent.ts divePixelCap). */
+  update(now: number, moving: boolean, sharpNow = false, resting = false, cap = Infinity): number {
+    if (!this.enabled && !this.restEnabled && this.limit === Infinity && cap === Infinity && this.current === this.sharp) return 0;
     let next = this.sharp;
     if (this.enabled) {
       next = this.current;
@@ -56,7 +57,7 @@ export class MotionResolution {
       if (resting && !sharpNow && !moving) { if (this.restSince < 0) this.restSince = now; if (now - this.restSince >= REST_SOFT_MS) next = Math.min(next, REST_PIXEL_RATIO); }
       else this.restSince = -1;
     }
-    next = Math.min(next, this.limit);
+    next = Math.min(next, this.limit, cap);
     if (next === this.current) return 0;
     this.current = next; this.switches++; return next;
   }

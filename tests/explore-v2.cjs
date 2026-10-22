@@ -15,7 +15,7 @@ const D=load('lib/town/water/diveSpots.ts'),S=load('lib/town/water/diveSession.t
 
 ok('the island is frozen while under: the dive branch runs first in the frame and every island system comes after it',()=>{
  const town=read('components/Town.tsx'),a=town.indexOf('    function animate(now:number){'),body=town.slice(a);
- const branch=body.indexOf('if(dive.diving){const restFrame=idleRide.interval(now,dive.resting,');assert(branch>0,'the dive branch');
+ const branch=body.indexOf('if(dive.diving){const rest0=idleRide.interval(now,dive.resting,');assert(branch>0,'the dive branch');
  const end=body.indexOf('return;}',branch),seg=body.slice(branch,end);
  // What runs under the water: the room rest cap, the heat governor fed with the room's frames, the motion resolution, the dive step,
  // the reef sound bed, the stick paint. Nothing of the island.

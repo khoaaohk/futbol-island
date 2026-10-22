@@ -201,7 +201,7 @@ import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RID
 import SwimLessonToast from './SwimLessonToast';
 import RayLessonToast from './RayLessonToast';import ReefHintToast from './ReefHintToast';import {createReefHints} from '@/lib/town/water/reefDiscovery';
 import DiveHud from './DiveHud';
-import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
+import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {divePixelCap,diveRestFrame} from '@/lib/town/water/diveCurrent';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
 import PaintEasel from './PaintEasel';
 import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';// Summit Isle Ball Cannon (Oct 14 2026)
 import {createBeachFinds} from '@/lib/graphics/beachFinds';import BeachcombHud from './BeachcombHud';import {islandJobWallet as beachWallet,islandMarket as beachMarket} from '@/lib/town/jobs/islandWallet';// Beachcombing (Oct 14 2026, docs/beachcombing.md)
@@ -1206,7 +1206,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     function wakeLoop(){if(!loopSleeping||disposed||isVideoPlaying())return;loopSleeping=false;cancelAnimationFrame(frame);last=performance.now();accumulator=0;frame=requestAnimationFrame(animate);}
     wakeLoopRef.current=wakeLoop;
     // Idle ride / flight (lib/town/idleRide.ts, Oct 1 2026): no input and no travel for 4 s on a ride or the jetpack → 20 fps.
-    const idleRide=createIdleRide(),idleInput=new AbortController(),stir=()=>idleRide.stir(performance.now());
+    let diveRestAt=-1;const idleRide=createIdleRide(),idleInput=new AbortController(),stir=()=>idleRide.stir(performance.now());
     for(const type of ['pointerdown','pointermove','keydown','wheel'])window.addEventListener(type,stir,{capture:true,passive:true,signal:idleInput.signal});
     const dailyPlay=createDailyPlay({now:Date.now,claim:grantDailyPlayCoins,earned:amount=>window.dispatchEvent(new CustomEvent('fi2-daily-play-earned',{detail:{amount}}))});
     let dailyX=location.x,dailyZ=location.z;
@@ -1232,11 +1232,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // and its clock), no HUD tick, no shadow refresh, no island render. Only: the room's own rest cap (dive.resting: hovering with nothing
       // the player moved still moving → 20 fps after 3 s, 15 fps after 30 s), the heat governor fed with the room's frames (so heat tiers
       // and Battery saver keep adapting underwater), the motion resolution, the dive step and ONE room render (tests/explore-v2.cjs).
-      if(dive.diving){const restFrame=idleRide.interval(now,dive.resting,IDLE_FOOT_AFTER_MS,true);heat.setRest(restFrame>0,restFrame);renderStats.idleRide=restFrame;
+      if(dive.diving){const rest0=idleRide.interval(now,dive.resting,IDLE_FOOT_AFTER_MS,true);if(rest0>0){if(diveRestAt<0)diveRestAt=now;}else diveRestAt=-1;const restFrame=diveRestFrame(rest0,rest0>0?now-diveRestAt:0);/* Explore life: 12 fps after a minute's rest */heat.setRest(restFrame>0,restFrame);renderStats.idleRide=restFrame;
         if(restFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(restFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
         idleRide.sample(now,player.root.position,player.root.position);
         const ms=now-last;last=now;const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
-        {const res=motionResolution.update(now,!dive.resting,!active,restFrame>0);if(res){renderer.setPixelRatio(res);renderer.setViewport(0,0,viewportW,viewportH);}}
+        {const res=motionResolution.update(now,!dive.resting,!active,restFrame>0,divePixelCap(quality.phone,!dive.resting));/* Explore life: the soft fogged room draws at 1.25 moving / 1.5 still on phones */if(res){renderer.setPixelRatio(res);renderer.setViewport(0,0,viewportW,viewportH);}}
         const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
         dive.frame(active?dt:0,{sx,sy,lift:(keys.has('q')?1:0)-(keys.has('z')?1:0)},viewportW,viewportH);{const ss=SWIM_SOUND_IN,st=dive.session.state;ss.in=dive.diving;ss.under=st.phase==='rising'?Math.max(0,1-st.rise/.45):1;ss.kind=st.effort>.12?'crawl':'tread';ss.phase=0;ss.speed=st.effort;ss.fast=false;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(active?dt:0,ss);}/* the reef sounds under water: the duck-dive's low-pass bed */
         heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,'dive');renderStats.rendered++;
