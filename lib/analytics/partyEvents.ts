@@ -13,11 +13,13 @@
  */
 import {count,onPageHide} from './tracker';
 import {PARTY_FAIL_REASONS,PARTY_MIN_REACH} from './countIds';
+import {countPartyRetention} from './partyRetentionEvents';
 
 /** Every event name PartyHost may raise (tests/admin-analytics-party.cjs: equals PartyHost's `Track` union). */
 export const PARTY_TRACK_EVENTS=['open','sheet','open_link','gate_show','gate_skip','gate_ok','gate_back','gate_wrong','name_ok',
  'create_tap','created','join_tap','live_host','live_guest','members','share_tap','share_ok','copy_ok','share_fail','new_code','lock','unlock',
- 'kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','fail','fail_create'] as const;
+ 'kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','fail','fail_create',
+ 'rtt','reconnect'] as const;// Phase C (partyRetentionEvents.ts; sends nothing unless NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1)
 export type PartyTrack=typeof PARTY_TRACK_EVENTS[number];
 const KNOWN=new Set<string>(PARTY_TRACK_EVENTS);
 /** Events that are simply `mp:<event>`. */
@@ -52,6 +54,7 @@ function close(t:number){
 /** One PartyHost event. `bucket`: a fixed string (fail reason, 'link' / 'typed', or the member count for 'members'). */
 export function countParty(event:string,bucket?:string,t=now()){
  if(!KNOWN.has(event))return;
+ if(event==='live_guest'||event==='rtt'||event==='reconnect')countPartyRetention(event,bucket);
  if(DIRECT.has(event)){count('mp:'+event);return;}
  if(ONCE.has(event)){once('mp:'+event);return;}
  switch(event){

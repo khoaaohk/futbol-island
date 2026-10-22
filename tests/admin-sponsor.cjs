@@ -167,7 +167,7 @@ await ok('sql: the split on a throwaway Postgres matches the TypeScript',async()
   psql('create role anon; create role authenticated; create role service_role bypassrls;');
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
-  assert.equal(files[files.length-1],path.basename(MIGRATION),'the newest migration');
+  assert(files.includes(path.basename(MIGRATION)),'the migration is in the folder');// newer files (e.g. 20261022_analytics_party_retention.sql) run after it
   const results=files.map(f=>[f,runFile(path.join('supabase/migrations',f))]);
   assert.equal(results.find(([f])=>f===path.basename(MIGRATION))[1],OK_ROW,'self-check row');
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');

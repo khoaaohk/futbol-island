@@ -228,7 +228,8 @@ import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
 // Play with friends + emote analytics (Oct 22 2026, docs/analytics-multiplayer-plan.md Phase A): the party code never imports
 // analytics, so PartyHost's onTrack names and the Hide / Mute choices become mp: counts here; emotes are counted in the emoteBus handler.
-import {countParty,partyFrame,watchPartyEnd} from '@/lib/analytics/partyEvents';
+import {countParty,partyFrame,partyLive,watchPartyEnd} from '@/lib/analytics/partyEvents';
+import {watchPartyAway} from '@/lib/analytics/partyRetentionEvents';// Phase C: off unless NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1
 import {countEmote,emoteCtx} from '@/lib/analytics/emoteEvents';
 let hiddenN=0,mutedN=0;
 const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
@@ -275,6 +276,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
   const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
   useEffect(()=>watchPartyEnd(),[]);// the host's party bands ride the final beat when the tab closes mid-party
+  useEffect(()=>watchPartyAway(partyLive),[]);// mp:min_away (background minutes in a live party); a no-op while the Phase C switch is off
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;countPathLaunch(detail.format);primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
   const [learningRequest,setLearningRequest]=useState<{id:LearningId;nonce:number}|null>(null);
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent<{id:LearningId;nonce:number}>).detail,j=journeyById(detail?.id);if(!j)return;primeLessonVoice();setFormatPathRequest(null);setLearningRequest(detail);closeForLesson();setFieldCatalog(j.format);};window.addEventListener(LEARNING_LAUNCH,launch);return()=>window.removeEventListener(LEARNING_LAUNCH,launch);},[]);

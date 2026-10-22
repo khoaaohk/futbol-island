@@ -53,5 +53,7 @@ function bindOnce(conn: PartyConnection, now: () => number): () => void {
   });
   const offStatus = conn.onStatus((s) => partyStore.setStatus(s, conn.code));
   partyStore.setStatus(conn.status, conn.code);
-  return () => { offMsg(); offStatus(); };
+  const health = () => ({ rttMs: conn.rttMs ?? null, reconnects: conn.reconnects ?? 0 });
+  partyStore.setHealthSource(health);
+  return () => { offMsg(); offStatus(); partyStore.setHealthSource(null); };
 }

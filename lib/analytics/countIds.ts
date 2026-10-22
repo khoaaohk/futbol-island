@@ -26,7 +26,9 @@
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  *   mp:<event>                     Play with friends (PARTY_COUNT_EVENTS, lib/analytics/partyEvents.ts; Oct 22 2026): the funnel,
  *                                  join failures by reason, party controls, party size / length / first-friend bands (host only,
- *                                  one per party), minutes in a party and the per-session minute thresholds
+ *                                  one per party), minutes in a party and the per-session minute thresholds. Phase C
+ *                                  (PARTY_RETENTION_EVENTS, lib/analytics/partyRetentionEvents.ts) adds guest_new, rtt_* bands,
+ *                                  reconnect and min_away: sent ONLY when NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1 (legal sign-off)
  *   em:<event>  em:e<n>            emotes (EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS, lib/analytics/emoteEvents.ts; Oct 22 2026): plays by
  *                                  local emote number, context, target (townsperson / party / solo / refused), button → wheel → pick,
  *                                  per-session thresholds. docs/analytics-multiplayer-plan.md is the spec for both families.
@@ -198,6 +200,20 @@ export const PARTY_COUNT_EVENTS=[
  ['min','Minutes played in a party'],...PARTY_MIN_REACH.map(m=>[`min_reach_${m}`,`Sessions with ${m}+ party minutes`] as const),
 ] as const;
 /**
+ * Phase C (Oct 22 2026, docs/analytics-multiplayer-plan.md §6–§7, lib/analytics/partyRetentionEvents.ts). Allowlisted here so the
+ * server accepts them, but the CLIENT sends none of them unless NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1 (off until the legal
+ * sign-off: retention links party play to the anonymous player id). The RTT bands are the median round trip of the party's
+ * heartbeat echoes, one band per party per player at its end.
+ */
+export const PARTY_RTT_BUCKETS=[['rtt_lt80','Round trip under 80 ms'],['rtt_80_150','Round trip 80–150 ms'],['rtt_150_300','Round trip 150–300 ms'],['rtt_300p','Round trip 300 ms or more']] as const;
+export const PARTY_RETENTION_EVENTS=[
+ ['guest_new','New player joined as a guest (first visit on this device)'],
+ ...PARTY_RTT_BUCKETS,
+ ['reconnect','Party connection dropped and reconnected'],
+ ['min_away','Minutes in a party with the game in the background (away)'],
+] as const;
+export const PARTY_RETENTION_IDS:readonly string[]=PARTY_RETENTION_EVENTS.map(([e])=>'mp:'+e);
+/**
  * Emotes (Oct 22 2026, lib/analytics/emoteEvents.ts): which preset emote was played by its LOCAL emote number, where, and what
  * answered. The numeric ranges are repeated here (not imported) so the every-page tracker never loads the emote content;
  * tests/admin-analytics-party.cjs checks them against lib/town/emoteReact.ts EMOTE (0–9), rideEmotes.ts RIDE_EMOTE (10–18),
@@ -227,7 +243,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...FISHING_COUNT_EVENTS.map(([e])=>'fi:'+e),
  ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
  ...ENGAGE_FIXED_IDS,
- ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,
+ ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,...PARTY_RETENTION_IDS,
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

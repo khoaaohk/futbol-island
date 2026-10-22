@@ -561,6 +561,60 @@ Run with the project's quiet test script.
   - suppression;
   - the output has no player id column.
 
+**Status (Oct 22 2026, branch `analytics-phase-c`): built, OFF by default, waiting for the legal sign-off.**
+- **The switch.** `NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1` turns on everything below. Unset (the default), the client sends
+  exactly what Phase A sends, the connection sends no extra probe beat, the admin route answers `status: 'off'` without calling
+  Supabase, and the admin card renders nothing. **Legal flag:** the retention report links party play to the anonymous, keyed
+  player id on the server. Only aggregates over ≥10 players leave the database, but the policy sentence drafted in the `[LAWYER]`
+  note of components/privacy/PrivacyPolicy.tsx must be approved (and added to §7 of the live policy) before the switch is set.
+- **Client** (lib/analytics/partyRetentionEvents.ts, routed from partyEvents.countParty):
+  - `mp:guest_new`: once per tab session, when a guest goes live in a session whose start carried `rt=0` (the tracker keeps the
+    mark it sent: `sessionStartRt()`).
+  - `mp:rtt_lt80`, `mp:rtt_80_150`, `mp:rtt_150_300`, `mp:rtt_300p`: once per party per player at its end.
+    connection.ts times its own heartbeat echoes (the relay already echoes `Beat`; no protocol change). It exposes the median of
+    the last 15 as `rttMs`, and `partyStore.health()` reads it on demand without emitting. PartyHost passes only the band
+    (`rttBand`) to `onTrack`. While the switch is on, the connection also sends a beat at least every 30 s while poses flow, so
+    moving players get samples too (one ~10-byte message per 30 s).
+  - `mp:reconnect`: the number of unexpected drops recovered in that party (a hidden-tab close is not one), capped at 20.
+  - `mp:min_away`: whole background minutes while live, from two visibilitychange timestamps (no timer). One stretch counts at
+    most 30 minutes.
+- **Server.** `supabase/migrations/20261022_analytics_party_retention.sql` provides:
+  - `analytics_party_retention(from,to)`;
+  - the `analytics_sponsor_weekly` table (RLS on, no policies, service_role only);
+  - `analytics_sponsor_week_snapshot()`, which stores each finished week still fully inside the raw rows, once, never
+    overwriting;
+  - `analytics_sponsor_weekly_read(limit)`.
+- **Group rule (a refinement of §6).** A player is "party" when they played in a party on their **first day in the range**, so
+  a player who only joined a party after coming back does not inflate the party return rate.
+- **Retention windows.** D1 = played again the next day. D7 = played again within 7 days. Only cohorts whose window has
+  finished count (the last complete UTC day, never today).
+- **Admin.** app/api/admin/party-retention (same admin session check) → lib/analytics/partyRetention.ts (loader, parser and
+  the TypeScript reference), cached 60 s. It also runs the idempotent weekly snapshot. Card: app/admin/PartyRetentionCard.tsx on
+  the Engagement tab ("Friends & coming back"). It shows "Not available yet" when the migration has not run.
+- **Tests.** tests/admin-party-retention.cjs: the off-by-default switch, the client ids, connection RTT and reconnects, the
+  reference aggregation and suppression, a static SQL check, SQL = TypeScript on a throwaway Postgres (grants, RLS, the
+  snapshot), the route and loader states, the card render, and the policy note.
+
+#### Supabase steps for the owner (only after the legal sign-off)
+
+1. **Check the order.** The earlier analytics files must already be applied: `20261018_analytics_live.sql` (`is_returning`),
+   `20261019_analytics_day_sessions.sql` (`player_id`) and `20261021_analytics_sponsor_split.sql`.
+2. **Run the migration.** In the Supabase SQL editor, paste the WHOLE of
+   `supabase/migrations/20261022_analytics_party_retention.sql` and run it (or `supabase db push`). The last result must be one
+   row: `status = OK, party retention installed`. Any `NOT INSTALLED: …` row names the missing piece. Running the file twice is
+   harmless.
+3. **Check the lock-down.** In the SQL editor, `select has_function_privilege('anon','public.analytics_party_retention(date,date)','execute');`
+   and `select relrowsecurity from pg_class where oid='public.analytics_sponsor_weekly'::regclass;` must return `false` and
+   `true`.
+4. **Turn on the switch.** Set `NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1` in the Vercel project (Production, and Preview if
+   wanted), then redeploy. It is inlined at build time, so a redeploy is required.
+5. **Publish the policy sentence.** Add the approved `[LAWYER]` sentence to the live privacy policy (§7) in the same deploy.
+6. **Check the card.** Open /admin → Engagement → "Friends & coming back". The first days show "<10" and "—": rates need ≥10
+   players per group and a finished D1 / D7 window, so D7 needs at least 8 days of data. The weekly reach table fills after the
+   first finished Monday-to-Sunday week.
+7. **Roll back.** Unset the variable and redeploy. The client stops sending at once, and the database objects can stay
+   (read-only, service_role only).
+
 ## 11. Risks
 
 - **Beat pressure.** Emote-heavy sessions add 20–40 ids. The 64-id cap and carry handle it, but the busiest ids win each beat,

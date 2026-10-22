@@ -10,6 +10,7 @@ import FishingSection from './FishingSection';
 import WaterSection from './WaterSection';
 import FriendsSection from './FriendsSection';
 import EmoteSection from './EmoteSection';
+import PartyRetentionCard from './PartyRetentionCard';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
@@ -293,6 +294,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
      <WaterSection report={report}/>
      <FriendsSection report={report}/>
      <EmoteSection report={report}/>
+     <PartyRetentionCard from={report.from} to={report.to}/>
     </section>}
 
     {tab==='players'&&    <section className={styles.island} aria-labelledby="sec-health">

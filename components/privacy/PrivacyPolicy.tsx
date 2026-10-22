@@ -17,6 +17,16 @@ import styles from './PrivacyPolicy.module.css';
  * collect), 10 (how we use it), 13 (sharing and selling: combined totals to sponsors), 14 (retention rows), 16 (questions / opt-out /
  * deletion), 17 (US state "sell / share" wording). This wording is a draft and must be reviewed by a lawyer (COPPA incl. the 2025
  * amendments, GDPR / UK GDPR and the Children's Code (GDPR-K), CCPA/CPRA and other US state laws) before any sponsor report leaves the team.
+ * [LAWYER] Oct 22 2026 PHASE C, NOT LIVE (docs/analytics-multiplayer-plan.md §6, §9, §10 Phase C; switch
+ * NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION, unset = off): an internal "party vs solo" return-rate report, an "invited vs organic" new-player
+ * split, connection-quality bands and background minutes in a party. The return-rate report LINKS PARTY PLAY TO THE ANONYMOUS PLAYER
+ * NUMBER on the server (section 4's keyed player number) to compute D1 / D7 rates; only rates and totals over groups of 10 or more
+ * players ever leave the database. Needs sign-off before the switch is turned on or supabase/migrations/20261022_analytics_party_retention.sql
+ * runs. Draft sentence to ADD to section 7 (after the Play with friends bullet) once approved; the live text below is unchanged:
+ *   "We also count, for groups of at least 10 players and never for one player, whether players who played with friends come back
+ *    the next day or within a week more or less often than players who played alone, how many first-time players arrived through an
+ *    invite link, and how steady the party connection was (in broad bands, such as "under 80 milliseconds"). To work this out we
+ *    use the same anonymous player number described in section 4; we never record who played with whom."
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
 export const POLICY_UPDATED='October 22, 2026';

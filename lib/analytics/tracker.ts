@@ -94,6 +94,10 @@ export function islandFrame(x:number,z:number,mode:ActivityId,lookup:(x:number,z
 /** Hooks run at the start of a real pagehide (the tab closing or navigating away), before its final beat, so a last count()
  *  still rides it (lib/analytics/partyEvents.ts: the host's party bands). Not run on a mere hide. Returns the cleanup. */
 const pageHideHooks=new Set<()=>void>();
+/** The `rt` mark this tab's current session started with (1 = the device had played here before, 0 = new device, null = not sent).
+ *  Read by lib/analytics/partyRetentionEvents.ts for `mp:guest_new` (Phase C, off by default). Never leaves the device on its own. */
+let startRt:0|1|null=null;
+export const sessionStartRt=():0|1|null=>startRt;
 export function onPageHide(fn:()=>void):()=>void{pageHideHooks.add(fn);return()=>{pageHideHooks.delete(fn);};}
 /** Learning counters waiting for the next beat (id → n). Only filled while a tracker runs. */
 const countAcc=new Map<string,number>();
@@ -251,7 +255,7 @@ export function startTracker(env:TrackerEnv){
    // A printed link's tag (Oct 15 2026: the QR card is https://futbolisland.app/?from=flyer) rides as the source when no utm_source.
    const tag=campaignTag(w.location.search);if(tag&&!u.source)u.source=tag;
    if(Object.keys(u).length)body.u=u;
-   try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;}}catch{}
+   startRt=null;try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;startRt=body.rt as 0|1;}}catch{}
    try{const k=env.player?.();if(k)Object.assign(body,'pc' in k?{pc:k.pc}:{pi:k.pi});}catch{}
    if((n.maxTouchPoints||0)>1)body.tp=1;
    try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
