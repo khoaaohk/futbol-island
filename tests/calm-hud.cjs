@@ -53,5 +53,7 @@ const load=(f,req=()=>({}))=>{const m={exports:{}};new Function('exports','modul
   for(const m of css.matchAll(new RegExp(`\\.${sel}\\{[^}]*?width:(\\d+)px;height:(\\d+)px`,'g')))assert(+m[1]>=44&&+m[2]>=44,`${sel} tap target >= 44 px (${m[1]}x${m[2]})`);}
 {const hud=read('components/DiveHud.tsx'),css=read('app/globals.css');
  assert(!/dive-dart-btn|data-dive-dart/.test(hud+css),'the Dart button is gone (user, Oct 21 2026)');
- assert(/\.town-app:has\(\.dive-depth\) :is\(\.town-minimap,\.travel-actions \.minimap-toggle\)\{display:none!important\}/.test(css),'no island minimap inside a room');}
+ assert(/\.town-app:has\(\.dive-depth\) \.travel-actions\.travel-actions \.minimap-toggle\{grid-column:1;grid-row:1\}/.test(css)&&/\.travel-mode\{grid-column:1;grid-row:2\}/.test(css),'room grid: minimap top right, Fly bottom right');
+ assert(/\.town-app:has\(\.dive-depth\) \.dive-depth\{right:calc\(18px \+ 58px \+ 12px/.test(css),'▲ ▼ are the grid\'s left column (12 px gap)');
+ const H=load('lib/town/water/waterHud.ts',()=>({}));assert.equal(H.REEF_BUTTONS_FLY.find(b=>b.slot==='ride').icon,'jetpack','the room\'s Fly button shows the jetpack');}
 console.log('calm-hud: ok');

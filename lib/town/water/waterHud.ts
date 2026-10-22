@@ -54,8 +54,11 @@ export const RIDING_NOTE='Hanging on! Tap Let go to swim again.';
 export const DIVE_SURFACE:JobButton={slot:'shoot',key:'Space',id:'surface',label:'Surface: swim back up for air',icon:'surface',enabled:true};
 /** Oct 20 2026 (user: "R and the switcher must still take off with the jetpack inside the dive zone"): the ride slot is the same
  *  swim → jetpack switcher as at the surface; with fuel it surfaces at once and flies up, without fuel it answers with the hint. */
-export const REEF_BUTTONS:readonly JobButton[]=[DIVE_SURFACE,RIDE_SWIM_NO_FUEL] as const;
-export const REEF_BUTTONS_FLY:readonly JobButton[]=[DIVE_SURFACE,RIDE_SWIM] as const;
+/** Calm HUD (Oct 21 2026, user: "bottom right will be the fly btn"): in a room the switcher shows the jetpack (what it does), not the swim. */
+export const REEF_FLY:JobButton={...RIDE_SWIM,label:'Fly up with the jetpack',icon:'jetpack'};
+export const REEF_FLY_NO_FUEL:JobButton={...RIDE_SWIM_NO_FUEL,label:'Fly: the jetpack needs fuel (swim to a beach)',icon:'jetpack'};
+export const REEF_BUTTONS:readonly JobButton[]=[DIVE_SURFACE,REEF_FLY_NO_FUEL] as const;
+export const REEF_BUTTONS_FLY:readonly JobButton[]=[DIVE_SURFACE,REEF_FLY] as const;
 export const REEF_NOTE='Diving! Tap Surface to swim back up.';
 export function waterKeyAction(code:string,key:string):WaterActionId|null{
  if(code==='Space'||code==='Digit1'||code==='Numpad1')return 'swimfast';

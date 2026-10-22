@@ -181,8 +181,11 @@ User: "there's so much going on ... only show one at a time", "it's looking way 
 - **Breath is never covered**: while `.dive-breath` shows, `.hud-stack` starts at 150 px (12 px under the pill); dive notes sit there.
 - **Explore room controls** (user: "on mobile this looks messy, the btns are covering"): the Dart button is removed (user: "let's
   remove the dart action"), the "Reef n/12" chip and its hearts are removed (user: "remove this, we don't need it"; the journey,
-  hearts, restore card and saves are unchanged), the island minimap and its collapse button are hidden in a room, and the right
-  side is one column with 12 px steps: the action row, ▲ ▼ above it, the friend row (Wave / High five, only near a friend) above.
+  hearts, restore card and saves are unchanged). On touch screens the room's controls are the island's 2x2 action grid (user: "up
+  and down arrows in the grid of four icons, on the left; top right the mini map; bottom right the fly btn"): ▲ / ▼ the left
+  column, the minimap toggle top right, Fly (the switcher, now the jetpack icon, `REEF_FLY` in waterHud.ts) bottom right; Surface
+  left of ▼ on the bottom row (it is the only way up without fuel); Wave / High five above Surface, only near a friend; the minimap
+  circle 12 px above the grid. 58 px circles, 12 px steps. Desktop keeps its column (▲ ▼, the friend row above) and keyboard hints.
 - **Fishing**: while the tutorial shows its step, the message (the same words) is hidden, so the two never overlap.
 
 Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, stack rules, copy caps, names, >= 44 px targets).

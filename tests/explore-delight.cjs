@@ -140,7 +140,7 @@ ok('HUD: Wave / High five above Dart (never over Dart or the rise / dip pad), he
  assert(hud.includes("toastLane.request('dive-edge')")&&hud.includes("useToastLaneBusy('dive-edge')"),'the chip shares the toast lane with the lesson card');
  const px=(sel,prop,phone)=>{const block=phone?css.slice(css.indexOf('@media(max-width:600px),(pointer:coarse){'+sel+'{')):css.slice(css.indexOf('\n'+sel+'{'));const m=block.match(new RegExp(prop+':([^;}]+)'));return m[1];};
  // Calm HUD (Oct 21 2026; Dart removed): one right column: ▲ ▼ (desktop 112 px + 2×58 + 10 = 238) then the friend row 12 px above; phone +70 + 2×50 + 8 = +178, row at +190.
- assert.equal(px('.dive-emote','bottom',false),'250px');assert(/\+ 190px\)/.test(px('.dive-emote','bottom',true)));
+ assert.equal(px('.dive-emote','bottom',false),'250px');assert(css.includes('.town-app:has(.dive-depth) .dive-emote{right:calc(18px + 2 * (58px + 12px)'),'phone: the friend row sits left of the grid, above Surface');
  assert.equal(px('.dive-emote','right',false),px('.dive-depth','right',false),'same column as the ▲ ▼ pad');
 });
 console.log(`\nexplore-delight: ${passed} passed`);
