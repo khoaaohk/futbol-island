@@ -106,6 +106,8 @@
 /* A long label ("Welcome back, let's play") stays on ONE line at the same pill height (user, Oct 22 2026). */
 .start span[data-long]{font-size:clamp(19px,5.7vw,24px);white-space:nowrap}
 .start:has(span[data-long]){align-content:center;padding-block:10px 10px}/* one centred line: balanced above and below (user, Oct 22 2026), the water crest sits under it */
+/* The one-word 'Play' pill (no small line under it): centred in the 68 px pill and nudged down a little (the brush font sits high; user, Oct 22 2026). */
+.start:not(:has(small)){align-content:center;padding-block:15px 5px}
 /* Hover: a lift and one riso shine across the face (transform only). */
 .start::after{content:'';position:absolute;inset:-20% auto -20% -40%;width:30%;background:linear-gradient(100deg,transparent,#fff7dc99,transparent);transform:translateX(-120%) skewX(-18deg);pointer-events:none}
 @media(hover:hover){.start:hover{scale:1.03}.start:hover::after{transform:translateX(560%) skewX(-18deg);transition:transform .7s ease}}
