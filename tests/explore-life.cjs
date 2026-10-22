@@ -91,4 +91,11 @@ ok('heat: school fish use the 92-triangle reef fish (was 380-430); every phone r
  const rows=[];for(const z of D.DIVE_SPOTS){const st=roomOf(z).stats(),[d,t]=BASE[z.id];assert(st.draws<=d,z.id+' draws '+st.draws);assert(st.triangles<=t,z.id+' triangles '+st.triangles);rows.push(`${z.id}:${st.draws}/${st.triangles}`);}
  console.log('     phone rooms (draws/triangles): '+rows.join(' '));
 });
+ok('see-through when close: soft things fade from 1 at 2.5 m to 0.15 at 0.8 m (diver or the camera line), dithered, from the shared uniforms; solids never fade',()=>{
+ const P=load('lib/graphics/proximityFade.ts');assert.equal(P.proximityFade(10),1);assert.equal(P.proximityFade(P.PROXIMITY_FADE.far),1);assert(Math.abs(P.proximityFade(0)-.15)<1e-9);assert(Math.abs(P.proximityFade(.8)-.15)<1e-9);
+ let prev=0;for(let d=0;d<=3;d+=.05){const v=P.proximityFade(d);assert(v>=prev-1e-12&&v>=.15&&v<=1);prev=v;}
+ const src=read('lib/graphics/diveRoom.ts');assert.equal((src.match(/dvProxFade\(/g)||[]).length,3,'fish, sway, the friend');assert.equal((src.match(/dvDitherDiscard\(vDvFade\)/g)||[]).length,3);
+ assert(src.includes('const seeThrough=!(opt.calm||opt.lite)'),'compiled out when calm / lite');assert(!/reefMat[^\n]*PROXIMITY/.test(src),'the reef (rocks, wreck) never fades');
+ assert(P.PROXIMITY_DITHER_GLSL.includes('discard')&&!/new |\[\]/.test(P.PROXIMITY_FADE_GLSL));
+});
 console.log(`\nexplore-life: ${passed} passed`);

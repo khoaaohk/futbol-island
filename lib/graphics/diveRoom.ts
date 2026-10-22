@@ -4,6 +4,7 @@ import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveCrestMask,diveDepthAt,diveFindPoint,diveF
 import {diveLayout,diveWreckSize,type DiveArchSpot} from '../town/water/diveLayout';
 import {addDiveBall} from './diveBall';
 import {reefFishModel} from './diveFish';
+import {PROXIMITY_DITHER_GLSL,PROXIMITY_FADE_GLSL} from './proximityFade';
 import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROOM_SHIMMER,ROOM_WINDOW} from './waterTokens';
 import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
@@ -186,6 +187,8 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  const th=spot.theme,fl=spot.floor,r=rng(9173+spot.blob*101),phone=opt.phone,lite=opt.lite?DIVE_LITE:1,lay=diveLayout(spot);
  const F=(x:number,z:number)=>diveFloor(x,z,fl);
  const cap=(k:keyof Omit<typeof DIVE_CAPS,'fish'>,m:number)=>Math.round(DIVE_CAPS[k][phone?'phone':'desktop']*Math.min(1,m)*lite);
+ // See-through soft things near the diver / in front of the camera (proximityFade.ts); off with calm / lite (no discard: plain opaque).
+ const seeThrough=!(opt.calm||opt.lite);
  const scene=new T.Scene();scene.name='dive-room';const fog=new T.Fog(th.water,th.fog[0]*.6,th.fog[1]);scene.fog=fog;
  // Explore v2: the water colour follows the camera's place in the water column (waterTokens ROOM_SHALLOW): the background IS the fog colour
  // (one Color, rewritten each frame), so far water, the rim and the surface's edge all meet in the same tint.
@@ -360,13 +363,15 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const swayAmp={value:opt.reduced?.25:1};
  const swayMat=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});swayMat.name='dive-sway';
  swayMat.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uSwayAmp=swayAmp;sh.uniforms.uDiver=uDiver;sh.uniforms.uReef=uReef;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;uniform vec4 uDiver;attribute float aSway,aSeed;')
+  sh.uniforms.uCam=uCam;
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;uniform vec4 uDiver;uniform vec3 uCam;attribute float aSway,aSeed;'+(seeThrough?PROXIMITY_FADE_GLSL:''))
    .replace('#include <begin_vertex>',/* glsl */`#include <begin_vertex>
     float sw=aSway*aSway*uSwayAmp;transformed.x+=sin(uDiveTime*1.1+aSeed+position.y*.6)*.22*sw;transformed.z+=cos(uDiveTime*.83+aSeed*1.7+position.y*.4)*.14*sw;
     // Explore v2: fans, kelp and grass bend away as the diver swims through (one distance per vertex, the model matrix is identity)
-    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`);
+    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`+(seeThrough?'vDvFade=aSway>0.?dvProxFade(transformed,uDiver.xyz,uCam):1.;':''));
+  if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uReef;').replace('#include <fog_fragment>','{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);}\n#include <fog_fragment>');};
- swayMat.customProgramCacheKey=()=>'dive-sway-v2';
+ swayMat.customProgramCacheKey=()=>'dive-sway-v3'+(seeThrough?'-fade':'');
  const sway=new T.Mesh(W.geometry(true),swayMat);sway.name='dive-sway';sway.frustumCulled=false;sway.matrixAutoUpdate=false;scene.add(sway);
 
  // ---- Fish: one instanced draw per species, every path in the vertex shader. The theme picks the schools (SCHOOLS keys).
@@ -382,13 +387,15 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   const an=model.anim,mat=new T.MeshLambertMaterial({vertexColors:true,...(glow?{emissive:new T.Color(glow),transparent:true,opacity:.82,depthWrite:false}:{})});mat.name='dive-fish-'+name;
   const wag={uWagAxis:{value:new T.Vector3(...an.axis)},uWagDir:{value:new T.Vector3(...an.dir)},uWagK:{value:new T.Vector3(...an.k)},uWag:{value:new T.Vector3(an.start,Math.max(.01,an.span),an.amp)}};
   const form={value:new T.Vector4(0,0,0,0)};forms.push({n,form});
-  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK});
-   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+FISH_GLSL)
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK,uCam});
+   // See-through when close (proximityFade.ts): a per-vertex fade from the shared uDiver / uCam, a screen-door dither (off when calm / lite).
+   if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
+   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform vec3 uCam;\n'+FISH_GLSL+(seeThrough?PROXIMITY_FADE_GLSL:''))
     .replace('#include <beginnormal_vertex>',FISH_BASIS+'vec3 objectNormal=normalize(-dvF*normal.x+dvU*normal.y-dvS*normal.z);')
     .replace('#include <begin_vertex>',/* glsl */`vec3 transformed=vec3(position);
      float dvW=clamp((dot(transformed,uWagAxis)-uWag.x)/uWag.y,0.,1.);transformed+=uWagDir*uWag.z*dvW*dvW*sin(dvT*aPD.z+aPD.w*7.-dot(transformed,uWagK));
-     transformed*=aPC.w*dvHide;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`);};
-  mat.customProgramCacheKey=()=>'dive-fish-v3';
+     transformed*=aPC.w*dvHide;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`+(seeThrough?'vDvFade=dvProxFade(transformed,uDiver.xyz,uCam);':''));};
+  mat.customProgramCacheKey=()=>'dive-fish-v4'+(seeThrough?'-fade':'');
   const mesh=new T.Mesh(g,mat);mesh.name='dive-fish-'+name;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;if(glow)mesh.renderOrder=1;scene.add(mesh);fishMeshes.push(mesh);return mesh;};
  const uWhaleK={value:0},uRayK={value:1},uWhale={value:new T.Vector4(0,0,0,0)};
  const uBurst={value:new T.Vector4(0,0,0,-1e4)},uDiver={value:new T.Vector4(0,-50,0,0)},uBuddy={value:new T.Vector4(0,DIVE_SURFACE_Y-1.5,10,1)},uBuddyF={value:new T.Vector3(0,0,-1)};
@@ -531,10 +538,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   for(const [name,size] of [['position',3],['normal',3],['color',3],['aPart',1],['aLimb',1]] as const){const arr=new Float32Array(n*size);let o=0;for(const q of flat){arr.set(q.getAttribute(name).array as Float32Array,o);o+=q.getAttribute(name).count*size;}g.setAttribute(name,new T.BufferAttribute(arr,size));}
   flat.forEach(q=>q.dispose());g.setAttribute('aKind',new T.InstancedBufferAttribute(new Float32Array([...picks.map(p=>p.kind==='litter'?1:0),...(friend?[2]:[])]),1));
   const m=new T.MeshLambertMaterial({vertexColors:true});m.name='dive-pickups';
-  m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uFriend=uFriend;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aPart,aKind,aLimb;varying float vTw;uniform float uDiveTime;uniform vec4 uFriend;')
-   .replace('#include <begin_vertex>','#include <begin_vertex>\nif(abs(aPart-aKind)>.5)transformed*=0.;vTw=step(aKind,.5)*(.5+.5*sin(uDiveTime*3.+instanceMatrix[3].x*1.7));\nif(aKind>1.5){transformed.y+=aLimb*(uFriend.x*.13*(1.+sin(uFriend.w*14.))+uFriend.y*.3);transformed*=1.+uFriend.z*.35;}');
+  m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uFriend=uFriend;sh.uniforms.uDiver=uDiver;sh.uniforms.uCam=uCam;
+   // the friend (part 2) is see-through when close (proximityFade.ts); the pickups stay solid-looking (you swim through them to collect)
+   if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
+   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aPart,aKind,aLimb;varying float vTw;uniform float uDiveTime;uniform vec4 uFriend,uDiver;uniform vec3 uCam;'+(seeThrough?PROXIMITY_FADE_GLSL:''))
+   .replace('#include <begin_vertex>','#include <begin_vertex>\nif(abs(aPart-aKind)>.5)transformed*=0.;vTw=step(aKind,.5)*(.5+.5*sin(uDiveTime*3.+instanceMatrix[3].x*1.7));\nif(aKind>1.5){transformed.y+=aLimb*(uFriend.x*.13*(1.+sin(uFriend.w*14.))+uFriend.y*.3);transformed*=1.+uFriend.z*.35;}'+(seeThrough?'\nvDvFade=aKind>1.5?dvProxFade((instanceMatrix*vec4(transformed,1.)).xyz,uDiver.xyz,uCam):1.;':''));
    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vTw;').replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vColor*vTw*.45;');};
-  m.customProgramCacheKey=()=>'dive-pickups-v2';
+  m.customProgramCacheKey=()=>'dive-pickups-v3'+(seeThrough?'-fade':'');
   pickMesh=new T.InstancedMesh(g,m,picks.length+(friend?1:0));pickMesh.name='dive-pickups';pickMesh.frustumCulled=false;
   const mm=new T.Matrix4(),cc=new T.Color();picks.forEach((p,i)=>{mm.compose(new T.Vector3(p.x,p.y-.18,p.z),new T.Quaternion().setFromEuler(new T.Euler(0,i*1.9,p.kind==='litter'?.25:0)),new T.Vector3().setScalar(got[i]?0:p.kind==='litter'?1:1.2));pickMesh!.setMatrixAt(i,mm);pickMesh!.setColorAt(i,cc.set(p.color));});
   if(friend){mm.makeTranslation(friend.x,friend.y,friend.z);pickMesh.setMatrixAt(friendI,mm);pickMesh.setColorAt(friendI,cc.set('#ffffff'));}
