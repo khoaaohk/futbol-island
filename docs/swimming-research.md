@@ -552,3 +552,127 @@ User (16 Oct 2026): "For the diving spots, have some type of marker on the top o
 - **Saves and analytics.** Finds: SYNC key `fi2-dive-finds-v1` (docs/accounts-design.md table A); lesson flag: DEVICE key `fi2-dive-lesson-v1`. Ids on the `k` channel (no migration): `wa:dive_start`, `wa:dive_surface`, `wa:dive_find` (first use of each find), `wa:dive_breath_out`, `wa:dive_lesson`, shown in a **Dives** tile in the admin Water section.
 - **Adding the next spot** is data: a row in `DIVE_SPOTS` (centre, radius, tint, surface point, theme, finds with room positions, the fact and its credit). The shader has 2 slots (`DIVE_SLOTS`; farther zones are the shoal decal), the buoys are one instanced draw, the room is built from the theme. Where everything sits comes from the zone's shared layout (`lib/town/water/diveLayout.ts`), read by the room, the shoal preview, the decal and the above-water pieces. Each new fact must be verified before it ships.
 - **Validation.** tests/water-dive.cjs (14 groups); the browser driver `scripts/check-dive-browser.cjs` (production build, 390×844 touch): swim into the patch, Dive, swim to all four finds and use them, Surface with the button, catch a breath, dive again, Escape; zero page or console errors; screenshots in docs/water/. Phone heat was NOT measured (cloud only).
+
+
+## 10. Explore v2: swim feel, the reef journey, the frozen island (21 Oct 2026, local)
+
+Critique first (headless phone + desktop, Paul's Grotto, Captain's Cup, Kelp Forest Wreck): the diver was drawn upright (a tread / head-up
+crawl, so it read as walking in fog), the top of the screen was one flat pale band, the god rays were hard glass slabs, there was no
+caustic light, nothing moved past you (no motes), fish ignored you, nothing guided you to the four finds and there was no progress, and the
+island's music kept playing under the reef bed. Built, in order of impact:
+- **Swimming.** The body lies along the swim (the crawl's under-water shape, `under` 1, pitched with the climb): a flutter-kick crawl
+  while swimming, a slow glide flutter when the stick is let go (a lower drag, `DIVE_GLIDE_DRAG`, so a kick carries), a gentle hover bob,
+  banking into turns (`DIVE_BANK` 0.5 rad). **Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
+  to 5.4 m/s for 0.7 s, 1.1 s cooldown, 1.2 % breath (the pace lesson: a sprint has a price), a longer bubble trail, a 6° FOV kick, sand
+  puffs low over the sand. The camera sits a little lower and looks farther ahead, and is kept over the sand under it and halfway to the
+  diver (never inside a rising reef).
+- **The reef journey (diveJourney.ts).** Each zone has 8 pickups on a guided path through its finds (from the zone's own data, never
+  hard-coded positions): 4 bits of litter (a can, a bottle, a lost net, a bottle cap) and 4 treasures (a spiral shell, a starfish, sea
+  glass, a lost kit badge) that twinkle. Swim through one to collect it (no button): it spins up and away, a short note ("You cleared an
+  old can: the reef says thank you!"). The **Reef n/12** chip counts pickups + finds; the coral's colour comes back as it fills (uReef 0.72
+  → 1). At 12/12 the zone is **restored**, once ever: a *Real football fact* card (Forest Green Rovers, the first club certified carbon
+  neutral by the UN, 2018; source Wikipedia), a "Reef Keeper" sticker line, **3 coins** (`dive:<zone>:reef`, Training-metered, once ever:
+  at most 21 over all seven zones) and the zone's biggest school swims into a turning football in front of you for 8 s.
+- **Dot, the buddy fish.** A small damselfish swims beside you; hover for 2 s and it swims toward the nearest thing left to find and back
+  (it leads), so a young child always has a next step. No arrows, no map.
+- **Underwater football (the pitch zone, Paul's Grotto).** A ball on the old centre spot: nudge it with your body (water drag, a slow sink,
+  soft sand bounces) into the sunken goal: "GOAL!" and a *Coaching idea* card (a soaked pitch slows the ball: pass firmer). The ball
+  resets after 3 s. No coins (play only).
+- **Fish and plants react.** Schools part round the diver (more on a dart) and close up behind; fans, kelp and grass bend away as you swim
+  through. All in the vertex shaders.
+- **Water.** The room's water colour now follows the camera's place in the water column (clear turquoise near the surface, the zone's own
+  tint low over the rim; waterTokens ROOM_SHALLOW / ROOM_SHALLOW_MIX), the surface from below is a clear aqua window with moving shimmer
+  lines fading into that colour, caustic light lines move over the sand and the reef, the rays are soft and breathe, plankton motes drift
+  past (parallax: you can feel yourself move), a soft static vignette.
+- **Calm by design.** No fail states: the breath still floats you up gently; no timers on the journey; nothing scary.
+- **Saves / analytics.** `fi2-dive-reef-v1` (SYNC, docs/accounts-design.md table A): each zone's collected pickup indices and the restored
+  zones. `wa:dive_dart` / `wa:dive_pick` (once per dive), `wa:dive_restore`, `wa:dive_goal` on the `k` channel (countIds.ts registry,
+  admin Water tile): **no migration**.
+- **Freeze.** While in the room the whole island is suspended (docs/performance-guide.md "Explore v2").
+- **Validation.** tests/explore-v2.cjs (frozen-island source checks, rest, swim feel, journey, runtime restore, room caps and colour),
+  tests/water-dive.cjs, tests/dive-layout.cjs, full suite, `build:quiet`, headless phone + desktop shots (/tmp/explore-v2), 0 console errors.
+- **Not done / next.** A whale-shadow surprise, per-zone friend emotes (wave / high five), a daily sparkle spot and a photo mode were left
+  out to keep the draw budget; the Dart button could pulse once on the first dive. iPhone heat not measured.
+
+## 11. Seamless Explore: in and out across the zone's edge (21 Oct 2026, local)
+
+User: "when diving and outside of the explore, allow swimming right into it. when in the explore and exiting the boundary exit out and
+show diving outside ... without having to tap explore". `lib/town/water/diveEdge.ts` (pure; tests/dive-edge.cjs):
+- **In:** a walking duck-diver (waterState DIVE, under > 0.35) 1 m inside a zone's blob (`diveEdgeSpotAt`) enters its room at the
+  matching point: room = (island - centre) / scale (the layout's mapping), held 1.5 m inside the rim; heading and speed carry on (turned
+  inward when arriving at the rim facing out); the island dive depth maps to the room's water column. The breath goes on as it was.
+  No splash: the 0.65 s blend through the zone's water colour (none with reduced motion). Pressing Dive (Q) inside a zone therefore
+  also goes straight in; the Explore pill / E tap path is unchanged.
+- **Out:** the room's rim is the zone's blob outline in room metres (diveLayout `outline`), capped at DIVE_ROOM_R - 2. 2 m past it the
+  room hands back: the island 3 m outside the blob on the same bearing, still under (`water.underNow()`), facing outward, the follow
+  camera moved with the diver. Land / a pier / another zone there: it looks up to 12 m further out; only too-shallow water: the diver
+  comes up and swims; nothing: the buoy.
+- **No ping-pong:** in at 1 m inside, out lands 3 m outside (4 m back in); room 1.5 m in, out at 2 m past (3.5 m); a 1.5 s cooldown
+  after each crossing (the rim holds like a wall meanwhile) and the 2 s Explore re-arm after leaving. The 7 zones are far apart.
+- HUD: a soft chip "Entering: <zone>" / "Leaving the reef" (2.4 s). Analytics: `wa:dive_enter_edge` (instead of wa:dive_start) and
+  `wa:dive_exit_edge` (instead of wa:dive_surface), in the admin Water tile.
+
+## 11. Explore zone links: the map, discovery and the zone neighbourhoods (21 Oct 2026, local)
+
+User: "the jetpack badge on the map for the three far zones, discovery hints for the zones, and sea-life loops near zones"
+(audit /tmp/water-audit §1 #9 and #14, lane E).
+- **Fly there.** `lib/town/water/reefDiscovery.ts` `diveSpotFar`: a zone whose whole blob outline is beyond `SWIM_RANGE` (60 m) from
+  land is jetpack-only. Computed from the zone data, so a moved zone is re-classified: Kelp Forest Wreck (edge ~90 m), Ball Crate Reef
+  (~89 m), Moon Arch (~69 m). Their E marks (travel map and minimap) wear a small jetpack badge; the map key gains "Fly there: too far
+  to swim, so take your jetpack to these reefs".
+- **Explored.** No new save key: a zone with a saved find (`fi2-dive-finds-v1`) or a collected pickup / restore (`fi2-dive-reef-v1`)
+  is explored, and so is any zone entered this visit. Its E is filled deeper with a tiny check. The travel map shows one line under the
+  key: "Nearest reef to explore: <zone>, <n> m away" (plus "Too far to swim: fly there"), or "You have explored every reef".
+- **Shimmer hint.** Flying or swimming (never in a job, lesson, menu, room or the dive) within 300 m of an unexplored zone's edge, the
+  first time per visit per zone: one toast "Something shimmers over there" with an arrow that turns toward the zone (2 Hz), 6 s, on the
+  shared toast lane (`components/ReefHintToast.tsx`).
+- **Neighbourhoods.** Each zone's signature animal now swims within 60 m of its centre (`seaLifeAreas.ts` `ZONE_SIGNATURE`;
+  `zoneEllipse` places loops from the zone outline): Captain's Cup the north-sea whale shark (loop moved beside it, 27 m), Paul's Grotto
+  the Coral Cay manta (20 m), Ray Meadow an eagle ray + a stingray (19 m), Turtle Pool two turtles that surface to breathe every 20 s
+  (18 m), Kelp Forest Wreck and Ball Crate Reef fish schools (23 m), Moon Arch jellies (15 m). Turtles / fish / jellies reuse the clear
+  window's creature shapes (`clearCreatures.ts`) in `lib/graphics/zoneLife.ts`. Clearances unchanged: sharks ≥ 8 m and other animals
+  ≥ 5 m off every patch; zone life ≥ 2 m off patches, ≥ 8 m from sharks, ≥ 4 m from other animals.
+- **Not done.** The humpback (8 m) and the summit-east shark patrol (18 m) still pass close to Turtle Pool (inside the tested
+  clearances); fishing / other water talk does not mention the reefs yet. iPhone heat not measured.
+- **Validation.** tests/reef-discovery.cjs, tests/sea-life-areas.cjs (zone neighbourhood group), tests/map-markers.cjs.
+
+## 12. Explore delight: a whale, zone friends, a daily sparkle, a gentler glide near finds (21 Oct 2026, local)
+
+User: "Explore: a whale-shadow surprise, wave and high-five emotes for each zone's friend, a daily sparkle spot, and slowing the glide
+near finds." Pure rules in `lib/town/water/diveDelight.ts` (whale, friends, emotes) and `diveSparkle.ts` (the sparkle spot); the
+slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
+- **Whale shadow.** Once in a while (45-120 s after entering, at most once a visit; once that zone's whale has been met only 40 % of
+  visits get one; never while a pickup, an emote or a card is going on) a big soft whale silhouette (body, pectoral fins, flukes: soft
+  ellipses in the surface shader, no texture) glides 64 m across the surface overhead in 16 s, crossing 5 m ahead of the diver (in view). The god rays dim
+  (to 45 %), the schools lift and tilt up toward it, and a quiet, slow two-note whale song plays (synthesized, islandSound `whaleSong`).
+  The first time in each zone: "Whale friend! Whales call to each other across the sea, like teammates calling for the ball." and
+  **1 coin** (`dive:<zone>:whale`, Training-metered, once ever). Off with heat tier 3+ / Battery saver / reduced motion.
+- **Zone friends: wave and high five.** Every zone has a named friend near the first leg of its journey: Captain Crab (Captain's Cup),
+  Otto the octopus (Paul's Grotto), Sunny the seahorse (Kelp Forest Wreck), Rae the ray (Ray Meadow), Luna the moon jelly (Moon Arch),
+  Puff the pufferfish (Ball Crate Reef), Shelly the turtle (Turtle Pool); Dot the buddy fish still swims with you everywhere. Within
+  4 m two small round icon buttons show above Dart (Wave, High five; G / H on desktop). The diver's right arm waves (up and out, the hand
+  swinging) or reaches straight ahead; the friend turns to face you and answers in its own way (the crab and turtle wave a claw /
+  flipper, the octopus raises a tentacle, the ray flaps, the seahorse nods, the jelly pulses, the puffer puffs up softly); on a high five
+  it swims in to meet your hand and a little gold sparkle ring pops with a pop sound. 2 s cooldown. Each emote adds a friendship heart
+  (♥ on the Reef chip, up to 3); the third gives "Best friends ...: Reef Pal sticker! Players high-five to show respect: that is fair
+  play." and **1 coin** once ever (`dive:<zone>:friend`).
+- **Daily sparkle spot.** Each local calendar day every zone hides one soft glittering patch on the sand (a seeded pick from the date
+  and the zone id: stable all day, somewhere else tomorrow; clear of the buoy, the start, the finds, the pickups, the wreck, the pitch,
+  the arch and the rocks). It twinkles within ~12 m (holds still with calm / reduced motion). Swim into it: a bubble burst and a sparkle
+  ring, a tiny treasure (a pearl or a pink shell) and a "Today's sparkle" card with one of 7 short, true ocean facts (three hearts of an
+  octopus, coral polyps, seahorse dads, parrotfish sand, starfish arms, clownfish and anemones, the blue whale); **1 coin** once per day
+  per zone (`dive:<zone>:sparkle:<date>`, Training-metered).
+- **Slower glide near finds.** Within 4 m of anything still to collect (a journey pickup, an unfound find, today's sparkle) the water
+  gets a little thicker on an eased curve (smoothstep 4 m -> 1.4 m): drag up to ×1.6, the top speed down up to 25 %, a dart there is a
+  shorter "precision" dash (kick and burst × 0.55). The find prompt shows from 3.2 m (was 2.6) and a pickup collects within 1.6 m (was
+  1.35), so a slow drift still gets it. Elsewhere the swim is exactly as before.
+- **One thing at a time.** The "Entering: <zone>" / "Leaving the reef" chip now takes the HUD stack's toast lane while it shows, so the
+  one-time lesson cards wait for it (and the chip waits up to 4 s for a card already showing, then drops: the arrival note names the zone anyway); it sits in one column with the note, off the Breath pill: nothing covers it.
+- **Saves / analytics.** `fi2-dive-reef-v1` gains optional `hearts` (per zone, 1-3), `whale` (zones met) and `spark` ({d: date, m:
+  zone bitmask}); a full save of all seven zones is under 1.5 KB; older saves read unchanged. `wa:dive_whale` (each pass),
+  `wa:dive_emote` (once per dive), `wa:dive_sparkle` on the `k` channel (countIds.ts, admin Water tile): no migration. Economy: at most
+  2 coins once ever per zone (whale, friend) plus 1 a day per zone for the sparkle, all through the Training meter.
+- **Cost.** No new draw: the friend is one more instance of the pickups' instanced draw, the whale is a few lines in the surface
+  shader, the sparkle glitter and the ring are 14-20 + 12 more points in the bubbles' draw (docs/performance-guide.md "Explore delight").
+- **Not done.** iPhone heat not measured; no photo mode.
+

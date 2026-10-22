@@ -34,7 +34,7 @@ const near=(sw,x,z,r)=>sw.bugs.filter(b=>b.mode!==F.Mode.Hidden&&b.fade>.5&&Math
 function run(sw,cam,x,z,secs,o={}){const dt=1/30;let acc=0;const moved=[];
  for(let t=0;t<secs;t+=dt){if(o.walk){x+=o.walk.vx*dt;z+=o.walk.vz*dt;if(!SI.onSummitIsle(x,z)){o.walk.vx*=-1;o.walk.vz*=-1;}}
   aim(cam,x,z);sw.update({dt,x,z,night:!!o.night,tier:o.tier??0,reduced:false,busy:false,job:o.night?'fireflies':'bugs'});
-  acc+=dt;if(acc>=SP.BUG_LOCAL.every){acc=0;const before=sw.bugs.map(b=>b.hx+','+b.hz);sw.ambient(x,z,{caught:o.caught??(()=>false)});
+  acc+=dt;if(acc>=SP.BUG_LOCAL.every){acc=0;const before=sw.bugs.map(b=>b.hx+','+b.hz);sw.ambient(x,z,{want:o.want,caught:o.caught??(()=>false)});
    sw.bugs.forEach((b,i)=>{if(b.hx+','+b.hz!==before[i])moved.push({id:b.id,x:b.hx,z:b.hz,view:inView(cam,b.hx,b.hz)});});}
   if(o.each)o.each(x,z,t);}
  return {x,z,moved};}
@@ -101,8 +101,13 @@ for(const [tier,cap] of [[1,10],[2,8],[3,8],[4,8]]){const s=spots[2],sc=new T.Sc
  for(const id of sw.ids)assert(sw.root.getObjectByName('bug-'+id),'built model for '+id);
  // the far silhouette at 40 m on a phone (fov 40, 844 px tall): the smallest species, at the far boost, ≥ 14 px
  const W=load('lib/graphics/wildBugsCore.ts'),minSize=Math.min(...SP.BUG_SPECIES.map(b=>W.bugVisualSize(b.look.size))),boost=1.45;
- const px=minSize*boost/(2*40*Math.tan(20*Math.PI/180))*844;assert(px>=14,`silhouette at 40 m: ${px.toFixed(1)} px`);
- report.push(`bodies: ${checked} in-view full models all drawn (sphere follows the bug), ≤ ${maxD} draws; smallest silhouette at 40 m ≈ ${px.toFixed(0)} px (phone)`);sw.dispose();}
+ // Oct 21 2026: believable sizes (gentle × 1.0-1.3 boost by size class); the halo carries the readability, not the body
+ const maxSize=Math.max(...SP.BUG_SPECIES.map(b=>W.bugVisualSize(b.look.size)));assert(minSize>=.2&&maxSize<=.8,`island sizes believable: ${minSize.toFixed(2)}-${maxSize.toFixed(2)} m`);
+ for(const b of SP.BUG_SPECIES){const k=W.bugVisualSize(b.look.size)/b.look.size;assert(k>=1-1e-9&&k<=1.3+1e-9,'readability boost 1.0-1.3 for '+b.id);}
+ const tiny=SP.BUG_SPECIES.find(b=>b.look.body==='ant'),fly=SP.BUG_SPECIES.find(b=>b.look.body==='dragonfly');assert(W.bugVisualSize(tiny.look.size)<W.bugVisualSize(fly.look.size)*.6,'an ant is much smaller than a dragonfly');
+ const ppm=(d)=>844/(2*d*Math.tan(20*Math.PI/180)),px=minSize*boost*ppm(40);assert(px>=8,`silhouette at 40 m: ${px.toFixed(1)} px`);
+ const hpx=FX.haloSize(minSize)*ppm(FX.SPOT_FX.haloRange);assert(hpx>=50,`halo on the nearest bug at its 30 m range: ${hpx.toFixed(0)} px`);
+ report.push(`bodies: ${checked} in-view full models all drawn (sphere follows the bug), ≤ ${maxD} draws; sizes ${minSize.toFixed(2)}-${maxSize.toFixed(2)} m; smallest at 40 m ≈ ${px.toFixed(0)} px, halo at 30 m ≈ ${hpx.toFixed(0)} px (phone)`);sw.dispose();}
 // ---- 6. Catch simulation: walk up at 1.6 m/s, press Swing at d m (auto-aim, hold, samples, lunge) ----
 {const K=load('lib/town/jobs/bugCatch.ts'),dt=1/30,rates={};const fast=new Set(['monarch','swallowtail','blue-morph','dragonfly','moth','bumblebee','honeybee']);
  const seen=new Set();const swarms=[];for(const time of ['day','sunset'])for(let seed=1;seen.size<20&&seed<400;seed++){const ids=SP.pickBugsOnMap(seed,0,time).map(b=>b.id);if(ids.some(id=>!seen.has(id))){ids.forEach(id=>seen.add(id));swarms.push({seed,time});}}
@@ -124,14 +129,16 @@ for(const [tier,cap] of [[1,10],[2,8],[3,8],[4,8]]){const s=spots[2],sc=new T.Sc
      if(res&&res.id===id)ok++;}
     rates[id][D]=ok/n;}}
   sw.dispose();}
- const fails=[];for(const [id,r] of Object.entries(rates)){if(r[2]<.95||r[4]<.95||r[5]<.95)fails.push(id+' ≤5 m '+[r[2],r[4],r[5]].join('/'));if(r[8]<.8)fails.push(id+' 8 m '+r[8]);}
+ const fails=[];for(const [id,r] of Object.entries(rates)){/* Oct 21 2026 reach pull-in (auto-aim 4.2 m): within 4 m always, 8 m never ("you have to be closer") */if(r[2]<.95||r[4]<.95)fails.push(id+' ≤4 m '+[r[2],r[4]].join('/'));if(r[8]>.05)fails.push(id+' 8 m '+r[8]);}
  assert.equal(fails.length,0,'catch rates: '+fails.join('; '));
  const avg=D=>Math.round(Object.values(rates).reduce((a,r)=>a+r[D],0)/Object.keys(rates).length*100);
  const fastMin=D=>Math.round(Math.min(...[...fast].map(id=>rates[id][D]))*100);
  report.push(`catch sim (20 species × 10 walk-ups): mean ${[2,4,5,6,8].map(D=>D+' m '+avg(D)+'%').join(', ')}; fast fliers min ${[2,4,6,8].map(D=>D+' m '+fastMin(D)+'%').join(', ')}`);}
 // Night shift: fireflies get the same local density.
-{const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(.46);sw.setCamera(cam);const s=spots[4];run(sw,cam,s.x,s.z,6,{night:true});
- const n=near(sw,s.x,s.z,40);assert(n>=Math.min(8,sw.count),`night: ${n} fireflies within 40 m`);report.push(`night: ${n}/${sw.count} fireflies within 40 m`);sw.dispose();}
+{const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77}),cam=camFor(.46);sw.setCamera(cam);const s=spots[4];const WC=load('lib/graphics/wildBugsCore');run(sw,cam,s.x,s.z,6,{night:true,want:WC.FIREFLY_LOCAL_WANT});
+ // Oct 21 2026 ("more fireflies on the mountain island"): 48 out on a cool desktop, ≥ FIREFLY_LOCAL_WANT (14) within 35 m on a shift.
+ assert.equal(sw.count,WC.FIREFLY_AMBIENT.desktop[0],'night tier 0: the ambient firefly count');
+ const n=near(sw,s.x,s.z,35);assert(n>=WC.FIREFLY_LOCAL_WANT,`night: ${n} fireflies within 35 m (≥ ${WC.FIREFLY_LOCAL_WANT})`);report.push(`night: ${n}/${sw.count} fireflies within 35 m`);sw.dispose();}
 // Wiring: the job calls the local density on its throttle; Town hands the swarm the camera.
 {const js=fs.readFileSync(path.join(base,'lib/town/jobs/jobScene.ts'),'utf8'),town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
  assert(/recallAcc>=BUG_LOCAL\.every/.test(js)&&/sw\.ambient\(p\.x,p\.z/.test(js),'jobScene: local density every BUG_LOCAL.every s');assert(/wildBugs\.setCamera\(camera\)/.test(town),'Town: swarm camera');}

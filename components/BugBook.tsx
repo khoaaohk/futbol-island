@@ -53,7 +53,7 @@ export default function BugBook({open,onClose}:{open:boolean;onClose:()=>void}){
   else if(!open&&el.open){el.close();restore.current?.focus({preventScroll:true});}},[open]);
  const got=bugsCaught(save),nights=firefliesCaught(save),done=bugBookComplete(save);
  const sections=[{id:'bug',title:'Bug squad · Day',lesson:BUG_JOB_LESSON,where:'Catch it on a Bug squad shift (the sign on the summit\'s south-west corner), by Day or at Sunset: up on the mountain, along the trails or near the water.'},
-  {id:'firefly',title:'Fireflies · Night',lesson:FIREFLY_JOB_LESSON,where:'Catch it on a Bug squad shift at Night (the same sign on the summit).'}] as const;
+  {id:'firefly',title:'Fireflies · Night',lesson:FIREFLY_JOB_LESSON,where:'Cup it in the glass jar on a Bug squad shift at Night (the same sign on the summit).'}] as const;
  return <dialog ref={dialog} className={`${styles.dialog} ${leaving?styles.leaving:styles.entering}`} aria-labelledby="bugbook-title" data-bugbook onCancel={e=>{e.preventDefault();requestClose();}} onClick={e=>{if(e.target===e.currentTarget)requestClose();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell} ${shell.drawer}`}>
    <header className={`${shell.header} ${styles.header}`}><div><h2 id="bugbook-title">Bug book</h2></div><DoneButton ref={close} onDone={requestClose}/></header>

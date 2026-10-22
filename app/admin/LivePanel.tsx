@@ -259,9 +259,9 @@ export default function LivePanel({view,onClose,countryName}:{view:PanelView|nul
   <section className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="live-title" style={drag?{transform:`translateY(${drag}px)`,transition:'none'}:undefined}
    onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd}>
    <header className={styles.head}>
-    {open&&stack.length>1&&<BackButton onBack={back}/>}
+    {open&&stack.length>1&&<BackButton key={stack.length} onBack={back}/>}
     <h2 id="live-title">{cur.mode==='live'&&<i className={styles.dot} aria-hidden="true"/>}{title} <span className={styles.count}>{count}</span></h2>
-    {open&&<DoneButton ref={done} onDone={onClose} immediate/>}
+    {open&&<DoneButton ref={done} onDone={onClose}/>}
    </header>
    <div className={styles.body} ref={body}>
     {cur.mode==='live'&&<>

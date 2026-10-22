@@ -209,3 +209,15 @@ export function createBackpack(){
   };
 }
 export type Backpack=ReturnType<typeof createBackpack>;
+/**
+ * The worn pack in a room or a portrait render (Oct 21 2026, user: "Backpack: not yet in the kit shop and other rooms"): one line
+ * per room after the rig's bean look is set (docs/backpack.md). Folded (morph 0, never the jet, no flames), kit colours from
+ * `playerOutfit`. `refresh(kit)` after a kit / build change (re-reads the bean shell, recolours; rebuilds only on a build change).
+ * One draw call; nothing per frame.
+ */
+export function wearBackpack(rig:T.Object3D,kit:BackpackKit){
+  const pack=createBackpack();if(!pack.attach(rig)){pack.dispose();return null;}
+  const refresh=(k?:BackpackKit)=>{if(k)pack.setKit(k);pack.update(0,'walk','classic',false,0,0,0,true);};
+  refresh(kit);
+  return {pack,refresh,dispose:()=>pack.dispose()};
+}

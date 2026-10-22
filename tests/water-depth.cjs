@@ -72,14 +72,14 @@ ok('the probe asks distanceToLand at most 10 times a second and never on land',(
  probe.reset();assert.equal(probe.land,true);
 });
 
-ok('the swim step: crawl SWIM_SPEED, Swim fast SWIM_FAST_SPEED (3.7 / 6.2 since Oct 15 2026), momentum, the soft 60 m edge',()=>{
+ok('the swim step: crawl SWIM_SPEED, Swim fast SWIM_SPRINT (4.8 / 8.2 since Oct 21 2026), momentum, the soft 60 m edge',()=>{
  const allowed=(x,z)=>Math.hypot(x,z)>10&&Math.hypot(x,z)<=70,land=(x,z)=>Math.hypot(x,z)<=10;
  const p={x:20,z:0},v={x:0,z:0};
- for(let i=0;i<600;i++)W.swimStep(p,v,{x:1,z:0},false,1/60,allowed,land,Math.hypot(p.x,p.z)-10);
+ for(let i=0;i<300;i++)W.swimStep(p,v,{x:1,z:0},false,1/60,allowed,land,Math.hypot(p.x,p.z)-10);
  assert(Math.abs(Math.hypot(v.x,v.z)-W.SWIM_SPEED)<.02,'crawl speed '+Math.hypot(v.x,v.z));
- p.x=12;p.z=0;/* back from the edge: at 6.2 m/s the sprint covers the 70 m test sea in ~9 s (Oct 15 2026) */
+ p.x=12;p.z=0;/* back from the edge: at 8.2 m/s the sprint covers the 70 m test sea in ~7 s (Oct 21 2026) */
  for(let i=0;i<300;i++)W.swimStep(p,v,{x:1,z:0},true,1/60,allowed,land,0);
- assert(Math.abs(Math.hypot(v.x,v.z)-W.SWIM_FAST_SPEED)<.02,'fast '+Math.hypot(v.x,v.z));
+ assert(Math.abs(Math.hypot(v.x,v.z)-W.SWIM_SPRINT)<.02,'fast '+Math.hypot(v.x,v.z));
  // Release: it brakes at SWIM_BRAKE (carries momentum for a moment), never stops dead.
  const v0=Math.hypot(v.x,v.z);W.swimStep(p,v,{x:0,z:0},false,.1,allowed,land,0);const v1=Math.hypot(v.x,v.z);
  assert(v1<v0&&v1>v0*.7,'momentum '+v1);
@@ -89,7 +89,7 @@ ok('the swim step: crawl SWIM_SPEED, Swim fast SWIM_FAST_SPEED (3.7 / 6.2 since 
  // The edge: at 58 m out the current slows the swimmer; the range itself stops the outward step and slides along it.
  v.x=v.z=0;p.x=66;p.z=0;for(let i=0;i<600;i++)W.swimStep(p,v,{x:1,z:0},false,1/60,allowed,land,Math.hypot(p.x,p.z)-10);
  assert(Math.hypot(p.x,p.z)<=70.001,'never past the range '+Math.hypot(p.x,p.z));
- v.x=v.z=0;p.x=66;const s=W.swimStep(p,v,{x:1,z:0},true,1,allowed,land,58);assert(s<W.SWIM_FAST_SPEED*.75,'slower near the edge '+s);
+ v.x=v.z=0;p.x=66;const s=W.swimStep(p,v,{x:1,z:0},true,1,allowed,land,58);assert(s<W.SWIM_SPRINT*.75,'slower near the edge '+s);
  // Land ahead is allowed (the climb-out); it does not block the step.
  p.x=10.5;p.z=0;v.x=-1;v.z=0;W.swimStep(p,v,{x:-1,z:0},false,.5,allowed,land,0);assert(p.x<10.5,'stepped toward the sand');
  // No allocation: the same objects, nothing returned but a number.

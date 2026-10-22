@@ -65,7 +65,7 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  const slow=count(false,4),fast=count(true,4);
  assert(slow.wakes>=9&&slow.wakes<=12,'wake pairs at ~0.38 s: '+slow.wakes);assert(slow.strokes>=5&&slow.strokes<=9,'strokes: '+slow.strokes);assert.deepEqual([...slow.sides].sort(),[-1,1],'both arms');
  assert(fast.wakes>slow.wakes&&fast.strokes>slow.strokes,'Swim fast: a quicker wake and stroke');
- assert(W.SWIM_FAST_SPEED/W.SWIM_SPEED>=1.6&&W.SWIM_FAST_SPEED/W.SWIM_SPEED<=1.8,'Swim fast is 1.6–1.8× the crawl');
+ assert(W.SWIM_SPRINT/W.SWIM_SPEED>=1.6&&W.SWIM_SPRINT/W.SWIM_SPEED<=1.8,'Swim fast is 1.6–1.8× the crawl');
  // Treading: soft rings only, no wake.
  water.press('swimfast','up');let wakes=0,rings=0;for(let i=0;i<300;i++){const ev=water.step(1/60,20,0,input());if(ev.wake||ev.stroke)wakes++;if(ev.ripple)rings++;}assert.equal(wakes,0);assert(rings>=2&&rings<=4,'tread rings '+rings);
  // Reduced motion: the stroke clock stands still, so no arm splashes; the wake pairs still mark the way (the host gates them off anyway).
@@ -85,7 +85,7 @@ ok('the wake and the strokes while swimming; Fly up: the jetpack takes off out o
  for(const row of [fly,noFuel,wadeFly])for(const b of row){assert(!['walk','scooter','bike','moped'].includes(b.icon),'no land ride in the water: '+b.icon);assert.notEqual(b.id,'shore','To shore is gone from the cluster');}
  assert.equal(H.waterKeyAction('KeyR','r'),'swimride','R (the land ride key) is the switcher');assert.equal(H.waterKeyAction('KeyE','e'),'swimride');
  // Water actions show only their icon (user, Oct 15 2026): the caption is skipped for the water ids.
- assert.match(fs.readFileSync('components/JobActionButton.tsx','utf8'),/WATER_IDS\.has\(b\.id\)\?null:<small>/,'water buttons are icon-only');
+ {const jab=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/WATER_IDS\.has\(b\.id\)\?null:<small>/.test(jab)||!/<small>/.test(jab),'water buttons are icon-only (Oct 21 2026: every job action is)');}
  const words=fs.readFileSync('components/JobActionButton.tsx','utf8');assert(/\bswimride:'/.test(words));assert.match(words,/WATER_IDS=new Set\(\['swimfast','dive','swimride'(,'letgo')?(,'surface')?(,'tuck','spin','wave')?\]\)/);/* + water P1b's Let go */
  const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/const flyUp=\(\)=>\{if\(!water\.inWater\|\|rideRef\.current!=='walk'\|\|!fuelStore\.canUse\('jetpack'\)\)return false;/,'fuel-gated');
  // QA Oct 16 2026: the gate must not raise the land fuel notice ("Walk to a Konbini…"), which hid SWIM_RIDE_NOTE from a swimmer.

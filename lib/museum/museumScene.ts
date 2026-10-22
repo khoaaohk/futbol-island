@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {wearBackpack} from '@/lib/graphics/backpack';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createPlayer,profileFor,type PlayerMotion} from '../graphics/player';
 import {loadCustomization,beanLookFor,playerOutfit} from '../town/customization';
@@ -188,7 +189,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const shadowGeo=new T.CircleGeometry(1,24),shadowMat=new T.MeshBasicMaterial({color:'#2a2722',transparent:true,opacity:.16,depthWrite:false});
  const disc=(s:number)=>{const d=new T.Mesh(shadowGeo,shadowMat);d.rotation.x=-Math.PI/2;d.scale.set(s,s*.7,1);scene.add(d);return d;};
  const progress=getQuizProgress(),custom=loadCustomization(progress.completed,progress.total);
- const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));player.root.name='museum-player';scene.add(player.root);const playerShadow=disc(.42);
+ const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));const pack=wearBackpack(player.root,playerOutfit(custom));/* Oct 21 2026: the always-worn pack, folded (docs/backpack.md) */player.root.name='museum-player';scene.add(player.root);const playerShadow=disc(.42);
  const guide=createPlayer('museum-guide-ada','neutral',true,true);guide.setProfile(profileFor('npc',44));
  {const d=npcDress({id:'museum-guide-ada',role:'Museum guide',character:'female',face:'deep',clothing:'classic'});d.look.headwear='none';guide.setBeanLook(d.look,{...d.outfit,shirt:P.ink,shirt2:P.plinth});}
  guide.root.name='museum-guide';scene.add(guide.root);const guideShadow=disc(.42);guideShadow.position.set(GUIDE.x,.03,GUIDE.z);
@@ -348,7 +349,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   get state(){return {exhibits:{sculptures:[...exhibits.built]},x,z,yaw,zoom:zoomView(),zooming:!!zoom,near:near?.id??null,leaving,doorOpen,sleeping:frame===0,draws,frames,steps,spin:{turns:spinTurns,v:spinV,angle:telstar?.rotation.y??0},rain,
    render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),stops:stops.map(s=>s.id)};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
-   player.dispose();guide.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});
+   pack?.dispose();player.dispose();guide.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});
    geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());doorGeo.dispose();atlas.dispose();shadeTex.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
 }

@@ -49,7 +49,9 @@ const SI=load('lib/town/summitIsle.ts'),V=load('lib/town/venues.ts'),floor=V.fie
 
 // ---- 2. Caps by heat tier ----
 same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:false})),[12,10,8,0,0],'bugs 12 / 10 / 8 / 0 / 0');
-same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[8,6,4,0,0],'fireflies 8 / 6 / 4 / 0 / 0');
+same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[48,30,20,8,0],'fireflies 48 / 30 / 20 / 8 / 0 (desktop; Battery saver = tier 4: none)');
+same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:true,phone:true})),[28,16,16,8,0],'phone fireflies 28 / 16 / 16 / 8 / 0');
+assert.equal(W.wildBugCount({tier:0,reduced:true,night:true}),0,'reduced motion: no ambient fireflies');
 assert.equal(W.wildBugCount({tier:0,reduced:true,night:false}),0,'reduced motion: none');
 const C=SI.SUMMIT_CENTER,on={x:640,z:180};
 const frame=(sw,o,n=1,dt=1/60)=>{for(let i=0;i<n;i++)sw.update({dt,night:false,tier:0,reduced:false,busy:false,...o});};
@@ -127,6 +129,6 @@ for(const [tier,n] of [[0,12],[1,10],[2,8]]){const sc=new T.Scene(),sw=S.createB
  assert(!/\bnew (?!Event\(WILD_BUG_HINT)|\[\]|[(=,]\s*\{\s*\w+:/.test(loop.replace(/build\([^)]*\)/g,'')),'no allocation in the swarm update');
  const fl=read('lib/graphics/bugFlight.ts'),step=fl.slice(fl.indexOf('export function stepBug'),fl.indexOf('/** Catch:'));
  assert(!/\bnew |\[[^\]]*,[^\]]*\]\s*\)|[(=,]\s*\{\s*\w+:/.test(step),'no allocation in the flight step');
- const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*night:timeRef\.current==='night',sunset:timeRef\.current==='sunset',tier:heat\.tier,reduced,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it');}
-console.log('PASS bug flight: 20 species + firefly modelled (wings, cases, legs), caps 12/10/8 + fireflies 8/6/4, draw budget, 60 s flights with no NaN or teleport, sneaking vs running, the catching API, no per-frame allocation');
+ const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*night:timeRef\.current==='night',sunset:timeRef\.current==='sunset',tier:heat\.tier,reduced,phone:quality\.phone,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it');}
+console.log('PASS bug flight: 20 species + firefly modelled (wings, cases, legs), caps 12/10/8 + fireflies 48/30/20/8 (phone 28/16/16/8), draw budget, 60 s flights with no NaN or teleport, sneaking vs running, the catching API, no per-frame allocation');
 function same(a,b,m){assert.deepEqual(JSON.parse(JSON.stringify(a)),JSON.parse(JSON.stringify(b)),m);}

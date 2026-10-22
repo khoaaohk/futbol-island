@@ -32,7 +32,7 @@ import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib
 import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
-import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,initialPill,bugBookCoinNote} from '@/lib/town/jobs/bugUi';
+import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,BUG_TIP_NIGHT,initialPill,bugBookCoinNote,pillCount,pillShown,pillWatch,PILL_WATCH_MS} from '@/lib/town/jobs/bugUi';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
@@ -88,6 +88,25 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   const first=peek===0;const next=first?initialPill(seen):'full';setPill(next);if(next==='chip')return;
   const t=setTimeout(()=>{setPill('chip');if(next==='tip')try{localStorage.setItem(BUG_PILL.key,'1');}catch{}},next==='tip'?BUG_PILL.tipMs:BUG_PILL.openMs);return()=>clearTimeout(t);
  },[squadKey,peek]);
+ // The pill's safety net (bugUi.ts pillWatch; user, twice: "the bar is missing for bug squad"): while a Bug squad run is active, a
+ // 2 Hz check that the pill is really on screen. A stage, the release or a dialog covering it is fine; otherwise the pill state is
+ // reset, and if the HUD stack itself is hidden (or the pill keeps failing) the pill is drawn on its own under the coins bar.
+ const [pillDocked,setPillDocked]=useState(false),pillStage=useRef(false);pillStage.current=!!act0?.squad&&(!!view.zooming||!!view.releasing);
+ useEffect(()=>{setPillDocked(false);if(!squadKey)return;let misses=0,sticky=false;
+  const id=window.setInterval(()=>{try{
+   const stack=document.querySelector<HTMLElement>('[data-hud-stack]'),el=document.querySelector<HTMLElement>('[data-job-active]:not([data-hud-exit])');
+   const shown=(n:Element|null)=>{if(!n)return false;const r=n.getBoundingClientRect(),cs=getComputedStyle(n);return r.width>0&&r.height>0&&cs.visibility==='visible'&&+cs.opacity>.1;};
+   const dialog=[...document.querySelectorAll('[role="dialog"],[aria-modal="true"],dialog[open]')].some(d=>{if(d.closest('[data-job-intro],[data-job-done],[data-job-active]'))return false;const r=d.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(d).visibility!=='hidden';});
+   let visible=false;if(el&&shown(el)){const r=el.getBoundingClientRect();visible=r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth&&(!stack?.contains(el)||shown(stack));
+    if(visible){const hit=document.elementFromPoint(Math.min(innerWidth-1,Math.max(0,r.left+r.width/2)),Math.min(innerHeight-1,Math.max(0,r.top+r.height/2)));visible=!!hit&&(el.contains(hit)||!!hit.closest('[data-bug-card],[data-island-toast],[data-job-skip]'));}}
+   const stackHidden=!!stack&&(stack.hidden||!shown(stack)&&!!el&&stack.contains(el));
+   const call=pillWatch({running:!!getJobRuntime()?.run,staging:pillStage.current||document.documentElement.hasAttribute('data-catch-stage'),dialog,exists:!!el,visible,stackHidden});
+   if(call==='ok'){misses=0;if(!sticky&&stack&&!stack.hidden&&el&&!stack.contains(el))setPillDocked(false);return;}
+   if(call==='wait')return;
+   misses++;const w=window as unknown as {__fi2PillRescues?:number};w.__fi2PillRescues=(w.__fi2PillRescues??0)+1;
+   setPill('chip');setPanel('full');if(call==='detach'||misses>=3){if(misses>=3)sticky=true;setPillDocked(true);}
+  }catch{/* a safety net never throws */}},PILL_WATCH_MS);
+  return()=>window.clearInterval(id);},[squadKey]);
  useEffect(()=>{if(!panelKey||squadPill)return;setPanel('full');if(holdOpen)return;
   const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const dwell=Math.min(9000,Math.max(PANEL_DWELL_MS,(act0?.hint.length??0)*45));let t2:ReturnType<typeof setTimeout>|undefined;
@@ -142,6 +161,10 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  },[view.ended?.nonce]);
  useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
  const endJob=()=>{const r=runtime?.run;if(r&&r.def.swing&&r.got.some(Boolean)&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
+ // The action cluster's End button (Town.tsx, Oct 21 2026) asks through the same two-tap confirm, and mirrors its state.
+ const endRef=useRef(endJob);useEffect(()=>{endRef.current=endJob;});
+ useEffect(()=>{const on=()=>{const r=getJobRuntime()?.run;if(r&&r.def.swing&&!payday&&!view.releasing&&!view.zooming)endRef.current();};document.addEventListener('fi2-bug-end',on);return()=>document.removeEventListener('fi2-bug-end',on);},[payday,view.releasing,view.zooming]);
+ useEffect(()=>{try{document.dispatchEvent(new CustomEvent('fi2-bug-end-ask',{detail:endAsk}));}catch{}},[endAsk]);
  // Payday: pay once per finished shift.
  useEffect(()=>{const done=view.done;if(!done||done.nonce===paidNonce.current)return;paidNonce.current=done.nonce;const def=jobById(done.id);if(!def)return;
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
@@ -198,13 +221,13 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <p className={styles.pay}><span className={styles.coin} aria-hidden="true"/>Pays {preview.coins} {preview.coins===1?'coin':'coins'}{preview.bonus?` (includes a +${FIRST_JOB_BONUS} first-time bonus)`:''}{preview.tier==='half'?' · half pay for today\'s extra shifts':preview.tier==='tip'?' · a thank-you tip today — full pay again tomorrow':''}</p>
    <div className={styles.actions}><button type="button" ref={startButton} className={styles.primary} disabled={introClosed} onClick={()=>start(introJob.id)}>{introClosed?(introJob.when==='night'?'Night only':'Day only'):'Start job'}</button><button type="button" className={styles.secondary} onClick={()=>setIntro(null)}>Not now</button>{isBugJob(introJob.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>}
-  {active&&view.active&&(()=>{const a=view.active,count=a.squad?`${a.squad.value}/${a.squad.total}`:a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`,netChip=a.buttons?.find(b=>b.slot==='extra'),
+  {active&&view.active&&(()=>{const a=view.active,count=pillCount(a),netChip=a.buttons?.find(b=>b.slot==='extra'),
     unit=a.phase==='deliver'?(active.kind==='garden'?'Drop in the crate':'Empty the bag'):active.kind==='rebound'&&a.phase==='shots'?'Target passes':active.unit,chip=a.squad?pill!=='full':panel==='chip',tip=!!a.squad&&pill==='tip';
-   return <HudSlot><section className={styles.hud} data-hud-slot="task" data-job-active={active.id} data-job-phase={a.phase} data-job-panel={a.squad?pill:panel} data-compact={chip||undefined} aria-label={`${active.title}: ${unit} ${a.value} of ${a.total}`}>
+   const panelEl=<section className={styles.hud} data-hud-slot="task" data-job-active={active.id} data-job-phase={a.phase} data-job-panel={pillShown(!!a.squad,pill,panel)} data-compact={chip||undefined} aria-label={`${active.title}: ${unit} ${a.value} of ${a.total}`}>
    {/* Progress and the next step are announced even while the panel is a chip. */}
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
-    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
+    <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{a.set==='fireflies'?BUG_TIP_NIGHT:BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
     {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label="Show nearest bug" title="Show nearest bug" disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
     {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
     :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
@@ -220,7 +243,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
     {a.actions.length>0&&!a.buttons&&<div className={styles.taskActions}>{a.actions.map(x=><button key={x.id} type="button" data-job-action={x.id} className={x.primary?styles.primary:styles.secondary} {...jobActionProps(x,id=>runtime?.act(id))}>{x.label}</button>)}</div>}
     <button type="button" className={styles.stop} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
    </>}
-  </section></HudSlot>;})()}
+  </section>;
+   return a.squad&&pillDocked?<div className={styles.pillDock} data-pill-dock>{panelEl}</div>:<HudSlot>{panelEl}</HudSlot>;})()}
   {/* Bug squad release cinematic (Oct 20 2026): the controls are held while the bugs fly off; a tap anywhere (or Space / Enter /
       Esc) skips to the end. Transparent, over the game only; the HUD stays readable. Only a NEW press skips: the Release tap's own trailing click lands on
       this overlay (it appears under the finger), so pointer clicks are ignored (keyboard clicks, detail 0, still skip). */}

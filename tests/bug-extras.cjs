@@ -51,7 +51,7 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
 // ---- 3. Wild bugs (since Bug flight: the island's bug swarm, lib/graphics/bugSwarm.ts; details in tests/bug-flight.cjs) ----
 {const W=load('lib/graphics/wildBugsCore.ts'),SI=load('lib/town/summitIsle.ts');
  same([0,1,2,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:false})),[12,10,8,0,0],'12 / 10 / 8 by heat tier (pickBugsOnMap caps), none hot or on Battery saver (tier 4)');
- same([0,1,3].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[8,6,0],'fireflies at night');
+ same([0,1,3,4].map(tier=>W.wildBugCount({tier,reduced:false,night:true})),[48,30,8,0],'fireflies at night (more on the mountain island, Oct 21 2026)');
  assert.equal(W.wildBugCount({tier:0,reduced:true,night:false}),0,'none with reduced motion');
  const {createWildBugs}=load('lib/graphics/wildBugs.ts'),scene=new T.Scene(),wb=createWildBugs(scene,()=>0,99);
  const step=(o,n=1)=>{for(let i=0;i<n;i++)wb.update({dt:1/60,night:false,tier:0,reduced:false,busy:false,...o});};
@@ -65,7 +65,7 @@ const BB=load('lib/town/jobs/bugBook.ts'),B=load('lib/town/jobs/bugScout.ts'),SN
  step({...off,busy:true});assert.equal(wb.root.visible,false,'hidden while a bug job runs');step(off);assert.equal(wb.root.visible,true);
  step({x:C.x+270,z:C.z});assert(wb.set,'kept between BUILD_M and DROP_M (hysteresis)');step({x:C.x+300,z:C.z});assert.equal(wb.set,null,'disposed after leaving');
  wb.dispose();assert.equal(scene.children.length,0);
- const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it with the heat tier and the job (the Bug squad catches from it)');assert.match(town,/wildBugs\.dispo/);}
+ const town=read('components/Town.tsx');assert.match(town,/wildBugs\.update\(\{dt:[^}]*tier:heat\.tier,reduced,phone:quality\.phone,busy:!!jobs\.run&&!jobs\.swarmJob,job:jobs\.swarmJob\}\)/,'Town drives it with the heat tier and the job (the Bug squad catches from it)');assert.match(town,/wildBugs\.dispo/);}
 
 // ---- 4. Sounds, analytics, UI ----
 {let now=0;const param=()=>({value:1,setValueAtTime(v){this.value=v},linearRampToValueAtTime(v){this.value=v},exponentialRampToValueAtTime(v){this.value=v},cancelScheduledValues(){},setTargetAtTime(v){this.value=v}});

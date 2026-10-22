@@ -24,7 +24,13 @@ User: "the main character always wears a backpack … when flying it transforms 
   pack and straps to the new shell (rebuild only on change).
 - The bean skin hides every classic mesh in the rig on appearance changes; gear meshes flagged `userData.rigGear`
   (the pack, its flames) are skipped (`beanSkin.ts attachBeanSkin`).
-- Interiors (shop, konbini, museum, arcade room) and portrait renders do not wear it (not attached there).
+- Rooms and portraits (Oct 21 2026): `wearBackpack(rig.root, playerOutfit(c))` after the rig's bean look, one line each in the
+  kit shop (`lib/shop/shopScene.ts`), the konbini, the museum, the arcade room and the customizer preview (`CharacterPreview`,
+  `refresh(kit)` on each appearance change); disposed with the room. Folded (morph 0, never the jet, no flames), kit colours as
+  in the town; checked from each room's camera (no clipping, reads on the back). Not in the jersey / boot / ball studios (they
+  show the item alone, no avatar) or the costume thumbnails (`CostumePreviews`: the costume is the subject, front view).
+- Crash debris: the town's classic jet is the pack's morph, so a classic crash now throws a copy of the pack (geometry shared,
+  materials cloned and faded) with the other pieces (`jetpackBreakup.trigger(vehicle, reduced, pack)`).
 
 ## Cost (heat)
 

@@ -10,14 +10,15 @@ import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId,type BugSpot} from './bug
 import {createBugGeometry,mergeColoured} from './bugShape';
 import {recordBugCatch,BUG_BOOK_COMPLETE_EVENT,BUG_BOOK_KEY,BUG_NEW_SPECIES_EVENT} from './bugBook';
 import {createBugNet,NET_HOOP_RADIUS,type BugNet} from './bugNet';
+import {createBugJar,JAR_RADIUS,type BugJar} from './bugJar';
 import {BACKPACK_RIDE_OFFSETS} from '../../graphics/backpack';
 import {BUG_LOCAL} from './bugSpecies';
 import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught,predictCatch,CATCH_STAGE,CATCH_STAGE_AT,catchStagePhase,stageSwingTime,stageShot,stageFit,pushInShot,catchScale,stageFlightScale} from './bugCatch';
 import {createCatchStage,type CatchStage} from '../../graphics/catchStage';
 import {BUG_SPECIES} from './bugSpecies';
-import {bugVisualSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
+import {bugStageSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
 import {bugMapCount} from './bugSpecies';
-import {FIREFLY_MAP_CAP} from '@/lib/graphics/wildBugsCore';
+import {FIREFLY_MAP_CAP,FIREFLY_LOCAL_WANT} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
 import {countBugCatch,countBugShift,countBugBookComplete,countBugSwing,countBugMiss,countBugHint} from '@/lib/analytics/summitEvents';
 import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
@@ -333,7 +334,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(def.prop==='bug'||def.prop==='firefly'){const jar=new T.Mesh(own(new T.CylinderGeometry(.17,.17,.34,12)),own(new T.MeshStandardMaterial({color:'#cfe9f2',roughness:.15,transparent:true,opacity:.55,emissive:def.prop==='firefly'?'#d9ff5a':'#000000',emissiveIntensity:0})));
    const lid=new T.Mesh(own(new T.CylinderGeometry(.18,.18,.05,12)),std('#b98f62'));lid.position.y=.19;jar.add(lid);jar.name='job-jar';jar.visible=false;group.add(jar);gear.bag=jar;}
   // Bug squad's net (catching lane, bugNet.ts): a round hoop, a deep mesh bag, a wooden pole with a grip and a football; plus the swoosh.
-  if(def.prop==='bug'||def.prop==='firefly'){net=createBugNet(x=>{propDisposables.push(x);return x;},def.prop==='firefly');group.add(net.group,net.swoosh);gear.net=net.group;
+  if(def.prop==='bug'||def.prop==='firefly'){{const own=<X extends {dispose:()=>void}>(x:X)=>{propDisposables.push(x);return x;};/* Oct 21 2026: at Night the tool is the firefly jar (bugJar.ts), by day the net */net=def.prop==='firefly'?createBugJar(own):createBugNet(own,false);}group.add(net.group,net.swoosh);gear.net=net.group;
    // The hint's ground chevron (a flat arrow pointing at the nearest bug), hidden until the hint button is used.
    const sh=new T.Shape();sh.moveTo(0,.75);sh.lineTo(.5,.05);sh.lineTo(.2,.05);sh.lineTo(.2,-.7);sh.lineTo(-.2,-.7);sh.lineTo(-.2,.05);sh.lineTo(-.5,.05);sh.closePath();
    const hm=new T.Mesh(own(new T.ShapeGeometry(sh)),own(new T.MeshBasicMaterial({color:'#ffd36c',transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide})));hm.name='bug-hint-arrow';hm.visible=false;hm.frustumCulled=false;group.add(hm);gear.hint=hm;}
@@ -764,7 +765,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  // swing, the arrow's query at 4 Hz, no per-frame allocation; nothing while no shift runs.
  const bugSwarm=options.bugs??(()=>null),heatTier=options.tier??(()=>0);
  const bookPort={get:()=>{try{return store?store.getItem(BUG_BOOK_KEY):localStorage.getItem(BUG_BOOK_KEY);}catch{return null;}},set:(v:string)=>{try{if(store)store.setItem(BUG_BOOK_KEY,v);else localStorage.setItem(BUG_BOOK_KEY,v);}catch{}}};
- let wading=false,net:BugNet|null=null,relMesh:T.InstancedMesh|null=null,lastDt=1/60,playerYaw=0,rideMode='walk',jarPop=0,caughtNonce=0,endedNonce=0,shiftNo=0,formationNext=false;
+ let wading=false,net:BugNet|BugJar|null=null,jarFill=0,relMesh:T.InstancedMesh|null=null,lastDt=1/60,playerYaw=0,rideMode='walk',jarPop=0,caughtNonce=0,endedNonce=0,shiftNo=0,formationNext=false;
  let swing:{t:number;target:string|null;resolved:boolean;yaw:number;seen:boolean;k:number}|null=null;
  const bagPos={x:0,y:0,z:0},sc0={x:0,y:0,z:0},tq={x:0,y:0,z:0},projV=new T.Vector3();
  let bugGoalOn=false,bugGoalT=0;const bugGoal={x:0,z:0};
@@ -827,8 +828,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // Local density (bug-polish; user: "can't see bugs to catch when walking around"): every BUG_LOCAL.every s the swarm keeps at least
   // BUG_LOCAL.want bugs within BUG_LOCAL.radius m (uncaught species first, spawned out of view, fading in). A swarm without it
   // (tests' fakes) falls back to the older recall: nobody near for a while, call the farthest one over.
-  recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{caught:(id:string)=>boolean})=>number})|null;
-   if(sw&&r&&!cs&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
+  recallAcc+=dt;if(recallAcc>=BUG_LOCAL.every){recallAcc=0;const r=run,sw=bugSwarm() as (BugSwarmPort&{recall?:(x:number,z:number,w:number,f:number)=>string|null;ambient?:(x:number,z:number,o:{want?:number;caught:(id:string)=>boolean})=>number})|null;
+   if(sw&&r&&!cs&&!rel){if(sw.ambient){const list=bugList(r.def)??[];sw.ambient(p.x,p.z,{want:r.def.prop==='firefly'?FIREFLY_LOCAL_WANT:undefined,caught:id=>{const i=list.findIndex(b=>b.id===id);return i>=0&&!!r.got[i];}});}
     else if(sw.recall){const n=sw.query(p.x,p.y,p.z,RECALL.near).length;for(let k=n<3?2:n<RECALL.min?1:0;k>0;k--)sw.recall(p.x,p.z,RECALL.within,RECALL.far);}}}
   if(hintT<=0)return;hintT-=dt;hintAcc+=dt;
   if(hintAcc>=.25){hintAcc=0;const sw=bugSwarm();if(sw&&sw.position(hintId,tq)){hintGoal.x=tq.x;hintGoal.z=tq.z;}
@@ -877,6 +878,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function fade(o:number,look:string){const host=stagePorts?.host();if(!host||typeof document==='undefined')return;if(!fadeEl){if(o<=0)return;fadeEl=document.createElement('div');fadeEl.className='catch-stage-fade';fadeEl.dataset.catchFade='';host.appendChild(fadeEl);}
   if(fadeEl.dataset.look!==look)fadeEl.dataset.look=look;const v=String(Math.round(Math.max(0,Math.min(1,o))*1000)/1000);if(fadeEl.style.opacity!==v)fadeEl.style.opacity=v;const hide=o<=0;if(fadeEl.hidden!==hide)fadeEl.hidden=hide;}
  const stageLook=()=>run?.def.prop==='firefly'?'night':timeOfDay()==='sunset'?'sunset':'day';
+ /** The night tool: the firefly jar (bugJar.ts) instead of the net. */
+ const jarTool=()=>!!net&&'kind' in net&&net.kind==='jar';
  function hudHidden(on:boolean){if(typeof document==='undefined')return;document.documentElement?.toggleAttribute?.("data-catch-stage",on);}
  /** Start the catch stage for a locked target the swing will catch. False (play the island swing) when it cannot. */
  function beginStage(tgt:BugSwarmHit){const r=run;if(!r||!stagePorts||!net||reducedMotion||cs)return false;
@@ -893,16 +896,17 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function enterStage(){const C=cs,ports=stagePorts;if(!C||!ports||!net){exitStage(true);return;}const p=C.p,look=stageLook();
   const sp=C.hit.kind==='bug'?BUG_SPECIES.find(s=>s.id===C.hit.species?.id)??null:null;
   const st=createCatchStage({at:p,look,species:sp,host:ports.host()});C.stage=st;
-  const world=sp?bugVisualSize(sp.look.size):FIREFLY_SIZE;C.sF=stageFlightScale(st.longest,world);C.sC=catchScale(st.longest,C.sF,NET_HOOP_RADIUS);
+  const world=sp?bugStageSize(sp.look.size):FIREFLY_SIZE;C.sF=stageFlightScale(st.longest,world);C.sC=catchScale(st.longest,C.sF,jarTool()?JAR_RADIUS:NET_HOOP_RADIUS);
   const fx0=Math.sin(C.yaw),fz0=Math.cos(C.yaw),rx=-fz0,rz=fx0;
   // The bug hovers where the hoop's sweep passes at the hit frame (ahead, a little right, about hand height).
-  C.bugAt.x=p.x+fx0*1.45+rx*.2;C.bugAt.y=p.y+1.05;C.bugAt.z=p.z+fz0*1.45+rz*.2;
+  // The jar (Night) is cupped over the firefly close in front, at about head height, where the scoop's arc peaks.
+  if(jarTool()){C.bugAt.x=p.x+fx0*.72;C.bugAt.y=p.y+1.42;C.bugAt.z=p.z+fz0*.72;}else{C.bugAt.x=p.x+fx0*1.45+rx*.2;C.bugAt.y=p.y+1.05;C.bugAt.z=p.z+fz0*1.45+rz*.2;}
   C.rigParent=ports.player.root.parent;C.netParent=net.group.parent;st.scene.add(ports.player.root,net.group,net.swoosh);
   // Frame the whole character, the net's reach (held out in front, raised over the head on the right) and the bug, from the front-left.
   const fit=stageFit(p,C.yaw,C.bugAt),el=ports.renderer.domElement;
   const shot=stageShot(p,C.yaw,(el.clientWidth||el.width)/Math.max(1,el.clientHeight||el.height),fit);
   C.eye.set(shot.eye.x,shot.eye.y,shot.eye.z);C.target.set(shot.target.x,shot.target.y,shot.target.z);st.camera.fov=shot.fov;st.camera.updateProjectionMatrix();
-  net.stageLook(true);C.on=true;jobCue('swish');}
+  net.stageLook(look);C.on=true;jobCue('swish');}
  /** Back to the island (the stage is covered, or skipped / ended): the rig and the net go home, the bug is in the jar, the camera eases
   *  back from the push-in. `instant` = quit / set swap / leaving: no fade. */
  function exitStage(instant=false){const C=cs;if(!C)return;cs=null;
@@ -924,9 +928,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(phase==='done'){exitStage();return;}
   const swingT=stageSwingTime(t),swinging=swingT>=0&&(t<A.suck||swingT<SWING.sweepEnd);
   // The body: ready (the carry), the swing, then the show (presented in front, raised with a hop), blended by player.ts.
-  if(swingT<0){STAGE_POSE.kind='netcarry';STAGE_POSE.progress=(time*1.7)%1;STAGE_POSE.upper=true;STAGE_POSE.tug=0;}
-  else if(swinging){STAGE_POSE.kind='netswing';STAGE_POSE.upper=false;STAGE_POSE.tug=0;STAGE_POSE.progress=swingT<SWING.hit?swingT/SWING.hit*.48:.48+(swingT-SWING.hit)/(SWING.end-SWING.hit)*.52;}
-  else{STAGE_POSE.kind='netshow';STAGE_POSE.upper=false;STAGE_POSE.progress=t<A.raise?0:t<A.hold?smooth((t-A.raise)/CATCH_STAGE.raise):1;
+  const jar=jarTool();
+  if(swingT<0){STAGE_POSE.kind=jar?'jarcarry':'netcarry';STAGE_POSE.progress=(time*1.7)%1;STAGE_POSE.upper=true;STAGE_POSE.tug=0;}
+  else if(swinging){STAGE_POSE.kind=jar?'jarcup':'netswing';STAGE_POSE.upper=false;STAGE_POSE.tug=0;STAGE_POSE.progress=swingT<SWING.hit?swingT/SWING.hit*.48:.48+(swingT-SWING.hit)/(SWING.end-SWING.hit)*.52;}
+  else{STAGE_POSE.kind=jar?'jarshow':'netshow';STAGE_POSE.upper=false;STAGE_POSE.progress=t<A.raise?0:t<A.hold?smooth((t-A.raise)/CATCH_STAGE.raise):1;
    STAGE_POSE.tug=t>=A.raise&&t<A.hold+.15?Math.sin(Math.min(1,(t-A.raise)/(CATCH_STAGE.raise+.15))*Math.PI):0;}
   stageMotion.facing=C.yaw;const frozen=phase==='hitstop';
   ports.player.update(p.x,p.z,frozen?0:R0,time,reducedMotion,stageMotion);ports.player.root.position.y=p.y;
@@ -946,10 +951,12 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   else{net.bagPoint(.5,bagQ);const wt=t-A.flip,wig=reducedMotion?0:1;bx=bagQ.x+Math.sin(wt*13)*.025*wig;by=bagQ.y+Math.sin(wt*17)*.02*wig;bz=bagQ.z+Math.cos(wt*11)*.025*wig;
    s=C.sC;yaw+=Math.sin(wt*9)*.35*wig;roll=Math.sin(wt*14)*.3*wig;pitch=Math.sin(wt*7)*.2*wig;amp=.1;base=w.base+.5;open=0;legAmp=.035;hz=8;}
   st.setBug(bx,by,bz,yaw,pitch,roll,s,{amp,base,open,legAmp,hz});
+  // The jar: the firefly's light fills it as it is drawn in (soft emissive + the inner glow sprite; no lights).
+  if(jar&&'setFill' in net)net.setFill(t>=A.suck?Math.max(jarFill,smooth((t-A.suck)/CATCH_STAGE.suck)*.75):jarFill);
   // The hold: a star burst round the raised net, the name over it, the cheer.
   if(!C.burst&&t>=A.hold){C.burst=true;net.hoopCentre(bagQ);st.burst(bagQ.x,bagQ.y,bagQ.z);jobCue('squad');}
   const host=ports.host(),cw=host?.clientWidth??0,ch=host?.clientHeight??0;
-  if(t>=A.hold&&phase!=='out'){net.hoopCentre(bagQ);st.label(C.name,bagQ.x,bagQ.y+NET_HOOP_RADIUS+.3,bagQ.z,cw,ch);}else st.label(null);
+  if(t>=A.hold&&phase!=='out'){net.hoopCentre(bagQ);st.label(C.name,bagQ.x,bagQ.y+(jar?.3:NET_HOOP_RADIUS+.3),bagQ.z,cw,ch);}else st.label(null);
   if(!C.cardShown&&t>=A.card){C.cardShown=true;setView({zooming:false});}
   st.update(R0,reducedMotion);
   // The camera: the three-quarter shot, drifting in a little over the catch.
@@ -1068,6 +1075,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    g.visible=!jet&&(jr.phase==='work'||jr.phase==='deliver'||!!swing);
    if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:false});
     if(mode==='pack'){if(packPort){const s=packPort.socket;s.updateWorldMatrix(true,false);net.pack(s.matrixWorld,yaw,packTilt(rideMode),lastDt,reducedMotion);}else g.visible=false;}
+    if('setFill' in net){let n=0;for(const g of jr.got)if(g)n++;jarFill=n/Math.max(1,jr.got.length);net.setFill(jarFill);}
     else net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);
     net.bagCentre(bagPos);}}
   if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}

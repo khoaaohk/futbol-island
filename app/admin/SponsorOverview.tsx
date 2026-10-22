@@ -123,7 +123,7 @@ function MetricPanel({metric,onClose,prevLabel,split,from,to,today,countryName}:
  return <div className={panelStyles.root} data-open={open} data-pull-ignore aria-hidden={!open}>
   <div className={panelStyles.scrim} onClick={onClose}/>
   <aside className={panelStyles.panel} role="dialog" aria-modal="true" aria-labelledby="sponsor-panel-title">
-   <div className={panelStyles.head}><h2 id="sponsor-panel-title">{m?.label??''}</h2>{open&&<DoneButton ref={done} onDone={onClose} immediate/>}</div>
+   <div className={panelStyles.head}><h2 id="sponsor-panel-title">{m?.label??''}</h2>{open&&<DoneButton ref={done} onDone={onClose}/>}</div>
    {m&&<div className={panelStyles.body} data-sponsor-panel={m.id}>
     <div className={s.pTotal}>
      {m.status==='none'?<b className={s.mNone}>Not tracked yet</b>:<b>{fmtCell(m.total)} <small>{m.unit}</small></b>}

@@ -12,6 +12,7 @@
 import * as T from 'three';
 import {createWhaleShark,createWhaleSharkShared} from './whaleShark';
 import {createCayMantas} from './cayMantas';
+import {createZoneLife} from './zoneLife';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
 import {dynamicResolutionEnabled} from './quality';
 import {OPEN_SEA_WHALE_LOOPS,OPEN_SEA_RAY_GROUPS,FAR_UPDATE,FAR_HZ,RAY_SPOT_RANGE,openSeaCounts,type OpenSeaRayLoop,type RaySpecies} from '../town/seaLifeAreas';
@@ -25,6 +26,8 @@ export function createOpenSeaLife(scene:T.Scene,options:{phone?:boolean}={}){
  // Oct 20 2026: the humpbacks (humpback.ts) are the same kit with their own ONE geometry/material, drawn under the same cap.
  const whales=OPEN_SEA_WHALE_LOOPS.map(l=>createWhaleShark(scene,{loop:l,id:l.id,name:'open-sea-'+l.id,start:l.start,shared:l.kind==='humpback'?humpShared:shared}));
  const rays=createCayMantas(scene,{phone,groups:OPEN_SEA_RAY_GROUPS,name:'open-sea-rays',groupCount:(tier,ph)=>openSeaCounts(tier,ph).raysPerArea});
+ // Oct 21 2026: the Explore zones' turtles, fish schools and jellies (zoneLife.ts), stepped with the rest of the open sea.
+ const zoneLife=createZoneLife(scene,{phone});
  let cap=openSeaCounts(effectiveTier(),phone).whales;
  const offTier=subscribeHeatTier(()=>{cap=openSeaCounts(effectiveTier(),phone).whales;});
  const friends:RideFriend[]=[...whales.map(w=>w.friend),...rays.friends];
@@ -51,6 +54,7 @@ export function createOpenSeaLife(scene:T.Scene,options:{phone?:boolean}={}){
   let near=false;for(const r of rays.islands)if(r.ridden||r.active>0&&boxDistance(r.box,player.x,player.z)<FAR_UPDATE){near=true;break;}
   let rstep=dt;if(dt>0&&!near){rayAcc+=dt;if(rayAcc<1/FAR_HZ)rstep=-1;else{rstep=Math.min(rayAcc,.1);rayAcc=0;}}else rayAcc=0;
   if(rstep>=0){rays.update(rstep,reduced,frustum,player);stats.raysAwake=rays.stats.awake;stats.rayUpdates=rays.stats.updated;}else stats.rayUpdates=0;
+  zoneLife.update(dt,reduced,player);
  }
  /** Analytics (Town.tsx, wa:ray_spot): true once per ray per visit when a swimmer comes within RAY_SPOT_RANGE of a drawn ray.
   *  Checked twice a second, only while in the water; a few distance tests. */
@@ -61,13 +65,13 @@ export function createOpenSeaLife(scene:T.Scene,options:{phone?:boolean}={}){
     if(Math.hypot(pt.x-x,pt.z-z)<RAY_SPOT_RANGE){spotted.add(t.loop.id);lastSpecies=(t.loop as OpenSeaRayLoop).species??null;return true;}}}
   return false;
  }
- return {whales,rays,friends,stats,update,spot,
+ return {whales,rays,zoneLife,friends,stats,update,spot,
   /** The kind of the ray the last true spot() found (the ray lesson toast, Town.tsx). */
   lastSpotted:()=>lastSpecies,
   /** True for a ride friend drawn here (Town.tsx: the open-sea whale ride counter). */
   owns(f:RideFriend|null){return !!f&&ownIds.has(f.id);},
   setClearBed(b:Parameters<typeof whales[number]['setClearBed']>[0]){for(const w of whales)w.setClearBed(b);},
   setFx(f:Parameters<typeof whales[number]['setFx']>[0]){for(const w of whales)w.setFx(f);},
-  dispose(){offTier();for(const w of whales)w.dispose();shared.dispose();humpShared.dispose();rays.dispose();}};
+  dispose(){offTier();for(const w of whales)w.dispose();shared.dispose();humpShared.dispose();rays.dispose();zoneLife.dispose();}};
 }
 export type OpenSeaLife=ReturnType<typeof createOpenSeaLife>;

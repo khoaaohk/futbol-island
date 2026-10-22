@@ -36,7 +36,7 @@ export const DIVE_BLOB_MAX=1.42;
 export const DIVE_PROMPT='Explore',DIVE_PROMPT_LABEL='Explore here: swim over the reef and look around';
 export const DIVE_REST_PROMPT='Catch your breath';
 /** Underwater, a find's prompt shows within this distance of it (m, 3D). */
-export const DIVE_FIND_RANGE=2.6;
+export const DIVE_FIND_RANGE=3.2;// Explore delight (Oct 21 2026): 2.6 -> 3.2 m, so a slow drift past a find still shows its prompt
 
 export type DiveFindKind='relic'|'burst'|'clam'|'treasure'|'ball';
 export type DiveLabel='Real football fact'|'Coaching idea'|'Island story';

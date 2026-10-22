@@ -740,7 +740,31 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .dive-depth-btn{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #bff1f5;background:#2a6f79;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .dive-depth-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
 @media(max-width:600px),(pointer:coarse){.dive-depth{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 70px);gap:8px}.dive-depth-btn{width:50px;height:50px}}
+/* Explore v2 (Oct 21 2026): the Dart button beside the depth pad (one thumb on a phone: the pad and Dart sit together on the right),
+   the zone's Reef progress chip (top left, under the coin bar) and a soft static vignette (one composited layer, no animation). */
+.dive-dart-btn{position:absolute;z-index:9;right:calc(24px + 58px + 14px + env(safe-area-inset-right,0px));bottom:145px;width:62px;height:62px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #ffe2a8;background:#e07a3a;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.dive-dart-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
+@media(max-width:600px),(pointer:coarse){.dive-dart-btn{right:calc(18px + 50px + 12px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 99px);width:54px;height:54px}}
+.dive-reef{position:absolute;left:calc(16px + env(safe-area-inset-left,0px));top:calc(env(safe-area-inset-top,0px) + 96px);z-index:7;margin:0;display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:999px;background:#0f3d4acc;color:#e9fbff;font:800 14px/1 system-ui,sans-serif;pointer-events:none}
+.dive-reef i{font-style:normal;color:#ffd36b}
+.dive-hearts{margin-left:4px;color:#ff8fa3;font-weight:800;letter-spacing:1px}
+/* Explore delight (Oct 21 2026): Wave / High five, two small round icon buttons in a row ABOVE the Dart button (never over Dart or the
+   rise / dip pad); shown only while the zone's friend is within reach. */
+.dive-emote{position:absolute;z-index:9;right:calc(24px + 58px + 14px + env(safe-area-inset-right,0px));bottom:221px;display:flex;flex-direction:row-reverse;gap:10px}
+.dive-emote-btn{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #ffd3dc;background:#d9577a;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+.dive-emote-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
+@media(max-width:600px),(pointer:coarse){.dive-emote{right:calc(18px + 50px + 12px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 165px);gap:8px}.dive-emote-btn{width:46px;height:46px}}
+.dive-reef[data-restored]{background:#1f7a5ccc}
+.dive-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,#06303a59 100%)}
 .dive-note{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 15px/1.2 system-ui,sans-serif;max-width:min(320px,86vw);text-align:center;pointer-events:none}
+/* Seamless Explore (Oct 21 2026): the soft chip at a zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); fades in and out by itself.
+   Explore delight (Oct 21 2026): off the Breath pill, in one column with the note (.dive-msgs, the chip on top), and it waits its turn
+   in the toast lane (DiveHud), so the one-time lesson card never covers it. */
+.dive-msgs{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:max-content;max-width:90vw;pointer-events:none}
+.dive-msgs>.dive-note,.dive-msgs>.dive-edge-chip{position:static;transform:none}
+.dive-edge-chip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:6px 14px;border-radius:999px;background:#0f3b47cc;color:#e9fbff;font:800 14px/1.2 system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap;max-width:86vw;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:dive-edge-chip 2.4s ease both}
+@keyframes dive-edge-chip{0%{opacity:0;translate:0 -6px}15%,75%{opacity:1;translate:0 0}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.dive-edge-chip{animation:none}}
 .dive-card{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 150px);z-index:9;transform:translateX(-50%);display:grid;gap:4px;justify-items:center;width:min(340px,88vw);padding:12px 16px;border:3px solid #fff2cd;border-radius:20px;background:#fffdf5;color:#17323b;text-align:center;font:600 14px/1.3 system-ui,sans-serif}
 .dive-card small{font-weight:800;color:#2a6f79;text-transform:uppercase;letter-spacing:.04em;font-size:11px}
 .dive-card b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:21px;line-height:1.1}
@@ -754,3 +778,13 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .catch-stage-fade[data-look=sunset]{background:#ffe4c4}.catch-stage-fade[data-look=night]{background:#2b3d78}
 .catch-stage-fade[hidden],.catch-stage-label[hidden]{display:none}
 .catch-stage-label{position:absolute;left:0;top:0;z-index:2;pointer-events:none;padding:7px 14px;border-radius:999px;background:#fff8e6;color:#2b4a3e;font:400 19px/1.1 IslandBrush,Arial,sans-serif;box-shadow:0 3px 0 rgba(43,74,62,.25);white-space:nowrap}
+/* Bug squad End job on the action cluster (Oct 21 2026): a small, quiet secondary button just left of the cluster, level with its
+   top row (Ride), so it sits on the far side from Swing (the cluster's bottom-right / right end); two taps when the jar has bugs. */
+.travel-actions .job-end-mini{position:absolute;z-index:1;right:calc(100% + 10px);top:calc((var(--action-size,64px) - 44px) / 2);width:44px;height:44px;min-width:44px;min-height:44px;padding:3px 0 2px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;margin:0;background:#173e34b3;color:#fff3d1;border:1.5px solid #f6e5bd59;box-shadow:0 2px 0 #0f2a2340;cursor:pointer;}
+.travel-actions .job-end-mini svg{width:17px;height:17px;flex:none;}
+.travel-actions .job-end-mini small{font:700 8px/1 system-ui;letter-spacing:0;margin-top:1px;}
+.travel-actions .job-end-mini[data-ask]{background:#8a2d23e6;border-color:#ffd9c9;}
+.travel-actions .job-end-mini:active{filter:brightness(1.15);}
+/* The Bug squad count on the End button (Oct 21 2026): a small badge, so the count and the exit are always with the action cluster. */
+.travel-actions .job-end-mini .job-end-count{position:absolute;top:-9px;left:50%;translate:-50% 0;min-width:30px;padding:1px 5px;border-radius:9px;background:#ffd36c;color:#173e34;border:1.5px solid #fff0c4;font:800 10px/1.2 system-ui;white-space:nowrap;text-align:center;pointer-events:none;box-shadow:0 1px 0 #0f2a2340;}
+html[data-catch-stage] .travel-actions .job-end-mini{visibility:hidden;pointer-events:none;}

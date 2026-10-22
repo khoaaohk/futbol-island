@@ -42,10 +42,14 @@
 @media (max-width:900px){.metrics,.audience{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.metrics,.audience{gap:10px}.metric{min-height:150px;padding:14px}.mValue{font-size:28px}.mNone{font-size:17px}}
 /* The /admin tabs (AnalyticsDashboard.tsx). */
-.tabs{display:flex;gap:6px;padding:4px;border-radius:999px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring);overflow-x:auto;scrollbar-width:none}
+.tabs{position:relative;display:flex;gap:6px;padding:4px;border-radius:999px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring);overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{flex:1 0 auto;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--a-ink-2);font:700 15px var(--btn-font);cursor:pointer}
-.tab[aria-selected=true]{background:var(--a-ink);color:var(--a-surface)}
+.tab{position:relative;z-index:1;flex:1 0 auto;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--a-ink-2);font:700 15px var(--btn-font);cursor:pointer;transition:color .22s}
+.tab[aria-selected=true]{background:transparent;color:var(--a-surface)}
+/* the sliding pill behind the selected tab (AnalyticsDashboard.tsx measures x / width) */
+.tabPill{position:absolute;top:4px;bottom:4px;left:0;z-index:0;border-radius:999px;background:var(--a-ink);pointer-events:none}
+.tabPill[data-ready=true]{transition:transform .3s cubic-bezier(.22,.68,0,1),width .3s cubic-bezier(.22,.68,0,1)}
+@media (prefers-reduced-motion:reduce){.tabPill[data-ready=true]{transition:none}.tab{transition:none}}
 .tab:focus-visible{outline:var(--btn-focus);outline-offset:-2px}
 .liveGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .liveCard{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:6px;padding:18px;border-radius:22px;background:var(--a-surface);box-shadow:0 6px 0 #183b3438;font-family:var(--btn-font);color:var(--a-ink)}

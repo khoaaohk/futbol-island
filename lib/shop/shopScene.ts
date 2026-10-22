@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {wearBackpack} from '@/lib/graphics/backpack';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createPlayer,profileFor,type PlayerMotion,type PlayerRig} from '../graphics/player';
 import {loadCustomization,beanLookFor,playerOutfit} from '../town/customization';
@@ -263,7 +264,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  const so=new T.Object3D();
  function placeShadow(i:number,px:number,pz:number,s:number){so.position.set(px,.02,pz);so.scale.set(s,1,s*.75);so.updateMatrix();shadows.setMatrixAt(i,so.matrix);shadows.instanceMatrix.needsUpdate=true;}
  const progress=getQuizProgress(),custom=loadCustomization(progress.completed,progress.total);
- const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));player.root.name='shop-player';scene.add(player.root);
+ const player=createPlayer('you','home',true,true);player.setAppearance(custom);player.setBeanLook(beanLookFor(custom),playerOutfit(custom));const pack=wearBackpack(player.root,playerOutfit(custom));/* Oct 21 2026: the always-worn pack, folded (docs/backpack.md) */player.root.name='shop-player';scene.add(player.root);
  type Actor={id:string;name:string;rig:PlayerRig;clerk:boolean;spots:ShopSpot[];spot:number;x:number;z:number;facing:number;mode:'hold'|'walk';holdUntil:number;speed:number;
   motion:PlayerMotion;settle:number;wave:number;nearYou:boolean;elapsed:number;bucket:number;slot:number;leader:Actor|null;follower:Actor|null;height:number;expr:string;shadow:number;poi:ShopPoi|null};
  let rngSeed=1234567;const rand=()=>{rngSeed=(rngSeed*16807)%2147483647;return rngSeed/2147483647;};
@@ -438,7 +439,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
    render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs()};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;clearTimeout(npcTimer);observer.disconnect();
    window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
-   player.dispose();for(const a of actors)a.rig.dispose();
+   pack?.dispose();player.dispose();for(const a of actors)a.rig.dispose();
    for(const mesh of merged)mesh.geometry.dispose();stationRing.geometry.dispose();propGeo.dispose();doorGeo.dispose();shadowGeo.dispose();
    for(const mat of [solidMat,kitMat,glowMat,printMat,ringMat,glassMat,shadowMat])mat.dispose();kitTex.dispose();signTex.dispose();
    renderer.dispose();renderer.forceContextLoss();},

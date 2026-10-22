@@ -2,7 +2,11 @@ import * as T from 'three';
 import {speciesModel} from '../town/fishing/fishModels';
 import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveCrestMask,diveDepthAt,diveFindPoint,diveFloor,diveRipple,diveWreckPose,type DiveFind,type DiveSpot} from '../town/water/diveSpots';
 import {diveLayout,diveWreckSize,type DiveArchSpot} from '../town/water/diveLayout';
-import {PITCH_TURF,ROOM_CEILING} from './waterTokens';
+import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROOM_SHIMMER,ROOM_WINDOW} from './waterTokens';
+import type {DivePickup} from '../town/water/diveJourney';
+import type {DiveFriendKind} from '../town/water/diveDelight';
+import {SPARKLE} from '../town/water/diveSparkle';
+const SPARKLE_SEE=SPARKLE.see;
 export {diveWreckSize};
 
 /**
@@ -41,8 +45,39 @@ export {diveWreckSize};
  */
 export const DIVE_FOG_COLOR_KEY='water';
 export type DiveRoomOptions={phone:boolean;reduced:boolean;found:readonly string[];
+ /** Explore v2: the journey's pickups (diveJourney.ts) and which are already collected, and the reef's colour (0..1 saturation share). */
+ pickups?:readonly DivePickup[];got?:readonly boolean[];reef?:number;
  /** Heat tier 2+ / Battery saver: DIVE_LITE of every capped count. */
- lite?:boolean};
+ lite?:boolean;
+ /** Explore delight (Oct 21 2026): the zone's friend (diveDelight.ts; drawn as one more instance of the pickups' draw), today's sparkle
+  *  spot (diveSparkle.ts; glitter in the bubbles' draw), and `calm` (heat tier 3+ / Battery saver / reduced motion): no whale shadow,
+  *  a still shimmer. */
+ friend?:{kind:DiveFriendKind;x:number;y:number;z:number}|null;sparkle?:{x:number;y:number;z:number}|null;calm?:boolean};
+
+/** Explore delight: each zone friend's low-poly body (~150-300 triangles; it faces +z, up +y, about 0.6-1 m). `limb` marks what moves
+ *  in the wave / high five (1: that part lifts; -1: weighted by |x|, the ray's wing tips). Vertex-coloured, merged into the pickups'
+ *  instanced draw as its part 2 (no extra draw). */
+export function friendParts(kind:DiveFriendKind){
+ const out:{g:T.BufferGeometry;c:C;limb:number}[]=[],add=(g:T.BufferGeometry,c:string,limb=0)=>{out.push({g,c:col(c),limb});};
+ const at=(g:T.BufferGeometry,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>{g.applyMatrix4(M(x,y,z,rx,ry,rz));return g;};
+ const eyes=(x:number,y:number,z:number,r=.05)=>{for(const sx of [-1,1])add(at(new T.IcosahedronGeometry(r,0),sx*x,y,z),'#1e2328');};
+ if(kind==='crab'){const b=new T.SphereGeometry(.28,8,4);b.scale(1.3,.5,1);add(at(b,0,.08,0),'#e0583c');eyes(.09,.2,.2);
+  for(const sx of [-1,1])for(let k=0;k<3;k++)add(at(new T.BoxGeometry(.3,.04,.05),sx*.4,.02,-.14+k*.12,0,sx*.2,sx*-.35),'#c94a32');
+  for(const sx of [-1,1]){add(at(new T.BoxGeometry(.06,.06,.22),sx*.3,.1,.26,0,sx*-.5,0),'#c94a32',sx>0?1:0);const cl=new T.SphereGeometry(.11,6,4);cl.scale(1,.7,1.3);add(at(cl,sx*.36,.12,.38),'#ef6b4a',sx>0?1:0);}}
+ else if(kind==='octopus'){const h=new T.SphereGeometry(.3,8,6);h.scale(1,1.15,1);add(at(h,0,.42,0),'#e8705a');eyes(.12,.45,.26,.06);
+  for(let i=0;i<8;i++){const a=(i+.5)/8*Math.PI*2,c=new T.ConeGeometry(.07,.55,4);c.translate(0,-.27,0);c.rotateX(-.95);c.rotateY(a);c.translate(Math.sin(a)*.16,.2,Math.cos(a)*.16);add(c,'#d9604c',i===0?1:0);}}
+ else if(kind==='seahorse'){add(at(new T.CylinderGeometry(.12,.07,.5,6),0,.12,0,.18,0,0),'#f2a03a');const hd=new T.SphereGeometry(.11,6,4);add(at(hd,0,.44,.04),'#f2a03a');
+  add(at(new T.CylinderGeometry(.03,.045,.2,5),0,.43,.18,Math.PI/2,0,0),'#e8902a');eyes(.07,.47,.1,.035);
+  add(at(new T.TorusGeometry(.1,.035,4,8,Math.PI*1.5),0,-.2,-.06,0,Math.PI/2,0),'#e8902a');add(at(new T.BoxGeometry(.02,.16,.12),0,.16,-.12),'#ffd08a',1);}
+ else if(kind==='ray'){const b=new T.SphereGeometry(.5,10,4);b.scale(1.3,.12,.8);add(b,'#7d8fa6',-1);add(at(new T.CylinderGeometry(.025,.008,.75,4),0,0,-.72,Math.PI/2,0,0),'#5d6f86');eyes(.12,.06,.3,.04);}
+ else if(kind==='jelly'){const d=new T.SphereGeometry(.35,10,5,0,Math.PI*2,0,Math.PI/2);d.scale(1,.8,1);add(d,'#cfd8ff');
+  for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;add(at(new T.CylinderGeometry(.03,.05,.55,4),Math.cos(a)*.12,-.26,Math.sin(a)*.12),'#f0d4ff',1);}}
+ else if(kind==='puffer'){add(new T.IcosahedronGeometry(.32,1),'#f2d16b');const bl=new T.SphereGeometry(.26,8,3,0,Math.PI*2,Math.PI/2,Math.PI/2);add(at(bl,0,-.08,.02),'#fff4d0');eyes(.15,.1,.25,.06);
+  add(at(new T.BoxGeometry(.02,.2,.16),0,0,-.38),'#e8b64a');for(const sx of [-1,1])add(at(new T.BoxGeometry(.14,.02,.09),sx*.32,0,.05),'#e8b64a',1);}
+ else{const sh=new T.SphereGeometry(.4,8,5);sh.scale(.85,.42,1.1);add(sh,'#6f8a4a');const hd=new T.SphereGeometry(.12,6,4);hd.scale(1,.9,1.3);add(at(hd,0,.02,.55),'#9bb27a');eyes(.06,.07,.64,.025);
+  for(const sx of [-1,1]){add(at(new T.BoxGeometry(.38,.04,.2),sx*.42,-.02,.22,0,sx*.5,0),'#8aa66a',1);add(at(new T.BoxGeometry(.2,.04,.12),sx*.27,-.02,-.36,0,sx*-.5,0),'#8aa66a');}}
+ return out;
+}
 export type C=[number,number,number];
 const col=(h:string|T.Color):C=>{const c=new T.Color(h);return [c.r,c.g,c.b];};
 const mix=(a:C,b:C,k:number):C=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
@@ -86,10 +121,10 @@ function mergeGeos(parts:T.BufferGeometry[]){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(nor,3));return g;}
 
 /** Fish: per-instance path attributes (see the vertex shader below). */
-type Swimmer={cx:number;cy:number;cz:number;r:number;omega:number;phase:number;eight:boolean;stretch:number;yaw:number;bob:number;wag:number;seed:number;scale:number;dir?:[number,number,number]};
+type Swimmer={buddy?:boolean;cx:number;cy:number;cz:number;r:number;omega:number;phase:number;eight:boolean;stretch:number;yaw:number;bob:number;wag:number;seed:number;scale:number;dir?:[number,number,number]};
 const FISH_GLSL=/* glsl */`
 attribute vec4 aPA;attribute vec4 aPB;attribute vec4 aPC;attribute vec4 aPD;
-uniform float uDiveTime;uniform vec4 uBurst;uniform vec3 uWagAxis,uWagDir,uWagK,uWag;
+uniform float uDiveTime,uWhaleK;uniform vec4 uBurst,uDiver,uForm,uBuddy;uniform vec3 uWagAxis,uWagDir,uWagK,uWag,uBuddyF;
 // A closed path: a loop (aPB.z 0) or a lazy figure-eight (1), radius aPA.w, stretched aPB.w across, turned by aPD.x, bobbing aPD.y.
 vec3 dvPath(float t){float th=aPB.x*t+aPB.y,r=aPA.w;vec3 p;
  if(aPB.z<.5||aPB.z>1.5)p=vec3(cos(th)*r,0.,sin(th)*r*aPB.w);else p=vec3(sin(th)*r,0.,sin(th)*cos(th)*r*aPB.w*2.);
@@ -97,9 +132,16 @@ vec3 dvPath(float t){float th=aPB.x*t+aPB.y,r=aPA.w;vec3 p;
 `;
 const FISH_BASIS=/* glsl */`
  float dvT=uDiveTime;vec3 dvP=dvPath(dvT),dvF=dvPath(dvT+.12)-dvP;
- if(aPB.z>1.5){// the burst: dart out of the coral along aPC.xyz, then settle into the home loop round it
+ float dvHide=1.;
+ if(aPB.z>1.5&&aPB.z<2.5){// the burst: dart out of the coral along aPC.xyz, then settle into the home loop round it (hidden until touched)
   float bt=max(0.,dvT-uBurst.w);vec3 bd=normalize(aPC.xyz);vec3 bp=uBurst.xyz+bd*3.4*(1.-exp(-1.5*bt))+vec3(0.,bt*.18,0.);
-  float home=smoothstep(1.4,3.4,bt);dvP=mix(bp,dvP,home);dvF=mix(bd,normalize(dvF+vec3(1e-4)),home);}
+  float home=smoothstep(1.4,3.4,bt);dvP=mix(bp,dvP,home);dvF=mix(bd,normalize(dvF+vec3(1e-4)),home);if(uBurst.w<-1000.)dvHide=0.;}
+ else if(aPB.z>2.5){dvP=uBuddy.xyz;dvF=uBuddyF;dvHide=uBuddy.w;}// Explore v2: the buddy fish (moved on the CPU, one uniform)
+ else{// Explore v2: the school parts round the diver (uDiver.w = how strongly: more on a dart) and, at a restored reef, forms a ball
+  vec3 dvD=dvP-uDiver.xyz;float dvL=length(dvD);dvP+=dvD/max(dvL,.01)*(1.-smoothstep(.8,3.,dvL))*uDiver.w*1.5;
+  dvP.y+=uWhaleK*.3;dvF.y+=uWhaleK*.6*length(dvF);// Explore delight: the school lifts and tilts up toward the whale passing overhead
+  if(uForm.w>0.){vec3 sp=normalize(vec3(sin(aPD.w*7.1+1.3),cos(aPD.w*3.7),sin(aPD.w*5.3+.4))+vec3(1e-4));float ca=cos(dvT*.7),sa=sin(dvT*.7);sp.xz=mat2(ca,-sa,sa,ca)*sp.xz;
+   dvP=mix(dvP,uForm.xyz+sp*1.35,uForm.w);dvF=mix(dvF,normalize(cross(vec3(0.,1.,0.),sp)+vec3(1e-4)),uForm.w);}}
  dvF=normalize(dvF+vec3(1e-5,0.,0.));vec3 dvS=normalize(cross(dvF,vec3(0.,1.,0.))+vec3(0.,0.,1e-5)),dvU=cross(dvS,dvF);
 `;
 
@@ -132,7 +174,10 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  const th=spot.theme,fl=spot.floor,r=rng(9173+spot.blob*101),phone=opt.phone,lite=opt.lite?DIVE_LITE:1,lay=diveLayout(spot);
  const F=(x:number,z:number)=>diveFloor(x,z,fl);
  const cap=(k:keyof Omit<typeof DIVE_CAPS,'fish'>,m:number)=>Math.round(DIVE_CAPS[k][phone?'phone':'desktop']*Math.min(1,m)*lite);
- const scene=new T.Scene();scene.name='dive-room';scene.background=new T.Color(th.water);scene.fog=new T.Fog(th.water,th.fog[0]*.6,th.fog[1]);
+ const scene=new T.Scene();scene.name='dive-room';const fog=new T.Fog(th.water,th.fog[0]*.6,th.fog[1]);scene.fog=fog;
+ // Explore v2: the water colour follows the camera's place in the water column (waterTokens ROOM_SHALLOW): the background IS the fog colour
+ // (one Color, rewritten each frame), so far water, the rim and the surface's edge all meet in the same tint.
+ scene.background=fog.color;const deepC=new T.Color(th.water),shallowC=new T.Color(ROOM_SHALLOW);fog.color.copy(deepC).lerp(shallowC,ROOM_SHALLOW_MIX[0]);
  const hemi=new T.HemisphereLight(th.light[0],th.light[1],th.light[2]*.78);/* shallow reef: softer, so the sand is not washed out (water audit #5) */scene.add(hemi);
  const camera=new T.PerspectiveCamera(58,1,.1,th.fog[1]+6);camera.name='dive-camera';
  const uTime={value:0};
@@ -254,6 +299,19 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  {const vy=F(vent.x,vent.z);S.add(rockGeo(77,1),M(vent.x,vy+.2,vent.z,0,0,0,[.6,.55,.6]),paintRock);
   const c=new T.CylinderGeometry(.18,.32,.45,7,1,true);c.translate(0,.62,0);S.add(c,M(vent.x,vy,vent.z),(v,n)=>scl(rockA,.6+.3*n.y));}
  const reefMat=new T.MeshLambertMaterial({vertexColors:true});reefMat.name='dive-reef';
+ // Explore v2: moving light lines on everything that faces up (the shore's sun-net, ROOM_CAUSTIC; stronger in shallow water), and the
+ // reef's colour (uReef: a little grey until the zone is cleaned up, diveJourney.ts reefColour). ALU only, no texture.
+ const uCaustic={value:opt.lite||opt.reduced?0:ROOM_CAUSTIC_K},uReef={value:opt.reef??1},causticC={value:new T.Color(ROOM_CAUSTIC)};
+ reefMat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{uDiveTime:uTime,uCaustic,uReef,uCausticC:causticC});
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;');
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
+uniform float uDiveTime,uCaustic,uReef;uniform vec3 uCausticC;varying vec3 vDvW;
+float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);return pow(1.-abs(a*b),7.);}`)
+   .replace('#include <fog_fragment>',`{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);
+ if(uCaustic>0.){float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float c=dvNet(vDvW.xz*1.25,uDiveTime*.9)*.65+dvNet(vDvW.xz*.62+3.1,uDiveTime*.6)*.5;
+  gl_FragColor.rgb+=uCausticC*c*uCaustic*up*exp(-max(0.,${DIVE_SURFACE_Y.toFixed(2)}-vDvW.y)*.22);}}
+#include <fog_fragment>`);};
+ reefMat.customProgramCacheKey=()=>'dive-reef-v2';
  const reef=new T.Mesh(S.geometry(),reefMat);reef.name='dive-reef';reef.matrixAutoUpdate=false;scene.add(reef);
 
  // ---- The swaying life: sea fans, anemones, kelp, seagrass. ONE draw, bent in the vertex shader.
@@ -288,11 +346,14 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
   W.add(g,M(p.x,F(p.x,p.z)-.02,p.z),(v,n,l)=>scl(c,.7+.6*l.y),l=>Math.min(1,l.y*2),r()*6.28);}
  const swayAmp={value:opt.reduced?.25:1};
  const swayMat=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});swayMat.name='dive-sway';
- swayMat.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uSwayAmp=swayAmp;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;attribute float aSway,aSeed;')
+ swayMat.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uSwayAmp=swayAmp;sh.uniforms.uDiver=uDiver;sh.uniforms.uReef=uReef;
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;uniform vec4 uDiver;attribute float aSway,aSeed;')
    .replace('#include <begin_vertex>',/* glsl */`#include <begin_vertex>
-    float sw=aSway*aSway*uSwayAmp;transformed.x+=sin(uDiveTime*1.1+aSeed+position.y*.6)*.22*sw;transformed.z+=cos(uDiveTime*.83+aSeed*1.7+position.y*.4)*.14*sw;`);};
- swayMat.customProgramCacheKey=()=>'dive-sway-v1';
+    float sw=aSway*aSway*uSwayAmp;transformed.x+=sin(uDiveTime*1.1+aSeed+position.y*.6)*.22*sw;transformed.z+=cos(uDiveTime*.83+aSeed*1.7+position.y*.4)*.14*sw;
+    // Explore v2: fans, kelp and grass bend away as the diver swims through (one distance per vertex, the model matrix is identity)
+    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`);
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uReef;').replace('#include <fog_fragment>','{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);}\n#include <fog_fragment>');};
+ swayMat.customProgramCacheKey=()=>'dive-sway-v2';
  const sway=new T.Mesh(W.geometry(true),swayMat);sway.name='dive-sway';sway.frustumCulled=false;sway.matrixAutoUpdate=false;scene.add(sway);
 
  // ---- Fish: one instanced draw per species, every path in the vertex shader. The theme picks the schools (SCHOOLS keys).
@@ -302,20 +363,23 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
   for(const a of ['position','normal','color'])g.setAttribute(a,new T.BufferAttribute((src.getAttribute(a).array as Float32Array).slice(),src.getAttribute(a).itemSize));
   if(custom)src.dispose();
   const n=list.length,A=new Float32Array(n*4),B=new Float32Array(n*4),Cc=new Float32Array(n*4),D=new Float32Array(n*4);
-  list.forEach((f,i)=>{A.set([f.cx,f.cy,f.cz,f.r],i*4);B.set([f.omega,f.phase,f.dir?2:f.eight?1:0,f.stretch],i*4);Cc.set([...(f.dir??[0,0,0]),f.scale],i*4);D.set([f.yaw,f.bob,f.wag,f.seed],i*4);});
+  list.forEach((f,i)=>{A.set([f.cx,f.cy,f.cz,f.r],i*4);B.set([f.omega,f.phase,f.buddy?3:f.dir?2:f.eight?1:0,f.stretch],i*4);Cc.set([...(f.dir??[0,0,0]),f.scale],i*4);D.set([f.yaw,f.bob,f.wag,f.seed],i*4);});
   g.setAttribute('aPA',new T.InstancedBufferAttribute(A,4));g.setAttribute('aPB',new T.InstancedBufferAttribute(B,4));g.setAttribute('aPC',new T.InstancedBufferAttribute(Cc,4));g.setAttribute('aPD',new T.InstancedBufferAttribute(D,4));
   g.instanceCount=n;g.boundingSphere=new T.Sphere(new T.Vector3(0,0,0),60);
   const an=model.anim,mat=new T.MeshLambertMaterial({vertexColors:true,...(glow?{emissive:new T.Color(glow),transparent:true,opacity:.82,depthWrite:false}:{})});mat.name='dive-fish-'+name;
   const wag={uWagAxis:{value:new T.Vector3(...an.axis)},uWagDir:{value:new T.Vector3(...an.dir)},uWagK:{value:new T.Vector3(...an.k)},uWag:{value:new T.Vector3(an.start,Math.max(.01,an.span),an.amp)}};
-  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst});
+  const form={value:new T.Vector4(0,0,0,0)};forms.push({n,form});
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK});
    sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+FISH_GLSL)
     .replace('#include <beginnormal_vertex>',FISH_BASIS+'vec3 objectNormal=normalize(-dvF*normal.x+dvU*normal.y-dvS*normal.z);')
     .replace('#include <begin_vertex>',/* glsl */`vec3 transformed=vec3(position);
      float dvW=clamp((dot(transformed,uWagAxis)-uWag.x)/uWag.y,0.,1.);transformed+=uWagDir*uWag.z*dvW*dvW*sin(dvT*aPD.z+aPD.w*7.-dot(transformed,uWagK));
-     transformed*=aPC.w;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`);};
-  mat.customProgramCacheKey=()=>'dive-fish-v1';
+     transformed*=aPC.w*dvHide;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`);};
+  mat.customProgramCacheKey=()=>'dive-fish-v3';
   const mesh=new T.Mesh(g,mat);mesh.name='dive-fish-'+name;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;if(glow)mesh.renderOrder=1;scene.add(mesh);fishMeshes.push(mesh);return mesh;};
- const uBurst={value:new T.Vector4(0,0,0,-1e4)};
+ const uWhaleK={value:0},uRayK={value:1},uWhale={value:new T.Vector4(0,0,0,0)};
+ const uBurst={value:new T.Vector4(0,0,0,-1e4)},uDiver={value:new T.Vector4(0,-50,0,0)},uBuddy={value:new T.Vector4(0,DIVE_SURFACE_Y-1.5,10,1)},uBuddyF={value:new T.Vector3(0,0,-1)};
+ const forms:{n:number;form:{value:T.Vector4}}[]=[];
  const shoal=(n:number,c:{x:number;y:number;z:number},R:number,omega:number,eight:boolean,size:[number,number],spread:number,extra:Partial<Swimmer>={})=>
   Array.from({length:Math.max(1,Math.round(n*lite))},(_,i)=>({cx:c.x,cy:c.y+(r()-.5)*spread*1.2,cz:c.z,r:R+(r()-.5)*spread*2,omega,phase:(extra.phase??0)-i*.035*Math.sign(omega||1)+(r()-.5)*spread/Math.max(R,1),eight,stretch:extra.stretch??1,yaw:extra.yaw??0,bob:extra.bob??.3,wag:extra.wag??9,seed:r()*6.28,scale:size[0]+r()*(size[1]-size[0])} as Swimmer));
  // Heights (Oct 20 2026 shallow reef): every path stays between the sand and the surface. Over the crest that is only 1.5-3 m of
@@ -345,39 +409,78 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  for(const k of th.fish)SCHOOLS[k]?.();
  // The burst: damselfish hidden in the coral until it is touched.
  const coralAt=findPt('coral')??{x:7,y:1,z:6};
- const burst=school(undefined,'round','#1f8bff',Array.from({length:14},(_,i)=>{const a=i/14*Math.PI*2+r()*.3,up=.2+r()*.6;
-  return {cx:coralAt.x,cy:coralAt.y+.4+(r()-.5)*.6,cz:coralAt.z,r:1.3+r()*.6,omega:.55+r()*.2,phase:a,eight:false,stretch:1,yaw:0,bob:.2,wag:16,seed:r()*6.28,scale:.22+r()*.08,dir:[Math.cos(a),up,Math.sin(a)] as [number,number,number]};}),'burst');
- burst.visible=false;
+ const burst=school(undefined,'round','#1f8bff',([{buddy:true,cx:0,cy:0,cz:0,r:0,omega:0,phase:0,eight:false,stretch:1,yaw:0,bob:0,wag:18,seed:1,scale:.42}] as Swimmer[]).concat(Array.from({length:14},(_,i)=>{const a=i/14*Math.PI*2+r()*.3,up=.2+r()*.6;
+  return {cx:coralAt.x,cy:coralAt.y+.4+(r()-.5)*.6,cz:coralAt.z,r:1.3+r()*.6,omega:.55+r()*.2,phase:a,eight:false,stretch:1,yaw:0,bob:.2,wag:16,seed:r()*6.28,scale:.22+r()*.08,dir:[Math.cos(a),up,Math.sin(a)] as [number,number,number]} as Swimmer;})),'burst');
+ // The buddy is instance 0; the 14 burst fish are drawn only once the coral is touched (instanceCount 1 until then).
+ const burstGeo=burst.geometry as T.InstancedBufferGeometry,burstN=burstGeo.instanceCount;burstGeo.instanceCount=1;
+ // The formation school (a restored reef): the biggest school there is.
+ const formSchool=forms.slice(0,-1).reduce((a,b)=>b.n>a.n?b:a,forms[0]);
 
- // ---- God rays: long soft streaks slanting down from the surface. ONE static additive draw, no light.
+ // ---- God rays: long soft streaks slanting down from the surface. ONE additive draw, no light. Explore v2: each streak is two quads
+ // (clear at both sides, bright down the middle: no hard glass edges) and breathes slowly in the vertex shader (one time uniform).
  {const pos:number[]=[],cl:number[]=[],n=phone?11:16;
-  for(let i=0;i<n;i++){const x=-18+i/(n-1)*36+(r()-.5)*2,z=-20+r()*34,w=.5+r()*1.1,len=2.4+r()*1.8,sl=.35,a=.07+r()*.06;
-   const top=[[x-w,DIVE_SURFACE_Y,z],[x+w,DIVE_SURFACE_Y,z]],bot=[[x-w*1.6+sl*len,DIVE_SURFACE_Y-len,z+.4*len*.3],[x+w*1.6+sl*len,DIVE_SURFACE_Y-len,z+.4*len*.3]];
-   pos.push(...top[0],...top[1],...bot[1],...top[0],...bot[1],...bot[0]);for(const k of [a,a,0,a,0,0])cl.push(.75,.95,1,k);}
+  for(let i=0;i<n;i++){const x=-18+i/(n-1)*36+(r()-.5)*2,z=-20+r()*34,w=.5+r()*1.1,len=2.6+r()*2.2,sl=.35,a=.08+r()*.07,dz=.4*len*.3;
+   const T0=(k:number)=>[x+w*k,DIVE_SURFACE_Y,z],B0=(k:number)=>[x+w*1.6*k+sl*len,DIVE_SURFACE_Y-len,z+dz];
+   for(const [k0,k1] of [[-1,0],[0,1]]){const a0=k0===0?a:0,a1=k1===0?a:0;
+    pos.push(...T0(k0),...T0(k1),...B0(k1),...T0(k0),...B0(k1),...B0(k0));for(const k of [a0,a1,0,a0,0,0])cl.push(.78,.97,1,k);}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(cl,4));
   const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false});m.name='dive-rays';
+  if(!opt.reduced){m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uRayK=uRayK;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uRayK;')
+   .replace('#include <color_vertex>','#include <color_vertex>\nvColor.a*=(.55+.45*sin(uDiveTime*.5+position.x*.43+position.z*.21))*uRayK;');};m.customProgramCacheKey=()=>'dive-rays-v3';}
   const rays=new T.Mesh(g,m);rays.name='dive-rays';rays.renderOrder=2;rays.matrixAutoUpdate=false;scene.add(rays);}
- // ---- The surface overhead: bright, with a soft sun patch and caustic-like mottling painted in the vertex colours.
- {const N=phone?24:36,R=DIVE_ROOM_R+12,g=new T.PlaneGeometry(R*2,R*2,N,N);g.rotateX(Math.PI/2);g.translate(0,DIVE_SURFACE_Y,0);const p=g.getAttribute('position'),cl:number[]=[];
-  const deep=col(th.water),light=col(ROOM_CEILING);
-  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),sun=Math.exp(-(x*x+(z+2)*(z+2))/60),mott=.5+.5*Math.sin(x*.9+Math.sin(z*.7)*2)*Math.sin(z*.8+Math.sin(x*.6)*2);
-   const c=mix(mix(deep,light,.3+.22*mott),[1,1,.95],sun*.35);cl.push(...c);}
-  g.setAttribute('color',new T.Float32BufferAttribute(cl,3));const m=new T.MeshBasicMaterial({vertexColors:true});m.name='dive-surface';
+ // ---- The surface overhead (Explore v2): the bright window right above the camera (ROOM_WINDOW, clear aqua) with moving shimmer lines,
+ // fading with distance into the fog colour (the same Color as the background), so there is no flat pale band at the top of a phone.
+ const uCam={value:new T.Vector3()};
+ {const N=phone?12:18,R=DIVE_ROOM_R+12,g=new T.PlaneGeometry(R*2,R*2,N,N);g.rotateX(Math.PI/2);g.translate(0,DIVE_SURFACE_Y,0);
+  const m=new T.ShaderMaterial({uniforms:{uDiveTime:uTime,uCam,uFog:{value:fog.color},uWin:{value:new T.Color(ROOM_WINDOW)},uShim:{value:new T.Color(ROOM_SHIMMER)},uFar:{value:th.fog[1]},uMove:{value:opt.reduced?0:1},uWhale},
+   vertexShader:/* glsl */`varying vec3 vW;void main(){vW=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+   fragmentShader:/* glsl */`uniform float uDiveTime,uFar,uMove;uniform vec3 uCam,uFog,uWin,uShim;uniform vec4 uWhale;varying vec3 vW;
+    void main(){float d=length(vW.xz-uCam.xz),t=uDiveTime*uMove;vec2 p=vW.xz*.55;
+     float a=sin(p.x+sin(p.y*1.4+t*.8)*1.2+t*.6),b=sin(p.y*1.2+sin(p.x*1.1-t*.7)*1.3-t*.4),net=pow(1.-abs(a*b),9.);
+     float near=1.-smoothstep(1.5,uFar*.75,d);vec3 c=mix(uFog,uWin,near*.85)+uShim*net*.32*near;
+     if(uWhale.w>0.){// Explore delight: the whale's soft shadow gliding over the surface (x, z, heading, strength): a long body, two
+      // pectoral fins and the tail flukes, all soft-edged ellipses (no texture)
+      vec2 q=vW.xz-uWhale.xy;float cs=cos(uWhale.z),sn=sin(uWhale.z),al=q.x*sn+q.y*cs,ac=q.x*cs-q.y*sn;
+      al/=1.35;ac/=1.35;float b=length(vec2(ac/(1.9-.06*al),al/6.2)),fl=length(vec2((abs(ac)-1.3)/2.4,(al+6.9)/.75)),fn=length(vec2((abs(ac)-2.1)/1.7,(al-1.6+abs(ac)*.35)/.5));
+      c*=1.-.7*uWhale.w*(1.-smoothstep(.7,1.2,min(b,min(fl,fn))));}
+     gl_FragColor=vec4(c,1.);
+     #include <colorspace_fragment>
+    }`});m.name='dive-surface';
   const surf=new T.Mesh(g,m);surf.name='dive-surface';surf.matrixAutoUpdate=false;scene.add(surf);}
- // ---- Bubbles: the vent's stream and the diver's breath. ONE Points draw; each bubble rises and loops in the vertex shader.
- const uPlayer={value:new T.Vector3(0,DIVE_SURFACE_Y-1,0)},uBubbleScale={value:300};
- {const NV=phone?28:40,NP=phone?12:16,n=NV+NP,A=new Float32Array(n*4),K=new Float32Array(n),pos=new Float32Array(n*3);
-  for(let i=0;i<n;i++){const player=i>=NV;A.set([(r()-.5)*(player?.25:.4),(r()-.5)*(player?.25:.4),player?.9+r()*.6:.7+r()*.6,r()*10],i*4);K[i]=player?1:0;}
+ // ---- Bubbles: the vent's stream and the diver's breath (a longer trail on a dart), drifting plankton motes round the camera and a
+ // sand puff. ONE Points draw; everything moves in the vertex shader (Explore v2 added the motes and the puff to the same draw).
+ const uPlayer={value:new T.Vector3(0,DIVE_SURFACE_Y-1,0)},uBubbleScale={value:300},uTrail={value:0},uPuff={value:new T.Vector4(0,-50,0,-1e4)};
+ // Explore delight: today's sparkle spot (glitter on the sand, kind 4; uSpark w = shown) and the high five's sparkle ring (kind 5, uRing w =
+ // its start time), in this same draw. With `calm` the glitter holds still.
+ const sp0=opt.sparkle??null,uSpark={value:new T.Vector4(sp0?.x??0,(sp0?.y??-50)+.05,sp0?.z??0,sp0?1:0)},uRing={value:new T.Vector4(0,-50,0,-1e4)};
+ {const NV=phone?28:40,NP=phone?14:20,NM=Math.round((phone?70:120)*lite),NF=12,NS=sp0?(phone?14:20):0,NR=12,n=NV+NP+NM+NF+NS+NR,A=new Float32Array(n*4),K=new Float32Array(n),pos=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const kind=i<NV?0:i<NV+NP?1:i<NV+NP+NM?2:i<NV+NP+NM+NF?3:i<NV+NP+NM+NF+NS?4:5;
+   if(kind<2)A.set([(r()-.5)*(kind?.25:.4),(r()-.5)*(kind?.25:.4),kind?.9+r()*.6:.7+r()*.6,r()*10],i*4);
+   else if(kind===2)A.set([r()*16,r()*8,r()*16,r()*10],i*4);else if(kind===3)A.set([(r()-.5)*2,r()*.8+.2,(r()-.5)*2,r()],i*4);
+   else if(kind===4){const a=r()*Math.PI*2,d=Math.sqrt(r());A.set([Math.cos(a)*d,r(),Math.sin(a)*d,r()*10],i*4);}
+   else{const a=(i%NR)/NR*Math.PI*2;A.set([Math.cos(a),(r()-.5)*.6,Math.sin(a),r()],i*4);}K[i]=kind;}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('aB',new T.BufferAttribute(A,4));g.setAttribute('aKind',new T.BufferAttribute(K,1));
   const ventY=F(vent.x,vent.z)+.85;
-  const m=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uDiveTime:uTime,uPlayer,uScale:uBubbleScale,uFogFar:{value:th.fog[1]}},
-   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar;uniform vec3 uPlayer;varying float vA;
-    void main(){vec3 p;float life;
-     if(aKind<.5){float h=${(DIVE_SURFACE_Y-ventY).toFixed(2)};float y=mod(uDiveTime*aB.z+aB.w,h);life=y/h;p=vec3((${vent.x.toFixed(2)})+aB.x+sin(y*2.+aB.w)*.12,(${ventY.toFixed(2)})+y,(${vent.z.toFixed(2)})+aB.y);}
-     else{float c=2.6,a=mod(uDiveTime+aB.w,c);life=a/c;p=uPlayer+vec3(aB.x+sin(a*5.+aB.w)*.08,.4+a*aB.z,aB.y);}
-     vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uScale*(aKind<.5?.07:.05)*(.7+.6*fract(aB.w))/max(.5,-mv.z);
-     vA=(1.-smoothstep(.75,1.,life))*smoothstep(0.,.06,life)*(1.-smoothstep(uFogFar*.5,uFogFar,-mv.z));}`,
-   fragmentShader:/* glsl */`varying float vA;void main(){vec2 d=gl_PointCoord-.5;float r=length(d);if(r>.5)discard;float ring=smoothstep(.32,.45,r)*(1.-smoothstep(.45,.5,r));
+  const m=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uDiveTime:uTime,uPlayer,uScale:uBubbleScale,uFogFar:{value:th.fog[1]},uCam,uTrail,uPuff,uDrift:{value:opt.reduced?0:1},uSpark,uRing,uTwinkle:{value:opt.calm||opt.reduced?0:1}},
+   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar,uTrail,uDrift,uTwinkle;uniform vec3 uPlayer,uCam;uniform vec4 uPuff,uSpark,uRing;varying float vA,vK;
+    void main(){vec3 p;float life,sz,vS=0.;vK=aKind;
+     if(aKind<.5){float h=${(DIVE_SURFACE_Y-ventY).toFixed(2)};float y=mod(uDiveTime*aB.z+aB.w,h);life=y/h;p=vec3((${vent.x.toFixed(2)})+aB.x+sin(y*2.+aB.w)*.12,(${ventY.toFixed(2)})+y,(${vent.z.toFixed(2)})+aB.y);sz=.07;}
+     else if(aKind<1.5){float c=2.6-1.2*uTrail,a=mod(uDiveTime+aB.w,c);life=a/c;p=uPlayer+vec3(aB.x*(1.+uTrail*2.)+sin(a*5.+aB.w)*.08,.4+a*aB.z,aB.y*(1.+uTrail*2.));sz=.05*(1.+uTrail*.6);}
+     else if(aKind<2.5){// plankton: a 16 x 8 x 16 m box of motes wrapped round the camera, drifting with a slow current
+      vec3 q=aB.xyz+vec3(uDiveTime*.12,sin(uDiveTime*.3+aB.w)*.25,uDiveTime*.05)*uDrift;q=mod(q-uCam+vec3(8.,4.,8.),vec3(16.,8.,16.))-vec3(8.,4.,8.);
+      p=uCam+q;p.y=min(p.y,${(DIVE_SURFACE_Y-.15).toFixed(2)});life=.5;sz=.028;}
+     else if(aKind<3.5){float a=uDiveTime-uPuff.w;life=clamp(a/1.3,0.,1.);p=uPuff.xyz+vec3(aB.x,0.,aB.z)*(1.-exp(-2.5*a))*.9+vec3(0.,aB.y*life*.6,0.);sz=.16*(1.+life);}
+     else if(aKind<4.5){// the sparkle spot: glints over a 0.9 m patch of sand, twinkling (still with calm), seen within ~12 m of the diver
+      p=uSpark.xyz+vec3(aB.x*.9,.08+aB.y*.6+sin(uDiveTime*1.3+aB.w)*.08*uTwinkle,aB.z*.9);life=.5;sz=.15;
+      float tw=uTwinkle>.5?pow(.5+.5*sin(uDiveTime*3.1+aB.w*6.3),3.):.55;vS=uSpark.w*(.45+.55*tw)*(1.-smoothstep(${(SPARKLE_SEE-2).toFixed(1)},${SPARKLE_SEE.toFixed(1)},length(p-uPlayer)));}
+     else{float a=uDiveTime-uRing.w;life=clamp(a/.9,0.,1.);p=uRing.xyz+aB.xyz*(.12+.6*(1.-exp(-4.*a)));sz=.09;vS=(1.-life)*step(0.,a);}// the high five's sparkle ring
+     vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uScale*sz*(.7+.6*fract(aB.w))/max(.5,-mv.z);
+     vA=aKind>3.5?vS:aKind>2.5?(1.-life)*step(0.,uDiveTime-uPuff.w)*.55:aKind>1.5?.32*(1.-smoothstep(uFogFar*.25,uFogFar*.45,-mv.z)):(1.-smoothstep(.75,1.,life))*smoothstep(0.,.06,life)*(1.-smoothstep(uFogFar*.5,uFogFar,-mv.z));
+     if(aKind>.5&&aKind<1.5)vA*=.55+.45*uTrail+.3;}`,
+   fragmentShader:/* glsl */`varying float vA,vK;void main(){vec2 d=gl_PointCoord-.5;float r=length(d);if(r>.5)discard;
+    if(vK>3.5){float s=1.-smoothstep(0.,.5,r),x=max(0.,1.-abs(d.x)*7.)*max(0.,1.-abs(d.y)*1.6)+max(0.,1.-abs(d.y)*7.)*max(0.,1.-abs(d.x)*1.6);gl_FragColor=vec4(1.,.93,.64,min(1.,s*s*.9+x*.8)*vA);return;}
+    if(vK>1.5){float s=1.-smoothstep(0.,.5,r);gl_FragColor=vec4(vK>2.5?vec3(.86,.82,.68):vec3(.9,1.,.95),s*vA);return;}
+    float ring=smoothstep(.32,.45,r)*(1.-smoothstep(.45,.5,r));
     float hi=smoothstep(.16,0.,length(d-vec2(-.15,-.15)));gl_FragColor=vec4(.88,.97,1.,(ring*.85+hi*.9+.12)*vA);}`});
   m.name='dive-bubbles';const pts=new T.Points(g,m);pts.name='dive-bubbles';pts.frustumCulled=false;pts.renderOrder=3;scene.add(pts);}
  // ---- The clam's lid and pearl, and the treasure coin (tiny meshes; they move only while they animate).
@@ -394,32 +497,96 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  const coinHome=new T.Vector3(chestAt.x,F(chestAt.x,chestAt.z)+.55,chestAt.z);coin.position.copy(coinHome);coin.visible=!opt.found.includes('treasure');scene.add(coin);
  let lidT=-1,lidOpen=0,coinT=-1;
 
+ // ---- Explore v2: the journey's pickups (diveJourney.ts): litter (a can) and reef treasures (a starfish), ONE instanced draw. Both
+ // shapes are in one geometry (aPart); each instance shows its own (aKind) and its colour; treasures twinkle (a time uniform). A
+ // collected one rises and shrinks for 0.7 s (one instance matrix per frame while it does), then it is gone.
+ const picks=opt.pickups??[],got=picks.map((_,i)=>Boolean(opt.got?.[i]));let pickMesh:T.InstancedMesh|null=null;const pickAnim:{i:number;t:number}[]=[];
+ // Explore delight: the zone's friend is one more instance of this draw (its own part 2, aLimb for the wave / high five, uFriend:
+ // x wave, y high five, z puff / pulse, w the gesture clock), moved on the CPU by setFriend (one instance matrix per frame).
+ const friend=opt.friend??null,friendI=picks.length,uFriend={value:new T.Vector4(0,0,0,0)};
+ if(picks.length||friend){const parts:{g:T.BufferGeometry;part:number;c:C;limb?:number}[]=[];
+  if(friend)for(const q of friendParts(friend.kind))parts.push({g:q.g,part:2,c:q.c,limb:q.limb});
+  {const pts:T.Vector2[]=[];for(let k=0;k<10;k++){const a=k/10*Math.PI*2,rr=k%2?.11:.3;pts.push(new T.Vector2(Math.cos(a)*rr,Math.sin(a)*rr));}
+   const star=new T.ExtrudeGeometry(new T.Shape(pts),{depth:.06,bevelEnabled:false});star.rotateX(-Math.PI/2);parts.push({g:star,part:0,c:[1,1,1]});}
+  {const can=new T.CylinderGeometry(.1,.1,.3,8);can.rotateZ(Math.PI/2);can.translate(0,.08,0);parts.push({g:can,part:1,c:[1,1,1]});
+   const lid=new T.CylinderGeometry(.06,.07,.08,6);lid.rotateZ(Math.PI/2);lid.translate(.18,.08,0);parts.push({g:lid,part:1,c:[.55,.55,.58]});}
+  const flat=parts.map(({g,part,c,limb})=>{const q=g.index?g.toNonIndexed():g;if(q!==g)g.dispose();q.computeVertexNormals();const n=q.getAttribute('position').count,qp=q.getAttribute('position');
+   q.setAttribute('aPart',new T.BufferAttribute(new Float32Array(n).fill(part),1));q.setAttribute('aLimb',new T.BufferAttribute(new Float32Array(n).map((_,i)=>limb===-1?Math.min(1,Math.abs(qp.getX(i))/.65):limb??0),1));q.setAttribute('color',new T.BufferAttribute(new Float32Array(n*3).map((_,i)=>c[i%3]),3));return q;});
+  let n=0;for(const q of flat)n+=q.getAttribute('position').count;const g=new T.BufferGeometry();
+  for(const [name,size] of [['position',3],['normal',3],['color',3],['aPart',1],['aLimb',1]] as const){const arr=new Float32Array(n*size);let o=0;for(const q of flat){arr.set(q.getAttribute(name).array as Float32Array,o);o+=q.getAttribute(name).count*size;}g.setAttribute(name,new T.BufferAttribute(arr,size));}
+  flat.forEach(q=>q.dispose());g.setAttribute('aKind',new T.InstancedBufferAttribute(new Float32Array([...picks.map(p=>p.kind==='litter'?1:0),...(friend?[2]:[])]),1));
+  const m=new T.MeshLambertMaterial({vertexColors:true});m.name='dive-pickups';
+  m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uFriend=uFriend;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aPart,aKind,aLimb;varying float vTw;uniform float uDiveTime;uniform vec4 uFriend;')
+   .replace('#include <begin_vertex>','#include <begin_vertex>\nif(abs(aPart-aKind)>.5)transformed*=0.;vTw=step(aKind,.5)*(.5+.5*sin(uDiveTime*3.+instanceMatrix[3].x*1.7));\nif(aKind>1.5){transformed.y+=aLimb*(uFriend.x*.13*(1.+sin(uFriend.w*14.))+uFriend.y*.3);transformed*=1.+uFriend.z*.35;}');
+   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nvarying float vTw;').replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=vColor*vTw*.45;');};
+  m.customProgramCacheKey=()=>'dive-pickups-v2';
+  pickMesh=new T.InstancedMesh(g,m,picks.length+(friend?1:0));pickMesh.name='dive-pickups';pickMesh.frustumCulled=false;
+  const mm=new T.Matrix4(),cc=new T.Color();picks.forEach((p,i)=>{mm.compose(new T.Vector3(p.x,p.y-.18,p.z),new T.Quaternion().setFromEuler(new T.Euler(0,i*1.9,p.kind==='litter'?.25:0)),new T.Vector3().setScalar(got[i]?0:p.kind==='litter'?1:1.2));pickMesh!.setMatrixAt(i,mm);pickMesh!.setColorAt(i,cc.set(p.color));});
+  if(friend){mm.makeTranslation(friend.x,friend.y,friend.z);pickMesh.setMatrixAt(friendI,mm);pickMesh.setColorAt(friendI,cc.set('#ffffff'));}
+  scene.add(pickMesh);}
+ const pm=new T.Matrix4(),pq=new T.Quaternion(),pv=new T.Vector3(),ps=new T.Vector3(),pe=new T.Euler(0,0,0,'YXZ');
+ // ---- Explore v2: the underwater football (a zone with the old pitch, Paul's Grotto): a ball on the centre spot to nudge with your body
+ // into the sunken goal. ONE small mesh; its few lines of physics run in diveRuntime.ts only in that zone.
+ let ball:T.Mesh|null=null;const goal=lay.pitch?{x:lay.pitch.goal.x,z:lay.pitch.goal.z,y:F(lay.pitch.goal.x,lay.pitch.goal.z),yaw:lay.pitch.goal.yaw,w:lay.pitch.goal.w,h:lay.pitch.goal.h,cx:lay.pitch.cx,cz:lay.pitch.cz}:null;
+ if(goal){const B=new Merge();B.add(new T.IcosahedronGeometry(.3,2),new T.Matrix4(),(v,n,l)=>paintBall(v,n,l.clone().multiplyScalar(.22/.3)));
+  const bm=new T.MeshLambertMaterial({vertexColors:true});bm.name='dive-ball';ball=new T.Mesh(B.geometry(),bm);ball.name='dive-ball';ball.position.set(goal.cx,F(goal.cx,goal.cz)+.3,goal.cz);scene.add(ball);}
+
  // ---- The follow camera: behind and a little above the diver, eased; kept under the surface and over the sand.
  const camPos=new T.Vector3(0,DIVE_SURFACE_Y-1,8),camLook=new T.Vector3(),tmp=new T.Vector3();let camInit=false;
  function follow(dt:number,d:{x:number;y:number;z:number;yaw:number}){
-  const fx=Math.sin(d.yaw),fz=Math.cos(d.yaw);tmp.set(d.x-fx*6.2,d.y+1.1,d.z-fz*6.2);
+  const fx=Math.sin(d.yaw),fz=Math.cos(d.yaw);tmp.set(d.x-fx*6,d.y+1,d.z-fz*6);
   {const cr=Math.hypot(tmp.x,tmp.z),lim=DIVE_ROOM_R+1.5;if(cr>lim){tmp.x*=lim/cr;tmp.z*=lim/cr;}}// never back into the rock ring
-  tmp.y=Math.min(DIVE_SURFACE_Y-.55,Math.max(F(tmp.x,tmp.z)+.6,tmp.y));
-  const k=camInit?1-Math.exp(-dt*3.2):1;camPos.lerp(tmp,k);camLook.lerp(tmp.set(d.x+fx*3,d.y-.45,d.z+fz*3),camInit?1-Math.exp(-dt*5):1);camInit=true;
+  tmp.y=Math.min(DIVE_SURFACE_Y-.55,Math.max(F(tmp.x,tmp.z)+.6,F((tmp.x+d.x)/2,(tmp.z+d.z)/2)+.5,tmp.y));// over the sand under it and halfway to the diver (never in a rising reef)
+  const k=camInit?1-Math.exp(-dt*3.2):1;camPos.lerp(tmp,k);camLook.lerp(tmp.set(d.x+fx*3.6,d.y-.2,d.z+fz*3.6),camInit?1-Math.exp(-dt*5):1);camInit=true;
   camera.position.copy(camPos);camera.lookAt(camLook);
  }
  const triangles=()=>{let t=0;scene.traverse(o=>{const m=o as T.Mesh;if(!m.isMesh||!o.name.startsWith('dive-'))return;const g=m.geometry as T.BufferGeometry&{instanceCount?:number};const n=(g.index?g.index.count:g.getAttribute('position').count)/3;t+=n*(g.instanceCount&&Number.isFinite(g.instanceCount)?g.instanceCount:1);});return Math.round(t);};
  let disposed=false;
  return {scene,camera,uTime,
-  /** Draws (meshes and points in the room, not counting the diver's rig) and triangles, for the budget test and the docs. */
-  stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
+  /** Draws (VISIBLE meshes and points in the room: the hidden pearl is not drawn; not counting the diver's rig) and triangles, for the budget test and the docs. */
+  stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / coin while they animate. */
-  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number}){
+  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;dartT?:number}){
    uTime.value=t;uPlayer.value.set(diver.x,diver.y+.9,diver.z);follow(dt,diver);
+   // Explore v2: the fish and plants feel the diver (stronger on a dart), the dart's trail, the camera's FOV kick, the water's colour.
+   const dart=Math.min(1,(diver.dartT??0)/.5);uDiver.value.set(diver.x,diver.y+.3,diver.z,.5+.5*dart);uTrail.value+=(dart-uTrail.value)*Math.min(1,dt*6);uCam.value.copy(camera.position);
+   const fov=58+6*uTrail.value;if(Math.abs(camera.fov-fov)>.05){camera.fov=fov;camera.updateProjectionMatrix();}
+   {const cr=Math.max(.5,DIVE_SURFACE_Y-F(camera.position.x,camera.position.z)),ct=Math.max(0,Math.min(1,(DIVE_SURFACE_Y-camera.position.y)/cr));
+    fog.color.copy(deepC).lerp(shallowC,ROOM_SHALLOW_MIX[0]+(ROOM_SHALLOW_MIX[1]-ROOM_SHALLOW_MIX[0])*ct);}
+   for(let k=pickAnim.length-1;k>=0;k--){const a=pickAnim[k],p=picks[a.i];a.t+=dt;const u=Math.min(1,a.t/.7);
+    pv.set(p.x,p.y-.18+u*1.1,p.z);pq.setFromAxisAngle(ps.set(0,1,0),a.t*9);ps.setScalar(Math.max(.001,(1-u)*1.2));pm.compose(pv,pq,ps);pickMesh!.setMatrixAt(a.i,pm);pickMesh!.instanceMatrix.needsUpdate=true;
+    if(u>=1)pickAnim.splice(k,1);}
    if(lidT>=0){lidT+=dt;lidOpen=Math.min(1,lidT/1.1);lidHinge.rotation.x=-.9*(lidOpen*lidOpen*(3-2*lidOpen));if(lidT>6){lidT=-2;}}
    else if(lidT<-1){lidT+=dt;lidOpen=Math.max(0,1-(lidT+2)/1.2);lidHinge.rotation.x=-.9*lidOpen;if(lidOpen<=0){lidT=-1;pearl.visible=false;}}
    if(coin.visible){coin.rotation.y=t*1.6;if(coinT>=0){coinT+=dt;coin.position.y=coinHome.y+coinT*1.4;coin.scale.setScalar(Math.max(.01,1-coinT/1.2));if(coinT>1.2){coin.visible=false;coinT=-1;}}}
   },
+  /** Explore v2: a pickup collected (index): it rises, spins and shrinks away; a sand puff where it lay. */
+  collect(i:number,t:number){const p=picks[i];if(!p||got[i])return;got[i]=true;pickAnim.push({i,t:0});uPuff.value.set(p.x,p.y-.2,p.z,t);},
+  /** A soft sand puff (the ball landing, a dart low over the sand). */
+  puff(x:number,y:number,z:number,t:number){if(t-uPuff.value.w>.9)uPuff.value.set(x,y,z,t);},
+  /** The reef's colour (diveJourney.ts reefColour) and, at a restored reef, the big school's football (0..1) in front of the diver. */
+  setReef(v:number){uReef.value=v;},
+  form(k:number,x:number,y:number,z:number){if(formSchool)formSchool.form.value.set(x,y,z,k);},
+  /** The buddy fish (Explore v2): where it is, which way it faces, shown or not. */
+  setBuddy(x:number,y:number,z:number,fx:number,fy:number,fz:number,show:boolean){uBuddy.value.set(x,y,z,show?1:0);uBuddyF.value.set(fx,fy,fz).normalize();},
+  /** Explore delight: the zone's friend (null when the zone has none): where it is, its heading (forward (sin, cos)), a nod / tip
+   *  (pitch, roll), and its gesture: wave, high five, puff / pulse (0..1 each) and the gesture's clock. */
+  hasFriend:!!friend,
+  setFriend(x:number,y:number,z:number,yaw:number,pitch:number,roll:number,wave:number,five:number,puff:number,t:number){
+   if(!friend||!pickMesh)return;pv.set(x,y,z);pq.setFromEuler(pe.set(pitch,yaw,roll,'YXZ'));ps.set(1,1,1);pm.compose(pv,pq,ps);pickMesh.setMatrixAt(friendI,pm);pickMesh.instanceMatrix.needsUpdate=true;uFriend.value.set(wave,five,puff,t);},
+  /** Explore delight: the whale's shadow over the surface (x, z, heading, strength 0..1): the rays dim and the schools tilt up with it.
+   *  Nothing with `calm` (heat tier 3+ / Battery saver / reduced motion). */
+  setWhale(x:number,z:number,yaw:number,k:number){if(opt.calm)k=0;uWhale.value.set(x,z,yaw,k);uRayK.value=1-.55*k;uWhaleK.value=k;},
+  /** Explore delight: the high five's sparkle ring at (x, y, z), starting at t; today's sparkle shown or gone (found). */
+  ring(x:number,y:number,z:number,t:number){uRing.value.set(x,y,z,t);},
+  setSparkle(on:boolean){uSpark.value.w=on&&sp0?1:0;},
+  /** The underwater football (null outside the pitch zone) and its goal (room-local; the frame's yaw: the goal line along local x). */
+  ball,goal,
   /** The size of a bubble (pixels at 1 m), from the drawing buffer's height. */
   setViewport(width:number,height:number,aspect:number){uBubbleScale.value=height;if(camera.aspect!==aspect){camera.aspect=aspect;camera.updateProjectionMatrix();}void width;},
   /** The find's interaction: the coral's burst, the clam opening (visual only), the coin rising into your coins. */
   use(find:DiveFind,t:number){
-   if(find.kind==='burst'){uBurst.value.set(coralAt.x,coralAt.y+.3,coralAt.z,t);burst.visible=true;}
+   if(find.kind==='burst'){uBurst.value.set(coralAt.x,coralAt.y+.3,coralAt.z,t);burstGeo.instanceCount=burstN;}
    else if(find.kind==='clam'){lidT=0;pearl.visible=true;}
    else if(find.kind==='treasure'&&coin.visible&&coinT<0)coinT=0;
   },

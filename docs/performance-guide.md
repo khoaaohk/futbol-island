@@ -1,5 +1,47 @@
 # Performance reference for future Futbol Island updates
 
+## Explore delight (Oct 21 2026, local, not deployed)
+
+The whale shadow, the zone friends' wave / high five, the daily sparkle spot and the find slow-down (docs/swimming-research.md §12) add
+**no draw call** to the reef room: phone rooms stay 12-16 draws (tests/explore-v2.cjs cap 16, unchanged).
+- **Friend:** one more instance of the pickups' InstancedMesh (its own part 2 with an `aLimb` attribute, gestures from one `uFriend`
+  vec4). Its body is 116-256 triangles per zone (room stats: captains-cup +256, pauls-grotto +184, kelp-trawler +196, ray-meadow +116,
+  moon-arch +154, ball-crate +196, turtle-pool +188); because the 9 instances share the geometry, the GPU also runs ~1-2.3k collapsed
+  (zero-area) vertices' worth of the friend on the 8 pickup instances: vertex work only, no fill. CPU: one instance matrix upload
+  (9 × 64 bytes) per frame and a few distance checks; nothing allocates (tests/explore-delight.cjs).
+- **Whale:** a soft silhouette in the surface's fragment shader behind a uniform branch (`uWhale.w > 0` only during the 16 s pass, at
+  most once a visit), the rays' alpha × `uRayK`, the schools' tilt from one float. Off (never scheduled) at heat tier 3+ / Battery saver /
+  reduced motion (`calm`).
+- **Sparkle and ring:** 14 (phone) / 20 (desktop) glitter points + 12 ring points in the existing bubbles Points draw; the glitter is
+  still with `calm` or reduced motion; gone once found.
+- **Slow-down:** pure arithmetic in `diveSession.step` (findSlow), the runtime's nearest-thing distance over 8 pickups + 4 finds + 1
+  sparkle per frame.
+- Not measured on an iPhone.
+
+## Seamless Explore edge (Oct 21 2026, local, not deployed)
+
+Swimming in / out of a reef zone across its edge (lib/town/water/diveEdge.ts, docs/swimming-research.md §11). Added cost: while
+duck-diving on the island, one 7-zone distance reject per tick (an atan2 + 3 sines only within 1.45 × a zone's radius); in the room one
+atan2 + 3 sines per step for the rim. No allocation per frame (reused out objects). Crossing out wakes the island in one frame with
+nothing pre-warmed: the room is disposed as on surfacing and the island's frame resumes; the frozen-island rule is unchanged (the dive
+branch still runs first). The way out probes at most 9 points (distanceToLand) once per crossing. tests/dive-edge.cjs. iPhone heat not
+measured.
+
+## Explore zone links: jetpack badge, reef hints, zone sea life (Oct 21 2026, local, not deployed)
+
+- **Map** (`IslandOverview.tsx` `ExploreMarks`, `lib/town/water/reefDiscovery.ts`): the E marks are their own small component
+  reading the reef store, so the memoized terrain is untouched; it re-renders only when a zone becomes explored. Far zones (whole
+  blob outline beyond `SWIM_RANGE` from land, 72 samples once per load) wear a jetpack badge: Kelp Forest Wreck, Ball Crate Reef,
+  Moon Arch. Explored = the existing `fi2-dive-finds-v1` / `fi2-dive-reef-v1` saves (no new key), read once, on map open and after a dive.
+- **Hint** (`ReefHintToast.tsx`): `reefHints.step` runs every frame but tests at 2 Hz: a box reject and one `atan2` per zone within
+  300 m, no allocation; the arrow re-aims at 2 Hz in 10° steps (a React update only when it visibly turns). The shared toast lane,
+  one wait + one hide timeout.
+- **Zone sea life** (`lib/graphics/zoneLife.ts`, from `openSeaLife.update`): turtles / fish / jellies from the clear window's
+  shapes, ONE InstancedMesh per kind (≤ 3 draws, only while a zone is within 160 m), caps by tier (`zoneLifeCounts`: desktop tier 0
+  2/7/5, phone 2/5/4, tiers 1–2 2/4/3, tier 3 1/3/2, tier 4 none), far (> 60 m) at 15 Hz, nothing uploaded on frozen frames.
+  Ray Meadow's two rays are a separate cayMantas group (one more instanced draw near it); the north-sea whale shark's loop moved
+  beside Captain's Cup (same count). Desktop-only validation (tests/sea-life-areas.cjs, tests/reef-discovery.cjs); no phone thermal claim.
+
 ## Explore shoals: no sand band, clear of the shore (Oct 21 2026, local, not deployed)
 
 - **Cause of the khaki band past the far edge:** the scene's clear colour (the warm sky) seen through the see-through shoal water. From a low or distant camera a view ray past the shallow crest descends more slowly than the preview shelf falls away, so it reached no geometry. Confirmed by turning the background magenta.
@@ -5721,3 +5763,39 @@ User: "the dive spots don't look like the area from above" (the reef you explore
 - **Validation**: tests/dive-layout.cjs (determinism, unique props / tells, nothing above the surface, buoy / start / lanes clear, room and
   preview at the same places, caps, gating, tokens), dive-see-through, water-dive, full suite, build, headless shots in /tmp/dive-layout.
   **No iPhone heat test has been done.**
+
+
+## Explore v2: frozen island, room rest cap, water colour, journey (Oct 21 2026, local, not deployed)
+
+User: "improve the visuals, swimming movements, controls, animations, water realism, interactions ... keeping down the heat ... freeze
+everything else with the island while this is running", and "the room's background is still a fixed colour".
+- **Frozen island audit (before).** The dive branch returned from `animate` only AFTER the island's rest heuristics: every frame under
+  water still ran `games.stats` / the cars' distance scan (`streetTraffic.cars.some`) / `islandNpcs.stats`, the foot-rest test and the
+  island idle rule (the room only reached ~20 fps at rest by accident: `water.resting()` stayed true from the surface). The heat governor
+  was NOT fed underwater (no `heat.afterRender` in the branch), so heat tiers never adapted during a dive; the motion resolution was not
+  applied; the island music kept playing and the footstep / wind bed (`sound.move`) kept its last state. Everything else (the island step,
+  NPCs, traffic, sharks, open sea, wild bugs / swarm, ferry, lighthouse, water clock, shadows, HUD tick, island render) was already skipped.
+- **After.** `if(dive.diving)` is the FIRST thing after the easel cap in `animate` (components/Town.tsx): under the water only the room's
+  own rest cap (`dive.resting`: no stick, lift, dart, ball, pickup or formation moving → `idleRide` 20 fps after 3 s, 15 fps after 30 s),
+  `heat.setRest`, the frame-cap slot, `motionResolution.update`, the dive step, the reef sound bed, ONE room render and
+  `heat.afterRender(...,'dive')` (the governor judges the room's frames, so tiers / Battery saver keep working) run. Going under ducks the
+  island music (`music.setDucked(true)`, back on surfacing) and stops the move bed. tests/explore-v2.cjs pins the branch's position and
+  contents and that 13 island systems' per-frame calls sit after it.
+- **Water colour (tokens, waterTokens.ts ROOM_*).** `scene.background` IS the fog colour, rewritten each frame from the zone's
+  `theme.water` toward `ROOM_SHALLOW` by the camera's place in the water column (clear turquoise near the surface, the zone tint low over
+  the rim): one lerp per frame. The surface seen from below is a small ShaderMaterial (the ceiling plane, 12x12 segments on phones): a
+  clear aqua window over the camera fading into the fog colour with moving shimmer lines (no pale band on a phone's tall view).
+- **Light and life (same draws).** Caustic light lines on everything facing up (reef material, ALU only, off when lite / reduced); god rays
+  as soft two-quad streaks breathing on the time uniform; plankton motes (70 phone / 120 desktop, × lite) and a sand puff added to the
+  existing bubble Points draw; the swimmer's bubble trail longer on a dart; plants bend away from the diver and schools part round them
+  (one distance per vertex on `uDiver`); the buddy fish is instance 0 of the coral-burst draw (whose 14 fish are drawn only once touched).
+- **New draws.** The journey pickups (ONE InstancedMesh, 8 instances, two shapes in one geometry) and, at the pitch zone only, the ball.
+  Counted as VISIBLE draws (the hidden pearl is not drawn). Node, phone profile (draws / triangles): before 13-16 / 34k-75k; after
+  captains-cup 16/63.4k, pauls-grotto 15/46.4k, kelp-trawler 14/51.5k, ray-meadow 14/30.3k, moon-arch 13/40.9k, ball-crate 15/67.6k,
+  turtle-pool 13/41.3k (fewer triangles: the burst fish are no longer drawn before the touch).
+- **Headless (production build, SwiftShader, 390x844, phone profile, Captain's Cup).** rAF callback CPU median: island swimming 1.5 ms
+  (30 calls, 81k tris, 17 fps rendered in SwiftShader), room swimming 0.3 ms (20 calls incl. the rig, 71k tris, 30 fps), room hovering
+  ~20-23 fps (the rest cap). Before: room 0.2 ms, 18 calls, 70.7k. The extra ~0.1 ms is the buddy, the pickups test and the fog lerp.
+- **Per frame CPU added:** ~8 distance tests (pickups), the buddy spring, the ball's few lines (pitch zone only), one Color lerp, a few
+  uniform writes. No allocation in the room frame or the session step (tests/explore-v2.cjs). Nothing runs between dives.
+- **Not measured on an iPhone.** All of the above is reduced/bounded work in desktop emulation; phone heat was NOT measured.

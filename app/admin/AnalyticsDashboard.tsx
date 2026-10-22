@@ -1,5 +1,5 @@
 'use client';
-import {useCallback,useEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type CSSProperties} from 'react';
 import {useRouter} from 'next/navigation';
 import {BackButton} from '@/components/BackButton';
 import type {Report,Row} from '@/lib/analytics/core';
@@ -77,6 +77,17 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  const [tab,setTabState]=useState<Tab>('overview');
  // The tab lives in the URL hash (#engagement …) so a reload or a shared link opens the same tab.
  useEffect(()=>{const h=location.hash.slice(1);if(TABS.some(([t])=>t===h))setTabState(h as Tab);},[]);
+ // The tab toggle's moving pill (Oct 21 2026, owner: "animate the toggle ... have that animate and move over"): one absolutely placed
+ // indicator slides and resizes to the selected tab; measured after layout, again on resize and when fonts load. It does not slide
+ // on the first paint (`ready` turns the transition on after the first measure).
+ const tabsEl=useRef<HTMLDivElement>(null),[pill,setPill]=useState<{x:number;w:number;ready:boolean}|null>(null);
+ useLayoutEffect(()=>{
+  const measure=()=>{const el=tabsEl.current?.querySelector<HTMLElement>(`[data-tab="${tab}"]`);if(!el)return;setPill(p=>p&&p.x===el.offsetLeft&&p.w===el.offsetWidth?p:{x:el.offsetLeft,w:el.offsetWidth,ready:!!p});};
+  measure();
+  const raf=requestAnimationFrame(()=>setPill(p=>p?{...p,ready:true}:p));
+  window.addEventListener('resize',measure);const fonts=(document as Document&{fonts?:{ready:Promise<unknown>}}).fonts;fonts?.ready.then(measure).catch(()=>{});
+  return()=>{cancelAnimationFrame(raf);window.removeEventListener('resize',measure);};
+ },[tab]);
  const setTab=(t:Tab)=>{setTabState(t);try{history.replaceState(null,'',t==='overview'?location.pathname+location.search:'#'+t);}catch{}};
  const query=useRef(`range=${initialRange}`);
  // The first paint's data came from the server moments ago; stamp it client-side once mounted (avoids an SSR/client
@@ -136,7 +147,8 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
     <h1><small>Admin</small>Analytics</h1>
    </header>
 
-   <div className={so.tabs} role="tablist" aria-label="Admin sections">
+   <div className={so.tabs} role="tablist" aria-label="Admin sections" ref={tabsEl}>
+    {pill&&<span className={so.tabPill} data-ready={pill.ready?'true':'false'} aria-hidden="true" style={{width:pill.w,transform:`translateX(${pill.x}px)`}}/>}
     {TABS.map(([id,label])=><button key={id} type="button" role="tab" id={'tab-'+id} aria-selected={tab===id} aria-controls="admin-tabpanel" className={so.tab} data-tab={id} onClick={()=>setTab(id)}>{label}</button>)}
    </div>
 

@@ -23,6 +23,7 @@ entire screen", "the rest of the game should be in this style".
 | `figure.ts` | Paper mannequins (capsule bodies, poses, runs, ball, depth sort) | cards, var, backpass |
 | `bench.tsx` | Frames (wide / tall model orientation), `Base`, `Tint`, `Sphere`, `LabelPlate`, `useBox(ref)`, `useLive` | telstar, laced-leather, shirts |
 | `hooks.ts` | `useSize` (an element's live px size) | hall-of-fame, timeline |
+| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain) |
 
 Hall-of-fame and timeline keep their own `Draw.tsx` (their display lists differ); everything else that was copied between
 exhibits now lives here. Two room components remain (`PaperRoom`, `PaperStage`): they share tokens and behaviour but differ in
@@ -55,3 +56,43 @@ layout details, and merging them was not worth the risk.
 
 `tests/museum-paper-kit.cjs` (one loop, its behaviour, tokens, no duplicates) and `tests/museum-exp-<id>.cjs` per exhibit, all in
 `npm test`. Dev labs: `/museum-lab/<id>`.
+
+## Figure kit v2 (Oct 21 2026)
+
+User: research Colorfigures (https://april-zhu.com/colorfigures) and make the exhibits better; "Start with Telstar and VAR, build
+the shared kit first". An opt-in layer on the anatomy kit: a figure you can turn all the way round, see through, label and
+recolour. Exhibits that don't use it keep their fixed view. Files: `anatomy/figure-kit.ts` (pure maths, tested in Node) and
+`anatomy/FigureStage.tsx` + `FigureStage.module.css` (the React stage). Pilots: telstar-1970 ("Turn the ball"), var-2018
+("The review chain").
+
+**API.** `<FigureStage spec active reduced onLabel handle label top extra/>` fills its card (absolute, inset 0). `spec`:
+`{id, points, front?, turn?:'full'|'fixed', pitch?:[20,60], seeThrough?, labels?, swatches?, swatchLabel?, draw(view), tick?}`.
+`draw(view)` returns `{svg, labels?, obj?}` as ONE SVG string; `view` carries `yaw, pitch, P` (an iso-kit Projection, so every
+iso-kit solid shades and hides its back faces at any yaw), `V` (toward the viewer), `L` (light, always the viewer's top left),
+`xray` (0…1), `swatch`, `active` (ids of the parts working now). `handle.current` gives `turnTo`, `aim(n)`, `front`,
+`invalidate`, `setSeeThrough`, `setLabels`. The stage adds ⟲ ⟳ (45°), Front view, See-through, Labels, the swatch row, a
+"Drag to turn" hint that goes after first use, drag/touch with inertia, arrow keys (15° / 8°) and Home.
+
+**Layers and labels.** Tag a part `layer:'shell'` (fades to `GHOST` .18 with its ink outline, `shellAlpha(k)`) or `'inner'`
+(drawn over the ghost at `innerAlpha(k)`); the cross-fade is 250 ms. Labels are `{id, text, at, normal?}`: a tag whose
+`normal` faces away is hidden; tags sit in two columns either side of `obj`, sorted by height (leaders never cross), pushed
+apart (no overlaps), kept in the card, 13-14 px mono; a tag lights in the accent while its id is in `active`; tapping a tag
+turns the figure to face it and calls `onLabel(id)`.
+
+**Depth rules (no depth buffer).** Never a fixed back-to-front order: every part has a `box` and goes through `byDepth(parts, V)`
+(separated boxes by the viewer's side, overlapping ones by centre depth). Draw a face, and anything on it, only while
+`isFacing(n, V)`. Split long parts beside short ones; wrap shells as far half → contents → near half.
+
+**Heat.** ≤ `MAX_PARTS` (120) SVG elements per figure (`countParts`, checked in tests). The figure is painted into a `<g>` by
+`innerHTML` through a ref (no React render per frame); the ONE Paper loop runs only while it coasts, eases or fades, paints
+only when dirty, sleeps at rest, parks off-screen / hidden, is disposed on unmount; the tick allocates nothing. Reduced
+motion: turns and fades jump to their end.
+
+**Why not embed the Colorfigures engine?** Considered (an iframe of its built HTML): it brings its own frame driver (rAF plus a
+timer fallback), its own look and a second document per exhibit; our rules are one Paper loop and the Paper tokens. The ideas
+were ported instead.
+
+**Credits.** Ideas (camera turning, box depth sort, facing tests, see-through ghost, two-column callouts, swatches) from
+Colorfigures / ISO-GLOW by April Zhu (MIT), which builds on iso-figure by Tolga Cohce (MIT). No code was copied.
+
+Checks: `tests/museum-figure-kit.cjs` (projection, turning, depth at 8 yaws, facing, labels, swatches, heat).

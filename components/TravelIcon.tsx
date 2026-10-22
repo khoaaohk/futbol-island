@@ -5,6 +5,8 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  walk:'M14 4a1.5 1.5 0 1 0 0 .01 M10 21l2-7-3-3 2-4 4 2 3 1 M7 13l2-4 M12 14l5 6',
  map:'m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2V5 M9 3v16 M15 5v16',
  minus:'M5 12h14',stop:'M7 7h10v10H7z',
+ /* End job on the Bug squad's action cluster (Oct 21 2026): out through a door. */
+ endjob:'M13 4H6v16h7 M10 12h11 M17 8l4 4-4 4',
  shoot:'M3 8h7 M2 12h6 M3 16h7 M19 8a5 5 0 1 1-6 8 5 5 0 0 1 6-8 M16 10l2 2-1 3h-3l-1-3z',
  juggle:'M9 6a3 3 0 1 0 6 0 3 3 0 0 0-6 0 M6 20l3-5 3 3 3-3 3 5 M12 10v3',
  scooter:'M4 18h11l4-12h-4 M3 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0 M17 18a2 2 0 1 0 4 0 2 2 0 0 0-4 0',
@@ -40,6 +42,8 @@ export default function TravelIcon({kind,size}:{kind:string;size?:number}){
  hammer:'M13 7 4 20 M10 3l9 9 2-2-9-9z',
  // Summit Isle bug jobs (Oct 20 2026): a butterfly net, a jar with fireflies, and an open jar with bugs flying out.
  net:'M15 9a5 5 0 1 0-10 0 5 5 0 0 0 10 0 M13.5 12.5 21 20 M7 7l6 4 M7 11l6-4',
+ /* The firefly jar's Cup (Oct 21 2026): a jar tipped over a firefly, the lid swung open, the scoop's arc. */
+ cup:'M7 14V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v8 M6 14h12 M18 14l3 2.5 M12 18.5h.01 M3 13c0-3 1-6 3-8',
  jar:'M8 3h8 M7 6h10v13a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2z M10 11h.01 M14 13h.01 M11 16h.01',
  /* Bug squad's net toggle (Oct 20 2026): net held low and forward (the stalk) / net carried upright on the shoulder. */
  netlow:'M4 4l9 9 M19 16a4 3 0 1 0-8 0 4 3 0 0 0 8 0 M3 21h18 M13 18l2 2 M17 18l-2 2',

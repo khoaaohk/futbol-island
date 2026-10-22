@@ -41,7 +41,8 @@ export const WATER_PROBE_HZ=10;
 export const WADE_SPEED={ankle:.9,knee:.7,waist:.5} as const;
 /** Swim speeds (m/s): the head-up crawl, and the Swim fast hold (user, Oct 15 2026: "swim fast isn't moving faster": 1.72× now);
  *  acceleration (quicker on the hold) and braking per second (water carries momentum). */
-export const SWIM_SPEED=3.7,SWIM_FAST_SPEED=6.2,SWIM_ACCEL=5.5,SWIM_FAST_ACCEL=8,SWIM_BRAKE=3;// Oct 15 2026 (user: "make the swimming speed faster and also make the faster speed even faster"): was 1.8 / 3.1, then 2.6 / 4.6; now the walk speed 3.7 and a sprint well above it (user: "increase the swim speed to match the walking speeds")
+/** SWIM_SPEED is the player's crawl and SWIM_SPRINT the player's Swim fast; SWIM_FAST_SPEED (6.2) is the sprint the animal rides were tuned against (animalRides.ts), kept so the rides do not change when the player swims faster. */
+export const SWIM_SPEED=4.8,SWIM_SPRINT=8.2,SWIM_FAST_SPEED=6.2,SWIM_ACCEL=6.5,SWIM_FAST_ACCEL=10,SWIM_BRAKE=3.4;// Oct 21 2026 (user: "increase the regular swim speed more and the faster swim speed"): 3.7 / 6.2 -> 4.8 / 8.2 (still 1.7x). Oct 15 2026 (user: "make the swimming speed faster and also make the faster speed even faster"): was 1.8 / 3.1, then 2.6 / 4.6; now the walk speed 3.7 and a sprint well above it (user: "increase the swim speed to match the walking speeds")
 /** The rig root while swimming sits this far under the water line (shoulders at the surface, head above it). 1.0 since Oct 19 2026
  *  (was 1.27): the body is seen through the swimmer's clear disc now (swimClear.ts); the pose heights follow swimPose WATER_LINE. */
 export const SWIM_ROOT_DEPTH=1.0;
@@ -155,7 +156,7 @@ export function swimStep(position:{x:number;z:number},velocity:{x:number;z:numbe
  let ix=input.x,iz=input.z;let len=Math.hypot(ix,iz);
  if(len>1){ix/=len;iz/=len;len=1;}
  const edge=Math.max(0,Math.min(1,(SWIM_RANGE-distanceOut)/SWIM_EDGE_FADE));
- const top=(fast?SWIM_FAST_SPEED:SWIM_SPEED)*len*(SWIM_EDGE_KEEP+(1-SWIM_EDGE_KEEP)*edge);
+ const top=(fast?SWIM_SPRINT:SWIM_SPEED)*len*(SWIM_EDGE_KEEP+(1-SWIM_EDGE_KEEP)*edge);
  const targetX=len>0?ix/len*top:0,targetZ=len>0?iz/len*top:0;
  const blend=1-Math.exp(-dt*(len>0?(fast?SWIM_FAST_ACCEL:SWIM_ACCEL):SWIM_BRAKE));
  velocity.x+=(targetX-velocity.x)*blend;velocity.z+=(targetZ-velocity.z)*blend;

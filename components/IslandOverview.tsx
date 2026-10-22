@@ -1,4 +1,4 @@
-import {useEffect,useRef,useMemo,memo,useState} from 'react';
+import {useEffect,useRef,useMemo,memo,useState,useSyncExternalStore} from 'react';
 import {ARCADE_DOOR,COACHES_DOOR,VENUES,type Format} from '@/lib/town/venues';
 import {MUSEUM_DOOR} from '@/lib/museum/museumDoors';
 import {SHOP_DOOR} from '@/lib/shop/shopDoors';
@@ -13,6 +13,7 @@ import {CAY_SHORE,CAY_SAND,CAY_LAWN,CAUSEWAY_PATH,CAUSEWAY_BEACHES,SANDBARS,FARM
 import {VENDING_MACHINES} from '@/lib/town/vendingCatalog';
 import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
 import {DIVE_SPOTS} from '@/lib/town/water/diveSpots';
+import {farDiveSpotIds,reefStore} from '@/lib/town/water/reefDiscovery';
 import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers} from '@/lib/town/mapMarkers';
@@ -35,6 +36,27 @@ const VENDING_MARKERS=VENDING_MACHINES.reduce<{id:string;x:number;z:number;names
 /** Job board markers ("J", full map only): one per board in JOBS (new jobs appear by themselves), nudged clear of the V/F
  *  markers, field names and Rosa's label (lib/town/mapMarkers.ts). Static, computed once. */
 const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z-26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
+/** The jetpack glyph (TravelIcon's jetpack strokes), for the far-reef badge and the map key. */
+export const JETPACK_GLYPH='M6 5h4v12H6z M14 5h4v12h-4z M10 9h4 M7 20v2 M17 20v2 M12 3v3';
+/** Reef zones to explore (Oct 20 2026; the user renamed Dive to Explore, so the mark reads E): one per zone at its buoy, the same
+ *  plain mark as F (the map key explains it). Oct 21 2026 (reefDiscovery.ts): a zone too far to swim to (its whole outline beyond
+ *  the 60 m swim range) wears a small jetpack badge; an explored zone (saved finds / pickups, or entered this visit) is filled
+ *  deeper with a tiny check. Its own small component so the memoized terrain stays put; it re-renders only when a zone is explored. */
+function ExploreMarks({localMap}:{localMap:boolean}){
+ const discovered=useSyncExternalStore(reefStore.subscribe,()=>reefStore.get().discovered,()=>NONE);
+ useEffect(()=>reefStore.ensure(),[]);
+ const far=farDiveSpotIds(),r=localMap?5.4:9.5,b=localMap?3.4:5.6;
+ return <g className="map-dive-markers" pointerEvents="none">{DIVE_SPOTS.map(spot=>{const done=discovered.has(spot.id),fly=far.has(spot.id);
+  return <g key={spot.id} aria-label={`${spot.name}: a reef to explore${fly?' (too far to swim: fly there)':''}${done?' (explored)':''}`} data-dive-marker={spot.id} data-dive-far={fly?'':undefined} data-dive-found={done?'':undefined}>
+   <circle cx={spot.x} cy={spot.z} r={r} fill={done?'#5fb9e6':'#a9dcf5'} stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
+   <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill={done?'#ffffff':'#294f43'} fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>E</text>
+   {fly&&<g data-jetpack-badge=""><circle cx={spot.x+r*.8} cy={spot.z-r*.8} r={b} fill="#f4cc7c" stroke="#294f43" strokeWidth={localMap?.8:1.2}/>
+    <path d={JETPACK_GLYPH} transform={`translate(${spot.x+r*.8-b*.62} ${spot.z-r*.8-b*.62}) scale(${b*1.24/24})`} fill="none" stroke="#294f43" strokeWidth={localMap?2.6:2.2} strokeLinecap="round" strokeLinejoin="round"/></g>}
+   {done&&<g data-dive-check=""><circle cx={spot.x+r*.8} cy={spot.z+r*.8} r={b*.8} fill="#3f9b5f" stroke="#ffffff" strokeWidth={localMap?.6:1}/>
+    <path d={`M${spot.x+r*.8-b*.4} ${spot.z+r*.8}l${b*.3} ${b*.3}l${b*.5} ${-b*.55}`} fill="none" stroke="#ffffff" strokeWidth={localMap?.9:1.4} strokeLinecap="round" strokeLinejoin="round"/></g>}
+  </g>;})}</g>;
+}
+const NONE:ReadonlySet<string>=new Set();
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
 export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit';
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
@@ -113,10 +135,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>F</text>
   </g>)}</g>
   {/* Reef zones to explore (Oct 20 2026; the user renamed Dive to Explore, so the mark reads E): one per zone at its buoy, the same plain mark as F (the map key explains it). */}
-  <g className="map-dive-markers" pointerEvents="none">{DIVE_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name}: a reef to explore`} data-dive-marker={spot.id}>
-   <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#a9dcf5" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
-   <text x={spot.x} y={spot.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>E</text>
-  </g>)}</g>
+  <ExploreMarks localMap={localMap}/>
   {/* Island job boards (G-13, Sep 30 2026): one "J" per JOBS board on the full travel map only (the minimap stays uncluttered). Static, in the memoized terrain. */}
   {!localMap&&<g className="map-job-markers" pointerEvents="none">{JOB_MARKERS.map(job=><g key={job.id} aria-label={`${job.title} job`} data-job-marker={job.id}>
    <circle cx={job.x} cy={job.z} r="9.5" fill="#f4cc7c" stroke="#294f43" strokeWidth="1.8"/>

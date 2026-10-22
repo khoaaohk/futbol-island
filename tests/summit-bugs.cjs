@@ -37,14 +37,14 @@ const day=C.jobVariant('bug-scout','bugs'),night=C.jobVariant('bug-scout','firef
  assert.equal(K.shiftGoal('bugs',12),6);assert.equal(K.shiftGoal('fireflies',4),4,'fewer out (heat) = fewer to catch');}
 
 // ---- 2. Swing rules: a bigger sweep, generous auto-aim and tap range (named constants) ----
-{assert(K.NET_SWEEP_RADIUS>=2*K.NET_BASE_REACH,'the sweep is about 2x the first lane reach');assert(K.AUTO_AIM_HALF_ANGLE>=Math.PI/3,'a wide auto-aim cone');
+{assert(K.NET_SWEEP_RADIUS>=1.8*K.NET_BASE_REACH,'the sweep is about 2x the first lane reach (2.2 m after the Oct 21 pull-in)');assert(K.AUTO_AIM_HALF_ANGLE>=Math.PI/3,'a wide auto-aim cone');
  assert(K.TAP_RANGE>=K.AUTO_AIM_RANGE&&K.TAP_RANGE<=K.LUNGE_MAX+K.NET_SWEEP_RADIUS*K.LOCKED_SLACK,'a tapped bug is always within the lunge');
  const hit=(id,x,z,y=1)=>({id,x,y,z});
  assert.equal(K.autoAim([hit('a',0,3),hit('b',0,-2)].sort((p,q)=>Math.hypot(p.x,p.z)-Math.hypot(q.x,q.z)),0,0,0)?.id,'a','the nearest IN FRONT, not the one behind');
  assert.equal(K.autoAim([hit('a',3,1)],0,0,0)?.id,'a','a wide cone (72 degrees off the facing)');assert.equal(K.autoAim([hit('a',0,9)],0,0,0),null,'out of range');
  const c=K.sweepCentre(0,0,0,0,{x:0,y:0,z:0});assert(K.inSweep(c,hit('a',1.2,3,2)),'3.5 m round the sweep centre');assert(!K.inSweep(c,hit('a',0,5)),'too far');
- assert(K.inSweep(c,hit('a',0,4),true),'Net down reaches further');
- assert.equal(K.swingResult([hit('a',0,5.6)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,5.6)],c,null),null,'unlocked: a miss');
+ assert(K.inSweep(c,hit('a',0,3.7),true)&&!K.inSweep(c,hit('a',0,3.7)),'Net down reaches further');
+ assert.equal(K.swingResult([hit('a',0,4)],c,'a')?.id,'a','a locked target gets slack');assert.equal(K.swingResult([hit('a',0,4)],c,null),null,'unlocked: a miss');
  // The swing timeline and the 20-bug formation.
  same(['windup','sweep','sweep','recover','done'].map((ph,i)=>K.swingPhase([.1,.4,K.SWING.hit,1,1.3][i]).phase),['windup','sweep','sweep','recover','done']);
  same(K.FORMATION_CAP,[20,14,11]);const ord=K.formationOrder();assert.equal(ord.length,20);assert.equal(new Set(ord).size,20);assert.equal(ord[0],'ladybug','the goalkeeper first');
@@ -168,6 +168,16 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  for(const kind of ['netcarry','netsneak'])assert(M.UPPER_POSES.has(kind),'the legs keep walking: '+kind);
  const run=R.startRun(day,1);assert.equal(M.heldPose(run,0,0).kind,'netcarry');run.stalk=true;assert.equal(M.heldPose(run,0,0).kind,'netsneak');
  assert.equal(M.poseForEvent(day,{type:'swing',x:1,z:1}).kind,'netswing');assert.equal(M.poseForEvent(day,{type:'netcatch',x:1,z:1}).kind,'netcatch');
+ // Oct 21 2026: at Night the tool is the firefly jar: Cup (jarcup), the jar held up (jarcatch), carried in both hands (jarcarry /
+ // jarsneak); the button reads Cup the jar with the cup icon, Net down reads Jar low; the catch reach is the net's (same rules).
+ {const nr=R.startRun(night,1);assert.equal(M.heldPose(nr,0,0).kind,'jarcarry');nr.stalk=true;assert.equal(M.heldPose(nr,0,0).kind,'jarsneak');
+  assert.equal(M.poseForEvent(night,{type:'swing',x:1,z:1}).kind,'jarcup');assert.equal(M.poseForEvent(night,{type:'netcatch',x:1,z:1}).kind,'jarcatch');
+  assert(M.POSE_TIME.jarcup===M.POSE_TIME.netswing&&M.UPPER_POSES.has('jarcarry')&&M.UPPER_POSES.has('jarsneak'),'the jar poses time like the net');
+  const nb=M.jobButtons(R.startRun(night,1)),cupB=nb.find(b=>b.id==='jar');assert(cupB&&cupB.label==='Cup the jar'&&cupB.icon==='cup','Cup the jar, cup icon');
+  assert(nb.some(b=>b.label==='Jar low'),'Jar low (the stalk) at night');assert(/Cup/.test(night.howTo)&&!/Swing net/.test(night.intro+night.howTo),'night copy says Cup, not Swing net');
+  for(let k=0;k<=1;k+=.05){const t=JP.jobPoseTarget({kind:'jarcup',progress:k},0,false);assert([t.py,t.tx,t.ty,...t.al].every(Number.isFinite),'jarcup finite');}
+  assert(/createBugJar/.test(read('lib/town/jobs/jobScene.ts'))&&/def\.prop==='firefly'\?createBugJar/.test(read('lib/town/jobs/jobScene.ts')),'the shift builds the jar at night');
+  assert(/cup:'/.test(read('components/TravelIcon.tsx'))&&/jar:'Cup'/.test(read('components/JobActionButton.tsx')),'Cup icon and word');}
  assert.equal(E.JOB_BASE_PAY['bug-scout'],5,'pay unchanged');let l=E.emptyJobLedger('2026-10-20');const p=[];for(let i=0;i<4;i++){const x=E.jobPayout('bug-scout',l);p.push(x.coins);l=E.recordCompletion(l,'bug-scout',x.coins,60);}same(p,[9,5,3,3]);
  const CID=load('lib/analytics/countIds.ts'),ev=read('lib/analytics/summitEvents.ts'),admin=read('app/admin/SummitKitSection.tsx');
  for(const id of ['su:bug_catch','su:bug_squad','su:firefly_catch','su:firefly_shift','su:bug_swing','su:bug_miss','su:bug_story','su:bug_hint']){assert(CID.isCountId(id),'allowlisted '+id);assert(ev.includes(`'${id}'`),'call site '+id);assert(admin.includes(`'${id}'`),'in /admin '+id);}

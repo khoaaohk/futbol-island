@@ -624,4 +624,35 @@ runtime: `jobScene.ts` (beginStage / stageFrame / exitStage), HUD rules: `bugUi.
   story card > payday > toast; the others wait); the new-species coin is on the story card (no "New in the Bug book" banner).
 - **Heat:** while the stage plays the island is neither stepped nor drawn: one stage render (≈ 4-6 draws + the rig and the net);
   nothing allocated per frame; the stage is built at the push-in and disposed at the end; no textures.
-- **Not done:** the fireflies are caught with the net (glowing in the bag), not cupped with the jar.
+- **Not done (then):** the fireflies were caught with the net; done in "Bug gaps" below (the firefly jar).
+
+### Bug gaps: the firefly jar, believable bug sizes, the night swoosh, End on the buttons (21 Oct 2026, local, not deployed)
+User: "also do these" (the firefly jar isn't built; island bugs still drawn large; the night swoosh is pale on the blue backdrop; End
+job not on the action buttons). Tests: `tests/bug-net-hold.cjs` §4, `tests/bug-catch-stage.cjs` §4b, `tests/summit-bugs.cjs` (night
+tool), `tests/bug-local.cjs` §5; browser: `scripts/check-bug-catch-stage-browser.cjs [--night|--sunset] [--mobile]`.
+- **Firefly jar** (`lib/town/jobs/bugJar.ts`, same API as the net, chosen by `jobScene` when `def.prop==='firefly'`): a glass jar
+  (r .115 m, h .25 m: transparent glass, a brass neck ring, a football sticker) with a red hinged lid (cream knob, three air holes),
+  merged vertex-colour meshes, no textures. Held in both hands at its sides (`jobPoses` `jarGrip`, solved by `player.ts` like the
+  net's grip; `JAR_HAND_GAP` .28 m): carry in front of the chest, Jar low (the stalk, the old Net down) lower and further out. The
+  **Cup** (button "Cup the jar", word Cup, `cup` icon; Space as before) is the scoop: the jar low on the right, swept up and over
+  in front at head height with the mouth tipping forward and down over the firefly, then righted (`jarcup` pose: body keys +
+  the jar path; the hands stay on the jar throughout). Catch radius, auto-aim, lunge and samples are the net's (bugCatch.ts
+  unchanged). On the stage (night) the firefly hovers .72 m ahead at 1.42 m, is drawn into the jar, the lid snaps shut (a spring
+  with a little overshoot), the firefly glows inside (glass emissive + one additive camera-facing sprite, no lights), and the jar
+  is presented then held up with a hop (`jarshow`); the island catch pose is `jarcatch` (held up in both hands). The jar glows
+  softly on the island with the fireflies caught so far. Riding, it hangs upright on `backpack-side-right`, lid shut.
+  Copy: the night intro, how-to, hint and pill tip say Cup; Net down / up read Jar low / up at night; the Bug book's firefly
+  pages say "Cup it in the glass jar". Draws while a night shift runs: glass, trim, lid (+ glow sprite once a firefly is in,
+  + the trail during a Cup) instead of the net's frame + bag.
+- **Island bug sizes** (`wildBugsCore.bugVisualSize`): look.size (the species' relative size: spider .2 … dragonfly .7) × a gentle
+  readability boost from × 1.3 (tiniest) to × 1.0 (biggest): .26-.70 m instead of (size + .25) × 2.7 (a 1.5 m ladybird). The far
+  silhouette keeps its × 1.45 by 40 m (smallest ≈ 11 px at 40 m on a phone). Finding them is the halo's job: `bugSpotFx.haloSize`
+  (≥ 1.6 m, ≈ 65 px at its 30 m range on a phone) plus the hint arrow. The catch stage keeps the earlier scale (`bugStageSize`).
+- **Swoosh** (`lib/town/jobs/bugSwoosh.ts`, shared by the net and the jar): a three-row ribbon with soft edges and a bright core,
+  revealed along the sweep with a comet tail by a uniform. Night (island + stage): additive, warm near-white core with amber edges;
+  island by day: additive warm white; the stage's cream (Day) / peach (Sunset) backdrops: normal blending, a golden core with
+  amber / orange edges (additive light vanishes on them). Checked in frames on all three backdrops.
+- **End on the action buttons:** a small quiet round button (44 px, door icon, "End"; aria-label "End job") just left of the
+  cluster's top row (left of Ride), so it is on the far side from Swing / Cup (bottom-right on phones, the right end on desktop);
+  measured at 1280×800, 390×844 and 360×740, no overlaps. It uses IslandJobs' two-tap ask (events `fi2-bug-end` /
+  `fi2-bug-end-ask`; "Sure?" in red on the first tap when the jar has bugs). The pill's × and Esc stay. Hidden during the stage.
