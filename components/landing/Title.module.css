@@ -95,7 +95,8 @@
 @media(min-width:900px){.copy{padding-top:calc(env(safe-area-inset-top,0px) + 6svh)}}
 
 /* ---- Actions (bottom, over the pink coast) ---- */
-.actions{position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:6px}
+/* Oct 22 2026 (user: "push up this more, there's some space below the futbol island title"): the button stack is lifted off the bottom edge by --title-actions-lift (about 5 % of the screen height, 14-48 px) */
+.actions{--title-actions-lift:clamp(14px,5svh,48px);position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:calc(6px + var(--title-actions-lift))}
 .choices{display:grid;justify-items:center;gap:12px;width:min(340px,100%)}
 .start{position:relative;overflow:hidden;display:grid;justify-items:center;gap:2px;width:100%;min-height:68px;padding:8px 24px 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
  background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;
