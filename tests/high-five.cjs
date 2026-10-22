@@ -132,6 +132,28 @@ const fakeShot=(i,o)=>{let tt=0,dir=0,frame=null;return{begin(f){frame=f;frame(1
 const CAMX=load('lib/town/emoteCamera.ts',{'./shotCamera':{createShotCamera:fakeShot},'./emoteCameraMath':M});
 const okS=()=>({reduced:false,riding:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:false,cameraDist:43});
 const cam=()=>({position:{x:1,y:2,z:3,t:0,set(x,y,z){this.x=x;this.y=y;this.z=z;}}});
+t('framing solves the pair: both characters (feet and raised hands) are inside at every heading, a wider rider needs a farther camera',()=>{
+ const out={eye:{x:0,y:0,z:0},target:{x:0,y:0,z:0}};
+ for(const aspect of [.46,1.6])for(const yaw of [-1,.2,.62,1.5,2.4])for(const [gx,gz] of [[2,0],[0,2.5],[1.5,1.5]]){
+  const d=M.frameEmote(out,0,0,0,true,gx,0,gz,aspect,1,yaw);if(d>=M.EMOTE_CAM.maxDist-1e-9)continue;
+  for(const [x,z] of [[0,0],[gx,gz]])for(const dy of [-.1,2.45])for(const side of [-.85,.85])assert(M.insideFrame(x+side*Math.cos(yaw)-out.target.x,dy-out.target.y,z-side*Math.sin(yaw)-out.target.z,d,aspect,yaw),`aspect ${aspect} yaw ${yaw} gap ${gx},${gz}`);}
+ const a=M.frameEmote(out,0,0,0,false,0,0,0,.46,1),b=M.frameEmote(out,0,0,0,false,0,0,0,.46,1,M.EMOTE_CAM.yaw,M.EMOTE_CAM.rideWide);assert(b>a,'a rider (wide) is framed farther');
+ const y1=M.bestEmoteYaw(0,0,0,true,4,0,0,.46),d0=M.frameEmote(out,0,0,0,true,4,0,0,.46,1),d1=M.frameEmote(out,0,0,0,true,4,0,0,.46,1,y1);assert(d1<=d0+1e-9,'the chosen heading is never farther than the default');
+ assert.equal(M.bestEmoteYaw(0,0,0,false,0,0,0,1),M.EMOTE_CAM.yaw,'alone: the default view');
+ assert(M.EMOTE_CAM.minDist<=3.7&&M.EMOTE_CAM.minDist>=3,'a clear zoom');
+});
+t('rides: scooter / bike / moped emotes keep going at normal speed; fast, a sharp steer or dismounting ends them; jetpack / zipline / truck stay blocked',()=>{
+ const r={reduced:false,riding:false,onRide:true,rideSpeed:10,steer:.3,rideChanged:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:true,cameraDist:43};
+ assert.equal(M.emoteCamSkip(r),'','moving on a ride does not cancel');assert.equal(M.emoteCamBlocked(r),'');
+ assert.equal(M.emoteCamBlocked({...r,rideSpeed:M.EMOTE_CAM.rideMaxSpeed+1}),'fast');assert.equal(M.emoteCamBlocked({...r,steer:M.EMOTE_CAM.rideSteer+.1}),'steering');
+ assert.equal(M.emoteCamBlocked({...r,rideChanged:true}),'dismount');assert.equal(M.emoteCamBlocked({...r,riding:true}),'riding');
+ assert.equal(M.emoteCamBlocked({...r,onRide:false}),'moving','on foot, moving still cancels');
+ for(const bad of [{swimming:true},{flying:true},{inJob:true},{menuOpen:true}])assert.notEqual(M.emoteCamBlocked({...r,...bad}),'',JSON.stringify(bad));
+ const c=CAMX.createEmoteCamera();assert(c.begin(r,0,0,0,null,2,null,1.6,true),'a ride starts a (wider) zoom');
+ const cam2=cam();for(let i=0;i<30;i++)c.apply(cam2,.016,r,false);assert(c.zooming,'still zooming at speed');c.apply(cam2,.016,{...r,rideChanged:true},false);assert(!c.zooming,'dismount ends it');
+ const pr=CAMX.createEmoteCamera();pr.begin(okS(),0,0,0,null,3,null);pr.track(1,0,1,{x:3,y:0,z:3});assert(pr.zooming,'a partner that appears later is tracked');
+ const hf=H.highFivePlan,bag=H.createHighFiveBag();assert.equal(hf(2,true,Math.random,bag),-1,'riding passes reduced=true: an air five');
+});
 t('controller: ease in, hold, ease back out to exactly the follow camera; extends instead of restarting; cooldown',()=>{
  const c=CAMX.createEmoteCamera(),camera=cam(),s=okS();
  assert(c.begin(s,0,0,0,null,1.5,null),'starts');assert(c.zooming);

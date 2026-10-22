@@ -47,3 +47,20 @@ export function applyCelebrationArms(root:T.Object3D,p:number,weight=1){
   const set=(s:T.Object3D,e:T.Object3D,t:{sx:number;sz:number;el:number})=>{s.rotation.x+=(t.sx-s.rotation.x)*k;s.rotation.y*=1-k;s.rotation.z+=(t.sz-s.rotation.z)*k;e.rotation.x+=(t.el-e.rotation.x)*k;};
   set(j.ls,j.le,a.left);set(j.rs,j.re,a.right);
 }
+/** Well played (user, Oct 22 2026): a clap in front of the chest, both hands meeting about 2.6 times a second. `w` is the 0..1 weight. Call after `rig.update`. */
+export function applyApplause(root:T.Object3D,age:number,w:number){
+  const j=joints(root);if(!j||w<=0)return;
+  const k=clamp01(w),open=.5+.5*Math.sin(age*Math.PI*2*2.6),sx=-1.35+.1*(1-open),sz=.04+.34*open,el=-1.15-.15*(1-open);
+  const set=(s:T.Object3D,e:T.Object3D,side:number)=>{s.rotation.x+=(sx-s.rotation.x)*k;s.rotation.y*=1-k;s.rotation.z+=(side*sz-s.rotation.z)*k;e.rotation.x+=(el-e.rotation.x)*k;};
+  set(j.ls,j.le,-1);set(j.rs,j.re,1);
+}
+/** Emotes on a scooter, bike or moped: ONE arm only (the right), so the left hand stays on the bar and the vehicle keeps its pose.
+ *  emote 0 Wave (a waving hand), 2 High five (an "air five": hand high), 1 Cheer (fist pump up), 5 Well played / 6 Thumbs up (thumbs-up: forearm up, nodding). */
+export function applyRideEmote(root:T.Object3D,emote:number,age:number,w:number){
+  const j=joints(root);if(!j||w<=0)return;
+  const k=clamp01(w),wave=Math.sin(age*9);let sx=-1.5,sz=.25,el=-1.4+.15*Math.sin(age*7);
+  if(emote===0){sx=-.3;sz=2.62+.2*wave;el=-.2-.1*wave;}
+  else if(emote===2){sx=-2.85;sz=.3+.1*wave;el=-.2;}
+  else if(emote===1){sx=-2.85-.15*Math.sin(age*8);sz=.42;el=-.25-.3*Math.max(0,Math.sin(age*8));}
+  const s=j.rs;s.rotation.x+=(sx-s.rotation.x)*k;s.rotation.y*=1-k;s.rotation.z+=(sz-s.rotation.z)*k;j.re.rotation.x+=(el-j.re.rotation.x)*k;
+}
