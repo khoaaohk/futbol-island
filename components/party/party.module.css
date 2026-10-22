@@ -89,7 +89,7 @@
 .tabCount{display:inline-block;animation:tabPop .2s ease-out}
 @keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 .hdrCount{justify-self:start;display:inline-flex;align-items:center;gap:4px;font:700 14px/1 system-ui,sans-serif;white-space:nowrap}
-.pairRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%}
+.pairRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:calc(100% - 6px)}
 .pairRow>button{min-width:0;padding:0 10px}
 .panelFoot{flex:none;display:flex;justify-content:center;padding-top:2px}
 .footLeave{min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--btn-ink);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
@@ -102,7 +102,9 @@
 .panel[data-party-panel=code][data-active=false]{transform:translateX(-6px)}
 .endLink{align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:rgb(163 38 28);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
 .endLink:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:8px}
-.codeActions{margin-top:4px;align-items:stretch}
+.codeActions{margin-top:4px;align-items:stretch;width:100%}
+/* Same left/right edges as the Code | List track (.tabs is inset 3px inside .body): Share/New code row and the lock button. */
+.codeActions>button{box-sizing:border-box;width:calc(100% - 6px);max-width:none;margin-inline:3px}
 .codeActions .small{opacity:.85}
 .codeFresh{animation:codeGlow 1.3s ease-out}
 @keyframes codeGlow{0%{opacity:0;transform:translateY(8px) scale(.96);text-shadow:0 0 18px var(--btn-gold)}35%{opacity:1;transform:none;text-shadow:0 0 18px var(--btn-gold)}100%{text-shadow:0 0 0 transparent}}
