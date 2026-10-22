@@ -118,6 +118,7 @@ t('grown-up gate: the same card shell as Play with friends, Back top left (no bo
  assert(/onEscape=\{view === 'gate'/.test(host),'Escape goes Back from the gate');
 });
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
+ assert(/\.codeActions\{[^}]*width:100%/.test(css)&&/\.codeActions>button\{[^}]*width:calc\(100% - 6px\)[^}]*margin-inline:3px/.test(css)&&/\.pairRow\{[^}]*width:calc\(100% - 6px\)/.test(css),'lock button and Share/New code row share the toggle track edges (3px inset)');
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
  assert(/grow from=\{[^}]*\bfrom\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
  assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function Card'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');

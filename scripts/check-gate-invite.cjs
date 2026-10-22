@@ -51,6 +51,10 @@ require('fs').mkdirSync(out, { recursive: true });
       const tabs = await p.evaluate(() => [...document.querySelectorAll('[role=tab]')].map((x) => [x.innerText, x.getAttribute('aria-selected')]));
       console.log(name, 'tabs:', JSON.stringify(tabs)); if (tabs.length !== 2 || tabs[0][1] !== 'true' || !/^List \(1\)$/.test(tabs[1][0])) { fail++; console.log(name, 'FAIL: tabs (Code, List (1)) / default Code'); }
       if (!/New code[\s\S]*Close to new friends/.test(sheet)) { fail++; console.log(name, 'FAIL: no code actions'); }
+      // Edge equality: Close-to-new-friends button and Share/New code row share the Code | List track's left and right edges.
+      const edges = await p.evaluate(() => { const e = (el) => { const r = el.getBoundingClientRect(); return [Math.round(r.left * 10) / 10, Math.round(r.right * 10) / 10]; }; return { tabs: e(document.querySelector('[role=tablist]')), pair: e(document.querySelector('[data-party-code-pair]')), lock: e(document.querySelector('[data-party-lock]')) }; });
+      console.log(name, 'edges', JSON.stringify(edges));
+      for (const k of ['pair', 'lock']) if (Math.abs(edges[k][0] - edges.tabs[0]) > 0.5 || Math.abs(edges[k][1] - edges.tabs[1]) > 0.5) { fail++; console.log(name, 'FAIL: ' + k + ' edges differ from the toggle track'); }
       const code1 = await p.textContent('[data-party-code]');
       await p.click('[data-party-new-code]'); await p.waitForTimeout(500);
       await p.screenshot({ path: `${out}/${name}-5b-newcode.png` });
