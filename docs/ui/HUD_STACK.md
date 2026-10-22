@@ -218,8 +218,17 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
 - The island's bottom-right cluster (`.travel-actions[data-emote-grid]`, Town.tsx) is ALWAYS a 2 x 2 grid of round buttons, 12 px
   gaps, `--action-size` cells (58 px phone, 52 px at <= 350 px, 72 px desktop): row 1 **Fly** (the ride/jetpack button) left,
   **Emote** right; row 2 the two action buttons (juggle-side left, kick-side right). No reserved or empty cells: it is the same in
-  every state, flag on or off, party or not. The map toggle left the grid: on phones it sits just left of it (above it on a
-  320 px phone, where the joystick would touch it); on desktop it stays at the lower left. The grid hides with the other action
+  every state, flag on or off, party or not. On desktop the map toggle stays at the lower left.
+- **Phones (<= 600 px or coarse pointer; portrait and landscape; user, 22 Oct 2026: "the minimize map needs to be where the emote
+  is, the emote to the left of the parachute, and the map should open less crowded"):** the cluster is 3 columns x 2 rows, grown to
+  the LEFT so Fly, Parachute and Sprint keep their places: top row `[ ][Fly][Map toggle]`, bottom row `[Emote][Parachute][Sprint]`.
+  The top-left cell is simply empty (the stair shape keeps every button above or beside where players expect it). Gap 12 px, 8 px
+  at <= 380 px so the Emote cell clears the joystick on a 360 px phone. Left-handed (`.controls-flipped`): same cells in place,
+  Emote to the right of Sprint. The open map is a 128 px disc (112 px in short landscape), right-aligned over the toggle, 14 px
+  above the grid (`bottom: --control-bottom + 142px`, 138 px at <= 380, 126 px at <= 350), soft border, no place labels or small
+  landmark dots (player dot and the vending markers stay). It folds out of / into the toggle (fade + scale from the toggle, .2 s;
+  instant with reduced motion), hides while the Emote wheel is open, and folds away (`mapFoldNow` in Town.tsx) when a dialog, menu
+  or job card opens; the toggle opens it again. The grid hides with the other action
   buttons (lessons, fishing, job camera, menus). The Arcade and Konbini rooms and the Explore room (reef: its own Say hi grid in
   `DiveHud`) are unchanged.
 - The Emote button (`components/EmoteControl.tsx`) is icon-only (aria-label "Emotes"), >= 44 px, same style as the other action
