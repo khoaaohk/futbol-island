@@ -42,6 +42,10 @@ Then redeploy (NEXT_PUBLIC_ values are inlined at build time).
 4. A opens a lesson or Settings: B sees the green force field + "Taking a lesson"/"In Settings"; kick the ball at the field: it bounces.
 5. A walks into the Konbini, then the Museum, then the Arcade (and the Kit Shop): the party stays on; B sees "In the Konbini" etc.,
    the "N in the Konbini" door hint; B follows: both are visible inside, the chip says "N here", Leave only.
+   Also try the Kit Shop and, in the Arcade, start a game: B sees A as "Playing <game>" in a green force field at the cabinet, and A
+   returns to the hub with B still there. Inside every room the chip shows "N here" with Leave only; walking into a busy friend's
+   green field stops you about 0.9 m away. Island friends see "N in the Konbini / Museum / Arcade / Kit Shop" over each door.
+   Until the relay is on v1.1 a friend may appear up to about 6 seconds late after entering a room (one warp retry).
 6. Reload A's tab: the party resumes by itself (same colour). Replay the walkthrough: the party stays on.
 7. A taps New code: the old code stops working, B stays. A taps Close to new friends, a third device cannot join. A removes B: B sees
    "You left the party". A taps End party for everyone (small red link on the List tab): everything ends, the ring disappears.
