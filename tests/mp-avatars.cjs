@@ -323,10 +323,10 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.ok(Math.abs(q.w-1)<1e-9&&Math.abs(pos.y-5.1)<1e-9&&pos.x===3&&pos.z===7,'hover (pitch 0): flat ring at the feet, as before');
  RA.ringPlacement(3,5,7,RA.ringPitchFor(Jet,1.2),0,q,pos);
  n.set(0,1,0).applyQuaternion(q);
- assert.ok(Math.abs(n.y-Math.cos(1.2))<1e-6&&Math.abs(n.z-Math.sin(1.2))<1e-6,'pitch 1.2: the ring normal tilts forward with the body axis');
- assert.ok(pos.y>5.1+.4&&pos.z>7,'pitch 1.2: the centre rises and moves forward toward the pelvis');
+ const tl=Math.min(.9,1.2*.6);assert.ok(Math.abs(n.y-Math.cos(tl))<1e-6&&Math.abs(n.z-Math.sin(tl))<1e-6,'pitch 1.2: the ring leans part of the way (0.6x, max 0.9 rad) so it is never edge-on');
+ assert.ok(pos.y>5.1+.05&&pos.y<5.1+.3&&pos.z>7&&pos.z<7.2,'pitch 1.2: the centre rises only a little (it sits low, feet to hips)');assert.ok(/side:T\.DoubleSide/.test(read('lib/graphics/remoteAvatars.ts')),'the ring is double sided (visible from behind too)');
  RA.ringPlacement(0,0,0,RA.ringPitchFor(Jet,1.2),Math.PI/2,q,pos);n.set(0,1,0).applyQuaternion(q);
- assert.ok(n.x>.9,'the tilt follows the heading (yaw pi/2 tilts toward +x)');
+ assert.ok(n.x>.6,'the tilt follows the heading (yaw pi/2 tilts toward +x)');
  assert.equal(RA.ringPitchFor(Jet,9),1.45,'pitch clamps at the rig limit');
  for(const m of [P.Mode.Idle,P.Mode.Walk,P.Mode.Run,P.Mode.Scooter,P.Mode.Bike,P.Mode.Moped,P.Mode.Swim,P.Mode.Dive,P.Mode.Parachute,P.Mode.Zipline])assert.equal(RA.ringPitchFor(m,1.2),0,'ring stays flat for mode '+m);
  assert.equal(RA.friendFlightPitch(0),0);assert.ok(RA.friendFlightPitch(30)>1.05&&RA.friendFlightPitch(30)<=1.1&&RA.friendFlightPitch(9)>0&&RA.friendFlightPitch(9)<RA.friendFlightPitch(15),'friend estimate: hover 0, rises smoothly with speed to ~1.1');

@@ -61,7 +61,7 @@ export interface RemoteAvatars{
 
 const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
 const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
-const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10,RING_PITCH_LIMIT=1.45,RING_BODY_LIFT=.6,RING_BODY_FWD=.5,FRIEND_PITCH_MAX=1.1;
+const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10,RING_PITCH_LIMIT=1.45,RING_TILT_K=.6,RING_TILT_MAX=.9,RING_BODY_LIFT=.2,RING_BODY_FWD=.05,FRIEND_PITCH_MAX=1.1;
 const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.JuggleWithMe]:'\u{1F939}',[Emote.ShowOff]:'\u{1F31F}',[Emote.WellPlayed]:'\u{1F44F}',[Emote.PassBall]:'\u{26BD}',[Emote.Laugh]:'\u{1F602}',[Emote.Dance]:'\u{1F483}',[Emote.Thanks]:'\u{1F64F}'};
 
 // Released hidden classic geometry (copied from islandNpcs.ts: heat pass 5 + NPC heat fix 2). A friend never takes a costume,
@@ -171,8 +171,9 @@ export function ringPitchFor(mode:number,pitch:number):number{return mode===Mode
 /** Ring quaternion + centre for a body pitched `pitch` about the horizontal axis perpendicular to heading `yaw` (writes ringQ / ringPos). Exported for tests. */
 export function ringPlacement(x:number,y:number,z:number,pitch:number,yaw:number,qOut:T.Quaternion,pOut:T.Vector3){
  if(pitch<.0005){qOut.identity();pOut.set(x,y+RING_LIFT,z);return;}
- ringE.set(pitch,yaw,0,'YXZ');qOut.setFromEuler(ringE);
- const s=Math.sin(pitch);pOut.set(x+Math.sin(yaw)*RING_BODY_FWD*s,y+RING_LIFT+RING_BODY_LIFT*s,z+Math.cos(yaw)*RING_BODY_FWD*s);
+ // The ring leans only PART of the way with the body (never edge-on, so it stays visible from above and behind), and sits low (feet to hips).
+ const tilt=Math.min(RING_TILT_MAX,pitch*RING_TILT_K);ringE.set(tilt,yaw,0,'YXZ');qOut.setFromEuler(ringE);
+ const s=Math.sin(tilt);pOut.set(x+Math.sin(yaw)*RING_BODY_FWD*s,y+RING_LIFT+RING_BODY_LIFT*s,z+Math.cos(yaw)*RING_BODY_FWD*s);
 }
 /** Ring size by ride, as the island's own foot ring (Town.tsx ringSize): walk 1, scooter 1.65, bike 2.15, moped 2.3. */
 const ringSizeFor=(mode:number):number=>mode===Mode.Scooter?1.65:mode===Mode.Bike?2.15:mode===Mode.Moped?2.3:1;
@@ -183,7 +184,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
  const batch=playerBatch(drawn,BATCH_CAPACITY);
  const ringGeo=ringGeometry();
- const ringMat=new T.MeshBasicMaterial({vertexColors:true,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+ const ringMat=new T.MeshBasicMaterial({vertexColors:true,transparent:true,side:T.DoubleSide,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
  const rings=new T.InstancedMesh(ringGeo,ringMat,RING_CAPACITY);rings.name='remote-avatar-rings';rings.frustumCulled=false;rings.castShadow=false;rings.receiveShadow=false;rings.count=0;rings.renderOrder=2;
  rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
  const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
