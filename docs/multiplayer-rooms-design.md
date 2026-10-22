@@ -314,6 +314,24 @@ Integrator, after Phase 1 merges (~30 min):
 6. Verify (fresh agent): 2 contexts in the museum, 1 on the island; idle 0 rAF after 0.5 s with 2 still friends; `__museum.state`
    draws / `render.calls` +<= 3.
 
+#### Museum Phase 2 status (branch `mp-rooms-museum`, 22 Oct 2026; local, not deployed, relay unchanged)
+Wired (all six prep steps):
+- `MuseumRoom.tsx` (`MuseumHall`): `useRoomParty(room, RoomCode.Museum, ready, covered||!!zoom)` declared before the scene effect;
+  `RoomPartyChip` (Leave only, `align="right"`) left of Done, not rendered while zoomed, hidden while covered. Arrival: on the first
+  live party, `pickMuseumSpawn(spot, friends here, you)` then `museumRoomHooks.arrive()` (re-aims the walk-in only).
+- `museumScene.ts`: the RoomPartyHost surface (as `konbiniScene.ts`): `setFriendLayer` attaches / detaches through
+  `museumRoomHooks`, `wakeRemote` (the hooks' network wake; 20 fps phones, never in Battery saver), friends hidden on a case zoom,
+  one ring rule, busy fields block walking, local emote on your rig with a bubble (no camera change), `measureParty`, `state.party`.
+- Phase 1 names: descriptor `code` = `RoomCode.Museum`, `bounds` = `ROOM_BOUNDS[RoomCode.Museum]`; `useRoomParty` takes a room's
+  own `stationCode` (museum codes 120+ via `presence.defineStationLines`, never on the wire).
+- Island: `Town.tsx` passes `ROOM_DOOR_HINTS` (both Konbinis + `MUSEUM_DOOR_HINT`); `townBridge.doorHintText` says "N in the
+  Museum"; the party list keeps "In the museum".
+- Tests: `tests/mp-rooms.cjs` (museum layer: room filter, wake / Battery saver, exhibit busy line, field, spawn),
+  `tests/mp-rooms-museum.cjs` (Phase 2 wiring). Headless: `scripts/check-mp-rooms-museum.cjs` (door survives, bot inside + moves,
+  emotes both ways, Leave-only roster, idle sleep, phone 20 fps, island hint "1 in the Museum" + "In the museum").
+- Limits: the busy line is inferred from the spot (a friend paging cases with the arrows reads as the case they stand at); draw
+  calls +7 with a friend (shared layer); the bot's walk ignores cases (clamped to the floor only); no real-device heat numbers.
+
 ### Phase 3: Arcade hub - effort M, ~5 h + 2 h verify
 `ArcadeRoom.tsx`, `arcadeRoomScene.ts` (layer in `tick`, Busy at the cabinet while `game`), `arcadeRoomCrowd.ts` (count minus
 friends). Risk: the 15 fps floor means remote frames are free here, but the crowd swap must not pop NPCs (fade them at their

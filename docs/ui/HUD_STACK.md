@@ -352,3 +352,8 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   reveal, pack reveal, cashier chat, stamp card) and on the shelf zoom: one calm header at a time.
 - **Island side:** a small screen-sized "N in the Konbini" label over each Konbini roof while party friends are inside THAT shop
   (world-anchored, client-only, from the roster; `townBridge.ts` door hints); the Party list line says "In the Konbini".
+- **Museum (rooms Phase 2, 22 Oct 2026):** the chip sits top-right in the museum header, LEFT of Done (`.partySlot`, order 1,
+  `align="right"`: wheel and roster open from the right edge). Shown only while walking the hall: not rendered on an exhibit zoom
+  (Back + the case name own the header then) and hidden under every cover (Ada's panel, a certificate, the World Cup balls, an
+  exhibit experience). Island side: "N in the Museum" above the museum canopy (`MUSEUM_DOOR_HINT`, `lib/museum/museumDoors.ts`);
+  the Party list says "In the museum".

@@ -5832,6 +5832,24 @@ everything else with the island while this is running", and "the room's backgrou
   uniform writes. No allocation in the room frame or the session step (tests/explore-v2.cjs). Nothing runs between dives.
 - **Not measured on an iPhone.** All of the above is reduced/bounded work in desktop emulation; phone heat was NOT measured.
 
+## Friends in the Museum (multiplayer rooms Phase 2) — October 22, 2026 (local, not deployed)
+
+- **Same layer, same rules as the Konbini:** `MuseumRoom.tsx` mounts `useRoomParty(room, RoomCode.Museum, ...)`; the scene attaches
+  the layer through `museumRoomHooks` and the tick's existing `museumRoomHooks.frame()` drives it before the render. Flag off / no
+  stored party: no layer, the tick's `frame()` returns false (one null check), nothing allocates or is sent.
+- **Sleep kept:** the hall still renders 0 frames when nothing moves, a still friend included. A changed same-room pose calls the
+  scene's new `wakeRemote()` (no 0.5 s local settle); frames continue <= 550 ms after the last change or while a friend's emote
+  plays; remote-only frames run at 20 fps on phones (`MUSEUM_REMOTE_FPS`); Battery saver never wakes. Friends are hidden (not
+  updated) while a case is zoomed; a covered hall (Ada, certificate, balls, experience) stops the loop and the connection's 5 s beat
+  sends the Busy pose.
+- **Busy line without wire bytes:** the receiver maps a busy friend's spot to its own museum layout (`museumStationCode`, local codes
+  120+ registered once with `presence.defineStationLines`): "Looking at <exhibit>", "Talking to Ada", "Looking at World Cup balls",
+  else "In the museum". Their field blocks walking (`pushOut` in `collide()`).
+- **Measured (headless Chrome, `scripts/check-mp-rooms-museum.cjs`, desktop, 1 friend):** layer update 0.03 ms, render 0.067 ->
+  0.091 ms, draw calls 17 -> 24 (the shared layer's fixed batch groups + ring + label + bubble, as in the Konbini; the prep's
+  "+<= 3" target is not met by the shared layer), idle 0 frames in 2 s with the friend standing, phone (touch emulation)
+  remote-only 20 fps, 17 calls. Reduced work, not a measured iPhone temperature.
+
 ## Friends in the Konbini (multiplayer rooms Phase 1) — October 22, 2026 (local, not deployed)
 
 - **What runs:** only with the multiplayer flag on AND a stored party: `components/party/useRoomParty.ts` mounts one friend layer
