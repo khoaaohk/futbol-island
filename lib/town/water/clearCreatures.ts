@@ -1,9 +1,10 @@
 import * as T from 'three';
+import {seaTurtleGeometry} from '../../graphics/seaTurtle';
 
 /**
  * Ambient sea life for the clear water window (Oct 19 2026, "I would like to see fish and other sea creatures moving").
  * Four tiny low-poly kinds, each ONE geometry (drawn as ONE InstancedMesh in clearWindow.ts): reef fish (~44 triangles), sea turtle
- * (~100), jellyfish (~50), crab (~60). Facing -X (head), +Y up, centred on the origin, about 1 m long. Vertex colours are the paint
+ * (seaTurtle.ts, ~440 triangles near / 160 / 31 far), jellyfish (~50), crab (~60). Facing -X (head), +Y up, centred on the origin, about 1 m long. Vertex colours are the paint
  * (pale belly, deeper back; the instance colour tints them); `aW` is the per-vertex motion weight the shader reads (tail / flippers /
  * tentacles / legs). Built on first use, a few hundred vertices in all. The fishing models (fishModels.ts) were too heavy for this
  * layer's budget (herring 393 triangles each), so these are their own simplified shapes.
@@ -31,7 +32,9 @@ function blob(p:Part,r:Vec,at:Vec,back:Vec,belly:Vec,seg:number,ring:number,weig
 }
 function build(p:Part){
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p.pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(p.nor,3));
- g.setAttribute('color',new T.Float32BufferAttribute(p.col,3));g.setAttribute('aW',new T.Float32BufferAttribute(p.w,1));return g;
+ g.setAttribute('color',new T.Float32BufferAttribute(p.col,3));g.setAttribute('aW',new T.Float32BufferAttribute(p.w,1));
+ // aTw zeros: "not a turtle" for the turtle shader library when a material is shared (zoneLife.ts).
+ g.setAttribute('aTw',new T.Float32BufferAttribute(new Float32Array(p.w.length*4),4));return g;
 }
 export type CreatureKind='fish'|'turtle'|'jelly'|'crab';
 export function creatureGeometry(kind:CreatureKind):T.BufferGeometry{
@@ -42,11 +45,7 @@ export function creatureGeometry(kind:CreatureKind):T.BufferGeometry{
   tri2(p,[.28,0,0],[.52,.17,0],[.52,-.17,0],fin,[0,1,1]);
   tri2(p,[-.12,.13,0],[.1,.13,0],[0,.3,0],fin);
  }else if(kind==='turtle'){
-  const shell=rgb('#8fb85a'),under=rgb('#eee6b4'),skin=rgb('#b9c97c'),flip=rgb('#a2c46a');
-  // A rounded, domed shell, a clear head, four paddle flippers (flattened ellipsoids; weight grows toward the tip, the shader flaps them).
-  blob(p,[.34,.15,.27],[.05,0,0],shell,under,8,4);
-  blob(p,[.11,.075,.075],[-.42,.01,0],skin,under,5,3);
-  for(const s of [-1,1]){blob(p,[.22,.03,.09],[-.12,-.01,s*.36],flip,under,5,2,(x,y,z)=>Math.max(0,Math.min(1,(Math.abs(z)-.28)/.2)));blob(p,[.11,.025,.06],[.36,-.01,s*.19],flip,under,4,2,(x,y,z)=>Math.max(0,Math.min(1,(Math.abs(z)-.15)/.12)));}
+  return seaTurtleGeometry();// the realistic low-poly sea turtle (seaTurtle.ts: three LOD bands, posed in the shader by aTw)
  }else if(kind==='jelly'){
   const bell=rgb('#ffffff'),rim=rgb('#f2d6ff'),tent=rgb('#ffe2f6');
   blob(p,[.3,.22,.3],[0,0,0],bell,rim,8,3,()=>0,Math.PI/2);

@@ -1,5 +1,11 @@
 # Performance reference for future Futbol Island updates
 
+## Realistic sea turtle (Oct 21 2026, local, not deployed)
+
+- One builder, `lib/graphics/seaTurtle.ts`, for every turtle: the Explore room school (diveRoom.ts), Shelly the friend (in the pickups draw), the surfacing turtles by Turtle Pool (zoneLife.ts), the shore clear-window turtles (clearCreatures.ts → clearWindow.ts) and the Turtle Pool tell (divePreview.ts, low band). Domed lofted carapace with vertex-colour scutes and ridges, plastron, head with beak/eyes/smile, curved front flippers with claw, hind flippers, tail. No textures.
+- LOD without extra draws: ONE non-indexed geometry holds three bands (442 / 160 / 31 triangles, aTw.w); the vertex shader keeps the band each instance wants by camera distance (< 14 m, < 40 m, beyond) and collapses the others to a point. Heat tier 2+ forces the low band; tier 3-4, Battery saver and reduced motion hold the still pose. Rasterised turtle triangles: 442 near (was 188 room / 104 shore), 160 mid, 31 far; vertex work is all three bands (633) per instance, a few turtles per scene.
+- Animation is vertex-shader only (stPose: 4 s figure-8 front stroke with blade bend and feathering, glide, hind trim, body pitch/roll/heave, head bob, neck stretch; per-instance phase). No new CPU matrix writes; draws unchanged (room 14 desktop, one turtle draw per scene). Friend: 324 triangles ('mid' band, ≤ 340). Tests: `tests/realistic-turtle.cjs`.
+
 ## Explore delight (Oct 21 2026, local, not deployed)
 
 The whale shadow, the zone friends' wave / high five, the daily sparkle spot and the find slow-down (docs/swimming-research.md §12) add

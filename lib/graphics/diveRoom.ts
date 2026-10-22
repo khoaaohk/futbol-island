@@ -7,6 +7,7 @@ import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROO
 import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
 import {SPARKLE} from '../town/water/diveSparkle';
+import {seaTurtleFriendParts,seaTurtleModel} from './seaTurtle';
 const SPARKLE_SEE=SPARKLE.see;
 export {diveWreckSize};
 
@@ -75,8 +76,7 @@ export function friendParts(kind:DiveFriendKind){
   for(let i=0;i<4;i++){const a=i/4*Math.PI*2+.4;add(at(new T.CylinderGeometry(.03,.05,.55,4),Math.cos(a)*.12,-.26,Math.sin(a)*.12),'#f0d4ff',1);}}
  else if(kind==='puffer'){add(new T.IcosahedronGeometry(.32,1),'#f2d16b');const bl=new T.SphereGeometry(.26,8,3,0,Math.PI*2,Math.PI/2,Math.PI/2);add(at(bl,0,-.08,.02),'#fff4d0');eyes(.15,.1,.25,.06);
   add(at(new T.BoxGeometry(.02,.2,.16),0,0,-.38),'#e8b64a');for(const sx of [-1,1])add(at(new T.BoxGeometry(.14,.02,.09),sx*.32,0,.05),'#e8b64a',1);}
- else{const sh=new T.SphereGeometry(.4,8,5);sh.scale(.85,.42,1.1);add(sh,'#6f8a4a');const hd=new T.SphereGeometry(.12,6,4);hd.scale(1,.9,1.3);add(at(hd,0,.02,.55),'#9bb27a');eyes(.06,.07,.64,.025);
-  for(const sx of [-1,1]){add(at(new T.BoxGeometry(.38,.04,.2),sx*.42,-.02,.22,0,sx*.5,0),'#8aa66a',1);add(at(new T.BoxGeometry(.2,.04,.12),sx*.27,-.02,-.36,0,sx*-.5,0),'#8aa66a');}}
+ else for(const q of seaTurtleFriendParts())add(q.g,'#ffffff',q.limb);// Shelly: the realistic sea turtle (seaTurtle.ts)
  return out;
 }
 export type C=[number,number,number];
@@ -150,12 +150,8 @@ const FISH_BASIS=/* glsl */`
  *  facing −x like the fish models, vertex-coloured. */
 export function creatureModel(kind:'turtle'|'jelly'){
  const parts:{g:T.BufferGeometry;c:C}[]=[];
- if(kind==='turtle'){
-  const shell=new T.SphereGeometry(.38,8,5);shell.scale(1.1,.42,.85);parts.push({g:shell,c:col('#6f8a4a')});
-  const belly=new T.SphereGeometry(.34,8,3,0,Math.PI*2,Math.PI/2,Math.PI/2);belly.scale(1.1,.25,.85);parts.push({g:belly,c:col('#d9cf9a')});
-  const head=new T.SphereGeometry(.12,6,4);head.scale(1.3,.9,1);head.translate(-.5,.02,0);parts.push({g:head,c:col('#9bb27a')});
-  for(const [x,z,l] of [[-.2,.36,.34],[-.2,-.36,.34],[.3,.28,.2],[.3,-.28,.2]] as const){const f=new T.BoxGeometry(l*.6,.04,l);f.rotateY(z>0?.5:-.5);f.translate(x,-.02,z);parts.push({g:f,c:col('#8aa66a')});}
- }else{
+ if(kind==='turtle')return seaTurtleModel();// the realistic sea turtle (seaTurtle.ts)
+ {
   const dome=new T.SphereGeometry(.4,10,5,0,Math.PI*2,0,Math.PI/2);dome.scale(1,.75,1);parts.push({g:dome,c:col('#cfd8ff')});
   for(let i=0;i<6;i++){const a=i/6*Math.PI*2,t=new T.ConeGeometry(.04,.75,3);t.translate(Math.cos(a)*.22,-.37,Math.sin(a)*.22);parts.push({g:t,c:col('#f0d4ff')});}
  }
@@ -163,7 +159,7 @@ export function creatureModel(kind:'turtle'|'jelly'){
  let n=0;for(const q of flat)n+=q.getAttribute('position').count;const pos=new Float32Array(n*3),nor=new Float32Array(n*3),cl=new Float32Array(n*3);let o=0;
  for(const q of flat){pos.set(q.getAttribute('position').array as Float32Array,o*3);nor.set(q.getAttribute('normal').array as Float32Array,o*3);cl.set(q.getAttribute('color').array as Float32Array,o*3);o+=q.getAttribute('position').count;q.dispose();}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(nor,3));g.setAttribute('color',new T.BufferAttribute(cl,3));
- return {geometry:g,anim:{axis:[1,0,0] as [number,number,number],start:kind==='turtle'?-.3:0,span:.5,dir:kind==='turtle'?[0,1,0] as [number,number,number]:[1,0,1] as [number,number,number],k:[0,0,0] as [number,number,number],amp:kind==='turtle'?.03:.04}};
+ return {geometry:g,anim:{axis:[1,0,0] as [number,number,number],start:0,span:.5,dir:[1,0,1] as [number,number,number],k:[0,0,0] as [number,number,number],amp:.04}};
 }
 
 /** Room content caps (the whole room, whatever the theme asks): coral pieces, sway plants, fish. Lite (heat tier 2+, Battery saver)
@@ -361,7 +357,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const fishMeshes:T.Mesh[]=[];
  const school=(id:string|undefined,shape:string|undefined,color:string|undefined,list:Swimmer[],name:string,custom?:ReturnType<typeof creatureModel>,glow?:string)=>{
   const model=custom??speciesModel(id,shape as never,color),src=model.geometry,g=new T.InstancedBufferGeometry();
-  for(const a of ['position','normal','color'])g.setAttribute(a,new T.BufferAttribute((src.getAttribute(a).array as Float32Array).slice(),src.getAttribute(a).itemSize));
+  const tt=(model as {turtle?:ReturnType<typeof seaTurtleModel>['turtle']}).turtle??null;
+  for(const a of ['position','normal','color','aTw'])if(src.getAttribute(a))g.setAttribute(a,new T.BufferAttribute((src.getAttribute(a).array as Float32Array).slice(),src.getAttribute(a).itemSize));
   if(custom)src.dispose();
   const n=list.length,A=new Float32Array(n*4),B=new Float32Array(n*4),Cc=new Float32Array(n*4),D=new Float32Array(n*4);
   list.forEach((f,i)=>{A.set([f.cx,f.cy,f.cz,f.r],i*4);B.set([f.omega,f.phase,f.buddy?3:f.dir?2:f.eight?1:0,f.stretch],i*4);Cc.set([...(f.dir??[0,0,0]),f.scale],i*4);D.set([f.yaw,f.bob,f.wag,f.seed],i*4);});
@@ -370,13 +367,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   const an=model.anim,mat=new T.MeshLambertMaterial({vertexColors:true,...(glow?{emissive:new T.Color(glow),transparent:true,opacity:.82,depthWrite:false}:{})});mat.name='dive-fish-'+name;
   const wag={uWagAxis:{value:new T.Vector3(...an.axis)},uWagDir:{value:new T.Vector3(...an.dir)},uWagK:{value:new T.Vector3(...an.k)},uWag:{value:new T.Vector3(an.start,Math.max(.01,an.span),an.amp)}};
   const form={value:new T.Vector4(0,0,0,0)};forms.push({n,form});
-  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK});
-   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+FISH_GLSL)
-    .replace('#include <beginnormal_vertex>',FISH_BASIS+'vec3 objectNormal=normalize(-dvF*normal.x+dvU*normal.y-dvS*normal.z);')
-    .replace('#include <begin_vertex>',/* glsl */`vec3 transformed=vec3(position);
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK},tt?tt.uniforms:{});
+   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+FISH_GLSL+(tt?tt.head:''))
+    .replace('#include <beginnormal_vertex>',FISH_BASIS+(tt?tt.pose:'vec3 stP=position,stN=normal;')+'vec3 objectNormal=normalize(-dvF*stN.x+dvU*stN.y-dvS*stN.z);')
+    .replace('#include <begin_vertex>',/* glsl */`vec3 transformed=stP;
      float dvW=clamp((dot(transformed,uWagAxis)-uWag.x)/uWag.y,0.,1.);transformed+=uWagDir*uWag.z*dvW*dvW*sin(dvT*aPD.z+aPD.w*7.-dot(transformed,uWagK));
      transformed*=aPC.w*dvHide;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`);};
-  mat.customProgramCacheKey=()=>'dive-fish-v3';
+  mat.customProgramCacheKey=()=>'dive-fish-v3'+(tt?'-turtle':'');
   const mesh=new T.Mesh(g,mat);mesh.name='dive-fish-'+name;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;if(glow)mesh.renderOrder=1;scene.add(mesh);fishMeshes.push(mesh);return mesh;};
  const uWhaleK={value:0},uRayK={value:1},uWhale={value:new T.Vector4(0,0,0,0)};
  const uBurst={value:new T.Vector4(0,0,0,-1e4)},uDiver={value:new T.Vector4(0,-50,0,0)},uBuddy={value:new T.Vector4(0,DIVE_SURFACE_Y-1.5,10,1)},uBuddyF={value:new T.Vector3(0,0,-1)};
@@ -405,7 +402,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   eel:()=>school(undefined,'eel','#6b7a3a',[{cx:wx-1,cy:F(wx-1,wz)+.6,cz:wz,r:1.6,omega:.2,phase:0,eight:true,stretch:.8,yaw:wk?-wk.yaw:0,bob:.2,wag:7,seed:5,scale:1.4}],'eel'),
   seahorse:()=>school(undefined,'seahorse','#f2a03a',shoal(5,{x:0,y:fy(0,6,.9),z:6},5,.05,false,[.3,.36],.5,{bob:.15,wag:3}),'seahorse'),
   jelly:()=>school(undefined,undefined,undefined,shoal(phone?10:14,{x:0,y:top-.2,z:-6},7,.04,true,[.8,1.2],.5,{bob:.25,wag:2,stretch:.8}),'jelly',creatureModel('jelly'),'#4a3a7a'),
-  turtle:()=>school(undefined,undefined,undefined,[0,1,2,3].map(i=>({cx:lay.bowl?.x??fl.cx,cy:fy(lay.bowl?.x??fl.cx,lay.bowl?.z??fl.cz,.8)+i*.3,cz:lay.bowl?.z??fl.cz,r:3.5+i*1.3,omega:(i%2?-1:1)*(.1-i*.012),phase:i*1.6,eight:false,stretch:.85,yaw:0,bob:.35,wag:1.4,seed:i,scale:1.5+r()*.5})),'turtle',creatureModel('turtle')),
+  turtle:()=>school(undefined,undefined,undefined,[0,1,2,3].map(i=>({cx:lay.bowl?.x??fl.cx,cy:fy(lay.bowl?.x??fl.cx,lay.bowl?.z??fl.cz,.8)+i*.3,cz:lay.bowl?.z??fl.cz,r:3.5+i*1.3,omega:(i%2?-1:1)*(.1-i*.012),phase:i*1.6,eight:false,stretch:.85,yaw:0,bob:.35,wag:1.4,seed:i,scale:1.5+r()*.12})),'turtle',seaTurtleModel({lite:!!opt.lite,still:!!(opt.calm||opt.reduced)})),
  };
  for(const k of th.fish)SCHOOLS[k]?.();
  // The burst: damselfish hidden in the coral until it is touched.
@@ -513,8 +510,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
    const star=new T.ExtrudeGeometry(new T.Shape(pts),{depth:.06,bevelEnabled:false});star.rotateX(-Math.PI/2);parts.push({g:star,part:0,c:[1,1,1]});}
   {const can=new T.CylinderGeometry(.1,.1,.3,8);can.rotateZ(Math.PI/2);can.translate(0,.08,0);parts.push({g:can,part:1,c:[1,1,1]});
    const lid=new T.CylinderGeometry(.06,.07,.08,6);lid.rotateZ(Math.PI/2);lid.translate(.18,.08,0);parts.push({g:lid,part:1,c:[.55,.55,.58]});}
-  const flat=parts.map(({g,part,c,limb})=>{const q=g.index?g.toNonIndexed():g;if(q!==g)g.dispose();q.computeVertexNormals();const n=q.getAttribute('position').count,qp=q.getAttribute('position');
-   q.setAttribute('aPart',new T.BufferAttribute(new Float32Array(n).fill(part),1));q.setAttribute('aLimb',new T.BufferAttribute(new Float32Array(n).map((_,i)=>limb===-1?Math.min(1,Math.abs(qp.getX(i))/.65):limb??0),1));q.setAttribute('color',new T.BufferAttribute(new Float32Array(n*3).map((_,i)=>c[i%3]),3));return q;});
+  const flat=parts.map(({g,part,c,limb})=>{const q=g.index?g.toNonIndexed():g;if(q!==g)g.dispose();const paint=!!q.userData.paint;if(!paint)q.computeVertexNormals();const n=q.getAttribute('position').count,qp=q.getAttribute('position');
+   q.setAttribute('aPart',new T.BufferAttribute(new Float32Array(n).fill(part),1));q.setAttribute('aLimb',new T.BufferAttribute(new Float32Array(n).map((_,i)=>limb===-1?Math.min(1,Math.abs(qp.getX(i))/.65):limb??0),1));if(!paint)q.setAttribute('color',new T.BufferAttribute(new Float32Array(n*3).map((_,i)=>c[i%3]),3));return q;});
   let n=0;for(const q of flat)n+=q.getAttribute('position').count;const g=new T.BufferGeometry();
   for(const [name,size] of [['position',3],['normal',3],['color',3],['aPart',1],['aLimb',1]] as const){const arr=new Float32Array(n*size);let o=0;for(const q of flat){arr.set(q.getAttribute(name).array as Float32Array,o);o+=q.getAttribute(name).count*size;}g.setAttribute(name,new T.BufferAttribute(arr,size));}
   flat.forEach(q=>q.dispose());g.setAttribute('aKind',new T.InstancedBufferAttribute(new Float32Array([...picks.map(p=>p.kind==='litter'?1:0),...(friend?[2]:[])]),1));

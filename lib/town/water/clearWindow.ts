@@ -5,6 +5,7 @@ import type {IsleCpuField} from '../../graphics/islandShore';
 import {CLEAR_CORAL,CLEAR_LOOK,CLEAR_SHARE,UNDERWATER_GLSL,UW_LIGHT_GLSL,UW_SURFACE,UW_UNIFORMS,clearReefKit,coralFamily,uwDepthAt,type ClearReefKind} from '../fishing/underwater';
 import {createWaterNoise} from '../fishing/shoreWater';
 import {creatureGeometry,type CreatureKind} from './clearCreatures';
+import {SEA_TURTLE_GLSL} from '../../graphics/seaTurtle';
 import {distanceToLandableDeck} from '../landableDecks';
 import {FISH_SPOTS} from '../fishing/fishCatalog';
 
@@ -144,9 +145,11 @@ const LIFE_GLSL:Record<CreatureKind,{normal:string;body:string}>={
  float fy=-aFish2.x+.07*sin(fa*2.+aFish.x);`},
  turtle:{normal:`${LIFE_FADE}float fa=aFish.y*uWaterTime+aFish.x;float frc=cos(aFish2.z),frs=sin(aFish2.z);
  vec2 fvr=sign(aFish.y)*(vec2(-sin(fa),aFish2.y*cos(fa))*aFish.w+aFish2.w*vec2(3.*cos(3.*fa+2.*aFish.x),-2.*sin(2.*fa+aFish.x))*.5);
- vec2 fv=normalize(vec2(frc*fvr.x-frs*fvr.y,frs*fvr.x+frc*fvr.y)+1e-5);`,
+ vec2 fv=normalize(vec2(frc*fvr.x-frs*fvr.y,frs*fvr.x+frc*fvr.y)+1e-5);
+ // The realistic turtle (seaTurtle.ts): stroke / glide posed in model space (still at water detail 0), the LOD band per instance.
+ vec3 stP=position;stPose(stP,objectNormal,uWaterTime,aFish.x*.159,step(.5,uWaterDetail));`,
   body:`vec2 for0=aFish.w*vec2(cos(fa),aFish2.y*sin(fa))+aFish2.w*vec2(sin(3.*fa+2.*aFish.x),cos(2.*fa+aFish.x));vec2 fo=vec2(frc*for0.x-frs*for0.y,frs*for0.x+frc*for0.y);
- vec3 fq=transformed*aFish.z*lfk;fq.y+=sin(uWaterTime*2.4+aFish.x)*aW*.14*aFish.z*lfk*sign(transformed.z)*step(.5,uWaterDetail);fq.y-=aW*.05*aFish.z*lfk*step(.5,uWaterDetail);
+ vec3 fq=stP*aFish.z*lfk*stKeep(distance(cameraPosition.xz,instanceMatrix[3].xz+fo),1.-step(1.5,uWaterDetail));
  float fy=-aFish2.x+.1*sin(fa*3.+aFish.x);`},
  jelly:{normal:`${LIFE_FADE}float fa=uWaterTime*1.2566+aFish.x;
  vec2 fv=vec2(cos(aFish.x*3.),sin(aFish.x*3.));`,
@@ -168,7 +171,7 @@ export function underMaterial(kind:'bed'|'reef'|'shoal'|CreatureKind,uniforms:Re
  const m=new T.MeshLambertMaterial({color:'#ffffff',vertexColors:kind!=='bed'});
  m.onBeforeCompile=sh=>{
   Object.assign(sh.uniforms,WATER_UNIFORMS,UW_UNIFORMS,CLEAR_WIN_UNIFORMS,uniforms);
-  const vHead='varying vec3 vCwPos;varying vec2 vCwN;\n'+(kind==='bed'?SHORE_GLSL:kind!=='reef'&&kind!=='shoal'?LIFE_HEAD:FISH_BOX+'uniform float uWaterTime,uWaterDetail;uniform vec4 uClearWin;\nattribute float aSway;\n');
+  const vHead='varying vec3 vCwPos;varying vec2 vCwN;\n'+(kind==='bed'?SHORE_GLSL:kind!=='reef'&&kind!=='shoal'?LIFE_HEAD+(kind==='turtle'?SEA_TURTLE_GLSL:''):FISH_BOX+'uniform float uWaterTime,uWaterDetail;uniform vec4 uClearWin;\nattribute float aSway;\n');
   const vBody=kind==='bed'
    // The seabed: each vertex at the field's depth (the same texture and curve the CPU scatter uses).
    ?`{vec2 wxz=(modelMatrix*vec4(transformed,1.)).xz;vec4 f=isleSample(wxz);vCwN=f.gb;transformed.y-=.05+${CLEAR_BED.floor.toFixed(2)}*(1.-exp(-max(f.r,0.)/3.4));}`
