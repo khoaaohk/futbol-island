@@ -501,7 +501,7 @@ Lane A + B + D of §4 (and the `swimFx` pool of lane C replaced by a reuse), on 
 
 **Analytics (`lib/analytics/waterEvents.ts`, ids in `countIds.ts` `WATER_COUNT_EVENTS`, admin "Water" section):** `wa:first_wade`, `wa:first_swim` (once per device, `fi2-water-firsts-v1`), `wa:swim_start`, `wa:splash_fall` / `wa:splash_roof` / `wa:splash_launch` / `wa:splash_dropin`, `wa:shore`, `wa:fast`, `wa:float`, `wa:time_10s` / `wa:time_30s` / `wa:time_60s` / `wa:time_120s` / `wa:time_long` (a swim's seconds, bucketed when it ends), `wa:idle_cap` (the 20 fps cap engaging while treading water), `wa:lesson`. Time in the sea is the new `swim` activity in "What they're doing" (`islandFrame(…, 'swim')`), which needs `supabase/migrations/20261017_analytics_water.sql` (the counters ride the existing `k` channel and need no migration).
 
-**Teaching:** the first swim shows `SWIM_LESSON` once per device (`fi2-swim-lesson-v1`): "Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn't." labelled *Coaching idea* (§3's pool-recovery fact stays unshown until verified).
+**Teaching:** (copy shortened Oct 22 2026: swim "Swim smooth and steady: a calm rhythm lasts, like a team keeping its shape all match.", dive "Glide to save breath; rise up for air. Sprint everywhere and you tire, like a midfielder.": the two no longer repeat each other) the first swim shows `SWIM_LESSON` once per device (`fi2-swim-lesson-v1`): "Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn't." labelled *Coaching idea* (§3's pool-recovery fact stays unshown until verified).
 
 Heat numbers and the browser validation are in `docs/performance-guide.md`, "Wading, swimming and splash-downs (P0)".
 
@@ -562,10 +562,10 @@ caustic light, nothing moved past you (no motes), fish ignored you, nothing guid
 island's music kept playing under the reef bed. Built, in order of impact:
 - **Swimming.** The body lies along the swim (the crawl's under-water shape, `under` 1, pitched with the climb): a flutter-kick crawl
   while swimming, a slow glide flutter when the stick is let go (a lower drag, `DIVE_GLIDE_DRAG`, so a kick carries), a gentle hover bob,
-  banking into turns (`DIVE_BANK` 0.5 rad). **Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
+  banking into turns (`DIVE_BANK` 0.5 rad). **(Dart removed Oct 21/22 2026 by user decision: normal swim only; `wa:dive_dart` kept, retired.)** ~~**Dart** (the orange button beside ▲ ▼ on phones, one thumb; F / Shift on desktop): a burst
   to 5.4 m/s for 0.7 s, 1.1 s cooldown, 1.2 % breath (the pace lesson: a sprint has a price), a longer bubble trail, a 6° FOV kick, sand
   puffs low over the sand. The camera sits a little lower and looks farther ahead, and is kept over the sand under it and halfway to the
-  diver (never inside a rising reef).
+  diver (never inside a rising reef).~~ (the camera rule still holds)
 - **The reef journey (diveJourney.ts).** Each zone has 8 pickups on a guided path through its finds (from the zone's own data, never
   hard-coded positions): 4 bits of litter (a can, a bottle, a lost net, a bottle cap) and 4 treasures (a spiral shell, a starfish, sea
   glass, a lost kit badge) that twinkle. Swim through one to collect it (no button): it spins up and away, a short note ("You cleared an
@@ -676,3 +676,26 @@ slow-down is `findSlow` in `diveSession.ts`; tests/explore-delight.cjs.
   shader, the sparkle glitter and the ring are 14-20 + 12 more points in the bubbles' draw (docs/performance-guide.md "Explore delight").
 - **Not done.** iPhone heat not measured; no photo mode.
 
+
+## 13. Explore life: alive, solid, calm controls (Oct 21-22 2026, local)
+
+User: "improve the explore swimming scenes ... more life like ... without additional heat", "shouldn't be able to swim through
+wreckage", "it needs to be see through", "let's remove the dart action", "When holding the up btn, it will rise up all the way",
+"remove the pink action btn, that is replaced by the up btn", "a grid of 4 up and down on the left, jetpack on the top right and emote
+bottom right", "the same size ... same style". tests/explore-life.cjs; heat in docs/performance-guide.md "Explore life".
+- **Dart removed** (normal swim only; `wa:dive_dart` retired, kept for old rows).
+- **Held ▲ / Q** eases to 2x and rises all the way; **at the top, holding 0.35 s (or a fresh tap) surfaces** the old Surface way; the
+  Surface button is gone; Escape still surfaces on desktop. ▼ / Z eases to 1.3x.
+- **Solid things:** the wreck (keel, ribs, planks, posts, masts, cabins, containers), rocks and boulders, the arch (its passage stays
+  open), the goal's posts and bar, crates, chest, clam, vent, big brain / table coral. The diver slides along them; a 1.3 m gap is the
+  narrowest that passes; the camera pulls in instead of looking through a plank. Every pickup, find, friend and sparkle stays reachable.
+- **See-through soft things:** fish, turtles, jellies, rays, the friend, kelp, grass, fans and anemones fade to 15 % within 0.8 m of the
+  diver or the camera's line to the diver.
+- **Water:** one slow current and 10 s swell sways the plants in sequence, drifts the plankton, sways the light shafts; the camera
+  breathes with the swell. **Light:** wide soft shafts along one sun direction, Snell's window with a bright rim, red-first colour
+  absorption with depth. **Coral:** polyp speckle, darker bases, lighter tips; sea stars, urchins, rubble. **Fish:** schools surge and
+  coast, low-poly countershaded school fish. **Diver:** arms sweep back into a streamlined glide when coasting, a little body
+  undulation with the kick, breath bubbles in bursts from the face. **Lessons:** dive "Glide to save breath; rise up for air. Sprint
+  everywhere and you tire, like a midfielder." (no longer repeats the swim lesson).
+- **Room buttons:** see docs/ui/HUD_STACK.md "Explore room layout".
+- Not done: iPhone heat; the friend creatures' own idle polish; per-zone signature animation polish.

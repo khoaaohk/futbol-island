@@ -115,6 +115,11 @@ export function createSwimPoser(j:SwimJoints){
     target[o]=.12+.28*k*(.5+.5*e);target[o+1]=side*.06;target[o+3]=.2+.22*Math.max(0,-k);target[o+4]=-.35;
     const q=ARM+i*4,a=ph+i*Math.PI,rec=Math.max(0,Math.sin(a));
     target[q]=-1.45-1.3*Math.cos(a);target[q+1]=side*(.3+.4*rec);target[q+3]=-.35-.7*rec;}
+   if(uw>.5){// Explore life (Oct 22 2026): under water the body undulates a little with the kick; coasting (the stick let go) the arms
+    // sweep back along the body into a streamlined glide and the kick slows (the crawl's arms only turn over while really swimming).
+    const g=uw*Math.max(0,1-e*2.2);target[P_PITCH]+=reduced?0:.05*uw*e*Math.sin(ph*1.5);
+    for(let i=0;i<2;i++){const side=i===0?-1:1,q=ARM+i*4,o=LEG+i*5;target[q]+=(.15-target[q])*g;target[q+1]+=(side*.14-target[q+1])*g;target[q+3]+=(-.1-target[q+3])*g;
+     target[o]=.12+(target[o]-.12)*(1-.6*g);}}
   }else if(s.kind==='hold'){
    // Hanging on to a manta or the whale shark (water P1b, lib/town/water/animalRides.ts): prone along the animal's back, the head
    // up out of the water (the face ahead), both arms reaching forward and down to the grip, hands close; the legs trailing in

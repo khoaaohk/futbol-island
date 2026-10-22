@@ -33,8 +33,6 @@ const IDLE:DiveView={diving:false,card:null,note:'',spot:'',reef:'',restored:fal
 export const DIVE_EDGE_LEAVING='Leaving the reef';export const diveEdgeEntering=(name:string)=>`Entering: ${name}`;
 /** The phone's ▲ / ▼ (components/DiveHud.tsx, held: pointer down / up) and Q / Z on desktop feed this; the dive frame reads it. */
 export const diveLift={up:false,down:false,
- /** Explore v2: the Dart button / F / Shift asked for a dart (an edge: the next dive frame takes it and clears it). */
- dart:false,
  /** Explore delight: the Wave / High five buttons, G / H asked for an emote (an edge, taken by the next dive frame). */
  emote:'' as ''|DiveEmote};
 export function readDiveReef():DiveReefSave{try{return parseDiveReef(JSON.parse(localStorage.getItem(DIVE_REEF_KEY)??'null'),DIVE_SPOTS);}catch{return parseDiveReef(null,DIVE_SPOTS);}}
@@ -72,8 +70,8 @@ export type DiveRuntimePorts={
  low:()=>void;out:()=>void;
  /** First time over the reef crest this dive (analytics wa:dive_crest), and R / the switcher's jetpack take-off from under the water. */
  crest?:(spot:DiveSpot)=>void;fly:()=>boolean;
- /** Explore v2: a dart (sound, the first per dive counted), a pickup collected, the zone restored, a goal with the underwater ball. */
- dart?:(first:boolean)=>void;picked?:(kind:DivePickup['kind'],first:boolean)=>void;restored?:(spot:DiveSpot)=>void;goal?:()=>void;
+ /** Explore v2: a pickup collected, the zone restored, a goal with the underwater ball. */
+ picked?:(kind:DivePickup['kind'],first:boolean)=>void;restored?:(spot:DiveSpot)=>void;goal?:()=>void;
  /** Explore delight: heat tier 3+ / Battery saver / reduced motion (no whale, a still sparkle); the whale's pass starting ('pass': the
   *  whale song, analytics) and its once-per-zone stamp ('stamp': the chime); an emote starting ('start', `first` = first this dive:
   *  analytics) and the high five's hands meeting ('meet': the pop); today's sparkle found. `date` / `rand` for tests. */
@@ -120,14 +118,14 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   sparkDate=ports.date?.()??localDate();spark=sparkleDone(reefSave.spark,s.id,sparkDate)?null:sparkleSpot(s,sparkDate);
   whale.at=calm?-1:whalePlan(rnd(),rnd(),!!reefSave.whale?.includes(s.id));whale.t=-1;whale.done=whale.stamped=false;
   room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
-   friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;
+   friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;session.setSolids(room.solids);/* Explore (Oct 22 2026): solid wreck, rocks, arch, goal, crates */
   formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
   room.scene.add(ports.player.root);pose.phase=0;hidePrompt();findPrompt='';
   diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):'',friend:'',hearts:reefSave.hearts?.[s.id]??0});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
-  if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;}
+  if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;session.setSolids(null);}
   diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){
@@ -140,9 +138,9 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
  return {session,
   get diving(){return session.diving;},get room(){return room;},
-  /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no dart, no ball rolling,
+  /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no ball rolling,
    *  no pickup or formation playing (the fish and plants are shader time only: they keep swimming at the capped rate). */
-  get resting(){const st=session.state;return st.phase==='diving'&&emo.kind===''&&st.effort<.05&&st.lift===0&&st.dartT<=0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
+  get resting(){const st=session.state;return st.phase==='diving'&&emo.kind===''&&st.effort<.05&&st.lift===0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
   /** Explore v2: the journey's pickups this dive and which are collected (tests). */
   get pickups(){return picks;},get got(){return got;},
   /** Explore delight (tests and headless checks): the friend's home, today's sparkle (null once found), and bring the whale now. */
@@ -180,7 +178,6 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   frame(dt:number,input:DiveInput,width:number,height:number){
    if(!room)return;const s=session.state.spot;
    input.lift=Math.max(-1,Math.min(1,input.lift+(diveLift.up?1:0)-(diveLift.down?1:0)));
-   if(diveLift.dart){input.dart=true;diveLift.dart=false;}
    const ask=diveLift.emote;diveLift.emote='';
    // Explore delight: the nearest thing still to collect (pickups, unfound finds, today's sparkle) slows the glide (diveSession findSlow).
    if(s){const st0=session.state,fd=save.spots[s.id];let nd=Infinity;
@@ -188,15 +185,15 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
     for(const f of s.finds){if(fd?.includes(f.id)||st0.used.has(f.id))continue;diveFindPoint(f,fp,s.floor);const d=Math.hypot(fp.x-st0.x,fp.y-st0.y,fp.z-st0.z);if(d<nd)nd=d;}
     if(spark){const d=Math.hypot(spark.x-st0.x,spark.z-st0.z);if(d<nd)nd=d;}
     input.near=nd;}
-   const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.dart)ports.dart?.(session.state.darts===1);if(ev.crest&&s)ports.crest?.(s);
+   const ev=session.step(dt,input);if(ev.breathUi)drawBreath();if(ev.crest&&s)ports.crest?.(s);
    if(ev.low)ports.low();if(ev.out)ports.out();
    if(ev.surfaced){if(ev.surfaced==='edge'&&s)diveEdgeToIsland(s,session.state.x,session.state.z,session.state.yaw,ports.water??anyWater,exitPt,DIVE_SPOTS,s.surface);leave(ev.surfaced as SurfaceReason,s!);return;}
    const st=session.state,reduced=ports.reduced();clock+=dt;
    // The rig: the crawl while swimming, treading water at rest; tipped with the climb and the turn.
    // Explore v2: the body lies along the swim (the crawl's under-water shape, under 1): a flutter-kick crawl while swimming, a slow
-   // glide flutter when the stick is let go, quicker and flatter on a dart; a gentle hover bob at rest; a happy wiggle after a find.
-   const moving=st.effort>.12,dartK=st.dartT>0?1:0;joy=Math.max(0,joy-dt);still=moving||Math.abs(input.lift)>0?0:still+dt;
-   pose.kind='crawl';pose.under=1;pose.tilt=st.pitch*.7;pose.effort=Math.max(st.effort,joy>0?.8:0);pose.fast=Math.max(dartK,joy>0?1:0);
+   // glide flutter when the stick is let go; a gentle hover bob at rest; a happy wiggle after a find.
+   const moving=st.effort>.12;joy=Math.max(0,joy-dt);still=moving||Math.abs(input.lift)>0?0:still+dt;
+   pose.kind='crawl';pose.under=1;pose.tilt=st.pitch*.7;pose.effort=Math.max(st.effort,joy>0?.8:0);pose.fast=joy>0?1:0;
    pose.phase=(pose.phase+dt*(reduced?0:moving||joy>0?5.5*(.5+.5*pose.effort)*(1+.6*pose.fast):1.1))%(Math.PI*12);
    // Explore delight: the zone friend's wave / high five (G / H, the round buttons): within EMOTE.range, EMOTE.cooldown apart; a heart
    // each (up to 3, the reward once); the diver's arm (pose.wave / five) and the friend's own gesture; the hands meet with a sparkle ring.
@@ -256,7 +253,6 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
      diveStore.set({note:'GOAL! Paul the Octopus would have picked that one.',card:{id:'goal',title:DIVE_GOAL_CARD.title,text:DIVE_GOAL_CARD.text,label:DIVE_GOAL_CARD.label,coins:0}});ports.goal?.();}
     b.lz=lz;if(ballGoalT>=0){ballGoalT+=dt;if(ballGoalT>3){ballGoalT=-1;b.x=g.cx;b.z=g.cz;b.y=diveFloor(b.x,b.z,fl)+R+.6;b.vx=b.vy=b.vz=0;b.lz=0;}}
     const bs=Math.hypot(b.vx,b.vz);room.ball.position.set(b.x,b.y,b.z);if(bs>.02&&!reduced){ax.set(b.vz,0,-b.vx).normalize();room.ball.rotateOnWorldAxis(ax,bs*dt/R);}}
-   if(dartK&&st.dartT>.6&&s&&st.y-diveFloor(st.x,st.z,s.floor)<1.3)room.puff(st.x,diveFloor(st.x,st.z,s.floor),st.z,clock*(reduced?.4:1));
    room.setViewport(width,height,ports.camera.aspect);room.frame(clock*(reduced?.4:1),dt,st);
    // The find prompt (the floating button, the island's style) over the find in reach.
    const el=ports.ui<HTMLButtonElement>('[data-dive-go]');
@@ -269,17 +265,16 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   },
   /** The prompt's tap / E: use the find in reach underwater. */
   use,
-  /** Surface (the button, Space, Escape): drift up, then the island. */
+  /** Surface (Escape; on screen: hold ▲ at the top, diveSession DIVE_TOP_SURFACE_S): drift up, then the island. */
   surface(){session.surface('tap');return session.state.phase==='rising';},
-  /** The dive keys (before the water keys): Escape / Space / 1 surface, E uses the find, Q / Z rise and sink (held, into `held`). */
+  /** The dive keys (before the water keys): Escape surfaces (Space / 1 retired with the Surface button, Oct 22 2026), E uses the find, Q / Z rise and sink (held, into `held`). */
   key(e:KeyboardEvent,down:boolean,held:Set<string>){
    if(!session.diving)return false;const k=e.key.toLowerCase();
    if(k==='q'||k==='z'){if(down)held.add(k);else held.delete(k);e.preventDefault();return true;}
-   if(k==='f'||k==='shift'){if(down&&!e.repeat)diveLift.dart=true;e.preventDefault();return true;}// Explore v2: the dart (a quick burst)
    if(k==='g'||k==='h'){if(down&&!e.repeat)diveLift.emote=k==='g'?'wave':'five';e.preventDefault();return true;}// Explore delight: wave / high five
-   if(!down)return ['escape',' ','e','1','j','2','3'].includes(k)||e.code==='Space';
+   if(!down)return ['escape','e','j','2','3'].includes(k);
    if(e.repeat)return true;
-   if(k==='escape'||e.code==='Space'||e.code==='Digit1'||e.code==='Numpad1'){e.preventDefault();session.surface('tap');return true;}
+   if(k==='escape'){e.preventDefault();session.surface('tap');return true;}
    if(k==='e'||e.code==='Digit3'||e.code==='Numpad3'){e.preventDefault();use();return true;}
    // R (Oct 20 2026, user): the jetpack still takes off from inside the dive zone (fuel allowing; else the swim switcher's hint).
    if(k==='r'){e.preventDefault();ports.fly();return true;}

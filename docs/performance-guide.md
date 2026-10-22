@@ -6,6 +6,32 @@
 - LOD without extra draws: ONE non-indexed geometry holds three bands (442 / 160 / 31 triangles, aTw.w); the vertex shader keeps the band each instance wants by camera distance (< 14 m, < 40 m, beyond) and collapses the others to a point. Heat tier 2+ forces the low band; tier 3-4, Battery saver and reduced motion hold the still pose. Rasterised turtle triangles: 442 near (was 188 room / 104 shore), 160 mid, 31 far; vertex work is all three bands (633) per instance, a few turtles per scene.
 - Animation is vertex-shader only (stPose: 4 s figure-8 front stroke with blade bend and feathering, glide, hind trim, body pitch/roll/heave, head bob, neck stretch; per-instance phase). No new CPU matrix writes; draws unchanged (room 14 desktop, one turtle draw per scene). Friend: 324 triangles ('mid' band, ≤ 340). Tests: `tests/realistic-turtle.cjs`.
 
+## Explore life: heat savings, solid collision, see-through, current / light / coral / fish / diver (Oct 21-22 2026, local, not deployed)
+
+User: "make that more life like ... all this without additional heat. also find heat savings in that scene"; "shouldn't be able to swim
+through wreckage"; "it needs to be see through". Baseline and shots: /tmp/explore-life (BASELINE.md, before/after.json, contact sheets).
+- **Savings (measured, headless SwiftShader, production build).** Phone pixel ratio in the room 1.75 still / 1.5 moving -> 1.5 / 1.25
+  (`divePixelCap`, a `cap` argument to `MotionResolution.update`; heat tiers still cap lower; desktop untouched): -27 % / -31 % pixels.
+  School fish: a 92-triangle reef fish (`lib/graphics/diveFish.ts`) instead of the catalogue's 380-430: phone rooms 30.8k-68.1k ->
+  24.9k-54.9k triangles (captains-cup 63.8k -> 43.9k incl. the new bottom dwellers); GL vertices per frame captains-cup 220k -> 156k,
+  ray-meadow 117k -> 98k, turtle-pool 152k -> 130k. Per-school true bounding spheres: schools behind the camera are frustum-culled
+  (coral view 20 -> 19 draws, ray-meadow 17 -> 14). Bubble-draw points with nothing to show leave the clip box (no quads, no discard
+  fragments). Caustics: one warped octave, only on up-facing faces (-4 sin, -1 pow per reef fragment). Deeper rest: 12 fps after 60 s
+  of rest in the room (`diveRestFrame`). Draws per room unchanged (14-17 phone).
+- **Collision** (`lib/town/water/diveSolids.ts`): 62-147 solids per zone built once from the room's own matrices; a 2 m grid, at most 38
+  solids per cell, ~0.9 us per push-out (node); sub-steps <= 0.25 m; the camera marches <= 24 points (bounding-sphere prefiltered).
+  No allocation per frame (tests/explore-life.cjs).
+- **See-through** (`lib/graphics/proximityFade.ts`): per-vertex fade from the shared uDiver / uCam, screen-door dither (`discard`) in
+  the fish, sway and pickups programs; compiled out with calm / lite (no discard: early depth testing kept on hot phones).
+- **Realism at no extra draw:** the current / swell (vertex shaders only), wide sun shafts (phone 42 tris, was 44), Snell's window
+  (a few ALU in the surface shader), absorption per vertex (a varying, no fragment exp), coral vertex colours, bottom dwellers in the
+  reef's one draw (+334 tris), fish surge (2 sin per vertex), exhale bubbles (same points), the diver's glide pose (CPU pose targets).
+- CPU per frame (rAF median, phone profile): 0.7-1.1 ms vs 0.7-0.8 ms before (SwiftShader-noisy; collision + camera march are tens of
+  microseconds). **Not measured on an iPhone**; reduced work, not a measured cooling.
+
+
+> Dart removed Oct 21/22 2026 by user decision ("let's remove the dart action"): no burst, trail, FOV kick or precision dash in the reef room; `wa:dive_dart` stays in countIds.ts (retired) so old rows read.
+
 ## Explore delight (Oct 21 2026, local, not deployed)
 
 The whale shadow, the zone friends' wave / high five, the daily sparkle spot and the find slow-down (docs/swimming-research.md §12) add

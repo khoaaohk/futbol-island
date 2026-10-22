@@ -110,7 +110,7 @@ ok('frame loop + HUD + analytics wiring (Town.tsx)',()=>{
  const duck=town.indexOf('const de=dive.duck(dt,water.inWater&&water.state.diving&&!dive.diving)'),enter=town.indexOf("dive.edgeEnter(location.x,location.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z),water.state.dive)");
  assert(duck>0&&enter>duck&&enter-duck<900,'edge entry right after the duck-dive breath, in the island step');
  assert(town.slice(duck,enter).includes("water.state.diving&&water.state.under>.35&&water.state.phase==='swim'&&!animalRides.riding&&rideRef.current==='walk'"),'only a walking duck-diver');
- const branch=body.indexOf('if(dive.diving){const restFrame=idleRide.interval(now,dive.resting,');assert(branch>0&&body.indexOf('const waterIdle=water.resting();')>branch,'the island stays frozen in the room (the dive branch first)');
+ const branch=body.indexOf('if(dive.diving){const rest0=idleRide.interval(now,dive.resting,');assert(branch>0&&body.indexOf('const waterIdle=water.resting();')>branch,'the island stays frozen in the room (the dive branch first)');
  assert(town.includes("if(reason==='edge'){const e=dive.edgeExit,")&&town.includes('if(!(e.under&&water.underNow()))'),'the way out: under at once (or swim up)');
  assert(town.includes('camera.position.x+=e.x-visualLocation.x;camera.position.z+=e.z-visualLocation.z;'),'the camera moves with the diver');
  assert(town.includes("if(edge){showUnderTint(spot.theme.water);}"),'the soft blend in, no splash');

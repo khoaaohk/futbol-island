@@ -36,18 +36,18 @@ export default function DiveHud(){
  const hold=(dir:'up'|'down',on:boolean)=>(e:React.PointerEvent<HTMLButtonElement>)=>{e.preventDefault();if(on)e.currentTarget.setPointerCapture?.(e.pointerId);diveLift[dir]=on;};
  const depthBtn=(dir:'up'|'down')=><button type="button" className="dive-depth-btn" data-dive-depth={dir} aria-label={dir==='up'?'Rise toward the top (hold) · Q':'Dip lower over the reef (hold) · Z'} title={dir==='up'?'Rise · Q':'Dip lower · Z'}
   onPointerDown={hold(dir,true)} onPointerUp={hold(dir,false)} onPointerCancel={hold(dir,false)} onLostPointerCapture={()=>{diveLift[dir]=false;}} onContextMenu={e=>e.preventDefault()}>
-  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={dir==='up'?'M5 15l7-7 7 7':'M5 9l7 7 7-7'}/></svg></button>;
+  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={dir==='up'?'M5 15l7-7 7 7':'M5 9l7 7 7-7'}/></svg></button>;
  return <>
   {v.diving?<div className="dive-vignette" aria-hidden="true"/>:null}
   {v.diving?<div className="dive-depth" data-dive-depth-pad role="group" aria-label="Rise or dip lower">{depthBtn('up')}{depthBtn('down')}</div>:null}
   {/* The Dart button was removed (Oct 21 2026, user: "let's remove the dart action").
       The room's action grid (Calm HUD, Oct 21 2026, user: "move the emote btn to the left of the down btn ... a grid of 2 rows and 3
-      columns"; cells in globals.css / docs/ui/HUD_STACK.md): ONE "Say hi" button in cell c1-r2, only while the zone's friend is in
+      columns"; cells in globals.css / docs/ui/HUD_STACK.md): ONE "Say hi" button at the bottom right (Oct 22 2026 layout: the right column, under Fly), only while the zone's friend is in
       reach (G / H on desktop still wave / high five). A tap waves; a second tap within 2 s is the high five. */}
   {v.diving&&v.friend?<div className="dive-emote" data-dive-emote role="group" aria-label={`Say hi to ${v.friend}`}>
    <button type="button" className="dive-emote-btn" data-dive-emote-btn="hi" aria-label={`Say hi to ${v.friend}: tap to wave, tap again for a high five · G / H`} title="Wave · G, then High five · H"
     onPointerDown={e=>{e.preventDefault();const t=performance.now(),again=t-lastWave<2000;if(again){diveLift.emote='five';lastWave=0;}else{diveLift.emote='wave';lastWave=t;}}} onContextMenu={e=>e.preventDefault()}>
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V5a1.5 1.5 0 0 1 3 0v6M14 11V6.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 6.5-6 6.5-2.6 0-4.2-1.3-5.5-3.6L4 14a1.4 1.4 0 0 1 2.3-1.5L8 14.5"/><path d="M19 3.5c1 .8 1.6 1.9 1.7 3.1M3.5 5.5C4 4.4 4.9 3.6 6 3.2"/></svg></button>
+    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V5a1.5 1.5 0 0 1 3 0v6M14 11V6.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 6.5-6 6.5-2.6 0-4.2-1.3-5.5-3.6L4 14a1.4 1.4 0 0 1 2.3-1.5L8 14.5"/><path d="M19 3.5c1 .8 1.6 1.9 1.7 3.1M3.5 5.5C4 4.4 4.9 3.6 6 3.2"/></svg></button>
   </div>:null}
   {/* The "Reef n/12" chip and its hearts were removed (Oct 21 2026, user: "remove this, we don't need it"); the journey, hearts and
       the restore card still count and save, and their rewards arrive as the one note / card in the toast lane. */}

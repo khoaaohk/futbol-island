@@ -56,7 +56,7 @@ ok('Explore room (Turtle Pool): ONE turtle draw (4 instances), posed in its shad
  const turtles=[];room.scene.traverse(o=>{if(o.name==='dive-fish-turtle')turtles.push(o);});assert.equal(turtles.length,1,'one turtle mesh');
  const g=turtles[0].geometry;assert(g.instanceCount<=4&&g.instanceCount>=1,'instances '+g.instanceCount);assert(g.getAttribute('aTw'),'aTw copied');
  const sh=fake();turtles[0].material.onBeforeCompile(sh);assert(sh.vertexShader.includes('stPose(stP,stN,dvT')&&sh.vertexShader.includes('stKeep(distance(cameraPosition,dvP)'),'posed in the fish shader');
- assert.equal(sh.uniforms.uStCtl.value.x,1);assert.equal(turtles[0].material.customProgramCacheKey(),'dive-fish-v3-turtle');assert.equal(turtles[0].material.map,null,'no texture');
+ assert.equal(sh.uniforms.uStCtl.value.x,1);assert.match(turtles[0].material.customProgramCacheKey(),/^dive-fish-v4(-fade)?-turtle$/);assert.equal(turtles[0].material.map,null,'no texture');
  const fishSh=fake();let other=null;room.scene.traverse(o=>{if(!other&&o.name.startsWith('dive-fish-')&&o.name!=='dive-fish-turtle')other=o;});other.material.onBeforeCompile(fishSh);
  assert(!fishSh.vertexShader.includes('stPose')&&fishSh.vertexShader.includes('vec3 stP=position,stN=normal;'),'other fish: unchanged maths');
  const st=room.stats();console.log('     Turtle Pool room (desktop): draws '+st.draws+', triangles '+st.triangles);room.dispose();

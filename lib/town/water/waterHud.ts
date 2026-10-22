@@ -51,14 +51,14 @@ export const RIDING_BUTTONS:readonly JobButton[]=[RIDE_LET_GO,RIDE_HOLDING] as c
 export const RIDING_NOTE='Hanging on! Tap Let go to swim again.';
 /** Diving (water P2, lib/town/water/diveSession.ts): the one action is Surface (Space / 1, and Escape), icon-only; the ride slot keeps
  *  the swim icon (the ride you go back to), answering a tap with a hint. E uses the find in reach (its floating prompt). */
-export const DIVE_SURFACE:JobButton={slot:'shoot',key:'Space',id:'surface',label:'Surface: swim back up for air',icon:'surface',enabled:true};
+/* The reef room's Surface button was removed Oct 22 2026 (user): holding ▲ at the top surfaces (diveSession.ts DIVE_TOP_SURFACE_S). */
 /** Oct 20 2026 (user: "R and the switcher must still take off with the jetpack inside the dive zone"): the ride slot is the same
  *  swim → jetpack switcher as at the surface; with fuel it surfaces at once and flies up, without fuel it answers with the hint. */
 /** Calm HUD (Oct 21 2026, user: "bottom right will be the fly btn"): in a room the switcher shows the jetpack (what it does), not the swim. */
 export const REEF_FLY:JobButton={...RIDE_SWIM,label:'Fly up with the jetpack',icon:'jetpack'};
 export const REEF_FLY_NO_FUEL:JobButton={...RIDE_SWIM_NO_FUEL,label:'Fly: the jetpack needs fuel (swim to a beach)',icon:'jetpack'};
-export const REEF_BUTTONS:readonly JobButton[]=[DIVE_SURFACE,REEF_FLY_NO_FUEL] as const;
-export const REEF_BUTTONS_FLY:readonly JobButton[]=[DIVE_SURFACE,REEF_FLY] as const;
+export const REEF_BUTTONS:readonly JobButton[]=[REEF_FLY_NO_FUEL] as const;
+export const REEF_BUTTONS_FLY:readonly JobButton[]=[REEF_FLY] as const;
 export const REEF_NOTE='Diving! Tap Surface to swim back up.';
 export function waterKeyAction(code:string,key:string):WaterActionId|null{
  if(code==='Space'||code==='Digit1'||code==='Numpad1')return 'swimfast';
@@ -145,5 +145,5 @@ export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{
  * The swim lesson (AGENTS.md: every feature teaches football; docs/swimming-research.md §3). A coaching metaphor, labelled as
  * one; shown once per device the first time the player swims (components/SwimLessonToast.tsx, key SWIM_LESSON_KEY).
  */
-export const SWIM_LESSON={title:'Pace yourself',text:'Swim smooth and steady, like pacing a match: sprint when it matters, glide when it doesn’t.',kind:'Coaching idea'} as const;
+export const SWIM_LESSON={title:'Pace yourself',text:'Swim smooth and steady: a calm rhythm lasts, like a team keeping its shape all match.',kind:'Coaching idea'} as const;
 export const SWIM_LESSON_KEY='fi2-swim-lesson-v1';

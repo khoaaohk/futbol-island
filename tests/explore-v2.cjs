@@ -1,5 +1,5 @@
 // Explore v2 (Oct 21 2026; docs/swimming-research.md §10, docs/performance-guide.md "Explore v2"): the frozen island while under, the
-// swim feel (glide, dart, banking), the reef journey (pickups, progress, restore), the buddy fish, the underwater ball, the room's water
+// swim feel (glide, banking; the Dart was removed Oct 21/22 2026), the reef journey (pickups, progress, restore), the buddy fish, the underwater ball, the room's water
 // colour from the tokens, and the room's budget (draws / triangles within the existing caps).
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
@@ -15,7 +15,7 @@ const D=load('lib/town/water/diveSpots.ts'),S=load('lib/town/water/diveSession.t
 
 ok('the island is frozen while under: the dive branch runs first in the frame and every island system comes after it',()=>{
  const town=read('components/Town.tsx'),a=town.indexOf('    function animate(now:number){'),body=town.slice(a);
- const branch=body.indexOf('if(dive.diving){const restFrame=idleRide.interval(now,dive.resting,');assert(branch>0,'the dive branch');
+ const branch=body.indexOf('if(dive.diving){const rest0=idleRide.interval(now,dive.resting,');assert(branch>0,'the dive branch');
  const end=body.indexOf('return;}',branch),seg=body.slice(branch,end);
  // What runs under the water: the room rest cap, the heat governor fed with the room's frames, the motion resolution, the dive step,
  // the reef sound bed, the stick paint. Nothing of the island.
@@ -46,14 +46,13 @@ ok('the room rests: dive.resting only when nothing the player moved is moving (t
  rt.frame(1/30,{sx:0,sy:0,lift:1},390,844);assert.equal(rt.resting,false,'rising is not');rt.dispose();
 });
 
-ok('swim feel: the glide carries, a dart bursts past the top speed then cools down and costs a little breath, banking into turns',()=>{
+ok('swim feel: the glide carries, no Dart (removed Oct 21/22 2026 by user decision), banking into turns',()=>{
  const spot=D.diveSpotById('ray-meadow');
- const run=(dart)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:-1,lift:0});
-  const b0=s.state.breath;if(dart)s.step(1/30,{sx:0,sy:-1,lift:0,dart:true});let top=0;for(let i=0;i<15;i++){s.step(1/30,{sx:0,sy:-1,lift:0});top=Math.max(top,Math.hypot(s.state.vx,s.state.vz));}return {s,top,b0};};
- const plain=run(false),d=run(true);
- assert(plain.top<=S.DIVE_SPEED+.01,'top speed without a dart');assert(d.top>S.DIVE_SPEED+.8,'the dart bursts: '+d.top.toFixed(2));assert.equal(d.s.state.darts,1);
- assert(d.s.state.breath<plain.s.state.breath-S.DIVE_DART_BREATH*.5,'a dart costs breath');
- const e=d.s.step(1/30,{sx:0,sy:-1,lift:0,dart:true});assert.equal(e.dart,false,'cooldown: no second dart at once');
+ const run=()=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());for(let i=0;i<60;i++)s.step(1/30,{sx:0,sy:-1,lift:0});
+  let top=0;for(let i=0;i<15;i++){s.step(1/30,{sx:0,sy:-1,lift:0,dart:true});top=Math.max(top,Math.hypot(s.state.vx,s.state.vz));}return {s,top};};
+ const plain=run();
+ assert(plain.top<=S.DIVE_SPEED+.01,'normal swim only: a stray dart flag does nothing');assert(!('DIVE_DART_SPEED' in S)&&!('dartT' in plain.s.state),'the Dart is gone');
+ const rt=read('lib/town/water/diveRuntime.ts');assert(!rt.includes("k==='f'||k==='shift'"),'no F / Shift binding');
  // Glide: let go at full speed, it coasts farther than the old drag would.
  const g=plain.s,x0=g.state.x,z0=g.state.z;for(let i=0;i<60;i++)g.step(1/30,{sx:0,sy:0,lift:0});const coast=Math.hypot(g.state.x-x0,g.state.z-z0);
  assert(coast>S.DIVE_SPEED*(1-Math.exp(-S.DIVE_DRAG*2))/S.DIVE_DRAG*1.1,'the glide carries: '+coast.toFixed(2));

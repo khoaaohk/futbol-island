@@ -189,13 +189,25 @@ User: "there's so much going on ... only show one at a time", "it's looking way 
 
   | | c1 | c2 | c3 |
   |---|---|---|---|
-  | r1 | Surface (the only way up without fuel) | ▲ rise | minimap toggle |
+  | r1 | (Surface: removed 22 Oct 2026) | ▲ rise | minimap toggle |
   | r2 | Say hi (only near the friend; the cell stays reserved) | ▼ dip | Fly (switcher, jetpack icon, `REEF_FLY`) |
 
   To add an action: give it `position:absolute` (or fixed), `right:var(--room-cN)`, `bottom:var(--room-rM)` and the cell size. The
   grid is full today; a seventh action needs a third row (`--room-r0`), since a fourth column would reach the joystick on a 390 px
   phone. Say hi is one button: a tap waves, a second tap within 2 s high-fives (G / H on desktop). The minimap circle sits 12 px
   above the grid. Desktop keeps its column (▲ ▼, Say hi above) and the keyboard hints.
+- **Explore room layout (22 October 2026, supersedes the 2x3 grid above on every viewport).** User: "fix the actions positions. do a
+  grid of 4 up and down on the left, jetpack on the top right and emote bottom right. remove the pink go up btn", "make the up and
+  down the same size as the other btns", "same style as well". LEFT: a 2x2 grid, column `--room-l1` holds ▲ (row `--room-r1`) over
+  ▼ (`--room-r2`); the column `--room-l2` cells are EMPTY (reserved). RIGHT: Fly at the top (`--room-rr`, one cell above
+  `--room-rb`), Say hi at the bottom right (its cell stays reserved). The minimap toggle sits above ▲ (`--room-r0`) and the open map
+  above it. Phones: the grid sits above the joystick (portrait) or right of it (landscape); desktop: bottom left. Measured
+  (headless): 390x844 ▲ 18,544 / ▼ 18,614 / toggle 18,474 / map 18,334 (128) / Fly 314,688 / Say hi 314,758 / joystick 18,684;
+  844x390 ▲ 162,246 / ▼ 162,316 / toggle 162,176 / map 162,52 (112) / Fly 768,246 / Say hi 768,316; 1288x717 ▲ 24,537 / ▼ 24,621 /
+  toggle 24,453 / map 24,251 (190) / Fly 1192,537 / Say hi 1192,621: no overlaps. One size (`--room-cell` = the island action size,
+  72 px desktop / 58 px phones, 12 px gaps) and one style for ▲ ▼ and Say hi: the Fly button's 3 px cream rim, pastel fill + grain,
+  5 px lower edge and press (▲ ▼ aqua, Say hi pink); 32 px icons. No Surface button: hold ▲ at the very top for 0.35 s (or tap it
+  again there) to surface; Escape on desktop.
 - **Fishing**: while the tutorial shows its step, the message (the same words) is hidden, so the two never overlap.
 
 Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, stack rules, copy caps, names, >= 44 px targets).

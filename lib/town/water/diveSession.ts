@@ -12,6 +12,7 @@
  * nothing is lost and nobody is hurt. Breath refills at the surface over BREATH_REFILL_S, and a new dive waits for
  * BREATH_MIN_DIVE of it (recover before the next sprint). DIVE_LESSON shows once per device.
  */
+import {DIVE_BODY,divePushOut,divePushOutLevel,type DiveSolidWorld} from './diveSolids';
 import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveOnCrest,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
 import {WATER_PROBE_HZ} from './waterDepth';
 import {DIVE_EDGE,diveEdgeBeyond,diveEdgeRim} from './diveEdge';
@@ -34,16 +35,30 @@ export const DIVE_SPEED=3.2,DIVE_ACCEL=3,DIVE_DRAG=1.6,DIVE_TURN=2.2;
  *  and follows the seabed, so a rising reef lifts them (no clipping, no hard step). ▲ / ▼ (phone) or Q / Z (desktop) rise or dip
  *  lower at about DIVE_VSPEED m/s; neither held keeps the place. DIVE_FOLLOW is how fast the body eases onto the followed height. */
 export const DIVE_VSPEED=1.6,DIVE_FOLLOW=4;
-/** Explore v2 (Oct 21 2026) swim feel: with the stick let go the diver GLIDES (a lower drag, DIVE_GLIDE_DRAG, so a kick carries);
- *  a DART (the phone's Dart button, F / Shift on desktop) is a quick burst forward: +DIVE_DART_KICK m/s along the facing, the top
- *  speed raised to DIVE_DART_SPEED for DIVE_DART_S, then a DIVE_DART_COOLDOWN wait; it costs DIVE_DART_BREATH of the breath (the pace
- *  lesson: a sprint has a price). DIVE_BANK is the roll into a turn at full stick and speed (rad). */
-export const DIVE_GLIDE_DRAG=.75,DIVE_DART_KICK=2.6,DIVE_DART_SPEED=5.4,DIVE_DART_S=.7,DIVE_DART_COOLDOWN=1.1,DIVE_DART_BREATH=.012,DIVE_BANK=.5;
+/** Holding ▲ / Q (Oct 22 2026, user: "When holding the up btn, it will rise up all the way"): the rise eases in over `ease` s to `up` ×
+ *  DIVE_VSPEED and carries on to the top of the water (depthT 0, the surface where the breath refills); holding ▼ / Z eases to `down` ×
+ *  (gentler) down to the sand clearance. Let go: the depth holds. A tap is a small step (the first frames are at the normal speed).
+ *  While held the body follows its depth `follow` × faster, so it never lags behind the button. */
+export const DIVE_LIFT={up:2,down:1.3,ease:1.2,follow:2} as const;
+/** ▲ at the top surfaces (Oct 22 2026, user: "remove the pink action btn, that is replaced by the up btn when going all the way up"):
+ *  holding ▲ / Q at the very top for DIVE_TOP_SURFACE_S, or a fresh tap of it while already at the top, leaves the room the way the old
+ *  Surface button did (the 'tap' reason: the same rise, blend, analytics and Explore re-arm). */
+export const DIVE_TOP_SURFACE_S=.35;
+/** The top-hold clock: grows while ▲ is held at the top, else 0. */
+export function diveTopHold(held:number,atTop:boolean,lift:number,dt:number){return atTop&&lift>0?held+Math.max(0,dt):0;}
+/** True when this frame's ▲ surfaces: held long enough at the top, or a new press (no ▲ last frame) while already at the top. */
+export function diveTopSurfaces(topHold:number,lift:number,lastLift:number,wasTop:boolean){return topHold>=DIVE_TOP_SURFACE_S||(lift>0&&lastLift<=0&&wasTop);}
+/** The rise / dip speed multiplier after holding for `held` s in direction `dir` (+1 up, -1 down): 1 at the press, easing (smoothstep)
+ *  to DIVE_LIFT.up / .down by DIVE_LIFT.ease s. */
+export function diveLiftSpeed(held:number,dir:number){const k=Math.max(0,Math.min(1,held/DIVE_LIFT.ease)),e=k*k*(3-2*k);return 1+((dir>0?DIVE_LIFT.up:DIVE_LIFT.down)-1)*e;}
+/** Explore v2 (Oct 21 2026) swim feel: with the stick let go the diver GLIDES (a lower drag, DIVE_GLIDE_DRAG, so a kick carries).
+ *  DIVE_BANK is the roll into a turn at full stick and speed (rad). The Dart burst (5.4 m/s, F / Shift, the Dart button) was REMOVED
+ *  Oct 21/22 2026 by user decision ("let's remove the dart action"): normal swimming only. */
+export const DIVE_GLIDE_DRAG=.75,DIVE_BANK=.5;
 /** Explore delight (Oct 21 2026): the glide carried kids past a find's prompt, so near anything still to collect (a journey pickup, an
  *  unused find, today's sparkle) the water gets a little thicker: within `far` m the drag rises up to ×`drag` and the top speed eases
- *  down by up to `speed`, fully at `near` m (an eased curve, never a sudden brake); a dart there is a shorter, gentler "precision" dash
- *  (kick and burst time × (1 − `dart`)). Elsewhere the swim is unchanged. */
-export const FIND_SLOW={near:1.4,far:4,drag:1.6,speed:.25,dart:.45} as const;
+ *  down by up to `speed`, fully at `near` m (an eased curve, never a sudden brake). Elsewhere the swim is unchanged. */
+export const FIND_SLOW={near:1.4,far:4,drag:1.6,speed:.25} as const;
 /** 0 (far, or nothing near) .. 1 (right by it): smoothstep over FIND_SLOW.far .. near. */
 export function findSlow(d:number){if(!(d<FIND_SLOW.far))return 0;const t=Math.max(0,Math.min(1,(FIND_SLOW.far-d)/(FIND_SLOW.far-FIND_SLOW.near)));return t*t*(3-2*t);}
 /** Where a dive starts in the water column (depthT). */
@@ -67,7 +82,7 @@ export const DIVE_START={x:0,y:DIVE_SURFACE_Y-1.2,z:13,yaw:Math.PI} as const;
 /** The proximity tick at the surface (s): the water probe's own rate. */
 export const DIVE_TICK=1/WATER_PROBE_HZ;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
-export const DIVE_LESSON={title:'Pace your breath',text:'Glide slowly and your breath lasts longer, and rise to the top for a quick breath. Sprint everywhere and it runs out fast, like a midfielder’s legs in a long match.',kind:'Coaching idea'} as const;
+export const DIVE_LESSON={title:'Pace your breath',text:'Glide to save breath; rise up for air. Sprint everywhere and you tire, like a midfielder.',kind:'Coaching idea'} as const;
 export const DIVE_LESSON_KEY='fi2-dive-lesson-v1';
 export const DIVE_LOW_NOTE='Running low on breath: rise to the top for air.',DIVE_OUT_NOTE='Well done! You floated up for a breath.';
 
@@ -85,16 +100,12 @@ export type DiveEvents={
  breathUi:boolean;
  /** The diver reached the reef crest for the first time this dive (analytics wa:dive_crest; wa:dive_deep is kept for old data). */
  crest:boolean;
- /** Explore v2: a dart started this frame. */
- dart:boolean;
 };
 export type DiveInput={
  /** Stick: x right, y DOWN (the island's convention: −1 = forward), each −1..1 (keys + joystick). */
  sx:number;sy:number;
  /** Rise (+1) / dip lower (−1): ▲ ▼ on phones, Q / Z on desktop. */
  lift:number;
- /** A dart was asked for this frame (an edge, not held). */
- dart?:boolean;
  /** Explore delight: the distance (m) to the nearest thing still to collect (the runtime's pickups, finds, sparkle), for findSlow. */
  near?:number;
 };
@@ -105,7 +116,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   /** The patch the swimmer is in at the surface (the Dive prompt), by the 10 Hz test. */
   near:null as DiveSpot|null,acc:Infinity,
   /** Room-local diver: position, velocity, facing (rig yaw: forward = (sin, cos)), pitch (rad, + nose down), roll, lift offset. */
-  x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,roll:0,lift:0,
+  x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,roll:0,lift:0,liftHeld:0,lift0:0,topHold:0,
   /** Breath 0..1 (refills at the surface), the last value the UI drew, its clock; whether the low note fired this dive. */
   breath:1,uiBreath:1,uiAcc:0,lowSaid:false,
   /** The find in reach (3D, DIVE_FIND_RANGE) and its distance; finds used this dive; the rising fade (s). */
@@ -119,19 +130,31 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   /** The place in the water column (0 just under the surface .. 1 low over the sand), whether the diver is at the top sipping air,
    *  and whether the reef crest was reached this dive. */
   depthT:DIVE_START_T,atTop:false,onCrest:false,
-  /** Explore v2: the dart's remaining burst (s) and its cooldown (s); darts this dive (analytics: the first one). */
-  dartT:0,dartCd:0,darts:0,
   /** Explore delight: the find slow-down this frame (0..1, findSlow). */
   slow:0,
   /** Seamless Explore: seconds before the zone's edge may be crossed again (DIVE_EDGE.cooldown after each crossing, both ways), and
    *  whether this dive came in across the edge. */
   edgeCd:0,viaEdge:false};
  const range={min:0,max:0};
- const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false,dart:false};
- const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=events.dart=false;events.surfaced='';events.find='';events.coins=0;};
+ // Explore (Oct 22 2026): the room's solids (diveSolids.ts; set by the runtime with the room) and the collision scratch (no allocation).
+ let solids:DiveSolidWorld|null=null;const cp={x:0,y:0,z:0},cn={x:0,y:0,z:0};
+ /** Move the body from (x0, y0, z0) to the state's position in sub-steps of at most DIVE_BODY.step m, pushed out of every solid on the
+  *  way; the inward part of the velocity is removed (the diver slides along a plank). True when something was hit. */
+ function collide(x0:number,y0:number,z0:number){
+  if(!solids)return false;const dx=state.x-x0,dy=state.y-y0,dz=state.z-z0,n=Math.max(1,Math.ceil(Math.hypot(dx,dy,dz)/DIVE_BODY.step));
+  let mx=dx/n,my=dy/n,mz=dz/n,hit=false;cp.x=x0;cp.y=y0+DIVE_BODY.cy;cp.z=z0;
+  for(let i=0;i<n;i++){cp.x+=mx;cp.y+=my;cp.z+=mz;
+   if(divePushOut(solids,cp,DIVE_BODY.r,cn)>0){hit=true;const l=Math.hypot(cn.x,cn.y,cn.z)||1,nx=cn.x/l,ny=cn.y/l,nz=cn.z/l;
+    const vn=state.vx*nx+state.vz*nz;if(vn<0){state.vx-=nx*vn;state.vz-=nz*vn;}
+    const mn=mx*nx+my*ny+mz*nz;if(mn<0){mx-=nx*mn;my-=ny*mn;mz-=nz*mn;}}}
+  state.x=cp.x;state.y=cp.y-DIVE_BODY.cy;state.z=cp.z;return hit;}
+ const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false};
+ const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=false;events.surfaced='';events.find='';events.coins=0;};
  const heightFor=(t:number)=>range.max-(range.max-range.min)*t;
  const markUi=(dt:number)=>{state.uiAcc+=dt;if(state.uiAcc>=1/BREATH_UI_HZ-1e-6&&Math.abs(state.breath-state.uiBreath)>.002){state.uiAcc=0;state.uiBreath=state.breath;events.breathUi=true;}};
  return {state,events,
+  /** Explore (Oct 22 2026): the room's solids for the collision (null: none, e.g. tests of the open water). */
+  setSolids(w:DiveSolidWorld|null){solids=w;},
   /** The Dive prompt's proximity test: at most WATER_PROBE_HZ a second, only while swimming at the surface (else it clears). Also
    *  refills the breath while at the surface. */
   scan(dt:number,x:number,z:number,swimming:boolean){
@@ -176,7 +199,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    if(state.phase==='rising'){
     // The gentle way up (a tap of Surface, Escape, or the breath running out): drift up with the bubbles, then the island.
     state.rise+=dt;state.vy+=(1.6-state.vy)*(1-Math.exp(-dt*3));state.y=Math.min(DIVE_SURFACE_Y-.2,state.y+state.vy*dt);
-    state.vx*=Math.exp(-dt*2);state.vz*=Math.exp(-dt*2);state.x+=state.vx*dt;state.z+=state.vz*dt;state.pitch+=(-.5-state.pitch)*(1-Math.exp(-dt*3));
+    {const x0=state.x,y0=state.y-state.vy*dt,z0=state.z;state.vx*=Math.exp(-dt*2);state.vz*=Math.exp(-dt*2);state.x+=state.vx*dt;state.z+=state.vz*dt;collide(x0,y0,z0);}state.pitch+=(-.5-state.pitch)*(1-Math.exp(-dt*3));
     if(state.rise>=DIVE_SURFACE_S){state.phase='surface';state.hold=DIVE_REARM_S;state.spot=null;state.find=null;state.findDist=Infinity;events.surfaced=state.risingFor;}
     return events;
    }
@@ -185,20 +208,16 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    const sx=Math.max(-1,Math.min(1,input.sx)),fwd=Math.max(-1,Math.min(1,-input.sy)),stick=Math.min(1,Math.hypot(sx,fwd));
    state.yaw+=-sx*DIVE_TURN*dt*(.45+.55*Math.min(1,Math.abs(fwd)+.3));
    const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw);
-   // The dart (Explore v2): a kick along the facing and a higher top speed for a moment, then the glide carries it off.
-   state.dartCd=Math.max(0,state.dartCd-dt);state.dartT=Math.max(0,state.dartT-dt);
-   // Explore delight: near something still to collect the water is a little thicker (findSlow: more drag, a lower top speed, a shorter dart).
-   const slow=findSlow(input.near??Infinity),precise=1-FIND_SLOW.dart*slow,thick=1+(FIND_SLOW.drag-1)*slow;state.slow=slow;
-   if(input.dart&&state.dartCd<=0&&dt>0){state.dartT=DIVE_DART_S*precise;state.dartCd=DIVE_DART_COOLDOWN;state.darts++;events.dart=true;state.breath=Math.max(.001,state.breath-DIVE_DART_BREATH);
-    state.vx+=fx*DIVE_DART_KICK*precise;state.vz+=fz*DIVE_DART_KICK*precise;}
-   const darting=state.dartT>0,top=1-FIND_SLOW.speed*slow,target=(darting?Math.max(fwd,0)*DIVE_DART_SPEED+(fwd<=0?DIVE_SPEED*.6:0):fwd*DIVE_SPEED*(fwd<0?.5:1))*top;
-   const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(darting&&along>target?.6*thick:Math.abs(target)>Math.abs(along)?DIVE_ACCEL:(stick<.08?DIVE_GLIDE_DRAG:DIVE_DRAG)*thick));
+   // Explore delight: near something still to collect the water is a little thicker (findSlow: more drag, a lower top speed).
+   const slow=findSlow(input.near??Infinity),thick=1+(FIND_SLOW.drag-1)*slow;state.slow=slow;
+   const top=1-FIND_SLOW.speed*slow,target=fwd*DIVE_SPEED*(fwd<0?.5:1)*top;
+   const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(Math.abs(target)>Math.abs(along)?DIVE_ACCEL:(stick<.08?DIVE_GLIDE_DRAG:DIVE_DRAG)*thick));
    const nextAlong=along+(target-along)*k,side=(state.vx*fz-state.vz*fx)*Math.exp(-dt*3);
    state.vx=fx*nextAlong+fz*side;state.vz=fz*nextAlong-fx*side;
    // Seamless Explore (diveEdge.ts): the rim (the zone's blob outline in room metres) is a doorway. DIVE_EDGE.exitOut m past it the
    // diver leaves for the island (still under: the duck-dive); while the edge waits after a crossing it holds there like a wall.
    if(state.edgeCd>0)state.edgeCd=Math.max(0,state.edgeCd-dt);
-   let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
+   const px0=state.x,py0=state.y,pz0=state.z;let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
    if(r>=lim&&state.edgeCd<=0){state.x=nx;state.z=nz;state.phase='surface';state.hold=DIVE_REARM_S;state.edgeCd=DIVE_EDGE.cooldown;state.spot=null;state.find=null;state.findDist=Infinity;state.ducking=true;events.surfaced='edge';return events;}
    if(r>lim){nx*=lim/r;nz*=lim/r;const n=(state.vx*nx+state.vz*nz)/(lim||1);if(n>0){state.vx-=nx/lim*n;state.vz-=nz/lim*n;}}
    state.x=nx;state.z=nz;
@@ -206,13 +225,21 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    // under the diver, so a rising crest lifts them smoothly; the sand and the surface are hard limits (never clipped).
    const fl=state.spot!.floor,lift=Math.max(-1,Math.min(1,input.lift));state.lift=lift;
    diveDepthRange(state.x,state.z,fl,range);const span=Math.max(.3,range.max-range.min);
-   state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*dt/span));
-   const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW));
+   // Held ▲ / ▼: the speed eases in (diveLiftSpeed) and carries on to the top / the sand; the direction's hold clock resets on release.
+   const lastLift=state.lift0,wasTop=state.atTop;
+   state.liftHeld=lift===0||Math.sign(lift)!==Math.sign(state.lift0)?0:state.liftHeld+dt;state.lift0=lift;
+   state.depthT=Math.max(0,Math.min(1,state.depthT-lift*DIVE_VSPEED*diveLiftSpeed(state.liftHeld,lift)*dt/span));
+   const y0=state.y;let y=y0+(heightFor(state.depthT)-y0)*(1-Math.exp(-dt*DIVE_FOLLOW*(lift!==0?DIVE_LIFT.follow:1)));
    if(y<range.min)y=range.min;if(y>range.max)y=range.max;
-   state.y=y;state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
+   state.y=y;
+   // Solid things (the wreck, rocks, the arch, the goal, crates, big coral): slide along them; a push up / down keeps that depth.
+   if(collide(px0,py0,pz0)){diveDepthRange(state.x,state.z,fl,range);const sp2=Math.max(.3,range.max-range.min);const yc=Math.max(range.min,Math.min(range.max,state.y));if(yc!==state.y){state.y=yc;cp.x=state.x;cp.y=yc+DIVE_BODY.cy;cp.z=state.z;if(solids){divePushOutLevel(solids,cp,DIVE_BODY.r);state.x=cp.x;state.z=cp.z;}}y=state.y;state.depthT=Math.max(0,Math.min(1,(range.max-y)/sp2));}
+   state.vy=dt>0?(y-y0)/dt:0;state.atTop=state.depthT<DIVE_TOP_T&&y>range.max-.08;
+   state.topHold=diveTopHold(state.topHold,state.atTop,lift,dt);
+   if(diveTopSurfaces(state.topHold,lift,lastLift,wasTop)){state.topHold=0;rise('tap');return events;}
    if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
    // The body pitches with the climb / dive and rolls a little into turns (auto-level: both ease back to flat).
-   const speed=Math.hypot(state.vx,state.vz);state.effort+=((state.dartT>0?1:stick)-state.effort)*(1-Math.exp(-dt*4));
+   const speed=Math.hypot(state.vx,state.vz);state.effort+=(stick-state.effort)*(1-Math.exp(-dt*4));
    state.pitch+=(Math.max(-.5,Math.min(.5,-state.vy*.35))-state.pitch)*(1-Math.exp(-dt*3));
    state.roll+=(Math.max(-DIVE_BANK,Math.min(DIVE_BANK,sx*DIVE_BANK*Math.min(1,.25+speed/DIVE_SPEED)))-state.roll)*(1-Math.exp(-dt*3));
    // Breath: the pace lesson. Glide slow, it lasts; push the stick all the way, it goes fast; at the top, a sip of air refills it.
@@ -250,7 +277,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
  };
  function begin(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
   state.phase='diving';state.spot=s;state.x=x;state.z=z;state.yaw=yaw;state.vx=Math.sin(yaw)*speed;state.vz=Math.cos(yaw)*speed;state.vy=0;
-  state.pitch=state.roll=state.lift=0;state.dartT=state.dartCd=0;state.darts=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
+  state.pitch=state.roll=state.lift=0;state.liftHeld=state.lift0=state.topHold=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
   diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();for(const f of s.finds)if(f.kind==='ball'&&found(s.id).includes(f.id))state.used.add(f.id);state.rise=0;state.time=0;state.effort=0;state.dives++;
   events.started=true;events.breathUi=true;state.uiBreath=state.breath;
  }
