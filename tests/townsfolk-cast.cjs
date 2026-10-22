@@ -78,7 +78,7 @@ assert.match(npcs,/for\(const entry of entries\)\{if\(frozen\.has\(entry\.id\)\|
 assert.match(npcs,/bucket===entry\.poseBucket&&!entry\.definition\.travel&&[^;]*distance>FAR_POSE/,'still and walking townsfolk pose at 10 Hz beyond FAR_POSE');
 assert.match(npcs,/const seat=definition\.pose\?npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\):undefined;/,'still poses built once');
 assert.match(npcs,/\.\.\.\(entry\.seat\?\{trick:entry\.seat\}:null\)/,'still pose handed to the rig as its trick pose');
-assert.match(npcs,/if\(entry\.seat&&!entry\.near&&!entry\.stunned&&entry\.seatHeld>=2&&!truckWitnesses\.has\(entry\.id\)\)/,'a still townsperson holds its solved pose (re-solved after a wave, bump or truck)');
+assert.match(npcs,/if\(entry\.seat&&!entry\.near&&!entry\.stunned&&entry\.seatHeld>=2&&\(!entry\.sm\|\|entry\.sm\.state==='seated'\)&&!truckWitnesses\.has\(entry\.id\)\)/,'a still townsperson holds its solved pose (re-solved after a wave, bump or truck)');
 assert.match(npcs,/rig\.setProfile\(AGE_PROFILES\[definition\.age\]\)/,'age height profile');
 assert.match(npcs,/radius<=12&&!authoredRoute&&!definition\.pose;/,'still poses keep their exact bench / towel spot');
 assert.match(src('lib/graphics/npcSeatPose.ts'),/stancePose\('lie',ctx,o\)[\s\S]*stancePose\('sit',ctx,o\)/,'existing freestyle stances');
