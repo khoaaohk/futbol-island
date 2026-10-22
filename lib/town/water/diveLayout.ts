@@ -161,6 +161,8 @@ export function buildLayout(spot:DiveSpot):DiveLayout{
  else if(sig==='turtles'){const b=L.bowl!;let best={x:b.x,z:b.z-b.r*.7};for(let i=0;i<24;i++){const a=i/24*6.28,x=b.x+Math.cos(a)*b.r*.75,z=b.z+Math.sin(a)*b.r*.75;if(off(x,z,4.5)&&inside(x,z,.85)&&Math.hypot(x-L.start.x,z-L.start.z)>4){best={x,z};break;}}
   L.tell={kind:'turtle',pts:[best],r:1.5};}
  else if(L.wreck)L.tell={kind:'mast',pts:[{x:L.wreck.x,z:L.wreck.z}],r:L.wreck.half};
+ // The hidden explore ball joins the finds last: it never moves the coral or rocks, but later placements (sparkle, friend) keep off it.
+ for(const q of spot.finds)if(q.kind==='ball')L.finds.push({id:q.id,x:q.x,z:q.z});
  return L;
 }
 

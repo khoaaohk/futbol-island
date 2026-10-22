@@ -62,6 +62,8 @@ export const countDiveCrest=()=>count('wa:dive_crest');
 export const countDiveFly=()=>count('wa:dive_fly');
 export const countDiveWreckVisit=()=>count('wa:dive_wreck_visit');
 export const countDiveWreckFind=()=>count('wa:dive_wreck_find');
+/** Explore balls (Oct 21 2026, diveBalls.ts): a zone's hidden ball picked up (first time each, once ever per zone per player). */
+export const countDiveBallFind=()=>count('wa:dive_ball_find');
 /** Explore v2 (Oct 21 2026): a dive with a dart (once per dive), a dive with a pickup collected (once per dive), a zone restored (once
  *  ever per zone), a goal with the underwater ball. Totals only, `k` channel: no migration. */
 export const countDiveDart=()=>count('wa:dive_dart');

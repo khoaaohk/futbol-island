@@ -51,7 +51,7 @@ export const DIVE_BALLS:readonly DiveBall[]=[
   text:'Seagrass needs sunlight, and so does a pitch. Where a stadium’s roof and stands shade the grass, groundstaff wheel huge lamp rigs over it, so the grass keeps growing even in the dark days of winter.',
   credit:'Pitchcare, “Lights keep grass pitches in summer condition in depths of winter”',source:'https://pitchcare.com/blogs/news/lights-keep-grass-pitches-in-summer-condition-in-depths-of-winter',
   topic:['lamp rig','grow light','grow lighting']},
- {spot:'moon-arch',name:'The moonlight ball',look:'moon',x:-12.4,z:-5.5,hide:'At the foot of the rock arch, on the side away from the boot',
+ {spot:'moon-arch',name:'The moonlight ball',look:'moon',x:-14,z:-4.5,hide:'Tucked against a boulder just past the rock arch, on the side away from the boot',
   title:'Cuju: a goal up high',
   text:'Over 2,000 years ago in China, people played cuju, a kicking game. In one version the goal was a net hung high between two tall poles, with a round hole in the middle, and players aimed to kick the ball through that hole.',
   credit:'FIFA Museum, “Origins: cuju in China”',source:'https://editorial.fifamuseum.com/en/read/origins-cuju-in-china/',
@@ -61,7 +61,7 @@ export const DIVE_BALLS:readonly DiveBall[]=[
   text:'Most of the world’s hand-stitched footballs come from one city: Sialkot in Pakistan. Skilled stitchers sew the panels together by hand, and the official ball of the 2026 World Cup was made in Sialkot too.',
   credit:'LUMS, “Stitching the World’s Game: Inside Sialkot’s Football Industry”',source:'https://lce.lums.edu.pk/stitching-the-worlds-game-inside-sialkots-football-industry/',
   topic:['Sialkot','hand-stitched']},
- {spot:'turtle-pool',name:'The turtle-shell ball',look:'shell',x:-5,z:-3,hide:'On the sand inside the turtles’ pool, where they swim their laps',
+ {spot:'turtle-pool',name:'The turtle-shell ball',look:'shell',x:5.5,z:-1,hide:'Inside the turtles’ pool, nestled against a coral head on its far rim',
   title:'A picture made of fans',
   text:'A tifo is a giant picture made by fans in the stands. Thousands of people hold up coloured cards or flags at the same moment, and together they make one huge image, the way many small plates make one turtle shell.',
   credit:'Wikipedia, “Tifo”',source:'https://en.wikipedia.org/wiki/Tifo',
@@ -70,7 +70,7 @@ export const DIVE_BALLS:readonly DiveBall[]=[
 
 export const diveBallFor=(spot:string)=>DIVE_BALLS.find(b=>b.spot===spot);
 /** The find id every zone's ball uses (one per zone; saved in the dive finds store under the zone). */
-export const DIVE_BALL_FIND='ball';
+export const DIVE_BALL_FIND='hidden-ball';
 /** How many explore balls a save holds (the "3 of 7" note). */
 export const diveBallsFound=(spots:Record<string,readonly string[]>)=>DIVE_BALLS.reduce((n,b)=>n+((spots[b.spot]??[]).includes(DIVE_BALL_FIND)?1:0),0);
-export const diveBallNote=(found:number)=>found>=DIVE_BALLS.length?`Explore balls: all ${DIVE_BALLS.length} found!`:`Explore balls found: ${found} of ${DIVE_BALLS.length}`;
+export const diveBallNote=(found:number)=>found>=DIVE_BALLS.length?`All ${DIVE_BALLS.length} explore balls found`:`Explore balls found: ${found} of ${DIVE_BALLS.length}`;

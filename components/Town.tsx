@@ -194,7 +194,7 @@ import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind} from '@/lib/analytics/waterEvents';
+import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDiveDart,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
@@ -807,7 +807,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // Back at the buoy, treading water: a splash and drips from the ring pool, the surfacing plip; the island resumes.
         location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;
         ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.45,reduced);ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);playCues(SURFACE_CUES);sound.waterSurface();showUnderTint(spot.theme.water);wakeLoop();},
-      found:(f,first)=>{if(first){countDiveFind();if(f.kind==='relic'&&dive.session.state.spot?.theme.wreck)countDiveWreckFind();}tapHaptic();sound.ui('click');if(f.kind==='treasure'||f.kind==='clam')document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'path-pop'}));},
+      found:(f,first)=>{if(first){countDiveFind();if(f.kind==='relic'&&dive.session.state.spot?.theme.wreck)countDiveWreckFind();if(f.kind==='ball')countDiveBallFind();}tapHaptic();sound.ui('click');if(f.kind==='treasure'||f.kind==='clam'||f.kind==='ball')document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'path-pop'}));},
       credit:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},
       low:()=>diveStore.set({note:DIVE_LOW_NOTE}),out:()=>{countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});},
       crest:()=>countDiveCrest(),fly:()=>flyFromReef(),

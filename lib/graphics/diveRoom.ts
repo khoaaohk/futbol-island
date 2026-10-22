@@ -2,6 +2,7 @@ import * as T from 'three';
 import {speciesModel} from '../town/fishing/fishModels';
 import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveCrestMask,diveDepthAt,diveFindPoint,diveFloor,diveRipple,diveWreckPose,type DiveFind,type DiveSpot} from '../town/water/diveSpots';
 import {diveLayout,diveWreckSize,type DiveArchSpot} from '../town/water/diveLayout';
+import {addDiveBall} from './diveBall';
 import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROOM_SHIMMER,ROOM_WINDOW} from './waterTokens';
 import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
@@ -495,6 +496,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const coinMat=new T.MeshLambertMaterial({color:'#ffc93c',emissive:'#7a5208'});coinMat.name='dive-coin';
  const coin=new T.Mesh(new T.CylinderGeometry(.2,.2,.05,18),coinMat);coin.name='dive-coin';coin.rotation.order='YXZ';coin.rotation.x=Math.PI/2;
  const coinHome=new T.Vector3(chestAt.x,F(chestAt.x,chestAt.z)+.55,chestAt.z);coin.position.copy(coinHome);coin.visible=!opt.found.includes('treasure');scene.add(coin);
+ // The zone's hidden explore ball (diveBall.ts, Oct 21 2026): one small mesh in its nook, picked up like the coin.
+ const hiddenBall=addDiveBall(scene,spot,{found:opt.found,lite:!!opt.lite,reduced:opt.reduced});
  let lidT=-1,lidOpen=0,coinT=-1;
 
  // ---- Explore v2: the journey's pickups (diveJourney.ts): litter (a can) and reef treasures (a starfish), ONE instanced draw. Both
@@ -546,7 +549,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   /** Draws (VISIBLE meshes and points in the room: the hidden pearl is not drawn; not counting the diver's rig) and triangles, for the budget test and the docs. */
   stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / coin while they animate. */
-  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;dartT?:number}){
+  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;dartT?:number}){hiddenBall?.frame(t,dt);
    uTime.value=t;uPlayer.value.set(diver.x,diver.y+.9,diver.z);follow(dt,diver);
    // Explore v2: the fish and plants feel the diver (stronger on a dart), the dart's trail, the camera's FOV kick, the water's colour.
    const dart=Math.min(1,(diver.dartT??0)/.5);uDiver.value.set(diver.x,diver.y+.3,diver.z,.5+.5*dart);uTrail.value+=(dart-uTrail.value)*Math.min(1,dt*6);uCam.value.copy(camera.position);
@@ -589,6 +592,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
    if(find.kind==='burst'){uBurst.value.set(coralAt.x,coralAt.y+.3,coralAt.z,t);burstGeo.instanceCount=burstN;}
    else if(find.kind==='clam'){lidT=0;pearl.visible=true;}
    else if(find.kind==='treasure'&&coin.visible&&coinT<0)coinT=0;
+   else if(find.kind==='ball')hiddenBall?.collect();
   },
   /** Where a find's prompt floats (room-local), written into `out`. */
   anchor(find:DiveFind,out:T.Vector3){diveFindPoint(find,fp,fl);return out.set(fp.x,fp.y+.9,fp.z);},

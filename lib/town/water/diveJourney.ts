@@ -9,7 +9,7 @@
  * Pure: no three.js, no DOM. Positions are room-local and derived from the zone's own data (its finds, its floor), never hard-coded,
  * so a zone moved on the island (its x / z) keeps its journey. No allocation in `reach` (the per-frame test).
  */
-import {DIVE_ROOM_R,diveFloor,type DiveSpot} from './diveSpots';
+import {DIVE_ROOM_R,diveFloor,diveTaskFinds,type DiveSpot} from './diveSpots';
 
 export type DivePickupKind='litter'|'treasure';
 export type DivePickup={i:number;kind:DivePickupKind;name:string;x:number;y:number;z:number;color:string};
@@ -34,7 +34,7 @@ export type DiveReefSave={version:1;zones:Record<string,number[]>;restored:strin
 
 /** The guided path: the start, then the finds in nearest-next order (the buddy fish leads along it). */
 export function journeyPath(spot:DiveSpot){
- const left=spot.finds.map(f=>({x:f.x,z:f.z,id:f.id})),out:{x:number;z:number;id:string}[]=[{x:JOURNEY_START.x,z:JOURNEY_START.z,id:'start'}];
+ const left=diveTaskFinds(spot).map(f=>({x:f.x,z:f.z,id:f.id})),out:{x:number;z:number;id:string}[]=[{x:JOURNEY_START.x,z:JOURNEY_START.z,id:'start'}];
  while(left.length){const c=out[out.length-1];let b=0,bd=Infinity;left.forEach((p,i)=>{const d=Math.hypot(p.x-c.x,p.z-c.z);if(d<bd){bd=d;b=i;}});out.push(left.splice(b,1)[0]);}
  return out;
 }
@@ -49,7 +49,7 @@ export function journeyPickups(spot:DiveSpot):DivePickup[]{
  return out;
 }
 /** The whole zone's tasks: every pickup and every find. */
-export const journeyTotal=(spot:DiveSpot)=>journeyPickups(spot).length+spot.finds.length;
+export const journeyTotal=(spot:DiveSpot)=>journeyPickups(spot).length+diveTaskFinds(spot).length;
 /** 0..1 how restored the reef is, from the counts. */
 export const reefHealth=(picked:number,found:number,total:number)=>total>0?Math.min(1,(picked+found)/total):1;
 /** The reef's saturation for a health (REEF_DULL .. 1). */
@@ -63,7 +63,7 @@ export function reach(pickups:readonly DivePickup[],got:readonly boolean[],x:num
 export function nextTarget(spot:DiveSpot,pickups:readonly DivePickup[],got:readonly boolean[],found:readonly string[],x:number,z:number,out:{x:number;z:number}){
  let bd=Infinity;
  for(let i=0;i<pickups.length;i++){if(got[i])continue;const d=Math.hypot(pickups[i].x-x,pickups[i].z-z);if(d<bd){bd=d;out.x=pickups[i].x;out.z=pickups[i].z;}}
- for(const f of spot.finds){if(found.includes(f.id))continue;const d=Math.hypot(f.x-x,f.z-z);if(d<bd){bd=d;out.x=f.x;out.z=f.z;}}
+ for(const f of diveTaskFinds(spot)){if(found.includes(f.id))continue;const d=Math.hypot(f.x-x,f.z-z);if(d<bd){bd=d;out.x=f.x;out.z=f.z;}}
  return bd<Infinity?out:null;
 }
 export function parseDiveReef(raw:unknown,spots:readonly DiveSpot[]):DiveReefSave{

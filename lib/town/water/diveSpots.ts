@@ -275,6 +275,8 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
   ]},
 ]);
 
+/** The finds the reef journey counts and the buddy fish leads to: every find but the hidden explore ball (it stays a secret). */
+export const diveTaskFinds=(s:Pick<DiveSpot,'finds'>)=>s.finds.filter(f=>f.kind!=='ball');
 export const diveSpotById=(id:string)=>DIVE_SPOTS.find(s=>s.id===id);
 /** The zone whose blob (x, z) is inside, or null: what the 10 Hz prompt test asks (a distance reject, then one atan for a near zone). */
 export function diveSpotAt(x:number,z:number,spots:readonly DiveSpot[]=DIVE_SPOTS):DiveSpot|null{

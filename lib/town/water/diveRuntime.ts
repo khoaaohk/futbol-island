@@ -11,7 +11,8 @@ import * as T from 'three';
 import {createDiveRoom,type DiveRoom} from '../../graphics/diveRoom';
 import type {SwimRigPose} from '../../graphics/swimPose';
 import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
-import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
+import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
+import {diveBallNote,diveBallsFound} from './diveBalls';
 import {setDiveSpots} from '../../graphics/waterSurface';
 import {WATER_LEVEL} from './waterDepth';
 import {DIVE_REEF_KEY,REEF_RESTORE_CARD,REEF_RESTORE_COINS,addPickup,journeyPickups,markRestored,nextTarget,parseDiveReef,reach,reefColour,reefHealth,reefRunId,type DivePickup,type DiveReefSave} from './diveJourney';
@@ -95,7 +96,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  let friend:DiveFriend|null=null,friendNear=false,emotedThisDive=false,spark:SparkleSpot|null=null,sparkDate='';
  const home={x:0,y:0,z:0},fr={x:0,y:0,z:0,yaw:0},emo={kind:'' as ''|DiveEmote,t:0,cd:0,met:false},heart={n:0,done:false};
  const whale={at:-1,t:-1,done:false,stamped:false,cx:0,cz:0,yaw:0},wp={x:0,z:0,k:0},fp={x:0,y:0,z:0};
- function progress(spot:DiveSpot){const found=save.spots[spot.id]??[];const n=got.filter(Boolean).length+found.length,total=picks.length+spot.finds.length;return {n,total,found};}
+ function progress(spot:DiveSpot){const found=save.spots[spot.id]??[],tasks=diveTaskFinds(spot);const n=got.filter(Boolean).length+tasks.filter(f=>found.includes(f.id)).length,total=picks.length+tasks.length;return {n,total,found};}
  function drawProgress(spot:DiveSpot,celebrate:boolean){
   const {n,total}=progress(spot),done=reefSave.restored.includes(spot.id);room?.setReef(reefColour(done?1:reefHealth(n,0,total)));diveStore.set({reef:`${n}/${total}`,restored:done});
   if(n>=total&&!done&&celebrate){reefSave=markRestored(reefSave,spot.id);writeDiveReef(reefSave);ports.credit(reefRunId(spot.id),REEF_RESTORE_COINS,`Reef restored · ${spot.name}`);
@@ -132,8 +133,8 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  function use(){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;
   room.use(f,clock*(ports.reduced()?.4:1));
-  if(ev.firstFind){save=addDiveFind(save,s.id,f.id);writeDiveFinds(save);if(ev.coins>0)ports.credit(diveRunId(s.id,f.id),ev.coins,`Dive treasure · ${s.name}`);}
-  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.story,coins:ev.coins}});
+  if(ev.firstFind){save=addDiveFind(save,s.id,f.id);writeDiveFinds(save);if(ev.coins>0)ports.credit(diveRunId(s.id,f.id),ev.coins,f.kind==='ball'?`Explore ball · ${s.name}`:`Dive treasure · ${s.name}`);}
+  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.kind==='ball'?`${f.story} ${diveBallNote(diveBallsFound(save.spots))}.`:f.story,coins:ev.coins}});
   ports.found(f,ev.firstFind);joy=DIVE_JOY_S;drawProgress(s,true);return true;
  }
  const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
