@@ -154,7 +154,7 @@
 .bugIdea{display:block;margin-top:6px;font-size:13px;line-height:1.35;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .bugIdea span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;opacity:.75}
 .bugCard[data-night] .bugIdea{color:#e9ff6b}
-.bugCard[data-night] .bugFact{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.bugCard[data-night] .bugFact{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
 .bugSource{display:inline;margin-left:6px;font-size:10px;opacity:.6}
 .bugMeta{margin:2px 0 0;font-size:11.5px;font-weight:700;opacity:.8}
 .chipStop[data-on]{background:#ffd36c}

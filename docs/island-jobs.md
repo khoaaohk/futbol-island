@@ -675,7 +675,7 @@ hint and end the bug squad, both night and day time"; "remove the end btn in the
 - **Top bar.** The Bug squad pill is no longer in the HUD stack: for every squad run (day and night) it renders in its own fixed
   `.pillDock[data-bug-bar]` under the coins bar with the title + count, the hint (cooldown state) and End x (two-tap Sure?). Only
   the catch stage and the release hide it (`bugBar()` in bugUi.ts, `data-staged`, `html[data-catch-stage]`). The stack moves below
-  it (`html[data-bug-bar] .hud-stack`, `--bug-bar-h` measured by a ResizeObserver). The 2 Hz watchdog (pillWatch) and the
+  it (`html[data-bug-bar-on] .hud-stack`, `--bug-bar-h` measured by a ResizeObserver). The 2 Hz watchdog (pillWatch) and the
   action-cluster End button + count badge (previous section) are removed; Esc still ends the shift. Root cause of the "missing
   bar" reports: the pill lived inside the HUD stack, which any calm/covered flag (`stackCovered` in Town.tsx, e.g. a stuck vending
   leaving flag) or a stack-wide CSS rule hides as a whole, taking the count, hint and End with it. Tests: tests/firefly-lessons.cjs,

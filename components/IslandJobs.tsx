@@ -98,8 +98,8 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  const barRef=useRef<HTMLDivElement|null>(null);
  useEffect(()=>{const el=barRef.current,root=document.documentElement;if(!squadKey||!el)return;
   const put=()=>{try{root.style.setProperty('--bug-bar-h',`${Math.ceil(el.getBoundingClientRect().height)}px`);}catch{}};
-  root.setAttribute('data-bug-bar','');put();const ro=typeof ResizeObserver!=='undefined'?new ResizeObserver(put):null;ro?.observe(el);
-  return()=>{ro?.disconnect();root.removeAttribute('data-bug-bar');root.style.removeProperty('--bug-bar-h');};
+  root.setAttribute('data-bug-bar-on','');put();const ro=typeof ResizeObserver!=='undefined'?new ResizeObserver(put):null;ro?.observe(el);
+  return()=>{ro?.disconnect();root.removeAttribute('data-bug-bar-on');root.style.removeProperty('--bug-bar-h');};
  },[squadKey,blocked]);
  useEffect(()=>{if(!panelKey||squadPill)return;setPanel('full');if(holdOpen)return;
   const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -223,7 +223,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    {chip?<>
     <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{a.set==='fireflies'?BUG_TIP_NIGHT:BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
     {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} title={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
-    {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
+    {a.squad?<button type="button" className={styles.chipStop} data-bug-end data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
     :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
    </>:<>
     <div className={styles.head} title={`${active.role} · ${unit}`} onClick={a.squad?()=>setPill('chip'):undefined}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
@@ -235,7 +235,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
     {/* A job with its own action cluster (jobMoves.ts jobButtons) acts from the Kick / Juggle / Ride buttons instead (Town.tsx):
         no duplicate controls in the panel. Wall rebounds keeps the ball buttons and has no panel actions. */}
     {a.actions.length>0&&!a.buttons&&<div className={styles.taskActions}>{a.actions.map(x=><button key={x.id} type="button" data-job-action={x.id} className={x.primary?styles.primary:styles.secondary} {...jobActionProps(x,id=>runtime?.act(id))}>{x.label}</button>)}</div>}
-    <button type="button" className={styles.stop} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
+    <button type="button" className={styles.stop} data-bug-end={a.squad?true:undefined} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
    </>}
   </section>;
    return a.squad?<div ref={barRef} className={styles.pillDock} data-pill-dock data-bug-bar={a.set??'bugs'} data-staged={bugBar(a,view)==='staged'||undefined}>{panelEl}</div>:<HudSlot>{panelEl}</HudSlot>;})()}

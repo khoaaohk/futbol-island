@@ -43,7 +43,7 @@ const su=(a,n)=>K.storiesUnlocked(a,n).join(',');assert.equal(su(['a','b','c'],0
  assert.match(J,/title:lesson\?\.title\?\?b\.name,idea:lesson\?\.idea\?\?'',story:lesson\?lesson\.fact:story\?\.text\?\?''/);
  assert.match(I,/\{bugCard\.idea&&<span className=\{styles\.bugIdea\} data-bug-idea><span>Coaching idea<\/span>\{bugCard\.idea\}<\/span>\}/);
  assert.match(I,/bugCard\.kind==='firefly'&&bugCard\.title\?bugCard\.title:bugCard\.name/,'the call is the card title');
- assert.match(css,/\.bugIdea\{[^}]*-webkit-line-clamp:3/,'idea: label + 2 lines');assert.match(css,/\.bugCard\[data-night\] \.bugFact\{[^}]*-webkit-line-clamp:4/,'fact: label + 3 lines');
+ assert.match(css,/\.bugIdea\{[^}]*-webkit-line-clamp:3/,'idea: label + 2 lines');assert.match(css,/\.bugCard\[data-night\] \.bugFact\{[^}]*-webkit-line-clamp:5/,'fact: label + 4 lines (a whole fact on a phone)');
  assert.match(B,/data-bugbook-idea><span className=\{styles\.tag\}>Coaching idea<\/span>/);assert.match(B,/storiesUnlocked\(p\.stories,c\)\.map/);}
 const pages=BB.BUG_BOOK_PAGES.filter(p=>p.kind==='firefly');assert.equal(pages.length,8);for(const p of pages){assert(p.idea&&p.lesson.includes('that call means'),`${p.id}: page has call meaning + idea`);}
 console.log('PASS firefly lessons: 8 calls, each a coaching idea + 2 sourced facts (no duplicates), card title/idea/fact on every catch with rotation, Bug book pages');

@@ -35,10 +35,10 @@ const UI=load('lib/town/jobs/bugUi.ts');
  assert.match(J,/active=view\.active\?jobVariant\(view\.active\.id,view\.active\.set\)\?\?jobById\(view\.active\.id\)\?\?null:null/,'a missing variant never drops the bar');
  assert.doesNotMatch(J,/pillWatch|pillDocked|setInterval\(/,'no watchdog');
  // Both pill states carry the hint (➤) and the End button.
- const chip=J.slice(J.indexOf('{chip?<>'),J.indexOf('</>:<>'));assert.match(chip,/data-bug-hint/);assert.match(chip,/a\.squad\?<button type="button" className=\{styles\.chipStop\} data-job-end/);
- const full=J.slice(J.indexOf('</>:<>'),J.indexOf('</section>;',J.indexOf('</>:<>')));assert.match(full,/data-bug-hint/);assert.match(full,/data-job-end=\{endAsk\|\|undefined\} onClick=\{a\.squad\?endJob/);
- assert.match(J,/root\.setAttribute\('data-bug-bar',''\)/);assert.match(J,/setProperty\('--bug-bar-h'/,'the bar height is measured for the stack');
- assert.match(g,/html\[data-bug-bar\] \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ var\(--island-hud-row-height\) \+ var\(--island-hud-row-gap\) \+ var\(--bug-bar-h,48px\) \+ 8px\)\}/,'the stack sits below the bar');
+ const chip=J.slice(J.indexOf('{chip?<>'),J.indexOf('</>:<>'));assert.match(chip,/data-bug-hint/);assert.match(chip,/a\.squad\?<button type="button" className=\{styles\.chipStop\} data-bug-end data-job-end/);
+ const full=J.slice(J.indexOf('</>:<>'),J.indexOf('</section>;',J.indexOf('</>:<>')));assert.match(full,/data-bug-hint/);assert.match(full,/data-bug-end=\{a\.squad\?true:undefined\} data-job-end=\{endAsk\|\|undefined\} onClick=\{a\.squad\?endJob/);
+ assert.match(J,/root\.setAttribute\('data-bug-bar-on',''\)/);assert.match(J,/setProperty\('--bug-bar-h'/,'the bar height is measured for the stack');
+ assert.match(g,/html\[data-bug-bar-on\] \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ var\(--island-hud-row-height\) \+ var\(--island-hud-row-gap\) \+ var\(--bug-bar-h,48px\) \+ 8px\)\}/,'the stack sits below the bar');
  assert.match(css,/\.pillDock\{position:fixed;/);assert.match(css,/\.pillDock>\.hud\{[^}]*visibility:visible!important;opacity:1!important/);
  assert.match(css,/\.pillDock\[data-staged\] \*,:global\(html\[data-catch-stage\]\) \.pillDock \*\{visibility:hidden!important;pointer-events:none\}/,'hidden only during the stage / release');
  assert.match(J,/e\.key==='Escape'[\s\S]{0,300}endJob\(\)/,'Esc still ends the shift');
