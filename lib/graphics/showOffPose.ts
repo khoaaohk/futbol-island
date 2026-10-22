@@ -9,5 +9,5 @@ import {applyBodyMove, bodyJoints, pickMove} from './dancePose';
 const showBag = createMoveBag(SHOW_OFF_COUNT), reactBag = createMoveBag(REACTION_COUNT);
 export function applyShowOff(root: T.Object3D, kind: number, age: number, dur: number) {
   const npc = bodyJoints(root)?.npc === true;
-  applyBodyMove(root, npc ? SHOW_OFF_REACTIONS[pickMove(root, kind, age, reactBag)] : SHOW_OFFS[pickMove(root, kind, age, showBag)], age, dur);
+  applyBodyMove(root, npc ? SHOW_OFF_REACTIONS[pickMove(root, kind, age, reactBag, 'react')] : SHOW_OFFS[pickMove(root, kind, age, showBag, 'show')], age, dur);
 }

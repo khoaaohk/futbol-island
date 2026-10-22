@@ -29,7 +29,9 @@
  *                                  one per party), minutes in a party and the per-session minute thresholds
  *   em:<event>  em:e<n>            emotes (EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS, lib/analytics/emoteEvents.ts; Oct 22 2026): plays by
  *                                  local emote number, context, target (townsperson / party / solo / refused), button → wheel → pick,
- *                                  per-session thresholds. docs/analytics-multiplayer-plan.md is the spec for both families.
+ *                                  per-session thresholds; Phase B adds variants by table index (em:dance_<n> …), streaks, the
+ *                                  emote camera and friends' emotes seen, plus mp: learning-in-a-party, first-party and ping ids.
+ *                                  docs/analytics-multiplayer-plan.md is the spec for both families.
  */
 import {LESSON_TABLE} from './learningIds.generated';
 import {START_COUNT_IDS} from './startIds';
@@ -196,7 +198,15 @@ export const PARTY_COUNT_EVENTS=[
  ...PARTY_FAIL_REASONS.map(r=>[`fail_${r}`,`Join failed: ${r.replace('_',' ')}`] as const),['fail_create_rate','Create failed: too many parties'],['fail_create_offline','Create failed: party service unreachable'],
  ...PARTY_PEAK_BUCKETS,...PARTY_LEN_BUCKETS,
  ['min','Minutes played in a party'],...PARTY_MIN_REACH.map(m=>[`min_reach_${m}`,`Sessions with ${m}+ party minutes`] as const),
+ // Phase B (P1, Oct 22 2026): learning while a party is live (learnEvents.ts adds the twin), the first party / first hosted party
+ // on this device (one device flag, fi2-mp-firsts-v1), a rejected character typed in the first-name box (a count, never the
+ // text), and the Meet here / Follow me map pings.
+ ['lesson','Lesson opened while in a party'],['quiz','Quiz started while in a party'],['quiz_done','Quiz finished while in a party'],
+ ['first_party','First party on this device'],['first_host','First party hosted on this device'],
+ ['name_bad','First-name box: a character was refused'],['ping_meet','“Meet here” ping sent'],['ping_follow','“Follow me” ping sent'],
 ] as const;
+/** The day the mp: and em: ids were added (the build that sends them; lib/analytics/partyReport.ts, sponsor.ts). Nothing before can carry them. */
+export const PARTY_SINCE='2026-10-22';
 /**
  * Emotes (Oct 22 2026, lib/analytics/emoteEvents.ts): which preset emote was played by its LOCAL emote number, where, and what
  * answered. The numeric ranges are repeated here (not imported) so the every-page tracker never loads the emote content;
@@ -213,9 +223,21 @@ export const EMOTE_COUNT_EVENTS=[
  ['to_npc','A townsperson answered'],['to_party','Sent to a live party'],['solo','Nobody near (solo)'],['refused','Field player said “not now”'],
  ...EMOTE_CONTEXTS.map(c=>[`ctx_${c}`,`Context: ${c}`] as const),
  ...EMOTE_REACH.map(n=>[`reach_${n}`,`Sessions with ${n}+ emotes`] as const),
+ // Phase B (P1): a streak (3+ emotes inside a minute, at most one per minute), the emote camera engaging, a friend's emote shown.
+ ['streak','Emote streak (3+ in a minute)'],['cam','Emote camera zoomed in'],['seen','A friend’s emote shown'],
 ] as const;
+/**
+ * Emote variants (Phase B, P1): which move of a multi-move emote played, by its INDEX in the real table (repeated here, not
+ * imported, so the tracker never loads the emote content; tests/admin-analytics-party.cjs checks every count against the source):
+ * dance = lib/town/emoteDance.ts DANCES, show = emoteShowOff.ts SHOW_OFFS, react = SHOW_OFF_REACTIONS (a townsperson answering
+ * your show-off), hf = emoteHandshakes.ts HANDSHAKES (high fives, thanks, well played), wave / cheer / laugh = emoteBody.ts
+ * BODY_VARIANTS[0 / 1 / 7], pass / juggle / keepup = emoteBallPlay.ts PASS_ROUTINES / JUGGLE_ROUTINES / JUGGLE_SOLO_ROUTINES.
+ */
+export const EMOTE_VARIANT_COUNTS={dance:10,show:10,react:4,hf:20,wave:6,cheer:6,laugh:6,pass:6,juggle:6,keepup:3} as const;
+export type EmoteVariantFamily=keyof typeof EMOTE_VARIANT_COUNTS;
+export const EMOTE_VARIANT_IDS:readonly string[]=(Object.entries(EMOTE_VARIANT_COUNTS) as [EmoteVariantFamily,number][]).flatMap(([f,n])=>Array.from({length:n},(_,i)=>`em:${f}_${i}`));
 export const PARTY_FIXED_IDS:readonly string[]=PARTY_COUNT_EVENTS.map(([e])=>'mp:'+e);
-export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n)];
+export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n),...EMOTE_VARIANT_IDS];
 
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',

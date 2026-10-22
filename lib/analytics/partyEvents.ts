@@ -13,16 +13,17 @@
  */
 import {count,onPageHide} from './tracker';
 import {PARTY_FAIL_REASONS,PARTY_MIN_REACH} from './countIds';
+import {markPartyFirst,resetPartyFirsts} from './partyFirsts';
 
 /** Every event name PartyHost may raise (tests/admin-analytics-party.cjs: equals PartyHost's `Track` union). */
 export const PARTY_TRACK_EVENTS=['open','sheet','open_link','gate_show','gate_skip','gate_ok','gate_back','gate_wrong','name_ok',
  'create_tap','created','join_tap','live_host','live_guest','members','share_tap','share_ok','copy_ok','share_fail','new_code','lock','unlock',
- 'kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','fail','fail_create'] as const;
+ 'kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','fail','fail_create','name_bad'] as const;
 export type PartyTrack=typeof PARTY_TRACK_EVENTS[number];
 const KNOWN=new Set<string>(PARTY_TRACK_EVENTS);
 /** Events that are simply `mp:<event>`. */
 const DIRECT=new Set<string>(['open','sheet','open_link','gate_show','gate_skip','gate_ok','gate_back','gate_wrong','create_tap','created','join_tap',
- 'share_tap','share_ok','copy_ok','share_fail','new_code','lock','unlock','kick','name_reset','hide','mute','end_tap']);
+ 'share_tap','share_ok','copy_ok','share_fail','new_code','lock','unlock','kick','name_reset','hide','mute','end_tap','name_bad']);
 /** Counted at most once per tab session (the module lives as long as the tab's page). */
 const ONCE=new Set<string>(['name_ok','tab_code','tab_list']);
 
@@ -58,7 +59,10 @@ export function countParty(event:string,bucket?:string,t=now()){
   case 'live_host':case 'live_guest':{
    const host=event==='live_host';
    count('mp:'+event);if(!host)count(bucket==='link'?'mp:live_guest_link':'mp:live_guest_typed');
-   once('mp:in');live={host,since:t,peak:1,friend:false};lastAt=-1;return;
+   once('mp:in');live={host,since:t,peak:1,friend:false};lastAt=-1;
+   // Phase B: the first party (and first hosted party) on this device, once each (partyFirsts.ts keeps two letters).
+   if(markPartyFirst('p'))count('mp:first_party');if(host&&markPartyFirst('h'))count('mp:first_host');
+   return;
   }
   case 'members':{
    const n=Number(bucket);if(!live||!Number.isInteger(n)||n<1)return;
@@ -73,6 +77,9 @@ export function countParty(event:string,bucket?:string,t=now()){
   case 'ended':case 'kicked':if(live){count('mp:'+event);close(t);}return;
  }
 }
+
+/** A Meet here (0) / Follow me (1) map ping was sent (the protocol's PingKind numbers; anything else is dropped). */
+export function countPartyPing(kind:number){if(kind===0)count('mp:ping_meet');else if(kind===1)count('mp:ping_follow');}
 
 /** True while this device is in a live party (Phase B: learnEvents' mp: twins). */
 export const partyLive=()=>live!==null;
@@ -102,4 +109,4 @@ let unhook:(()=>void)|null=null;
 export function watchPartyEnd(){unhook?.();unhook=onPageHide(()=>flushPartyEnd());return()=>{unhook?.();unhook=null;};}
 
 /** Tests: forget everything. */
-export function resetPartyEvents(){live=null;sent.clear();partyMs=0;sessionMin=0;lastAt=-1;nextAt=0;}
+export function resetPartyEvents(){live=null;sent.clear();partyMs=0;sessionMin=0;lastAt=-1;nextAt=0;resetPartyFirsts();}

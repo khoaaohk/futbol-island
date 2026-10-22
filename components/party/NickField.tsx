@@ -10,11 +10,12 @@ import styles from './party.module.css';
  * steps (Start a party card, Join card), never on the title screen. Held in memory for this page visit (lib/multiplayer/nick.ts),
  * shown only to the party, never stored, logged or sent to analytics. Invalid characters are dropped as the kid types.
  */
-export default function NickField({ onChange }: { onChange?: (nick: string | null) => void }) {
+/** `onRejected` (Oct 22 2026): a typed character was dropped by the filter. It carries nothing (PartyHost counts it as mp:name_bad). */
+export default function NickField({ onChange, onRejected }: { onChange?: (nick: string | null) => void; onRejected?: () => void }) {
   const [text, setText] = useState<string>(() => getNick() ?? '');
   const id = useId();
   const valid = normalizeNick(text) !== null;
-  const commit = (raw: string) => { const t = filterNickInput(raw); setText(t); setNick(t); onChange?.(getNick()); };
+  const commit = (raw: string) => { const t = filterNickInput(raw); if (t !== raw.slice(0, NICK_MAX)) onRejected?.(); setText(t); setNick(t); onChange?.(getNick()); };
   return (
     <div className={styles.nick} data-nick-field>
       <div className={styles.nickRow}>

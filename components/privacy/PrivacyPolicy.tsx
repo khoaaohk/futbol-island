@@ -15,7 +15,9 @@ import styles from './PrivacyPolicy.module.css';
  * Changed sections for the review to focus on: 1 (short version), 2, 4 (the code and the player number), 7 (what is collected, the
  * Play with friends and emote counts bullet from docs/analytics-multiplayer-plan.md §9, the two purposes), 7a (what we keep), 9 (never
  * collect), 10 (how we use it), 13 (sharing and selling: combined totals to sponsors), 14 (retention rows), 16 (questions / opt-out /
- * deletion), 17 (US state "sell / share" wording). This wording is a draft and must be reviewed by a lawyer (COPPA incl. the 2025
+ * deletion), 17 (US state "sell / share" wording). Phase B (Oct 22 2026, docs/analytics-multiplayer-plan.md §9): 7a "What we keep" now
+ * names the party service's daily totals, and 11 names the device-only "first party" mark (fi2-mp-firsts-v1). The weekly sponsor
+ * report in /admin is marked INTERNAL DRAFT and must not leave the team until a lawyer approves 13. This wording is a draft and must be reviewed by a lawyer (COPPA incl. the 2025
  * amendments, GDPR / UK GDPR and the Children's Code (GDPR-K), CCPA/CPRA and other US state laws) before any sponsor report leaves the team.
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
@@ -124,7 +126,7 @@ export default function PrivacyPolicy(){
   <section id="pp-friends"><h2 tabIndex={-1}>7a. Play with friends (optional)</h2>
    <p>Play with friends lets a small group of friends see each other on the island. It works only after a grown-up passes the grown-up check, and a grown-up can switch it off in Settings.</p>
    <p><b>What the other players in a party can see:</b> a colour chosen by the game (such as Red or Blue), the <b>first name only</b> that the player typed when starting or joining (letters only, 2 to 12 letters, needed to play with friends so friends can tell each other apart), their outfit, where they are on the island, and simple preset emotes such as a wave. There is no free-text chat, no voice, no photos, and no way to send a link or a message. Please type only a first name: never a last name, school, address or contact details.</p>
-   <p><b>What we keep:</b> nothing about who the players are. We do count, as anonymous totals from fixed lists, how Play with friends is used (section 7): for example how many parties started and their sizes in broad bands, never a code, a name or who played with whom. A party exists only while it is in use (an invite code works for 8 hours and a party lasts at most 12 hours). The first name is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. Like any website, the party service sees the internet address a connection comes from; it keeps only a short-lived scrambled version in memory to stop abuse.</p>
+   <p><b>What we keep:</b> nothing about who the players are. We do count, as anonymous totals from fixed lists, how Play with friends is used (section 7): for example how many parties started and their sizes in broad bands, never a code, a name or who played with whom. A party exists only while it is in use (an invite code works for 8 hours and a party lasts at most 12 hours). The first name is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. Like any website, the party service sees the internet address a connection comes from; it keeps only a short-lived scrambled version in memory to stop abuse. The party service keeps only daily totals, such as how many parties started, their sizes and lengths in broad bands, and how many connections failed, with no code, name or internet address.</p>
    <p><b>Controls:</b> whoever starts a party can remove a player, lock the party, change the code, reset a player’s name back to their colour, or end the party. Any player can leave, or hide or mute another player. If you see a name that should not be there, tell a grown-up.</p>
   </section>
   <section id="pp-tech"><h2 tabIndex={-1}>8. Technical information</h2>
@@ -146,7 +148,7 @@ export default function PrivacyPolicy(){
   <p>We do not show ads, and we do not use information for targeted advertising, for profiling children, or to send marketing.</p></section>
 
   <section id="pp-cookies"><h2 tabIndex={-1}>11. Cookies and browser storage</h2>
-   <p>The game does not use tracking or advertising cookies. It uses the browser’s local storage to keep the game on the device (section 3), and a per-tab session value for the visit counter that disappears when the tab is closed. Our administrators’ own sign-in uses a cookie that is never set for players.</p>
+   <p>The game does not use tracking or advertising cookies. It uses the browser’s local storage to keep the game on the device (section 3), and a per-tab session value for the visit counter that disappears when the tab is closed. Two small yes/no marks on the device help count first-time use without knowing who anyone is: whether this device has been in the sea before, and whether it has played in (or started) a party before; they never leave the device and are not part of a save code. Our administrators’ own sign-in uses a cookie that is never set for players.</p>
   </section>
 
   <section id="pp-services"><h2 tabIndex={-1}>12. Services that help run the game</h2>

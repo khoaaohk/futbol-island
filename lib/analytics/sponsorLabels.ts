@@ -6,10 +6,13 @@
 import {LESSON_TEXT} from './learningText.generated';
 import {PLAYER_BOOKS} from '../books/catalog';
 import {ALL_PLAYERS,cardDisplayName} from '../town/cardCollection';
+import {emoteLabels} from './emoteLabels';
 
 let lessons:Map<string,string>|null=null;
+let emotes:ReturnType<typeof emoteLabels>|null=null;
 export const sponsorLabels={
  lesson:(id:string)=>{lessons??=new Map(LESSON_TEXT.map(([,lid,name])=>[lid,name]));return lessons.get(id);},
  book:(key:string)=>(PLAYER_BOOKS as Record<string,{title:string}>)[key]?.title,
  card:(n:number)=>{const name=ALL_PLAYERS[n-1];return name?cardDisplayName(name):undefined;},
+ emote:(n:number)=>{emotes??=emoteLabels();return emotes[n]?.label;},
 };

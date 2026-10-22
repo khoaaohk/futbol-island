@@ -22,6 +22,7 @@ import {LIVE_COUNT_KEYS,LIVE_COUNT_LABEL,LIVE_MIGRATION,LIVE_OK_ROW,LIVE_WINDOWS
  type CountryTally,type LiveReport,type LiveRow,type LiveStatus,type LiveWindow,type Tally} from '@/lib/analytics/live';
 import {DAY_MIGRATION,DAY_OK_ROW,RAW_DAYS,addDays,clockPT,dateClockPT,pacificDay,shortDay,
  type AreaTally,type DayReport,type PlayerReport,type PlayerRow,type PlayersReport,type RowTotals} from '@/lib/analytics/day';
+import type {RelayStatsReport} from '@/lib/analytics/relayStatsTypes';
 import styles from './LivePanel.module.css';
 
 export type PanelView={mode:'live'}|{mode:'day';day:string}|{mode:'players';from:string;to:string}|{mode:'player';pid:string};
@@ -220,6 +221,14 @@ export default function LivePanel({view,onClose,countryName}:{view:PanelView|nul
   arm();document.addEventListener('visibilitychange',vis);
   return()=>{disarm();document.removeEventListener('visibilitychange',vis);};
  },[isLive,minutes,load]);
+ // "Parties now" (Oct 22 2026, Phase B): the relay's live gauge via /api/admin/party-stats (cached 60 s on the server), refreshed
+ // once a minute while the live view is open and visible. Nothing when the relay's stats are not configured.
+ const [parties,setParties]=useState<RelayStatsReport|null>(null);
+ useEffect(()=>{
+  if(!isLive)return;let gone=false;
+  const get=()=>{if(document.visibilityState!=='visible')return;const d=pacificDay();fetch(`/api/admin/party-stats?from=${d}&to=${d}`,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(!gone&&j&&j.status)setParties(j as RelayStatsReport);}).catch(()=>{});};
+  get();const t=setInterval(get,60_000);return()=>{gone=true;clearInterval(t);};
+ },[isLive]);
  // "3 min ago" keeps moving between polls (a 1 s tick only while the live view is open and visible).
  useEffect(()=>{if(!isLive)return;const t=setInterval(()=>{if(document.visibilityState==='visible')setNow(Date.now());},1000);return()=>clearInterval(t);},[isLive]);
  // Day / players / player: one load per view (the server caches 30 s); no polling.
@@ -270,6 +279,7 @@ export default function LivePanel({view,onClose,countryName}:{view:PanelView|nul
       <span className={styles.note}>{data?.status==='ok'?`updated ${fmtAgo(data.generatedAt,now)}`:''}</span>
      </div>
      {error&&<p className={styles.error} role="alert">{error}</p>}
+     <PartiesNow data={parties}/>
      {status!=='ok'&&<Warn status={status} live/>}
      {status==='ok'&&<>
       <Strip label="Where" items={(data!.byArea).map(a=>({key:a.key,text:`${spotIcon(a.key)} ${spotLabel(a.key)} ${a.n}`}))}/>
@@ -292,4 +302,15 @@ export default function LivePanel({view,onClose,countryName}:{view:PanelView|nul
    </div>
   </section>
  </div>;
+}
+
+/** "Parties now": live parties and players in parties from the relay's gauge (Phase B); a quiet note when it is not configured. */
+export function PartiesNow({data}:{data:RelayStatsReport|null}){
+ if(!data)return null;
+ if(data.status!=='ok'||!data.live)return <p className={styles.foot} data-parties-now={data.status}>Parties now: {data.status==='not-configured'?'relay stats not configured':'not available'}.</p>;
+ return <dl className={`${styles.facts} ${styles.summary}`} data-parties-now="ok">
+  <div><dt>Parties now</dt><dd>{data.live.parties}</dd></div>
+  <div><dt>Players in parties</dt><dd>{data.live.players}</dd></div>
+  {data.totals&&<div><dt>Peak today (relay)</dt><dd>{data.totals.peakParties} parties · {data.totals.peakPlayers} players</dd></div>}
+ </dl>;
 }

@@ -65,7 +65,9 @@ export function partyLocal(
 export const SLEEP_SAMPLE_MS = 500;
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
-  local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean }): PartyRuntime | null {
+  local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
+  /** A friend's emote was shown (Town counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
+  onEmoteSeen?: () => void }): PartyRuntime | null {
   if (!multiplayerEnabled()) return null;
   const conn = partyConnection();
   const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()) });
@@ -108,7 +110,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       avatars.remove(id); interp.drop(id); poses.delete(id); active.delete(id); spare.delete(id); ids.splice(i, 1);
     }
     const e = s.lastEmote;
-    if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you) avatars.emote(e.id, e.emote); }
+    if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you && avatars.emote(e.id, e.emote)) ctx.onEmoteSeen?.(); }
     if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; }
   }
   const applyFilters = () => { avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };

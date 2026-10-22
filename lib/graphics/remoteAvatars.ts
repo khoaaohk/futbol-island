@@ -48,7 +48,8 @@ export interface RemoteAvatars{
  /** Local choices (PartyHost Hide / Mute): hidden friends are not drawn at all (avatar, ring, label, emote bubble); muted friends' emotes are not shown. */
  setHidden(ids:ReadonlySet<MemberId>):void;
  setMuted(ids:ReadonlySet<MemberId>):void;
- emote(id:MemberId,e:Emote):void;
+ /** Plays a friend's emote; false when it is not shown (muted, hidden, inside a force field, unknown). */
+ emote(id:MemberId,e:Emote):boolean;
  /** The island ball hit this friend's force field: a short damped shake and a ripple from the impact normal (dome space). */
  bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
@@ -263,7 +264,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
   bumpField(id,nx,ny,nz){const e=byId.get(id);if(!e||!e.shield)return;e.shake=1;e.ripple=0;e.hx=nx;e.hy=ny;e.hz=nz;},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;e.hf=!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;if(em===Emote.PassBall||em===Emote.JuggleWithMe){e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;e.hf=!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;if(em===Emote.PassBall||em===Emote.JuggleWithMe){e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;

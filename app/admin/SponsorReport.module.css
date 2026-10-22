@@ -1,0 +1,32 @@
+/* The weekly Sponsor report (Oct 22 2026). Same card language as the sponsor Overview; the print rules live in SponsorReport.tsx
+   PRINT_CSS (they must reach the rest of the page, which a CSS module cannot select). Phone: one card per row. */
+.root{gap:16px}
+.draft{margin:0;padding:12px 16px;border-radius:16px;background:#ffe3a3;color:#3d2a00;font-size:14px;line-height:1.4;box-shadow:inset 6px 0 0 #c86a00}
+.head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.actions button{min-height:44px;padding:0 16px;border-radius:var(--btn-radius);font:700 15px var(--btn-font)}
+.actions button:disabled{opacity:.5}
+.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{background:var(--a-surface);border-radius:22px;box-shadow:0 6px 0 #183b3438;padding:16px 18px;display:grid;gap:4px;align-content:start;min-width:0}
+.label{font-size:13px;font-weight:700;color:var(--a-ink-2);text-transform:uppercase;letter-spacing:.04em}
+.value{font-size:30px;line-height:1.1}
+.value small{font-size:14px;color:var(--a-muted)}
+.none{font-size:18px;color:var(--a-muted)}
+.change{font-size:12px;color:var(--a-ink-2)}
+.note{font-size:12px;color:var(--a-muted)}
+.sub{margin:6px 0 0;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.sub div{display:contents}
+.sub dt{font-size:12px;color:var(--a-muted)}
+.sub dd{margin:0;font-size:13px;font-weight:700;text-align:right}
+.bars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.block{background:var(--a-surface);border-radius:22px;box-shadow:0 6px 0 #183b3438;padding:14px 18px;min-width:0}
+.block h3{margin:0 0 8px;font-size:15px}
+.bandList{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.bandList li{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.how{background:var(--a-surface);border-radius:22px;padding:14px 18px;font-size:13px;line-height:1.5}
+.how summary{font-weight:700;cursor:pointer}
+.how dt{font-weight:700;margin-top:8px}
+.how dd{margin:0}
+.exportLine{font-weight:700}
+@media (max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.cards,.bars{grid-template-columns:1fr}.actions{width:100%}.actions button{flex:1 1 auto}}

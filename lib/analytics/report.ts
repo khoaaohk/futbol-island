@@ -24,6 +24,7 @@ import {buildSponsor} from './sponsor';
 import {sponsorLabels} from './sponsorLabels';
 import {buildEmotes,buildParty} from './partyReport';
 import {emoteLabels} from './emoteLabels';
+import {emoteVariantLabels} from './emoteVariantLabels';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
 
@@ -114,7 +115,7 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
   trendRollups,firstTry:report.overview.current.firstTry,labels:sponsorLabels});
 
  // Oct 22 2026: Play with friends and emotes (lib/analytics/partyReport.ts), same rollups.
- report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels());
+ report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels(),emoteVariantLabels());
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}
@@ -122,6 +123,13 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  report.live=await store.live(new Date(now.getTime()-LIVE_WINDOW_MS).toISOString());
  if(days[0]<oldestRaw)report.notes.push(`Days older than ${oldestRaw===addDays(today,-13)?13:14} days come from the nightly daily totals.`);
  return report;
+}
+
+/** The weekly Sponsor report (lib/analytics/sponsorReport.ts): one range's rollups, merged (same loader as the dashboard). */
+export async function loadRangeMerged(store:AnalyticsStore|null,from:string,to:string,now=new Date()):Promise<{merged:ReturnType<typeof mergeRollups>;rollups:DailyRollup[]}>{
+ if(!store){const rollups:DailyRollup[]=[];return {merged:mergeRollups(rollups),rollups};}
+ const mode=await store.timeMode();const {rollups}=await loadRollups(store,dayList(from,to),now,mode);
+ return {merged:mergeRollups(rollups),rollups};
 }
 
 /** The route and the page: resolve the range on the store's clock, then build. */

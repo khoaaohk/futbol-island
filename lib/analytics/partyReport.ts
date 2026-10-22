@@ -13,13 +13,11 @@
  */
 import type {DailyRollup,Merged} from './core';
 import {MIN_SESSIONS,type Cell} from './learning';
-import {EMOTE_CONTEXTS,EMOTE_REACH,EMOTE_WIRE_IDS,PARTY_COUNT_EVENTS,PARTY_FAIL_REASONS,PARTY_FF_BUCKETS,PARTY_LEN_BUCKETS,PARTY_MIN_REACH,PARTY_PEAK_BUCKETS} from './countIds';
+import {EMOTE_CONTEXTS,EMOTE_REACH,EMOTE_VARIANT_COUNTS,EMOTE_WIRE_IDS,PARTY_COUNT_EVENTS,PARTY_FAIL_REASONS,PARTY_FF_BUCKETS,PARTY_LEN_BUCKETS,PARTY_MIN_REACH,PARTY_PEAK_BUCKETS,PARTY_SINCE,type EmoteVariantFamily} from './countIds';
 import {funnelMath} from './startReport';
 import type {EmoteGroup} from './emoteLabels';
 
-export {funnelMath};
-/** The day the mp: and em: ids were added (the build that sends them). Nothing before can carry them. */
-export const PARTY_SINCE='2026-10-22';
+export {funnelMath,PARTY_SINCE};
 export const MIN_PARTIES=5;
 const LABEL:Record<string,string>=Object.fromEntries(PARTY_COUNT_EVENTS.map(([e,l])=>['mp:'+e,l]));
 
@@ -36,6 +34,8 @@ export type PartyReport={
  daily:{day:string;party:Cell;solo:number}[];
  invites:{shared:Cell;copied:Cell;linkOpens:Cell;linkJoins:Cell;linkConv:number|null;perParty:number|null};
  controls:PartyRow[];
+ /** Phase B (P1): lessons / quizzes while in a party; first party and first hosted party per device, and repeat hosting. */
+ learning:PartyRow[];firsts:{party:Cell;host:Cell;repeatHosting:Cell};
 };
 export type EmoteRow={wire:number;label:string;group:EmoteGroup;value:Cell};
 export type EmoteReport={
@@ -43,7 +43,12 @@ export type EmoteReport={
  picks:Cell;sessions:number;emotingSessions:Cell;emotingShare:number|null;perEmoter:number|null;npcRate:number|null;
  btnSessions:Cell;wheelOpens:Cell;wheelNoPick:Cell;wheelConv:number|null;
  byEmote:EmoteRow[];contexts:PartyRow[];targets:PartyRow[];reach:PartyStep[];
+ /** Phase B (P1): streaks, emote-camera zooms, friends' emotes seen; which move of each multi-move emote (by table index). */
+ streaks:Cell;cam:Cell;seen:Cell;variants:EmoteVariantTable[];
 };
+export type EmoteVariantTable={family:EmoteVariantFamily;title:string;rows:{key:string;label:string;value:Cell}[]};
+const VARIANT_TITLE:Record<EmoteVariantFamily,string>={dance:'Dance moves',show:'Show-off skills',react:'Townsperson reactions to a show-off',hf:'High fives, thanks and well played',
+ wave:'Wave moves',cheer:'Cheer moves',laugh:'Laugh moves',pass:'Pass it routines',juggle:'Juggle with me routines',keepup:'Solo keep-up routines'};
 
 type M=Pick<Merged,'counts'|'countSessions'|'totals'|'areas'>;
 const statusOf=(to:string,m:M,prefix:string):PartyStatus=>to<PARTY_SINCE?'not_yet':Object.keys(m.counts).some(k=>k.startsWith(prefix))?'ok':'empty';
@@ -93,14 +98,16 @@ export function buildParty(m:M,range:{from:string;to:string},rollups:DailyRollup
   daily:rollups.map(d=>{const s=d.countSessions?.['mp:min']||0,p=d.counts?.['mp:min']||0,isl=Math.round((d.areaMs?.island||0)/60000);
    return {day:d.day,party:s>=MIN_SESSIONS?p:s>0?null:0,solo:Math.max(0,isl-(s>=MIN_SESSIONS?p:0))};}),
   invites:{shared,copied,linkOpens,linkJoins,linkConv:ratio(linkJoins,linkOpens),perParty:shared===null||copied===null?null:ratio(shared+copied,created)},
-  controls:['new_code','lock','unlock','kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','sheet','share_tap','share_fail','gate_skip','gate_back','gate_wrong']
+  controls:['new_code','lock','unlock','kick','name_reset','hide','mute','tab_code','tab_list','end_tap','end','leave','ended','kicked','sheet','share_tap','share_fail','gate_skip','gate_back','gate_wrong','name_bad','ping_meet','ping_follow']
    .map(id=>row('mp:'+id)),
+  learning:['lesson','quiz','quiz_done'].map(id=>row('mp:'+id)),
+  firsts:(()=>{const party=guarded('mp:first_party'),host=guarded('mp:first_host');return {party,host,repeatHosting:created===null||host===null?null:Math.max(0,created-host)};})(),
  };
  r.hidden=hidden();
  return r;
 }
 
-export function buildEmotes(m:M,range:{from:string;to:string},labels:Record<number,{label:string;group:EmoteGroup}>={}):EmoteReport{
+export function buildEmotes(m:M,range:{from:string;to:string},labels:Record<number,{label:string;group:EmoteGroup}>={},variantLabels:Partial<Record<EmoteVariantFamily,string[]>>={}):EmoteReport{
  const {cell,guarded,hidden}=cells(m),S=m.countSessions;
  const row=(id:string,label:string):PartyRow=>({id,label,value:guarded(id)});
  const picks=guarded('em:pick'),emoting=cell(S['em:reach_1']),sessions=m.totals.sessions;
@@ -115,6 +122,9 @@ export function buildEmotes(m:M,range:{from:string;to:string},labels:Record<numb
   contexts:EMOTE_CONTEXTS.map(c=>row('em:ctx_'+c,CTX_LABEL[c])),
   targets:[row('em:to_npc','A townsperson answered'),row('em:to_party','Sent to friends in a party'),row('em:solo','Nobody near'),row('em:refused','A field player said “not now”')],
   reach:EMOTE_REACH.map(n=>({id:'em:reach_'+n,label:`${n}+ emotes in a visit`,sessions:cell(S['em:reach_'+n])})),
+  streaks:guarded('em:streak'),cam:guarded('em:cam'),seen:guarded('em:seen'),
+  variants:(Object.entries(EMOTE_VARIANT_COUNTS) as [EmoteVariantFamily,number][]).map(([family,n])=>({family,title:VARIANT_TITLE[family],
+   rows:Array.from({length:n},(_,i)=>({key:`em:${family}_${i}`,label:variantLabels[family]?.[i]??`Move ${i+1}`,value:guarded(`em:${family}_${i}`)}))})),
  };
  r.hidden=hidden();
  return r;

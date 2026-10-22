@@ -14,6 +14,20 @@ added; the host's end bands ride the final beat through a new tracker `onPageHid
 day to say plainly that anonymous usage data IS collected, for running the game and for combined sponsor totals (legal review
 pending, `[LAWYER]` comment in components/privacy/PrivacyPolicy.tsx). The sponsor report stays internal: no sponsor export in Phase A.
 
+**Status (Oct 22 2026, Phase B admin side; branch `analytics-phase-b-admin`).** Built: the `GET /stats` contract
+(`lib/analytics/relayStatsTypes.ts`: payload type, tolerant parser, fixture; the relay agent produces it), `lib/analytics/relayStatsAdmin.ts`
++ `app/api/admin/party-stats` (server-only `RELAY_STATS_URL` / `RELAY_STATS_TOKEN`, 60 s cache, "Relay stats not configured"
+without them), the "Health" block in Friends & parties (`app/admin/RelayHealth.tsx`) and "Parties now" in the live panel;
+`SPONSOR_METRICS` += `social`, `emotes`; the weekly **Sponsor report** tab (`lib/analytics/sponsorReport.ts`,
+`app/api/admin/sponsor-report`, `app/admin/SponsorReport.tsx`: ISO weeks, ≥10 suppression, rounded reach, CSV, print CSS,
+"Internal draft" banner); `PARTY_SINCE` moved to countIds.ts. P1 client ids: variants by table index (`em:dance_0-9`, `em:show_0-9`,
+`em:react_0-3`, `em:hf_0-19`, `em:wave|cheer|laugh_0-5`, `em:pass_0-5`, `em:juggle_0-5`, `em:keepup_0-2`; the graphics report the pick through
+`lib/town/emoteVariantHook.ts`, Town counts the local player's), `em:streak`, `em:cam`, `em:seen` (townBridge `onEmoteSeen`), `mp:lesson`
+/ `mp:quiz` / `mp:quiz_done` (learnEvents.ts), `mp:first_party` / `mp:first_host` (`fi2-mp-firsts-v1`, a device key), `mp:name_bad`.
+`mp:ping_meet` / `mp:ping_follow` are allowlisted with `countPartyPing()`, but **no UI sends a ping yet**, so they have no call
+site until the Meet here / Follow me buttons exist. Not done: the device / country split for the two new sponsor cards (needs SQL,
+Phase C) and the weekly reach snapshot (Phase C). Policy: §7a "What we keep" and the §11 storage line added; legal review still required.
+
 ## 0. Decision summary
 
 **Finding 1: no multiplayer data is collected today.**

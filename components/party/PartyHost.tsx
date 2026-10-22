@@ -22,7 +22,7 @@ import styles from './party.module.css';
  *  The bucket is a fixed string (a fail reason, 'link' / 'typed', or the member count): never a code, a name or a member id. */
 type Track = 'open' | 'sheet' | 'open_link' | 'gate_show' | 'gate_skip' | 'gate_ok' | 'gate_back' | 'gate_wrong' | 'name_ok'
   | 'create_tap' | 'created' | 'join_tap' | 'live_host' | 'live_guest' | 'members' | 'share_tap' | 'share_ok' | 'copy_ok' | 'share_fail' | 'new_code' | 'lock' | 'unlock'
-  | 'kick' | 'name_reset' | 'hide' | 'mute' | 'tab_code' | 'tab_list' | 'end_tap' | 'end' | 'leave' | 'ended' | 'kicked' | 'fail' | 'fail_create';
+  | 'kick' | 'name_reset' | 'hide' | 'mute' | 'tab_code' | 'tab_list' | 'end_tap' | 'end' | 'leave' | 'ended' | 'kicked' | 'fail' | 'fail_create' | 'name_bad';
 type View = 'none' | 'menu' | 'gate' | 'join' | 'sheet';
 type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
@@ -319,7 +319,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             </header>
             <FadeScroll>
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
-            <NickField onChange={(n) => { setNamed(n !== null); if (n !== null) track.current?.('name_ok'); }} />
+            <NickField onChange={(n) => { setNamed(n !== null); if (n !== null) track.current?.('name_ok'); }} onRejected={() => track.current?.('name_bad')} />
             <div className={styles.stack}>
               <button type="button" className={styles.primary} disabled={busy || !named} onClick={() => { track.current?.('create_tap'); afterGate({ kind: 'create' }); }}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
               <button type="button" className={styles.secondary} disabled={busy || !named} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); joinVia.current = 'typed'; }}>Join with a code</button>
@@ -330,7 +330,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       )}
       {view === 'join' && (
         <Card label="Join with a code" onClose={closeJoin} grow from={null}>
-          {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => { track.current?.('join_tap'); afterGate({ kind: 'join', code: c }); }} />}
+          {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => { track.current?.('join_tap'); afterGate({ kind: 'join', code: c }); }} onNameRejected={() => track.current?.('name_bad')} />}
         </Card>
       )}
       {view === 'sheet' && (live || busy || state.status === 'connecting') && (

@@ -4,6 +4,7 @@
 // emote (another kind, or the clock restarting) draws the next one from its role's shuffled bag. One scratch pose, no per-frame allocation.
 import type * as T from 'three';
 import {BC, BODY_CH, BODY_NPC_AMP, BODY_ROLE, isBodyEmote, legBend, npcAnswerFor, pickBodyVariant, sampleBodyPose} from '../town/emoteBody';
+import {BODY_VARIANT_FAMILY, emitEmoteVariant} from '../town/emoteVariantHook';
 
 type J = T.Object3D;
 interface Joints {ls: J; rs: J; le: J; re: J; pelvis: J | null; torso: J | null; head: J | null; lh: J | null; rh: J | null; lk: J | null; rk: J | null; la: J | null; ra: J | null}
@@ -43,7 +44,7 @@ export function applyBodyEmote(root: J, kind: number, age: number, dur: number, 
   let s = states.get(root);
   if (!s) { s = {kind: -1, age: 0, v: 0, role: roleOf(root)}; states.set(root, s); }
   if (force >= 0) { s.kind = kind; s.v = force; } // contact sheets / tests: a fixed variant
-  else if (s.kind !== kind || age < s.age - .25) { s.kind = kind; s.v = pickBodyVariant(kind, s.role); }
+  else if (s.kind !== kind || age < s.age - .25) { s.kind = kind; s.v = pickBodyVariant(kind, s.role); if (s.role === BODY_ROLE.Self) emitEmoteVariant(BODY_VARIANT_FAMILY[kind], s.v, root); } // analytics: Town counts your own pick (emoteVariantHook.ts)
   else if (s.role === BODY_ROLE.Npc && age < .25) { const a = npcAnswerFor(kind); if (a >= 0) s.v = a; } // your pick may land a frame after theirs
   s.age = age;
   const k = ramp(age, dur); if (k <= 0) return true;

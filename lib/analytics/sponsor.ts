@@ -13,14 +13,20 @@
  */
 import type {DailyRollup,Merged} from './core';
 import type {Cell} from './learning';
-import {ENGAGE_ARCADE_GAMES,ENGAGE_BOOKS,ENGAGE_BOOT_MODELS,ENGAGE_BOOT_PATTERNS,ENGAGE_CARD_SOURCES,ENGAGE_CARD_TIERS,ENGAGE_JERSEY_PATTERNS,ENGAGE_READ_BUCKETS} from './countIds';
+import {ENGAGE_ARCADE_GAMES,ENGAGE_BOOKS,ENGAGE_BOOT_MODELS,ENGAGE_BOOT_PATTERNS,ENGAGE_CARD_SOURCES,ENGAGE_CARD_TIERS,ENGAGE_JERSEY_PATTERNS,ENGAGE_READ_BUCKETS,
+ EMOTE_WIRE_IDS,PARTY_LEN_BUCKETS,PARTY_PEAK_BUCKETS,PARTY_SINCE} from './countIds';
 
-export const SPONSOR_METRICS=['games','shirts','cleats','cards','watched','books','reading','quizzes'] as const;
+/** Oct 22 2026 (Phase B of docs/analytics-multiplayer-plan.md §8): + 'social' (Minutes with friends) and 'emotes' (Emotes used),
+ *  counted by the mp: / em: ids; "not tracked yet" until the first of them arrives (PARTY_SINCE, the ENGAGE_SINCE pattern). */
+export const SPONSOR_METRICS=['games','shirts','cleats','cards','watched','books','reading','quizzes','social','emotes'] as const;
 export type SponsorMetricId=typeof SPONSOR_METRICS[number];
 /** The day the `en:` events were added (the build that sends them). Nothing before can carry them. */
 export const ENGAGE_SINCE='2026-10-20';
 /** Same small-number rule as lib/analytics/learning.ts MIN_SESSIONS (repeated so the client bundle never loads the lesson text). */
 export const MIN_SESSIONS=5;
+/** Party-band rule (lib/analytics/partyReport.ts MIN_PARTIES): averages from the party histogram need 5 parties. */
+export const MIN_PARTIES=5;
+export {PARTY_SINCE};
 
 /**
  * Which headline metric a counter id adds to (null = none). The SQL drill-down uses the same rule
@@ -57,8 +63,8 @@ export type SponsorReport={from:string;to:string;prevFrom:string;prevTo:string;m
  kpis:{sessions:number;prevSessions:number|null;visitorDays:number;prevVisitorDays:number|null;perDay:number;prevPerDay:number|null;
   avgSessionMs:number;prevAvgSessionMs:number|null;engagedMs:number}};
 
-type Counts={counts:Record<string,number>;countSessions:Record<string,number>;bookMs:number;sessions:number};
-type Labels={card?:(n:number)=>string|undefined;lesson?:(id:string)=>string|undefined;book?:(key:string)=>string|undefined};
+type Counts={counts:Record<string,number>;countSessions:Record<string,number>;bookMs:number;sessions:number;visitors:number;islandMs:number};
+type Labels={card?:(n:number)=>string|undefined;lesson?:(id:string)=>string|undefined;book?:(key:string)=>string|undefined;emote?:(n:number)=>string|undefined};
 
 const sum=(rec:Record<string,number>,ids:(id:string)=>boolean)=>Object.entries(rec).reduce((a,[k,v])=>ids(k)?a+(v||0):a,0);
 const maxOf=(rec:Record<string,number>,ids:(id:string)=>boolean)=>Object.entries(rec).reduce((a,[k,v])=>ids(k)?Math.max(a,v||0):a,0);
@@ -69,6 +75,15 @@ const pre=(p:string)=>(k:string)=>k.startsWith(p);
 const ratio=(a:Cell,b:Cell)=>a===null||b===null||!b?null:a/b;
 const addCells=(cells:Cell[]):Cell=>cells.some(v=>v===null)?null:cells.reduce<number>((a,v)=>a+(v||0),0);
 const title=(s:string)=>s[0].toUpperCase()+s.slice(1);
+/** Sessions that carried `id` (a session count), withheld under MIN_SESSIONS. */
+const sess=(c:Counts,id:string):Cell=>{const s=c.countSessions[id]||0;return s>=MIN_SESSIONS?s:s>0?null:0;};
+/** Party-histogram bands (one increment per party): a band under MIN_PARTIES parties is withheld; zero bands dropped. */
+const partyBands=(c:Counts,bands:readonly (readonly [string,string])[]):SponsorItem[]=>bands.map(([id,label])=>{const v=c.counts['mp:'+id]||0;return {key:id,label,value:v>=MIN_PARTIES?v:v>0?null:0} as SponsorItem;}).filter(i=>i.value!==0);
+const PEAK_MID:Record<string,number>={peak_1:1,peak_2:2,peak_3_4:3.5,peak_5_8:6.5,peak_9_12:10.5,peak_13_20:16.5};
+/** ≈ players per party from the size bands (band midpoints), once 5+ parties are in them. */
+export function avgPartySize(c:{counts:Record<string,number>}):number|null{const n=PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0),0);return n>=MIN_PARTIES?PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0)*PEAK_MID[id],0)/n:null;}
+/** The emote groups (countIds.ts EMOTE_WIRE_IDS ranges): key, label, first and last local emote number. */
+const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel','On foot (the wheel)',0,9],['ride','On a ride',10,18],['fly','Flying',20,24],['swim','Swimming',30,34],['npc','With a townsperson',40,49]];
 
 const GAME_LABEL:Record<string,string>={live:'Island Strikers',runner:'Breakaway Run',tennis:'Futbol Tennis',pinball:'Futbol Pinball',puzzle:'Pass Puzzles'};
 const SOURCE_LABEL:Record<string,string>={ball:'Hidden ball found',npc:'Islander gift',quiz:'Perfect quiz',explore:'Exploring',journey:'Learning Journey',story:'Story finished',path:'Path finished',pack:'Card pack',starter:'Starter kit'};
@@ -86,10 +101,10 @@ function itemsBy(c:Counts,prefix:string,label:(k:string)=>string,limit=10,detail
 }
 
 type Def={id:SponsorMetricId;label:string;unit:string;how:string;gap?:string;
- parts:{key:string;label:string;test:(id:string)=>boolean;engage:boolean}[];
+ parts:{key:string;label:string;test:(id:string)=>boolean;engage:boolean;party?:boolean}[];
  /** Reading: the value is minutes of foreground time, not a counter sum. */
  minutes?:boolean;
- detail:(c:Counts,live:boolean,lab:Labels,extra:Extra)=>{breakdowns:SponsorBreakdown[];stats:SponsorStat[]}};
+ detail:(c:Counts,live:boolean,lab:Labels,extra:Extra,partyLive:boolean)=>{breakdowns:SponsorBreakdown[];stats:SponsorStat[]}};
 type Extra={firstTry:{right:number;tries:number}|null;arcadeMs:number;studioMs:number};
 
 const DEFS:Def[]=[
@@ -146,17 +161,39 @@ const DEFS:Def[]=[
    return {breakdowns:[{id:'top',title:'Most taken quizzes',unit:'started',items:itemsBy(c,'ls:',k=>l.lesson?.(k)??k,10,k=>{const s=c.counts['ls:'+k]||0,f=c.counts['lf:'+k]||0;return s?`${Math.round(Math.min(1,f/s)*100)}% finished`:undefined;})}],
     stats:[{label:'Finished',value:fin,format:'int'},{label:'Finished per start',value:ratio(fin,st),format:'pct'},{label:'All right first try',value:all,format:'int'},
      {label:'First-try answers right',value:x.firstTry&&x.firstTry.tries?x.firstTry.right/x.firstTry.tries:null,format:'pct',hint:'Every question’s first attempt, questions with 5+ sessions'}]};}},
+ {id:'social',label:'Minutes with friends',unit:'minutes',
+  how:'Whole foreground minutes played while in a live Play with friends party (each player’s own device counts its own minutes once each minute is complete; hidden tabs do not count). Never a party code, a name or who played with whom.',
+  gap:'Party sizes come from the host’s device when a party ends (approximate until the party service’s own totals are live).',
+  parts:[{key:'min',label:'Minutes in a party',test:k=>k==='mp:min',engage:false,party:true}],
+  detail:(c,_live,_l,_x,pl)=>{const mins=one(c,'mp:min'),created=one(c,'mp:created'),inParty=sess(c,'mp:in'),islandMin=Math.round(c.islandMs/60000);
+   return {breakdowns:[{id:'size',title:'Party size',unit:'parties',pending:!pl,note:`One per party, from the host’s device; bands under ${MIN_PARTIES} parties are withheld.`,items:partyBands(c,PARTY_PEAK_BUCKETS)},
+     {id:'length',title:'Party length',unit:'parties',pending:!pl,items:partyBands(c,PARTY_LEN_BUCKETS)}],
+    stats:[{label:'Share of island minutes in a party',value:mins===null||!islandMin?null:Math.min(1,mins/islandMin),format:'pct',pending:!pl},
+     {label:'Average party size',value:avgPartySize(c),format:'dec',hint:`Players at once, from the size bands (${MIN_PARTIES}+ parties)`,pending:!pl},
+     {label:'Parties per active player',value:created===null||!c.visitors?null:created/c.visitors,format:'dec',hint:'Parties started ÷ daily players (visitor-days)',pending:!pl},
+     {label:'Sessions in a party',value:inParty,format:'int',pending:!pl},{label:'Share of sessions in a party',value:inParty===null||!c.sessions?null:Math.min(1,inParty/c.sessions),format:'pct',pending:!pl}]};}},
+ {id:'emotes',label:'Emotes used',unit:'emotes',
+  how:'One each time a player plays a preset emote (a wave, a high five, a dance, a trick on a ride …) and it is accepted. Preset emotes only: never who an emote was aimed at.',
+  parts:EMOTE_GROUPS.map(([key,label,a,b])=>({key,label,test:(k:string)=>{const m=/^em:e(\d+)$/.exec(k);return !!m&&Number(m[1])>=a&&Number(m[1])<=b;},engage:false,party:true})),
+  detail:(c,_live,l,_x,pl)=>{const picks=one(c,'em:pick'),emoting=sess(c,'em:reach_1');
+   return {breakdowns:[{id:'top',title:'Most used emotes',unit:'times',pending:!pl,items:items(c,EMOTE_WIRE_IDS.map(String),'em:e',k=>l.emote?.(Number(k))??`Emote ${k}`).slice(0,10)}],
+    stats:[{label:'Emotes per active player',value:picks===null||!c.visitors?null:picks/c.visitors,format:'dec',hint:'Emotes ÷ daily players (visitor-days)',pending:!pl},
+     {label:'Emote engagement (sessions that emoted)',value:emoting===null||!c.sessions?null:Math.min(1,emoting/c.sessions),format:'pct',pending:!pl},
+     {label:'Emotes per emoting session',value:ratio(picks,emoting),format:'dec',pending:!pl},
+     {label:'A townsperson answered',value:ratio(one(c,'em:to_npc'),picks),format:'pct',pending:!pl}]};}},
 ];
 
-function countsOf(m:Pick<Merged,'counts'|'countSessions'|'activities'|'totals'>):Counts{
- return {counts:m.counts||{},countSessions:m.countSessions||{},bookMs:m.activities.find(a=>a.activity==='book')?.ms||0,sessions:m.totals.sessions};
+function countsOf(m:Pick<Merged,'counts'|'countSessions'|'activities'|'totals'>&{areas?:Merged['areas']}):Counts{
+ return {counts:m.counts||{},countSessions:m.countSessions||{},bookMs:m.activities.find(a=>a.activity==='book')?.ms||0,sessions:m.totals.sessions,
+  visitors:m.totals.visitors||0,islandMs:m.areas?.find(a=>a.area==='island')?.ms||0};
 }
-const rollCounts=(r:DailyRollup):Counts=>({counts:r.counts||{},countSessions:r.countSessions||{},bookMs:r.activityMs?.book||0,sessions:r.sessions});
+const rollCounts=(r:DailyRollup):Counts=>({counts:r.counts||{},countSessions:r.countSessions||{},bookMs:r.activityMs?.book||0,sessions:r.sessions,visitors:r.visitors||0,islandMs:r.areaMs?.island||0});
 const engageIn=(c:Record<string,number>)=>Object.keys(c).some(k=>k.startsWith('en:'));
+const partyIn=(c:Record<string,number>)=>Object.keys(c).some(k=>k.startsWith('mp:')||k.startsWith('em:'));
 
-function totalOf(d:Def,c:Counts,live:boolean):Cell{
+function totalOf(d:Def,c:Counts,live:boolean,pending:(p:Def['parts'][number])=>boolean=p=>p.engage&&!live):Cell{
  if(d.minutes)return c.sessions>=MIN_SESSIONS?Math.round(c.bookMs/60000):c.sessions>0?null:0;
- const parts=d.parts.filter(p=>!p.engage||live);if(!parts.length)return 0;
+ const parts=d.parts.filter(p=>!pending(p));if(!parts.length)return 0;
  return guarded(c,k=>parts.some(p=>p.test(k)));
 }
 
@@ -166,22 +203,24 @@ export type SponsorInput={from:string;to:string;merged:Merged;rollups:DailyRollu
 export function buildSponsor({from,to,merged,rollups,prev,trendRollups,firstTry=null,labels={}}:SponsorInput):SponsorReport{
  const cur=countsOf(merged),pc=prev?countsOf(prev.merged):null;
  const live=engageIn(cur.counts)||(!!pc&&engageIn(pc.counts));
+ const partyLive=partyIn(cur.counts)||(!!pc&&partyIn(pc.counts));
+ const isPending=(p:Def['parts'][number])=>(p.engage&&!live)||(!!p.party&&!partyLive);
  const trend=(trendRollups&&trendRollups.length>rollups.length?trendRollups:rollups);
  const act=(re:RegExp)=>merged.activities.filter(a=>re.test(a.activity)).reduce((a,r)=>a+r.ms,0);
  const extra:Extra={firstTry,arcadeMs:act(/^arcade_(?!lobby)/),studioMs:act(/^kit_studio$/)};
  const metrics=DEFS.map((d):SponsorMetric=>{
-  const pending=d.parts.filter(p=>p.engage&&!live);
+  const pending=d.parts.filter(isPending);
   const status:SponsorMetric['status']=pending.length===d.parts.length?'none':pending.length?'partial':'ok';
-  const total=status==='none'?null:totalOf(d,cur,live),prevT=status==='none'||!pc?null:totalOf(d,pc,live);
-  const {breakdowns,stats}=d.detail(cur,live,labels,extra);
-  const parts:SponsorPart[]=d.minutes?[]:d.parts.map(p=>({key:p.key,label:p.label,pending:p.engage&&!live,value:p.engage&&!live?null:guarded(cur,p.test)}));
+  const total=status==='none'?null:totalOf(d,cur,live,isPending),prevT=status==='none'||!pc?null:totalOf(d,pc,live,isPending);
+  const {breakdowns,stats}=d.detail(cur,live,labels,extra,partyLive);
+  const parts:SponsorPart[]=d.minutes?[]:d.parts.map(p=>({key:p.key,label:p.label,pending:isPending(p),value:isPending(p)?null:guarded(cur,p.test)}));
   if(parts.length>1)breakdowns.unshift({id:'parts',title:d.id==='games'?'By game':d.id==='cards'?'How they were found':'By kind',unit:d.unit,
    items:parts.filter(p=>!p.pending&&p.value!==0).map(p=>({key:p.key,label:p.label,value:p.value})).sort((a,b)=>(b.value??0)-(a.value??0))});
   return {id:d.id,label:d.label,unit:d.unit,status,total,prev:prevT,
-   trend:status==='none'?[]:trend.map(r=>totalOf(d,rollCounts(r),live)),
-   daily:status==='none'?[]:rollups.map(r=>({day:r.day,value:totalOf(d,rollCounts(r),live)})),
+   trend:status==='none'?[]:trend.map(r=>totalOf(d,rollCounts(r),live,isPending)),
+   daily:status==='none'?[]:rollups.map(r=>({day:r.day,value:totalOf(d,rollCounts(r),live,isPending)})),
    parts,breakdowns,stats,how:d.how,
-   gap:[pending.length?`Not tracked yet: ${pending.map(p=>p.label).join(', ')} (counted from the ${ENGAGE_SINCE} build once it is live).`:'',d.gap||''].filter(Boolean).join(' ')||undefined};
+   gap:[pending.length?`Not tracked yet: ${pending.map(p=>p.label).join(', ')} (counted from the ${pending.some(p=>p.party)?PARTY_SINCE:ENGAGE_SINCE} build once it is live).`:'',d.gap||''].filter(Boolean).join(' ')||undefined};
  });
  const t=merged.totals,pt=prev?.merged.totals;
  return {from,to,prevFrom:prev?.from??'',prevTo:prev?.to??'',min:MIN_SESSIONS,engageLive:live,engageSince:ENGAGE_SINCE,
