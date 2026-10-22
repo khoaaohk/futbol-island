@@ -9,6 +9,8 @@ import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
  * (a Real football fact with its plain-text source, a Coaching idea or Island story, never a link) and the calm breath notes.
  * Renders only when the dive store changes (a find, a note, going under or coming up).
  */
+/** Whether an edge chip has shown yet this page visit (the first one may wait longer for the welcome toast and lesson cards). */
+let edgeChipSeen=false;
 export default function DiveHud(){
  const v=useSyncExternalStore(diveStore.subscribe,diveStore.get,diveStore.server);
  // A note fades by itself after a few seconds (one timer while one shows; none at rest).
@@ -19,7 +21,10 @@ export default function DiveHud(){
  const laneBusy=useToastLaneBusy('dive-edge'),chip=v.banner&&!laneBusy?v.banner:'';
  useEffect(()=>{if(!chip)return;if(!toastLane.request('dive-edge'))return;const t=setTimeout(()=>diveStore.set({banner:''}),2400);return ()=>{clearTimeout(t);toastLane.release('dive-edge');};},[chip]);
  // A chip that waited 4 s behind other notes is stale (the arrival note already names the zone): it is dropped, never shown late.
- useEffect(()=>{if(!v.banner||chip)return;const t=setTimeout(()=>diveStore.set({banner:''}),4000);return ()=>clearTimeout(t);},[v.banner,chip]);
+ // Oct 21 2026 (user: go with the recommendation): the FIRST edge chip of a visit may wait 10 s (a fresh save queues the welcome toast and
+ // the one-time lesson cards ahead of it); later chips keep the 4 s limit.
+ useEffect(()=>{if(!v.banner||chip)return;const t=setTimeout(()=>diveStore.set({banner:''}),edgeChipSeen?4000:10000);return ()=>clearTimeout(t);},[v.banner,chip]);
+ useEffect(()=>{if(chip)edgeChipSeen=true;},[chip]);
  // Oct 20 2026 (user): swim up / down inside the dive zone; later that day the reef became shallow, so these rise to the top (air) or dip lower over the reef, and the diver follows the seabed. Icon-only, held (pointer down / up), the water buttons' look; Q / Z on desktop.
  const hold=(dir:'up'|'down',on:boolean)=>(e:React.PointerEvent<HTMLButtonElement>)=>{e.preventDefault();if(on)e.currentTarget.setPointerCapture?.(e.pointerId);diveLift[dir]=on;};
  const depthBtn=(dir:'up'|'down')=><button type="button" className="dive-depth-btn" data-dive-depth={dir} aria-label={dir==='up'?'Rise toward the top (hold) · Q':'Dip lower over the reef (hold) · Z'} title={dir==='up'?'Rise · Q':'Dip lower · Z'}
