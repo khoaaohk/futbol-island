@@ -50,7 +50,7 @@
 .boxWrap{display:inline-flex;align-items:center;gap:6px}
 .dash{font:800 22px/1 system-ui,sans-serif}
 .box{width:44px;height:56px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:800 26px/1 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;text-transform:uppercase;caret-color:transparent}
-.members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left;max-height:min(46vh,380px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left}
 .member{display:flex;align-items:center;gap:6px;min-height:44px}
 .member[data-away]{opacity:.55}
 .zone{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--btn-mint)}
@@ -73,3 +73,16 @@
 .inviteBlock{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-bottom:4px}
 .inviteBlock .qr,.inviteBlock .qrWait{width:120px;height:120px}
 .inviteBlock .row{flex-wrap:wrap;justify-content:center}
+
+/* Code | Party segmented control under the header */
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;background:var(--btn-mint)}
+.tab{min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--btn-ink);font:700 15px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;transition:background .15s ease-out}
+.tab[aria-selected=true]{background:var(--btn-green);color:var(--btn-ink-on-dark)}
+.tab:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
+.panel{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+.panel[hidden]{display:none}
+.codeActions{margin-top:8px;align-items:stretch}
+.codeActions .small{opacity:.85}
+.codeFresh{animation:codeGlow 1.3s ease-out}
+@keyframes codeGlow{0%{opacity:0;transform:translateY(8px) scale(.96);text-shadow:0 0 18px var(--btn-gold)}35%{opacity:1;transform:none;text-shadow:0 0 18px var(--btn-gold)}100%{text-shadow:0 0 0 transparent}}
+@media(prefers-reduced-motion:reduce){.codeFresh{animation:none;text-shadow:0 0 14px var(--btn-gold)}.tab{transition:none}}

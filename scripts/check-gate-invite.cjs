@@ -47,7 +47,25 @@ require('fs').mkdirSync(out, { recursive: true });
       await p.waitForSelector('[data-party-sheet]'); await p.waitForTimeout(800);
       await p.screenshot({ path: `${out}/${name}-5-sheet.png` });
       const sheet = await p.evaluate(() => document.querySelector('[data-party-sheet]').innerText.replace(/\n+/g, ' | '));
-      console.log(name, 'sheet:', sheet); if (!/End party[\s\S]*Lock|Lock[\s\S]*End party/i.test(sheet)) { fail++; console.log(name, 'FAIL: no host controls'); }
+      console.log(name, 'sheet:', sheet);
+      const tabs = await p.evaluate(() => [...document.querySelectorAll('[role=tab]')].map((x) => [x.innerText, x.getAttribute('aria-selected')]));
+      console.log(name, 'tabs:', JSON.stringify(tabs)); if (tabs.length !== 2 || tabs[0][1] !== 'true' || !/^Party \(1\)$/.test(tabs[1][0])) { fail++; console.log(name, 'FAIL: tabs / default Code'); }
+      if (!/New code[\s\S]*Close to new friends/.test(sheet)) { fail++; console.log(name, 'FAIL: no code actions'); }
+      const code1 = await p.textContent('[data-party-code]');
+      await p.click('[data-party-new-code]'); await p.waitForTimeout(500);
+      await p.screenshot({ path: `${out}/${name}-5b-newcode.png` });
+      await p.waitForTimeout(1500);
+      const code2 = await p.textContent('[data-party-code]');
+      console.log(name, 'code', code1, '->', code2); if (code1 === code2) { fail++; console.log(name, 'FAIL: New code did not change the code'); }
+      await p.click('[data-party-lock]'); await p.waitForTimeout(500);
+      if (!(await p.evaluate(() => !!document.querySelector('[data-party-closed]')))) { fail++; console.log(name, 'FAIL: no Closed badge'); }
+      await p.screenshot({ path: `${out}/${name}-5c-closed.png` });
+      await p.click('[data-party-lock]'); await p.waitForTimeout(300);
+      await p.focus('#party-tab-code'); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(400);
+      const sel = await p.evaluate(() => [document.activeElement.id, document.activeElement.getAttribute('aria-selected'), document.querySelector('#party-panel-party').hidden]);
+      console.log(name, 'after ArrowRight', JSON.stringify(sel)); if (sel[0] !== 'party-tab-party' || sel[1] !== 'true' || sel[2]) { fail++; console.log(name, 'FAIL: arrow key tab switch'); }
+      await p.screenshot({ path: `${out}/${name}-5d-party-tab.png` });
+      if (!/End party for everyone/.test(await p.innerText('#party-panel-party'))) { fail++; console.log(name, 'FAIL: no End party on Party tab'); }
       await p.click('[data-party-sheet] button:has-text("Done")'); await p.waitForTimeout(1200);
       await p.screenshot({ path: `${out}/${name}-6-hud.png` });
       await p.click('[data-party-open]'); await p.waitForTimeout(900);

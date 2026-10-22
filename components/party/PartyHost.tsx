@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
@@ -126,6 +126,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const [queue, setQueue] = useState<Note[]>([]);
   const [shown, setShown] = useState<string | null>(null);
   const [kickPrompt, setKickPrompt] = useState(false);
+  const [tab, setTab] = useState<'code' | 'party'>('code'); // remembered while this party lives; a new party starts on Code
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const everLive = useRef(false);
   const track = useRef(onTrack); track.current = onTrack;
   const joining = useRef<'host' | 'guest' | null>(null);
@@ -197,7 +199,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   }, [state.status, state.error, state.members.length, text]);
   useEffect(() => {
     if (live) everLive.current = true;
-    if (!live) setKickPrompt(false);
+    if (!live) { setKickPrompt(false); setTab('code'); }
   }, [live]);
   useEffect(() => {
     // Kicked: the connection ends in status 'error' (not 'ended'), so the "left" note is raised here (review #16).
@@ -265,6 +267,22 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   };
   const friends: Member[] = state.members.filter((m) => m.id !== state.you);
   const me = state.members.find((m) => m.id === state.you);
+  const kickBlock = (
+    <div className={styles.stack} data-party-kick-prompt>
+      <p className={styles.small}>Friend removed. Keep others out?</p>
+      <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); }}><Icon name="rotate" size={20} /> New code</button>
+      <button type="button" className={styles.secondary} onClick={() => { connection.host.lock(true); partyStore.setLocked(true); setKickPrompt(false); }}><Glyph name="lock" size={20} /> Close to new friends</button>
+      <button type="button" className={styles.ghost} onClick={() => setKickPrompt(false)}>Not now</button>
+    </div>
+  );
+  const activeTab = state.isHost ? tab : 'party';
+  const onTabKey = (e: ReactKeyboardEvent) => {
+    const order = ['code', 'party'] as const; const i = order.indexOf(activeTab);
+    let n = -1;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') n = (i + 1) % 2; else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') n = (i + 1) % 2; else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = 1;
+    if (n < 0) return;
+    e.preventDefault(); setTab(order[n]); tabRefs.current[order[n]]?.focus();
+  };
   const leave = () => { connection.leave(); setView('none'); text('You left the party'); };
 
   return (
@@ -311,8 +329,30 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <h2 id="party-sheet-title">Your party</h2>
               <DoneButton onDone={requestClose} />
             </header>
-            <FadeScroll>
-            {state.isHost && state.code && <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} />}
+            {state.isHost && (
+              <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs onKeyDown={onTabKey}>
+                {(['code', 'party'] as const).map((t) => (
+                  <button key={t} ref={(el) => { tabRefs.current[t] = el; }} type="button" role="tab" id={`party-tab-${t}`} aria-controls={`party-panel-${t}`} aria-selected={activeTab === t} tabIndex={activeTab === t ? 0 : -1} data-party-tab={t} className={styles.tab} onClick={() => setTab(t)}>
+                    {t === 'code' ? 'Code' : `Party (${state.members.length})`}
+                  </button>
+                ))}
+              </div>
+            )}
+            {state.isHost && (
+              <div role="tabpanel" id="party-panel-code" aria-labelledby="party-tab-code" hidden={activeTab !== 'code'} className={styles.panel} data-party-panel="code">
+                <FadeScroll>
+                  {state.code
+                    ? <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} locked={state.locked}
+                        onNewCode={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); }}
+                        onToggleLock={() => { connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }} />
+                    : <p className={styles.small} role="status">Making your code...</p>}
+                  {kickPrompt && kickBlock}
+                </FadeScroll>
+              </div>
+            )}
+            <div role={state.isHost ? 'tabpanel' : undefined} id="party-panel-party" aria-labelledby={state.isHost ? 'party-tab-party' : undefined} hidden={state.isHost && activeTab !== 'party'} className={styles.panel} data-party-panel="party">
+              <FadeScroll>
+            {!state.isHost && <p className={styles.small} data-party-guest-note>Only the host has the code.</p>}
             <p className={styles.small} data-party-count>Friends here: {state.members.length} of {PARTY_MAX}</p>
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
@@ -329,23 +369,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               ))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
             </ul>
-            {kickPrompt && state.isHost && (
-              <div className={styles.stack} data-party-kick-prompt>
-                <p className={styles.small}>Friend removed. Keep others out?</p>
-                <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code'); setKickPrompt(false); }}><Icon name="rotate" size={20} /> New code</button>
-                <button type="button" className={styles.secondary} onClick={() => { connection.host.lock(true); partyStore.setLocked(true); setKickPrompt(false); }}><Glyph name="lock" size={20} /> Lock party</button>
-                <button type="button" className={styles.ghost} onClick={() => setKickPrompt(false)}>Not now</button>
-              </div>
-            )}
+            {kickPrompt && state.isHost && kickBlock}
             <div className={styles.stack}>
-              {state.isHost && <button type="button" className={styles.secondary} aria-pressed={state.locked} onClick={() => { connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }}><Glyph name="lock" size={20} /> {state.locked ? 'Party is locked' : 'Lock party'}</button>}
-              {state.isHost && <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code'); }}><Icon name="rotate" size={20} /> New code</button>}
               {state.isHost && (confirmEnd
                 ? <button type="button" className={styles.secondary} onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
                 : <button type="button" className={styles.secondary} onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
-              <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>
+              {!state.isHost && <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>}
             </div>
-            </FadeScroll>
+              </FadeScroll>
+            </div>
           </section>}
         </Card>
       )}

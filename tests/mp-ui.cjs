@@ -137,9 +137,21 @@ t('gate -> party card state machine (regression: the dialog closed after a corre
  assert(/if \('error' in r\) \{ setBusy\(false\); setView\('menu'\); text\(/.test(host),'a create error returns to the menu with the toast');
  assert(/join\(r\.code[\s\S]{0,160}setView\('sheet'\); setBusy\(false\)/.test(host),'busy stays on until the join has started (no bounce to the menu)');
  assert(/setView\(liveRef\.current \? 'sheet' : 'menu'\)/.test(host),'HUD button opens the party card while live');
- assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/state\.isHost && state\.code/.test(host),'code block is host-only inside the party card');
+ assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/\{state\.isHost && \(\s*<div role="tabpanel" id="party-panel-code"/.test(host),'code block is host-only inside the Code tab');
  assert(/Tap the friends button to manage your party/.test(host)&&/manageHint/.test(host),'one-time manage hint after Done');
  assert(/data-party-badge/.test(read('components/IslandSettings.tsx')),'HUD button shows a live count badge');
+});
+t('party card tabs: Code | Party toggle, a11y, host/guest split, new code + close actions',()=>{
+ assert(/role="tablist"/.test(host)&&/role="tab"/.test(host)&&/aria-selected=\{activeTab === t\}/.test(host)&&/role=\{state\.isHost \? 'tabpanel'/.test(host)&&/aria-controls=/.test(host)&&/aria-labelledby="party-tab-code"/.test(host),'tablist / tab / tabpanel wiring');
+ assert(/ArrowRight/.test(host)&&/ArrowLeft/.test(host)&&/Home/.test(host)&&/tabRefs\.current\[order\[n\]\]\?\.focus\(\)/.test(host)&&/tabIndex=\{activeTab === t \? 0 : -1\}/.test(host),'arrow keys switch tabs and keep focus (roving tabindex)');
+ assert(/`Party \(\$\{state\.members\.length\}\)`/.test(host)&&/'Code'/.test(host),'tab labels Code and Party (N)');
+ assert(/useState<'code' \| 'party'>\('code'\)/.test(host)&&/if \(!live\) \{ setKickPrompt\(false\); setTab\('code'\); \}/.test(host)&&/state\.isHost \? tab : 'party'/.test(host),'default Code, remembered per party, guests only get Party');
+ assert(/Only the host has the code/.test(host)&&/\{state\.isHost && \(\s*<div className=\{styles\.tabs\}/.test(host),'guests have no Code tab');
+ assert(/onNewCode=\{\(\) => \{ connection\.host\.rotate\(\); text\('New code ready'\)/.test(host)&&/The old code stops working right away\. People already here stay\./.test(invite),'primary New code replaces the old one with a toast and helper');
+ assert(/Closed to new friends/.test(invite)&&/Open to new friends/.test(invite)&&/aria-pressed=\{locked\}/.test(invite)&&/onToggleLock/.test(host),'Close to new friends toggle shows its state');
+ assert(/codeFresh/.test(invite)&&/prefers-reduced-motion[\s\S]*codeFresh/.test(read('components/party/party.module.css')),'new code animates in; reduced motion calm');
+ assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
+ assert(!/max-height:min\(46vh/.test(read('components/party/party.module.css')),'member list scrolls in the card FadeScroll, no separate list scroller');
 });
 t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
@@ -168,7 +180,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/aria-label=\{label\}/.test(chip)&&/aria-expanded/.test(chip),'chip label');assert(!/>\s*[A-Za-z]{3,}\s*</.test(chip.replace(/<svg[\s\S]*?<\/svg>/g,'')),'no visible words on the chip');
   assert(/aria-label=\{x\.label\}/.test(wheel)&&(read('lib/town/emoteReact.ts').split('/** What the wheel shows')[0].split('export const LOCAL_EMOTES')[1].match(/emote: EMOTE\./g)||[]).length===10,'ten labelled emotes (Wave, High five, Cheer, Well played, ...)');
   assert(/Hide \$\{m\.name\}|Hide/.test(host)&&/Mute|Unmute/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'hide / mute / remove per friend');
-  for(const w of ['Lock party','New code','End party for everyone','Leave party','Invite'])assert(host.includes(w),w);
+  for(const w of ['Close to new friends','New code','End party for everyone','Leave party'])assert((host+invite).includes(w),w);
  });
  t('messages go through toastLane at note priority; no analytics / saves',()=>{
   assert(/toastLane\.request\('party'\)/.test(host)&&/useToastLaneBusy\('party'\)/.test(host)&&/toastLane\.release\('party'\)/.test(host),'lane used');
@@ -194,7 +206,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/fi2-multiplayer-allowed-v1/.test(pa)&&/function Allowed/.test(host)&&/if \(!allowed\) return null/.test(host),'PartyHost returns null when Off');
  });}
  t('kick prompt, optimistic lock, Kicked note (#5 #6 #16)',()=>{
-  assert(/setKickPrompt\(true\)/.test(host)&&/data-party-kick-prompt/.test(host)&&/New code/.test(host.slice(host.indexOf('data-party-kick-prompt')))&&/Lock party/.test(host.slice(host.indexOf('data-party-kick-prompt'))),'post-kick New code / Lock prompt');
+  assert(/setKickPrompt\(true\)/.test(host)&&/data-party-kick-prompt/.test(host)&&/New code/.test(host.slice(host.indexOf('data-party-kick-prompt')))&&/Close to new friends/.test(host.slice(host.indexOf('data-party-kick-prompt'))),'post-kick New code / Lock prompt');
   assert(/connection\.host\.lock\(!state\.locked\); partyStore\.setLocked\(!state\.locked\)/.test(host),'host lock updates the store at once');
   assert(/state\.error !== ErrorCode\.Kicked \|\| !everLive\.current/.test(host)&&/text\('You left the party'\)/.test(host),'Kicked raises the left note');
  });
@@ -226,7 +238,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  {
   assert(/This party is full \(20\/20\)/.test(host)&&!/\(6\/6\)/.test(host),'full text says 20/20 (both places)');
   assert.equal((host.match(/\(20\/20\)/g)||[]).length,2);
-  assert(/\.members\{[^}]*max-height:min\(46vh,380px\);overflow-y:auto/.test(css),'the member list scrolls inside the card');
+  assert(!/\.members\{[^}]*overflow-y:auto/.test(css)&&/id="party-panel-party"[\s\S]*<FadeScroll>/.test(host),'the member list scrolls in the Party tab FadeScroll');
   assert(/friends here|Friends here: |friend' : 'friends'/.test(host),'a friends count line above the list');
   assert(/createJoinBuffer/.test(host)&&/cancel\(\)/.test(host),'joins go through the coalescing buffer and it is cancelled on unmount');
   assert(/friend' : 'friends'/.test(chip),'chip label says N friends');
