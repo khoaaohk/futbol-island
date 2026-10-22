@@ -74,4 +74,50 @@ t('wiring: the button, the wheel, Town, remote avatars and the party bridge use 
  assert(/flourishForWire\(/.test(ra),'friends pick the flourish from the sender mode');
  assert(/friends\(\)/.test(br));
 });
+
+// ---- Emote camera angles (user, Oct 22 2026: "better angles where we can see both characters better") ----
+const M2=load('lib/town/emoteCameraMath.ts');
+t('pair view: the heading looks ACROSS the line between the two (side by side), for every relative position, on phone and desktop',()=>{
+ for(const aspect of [.46,1.6,2.16])for(const ang of [0,.8,1.6,2.4,3.14,3.9,4.7,5.5]){
+  const qx=Math.sin(ang)*3.5,qz=Math.cos(ang)*3.5,y=M2.bestEmoteYaw(0,0,0,true,qx,0,qz,aspect);
+  const along=Math.abs(qx*Math.sin(y)+qz*Math.cos(y))/3.5; // 0 = perfectly across, 1 = one behind the other
+  assert(along<.45,`aspect ${aspect} axis ${ang}: depth share ${along.toFixed(2)} (stacked)`);
+ }
+});
+t('pair view: the clear side wins; when every heading is blocked it falls back to the follow heading (and never NaN)',()=>{
+ const qx=3.5,qz=0;
+ const free=M2.bestEmoteYaw(0,0,0,true,qx,0,qz,.46);
+ const blockedSide=y=>Math.abs(M2.angleDiff(y,free))>.5; // a wall near the free heading
+ const y2=M2.bestEmoteYaw(0,0,0,true,qx,0,qz,.46,0,1.8,M2.EMOTE_CAM.yaw,undefined,blockedSide);
+ assert(blockedSide(y2),'picks a heading the occlusion test accepts');
+ const y3=M2.bestEmoteYaw(0,0,0,true,qx,0,qz,.46,0,1.8,.45,undefined,()=>false);
+ assert(Number.isFinite(y3));
+});
+t('layouts: portrait phone higher pitch + tall margin, desktop lower cinematic pitch, landscape phone wide margin; the pair stays in the safe band',()=>{
+ const P=M2.emoteLayout(.46),D=M2.emoteLayout(1.6),L=M2.emoteLayout(2.16);
+ assert(P.kind==='portrait'&&D.kind==='desktop'&&L.kind==='landscape');
+ assert(P.pitch>D.pitch+.15,'portrait looks down more');assert(D.pitch<=.3);
+ const [top,bottom]=M2.emoteSafeBand(.46);assert(top>=.2&&bottom<=.8,'clear of the top HUD (18 %) and the joystick / action grid at the bottom');
+ for(const aspect of [.46,1.6,2.16])for(const ang of [0,1.6,3.14,4.7]){
+  const qx=Math.sin(ang)*3,qz=Math.cos(ang)*3,out={eye:{x:0,y:0,z:0},target:{x:0,y:0,z:0}},yaw=M2.bestEmoteYaw(0,0,0,true,qx,0,qz,aspect);
+  const d=M2.frameEmote(out,0,0,0,true,qx,0,qz,aspect,1,yaw);if(d>=M2.EMOTE_CAM.maxDist-1e-9)continue;
+  const lay=M2.emoteLayout(aspect);
+  for(const [x,z] of [[0,0],[qx,qz]])for(const dy of [-.1,2.45,3.75])for(const side of [-.85,.85]){ // 3.75 = 2 m above a head: the floating / dissipating emoji zone is in view
+   const dx=x+side*Math.cos(yaw)-out.target.x,dz=z-side*Math.sin(yaw)-out.target.z,dyy=dy-out.target.y;
+   assert(M2.insideFrame(dx,dyy,dz,d,aspect,yaw,lay.pitch),`aspect ${aspect} axis ${ang}: character corner inside the frame`);
+   // vertical screen position (0 top .. 1 bottom) inside the safe band
+   const cp=Math.cos(lay.pitch),sp=Math.sin(lay.pitch),sy=Math.sin(yaw),cy=Math.cos(yaw),up=dyy*cp-(dx*sy+dz*cy)*sp,depth=d-(dx*sy*cp+dyy*sp+dz*cy*cp),v=.5-up/(depth*Math.tan(M2.EMOTE_CAM.fov*Math.PI/360))/2;
+   assert(v>=.17&&v<=.83,`aspect ${aspect} axis ${ang}: vertical screen position ${v.toFixed(2)} inside the safe band`);
+  }
+ }
+});
+t('solo: a three-quarter FRONT-side view of the player (not a back view); a rider gets a side-on view',()=>{
+ for(const f of [0,1,2.5,-2,3.1]){const y=M2.bestEmoteYaw(0,0,0,false,0,0,0,.46,0,1.8,.45,f);assert(Math.abs(Math.abs(M2.angleDiff(y,f))-M2.SOLO_FRONT)<1e-9,'camera in front of the player, '+f);
+  const r=M2.bestEmoteYaw(0,0,0,false,0,0,0,.46,.5,1.8,.45,f);assert(Math.abs(Math.abs(M2.angleDiff(r,f))-1.4)<1e-9);}
+ assert.equal(M2.bestEmoteYaw(0,0,0,false,0,0,0,1),M2.EMOTE_CAM.yaw,'no facing known: the default view');
+});
+t('a moving partner never whips the camera: heading rate is capped, pair-turn recompute starts from the current heading',()=>{
+ assert(M2.YAW_RATE<=1.2&&M2.YAW_RATE>0);
+ const cam=read('lib/town/emoteCamera.ts');assert(/YAW_RATE \* dt/.test(cam)&&/angleDiff\(ang, axisAng\)/.test(cam)&&/clearAt/.test(cam));
+});
 console.log('emote-contexts: '+n+' tests passed');

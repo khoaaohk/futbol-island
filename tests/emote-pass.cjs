@@ -139,6 +139,6 @@ t('source: Town gives the emote camera every wall and the big props; the zoom ea
  const town=read('components/Town.tsx'),cam=read('lib/town/emoteCamera.ts');
  assert(/solids:emoteSolidsAt/.test(town)&&/ballWallGrid\.query\(x,z,r\)/.test(town)&&/ballObstacleGrid\.query\(x,z,r\)/.test(town));
  assert(/viewClear\(l, out\.eye\.x/.test(cam)&&/stop\(\)/.test(cam),'a wall that comes between ends the zoom');
- assert(/PITCH_TRIES/.test(cam)&&/YAW_TRIES/.test(cam)&&/EYE_CLEAR/.test(read('lib/town/emoteCamClear.ts')));
+ assert(/tries/.test(cam)&&/YAW_TRIES/.test(cam)&&/EYE_CLEAR/.test(read('lib/town/emoteCamClear.ts')));
 });
 console.log(`emote-pass: ${n} checks passed`);
