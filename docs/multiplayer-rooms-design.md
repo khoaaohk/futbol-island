@@ -170,7 +170,9 @@ this branch).** Order:
    on the island; the island friend fades at the door, the party list still shows "In the museum"; a second friend entering the
    museum appears at once (no 5 s wait).
 6. Then deploy clients (relay first, it is backward compatible). Clients need no change for v1.1.
-**Roll back:** `wrangler rollback` (or `wrangler deployments list` + `wrangler rollback <id>`) to the previous worker version.
+**Roll back:** `wrangler rollback` (or `wrangler deployments list` + `wrangler rollback <id>`) to the previous worker version. If
+wrangler refuses because that version predates the v2 Durable Object migration, revert only `roomCore.ts` / `limits.ts` to the
+pre-v1.1 code (`tests/fixtures/mp-roomCore-v1.ts` is that core) and `wrangler deploy` again with the current `wrangler.toml`.
 Clients work unchanged against v1 (entry warp + retry still on). Do NOT delete the v2 migration / RelayStats class on a rollback (a
 `deleted_classes` migration destroys its data); an older worker without the STATS binding simply stops writing stats.
 
