@@ -37,6 +37,9 @@
     ".next-push/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "multiplayer/relay",
+    "multiplayer/dev-relay",
+    "multiplayer/bots"
   ]
 }
