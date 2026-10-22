@@ -98,4 +98,19 @@ ok('see-through when close: soft things fade from 1 at 2.5 m to 0.15 at 0.8 m (d
  assert(src.includes('const seeThrough=!(opt.calm||opt.lite)'),'compiled out when calm / lite');assert(!/reefMat[^\n]*PROXIMITY/.test(src),'the reef (rocks, wreck) never fades');
  assert(P.PROXIMITY_DITHER_GLSL.includes('discard')&&!/new |\[\]/.test(P.PROXIMITY_FADE_GLSL));
 });
+ok('water movement: one current and swell (bounded sway, travelling down-current), plants / plankton / rays / camera follow it',()=>{
+ const K=C.DIVE_CURRENT;assert(Math.abs(Math.hypot(K.dir[0],K.dir[1])-1)<1e-9);
+ let mx=0;for(let t=0;t<30;t+=.13)for(let x=-20;x<=20;x+=5){const s=C.diveSwell(t,x,x*.5);assert(s>=-1&&s<=1);for(const w of [0,.5,1]){const v=C.diveSway(t,x,0,w,1.3);assert(Math.abs(v)<=(K.surge*1.35+K.flutter)*w*w+1e-9);mx=Math.max(mx,Math.abs(v));}}
+ assert(mx>.15,'it really sways');assert.notEqual(C.diveSwell(2,0,0).toFixed(3),C.diveSwell(2,10,0).toFixed(3),'neighbours lean one after another');
+ const src=read('lib/graphics/diveRoom.ts');assert.equal((src.match(/\$\{DIVE_CURRENT_GLSL\}|\+DIVE_CURRENT_GLSL/g)||[]).length,3,'sway, plankton, rays share the current');assert(src.includes('DIVE_BREATH_M*Math.sin('));
+});
+ok('light: absorption (red first, floored), wide soft shafts along one sun direction within the old ray triangles, Snell\'s window rim',()=>{
+ const a=C.diveAbsorb(0),b=C.diveAbsorb(5),c=C.diveAbsorb(50);assert(a[0]===1&&a[1]===1&&a[2]===1);assert(b[0]<b[1]&&b[1]<b[2],'red fades first');for(let i=0;i<3;i++)assert(c[i]>=C.DIVE_ABSORB.floor[i]-1e-9);
+ for(const z of [D.diveSpotById('captains-cup')]){let rays=null;roomOf(z).scene.traverse(o=>{if(o.name==='dive-rays')rays=o;});assert(rays.geometry.getAttribute('position').count/3<=44,'phone rays within the old 44 triangles');}
+ const src=read('lib/graphics/diveRoom.ts');assert(src.includes('dvRw=dvDep*1.134'),'Snell window');assert(src.includes('vDvAbs=dvAbsorb('),'absorption per vertex (no fragment exp)');
+});
+ok('life: living coral colour, bottom dwellers in the reef draw, fish surge and coast, the diver glides with arms back and breathes out in bursts',()=>{
+ const src=read('lib/graphics/diveRoom.ts');assert(src.includes('const live=(c:C')&&src.includes('sea stars, urchins'));assert(src.includes('float dvTp=dvT+'));assert(src.includes('mod(uDiveTime-fract(aB.w)*.45,3.4)'));
+ assert(read('lib/graphics/swimPose.ts').includes('streamlined glide'));
+});
 console.log(`\nexplore-life: ${passed} passed`);

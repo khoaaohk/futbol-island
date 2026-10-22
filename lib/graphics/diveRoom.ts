@@ -5,6 +5,7 @@ import {diveLayout,diveWreckSize,type DiveArchSpot} from '../town/water/diveLayo
 import {addDiveBall} from './diveBall';
 import {reefFishModel} from './diveFish';
 import {PROXIMITY_DITHER_GLSL,PROXIMITY_FADE_GLSL} from './proximityFade';
+import {DIVE_ABSORB_GLSL,DIVE_BREATH_M,DIVE_CURRENT,DIVE_CURRENT_GLSL,DIVE_SUN} from '../town/water/diveCurrent';
 import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROOM_SHIMMER,ROOM_WINDOW} from './waterTokens';
 import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
@@ -144,7 +145,9 @@ vec3 dvPath(float t){float th=aPB.x*t+aPB.y,r=aPA.w;vec3 p;
  p.y=sin(th*2.+aPD.w)*aPD.y+sin(t*1.3+aPD.w*3.)*.08;float c=cos(aPD.x),s=sin(aPD.x);p.xz=vec2(c*p.x-s*p.z,s*p.x+c*p.z);return aPA.xyz+p;}
 `;
 const FISH_BASIS=/* glsl */`
- float dvT=uDiveTime;vec3 dvP=dvPath(dvT),dvF=dvPath(dvT+.12)-dvP;
+ float dvT=uDiveTime;
+ // Explore life: a school surges and coasts (its own slow beat) and each fish is a touch ahead or behind (no clockwork loops)
+ float dvTp=dvT+.55*sin(dvT*.33+aPA.x*.7+aPA.z*.3)+.1*sin(dvT*1.1+aPD.w*5.);vec3 dvP=dvPath(dvTp),dvF=dvPath(dvTp+.12)-dvP;
  float dvHide=1.;
  if(aPB.z>1.5&&aPB.z<2.5){// the burst: dart out of the coral along aPC.xyz, then settle into the home loop round it (hidden until touched)
   float bt=max(0.,dvT-uBurst.w);vec3 bd=normalize(aPC.xyz);vec3 bp=uBurst.xyz+bd*3.4*(1.-exp(-1.5*bt))+vec3(0.,bt*.18,0.);
@@ -231,18 +234,22 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  // Every coral piece stays well under the surface (the crest is shallow): its size is capped by the water over its sand.
  // Each kind's height per unit of scale (a branching coral is the tallest), so a piece's top stays under its cap.
  const CORAL_H=[2.2,.45,.8,1.05,.7];
+ // Explore life: living colour on every coral (vertex colour only): a polyp speckle (a hash of the world point), darker at the base
+ // where it meets the sand (soft ambient occlusion), lighter growing tips.
+ const speck=(v:T.Vector3)=>{const h=Math.sin(v.x*12.9898+v.y*78.233+v.z*37.719)*43758.5453;return .9+.2*(h-Math.floor(h));};
+ const live=(c:C,v:T.Vector3,l:T.Vector3,k:number,ao=.28)=>scl(c,k*speck(v)*(1-ao+ao*Math.min(1,Math.max(0,l.y)/.3)));
  const coralPiece=(x:number,z:number,s0:number,base:C,kind:number,hCap=Infinity)=>{const s=Math.max(.2,Math.min(s0,Math.min(diveDepthAt(x,z,fl)-.9,hCap)/CORAL_H[kind])),y=F(x,z)-.05,tip=mix(base,[1,1,1],.35),yaw=r()*6.28;
-  if(kind===0){S.add(branchGeo(r,phone?2:3),M(x,y,z,0,yaw,0,s*1.4),(v,n,l)=>scl(mix(base,tip,Math.min(1,l.y/1.4)),.8+.2*n.y));}
+  if(kind===0){S.add(branchGeo(r,phone?2:3),M(x,y,z,0,yaw,0,s*1.4),(v,n,l)=>live(mix(base,tip,Math.min(1,l.y/1.4)),v,l,.8+.2*n.y,.3));}
   else if(kind===1){const g=new T.IcosahedronGeometry(.55,phone?1:2),p=g.getAttribute('position'),v=new T.Vector3();
    for(let k=0;k<p.count;k++){v.fromBufferAttribute(p,k);const groove=Math.sin(v.x*16+Math.sin(v.z*13)*2.2+v.y*9);v.multiplyScalar(1+.04*groove);v.y=Math.max(-.1,v.y*.62);p.setXYZ(k,v.x,v.y,v.z);}g.computeVertexNormals();
-   S.add(g,M(x,y+.05,z,0,yaw,0,s),(v,n,l)=>scl(base,.72+.28*(.5+.5*Math.sin(l.x*16+Math.sin(l.z*13)*2.2+l.y*9))));if(s>=.45)solid(diveSolidRound('brain-coral',x,y+.1,z,.55*s,.34*s,.55*s));}
+   S.add(g,M(x,y+.05,z,0,yaw,0,s),(v,n,l)=>live(mix(base,tip,Math.max(0,l.y)*.5),v,l,.72+.28*(.5+.5*Math.sin(l.x*16+Math.sin(l.z*13)*2.2+l.y*9)),.35));if(s>=.45)solid(diveSolidRound('brain-coral',x,y+.1,z,.55*s,.34*s,.55*s));}
   else if(kind===2){const st=new T.CylinderGeometry(.07,.12,.5,6);st.translate(0,.25,0);const top=new T.CylinderGeometry(.75,.6,.1,phone?10:14);top.translate(0,.55,0);
-   const tm=M(x,y,z,(r()-.5)*.2,yaw,(r()-.5)*.2,s*1.2);if(s>=.45)solid(boxOf('table-coral',tm,1.3,.12,1.3,0,.55,0,0));S.add(mergeGeos([st,top]),tm,(v,n,l)=>scl(l.y>.48?mix(base,tip,n.y>.5?.3:0):base,.75+.25*Math.abs(n.y)));}
+   const tm=M(x,y,z,(r()-.5)*.2,yaw,(r()-.5)*.2,s*1.2);if(s>=.45)solid(boxOf('table-coral',tm,1.3,.12,1.3,0,.55,0,0));S.add(mergeGeos([st,top]),tm,(v,n,l)=>live(l.y>.48?mix(base,tip,n.y>.5?.3:Math.min(1,Math.hypot(l.x,l.z)/.75)*.4):scl(base,.8),v,l,.75+.25*Math.abs(n.y),.4));}
   else if(kind===3){const parts:T.BufferGeometry[]=[];const n=5+Math.floor(r()*5);for(let k=0;k<n;k++){const hh=.3+r()*.7,c=new T.CylinderGeometry(.07+r()*.04,.09,hh,6,1,true);c.translate((r()-.5)*.45,hh/2,(r()-.5)*.45);c.rotateZ((r()-.5)*.3);parts.push(c);}
-   S.add(mergeGeos(parts),M(x,y,z,0,yaw,0,s),(v,n,l)=>scl(mix(base,tip,Math.min(1,Math.max(0,l.y-.25)*1.5)),.8+.2*Math.abs(n.x)));}
+   S.add(mergeGeos(parts),M(x,y,z,0,yaw,0,s),(v,n,l)=>live(mix(base,tip,Math.min(1,Math.max(0,l.y-.25)*1.5)),v,l,.8+.2*Math.abs(n.x)));}
   else{const parts:T.BufferGeometry[]=[new T.SphereGeometry(.35,7,4,0,Math.PI*2,0,Math.PI/2)];const n=6+Math.floor(r()*6);
    for(let k=0;k<n;k++){const aa=r()*6.28,dd=r()*.28,c=new T.CapsuleGeometry(.06,.2+r()*.25,2,5);c.translate(Math.cos(aa)*dd,.3+r()*.15,Math.sin(aa)*dd);parts.push(c);}
-   S.add(mergeGeos(parts),M(x,y,z,0,yaw,0,s),(v,n)=>scl(base,.78+.22*n.y));}};
+   S.add(mergeGeos(parts),M(x,y,z,0,yaw,0,s),(v,n,l)=>live(mix(base,tip,Math.max(0,l.y-.3)*1.6),v,l,.78+.22*n.y));}};
  // The pieces share out over the clusters by area (every cluster gets at least two), inside each one's radius; 60 % in its own hue.
  const coralCount=cap('coral',th.mix.coral),area=heads.reduce((n,h)=>n+h.r*h.r,0)||1;
  heads.forEach(h=>{const n=Math.max(2,Math.round(coralCount*h.r*h.r/area));
@@ -314,16 +321,26 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  const vent={x:-5,z:9};for(let k=0;k<20;k++){const x=(r()-.5)*28,z=4+r()*12;if(clearOf(x,z,2.5)){vent.x=x;vent.z=z;break;}}
  {const vy=F(vent.x,vent.z);solid(diveSolidRound('vent',vent.x,vy+.35,vent.z,.6,.75,.6));S.add(rockGeo(77,1),M(vent.x,vy+.2,vent.z,0,0,0,[.6,.55,.6]),paintRock);
   const c=new T.CylinderGeometry(.18,.32,.45,7,1,true);c.translate(0,.62,0);S.add(c,M(vent.x,vy,vent.z),(v,n)=>scl(rockA,.6+.3*n.y));}
+ // Explore life: small bottom dwellers and coral rubble on the sand round the reef heads (static, in the reef's one draw; ~420 triangles
+ // on a phone, paid for by the low-poly school fish): sea stars, urchins, pale broken-coral rubble. Their own seeded random.
+ {const rb=rng(spot.blob*71+5),k=(n:number)=>Math.max(1,Math.round(n*(phone?1:1.5)*lite)),near=()=>{for(let t=0;t<12;t++){const h=heads.length?heads[Math.floor(rb()*heads.length)]:{x:0,z:0,r:6},a=rb()*Math.PI*2,d=h.r*(.7+rb()*.7),x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d;if(clearOf(x,z,1)&&Math.hypot(x,z)<DIVE_ROOM_R-2)return {x,z};}return null;};
+  const starC=[col('#d8704a'),col('#e0a040'),col('#b85a8a'),col('#d85a5a')],urch=col('#3a2a4a'),rubC=col('#e8dccb');
+  for(let i=0;i<k(8);i++){const p=near();if(!p)continue;const pts:number[]=[],R0=.1+rb()*.06;for(let q=0;q<10;q++){const a0=q/10*Math.PI*2,a1=(q+1)/10*Math.PI*2,r0=q%2?R0*.38:R0,r1=q%2?R0:R0*.38;pts.push(0,.03,0,Math.cos(a1)*r1,0,Math.sin(a1)*r1,Math.cos(a0)*r0,0,Math.sin(a0)*r0);}
+   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pts,3));g.computeVertexNormals();const c=starC[i%starC.length];
+   S.add(g,M(p.x,F(p.x,p.z)+.02,p.z,0,rb()*6,0),(v,n,l)=>scl(c,(.75+.35*Math.min(1,Math.hypot(l.x,l.z)/R0))*speck(v)));}
+  for(let i=0;i<k(8);i++){const p=near();if(!p)continue;const g=new T.IcosahedronGeometry(.1+rb()*.04,0);g.scale(1,.7,1);S.add(g,M(p.x,F(p.x,p.z)+.05,p.z,0,rb()*6,0),(v,n)=>scl(urch,(.7+.5*Math.max(0,n.y))*speck(v)));}
+  for(let i=0;i<k(24);i++){const p=near();if(!p)continue;const g=new T.TetrahedronGeometry(.06+rb()*.08,0);S.add(g,M(p.x,F(p.x,p.z)+.02,p.z,rb()*3,rb()*6,rb()*3,[1.4,.6,1]),(v,n)=>scl(rubC,(.7+.3*Math.max(0,n.y))*speck(v)));}}
  const reefMat=new T.MeshLambertMaterial({vertexColors:true});reefMat.name='dive-reef';
  // Explore v2: moving light lines on everything that faces up (the shore's sun-net, ROOM_CAUSTIC; stronger in shallow water), and the
  // reef's colour (uReef: a little grey until the zone is cleaned up, diveJourney.ts reefColour). ALU only, no texture.
  const uCaustic={value:opt.lite||opt.reduced?0:ROOM_CAUSTIC_K},uReef={value:opt.reef??1},causticC={value:new T.Color(ROOM_CAUSTIC)};
  reefMat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{uDiveTime:uTime,uCaustic,uReef,uCausticC:causticC});
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;');
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;varying vec3 vDvAbs;'+DIVE_ABSORB_GLSL).replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;vDvAbs=dvAbsorb(${DIVE_SURFACE_Y.toFixed(2)}-transformed.y);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uDiveTime,uCaustic,uReef;uniform vec3 uCausticC;varying vec3 vDvW;
+uniform float uDiveTime,uCaustic,uReef;uniform vec3 uCausticC;varying vec3 vDvW;varying vec3 vDvAbs;
 float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);float k=1.-abs(a*b);k*=k;return k*k*k;}`)
    .replace('#include <fog_fragment>',`{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);
+ gl_FragColor.rgb*=vDvAbs;// Explore life: the water's colour absorption (red fades first with depth; per vertex)
  // Explore life (heat): ONE warped octave (was two), only on faces that look up, k^6 by multiplies (no pow).
  float up=uCaustic>0.?clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.):0.;
  if(up>.05){float c=dvNet(vDvW.xz*1.05,uDiveTime*.8)*1.05;
@@ -366,13 +383,16 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const swayMat=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});swayMat.name='dive-sway';
  swayMat.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uSwayAmp=swayAmp;sh.uniforms.uDiver=uDiver;sh.uniforms.uReef=uReef;
   sh.uniforms.uCam=uCam;
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;uniform vec4 uDiver;uniform vec3 uCam;attribute float aSway,aSeed;'+(seeThrough?PROXIMITY_FADE_GLSL:''))
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uSwayAmp;uniform vec4 uDiver;uniform vec3 uCam;attribute float aSway,aSeed;varying vec3 vDvAbs;'+DIVE_CURRENT_GLSL+DIVE_ABSORB_GLSL+(seeThrough?PROXIMITY_FADE_GLSL:''))
    .replace('#include <begin_vertex>',/* glsl */`#include <begin_vertex>
-    float sw=aSway*aSway*uSwayAmp;transformed.x+=sin(uDiveTime*1.1+aSeed+position.y*.6)*.22*sw;transformed.z+=cos(uDiveTime*.83+aSeed*1.7+position.y*.4)*.14*sw;
+    // Explore life: ONE slow current (diveCurrent.ts): the swell's surge travels down-current so neighbours lean one after another,
+    // leaning a little more down-current than up, plus each plant's own small flutter (diveSway's GLSL twin).
+    float sw=aSway*aSway*uSwayAmp;vec2 dvPush=DV_CUR*(${DIVE_CURRENT.surge.toFixed(3)}*(.35+dvSwell(position.xz)))+vec2(sin(uDiveTime*1.7+aSeed),cos(uDiveTime*1.3+aSeed*1.7))*${DIVE_CURRENT.flutter.toFixed(3)};
+    transformed.xz+=dvPush*sw;
     // Explore v2: fans, kelp and grass bend away as the diver swims through (one distance per vertex, the model matrix is identity)
-    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`+(seeThrough?'vDvFade=aSway>0.?dvProxFade(transformed,uDiver.xyz,uCam):1.;':''));
+    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`+(seeThrough?'vDvFade=aSway>0.?dvProxFade(transformed,uDiver.xyz,uCam):1.;':'')+'vDvAbs=dvAbsorb(${DIVE_SURFACE_Y.toFixed(2)}-transformed.y);');
   if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uReef;').replace('#include <fog_fragment>','{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);}\n#include <fog_fragment>');};
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uReef;varying vec3 vDvAbs;').replace('#include <fog_fragment>','{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef)*vDvAbs;}\n#include <fog_fragment>');};
  swayMat.customProgramCacheKey=()=>'dive-sway-v3'+(seeThrough?'-fade':'');
  const sway=new T.Mesh(W.geometry(true),swayMat);sway.name='dive-sway';sway.frustumCulled=false;sway.matrixAutoUpdate=false;scene.add(sway);
 
@@ -441,18 +461,22 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  // The formation school (a restored reef): the biggest school there is.
  const formSchool=forms.slice(0,-1).reduce((a,b)=>b.n>a.n?b:a,forms[0]);
 
- // ---- God rays: long soft streaks slanting down from the surface. ONE additive draw, no light. Explore v2: each streak is two quads
- // (clear at both sides, bright down the middle: no hard glass edges) and breathes slowly in the vertex shader (one time uniform).
- {const pos:number[]=[],cl:number[]=[],n=phone?11:16;
-  for(let i=0;i<n;i++){const x=-18+i/(n-1)*36+(r()-.5)*2,z=-20+r()*34,w=.5+r()*1.1,len=2.6+r()*2.2,sl=.35,a=.08+r()*.07,dz=.4*len*.3;
-   const T0=(k:number)=>[x+w*k,DIVE_SURFACE_Y,z],B0=(k:number)=>[x+w*1.6*k+sl*len,DIVE_SURFACE_Y-len,z+dz];
-   for(const [k0,k1] of [[-1,0],[0,1]]){const a0=k0===0?a:0,a1=k1===0?a:0;
-    pos.push(...T0(k0),...T0(k1),...B0(k1),...T0(k0),...B0(k1),...B0(k0));for(const k of [a0,a1,0,a0,0,0])cl.push(.78,.97,1,k);}}
+ // ---- God rays (Explore life, Oct 22 2026): a few WIDE, soft shafts from the surface window, all slanting along the one sun direction
+ // (diveCurrent.ts DIVE_SUN, the side the surface preview's light lines come from). ONE additive draw, no light: each shaft is three
+ // quads across (clear at both edges, a soft bright middle, fading to nothing by its foot), drifting with the swell and pulsing with it
+ // in the vertex shader (the shared current). Phone 7 shafts / 42 triangles, desktop 10 / 60 (was 11 / 44 and 16 / 64 thin streaks).
+ {const pos:number[]=[],cl:number[]=[],n=phone?7:10,rr=rng(spot.blob*13+29),K=[-1,-1/3,1/3,1];
+  for(let i=0;i<n;i++){const x=-16+i/(n-1)*32+(rr()-.5)*3,z=-18+rr()*30,w=.7+rr()*.6,len=3.2+rr()*2,a=.07+rr()*.05;
+   const at=(k:number,bot:boolean)=>bot?[x+w*1.5*k+DIVE_SUN.x*len,DIVE_SURFACE_Y-len,z+DIVE_SUN.z*len+k*.2]:[x+w*k,DIVE_SURFACE_Y,z];
+   for(let q=0;q<3;q++){const k0=K[q],k1=K[q+1],a0=q===0?0:a,a1=q===2?0:a;
+    pos.push(...at(k0,false),...at(k1,false),...at(k1,true),...at(k0,false),...at(k1,true),...at(k0,true));for(const k of [a0,a1,0,a0,0,0])cl.push(.8,.97,1,k);}}
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(cl,4));
   const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide,fog:false});m.name='dive-rays';
-  if(!opt.reduced){m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uRayK=uRayK;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uRayK;')
-   .replace('#include <color_vertex>','#include <color_vertex>\nvColor.a*=(.55+.45*sin(uDiveTime*.5+position.x*.43+position.z*.21))*uRayK;');};m.customProgramCacheKey=()=>'dive-rays-v3';}
-  const rays=new T.Mesh(g,m);rays.name='dive-rays';rays.renderOrder=2;rays.matrixAutoUpdate=false;scene.add(rays);}
+  if(!opt.reduced){m.onBeforeCompile=sh=>{sh.uniforms.uDiveTime=uTime;sh.uniforms.uRayK=uRayK;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nuniform float uDiveTime,uRayK;'+DIVE_CURRENT_GLSL)
+   .replace('#include <begin_vertex>',`#include <begin_vertex>
+    float dvDn=(${DIVE_SURFACE_Y.toFixed(2)}-position.y)/5.;transformed.xz+=DV_CUR*dvSwell(position.xz*.5)*.45*dvDn;`)
+   .replace('#include <color_vertex>','#include <color_vertex>\nvColor.a*=(.6+.4*(.5+.5*dvSwell(position.xz*.7+vec2(3.1,0.))))*uRayK;');};m.customProgramCacheKey=()=>'dive-rays-v4';}
+ const rays=new T.Mesh(g,m);rays.name='dive-rays';rays.renderOrder=2;rays.matrixAutoUpdate=false;scene.add(rays);}
  // ---- The surface overhead (Explore v2): the bright window right above the camera (ROOM_WINDOW, clear aqua) with moving shimmer lines,
  // fading with distance into the fog colour (the same Color as the background), so there is no flat pale band at the top of a phone.
  const uCam={value:new T.Vector3()};
@@ -463,6 +487,8 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
     void main(){float d=length(vW.xz-uCam.xz),t=uDiveTime*uMove;vec2 p=vW.xz*.55;
      float a=sin(p.x+sin(p.y*1.4+t*.8)*1.2+t*.6),b=sin(p.y*1.2+sin(p.x*1.1-t*.7)*1.3-t*.4),net=pow(1.-abs(a*b),9.);
      float near=1.-smoothstep(1.5,uFar*.75,d);vec3 c=mix(uFog,uWin,near*.85)+uShim*net*.32*near;
+     // Explore life: Snell's window: the sky squeezed into a bright disc overhead (radius = depth x tan 48.6 deg) with a bright rim
+     float dvDep=max(.3,${DIVE_SURFACE_Y.toFixed(2)}-uCam.y),dvRw=dvDep*1.134,dvE=(d-dvRw)/(.45+.2*dvDep);c=mix(c,uWin*1.1+uShim*net*.2,(1.-smoothstep(dvRw*.8,dvRw*1.02,d))*.35)+uShim*.22*exp(-dvE*dvE);
      if(uWhale.w>0.){// Explore delight: the whale's soft shadow gliding over the surface (x, z, heading, strength): a long body, two
       // pectoral fins and the tail flukes, all soft-edged ellipses (no texture)
       vec2 q=vW.xz-uWhale.xy;float cs=cos(uWhale.z),sn=sin(uWhale.z),al=q.x*sn+q.y*cs,ac=q.x*cs-q.y*sn;
@@ -487,12 +513,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('aB',new T.BufferAttribute(A,4));g.setAttribute('aKind',new T.BufferAttribute(K,1));
   const ventY=F(vent.x,vent.z)+.85;
   const m=new T.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uDiveTime:uTime,uPlayer,uScale:uBubbleScale,uFogFar:{value:th.fog[1]},uCam,uPuff,uDrift:{value:opt.reduced?0:1},uSpark,uRing,uTwinkle:{value:opt.calm||opt.reduced?0:1}},
-   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar,uDrift,uTwinkle;uniform vec3 uPlayer,uCam;uniform vec4 uPuff,uSpark,uRing;varying float vA,vK;
+   vertexShader:/* glsl */`attribute vec4 aB;attribute float aKind;uniform float uDiveTime,uScale,uFogFar,uDrift,uTwinkle;uniform vec3 uPlayer,uCam;uniform vec4 uPuff,uSpark,uRing;varying float vA,vK;${DIVE_CURRENT_GLSL}
     void main(){vec3 p;float life,sz,vS=0.;vK=aKind;
      if(aKind<.5){float h=${(DIVE_SURFACE_Y-ventY).toFixed(2)};float y=mod(uDiveTime*aB.z+aB.w,h);life=y/h;p=vec3((${vent.x.toFixed(2)})+aB.x+sin(y*2.+aB.w)*.12,(${ventY.toFixed(2)})+y,(${vent.z.toFixed(2)})+aB.y);sz=.07;}
-     else if(aKind<1.5){float c=2.6,a=mod(uDiveTime+aB.w,c);life=a/c;p=uPlayer+vec3(aB.x+sin(a*5.+aB.w)*.08,.4+a*aB.z,aB.y);sz=.05;}
+     else if(aKind<1.5){// Explore life: the diver breathes out every 3.4 s: a little cluster of bubbles from the face, wobbling up
+      float a=mod(uDiveTime-fract(aB.w)*.45,3.4);life=a/2.6;p=uPlayer+vec3(aB.x*.5+sin(a*6.+aB.w)*.06*a,.05+a*aB.z*(.8+.3*a),aB.y*.5);sz=.045+.02*fract(aB.w*3.1);if(a>2.6)life=1.;}
      else if(aKind<2.5){// plankton: a 16 x 8 x 16 m box of motes wrapped round the camera, drifting with a slow current
-      vec3 q=aB.xyz+vec3(uDiveTime*.12,sin(uDiveTime*.3+aB.w)*.25,uDiveTime*.05)*uDrift;q=mod(q-uCam+vec3(8.,4.,8.),vec3(16.,8.,16.))-vec3(8.,4.,8.);
+      vec2 dvC=DV_CUR*(uDiveTime*${DIVE_CURRENT.drift.toFixed(3)}+dvSwell(aB.xz)*.3);vec3 q=aB.xyz+vec3(dvC.x,sin(uDiveTime*.3+aB.w)*.25,dvC.y)*uDrift;q=mod(q-uCam+vec3(8.,4.,8.),vec3(16.,8.,16.))-vec3(8.,4.,8.);
       p=uCam+q;p.y=min(p.y,${(DIVE_SURFACE_Y-.15).toFixed(2)});life=.5;sz=.028;}
      else if(aKind<3.5){float a=uDiveTime-uPuff.w;life=clamp(a/1.3,0.,1.);p=uPuff.xyz+vec3(aB.x,0.,aB.z)*(1.-exp(-2.5*a))*.9+vec3(0.,aB.y*life*.6,0.);sz=.16*(1.+life);}
      else if(aKind<4.5){// the sparkle spot: glints over a 0.9 m patch of sand, twinkling (still with calm), seen within ~12 m of the diver
@@ -585,11 +612,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / coin while they animate. */
   frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number}){hiddenBall?.frame(t,dt);
-   uTime.value=t;uPlayer.value.set(diver.x,diver.y+.9,diver.z);follow(dt,diver);
+   uTime.value=t;uPlayer.value.set(diver.x+Math.sin(diver.yaw)*.55,diver.y-.05,diver.z+Math.cos(diver.yaw)*.55);follow(dt,diver);
    // Explore v2: the fish and plants feel the diver, the water's colour. (The Dart's trail and FOV kick went with the Dart, Oct 21/22 2026.)
    uDiver.value.set(diver.x,diver.y+.3,diver.z,.5);uCam.value.copy(camera.position);
    {const cr=Math.max(.5,DIVE_SURFACE_Y-F(camera.position.x,camera.position.z)),ct=Math.max(0,Math.min(1,(DIVE_SURFACE_Y-camera.position.y)/cr));
     fog.color.copy(deepC).lerp(shallowC,ROOM_SHALLOW_MIX[0]+(ROOM_SHALLOW_MIX[1]-ROOM_SHALLOW_MIX[0])*ct);}
+   // Explore life: the scene's slow breath (the swell lifting the water column) on the camera (after the colour: it never flickers)
+   if(!opt.reduced)camera.position.y+=DIVE_BREATH_M*Math.sin(t*Math.PI*2/DIVE_CURRENT.period);
    for(let k=pickAnim.length-1;k>=0;k--){const a=pickAnim[k],p=picks[a.i];a.t+=dt;const u=Math.min(1,a.t/.7);
     pv.set(p.x,p.y-.18+u*1.1,p.z);pq.setFromAxisAngle(ps.set(0,1,0),a.t*9);ps.setScalar(Math.max(.001,(1-u)*1.2));pm.compose(pv,pq,ps);pickMesh!.setMatrixAt(a.i,pm);pickMesh!.instanceMatrix.needsUpdate=true;
     if(u>=1)pickAnim.splice(k,1);}

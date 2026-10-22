@@ -31,7 +31,7 @@ float dvSwell(vec2 p){return sin(uDiveTime*${(Math.PI*2/DIVE_CURRENT.period).toF
 export const DIVE_SUN={x:.3,z:.12} as const;
 /** Colour absorption per metre of water above a point (linear rgb): red fades first, then green; blue stays. Floors keep a deep reef
  *  from going black (kid-friendly, the shore's muted look). */
-export const DIVE_ABSORB={k:[.13,.05,.025] as const,floor:[.45,.72,.85] as const};
+export const DIVE_ABSORB={k:[.1,.04,.02] as const,floor:[.5,.75,.88] as const};
 /** The rgb multiplier at `depth` metres under the surface. */
 export function diveAbsorb(depth:number,out:[number,number,number]=[1,1,1]){const d=Math.max(0,depth);
  for(let i=0;i<3;i++)out[i]=Math.max(DIVE_ABSORB.floor[i],Math.exp(-DIVE_ABSORB.k[i]*d));return out;}
