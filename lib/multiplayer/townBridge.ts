@@ -15,7 +15,9 @@ import { displayName, partyStore } from './store';
 
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
   zone: Zone; warp: boolean; hidden: boolean };
-export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.Camera): void; dispose(): void }
+export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.Camera): void; dispose(): void;
+  /** The friends' latest interpolated poses (read-only, reused objects): the emote button looks for a friend flying nearby. */
+  friends(): Iterable<RemotePose> }
 
 // One connection per page, shared by Town (this bridge) and the React PartyHost (props.connection).
 let shared: PartyConnection | null = null;
@@ -101,6 +103,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   applyFilters();
 
   return {
+    friends: () => poses.values(),
     update(dt, nowMs, camera) {
       if (!live) return;
       // Friends: sample the interpolators into preallocated poses.

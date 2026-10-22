@@ -89,6 +89,8 @@ export interface EmoteCamState {
   /** On a scooter, bike or moped (a ground ride): emotes work; `rideSpeed` m/s, `steer` rad/s (turn rate), `rideChanged` = dismounted / changed ride since the emote began. */
   onRide: boolean; rideSpeed: number; steer: number; rideChanged: boolean;
   swimming: boolean; flying: boolean;
+  /** A context emote is running (lib/town/emoteContexts.ts): a FLYING one is allowed while flying / on the jetpack ride, a SWIM one while swimming; neither is cancelled by the movement that goes with it. */
+  ctx?: 'fly' | 'swim' | '';
   inJob: boolean; cutscene: boolean; lesson: boolean;
   /** A menu, dialog, map, shop or the Explore room is open (Town's `active` is false). */
   menuOpen: boolean;
@@ -100,9 +102,11 @@ export interface EmoteCamState {
 /** Why the zoom must not run (or must stop at once): '' = it may run. Reduced motion: no zoom at all, just the bubble. */
 export function emoteCamBlocked(s: EmoteCamState): string {
   if (s.reduced) return 'reduced';
-  if (s.riding) return 'riding';
-  if (s.swimming) return 'swimming';
-  if (s.flying) return 'flying';
+  if (s.riding) return 'riding'; // (a flying emote: Town leaves the jetpack ride out of `riding`, only a truck / zipline ride counts)
+  if (s.swimming && s.ctx !== 'swim') return 'swimming';
+  if (s.flying && s.ctx !== 'fly') return 'flying';
+  if (s.ctx === 'fly' && !s.flying) return 'landed';
+  if (s.ctx === 'swim' && !s.swimming) return 'left the water';
   if (s.inJob) return 'job';
   if (s.cutscene) return 'cutscene';
   if (s.lesson) return 'lesson';
@@ -113,7 +117,7 @@ export function emoteCamBlocked(s: EmoteCamState): string {
     if (s.steer > EMOTE_CAM.rideSteer) return 'steering';
     return '';
   }
-  if (s.moving) return 'moving';
+  if (s.moving && !s.ctx) return 'moving';
   return '';
 }
 /** To START: the cancel rules plus "the camera is already close" (an indoor / room camera). */

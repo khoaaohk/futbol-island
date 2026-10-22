@@ -13,7 +13,7 @@ import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyHighFive} from './highFivePose';
+import {applyHighFive} from './highFivePose';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';
 import {HIGH_FIVES,createHighFiveBag,nextHighFive,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
@@ -74,6 +74,8 @@ type Entry={
  admitted:boolean;shown:boolean;
  motion:PlayerMotion;swim:SwimPose;
  emote:number;emoteAge:number;hidden:boolean;muted:boolean;
+ /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
+ lastMode:number;flOn:boolean;
  /** The high five variation this friend is playing (0..9; -1 none). The wire format has no spare field, so each screen picks its own. */
  hf:number;
  acc:number;slot:number;needResume:boolean;
@@ -126,6 +128,7 @@ function ringGeometry(){
  return geo;
 }
 
+const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0};
 export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number}):RemoteAvatars{
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
@@ -182,7 +185,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true};
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,hf:-1,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -194,7 +197,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   },
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive&&!flourishForWire(em,e.lastMode)?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;
@@ -214,7 +217,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    for(let i=0;i<list.length;i++){
     const e=list[i],rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
-    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
+    const fs0=e.emote>=0?flourishForWire(e.emote,e.lastMode):undefined;
+    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;rig?.setExpression('neutral');}}
     if(!rig||!e.label||!e.bubble)continue;
     if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
     const pose=poses.get(e.id);
@@ -232,7 +236,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     const moving=pose.speed>.3;
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1);e.acc=0;
-     const mode=pose.mode;
+     const mode=pose.mode;e.lastMode=mode;
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=travelFor(mode);
      motion.parachute=mode===Mode.Parachute||mode===Mode.Zipline;
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&e.emote===Emote.HighFive&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
@@ -242,15 +246,19 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      // Emotes: PassToMe/Space/Wave/HighFive raise the "called" arm; Cheer/WellPlayed celebrate. Reduced motion keeps only the bubble.
      if(e.emote>=0&&!reduced){
       const em=e.emote,age=e.emoteAge;
-      if(e.hf<0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=b.jump;motion.called=b.called;}
+      if(e.hf<0&&!fs0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=b.jump;motion.called=b.called;}
      }
      rig.update(pose.x,pose.z,step,clock,reduced,motion);
-     if(e.emote>=0&&!reduced&&e.hf<0)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));
+     if(e.emote>=0&&!reduced&&e.hf<0&&!fs0)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));
+     else if(fs0&&!reduced&&fs0.arm>=0&&e.emoteAge>=fs0.armFrom)applyRideEmote(rig.root,fs0.arm,e.emoteAge,Math.max(0,Math.min(1,(e.emoteAge-fs0.armFrom)/.2,(fs0.seconds-e.emoteAge)/.2)));
      root3.position.set(pose.x,pose.y,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
      if(e.hf>=0&&!reduced&&e.emote===Emote.HighFive)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);
      e.needResume=false;
     }
+    // A flying / swimming friend's emote (their mode picks it from the same wire value): roll / pitch / lift on the rig root, every frame, gone with the emote.
+    if(fs0&&!reduced){flourishAt(fs0.emote,e.emoteAge,fs0.seconds,FL,1);root3.rotation.order='YXZ';root3.rotation.x=FL.pitch;root3.rotation.z=FL.roll;root3.position.y+=FL.lift*k;e.flOn=true;}
+    else if(e.flOn){root3.rotation.x=0;root3.rotation.z=0;e.flOn=false;}
     batch.draw(root3);e.shown=true;shown++;
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
     ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1,k);

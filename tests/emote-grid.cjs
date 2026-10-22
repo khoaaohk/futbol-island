@@ -73,7 +73,7 @@ t('Emote button is rendered inside the action cluster, after the action buttons,
 t('always present: not behind multiplayerEnabled() or a live party; sending is gated on a live party',()=>{
  assert(!/multiplayerEnabled|partyStore|usePartyState/.test(ctl),'the button needs no flag');
  assert(/emoteBus\.set\(pickIn=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick as/.test(town),'friends get it only while live');
- assert(/emoteBubbles\.show\(0,rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs&&rs\.arm<0\?-1:pick/.test(town),'your own pose + bubble are immediate');
+ assert(/emoteBubbles\.show\(0,cs\?cs\.emote:rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs&&rs\.arm<0\?-1:pick/.test(town),'your own pose + bubble are immediate');
  assert(/islandNpcs\.react\(id,pick,reduced,emoteFx\.v,/.test(town)&&/pickEmoteNpc\(emoteCands,\{x:me\.x,y:me\.y,z:me\.z\},now,undefined,emoteFacing\)/.test(town),'the best free townsperson (nearest, in front) reacts');
  assert(/emoteBubbles\.show\(1,pick,/.test(town),'a bubble over the townsperson');
 });
@@ -110,6 +110,6 @@ t('townsfolk hold still, face you and step in; the name tag hides; riding emotes
  assert(/applyRideEmote\(player\.root,k,/.test(town)&&/emoteCam\.begin\([^;]*onRideNow[,)]/.test(town)&&/emoteCam\.track\(/.test(town));
  const cel=read('lib/graphics/celebrations.ts'),ride=cel.slice(cel.indexOf('export function applyRideEmote'));
  assert(!/j\.ls|j\.le/.test(ride),'the ride emote never touches the left arm (it stays on the bar)');
- assert(/\.react\(id,pick|ecs\.onRide=/.test(town)&&/ecs\.riding=rideRef\.current==='jetpack'\|\|streetTraffic\.rider\.index>=0\|\|zipline\.active/.test(town),'the jetpack, truck and zipline stay blocked');
+ assert(/\.react\(id,pick|ecs\.onRide=/.test(town)&&/ecs\.riding=\(rideRef\.current==='jetpack'&&ecs\.ctx!=='fly'\)\|\|streetTraffic\.rider\.index>=0\|\|zipline\.active/.test(town),'the jetpack, truck and zipline stay blocked');
 });
 console.log(`emote-grid: ${n} checks passed`);
