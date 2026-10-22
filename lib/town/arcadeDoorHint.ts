@@ -5,8 +5,8 @@ import {ARCADE_DOOR} from './venues';
 import {ARCADE_ROOM_CODE} from '../multiplayer/rooms/arcade';
 
 export type ArcadeDoorHint={visible:boolean;count:number;text:string;x:number;y:number;z:number};
-/** Hint anchor: above the island's Arcade door (lib/town/venues.ts ARCADE_DOOR), sign height. */
-export const ARCADE_DOOR_HINT_Y=3.4;
+/** Hint anchor: above the island's Arcade door frame (lib/town/venues.ts ARCADE_DOOR), clear of the walkers' name labels at the door (5.2 m; was 3.4). */
+export const ARCADE_DOOR_HINT_Y=5.2;
 export function createArcadeDoorHint():ArcadeDoorHint{return{visible:false,count:0,text:'',x:ARCADE_DOOR.x,y:ARCADE_DOOR_HINT_Y,z:ARCADE_DOOR.z};}
 export function arcadeDoorHintText(count:number){return count>0?`${count} in the Arcade`:'';}
 /** `rooms[i]` = roomOf(friend i's last pose) (RoomCode, -1 on the island). A LEGACY door pose (old client: Busy + Indoors + Activity.Arcade

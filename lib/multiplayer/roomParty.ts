@@ -179,6 +179,9 @@ export interface RoomParty {
   /** Sends the local room pose now (a busy flag flipped while the room's loop is stopped: a game replaced the Arcade hub, an overlay
    *  covers it). The connection's delta check drops it when nothing changed; otherwise the 5 s beat would carry it late. */
   sendNow(): void;
+  /** The next pose is a Warp (+ one retry 5.5 s later, as after a Welcome): the local player jumps (the Arcade: hub spot <-> the
+   *  cabinet of a running game); without it the relay drops the jump as too fast and friends keep the old spot. */
+  warpNext(): void;
   /** True while the party draws the local player's colour ring (the room's own foot disc then hides: one ring only). */
   readonly meRing: boolean;
   readonly room: number;
@@ -283,6 +286,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
       return moved;
     },
     sendNow() { if (core.live) sendLocal(now()); },
+    warpNext() { armEntryWarp(st.warp); },
     sendEmote(e) { return conn.status === 'live' && conn.sendEmote(e as Parameters<PartyConnection['sendEmote']>[0]); },
     update(dt, nowMs, camera, hideFriends = false) {
       lastUpdateAt = nowMs;

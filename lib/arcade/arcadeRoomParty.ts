@@ -73,6 +73,7 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
         // Entry spawn: a fresh hub at the default door spot looks for a free slot once friends are known (they arrive after Welcome).
         h.pose(hp);
         spawnUntil = Math.abs(hp.x - SPAWN.x) < 0.05 && Math.abs(hp.z - SPAWN.z) < 0.05 ? performance.now() + SPAWN_WINDOW_MS : 0;
+        if (flags.game === null) party.warpNext(); // back from a game: the cabinet -> the hub spot is a jump
         h.wakeRemote();
       } else {
         // The hub is going (a game started, or the page is leaving): take the avatars out BEFORE it disposes its scene's meshes.
@@ -104,7 +105,9 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
     },
     busy(state) {
       if (flags.game === state.game && flags.list === state.list && flags.hall === state.hall) return;
+      const jump = flags.game !== state.game; // a game starts / ends: the pose moves to / from that cabinet's stand spot
       flags.game = state.game; flags.list = state.list; flags.hall = state.hall;
+      if (jump) party.warpNext();
       party.sendNow();
     },
     pushOut: (p, r) => party.pushOut(p, r),

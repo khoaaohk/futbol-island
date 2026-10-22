@@ -1,7 +1,7 @@
 // Scripted multiplayer bots. Needs a WebSocket client: `node --experimental-websocket` on Node 20.
 //   node --experimental-websocket multiplayer/bots/bot.mjs --url http://127.0.0.1:8790 --code K7MQ4R --n 3 \
 //        [--path circle|line] [--cheat speed|flood|bounds] [--host-key KEY] [--ms 3000] [--spread 300]
-//        [--room 8 --room-after 6000 --walk 6000 --stand 6000 --emote-every 7000]
+//        [--room 8 --room-after 6000 --walk 6000 --stand 6000 --emote-every 7000] [--busy-at 3.1,-4.2 --busy-after 20000 --busy-for 30000]
 // --room: after --room-after ms on the island the bot walks into that room (docs/multiplayer-rooms-design.md 2.2: room poses with
 // the entry Warp + one retry 5.5 s later), walking --walk ms then standing --stand ms in turn, and sends a Wave every --emote-every ms.
 // --n up to 20 (the party cap). --spread = decimetres between bots along X (default 0: everyone on one spot), to exercise interest management.
@@ -21,12 +21,12 @@ const LOOK = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8];
 const wsUrl = (url, code) => url.replace(/^http/, 'ws').replace(/\/$/, '') + '/party/' + code + '/ws';
 
 const running = []; // live reports, printed early on SIGTERM (a check that ends before --ms)
-function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = null, ms = 3000, index = 0, spread = 0, room = -1, roomAfter = 0, walk = 6000, stand = 6000, emoteEvery = 0 }) {
+function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = null, ms = 3000, index = 0, spread = 0, room = -1, roomAfter = 0, walk = 6000, stand = 6000, emoteEvery = 0, busyAt = null, busyAfter = 0, busyFor = 0 }) {
   return new Promise((resolve) => {
     const out = {
       index, cheat, welcomed: false, id: -1, host: false, token: null, seen: 0, posesFrom: [], maxXFrom: {}, errors: [],
       closeCode: null, ended: null, left: [], sent: 0, msgs: 0, bytes: 0, poseFrames: 0, poseEntries: 0, maxFrame: 0,
-      roomFrom: {}, emotesFrom: {}, emotesSent: 0,
+      roomFrom: {}, emotesFrom: {}, emotesSent: 0, busyFrom: {},
     };
     let t0 = 0, roomWarps = 0;
     const seen = new Set();
@@ -48,8 +48,18 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
       const el = Date.now() - t0;
       if (room >= 0 && el >= roomAfter) { // inside the room: walk a line in front of the door, then stand still, in turn
         const r = el - roomAfter, cyc = r % (walk + stand), walking = cyc < walk, k = Math.min(cyc, walk) / 1000;
+        // --busy-at: Busy (an arcade game, an overlay) at a room-local spot for --busy-for ms after --busy-after ms in the room.
+        if (busyAt && r >= busyAfter && (!busyFor || r < busyAfter + busyFor)) {
+          if (out.lastBusy && r - out.busySentAt < 2000) return; // repeated every 2 s (a dropped first pose must not lose the state)
+          const first = !out.lastBusy;
+          out.lastBusy = true; out.lastStill = false; out.busySentAt = r;
+          send([C.Pose, seq, ...roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, busyAt[0], 0, busyAt[1], Math.PI, Mode.Busy, first ? 1 : 0)]); // first: a Warp (the relay drops a multi-metre jump)
+          out.wasBusy = true;
+          return;
+        }
+        out.lastBusy = false;
         const x = -1.5 + 2.2 * Math.sin(k * 0.9), z = 2.4 + 0.8 * Math.cos(k * 0.6);
-        const warp = roomWarps === 0 || (roomWarps === 1 && r >= 5500) ? 1 : 0; if (warp) roomWarps++;
+        const warp = roomWarps === 0 || (roomWarps === 1 && r >= 5500) || out.wasBusy ? 1 : 0; if (warp) roomWarps++; out.wasBusy = false;
         const b = roomBody([0, 0, 0, 0, 0, 0, 0, 0], room, x, 0, z, walking ? k * 0.9 : 0.6, walking ? Mode.Walk : Mode.Idle, warp);
         if (!walking && !warp && out.lastStill) return; // standing: send once, like the client's delta suppression
         out.lastStill = !walking;
@@ -88,6 +98,7 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
             const id = m[i];
             posesFrom.add(id);
             const rm = roomOf(m.slice(i + 1, i + 9)); if (rm >= 0) out.roomFrom[id] = rm;
+            if (rm >= 0 && m[i + 6] === Mode.Busy) { const l = (out.busyFrom[id] ??= []), x = m[i + 1] / 10, z = m[i + 3] / 10, k = l[l.length - 1]; if (!k || k[0] !== x || k[1] !== z) { l.push([x, z]); if (l.length > 20) l.shift(); } } // every Busy spot seen
             out.maxXFrom[id] = Math.max(out.maxXFrom[id] ?? -1e9, m[i + 1]);
           }
           break;
@@ -118,6 +129,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     url: get('url', 'http://127.0.0.1:8790'), code: get('code'), n: Number(get('n', 1)), path: get('path', 'circle'),
     cheat: get('cheat', null), hostKey: get('host-key', null), ms: Number(get('ms', 3000)), spread: Number(get('spread', 0)),
     room: Number(get('room', -1)), roomAfter: Number(get('room-after', 0)), walk: Number(get('walk', 6000)), stand: Number(get('stand', 6000)), emoteEvery: Number(get('emote-every', 0)),
+    busyAt: get('busy-at', null)?.split(',').map(Number) ?? null, busyAfter: Number(get('busy-after', 0)), busyFor: Number(get('busy-for', 0)),
   });
   console.log(JSON.stringify({ bots: bots.map((b) => ({ ...b, token: undefined })) }));
 }
