@@ -7,7 +7,7 @@ import {NPC_SET_EMOJI} from './npcEmoteSets';
 import {JUGGLE_SECONDS, PASS_SECONDS as PASS_LEN} from './emotePass';
 
 /** The ten preset emotes (the wheel shows five at a time and scrolls). The numbers are the multiplayer protocol's Emote values (multiplayer/protocol/types.ts). */
-export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
+export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, ShowOff: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
 export type LocalEmote = (typeof EMOTE)[keyof typeof EMOTE];
 export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = [
   {emote: EMOTE.Wave, icon: 'hand', label: 'Wave'},
@@ -19,7 +19,7 @@ export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = 
   {emote: EMOTE.Dance, icon: 'music', label: 'Dance'},
   {emote: EMOTE.Thanks, icon: 'thanks', label: 'Thanks'},
   {emote: EMOTE.JuggleWithMe, icon: 'juggle-air', label: 'Juggle with me'},
-  {emote: EMOTE.Space, icon: 'wind', label: 'Space'},
+  {emote: EMOTE.ShowOff, icon: 'show-off', label: 'Show off'},
 ];
 /** What the wheel shows: on foot the ten presets; on a scooter, bike or moped (user, Oct 22 2026) Wave, Cheer and the three scripted rides that fit that vehicle (foot-only emotes are hidden). */
 export interface WheelEmote {emote: number; icon: string; label: string}
@@ -28,7 +28,7 @@ export function wheelEmotesFor(ride: string): WheelEmote[] {
   if (!scripts.length) return LOCAL_EMOTES;
   return [{emote: EMOTE.Wave, icon: 'hand', label: 'Wave'}, ...scripts.map(r => ({emote: r.emote, icon: r.icon, label: r.label})), {emote: EMOTE.Cheer, icon: 'star', label: 'Cheer'}];
 }
-export const EMOTE_EMOJI: Record<number, string> = {...CTX_EMOTE_EMOJI, ...NPC_SET_EMOJI, ...Object.fromEntries(RIDE_SCRIPTS.map(r => [r.emote, r.emoji])), 0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{1F939}', 4: '\u{1F4A8}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
+export const EMOTE_EMOJI: Record<number, string> = {...CTX_EMOTE_EMOJI, ...NPC_SET_EMOJI, ...Object.fromEntries(RIDE_SCRIPTS.map(r => [r.emote, r.emoji])), 0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{1F939}', 4: '\u{1F31F}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
 /** Every simple emote lasts about 4 s (user, Oct 22 2026), for you, a friend and a townsperson alike; Pass it ~5.9 s (five passes); a high five with a variation keeps its own length. */
 export const EMOTE_SECONDS = 4, NPC_EMOTE_SECONDS = 4, PASS_SECONDS = PASS_LEN, NPC_BUBBLE_SECONDS = 4, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
 /** A townsperson farther than NPC_STEP_FROM (m) takes up to NPC_STEP_MAX steps toward you (never closer than NPC_STEP_TO) at NPC_STEP_SPEED m/s. */
