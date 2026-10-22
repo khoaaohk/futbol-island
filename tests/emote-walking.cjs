@@ -124,7 +124,7 @@ t('townsfolk you pass: a light answer on their route; only the run-by five slows
  const npcs=read('lib/graphics/islandNpcs.ts'),pb=npcs.slice(npcs.indexOf('const passBy='),npcs.indexOf('\n',npcs.indexOf('const passBy=')));
  assert(/e\.mx=reduced\?null:\{a,age:0\}/.test(pb)&&!/standUp|emoteStep/.test(pb),'passBy: no stand-up, no step-in; reduced motion = bubble only');
  assert(/if\(entry\.mx&&!reduced&&!stunned\)/.test(npcs)&&/entry\.head\.rotation\.y\+=/.test(npcs),'the head turns, arms answer, never under reduced motion');
- assert(/!entry\.near&&!entry\.mx&&!entry\.stunned&&entry\.seatHeld>=2/.test(npcs),'a seated one still poses while answering');
+ assert(/if\(entry\.mx\)\{entry\.seatHeld=0;/.test(npcs),'a seated one still poses while answering');
 });
 t('writer: no leg joint, additive torso / head / pelvis, an arm left NaN keeps the walk swing; no allocation per frame',()=>{
  const W2=load('lib/graphics/moveEmotePose.ts');const names=['left-shoulder','right-shoulder','left-elbow','right-elbow','player-pelvis','armor-torso','player-head','left-hip','right-hip','left-knee','right-knee'];
