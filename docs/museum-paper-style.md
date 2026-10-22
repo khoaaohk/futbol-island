@@ -23,7 +23,7 @@ entire screen", "the rest of the game should be in this style".
 | `figure.ts` | Paper mannequins (capsule bodies, poses, runs, ball, depth sort) | cards, var, backpass |
 | `bench.tsx` | Frames (wide / tall model orientation), `Base`, `Tint`, `Sphere`, `LabelPlate`, `useBox(ref)`, `useLive` | telstar, laced-leather, shirts |
 | `hooks.ts` | `useSize` (an element's live px size) | hall-of-fame, timeline |
-| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain), laced-leather (Turn the old ball, Old vs New), boots (Run, plant, kick) |
+| `figure-kit.ts`, `FigureStage.tsx`, `FigureStage.module.css` | Figure kit v2 (below): turn all the way round, see-through, labels, swatches | telstar-1970 (Turn the ball), var-2018 (The review chain), laced-leather (Turn the old ball, Old vs New), boots (Run, plant, kick), floodlights-1878 (Switch on a floodlight), ball-curve (Kick with spin), stadiums (Fill the stadium) |
 
 Hall-of-fame and timeline keep their own `Draw.tsx` (their display lists differ); everything else that was copied between
 exhibits now lives here. Two room components remain (`PaperRoom`, `PaperStage`): they share tokens and behaviour but differ in
@@ -67,8 +67,33 @@ recolour. Exhibits that don't use it keep their fixed view. Files: `anatomy/figu
 ("Turn the old ball": 18 leather panels, the lace and lace-up opening; see-through = the bladder and its inflation tube tucked
 under the laces; "Old vs New" swaps in a modern ball with a valve and a sealed bladder; leather swatches) and boots ("Run, plant,
 kick": a boot on turf; see-through = insole, heel counter, toe box over the soleplate and studs; moulded / screw-in studs; the
-Kit Shop's boot colours as swatches; three steps bend the sole, sink the studs and swing the kick). Next candidates:
-floodlights-1878, ball-curve, stadiums.
+Kit Shop's boot colours as swatches; three steps bend the sole, sink the studs and swing the kick). Batch 2 below.
+
+**Batch 2 (museum-figures-3, Oct 21 2026; user: "floodlights-1878 is next, then ball-curve, then stadiums"; keep each figure
+simple: few named parts, one action button, no extra panels).** Each opens from its intro dock (and from the rig / breakdown /
+workshop) as a `figure` phase in the card, with a note line, ONE action button and Back; the rest of each exhibit is unchanged.
+The three action sequences run on the figure's own clock in `spec.tick` (no timers; the loop sleeps when it ends) and report
+each step through `onStep`; reduced motion = one step per press. New kit option: `seeThroughLabel` (the See-through button's
+words).
+- floodlights-1878 · `figure.ts` "Switch on a floodlight": a generic mast; see-through = reflector, lamps, the cable up inside the
+  mast; Labels Lamps, Reflector, Mast, Cable, Power box; Switch on = power on → lamps glow → pitch lit (a pool of light grows).
+  Facts: the Bramall Lane lamps (14 October 1878) stood on wooden towers and generators at the ground made the power, as there was
+  no grid (Sheffield, home of football · John Tasker plaque; Wikipedia · Floodlight); older floodlights needed to warm up, LED
+  floodlights light at once (Wikipedia · Floodlight). Max 61 parts (labels counted as 7 each).
+- ball-curve · `figure.ts` "Kick with spin": a big teaching ball, a wall of three blocks and a goal; "Show the air" (= see-through)
+  shows streamlines thrown off one side and the sideways Force arrow; Labels Spin, Air flow, Force, Curve path; Curl left / right
+  mirrors spin, air and path; Kick it = kick with spin → the air bends → round the wall into the goal. Facts: the spinning ball
+  throws the air one way and is pushed the other (Magnus effect; NASA Glenn "Lift of a baseball"); sidespin curves, backspin
+  lifts, topspin dips (Wikipedia · Magnus effect); Roberto Carlos, Brazil v France, Tournoi de France 1997, outside of the left
+  foot, looked like going wide then swung in, and a spinning ball bends more as it slows (Wikipedia · Curl; Dupeux et al. 2010,
+  New J. Phys. 12, via ScienceDaily). No speeds or spin rates claimed. Max 69 parts. Note: iso-kit's screen is the mirror of the world
+  (R × U = −V), so the figure passes −side to make the curl you see from behind the ball match the button.
+- stadiums · `figure.ts` "Fill the stadium": a simple GENERIC bowl (the seven detailed turntable models draw ~4,000 SVG elements
+  each, so they were not converted; their explore / build / quiz flow is unchanged): four two-tier stands (one prism each, a
+  stepped profile), a roof ring of four slabs that lifts and ghosts in the see-through, the players' tunnel (and its way under
+  the stand), the pitch, four corner masts; Labels Roof, Stand tiers, Tunnel, Pitch, Floodlights; Fill = lower tier → upper tier
+  → kick-off (lights on). Plain truths only (tiers step up so fans see over the heads in front, roofs keep the rain off, the
+  tunnel leads from the dressing rooms, floodlights light evening matches). Max 98 parts.
 
 **API.** `<FigureStage spec active reduced onLabel handle label top extra/>` fills its card (absolute, inset 0). `spec`:
 `{id, points, front?, turn?:'full'|'fixed', pitch?:[20,60], seeThrough?, labels?, swatches?, swatchLabel?, draw(view), tick?}`.
