@@ -138,6 +138,9 @@ export const SWATCHES=[
  {id:'cobalt',name:'Cobalt',hex:'#2f55c9'},{id:'blush',name:'Blush',hex:'#ef9fb0'},{id:'gallery',name:'Gallery red',hex:'#e4322b'},
 ] as const;
 export type SwatchId=typeof SWATCHES[number]['id'];
+/** An exhibit's own swatch (leather tones, the Kit Shop's boot colours); spec.swatches takes SWATCHES ids or these. */
+export type Swatch={id:string;name:string;hex:string};
+export const swatchList=(list:readonly (string|Swatch)[]|undefined):Swatch[]=>(list??[]).map(x=>typeof x==='string'?SWATCHES.find(s=>s.id===x)??null:x).filter((x):x is Swatch=>!!x);
 export const swatchHex=(id:string|null|undefined)=>SWATCHES.find(s=>s.id===id)?.hex??null;
 /** A designated part takes the swatch colour; every other part keeps its own. */
 export const recolor=(base:string,swatch:string|null|undefined,designated:boolean)=>designated&&swatchHex(swatch)?swatchHex(swatch)!:base;
@@ -157,34 +160,119 @@ export const kOf=(P:Projection)=>cameraOf(P).k;
 /** The number of separate SVG elements in a drawing string (the heat cap counts these). */
 export const countParts=(svg:string)=>(svg.match(/<(path|circle|ellipse|rect|line|polygon|text)\b/g)||[]).length;
 
+// ── Free solids: prisms from any two rings (bendable), sphere panels (museum-figures-2) ─────────────────────────────────
+const sub=(a:readonly number[],b:readonly number[]):V3=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const cross=(a:readonly number[],b:readonly number[]):V3=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+/** The convex hull of screen points (monotone chain), for a solid's one-path silhouette. */
+export function hull(pts:readonly Flat[]):Flat[]{
+ const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);if(p.length<3)return p;
+ const cr=(o:Flat,a:Flat,b:Flat)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]),lo:Flat[]=[],up:Flat[]=[];
+ for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
+ for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
+ lo.pop();up.pop();return lo.concat(up);}
+const pd=(pts:readonly Flat[])=>{let d='';for(let i=0;i<pts.length;i++)d+=(i?'L':'M')+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1);return d+'Z';};
+export type PrismStyle={alpha?:number;ghost?:number;lit?:boolean;attrs?:string};
+/**
+ * A prism between two rings of 3D points (same count, any shape, any tilt: a bent boot sole is just moved vertices). Faces are
+ * drawn only while they face the viewer, shaded in three tones from the light, merged into one path per tone (≤ 6 SVG elements:
+ * 3 tones, the two caps, the ink silhouette). `ghost` (0…1) draws it as the see-through ghost instead (silhouette only).
+ * Near-convex shapes only (a foot outline is): the silhouette is the hull of the projected corners.
+ */
+export function prismSvg(bot:readonly V3[],top:readonly V3[],hex:string,v:{P:Projection;V:readonly number[];L:readonly number[]},{alpha=1,ghost,lit,attrs=''}:PrismStyle={}){
+ const n=bot.length,P=v.P,sb=bot.map(p=>iso(p as V3,P)),st=top.map(p=>iso(p as V3,P)),all=sb.concat(st),sil=pd(hull(all));
+ if(ghost!=null&&ghost>0)return `<path${attrs} d="${sil}" fill="#f7f7f3" fill-opacity="${(ghost*.6).toFixed(3)}" stroke="${INK}" stroke-width=".9" opacity="${Math.max(ghost,.35).toFixed(3)}"/>`;
+ let c:V3=[0,0,0];for(const p of bot.concat(top)){c[0]+=p[0];c[1]+=p[1];c[2]+=p[2];}c=[c[0]/(2*n),c[1]/(2*n),c[2]/(2*n)];
+ const t=tones(hex),bucket:{[k:string]:string}={},out=(face:readonly V3[],nrm:V3)=>{const m:V3=[0,0,0];for(const q of face){m[0]+=q[0];m[1]+=q[1];m[2]+=q[2];}
+  return dot(nrm,sub([m[0]/face.length,m[1]/face.length,m[2]/face.length],c))<0?[-nrm[0],-nrm[1],-nrm[2]] as V3:nrm;};
+ for(let i=0;i<n;i++){const j=(i+1)%n,face=[bot[i],bot[j],top[j],top[i]],nr=out(face,unit(cross(sub(bot[j],bot[i]),sub(top[i],bot[i]))));
+  if(!isFacing(nr,v.V,1e-4))continue;const col=shadeOf(nr,v.L,t);bucket[col]=(bucket[col]??'')+pd([sb[i],sb[j],st[j],st[i]]);}
+ let s='';for(const col in bucket)s+=`<path d="${bucket[col]}" fill="${col}"/>`;
+ for(const [ring,flat] of [[top,st],[bot,sb]] as const){const nr=out(ring,unit(cross(sub(ring[1],ring[0]),sub(ring[Math.floor(n/2)],ring[0]))));
+  if(isFacing(nr,v.V,1e-4))s+=`<path d="${pd(flat)}" fill="${lit?mix(t.l,'#ffffff',.25):shadeOf(nr,v.L,t)}" stroke="${INK_MID}" stroke-width=".6"/>`;}
+ s+=`<path d="${sil}" fill="none" stroke="${lit?'var(--accent)':INK}" stroke-width="${lit?1.8:.9}" stroke-linejoin="round"/>`;
+ return `<g${attrs}${alpha<1?` opacity="${alpha.toFixed(3)}"`:''}>${s}</g>`;}
+/** The corners of a prism's rings as a depth box (for byDepth). */
+export function boxOf(...rings:readonly (readonly V3[])[]):Box{const a:V3=[1e9,1e9,1e9],b:V3=[-1e9,-1e9,-1e9];
+ for(const r of rings)for(const p of r)for(let k=0;k<3;k++){a[k]=Math.min(a[k],p[k]);b[k]=Math.max(b[k],p[k]);}return [a,b];}
+/**
+ * One panel of a ball (unit directions from the ball's centre) as a screen path: points past the horizon slide onto the rim, so a
+ * panel that straddles the edge closes on the silhouette (the Telstar's rule, shared).
+ */
+export function spherePath(dirs:readonly V3[],c:Flat,rad:number,v:{V:readonly number[];R:readonly number[];U:readonly number[]}){
+ let d='';for(let j=0;j<dirs.length;j++){let [x,y,z]=dirs[j];const s=x*v.V[0]+y*v.V[1]+z*v.V[2];
+  if(s<0){x-=s*v.V[0];y-=s*v.V[1];z-=s*v.V[2];const l=Math.hypot(x,y,z)||1;x/=l;y/=l;z/=l;}
+  d+=(j?'L':'M')+(c[0]+rad*(x*v.R[0]+y*v.R[1]+z*v.R[2])).toFixed(1)+' '+(c[1]-rad*(x*v.U[0]+y*v.U[1]+z*v.U[2])).toFixed(1);}
+ return d+'Z';}
+export const norm3=(v:readonly number[]):V3=>unit([v[0],v[1],v[2]]);
+
 // ── Labels ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
-export type LabelAnchor={id:string;text:string;at:V3;normal?:V3;on?:boolean};
-export type PlacedLabel={id:string;text:string;on:boolean;ax:number;ay:number;x:number;y:number;w:number;h:number;side:-1|1};
+/**
+ * A tag's anchor. A part whose `normal` faces away: with `centre` (a round part) the anchor slides to the nearest point on the
+ * silhouette, so the tag stays (museum-figures-2: the Telstar's Valve); with `keep` it stays where it is, its leader dashed
+ * (the part is round the back); otherwise it hides. Tapping any tag turns the figure to face its part, so every tag is reachable.
+ */
+export type LabelAnchor={id:string;text:string;at:V3;normal?:V3;on?:boolean;centre?:V3;keep?:boolean};
+export type PlacedLabel={id:string;text:string;on:boolean;ax:number;ay:number;x:number;y:number;w:number;h:number;side:-1|1;back?:boolean;n?:number};
 /** Pill size for a name at a font size (px): kid-readable type, at least 13 px. */
 export const pillSize=(text:string,font:number)=>({w:Math.round(text.length*font*.6+font*1.7),h:Math.round(font*2)});
+/** Where a tag's anchor goes for this view (null = hidden): see LabelAnchor. */
+export function anchorFor(a:LabelAnchor,V:readonly number[]):{at:V3;back:boolean}|null{
+ if(!a.normal||isFacing(a.normal,V,.05))return {at:a.at,back:false};
+ if(a.centre){const c=a.centre,d:V3=[a.at[0]-c[0],a.at[1]-c[1],a.at[2]-c[2]],r=Math.hypot(d[0],d[1],d[2]),s=dot(d,V);
+  // the part's direction with its toward-viewer share removed (the rim point nearest it), nudged just in front of the rim
+  const e=unit([d[0]-s*V[0]+.12*r*V[0],d[1]-s*V[1]+.12*r*V[1],d[2]-s*V[2]+.12*r*V[2]]);return {at:[c[0]+e[0]*r,c[1]+e[1]*r,c[2]+e[2]*r],back:true};}
+ return a.keep?{at:a.at,back:true}:null;}
+const widest=(list:readonly {w:number}[])=>list.reduce((m,c)=>Math.max(m,c.w),0);
 /**
  * Name tags in two columns either side of the object, each column sorted by height so the leaders never cross, pushed apart
- * so pills never overlap, and kept inside the card. Tags whose part faces away are hidden (a face, and its label, only while
- * it faces you). `obj` is the object's screen bounds.
+ * so pills never overlap, and kept inside the card. Tags whose part faces away are hidden or kept (see LabelAnchor). `obj` is
+ * the object's screen bounds. When a column has no room beside the object (a phone card the figure fills), the tags collapse
+ * to numbered badges on the parts plus a legend of numbered pills along the card's bottom edge, so no tag covers the figure
+ * (`compact`: 'auto' = only when needed).
  */
-export function placeLabels(anchors:readonly LabelAnchor[],P:Projection,V:readonly number[],card:{w:number;h:number},obj:{l:number;r:number;t:number;b:number},{font=13,gap=6,top=8,bottom=8}:{font?:number;gap?:number;top?:number;bottom?:number}={}):PlacedLabel[]{
- const cx=(obj.l+obj.r)/2,cols:{[s:number]:PlacedLabel[]}={[-1]:[],[1]:[]};
- for(const a of anchors){if(a.normal&&!isFacing(a.normal,V,.05))continue;const [x,y]=iso(a.at,P),{w,h}=pillSize(a.text,font);
-  cols[x<cx?-1:1].push({id:a.id,text:a.text,on:!!a.on,ax:x,ay:y,x:0,y,w,h,side:x<cx?-1:1});}
+export function placeLabels(anchors:readonly LabelAnchor[],P:Projection,V:readonly number[],card:{w:number;h:number},obj:{l:number;r:number;t:number;b:number},{font=13,gap=6,top=8,bottom=8,compact='auto'}:{font?:number;gap?:number;top?:number;bottom?:number;compact?:boolean|'auto'}={}):PlacedLabel[]{
+ const cx=(obj.l+obj.r)/2,cols:{[s:number]:PlacedLabel[]}={[-1]:[],[1]:[]},all:PlacedLabel[]=[];
+ for(const a of anchors){const f=anchorFor(a,V);if(!f)continue;const [x,y]=iso(f.at,P),{w,h}=pillSize(a.text,font);
+  const c:PlacedLabel={id:a.id,text:a.text,on:!!a.on,ax:x,ay:y,x:0,y,w,h,side:x<cx?-1:1,back:f.back};cols[c.side].push(c);all.push(c);}
  // Balance: a crowded column hands its innermost tags to the other side.
  for(const s of [-1,1] as const){const o=-s as -1|1;while(cols[s].length>cols[o].length+2){cols[s].sort((a,b)=>s*(a.ax-b.ax));const m=cols[s].shift()!;m.side=o;cols[o].push(m);}}
+ const room=(s:-1|1)=>!cols[s].length||(s<0?obj.l-14-widest(cols[s])>=4:obj.r+14+widest(cols[s])<=card.w-4);
+ if(compact===true||(compact==='auto'&&(!room(-1)||!room(1))))return legend(all,card,{font,gap,bottom});
  const out:PlacedLabel[]=[];
  for(const s of [-1,1] as const){const col=cols[s].sort((a,b)=>a.ay-b.ay);
   let y=-1e9;for(const c of col){c.y=Math.max(c.ay,y+c.h+gap,top+c.h/2);y=c.y;}
   let lim=card.h-bottom;for(let i=col.length-1;i>=0;i--){const c=col[i];if(c.y+c.h/2>lim)c.y=lim-c.h/2;lim=c.y-c.h/2-gap;}
   for(const c of col){const want=s<0?obj.l-14-c.w/2:obj.r+14+c.w/2;c.x=clamp(want,4+c.w/2,card.w-4-c.w/2);out.push(c);}}
  return out;}
+/** Compact tags: numbered left to right by anchor; the legend wraps in centred rows along the card's bottom edge. */
+function legend(list:PlacedLabel[],card:{w:number;h:number},{font,gap,bottom}:{font:number;gap:number;bottom:number}):PlacedLabel[]{
+ const sorted=list.slice().sort((a,b)=>a.ax-b.ax||a.ay-b.ay),rows:PlacedLabel[][]=[[]];let used=0;
+ for(let i=0;i<sorted.length;i++){const c=sorted[i];c.n=i+1;c.w=pillSize(`${c.n} ${c.text}`,font).w;
+  if(used&&used+gap+c.w>card.w-16){rows.push([]);used=0;}rows[rows.length-1].push(c);used+=(used?gap:0)+c.w;}
+ const h=sorted[0]?.h??font*2;let y=card.h-bottom-h/2-(rows.length-1)*(h+gap);
+ for(const r of rows){const tw=r.reduce((m,c)=>m+c.w,0)+gap*(r.length-1);let x=(card.w-tw)/2;
+  for(const c of r){c.x=x+c.w/2;c.y=y;c.side=c.ax<c.x?-1:1;x+=c.w+gap;}y+=h+gap;}
+ return sorted;}
 const esc=(t:string)=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]!));
-/** The tags as SVG (a dot on the part, a leader, a pill; lit in the accent while the part works). Tappable via data-fig-label. */
+const MONO=`font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700"`;
+/**
+ * The tags as SVG: a dot on the part, a leader, a pill, lit in the accent while the part works; a dashed leader and outline for
+ * a part round the back. Compact tags: a numbered badge on the part and a numbered pill in the legend. Tappable through
+ * data-fig-label; every tag has an invisible hit area at least 44 px tall (kids' fingers).
+ */
 export function labelsSvg(list:readonly PlacedLabel[],font=13,alpha=1){
- let s='';for(const c of list){const ex=c.x-c.side*c.w/2;
-  s+=`<g data-fig-label="${esc(c.id)}"${c.on?' data-on=""':''} style="cursor:pointer"><path d="M${c.ax.toFixed(1)} ${c.ay.toFixed(1)}L${(ex-c.side*6).toFixed(1)} ${c.y.toFixed(1)}L${ex.toFixed(1)} ${c.y.toFixed(1)}" fill="none" stroke="${c.on?'var(--accent)':INK}" stroke-width="1"/>`
-  +`<circle cx="${c.ax.toFixed(1)}" cy="${c.ay.toFixed(1)}" r="2.4" fill="${c.on?'var(--accent)':INK}"/>`
-  +`<rect x="${(c.x-c.w/2).toFixed(1)}" y="${(c.y-c.h/2).toFixed(1)}" width="${c.w}" height="${c.h}" rx="${c.h/2}" fill="${c.on?'var(--accent)':'#fbfbf8'}" stroke="${c.on?'var(--accent)':INK}" stroke-width="1"/>`
-  +`<text x="${c.x.toFixed(1)}" y="${(c.y+font*.36).toFixed(1)}" font-size="${font}" text-anchor="middle" font-family="ui-monospace,'SF Mono',Menlo,monospace" font-weight="700" fill="${c.on?'#fff':INK}">${esc(c.text)}</text></g>`;}
+ let s='';for(const c of list){const ink=c.on?'var(--accent)':INK,fill=c.on?'var(--accent)':'#fbfbf8',txt=c.on?'#fff':INK,dash=c.back?' stroke-dasharray="3 2"':'';
+  const pill=`<rect x="${(c.x-c.w/2).toFixed(1)}" y="${(c.y-22).toFixed(1)}" width="${c.w}" height="44" fill="transparent"/>`
+   +`<rect x="${(c.x-c.w/2).toFixed(1)}" y="${(c.y-c.h/2).toFixed(1)}" width="${c.w}" height="${c.h}" rx="${c.h/2}" fill="${fill}" stroke="${ink}" stroke-width="1"${dash}/>`;
+  const head=`<g data-fig-label="${esc(c.id)}"${c.on?' data-on=""':''}${c.back?' data-back=""':''} style="cursor:pointer">`;
+  if(c.n){
+   s+=`${head.replace('<g ','<g data-fig-badge="'+c.n+'" ')}<circle cx="${c.ax.toFixed(1)}" cy="${c.ay.toFixed(1)}" r="22" fill="transparent"/>`
+    +`<circle cx="${c.ax.toFixed(1)}" cy="${c.ay.toFixed(1)}" r="${Math.round(font*.85)}" fill="${fill}" stroke="${ink}" stroke-width="1.2"${dash}/>`
+    +`<text x="${c.ax.toFixed(1)}" y="${(c.ay+font*.34).toFixed(1)}" font-size="${font-1}" text-anchor="middle" ${MONO} fill="${txt}">${c.n}</text></g>`
+    +`${head}${pill}<text x="${c.x.toFixed(1)}" y="${(c.y+font*.36).toFixed(1)}" font-size="${font}" text-anchor="middle" ${MONO} fill="${txt}">${c.n} ${esc(c.text)}</text></g>`;
+   continue;}
+  const ex=c.x-c.side*c.w/2;
+  s+=`${head}<path d="M${c.ax.toFixed(1)} ${c.ay.toFixed(1)}L${(ex-c.side*6).toFixed(1)} ${c.y.toFixed(1)}L${ex.toFixed(1)} ${c.y.toFixed(1)}" fill="none" stroke="${ink}" stroke-width="1"${dash}/>`
+  +`<circle cx="${c.ax.toFixed(1)}" cy="${c.ay.toFixed(1)}" r="2.4" fill="${ink}"/>${pill}`
+  +`<text x="${c.x.toFixed(1)}" y="${(c.y+font*.36).toFixed(1)}" font-size="${font}" text-anchor="middle" ${MONO} fill="${txt}">${esc(c.text)}</text></g>`;}
  return alpha<1?`<g opacity="${alpha.toFixed(3)}">${s}</g>`:s;}

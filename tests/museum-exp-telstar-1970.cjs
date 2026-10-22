@@ -158,4 +158,8 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.ok(C.EXTRA_SOURCES.some(s=>/dpma/.test(s.url))&&C.EXTRA_SOURCES.some(s=>/Ball_\(association_football\)/.test(s.url)),'inside facts cited');
  assert.match(exp,/<FigureStage spec=\{fig\.spec\}/);assert.match(exp,/data-look /);assert.match(exp,/data-roll/);assert.match(exp,/setPhase\(lookFrom\.current\)/,'Back returns to where you were');
  assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval/);
+ // museum-figures-2: the Valve tag never hides; round the back it slides to the ball's edge (dashed), and tapping it aims there.
+ for(let yaw=0;yaw<360;yaw+=30)for(const pitch of [20,60]){const V=FK.viewVector(yaw,pitch),va=fig.spec.draw(view(yaw,pitch,0)).labels.find(l=>l.id==='valve');
+  assert.ok(va&&va.centre,'the valve tag is anchored to the ball');assert.ok(FK.anchorFor(va,V),'Valve label visible at '+yaw+'/'+pitch);}
+ console.log('PASS valve tag: visible from every yaw (clamped to the silhouette round the back)');
  console.log('PASS turn the ball: all 32 panels seen, see-through = bladder + valve only, 5 real labels, swatches on pentagons, ≤ 120 parts');}

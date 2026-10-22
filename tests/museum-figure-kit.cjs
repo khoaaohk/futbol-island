@@ -53,15 +53,31 @@ const near=(a,b,e=1e-9)=>Math.abs(a-b)<e;
 {const P=F.fitTurn([[0,0,0],[20,20,20]],390,600,45,30,{pad:20}),V=F.viewVector(45,30);
  const anchors=[['a','Black pentagon',[10,20,18],[0,1,0]],['b','White hexagon',[20,10,15],[1,0,0]],['c','Stitched seam',[20,18,10],[1,0,0]],['d','Bladder',[10,10,10]],['e','Valve',[0,10,20],[-1,0,0]],['f','Back',[0,10,5],[-1,0,0]],['g','Base',[10,10,0]]]
   .map(([id,text,at,normal])=>({id,text,at,normal,on:id==='b'}));
- for(const [W,H] of [[390,600],[1200,700]]){const L=F.placeLabels(anchors,P,V,{w:W,h:H},{l:W*.3,r:W*.7,t:0,b:H},{font:13});
+ for(const [W,H] of [[390,600],[1200,700]]){const L=F.placeLabels(anchors,P,V,{w:W,h:H},{l:W*.3,r:W*.7,t:0,b:H},{font:13,compact:false});
   assert.ok(!L.some(l=>l.id==='e'||l.id==='f'),'tags on faces turned away are hidden');assert.equal(L.length,5);
   for(const s of [-1,1]){const col=L.filter(l=>l.side===s).sort((a,b)=>a.y-b.y);
    for(let i=1;i<col.length;i++){assert.ok(col[i].y-col[i].h/2>=col[i-1].y+col[i-1].h/2-1e-9,'no overlap');assert.ok(col[i].ay>=col[i-1].ay,'sorted by anchor height: leaders never cross');}}
   for(const l of L){assert.ok(l.x-l.w/2>=0&&l.x+l.w/2<=W&&l.y-l.h/2>=0&&l.y+l.h/2<=H,'inside the card');assert.ok(l.h>=26,'kid-size pills');}
   assert.ok(L.find(l=>l.id==='b').on);const svg=F.labelsSvg(L,13);assert.equal((svg.match(/data-fig-label=/g)||[]).length,5);assert.match(svg,/data-on=""/);assert.match(svg,/font-size="13"/);}
- const crowd=Array.from({length:8},(_,i)=>({id:'n'+i,text:'Part '+i,at:[i*2,0,i*2]})),L2=F.placeLabels(crowd,P,V,{w:390,h:600},{l:120,r:270,t:0,b:600});
+ const crowd=Array.from({length:8},(_,i)=>({id:'n'+i,text:'Part '+i,at:[i*2,0,i*2]})),L2=F.placeLabels(crowd,P,V,{w:390,h:600},{l:120,r:270,t:0,b:600},{compact:false});
  assert.ok(Math.abs(L2.filter(l=>l.side<0).length-L2.filter(l=>l.side>0).length)<=2,'crowded columns are balanced');
  console.log('PASS labels: two sorted columns, no overlaps, inside the card at 390 and 1200, facing-away hidden, lit tag, ≥ 13 px');}
+
+// 4b. museum-figures-2: a round part's tag slides to the silhouette when its face turns away (never hidden); a 'keep' tag stays
+//     with a dashed leader; when the figure fills a phone card the tags collapse to numbered badges + a legend along the bottom
+//     edge (no pill over the figure); every tag has a 44 px hit area.
+{const c=[0,0,0],R0=50,P=F.fitTurn([[-R0,-R0,-R0],[R0,R0,R0]],390,600,45,30,{pad:20});
+ for(let yaw=0;yaw<360;yaw+=15){const V=F.viewVector(yaw,30),n=[1,0,0],a=F.anchorFor({id:'v',text:'Valve',at:[R0,0,0],normal:n,centre:c},V);
+  assert.ok(a,'never hidden at yaw '+yaw);const r=Math.hypot(...a.at);assert.ok(Math.abs(r-R0)<1e-6,'on the ball');assert.ok(F.dot(a.at,V)>=-1e-9,'on the visible side or rim at '+yaw);
+  assert.equal(a.back,!F.isFacing(n,V,.05));const k=F.anchorFor({id:'k',text:'Heel',at:[1,2,3],normal:n,keep:true},V);assert.ok(k&&k.at[0]===1);}
+ const V=F.viewVector(45,30),an=['Cameras','Video room','Radio','Monitor','Replays','VAR'].map((t,i)=>({id:'a'+i,text:t,at:[-40+i*16,-30+i*12,i*8]}));
+ const obj={l:20,r:370,t:200,b:420},L=F.placeLabels(an,P,V,{w:390,h:600},obj,{font:13,bottom:30});
+ assert.equal(L.length,6);assert.ok(L.every(l=>l.n>=1),'compact: numbered');assert.deepEqual(L.map(l=>l.n).sort(),[1,2,3,4,5,6]);
+ for(const l of L){assert.ok(l.x-l.w/2>=0&&l.x+l.w/2<=390,'legend inside the card');assert.ok(l.y+l.h/2<=600-30+1e-9&&l.y-l.h/2>=obj.b-1,'legend below the figure');}
+ for(let i=0;i<L.length;i++)for(let j=i+1;j<L.length;j++){const a=L[i],b=L[j];assert.ok(Math.abs(a.y-b.y)>=a.h||Math.abs(a.x-b.x)>=(a.w+b.w)/2-1e-9,'legend pills never overlap');}
+ const svg=F.labelsSvg(L,13);assert.equal((svg.match(/data-fig-badge=/g)||[]).length,6,'a badge on each part');assert.match(svg,/>1 /);assert.match(svg,/height="44"/,'44 px hit areas');assert.match(svg,/r="22"/);
+ const wide=F.placeLabels(an,P,V,{w:1200,h:700},{l:400,r:800,t:200,b:500},{font:14});assert.ok(wide.every(l=>!l.n),'desktop with room: two columns as before');
+ console.log('PASS labels v2: round parts keep their tag on the rim at 24 yaws, keep-tags dashed, compact badges + legend on a phone, 44 px hits');}
 
 // 5. Swatches and shading: only designated parts recolour; three tones; the light stays at the viewer's top left.
 {assert.ok(F.SWATCHES.length>=5&&F.SWATCHES.length<=6);for(const id of ['tomato','mustard','mint','cobalt','blush'])assert.ok(F.swatchHex(id),id);

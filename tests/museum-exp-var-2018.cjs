@@ -79,8 +79,8 @@ const paper=read('components/museum/experiences/anatomy/PaperStage.tsx'),pcss=re
   assert.equal(lens>0,FK.isFacing([-1,0,0],V,.02),'a camera lens only while it looks at you');assert.ok((d.svg.match(/data-screen/g)||[]).length<=4);}
  const closed=spec.draw(view(30,34,0)),open=spec.draw(view(30,34,1));
  assert.ok(!/data-inside/.test(closed.svg)&&/data-inside/.test(open.svg),'see-through opens the video room');
- assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Cameras','Radio link','Review monitor','Video room']);
- assert.deepEqual(open.labels.map(l=>l.text).sort(),['Cameras','Radio link','Replay operator','Review monitor','VAR','Video room'],'the desks are named only when drawn');
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Cameras','Monitor','Radio','Video room']);
+ assert.deepEqual(open.labels.map(l=>l.text).sort(),['Cameras','Monitor','Radio','Replays','VAR','Video room'],'the desks are named only when drawn');
  assert.deepEqual(ST.STEPS.map(s=>s.id),['cameras','replay','check','decision'],'camera angle → replay → check → decision');
  assert.match(spec.draw(view(30,34,1,['radio','monitor'])).svg,/data-radio data-on/);assert.doesNotMatch(closed.svg,/data-on/);
  for(const s of ST.STEPS)assert.ok(C.STATION.steps[s.id],'step text: '+s.id);

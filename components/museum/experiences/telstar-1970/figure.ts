@@ -72,7 +72,7 @@ export function makeTelstarFigure(){
   const e0=toWorld(rotate(st.q,PANELS[bp].pts[0])),e1=toWorld(rotate(st.q,PANELS[bp].pts[1])),em=[(e0[0]+e1[0])/2,(e0[1]+e1[1])/2,(e0[2]+e1[2])/2] as V3,eml=Math.hypot(...em);
   const seam:V3=[em[0]/eml,em[1]/eml,em[2]/eml];
   const labels:LabelAnchor[]=[{id:'pentagon',text:'Black pentagon',at:on(at(bp)),normal:at(bp)},{id:'hexagon',text:'White hexagon',at:on(at(bh)),normal:at(bh)},
-   {id:'seam',text:'Stitched seam',at:on(seam),normal:seam},{id:'valve',text:'Valve',at:on(valve),normal:valve}];
+   {id:'seam',text:'Stitched seam',at:on(seam),normal:seam},{id:'valve',text:'Valve',at:on(valve),normal:valve,centre:CENTRE}];
   if(x>.5){const bl:V3=[v.U[0]*.5-v.R[0]*.5+v.V[0]*.7,v.U[1]*.5-v.R[1]*.5+v.V[1]*.7,v.U[2]*.5-v.R[2]*.5+v.V[2]*.7],l=Math.hypot(...bl);
    labels.push({id:'bladder',text:'Bladder',at:on([bl[0]/l,bl[1]/l,bl[2]/l],R*.84)});}
   const pr=STAND.plinthR*kk,base=k.iso([0,0,0],P);

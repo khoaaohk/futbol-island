@@ -21,11 +21,16 @@ export const STEPS=[
  {id:'decision',lit:['radio','monitor']},
 ] as const;
 export type StepId=typeof STEPS[number]['id'];
-const PL={x:-110,y:-110,w:220,d:220},PH=8,Z=PH;
-const VOR={x:-104,y:-104,w:104,d:80,h:44};
-const MASTS:{x:number;y:number}[]=[{x:84,y:-92},{x:92,y:30}];
-const RRA={x:40,y:72};
-export const POINTS:V3[]=[[PL.x,PL.y,0],[PL.x+PL.w,PL.y+PL.d,0],[PL.x+PL.w,PL.y,0],[PL.x,PL.y+PL.d,0],[0,0,96],[MASTS[0].x,MASTS[0].y,96]];
+// museum-figures-2: a round plinth (the same width from every side, so the fit no longer loses a third of the card to the
+// square base's diagonal) and a tighter layout inside it; the model now fills its card.
+const PR=112,PH=8,Z=PH;
+const VOR={x:-80,y:-66,w:96,d:72,h:44};
+const MASTS:{x:number;y:number}[]=[{x:70,y:-58},{x:80,y:22}];
+const RRA={x:26,y:72};
+const ARC_TOP=Z+VOR.h+18+50;
+/** The true extremes: the plinth rim all round, the mast tops and the top of the radio arc. */
+export const POINTS:V3[]=[...Array.from({length:8},(_,i)=>[PR*Math.cos(i*Math.PI/4),PR*Math.sin(i*Math.PI/4),0] as V3),
+ [MASTS[0].x,MASTS[0].y,Z+80],[MASTS[1].x,MASTS[1].y,Z+80],[(VOR.x+VOR.w-10+RRA.x)/2,(VOR.y+10+RRA.y)/2,ARC_TOP]];
 const f1=(n:number)=>n.toFixed(1);
 const box=(x0:number,y0:number,z0:number,x1:number,y1:number,z1:number):Box=>[[x0,y0,z0],[x1,y1,z1]];
 const slab=(x:number,y:number,w:number,d:number,z:number,h:number,P:k.Projection,r=1)=>k.extrude(k.roundedPlan({x,y,w,d,r},2),z,h,P);
@@ -38,10 +43,10 @@ function screenFace(cx:number,cy:number,z0:number,w:number,h:number,axis:'x'|'y'
 
 export function makeStation():{spec:FigureSpec}{
  const draw=(v:FigureView)=>{const P=v.P,V=v.V,on=(id:string)=>v.active.has(id),x=v.xray,ia=innerAlpha(x);
-  let s=`<path class="iso-halo" d="${k.extrude(k.roundedPlan({...PL,r:14},4),0,1,P).fill}"/>`;
-  s+=k.solidSvg(k.extrude(k.roundedPlan({...PL,r:14},4),0,PH,P,{bevel:1.5}));
+  let s=`<path class="iso-halo" d="${k.cylinder(0,0,PR+4,0,1,P,40).fill}"/>`;
+  s+=k.solidSvg(k.cylinder(0,0,PR,0,PH,P,48,2));
   // Floor (always under everything): a corner of the pitch, the touchline, and the fibre cable from each mast to the room.
-  s+=`<path class="iso-line" data-tone="lo" d="${k.onTop([[PL.x+20,40],[PL.x+PL.w-10,40]],Z,P)}${k.onTop([[60,40],[60,PL.y+PL.d-10]],Z,P)}${k.onTop([[ -30,40],[-30,PL.y+PL.d-10]],Z,P)}"/>`;
+  s+=`<path class="iso-line" data-tone="lo" d="${k.onTop([[-98,40],[98,40]],Z,P)}${k.onTop([[60,40],[60,90]],Z,P)}${k.onTop([[-30,40],[-30,100]],Z,P)}"/>`;
   const fibre=MASTS.map(m=>k.onTop([[m.x,m.y],[m.x-30,m.y],[VOR.x+VOR.w,VOR.y+VOR.d/2]],Z+.2,P)).join('');
   s+=`<path data-fibre${on('fibre')?' data-on=""':''} d="${fibre}" fill="none" stroke="${on('fibre')?ACC:'#6f6f72'}" stroke-width="${on('fibre')?2.4:1.2}" stroke-linecap="round" stroke-linejoin="round"/>`;
   type It={box:Box;svg:string};const items:It[]=[];
@@ -78,9 +83,9 @@ export function makeStation():{spec:FigureSpec}{
   s+=`<path data-radio${on('radio')?' data-on=""':''} d="${k.pathOf(arc.map(p=>k.iso(p,P)))}" fill="none" stroke="${on('radio')?ACC:'#98989a'}" stroke-width="${on('radio')?2.2:1.2}" stroke-dasharray="5 4"/>`;
   const rm=arc[6];
   const labels:LabelAnchor[]=[{id:'cameras',text:'Cameras',at:[MASTS[0].x-2,MASTS[0].y,Z+80]},{id:'room',text:'Video room',at:[VOR.x+VOR.w/2,VOR.y+VOR.d/2,Z+VOR.h]},
-   {id:'radio',text:'Radio link',at:rm},{id:'monitor',text:'Review monitor',at:[RRA.x,RRA.y,Z+60]}];
-  if(x>.5)labels.push({id:'operator',text:'Replay operator',at:[VOR.x+29,VOR.y+29,Z+16]},{id:'var',text:'VAR',at:[VOR.x+75,VOR.y+29,Z+16]});
+   {id:'radio',text:'Radio',at:rm},{id:'monitor',text:'Monitor',at:[RRA.x,RRA.y,Z+60]}];
+  if(x>.5)labels.push({id:'operator',text:'Replays',at:[VOR.x+29,VOR.y+29,Z+16]},{id:'var',text:'VAR',at:[VOR.x+75,VOR.y+29,Z+16]});
   const xs:number[]=[],ys:number[]=[];for(const p of POINTS){const q=k.iso(p,P);xs.push(q[0]);ys.push(q[1]);}
   return {svg:s,labels,obj:{l:Math.min(...xs),r:Math.max(...xs),t:Math.min(...ys),b:Math.max(...ys)}};};
- return {spec:{id:'var-station',points:POINTS,front:{yaw:30,pitch:34},seeThrough:true,labels:true,draw}};
+ return {spec:{id:'var-station',points:POINTS,front:{yaw:30,pitch:34},pitch:[26,52],seeThrough:true,labels:true,draw}};
 }

@@ -3,7 +3,7 @@ import {useCallback,useEffect,useMemo,useRef,useState,type KeyboardEvent,type Mu
 import type {Projection} from './iso-kit';
 import {useBox} from './paper-kit';
 import {usePaperLoop} from './paper-loop';
-import {FRONT_PITCH,FRONT_YAW,PITCH_MAX,PITCH_MIN,SWATCHES,aimAt,basis,centreOf,dragBy,fade,fitTurn,keyTurn,labelsSvg,lightOf,newTurn,placeLabels,release,stepTurn,turnBy,turnProjection,turnTo,type LabelAnchor,type V3} from './figure-kit';
+import {FRONT_PITCH,FRONT_YAW,PITCH_MAX,PITCH_MIN,aimAt,basis,centreOf,dragBy,fade,fitTurn,keyTurn,labelsSvg,lightOf,newTurn,placeLabels,release,stepTurn,swatchList,turnBy,turnProjection,turnTo,type LabelAnchor,type Swatch,type V3} from './figure-kit';
 import f from './FigureStage.module.css';
 
 /**
@@ -16,7 +16,7 @@ import f from './FigureStage.module.css';
  * turn and fade jumps to its end. Caps: ≤ MAX_PARTS (120) SVG elements per figure (tests count them).
  * Ideas from Colorfigures / ISO-GLOW by April Zhu (MIT) and iso-figure by Tolga Cohce (MIT); see docs/museum-paper-style.md.
  */
-export type FigureView={yaw:number;pitch:number;P:Projection;V:V3;L:V3;R:V3;U:V3;xray:number;swatch:string|null;active:ReadonlySet<string>;w:number;h:number};
+export type FigureView={yaw:number;pitch:number;P:Projection;V:V3;L:V3;R:V3;U:V3;xray:number;swatch:string|null;swatchHex:string|null;active:ReadonlySet<string>;w:number;h:number};
 export type FigureDrawing={svg:string;labels?:LabelAnchor[];obj?:{l:number;r:number;t:number;b:number}};
 export type FigureSpec={
  id:string;
@@ -28,8 +28,8 @@ export type FigureSpec={
  pitch?:readonly [number,number];
  seeThrough?:boolean;
  labels?:boolean;
- /** Swatch ids from SWATCHES (4-6); omitted = no swatch row. */
- swatches?:readonly string[];
+ /** Swatch ids from SWATCHES or the exhibit's own {id,name,hex} (4-6); omitted = no swatch row. */
+ swatches?:readonly (string|Swatch)[];
  swatchLabel?:string;
  draw:(v:FigureView)=>FigureDrawing;
  /** The figure's own motion (a flip, a pulse); return true while it moves. */
@@ -46,6 +46,7 @@ export function FigureStage({spec,active,reduced,onLabel,handle,top=0,extra,labe
   swatch:null as string|null,active:new Set<string>() as ReadonlySet<string>,dirty:true,anchors:[] as LabelAnchor[],drag:null as null|{x:number;y:number;t:number}});
  const [xrOn,setXr]=useState(false),[lbOn,setLb]=useState(false),[swatch,setSwatch]=useState<string|null>(null),[used,setUsed]=useState(false);
  const narrow=w<560,font=narrow?13:14,ctlH=(narrow?100:56)+(spec.swatches?.length?52:0);
+ const sw=useMemo(()=>swatchList(spec.swatches),[spec.swatches]),swRef=useRef(sw);swRef.current=sw;
  const centre=useMemo(()=>centreOf(spec.points),[spec.points]);
  const P0=useMemo(()=>w>0?fitTurn(spec.points,w,h,front.yaw,front.pitch,{pad:narrow?14:28,top:top+ctlH,bottom:28,range}):null,
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -54,10 +55,10 @@ export function FigureStage({spec,active,reduced,onLabel,handle,top=0,extra,labe
 
  const paint=useCallback(()=>{const s=st.current,P0=P0ref.current,el=g.current;if(!P0||!el)return;s.dirty=false;
   const {yaw,pitch}=s.turn,P=turnProjection(P0,centre,yaw,pitch),{R,U,V}=basis(yaw,pitch);
-  const d=specRef.current.draw({yaw,pitch,P,V,L:lightOf(yaw,pitch),R,U,xray:s.xr.k,swatch:s.swatch,active:s.active,w,h});
+  const d=specRef.current.draw({yaw,pitch,P,V,L:lightOf(yaw,pitch),R,U,xray:s.xr.k,swatch:s.swatch,swatchHex:s.swatch?swRef.current.find(x=>x.id===s.swatch)?.hex??null:null,active:s.active,w,h});
   s.anchors=d.labels??[];let out=d.svg;
   if(s.lb.k>0&&d.labels?.length){const obj=d.obj??{l:w*.3,r:w*.7,t:0,b:h};
-   out+=labelsSvg(placeLabels(d.labels.map(a=>({...a,on:s.active.has(a.id)})),P,V,{w,h},obj,{font,top:top+ctlH,bottom:30}),font,s.lb.k);}
+   out+=labelsSvg(placeLabels(d.labels.map(a=>({...a,on:!!a.on||s.active.has(a.id)})),P,V,{w,h},obj,{font,top:top+ctlH,bottom:30}),font,s.lb.k);}
   el.innerHTML=out;},[centre,w,h,font,top,ctlH]);
 
  // The one loop: coast / ease / cross-fade, paint when something changed, sleep at rest (no allocation in the tick itself).
@@ -105,12 +106,12 @@ export function FigureStage({spec,active,reduced,onLabel,handle,top=0,extra,labe
     {spec.labels!==false&&<button type="button" className={f.pill} aria-pressed={lbOn} data-fig-labels onClick={()=>api.setLabels(!lbOn)}>Labels</button>}
     {extra}
    </div>
-   {!!spec.swatches?.length&&<div className={f.row} role="radiogroup" aria-label={spec.swatchLabel??'Colour'}>
+   {!!sw.length&&<div className={f.row} role="radiogroup" aria-label={spec.swatchLabel??'Colour'}>
     <button type="button" role="radio" aria-checked={swatch==null} className={f.swatch} data-fig-swatch="" onClick={()=>pick(null)}>{spec.swatchLabel??'Real'}</button>
-    {spec.swatches.map(id=>{const s=SWATCHES.find(x=>x.id===id);if(!s)return null;
-     return <button key={id} type="button" role="radio" aria-checked={swatch===id} aria-label={s.name} className={f.dot} style={{background:s.hex}} data-fig-swatch={id} onClick={()=>pick(id)}/>;})}
+    {sw.map(s=><button key={s.id} type="button" role="radio" aria-checked={swatch===s.id} aria-label={s.name} className={f.dot} style={{background:s.hex}} data-fig-swatch={s.id} onClick={()=>pick(s.id)}/>)}
    </div>}
   </div>
-  {!used&&<span className={f.hint} aria-hidden="true" data-fig-hint>Drag to turn</span>}
+  {/* the hint sits just under the controls, so it never covers the label legend along the bottom edge */}
+  {!used&&<span className={f.hint} style={{top:top+ctlH+4}} aria-hidden="true" data-fig-hint>Drag to turn</span>}
  </div>;
 }
