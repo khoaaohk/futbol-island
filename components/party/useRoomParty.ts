@@ -13,12 +13,14 @@ import { createRoomParty, partyConnection, partyLook, type RoomParty } from '@/l
 import { STATION, type RoomLocal } from '@/lib/multiplayer/presence';
 import { Emote } from '../../multiplayer/protocol';
 
-/** What a room scene exposes for its party layer (konbiniScene.ts today; the Museum / Arcade / Shop scenes next). */
+/** What a room scene exposes for its party layer (konbiniScene.ts, museumScene.ts; the Arcade / Shop scenes next). */
 export interface RoomPartyHost {
   readonly threeScene: THREE.Scene; readonly phone: boolean; readonly reduced: boolean;
   setFriendLayer(layer: RoomParty | null): void;
   wakeRemote(): void;
   stationAt(x: number, z: number): 'counter' | 'shelves' | null;
+  /** A room with its own station lines (the Museum: presence.defineStationLines codes >= 110) returns the code directly. */
+  stationCode?(x: number, z: number): number;
   localPose(): { x: number; z: number; facing: number; speed: number; eating: boolean; zoomed: boolean };
   emote(kind: number, face?: { x: number; z: number } | null): void;
 }
@@ -50,7 +52,7 @@ export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: num
         out.busy = busyRef.current || l.eating || l.zoomed; out.hidden = typeof document !== 'undefined' && document.hidden;
         return out;
       },
-      station: (x, z) => { const k = host.stationAt(x, z); return k === 'counter' ? STATION.Counter : k === 'shelves' ? STATION.Shelves : STATION.Snack; },
+      station: host.stationCode ? (x, z) => host.stationCode!(x, z) : (x, z) => { const k = host.stationAt(x, z); return k === 'counter' ? STATION.Counter : k === 'shelves' ? STATION.Shelves : STATION.Snack; },
     });
     if (!layer) return;
     host.setFriendLayer(layer);

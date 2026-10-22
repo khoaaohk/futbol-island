@@ -1,16 +1,19 @@
 import {EXHIBITS} from '../../endgame/museum';
 import {ROOM,WING,FLOOR,CASE_PLACES,GALLERY_ORDER,museumPois,museumBlocked,museumObstacles,type Obstacle} from '../../museum/museumLayout';
-import {MUSEUM_DOOR} from '../../museum/museumDoors';
+import {MUSEUM_DOOR_HINT as DOOR_HINT} from '../../museum/museumDoors';
+import {RoomCode,ROOM_BOUNDS} from '../roomPos';
 
 /**
  * The History Museum as a shared room (docs/multiplayer-rooms-design.md Phase 2, "Museum prep status"). Pure data + pure helpers,
  * no three.js, no network: the room party layer (lib/multiplayer/roomParty.ts, Phase 1) reads this descriptor; the museum page
  * side (scene / camera / local pose / wake) is lib/multiplayer/rooms/museumHooks.ts.
  *
- * `RoomDescriptor` is deliberately local and tiny. If Phase 1 names its descriptor differently, map field by field:
- *   code -> RoomCode.Museum (6, = Activity.Museum, design 2.2)   bounds/areas -> the room's clamp + relay v1.1 ROOM_BOUNDS
- *   door/spawns -> the layer's arrival placement                  wake/caps -> createRoomParty's wake rule + remoteCap
- *   busy/stationText -> fillRoomBody's Busy + the receiver's station line (design 2.2 "kind of busy is not on the wire")
+ * `RoomDescriptor` stays local and tiny; Phase 2 (Oct 22 2026) maps it onto the Phase 1 layer (lib/multiplayer/roomPos.ts,
+ * roomParty.ts, components/party/useRoomParty.ts):
+ *   code -> RoomCode.Museum (6, = Activity.Museum)       bounds -> ROOM_BOUNDS[RoomCode.Museum] (encodeRoomPose / clampToRoom)
+ *   areas -> clampToMuseum (the receiver's L clamp)       door/spawns -> pickMuseumSpawn + museumRoomHooks.arrive (MuseumRoom.tsx)
+ *   wake -> createRoomParty's wake + the scene's 20 fps   caps.fieldR -> ROOM_FIELD_SCALE (drawn dome ~0.8 m; obstacle ROOM_FIELD_R)
+ *   busy -> useRoomParty's busy (fillRoomBody Busy)       stationText -> museumStationCode + presence defineStationLines
  * Coordinates are the museum's own metres (museumLayout.ts): x east, z toward the door (+z = front), scale 1.
  */
 export type Rect={minX:number;maxX:number;minZ:number;maxZ:number};
@@ -41,7 +44,7 @@ export interface RoomDescriptor{
  busy:readonly {flag:BusyFlag;text:string}[];
 }
 
-export const MUSEUM_ROOM_CODE=6;// = RoomCode.Museum = Activity.Museum (multiplayer/protocol/presence.ts)
+export const MUSEUM_ROOM_CODE:number=RoomCode.Museum;// 6 = Activity.Museum (multiplayer/protocol/presence.ts)
 const M=.6;// collide()'s wall margin (museumScene.ts)
 const D=ROOM.halfD;
 const rectOf=(pts:readonly {x:number;z:number}[],pad:number):Rect=>{let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(const p of pts){a=Math.min(a,p.x);b=Math.max(b,p.x);c=Math.min(c,p.z);d=Math.max(d,p.z);}return {minX:a-pad,maxX:b+pad,minZ:c-pad,maxZ:d+pad};};
@@ -66,7 +69,7 @@ export const MUSEUM_BUSY:readonly {flag:BusyFlag;text:string}[]=[
 
 export const MUSEUM_ROOM:RoomDescriptor={
  code:MUSEUM_ROOM_CODE,id:'museum',name:'History Museum',scale:1,
- bounds:{minX:FLOOR.minX,maxX:FLOOR.maxX,minZ:FLOOR.minZ,maxZ:FLOOR.maxZ},
+ bounds:ROOM_BOUNDS[RoomCode.Museum],// = FLOOR (tests/mp-rooms-museum.cjs)
  areas:[{id:'hall',rect:{minX:WING.x1,maxX:ROOM.halfW,minZ:-D,maxZ:D}},{id:'wing',rect:{minX:WING.x0,maxX:WING.x1,minZ:WING.z0,maxZ:WING.z1}}],
  galleries:GALLERY_ORDER.map(id=>({id,rect:rectOf(EXHIBITS.filter(e=>e.gallery===id&&CASE_PLACES[e.id]).map(e=>CASE_PLACES[e.id]),1.2)})),
  door:{x:ROOM.doorX,z:D+.2,yaw:Math.PI,inside:MUSEUM_ARRIVAL},
@@ -100,11 +103,26 @@ export function museumBusyText(f:MuseumBusyFlags):string{
 type Station={a:{x:number;z:number};b:{x:number;z:number};text:string};
 const STATIONS:Station[]=museumPois().map(p=>({a:p.a,b:p.b,text:p.id==='guide'?'Talking to Ada':p.id==='wc-balls'?'Looking at World Cup balls':LOOKING[p.id]??`Looking at ${p.label}`}));
 export const MUSEUM_IDLE_TEXT='In the museum';
+/** Index of the nearest look-at spot within `caps.stationR` of (x,z), or -1. */
+function museumStationIndex(x:number,z:number):number{
+ let best=MUSEUM_ROOM.caps.stationR,at=-1;
+ for(let i=0;i<STATIONS.length;i++){const s=STATIONS[i],dx=s.b.x-s.a.x,dz=s.b.z-s.a.z,l=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s.a.x)*dx+(z-s.a.z)*dz)/l)),d=Math.hypot(s.a.x+dx*t-x,s.a.z+dz*t-z);if(d<best){best=d;at=i;}}
+ return at;
+}
 /** What a busy friend at room-local (x,z) is doing: the nearest look-at spot within `caps.stationR`, else MUSEUM_IDLE_TEXT. */
 export function museumStationText(x:number,z:number):string{
- let best=MUSEUM_ROOM.caps.stationR,text=MUSEUM_IDLE_TEXT;
- for(const s of STATIONS){const dx=s.b.x-s.a.x,dz=s.b.z-s.a.z,l=dx*dx+dz*dz||1,t=Math.max(0,Math.min(1,((x-s.a.x)*dx+(z-s.a.z)*dz)/l)),d=Math.hypot(s.a.x+dx*t-x,s.a.z+dz*t-z);if(d<best){best=d;text=s.text;}}
- return text;
+ const i=museumStationIndex(x,z);return i<0?MUSEUM_IDLE_TEXT:STATIONS[i].text;
+}
+/** Local station codes (never on the wire): MUSEUM_STATION_BASE + the spot's index; nothing near = Activity.Museum ("In the museum"). */
+export const MUSEUM_STATION_BASE=120;
+export function museumStationCode(x:number,z:number):number{
+ const i=museumStationIndex(x,z);return i<0?MUSEUM_ROOM_CODE:MUSEUM_STATION_BASE+i;
+}
+/** The station lines for presence.defineStationLines (registered once when the museum's party layer attaches). */
+export function museumStationLines():Record<number,readonly [string,string]>{
+ const out:Record<number,readonly [string,string]>={};
+ STATIONS.forEach((s,i)=>{out[MUSEUM_STATION_BASE+i]=[s.text,s.text==='Talking to Ada'?'\u{1F4AC}':s.text==='Looking at World Cup balls'?'\u26BD':'\u{1F3DB}\uFE0F'];});
+ return out;
 }
 
 // ---- Bounds ---------------------------------------------------------------------------------------------------------------------
@@ -130,6 +148,6 @@ export function pickMuseumSpawn(out:Spot,occupied:ArrayLike<{x:number;z:number}>
 
 // ---- Island door hint (owner: island friends see "2 in the Museum" at the door) -----------------------------------------------------
 /** World position of the hint: above the entrance canopy (museumExterior.ts: canopy 4 m high, 0.6 m deep) at the door anchor. */
-export const MUSEUM_DOOR_HINT={x:MUSEUM_DOOR.x,y:4.6,z:MUSEUM_DOOR.front+.4,room:MUSEUM_ROOM_CODE,label:MUSEUM_DOOR.label} as const;
+export const MUSEUM_DOOR_HINT=DOOR_HINT;
 /** "2 in the Museum" (null when nobody is in). Counted from the roster: members whose roomOf(pose) === MUSEUM_ROOM_CODE. */
 export function museumDoorHintText(n:number):string|null{return n>0?`${n} in the Museum`:null;}

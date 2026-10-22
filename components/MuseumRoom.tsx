@@ -27,6 +27,8 @@ import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/exper
 import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
+import {useRoomParty} from './party/useRoomParty';import RoomPartyChip from './party/RoomPartyChip';import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
@@ -104,6 +106,15 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
    if(how)trigger.current=null;return;}
   const obs=new MutationObserver(apply);obs.observe(root,{childList:true});return()=>obs.disconnect();},[experience]);
  const joyRect=useJoystickBounds(joy,ready&&!zoom&&!covered);
+ // Party friends in the museum (docs/multiplayer-rooms-design.md Phase 2): resumes the stored party, mounts the friend layer once the
+ // scene is up (declared before the scene effect, so it is disposed first). Busy = any cover or a zoomed case. Flag off / no party: null.
+ const party=useRoomParty(room,RoomCode.Museum,ready,covered||!!zoom);
+ // Arrival: on the first live party in the museum, walk in to the first free spawn slot round the door (friends already standing
+ // there keep theirs). Once per visit; the scene only re-aims while its arrival walk is still the target.
+ useEffect(()=>{if(!party)return;let done=false,timer=0;const spot={x:0,z:0,yaw:0};
+  const check=()=>{const s=partyStore.get();if(done||s.status!=='live')return;done=true;
+   timer=window.setTimeout(()=>{const here=party.layer.debugFriends().filter(f=>!f.gone);pickMuseumSpawn(spot,here,s.you??0);museumRoomHooks.arrive(spot.x,spot.z);},150);};
+  check();const off=partyStore.subscribe(check);return()=>{off();clearTimeout(timer);};},[party]);
 
  // Done exits straight away (door slide, then the island), no walk to the door first (user, Oct 10 2026).
  const leave=()=>{if(leavingRef.current)return;leavingRef.current=true;ambience.current?.fadeOut(.4);setTimeout(()=>ambience.current?.dispose(),420);setWalkingOut(true);setGuideOpen(false);setCert(null);room.current?.clearInput();refreshMuseumDeparture();setLeaving(true);
@@ -184,7 +195,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
  return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom}>
-  <header className={styles.header}>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
+  <header className={styles.header}>{party&&!zoom&&<span className={styles.partySlot}><RoomPartyChip party={party} hidden={covered} align="right"/></span>}{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
   </header>
   {/* See exhibit: bottom centre, the one thing to do at an open case (Oct 14 2026, user). */}

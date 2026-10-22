@@ -2,7 +2,7 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Mode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
@@ -59,7 +59,9 @@ function hintTexture(text: string): T3.CanvasTexture {
   const t = new T3.CanvasTexture(canvas); t.colorSpace = T3.SRGBColorSpace; return t;
 }
 /** The door hint's words: "3 in the Konbini" (pure, exported for tests). */
-export function doorHintText(n: number, room: number): string { return n > 0 ? `${n} ${roomText(room).replace(/^In /, 'in ')}` : ''; }
+export function doorHintText(n: number, room: number): string { return n > 0 ? `${n} ${DOOR_WORDS[room] ?? roomText(room).replace(/^In /, 'in ')}` : ''; }
+/** Door hints that name the building as its sign does ("2 in the Museum"; the party list keeps "In the museum"). */
+const DOOR_WORDS: Partial<Record<number, string>> = { [RoomCode.Museum]: 'in the Museum' };
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;

@@ -113,11 +113,41 @@ t('hooks: no per-frame allocation (source scan of the hot paths)',()=>{
 
 t('scene + page wiring (unchanged behaviour without a layer)',()=>{
  const sc=read('lib/museum/museumScene.ts');
- assert.match(sc,/museumRoomHooks\.register\(hookSource\)/);assert.match(sc,/dispose\(\)\{disposed=true;museumRoomHooks\.unregister\(hookSource\);/);
+ assert.match(sc,/museumRoomHooks\.register\(hookSource\)/);assert.match(sc,/dispose\(\)\{disposed=true;museumRoomHooks\.detach\(hookLayer\);museumRoomHooks\.unregister\(hookSource\);/);
  const f=sc.indexOf('museumRoomHooks.frame(dt,now,camera)'),r=sc.indexOf('renderer.render(scene,camera);draws++');assert.ok(f>0&&f<r,'friends update before the render');
  assert.match(sc,/if\(settle>0\|\|leaving\|\|remote\)frame=requestAnimationFrame\(tick\)/,'remote keeps frames only while the layer says so');
  assert.match(sc,/const arrival=\{x:ROOM\.doorX,z:D-1\.6\},slotPoint=\{x:0,z:0\};target=arrival;/,'arrival walk unchanged');assert.match(sc,/arrive\(px,pz\)\{if\(target===arrival&&!leaving\)\{slotPoint\.x=px;slotPoint\.z=pz;route=\[slotPoint\];wake\(\);\}\}/);
  assert.match(read('components/MuseumRoom.tsx'),/import \{museumRoomHooks\} from '@\/lib\/multiplayer\/rooms\/museumHooks';/);
+});
+
+t('Phase 2 wiring: Phase 1 names, hook before the scene, chip Leave only, wake rules, one ring, field obstacle, door hint',()=>{
+ const RP=require('../lib/multiplayer/roomPos.ts');
+ assert.deepEqual(D.bounds,RP.ROOM_BOUNDS[RP.RoomCode.Museum],'descriptor bounds = roomPos ROOM_BOUNDS (the layer clamps with these)');
+ assert.equal(D.code,RP.RoomCode.Museum);
+ const sc=read('lib/museum/museumScene.ts'),mr=read('components/MuseumRoom.tsx'),hook=read('components/party/useRoomParty.ts');
+ // page: the hook resumes the party and is declared before the scene effect (disposed first); the chip sits in the header, right
+ const h=mr.indexOf('useRoomParty(room,RoomCode.Museum,ready,covered||!!zoom)');assert.ok(h>0&&h<mr.indexOf("import('@/lib/museum/museumScene')"),'hook before the scene effect, busy = covered or zoomed');
+ assert.match(mr,/\{party&&!zoom&&<span className=\{styles\.partySlot\}><RoomPartyChip party=\{party\} hidden=\{covered\} align="right"\/><\/span>\}/,'chip in the header, hidden while covered / zoomed');
+ assert.match(mr,/pickMuseumSpawn\(spot,here,s\.you\?\?0\);museumRoomHooks\.arrive\(spot\.x,spot\.z\)/,'arrival: first free slot, then arrive()');
+ assert.match(hook,/station: host\.stationCode \?/,'useRoomParty takes a room\'s own station codes');
+ // scene: the layer through museumRoomHooks (attach / detach), hidden while zoomed, remote wake without the local settle
+ assert.match(sc,/setFriendLayer\(layer:MuseumFriendLayer\|null\)\{if\(layer\)\{friends=layer;museumRoomHooks\.attach\(hookLayer\);\}else\{museumRoomHooks\.detach\(hookLayer\);friends=null;remoteOnly=false;\}\}/);
+ assert.match(sc,/update:\(dt,now,cam\)=>friends\?friends\.update\(dt,now,cam as T\.Camera,zoomIndex!==null\):false/,'friends hidden while a case is zoomed');
+ assert.match(sc,/wake:wakeRemote,/,'the layer\'s network wake is the remote-only wake (20 fps on phones)');
+ assert.match(sc,/function wakeRemote\(\)\{if\(!frame&&!covered&&!disposed&&!document\.hidden\)\{remoteOnly=true;/);
+ assert.match(sc,/function wake\(\)\{remoteOnly=false;/,'a local wake drops the remote cap');
+ assert.match(sc,/remoteOnly&&mobile\?Math\.max\(1000\/MUSEUM_REMOTE_FPS,frameMs\(\)\):frameMs\(\)/,'remote-only frames at 20 fps on phones');
+ assert.match(sc,/if\(friends\?\.meRing\)playerShadow\.visible=false/,'one ring rule');
+ assert.match(sc,/friends\.pushOut\(pushPt,\.3\)/,'busy friends are obstacles');
+ assert.match(sc,/stationCode:\(px:number,pz:number\)=>museumRoomHooks\.station\(px,pz\)/);
+ assert.match(sc,/async emote\(kind:number,face\?:/,'local emote plays on your rig (no camera change)');
+ // no party: nothing runs (the adapter returns false, no layer = no wake; flag off = useRoomParty returns null)
+ const M=H.museumRoomHooks;assert.equal(M.attached,false);assert.equal(M.frame(.016,0,null),false);
+ // island door hint
+ const tw=read('components/Town.tsx');assert.match(tw,/doors:ROOM_DOOR_HINTS/);assert.match(read('lib/multiplayer/townBridge.ts'),/\[RoomCode\.Museum\]: 'in the Museum'/);
+ assert.deepEqual({...R.MUSEUM_DOOR_HINT},{...Dr.MUSEUM_DOOR_HINT},'one door hint spot (museumDoors.ts, light for the island bundle)');
+ // station codes: every look-at spot has a line, registered once
+ const lines=R.museumStationLines();for(const p of L.museumPois()){const c=R.museumStationCode((p.a.x+p.b.x)/2,(p.a.z+p.b.z)/2);assert.ok(lines[c],p.id);assert.equal(lines[c][0],R.museumStationText((p.a.x+p.b.x)/2,(p.a.z+p.b.z)/2));}
 });
 
 console.log(`mp-rooms-museum: ${n} groups passed`);

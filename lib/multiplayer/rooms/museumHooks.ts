@@ -1,4 +1,5 @@
-import {MUSEUM_ROOM,museumBusyFlag,museumBusyFlags,museumBusyText,clampToMuseum,type MuseumBusyFlags} from './museum';
+import {MUSEUM_ROOM,museumBusyFlag,museumBusyFlags,museumBusyText,clampToMuseum,museumStationCode,museumStationLines,type MuseumBusyFlags} from './museum';
+import {defineStationLines} from '../presence';
 
 /**
  * The museum page's side of the room party layer (docs/multiplayer-rooms-design.md Phase 2, "Museum prep status").
@@ -29,7 +30,7 @@ export interface MuseumRoomLayer{
 }
 export const roomLocalPose=():RoomLocalPose=>({x:0,y:0,z:0,yaw:0,moving:false,busy:false,activity:''});
 
-let source:MuseumHookSource|null=null,layer:MuseumRoomLayer|null=null;
+let source:MuseumHookSource|null=null,layer:MuseumRoomLayer|null=null,linesDefined=false;
 const busy:MuseumBusyFlags=museumBusyFlags();
 
 export const museumRoomHooks={
@@ -57,6 +58,9 @@ export const museumRoomHooks={
  wake(){source?.wake();},
  sleeping(){return source?source.sleeping():true;},
  arrive(x:number,z:number){source?.arrive(x,z);},
+ /** A busy friend's station code at room-local (x,z) for the friend layer (useRoomParty `stationCode`): "Looking at <exhibit>",
+  *  "Talking to Ada", ... else "In the museum". The lines are registered with presence on the first call (a party is up by then). */
+ station(x:number,z:number):number{if(!linesDefined){linesDefined=true;defineStationLines(museumStationLines());}return museumStationCode(x,z);},
  /** Clamp a friend's room-local point inside the walkable L (writes `out`). */
  clamp:clampToMuseum,
 };
