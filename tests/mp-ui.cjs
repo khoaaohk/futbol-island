@@ -73,7 +73,7 @@ t('display and links',()=>{
  origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R','unknown origins fall back to SITE_URL');
  origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
- assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/stops working/.test(invite)&&/partyQr/.test(invite),'invite card content');
+ assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/stops (working|in)/.test(invite)&&/New code/.test(invite)&&/partyQr/.test(invite),'invite card content');
  assert.equal(I.joinNote(['Red']),'Red joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
  assert.equal(I.expiryText(0,0),'');assert.equal(I.expiryText(112*60000,0),'1 hour 52 minutes');assert.equal(I.expiryText(30*60000,0),'30 minutes');assert.equal(I.expiryText(120*60000,0),'2 hours');assert.equal(I.expiryText(61*60000,0),'1 hour 1 minute');assert.equal(I.expiryText(60000,0),'1 minute');
 });
