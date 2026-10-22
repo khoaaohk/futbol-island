@@ -11,7 +11,9 @@ import g from '../modern/gallery.module.css';
 import {ISO_CSS,fitProjection,type Projection} from '../anatomy/iso-kit';
 import {useBox} from '../anatomy/bench';
 import {usePaperLoop} from '../anatomy/paper-loop';
-import {BEATS,BEST_KEY,CHECK,EXTRA_SOURCES,LAYERS,LAYER_NAME,STADIUMS,aboutSeats,type LayerId} from './data';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import {STEPS as FIG_STEPS,makeStadiumFigure} from './figure';
+import {BEATS,BEST_KEY,CHECK,EXTRA_SOURCES,FIGURE_INTRO,FIGURE_SAY,LAYERS,LAYER_NAME,STADIUMS,aboutSeats,type LayerId} from './data';
 import {buildPose,explodePose,fitPoints,renderStadium,type Pose} from './geometry';
 import {MAX_POINTS,MAX_SEATS,ROUNDS,buildScore,follow,makeRounds,pickLayer,seatShare,total,turnTo,verdict,type Round} from './model';
 import s from './Experience.module.css';
@@ -27,11 +29,14 @@ import s from './Experience.module.css';
  *     pick says what has to go underneath first.
  *  3. Which stadium?: five rounds: a silhouette on the turntable, or a written clue. Four names to pick from.
  *  4. Score, the quick check, then the gallery ending (onComplete once, via Ending `reached`). Best score saved (BEST_KEY).
+ *  Fill the stadium (museum-figures-3, figure kit v2; figure.ts): from the intro or the workshop, a simple generic stadium (≤ 120
+ *     SVG elements; the seven detailed models stay on their turntable) that turns all the way round; See-through lifts the roof
+ *     ring; Labels: Roof, Stand tiers, Tunnel, Pitch, Floodlights; "Fill the stadium" fills the tiers in three steps.
  * Heat: the drawing is one SVG string written into the card (geometry.ts), redrawn only on a change; the one shared loop
  * (anatomy/paper-loop.ts) runs only while the turntable eases, the layers move or a layer drops, parks off screen and is
  * disposed on unmount; while things move the faint texture lines are left out (lite). Reduced motion: every move lands at once.
  */
-type Phase='intro'|'explore'|'build'|'quiz'|'score';
+type Phase='intro'|'explore'|'build'|'quiz'|'score'|'figure';
 /** The score shown in the readout (the same sum as the score panel). */
 const points0=(u:{rounds:Round[];answers:(string|null)[];mistakes:number})=>total(u.answers.filter((a,i)=>a!=null&&a===u.rounds[i]?.answer).length,u.mistakes);
 const readBest=()=>{try{return Number(localStorage.getItem(BEST_KEY)||0)||0;}catch{return 0;}};
@@ -57,6 +62,15 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const [picked,setPicked]=useState<number|null>(null),[best,setBest]=useState(0);
  useEffect(()=>{setBest(readBest());},[]);
  const timers=useRef<ReturnType<typeof setTimeout>[]>([]);
+ // Fill the stadium (figure kit v2): made once; `figFrom` is the phase to go back to. The steps report back through onStep.
+ const bowl=useMemo(()=>makeStadiumFigure(),[]),figHandle=useRef<FigureHandle|null>(null),figFrom=useRef<Phase>('intro');
+ const [figLit,setFigLit]=useState<string[]>([]),[figNote,setFigNote]=useState(FIGURE_INTRO),[figStep,setFigStep]=useState(-1);
+ useEffect(()=>{bowl.onStep=i=>{setFigStep(i);const st=FIG_STEPS[i];if(st){setFigLit([...st.lit]);setFigNote(FIGURE_SAY[st.id]);(i===FIG_STEPS.length-1?museumSfx.whistle:museumSfx.crowd)();}};return()=>{bowl.onStep=null;};},[bowl]);
+ const openFigure=()=>{figFrom.current=ui.current.phase;bowl.empty(true);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase('figure');ui.current.phase='figure';museumSfx.flapBook();};
+ const closeFigure=()=>{bowl.empty(true);setFigStep(-1);setFigLit([]);setPhase(figFrom.current);ui.current.phase=figFrom.current;};
+ const touchBowl=(id:string)=>{if(bowl.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id]??FIGURE_INTRO);museumSfx.tick();};
+ const fillBowl=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1&&!bowl.running){bowl.empty(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);museumSfx.tick();h?.invalidate();return;}
+  if(figStep<0){h?.setLabels(true);h?.setSeeThrough(true);}bowl.fill(reduced);h?.invalidate();};
  const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
  useEffect(()=>{const kk=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();onClose();}};window.addEventListener('keydown',kk);return()=>window.removeEventListener('keydown',kk);},[onClose]);
@@ -161,8 +175,8 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const checked=picked!=null;
  const sources=useMemo(()=>{const seenU=new Set<string>();return [...exhibit.sources,...EXTRA_SOURCES].filter(x=>seenU.has(x.url)?false:(seenU.add(x.url),true));},[exhibit.sources]);
  const quizS=STADIUMS.find(x=>x.id===round?.answer)!;
- const hint=phase==='explore'?(wide?'Drag to turn · slide to take it apart':'Drag to turn'):phase==='build'?'Bottom up: tap the next layer':phase==='quiz'?(round.kind==='shape'?'Whose shape is this?':'Read the clue'):'Stadiums of the world';
- const title=phase==='build'?`Build ${S.name}`:phase==='quiz'?`Which stadium? ${qi+1}/${ROUNDS}`:S.name;
+ const hint=phase==='figure'?'Drag to turn':phase==='explore'?(wide?'Drag to turn · slide to take it apart':'Drag to turn'):phase==='build'?'Bottom up: tap the next layer':phase==='quiz'?(round.kind==='shape'?'Whose shape is this?':'Read the clue'):'Stadiums of the world';
+ const title=phase==='figure'?'Fill the stadium':phase==='build'?`Build ${S.name}`:phase==='quiz'?`Which stadium? ${qi+1}/${ROUNDS}`:S.name;
  const label=phase==='quiz'?(round.kind==='shape'?'A stadium drawn as a dark shape on a turntable. Which one is it?':`A clue: ${quizS.clue}`)
   :`${S.name}, ${S.city}, on a turntable${apart>.3?', taken apart into foundations, pitch, stands, roof and outside':''}.`;
  const ready=box.w>0;
@@ -179,10 +193,12 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
 
     <div ref={card} className={s.card} data-play-area data-fill-screen tabIndex={0} onKeyDown={keyDown} aria-label={label}>
      <div className={s.corners} aria-hidden="true">
-      <span data-corner="fig">Fig. {phase==='quiz'?'?':S.opened}</span><span data-corner="title">{title}</span>
+      <span data-corner="fig">Fig. {phase==='quiz'?'?':phase==='figure'?'model':S.opened}</span><span data-corner="title">{title}</span>
       <span data-corner="hint">{hint}</span><span data-corner="readout" ref={readRef}>45° · 0% apart</span>
      </div>
-     {ready&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label} data-sil={phase==='quiz'&&round.kind==='shape'&&!answered?'':undefined}
+     {phase==='figure'&&<FigureStage spec={bowl.spec} active={figLit} reduced={reduced} onLabel={touchBowl} handle={figHandle} top={28}
+      label="A simple stadium: a roof ring over two-tier stands round the pitch, the players' tunnel and four floodlight masts"/>}
+     {ready&&phase!=='figure'&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label} data-sil={phase==='quiz'&&round.kind==='shape'&&!answered?'':undefined}
       onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
       <g ref={modelRef} data-model=""/><g ref={overRef} data-over=""/>
      </svg>}
@@ -223,7 +239,10 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     </div>
 
     <div className={s.dock} data-dock data-phase={phase}>
-     {phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock onClick={startExplore} data-museum-own-cue>Open the workshop</button><p className={s.say}>Seven famous stadiums are waiting on the workbench.</p></div>
+     {phase==='figure'?<div className={s.introDock}><p className={s.say} aria-live="polite" data-fig-note>{figNote}</p>
+       <button type="button" className={g.btn} data-fill-stadium onClick={fillBowl}>{figStep>=FIG_STEPS.length-1&&!bowl.running?'Empty it':reduced&&figStep>=0?'Next step':'Fill the stadium'}</button>
+       <button type="button" className={g.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the workshop'}</button></div>
+     :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock onClick={startExplore} data-museum-own-cue>Open the workshop</button><button type="button" className={g.ghost} data-stadium-figure onClick={openFigure}>Fill the stadium</button><p className={s.say}>Seven famous stadiums are waiting on the workbench.</p></div>
      :phase==='explore'?<>
        <div className={s.carousel} role="group" aria-label="Choose a stadium">
         <button type="button" className={s.round} aria-label="Previous stadium" data-prev onClick={()=>go(si-1)}>‹</button>
@@ -237,6 +256,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
         <label className={s.slider}><span>Take it apart</span><input type="range" min={0} max={100} step={1} value={Math.round(apart*100)} data-apart-slider
          onChange={e=>{const x=Number(e.target.value)/100;setApart(x);setE(x,false);}}/></label>
         <button type="button" className={g.ghost} data-explode onClick={toggleApart}>{apart>.5?'Put together':'Explode'}</button>
+        <button type="button" className={g.ghost} data-stadium-figure onClick={openFigure}>Fill the stadium</button>
         <button type="button" className={g.btn} data-build onClick={startBuild}>Build it ▸</button>
        </div>
        {!wide&&<p className={s.mini} data-stat-line><b>{S.city}</b> · opened {S.opened} · {aboutSeats(S.seats)} seats<i style={{'--w':`${(seatShare(S.seats)*100).toFixed(1)}%`} as CSSProperties}/></p>}

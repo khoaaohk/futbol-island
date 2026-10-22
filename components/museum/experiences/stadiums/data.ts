@@ -121,6 +121,22 @@ export const CHECK={q:'Which part of a stadium goes at the very bottom?',options
  why:'The foundations spread the stadium’s huge weight into the ground. Everything else stands on them.'};
 
 /** Best score (synced: lib/saves/snapshot.ts SYNC_KEYS). */
+/**
+ * "Fill the stadium" (museum-figures-3, figure kit v2): a generic stadium, not one of the seven. Plain, well-known truths only
+ * (tiers step the rows up so fans see over the heads in front; roofs cover the stands; the tunnel leads from the dressing rooms
+ * to the pitch; floodlights on masts or roofs light evening matches; the pitch layers as in PITCH_LAYERS). No numbers claimed.
+ */
+export const FIGURE_INTRO='A simple stadium. Turn it round, lift the roof with See-through, then fill it with fans.';
+export const FIGURE_SAY:Record<string,string>={
+ lower:'The gates open and the fans fill the lower tier first, the rows closest to the pitch.',
+ upper:'The upper tier fills too. Stacking a second tier on top puts more fans close to the pitch, and the roof keeps the rain off them.',
+ kickoff:'Full house! The floodlights come on and the two teams walk out of the players’ tunnel onto the pitch.',
+ roof:'The roof covers the stands and keeps the rain off the fans. It is held up from the back of the stands, so no pillars block the view.',
+ tiers:'Stand tiers: the rows of seats step up like stairs, so every fan can see over the heads in front.',
+ tunnel:'The players’ tunnel leads from the dressing rooms, under the stand, out to the pitch.',
+ pitch:'The pitch: grass on top of sand, gravel and drains, so the rain runs away (take a stadium apart in the workshop to see the layers).',
+ floodlights:'Floodlights on tall masts or along the roof light the pitch for evening matches.',
+};
 export const BEST_KEY='fi2-museum-stadiums-best';
 
 /** Sources beyond the case's own (the pitch layers, foundations). */

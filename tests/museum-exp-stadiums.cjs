@@ -43,8 +43,8 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  console.log('PASS contract: dialog, shared Back, Escape, onComplete only after the game + quick check, hooks, synced best key, lab route');}
 
 // 3. Style: the shared anatomy kit, Paper tint, one red accent, no figures, no pixels.
-{const files=fs.readdirSync(path.join(root,dir)).sort();assert.deepEqual(files,['Experience.module.css','Experience.tsx','data.ts','geometry.ts','model.ts']);
- for(const f of files){const s=read(dir+f);assert.doesNotMatch(s,/pixeliso|anatomy\/figure|PK Press Start|crispEdges/,f+': no pixel kit, no paper figures');}
+{const files=fs.readdirSync(path.join(root,dir)).sort();assert.deepEqual(files,['Experience.module.css','Experience.tsx','data.ts','figure.ts','geometry.ts','model.ts']);
+ for(const f of files){const s=read(dir+f);assert.doesNotMatch(s,/pixeliso|anatomy\/figure(\.ts)?['"]|PK Press Start|crispEdges/,f+': no pixel kit, no paper figures (the figure kit is fine: it draws objects)');}
  assert.match(geo,/from '\.\.\/anatomy\/iso-kit'/);assert.match(exp,/dangerouslySetInnerHTML=\{\{__html:ISO_CSS\}\}/);assert.match(exp,/className=\{`\$\{g\.room\} iso \$\{s\.root\}`\} data-theme="light"/);
  assert.match(css,/\.root\.root\[data-theme\]\{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3/);assert.match(exp,/'--accent':'#e4322b'/);
  console.log('PASS style: anatomy kit, Paper tokens, one red accent, no figure.ts');}
@@ -110,4 +110,33 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  // Oct 13 2026: the hall's stories are retired; the stadium is a still bowl and its case opens on the full card.
  assert.ok(!/cranking/.test(read('components/MuseumRoom.tsx')),'the hall case is a still stadium bowl, no turntable');
  console.log('PASS registry: the hall case and sculpture, chapter, passport drops the retired id, analytics key, old folders gone');}
+
+// Fill the stadium (museum-figures-3, figure kit v2): a simple generic bowl that turns all the way round; see-through lifts the
+// roof ring (a ghost) over the stand tiers, the tunnel's way, the pitch and the floodlights; five labels from every yaw; three fill
+// steps on the figure's clock; ≤ 120 parts at every yaw; the workshop flow kept.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),FF=require('../'+dir+'figure.ts');
+ const fig=FF.makeStadiumFigure(),spec=fig.spec,c=FK.centreOf(spec.points),fr=spec.front,P0=FK.fitTurn(spec.points,900,700,fr.yaw,fr.pitch,{pad:24,top:80,range:spec.pitch});
+ const view=(yaw,pitch,xray,active=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch:null,swatchHex:null,active:new Set(active),w:900,h:700};};
+ assert.equal(spec.turn??'full','full');assert.ok(spec.seeThrough&&spec.labels);assert.ok(!spec.swatches,'no swatches: kept simple');
+ let most=0;for(const presses of [0,1,2,3]){fig.empty(true);for(let i=0;i<presses;i++)fig.fill(true);
+  for(let yaw=0;yaw<360;yaw+=45)for(const pitch of [22,36,70])for(const x of [0,1]){const d=spec.draw(view(yaw,pitch,x,['tiers','roof']));const n=FK.countParts(d.svg)+d.labels.length*7;most=Math.max(most,n);
+   assert.ok(n<=FK.MAX_PARTS,presses+'/'+yaw+'/'+pitch+'/'+x+': '+n+' parts');assert.equal(d.labels.length,5);for(const l of d.labels)assert.ok(FK.anchorFor(l,FK.viewVector(yaw,pitch)),l.id+' reachable at yaw '+yaw);}}
+ fig.empty(true);const closed=spec.draw(view(30,36,0)),open=spec.draw(view(30,36,1));
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Floodlights','Pitch','Roof','Stand tiers','Tunnel']);
+ assert.equal((closed.svg.match(/data-part="roof"/g)||[]).length,4);assert.equal((closed.svg.match(/data-part="stand"/g)||[]).length,4);assert.equal((closed.svg.match(/data-part="mast"/g)||[]).length,4);
+ assert.ok(open.svg.includes('data-part="tunnel-way"')&&!closed.svg.includes('data-part="tunnel-way"'),'see-through shows the tunnel’s way');
+ const roofY=svg=>Math.min(...svg.split('data-part="roof"').slice(1).flatMap(ch=>[...ch.split(/data-part="(?!roof)/)[0].matchAll(/[ML]([\d.-]+) ([\d.-]+)/g)].map(m=>Number(m[2]))));
+ assert.notEqual(open.svg.match(/data-part="roof"[^>]*/)[0],closed.svg.match(/data-part="roof"[^>]*/)[0],'the roof ring turns to a ghost');assert.ok(roofY(open.svg)<roofY(closed.svg)-10,'and lifts');
+ assert.doesNotMatch(closed.svg,/data-crowd/,'empty at rest');
+ assert.deepEqual(FF.STEPS.map(s=>s.id),['lower','upper','kickoff']);for(const s of FF.STEPS){for(const id of s.lit)assert.ok(open.labels.some(l=>l.id===id),s.id+' lights a real label '+id);assert.ok(D.FIGURE_SAY[s.id]);}
+ for(const k of ['roof','tiers','tunnel','pitch','floodlights'])assert.ok(D.FIGURE_SAY[k],'says '+k);
+ const seen=[];fig.onStep=i=>seen.push(i);
+ const crowd=()=>{const svg=spec.draw(view(30,36,1)).svg;return new Set([...svg.matchAll(/data-crowd="(\d)"/g)].map(m=>m[1]));};
+ fig.fill(true);assert.deepEqual([...crowd()].sort(),['1']);fig.fill(true);assert.deepEqual([...crowd()].sort(),['1','2']);fig.fill(true);assert.deepEqual([...crowd()].sort(),['1','2','3']);
+ assert.equal(fig.state.lights,1);assert.match(spec.draw(view(30,36,0)).svg,/data-glow/);assert.deepEqual(seen,[0,1,2],'reduced: one step a press');
+ fig.empty(true);seen.length=0;fig.fill(false);let n=0;while(spec.tick(1/60)&&n<2000)n++;assert.deepEqual(seen,[0,1,2],'lower → upper → kick-off');assert.ok(n<1200,'then sleeps');assert.equal(spec.tick(1/60),false);
+ fig.empty(false);n=0;while(spec.tick(1/60)&&n<600)n++;assert.ok(n>5&&n<400);assert.equal(fig.state.fill,0);fig.onStep=null;
+ assert.match(exp,/<FigureStage spec=\{bowl\.spec\}/);for(const h of ['data-stadium-figure','data-fill-stadium','data-fig-back','data-fig-note'])assert.ok(exp.includes(h),'hook '+h);
+ assert.match(exp,/bowl\.onStep=null/);assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval|setTimeout/);
+ console.log('PASS fill the stadium: turns all the way round (8 yaws × 3 pitches), see-through lifts the roof ring (tunnel’s way), 5 labels from every yaw, 3 fill steps on the figure clock, most '+most+' ≤ 120 parts');}
 console.log('museum-exp-stadiums: all passed');
