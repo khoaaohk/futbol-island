@@ -6,3 +6,4 @@ export * from './limits';
 export * from './validate';
 export * from './sha256';
 export * from './presence';
+export * from './rooms';

@@ -37,6 +37,8 @@ import {collectionProgress} from '@/lib/konbini/food';
 import {isDrinkItem} from './KonbiniReveal';
 import {isSoundEnabled} from '@/lib/games/sound';
 import type {KonbiniScene,KonbiniPoi,KonbiniSlotView,KonbiniZoomView} from '@/lib/konbini/konbiniScene';
+// Party in rooms (docs/multiplayer-rooms-design.md Phase 1): friends in THIS Konbini walk about with you; Leave-only chip.
+import {useRoomParty} from './party/useRoomParty';import RoomPartyChip from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
 const NpcConversation=dynamic(()=>import('./NpcConversation'),{ssr:false});
 
 /**
@@ -129,6 +131,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  /** Look at a shelf: zoom onto it. The ATM opens its read-out; the register also opens the cashier's slide-out. */
  const look=(p:KonbiniPoi|ShelfId)=>{const id=typeof p==='string'?p:p.id;setMessage('');setSelected(null);
   if(id==='atm'){setOverlay({kind:'atm'});return;}room.current?.zoomToPoi(id);if(id==='counter'){room.current?.greet();setTalking(true);}};
+ const party=useRoomParty(room,konbiniRoom(shop),ready,covered||!!zoom);// before the scene effect: the layer is disposed before the scene on unmount
  useEffect(()=>{if(!canvas.current)return;let canceled=false;const node=canvas.current;
   import('@/lib/konbini/konbiniScene').then(({createKonbiniScene})=>{if(canceled)return;try{
    const scene=createKonbiniScene(node,shop,{onNear:setNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:v=>{setZoom(v);if(!v)setSelected(null);},onSlots:setSlots,onFirstFrame:()=>{setFirstFrame(true);},onZoomArrive:poi=>konbiniSfx.section(poi),onZoomStep:()=>konbiniSfx.whoosh(),
@@ -268,7 +271,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  return <main onClickCapture={e=>{if(konbiniClickTarget(e.target))konbiniSfx.click();}} aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back className={styles.backLeft} label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}}/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
-   <div className={styles.headerActions}><span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
+   <div className={styles.headerActions}>{party&&<RoomPartyChip party={party} hidden={covered||!!zoom}/>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};swipe.current=zoom?{x:e.clientX,y:e.clientY}:null;}}
    onPointerUp={e=>{const p=tap.current,sw=swipe.current;tap.current=null;swipe.current=null;

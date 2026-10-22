@@ -338,3 +338,17 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   zipline / truck ride, flying, swimming, a job, a lesson, a tap on the
   screen cancel it at once; reduced motion and already-close (room) cameras skip it; trees / buildings in the sight line shrink the
   zoom (or skip it); a new emote extends the zoom; 0.6 s cooldown after it ends. Guarded by `tests/high-five.cjs`.
+
+## Room party chip (rooms Phase 1, 22 Oct 2026, `docs/multiplayer-rooms-design.md` 3.3)
+
+- **Where:** the room page's own header slot, NOT the island `.hud-stack`. In the Konbini it is the first item of
+  `.headerActions` (top-left, before the coin card; Done stays top-right; Back takes the far left while zoomed). Future rooms put
+  it in their header's actions group and pass `align="right"` when that group sits on the right.
+- **What:** `components/party/RoomPartyChip.tsx`: a cream pill (your colour dot + "N here", >= 44 px) and a round gold Emote
+  button (44 px). The wheel (`EmoteWheel.tsx`, the island presets) and the read-only roster open as popovers under the chip, from
+  the chip's side (`data-align`). Owner decision: **Leave only** in rooms (no invite, code, kick, lock or End; the roster says the
+  host buttons are on the island); Hide / Mute per friend as on the island.
+- **When:** only while a party is live / reconnecting. Hidden (and its popovers closed) while the room is covered (overlay,
+  reveal, pack reveal, cashier chat, stamp card) and on the shelf zoom: one calm header at a time.
+- **Island side:** a small screen-sized "N in the Konbini" label over each Konbini roof while party friends are inside THAT shop
+  (world-anchored, client-only, from the roster; `townBridge.ts` door hints); the Party list line says "In the Konbini".

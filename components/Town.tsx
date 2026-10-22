@@ -2,7 +2,7 @@
 import {createDailyPlay,dailyPlayCounts} from '@/lib/town/dailyPlay';
 import {grantDailyPlayCoins} from '@/lib/arcade/arcadeWallet';
 import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
-import {KONBINI_DOORS,KONBINI_BUILDINGS,konbiniDoorNear,saveKonbiniDeparture,konbiniUrl,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
+import {KONBINI_DOORS,KONBINI_BUILDINGS,KONBINI_DOOR_HINTS,konbiniDoorNear,saveKonbiniDeparture,konbiniUrl,type KonbiniDoor} from '@/lib/konbini/konbiniDoors';
 import KonbiniDoorSlide from './KonbiniDoorSlide';
 import {saveMuseumDeparture,MUSEUM_URL,museumExitPoint} from '@/lib/museum/museumDoors';
 import {saveShopDeparture,SHOP_URL,SHOP_DOOR,KIT_SHOP,KIT_SHOP_BOUNDS,shopDoorNear,shopExitPoint} from '@/lib/shop/shopDoors';
@@ -872,7 +872,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
 
     const fakeFriends:{x:number;y:number;z:number;mode:number}[]=[];const friendsNow=():Iterable<{x:number;y:number;z:number;mode:number}>=>fakeFriends.length?fakeFriends:party?party.friends():[];// fakeFriends: play-test hook (__fi2.emoteTest.fakeFriends), empty in play
     let partyPitch=0;// the body's real flight pitch (flightPose.pitch), for the party colour ring
-    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},phone:quality.phone,reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen});
+    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},phone:quality.phone,reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen,doors:KONBINI_DOOR_HINTS});
     const noObstacles:Parameters<typeof blocked>[2]=[],fieldBumpCtx={entries:games.entries,npcs:islandNpcs.entries,height:0,ride:'walk',disabled:false,canMove:(x:number,z:number)=>!blocked(x,z,noObstacles,0)};
     const onboardingNpcFocus=createOnboardingNpcFocus(islandNpcs),npcHover=createNpcHover(scene);
     let hoveredNpcId:string|null=null;

@@ -622,6 +622,27 @@ existing tracker with these ids.
 
 ---
 
+### 5.8 Rooms Phase 1: friends together in the Konbini (built 22 Oct 2026, `docs/multiplayer-rooms-design.md`)
+- **Wire (no relay redeploy, no version bump):** a room pose is `zone = Indoors`, y_dm in the reserved band [-400, -300], x / z =
+  room-local metres * 10, the speed byte = the room code (Arcade 5, Museum 6, Shop 7, Konbini 8 = the Activity codes; the Coral
+  Cay Konbini 32: a SEPARATE room). `multiplayer/protocol/rooms.ts` (`roomBody`, `roomOf`, `roomLocalY`), client helpers and
+  bounds in `lib/multiplayer/roomPos.ts`. Old clients and the deployed relay parse every room frame (they see "indoors"; Busy in
+  the main Konbini still prints "In the Konbini"). Entry warp: the first pose after every Welcome carries Warp and one retry
+  follows 5.5 s later (`presence.ts` `entryWarpDue`), on the island too, so a dropped warp (relay: one per 5 s) never strands a
+  friend; the retry rides a frame or the 5 s beat (no timer).
+- **Shared code:** `lib/multiplayer/roomParty.ts` `createFriendCore` (connection, store sync, labels, Hide / Mute, emotes, the
+  Welcome / Joined roster seeding a still friend, interpolation sampling) is used by the island (`townBridge.ts`
+  `createPartyRuntime`, which keeps zones, the view gate, ball fields and the door hints) and by `createRoomParty` (room filter,
+  wake rule, room pose, busy fields as obstacles). On the island a room pose is drawn as "indoors at their last island spot" (the
+  door fade as before); a friend first heard inside a room is roster-only there.
+- **Room pages:** `components/party/useRoomParty.ts` resumes the stored party on load and mounts the layer; the room scene calls
+  `layer.update()` in its own loop. Heat: no party = no layer (zero cost); a changed same-room pose wakes a sleeping room, which
+  keeps frames <= 550 ms after the last change, at <= 20 fps on phones when only friends move; Battery saver never wakes. Measured
+  (headless, `scripts/check-mp-rooms.cjs`): 1 friend = +0.03 ms layer update, +~0.005 ms render, +7 draw calls (batch material
+  groups, ring, label, bubble; fixed per batch, labels +1 each); idle with a still friend = 0 frames; phone remote-only = 20 fps.
+- **Not in Phase 1:** Museum / Arcade / Kit Shop (Phases 2-4 reuse `useRoomParty` + `RoomPartyChip` + a scene's
+  `setFriendLayer` / `wakeRemote` / `localPose` / `stationAt` / `emote`), shared reefs (cut by the owner), relay v1.1 (Phase 4).
+
 ## 6. Phased roadmap
 Agent-day = 2-3 short build agents + 1 verify agent under the token rules. Model per task saves tokens: **Opus** only for design,
 security review and hard sync; **Sonnet** for implementation; **Haiku** for docs/tests/cleanup at low effort.

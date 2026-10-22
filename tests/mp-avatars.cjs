@@ -1,6 +1,8 @@
 // Multiplayer Phase 0, Task E: remote avatars + Town glue (docs/multiplayer-workplan.md). Source + pure checks, no browser.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript'),T=require('three');
-const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const root=path.join(__dirname,'..'),read0=f=>fs.readFileSync(path.join(root,f),'utf8');
+// The island bridge's shared core moved to lib/multiplayer/roomParty.ts (rooms Phase 1): source checks read both files.
+const read=f=>f==='lib/multiplayer/townBridge.ts'?read0(f)+'\n'+read0('lib/multiplayer/roomParty.ts'):read0(f);
 const stub=()=>new Proxy(function(){},{get:(_,k)=>k==='__esModule'?false:stub(),apply:()=>stub(),construct:()=>({})});
 // TS loader: relative imports resolve to .ts; `over` maps a module's file name (no extension) to a replacement export object.
 function load(file,over={},env={}){
@@ -129,7 +131,7 @@ function harness(){
 }
 
 // 3. sources: no shadow registration, one batch (capacity 8), no forbidden imports
-const files=['lib/graphics/remoteAvatars.ts','lib/multiplayer/townBridge.ts'];
+const files=['lib/graphics/remoteAvatars.ts','lib/multiplayer/townBridge.ts','lib/multiplayer/roomParty.ts'];
 for(const f of files){
  const src=read(f);
  assert(!/shadowVisibility|npcShadows/.test(src),f+' must not reference shadowVisibility/npcShadows');
@@ -331,5 +333,10 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  for(const m of [P.Mode.Idle,P.Mode.Walk,P.Mode.Run,P.Mode.Scooter,P.Mode.Bike,P.Mode.Moped,P.Mode.Swim,P.Mode.Dive,P.Mode.Parachute,P.Mode.Zipline])assert.equal(RA.ringPitchFor(m,1.2),0,'ring stays flat for mode '+m);
  assert.equal(RA.friendFlightPitch(0),0);assert.ok(RA.friendFlightPitch(30)>1.05&&RA.friendFlightPitch(30)<=1.1&&RA.friendFlightPitch(9)>0&&RA.friendFlightPitch(9)<RA.friendFlightPitch(15),'friend estimate: hover 0, rises smoothly with speed to ~1.1');
  const br=read('lib/multiplayer/townBridge.ts');assert(/ring\.pitch = l\.pitch/.test(br)&&/partyPitch/.test(read('components/Town.tsx')),'the local flight pitch reaches the ring');
+}
+{ // Rooms Phase 1: rooms draw a smaller dome (r ~0.8 m) through the same instanced field; the island default stays 1.
+ const ra=read('lib/graphics/remoteAvatars.ts'),rp=read0('lib/multiplayer/roomParty.ts');
+ assert(/const FS=opts\.fieldScale\?\?1;/.test(ra)&&/FS\*\(shield\?/.test(ra),'field scale option, default 1');
+ assert(/fieldScale: ROOM_FIELD_SCALE/.test(rp)&&/ROOM_FIELD_SCALE = 0\.8 \/ 1\.15/.test(rp),'rooms pass 0.8 / 1.15');
 }
 console.log('mp-avatars ok');

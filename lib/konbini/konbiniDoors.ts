@@ -1,6 +1,7 @@
 import {CAY_KONBINI_DOOR,CAY_KONBINI} from '../town/coralCay';
 import {saveIslandReturnPosition,readIslandReturnPosition,type IslandReturnPosition} from '../arcade/islandReturnPosition';
 import type {TravelMode} from '../town/travelModes';
+import {RoomCode} from '../../multiplayer/protocol/rooms';
 
 /**
  * The two enterable Konbinis and the island ↔ Konbini document boundary (like the Arcade: leaving the island unloads it
@@ -18,6 +19,12 @@ export const KONBINI_DOORS:Record<KonbiniDoor,{x:number;front:number;label:strin
  main:{x:71-.55,front:-53,label:'Island Square Konbini'},
  cay:{x:CAY_KONBINI_DOOR.x,front:CAY_KONBINI_DOOR.z,label:'Coral Cay Konbini'},
 };
+/** Party door hints on the island (over the roof line, clear of the DOM Enter prompt at the door) (docs/multiplayer-rooms-design.md, owner decision 1): "3 in the Konbini" floats over each door
+ *  while party friends are in THAT Konbini (the two shops are separate rooms: RoomCode.Konbini 8 / KonbiniCay 32, lib/multiplayer/roomPos.ts). */
+export const KONBINI_DOOR_HINTS:readonly {room:number;x:number;y:number;z:number}[]=[
+ {room:RoomCode.Konbini,x:71-.55,y:6.4,z:-53},
+ {room:RoomCode.KonbiniCay,x:CAY_KONBINI_DOOR.x,y:6.2,z:CAY_KONBINI_DOOR.z},
+];
 /** Building footprints (x/z centre, width, depth, roof height) for the shared building highlight and the from-the-air Enter,
  *  registered in Town.tsx like the Arcade/Coaches Centre: main from world.ts's hub block, cay from CAY_KONBINI. */
 export const KONBINI_BUILDINGS:Record<KonbiniDoor,{x:number;z:number;w:number;d:number;h:number}>={
