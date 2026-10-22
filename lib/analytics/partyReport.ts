@@ -48,7 +48,7 @@ export type EmoteReport={
 };
 export type EmoteVariantTable={family:EmoteVariantFamily;title:string;rows:{key:string;label:string;value:Cell}[]};
 const VARIANT_TITLE:Record<EmoteVariantFamily,string>={dance:'Dance moves',show:'Show-off skills',react:'Townsperson reactions to a show-off',hf:'High fives, thanks and well played',
- wave:'Wave moves',cheer:'Cheer moves',laugh:'Laugh moves',pass:'Pass it routines',juggle:'Juggle with me routines',keepup:'Solo keep-up routines'};
+ wave:'Wave moves',cheer:'Cheer moves',laugh:'Laugh moves',pass:'Pass it routines',juggle:'Juggle with me routines',keepup:'Solo keep-up routines',move:'Moving emotes (walking / running)'};
 
 type M=Pick<Merged,'counts'|'countSessions'|'totals'|'areas'>;
 const statusOf=(to:string,m:M,prefix:string):PartyStatus=>to<PARTY_SINCE?'not_yet':Object.keys(m.counts).some(k=>k.startsWith(prefix))?'ok':'empty';
@@ -112,13 +112,13 @@ export function buildEmotes(m:M,range:{from:string;to:string},labels:Record<numb
  const row=(id:string,label:string):PartyRow=>({id,label,value:guarded(id)});
  const picks=guarded('em:pick'),emoting=cell(S['em:reach_1']),sessions=m.totals.sessions;
  const wheel=guarded('em:wheel'),noPick=guarded('em:wheel_close');
- const CTX_LABEL:Record<string,string>={ground:'On foot',scooter:'Scooter',bike:'Bike',moped:'Moped',fly:'Flying',swim:'Swimming'};
+ const CTX_LABEL:Record<string,string>={ground:'On foot',scooter:'Scooter',bike:'Bike',moped:'Moped',fly:'Flying',swim:'Swimming',walk:'Walking / running'};
  const r:EmoteReport={
   status:statusOf(range.to,m,'em:'),since:PARTY_SINCE,partial:range.from<PARTY_SINCE&&range.to>=PARTY_SINCE,min:MIN_SESSIONS,hidden:0,
   picks,sessions,emotingSessions:emoting,emotingShare:emoting!==null&&sessions>0?Math.min(1,emoting/sessions):null,
   perEmoter:ratio(picks,emoting),npcRate:ratio(guarded('em:to_npc'),picks),
   btnSessions:cell(S['em:btn']),wheelOpens:wheel,wheelNoPick:noPick,wheelConv:wheel===null||noPick===null||!wheel?null:Math.max(0,1-noPick/wheel),
-  byEmote:EMOTE_WIRE_IDS.map(n=>({wire:n,label:labels[n]?.label??`Emote ${n}`,group:labels[n]?.group??(n<10?'wheel':n<20?'ride':n<30?'fly':n<40?'swim':'npc'),value:guarded('em:e'+n)})),
+  byEmote:EMOTE_WIRE_IDS.map(n=>({wire:n,label:labels[n]?.label??`Emote ${n}`,group:labels[n]?.group??(n<10?'wheel':n<20?'ride':n<30?'fly':n<40?'swim':n<50?'npc':'walk'),value:guarded('em:e'+n)})),
   contexts:EMOTE_CONTEXTS.map(c=>row('em:ctx_'+c,CTX_LABEL[c])),
   targets:[row('em:to_npc','A townsperson answered'),row('em:to_party','Sent to friends in a party'),row('em:solo','Nobody near'),row('em:refused','A field player said “not now”')],
   reach:EMOTE_REACH.map(n=>({id:'em:reach_'+n,label:`${n}+ emotes in a visit`,sessions:cell(S['em:reach_'+n])})),

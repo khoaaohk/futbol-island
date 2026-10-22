@@ -15,7 +15,7 @@ import styles from './admin.module.css';
 const show=(c:Cell)=>c===null?'<5':fmtInt(c);
 const pct=(x:number|null)=>x===null?'—':fmtPct(x);
 const bars=(rows:PartyRow[]):BarRow[]=>rows.map(r=>({key:r.id,label:r.label,value:r.value??0,text:r.value===null?'<5':undefined,detail:r.value===null?'fewer than 5 sessions':undefined}));
-const GROUPS:[EmoteRow['group'],string][]=[['wheel','On foot (the wheel)'],['ride','On a ride'],['fly','Flying'],['swim','Swimming'],['npc','With a townsperson (skaters, scooters, jugglers)']];
+const GROUPS:[EmoteRow['group'],string][]=[['wheel','On foot (the wheel)'],['ride','On a ride'],['fly','Flying'],['swim','Swimming'],['npc','With a townsperson (skaters, scooters, jugglers)'],['walk','Walking or running (moving emotes)']];
 const EMPTY='No emotes in this range yet. Counts arrive after the player leaves the tab, or every few minutes while they play.';
 
 export default function EmoteSection({report}:{report:Report}){
