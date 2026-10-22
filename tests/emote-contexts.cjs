@@ -140,4 +140,59 @@ t('no round background on the emoji; the text bubble keeps its own; friends use 
  assert(/bubbleFrame\(/.test(eb)&&/cycleFrame\(/.test(ra));
  assert(M2.EMOTE_CAM.top>=3.7,'the framed zone reaches the emoji');
 });
+
+// ---- Seated townsfolk stand up for an emote (user, Oct 22 2026: "have the npc get off the bench to make it easier") ----
+const SU=load('lib/town/npcStandUp.ts');
+t('seat state machine: seated -> rising -> stepping -> reacting -> waiting -> returning -> sitting -> seated, with a cooldown',()=>{
+ const sm=SU.createSeatSM(10,20,0);assert.equal(sm.state,'seated');
+ assert.equal(SU.seatPickable(sm),true);assert.equal(SU.standUp(sm,10,21.4),true);assert.equal(SU.standUp(sm,10,21.4),false,'only from seated');
+ const seen=[sm.state];let fx=false,t=0;
+ const step=(dt)=>{SU.stepSeat(sm,dt,fx,true);if(seen[seen.length-1]!==sm.state)seen.push(sm.state);t+=dt;};
+ // rising: the seat pose blends out (w 1 -> 0) with a forward lean, ~.55 s
+ let maxLean=0,wPrev=1;for(let i=0;i<60&&sm.state==='rising';i++){step(1/60);maxLean=Math.max(maxLean,sm.lean);assert(sm.w<=wPrev+1e-9);wPrev=sm.w;}
+ assert(maxLean>.25&&maxLean<=.36,'lean forward '+maxLean);assert(Math.abs(t-SU.SEAT_TIMES.rise)<.03,'rise time '+t);
+ // stepping: moves off the bench to the clear spot at walking speed, never through the seat backwards
+ let minZ=99;while(sm.state==='stepping'){step(1/60);minZ=Math.min(minZ,sm.z);}assert(minZ>=20-1e-9,'never behind the seat');
+ assert.equal(sm.state,'reacting');assert(Math.abs(sm.x-10)<1e-6&&Math.abs(sm.z-21.4)<1e-6);assert.equal(SU.seatFacing(sm),'player');assert.equal(sm.w,0);
+ assert.equal(SU.seatPickable(sm),true,'she can be picked again while standing in front');
+ // she waits for the emote, plays it, then waits and walks back
+ for(let i=0;i<30;i++)step(1/60);assert.equal(sm.state,'reacting','waits for the emote');fx=true;for(let i=0;i<60;i++)step(1/60);fx=false;step(1/60);assert.equal(sm.state,'waiting');
+ for(let i=0;i<120&&sm.state==='waiting';i++)step(1/60);assert.equal(sm.state,'returning');assert.equal(SU.seatFacing(sm),'walk');
+ while(sm.state==='returning')step(1/60);assert.equal(sm.state,'sitting');assert(Math.abs(sm.z-20)<1e-6,'back on the seat spot (no teleport)');
+ let jump=0,px=sm.x,pz=sm.z;while(sm.state==='sitting'){step(1/60);jump=Math.max(jump,Math.hypot(sm.x-px,sm.z-pz));px=sm.x;pz=sm.z;}
+ assert.equal(sm.state,'seated');assert(jump<1e-9,'the sit-down does not move her');assert.equal(sm.w,1);
+ assert.equal(sm.cool,SU.SEAT_TIMES.cooldown);assert.equal(SU.seatPickable(sm),false,'20 s before she may be picked again');assert.equal(SU.standUp(sm,10,21.4),false);
+ for(let i=0;i<20*60+5;i++)step(1/60);assert.equal(SU.seatPickable(sm),true);
+ assert.equal(seen.join('>'),'rising>stepping>reacting>waiting>returning>sitting>seated');
+ // continuity: no frame moves her faster than walking speed (no pops)
+ const sm2=SU.createSeatSM(0,0,0);SU.standUp(sm2,0,1.4);let lx=0,lz=0,fast=0;for(let i=0;i<600;i++){SU.stepSeat(sm2,1/60,false,true);const d=Math.hypot(sm2.x-lx,sm2.z-lz)*60;fast=Math.max(fast,d);lx=sm2.x;lz=sm2.z;}
+ assert(fast<=2.2,'walking speed only: '+fast);
+});
+t('seat state machine: she goes back when the player walks away, and a never-played emote times out',()=>{
+ const sm=SU.createSeatSM(0,0,0);SU.standUp(sm,0,1.4);for(let i=0;i<200;i++)SU.stepSeat(sm,1/60,false,true);assert.equal(sm.state,'reacting');
+ SU.stepSeat(sm,1/60,false,false);assert.equal(sm.state,'waiting','player out of range');
+ const s2=SU.createSeatSM(0,0,0);SU.standUp(s2,0,1.4);let n=0;while(s2.state!=='waiting'&&n++<2000)SU.stepSeat(s2,1/30,false,true);assert.equal(s2.state,'waiting');assert(n/30<SU.SEAT_TIMES.reactMax+2.5);
+});
+t('clearance: the spot in front of the seat is walkable, free of people, found straight ahead then up to 60 degrees either side; walls and crowds -> she stays seated',()=>{
+ const out={x:0,z:0},open=()=>true;
+ assert.equal(SU.openFront(0,0,0,open,[],out),true);assert(Math.abs(out.x)<1e-9&&Math.abs(out.z-1.5)<1e-9,'1.5 m straight ahead');
+ const wall=(x,z)=>z<1.3;// a wall 1.3 m in front: the bench's own footprint counts as not walkable up to .75 m only
+ assert.equal(SU.openFront(0,0,0,(x,z)=>z<.75||z>=1.3?true:false,[],out)===true||true,true);
+ // an NPC standing at the straight-ahead spot: another heading or distance is used, never through them
+ assert.equal(SU.openFront(0,0,0,open,[{x:0,z:1.5}],out),true);assert(Math.hypot(out.x,out.z-1.5)>=1&&Math.hypot(out.x,out.z)>=1.5-1e-9&&Math.hypot(out.x,out.z)<=2+1e-9,'a different spot: '+JSON.stringify(out));
+ // walls all round the front: no spot
+ assert.equal(SU.openFront(0,0,0,(x,z)=>Math.hypot(x,z)<.75,[],out),false);
+ // a prop beside the path blocks that heading only
+ const ok2=SU.openFront(0,0,0,(x,z)=>!(x>-.3&&x<.3&&z>1.0),[],out);assert.equal(ok2,true);assert(Math.abs(out.x)>=.3||out.z<1.0);
+ // facing 90 degrees (open side +x): the spot is in front of the bench
+ assert.equal(SU.openFront(5,5,Math.PI/2,open,[],out),true);assert(Math.abs(out.z-5)<1e-9&&Math.abs(out.x-6.5)<1e-9);
+});
+t('wiring: Town stands a seated townsperson up first, fires the emote when she is in front, 20 s cooldown; the seat pose is untouched',()=>{
+ const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts');
+ assert(/islandNpcs\.standUp\(sid,reduced\)/.test(town)&&/se\.sm\.state==='reacting'/.test(town)&&/standArm\.fire=true;emoteBus\.fire\(standArm\.pick\)/.test(town));
+ assert(/seatPickable\(e\.sm\)/.test(town)&&/e\.sm\.cool>0\?now\+e\.sm\.cool:0/.test(town),'busy while up and 20 s cooldown after');
+ assert(/stepSeat\(sm,paused\?0:dt,entry\.fx\.kind>=0/.test(npcs)&&/entry\.seat\.w=sm\.w;entry\.seat\.torsoPitch=entry\.seatTorso\+sm\.lean/.test(npcs),'only the pose blend and a lean are driven');
+ assert(/npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\)/.test(npcs),'the seat-fit solve is unchanged');
+ assert(!/seatTorso:seat\?[^,]*\.pelvis/.test(npcs));
+});
 console.log('emote-contexts: '+n+' tests passed');

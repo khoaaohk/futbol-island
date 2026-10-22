@@ -60,7 +60,7 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
       }
       if (!ok) return false;
       // A pair that cannot both fit even at the farthest allowed distance (a wide Juggle pair on a portrait phone): stay on the follow camera, which already shows both.
-      if (hasQ && frameEmote(tmp, px, py, pz, true, q.x, q.y, q.z, aspect, factor, yaw, wide, pitch) >= (wideGap ? EMOTE_CAM.wideMaxDist : EMOTE_CAM.maxDist) - 1e-6) return false;
+      if (wideGap && frameEmote(tmp, px, py, pz, true, q.x, q.y, q.z, aspect, factor, yaw, wide, pitch) >= EMOTE_CAM.wideMaxDist - 1e-6) return false;
       holding = true; hold = seconds; tapped = false; shot.begin(frame); return true;
     },
     /** Every frame while it runs: the player now, and the partner (null = none / out of reach). A partner that appears later fades into the framing. */
