@@ -19,18 +19,20 @@ export const DAY_PREFIX = 'day:';
 export const LIVE_KEY = 'live';
 
 // ---- buckets (fixed strings; the same edges are used by the room, the core and the tests) ----
-export const PEAK_BUCKETS = ['1', '2', '3', '4_5', '6p'] as const;
-export const LEN_BUCKETS = ['lt5m', '5_15m', '15_30m', '30_60m', '60mp'] as const;
+// Size and length bands use the SAME ids as the client (lib/analytics/countIds.ts PARTY_PEAK_BUCKETS / PARTY_LEN_BUCKETS; party cap 20);
+// message bands use the admin's names (lib/analytics/relayStatsTypes.ts RELAY_MSG_BUCKETS). A test keeps them equal.
+export const PEAK_BUCKETS = ['peak_1', 'peak_2', 'peak_3_4', 'peak_5_8', 'peak_9_12', 'peak_13_20'] as const;
+export const LEN_BUCKETS = ['len_5m', 'len_15m', 'len_30m', 'len_60m', 'len_3h', 'len_long'] as const;
 export const JOIN_BUCKETS = ['1', '2_3', '4_9', '10p'] as const;
-export const MSG_BUCKETS = ['lt1k', '1k_10k', '10k_50k', '50kp'] as const;
+export const MSG_BUCKETS = ['lt_1k', 'k1_10k', 'k10_50k', 'k50k_plus'] as const;
 
-export const peakBucket = (n: number): string => (n <= 1 ? '1' : n === 2 ? '2' : n === 3 ? '3' : n <= 5 ? '4_5' : '6p');
+export const peakBucket = (n: number): string => (n <= 1 ? 'peak_1' : n === 2 ? 'peak_2' : n <= 4 ? 'peak_3_4' : n <= 8 ? 'peak_5_8' : n <= 12 ? 'peak_9_12' : 'peak_13_20');
 export const lenBucket = (ms: number): string => {
   const m = ms / 60000;
-  return m < 5 ? 'lt5m' : m < 15 ? '5_15m' : m < 30 ? '15_30m' : m < 60 ? '30_60m' : '60mp';
+  return m < 5 ? 'len_5m' : m < 15 ? 'len_15m' : m < 30 ? 'len_30m' : m < 60 ? 'len_60m' : m < 180 ? 'len_3h' : 'len_long';
 };
 export const joinsBucket = (n: number): string => (n <= 1 ? '1' : n <= 3 ? '2_3' : n <= 9 ? '4_9' : '10p');
-export const msgsBucket = (n: number): string => (n < 1000 ? 'lt1k' : n < 10000 ? '1k_10k' : n < 50000 ? '10k_50k' : '50kp');
+export const msgsBucket = (n: number): string => (n < 1000 ? 'lt_1k' : n < 10000 ? 'k1_10k' : n < 50000 ? 'k10_50k' : 'k50k_plus');
 
 // ---- ids ----
 /** Why a join failed. */
@@ -46,8 +48,8 @@ const ids: string[] = [
   'rl:live_parties_max', 'rl:live_players_max',
 ];
 for (const r of END_REASONS) ids.push('rl:ended_' + r);
-for (const b of PEAK_BUCKETS) ids.push('rl:peak_' + b);
-for (const b of LEN_BUCKETS) ids.push('rl:len_' + b);
+for (const b of PEAK_BUCKETS) ids.push('rl:' + b);
+for (const b of LEN_BUCKETS) ids.push('rl:' + b);
 for (const b of JOIN_BUCKETS) ids.push('rl:joins_' + b);
 for (const b of MSG_BUCKETS) ids.push('rl:msgs_' + b);
 for (const r of FAIL_REASONS) ids.push('rl:fail_' + r);
@@ -84,8 +86,8 @@ function bump(row: Row, id: string, n = 1): void {
 export function summaryIncrements(s: RoomSummary): Row {
   const row: Row = {};
   bump(row, 'rl:ended_' + (END_REASONS[s.endReason] ?? 'expired'));
-  bump(row, 'rl:peak_' + peakBucket(Math.max(1, num(s.peak))));
-  bump(row, 'rl:len_' + lenBucket(num(s.lenMs)));
+  bump(row, 'rl:' + peakBucket(Math.max(1, num(s.peak))));
+  bump(row, 'rl:' + lenBucket(num(s.lenMs)));
   bump(row, 'rl:joins_' + joinsBucket(num(s.joins)));
   bump(row, 'rl:msgs_' + msgsBucket(num(s.msgs)));
   bump(row, 'rl:msgs', num(s.msgs));

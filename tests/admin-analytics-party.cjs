@@ -296,15 +296,47 @@ ok('relay stats: contract in step with the protocol and the client bands; tolera
  const js=JSON.stringify(bad);assert(!/K7QXMB|Alex|1\.2\.3\.4/.test(js),js);assert.equal(bad.days[0].roomsCreated,0);assert.equal(bad.days[0].kicks,0);assert.equal(bad.days[0].errorsByCode.full,2);
  assert.deepEqual(RT.shapeRelayStats(null).days,[]);assert.equal(RT.shapeRelayStats({days:[{day:'not-a-day'}]}).days.length,0);
  const h=RT.relayHealth(r.totals);assert(h.connectSuccess>0.9&&h.connectSuccess<1);assert(h.avgSize>2&&h.avgSize<4);
- // If the relay agent's core is present on this branch, every field name appears in it (kept in sync by this test).
- const core='multiplayer/relay/src/relayStatsCore.ts';
- if(fs.existsSync(core)){const src=read(core);for(const f of fields.filter(f=>f!=='day'))assert(src.includes(f),`${core} names ${f}`);}
-});
+ });
 
 console.log(`admin-analytics-party: ${passed} groups passed`);
 
 (async()=>{
- const A=createLoader()('lib/analytics/relayStatsAdmin.ts');
+ const A=createLoader()('lib/analytics/relayStatsAdmin.ts'),AD=createLoader()('lib/analytics/relayStatsAdapt.ts');
+ // The REAL contract: a relay-native /stats answer produced by relayStatsCore (Map-backed KV, as tests/mp-relay-stats.cjs does)
+ // -> adaptRelayNative -> the parser. The relay's bucket ids must be the client's / the admin's.
+ const {loadTs}=require('../multiplayer/dev-relay/loadTs.cjs'),SC=loadTs(path.join(ROOT,'multiplayer/relay/src/relayStatsCore.ts'));
+ const kvm=new Map(),kv={get:async k=>kvm.has(k)?JSON.parse(JSON.stringify(kvm.get(k))):undefined,put:async(k,v)=>{kvm.set(k,JSON.parse(JSON.stringify(v)));},delete:async k=>kvm.delete(k),
+  list:async(o={})=>new Map([...kvm].filter(([k])=>k.startsWith(o.prefix||'')).map(([k,v])=>[k,JSON.parse(JSON.stringify(v))]))};
+ const T0=Date.UTC(2026,9,22,12,0,0);let clock=T0;const core=new SC.RelayStatsCore(kv,()=>clock);
+ assert.deepEqual([...SC.PEAK_BUCKETS],K.PARTY_PEAK_BUCKETS.map(([b])=>b),'relay size bands = the client peak bands');
+ assert.deepEqual([...SC.LEN_BUCKETS],K.PARTY_LEN_BUCKETS.map(([b])=>b),'relay length bands = the client length bands');
+ assert.deepEqual([...SC.MSG_BUCKETS],RT.RELAY_MSG_BUCKETS.map(([b])=>b),'relay message bands = the admin message bands');
+ assert.deepEqual([...SC.ERR_NAMES],[...RT.RELAY_ERROR_CODES],'relay error names = the admin codes');
+ await core.created();await core.created();await core.players(5);
+ await core.ended({endReason:0,peak:11,lenMs:200*60000,joins:4,resumes:2,kicks:1,rotates:2,locks:3,nameResets:0,rateCloses:1,msgs:12000,fails:{not_found:2,full:1,closed:1,locked:2,bad_name:1,rate_limited:3,expired:1},errs:{full:2,bad_version:4,kicked:1}},4);
+ await core.inc('rl:origin_refused',2);await core.inc('rl:join_rate',1);await core.inc('rl:create_rate',1);
+ clock=T0+86400000;await core.created();
+ const native=await core.stats('2026-10-22','2026-10-23');
+ const adapted=AD.adaptRelayNative(native,Date.UTC(2026,9,23,12,0,0)),rr=RT.shapeRelayStats(adapted),d0=rr.days[0];
+ assert.equal(adapted.v,1);assert.equal(rr.days.length,2);assert.equal(d0.day,'2026-10-22');
+ assert.equal(d0.roomsCreated,2);assert.equal(d0.roomsEnded,1);assert.equal(d0.peakParties,2);assert.equal(d0.peakPlayers,5);
+ assert.equal(d0.connects,4);assert.equal(d0.reconnects,2);assert.equal(d0.kicks,1);assert.equal(d0.rotations,2);assert.equal(d0.locks,3);assert.equal(d0.rateLimitCloses,1);
+ assert.equal(d0.sizeBuckets.peak_9_12,1);assert.equal(d0.lenBuckets.len_long,1);assert.equal(d0.msgsPerPartyBuckets.k10_50k,1);
+ assert.deepEqual(d0.failedJoins,{not_found:2,full:1,expired:1,locked:3,bad_version:4,bad_name:1,rate:5,origin:2});
+ assert.equal(d0.errorsByCode.full,2);assert.equal(d0.errorsByCode.bad_version,4);assert.equal(d0.errorsByCode.kicked,1);
+ assert.deepEqual(rr.live,{parties:native.live.parties,players:native.live.players,at:'2026-10-23T12:00:00.000Z'},'live gets generatedAt');
+ assert.equal(rr.totals.roomsCreated,3);
+ for(const d of rr.days){assert.deepEqual(Object.keys(d.lenBuckets),K.PARTY_LEN_BUCKETS.map(([b])=>b));assert.deepEqual(Object.keys(d.sizeBuckets),K.PARTY_PEAK_BUCKETS.map(([b])=>b));}
+ // Tolerant: the already-adapted shape passes through; junk and hostile keys never reach the report.
+ assert.deepEqual(RT.shapeRelayStats(AD.adaptRelayNative(RT.relayStatsFixture('2026-10-19',3))),RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',3)));
+ assert.equal(AD.adaptRelayNative(null),null);
+ const evil=JSON.stringify(RT.shapeRelayStats(AD.adaptRelayNative({from:'2026-10-22',to:'2026-10-22',days:{'2026-10-22':{'rl:created':1,'rl:K7QXMB':9,'name:Alex':3,'ip:1.2.3.4':2}},live:{parties:1,players:2,code:'K7QXMB',ip:'1.2.3.4'}})));
+ assert(!/K7QXMB|Alex|1\.2\.3\.4/.test(evil),evil);
+ // Through the loader with a native answer.
+ {const env0={RELAY_STATS_URL:'https://relay.example/stats',RELAY_STATS_TOKEN:'sekrit-token-123'};A.resetRelayStatsCache();
+  const nr=await A.loadRelayStats('2026-10-22','2026-10-23',{fetchImpl:async()=>({status:200,ok:true,text:async()=>JSON.stringify(native)}),env:env0,now:Date.UTC(2026,9,23,12)});
+  assert.equal(nr.status,'ok');assert.equal(nr.totals.connects,4);assert.equal(nr.live.at,'2026-10-23T12:00:00.000Z');A.resetRelayStatsCache();}
+ globalThis.__nativeRelay=rr;
  // Not configured: no request at all, and a clear status.
  let calls=[];const fake=(status,body)=>async(url,init)=>{calls.push({url,init});return {status,ok:status>=200&&status<300,text:async()=>JSON.stringify(body)};};
  let r=await A.loadRelayStats('2026-10-19','2026-10-25',{fetchImpl:fake(200,{}),env:{}});
@@ -335,8 +367,11 @@ console.log(`admin-analytics-party: ${passed} groups passed`);
  const Friends=L('app/admin/FriendsSection.tsx').default,Emote=L('app/admin/EmoteSection.tsx').default,PartiesNow=L('app/admin/LivePanel.tsx').PartiesNow;
  const rep={from:'2026-10-19',to:'2026-10-25',party:R.buildParty(fixture(),RANGE,[]),emotes:R.buildEmotes(fixture(),RANGE,labels,createLoader()('lib/analytics/emoteVariantLabels.ts').emoteVariantLabels())};
  const okRelay=RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7));
+ const nativeRelay=globalThis.__nativeRelay;
  const f=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:okRelay}));
  assert(/data-relay-health="true" data-status="ok"/.test(f)&&/Connect success/.test(f)&&/Refusals by error code/.test(f)&&/Messages per party/.test(f)&&/Learning together/.test(f)&&/First parties/.test(f),'health block');
+ {const fn=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:nativeRelay}));assert(/data-relay-health="true" data-status="ok"/.test(fn)&&/Connect success/.test(fn),'health block from adapted native data');
+  const pnn=renderToStaticMarkup(React.createElement(PartiesNow,{data:nativeRelay}));assert(/Parties now/.test(pnn)&&/>1</.test(pnn),'parties now from adapted native data');}
  const nc=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:RT.emptyRelayStats('not-configured','2026-10-19','2026-10-25')}));
  assert(/Relay stats not configured/.test(nc),'not configured state');
  const pn=renderToStaticMarkup(React.createElement(PartiesNow,{data:okRelay}));assert(/Parties now/.test(pn)&&/>7</.test(pn)&&/>23</.test(pn),'parties now');

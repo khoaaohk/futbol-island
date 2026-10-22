@@ -627,7 +627,7 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   assert.equal(st.locks, 1); assert.equal(st.rotates, 1); assert.equal(st.kicks, 1); assert.equal(st.resumes, 1);
   assert.ok(st.joins >= 4 && st.peak >= 3 && st.msgs >= 4, 'counters moved');
   assert.deepEqual(Object.keys(st.buckets).sort(), ['joins', 'len', 'msgs', 'peak']);
-  assert.equal(st.buckets.msgs, 'lt1k');
+  assert.equal(st.buckets.msgs, 'lt_1k');
   const room2 = new RoomCore({ code: snap.code, createdAt: 1_000_000, clock, random, hostKeyHash: room.digest, restore: snap });
   assert.deepEqual(room2.snapshot().stats.buckets.peak, st.buckets.peak);
   const s2 = room2.summary();

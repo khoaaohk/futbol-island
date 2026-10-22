@@ -25,11 +25,11 @@ const DAY = 86400000;
 
 (async () => {
   // ---- bucket edges ----
-  assert.deepEqual([1, 2, 3, 4, 5, 6, 20].map(SC.peakBucket), ['1', '2', '3', '4_5', '4_5', '6p', '6p']);
-  assert.deepEqual([0, 4.99 * 60000, 5 * 60000, 14.99 * 60000, 15 * 60000, 30 * 60000, 59.99 * 60000, 60 * 60000].map(SC.lenBucket),
-    ['lt5m', 'lt5m', '5_15m', '5_15m', '15_30m', '30_60m', '30_60m', '60mp']);
+  assert.deepEqual([1, 2, 3, 4, 5, 8, 9, 12, 13, 20].map(SC.peakBucket), ['peak_1', 'peak_2', 'peak_3_4', 'peak_3_4', 'peak_5_8', 'peak_5_8', 'peak_9_12', 'peak_9_12', 'peak_13_20', 'peak_13_20']);
+  assert.deepEqual([0, 4.99 * 60000, 5 * 60000, 14.99 * 60000, 15 * 60000, 30 * 60000, 59.99 * 60000, 60 * 60000, 180 * 60000].map(SC.lenBucket),
+    ['len_5m', 'len_5m', 'len_15m', 'len_15m', 'len_30m', 'len_60m', 'len_60m', 'len_3h', 'len_long']);
   assert.deepEqual([1, 2, 3, 4, 9, 10, 50].map(SC.joinsBucket), ['1', '2_3', '2_3', '4_9', '4_9', '10p', '10p']);
-  assert.deepEqual([0, 999, 1000, 9999, 10000, 49999, 50000].map(SC.msgsBucket), ['lt1k', 'lt1k', '1k_10k', '1k_10k', '10k_50k', '10k_50k', '50kp']);
+  assert.deepEqual([0, 999, 1000, 9999, 10000, 49999, 50000].map(SC.msgsBucket), ['lt_1k', 'lt_1k', 'k1_10k', 'k1_10k', 'k10_50k', 'k10_50k', 'k50k_plus']);
 
   // ---- counters, gauges ----
   const kv = mkKv();
@@ -47,8 +47,8 @@ const DAY = 86400000;
   const day = SC.dayOf(T0);
   const row = await kv.get('day:' + day);
   assert.equal(row['rl:created'], 2);
-  assert.equal(row['rl:ended_host'], 1); assert.equal(row['rl:peak_3'], 1); assert.equal(row['rl:len_15_30m'], 1);
-  assert.equal(row['rl:joins_2_3'], 1); assert.equal(row['rl:msgs_10k_50k'], 1); assert.equal(row['rl:msgs'], 12000);
+  assert.equal(row['rl:ended_host'], 1); assert.equal(row['rl:peak_3_4'], 1); assert.equal(row['rl:len_30m'], 1);
+  assert.equal(row['rl:joins_2_3'], 1); assert.equal(row['rl:msgs_k10_50k'], 1); assert.equal(row['rl:msgs'], 12000);
   assert.equal(row['rl:welcome'], 3); assert.equal(row['rl:resume'], 1); assert.equal(row['rl:kick'], 1); assert.equal(row['rl:rotate'], 2);
   assert.equal(row['rl:lock'], 1); assert.equal(row['rl:rate_close'], 1);
   assert.equal(row['rl:fail_full'], 2); assert.equal(row['rl:fail_locked'], 1); assert.equal(row['rl:fail_closed'], 1);
@@ -96,7 +96,7 @@ const DAY = 86400000;
   // the snapshot carries counters and buckets, and none of it is identifying
   const snap = JSON.stringify(room.snapshot().stats);
   assert.ok(!snap.includes(NICK) && !snap.includes(CODE));
-  assert.equal(room.snapshot().stats.buckets.peak, '2');
+  assert.equal(room.snapshot().stats.buckets.peak, 'peak_2');
 
   // ---- the Durable Object shell: routes, alarm, prune ----
   const store = new Map();

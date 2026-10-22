@@ -8,6 +8,8 @@
  */
 import {emptyRelayStats,relayStatsFixture,shapeRelayStats,type RelayStatsReport} from './relayStatsTypes';
 
+import {adaptRelayNative} from './relayStatsAdapt';
+
 export const RELAY_STATS_CACHE_MS=60_000;
 const cache=new Map<string,{at:number;value:RelayStatsReport}>();
 
@@ -27,7 +29,7 @@ export async function loadRelayStats(from:string,to:string,{fetchImpl=fetch,now=
   try{
    const u=new URL(cfg.url);u.searchParams.set('from',from);u.searchParams.set('to',to);
    const res=await fetchImpl(u.toString(),{cache:'no-store',headers:{Authorization:`Bearer ${cfg.token}`,Accept:'application/json'},signal:AbortSignal.timeout?.(5000)});
-   out=res.status===401||res.status===403?emptyRelayStats('unauthorized',from,to):!res.ok?emptyRelayStats('error',from,to):shapeRelayStats(JSON.parse(await res.text()||'null'),from,to);
+   out=res.status===401||res.status===403?emptyRelayStats('unauthorized',from,to):!res.ok?emptyRelayStats('error',from,to):shapeRelayStats(adaptRelayNative(JSON.parse(await res.text()||'null'),now),from,to);
   }catch{out=emptyRelayStats('error',from,to);}
  }
  if(out.status==='ok'){if(cache.size>50)cache.clear();cache.set(key,{at:now,value:out});}
