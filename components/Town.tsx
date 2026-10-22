@@ -803,9 +803,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Solids for the emote camera's multi-ray test (lib/town/emoteCamClear.ts): every wall box (buildings with their real height) plus the big props (kiosks, stalls: 3.5 m tall boxes).
     const emoteSolids:Solid[]=[],emoteSolidsAt=(x:number,z:number,r:number):readonly Solid[]=>{emoteSolids.length=0;for(const o of ballWallGrid.query(x,z,r)){const w=o as unknown as Partial<Solid>;emoteSolids.push({x:o.x,z:o.z,w:o.w,d:o.d,floor:w.floor??0,top:w.top??(o as unknown as {height?:number}).height??4});}for(const o of ballObstacleGrid.query(x,z,r))if(Math.max(o.w,o.d)>=2.5&&!o.dynamic)emoteSolids.push({x:o.x,z:o.z,w:o.w,d:o.d,floor:0,top:3.5});return emoteSolids;};
     const emoteCamWorld:EmoteCamWorld={solids:emoteSolidsAt,floorAt:(x,z)=>ctxOn()&&ctxFx.script!.ctx==='swim'?Math.max(fieldSurfaceHeight(x,z),WATER_LEVEL):fieldSurfaceHeight(x,z),clear:(ex,ey,ez,tx,ty,tz)=>{const r=Math.hypot(ex-tx,ez-tz)/2+1;for(const g of [ballWallGrid,ballRoofGrid])for(const o of g.query((ex+tx)/2,(ez+tz)/2,r))if(segmentHitsBox(ex,ey,ez,tx,ty,tz,o))return false;return true;}};
-    const HF_CAMERA_YAW=Math.atan2(16,33),hfFaceYaw=()=>{const n=emoteNpc;if(n&&n.fx.kind===2){const me=player.root.position;return Math.atan2(n.position.x-me.x,n.position.z-me.z);}return HF_CAMERA_YAW;};
+    const HF_CAMERA_YAW=Math.atan2(16,33),hfFaceYaw=()=>{const n=emoteNpc;if(n&&n.fx.v>=0){const me=player.root.position;return Math.atan2(n.position.x-me.x,n.position.z-me.z);}return HF_CAMERA_YAW;};
     const hfSkillNow=()=>emoteFx.kind>=0&&emoteFx.v>=0&&!reduced&&highFiveSkill(hfSkill,emoteFx.v,0,emoteFx.age)?hfSkill:undefined;
-    const hfPose=()=>{if(emoteFx.kind>=0&&emoteFx.v>=0&&!reduced)applyHighFive(player.root,emoteFx.v,0,emoteFx.age,1,hfFaceYaw(),1);};
+    const hfPose=()=>{if(emoteFx.kind>=0&&emoteFx.v>=0&&!reduced){const n=emoteNpc&&emoteNpc.fx.v>=0?emoteNpc:null,me=player.root.position;applyHighFive(player.root,emoteFx.v,0,emoteFx.age,1,hfFaceYaw(),1,n?Math.hypot(n.position.x-me.x,n.position.z-me.z):NaN);}};
     // Pass it: one pooled ball between your feet and the partner's (a townsperson, or an imaginary friend in front of you); the passer hops a little at each kick.
     const endBallEmote=()=>{passOnBall=false;if(emoteNpc)emoteNpc.pass=null;};
     const passStep=()=>{const me=player.root.position,n=emoteNpc&&emoteNpc.fx.kind>=0?emoteNpc:null;passFeet.x=me.x;passFeet.y=me.y;passFeet.z=me.z;
@@ -823,7 +823,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(ctxOn()){if(!ctxStillValid(ctxFx.script!.emote,isFlying(rideRef.current,jetActions.state.phase),water.swimming&&!dive.diving)){emoteFx.kind=-1;ctxFx.script=null;emoteCam.cancel();return;}/* landed / left the water: the flourish ends at once */}else if(!onRideNow&&emoteMoving()){emoteFx.kind=-1;endBallEmote();if(emoteNpc)emoteNpc.fx.kind=-1;return;}
       if(passOnBall&&(walkBall.state.mode!=='attached'||rideRef.current!=='walk'||water.inWater)){emoteFx.kind=-1;endBallEmote();emoteCam.cancel();return;}/* a kick, a ride or the sea ends the ball emote */// walking away ends the emote (and the pass, and the dance)
       const prev=emoteFx.age;emoteFx.age+=dt;
-      if(emoteFx.v>=0&&!reduced){const d=HIGH_FIVES[emoteFx.v],h=hitCrossed(d,prev,emoteFx.age);if(h>=0){const me=player.root.position,n=emoteNpc&&emoteNpc.fx.kind===2?emoteNpc:null;sparkPoint(hfPt,d,h,me.x,me.y,me.z,1,!!n,n?n.position.x:0,n?n.position.y:0,n?n.position.z:0,n?n.rig.profileScale:1,hfFaceYaw());emoteBubbles.spark(hfPt.x,hfPt.y,hfPt.z);}}
+      if(emoteFx.v>=0&&!reduced){const d=HIGH_FIVES[emoteFx.v],h=hitCrossed(d,prev,emoteFx.age);if(h>=0){const me=player.root.position,n=emoteNpc&&emoteNpc.fx.v>=0?emoteNpc:null;sparkPoint(hfPt,d,h,me.x,me.y,me.z,1,!!n,n?n.position.x:0,n?n.position.y:0,n?n.position.z:0,n?n.rig.profileScale:1,hfFaceYaw());emoteBubbles.spark(hfPt.x,hfPt.y,hfPt.z);}}
       if(emoteFx.kind===EMOTE.PassBall||emoteFx.kind===EMOTE.JuggleWithMe)passStep();
       if(emoteFx.age>=emoteFx.dur){emoteFx.kind=-1;endBallEmote();}};
 

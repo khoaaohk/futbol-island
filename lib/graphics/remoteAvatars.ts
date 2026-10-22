@@ -15,7 +15,7 @@ import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
 import {applyHighFive} from './highFivePose';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';
-import {HIGH_FIVES,createHighFiveBag,nextHighFive,highFiveSkill} from '../town/highFive';
+import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
 import {wireToLook} from '../multiplayer/look';
@@ -220,7 +220,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   },
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=em===Emote.HighFive&&!flourishForWire(em,e.lastMode)?nextHighFive(Math.random,hfBag):-1;e.rig?.setExpression('happy');},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden)return;e.emote=em;e.emoteAge=0;e.hf=!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;e.rig?.setExpression('happy');},
   update(dt,poses,camera,reduced,local){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
@@ -268,7 +268,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      const mode=pose.mode;e.lastMode=mode;
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=travelFor(mode);
      motion.parachute=mode===Mode.Parachute||mode===Mode.Zipline;
-     motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&e.emote===Emote.HighFive&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
+     motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
      if(mode===Mode.Swim||mode===Mode.Dive){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
      }else motion.swim=undefined;
@@ -282,7 +282,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
      else if(fs0&&!reduced&&fs0.arm>=0&&e.emoteAge>=fs0.armFrom)applyRideEmote(rig.root,fs0.arm,e.emoteAge,Math.max(0,Math.min(1,(e.emoteAge-fs0.armFrom)/.2,(fs0.seconds-e.emoteAge)/.2)));
      root3.position.set(pose.x,pose.y,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
-     if(e.hf>=0&&!reduced&&e.emote===Emote.HighFive)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);
+     if(e.hf>=0&&!reduced)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);
      e.needResume=false;
     }
     // A flying / swimming friend's emote (their mode picks it from the same wire value): roll / pitch / lift on the rig root, every frame, gone with the emote.
