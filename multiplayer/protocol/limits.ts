@@ -1,0 +1,76 @@
+// Rate limits, world bounds, speed checks and pose clamping (design 4.4 / 4.5).
+import { Mode, Zone, type PoseBody } from './types';
+
+export const RATE = {
+  pose: [8, 12],
+  emote: [0.5, 2],
+  ping: [0.33, 2],
+  control: [1, 3],
+  closeAbovePerSec: 30,
+  emotePerMin: 10,
+} as const;
+
+/** Decimetres. Contains main island, Cay (612,-160), Summit (640,130) with margin for flight. */
+export const WORLD_BOUNDS = { minX: -4000, maxX: 10000, minZ: -6000, maxZ: 6000, minY: -400, maxY: 2000 } as const;
+
+export const MAX_SPEED_MS: Record<Mode, number> = {
+  [Mode.Walk]: 3.7 * 1.7,
+  [Mode.Run]: 3.7 * 1.7,
+  [Mode.Scooter]: 14,
+  [Mode.Bike]: 20,
+  [Mode.Moped]: 28,
+  [Mode.Jetpack]: 34,
+  [Mode.Parachute]: 6,
+  [Mode.Zipline]: 6,
+  [Mode.Swim]: 3,
+  [Mode.Dive]: 6,
+  [Mode.AnimalRide]: 6,
+  [Mode.Fishing]: 6,
+  [Mode.Busy]: 6,
+  [Mode.Idle]: 6,
+};
+
+const isInt = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n);
+const inRange = (n: unknown, lo: number, hi: number): boolean => isInt(n) && n >= lo && n <= hi;
+
+/** Returns a fresh copy of the body if valid, else null. */
+export function clampPose(body: PoseBody): PoseBody | null {
+  if (!Array.isArray(body) || body.length !== 8) return null;
+  const [x, y, z, yaw, sp, mode, zone, flags] = body;
+  const B = WORLD_BOUNDS;
+  if (!inRange(x, B.minX, B.maxX) || !inRange(y, B.minY, B.maxY) || !inRange(z, B.minZ, B.maxZ)) return null;
+  if (!inRange(yaw, 0, 255) || !inRange(sp, 0, 255)) return null;
+  if (!inRange(mode, Mode.Walk, Mode.Idle) || !inRange(zone, Zone.Main, Zone.Indoors)) return null;
+  if (!inRange(flags, 0, 3)) return null;
+  return [x, y, z, yaw, sp, mode, zone, flags];
+}
+
+/** Distance (m) <= MAX_SPEED_MS[next mode] * 1.5 * dt + 2. Always true with Warp (caller limits Warp to 1 per 5 s). */
+export function speedOk(prev: PoseBody, next: PoseBody, dtMs: number): boolean {
+  if (next[7] & 1) return true;
+  const dx = (next[0] - prev[0]) / 10;
+  const dy = (next[1] - prev[1]) / 10;
+  const dz = (next[2] - prev[2]) / 10;
+  const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  const max = MAX_SPEED_MS[next[5]] ?? 6;
+  return dist <= max * 1.5 * (Math.max(0, dtMs) / 1000) + 2;
+}
+
+export class TokenBucket {
+  private tokens: number;
+  private last = -1;
+  constructor(private perSec: number, private burst: number) {
+    this.tokens = burst;
+  }
+  take(nowMs: number): boolean {
+    if (this.last >= 0 && nowMs > this.last) {
+      this.tokens = Math.min(this.burst, this.tokens + ((nowMs - this.last) / 1000) * this.perSec);
+    }
+    this.last = nowMs;
+    if (this.tokens >= 1) {
+      this.tokens -= 1;
+      return true;
+    }
+    return false;
+  }
+}
