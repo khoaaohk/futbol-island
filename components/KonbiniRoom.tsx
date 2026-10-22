@@ -38,7 +38,7 @@ import {isDrinkItem} from './KonbiniReveal';
 import {isSoundEnabled} from '@/lib/games/sound';
 import type {KonbiniScene,KonbiniPoi,KonbiniSlotView,KonbiniZoomView} from '@/lib/konbini/konbiniScene';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 1): friends in THIS Konbini walk about with you; Leave-only chip.
-import {useRoomParty} from './party/useRoomParty';import RoomPartyChip from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';import RoomPartyChip,{RoomEmoteDock} from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
 const NpcConversation=dynamic(()=>import('./NpcConversation'),{ssr:false});
 
 /**
@@ -271,7 +271,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  return <main onClickCapture={e=>{if(konbiniClickTarget(e.target))konbiniSfx.click();}} aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back className={styles.backLeft} label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}}/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
-   <div className={styles.headerActions}>{party&&<RoomPartyChip party={party} hidden={covered||!!zoom}/>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
+   <div className={styles.headerActions}>{party&&<RoomPartyChip party={party} hidden={covered||!!zoom} emoteDock/>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};swipe.current=zoom?{x:e.clientX,y:e.clientY}:null;}}
    onPointerUp={e=>{const p=tap.current,sw=swipe.current;tap.current=null;swipe.current=null;
@@ -320,7 +320,8 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
     onKeyUp={e=>{if(e.code!=='Space')return;e.preventDefault();e.stopPropagation();const b=e.currentTarget;delete b.dataset.charging;until(b,300);room.current?.endShot();}}
     onBlur={e=>{delete e.currentTarget.dataset.charging;room.current?.endShot(true);}}
     onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.kick();}}><TravelIcon kind="shoot"/></button>
-  </div></div>}
+  </div>
+  {party&&<RoomEmoteDock party={party} wheelClass={styles.emoteWheel}/>}</div>}
   {streak&&actionsOn&&<p key={'streak-'+streak.key} className={styles.streak} data-konbini-streak={streak.n} data-live={streak.live||undefined} data-best={streak.best||undefined} role={streak.live?undefined:'status'}>Keep-ups: <b>{streak.n}</b>{streak.best?<span className={styles.newBest}>★ New best!</span>:best>0?<small>best {best}</small>:null}</p>}
   {coachTip&&<p className={styles.coachTip} role="status" data-konbini-coach-tip><b>Coach tip</b>{coachTip}</p>}
   {clerkLine&&<aside className={styles.clerkLine} role="status" data-konbini-clerk-line><span>{npc.name}</span><p>{clerkLine}</p></aside>}

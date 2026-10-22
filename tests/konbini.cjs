@@ -401,6 +401,11 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(/e\.code==='Space'\)\{if\(e\.type==='keydown'&&!e\.repeat\)beginShot\(\);else if\(e\.type==='keyup'\)endShot\(\);\}/.test(scene),'Space: hold to charge, release to shoot');assert(/e\.code==='KeyJ'/.test(scene),'J: keep-ups');
   assert(/const actionsOn=ready&&!failed&&!zoom&&!overlay&&!reveal&&!preview&&!packReveal&&!talking&&!walkingOut&&!leaving;/.test(room),'buttons hidden zoomed, in dialogs, reveal/preview and the exit walk');
   assert(/\{actionsOn&&<div className=\{`travel-actions \$\{styles\.ballActions\}`\}/.test(room)&&/className="touch-shoot"/.test(room)&&/className="touch-juggle"/.test(room),'the island’s round action buttons');
+  // Owner, Oct 22 2026: keep-up above kick on the right edge, the Emote button immediately left of kick, all three one --action-size; the header chip drops its emote button.
+  assert(/<RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/>/.test(room)&&/<RoomEmoteDock party=\{party\}/.test(room),'the Konbini chip has no emote button; the Emote button lives in the action cluster');
+  const kcss=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.module.css'),'utf8');
+  assert(/:global\(\.touch-juggle\)\{grid-column:2;grid-row:1\}/.test(kcss)&&/:global\(\.touch-shoot\)\{grid-column:2;grid-row:2\}/.test(kcss)&&/:global\(\.touch-emote\)\{grid-column:1;grid-row:2/.test(kcss),'keep-up above kick, Emote left of kick');
+  assert(!/touch-shoot\)\{--action-size/.test(kcss),'kick, keep-up and Emote share one --action-size');
   assert(/const ballFree=\(\)=>!leaving&&!leaveStarted&&!covered&&!disposed&&zoomIndex===null&&!zoom&&!eat;/.test(scene),'the scene refuses ball actions when zoomed/covered/leaving');
   assert(/function zoomToIndex[^\n]*settleBall\(\)/.test(scene)&&/setCovered\(value:boolean\)\{covered=value;if\(value\)\{settleBall\(\)/.test(scene),'zoom and dialogs bring the ball home');
   const css=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.module.css'),'utf8');for(const m of css.matchAll(/--action-size:(\d+)px/g))assert(Number(m[1])>=44,'action buttons ≥ 44 px');
