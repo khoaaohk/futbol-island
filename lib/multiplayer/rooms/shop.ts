@@ -61,15 +61,15 @@ defineStationText(STATION.ShopKit,'Looking at my kit','\u{1F455}');
 
 const STANDS=stationPois();
 const TILL=clerkPoi(SHOP_CLERK.def.name);
-const rectAround=(a:{x:number;z:number},b:{x:number;z:number},pad:number):Rect=>({minX:r2(Math.min(a.x,b.x)-pad),maxX:r2(Math.max(a.x,b.x)+pad),minZ:r2(Math.min(a.z,b.z)-pad),maxZ:r2(Math.max(a.z,b.z)+pad)});
+const rectAround=(pts:readonly {x:number;z:number}[],pad:number):Rect=>({minX:r2(Math.min(...pts.map(p=>p.x))-pad),maxX:r2(Math.max(...pts.map(p=>p.x))+pad),minZ:r2(Math.min(...pts.map(p=>p.z))-pad),maxZ:r2(Math.max(...pts.map(p=>p.z))+pad)});
 const BOUNDS:Rect={minX:-ROOM.halfW,maxX:ROOM.halfW,minZ:ROOM.back,maxZ:ROOM.front};
 
 export const SHOP_ROOM:ShopRoomDescriptor={
  code:SHOP_ROOM_CODE,id:'shop',name:'Kit Shop',scale:1,
  bounds:BOUNDS,
  areas:[
-  ...STANDS.map(p=>({id:`studio-${p.station as ShopStation}`,rect:rectAround(p.a,p.b,.6)})),
-  {id:'till',rect:rectAround(TILL.a,TILL.b,.6)},
+  ...STANDS.map(p=>({id:`studio-${p.station as ShopStation}`,rect:rectAround(p.stand?[p.a,p.b,p.stand]:[p.a,p.b],.6)})),
+  {id:'till',rect:rectAround([TILL.a,TILL.b],.6)},
   {id:'bench',rect:{minX:r2(BENCH.x-BENCH.w/2-.6),maxX:r2(BENCH.x+BENCH.w/2+.6),minZ:r2(BENCH.z-BENCH.d/2-.6),maxZ:r2(BENCH.z+BENCH.d/2+.6)}},
   {id:'door',rect:{minX:DOOR.x-DOOR.half,maxX:DOOR.x+DOOR.half,minZ:ROOM.front-2,maxZ:ROOM.front}},
   {id:'floor',rect:{minX:-ROOM.halfW,maxX:ROOM.halfW,minZ:.25,maxZ:ROOM.front}},
