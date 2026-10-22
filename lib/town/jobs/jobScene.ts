@@ -654,7 +654,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
     // Wall rebounds' shooting circle is the beacon's own ring, sized to the circle (one mesh, moved; the arrow hides once inside).
     const spotRing=run.def.kind==='rebound'&&run.phase==='shots',inside=!!goal&&Math.hypot(p.x-goal.x,p.z-goal.z)<(spotRing?REBOUND_WALL.spot.radius:2);
     beacon.visible=!!goal&&(spotRing||!(run.def.kind==='rebound'&&inside));arrowOn=!!goal;if(goal){arrowGoal.x=goal.x;arrowGoal.z=goal.z;time+=dt;beacon.position.set(goal.x,floor(goal.x,goal.z),goal.z);const arrow=beacon.getObjectByName('arrow')!;arrow.visible=!(spotRing&&inside);arrow.position.y=2.2+(reduced?0:Math.sin(time*3)*.18);
-     const ring=beacon.getObjectByName('beacon-ring');if(ring){const s=spotRing?REBOUND_WALL.spot.radius:1;if(ring.scale.x!==s)ring.scale.set(s,s,1);}}}
+     const ring=beacon.getObjectByName('beacon-ring');if(ring){const s=spotRing?REBOUND_WALL.spot.radius:1;if(ring.scale.x!==s)ring.scale.set(s,s,1);/* Oct 22 2026 (user: "we don't need two rings for the bugs"): the Bug squad has the bug's own halo, so its beacon is the arrow only */ring.visible=!run.def.swing;}}}
    if(run&&run.def.kind==='sort'&&task.shirts){const shirt=task.shirts[run.step];if(shirt&&run.carrying>=0){shirt.visible=true;const k=liftK(dt),f=gear.lift?.from;
     if(f&&k<1)shirt.position.set(f.x+(p.x-f.x)*k,f.y+(p.y+2.35-f.y)*ease.out(k),f.z+(p.z-f.z)*k);else shirt.position.set(p.x,p.y+2.35,p.z);}}
    if(run&&run.def.kind==='offside')paintOffside();
@@ -1076,7 +1076,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    if(g.visible){const mode=netCarryMode({ride:rideMode,stalk:!!jr.stalk,swinging:!!swing,raised:false});
     if(mode==='pack'){if(packPort){const s=packPort.socket;s.updateWorldMatrix(true,false);net.pack(s.matrixWorld,yaw,packTilt(rideMode),lastDt,reducedMotion);}else g.visible=false;}
     if('setFill' in net){let n=0;for(const g of jr.got)if(g)n++;jarFill=n/Math.max(1,jr.got.length);net.setFill(jarFill);}
-    else net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);
+    /* Oct 22 2026 (user: the jar stayed behind after a catch and was not in the hand): the jar needs its layout every island frame too (it was an `else` of the fill branch, so only the net was laid out) */
+    if(mode!=='pack'||!('setFill' in net))net.layout(l,r,swing?swing.yaw:yaw,swing?swing.t:-1,mode,lastDt,reducedMotion);/* the jar rests on the pack socket while riding (net.pack above) */
     net.bagCentre(bagPos);}}
   if(gear.rake){const g=gear.rake;g.visible=jr.phase==='work';g.position.set(mx,my,mz);aim(g,DOWN,p.x+fx0*1.25,floor(p.x,p.z)+.05,p.z+fz0*1.25);}
   if(gear.handFlag){const g=gear.handFlag;g.visible=true;g.position.set(r.x,r.y,r.z);aim(g,UP,r.x+(r.x-p.x)*.4,r.y+(r.y-(p.y+1.3))*1.2,r.z+(r.z-p.z)*.4);}
