@@ -53,8 +53,15 @@ const load=(f,req=()=>({}))=>{const m={exports:{}};new Function('exports','modul
   for(const m of css.matchAll(new RegExp(`\\.${sel}\\{[^}]*?width:(\\d+)px;height:(\\d+)px`,'g')))assert(+m[1]>=44&&+m[2]>=44,`${sel} tap target >= 44 px (${m[1]}x${m[2]})`);}
 {const hud=read('components/DiveHud.tsx'),css=read('app/globals.css');
  assert(!/dive-dart-btn|data-dive-dart/.test(hud+css),'the Dart button is gone (user, Oct 21 2026)');
- assert(/\.town-app:has\(\.dive-depth\) \.travel-actions\.travel-actions \.minimap-toggle\{grid-column:1;grid-row:1\}/.test(css)&&/\.travel-mode\{grid-column:1;grid-row:2\}/.test(css),'room grid: minimap top right, Fly bottom right');
- assert(css.includes('.town-app:has(.dive-depth) .dive-depth{right:var(--room-c2);bottom:var(--room-r2)')&&css.includes('[data-job-action=surface]{position:fixed;right:var(--room-c1);bottom:var(--room-r1)'),'2x3 room grid: ▲ ▼ the middle column, Surface c1-r1');
- assert(/--room-cell:58px;--room-gap:12px/.test(css),'58 px cells, 12 px gaps');
+ // Explore room layout (Oct 22 2026, user: "a grid of 4 up and down on the left, jetpack on the top right and emote bottom right. remove
+ // the pink go up btn"; "the same size as the other btns", "same style as well"): every viewport.
+ assert(css.includes('.town-app:has(.dive-depth) .dive-depth{left:var(--room-l1);right:auto;bottom:var(--room-r2)'),'▲ ▼ in the left grid column c1 (r1 / r2)');
+ assert(css.includes('.travel-actions.travel-actions .travel-mode{position:fixed;z-index:9;right:var(--room-rr);bottom:calc(var(--room-rb) + var(--room-cell) + var(--room-gap))'),'Fly top right');
+ assert(css.includes('.town-app:has(.dive-depth) .dive-emote{right:var(--room-rr);bottom:var(--room-rb)'),'Say hi bottom right');
+ assert(css.includes('.minimap-toggle{position:fixed;z-index:9;left:var(--room-l1);right:auto;bottom:var(--room-r0)'),'the minimap toggle above ▲, the map above it');
+ assert(!/\[data-job-action=surface\]/.test(css),'no Surface cell (hold ▲ at the top)');
+ assert(/--room-cell:72px;--room-gap:12px/.test(css)&&/--room-cell:58px/.test(css),'one cell size: the island action size (72 desktop / 58 phone), 12 px gaps');
+ assert(/:is\(\.dive-depth-btn,\.dive-emote-btn\)\{width:var\(--room-cell\)[^}]*border:3px solid #fff2cd[^}]*var\(--btn-grain\)[^}]*box-shadow:0 5px 0 var\(--room-edge\)/.test(css),'▲ ▼ and Say hi wear the island action button style');
+ assert(!/\.dive-depth-btn\{[^}]*#2a6f79/.test(css),'the dark teal ▲ ▼ look is gone');
  const H=load('lib/town/water/waterHud.ts',()=>({}));assert.equal(H.REEF_BUTTONS_FLY.find(b=>b.slot==='ride').icon,'jetpack','the room\'s Fly button shows the jetpack');}
 console.log('calm-hud: ok');

@@ -742,36 +742,39 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .dive-breath[hidden]{display:none}
 /* Dive zones (Oct 20 2026): ▲ ▼ swim up / down, held; icon-only round buttons in the water HUD's colours, stacked above the action cluster. */
 .dive-depth{position:absolute;z-index:9;right:calc(24px + env(safe-area-inset-right,0px));bottom:112px;display:flex;flex-direction:column;gap:10px}
-.dive-depth-btn{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #bff1f5;background:#2a6f79;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-.dive-depth-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
-@media(max-width:600px),(pointer:coarse){.dive-depth{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 70px);gap:8px}.dive-depth-btn{width:50px;height:50px}}
+.dive-depth-btn{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;padding:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+@media(max-width:600px),(pointer:coarse){.dive-depth{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom,24px) + 70px);gap:8px}}
 /* Explore v2 (Oct 21 2026): the Dart button beside the depth pad (one thumb on a phone: the pad and Dart sit together on the right),
    the zone's Reef progress chip (top left, under the coin bar) and a soft static vignette (one composited layer, no animation). */
 /* Explore delight (Oct 21 2026): Wave / High five, two small round icon buttons in a row ABOVE the Dart button (never over Dart or the
    rise / dip pad); shown only while the zone's friend is within reach. */
 .dive-emote{position:absolute;z-index:9;right:calc(24px + env(safe-area-inset-right,0px));bottom:250px;display:flex;flex-direction:row-reverse;gap:10px}
-.dive-emote-btn{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;padding:0;border:3px solid #ffd3dc;background:#d9577a;color:#fffdf5;box-shadow:0 4px 0 #17323b55;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-.dive-emote-btn:active{translate:0 var(--btn-press);box-shadow:0 2px 0 #17323b55}
-/* Calm HUD (Oct 21 2026). User: "on mobile this looks messy, the btns are covering", "let's have the up and down arrows in the grid
-   of four icons ... top right will be the mini map. and bottom right will be the fly btn", then "move the emote btn to the left of
-   the down btn. in the future we can have more actions so a grid of 2 rows and 3 columns". On touch screens the room's controls are
-   ONE 2x3 grid at the bottom right, 58 px cells, 12 px gaps; cells are named by column (c1 left .. c3 right) and row (r1 top, r2
-   bottom) through the --room-c* (right offset) and --room-r* (bottom offset) variables, so an action drops into a cell by using them:
-     r1: c1 (empty, reserved: the Surface button was removed Oct 22 2026; hold ▲ at the top to surface)   c2 ▲ rise   c3 minimap toggle
-     r2: c1 Say hi (friend) c2 ▼ dip    c3 Fly (jetpack)
-   The Say hi cell stays reserved when no friend is near (nothing moves). The minimap circle sits 12 px above the grid; the grid's
-   left edge (18 + 3x58 + 2x12 = 216 px from the right) stays clear of the joystick. */
-@media(max-width:600px),(pointer:coarse){
- .town-app:has(.dive-depth){--room-cell:58px;--room-gap:12px;--room-c3:calc(18px + env(safe-area-inset-right,0px));--room-c2:calc(var(--room-c3) + var(--room-cell) + var(--room-gap));--room-c1:calc(var(--room-c2) + var(--room-cell) + var(--room-gap));--room-r2:var(--control-bottom,24px);--room-r1:calc(var(--room-r2) + var(--room-cell) + var(--room-gap))}
- .town-app:has(.dive-depth) .travel-actions.travel-actions{--action-size:58px;display:grid;grid-template-columns:var(--room-cell);grid-template-rows:var(--room-cell) var(--room-cell);gap:var(--room-gap);right:var(--room-c3);bottom:var(--room-r2)}
- .town-app:has(.dive-depth) .travel-actions.travel-actions .minimap-toggle{grid-column:1;grid-row:1}
- .town-app:has(.dive-depth) .travel-actions.travel-actions .travel-mode{grid-column:1;grid-row:2}
- .town-app:has(.dive-depth) .dive-depth{right:var(--room-c2);bottom:var(--room-r2);gap:var(--room-gap)}
- .town-app:has(.dive-depth) .dive-depth-btn{width:var(--room-cell);height:var(--room-cell)}
- .town-app:has(.dive-depth) .dive-emote{right:var(--room-c1);bottom:var(--room-r2);gap:0}
- .town-app:has(.dive-depth) .dive-emote-btn{width:var(--room-cell);height:var(--room-cell)}
- .town-app:has(.dive-depth):not(.in-lesson) .town-minimap:not(.is-collapsed){bottom:calc(var(--room-r1) + var(--room-cell) + var(--room-gap))}
-}
+.dive-emote-btn{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;padding:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+/* Calm HUD (Oct 21 2026) -> Explore room layout (Oct 22 2026). User: "fix the actions positions. do a grid of 4 up and down on the left,
+   jetpack on the top right and emote bottom right. remove the pink go up btn", "make the up and down the same size as the other btns",
+   "same style as well". Every viewport:
+     LEFT  a 2x2 grid (named cells --room-l1 / --room-l2 columns, --room-gb row base): c1 ▲ (top) / ▼ (bottom); c2 r1, c2 r2 EMPTY
+           (reserved for future actions). Phones: above the joystick (portrait) or right of it (landscape); desktop: bottom left.
+     RIGHT a column: Fly (jetpack) on top, Say hi (only near a friend; its cell stays reserved) at the bottom right.
+     MAP   the minimap toggle sits above ▲ (left column), the open minimap above it: clear of every button on 390x844, 844x390, 1288x717.
+   One size for all of them: --room-cell (the island's --action-size: 72 px desktop, 58 px phones), 12 px gaps, safe-area insets.
+   One style: the island's action button (3 px cream rim, pastel fill + grain, the soft lower edge, the same press). No Surface button:
+   hold ▲ at the top to surface (diveSession DIVE_TOP_SURFACE_S). */
+.town-app:has(.dive-depth){--room-cell:72px;--room-gap:12px;--room-l1:calc(24px + env(safe-area-inset-left,0px));--room-gb:24px;--room-rr:calc(24px + env(safe-area-inset-right,0px));--room-rb:24px}
+@media(max-width:600px),(pointer:coarse){.town-app:has(.dive-depth){--room-cell:58px;--room-l1:calc(18px + env(safe-area-inset-left,0px));--room-gb:calc(var(--control-bottom,24px) + 132px + var(--room-gap));--room-rr:calc(18px + env(safe-area-inset-right,0px));--room-rb:var(--control-bottom,24px)}}
+@media(orientation:landscape) and (max-height:500px){.town-app:has(.dive-depth){--room-l1:calc(18px + 132px + 12px + env(safe-area-inset-left,0px));--room-gb:var(--control-bottom,16px)}}
+.town-app:has(.dive-depth){--room-l2:calc(var(--room-l1) + var(--room-cell) + var(--room-gap));--room-r2:var(--room-gb);--room-r1:calc(var(--room-gb) + var(--room-cell) + var(--room-gap));--room-r0:calc(var(--room-r1) + var(--room-cell) + var(--room-gap))}
+.town-app:has(.dive-depth) .dive-depth{left:var(--room-l1);right:auto;bottom:var(--room-r2);gap:var(--room-gap)}
+.town-app:has(.dive-depth) .dive-emote{right:var(--room-rr);bottom:var(--room-rb);gap:0}
+.town-app:has(.dive-depth) .travel-actions.travel-actions{display:contents}
+.town-app:has(.dive-depth) .travel-actions.travel-actions .travel-mode{position:fixed;z-index:9;right:var(--room-rr);bottom:calc(var(--room-rb) + var(--room-cell) + var(--room-gap));left:auto;width:var(--room-cell);height:var(--room-cell);min-width:var(--room-cell);min-height:var(--room-cell);margin:0}
+.town-app:has(.dive-depth) .travel-actions.travel-actions .minimap-toggle{position:fixed;z-index:9;left:var(--room-l1);right:auto;bottom:var(--room-r0);width:var(--room-cell);height:var(--room-cell);min-width:var(--room-cell);min-height:var(--room-cell);margin:0}
+.town-app.town-app:has(.dive-depth):not(.in-lesson) .town-minimap:not(.is-collapsed){left:var(--room-l1);right:auto;bottom:calc(var(--room-r0) + var(--room-cell) + var(--room-gap))}
+/* ▲ ▼ and Say hi: the island action button's look and size (the Fly button's rim, grain, lower edge and press), their own fills. */
+.town-app:has(.dive-depth) :is(.dive-depth-btn,.dive-emote-btn){width:var(--room-cell);height:var(--room-cell);min-width:var(--room-cell);min-height:var(--room-cell);border-radius:50%;border:3px solid #fff2cd;color:#294f43;background:var(--room-fill) var(--btn-grain);background-blend-mode:soft-light;box-shadow:0 5px 0 var(--room-edge),0 0 0 4px #fff2cd40}
+.town-app:has(.dive-depth) :is(.dive-depth-btn,.dive-emote-btn):active{translate:0 3px;box-shadow:0 2px 0 var(--room-edge),0 0 0 4px #fff2cd40}
+.town-app:has(.dive-depth) :is(.dive-depth-btn,.dive-emote-btn)>svg{width:32px;height:32px}
+.dive-depth-btn{--room-fill:#a8dcd6;--room-edge:#6a9e98}.dive-emote-btn{--room-fill:#f2b3c0;--room-edge:#b9798a}
 .dive-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,#06303a59 100%)}
 .dive-note{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 15px/1.2 system-ui,sans-serif;max-width:min(320px,86vw);text-align:center;pointer-events:none}
 /* Seamless Explore (Oct 21 2026): the soft chip at a zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); fades in and out by itself.
