@@ -22,7 +22,10 @@ import styles from './party.module.css';
  *  The bucket is a fixed string (a fail reason, 'link' / 'typed', or the member count): never a code, a name or a member id. */
 type Track = 'open' | 'sheet' | 'open_link' | 'gate_show' | 'gate_skip' | 'gate_ok' | 'gate_back' | 'gate_wrong' | 'name_ok'
   | 'create_tap' | 'created' | 'join_tap' | 'live_host' | 'live_guest' | 'members' | 'share_tap' | 'share_ok' | 'copy_ok' | 'share_fail' | 'new_code' | 'lock' | 'unlock'
-  | 'kick' | 'name_reset' | 'hide' | 'mute' | 'tab_code' | 'tab_list' | 'end_tap' | 'end' | 'leave' | 'ended' | 'kicked' | 'fail' | 'fail_create';
+  | 'kick' | 'name_reset' | 'hide' | 'mute' | 'tab_code' | 'tab_list' | 'end_tap' | 'end' | 'leave' | 'ended' | 'kicked' | 'fail' | 'fail_create'
+  | 'rtt' | 'reconnect';
+/** Phase C (§7 RTT): the party's median heartbeat round trip as a fixed band, passed once at the party's end (never the number). */
+export const rttBand = (ms: number): string => (ms < 80 ? 'rtt_lt80' : ms < 150 ? 'rtt_80_150' : ms < 300 ? 'rtt_150_300' : 'rtt_300p');
 type View = 'none' | 'menu' | 'gate' | 'join' | 'sheet';
 type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
@@ -143,6 +146,14 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const everLive = useRef(false);
   const track = useRef(onTrack); track.current = onTrack;
+  // Connection health at the party's end (once per party): an RTT band and the drops recovered, from the party store.
+  const healthSent = useRef(false);
+  const trackHealth = () => {
+    if (healthSent.current) return; healthSent.current = true;
+    const h = partyStore.health();
+    if (h.rttMs !== null) track.current?.('rtt', rttBand(h.rttMs));
+    if (h.reconnects > 0) track.current?.('reconnect', String(h.reconnects));
+  };
   const joining = useRef<'host' | 'guest' | null>(null);
   const joinVia = useRef<'link' | 'typed'>('typed'); // how the code being joined arrived (analytics: a link / the title screen vs typed)
   const prevIds = useRef<Set<number> | null>(null);
@@ -203,11 +214,12 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (state.status === 'reconnecting') text('Reconnecting');
     if (state.status === 'live' && joining.current) {
       track.current?.(joining.current === 'host' ? 'live_host' : 'live_guest', joining.current === 'guest' ? joinVia.current : undefined);
+      healthSent.current = false;
       joining.current = null; setBusy(false); setJoinMsg(null);
       setView((v) => (v === 'join' ? 'none' : v));
     }
     if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
-      if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
+      if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); trackHealth(); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
       prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.members.length, text]);
@@ -221,7 +233,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     // Kicked: the connection ends in status 'error' (not 'ended'), so the "left" note is raised here (review #16).
     if (state.error !== ErrorCode.Kicked || !everLive.current) return;
     everLive.current = false;
-    track.current?.('kicked'); text('You left the party');
+    track.current?.('kicked'); trackHealth(); text('You left the party');
     prevIds.current = null; setView('none'); setConfirmEnd(false);
   }, [state.error, text]);
   useEffect(() => {
@@ -300,7 +312,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     e.preventDefault(); setTab(order[n]); tabRefs.current[order[n]]?.focus();
   };
   useEffect(() => { if (confirmEnd) track.current?.('end_tap'); }, [confirmEnd]); // analytics: the first End tap (asks to confirm)
-  const leave = () => { track.current?.('leave'); connection.leave(); setView('none'); text('You left the party'); };
+  const leave = () => { track.current?.('leave'); trackHealth(); connection.leave(); setView('none'); text('You left the party'); };
 
   return (
     <>
@@ -396,7 +408,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               {/* Pinned footer: outside the scrolling area, so End / Leave is always in view while the list scrolls under it. */}
               <div className={styles.panelFoot} data-party-foot>
               {state.isHost && (confirmEnd
-                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { track.current?.('end'); connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
+                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { track.current?.('end'); trackHealth(); connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
                 : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
               {!state.isHost && <button type="button" className={styles.footLeave} onClick={leave}>Leave party</button>}
               </div>

@@ -35,8 +35,15 @@ const subs = new Set<() => void>();
 const emit = () => { for (const fn of Array.from(subs)) fn(); };
 const set = (next: PartyState) => { state = next; emit(); };
 
+/** Connection health (median RTT ms, drops recovered), read on demand and never emitted: no re-render per heartbeat. */
+export type PartyHealth = { rttMs: number | null; reconnects: number };
+let healthSource: (() => PartyHealth) | null = null;
+
 export const partyStore = {
   get(): PartyState { return state; },
+  /** The bound connection's health right now (index.ts bindConnection registers the source). */
+  health(): PartyHealth { try { return healthSource?.() ?? { rttMs: null, reconnects: 0 }; } catch { return { rttMs: null, reconnects: 0 }; } },
+  setHealthSource(fn: (() => PartyHealth) | null): void { healthSource = fn; },
   subscribe(fn: () => void): () => void { subs.add(fn); return () => { subs.delete(fn); }; },
   /** Extra (not in the design API): connection status, and the code being joined. Emits only on change. */
   setStatus(status: PartyStatus, code?: string | null): void {

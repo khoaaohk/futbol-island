@@ -24,6 +24,11 @@ export interface PartyConnection {
   /** Extras beyond the design API (used by index.ts bindConnection). */
   onStatus(fn: (s: PartyStatus) => void): () => void;
   readonly code: string | null;
+  /** Connection health for this party (Oct 22 2026, docs/analytics-multiplayer-plan.md §7 RTT): the median round trip (ms) of the
+   *  last heartbeat echoes (null before the first), and how many unexpected drops were recovered. Reset by join(). Plain numbers:
+   *  this file stays analytics-free; partyStore.health() reads them and PartyHost passes a band to its onTrack callback. */
+  readonly rttMs: number | null;
+  readonly reconnects: number;
 }
 
 export const SESSION_KEY = 'fi-party-session';
@@ -50,7 +55,12 @@ export type ConnectionDeps = {
   visibility?: { hidden(): boolean; on(fn: () => void): () => void };
   storage?: StorageLike | null; // sessionStorage by default
   url?: (code: string) => string | null; // relayWsUrl by default
+  /** Send a heartbeat at least this often even while poses flow, so the RTT has samples while moving (one ~10-byte message).
+   *  0 = only the normal idle beat. Default: 30 s when NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1, else 0 (Phase C switch). */
+  rttProbeMs?: number;
 };
+export const RTT_SAMPLES = 15;
+export const RTT_PROBE_MS = 30000;
 
 export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnection {
   const WS = (deps.WebSocketImpl ?? (globalThis as any).WebSocket) as any;
@@ -61,6 +71,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   const urlFor = deps.url ?? relayWsUrl;
   const vis = deps.visibility ?? defaultVisibility();
   const storage = deps.storage === undefined ? safeSessionStorage() : deps.storage;
+  const rttProbeMs = deps.rttProbeMs ?? (process.env.NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION === '1' ? RTT_PROBE_MS : 0);
 
   let status: PartyStatus = 'idle';
   let code: string | null = null;
@@ -84,6 +95,12 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
   const pingBucket = new TokenBucket(0.33, 2);
+  // Health: the last beat sent (its echoed value and local send time), recent round trips, drops recovered.
+  let beatOut: { v: number; at: number } | null = null;
+  let lastProbeAt = -1e12;
+  let rtts: number[] = [];
+  let reconnects = 0;
+  let dropped = false;
   const msgSubs = new Set<(m: ServerMsg) => void>();
   const statusSubs = new Set<(s: PartyStatus) => void>();
 
@@ -160,6 +177,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
         else { code = null; resumeToken = null; hostKey = null; last = null; setStatus('idle'); }
         return;
       }
+      if (status === 'live') dropped = true; // an unexpected drop (a hidden-tab close never reaches here)
       scheduleRetry();
     };
     w.onerror = () => { /* close follows */ };
@@ -170,6 +188,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       resumeToken = m[3];
       you = m[2];
       attempt = 0;
+      if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
       writeSession();
       setStatus('live');
@@ -179,6 +198,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       // Rotate: the room now lives under a new code. Every later reconnect (and the stored session) must use it (review #1).
       code = m[1];
       writeSession();
+    } else if (m[0] === S.Beat) {
+      if (beatOut && m[1] === beatOut.v) {
+        const rtt = now() - beatOut.at; beatOut = null;
+        if (rtt >= 0 && rtt < 10000) { rtts.push(rtt); if (rtts.length > RTT_SAMPLES) rtts.shift(); }
+      }
     } else if (m[0] === S.Ended) {
       clearSession();
       setStatus('ended');
@@ -216,7 +240,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       beatTimer = null;
       if (!open()) return;
       if (beforeBeat) { try { beforeBeat(); } catch { /* the bridge must never stop the beat */ } }
-      if (now() - lastSendAt >= BEAT_MS - 50) raw([C.Beat, Math.round(now() / 1000)]);
+      const t = now(), probe = rttProbeMs > 0 && t - lastProbeAt >= rttProbeMs;
+      if (t - lastSendAt >= BEAT_MS - 50 || probe) {
+        const v = Math.round(t / 1000);
+        if (raw([C.Beat, v])) { beatOut = { v, at: t }; lastProbeAt = t; }
+      }
       scheduleBeat();
     }, Math.max(50, Math.min(BEAT_MS, BEAT_MS - (now() - lastSendAt)))); // due 5 s after the LAST frame sent (never a ~10 s gap)
   }
@@ -271,6 +299,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;
       resumeToken = same ? sess!.resumeToken : null;
       attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
+      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
       writeSession();
       setStatus('idle'); // reset, then connecting
       connect();
@@ -318,6 +347,12 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     onStatus(fn) { statusSubs.add(fn); return () => { statusSubs.delete(fn); }; },
     get status() { return status; },
     get code() { return code; },
+    get rttMs() {
+      if (!rtts.length) return null;
+      const s = rtts.slice().sort((a, b) => a - b), h = s.length >> 1;
+      return Math.round(s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2);
+    },
+    get reconnects() { return reconnects; },
     dispose() {
       if (disposed) return;
       clearTimers();
