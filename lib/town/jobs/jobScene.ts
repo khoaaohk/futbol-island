@@ -13,7 +13,7 @@ import {createBugNet,NET_HOOP_RADIUS,type BugNet} from './bugNet';
 import {createBugJar,JAR_RADIUS,type BugJar} from './bugJar';
 import {BACKPACK_RIDE_OFFSETS} from '../../graphics/backpack';
 import {BUG_LOCAL} from './bugSpecies';
-import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught,predictCatch,CATCH_STAGE,CATCH_STAGE_AT,catchStagePhase,stageSwingTime,stageShot,stageFit,pushInShot,catchScale,stageFlightScale} from './bugCatch';
+import {AUTO_AIM_RANGE,TAP_RANGE,TAP_SCREEN_SLOP,SWING,SWING_SAMPLES,lungeCentre,inSweep,LOCKED_SLACK,ZOOM,autoAim,headingTo,sweepCentre,swingResult,shiftGoal,shiftSeed,storyFor,formationCount,formationOrder,fireflyCard,formationSlots,BUG_LEFT_NOTE,BUG_WATER_NOTE,BUG_ISLAND_MARGIN,BUG_WALK_NOTE,netCarryMode,NEW_SPECIES_COINS,NET_SWEEP_AHEAD,HINT,RECALL,nearestUncaught,predictCatch,CATCH_STAGE,CATCH_STAGE_AT,catchStagePhase,stageSwingTime,stageShot,stageFit,pushInShot,catchScale,stageFlightScale} from './bugCatch';
 import {createCatchStage,type CatchStage} from '../../graphics/catchStage';
 import {BUG_SPECIES} from './bugSpecies';
 import {bugStageSize,FIREFLY_SIZE} from '@/lib/graphics/wildBugsCore';
@@ -62,7 +62,7 @@ export type JobView={
  /** Bug squad catching (catching lane): the catch zoom is playing (controls held, tap to skip). */
  zooming?:boolean;
  /** The last catch, for the story card (IslandJobs): name, role, the "Real football fact" (rotating), NEW, squad progress. */
- caught?:{nonce:number;id:string;kind:'bug'|'firefly';name:string;role:string;story:string;source:string;isNew:boolean;count:number;coins:number;squad:number;squadSize:number;squadComplete:boolean;dup:boolean}|null;
+ caught?:{nonce:number;id:string;kind:'bug'|'firefly';name:string;role:string;/** card title (a firefly: its call) */title:string;/** a firefly's coaching idea (the lesson), else '' */idea:string;story:string;source:string;isNew:boolean;count:number;coins:number;squad:number;squadSize:number;squadComplete:boolean;dup:boolean}|null;
  /** The shift ended by itself (left Summit Isle): a short toast. */
  ended?:{text:string;nonce:number}|null;
  garden:string;
@@ -846,11 +846,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function registerCatch(h:{id:string;kind:'bug'|'firefly';species:{id:string}|null;call:{id:string}|null;x:number;y:number;z:number},world:boolean){const r=run;if(!r)return false;
   const kind=h.kind,id=h.species?.id??h.call?.id??'',list=bugList(r.def)??[],i=list.findIndex(b=>b.id===id),b=list[i];
   if(!b||(kind==='firefly')!==(r.def.prop==='firefly'))return false;
-  const rec=recordBugCatch(kind,id,bookPort),story=storyFor(b.stories,rec.count),dup=r.got[i]||r.phase!=='work';
+  const rec=recordBugCatch(kind,id,bookPort),story=storyFor(b.stories,rec.count),dup=r.got[i]||r.phase!=='work',lesson=kind==='firefly'?fireflyCard(id,rec.count):null;
   if(rec.squadComplete)formationNext=true;stopHint();
   if(rec.first)cue(BUG_NEW_SPECIES_EVENT,id);
   if(rec.completed){countBugBookComplete();cue(BUG_BOOK_COMPLETE_EVENT,'complete');}else if(rec.nightCompleted)cue(BUG_BOOK_COMPLETE_EVENT,'night');
-  setView({caught:{nonce:++caughtNonce,id,kind,name:b.name,role:b.role,story:story?.text??'',source:story?.source??'',isNew:rec.first,count:rec.count,coins:rec.first?NEW_SPECIES_COINS:0,
+  setView({caught:{nonce:++caughtNonce,id,kind,name:b.name,role:b.role,title:lesson?.title??b.name,idea:lesson?.idea??'',story:lesson?lesson.fact:story?.text??'',source:lesson?lesson.source:story?.source??'',isNew:rec.first,count:rec.count,coins:rec.first?NEW_SPECIES_COINS:0,
    squad:kind==='bug'?(rec.squadComplete?20:rec.squadSize):0,squadSize:list.length,squadComplete:rec.squadComplete,dup}});
   tapHaptic();jobCue('jar');
   if(world){fx.burst(h.x,h.y,h.z,r.def.prop==='firefly'?'#f4ff8a':'#fff6c8',8,1.4,1.2,true,.8);applyEvents([{type:'netcatch',x:h.x,z:h.z}]);}

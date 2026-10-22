@@ -660,6 +660,8 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
 .hud-stack{position:absolute;z-index:34;left:50%;top:calc(var(--island-hud-row-top) + var(--island-hud-row-height) + var(--island-hud-row-gap));transform:translateX(-50%);
  display:flex;flex-direction:column;align-items:center;gap:10px;width:min(420px,calc(100% - 2 * var(--phone-gutter)));box-sizing:border-box;pointer-events:none}
 .hud-stack[hidden],.hud-stack>[hidden]{display:none!important}
+/* A Bug squad shift's top bar (IslandJobs .pillDock) sits under the coins bar: the column starts below it (--bug-bar-h, measured). */
+html[data-bug-bar] .hud-stack{top:calc(var(--island-hud-row-top) + var(--island-hud-row-height) + var(--island-hud-row-gap) + var(--bug-bar-h,48px) + 8px)}
 /* Each piece keeps its own look; the column owns where it sits. (0,4,0) so the pieces' old absolute placements cannot win. */
 .town-app .hud-stack.hud-stack.hud-stack>*{position:relative;inset:auto;z-index:auto;transform:none;translate:none;margin:0;max-width:100%;box-sizing:border-box;pointer-events:auto}
 .town-app .hud-stack.hud-stack.hud-stack>:is([data-coin-hint],[data-knockout-status]){pointer-events:none}
@@ -796,13 +798,3 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .catch-stage-fade[data-look=sunset]{background:#ffe4c4}.catch-stage-fade[data-look=night]{background:#2b3d78}
 .catch-stage-fade[hidden],.catch-stage-label[hidden]{display:none}
 .catch-stage-label{position:absolute;left:0;top:0;z-index:2;pointer-events:none;padding:7px 14px;border-radius:999px;background:#fff8e6;color:#2b4a3e;font:400 19px/1.1 IslandBrush,Arial,sans-serif;box-shadow:0 3px 0 rgba(43,74,62,.25);white-space:nowrap}
-/* Bug squad End job on the action cluster (Oct 21 2026): a small, quiet secondary button just left of the cluster, level with its
-   top row (Ride), so it sits on the far side from Swing (the cluster's bottom-right / right end); two taps when the jar has bugs. */
-.travel-actions .job-end-mini{position:absolute;z-index:1;right:calc(100% + 10px);top:calc((var(--action-size,64px) - 44px) / 2);width:44px;height:44px;min-width:44px;min-height:44px;padding:3px 0 2px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;margin:0;background:#173e34b3;color:#fff3d1;border:1.5px solid #f6e5bd59;box-shadow:0 2px 0 #0f2a2340;cursor:pointer;}
-.travel-actions .job-end-mini svg{width:17px;height:17px;flex:none;}
-.travel-actions .job-end-mini small{font:700 8px/1 system-ui;letter-spacing:0;margin-top:1px;}
-.travel-actions .job-end-mini[data-ask]{background:#8a2d23e6;border-color:#ffd9c9;}
-.travel-actions .job-end-mini:active{filter:brightness(1.15);}
-/* The Bug squad count on the End button (Oct 21 2026): a small badge, so the count and the exit are always with the action cluster. */
-.travel-actions .job-end-mini .job-end-count{position:absolute;top:-9px;left:50%;translate:-50% 0;min-width:30px;padding:1px 5px;border-radius:9px;background:#ffd36c;color:#173e34;border:1.5px solid #fff0c4;font:800 10px/1.2 system-ui;white-space:nowrap;text-align:center;pointer-events:none;box-shadow:0 1px 0 #0f2a2340;}
-html[data-catch-stage] .travel-actions .job-end-mini{visibility:hidden;pointer-events:none;}

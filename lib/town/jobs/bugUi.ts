@@ -26,23 +26,19 @@ export function initialPill(seen:boolean):BugPill{return seen?'chip':'tip';}
 /** Learning-coin notes from the Bug book are already on the story card (New! + coin): no separate banner for them. */
 export function bugBookCoinNote(reason:string){return /^New in the Bug book/.test(reason);}
 
-/* Oct 21 2026 (user, twice: "the bar is missing for bug squad, I don't know how many I have caught and can't exit"). The pill hangs
-   in the island HUD stack, so anything that hides the stack (a stuck "calm" flag in Town, e.g. the vending camera's leaving flag,
-   or CSS) hid the count and the End job ×. Safety net: a 2 Hz watchdog (IslandJobs) checks the pill is really on screen while a Bug
-   squad run is active and no catch stage / release cinematic / dialog is up; if not, it resets the pill to its chip and, when the
-   stack itself is the problem, draws the pill on its own (fixed under the coins bar) until the stack shows again. The count also
-   rides on the action cluster's End button (Town.tsx), so the count and the exit are always on screen with the job buttons. */
+/* Oct 21 2026 (user, several times: "the bar is missing for bug squad, I don't know how many I have caught and can't exit"; "there
+   need to be a bar at the top to ask for hint and end the bug squad, both night and day time"). The pill used to hang in the island
+   HUD stack, so anything that hid the stack (a stuck "calm" flag in Town such as the vending camera's leaving flag, the stack's
+   `hidden`, a stack-wide CSS rule) hid the count, the hint and the End job ×; a 2 Hz watchdog and an End button on the action cluster
+   were patches on top. Now the pill is the Bug squad TOP BAR: its own fixed element under the coins bar for the whole shift, day and
+   night, outside the stack (IslandJobs .pillDock), with the stack moved below it. The action cluster has no End button any more. */
+/** The top bar for a running job view: 'shown' for every Bug squad run (day and night set), 'staged' while the catch stage or the
+ *  release cinematic plays (hidden for that moment only), null for other jobs (their panel stays in the HUD stack). */
+export function bugBar(a:{squad?:unknown;guide?:unknown}|null|undefined,f:{zooming?:boolean;releasing?:boolean}={}):'shown'|'staged'|null{
+ if(!a||!a.squad)return null;return f.zooming||f.releasing?'staged':'shown';}
 /** The count the pill shows: the squad (day N/20, night N/8) when the run has one, else the jar. */
 export function pillCount(a:{value:number;total:number;phase?:string;squad?:{value:number;total:number}|null}):string{
  return a.squad?`${a.squad.value}/${a.squad.total}`:a.phase==='deliver'?`${a.total}/${a.total}`:`${a.value}/${a.total}`;}
 /** The pill state to render: a squad run only ever renders a visible state (chip, tip or full; never 'fading' or anything stale). */
 export function pillShown(squad:boolean,pill:string,panel:string):string{
  if(squad)return pill==='full'||pill==='tip'?pill:'chip';return panel==='full'||panel==='fading'||panel==='chip'?panel:'full';}
-export type PillCheck={running:boolean;staging:boolean;dialog:boolean;exists:boolean;visible:boolean;stackHidden:boolean};
-/** The watchdog's call for one check: 'ok'; 'wait' (a catch stage, release or dialog covers it on purpose); 'reset' (it is in the
- *  stack but not visible: reset the pill state); 'detach' (the stack itself is hidden or the pill is missing: draw it on its own). */
-export function pillWatch(c:PillCheck):'ok'|'wait'|'reset'|'detach'{
- if(!c.running)return 'ok';if(c.staging||c.dialog)return 'wait';if(c.exists&&c.visible)return 'ok';
- return c.stackHidden||!c.exists?'detach':'reset';}
-/** The watchdog's period: 2 Hz, no per-frame work. */
-export const PILL_WATCH_MS=500;

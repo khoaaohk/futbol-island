@@ -198,6 +198,14 @@ export const fireflyIndex=(id:string)=>FIREFLY_SET.findIndex(f=>f.id===id);
 /** The story shown for the n-th catch of a species (1-based): rotates through its stories. */
 export function storyFor(stories:readonly {text:string;source:string}[],catchCount:number){
  if(!stories.length)return null;return stories[(Math.max(1,catchCount)-1)%stories.length];}
+/** The firefly catch card's lesson (Oct 21 2026, firefly-lessons): the call as the title, its coaching idea (the lesson, always
+ *  there, also on a repeat or dup catch) and one real football fact that rotates with the call's catch count. No save key: the
+ *  rotation derives from the Bug book count. null for an unknown id. */
+export function fireflyCard(id:string,catchCount:number):{title:string;idea:string;fact:string;source:string}|null{
+ const c=FIREFLY_SET.find(f=>f.id===id);if(!c)return null;const f=storyFor(c.stories,catchCount);
+ return {title:c.call,idea:c.idea,fact:f?.text??'',source:f?.source??''};}
+/** The facts a Bug book page has unlocked so far: one per catch, up to all of them (catch 1 → the first, 2 → the first two, …). */
+export function storiesUnlocked<S>(stories:readonly S[],catchCount:number):S[]{return stories.slice(0,Math.max(0,Math.min(stories.length,catchCount)));}
 /** 20-bug release formation: a 4-3-3 (GK, back four, three in midfield, three up front) then the bench and staff in a line behind,
  *  in metres across (x) and forward (z) of the formation's centre. Slot order follows BUG_SPECIES (role shirt numbers). */
 export function formationSlots(n:number):{x:number;z:number}[]{

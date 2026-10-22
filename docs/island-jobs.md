@@ -656,3 +656,27 @@ tool), `tests/bug-local.cjs` §5; browser: `scripts/check-bug-catch-stage-browse
   cluster's top row (left of Ride), so it is on the far side from Swing / Cup (bottom-right on phones, the right end on desktop);
   measured at 1280×800, 390×844 and 360×740, no overlaps. It uses IslandJobs' two-tap ask (events `fi2-bug-end` /
   `fi2-bug-end-ask`; "Sure?" in red on the first tap when the jar has bugs). The pill's × and Esc stay. Hidden during the stage.
+
+### Firefly lessons and the permanent Bug squad top bar (21 Oct 2026, local, not deployed)
+
+User: "when catching some of the firefly. it doesn't tie in any futbol fact or lesson"; "there need to be a bar at the top to ask for
+hint and end the bug squad, both night and day time"; "remove the end btn in the actions area".
+
+- **Firefly lessons.** Each of the 8 calls (`FIREFLY_SET`, bugSpecies.ts) now has `idea`, a one-line coaching idea (<= 110 chars, the
+  lesson a kid can use, e.g. "Square! A team-mate is level with you: pass it sideways and keep the ball.") and 2 real facts that show
+  that call in play (rondo + the shielding law for Man on!, Xavi's scanning for Time!, Cruyff + Marseille turns, Queen's Park's
+  passing game + tiki-taka for Square!, Maxi Rodriguez 2006 + pitch width for Switch!, Stones 2019 + the corner-kick law for Away!,
+  the two keeper rules, blind football's "voy" + Law 12's verbal-distraction caution for Mine!). The six facts that did not fit
+  their call (shin pads, Law 7, 1872, Telstar, nets, 1930 balls) left the set. Facts and sources: docs/bug-story-facts.md.
+- **Catch card.** `fireflyCard(id,count)` (bugCatch.ts) builds title (the call) + idea + one fact rotating by the call's Bug book
+  count (no new save key). registerCatch sends `title`/`idea` for every firefly catch, dup and repeat included, so the lesson is
+  always on the card; the fact is clamped to 3 lines, the idea to 2, with a short source site. Bug book firefly pages: call +
+  meaning, the coaching idea and every fact unlocked so far (`storiesUnlocked`).
+- **Top bar.** The Bug squad pill is no longer in the HUD stack: for every squad run (day and night) it renders in its own fixed
+  `.pillDock[data-bug-bar]` under the coins bar with the title + count, the hint (cooldown state) and End x (two-tap Sure?). Only
+  the catch stage and the release hide it (`bugBar()` in bugUi.ts, `data-staged`, `html[data-catch-stage]`). The stack moves below
+  it (`html[data-bug-bar] .hud-stack`, `--bug-bar-h` measured by a ResizeObserver). The 2 Hz watchdog (pillWatch) and the
+  action-cluster End button + count badge (previous section) are removed; Esc still ends the shift. Root cause of the "missing
+  bar" reports: the pill lived inside the HUD stack, which any calm/covered flag (`stackCovered` in Town.tsx, e.g. a stuck vending
+  leaving flag) or a stack-wide CSS rule hides as a whole, taking the count, hint and End with it. Tests: tests/firefly-lessons.cjs,
+  tests/bug-pill.cjs; browser: scripts/check-bug-bar-browser.cjs (Day + Night, 1288x717 and 390x844).
