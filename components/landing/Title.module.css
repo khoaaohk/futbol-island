@@ -18,17 +18,19 @@
 
 /* ---- The one screen ---- */
 .screen{
- --isle-top:max(25svh,calc(env(safe-area-inset-top,0px) + 172px));
+ /* Oct 22 2026 (user: "push up this more, there's some space below the futbol island title" / "the characters are hidden behind the btn"): the island and the cast sit higher by --art-lift, so the three title buttons (Play, Use a different code, Join friends) clear the characters' feet */
+ --art-lift:clamp(32px,6.5svh,64px);
+ --isle-top:calc(max(25svh,calc(env(safe-area-inset-top,0px) + 172px)) - var(--art-lift));
  --isle-h:min(37svh,calc(106vw / 1.415));--isle-w:calc(var(--isle-h) * 1.415);
  --cast-w:min(100vw,calc(var(--isle-h) * 1.4));--cast-top:calc(var(--isle-top) + var(--isle-h) * .7);
  position:relative;isolation:isolate;overflow:hidden;min-height:100vh;min-height:100svh;display:grid;grid-template-rows:auto 1fr auto auto;
  padding:0 calc(var(--phone-gutter) + env(safe-area-inset-right,0px)) 0 calc(var(--phone-gutter) + env(safe-area-inset-left,0px));background:var(--sea)}
 /* The riso grain over the whole print, under the type and buttons (as on the loading screen). */
 .screen::after{content:'';position:absolute;inset:0;z-index:1;background:url('/stories/films/assets/entry-grain.png');opacity:.38;pointer-events:none}
-@media(min-width:900px){.screen{--isle-h:min(40svh,calc(60vw / 1.415));--isle-top:max(19svh,160px);--cast-w:calc(var(--isle-w) * 1.05);--cast-top:calc(var(--isle-top) + var(--isle-h) * .72)}}
+@media(min-width:900px){.screen{--isle-h:min(40svh,calc(60vw / 1.415));--isle-top:calc(max(19svh,160px) - var(--art-lift));--cast-w:calc(var(--isle-w) * 1.05);--cast-top:calc(var(--isle-top) + var(--isle-h) * .72)}}
 /* Shorter phones (≤ 760px tall, e.g. an iPhone with the browser bars showing): a slightly smaller island and the cast lifted, so
    the characters' feet and shadows sit clear above Start (user, Oct 9 2026). */
-@media(max-width:899px) and (max-height:760px){.screen{--isle-top:max(22svh,calc(env(safe-area-inset-top,0px) + 150px));--isle-h:min(33svh,calc(106vw / 1.415));--cast-top:calc(var(--isle-top) + var(--isle-h) * .62)}}
+@media(max-width:899px) and (max-height:760px){.screen{--isle-top:calc(max(22svh,calc(env(safe-area-inset-top,0px) + 150px)) - var(--art-lift));--isle-h:min(33svh,calc(106vw / 1.415));--cast-top:calc(var(--isle-top) + var(--isle-h) * .62)}}
 /* Shorter laptop screens (≤ 860px tall): lift the cast so the feet clear the Start button (Oct 9 2026). */
 @media(min-width:900px) and (max-height:860px){.screen{--cast-top:calc(var(--isle-top) + var(--isle-h) * .6)}}
 
@@ -95,9 +97,8 @@
 @media(min-width:900px){.copy{padding-top:calc(env(safe-area-inset-top,0px) + 6svh)}}
 
 /* ---- Actions (bottom, over the pink coast) ---- */
-/* Oct 22 2026 (user: "push up this more, there's some space below the futbol island title"): the button stack is lifted off the bottom edge by --title-actions-lift (about 5 % of the screen height, 14-48 px) */
-.actions{--title-actions-lift:clamp(14px,5svh,48px);position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:calc(6px + var(--title-actions-lift))}
-.choices{display:grid;justify-items:center;gap:12px;width:min(340px,100%)}
+.actions{position:relative;z-index:5;grid-row:3;display:grid;justify-items:center;padding-bottom:6px}
+.choices{display:grid;justify-items:center;gap:8px;width:min(340px,100%)}
 .start{position:relative;overflow:hidden;display:grid;justify-items:center;gap:2px;width:100%;min-height:68px;padding:8px 24px 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
  background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;
  transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}

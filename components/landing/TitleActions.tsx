@@ -4,7 +4,9 @@ import {BackButton} from '../BackButton';
 import {NavigationButton} from '../DoneButton';
 import {SafeLockArt} from '../PocketArt';
 import WaterPill from './WaterPill';
-import JoinFriends from './JoinFriends';
+import JoinFriends,{TITLE_PENDING_EVENT} from './JoinFriends';
+import JoinFriendsSheet from './JoinFriendsSheet';
+import {setPendingParty} from '@/lib/multiplayer/invite';
 import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {SPRING_EASE,flipTransform,invert} from './motion';
 import styles from './Title.module.css';
@@ -22,7 +24,7 @@ type Saves=typeof import('./saveCodeAdapter');
  *    + the gold pill. An outage never locks a kid out; it looks clearly different from the normal flow.
  *  Every Play is the water loader (WaterPill + waterLaunch.ts): water rises while the game loads, then the full-tan hand-off. */
 export type TitleState='boot'|'new'|'returning'|'ready'|'restored'|'break';
-type Sheet={mode:'create'|'restore';from:HTMLElement|null};
+type Sheet={mode:'create'|'restore'|'join';from:HTMLElement|null};
 
 const CONFETTI=Array.from({length:18},(_,i)=>({x:Math.round(Math.cos(i*2.4)*(70+(i*37)%90)),y:Math.round(-60-((i*53)%120)),r:(i*47)%360,
  c:['#ef8fd0','#f9d55d','#78d7df','#2e9a5b','#f17732','#2953e7'][i%6],d:(i%5)*30}));
@@ -91,6 +93,14 @@ export default function TitleActions(){
   if(!ok){pendingMorph.current=el.getBoundingClientRect();setState('break');return;}
   setIntro(mode==='create');setMaking(false);setCreatePhase('');setSheet({mode,from:el});
  };
+ // "Join friends" (Oct 22 2026): the same sheet and morph as "Use a different code"; it stores the typed code as the pending party and
+ // then continues into the game exactly as Play / Start would (PartyHost does the grown-up check, the animal picker and the join).
+ const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
+ const joinParty=(c:string)=>{
+  const stored=setPendingParty(c);if(!stored)return;
+  window.dispatchEvent(new Event(TITLE_PENDING_EVENT));
+  void leave(null).then(()=>document.querySelector<HTMLElement>(state==='returning'?'[data-title-card="returning"] [data-landing-play]':'[data-title-start]')?.click());
+ };
  const created=(c:string|null)=>{
   if(!c){void leave('break');return;}
   setCode(c);setCelebrate(true);
@@ -107,7 +117,7 @@ export default function TitleActions(){
  const restoreFooter=sheet?.mode==='restore'&&(restorePhase==='enter'||restorePhase==='loading');
  // The create sheet never shows a header Back: its moments before the code (checking, making) are brief, and a Back there
  // flashed in the corner before the code's footer Back took over (user, Oct 9 2026).
- const footerBack=sheet?.mode==='create'||restoreFooter;
+ const footerBack=sheet?.mode==='create'||sheet?.mode==='join'||restoreFooter;
  return <div className={styles.actions} data-title-state={state} aria-live="polite">
   {state==='new'&&<div className={styles.choices} data-enter="actions">
    <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={!saves||busy} onClick={e=>{warmIsland('create');void open('create',e.currentTarget);}}>
@@ -135,7 +145,7 @@ export default function TitleActions(){
 
   {/* Join friends (flag only): type a party code here instead of using a link. It stores the code as the pending party, then continues
       as Play (returning) or Start (new player: save code + intro first) would. Nothing is mounted with the flag off. */}
-  {multiplayerEnabled()&&(state==='new'||state==='returning')&&<JoinFriends onContinue={()=>document.querySelector<HTMLElement>(state==='returning'?'[data-title-card="returning"] [data-landing-play]':'[data-title-start]')?.click()}/>}
+  {multiplayerEnabled()&&(state==='new'||state==='returning')&&<JoinFriends onOpen={openJoin}/>}
 
   {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={footerBack||undefined}>
    <div ref={backdrop} className={styles.backdrop} onClick={()=>void leave(null)} aria-hidden="true"/>
@@ -144,7 +154,7 @@ export default function TitleActions(){
     <div ref={content} className={styles.sheetContent}>
      <header className={styles.sheetHeader}>
       {!footerBack&&<BackButton onBack={()=>void leave(null)}/>}
-      <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='create'?(intro?'Before you start':createPhase==='working'||createPhase==='timeout'?'Save your island':'Your secret code'):'My save code'}</h2>
+      <h2 id="save-sheet-title" tabIndex={-1}>{sheet.mode==='join'?'Join friends':sheet.mode==='create'?(intro?'Before you start':createPhase==='working'||createPhase==='timeout'?'Save your island':'Your secret code'):'My save code'}</h2>
       {!footerBack&&<span aria-hidden="true"/>}
      </header>
      <div className={styles.sheetBody} data-save-flow={sheet.mode}>
@@ -157,7 +167,8 @@ export default function TitleActions(){
        :null}
       {sheet.mode==='create'&&(making||!intro)&&<div hidden={intro} data-save-making={intro||undefined}>
        <saves.SaveCodeCreate headless={codeFooter} onDone={created} onPhase={onCreatePhase} onBack={()=>{setMaking(false);setIntro(true);}} onHaveCode={()=>setSheet(s=>s&&{...s,mode:'restore'})}/></div>}
-      {sheet.mode==='create'
+      {sheet.mode==='join'?<JoinFriendsSheet onBack={()=>void leave(null)} onJoin={joinParty}/>:null}
+      {sheet.mode==='join'?null:sheet.mode==='create'
        ?null
        // "My save code" stacks over the same invisible code layout, so it is the same height as the two Start steps (user).
        :<div className={styles.introStack}><div className={styles.restoreFill}><saves.SaveCodeRestore onDone={restored=>{if(!restored)void leave('break');}} onPhase={onRestorePhase} onBack={()=>void leave(null)} onCancel={()=>setSheet(s=>s&&{...s,mode:'create'})}

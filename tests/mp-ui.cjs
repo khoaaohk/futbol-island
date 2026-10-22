@@ -147,17 +147,18 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/connection\.host\.lock\(!state\.locked\); partyStore\.setLocked\(!state\.locked\)/.test(host),'host lock updates the store at once');
   assert(/state\.error !== ErrorCode\.Kicked \|\| !everLive\.current/.test(host)&&/text\('You left the party'\)/.test(host),'Kicked raises the left note');
  });
- t('title screen Join friends (flag-gated, reuses CodeBoxes, pending store, no analytics)',()=>{
-  const ta=read('components/landing/TitleActions.tsx'),jf=read('components/landing/JoinFriends.tsx'),cb=read('components/party/CodeBoxes.tsx'),jc=read('components/landing/JoinFriends.module.css');
+ t('title screen Join friends (flag-gated, same sheet as Use a different code, reuses CodeBoxes, pending store, no analytics)',()=>{
+  const ta=read('components/landing/TitleActions.tsx'),jf=read('components/landing/JoinFriends.tsx'),js=read('components/landing/JoinFriendsSheet.tsx'),cb=read('components/party/CodeBoxes.tsx'),jc=read('components/landing/JoinFriends.module.css');
   assert(/multiplayerEnabled\(\)&&\(state==='new'\|\|state==='returning'\)&&<JoinFriends/.test(ta),'TitleActions mounts it only behind the flag, on the new / returning cards');
-  assert(/multiplayerEnabled\(\)&&multiplayerAllowed\(\)/.test(jf)&&/if\(!on\|\|gone\)return null/.test(jf),'hidden while the grown-up switch is Off');
-  assert(/import CodeBoxes from '..\/party\/CodeBoxes'/.test(jf)&&/<CodeBoxes/.test(jf)&&/<CodeBoxes/.test(joinCard)&&!/data-code-box/.test(joinCard),'one shared code-box component for JoinParty and the title card');
+  assert(/multiplayerEnabled\(\)&&multiplayerAllowed\(\)/.test(jf)&&/if\(!on\)return null/.test(jf),'hidden while the grown-up switch is Off');
+  assert(/mode:'create'\|'restore'\|'join'/.test(ta)&&/setSheet\(\{mode:'join'/.test(ta)&&/<JoinFriendsSheet/.test(ta)&&/'Join friends'/.test(ta),'opens in the title screen\'s own sheet (same morph as Use a different code)');
+  assert(/import CodeBoxes from '..\/party\/CodeBoxes'/.test(js)&&/<CodeBoxes/.test(js)&&/<CodeBoxes/.test(joinCard)&&!/data-code-box/.test(joinCard),'one shared code-box component for JoinParty and the title sheet');
   assert(/data-code-box/.test(cb)&&/filterCodeText/.test(cb)&&/acceptCodeChar/.test(cb),'CodeBoxes holds the alphabet filter');
-  assert(/NOT_IN_CODES_HINT/.test(jf)&&/Cancel/.test(jf)&&/>Join</.test(jf)&&/Join friends/.test(jf),'hint, Join, Cancel');
+  assert(/<BackButton/.test(js)&&!/Cancel/.test(js)&&/>Join</.test(js)&&/NOT_IN_CODES_HINT/.test(js)&&/SaveCode\.module\.css/.test(js)&&/styles\.footer/.test(js),'Back (not Cancel) bottom left, Join bottom right, the save sheet\'s styles and fonts');
   assert(/Party code waiting: /.test(jf)&&/clearPendingParty\(\)/.test(jf)&&/groupCode\(pending\)/.test(jf),'pending line with clear');
-  assert(!/<input/.test(jf)&&!/<textarea/.test(jf),'no free text besides the code boxes');
-  assert(!/from '[^']*(analytics|saves|deviceMarks)/.test(jf+cb)&&!/console\./.test(jf+cb)&&!/data-track/.test(jf),'the code is never logged or tracked');
-  assert(!/connection\.|createParty|checkParty|fetch\(/.test(jf),'does not connect from the title screen');
+  assert(!/<input/.test(jf+js)&&!/<textarea/.test(jf+js),'no free text besides the code boxes');
+  assert(!/from '[^']*(analytics|deviceMarks)/.test(jf+js+cb)&&!/from '[^']*lib\/saves/.test(jf+js+cb)&&!/console\./.test(jf+js+cb)&&!/data-track/.test(jf+js),'the code is never logged or tracked');
+  assert(!/connection\.|createParty|checkParty|fetch\(/.test(jf+js),'does not connect from the title screen');
   assert(/min-height:4[48]px/.test(jc),'>= 44 px targets');
   assert(!/transition|animation/.test(jc)||/prefers-reduced-motion:reduce\)\{\.join\{transition:none\}/.test(jc),'the Use-a-different-code style motion has a reduced-motion override');
   assert(!/(^|\n)import .*party/.test(read('components/landing/saveCodeAdapter.tsx')),'save adapter untouched');
