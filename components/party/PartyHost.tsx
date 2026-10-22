@@ -4,7 +4,7 @@ import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { bindConnection, colourName, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
+import { bindConnection, colourName, displayName, getNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { ErrorCode, Zone, type Look } from '../../multiplayer/protocol';
@@ -12,6 +12,7 @@ import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
 import AnimalPicker, { getAnimalChoice } from './AnimalPicker';
+import NickField from './NickField';
 import pickerStyles from './animalPicker.module.css';
 import styles from './party.module.css';
 
@@ -85,6 +86,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const live = state.status === 'live' || state.status === 'reconnecting';
 
   useEffect(() => bindConnection(connection), [connection]);
+  // Member slots are reused: a friend who left must not leave their Hide / Mute behind for the next face in that slot.
+  useEffect(() => {
+    const ids = new Set(state.members.map((m) => m.id));
+    const prune = (cur: ReadonlySet<number>, cb?: (s: ReadonlySet<number>) => void, apply?: (s: ReadonlySet<number>) => void) => {
+      if (!Array.from(cur).some((id) => !ids.has(id))) return;
+      const next = new Set(Array.from(cur).filter((id) => ids.has(id))); apply?.(next); cb?.(next);
+    };
+    prune(hidden, onHiddenChange, setHidden); prune(muted, onMutedChange, setMuted);
+  }, [state.members, hidden, muted, onHiddenChange, onMutedChange]);
   const note = useCallback((n: Note) => setQueue((q) => {
     const last = q[q.length - 1];
     if (n.kind === 'join' && last?.kind === 'join') return [...q.slice(0, -1), { kind: 'join', names: [...last.names, ...n.names] }];
@@ -116,7 +126,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     const before = prevIds.current;
     prevIds.current = ids;
     if (!before) return; // the first roster is not news
-    const added = state.members.filter((m) => !before.has(m.id) && m.id !== state.you).map((m) => m.name);
+    const added = state.members.filter((m) => !before.has(m.id) && m.id !== state.you).map((m) => displayName(m));
     if (added.length) note({ kind: 'join', names: added });
   }, [state.members, state.status, state.you, note]);
   useEffect(() => {
@@ -175,7 +185,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     setBusy(false);
     if ('error' in r) { text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('mp_join_failed', r.error); return; }
     joining.current = 'host';
-    connection.join(r.code, { look: look(), hostKey: r.hostKey, animal: getAnimalChoice() });
+    connection.join(r.code, { look: look(), hostKey: r.hostKey, animal: getAnimalChoice(), nick: getNick() });
     track.current?.('mp_party_created');
     setView('invite');
   }
@@ -187,7 +197,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('mp_join_failed', 'closed'); return; }
     clearPendingParty();
     joining.current = 'guest';
-    connection.join(code, { look: look(), animal: getAnimalChoice() });
+    connection.join(code, { look: look(), animal: getAnimalChoice(), nick: getNick() });
   }
 
   const close = useCallback(() => { setView('none'); setPending(null); setConfirmEnd(false); }, []);
@@ -214,6 +224,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             <h3 id="party-menu-title">Play with friends</h3>
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
             <AnimalPicker />
+            <NickField />
             <div className={styles.stack}>
               <button type="button" className={styles.primary} disabled={busy} onClick={() => afterGate({ kind: 'create' })}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
               <button type="button" className={styles.secondary} disabled={busy} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); }}>Join with a code</button>
@@ -242,15 +253,16 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
           <section className={styles.card} data-party-sheet aria-labelledby="party-sheet-title">
             <h3 id="party-sheet-title">Your party</h3>
             <ul className={styles.members}>
-              {me && <li className={styles.member} aria-label={`You, ${me.name}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={pickerStyles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{me.animalGlyph} </span>You ({me.name})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
+              {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={pickerStyles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{me.animalGlyph} </span>You ({displayName(me)}){me.nick && <small>{me.name}</small>}</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
-                <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} aria-label={`${m.name}, ${colourName(m.colourIdx).toLowerCase()}`}>
+                <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}`}>
                   <span className={styles.zone} role="img" aria-label={ZONE_LABEL[m.zone] ?? 'on the island'}><Icon name={ZONE_ICON[m.zone] ?? 'home'} size={18} /></span>
-                  <span className={pickerStyles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{m.animalGlyph} </span>{m.name}</span>
+                  <span className={pickerStyles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}><span aria-hidden="true">{m.animalGlyph} </span>{displayName(m)}{m.nick && <small>{m.name}</small>}</span>
                   {m.isHost && <span className={styles.badge}>Host</span>}
-                  <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${m.name}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
-                  <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${m.name}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>
-                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${m.name}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); }}><Icon name="close" size={20} /></button>}
+                  <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
+                  <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>
+                  {state.isHost && m.nick && <button type="button" className={styles.mini} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); }}><Icon name="rotate" size={20} /></button>}
+                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${displayName(m)}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); }}><Icon name="close" size={20} /></button>}
                 </li>
               ))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}

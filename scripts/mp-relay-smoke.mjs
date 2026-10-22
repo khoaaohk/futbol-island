@@ -12,6 +12,8 @@ if (typeof WebSocket === 'undefined') { console.error('run with: node --experime
 const srv = spawn(process.execPath, [path.join(ROOT, 'multiplayer/dev-relay/server.mjs')], {
   env: { ...process.env, MP_PORT: '0' }, stdio: ['ignore', 'pipe', 'inherit'],
 });
+let srvOut = '';
+srv.stdout.on('data', (d) => { srvOut += d; });
 const killServer = () => { try { srv.kill('SIGTERM'); } catch { /* already gone */ } };
 process.on('exit', killServer);
 const hardStop = setTimeout(() => { console.error('smoke: timeout'); killServer(); process.exit(1); }, 28000);
@@ -90,6 +92,26 @@ try {
     assert.ok(back.msgs.some((m) => m[0] === 20), 'resume through the retired code');
     back.w.close();
   }
+  // first-name nick: normalised in the roster, host can reset it, the relay's log lines never contain it
+  {
+    const p3 = await (await fetch(base + '/party', { method: 'POST' })).json();
+    const wsBase = 'ws://127.0.0.1:' + port + '/party/';
+    const open = (c) => new Promise((res, rej) => { const w = new WebSocket(wsBase + c + '/ws'); const msgs = []; w.onmessage = (e) => msgs.push(JSON.parse(e.data)); w.onopen = () => res({ w, msgs }); w.onerror = () => rej(new Error('ws')); });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const L = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const h = await open(p3.code); h.w.send(JSON.stringify([0, 1, L, null, p3.hostKey, null, 'SMOKEKID'])); await wait(300);
+    const g = await open(p3.code); g.w.send(JSON.stringify([0, 1, L, null, null, 3, 'Emma'])); await wait(300);
+    const hid = h.msgs.find((m) => m[0] === 20)[2];
+    const gid = g.msgs.find((m) => m[0] === 20)[2];
+    assert.equal(g.msgs.find((m) => m[0] === 20)[7].find((m) => m[0] === hid)[5], 'Smokekid', 'roster carries the normalised nick');
+    assert.equal(h.msgs.find((m) => m[0] === 21)[1][5], 'Emma');
+    h.w.send(JSON.stringify([10, gid])); await wait(300);
+    assert.ok(g.msgs.some((m) => m[0] === 31 && m[1] === gid && m[2] === null), 'Renamed broadcast');
+    g.w.send(JSON.stringify([10, hid])); await wait(300);
+    assert.ok(g.msgs.some((m) => m[0] === 29 && m[1] === 6), 'guest ResetName -> NotHost');
+    h.w.close(); g.w.close();
+  }
+  assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');
   console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots, 7th Full, cheat dropped, flood closed)');
 } catch (e) {
   console.error('mp-relay-smoke: FAILED', e && e.stack ? e.stack : e);

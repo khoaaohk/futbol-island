@@ -358,4 +358,49 @@ t('privacy: no forbidden imports or storage keys in lib/multiplayer',()=>{
     assert.ok(!/lib\/saves|lib\/analytics|\.\.\/saves|\.\.\/analytics|deviceMarks|fi2-install-v1|fi2-save-code-v1|localStorage/.test(src),f);}
 });
 
+
+// ---- first-name nick: Hello, store, never persisted ----
+t('Hello carries the nick (7th field), re-sent on reconnect, normalised, dropped when bad',()=>{
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,animal:4,nick:'EMMA'});e.last().open();
+  assert.deepEqual(e.msgs(e.last())[0],[0,1,LOOK,null,null,4,'Emma']);assert.ok(P.parseClient(e.last().sent[0]),'validator accepts it');
+  const e2=makeEnv();e2.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});e2.last().open();
+  assert.deepEqual(e2.msgs(e2.last())[0],[0,1,LOOK,null,null,null,'Emma'],'nick without animal -> null animal slot');
+  for(const bad of ['Emma Lou','12345','a',null,undefined,'']){const e3=makeEnv();e3.c.join('k7m-q4r',{look:LOOK,nick:bad});e3.last().open();assert.equal(e3.msgs(e3.last())[0].length,5,String(bad));}
+  e.last().recv(welcome());e.last().drop();e.clock.advance(60000);e.last().open();
+  assert.equal(e.msgs(e.last())[0][6],'Emma','reconnect Hello keeps the nick');
+  // the host resets MY name: a later reconnect must not put it back
+  e.last().recv(welcome());e.last().recv([31,1,null]);e.last().drop();e.clock.advance(60000);e.last().open();
+  assert.equal(e.msgs(e.last())[0].length,6,'after a reset the nick is no longer sent');
+  e.c.leave();const e4=makeEnv();e4.c.join('k7m-q4r',{look:LOOK});e4.last().open();assert.equal(e4.msgs(e4.last())[0].length,5);
+});
+t('store exposes nick, displayName, and Renamed clears it',()=>{
+  st.partyStore.reset();
+  st.partyStore.apply([20,1,1,'tok-abcdefghij012345',Date.now()+7200000,Date.now()+14400000,0,[[1,[2,3],LOOK,1,null,'Emma'],[2,[0,0],LOOK,0,null],[3,[1,1],LOOK,0,null,null]]],1000);
+  let ms=st.partyStore.get().members;
+  assert.equal(ms[0].nick,'Emma');assert.equal(ms[0].name,'Green Otter');assert.equal(st.displayName(ms[0]),'Emma');
+  assert.equal(ms[1].nick,null);assert.equal(st.displayName(ms[1]),'Red Zebra');assert.equal(ms[2].nick,null);
+  st.partyStore.apply([31,1,null],2000);
+  ms=st.partyStore.get().members;assert.equal(ms[0].nick,null);assert.equal(st.displayName(ms[0]),'Green Otter');
+  st.partyStore.apply([21,[4,[2,2],LOOK,0,null,'Zoë']],3000);
+  assert.equal(st.partyStore.get().members.find(x=>x.id===4).nick,'Zoë');
+  st.partyStore.reset();
+});
+t('nick module: memory only, normalised, clearable',()=>{
+  const nk=L('nick');assert.equal(nk.getNick(),null);nk.setNick('EMMA');assert.equal(nk.getNick(),'Emma');nk.setNick('Emma Lou');assert.equal(nk.getNick(),null);
+  nk.setNick('Zoe');nk.clearNick();assert.equal(nk.getNick(),null);
+});
+t('nick is never persisted or logged (source scan)',()=>{
+  const files=['lib/multiplayer/nick.ts','lib/multiplayer/connection.ts','lib/multiplayer/store.ts','lib/multiplayer/townBridge.ts','components/party/NickField.tsx','components/party/PartyHost.tsx','components/party/JoinParty.tsx','lib/graphics/remoteAvatars.ts'];
+  for(const f of files){const src=fs.readFileSync(path.join(ROOT,f),'utf8');
+    assert.ok(!/localStorage|document\.cookie|indexedDB/.test(src),f+' touches persistent storage');
+    assert.ok(!/console\.(log|info|warn|error|debug)/.test(src),f+' logs');
+    for(const m of src.matchAll(/(?:session|local)Storage\.setItem\([^)]*\)/g))assert.ok(!/nick/i.test(m[0]),f+' stores the nick');}
+  // connection.ts: the only sessionStorage write is writeSession(), whose payload is code / token / hostKey / time
+  const c=fs.readFileSync(path.join(ROOT,'lib/multiplayer/connection.ts'),'utf8');
+  assert.ok(!/setItem\([^)]*nick/.test(c)&&!/JSON\.stringify\(\{[^}]*nick/.test(c));
+  const sess=JSON.stringify({code:'K7MQ4R',resumeToken:null,at:1});assert.ok(!/nick/i.test(sess));
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});e.last().open();e.last().recv(welcome());
+  assert.ok(!/Emma/.test(e.storage.getItem('fi-party-session')||''),'session storage payload has no nick');
+});
+
 console.log(`mp-client: ${n} groups passed`);

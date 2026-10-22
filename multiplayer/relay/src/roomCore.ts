@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
-  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex,
+  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick,
 } from '../../protocol';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
@@ -25,7 +25,8 @@ const WARP_MIN_GAP_MS = 5000;
 export const KICK_LOCK_MS = 60_000; // auto-lock after a kick (review #6)
 
 interface Member {
-  id: number; name: NameIdx; look: number[]; token: string; joinSeq: number;
+  // nick: the typed first name. In memory on the member ONLY: never in attachments, snapshots, storage or logs (owner decision).
+  id: number; name: NameIdx; nick: string | null; look: number[]; token: string; joinSeq: number;
   peer: Peer | null; goneAt: number | null; // goneAt: disconnected since (resume grace)
   pose: PoseBody | null; poseAt: number; lastSeq: number; dirty: boolean; lastWarpAt: number;
   poseBucket: TokenBucket; emoteBucket: TokenBucket; pingBucket: TokenBucket; ctlBucket: TokenBucket;
@@ -105,7 +106,7 @@ export class RoomCore {
   /** Wake-up path for a hibernated Durable Object: put a member back on its surviving socket. */
   restoreMember(peer: Peer, a: MemberAttachment): void {
     if (this.ended || this.members.has(a.id)) return;
-    const m = this.newMember(a.id, a.name, a.look, a.token, a.joinSeq, peer, this.clock.now());
+    const m = this.newMember(a.id, a.name, null, a.look, a.token, a.joinSeq, peer, this.clock.now());
     this.members.set(a.id, m); this.byPeer.set(peer, m);
     this.joinSeq = Math.max(this.joinSeq, a.joinSeq + 1);
     if (a.host) { this.hostId = a.id; this.hadHost = true; }
@@ -178,10 +179,15 @@ export class RoomCore {
       case C.Leave: this.remove(m, LeaveReason.Left, CLOSE.Normal); return;
       default: break;
     }
-    // host-only controls: Kick, Lock, Rotate, End
+    // host-only controls: Kick, Lock, Rotate, End, ResetName
     if (!m.ctlBucket.take(now)) { this.send(peer, [S.Error, ErrorCode.RateLimited]); return; }
     if (m.id !== this.hostId) { this.send(peer, [S.Error, ErrorCode.NotHost]); return; }
-    if (msg[0] === C.Kick) {
+    if (msg[0] === C.ResetName) {
+      const t = this.members.get(msg[1] as number);
+      if (!t || t === m || t.nick === null) return;
+      t.nick = null;
+      this.broadcast([S.Renamed, t.id, null], null);
+    } else if (msg[0] === C.Kick) {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m) return;
       this.revoked.push(t.token);
@@ -254,7 +260,8 @@ export class RoomCore {
 
   // ---- internals ----
   private hello(peer: Peer, msg: ClientMsg, now: number): void {
-    const [, v, look, resumeToken, hostKey, animal] = msg as [number, number, number[], string | null, string | null, (number | null)?];
+    const [, v, look, resumeToken, hostKey, animal, rawNick] = msg as [number, number, number[], string | null, string | null, (number | null)?, (string | null)?];
+    const nick = normalizeNick(rawNick ?? null); // parseClient already normalised; a name is only ever set here, at Hello
     if (v !== PROTOCOL_VERSION) return this.refuse(peer, ErrorCode.BadVersion);
     if (now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
     const viaRetired = this.retiredPeers.delete(peer);
@@ -288,7 +295,7 @@ export class RoomCore {
     const r = this.random(4);
     const rnd = () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
     const id = this.freeId();
-    const m = this.newMember(id, pickNameWith(taken, rnd, animal ?? null), look, b64url(this.random(16)), this.joinSeq++, peer, now);
+    const m = this.newMember(id, pickNameWith(taken, rnd, animal ?? null), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }
@@ -296,9 +303,9 @@ export class RoomCore {
     this.broadcast([S.Joined, this.memberInfo(m)], m);
   }
 
-  private newMember(id: number, name: NameIdx, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
+  private newMember(id: number, name: NameIdx, nick: string | null, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
     return {
-      id, name, look: look.slice(), token, joinSeq,
+      id, name, nick, look: look.slice(), token, joinSeq,
       peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, lastWarpAt: -1e12,
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
@@ -324,7 +331,7 @@ export class RoomCore {
   }
 
   private memberInfo(m: Member): MemberInfo {
-    return [m.id, m.name, m.look, m.id === this.hostId ? 1 : 0, m.pose ? (m.pose.slice() as PoseBody) : null];
+    return [m.id, m.name, m.look, m.id === this.hostId ? 1 : 0, m.pose ? (m.pose.slice() as PoseBody) : null, m.nick];
   }
 
   private pose(m: Member, msg: number[], now: number): void {

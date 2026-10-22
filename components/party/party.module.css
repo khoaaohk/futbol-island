@@ -41,3 +41,11 @@
 @keyframes partyIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.chip,.round,.toast,.dialog{transition:none;animation:none}}
 @media(min-width:900px){.corner{top:calc(20px + env(safe-area-inset-top,0px));left:calc(20px + env(safe-area-inset-left,0px))}}
+/* First-name field (NickField): same calm rim as the code boxes */
+.nick{display:flex;flex-direction:column;align-items:center;gap:4px}
+.nickLabel{font:700 13px/1.2 system-ui,sans-serif}
+.nickRow{display:flex;align-items:center;gap:4px}
+.nickInput{width:min(220px,60vw);min-height:44px;padding:0 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:700 16px/1 system-ui,sans-serif;text-align:center}
+.nickInput:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
+.nickHint{margin:0;font-size:12px;line-height:1.3;opacity:.8}
+.mname small{margin-left:6px;font-size:11px;font-weight:600;opacity:.7}

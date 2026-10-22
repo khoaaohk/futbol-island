@@ -30,7 +30,7 @@ walk/ride/swim around together, send preset emotes and "meet here / follow me" p
 on top: no collision, no shared objects, no effect on anyone's save. The server owns only party membership and the latest pose.
 
 **v1 non-goals (explicit):**
-- free text chat, voice chat, typed names, custom signs (the kid may pick an animal icon from a fixed list; see Identity below);
+- free text chat, voice chat, custom signs, any typed text other than the one optional FIRST NAME (owner decision 22 Oct 2026, reversing the earlier "no free text anywhere" rule: "for the play with friends, allow them to add their first name only. easier to identify."; see 2.3 Name label and 5.7);
 - global/public lobbies, matchmaking with strangers, browsing parties;
 - persistent friend lists (Phase 4, parent-approved only);
 - competitive PvP, scores against each other;
@@ -78,13 +78,21 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 | Element | v1 behaviour |
 |---|---|
 | Friend avatar | Their bean + kit colours + hair/headwear (look indexes on join). Costumes: base bean in v1 (Phase 2 if assets loaded). |
-| Name label | Friendly, never typed: colour + animal ("Red Zebra"). The COLOUR is assigned by the server and is unique in the party (handed out in a fixed best-separated order, `COLOUR_ORDER`, so a party of 6 always gets the six most distinguishable colours, also for colour-blind kids). The ANIMAL is the kid's pick from a fixed list of 16 icons in the join / start card (an index into the 32 reviewed `NAME_ANIMALS`; `Hello` field `animal`, optional, null / absent = "Surprise me" = random); two kids may share an animal, the colour keeps names unique. New each party. Small label above the head (animal glyph, coloured dot and rim), hidden beyond 40 m. |
+| Name label | Colour + animal ("Red Zebra") chosen by the game and the kid, plus an OPTIONAL typed first name (see Typed first name below). The COLOUR is assigned by the server and is unique in the party (handed out in a fixed best-separated order, `COLOUR_ORDER`, so a party of 6 always gets the six most distinguishable colours, also for colour-blind kids). The ANIMAL is the kid's pick from a fixed list of 16 icons in the join / start card (an index into the 32 reviewed `NAME_ANIMALS`; `Hello` field `animal`, optional, null / absent = "Surprise me" = random); two kids may share an animal, the colour keeps names unique. New each party. Small label above the head (animal glyph, coloured dot and rim), hidden beyond 40 m. |
 | Colour ring | One instanced ring (capacity 8, no shadows) on the ground under each shown friend and under the local player while the party is live, in the member's colour; it grows with camera distance (up to 4x) so friends can be found from far away, pulses briefly on an emote, and is hidden with the avatar (culled, > 160 m, Battery saver). The party sheet shows the same colour as a dot beside the animal glyph and name. |
 | Movement | Walk/run/ride poses from mode + speed; vehicles drawn as pose only in v1 (merged ride proxies in Phase 2). |
 | Emotes | Preset only: wave, cheer, high-five, "Pass to me!", "Space!", "Well played!". Reuse `PlayerMotion.called`, celebrations, `setExpression`. |
 | Pings | "Meet here" (a pin at my spot for 20 s) and "Follow me" (others get an edge arrow to me for 60 s). |
 | Party chip | Fixed corner chip: stacked mini faces (count), tap -> sheet: members (name + zone icon), Emotes, Invite more (host), Leave. |
 | Map | Friend pins with their colour on the existing map (Phase 2), plus "Go to friend" using the map's existing travel. |
+
+**Typed first name (owner decision, 22 Oct 2026).** The only free text in the whole feature. Chosen option: "Typed name + a tiny safety check":
+- one optional field in the grown-up-gated Start / Join cards (`components/party/NickField.tsx`, never on the title screen): label "First name (optional)", `maxLength` 12, hint "Letters only. First name only, no last names.", invalid characters are dropped as the kid types, clear button;
+- validation is `normalizeNick` (protocol, shared by client and relay): trimmed, ONLY letters A-Z a-z and Latin-1 accented letters, 2 to 12 long, first letter upper case, the rest lower case; digits, spaces, hyphens, symbols, emoji, URLs and anything else return null (never throws). A bad name is treated as "no name" and the join still succeeds, so a typo never blocks a kid;
+- **no naughty-words block-list (owner decision).** The safeguards are structural instead: the name is set only at join (no rename message, no way to change it mid-party), letters only (no links, numbers, contact details or symbols), 12 letters max, it is shown only to the party (cap 6, code + grown-up gate), the host can **Reset name** (everyone then sees the made-up name again), **Remove** or **Lock** the party, any friend can **Hide** (drops the avatar AND the name label locally) or **Mute** a friend, and a reset or empty name always falls back to the made-up name;
+- shown as the label (and the party sheet row) with the animal glyph and colour dot; the made-up name ("Red Zebra") stays visible smaller under it / beside it for context;
+- **held in memory only.** Client: module variable `lib/multiplayer/nick.ts` for the page visit (like the animal choice; never localStorage / sessionStorage / cookies / saves / analytics, never logged; a reload asks again, and the resume session in sessionStorage never contains it). Relay: on the member object only, never in the Durable Object storage, the hibernation attachment, the snapshot or any log; kicked / left members' names go with them and the party end drops everything (after a Durable Object eviction a resumed member simply shows the made-up name).
+- protocol: `Hello` gets an optional trailing `nick` (7th element, after `animal`; old 5 / 6 element Hellos still parse), member info gets an optional 6th element `nick`, host-only `ResetName(memberId)` (C = 10) and the broadcast `Renamed(memberId, null)` (S = 31). Frames stay small (Hello <= 512 B with a 12-letter name).
 
 ### 2.4 Shared vs local
 | Shared in v1 | Local only in v1 | Later phases |
@@ -254,11 +262,13 @@ export type MemberId = number;                       // 0..15, server-assigned s
 export type NameIdx = [colour: number, animal: number];
 /** Pose body: [x_dm, y_dm, z_dm, yaw256, speedQ, mode, zone, flags] */
 export type PoseBody = [number, number, number, number, number, Mode, Zone, number];
-export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null];
+export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null]; // nick: typed first name (normalizeNick) or null
 
 // client -> server
-export const enum C { Hello = 0, Pose = 1, Emote = 2, Ping = 3, Kick = 4, Lock = 5, Rotate = 6, End = 7, Leave = 8, Beat = 9 }
-export type CHello  = [C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null];
+export const enum C { Hello = 0, Pose = 1, Emote = 2, Ping = 3, Kick = 4, Lock = 5, Rotate = 6, End = 7, Leave = 8, Beat = 9, ResetName = 10 }
+export type CHello  = [C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
+  animal?: number | null, nick?: string | null];   // both optional trailing; a bad nick becomes null, the join still works
+export type CResetName = [C.ResetName, target: MemberId];   // host only; relay answers Renamed(target, null) to everyone
 export type CPose   = [C.Pose, seq: number, ...body: PoseBody];
 export type CEmote  = [C.Emote, emote: Emote];
 export type CPing   = [C.Ping, kind: PingKind, x_dm: number, z_dm: number];
@@ -271,7 +281,7 @@ export type CBeat   = [C.Beat, t: number];
 export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat;
 
 // server -> client
-export const enum S { Welcome = 20, Joined = 21, Left = 22, Poses = 23, Emote = 24, Ping = 25, Host = 26,
+export const enum S { Welcome = 20, Joined = 21, Left = 22, Poses = 23, Emote = 24, Ping = 25, Host = 26, Renamed = 31 /* (id, null): the host reset a typed name */,
   Code = 27, Ended = 28, Error = 29, Beat = 30 }
 export type SWelcome = [S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
   partyEndsAt: number, locked: 0 | 1, members: MemberInfo[]];
@@ -467,15 +477,15 @@ export function remoteCap(tier: HeatTier, phone: boolean, saver: boolean): numbe
 friend, after a grown-up answers the grown-up check. They share a 6-character party code, a link or a QR code; the code stops
 accepting new players after 2 hours. While playing together, the other players in that party see the child's character and its
 outfit colours, where it moves on the island and which preset waves or cheers it taps. Each player gets a name made of a colour chosen by the game and an animal picked from a fixed list of icons, like
-'Red Zebra', that changes every party. Players pick an animal icon from a fixed list; names are a colour and an animal chosen by the game and the child, never typed. There is no chat, no typing, no voice and no photos, and players cannot give or trade
-anything. We do not ask for or keep names, contact details or friend lists. Our relay (Cloudflare) passes these live positions
+'Red Zebra', that changes every party. A player may also type a first name only (letters only, up to 12 letters) so friends can tell each other apart; it is shown only to the other players in that party, is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. There is no chat, no voice and no photos, and players cannot give or trade
+anything. We do not ask for or keep last names, contact details or friend lists. (Matches components/privacy/PrivacyPolicy.tsx section 7a.) Our relay (Cloudflare) passes these live positions
 between the players in the party and keeps nothing after the party ends; it uses the device's internet address only for a few
 minutes to stop misuse, and does not store it. A grown-up can turn 'Play with friends' off in Settings."
 
 **§12 services (DRAFT):** "Cloudflare relays live character positions between friends in a party while they play and keeps
 nothing after the party ends."
 
-**Grown-ups card (`AboutGrownUps.tsx`, DRAFT):** "No ads, no chat, no names or contact details. Playing with friends uses a
+**Grown-ups card (`AboutGrownUps.tsx`, DRAFT):** "No ads, no chat, no contact details (the only thing a child may type in a party is a first name, shown to that party only). Playing with friends uses a
 temporary code, needs the grown-up check, and can be turned off in Settings. It uses about 4 MB of data an hour."
 
 ### 5.6 Analytics
@@ -488,12 +498,12 @@ existing tracker with these ids.
 
 ### 5.7 COPPA / GDPR-K engineering notes (engineering notes, not legal advice)
 - **Personal information under COPPA** includes persistent identifiers, and any free text/voice/photo that lets a child disclose
-  information. v1 has no free text, no voice, no chosen names, no photos, no real-world location (island coordinates are not
+  information. v1 has no chat, no voice, no photos and one optional letters-only typed FIRST NAME (owner decision; memory only, shown to the party, not stored or logged; a COPPA/GDPR review item, see multiplayer-review-phase0.md), no real-world location (island coordinates are not
   geolocation), and only short-lived random tokens. The relay's IP use is for network communication and abuse prevention, the
   "support for internal operations" exception; the amended rule (final 2025) requires the online notice to name those internal
   operations and how identifiers are kept to them ([Hunton summary](https://www.hunton.com/privacy-and-cybersecurity-law-blog/ftc-publishes-final-coppa-rule-amendments),
   [Perkins Coie](https://perkinscoie.com/insights/update/ftc-announces-new-childrens-privacy-requirements-updated-coppa-rule)).
-- **Verifiable parental consent triggers to avoid in v1:** chat, user-chosen names, persistent friend lists, contact import,
+- **Verifiable parental consent triggers to avoid in v1:** chat, persistent friend lists, contact import,
   photos/voice, sharing with third parties. Phase 4 persistent friends likely needs VPC or a careful parent-mediated design: book counsel.
 - **ICO Children's Code / GDPR Art. 8:** high privacy by default (feature needs a grown-up step), transparency at the point of use
   (the invite card says what friends see), data minimisation (nothing stored), a short DPIA before launch.
@@ -520,7 +530,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 2. **Party size cap:** *6* (host + 5).
 3. **Parent gate for joiners too** (not only hosts): *yes*, every create and join (10-min pass).
 4. **Code expiry:** *2 h* for new joins, 4 h party max, host can rotate.
-5. **Names:** server-assigned unique colour + kid-picked animal icon from a fixed list (no typing) per party ("Red Zebra"), no stable names in v1: *yes*.
+5. **Names:** server-assigned unique colour + kid-picked animal icon from a fixed list per party ("Red Zebra"), no stable names in v1: *yes*. PLUS (owner, 22 Oct 2026) an optional typed first name, letters only, no block-list, memory only: *decided, built*.
 6. **Default setting:** "Play with friends" *allowed* (each use is gated), lockable off by a grown-up. (Alternative: off until a grown-up turns it on.)
 7. **Identity:** *no identifier at all in v1* (stricter than an install-id hash); revisit for Phase 4.
 8. **Privacy/legal:** have the §5.5 draft and COPPA notes reviewed by counsel before the flag goes on in production; short DPIA.
@@ -534,7 +544,7 @@ security review and hard sync; **Sonnet** for implementation; **Haiku** for docs
 | # | Risk | Mitigation |
 |---|---|---|
 | 1 | iPhone heat/battery (extra rigs + socket keeps radio awake) | One batch, no shadows, caps at admission, send only on change, close socket when hidden, owner's two-iPhone run gates Phase 1 |
-| 2 | Child safety: a code leaks to a stranger | 2 h expiry, cap 6, gate on join, host Remove/Lock/New code, no text/voice, nothing to take or change |
+| 2 | Child safety: a code leaks to a stranger | 2 h expiry, cap 6, gate on join, host Remove/Lock/New code, no voice, only an optional letters-only first name (host Reset name, Hide / Mute), nothing to take or change |
 | 3 | Legal: notice/consent wording wrong | Draft marked for review, nothing ships until counsel + DPIA; no identifiers collected |
 | 4 | `Town.tsx` merge conflicts with other lanes | One glue task owns the 4 Town edits, lands last; flag off by default |
 | 5 | Desync looks bad (jitter, popping) | 250 ms buffer, Hermite, extrapolation cap, fades on warp/arrival; tune in Phase 1 on real networks |

@@ -11,7 +11,7 @@ import { createPartyConnection, type PartyConnection } from './connection';
 import { bindConnection, onPoses } from './index';
 import { createInterp, type RemotePose } from './interp';
 import { lookToWire } from './look';
-import { partyStore } from './store';
+import { displayName, partyStore } from './store';
 
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
   zone: Zone; warp: boolean; hidden: boolean };
@@ -24,6 +24,12 @@ export function partyConnection(): PartyConnection {
   if (!shared) { shared = createPartyConnection(); unbind = bindConnection(shared); }
   return shared;
 }
+// Local Hide / Mute choices from the party sheet (PartyHost). Module-level so a runtime created later still applies them.
+let hiddenIds: ReadonlySet<MemberId> = new Set();
+let mutedIds: ReadonlySet<MemberId> = new Set();
+const filterSubs = new Set<() => void>();
+export function setHiddenFriends(ids: ReadonlySet<MemberId>): void { hiddenIds = ids; for (const f of Array.from(filterSubs)) f(); }
+export function setMutedFriends(ids: ReadonlySet<MemberId>): void { mutedIds = ids; for (const f of Array.from(filterSubs)) f(); }
 /** The local player's look on the wire (what PartyHost passes to join). */
 export function partyLook(): Look { return lookToWire(loadCustomization()); }
 
@@ -75,7 +81,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (m.id === s.you) { meHex = m.colourHex; continue; } // the Welcome roster includes the local player
       known.add(m.id);
       if (!spare.has(m.id)) { spare.set(m.id, { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Idle, zone: Zone.Main, fade: 1 }); ids.push(m.id); }
-      avatars.upsert(m.id, m.look, m.name, { hex: m.colourHex, glyph: m.animalGlyph });
+      // Label: the typed first name if set (the made-up name goes small under it), else the made-up name.
+      avatars.upsert(m.id, m.look, displayName(m), { hex: m.colourHex, glyph: m.animalGlyph, sub: m.nick ? m.name : undefined });
     }
     for (let i = ids.length - 1; i >= 0; i--) {
       const id = ids[i];
@@ -86,9 +93,12 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you) avatars.emote(e.id, e.emote); }
     if (!live) { lastX = lastZ = NaN; }
   }
+  const applyFilters = () => { avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
+  filterSubs.add(applyFilters);
   const offStore = partyStore.subscribe(sync);
   const offPoses = onPoses((id, b, recvMs) => { if (id !== you && known.has(id)) interp.push(id, b, recvMs); });
   sync();
+  applyFilters();
 
   return {
     update(dt, nowMs, camera) {
@@ -115,7 +125,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       }
     },
     dispose() {
-      offStore(); offPoses(); avatars.dispose(); poses.clear(); spare.clear(); ids.length = 0; known.clear();
+      offStore(); offPoses(); filterSubs.delete(applyFilters); avatars.dispose(); poses.clear(); spare.clear(); ids.length = 0; known.clear();
       // The shared connection (and its binding) belongs to the page / PartyHost: it closes on unload and via leave().
       void unbind;
     },

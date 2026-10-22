@@ -429,4 +429,58 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const dev = { MP_DEV: '1' };
   assert.equal(originAllowed('http://localhost:3000', dev), true); assert.equal(originAllowed(null, dev), true);
 }
+
+// first-name nick (owner decision): in memory only, set at Hello, host can reset, nothing persisted
+{
+  const { room, clock } = mk();
+  const nickHello = (p, nick, resume = null, hostKey = null) => { room.connect(p); room.message(p, JSON.stringify([C.Hello, PROTOCOL_VERSION, LOOK, resume, hostKey, null, nick])); };
+  const host = peer(); nickHello(host, 'EMMA', null, room.hostKey);
+  assert.equal(welcome(host)[7][0][5], 'Emma', 'nick normalised and in the roster');
+  const g = peer(); nickHello(g, 'élodie');
+  const gw = welcome(g);
+  assert.equal(gw[7].find((m) => m[0] === gw[2])[5], 'Élodie');
+  assert.equal(host.of(S.Joined)[0][1][5], 'Élodie', 'Joined carries the nick');
+  const bad = peer(); nickHello(bad, 'Emma Lou');
+  assert.ok(welcome(bad), 'a bad name never blocks the join');
+  assert.equal(welcome(bad)[7].find((m) => m[0] === welcome(bad)[2])[5], null, 'bad nick -> null');
+  const none = peer(); hello(room, none);
+  assert.equal(welcome(none)[7].find((m) => m[0] === welcome(none)[2])[5], null, 'old Hello -> null');
+  const idg = welcome(g)[2], idh = welcome(host)[2];
+  // ResetName: host only, never on itself, broadcast to all
+  send(room, g, [C.ResetName, idh]);
+  assert.deepEqual(errs(g).slice(-1), [ErrorCode.NotHost], 'a guest cannot reset');
+  assert.equal(host.of(S.Renamed).length, 0);
+  clock.t += 2000;
+  send(room, host, [C.ResetName, idh]);
+  assert.equal(host.of(S.Renamed).length, 0, 'host cannot reset itself (no-op)');
+  send(room, host, [C.ResetName, idg]);
+  assert.deepEqual(g.of(S.Renamed)[0], [S.Renamed, idg, null], 'target hears Renamed');
+  assert.deepEqual(host.of(S.Renamed)[0], [S.Renamed, idg, null], 'host hears Renamed');
+  assert.deepEqual(bad.of(S.Renamed)[0], [S.Renamed, idg, null], 'everyone hears Renamed');
+  const late = peer(); hello(room, late);
+  assert.equal(welcome(late)[7].find((m) => m[0] === idg)[5], null, 'the reset sticks for later joiners');
+  // resume keeps the nick; a resume Hello cannot rename
+  const tok = welcome(host)[3];
+  host.msgs.length = 0; room.disconnect(host);
+  const host2 = peer(); nickHello(host2, 'Zed', tok);
+  assert.equal(welcome(host2)[7].find((m) => m[0] === idh)[5], 'Emma', 'resume keeps the nick, ignores a new one');
+  // leave / kick: nick vanishes with the member
+  const k = peer(); nickHello(k, 'Kaya'); const idk = welcome(k)[2];
+  clock.t += 2000; send(room, host2, [C.Kick, idk]);
+  const probe = peer(); hello(room, probe, null, room.hostKey);
+  assert.ok(!JSON.stringify(probe.msgs).includes('Kaya'), 'kicked nick is gone');
+  // nothing persisted or attached
+  assert.ok(!JSON.stringify(room.snapshot()).match(/Emma|Elodie|Élodie|Kaya|nick/i), 'no nick in the snapshot');
+  const att = JSON.stringify([room.attachmentFor(host2), room.attachmentFor(g)]);
+  assert.ok(!att.match(/Emma|Élodie|nick/i), 'no nick in the hibernation attachment');
+  const { room: back } = mk();
+  const rp = peer(); back.restoreMember(rp, room.attachmentFor(host2));
+  const rj = peer(); hello(back, rj);
+  assert.equal(welcome(rj)[7].find((m) => m[0] === idh)[5], null, 'after an eviction the nick is simply gone (made-up name)');
+  const src = require('node:fs').readFileSync(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts'), 'utf8') + require('node:fs').readFileSync(path.join(ROOT, 'multiplayer/relay/src/partyRoom.ts'), 'utf8');
+  assert.ok(!/console\.|\.put\(.*nick/.test(src), 'relay never logs or stores');
+  // party end drops everything
+  send(room, host2, [C.End]);
+  assert.equal(room.ended, true);
+}
 console.log('mp-room-core: ok');

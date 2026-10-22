@@ -39,13 +39,14 @@ export type MemberId = number; // 0..15, server-assigned slot
 export type NameIdx = [colour: number, animal: number];
 /** Pose body: [x_dm, y_dm, z_dm, yaw256, speedQ, mode, zone, flags] */
 export type PoseBody = [number, number, number, number, number, Mode, Zone, number];
-export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null];
+/** nick: the typed first name (normalizeNick), or null / absent = use the made-up name. */
+export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
-  animal?: number | null]; // animal: optional trailing index into NAME_ANIMALS (absent / null = random); old 5-element Hello still valid
+  animal?: number | null, nick?: string | null]; // animal: optional trailing index into NAME_ANIMALS (absent / null = random); nick: optional first name (normalizeNick, bad = null); old 5 / 6-element Hellos still valid
 export type CPose = [typeof C.Pose, seq: number, ...body: PoseBody];
 export type CEmote = [typeof C.Emote, emote: Emote];
 export type CPing = [typeof C.Ping, kind: PingKind, x_dm: number, z_dm: number];
@@ -55,11 +56,12 @@ export type CRotate = [typeof C.Rotate]; // host only: new code
 export type CEnd = [typeof C.End]; // host only
 export type CLeave = [typeof C.Leave];
 export type CBeat = [typeof C.Beat, t: number];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat;
+export type CResetName = [typeof C.ResetName, target: MemberId]; // host only: clears that member's typed name for everyone
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName;
 
 // server -> client
 export const S = {
-  Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30,
+  Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -75,4 +77,6 @@ export type SCode = [typeof S.Code, code: string, codeExpiresAt: number]; // sen
 export type SEnded = [typeof S.Ended, reason: EndReason];
 export type SError = [typeof S.Error, code: ErrorCode];
 export type SBeat = [typeof S.Beat, t: number];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat;
+/** The host reset a member's typed name: everyone falls back to the made-up name. nick is always null. */
+export type SRenamed = [typeof S.Renamed, id: MemberId, nick: null];
+export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed;
