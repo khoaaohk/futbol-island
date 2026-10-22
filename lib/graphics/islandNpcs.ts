@@ -14,6 +14,7 @@ import {npcDress} from '../town/beanLooks';
 import {NPC_DIALOGUES,type NpcDefinition} from '../town/npcDialogues';
 import {pickTagFocus} from './npcTagFocus';
 import {npcSeatPose} from './npcSeatPose';
+import {beanShapeOf} from './beanGearFit';
 import {AGE_PROFILES} from '../town/townsfolkCast';
 import {applyHighFive} from './highFivePose';
 import {HIGH_FIVES,highFiveSkill} from '../town/highFive';
@@ -80,7 +81,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(freestyle)freestyle.ball.userData.npcId=definition.id;
   activity?.root.traverse(object=>{object.userData.npcId=definition.id;});
   const ride=definition.travel&&definition.travel!=='run'?createNpcRide(definition.travel,definition.id):null;if(ride)root.add(ride.root);
-  const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale):undefined;
+  const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale,beanShapeOf(rig.root)):undefined;
   const routine=createNpcRoutine(index,Boolean(activity||freestyle||seat),position);if(seat)routine.socialCooldown=Infinity;if(definition.travel){routine.speed=definition.travel==='run'?2.8:definition.travel==='skateboard'?3.8:4.5;routine.restDuration=.6;routine.socialCooldown=Infinity;}
   if(freestyle)routine.socialCooldown=Infinity;
   const route=[{...position}];if(!activity&&!freestyle&&!seat&&!definition.floor)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
