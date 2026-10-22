@@ -274,9 +274,49 @@ t('island: a friend entering a room fades at their last island spot; a friend fi
   const p = h.state.upd.at(-1).poses.get(1);
   assert.equal(p.zone, Zone.Indoors); assert.ok(Math.abs(p.x - 70.5) < .01 && Math.abs(p.z + 52) < .01, 'indoors at the door spot, never at the room origin');
   assert.equal(hints[0].userData.text, '2 in the Konbini');
-  assert.equal(tb.doorHintText(3, RoomCode.Konbini), '3 in the Konbini'); assert.equal(tb.doorHintText(1, RoomCode.Museum), '1 in the museum'); assert.equal(tb.doorHintText(0, 8), '');
+  assert.equal(tb.doorHintText(3, RoomCode.Konbini), '3 in the Konbini'); assert.equal(tb.doorHintText(1, RoomCode.Museum), '1 in the Museum'); assert.equal(tb.doorHintText(0, 8), '');
   assert.equal(h.conn.sent[0].b[7] & 1, 1, 'island: the first pose after a Welcome warps too (back from a room)');
   rt.dispose();
+});
+
+// ---- 5b. the Museum (rooms Phase 2) ---------------------------------------------------------------------------------------
+t('museum layer: museum friends only, wake on a changed pose, Battery saver never wakes, busy line from the exhibit, free spawn slot', () => {
+  const cache = new Map(), MH = load('lib/multiplayer/rooms/museumHooks.ts', {}, {}, cache), MR = load('lib/multiplayer/rooms/museum.ts', {}, {}, cache);
+  const mpres = load('lib/multiplayer/presence.ts', {}, {}, cache), L = load('lib/museum/museumLayout.ts', {}, {}, cache);
+  const h = harness(RoomCode.Museum);
+  const me = { x: 0, y: 0, z: 6.4, facing: Math.PI, speed: 0, busy: false, hidden: false };
+  const layer = h.mod.createRoomParty({ scene: new T.Scene(), room: RoomCode.Museum, local: () => me, phone: true, reducedMotion: () => false, wake() { h.state.wakes++; },
+    station: (x, z) => MH.museumRoomHooks.station(x, z) });
+  h.conn.live(); h.conn.emit(welcome([ME(), FR(1, rb(6, 0, 6.4)), FR(2, rb(8, 1, 1)), FR(3, [100, 0, 100, 0, 0, Mode.Walk, Zone.Main, 0])]));
+  h.clock.t += 600; assert.equal(layer.update(.05, h.clock.t, new T.OrthographicCamera()), false, 'a still friend: the museum sleeps');
+  deq([...h.state.upd.at(-1).poses.keys()], [1], 'only the friend in the museum is drawn (not the Konbini, not the island)');
+  assert.equal(P.roomOf(h.conn.sent[0].b), RoomCode.Museum, 'my poses carry room 6');
+  // arrival: friend 1 stands on slot 0 (today's arrival point) -> I walk in to the next free slot
+  const spot = { x: 0, z: 0, yaw: 0 }; MR.pickMuseumSpawn(spot, layer.debugFriends().filter((f) => !f.gone), 0);
+  assert.deepEqual([spot.x, spot.z], [MR.MUSEUM_SPAWNS[1].x, MR.MUSEUM_SPAWNS[1].z], 'a friend on the arrival point: the next slot');
+  const w0 = h.state.wakes;
+  h.conn.emit([S.Poses, 1, 1, ...rb(6, -3, 2, Mode.Walk)]); assert.equal(h.state.wakes, w0 + 1, 'changed museum pose wakes');
+  h.conn.emit([S.Poses, 2, 2, ...rb(8, 2, 2, Mode.Walk)]); assert.equal(h.state.wakes, w0 + 1, 'a Konbini friend never wakes the museum');
+  h.clock.t += 100; assert.equal(layer.update(.05, h.clock.t, new T.OrthographicCamera()), true, 'frames while the friend walks');
+  h.clock.t += 600; assert.equal(layer.update(.05, h.clock.t, new T.OrthographicCamera()), false, 'sleeps after the friend settles');
+  // busy at a case: the line is that exhibit, from this client's own layout (never on the wire); at Ada; nowhere near anything
+  const poi = (id) => L.museumPois().find((p) => p.id === id), mid = (p) => ({ x: (p.a.x + p.b.x) / 2, z: (p.a.z + p.b.z) / 2 });
+  const cases = L.museumPois().filter((p) => !['guide', 'wc-balls', 'timeline'].includes(p.id)), c0 = cases[0], at = mid(c0);
+  h.conn.emit([S.Poses, 3, 1, ...rb(6, at.x, at.z, Mode.Busy, 1)]); h.clock.t += 1500; layer.update(.05, h.clock.t, new T.OrthographicCamera());
+  let p = h.state.upd.at(-1).poses.get(1); assert.equal(P.presenceOf(p.mode, p.zone, p.flags), 'busy');
+  assert.equal(mpres.presenceText('busy', p.activity), 'Looking at ' + c0.label, 'busy at a case reads "Looking at <exhibit>"');
+  const pt = { x: p.x + .2, z: p.z }; assert.ok(layer.pushOut(pt, .3), 'the busy field blocks walking, as in the Konbini');
+  const g = mid(poi('guide')); h.conn.emit([S.Poses, 4, 1, ...rb(6, g.x, g.z, Mode.Busy, 1)]); h.clock.t += 1500; layer.update(.05, h.clock.t, new T.OrthographicCamera());
+  p = h.state.upd.at(-1).poses.get(1); assert.equal(mpres.presenceText('busy', p.activity), 'Talking to Ada');
+  assert.equal(MH.museumRoomHooks.station(-17, 17.5), RoomCode.Museum, 'nothing near: "In the museum"'); assert.equal(mpres.presenceText('busy', RoomCode.Museum), 'In the museum');
+  assert.ok(Object.keys(MR.museumStationLines()).every((k) => +k >= 120 && +k < 256), 'local station codes stay off the wire Activities');
+  // Battery saver: no wake, no frames kept
+  h.state.saver = true; const w1 = h.state.wakes;
+  h.conn.emit([S.Poses, 5, 1, ...rb(6, 2, 4, Mode.Walk)]); assert.equal(h.state.wakes, w1, 'Battery saver: no remote wake');
+  h.clock.t += 50; assert.equal(layer.update(.05, h.clock.t, new T.OrthographicCamera()), false, 'Battery saver: no remote frames');
+  layer.dispose();
+  // island door hint for the museum
+  assert.ok(/MUSEUM_DOOR_HINT/.test(read('components/Town.tsx')) && /ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT\]/.test(read('components/Town.tsx')), 'Town passes the museum door hint');
 });
 
 // ---- 6. UI + wiring (source) ----------------------------------------------------------------------------------------------

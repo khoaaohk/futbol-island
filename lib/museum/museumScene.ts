@@ -16,7 +16,10 @@ import {museumSfx} from './museumSound';
 import {createExhibitSculptures,SCULPTURE_TOP} from './museumExhibits';
 import {createBallMaterial} from './wcBalls/ballViewer';
 import {ballDesign} from './wcBalls/designs';
-import {museumRoomHooks,type MuseumHookSource} from '../multiplayer/rooms/museumHooks';
+import {museumRoomHooks,type MuseumHookSource,type MuseumRoomLayer} from '../multiplayer/rooms/museumHooks';
+import {emoteBody,applyEmoteArms} from '../graphics/emotePose';
+import {emoteSeconds} from '../town/emoteReact';
+import type {EmoteBubbles} from '../graphics/emoteBubbles';
 import {museumWalls,MUSEUM_LIGHT,WALL_TONES,SKIRT_H,RIM_H,LIP,AO_WIDTH,faceAlbedo,toneFor,addCutaway,cutUniforms,updateCut,type WallSpec} from './museumWalls';
 
 /**
@@ -39,6 +42,9 @@ type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number
 /** The modern gallery (Oct 10 2026; docs/museum-modern-style.md): gallery white, pale concrete, ink, hairlines. */
 /** Remote-only frame rate on phones (design 3.2; MUSEUM_ROOM.wake.remoteFpsPhone). */
 const MUSEUM_REMOTE_FPS=20;
+/** The party friend layer (lib/multiplayer/roomParty.ts createRoomParty via components/party/useRoomParty.ts; rooms Phase 2). The
+ *  scene drives it through museumRoomHooks.frame(); with no layer (flag off, no party) none of the party code below runs. */
+export interface MuseumFriendLayer{update(dt:number,nowMs:number,camera:T.Camera,hideFriends?:boolean):boolean;readonly meRing:boolean;readonly shown?:number;debugFriends?():unknown[];pushOut(p:{x:number;z:number},r:number):boolean;nearestFriend(x:number,z:number,maxM:number):{x:number;z:number}|null;}
 const P={ground:'#f6f4ef',floor:'#dcd8cf',joint:'#cfcac0',wall:'#f7f5f0',reveal:'#cbc7be',plinth:'#fbfaf7',ink:'#1d1d1b',hair:'#d9d6cf',wood:'#e9e6df'};
 
 export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInput,callbacks:{
@@ -203,6 +209,9 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const blocked=(px:number,pz:number,r=.3)=>museumBlocked(px,pz,obstacles,r);
  let x:number=ROOM.doorX,z=D+.2,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.8,stride=0,steps=0;
  let leaveStarted=0,firstFrameSent=false,remoteOnly=false;const stuck=createStuckWatch(.5);
+ // Party (rooms Phase 2): the friend layer, remote-only frames, the local emote (lazy bubble), friend frames counted for the heat checks.
+ let friends:MuseumFriendLayer|null=null,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null;
+ const pushPt={x:0,z:0},localOut={x:0,y:0,z:0,facing:0,speed:0,eating:false,zoomed:false};
  let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:MuseumPoi|null=null,near:MuseumPoi|null=null,promptVisible=false;
  let cameraX=0,cameraZ=0,halfW=8,halfH=6,viewportW=1,viewportH=1,viewportLeft=0,viewportTop=0;
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'};
@@ -249,6 +258,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  function zoomOut(){if(zoomIndex===null)return;const from=snapshot();setClip(false);zoom={from,to:null,t:0,dur:ZOOM_OUT_SECONDS};arrived=false;spinV=0;callbacks.onZoom?.(zoomView());wake();}
 
  function collide(){for(let pass=0;pass<2;pass++)for(const o of obstacles){const r=.3;if(x>o.minX-r&&x<o.maxX+r&&z>o.minZ-r&&z<o.maxZ+r){const dl=x-(o.minX-r),dr=o.maxX+r-x,db=z-(o.minZ-r),df=o.maxZ+r-z,mn=Math.min(dl,dr,db,df);if(mn===dl)x=o.minX-r;else if(mn===dr)x=o.maxX+r;else if(mn===db)z=o.minZ-r;else z=o.maxZ+r;}}
+  if(friends){pushPt.x=x;pushPt.z=z;if(friends.pushOut(pushPt,.3)){x=pushPt.x;z=pushPt.z;}}// busy friends' force fields are obstacles
   x=T.MathUtils.clamp(x,FLOOR.minX+.6,W-.6);z=T.MathUtils.clamp(z,-D+.6,x<WX1?WZ1-.6:Math.abs(x-ROOM.doorX)<ROOM.doorHalf-.15?D+.5:D-.6);}
  const findPath=(tx:number,tz:number)=>findMuseumPath({x,z},{x:tx,z:tz},(a,b)=>blocked(a,b));
  const segPoint=(p:MuseumPoi,px:number,pz:number)=>{const dx=p.b.x-p.a.x,dz=p.b.z-p.a.z,l=dx*dx+dz*dz||1,t=T.MathUtils.clamp(((px-p.a.x)*dx+(pz-p.a.z)*dz)/l,0,1);return {x:p.a.x+dx*t,z:p.a.z+dz*t};};
@@ -275,7 +285,10 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   if(Math.hypot(ix,iz)>.08)yaw=Math.atan2(ix,iz);
   doorTarget=leaving||Math.hypot(x-ROOM.doorX,z-D)<2.4?1:0;const prevDoor=doorOpen;doorOpen=reduced?doorTarget:T.MathUtils.damp(doorOpen,doorTarget,7,dt);if(Math.abs(doorOpen-doorTarget)<.003)doorOpen=doorTarget;if(doorOpen!==prevDoor)placeDoors();
   motion.facing=yaw;motion.intentHeading=speed>.08?Math.atan2(vx,vz):undefined;motion.stopDistance=target?Math.hypot(target.x-x,target.z-z):undefined;motion.dribbling=false;
+  if(emote){emote.age+=dt;if(emote.age>=emote.dur){emote=null;motion.jump=undefined;motion.called=0;player.setExpression('neutral');}else if(!reduced){const b=emoteBody(emote.kind,emote.age,emote.dur);motion.called=b.called;motion.jump=b.jump;}}
   player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);
+  if(emote&&!reduced)applyEmoteArms(player.root,emote.kind,emote.age,emote.dur);
+  if(bubbles&&(emote||bubbles.active(0))){bubbles.follow(0,x,2.55,z);bubbles.update(dt,reduced);}
   // The guide faces you when you're close and waves hello on arrival.
   greet=Math.max(0,greet-dt);const gd=Math.hypot(x-GUIDE.x,z-GUIDE.z),wantFace=gd<5?Math.atan2(x-GUIDE.x,z-GUIDE.z):GUIDE.yaw;
   const gf=guideMotion.facing??GUIDE.yaw,turn=Math.atan2(Math.sin(wantFace-gf),Math.cos(wantFace-gf));guideMotion.facing=Math.abs(turn)<.002?wantFace:gf+turn*(1-Math.exp(-dt*6));
@@ -294,20 +307,23 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=!hidePlayer;
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.4,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
   if(!leaving)stepTimeline();
-  // Friends in the room (no-op false until a room party layer attaches: lib/multiplayer/rooms/museumHooks.ts).
-  const remote=museumRoomHooks.frame(dt,now,camera);
+  // Friends in the room (no-op false until a room party layer attaches: lib/multiplayer/rooms/museumHooks.ts), drawn with the room's
+  // camera, hidden with you while a case is zoomed. One ring rule: while the party draws your colour ring, the foot disc hides.
+  const remote=museumRoomHooks.frame(dt,now,camera);if(friends?.meRing)playerShadow.visible=false;
   // The wall cutaway follows the player (view space; this loop only runs while something moves).
   updateCut(cut,player.root.visible,x,z,camera);
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
-  const busy=!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
-  if(busy)settle=.5;else settle-=dt;remoteOnly=remote&&!busy&&settle<=0;
+  const busy=!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||!!emote||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
+  if(busy)settle=.5;else settle-=dt;remoteOnly=remote&&!busy&&settle<=0;if(remoteOnly)remoteFrames++;
   if(settle>0||leaving||remote)frame=requestAnimationFrame(tick);else{last=0;slot=0;remoteOnly=false;}
  }
  /** The walking camera follows you across the L: x within the whole floor, z further toward the front inside the wing. */
  function camX(){const lo=FLOOR.minX-.4+halfW,hi=FLOOR.maxX+.4-halfW;return lo>=hi?(FLOOR.minX+FLOOR.maxX)/2:T.MathUtils.clamp(x,lo,hi);}
  function camZ(){return T.MathUtils.clamp(z,-2.4,x<WX1+1?WZ1-7:halfW<halfH?-.6:2.2);}
  function placeCamera(){camera.position.set(cameraX+Math.sin(camYaw)*12.5,10.8,cameraZ+Math.cos(camYaw)*12.5);curLook.set(cameraX,.6,cameraZ);camera.lookAt(curLook);camera.updateMatrixWorld();}
- function wake(){if(!frame&&!covered&&!disposed&&!document.hidden){settle=.5;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ function wake(){remoteOnly=false;if(!frame&&!covered&&!disposed&&!document.hidden){settle=.5;last=0;slot=0;frame=requestAnimationFrame(tick);}}
+ /** A friend here moved: run frames without the local 0.5 s settle (the layer says how long), at the remote rate on phones. */
+ function wakeRemote(){if(!frame&&!covered&&!disposed&&!document.hidden){remoteOnly=true;settle=0;last=0;slot=0;frame=requestAnimationFrame(tick);}}
  function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setPixelRatio(pixelRatio());renderer.setSize(w,h,false);viewportW=w;viewportH=h;const r=canvas.getBoundingClientRect();viewportLeft=r.left;viewportTop=r.top;
   const a=w/h;halfH=a<1?7.4:a<1.25?6.6:6.4;halfW=halfH*a;if(halfW>11){halfW=11;halfH=halfW/a;}
   if(zoomIndex===null){camera.left=-halfW;camera.right=halfW;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix();}
@@ -325,9 +341,11 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  placeDoors();const arrival={x:ROOM.doorX,z:D-1.6},slotPoint={x:0,z:0};target=arrival;
  // The room party layer's view of this scene (museumHooks.ts): pose, wake, sleeping, and re-aiming the walk-in at a free slot.
  const hookSource:MuseumHookSource={scene,camera,player:player.root,
-  readPose(o){o.x=x;o.y=0;o.z=z;o.yaw=yaw;o.moving=Math.hypot(vx,vz)>.08;},wake,sleeping:()=>frame===0,
+  readPose(o){o.x=x;o.y=0;o.z=z;o.yaw=yaw;o.moving=Math.hypot(vx,vz)>.08;},wake:wakeRemote,sleeping:()=>frame===0,
   arrive(px,pz){if(target===arrival&&!leaving){slotPoint.x=px;slotPoint.z=pz;route=[slotPoint];wake();}}};
  museumRoomHooks.register(hookSource);
+ // What museumRoomHooks.frame() drives: the friend layer, hidden while a case is zoomed (no camera change for friends' emotes).
+ const hookLayer:MuseumRoomLayer={update:(dt,now,cam)=>friends?friends.update(dt,now,cam as T.Camera,zoomIndex!==null):false};
  const stopIndex=(id:string)=>stops.findIndex(s=>s.id===id);
 
  return {
@@ -354,12 +372,33 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   setRain(on:boolean){rain=on;wake();},
   setCovered(value:boolean){covered=value;if(value){keys.clear();stick.x=stick.z=0;spinV=0;cancelAnimationFrame(frame);frame=0;}else wake();},
   clearInput,
+  // ---- party hooks (components/party/useRoomParty.ts RoomPartyHost; lib/multiplayer/rooms/museumHooks.ts) ----
+  threeScene:scene,camera,phone:mobile,reduced,
+  /** Attach / detach the friend layer (null on Leave or unmount): through museumRoomHooks, so the tick's frame() drives it. */
+  setFriendLayer(layer:MuseumFriendLayer|null){if(layer){friends=layer;museumRoomHooks.attach(hookLayer);}else{museumRoomHooks.detach(hookLayer);friends=null;remoteOnly=false;}},
+  wakeRemote,
+  /** Konbini-style station kind (unused here: stationCode wins). */
+  stationAt:():null=>null,
+  /** A busy friend's line at a room-local spot: "Looking at <exhibit>", "Talking to Ada", ... (museumHooks.station). */
+  stationCode:(px:number,pz:number)=>museumRoomHooks.station(px,pz),
+  /** The local player, room-local (one reused object): what the party sends. */
+  localPose(){localOut.x=x;localOut.z=z;localOut.facing=yaw;localOut.speed=Math.hypot(vx,vz);localOut.zoomed=zoomIndex!==null;return localOut;},
+  /** Plays a wire emote on your own rig (no camera change in rooms) with its bubble; `face` turns you toward a friend (high five). */
+  async emote(kind:number,face?:{x:number;z:number}|null){if(disposed||leaving)return;
+   if(!bubbles){const m=await import('../graphics/emoteBubbles');if(disposed)return;bubbles=bubbles??m.createEmoteBubbles(scene);}
+   if(face)yaw=Math.atan2(face.x-x,face.z-z);const dur=emoteSeconds(kind);emote={kind,age:0,dur};player.setExpression('happy');bubbles.show(0,kind,dur);wake();},
+  /** Heat check hook (scripts/check-mp-rooms-museum.cjs): ms per friend-layer update and per render, with the friends drawn vs not. */
+  measureParty(n=60){if(!friends)return null;let t=performance.now();for(let i=0;i<n;i++)friends.update(1/60,performance.now(),camera,false);const update=(performance.now()-t)/n;
+   t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const withF=(performance.now()-t)/n,calls=renderer.info.render.calls;friends.update(0,performance.now(),camera,true);
+   t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const without=(performance.now()-t)/n,callsWithout=renderer.info.render.calls;friends.update(0,performance.now(),camera,false);
+   return {update,renderWith:withF,renderWithout:without,calls,callsWithout};},
   /** Test/measurement hooks. */
   measureRender(n=60){const t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);return (performance.now()-t)/n;},
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
   get state(){return {exhibits:{sculptures:[...exhibits.built]},x,z,yaw,zoom:zoomView(),zooming:!!zoom,near:near?.id??null,leaving,doorOpen,sleeping:frame===0,draws,frames,steps,spin:{turns:spinTurns,v:spinV,angle:telstar?.rotation.y??0},rain,
-   render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),stops:stops.map(s=>s.id)};},
-  dispose(){disposed=true;museumRoomHooks.unregister(hookSource);cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
+   render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),stops:stops.map(s=>s.id),
+   remoteOnly,remoteFrames,party:friends?{shown:friends.shown??0,meRing:friends.meRing,friends:friends.debugFriends?.()??[]}:null,emote:emote?.kind??-1};},
+  dispose(){disposed=true;museumRoomHooks.detach(hookLayer);museumRoomHooks.unregister(hookSource);cancelAnimationFrame(frame);frame=0;friends=null;bubbles?.dispose();bubbles=null;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    pack?.dispose();player.dispose();guide.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});
    geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());doorGeo.dispose();atlas.dispose();shadeTex.dispose();renderer.dispose();renderer.forceContextLoss();},
  };

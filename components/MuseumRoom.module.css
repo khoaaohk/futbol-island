@@ -13,6 +13,8 @@
 .section{position:static;margin-left:auto;min-width:0;flex:0 1 auto;max-width:min(100%,420px);padding:8px 14px;border-radius:999px;background:#fbfaf7eb;border:1px solid var(--m-hair);color:var(--m-ink);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
 /* Back on the left, Done on the right, everywhere (Oct 14 2026, user). The collection counts that sat left of Done are gone (Oct 14 2026). */
 .doneRight{order:2;margin-left:auto}
+/* The party chip (rooms Phase 2, Leave only): right, beside Done; only while a party is live in the museum. */
+.partySlot{order:1;margin-left:auto;display:flex}.partySlot+.doneRight{margin-left:0}
 .prompt{z-index:4;visibility:hidden}
 /* The hall's look-at prompt: an ink pill (overrides the island's gold store-enter-prompt inside the museum only). */
 .root .prompt{border:1.5px solid var(--m-ink);background:var(--m-ink);background-image:none;color:#fff;box-shadow:0 10px 24px -10px #1d1d1b66;font-weight:600}

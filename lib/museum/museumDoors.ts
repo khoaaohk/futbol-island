@@ -11,6 +11,9 @@ import type {TravelMode} from '../town/travelModes';
  * front face z + d/2 + 0.2 = 185.7. The front faces +z (south), so "facing out" is yaw 0.
  */
 export const MUSEUM_DOOR={x:168-30*.26,front:181+9/2+.2,label:'History Museum'} as const;
+/** Party door hint on the island (docs/multiplayer-rooms-design.md Phase 2, owner decision 1): "2 in the Museum" floats above the
+ *  entrance canopy (museumExterior.ts: canopy 4 m high, 0.6 m deep) while party friends are inside. room 6 = RoomCode.Museum. */
+export const MUSEUM_DOOR_HINT={x:MUSEUM_DOOR.x,y:4.6,z:MUSEUM_DOOR.front+.4,room:6,label:MUSEUM_DOOR.label} as const;
 /** The building footprint (world.ts) for the shared highlight and the from-the-air Enter (Town registers it already). */
 export const MUSEUM_BUILDING={x:168,z:181,w:30,d:9,h:5} as const;
 export const MUSEUM_EXIT_OFFSET=2.4;

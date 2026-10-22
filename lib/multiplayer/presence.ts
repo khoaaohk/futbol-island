@@ -108,6 +108,11 @@ export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody):
 // ---- rooms (docs/multiplayer-rooms-design.md 2.2, 2.4, 3.4) ----
 /** Busy kinds inside a room: local Activity-like codes (101+), shown over a busy friend's field. Never sent. */
 export const STATION = { Counter: 101, Shelves: 102, Snack: 103 } as const;
+/** A room page adds its own station lines once (local codes >= 110, never on the wire), e.g. the Museum's "Looking at <exhibit>"
+ *  (lib/multiplayer/rooms/museum.ts museumStationLines). Codes below 110 are refused (the wire Activities and the Konbini's). */
+export function defineStationLines(lines: Readonly<Record<number, readonly [text: string, icon: string]>>): void {
+  for (const k of Object.keys(lines)) { const c = +k; if (c >= 110 && c < 256) { TEXT[c] = lines[c][0]; ICON[c] = lines[c][1]; } }
+}
 
 /** The Activity a room code reads as in the party list ("In the Konbini"): both Konbinis are the Konbini; unknown rooms: None. */
 export function roomActivity(room: number): number {
