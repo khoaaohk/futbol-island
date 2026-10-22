@@ -12,7 +12,7 @@ export const EMOTE_CAM = {
   /** Closest / farthest the camera sits from the framed point (m). Farther than `maxDist` is no real zoom (the follow camera sits ~43 m away). */
   minDist: 3.2, maxDist: 18,
   /** Back the fitted distance off a little (user, Oct 22 2026: "for the emote zoom out just a bit more"). */
-  backoff: 1.22,
+  backoff: 1.6,
   /** Tried in order when something stands between the camera and the characters: a gentler zoom (distance x factor). */
   shrink: [1, 1.35, 1.8] as readonly number[],
   /** Rapid taps do not pump the camera: no new zoom for this long after one ends. */
