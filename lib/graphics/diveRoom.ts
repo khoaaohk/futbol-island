@@ -322,12 +322,14 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;').replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
 uniform float uDiveTime,uCaustic,uReef;uniform vec3 uCausticC;varying vec3 vDvW;
-float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);return pow(1.-abs(a*b),7.);}`)
+float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);float k=1.-abs(a*b);k*=k;return k*k*k;}`)
    .replace('#include <fog_fragment>',`{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);
- if(uCaustic>0.){float up=clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.);float c=dvNet(vDvW.xz*1.25,uDiveTime*.9)*.65+dvNet(vDvW.xz*.62+3.1,uDiveTime*.6)*.5;
+ // Explore life (heat): ONE warped octave (was two), only on faces that look up, k^6 by multiplies (no pow).
+ float up=uCaustic>0.?clamp(dot(normal,normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz)),0.,1.):0.;
+ if(up>.05){float c=dvNet(vDvW.xz*1.05,uDiveTime*.8)*1.05;
   gl_FragColor.rgb+=uCausticC*c*uCaustic*up*exp(-max(0.,${DIVE_SURFACE_Y.toFixed(2)}-vDvW.y)*.22);}}
 #include <fog_fragment>`);};
- reefMat.customProgramCacheKey=()=>'dive-reef-v2';
+ reefMat.customProgramCacheKey=()=>'dive-reef-v3';
  const reef=new T.Mesh(S.geometry(),reefMat);reef.name='dive-reef';reef.matrixAutoUpdate=false;scene.add(reef);
 
  // ---- The swaying life: sea fans, anemones, kelp, seagrass. ONE draw, bent in the vertex shader.
@@ -383,10 +385,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   const n=list.length,A=new Float32Array(n*4),B=new Float32Array(n*4),Cc=new Float32Array(n*4),D=new Float32Array(n*4);
   list.forEach((f,i)=>{A.set([f.cx,f.cy,f.cz,f.r],i*4);B.set([f.omega,f.phase,f.buddy?3:f.dir?2:f.eight?1:0,f.stretch],i*4);Cc.set([...(f.dir??[0,0,0]),f.scale],i*4);D.set([f.yaw,f.bob,f.wag,f.seed],i*4);});
   g.setAttribute('aPA',new T.InstancedBufferAttribute(A,4));g.setAttribute('aPB',new T.InstancedBufferAttribute(B,4));g.setAttribute('aPC',new T.InstancedBufferAttribute(Cc,4));g.setAttribute('aPD',new T.InstancedBufferAttribute(D,4));
-  g.instanceCount=n;g.boundingSphere=new T.Sphere(new T.Vector3(0,0,0),60);
+  // Explore life (heat): each school's TRUE bounds (its loops' centres and radii, + bob, parting and the whale's lift), so a school
+  // behind the camera is frustum-culled (no draw, no vertex work). The buddy / burst and a forming school are never culled.
+  g.instanceCount=n;{let mx=0,my=0,mz=0;for(const f of list){mx+=f.cx;my+=f.cy;mz+=f.cz;}mx/=n;my/=n;mz/=n;let R=0;
+   for(const f of list)R=Math.max(R,Math.hypot(f.cx-mx,f.cy-my,f.cz-mz)+f.r*Math.max(1,f.stretch)+f.bob+f.scale);g.boundingSphere=new T.Sphere(new T.Vector3(mx,my,mz),R+2.5);}
   const an=model.anim,mat=new T.MeshLambertMaterial({vertexColors:true,...(glow?{emissive:new T.Color(glow),transparent:true,opacity:.82,depthWrite:false}:{})});mat.name='dive-fish-'+name;
   const wag={uWagAxis:{value:new T.Vector3(...an.axis)},uWagDir:{value:new T.Vector3(...an.dir)},uWagK:{value:new T.Vector3(...an.k)},uWag:{value:new T.Vector3(an.start,Math.max(.01,an.span),an.amp)}};
-  const form={value:new T.Vector4(0,0,0,0)};forms.push({n,form});
+  const form={value:new T.Vector4(0,0,0,0)},entry={n,form,mesh:null as T.Mesh|null};forms.push(entry);
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,wag,{uDiveTime:uTime,uBurst,uDiver,uForm:form,uBuddy,uBuddyF,uWhaleK,uCam});
    // See-through when close (proximityFade.ts): a per-vertex fade from the shared uDiver / uCam, a screen-door dither (off when calm / lite).
    if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
@@ -396,10 +401,10 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
      float dvW=clamp((dot(transformed,uWagAxis)-uWag.x)/uWag.y,0.,1.);transformed+=uWagDir*uWag.z*dvW*dvW*sin(dvT*aPD.z+aPD.w*7.-dot(transformed,uWagK));
      transformed*=aPC.w*dvHide;transformed=dvP-dvF*transformed.x+dvU*transformed.y-dvS*transformed.z;`+(seeThrough?'vDvFade=dvProxFade(transformed,uDiver.xyz,uCam);':''));};
   mat.customProgramCacheKey=()=>'dive-fish-v4'+(seeThrough?'-fade':'');
-  const mesh=new T.Mesh(g,mat);mesh.name='dive-fish-'+name;mesh.frustumCulled=false;mesh.matrixAutoUpdate=false;if(glow)mesh.renderOrder=1;scene.add(mesh);fishMeshes.push(mesh);return mesh;};
+  const mesh=new T.Mesh(g,mat);mesh.name='dive-fish-'+name;mesh.frustumCulled=!list.some(f=>f.buddy||f.dir);entry.mesh=mesh;mesh.matrixAutoUpdate=false;if(glow)mesh.renderOrder=1;scene.add(mesh);fishMeshes.push(mesh);return mesh;};
  const uWhaleK={value:0},uRayK={value:1},uWhale={value:new T.Vector4(0,0,0,0)};
  const uBurst={value:new T.Vector4(0,0,0,-1e4)},uDiver={value:new T.Vector4(0,-50,0,0)},uBuddy={value:new T.Vector4(0,DIVE_SURFACE_Y-1.5,10,1)},uBuddyF={value:new T.Vector3(0,0,-1)};
- const forms:{n:number;form:{value:T.Vector4}}[]=[];
+ const forms:{n:number;form:{value:T.Vector4};mesh:T.Mesh|null}[]=[];
  const shoal=(n:number,c:{x:number;y:number;z:number},R:number,omega:number,eight:boolean,size:[number,number],spread:number,extra:Partial<Swimmer>={})=>
   Array.from({length:Math.max(1,Math.round(n*lite))},(_,i)=>({cx:c.x,cy:c.y+(r()-.5)*spread*1.2,cz:c.z,r:R+(r()-.5)*spread*2,omega,phase:(extra.phase??0)-i*.035*Math.sign(omega||1)+(r()-.5)*spread/Math.max(R,1),eight,stretch:extra.stretch??1,yaw:extra.yaw??0,bob:extra.bob??.3,wag:extra.wag??9,seed:r()*6.28,scale:size[0]+r()*(size[1]-size[0])} as Swimmer));
  // Heights (Oct 20 2026 shallow reef): every path stays between the sand and the surface. Over the crest that is only 1.5-3 m of
@@ -496,7 +501,10 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
      else{float a=uDiveTime-uRing.w;life=clamp(a/.9,0.,1.);p=uRing.xyz+aB.xyz*(.12+.6*(1.-exp(-4.*a)));sz=.09;vS=(1.-life)*step(0.,a);}// the high five's sparkle ring
      vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uScale*sz*(.7+.6*fract(aB.w))/max(.5,-mv.z);
      vA=aKind>3.5?vS:aKind>2.5?(1.-life)*step(0.,uDiveTime-uPuff.w)*.55:aKind>1.5?.32*(1.-smoothstep(uFogFar*.25,uFogFar*.45,-mv.z)):(1.-smoothstep(.75,1.,life))*smoothstep(0.,.06,life)*(1.-smoothstep(uFogFar*.5,uFogFar,-mv.z));
-     if(aKind>.5&&aKind<1.5)vA*=.85;}`,
+     if(aKind>.5&&aKind<1.5)vA*=.85;
+     // Explore life (heat): a point with nothing to show (the puff and ring between uses, glitter out of sight, plankton in the fog)
+     // is moved out of the clip box: no quad, no fragments (its discard would also cost the early depth test on a phone GPU).
+     if(vA<.004){gl_Position=vec4(2.,2.,2.,1.);gl_PointSize=0.;}}`,
    fragmentShader:/* glsl */`varying float vA,vK;void main(){vec2 d=gl_PointCoord-.5;float r=length(d);if(r>.5)discard;
     if(vK>3.5){float s=1.-smoothstep(0.,.5,r),x=max(0.,1.-abs(d.x)*7.)*max(0.,1.-abs(d.y)*1.6)+max(0.,1.-abs(d.y)*7.)*max(0.,1.-abs(d.x)*1.6);gl_FragColor=vec4(1.,.93,.64,min(1.,s*s*.9+x*.8)*vA);return;}
     if(vK>1.5){float s=1.-smoothstep(0.,.5,r);gl_FragColor=vec4(vK>2.5?vec3(.86,.82,.68):vec3(.9,1.,.95),s*vA);return;}
@@ -595,7 +603,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   puff(x:number,y:number,z:number,t:number){if(t-uPuff.value.w>.9)uPuff.value.set(x,y,z,t);},
   /** The reef's colour (diveJourney.ts reefColour) and, at a restored reef, the big school's football (0..1) in front of the diver. */
   setReef(v:number){uReef.value=v;},
-  form(k:number,x:number,y:number,z:number){if(formSchool)formSchool.form.value.set(x,y,z,k);},
+  form(k:number,x:number,y:number,z:number){if(formSchool){formSchool.form.value.set(x,y,z,k);if(formSchool.mesh)formSchool.mesh.frustumCulled=k<=0;}},
   /** The buddy fish (Explore v2): where it is, which way it faces, shown or not. */
   setBuddy(x:number,y:number,z:number,fx:number,fy:number,fz:number,show:boolean){uBuddy.value.set(x,y,z,show?1:0);uBuddyF.value.set(fx,fy,fz).normalize();},
   /** Explore delight: the zone's friend (null when the zone has none): where it is, its heading (forward (sin, cos)), a nod / tip
