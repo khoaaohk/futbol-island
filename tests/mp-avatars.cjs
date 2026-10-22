@@ -95,7 +95,7 @@ function harness(){
  const m=new T.Matrix4(),p=new T.Vector3(),q=new T.Quaternion(),s=new T.Vector3();
  ring.getMatrixAt(0,m);m.decompose(p,q,s);assert.ok(Math.abs(p.x-(-1))<1e-6&&p.y>0&&p.y<.2,'flat at the avatar feet');const near=s.x;
  h.camera.position.set(0,5,80);h.camera.lookAt(0,0,0);h.avatars.update(.016,h.poses,h.camera,false);
- ring.getMatrixAt(0,m);m.decompose(p,q,s);assert.ok(s.x>near*2.5&&s.x<=1*4+1e-6,'bigger from far, capped at 4x');
+ ring.getMatrixAt(0,m);m.decompose(p,q,s);assert.ok(s.x>near*1.2&&s.x<=1*4+1e-6,'a little bigger from far (starts beyond the follow camera distance), capped at 4x');assert.ok(near<1.01,'at the normal camera distance the ring is exactly the island foot ring size');
  // hidden when culled (behind the camera), too far, or Battery saver
  h.camera.position.set(0,5,10);h.camera.lookAt(0,0,0);
  h.poses.set(1,{x:500,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1});h.avatars.update(.016,h.poses,h.camera,false);assert.equal(ring.count,1,'beyond 160 m: no ring');
