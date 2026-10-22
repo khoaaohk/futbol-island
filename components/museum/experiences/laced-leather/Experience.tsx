@@ -15,6 +15,10 @@ import {CHECK,EXTRA_SOURCES,HEAD_PAIN,HEAD_STUDY,LEATHER,LEATHER_GAIN,LEATHER_GA
 import {BEATS,BEST_KEY,PRACTICE_NOTE} from './content';
 import {DMAX,KICKS,MAX_POINTS,carry,carryFactor,dryCarry,gramsOf,minuteOf,powerAt,scoreKick,targets,verdict,type MatchBall} from './match';
 import {MODERN_G,SOAK_SECONDS,TAP_SOAK,flightAt,gramsAt,leatherTone,minutesAt} from './model';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import fs from '../anatomy/FigureStage.module.css';
+import {makeLeatherFigure,type BallMode} from './figure';
+import {LOOK_INTRO,LOOK_SAY} from './facts';
 import s from './Experience.module.css';
 
 /**
@@ -34,7 +38,7 @@ import s from './Experience.module.css';
  * ball flies, pauses off screen or in a hidden tab, and is cancelled on unmount. Reduced motion: RAIN taps add 15 minutes, tap
  * the pitch to place the marker then tap Kick, the ball lands at once.
  */
-type Phase='intro'|'machine'|'match'|'score';
+type Phase='intro'|'machine'|'match'|'score'|'look';
 type Result={pts:number;landed:number;target:number;say:string};
 const readBest=():Partial<Record<MatchBall,number>>=>{try{return JSON.parse(localStorage.getItem(BEST_KEY)||'{}')||{};}catch{return {};}};
 const saveBest=(b:Partial<Record<MatchBall,number>>)=>{try{localStorage.setItem(BEST_KEY,JSON.stringify(b));}catch{/* private mode */}};
@@ -68,6 +72,13 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
  useEffect(()=>{const kk=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();onClose();}};window.addEventListener('keydown',kk);return()=>window.removeEventListener('keydown',kk);},[onClose]);
 
+ // Turn the ball (museum-figures-2, figure kit v2): made once; `lookFrom` is the phase to go back to. Labels light for 1.8 s.
+ const fig=useMemo(()=>makeLeatherFigure(),[]),figHandle=useRef<FigureHandle|null>(null),lookFrom=useRef<Phase>('intro');
+ const [lit,setLit]=useState<string[]>([]),[lookNote,setLookNote]=useState(LOOK_INTRO),[ballMode,setBallMode]=useState<BallMode>('old');
+ const openLook=()=>{lookFrom.current=phaseRef.current;setPhase('look');museumSfx.card();};
+ const sayOf=(id:string,mode:BallMode)=>LOOK_SAY[mode==='new'&&(id==='panel'||id==='bladder')?(id==='panel'?'newPanel':'newBladder'):id]??LOOK_INTRO;
+ const touchPart=(id:string)=>{setLit([id]);setLookNote(sayOf(id,fig.mode));museumSfx.tick();later(()=>setLit(l=>l[0]===id?[]:l),1800);};
+ const swapBall=()=>{const m:BallMode=fig.mode==='old'?'new':'old';fig.setMode(m);setBallMode(m);setLit([]);setLookNote(m==='new'?LOOK_SAY.valve:LOOK_SAY.opening);figHandle.current?.invalidate();museumSfx.card();};
  const W=box.w||1,H=box.h||1,orient=W>=H*1.05?'wide':'tall',FL=useMemo(()=>frameFor(orient),[orient]),FM=useMemo(()=>frameFor('wide'),[]);
  const pad=Math.round(Math.max(18,Math.min(W,H)*.05));
  const machineView=phase==='intro'||phase==='machine';
@@ -155,7 +166,10 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <span data-corner="fig">Fig. 1966</span><span data-corner="title">{machineView?'The weather machine':'The rain match'}</span>
       <span data-corner="hint">{hint}</span><span data-corner="readout" ref={readRef}>{LEATHER.dry} g · 0 min</span>
      </div>
-     {ready&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}
+     {phase==='look'&&<FigureStage spec={fig.spec} active={lit} reduced={reduced} onLabel={touchPart} handle={figHandle} top={28}
+      label={ballMode==='old'?'An old laced leather ball on a display cup: leather panels, a lace and the lace-up opening':'A modern size 5 ball on a display cup: stitched panels and a small valve'}
+      extra={<button type="button" className={fs.pill} aria-pressed={ballMode==='new'} data-fig-modern onClick={swapBall}>{ballMode==='old'?'Old vs New: show new':'Old vs New: show old'}</button>}/>}
+     {ready&&phase!=='look'&&<svg ref={svgRef} className={`iso-svg ${s.svg}`} viewBox={`0 0 ${W} ${H}`} width={W} height={H} role="img" aria-label={label}
       onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={onUp} onPointerLeave={e=>{if(e.buttons)onUp();}}>
       {machineView?<g>
         <RigStatic F={F} P={P} H={hoodH}/>
@@ -188,12 +202,15 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
       <div className={g.row}>
        <button type="button" className={g.btn} data-museum-own-cue data-play-modern onClick={()=>startMatch(ballKind==='leather'?'modern':'leather')}>{ballKind==='leather'?'Play with the modern ball':'Play with leather'}</button>
        <button type="button" className={g.ghost} data-play-again onClick={()=>startMatch(ballKind)}>Play again</button>
+       <button type="button" className={g.ghost} data-look onClick={openLook}>Look inside both balls</button>
       </div>
      </div>}
     </div>
 
     <div className={s.dock} data-dock>
-     {phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startMachine}>Start the machine</button><p className={s.say}>A rainy Saturday, long ago. Your team’s ball is brown leather.</p></div>
+     {phase==='look'?<div className={s.introDock}><p className={s.say} aria-live="polite" data-look-note>{lookNote}</p>
+       <button type="button" className={g.btn} data-look-back onClick={()=>{setPhase(lookFrom.current);setLookNote(LOOK_INTRO);}}>{lookFrom.current==='intro'?'Back to the start':'Back to full time'}</button></div>
+     :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock data-museum-own-cue onClick={startMachine}>Start the machine</button><button type="button" className={g.ghost} data-look onClick={openLook}>Turn the old ball</button><p className={s.say}>A rainy Saturday, long ago. Your team’s ball is brown leather.</p></div>
      :phase==='machine'?<>
        {!full?<button type="button" className={s.hold} data-rain onPointerDown={e=>{e.preventDefault();capture(e);startRain();}} onPointerUp={stopRain} onPointerCancel={stopRain}
          onKeyDown={e=>{if((e.key===' '||e.key==='Enter')&&!e.repeat){e.preventDefault();startRain();}}} onKeyUp={e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stopRain();}}}>{reduced?'Rain +15 min':'Hold: Rain'}</button>

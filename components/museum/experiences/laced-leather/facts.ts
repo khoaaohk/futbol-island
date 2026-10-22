@@ -34,6 +34,24 @@ export const YEATS={quote:'The ball had a lace in it and if you headed the lace,
 export const HEAD_STUDY='In a 2023 lab test, the soaked copy of the 1966 ball pushed a test head harder in slow headers. In fast headers it squashed more, and the difference went away. Dry, the old and new balls were about the same.';
 export const HEAD_PAIN='Heading a leather ball was often painful, and rain made it worse: the wet leather got heavy.';
 
+/**
+ * "Turn the ball" (museum-figures-2): what each part of the figure says when you tap its label. Plain, verified, no numbers:
+ * leather ball with a bladder inside, blown up through a tube that was tucked in before the opening was laced shut; unlacing to
+ * pump it again; the lace hurt to head (YEATS); leather drank water (the lab test above); a valve later did away with the laced
+ * slit; today's balls: synthetic or waterproofed panels, stitched or glued, a sealed bladder and a valve (DPMA history,
+ * Wikipedia "Football (ball)", Ask a Soccer Referee "The five-pound ball").
+ */
+export const LOOK_SAY:Record<string,string>={
+ panel:'Thick leather panels, stitched together. Leather soaked up water, so in the rain the ball got heavier.',
+ lace:'A leather lace held the opening shut. Heading the lace could really hurt.',
+ opening:'The lace-up opening: the bladder went in here, was blown up through its tube, the tube was tucked in, and the slit was laced shut.',
+ bladder:'Inside: a bladder that holds the air. The very first ones were animal bladders; later ones were rubber. The leather is only the cover.',
+ tube:'The inflation tube. To pump the ball up again, you had to unlace it, pull the tube out, pump, tuck it back and lace it up.',
+ newPanel:'A modern ball: synthetic panels, stitched or glued, that hardly soak up any water. It weighs about the same at full time.',
+ valve:'A small valve. You pump the ball up with a needle and nothing has to be unlaced. Valves took over from the lace-up opening.',
+ newBladder:'The bladder is sealed inside for good. The valve is the only way in.',
+};
+export const LOOK_INTRO='Turn the old ball all the way round. Then switch to a modern ball and look inside both.';
 /** Sources added by this experience (the exhibit's own IFAB + Wikipedia sources are listed too). */
 export const EXTRA_SOURCES:{title:string;url:string}[]=[
  {title:'Scientific Reports (2023) · Head trauma analysis of laboratory reconstructed headers using 1966 Slazenger Challenge and 2018 Telstar 18 soccer balls',url:'https://www.nature.com/articles/s41598-023-45489-2'},
@@ -44,6 +62,8 @@ export const EXTRA_SOURCES:{title:string;url:string}[]=[
  {title:'Reading Referees’ Society · A different ball game since Jeff Astle played (Dick Sawdon Smith)',url:'https://www.readingrefs.org.uk/ftm/ftmpages/FTM124.html'},
  {title:'Wikipedia · Slazenger Challenge 4-Star (the 1966 World Cup ball: 25 panels, no laces)',url:'https://en.wikipedia.org/wiki/Slazenger_Challenge_4-Star'},
  {title:'DPMA (German Patent and Trade Mark Office) · History of the football',url:'https://galerie.dpma.de/fussballundtechnik/en/technik/historiedesfussballs/neuzeit.html'},
+ {title:'Wikipedia · Football (ball)',url:'https://en.wikipedia.org/wiki/Football_(ball)'},
+ {title:'Ask a Soccer Referee · The five-pound ball',url:'https://www.askasoccerreferee.com/the-five-pound-ball/'},
 ];
 
 /** The 1966 World Cup ball itself (Slazenger Challenge 4-Star) had no laces: 25 leather panels and a valve. It is the ball the lab

@@ -43,7 +43,7 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 // 3. Style: no pixel kit; the anatomy kit in the Paper tint; one blue accent (the water and the aim).
 {for(const f of files){const src=read(dir+f);assert.doesNotMatch(src,/pixeliso/,f+' imports no pixeliso / pixeliso-laws');
   assert.doesNotMatch(src,/#000048|PK Press Start|PK Pixelify|Mega Drive|crispEdges/i,f+': no pixel palette, fonts or navy ground');}
- assert.deepEqual(files,['Experience.module.css','Experience.tsx','content.ts','facts.ts','match.ts','model.ts','scene.tsx']);
+ assert.deepEqual(files,['Experience.module.css','Experience.tsx','content.ts','facts.ts','figure.ts','match.ts','model.ts','scene.tsx']);
  assert.match(bench,/from '\.\/iso-kit'/);assert.match(exp,/from '\.\.\/anatomy\/bench'/);assert.match(exp,/dangerouslySetInnerHTML=\{\{__html:ISO_CSS\}\}/);
  assert.match(exp,/className=\{`\$\{g\.room\} iso \$\{s\.root\}`\} data-theme="light"/);
  assert.match(css,/\.root\.root\[data-theme\]\{--anatomy-page:#e0e0db;--anatomy-card:#e0e0db;--anatomy-paper:#f7f7f3/,'Paper ground and solids');
@@ -109,3 +109,35 @@ const code=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  assert.match(exp,/if\(reduced\)\{M\.ball=\{u:M\.to,z:0\};land\(\);return;\}/,'the ball lands at once');
  assert.match(exp,/metresAt\(F,P,x,y\)/,'tap the pitch to place the marker');assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
  console.log('PASS reduced motion: tap-to-rain, tap-to-aim then Kick, instant landings');}
+
+// 9. Turn the ball (museum-figures-2, figure kit v2): an old laced leather ball that turns all the way round (18 panels, the lace,
+//    the lace-up opening), see-through shows the bladder and its inflation tube, "Old vs New" swaps in a modern ball with a
+//    valve and a sealed bladder, labels reachable from every yaw, leather swatches recolour the panels, ≤ 120 parts, the flow kept.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),LF=require('../'+dir+'figure.ts');
+ const fig=LF.makeLeatherFigure(),spec=fig.spec,c=FK.centreOf(spec.points),P0=FK.fitTurn(spec.points,900,700,45,30,{pad:24,top:80});
+ const view=(yaw,pitch,xray,swatch=null,active=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);
+  return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch,swatchHex:FK.swatchList(spec.swatches).find(s=>s.id===swatch)?.hex??null,active:new Set(active),w:900,h:700};};
+ assert.equal(LF.PANELS18.length,18,'18 leather panels');assert.equal(LF.PANELS18.filter(p=>p.lace).length,1,'one lace panel');
+ for(const mode of ['old','new']){fig.setMode(mode);
+  for(let yaw=0;yaw<360;yaw+=45)for(const x of [0,1]){const d=spec.draw(view(yaw,30,x));const n=FK.countParts(d.svg)+d.labels.length*7;
+   assert.ok(n<=FK.MAX_PARTS,mode+' '+yaw+'/'+x+': '+n+' parts');
+   for(const l of d.labels)assert.ok(FK.anchorFor(l,FK.viewVector(yaw,30)),mode+': '+l.id+' reachable at yaw '+yaw);}}
+ fig.setMode('old');const closed=spec.draw(view(45,30,0)),open=spec.draw(view(45,30,1));
+ assert.deepEqual(closed.labels.map(l=>l.text).sort(),['Lace','Lace-up opening','Leather panel']);
+ assert.deepEqual(open.labels.map(l=>l.text).sort(),['Bladder','Inflation tube','Lace','Lace-up opening','Leather panel'],'the inside is named only when drawn');
+ assert.match(closed.svg,/data-lace /);assert.match(closed.svg,/data-opening/);assert.doesNotMatch(closed.svg,/data-bladder/);assert.match(open.svg,/data-bladder/);assert.match(open.svg,/data-tube/);
+ const back=FK.aimAt(LF.LACE_DIR.map(x=>-x));assert.doesNotMatch(spec.draw(view(back.yaw,back.pitch,0)).svg,/data-lace /,'the lace is drawn only while it faces you');
+ const seen=new Set();for(let yaw=0;yaw<360;yaw+=30)for(const p of [20,60]){const V=FK.viewVector(yaw,p);LF.PANELS18.forEach((q,i)=>{if(FK.dot(q.c,V)>.2)seen.add(i);});}
+ assert.ok(seen.size>=17,'every panel but the one resting in the cup can be seen by turning ('+seen.size+')');
+ const tan=spec.draw(view(45,30,0)).svg,ox=spec.draw(view(45,30,0,'oxblood')).svg;assert.notEqual(tan,ox,'swatches recolour the leather');
+ assert.deepEqual(FK.swatchList(spec.swatches).map(s=>s.name),['Tan','Chestnut','Oxblood','White leather']);
+ fig.setMode('new');const nd=spec.draw(view(45,30,1));assert.deepEqual(nd.labels.map(l=>l.text).sort(),['Panel','Sealed bladder','Valve']);
+ assert.doesNotMatch(nd.svg,/data-lace|data-tube/,'no lace on the modern ball');assert.match(nd.svg,/data-valve-stem/);assert.equal(spec.draw(view(45,30,1,'oxblood')).svg,nd.svg,'swatches are for the leather');fig.setMode('old');
+ const lit=spec.draw(view(45,30,0,null,['lace'])).svg;assert.match(lit,/var\(--accent\)/,'a touched part lights');
+ for(const k of ['panel','lace','opening','bladder','tube','newPanel','valve','newBladder'])assert.ok(F.LOOK_SAY[k],'says '+k);
+ assert.doesNotMatch(Object.values(F.LOOK_SAY).join(' '),/\d/,'no invented numbers in the look notes');assert.match(F.LOOK_SAY.tube,/unlace/);assert.match(F.LOOK_SAY.valve,/valve/i);
+ assert.match(exp,/<FigureStage spec=\{fig\.spec\}/);for(const h of ['data-look ','data-look-back','data-fig-modern','data-look-note'])assert.ok(exp.includes(h),'hook '+h);
+ assert.match(exp,/phase==='look'\?/);assert.match(exp,/ready&&phase!=='look'&&<svg/,'one drawing at a time');
+ assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval/);
+ console.log('PASS turn the ball: 17 of 18 panels seen (one rests in the cup), lace + opening, see-through bladder + tube, old vs new (valve, sealed bladder), labels from every yaw, leather swatches, ≤ 120 parts');}
+
