@@ -4,7 +4,7 @@ import {diveLayout,diveLayoutCover,type DiveLayout} from '../town/water/diveLayo
 import {clearReefKit} from '../town/fishing/underwater';
 import {DIVE_SHOAL,WATER_UNIFORMS,clearWinNoise,diveShoreD} from './waterSurface';
 import {createOceanBlend} from './swimClear';
-import {creatureModel} from './diveRoom';
+import {seaTurtleBand} from './seaTurtle';
 import {DIVE_TELL_TINT,PITCH_TURF,SHOAL_DECAL,SHOAL_DEEP_LIN,SHOAL_GRASS,SHOAL_KELP_TOP,SHOAL_LANE_LIN,SHOAL_MUTED,SHOAL_PITCH,SHOAL_RAY,SHOAL_ROCK,SHOAL_TEAL_LIN,UNDER_SURFACE_Y,WATER_Y} from './waterTokens';
 
 /**
@@ -154,7 +154,7 @@ export function buildDiveTells(spot:DiveSpot){
  if(L.tell.kind==='balls')L.tell.pts.forEach((p,i)=>{const [x,z]=I(p.x,p.z);// footballs afloat, bobbing like the buoys
   M.compose(new T.Vector3(x,WATER_Y+.06,z),Q.setFromEuler(new T.Euler(i,i*2,0)),new T.Vector3(L.tell.r,L.tell.r,L.tell.r));
   add(new T.IcosahedronGeometry(1,1),M,(_,l)=>{const k=Math.abs(l.x)+Math.abs(l.y)*1.3+Math.abs(l.z)*.7;return Math.sin(k*6)>.55?dark:white;},[1,i*2.17,0,0]);});
- if(L.tell.kind==='turtle'){const p=L.tell.pts[0],[x,z]=I(p.x,p.z),b=L.bowl!,[bx,bz]=I(b.x,b.z),yaw=Math.atan2(z-bz,x-bx)+Math.PI/2,t=creatureModel('turtle');// a turtle coming up to breathe
+ if(L.tell.kind==='turtle'){const p=L.tell.pts[0],[x,z]=I(p.x,p.z),b=L.bowl!,[bx,bz]=I(b.x,b.z),yaw=Math.atan2(z-bz,x-bx)+Math.PI/2,t={geometry:seaTurtleBand('low')};// a turtle coming up to breathe (seaTurtle.ts low band, 160 triangles)
   M.compose(new T.Vector3(x,WATER_Y-.08,z),Q.setFromEuler(new T.Euler(0,-yaw,0)),new T.Vector3(1.3,1.3,1.3));add(t.geometry,M,()=>new T.Color(1,1,1),[2,(spot.blob%7)*3,0,0]);}
  if(L.tell.kind==='ray'){const p=L.tell.pts[0],[cx,cz]=I(p.x,p.z),R=L.tell.r*sc,g=new T.BufferGeometry();// a ray silhouette gliding a loop over the shoal
   const s=1.1,wing=[0,0,1.1*s, 1.2*s,0,-.1*s, 0,0,-.5*s, 0,0,1.1*s, 0,0,-.5*s, -1.2*s,0,-.1*s, 0,0,-.5*s, .08*s,0,-.5*s, 0,0,-1.6*s];

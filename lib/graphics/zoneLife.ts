@@ -8,6 +8,7 @@
 // Updated from openSeaLife.update (Town.tsx needs no hook of its own).
 import * as T from 'three';
 import {creatureGeometry} from '../town/water/clearCreatures';
+import {patchSeaTurtle,seaTurtleControls} from './seaTurtle';
 import {patchSeaVeil,SEA_LEVEL} from './seaVeil';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
 import {ZONE_LIFE_LOOPS,ZONE_LIFE_DRAW,FAR_UPDATE,FAR_HZ,zoneLifeCounts,type ZoneCreature,type ZoneLifeLoop} from '../town/seaLifeAreas';
@@ -35,8 +36,10 @@ export function createZoneLife(scene:T.Scene,options:{phone?:boolean}={}){
  const phone=!!options.phone;
  const root=new T.Group();root.name='zone-life';scene.add(root);
  const time={value:0};
- const material=new T.MeshLambertMaterial({vertexColors:true,flatShading:true,side:T.FrontSide});
- material.onBeforeCompile=shader=>patchSeaVeil(shader,time,{});material.customProgramCacheKey=()=>'zone-life-sea';
+ // Smooth shading: the turtle (seaTurtle.ts) carries its own normals; the fish / jelly shapes have per-face normals (flat as before).
+ const turtleCtl={value:new T.Vector2(1,0)};
+ const material=new T.MeshLambertMaterial({vertexColors:true,side:T.FrontSide});
+ material.onBeforeCompile=shader=>{patchSeaVeil(shader,time,{});patchSeaTurtle(shader,time,turtleCtl);};material.customProgramCacheKey=()=>'zone-life-sea-turtle';
  const tracks=ZONE_LIFE_LOOPS.map((loop,i)=>{const n=loop.points.length,lengths=new Float64Array(n+1);
   for(let k=1;k<=n;k++){const a=loop.points[k-1],b=loop.points[k%n];lengths[k]=lengths[k-1]+Math.hypot(b.x-a.x,b.z-a.z);}
   let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;for(const p of loop.points){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxZ=Math.max(maxZ,p.z);}
@@ -49,8 +52,8 @@ export function createZoneLife(scene:T.Scene,options:{phone?:boolean}={}){
   mesh.castShadow=mesh.receiveShadow=false;mesh.renderOrder=1;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
   for(let i=0;i<max;i++)mesh.setColorAt(i,color.set(LOOK[kind].tint).offsetHSL(0,0,(hash(i*3.1)-.5)*.12));
   meshes[kind]=mesh;root.add(mesh);}
- let caps=zoneLifeCounts(effectiveTier(),phone);
- const offTier=subscribeHeatTier(()=>{caps=zoneLifeCounts(effectiveTier(),phone);});
+ let tier=effectiveTier(),caps=zoneLifeCounts(tier,phone);
+ const offTier=subscribeHeatTier(()=>{tier=effectiveTier();caps=zoneLifeCounts(tier,phone);});
  const pt={x:0,z:0,yaw:0},pos=new T.Vector3(),quat=new T.Quaternion(),euler=new T.Euler(0,0,0,'YXZ'),scl=new T.Vector3(),mat=new T.Matrix4();
  const used:Record<ZoneCreature,number>={turtle:0,fish:0,jelly:0};
  const stats={drawn:0,zones:0,updated:0};
@@ -68,7 +71,7 @@ export function createZoneLife(scene:T.Scene,options:{phone?:boolean}={}){
   pos.set(x,y,z);quat.setFromEuler(euler);scl.set(s,sy,s);mat.compose(pos,quat,scl);mesh.setMatrixAt(used[kind]++,mat);
  }
  function update(dt:number,reduced:boolean,player:{x:number;z:number}){
-  stats.updated=0;
+  stats.updated=0;{const c=seaTurtleControls(tier,reduced);turtleCtl.value.set(c.anim,c.minLod);}
   if(dt<=0&&placed)return;// frozen frame: nothing moves, nothing uploads
   let any=false;for(const t of tracks){t.near=caps[t.loop.kind]>0&&boxDistance(t.box,player.x,player.z)<ZONE_LIFE_DRAW;if(t.near)any=true;}
   if(!any){if(stats.drawn){for(const kind of KINDS){const m=meshes[kind];if(m){m.count=0;m.visible=false;}}stats.drawn=stats.zones=0;}placed=true;return;}
