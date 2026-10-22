@@ -29,6 +29,8 @@ const ERROR_TEXT: Record<number, string> = {
 };
 const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked' };
 
+// React 18 has no typed `inert`; an empty attribute makes the hidden panel unfocusable and unclickable.
+const inertIf = (on: boolean): Record<string, string> => (on ? { inert: '' } : {});
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The Play with friends HUD button the card grows out of (and shrinks back into). */
 const openerRect = () => document.querySelector<HTMLElement>('[data-party-open]')?.getBoundingClientRect() ?? null;
@@ -330,16 +332,19 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <DoneButton onDone={requestClose} />
             </header>
             {state.isHost && (
-              <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs onKeyDown={onTabKey}>
+              <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs data-active={activeTab} onKeyDown={onTabKey}>
+                <span className={styles.pill} aria-hidden="true" data-party-pill />
                 {(['code', 'party'] as const).map((t) => (
                   <button key={t} ref={(el) => { tabRefs.current[t] = el; }} type="button" role="tab" id={`party-tab-${t}`} aria-controls={`party-panel-${t}`} aria-selected={activeTab === t} tabIndex={activeTab === t ? 0 : -1} data-party-tab={t} className={styles.tab} onClick={() => setTab(t)}>
-                    {t === 'code' ? 'Code' : `Party (${state.members.length})`}
+                    {t === 'code' ? 'Code' : <>Party <span key={state.members.length} className={styles.tabCount} data-party-tab-count>({state.members.length})</span></>}
                   </button>
                 ))}
               </div>
             )}
+            {/* One stage: both panels share a grid cell, so the card is always as tall as the taller one and never jumps. */}
+            <div className={styles.stage} data-party-stage>
             {state.isHost && (
-              <div role="tabpanel" id="party-panel-code" aria-labelledby="party-tab-code" hidden={activeTab !== 'code'} className={styles.panel} data-party-panel="code">
+              <div role="tabpanel" id="party-panel-code" aria-labelledby="party-tab-code" aria-hidden={activeTab !== 'code'} {...inertIf(activeTab !== 'code')} data-active={activeTab === 'code'} className={styles.panel} data-party-panel="code">
                 <FadeScroll>
                   {state.code
                     ? <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} locked={state.locked}
@@ -350,7 +355,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                 </FadeScroll>
               </div>
             )}
-            <div role={state.isHost ? 'tabpanel' : undefined} id="party-panel-party" aria-labelledby={state.isHost ? 'party-tab-party' : undefined} hidden={state.isHost && activeTab !== 'party'} className={styles.panel} data-party-panel="party">
+            <div role={state.isHost ? 'tabpanel' : undefined} id="party-panel-party" aria-labelledby={state.isHost ? 'party-tab-party' : undefined} aria-hidden={state.isHost && activeTab !== 'party'} {...inertIf(state.isHost && activeTab !== 'party')} data-active={!state.isHost || activeTab === 'party'} className={styles.panel} data-party-panel="party">
               <FadeScroll>
             {!state.isHost && <p className={styles.small} data-party-guest-note>Only the host has the code.</p>}
             <p className={styles.small} data-party-count>Friends here: {state.members.length} of {PARTY_MAX}</p>
@@ -372,11 +377,12 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             {kickPrompt && state.isHost && kickBlock}
             <div className={styles.stack}>
               {state.isHost && (confirmEnd
-                ? <button type="button" className={styles.secondary} onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
-                : <button type="button" className={styles.secondary} onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
+                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
+                : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
               {!state.isHost && <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>}
             </div>
               </FadeScroll>
+            </div>
             </div>
           </section>}
         </Card>
