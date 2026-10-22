@@ -18,7 +18,7 @@ import {AGE_PROFILES} from '../town/townsfolkCast';
 import {applyHighFive} from './highFivePose';
 import {HIGH_FIVES,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
-import {EMOTE,NPC_EMOTE_SECONDS,NPC_STEP_SPEED,emoteCalled,emoteCelebration,emoteClap,emoteHop,npcStepDistance} from '../town/emoteReact';
+import {EMOTE,NPC_STEP_SPEED,emoteSeconds,npcStepDistance} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
 import {applyApplause,applyCelebrationArms} from './celebrations';
 type Position={x:number;y:number;z:number};
 type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:number)=>number};
@@ -55,8 +55,8 @@ function npcEmoteMotion(fx:{kind:number;age:number;v:number},reduced:boolean):{c
  // a high five sequence poses the arms itself (lib/graphics/highFivePose.ts); its arcade windows (highFive / fistBump) go through the rig's skill layer
  if(fx.kind>=0&&!reduced&&fx.v>=0)return highFiveSkill(HF_SKILL,fx.v,1,fx.age)?HF_MOTION:null;
  if(fx.kind<0||reduced||fx.v>=0)return null;
- const c=emoteCelebration(fx.kind,fx.age,NPC_EMOTE_SECONDS);
- return c>=0?{jump:emoteHop(c)}:{called:emoteCalled(fx.kind,fx.age,NPC_EMOTE_SECONDS)};
+ const b=emoteBody(fx.kind,fx.age,emoteSeconds(fx.kind));
+ return b.jump?{jump:b.jump}:{called:b.called};
 }
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
@@ -122,7 +122,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const floored=entries.filter(e=>!!e.definition.floor);
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera,hideTags=false)=>{
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
-  for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;/* an answering townsperson holds still and faces you, like a near one */if(entry.emoteStep){const st=entry.emoteStep,dx=st.x-entry.position.x,dz=st.z-entry.position.z,len=Math.hypot(dx,dz),stepLen=Math.min(len,NPC_STEP_SPEED*(paused?0:dt));if(len<.05||entry.fx.kind<0)entry.emoteStep=null;else{entry.position.x+=dx/len*stepLen;entry.position.z+=dz/len*stepLen;if(!entry.definition.floor)entry.position.y=placement.heightAt(entry.position.x,entry.position.z);}}entry.stunned=Boolean(reactions?.get('npc:'+entry.id));if(entry.fx.kind>=0){entry.fx.age+=paused?0:dt;if(entry.fx.age>=(entry.fx.v>=0?HIGH_FIVES[entry.fx.v].duration:NPC_EMOTE_SECONDS)||entry.stunned)entry.fx.kind=-1;}}
+  for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;/* an answering townsperson holds still and faces you, like a near one */if(entry.emoteStep){const st=entry.emoteStep,dx=st.x-entry.position.x,dz=st.z-entry.position.z,len=Math.hypot(dx,dz),stepLen=Math.min(len,NPC_STEP_SPEED*(paused?0:dt));if(len<.05||entry.fx.kind<0)entry.emoteStep=null;else{entry.position.x+=dx/len*stepLen;entry.position.z+=dz/len*stepLen;if(!entry.definition.floor)entry.position.y=placement.heightAt(entry.position.x,entry.position.z);}}entry.stunned=Boolean(reactions?.get('npc:'+entry.id));if(entry.fx.kind>=0){entry.fx.age+=paused?0:dt;if(entry.fx.age>=(entry.fx.v>=0?HIGH_FIVES[entry.fx.v].duration:emoteSeconds(entry.fx.kind))||entry.stunned)entry.fx.kind=-1;}}
   neighborhood.length=0;frozen.clear();
   for(const entry of entries){if(isThinned(entry)||heldByFocus(entry))continue;if(entry.distance<(desktop?112:88)||entry.routine.partner!==null||entry.stunned)neighborhood.push(entry);if(hoveredId!==null&&(entry.id===hoveredId||entry.routine.partner===hoveredId))frozen.add(entry.id);}
   for(const [id,witness] of truckWitnesses){witness.remaining-=paused?0:dt;if(witness.remaining<=0)truckWitnesses.delete(id);else frozen.add(id);}
@@ -152,7 +152,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
     else if(r.mode==='social'&&partner&&((Math.floor(r.age/1.5)%2===0)===(entry.id<partner.id))){entry.rightShoulder.rotation.set(-.55-Math.sin(r.age*5)*.12,0,.3);entry.rightElbow.rotation.x=-.85;}
    }
    if(entry.fx.kind>=0&&entry.fx.v>=0&&!reduced&&!stunned)applyHighFive(entry.rig.root,entry.fx.v,1,entry.fx.age,-1,Math.atan2(player.x-entry.position.x,player.z-entry.position.z),entry.rig.profileScale);// the townsperson's half of the player's variation, on the same clock
-   if(entry.fx.kind>=0&&!reduced&&!stunned){const c=emoteCelebration(entry.fx.kind,entry.fx.age,NPC_EMOTE_SECONDS);if(c>=0)applyCelebrationArms(entry.rig.root,c);const cl=emoteClap(entry.fx.kind,entry.fx.age,NPC_EMOTE_SECONDS);if(cl>0)applyApplause(entry.rig.root,entry.fx.age,cl);}
+   if(entry.fx.kind>=0&&!reduced&&!stunned)applyEmoteArms(entry.rig.root,entry.fx.kind,entry.fx.age,emoteSeconds(entry.fx.kind));
    entry.ride?.update(entry.position.x,entry.position.y,entry.position.z,entry.rig.root.rotation.y,paused?0:poseDt,speed,entry.rig.root.visible&&!stunned);entry.lastPosition.x=entry.position.x;entry.lastPosition.z=entry.position.z;
    if(entry.definition.travel==='skateboard'&&!stunned){entry.leftShoulder?.rotation.set(.15,0,-.25);entry.rightShoulder?.rotation.set(.15,0,.25);}
    if(witness&&!stunned)applyTruckProtest(entry.rig.root,time,reduced);else if(!stunned)entry.rig.root.rotation.z=0;

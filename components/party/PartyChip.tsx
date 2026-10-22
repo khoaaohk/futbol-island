@@ -14,6 +14,7 @@ const GLYPHS: Record<string, string> = {
   music: 'M9 18V6l10-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm10-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
   thanks: 'M12 21c-4-3-7-5.5-7-9.5a4 4 0 0 1 7-2.6 4 4 0 0 1 7 2.6C19 15.5 16 18 12 21zM12 8v5m-2.5-2.5h5',
   point: 'M12 21V9m0 0V4m0 5-4 4m4-4 4 4M7 21h10',
+  pass: 'M12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zM2.5 7.5h6m-2.6-2.6 2.6 2.6-2.6 2.6M21.5 16.5h-6m2.6-2.6-2.6 2.6 2.6 2.6',
   wind: 'M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7a2.5 2.5 0 1 1-2.5 2.5',
 };
 export function Glyph({ name, size = 22 }: { name: string; size?: number }) {

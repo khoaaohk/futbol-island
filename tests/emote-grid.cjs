@@ -51,13 +51,13 @@ t('busy rules: riding, driving, sleeping, hidden, stunned, freestyle',()=>{
  for(const bad of [{travel:'scooter'},{travel:'skateboard'},{pose:'lie'},{visible:false},{stunned:true},{freestyle:true}])assert.equal(E.npcBusy({...base,...bad}),true,JSON.stringify(bad));
 });
 t('ten presets, protocol numbers, timing',()=>{
- assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Thumbs up','Laugh','Dance','Thanks','Pass to me','Space']));
+ assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Pass it','Laugh','Dance','Thanks','Pass to me','Space']));
  assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.emote)),JSON.stringify([0,2,1,5,6,7,8,9,3,4]));
- assert.equal(E.EMOTE_SECONDS,1.5);assert.equal(E.NPC_EMOTE_SECONDS,2);assert.equal(E.NPC_EMOTE_RANGE,9);
- assert(E.emoteCalled(E.EMOTE.Wave,.1,1.5)>0&&E.emoteCalled(E.EMOTE.Wave,0,1.5)===0&&E.emoteCalled(E.EMOTE.Cheer,.5,1.5)===0);
- assert(E.emoteCelebration(E.EMOTE.Cheer,.75,1.5)===.5&&E.emoteCelebration(E.EMOTE.Wave,.5,1.5)===-1);
- assert.equal(E.emoteCelebration(E.EMOTE.WellPlayed,.75,1.5),-1,'Well played is a clap, not the cheer');
- assert(E.emoteClap(E.EMOTE.WellPlayed,.75,1.5)===1&&E.emoteClap(E.EMOTE.WellPlayed,0,1.5)===0&&E.emoteClap(E.EMOTE.Cheer,.75,1.5)===0,'the clap exists only for Well played, ramped in / out');
+ assert.equal(E.EMOTE_SECONDS,4);assert.equal(E.NPC_EMOTE_SECONDS,4);assert.equal(E.emoteSeconds(E.EMOTE.PassBall),E.PASS_SECONDS);assert(E.PASS_SECONDS>=5.5&&E.PASS_SECONDS<=6.2);assert.equal(E.emoteSeconds(E.EMOTE.Dance),4);assert.equal(E.NPC_EMOTE_RANGE,9);
+ assert(E.emoteCalled(E.EMOTE.Wave,.1,4)>0&&E.emoteCalled(E.EMOTE.Wave,0,4)===0&&E.emoteCalled(E.EMOTE.Cheer,.5,4)===0&&E.emoteCalled(E.EMOTE.PassBall,.5,4)===0);
+ assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,1,4)-.5)<1e-9&&E.emoteCelebration(E.EMOTE.Wave,.5,4)===-1);assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,3,4)-.5)<1e-9,'two cheers back to back fill 4 s');assert.equal(E.emoteCelebration(E.EMOTE.Dance,1,4),-1,'Dance has its own moves');
+ assert.equal(E.emoteCelebration(E.EMOTE.WellPlayed,.75,4),-1,'Well played is a clap, not the cheer');
+ assert(E.emoteClap(E.EMOTE.WellPlayed,2,4)===1&&E.emoteClap(E.EMOTE.WellPlayed,0,4)===0&&E.emoteClap(E.EMOTE.Cheer,2,4)===0,'the clap exists only for Well played, ramped in / out');
 });
 t('the bus works with no party and no flag (a handler is all it needs)',()=>{
  assert.equal(E.emoteBus.fire(0),false,'no handler yet');let got=null;E.emoteBus.set(e=>{got=e;});assert.equal(E.emoteBus.fire(2),true);assert.equal(got,2);E.emoteBus.set(null);
@@ -104,10 +104,10 @@ t('townsfolk answer: pooled bubble, no per-frame allocation while idle, reduced 
 t('townsfolk hold still, face you and step in; the name tag hides; riding emotes use one arm and keep the vehicle',()=>{
  assert(/entry\.near=entry\.distance<7\|\|entry\.fx\.kind>=0/.test(npcs),'an answering townsperson is "near": the routine stops it and it faces you');
  assert(/npcStepDistance\(d\)/.test(npcs)&&/canTravel\(entry\.position,to\)/.test(npcs)&&/NPC_STEP_SPEED/.test(npcs),'the step needs a clear path');
- assert(/applyApplause\(entry\.rig\.root/.test(npcs),'Well played: townsfolk clap');
+ assert(/applyEmoteArms\(entry\.rig\.root/.test(npcs)&&/applyApplause/.test(read('lib/graphics/emotePose.ts')),'Well played: townsfolk clap (and every other move through applyEmoteArms)');
  assert(/\|\|emoteCam\.active\);fieldBump/.test(town),'no name tag over the close-up');
  assert(/highFivePlan\(pick,reduced\|\|onRideNow,/.test(town),'on a ride: an air five, no spin / hop / crouch variation');
- assert(/applyRideEmote\(player\.root,k,/.test(town)&&/emoteCam\.begin\([^;]*onRideNow\)/.test(town)&&/emoteCam\.track\(/.test(town));
+ assert(/applyRideEmote\(player\.root,k,/.test(town)&&/emoteCam\.begin\([^;]*onRideNow[,)]/.test(town)&&/emoteCam\.track\(/.test(town));
  const cel=read('lib/graphics/celebrations.ts'),ride=cel.slice(cel.indexOf('export function applyRideEmote'));
  assert(!/j\.ls|j\.le/.test(ride),'the ride emote never touches the left arm (it stays on the bar)');
  assert(/\.react\(id,pick|ecs\.onRide=/.test(town)&&/ecs\.riding=rideRef\.current==='jetpack'\|\|streetTraffic\.rider\.index>=0\|\|zipline\.active/.test(town),'the jetpack, truck and zipline stay blocked');

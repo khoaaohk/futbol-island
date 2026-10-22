@@ -3,23 +3,23 @@
 import {celebrationJump} from '../graphics/celebrations';
 
 /** The ten preset emotes (the wheel shows five at a time and scrolls). The numbers are the multiplayer protocol's Emote values (multiplayer/protocol/types.ts). */
-export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, PassToMe: 3, Space: 4, WellPlayed: 5, ThumbsUp: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
+export const EMOTE = {Wave: 0, Cheer: 1, HighFive: 2, PassToMe: 3, Space: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9} as const;
 export type LocalEmote = (typeof EMOTE)[keyof typeof EMOTE];
 export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = [
   {emote: EMOTE.Wave, icon: 'hand', label: 'Wave'},
   {emote: EMOTE.HighFive, icon: 'handshake', label: 'High five'},
   {emote: EMOTE.Cheer, icon: 'star', label: 'Cheer'},
   {emote: EMOTE.WellPlayed, icon: 'heart', label: 'Well played'},
-  {emote: EMOTE.ThumbsUp, icon: 'thumb', label: 'Thumbs up'},
+  {emote: EMOTE.PassBall, icon: 'pass', label: 'Pass it'},
   {emote: EMOTE.Laugh, icon: 'smile', label: 'Laugh'},
   {emote: EMOTE.Dance, icon: 'music', label: 'Dance'},
   {emote: EMOTE.Thanks, icon: 'thanks', label: 'Thanks'},
   {emote: EMOTE.PassToMe, icon: 'point', label: 'Pass to me'},
   {emote: EMOTE.Space, icon: 'wind', label: 'Space'},
 ];
-export const EMOTE_EMOJI: Record<number, string> = {0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{261D}\u{FE0F}', 4: '\u{1F4A8}', 6: '\u{1F44D}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
-/** Your own pose + bubble last 1.5 s (same as a friend's); a townsperson answers for 2 s. */
-export const EMOTE_SECONDS = 1.5, NPC_EMOTE_SECONDS = 2, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
+export const EMOTE_EMOJI: Record<number, string> = {0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{261D}\u{FE0F}', 4: '\u{1F4A8}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
+/** Every simple emote lasts about 4 s (user, Oct 22 2026), for you, a friend and a townsperson alike; Pass it ~5.9 s (five passes); a high five with a variation keeps its own length. */
+export const EMOTE_SECONDS = 4, NPC_EMOTE_SECONDS = 4, PASS_SECONDS = 5.9, NPC_BUBBLE_SECONDS = 4, NPC_COOLDOWN_SECONDS = 2, NPC_EMOTE_RANGE = 9;
 /** A townsperson farther than NPC_STEP_FROM (m) takes up to NPC_STEP_MAX steps toward you (never closer than NPC_STEP_TO) at NPC_STEP_SPEED m/s. */
 export const NPC_STEP_FROM = 3, NPC_STEP_TO = 2.2, NPC_STEP_MAX = 2.5, NPC_STEP_SPEED = 3.6;
 /** How far a townsperson at distance `d` walks toward the player so the two fit one close frame (0 when already close). */
@@ -33,7 +33,8 @@ export function pickEmoteNpc(list: readonly EmoteCandidate[], p: {x: number; y: 
   for (let i = 0; i < list.length; i++) {
     const c = list[i];
     if (c.busy || now < c.cooldownUntil) continue;
-    const d = Math.hypot(c.x - p.x, c.y - p.y, c.z - p.z);
+    if (Math.abs(c.y - p.y) > 4) continue; // another floor / a rooftop above: not in the same scene
+    const d = Math.hypot(c.x - p.x, c.z - p.z);
     if (d > range) continue;
     let score = d;
     if (facing && d > .05) score -= 2 * Math.max(0, ((c.x - p.x) * facing.x + (c.z - p.z) * facing.z) / d);
@@ -45,16 +46,20 @@ export function pickEmoteNpc(list: readonly EmoteCandidate[], p: {x: number; y: 
 export function npcBusy(e: {travel?: string; pose?: string; visible: boolean; stunned: boolean; freestyle: boolean}): boolean {
   return Boolean(e.travel && e.travel !== 'run') || e.pose === 'lie' || !e.visible || e.stunned || e.freestyle;
 }
+/** How long an emote runs (s). */
+export const emoteSeconds = (emote: number): number => emote === EMOTE.PassBall ? PASS_SECONDS : emote === EMOTE.HighFive ? 2.2 : EMOTE_SECONDS;
 const ramp = (age: number, dur: number) => Math.max(0, Math.min(1, age / .2, (dur - age) / .2));
 /** The raised "called" arm for a wave or a high five (0 for the celebration emotes). */
 export function emoteCalled(emote: number, age: number, dur: number): number {
-  return emote === EMOTE.Wave || emote === EMOTE.HighFive || emote === EMOTE.ThumbsUp ? ramp(age, dur) : 0;
+  return emote === EMOTE.Wave || emote === EMOTE.HighFive ? ramp(age, dur) : 0;
 }
-/** Cheer / Well played: celebration progress 0..1 (or -1 when the emote is not a celebration). */
+/** Cheer: celebration progress 0..1 (or -1 when the emote is not a cheer). Two full cheers (hops, arms up V, fist pump) back to back fill the 4 s. */
 export function emoteCelebration(emote: number, age: number, dur: number): number {
-  return emote === EMOTE.Cheer || emote === EMOTE.Dance ? Math.min(1, age / dur) : -1;
+  if (emote !== EMOTE.Cheer) return -1;
+  const u = Math.min(.9999, Math.max(0, age / dur)) * 2;
+  return u - Math.floor(u);
 }
-/** Well played: the clap (0 = not a clap, else the ramped weight 0..1). Thumbs up on a ride shares the same single-arm pose. */
+/** Well played: the clap (0 = not a clap, else the ramped weight 0..1).  */
 export function emoteClap(emote: number, age: number, dur: number): number {
   return emote === EMOTE.WellPlayed ? ramp(age, dur) : 0;
 }

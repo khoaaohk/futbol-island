@@ -129,7 +129,7 @@ t('start / cancel / skip rules',()=>{
 // A stand-in for the shot camera: the same begin / end / apply / active contract with a plain 0..1 ease.
 const fakeShot=(i,o)=>{let tt=0,dir=0,frame=null;return{begin(f){frame=f;frame(1.6);dir=1;},end(){dir=-1;},get active(){return dir!==0||tt>0;},
  apply(cam,dt){if(dir===0&&tt===0)return false;tt=Math.max(0,Math.min(1,tt+(dir>0?dt/i:-dt/o)));cam.position.t=tt;if(dir<0&&tt<=0)dir=0;return true;},get t(){return tt;}};};
-const CAMX=load('lib/town/emoteCamera.ts',{'./shotCamera':{createShotCamera:fakeShot},'./emoteCameraMath':M});
+const CAMX=load('lib/town/emoteCamera.ts',{'./emoteCamClear':load('lib/town/emoteCamClear.ts',{}),'./shotCamera':{createShotCamera:fakeShot},'./emoteCameraMath':M});
 const okS=()=>({reduced:false,riding:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:false,cameraDist:43});
 const cam=()=>({position:{x:1,y:2,z:3,t:0,set(x,y,z){this.x=x;this.y=y;this.z=z;}}});
 t('framing solves the pair: both characters (feet and raised hands) are inside at every heading, a wider rider needs a farther camera',()=>{

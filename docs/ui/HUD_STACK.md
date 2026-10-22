@@ -233,16 +233,35 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   `DiveHud`) are unchanged.
 - The Emote button (`components/EmoteControl.tsx`) is icon-only (aria-label "Emotes"), >= 44 px, same style as the other action
   buttons. It opens a wheel of four round buttons upward (Wave, High five, Cheer, Well played; `lib/town/emoteReact.ts`); a pick
-  plays on you at once (raised arm or cheer arms, icon bubble, 1.5 s), is sent to friends only while a party is live, and the
+  plays on you at once (raised arm or cheer arms, icon bubble, ~4 s), is sent to friends only while a party is live, and the
   best free townsperson within 9 m answers for 2 s (user, 22 Oct 2026: "the emotes are not interacting with the npcs": 5 m was too
   tight and a walker was never in reach; now the nearest wins with a bonus of up to 2 m for one in front of you). Wave: a waving
   hand; High five: the sequence / raised hand + spark ring; Cheer: hop + arms up; Well played: a clap. The townsperson counts as
   near: its routine stops, it turns to face you and holds still, a bubble floats over it, and its name tag hides. Beyond 3 m it
   takes up to 2.5 m of steps toward you (never closer than 2.2 m, only on a clear path). Walking townsfolk answer; only riding /
   driving, sleeping, hidden, stunned and court-freestyle ones ignore it (2 s cooldown each; reduced motion = bubble only).
-  **On a scooter, bike or moped** all four emotes work at normal speed: the right arm only (wave, air five, fist pump, thumbs-up;
+  **On a scooter, bike or moped** all four emotes work at normal speed: the right arm only (wave, air five, fist pump, clap;
   the left hand stays on the bar, the vehicle is never touched, no spin / hop / crouch high five). Jetpack, zipline, truck rides,
   swimming and jobs stay blocked. One pooled bubble pair + one ring (`lib/graphics/emoteBubbles.ts`), updated only while active.
+- **Ten emotes, ~4 s each** (user, 22 Oct 2026: "emotes are not working with the npcs", "the music icon should be dancing for a few seconds",
+  "replace the thumbs up with passing the ball back and forth"). Before, Pass to me / Space / Laugh / Thanks / Dance / Thumbs up did nothing
+  visible on a townsperson (the reaction code knew only the first four) and nothing on you but the bubble. Now EVERY emote plays on you,
+  a friend and the nearest townsperson through one shared module (`lib/graphics/emotePose.ts`: `emoteBody` = raised arm + hop,
+  `applyEmoteArms` = cheer / clap / Dance / Laugh / Thanks / Pass to me / Space arm poses). Length `emoteSeconds(kind)` in
+  `lib/town/emoteReact.ts`: 4 s (Cheer = two cheers back to back; Wave keeps waving; Well played = ~10 claps; Laugh = belly shake + tiny
+  hops; Thanks = palms together, three bows; Dance = pumps, hands on hips, a full spin, hops, arms-up finish); High five 2.2 s unless a
+  variation (its own length); Pass it ~5.9 s. Walking away ends an emote at once; the townsperson's cooldown starts after its reaction.
+  Range is horizontal 9 m (a rooftop / other floor, > 4 m up or down, is a different scene).
+- **Pass it** (wheel slot 5, icon = ball between two arrows, protocol value 6 `Emote.PassBall`, was Thumbs up): you and the nearest
+  townsperson (or an imaginary friend 3.2 m ahead when none is near) pass one pooled ball (`lib/graphics/passBall.ts`) five times,
+  player -> partner -> player ..., a lifted pass between the feet with a trap bounce (`lib/town/emotePass.ts passBallAt`); you face the
+  partner and hop a little at each kick; the camera takes a side / high view (`ballPass` in `emoteCamera.begin`) so the ball between
+  the pair is seen. Not on rides, reduced motion = the bubble and one pass. Friends see the bubble only.
+- **Emote camera and walls** (user, 22 Oct 2026: "the building is covering the view"): `lib/town/emoteCamClear.ts` runs a multi-ray test
+  (eye and a shoulder either side to the feet, chest, head and raised hands of BOTH characters) against every wall box (buildings
+  with their real height, `ballWallGrid`) and the big props (`ballObstacleGrid`), needs the eye 0.6 m clear of any solid, and tries
+  other headings (+-0.35 .. +-1.9 rad, the opposite side), gentler zooms and higher pitches (.36 / .6 / .9); if nothing is clear
+  the zoom is skipped. During the zoom a wall that comes between (150 ms check) ends it. Guarded by `tests/emote-pass.cjs`.
 - The party chip stays top-left (members / menu); its separate Emotes button is gone. Guarded by `tests/emote-grid.cjs`.
 - **High five variations** (user, 22 Oct 2026: "the high five emote only waves ... ten variations, randomized"). High five plays a
   real sequence, 1.5-2.5 s, one of TEN (`lib/town/highFive.ts`, shuffled bag `nextHighFive`: all ten before any repeat, never the
