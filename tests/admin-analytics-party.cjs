@@ -262,7 +262,7 @@ ok('Phase B wiring: Town, townBridge (analytics-free callback), NickField, the v
  assert(/if\(emoteCam\.begin\([^;]*\)\)countEmoteCam\(\);/.test(bus),'em:cam only when the camera engaged');
  assert(/onEmoteVariant\(\(family,v,root\)=>\{if\(family==='react'\|\|root===player\.root\)countEmoteVariant\(family,v\);\}\);/.test(town),'only your own picks (and a reaction to yours)');
  assert(/emoteBus\.set\(null\);onEmoteVariant\(null\);/.test(town),'listener cleared on unmount');
- assert(/reducedMotion:\(\)=>reduced,onEmoteSeen:countEmoteSeen,doors:KONBINI_DOOR_HINTS\}\)/.test(town),'em:seen through the runtime option');
+ assert(/reducedMotion:\(\)=>reduced,onEmoteSeen:countEmoteSeen,doors:(?:KONBINI|PARTY)_DOOR_HINTS\}\)/.test(town),'em:seen through the runtime option');
  const tb=read('lib/multiplayer/townBridge.ts')+read('lib/multiplayer/roomParty.ts');
  assert(/onEmoteSeen\?: \(\) => void/.test(tb)&&/if \(e\.id !== s\.you && avatars\.emote\(e\.id, e\.emote\)\) ctx\.onEmoteSeen\?\.\(\);/.test(tb),'callback only, when the emote is really shown');
  assert(/emote\(id:MemberId,e:Emote\):boolean;/.test(read('lib/graphics/remoteAvatars.ts')));
