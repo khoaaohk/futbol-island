@@ -2,7 +2,8 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Mode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
@@ -59,7 +60,15 @@ function hintTexture(text: string): T3.CanvasTexture {
   const t = new T3.CanvasTexture(canvas); t.colorSpace = T3.SRGBColorSpace; return t;
 }
 /** The door hint's words: "3 in the Konbini" (pure, exported for tests). */
-export function doorHintText(n: number, room: number): string { return n > 0 ? `${n} ${roomText(room).replace(/^In /, 'in ')}` : ''; }
+export function doorHintText(n: number, room: number): string {
+  if (room === RoomCode.Arcade) return arcadeDoorHintText(n); // "2 in the Arcade" (the building's sign name)
+  return n > 0 ? `${n} ${roomText(room).replace(/^In /, 'in ')}` : '';
+}
+/** Is this member counted at room `room`'s door? Their room pose says so, or (Arcade only) a LEGACY door pose: an old client in the
+ *  Arcade sends Busy + Indoors + Activity.Arcade at the island door (lib/town/arcadeDoorHint.ts). */
+export function atRoomDoor(m: { room: number; presence: string; activity: number }, room: number): boolean {
+  return m.room === room || (room === RoomCode.Arcade && m.room < 0 && m.presence === 'indoors' && m.activity === Activity.Arcade);
+}
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
@@ -108,7 +117,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       let h = hints[i];
       if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false })); sp.renderOrder = 4; sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
       let n = 0;
-      if (live) for (const m of s.members) if (m.id !== s.you && m.room === d.room && !hid.has(m.id)) n++;
+      if (live) for (const m of s.members) if (m.id !== s.you && atRoomDoor(m, d.room) && !hid.has(m.id)) n++;
       if (n !== h.n) {
         h.n = n; const mat = h.sprite.material as T3.SpriteMaterial; mat.map?.dispose(); mat.map = n > 0 ? hintTexture(doorHintText(n, d.room)) : null; mat.needsUpdate = true;
         h.sprite.userData.text = doorHintText(n, d.room);

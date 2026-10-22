@@ -176,6 +176,9 @@ export interface RoomParty {
   pushOut(p: { x: number; z: number }, r: number): boolean;
   /** Sends an emote to the party (rate limits as on the island); false when not sent (not live, away, too soon). */
   sendEmote(e: number): boolean;
+  /** Sends the local room pose now (a busy flag flipped while the room's loop is stopped: a game replaced the Arcade hub, an overlay
+   *  covers it). The connection's delta check drops it when nothing changed; otherwise the 5 s beat would carry it late. */
+  sendNow(): void;
   /** True while the party draws the local player's colour ring (the room's own foot disc then hides: one ring only). */
   readonly meRing: boolean;
   readonly room: number;
@@ -279,6 +282,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
       }
       return moved;
     },
+    sendNow() { if (core.live) sendLocal(now()); },
     sendEmote(e) { return conn.status === 'live' && conn.sendEmote(e as Parameters<PartyConnection['sendEmote']>[0]); },
     update(dt, nowMs, camera, hideFriends = false) {
       lastUpdateAt = nowMs;

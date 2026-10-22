@@ -17,3 +17,5 @@ export function arcadeDoorHint(rooms:ArrayLike<number>,count:number,out:ArcadeDo
  if(n!==out.count||out.text===''&&n>0){out.count=n;out.text=arcadeDoorHintText(n);}
  out.visible=n>0;return out;
 }
+/** The island party runtime's door entry for the Arcade (components/Town.tsx passes it with the Konbini doors to createPartyRuntime). */
+export const ARCADE_DOOR_HINT:{readonly room:number;readonly x:number;readonly y:number;readonly z:number}={room:ARCADE_ROOM_CODE,x:ARCADE_DOOR.x,y:ARCADE_DOOR_HINT_Y,z:ARCADE_DOOR.z};

@@ -26,18 +26,24 @@ export interface RoomPartyHandle { readonly layer: RoomParty; readonly room: num
   /** An emote from the wheel: sent to the party and played on your own rig (a high five turns you to the nearest friend here). */
   emote(kind: number): void }
 
-export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: number, ready: boolean, busy: boolean): RoomPartyHandle | null {
+/** Back into the stored party as a room page loads (before its scene is ready); the grown-up switch Off leaves from any room.
+ *  Returns whether multiplayer is allowed (the Arcade's page-level layer, components/party/useArcadeRoomParty.ts, shares it). */
+export function useRoomPartyResume(): boolean {
   const allowed = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerAllowed, () => true);
-  const busyRef = useRef(busy);
-  busyRef.current = busy;
-  const [handle, setHandle] = useState<RoomPartyHandle | null>(null);
-  // Back into the stored party as the page loads (before the scene is ready), and the grown-up switch Off leaves from any room.
   useEffect(() => {
     if (!multiplayerEnabled()) return;
     const conn = partyConnection();
     if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return; }
     conn.resume({ look: partyLook() });
   }, [allowed]);
+  return allowed;
+}
+
+export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: number, ready: boolean, busy: boolean): RoomPartyHandle | null {
+  const allowed = useRoomPartyResume();
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
+  const [handle, setHandle] = useState<RoomPartyHandle | null>(null);
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || !host || !allowed || !multiplayerEnabled()) return;
