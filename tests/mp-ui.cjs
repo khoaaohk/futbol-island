@@ -73,7 +73,7 @@ t('display and links',()=>{
  origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R','unknown origins fall back to SITE_URL');
  origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
- assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/Show QR/.test(invite)&&/Works for/.test(invite)&&/New code/.test(invite)&&/expiresAt > 0/.test(invite)&&/partyQr/.test(invite),'invite card content');
+ assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&!/QR/.test(invite)&&/Works for/.test(invite)&&/New code/.test(invite)&&/expiresAt > 0/.test(invite)&&!/partyQr/.test(invite),'invite card content');
  assert.equal(I.joinNote(['Red']),'Red joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
  assert.equal(I.expiryText(0,0),'');assert.equal(I.expiryText(112*60000,0),'1 hour 52 minutes');assert.equal(I.expiryText(30*60000,0),'30 minutes');assert.equal(I.expiryText(120*60000,0),'2 hours');assert.equal(I.expiryText(61*60000,0),'1 hour 1 minute');assert.equal(I.expiryText(60000,0),'1 minute');
 });
@@ -196,9 +196,8 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(!/lib\/saves|lib\/analytics|localStorage/.test(all.replace(/\/\/[^\n]*/g,'')),'privacy: no saves / analytics / persistent storage');
   assert(/sessionStorage/.test(inv)&&!/localStorage/.test(inv),'pending code in sessionStorage only');
  });
- t('qrcode is imported dynamically only',()=>{
-  assert(!/^import[^\n]*['"]qrcode['"]/m.test(all)&&!/require\(['"]qrcode['"]\)/.test(all),'no static import');
-  assert(/await import\('qrcode'\)/.test(inv),'dynamic import');assert.equal((all.match(/qrcode'/g)||[]).length,1);
+ t('no QR code in the party UI (owner decision Oct 22 2026)',()=>{
+  assert(!/qrcode/.test(all),'the party UI does not load the qrcode package');assert(!/partyQr|data-party-qr/.test(all));
  });
  t('mounted in Town only behind the flag (Task E / coordinator, Oct 22 2026)',()=>{
   const town=read('components/Town.tsx');

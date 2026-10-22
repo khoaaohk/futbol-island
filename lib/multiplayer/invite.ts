@@ -1,5 +1,5 @@
 // Party invitations (design docs/multiplayer-design.md 2.1-2.3, 3). The code is the only capability: no accounts, no names.
-// Relay HTTP calls (POST /party, GET /party/:code), link / share / QR helpers and the pending-link store. No analytics, no saves.
+// Relay HTTP calls (POST /party, GET /party/:code), link / share helpers and the pending-link store. No analytics, no saves.
 import { CODE_ALPHABET, CODE_LENGTH, normalizeCode } from '../../multiplayer/protocol';
 import { SITE_URL } from '../site/seo';
 import { relayHttpUrl } from './config';
@@ -70,21 +70,6 @@ export async function sharePartyLink(code: string): Promise<'shared' | 'copied' 
     return 'copied';
   } catch {
     return 'failed';
-  }
-}
-
-const qrCache = new Map<string, string | null>();
-/** QR of the link as a data URL; the qrcode package loads only here, on demand. */
-export async function partyQr(code: string): Promise<string | null> {
-  if (qrCache.has(code)) return qrCache.get(code) ?? null;
-  try {
-    const { default: QR } = await import('qrcode');
-    const url = await QR.toDataURL(partyLink(code), { width: 240, margin: 1, errorCorrectionLevel: 'M' });
-    qrCache.set(code, url);
-    return url;
-  } catch {
-    qrCache.set(code, null);
-    return null;
   }
 }
 
