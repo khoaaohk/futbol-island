@@ -118,7 +118,7 @@ export default function TitleActions(){
   {state==='returning'&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions">
    {/* Never part of the code on screen: its first word is a third of the key (QA, Oct 10 2026). */}
    <WaterPill card="returning" label="Play" sub="Welcome back!"/>
-   <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>Use a different code</button>
+   <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="3.4"/><path d="M11.4 12H21M17.5 12v3M20 12v2"/></svg>Use a different code</button>
   </div>}
   {state==='ready'&&<div ref={landing} className={styles.choices} data-title-card="ready">
    <WaterPill card="ready" label="Play" sub="You’re all set!" autoStart/>

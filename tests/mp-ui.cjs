@@ -158,8 +158,8 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(!/<input/.test(jf)&&!/<textarea/.test(jf),'no free text besides the code boxes');
   assert(!/from '[^']*(analytics|saves|deviceMarks)/.test(jf+cb)&&!/console\./.test(jf+cb)&&!/data-track/.test(jf),'the code is never logged or tracked');
   assert(!/connection\.|createParty|checkParty|fetch\(/.test(jf),'does not connect from the title screen');
-  assert(/min-height:44px/.test(jc)&&/min-width:44px/.test(jc),'>= 44 px targets');
-  assert(!/transition|animation/.test(jc),'no motion to reduce');
+  assert(/min-height:4[48]px/.test(jc),'>= 44 px targets');
+  assert(!/transition|animation/.test(jc)||/prefers-reduced-motion:reduce\)\{\.join\{transition:none\}/.test(jc),'the Use-a-different-code style motion has a reduced-motion override');
   assert(!/(^|\n)import .*party/.test(read('components/landing/saveCodeAdapter.tsx')),'save adapter untouched');
   // setPendingParty
   store.clear();

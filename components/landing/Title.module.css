@@ -108,7 +108,7 @@
 .start:active{translate:0 var(--btn-press);scale:.98;box-shadow:var(--btn-shadow-gold-pressed)}
 .start:focus-visible,.haveCode:focus-visible,.quiet:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .start:disabled,.haveCode:disabled{cursor:progress}
-.haveCode{min-height:48px;width:100%;padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);
+.haveCode{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;width:100%;padding:10px 20px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);
  box-shadow:0 4px 0 var(--btn-mint-edge);font-size:16px;font-weight:800;cursor:pointer;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
 @media(hover:hover){.haveCode:hover{scale:1.03}}
 .haveCode:active{translate:0 var(--btn-press);scale:.98;box-shadow:0 1px 0 var(--btn-mint-edge)}
