@@ -281,6 +281,37 @@ Agent-hours = one agent's wall time. Every phase: build agent, then a fresh veri
 `MuseumRoom.tsx`, `museumScene.ts` (expose scene/camera/wake, exhibit lookup for the station line). Risk: draw count in the big
 hall.
 
+#### Museum prep status (branch `mp-rooms-museum-prep`, 22 Oct 2026; built before Phase 1 merged)
+Done (no shared-layer code touched; tests `tests/mp-rooms-museum.cjs`, in `npm test`):
+- `lib/multiplayer/rooms/museum.ts` (pure): `MUSEUM_ROOM: RoomDescriptor` (code 6 = `RoomCode.Museum`; bounds = museum `FLOOR`
+  x -21..12, z -8..18; areas hall + wing; 7 gallery rects; door + `MUSEUM_ARRIVAL`; 9 `MUSEUM_SPAWNS` round the door; wake rule
+  remote / 20 fps phones / 300 ms / no Battery-saver wake; caps max 5, field r 0.8, station r 2.5; busy table). Helpers:
+  `museumBusyFlag/Text` (sender), `museumStationText(x,z)` (receiver line: "Looking at <exhibit>", "Talking to Ada", "Looking at
+  World Cup balls", "Looking at the timeline", else "In the museum"), `clampToMuseum(out,x,z)` (= the scene's collide clamp),
+  `pickMuseumSpawn(out,occupied,seed)`, `MUSEUM_DOOR_HINT` (island world x 160.2, y 4.6, z 186.1) + `museumDoorHintText(n)`
+  ("2 in the Museum"). `RoomDescriptor` is local: map its fields onto Phase 1's type (comment at the top of the file).
+- `lib/multiplayer/rooms/museumHooks.ts`: `museumRoomHooks` (no-op until `attach`): `context()` -> `{scene, camera, player,
+  readPose, wake, sleeping, arrive}`, `pose(out)` (room-local x/z/yaw/moving + busy), `frame(dt,now,camera)`, `wake()`,
+  `sleeping()`, `arrive(x,z)`, `clamp`, `attach(layer)/detach(layer)` where `layer.update(dt,now,camera): boolean`.
+- Already wired, behaviour unchanged without a layer: `museumScene.ts` registers its source, calls `museumRoomHooks.frame()` before
+  render, keeps frames while it returns true, runs remote-only frames at 20 fps on phones, unregisters in `dispose()`, and
+  `arrive(x,z)` re-aims the walk-in (sill -> today's arrival point -> the slot). `MuseumRoom.tsx` writes
+  `museumRoomHooks.setBusy(guideOpen, !!cert, balls!==false, experience, zoom?.id)`.
+- `tests/mp-client.cjs` privacy scan now walks `lib/multiplayer` recursively (the `rooms/` folder broke its `readdirSync`).
+
+Integrator, after Phase 1 merges (~30 min):
+1. `MuseumRoom.tsx` (in `MuseumHall`): `const party = useRoomParty(museumRoomSource, RoomCode.Museum)` where the source adapts
+   `museumRoomHooks.context()` (scene / camera / `local: () => museumRoomHooks.pose(buf)` / `wake`), then
+   `{party && <RoomPartyChip party={party}/>}` in the header's right slot, hidden while `covered || zoom`.
+2. Inside `createRoomParty` (or the hook): `museumRoomHooks.attach({update: (dt, now, cam) => party.update(dt, now, cam)})` and
+   `detach` on dispose; the layer's network wake calls `museumRoomHooks.wake()` (not in Battery saver).
+3. Clamp received same-room poses with `MUSEUM_ROOM`'s `clampToMuseum`; busy friends' line = `museumStationText(x, z)`.
+4. Arrival: on the first Welcome in the museum, `pickMuseumSpawn(buf, friendsHere(), mySlot)` then `museumRoomHooks.arrive(buf.x, buf.z)`.
+5. Island (Town / townBridge, Phase 1 owners): count roster members with `roomOf(pose) === 6`; show `museumDoorHintText(n)` at
+   `MUSEUM_DOOR_HINT`.
+6. Verify (fresh agent): 2 contexts in the museum, 1 on the island; idle 0 rAF after 0.5 s with 2 still friends; `__museum.state`
+   draws / `render.calls` +<= 3.
+
 ### Phase 3: Arcade hub - effort M, ~5 h + 2 h verify
 `ArcadeRoom.tsx`, `arcadeRoomScene.ts` (layer in `tick`, Busy at the cabinet while `game`), `arcadeRoomCrowd.ts` (count minus
 friends). Risk: the 15 fps floor means remote frames are free here, but the crowd swap must not pop NPCs (fade them at their

@@ -26,6 +26,7 @@ import {EXPERIENCES} from './museum/experiences';
 import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/experiences/ExperienceStage';
 import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
+import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
@@ -118,6 +119,8 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
  useEffect(()=>{room.current?.setCovered(covered);if(covered)stop();},[covered,ready]);
+ // The room party layer's busy line (lib/multiplayer/rooms/museumHooks.ts; a module write, no render, no-op without a layer).
+ useEffect(()=>{museumRoomHooks.setBusy(guideOpen,!!cert,balls!==false,experience,zoom?.id??null);},[guideOpen,cert,balls,experience,zoom]);
  // Audio: every trusted input unlocks the page's one AudioContext (iOS counts touchend / click). The arrival bell and the gallery
  // "shh" play as the light fades, or on the first tap within 8 s if audio is still locked.
  const arrival=useRef(0);

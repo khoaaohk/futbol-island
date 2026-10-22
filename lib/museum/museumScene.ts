@@ -16,6 +16,7 @@ import {museumSfx} from './museumSound';
 import {createExhibitSculptures,SCULPTURE_TOP} from './museumExhibits';
 import {createBallMaterial} from './wcBalls/ballViewer';
 import {ballDesign} from './wcBalls/designs';
+import {museumRoomHooks,type MuseumHookSource} from '../multiplayer/rooms/museumHooks';
 import {museumWalls,MUSEUM_LIGHT,WALL_TONES,SKIRT_H,RIM_H,LIP,AO_WIDTH,faceAlbedo,toneFor,addCutaway,cutUniforms,updateCut,type WallSpec} from './museumWalls';
 
 /**
@@ -36,6 +37,8 @@ type Cam={pos:T.Vector3;look:T.Vector3;hw:number;hh:number};
 type Stop={id:string;label:string;x:number;y:number;z:number;yaw:number;w:number;h:number;elev:number;piece?:{top:number;bot:number}};
 
 /** The modern gallery (Oct 10 2026; docs/museum-modern-style.md): gallery white, pale concrete, ink, hairlines. */
+/** Remote-only frame rate on phones (design 3.2; MUSEUM_ROOM.wake.remoteFpsPhone). */
+const MUSEUM_REMOTE_FPS=20;
 const P={ground:'#f6f4ef',floor:'#dcd8cf',joint:'#cfcac0',wall:'#f7f5f0',reveal:'#cbc7be',plinth:'#fbfaf7',ink:'#1d1d1b',hair:'#d9d6cf',wood:'#e9e6df'};
 
 export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInput,callbacks:{
@@ -199,7 +202,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const obstacles=museumObstacles(),pois=museumPois(),camYaw=-.36;
  const blocked=(px:number,pz:number,r=.3)=>museumBlocked(px,pz,obstacles,r);
  let x:number=ROOM.doorX,z=D+.2,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.8,stride=0,steps=0;
- let leaveStarted=0,firstFrameSent=false;const stuck=createStuckWatch(.5);
+ let leaveStarted=0,firstFrameSent=false,remoteOnly=false;const stuck=createStuckWatch(.5);
  let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:MuseumPoi|null=null,near:MuseumPoi|null=null,promptVisible=false;
  let cameraX=0,cameraZ=0,halfW=8,halfH=6,viewportW=1,viewportH=1,viewportLeft=0,viewportTop=0;
  const keys=new Set<string>(),stick={x:0,z:0},motion:PlayerMotion={travelMode:'walk'};
@@ -253,7 +256,8 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  function walkToPoi(p:MuseumPoi){const s=segPoint(p,x,z);if(Math.hypot(s.x-x,s.z-z)<.3){target=null;route=[];arrivePoi=null;yaw=Math.atan2(p.face.x-x,p.face.z-z);wake();callbacks.onArrive?.(p);return;}route=findPath(s.x,s.z);target=route.shift()??{x:s.x,z:s.z};arrivePoi=p;wake();}
 
  function tick(now:number){frame=0;if(disposed||covered||document.hidden)return;
-  const interval=frameMs();if(interval>0){const next=frameCapSlot(now,slot,interval);if(next<0){frame=requestAnimationFrame(tick);return;}slot=next;}
+  // Friends-only frames (room party layer, docs/multiplayer-rooms-design.md 3.2): 20 fps on phones; never without a layer.
+  const interval=remoteOnly&&mobile?Math.max(1000/MUSEUM_REMOTE_FPS,frameMs()):frameMs();if(interval>0){const next=frameCapSlot(now,slot,interval);if(next<0){frame=requestAnimationFrame(tick);return;}slot=next;}
   const dt=Math.max(.001,Math.min(.05,last?(now-last)/1000:1/60));last=now;time+=dt;frames++;
   const zoomed=zoomIndex!==null;
   let ix=zoomed?0:stick.x+Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),iz=zoomed?0:stick.z+Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
@@ -290,12 +294,14 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=!hidePlayer;
   if(near&&!zoomed){const c=segPoint(near,x,z);projected.set((c.x+near.face.x)/2,2.4,(c.z+near.face.z)/2).project(camera);const vis=Math.abs(projected.x)<.92&&projected.y<.85&&projected.y>-.8;callbacks.onPrompt?.((projected.x*.5+.5)*viewportW,(-projected.y*.5+.5)*viewportH,vis);promptVisible=vis;}else if(promptVisible){promptVisible=false;callbacks.onPrompt?.(0,0,false);}
   if(!leaving)stepTimeline();
+  // Friends in the room (no-op false until a room party layer attaches: lib/multiplayer/rooms/museumHooks.ts).
+  const remote=museumRoomHooks.frame(dt,now,camera);
   // The wall cutaway follows the player (view space; this loop only runs while something moves).
   updateCut(cut,player.root.visible,x,z,camera);
   renderer.render(scene,camera);draws++;if(!firstFrameSent){firstFrameSent=true;callbacks.onFirstFrame?.();}
   const busy=!!zoom||speed>.03||!!target||keys.size>0||Math.hypot(stick.x,stick.z)>.02||greet>0||spinV!==0||doorOpen!==doorTarget||Math.abs(cameraX-cx)>.005||Math.abs(cameraZ-cz)>.005||Math.abs(turn)>.01;
-  if(busy)settle=.5;else settle-=dt;
-  if(settle>0||leaving)frame=requestAnimationFrame(tick);else{last=0;slot=0;}
+  if(busy)settle=.5;else settle-=dt;remoteOnly=remote&&!busy&&settle<=0;
+  if(settle>0||leaving||remote)frame=requestAnimationFrame(tick);else{last=0;slot=0;remoteOnly=false;}
  }
  /** The walking camera follows you across the L: x within the whole floor, z further toward the front inside the wing. */
  function camX(){const lo=FLOOR.minX-.4+halfW,hi=FLOOR.maxX+.4-halfW;return lo>=hi?(FLOOR.minX+FLOOR.maxX)/2:T.MathUtils.clamp(x,lo,hi);}
@@ -316,7 +322,12 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
  const observer=new ResizeObserver(resize);observer.observe(canvas);window.addEventListener('keydown',key);window.addEventListener('keyup',key);window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',visibility);
  player.update(x,z,0,0,reduced,{facing:yaw,resumePose:true,travelMode:'walk'});guide.update(GUIDE.x,GUIDE.z,0,0,reduced,guideMotion);resize();
  // Arrival: walk in a few steps from the door (the doors are already open from the transition).
- placeDoors();target={x:ROOM.doorX,z:D-1.6};
+ placeDoors();const arrival={x:ROOM.doorX,z:D-1.6},slotPoint={x:0,z:0};target=arrival;
+ // The room party layer's view of this scene (museumHooks.ts): pose, wake, sleeping, and re-aiming the walk-in at a free slot.
+ const hookSource:MuseumHookSource={scene,camera,player:player.root,
+  readPose(o){o.x=x;o.y=0;o.z=z;o.yaw=yaw;o.moving=Math.hypot(vx,vz)>.08;},wake,sleeping:()=>frame===0,
+  arrive(px,pz){if(target===arrival&&!leaving){slotPoint.x=px;slotPoint.z=pz;route=[slotPoint];wake();}}};
+ museumRoomHooks.register(hookSource);
  const stopIndex=(id:string)=>stops.findIndex(s=>s.id===id);
 
  return {
@@ -348,7 +359,7 @@ export function createMuseumScene(canvas:HTMLCanvasElement,input:MuseumSceneInpu
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
   get state(){return {exhibits:{sculptures:[...exhibits.built]},x,z,yaw,zoom:zoomView(),zooming:!!zoom,near:near?.id??null,leaving,doorOpen,sleeping:frame===0,draws,frames,steps,spin:{turns:spinTurns,v:spinV,angle:telstar?.rotation.y??0},rain,
    render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),stops:stops.map(s=>s.id)};},
-  dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
+  dispose(){disposed=true;museumRoomHooks.unregister(hookSource);cancelAnimationFrame(frame);frame=0;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    pack?.dispose();player.dispose();guide.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});
    geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());doorGeo.dispose();atlas.dispose();shadeTex.dispose();renderer.dispose();renderer.forceContextLoss();},
  };

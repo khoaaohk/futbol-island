@@ -96,7 +96,7 @@ const walls=W.museumWalls();
  const tick=scene.slice(scene.indexOf('function tick('),scene.indexOf('renderer.render(scene,camera);draws++'));
  assert.match(tick,/updateCut\(cut,player\.root\.visible,x,z,camera\);/,'updated in the frame loop, right before the render');
  assert.equal((scene.match(/updateCut\(|cut\.uCut/g)||[]).length,1,'and nowhere else');
- assert.match(scene,/if\(settle>0\|\|leaving\)frame=requestAnimationFrame\(tick\);else/,'the loop still sleeps at rest');
+ assert.match(scene,/if\(settle>0\|\|leaving(?:\|\|remote)?\)frame=requestAnimationFrame\(tick\);else/,'the loop still sleeps at rest');
  for(const v of [W.CUT.rx,W.CUT.ry,W.CUT.inner,W.CUT.margin])assert.ok(W.CUT_GLSL.includes(v.toFixed(3)),'GLSL uses CUT '+v);
  assert.match(W.CUT_GLSL,/dot\(vCutN,vec3\(uCutPlayer\.x,[.\d]+,uCutPlayer\.y\)-vCutWorld\)<0\./,'only faces the player is behind');assert.match(W.CUT_GLSL,/dot\(vCutWorld\.xz-uCutPlayer,uCutDir\)>/,'only fragments on the camera\'s side of the player');
  // The patched shader compiles into the materials' own chunks (no extra pass).

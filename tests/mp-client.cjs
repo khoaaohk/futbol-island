@@ -357,7 +357,7 @@ t('look round trip: default + 3 presets, bounds, unknown -> 0',()=>{
 });
 
 t('privacy: no forbidden imports or storage keys in lib/multiplayer',()=>{
-  for(const f of fs.readdirSync(path.join(ROOT,'lib/multiplayer'))){
+  for(const f of fs.readdirSync(path.join(ROOT,'lib/multiplayer'),{recursive:true}).filter(f=>/\.tsx?$/.test(f))){// recursive: lib/multiplayer/rooms/*
     const src=fs.readFileSync(path.join(ROOT,'lib/multiplayer',f),'utf8');
     assert.ok(!/lib\/saves|lib\/analytics|\.\.\/saves|\.\.\/analytics|deviceMarks|fi2-install-v1|fi2-save-code-v1|localStorage/.test(src),f);}
 });

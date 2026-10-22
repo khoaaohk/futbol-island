@@ -85,7 +85,7 @@ const IDS=X.EXHIBITS.map(e=>e.id);
  assert.match(town,/target==='museum'\)setMuseumOpen\(true\)/,'endgame / graduation links still open the museum');
  assert.match(read('next.config.mjs'),/key: 'from', value: '\^\(arcade\|konbini\|museum(\|shop)?\)\$' \}\], destination: '\/island-return'/,'/?from=museum is rewritten to the static island-return page');assert.match(read('app/island-return/page.tsx'),/<Town returningFromArcade\/>/);assert.match(museum,/MuseumDoorSlide mode="enter"/);assert.ok(!/Coming soon/.test(museum));
  assert.match(scene,/forceContextLoss\(\)/);assert.match(scene,/powerPreference:'low-power'/);assert.match(scene,/frameCapSlot/);assert.ok(!/setInterval/.test(scene+room),'no timers polling');
- assert.match(scene,/if\(settle>0\|\|leaving\)frame=requestAnimationFrame\(tick\);else/,'the loop sleeps when nothing moves');
+ assert.match(scene,/if\(settle>0\|\|leaving(?:\|\|remote)?\)frame=requestAnimationFrame\(tick\);else/,'the loop sleeps when nothing moves');
  assert.match(room,/import\('@\/lib\/museum\/museumScene'\)/,'scene lazy-loaded');
  console.log('PASS wiring: Town → /museum, ?from=museum, door slide, sleeping loop, full dispose');}
 
