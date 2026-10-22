@@ -136,11 +136,11 @@ ok('the room: the friend is an instance of the pickups draw and the sparkle and 
 ok('HUD: Wave / High five above Dart (never over Dart or the rise / dip pad), hearts on the reef chip; the Entering chip waits its turn (one at a time)',()=>{
  const hud=read('components/DiveHud.tsx'),css=read('app/globals.css');
  assert(hud.includes('data-dive-emote-btn="wave"')&&hud.includes('data-dive-emote-btn="five"')&&hud.includes("diveLift.emote='wave'")&&hud.includes("diveLift.emote='five'"));
- assert(hud.includes('{v.diving&&v.friend?'),'shown only while the friend is in reach');assert(hud.includes('dive-hearts'));
+ assert(hud.includes('{v.diving&&v.friend?'),'shown only while the friend is in reach');assert(!hud.includes('className="dive-reef"'),'the Reef n/12 chip is gone (user, Oct 21 2026)');
  assert(hud.includes("toastLane.request('dive-edge')")&&hud.includes("useToastLaneBusy('dive-edge')"),'the chip shares the toast lane with the lesson card');
  const px=(sel,prop,phone)=>{const block=phone?css.slice(css.indexOf('@media(max-width:600px),(pointer:coarse){'+sel+'{')):css.slice(css.indexOf('\n'+sel+'{'));const m=block.match(new RegExp(prop+':([^;}]+)'));return m[1];};
- // Desktop: Dart 62 px at bottom 145 (top at 207); the emote row at 221. Phone: Dart 54 px at +99 (top +153); the row at +165; ▲ ▼ are at the far right column.
- assert.equal(px('.dive-emote','bottom',false),'221px');assert(/\+ 165px\)/.test(px('.dive-emote','bottom',true)));
- assert.equal(px('.dive-emote','right',false),px('.dive-dart-btn','right',false),'same column as Dart, left of the ▲ ▼ pad');
+ // Calm HUD (Oct 21 2026; Dart removed): one right column: ▲ ▼ (desktop 112 px + 2×58 + 10 = 238) then the friend row 12 px above; phone +70 + 2×50 + 8 = +178, row at +190.
+ assert.equal(px('.dive-emote','bottom',false),'250px');assert(/\+ 190px\)/.test(px('.dive-emote','bottom',true)));
+ assert.equal(px('.dive-emote','right',false),px('.dive-depth','right',false),'same column as the ▲ ▼ pad');
 });
 console.log(`\nexplore-delight: ${passed} passed`);

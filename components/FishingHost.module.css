@@ -226,3 +226,6 @@
 .trail i:nth-of-type(3){transform:rotate(calc(var(--trail-len) * -.66)) scale(.7);opacity:.45}
 .trail i:nth-of-type(4){transform:rotate(calc(var(--trail-len) * -.88)) scale(.55);opacity:.25}
 @media(prefers-reduced-motion:reduce){.trail,.spoolGhost,.whir,.ghosts,.hubRing{display:none}.reelArt{filter:none}}
+
+/* Calm HUD (Oct 21 2026): while the tutorial shows its step, the message (the same words) waits, so the two never overlap. */
+.hud:has([data-fish-tutorial]) .message{visibility:hidden}

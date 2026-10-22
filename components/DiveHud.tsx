@@ -13,12 +13,17 @@ import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 let edgeChipSeen=false;
 export default function DiveHud(){
  const v=useSyncExternalStore(diveStore.subscribe,diveStore.get,diveStore.server);
- // A note fades by itself after a few seconds (one timer while one shows; none at rest).
- useEffect(()=>{if(!v.note)return;const t=setTimeout(()=>diveStore.set({note:''}),5000);return ()=>clearTimeout(t);},[v.note]);
+ // Calm HUD (Oct 21 2026, user: "only show one at a time"): the note takes the one toast lane too (a lesson card or the edge chip
+ // showing first makes it wait; one that waited 6 s is dropped), and fades by itself after 4 s on screen. The find card holds the
+ // lane while it shows (a blocking card: no note, chip or lesson starts over it).
+ const noteBusy=useToastLaneBusy('dive-note'),card=!!v.card,note=v.note&&!noteBusy&&!card?v.note:'';
+ useEffect(()=>{if(!note)return;if(!toastLane.request('dive-note'))return;const t=setTimeout(()=>diveStore.set({note:''}),4000);return ()=>{clearTimeout(t);toastLane.release('dive-note');};},[note]);
+ useEffect(()=>{if(!v.note||note)return;toastLane.want('dive-note');const t=setTimeout(()=>{toastLane.cancel('dive-note');diveStore.set({note:''});},6000);return ()=>clearTimeout(t);},[v.note,note]);
+ useEffect(()=>{if(!card)return;toastLane.hold('card',true);return ()=>toastLane.hold('card',false);},[card]);
  // Seamless Explore (Oct 21 2026): the edge chip ("Entering: …" / "Leaving the reef") clears itself after its 2.4 s fade.
  // Explore delight (Oct 21 2026, user rule "only one thing at a time"): the chip takes the HUD stack's toast lane while it shows, so the
  // one-time lesson card (SwimLessonToast, same lane) waits for it, and the chip waits for a card already showing. Never both at once.
- const laneBusy=useToastLaneBusy('dive-edge'),chip=v.banner&&!laneBusy?v.banner:'';
+ const laneBusy=useToastLaneBusy('dive-edge'),chip=v.banner&&!laneBusy&&!v.card?v.banner:'';
  useEffect(()=>{if(!chip)return;if(!toastLane.request('dive-edge'))return;const t=setTimeout(()=>diveStore.set({banner:''}),2400);return ()=>{clearTimeout(t);toastLane.release('dive-edge');};},[chip]);
  // A chip that waited 4 s behind other notes is stale (the arrival note already names the zone): it is dropped, never shown late.
  // Oct 21 2026 (user: go with the recommendation): the FIRST edge chip of a visit may wait 10 s (a fresh save queues the welcome toast and
@@ -33,10 +38,7 @@ export default function DiveHud(){
  return <>
   {v.diving?<div className="dive-vignette" aria-hidden="true"/>:null}
   {v.diving?<div className="dive-depth" data-dive-depth-pad role="group" aria-label="Rise or dip lower">{depthBtn('up')}{depthBtn('down')}</div>:null}
-  {/* Explore v2 (Oct 21 2026): a quick burst forward (tap; F / Shift on desktop), and the zone's journey progress (pickups + finds). */}
-  {v.diving?<button type="button" className="dive-dart-btn" data-dive-dart aria-label="Dart: a quick burst forward · F" title="Dart · F"
-   onPointerDown={e=>{e.preventDefault();diveLift.dart=true;}} onContextMenu={e=>e.preventDefault()}>
-   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 12h9M9 7l5 5-5 5M15 7l5 5-5 5"/></svg></button>:null}
+  {/* The Dart button was removed (Oct 21 2026, user: "let's remove the dart action"); the right column is ▲ ▼ and the friend row. */}
   {/* Explore delight (Oct 21 2026): wave / high five the zone's friend (shown only while it is within reach; G / H on desktop). */}
   {v.diving&&v.friend?<div className="dive-emote" data-dive-emote role="group" aria-label={`Say hi to ${v.friend}`}>
    <button type="button" className="dive-emote-btn" data-dive-emote-btn="wave" aria-label={`Wave to ${v.friend} · G`} title="Wave · G" onPointerDown={e=>{e.preventDefault();diveLift.emote='wave';}} onContextMenu={e=>e.preventDefault()}>
@@ -44,21 +46,21 @@ export default function DiveHud(){
    <button type="button" className="dive-emote-btn" data-dive-emote-btn="five" aria-label={`High five ${v.friend} · H`} title="High five · H" onPointerDown={e=>{e.preventDefault();diveLift.emote='five';}} onContextMenu={e=>e.preventDefault()}>
     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 21v-9.5a1.5 1.5 0 0 1 3 0V10V4.5a1.5 1.5 0 0 1 3 0V10V5.5a1.5 1.5 0 0 1 3 0v5V8a1.5 1.5 0 0 1 3 0v6c0 4-2.7 7-6.5 7H7"/><path d="M4 9l-1.5-1M4.5 5.5 3 3.5M8 2.5V1"/></svg></button>
   </div>:null}
-  {v.diving&&v.reef?<p className="dive-reef" data-dive-reef data-restored={v.restored?'':undefined} role="status" aria-label={`Reef ${v.reef}${v.restored?', restored':''}${v.hearts?`, ${v.hearts} of 3 friendship hearts`:''}`}><i aria-hidden="true">{v.restored?'★':'✦'}</i>Reef {v.reef}{v.hearts?<b className="dive-hearts" data-dive-hearts={v.hearts} aria-hidden="true">{'♥'.repeat(v.hearts)}{'♡'.repeat(Math.max(0,3-v.hearts))}</b>:null}</p>:null}
+  {/* The "Reef n/12" chip and its hearts were removed (Oct 21 2026, user: "remove this, we don't need it"); the journey, hearts and
+      the restore card still count and save, and their rewards arrive as the one note / card in the toast lane. */}
   <div className="dive-breath" data-dive-breath hidden role="meter" aria-label="Breath" aria-valuemin={0} aria-valuemax={100} aria-valuenow={100}>
    <i aria-hidden="true"/><span>Breath</span>
   </div>
   {/* Explore delight: the edge chip and the note share one column (the chip on top), so neither can sit on the other. */}
-  {chip||v.note?<div className="dive-msgs">
+  {chip||note?<div className="dive-msgs">
    {chip?<p className="dive-edge-chip" role="status" data-dive-edge key={chip}>{chip}</p>:null}
-   {v.note?<p className="dive-note" role="status" data-dive-note>{v.note}</p>:null}
+   {note&&!chip?<p className="dive-note" role="status" data-dive-note>{note}</p>:null}
   </div>:null}
   {v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
    <small>{v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>
    {v.card.credit?<span className="dive-card-credit">Source: {v.card.credit}</span>:null}
    {v.card.story?<span className="dive-card-story">{v.card.story}</span>:null}
    {v.card.coins>0?<span className="dive-card-coins">+{v.card.coins} coins</span>:null}
-   <span className="dive-card-close">Tap to close</span>
   </button>:null}
  </>;
 }

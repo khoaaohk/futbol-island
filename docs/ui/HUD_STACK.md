@@ -163,3 +163,26 @@ moment the feet are on the roof deck. Guarded by `tests/zipline.cjs`.
   now also honoured when `navigator.webdriver` is true (automation only; players always get 6 s). The card is also mounted once
   per showing: while `blocked` (a job, a lesson, a modal) it is `hidden` rather than unmounted, so the node a tap or a test holds
   stays the same across a job. Guarded by `tests/hud-stack.cjs` and `tests/oct1-ui.cjs`.
+
+## Calm HUD (21 October 2026)
+
+User: "there's so much going on ... only show one at a time", "it's looking way too complicated". Audit and before/after shots:
+`/tmp/calm-hud/` (states × desktop 1288×717, phone 390×844, landscape 844×390). Rules now in code:
+
+- **One transient message, by priority** (`lib/ui/toastLane.ts`): `TOAST_PRIORITY` blocking card (5) > payday (4) > story (3) >
+  hint / lesson (2) > note (1). A note with something to show calls `want(id)` (remembered for `WAIT_MS`, 6 s); when the lane frees,
+  a lower note asking first is told to wait. A blocking card `hold`s the lane (the dive's find / restore / goal card). The dive's
+  notes (`dive-note`, 4 s on screen, dropped after waiting 6 s) and edge chip (`dive-edge`) are in the lane. Lesson toasts (swim,
+  shark, ride, dive, rays) show 5 s (was 8 s) without the "· tap to close" line (the whole card is still the tap target); the reef
+  hint lost "Explore · tap to close" and the find card "Tap to close".
+- **One card under the coins bar**: the ambient Learn / Path card and the ball-hunt hint step aside while a note or the welcome-back
+  card shows; the welcome-back card waits (`blocked`, dwell paused) while an action prompt shows (`actionFocus`: Talk, a job sign,
+  Hop off, Land on truck, Spot it).
+- **Breath is never covered**: while `.dive-breath` shows, `.hud-stack` starts at 150 px (12 px under the pill); dive notes sit there.
+- **Explore room controls** (user: "on mobile this looks messy, the btns are covering"): the Dart button is removed (user: "let's
+  remove the dart action"), the "Reef n/12" chip and its hearts are removed (user: "remove this, we don't need it"; the journey,
+  hearts, restore card and saves are unchanged), the island minimap and its collapse button are hidden in a room, and the right
+  side is one column with 12 px steps: the action row, ▲ ▼ above it, the friend row (Wave / High five, only near a friend) above.
+- **Fishing**: while the tutorial shows its step, the message (the same words) is hidden, so the two never overlap.
+
+Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, stack rules, copy caps, names, >= 44 px targets).

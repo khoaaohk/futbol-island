@@ -17,12 +17,12 @@ export default function RayLessonToast({blocked:held}:{blocked:boolean}){
  const due=useSyncExternalStore(waterStore.subscribe,()=>waterStore.get().rayLesson,()=>0);
  const kind=useSyncExternalStore(waterStore.subscribe,()=>waterStore.get().rayKind,()=>null);
  const [shown,setShown]=useState<{title:string;text:string}|null>(null),done=useRef(0),timer=useRef<ReturnType<typeof setTimeout>>();
- useEffect(()=>{if(!due||blocked||shown||done.current>=due||!kind||!(kind in RAY_LESSONS))return;
+ useEffect(()=>{if(!due||shown||done.current>=due||!kind||!(kind in RAY_LESSONS))return;toastLane.want('ray');if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request('ray'))return;done.current=due;setShown(rayLessonFor(kind as RaySpecies,due-1));},500);
   return ()=>clearTimeout(timer.current);},[due,kind,blocked,shown]);
- useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(null),8000);return ()=>{clearTimeout(t);toastLane.release('ray');};},[shown]);
+ useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(null),5000);return ()=>{clearTimeout(t);toastLane.release('ray');};},[shown]);
  if(!shown)return null;
  return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-swim-lesson="ray" data-ray-kind={kind??undefined} onClick={()=>setShown(null)}>
-  <b>{shown.title}</b><span className={styles.list}>{shown.text}</span><span>{RAY_LESSON_KIND} · tap to close</span>
+  <b>{shown.title}</b><span className={styles.list}>{shown.text}</span><span>{RAY_LESSON_KIND}</span>
  </button></HudSlot>;
 }

@@ -24,12 +24,12 @@ export default function SwimLessonToast({blocked:held,which='swim'}:{blocked:boo
  const L=LESSONS[which],busy=useToastLaneBusy(which),blocked=held||busy;
  const due=useSyncExternalStore(waterStore.subscribe,()=>which==='shark'?waterStore.get().sharkLesson:which==='ride'?waterStore.get().rideLesson:which==='dive'?waterStore.get().reefLesson:waterStore.get().lesson,()=>0);
  const [shown,setShown]=useState(false),timer=useRef<ReturnType<typeof setTimeout>>();
- useEffect(()=>{if(!due||blocked||shown||readShown(L.key))return;
+ useEffect(()=>{if(!due||shown||readShown(L.key))return;toastLane.want(which);if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request(which))return;saveShown(L.key);L.count();setShown(true);},500);
   return ()=>clearTimeout(timer.current);},[due,blocked,shown,L,which]);
- useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(false),8000);return ()=>{clearTimeout(t);toastLane.release(which);};},[shown,which]);
+ useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(false),5000);return ()=>{clearTimeout(t);toastLane.release(which);};},[shown,which]);
  if(!shown)return null;
  return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-swim-lesson={which} onClick={()=>setShown(false)}>
-  <b>{L.lesson.title}</b><span className={styles.list}>{L.lesson.text}</span><span>{L.lesson.kind} · tap to close</span>
+  <b>{L.lesson.title}</b><span className={styles.list}>{L.lesson.text}</span><span>{L.lesson.kind}</span>
  </button></HudSlot>;
 }

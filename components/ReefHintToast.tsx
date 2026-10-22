@@ -19,14 +19,14 @@ export default function ReefHintToast({blocked:held}:{blocked:boolean}){
  const angle=useSyncExternalStore(reefStore.subscribe,()=>reefStore.get().angle,()=>0);
  const [shown,setShown]=useState<number>(0),done=useRef(0),since=useRef(0),timer=useRef<ReturnType<typeof setTimeout>>();
  useEffect(()=>{if(!hint||shown||done.current>=hint.n)return;if(!since.current)since.current=Date.now();
-  if(Date.now()-since.current>STALE_MS){done.current=hint.n;since.current=0;reefStore.clearHint();return;}
-  if(blocked)return;
+  if(Date.now()-since.current>STALE_MS){done.current=hint.n;since.current=0;toastLane.cancel('reef');reefStore.clearHint();return;}
+  toastLane.want('reef');if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request('reef'))return;done.current=hint.n;since.current=0;setShown(hint.n);},400);
   return ()=>clearTimeout(timer.current);},[hint,blocked,shown]);
  useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(0),REEF_HINT_MS);return ()=>{clearTimeout(t);toastLane.release('reef');reefStore.clearHint();};},[shown]);
  if(!shown||!hint||hint.n!==shown)return null;
  return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-reef-hint={hint.id} data-reef-far={hint.far?'':undefined} onClick={()=>setShown(0)}>
   <b><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style={{verticalAlign:'-4px',marginRight:6,transform:`rotate(${angle.toFixed(2)}rad)`,transition:'transform .4s ease'}}><path d="M12 3l7 9h-4.5v9h-5v-9H5z" fill="currentColor"/></svg>{REEF_HINT_TITLE}</b>
-  <span className={styles.list}>{reefHintText(hint,hint.far)}</span><span>Explore · tap to close</span>
+  <span className={styles.list}>{reefHintText(hint,hint.far)}</span>
  </button></HudSlot>;
 }

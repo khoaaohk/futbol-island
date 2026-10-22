@@ -85,7 +85,7 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
 // Guide tier on landscape phones (Sep 30 2026): a running job (or an open job card) owns the stack, so the welcome-back card waits;
 // in landscape it docks compactly at the top-left edge (same query and anchor as the docked job panel), never over the centre.
 {const town=fs.readFileSync(path.resolve(__dirname,'../components/Town.tsx'),'utf8'),css=fs.readFileSync(path.resolve(__dirname,'../components/WelcomeBack.module.css'),'utf8');
- assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\} held=\{stackCovered\}\/>/,'the guide card waits while a job owns the stack, and its dwell pauses while the stack is covered');
+ assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\|\|actionFocus\} held=\{stackCovered\}\/>/,'the guide card waits while a job owns the stack, and its dwell pauses while the stack is covered');
  assert.match(town,/if\(jobActiveRef\.current!==!!a\)setJobRunning\(!!a\);jobActiveRef\.current=!!a;/,'Town re-renders only when a job starts or ends');assert.match(town,/jobCardOpen\.current=open;setJobCardShown\(open\);/);
  const land=css.slice(css.indexOf('@media (orientation:landscape) and (max-height:500px)'));
  assert(land.length>40,'landscape dock rule');assert.match(land,/\.card\[data-welcome-back\]\{position:absolute;top:0;left:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-left,0px\)\)/,'docked at the left edge');
