@@ -74,15 +74,25 @@
 .inviteBlock .qr,.inviteBlock .qrWait{width:120px;height:120px}
 .inviteBlock .row{flex-wrap:wrap;justify-content:center}
 
-/* Code | Party segmented control under the header */
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:999px;background:var(--btn-mint)}
-.tab{min-height:44px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--btn-ink);font:700 15px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;transition:background .15s ease-out}
-.tab[aria-selected=true]{background:var(--btn-green);color:var(--btn-ink-on-dark)}
-.tab:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
-.panel{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
-.panel[hidden]{display:none}
+/* Code | Party segmented control: the app's cream track + gold pill (CharacterToggle / chips), a sliding highlight, one stage for both panels. */
+.tabs{position:relative;isolation:isolate;display:grid;grid-template-columns:1fr 1fr;padding:4px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-cream);box-shadow:0 4px 0 var(--btn-cream-edge)}
+.pill{position:absolute;z-index:-1;left:4px;top:4px;width:calc(50% - 4px);height:var(--btn-height);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;box-shadow:0 3px 0 var(--btn-gold-edge);transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),translate .12s ease-out;will-change:transform}
+.tabs[data-active=party] .pill{transform:translateX(100%)}
+.tabs:has(.tab[aria-selected=true]:active) .pill{translate:0 2px;box-shadow:0 1px 0 var(--btn-gold-edge)}
+.tab{min-height:var(--btn-height);padding:0 12px;border:0;border-radius:var(--btn-radius);background:transparent;color:#244d4099;font:700 15px/1 var(--btn-font);cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
+.tab[aria-selected=true]{color:var(--btn-ink)}
+.tab:active{transform:translateY(2px)}
+.tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.tabCount{display:inline-block;animation:tabPop .2s ease-out}
+@keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+/* Both panels share one grid cell, so the card is as tall as the taller panel (fixed basis, shrinks only to the viewport cap);
+   the inactive one stays laid out but hidden, so switching, joins/leaves and Show QR never resize the card. */
+.stage{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);flex:0 1 var(--party-stage,430px);min-height:0}
+.panel{grid-area:1/1;display:flex;flex-direction:column;min-height:0;min-width:0;opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
+.panel[data-active=false]{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(6px);transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s .15s}
+.panel[data-party-panel=code][data-active=false]{transform:translateX(-6px)}
 .codeActions{margin-top:8px;align-items:stretch}
 .codeActions .small{opacity:.85}
 .codeFresh{animation:codeGlow 1.3s ease-out}
 @keyframes codeGlow{0%{opacity:0;transform:translateY(8px) scale(.96);text-shadow:0 0 18px var(--btn-gold)}35%{opacity:1;transform:none;text-shadow:0 0 18px var(--btn-gold)}100%{text-shadow:0 0 0 transparent}}
-@media(prefers-reduced-motion:reduce){.codeFresh{animation:none;text-shadow:0 0 14px var(--btn-gold)}.tab{transition:none}}
+@media(prefers-reduced-motion:reduce){.codeFresh{animation:none;text-shadow:0 0 14px var(--btn-gold)}.tab,.pill,.panel,.panel[data-active=false]{transition:none}.tabCount{animation:none}}

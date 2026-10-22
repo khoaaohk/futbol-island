@@ -144,12 +144,19 @@ t('gate -> party card state machine (regression: the dialog closed after a corre
 t('party card tabs: Code | Party toggle, a11y, host/guest split, new code + close actions',()=>{
  assert(/role="tablist"/.test(host)&&/role="tab"/.test(host)&&/aria-selected=\{activeTab === t\}/.test(host)&&/role=\{state\.isHost \? 'tabpanel'/.test(host)&&/aria-controls=/.test(host)&&/aria-labelledby="party-tab-code"/.test(host),'tablist / tab / tabpanel wiring');
  assert(/ArrowRight/.test(host)&&/ArrowLeft/.test(host)&&/Home/.test(host)&&/tabRefs\.current\[order\[n\]\]\?\.focus\(\)/.test(host)&&/tabIndex=\{activeTab === t \? 0 : -1\}/.test(host),'arrow keys switch tabs and keep focus (roving tabindex)');
- assert(/`Party \(\$\{state\.members\.length\}\)`/.test(host)&&/'Code'/.test(host),'tab labels Code and Party (N)');
+ assert(/\(\{state\.members\.length\}\)/.test(host)&&/Party <span key=\{state\.members\.length\}/.test(host)&&/'Code'/.test(host),'tab labels Code and Party (N), count remounts to pop');
  assert(/useState<'code' \| 'party'>\('code'\)/.test(host)&&/if \(!live\) \{ setKickPrompt\(false\); setTab\('code'\); \}/.test(host)&&/state\.isHost \? tab : 'party'/.test(host),'default Code, remembered per party, guests only get Party');
  assert(/Only the host has the code/.test(host)&&/\{state\.isHost && \(\s*<div className=\{styles\.tabs\}/.test(host),'guests have no Code tab');
  assert(/onNewCode=\{\(\) => \{ connection\.host\.rotate\(\); text\('New code ready'\)/.test(host)&&/The old code stops working right away\. People already here stay\./.test(invite),'primary New code replaces the old one with a toast and helper');
  assert(/Closed to new friends/.test(invite)&&/Open to new friends/.test(invite)&&/aria-pressed=\{locked\}/.test(invite)&&/onToggleLock/.test(host),'Close to new friends toggle shows its state');
  assert(/codeFresh/.test(invite)&&/prefers-reduced-motion[\s\S]*codeFresh/.test(read('components/party/party.module.css')),'new code animates in; reduced motion calm');
+ {
+  const css=read('components/party/party.module.css');
+  assert(/styles\.stage/.test(host)&&/\.stage\{[^}]*display:grid/.test(css)&&/\.panel\{[^}]*grid-area:1\/1/.test(css)&&/\.panel\[data-active=false\]\{[^}]*visibility:hidden/.test(css)&&!/ hidden=\{/.test(host.slice(host.indexOf('data-party-stage'))),'both panels stack in one grid cell; inactive is visibility:hidden, not display:none');
+  assert(/aria-hidden=\{activeTab !== 'code'\}/.test(host)&&/inertIf\(/.test(host),'inactive panel is aria-hidden + inert');
+  assert(/styles\.pill/.test(host)&&/\.pill\{[^}]*transition:transform \.22s cubic-bezier\(\.2,\.8,\.2,1\)/.test(css)&&/\.tabs\[data-active=party\] \.pill\{transform:translateX\(100%\)\}/.test(css)&&/\.tab:active\{transform:translateY\(2px\)\}/.test(css)&&/tabPop/.test(css)&&/prefers-reduced-motion:reduce\)\{[^\n]*\.pill/.test(css),'sliding gold pill, press, count pop, reduced motion');
+  assert(/var\(--btn-gold\) var\(--btn-grain\)/.test(css.slice(css.indexOf('.pill{')))&&/\.tabs\{[^}]*var\(--btn-cream\)/.test(css),'toggle uses the shared button tokens');
+ }
  assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
  assert(!/max-height:min\(46vh/.test(read('components/party/party.module.css')),'member list scrolls in the card FadeScroll, no separate list scroller');
 });
