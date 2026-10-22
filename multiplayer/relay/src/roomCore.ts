@@ -3,12 +3,16 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
-  parseClient, encode, clampPose, speedOk, generateCode, pickName,
+  parseClient, encode, clampPose, speedOk, generateCode, pickName, sha256Hex,
 } from '../../protocol';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
 export interface Peer { send(text: string): void; close(code: number): void }
 export interface RoomClock { now(): number }
+/** What a Durable Object must keep so an eviction cannot revive an ended party, a retired code or a revoked token (review #2). */
+export interface RoomSnapshot { code: string; codeIssuedAt: number; locked: boolean; revoked: string[]; retired: string[] }
+/** Per-socket state a hibernating Durable Object keeps with serializeAttachment so members survive an eviction. */
+export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean }
 
 /** WebSocket close codes the relay uses (4xxx = application range). */
 export const CLOSE = {
@@ -18,6 +22,7 @@ export const CLOSE = {
 const HELLO_TIMEOUT_MS = 5000;
 const BAD_FRAME_LIMIT = 5;
 const WARP_MIN_GAP_MS = 5000;
+export const KICK_LOCK_MS = 60_000; // auto-lock after a kick (review #6)
 
 interface Member {
   id: number; name: NameIdx; look: number[]; token: string; joinSeq: number;
@@ -47,7 +52,9 @@ function ctEq(a: string, b: string): boolean {
 }
 
 export class RoomCore {
+  /** The raw host key exists only on the instance that created the party (it is handed out once); a restored room has ''. */
   readonly hostKey: string;
+  private hostKeyHash: string;
   readonly createdAt: number;
   ended = false;
   private _code: string;
@@ -59,6 +66,11 @@ export class RoomCore {
   private byPeer = new Map<Peer, Member>();
   private pending = new Map<Peer, number>(); // peer -> hello deadline
   private revoked: string[] = []; // tokens of kicked members: cannot resume
+  private retired: string[] = []; // codes replaced by Rotate: admit only a resume token or the host key
+  private retiredPeers = new Set<Peer>(); // sockets that arrived through a retired code
+  private kickLockUntil = 0;
+  /** Set when something the Durable Object must persist changed (lock, kick, rotate, end); the caller reads and clears it. */
+  stateChanged = false;
   private joinSeq = 0;
   private idCursor = 0;
   private tickNo = 0;
@@ -68,14 +80,39 @@ export class RoomCore {
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
 
-  constructor(opts: { code: string; createdAt: number; clock: RoomClock; random: (n: number) => Uint8Array }) {
+  constructor(opts: { code: string; createdAt: number; clock: RoomClock; random: (n: number) => Uint8Array; hostKeyHash?: string; restore?: RoomSnapshot }) {
     this._code = opts.code;
     this.createdAt = opts.createdAt;
     this.codeIssuedAt = opts.createdAt;
     this.clock = opts.clock;
     this.random = opts.random;
     this.emptySince = opts.createdAt;
-    this.hostKey = b64url(this.random(16));
+    if (opts.hostKeyHash) { this.hostKey = ''; this.hostKeyHash = opts.hostKeyHash; }
+    else { this.hostKey = b64url(this.random(16)); this.hostKeyHash = sha256Hex(this.hostKey); }
+    const r = opts.restore;
+    if (r) { this._code = r.code; this.codeIssuedAt = r.codeIssuedAt; this.locked = r.locked; this.revoked = r.revoked.slice(); this.retired = r.retired.slice(); }
+  }
+
+  get digest(): string { return this.hostKeyHash; }
+  snapshot(): RoomSnapshot {
+    return { code: this._code, codeIssuedAt: this.codeIssuedAt, locked: this.locked, revoked: this.revoked.slice(), retired: this.retired.slice() };
+  }
+  /** 'current' | 'retired' | null for a code that is neither. */
+  codeStatus(code: string): 'current' | 'retired' | null {
+    return code === this._code ? 'current' : this.retired.includes(code) ? 'retired' : null;
+  }
+  private isLocked(now: number): boolean { return this.locked || now < this.kickLockUntil; }
+  /** Wake-up path for a hibernated Durable Object: put a member back on its surviving socket. */
+  restoreMember(peer: Peer, a: MemberAttachment): void {
+    if (this.ended || this.members.has(a.id)) return;
+    const m = this.newMember(a.id, a.name, a.look, a.token, a.joinSeq, peer, this.clock.now());
+    this.members.set(a.id, m); this.byPeer.set(peer, m);
+    this.joinSeq = Math.max(this.joinSeq, a.joinSeq + 1);
+    if (a.host) { this.hostId = a.id; this.hadHost = true; }
+  }
+  attachmentFor(peer: Peer): MemberAttachment | null {
+    const m = this.byPeer.get(peer);
+    return m ? { id: m.id, name: m.name, look: m.look, token: m.token, joinSeq: m.joinSeq, host: m.id === this.hostId } : null;
   }
 
   get code(): string { return this._code; }
@@ -86,12 +123,14 @@ export class RoomCore {
     const size = this.members.size;
     const full = size >= PARTY_MAX;
     const now = this.clock.now();
-    const open = !this.ended && !this.locked && !full && now < this.codeExpiresAt && now < this.partyEndsAt;
+    const open = !this.ended && !this.isLocked(now) && !full && now < this.codeExpiresAt && now < this.partyEndsAt;
     return { open, size, full };
   }
 
-  connect(peer: Peer): void {
+  /** `retired`: the socket came in through a code that Rotate replaced; it may only resume or present the host key. */
+  connect(peer: Peer, retired = false): void {
     if (this.ended) { this.send(peer, [S.Error, ErrorCode.Expired]); peer.close(CLOSE.Ended); return; }
+    if (retired) this.retiredPeers.add(peer);
     this.pending.set(peer, this.clock.now() + HELLO_TIMEOUT_MS);
   }
 
@@ -146,10 +185,14 @@ export class RoomCore {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m) return;
       this.revoked.push(t.token);
+      this.kickLockUntil = this.clock.now() + KICK_LOCK_MS; // the kicked child cannot walk straight back in
+      this.stateChanged = true;
       if (t.peer) this.send(t.peer, [S.Error, ErrorCode.Kicked]);
       this.remove(t, LeaveReason.Kicked, CLOSE.Kicked);
     } else if (msg[0] === C.Lock) {
       this.locked = msg[1] === 1;
+      if (!this.locked) this.kickLockUntil = 0;
+      this.stateChanged = true;
     } else if (msg[0] === C.Rotate) {
       const old = this._code;
       const code = this.rotate();
@@ -162,6 +205,7 @@ export class RoomCore {
 
   disconnect(peer: Peer): void {
     this.pending.delete(peer);
+    this.retiredPeers.delete(peer);
     const m = this.byPeer.get(peer);
     if (!m) return;
     this.byPeer.delete(peer);
@@ -201,6 +245,8 @@ export class RoomCore {
 
   /** New code for the same room (TTL restarts); the caller retires the old code so it no longer finds the room. */
   rotate(): string {
+    this.retired.push(this._code);
+    this.stateChanged = true;
     this._code = generateCode(this.random);
     this.codeIssuedAt = this.clock.now();
     return this._code;
@@ -211,6 +257,8 @@ export class RoomCore {
     const [, v, look, resumeToken, hostKey] = msg as [number, number, number[], string | null, string | null];
     if (v !== PROTOCOL_VERSION) return this.refuse(peer, ErrorCode.BadVersion);
     if (now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
+    const viaRetired = this.retiredPeers.delete(peer);
+    const isHostKey = hostKey !== null && hostKey.length > 0 && ctEq(sha256Hex(hostKey), this.hostKeyHash);
     if (resumeToken !== null) {
       if (this.revoked.some((t) => ctEq(t, resumeToken))) return this.refuse(peer, ErrorCode.Kicked);
       let found: Member | null = null;
@@ -221,15 +269,16 @@ export class RoomCore {
         if (old) { this.byPeer.delete(old); m.peer = null; old.close(CLOSE.Replaced); }
         this.pending.delete(peer);
         m.peer = peer; m.goneAt = null;
+        m.lastSeq = -1; // the client restarts its pose counter at 0 on every connect (review #7)
         this.byPeer.set(peer, m);
         this.welcome(m);
         return;
       }
       // unknown / lapsed token: fall through to a fresh join (graceful after a Durable Object eviction)
     }
-    const isHostKey = hostKey !== null && ctEq(hostKey, this.hostKey);
+    if (viaRetired && !isHostKey) return this.refuse(peer, ErrorCode.NotFound); // a leaked old code never admits a new face
     if (!isHostKey) {
-      if (this.locked) return this.refuse(peer, ErrorCode.Locked);
+      if (this.isLocked(now)) return this.refuse(peer, ErrorCode.Locked);
       if (now >= this.codeExpiresAt) return this.refuse(peer, ErrorCode.Expired);
     }
     if (this.members.size >= PARTY_MAX) return this.refuse(peer, ErrorCode.Full);
@@ -239,18 +288,22 @@ export class RoomCore {
     const r = this.random(4);
     const rnd = () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
     const id = this.freeId();
-    const m: Member = {
-      id, name: pickName(taken, rnd), look: look.slice(), token: b64url(this.random(16)), joinSeq: this.joinSeq++,
-      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, lastWarpAt: -1e12,
-      poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
-      pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
-      emoteTimes: [], bad: 0, secStart: now, secCount: 0,
-    };
+    const m = this.newMember(id, pickName(taken, rnd), look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }
     this.welcome(m);
     this.broadcast([S.Joined, this.memberInfo(m)], m);
+  }
+
+  private newMember(id: number, name: NameIdx, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
+    return {
+      id, name, look: look.slice(), token, joinSeq,
+      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, lastWarpAt: -1e12,
+      poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
+      pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
+      emoteTimes: [], bad: 0, secStart: now, secCount: 0,
+    };
   }
 
   private migrateHost(now: number): void {
@@ -317,6 +370,7 @@ export class RoomCore {
   private end(reason: EndReason): void {
     if (this.ended) return;
     this.ended = true;
+    this.stateChanged = true;
     this.members.forEach((m) => { if (m.peer) { this.send(m.peer, [S.Ended, reason]); m.peer.close(CLOSE.Ended); } });
     this.pending.forEach((_d, p) => p.close(CLOSE.Ended));
     this.members.clear(); this.byPeer.clear(); this.pending.clear();

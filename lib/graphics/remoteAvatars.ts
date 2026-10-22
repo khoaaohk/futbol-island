@@ -151,6 +151,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    batch.begin();let shown=0;
    for(let i=0;i<list.length;i++){
     const e=list[i],rig=e.rig;
+    // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
+    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=EMOTE_SECONDS){e.emote=-1;rig?.setExpression('neutral');}}
     if(!rig||!e.label||!e.bubble)continue;
     const pose=poses.get(e.id);
     if(!pose||saverFade<=0||pose.zone===Zone.Indoors){hideEntry(e);continue;}
@@ -165,7 +167,6 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     e.acc+=dt;
     const period=d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
     const moving=pose.speed>.3;
-    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=EMOTE_SECONDS){e.emote=-1;rig.setExpression('neutral');}}
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1);e.acc=0;
      const mode=pose.mode;

@@ -296,4 +296,108 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const { room } = mk();
   assert.match(room.hostKey, /^[A-Za-z0-9_-]{22}$/);
 }
+// review #1: Rotate retires the old code. It still reaches /ws, but admits only a resume token or the host key.
+{
+  const { clock, room } = mk();
+  const host = join(room, room.hostKey), g = join(room);
+  const gTok = welcome(g)[3], old = room.code;
+  send(room, host, [C.Rotate]);
+  assert.equal(host.of(S.Code).length, 1);
+  assert.notEqual(room.code, old);
+  assert.equal(room.codeStatus(old), 'retired'); assert.equal(room.codeStatus(room.code), 'current'); assert.equal(room.codeStatus('ZZZZZZ'), null);
+  // a stranger on the retired code is refused, even with a made-up token
+  const s1 = peer(); room.connect(s1, true); send(room, s1, [C.Hello, PROTOCOL_VERSION, LOOK, null, null]);
+  assert.deepEqual(errs(s1), [ErrorCode.NotFound]); assert.ok(s1.closed);
+  const s2 = peer(); room.connect(s2, true); send(room, s2, [C.Hello, PROTOCOL_VERSION, LOOK, 'x'.repeat(22), null]);
+  assert.deepEqual(errs(s2), [ErrorCode.NotFound]);
+  assert.equal(room.info().size, 2);
+  // a guest whose socket dropped resumes through the old code
+  room.disconnect(g); clock.t += 5000;
+  const g2 = peer(); room.connect(g2, true); send(room, g2, [C.Hello, PROTOCOL_VERSION, LOOK, gTok, null]);
+  assert.ok(welcome(g2), 'resume via the retired code'); assert.equal(welcome(g2)[2], welcome(g)[2]);
+  // the host key also works through a retired code
+  const h2 = peer(); room.connect(h2, true); send(room, h2, [C.Hello, PROTOCOL_VERSION, LOOK, null, room.hostKey]);
+  assert.ok(welcome(h2), 'host key via the retired code');
+}
+// review #7: a resumed member restarts its pose counter at 0
+{
+  const { clock, room } = mk();
+  const host = join(room, room.hostKey), g = join(room);
+  const tok = welcome(g)[3];
+  for (let i = 1; i <= 5; i++) { clock.t += 250; send(room, g, pose(i, 10 * i, 10)); }
+  room.disconnect(g); clock.t += 3000;
+  const g2 = peer(); hello(room, g2, tok);
+  clock.t += 300; send(room, g2, pose(0, 55, 10)); room.tick();
+  const last = host.of(S.Poses).pop(); assert.ok(last, 'poses flow'); assert.ok(last.includes(55), 'seq 0 after resume is accepted');
+  clock.t += 300; send(room, g2, pose(100000, 58, 10)); room.tick();
+  assert.ok(host.of(S.Poses).pop().includes(58), 'no 16-bit wrap: a large seq is fine');
+}
+// review #6: after a kick the room auto-locks for 60 s; a manual unlock clears it
+{
+  const { clock, room } = mk();
+  const host = join(room, room.hostKey), g = join(room);
+  send(room, host, [C.Kick, welcome(g)[2]]);
+  assert.equal(room.info().open, false, 'closed right after a kick');
+  assert.deepEqual(errs(join(room)), [ErrorCode.Locked]);
+  clock.t += 61000; assert.equal(room.info().open, true);
+  assert.ok(welcome(join(room)), 'open again after 60 s');
+  const { clock: c2, room: r2 } = mk();
+  const h2 = join(r2, r2.hostKey), g2 = join(r2);
+  send(r2, h2, [C.Kick, welcome(g2)[2]]); c2.t += 1500; send(r2, h2, [C.Lock, 0]);
+  assert.equal(r2.info().open, true, 'host unlock clears the auto-lock');
+}
+// review #2 / #14: snapshot + restore keeps lock, kicks, retired codes; only a digest of the host key is kept
+{
+  const { room } = mk();
+  const host = join(room, room.hostKey), g = join(room);
+  const gTok = welcome(g)[3];
+  send(room, host, [C.Lock, 1]); send(room, host, [C.Rotate]);
+  send(room, host, [C.Kick, welcome(g)[2]]);
+  assert.equal(room.stateChanged, true);
+  const snap = JSON.parse(JSON.stringify(room.snapshot()));
+  assert.ok(!JSON.stringify(snap).includes(room.hostKey), 'no raw host key in the snapshot');
+  assert.notEqual(room.digest, room.hostKey); assert.match(room.digest, /^[0-9a-f]{64}$/);
+  const clock = { t: 1_000_000 + 1000, now() { return this.t; } };
+  const back = new RoomCore({ code: 'K7MQ4R', createdAt: 1_000_000, clock, random, hostKeyHash: room.digest, restore: snap });
+  assert.equal(back.hostKey, ''); assert.equal(back.code, room.code);
+  assert.equal(back.codeStatus('K7MQ4R'), 'retired');
+  const k = peer(); hello(back, k, gTok); assert.deepEqual(errs(k), [ErrorCode.Kicked], 'a revoked token stays revoked');
+  assert.deepEqual(errs(join(back)), [ErrorCode.Locked], 'lock survives');
+  assert.ok(welcome(join(back, room.hostKey)), 'the original host key still works against the digest');
+  assert.deepEqual(errs(join(back, 'A'.repeat(22))), [ErrorCode.Locked]);
+  // ended parties report it, so the Durable Object can write a tombstone
+  const { room: r3 } = mk(); const h3 = join(r3, r3.hostKey); r3.stateChanged = false; send(r3, h3, [C.End]);
+  assert.equal(r3.ended, true); assert.equal(r3.stateChanged, true);
+}
+// review #2: a hibernated Durable Object puts members back on their sockets from the attachment
+{
+  const { room } = mk();
+  const host = join(room, room.hostKey), g = join(room);
+  const ah = room.attachmentFor(host), ag = room.attachmentFor(g);
+  assert.equal(ah.host, true); assert.equal(ag.host, false); assert.equal(room.attachmentFor(peer()), null);
+  const clock = { t: 1_000_500, now() { return this.t; } };
+  const back = new RoomCore({ code: 'K7MQ4R', createdAt: 1_000_000, clock, random, hostKeyHash: room.digest });
+  const hp = peer(), gp = peer();
+  back.restoreMember(hp, JSON.parse(JSON.stringify(ah))); back.restoreMember(gp, JSON.parse(JSON.stringify(ag)));
+  assert.equal(back.info().size, 2);
+  send(back, gp, [C.Emote, 1]);
+  assert.equal(hp.of(S.Emote).length, 1, 'restored members talk to each other');
+  send(back, hp, [C.Lock, 1]); assert.equal(back.info().open, false, 'restored host keeps host powers');
+  const r = peer(); hello(back, r, ag.token); assert.equal(welcome(r)[2], ag.id, 'resume token survives the eviction');
+}
+// review #10: origin allow-list
+{
+  const { originAllowed, compileOrigins } = loadTs(path.join(ROOT, 'multiplayer/relay/src/origins.ts'));
+  const prod = {};
+  assert.equal(originAllowed('https://futbolisland.app', prod), true);
+  assert.equal(originAllowed('https://www.futbolisland.app', prod), true);
+  for (const bad of ['https://futbol-island-evil.vercel.app', 'http://localhost:3000', 'http://127.0.0.1', 'https://futbolisland.app.evil.com', null, '']) assert.equal(originAllowed(bad, prod), false, String(bad));
+  const team = { MP_ALLOWED_ORIGINS: 'https://futbolisland.app, https://futbol-island-*-myteam.vercel.app' };
+  assert.equal(originAllowed('https://futbol-island-git-feat-myteam.vercel.app', team), true);
+  assert.equal(originAllowed('https://futbol-island-git-feat-other.vercel.app', team), false);
+  assert.equal(originAllowed('https://futbol-island-x-myteam.vercel.app.evil.com', team), false);
+  assert.equal(compileOrigins('not a url,*').length, 0, 'malformed entries are dropped');
+  const dev = { MP_DEV: '1' };
+  assert.equal(originAllowed('http://localhost:3000', dev), true); assert.equal(originAllowed(null, dev), true);
+}
 console.log('mp-room-core: ok');

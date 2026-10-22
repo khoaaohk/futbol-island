@@ -4,17 +4,9 @@
 import { normalizeCode, TokenBucket } from '../../protocol';
 import { PartyRoom, newPartyCode } from './partyRoom';
 import type { Env } from './partyRoom';
+import { originAllowed } from './origins';
 
 export { PartyRoom };
-
-const ORIGINS: RegExp[] = [
-  /^https:\/\/futbolisland\.app$/,
-  /^https:\/\/www\.futbolisland\.app$/,
-  /^https:\/\/futbol-island[a-z0-9-]*\.vercel\.app$/, // the project's Vercel previews
-  /^http:\/\/localhost(:\d+)?$/,
-  /^http:\/\/127\.0\.0\.1(:\d+)?$/,
-];
-const originAllowed = (o: string | null): boolean => !o || ORIGINS.some((r) => r.test(o)); // no Origin = not a browser
 
 interface Limits { create: TokenBucket; join: TokenBucket; misses: number[]; blockedUntil: number }
 const limits = new Map<string, Limits>();
@@ -46,16 +38,16 @@ function noteMiss(l: Limits, now: number): void {
   if (l.misses.length >= 20) l.blockedUntil = now + 3600000; // 20 unknown codes / hour -> 1 h block
 }
 
-const json = (status: number, body: unknown, origin: string | null): Response => {
+const json = (status: number, body: unknown, origin: string | null, env: Env): Response => {
   const h: Record<string, string> = { 'content-type': 'application/json', 'cache-control': 'no-store' };
-  if (origin && originAllowed(origin)) { h['access-control-allow-origin'] = origin; h['vary'] = 'Origin'; }
+  if (origin && originAllowed(origin, env)) { h['access-control-allow-origin'] = origin; h['vary'] = 'Origin'; }
   return new Response(JSON.stringify(body), { status, headers: h });
 };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const origin = request.headers.get('Origin');
-    if (!originAllowed(origin)) return new Response('forbidden', { status: 403 });
+    if (!originAllowed(origin, env)) return new Response('forbidden', { status: 403 });
     const url = new URL(request.url);
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: origin ? {
@@ -67,30 +59,32 @@ export default {
     const lim = limitsFor(await ipKey(request));
 
     if (request.method === 'POST' && url.pathname === '/party') {
-      if (!lim.create.take(now)) return json(429, { error: 'rate_limited' }, origin);
+      if (!lim.create.take(now)) return json(429, { error: 'rate_limited' }, origin, env);
       for (let i = 0; i < 4; i++) {
         const code = newPartyCode();
         const createdAt = now;
         const res = await env.PARTY.get(env.PARTY.idFromName(code)).fetch('https://do/init', { method: 'POST', body: JSON.stringify({ code, createdAt }) });
         if (res.status === 409) continue; // code already live: try another
-        if (!res.ok) return json(502, { error: 'unavailable' }, origin);
+        if (!res.ok) return json(502, { error: 'unavailable' }, origin, env);
         const b = (await res.json()) as { hostKey: string; expiresAt: number };
-        return json(201, { code, hostKey: b.hostKey, expiresAt: b.expiresAt }, origin);
+        return json(201, { code, hostKey: b.hostKey, expiresAt: b.expiresAt }, origin, env);
       }
-      return json(503, { error: 'busy' }, origin);
+      return json(503, { error: 'busy' }, origin, env);
     }
 
     const m = request.method === 'GET' ? /^\/party\/([^/]+)(\/ws)?$/.exec(url.pathname) : null;
-    if (!m) return json(404, { error: 'not_found' }, origin);
-    if (now < lim.blockedUntil || !lim.join.take(now)) return json(429, { error: 'rate_limited' }, origin);
-    const code = normalizeCode(decodeURIComponent(m[1]));
-    if (!code) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin); }
+    if (!m) return json(404, { error: 'not_found' }, origin, env);
+    if (now < lim.blockedUntil || !lim.join.take(now)) return json(429, { error: 'rate_limited' }, origin, env);
+    let decoded = '';
+    try { decoded = decodeURIComponent(m[1]); } catch { /* malformed escape: treated as an unknown code (review #12) */ }
+    const code = normalizeCode(decoded);
+    if (!code) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin, env); }
     const stub = env.PARTY.get(env.PARTY.idFromName(code));
     const target = 'https://do/' + (m[2] ? 'ws' : 'info') + '?code=' + code;
     const res = await stub.fetch(m[2] ? new Request(target, request) : target);
-    if (res.status === 404) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin); }
+    if (res.status === 404) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin, env); }
     if (m[2]) return res; // the 101 upgrade (or 426)
     const body = await res.text();
-    return new Response(body, { status: res.status, headers: json(200, null, origin).headers });
+    return new Response(body, { status: res.status, headers: json(200, null, origin, env).headers });
   },
 };

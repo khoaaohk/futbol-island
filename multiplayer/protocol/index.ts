@@ -4,3 +4,4 @@ export * from './codes';
 export * from './names';
 export * from './limits';
 export * from './validate';
+export * from './sha256';

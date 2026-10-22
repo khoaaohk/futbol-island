@@ -34,7 +34,7 @@ try {
   const { code, hostKey, expiresAt } = await created.json();
   assert.match(code, /^[23456789BCDFGHJKMNPQRSTVWXYZ]{6}$/);
   assert.ok(hostKey && expiresAt > Date.now());
-  assert.deepEqual(await (await fetch(base + '/party/' + code)).json(), { open: true, size: 0, full: false });
+  assert.deepEqual(await (await fetch(base + '/party/' + code)).json(), { open: true, full: false });
   assert.equal((await fetch(base + '/party/ZZZZZZ')).status, 404);
   assert.equal((await fetch(base + '/party/' + code, { headers: { Origin: 'https://evil.example' } })).status, 403);
 
@@ -47,7 +47,7 @@ try {
   ]);
   await new Promise((r) => setTimeout(r, 1500));
   const status = await (await fetch(base + '/party/' + code)).json();
-  assert.equal(status.size, 6, 'six members present');
+  assert.equal(status.size, undefined, 'the info endpoint does not reveal the party size');
   assert.equal(status.full, true);
   const seventh = (await runBots({ ...common, n: 1, ms: 500 }))[0];
   assert.ok(seventh.errors.includes(2), '7th joiner gets Full: ' + JSON.stringify(seventh.errors));
@@ -70,6 +70,26 @@ try {
   assert.ok(cheater.sent > 3);
   assert.equal(flooder.closeCode, 4002, 'flood bot closed by the relay (' + flooder.closeCode + ')');
   assert.ok(flooder.errors.includes(1), 'flooder got RateLimited');
+  // Rotate: the new code is joinable, the old one is retired (404 info, /ws only for a resume token or the host key)
+  {
+    const p2 = await (await fetch(base + '/party', { method: 'POST' })).json();
+    const wsBase = 'ws://127.0.0.1:' + port + '/party/';
+    const open = (c) => new Promise((res, rej) => { const w = new WebSocket(wsBase + c + '/ws'); const msgs = []; w.onmessage = (e) => msgs.push(JSON.parse(e.data)); w.onopen = () => res({ w, msgs }); w.onerror = () => rej(new Error('ws')); });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const h = await open(p2.code); h.w.send(JSON.stringify([0, 1, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], null, p2.hostKey])); await wait(300);
+    const tok = h.msgs.find((m) => m[0] === 20)[3];
+    h.w.send(JSON.stringify([6])); await wait(300);
+    const newCode = h.msgs.find((m) => m[0] === 27)[1];
+    assert.equal((await fetch(base + '/party/' + p2.code)).status, 404, 'retired code is not joinable');
+    assert.equal((await fetch(base + '/party/' + newCode)).status, 200);
+    const stranger = await open(p2.code); stranger.w.send(JSON.stringify([0, 1, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], null, null])); await wait(300);
+    assert.ok(stranger.msgs.some((m) => m[0] === 29 && m[1] === 3) || !stranger.msgs.some((m) => m[0] === 20), 'stranger on a retired code is not welcomed');
+    assert.ok(!stranger.msgs.some((m) => m[0] === 20));
+    h.w.close(); await wait(100);
+    const back = await open(p2.code); back.w.send(JSON.stringify([0, 1, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], tok, null])); await wait(300);
+    assert.ok(back.msgs.some((m) => m[0] === 20), 'resume through the retired code');
+    back.w.close();
+  }
   console.log('mp-relay-smoke: ok (port ' + port + ', 6 bots, 7th Full, cheat dropped, flood closed)');
 } catch (e) {
   console.error('mp-relay-smoke: FAILED', e && e.stack ? e.stack : e);

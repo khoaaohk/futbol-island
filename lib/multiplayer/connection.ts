@@ -29,6 +29,7 @@ export const JITTER = 0.3;
 export const HIDDEN_CLOSE_MS = 15000;
 export const BEAT_MS = 5000;
 export const MAX_ATTEMPTS = 12;
+const CLOSE_KICKED = 4003, CLOSE_ENDED = 4004, CLOSE_REPLACED = 4005; // relay close codes (roomCore CLOSE)
 const MOVE_GAP_MS = 200; // 5 Hz
 const IDLE_GAP_MS = 1000; // 1 Hz
 const EMOTE_GAP_MS = 2000;
@@ -136,7 +137,21 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       const m = parseServer(ev.data);
       if (m) handle(m);
     };
-    w.onclose = () => { if (ws === w) { ws = null; if (beatTimer) { ct(beatTimer); beatTimer = null; } scheduleRetry(); } };
+    w.onclose = (ev: { code?: number } | undefined) => {
+      if (ws !== w) return;
+      ws = null;
+      if (beatTimer) { ct(beatTimer); beatTimer = null; }
+      const cc = ev && typeof ev.code === 'number' ? ev.code : 0;
+      // Terminal close codes (review #15): never reconnect after being kicked, after the party ended, or after another tab took over.
+      if (cc === CLOSE_KICKED || cc === CLOSE_ENDED || cc === CLOSE_REPLACED) {
+        clearTimers(); clearSession();
+        if (cc === CLOSE_KICKED) setStatus('error');
+        else if (cc === CLOSE_ENDED) setStatus('ended');
+        else { code = null; resumeToken = null; hostKey = null; last = null; setStatus('idle'); }
+        return;
+      }
+      scheduleRetry();
+    };
     w.onerror = () => { /* close follows */ };
   }
 
@@ -147,6 +162,10 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       last = null; // first pose after (re)connect is always sent
       writeSession();
       setStatus('live');
+    } else if (m[0] === S.Code) {
+      // Rotate: the room now lives under a new code. Every later reconnect (and the stored session) must use it (review #1).
+      code = m[1];
+      writeSession();
     } else if (m[0] === S.Ended) {
       clearSession();
       setStatus('ended');
@@ -243,7 +262,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= MOVE_GAP_MS;
       else if (body.some((v, i) => v !== last![i])) send = nowMs - lastPoseAt >= IDLE_GAP_MS;
       if (!send) return;
-      if (raw([C.Pose, seq & 0xffff, ...body] as ClientMsg)) { seq++; last = body.slice() as PoseBody; lastPoseAt = nowMs; }
+      if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body.slice() as PoseBody; lastPoseAt = nowMs; }
     },
     sendEmote(e) {
       const t = now();

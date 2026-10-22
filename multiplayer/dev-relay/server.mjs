@@ -37,7 +37,10 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
   };
   const routeCode = (url) => {
     const m = /^\/party\/([^/]+)(\/ws)?$/.exec(url.pathname);
-    return m ? { code: P.normalizeCode(decodeURIComponent(m[1])), ws: !!m[2] } : null;
+    if (!m) return null;
+    let raw = '';
+    try { raw = decodeURIComponent(m[1]); } catch { /* malformed escape: an unknown code, not a 500 (review #12) */ }
+    return { code: P.normalizeCode(raw), ws: !!m[2] };
   };
   const originOk = (req) => !req.headers.origin || LOCAL.test(req.headers.origin);
 
@@ -50,7 +53,9 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       let code;
       do { code = P.generateCode(random); } while (rooms.has(code));
       const room = new RoomCore({ code, createdAt: Date.now(), clock, random });
-      room.onRotate = (o, n) => { rooms.delete(o); rooms.set(n, room); };
+      // Rotate: the new code finds the room; the old one stays mapped but RETIRED (RoomCore.codeStatus), so /ws still takes it
+      // for a resume token or the host key while /party/:code answers 404 for it.
+      room.onRotate = (_o, n) => { rooms.set(n, room); };
       rooms.set(code, room);
       stats.created++;
       return json(res, 201, { code, hostKey: room.hostKey, expiresAt: room.codeExpiresAt });
@@ -58,7 +63,9 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
     const r = req.method === 'GET' ? routeCode(url) : null;
     if (r && !r.ws) {
       const room = r.code && rooms.get(r.code);
-      return room && !room.ended ? json(res, 200, room.info()) : json(res, 404, { error: 'not_found' });
+      if (!room || room.ended || room.codeStatus(r.code) !== 'current') return json(res, 404, { error: 'not_found' });
+      const i = room.info();
+      return json(res, 200, { open: i.open, full: i.full }); // no party size (review #23)
     }
     json(res, 404, { error: 'not_found' });
   });
@@ -73,15 +80,15 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
     if (!conn) return;
     const peer = { send: (t) => conn.send(t), close: (c) => conn.close(c) };
     stats.joins++;
-    room.connect(peer);
+    room.connect(peer, room.codeStatus(r.code) === 'retired');
     conn.onMessage((t) => room.message(peer, t));
     conn.onClose(() => room.disconnect(peer));
   });
 
   const timer = setInterval(() => {
-    for (const [code, room] of rooms) {
+    for (const room of new Set(rooms.values())) {
       room.tick();
-      if (room.ended) { rooms.delete(code); stats.ended++; }
+      if (room.ended) { for (const [code, r] of rooms) if (r === room) rooms.delete(code); stats.ended++; }
     }
   }, 200);
   timer.unref();
