@@ -23,7 +23,7 @@ export default function JoinFriends({onOpen}:{onOpen:(opener:HTMLElement)=>void}
   return()=>{window.removeEventListener(TITLE_PENDING_EVENT,sync);off();};
  },[]);
  if(!on)return null;
- return <div className={styles.stack} data-title-join-stack>
+ return <div className={styles.stack} data-title-join-stack data-enter="actions-late">
   {pending&&<p className={styles.waiting} data-party-waiting role="status">
    <span>Party code waiting: <b>{groupCode(pending)}</b></span>
    <button type="button" className={styles.clear} aria-label="Forget the party code" onClick={()=>{clearPendingParty();setPending(null);}}>

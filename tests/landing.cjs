@@ -207,7 +207,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.doesNotMatch(water,/translate\(\$\{dx\}px/,'…without drifting to the screen centre');
  for(const k of strip(water).matchAll(/\.animate\(\[([\s\S]*?)\],\{/g))assert(!/(width|height|top|left|background|filter)\s*:/.test(k[1]),`exit keyframes: transform/opacity only: ${k[1].slice(0,50)}`);
  assert.match(css,/@media\(prefers-reduced-motion:no-preference\)\{\.waterPill\[data-loading\] \.waterCrest\{animation:crestRoll/,'the crest rolls only while loading');
- assert.match(css,/\.screen\[data-launch\] :is\(\.grownRow,\.tilt,\.haveCode,\.quiet,\.breakChip,\.cardTitle,\.cardBody\)\{opacity:0;pointer-events:none\}/,'links and other buttons go first');
+ assert.match(css,/\.screen\[data-launch\] :is\(\.grownRow,\.tilt,\.haveCode,\.quiet,\.breakChip,\.cardTitle,\.cardBody(?:,\[data-title-join-stack\])?\)\{opacity:0;pointer-events:none\}/,'links and other buttons go first (Join friends included since Oct 22 2026)');
  assert.match(water,/if\(reduced\|\|!land\)\{/,'reduced motion: a plain fill, then a cross-fade to tan');
  // No intermediate loader: the game's IslandLoading starts as the same plain tan sheet; cold start (no flag) unchanged.
  const lcss=read('components/IslandLoading.module.css'),ltsx=read('components/IslandLoading.tsx');
