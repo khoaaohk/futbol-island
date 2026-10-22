@@ -5,8 +5,10 @@ import { normalizeCode, TokenBucket } from '../../protocol';
 import { PartyRoom, newPartyCode } from './partyRoom';
 import type { Env } from './partyRoom';
 import { originAllowed } from './origins';
+import { RelayStats } from './relayStats';
+import { bearerOk } from './relayStatsCore';
 
-export { PartyRoom };
+export { PartyRoom, RelayStats };
 
 interface Limits { create: TokenBucket; join: TokenBucket; misses: number[]; blockedUntil: number }
 const limits = new Map<string, Limits>();
@@ -38,6 +40,20 @@ function noteMiss(l: Limits, now: number): void {
   if (l.misses.length >= 20) l.blockedUntil = now + 3600000; // 20 unknown codes / hour -> 1 h block
 }
 
+// Worker-level refusal counters (rl:origin_refused, rl:create_rate, rl:lookup_miss, rl:join_rate). They are batched in the isolate and
+// flushed at most once per 10 s as plain counts, so a flood of refused requests cannot hammer the RelayStats object. Best effort.
+const pendingStats = new Map<string, number>();
+let lastFlush = 0;
+function noteStat(env: Env, ctx: ExecutionContext | undefined, id: string, now: number): void {
+  pendingStats.set(id, (pendingStats.get(id) || 0) + 1);
+  if (!env.STATS || !ctx || now - lastFlush < 10000) return;
+  lastFlush = now;
+  const batch = Array.from(pendingStats);
+  pendingStats.clear();
+  const stub = env.STATS.get(env.STATS.idFromName('stats'));
+  ctx.waitUntil(Promise.all(batch.map(([k, n]) => stub.fetch('https://do/inc', { method: 'POST', body: JSON.stringify({ id: k, n }) }).catch(() => undefined))));
+}
+
 const json = (status: number, body: unknown, origin: string | null, env: Env): Response => {
   const h: Record<string, string> = { 'content-type': 'application/json', 'cache-control': 'no-store' };
   if (origin && originAllowed(origin, env)) { h['access-control-allow-origin'] = origin; h['vary'] = 'Origin'; }
@@ -45,10 +61,18 @@ const json = (status: number, body: unknown, origin: string | null, env: Env): R
 };
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     const origin = request.headers.get('Origin');
-    if (!originAllowed(origin, env)) return new Response('forbidden', { status: 403 });
     const url = new URL(request.url);
+    // GET /stats: server-to-server only (the Next admin route). Bearer STATS_TOKEN, constant-time compare. No CORS headers, no
+    // OPTIONS answer: a browser page can never read it. 404 when the secret is not set or the method is wrong, 401 for a bad token.
+    if (url.pathname === '/stats') {
+      if (request.method !== 'GET' || !env.STATS_TOKEN || !env.STATS) return new Response('not found', { status: 404 });
+      if (!bearerOk(request.headers.get('Authorization'), env.STATS_TOKEN)) return new Response('unauthorized', { status: 401, headers: { 'www-authenticate': 'Bearer' } });
+      const res = await env.STATS.get(env.STATS.idFromName('stats')).fetch('https://do/stats' + url.search);
+      return new Response(res.body, { status: res.status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' } });
+    }
+    if (!originAllowed(origin, env)) { noteStat(env, ctx, 'rl:origin_refused', Date.now()); return new Response('forbidden', { status: 403 }); }
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: origin ? {
         'access-control-allow-origin': origin, 'access-control-allow-methods': 'GET, POST, OPTIONS',
@@ -59,7 +83,7 @@ export default {
     const lim = limitsFor(await ipKey(request));
 
     if (request.method === 'POST' && url.pathname === '/party') {
-      if (!lim.create.take(now)) return json(429, { error: 'rate_limited' }, origin, env);
+      if (!lim.create.take(now)) { noteStat(env, ctx, 'rl:create_rate', now); return json(429, { error: 'rate_limited' }, origin, env); }
       for (let i = 0; i < 4; i++) {
         const code = newPartyCode();
         const createdAt = now;
@@ -74,15 +98,15 @@ export default {
 
     const m = request.method === 'GET' ? /^\/party\/([^/]+)(\/ws)?$/.exec(url.pathname) : null;
     if (!m) return json(404, { error: 'not_found' }, origin, env);
-    if (now < lim.blockedUntil || !lim.join.take(now)) return json(429, { error: 'rate_limited' }, origin, env);
+    if (now < lim.blockedUntil || !lim.join.take(now)) { noteStat(env, ctx, 'rl:join_rate', now); return json(429, { error: 'rate_limited' }, origin, env); }
     let decoded = '';
     try { decoded = decodeURIComponent(m[1]); } catch { /* malformed escape: treated as an unknown code (review #12) */ }
     const code = normalizeCode(decoded);
-    if (!code) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin, env); }
+    if (!code) { noteMiss(lim, now); noteStat(env, ctx, 'rl:lookup_miss', now); return json(404, { error: 'not_found' }, origin, env); }
     const stub = env.PARTY.get(env.PARTY.idFromName(code));
     const target = 'https://do/' + (m[2] ? 'ws' : 'info') + '?code=' + code;
     const res = await stub.fetch(m[2] ? new Request(target, request) : target);
-    if (res.status === 404) { noteMiss(lim, now); return json(404, { error: 'not_found' }, origin, env); }
+    if (res.status === 404) { noteMiss(lim, now); noteStat(env, ctx, 'rl:lookup_miss', now); return json(404, { error: 'not_found' }, origin, env); }
     if (m[2]) return res; // the 101 upgrade (or 426)
     const body = await res.text();
     return new Response(body, { status: res.status, headers: json(200, null, origin, env).headers });

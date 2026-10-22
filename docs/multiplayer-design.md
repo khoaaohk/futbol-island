@@ -415,6 +415,17 @@ friends see them away after 12 s, not a vanish. Limit: after 60 s in a room the 
 - **Observability (counts only):** parties created, joins, rejects by `ErrorCode`, party size histogram, session length bucket,
   reconnects. Via Workers Analytics Engine or log lines with no code, token or IP. The game side sends aggregate analytics events
   only (§5.6).
+- **Relay stats (analytics Phase B, written Oct 22 2026, NOT deployed).** A singleton `RelayStats` Durable Object keeps DAILY aggregate
+  counters only (`day:YYYY-MM-DD` rows of allow-listed `rl:*` ids, 400 days, daily prune alarm). `PartyRoom` pushes `/created`, rare
+  `/players {delta}` gauge changes and ONE `/ended` summary per party (counts; buckets are derived from them). The worker batches
+  refusal counters (flush at most every 10 s). `GET /stats?from&to` needs `Authorization: Bearer $STATS_TOKEN` (404 if unset, 401 if wrong,
+  no CORS). The dev relay has the same route (`MP_STATS_TOKEN`). Deploy steps, in order, by the owner:
+  1. `wrangler secret put STATS_TOKEN` (>= 16 random chars; the same value goes into the Next admin env for the party-stats route).
+  2. Review `wrangler.toml`: new `[[durable_objects.bindings]] STATS -> RelayStats` and a NEW `[[migrations]] tag = "v2"`, `new_sqlite_classes = ["RelayStats"]`
+     (`v1` for PartyRoom is untouched).
+  3. `wrangler deploy` (applies the v2 migration). Then `curl -H "Authorization: Bearer $STATS_TOKEN" https://<worker>/stats` should return totals.
+  Known limits: the live-players gauge is best effort (clamped at 0, self-heals as parties end); worker refusal counters can lose up to one
+  10 s batch when an isolate is recycled.
 - **Failures:** socket drop -> backoff 1, 2, 4, 8, 15 s (+/-30 % jitter), resume within 60 s keeps the same id/name; after
   ~2 min the chip offers "Rejoin"; DO eviction -> clients resume into a fresh object that has lost members, server answers
   `Welcome` with an empty roster and members re-Hello (graceful); relay down -> Join card "Can't reach friends right now".

@@ -609,4 +609,39 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   clock.t += 60_000; send(room, host, [C.Beat, 3]); room.tick();
   assert.deepEqual(host.of(S.Left).filter((m) => m[1] === ia)[0].slice(1), [ia, LeaveReason.Indoors]);
 }
+
+// stats counters + buckets survive snapshot / restore (relay analytics, Phase B)
+{
+  const { clock, room } = mk();
+  const host = join(room, room.hostKey);
+  const a = join(room), b = join(room);
+  const tok = welcome(a)[3];
+  send(room, host, [C.Lock, 1]); clock.t += 5000; send(room, host, [C.Lock, 0]); clock.t += 5000;
+  send(room, host, [C.Rotate]); clock.t += 5000;
+  const late = join(room); // a fresh code, unlocked: fine
+  send(room, host, [C.Kick, welcome(b)[2]]);
+  room.disconnect(a); clock.t += 1000; hello(room, peer(), tok);
+  const full = join(room, null); assert.ok(full);
+  const snap = JSON.parse(JSON.stringify(room.snapshot()));
+  const st = snap.stats;
+  assert.equal(st.locks, 1); assert.equal(st.rotates, 1); assert.equal(st.kicks, 1); assert.equal(st.resumes, 1);
+  assert.ok(st.joins >= 4 && st.peak >= 3 && st.msgs >= 4, 'counters moved');
+  assert.deepEqual(Object.keys(st.buckets).sort(), ['joins', 'len', 'msgs', 'peak']);
+  assert.equal(st.buckets.msgs, 'lt1k');
+  const room2 = new RoomCore({ code: snap.code, createdAt: 1_000_000, clock, random, hostKeyHash: room.digest, restore: snap });
+  assert.deepEqual(room2.snapshot().stats.buckets.peak, st.buckets.peak);
+  const s2 = room2.summary();
+  assert.equal(s2.locks, 1); assert.equal(s2.rotates, 1); assert.equal(s2.kicks, 1); assert.equal(s2.resumes, 1); assert.equal(s2.joins, st.joins);
+  assert.equal(s2.peak, st.peak);
+  assert.equal(JSON.stringify(snap.stats).includes('K7MQ4R'), false, 'no code in the counters');
+  // an old snapshot without stats restores with zero counters
+  const old = { ...snap }; delete old.stats;
+  assert.equal(new RoomCore({ code: snap.code, createdAt: 1_000_000, clock, random, hostKeyHash: room.digest, restore: old }).summary().joins, 0);
+  // refusals are counted by reason, ended room counts as closed
+  const { room: r3 } = mk();
+  const h3 = join(r3, r3.hostKey); send(r3, h3, [C.Lock, 1]); join(r3);
+  assert.equal(r3.summary().fails.locked, 1);
+  send(r3, h3, [C.End]); join(r3);
+  assert.equal(r3.summary().fails.closed, 1); assert.equal(r3.summary().endReason, EndReason.HostEnded);
+}
 console.log('mp-room-core: ok');

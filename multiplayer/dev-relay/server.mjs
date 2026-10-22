@@ -1,4 +1,5 @@
 // Local dev relay: the same three endpoints as the Cloudflare worker, the same RoomCore (loaded from TS).
+//   GET /stats?from&to (Bearer MP_STATS_TOKEN; 404 when the env var is unset; in-memory daily counters, same shape as the worker)
 //   POST /party -> 201 {code, hostKey, expiresAt};  GET /party/:code -> {open,size,full} | 404;  GET /party/:code/ws (Upgrade)
 // Run: MP_PORT=8790 node multiplayer/dev-relay/server.mjs   (MP_PORT=0 picks a free port; the first stdout line says which)
 // Logs counts only: no codes, tokens or addresses.
@@ -14,8 +15,19 @@ const { loadTs } = require('./loadTs.cjs');
 const here = path.dirname(fileURLToPath(import.meta.url));
 const P = loadTs(path.join(here, '../protocol/index.ts'));
 const { RoomCore } = loadTs(path.join(here, '../relay/src/roomCore.ts'));
+const SC = loadTs(path.join(here, '../relay/src/relayStatsCore.ts'));
 
-export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet = false } = {}) {
+export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet = false, statsToken = process.env.MP_STATS_TOKEN } = {}) {
+  // Local stand-in for the RelayStats Durable Object: the same core over a Map. Updates are chained so they apply in order.
+  const kvMap = new Map();
+  const kv = {
+    get: async (k) => kvMap.get(k), put: async (k, v) => { kvMap.set(k, JSON.parse(JSON.stringify(v))); }, delete: async (k) => kvMap.delete(k),
+    list: async (o = {}) => new Map([...kvMap].filter(([k]) => k.startsWith(o.prefix || ''))),
+  };
+  const statsCore = new SC.RelayStatsCore(kv, () => Date.now());
+  let chain = Promise.resolve();
+  const stat = (fn) => { chain = chain.then(fn).catch(() => undefined); };
+  const reported = new Map(); // room -> members reported live
   const rooms = new Map(); // code -> RoomCore
   const stats = { created: 0, joins: 0, ended: 0 };
   const clock = { now: () => Date.now() };
@@ -45,9 +57,15 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
   const originOk = (req) => !req.headers.origin || LOCAL.test(req.headers.origin);
 
   const server = http.createServer((req, res) => {
-    cors(req, res);
-    if (!originOk(req)) return json(res, 403, { error: 'origin' });
     const url = new URL(req.url, 'http://x');
+    if (url.pathname === '/stats') { // server-to-server: no CORS headers, bearer token, constant-time compare
+      if (req.method !== 'GET' || !statsToken) return json(res, 404, { error: 'not_found' });
+      if (!SC.bearerOk(req.headers.authorization ?? null, statsToken)) return json(res, 401, { error: 'unauthorized' });
+      const r = SC.parseRange(url.searchParams.get('from'), url.searchParams.get('to'), Date.now());
+      return chain.then(() => statsCore.stats(r.from, r.to)).then((b) => json(res, 200, b));
+    }
+    cors(req, res);
+    if (!originOk(req)) { stat(() => statsCore.inc('rl:origin_refused')); return json(res, 403, { error: 'origin' }); }
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     if (req.method === 'POST' && url.pathname === '/party') {
       let code;
@@ -58,6 +76,8 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       room.onRotate = (_o, n) => { rooms.set(n, room); };
       rooms.set(code, room);
       stats.created++;
+      reported.set(room, 0);
+      stat(() => statsCore.created());
       return json(res, 201, { code, hostKey: room.hostKey, expiresAt: room.codeExpiresAt });
     }
     const r = req.method === 'GET' ? routeCode(url) : null;
@@ -88,7 +108,12 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
   const timer = setInterval(() => {
     for (const room of new Set(rooms.values())) {
       room.tick();
-      if (room.ended) { for (const [code, r] of rooms) if (r === room) rooms.delete(code); stats.ended++; }
+      const n = room.ended ? 0 : room.liveMembers, was = reported.get(room) ?? 0;
+      if (n !== was && !room.ended) { reported.set(room, n); stat(() => statsCore.players(n - was)); }
+      if (room.ended) {
+        const sum = room.summary(), rep = reported.get(room) ?? 0;
+        reported.delete(room);
+        stat(() => statsCore.ended(sum, rep)); for (const [code, r] of rooms) if (r === room) rooms.delete(code); stats.ended++; }
     }
   }, 200);
   timer.unref();

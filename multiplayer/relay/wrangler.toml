@@ -13,9 +13,20 @@ MP_ALLOWED_ORIGINS = "https://futbolisland.app,https://www.futbolisland.app"
 name = "PARTY"
 class_name = "PartyRoom"
 
+# Analytics (Phase B): daily aggregate relay counters live in one singleton RelayStats object. Set the secret with
+# `wrangler secret put STATS_TOKEN` (>= 16 random chars; the Next admin route sends it as a bearer token). Not run yet.
+[[durable_objects.bindings]]
+name = "STATS"
+class_name = "RelayStats"
+
 [[migrations]]
 tag = "v1"
 # SQLite-backed Durable Object. Chosen when the account was on the Workers Free plan (SQLite was the only DO kind it allowed);
 # the owner is now on Workers Paid ($5/month, Oct 22 2026). SQLite is still the recommended DO backend, so nothing changes here,
 # and a class's storage backend cannot be switched after its first migration anyway.
 new_sqlite_classes = ["PartyRoom"]
+
+# Phase B: adds the RelayStats object (daily counters only). A NEW tag; v1 above stays exactly as deployed.
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["RelayStats"]

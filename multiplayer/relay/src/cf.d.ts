@@ -11,6 +11,7 @@ declare global {
     deleteAlarm(): Promise<void>;
     getAlarm(): Promise<number | null>;
     deleteAll(): Promise<void>;
+    list<T = unknown>(options?: { prefix?: string }): Promise<Map<string, T>>;
   }
   interface HibernatableWebSocket extends WebSocket {
     serializeAttachment(value: unknown): void;
@@ -28,6 +29,7 @@ declare global {
     idFromName(name: string): DurableObjectId;
     get(id: DurableObjectId): DurableObjectStub;
   }
+  interface ExecutionContext { waitUntil(promise: Promise<unknown>): void }
   class WebSocketPair {
     0: WebSocket;
     1: WebSocket;

@@ -17,7 +17,7 @@ import { RoomCore, CLOSE } from './roomCore';
 import type { MemberAttachment, Peer, RoomSnapshot } from './roomCore';
 import { generateCode, PARTY_MAX_MS } from '../../protocol';
 
-export interface Env { PARTY: DurableObjectNamespace; MP_ALLOWED_ORIGINS?: string; MP_DEV?: string }
+export interface Env { PARTY: DurableObjectNamespace; STATS: DurableObjectNamespace; STATS_TOKEN?: string; MP_ALLOWED_ORIGINS?: string; MP_DEV?: string }
 
 interface Saved extends RoomSnapshot { name: string; createdAt: number; hostKeyHash: string }
 
@@ -32,6 +32,9 @@ export class PartyRoom {
   private attSig = new Map<WebSocket, string>();
   private timer: ReturnType<typeof setInterval> | null = null;
   private alarmAt = 0;
+  /** Members this room has reported to RelayStats as live (a number only; persisted under 'gauge' before each report). */
+  private reported = 0;
+  private summarySent = false;
 
   constructor(private state: DurableObjectState, private env: Env) {}
 
@@ -94,6 +97,7 @@ export class PartyRoom {
     const core = await this.load();
     if (!core) return;
     core.tick();
+    if (core.countersDirty && !core.ended) await this.persist(core); // counters ride the 5 s alarm, not every message
     this.afterEvent();
   }
 
@@ -118,6 +122,7 @@ export class PartyRoom {
     this.base = { name: b.code, createdAt: b.createdAt, hostKeyHash: core.digest };
     await this.state.storage.put('saved', { ...this.base, ...core.snapshot() } satisfies Saved);
     this.core = core;
+    this.report('/created', {});
     this.afterEvent();
     return Response.json({ hostKey: core.hostKey, expiresAt: core.codeExpiresAt });
   }
@@ -142,7 +147,14 @@ export class PartyRoom {
     if (await this.state.storage.get('tombstone')) return null; // ended: never revived
     const s = await this.state.storage.get<Saved>('saved');
     if (!s) return null;
-    if (Date.now() >= s.createdAt + PARTY_MAX_MS) { await this.finish(); return null; } // past the 12 h cap
+    this.reported = (await this.state.storage.get<number>('gauge')) ?? 0;
+    if (Date.now() >= s.createdAt + PARTY_MAX_MS) { // past the 12 h cap: report it as expired, then delete
+      const dead = this.build(s.name, s.createdAt, s.hostKeyHash, s);
+      dead.expire();
+      await this.reportEnded(dead);
+      await this.finish();
+      return null;
+    }
     this.base = { name: s.name, createdAt: s.createdAt, hostKeyHash: s.hostKeyHash };
     const core = this.build(s.name, s.createdAt, s.hostKeyHash, s);
     // a hibernated object wakes with its sockets still attached: put the members back on them
@@ -165,8 +177,33 @@ export class PartyRoom {
   }
 
   private async persist(core: RoomCore): Promise<void> {
-    if (core.ended) { await this.finish(); return; }
+    core.countersDirty = false;
+    if (core.ended) { await this.reportEnded(core); await this.finish(); return; }
     if (this.base) await this.state.storage.put('saved', { ...this.base, ...core.snapshot() } satisfies Saved);
+  }
+
+  /** Fire-and-forget to the RelayStats singleton. A failure here must never affect a party; there is nothing in the body but counts. */
+  private report(path: string, body: unknown): void {
+    try {
+      if (!this.env.STATS) return;
+      void this.env.STATS.get(this.env.STATS.idFromName('stats')).fetch('https://do' + path, { method: 'POST', body: JSON.stringify(body) }).catch(() => undefined);
+    } catch { /* stats are best effort */ }
+  }
+
+  private async reportEnded(core: RoomCore): Promise<void> {
+    if (this.summarySent) return;
+    this.summarySent = true;
+    this.report('/ended', { summary: core.summary(), players: this.reported });
+    this.reported = 0;
+  }
+
+  /** Live players gauge: a +/-N report to RelayStats whenever the number of connected members changed (joins and leaves are rare). */
+  private syncGauge(core: RoomCore): void {
+    const n = core.liveMembers;
+    if (n === this.reported) return;
+    const delta = n - this.reported;
+    this.reported = n;
+    void this.state.storage.put('gauge', n).then(() => this.report('/players', { delta }));
   }
 
   /** The alarm is set only when none is pending (review #3): one billed write per 5 s, not one per frame. */
@@ -184,6 +221,7 @@ export class PartyRoom {
     const core = this.core;
     if (!core) return;
     if (core.stateChanged) { core.stateChanged = false; void this.persist(core); }
+    if (!core.ended) this.syncGauge(core);
     if (core.ended) {
       if (this.timer) clearInterval(this.timer);
       this.timer = null;

@@ -5,12 +5,26 @@ import {
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
   parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
+import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
+import type { RoomSummary, FailReason } from './relayStatsCore';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
 export interface Peer { send(text: string): void; close(code: number): void }
 export interface RoomClock { now(): number }
 /** What a Durable Object must keep so an eviction cannot revive an ended party, a retired code or a revoked token (review #2). */
-export interface RoomSnapshot { code: string; codeIssuedAt: number; locked: boolean; revoked: string[]; retired: string[] }
+export interface RoomSnapshot { code: string; codeIssuedAt: number; locked: boolean; revoked: string[]; retired: string[]; stats?: RoomStatsSnapshot }
+/** Aggregate counters only (no codes, names, ids, tokens or times). Persisted in the snapshot so an eviction keeps them. */
+export interface RoomCounters {
+  peak: number; joins: number; resumes: number; kicks: number; rotates: number; locks: number; nameResets: number; rateCloses: number; msgs: number;
+  fails: Record<string, number>; errs: Record<string, number>; endReason: number; // endReason -1 while the party is live
+}
+/** The counters plus their fixed bucket names as they stand now. */
+export interface RoomStatsSnapshot extends RoomCounters { buckets: { peak: string; len: string; joins: string; msgs: string } }
+const newCounters = (): RoomCounters => ({ peak: 0, joins: 0, resumes: 0, kicks: 0, rotates: 0, locks: 0, nameResets: 0, rateCloses: 0, msgs: 0, fails: {}, errs: {}, endReason: -1 });
+const FAIL_OF: Partial<Record<number, FailReason>> = {
+  [ErrorCode.Expired]: 'expired', [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.BadName]: 'bad_name',
+  [ErrorCode.Locked]: 'locked', [ErrorCode.RateLimited]: 'rate_limited',
+};
 /** Per-socket state a hibernating Durable Object keeps with serializeAttachment so members survive an eviction. */
 export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean }
 
@@ -83,6 +97,10 @@ export class RoomCore {
   private emptySince: number;
   private hostId = -1;
   private hadHost = false;
+  private counters: RoomCounters = newCounters();
+  private endedAt = 0;
+  /** True when a counter moved since the Durable Object last persisted (it saves them on its 5 s alarm, not per message). */
+  countersDirty = false;
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
 
@@ -96,13 +114,33 @@ export class RoomCore {
     if (opts.hostKeyHash) { this.hostKey = ''; this.hostKeyHash = opts.hostKeyHash; }
     else { this.hostKey = b64url(this.random(16)); this.hostKeyHash = sha256Hex(this.hostKey); }
     const r = opts.restore;
-    if (r) { this._code = r.code; this.codeIssuedAt = r.codeIssuedAt; this.locked = r.locked; this.revoked = r.revoked.slice(); this.retired = r.retired.slice(); }
+    if (r) { this._code = r.code; this.codeIssuedAt = r.codeIssuedAt; this.locked = r.locked; this.revoked = r.revoked.slice(); this.retired = r.retired.slice();
+      if (r.stats) { const c = newCounters(); Object.assign(c, r.stats); delete (c as unknown as { buckets?: unknown }).buckets; c.fails = { ...(r.stats.fails || {}) }; c.errs = { ...(r.stats.errs || {}) }; this.counters = c; } }
   }
 
   get digest(): string { return this.hostKeyHash; }
   snapshot(): RoomSnapshot {
-    return { code: this._code, codeIssuedAt: this.codeIssuedAt, locked: this.locked, revoked: this.revoked.slice(), retired: this.retired.slice() };
+    return { code: this._code, codeIssuedAt: this.codeIssuedAt, locked: this.locked, revoked: this.revoked.slice(), retired: this.retired.slice(), stats: this.statsSnapshot() };
   }
+  private statsSnapshot(): RoomStatsSnapshot {
+    const c = this.counters;
+    return { ...c, fails: { ...c.fails }, errs: { ...c.errs },
+      buckets: { peak: peakBucket(Math.max(1, c.peak)), len: lenBucket(this.lenMs()), joins: joinsBucket(c.joins), msgs: msgsBucket(c.msgs) } };
+  }
+  private lenMs(): number { return Math.max(0, (this.endedAt || this.clock.now()) - this.createdAt); }
+  /** The one end-of-party report (counts only). Call after `ended`. */
+  summary(): RoomSummary {
+    const c = this.counters;
+    return { endReason: c.endReason < 0 ? EndReason.Expired : c.endReason, peak: c.peak, lenMs: this.lenMs(), joins: c.joins, resumes: c.resumes,
+      kicks: c.kicks, rotates: c.rotates, locks: c.locks, nameResets: c.nameResets, rateCloses: c.rateCloses, msgs: c.msgs, fails: { ...c.fails }, errs: { ...c.errs } };
+  }
+  /** Members with a live socket (the live players gauge). */
+  get liveMembers(): number { let n = 0; this.members.forEach((m) => { if (m.peer) n++; }); return n; }
+  /** End the party from outside (the 12 h cap found on wake-up). */
+  expire(): void { this.end(EndReason.Expired); }
+  private count(k: 'joins' | 'resumes' | 'kicks' | 'rotates' | 'locks' | 'nameResets' | 'rateCloses' | 'msgs'): void { this.counters[k]++; this.countersDirty = true; }
+  private notePeak(): void { const n = this.liveMembers; if (n > this.counters.peak) { this.counters.peak = n; this.countersDirty = true; } }
+  private fail(code: ErrorCode): void { const r = FAIL_OF[code]; if (r) { this.counters.fails[r] = (this.counters.fails[r] || 0) + 1; this.countersDirty = true; } }
   /** 'current' | 'retired' | null for a code that is neither. */
   codeStatus(code: string): 'current' | 'retired' | null {
     return code === this._code ? 'current' : this.retired.includes(code) ? 'retired' : null;
@@ -135,7 +173,7 @@ export class RoomCore {
 
   /** `retired`: the socket came in through a code that Rotate replaced; it may only resume or present the host key. */
   connect(peer: Peer, retired = false): void {
-    if (this.ended) { this.send(peer, [S.Error, ErrorCode.Expired]); peer.close(CLOSE.Ended); return; }
+    if (this.ended) { this.counters.fails.closed = (this.counters.fails.closed || 0) + 1; this.countersDirty = true; this.send(peer, [S.Error, ErrorCode.Expired]); peer.close(CLOSE.Ended); return; }
     if (retired) this.retiredPeers.add(peer);
     this.pending.set(peer, this.clock.now() + HELLO_TIMEOUT_MS);
   }
@@ -156,11 +194,13 @@ export class RoomCore {
       this.hello(peer, msg, now);
       return;
     }
+    this.count('msgs');
     m.heardAt = now; // any frame (pose, beat, emote) proves they are here
     if (m.relayAway) this.unAway(m);
     // flood guard: more than closeAbovePerSec frames within one second -> close
     if (now - m.secStart >= 1000) { m.secStart = now; m.secCount = 0; }
     if (++m.secCount > RATE.closeAbovePerSec) {
+      this.count('rateCloses');
       this.send(peer, [S.Error, ErrorCode.RateLimited]);
       this.drop(m, CLOSE.Flood);
       return;
@@ -195,20 +235,24 @@ export class RoomCore {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m || t.nick === null) return;
       t.nick = null;
+      this.count('nameResets');
       this.broadcast([S.Renamed, t.id, null], null);
     } else if (msg[0] === C.Kick) {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m) return;
+      this.count('kicks');
       this.revoked.push(t.token);
       this.kickLockUntil = this.clock.now() + KICK_LOCK_MS; // the kicked child cannot walk straight back in
       this.stateChanged = true;
       if (t.peer) this.send(t.peer, [S.Error, ErrorCode.Kicked]);
       this.remove(t, LeaveReason.Kicked, CLOSE.Kicked);
     } else if (msg[0] === C.Lock) {
+      if (msg[1] === 1 && !this.locked) this.count('locks');
       this.locked = msg[1] === 1;
       if (!this.locked) this.kickLockUntil = 0;
       this.stateChanged = true;
     } else if (msg[0] === C.Rotate) {
+      this.count('rotates');
       const old = this._code;
       const code = this.rotate();
       this.send(peer, [S.Code, code, this.codeExpiresAt]);
@@ -317,6 +361,7 @@ export class RoomCore {
         m.lastSeq = -1; // the client restarts its pose counter at 0 on every connect (review #7)
         m.heardAt = now; if (m.relayAway) this.unAway(m);
         this.byPeer.set(peer, m);
+        this.count('resumes'); this.notePeak();
         this.welcome(m);
         return;
       }
@@ -338,6 +383,7 @@ export class RoomCore {
     const m = this.newMember(id, pickNameWith(taken, rnd), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
+    this.count('joins'); this.notePeak();
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }
     this.welcome(m);
     this.broadcast([S.Joined, this.memberInfo(m)], m);
@@ -435,6 +481,7 @@ export class RoomCore {
   private end(reason: EndReason): void {
     if (this.ended) return;
     this.ended = true;
+    this.counters.endReason = reason; this.endedAt = this.clock.now(); this.countersDirty = true;
     this.stateChanged = true;
     this.members.forEach((m) => { if (m.peer) { this.send(m.peer, [S.Ended, reason]); m.peer.close(CLOSE.Ended); } });
     this.pending.forEach((_d, p) => p.close(CLOSE.Ended));
@@ -442,6 +489,7 @@ export class RoomCore {
   }
 
   private refuse(peer: Peer, code: ErrorCode): void {
+    this.fail(code);
     this.pending.delete(peer);
     this.send(peer, [S.Error, code]);
     peer.close(CLOSE.Refused);
@@ -457,6 +505,7 @@ export class RoomCore {
   }
 
   private send(peer: Peer, msg: ServerMsg): void {
+    if (msg[0] === S.Error) { const n = ERR_NAMES[msg[1] as number]; if (n) { this.counters.errs[n] = (this.counters.errs[n] || 0) + 1; this.countersDirty = true; } }
     try { peer.send(encode(msg)); } catch { /* peer already gone */ }
   }
 
