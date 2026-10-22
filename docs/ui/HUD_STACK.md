@@ -252,6 +252,14 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   hops; Thanks = palms together, three bows; Dance = pumps, hands on hips, a full spin, hops, arms-up finish); High five 2.2 s unless a
   variation (its own length); Pass it ~5.9 s. Walking away ends an emote at once; the townsperson's cooldown starts after its reaction.
   Range is horizontal 9 m (a rooftop / other floor, > 4 m up or down, is a different scene).
+- **Whole-body Wave / Cheer / Laugh** (user, 22 Oct 2026: "many of them look similar ... standing and just waving their arms ... make them all
+  very different"). Six variants each in `lib/town/emoteBody.ts` (pose functions: in-place travel, hop, crouch, spin, torso, head, both arms and
+  legs), written on the rig by `lib/graphics/bodyEmotePose.ts` through `applyEmoteArms`. Wave: windmill shuffle, jumping hello, royal wave +
+  curtsy, wave / heel click / salute, "hey, over there!", shy wave + peekaboo. Cheer: double-jump fist pumps, goal run + aeroplane turn, knee
+  slide roar, pom-pom kicks, stadium bounce, victory spin + flex. Laugh: doubled-over knee slap, belly laugh + tear wipe, point and stagger back,
+  clutching-sides hop, thigh-slap spin, lean on your partner. Shuffled bag per actor (never the same twice in a row); a friend draws its own;
+  the townsperson answers with a different variant (`BODY_ANSWER`) at 0.8 amplitude. Root stays within 1.0 m (EMOTE_BOUNDS 1.4 m); reduced
+  motion unchanged (these poses never run under it). Guarded by `tests/emote-body.cjs` (bounds every frame, pairwise pose RMS, whole-body ranges).
 - **Pass it** (wheel slot 5, icon = ball between two arrows, protocol value 6 `Emote.PassBall`, was Thumbs up): you and the nearest
   townsperson (or an imaginary friend 3.2 m ahead when none is near) pass one pooled ball (`lib/graphics/passBall.ts`) five times,
   player -> partner -> player ..., a lifted pass between the feet with a trap bounce (`lib/town/emotePass.ts passBallAt`); you face the

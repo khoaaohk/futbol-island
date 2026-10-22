@@ -4,6 +4,7 @@
 import type * as T from 'three';
 import {EMOTE, emoteCalled, emoteCelebration, emoteClap, emoteHop} from '../town/emoteReact';
 import {applyApplause, applyCelebrationArms, joints} from './celebrations';
+import {applyBodyEmote} from './bodyEmotePose';import {isBodyEmote} from '../town/emoteBody';
 
 const clamp01 = (v: number) => v < 0 ? 0 : v > 1 ? 1 : v;
 const smooth = (v: number) => { const t = clamp01(v); return t * t * (3 - 2 * t); };
@@ -76,6 +77,7 @@ const body: EmoteBody = {called: 0, jump: undefined};
 /** The rig-level part of an emote at `age` (shared output object, read at once): the raised "called" arm and the hop. */
 export function emoteBody(kind: number, age: number, dur: number): EmoteBody {
   body.called = emoteCalled(kind, age, dur); body.jump = undefined;
+  if (isBodyEmote(kind)) { body.called = 0; return body; } // Wave / Cheer / Laugh: the whole body moves in bodyEmotePose.ts
   const c = emoteCelebration(kind, age, dur);
   if (c >= 0) body.jump = emoteHop(c);
   else if (kind === EMOTE.Dance) body.jump = danceJump(clamp01(age / dur), age);
@@ -84,6 +86,7 @@ export function emoteBody(kind: number, age: number, dur: number): EmoteBody {
 }
 /** Every arm pose an emote needs on the body: the cheer, the clap and the moves above. */
 export function applyEmoteArms(root: T.Object3D, kind: number, age: number, dur: number) {
+  if (applyBodyEmote(root, kind, age, dur)) return;
   const c = emoteCelebration(kind, age, dur); if (c >= 0) applyCelebrationArms(root, c, ramp(age, dur) > 0 ? 1 : 0);
   const cl = emoteClap(kind, age, dur); if (cl > 0) applyApplause(root, age, cl);
   applyEmoteMove(root, kind, age, dur);
