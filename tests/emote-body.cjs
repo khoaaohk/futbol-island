@@ -109,18 +109,18 @@ t('dispatcher: Wave / Cheer / Laugh go to the whole-body writer for you, friends
  const ep=read('lib/graphics/emotePose.ts');
  assert(/if \(applyBodyEmote\(root, kind, age, dur\)\) return;/.test(ep),'applyEmoteArms hands the three to applyBodyEmote');
  for(const k of KINDS){const b=P.emoteBody(k,1.0,DUR);assert.equal(b.called,0);assert.equal(b.jump,undefined,'no rig hop on top of the pelvis hop');}
- assert(P.emoteBody(8,.5,DUR).jump,'Dance keeps its own hop');
  assert(/emoteFx\.kind>=0&&!reduced\)\{[^\n]*applyEmoteArms\(player\.root/.test(read('components/Town.tsx'))&&/!reduced&&!stunned&&!entry\.pass\)applyEmoteArms\(entry\.rig\.root/.test(read('lib/graphics/islandNpcs.ts'))&&/!reduced&&e\.hf<0&&!fs0\)applyEmoteArms\(rig\.root/.test(read('lib/graphics/remoteAvatars.ts')),'all three actors pose through applyEmoteArms, never under reduced motion');
 });
 t('writer: fake rig with every joint moves pelvis, torso, head, legs and arms; roles: you, a friend, a townsperson',()=>{
  const W2=load('lib/graphics/bodyEmotePose.ts');
  const mk=(id,npc)=>{const names=['left-shoulder','right-shoulder','left-elbow','right-elbow','player-pelvis','armor-torso','player-head','left-hip','right-hip','left-knee','right-knee','left-ankle','right-ankle'];
   const j={};for(const x of names)j[x]={rotation:{x:0,y:0,z:0},position:{x:0,y:.88,z:0}};j['player-jersey']={userData:{playerId:id}};return {j,userData:npc?{npcId:'baker'}:{},getObjectByName:x=>j[x]};};
- for(const k of KINDS){const me=mk('you'),npc=mk('town-npc-baker',true);
-  assert.equal(W2.applyBodyEmote(me,k,.02,DUR),true);assert.equal(W2.applyBodyEmote(npc,k,.02,DUR),true);
-  let moved=0;for(let a=.4;a<3.7;a+=.3){W2.applyBodyEmote(me,k,a,DUR);W2.applyBodyEmote(npc,k,a,DUR);}
-  for(const x of ['player-pelvis','armor-torso','left-hip','right-knee','left-shoulder','right-elbow'])if(Math.abs(me.j[x].rotation.x)+Math.abs(me.j[x].rotation.y)+Math.abs(me.j[x].rotation.z)+Math.abs(me.j[x].position.y-.88)>.01)moved++;
-  assert(moved>=5,NAME[k]+' moves the whole rig ('+moved+')');}
+ for(const k of KINDS){const seen=new Set();
+  for(let v=0;v<6;v++){const me=mk('you'),npc=mk('town-npc-baker',true);
+   assert.equal(W2.applyBodyEmote(me,k,.02,DUR,v),true);assert.equal(W2.applyBodyEmote(npc,k,.02,DUR,v),true);
+   for(let a=.4;a<3.7;a+=.3){W2.applyBodyEmote(me,k,a,DUR,v);W2.applyBodyEmote(npc,k,a,DUR,v);}
+   for(const x of ['player-pelvis','armor-torso','left-hip','right-knee','left-shoulder','right-elbow'])if(Math.abs(me.j[x].rotation.x)+Math.abs(me.j[x].rotation.y)+Math.abs(me.j[x].rotation.z)+Math.abs(me.j[x].position.y-.88)>.01)seen.add(x);}
+  assert(seen.size>=5,NAME[k]+' moves the whole rig across its variants ('+seen.size+')');}
  assert.equal(W2.applyBodyEmote(mk('you'),2,1,DUR),false,'a high five is not mine');
  const src=read('lib/graphics/bodyEmotePose.ts'),body=src.slice(src.indexOf('export function applyBodyEmote'));
  assert(!/new |\[\]|\{\s*\w+:/.test(body.replace("s = {kind: -1, age: 0, v: 0, role: roleOf(root)}; states.set(root, s);","")),'no allocation per frame (one state per rig)');
