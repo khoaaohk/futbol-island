@@ -13,7 +13,6 @@ import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
 import AnimalPicker, { getAnimalChoice } from './AnimalPicker';
 import NickField from './NickField';
-import { SPRING_EASE, flipTransform, invert } from '../landing/motion';
 import { DoneButton } from '@/components/DoneButton';
 import pickerStyles from './animalPicker.module.css';
 import styles from './party.module.css';
@@ -34,6 +33,20 @@ const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorC
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The Play with friends HUD button the card grows out of (and shrinks back into). */
 const openerRect = () => document.querySelector<HTMLElement>('[data-party-open]')?.getBoundingClientRect() ?? null;
+
+/** Grow timing: card reveals out of the HUD button in ~300 ms, content fades in over the last 60%; shrink back in ~200 ms. */
+const GROW_IN_MS = 300;
+const GROW_OUT_MS = 200;
+/** One grow keyframe: the card is clipped to a button-sized rounded box (constant corner radius, never stretched) and moved so that
+ *  box sits over the HUD button; `box` null is the resting card. Translate + clip only: nothing is scaled, so no oval. */
+function growFrame(box: DOMRect | null, el: HTMLElement): Keyframe {
+  const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 24;
+  if (!box) return { transform: 'none', clipPath: `inset(0px round ${r}px)` };
+  const c = el.getBoundingClientRect();
+  const ix = Math.max(0, (c.width - box.width) / 2), iy = Math.max(0, (c.height - box.height) / 2);
+  const dx = box.left + box.width / 2 - (c.left + c.width / 2), dy = box.top + box.height / 2 - (c.top + c.height / 2);
+  return { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, clipPath: `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${Math.min(r, box.width / 2)}px)` };
+}
 
 /** The card's scrolling body: edges fade softly (mask) only where more content waits, never a hard clip. Padding keeps button
  *  edges / focus rings from being cut at rest. */
@@ -57,8 +70,8 @@ function FadeScroll({ children }: { children: ReactNode }) {
 
 /**
  * Dialog shell: backdrop, Esc closes, focus moves in. Same cream card look as the other island cards.
- * With `grow`, the card grows out of the HUD button and shrinks back into it before unmounting: the same FLIP, easing and
- * durations as the title screen's sheets (components/landing/TitleActions.tsx morph). Reduced motion: no morph, no fade-out.
+ * With `grow`, the card grows out of the HUD button and shrinks back into it before unmounting: a clip-path reveal with a constant corner radius
+ * (no scale, so no oval); content fades in after the shell has grown. Reduced motion: no morph, no fade-out.
  * `children` may be a function that receives the animated close (for the card's own Done button).
  */
 function Card({ children, onClose, label, grow, from }: { children: ReactNode | ((close: () => void) => ReactNode); onClose: () => void; label: string; grow?: boolean; from?: DOMRect | null }) {
@@ -71,22 +84,18 @@ function Card({ children, onClose, label, grow, from }: { children: ReactNode | 
     const el = ref.current; const target = openerRect();
     if (!grow || !el || !target || reducedMotion()) { closeRef.current(); return; }
     closing.current = true;
-    el.style.transformOrigin = '0 0';
-    const to = el.getBoundingClientRect();
-    back.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' });
-    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, fill: 'forwards' });
-    const a = el.animate([{ transform: 'none', borderRadius: getComputedStyle(el).borderRadius }, { transform: flipTransform(invert(target, to)), borderRadius: '999px' }], { duration: 300, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'both' });
+    back.current?.animate([{ backgroundColor: '#193f3766' }, { backgroundColor: '#193f3700' }], { duration: GROW_OUT_MS, fill: 'forwards' });
+    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 90, fill: 'forwards' });
+    const a = el.animate([growFrame(null, el), growFrame(target, el)], { duration: GROW_OUT_MS, easing: 'cubic-bezier(.4,0,1,1)', fill: 'forwards' });
     const done = () => closeRef.current();
     a.finished.then(done, done);
   }, [grow]);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!grow || !el || !from || reducedMotion()) return;
-    el.style.transformOrigin = '0 0';
-    const to = el.getBoundingClientRect();
-    el.animate([{ transform: flipTransform(invert(from, to)), borderRadius: '999px' }, { transform: 'none', borderRadius: getComputedStyle(el).borderRadius }], { duration: 460, easing: SPRING_EASE, fill: 'backwards' });
-    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 160, easing: 'ease-out', fill: 'backwards' });
-    back.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, fill: 'backwards' });
+    el.animate([growFrame(from, el), growFrame(null, el)], { duration: GROW_IN_MS, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'backwards' });
+    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: Math.round(GROW_IN_MS * 0.6), delay: Math.round(GROW_IN_MS * 0.4), easing: 'ease-out', fill: 'backwards' });
+    back.current?.animate([{ backgroundColor: '#193f3700' }, { backgroundColor: '#193f3766' }], { duration: GROW_IN_MS, fill: 'backwards' });
   }, [grow, from]);
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;

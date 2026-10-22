@@ -106,7 +106,8 @@ t('animal picker: 12-16 fixed options, no typing, Surprise me, labels, >= 44px, 
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
  assert(/grow from=\{from\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
- assert(/SPRING_EASE/.test(host)&&/duration: 460/.test(host)&&/duration: 300/.test(host)&&/cubic-bezier\(\.5, ?0, ?\.75, ?0\)/.test(host),'same easing and durations as the title sheet morph');
+ assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function FadeScroll'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');
+ assert(/borderRadius: '999px'/.test(host)===false&&/GROW_IN_MS \* 0\.4/.test(host)&&/GROW_IN_MS \* 0\.6/.test(host),'content fades in over the last 60% of the grow; no 999px radius morph');
  assert(/reducedMotion\(\)\) \{ closeRef\.current\(\)/.test(host)&&/prefers-reduced-motion: reduce/.test(host),'reduced motion: no morph, close at once');
  assert(/e\.key === 'Escape'\) \{ e\.stopPropagation\(\); requestClose\(\)/.test(host)&&/role="dialog" aria-modal="true"/.test(host),'Escape / backdrop use the animated close; dialog aria kept');
  assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Close<\/button>/.test(host.slice(host.indexOf('data-party-menu'),host.indexOf("view === 'gate'"))),'Done (shared DoneButton) replaces the bottom Close');
