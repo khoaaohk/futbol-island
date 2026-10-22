@@ -52,11 +52,15 @@ assert.doesNotMatch(comp,/localStorage|fetch\(/,'component stores and sends noth
 // Server render: the gate shows, the guarded content does not (nothing leaks before a pass).
 const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
 function loadTsx(file){const m={exports:{}};const out=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText;
- vm.runInNewContext(out,{module:m,exports:m.exports,require:id=>id.endsWith('.module.css')?new Proxy({},{get:(_,k)=>String(k)}):id==='@/lib/parentGate'?gate:require(id),Date,Math});return m.exports;}
+ vm.runInNewContext(out,{module:m,exports:m.exports,require:id=>id.endsWith('.module.css')?new Proxy({},{get:(_,k)=>String(k)}):id==='@/lib/parentGate'?gate:id==='./BackButton'?{BackButton:({onBack,...p})=>React.createElement('button',{...p,'aria-label':'Back'},'Back')}:require(id),Date,Math});return m.exports;}
 const ParentGate=loadTsx(path.join(ROOT,'components/ParentGate.tsx')).default;
 const html=renderToStaticMarkup(React.createElement(ParentGate.Guard,{reason:'Test'},React.createElement('div',{id:'secret'},'SECRET')));
 assert.match(html,/data-parent-gate/);assert.doesNotMatch(html,/SECRET/,'guarded content hidden before the gate');
 assert.match(html,/Kids, ask a grown-up/);
+{const cancel=renderToStaticMarkup(React.createElement(ParentGate,{onPass(){},onCancel(){}}));
+ assert(cancel.indexOf('data-parent-gate-back')>=0&&cancel.indexOf('data-parent-gate-back')<cancel.indexOf('<h3'),'Back sits in the header, before the title (top left)');assert.doesNotMatch(cancel,/Go back/,'no bottom Go back');
+ assert.doesNotMatch(renderToStaticMarkup(React.createElement(ParentGate,{onPass(){}})),/data-parent-gate-back/,'no Back without onCancel');
+ assert.match(renderToStaticMarkup(React.createElement(ParentGate,{onPass(){},onCancel(){},shell:true})),/<h2/,'shell title is the h2 sheet title');}
 // QA11: two gates on one screen get their own ids (label/aria links stay correct); the cooldown counts down with a 1 s tick
 // that only runs while waiting and is cleared with the cooldown.
 {const two=renderToStaticMarkup(React.createElement('div',null,React.createElement(ParentGate,{onPass(){}}),React.createElement(ParentGate,{onPass(){}})));
