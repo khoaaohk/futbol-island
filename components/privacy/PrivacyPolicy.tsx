@@ -7,10 +7,11 @@ import styles from './PrivacyPolicy.module.css';
  * lib/analytics/* (visit counts), lib/saves/* + app/api/save/* (save codes, grown-up email), lib/coaches/idp/* (plan + QR links),
  * components/OfficialClipPlayer.tsx (YouTube privacy-enhanced clips on tap), app/coffee/* (Stripe donations behind the grown-up check).
  * COPPA 2025 notice items: internal operations (§312.5(c)(7)), retention policy (§312.10), security program summary (§312.8).
- * [LAWYER] Review before public launch: operator name/address, the YouTube-on-tap disclosure, state-law and UK/EU sections.
+ * [LAWYER] Review before public launch: operator name/address, the YouTube-on-tap disclosure, state-law and UK/EU sections, and section 7a
+ * (Play with friends: an optional typed FIRST NAME ONLY, shown to the friends in the same party; added Oct 22 2026 at the owner's request).
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
-export const POLICY_UPDATED='October 9, 2026';
+export const POLICY_UPDATED='October 22, 2026';
 /** Operator's legal name and postal address for the notice (COPPA §312.4(d)(1)). Set before launch. */
 export const OPERATOR:{name:string;address:string|null}={name:'Futbol Island',address:null};
 /** The address for privacy questions and requests. Set before launch (docs/save-codes.md). */
@@ -29,6 +30,7 @@ export default function PrivacyPolicy(){
    <li><PolicyToc href="#pp-plan">The football plan and QR links</PolicyToc></li>
    <li><PolicyToc href="#pp-email">Sending a code to a grown-up</PolicyToc></li>
    <li><PolicyToc href="#pp-visits">Visit counts and learning statistics</PolicyToc></li>
+   <li><PolicyToc href="#pp-friends">Play with friends (optional)</PolicyToc></li>
    <li><PolicyToc href="#pp-tech">Technical information</PolicyToc></li>
    <li><PolicyToc href="#pp-never">What we never collect</PolicyToc></li>
    <li><PolicyToc href="#pp-use">How we use information</PolicyToc></li>
@@ -44,8 +46,8 @@ export default function PrivacyPolicy(){
   </ol></nav>
 
   <section id="pp-short"><h2 tabIndex={-1}>1. The short version</h2><ul>
-   <li><b>No accounts and no personal details.</b> We never ask a child for a name, age, birthday, email, phone number, photo, voice, school or location.</li>
-   <li><b>No ads, no chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b></li>
+   <li><b>No accounts and almost no personal details.</b> We never ask a child for a last name, age, birthday, email, phone number, photo, voice, school or location. The one exception is the optional <i>Play with friends</i> feature, where a grown-up may type a <b>first name only</b> so friends can tell each other apart (section 7a).</li>
+   <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>
    <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We count visits without identifying anyone.</b> Totals only, with a scrambled visitor code that changes every day.</li>
    <li><b>Links that leave the game, donations and grown-up tools sit behind a grown-up check.</b></li>
@@ -105,12 +107,18 @@ export default function PrivacyPolicy(){
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>
   </section>
 
+  <section id="pp-friends"><h2 tabIndex={-1}>7a. Play with friends (optional)</h2>
+   <p>Play with friends lets a small group of friends see each other on the island. It works only after a grown-up passes the grown-up check, and a grown-up can switch it off in Settings.</p>
+   <p><b>What the other players in a party can see:</b> a made-up name chosen by the game (a colour and an animal, such as “Red Zebra”), an animal picture the player picks from a fixed list, their outfit, where they are on the island, and simple preset emotes such as a wave. A player may also type a <b>first name only</b> (letters only, up to 12 letters) so friends can tell each other apart. There is no free-text chat, no voice, no photos, and no way to send a link or a message. Please type only a first name: never a last name, school, address or contact details.</p>
+   <p><b>What we keep:</b> nothing about who the players are. A party exists only while it is in use (an invite code works for 2 hours and a party lasts at most 4 hours). The first name is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. Like any website, the party service sees the internet address a connection comes from; it keeps only a short-lived scrambled version in memory to stop abuse.</p>
+   <p><b>Controls:</b> whoever starts a party can remove a player, lock the party, change the code, reset a player’s name back to the made-up one, or end the party. Any player can leave, or hide or mute another player. If you see a name that should not be there, tell a grown-up.</p>
+  </section>
   <section id="pp-tech"><h2 tabIndex={-1}>8. Technical information</h2>
    <p>Like every website, our host receives standard technical information with each request (such as the network address, browser type and the page asked for) so it can deliver the page and protect the site from abuse. Our host keeps these logs for a short time under its own policy; we use them only to keep the service running and secure, and we do not combine them with save codes or visit counts.</p>
   </section>
 
   <section id="pp-never"><h2 tabIndex={-1}>9. What we never collect</h2>
-   <p>Names, usernames, ages or birthdays, email addresses or phone numbers (other than the one-time email in section 6), home or school addresses, photos, video, voice recordings, precise location, contacts, chat messages, or advertising identifiers.</p>
+   <p>Last names, usernames, ages or birthdays, email addresses or phone numbers (other than the one-time email in section 6; and other than the optional first name described in section 7a), home or school addresses, photos, video, voice recordings, precise location, contacts, chat messages, or advertising identifiers.</p>
   </section>
 
   <section id="pp-use"><h2 tabIndex={-1}>10. How we use information</h2><ul>
@@ -129,6 +137,7 @@ export default function PrivacyPolicy(){
    <p>These companies process information only to provide their service to us, under contracts or terms that limit their use of it:</p><ul>
     <li><b>Vercel</b> hosts the website and works out the country and region for visit counts.</li>
     <li><b>Supabase</b> stores saves and visit counts.</li>
+    <li><b>Cloudflare</b> runs the party service for <i>Play with friends</i>: messages pass through it while a party is in use and are not stored afterwards.</li>
     <li><b>Resend</b> sends the one email a grown-up asks for, only when they ask.</li>
     <li><b>YouTube</b> (in its privacy-enhanced mode) plays official football clips, only when a player taps a clip to play it. When a clip plays, YouTube receives the request and may collect information under its own policies. Nothing loads from YouTube until a clip is tapped.</li>
     <li><b>Stripe</b> processes donations, which only a grown-up can start after the grown-up check. Payment details go directly to Stripe; we do not receive card numbers.</li>

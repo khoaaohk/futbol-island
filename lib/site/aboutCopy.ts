@@ -9,7 +9,7 @@ export const GROWN_UPS={
  learnsTitle:'What your child learns',
  learns:'Positions, team shape and decisions in 7v7, 9v9, 11v11 and futsal, through short lessons and quizzes, plus the history and culture of the game in the museum.',
  privacyTitle:'Privacy',
- privacy:'No ads, no chat, no names or contact details. A save code (three words and a number) instead of an account.',
+ privacy:'No ads, no free-text chat, no contact details. A save code (three words and a number) instead of an account. The optional Play with friends feature shows only a first name, if a grown-up types one, to the friends in the same party.',
  privacyLink:'Read the privacy policy',
  free:'Free, always.',
  freeWhy:'Learning the game shouldn’t cost money. Club soccer already prices too many kids out.',
