@@ -1,7 +1,7 @@
 // Pure party-room logic: no Cloudflare or Node APIs. Used by the Durable Object (partyRoom.ts) and the Node dev relay.
 // Design: docs/multiplayer-design.md 4.4 / 4.5. Time and randomness are injected so tests are deterministic.
 import {
-  C, S, PROTOCOL_VERSION, PARTY_MAX, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
+  C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
   parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick,
 } from '../../protocol';
@@ -28,7 +28,7 @@ interface Member {
   // nick: the typed first name. In memory on the member ONLY: never in attachments, snapshots, storage or logs (owner decision).
   id: number; name: NameIdx; nick: string | null; look: number[]; token: string; joinSeq: number;
   peer: Peer | null; goneAt: number | null; // goneAt: disconnected since (resume grace)
-  pose: PoseBody | null; poseAt: number; lastSeq: number; dirty: boolean; lastWarpAt: number;
+  pose: PoseBody | null; poseAt: number; lastSeq: number; dirty: boolean; farDirty: boolean; lastWarpAt: number;
   poseBucket: TokenBucket; emoteBucket: TokenBucket; pingBucket: TokenBucket; ctlBucket: TokenBucket;
   emoteTimes: number[]; bad: number; secStart: number; secCount: number;
 }
@@ -75,6 +75,9 @@ export class RoomCore {
   private joinSeq = 0;
   private idCursor = 0;
   private tickNo = 0;
+  private beaconCount = 0;
+  /** Fan-out counters for the cost model / smoke test: Poses frames sent and pose entries inside them. */
+  stats = { poseFrames: 0, poseEntries: 0 };
   private emptySince: number;
   private hostId = -1;
   private hadHost = false;
@@ -234,19 +237,46 @@ export class RoomCore {
     }
     this.migrateHost(now);
     if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
-    // batch poses: each recipient gets every dirty member except itself
-    const dirty: Member[] = [];
-    this.members.forEach((m) => { if (m.dirty && m.pose) dirty.push(m); });
-    if (dirty.length) {
+    this.fanOutPoses();
+  }
+
+  /**
+   * Interest management. Every 5 Hz tick each recipient gets the NEAREST INTEREST_NEAR (12) members whose pose changed this tick (horizontal distance
+   * from the recipient's last pose; ties by id, so it is deterministic). Every BEACON_EVERY-th tick (1 Hz) it gets EVERY member that changed since the
+   * last beacon instead, so far friends still move on the roster / map. Up to 12 near friends is the old behaviour unchanged.
+   */
+  private fanOutPoses(): void {
+    const beacon = ++this.beaconCount % BEACON_EVERY === 0;
+    const dirty: Member[] = [], far: Member[] = [];
+    this.members.forEach((m) => { if (m.pose) { if (m.dirty) dirty.push(m); if (beacon && m.farDirty) far.push(m); } });
+    const pool = beacon ? far : dirty;
+    if (pool.length) {
       this.tickNo++;
+      const seg = new Map<Member, string>(); // each pose's JSON text is built once and shared by every recipient (relay CPU)
+      const text = (d: Member): string => {
+        let t = seg.get(d);
+        if (t === undefined) { t = ',' + d.id + ',' + (d.pose as PoseBody).join(','); seg.set(d, t); }
+        return t;
+      };
       this.members.forEach((r) => {
         if (!r.peer) return;
-        const flat: number[] = [];
-        for (const d of dirty) if (d !== r) flat.push(d.id, ...(d.pose as PoseBody));
-        if (flat.length) this.send(r.peer, [S.Poses, this.tickNo, ...flat] as ServerMsg);
+        const list = this.interest(r, pool, beacon);
+        if (!list.length) return;
+        let body = '[' + S.Poses + ',' + this.tickNo;
+        for (const d of list) body += text(d);
+        try { r.peer.send(body + ']'); this.stats.poseFrames++; this.stats.poseEntries += list.length; } catch { /* peer already gone */ }
       });
-      dirty.forEach((d) => { d.dirty = false; });
     }
+    this.members.forEach((m) => { m.dirty = false; if (beacon) m.farDirty = false; });
+  }
+
+  /** Who `r` hears about this tick: never itself; on a normal tick only the nearest INTEREST_NEAR of the changed members; on a beacon tick all of them. */
+  private interest(r: Member, pool: Member[], beacon: boolean): Member[] {
+    const out = pool.filter((d) => d !== r);
+    if (beacon || out.length <= INTEREST_NEAR) return out;
+    const ox = r.pose ? r.pose[0] : 0, oz = r.pose ? r.pose[2] : 0;
+    const dist = (d: Member): number => { const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz; return dx * dx + dz * dz; };
+    return out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, INTEREST_NEAR).map((e) => e.d);
   }
 
   /** New code for the same room (TTL restarts); the caller retires the old code so it no longer finds the room. */
@@ -308,7 +338,7 @@ export class RoomCore {
   private newMember(id: number, name: NameIdx, nick: string | null, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
     return {
       id, name, nick, look: look.slice(), token, joinSeq,
-      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, lastWarpAt: -1e12,
+      peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, farDirty: false, lastWarpAt: -1e12,
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
       emoteTimes: [], bad: 0, secStart: now, secCount: 0,
@@ -348,7 +378,7 @@ export class RoomCore {
     } else if (m.pose && !speedOk(m.pose, body, now - m.poseAt)) {
       return; // speed cheat: dropped, never relayed; the last good pose stays
     }
-    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true;
+    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true;
   }
 
   private bad(m: Member): void {
@@ -392,11 +422,12 @@ export class RoomCore {
   }
 
   private freeId(): number {
-    for (let i = 0; i < 16; i++) {
-      const id = (this.idCursor + i) % 16;
-      if (!this.members.has(id)) { this.idCursor = (id + 1) % 16; return id; }
+    const n = MAX_MEMBER_ID + 1;
+    for (let i = 0; i < n; i++) {
+      const id = (this.idCursor + i) % n;
+      if (!this.members.has(id)) { this.idCursor = (id + 1) % n; return id; }
     }
-    return 0; // unreachable: PARTY_MAX < 16
+    return 0; // unreachable: PARTY_MAX (20) < 32 slot ids
   }
 
   private send(peer: Peer, msg: ServerMsg): void {

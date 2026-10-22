@@ -11,7 +11,7 @@ const sandbox={
 function resolveTs(from,id){const base=path.resolve(path.dirname(from),id);return fs.existsSync(base+'.ts')?base+'.ts':path.join(base,'index.ts');}
 function load(file){if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,
-  {exports:mod.exports,module:mod,Math,Date,JSON,Number,Array,Object,Error,Map,Set,URL,Promise,String,console,process:{env},fetch:(u,o)=>{calls.push([u,o&&o.method]);return Promise.resolve({ok:false,status:404});},
+  {exports:mod.exports,module:mod,Math,Date,JSON,Number,Array,Object,Error,Map,Set,URL,Promise,String,console,process:{env},setTimeout,clearTimeout,fetch:(u,o)=>{calls.push([u,o&&o.method]);return Promise.resolve({ok:false,status:404});},
    ...sandbox,require:id=>id.startsWith('.')?load(resolveTs(file,id)):req(id)});
  cache.set(file,mod.exports);return mod.exports;}
 const I=load(path.join(ROOT,'lib/multiplayer/invite.ts'));
@@ -211,5 +211,23 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   for(const bad of ['','K7MQ4','K7MQ4RR','K7MQ0R','K7M Q4!','OOOOOO'])assert.equal(I.setPendingParty(bad),null,'rejects '+bad),assert.equal(store.size,0,'nothing stored for '+bad);
   I.clearPendingParty();assert.equal(store.size,0);
  });
+ // 20 players: the text says 20, joins coalesce, the roster scrolls, the chip counts friends
+ {
+  assert(/This party is full \(20\/20\)/.test(host)&&!/\(6\/6\)/.test(host),'full text says 20/20 (both places)');
+  assert.equal((host.match(/\(20\/20\)/g)||[]).length,2);
+  assert(/\.members\{[^}]*max-height:min\(46vh,380px\);overflow-y:auto/.test(css),'the member list scrolls inside the card');
+  assert(/friends here|friend' : 'friends'/.test(host),'a friends count line above the list');
+  assert(/createJoinBuffer/.test(host)&&/cancel\(\)/.test(host),'joins go through the coalescing buffer and it is cancelled on unmount');
+  assert(/friend' : 'friends'/.test(chip),'chip label says N friends');
+  assert(/Reset name to/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'Reset name / Remove stay one tap on every row');
+  const got=[];const b=I.createJoinBuffer(names=>got.push(names),30);
+  b.add(['A']);b.add(['B','C']);b.add(['D']);assert.equal(JSON.stringify(got),'[]','nothing yet inside the window');
+  await new Promise(r=>setTimeout(r,70));
+  assert.equal(JSON.stringify(got),'[["A","B","C","D"]]','four joins within the window become ONE note');
+  assert.equal(I.joinNote(got[0]),'4 friends joined');
+  b.add(['E']);await new Promise(r=>setTimeout(r,70));assert.equal(JSON.stringify(got[1]),'["E"]');assert.equal(I.joinNote(got[1]),'E joined');
+  b.add(['F']);b.cancel();await new Promise(r=>setTimeout(r,70));assert.equal(got.length,2,'cancel drops pending names');
+  n++;
+ }
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});

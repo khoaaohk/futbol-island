@@ -7,7 +7,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 let n=0;const t=(name,fn)=>{fn();n++;};
 
 t('constants',()=>{
-  assert.equal(P.PROTOCOL_VERSION,1);assert.equal(P.PARTY_MAX,6);assert.equal(P.CODE_ALPHABET,'23456789BCDFGHJKMNPQRSTVWXYZ');
+  assert.equal(P.PROTOCOL_VERSION,1);assert.equal(P.PARTY_MAX,20);assert.equal(P.MAX_MEMBER_ID,31);assert.equal(P.INTEREST_NEAR,12);assert.equal(P.BEACON_EVERY,5);assert.equal(P.CODE_ALPHABET,'23456789BCDFGHJKMNPQRSTVWXYZ');
   assert.equal(P.CODE_ALPHABET.length,28);assert.equal(P.CODE_LENGTH,6);assert.equal(P.CODE_TTL_MS,7200000);assert.equal(P.PARTY_MAX_MS,14400000);
   assert.equal(P.RESUME_GRACE_MS,60000);assert.equal(P.HOST_GRACE_MS,30000);assert.equal(P.EMPTY_CLOSE_MS,120000);assert.equal(P.MAX_INBOUND_BYTES,512);assert.equal(P.LOOK_LEN,12);
   assert.equal(P.Mode.Idle,13);assert.equal(P.Mode.Swim,8);assert.equal(P.Zone.Indoors,4);assert.equal(P.Emote.WellPlayed,5);assert.equal(P.ErrorCode.Kicked,8);
@@ -47,15 +47,15 @@ t('normalizeCode / formatCode',()=>{
 });
 
 t('names',()=>{
-  assert.equal(P.NAME_COLOURS.length,16);assert.equal(new Set(P.NAME_COLOURS).size,16);
+  assert.equal(P.NAME_COLOURS.length,20);assert.equal(new Set(P.NAME_COLOURS).size,20);
   assert.equal(P.NAME_ANIMALS,undefined,'no animals any more');assert.equal(P.PICKER_ANIMALS,undefined);assert.equal(P.validAnimal,undefined);
   assert.equal(P.nameFor([0,0]),'Red');assert.equal(P.nameFor([0,31]),'Red','reserved slot ignored');assert.equal(P.nameFor([99,0]),'Friend');
   const taken=[];let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
-  for(let i=0;i<16;i++){const nm=P.pickName(taken,rnd);assert.ok(!taken.some(x=>x[0]===nm[0]),'colour dup at '+i);assert.equal(nm[1],0);taken.push(nm);}
-  assert.equal(P.pickName(taken,rnd).length,2); // all 16 colours taken -> still returns a pair
+  for(let i=0;i<20;i++){const nm=P.pickName(taken,rnd);assert.ok(!taken.some(x=>x[0]===nm[0]),'colour dup at '+i);assert.equal(nm[1],0);taken.push(nm);}
+  assert.equal(P.pickName(taken,rnd).length,2); // all 20 colours taken -> still returns a pair
   assert.deepEqual(plain(P.pickName([[0,0]],()=>0)),[P.COLOUR_ORDER[0],0]);
   // colour order: a permutation of 0..15; the order is unique per party
-  assert.deepEqual([...P.COLOUR_ORDER].sort((a,b)=>a-b),Array.from({length:16},(_,i)=>i));
+  assert.deepEqual([...P.COLOUR_ORDER].sort((a,b)=>a-b),Array.from({length:20},(_,i)=>i));
 });
 
 const look=[0,1,2,3,4,5,6,7,8,9,10,63];
@@ -109,12 +109,12 @@ t('Hello nick: normalised; bad nick parses as null (the relay then refuses it wi
 
 t('ResetName / Renamed shapes',()=>{
   assert.equal(P.C.ResetName,10);assert.equal(P.S.Renamed,31);
-  for(const b of [[10],[10,16],[10,'1'],[10,1,2],[10,-1]])assert.equal(P.parseClient(JSON.stringify(b)),null,JSON.stringify(b));
-  for(const b of [[31],[31,1],[31,1,'Emma'],[31,16,null],[31,1,null,0]])assert.equal(P.parseServer(JSON.stringify(b)),null,JSON.stringify(b));
+  for(const b of [[10],[10,32],[10,'1'],[10,1,2],[10,-1]])assert.equal(P.parseClient(JSON.stringify(b)),null,JSON.stringify(b));
+  for(const b of [[31],[31,1],[31,1,'Emma'],[31,32,null],[31,1,null,0]])assert.equal(P.parseServer(JSON.stringify(b)),null,JSON.stringify(b));
   const w=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null,'Emma Lou']]];assert.equal(P.parseServer(JSON.stringify(w)),null,'roster nick must be valid');
   const w2=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null,'emma']]];assert.equal(P.parseServer(JSON.stringify(w2)),null,'roster nick must be normalised');
   const w3=[20,1,0,tok,1,2,0,[[0,[1,2],look,1,null]]];assert.ok(P.parseServer(JSON.stringify(w3)),'5-element member still fine');
-  const full=[20,1,0,tok,1,2,0,new Array(6).fill([5,[15,31],look,0,body,'Abcdefghijkl'])];assert.ok(P.encode(full).length<4096);
+  const full=[20,1,0,tok,1,2,0,new Array(20).fill([31,[19,31],look,0,body,'Abcdefghijkl'])];assert.ok(P.encode(full).length<8192,'a full 20-member Welcome fits the 8 KB server cap');assert.ok(P.parseServer(P.encode(full)),'and parses (ids to 31, 20 members)');
 });
 
 t('malformed inputs rejected (client)',()=>{
@@ -129,7 +129,7 @@ t('malformed inputs rejected (client)',()=>{
     j([1,1,...body.slice(0,7)]), j([1,1,...body,0]), pose(...bodyWith(0,'100')), pose(...bodyWith(0,1.5)), pose(...bodyWith(0,10001)), pose(...bodyWith(2,-6001)),
     pose(...bodyWith(1,2001)), pose(...bodyWith(3,256)), pose(...bodyWith(3,-1)), pose(...bodyWith(4,256)), pose(...bodyWith(5,14)), pose(...bodyWith(6,5)), pose(...bodyWith(7,4)),
     pose(...bodyWith(0,{x:1})), pose(...bodyWith(0,[1])), pose(...bodyWith(0,null)), '[1,1,100,0,-200,128,12,0,0,NaN]', j([1,-1,...body]), j([1,'1',...body]),
-    j([2,10]), j([2,-1]), j([2]), j([2,1,1]), j([3,2,0,0]), j([3,0,10001,0]), j([3,0,0,6001]), j([3,0,0.5,0]), j([4]), j([4,16]), j([4,'1']), j([5,2]), j([5]), j([6,1]), j([7,0]), j([8,0]),
+    j([2,10]), j([2,-1]), j([2]), j([2,1,1]), j([3,2,0,0]), j([3,0,10001,0]), j([3,0,0,6001]), j([3,0,0.5,0]), j([4]), j([4,32]), j([4,'1']), j([5,2]), j([5]), j([6,1]), j([7,0]), j([8,0]),
     j([9]), j([9,-1]), j([9,1.5]), j([9,'x']),
     '['+'1,'.repeat(300)+'1]', j([0,1,look,null,null,'x'.repeat(600)]), j([2,{emote:1}]), j([20,1]), j([23,1]), j([1,1,...body]).replace('1,1','1e0,1.0e0').replace(/\]$/,',0]'),
   ];
@@ -142,11 +142,11 @@ t('malformed inputs rejected (client)',()=>{
 
 t('malformed inputs rejected (server)',()=>{
   const j=JSON.stringify;
-  const bad=['','{}','[]','[99]','[20]',j([20,1,0,tok,1,2,0]),j([20,1,0,'bad',1,2,0,[]]),j([20,1,16,tok,1,2,0,[]]),j([20,1,0,tok,1,2,2,[]]),
-    j([20,1,0,tok,1,2,0,new Array(7).fill(member)]),j([20,1,0,tok,1,2,0,[[0,[16,0],look,0,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,32],look,0,null]]]),
+  const bad=['','{}','[]','[99]','[20]',j([20,1,0,tok,1,2,0]),j([20,1,0,'bad',1,2,0,[]]),j([20,1,32,tok,1,2,0,[]]),j([20,1,0,tok,1,2,2,[]]),
+    j([20,1,0,tok,1,2,0,new Array(21).fill(member)]),j([20,1,0,tok,1,2,0,[[0,[20,0],look,0,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,32],look,0,null]]]),
     j([20,1,0,tok,1,2,0,[[0,[0,0],look,2,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,0],look,0,[1,2]]]]),j([20,1,0,tok,1.5,2,0,[]]),
-    j([21]),j([21,[1]]),j([22,1,4]),j([22,16,0]),j([23]),j([23,1,2]),j([23,1,2,...body.slice(1)]),j([23,1,16,...body]),j([23,1.5]),
-    j([24,1,10]),j([25,1,2,0,0]),j([25,1,0,99999,0]),j([26]),j([26,16]),j([27,'k7mq4r',1]),j([27,'K7MQ4O',1]),j([27,'K7M-Q4R',1]),j([27,5,1]),j([28,3]),j([29,9]),j([29,-1]),j([30]),j([30,1.5]),
+    j([21]),j([21,[1]]),j([22,1,4]),j([22,32,0]),j([23]),j([23,1,2]),j([23,1,2,...body.slice(1)]),j([23,1,32,...body]),j([23,1.5]),
+    j([24,1,10]),j([25,1,2,0,0]),j([25,1,0,99999,0]),j([26]),j([26,32]),j([27,'k7mq4r',1]),j([27,'K7MQ4O',1]),j([27,'K7M-Q4R',1]),j([27,5,1]),j([28,3]),j([29,9]),j([29,-1]),j([30]),j([30,1.5]),
     'x'.repeat(5000),j([24,1,1,1])];
   assert.ok(bad.length>=30);
   for(const b of bad)assert.equal(P.parseServer(b),null,b.slice(0,80));
@@ -216,4 +216,19 @@ t('sha256Hex matches node crypto (host key digest, review #14)',()=>{
   for(const x of ['','abc','h\u00e9llo \u{1F600}','x'.repeat(100),'y'.repeat(55),'z'.repeat(56),'q'.repeat(64)])assert.equal(P.sha256Hex(x),crypto.createHash('sha256').update(x).digest('hex'));
 });
 
+
+t('20 players: ids to 31, a 19-friend Poses frame parses and fits, a 21st roster entry does not',()=>{
+  const j=JSON.stringify;
+  for(const id of [0,19,31])assert.ok(P.parseServer(j([22,id,0])),'Left id '+id);
+  assert.equal(P.parseServer(j([22,32,0])),null);
+  assert.ok(P.parseClient(j([4,31])),'Kick 31');assert.ok(P.parseClient(j([10,19])),'ResetName 19');assert.equal(P.parseClient(j([4,32])),null);
+  const flat=[];for(let id=1;id<=19;id++)flat.push(id,1000+id*37,0,500,id*5,12,8,0,0);
+  const frame=[23,77,...flat];const text=P.encode(frame);
+  assert.ok(text.length<1100,'19 poses ~ '+text.length+' B');assert.ok(P.parseServer(text),'19-friend Poses parses');
+  const over=[23,1,...new Array(21).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.equal(P.parseServer(j(over)),null,'21 entries are refused');
+  const hello=j([0,1,[1,2,3,4,5,6,7,8,9,10,11,12],null,null,null,'Abcdefghijkl']);assert.ok(hello.length<=P.MAX_INBOUND_BYTES);
+  const poseMsg=j([1,2147483647,-4000,-400,-6000,255,255,13,4,3]);assert.ok(poseMsg.length<=80,'client frames stay far below 512 B');
+  assert.equal(P.NAME_COLOURS.length,P.PARTY_MAX,'a unique colour name for every seat');
+  for(const n of ['Red','Teal','Brown','Maroon','White','Black'])assert.ok(P.NAME_COLOURS.includes(n),n);
+});
 console.log('mp-protocol: '+n+' groups passed');

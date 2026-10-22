@@ -84,7 +84,7 @@ function harness(){
 {
  const h=harness(),look=new Array(12).fill(0),ringsOf=()=>h.avatars.root.children.filter(o=>o.name==='remote-avatar-rings');
  assert.equal(ringsOf().length,1,'one ring mesh in the whole remote layer');
- const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===8,'instanced, capacity 8');
+ const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===21,'instanced, capacity party max + 1 = 21');
  assert.equal(ring.castShadow,false);assert.equal(ring.frustumCulled,false);
  h.avatars.upsert(1,look,'Blue',{hex:'#0072B2'});h.avatars.upsert(2,look,'Orange',{hex:'#E69F00'});
  h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
@@ -121,7 +121,7 @@ function harness(){
  assert.ok(body.length>500);
  for(const [what,b] of [['update',body],['ringAdd',ring]]){assert(!/\bnew\s/.test(b),what+' allocates nothing (no new)');assert(!/\.clone\(|\.map\(|\.filter\(|=>\s*\{?[^;]*\}/.test(b.replace(/=>\s*\{\s*\}/g,'')),what+' no closures / array copies');}
  assert.equal((src.match(/new T\.InstancedMesh/g)||[]).length,1,'exactly one instanced ring mesh');
- assert(/RING_CAPACITY=8/.test(src)&&/castShadow=false/.test(src.slice(src.indexOf('rings.name'),src.indexOf('rings.name')+300)),'capacity 8, no shadows');
+ assert(/RING_CAPACITY=PARTY_MAX\+1/.test(src)&&/castShadow=false/.test(src.slice(src.indexOf('rings.name'),src.indexOf('rings.name')+300)),'capacity 21, no shadows');
  assert(/polygonOffset/.test(src)&&!/new T\.(Sprite|Mesh)\([^)]*ring/i.test(src),'no per-friend ring meshes');
  const bridge=read('lib/multiplayer/townBridge.ts');
  assert(/conn\.status === 'live' && meHex !== ''/.test(bridge)&&/showRing \? ring : null/.test(bridge),'local ring only while live');
@@ -140,7 +140,7 @@ assert(/playerBatch\(drawn,BATCH_CAPACITY\)/.test(read('lib/graphics/remoteAvata
 assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched friends never cast shadows');
 
 { // review #22: an emote ages (and expires) even when the friend is off screen, indoors or too far to draw
- const ra=read('lib/graphics/remoteAvatars.ts'),age=ra.indexOf('e.emoteAge+=dt'),early=ra.indexOf('if(!rig||!e.label||!e.bubble)continue'),hide=ra.indexOf('hideEntry(e);continue');
+ const ra=read('lib/graphics/remoteAvatars.ts'),age=ra.indexOf('e.emoteAge+=dt'),early=ra.indexOf('if(!e.label||!e.bubble)continue'),hide=ra.indexOf('hideEntry(e);continue');
  assert(age>0&&age<early&&early<hide&&ra.split('e.emoteAge+=dt').length===2,'emote age advances once per update, before the visibility early-outs');
 }
 
@@ -197,5 +197,44 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  const bridge=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx');
  assert(/setHiddenFriends/.test(bridge)&&/avatars\.setHidden\(hiddenIds\)/.test(bridge)&&/onHiddenChange=\{setHiddenFriends\}/.test(town)&&/onMutedChange=\{setMutedFriends\}/.test(town),'PartyHost Hide / Mute reach the avatars');
  assert(/displayName\(m\)/.test(bridge)&&!/sub:/.test(bridge),'label uses the first name (or the colour name), nothing underneath');
+}
+
+// 4. 20-player party (19 friends): the heat caps stay (5 rigs on a phone), the rest are ring + label only, labels nearest 8 within 25 m, emote bubbles max 6
+{
+ const h=harness(),look=new Array(12).fill(0);
+ const ringsMesh=h.avatars.root.children.find(o=>o.name==='remote-avatar-rings');
+ const labelsOf=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-name');
+ const bubblesOf=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-emote');
+ const ids=Array.from({length:19},(_,i)=>i+1);
+ const colours=['#D62828','#0072B2','#009E73','#F0E442','#E69F00','#7B3FA0','#CC79A7','#1B9AAA','#B8860B','#AEB7C0','#FF6F61','#7FD8B0','#1D2F6F','#8BC34A','#56B4E9','#FFB997','#8B5A2B','#8E1B3A','#FFFFFF'];
+ ids.forEach((id,i)=>h.avatars.upsert(id,look,'F'+id,{hex:colours[i]}));
+ assert.equal(h.state.created,5,'19 friends: the phone tier-0 cap still admits only 5 rigs');
+ // friend i sits on a ring of radius 3 + i*0.4 m round the origin: closest-to-camera ids are the ones with small distance
+ const at=(id)=>{const a=id*.33,r=3+id*.4;return {x:Math.cos(a)*r,y:0,z:Math.sin(a)*r-6};};
+ h.poses.clear();for(const id of ids){const p=at(id);h.poses.set(id,{x:p.x,y:0,z:p.z,yaw:0,speed:0,mode:13,zone:0,fade:1});}
+ h.camera.position.set(0,6,14);h.camera.lookAt(0,0,-6);h.camera.updateMatrixWorld();
+ h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.state.created,5,'no extra rigs created by the update');
+ assert.equal(h.avatars.shown,5,'only the 5 admitted friends are drawn as bodies');
+ assert.equal(ringsMesh.count,19,'every other friend still gets a colour ring (marker): 19 rings for 19 friends');
+ const vis=labelsOf().filter(l=>l.visible);
+ assert.ok(vis.length<=8&&vis.length===8,'only the nearest 8 labels are visible (got '+vis.length+')');
+ const cam=h.camera.position,dist=l=>Math.hypot(l.position.x-cam.x,l.position.z-cam.z);
+ const farthestVisible=Math.max(...vis.map(dist)),nearestHidden=Math.min(...labelsOf().filter(l=>!l.visible&&l.position.lengthSq()>0).map(dist));
+ assert.ok(farthestVisible<=nearestHidden+1e-6,'the visible labels are the nearest ones');
+ assert.ok(vis.every(l=>dist(l)<=25),'no label beyond 25 m');
+ // a friend 40 m away gets a ring but no label
+ h.avatars.upsert(30,look,'Far',{hex:'#000000'});h.poses.set(30,{x:0,y:0,z:-30,yaw:0,speed:0,mode:13,zone:0,fade:1});
+ h.camera.position.set(0,6,10);h.camera.lookAt(0,0,-10);h.camera.updateMatrixWorld();
+ h.avatars.update(.016,h.poses,h.camera,false);
+ const far=labelsOf()[labelsOf().length-1];assert.equal(far.visible,false,'label hidden beyond 25 m');
+ // emote bubbles: everyone emotes -> at most 6 bubbles visible
+ for(const id of ids)h.avatars.emote(id,1);
+ for(let k=0;k<6;k++)h.avatars.update(.2,h.poses,h.camera,false);
+ const nb=bubblesOf().filter(b=>b.visible).length;assert.ok(nb>0&&nb<=6,'emote bubbles capped at 6 (got '+nb+')');
+ // Battery saver still fades everyone including the markers
+ h.state.saver=true;for(let k=0;k<8;k++)h.avatars.update(.2,h.poses,h.camera,false);
+ assert.equal(ringsMesh.count,0,'saver: no rings');assert.equal(h.avatars.shown,0);
+ h.avatars.dispose();
 }
 console.log('mp-avatars ok');

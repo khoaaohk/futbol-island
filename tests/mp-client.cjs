@@ -199,13 +199,17 @@ t('store exposes colour per member (no animal fields)',()=>{
 });
 t('names tables: hex per colour, first 6 assigned colours well separated',()=>{
   assert.equal(nm.COLOUR_HEX.length,P.NAME_COLOURS.length);assert.equal(nm.ANIMAL_GLYPH,undefined);
-  assert.equal(new Set(nm.COLOUR_HEX).size,16);assert.ok(nm.COLOUR_HEX.every(h=>/^#[0-9A-F]{6}$/.test(h)));
+  assert.equal(new Set(nm.COLOUR_HEX).size,20);assert.equal(nm.COLOUR_HEX.length,P.PARTY_MAX,'a colour for each of the 20 seats');assert.ok(nm.COLOUR_HEX.every(h=>/^#[0-9A-F]{6}$/.test(h)));
   const rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   const lin=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4);};
   const lab=h=>{const [r,g,b]=rgb(h).map(lin);const f=t=>t>.008856?Math.cbrt(t):7.787*t+16/116;
     const X=f((.4124*r+.3576*g+.1805*b)/.95047),Y=f(.2126*r+.7152*g+.0722*b),Z=f((.0193*r+.1192*g+.9505*b)/1.08883);return[116*Y-16,500*(X-Y),200*(Y-Z)];};
   const first=P.COLOUR_ORDER.slice(0,6).map(i=>lab(nm.COLOUR_HEX[i]));
   for(let i=0;i<6;i++)for(let j=i+1;j<6;j++){const d=Math.hypot(first[i][0]-first[j][0],first[i][1]-first[j][1],first[i][2]-first[j][2]);assert.ok(d>=25,`colours ${i},${j} too close (${d.toFixed(1)})`);}
+  // all 20: every pair is distinguishable (CIELAB distance), and the colour names are the 20 fallbacks ('Red', 'Teal', ...)
+  const all=P.COLOUR_ORDER.map(i=>lab(nm.COLOUR_HEX[i]));let min=1e9;
+  for(let i=0;i<20;i++)for(let j=i+1;j<20;j++){const d=Math.hypot(all[i][0]-all[j][0],all[i][1]-all[j][1],all[i][2]-all[j][2]);min=Math.min(min,d);assert.ok(d>=14,`colours ${i},${j} too close for 20 players (${d.toFixed(1)})`);}
+  assert.equal(P.NAME_COLOURS.length,20);assert.equal(nm.colourName(7),'Teal');assert.equal(nm.colourName(0),'Red');assert.equal(nm.colourName(19),'Black');
 });
 
 // ---- store ----

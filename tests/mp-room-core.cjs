@@ -59,7 +59,7 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const q = peer(); room.connect(q); send(room, q, [C.Leave]); assert.equal(q.closed, CLOSE.BadMessages);
   const r = peer(); room.connect(r); send(room, r, [C.Hello, 99, LOOK, null, null]); assert.deepEqual(errs(r), [ErrorCode.BadVersion]); assert.ok(r.closed);
 }
-// Full at the 7th joiner, size/full in info(); Full does not eat a slot
+// Full at the 21st joiner, size/full in info(); Full does not eat a slot
 {
   const { room } = mk();
   const ps = [join(room, room.hostKey)];
@@ -71,7 +71,7 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   assert.deepEqual(errs(seventh), [ErrorCode.Full]);
   assert.ok(seventh.closed);
   assert.equal(room.info().size, PARTY_MAX);
-  assert.equal(welcome(ps[5])[7].length, PARTY_MAX);
+  assert.equal(welcome(ps[PARTY_MAX - 1])[7].length, PARTY_MAX);
   assert.equal(new Set(ps.map((p) => welcome(p)[2])).size, PARTY_MAX, 'distinct ids');
   send(room, ps[3], [C.Leave]);
   assert.ok(welcome(join(room)), 'a slot frees up');
@@ -123,8 +123,8 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const ws = ps.map(welcome);
   const mine = (w) => w[7].find((m) => m[0] === w[2])[1];
   const names = ws.map(mine);
-  assert.equal(new Set(names.map((n) => n[0])).size, PARTY_MAX, 'colours unique across 6 joins');
-  assert.deepEqual(names.map((n) => n[0]), P.COLOUR_ORDER.slice(0, PARTY_MAX), 'best-separated colours first');
+  assert.equal(new Set(names.map((n) => n[0])).size, 6, 'colours unique across 6 joins');
+  assert.deepEqual(names.map((n) => n[0]), P.COLOUR_ORDER.slice(0, 6), 'best-separated colours first');
   assert.ok(names.every((n) => n[1] === 0), 'the reserved second slot is always 0: an old client animal wish is ignored');
   // an out-of-range reserved slot is still a bad message
   const bad = peer(); room.connect(bad); room.message(bad, JSON.stringify([C.Hello, PROTOCOL_VERSION, LOOK, null, null, 99]));
@@ -485,5 +485,83 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   // party end drops everything
   send(room, host2, [C.End]);
   assert.equal(room.ended, true);
+}
+
+// ---- 20 players: roster, 21st refused, unique colours, ids to 19+, interest management ----
+{
+  const { clock, room } = mk();
+  const ps = [join(room, room.hostKey)];
+  for (let i = 1; i < 20; i++) ps.push(join(room));
+  assert.equal(PARTY_MAX, 20);
+  assert.equal(room.info().size, 20); assert.equal(room.info().full, true); assert.equal(room.info().open, false);
+  const w = welcome(ps[19]);
+  assert.equal(w[7].length, 20, 'roster complete for the 20th joiner');
+  assert.equal(new Set(w[7].map((m) => m[0])).size, 20, '20 distinct ids');
+  assert.ok(w[7].every((m) => m[0] >= 0 && m[0] <= P.MAX_MEMBER_ID));
+  assert.equal(new Set(w[7].map((m) => m[1][0])).size, 20, '20 unique colours');
+  assert.deepEqual(w[7].map((m) => m[1][0]), P.COLOUR_ORDER.slice(0, 20));
+  assert.ok(JSON.stringify(w).length < 8192, 'Welcome fits the server cap');
+  for (let i = 0; i < 19; i++) assert.equal(ps[i].of(S.Joined).length, 19 - i, 'everyone earlier heard every later Joined');
+  const extra = join(room);
+  assert.deepEqual(errs(extra), [ErrorCode.Full], '21st refused: full');
+  assert.ok(extra.closed);
+  assert.equal(room.info().size, 20);
+  // a freed slot is reusable; ids stay unique
+  send(room, ps[7], [C.Leave]);
+  const again = join(room); assert.ok(welcome(again));
+  assert.equal(new Set(welcome(again)[7].map((m) => m[0])).size, 20);
+}
+{
+  // interest management: 20 members on a line 10 m apart, all moving. Each normal tick = nearest 12 only; every 5th tick (beacon) = everyone changed since the last beacon.
+  const { clock, room } = mk();
+  const ps = [join(room, room.hostKey)];
+  for (let i = 1; i < 20; i++) ps.push(join(room));
+  const ids = ps.map((p) => welcome(p)[2]);
+  const xAt = (i) => 1000 + i * 100; // 10 m apart (decimetres)
+  let seq = 0;
+  const moveAll = (dx) => { seq++; ps.forEach((p, i) => { clock.t += 1; send(room, p, pose(seq, xAt(i) + dx, 500)); }); clock.t += 200; };
+  const clear = () => ps.forEach((p) => { p.msgs.length = 0; });
+  const entries = (p) => p.of(S.Poses).flatMap((m) => { const out = []; for (let k = 2; k < m.length; k += 9) out.push(m[k]); return out; });
+  // tick 1..4 are normal ticks
+  moveAll(0); clear(); room.tick();
+  // run ticks without the beacon: we need to know where the beacon falls; count ticks from a fresh room, so use the first four
+  const mid = ps[10];
+  assert.equal(mid.of(S.Poses).length, 1);
+  const got = entries(mid);
+  assert.equal(got.length, 12, 'normal tick: nearest 12 of the 19 moving friends');
+  assert.ok(!got.includes(ids[10]), 'never itself');
+  // nearest to member 10 (x index 10): neighbours by distance; ties by id
+  const expect = ids.map((id, i) => ({ id, d: Math.abs(i - 10) })).filter((e) => e.id !== ids[10]).sort((a, b) => a.d - b.d || a.id - b.id).slice(0, 12).map((e) => e.id).sort((a, b) => a - b);
+  assert.deepEqual(got.slice().sort((a, b) => a - b), expect, 'the 12 nearest, deterministic');
+  // the edge member's 12 nearest are the 12 on one side
+  const edge = entries(ps[0]).sort((a, b) => a - b);
+  assert.deepEqual(edge, ids.slice(1, 13).sort((a, b) => a - b));
+  // ticks 2,3,4: still 12; tick 5 = beacon: all 19 (changed since the last beacon)
+  for (let n = 2; n <= 5; n++) {
+    clear(); moveAll(n * 3); room.tick();
+    const c = entries(ps[10]).length;
+    if (n < 5) assert.equal(c, 12, 'tick ' + n + ' near only'); else assert.equal(c, 19, 'tick 5 is the 1 Hz beacon: everyone, so far friends still update');
+  }
+  assert.equal(entries(ps[0]).length, 19, 'beacon reaches the edge member too');
+  // after the beacon the next ticks go back to near-only; an idle tick sends nothing
+  clear(); moveAll(40); room.tick(); assert.equal(entries(ps[10]).length, 12);
+  clear(); room.tick(); assert.equal(ps[10].of(S.Poses).length, 0, 'nothing moved: nothing sent');
+  // with 12 or fewer movers every mover is sent (the old behaviour)
+  clear(); seq++; for (let i = 0; i < 5; i++) send(room, ps[i], pose(seq + 100, xAt(i) + 77, 500)); room.tick();
+  assert.deepEqual(entries(ps[15]).sort((a, b) => a - b), ids.slice(0, 5).sort((a, b) => a - b));
+  assert.ok(room.stats.poseFrames > 0 && room.stats.poseEntries >= room.stats.poseFrames);
+}
+{
+  // a far, slow friend is still on the roster/map: moves only seen via beacon (1 Hz); a lone mover inside the near set is sent every tick
+  const { clock, room } = mk();
+  const ps = [join(room, room.hostKey)]; for (let i = 1; i < 14; i++) ps.push(join(room));
+  const ids = ps.map((p) => welcome(p)[2]);
+  let seq = 0;
+  const step = () => { seq++; ps.forEach((p, i) => { clock.t += 1; send(room, p, pose(seq, 1000 + i * 100 + seq, 500)); }); clock.t += 200; };
+  const seen = new Map(); let ticks = 0;
+  for (let n = 0; n < 10; n++) { ps.forEach((p) => { p.msgs.length = 0; }); step(); room.tick(); ticks++; ps[0].of(S.Poses).forEach((m) => { for (let k = 2; k < m.length; k += 9) seen.set(m[k], (seen.get(m[k]) || 0) + 1); }); }
+  const far = ids[13]; // 13th friend of ps[0]: not among the nearest 12
+  assert.equal(seen.get(far), 2, 'the far friend arrives only on the 2 beacons in 10 ticks (1 Hz)');
+  assert.ok(seen.get(ids[1]) >= 10, 'the nearest friend arrives every tick');
 }
 console.log('mp-room-core: ok');
