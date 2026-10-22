@@ -252,6 +252,16 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   hops; Thanks = palms together, three bows; Dance = pumps, hands on hips, a full spin, hops, arms-up finish); High five 2.2 s unless a
   variation (its own length); Pass it ~5.9 s. Walking away ends an emote at once; the townsperson's cooldown starts after its reaction.
   Range is horizontal 9 m (a rooftop / other floor, > 4 m up or down, is a different scene).
+- **Dance = ten whole-body dances; Space became Show off** (user, 22 Oct 2026: "many of them look similar ... standing and just waving
+  their arms", "replace the space one with something else"). `lib/town/emoteDance.ts`: floss, robot, running man, moonwalk, disco point,
+  spin and dip, hip-hop bounce + arm wave, Macarena, jumpstyle kicks, wiggle worm. `lib/town/emoteShowOff.ts` (wire value 4, enum key
+  `ShowOff`, wheel "Show off", glyph `show-off`, bubble \u{1F31F}): rainbow flick, step-overs, back-heel + heel click, around the world, knee
+  slide, jump spin and pose, backflip, toe-tap keep-ups, scorpion kick, Cruyff turn, each ending in a pose; a townsperson reacts (gasp,
+  cheer-clap, wobbly copy, not-worthy bows) or, for Dance, dances along with a DIFFERENT dance. One 27-channel pose (arms, legs, ankles,
+  torso, head, hips hop / glide / spin / flip) written after `rig.update` by `lib/graphics/dancePose.ts` on the pelvis (so a friend's
+  root reset cannot cancel it); the lowest foot or knee stays on the ground. Shuffled bags per emote (never the same twice in a row; a
+  friend picks its own locally). Inside EMOTE_BOUNDS (hips glide <= 0.72 m, highest point ~2.4 m). Town keeps the heading during both
+  (the move spins the body). Reduced motion: unchanged (bubble only). Tests: `tests/emote-dance-show.cjs`.
 - **Pass it** (wheel slot 5, icon = ball between two arrows, protocol value 6 `Emote.PassBall`, was Thumbs up): you and the nearest
   townsperson (or an imaginary friend 3.2 m ahead when none is near) pass one pooled ball (`lib/graphics/passBall.ts`) five times,
   player -> partner -> player ..., a lifted pass between the feet with a trap bounce (`lib/town/emotePass.ts passBallAt`); you face the

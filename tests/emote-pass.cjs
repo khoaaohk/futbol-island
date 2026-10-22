@@ -30,14 +30,13 @@ t('each simple emote lasts about 4 s, Pass it about 6, and the moves differ from
  for(const k of [0,1,4,5,7,8,9])assert.equal(E.emoteSeconds(k),4);
  assert(E.emoteSeconds(E.EMOTE.PassBall)>=6.5&&E.emoteSeconds(E.EMOTE.JuggleWithMe)>=8);
  const sig=k=>{const r=rig();P.applyEmoteArms(r,k,2,4);return Object.values(r.j).map(o=>o.rotation.x.toFixed(2)+'/'+o.rotation.z.toFixed(2)).join(',');};
- const set=new Set([E.EMOTE.JuggleWithMe,E.EMOTE.Space,E.EMOTE.Laugh,E.EMOTE.Dance,E.EMOTE.Thanks,E.EMOTE.WellPlayed].map(sig));
+ const set=new Set([E.EMOTE.JuggleWithMe,E.EMOTE.ShowOff,E.EMOTE.Laugh,E.EMOTE.Dance,E.EMOTE.Thanks,E.EMOTE.WellPlayed].map(sig));
  assert.equal(set.size,6,'six distinct arm poses');
 });
-t('Dance has a 4 s routine: arm changes, a spin in the middle, hops, a final pose; no motion changes at a high rate',()=>{
- const key=u=>{const r=rig();P.applyEmoteArms(r,E.EMOTE.Dance,u*4,4);return Object.values(r.j).map(o=>o.rotation.x.toFixed(1)+o.rotation.z.toFixed(1)).join();};
+t('Dance has a 4 s routine (one of ten whole-body dances, tests/emote-dance-show.cjs): the arms change through the move',()=>{
+ const r=rig(),key=u=>{P.applyEmoteArms(r,E.EMOTE.Dance,u*4,4);return Object.values(r.j).map(o=>o.rotation.x.toFixed(1)+o.rotation.z.toFixed(1)).join();};
  assert(new Set([.1,.25,.45,.7,.95].map(key)).size>=4,'at least four different moves');
- assert.equal(P.danceTurn(.45),0);assert.equal(P.danceTurn(.8),1);assert(P.danceTurn(.62)>.3&&P.danceTurn(.62)<.7);
- assert(P.emoteBody(E.EMOTE.Dance,.5,4).jump,'beat hops');
+ assert.equal(P.emoteBody(E.EMOTE.Dance,.5,4).jump,undefined,'the dance hops the hips itself');
 });
 const SM=load('lib/graphics/strikeMotion.ts');
 const ballOut=()=>PB.createPassBallOut();
