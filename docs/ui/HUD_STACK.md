@@ -238,3 +238,19 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   played; 2 s cooldown per townsperson; riding, driving, sleeping, hidden, stunned and court-freestyle townsfolk ignore it;
   reduced motion = bubble only). One pooled bubble pair + one ring (`lib/graphics/emoteBubbles.ts`), updated only while active.
 - The party chip stays top-left (members / menu); its separate Emotes button is gone. Guarded by `tests/emote-grid.cjs`.
+- **High five variations** (user, 22 Oct 2026: "the high five emote only waves ... ten variations, randomized"). High five plays a
+  real sequence, 1.5-2.5 s, one of TEN (`lib/town/highFive.ts`, shuffled bag `nextHighFive`: all ten before any repeat, never the
+  same twice in a row): Classic, Low five, Double high five, Jump five, Spin five, Slap then fist bump, Behind-the-back five, Up-top
+  fake-out, Secret handshake (five, snap, clap, fist bump), Wave then five. Classic, Double, the fist bump and the handshake's two
+  contacts are the ARCADE's own rig-native `highFive` / `fistBump` skill poses (`lib/graphics/skillMoves.ts`, as played by
+  `lib/arcade/arcadeSocial.ts`; windows in `segs`, the partner on the opposite side); the rest are small keyframed tables (arms,
+  elbows, chest lean, hop / crouch, spin) written by `lib/graphics/highFivePose.ts` right after `rig.update`. Each variation has a
+  player half and a townsperson half on ONE clock; the pooled spark ring pops at each `hits[]` time at the midpoint of the two
+  hands (an "air five" toward the camera side when nobody is within 5 m). You turn to face the partner; walking away ends it.
+  Friends: the wire format is unchanged (no spare field in `Emote`), so each screen picks its own variation for a friend's high five
+  (air five, `remoteAvatars.ts`). Reduced motion: no sequence, bubble + a single raised arm. No new draw calls or per-frame allocation.
+- **Emote camera** (`lib/town/emoteCamera.ts` + `emoteCameraMath.ts`, reusing `shotCamera.ts`): every emote eases the island camera in
+  (0.45 s) to a closer three-quarter view of you (and the answering townsperson), holds for the emote, and eases back out (0.5 s) to
+  exactly the follow camera. Never fights the player: movement, a menu, a ride, flying, swimming, a job, a lesson, a tap on the
+  screen cancel it at once; reduced motion and already-close (room) cameras skip it; trees / buildings in the sight line shrink the
+  zoom (or skip it); a new emote extends the zoom; 0.6 s cooldown after it ends. Guarded by `tests/high-five.cjs`.

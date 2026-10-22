@@ -50,8 +50,8 @@ t('Emote button is rendered inside the action cluster, after the action buttons,
 t('always present: not behind multiplayerEnabled() or a live party; sending is gated on a live party',()=>{
  assert(!/multiplayerEnabled|partyStore|usePartyState/.test(ctl),'the button needs no flag');
  assert(/emoteBus\.set\(pick=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick\)/.test(town),'friends get it only while live');
- assert(/emoteBubbles\.show\(0,pick,EMOTE_SECONDS\)/.test(town)&&/emoteFx\.kind=pick/.test(town),'your own pose + bubble are immediate');
- assert(/islandNpcs\.react\(id,pick,reduced\)/.test(town),'the nearest free townsperson reacts');
+ assert(/emoteBubbles\.show\(0,pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=pick/.test(town),'your own pose + bubble are immediate');
+ assert(/islandNpcs\.react\(id,pick,reduced,emoteFx\.v\)/.test(town),'the nearest free townsperson reacts');
 });
 t('icon-only, labelled, >= 44 px, upward wheel',()=>{
  assert(/aria-label="Emotes"/.test(ctl)&&/aria-expanded=\{open\}/.test(ctl));
@@ -74,7 +74,7 @@ t('grid CSS: desktop 2x2 (Fly, Emote / juggle, kick); phones 3x2: Fly + map togg
  assert(/data-job-camera\] :is\(\.touch-emote,\.emote-wheel\)\{visibility:hidden/.test(css),'hidden with the job camera like the other action buttons');
 });
 t('townsfolk answer: pooled bubble, no per-frame allocation while idle, reduced motion = bubble only',()=>{
- assert(/const react=\(id:string,emote:number,reduced:boolean\)/.test(npcs)&&/if\(fx\.kind<0\|\|reduced\)return null/.test(npcs));
+ assert(/const react=\(id:string,emote:number,reduced:boolean,variation=-1\)/.test(npcs)&&/if\(fx\.kind<0\|\|reduced\|\|fx\.v>=0\)return null/.test(npcs));
  assert(/emoteBubbles\.update\(active\?dt:0,reduced\)/.test(town)&&(read('lib/graphics/emoteBubbles.ts').match(/new T\.Sprite\(/g)||[]).length===1,'one sprite factory, two pooled sprites');
 });
 console.log(`emote-grid: ${n} checks passed`);
