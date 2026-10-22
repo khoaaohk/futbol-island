@@ -18,7 +18,10 @@ export default function AnimalPicker({ onChange }: { onChange?: (animal: number 
   const pick = (n: number | null) => { chosen = n; setValue(n); onChange?.(n); };
   return (
     <div className={styles.wrap} data-animal-picker>
+      <div className={styles.head}>
       <p className={styles.title} id="animal-picker-title">Pick your animal</p>
+  <button type="button" className={styles.surprise} data-animal-surprise aria-pressed={value === null} aria-label="Surprise me, the game picks an animal" onClick={() => pick(null)}>Surprise me</button>
+      </div>
       <div className={styles.grid} role="group" aria-labelledby="animal-picker-title">
         {PICKER_ANIMALS.map((idx) => {
           const name = NAME_ANIMALS[idx];
@@ -30,7 +33,6 @@ export default function AnimalPicker({ onChange }: { onChange?: (animal: number 
           );
         })}
       </div>
-      <button type="button" className={styles.surprise} data-animal-surprise aria-pressed={value === null} aria-label="Surprise me, the game picks an animal" onClick={() => pick(null)}>Surprise me</button>
     </div>
   );
 }

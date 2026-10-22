@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
@@ -13,6 +13,8 @@ import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
 import AnimalPicker, { getAnimalChoice } from './AnimalPicker';
 import NickField from './NickField';
+import { SPRING_EASE, flipTransform, invert } from '../landing/motion';
+import { DoneButton } from '@/components/DoneButton';
 import pickerStyles from './animalPicker.module.css';
 import styles from './party.module.css';
 
@@ -29,17 +31,71 @@ const ERROR_TEXT: Record<number, string> = {
 };
 const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked' };
 
-/** Dialog shell: backdrop, Esc closes, focus moves in. Same cream card look as the other island cards. */
-function Card({ children, onClose, label }: { children: ReactNode; onClose: () => void; label: string }) {
+const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** The Play with friends HUD button the card grows out of (and shrinks back into). */
+const openerRect = () => document.querySelector<HTMLElement>('[data-party-open]')?.getBoundingClientRect() ?? null;
+
+/** The card's scrolling body: edges fade softly (mask) only where more content waits, never a hard clip. Padding keeps button
+ *  edges / focus rings from being cut at rest. */
+function FadeScroll({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
+  const update = useCallback(() => {
+    const el = ref.current; if (!el) return;
+    el.dataset.top = el.scrollTop > 2 ? '1' : '0';
+    el.dataset.bottom = el.scrollHeight - el.clientHeight - el.scrollTop > 2 ? '1' : '0';
+  }, []);
+  useLayoutEffect(() => {
+    update();
+    const el = ref.current; if (!el) return;
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(el); if (el.firstElementChild) ro?.observe(el.firstElementChild);
+    window.addEventListener('resize', update);
+    return () => { ro?.disconnect(); window.removeEventListener('resize', update); };
+  }, [update]);
+  return <div ref={ref} className={styles.fadeScroll} data-party-scroll onScroll={update}><div>{children}</div></div>;
+}
+
+/**
+ * Dialog shell: backdrop, Esc closes, focus moves in. Same cream card look as the other island cards.
+ * With `grow`, the card grows out of the HUD button and shrinks back into it before unmounting: the same FLIP, easing and
+ * durations as the title screen's sheets (components/landing/TitleActions.tsx morph). Reduced motion: no morph, no fade-out.
+ * `children` may be a function that receives the animated close (for the card's own Done button).
+ */
+function Card({ children, onClose, label, grow, from }: { children: ReactNode | ((close: () => void) => ReactNode); onClose: () => void; label: string; grow?: boolean; from?: DOMRect | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const back = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
+  const closeRef = useRef(onClose); closeRef.current = onClose;
+  const requestClose = useCallback(() => {
+    if (closing.current) return;
+    const el = ref.current; const target = openerRect();
+    if (!grow || !el || !target || reducedMotion()) { closeRef.current(); return; }
+    closing.current = true;
+    el.style.transformOrigin = '0 0';
+    const to = el.getBoundingClientRect();
+    back.current?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' });
+    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, fill: 'forwards' });
+    const a = el.animate([{ transform: 'none', borderRadius: getComputedStyle(el).borderRadius }, { transform: flipTransform(invert(target, to)), borderRadius: '999px' }], { duration: 300, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'both' });
+    const done = () => closeRef.current();
+    a.finished.then(done, done);
+  }, [grow]);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!grow || !el || !from || reducedMotion()) return;
+    el.style.transformOrigin = '0 0';
+    const to = el.getBoundingClientRect();
+    el.animate([{ transform: flipTransform(invert(from, to)), borderRadius: '999px' }, { transform: 'none', borderRadius: getComputedStyle(el).borderRadius }], { duration: 460, easing: SPRING_EASE, fill: 'backwards' });
+    for (const c of Array.from(el.firstElementChild?.children ?? [])) c.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 280, delay: 160, easing: 'ease-out', fill: 'backwards' });
+    back.current?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, fill: 'backwards' });
+  }, [grow, from]);
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('input,button')?.focus();
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
+    ref.current?.querySelector<HTMLElement>('input,button')?.focus({ preventScroll: true });
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); requestClose(); } };
     window.addEventListener('keydown', key, true);
     return () => { window.removeEventListener('keydown', key, true); prev?.focus?.(); };
-  }, [onClose]);
-  return <div className={styles.backdrop} onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}><div ref={ref} className={styles.dialog} role="dialog" aria-modal="true" aria-label={label}>{children}</div></div>;
+  }, [requestClose]);
+  return <div ref={back} className={styles.backdrop} onPointerDown={(e) => { if (e.target === e.currentTarget) requestClose(); }}><div ref={ref} className={`${styles.dialog}${grow ? ' ' + styles.dialogWide : ''}`} role="dialog" aria-modal="true" aria-label={label}>{typeof children === 'function' ? children(requestClose) : children}</div></div>;
 }
 
 /**
@@ -69,6 +125,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const state = usePartyState();
   const [view, setView] = useState<View>('none');
   const [pending, setPending] = useState<Pending | null>(null);
+  const [from, setFrom] = useState<DOMRect | null>(null);
   const [joinCode, setJoinCode] = useState('');
   const [joinMsg, setJoinMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -164,7 +221,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   }, [state.error, connection]);
 
   // ---- open from the HUD, and from a pending link ----
-  const openMenu = useCallback(() => { setPending(null); setView('menu'); }, []);
+  const openMenu = useCallback(() => { setPending(null); setFrom(openerRect()); setView('menu'); }, []);
   useEffect(() => { window.addEventListener(PARTY_EVENT, openMenu); return () => window.removeEventListener(PARTY_EVENT, openMenu); }, [openMenu]);
   // Take ?party= out of the URL as soon as the island mounts (the code waits in sessionStorage for the intro to finish).
   useEffect(() => { readPendingParty(); }, []);
@@ -219,9 +276,14 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       {shown && <p className={styles.toast} role="status" data-party-toast>{shown}</p>}
 
       {view === 'menu' && (
-        <Card label="Play with friends" onClose={close}>
-          <section className={styles.card} data-party-menu aria-labelledby="party-menu-title">
-            <h3 id="party-menu-title">Play with friends</h3>
+        <Card label="Play with friends" onClose={close} grow from={from}>
+          {(requestClose) => <section className={`${styles.card} ${styles.menuCard}`} data-party-menu aria-labelledby="party-menu-title">
+            <header className={styles.menuHeader}>
+              <span aria-hidden="true" />
+              <h2 id="party-menu-title">Play with friends</h2>
+              <DoneButton onDone={requestClose} />
+            </header>
+            <FadeScroll>
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
             <AnimalPicker />
             <NickField />
@@ -229,8 +291,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <button type="button" className={styles.primary} disabled={busy} onClick={() => afterGate({ kind: 'create' })}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
               <button type="button" className={styles.secondary} disabled={busy} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); }}>Join with a code</button>
             </div>
-            <button type="button" className={styles.ghost} onClick={close}>Close</button>
-          </section>
+            </FadeScroll>
+          </section>}
         </Card>
       )}
       {view === 'gate' && pending && (

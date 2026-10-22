@@ -95,13 +95,24 @@ t('animal picker: 12-16 fixed options, no typing, Surprise me, labels, >= 44px, 
  assert(/Surprise me/.test(pk)&&/pick\(null\)/.test(pk),'Surprise me = random (null)');
  assert(/aria-label=\{`Be a \$\{name\}`\}/.test(pk),"aria-label 'Be a Zebra'");
  assert(/aria-pressed=\{value === idx\}/.test(pk),'one selection highlighted');
- assert(/\.animal\{[^}]*width:56px;height:56px/.test(pcss)&&/\.surprise\{[^}]*min-height:44px/.test(pcss),'56px round buttons, >= 44px surprise');
+ assert(/\.animal\{[^}]*width:clamp\(56px,17vw,76px\);height:clamp\(56px,17vw,76px\)/.test(pcss)&&/\.surprise\{[^}]*min-height:44px/.test(pcss),'round buttons clamp(56px,17vw,76px) (>= 56px), >= 44px surprise');
  assert(/\.animal:focus-visible/.test(pcss)&&/prefers-reduced-motion/.test(pcss),'focus ring, reduced motion');
  assert(!/localStorage|sessionStorage|document\.cookie/.test(pk),'choice kept in memory only');
  assert(/<AnimalPicker \/>/.test(join),'join card shows the picker')&&assert(/<AnimalPicker \/>/.test(host),'host start card shows the picker');
  assert(/animal: getAnimalChoice\(\)/.test(host)&&host.split('animal: getAnimalChoice()').length===3,'create and join both send the choice');
  assert(host.split('nick: getNick()').length===3,'create and join both send the first name (memory only)');
  const inputs=(join.match(/<input/g)||[]).length;assert.equal(inputs,1,'picker adds no input to the join card');
+});
+t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
+ assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
+ assert(/grow from=\{from\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
+ assert(/SPRING_EASE/.test(host)&&/duration: 460/.test(host)&&/duration: 300/.test(host)&&/cubic-bezier\(\.5, ?0, ?\.75, ?0\)/.test(host),'same easing and durations as the title sheet morph');
+ assert(/reducedMotion\(\)\) \{ closeRef\.current\(\)/.test(host)&&/prefers-reduced-motion: reduce/.test(host),'reduced motion: no morph, close at once');
+ assert(/e\.key === 'Escape'\) \{ e\.stopPropagation\(\); requestClose\(\)/.test(host)&&/role="dialog" aria-modal="true"/.test(host),'Escape / backdrop use the animated close; dialog aria kept');
+ assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Close<\/button>/.test(host.slice(host.indexOf('data-party-menu'),host.indexOf("view === 'gate'"))),'Done (shared DoneButton) replaces the bottom Close');
+ assert(/\.menuHeader h2\{[^}]*IslandBrush[^}]*font-weight:400;font-size:clamp\(24px,3vw,38px\)/.test(css)&&/grid-template-columns:76px minmax\(0,1fr\) 76px/.test(css),'title matches the other sheet titles');
+ assert(/\.nickInput\{[^}]*width:100%;box-sizing:border-box/.test(css),'name field as wide as the buttons');
+ assert(/\.fadeScroll\{[^}]*mask-image/.test(css)&&/dataset\.top/.test(host)&&/dataset\.bottom/.test(host),'scroll area fades only where content continues');
 });
 t('party sheet rows: coloured dot + animal glyph + name, aria-labels carry the colour',()=>{
  assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
