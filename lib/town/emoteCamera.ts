@@ -19,7 +19,7 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
   const out = {eye: {x: 0, y: 0, z: 0}, target: {x: 0, y: 0, z: 0}, fov: EMOTE_CAM.fov} as Shot & {eye: V3; target: V3};
   const p = {x: 0, y: 0, z: 0}, q = {x: 0, y: 0, z: 0}, qe = {x: 0, y: 0, z: 0}, follow = {x: 0, y: 0, z: 0};
   // qw = how much the partner counts (0..1, eased so a reaction that starts a moment later, or an NPC that is left behind, never jerks the shot); yaw eases to the best heading
-  let hasQ = false, qw = 0, qGoal = 0, yaw: number = EMOTE_CAM.yaw, yawGoal: number = EMOTE_CAM.yaw, pitch: number = EMOTE_CAM.pitch, yawBias = 0, watch = 0, worldNow: EmoteCamWorld | null = null, wide = 0, aspectNow = 1.6, factor = 1, hold = 0, cooldown = 0, holding = false, restoring = false, tapped = false;
+  let hasQ = false, qw = 0, qGoal = 0, yaw: number = EMOTE_CAM.yaw, yawGoal: number = EMOTE_CAM.yaw, pitch: number = EMOTE_CAM.pitch, yawBias = 0, watch = 0, worldNow: EmoteCamWorld | null = null, wide = 0, aspectNow = 1.6, factor = 1, hold = 0, why = '', cooldown = 0, holding = false, restoring = false, tapped = false;
   const effQ = () => { qe.x = p.x + (q.x - p.x) * qw; qe.y = p.y + (q.y - p.y) * qw; qe.z = p.z + (q.z - p.z) * qw; };
   const frame = (aspect: number): Shot => { effQ(); aspectNow = aspect; frameEmote(out, p.x, p.y, p.z, hasQ, qe.x, qe.y, qe.z, aspect, factor, yaw, wide, pitch); return out; };
   const stop = () => { if (holding) { holding = false; hold = 0; cooldown = EMOTE_CAM.cooldown; shot.end(); } };
@@ -67,13 +67,13 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
       if (cooldown > 0 && !shot.active) cooldown = Math.max(0, cooldown - dt); // counts from the moment the camera is back
       if (!holding && !shot.active) { restoring = false; tapped = false; return false; }
       if (holding) { const k = Math.min(1, dt * 4); qw += (qGoal - qw) * k; yaw += (yawGoal - yaw) * k; }
-      if (holding) { if (tapped || emoteCamBlocked(s)) stop(); else { hold -= dt; if (hold <= 0) stop(); } }
+      if (holding) { if (tapped || emoteCamBlocked(s)) { why = tapped ? 'tap' : emoteCamBlocked(s); stop(); } else { hold -= dt; if (hold <= 0) stop(); } }
       tapped = false;
       if (holding && worldNow?.solids) { // a wall came between (the characters moved, the partner stepped): ease back out
         watch -= dt;
         if (watch <= 0) {
           watch = .15; effQ(); const l = worldNow.solids(p.x, p.z, EMOTE_CAM.maxDist * 2.5);
-          if (!viewClear(l, out.eye.x, out.eye.y, out.eye.z, p, hasQ, qe, yaw) || eyeBlocked(l, camera.position.x, camera.position.y, camera.position.z, 0)) stop();
+          if (!viewClear(l, out.eye.x, out.eye.y, out.eye.z, p, hasQ, qe, yaw) || eyeBlocked(l, camera.position.x, camera.position.y, camera.position.z, 0)) { why = 'wall'; stop(); }
         }
       }
       follow.x = camera.position.x; follow.y = camera.position.y; follow.z = camera.position.z; restoring = true;
@@ -82,6 +82,8 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
       return changed;
     },
     get zooming() { return holding; },
+    /** Why the last zoom ended early ('tap', a blocked rule, 'wall'), for play-tests. */
+    get why() { return why; },
     get active() { return holding || shot.active; },
     cancel: stop,
   };

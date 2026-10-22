@@ -10,7 +10,7 @@ import { emoteBus } from '@/lib/town/emoteReact';
  * fishing, job camera). Pressing it opens a wheel of four round picture buttons upward; a pick goes to Town's handler through
  * `emoteBus` (plays on you, goes to friends when a party is live, and wakes the nearest townsperson).
  */
-export default function EmoteControl() {
+export default function EmoteControl({ ride = 'walk' }: { ride?: string }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLSpanElement>(null);
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function EmoteControl() {
       <button type="button" className="touch-emote" data-emote-btn aria-label="Emotes" title="Emotes" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((o) => !o)}>
         <Glyph name="hand" size={32} />
       </button>
-      {open && <EmoteWheel onPick={(e) => { emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
+      {open && <EmoteWheel ride={ride} onPick={(e) => { emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
     </span>
   );
 }

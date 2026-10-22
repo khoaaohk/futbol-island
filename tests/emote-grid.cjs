@@ -4,7 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
 const mod={exports:{}};
 vm.runInNewContext(ts.transpileModule(read('lib/town/emoteReact.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,
- {exports:mod.exports,module:mod,Math,require:()=>({celebrationJump:p=>p>=0&&p<=.36?{progress:p/.36,height:.3}:undefined})});
+ {exports:mod.exports,module:mod,Math,Object,require:id=>{if(id==='./rideEmotes'){const m2={exports:{}};vm.runInNewContext(ts.transpileModule(read('lib/town/rideEmotes.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:m2.exports,module:m2,Math});return m2.exports;}return {celebrationJump:p=>p>=0&&p<=.36?{progress:p/.36,height:.3}:undefined};}});
 const E=mod.exports;let n=0;const t=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);throw e;}};
 const npc=(id,x,o={})=>({id,x,y:0,z:0,busy:false,cooldownUntil:0,...o}),me={x:0,y:0,z:0};
 
@@ -67,13 +67,13 @@ const town=read('components/Town.tsx'),ctl=read('components/EmoteControl.tsx'),h
 t('Emote button is rendered inside the action cluster, after the action buttons, and not under the party chip',()=>{
  const i=town.indexOf('<div className="travel-actions"'),j=town.indexOf('<div className="touch-controls">');assert(i>0&&j>i);
  assert(/data-emote-grid/.test(town.slice(i,i+200)),'grid marker on the cluster');
- assert(town.slice(i,j).includes('<EmoteControl/>'),'EmoteControl is inside .travel-actions');
+ assert(town.slice(i,j).includes('<EmoteControl ride={rideMode}/>'),'EmoteControl is inside .travel-actions');
  assert(!/data-party-emotes|EmoteWheel|sendEmote/.test(host),'PartyHost no longer renders an Emotes button');
 });
 t('always present: not behind multiplayerEnabled() or a live party; sending is gated on a live party',()=>{
  assert(!/multiplayerEnabled|partyStore|usePartyState/.test(ctl),'the button needs no flag');
- assert(/emoteBus\.set\(pick=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick\)/.test(town),'friends get it only while live');
- assert(/emoteBubbles\.show\(0,pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=pick/.test(town),'your own pose + bubble are immediate');
+ assert(/emoteBus\.set\(pickIn=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick as/.test(town),'friends get it only while live');
+ assert(/emoteBubbles\.show\(0,rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs&&rs\.arm<0\?-1:pick/.test(town),'your own pose + bubble are immediate');
  assert(/islandNpcs\.react\(id,pick,reduced,emoteFx\.v,/.test(town)&&/pickEmoteNpc\(emoteCands,\{x:me\.x,y:me\.y,z:me\.z\},now,undefined,emoteFacing\)/.test(town),'the best free townsperson (nearest, in front) reacts');
  assert(/emoteBubbles\.show\(1,pick,/.test(town),'a bubble over the townsperson');
 });

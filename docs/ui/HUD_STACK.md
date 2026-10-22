@@ -262,6 +262,16 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   with their real height, `ballWallGrid`) and the big props (`ballObstacleGrid`), needs the eye 0.6 m clear of any solid, and tries
   other headings (+-0.35 .. +-1.9 rad, the opposite side), gentler zooms and higher pitches (.36 / .6 / .9); if nothing is clear
   the zoom is skipped. During the zoom a wall that comes between (150 ms check) ends it. Guarded by `tests/emote-pass.cjs`.
+- **Ride emotes** (user, 22 Oct 2026: "the emotes change depending if you're on the bike, scooter and moped ... have them ride with the moped
+  for a few seconds"). `EmoteControl` gets the ride (`rideMode`); on a scooter, bike or moped the wheel (`wheelEmotesFor`) shows Wave, three
+  scripted rides for THAT vehicle and Cheer (foot-only emotes hidden). Moped: Cruise by (a 4.6 s arc ride-by with a wave), Rev & wave (stand-up
+  trick on the spot), Figure eight (6.4 s). Scooter: Kick & glide, Trick spin (the 360), Hop & wave (the jump). Bike: Bell & wave (slow roll),
+  Wheelie (back wheelie), Lean & weave (slalom). Data and rules in `lib/town/rideEmotes.ts`: each script asks the game's own movement for a speed
+  (fraction of `RIDE_SPEED_CAP`: moped 8, bike 6, scooter 4.5 m/s) with a synthetic stick (Town `rideScriptStep`, a small speed controller), so the
+  game's slide-round-a-collider / ramp code still runs; tricks reuse `createRideTricks`. It ends at once on ANY real input (joystick touch or key),
+  a dismount / ride change, a blocked look-ahead (`groundBlocked` 1.5 m+ ahead), a car within 10 m, water, a ramp or a fall, and hands control
+  straight back. The nearest townsperson waves / cheers back; the camera frames the rider (no partner, so it follows the moving vehicle) and
+  eases out if a wall comes between. Friends see only the bubble with an existing wire value (0 Wave / 1 Cheer). Guarded by `tests/emote-pass.cjs`.
 - The party chip stays top-left (members / menu); its separate Emotes button is gone. Guarded by `tests/emote-grid.cjs`.
 - **High five variations** (user, 22 Oct 2026: "the high five emote only waves ... ten variations, randomized"). High five plays a
   real sequence, 1.5-2.5 s, one of TEN (`lib/town/highFive.ts`, shuffled bag `nextHighFive`: all ten before any repeat, never the

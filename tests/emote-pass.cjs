@@ -11,7 +11,8 @@ function load(file,over={}){
  return m.exports;
 }
 let n=0;const t=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);throw e;}};
-const E=load('lib/town/emoteReact.ts'),P=load('lib/graphics/emotePose.ts'),PB=load('lib/town/emotePass.ts');
+const R=load('lib/town/rideEmotes.ts');
+const E=load('lib/town/emoteReact.ts',{rideEmotes:R,celebrations:{celebrationJump(){}}}),P=load('lib/graphics/emotePose.ts'),PB=load('lib/town/emotePass.ts');
 
 // a fake rig: the four named joints
 const joint=()=>({rotation:{x:0,y:0,z:0}});
@@ -52,12 +53,56 @@ t('Pass it: five passes alternate player -> partner, the ball really travels bet
 t('source: Pass it is wired (bubble, ball, no rides, camera hold, cancel on walk, rename ThumbsUp -> PassBall)',()=>{
  const town=read('components/Town.tsx'),proto=read('multiplayer/protocol/types.ts'),npcs=read('lib/graphics/islandNpcs.ts');
  assert(/PassBall: 6/.test(proto)&&!/ThumbsUp/.test(proto+read('lib/graphics/remoteAvatars.ts')+read('lib/town/emoteReact.ts')),'wire value 6 unchanged, renamed');
- assert(/pick===EMOTE\.PassBall&&\(onRideNow\|\|ecsRide\(\)\)\)return/.test(town),'never on a ride');
+ assert(/pick===EMOTE\.PassBall&&ecsRide\(\)\)return/.test(town),'never on a ride');
  assert(/pick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town),'reduced motion: bubble + one pass');
  assert(/emoteFx\.kind===EMOTE\.PassBall\)passStep\(\)/.test(town)&&/passBall\.hide\(\)/.test(town));
- assert(/if\(emoteMoving\(\)\)\{emoteFx\.kind=-1;passBall\.hide\(\)/.test(town),'walking away cancels');
+ assert(/if\(!onRideNow&&emoteMoving\(\)\)\{emoteFx\.kind=-1;passBall\.hide\(\)/.test(town),'walking away cancels');
  assert(/emoteSeconds\(entry\.fx\.kind\)/.test(npcs)&&/applyEmoteArms/.test(npcs),'the townsperson answers every kind for the same length');
  assert(/pass:\s*'/.test(read('components/party/PartyChip.tsx')),'the Pass it glyph exists');
+});
+
+t('ride emotes: each vehicle gets its own three scripted rides on the wheel; foot-only emotes are hidden on rides',()=>{
+ for(const ride of ['moped','scooter','bike']){
+  const w=E.wheelEmotesFor(ride),labels=w.map(x=>x.label);
+  assert.equal(w.length,5,ride+' wheel: Wave, three scripts, Cheer');assert(labels.includes('Wave')&&labels.includes('Cheer'));
+  assert(!labels.some(l=>/Pass it|Dance|Laugh|Thanks|Space|Pass to me/.test(l)),ride+' hides the foot-only emotes');
+  assert.equal(R.rideScriptsFor(ride).length,3);
+ }
+ assert.equal(E.wheelEmotesFor('walk').length,10);assert.equal(E.wheelEmotesFor('jetpack').length,10);
+ const all=new Set(R.RIDE_SCRIPTS.map(x=>x.label));assert.equal(all.size,9,'nine different scripts');
+ assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.icon)).size,9);
+ assert(/'ride-weave'/.test(read('components/party/PartyChip.tsx')));
+});
+t('ride scripts: a few seconds, capped speed per vehicle, they differ, friends only get existing wire values',()=>{
+ const mv={mag:0,turn:0};
+ for(const sc of R.RIDE_SCRIPTS){
+  assert(sc.seconds>=2.5&&sc.seconds<=6.5,sc.label+' lasts a few seconds');
+  let top=0,turns=new Set();for(let a=0;a<=sc.seconds;a+=.1){sc.move(a,mv);top=Math.max(top,mv.mag);turns.add(Math.round(mv.turn*10));assert(mv.mag>=0&&mv.mag<=sc.maxMag+1e-9,sc.label+' stays under its cap');}
+  assert(top*R.RIDE_SPEED_CAP[sc.ride]<=8.01,sc.label+' never asks for more than 8 m/s');
+  assert(sc.wire===0||sc.wire===1,'wire values are existing protocol ones');assert(sc.emote>=10&&R.isRideEmote(sc.emote));
+ }
+ assert(R.RIDE_SPEED_CAP.scooter<R.RIDE_SPEED_CAP.bike&&R.RIDE_SPEED_CAP.bike<R.RIDE_SPEED_CAP.moped,'scooter < bike < moped');
+ const eight=R.rideScriptFor(R.RIDE_EMOTE.MopedEight);eight.move(1,mv);const t1=mv.turn;eight.move(5,mv);assert(t1*mv.turn<0,'the figure eight turns left then right');
+ const weave=R.rideScriptFor(R.RIDE_EMOTE.BikeWeave);let sg=new Set();for(let a=0;a<4;a+=.1){weave.move(a,mv);sg.add(Math.sign(Math.round(mv.turn*10)));}assert(sg.has(1)&&sg.has(-1),'the weave swings both ways');
+ const spin=R.rideScriptFor(R.RIDE_EMOTE.ScooterSpin),wheelie=R.rideScriptFor(R.RIDE_EMOTE.BikeWheelie),rev=R.rideScriptFor(R.RIDE_EMOTE.MopedRev);
+ assert(spin.trick&&spin.trick.action===0&&wheelie.trick&&wheelie.trick.action===1&&rev.trick,'tricks reuse createRideTricks: spin 360, back wheelie, moped stand-up');
+ assert(R.rideScriptFor(R.RIDE_EMOTE.MopedCruise).ride==='moped'&&R.rideScriptFor(R.RIDE_EMOTE.BikeBell).ride==='bike'&&spin.ride==='scooter');
+});
+t('ride scripts: stick math points the ride where the script says, and every cancel rule ends it',()=>{
+ const o={x:0,z:0};
+ for(const h of [0,1,2.5,-1.2]){R.stickFor(h,1,o);const wx=o.x*.857+o.z*.515,wz=-o.x*.515+o.z*.857;assert(Math.abs(wx-Math.sin(h))<2e-3&&Math.abs(wz-Math.cos(h))<2e-3,'heading '+h);}
+ const base={age:1,seconds:4,realInput:false,rideNow:'moped',rideWas:'moped',blockedAhead:false,trafficNear:false,water:false,crashed:false};
+ assert.equal(R.rideScriptStop(base),'');
+ assert.equal(R.rideScriptStop({...base,age:4}),'done');
+ assert.equal(R.rideScriptStop({...base,realInput:true}),'input','any stick / key input cancels at once');
+ assert.equal(R.rideScriptStop({...base,rideNow:'walk'}),'dismount');assert.equal(R.rideScriptStop({...base,rideNow:'bike'}),'dismount');
+ assert.equal(R.rideScriptStop({...base,blockedAhead:true}),'blocked','the next step is blocked: abort');
+ assert.equal(R.rideScriptStop({...base,trafficNear:true}),'traffic');assert.equal(R.rideScriptStop({...base,water:true}),'hazard');assert.equal(R.rideScriptStop({...base,crashed:true}),'hazard');
+ const town=read('components/Town.tsx');
+ assert(/groundBlocked\(location\.x\+hx\*L,location\.z\+hz\*L,world\.obstacles/.test(town),'uses the game collision for the look-ahead');
+ assert(/joystickPointer\.current!==null\|\|keys\.size>0/.test(town)&&/rideScript\.s\)rideScriptStep\(/.test(town),'real input detection, stepped before the movement code');
+ assert(/if\(!onRideNow&&emoteMoving\(\)\)/.test(town),'riding emotes are not cancelled by the ride moving');
+ assert(/<EmoteControl ride=\{rideMode\}\/>/.test(town)&&/wheelEmotesFor\(ride\)/.test(read('components/party/EmoteWheel.tsx')));
 });
 
 // the emote camera and the walls
