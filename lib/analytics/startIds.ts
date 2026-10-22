@@ -10,7 +10,8 @@
  *   sp:<section>   a table-of-contents entry of the privacy policy (components/privacy/PrivacyPolicy.tsx, #pp-<section>)
  */
 export const START_TITLE_IDS=['view','start','created','word','word_ok','saved','play_ready','have','restored','restore_fail','play_restored',
- 'returning','play_returning','other_code','break','play_break','tilt'] as const;
+ 'returning','play_returning','other_code','break','play_break','tilt',
+ 'friends'] as const;// friends: "Join friends" tapped (Oct 22 2026, the Play with friends funnel)
 /** The non-profits (components/DonationLinks.tsx NONPROFITS, slugged: lower case, non-letters → _) and the Stripe tiers. */
 export const START_NONPROFITS=['fc_yap','street_soccer_san_diego','ronin_futsal'] as const;
 export const START_AMOUNTS=[5,10,15,25] as const;

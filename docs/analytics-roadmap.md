@@ -1,5 +1,9 @@
 # Admin analytics: what to measure next (research, Oct 8 2026)
 
+**Oct 22 2026:** Play with friends, emotes and the sponsor report have their own plan, [docs/analytics-multiplayer-plan.md](analytics-multiplayer-plan.md).
+Phase A (the `mp:` / `em:` counters, the "Friends & parties" and "Emotes" admin sections, the privacy-policy wording) is built;
+Phase B (relay counters, sponsor report) and C (retention, virality) are not.
+
 Research only; nothing below is built yet. Privacy rules: fixed ids, totals only, no event order, no IDs, no typed text, no fingerprinting, no third-party SDKs.
 
 **Foundation (1–2 days):** a generic allowlisted counter channel. `count(id,n)` in lib/analytics/tracker.ts, drained into the existing beat as `k:{id:n}` (≤64 keys); an optional `f` flags field on `start`; validation in core.ts; a `counts` jsonb column on analytics_beats; a rollup of `counts` + `countSessions` (sessions with id ≥1, which makes funnels work without IDs).

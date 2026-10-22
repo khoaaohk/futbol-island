@@ -22,6 +22,8 @@ import {buildStart} from './startReport';
 import {buildOverview,type PerDay} from './overview';
 import {buildSponsor} from './sponsor';
 import {sponsorLabels} from './sponsorLabels';
+import {buildEmotes,buildParty} from './partyReport';
+import {emoteLabels} from './emoteLabels';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
 
@@ -110,6 +112,9 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  if(len<7)try{trendRollups=(await loadRollups(store,dayList(addDays(range.to,-6),range.to),now,mode)).rollups;}catch{}
  report.sponsor=buildSponsor({from:range.from,to:range.to,merged,rollups,prev:prev?{from:prev.from,to:prev.to,merged:prev.merged}:null,
   trendRollups,firstTry:report.overview.current.firstTry,labels:sponsorLabels});
+
+ // Oct 22 2026: Play with friends and emotes (lib/analytics/partyReport.ts), same rollups.
+ report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels());
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

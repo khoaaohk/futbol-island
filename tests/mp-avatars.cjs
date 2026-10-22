@@ -195,7 +195,7 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.equal(h.avatars.shown,2,'muted friend stays drawn');assert.equal(bubbles[1].visible,false,'muted friend emote not shown');
  h.avatars.emote(1,1);h.avatars.update(.016,h.poses,h.camera,false);assert.equal(bubbles[0].visible,true,'other friends emotes still show');
  const bridge=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx');
- assert(/setHiddenFriends/.test(bridge)&&/avatars\.setHidden\(hiddenIds\)/.test(bridge)&&/onHiddenChange=\{setHiddenFriends\}/.test(town)&&/onMutedChange=\{setMutedFriends\}/.test(town),'PartyHost Hide / Mute reach the avatars');
+ assert(/setHiddenFriends/.test(bridge)&&/avatars\.setHidden\(hiddenIds\)/.test(bridge)&&/onHiddenChange=\{onHiddenFriends\}/.test(town)&&/onMutedChange=\{onMutedFriends\}/.test(town)&&/const onHiddenFriends=[^\n]*setHiddenFriends\(s\)/.test(town)&&/const onMutedFriends=[^\n]*setMutedFriends\(s\)/.test(town),'PartyHost Hide / Mute reach the avatars');
  assert(/displayName\(m\)/.test(bridge)&&!/sub:/.test(bridge),'label uses the first name (or the colour name), nothing underneath');
 }
 

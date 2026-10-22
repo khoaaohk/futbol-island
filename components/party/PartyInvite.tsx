@@ -6,7 +6,9 @@ import { Glyph } from './PartyChip';
 import styles from './party.module.css';
 
 /** The host's invite block at the top of the "Your party" card: big code XXX-XXX, Share / Copy link and the expiry (the code and link only: no scan-code picture, owner decision Oct 22 2026). */
-export default function PartyInvite({ code, expiresAt, onNote, locked, onNewCode, onToggleLock }: { code: string; expiresAt: number; onNote: (text: string) => void; locked: boolean; onNewCode: () => void; onToggleLock: () => void }) {
+/** `onShared` (analytics, Oct 22 2026): the tap and its result as a fixed name; PartyHost passes it on to Town (never the code or link). */
+export type ShareEvent = 'share_tap' | 'share_ok' | 'copy_ok' | 'share_fail';
+export default function PartyInvite({ code, expiresAt, onNote, locked, onNewCode, onToggleLock, onShared }: { code: string; expiresAt: number; onNote: (text: string) => void; locked: boolean; onNewCode: () => void; onToggleLock: () => void; onShared?: (e: ShareEvent) => void }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30000); return () => clearInterval(t); }, []);
   const [fresh, setFresh] = useState(false);
@@ -19,7 +21,9 @@ export default function PartyInvite({ code, expiresAt, onNote, locked, onNewCode
   const left = expiryText(expiresAt, now);
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
   const share = async () => {
+    onShared?.('share_tap');
     const r = await sharePartyLink(code);
+    onShared?.(r === 'shared' ? 'share_ok' : r === 'copied' ? 'copy_ok' : 'share_fail');
     if (r === 'copied') onNote('Link copied');
     else if (r === 'failed') onNote("Couldn't share. Read the code out instead");
   };

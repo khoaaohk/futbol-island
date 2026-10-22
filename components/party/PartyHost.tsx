@@ -17,7 +17,12 @@ import NickField from './NickField';
 import { DoneButton } from '@/components/DoneButton';
 import styles from './party.module.css';
 
-type Track = 'mp_party_created' | 'mp_party_joined' | 'mp_party_ended' | 'mp_join_failed';
+/** Analytics event names (Oct 22 2026, docs/analytics-multiplayer-plan.md §3). This file never imports analytics: Town.tsx passes
+ *  `onTrack`, which maps a name to an `mp:` count (partyEvents.ts PARTY_TRACK_EVENTS in the analytics folder; a test keeps the two lists equal).
+ *  The bucket is a fixed string (a fail reason, 'link' / 'typed', or the member count): never a code, a name or a member id. */
+type Track = 'open' | 'sheet' | 'open_link' | 'gate_show' | 'gate_skip' | 'gate_ok' | 'gate_back' | 'gate_wrong' | 'name_ok'
+  | 'create_tap' | 'created' | 'join_tap' | 'live_host' | 'live_guest' | 'members' | 'share_tap' | 'share_ok' | 'copy_ok' | 'share_fail' | 'new_code' | 'lock' | 'unlock'
+  | 'kick' | 'name_reset' | 'hide' | 'mute' | 'tab_code' | 'tab_list' | 'end_tap' | 'end' | 'leave' | 'ended' | 'kicked' | 'fail' | 'fail_create';
 type View = 'none' | 'menu' | 'gate' | 'join' | 'sheet';
 type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
@@ -33,7 +38,7 @@ const ERROR_TEXT: Record<number, string> = {
   [ErrorCode.Full]: 'This party is full (20/20)', [ErrorCode.NotFound]: "We couldn't find that party", [ErrorCode.Expired]: 'That code has run out. Ask for a new one',
   [ErrorCode.Locked]: 'This party is closed', [ErrorCode.RateLimited]: 'Please wait a moment and try again', [ErrorCode.BadVersion]: 'Please reload the game', [ErrorCode.BadName]: 'Type your first name to play',
 };
-const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked' };
+const ERROR_BUCKET: Record<number, string> = { [ErrorCode.Full]: 'full', [ErrorCode.NotFound]: 'not_found', [ErrorCode.Expired]: 'expired', [ErrorCode.Locked]: 'locked', [ErrorCode.BadName]: 'bad_name', [ErrorCode.RateLimited]: 'rate', [ErrorCode.BadVersion]: 'version' };
 
 // React 18 has no typed `inert`; an empty attribute makes the hidden panel unfocusable and unclickable.
 const inertIf = (on: boolean): Record<string, string> => (on ? { inert: '' } : {});
@@ -139,6 +144,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const everLive = useRef(false);
   const track = useRef(onTrack); track.current = onTrack;
   const joining = useRef<'host' | 'guest' | null>(null);
+  const joinVia = useRef<'link' | 'typed'>('typed'); // how the code being joined arrived (analytics: a link / the title screen vs typed)
   const prevIds = useRef<Set<number> | null>(null);
   const prevStatus = useRef(state.status);
   const joinBuf = useRef<ReturnType<typeof createJoinBuffer> | null>(null);
@@ -196,15 +202,17 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (state.status === was) return;
     if (state.status === 'reconnecting') text('Reconnecting');
     if (state.status === 'live' && joining.current) {
-      if (joining.current === 'guest') track.current?.('mp_party_joined', String(state.members.length));
+      track.current?.(joining.current === 'host' ? 'live_host' : 'live_guest', joining.current === 'guest' ? joinVia.current : undefined);
       joining.current = null; setBusy(false); setJoinMsg(null);
       setView((v) => (v === 'join' ? 'none' : v));
     }
     if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
-      if (was === 'live' || was === 'reconnecting') { track.current?.('mp_party_ended'); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
+      if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
       prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.members.length, text]);
+  // Analytics: the member count while live (the host's peak and first-friend bands; only a number, never who).
+  useEffect(() => { if (state.status === 'live') track.current?.('members', String(state.members.length)); }, [state.status, state.members.length]);
   useEffect(() => {
     if (live) everLive.current = true;
     if (!live) { setKickPrompt(false); setTab('code'); }
@@ -213,21 +221,21 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     // Kicked: the connection ends in status 'error' (not 'ended'), so the "left" note is raised here (review #16).
     if (state.error !== ErrorCode.Kicked || !everLive.current) return;
     everLive.current = false;
-    track.current?.('mp_party_ended'); text('You left the party');
+    track.current?.('kicked'); text('You left the party');
     prevIds.current = null; setView('none'); setConfirmEnd(false);
   }, [state.error, text]);
   useEffect(() => {
     if (state.error === null || state.error === ErrorCode.Kicked) return;
     if (!joining.current) return;
     const msg = ERROR_TEXT[state.error] ?? "Couldn't join that party";
-    track.current?.('mp_join_failed', ERROR_BUCKET[state.error] ?? 'other');
+    track.current?.('fail', ERROR_BUCKET[state.error] ?? 'other');
     joining.current = null; setBusy(false); setJoinMsg(msg); connection.leave();
   }, [state.error, connection]);
 
   // ---- open from the HUD, and from a pending link ----
   // In a party the HUD button opens the party sheet (members, Invite, Lock, New code, End / Leave), never the Start menu again.
   const liveRef = useRef(live); liveRef.current = live;
-  const openMenu = useCallback(() => { setPending(null); setFrom(openerRect()); setView(liveRef.current ? 'sheet' : 'menu'); }, []);
+  const openMenu = useCallback(() => { track.current?.(liveRef.current ? 'sheet' : 'open'); setPending(null); setFrom(openerRect()); setView(liveRef.current ? 'sheet' : 'menu'); }, []);
   useEffect(() => { window.addEventListener(PARTY_EVENT, openMenu); return () => window.removeEventListener(PARTY_EVENT, openMenu); }, [openMenu]);
   // Take ?party= out of the URL as soon as the island mounts (the code waits in sessionStorage for the intro to finish).
   useEffect(() => { readPendingParty(); }, []);
@@ -236,29 +244,29 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (!islandReady || !introDone || linkChecked.current || live) return;
     linkChecked.current = true;
     const code = readPendingParty();
-    if (code) { setJoinCode(code); setJoinMsg(null); setView('join'); }
+    if (code) { setJoinCode(code); setJoinMsg(null); setView('join'); joinVia.current = 'link'; track.current?.('open_link'); }
   }, [islandReady, introDone, live]);
 
   // ---- gate, then create / join ----
-  const afterGate = (p: Pending) => { if (parentGatePassed()) run(p); else { setPending(p); setView('gate'); } };
+  const afterGate = (p: Pending) => { track.current?.(parentGatePassed() ? 'gate_skip' : 'gate_show'); if (parentGatePassed()) run(p); else { setPending(p); setView('gate'); } };
   const run = (p: Pending) => { setPending(null); if (p.kind === 'create') void startCreate(); else void startJoin(p.code); };
   async function startCreate() {
     if (!getNick()) { setView('menu'); return; } // the first name is required
     setBusy(true); setView('sheet'); setJoinMsg(null); // the same dialog never disappears: the party card shows 'Making your code' until the code arrives
     const r = await createParty();
-    if ('error' in r) { setBusy(false); setView('menu'); text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('mp_join_failed', r.error); return; }
+    if ('error' in r) { setBusy(false); setView('menu'); text(r.error === 'rate' ? 'Too many parties. Try again later' : "Can't reach the party service"); track.current?.('fail_create', r.error); return; }
     joining.current = 'host';
     connection.join(r.code, { look: look(), hostKey: r.hostKey, nick: getNick() });
-    track.current?.('mp_party_created');
+    track.current?.('created');
     setView('sheet'); setBusy(false);
   }
   async function startJoin(code: string) {
     if (!getNick()) { setJoinCode(code); setView('join'); return; } // the first name is required
     setBusy(true); setJoinCode(code); setJoinMsg(null); setView('join');
     const info = await checkParty(code);
-    if (!info) { setBusy(false); setJoinMsg("We couldn't find that party"); track.current?.('mp_join_failed', 'not_found'); return; }
-    if (info.full) { setBusy(false); setJoinMsg('This party is full (20/20)'); track.current?.('mp_join_failed', 'full'); return; }
-    if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('mp_join_failed', 'closed'); return; }
+    if (!info) { setBusy(false); setJoinMsg("We couldn't find that party"); track.current?.('fail', 'not_found'); return; }
+    if (info.full) { setBusy(false); setJoinMsg('This party is full (20/20)'); track.current?.('fail', 'full'); return; }
+    if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('fail', 'closed'); return; }
     clearPendingParty();
     joining.current = 'guest';
     connection.join(code, { look: look(), nick: getNick() });
@@ -278,8 +286,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const kickBlock = (
     <div className={styles.stack} data-party-kick-prompt>
       <p className={styles.small}>Friend removed. Keep others out?</p>
-      <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); }}><Icon name="rotate" size={20} /> New code</button>
-      <button type="button" className={styles.secondary} onClick={() => { connection.host.lock(true); partyStore.setLocked(true); setKickPrompt(false); }}><Glyph name="lock" size={20} /> Close to new friends</button>
+      <button type="button" className={styles.secondary} onClick={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); track.current?.('new_code'); }}><Icon name="rotate" size={20} /> New code</button>
+      <button type="button" className={styles.secondary} onClick={() => { connection.host.lock(true); partyStore.setLocked(true); setKickPrompt(false); track.current?.('lock'); }}><Glyph name="lock" size={20} /> Close to new friends</button>
       <button type="button" className={styles.ghost} onClick={() => setKickPrompt(false)}>Not now</button>
     </div>
   );
@@ -291,7 +299,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (n < 0) return;
     e.preventDefault(); setTab(order[n]); tabRefs.current[order[n]]?.focus();
   };
-  const leave = () => { connection.leave(); setView('none'); text('You left the party'); };
+  useEffect(() => { if (confirmEnd) track.current?.('end_tap'); }, [confirmEnd]); // analytics: the first End tap (asks to confirm)
+  const leave = () => { track.current?.('leave'); connection.leave(); setView('none'); text('You left the party'); };
 
   return (
     <>
@@ -301,7 +310,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       {(view === 'menu' || (view === 'gate' && pending)) && (
         <Card label={view === 'gate' ? 'For grown-ups' : 'Play with friends'} onClose={close} grow from={view === 'gate' && pending?.kind === 'join' ? null : from} onEscape={view === 'gate' ? () => setView(pending?.kind === 'join' ? 'join' : 'menu') : undefined}>
           {(requestClose) => view === 'gate' && pending ? (
-            <ParentGate shell reason={pending.kind === 'create' ? 'Invite friends to play on your island. Nobody can chat.' : 'Join a friend’s party. Nobody can chat.'} onCancel={() => setView(pending.kind === 'join' ? 'join' : 'menu')} onPass={() => run(pending)} />
+            <ParentGate shell reason={pending.kind === 'create' ? 'Invite friends to play on your island. Nobody can chat.' : 'Join a friend’s party. Nobody can chat.'} onCancel={() => { track.current?.('gate_back'); setView(pending.kind === 'join' ? 'join' : 'menu'); }} onPass={() => { track.current?.('gate_ok'); run(pending); }} onWrong={() => track.current?.('gate_wrong')} />
           ) : <section className={`${styles.card} ${styles.menuCard}`} data-party-menu aria-labelledby="party-menu-title">
             <header className={styles.menuHeader}>
               <span aria-hidden="true" />
@@ -310,10 +319,10 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             </header>
             <FadeScroll>
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
-            <NickField onChange={(n) => setNamed(n !== null)} />
+            <NickField onChange={(n) => { setNamed(n !== null); if (n !== null) track.current?.('name_ok'); }} />
             <div className={styles.stack}>
-              <button type="button" className={styles.primary} disabled={busy || !named} onClick={() => afterGate({ kind: 'create' })}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
-              <button type="button" className={styles.secondary} disabled={busy || !named} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); }}>Join with a code</button>
+              <button type="button" className={styles.primary} disabled={busy || !named} onClick={() => { track.current?.('create_tap'); afterGate({ kind: 'create' }); }}><Icon name="people" size={20} /> {busy ? 'Starting' : 'Start a party'}</button>
+              <button type="button" className={styles.secondary} disabled={busy || !named} onClick={() => { setJoinCode(''); setJoinMsg(null); setView('join'); joinVia.current = 'typed'; }}>Join with a code</button>
             </div>
             </FadeScroll>
           </section>}
@@ -321,7 +330,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       )}
       {view === 'join' && (
         <Card label="Join with a code" onClose={closeJoin} grow from={null}>
-          {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => afterGate({ kind: 'join', code: c })} />}
+          {(requestClose) => <JoinParty initial={joinCode} message={joinMsg} busy={busy} onClose={requestClose} onJoin={(c) => { track.current?.('join_tap'); afterGate({ kind: 'join', code: c }); }} />}
         </Card>
       )}
       {view === 'sheet' && (live || busy || state.status === 'connecting') && (
@@ -343,7 +352,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs data-active={activeTab} onKeyDown={onTabKey}>
                 <span className={styles.pill} aria-hidden="true" data-party-pill />
                 {(['code', 'party'] as const).map((t) => (
-                  <button key={t} ref={(el) => { tabRefs.current[t] = el; }} type="button" role="tab" id={`party-tab-${t}`} aria-controls={`party-panel-${t}`} aria-selected={activeTab === t} tabIndex={activeTab === t ? 0 : -1} data-party-tab={t} className={styles.tab} onClick={() => setTab(t)}>
+                  <button key={t} ref={(el) => { tabRefs.current[t] = el; }} type="button" role="tab" id={`party-tab-${t}`} aria-controls={`party-panel-${t}`} aria-selected={activeTab === t} tabIndex={activeTab === t ? 0 : -1} data-party-tab={t} className={styles.tab} onClick={() => { setTab(t); track.current?.(t === 'code' ? 'tab_code' : 'tab_list'); }}>
                     {t === 'code' ? 'Code' : <>List <span key={state.members.length} className={styles.tabCount} data-party-tab-count>({state.members.length})</span></>}
                   </button>
                 ))}
@@ -356,8 +365,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                 <FadeScroll>
                   {state.code
                     ? <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} locked={state.locked}
-                        onNewCode={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); }}
-                        onToggleLock={() => { connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }} />
+                        onNewCode={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); track.current?.('new_code'); }}
+                        onToggleLock={() => { track.current?.(state.locked ? 'unlock' : 'lock'); connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }}
+                        onShared={(r) => track.current?.(r)} />
                     : <p className={styles.small} role="status">Making your code...</p>}
                   {kickPrompt && kickBlock}
                 </FadeScroll>
@@ -375,8 +385,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                   {m.isHost && <span className={styles.badge}>Host</span>}
                   <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
                   <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>
-                  {state.isHost && m.nick && <button type="button" className={styles.mini} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); }}><Icon name="rotate" size={20} /></button>}
-                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${displayName(m)}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); }}><Icon name="close" size={20} /></button>}
+                  {state.isHost && m.nick && <button type="button" className={styles.mini} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); track.current?.('name_reset'); }}><Icon name="rotate" size={20} /></button>}
+                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${displayName(m)}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); track.current?.('kick'); }}><Icon name="close" size={20} /></button>}
                 </li>
               ))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
@@ -386,7 +396,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               {/* Pinned footer: outside the scrolling area, so End / Leave is always in view while the list scrolls under it. */}
               <div className={styles.panelFoot} data-party-foot>
               {state.isHost && (confirmEnd
-                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
+                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { track.current?.('end'); connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
                 : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
               {!state.isHost && <button type="button" className={styles.footLeave} onClick={leave}>Leave party</button>}
               </div>

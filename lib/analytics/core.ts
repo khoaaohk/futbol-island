@@ -30,6 +30,7 @@ import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import type {SourcesSummary} from './live';
 import type {SponsorReport} from './sponsor';
+import type {EmoteReport,PartyReport} from './partyReport';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -559,6 +560,10 @@ export type Report={
  sources?:SourcesSummary|null;
  /** Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts): games, designs, cards, videos and stories, books, reading, quizzes. */
  sponsor?:SponsorReport|null;
+ /** Oct 22 2026: "Friends & parties" and "Emotes" (lib/analytics/partyReport.ts, docs/analytics-multiplayer-plan.md Phase A):
+  *  built and small-number-suppressed on the server (<5 sessions, <5 parties), 'not_yet' before PARTY_SINCE. */
+ party?:PartyReport|null;
+ emotes?:EmoteReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

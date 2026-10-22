@@ -15,4 +15,7 @@ class_name = "PartyRoom"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["PartyRoom"] # SQLite-backed Durable Object: the only kind the Workers Free plan allows (Oct 22 2026)
+# SQLite-backed Durable Object. Chosen when the account was on the Workers Free plan (SQLite was the only DO kind it allowed);
+# the owner is now on Workers Paid ($5/month, Oct 22 2026). SQLite is still the recommended DO backend, so nothing changes here,
+# and a class's storage backend cannot be switched after its first migration anyway.
+new_sqlite_classes = ["PartyRoom"]

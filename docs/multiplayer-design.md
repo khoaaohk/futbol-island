@@ -559,7 +559,12 @@ temporary code, needs the grown-up check, and can be turned off in Settings. It 
 
 ### 5.6 Analytics
 
-**Status (22 Oct 2026):** event ids `mp_party_created`, `mp_party_joined`, `mp_party_ended`, `mp_join_failed` are defined in the Phase 0 contract; wiring through the existing tracker is pending the flag rollout.
+**Status (22 Oct 2026, later): wired (Phase A of docs/analytics-multiplayer-plan.md).** The ids are now `mp:*` and `em:*`
+(the counter grammar forbids `mp_*`; lib/analytics/countIds.ts PARTY_COUNT_EVENTS / EMOTE_COUNT_EVENTS). `PartyHost` still imports
+no analytics: it raises event names through `onTrack`, which Town.tsx wires to lib/analytics/partyEvents.ts `countParty`; emotes are
+counted in Town's emoteBus handler (lib/analytics/emoteEvents.ts). Admin: "Friends & parties" and "Emotes" on the Engagement tab.
+The relay `rl:*` counters (a stats Durable Object) are Phase B. The text below is the original Phase 0 plan, kept for history.
+
 Aggregate events only, no party code, member id or token: `mp_party_created`, `mp_party_joined` (size bucket 2/3-4/5-6),
 `mp_party_ended` (duration bucket), `mp_join_failed` (reason). They ride the existing visit/session pipeline (daily-rotating
 visitor hash, `lib/analytics/ingest.ts:17`); `lib/multiplayer/**` must not import analytics directly: `PartyHost` calls the

@@ -25,7 +25,7 @@
 
 ## Privacy
 
-- [Privacy policy](https://futbolisland.app/privacy): what the game keeps, why and for how long. Designed for children under 13 (COPPA and the UK Age Appropriate Design Code principles).
+- [Privacy policy](https://futbolisland.app/privacy): what the game keeps, why and for how long. The game collects anonymous usage data (counts and totals, no names), only to run and improve it and to report combined totals to sponsors; nothing is sold and nothing about an individual child is shared. Designed for children under 13 (COPPA and the UK Age Appropriate Design Code principles).
 
 ## Optional
 
