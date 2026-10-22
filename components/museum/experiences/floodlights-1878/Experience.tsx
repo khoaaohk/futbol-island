@@ -78,11 +78,11 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const flood=useMemo(()=>makeFloodlightFigure(),[]),figHandle=useRef<FigureHandle|null>(null),figFrom=useRef<Phase>('intro');
  const [figLit,setFigLit]=useState<string[]>([]),[figNote,setFigNote]=useState(FIGURE_INTRO),[figStep,setFigStep]=useState(-1);
  useEffect(()=>{flood.onStep=i=>{setFigStep(i);const st=STEPS[i];if(st){setFigLit([...st.lit]);setFigNote(FIGURE_SAY[st.id]);sfx(i===STEPS.length-1?museumSfx.reveal:museumSfx.tick);}};return()=>{flood.onStep=null;};},[flood]);
- const openFigure=(from:Phase)=>{figFrom.current=from;setPhase('figure');sfx(museumSfx.flapBook);};
+ const openFigure=(from:Phase)=>{figFrom.current=from;if(readRef.current)readRef.current.textContent='';setPhase('figure');sfx(museumSfx.flapBook);};
  const closeFigure=()=>{flood.switchOff(true);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase(figFrom.current);};
  const touchFlood=(id:string)=>{if(flood.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id]??FIGURE_INTRO);sfx(museumSfx.tick);};
  const switchFlood=()=>{const h=figHandle.current;
-  if(figStep>=STEPS.length-1&&!flood.running){flood.switchOff(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);sfx(museumSfx.tick);h?.invalidate();return;}
+  if(figStep>=STEPS.length-1){flood.switchOff(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);sfx(museumSfx.tick);h?.invalidate();return;}
   if(figStep<0){h?.setLabels(true);h?.front();}flood.switchOn(reduced);h?.invalidate();};
  useEffect(()=>{const kd=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();closeRef.current();}};window.addEventListener('keydown',kd);return()=>window.removeEventListener('keydown',kd);},[]);
  useEffect(()=>{cvRef.current=document.createElement('canvas');cvRef.current.width=GX;cvRef.current.height=GY;},[]);
@@ -234,7 +234,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
   :phase==='figure'?<>
    <p className={p.say} aria-live="polite" data-fig-note>{figNote}</p>
    <div className={p.row}>
-    <button type="button" className={p.btn} data-tone="acc" data-switch-on aria-pressed={figStep>=STEPS.length-1} onClick={switchFlood}>{figStep>=STEPS.length-1&&!flood.running?'Switch off':reduced&&figStep>=0?'Next step':'Switch on'}</button>
+    <button type="button" className={p.btn} data-tone="acc" data-switch-on aria-pressed={figStep>=STEPS.length-1} onClick={switchFlood}>{figStep>=STEPS.length-1?'Switch off':reduced&&figStep>=0?'Next step':'Switch on'}</button>
     <button type="button" className={p.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the rig'}</button>
    </div>
   </>

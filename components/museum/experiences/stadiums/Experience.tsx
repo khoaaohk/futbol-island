@@ -69,7 +69,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const openFigure=()=>{figFrom.current=ui.current.phase;bowl.empty(true);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase('figure');ui.current.phase='figure';museumSfx.flapBook();};
  const closeFigure=()=>{bowl.empty(true);setFigStep(-1);setFigLit([]);setPhase(figFrom.current);ui.current.phase=figFrom.current;};
  const touchBowl=(id:string)=>{if(bowl.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id]??FIGURE_INTRO);museumSfx.tick();};
- const fillBowl=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1&&!bowl.running){bowl.empty(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);museumSfx.tick();h?.invalidate();return;}
+ const fillBowl=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1){bowl.empty(reduced);setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);museumSfx.tick();h?.invalidate();return;}
   if(figStep<0){h?.setLabels(true);h?.setSeeThrough(true);}bowl.fill(reduced);h?.invalidate();};
  const later=(f:()=>void,ms:number)=>{timers.current.push(setTimeout(f,ms));};
  useEffect(()=>()=>timers.current.forEach(clearTimeout),[]);
@@ -240,7 +240,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
 
     <div className={s.dock} data-dock data-phase={phase}>
      {phase==='figure'?<div className={s.introDock}><p className={s.say} aria-live="polite" data-fig-note>{figNote}</p>
-       <button type="button" className={g.btn} data-fill-stadium onClick={fillBowl}>{figStep>=FIG_STEPS.length-1&&!bowl.running?'Empty it':reduced&&figStep>=0?'Next step':'Fill the stadium'}</button>
+       <button type="button" className={g.btn} data-fill-stadium onClick={fillBowl}>{figStep>=FIG_STEPS.length-1?'Empty it':reduced&&figStep>=0?'Next step':'Fill the stadium'}</button>
        <button type="button" className={g.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the workshop'}</button></div>
      :phase==='intro'?<div className={s.introDock}><button type="button" className={g.btn} data-start data-start-dock onClick={startExplore} data-museum-own-cue>Open the workshop</button><button type="button" className={g.ghost} data-stadium-figure onClick={openFigure}>Fill the stadium</button><p className={s.say}>Seven famous stadiums are waiting on the workbench.</p></div>
      :phase==='explore'?<>

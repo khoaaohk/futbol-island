@@ -67,7 +67,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const openFigure=(from:Phase)=>{figFrom.current=from;curve.reset();setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase('figure');sfx(museumSfx.reveal);};
  const closeFigure=()=>{curve.reset();setFigStep(-1);setFigLit([]);setPhase(figFrom.current);};
  const touchCurve=(id:string)=>{if(curve.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id==='air'?'air_flow':id]??FIGURE_INTRO);sfx(museumSfx.tick);};
- const kickCurve=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1&&!curve.running){curve.reset();setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);h?.invalidate();return;}
+ const kickCurve=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1){curve.reset();setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);h?.invalidate();return;}
   if(figStep<0){h?.setLabels(true);h?.setSeeThrough(true);}curve.kick(reduced);h?.invalidate();};
  const flipCurl=()=>{const n:1|-1=curl===1?-1:1;curve.reset();curve.setSide(n);setCurl(n);setFigStep(-1);setFigLit(['spin']);setFigNote(FIGURE_SAY[n===1?'right':'left']);sfx(museumSfx.tick);figHandle.current?.invalidate();};
  const cardRef=useRef<HTMLDivElement>(null),stageRef=useRef<HTMLDivElement>(null),readRef=useRef<HTMLSpanElement>(null);
@@ -223,7 +223,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
   :phase==='figure'?<>
    <p className={s.say} aria-live="polite" data-fig-note>{figNote}</p>
    <div className={s.row}>
-    <button type="button" className={s.btn} data-tone="acc" data-kick-it onClick={kickCurve}>{figStep>=FIG_STEPS.length-1&&!curve.running?'Kick again':reduced&&figStep>=0?'Next step':'Kick it'}</button>
+    <button type="button" className={s.btn} data-tone="acc" data-kick-it onClick={kickCurve}>{figStep>=FIG_STEPS.length-1?'Kick again':reduced&&figStep>=0?'Next step':'Kick it'}</button>
     <button type="button" className={s.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the ball'}</button>
    </div></>
   :phase==='tunnel'?<>
