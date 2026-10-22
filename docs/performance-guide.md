@@ -5831,3 +5831,15 @@ everything else with the island while this is running", and "the room's backgrou
 - **Per frame CPU added:** ~8 distance tests (pickups), the buddy spring, the ball's few lines (pitch zone only), one Color lerp, a few
   uniform writes. No allocation in the room frame or the session step (tests/explore-v2.cjs). Nothing runs between dives.
 - **Not measured on an iPhone.** All of the above is reduced/bounded work in desktop emulation; phone heat was NOT measured.
+
+## Friends in the Konbini (multiplayer rooms Phase 1) — October 22, 2026 (local, not deployed)
+
+- **What runs:** only with the multiplayer flag on AND a stored party: `components/party/useRoomParty.ts` mounts one friend layer
+  (`lib/multiplayer/roomParty.ts`, the island's remote-avatar layer: one playerBatch of 8, one instanced ring, labels <= 8,
+  `remoteCap` 5/5/3/1/0, Battery saver 0). No party / flag off: no layer, `konbiniScene.ts` checks one null per frame.
+- **Sleep kept:** the Konbini still renders 0 frames when nothing moves, a still friend included. A changed same-room pose wakes it
+  (`wakeRemote`, no 0.5 s local settle); frames continue <= 550 ms after the last change (interp delay + 300 ms) or while a
+  friend's emote plays; remote-only frames are capped at 20 fps on phones (`REMOTE_FRAME_MS`); Battery saver never wakes.
+- **Measured (headless Chrome, `scripts/check-mp-rooms.cjs`, desktop, 1 friend):** layer update 0.03 ms, render +0.005 ms,
+  draw calls 17 -> 24 (fixed batch groups + ring + label + bubble; another friend adds its label only), idle 0 frames in 2 s with
+  the friend standing, phone (touch emulation) remote-only 20 fps. Reduced work, not a measured iPhone temperature.

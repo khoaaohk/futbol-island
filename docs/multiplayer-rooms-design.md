@@ -3,7 +3,9 @@
 Owner request (verbatim): "we need to make sure that it works in all places, allow multi players to be in the museum, konbini,
 arcade, and so on".
 
-Status: DESIGN ONLY (branch `mp-rooms-design`, no app code changed). Builds on `docs/multiplayer-design.md` (4.4 protocol, 4.4.1
+Status: **Phase 1 BUILT (22 Oct 2026, branch `mp-rooms-phase1`)**: the room party layer + the Konbini, as specified below, with the
+owner's answers to section 6 (door hint yes, reefs no, Leave-only chip, two separate Konbinis, relay v1.1 later). Notes:
+`docs/multiplayer-design.md` 5.8. Phases 2-5 remain design only. Builds on `docs/multiplayer-design.md` (4.4 protocol, 4.4.1
 presence, 4.7 heat) and assumes the parallel branch **`party-persist`** lands first: the stored party session auto-resumes on every
 page load and the relay keeps an Indoors member's slot longer. This doc does not repeat that work; section 3.1 says exactly where
 the two meet.
