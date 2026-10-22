@@ -125,7 +125,7 @@ t('shared modal header: Play with friends, grown-ups gate, Join, Invite and the 
  const mt=rule(css,/\.menuHeader h2\{([^}]*)\}/),gt=rule(gcss,/\.header h2,\.header h3\{([^}]*)\}/);assert.equal(mt,gt.replace('var(--btn-font,sans-serif)','var(--btn-font)'),'identical title rules');
  const pad=rule(gcss,/\.shell\{[^}]*(padding:[^;}]*)/);assert(css.includes('.card.menuCard{gap:16px;'+pad+'}'),'same card padding (menuCard must out-rank .card, which is declared later)');
  assert(/@media\(max-width:600px\)\{\.card\.menuCard\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(css)&&/@media\(max-width:600px\)\{\.shell\{gap:14px;padding:12px var\(--phone-gutter,18px\) 18px\}/.test(gcss),'same phone padding');
- for(const [f,id] of [['PartyHost','party-menu-title'],['JoinParty','party-join-title'],['PartyHost','party-sheet-title']]){const src=read('components/party/'+f+'.tsx');assert(new RegExp('<header className=\\{styles\\.menuHeader\\}>[\\s\\S]{0,260}<h2 id="'+id+'"').test(src),id+' uses the shared header + h2');}
+ for(const [f,id] of [['PartyHost','party-menu-title'],['JoinParty','party-join-title'],['PartyHost','party-sheet-title']]){const src=read('components/party/'+f+'.tsx');assert(new RegExp('<header className=\\{styles\\.menuHeader\\}>[\\s\\S]{0,520}<h2 id="'+id+'"').test(src),id+' uses the shared header + h2');}
  assert(!/<h3 id="party-/.test(all),'no party title still uses the old h3');
  assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Done<\/button>/.test(host),'party card: Done top right (shared DoneButton)');
  assert(/Card label="Your party"[\s\S]{0,330}grow from/.test(host)&&/Card label="Join with a code"[^>]*grow/.test(host),'Invite and Join use the wide grow card');
@@ -141,10 +141,10 @@ t('gate -> party card state machine (regression: the dialog closed after a corre
  assert(/Tap the friends button to manage your party/.test(host)&&/manageHint/.test(host),'one-time manage hint after Done');
  assert(/data-party-badge/.test(read('components/IslandSettings.tsx')),'HUD button shows a live count badge');
 });
-t('party card tabs: Code | Party toggle, a11y, host/guest split, new code + close actions',()=>{
+t('party card tabs: Code | List toggle, a11y, host/guest split, new code + close actions',()=>{
  assert(/role="tablist"/.test(host)&&/role="tab"/.test(host)&&/aria-selected=\{activeTab === t\}/.test(host)&&/role=\{state\.isHost \? 'tabpanel'/.test(host)&&/aria-controls=/.test(host)&&/aria-labelledby="party-tab-code"/.test(host),'tablist / tab / tabpanel wiring');
  assert(/ArrowRight/.test(host)&&/ArrowLeft/.test(host)&&/Home/.test(host)&&/tabRefs\.current\[order\[n\]\]\?\.focus\(\)/.test(host)&&/tabIndex=\{activeTab === t \? 0 : -1\}/.test(host),'arrow keys switch tabs and keep focus (roving tabindex)');
- assert(/\(\{state\.members\.length\}\)/.test(host)&&/Party <span key=\{state\.members\.length\}/.test(host)&&/'Code'/.test(host),'tab labels Code and Party (N), count remounts to pop');
+ assert(/\(\{state\.members\.length\}\)/.test(host)&&/List <span key=\{state\.members\.length\}/.test(host)&&/'Code'/.test(host),'tab labels Code and List (N), count remounts to pop');
  assert(/useState<'code' \| 'party'>\('code'\)/.test(host)&&/if \(!live\) \{ setKickPrompt\(false\); setTab\('code'\); \}/.test(host)&&/state\.isHost \? tab : 'party'/.test(host),'default Code, remembered per party, guests only get Party');
  assert(/Only the host has the code/.test(host)&&/\{state\.isHost && \(\s*<div className=\{styles\.tabs\}/.test(host),'guests have no Code tab');
  assert(/onNewCode=\{\(\) => \{ connection\.host\.rotate\(\); text\('New code ready'\)/.test(host)&&/The old code stops working right away\. People already here stay\./.test(invite),'primary New code replaces the old one with a toast and helper');
@@ -155,7 +155,7 @@ t('party card tabs: Code | Party toggle, a11y, host/guest split, new code + clos
   assert(/styles\.stage/.test(host)&&/\.stage\{[^}]*display:grid/.test(css)&&/\.panel\{[^}]*grid-area:1\/1/.test(css)&&/\.panel\[data-active=false\]\{[^}]*visibility:hidden/.test(css)&&!/ hidden=\{/.test(host.slice(host.indexOf('data-party-stage'))),'both panels stack in one grid cell; inactive is visibility:hidden, not display:none');
   assert(/aria-hidden=\{activeTab !== 'code'\}/.test(host)&&/inertIf\(/.test(host),'inactive panel is aria-hidden + inert');
   assert(/styles\.pill/.test(host)&&/\.pill\{[^}]*transition:transform \.22s cubic-bezier\(\.2,\.8,\.2,1\)/.test(css)&&/\.tabs\[data-active=party\] \.pill\{transform:translateX\(100%\)\}/.test(css)&&/\.tab:active\{transform:translateY\(2px\)\}/.test(css)&&/tabPop/.test(css)&&/prefers-reduced-motion:reduce\)\{[^\n]*\.pill/.test(css),'sliding gold pill, press, count pop, reduced motion');
-  assert(/var\(--btn-gold\) var\(--btn-grain\)/.test(css.slice(css.indexOf('.pill{')))&&/\.tabs\{[^}]*var\(--btn-cream\)/.test(css),'toggle uses the shared button tokens');
+  assert(/#fdf3dc/.test(css.slice(css.indexOf('.pill{')))&&/\.tabs\{[^}]*background:#ddd0ad[^}]*inset 0 3px/.test(css)&&/\.pill\{[^}]*background:#fdf3dc/.test(css)&&/\.tab\{[^}]*font:500 20px/.test(css)&&/\.body\{--tabs-h:48px\}/.test(css),'toggle: recessed sand track, raised cream pill, 20px medium labels, 48px on phones');
  }
  assert(/styles\.endLink[\s\S]{0,80}>End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&/\.endLink\{[^}]*background:transparent;color:rgb\(163 38 28\)/.test(read('components/party/party.module.css'))&&!/End party/.test(host.slice(host.indexOf('id="party-panel-code"'),host.indexOf('id="party-panel-party"'))),'End party is a small red text link at the bottom of the Party tab, never on Code'); assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
  assert(!/max-height:min\(46vh/.test(read('components/party/party.module.css')),'member list scrolls in the card FadeScroll, no separate list scroller');
@@ -181,7 +181,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/width:(4[4-9]|[5-9]\d)px/.test(px('box')),'code box');
   assert(/prefers-reduced-motion:reduce/.test(css),'reduced motion');
   assert(/position:fixed/.test(px('corner')),'chip in a fixed corner');
-  assert(!/#[0-9a-f]{6}\b/i.test(css.replace(/#(fff1d3b0|193f3766)/gi,'')),'island tokens, no raw hex');
+  assert(!/#[0-9a-f]{6}\b/i.test(css.replace(/#(fff1d3b0|193f3766|ddd0ad|fdf3dc|fbf1d6|c4b48a|66694f|24543a|5b4a1f40|5b4a1f47|ffffff55)/gi,'')),'island tokens, no raw hex (except the sand toggle spec from the owner screenshot)');
  });
  t('icon-only chip with aria-labels',()=>{
   assert(/aria-label=\{label\}/.test(chip)&&/aria-expanded/.test(chip),'chip label');assert(!/>\s*[A-Za-z]{3,}\s*</.test(chip.replace(/<svg[\s\S]*?<\/svg>/g,'')),'no visible words on the chip');
@@ -245,7 +245,10 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/This party is full \(20\/20\)/.test(host)&&!/\(6\/6\)/.test(host),'full text says 20/20 (both places)');
   assert.equal((host.match(/\(20\/20\)/g)||[]).length,2);
   assert(!/\.members\{[^}]*overflow-y:auto/.test(css)&&/id="party-panel-party"[\s\S]*<FadeScroll>/.test(host),'the member list scrolls in the Party tab FadeScroll');
-  assert(/friends here|Friends here: |friend' : 'friends'/.test(host),'a friends count line above the list');
+  assert(/data-party-count/.test(host)&&/Friends here: \$\{state\.members\.length\} of \$\{PARTY_MAX\}/.test(host)&&/styles\.hdrCount/.test(host)&&!/<p className=\{styles\.small\} data-party-count>/.test(host),'the friends count "N of 20" lives in the card header left slot (labelled Friends here), not above the list');
+  assert(/data-party-code-pair/.test(read('components/party/PartyInvite.tsx'))&&/\.pairRow\{[^}]*grid-template-columns:1fr 1fr/.test(css),'Share link and New code sit side by side in one equal row');
+  assert(/styles\.panelFoot/.test(host)&&host.indexOf('styles.panelFoot')>host.indexOf('</FadeScroll>',host.indexOf('id="party-panel-party"'))&&/\.panelFoot\{flex:none/.test(css),'End / Leave party is a pinned footer after the scroll area');
+  assert(/styles\.body/.test(host)&&/\.tabs\{position:absolute/.test(css)&&/padding:calc\(6px \+ var\(--lead,0px\)\)/.test(css)&&/--fade-start/.test(css),'the toggle is pinned over the list; lists scroll under it with a soft top fade');
   assert(/createJoinBuffer/.test(host)&&/cancel\(\)/.test(host),'joins go through the coalescing buffer and it is cancelled on unmount');
   assert(/friend' : 'friends'/.test(chip),'chip label says N friends');
   assert(/Reset name to/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'Reset name / Remove stay one tap on every row');

@@ -49,7 +49,7 @@ require('fs').mkdirSync(out, { recursive: true });
       const sheet = await p.evaluate(() => document.querySelector('[data-party-sheet]').innerText.replace(/\n+/g, ' | '));
       console.log(name, 'sheet:', sheet);
       const tabs = await p.evaluate(() => [...document.querySelectorAll('[role=tab]')].map((x) => [x.innerText, x.getAttribute('aria-selected')]));
-      console.log(name, 'tabs:', JSON.stringify(tabs)); if (tabs.length !== 2 || tabs[0][1] !== 'true' || !/^Party \(1\)$/.test(tabs[1][0])) { fail++; console.log(name, 'FAIL: tabs / default Code'); }
+      console.log(name, 'tabs:', JSON.stringify(tabs)); if (tabs.length !== 2 || tabs[0][1] !== 'true' || !/^List \(1\)$/.test(tabs[1][0])) { fail++; console.log(name, 'FAIL: tabs (Code, List (1)) / default Code'); }
       if (!/New code[\s\S]*Close to new friends/.test(sheet)) { fail++; console.log(name, 'FAIL: no code actions'); }
       const code1 = await p.textContent('[data-party-code]');
       await p.click('[data-party-new-code]'); await p.waitForTimeout(500);
@@ -75,7 +75,7 @@ require('fs').mkdirSync(out, { recursive: true });
       const bots = [];
       for (const [label, n, total] of [['m2', 1, 2], ['m8', 7, 8]]) {
         bots.push(require('child_process').spawn('node', ['--experimental-websocket', 'multiplayer/bots/bot.mjs', '--url', process.env.RELAY_URL || 'http://127.0.0.1:8871', '--code', codeNow, '--n', String(n), '--ms', '25000'], { stdio: 'ignore' }));
-        await p.waitForFunction((t) => new RegExp('^Party \\(' + t + '\\)$').test(document.querySelector('#party-tab-party').innerText), total, { timeout: 15000 }).catch(() => { fail++; console.log(name, 'FAIL: bots did not join', label); });
+        await p.waitForFunction((t) => new RegExp('^List \\(' + t + '\\)$').test(document.querySelector('#party-tab-party').innerText), total, { timeout: 15000 }).catch(() => { fail++; console.log(name, 'FAIL: bots did not join', label); });
         await p.waitForTimeout(600);
         boxes[label + 'code'] = await box();
         await p.click('#party-tab-party'); await p.waitForTimeout(500); boxes[label + 'party'] = await box();

@@ -327,16 +327,18 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             </section>
           ) : <section className={`${styles.card} ${styles.menuCard}`} data-party-sheet aria-labelledby="party-sheet-title">
             <header className={styles.menuHeader}>
-              <span aria-hidden="true" />
+              <span className={styles.hdrCount} role="img" aria-label={`Friends here: ${state.members.length} of ${PARTY_MAX}`} data-party-count><Icon name="people" size={18} /><span aria-hidden="true">{state.members.length} of {PARTY_MAX}</span></span>
               <h2 id="party-sheet-title">Your party</h2>
               <DoneButton onDone={requestClose} />
             </header>
+            {/* One body: the toggle floats pinned on top, both lists scroll underneath it (and above the pinned footer). */}
+            <div className={styles.body} data-party-body data-tabs={state.isHost ? '1' : undefined}>
             {state.isHost && (
               <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs data-active={activeTab} onKeyDown={onTabKey}>
                 <span className={styles.pill} aria-hidden="true" data-party-pill />
                 {(['code', 'party'] as const).map((t) => (
                   <button key={t} ref={(el) => { tabRefs.current[t] = el; }} type="button" role="tab" id={`party-tab-${t}`} aria-controls={`party-panel-${t}`} aria-selected={activeTab === t} tabIndex={activeTab === t ? 0 : -1} data-party-tab={t} className={styles.tab} onClick={() => setTab(t)}>
-                    {t === 'code' ? 'Code' : <>Party <span key={state.members.length} className={styles.tabCount} data-party-tab-count>({state.members.length})</span></>}
+                    {t === 'code' ? 'Code' : <>List <span key={state.members.length} className={styles.tabCount} data-party-tab-count>({state.members.length})</span></>}
                   </button>
                 ))}
               </div>
@@ -358,7 +360,6 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             <div role={state.isHost ? 'tabpanel' : undefined} id="party-panel-party" aria-labelledby={state.isHost ? 'party-tab-party' : undefined} aria-hidden={state.isHost && activeTab !== 'party'} {...inertIf(state.isHost && activeTab !== 'party')} data-active={!state.isHost || activeTab === 'party'} className={styles.panel} data-party-panel="party">
               <FadeScroll>
             {!state.isHost && <p className={styles.small} data-party-guest-note>Only the host has the code.</p>}
-            <p className={styles.small} data-party-count>Friends here: {state.members.length} of {PARTY_MAX}</p>
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
@@ -375,13 +376,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
             </ul>
             {kickPrompt && state.isHost && kickBlock}
-            <div className={styles.stack}>
+              </FadeScroll>
+              {/* Pinned footer: outside the scrolling area, so End / Leave is always in view while the list scrolls under it. */}
+              <div className={styles.panelFoot} data-party-foot>
               {state.isHost && (confirmEnd
                 ? <button type="button" className={styles.endLink} data-party-end onClick={() => { connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
                 : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
-              {!state.isHost && <button type="button" className={styles.ghost} onClick={leave}>Leave party</button>}
+              {!state.isHost && <button type="button" className={styles.footLeave} onClick={leave}>Leave party</button>}
+              </div>
             </div>
-              </FadeScroll>
             </div>
             </div>
           </section>}
