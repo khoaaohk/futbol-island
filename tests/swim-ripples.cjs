@@ -44,7 +44,7 @@ ok('the pool caps at 6 live ripples, grows in world space, fades, and nothing al
  const fxSrc=fs.readFileSync('lib/graphics/ballEffects.ts','utf8');const loop=fxSrc.split('for(const r of swimRipples)')[1].split('for(const ring of rings)')[0];assert(!/new |\.map\(/.test(loop));fx.dispose();});
 ok('Town wiring: foot ring hidden while swimming, scheduler fed from the pose + tier gate, old arm splash / wake pair gone',()=>{
  const town=fs.readFileSync('components/Town.tsx','utf8');
- assert.match(town,/ring\.visible=!fieldMenu\.current&&!vendingHide&&rideRef\.current!=='jetpack'&&!\(water\.inWater&&water\.state\.phase==='swim'\)/);
+ assert.match(town,/ring\.visible=!fieldMenu\.current&&!vendingHide&&rideRef\.current!=='jetpack'&&(?:!party\?\.meRing&&)?!\(water\.inWater&&water\.state\.phase==='swim'\)/);
  assert.match(town,/swimRipples\.update\(dt,si\)/);assert.match(town,/si\.mode=reduced\?2:waterFxOn\(\)\?0:1/);assert.match(town,/si\.phase=p\.phase/);
  assert(!/if\(ev\.stroke\)ballEffects\.ripple/.test(town));
  const doc=fs.readFileSync('docs/performance-guide.md','utf8');assert(/Swim ripples/.test(doc));});
