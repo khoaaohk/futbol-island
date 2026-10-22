@@ -335,7 +335,7 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  // reef's colour (uReef: a little grey until the zone is cleaned up, diveJourney.ts reefColour). ALU only, no texture.
  const uCaustic={value:opt.lite||opt.reduced?0:ROOM_CAUSTIC_K},uReef={value:opt.reef??1},causticC={value:new T.Color(ROOM_CAUSTIC)};
  reefMat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{uDiveTime:uTime,uCaustic,uReef,uCausticC:causticC});
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;varying vec3 vDvAbs;'+DIVE_ABSORB_GLSL).replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;vDvAbs=dvAbsorb(${DIVE_SURFACE_Y.toFixed(2)}-transformed.y);');
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vDvW;varying vec3 vDvAbs;'+DIVE_ABSORB_GLSL).replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;vDvAbs=dvAbsorb('+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
 uniform float uDiveTime,uCaustic,uReef;uniform vec3 uCausticC;varying vec3 vDvW;varying vec3 vDvAbs;
 float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);float k=1.-abs(a*b);k*=k;return k*k*k;}`)
@@ -390,7 +390,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
     float sw=aSway*aSway*uSwayAmp;vec2 dvPush=DV_CUR*(${DIVE_CURRENT.surge.toFixed(3)}*(.35+dvSwell(position.xz)))+vec2(sin(uDiveTime*1.7+aSeed),cos(uDiveTime*1.3+aSeed*1.7))*${DIVE_CURRENT.flutter.toFixed(3)};
     transformed.xz+=dvPush*sw;
     // Explore v2: fans, kelp and grass bend away as the diver swims through (one distance per vertex, the model matrix is identity)
-    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`+(seeThrough?'vDvFade=aSway>0.?dvProxFade(transformed,uDiver.xyz,uCam):1.;':'')+'vDvAbs=dvAbsorb(${DIVE_SURFACE_Y.toFixed(2)}-transformed.y);');
+    {vec2 dd=transformed.xz-uDiver.xz;float dl=length(dd);transformed.xz+=dd/max(dl,.01)*(1.-smoothstep(.3,1.9,dl))*(1.-smoothstep(1.,2.6,abs(transformed.y-uDiver.y)))*aSway*.7;}`+(seeThrough?'vDvFade=aSway>0.?dvProxFade(transformed,uDiver.xyz,uCam):1.;':'')+'vDvAbs=dvAbsorb('+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y);');
   if(seeThrough)sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+PROXIMITY_DITHER_GLSL).replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\ndvDitherDiscard(vDvFade);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uReef;varying vec3 vDvAbs;').replace('#include <fog_fragment>','{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef)*vDvAbs;}\n#include <fog_fragment>');};
  swayMat.customProgramCacheKey=()=>'dive-sway-v3'+(seeThrough?'-fade':'');

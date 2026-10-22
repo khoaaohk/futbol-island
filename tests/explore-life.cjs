@@ -121,4 +121,11 @@ ok('▲ at the top surfaces: held there 0.35 s (or a fresh tap at the top) rises
  const H=load('lib/town/water/waterHud.ts');assert(!('DIVE_SURFACE' in H)&&!H.REEF_BUTTONS.some(b=>b.id==='surface')&&!H.REEF_BUTTONS_FLY.some(b=>b.id==='surface'));
  assert(!/\[data-job-action=surface\]/.test(read('app/globals.css')),'no Surface cell');
 });
+ok('every room shader patch resolves (no stray ${...} in the GLSL, every hook found), lite and full',()=>{
+ for(const lite of [false,true]){const z=D.diveSpotById('captains-cup'),room=R.createDiveRoom(z,{phone:true,reduced:false,found:[],pickups:J.journeyPickups(z),lite,friend:{kind:'crab',x:0,y:0,z:0}});
+  room.scene.traverse(o=>{const m=o.material;if(!m)return;const lib=m.isMeshLambertMaterial?T.ShaderLib.lambert:m.isMeshBasicMaterial?T.ShaderLib.basic:null;
+   if(m.onBeforeCompile&&lib&&m.onBeforeCompile.toString().length>20){const sh={uniforms:{},vertexShader:lib.vertexShader,fragmentShader:lib.fragmentShader};m.onBeforeCompile(sh);
+    for(const k of ['vertexShader','fragmentShader'])assert(!sh[k].includes('${'),`${o.name} ${k} has a stray \${`);}
+   if(m.isShaderMaterial)for(const k of ['vertexShader','fragmentShader'])assert(!m[k].includes('${'),o.name);});room.dispose();}
+});
 console.log(`\nexplore-life: ${passed} passed`);
