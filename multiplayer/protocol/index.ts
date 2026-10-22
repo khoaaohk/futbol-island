@@ -5,3 +5,4 @@ export * from './names';
 export * from './limits';
 export * from './validate';
 export * from './sha256';
+export * from './presence';

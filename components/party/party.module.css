@@ -53,6 +53,7 @@
 .members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left}
 .member{display:flex;align-items:center;gap:6px;min-height:44px}
 .member[data-away]{opacity:.55}
+.activity{display:block;font-weight:600;font-size:12px;line-height:1.2;color:var(--btn-ink);opacity:.75;overflow:hidden;text-overflow:ellipsis}
 .zone{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--btn-mint)}
 .mname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;font-size:14px}
 .badge{padding:2px 8px;border-radius:10px;background:var(--btn-gold);font-size:11px;font-weight:700}

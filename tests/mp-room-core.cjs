@@ -268,7 +268,7 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   clock.t += 1000; send(room, b, pose(3, 9000, 300, Mode.Walk, PoseFlag.Warp)); room.tick();
   assert.equal(host.of(S.Poses).length, n, 'second warp inside 5 s dropped');
   // old seq ignored
-  clock.t += 6000; send(room, b, pose(2, 5010, 300)); room.tick();
+  clock.t += 1000; send(room, b, pose(2, 5010, 300)); room.tick(); // (under 8 s: no relay away flag yet)
   assert.equal(host.of(S.Poses).length, n);
   // Welcome carries the last pose of members for late joiners
   const late = join(room); const wl = welcome(late)[7].find((m) => m[0] === ib);
@@ -563,5 +563,50 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const far = ids[13]; // 13th friend of ps[0]: not among the nearest 12
   assert.equal(seen.get(far), 2, 'the far friend arrives only on the 2 beacons in 10 ticks (1 Hz)');
   assert.ok(seen.get(ids[1]) >= 10, 'the nearest friend arrives every tick');
+}
+
+// Presence (design 4.4.1): Busy poses, frozen positions, beats, the relay's 8 s away flag, emotes from a busy member
+{
+  const { clock, room } = mk();
+  const { Activity, AWAY_SILENCE_MS } = P;
+  const host = join(room, room.hostKey), a = join(room);
+  const ia = welcome(a)[2];
+  const last = (p, id) => { const ms = p.of(S.Poses); for (let j = ms.length - 1; j >= 0; j--) { const m = ms[j]; for (let k = 2; k < m.length; k += 9) if (m[k] === id) return m.slice(k + 1, k + 9); } return null; };
+  send(room, a, pose(1, 300, 300)); room.tick();
+  // goes busy (lesson): Mode.Busy with the Activity in the speed byte, the same spot
+  clock.t += 200; send(room, a, [C.Pose, 2, 300, 0, 300, 0, Activity.Lesson, Mode.Busy, Zone.Main, 0]); room.tick();
+  assert.deepEqual(last(host, ia), [300, 0, 300, 0, Activity.Lesson, Mode.Busy, Zone.Main, 0], 'Busy pose relayed with its activity');
+  // frozen for a long while, then back 400 m away (the lesson moved them) with Warp: never a speed cheat
+  for (let i = 0; i < 6; i++) { clock.t += 5000; send(room, a, [C.Beat, 1]); room.tick(); }
+  assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0, 'beats every 5 s keep a busy member present (no away flag)');
+  assert.equal(room.info().size, 2, 'busy member never dropped as idle');
+  send(room, a, [C.Pose, 3, 4300, 0, 300, 0, 0, Mode.Walk, Zone.Main, PoseFlag.Warp]); room.tick();
+  assert.deepEqual(last(host, ia).slice(0, 3), [4300, 0, 300], 'the warp back is relayed');
+  // an emote from a busy member is dropped by the relay
+  clock.t += 6000; send(room, a, [C.Pose, 4, 4300, 0, 300, 0, Activity.Quiz, Mode.Busy, Zone.Main, 0]); room.tick();
+  const before = host.of(S.Emote).length; send(room, a, [C.Emote, 1]);
+  assert.equal(host.of(S.Emote).length, before, 'no emotes from inside the force field');
+  clock.t += 200; send(room, a, [C.Pose, 5, 4300, 0, 300, 0, 0, Mode.Idle, Zone.Main, 0]); room.tick();
+  clock.t += 3000; send(room, a, [C.Emote, 1]); assert.equal(host.of(S.Emote).length, before + 1, 'emotes again once back');
+  // silence: 8 s with no frame -> the relay sets the Hidden (away) flag itself; the next frame clears it
+  clock.t += AWAY_SILENCE_MS - 100; send(room, host, [C.Beat, 1]); room.tick(); assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0);
+  clock.t += 200; send(room, host, [C.Beat, 1]); room.tick();
+  assert.equal(last(host, ia)[7] & PoseFlag.Hidden, PoseFlag.Hidden, 'away after 8 s of silence');
+  const late = join(room); assert.equal(welcome(late)[7].find((m) => m[0] === ia)[4][7] & PoseFlag.Hidden, PoseFlag.Hidden, 'late joiner sees them away');
+  clock.t += 200; send(room, a, [C.Beat, 2]); room.tick();
+  assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0, 'a beat clears the relay away flag');
+  // a dropped socket: away after 8 s, still a member; resume inside the 60 s grace clears it
+  const tok = welcome(a)[3];
+  room.disconnect(a); clock.t += AWAY_SILENCE_MS + 200; room.tick();
+  assert.equal(last(host, ia)[7] & PoseFlag.Hidden, PoseFlag.Hidden, 'dropped -> away, not gone');
+  assert.equal(host.of(S.Left).filter((m) => m[1] === ia).length, 0);
+  const a2 = peer(); hello(room, a2, tok); clock.t += 200; room.tick();
+  assert.equal(welcome(a2)[2], ia, 'resumed the same slot'); assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0, 'back from away on resume');
+  // indoors (a room on another page) is never flagged away; the grace ends with LeaveReason.Indoors
+  send(room, a2, [C.Pose, 0, 4300, 0, 300, 0, Activity.Museum, Mode.Busy, Zone.Indoors, 0]); room.tick();
+  room.disconnect(a2); clock.t += AWAY_SILENCE_MS + 200; room.tick();
+  assert.equal(last(host, ia)[6], Zone.Indoors); assert.equal(last(host, ia)[7] & PoseFlag.Hidden, 0, 'indoors stays indoors');
+  clock.t += 60_000; send(room, host, [C.Beat, 3]); room.tick();
+  assert.deepEqual(host.of(S.Left).filter((m) => m[1] === ia)[0].slice(1), [ia, LeaveReason.Indoors]);
 }
 console.log('mp-room-core: ok');

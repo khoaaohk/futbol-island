@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
-  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick,
+  parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
@@ -31,6 +31,8 @@ interface Member {
   pose: PoseBody | null; poseAt: number; lastSeq: number; dirty: boolean; farDirty: boolean; lastWarpAt: number;
   poseBucket: TokenBucket; emoteBucket: TokenBucket; pingBucket: TokenBucket; ctlBucket: TokenBucket;
   emoteTimes: number[]; bad: number; secStart: number; secCount: number;
+  /** Presence (design 4.4.1): last frame heard from this member, and whether the relay itself set the away (Hidden) flag on its pose. */
+  heardAt: number; relayAway: boolean;
 }
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -154,6 +156,8 @@ export class RoomCore {
       this.hello(peer, msg, now);
       return;
     }
+    m.heardAt = now; // any frame (pose, beat, emote) proves they are here
+    if (m.relayAway) this.unAway(m);
     // flood guard: more than closeAbovePerSec frames within one second -> close
     if (now - m.secStart >= 1000) { m.secStart = now; m.secCount = 0; }
     if (++m.secCount > RATE.closeAbovePerSec) {
@@ -168,6 +172,8 @@ export class RoomCore {
       case C.Pose: this.pose(m, msg as number[], now); return;
       case C.Emote: {
         if (!m.emoteBucket.take(now)) return;
+        // A member inside the force field (busy in a lesson / menu, or away) cannot emote: old or modded clients are ignored here.
+        if (m.pose && shielded(presenceOf(m.pose[5], m.pose[6], m.pose[7]))) return;
         m.emoteTimes = m.emoteTimes.filter((t) => now - t < 60000);
         if (m.emoteTimes.length >= RATE.emotePerMin) return;
         m.emoteTimes.push(now);
@@ -235,6 +241,7 @@ export class RoomCore {
         this.remove(m, m.pose && m.pose[6] === Zone.Indoors ? LeaveReason.Indoors : LeaveReason.Timeout, null);
       }
     }
+    this.markAway(now);
     this.migrateHost(now);
     if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
     this.fanOutPoses();
@@ -308,6 +315,7 @@ export class RoomCore {
         this.pending.delete(peer);
         m.peer = peer; m.goneAt = null;
         m.lastSeq = -1; // the client restarts its pose counter at 0 on every connect (review #7)
+        m.heardAt = now; if (m.relayAway) this.unAway(m);
         this.byPeer.set(peer, m);
         this.welcome(m);
         return;
@@ -341,8 +349,26 @@ export class RoomCore {
       peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, farDirty: false, lastWarpAt: -1e12,
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
-      emoteTimes: [], bad: 0, secStart: now, secCount: 0,
+      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false,
     };
+  }
+
+  /** Silence (no frame for AWAY_SILENCE_MS, connected or within the resume grace) shows the member as Away: the Hidden flag on their pose. */
+  private markAway(now: number): void {
+    this.members.forEach((m) => {
+      const p = m.pose;
+      if (!p || m.relayAway || (p[7] & PoseFlag.Hidden) !== 0 || p[6] === Zone.Indoors || now - m.heardAt < AWAY_SILENCE_MS) return;
+      const q = p.slice() as PoseBody; q[7] = (q[7] | PoseFlag.Hidden) & ~PoseFlag.Warp;
+      m.pose = q; m.relayAway = true; m.dirty = true; m.farDirty = true;
+    });
+  }
+
+  /** The member spoke again: drop the relay-set away flag (a client-set one stays until their next pose). */
+  private unAway(m: Member): void {
+    m.relayAway = false;
+    if (m.pose && (m.pose[7] & PoseFlag.Hidden) !== 0) {
+      const q = m.pose.slice() as PoseBody; q[7] &= ~PoseFlag.Hidden; m.pose = q; m.dirty = true; m.farDirty = true;
+    }
   }
 
   private migrateHost(now: number): void {
@@ -378,7 +404,7 @@ export class RoomCore {
     } else if (m.pose && !speedOk(m.pose, body, now - m.poseAt)) {
       return; // speed cheat: dropped, never relayed; the last good pose stays
     }
-    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true;
+    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false;
   }
 
   private bad(m: Member): void {

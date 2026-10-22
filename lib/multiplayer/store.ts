@@ -1,12 +1,14 @@
 // Party state for React. Emits only on membership / status / emote / ping / error changes (and a member's zone or away
 // flag flipping), never because a Poses message arrived.
 import { useSyncExternalStore } from 'react';
-import { S, nameFor, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
+import { S, nameFor, presenceOf, activityOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
 import type { PartyStatus } from './connection';
 import { colourHex } from './names';
 
 /** name = the colour name ('Red', always present); nick = the typed first name or null. Show displayName(member). */
-export type Member = { id: MemberId; name: string; nick: string | null; colourIdx: number; colourHex: string; look: Look; isHost: boolean; zone: Zone; away: boolean };
+export type Member = { id: MemberId; name: string; nick: string | null; colourIdx: number; colourHex: string; look: Look; isHost: boolean; zone: Zone; away: boolean;
+  /** Presence (design 4.4.1): playing, busy (lesson / quiz / menu), indoors (Museum...) or away; activity = the Activity code (0 when playing). */
+  presence: Presence; activity: number };
 export type PartyState = {
   status: PartyStatus; code: string | null; codeExpiresAt: number; you: MemberId | null; isHost: boolean; locked: boolean;
   members: Member[]; lastEmote: { id: MemberId; emote: Emote; at: number } | null;
@@ -24,7 +26,8 @@ const initial = (): PartyState => ({
 
 function toMember(m: MemberInfo): Member {
   const pose = m[4];
-  return { id: m[0], name: nameFor(m[1]), nick: m[5] ?? null, colourIdx: m[1][0], colourHex: colourHex(m[1][0]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false };
+  return { id: m[0], name: nameFor(m[1]), nick: m[5] ?? null, colourIdx: m[1][0], colourHex: colourHex(m[1][0]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false,
+    presence: pose ? presenceOf(pose[5], pose[6], pose[7]) : 'active', activity: pose ? activityOf(pose[5], pose[4]) : 0 };
 }
 
 let state: PartyState = initial();
@@ -61,14 +64,15 @@ export const partyStore = {
         set({ ...state, members: state.members.filter((x) => x.id !== m[1]), pings: state.pings.filter((p) => p.id !== m[1]) });
         return;
       case S.Poses: {
-        // Only a zone / away flip is visible state. Nothing changes (and nothing emits) for ordinary movement.
+        // Only a zone / away / presence flip is visible state. Nothing changes (and nothing emits) for ordinary movement.
         let list: Member[] = state.members;
         let changed = false;
         for (let i = 2; i + 8 < m.length; i += 9) {
-          const id = m[i] as number, zone = m[i + 7] as Zone, away = ((m[i + 8] as number) & 2) !== 0;
+          const id = m[i] as number, zone = m[i + 7] as Zone, flags = m[i + 8] as number, away = (flags & 2) !== 0;
+          const presence = presenceOf(m[i + 6] as number, zone, flags), activity = activityOf(m[i + 6] as number, m[i + 5] as number);
           const cur: Member | undefined = list.find((x) => x.id === id);
-          if (cur && (cur.zone !== zone || cur.away !== away)) {
-            list = list.map((x) => (x.id === id ? { ...x, zone, away } : x));
+          if (cur && (cur.zone !== zone || cur.away !== away || cur.presence !== presence || cur.activity !== activity)) {
+            list = list.map((x) => (x.id === id ? { ...x, zone, away, presence, activity } : x));
             changed = true;
           }
         }
