@@ -3,17 +3,17 @@
 import { useSyncExternalStore } from 'react';
 import { S, nameFor, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
 import type { PartyStatus } from './connection';
-import { animalGlyph, colourHex } from './names';
+import { colourHex } from './names';
 
-/** name = the made-up name ('Red Zebra', always present); nick = the typed first name or null. Show displayName(member). */
-export type Member = { id: MemberId; name: string; nick: string | null; colourIdx: number; animalIdx: number; colourHex: string; animalGlyph: string; look: Look; isHost: boolean; zone: Zone; away: boolean };
+/** name = the colour name ('Red', always present); nick = the typed first name or null. Show displayName(member). */
+export type Member = { id: MemberId; name: string; nick: string | null; colourIdx: number; colourHex: string; look: Look; isHost: boolean; zone: Zone; away: boolean };
 export type PartyState = {
   status: PartyStatus; code: string | null; codeExpiresAt: number; you: MemberId | null; isHost: boolean; locked: boolean;
   members: Member[]; lastEmote: { id: MemberId; emote: Emote; at: number } | null;
   pings: { id: MemberId; kind: PingKind; x: number; z: number; until: number }[]; error: ErrorCode | null;
 };
 
-/** What to call a friend: the typed first name if they set one, else the made-up name. */
+/** What to call a friend: their typed first name, else the colour name ('Red'). */
 export const displayName = (m: Pick<Member, 'name' | 'nick'>): string => m.nick || m.name;
 
 export const PING_SHOW_MS = 8000;
@@ -24,7 +24,7 @@ const initial = (): PartyState => ({
 
 function toMember(m: MemberInfo): Member {
   const pose = m[4];
-  return { id: m[0], name: nameFor(m[1]), nick: m[5] ?? null, colourIdx: m[1][0], animalIdx: m[1][1], colourHex: colourHex(m[1][0]), animalGlyph: animalGlyph(m[1][1]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false };
+  return { id: m[0], name: nameFor(m[1]), nick: m[5] ?? null, colourIdx: m[1][0], colourHex: colourHex(m[1][0]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false };
 }
 
 let state: PartyState = initial();

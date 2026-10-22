@@ -47,18 +47,15 @@ t('normalizeCode / formatCode',()=>{
 });
 
 t('names',()=>{
-  assert.equal(P.NAME_COLOURS.length,16);assert.equal(P.NAME_ANIMALS.length,32);
-  assert.equal(new Set(P.NAME_ANIMALS).size,32);assert.equal(new Set(P.NAME_COLOURS).size,16);
-  for(const bad of ['Rat','Pig','Donkey','Snake','Slug','Worm','Weasel'])assert.ok(!P.NAME_ANIMALS.includes(bad));
-  assert.equal(P.nameFor([0,0]),'Red Zebra');assert.equal(P.nameFor([99,0]),'Friend');
+  assert.equal(P.NAME_COLOURS.length,16);assert.equal(new Set(P.NAME_COLOURS).size,16);
+  assert.equal(P.NAME_ANIMALS,undefined,'no animals any more');assert.equal(P.PICKER_ANIMALS,undefined);assert.equal(P.validAnimal,undefined);
+  assert.equal(P.nameFor([0,0]),'Red');assert.equal(P.nameFor([0,31]),'Red','reserved slot ignored');assert.equal(P.nameFor([99,0]),'Friend');
   const taken=[];let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
-  for(let i=0;i<512;i++){const nm=P.pickName(taken,rnd);assert.ok(!taken.some(x=>x[0]===nm[0]&&x[1]===nm[1]),'dup at '+i);taken.push(nm);}
-  assert.equal(P.pickName(taken,rnd).length,2); // all taken -> still returns a pair
+  for(let i=0;i<16;i++){const nm=P.pickName(taken,rnd);assert.ok(!taken.some(x=>x[0]===nm[0]),'colour dup at '+i);assert.equal(nm[1],0);taken.push(nm);}
+  assert.equal(P.pickName(taken,rnd).length,2); // all 16 colours taken -> still returns a pair
   assert.deepEqual(plain(P.pickName([[0,0]],()=>0)),[P.COLOUR_ORDER[0],0]);
-  // colour order: a permutation of 0..15; the animal picker subset is valid and has 12-16 entries
+  // colour order: a permutation of 0..15; the order is unique per party
   assert.deepEqual([...P.COLOUR_ORDER].sort((a,b)=>a-b),Array.from({length:16},(_,i)=>i));
-  assert.ok(P.PICKER_ANIMALS.length>=12&&P.PICKER_ANIMALS.length<=16&&P.PICKER_ANIMALS.every(P.validAnimal));
-  assert.ok(P.validAnimal(0)&&P.validAnimal(31)&&!P.validAnimal(32)&&!P.validAnimal(-1)&&!P.validAnimal(1.5)&&!P.validAnimal(null)&&!P.validAnimal('3'));
 });
 
 const look=[0,1,2,3,4,5,6,7,8,9,10,63];
@@ -80,11 +77,12 @@ const serverSamples=[
 t('round trip client',()=>{for(const m of clientSamples)assert.deepEqual(plain(P.parseClient(P.encode(m))),m,JSON.stringify(m));});
 t('round trip server',()=>{for(const m of serverSamples)assert.deepEqual(plain(P.parseServer(P.encode(m))),m,JSON.stringify(m));});
 
-t('Hello animal is optional and backward compatible',()=>{
+t('Hello reserved animal slot: parsed for compatibility, ignored',()=>{
   const old=P.parseClient(JSON.stringify([0,1,look,null,null]));assert.ok(old&&old.length===5,'old 5-element Hello still parses');
   assert.deepEqual(plain(P.parseClient(JSON.stringify([0,1,look,null,null,7]))),[0,1,look,null,null,7]);
   assert.equal(P.PROTOCOL_VERSION,1,'no version bump');
   for(const bad of [32,-1,2.5,'1',[1],{},true])assert.equal(P.parseClient(JSON.stringify([0,1,look,null,null,bad])),null,JSON.stringify(bad));
+  assert.equal(P.ErrorCode.BadName,9);
 });
 
 t('normalizeNick table',()=>{
@@ -98,7 +96,7 @@ t('normalizeNick table',()=>{
   assert.equal(P.NICK_MAX,12);
 });
 
-t('Hello nick: optional, normalised, bad nick becomes null (join never blocked)',()=>{
+t('Hello nick: normalised; bad nick parses as null (the relay then refuses it with BadName; 5 / 6-element Hellos stay colour-only)',()=>{
   const parse=x=>P.parseClient(JSON.stringify(x));
   assert.equal(parse([0,1,look,null,null,null,'EMMA'])[6],'Emma');
   assert.equal(parse([0,1,look,null,null,5,'élodie'])[6],'Élodie');

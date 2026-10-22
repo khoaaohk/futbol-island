@@ -32,7 +32,7 @@ deploy until #1-#3 are fixed; #5-#7 before real children use it.** Status of eac
 | 23 | P2 | partyRoom.ts:69-76; /party/:code | no reciprocal ws.close(); info endpoint reveals party size | close in handler; return {open, full} only | done: reciprocal ws.close in the DO; /party/:code returns {open, full} only |
 | 24 | P2 | roomCore.ts:231-234 | a member away > 60 s cannot return after lock/2 h | document or extend resume to the 4 h cap | skipped |
 
-Checked and OK: no free text or identifier is relayed (names are server-picked colour+animal; Look = 12 ints; Emote/Ping enums); tokens
+Checked and OK: no free text or identifier is relayed (names are the server-picked colour plus, since 22 Oct 2026, the typed first name; Look = 12 ints; Emote/Ping enums); tokens
 go only to their owner; no saves/install id/analytics touched; session storage holds only {code, resumeToken, hostKey, at} (30 min TTL)
 plus the pending code; the parent gate covers create, join by code and join by link; wire validation is tight (512 B cap before parse,
 arrays only, integer checks, CSPRNG codes + blocklist, constant-time compares); flood handling and token buckets; interpolation clock
@@ -44,8 +44,17 @@ Owner decision: players may type a **first name only** (letters only, 2 to 12, L
 
 Residual risks to accept knowingly (or revisit before public launch):
 - **Filter-evasion spellings:** with no block-list, an offensive word spelled in plain letters ("Poo", a slur, a rude word in another language) is a valid name. Letters-only removes digits, symbols, spaces and URLs, but not words. Mitigations are structural (cap 6, code + grown-up gate, host Reset name / Remove / Lock, Hide / Mute, set-at-join only, falls back to the made-up name).
-- **Impersonation:** two players may type the same name, or a name like a classmate's or a host's; the colour dot, animal and the small made-up name under the label are the tie-breakers. Hosts can reset.
+- **Impersonation:** two players may type the same name, or a name like a classmate's or a host's; the colour dot is the tie-breaker (animals and the made-up name line were removed). Hosts can reset.
 - **Lookalike letters:** Latin-1 accented letters (e.g. "Élodie" vs "Elodie", "I" vs "l") and mixed-case lookalikes pass the filter; Cyrillic / Greek / full-width lookalikes do NOT (outside the allowed ranges), which is deliberate.
-- **Personal information:** a first name is personal information under COPPA / GDPR-K. Mitigated by: optional, grown-up-gated step, shown only inside the party, never persisted or logged, not in analytics; the privacy page 7a discloses it. Needs the legal review already pending.
+- **Personal information:** a first name is personal information under COPPA / GDPR-K. Mitigated by: grown-up-gated step (the name is now required to play with friends, 22 Oct 2026, mp-no-animals), shown only inside the party, never persisted or logged, not in analytics; the privacy page 7a discloses it. Needs the legal review already pending.
 - **A reset can be undone by a reconnect only if the client still holds the name:** the client clears its own copy on `Renamed`, and a resume Hello never changes the relay's stored name, so a reset sticks.
-- **Memory only means a Durable Object eviction drops names** (members keep their made-up name); acceptable by design.
+- **Memory only means a Durable Object eviction drops names** (members keep their colour name); acceptable by design.
+
+## Addendum (22 Oct 2026, mp-no-animals): animals removed, first name required
+
+Owner decision ("make it simple and not have animals", then "make the name not optional"). Identity is now the server-assigned unique colour plus the typed first name. Review notes:
+- **Required name, same free-text surface.** The name was already the one free-text field; making it required does not widen the input (`normalizeNick`: letters only, 2 to 12, no block-list). The relay now REFUSES a Hello that carries a missing or invalid name (`ErrorCode.BadName` = 9, closes with `CLOSE.Refused`) instead of nulling it. The UI (NickField, disabled Start / Join buttons, in-code guards) validates first.
+- **Compatibility window.** Old 5 / 6-element Hellos (no name) still parse and join as colour-name-only ('Red'), and the old `animal` slot is parsed (null or 0..31) and ignored, so old builds do not break. Remove the legacy path (accept only 7-element Hellos) once no old client is in use. The wire shape is unchanged: `Hello` slot 5 is a reserved null, roster `NameIdx` is `[colour, 0]`, `PROTOCOL_VERSION` stays 1.
+- **Host Reset name** now falls back to the colour name ('Red'); the member must rejoin to type a new one. Names stay memory only (client module variable, relay member object).
+- Fewer identity cues for a child with a very common name: the colour dot and ring remain the tie-breaker; the made-up name line is gone.
+

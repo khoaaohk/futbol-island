@@ -100,7 +100,7 @@ try {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const L = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
     const h = await open(p3.code); h.w.send(JSON.stringify([0, 1, L, null, p3.hostKey, null, 'SMOKEKID'])); await wait(300);
-    const g = await open(p3.code); g.w.send(JSON.stringify([0, 1, L, null, null, 3, 'Emma'])); await wait(300);
+    const g = await open(p3.code); g.w.send(JSON.stringify([0, 1, L, null, null, null, 'Emma'])); await wait(300);
     const hid = h.msgs.find((m) => m[0] === 20)[2];
     const gid = g.msgs.find((m) => m[0] === 20)[2];
     assert.equal(g.msgs.find((m) => m[0] === 20)[7].find((m) => m[0] === hid)[5], 'Smokekid', 'roster carries the normalised nick');
@@ -109,6 +109,14 @@ try {
     assert.ok(g.msgs.some((m) => m[0] === 31 && m[1] === gid && m[2] === null), 'Renamed broadcast');
     g.w.send(JSON.stringify([10, hid])); await wait(300);
     assert.ok(g.msgs.some((m) => m[0] === 29 && m[1] === 6), 'guest ResetName -> NotHost');
+    // the name is required for new clients: a bad / missing name is refused with BadName (9); an old nick-less Hello still joins (colour only); an old animal wish is ignored
+    const bad = await open(p3.code); bad.w.send(JSON.stringify([0, 1, L, null, null, null, 'Emma Lou'])); await wait(300);
+    assert.ok(bad.msgs.some((m) => m[0] === 29 && m[1] === 9), 'invalid name -> BadName');
+    const old = await open(p3.code); old.w.send(JSON.stringify([0, 1, L, null, null, 3])); await wait(300);
+    const ow = old.msgs.find((m) => m[0] === 20); assert.ok(ow, 'old Hello (animal wish, no name) still joins');
+    assert.equal(ow[7].find((m) => m[0] === ow[2])[1][1], 0, 'animal wish ignored: reserved slot is 0');
+    assert.equal(ow[7].find((m) => m[0] === ow[2])[5], null, 'no name -> colour name only');
+    old.w.close(); bad.w.close();
     h.w.close(); g.w.close();
   }
   assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');

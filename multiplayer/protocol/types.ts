@@ -27,7 +27,7 @@ export type LeaveReason = (typeof LeaveReason)[keyof typeof LeaveReason];
 export const EndReason = { HostEnded: 0, Expired: 1, Empty: 2 } as const;
 export type EndReason = (typeof EndReason)[keyof typeof EndReason];
 export const ErrorCode = {
-  BadMessage: 0, RateLimited: 1, Full: 2, NotFound: 3, Expired: 4, Locked: 5, NotHost: 6, BadVersion: 7, Kicked: 8,
+  BadMessage: 0, RateLimited: 1, Full: 2, NotFound: 3, Expired: 4, Locked: 5, NotHost: 6, BadVersion: 7, Kicked: 8, BadName: 9,
 } as const;
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 /** Warp: teleport (fade, skip speed check); Hidden: in a menu/away. */
@@ -36,17 +36,18 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
 
 export type Look = number[]; // length LOOK_LEN, ints 0..63
 export type MemberId = number; // 0..15, server-assigned slot
-export type NameIdx = [colour: number, animal: number];
+/** [colour, reserved]: the second slot used to be an animal index; the relay now always sends 0 and receivers ignore it. */
+export type NameIdx = [colour: number, reserved: number];
 /** Pose body: [x_dm, y_dm, z_dm, yaw256, speedQ, mode, zone, flags] */
 export type PoseBody = [number, number, number, number, number, Mode, Zone, number];
-/** nick: the typed first name (normalizeNick), or null / absent = use the made-up name. */
+/** nick: the typed first name (normalizeNick), or null / absent = shown by colour name ('Red'). */
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
 export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
-  animal?: number | null, nick?: string | null]; // animal: optional trailing index into NAME_ANIMALS (absent / null = random); nick: optional first name (normalizeNick, bad = null); old 5 / 6-element Hellos still valid
+  reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
 export type CPose = [typeof C.Pose, seq: number, ...body: PoseBody];
 export type CEmote = [typeof C.Emote, emote: Emote];
 export type CPing = [typeof C.Ping, kind: PingKind, x_dm: number, z_dm: number];
@@ -77,6 +78,6 @@ export type SCode = [typeof S.Code, code: string, codeExpiresAt: number]; // sen
 export type SEnded = [typeof S.Ended, reason: EndReason];
 export type SError = [typeof S.Error, code: ErrorCode];
 export type SBeat = [typeof S.Beat, t: number];
-/** The host reset a member's typed name: everyone falls back to the made-up name. nick is always null. */
+/** The host reset a member's typed name: everyone falls back to the colour name. nick is always null. */
 export type SRenamed = [typeof S.Renamed, id: MemberId, nick: null];
 export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed;

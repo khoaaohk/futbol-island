@@ -9,7 +9,7 @@ import styles from './JoinFriends.module.css';
  * "Join friends" on the title screen (user, Oct 22 2026: "remembering that link is a hassle, can we place that on the main login
  * screen?"). A friend types the 6-character party code here, no link needed. It does NOT connect: it stores the code as the
  * pending party (the same sessionStorage store the invite link uses) and continues into the game exactly as Play / Start would;
- * PartyHost then waits for the island and the intro, runs the grown-up check and the animal picker, and joins.
+ * PartyHost then waits for the island and the intro, runs the grown-up check and joins.
  * Rendered by TitleActions only when multiplayerEnabled(); this component also hides while the grown-up switch is Off.
  * Only the six code boxes take text. The code is never logged and never sent to analytics (no analytics import here).
  */

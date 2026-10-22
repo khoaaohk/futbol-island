@@ -50,7 +50,7 @@ function harness(){
 {
  const h=harness(),look=new Array(12).fill(0);
  h.state.tier=3; // cap 1
- for(const id of [1,2,3])h.avatars.upsert(id,look,'Red Zebra');
+ for(const id of [1,2,3])h.avatars.upsert(id,look,'Red');
  assert.equal(h.state.created,1,'tier 3 admits one friend');
  h.state.tier=0; h.all([1,2,3]);
  h.avatars.update(1.1,h.poses,h.camera,false);
@@ -72,7 +72,7 @@ function harness(){
 }
 {
  const h=harness(),look=new Array(12).fill(0);
- h.avatars.upsert(1,look,'Red Zebra');h.all([1]);
+ h.avatars.upsert(1,look,'Red');h.all([1]);
  h.avatars.update(.016,h.poses,h.camera,false);assert.equal(h.avatars.shown,1);
  h.state.saver=true;
  h.avatars.update(.5,h.poses,h.camera,false);assert.equal(h.avatars.shown,1,'still fading at 0.5 s');
@@ -86,7 +86,7 @@ function harness(){
  assert.equal(ringsOf().length,1,'one ring mesh in the whole remote layer');
  const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===8,'instanced, capacity 8');
  assert.equal(ring.castShadow,false);assert.equal(ring.frustumCulled,false);
- h.avatars.upsert(1,look,'Blue Fox',{hex:'#0072B2',glyph:'F'});h.avatars.upsert(2,look,'Orange Owl',{hex:'#E69F00',glyph:'O'});
+ h.avatars.upsert(1,look,'Blue',{hex:'#0072B2'});h.avatars.upsert(2,look,'Orange',{hex:'#E69F00'});
  h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
  assert.equal(ring.count,2,'a ring per shown friend');
  const c=new T.Color(),c0=new T.Color(),c1=new T.Color();ring.getColorAt(0,c0);ring.getColorAt(1,c1);
@@ -125,7 +125,7 @@ function harness(){
  assert(/polygonOffset/.test(src)&&!/new T\.(Sprite|Mesh)\([^)]*ring/i.test(src),'no per-friend ring meshes');
  const bridge=read('lib/multiplayer/townBridge.ts');
  assert(/conn\.status === 'live' && meHex !== ''/.test(bridge)&&/showRing \? ring : null/.test(bridge),'local ring only while live');
- assert(/glyph:\s*m\.animalGlyph/.test(bridge),'label gets the glyph and colour');
+ assert(/\{ hex: m\.colourHex \}/.test(bridge)&&!/glyph|animal/i.test(bridge),'label gets the colour dot only, no animal glyph');
 }
 
 // 3. sources: no shadow registration, one batch (capacity 8), no forbidden imports
@@ -170,14 +170,14 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
 {
  const h=harness(),look=new Array(12).fill(0);
  const labels=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-name');
- h.avatars.upsert(1,look,'Red Zebra',{hex:'#D62828',glyph:'Z'});
- h.avatars.upsert(2,look,'Emma',{hex:'#0072B2',glyph:'F',sub:'Blue Fox'});
+ h.avatars.upsert(1,look,'Red',{hex:'#D62828'});
+ h.avatars.upsert(2,look,'Emma',{hex:'#0072B2'});
  h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
  assert.equal(h.avatars.shown,2);
  const [l1,l2]=labels();
- assert.ok(l2.scale.y>l1.scale.y,'a label with the made-up name underneath is taller');
+ assert.ok(Math.abs(l2.scale.y-l1.scale.y)<1e-9,'every label is one line (colour dot + name), no made-up name underneath');
  const tex2=l2.material.map;
- h.avatars.upsert(2,look,'Blue Fox',{hex:'#0072B2',glyph:'F'}); // the host reset the name
+ h.avatars.upsert(2,look,'Blue',{hex:'#0072B2'}); // the host reset the name
  assert.notEqual(l2.material.map,tex2,'label texture is rebuilt on reset');
  assert.ok(Math.abs(l2.scale.y-l1.scale.y)<1e-9,'label back to the single-line size');
  // Hide: not drawn at all (avatar, label, bubble); Show brings it back
@@ -196,6 +196,6 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  h.avatars.emote(1,1);h.avatars.update(.016,h.poses,h.camera,false);assert.equal(bubbles[0].visible,true,'other friends emotes still show');
  const bridge=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx');
  assert(/setHiddenFriends/.test(bridge)&&/avatars\.setHidden\(hiddenIds\)/.test(bridge)&&/onHiddenChange=\{setHiddenFriends\}/.test(town)&&/onMutedChange=\{setMutedFriends\}/.test(town),'PartyHost Hide / Mute reach the avatars');
- assert(/displayName\(m\)/.test(bridge)&&/sub: m\.nick \? m\.name/.test(bridge),'label uses the first name with the made-up name small underneath');
+ assert(/displayName\(m\)/.test(bridge)&&!/sub:/.test(bridge),'label uses the first name (or the colour name), nothing underneath');
 }
 console.log('mp-avatars ok');
