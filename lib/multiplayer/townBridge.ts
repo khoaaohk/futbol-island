@@ -79,7 +79,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const known = new Set<MemberId>();
   const ids: MemberId[] = [];
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
-  const ring = { x: 0, y: 0, z: 0, hex: '' };
+  const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0 };
   let meHex = '';
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const active = new Map<MemberId, RemotePose>(); // friends outside any force field (what friends() lists)
@@ -161,7 +161,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!busyMe) {
         const showRing = conn.status === 'live' && meHex !== '' && !l.hidden && l.zone !== Zone.Indoors;
         meRingOn = showRing;
-        if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; }
+        if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; }
         avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
       }
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.
