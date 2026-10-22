@@ -53,6 +53,9 @@ const ICON: Record<number, string> = {
   [101]: '\u{1F6CE}️', [102]: '\u{1F440}', [103]: '\u{1F359}',
 };
 export const AWAY_TEXT = 'Away', AWAY_ICON = '\u{1F4A4}';
+/** A room registers its own local station lines (codes 101+; the Arcade uses 120+ in lib/arcade/arcadeRoomParty.ts) when its party
+ *  layer is created: the words come from the receiver's own copy of the room (never the wire). Idempotent. */
+export function setStationText(code: number, text: string, icon: string): void { if (code > 100) { TEXT[code] = text; ICON[code] = icon; } }
 
 /** The words over a friend's field / under their name in the party list ('' when they are just playing). */
 export function presenceText(p: Presence, activity: number): string {

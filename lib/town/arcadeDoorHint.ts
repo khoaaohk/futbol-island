@@ -5,8 +5,8 @@ import {ARCADE_DOOR} from './venues';
 import {ARCADE_ROOM_CODE} from '../multiplayer/rooms/arcade';
 
 export type ArcadeDoorHint={visible:boolean;count:number;text:string;x:number;y:number;z:number};
-/** Hint anchor: above the island's Arcade door (lib/town/venues.ts ARCADE_DOOR), sign height. */
-export const ARCADE_DOOR_HINT_Y=3.4;
+/** Hint anchor: above the island's Arcade door frame (lib/town/venues.ts ARCADE_DOOR), clear of the walkers' name labels at the door (5.2 m; was 3.4). */
+export const ARCADE_DOOR_HINT_Y=5.2;
 export function createArcadeDoorHint():ArcadeDoorHint{return{visible:false,count:0,text:'',x:ARCADE_DOOR.x,y:ARCADE_DOOR_HINT_Y,z:ARCADE_DOOR.z};}
 export function arcadeDoorHintText(count:number){return count>0?`${count} in the Arcade`:'';}
 /** `rooms[i]` = roomOf(friend i's last pose) (RoomCode, -1 on the island). A LEGACY door pose (old client: Busy + Indoors + Activity.Arcade
@@ -17,3 +17,5 @@ export function arcadeDoorHint(rooms:ArrayLike<number>,count:number,out:ArcadeDo
  if(n!==out.count||out.text===''&&n>0){out.count=n;out.text=arcadeDoorHintText(n);}
  out.visible=n>0;return out;
 }
+/** The island party runtime's door entry for the Arcade (components/Town.tsx passes it with the Konbini doors to createPartyRuntime). */
+export const ARCADE_DOOR_HINT:{readonly room:number;readonly x:number;readonly y:number;readonly z:number}={room:ARCADE_ROOM_CODE,x:ARCADE_DOOR.x,y:ARCADE_DOOR_HINT_Y,z:ARCADE_DOOR.z};

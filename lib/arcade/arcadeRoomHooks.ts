@@ -14,6 +14,10 @@ export interface ArcadeRoomHost{
  wakeRemote(ms?:number):void;
  /** Party friends drawn in the hub: that many crowd visitors walk out (design: friends replace NPCs). */
  setFriendSlots(n:number):void;
+ /** Plays a party emote on the local rig (bubble over the head); `face` turns you toward a friend (high five). */
+ emote?(kind:number,face?:{x:number;z:number}|null):void;
+ /** Moves the local player (entry spawn slot when friends already stand at the door). */
+ place?(x:number,z:number):void;
  readonly covered:boolean;readonly sleeping:boolean;readonly mobile:boolean;
  readonly bounds:{readonly minX:number;readonly maxX:number;readonly minZ:number;readonly maxZ:number};
 }
@@ -24,6 +28,10 @@ export interface ArcadeRoomLayer{
  frame(dt:number,nowMs:number):boolean;
  /** Busy flags of the page changed (also fires while no hub exists, e.g. during a game). */
  busy?(state:Readonly<ArcadeBusyFlags>):void;
+ /** Busy friends' force fields as obstacles: pushes the room-local point out (+ radius r); true when it moved. */
+ pushOut?(p:{x:number;z:number},r:number):boolean;
+ /** Check hooks (scripts/check-mp-rooms-arcade.cjs; allocate, never per frame). */
+ debug?():unknown;measure?(n?:number):unknown;
 }
 export type ArcadeBusyFlags={game:ArcadeCabinetId|null;list:boolean;hall:boolean};
 
@@ -39,6 +47,11 @@ export function registerArcadeHost(h:ArcadeRoomHost):()=>void{
 }
 /** Hub side, per rendered frame: no-op (false) without a layer. */
 export function arcadeLayerFrame(dt:number,nowMs:number):boolean{return layer!==null&&layer.frame(dt,nowMs);}
+/** Hub side, in the walk collide step: no-op (false) without a layer. */
+export function arcadeLayerPushOut(p:{x:number;z:number},r:number):boolean{return layer!==null&&!!layer.pushOut?.(p,r);}
+/** Check hooks: the layer's friends / slots, and ms per layer update (null without a layer). */
+export function arcadeLayerDebug():unknown{return layer?.debug?.()??null;}
+export function arcadeLayerMeasure(n?:number):unknown{return layer?.measure?.(n)??null;}
 /** Page side: ArcadeRoom.tsx reports game / list / hall. */
 export function setArcadeBusy(game:ArcadeCabinetId|null,list:boolean,hall:boolean){
  if(busyFlags.game===game&&busyFlags.list===list&&busyFlags.hall===hall)return;

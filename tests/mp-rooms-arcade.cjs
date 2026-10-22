@@ -1,9 +1,9 @@
 // Arcade multiplayer-room prep (docs/multiplayer-rooms-design.md Phase 3 "Arcade prep status"): descriptor, busy mapping,
 // hub hooks, crowd replacement, spawn slots, island door hint. Pure: no browser, no relay.
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path'),T=require('three');
-const ROOT=path.resolve(__dirname,'..'),loaded=new Map();
+const ROOT=path.resolve(__dirname,'..'),loaded=new Map(),stubs=new Map();// stubs: resolved path -> exports (section 8 swaps the shared room layer for a recorder)
 function resolve(from,n){const base=n.startsWith('@/')?path.join(ROOT,n.slice(2)):path.resolve(path.dirname(from),n);for(const ext of ['.ts','.tsx','/index.ts',''])if(fs.existsSync(base+ext)&&fs.statSync(base+ext).isFile())return base+ext;throw new Error('cannot resolve '+n+' from '+from);}
-function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const m={exports:{}};loaded.set(file,m.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require:n=>n.startsWith('.')||n.startsWith('@/')?load(resolve(file,n)):require(n),console,Math,Map,WeakMap,Set,Float64Array,Float32Array,Uint16Array,URLSearchParams,Object,Array,JSON,Number,String,Infinity,NaN});return m.exports;}
+function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const m={exports:{}};loaded.set(file,m.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,require:n=>n.startsWith('.')||n.startsWith('@/')?(f=>stubs.get(f)??load(f))(resolve(file,n)):require(n),console,Math,performance,Map,WeakMap,Set,Float64Array,Float32Array,Uint16Array,URLSearchParams,Object,Array,JSON,Number,String,Infinity,NaN});return m.exports;}
 // vm objects come from another realm: compare by value.
 const same=(a,b,m)=>assert.equal(JSON.stringify(a),JSON.stringify(b),m);
 const src=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
@@ -148,4 +148,57 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  H.arcadeDoorHint([5,-1,5,6],1,out);assert.equal(out.text,'1 in the Arcade');H.arcadeDoorHint([-1,6],2,out);same([out.visible,out.count],[false,0]);
  assert(!/[^\x20-\x7e]/.test(H.arcadeDoorHintText(3)),'plain fixed text');
  console.log('MP_ROOMS_ARCADE_DOOR_HINT_PASS');
+}
+
+// 8. Integration (rooms Phase 3): the page-level layer over the hub hooks, with the shared room layer swapped for a recorder.
+{
+ const H=load(path.join(ROOT,'lib/arcade/arcadeRoomHooks.ts'));H.resetArcadeRoomHooks();
+ const log=[];let ctx=null;const fake={shown:0,meRing:false,friends:[],update(){log.push('update');return true;},friendsHere(){return this.friends;},nearestFriend(){return null;},pushOut(p,r){log.push(['push',r]);p.x+=1;return true;},
+  sendEmote(k){log.push(['emote',k]);return true;},sendNow(){log.push('send');},warpNext(){log.push('warp');},debugFriends(){return [];},dispose(){log.push('dispose');},room:5};
+ stubs.set(path.join(ROOT,'lib/multiplayer/roomParty.ts'),{createRoomParty(c){ctx=c;return fake;}});
+ const P=load(path.join(ROOT,'lib/arcade/arcadeRoomParty.ts')),pres=load(path.join(ROOT,'lib/multiplayer/presence.ts'));
+ const party=P.createArcadeParty({phone:true,reduced:false});assert(party&&ctx,'layer created over createRoomParty');
+ assert.equal(ctx.room,5,'RoomCode.Arcade');
+ // Station lines: the receiver's own words, never the wire.
+ for(const c of arcadeCabinets){const a=R.areas.find(x=>x.id===c.id),code=ctx.station(a.standX,a.standZ);assert(code>100,'local station code');assert.equal(pres.presenceText('busy',code),`Playing ${c.name}`);}
+ assert.equal(pres.presenceText('busy',ctx.station(0,0)),'Looking at high scores');
+ // Host lifecycle: the avatar group moves into each hub scene and out of it before the hub disposes its meshes.
+ const calls=[];let px=0,pz=10.3,moving=false;const mk=()=>{const scene=new T.Scene();return {scene,camera:{},playerRoot:{},mobile:true,covered:false,sleeping:false,bounds:R.bounds,pose(o){o.x=px;o.z=pz;o.yaw=Math.PI;o.moving=moving;o.speed=moving?2:0;return o;},wakeRemote(){calls.push('wake');},setFriendSlots(n){calls.push(['slots',n]);},place(x,z){calls.push(['place',x,z]);px=x;pz=z;},emote(k,f){calls.push(['myEmote',k]);}};};
+ let host=mk(),unregister=H.registerArcadeHost(host);const detach=H.attachArcadeLayer(party.layer);
+ assert(host.scene.children.some(o=>o.name==='arcade-party'),'avatar group in the hub scene');
+ // Friends replace NPCs (count = drawn friends), reported only on change; an entry spawn slot when a friend stands at the door.
+ fake.shown=1;fake.friends=[{x:0,z:10.3}];assert.equal(H.arcadeLayerFrame(1/20,performance.now()),true);
+ same(calls.filter(c=>c[0]==='slots'),[['slots',1]]);same(calls.find(c=>c[0]==='place'),['place',-1.2,10.3],'first free spawn slot');
+ H.arcadeLayerFrame(1/20,performance.now());assert.equal(calls.filter(c=>c[0]==='slots').length,1,'unchanged count: no call');
+ fake.shown=0;H.arcadeLayerFrame(1/20,performance.now());same(calls.filter(c=>c[0]==='slots').at(-1),['slots',0],'friends gone: the crowd comes back');
+ // Force field obstacle through the hook.
+ const pt={x:0,z:0};assert.equal(H.arcadeLayerPushOut(pt,.3),true);assert.equal(pt.x,1);
+ // Local pose: walking in the hub, then Busy at the cabinet of a running game (a warp: the relay drops a multi-metre jump).
+ px=3;pz=2;let l=ctx.local();same([l.x,l.z,l.busy],[3,2,false]);
+ log.length=0;H.setArcadeBusy('tennis',false,false);same(log,['warp','send'],'game start: warp + send now');
+ const ten=R.areas.find(a=>a.id==='tennis');l=ctx.local();same([l.x,l.z,l.busy,l.speed],[ten.standX,ten.standZ,true,0]);
+ log.length=0;unregister();assert(!host.scene.children.some(o=>o.name==='arcade-party'),'group out before the hub disposes');assert(log.includes('send'),'Busy sent when the hub goes');
+ l=ctx.local();same([l.x,l.z,l.busy],[ten.standX,ten.standZ,true],'during the game: Busy at the cabinet (the beat carries it)');
+ assert.equal(H.arcadeLayerFrame(1/20,0),false,'no hub: no frames');
+ log.length=0;H.setArcadeBusy(null,false,false);host=mk();px=5;pz=1;unregister=H.registerArcadeHost(host);
+ assert(log.includes('warp'),'back from the game: warp');assert(host.scene.children.some(o=>o.name==='arcade-party'),'friends back in the new hub');
+ l=ctx.local();same([l.x,l.z,l.busy],[5,1,false]);
+ // Overlays keep the spot; emote from the chip plays on my rig.
+ H.setArcadeBusy(null,false,true);l=ctx.local();same([l.x,l.z,l.busy],[5,1,true]);H.setArcadeBusy(null,false,false);
+ party.emote(1);assert(log.some(e=>e[0]==='emote'&&e[1]===1));same(calls.at(-1),['myEmote',1]);
+ calls.length=0;detach();same(calls,[['slots',0]],'detach restores the crowd');party.dispose();assert(log.includes('dispose'));unregister();H.resetArcadeRoomHooks();
+ stubs.clear();
+ // Page + scene wiring (source scans).
+ const page=src('components/ArcadeRoom.tsx'),scene=src('lib/arcade/arcadeRoomScene.ts'),town=src('components/Town.tsx'),bridge=src('lib/multiplayer/townBridge.ts');
+ assert(page.indexOf('useArcadeRoomParty()')<page.indexOf("import('@/lib/arcade/arcadeRoomScene')"),'the layer hook is declared before the scene effect');
+ assert(page.includes('<RoomPartyChip party={party} hidden={list||hall} align="right"/>'),'Leave-only chip, hidden under overlays (the game hides the hub UI)');
+ assert(scene.includes('separateArcadeBody(body,person);arcadeLayerPushOut(body,.3);'),'force fields are obstacles in the walk collide step');
+ assert(/dispose\(\)\{unregisterHost\(\);/.test(scene),'unregister first: the layer takes its group out before the scene traversal disposes meshes');
+ assert(/ROOM_DOOR_HINTS=\[[^\]]*ARCADE_DOOR_HINT[^\]]*\]/.test(town)&&town.includes('doors:ROOM_DOOR_HINTS'),'island door hint registered');
+ assert(bridge.includes('atRoomDoor(m, d.room)'));
+ // Flag off costs nothing: the page loads neither the layer, the chip, nor the avatar / three.js code for the party.
+ const hook=src('components/party/useArcadeRoomParty.ts'),statics=t=>[...t.matchAll(/^import\s+(?!type)[^;]*from\s+'([^']+)'/gm)].map(m=>m[1]);
+ for(const f of [...statics(page),...statics(hook)])assert(!/roomParty|arcadeRoomParty|RoomPartyChip|remoteAvatars|^three$/.test(f),'static import of party code: '+f);
+ assert(hook.includes("if (!multiplayerEnabled()) return;")&&hook.includes("import('@/lib/arcade/arcadeRoomParty')"),'the layer loads only with the flag on');
+ console.log('MP_ROOMS_ARCADE_INTEGRATION_PASS');
 }

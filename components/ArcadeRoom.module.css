@@ -48,3 +48,6 @@
 .root>.header.header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px))}
 @media(max-width:600px),(pointer:coarse){.root>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
 .root>.header.header button{min-height:var(--btn-height,44px)}
+
+/* Party chip (rooms Phase 3): its own slot under the header's right buttons, so the arcade header button skin never applies to it. */
+.partySlot{position:absolute;z-index:3;right:26px;top:calc(max(18px,env(safe-area-inset-top)) + 62px)}@media(max-width:600px){.partySlot{right:14px}}@media(max-height:520px){.partySlot{top:62px}}

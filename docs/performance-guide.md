@@ -5875,3 +5875,8 @@ everything else with the island while this is running", and "the room's backgrou
 - **Measured (headless Chrome, `scripts/check-mp-rooms-shop.cjs`, 1 friend):** desktop layer update 0.04-0.06 ms, render with vs
   without the friend within noise (0.15-0.3 ms), draw calls 29 -> 36 (batch groups + ring + label + bubble); idle 0 frames in 2 s
   with the friend standing; phone (touch emulation) remote-only 20 fps, 22 draw calls. Reduced work, not an iPhone temperature.
+- **Arcade hub (rooms Phase 3, `scripts/check-mp-rooms-arcade.cjs`, 1 friend):** the hub never sleeps (15 fps floor), so friends
+  cost only their update + draw: layer update 0.02-0.04 ms (desktop) / 0.01-0.03 ms (phone ctx), render 0.16-0.3 ms total; a friend's
+  motion lifts the cadence to 20 fps on phones / 30 desktop for 300 ms only (measured 18-20 fps phone friends-only). Rig count does
+  not rise: each drawn friend sends one crowd NPC out (hidden, parked, no rig update); Battery saver / cap 0 draws no friend and keeps
+  the NPCs. During a game nothing renders; the beat sends the Busy pose. Flag off: the party code is not even loaded.

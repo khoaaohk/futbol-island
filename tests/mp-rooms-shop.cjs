@@ -231,9 +231,9 @@ t('island: "2 in the Kit Shop" over the shop door (Konbini hint mechanism), part
   const town = read('components/Town.tsx'), hint = read('lib/town/shopDoorHint.ts');
   assert.match(town, /const ROOM_DOOR_HINTS=\[\.\.\.KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT(?:,ARCADE_DOOR_HINT)?\]/); assert.match(town, /doors:ROOM_DOOR_HINTS\}/);
   assert.match(hint, /room:RoomCode\.Shop,x:SHOP_DOOR\.x,y:SHOP_CANOPY\.y\+2\.6,z:SHOP_DOOR\.front\+\.3/);
-  const tb = read('lib/multiplayer/townBridge.ts'); const m = [tb.slice(tb.indexOf('export function doorHintText'), tb.indexOf('export function doorHintText') + 200)]; m[1] = m[0];
+  const tb = read('lib/multiplayer/townBridge.ts'); const m = [tb.slice(tb.indexOf('export function doorHintText'), tb.indexOf('export function doorHintText') + 400)]; m[1] = m[0];
   const doorHintText = (k, room) => (k > 0 ? `${k} ${pres.roomText(room).replace(/^In /, 'in ')}` : '');
-  assert.ok(m[1].includes("roomText(room).replace(/^In /, 'in ')"), 'townBridge words = roomText');
+  assert.ok(m[1].includes("roomText(room).replace(/^In /, 'in ')"), 'townBridge words = roomText (Museum and Arcade have their own sign words)');
   assert.equal(doorHintText(2, RoomCode.Shop), '2 in the Kit Shop'); assert.equal(SH.shopDoorHintText(1), '1 in the Kit Shop'); assert.equal(SH.shopDoorHintText(0), '');
   assert.ok(!/rooms\/shop'|shopCast|shopLayout/.test(hint), 'the island bundle does not load the shop layout for the hint');
 });

@@ -14,6 +14,10 @@ import {arcadeCabinets,type ArcadeCabinetId} from '@/lib/arcade/arcadeCatalog';
 import type {createArcadeRoomScene,ArcadeRoomAction} from '@/lib/arcade/arcadeRoomScene';
 import styles from './ArcadeRoom.module.css';
 import {setArcadeBusy} from '@/lib/arcade/arcadeRoomHooks';
+// Party in rooms (docs/multiplayer-rooms-design.md Phase 3): friends in the Arcade walk about the hub; a friend in a game shows at its
+// cabinet in a force field. The layer lives for the PAGE (a game replaces the hub); Leave-only chip under the header.
+import {useArcadeRoomParty} from './party/useArcadeRoomParty';
+const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});// only rendered with a live party (flag on)
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 const Tennis=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
@@ -25,6 +29,7 @@ const gameComponents={tennis:Tennis,pinball:Pinball,runner:Runner};
 // The Hall of High Scores (docs/arcade-leaderboards.md): lazy, loaded when Scores is tapped; the room sleeps under it.
 const ArcadeBoards=dynamic(()=>import('./arcade/ArcadeBoards'),{ssr:false});
 export default function ArcadeRoom(){
+ const party=useArcadeRoomParty();// before the scene effect: on unmount the layer goes first, then the hub
  const [socialNear,setSocialNear]=useState<number|null>(null);
  const [revealed,setRevealed]=useState(false),[entryDone,setEntryDone]=useState(false),[minimumLoadingDone,setMinimumLoadingDone]=useState(false);
  useEffect(()=>{const timer=setTimeout(()=>setMinimumLoadingDone(true),3000);return()=>clearTimeout(timer);},[]);
@@ -55,6 +60,7 @@ export default function ArcadeRoom(){
  return <main aria-label="The Arcade" className={styles.root} data-entering={!revealed} data-exiting={exiting} data-arcade-room={game?'playing':'room'}>
  {game?<div className={styles.game}>{game==='live'?<Strikers onExit={back}/>:game==='puzzle'?<PassPuzzle onExit={back}/>:<ArcadeGame kind={game} onExit={back}/>}</div>:<>
  <header className={styles.header}><NavigationButton back label="Exit" onNavigate={()=>leave()}/><div className={styles.headerActions}><button onClick={()=>{setList(false);setHall(true);}} aria-haspopup="dialog" data-arcade-scores><span className={styles.buttonFace}>Scores</span></button><button onClick={()=>setList(v=>!v)} aria-expanded={list} aria-controls="arcade-coins-panel"><span className={styles.buttonFace}>Coins</span></button></div></header>
+ {party&&<div className={styles.partySlot}><RoomPartyChip party={party} hidden={list||hall} align="right"/></div>}
  <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label="Walkable arcade room. Use WASD or arrow keys to walk, then Enter to play. You can also choose a machine from Coins." onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerUp={e=>{const p=tap.current;tap.current=null;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){(document.activeElement as HTMLElement)?.blur?.();room.current?.pick(e.clientX,e.clientY);}}}/>
  {failed&&<div className={styles.error}><h2>The room couldn’t load.</h2><p>You can still choose a game.</p><button onClick={()=>setList(true)}>Choose a game</button></div>}
  {chosen&&<button ref={machinePrompt} className={`store-enter-prompt ${styles.machinePrompt}`} aria-label={`Play ${chosen.name}`} data-arcade-play={chosen.id} onPointerEnter={()=>room.current?.holdPrompt(chosen.id)} onPointerLeave={()=>room.current?.holdPrompt(null)} onClick={()=>play(chosen.id)}>Play</button>}

@@ -650,6 +650,11 @@ existing tracker with these ids.
   keeps frames <= 550 ms after the last change, at <= 20 fps on phones when only friends move; Battery saver never wakes. Measured
   (headless, `scripts/check-mp-rooms.cjs`): 1 friend = +0.03 ms layer update, +~0.005 ms render, +7 draw calls (batch material
   groups, ring, label, bubble; fixed per batch, labels +1 each); idle with a still friend = 0 frames; phone remote-only = 20 fps.
+- **Arcade (rooms Phase 3, 22 Oct 2026):** friends walk the hub and replace crowd NPCs one for one; arcade games stay single
+  player: a friend in a game is Busy in a green force field AT that cabinet ("Playing <game>", an obstacle you bump into). The layer
+  lives per page (`lib/arcade/arcadeRoomParty.ts`), so the party keeps going while a game replaces the hub (Busy sent at once + Warp,
+  then the 5 s beat) and friends are back when the game ends. Island door hint "1 in the Arcade". Details and measurements:
+  `docs/multiplayer-rooms-design.md` "Arcade integration status".
 - **Not in Phase 1:** Museum / Arcade / Kit Shop (Phases 2-4 reuse `useRoomParty` + `RoomPartyChip` + a scene's
   `setFriendLayer` / `wakeRemote` / `localPose` / `stationAt` / `emote`), shared reefs (cut by the owner), relay v1.1 (Phase 4).
 
