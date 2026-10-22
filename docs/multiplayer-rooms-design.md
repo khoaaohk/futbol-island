@@ -354,6 +354,38 @@ friend clamp; `caps.fieldRadius` -> field r; `wake.remote*` -> the layer's remot
    `activityOf === Activity.Arcade` count as 5; skip hidden friends) and draw the label (one sprite, shown only when `visible`).
 6. `arcadeSocial.ts` routines stay NPC-only (proximity() only scans crowd + attendant): friends are never social targets.
 
+#### Arcade integration status (branch `mp-rooms-arcade`, 22 Oct 2026): DONE, on top of Phase 1 + the prep
+- **Layer per page, not per hub** (`lib/arcade/arcadeRoomParty.ts`, `components/party/useArcadeRoomParty.ts`): a game replaces the hub,
+  so the hub is disposed / re-created around every game while ONE `createRoomParty` (connection, interpolators, rigs) lives for the
+  page. Its avatars sit in their own group that `attach(host)` adds to each new hub scene and `attach(null)` removes BEFORE the hub's
+  dispose traverses its meshes (`unregisterHost()` is the first line of `dispose`). Friends are therefore back the moment you leave a
+  game (no Welcome needed; a still friend never re-sends).
+- **During a game**: no frames; `setArcadeBusy` -> `sendNow()` sends Busy at the cabinet's stand spot at once, the 5 s beat keeps it.
+  A game start / end is a multi-metre jump: `warpNext()` (new on `RoomParty`, arms the entry Warp + 5.5 s retry) or the relay drops it
+  as a speed cheat and friends keep the old spot. `?game=` deep links send Busy at the cabinet with no hub pose.
+- **Receiver**: busy friend -> force field (r 0.8) at the cabinet; station codes 120 (high scores) / 121+ (cabinets) registered with
+  `presence.setStationText` -> "Playing Futbol Tennis" from the receiver's own catalog. The field is an obstacle: `arcadeLayerPushOut`
+  in the hub collide step after the crowd separation (you stop ~0.9 m from the stand spot).
+- **Crowd**: `setFriendSlots(party.shown)` on change (drawn rigs, so Battery saver / tier cap 0 keeps the NPCs); 0 on Leave / detach.
+- **Spawn**: a fresh hub at the default door spot takes `pickArcadeSpawn` once friends are known (4 s window, cancelled when you move)
+  via the new host `place(x, z)`. Emotes: the chip's wheel plays on your rig through the new host `emote(kind, face)` (lazy bubbles).
+- **Chip**: `RoomPartyChip` (Leave only) in its own `.partySlot` under the header's right buttons (the Arcade header button skin would
+  restyle it), hidden under Coins / Scores; the game hides the hub UI.
+- **Island**: `ARCADE_DOOR_HINT` joins the Konbini doors in Town's `createPartyRuntime`; `doorHintText` says "1 in the Arcade";
+  `atRoomDoor` also counts a LEGACY door pose (Indoors + Activity.Arcade, room -1). Hint at y 5.2 (3.4 overlapped walkers' labels).
+- **Flag off**: `ArcadeRoom.tsx` has no static party import (layer and chip are dynamic imports behind `multiplayerEnabled()`); no
+  stored party: nothing is created, the hub's hooks stay no-ops.
+- Tests: `tests/mp-rooms-arcade.cjs` section 8 (layer over the real hooks with a recorder for `createRoomParty`: group in/out, slots,
+  spawn, busy warp + sendNow, Busy during the game, back from the game, station lines, flag-off imports); `tests/mp-rooms.cjs`
+  (Arcade door text, legacy door pose). Bot: `--busy-at x,z --busy-after ms --busy-for ms`; bot reports `busyFrom`.
+- Headless (`scripts/check-mp-rooms-arcade.cjs <app> <relay>`; screenshots in /tmp/mp-rooms-arcade): party survives the real door (same
+  slot), bot appears and moves, 1 NPC walks out (slots 1), wave bubble, my emote plays and reaches the bot, roster Leave only, bot busy
+  at Tennis with the status line, walking there stops at 0.9 m, my Pass Puzzles game reaches the bot as Busy 0.05 m from that stand
+  spot, friend drawn again after the game, island "1 in the Arcade". Heat: layer update 0.02-0.04 ms desktop / 0.01-0.03 ms phone ctx,
+  render 0.16-0.3 ms, phone friends-only cadence 20 fps (measured 18-20), desktop 30; draw calls ~92-95 desktop, ~56 phone.
+- Limits: crowd NPCs may still pick the cabinet a friend plays at (their station is 0.7 m to the side, they yield to you only);
+  `arcadeWalkIn` is unused (the Warp fade is used); the Hall / Coins overlays read "Looking at high scores" for receivers.
+
 ### Phase 4: Kit Shop + relay v1.1 - effort S-M, ~4 h shop + ~4 h relay + 2 h verify, **relay redeploy (owner, `wrangler deploy`)**
 `ShopRoom.tsx`, `shopScene.ts` (shoppers minus friends); relay items 2.3.1-5 in `multiplayer/protocol/limits.ts`,
 `multiplayer/relay/src/roomCore.ts`, `multiplayer/dev-relay`; tests `tests/mp-room-core.cjs` and `tests/mp-protocol.cjs`. Deploy order: relay first (it is
