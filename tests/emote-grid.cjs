@@ -59,11 +59,17 @@ t('icon-only, labelled, >= 44 px, upward wheel',()=>{
  assert(/\.emote-wheel\{[^}]*bottom:calc\(100% \+ 12px/.test(css),'opens upward from the grid');
  assert(/prefers-reduced-motion:reduce\)\{\.emote-wheel\{animation:none\}/.test(css));
 });
-t('grid CSS: Fly top-left, Emote top-right, 12 px gaps, map off the grid, desktop map stays lower-left',()=>{
+t('grid CSS: desktop 2x2 (Fly, Emote / juggle, kick); phones 3x2: Fly + map toggle over Parachute + Sprint, Emote left of Parachute',()=>{
  assert(/\[data-emote-grid\] \.travel-mode\{grid-column:1;grid-row:1/.test(css)&&/\[data-emote-grid\] \.touch-emote\{[^}]*grid-column:2;grid-row:1/.test(css));
  assert(/\[data-emote-grid\] \.touch-actions \.touch-juggle\{grid-column:1;grid-row:2/.test(css)&&/\[data-emote-grid\] \.touch-actions \.touch-shoot\{grid-column:2;grid-row:2/.test(css));
  assert(/\[data-emote-grid\]\{display:grid;grid-template-columns:var\(--action-size\) var\(--action-size\);[^}]*gap:12px/.test(css));
- assert(/\[data-emote-grid\] \.minimap-toggle\{position:absolute;[^}]*right:calc\(100% \+ 12px\)/.test(css),'phone: map beside the grid');
+ const ph=css.slice(css.indexOf('3 columns x 2 rows'),css.indexOf('@media(min-width:601px) and (pointer:fine){\n .town-app .travel-actions[data-emote-grid]'));
+ assert(/grid-template-columns:repeat\(3,var\(--action-size\)\)/.test(ph));
+ assert(/\.travel-mode\{grid-column:2;grid-row:1\}/.test(ph)&&/\.minimap-toggle\{position:static;grid-column:3;grid-row:1/.test(ph),'phone: Fly over Parachute, map toggle where Emote was');
+ assert(/\.touch-emote\{grid-column:1;grid-row:2\}/.test(ph)&&/\.touch-juggle\{grid-column:2;grid-row:2\}/.test(ph)&&/\.touch-shoot\{grid-column:3;grid-row:2\}/.test(ph),'phone: Emote | Parachute | Sprint');
+ assert(/\.town-minimap:not\(\.is-collapsed\)\{bottom:calc\(var\(--control-bottom\) \+ 142px\)/.test(ph),'the open map sits 14 px above the grid');
+ assert(/\.town-minimap\.is-minimized\{scale:\.4/.test(ph)&&/\.emote-wheel\)[^{]*\.town-minimap\{opacity:0/.test(ph),'it folds into the toggle; hidden while the wheel is open');
+ assert(/mapFoldNow/.test(town)&&/setMinimapCollapsed\(true\)/.test(town),'the phone map folds away under a dialog or job card');
  assert(/min-width:601px\) and \(pointer:fine\)\{[\s\S]*?\.minimap-toggle\{position:fixed/.test(css.slice(css.indexOf('[data-emote-grid] .touch-emote'))),'desktop: map stays at the lower left');
  assert(/data-job-camera\] :is\(\.touch-emote,\.emote-wheel\)\{visibility:hidden/.test(css),'hidden with the job camera like the other action buttons');
 });

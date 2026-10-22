@@ -803,8 +803,8 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 
 /* Island action grid with the Emote button (user, Oct 22 2026): ALWAYS 2 x 2, Fly (the ride button) top-left, Emote top-right, the
  * two action buttons below (juggle-side left, kick-side right). Scoped to the island's cluster by [data-emote-grid] (the Arcade and
- * Konbini rooms reuse .travel-actions unchanged). On phones the map toggle sits just left of the grid (above it on a 320 px phone,
- * where the joystick would touch it); on desktop it stays at the lower left. The wheel opens upward and never covers the grid. */
+ * Konbini rooms reuse .travel-actions unchanged). On phones it is 3 x 2 (see the phone block below: Emote | Parachute | Sprint under Fly + the map toggle);
+ * on desktop the toggle stays at the lower left. The wheel opens upward and never covers the grid. */
 .emote-control{display:contents}
 .town-app .travel-actions[data-emote-grid] .touch-emote{position:static;display:grid;place-items:center;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);padding:4px;border-radius:50%;border:1px solid #ecdfb5;background:#f4cc7c;color:#244d40;box-shadow:2px 3px 0 #17352b38;touch-action:manipulation;grid-column:2;grid-row:1;z-index:1}
 .town-app .travel-actions[data-emote-grid] .touch-emote[aria-expanded=true]{background-color:#fff0c3!important}
@@ -813,15 +813,32 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:1;grid-row:2;justify-self:center}
 .town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:2;grid-row:2;justify-self:center}
 @media(max-width:600px),(pointer:coarse){
- .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:absolute;grid-column:auto;grid-row:auto;top:0;right:calc(100% + 12px);left:auto;bottom:auto;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);margin:0}
- .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{right:auto;left:calc(100% + 12px)}
- .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 152px)}
+ /* Phones (user, Oct 22 2026): 3 columns x 2 rows. Top: Fly (over the parachute), map toggle (where Emote was, over Sprint).
+  * Bottom: Emote, Parachute, Sprint. Parachute, Sprint and Fly keep their places (the grid grows to the left). */
+ .town-app .travel-actions[data-emote-grid]{grid-template-columns:repeat(3,var(--action-size))}
+ .town-app .travel-actions[data-emote-grid] .travel-mode{grid-column:2;grid-row:1}
+ .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:static;grid-column:3;grid-row:1;justify-self:center;margin:0;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size)}
+ .town-app .travel-actions[data-emote-grid] .touch-emote{grid-column:1;grid-row:2}
+ .town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:2;grid-row:2}
+ .town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:3;grid-row:2}
+ /* flipped (left-handed): same cells mirrored in place, Parachute and Sprint stay put, Emote sits to the right of Sprint */
+ .controls-flipped .travel-actions[data-emote-grid] .travel-mode{grid-column:1;grid-row:1}
+ .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{grid-column:2;grid-row:1}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:1;grid-row:2}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:2;grid-row:2}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-emote{grid-column:3;grid-row:2}
+ /* the open map: a small calm disc, 14 px above the grid, folds out of the toggle (right-aligned over it) */
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 142px);border:1px solid #fff2cdb3;box-shadow:0 2px 10px #203d332e;transform-origin:calc(100% - 29px) 100%}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap.is-minimized{scale:.4;translate:0 28px;transition-duration:.2s}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap .minimap-terrain text:not(.map-vending-markers *),.town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap :is(.map-place-label,.minimap-terrain>circle){display:none}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid] .emote-wheel) .town-minimap{opacity:0;visibility:hidden;pointer-events:none}
+}
+@media(max-width:380px){
+ .town-app .travel-actions[data-emote-grid]{gap:8px}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 138px)}
 }
 @media(max-width:350px){
- .town-app .travel-actions[data-emote-grid] .minimap-toggle{top:auto;right:0;bottom:calc(100% + 12px)}
- .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{right:auto;left:0}
- .town-app .travel-actions[data-emote-grid]{--wheel-lift:calc(var(--action-size) + 12px)}
- .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 212px)}
+ .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 126px)}
 }
 @media(min-width:601px) and (pointer:fine){
  .town-app .travel-actions[data-emote-grid]{grid-template-columns:repeat(2,var(--action-size));grid-template-rows:repeat(2,var(--action-size));gap:12px;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px}
