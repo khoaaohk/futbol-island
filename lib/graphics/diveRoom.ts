@@ -3,6 +3,7 @@ import {speciesModel} from '../town/fishing/fishModels';
 import {DIVE_ROOM_R,DIVE_SURFACE_Y,diveCrestMask,diveDepthAt,diveFindPoint,diveFloor,diveRipple,diveWreckPose,type DiveFind,type DiveSpot} from '../town/water/diveSpots';
 import {diveLayout,diveWreckSize,type DiveArchSpot} from '../town/water/diveLayout';
 import {addDiveBall} from './diveBall';
+import {reefFishModel} from './diveFish';
 import {PITCH_TURF,ROOM_CAUSTIC,ROOM_CAUSTIC_K,ROOM_SHALLOW,ROOM_SHALLOW_MIX,ROOM_SHIMMER,ROOM_WINDOW} from './waterTokens';
 import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
@@ -370,7 +371,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
 
  // ---- Fish: one instanced draw per species, every path in the vertex shader. The theme picks the schools (SCHOOLS keys).
  const fishMeshes:T.Mesh[]=[];
- const school=(id:string|undefined,shape:string|undefined,color:string|undefined,list:Swimmer[],name:string,custom?:ReturnType<typeof creatureModel>,glow?:string)=>{
+ const school=(id:string|undefined,shape:string|undefined,color:string|undefined,list:Swimmer[],name:string,custom?:{geometry:T.BufferGeometry;anim:ReturnType<typeof creatureModel>['anim']},glow?:string)=>{
   const model=custom??speciesModel(id,shape as never,color),src=model.geometry,g=new T.InstancedBufferGeometry();
   for(const a of ['position','normal','color'])g.setAttribute(a,new T.BufferAttribute((src.getAttribute(a).array as Float32Array).slice(),src.getAttribute(a).itemSize));
   if(custom)src.dispose();
@@ -400,13 +401,13 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
  const fy=(x:number,z:number,over:number)=>Math.min(DIVE_SURFACE_Y-.75,F(x,z)+over),top=DIVE_SURFACE_Y-1;
  const wx=wk?wk.x:0,wz=wk?wk.z:-10,h0=headAt(0),h1=headAt(1),h2=headAt(2),wy=fy(wx,wz,1.2);
  const SCHOOLS:Record<string,()=>void>={
-  anchovy:()=>school('anchovy',undefined,undefined,shoal(phone?20:26,{x:0,y:top-.1,z:-4},8.5,.2,true,[.32,.42],.5,{stretch:.8,yaw:.4,wag:13,bob:.15}),'anchovy'),
-  'blue-tang':()=>school(undefined,'round','#2c5ee8',shoal(12,{x:h0.x,y:fy(h0.x,h0.z,1.3),z:h0.z},3.6,.33,false,[.36,.46],.4,{bob:.15}),'blue-tang'),
-  'yellow-tang':()=>school(undefined,'round','#ffd21f',shoal(10,{x:h1.x,y:fy(h1.x,h1.z,1.2),z:h1.z},3.2,-.37,false,[.32,.42],.4,{bob:.15,phase:2}),'yellow-tang'),
-  snapper:()=>school('red-snapper',undefined,undefined,shoal(8,{x:wx,y:wy,z:wz},wk?wreckHalf+1.5:7,.15,true,[.55,.7],.4,{stretch:wk?.35:.7,yaw:wk?-wk.yaw:-.3,bob:.2,phase:1}),'snapper'),
-  anthias:()=>school(undefined,'round','#ff7a3a',shoal(12,{x:h2.x,y:fy(h2.x,h2.z,1.1),z:h2.z},2.6,.45,true,[.24,.3],.4,{bob:.15,phase:3,wag:15}),'anthias'),
-  bigeye:()=>school('bigeye',undefined,undefined,shoal(7,{x:wx,y:wy-.3,z:wz},2.6,.42,false,[.34,.42],.3),'bigeye'),
-  trevally:()=>school('golden-trevally',undefined,undefined,shoal(6,{x:0,y:top,z:-2},14,-.1,false,[.6,.75],.4,{stretch:.85,bob:.2,phase:4}),'trevally'),
+  anchovy:()=>school(undefined,undefined,undefined,shoal(phone?20:26,{x:0,y:top-.1,z:-4},8.5,.2,true,[.32,.42],.5,{stretch:.8,yaw:.4,wag:13,bob:.15}),'anchovy',reefFishModel('anchovy')),
+  'blue-tang':()=>school(undefined,undefined,undefined,shoal(12,{x:h0.x,y:fy(h0.x,h0.z,1.3),z:h0.z},3.6,.33,false,[.36,.46],.4,{bob:.15}),'blue-tang',reefFishModel('blue-tang')),
+  'yellow-tang':()=>school(undefined,undefined,undefined,shoal(10,{x:h1.x,y:fy(h1.x,h1.z,1.2),z:h1.z},3.2,-.37,false,[.32,.42],.4,{bob:.15,phase:2}),'yellow-tang',reefFishModel('yellow-tang')),
+  snapper:()=>school(undefined,undefined,undefined,shoal(8,{x:wx,y:wy,z:wz},wk?wreckHalf+1.5:7,.15,true,[.55,.7],.4,{stretch:wk?.35:.7,yaw:wk?-wk.yaw:-.3,bob:.2,phase:1}),'snapper',reefFishModel('snapper')),
+  anthias:()=>school(undefined,undefined,undefined,shoal(12,{x:h2.x,y:fy(h2.x,h2.z,1.1),z:h2.z},2.6,.45,true,[.24,.3],.4,{bob:.15,phase:3,wag:15}),'anthias',reefFishModel('anthias')),
+  bigeye:()=>school(undefined,undefined,undefined,shoal(7,{x:wx,y:wy-.3,z:wz},2.6,.42,false,[.34,.42],.3),'bigeye',reefFishModel('bigeye')),
+  trevally:()=>school(undefined,undefined,undefined,shoal(6,{x:0,y:top,z:-2},14,-.1,false,[.6,.75],.4,{stretch:.85,bob:.2,phase:4}),'trevally',reefFishModel('trevally')),
   grouper:()=>school('grouper',undefined,undefined,[{cx:wx+1,cy:wy-.4,cz:wz+1,r:3.8,omega:-.11,phase:0,eight:false,stretch:.6,yaw:.3,bob:.1,wag:4,seed:2,scale:1.3}],'grouper'),
   parrotfish:()=>school(undefined,'round','#22c4a2',[{cx:h1.x,cy:F(h1.x,h1.z)+1.6,cz:h1.z,r:2.4,omega:.16,phase:1,eight:true,stretch:.9,yaw:0,bob:.2,wag:6,seed:3,scale:.95}],'parrotfish'),
   octopus:()=>school('octopus',undefined,undefined,[{cx:relic.x+.5,cy:F(relic.x,relic.z)+.55,cz:relic.z-.3,r:.35,omega:.25,phase:0,eight:true,stretch:1,yaw:0,bob:.1,wag:3,seed:4,scale:.85}],'octopus'),

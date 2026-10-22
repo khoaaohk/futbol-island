@@ -77,4 +77,18 @@ ok('collision: no allocation in the step or the push-out; the camera pulls in at
  for(let i=0;i<20000;i++){p.x=(i%40)-20;p.y=-2;p.z=((i*7)%40)-20;SD.divePushOut(w,p,.5,n);}const us=Number(process.hrtime.bigint()-t0)/1e3/20000;
  console.log(`     push-out ${us.toFixed(2)} µs per call, at most ${w.maxTested} solids tested`);assert(us<50);
 });
+const C=load('lib/town/water/diveCurrent.ts');
+ok('heat: the room draws at 1.25 moving / 1.5 still on phones (desktop uncapped), 12 fps after a minute of rest; wired in the dive branch',()=>{
+ assert.equal(C.divePixelCap(true,true),1.25);assert.equal(C.divePixelCap(true,false),1.5);assert.equal(C.divePixelCap(false,true),Infinity);
+ assert.equal(C.diveRestFrame(0,1e6),0);assert.equal(C.diveRestFrame(50,1000),50);assert(Math.abs(C.diveRestFrame(50,60000)-1000/12)<1e-9);assert.equal(C.diveRestFrame(1000/15,90000),1000/12);
+ const Q=load('lib/graphics/quality.ts'),m=new Q.MotionResolution(1.75,true);assert.equal(m.update(0,true,false,false,1.25),1.25);assert.equal(m.update(10,true),1.5);
+ const town=read('components/Town.tsx');assert(town.includes('divePixelCap(quality.phone,!dive.resting)')&&town.includes('diveRestFrame(rest0,'));
+});
+ok('heat: school fish use the 92-triangle reef fish (was 380-430); every phone room has fewer triangles than the baseline, draws unchanged',()=>{
+ const F=load('lib/graphics/diveFish.ts');for(const id of Object.keys(F.REEF_FISH)){const g=F.reefFishModel(id).geometry;assert(g.getAttribute('position').count/3<=C.DIVE_SCHOOL_FISH_TRIS,id);assert(!g.index);g.dispose();}
+ // baseline (Oct 21 2026, before Explore life): phone draws / triangles per zone
+ const BASE={'captains-cup':[17,63817],'pauls-grotto':[16,46932],'kelp-trawler':[15,51964],'ray-meadow':[15,30828],'moon-arch':[14,41386],'ball-crate':[16,68122],'turtle-pool':[14,41763]};
+ const rows=[];for(const z of D.DIVE_SPOTS){const st=roomOf(z).stats(),[d,t]=BASE[z.id];assert(st.draws<=d,z.id+' draws '+st.draws);assert(st.triangles<=t,z.id+' triangles '+st.triangles);rows.push(`${z.id}:${st.draws}/${st.triangles}`);}
+ console.log('     phone rooms (draws/triangles): '+rows.join(' '));
+});
 console.log(`\nexplore-life: ${passed} passed`);
