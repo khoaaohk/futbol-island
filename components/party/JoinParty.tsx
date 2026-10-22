@@ -13,7 +13,7 @@ import styles from './party.module.css';
  * Join with a code: six single-character boxes (CodeBoxes), nothing else is typed. Only the code alphabet is accepted (upper-cased);
  * any other character shows a gentle hint and is never guessed at (no O -> 0).
  */
-export default function JoinParty({ initial = '', message, busy, onJoin, onClose }: { initial?: string; message?: string | null; busy?: boolean; onJoin: (code: string) => void; onClose: () => void }) {
+export default function JoinParty({ initial = '', message, busy, onJoin, onClose, onNameRejected }: { initial?: string; message?: string | null; busy?: boolean; onJoin: (code: string) => void; onClose: () => void; onNameRejected?: () => void }) {
   const [code, setCode] = useState(initial);
   const [hint, setHint] = useState(false);
   const [named, setNamed] = useState(hasValidNick);
@@ -27,7 +27,7 @@ export default function JoinParty({ initial = '', message, busy, onJoin, onClose
       </header>
       <FadeScroll>
       <CodeBoxes initial={initial} onChange={(c, rejected) => { setCode(c); setHint(rejected); }} onEnter={(c) => { if (!busy && hasValidNick()) onJoin(c); }} />
-      <NickField onChange={(n) => setNamed(n !== null)} />
+      <NickField onChange={(n) => setNamed(n !== null)} onRejected={onNameRejected} />
       <p className={styles.status} role="status" aria-live="polite">{hint ? NOT_IN_CODES_HINT : message ?? 'Ask your friend for their code.'}</p>
       <div className={styles.row}>
         <button type="button" className={styles.primary} disabled={!complete || busy} onClick={() => onJoin(code)}>{busy ? 'Checking' : 'Join'}</button>

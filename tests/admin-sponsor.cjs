@@ -8,6 +8,9 @@
 //  4. The device / country split: TypeScript (lib/analytics/sponsorSplit.ts) = SQL (20261021_analytics_sponsor_split.sql) on a
 //     throwaway Postgres, grants and the self-check row.
 //  5. The dashboard wiring: tabs, the Overview, the route behind the admin session, no server modules in the client.
+//  6. Phase B (Oct 22 2026): the two new cards (Minutes with friends, Emotes used) and their CSV rows; the weekly Sponsor report
+//     (ISO weeks, ≥10 suppression, rounded reach, "not tracked yet", CSV with the draft banner, print CSS) and a fixture render
+//     (SPONSOR_REPORT_OUT=<file.html> writes it for a screenshot).
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),os=require('os'),cp=require('child_process');
 const ROOT=path.resolve(__dirname,'..');process.chdir(ROOT);
@@ -87,7 +90,8 @@ await ok('classification: one metric per counter, same rule as the SQL',()=>{
   'le:learn7_roles':'watched','en:film_end':'watched','en:bookend_messi':'watched','tu:finish':'watched','en:bookbuy_messi':'books','ls:learn7_roles':'quizzes',
   'lf:learn7_roles':null,'en:film_open':null,'sh:open_jersey':null,'en:bookopen_messi':null,'en:read_3m':null,'fi:land':null};
  for(const [id,m] of Object.entries(cases))assert.equal(S.sponsorMetricOf(id),m,id);
- assert.deepEqual([...S.SPONSOR_METRICS],['games','shirts','cleats','cards','watched','books','reading','quizzes'],'the eight cards, in order');
+ assert.deepEqual([...S.SPONSOR_METRICS],['games','shirts','cleats','cards','watched','books','reading','quizzes','social','emotes'],'the ten cards, in order (Phase B: + social, emotes)');
+ for(const id of ['mp:min','em:pick','em:e0','mp:created'])assert.equal(S.sponsorMetricOf(id),null,id+': not in the SQL device split (Phase C)');
 });
 
 await ok('before the new build is live: old counters count, new ones say "not tracked yet" (never a fake 0)',()=>{
@@ -143,7 +147,8 @@ await ok('split: TypeScript reference, suppression into withheld',()=>{
 
 await ok('dashboard: tabs, overview, route behind the session, client bundle stays small',()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),ov=read('app/admin/SponsorOverview.tsx'),route=read('app/api/admin/sponsor-split/route.ts');
- assert(/\['overview','Overview'\],\['engagement','Engagement'\],\['players','Players'\],\['live','Live'\]/.test(dash),'four tabs');
+ assert(/\['overview','Overview'\],\['engagement','Engagement'\],\['players','Players'\],\['live','Live'\],\['report','Sponsor report'\]/.test(dash),'five tabs (Phase B: Sponsor report)');
+ assert(dash.includes("{tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}"),'the report tab');
  assert(dash.includes("{tab==='overview'&&<SponsorOverview report={report}"),'the overview is the first tab');
  assert(/\{id:'all',label:'All'\}/.test(dash),'All preset');
  assert(route.indexOf('status:401')>0&&route.indexOf('status:401')<route.indexOf('loadSponsorSplit('),'session check first');
@@ -193,6 +198,106 @@ await ok('sql: the split on a throwaway Postgres matches the TypeScript',async()
   assert.equal(sql.devices[0].metrics.reading,6,'six minutes of reading');
   for(const role of ['anon','authenticated'])assert.throws(()=>psql(`select analytics_sponsor_split('${day}','${day}')`,{role}),/permission denied/,role);
  }finally{try{cp.execFileSync(pgctl,['-D',path.join(dir,'data'),'-m','immediate','stop'],quiet);}catch{}fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+// ---- Phase B: Minutes with friends and Emotes used.
+const partyDay=(day,n,extra={})=>many(n,day,{'mp:min':6,'mp:in':1,'mp:created':1,'em:pick':4,'em:e0':2,'em:e8':1,'em:e14':1,'em:reach_1':1,'em:to_npc':1,...extra},{ms:600000});
+await ok('social + emotes cards: not tracked before the build, then totals, stats, suppression, CSV rows',()=>{
+ const before=build({'2026-10-18':many(6,'2026-10-18',{'sh:save_jersey':1})});
+ for(const id of ['social','emotes']){assert.equal(M(before,id).status,'none',id);assert.equal(M(before,id).total,null);assert.match(M(before,id).gap,/2026-10-22/);}
+ assert.match(S.sponsorCsv(before),/Minutes with friends,,not tracked yet/);assert.match(S.sponsorCsv(before),/Emotes used,,not tracked yet/);
+ const day='2026-10-23',sessions=[...partyDay(day,8,{'mp:peak_2':1,'mp:len_15m':1}),...many(4,day,{'en:game_runner':1})];
+ const rollups=[C.rollupDay(day,sessions)],merged=C.mergeRollups(rollups);
+ const r=S.buildSponsor({from:day,to:day,merged,rollups,prev:null,labels:{emote:n=>n===0?'Wave':undefined}});
+ const so=M(r,'social'),em=M(r,'emotes');
+ assert.equal(so.status,'ok');assert.equal(so.total,48,'8 sessions × 6 minutes');
+ const stat=(m,l)=>m.stats.find(s=>s.label===l).value;
+ assert.equal(stat(so,'Share of island minutes in a party'),48/(8*10+4*2),'of 88 island minutes');
+ assert.equal(stat(so,'Average party size'),2,'8 parties of 2');assert.equal(stat(so,'Parties per active player'),8/12);assert.equal(stat(so,'Sessions in a party'),8);
+ assert.deepEqual(so.breakdowns.find(b=>b.id==='size').items.map(i=>[i.label,i.value]),[['2 players',8]]);
+ assert.equal(em.status,'ok');assert.equal(em.total,32,'8 × (2+1+1) by emote number');
+ assert.equal(stat(em,'Emotes per active player'),32/12);assert.equal(stat(em,'Emote engagement (sessions that emoted)'),8/12);assert.equal(stat(em,'Emotes per emoting session'),4);
+ assert.equal(em.breakdowns.find(b=>b.id==='top').items[0].label,'Wave');
+ assert.deepEqual(em.breakdowns.find(b=>b.id==='parts').items.map(i=>i.key).sort(),['ride','wheel']);
+ const small=S.buildSponsor({from:day,to:day,merged:C.mergeRollups([C.rollupDay(day,partyDay(day,3))]),rollups:[],prev:null});
+ assert.equal(M(small,'social').total,null,'3 sessions: <5');assert.equal(M(small,'social').stats.find(s=>s.label==='Average party size').value,null);
+ const csv=S.sponsorCsv(r);assert.match(csv,/^Minutes with friends,,48,,,minutes,ok,/m);assert.match(csv,/^Emotes used,,32,,,emotes,ok,/m);assert.match(csv,/^,On foot \(the wheel\),24,,,emotes,,/m);
+ const ov=read('app/admin/SponsorOverview.tsx');assert(/const NO_SPLIT=new Set<SponsorMetricId>\(\['social','emotes'\]\)/.test(ov)&&/data-split-na/.test(ov),'no fake device split for the new cards');
+});
+
+// ---- The weekly Sponsor report.
+const W=load('lib/analytics/sponsorReport.ts');
+await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not tracked yet, CSV and print',()=>{
+ assert.equal(W.isoWeekOf('2026-10-22'),'2026-W43');assert.deepEqual(W.weekRange('2026-W43'),{from:'2026-10-19',to:'2026-10-25'});
+ assert.equal(W.isoWeekOf('2027-01-01'),'2026-W53');assert.deepEqual(W.weekRange('2026-W53'),{from:'2026-12-28',to:'2027-01-03'});assert.equal(W.weekRange('2025-W53'),null);
+ assert.equal(W.shiftWeek('2026-W53',1),'2027-W01');assert.equal(W.shiftWeek('2026-W43',-1),'2026-W42');assert.equal(W.validWeek('2026-43'),false);
+ assert.deepEqual([4,9,10,14,15,994,995,1000,1049,1050,12345].map(W.roundReach),[0,10,10,10,20,990,1000,1000,1000,1100,12300]);
+ // A week with 30 party sessions and a few small groups.
+ const days={};for(let i=0;i<7;i++){const d=C.addDays('2026-10-19',i);days[d]=[...partyDay(d,i<3?4:2,{'mp:peak_3_4':1,'le:learn7_roles':1,'ls:learn7_roles':1,'mp:lesson':1}),...many(3,d,{'em:e45':1,'em:pick':1})];}
+ const rollups=Object.entries(days).map(([d,ss])=>C.rollupDay(d,ss)),merged=C.mergeRollups(rollups);
+ const prevMerged=C.mergeRollups([C.rollupDay('2026-10-12',partyDay('2026-10-12',12))]);
+ const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T12:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:{share:0.42,sessions:40},relay:null,emoteLabel:n=>({0:'Wave',8:'Dance',14:'Kickflip',45:'Juggle'})[n]});
+ const K2=Object.fromEntries(rep.kpis.map(k=>[k.id,k]));
+ assert.deepEqual(rep.kpis.map(k=>k.id),['reach','minutes','social','emotes','return','learning']);
+ assert.equal(K2.reach.value,440,'rounded to 10');assert.equal(K2.reach.prev,null,'8 players last week: withheld');assert.equal(K2.reach.change,null);
+ const sessions=merged.totals.sessions;assert.equal(sessions,41);assert.equal(K2.minutes.value,20*10+21*2,'10 min per party session, 2 min for the rest');assert.equal(K2.minutes.status,'ok');
+ assert.equal(K2.social.value,20*6,'20 party sessions × 6 min');assert.equal(K2.social.prev,72);assert.equal(K2.social.change,(120-72)/72);
+ const sub=(k,l)=>k.sub.find(s=>s.label===l);
+ assert.equal(sub(K2.social,'Average party size').value,3.5,'20 parties of 3–4');assert.equal(sub(K2.social,'Sessions with friends').value,20/41);
+ assert.equal(K2.emotes.value,(20*4+21)/20,'all picks ÷ emoting sessions');assert.equal(sub(K2.emotes,'Sessions that emoted').value,20/41);
+ assert.equal(K2.return.value,0.42);assert.equal(K2.learning.value,20);assert.equal(sub(K2.learning,'Learning with friends').value,20);
+ assert.deepEqual(rep.partySize.bands.map(b=>[b.key,b.value]),[['peak_1',0],['peak_2',0],['peak_3_4',20],['peak_5_8',0],['peak_9_12',0],['peak_13_20',0]]);assert.equal(rep.partySize.source,'client');
+ assert.deepEqual(rep.topEmotes.map(b=>[b.label,b.value]),[['Wave',40],['Juggle',21],['Dance',20],['Kickflip',20]],'each emote with 10+ sessions');
+ // Relay totals win for party size when the relay reports parties; a band under 10 parties is withheld.
+ const RT=load('lib/analytics/relayStatsTypes.ts'),relay=RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals;
+ const withRelay=W.buildSponsorWeekly({week:'2026-W43',merged,prev:null,players:9,prevPlayers:null,returning:null,relay});
+ assert.equal(withRelay.partySize.source,'relay');assert.equal(withRelay.partySize.bands.find(b=>b.key==='peak_13_20').value,0);assert(withRelay.partySize.bands.find(b=>b.key==='peak_9_12').value>=10);
+ const WK=Object.fromEntries(withRelay.kpis.map(k=>[k.id,k]));assert.equal(WK.reach.value,null,'9 players: withheld');assert.equal(WK.reach.status,'withheld');assert.equal(WK.return.status,'unavailable');
+ // Small week: every number under 10 sessions is withheld; before PARTY_SINCE the party KPIs say not tracked yet.
+ const tiny=W.buildSponsorWeekly({week:'2026-W43',merged:C.mergeRollups([C.rollupDay('2026-10-20',partyDay('2026-10-20',6))]),prev:null,players:6,prevPlayers:null,returning:{share:0.5,sessions:6},relay:null});
+ for(const k of tiny.kpis)assert(k.value===null||k.value===0,k.id+' withheld: '+k.value);
+ assert(tiny.partySize.bands.every(b=>b.value===null||b.value===0));assert.deepEqual(tiny.topEmotes,[]);
+ const old=W.buildSponsorWeekly({week:'2026-W40',merged:C.mergeRollups([C.rollupDay('2026-10-01',many(30,'2026-10-01',{'le:learn7_roles':1}))]),prev:null,players:null,prevPlayers:null,returning:null,relay:null});
+ const OK2=Object.fromEntries(old.kpis.map(k=>[k.id,k]));for(const id of ['social','emotes'])assert.equal(OK2[id].status,'not_yet',id);
+ assert.equal(OK2.reach.status,'unavailable');assert.equal(OK2.learning.value,30);
+ // CSV: banner first, combined totals only, "<10" for withheld, the export line; never a player id, a day row or a code.
+ const csv=W.sponsorWeeklyCsv(rep),lines=csv.trim().split('\n');
+ assert.equal(lines[0],'Internal draft: do not share outside the company until the privacy policy wording is approved.');
+ assert(lines.includes('"Aggregate, anonymous counts; groups under 10 withheld; no personal information."'),'export line');
+ assert.match(csv,/^Reach,440,,,/m);assert.match(csv,/^Social engagement,120,72,67%,/m);assert.match(csv,/^ {2}Average party size,3\.5,,,/m);assert.match(csv,/^Return rate,42%,/m);
+ assert(!/2026-10-2[0-5],|[0-9a-f]{12}|player_id|pid/.test(csv.replace('(2026-10-19 to 2026-10-25)','')),'no day rows or ids');
+ assert.match(W.sponsorWeeklyCsv(tiny),/^Reach,<10,/m);assert.match(W.sponsorWeeklyCsv(old),/^Social engagement,not tracked yet,/m);
+ // The tab: draft banner, CSV + Print, print CSS (A4 / two cards per row), and nothing server-side in the client.
+ const tab=read('app/admin/SponsorReport.tsx');
+ for(const x of ['Internal draft: do not share outside the company until the privacy policy wording is approved.','data-sponsor-report-csv','window.print()','@media print','@page{size:A4','grid-template-columns:repeat(2,minmax(0,1fr))!important'])assert(tab.includes(x),x);
+ for(const f of ['app/admin/SponsorReport.tsx','lib/analytics/sponsorReport.ts'])assert(!/^import(?! type)[^\n]*(sponsorLabels|sponsorAdmin|analytics\/store|relayStatsAdmin|dayAdmin|\/report')/m.test(read(f)),f+': client-safe');
+ const route=read('app/api/admin/sponsor-report/route.ts');
+ assert(route.indexOf('status:401')>0&&route.indexOf('status:401')<route.indexOf('loadRangeMerged('),'session check first');
+ assert(/if\(from<oldestRaw\)return null;/.test(route)&&!/rows/.test(route.replace(/raw rows/g,'')),'reach is a count: the player rows never leave the route');
+ return rep;
+});
+
+await ok('weekly report: fixture render (desktop + phone screenshot input)',()=>{
+ const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+ // A CSS-module stand-in whose class names are the plain names (so the raw stylesheet styles the render for the screenshot).
+ const css=new Proxy({},{get:(_,k)=>k==='__esModule'?false:typeof k==='string'?k:undefined});
+ const L=createLoader({'admin.module.css':css,'SponsorReport.module.css':css});
+ const Tab=L('app/admin/SponsorReport.tsx').default;
+ const days={};for(let i=0;i<7;i++){const d=C.addDays('2026-10-19',i);days[d]=[...partyDay(d,40+i*3,{'mp:peak_3_4':1,'mp:peak_2':1,'le:learn7_roles':2,'ls:learn7_roles':1,'lf:learn7_roles':1,'mp:lesson':1}),...many(60,d,{'em:e45':1,'em:pick':1,'le:learn7_roles':1},{ms:900000})];}
+ const rollups=Object.entries(days).map(([d,ss])=>C.rollupDay(d,ss)),merged=C.mergeRollups(rollups);
+ const prev=C.mergeRollups([C.rollupDay('2026-10-14',partyDay('2026-10-14',200))]);
+ const RT=load('lib/analytics/relayStatsTypes.ts');
+ const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T09:00:00Z'),merged,prev,players:1234,prevPlayers:1100,returning:{share:0.42,sessions:800},
+  relay:RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals,emoteLabel:n=>({0:'Wave',8:'Dance',14:'Kickflip (scooter)',45:'Juggle (juggler)'})[n]});
+ const html=renderToStaticMarkup(React.createElement(Tab,{week:'2026-W43',onWeek:()=>{},initial:rep}));
+ assert(/Sponsor report/.test(html)&&/Internal draft: do not share outside the company/.test(html)&&/data-kpi="reach"/.test(html)&&/1,200/.test(html),'reach rounded to 100 over 1,000');
+ for(const id of ['reach','minutes','social','emotes','return','learning'])assert(html.includes(`data-kpi="${id}"`),id);
+ assert(/Party size \(party service\)/.test(html)&&/Top emotes/.test(html)&&/Aggregate, anonymous counts; groups under 10 withheld; no personal information\./.test(html));
+ assert(!/[23456789BCDFGHJKMNPQRSTVWXYZ]{6}/.test(html.replace(/<[^>]+>/g,' ')),'no code-shaped text');
+ if(process.env.SPONSOR_REPORT_OUT){
+  const raw=f=>read(f).replace(/\.([A-Za-z][\w-]*)/g,(m,c)=>'.'+c);// identity class names (the proxy above)
+  fs.writeFileSync(process.env.SPONSOR_REPORT_OUT,`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--btn-font:Arial,sans-serif;--btn-radius:999px;--btn-rim-width:2px;--btn-rim:#183b34;--btn-mint:#bff0d4;--btn-mint-edge:#7cc9a0;--btn-ink:#183b34}body{margin:0}${raw('app/admin/admin.module.css')}${raw('app/admin/SponsorReport.module.css')}</style></head><body><main class="page">${html}</main></body></html>`);
+ }
 });
 
 console.log(`admin-sponsor: ${passed} checks passed`);

@@ -135,3 +135,21 @@ The Players row:
   - `docs/admin/sponsor-drilldown-phone.png`
 
   They were taken locally on seeded synthetic data, not real players.
+
+## Phase B (Oct 22 2026): social and emote cards, the weekly Sponsor report, relay health
+
+- **Two more Overview cards** (`SPONSOR_METRICS` in `lib/analytics/sponsor.ts`): **Minutes with friends** (`mp:min`; stats: share of
+  island minutes in a party, average party size, parties per active player, sessions in a party) and **Emotes used** (`em:e<n>` by
+  group; stats: emotes per active player, sessions that emoted, emotes per emoting session, townsperson answer rate). Both say
+  "Not tracked yet" until the first `mp:` / `em:` id arrives (`PARTY_SINCE`, `lib/analytics/countIds.ts`). They are not in the SQL
+  device / country split yet (that needs a migration, Phase C); the slide-out says so.
+- **Sponsor report tab** (`app/admin/SponsorReport.tsx`, `/api/admin/sponsor-report?week=YYYY-Www`, `lib/analytics/sponsorReport.ts`):
+  one ISO week of combined totals: reach (rounded to 10 under 1,000, else 100), engagement minutes, social engagement, emote
+  engagement, return rate (raw 14 days only), learning engagement, party sizes and top emotes. Anything resting on fewer than
+  **10** sessions / parties / players is withheld as "<10", on screen and in the CSV. The page and the CSV carry the banner
+  **"Internal draft: do not share outside the company until the privacy policy wording is approved."** Print → Save as PDF uses
+  the print stylesheet in the component (A4, two cards per row, buttons hidden).
+- **Relay health** ("Health" in Friends & parties, "Parties now" in the live panel): set **`RELAY_STATS_URL`** (the relay's
+  `/stats` address) and **`RELAY_STATS_TOKEN`** (its `STATS_TOKEN` secret) in the server environment (never `NEXT_PUBLIC_`).
+  Without them the admin shows "Relay stats not configured". The payload contract is `lib/analytics/relayStatsTypes.ts`;
+  `RELAY_STATS_FIXTURE=1` (not in production) serves the fixture for a local preview.

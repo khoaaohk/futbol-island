@@ -7,6 +7,7 @@
 import type * as T from 'three';
 import {BODY_CHANNELS, DANCES, DANCE_COUNT, GX, GZ, HOP, HX, HY, HZ, LAN, LEL, LHX, LHZ, LKN, LSX, LSZ, PP, PR, PY, RAN, REL, RHX, RHZ, RKN,
   RSX, RSZ, SPIN, TX, TY, TZ, createMoveBag, nextMove, pelvisLift, sampleMove, type BodyMove, type MoveBag} from '../town/emoteDance';
+import {emitEmoteVariant, type EmoteVariantPick} from '../town/emoteVariantHook';
 
 interface BodyJoints {
   ls: T.Object3D; rs: T.Object3D; le: T.Object3D; re: T.Object3D;
@@ -70,18 +71,19 @@ export function setMoveRandom(r: (() => number) | null) { rand = r ?? Math.rando
 interface Run { kind: number; age: number; v: number }
 const runs = new WeakMap<T.Object3D, Run>();
 /** The move index `root` plays for emote `kind` now, picking a new one from `bag` when the emote (re)starts. */
-export function pickMove(root: T.Object3D, kind: number, age: number, bag: MoveBag): number {
+export function pickMove(root: T.Object3D, kind: number, age: number, bag: MoveBag, family?: EmoteVariantPick): number {
   let r = runs.get(root);
   if (!r) { r = {kind: -1, age: 0, v: -1}; runs.set(root, r); }
   if (r.kind !== kind || r.v < 0 || age < r.age - 1e-4) {
     let v = nextMove(rand, bag);
     if (v === r.v && r.kind === kind) v = nextMove(rand, bag); // the bag is shared (a townsperson took one in between): still never your last move twice
     r.kind = kind; r.v = v;
+    if (family) emitEmoteVariant(family, v, root); // analytics: Town keeps your own pick and a townsperson's reaction (emoteVariantHook.ts)
   }
   r.age = age; return r.v;
 }
 const danceBag = createMoveBag(DANCE_COUNT);
 /** Dance: every actor (you, a friend, a townsperson dancing along) plays its own dance from the shared bag. Call after `rig.update`. */
 export function applyDance(root: T.Object3D, kind: number, age: number, dur: number) {
-  applyBodyMove(root, DANCES[pickMove(root, kind, age, danceBag)], age, dur);
+  applyBodyMove(root, DANCES[pickMove(root, kind, age, danceBag, 'dance')], age, dur);
 }

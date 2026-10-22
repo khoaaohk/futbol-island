@@ -47,7 +47,7 @@ await ok('off by default: nothing new is sent, no probe, no admin card',async()=
  P.countParty('live_guest','link',0);P.countParty('rtt','rtt_lt80');P.countParty('reconnect','3');
  R.partyVisibility(true,0,true);R.partyVisibility(false,10*60000,true);
  assert.deepEqual(log.filter(id=>K.PARTY_RETENTION_IDS.includes(id)),[],'no Phase C id while off');
- assert.deepEqual(log.filter(id=>id.startsWith('mp:')).sort(),['mp:in','mp:live_guest','mp:live_guest_link'],'exactly what Phase A sends');
+ assert.deepEqual(log.filter(id=>id.startsWith('mp:')).sort(),['mp:first_party','mp:in','mp:live_guest','mp:live_guest_link'],'exactly what Phase A and B send');
  // The visibility listener is not even installed while off.
  let added=0;global.document={visibilityState:'visible',addEventListener:()=>{added++;},removeEventListener:()=>{}};
  R.watchPartyAway(()=>true)();assert.equal(added,0);delete global.document;

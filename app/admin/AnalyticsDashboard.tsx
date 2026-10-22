@@ -22,6 +22,8 @@ import SourcesSection from './SourcesSection';
 import liveStyles from './LivePanel.module.css';
 import styles from './admin.module.css';
 import SponsorOverview from './SponsorOverview';
+import SponsorReport from './SponsorReport';
+import {isoWeekOf} from '@/lib/analytics/sponsorReport';
 import so from './SponsorOverview.module.css';
 
 type Preset='today'|'yesterday'|'7d'|'30d'|'90d'|'all'|'custom';
@@ -29,8 +31,9 @@ const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yester
 /** Oct 20 2026: tabs instead of one long page (owner: "fix the admin portal so it's easier to find this"). Overview = the sponsor
  *  view (SponsorOverview.tsx); Engagement = engagement, product usage and the learning / title-screen detail; Players = headline,
  *  acquisition and save health; Live = who is on now and each day's players. The sections keep their investor order in source. */
-type Tab='overview'|'engagement'|'players'|'live';
-const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],['players','Players'],['live','Live']];
+type Tab='overview'|'engagement'|'players'|'live'|'report';
+/** Oct 22 2026: + Sponsor report (SponsorReport.tsx, Phase B of docs/analytics-multiplayer-plan.md §8): the weekly sponsor view. */
+const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],['players','Players'],['live','Live'],['report','Sponsor report']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',shop:'Kit Shop',controller:'Phone controller',other:'Other pages'};
@@ -78,6 +81,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
   return()=>{gone=true;};
  },[report.from,report.to,report.generatedAt]);
  const [tab,setTabState]=useState<Tab>('overview');
+ const [week,setWeek]=useState<string|null>(null);// the Sponsor report's ISO week (null = the week holding today)
  // The tab lives in the URL hash (#engagement …) so a reload or a shared link opens the same tab.
  useEffect(()=>{const h=location.hash.slice(1);if(TABS.some(([t])=>t===h))setTabState(h as Tab);},[]);
  // The tab toggle's moving pill (Oct 21 2026, owner: "animate the toggle ... have that animate and move over"): one absolutely placed
@@ -205,6 +209,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
        Oct 20 2026: each section shows on its tab (TABS above). */}
    <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading} role="tabpanel" id="admin-tabpanel" aria-labelledby={'tab-'+tab}>
     {tab==='overview'&&<SponsorOverview report={report} rangeText={rangeText} playerCount={playerCount} countryName={countryName}/>}
+    {tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}
     {tab==='live'&&<section className={styles.island} aria-labelledby="sec-live">
      <div className={styles.sectionHead}><h2 id="sec-live">Live</h2><p>Who is playing right now, and each day’s players one by one (anonymous; the last 14 days).</p></div>
      <div className={so.liveGrid}>

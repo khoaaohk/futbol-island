@@ -16,14 +16,16 @@ const MP=K.PARTY_FIXED_IDS,EM=K.EMOTE_FIXED_IDS;
 function fresh(){
  const log=[],hooks=[];
  const L=createLoader({tracker:{count:id=>log.push(id),onPageHide:fn=>{hooks.push(fn);return()=>{};}}});
- return {log,hooks,P:L('lib/analytics/partyEvents.ts'),E:L('lib/analytics/emoteEvents.ts')};
+ return {log,hooks,P:L('lib/analytics/partyEvents.ts'),E:L('lib/analytics/emoteEvents.ts'),LE:L('lib/analytics/learnEvents.ts')};
 }
 
 ok('mp: and em: ids are fixed, well-formed and on the allowlist',()=>{
  assert(MP.length>=70&&EM.length>=39+15,`${MP.length} / ${EM.length}`);
  for(const id of [...MP,...EM]){assert(K.COUNT_KEY_RE.test(id),id);assert(K.isCountId(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);}
  assert.equal(new Set(K.FIXED_COUNT_IDS).size,K.FIXED_COUNT_IDS.length,'no duplicate fixed ids');
- for(const bad of ['mp:madeup','mp:fail_teapot','mp:peak_21','em:e19','em:e25','em:e50','em:ctx_car','em:reach_2','mp_party_created','mp:code','em:to_alex'])assert(!K.isCountId(bad),bad);
+ for(const bad of ['mp:madeup','mp:fail_teapot','mp:peak_21','em:e19','em:e25','em:e50','em:ctx_car','em:reach_2','mp_party_created','mp:code','em:to_alex',
+  'em:dance_10','em:show_10','em:react_4','em:hf_20','em:wave_6','em:laugh_6','em:keepup_3','em:pass_6','em:juggle_6','mp:ping_here','mp:first_guest'])assert(!K.isCountId(bad),bad);
+ for(const id of ['em:dance_0','em:dance_9','em:hf_19','em:react_3','em:keepup_2','em:streak','em:cam','em:seen','mp:lesson','mp:quiz','mp:quiz_done','mp:first_party','mp:first_host','mp:name_bad','mp:ping_meet','mp:ping_follow'])assert(K.isCountId(id),id);
  assert.deepEqual(K.EMOTE_WIRE_IDS.length,39);
  const head=read('lib/analytics/countIds.ts').split('*/')[0];assert(/mp:<event>/.test(head)&&/em:<event>/.test(head),'families documented in the header');
 });
@@ -40,6 +42,26 @@ ok('EMOTE_WIRE_IDS match the real emote tables (source scan; ShowOff, not Space)
  assert.deepEqual(Object.fromEntries(Object.entries(Lab.WHEEL_EMOTE_LABELS).map(([k,v])=>[Number(k),v])),local);
  const labels=Lab.emoteLabels();for(const n of K.EMOTE_WIRE_IDS)assert(labels[n]&&labels[n].label,'label for '+n);
  assert.equal(labels[45].group,'npc');assert.equal(labels[22].group,'fly');assert.equal(labels[33].group,'swim');assert.equal(labels[14].group,'ride');
+});
+
+ok('EMOTE_VARIANT_COUNTS match the CURRENT variant tables (10 dances, 10 show-offs, 4 reactions, 20 handshakes, 6 wave / cheer / laugh, ball routines)',()=>{
+ const L=createLoader(),D=L('lib/town/emoteDance.ts'),S=L('lib/town/emoteShowOff.ts'),H=L('lib/town/emoteHandshakes.ts'),B=L('lib/town/emoteBody.ts'),BP=L('lib/town/emoteBallPlay.ts');
+ assert.deepEqual({...K.EMOTE_VARIANT_COUNTS},{dance:D.DANCES.length,show:S.SHOW_OFFS.length,react:S.SHOW_OFF_REACTIONS.length,hf:H.HANDSHAKES.length,
+  wave:B.BODY_VARIANTS[0].length,cheer:B.BODY_VARIANTS[1].length,laugh:B.BODY_VARIANTS[7].length,pass:BP.PASS_ROUTINES.length,juggle:BP.JUGGLE_ROUTINES.length,keepup:BP.JUGGLE_SOLO_ROUTINES.length});
+ assert.deepEqual(Object.keys(B.BODY_VARIANTS).map(Number),[0,1,7],'wave / cheer / laugh are the body emotes');
+ const hook=L('lib/town/emoteVariantHook.ts');assert.deepEqual({...hook.BODY_VARIANT_FAMILY},{0:'wave',1:'cheer',7:'laugh'});
+ const VL=L('lib/analytics/emoteVariantLabels.ts').emoteVariantLabels();
+ for(const [f,n] of Object.entries(K.EMOTE_VARIANT_COUNTS))assert.equal(VL[f].length,n,'labels for '+f);
+ assert.equal(VL.dance[0],'The floss');
+ // The graphics report the pick (never analytics); Town counts only the local player's (and a townsperson's show-off reaction).
+ const imp=/(?:import[^'"`]*from\s*)['"`]([^'"`]+)['"`]/g;
+ for(const f of ['lib/town/emoteVariantHook.ts','lib/graphics/dancePose.ts','lib/graphics/showOffPose.ts','lib/graphics/bodyEmotePose.ts'])
+  for(const m of read(f).matchAll(imp))assert(!/analytics/.test(m[1]),f+' imports '+m[1]);
+ assert(/if \(family\) emitEmoteVariant\(family, v, root\)/.test(read('lib/graphics/dancePose.ts')));
+ assert(/pickMove\(root, kind, age, reactBag, 'react'\)\] : SHOW_OFFS\[pickMove\(root, kind, age, showBag, 'show'\)/.test(read('lib/graphics/showOffPose.ts')));
+ assert(/if \(s\.role === BODY_ROLE\.Self\) emitEmoteVariant\(BODY_VARIANT_FAMILY\[kind\], s\.v, root\)/.test(read('lib/graphics/bodyEmotePose.ts')));
+ const seen=[];hook.onEmoteVariant((f,v,r)=>seen.push([f,v,r]));hook.emitEmoteVariant('dance',3,'me');hook.onEmoteVariant(null);hook.emitEmoteVariant('dance',4,'me');
+ assert.deepEqual(seen,[['dance',3,'me']]);
 });
 
 ok("PartyHost's Track names equal partyEvents' list, and each has a call site",()=>{
@@ -61,7 +83,7 @@ ok('party / ParentGate / invite / townBridge import no analytics',()=>{
 });
 
 ok('every mp: and em: id has a writer (full simulation emits exactly the allowlist)',()=>{
- const {log,P,E}=fresh();let t=0;
+ const f0=fresh(),{log,P,E}=f0;fresh.last=f0.LE;let t=0;
  for(const e of ['open','sheet','open_link','gate_show','gate_skip','gate_ok','gate_back','gate_wrong','name_ok','create_tap','created','join_tap',
   'share_tap','share_ok','copy_ok','share_fail','new_code','lock','unlock','kick','name_reset','hide','mute','tab_code','tab_list','end_tap'])P.countParty(e,undefined,t);
  for(const r of [...K.PARTY_FAIL_REASONS,'teapot'])P.countParty('fail',r,t);
@@ -70,6 +92,9 @@ ok('every mp: and em: id has a writer (full simulation emits exactly the allowli
  party(1,4*MIN,null);party(2,10*MIN,0.5*MIN);party(4,20*MIN,3*MIN);party(8,45*MIN,10*MIN);party(12,2*60*MIN,30*MIN);party(20,4*60*MIN,2*60*MIN,'leave');
  t+=1e9;P.countParty('live_guest','link',t);P.countParty('ended',undefined,t+1);P.countParty('live_guest','typed',t+2);P.countParty('kicked',undefined,t+3);
  P.countParty('live_host',undefined,t+4);for(let i=0;i<130;i++)P.accruePartyMs(MIN);
+ // Phase B (P1): a refused name character, the map pings (no UI sends one yet), learning while live (learnEvents' twins).
+ P.countParty('name_bad');P.countPartyPing(0);P.countPartyPing(1);P.countPartyPing(7);
+ const LE=fresh.last,lid=K.lessonsOf('7v7')[0];LE.countLessonOpened(lid);LE.countLessonStage('ls',lid);LE.countLessonStage('lf',lid);
  const emitted=new Set(log.filter(id=>id.startsWith('mp:')));
  assert.deepEqual([...emitted].sort(),[...MP].sort());
  for(const n of K.EMOTE_WIRE_IDS)E.countEmote({wire:n,ctx:'ground',npc:false,party:false,refused:false});
@@ -77,6 +102,8 @@ ok('every mp: and em: id has a writer (full simulation emits exactly the allowli
  E.countEmote({wire:0,ctx:'ground',npc:false,party:false,refused:true});
  E.countEmoteUi('btn');E.countEmoteUi('wheel');E.countEmoteUi('wheel_close');
  for(let i=0;i<5;i++)E.countEmote({wire:99,ctx:'car',npc:false,party:false,refused:false});// unknown wire / context: only the generic ids (and past 50 picks)
+ for(const [f,n] of Object.entries(K.EMOTE_VARIANT_COUNTS))for(let i=0;i<n+1;i++)E.countEmoteVariant(f,i);// one past the end is dropped
+ E.countEmoteVariant('teapot',0);E.countEmoteCam();E.countEmoteSeen();
  assert.deepEqual([...new Set(log.filter(id=>id.startsWith('em:')))].sort(),[...EM].sort());
  for(const id of log)assert(K.isCountId(id),'emitted id allowlisted: '+id);
  P.countParty('teapot');P.countParty('members','x');assert(!log.includes('mp:teapot'));
@@ -114,6 +141,18 @@ ok('threshold and once-per-session counters fire once; host-only bands; pagehide
  for(let i=0;i<60;i++)E.countEmote({wire:2,ctx:'ground',npc:i%2===0,party:false,refused:false});
  for(const r of K.EMOTE_REACH)assert.equal(n('em:reach_'+r),1);
  E.countEmoteUi('btn');E.countEmoteUi('btn');assert.equal(n('em:btn'),1);assert.equal(n('em:to_npc'),30);assert.equal(n('em:solo'),30);
+ // Streak: 3 picks inside 60 s → one streak; more inside the same minute add none; a slow fourth adds none.
+ const s0=fresh(),sn=id=>s0.log.filter(x=>x===id).length,pick=t=>s0.E.countEmote({wire:0,ctx:'ground',npc:false,party:false,refused:false},t);
+ pick(0);pick(10_000);assert.equal(sn('em:streak'),0);pick(20_000);assert.equal(sn('em:streak'),1);pick(30_000);pick(40_000);assert.equal(sn('em:streak'),1,'once per minute');
+ pick(200_000);pick(300_000);assert.equal(sn('em:streak'),1,'spread out: no streak');pick(310_000);assert.equal(sn('em:streak'),1,'two quick ones are not a streak');pick(320_000);assert.equal(sn('em:streak'),2,'a later burst of three counts again');
+ // First party / first host: once per device (fi2-mp-firsts-v1); learning twins only while a party is live.
+ const f1=fresh(),fn=id=>f1.log.filter(x=>x===id).length;
+ f1.LE.countLessonOpened('a');f1.LE.countLessonStage('ls','a');assert.equal(fn('mp:lesson')+fn('mp:quiz'),0,'not in a party: no twin');
+ f1.P.countParty('live_guest','typed',0);f1.LE.countLessonOpened('a');f1.LE.countLessonStage('le','a');f1.LE.countLessonStage('ls','a');f1.LE.countLessonStage('lf','a');f1.LE.countLessonStage('la','a');
+ assert.deepEqual([fn('mp:lesson'),fn('mp:quiz'),fn('mp:quiz_done')],[1,1,1]);assert(!f1.log.some(x=>/^mp:.*a$/.test(x)&&x!=='mp:quiz_done'&&x!=='mp:lesson'&&x!=='mp:quiz'),'never the lesson id in an mp: id');
+ f1.P.countParty('leave',undefined,1);f1.P.countParty('live_host',undefined,2);f1.P.countParty('end',undefined,3);f1.P.countParty('live_host',undefined,4);
+ assert.deepEqual([fn('mp:first_party'),fn('mp:first_host')],[1,1],'once each per device');
+ const pf=read('lib/analytics/partyFirsts.ts');assert(/PARTY_FIRSTS_KEY='fi2-mp-firsts-v1'/.test(pf)&&createLoader()('lib/saves/snapshot.ts').DEVICE_KEYS.includes('fi2-mp-firsts-v1'),'a device key, never synced');
  const tr=read('lib/analytics/tracker.ts');assert(/const onHide=\(e\?:Event\)=>\{if\(e\?\.type==='pagehide'\)for\(const f of pageHideHooks\)/.test(tr),'tracker pagehide hook before the final beat');
 });
 
@@ -153,7 +192,7 @@ ok('partyReport: funnel maths, suppression, derived numbers, Not tracked yet',()
  assert.equal(e.status,'ok');assert.equal(e.picks,600);assert.equal(e.emotingSessions,90);assert.equal(e.perEmoter,600/90);assert.equal(e.npcRate,240/600);assert.equal(e.wheelConv,1-60/300);
  const by=Object.fromEntries(e.byEmote.map(r=>[r.wire,r]));assert.equal(by[0].label,'Wave');assert.equal(by[8].value,90);assert.equal(by[45].value,null);assert.equal(by[45].group,'npc');assert.equal(by[4].label,'Show off');
  assert.deepEqual(e.targets.map(r=>r.value),[240,50,300,null]);assert.equal(R.buildEmotes(fixture(),{from:'2026-10-01',to:'2026-10-02'}).status,'not_yet');
- const rep=read('lib/analytics/report.ts');assert(/report\.party=buildParty\(merged,range,rollups\);report\.emotes=buildEmotes\(merged,range,emoteLabels\(\)\)/.test(rep));
+ const rep=read('lib/analytics/report.ts');assert(/report\.party=buildParty\(merged,range,rollups\);report\.emotes=buildEmotes\(merged,range,emoteLabels\(\),emoteVariantLabels\(\)\)/.test(rep));
  assert(/party\?:PartyReport\|null;\n emotes\?:EmoteReport\|null;/.test(read('lib/analytics/core.ts')));
 });
 
@@ -217,4 +256,93 @@ ok('fixture render: Friends & parties and Emotes sections',()=>{
  if(process.env.PARTY_FIXTURE_OUT)fs.writeFileSync(process.env.PARTY_FIXTURE_OUT,JSON.stringify(report));
 });
 
+ok('Phase B wiring: Town, townBridge (analytics-free callback), NickField, the variant hook',()=>{
+ const town=read('components/Town.tsx'),bus=town.slice(town.indexOf('emoteBus.set(pickIn=>{'),town.indexOf('// High five + emote camera'));
+ assert(/if\(emoteFx\.v>=0\)countEmoteVariant\('hf',emoteFx\.v\);if\(ballEmote\)countEmoteVariant\(pick===EMOTE\.PassBall\?'pass':emoteNpc\?'juggle':'keepup',passOut\.routine\);/.test(bus),'handshake + ball routine after the pick');
+ assert(/if\(emoteCam\.begin\([^;]*\)\)countEmoteCam\(\);/.test(bus),'em:cam only when the camera engaged');
+ assert(/onEmoteVariant\(\(family,v,root\)=>\{if\(family==='react'\|\|root===player\.root\)countEmoteVariant\(family,v\);\}\);/.test(town),'only your own picks (and a reaction to yours)');
+ assert(/emoteBus\.set\(null\);onEmoteVariant\(null\);/.test(town),'listener cleared on unmount');
+ assert(/reducedMotion:\(\)=>reduced,onEmoteSeen:countEmoteSeen\}\)/.test(town),'em:seen through the runtime option');
+ const tb=read('lib/multiplayer/townBridge.ts');
+ assert(/onEmoteSeen\?: \(\) => void/.test(tb)&&/if \(e\.id !== s\.you && avatars\.emote\(e\.id, e\.emote\)\) ctx\.onEmoteSeen\?\.\(\);/.test(tb),'callback only, when the emote is really shown');
+ assert(/emote\(id:MemberId,e:Emote\):boolean;/.test(read('lib/graphics/remoteAvatars.ts')));
+ const nf=read('components/party/NickField.tsx');assert(/if \(t !== raw\.slice\(0, NICK_MAX\)\) onRejected\?\.\(\);/.test(nf)&&/onRejected\?: \(\) => void/.test(nf),'a count, never the text');
+ assert(/onRejected=\{\(\) => track\.current\?\.\('name_bad'\)\}/.test(read('components/party/PartyHost.tsx'))&&/onNameRejected=\{\(\) => track\.current\?\.\('name_bad'\)\}/.test(read('components/party/PartyHost.tsx')));
+ assert(/onRejected=\{onNameRejected\}/.test(read('components/party/JoinParty.tsx')));
+ const le=read('lib/analytics/learnEvents.ts');assert(/import \{partyLive\} from '\.\/partyEvents';/.test(le)&&/lo:'mp:lesson',ls:'mp:quiz',lf:'mp:quiz_done'/.test(le));
+ // Pings: allowlisted with a helper; no UI sends one yet (lib/multiplayer/connection.ts sendPing has no caller).
+ const callers=['components','lib','app'].flatMap(d=>{const out=[];const walk=x=>{for(const f of fs.readdirSync(x)){const q=path.join(x,f);if(fs.statSync(q).isDirectory())walk(q);else if(/\.(ts|tsx)$/.test(f)&&/sendPing\(/.test(read(q)))out.push(q);}};walk(d);return out;});
+ assert.deepEqual(callers,['lib/multiplayer/connection.ts'],'when a ping UI lands, wire countPartyPing at its call site and update this check');
+});
+
+// The party relay's /stats contract (lib/analytics/relayStatsTypes.ts) and the admin loader / route.
+const RT=createLoader()('lib/analytics/relayStatsTypes.ts');
+ok('relay stats: contract in step with the protocol and the client bands; tolerant, privacy-safe parser',()=>{
+ const types=read('multiplayer/protocol/types.ts'),ec=/export const ErrorCode = \{([\s\S]*?)\}/.exec(types)[1];
+ const snake=n=>n==='RateLimited'?'rate':n.replace(/([a-z])([A-Z])/g,'$1_$2').toLowerCase();
+ const codes=[...ec.matchAll(/(\w+):\s*(\d+)/g)].sort((a,b)=>a[2]-b[2]).map(m=>snake(m[1]));
+ assert.deepEqual([...RT.RELAY_ERROR_CODES],codes,'every protocol ErrorCode, in order');
+ assert.deepEqual([...RT.RELAY_SIZE_BUCKETS],K.PARTY_PEAK_BUCKETS.map(([b])=>b),'size bands = the client peak bands');
+ assert.deepEqual([...RT.RELAY_LEN_BUCKETS],K.PARTY_LEN_BUCKETS.map(([b])=>b),'length bands = the client length bands');
+ const fx=RT.relayStatsFixture('2026-10-19',7),r=RT.shapeRelayStats(fx);
+ assert.equal(r.status,'ok');assert.equal(r.days.length,7);assert.equal(r.totals.roomsCreated,fx.days.reduce((a,d)=>a+d.roomsCreated,0));
+ assert.equal(r.totals.peakParties,Math.max(...fx.days.map(d=>d.peakParties)),'peaks are the highest day, not a sum');
+ assert.deepEqual(RT.shapeRelayStats(JSON.parse(JSON.stringify(fx))),r,'round trip');
+ // Every field the type names is in the fixture (the relay produces this exact shape).
+ const fields=['day','roomsCreated','roomsEnded','peakParties','peakPlayers','lenBuckets','sizeBuckets','connects','reconnects','failedJoins','kicks','rotations','locks','rateLimitCloses','msgsPerPartyBuckets','errorsByCode'];
+ assert.deepEqual(Object.keys(fx.days[0]).sort(),[...fields].sort());assert.deepEqual(Object.keys(r.days[0]).sort(),[...fields].sort());
+ // Unknown keys never pass through (a code, a name or an address sent by mistake is dropped); junk numbers become 0.
+ const bad=RT.shapeRelayStats({v:1,days:[{day:'2026-10-20',code:'K7QXMB',name:'Alex',ip:'1.2.3.4',roomsCreated:-3,kicks:'9',errorsByCode:{full:2,K7QXMB:1}}],live:{parties:2,players:5,code:'K7QXMB'}});
+ const js=JSON.stringify(bad);assert(!/K7QXMB|Alex|1\.2\.3\.4/.test(js),js);assert.equal(bad.days[0].roomsCreated,0);assert.equal(bad.days[0].kicks,0);assert.equal(bad.days[0].errorsByCode.full,2);
+ assert.deepEqual(RT.shapeRelayStats(null).days,[]);assert.equal(RT.shapeRelayStats({days:[{day:'not-a-day'}]}).days.length,0);
+ const h=RT.relayHealth(r.totals);assert(h.connectSuccess>0.9&&h.connectSuccess<1);assert(h.avgSize>2&&h.avgSize<4);
+ // If the relay agent's core is present on this branch, every field name appears in it (kept in sync by this test).
+ const core='multiplayer/relay/src/relayStatsCore.ts';
+ if(fs.existsSync(core)){const src=read(core);for(const f of fields.filter(f=>f!=='day'))assert(src.includes(f),`${core} names ${f}`);}
+});
+
 console.log(`admin-analytics-party: ${passed} groups passed`);
+
+(async()=>{
+ const A=createLoader()('lib/analytics/relayStatsAdmin.ts');
+ // Not configured: no request at all, and a clear status.
+ let calls=[];const fake=(status,body)=>async(url,init)=>{calls.push({url,init});return {status,ok:status>=200&&status<300,text:async()=>JSON.stringify(body)};};
+ let r=await A.loadRelayStats('2026-10-19','2026-10-25',{fetchImpl:fake(200,{}),env:{}});
+ assert.equal(r.status,'not-configured');assert.equal(calls.length,0);
+ assert.equal(A.relayStatsConfig({RELAY_STATS_URL:'ftp://x',RELAY_STATS_TOKEN:'t'}),null,'http(s) only');
+ // Configured: the bearer token goes in the header only; the range in the query; the answer never carries the token; cached 60 s.
+ const env={RELAY_STATS_URL:'https://relay.example/stats',RELAY_STATS_TOKEN:'sekrit-token-123'};
+ r=await A.loadRelayStats('2026-10-19','2026-10-25',{fetchImpl:fake(200,RT.relayStatsFixture('2026-10-19',7)),env,now:1000});
+ assert.equal(r.status,'ok');assert.equal(calls.length,1);assert.equal(calls[0].init.headers.Authorization,'Bearer sekrit-token-123');
+ assert.equal(calls[0].url,'https://relay.example/stats?from=2026-10-19&to=2026-10-25');assert(!JSON.stringify(r).includes('sekrit'),'token never in the answer');
+ await A.loadRelayStats('2026-10-19','2026-10-25',{fetchImpl:fake(200,{}),env,now:1000+59_000});assert.equal(calls.length,1,'cached for 60 s');
+ await A.loadRelayStats('2026-10-19','2026-10-25',{fetchImpl:fake(200,RT.relayStatsFixture()),env,now:1000+61_000});assert.equal(calls.length,2,'refreshed after 60 s');
+ A.resetRelayStatsCache();
+ assert.equal((await A.loadRelayStats('2026-10-01','2026-10-02',{fetchImpl:fake(401,{}),env})).status,'unauthorized');
+ assert.equal((await A.loadRelayStats('2026-10-03','2026-10-04',{fetchImpl:fake(500,{}),env})).status,'error');
+ assert.equal((await A.loadRelayStats('2026-10-05','2026-10-06',{fetchImpl:async()=>{throw new Error('down');},env})).status,'error','never throws');
+ assert.equal((await A.loadRelayStats('2026-10-19','2026-10-25',{env:{RELAY_STATS_FIXTURE:'1',NODE_ENV:'development'}})).days.length,7,'local fixture mode');
+ // The route: session check first; the token is server-only (no NEXT_PUBLIC_, never in a client file).
+ const route=read('app/api/admin/party-stats/route.ts');
+ assert(route.indexOf('status:401')>0&&route.indexOf('status:401')<route.indexOf('loadRelayStats('),'session check first');
+ const clientFiles=['app/admin/RelayHealth.tsx','app/admin/LivePanel.tsx','app/admin/FriendsSection.tsx','lib/analytics/relayStatsTypes.ts','app/admin/AnalyticsDashboard.tsx'];
+ for(const f of clientFiles){const t=read(f);assert(!/RELAY_STATS_TOKEN|relayStatsAdmin/.test(t.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'').replace(/'Relay stats not configured[^']*'/g,'').replace(/'The relay refused[^']*'/g,'')),f+' never sees the token');}
+ assert(!/NEXT_PUBLIC_RELAY_STATS/.test(['lib','app','components'].map(d=>cpGrep(d)).join('')),'never NEXT_PUBLIC_');
+ // Fixture render: the Health block (ok and not configured), Parties now, and the emote variant tables.
+ const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+ const css=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
+ const L=createLoader({'admin.module.css':css,'LivePanel.module.css':css,'IslandTravelMap.module.css':css,'DoneButton.module.css':css,'Icon.module.css':css});
+ const Friends=L('app/admin/FriendsSection.tsx').default,Emote=L('app/admin/EmoteSection.tsx').default,PartiesNow=L('app/admin/LivePanel.tsx').PartiesNow;
+ const rep={from:'2026-10-19',to:'2026-10-25',party:R.buildParty(fixture(),RANGE,[]),emotes:R.buildEmotes(fixture(),RANGE,labels,createLoader()('lib/analytics/emoteVariantLabels.ts').emoteVariantLabels())};
+ const okRelay=RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7));
+ const f=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:okRelay}));
+ assert(/data-relay-health="true" data-status="ok"/.test(f)&&/Connect success/.test(f)&&/Refusals by error code/.test(f)&&/Messages per party/.test(f)&&/Learning together/.test(f)&&/First parties/.test(f),'health block');
+ const nc=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:RT.emptyRelayStats('not-configured','2026-10-19','2026-10-25')}));
+ assert(/Relay stats not configured/.test(nc),'not configured state');
+ const pn=renderToStaticMarkup(React.createElement(PartiesNow,{data:okRelay}));assert(/Parties now/.test(pn)&&/>7</.test(pn)&&/>23</.test(pn),'parties now');
+ assert(/relay stats not configured/.test(renderToStaticMarkup(React.createElement(PartiesNow,{data:RT.emptyRelayStats('not-configured')}))));
+ const e=renderToStaticMarkup(React.createElement(Emote,{report:rep}));assert(/Dance moves/.test(e)&&/Streaks/.test(e)&&/Friends’ emotes seen/.test(e),'variant tables + new tiles');
+ for(const html of [f,nc,pn,e])assert(!/sekrit|Bearer/.test(html));
+ console.log('admin-analytics-party: relay loader, route and renders passed');
+})().catch(e=>{console.error(e);process.exit(1);});
+function cpGrep(dir){let out='';const walk=x=>{for(const f of fs.readdirSync(x)){const q=path.join(x,f);if(fs.statSync(q).isDirectory())walk(q);else if(/\.(ts|tsx)$/.test(f))out+=read(q);}};walk(dir);return out;}

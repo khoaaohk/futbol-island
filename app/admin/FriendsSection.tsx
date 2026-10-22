@@ -11,6 +11,8 @@ import type {Cell} from '@/lib/analytics/learning';
 import type {PartyRow} from '@/lib/analytics/partyReport';
 import {BarList,ChartCard,LineChart,fmtInt,fmtPct,type BarRow} from './charts';
 import {Steps} from './StartSection';
+import RelayHealth from './RelayHealth';
+import type {RelayStatsReport} from '@/lib/analytics/relayStatsTypes';
 import styles from './admin.module.css';
 
 const show=(c:Cell)=>c===null?'<5':fmtInt(c);
@@ -19,8 +21,10 @@ const bars=(rows:PartyRow[],unit='sessions'):BarRow[]=>rows.map(r=>({key:r.id,la
 const table=(rows:PartyRow[],col='Count')=>({columns:['Item',col],rows:rows.map(r=>[r.label,show(r.value)])});
 const EMPTY='No Play with friends activity in this range yet. Counts arrive after the player leaves the tab, or every few minutes while they play.';
 
-export default function FriendsSection({report}:{report:Report}){
+/** `relay`: tests / previews pass the relay's stats directly; otherwise RelayHealth fetches them for the report's range. */
+export default function FriendsSection({report,relay}:{report:Report;relay?:RelayStatsReport|null}){
  const P=report.party;
+ const health=<RelayHealth from={report.from} to={report.to} initial={relay}/>;
  const head=<div className={styles.sectionHead}>
   <h2 id="friends-heading">Friends &amp; parties</h2>
   <p>Play with friends: how often the card is opened, parties started and joined (and why a join did not work), party sizes and lengths
@@ -31,7 +35,7 @@ export default function FriendsSection({report}:{report:Report}){
  </div>;
  if(!P||P.status!=='ok')return <section className={styles.island} aria-labelledby="friends-heading" data-friends-section data-status={P?.status??'none'}>{head}
   <ChartCard wide title="Play with friends" subtitle="Funnel, party sizes and minutes together" empty
-   emptyText={P?.status==='not_yet'||!P?`Not tracked yet: Play with friends counting starts ${P?.since??'with the Oct 22 2026 build'}.`:EMPTY} table={{columns:[],rows:[]}}><span/></ChartCard></section>;
+   emptyText={P?.status==='not_yet'||!P?`Not tracked yet: Play with friends counting starts ${P?.since??'with the Oct 22 2026 build'}.`:EMPTY} table={{columns:[],rows:[]}}><span/></ChartCard>{health}</section>;
  const inv=P.invites;
  const daysWith=P.daily.filter(d=>d.party!==null);
  return <section className={styles.island} aria-labelledby="friends-heading" data-friends-section data-status="ok">
@@ -74,9 +78,18 @@ export default function FriendsSection({report}:{report:Report}){
      series={[{key:'party',label:'With friends',color:'var(--s1)'},{key:'solo',label:'Solo',color:'var(--s2)'}]}
      values={{party:P.daily.map(d=>d.party??0),solo:P.daily.map(d=>d.solo)}}/>
    </ChartCard>
-   <ChartCard title="Party controls" subtitle="New code, close / open, remove, hide, mute, the Code / List tabs, End and Leave" table={table(P.controls)}>
+   <ChartCard title="Party controls" subtitle="New code, close / open, remove, hide, mute, the Code / List tabs, End and Leave, refused name characters, map pings" table={table(P.controls)}>
     <BarList rows={bars(P.controls)} unit="times" share={false} limit={P.controls.length}/>
    </ChartCard>
+   <ChartCard title="Learning together" subtitle="Lessons and quizzes started while in a party (on the learner’s own device)" table={table(P.learning)}>
+    <BarList rows={bars(P.learning)} unit="times" share={false} limit={P.learning.length}/>
+   </ChartCard>
+   <ChartCard title="First parties" subtitle="The first party (and first hosted party) on a device; repeat hosting = parties started minus first hosts"
+    table={{columns:['Item','Count'],rows:[['First party on a device',show(P.firsts.party)],['First hosted party on a device',show(P.firsts.host)],['Repeat hosting',show(P.firsts.repeatHosting)]]}}>
+    <BarList rows={[{key:'fp',label:'First party on a device',value:P.firsts.party??0,text:P.firsts.party===null?'<5':undefined},{key:'fh',label:'First hosted party',value:P.firsts.host??0,text:P.firsts.host===null?'<5':undefined},
+     {key:'rh',label:'Repeat hosting',value:P.firsts.repeatHosting??0,text:P.firsts.repeatHosting===null?'<5':undefined}]} unit="parties" share={false} limit={3}/>
+   </ChartCard>
   </div>
+  {health}
  </section>;
 }

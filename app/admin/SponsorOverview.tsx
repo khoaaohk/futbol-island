@@ -18,6 +18,8 @@ import panelStyles from './LivePanel.module.css';
 import s from './SponsorOverview.module.css';
 
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop','(unknown)':'Unknown'};
+/** Phase B cards the SQL device / country split does not cover yet (it would need a new migration: Phase C). */
+const NO_SPLIT=new Set<SponsorMetricId>(['social','emotes']);
 const shortDay=(day:string)=>new Date(day+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
 const daysBetween=(a:string,b:string)=>Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/86_400_000)+1;
 const fmtCell=(v:number|null)=>v===null?'<5':fmtInt(v);
@@ -148,7 +150,8 @@ function MetricPanel({metric,onClose,prevLabel,split,from,to,today,countryName}:
      </section>;})}
 
     <section className={s.block}><h3>By device and country</h3>
-     {!split?<p className={styles.note}>Loading…</p>
+     {NO_SPLIT.has(m.id)?<p className={styles.note} data-split-na>Not split by device or country yet: the split covers the content cards (games to quizzes). Party and emote totals are shown above.</p>
+      :!split?<p className={styles.note}>Loading…</p>
       :split.status==='needs-migration'?<p className={s.pending}>Needs <code>supabase/migrations/20261021_analytics_sponsor_split.sql</code> in Supabase (its last row reads <code>OK, sponsor split installed</code>).</p>
       :split.status==='not-configured'?<p className={styles.note}>Needs the analytics store (not configured here).</p>
       :split.status!=='ok'?<p className={styles.note}>Could not load the split. Try again in a moment.</p>

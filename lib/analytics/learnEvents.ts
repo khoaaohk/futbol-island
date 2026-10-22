@@ -5,13 +5,20 @@
  */
 import {count} from './tracker';
 import {lessonKey,optionKey,questionKey,type LessonStage} from './countIds';
+import {partyLive} from './partyEvents';
 
 /** The welcome walkthrough was shown in this page's lifetime (so a later lesson open counts as "opened a lesson after it"). */
 let walkthroughShown=false,walkthroughLesson=false;
 
-export const countLessonStage=(stage:LessonStage,lessonId:string)=>count(lessonKey(stage,lessonId));
+/**
+ * Learning in a party (Oct 22 2026, Phase B of docs/analytics-multiplayer-plan.md §6): while this device is in a live party
+ * (partyEvents.ts partyLive), a lesson opened / quiz started / quiz finished also adds its mp: twin. Never which lesson.
+ */
+const PARTY_TWIN:Partial<Record<LessonStage|'lo',string>>={lo:'mp:lesson',ls:'mp:quiz',lf:'mp:quiz_done'};
+const twin=(stage:LessonStage|'lo')=>{const id=PARTY_TWIN[stage];if(id&&partyLive())count(id);};
+export function countLessonStage(stage:LessonStage,lessonId:string){count(lessonKey(stage,lessonId));twin(stage);}
 export function countLessonOpened(lessonId:string){
- count(lessonKey('lo',lessonId));
+ count(lessonKey('lo',lessonId));twin('lo');
  if(walkthroughShown&&!walkthroughLesson){walkthroughLesson=true;count('ob:lesson');}
 }
 /** The FIRST attempt at a question in a quiz run: the question, and the option index it chose (never the answer's text). */

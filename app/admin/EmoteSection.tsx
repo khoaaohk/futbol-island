@@ -39,6 +39,9 @@ export default function EmoteSection({report}:{report:Report}){
    <div><span>Per emoting visit</span><b>{E.perEmoter===null?'—':E.perEmoter.toFixed(1)}</b><small>emotes per visit that used them</small></div>
    <div><span>Townsperson answered</span><b>{pct(E.npcRate)}</b><small>of emotes played</small></div>
    <div><span>Wheel → pick</span><b>{pct(E.wheelConv)}</b><small>{show(E.wheelOpens)} wheel opens · {show(E.wheelNoPick)} closed with no pick · button seen in {show(E.btnSessions)} visits</small></div>
+   <div><span>Streaks</span><b>{show(E.streaks)}</b><small>3+ emotes inside a minute (at most one a minute)</small></div>
+   <div><span>Emote camera</span><b>{show(E.cam)}</b><small>times the camera zoomed in on an emote</small></div>
+   <div><span>Friends’ emotes seen</span><b>{show(E.seen)}</b><small>a friend’s emote shown on screen in a party</small></div>
   </div>
   <div className={styles.grid}>
    {byGroup.map(({g,title,rows})=><ChartCard key={g} title={title} subtitle="Times played" table={{columns:['Emote','Times'],rows:rows.map(r=>[r.label,show(r.value)])}}>
@@ -53,6 +56,11 @@ export default function EmoteSection({report}:{report:Report}){
    <ChartCard title="Emotes per visit" subtitle="Sessions whose emotes reached each mark (cumulative)" table={{columns:['Mark','Sessions'],rows:E.reach.map(s=>[s.label,show(s.sessions)])}}>
     <Steps steps={E.reach}/>
    </ChartCard>
+   {(E.variants??[]).map(v=>{const any=v.rows.some(r=>r.value!==0);
+    return <ChartCard key={v.family} title={v.title} subtitle="Which move played, yours (a townsperson’s for reactions)" empty={!any} emptyText="None yet in this range (counted from the Oct 22 2026 Phase B build)."
+     table={{columns:['Move','Times'],rows:v.rows.map(r=>[r.label,show(r.value)])}}>
+     <BarList rows={v.rows.map(r=>({key:r.key,label:r.label,value:r.value??0,text:r.value===null?'<5':undefined,detail:r.value===null?'fewer than 5 sessions':undefined}))} unit="times" limit={v.rows.length}/>
+    </ChartCard>;})}
   </div>
  </section>;
 }
