@@ -82,11 +82,11 @@
 .pill{position:absolute;z-index:-1;left:6px;top:6px;width:calc(50% - 6px);height:calc(100% - 12px);border-radius:999px;background:#fdf3dc;box-shadow:0 1px 0 #fff inset,0 3px 7px #5b4a1f47;transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),translate .12s ease-out;will-change:transform}
 .tabs[data-active=party] .pill{transform:translateX(100%)}
 .tabs:has(.tab[aria-selected=true]:active) .pill{translate:0 1px}
-.tab{min-height:0;height:100%;padding:0 12px;border:0;border-radius:999px;background:transparent;color:#66694f;font:500 20px/1 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
+.tab{min-height:0;height:100%;padding:0 12px;border:0;border-radius:999px;background:transparent;color:#66694f;font:700 16px/1.3 var(--font-body),Arial,sans-serif;cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
 .tab[aria-selected=true]{color:#24543a}
 .tab:active{transform:translateY(2px)}
 .tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-@media(max-width:600px){.body{--tabs-h:48px}.tab{font-size:18px}}
+@media(max-width:600px){.body{--tabs-h:48px}}
 .tabCount{display:inline-block;animation:tabPop .2s ease-out}
 @keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 .hdrCount{justify-self:start;display:inline-flex;align-items:center;gap:4px;font:700 14px/1 system-ui,sans-serif;white-space:nowrap}
