@@ -310,4 +310,10 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert(/onBeforeBeat/.test(br),'sleeping-loop presence rides the connection beat (no timer)');
  const town=read('components/Town.tsx');assert(/party\.ballVsFields\(walkBall\.state\)/.test(town),'Town bounces the island ball off busy friends');
 }
+{ // One ring only, and it goes away with the party (user, Oct 22 2026)
+ const br=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx'),ra=read('lib/graphics/remoteAvatars.ts');
+ assert(/get meRing\(\)/.test(br)&&/!party\?\.meRing&&/.test(town),'the island cream foot ring hides while the party colour ring is drawn');
+ assert(/if \(!live\) \{ if \(drawnLast\)/.test(br)&&/avatars\.update\(dt, poses, camera, ctx\.reducedMotion\(\), null\)/.test(br),'one last empty frame clears the rings when the party ends');
+ assert(/radii=\[\.48,\.54\]/.test(ra)&&/RING_RADIUS=1\b/.test(ra),'the party ring has the island foot ring shape and size');
+}
 console.log('mp-avatars ok');

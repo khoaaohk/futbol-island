@@ -81,6 +81,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
   const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0 };
   let meHex = '';
+  let drawnLast = false; // the friend layer drew something last frame
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const active = new Map<MemberId, RemotePose>(); // friends outside any force field (what friends() lists)
   const st = localPoseState();
@@ -142,7 +143,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       return hit;
     },
     update(dt, nowMs, camera) {
-      if (!live) return;
+      // The party is over (or never started): draw one last EMPTY frame so the colour ring and every friend layer disappear at once,
+      // then sleep (the instanced ring mesh keeps its last count until it is told to draw nothing).
+      if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, ctx.reducedMotion(), null); } return; }
+      drawnLast = true;
       // Friends: sample the interpolators into preallocated poses.
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = spare.get(id)!;
