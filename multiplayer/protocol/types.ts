@@ -11,6 +11,9 @@ export const CODE_TTL_MS = 8 * 60 * 60 * 1000; // new joins (8 h; owner decision
 export const PARTY_MAX_MS = 12 * 60 * 60 * 1000; // session hard cap (12 h, was 4 h)
 export const RESUME_GRACE_MS = 60_000;
 export const HOST_GRACE_MS = 30_000;
+/** Party persistence: a member whose last pose announced they stepped away on purpose (Zone.Indoors = a room page, Mode.Busy = a menu /
+ *  lesson / the walkthrough, or the Hidden flag = the tab went to the background) keeps their slot this long, host included (no migration). */
+export const AWAY_GRACE_MS = 10 * 60_000;
 export const EMPTY_CLOSE_MS = 120_000;
 export const MAX_INBOUND_BYTES = 512;
 export const LOOK_LEN = 12; // look indexes, each 0..63

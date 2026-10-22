@@ -1,13 +1,24 @@
 // Pure party-room logic: no Cloudflare or Node APIs. Used by the Durable Object (partyRoom.ts) and the Node dev relay.
 // Design: docs/multiplayer-design.md 4.4 / 4.5. Time and randomness are injected so tests are deterministic.
 import {
-  C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS,
-  ErrorCode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
+  C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
+  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
   parseClient, encode, clampPose, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
 import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
+
+/** Party persistence (docs/multiplayer-design.md "Party persistence"): how long a gone member keeps their slot. A member whose last
+ *  pose said they stepped away on purpose (a room page: Zone.Indoors; a menu, lesson or the walkthrough: Mode.Busy; a background tab:
+ *  the Hidden flag) gets AWAY_GRACE_MS (10 min); a plain drop keeps `plain` (60 s for a member, 30 s before the host migrates).
+ *  The relay's own away mark (silence) does not count: only what the client announced. */
+export function graceFor(m: { pose: PoseBody | null; relayAway?: boolean }, plain: number): number {
+  const p = m.pose;
+  if (!p) return plain;
+  const announcedHidden = (p[7] & PoseFlag.Hidden) !== 0 && !m.relayAway;
+  return p[6] === Zone.Indoors || p[5] === Mode.Busy || announcedHidden ? Math.max(plain, AWAY_GRACE_MS) : plain;
+}
 
 export interface Peer { send(text: string): void; close(code: number): void }
 export interface RoomClock { now(): number }
@@ -281,7 +292,7 @@ export class RoomCore {
     }
     if (now >= this.partyEndsAt) { this.end(EndReason.Expired); return; }
     for (const m of Array.from(this.members.values())) {
-      if (m.goneAt !== null && now - m.goneAt >= RESUME_GRACE_MS) {
+      if (m.goneAt !== null && now - m.goneAt >= graceFor(m, RESUME_GRACE_MS)) {
         this.remove(m, m.pose && m.pose[6] === Zone.Indoors ? LeaveReason.Indoors : LeaveReason.Timeout, null);
       }
     }
@@ -353,7 +364,7 @@ export class RoomCore {
       let found: Member | null = null;
       this.members.forEach((x) => { if (ctEq(x.token, resumeToken)) found = x; });
       const m = found as Member | null;
-      if (m && (m.goneAt === null || now - m.goneAt < RESUME_GRACE_MS)) {
+      if (m && (m.goneAt === null || now - m.goneAt < graceFor(m, RESUME_GRACE_MS))) {
         const old = m.peer;
         if (old) { this.byPeer.delete(old); m.peer = null; old.close(CLOSE.Replaced); }
         this.pending.delete(peer);
@@ -420,8 +431,8 @@ export class RoomCore {
   private migrateHost(now: number): void {
     if (!this.hadHost) return; // the code alone never makes someone host; only the hostKey does
     const h = this.members.get(this.hostId);
-    if (h && (h.goneAt === null || now - h.goneAt < HOST_GRACE_MS)) return;
-    // host removed, or gone for >= 30 s: oldest connected member takes over
+    if (h && (h.goneAt === null || now - h.goneAt < graceFor(h, HOST_GRACE_MS))) return;
+    // host removed, or gone for >= 30 s (10 min after announcing a room / menu / background): oldest connected member takes over
     let best: Member | null = null;
     this.members.forEach((m) => { if (m.goneAt === null && m.peer && (!best || m.joinSeq < best.joinSeq)) best = m; });
     const b = best as Member | null;

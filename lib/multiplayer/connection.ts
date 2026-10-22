@@ -1,7 +1,7 @@
 // Party socket: Hello with look + resume token, backoff reconnect, hidden-tab close, send throttle, heartbeat.
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
-  C, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
+  C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
   type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
@@ -10,6 +10,12 @@ export type PartyStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'end
 export interface PartyConnection {
   /** nick: the typed first name (memory only: sent in Hello, never stored; the UI requires a valid one, the relay refuses a bad one with BadName). */
   join(code: string, opts: { look: Look; hostKey?: string; nick?: string | null }): void;
+  /** Party persistence: back into the party this tab was in (a reload, a room page round trip, back / forward, an island remount).
+   *  Uses the stored session ({code, resumeToken, hostKey}); sends no name (the relay keeps it on the slot). True when a resume
+   *  started; false when there is no stored session or the connection is already in a party. Status goes 'reconnecting' then 'live'. */
+  resume(opts: { look: Look }): boolean;
+  /** True while this tab holds a party session (the stored one, within the party cap). */
+  hasSession(): boolean;
   sendPose(body: PoseBody, nowMs: number): void;
   sendEmote(e: Emote): boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
@@ -32,12 +38,17 @@ export interface PartyConnection {
 }
 
 export const SESSION_KEY = 'fi-party-session';
-export const SESSION_TTL_MS = 30 * 60 * 1000;
+/** The stored session lives as long as a party can (12 h cap); it is cleared only by Leave / End / Kicked / ended / expired /
+ *  another tab taking over (4005). Per tab (sessionStorage), so two tabs never fight over one slot. */
+export const SESSION_TTL_MS = PARTY_MAX_MS;
 export const BACKOFF_MS = [1000, 2000, 4000, 8000, 15000] as const;
 export const JITTER = 0.3;
 export const HIDDEN_CLOSE_MS = 15000;
 export const BEAT_MS = 5000;
 export const MAX_ATTEMPTS = 12;
+/** A resume (no Welcome yet in this page) gives up after this many failed sockets (~15 s): the relay refuses the upgrade (404) once a
+ *  party is gone. Online at that point, the stored session is cleared (the party ended while away); offline, it is kept for next time. */
+export const RESUME_ATTEMPTS = 4;
 const CLOSE_KICKED = 4003, CLOSE_ENDED = 4004, CLOSE_REPLACED = 4005; // relay close codes (roomCore CLOSE)
 const MOVE_GAP_MS = 200; // 5 Hz
 const IDLE_GAP_MS = 1000; // 1 Hz
@@ -58,6 +69,8 @@ export type ConnectionDeps = {
   /** Send a heartbeat at least this often even while poses flow, so the RTT has samples while moving (one ~10-byte message).
    *  0 = only the normal idle beat. Default: 30 s when NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1, else 0 (Phase C switch). */
   rttProbeMs?: number;
+  /** navigator.onLine by default (a failed resume clears the stored session only while online). */
+  online?: () => boolean;
 };
 export const RTT_SAMPLES = 15;
 export const RTT_PROBE_MS = 30000;
@@ -71,6 +84,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   const urlFor = deps.url ?? relayWsUrl;
   const vis = deps.visibility ?? defaultVisibility();
   const storage = deps.storage === undefined ? safeSessionStorage() : deps.storage;
+  const online = deps.online ?? (() => typeof navigator === 'undefined' || navigator.onLine !== false);
   const rttProbeMs = deps.rttProbeMs ?? (process.env.NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION === '1' ? RTT_PROBE_MS : 0);
 
   let status: PartyStatus = 'idle';
@@ -86,6 +100,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let hiddenTimer: any = null;
   let beatTimer: any = null;
   let pendingResume = false; // wanted a (re)connect while hidden
+  let resuming = false; // resume() started and no Welcome yet
   let disposed = false;
   let seq = 0;
   let lastSendAt = -1e12;
@@ -187,7 +202,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     if (m[0] === S.Welcome) {
       resumeToken = m[3];
       you = m[2];
-      attempt = 0;
+      attempt = 0; resuming = false;
       if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
       writeSession();
@@ -222,6 +237,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   function scheduleRetry() {
     if (disposed || !code || status === 'ended' || status === 'error' || status === 'idle') return;
     if (retryTimer) return;
+    if (resuming && attempt >= RESUME_ATTEMPTS) {
+      resuming = false; if (online()) clearSession();
+      code = null; resumeToken = null; hostKey = null;
+      setStatus('error'); return;
+    }
     if (attempt >= MAX_ATTEMPTS) { setStatus('error'); return; }
     setStatus('reconnecting');
     const base = BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)];
@@ -299,11 +319,28 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;
       resumeToken = same ? sess!.resumeToken : null;
       attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
-      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
+      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false; resuming = false;
       writeSession();
       setStatus('idle'); // reset, then connecting
       connect();
     },
+    resume(opts) {
+      if (disposed || code || (status !== 'idle' && status !== 'error' && status !== 'ended')) return false;
+      const sess = readSession();
+      if (!sess || !sess.resumeToken) return false;
+      const norm = normalizeCode(sess.code);
+      if (!norm) { clearSession(); return false; }
+      clearTimers(); dropSocket();
+      code = norm; look = opts.look; nick = null; you = null;
+      hostKey = sess.hostKey ?? null; resumeToken = sess.resumeToken;
+      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
+      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
+      resuming = true;
+      setStatus('reconnecting'); // the 'Reconnecting' note, never 'connecting' (a fresh join)
+      connect();
+      return true;
+    },
+    hasSession() { return readSession() !== null; },
     onBeforeBeat(fn) { beforeBeat = fn; },
     sendPose(body, nowMs) {
       // Hidden (away) is sent like any flag change (once); while hidden, emotes and pings stay off.
@@ -340,7 +377,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       clearTimers();
       dropSocket();
       clearSession();
-      code = null; resumeToken = null; hostKey = null; nick = null; pendingResume = false; last = null;
+      code = null; resumeToken = null; hostKey = null; nick = null; pendingResume = false; last = null; resuming = false;
       setStatus('idle');
     },
     onMessage(fn) { msgSubs.add(fn); return () => { msgSubs.delete(fn); }; },
