@@ -8,7 +8,12 @@ import AboutGrownUps from './about/AboutGrownUps';
 import PrivacyPolicy from './privacy/PrivacyPolicy';
 import GrownUpsHost from './GrownUpsHost';
 
-import {useEffect,useRef,useState,type KeyboardEvent} from 'react';
+import {useEffect,useRef,useState,useSyncExternalStore,type KeyboardEvent} from 'react';
+import ParentGate from './ParentGate';
+import {parentGatePassed} from '@/lib/parentGate';
+import {multiplayerEnabled} from '@/lib/multiplayer/config';
+import {multiplayerAllowed,setMultiplayerAllowed,subscribeMultiplayerAllowed} from '@/lib/multiplayerAllowed';
+import {openPartyMenu} from '@/lib/multiplayer/invite';
 import {useSceneryRest} from '@/lib/sceneryRest';
 import {batterySaverOn,setBatterySaver,subscribeHeatTier} from '@/lib/graphics/heatTier';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
@@ -72,6 +77,8 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
   // and while the child steers or holds a ride button (they wake when it is released).
   useSceneryRest(triggers,styles.hudRest,hudSettle,hudHold);
   // Battery saver (heat pass 4): read after mount (localStorage), and follow changes made elsewhere.
+  const friendsAllowed=useSyncExternalStore(subscribeMultiplayerAllowed,multiplayerAllowed,()=>true),friendsOn=multiplayerEnabled()&&friendsAllowed;
+  const [friendsGate,setFriendsGate]=useState(false);
   const [saver,setSaver]=useState(false);useEffect(()=>{setSaver(batterySaverOn());return subscribeHeatTier(()=>setSaver(batterySaverOn()));},[]);
   useEffect(()=>{const sync=()=>{if(triggers.current)triggers.current.dataset.pageHidden=String(document.hidden);};sync();document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
   const mapAfterClose=useRef(false),learnAfterClose=useRef(false),storeAfterClose=useRef(false),welcomeAfterClose=useRef(false);
@@ -117,6 +124,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
     <nav ref={triggers} className={styles.triggers} data-hud-triggers aria-label="Island information" onPointerEnter={warmPanels} onPointerDown={warmPanels} onFocus={warmPanels}>
       <button type="button" className={styles.circle} aria-label="Settings" aria-haspopup="dialog" aria-expanded={open&&tab==='settings'} onClick={()=>show('settings')}><Symbol kind="settings"/></button>
       <button type="button" className={`${styles.circle} ${styles.questsTrigger}`} data-tour="quests" aria-label={`Paths${pendingPicksLabel(picks)}`} aria-haspopup="dialog" aria-expanded={open&&(tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards')} onClick={()=>show('quests')}><CardOfferDot/><span className={styles.pathIconCycle} aria-hidden="true">{['bolt','book','play'].map(name=><span key={name} data-path-icon={name}><Icon name={name} size={24}/></span>)}</span></button>
+      {friendsOn&&<button type="button" className={styles.circle} data-party-open aria-label="Play with friends" onClick={openPartyMenu}><Icon name="people" size={24}/></button>}
     </nav>
     <dialog ref={dialog} className={`${styles.dialog} ${styles.fullModal} ${tab==='balls'?styles.ballsModal:tab==='exploration'?styles.exploreModal:''} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?styles.pathsModal:''} ${open?styles.entering:styles.leaving}`} aria-labelledby="island-settings-title" aria-modal="true" onKeyDown={keyboard} onKeyUp={e=>e.stopPropagation()} onCancel={e=>{e.preventDefault();backPage();}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}}>
       <section data-paths-host={tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?'true':undefined} className={`${styles.panel} ${shell.shell} ${tab==='quests'||tab==='balls'||tab==='exploration'||tab==='cards'?shell.white:shell.drawer}`}>
@@ -140,7 +148,7 @@ export default function IslandSettings({voiceEnabled,onVoiceChange,coachVoice,on
           </section><section className={styles.preferenceCard}><h3>Lesson narration</h3>
           <button type="button" className={styles.toggle} aria-label="Lesson voice" aria-pressed={voiceEnabled} onClick={()=>onVoiceChange(!voiceEnabled)}><span><strong>Lesson voice</strong><small>Hear your coach explain each play.</small></span><span className={styles.switch} aria-hidden="true">{voiceEnabled?'On':'Off'}</span></button>
           <label className={styles.voiceSelect}>Coach voice<select aria-label="Coach voice" value={coachVoice} onChange={e=>onCoachVoiceChange(e.target.value)}>{COACH_VOICES.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label>
-          </section><section className={`${styles.mobileControls} ${styles.preferenceCard}`} aria-label="Mobile controls"><h3>Mobile controls</h3><button type="button" className={styles.toggle} aria-label="Flip controls" aria-pressed={controlsFlipped} onClick={()=>onControlsFlippedChange(!controlsFlipped)}><span><strong>Flip controls</strong><small>{controlsFlipped?'Move on the right. Map and actions on the left.':'Move on the left. Map and actions on the right.'}</small></span><span className={styles.switch} aria-hidden="true">{controlsFlipped?'On':'Off'}</span></button></section><section className={styles.preferenceCard} aria-label="Battery"><h3>Battery</h3><button type="button" className={styles.toggle} aria-label="Battery saver" aria-pressed={saver} data-battery-saver onClick={()=>setBatterySaver(!saver)}><span><strong>Battery saver</strong><small>Keeps your device cooler with slightly softer graphics, a gentler frame rate and calm water.</small></span><span className={styles.switch} aria-hidden="true">{saver?'On':'Off'}</span></button></section>
+          </section><section className={`${styles.mobileControls} ${styles.preferenceCard}`} aria-label="Mobile controls"><h3>Mobile controls</h3><button type="button" className={styles.toggle} aria-label="Flip controls" aria-pressed={controlsFlipped} onClick={()=>onControlsFlippedChange(!controlsFlipped)}><span><strong>Flip controls</strong><small>{controlsFlipped?'Move on the right. Map and actions on the left.':'Move on the left. Map and actions on the right.'}</small></span><span className={styles.switch} aria-hidden="true">{controlsFlipped?'On':'Off'}</span></button></section><section className={styles.preferenceCard} aria-label="Battery"><h3>Battery</h3><button type="button" className={styles.toggle} aria-label="Battery saver" aria-pressed={saver} data-battery-saver onClick={()=>setBatterySaver(!saver)}><span><strong>Battery saver</strong><small>Keeps your device cooler with slightly softer graphics, a gentler frame rate and calm water.</small></span><span className={styles.switch} aria-hidden="true">{saver?'On':'Off'}</span></button></section>{multiplayerEnabled()&&<section className={styles.preferenceCard} aria-label="Play with friends"><h3>Play with friends</h3><button type="button" className={styles.toggle} aria-label="Play with friends" aria-pressed={friendsAllowed} data-party-allowed onClick={()=>{if(parentGatePassed())setMultiplayerAllowed(!friendsAllowed);else setFriendsGate(true);}}><span><strong>Play with friends: {friendsAllowed?'Allowed':'Off'}</strong><small>A grown-up can switch party play off. Nobody can chat.</small></span><span className={styles.switch} aria-hidden="true">{friendsAllowed?'On':'Off'}</span></button>{friendsGate&&<div role="dialog" aria-label="For grown-ups"><ParentGate reason="Change who can play with friends. Nobody can chat." onCancel={()=>setFriendsGate(false)} onPass={()=>{setFriendsGate(false);setMultiplayerAllowed(!friendsAllowed);}}/></div>}</section>}
 
           
         </div>:tab==='privacy'?<div className={styles.content}><PrivacyPolicy/></div>:<div className={`${styles.content} ${styles.about}`}>

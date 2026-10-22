@@ -1,8 +1,9 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
+import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
 import { bindConnection, multiplayerEnabled, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
@@ -50,6 +51,15 @@ export default function PartyHost(props: {
   onHiddenChange?: (hidden: ReadonlySet<number>) => void; onMutedChange?: (muted: ReadonlySet<number>) => void;
 }) {
   if (!multiplayerEnabled()) return null;
+  return <Allowed {...props} />;
+}
+
+/** The grown-up switch (Settings > Play with friends: Allowed / Off). Off: nothing renders and any live party is left. */
+function Allowed(props: Parameters<typeof PartyHost>[0]) {
+  const allowed = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerAllowed, () => true);
+  const conn = props.connection;
+  useEffect(() => { if (!allowed) conn.leave(); }, [allowed, conn]);
+  if (!allowed) return null;
   return <Host {...props} />;
 }
 

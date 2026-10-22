@@ -3,10 +3,10 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),req=require('node:module').createRequire(ROOT+'/package.json');
 const cache=new Map(),env={NEXT_PUBLIC_MULTIPLAYER:'1',NEXT_PUBLIC_MULTIPLAYER_URL:'http://localhost:8790/'};
-const store=new Map(),calls=[];let href='https://futbolisland.app/?party=k7m-q4r&x=1';
+const store=new Map(),calls=[];let href='https://futbolisland.app/?party=k7m-q4r&x=1',origin='https://futbolisland.app';
 const sandbox={
  sessionStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},
- location:{get href(){return href;}},history:{state:null,replaceState:(_s,_t,u)=>{href='https://futbolisland.app'+u;}},
+ location:{get href(){return href;},get origin(){return origin;}},history:{state:null,replaceState:(_s,_t,u)=>{href='https://futbolisland.app'+u;}},
 };
 function resolveTs(from,id){const base=path.resolve(path.dirname(from),id);return fs.existsSync(base+'.ts')?base+'.ts':path.join(base,'index.ts');}
 function load(file){if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
@@ -56,6 +56,10 @@ t('code filter is exact (alphabet, no guessing)',()=>{
 });
 t('display and links',()=>{
  assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R');
+ origin='http://localhost:3000';assert.equal(I.partyLink('K7MQ4R'),'http://localhost:3000/?party=K7MQ4R','localhost links stay on localhost (#9)');
+ origin='https://futbol-island-git-x-team.vercel.app';assert(I.partyLink('K7MQ4R').startsWith(origin+'/?party='),'preview links stay on the preview');
+ origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R','unknown origins fall back to SITE_URL');
+ origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
  assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&/stops working/.test(invite)&&/partyQr/.test(invite),'invite card content');
  assert.equal(I.joinNote(['Red Zebra']),'Red Zebra joined');assert.equal(I.joinNote(['a','b']),'2 friends joined');
@@ -107,5 +111,12 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/import PartyHost from '@\/components\/party\/PartyHost'/.test(town),'imported');
   assert(/\{multiplayerEnabled\(\)&&<PartyHost /.test(town),'mounted behind multiplayerEnabled()');
  });
+ {const sett=read('components/IslandSettings.tsx'),pa=read('lib/multiplayerAllowed.ts');
+ t('Play with friends button + gated Settings switch (#8)',()=>{
+  assert(/\{friendsOn&&<button[^>]*aria-label="Play with friends"[^>]*onClick=\{openPartyMenu\}/.test(sett),'icon-only circle button calling openPartyMenu');
+  assert(/friendsOn=multiplayerEnabled\(\)&&friendsAllowed/.test(sett),'behind the flag and the switch');
+  assert(/Play with friends: \{friendsAllowed\?'Allowed':'Off'\}/.test(sett)&&/parentGatePassed\(\)\)setMultiplayerAllowed/.test(sett)&&/<ParentGate/.test(sett),'gated toggle');
+  assert(/fi2-multiplayer-allowed-v1/.test(pa)&&/function Allowed/.test(host)&&/if \(!allowed\) return null/.test(host),'PartyHost returns null when Off');
+ });}
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});

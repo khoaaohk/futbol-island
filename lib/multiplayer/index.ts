@@ -22,7 +22,18 @@ export function onPoses(fn: PoseListener): () => void {
  * Wire a connection to the store and to onPoses listeners. Returns an unbind function.
  * `now` is the clock used for recvMs (same base as interp.sample's renderMs).
  */
+const bound = new WeakMap<PartyConnection, { n: number; off: () => void }>();
 export function bindConnection(conn: PartyConnection, now: () => number = () => performance.now()): () => void {
+  // Idempotent per connection (townBridge and PartyHost both bind): one real subscription, reference counted.
+  const had = bound.get(conn);
+  const rec = had ?? { n: 0, off: bindOnce(conn, now) };
+  if (!had) bound.set(conn, rec);
+  rec.n++;
+  let done = false;
+  return () => { if (done) return; done = true; if (--rec.n === 0) { rec.off(); bound.delete(conn); } };
+}
+
+function bindOnce(conn: PartyConnection, now: () => number): () => void {
   const offMsg = conn.onMessage((m) => {
     if (m[0] === S.Poses) {
       if (poseSubs.size === 0) return;

@@ -215,6 +215,16 @@ t('bindConnection: messages -> store, Poses -> onPoses only',()=>{
   unbind();offP();off();st.partyStore.reset();
 });
 
+t('bindConnection is idempotent per connection (#4): second bind adds no subscription, unbinding is reference counted',()=>{
+  st.partyStore.reset();const e=makeEnv();let applied=0;const off=st.partyStore.subscribe(()=>applied++);
+  const u1=idx.bindConnection(e.c,()=>1),u2=idx.bindConnection(e.c,()=>1);
+  const s=goLive(e);applied=0;s.recv([23,1,1,10,0,20,0,3,0,0,0]);
+  s.recv([24,1,2]);// an Emote: applied once, not twice
+  assert.equal(applied,1,'one store update per message');
+  u1();u1();s.recv([24,1,3]);assert.equal(applied,2,'still bound while one binder remains (double unbind of the same handle counts once)');
+  u2();s.recv([24,1,4]);assert.equal(applied,2,'fully unbound');off();st.partyStore.reset();
+});
+
 // ---- interp ----
 const R=()=>({x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0});
 t('interp: straight walk at 5 Hz, error < 0.05 m',()=>{

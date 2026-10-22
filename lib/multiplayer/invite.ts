@@ -40,8 +40,17 @@ export async function checkParty(code: string): Promise<{ open: boolean; size: n
   }
 }
 
+/** Links from localhost / LAN / preview origins stay on that origin (so a two-device test works); real players get SITE_URL. */
+export function partyOrigin(): string {
+  try {
+    const o = location.origin;
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|192\.168\.[\d.]+|10\.[\d.]+|[a-z0-9-]+\.vercel\.app)(:\d+)?$/i.test(o)) return o;
+  } catch { /* no location (SSR / tests) */ }
+  return SITE_URL;
+}
+
 export function partyLink(code: string): string {
-  return `${SITE_URL}/?party=${code}`;
+  return `${partyOrigin()}/?party=${code}`;
 }
 
 /** Web Share where the browser has it, else the clipboard. */
