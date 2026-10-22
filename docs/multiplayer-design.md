@@ -1,4 +1,6 @@
 # Multiplayer v1: play with friends on the same island (design, 21 Oct 2026)
+> **Phase 0 status (22 Oct 2026):** code-complete on branch `mp-verify`, nothing pushed or deployed. Passed: full `npm run test:quiet` (248/248, including the six `mp-*` suites and `tests/mp-isolation.cjs`), `NEXT_DIST_DIR=.next-mpverify npm run build:quiet`, `scripts/mp-relay-smoke.mjs`, and `tsc` for `multiplayer/relay` and the root. Left for the owner: Cloudflare account and relay deploy, two-device test, legal review of the privacy draft, iPhone heat check, then enabling `NEXT_PUBLIC_MULTIPLAYER`. Flag stays off.
+
 
 Status: **DESIGN, decision-ready.** No app code changed. Implementers follow this doc plus `docs/multiplayer-workplan.md`
 (the task split for Phase 0). It builds on, and does not repeat:
@@ -462,6 +464,8 @@ nothing after the party ends."
 temporary code, needs the grown-up check, and can be turned off in Settings. It uses about 4 MB of data an hour."
 
 ### 5.6 Analytics
+
+**Status (22 Oct 2026):** event ids `mp_party_created`, `mp_party_joined`, `mp_party_ended`, `mp_join_failed` are defined in the Phase 0 contract; wiring through the existing tracker is pending the flag rollout.
 Aggregate events only, no party code, member id or token: `mp_party_created`, `mp_party_joined` (size bucket 2/3-4/5-6),
 `mp_party_ended` (duration bucket), `mp_join_failed` (reason). They ride the existing visit/session pipeline (daily-rotating
 visitor hash, `lib/analytics/ingest.ts:17`); `lib/multiplayer/**` must not import analytics directly: `PartyHost` calls the

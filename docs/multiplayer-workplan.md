@@ -1,4 +1,6 @@
 # Multiplayer Phase 0 workplan (overnight, no deploy)
+> **Phase 0 status (22 Oct 2026):** code-complete on branch `mp-verify`, nothing pushed or deployed. Passed: full `npm run test:quiet` (248/248, including the six `mp-*` suites and `tests/mp-isolation.cjs`), `NEXT_DIST_DIR=.next-mpverify npm run build:quiet`, `scripts/mp-relay-smoke.mjs`, and `tsc` for `multiplayer/relay` and the root. Left for the owner: Cloudflare account and relay deploy, two-device test, legal review of the privacy draft, iPhone heat check, then enabling `NEXT_PUBLIC_MULTIPLAYER`. Flag stays off.
+
 
 Source of truth: `docs/multiplayer-design.md` (§4.4 protocol types and §5.1 client API are **the contract**: copy them, do not
 redesign them). Branch base: `multiplayer-design`. Nothing is pushed or deployed. Flag `NEXT_PUBLIC_MULTIPLAYER` stays **off**
