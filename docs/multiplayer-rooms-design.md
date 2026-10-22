@@ -286,6 +286,41 @@ hall.
 friends). Risk: the 15 fps floor means remote frames are free here, but the crowd swap must not pop NPCs (fade them at their
 station).
 
+#### Arcade prep status (branch `mp-rooms-arcade-prep`, 22 Oct 2026; built before Phase 1 merged, no shared-layer files touched)
+Done (tested in `tests/mp-rooms-arcade.cjs`, in `npm test`; `tests/arcade*.cjs` green; no behaviour change until a layer attaches):
+- `lib/multiplayer/rooms/arcade.ts`: `ARCADE_ROOM` descriptor (code 5 = `Activity.Arcade`; bounds x -14..14, z -11..12 = the hub
+  clamp; door (0,12), spawn (0,10.3); 9 spawn slots; exit trigger; areas: 5 cabinets with stand spots, prize counter, air hockey,
+  claw, drinks machine, 2 lounges, door; busy table `game` > `hall` > `list`; `notBusy` list; caps; wake rule) written against a
+  LOCAL `RoomDescriptor`. Helpers (allocation-free, write into `out`): `arcadeBusyPose` (sender), `arcadeBusyLabel` /
+  `arcadeBusyCabinet` (receiver: within 0.35 m of a stand spot = "Playing <cabinet name>", else "Looking at high scores"; list and
+  hall cannot be told apart on the wire), `arcadeAreaAt`, `clampArcade`, `pickArcadeSpawn`, `arcadeWalkIn`, `arcadeCrowdCount`.
+- `lib/arcade/arcadeRoomHooks.ts`: hub seam. The hub registers `{scene, camera, playerRoot, pose(out), wakeRemote(ms), setFriendSlots,
+  covered, sleeping, mobile, bounds}`; `ArcadeRoom.tsx` reports `setArcadeBusy(game, list, hall)`; the last hub pose survives the
+  hub's disposal (a game replaces the room) for the beat-tick Busy pose; `?game=` deep links have no pose (use the cabinet).
+- `arcadeRoomScene.ts`: calls `arcadeLayerFrame(dt, now)` before render; a `true` return or `wakeRemote()` holds a 20 fps (phone) /
+  30 fps (desktop) cadence for 300 ms instead of the 12 s local window; never wakes while covered / hidden.
+- `arcadeRoomCrowd.ts`: `setFriendSlots(n)`: the n visitors nearest the door (never one in a social exchange, focused or knocked
+  down) walk out through the door, then are hidden, parked at z 1e4 and skip their rig update; at 0 they walk back in one at a time
+  (1.6 s apart) and pick free cabinets. Scene objects never change.
+- `lib/town/arcadeDoorHint.ts`: `arcadeDoorHint(rooms, count, out)` -> "2 in the Arcade" above `ARCADE_DOOR` (y 3.4).
+- `arcadeCatalog.ts` `arcadeHubCabinets()` / `ARCADE_HUB_YAW`: the hub's angled side cabinets, shared by scene and descriptor.
+
+Integrator wiring (after Phase 1 merges), name mapping local -> shared: `RoomDescriptor.code` -> `RoomCode.Arcade`; `bounds` ->
+friend clamp; `caps.fieldRadius` -> field r; `wake.remote*` -> the layer's remote cadence (the hub already applies it).
+1. In `ArcadeRoom.tsx` (or a tiny `useArcadeRoomParty`): `createRoomParty({scene: host.scene, room: RoomCode.Arcade, local: () =>
+   hooks.pose(...) + arcadeBusyPose(hooks.busy, ...), wake: () => hooks.wake(), ...})` via `attachArcadeLayer({attach, frame, busy})`;
+   `attach(null)` = the hub is gone (game running): keep the connection, keep sending Busy at `arcadeBusyPose(...)` from the beat.
+   Mount `RoomPartyChip` (Leave only) in the header slot, hidden while `game` / `list` / `hall`.
+2. In `frame()`: `party.update(dt, now, host.camera)`, return its "settling" flag; call `host.setFriendSlots(friendsShown)` when the
+   drawn-friend count changes (count = `arcadeCrowdCount`).
+3. Receiver: a busy same-room friend -> field (r 0.8) at their pose, label `arcadeBusyLabel(x, z)`; force-field circle obstacle is
+   NOT yet in the hub's collide loop (add `{x, z, r 0.6}` to `people` / `floorFree` when the layer exposes friend positions).
+4. Local spawn: pass `pickArcadeSpawn(friendsXZ, n, out)` as the scene's `start` on entry when friends are already in the room;
+   optional `arcadeWalkIn` for a friend's first same-room pose instead of the plain Warp fade.
+5. Island: in Town's party runtime, on store flips call `arcadeDoorHint(roomOf per friend, n, hint)` (legacy door poses with
+   `activityOf === Activity.Arcade` count as 5; skip hidden friends) and draw the label (one sprite, shown only when `visible`).
+6. `arcadeSocial.ts` routines stay NPC-only (proximity() only scans crowd + attendant): friends are never social targets.
+
 ### Phase 4: Kit Shop + relay v1.1 - effort S-M, ~4 h shop + ~4 h relay + 2 h verify, **relay redeploy (owner, `wrangler deploy`)**
 `ShopRoom.tsx`, `shopScene.ts` (shoppers minus friends); relay items 2.3.1-5 in `multiplayer/protocol/limits.ts`,
 `multiplayer/relay/src/roomCore.ts`, `multiplayer/dev-relay`; tests `tests/mp-room-core.cjs` and `tests/mp-protocol.cjs`. Deploy order: relay first (it is
