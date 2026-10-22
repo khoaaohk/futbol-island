@@ -842,6 +842,7 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 }
 @media(min-width:601px) and (pointer:fine){
  .town-app .travel-actions[data-emote-grid]{grid-template-columns:repeat(2,var(--action-size));grid-template-rows:repeat(2,var(--action-size));gap:12px;right:calc(24px + env(safe-area-inset-right,0px));bottom:24px}
+ .town-app .travel-actions[data-emote-grid] .emote-wheel{right:calc(100% + 12px);left:auto;bottom:auto;top:calc(var(--action-size) * 1.5 + 12px);translate:0 -50%}
  .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:fixed;grid-column:auto;grid-row:auto}
 }
 .emote-wheel{position:absolute;z-index:12;right:0;bottom:calc(100% + 12px + var(--wheel-lift,0px));display:flex;gap:8px;padding:8px;border:3px solid #fff2cd;border-radius:34px;background:#fff6dd;box-shadow:0 4px 0 #b8923f55;animation:emoteIn .16s ease-out}
@@ -851,4 +852,13 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .emote-wheel-btn:focus-visible,.touch-emote:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .town-app[data-job-camera] :is(.touch-emote,.emote-wheel){visibility:hidden;pointer-events:none}
 @keyframes emoteIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.emote-wheel{align-items:center;gap:4px}
+.emote-wheel-strip{display:flex;gap:8px;width:calc(5 * 52px + 4 * 8px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding:0 0 4px;margin-bottom:-4px}
+.emote-wheel-strip::-webkit-scrollbar{display:none}
+.emote-wheel-strip .emote-wheel-btn{flex:0 0 52px;scroll-snap-align:start}
+.emote-wheel-arrow{flex:0 0 auto;display:grid;place-items:center;width:28px;height:44px;padding:0 0 3px;border:0;border-radius:14px;background:#fff2cd;color:#244d40;font:700 24px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+.emote-wheel-arrow:active{filter:brightness(.94)}
+@media(max-width:600px),(pointer:coarse){.emote-wheel{gap:2px;padding:6px}.emote-wheel-strip{gap:6px;width:calc(5 * 44px + 4 * 6px)}.emote-wheel-strip .emote-wheel-btn{flex-basis:44px;width:44px;height:44px}.emote-wheel-arrow{width:24px}}
+/* Phones (user, Oct 22 2026: "on mobile make the emotes wider to fill the screen"): the wheel spans the screen width and the emote buttons spread across it. */
+@media(max-width:600px),(pointer:coarse){.town-app .emote-wheel{width:min(calc(100vw - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)),620px);box-sizing:border-box}.town-app .emote-wheel-strip{flex:1 1 auto;width:auto;min-width:0;justify-content:space-between}.town-app .emote-wheel-strip .emote-wheel-btn{flex:0 0 auto;width:min(52px,calc((100vw - 140px) / 7));height:min(52px,calc((100vw - 140px) / 7));min-width:44px;min-height:44px}}
 @media(prefers-reduced-motion:reduce){.emote-wheel{animation:none}.emote-wheel-btn{transition:none}}

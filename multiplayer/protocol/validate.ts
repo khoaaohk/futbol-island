@@ -86,7 +86,7 @@ export function parseClient(raw: string): ClientMsg | null {
       if (a.length === 10 && inRange(a[1], 0, 0x7fffffff) && clampPose(a.slice(2) as PoseBody)) return a as ClientMsg;
       return null;
     case C.Emote:
-      return a.length === 2 && inRange(a[1], 0, 5) ? (a as ClientMsg) : null;
+      return a.length === 2 && inRange(a[1], 0, 9) ? (a as ClientMsg) : null;
     case C.Ping:
       return a.length === 4 && inRange(a[1], 0, 1) && inBoundsXZ(a[2], a[3]) ? (a as ClientMsg) : null;
     case C.Kick:
@@ -128,7 +128,7 @@ export function parseServer(raw: string): ServerMsg | null {
       return a as ServerMsg;
     }
     case S.Emote:
-      return a.length === 3 && inRange(a[1], 0, 15) && inRange(a[2], 0, 5) ? (a as ServerMsg) : null;
+      return a.length === 3 && inRange(a[1], 0, 15) && inRange(a[2], 0, 9) ? (a as ServerMsg) : null;
     case S.Ping:
       return a.length === 5 && inRange(a[1], 0, 15) && inRange(a[2], 0, 1) && inBoundsXZ(a[3], a[4]) ? (a as ServerMsg) : null;
     case S.Host:
