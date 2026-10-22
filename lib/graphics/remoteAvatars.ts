@@ -13,7 +13,7 @@ import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyHighFive} from './highFivePose';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';
+import {applyHighFive} from './highFivePose';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';
 import {HIGH_FIVES,createHighFiveBag,nextHighFive,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
@@ -107,7 +107,7 @@ function iconTexture(e:number){
  let t=iconTextures.get(e);
  if(!t){
   const canvas=document.createElement('canvas');canvas.width=canvas.height=96;const g=canvas.getContext('2d');
-  if(g){g.fillStyle='rgba(255,255,255,.92)';g.beginPath();g.arc(48,48,44,0,Math.PI*2);g.fill();g.font='52px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(EMOTE_ICON[e]??'',48,52);}
+  if(g){g.font='58px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif';g.textAlign='center';g.textBaseline='middle';g.shadowColor='rgba(40,30,10,.4)';g.shadowBlur=7;g.shadowOffsetY=2;g.fillText(EMOTE_ICON[e]??'',48,52);/* the emoji alone, no disc (user, Oct 22 2026) */}
   t=new T.CanvasTexture(canvas);t.colorSpace=T.SRGBColorSpace;iconTextures.set(e,t);
  }
  return t;
@@ -128,7 +128,7 @@ function ringGeometry(){
  return geo;
 }
 
-const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0};
+const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible:false,dx:0,dy:0,scale:1,opacity:0};
 export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number}):RemoteAvatars{
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
@@ -268,7 +268,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
     const bubble=e.bubble;
     if(e.emote>=0&&d2<DRAW_RANGE*DRAW_RANGE){
      if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
-     bubble.visible=true;bubble.position.set(pose.x,pose.y+2.9*k,pose.z);
+     {const dur=fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote),f=cycleFrame(e.emoteAge,dur,reduced,BF);// pops in, floats up with a sway, dissipates; repeats through the emote
+      bubble.visible=f.visible;bubble.position.set(pose.x+f.dx,pose.y+2.9*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;}
     }else bubble.visible=false;
    }
    if(local&&saverFade>0)addLocalRing(local,camPos);

@@ -120,4 +120,24 @@ t('a moving partner never whips the camera: heading rate is capped, pair-turn re
  assert(M2.YAW_RATE<=1.2&&M2.YAW_RATE>0);
  const cam=read('lib/town/emoteCamera.ts');assert(/YAW_RATE \* dt/.test(cam)&&/angleDiff\(ang, axisAng\)/.test(cam)&&/clearAt/.test(cam));
 });
+
+// ---- Emote emoji: no disc, pop / float / dissipate, repeated copies (user, Oct 22 2026) ----
+const BM=load('lib/town/emoteBubbleMotion.ts');
+t('emoji copies: pop with an overshoot, float up with a sway, fade out with an upward drift; a 4 s emote emits 4 copies ~0.8 s apart',()=>{
+ const o={visible:false,dx:0,dy:0,scale:1,opacity:0};
+ assert.equal(BM.copyCount(4),4);assert.equal(BM.copyCount(2.2),2);assert.equal(BM.copyCount(.9),1);assert.equal(BM.copyStart(1,4),.8);assert.equal(BM.copyStart(3,2.2),-1);
+ let maxScale=0;for(let a=0;a<.3;a+=.01){BM.bubbleFrame(a,0,false,o);maxScale=Math.max(maxScale,o.scale);}assert(maxScale>1.02,'overshoot pop');
+ BM.bubbleFrame(.3,0,false,o);const y1=o.dy;BM.bubbleFrame(1.2,0,false,o);assert(o.dy>y1&&o.opacity>.5,'floating up');
+ BM.bubbleFrame(1.2,0,false,o);const sx=o.dx;BM.bubbleFrame(.9,1,false,o);assert(Math.abs(sx)+Math.abs(o.dx)>0,'sways');
+ BM.bubbleFrame(1.5,0,false,o);const mid=o.opacity,mdy=o.dy;BM.bubbleFrame(1.69,0,false,o);assert(o.opacity<mid&&o.opacity<.1&&o.dy>mdy&&o.scale>1.05,'dissipates: fades, drifts up, grows');
+ BM.bubbleFrame(1.7,0,false,o);assert.equal(o.visible,false);BM.bubbleFrame(-.1,0,false,o);assert.equal(o.visible,false);
+ BM.bubbleFrame(.8,0,true,o);assert(o.dy===0&&o.dx===0&&o.scale===1,'reduced motion: no float, a brief fade only');
+ const f=a=>BM.cycleFrame(a,4,false,{visible:false,dx:0,dy:0,scale:1,opacity:0});assert(f(.5).visible&&f(2.2).visible&&f(3.9).opacity<.2,'a friend sprite repeats and ends dissipated');
+});
+t('no round background on the emoji; the text bubble keeps its own; friends use the same motion; the camera frames 2 m above the head',()=>{
+ const eb=read('lib/graphics/emoteBubbles.ts'),ra=read('lib/graphics/remoteAvatars.ts');
+ assert(!/\.arc\(48, ?48/.test(eb)&&!/\.arc\(48,48/.test(ra),'no disc');assert(/roundRect/.test(eb),'the speech bubble keeps its background');
+ assert(/bubbleFrame\(/.test(eb)&&/cycleFrame\(/.test(ra));
+ assert(M2.EMOTE_CAM.top>=3.7,'the framed zone reaches the emoji');
+});
 console.log('emote-contexts: '+n+' tests passed');

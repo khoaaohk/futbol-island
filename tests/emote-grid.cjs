@@ -99,7 +99,7 @@ t('grid CSS: desktop 2x2 (Fly, Parachute / Emote, kick; Emote bottom-left); phon
 });
 t('townsfolk answer: pooled bubble, no per-frame allocation while idle, reduced motion = bubble only',()=>{
  assert(/const react=\(id:string,emote:number,reduced:boolean,variation=-1,player\?:Position\)/.test(npcs)&&/if\(fx\.kind<0\|\|reduced\|\|fx\.v>=0\)return null/.test(npcs));
- assert(/emoteBubbles\.update\(active\?dt:0,reduced\)/.test(town)&&(read('lib/graphics/emoteBubbles.ts').match(/new T\.Sprite\(/g)||[]).length===1,'one sprite factory, two pooled sprites');
+ assert(/emoteBubbles\.update\(active\?dt:0,reduced\)/.test(town)&&(read('lib/graphics/emoteBubbles.ts').match(/new T\.Sprite\(/g)||[]).length===2,'one pooled-copy sprite factory + the one text sprite');
 });
 t('townsfolk hold still, face you and step in; the name tag hides; riding emotes use one arm and keep the vehicle',()=>{
  assert(/entry\.near=entry\.distance<7\|\|entry\.fx\.kind>=0/.test(npcs),'an answering townsperson is "near": the routine stops it and it faces you');
