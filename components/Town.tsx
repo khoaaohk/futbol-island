@@ -841,7 +841,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(emoteFx.age>=emoteFx.dur){emoteFx.kind=-1;endBallEmote();}};
 
     const fakeFriends:{x:number;y:number;z:number;mode:number}[]=[];const friendsNow=():Iterable<{x:number;y:number;z:number;mode:number}>=>fakeFriends.length?fakeFriends:party?party.friends():[];// fakeFriends: play-test hook (__fi2.emoteTest.fakeFriends), empty in play
-    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags));},phone:quality.phone,reducedMotion:()=>reduced});
+    let partyPitch=0;// the body's real flight pitch (flightPose.pitch), for the party colour ring
+    const party=createPartyRuntime({scene,viewGate,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},phone:quality.phone,reducedMotion:()=>reduced});
     const noObstacles:Parameters<typeof blocked>[2]=[],fieldBumpCtx={entries:games.entries,npcs:islandNpcs.entries,height:0,ride:'walk',disabled:false,canMove:(x:number,z:number)=>!blocked(x,z,noObstacles,0)};
     const onboardingNpcFocus=createOnboardingNpcFocus(islandNpcs),npcHover=createNpcHover(scene);
     let hoveredNpcId:string|null=null;
@@ -1464,6 +1465,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       ball.visible=!fieldMenu.current&&!vendingHide&&(rideRef.current==='walk'||airJuggling);
       if(Math.hypot(velocity.x,velocity.z)>.1)arrivalFacing=undefined;
       const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced,location.x,location.z,flight.height,jetActions.state.phase,customizationRef.current.jetpack):undefined;
+      partyPitch=flightPose?.pitch??0;
       if(rooftop.state.falling||rooftop.state.recovery>0)rideTricks.reset();
       const groundVariant=rideRef.current==='scooter'||rideRef.current==='bike'||rideRef.current==='moped'?customizationRef.current[rideRef.current]:'classic';
       const trickPose=rideTricks.update(active?dt:0,rideRef.current,reduced,groundVariant,keys.has(rideTricks.state.action===0?' ':'j')||Array.from(heldRidePointers.current.values()).some(hold=>hold.action===rideTricks.state.action));

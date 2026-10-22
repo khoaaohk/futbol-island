@@ -37,7 +37,8 @@ export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
 
 /** The member's colour (hex): the label's dot and rim and the ground ring. The label text is the first name (or the colour name). */
 export interface MemberStyle{hex:string}
-export interface LocalRing{x:number;y:number;z:number;hex:string;mode?:number}
+/** `pitch` (rad, + leans forward) and `yaw` = the local body's real flight pitch / heading: the ring follows the body while flying (Mode.Jetpack). */
+export interface LocalRing{x:number;y:number;z:number;hex:string;mode?:number;pitch?:number;yaw?:number}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
  /** The label / status / emote sprites (each at its friend's position): the only children the view gate may treat as units. */
@@ -59,7 +60,7 @@ export interface RemoteAvatars{
 
 const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
 const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
-const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10;
+const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10,RING_PITCH_LIMIT=1.45,RING_BODY_LIFT=.6,RING_BODY_FWD=.5,FRIEND_PITCH_MAX=1.1;
 const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.JuggleWithMe]:'\u{1F939}',[Emote.ShowOff]:'\u{1F31F}',[Emote.WellPlayed]:'\u{1F44F}',[Emote.PassBall]:'\u{26BD}',[Emote.Laugh]:'\u{1F602}',[Emote.Dance]:'\u{1F483}',[Emote.Thanks]:'\u{1F64F}'};
 
 // Released hidden classic geometry (copied from islandNpcs.ts: heat pass 5 + NPC heat fix 2). A friend never takes a costume,
@@ -86,6 +87,8 @@ type Entry={
  emote:number;emoteAge:number;hidden:boolean;muted:boolean;
  /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
  lastMode:number;flOn:boolean;
+ /** Smoothed estimated flight pitch (rad) of a Jetpack friend, for the colour ring. */
+ rp:number;
  /** The high five variation this friend is playing (0..9; -1 none). The wire format has no spare field, so each screen picks its own. */
  hf:number;
  /** A Pass it / Juggle with me routine this friend's body plays (picked locally; no ball on their side), made on the first ball emote. */
@@ -147,7 +150,7 @@ function statusTexture(line:string){
  return t;
 }
 // Per-frame scratch (module level: nothing allocated while updating).
-const ringM=new T.Matrix4(),ringPos=new T.Vector3(),ringScale=new T.Vector3(),ringQ=new T.Quaternion(),localColour=new T.Color();
+const ringM=new T.Matrix4(),ringPos=new T.Vector3(),ringScale=new T.Vector3(),ringQ=new T.Quaternion(),ringE=new T.Euler(0,0,0,'YXZ'),localColour=new T.Color();
 const frustum=new T.Frustum(),projection=new T.Matrix4(),sphere=new T.Sphere(),camPos=new T.Vector3();
 
 /** A flat annulus with a soft outer glow: vertex alpha only (no texture), r 0.62..1.0 in the XZ plane. */
@@ -159,6 +162,16 @@ function ringGeometry(){
  const geo=new T.BufferGeometry();
  geo.setAttribute('position',new T.Float32BufferAttribute(pos,3));geo.setAttribute('color',new T.Float32BufferAttribute(col,4));geo.setIndex(idx);
  return geo;
+}
+/** Friends' flight pitch has no wire field: hover upright at low speed, cruise tilt rising smoothly with speed (the rig's cruise lean / orbitPitch family). */
+export function friendFlightPitch(speed:number):number{const t=Math.min(1,Math.max(0,(speed-3)/15));return FRIEND_PITCH_MAX*t*t*(3-2*t);}
+/** Ring tilt for a mode: only free flight (Jetpack) follows the body; every other mode stays flat. Parachute / zipline / swim keep the flat ring. */
+export function ringPitchFor(mode:number,pitch:number):number{return mode===Mode.Jetpack?Math.min(RING_PITCH_LIMIT,Math.max(0,pitch)):0;}
+/** Ring quaternion + centre for a body pitched `pitch` about the horizontal axis perpendicular to heading `yaw` (writes ringQ / ringPos). Exported for tests. */
+export function ringPlacement(x:number,y:number,z:number,pitch:number,yaw:number,qOut:T.Quaternion,pOut:T.Vector3){
+ if(pitch<.0005){qOut.identity();pOut.set(x,y+RING_LIFT,z);return;}
+ ringE.set(pitch,yaw,0,'YXZ');qOut.setFromEuler(ringE);
+ const s=Math.sin(pitch);pOut.set(x+Math.sin(yaw)*RING_BODY_FWD*s,y+RING_LIFT+RING_BODY_LIFT*s,z+Math.cos(yaw)*RING_BODY_FWD*s);
 }
 /** Ring size by ride, as the island's own foot ring (Town.tsx ringSize): walk 1, scooter 1.65, bike 2.15, moped 2.3. */
 const ringSizeFor=(mode:number):number=>mode===Mode.Scooter?1.65:mode===Mode.Bike?2.15:mode===Mode.Moped?2.3:1;
@@ -174,10 +187,10 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
  const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
  let ringN=0;
- function ringAdd(x:number,y:number,z:number,dist:number,c:T.Color,pulse:number,k:number){
+ function ringAdd(x:number,y:number,z:number,dist:number,c:T.Color,pulse:number,k:number,pitch=0,yaw=0){
   if(ringN>=RING_CAPACITY)return;
   const sc=RING_RADIUS*Math.min(RING_MAX_GROW,Math.max(1,dist/RING_FAR_M))*pulse*k;
-  ringScale.set(sc,1,sc);ringPos.set(x,y+RING_LIFT,z);ringM.compose(ringPos,ringQ,ringScale);
+  ringScale.set(sc,1,sc);ringPlacement(x,y,z,pitch,yaw,ringQ,ringPos);ringM.compose(ringPos,ringQ,ringScale);
   rings.setMatrixAt(ringN,ringM);rings.setColorAt(ringN,c);ringN++;
  }
  function ringsEnd(){rings.count=ringN;rings.instanceMatrix.needsUpdate=true;if(rings.instanceColor)rings.instanceColor.needsUpdate=true;}
@@ -236,10 +249,15 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   e.labelTexture?.dispose();e.label=e.bubble=null;e.labelTexture=null;e.admitted=false;
  }
 
+ function friendRingPitch(e:Entry,pose:RemotePose,dt:number):number{
+  const target=pose.mode===Mode.Jetpack&&!e.shield?friendFlightPitch(pose.speed):0;
+  e.rp+=(target-e.rp)*(1-Math.exp(-4*dt)); // damped, no allocation
+  return ringPitchFor(pose.mode,e.rp);
+ }
  function addLocalRing(l:LocalRing,cam:T.Vector3){
   if(l.hex!==localHex){localHex=l.hex;localColour.set(l.hex);}
   const dx=l.x-cam.x,dz=l.z-cam.z;
-  ringAdd(l.x,l.y,l.z,0,localColour,ringSizeFor(l.mode??0),1);/* my own ring never grows with the camera distance: it matches the island's foot ring exactly */
+  ringAdd(l.x,l.y,l.z,0,localColour,ringSizeFor(l.mode??0),1,ringPitchFor(l.mode??0,l.pitch??0),l.yaw??0);/* my own ring never grows with the camera distance: it matches the island's foot ring exactly */
  }
  return {
   root,labels,
@@ -249,7 +267,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,d2:0,
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:''};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
@@ -307,7 +325,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,shield?.86+.14*e.field:1+(1-e.field)*.28,reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
      e.shown=false;e.needResume=true;
-     if(d2<=RING_ONLY_RANGE*RING_ONLY_RANGE)ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,ringSizeFor(pose.mode),k);
+     if(d2<=RING_ONLY_RANGE*RING_ONLY_RANGE)ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
      placeLabel(e,pose,k,reduced);continue;
     }
     // Far friends solve their pose at 10 Hz (> 20 m) / 5 Hz (> 60 m); the root still follows every frame.
@@ -345,7 +363,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     else if(e.flOn){root3.rotation.x=0;root3.rotation.z=0;e.flOn=false;}
     batch.draw(root3);e.shown=true;shown++;
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
-    ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k);
+    ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
     placeLabel(e,pose,k,reduced);
    }
    pickVisible(candL,LABEL_MAX);pickVisible(candB,BUBBLE_MAX);
