@@ -5,6 +5,6 @@
 import {RoomCode} from '../../multiplayer/protocol/rooms';
 import {SHOP_DOOR,SHOP_CANOPY} from '../shop/shopDoors';
 
-/** Over the entrance canopy (y 5.2), on the shopfront above the doors: clear of the DOM Enter prompt at the door. */
-export const SHOP_DOOR_HINT:{room:number;x:number;y:number;z:number}={room:RoomCode.Shop,x:SHOP_DOOR.x,y:SHOP_CANOPY.y+1.4,z:SHOP_DOOR.front+.3};
+/** On the shopfront well above the entrance canopy (y 5.2) and its lettering: clear of the DOM Enter prompt at the door. */
+export const SHOP_DOOR_HINT:{room:number;x:number;y:number;z:number}={room:RoomCode.Shop,x:SHOP_DOOR.x,y:SHOP_CANOPY.y+2.6,z:SHOP_DOOR.front+.3};
 // The words come from townBridge's doorHintText(n, RoomCode.Shop) = "2 in the Kit Shop" (roomText; the island bundle never loads the shop).
