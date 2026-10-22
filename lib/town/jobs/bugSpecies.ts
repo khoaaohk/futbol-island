@@ -78,11 +78,8 @@ const R=(r:BugRarity)=>({rarity:r,...SNEAK[r]});
 // Sources (each fact is also listed in docs/bug-story-facts.md).
 const W='https://en.wikipedia.org/wiki/';
 const SRC={
- telstar:W+'Adidas_Telstar',
- final1930:W+'1930_FIFA_World_Cup_final',
  aston:W+'Ken_Aston',
  mccrum:'https://universitytimes.ie/2018/02/the-trinity-goalkeeper-who-saved-modern-football/',
- nets:'https://sportinglandmarks.co.uk/liverpools-19th-century-contribution-to-goal-line-technology/',
  yashin:W+'Lev_Yashin',
  grasshoppers:'https://www.gcz.ch/en/club/grasshopper-club-zurich/history-records/gruendung/',
  queensPark:W+'Queen%27s_Park_F.C.',
@@ -107,19 +104,28 @@ const SRC={
  marta:'https://nesn.com/2019/06/brazils-marta-sets-world-cup-record-with-17th-career-goal',
  numbers:W+'Squad_number_(association_football)',
  brentford:W+'Brentford_F.C.',
- firstIntl:'https://scottishfa.co.uk/news/scottish-fa-marks-150-years-since-first-international-football-game',
  backPass:W+'Back-pass_rule',
  keeper1912:W+'Goalkeeper_(association_football)',
  subs1970:'https://www.guinnessworldrecords.com/world-records/481757-first-substitution-at-a-fifa-world-cup',
- shinPads:'https://trentbridge.co.uk/news/2017/november/the-notts-cricketer-who-invented-football-shin-pads.html',
  captainLaw:W+'Captain_(association_football)',
  goalSize:'https://downloads.theifab.com/downloads/laws-of-the-game-2015-16?l=en',
- law7:'https://theifab.com/laws/latest/the-duration-of-the-match',
  azteca:'https://www.fifa.com/news/estadio-azteca-mexico-s-footballing-temple',
  monarchs:'https://journeynorth.org/jnorth/tm/monarch/SanctuaryFactsOyamel.html',
  pele3:'https://www.outlookindia.com/sports/fifa-world-cup-2022-pel%C3%A9-lifting-his-3rd-world-cup-before-turning-30-news-238710',
  offside1925:'https://www.sportsjournalists.co.uk/sports-digest/the-season-that-it-rained-goals/',
  vuvuzela:'https://www.aljazeera.com/news/2010/6/17/vuvu-mania-spreads-around-the-world',
+ // Firefly calls (Oct 21 2026, firefly-lessons): each fact illustrates its call (docs/bug-story-facts.md).
+ rondo:'https://learning.coachesvoice.com/cv/rondo-explained-cruyff-guardiola-ancelotti/',
+ law12:'https://www.theifab.com/laws/latest/fouls-and-misconduct/',
+ xaviScan:'https://www.skysports.com/football/news/11096/11119387/what-gave-xavi-hernandez-and-andrea-pirlo-an-edge-on-the-rest-the-secret-to-his-vision',
+ marseilleTurn:W+'Marseille_turn',
+ combination:'https://www.scotsfootballworldwide.scot/thecombinationgame',
+ tikiTaka:W+'Tiki-taka',
+ maxi2006:W+'Maxi_Rodr%C3%ADguez',
+ law1:'https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-1---the-field-of-play',
+ stones2019:'https://www.premierleague.com/news/1204176',
+ law17:'https://www.theifab.com/laws/latest/the-corner-kick/',
+ blind5:W+'Football_5-a-side',
 } as const;
 export const BUG_STORY_SOURCES=SRC;
 
@@ -245,26 +251,43 @@ export const BUG_SPECIES:readonly BugSpecies[]=[
    {text:'At the 2010 World Cup in South Africa, fans blew vuvuzelas: long plastic horns that made a loud buzzing drone, like a field full of cicadas.',source:SRC.vuvuzela}]},
 ];
 
-/** The night set: eight fireflies, each flashing a football call, each with real football stories. */
-export type FireflyCall={id:string;call:string;meaning:string;stories:readonly BugStory[]};
+/** The night set: eight fireflies, each flashing a football call. Each call carries its LESSON (`idea`, the coaching idea a kid can
+ *  use: <= 110 chars) and 2-3 real football facts that show that call in play (Oct 21 2026, firefly-lessons; user: "when catching
+ *  some of the firefly. it doesn't tie in any futbol fact or lesson"). Repeat catches rotate through the facts (bugCatch.ts storyFor). */
+export type FireflyCall={id:string;call:string;meaning:string;idea:string;stories:readonly BugStory[]};
 export const FIREFLY_SET:readonly FireflyCall[]=[
- {id:'man-on',call:'Man on!',meaning:'a defender is right behind you, so protect the ball or pass it quickly',stories:[
-  {text:'When a defender is right on you, your shins need protecting. In 1874 Nottingham Forest\'s Sam Weller Widdowson cut down a pair of cricket pads and strapped them on: early shin guards. Others laughed, then copied him.',source:SRC.shinPads}]},
- {id:'time',call:'Time!',meaning:'nobody is close, so you can take a touch and look up',stories:[
-  {text:'Law 7 of the Laws of the Game says a match has two equal halves of 45 minutes, with a half-time break of up to 15 minutes. The referee adds time for stoppages.',source:SRC.law7}]},
- {id:'turn',call:'Turn!',meaning:'you have space to turn and face the goal',stories:[
-  {text:'At the 1974 World Cup, Johan Cruyff of the Netherlands faked a pass against Sweden, dragged the ball behind his standing leg and spun away. Kids everywhere still practise the "Cruyff turn".',source:SRC.cruyffTurn}]},
- {id:'square',call:'Square!',meaning:'a teammate is level with you, ready for a sideways pass',stories:[
-  {text:'The first official international match was Scotland v England on 30 November 1872 in Glasgow. It finished 0-0, and every Scotland player came from Queen\'s Park.',source:SRC.firstIntl}]},
- {id:'switch',call:'Switch!',meaning:'play the ball across to the far side, where there is space',stories:[
-  {text:'The 1970 World Cup ball, the Adidas Telstar, had 12 black pentagons and 20 white hexagons. On black-and-white TV, the pattern helped viewers follow the ball as it was switched across the pitch.',source:SRC.telstar}]},
- {id:'away',call:'Away!',meaning:'clear the ball far from your own goal',stories:[
-  {text:'Early goals had no nets, so people argued about whether shots went in. John Brodie, an engineer from Liverpool, patented goal nets, and they were tried in a big match in January 1891.',source:SRC.nets}]},
- {id:'keepers',call:'Keeper\'s!',meaning:'the goalkeeper is coming to collect it, so get out of the way',stories:[
+ {id:'man-on',call:'Man on!',meaning:'a defender is right behind you, so protect the ball or pass it quickly',
+  idea:'Man on! Someone is right behind you: pass it first time, or shield the ball with your body.',stories:[
+  {text:'In a rondo, a ring of players keeps the ball while one or two in the middle chase it. Johan Cruyff made it a key training game at Barcelona: quick, simple passes beat the pressure.',source:SRC.rondo},
+  {text:'Shielding is allowed! The Laws of the Game say you may stand between an opponent and the ball to protect it, as long as the ball is within playing distance and you do not hold them off.',source:SRC.law12}]},
+ {id:'time',call:'Time!',meaning:'nobody is close, so you can take a touch and look up',
+  idea:'Time! Nobody is close: take a touch, lift your head and pick your best pass.',stories:[
+  {text:'Spain\'s Xavi told the Guardian in 2011: "Think quickly, look for spaces. That\'s what I do: look for spaces. All day." He kept looking around before the ball came, so he always knew his next pass.',source:SRC.xaviScan},
+  {text:'Researcher Geir Jordet counted how often players look around before they get the ball. Frank Lampard did it 0.62 times a second. Xavi scored 0.83, far above the rest!',source:SRC.xaviScan}]},
+ {id:'turn',call:'Turn!',meaning:'you have space to turn and face the goal',
+  idea:'Turn! There is space behind you: turn with the ball and face the goal.',stories:[
+  {text:'At the 1974 World Cup, Johan Cruyff of the Netherlands faked a pass against Sweden, dragged the ball behind his standing leg and spun away. Kids everywhere still practise the "Cruyff turn".',source:SRC.cruyffTurn},
+  {text:'The "Marseille turn", also called the roulette or the 360, spins over the ball using both feet. Zinedine Zidane, who grew up in Marseille, was one of its most famous users, so some call it the Zidane turn.',source:SRC.marseilleTurn}]},
+ {id:'square',call:'Square!',meaning:'a teammate is level with you, ready for a sideways pass',
+  idea:'Square! A team-mate is level with you: pass it sideways and keep the ball.',stories:[
+  {text:'In the 1870s Queen\'s Park of Glasgow are often credited with the "combination" game: passing to team-mates instead of everyone dribbling. It became the start of the passing game we play today.',source:SRC.combination},
+  {text:'Spain\'s "tiki-taka" was built on short, patient passes to team-mates close by. Playing that way they won Euro 2008, the 2010 World Cup and Euro 2012: three big tournaments in a row.',source:SRC.tikiTaka}]},
+ {id:'switch',call:'Switch!',meaning:'play the ball across to the far side, where there is space',
+  idea:'Switch! The far side is free: play the ball across to the team-mate in space.',stories:[
+  {text:'At the 2006 World Cup, Argentina\'s Juan Pablo Sorín switched play with a cross-field pass. Maxi Rodríguez chested it down and volleyed it into the top corner to beat Mexico 2-1 in extra time.',source:SRC.maxi2006},
+  {text:'Law 1 says a pitch for international matches is 64 to 75 metres wide. When one side is crowded, a switch uses all that width to find a team-mate with space.',source:SRC.law1}]},
+ {id:'away',call:'Away!',meaning:'clear the ball far from your own goal',
+  idea:'Away! Danger near your goal: kick it high, far and wide, never across your own box.',stories:[
+  {text:'In January 2019, Manchester City\'s John Stones cleared the ball away just 1.12 cm before it crossed his own goal line against Liverpool. City won 2-1, and later won the league by one point.',source:SRC.stones2019},
+  {text:'If a defender clears the ball over their own goal line, the other team gets a corner kick (Law 17). So defenders aim their clearances up the pitch or out to the side, away from goal.',source:SRC.law17}]},
+ {id:'keepers',call:'Keeper\'s!',meaning:'the goalkeeper is coming to collect it, so get out of the way',
+  idea:'Keeper\'s! Your keeper is coming for it: step out of the way and let them catch it.',stories:[
   {text:'Goalkeepers could once use their hands anywhere in their own half! In 1912 the rule changed so they could only handle the ball inside their own penalty area.',source:SRC.keeper1912},
   {text:'Since 1992 a goalkeeper may not pick up a ball that a teammate deliberately kicks back to them. The back-pass rule stops time-wasting and keeps the game moving.',source:SRC.backPass}]},
- {id:'mine',call:'Mine!',meaning:'you are taking it, so teammates do not collide',stories:[
-  {text:'At the first World Cup final in 1930, Argentina and Uruguay each wanted their own ball! So they used one in each half: Argentina\'s first, then Uruguay\'s. Uruguay won 4-2.',source:SRC.final1930}]},
+ {id:'mine',call:'Mine!',meaning:'you are taking it, so teammates do not collide',
+  idea:'Mine! Going for the ball? Call it loud and early so team-mates don\'t crash into you.',stories:[
+  {text:'In blind football (5-a-side), the ball rattles so players can hear it, and the rules say a player must call "voy" (Spanish for "I go"), "go" or similar when going for the ball.',source:SRC.blind5},
+  {text:'Calls are for your own team! The Laws of the Game say a player who verbally distracts an opponent during play gets a yellow card for unsporting behaviour.',source:SRC.law12}]},
 ];
 
 // ---------------------------------------------------------------------------------------------------------------

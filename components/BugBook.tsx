@@ -12,7 +12,7 @@ import shell from './ModalShell.module.css';
 import styles from './Fishbook.module.css';
 import own from './BugBook.module.css';
 import {BUG_BOOK_PAGES,BUG_IDS,bugBookComplete,bugsCaught,firefliesCaught,nightBookComplete,emptyBugBook,pageCaught,readBugBook,type BugBookPage,type BugBookSave} from '@/lib/town/jobs/bugBook';
-import {storyFor} from '@/lib/town/jobs/bugCatch';
+import {storyFor,storiesUnlocked} from '@/lib/town/jobs/bugCatch';
 import {BUG_JOB_LESSON,FIREFLY_JOB_LESSON} from '@/lib/town/jobs/bugScout';
 import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
 import {countBugBookOpen} from '@/lib/analytics/summitEvents';
@@ -68,7 +68,10 @@ export default function BugBook({open,onClose}:{open:boolean;onClose:()=>void}){
       <BugArt page={p} hidden={!c}/>
       {c?<><h3>{p.name}</h3><p className={styles.eyebrow}>{p.role} · caught {c} time{c===1?'':'s'}</p>
        <div className={styles.fact}><span className={styles.tag}>{p.kind==='bug'?'Squad role':'Football call'}</span><p>{p.lesson}</p></div>
-       {storyFor(p.stories,c)&&<div className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact</span><p>{storyFor(p.stories,c)!.text}</p></div>}</>
+       {p.kind==='firefly'?<>{/* Firefly pages (firefly-lessons): the coaching idea, then every fact unlocked so far (one per catch). */}
+        {p.idea&&<div className={styles.fact} data-bugbook-idea><span className={styles.tag}>Coaching idea</span><p>{p.idea}</p></div>}
+        {storiesUnlocked(p.stories,c).map((s,k)=><div key={k} className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact{p.stories.length>1?` ${k+1}/${p.stories.length}`:''}</span><p>{s.text}</p></div>)}</>
+       :storyFor(p.stories,c)&&<div className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact</span><p>{storyFor(p.stories,c)!.text}</p></div>}</>
       :<><h3>Not caught yet</h3><p className={styles.eyebrow}>{p.kind==='bug'?'A squad player':'A football call'}</p><p className={styles.found}>{sec.where}</p></>}
      </li>;})}</ul>
     </section>;})}

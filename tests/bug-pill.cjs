@@ -24,28 +24,27 @@ const UI=load('lib/town/jobs/bugUi.ts');
  assert.equal(UI.pillCount({value:3,total:5,squad:{value:10,total:20}}),'10/20','day: the squad count');
  assert.equal(UI.pillCount({value:3,total:5,squad:{value:6,total:8}}),'6/8','night: N/8');
  assert.equal(UI.pillCount({value:2,total:5,phase:'deliver'}),'5/5');
- const base0={running:true,staging:false,dialog:false,exists:true,visible:true,stackHidden:false};
- assert.equal(UI.pillWatch(base0),'ok');assert.equal(UI.pillWatch({...base0,running:false,visible:false}),'ok','no run: nothing to do');
- assert.equal(UI.pillWatch({...base0,visible:false,staging:true}),'wait','the catch stage / release hides it on purpose');
- assert.equal(UI.pillWatch({...base0,visible:false,dialog:true}),'wait','a dialog covers it on purpose');
- assert.equal(UI.pillWatch({...base0,visible:false}),'reset','in the stack but not visible: reset the pill state');
- assert.equal(UI.pillWatch({...base0,visible:false,stackHidden:true}),'detach','the stack is hidden by a stuck flag: draw it on its own');
- assert.equal(UI.pillWatch({...base0,exists:false,visible:false}),'detach','missing: draw it on its own');
- assert(UI.PILL_WATCH_MS>=400&&UI.PILL_WATCH_MS<=1000,'about 2 Hz, no per-frame work');}
-// ---- 2. Source: the watchdog, the dock, the End button's count, the vending flag cap, Esc and the two-tap confirm ----
+ // The top bar: every squad run (day set and night set) has it; only the catch stage / release hide it for that moment.
+ const day={squad:{value:3,total:20},guide:{on:false,ready:true},set:'bugs'},night={squad:{value:2,total:8},guide:{on:false,ready:true},set:'fireflies'};
+ for(const a of [day,night]){assert.equal(UI.bugBar(a),'shown',a.set+': bar shown');assert.equal(UI.bugBar(a,{zooming:true}),'staged');assert.equal(UI.bugBar(a,{releasing:true}),'staged');assert.equal(UI.bugBar(a,{}),'shown','back the frame the stage ends');}
+ assert.equal(UI.bugBar({value:1,total:5}),null,'other jobs keep the stack panel');assert.equal(UI.bugBar(null),null);
+ assert.equal(UI.pillWatch,undefined,'no watchdog any more: the bar is permanent');}
+// ---- 2. Source: the bar outside the HUD stack with hint + End, the stack offset, no End on the action cluster, Esc, two-tap ----
 {const J=read('components/IslandJobs.tsx'),town=read('components/Town.tsx'),css=read('components/IslandJobs.module.css'),g=read('app/globals.css');
- assert.match(J,/const id=window\.setInterval\(\(\)=>\{try\{/,'a watchdog');assert.match(J,/const call=pillWatch\(\{running:!!getJobRuntime\(\)\?\.run,/,'it asks pillWatch');assert.match(J,/\},PILL_WATCH_MS\);\n  return\(\)=>window\.clearInterval\(id\);\},\[squadKey\]\);/,'at 2 Hz, only while a squad shift runs');
- assert.match(J,/__fi2PillRescues/,'it counts its rescues (debug)');assert.match(J,/setPill\('chip'\);setPanel\('full'\)/,'it resets the pill state');
- assert.match(J,/data-job-panel=\{pillShown\(!!a\.squad,pill,panel\)\}/,'the panel state goes through the invariant');
- assert.match(J,/a\.squad&&pillDocked\?<div className=\{styles\.pillDock\} data-pill-dock>\{panelEl\}<\/div>:<HudSlot>\{panelEl\}<\/HudSlot>/,'docked on its own when the stack fails');
+ assert.match(J,/return a\.squad\?<div ref=\{barRef\} className=\{styles\.pillDock\} data-pill-dock data-bug-bar=\{a\.set\?\?'bugs'\} data-staged=\{bugBar\(a,view\)==='staged'\|\|undefined\}>\{panelEl\}<\/div>:<HudSlot>\{panelEl\}<\/HudSlot>/,'a squad run renders the bar outside HudSlot / the stack, always');
+ assert.match(J,/active=view\.active\?jobVariant\(view\.active\.id,view\.active\.set\)\?\?jobById\(view\.active\.id\)\?\?null:null/,'a missing variant never drops the bar');
+ assert.doesNotMatch(J,/pillWatch|pillDocked|setInterval\(/,'no watchdog');
+ // Both pill states carry the hint (➤) and the End button.
+ const chip=J.slice(J.indexOf('{chip?<>'),J.indexOf('</>:<>'));assert.match(chip,/data-bug-hint/);assert.match(chip,/a\.squad\?<button type="button" className=\{styles\.chipStop\} data-bug-end data-job-end/);
+ const full=J.slice(J.indexOf('</>:<>'),J.indexOf('</section>;',J.indexOf('</>:<>')));assert.match(full,/data-bug-hint/);assert.match(full,/data-bug-end=\{a\.squad\?true:undefined\} data-job-end=\{endAsk\|\|undefined\} onClick=\{a\.squad\?endJob/);
+ assert.match(J,/root\.setAttribute\('data-bug-bar-on',''\)/);assert.match(J,/setProperty\('--bug-bar-h'/,'the bar height is measured for the stack');
+ assert.match(g,/html\[data-bug-bar-on\] \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ var\(--island-hud-row-height\) \+ var\(--island-hud-row-gap\) \+ var\(--bug-bar-h,48px\) \+ 8px\)\}/,'the stack sits below the bar');
  assert.match(css,/\.pillDock\{position:fixed;/);assert.match(css,/\.pillDock>\.hud\{[^}]*visibility:visible!important;opacity:1!important/);
- assert.match(J,/dialog\[open\]/,'native dialogs (Bug book) count as covering it on purpose');
+ assert.match(css,/\.pillDock\[data-staged\] \*,:global\(html\[data-catch-stage\]\) \.pillDock \*\{visibility:hidden!important;pointer-events:none\}/,'hidden only during the stage / release');
  assert.match(J,/e\.key==='Escape'[\s\S]{0,300}endJob\(\)/,'Esc still ends the shift');
  assert.match(J,/if\(r&&r\.def\.swing&&r\.got\.some\(Boolean\)&&!endAsk\)\{setEndAsk\(true\);return;\}/,'the two-tap Sure? confirm stays');
- assert.match(town,/bc=a\?\.squad\?pillCount\(a\):''/,'Town mirrors the count');
- assert.match(town,/<b className="job-end-count" data-job-end-count aria-hidden="true">\{bugCount\}<\/b>/,'the End button carries the count');
- assert.match(town,/<small>\{bugEndAsk\?'Sure\?':'End'\}<\/small>/,'End keeps its Sure?');
- assert.match(g,/\.job-end-mini \.job-end-count\{/);
+ assert.doesNotMatch(town,/job-end-mini|data-job-end-count|bugEndAsk|bugCount/,'no End button on the action cluster (user: "remove the end btn in the actions area")');
+ assert.doesNotMatch(g,/job-end-mini/);
  assert.match(town,/leaveTimer\.current=setTimeout\(done,1600\)/,'the vending leaving flag clears itself (it hid the whole HUD stack when stuck)');
  assert.equal((town.match(/if\(!open\)leaveVending\(\);/g)||[]).length,2,'both machines use it');}
 // ---- 3. Night flow (pure, the real swarm and catch rules): the job def, the fireflies, catching ----
@@ -74,4 +73,4 @@ const UI=load('lib/town/jobs/bugUi.ts');
   if(res&&res.id===b.id){ok++;const got=sw.catch(b.id);assert(got&&got.kind==='firefly'&&calls.has(got.call.id),'caught: a firefly call');}
   F.placeHome(b,floor);}
  assert(ok/n>=.95,`night catch rate at 1-3 m: ${ok}/${n}`);sw.dispose();
- console.log(`PASS bug pill: the pill invariant + 2 Hz watchdog + dock, the End button count, the vending flag cap; night: the firefly squad def, 48 fireflies (8 calls, unique ids, on the island), caught ${ok}/${n} at 1-3 m running and walking`);}
+ console.log(`PASS bug pill: the pill invariant, the permanent top bar (day + night, outside the stack, hint + End, stack offset), no cluster End, the vending flag cap; night: the firefly squad def, 48 fireflies (8 calls, unique ids, on the island), caught ${ok}/${n} at 1-3 m running and walking`);}

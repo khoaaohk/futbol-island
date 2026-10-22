@@ -43,17 +43,43 @@ roles, homes and bands are original game fiction, not fact. `tests/bug-species.c
 
 ## The eight firefly calls
 
+Rewritten 21 Oct 2026 (firefly-lessons; user: "when catching some of the firefly. it doesn't tie in any futbol fact or lesson").
+Every call now has a **coaching idea** (the lesson, shown on the catch card and in the Bug book) and 2 facts that show that call in
+play; repeat catches rotate through the facts. Checked by web search on 21 Oct 2026.
+
+| Call | Coaching idea (the lesson) |
+|---|---|
+| Man on! | Someone is right behind you: pass it first time, or shield the ball with your body. |
+| Time! | Nobody is close: take a touch, lift your head and pick your best pass. |
+| Turn! | There is space behind you: turn with the ball and face the goal. |
+| Square! | A team-mate is level with you: pass it sideways and keep the ball. |
+| Switch! | The far side is free: play the ball across to the team-mate in space. |
+| Away! | Danger near your goal: kick it high, far and wide, never across your own box. |
+| Keeper's! | Your keeper is coming for it: step out of the way and let them catch it. |
+| Mine! | Going for the ball? Call it loud and early so team-mates don't crash into you. |
+
 | Call | Fact used | Source |
 |---|---|---|
-| Man on! | Sam Weller Widdowson of Nottingham Forest cut down cricket pads as early shin guards in 1874; ridiculed at first, then copied. | https://trentbridge.co.uk/news/2017/november/the-notts-cricketer-who-invented-football-shin-pads.html |
-| Time! | Law 7: two equal halves of 45 minutes, half-time of up to 15 minutes, time added for stoppages. | https://theifab.com/laws/latest/the-duration-of-the-match |
-| Turn! | Johan Cruyff's turn v Sweden, 1974 World Cup (19 June 1974, Dortmund). | https://www.nbcsports.com/soccer/news/top-20-world-cup-moments-the-cruyff-turn-no-2 |
-| Square! | First official international, Scotland 0-0 England, 30 November 1872, Hamilton Crescent, Glasgow; all Scotland players from Queen's Park. | https://scottishfa.co.uk/news/scottish-fa-marks-150-years-since-first-international-football-game |
-| Switch! | The 1970 Adidas Telstar: 12 black pentagons and 20 white hexagons, designed to show up on black-and-white TV. | https://en.wikipedia.org/wiki/Adidas_Telstar |
-| Away! | Liverpool engineer John Brodie patented goal nets (application 1889, granted 1890); first used in a big match, North v South, Nottingham, January 1891. | https://sportinglandmarks.co.uk/liverpools-19th-century-contribution-to-goal-line-technology/ |
+| Man on! | The rondo (keep-ball with one or two chasers in the middle); Johan Cruyff made it a key training game at Barcelona (as coach, late 1980s-90s). | https://learning.coachesvoice.com/cv/rondo-explained-cruyff-guardiola-ancelotti/ |
+| Man on! | Law 12: "A player may shield the ball by taking a position between an opponent and the ball if the ball is within playing distance" (without holding off the opponent). | https://www.theifab.com/laws/latest/fouls-and-misconduct/ |
+| Time! | Xavi to the Guardian (Sid Lowe), 2011: "Think quickly, look for spaces. That's what I do: look for spaces. All day." (quoted in the Sky Sports piece). | https://www.skysports.com/football/news/11096/11119387/what-gave-xavi-hernandez-and-andrea-pirlo-an-edge-on-the-rest-the-secret-to-his-vision |
+| Time! | Geir Jordet's scanning research: Lampard 0.62 visual searches per second before receiving, Xavi 0.83 (same Sky Sports piece). Jordet's scanning is also mentioned in the skill-moves history (lib/graphics/skillMoves.ts), with a different detail. | (as above) |
+| Turn! | Johan Cruyff's turn v Sweden, 1974 World Cup (19 June 1974, Dortmund). (Also told by the Rinus Michels bug story.) | https://www.nbcsports.com/soccer/news/top-20-world-cup-moments-the-cruyff-turn-no-2 |
+| Turn! | The Marseille turn (roulette, 360); Zidane, from Marseille, one of its best-known exponents, so sometimes "the Zidane turn". The move's exact origin is unclear, so the story makes no inventor claim. | https://en.wikipedia.org/wiki/Marseille_turn |
+| Square! | Queen's Park (Glasgow, 1870s) often credited with the "combination" passing game. Historians debate how far the club invented it, so the story says "often credited". | https://www.scotsfootballworldwide.scot/thecombinationgame |
+| Square! | Spain's tiki-taka (short passing, possession) won Euro 2008, the 2010 World Cup and Euro 2012. | https://en.wikipedia.org/wiki/Tiki-taka |
+| Switch! | 2006 World Cup round of 16: Juan Pablo Sorín's cross-field pass, Maxi Rodríguez chest control and volley into the top corner, Argentina 2-1 Mexico after extra time. | https://en.wikipedia.org/wiki/Maxi_Rodr%C3%ADguez |
+| Switch! | Law 1: for international matches the goal line (the pitch's width) is 64-75 m. | https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-1---the-field-of-play |
+| Away! | John Stones' clearance v Liverpool, January 2019 (3 Jan, Etihad, 0-0 at the time), 1.12 cm from crossing the line; City won 2-1 and the title by one point (98 to 97). | https://www.premierleague.com/news/1204176 |
+| Away! | Law 17: a corner kick is awarded when the whole ball crosses the goal line, last touched by a defender, and no goal is scored. | https://www.theifab.com/laws/latest/the-corner-kick/ |
 | Keeper's! | Before 1912 goalkeepers could handle anywhere in their own half; from 1912 only in their penalty area. | https://en.wikipedia.org/wiki/Goalkeeper_(association_football) |
 | Keeper's! | The back-pass rule (1992): a keeper may not handle a ball deliberately kicked to them by a teammate. | https://en.wikipedia.org/wiki/Back-pass_rule |
-| Mine! | The 1930 World Cup final used one ball per half after a dispute (Argentina's first, Uruguay's second); Uruguay won 4-2. | https://en.wikipedia.org/wiki/1930_FIFA_World_Cup_final |
+| Mine! | Blind football (5-a-side): the ball rattles; "players are required to say 'voy', 'go', or something similar when going for the ball". | https://en.wikipedia.org/wiki/Football_5-a-side |
+| Mine! | Law 12: "verbally distracts an opponent during play or at a restart" is a caution for unsporting behaviour. | https://www.theifab.com/laws/latest/fouls-and-misconduct/ |
+
+Moved out of the firefly set (they did not show their call; not used elsewhere in the game now): the 1874 shin pads (was Man on!),
+Law 7's halves (Time!), the 1872 first international (Square!), the Telstar ball (Switch!), goal nets (Away!) and the 1930 two-ball
+final (Mine!). Left out: Bergkamp's 1998 goal from Frank de Boer's long pass (a long ball, not clearly a switch to the far side).
 
 ## Unsure or left out
 

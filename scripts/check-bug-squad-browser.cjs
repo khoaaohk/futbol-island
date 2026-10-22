@@ -8,13 +8,13 @@ const assert=require('node:assert/strict'),fs=require('node:fs');
 const OUT=process.env.BUG_SHOTS||'/tmp/bug-catching',base=process.env.FUTBOL_BASE_URL||'http://localhost:8137';
 const mobile=process.argv.includes('--mobile'),tag=mobile?'phone':'desktop';
 // Oct 21 2026 (bug-pill-fix): after each step the Bug squad pill must be on screen (count + End job ×): in the DOM, a real rect inside
-// the viewport, opacity > 0, visible, and elementFromPoint at its centre is the pill (or a stage / dialog covers it on purpose). The
-// End button on the action cluster carries the count too. Seeds a long-time player (pill already seen, half a squad caught).
-const pillCheck=async(page,step,report)=>{const p=await page.evaluate(()=>{const el=document.querySelector('[data-job-active]'),stage=document.documentElement.hasAttribute('data-catch-stage')||!!window.__fi2Jobs.getView().releasing,dialog=!!document.querySelector('dialog[open],[role=dialog][aria-modal=true]');
+// the viewport, opacity > 0, visible, and elementFromPoint at its centre is the pill (or a stage / dialog covers it on purpose). Since
+// the top-bar change it is the [data-bug-bar] outside the HUD stack, with the hint and End inside it (no End on the action cluster).
+const pillCheck=async(page,step,report)=>{const p=await page.evaluate(()=>{const el=document.querySelector('[data-bug-bar] [data-job-active]'),stage=document.documentElement.hasAttribute('data-catch-stage')||!!window.__fi2Jobs.getView().releasing,dialog=!!document.querySelector('dialog[open],[role=dialog][aria-modal=true]');
   if(!window.__fi2Jobs.run)return {ok:true,idle:true};if(stage||dialog)return {ok:true,covered:true};if(!el)return {ok:false,why:'no pill in the DOM'};
-  const r=el.getBoundingClientRect(),cs=getComputedStyle(el),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2),end=document.querySelector('[data-job-end-count]');
-  const ok=r.width>0&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth&&+cs.opacity>.5&&cs.visibility==='visible'&&!!hit&&(el.contains(hit)||!!hit.closest('[data-bug-card],[data-island-toast]'));
-  return {ok,why:ok?'':JSON.stringify({rect:[r.x|0,r.y|0,r.width|0,r.height|0],op:cs.opacity,vis:cs.visibility,hit:hit&&(hit.className||hit.tagName)+''}),endCount:end?.textContent??null,docked:!!el.closest('[data-pill-dock]')};});
+  const r=el.getBoundingClientRect(),cs=getComputedStyle(el),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2),end=el.querySelector('[data-bug-end]'),hint=el.querySelector('[data-bug-hint]');
+  const ok=r.width>0&&r.height>0&&r.top>=0&&r.bottom<=innerHeight&&r.left>=0&&r.right<=innerWidth&&+cs.opacity>.5&&cs.visibility==='visible'&&!!hit&&!!end&&!!hint&&!el.closest('[data-hud-stack]')&&(el.contains(hit)||!!hit.closest('[data-bug-card],[data-island-toast]'));
+  return {ok,why:ok?'':JSON.stringify({rect:[r.x|0,r.y|0,r.width|0,r.height|0],op:cs.opacity,vis:cs.visibility,hit:hit&&(hit.className||hit.tagName)+''}),endCount:el.querySelector('[data-job-count]')?.textContent??null,docked:!!el.closest('[data-pill-dock]')};});
  report.pill=report.pill||[];report.pill.push(step+':'+(p.ok?'ok':'FAIL')+(p.endCount?' '+p.endCount:''));assert(p.ok,`the Bug squad pill is visible after ${step}: ${p.why}`);};fs.mkdirSync(OUT,{recursive:true});
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const SIGN={x:606,z:133.5};
@@ -56,7 +56,7 @@ const SIGN={x:606,z:133.5};
    await page.keyboard.press('Space');await wait(130);await shot(page,'2-mid-swing');await wait(500);
    report.zoom=await page.evaluate(()=>window.__fi2Jobs.zooming);await shot(page,'3-catch-zoom');await wait(700);await shot(page,'4-success-burst');
    await wait(1400);await pillCheck(page,'catch',report);await wait(7500);
-   await page.keyboard.press('Escape');await wait(300);await pillCheck(page,'end-ask (jar has a bug: Sure?)',report);report.endAsk=await page.locator('[data-job-end-mini] small').textContent().catch(()=>null);await wait(3800);await pillCheck(page,'end-ask-timeout',report);const card=page.locator('[data-bug-card]');report.card=await card.count();if(report.card)report.cardText=(await card.innerText()).slice(0,140);await shot(page,'5-story-card');
+   await page.keyboard.press('Escape');await wait(300);await pillCheck(page,'end-ask (jar has a bug: Sure?)',report);report.endAsk=await page.locator('[data-bug-bar] [data-bug-end]').getAttribute('aria-label').catch(()=>null);await wait(3800);await pillCheck(page,'end-ask-timeout',report);const card=page.locator('[data-bug-card]');report.card=await card.count();if(report.card)report.cardText=(await card.innerText()).slice(0,140);await shot(page,'5-story-card');
    // The 20th species: mark the rest of the squad caught, then catch one more → the formation release.
    const caughtId=await page.evaluate(()=>window.__fi2Jobs.getView().caught?.id);report.firstCatch=caughtId;
    for(let k=0;k<4;k++){bugs=await page.evaluate(()=>{const f=window.__fi2,l=f.location;return f.wildBugs.query(l.x,0,l.z,3000).map(b=>({id:b.id,x:b.x,y:b.y,z:b.z,sp:b.species?.id}));});

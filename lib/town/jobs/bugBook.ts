@@ -14,6 +14,7 @@
  * UI: components/BugBook.tsx, opened with OPEN_BUG_BOOK from the bug jobs' cards.
  */
 import {BUG_SQUAD,FIREFLY_CALLS,LEGACY_BUG_IDS,LEGACY_FIREFLY_IDS} from './bugScout';
+import {fireflyById} from './bugSpecies';
 
 export const BUG_BOOK_KEY='fi2-bug-book-v1';
 /** Window event: open the Bug book from anywhere (the job cards, the payday card). */
@@ -74,10 +75,10 @@ export function recordBugCatch(kind:'bug'|'firefly',id:string,port:Port=local):B
 export function markBugBookReward(port:Port=local,night=false){const s=readBugBook(port);if(night?s.nightReward:s.reward)return s;if(night)s.nightReward=true;else s.reward=true;writeBugBook(s,port);return s;}
 
 /** The book's pages, by species id: each bug's name, squad role and football lesson, its real stories; each firefly's call. */
-export type BugBookPage={kind:'bug'|'firefly';id:string;index:number;name:string;role:string;lesson:string;color:string;span:number;length:number;stories:readonly {text:string;source:string}[]};
+export type BugBookPage={kind:'bug'|'firefly';id:string;index:number;name:string;role:string;lesson:string;/** a firefly call's coaching idea (the lesson) */idea?:string;color:string;span:number;length:number;stories:readonly {text:string;source:string}[]};
 const lessonOf=(note:string)=>note.replace(/^[^!]*in the jar! /,'');
 export const BUG_BOOK_PAGES:readonly BugBookPage[]=[
  ...BUG_SQUAD.map((b,i)=>({kind:'bug' as const,id:b.id,index:i,name:b.name,role:b.role,lesson:lessonOf(b.note),color:b.color,span:b.span,length:b.length,stories:b.stories})),
- ...FIREFLY_CALLS.map((f,i)=>({kind:'firefly' as const,id:f.id,index:i,name:f.name,role:f.role,lesson:lessonOf(f.note),color:f.color,span:f.span,length:f.length,stories:f.stories})),
+ ...FIREFLY_CALLS.map((f,i)=>({kind:'firefly' as const,id:f.id,index:i,name:f.name,role:f.role,lesson:lessonOf(f.note),idea:fireflyById(f.id)?.idea,color:f.color,span:f.span,length:f.length,stories:f.stories})),
 ];
 export const pageCaught=(s:BugBookSave,p:BugBookPage)=>(p.kind==='bug'?s.bugs:s.fireflies)[p.id]??0;

@@ -110,12 +110,15 @@
 .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .hud[data-job-panel=fading]{opacity:0;transition:opacity .3s ease}
 .hud[data-compact]{display:flex;align-items:center;gap:6px;padding:3px 4px 3px 12px;border-radius:var(--btn-radius,24px);animation:chipIn .3s ease both}
-/* The Bug squad pill's safety dock (bugUi.ts pillWatch): when the HUD stack is hidden by a stuck flag, the pill is drawn on its own
-   right where the stack would put it (under the coins bar), so the count and End job × never go missing. */
+/* The Bug squad TOP BAR (Oct 21 2026; user: "there need to be a bar at the top to ask for hint and end the bug squad, both night and
+   day time"): for the whole shift the pill lives here, fixed under the coins bar and outside the HUD stack (the stack moves down by
+   --bug-bar-h, globals.css). Hidden only while the catch stage or the release cinematic plays. */
 .pillDock{position:fixed;z-index:36;left:50%;top:calc(var(--island-hud-row-top,16px) + var(--island-hud-row-height,44px) + var(--island-hud-row-gap,10px));transform:translateX(-50%);
  display:flex;justify-content:center;width:min(420px,calc(100% - 32px));pointer-events:none}
 .pillDock>.hud{position:relative;left:auto;top:auto;transform:none;pointer-events:auto;max-width:100%;visibility:visible!important;opacity:1!important}
 .pillDock>.hud[data-compact]{width:auto}
+.pillDock[data-staged],:global(html[data-catch-stage]) .pillDock{visibility:hidden}
+.pillDock[data-staged] *,:global(html[data-catch-stage]) .pillDock *{visibility:hidden!important;pointer-events:none}
 :global(.town-app) :global(.hud-stack.hud-stack.hud-stack)>.hud[data-compact]{width:auto}
 .chipMain{display:flex;align-items:center;gap:10px;min-height:var(--btn-height,44px);min-width:0;padding:0 4px;border:0;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .chipMain b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:IslandBrush,sans-serif;font-weight:400;font-size:18px;line-height:1.1}
@@ -147,6 +150,12 @@
 .bugRole{font-size:11.5px;font-weight:700;opacity:.8}
 .bugFact{display:block;margin-top:6px;font-size:12.5px;line-height:1.45}
 .bugFact span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;opacity:.75}
+/* Firefly lesson (firefly-lessons): the coaching idea (<= 2 lines) above the fact (clamped to 3 lines), one quiet source line. */
+.bugIdea{display:block;margin-top:6px;font-size:13px;line-height:1.35;font-weight:700;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.bugIdea span{display:block;font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:800;opacity:.75}
+.bugCard[data-night] .bugIdea{color:#e9ff6b}
+.bugCard[data-night] .bugFact{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden}
+.bugSource{display:inline;margin-left:6px;font-size:10px;opacity:.6}
 .bugMeta{margin:2px 0 0;font-size:11.5px;font-weight:700;opacity:.8}
 .chipStop[data-on]{background:#ffd36c}
 @keyframes bugCardIn{from{opacity:0;scale:.85}}

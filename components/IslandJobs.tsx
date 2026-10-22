@@ -32,11 +32,13 @@ import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib
 import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
-import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,BUG_TIP_NIGHT,initialPill,bugBookCoinNote,pillCount,pillShown,pillWatch,PILL_WATCH_MS} from '@/lib/town/jobs/bugUi';
+import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,BUG_TIP_NIGHT,initialPill,bugBookCoinNote,pillCount,pillShown,bugBar} from '@/lib/town/jobs/bugUi';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
 const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
 const openBugBook=()=>window.dispatchEvent(new Event(OPEN_BUG_BOOK));
+/** A fact's source as a short site name for the card ("en.wikipedia.org" → "wikipedia.org"). */
+const sourceHost=(u:string)=>{try{return new URL(u).hostname.replace(/^(www|en|learning)\./,'');}catch{return '';}};
 /** Same fish + fruit art as the onboarding "Earn coins" step (the sardine is FishArt's drawing, inlined in PocketFishIcon). */
 
 const subscribeView=(fn:()=>void)=>{let off=getJobRuntime()?.subscribe(fn);const unreg=subscribeJobRuntime(()=>{off?.();off=getJobRuntime()?.subscribe(fn);fn();});return()=>{off?.();unreg();};};
@@ -88,25 +90,17 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   const first=peek===0;const next=first?initialPill(seen):'full';setPill(next);if(next==='chip')return;
   const t=setTimeout(()=>{setPill('chip');if(next==='tip')try{localStorage.setItem(BUG_PILL.key,'1');}catch{}},next==='tip'?BUG_PILL.tipMs:BUG_PILL.openMs);return()=>clearTimeout(t);
  },[squadKey,peek]);
- // The pill's safety net (bugUi.ts pillWatch; user, twice: "the bar is missing for bug squad"): while a Bug squad run is active, a
- // 2 Hz check that the pill is really on screen. A stage, the release or a dialog covering it is fine; otherwise the pill state is
- // reset, and if the HUD stack itself is hidden (or the pill keeps failing) the pill is drawn on its own under the coins bar.
- const [pillDocked,setPillDocked]=useState(false),pillStage=useRef(false);pillStage.current=!!act0?.squad&&(!!view.zooming||!!view.releasing);
- useEffect(()=>{setPillDocked(false);if(!squadKey)return;let misses=0,sticky=false;
-  const id=window.setInterval(()=>{try{
-   const stack=document.querySelector<HTMLElement>('[data-hud-stack]'),el=document.querySelector<HTMLElement>('[data-job-active]:not([data-hud-exit])');
-   const shown=(n:Element|null)=>{if(!n)return false;const r=n.getBoundingClientRect(),cs=getComputedStyle(n);return r.width>0&&r.height>0&&cs.visibility==='visible'&&+cs.opacity>.1;};
-   const dialog=[...document.querySelectorAll('[role="dialog"],[aria-modal="true"],dialog[open]')].some(d=>{if(d.closest('[data-job-intro],[data-job-done],[data-job-active]'))return false;const r=d.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(d).visibility!=='hidden';});
-   let visible=false;if(el&&shown(el)){const r=el.getBoundingClientRect();visible=r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth&&(!stack?.contains(el)||shown(stack));
-    if(visible){const hit=document.elementFromPoint(Math.min(innerWidth-1,Math.max(0,r.left+r.width/2)),Math.min(innerHeight-1,Math.max(0,r.top+r.height/2)));visible=!!hit&&(el.contains(hit)||!!hit.closest('[data-bug-card],[data-island-toast],[data-job-skip]'));}}
-   const stackHidden=!!stack&&(stack.hidden||!shown(stack)&&!!el&&stack.contains(el));
-   const call=pillWatch({running:!!getJobRuntime()?.run,staging:pillStage.current||document.documentElement.hasAttribute('data-catch-stage'),dialog,exists:!!el,visible,stackHidden});
-   if(call==='ok'){misses=0;if(!sticky&&stack&&!stack.hidden&&el&&!stack.contains(el))setPillDocked(false);return;}
-   if(call==='wait')return;
-   misses++;const w=window as unknown as {__fi2PillRescues?:number};w.__fi2PillRescues=(w.__fi2PillRescues??0)+1;
-   setPill('chip');setPanel('full');if(call==='detach'||misses>=3){if(misses>=3)sticky=true;setPillDocked(true);}
-  }catch{/* a safety net never throws */}},PILL_WATCH_MS);
-  return()=>window.clearInterval(id);},[squadKey]);
+ // The Bug squad TOP BAR (Oct 21 2026; user, several times: "there need to be a bar at the top to ask for hint and end the bug squad,
+ // both night and day time"). For the whole shift the pill is its own fixed element under the coins bar (.pillDock, never inside
+ // the HUD stack, so no stack / toast lane / card state can hide it); the chip / tip / full states only change its content. Only the
+ // catch stage and the release cinematic hide it (CSS + view flags), and it is back the frame they end. The HUD stack's column
+ // moves down by the bar's measured height (--bug-bar-h on <html>, globals.css), so notes and cards stack below it, never over it.
+ const barRef=useRef<HTMLDivElement|null>(null);
+ useEffect(()=>{const el=barRef.current,root=document.documentElement;if(!squadKey||!el)return;
+  const put=()=>{try{root.style.setProperty('--bug-bar-h',`${Math.ceil(el.getBoundingClientRect().height)}px`);}catch{}};
+  root.setAttribute('data-bug-bar-on','');put();const ro=typeof ResizeObserver!=='undefined'?new ResizeObserver(put):null;ro?.observe(el);
+  return()=>{ro?.disconnect();root.removeAttribute('data-bug-bar-on');root.style.removeProperty('--bug-bar-h');};
+ },[squadKey,blocked]);
  useEffect(()=>{if(!panelKey||squadPill)return;setPanel('full');if(holdOpen)return;
   const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const dwell=Math.min(9000,Math.max(PANEL_DWELL_MS,(act0?.hint.length??0)*45));let t2:ReturnType<typeof setTimeout>|undefined;
@@ -194,7 +188,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  useEffect(()=>{const app=document.querySelector('.town-app');if(!app)return;app.toggleAttribute('data-job-camera',jobCamera);return()=>app.removeAttribute('data-job-camera');},[jobCamera]);
  if(blocked)return null;
  // The Bug squad's definition follows its target set (bugs by day, fireflies at night; Oct 20 2026 merge): title, unit and copy.
- const runtime=getJobRuntime(),active=view.active?jobVariant(view.active.id,view.active.set)??null:null,offer=view.near?jobById(view.near):null,introJob=intro?(runtime?.variant(intro)??jobById(intro)):null;
+ const runtime=getJobRuntime(),active=view.active?jobVariant(view.active.id,view.active.set)??jobById(view.active.id)??null:null,offer=view.near?jobById(view.near):null,introJob=intro?(runtime?.variant(intro)??jobById(intro)):null;
  const start=(id:JobId)=>{if(view.active&&runtime?.run){busyNote();setIntro(null);return;}onRequestWalk();if(runtime&&!runtime.start(id)){busyNote();setIntro(null);return;}setIntro(null);setPayday(null);};
  const preview=introJob?islandJobWallet.preview(introJob.id):null;
  // One message surface at a time (bugUi.ts): the story card, then payday, then the toast slot.
@@ -228,31 +222,33 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
     <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{a.set==='fireflies'?BUG_TIP_NIGHT:BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}</button>
-    {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label="Show nearest bug" title="Show nearest bug" disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
-    {a.squad?<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
+    {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} title={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
+    {a.squad?<button type="button" className={styles.chipStop} data-bug-end data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
     :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
    </>:<>
     <div className={styles.head} title={`${active.role} · ${unit}`} onClick={a.squad?()=>setPill('chip'):undefined}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
     <p data-job-hint data-open={hintOpen||undefined} onClick={()=>setHintOpen(o=>!o)}>{phaseText()}</p>
     {a.squad&&<p className={styles.bugMeta} data-bug-shift>Today&apos;s jar {a.phase==='deliver'?a.total:a.value}/{a.total} · squad {a.squad.value}/{a.squad.total}</p>}
-    {(a.guide||netChip)&&<div className={styles.taskActions}>{a.guide&&<button type="button" className={styles.secondary} data-bug-hint disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}>➤ Nearest bug</button>}{netChip&&<button type="button" className={styles.secondary} data-bug-net={netChip.id} aria-keyshortcuts="E" disabled={!netChip.enabled} onClick={()=>runtime?.act(netChip.id)}>{netChip.label} (E)</button>}</div>}
+    {(a.guide||netChip)&&<div className={styles.taskActions}>{a.guide&&<button type="button" className={styles.secondary} data-bug-hint disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}>{a.set==='fireflies'?'➤ Nearest firefly':'➤ Nearest bug'}</button>}{netChip&&<button type="button" className={styles.secondary} data-bug-net={netChip.id} aria-keyshortcuts="E" disabled={!netChip.enabled} onClick={()=>runtime?.act(netChip.id)}>{netChip.label} (E)</button>}</div>}
     {a.gauge&&(()=>{const g=a.gauge,max=1.4,pct=(v:number)=>`${Math.min(100,v/max*100)}%`;return <div className={styles.gauge} role="meter" aria-label={g.label??"Ball pressure in atmospheres"} aria-valuemin={0} aria-valuemax={max} aria-valuenow={g.value} data-job-gauge={g.value}>
      <span className={styles.zone} style={{left:pct(g.min),width:`calc(${pct(g.max)} - ${pct(g.min)})`}}/><i style={{left:pct(g.value)}}/><small>{g.label??`${g.value.toFixed(2)} atm · green zone ${g.min}–${g.max}`}</small></div>;})()}
     {/* A job with its own action cluster (jobMoves.ts jobButtons) acts from the Kick / Juggle / Ride buttons instead (Town.tsx):
         no duplicate controls in the panel. Wall rebounds keeps the ball buttons and has no panel actions. */}
     {a.actions.length>0&&!a.buttons&&<div className={styles.taskActions}>{a.actions.map(x=><button key={x.id} type="button" data-job-action={x.id} className={x.primary?styles.primary:styles.secondary} {...jobActionProps(x,id=>runtime?.act(id))}>{x.label}</button>)}</div>}
-    <button type="button" className={styles.stop} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
+    <button type="button" className={styles.stop} data-bug-end={a.squad?true:undefined} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
    </>}
   </section>;
-   return a.squad&&pillDocked?<div className={styles.pillDock} data-pill-dock>{panelEl}</div>:<HudSlot>{panelEl}</HudSlot>;})()}
+   return a.squad?<div ref={barRef} className={styles.pillDock} data-pill-dock data-bug-bar={a.set??'bugs'} data-staged={bugBar(a,view)==='staged'||undefined}>{panelEl}</div>:<HudSlot>{panelEl}</HudSlot>;})()}
   {/* Bug squad release cinematic (Oct 20 2026): the controls are held while the bugs fly off; a tap anywhere (or Space / Enter /
       Esc) skips to the end. Transparent, over the game only; the HUD stays readable. Only a NEW press skips: the Release tap's own trailing click lands on
       this overlay (it appears under the finger), so pointer clicks are ignored (keyboard clicks, detail 0, still skip). */}
   {bugCard&&surface==='card'&&<button type="button" className={styles.bugCard} data-bug-card={bugCard.id} data-out={cardOut||undefined} data-night={bugCard.kind==='firefly'||undefined} role="status" aria-live="polite" onClick={()=>setCardOut(true)}>
    {(bugCard.isNew||bugCard.squadComplete)&&<span className={styles.bugStamps}>{bugCard.isNew&&<em data-stamp="new">New!</em>}{bugCard.squadComplete&&<em data-stamp="squad">Squad complete!</em>}</span>}
-   <b className={styles.bugName}>{bugCard.name}</b>
-   <small className={styles.bugRole}>{bugCard.role}{bugCard.coins?` · +${bugCard.coins} coin`:''}{bugCard.kind==='bug'&&bugCard.squad?` · squad ${bugCard.squad}/${bugCard.squadSize}`:''}</small>
-   {bugCard.story&&<span className={styles.bugFact}><span>Real football fact</span>{bugCard.story}</span>}
+   <b className={styles.bugName}>{bugCard.kind==='firefly'&&bugCard.title?bugCard.title:bugCard.name}</b>
+   <small className={styles.bugRole}>{bugCard.kind==='firefly'?'Firefly call':bugCard.role}{bugCard.coins?` · +${bugCard.coins} coin`:''}{bugCard.kind==='bug'&&bugCard.squad?` · squad ${bugCard.squad}/${bugCard.squadSize}`:''}</small>
+   {/* Fireflies (firefly-lessons, Oct 21 2026): the call's lesson first (always, repeats too), then one rotating real fact. */}
+   {bugCard.idea&&<span className={styles.bugIdea} data-bug-idea><span>Coaching idea</span>{bugCard.idea}</span>}
+   {bugCard.story&&<span className={styles.bugFact} data-bug-fact><span>Real football fact</span>{bugCard.story}{bugCard.kind==='firefly'&&bugCard.source&&<small className={styles.bugSource}>{sourceHost(bugCard.source)}</small>}</span>}
   </button>}
   {view.zooming&&<button type="button" className={styles.skip} data-job-skip data-bug-zoom aria-label="Skip the catch" onPointerDown={e=>{e.preventDefault();runtime?.skipZoom();}} onClick={e=>{if(e.detail===0)runtime?.skipZoom();}}><span>Tap to skip</span></button>}
   {view.releasing&&<button type="button" className={styles.skip} data-job-skip aria-label="Skip the release" onPointerDown={e=>{e.preventDefault();runtime?.skipRelease();}} onClick={e=>{if(e.detail===0)runtime?.skipRelease();}}><span>Tap to skip</span></button>}
