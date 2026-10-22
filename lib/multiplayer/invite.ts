@@ -173,7 +173,9 @@ export function joinNote(names: string[]): string {
 export function expiryText(expiresAt: number, now: number): string {
   const min = Math.ceil((expiresAt - now) / 60000);
   if (min <= 0) return '';
-  if (min < 60) return `${min} min`;
+  // Spelled out for kids and grown-ups (Oct 22 2026, user: "also spell out hours"): "1 hour 52 minutes", "2 hours", "30 minutes".
+  const unit = (n: number, one: string) => `${n} ${n === 1 ? one : one + 's'}`;
+  if (min < 60) return unit(min, 'minute');
   const h = Math.floor(min / 60), m = min % 60;
-  return m ? `${h} h ${m} min` : `${h} h`;
+  return m ? `${unit(h, 'hour')} ${unit(m, 'minute')}` : unit(h, 'hour');
 }
