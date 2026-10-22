@@ -72,11 +72,12 @@ function FadeScroll({ children }: { children: ReactNode }) {
  * (no scale, so no oval); content fades in after the shell has grown. Reduced motion: no morph, no fade-out.
  * `children` may be a function that receives the animated close (for the card's own Done button).
  */
-function Card({ children, onClose, label, grow, from }: { children: ReactNode | ((close: () => void) => ReactNode); onClose: () => void; label: string; grow?: boolean; from?: DOMRect | null }) {
+function Card({ children, onClose, label, grow, from, onEscape }: { children: ReactNode | ((close: () => void) => ReactNode); onClose: () => void; label: string; grow?: boolean; from?: DOMRect | null; onEscape?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const back = useRef<HTMLDivElement>(null);
   const closing = useRef(false);
   const closeRef = useRef(onClose); closeRef.current = onClose;
+  const escRef = useRef(onEscape); escRef.current = onEscape;
   const requestClose = useCallback(() => {
     if (closing.current) return;
     const el = ref.current; const target = openerRect();
@@ -97,8 +98,8 @@ function Card({ children, onClose, label, grow, from }: { children: ReactNode | 
   }, [grow, from]);
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('input,button')?.focus({ preventScroll: true });
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); requestClose(); } };
+    ref.current?.querySelector<HTMLElement>('[data-parent-gate-answer],input,button')?.focus({ preventScroll: true });
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); if (escRef.current) escRef.current(); else requestClose(); } };
     window.addEventListener('keydown', key, true);
     return () => { window.removeEventListener('keydown', key, true); prev?.focus?.(); };
   }, [requestClose]);
@@ -285,9 +286,11 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       )}
       {shown && <p className={styles.toast} role="status" data-party-toast>{shown}</p>}
 
-      {view === 'menu' && (
-        <Card label="Play with friends" onClose={close} grow from={from}>
-          {(requestClose) => <section className={`${styles.card} ${styles.menuCard}`} data-party-menu aria-labelledby="party-menu-title">
+      {(view === 'menu' || (view === 'gate' && pending)) && (
+        <Card label={view === 'gate' ? 'For grown-ups' : 'Play with friends'} onClose={close} grow from={view === 'gate' && pending?.kind === 'join' ? null : from} onEscape={view === 'gate' ? () => setView(pending?.kind === 'join' ? 'join' : 'menu') : undefined}>
+          {(requestClose) => view === 'gate' && pending ? (
+            <ParentGate shell reason={pending.kind === 'create' ? 'Invite friends to play on your island. Nobody can chat.' : 'Join a friend’s party. Nobody can chat.'} onCancel={() => setView(pending.kind === 'join' ? 'join' : 'menu')} onPass={() => run(pending)} />
+          ) : <section className={`${styles.card} ${styles.menuCard}`} data-party-menu aria-labelledby="party-menu-title">
             <header className={styles.menuHeader}>
               <span aria-hidden="true" />
               <h2 id="party-menu-title">Play with friends</h2>
@@ -302,11 +305,6 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             </div>
             </FadeScroll>
           </section>}
-        </Card>
-      )}
-      {view === 'gate' && pending && (
-        <Card label="For grown-ups" onClose={close}>
-          <ParentGate reason={pending.kind === 'create' ? 'Invite friends to play on your island. Nobody can chat.' : 'Join a friend’s party. Nobody can chat.'} onCancel={close} onPass={() => run(pending)} />
         </Card>
       )}
       {view === 'join' && (

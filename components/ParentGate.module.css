@@ -1,7 +1,14 @@
 /* Grown-up check: the Coaches Centre cream card with the shared button families (docs/ui/BUTTONS.md). */
-.gate{display:grid;justify-items:center;gap:10px;max-width:460px;margin:0 auto;padding:26px 22px;text-align:center;color:var(--btn-ink,#244d40);background:var(--btn-cream,#fff1d3);border-radius:26px 40px 22px 24px;box-shadow:0 6px 0 #183b3438}
+.gate{display:grid;justify-items:stretch;gap:10px;max-width:460px;margin:0 auto;padding:16px 22px 26px;text-align:center;color:var(--btn-ink,#244d40);background:var(--btn-cream,#fff1d3);border-radius:26px 40px 22px 24px;box-shadow:0 6px 0 #183b3438}
 .lock{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--btn-gold-bright,#f9d665);box-shadow:0 4px 0 var(--btn-gold-bright-edge,#aa8b3e)}
-.gate h3{margin:4px 0 0;font-family:IslandBrush,sans-serif;font-weight:400;font-size:clamp(24px,4vw,32px);line-height:1.1}
+.header{display:grid;grid-template-columns:76px minmax(0,1fr) 76px;align-items:center;gap:8px}
+.header>button{justify-self:start}
+.header h2,.header h3{margin:0;text-align:center;font-family:IslandBrush,var(--btn-font,sans-serif);font-weight:400;font-size:clamp(24px,3vw,38px);line-height:1.15;text-wrap:balance}
+.body{display:grid;justify-items:center;gap:10px;min-height:0}
+/* Inside the Play with friends card: same width, padding, corner radius and header grid as .menuCard (party.module.css). */
+.shell{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden;max-width:none;margin:0;gap:16px;padding:16px 24px 24px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:24px;box-shadow:none;background:var(--btn-cream,#fff1d3)}
+.shell .body{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;padding:6px 10px 12px;margin:-6px -10px;gap:14px}
+@media(max-width:600px){.shell{gap:14px;padding:12px var(--phone-gutter,18px) 18px}}
 .reason{margin:0;font-size:14px;line-height:1.5;color:#48604c}
 .form{display:grid;gap:8px;width:100%;margin-top:6px}
 .question{font-size:18px;font-weight:700;line-height:1.35}
@@ -9,10 +16,8 @@
 .row input{width:96px;min-height:48px;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:var(--btn-ink,#244d40);font:inherit;font-size:22px;font-weight:700;text-align:center}
 .row input:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .status{margin:0;font-size:12px;color:#69715d;min-height:1.4em}
-.primary,.ghost{min-height:var(--btn-height,44px);padding:10px 20px;border-radius:var(--btn-radius,999px);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s}
+.primary{min-height:var(--btn-height,44px);padding:10px 20px;border-radius:var(--btn-radius,999px);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:1px solid var(--btn-green);box-shadow:0 4px 0 var(--btn-green-edge)}
 .primary:disabled{opacity:.45;cursor:default;box-shadow:none}
 .primary:not(:disabled):active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-green-edge)}
-.ghost{background:var(--btn-mint);color:var(--btn-ink);border:var(--btn-rim-width) solid var(--btn-rim);box-sizing:border-box;box-shadow:0 4px 0 var(--btn-mint-edge)}
-.ghost:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
-@media(prefers-reduced-motion:reduce){.primary,.ghost{transition:none}}
+@media(prefers-reduced-motion:reduce){.primary{transition:none}}

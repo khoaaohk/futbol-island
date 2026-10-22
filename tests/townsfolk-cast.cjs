@@ -76,7 +76,7 @@ assert.match(npcs,/const entries=NPC_DIALOGUES\.map\(/,'every islander is an ent
 assert.match(npcs,/for\(const entry of entries\)\{if\(isThinned\(entry\)\|\|heldByFocus\(entry\)\)continue;/,'focus mode holds routines');
 assert.match(npcs,/for\(const entry of entries\)\{if\(frozen\.has\(entry\.id\)\|\|heldByFocus\(entry\)\)continue;/,'focus mode holds posing');
 assert.match(npcs,/bucket===entry\.poseBucket&&!entry\.definition\.travel&&[^;]*distance>FAR_POSE/,'still and walking townsfolk pose at 10 Hz beyond FAR_POSE');
-assert.match(npcs,/const seat=definition\.pose\?npcSeatPose\(definition\.pose,rig\.profileScale\):undefined;/,'still poses built once');
+assert.match(npcs,/const seat=definition\.pose\?npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\):undefined;/,'still poses built once');
 assert.match(npcs,/\.\.\.\(entry\.seat\?\{trick:entry\.seat\}:null\)/,'still pose handed to the rig as its trick pose');
 assert.match(npcs,/if\(entry\.seat&&!entry\.near&&!entry\.stunned&&entry\.seatHeld>=2&&!truckWitnesses\.has\(entry\.id\)\)/,'a still townsperson holds its solved pose (re-solved after a wave, bump or truck)');
 assert.match(npcs,/rig\.setProfile\(AGE_PROFILES\[definition\.age\]\)/,'age height profile');

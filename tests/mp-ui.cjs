@@ -99,14 +99,21 @@ t('no animals: picker gone, create and join send only the first name; the name i
  assert(/if \(!getNick\(\)\)/.test(host),'create / join also guard in code');
  assert(/\[ErrorCode\.BadName\]/.test(host),'a relay BadName refusal has a message');
 });
+t('grown-up gate: the same card shell as Play with friends, Back top left (no bottom Go back), Esc = Back',()=>{
+ const gate=fs.readFileSync(path.join(ROOT,'components/ParentGate.tsx'),'utf8'),gcss=fs.readFileSync(path.join(ROOT,'components/ParentGate.module.css'),'utf8');
+ assert(/<ParentGate shell /.test(host)&&/view === 'menu' \|\| \(view === 'gate' && pending\)/.test(host),'gate renders inside the same grow Card as the menu (no size jump)');
+ assert(/grid-template-columns:76px minmax\(0,1fr\) 76px/.test(gcss)&&/\.shell\{[^}]*padding:16px 24px 24px[^}]*border-radius:24px/.test(gcss)&&/\.header h2[^{]*\{[^}]*IslandBrush[^}]*font-size:clamp\(24px,3vw,38px\)/.test(gcss),'same header grid, padding, radius and title style');
+ assert(/<BackButton onBack=\{onCancel\} data-parent-gate-back\/>/.test(gate)&&!/Go back/.test(gate),'Back (shared BackButton) replaces the bottom Go back');
+ assert(/onEscape=\{view === 'gate'/.test(host),'Escape goes Back from the gate');
+});
 t('Play with friends card: wide, grows out of the HUD button, animated close, Done top right, soft scroll fade',()=>{
  assert(/\.dialogWide\{[^}]*width:min\(560px,92vw\)/.test(css),'card is min(560px,92vw) wide');
- assert(/grow from=\{from\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
+ assert(/grow from=\{[^}]*\bfrom\}/.test(host)&&/data-party-open/.test(host)&&/getBoundingClientRect/.test(host),'menu card grows from the HUD button');
  assert(/GROW_IN_MS = 300/.test(host)&&/GROW_OUT_MS = 200/.test(host)&&/clipPath/.test(host)&&!/scale\(|flipTransform|invert\(/.test(host.slice(host.indexOf('function growFrame'),host.indexOf('function FadeScroll'))),'grow: ~300 ms open, 200 ms close, clip-path reveal with a constant radius, no scale (no oval)');
  assert(/borderRadius: '999px'/.test(host)===false&&/GROW_IN_MS \* 0\.4/.test(host)&&/GROW_IN_MS \* 0\.6/.test(host),'content fades in over the last 60% of the grow; no 999px radius morph');
  assert(/reducedMotion\(\)\) \{ closeRef\.current\(\)/.test(host)&&/prefers-reduced-motion: reduce/.test(host),'reduced motion: no morph, close at once');
- assert(/e\.key === 'Escape'\) \{ e\.stopPropagation\(\); requestClose\(\)/.test(host)&&/role="dialog" aria-modal="true"/.test(host),'Escape / backdrop use the animated close; dialog aria kept');
- assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Close<\/button>/.test(host.slice(host.indexOf('data-party-menu'),host.indexOf("view === 'gate'"))),'Done (shared DoneButton) replaces the bottom Close');
+ assert(/e\.key === 'Escape'\) \{ e\.stopPropagation\(\); if \(escRef\.current\) escRef\.current\(\); else requestClose\(\)/.test(host)&&/role="dialog" aria-modal="true"/.test(host),'Escape / backdrop use the animated close; dialog aria kept');
+ assert(/<DoneButton onDone=\{requestClose\} \/>/.test(host)&&!/>Close<\/button>/.test(host.slice(host.indexOf('data-party-menu'),host.indexOf("view === 'join' && ("))),'Done (shared DoneButton) replaces the bottom Close');
  assert(/\.menuHeader h2\{[^}]*IslandBrush[^}]*font-weight:400;font-size:clamp\(24px,3vw,38px\)/.test(css)&&/grid-template-columns:76px minmax\(0,1fr\) 76px/.test(css),'title matches the other sheet titles');
  assert(/\.nickInput\{[^}]*width:100%;box-sizing:border-box/.test(css),'name field as wide as the buttons');
  assert(/\.fadeScroll\{[^}]*mask-image/.test(css)&&/dataset\.top/.test(host)&&/dataset\.bottom/.test(host),'scroll area fades only where content continues');
