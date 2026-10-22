@@ -34,6 +34,7 @@ export default function JoinFriends({onContinue}:{onContinue:()=>void}){
   setPending(stored);setOpen(false);setGone(true);onContinue();
  };
  return <>
+  <div className={styles.stack} data-title-join-stack>
   {pending&&<p className={styles.waiting} data-party-waiting role="status">
    <span>Party code waiting: <b>{groupCode(pending)}</b></span>
    <button type="button" className={styles.clear} aria-label="Forget the party code" onClick={()=>{clearPendingParty();setPending(null);}}>
@@ -44,6 +45,7 @@ export default function JoinFriends({onContinue}:{onContinue:()=>void}){
    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><circle cx="17" cy="9.5" r="2.4"/><path d="M3 19c0-3.2 2.7-5.2 6-5.2s6 2 6 5.2M15.5 14.4c3 0 5.5 1.6 5.5 4.6"/></svg>
    Join friends
   </button>
+  </div>
   {open&&<div className={styles.wrap} data-title-join-card>
    <div className={styles.backdrop} onClick={()=>setOpen(false)} aria-hidden="true"/>
    <section className={styles.card} role="dialog" aria-modal="true" aria-labelledby="title-join-h">
