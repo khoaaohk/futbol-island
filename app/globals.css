@@ -777,6 +777,8 @@ html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:
 .town-app:has(.dive-depth) :is(.dive-depth-btn,.dive-emote-btn):active{translate:0 3px;box-shadow:0 2px 0 var(--room-edge),0 0 0 4px #fff2cd40}
 .town-app:has(.dive-depth) :is(.dive-depth-btn,.dive-emote-btn)>svg{width:32px;height:32px}
 .dive-depth-btn{--room-fill:#a8dcd6;--room-edge:#6a9e98}.dive-emote-btn{--room-fill:#f2b3c0;--room-edge:#b9798a}
+/* Desktop Explore (user, Oct 22 2026: "up and down on the left and jet pack on the right for the grid 2 by 2"): Rise / Dip join the jetpack in a 2x2 at the bottom right: Rise over Dip in the left column, the jetpack (and the friend hello) in the right column. */
+@media(min-width:601px) and (pointer:fine){.town-app:has(.dive-depth) .dive-depth{left:auto;right:calc(var(--room-rr) + var(--room-cell) + var(--room-gap));bottom:var(--room-rb)}}
 .dive-vignette{position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 42%,transparent 55%,#06303a59 100%)}
 .dive-note{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 152px);z-index:7;transform:translateX(-50%);margin:0;padding:8px 14px;border-radius:14px;background:#fffdf5;color:#17323b;font:800 15px/1.2 system-ui,sans-serif;max-width:min(320px,86vw);text-align:center;pointer-events:none}
 /* Seamless Explore (Oct 21 2026): the soft chip at a zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); fades in and out by itself.
