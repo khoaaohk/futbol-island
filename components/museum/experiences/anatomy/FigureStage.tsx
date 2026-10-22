@@ -27,6 +27,8 @@ export type FigureSpec={
  turn?:'full'|'fixed';
  pitch?:readonly [number,number];
  seeThrough?:boolean;
+ /** The See-through button's words for this figure (museum-figures-3: ball-curve's "Show the air"). */
+ seeThroughLabel?:string;
  labels?:boolean;
  /** Swatch ids from SWATCHES or the exhibit's own {id,name,hex} (4-6); omitted = no swatch row. */
  swatches?:readonly (string|Swatch)[];
@@ -102,7 +104,7 @@ export function FigureStage({spec,active,reduced,onLabel,handle,top=0,extra,labe
     <button type="button" className={f.round} aria-label="Turn left" data-fig-turn="-1" onClick={()=>spinBy(-45)}>⟲</button>
     <button type="button" className={f.round} aria-label="Turn right" data-fig-turn="1" onClick={()=>spinBy(45)}>⟳</button>
     <button type="button" className={f.pill} data-fig-front onClick={()=>{api.front();}}>Front view</button>
-    {spec.seeThrough&&<button type="button" className={f.pill} aria-pressed={xrOn} data-fig-xray onClick={()=>api.setSeeThrough(!xrOn)}>See-through</button>}
+    {spec.seeThrough&&<button type="button" className={f.pill} aria-pressed={xrOn} data-fig-xray onClick={()=>api.setSeeThrough(!xrOn)}>{spec.seeThroughLabel??'See-through'}</button>}
     {spec.labels!==false&&<button type="button" className={f.pill} aria-pressed={lbOn} data-fig-labels onClick={()=>api.setLabels(!lbOn)}>Labels</button>}
     {extra}
    </div>

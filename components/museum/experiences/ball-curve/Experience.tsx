@@ -14,7 +14,10 @@ import {local,toFloor,follow} from '../anatomy/paper-kit';
 import {iso} from '../anatomy/iso-kit';
 import {usePaperLoop} from '../anatomy/paper-loop';
 import {alongPath,knobValue} from '../free-kick-wall/rig-parts';
-import {ACCENT,BEATS,CHALLENGES,CHECKS,MODEL_NOTE,MORE,PART_NAME,PART_TEXT,SHOW,SOURCES,TASKS,VERDICT} from './content';
+import {FigureStage,type FigureHandle} from '../anatomy/FigureStage';
+import fs from '../anatomy/FigureStage.module.css';
+import {STEPS as FIG_STEPS,makeCurveFigure} from './figure';
+import {ACCENT,BEATS,CHALLENGES,CHECKS,FIGURE_INTRO,FIGURE_SAY,MODEL_NOTE,MORE,PART_NAME,PART_TEXT,SHOW,SOURCES,TASKS,VERDICT} from './content';
 import {bendAt,fly,judge,spinOf,yEndOf,type Flight,type Strike} from './physics';
 import {CRANK,SPINK,Tunnel,tunnelState,useTunnelProjection} from './Tunnel';
 import {Lane,M,cockOf,goalYOf,hammerAt,useLaneProjection,type LaneView} from './Launcher';
@@ -35,11 +38,14 @@ import bc from './bc.module.css';
  *  3. THE BALL TAKEN APART (Exploded.tsx, the breakdown like the stadiums): a slider lifts the cover, the bladder and the valve
  *     apart; five numbered parts with leader lines (or badges on a phone). Drag the ball to turn it.
  *  4. Score + quick check (StepCheck) → Ending → onComplete once.
+ *  KICK IT (museum-figures-3, figure kit v2; figure.ts): from the intro or the breakdown, a spinning ball, a wall and a goal that
+ *     turn all the way round; "Show the air" shows the air bent off one side and the force arrow; Labels; "Curl left / right";
+ *     "Kick it" plays kick with spin, the air bends, the ball curves round the wall into the goal (the figure's own clock).
  * Heat: React redraws on a change. The shared Paper loop (anatomy/paper-loop.ts) runs only while a control is being turned and
  * for a short settle after it (the fan, the spinning ball, the smoke), while a kick flies, or while the ball comes apart; it parks
  * off-screen and in a hidden tab. 0 frames at rest. Reduced motion: everything lands at once and the smoke stands still.
  */
-type Phase='intro'|'tunnel'|'launch'|'apart'|'score';
+type Phase='intro'|'tunnel'|'launch'|'apart'|'score'|'figure';
 type C2='wall'|'knuckle';
 type Ctl='fan'|'spin'|'aim'|'power'|'contact';
 type Task='wind'|'spin'|'flip'|'still';
@@ -54,6 +60,16 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const reduced=useReduced();
  const [phase,setPhase]=useState<Phase>('intro');
  const [,bump]=useReducer((n:number)=>n+1,0);
+ // Kick it (figure kit v2): made once; `figFrom` is the phase to go back to. The steps report back through onStep.
+ const curve=useMemo(()=>makeCurveFigure(),[]),figHandle=useRef<FigureHandle|null>(null),figFrom=useRef<Phase>('intro');
+ const [figLit,setFigLit]=useState<string[]>([]),[figNote,setFigNote]=useState(FIGURE_INTRO),[figStep,setFigStep]=useState(-1),[curl,setCurl]=useState<1|-1>(1);
+ useEffect(()=>{curve.onStep=i=>{setFigStep(i);const st=FIG_STEPS[i];if(st){setFigLit([...st.lit]);setFigNote(FIGURE_SAY[st.id]);sfx(i===0?museumSfx.kick:i===FIG_STEPS.length-1?museumSfx.net:museumSfx.tick);}};return()=>{curve.onStep=null;};},[curve]);
+ const openFigure=(from:Phase)=>{figFrom.current=from;curve.reset();setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);setPhase('figure');sfx(museumSfx.reveal);};
+ const closeFigure=()=>{curve.reset();setFigStep(-1);setFigLit([]);setPhase(figFrom.current);};
+ const touchCurve=(id:string)=>{if(curve.running)return;setFigLit([id]);setFigNote(FIGURE_SAY[id==='air'?'air_flow':id]??FIGURE_INTRO);sfx(museumSfx.tick);};
+ const kickCurve=()=>{const h=figHandle.current;if(figStep>=FIG_STEPS.length-1&&!curve.running){curve.reset();setFigStep(-1);setFigLit([]);setFigNote(FIGURE_INTRO);h?.invalidate();return;}
+  if(figStep<0){h?.setLabels(true);h?.setSeeThrough(true);}curve.kick(reduced);h?.invalidate();};
+ const flipCurl=()=>{const n:1|-1=curl===1?-1:1;curve.reset();curve.setSide(n);setCurl(n);setFigStep(-1);setFigLit(['spin']);setFigNote(FIGURE_SAY[n===1?'right':'left']);sfx(museumSfx.tick);figHandle.current?.invalidate();};
  const cardRef=useRef<HTMLDivElement>(null),stageRef=useRef<HTMLDivElement>(null),readRef=useRef<HTMLSpanElement>(null);
  const [box,setBox]=useState({w:0,h:0});
  useEffect(()=>{const el=stageRef.current;if(!el)return;const read=()=>{const r=el.getBoundingClientRect();setBox(b=>Math.round(r.width)===b.w&&Math.round(r.height)===b.h?b:{w:Math.round(r.width),h:Math.round(r.height)});};read();
@@ -183,9 +199,9 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
      renderDone={()=><Ending reached={checked} onComplete={onComplete} art={<EndArt/>} seen="You spun a ball in the wind tunnel, bent one round a wall and took one apart." take={exhibit.forYourGame}/>}/>
    </ScoreCover>:null;
 
- const fig=phase==='launch'?'Fig. 2':phase==='apart'?'Fig. 3':'Fig. 1';
- const title=phase==='launch'?'The curl launcher':phase==='apart'?'The ball, taken apart':'The wind tunnel';
- const hint=phase==='tunnel'?'Wind the crank · turn the spin knob':phase==='launch'?'Turn the table · pull the hammer · drag the dot':phase==='apart'?'Slide it apart · tap a number':'Magnus effect';
+ const fig=phase==='launch'?'Fig. 2':phase==='apart'?'Fig. 3':phase==='figure'?'Fig. 4':'Fig. 1';
+ const title=phase==='figure'?'A curling free kick':phase==='launch'?'The curl launcher':phase==='apart'?'The ball, taken apart':'The wind tunnel';
+ const hint=phase==='figure'?'Drag to turn':phase==='tunnel'?'Wind the crank · turn the spin knob':phase==='launch'?'Turn the table · pull the hammer · drag the dot':phase==='apart'?'Slide it apart · tap a number':'Magnus effect';
  const label=phase==='launch'?`The curl launcher. ${ch.name}: ${ch.goal} Aim ${aim} degrees, power ${Math.round(strike.power*100)}%, contact ${Math.abs(strike.cx)<.12?'in the middle':strike.cx>0?'right of the middle':'left of the middle'}.`
   :phase==='apart'?`A football taken apart: ${BALL_PARTS.map(p=>PART_NAME[p]).join(', ')}.`
   :`A wind tunnel with a ball on a spindle. Wind ${Math.round(st.U*3.6)} km/h, spin ${turnsWord(st.n)}. ${Math.abs(st.F)<.05?'No push.':`The ball is pushed ${st.F>0?'towards you':'away from you'} with ${Math.abs(st.F).toFixed(1)} newtons.`}`;
@@ -202,7 +218,14 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
  const labels=showParts&&wide?order.map((id,i)=><button key={id} type="button" className={bc.label} style={{left:colX+8,top:labelY(i),width:Math.min(310,box.w*.3)-24} as CSSProperties} data-part-label={id} aria-pressed={focus===id}
   onClick={()=>setFocus(x=>x===id?null:id)}><b><i>{BALL_PARTS.indexOf(id)+1}</i>{PART_NAME[id]}</b><span>{PART_TEXT[id]}</span></button>):null;
 
- const dock=phase==='intro'?<StartDock label="Open the lab" line="A wind tunnel, a curl launcher, and a ball to take apart." onStart={()=>{unlockMuseumAudio();sfx(museumSfx.whistle);setPhase('tunnel');}}/>
+ const dock=phase==='intro'?<><StartDock label="Open the lab" line="A wind tunnel, a curl launcher, and a ball to take apart." onStart={()=>{unlockMuseumAudio();sfx(museumSfx.whistle);setPhase('tunnel');}}/>
+   <div className={s.row}><button type="button" className={s.ghost} data-curve-figure onClick={()=>openFigure('intro')}>Kick with spin</button></div></>
+  :phase==='figure'?<>
+   <p className={s.say} aria-live="polite" data-fig-note>{figNote}</p>
+   <div className={s.row}>
+    <button type="button" className={s.btn} data-tone="acc" data-kick-it onClick={kickCurve}>{figStep>=FIG_STEPS.length-1&&!curve.running?'Kick again':reduced&&figStep>=0?'Next step':'Kick it'}</button>
+    <button type="button" className={s.ghost} data-fig-back onClick={closeFigure}>{figFrom.current==='intro'?'Back to the start':'Back to the ball'}</button>
+   </div></>
   :phase==='tunnel'?<>
    <div className={s.row}>
     <Pips results={TASKS.map(t=>done.includes(t.id)?'good':undefined)} total={4} label={`${done.length} of 4 tunnel jobs done`}/>
@@ -228,6 +251,7 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
     <label className={bc.slider}><span>Take it apart</span><input type="range" min={0} max={100} step={1} value={Math.round(apart*100)} data-apart-slider aria-valuetext={`${Math.round(apart*100)}% apart`}
      onChange={e=>setE(Number(e.currentTarget.value)/100,false)}/></label>
     <button type="button" className={s.ghost} data-bc-explode onClick={()=>{setE(ex.current.eT>.5?0:1,true);sfx(museumSfx.reveal);}}>{apart>.5?'Put it together':'Pull it apart'}</button>
+    <button type="button" className={s.ghost} data-curve-figure onClick={()=>openFigure('apart')}>Kick with spin</button>
     <button type="button" className={s.btn} data-tone="acc" data-bc-score onClick={()=>{sfx(museumSfx.whistle);setPhase('score');}}>Quick check</button>
    </div>
    {!wide&&<p className={s.say} data-caption aria-live="polite">{focus?<><b>{BALL_PARTS.indexOf(focus)+1} · {PART_NAME[focus]}.</b> {PART_TEXT[focus]}</>:showParts?'Tap a number to read about that part.':'Slide it apart to see the parts.'}</p>}
@@ -240,6 +264,9 @@ export default function Experience({exhibit,onClose,onComplete}:ExperienceProps)
    'data-flying':!!f||undefined,'data-apart':apart.toFixed(2),'data-reduced':reduced||undefined}}
   head={<WallLabel as="h1" title={exhibit.title} meta={<>Skills &amp; science · the Magnus effect</>}/>}
   card={<PaperCard ref={cardRef} data-wide-note="right" fig={fig} title={title} hint={hint} readout="THE LAB" readoutRef={readRef} note={phase==='intro'||phase==='score'?null:note} banner={banner} cover={cover}>
+   {phase==='figure'&&<FigureStage spec={curve.spec} active={figLit} reduced={reduced} onLabel={touchCurve} handle={figHandle} top={28}
+    label="A spinning ball, a wall of three blocks and a goal: the spin, the air flow, the force and the curve path"
+    extra={<button type="button" className={fs.pill} aria-pressed={curl===-1} data-fig-curl={curl===1?'right':'left'} onClick={flipCurl}>{curl===1?'Curl right':'Curl left'}</button>}/>}
    <div ref={stageRef} className={`${s.stage} ${bc.stage}`} tabIndex={0} role="application" aria-label={label} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}
     data-stage={phase} data-active={active??undefined}>
     {(phase==='tunnel'||phase==='intro')&&PT&&<Tunnel P={PT} w={box.w} h={box.h} v={{fan,spin,phase:T.phase,yaw:T.yaw,flow:T.flow,active,showForce:true}}/>}

@@ -99,3 +99,34 @@ const PJ={origin:[400,300],scale:3,azimuth:58,elevation:34};
  assert.match(exp,/if\(reduced\)\{ex\.current=\{e:1,eT:1\}/,'reduced motion: the ball comes apart at once');assert.match(css,/prefers-reduced-motion/);
  assert.ok(fs.existsSync(path.join(root,'app/museum-lab/ball-curve/page.tsx')));assert.match(read('components/museum/experiences/index.tsx'),/'ball-curve':load\(\(\)=>import\('\.\/ball-curve\/Experience'\)\)/);
  console.log('PASS contract: Paper room, Back + Escape, one centred start, hooks, quick check → Ending → onComplete once, no emoji, 44 px, physics once per kick, loop only while moving, reduced motion, lab + registry');}
+
+// Kick it (museum-figures-3, figure kit v2): a spinning ball, a wall and a goal that turn all the way round; "Show the air" shows
+// the air bent off one side and the force arrow the other way; four labels reachable from every yaw; Curl left / right mirrors the
+// spin, the air and the path; three steps on the figure's clock (kick, air, curve round the wall into the goal); ≤ 120 parts.
+{const FK=require('../components/museum/experiences/anatomy/figure-kit.ts'),FF=require('../'+dir+'figure.ts');
+ const fig=FF.makeCurveFigure(),spec=fig.spec,c=FK.centreOf(spec.points),fr=spec.front,P0=FK.fitTurn(spec.points,900,700,fr.yaw,fr.pitch,{pad:24,top:80,range:spec.pitch});
+ const view=(yaw,pitch,xray,active=[])=>{const P=FK.turnProjection(P0,c,yaw,pitch),{R,U,V}=FK.basis(yaw,pitch);return {yaw,pitch,P,V,R,U,L:FK.lightOf(yaw,pitch),xray,swatch:null,swatchHex:null,active:new Set(active),w:900,h:700};};
+ assert.equal(spec.turn??'full','full');assert.equal(spec.seeThroughLabel,'Show the air');assert.ok(!spec.swatches,'no swatches: kept simple');
+ for(const side of [1,-1]){fig.setSide(side);for(const presses of [0,2,3]){fig.reset();for(let i=0;i<presses;i++)fig.kick(true);
+  for(let yaw=0;yaw<360;yaw+=45)for(const x of [0,1]){const d=spec.draw(view(yaw,32,x,['force','path']));const n=FK.countParts(d.svg)+d.labels.length*7;
+   assert.ok(n<=FK.MAX_PARTS,side+'/'+presses+'/'+yaw+'/'+x+': '+n+' parts');for(const l of d.labels)assert.ok(FK.anchorFor(l,FK.viewVector(yaw,32)),l.id+' reachable at yaw '+yaw);}}}
+ fig.setSide(1);fig.reset();const still=spec.draw(view(200,32,0)),shown=spec.draw(view(200,32,1));
+ assert.deepEqual(still.labels.map(l=>l.text).sort(),['Curve path','Spin']);assert.doesNotMatch(still.svg,/data-part="air"/,'no air until shown');
+ assert.match(shown.svg,/data-part="air"/);assert.deepEqual(shown.labels.map(l=>l.text).sort(),['Air flow','Curve path','Spin'],'no force until the ball spins in the air');
+ fig.kick(true);fig.kick(true);const pushed=spec.draw(view(200,32,1));assert.deepEqual(pushed.labels.map(l=>l.text).sort(),['Air flow','Curve path','Force','Spin']);assert.match(pushed.svg,/data-part="force"/);
+ assert.deepEqual(FF.STEPS.map(s=>s.id),['kick','air','curve']);for(const s of FF.STEPS){for(const id of s.lit)assert.ok(pushed.labels.some(l=>l.id===id),s.id+' lights a real label '+id);assert.ok(C.FIGURE_SAY[s.id]);}
+ for(const k of ['spin','air_flow','force','path','left','right'])assert.ok(C.FIGURE_SAY[k],'says '+k);
+ // the path: round the wall (clear of every block where it passes), into the goal mouth, mirrored by the curl
+ for(const side of [1,-1]){let passed=false;for(let i=0;i<=200;i++){const p=FF.pathAt(i/200,side);for(const [wx,wy] of FF.WALL)if(Math.abs(p[0]-wx)<9)assert.ok(Math.abs(p[1]-wy)>9+FF.R,'clears the wall');if(p[0]>=-14&&!passed){passed=true;}}
+  const end=FF.pathAt(1,side);assert.ok(passed&&end[0]>104&&Math.abs(end[1])<42,'ends in the goal');assert.ok(Math.sign(FF.pathAt(.4,side)[1])===side,'goes out to one side first');}
+ for(let i=0;i<=10;i++){const a=FF.pathAt(i/10,1),b=FF.pathAt(i/10,-1);assert.ok(Math.abs(a[0]-b[0])<1e-9&&Math.abs(a[1]+b[1])<1e-9,'mirrored');}
+ fig.setSide(-1);fig.reset();const left=spec.draw(view(200,32,0)).svg;fig.setSide(1);fig.reset();assert.notEqual(left,spec.draw(view(200,32,0)).svg,'Curl left redraws');
+ // the clock: three steps in order, the ball flies into the goal, then the loop sleeps
+ const seen=[];fig.onStep=i=>seen.push(i);fig.kick(false);let n=0;while(spec.tick(1/60)&&n<2000)n++;
+ assert.deepEqual(seen,[0,1,2],'kick → air → curve');assert.equal(fig.state.u,1,'in the goal');assert.ok(n<1200,'then sleeps ('+n+')');assert.equal(spec.tick(1/60),false);
+ fig.reset();seen.length=0;fig.kick(true);assert.deepEqual(seen,[0]);assert.equal(fig.state.u,0);fig.kick(true);fig.kick(true);assert.deepEqual(seen,[0,1,2]);assert.equal(fig.state.u,1,'reduced: one step a press');fig.onStep=null;
+ assert.match(C.FIGURE_SAY.path,/Roberto Carlos/);assert.match(C.FIGURE_SAY.path,/1997/);assert.match(C.FIGURE_SAY.path,/outside of his left foot/);assert.match(C.FIGURE_SAY.air,/Magnus effect/);assert.match(C.FIGURE_SAY.spin,/backspin/);
+ assert.match(exp,/<FigureStage spec=\{curve\.spec\}/);for(const h of ['data-curve-figure','data-kick-it','data-fig-back','data-fig-note','data-fig-curl'])assert.ok(exp.includes(h),'hook '+h);
+ assert.match(exp,/curve\.onStep=null/);assert.doesNotMatch(read(dir+'figure.ts'),/requestAnimationFrame|setInterval|setTimeout/);
+ console.log('PASS kick it: turns all the way round (8 yaws), Show the air (air flow + force), 4 labels from every yaw, curl left / right mirrored, round the wall into the goal, 3 steps on the figure clock, ≤ 120 parts');}
+console.log('museum-exp-ball-curve: all passed');

@@ -22,6 +22,25 @@ export const MORE:readonly {tag:string;text:string}[]=[
  {tag:'Under',text:'Strike low on the ball and it spins backwards: the same push lifts it, so it floats. Strike over the top and it dips.'},
  {tag:'Knuckle',text:'With almost no spin, the ball can move, dip and wobble in the air in ways nobody can predict. Juninho Pernambucano made this shot famous at Lyon in the 2000s.'},
 ];
+/**
+ * "Kick it" (museum-figures-3, figure kit v2). Checked Oct 21 2026 against the sources below: the spinning ball drags the air and
+ * throws it off one side, the air pushes the ball the other way (Wikipedia · Magnus effect; NASA Glenn); sidespin curves,
+ * backspin lifts, topspin dips (Magnus effect); Roberto Carlos, Brazil v France, Tournoi de France 1997, outside of the left foot,
+ * looked like going wide then swung in (Wikipedia · Curl; Dupeux et al. 2010 via ScienceDaily); the curl grows late as the ball
+ * slows (Dupeux et al. 2010). No speeds, distances or spin rates are claimed.
+ */
+export const FIGURE_INTRO='A spinning ball, a wall and a goal. Turn it round, show the air, then kick it.';
+export const FIGURE_SAY:Record<string,string>={
+ kick:'Kick with spin: strike the ball to one side of its middle and it spins as it flies.',
+ air:'The spinning ball drags the air round with it and throws it off to one side. So the air pushes the ball the other way: that push is the Magnus effect.',
+ curve:'It curves! Out past the wall, then the push bends it back into the goal. A spinning ball bends more as it slows down, so the curl comes late.',
+ spin:'Spin: sidespin curves the ball left or right, backspin lifts it, topspin makes it dip. The ball curves the way its front is turning.',
+ air_flow:'Air flow: on one side the ball’s surface turns against the oncoming air, on the other side with it. The air leaves the ball bent to one side.',
+ force:'Force: the ball throws the air one way, so the air pushes the ball the other way, sideways across its flight.',
+ path:'Curve path: in 1997 Roberto Carlos of Brazil hit a free kick against France with the outside of his left foot. It looked like going wide, then it swung in.',
+ left:'Curl left: now the ball spins the other way, the air is thrown the other way and the ball bends left.',
+ right:'Curl right: the ball spins so its front turns right, the air is thrown left and the ball bends right.',
+};
 export const MODEL_NOTE='The wind tunnel and the launcher are a simple teaching model: real gravity, plus sensible made-up numbers for the air drag, the Magnus push and the knuckle wobble (the same every time for the same kick, so you can try again fairly). The smoke lines are an ideal flow round the ball plus a bent wake, and the push on the gauge is the textbook estimate ½·ρ·A·U·r·ω. The bend you see, a few metres over 20 m, is about what a strong curler does.';
 export const SOURCES:readonly {title:string;url:string}[]=[
  {title:'Wikipedia · Magnus effect (Newton’s third law; the force points the way the front of the ball turns)',url:'https://en.wikipedia.org/wiki/Magnus_effect'},
@@ -31,6 +50,7 @@ export const SOURCES:readonly {title:string;url:string}[]=[
  {title:'IFAB Laws of the Game · Law 2 The Ball (68–70 cm, 410–450 g, 0.6–1.1 atmosphere)',url:'https://www.theifab.com/laws/latest/the-ball/'},
  {title:'Wikipedia · Ball (association football) (bladder of latex or butyl rubber; 32 panels; stitched or thermo-bonded)',url:'https://en.wikipedia.org/wiki/Ball_(association_football)'},
  {title:'Wikipedia · Adidas Jabulani (eight panels; its knuckling flight, 2010)',url:'https://en.wikipedia.org/wiki/Adidas_Jabulani'},
+ {title:'ScienceDaily (2010) · Physicists explain Roberto Carlos’s free kick (the spinning ball spiral)',url:'https://www.sciencedaily.com/releases/2010/09/100902073509.htm'},
  {title:'Dupeux, Le Goff, Quéré & Clanet (2010) · The spinning ball spiral, New Journal of Physics 12',url:'https://iopscience.iop.org/article/10.1088/1367-2630/12/9/093004'},
 ];
 export const CHALLENGES:readonly {id:Challenge;name:string;goal:string;tip:string}[]=[
