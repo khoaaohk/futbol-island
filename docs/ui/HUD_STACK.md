@@ -262,6 +262,14 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   root reset cannot cancel it); the lowest foot or knee stays on the ground. Shuffled bags per emote (never the same twice in a row; a
   friend picks its own locally). Inside EMOTE_BOUNDS (hips glide <= 0.72 m, highest point ~2.4 m). Town keeps the heading during both
   (the move spins the body). Reduced motion: unchanged (bubble only). Tests: `tests/emote-dance-show.cjs`.
+- **Whole-body Wave / Cheer / Laugh** (user, 22 Oct 2026: "many of them look similar ... standing and just waving their arms ... make them all
+  very different"). Six variants each in `lib/town/emoteBody.ts` (pose functions: in-place travel, hop, crouch, spin, torso, head, both arms and
+  legs), written on the rig by `lib/graphics/bodyEmotePose.ts` through `applyEmoteArms`. Wave: windmill shuffle, jumping hello, royal wave +
+  curtsy, wave / heel click / salute, "hey, over there!", shy wave + peekaboo. Cheer: double-jump fist pumps, goal run + aeroplane turn, knee
+  slide roar, pom-pom kicks, stadium bounce, victory spin + flex. Laugh: doubled-over knee slap, belly laugh + tear wipe, point and stagger back,
+  clutching-sides hop, thigh-slap spin, lean on your partner. Shuffled bag per actor (never the same twice in a row); a friend draws its own;
+  the townsperson answers with a different variant (`BODY_ANSWER`) at 0.8 amplitude. Root stays within 1.0 m (EMOTE_BOUNDS 1.4 m); reduced
+  motion unchanged (these poses never run under it). Guarded by `tests/emote-body.cjs` (bounds every frame, pairwise pose RMS, whole-body ranges).
 - **Pass it** (wheel slot 5, icon = ball between two arrows, protocol value 6 `Emote.PassBall`, was Thumbs up): you and the nearest
   townsperson (or an imaginary friend 3.2 m ahead when none is near) pass one pooled ball (`lib/graphics/passBall.ts`) five times,
   player -> partner -> player ..., a lifted pass between the feet with a trap bounce (`lib/town/emotePass.ts passBallAt`); you face the
