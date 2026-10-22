@@ -17,7 +17,7 @@ import { displayName, partyStore } from './store';
 
 /** activity: NOT_BUSY (-1) while playing, else the Activity code (lib/multiplayer/presence.ts townActivity); optional for old callers. */
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
-  zone: Zone; warp: boolean; hidden: boolean; activity?: number };
+  zone: Zone; warp: boolean; hidden: boolean; activity?: number; pitch?: number };
 export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.Camera): void; dispose(): void;
   /** The friends' latest interpolated poses (read-only, reused objects): the emote button looks for a friend flying nearby.
    *  Friends inside a force field (busy / away) and friends indoors are NOT listed: nothing can emote at them or pick them. */
@@ -45,10 +45,10 @@ export function partyLook(): Look { return lookToWire(loadCustomization()); }
 
 // Town helper: assembles the local pose from values Town already has, into one reused object (no allocation per call).
 const SUMMIT = { x: 640, z: 130, r: 150 }, CAY = { x: 612, z: -160, r: 120 };
-const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY };
+const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY, pitch: 0 };
 export function partyLocal(
   loc: { x: number; z: number }, root: { position: { y: number }; rotation: { y: number } }, vel: { x: number; z: number },
-  ride: string, swimming: boolean, diving: boolean, hidden: boolean, activity = NOT_BUSY,
+  ride: string, swimming: boolean, diving: boolean, hidden: boolean, activity = NOT_BUSY, pitch = 0,
 ) {
   const o = localOut, speed = Math.hypot(vel.x, vel.z);
   o.x = loc.x; o.y = root.position.y; o.z = loc.z; o.facing = root.rotation.y; o.speed = speed; o.hidden = hidden;
@@ -56,7 +56,7 @@ export function partyLocal(
     : ride === 'moped' ? Mode.Moped : ride === 'jetpack' ? Mode.Jetpack : speed > 2.6 ? Mode.Run : speed > 0.15 ? Mode.Walk : Mode.Idle;
   const sx = loc.x - SUMMIT.x, sz = loc.z - SUMMIT.z, cx = loc.x - CAY.x, cz = loc.z - CAY.z;
   o.zone = swimming || diving ? Zone.Sea : sx * sx + sz * sz < SUMMIT.r * SUMMIT.r ? Zone.Summit : cx * cx + cz * cz < CAY.r * CAY.r ? Zone.Cay : Zone.Main;
-  o.warp = false; o.activity = activity;
+  o.warp = false; o.activity = activity; o.pitch = pitch;
   return o;
 }
 
@@ -79,7 +79,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const known = new Set<MemberId>();
   const ids: MemberId[] = [];
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
-  const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0 };
+  const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0, pitch: 0, yaw: 0 };
   let meHex = '';
   let drawnLast = false; // the friend layer drew something last frame
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
@@ -165,7 +165,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!busyMe) {
         const showRing = conn.status === 'live' && meHex !== '' && !l.hidden && l.zone !== Zone.Indoors;
         meRingOn = showRing;
-        if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; }
+        if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; ring.pitch = l.pitch ?? 0; ring.yaw = l.facing; }
         avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
       }
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.

@@ -316,4 +316,20 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert(/if \(!live\) \{ if \(drawnLast\)/.test(br)&&/avatars\.update\(dt, poses, camera, ctx\.reducedMotion\(\), null\)/.test(br),'one last empty frame clears the rings when the party ends');
  assert(/radii=\[\.48,\.54\]/.test(ra)&&/RING_RADIUS=1\b/.test(ra),'the party ring has the island foot ring shape and size');
 }
+{ // The ring follows the body while FLYING (Mode.Jetpack): flat at hover, tilted + raised when pitched, flat for every other mode
+ const RA=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},emotePose:{},customization:{},look:{}});
+ const P=load('multiplayer/protocol/index.ts'),Jet=P.Mode.Jetpack,q=new T.Quaternion(),pos=new T.Vector3(),n=new T.Vector3();
+ RA.ringPlacement(3,5,7,RA.ringPitchFor(Jet,0),1,q,pos);
+ assert.ok(Math.abs(q.w-1)<1e-9&&Math.abs(pos.y-5.1)<1e-9&&pos.x===3&&pos.z===7,'hover (pitch 0): flat ring at the feet, as before');
+ RA.ringPlacement(3,5,7,RA.ringPitchFor(Jet,1.2),0,q,pos);
+ n.set(0,1,0).applyQuaternion(q);
+ assert.ok(Math.abs(n.y-Math.cos(1.2))<1e-6&&Math.abs(n.z-Math.sin(1.2))<1e-6,'pitch 1.2: the ring normal tilts forward with the body axis');
+ assert.ok(pos.y>5.1+.4&&pos.z>7,'pitch 1.2: the centre rises and moves forward toward the pelvis');
+ RA.ringPlacement(0,0,0,RA.ringPitchFor(Jet,1.2),Math.PI/2,q,pos);n.set(0,1,0).applyQuaternion(q);
+ assert.ok(n.x>.9,'the tilt follows the heading (yaw pi/2 tilts toward +x)');
+ assert.equal(RA.ringPitchFor(Jet,9),1.45,'pitch clamps at the rig limit');
+ for(const m of [P.Mode.Idle,P.Mode.Walk,P.Mode.Run,P.Mode.Scooter,P.Mode.Bike,P.Mode.Moped,P.Mode.Swim,P.Mode.Dive,P.Mode.Parachute,P.Mode.Zipline])assert.equal(RA.ringPitchFor(m,1.2),0,'ring stays flat for mode '+m);
+ assert.equal(RA.friendFlightPitch(0),0);assert.ok(RA.friendFlightPitch(30)>1.05&&RA.friendFlightPitch(30)<=1.1&&RA.friendFlightPitch(9)>0&&RA.friendFlightPitch(9)<RA.friendFlightPitch(15),'friend estimate: hover 0, rises smoothly with speed to ~1.1');
+ const br=read('lib/multiplayer/townBridge.ts');assert(/ring\.pitch = l\.pitch/.test(br)&&/partyPitch/.test(read('components/Town.tsx')),'the local flight pitch reaches the ring');
+}
 console.log('mp-avatars ok');
