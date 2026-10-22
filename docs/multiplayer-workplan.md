@@ -1,6 +1,7 @@
 # Multiplayer Phase 0 workplan (overnight, no deploy)
 > **Identity update (22 Oct 2026, branch `mp-identity`, not pushed):** kids pick an animal icon (16 of the 32 reviewed animals, or "Surprise me") when they start or join a party; the server still assigns a unique colour per member; a colour ring under every friend (and under you) and a colour dot in the party sheet / name label match. `Hello` gained an optional trailing `animal` field (backward compatible, `PROTOCOL_VERSION` stays 1). Still no free text.
 >
+> **Title-screen join (22 Oct 2026, branch `mp-title-join`):** friends can type the 6-character code on the title screen (Join friends button, flag + grown-up switch gated; `CodeBoxes`, `setPendingParty`); not pushed.
 > **Phase 0 status (22 Oct 2026):** code-complete on branch `mp-verify`, nothing pushed or deployed. Passed: full `npm run test:quiet` (248/248, including the six `mp-*` suites and `tests/mp-isolation.cjs`), `NEXT_DIST_DIR=.next-mpverify npm run build:quiet`, `scripts/mp-relay-smoke.mjs`, and `tsc` for `multiplayer/relay` and the root. Left for the owner: Cloudflare account and relay deploy, two-device test, legal review of the privacy draft, iPhone heat check, then enabling `NEXT_PUBLIC_MULTIPLAYER`. Flag stays off.
 
 

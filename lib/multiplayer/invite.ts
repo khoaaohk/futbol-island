@@ -130,6 +130,14 @@ export function stripPartyParam(): void {
   } catch { /* ignore */ }
 }
 
+/** Store a typed code (title screen) as the pending party. Normalises; returns the code, or null (nothing stored) when the shape is wrong. */
+export function setPendingParty(code: string): string | null {
+  const c = normalizeCode(code);
+  if (!c) return null;
+  try { session()?.setItem(PENDING_KEY, `${c}:${Date.now()}`); } catch { /* ignore */ }
+  return c;
+}
+
 export function clearPendingParty(): void {
   try { session()?.removeItem(PENDING_KEY); } catch { /* ignore */ }
 }

@@ -4,6 +4,8 @@ import {BackButton} from '../BackButton';
 import {NavigationButton} from '../DoneButton';
 import {SafeLockArt} from '../PocketArt';
 import WaterPill from './WaterPill';
+import JoinFriends from './JoinFriends';
+import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {SPRING_EASE,flipTransform,invert} from './motion';
 import styles from './Title.module.css';
 import {startTitleState} from '@/lib/analytics/startEvents';
@@ -130,6 +132,10 @@ export default function TitleActions(){
    <p className={styles.cardBody}>You can still play today. We’ll ask for your save code next time.</p>
    <WaterPill card="break" label="Play"/>
   </div>}
+
+  {/* Join friends (flag only): type a party code here instead of using a link. It stores the code as the pending party, then continues
+      as Play (returning) or Start (new player: save code + intro first) would. Nothing is mounted with the flag off. */}
+  {multiplayerEnabled()&&(state==='new'||state==='returning')&&<JoinFriends onContinue={()=>document.querySelector<HTMLElement>(state==='returning'?'[data-title-card="returning"] [data-landing-play]':'[data-title-start]')?.click()}/>}
 
   {sheet&&saves&&<div className={styles.sheetWrap} data-save-sheet={sheet.mode} data-code-footer={footerBack||undefined}>
    <div ref={backdrop} className={styles.backdrop} onClick={()=>void leave(null)} aria-hidden="true"/>

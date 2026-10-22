@@ -58,6 +58,13 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 - **By link:** the link opens the game; `?party=CODE` is kept in `sessionStorage` (`fi-party-pending`, not a `fi2-*` save key,
   so it is never synced). A **new player** finishes the normal intro/tutorial first (`tests/new-player-flow.cjs` must not
   change); the Join card appears when the island is ready.
+- **On the title screen (Oct 22 2026, no link to remember):** the first screen (`components/landing/TitleActions.tsx`, the Start / Play
+  screen every player sees first) shows a calm **Join friends** button, only when `multiplayerEnabled()` and the grown-up switch is not
+  Off. It opens a small card with the same six code boxes (`components/party/CodeBoxes.tsx`, shared with Join with a code) plus Join /
+  Cancel. Join does not connect: `setPendingParty(code)` stores the normalised code in the same `fi-party-pending` sessionStorage
+  entry, then the screen continues as Play (returning player, straight in) or Start (new player: save code + intro first). PartyHost
+  then waits for `islandReady && introDone`, runs the parent gate and animal picker and joins. A pending code (link or typed) shows
+  as "Party code waiting: K7M-Q4R" with an x to clear it. The code is never logged or sent to analytics.
 - **By code:** Play with friends -> **Join with a code** -> 6 big character keys (only the alphabet's characters; auto-uppercase,
   auto-dash) -> Join.
 - **Parent gate on joining** (recommended, decision O3): the gate pass lasts 10 min (`GATE_PASS_MS`), so a parent approves once.

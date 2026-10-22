@@ -17,7 +17,7 @@ function load(file){if(cache.has(file))return cache.get(file);const mod={exports
 const I=load(path.join(ROOT,'lib/multiplayer/invite.ts'));
 let n=0;const t=(name,fn)=>{try{const r=fn();n++;return r;}catch(e){console.error('FAIL',name);throw e;}};
 
-const host=read('components/party/PartyHost.tsx'),join=read('components/party/JoinParty.tsx'),invite=read('components/party/PartyInvite.tsx'),
+const host=read('components/party/PartyHost.tsx'),joinCard=read('components/party/JoinParty.tsx'),join=joinCard+'\n'+read('components/party/CodeBoxes.tsx'),invite=read('components/party/PartyInvite.tsx'),
  chip=read('components/party/PartyChip.tsx'),wheel=read('components/party/EmoteWheel.tsx'),css=read('components/party/party.module.css'),inv=read('lib/multiplayer/invite.ts');
 const all=[host,join,invite,chip,wheel,inv].join('\n');
 
@@ -146,6 +146,29 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/setKickPrompt\(true\)/.test(host)&&/data-party-kick-prompt/.test(host)&&/New code/.test(host.slice(host.indexOf('data-party-kick-prompt')))&&/Lock party/.test(host.slice(host.indexOf('data-party-kick-prompt'))),'post-kick New code / Lock prompt');
   assert(/connection\.host\.lock\(!state\.locked\); partyStore\.setLocked\(!state\.locked\)/.test(host),'host lock updates the store at once');
   assert(/state\.error !== ErrorCode\.Kicked \|\| !everLive\.current/.test(host)&&/text\('You left the party'\)/.test(host),'Kicked raises the left note');
+ });
+ t('title screen Join friends (flag-gated, reuses CodeBoxes, pending store, no analytics)',()=>{
+  const ta=read('components/landing/TitleActions.tsx'),jf=read('components/landing/JoinFriends.tsx'),cb=read('components/party/CodeBoxes.tsx'),jc=read('components/landing/JoinFriends.module.css');
+  assert(/multiplayerEnabled\(\)&&\(state==='new'\|\|state==='returning'\)&&<JoinFriends/.test(ta),'TitleActions mounts it only behind the flag, on the new / returning cards');
+  assert(/multiplayerEnabled\(\)&&multiplayerAllowed\(\)/.test(jf)&&/if\(!on\|\|gone\)return null/.test(jf),'hidden while the grown-up switch is Off');
+  assert(/import CodeBoxes from '..\/party\/CodeBoxes'/.test(jf)&&/<CodeBoxes/.test(jf)&&/<CodeBoxes/.test(joinCard)&&!/data-code-box/.test(joinCard),'one shared code-box component for JoinParty and the title card');
+  assert(/data-code-box/.test(cb)&&/filterCodeText/.test(cb)&&/acceptCodeChar/.test(cb),'CodeBoxes holds the alphabet filter');
+  assert(/NOT_IN_CODES_HINT/.test(jf)&&/Cancel/.test(jf)&&/>Join</.test(jf)&&/Join friends/.test(jf),'hint, Join, Cancel');
+  assert(/Party code waiting: /.test(jf)&&/clearPendingParty\(\)/.test(jf)&&/groupCode\(pending\)/.test(jf),'pending line with clear');
+  assert(!/<input/.test(jf)&&!/<textarea/.test(jf),'no free text besides the code boxes');
+  assert(!/from '[^']*(analytics|saves|deviceMarks)/.test(jf+cb)&&!/console\./.test(jf+cb)&&!/data-track/.test(jf),'the code is never logged or tracked');
+  assert(!/connection\.|createParty|checkParty|fetch\(/.test(jf),'does not connect from the title screen');
+  assert(/min-height:44px/.test(jc)&&/min-width:44px/.test(jc),'>= 44 px targets');
+  assert(!/transition|animation/.test(jc),'no motion to reduce');
+  assert(!/(^|\n)import .*party/.test(read('components/landing/saveCodeAdapter.tsx')),'save adapter untouched');
+  // setPendingParty
+  store.clear();
+  assert.equal(I.setPendingParty('k7m-q4r'),'K7MQ4R','normalised');
+  assert(/^K7MQ4R:\d+$/.test(store.get(I.PENDING_KEY)),'stored with a stamp');
+  assert.equal(I.readPendingParty(),'K7MQ4R','read back');
+  store.clear();
+  for(const bad of ['','K7MQ4','K7MQ4RR','K7MQ0R','K7M Q4!','OOOOOO'])assert.equal(I.setPendingParty(bad),null,'rejects '+bad),assert.equal(store.size,0,'nothing stored for '+bad);
+  I.clearPendingParty();assert.equal(store.size,0);
  });
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});
