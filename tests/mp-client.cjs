@@ -565,7 +565,7 @@ t('rejoin: the session lives in device storage (fi2-party-session-v1), 12 h cap,
   const g=makeEnv();goLive(g);assert.deepEqual(plain(g.c.storedParty()),{code:'K7MQ4R',host:false});
   // a new tab ~11 h later still resumes; past 12 h nothing is offered
   const r=makeEnv({storage:e.storage});r.clock.advance(11*3600e3);assert.ok(r.c.storedParty());assert.equal(r.c.resume({look:LOOK}),true);
-  const x=makeEnv({storage:e.storage});x.clock.advance(P.PARTY_MAX_MS+60000);assert.equal(x.c.storedParty(),null);assert.equal(x.c.resume({look:LOOK}),false);
+  const x=makeEnv({storage:e.storage});x.clock.advance(P.PARTY_MAX_MS+60000);assert.equal(x.c.storedParty(),null);assert.equal(x.c.resume({look:LOOK}),false);assert.equal(e.storage.getItem(conn.SESSION_KEY),null,'bug sweep Oct 22: an expired session is removed from the device, not just ignored');
 });
 t('rejoin: cleared only on explicit endings; a 4005 (another tab) and a plain drop keep it',()=>{
   const ends=[['leave',e=>e.c.leave()],['ended',e=>e.last().recv([P.S.Ended,P.EndReason.HostEnded])],['expired',e=>e.last().recv([P.S.Ended,P.EndReason.Expired])],

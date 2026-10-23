@@ -202,7 +202,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       const raw = storage?.getItem(SESSION_KEY) ?? migrateTabSession(storage);
       if (!raw) return null;
       const s = JSON.parse(raw) as Session;
-      if (!s || typeof s.code !== 'string' || typeof s.at !== 'number' || now() - s.at > SESSION_TTL_MS) return null;
+      if (!s || typeof s.code !== 'string' || typeof s.at !== 'number') return null;
+      if (now() - s.at > SESSION_TTL_MS) { clearSession(); return null; } // past the 12 h cap: removed, not just ignored (privacy policy 3 / 7a)
       return s;
     } catch { return null; }
   }
