@@ -560,7 +560,7 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
    green (dark primary), mint (secondary), pink (selected chip), cream (unselected chip). Each face has its edge colour,
    used as the solid 0 Npx 0 drop shadow that the press effect shortens. */
 :root{
- --btn-font:Arial,Helvetica,sans-serif;
+ --btn-font:Arial,Helvetica,sans-serif;--font-body:var(--btn-font);
  --btn-grain:url('/stories/films/assets/entry-grain.png');
  --btn-rim:#fff2cd;--btn-rim-width:3px;--btn-halo:0 0 0 4px #fff2cd40;
  --btn-ink:#244d40;--btn-ink-on-dark:#fff3d2;
@@ -861,10 +861,10 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
  .town-app .travel-actions[data-emote-grid] .emote-wheel{right:calc(100% + 12px);left:auto;bottom:auto;top:calc(var(--action-size) * 1.5 + 12px);translate:0 -50%}
  .town-app .travel-actions[data-emote-grid] .minimap-toggle{position:fixed;grid-column:auto;grid-row:auto}
 }
-.emote-wheel{position:absolute;z-index:12;right:0;bottom:calc(100% + 12px + var(--wheel-lift,0px));display:flex;gap:8px;padding:8px;border:3px solid #fff2cd;border-radius:34px;background:#fff6dd;box-shadow:0 4px 0 #b8923f55;animation:emoteIn .16s ease-out}
+.emote-wheel{position:absolute;z-index:12;right:0;bottom:calc(100% + 12px + var(--wheel-lift,0px));display:flex;gap:8px;padding:8px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:34px;background:#fff6dd;box-shadow:0 4px 0 #b8923f55;animation:emoteIn .16s ease-out}
 .controls-flipped .emote-wheel{right:auto;left:0}
-.emote-wheel-btn{display:grid;place-items:center;width:52px;height:52px;min-width:44px;min-height:44px;padding:0;border-radius:50%;border:3px solid #fff2cd;background:var(--btn-gold) var(--btn-grain);background-blend-mode:soft-light;color:#244d40;box-shadow:0 4px 0 #b8923f;cursor:pointer;touch-action:manipulation;transition:translate .12s,box-shadow .12s}
-.emote-wheel-btn:active{translate:0 3px;box-shadow:0 1px 0 #b8923f}
+.emote-wheel-btn{display:grid;place-items:center;width:52px;height:52px;min-width:44px;min-height:44px;padding:0;border-radius:50%;border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation;transition:translate .16s,box-shadow .16s}
+.emote-wheel-btn:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-edge)}
 .emote-wheel-btn:focus-visible,.touch-emote:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .town-app[data-job-camera] :is(.touch-emote,.emote-wheel){visibility:hidden;pointer-events:none}
 .town-app .touch-emote{transition:translate .16s,box-shadow .16s,opacity .18s,scale .18s,visibility 0s}
@@ -876,7 +876,7 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .emote-wheel-strip{display:flex;gap:8px;width:calc(5 * 52px + 4 * 8px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding:0 0 4px;margin-bottom:-4px}
 .emote-wheel-strip::-webkit-scrollbar{display:none}
 .emote-wheel-strip .emote-wheel-btn{flex:0 0 52px;scroll-snap-align:start}
-.emote-wheel-arrow{flex:0 0 auto;display:grid;place-items:center;width:28px;height:44px;padding:0 0 3px;border:0;border-radius:14px;background:#fff2cd;color:#244d40;font:700 24px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+.emote-wheel-arrow{flex:0 0 auto;display:grid;place-items:center;width:28px;height:44px;padding:0 0 3px;border:0;border-radius:14px;background:var(--btn-rim);color:var(--btn-ink);font:700 24px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
 .emote-wheel-arrow:active{filter:brightness(.94)}
 @media(max-width:600px),(pointer:coarse){.emote-wheel{gap:2px;padding:6px}.emote-wheel-strip{gap:6px;width:calc(5 * 44px + 4 * 6px)}.emote-wheel-strip .emote-wheel-btn{flex-basis:44px;width:44px;height:44px}.emote-wheel-arrow{width:24px}}
 /* Phones (user, Oct 22 2026: "on mobile make the emotes wider to fill the screen"): the wheel spans the screen width and the emote buttons spread across it. */

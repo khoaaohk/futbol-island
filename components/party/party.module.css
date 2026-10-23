@@ -1,14 +1,14 @@
 /* Play with friends (multiplayer Phase 0). Island tokens only (--btn-*, app/globals.css). Every tap target is >= 44px. */
 .corner{position:fixed;z-index:34;top:calc(76px + env(safe-area-inset-top,0px));left:calc(12px + env(safe-area-inset-left,0px));display:flex;flex-direction:column;align-items:flex-start;gap:8px}
-.chip,.round{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:44px;min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation;transition:transform .12s ease-out,box-shadow .12s ease-out}
-.chip:active,.round:active{transform:translateY(3px);box-shadow:0 1px 0 var(--btn-gold-edge)}
-.chip:focus-visible,.round:focus-visible,.primary:focus-visible,.secondary:focus-visible,.ghost:focus-visible,.mini:focus-visible,.box:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
-.count{position:absolute;right:-4px;bottom:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--btn-green);color:var(--btn-ink-on-dark);font:700 12px/20px system-ui,sans-serif;text-align:center}
+.chip,.round{position:relative;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;min-width:44px;min-height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation;transition:transform .16s ease-out,box-shadow .16s ease-out}
+.chip:active,.round:active{transform:translateY(var(--btn-press));box-shadow:0 1px 0 var(--btn-gold-edge)}
+.chip:focus-visible,.round:focus-visible,.primary:focus-visible,.secondary:focus-visible,.ghost:focus-visible,.mini:focus-visible,.box:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.count{position:absolute;right:-4px;bottom:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--btn-green);color:var(--btn-ink-on-dark);font:700 12px/20px var(--btn-font);text-align:center}
 .dim{position:absolute;inset:0;border-radius:50%;background:#fff1d3b0}
 .chip[data-reconnecting]{opacity:.7}
-.toast{position:fixed;z-index:36;left:50%;transform:translateX(-50%);top:calc(16px + env(safe-area-inset-top,0px));max-width:calc(100vw - 32px);margin:0;padding:10px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);font:700 14px/1.3 system-ui,sans-serif;text-align:center;pointer-events:none;animation:partyIn .2s ease-out}
+.toast{position:fixed;z-index:36;left:50%;transform:translateX(-50%);top:calc(16px + env(safe-area-inset-top,0px));max-width:calc(100vw - 32px);margin:0;padding:10px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);font:700 14px/1.3 var(--btn-font);text-align:center;pointer-events:none;animation:partyIn .3s ease}
 .backdrop{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px;background:#193f3766}
-.dialog{width:min(100%,380px);max-height:calc(100dvh - 32px);overflow:auto;border-radius:24px;animation:partyIn .2s ease-out}
+.dialog{width:min(100%,380px);max-height:calc(100dvh - 32px);overflow:auto;border-radius:24px;animation:partyIn .26s ease-out}
 /* Play with friends card: wide, grows out of the HUD button (PartyHost Card), scrolls inside on short screens. */
 .backdrop{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
 .dialogWide{display:flex;flex-direction:column;overflow:hidden;width:min(560px,92vw);max-height:calc(100dvh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));animation:none}
@@ -38,17 +38,15 @@
 .grownup{margin:0;padding:10px 12px;border-radius:14px;background:var(--btn-mint);font-size:13px;line-height:1.4}
 .row,.stack{display:flex;gap:8px;justify-content:center}
 .stack{flex-direction:column}
-.primary,.secondary,.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--btn-height,44px);padding:0 18px;border-radius:999px;font:700 14px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation}
+.primary,.secondary,.ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--btn-height,44px);padding:0 18px;border-radius:999px;font:700 14px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
 .primary{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-green);color:var(--btn-ink-on-dark);box-shadow:0 4px 0 var(--btn-green-edge)}
 .secondary{border:var(--btn-rim-width) solid var(--btn-rim);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
 .secondary[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 .ghost{border:0;background:transparent;color:var(--btn-ink)}
 .primary:disabled,.secondary:disabled{opacity:.55;cursor:default}
-.qrBox{display:flex;flex-direction:column;align-items:center;gap:4px}
-.qr,.qrWait{display:block;width:160px;height:160px;border-radius:12px;background:#fff}
 .boxes{display:flex;justify-content:center;gap:6px}
 .boxWrap{display:inline-flex;align-items:center;gap:6px}
-.dash{font:800 22px/1 system-ui,sans-serif}
+.dash{font:800 22px/1 var(--btn-font)}
 .box{width:44px;height:56px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:800 26px/1 ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;text-transform:uppercase;caret-color:transparent}
 .members{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;text-align:left}
 .member{display:flex;align-items:center;gap:6px;min-height:44px}
@@ -60,19 +58,18 @@
 .mini{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--btn-ink);cursor:pointer}
 .mini[aria-pressed=true]{background:var(--btn-pink)}
 @keyframes partyIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.chip,.round,.toast,.dialog,.dialogWide{transition:none;animation:none}}
+@media(prefers-reduced-motion:reduce){.chip,.round,.toast,.dialog,.dialogWide,.roomChip,.roomEmote,.roomSheet{transition:none;animation:none}}
 @media(min-width:900px){.corner{top:calc(20px + env(safe-area-inset-top,0px));left:calc(20px + env(safe-area-inset-left,0px))}}
 /* First-name field (NickField): same calm rim as the code boxes */
 .nick{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:100%}
 .nickRow{position:relative;display:block;width:100%}
 .nickRow .mini{position:absolute;right:2px;top:50%;transform:translateY(-50%)}
-.nickInput{display:block;width:100%;box-sizing:border-box;min-height:48px;padding:0 48px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:700 16px/1 system-ui,sans-serif;text-align:center}
-.nickInput:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
+.nickInput{display:block;width:100%;box-sizing:border-box;min-height:48px;padding:0 48px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:14px;background:#fff;color:var(--btn-ink);font:700 16px/1 var(--btn-font);text-align:center}
+.nickInput:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .nickHint{margin:0;font-size:12px;line-height:1.3;opacity:.8}
 .dot{flex:none;width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1.5px var(--btn-ink)}
 
 .inviteBlock{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding-bottom:4px}
-.inviteBlock .qr,.inviteBlock .qrWait{width:120px;height:120px}
 .inviteBlock .row{flex-wrap:wrap;justify-content:center}
 
 /* Code | List segmented control: a recessed sand track with a raised cream pill that slides. It floats pinned at the top of .body; both lists scroll underneath. */
@@ -82,14 +79,14 @@
 .pill{position:absolute;z-index:-1;left:6px;top:6px;width:calc(50% - 6px);height:calc(100% - 12px);border-radius:999px;background:#fdf3dc;box-shadow:0 1px 0 #fff inset,0 3px 7px #5b4a1f47;transform:translateX(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),translate .12s ease-out;will-change:transform}
 .tabs[data-active=party] .pill{transform:translateX(100%)}
 .tabs:has(.tab[aria-selected=true]:active) .pill{translate:0 1px}
-.tab{min-height:0;height:100%;padding:0 12px;border:0;border-radius:999px;background:transparent;color:#66694f;font:700 16px/1.3 var(--font-body),Arial,sans-serif;cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
+.tab{min-height:0;height:100%;padding:0 12px;border:0;border-radius:999px;background:transparent;color:#66694f;font:700 16px/1.3 var(--btn-font);cursor:pointer;touch-action:manipulation;transition:color .2s ease-out,transform .12s ease-out}
 .tab[aria-selected=true]{color:#24543a}
 .tab:active{transform:translateY(2px)}
 .tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(max-width:600px){.body{--tabs-h:48px}}
 .tabCount{display:inline-block;animation:tabPop .2s ease-out}
 @keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
-.hdrCount{justify-self:start;display:inline-flex;align-items:center;gap:4px;font:700 14px/1 system-ui,sans-serif;white-space:nowrap}
+.hdrCount{justify-self:start;display:inline-flex;align-items:center;gap:4px;font:700 14px/1 var(--btn-font);white-space:nowrap}
 .pairRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:calc(100% - 6px)}
 .pairRow>button{min-width:0;padding:0 10px}
 .panelFoot{flex:none;display:flex;justify-content:center;padding-top:2px}
@@ -117,11 +114,17 @@
 .roomChip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px 0 12px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:24px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge);font:700 15px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
 .roomChip small{font-weight:600;font-size:13px;opacity:.8}
 .roomChip[data-reconnecting]{opacity:.7}
-.roomEmote{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation}
-.roomChip:active,.roomEmote:active{transform:translateY(3px);box-shadow:none}
-.roomChip:focus-visible,.roomEmote:focus-visible{outline:3px solid var(--btn-ink);outline-offset:2px}
+.roomEmote{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-gold-edge);cursor:pointer;touch-action:manipulation}
+.roomChip{transition:translate .16s,box-shadow .16s}.roomEmote{transition:translate .16s,box-shadow .16s}
+.roomChip:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}.roomEmote:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-edge)}
+.roomChip:focus-visible,.roomEmote:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .roomWheel{position:absolute;top:calc(100% + 10px);left:0;z-index:12}
 .roomParty[data-align=right] .roomWheel,.roomParty[data-align=right] .roomSheet{left:auto;right:0}
 .roomWheel :global(.emote-wheel){position:static;bottom:auto}
-.roomSheet{position:absolute;top:calc(100% + 10px);left:0;z-index:12;display:flex;flex-direction:column;gap:10px;width:min(320px,calc(100vw - 32px));max-height:min(60dvh,420px);overflow:auto;padding:14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 18px #193f3733;animation:partyIn .2s ease-out}
+.roomSheet{position:absolute;top:calc(100% + 10px);left:0;z-index:12;display:flex;flex-direction:column;gap:10px;width:min(320px,calc(100vw - 32px));max-height:min(60dvh,420px);overflow:auto;padding:14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 18px var(--btn-cream-edge);animation:partyIn .26s ease-out}
 .roomSheet .secondary,.roomSheet .primary{min-height:44px;border-radius:22px;font:700 15px/1 var(--btn-font);cursor:pointer}
+/* QA Oct 22 2026 (UI consistency): the Code | List tabs are drawn 36px tall on phones (48px track); an invisible strip keeps the
+   44px tap height inside the track's padding (BUTTONS.md: a smaller drawn control keeps a 44px hit area). Narrow phones: the
+   Share link / New code pair keeps one line per label. */
+.tab{position:relative}.tab::before{content:"";position:absolute;inset:-6px 0}
+@media(max-width:340px){.menuCard .pairRow>button{gap:6px;padding:0 6px;font-size:14px}}

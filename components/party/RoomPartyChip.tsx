@@ -2,7 +2,7 @@
 // The light party chip for room pages (docs/multiplayer-rooms-design.md 3.3; owner decision 3: LEAVE ONLY in rooms, the host sheet
 // stays on the island). Your colour dot + "2 here", the emote wheel (the same six-plus presets and rate limits as the island), and a
 // tap opens the read-only roster: what each friend is doing, Hide / Mute, and Leave. No invites, codes, kicks, locks or End here.
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { displayName, usePartyState, type Member } from '@/lib/multiplayer';
 import { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mutedFriends } from '@/lib/multiplayer/roomParty';
 import { presenceIcon, presenceText, roomText } from '@/lib/multiplayer/presence';
@@ -34,6 +34,16 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
   const [hid, setHid] = useState<ReadonlySet<number>>(() => hiddenFriends());
   const [mut, setMut] = useState<ReadonlySet<number>>(() => mutedFriends());
   useEffect(() => { if (hidden) { setOpen('none'); setConfirmLeave(false); } }, [hidden]);
+  // Keep the open wheel / roster inside the screen (QA, Oct 22 2026: the museum's right-aligned roster ran off the left edge of a
+  // phone, because its chip sits left of Done). One measure per open, no listener.
+  const pop = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const el = pop.current; if (!el) return;
+    el.style.translate = '';
+    const r = el.getBoundingClientRect(), g = 16, w = window.innerWidth;
+    const dx = r.left < g ? g - r.left : r.right > w - g ? Math.max(g - r.left, w - g - r.right) : 0;
+    if (dx) el.style.translate = `${Math.round(dx)}px 0`;
+  }, [open, confirmLeave]);
   // The party ends / the player is kicked / leaves while in a room: the chip goes, so say why once (as the island's PartyHost does).
   const [note, setNote] = useState<string | null>(null);
   const was = useRef(state.status), selfLeft = useRef(false);
@@ -64,9 +74,9 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
       {!emoteDock && <button type="button" className={styles.roomEmote} data-room-emote aria-label="Emotes" aria-expanded={open === 'wheel'} onClick={() => setOpen(open === 'wheel' ? 'none' : 'wheel')}>
         <Glyph name="smile" size={24} />
       </button>}
-      {!emoteDock && open === 'wheel' && <div className={styles.roomWheel}><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen('none')} /></div>}
+      {!emoteDock && open === 'wheel' && <div ref={(el) => { pop.current = el; }} className={styles.roomWheel}><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen('none')} /></div>}
       {open === 'roster' && (
-        <section className={styles.roomSheet} role="dialog" aria-label="Your party" data-room-roster>
+        <section ref={(el) => { pop.current = el; }} className={styles.roomSheet} role="dialog" aria-label="Your party" data-room-roster>
           <ul className={styles.members}>
             {others.map((m) => (
               <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} data-room-member={m.room === party.room ? 'here' : 'away'}>
