@@ -284,4 +284,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  const ANALYTICS_KEYS=['app/admin/AnalyticsDashboard.tsx','lib/analytics/core.ts','lib/analytics/startReport.ts'];
  for(const f of code.filter(f=>!ANALYTICS_KEYS.includes(f)))assert(!/[`'"](https:\/\/futbolisland\.app)?\/start(?=[?#`'"\/])/.test(strip2(read(f))),`${f} links to /start`);
  assert.match(read('app/coffee/checkout/route.ts'),/'start'\?'\/\?coffee=thanks'/,'the title screen\'s donation returns to /?coffee=thanks');}
+// iPhone SE landscape (667x375, docs/LANDSCAPE_AUDIT_OCT23.md batch 1): tighter vertical gaps, so For grown-ups / Privacy show without scrolling.
+{const m=css.match(/@media\(max-height:400px\)\{([^@]*?)\}\}?/);assert(m,'SE landscape block');
+ for(const re of [/\.copy\{padding-top:calc\(env\(safe-area-inset-top,0px\) \+ 2svh\)\}/,/\.title\{margin:6px 0 4px\}/,/\.card\{gap:6px;padding:10px 18px 8px\}/])assert.match(css,re);}
 console.log('landing ok');

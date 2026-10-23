@@ -354,3 +354,6 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .introGo:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* "My save code" fills the stacked height: its form's footer sits at the bottom, like the Start steps. */
 .restoreFill{display:flex;flex-direction:column}.restoreFill>form{flex:1;display:flex;flex-direction:column}.restoreFill [data-save-footer]{margin-top:auto}
+/* iPhone SE landscape (375 px tall, docs/LANDSCAPE_AUDIT_OCT23.md batch 1): tighter vertical gaps, so the title, the action card
+   (including the "saving is taking a break" card) and For grown-ups / Privacy all fit without the page scrolling. */
+@media(max-height:400px){.copy{padding-top:calc(env(safe-area-inset-top,0px) + 2svh)}.title{margin:6px 0 4px}.card{gap:6px;padding:10px 18px 8px}.actions{padding-bottom:2px}}

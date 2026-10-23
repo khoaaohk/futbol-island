@@ -229,3 +229,9 @@
 
 /* Calm HUD (Oct 21 2026): while the tutorial shows its step, the message (the same words) waits, so the two never overlap. */
 .hud:has([data-fish-tutorial]) .message{visibility:hidden}
+/* Back vs Play with friends (landscape audit Oct 23, every size): the HUD row keeps the friends button in its slot right of the
+   (hidden) Paths button, so Back moves right of it: row left + Paths + gap + friends (+1 px party badge) + gap. All 44 px circles.
+   <= 340 px the friends button sits under Paths (second row), so Back keeps the Paths slot there. */
+:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{--fish-back-left:calc(var(--btn-icon,44px) * 2 + var(--island-hud-pair-gap,8px) * 2 + 1px);left:calc(24px + env(safe-area-inset-left,0px) + var(--fish-back-left))}
+@media(max-width:600px),(pointer:coarse){:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{left:calc(18px + env(safe-area-inset-left,0px) + var(--fish-back-left))}}
+@media(max-width:340px){:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{left:calc(18px + env(safe-area-inset-left,0px))}}

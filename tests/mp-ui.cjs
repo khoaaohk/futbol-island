@@ -301,5 +301,14 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/addEventListener\('storage'/.test(host)&&!/setInterval/.test(host),'another tab is noticed by the storage event, never a poll');
   assert(!/localStorage/.test(host)&&!/sessionStorage\./.test(host),'PartyHost never touches storage itself (the connection owns the one key)');
  });
+ // Party List (landscape batch 1): the footer (End party / Leave party) is outside the scroller and the list ends where it starts
+ // (no -6px overlap), the footer stacks above the list, short landscape keeps one row of 44 px actions per friend.
+ {const host=read('components/party/PartyHost.tsx'),foot=host.indexOf('data-party-foot');
+  assert(foot>0&&host.lastIndexOf('</FadeScroll>',foot)>host.lastIndexOf('<FadeScroll>',foot),'footer sits after (outside) the List scroller');
+  assert(/\.panel>\.fadeScroll:has\(\+\.panelFoot\)\{margin-bottom:0\}/.test(css),'List scroller does not run under the footer');
+  assert(/\.panelFoot\{position:relative;z-index:4\}/.test(css),'footer stacks above the list');
+  assert(/@media\(max-height:500px\) and \(orientation:landscape\)\{\.members \.rowActions\{padding-left:0\}\.members \.rowActions \.act\{flex:1 1 92px/.test(css),'short landscape: one line of row actions');
+  assert(/\.act\{[^}]*min-height:44px/.test(css),'row actions stay 44 px');
+  assert(/\.backdrop\{padding:calc\(16px \+ env\(safe-area-inset-top,0px\)\) calc\(16px \+ env\(safe-area-inset-right,0px\)\)/.test(css),'sheet (and Remove) stays inside the right safe-area inset');}
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});

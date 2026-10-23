@@ -22,6 +22,7 @@ const SIZES = {
   max: { w: 932, h: 430, inset: { top: 0, left: 59, right: 59, bottom: 21 } },
   ipad: { w: 1024, h: 768, inset: { top: 0, left: 0, right: 0, bottom: 20 } },
   port: { w: 393, h: 852, inset: { top: 59, left: 0, right: 0, bottom: 34 } },
+  pmax: { w: 440, h: 956, inset: { top: 62, left: 0, right: 0, bottom: 34 } },
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -65,6 +66,8 @@ const measure = (p, inset) => p.evaluate((inset) => {
   const layers = [...document.querySelectorAll('dialog[open],[role=dialog],[role=alertdialog],[aria-modal=true]')].filter((e) => vis(e) && !e.closest('[hidden],[inert]'));
   const root = layers.length ? layers[layers.length - 1] : document.body;
   const name = (e) => (e.getAttribute('aria-label') || e.textContent || e.getAttribute('placeholder') || e.tagName).replace(/\s+/g, ' ').trim().slice(0, 22);
+  // Inside a scroller and not fully inside its visible box (scrolled partly out of view): skip covered / overlap for it.
+  const scrolled = (e, r) => { for (let a = e.parentElement; a && a !== document.body; a = a.parentElement) { const cs = getComputedStyle(a); if (/(auto|scroll)/.test(cs.overflowY) && a.scrollHeight > a.clientHeight + 2) { const ar = a.getBoundingClientRect(); if (r.top < ar.top - 1 || r.bottom > ar.bottom + 1) return true; } } return false; };
   const res = { layer: root === document.body ? 'page' : name(root).slice(0, 18), n: 0, off: [], notch: [], small: [], covered: [], cut: [] };
   for (const e of root.querySelectorAll('button,a[href],input,select,textarea,[role=button],[role=tab],[role=slider],[role=switch]')) {
     const r = vis(e); if (!r || e.closest('[hidden],[inert],[aria-hidden=true]')) continue; res.n++;
@@ -76,11 +79,12 @@ const measure = (p, inset) => p.evaluate((inset) => {
     }
     if (r.left < inset.left - 1 || r.right > vw - inset.right + 1 || r.bottom > vh - inset.bottom + 1 || r.top < inset.top - 1) res.notch.push(nm);
     if (Math.min(r.width, r.height) < 43.5) res.small.push(`${nm}(${Math.round(r.width)}x${Math.round(r.height)})`);
+    if (scrolled(e, r)) continue; // partly scrolled out of its list: reachable by scrolling, not covered
     const h = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
     if (h && !e.contains(h) && !h.contains(e) && !(h.closest('label') && h.closest('label').contains(e))) res.covered.push(`${nm}<${(h.getAttribute('aria-label') || h.className || h.tagName).toString().slice(0, 18)}`);
   }
   // Partial overlaps between two tappable things (neither inside the other), over 15 % of the smaller box.
-  const taps = [...root.querySelectorAll('button,a[href],input,[role=button],[role=tab]')].filter((e) => vis(e) && !e.closest('[hidden],[inert],[aria-hidden=true]')).map((e) => [e, e.getBoundingClientRect()]);
+  const taps = [...root.querySelectorAll('button,a[href],input,[role=button],[role=tab]')].filter((e) => vis(e) && !e.closest('[hidden],[inert],[aria-hidden=true]') && !scrolled(e, e.getBoundingClientRect())).map((e) => [e, e.getBoundingClientRect()]);
   res.overlap = [];
   for (let i = 0; i < taps.length; i++) for (let j = i + 1; j < taps.length; j++) {
     const [a, ra] = taps[i], [b, rb] = taps[j]; if (a.contains(b) || b.contains(a)) continue;
@@ -293,7 +297,100 @@ const SCENES = {
       console.log(`${'strikers-rotate'.padEnd(18)} ${size.padEnd(5)} portraitPrompt=${prompt}`);
     });
   },
+  // Batch 1 blockers (landscape fix pass, Oct 23): title fold, Pick your player, party List (host; GUEST=1 adds a guest device),
+  // fishing Back vs the friends button, Strikers start card. Prints one `b1-*` line per check with the measured boxes.
+  async batch1(env, size) {
+    const p = env.p, log = (k, v) => console.log(`${k.padEnd(18)} ${size.padEnd(5)} ${typeof v === 'string' ? v : JSON.stringify(v)}`);
+    const portrait = env.s.h > env.s.w;
+    await p.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(6000);
+    log('b1-title', await p.evaluate(() => { const vh = innerHeight, at = (re) => { const e = [...document.querySelectorAll('a,button')].find((x) => re.test(x.textContent) && x.getBoundingClientRect().width); return e ? Math.round(e.getBoundingClientRect().bottom) : null; };
+      return { vh, pageScroll: document.scrollingElement.scrollHeight - vh, grownups: at(/grown-?ups/i), privacy: at(/privacy/i) }; }));
+    await A(env, size, 'title');
+    await clickText(p, 'text=Get my save code', 20000); await p.waitForTimeout(2500);
+    log('b1-welcome', await p.evaluate(() => ({ vh: innerHeight, pageScroll: document.scrollingElement.scrollHeight - innerHeight })));
+    await clickText(p, 'button:has-text("Get my code")', 4000); await p.waitForTimeout(2500);
+    await clickText(p, 'button:has-text("I saved it")', 4000); await p.waitForTimeout(1500);
+    await clickText(p, 'button:has-text("Play")', 8000);
+    await p.waitForFunction(() => !!document.querySelector('[data-job-wallet]'), null, { timeout: 120000 }).catch(() => {});
+    await p.waitForTimeout(9000);
+    log('b1-onboarding', await onboardingBoxes(p));
+    await A(env, size, 'tutorial');
+    await clickText(p, 'button:has-text("Skip")', 8000); await p.waitForTimeout(1500); await esc(p, 1);
+    let friends = [];
+    await flow(env, size, 'party', async () => {
+      await p.click('button[aria-label="Play with friends"]'); await p.waitForSelector('[role=dialog][aria-label="Play with friends"]', { timeout: 10000 }); await p.waitForTimeout(800);
+      await p.fill('input[aria-label="First name"]', 'Sam'); await p.waitForTimeout(500);
+      await p.click('text=Start a party'); await p.waitForSelector('[data-parent-gate-answer]'); await gate(p); await p.waitForSelector('[data-party-code]', { timeout: 10000 }); await p.waitForTimeout(800);
+      const code = (await p.textContent('[data-party-code]')).replace(/[^A-Z0-9]/gi, '');
+      friends = [['Ayako', [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8]], ['Leo', [2, 7, 1, 8, 2, 8, 1, 8, 2, 8, 4, 5]], ['Mia', [1, 4, 1, 4, 2, 1, 3, 5, 6, 2, 3, 7]]].map(([n, l]) => friend(code, n, l));
+      await wait(2500);
+      await clickText(p, '[role=tab]:has-text("List")', 3000); await p.waitForTimeout(900);
+      log('b1-party-host', await partyBoxes(p, env.s.inset)); await A(env, size, 'party-list');
+      if (process.env.GUEST === '1') {
+        const g = await env.b.newContext({ viewport: { width: env.s.w, height: env.s.h }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 }); const gp = await g.newPage();
+        await (await g.newCDPSession(gp)).send('Emulation.setSafeAreaInsetsOverride', { insets: env.s.inset }).catch(() => {});
+        await gp.goto(url + '/?party=' + code, { waitUntil: 'domcontentloaded', timeout: 120000 }); await gp.waitForTimeout(6000);
+        await clickText(gp, 'text=Get my save code', 20000); await gp.waitForTimeout(2500); await clickText(gp, 'button:has-text("Get my code")', 4000); await gp.waitForTimeout(2500);
+        await clickText(gp, 'button:has-text("I saved it")', 4000); await gp.waitForTimeout(1500); await clickText(gp, 'button:has-text("Play")', 8000);
+        await gp.waitForFunction(() => !!window.__fi2?.scene, null, { timeout: 120000 }).catch(() => {}); await gp.waitForTimeout(9000);
+        await clickText(gp, 'button:has-text("Skip")', 8000); await gp.waitForTimeout(1200);
+        await gp.waitForSelector('[data-party-join]', { timeout: 20000 }).catch(() => {});
+        await gp.fill('input[aria-label="First name"]', 'Kai').catch(() => {}); await gp.waitForTimeout(500);
+        await gp.click('[data-party-join] button:has-text("Join")').catch(() => {}); await gate(gp).catch(() => {});
+        await gp.waitForFunction(() => document.querySelector('[data-party-open]')?.getAttribute('data-party-live') === 'true', null, { timeout: 20000 }).catch(() => {});
+        await gp.waitForTimeout(1500); await gp.evaluate(() => document.querySelector('[data-party-open]')?.click()); await gp.waitForTimeout(1200);
+        await clickText(gp, '[role=tab]:has-text("List")', 3000); await gp.waitForTimeout(900);
+        log('b1-party-guest', await partyBoxes(gp, env.s.inset)); if (SHOTS.has(`party-guest:${size}`)) await gp.screenshot({ path: path.join(out, `party-guest-${size}.png`) });
+        await g.close();
+      }
+    });
+    friends.forEach((f) => f.close());
+    await flow(env, size, 'fishing', async () => {
+      await p.addInitScript(() => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x: 217, z: 211.4, yaw: 0, ride: 'walk', flightHeight: 0 })); });
+      await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(4000);
+      await p.locator('[data-fish-enter]').tap({ timeout: 8000 }); await p.waitForTimeout(3000);
+      log('b1-fishing', await p.evaluate(() => { const rr = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return r.width ? r : null; }, b = rr(document.querySelector('[data-fish-stop]')), f = rr([...document.querySelectorAll('button[aria-label="Play with friends"],[data-party-open]')].find((e) => e.getBoundingClientRect().width));
+        const box = (r) => r && `${Math.round(r.left)},${Math.round(r.top)} ${Math.round(r.width)}x${Math.round(r.height)}`;
+        const ov = b && f ? Math.max(0, Math.min(b.right, f.right) - Math.max(b.left, f.left)) * Math.max(0, Math.min(b.bottom, f.bottom) - Math.max(b.top, f.top)) : 0;
+        const hit = b && document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2), back = document.querySelector('[data-fish-stop]');
+        const w = rr(document.querySelector('[data-job-wallet]')), wov = b && w ? Math.max(0, Math.min(b.right, w.right) - Math.max(b.left, w.left)) * Math.max(0, Math.min(b.bottom, w.bottom) - Math.max(b.top, w.top)) : 0;
+        return { back: box(b), friends: box(f), wallet: box(w), overlapPx: Math.round(ov), walletOverlapPx: Math.round(wov), backHit: !!(hit && (back.contains(hit) || hit.contains(back))) }; }));
+      await A(env, size, 'fishing');
+    });
+    if (!portrait) await flow(env, size, 'strikers', async () => {
+      await p.goto(url + '/arcade?game=live', { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(10000);
+      log('b1-strikers', await p.evaluate(() => { const k = [...document.querySelectorAll('button')].find((b) => /kick off/i.test(b.textContent)); const c = k && k.closest('[class*=card]'); if (!c) return null; const r = c.getBoundingClientRect();
+        return { vh: innerHeight, card: `${Math.round(r.top)}..${Math.round(r.bottom)}`, fits: r.bottom <= innerHeight && r.top >= 0, scroll: `${c.clientHeight}/${c.scrollHeight}`, selects: [...c.querySelectorAll('select')].map((s) => Math.round(s.getBoundingClientRect().height)) }; }));
+      await A(env, size, 'strikers');
+    });
+  },
 };
+// Pick your player: the scroller inside the card, and each control's box (COVERED / CLIPPED when not fully tappable).
+const onboardingBoxes = (p) => p.evaluate(() => {
+  const d = document.querySelector('dialog[open][data-onboarding-step]'); if (!d) return null; const card = d.querySelector('section');
+  const sc = [card, ...card.querySelectorAll('*')].find((e) => /(auto|scroll)/.test(getComputedStyle(e).overflowY) && e.scrollHeight > e.clientHeight + 2);
+  const cr = card.getBoundingClientRect(), pv = card.querySelector('[class*=preview]'), pr = pv && pv.getBoundingClientRect();
+  const box = (re) => { const e = [...card.querySelectorAll('button,[role=radio]')].find((x) => re.test((x.getAttribute('aria-label') || x.textContent || '').trim()) && x.getBoundingClientRect().width); if (!e) return null; const r = e.getBoundingClientRect();
+    const ok = (y) => { const h = document.elementFromPoint(r.left + r.width / 2, y); return !!h && (e.contains(h) || h.contains(e)); };
+    let clip = false; for (let a = e.parentElement; a && a !== card.parentElement; a = a.parentElement) { if (getComputedStyle(a).overflowY !== 'visible') { const ar = a.getBoundingClientRect(); if (r.top < ar.top - 1 || r.bottom > ar.bottom + 1) clip = true; } }
+    return `${Math.round(r.top)}-${Math.round(r.bottom)}${clip ? ' CLIPPED' : ''}${ok(r.top + 3) && ok(r.bottom - 3) ? '' : ' COVERED'}`; };
+  return { step: d.dataset.onboardingStep, card: `${Math.round(cr.width)}x${Math.round(cr.height)}@${Math.round(cr.top)}`, scroll: sc ? `${sc.clientHeight}/${sc.scrollHeight}` : 'none', preview: pr ? `${Math.round(pr.width)}x${Math.round(pr.height)}` : null,
+    male: box(/^Male$/), female: box(/^Female$/), shuffle: box(/shuffle/i), back: box(/^Back$/), next: box(/^Next$/) };
+});
+// Party List tab: every row action and the footer link, scrolled into view inside the list; reports any whose top or bottom edge
+// is hit by something else (the footer) or that sits in the right safe-area inset.
+const partyBoxes = (p, inset) => p.evaluate((inset) => {
+  const sheet = document.querySelector('[data-party-sheet]'); if (!sheet) return null; const foot = sheet.querySelector('[data-party-panel=party] [data-party-foot]');
+  const bad = [], btns = [...sheet.querySelectorAll('[data-party-panel=party] [data-row-actions] button, [data-party-panel=party] [data-party-foot] button')];
+  for (const e of btns) { e.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' }); const r = e.getBoundingClientRect(); const nm = (e.textContent || '').trim().slice(0, 14);
+    const hit = (y) => { const h = document.elementFromPoint(r.left + r.width / 2, y); return !!h && (e.contains(h) || h.contains(e)); };
+    if (!hit(r.top + 3) || !hit(r.bottom - 3)) { const h = document.elementFromPoint(r.left + r.width / 2, r.bottom - 3); bad.push(`${nm}<${h ? (h.closest('[data-party-foot]') ? 'foot' : (h.className || h.tagName).toString().slice(0, 14)) : 'none'}`); }
+    if (r.right > innerWidth - inset.right + 1 || r.left < inset.left - 1) bad.push(`${nm}@inset(${Math.round(r.right)}>${innerWidth - inset.right})`);
+    if (Math.min(r.width, r.height) < 43.5) bad.push(`${nm}(${Math.round(r.width)}x${Math.round(r.height)})`); }
+  const s = sheet.getBoundingClientRect(), f = foot && foot.getBoundingClientRect();
+  return { sheet: `${Math.round(s.width)}x${Math.round(s.height)}@${Math.round(s.top)}`, foot: f ? `${Math.round(f.top)}..${Math.round(f.bottom)}` : null, buttons: btns.length, bad };
+}, inset);
 
 async function run() {
   const sizes = onlySizes || ['se', 'i15', 'max', 'ipad'];

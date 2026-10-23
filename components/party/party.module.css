@@ -90,6 +90,12 @@
 .pairRow{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:calc(100% - 6px)}
 .pairRow>button{min-width:0;padding:0 10px}
 .panelFoot{flex:none;display:flex;justify-content:center;padding-top:2px}
+/* List tab (landscape batch 1, docs/LANDSCAPE_AUDIT_OCT23.md): the list ends where the pinned footer starts (no -6px overlap of the
+   scroller's masked layer over End / Leave, so a row button scrolled to the bottom is never under the footer and the footer link is
+   tappable edge to edge); the footer stacks above the list. Short landscape: one line of row actions per friend, so a whole row fits. */
+.panel>.fadeScroll:has(+.panelFoot){margin-bottom:0}
+.panelFoot{position:relative;z-index:4}
+@media(max-height:500px) and (orientation:landscape){.members .rowActions{padding-left:0}.members .rowActions .act{flex:1 1 92px;padding-inline:8px}.members .member[data-acts]{padding-bottom:6px}}
 .footLeave{min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--btn-ink);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
 .footLeave:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:8px}
 /* Both panels share one grid cell, so the card is as tall as the taller panel (fixed basis, shrinks only to the viewport cap);

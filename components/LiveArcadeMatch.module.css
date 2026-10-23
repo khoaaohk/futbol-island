@@ -140,3 +140,7 @@
 .boards:active{translate:0 3px;box-shadow:0 1px 0 #193f3766}
 .boards:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(prefers-reduced-motion:reduce){.boards:active{translate:none}}
+/* Landscape phones are a supported mode (docs/LANDSCAPE_AUDIT_OCT23.md, batch 1): the start / result card stays inside the screen and
+   scrolls inside itself instead of spilling past the bottom, sits above the (idle) touch buttons so none of them covers its
+   pickers or Kick off, and the Team shape / Round pickers keep 44 px targets. */
+@media(pointer:coarse) and (orientation:landscape){.overlay{z-index:6}.overlay>.card{max-height:calc(100dvh - 90px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain}.card .shape select,.card .inline select{min-height:44px;margin:2px 0;padding:6px 10px;box-sizing:border-box}}
