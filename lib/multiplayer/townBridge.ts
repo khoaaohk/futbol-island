@@ -101,7 +101,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     onSync(live, welcome) {
       if (welcome) armEntryWarp(ew);
-      if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; }
+      if (!live) { st.lastX = st.lastZ = NaN; meRingOn = false; lastIsland.clear(); }
+      // Bug sweep Oct 22: forget the island spot of a friend who left (ids are reused: a newcomer first heard in a room must not
+      // fade in at the old friend's door).
+      else if (ready) for (const id of Array.from(lastIsland.keys())) if (core.ids.indexOf(id) < 0) lastIsland.delete(id);
       syncHints();
     } });
   const { conn, avatars, poses, active, ids } = core;
