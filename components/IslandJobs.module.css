@@ -94,11 +94,26 @@
    max-device-width:480px for an iPhone whose layout viewport is wider than its screen (Request desktop site, zoomed-out page).
    Owner layout on phones: Paths + Play with friends on the left, the slim bar right-aligned immediately left of Settings, the
    bar <-> Settings gap equal to the Paths <-> friends gap (--island-hud-pair-gap, the triggers' flex gap). Not centred. */
-@media(max-width:480px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.wallet[data-job-wallet] .basketOnly{display:none}.wallet[data-job-wallet]{gap:4px;padding:4px 8px;left:auto;right:calc(18px + env(safe-area-inset-right,0px) + var(--btn-icon,44px) + var(--island-hud-pair-gap,8px));transform:none}.wallet[data-job-wallet] .basketCount{padding:3px}}
-/* A 4- or 5-digit balance on a narrow phone: the count steps down a size so the slim bar still clears Play with friends (8px). */
-@media(max-width:380px){.wallet[data-job-wallet]{gap:3px;padding:4px 6px}}
-@media(max-width:400px){.wallet[data-job-wallet][data-coin-digits="4"] b{font-size:17px}.wallet[data-job-wallet][data-coin-digits="5"] b{font-size:15px}}
-@media(max-width:380px){.wallet[data-job-wallet][data-coin-digits="4"] b{font-size:14px}.wallet[data-job-wallet][data-coin-digits="5"] b{font-size:12px}.wallet[data-job-wallet]:not([data-coin-digits="1"]):not([data-coin-digits="2"]):not([data-coin-digits="3"]){gap:2px;padding:4px 5px}.wallet[data-job-wallet]:not([data-coin-digits="1"]):not([data-coin-digits="2"]):not([data-coin-digits="3"]) .basketCount{padding:3px 2px}}
+/* Oct 23 2026 (owner, phones, stretched bar): the bar fills the whole space between the left group and Settings: left edge =
+   Play with friends right edge (+1 px: the party badge sits 4 px past the 3 px border) + pair gap, right edge = Settings left edge - pair gap, all from fixed
+   button sizes (Paths / friends / Settings are 44 px circles). Fish and fruit are back: four chips (coins, fish, fruit, fuel)
+   spread with equal free space between them (auto margins on the three counters; the 4 px gap is the minimum). <= 340 px the
+   friends button sits under Paths, so the bar starts at Paths + gap; while fishing it starts at the Back pill + gap. */
+@media(max-width:480px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.wallet[data-job-wallet]{--hud-bar-left:calc(18px + env(safe-area-inset-left,0px) + var(--btn-icon,44px) + var(--island-hud-pair-gap,8px));gap:4px;padding:4px 8px;left:var(--hud-bar-left);right:calc(18px + env(safe-area-inset-right,0px) + var(--btn-icon,44px) + var(--island-hud-pair-gap,8px));transform:none;max-width:none;justify-content:flex-start;container:hudbar / inline-size}.wallet[data-job-wallet]>em{flex:none;margin-left:auto}.wallet[data-job-wallet] .basketCount{padding:3px 4px}:global(.town-app:not([data-fishing]):has(nav[data-hud-triggers]>[data-party-open])) .wallet[data-job-wallet]{left:calc(var(--hud-bar-left) + var(--btn-icon,44px) + var(--island-hud-pair-gap,8px))}:global(.town-app:not([data-fishing]):has(nav[data-hud-triggers]>[data-party-open] [data-party-badge])) .wallet[data-job-wallet]{left:calc(var(--hud-bar-left) + var(--btn-icon,44px) + 1px + var(--island-hud-pair-gap,8px))}:global(.town-app[data-fishing]) .wallet[data-job-wallet]{max-width:none;left:calc(18px + env(safe-area-inset-left,0px) + var(--btn-nav-width,76px) + var(--island-hud-pair-gap,8px))}}
+@media(max-width:340px){:global(.town-app:not([data-fishing]):has(nav[data-hud-triggers]>[data-party-open])) .wallet[data-job-wallet],:global(.town-app:not([data-fishing]):has(nav[data-hud-triggers]>[data-party-open] [data-party-badge])) .wallet[data-job-wallet]{left:var(--hud-bar-left)}}
+/* Oct 23 2026 (owner: four counters only where they fit, else coins + energy; the bar still fills the row). The phone bar is a
+   size container (hudbar, content box = bar width - 4 px border - 16 px padding). Four chips need, worst case (fish and fruit
+   2 digits each, the basket holds 20; fuel "100"; coin number always 20 px IslandBrush; >= 8 px between chips; measured in
+   Chromium + WebKit): 222 px with <= 3 coin digits, 234 px with 4, 241 px with 5. Below that fish and fruit hide (still in the
+   aria-label and the pocket) and coins + energy spread to the two ends. "0 EMPTY" needs 242 / 254 / 261 px in four-chip mode, and 160 px in
+   two-chip mode; otherwise it hides (number, ring and hollow bolt still show the state). Measured by scripts/check-hud-row.cjs. */
+@container hudbar (max-width:221.98px){.wallet[data-job-wallet] .basketOnly{display:none}}
+@container hudbar (max-width:233.98px){.wallet[data-job-wallet][data-coin-digits="4"] .basketOnly,.wallet[data-job-wallet][data-coin-digits="5"] .basketOnly{display:none}}
+@container hudbar (max-width:240.98px){.wallet[data-job-wallet][data-coin-digits="5"] .basketOnly{display:none}}
+@container hudbar (max-width:159.98px){.wallet[data-job-wallet] [data-fuel] small{display:none!important}}
+@container hudbar (min-width:222px) and (max-width:241.98px){.wallet[data-job-wallet]:not([data-coin-digits="4"]):not([data-coin-digits="5"]) [data-fuel] small{display:none!important}}
+@container hudbar (min-width:234px) and (max-width:253.98px){.wallet[data-job-wallet][data-coin-digits="4"] [data-fuel] small{display:none!important}}
+@container hudbar (min-width:241px) and (max-width:260.98px){.wallet[data-job-wallet][data-coin-digits="5"] [data-fuel] small{display:none!important}}
 
 /* Sep 30 2026: the offer pill, job panel, job cards and notes are placed by the island HUD stack (globals.css .hud-stack,
    docs/ui/HUD_STACK.md) under the coins bar; the absolute/translate declarations above only apply outside it. */

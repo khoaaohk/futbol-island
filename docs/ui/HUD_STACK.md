@@ -439,6 +439,23 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   in `IslandJobs.module.css`). The free space sits in the middle and is >= the pair gap at 320-440px with 5-digit coins and
   low / empty fuel, so no extra shrinking was needed beyond the existing digit steps. Desktop (1280x800) and tablet (768x1024)
   are unchanged: all four counters, centred, same rect as before (pinned in `check-hud-row.cjs`).
+- **Superseded again (owner, 23 Oct, stretched bar): the phone bar fills the row.** Row = Paths | friends | [bar] | Settings with
+  the same `--island-hud-pair-gap` (8px) between each pair. The bar is anchored on both sides in CSS (`IslandJobs.module.css`, phone
+  breakpoint): `left` = 18px + safe-area + Paths 44px + gap (`--hud-bar-left`), plus friends 44px + gap when Play with friends is on
+  (`.town-app:has(nav[data-hud-triggers]>[data-party-open])`), plus 1px while the party badge shows (it sits 4px past the 3px
+  border); `right` = 18px + safe-area + Settings 44px + gap. At <= 340px friends sits under Paths, so the bar starts at Paths + gap.
+  While fishing (Paths hidden) it starts at the Back pill + gap. The HUD stack is untouched and stays centred.
+- **Four counters only where they fit (owner).** The phone bar is a size container (`container:hudbar / inline-size`); fish and
+  fruit show again but give way by the bar's own content width (bar - 4px border - 16px padding), never by device width, and never
+  by shrinking the coin number (always 20px now; the old 4/5-digit font steps are gone). Thresholds, measured in Chromium + WebKit
+  for >= 8px between chips with the worst case (fish and fruit 2 digits, the basket holds 20; fuel "100"): **222px** with <= 3
+  coin digits, **234px** with 4, **241px** with 5. Below: coins + energy only, at the two ends of the stretched bar (auto margins).
+  The Low / Empty word ("0 EMPTY" is the widest) shows in four-chip mode from 242 / 254 / 261px and in two-chip mode from 160px;
+  otherwise it hides (number, ring, hollow bolt). In practice: portrait 320-430px phones show coins + energy (content 147-218px);
+  440px (iPhone 16/17 Pro Max, content 228 / 227 in a party) shows four with <= 3 coin digits; every landscape phone shows four. `check-hud-row.cjs` now covers 320/360/375/390/393/430/440 portrait and landscape, solo and a party of 4, 3/4/5
+  digits, full / low / empty fuel, plus a 1px sweep 416-476px (full and empty fuel) across the thresholds; it asserts equal pair
+  gaps (1px), counters inside the bar with equal spacing (2px) and >= 6px apart, the mode matching the threshold, and the
+  desktop / tablet rects unchanged.
 - **Why fish / fruit still showed on the real iPhone**: the phone breakpoint was `max-width:430px`, but the iPhone 16 / 17 Pro Max
   are **440 CSS px** wide (440 tall in landscape), so they got the desktop bar (reproduced on production with Playwright WebKit and
   the 'iPhone 17 Pro Max' descriptor: fish / fruit `display:flex`, bar left edge touching the friends button). Phones are now

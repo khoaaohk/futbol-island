@@ -1,9 +1,12 @@
 // Headless check (Oct 23 2026, docs/ui/HUD_STACK.md "Top row on phones"): the island top row [Paths][Play with friends][coins bar]
 // [Settings] never overlaps.
-// - Phones (portrait <= 480 wide, landscape <= 480 tall): 320x568 ... 440x956 (iPhone 16/17 Pro Max) and landscape 844x390,
-//   touch, 3-, 4- and 5-digit balances, full / low / empty fuel. The bar shows only coins + fuel (fish / fruit hidden, still in its
-//   aria-label and the pocket it opens), it sits right-aligned next to Settings with bar <-> Settings == Paths <-> friends (within
-//   1 px), and the free space between friends and the bar is >= that same gap (the friends box includes the party badge).
+// - Phones (portrait <= 480 wide, landscape <= 480 tall): 320, 360, 375, 390, 393, 430, 440 wide, portrait and landscape, touch,
+//   3-, 4- and 5-digit balances, full / low / empty fuel, solo and (with a relay URL) in a party of 4 (badge). Owner (Oct 23 2026,
+//   stretched bar): the bar fills the row between the left group and Settings: Paths <-> friends == friends <-> bar ==
+//   bar <-> Settings (within 1 px; <= 340 px friends sits under Paths, so Paths <-> bar), all four counters (coins, fish, fruit,
+//   fuel) inside the bar, not overlapping, with equal spaces between them (within 2 px), coin number 20 px, measured with fish and
+//   fruit at 2 digits (the basket holds 20). Where the bar's content box is under FOUR[coin digits] px (container query 'hudbar'
+//   in IslandJobs.module.css) fish / fruit are display:none and coins + energy sit at the two ends; at or above it all four show.
 // - Real-device pass (WebKit, Playwright's 'iPhone 15', 'iPhone 17 Pro Max' (+ landscape) descriptors: isMobile, hasTouch, DPR 3): the same
 //   rules, measured with the fish / fruit chips' computed display. With a relay URL it first starts a party and three scripted
 //   friends join (the badge shows 4), like the owner's phone.
@@ -14,8 +17,10 @@ const pw = require('playwright');
 const path = require('path');
 const url = process.argv[2] || 'http://localhost:8739', out = process.argv[3] || '/tmp/hud-coins', relay = process.argv[4] || '';
 require('fs').mkdirSync(out, { recursive: true });
-const PHONES = [[320, 568], [360, 740], [375, 667], [390, 844], [393, 852], [430, 932], [440, 956], [844, 390]];
+const PHONES = [[320, 568], [360, 740], [375, 667], [390, 844], [393, 852], [430, 932], [440, 956], [568, 320], [740, 360], [667, 375], [844, 390], [852, 393], [932, 430], [956, 440]];
 const GAP = 8;
+// Four-chip thresholds (bar content-box width) by coin digits; keep in step with the @container hudbar rules.
+const FOUR = (d) => (d >= 5 ? 241 : d === 4 ? 234 : 222);
 // The bar as it was before the phone re-layout (new player, 40 coins, full fuel; production build, Oct 23 2026).
 const BASE = { 'desktop 1280x800': { l: 487, r: 793, t: 20 }, 'tablet 768x1024': { l: 278, r: 490, t: 16 } };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -53,23 +58,32 @@ async function party(p) {
   await wait(1500); await p.click('[data-party-sheet] button:has-text("Done")'); await p.waitForTimeout(3000);
   return ws;
 }
-const measure = (p, digits) => p.evaluate(({ digits }) => {
+const measure = (p, digits, worst = true) => p.evaluate(({ digits, worst }) => {
   const rect = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return r.width ? { l: r.left, r: r.right, t: r.top, b: r.bottom, w: r.width } : null; };
   const b = (s) => rect(document.querySelector(s));
   // Layout boxes, not the Paths button's one-off shake (a transform): animations paused while measuring.
   const still = document.createElement('style'); still.textContent = '[data-hud-triggers] *{animation:none!important;transition:none!important}'; document.head.append(still);
   const bar = document.querySelector('[data-job-wallet]'), coin = bar?.querySelector(':scope > b'), was = coin?.textContent, wasD = bar?.dataset.coinDigits;
   if (digits && coin) { coin.textContent = digits; bar.dataset.coinDigits = String(digits.length); }
+  // Worst case for fish / fruit: 2 digits each.
+  const basket = bar ? [...bar.querySelectorAll('[data-wallet-basket] span')].map((e) => [e, e.textContent]) : []; if (worst) basket.forEach(([e]) => { e.textContent = '10'; });
   // The friends box includes the party badge (it pokes 4 px out of the circle while a party is live).
   let friends = b('[data-party-open]'); const badge = b('[data-party-badge]');
   if (friends && badge) friends = { l: Math.min(friends.l, badge.l), r: Math.max(friends.r, badge.r), t: Math.min(friends.t, badge.t), b: Math.max(friends.b, badge.b), w: 0 };
   const boxes = { paths: b('[data-tour="quests"]'), friends, bar: b('[data-job-wallet]'), settings: b('[data-hud-triggers] button[aria-label="Settings"]') };
+  // The four chips: coin group (coin icon + number), fish, fruit, fuel.
+  const cs = bar ? getComputedStyle(bar) : null, inner = bar && { l: bar.getBoundingClientRect().left + parseFloat(cs.borderLeftWidth), r: bar.getBoundingClientRect().right - parseFloat(cs.borderRightWidth) };
+  const coinR = rect(bar?.querySelector(':scope > span')), numR = rect(coin);
+  const chips = bar ? [coinR && numR ? { n: 'coins', l: coinR.l, r: numR.r } : null, ...[...bar.querySelectorAll(':scope > em')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => ({ n: e.dataset.walletBasket || 'fuel', ...rect(e) }))] : [];
+  const coinFont = coin ? parseFloat(getComputedStyle(coin).fontSize) : 0, coinClip = coin ? coin.scrollWidth > Math.ceil(coin.getBoundingClientRect().width) + 1 : true;
   const shown = [...document.querySelectorAll('[data-job-wallet] > em')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.dataset.walletBasket || (e.dataset.fuel !== undefined ? 'fuel' : '?'));
   const pairCss = parseFloat(getComputedStyle(document.querySelector('nav[data-hud-triggers]')).columnGap) || 8;
   const stack = (() => { const e = document.querySelector('.hud-stack'); if (!e || getComputedStyle(e).display === 'none') return null; const r = e.getBoundingClientRect(); return { l: r.left, r: r.right, t: r.top }; })();
+  const content = bar ? bar.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) : 0, nd = Number(bar?.dataset.coinDigits || 1);
+  basket.forEach(([e, t]) => { e.textContent = t; });
   if (digits && coin) { coin.textContent = was; bar.dataset.coinDigits = wasD; } still.remove();
-  return { boxes, shown, pairCss, label: bar?.getAttribute('aria-label') || '', vw: innerWidth, stack, badge: !!badge };
-}, { digits });
+  return { boxes, shown, pairCss, chips, inner, coinFont, coinClip, content, nd, label: bar?.getAttribute('aria-label') || '', vw: innerWidth, stack, badge: !!badge };
+}, { digits, worst });
 const sep = (a, c) => Math.max(c.l - a.r, a.l - c.r, c.t - a.b, a.t - c.b);
 function judge(name, m, phone) {
   const fails = [], k = Object.keys(m.boxes).filter((x) => m.boxes[x]), B = m.boxes;
@@ -88,21 +102,39 @@ function judge(name, m, phone) {
     pair = side ? B.friends.l - B.paths.r : m.pairCss;
     const bs = B.settings.l - bar.r; if (Math.abs(bs - pair) > 1) fails.push(`bar <-> Settings ${bs.toFixed(1)} px, Paths <-> friends ${pair.toFixed(1)} px`);
     const left = side ? B.friends.r : B.paths.r, free = bar.l - left;
-    if (free < pair) fails.push(`only ${free.toFixed(1)} px between the left group and the bar (want >= ${pair.toFixed(1)})`);
+    if (Math.abs(free - pair) > 1) fails.push(`left group <-> bar ${free.toFixed(1)} px, want ${pair.toFixed(1)} (bar fills the row)`);
+    if (side && Math.abs(B.friends.l - B.paths.r - GAP) > 1) fails.push(`Paths <-> friends ${(B.friends.l - B.paths.r).toFixed(1)} px`);
     if (bar.t !== B.settings.t && Math.abs(bar.t - B.settings.t) > 1) fails.push('bar is not in the Settings row');
   } else if (off !== null && Math.abs(off) > 2) fails.push(`coins bar is ${off} px off the screen centre`);
   if (!phone && BASE[name] && bar) { const e = BASE[name]; if (Math.abs(bar.l - e.l) > 1 || Math.abs(bar.r - e.r) > 1 || Math.abs(bar.t - e.t) > 1) fails.push(`bar rect ${Math.round(bar.l)}-${Math.round(bar.r)} @${Math.round(bar.t)} differs from before (${e.l}-${e.r} @${e.t})`); }
   if (m.stack && bar && m.stack.t < bar.b) fails.push('HUD stack starts above the bar bottom');
   if (m.stack && Math.abs((m.stack.l + m.stack.r) / 2 - m.vw / 2) > 1.5) fails.push('HUD stack is not centred');
   const f = B.friends; if (m.stack && f && m.stack.l < f.r && m.stack.r > f.l && m.stack.t < f.b + GAP) fails.push('HUD stack starts beside the friends button');
-  if (phone && m.shown.join('+') !== 'fuel') fails.push(`phone bar shows ${m.shown.join('+')}, want only coins + fuel`);
-  if (!phone && m.shown.join('+') !== 'fish+fruit+fuel') fails.push(`bar shows ${m.shown.join('+')}, want fish+fruit+fuel`);
+  const four = !phone || m.content >= FOUR(m.nd), want = four ? 'fish+fruit+fuel' : 'fuel';
+  if (m.shown.join('+') !== want) fails.push(`bar (${Math.round(m.content)} px content, ${m.nd} digits) shows ${m.shown.join('+')}, want ${want}`);
+  let chipGaps = null;
+  if (phone && m.chips.length >= 2 && m.inner) {
+    const c = m.chips, n = c.length - 1; chipGaps = c.slice(1).map((x, i) => Math.round((x.l - c[i].r) * 10) / 10);
+    if (c[0].l < m.inner.l - 0.5 || c[n].r > m.inner.r + 0.5) fails.push(`counters clipped: ${c[0].l.toFixed(1)}-${c[n].r.toFixed(1)} outside ${m.inner.l.toFixed(1)}-${m.inner.r.toFixed(1)}`);
+    if (chipGaps.some((g) => g < 6)) fails.push(`counters too close: gaps ${chipGaps.join(', ')}`);
+    if (Math.max(...chipGaps) - Math.min(...chipGaps) > 2) fails.push(`uneven counter spacing ${chipGaps.join(', ')}`);
+    if (m.coinFont < 20 || m.coinClip) fails.push(`coin number ${m.coinFont}px${m.coinClip ? ', clipped' : ''}`);
+  } else if (phone) fails.push(`want counters, got ${m.chips.length}`);
   if (!/fish/.test(m.label) || !/fruit/.test(m.label)) fails.push('aria-label lost the fish / fruit counts');
-  return { name, fails, gaps, pair, barW: bar && Math.round(bar.w), barOffCentre: off, shown: m.shown.join('+') };
+  return { name, fails, gaps, pair, chipGaps, coinFont: m.coinFont, content: Math.round(m.content), barW: bar && Math.round(bar.w), barOffCentre: off, shown: m.shown.join('+') };
 }
+// Threshold sweep: every width from 416 to 476 px portrait, so the bar's content box crosses the four-chip thresholds (full
+// fuel "100", the widest number) and the Low / Empty word thresholds (empty fuel "0 EMPTY", the widest word) 1 px at a time.
+async function sweep(p, fuel) {
+  for (let w = 416; w <= 476; w++) {
+    await p.setViewportSize({ width: w, height: 900 }); await p.waitForTimeout(120);
+    for (const digits of ['999', '9999', '12345']) rows.push(judge(`sweep ${w}x900 fuel ${fuel} (${digits} coins)`, await measure(p, digits), true));
+  }
+}
+const rows = [];
 (async () => {
   const b = await pw.chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--mute-audio'] });
-  let fail = 0; const rows = []; const sockets = [];
+  let fail = 0; const sockets = [];
   try {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
     const p = await ctx.newPage(); await enter(p);
@@ -112,6 +144,7 @@ function judge(name, m, phone) {
       for (const digits of [null, '9999', '12345']) rows.push(judge(`${w}x${h}${digits ? ` (${digits} coins)` : ''}`, await measure(p, digits), true));
       if (w === 320 || w === 360 || w === 440 || w === 844) await p.screenshot({ path: `${out}/phone-${w}x${h}.png` });
     }
+    await sweep(p, 'full');
     // Low / empty fuel adds a word ("Low", "Empty") to the bolt counter: the widest the slim bar gets.
     for (const fuel of [15, 0]) {
       const level = await p.evaluate((fuel) => { const k = 'fi2-fuel-v1', d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; localStorage.setItem(k, JSON.stringify({ version: 1, fuel, day })); window.dispatchEvent(new StorageEvent('storage', { key: k })); return new Promise((r) => setTimeout(() => r(document.querySelector('[data-fuel-level]')?.dataset.fuelLevel), 400)); }, fuel);
@@ -120,11 +153,28 @@ function judge(name, m, phone) {
         for (const digits of [null, '12345']) { const r = judge(`${w}x${h} fuel ${level}${digits ? ` (${digits} coins)` : ''}`, await measure(p, digits), true); if (level !== 'low' && level !== 'empty') r.fails.push('could not set the fuel level'); rows.push(r); }
       }
     }
+    await sweep(p, 'empty');
+    if (relay) {
+      // Full fuel again, then a party of four (three scripted friends): every phone size, plus the owner's screenshots (4-digit coins).
+      await p.setViewportSize({ width: 390, height: 844 });
+      await p.evaluate(() => { const k = 'fi2-fuel-v1', d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; localStorage.setItem(k, JSON.stringify({ version: 1, fuel: 100, day })); window.dispatchEvent(new StorageEvent('storage', { key: k })); });
+      sockets.push(...await party(p));
+      for (const [w, h] of PHONES) {
+        await p.setViewportSize({ width: w, height: h }); await p.waitForTimeout(500);
+        for (const digits of [null, '9999', '12345']) { const m = await measure(p, digits), r = judge(`${w}x${h} party${digits ? ` (${digits} coins)` : ''}`, m, true); if (!m.badge) r.fails.push('party badge missing'); rows.push(r); }
+        if ((w === 393 && h === 852) || (w === 360 && h === 740)) {
+          const was = await p.evaluate(() => { const bar = document.querySelector('[data-job-wallet]'), c = bar.querySelector(':scope > b'), o = [c.textContent, bar.dataset.coinDigits]; c.textContent = '2480'; bar.dataset.coinDigits = '4'; return o; });
+          await p.evaluate(() => document.querySelectorAll('[data-hud-triggers] *').forEach((e) => { e.style.animation = 'none'; }));
+          await p.screenshot({ path: `${out}/party-${w}x${h}-4digit.png` });
+          await p.evaluate((o) => { const bar = document.querySelector('[data-job-wallet]'), c = bar.querySelector(':scope > b'); c.textContent = o[0]; bar.dataset.coinDigits = o[1]; }, was);
+        }
+      }
+    }
     await ctx.close();
     const d = await b.newContext({ viewport: { width: 1280, height: 800 } }); const q = await d.newPage(); await enter(q);
-    rows.push(judge('desktop 1280x800', await measure(q, null), false)); await q.screenshot({ path: `${out}/desktop-1280x800.png` }); await d.close();
+    rows.push(judge('desktop 1280x800', await measure(q, null, false), false)); await q.screenshot({ path: `${out}/desktop-1280x800.png` }); await d.close();
     const t = await b.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 }); const tp = await t.newPage(); await enter(tp);
-    rows.push(judge('tablet 768x1024', await measure(tp, null), false)); await t.close();
+    rows.push(judge('tablet 768x1024', await measure(tp, null, false), false)); await t.close();
   } finally { await b.close(); }
   // Real-device descriptors in WebKit (the iPhone engine): the owner's phone, not a resized desktop page.
   const wk = await pw.webkit.launch();
@@ -137,7 +187,7 @@ function judge(name, m, phone) {
       await c.close();
     }
   } finally { sockets.forEach((s) => { try { s.close(); } catch { /* gone */ } }); await wk.close(); }
-  for (const r of rows) { console.log(`${r.fails.length ? 'FAIL' : 'ok  '} ${r.name}: bar ${r.barW}px, off-centre ${r.barOffCentre}px, pair ${r.pair ?? '-'}, counters coins+${r.shown}, gaps ${JSON.stringify(r.gaps)}${r.fails.length ? ' -> ' + r.fails.join('; ') : ''}`); fail += r.fails.length; }
+  for (const r of rows) { console.log(`${r.fails.length ? 'FAIL' : 'ok  '} ${r.name}: bar ${r.barW}px, off-centre ${r.barOffCentre}px, pair ${r.pair ?? '-'}, content ${r.content}px, chip gaps ${r.chipGaps ? r.chipGaps.join('/') : '-'}, coin ${r.coinFont}px, counters coins+${r.shown}, gaps ${JSON.stringify(r.gaps)}${r.fails.length ? ' -> ' + r.fails.join('; ') : ''}`); fail += r.fails.length; }
   console.log(fail ? `FAIL hud row: ${fail} problem(s)` : `PASS hud row: ${rows.length} measurements`);
   process.exit(fail ? 1 : 0);
 })().catch((e) => { console.error(e); process.exit(1); });

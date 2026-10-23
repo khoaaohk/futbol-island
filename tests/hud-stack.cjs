@@ -119,19 +119,24 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
 // measured headless by scripts/check-hud-row.cjs (5 phone sizes + desktop, flag on, gaps >= 8 px); these pin the CSS it relies on.
 {const R=f=>fs.readFileSync(path.resolve(__dirname,'..',f),'utf8');
  const jobs=R('components/IslandJobs.tsx'),jcss=R('components/IslandJobs.module.css'),scss=R('components/IslandSettings.module.css'),g=R('app/globals.css'),fuel=R('components/FuelCount.module.css');
- assert.equal((jobs.match(/styles\.basketOnly\}`\} data-wallet-basket="(fish|fruit)"/g)||[]).length,2,'fish and fruit are the bar\'s phone-hidden counters');
+ assert.equal((jobs.match(/styles\.basketOnly\}`\} data-wallet-basket="(fish|fruit)"/g)||[]).length,2,'fish and fruit are the counters that give way on a narrow phone bar');
  assert.match(jobs,/aria-label=\{`Your island pocket: \$\{wallet\.balance\} coins, \$\{fish\} fish, \$\{fruit\} fruit/,'the bar still names fish and fruit for screen readers');
  assert.match(jobs,/onClick=\{onOpenBalances\}/,'one tap opens the pocket, which lists fish and fruit');
  // Real iPhone (Oct 23 2026): the old 430 px breakpoint missed the 440 px iPhone 16/17 Pro Max; phones are now <= 480 (or a <= 480 device).
- assert.match(jcss,/@media\(max-width:480px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones (portrait <= 480 wide, landscape <= 480 tall, or a <= 480 px device) show coins + energy only');
+ // Owner (Oct 23 2026, stretched bar): phones (portrait <= 480 wide, landscape <= 480 tall, or a <= 480 px device) stretch the bar
+ // between Play with friends and Settings and make it a size container; fish / fruit hide only by the bar's own width.
+ assert.match(jcss,/@media\(max-width:480px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\]\{--hud-bar-left:[^}]*left:var\(--hud-bar-left\);right:calc\(18px \+ env\(safe-area-inset-right,0px\) \+ var\(--btn-icon,44px\) \+ var\(--island-hud-pair-gap,8px\)\);transform:none;max-width:none;[^}]*container:hudbar \/ inline-size\}/,'phones: the bar spans from the left group to one pair-gap left of Settings, as a size container');
+ assert.doesNotMatch(jcss,/orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones no longer hide fish / fruit by viewport');
+ assert.match(jcss,/@container hudbar \(max-width:221\.98px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}\}/,'fish / fruit give way below the measured four-chip width');
+ assert.match(jcss,/:global\(\.town-app:not\(\[data-fishing\]\):has\(nav\[data-hud-triggers\]>\[data-party-open\] \[data-party-badge\]\)\) \.wallet\[data-job-wallet\]\{left:calc\(var\(--hud-bar-left\) \+ var\(--btn-icon,44px\) \+ 1px \+ var\(--island-hud-pair-gap,8px\)\)\}/,'the party badge (1 px past the circle border box) moves the bar start');
  assert.doesNotMatch(jcss,/max-width:430px\),\(max-height:430px\)/,'no leftover 430 px phone breakpoint');
  assert.doesNotMatch(jcss,/min-width:601px\) and \(pointer:fine\)\{[^\n]*basketOnly\{display:none/,'desktop keeps fish and fruit');
- assert.match(jcss,/data-coin-digits="4"\] b\{font-size:/,'a 4-digit balance steps down a size on narrow phones');
- assert.match(fuel,/@media\(max-width:400px\)\{:global\(\[data-job-wallet\]\) \.word\{display:none!important\}\}/,'the Low / Empty word gives way on narrow phones');
+ assert.doesNotMatch(jcss,/data-coin-digits="4"\] b\{font-size:/,'the coin number keeps its size (fish / fruit give way instead)');
+ assert.match(jcss,/@container hudbar \(max-width:159\.98px\)\{\.wallet\[data-job-wallet\] \[data-fuel\] small\{display:none!important\}\}/,'the Low / Empty word gives way on a narrow bar');
+ assert.doesNotMatch(fuel,/max-width:400px/,'the word no longer hides by viewport');
  // Owner (Oct 23 2026, final): desktop/tablet bar centred; on phones Paths + friends left, the bar right-aligned next to Settings,
  // bar <-> Settings gap = Paths <-> friends gap (one variable feeds both).
  assert.match(jcss,/\.wallet\[data-job-wallet\]\{left:50%;right:auto;[^}]*transform:translateX\(-50%\)/,'desktop / tablet: the island coins bar is centred on the screen');
- assert.match(jcss,/orientation:landscape\),\(max-device-width:480px\)\{[^\n]*\.wallet\[data-job-wallet\]\{[^}]*left:auto;right:calc\(18px \+ env\(safe-area-inset-right,0px\) \+ var\(--btn-icon,44px\) \+ var\(--island-hud-pair-gap,8px\)\);transform:none\}/,'phones: the bar sits one pair-gap left of Settings');
  assert.match(scss,/^\.triggers\{[^}]*gap:var\(--island-hud-pair-gap,8px\)\}/,'Paths <-> friends uses the same pair gap');
  assert.match(scss,/@media\(max-width:600px\),\(pointer:coarse\)\{\.triggers\{top:[^}]*right:calc\(18px \+ env\(safe-area-inset-right,0px\)\)\}\}/,'phone Settings sits 18 px from the right edge (the bar rule assumes it)');
  assert.match(g,/--island-hud-pair-gap:8px/,'the pair gap is one root variable');
