@@ -24,6 +24,17 @@ const GLYPHS: Record<string, string> = {
   'ride-bell': 'M6 17h12l-1.5-2V10a4.5 4.5 0 0 0-9 0v5zM10 20h4',
   'ride-wheelie': 'M4 19a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM15 14a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM7 16l5-5 4 3M12 11l-1-5',
   'ride-weave': 'M3 12c2-6 4-6 6 0s4 6 6 0 4-6 6 0',
+  // Ride emotes v2 (in-place vehicle tricks, lib/town/rideEmotes.ts)
+  'ride-donut': 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
+  'ride-pop': 'M4 19a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM8 16l8-9M16 7h-4M16 7v4',
+  'ride-salute': 'M6 21v-7l3-3 3 2M12 13l5-7M17 6l2 1M9 11V5',
+  'ride-horn': 'M4 10v4h3l6 4V6l-6 4zM16 9c1 1 1 5 0 6M19 7c2 2 2 8 0 10',
+  'ride-whip': 'M12 4v10M7 18h10M7 10a5 3 0 1 0 10 0',
+  'ride-flamingo': 'M12 3v10l-4 5M12 13h6M8 21h8',
+  'ride-kick': 'M5 18h10M15 18l2-10M8 12l-4-2M8 12l3 4',
+  'ride-bunny': 'M9 4v6M15 4v6M6 18a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM13 18a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM5 13h14',
+  'ride-stoppie': 'M15 19a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM4 10a2.5 2.5 0 1 0 5 0 2.5 2.5 0 0 0-5 0zM7 12l6 3 4 1',
+  'ride-nohands': 'M6 3l3 6M18 3l-3 6M9 9h6v5H9zM8 20a2 2 0 1 0 4 0M12 20a2 2 0 1 0 4 0',
   'juggle-air': 'M12 3.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6zM6 20.5v-6m0 0-2.5 2.5M6 14.5l2.5 2.5M18 20.5v-6m0 0-2.5 2.5M18 14.5l2.5 2.5',
   'show-off': 'M9.5 12.2a4.4 4.4 0 1 0 0 8.8 4.4 4.4 0 0 0 0-8.8zM7.6 14.6l1.9 1.4 1.9-1.4M9.5 16v3M17.5 2.5l1 2.6 2.6 1-2.6 1-1 2.6-1-2.6-2.6-1 2.6-1zM14 13l2.5-1.5',
   // Moving emotes (lib/town/moveEmotes.ts): a running figure punching up, skipping arcs, cool shades, a hand with speed lines.

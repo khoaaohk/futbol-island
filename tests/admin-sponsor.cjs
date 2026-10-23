@@ -201,7 +201,7 @@ await ok('sql: the split on a throwaway Postgres matches the TypeScript',async()
 });
 
 // ---- Phase B: Minutes with friends and Emotes used.
-const partyDay=(day,n,extra={})=>many(n,day,{'mp:min':6,'mp:in':1,'mp:created':1,'em:pick':4,'em:e0':2,'em:e8':1,'em:e14':1,'em:reach_1':1,'em:to_npc':1,...extra},{ms:600000});
+const partyDay=(day,n,extra={})=>many(n,day,{'mp:min':6,'mp:in':1,'mp:created':1,'em:pick':4,'em:e0':2,'em:e8':1,'em:e64':1,'em:reach_1':1,'em:to_npc':1,...extra},{ms:600000});
 await ok('social + emotes cards: not tracked before the build, then totals, stats, suppression, CSV rows',()=>{
  const before=build({'2026-10-18':many(6,'2026-10-18',{'sh:save_jersey':1})});
  for(const id of ['social','emotes']){assert.equal(M(before,id).status,'none',id);assert.equal(M(before,id).total,null);assert.match(M(before,id).gap,/2026-10-22/);}
@@ -236,7 +236,7 @@ await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not track
  const days={};for(let i=0;i<7;i++){const d=C.addDays('2026-10-19',i);days[d]=[...partyDay(d,i<3?4:2,{'mp:peak_3_4':1,'le:learn7_roles':1,'ls:learn7_roles':1,'mp:lesson':1}),...many(3,d,{'em:e45':1,'em:pick':1})];}
  const rollups=Object.entries(days).map(([d,ss])=>C.rollupDay(d,ss)),merged=C.mergeRollups(rollups);
  const prevMerged=C.mergeRollups([C.rollupDay('2026-10-12',partyDay('2026-10-12',12))]);
- const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T12:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:{share:0.42,sessions:40},relay:null,emoteLabel:n=>({0:'Wave',8:'Dance',14:'Kickflip',45:'Juggle'})[n]});
+ const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T12:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:{share:0.42,sessions:40},relay:null,emoteLabel:n=>({0:'Wave',8:'Dance',64:'Kickflip',45:'Juggle'})[n]});
  const K2=Object.fromEntries(rep.kpis.map(k=>[k.id,k]));
  assert.deepEqual(rep.kpis.map(k=>k.id),['reach','minutes','social','emotes','return','learning']);
  assert.equal(K2.reach.value,440,'rounded to 10');assert.equal(K2.reach.prev,null,'8 players last week: withheld');assert.equal(K2.reach.change,null);
@@ -288,7 +288,7 @@ await ok('weekly report: fixture render (desktop + phone screenshot input)',()=>
  const prev=C.mergeRollups([C.rollupDay('2026-10-14',partyDay('2026-10-14',200))]);
  const RT=load('lib/analytics/relayStatsTypes.ts');
  const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T09:00:00Z'),merged,prev,players:1234,prevPlayers:1100,returning:{share:0.42,sessions:800},
-  relay:RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals,emoteLabel:n=>({0:'Wave',8:'Dance',14:'Kickflip (scooter)',45:'Juggle (juggler)'})[n]});
+  relay:RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals,emoteLabel:n=>({0:'Wave',8:'Dance',64:'Kickflip (scooter)',45:'Juggle (juggler)'})[n]});
  const html=renderToStaticMarkup(React.createElement(Tab,{week:'2026-W43',onWeek:()=>{},initial:rep}));
  assert(/Sponsor report/.test(html)&&/Internal draft: do not share outside the company/.test(html)&&/data-kpi="reach"/.test(html)&&/1,200/.test(html),'reach rounded to 100 over 1,000');
  for(const id of ['reach','minutes','social','emotes','return','learning'])assert(html.includes(`data-kpi="${id}"`),id);

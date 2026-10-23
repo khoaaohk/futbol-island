@@ -108,36 +108,27 @@ t('source: Pass it is wired (bubble, camera hold, cancel on walk, renamed Thumbs
  assert(/pass:\s*'/.test(read('components/party/PartyChip.tsx')),'the Pass it glyph exists');
 });
 
-t('ride emotes: each vehicle gets its own three scripted rides on the wheel; foot-only emotes are hidden on rides',()=>{
+t('ride emotes v2: each vehicle gets Wave + its own five in-place tricks on the wheel; foot-only emotes are hidden on rides',()=>{
  for(const ride of ['moped','scooter','bike']){
   const w=E.wheelEmotesFor(ride),labels=w.map(x=>x.label);
-  assert.equal(w.length,5,ride+' wheel: Wave, three scripts, Cheer');assert(labels.includes('Wave')&&labels.includes('Cheer'));
+  assert.equal(w.length,6,ride+' wheel: Wave + five tricks');assert.equal(labels[0],'Wave');
   assert(!labels.some(l=>/Pass it|Dance|Laugh|Thanks|Space|Juggle with me/.test(l)),ride+' hides the foot-only emotes');
-  assert.equal(R.rideScriptsFor(ride).length,3);
+  assert.equal(R.rideScriptsFor(ride).length,5);
  }
  assert.equal(E.wheelEmotesFor('walk').length,10);assert.equal(E.wheelEmotesFor('jetpack').length,10);
- const all=new Set(R.RIDE_SCRIPTS.map(x=>x.label));assert.equal(all.size,9,'nine different scripts');
- assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.icon)).size,9);
- assert(/'ride-weave'/.test(read('components/party/PartyChip.tsx')));
+ assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.label)).size,15,'fifteen different tricks');
+ assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.icon)).size,15);assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.emoji)).size,15,'an emoji bubble each');
+ const chip=read('components/party/PartyChip.tsx');for(const sc of R.RIDE_SCRIPTS)assert(chip.includes(`'${sc.icon}':`),'glyph for '+sc.icon);
 });
-t('ride scripts: a few seconds, capped speed per vehicle, they differ, friends only get existing wire values',()=>{
- const mv={mag:0,turn:0};
+t('ride tricks: a few seconds, in place (no speed asked), friends only get existing wire values (never Wave or a ball emote)',()=>{
  for(const sc of R.RIDE_SCRIPTS){
-  assert(sc.seconds>=2.5&&sc.seconds<=6.5,sc.label+' lasts a few seconds');
-  let top=0,turns=new Set();for(let a=0;a<=sc.seconds;a+=.1){sc.move(a,mv);top=Math.max(top,mv.mag);turns.add(Math.round(mv.turn*10));assert(mv.mag>=0&&mv.mag<=sc.maxMag+1e-9,sc.label+' stays under its cap');}
-  assert(top*R.RIDE_SPEED_CAP[sc.ride]<=8.01,sc.label+' never asks for more than 8 m/s');
-  assert(sc.wire===0||sc.wire===1,'wire values are existing protocol ones');assert(sc.emote>=10&&R.isRideEmote(sc.emote));
+  assert(sc.seconds>=2.5&&sc.seconds<=4,sc.label+' lasts a few seconds');assert(!('move' in sc)&&!('maxMag' in sc),sc.label+' never drives the vehicle');
+  assert([1,2,4,5,7,8,9].includes(sc.wire),sc.label+' wire '+sc.wire);assert(sc.emote>=60&&R.isRideEmote(sc.emote));assert.equal(sc.arm,sc.emote);
  }
- assert(R.RIDE_SPEED_CAP.scooter<R.RIDE_SPEED_CAP.bike&&R.RIDE_SPEED_CAP.bike<R.RIDE_SPEED_CAP.moped,'scooter < bike < moped');
- const eight=R.rideScriptFor(R.RIDE_EMOTE.MopedEight);eight.move(1,mv);const t1=mv.turn;eight.move(5,mv);assert(t1*mv.turn<0,'the figure eight turns left then right');
- const weave=R.rideScriptFor(R.RIDE_EMOTE.BikeWeave);let sg=new Set();for(let a=0;a<4;a+=.1){weave.move(a,mv);sg.add(Math.sign(Math.round(mv.turn*10)));}assert(sg.has(1)&&sg.has(-1),'the weave swings both ways');
- const spin=R.rideScriptFor(R.RIDE_EMOTE.ScooterSpin),wheelie=R.rideScriptFor(R.RIDE_EMOTE.BikeWheelie),rev=R.rideScriptFor(R.RIDE_EMOTE.MopedRev);
- assert(spin.trick&&spin.trick.action===0&&wheelie.trick&&wheelie.trick.action===1&&rev.trick,'tricks reuse createRideTricks: spin 360, back wheelie, moped stand-up');
- assert(R.rideScriptFor(R.RIDE_EMOTE.MopedCruise).ride==='moped'&&R.rideScriptFor(R.RIDE_EMOTE.BikeBell).ride==='bike'&&spin.ride==='scooter');
+ for(const ride of ['moped','scooter','bike'])assert.equal(new Set(R.rideScriptsFor(ride).map(s=>s.wire)).size,5,ride+': a different wire value per trick');
+ assert(!R.isRideEmote(18)&&!R.isRideEmote(10)&&R.isRideEmote(60)&&R.isRideEmote(74)&&!R.isRideEmote(75));
 });
-t('ride scripts: stick math points the ride where the script says, and every cancel rule ends it',()=>{
- const o={x:0,z:0};
- for(const h of [0,1,2.5,-1.2]){R.stickFor(h,1,o);const wx=o.x*.857+o.z*.515,wz=-o.x*.515+o.z*.857;assert(Math.abs(wx-Math.sin(h))<2e-3&&Math.abs(wz-Math.cos(h))<2e-3,'heading '+h);}
+t('ride tricks: every cancel rule ends it',()=>{
  const base={age:1,seconds:4,realInput:false,rideNow:'moped',rideWas:'moped',blockedAhead:false,trafficNear:false,water:false,crashed:false};
  assert.equal(R.rideScriptStop(base),'');
  assert.equal(R.rideScriptStop({...base,age:4}),'done');
@@ -146,7 +137,7 @@ t('ride scripts: stick math points the ride where the script says, and every can
  assert.equal(R.rideScriptStop({...base,blockedAhead:true}),'blocked','the next step is blocked: abort');
  assert.equal(R.rideScriptStop({...base,trafficNear:true}),'traffic');assert.equal(R.rideScriptStop({...base,water:true}),'hazard');assert.equal(R.rideScriptStop({...base,crashed:true}),'hazard');
  const town=read('components/Town.tsx');
- assert(/groundBlocked\(location\.x\+hx\*L,location\.z\+hz\*L,world\.obstacles/.test(town),'uses the game collision for the look-ahead');
+ assert(/blockedAhead:braking&&groundBlocked\(location\.x\+r\.dx\*1\.2,location\.z\+r\.dz\*1\.2,world\.obstacles/.test(town),'only while braking: the game collision checks the stop');
  assert(/joystickPointer\.current!==null\|\|keys\.size>0/.test(town)&&/rideScript\.s\)rideScriptStep\(/.test(town),'real input detection, stepped before the movement code');
  assert(/if\(!onRideNow&&emoteMoving\(\)\)/.test(town),'riding emotes are not cancelled by the ride moving');
  assert(/<EmoteControl ride=\{rideMode\}\/>/.test(town)&&/wheelEmotesFor\(ride\)/.test(read('components/party/EmoteWheel.tsx')));
