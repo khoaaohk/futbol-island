@@ -248,11 +248,16 @@ t('busy field players: ten distinct short lines, a shuffled bag that never repea
  assert.equal(NS.FIELD_COOLDOWN,3);assert.equal(NS.FIELD_RANGE,9);
  assert.equal(NS.fieldWins(4,-1),true,'no friendlier townsperson');assert.equal(NS.fieldWins(4,6),true,'nearer than the friendly one');assert.equal(NS.fieldWins(6,4),false,'a friendlier townsperson is nearer');assert.equal(NS.fieldWins(-1,3),false);
 });
-t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays without touching routes or balls, the field players are the volleyball rally',()=>{
+t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays without touching routes or balls, the field players are the rally, the wall practice and the live matches',()=>{
  const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts'),vb=read('lib/graphics/volleyballGame.ts');
  assert(/islandNpcs\.interact\(id,ns\.emote,reduced\)/.test(town)&&/npcEmoteClass\(e\.definition\)!==ns\.kind/.test(town),'an NPC-set pick targets the nearest townsperson of that class');
  assert(/pickFieldPlayer\(refuse\.list/.test(town)&&/fieldWins\(fp\.d/.test(town)&&/emoteBubbles\.showText\(refuse\.bag\.next\(\)/.test(town),'one refusal bubble from the shuffled bag');
  assert(/volleyballGame\.entries/.test(town)&&/entries/.test(vb),'the rally players');
+ {const scan=(town.match(/const fieldScan=\(\)=>\{[\s\S]*?return refuse\.list;\};/)||[''])[0];
+  assert(/volleyballGame\.entries/.test(scan)&&/coachPractice\.entries/.test(scan)&&/games\.entries/.test(scan)&&/rig\.root\.visible/.test(scan),'matches + wall practice + rally all refuse');
+  assert(!/\{id:v\.id,x:/.test(town)&&/fieldPool\[n\]=c/.test(town),'pooled candidates, no per-scan object literals');
+  assert((town.match(/fieldScan\(\)/g)||[]).length>=3,'the button reach and both press paths use the same scan');
+  assert(/for\(const c of fieldScan\(\)\)\{[^}]*npcNear=true/.test(town),'a field player nearby shows the button');}
  assert(/entry\.routine\.speed=entry\.baseSpeed\*entry\.ixOut\.slow/.test(npcs)&&/entry\.routine\.speed=entry\.baseSpeed;/.test(npcs),'speed dips and returns; the route is untouched');
  assert(!/freestyle\.(ball|motion)\s*=/.test(npcs),'the freestyle ball logic is not written to');
  assert(/emoteReachTick\(performance\.now\(\)\/1000\)/.test(town)&&/nowS-reach\.at<\.25/.test(town),'the button flag is computed at ~4 Hz');
@@ -263,7 +268,7 @@ console.log('emote-contexts: '+n+' tests passed');
 // The Emote button needs someone IN FRONT of the player (owner, Oct 22 2026: "when not facing anyone, let's not show the emotes")
 { const fs=require('fs'),town=fs.readFileSync(require('path').join(__dirname,'..','components/Town.tsx'),'utf8');
   assert(/facing=\(x:number,z:number\)=>\{const dx=x-me\.x,dz=z-me\.z,d=Math\.hypot\(dx,dz\);return d<1\.6\|\|dx\*faceX\+dz\*faceZ>=d\*\.26;\}/.test(town),'facing cone helper (about 75 degrees, or right beside the player)');
-  assert(/d<=EMOTE_RANGE&&facing\(e\.position\.x,e\.position\.z\)/.test(town)&&/&&facing\(v\.position\.x,v\.position\.z\)/.test(town),'townspeople and field players count only when in front');
+  assert(/d<=EMOTE_RANGE&&facing\(e\.position\.x,e\.position\.z\)/.test(town)&&/&&facing\(c\.x,c\.z\)/.test(town),'townspeople and field players count only when in front');
   assert(/if\(!facing\(f\.x,f\.z\)&&!modeIsFlying\(f\.mode\)&&!modeIsSwimming\(f\.mode\)\)continue;fN=true;/.test(town),'party friends count only when in front (flying / swimming friends keep their own rule)');
   // same cone maths as the helper: 75 degrees
   const cone=(fx,fz,dx,dz)=>{const d=Math.hypot(dx,dz);return d<1.6||dx*fx+dz*fz>=d*.26;};
