@@ -425,6 +425,13 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   balances and full / low / empty fuel, and on desktop 1280×800 with all four counters. Narrowest margins (friends ↔ bar):
   360px 11px (4 digits 9px), 390px 23px (4 digits 14.5px), 430px 43px, 320px 43px (friends under Paths).
   `tests/hud-stack.cjs` pins the CSS it relies on.
+- **Position (owner, later on 23 Oct)**: Paths + Play with friends on the left, Settings on the right, and the slim coins + energy
+  bar in the **true centre of the screen** (`left:50%; transform:translateX(-50%)`, like the HUD stack), not pushed against
+  Settings or centred in the leftover space. `check-hud-row.cjs` fails if the bar's centre is more than 2px off the viewport
+  centre. It fits at 360px and wider (tightest: friends ↔ bar 9.1px at 360 with a 4-digit balance; 14.5px at 390; 21px at 430;
+  bar ↔ Settings ≥ 61px). At ≤ 340px a centred bar cannot keep 8px beside Paths + friends, so the existing rule keeps the friends
+  button under Paths there; the bar still centres (41px each side at 320). Desktop (1280×800) and touch tablet (768×1024) are not
+  phone breakpoints: all four counters show and the bar stays centred (also checked by the script).
 
 ## Pocket keeps the coins bar (23 October 2026)
 

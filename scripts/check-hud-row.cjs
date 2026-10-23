@@ -1,8 +1,8 @@
 // Headless check (Oct 23 2026, docs/ui/HUD_STACK.md "Top row on phones"): the island top row [Paths][Play with friends][coins bar]
 // [Settings] never overlaps. Measures the four boxes at 320x568, 360x740, 390x844, 430x932 and landscape 844x390 (touch phone) and
-// 1280x800 (desktop): every pair is >= 8 px apart (horizontally, or vertically where the friends button sits under Paths), the phone
+// 1280x800 (desktop) and 768x1024 (touch tablet): every pair is >= 8 px apart (horizontally, or vertically where the friends button sits under Paths), the phone
 // bar shows only coins + fuel (fish / fruit hidden, still in its aria-label and the pocket it opens), desktop keeps all four, and
-// the HUD stack stays centred under the bar. Also measures 4- and 5-digit coin counts.
+// the bar's centre is within 2 px of the screen centre, and the HUD stack stays centred under the bar. Also measures 4- and 5-digit coin counts.
 // Run: node scripts/check-hud-row.cjs <appUrl> [outDir]   (app built with NEXT_PUBLIC_MULTIPLAYER=1 so the friends button shows)
 const { chromium } = require('playwright');
 const url = process.argv[2] || 'http://localhost:8739', out = process.argv[3] || '/tmp/hud-coins';
@@ -44,6 +44,8 @@ function judge(name, m) {
     gaps[`${k[i]}-${k[j]}`] = Math.round(g * 10) / 10; if (g < GAP) fails.push(`${k[i]}/${k[j]} only ${g.toFixed(1)} px apart`);
   }
   const bar = m.boxes.bar, off = bar ? Math.round(((bar.l + bar.r) / 2 - m.vw / 2) * 10) / 10 : null;
+  // Owner (Oct 23 2026): the bar sits in the true centre of the screen, Paths + friends left, Settings right.
+  if (off !== null && Math.abs(off) > 2) fails.push(`coins bar is ${off} px off the screen centre`);
   if (m.stackTop !== null && bar && m.stackTop < bar.b) fails.push('HUD stack starts above the bar bottom');
   if (m.stackMid !== null && Math.abs(m.stackMid - m.vw / 2) > 1.5) fails.push('HUD stack is not centred');
   const f = m.boxes.friends; if (m.stack && f && m.stack.l < f.r && m.stack.r > f.l && m.stack.t < f.b + GAP) fails.push('HUD stack starts beside the friends button');
@@ -63,7 +65,7 @@ function judge(name, m) {
         if (!/fish/.test(m.label) || !/fruit/.test(m.label)) r.fails.push('aria-label lost the fish / fruit counts');
         rows.push(r);
       }
-      if (w === 320 || w === 390 || w === 844) await p.screenshot({ path: `${out}/phone-${w}x${h}.png` });
+      if (w === 320 || w === 360 || w === 390 || w === 844) await p.screenshot({ path: `${out}/phone-${w}x${h}.png` });
     }
     // Low / empty fuel adds a word ("Low", "Empty") to the bolt counter: the widest the slim bar gets.
     for (const fuel of [15, 0]) {
@@ -78,6 +80,11 @@ function judge(name, m) {
     const m = await measure(q, null), r = judge('desktop 1280x800', m);
     if (r.shown !== 'fish+fruit+fuel') r.fails.push(`desktop bar shows ${r.shown}, want fish+fruit+fuel`);
     rows.push(r); await q.screenshot({ path: `${out}/desktop-1280x800.png` }); await d.close();
+    // Tablet (touch, 768x1024): not a phone breakpoint, so all four counters show and the bar stays centred.
+    const t = await b.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 }); const tp = await t.newPage(); await enter(tp);
+    const tm = await measure(tp, null), tr = judge('tablet 768x1024', tm);
+    if (tr.shown !== 'fish+fruit+fuel') tr.fails.push(`tablet bar shows ${tr.shown}, want fish+fruit+fuel`);
+    rows.push(tr); await t.close();
   } finally { await b.close(); }
   for (const r of rows) { console.log(`${r.fails.length ? 'FAIL' : 'ok  '} ${r.name}: bar ${r.barW}px, off-centre ${r.barOffCentre}px, counters coins+${r.shown}, gaps ${JSON.stringify(r.gaps)}${r.fails.length ? ' -> ' + r.fails.join('; ') : ''}`); fail += r.fails.length; }
   console.log(fail ? `FAIL hud row: ${fail} problem(s)` : `PASS hud row: no overlap at ${rows.length} measurements (gap >= ${GAP} px)`);

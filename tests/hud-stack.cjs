@@ -126,6 +126,9 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.doesNotMatch(jcss,/min-width:601px\) and \(pointer:fine\)\{[^\n]*basketOnly\{display:none/,'desktop keeps fish and fruit');
  assert.match(jcss,/data-coin-digits="4"\] b\{font-size:/,'a 4-digit balance steps down a size on narrow phones');
  assert.match(fuel,/@media\(max-width:400px\)\{:global\(\[data-job-wallet\]\) \.word\{display:none!important\}\}/,'the Low / Empty word gives way on narrow phones');
+ // Owner (Oct 23 2026, later): Paths + friends left, Settings right, the slim bar in the true screen centre; no phone rule re-anchors it.
+ assert.match(jcss,/\.wallet\[data-job-wallet\]\{left:50%;right:auto;[^}]*transform:translateX\(-50%\)/,'the island coins bar is centred on the screen');
+ assert.doesNotMatch(jcss.split('\n').filter(l=>/max-width:(430|400|380|350|340)px/.test(l)).join('\n'),/\.wallet\[data-job-wallet\]\{[^}]*(left|right|transform):/,'phone rules never move the bar off the screen centre');
  assert.match(scss,/@media\(max-width:340px\)\{\.triggers \[data-party-open\]\{position:absolute!important;left:0;top:calc\(var\(--island-hud-row-height,44px\) \+ 8px\)\}\}/,'<= 340 px: Play with friends drops under Paths');
  assert.match(g,/@media\(max-width:340px\)\{\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\) \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ 2 \* var\(--island-hud-row-height\) \+ 8px \+ var\(--island-hud-row-gap\)\)\}/,'<= 340 px with friends on: the stack starts under the friends button, still centred');}
 // Pocket open (Oct 23 2026): the coins bar stays on screen above the drawer; the stack still hides.
