@@ -14,8 +14,24 @@ export interface PartyConnection {
    *  Uses the stored session ({code, resumeToken, hostKey}); sends no name (the relay keeps it on the slot). True when a resume
    *  started; false when there is no stored session or the connection is already in a party. Status goes 'reconnecting' then 'live'. */
   resume(opts: { look: Look }): boolean;
-  /** True while this tab holds a party session (the stored one, within the party cap). */
+  /** True while this device holds a party session (the stored one, within the party cap). */
   hasSession(): boolean;
+  /** Party rejoin (Oct 22 2026): "Use it here". Like resume(), but takes the party over from another tab of this browser (that tab
+   *  goes quiet with tab 'moved', its stored session untouched). False when nothing is stored or already in a party. */
+  takeOver(opts: { look: Look }): boolean;
+  /** The stored party for the Play with friends menu: its code and whether this device holds its host key (never the key or the
+   *  token themselves). Null when nothing is stored or it is past the 12 h cap. */
+  storedParty(): { code: string; host: boolean } | null;
+  /** Forget the stored party (a rejoin found that the party ended). */
+  forget(): void;
+  /** Which tab owns the party: 'here' (this tab), 'elsewhere' (another tab held it when this page tried to resume), 'moved'
+   *  (another tab took it over), null (no party). */
+  readonly tab: TabState;
+  /** A resume reached the relay but the slot had lapsed (60 s / 10 min grace): the stored session is kept so the menu can offer
+   *  'Join with the code' with the code filled in. Reset by the next join / resume. */
+  readonly lapsed: boolean;
+  /** tab / lapsed changed. */
+  onLocal(fn: () => void): () => void;
   sendPose(body: PoseBody, nowMs: number): void;
   sendEmote(e: Emote): boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
@@ -37,10 +53,19 @@ export interface PartyConnection {
   readonly reconnects: number;
 }
 
-export const SESSION_KEY = 'fi-party-session';
-/** The stored session lives as long as a party can (12 h cap); it is cleared only by Leave / End / Kicked / ended / expired /
- *  another tab taking over (4005). Per tab (sessionStorage), so two tabs never fight over one slot. */
+/** Party rejoin (Oct 22 2026, docs/multiplayer-design.md "Party rejoin"): the stored session lives in device storage (this device,
+ *  every tab) so a player who closed the tab can get back in. Device-only (a DEVICE key in the save allowlist): never part of a
+ *  save code. Holds {code, resumeToken, hostKey, at} only, never the first name; the token and key go only to the relay. */
+export const SESSION_KEY = 'fi2-party-session-v1';
+/** Before Oct 22 2026 the session lived per tab (sessionStorage) under this key: moved over once, then removed. */
+const OLD_TAB_KEY = 'fi-party-session';
+/** Only one tab holds the live connection: a Web Lock with this name (navigator.locks). A page without Web Locks falls back to the
+ *  relay's own rule: the newest tab wins and the older one is closed with 4005. */
+export const HOLDER_LOCK = 'fi2-party-holder';
+/** The stored session lives as long as a party can (12 h cap); it is cleared only by Leave / End / Kicked / ended / expired.
+ *  NOT by 4005 (another tab took the party over: that tab owns it now). */
 export const SESSION_TTL_MS = PARTY_MAX_MS;
+export type TabState = 'here' | 'elsewhere' | 'moved' | null;
 export const BACKOFF_MS = [1000, 2000, 4000, 8000, 15000] as const;
 export const JITTER = 0.3;
 export const HIDDEN_CLOSE_MS = 15000;
@@ -59,12 +84,17 @@ const YAW_UNITS = (8 * 256) / 360; // 8 degrees
 type Session = { code: string; resumeToken: string | null; hostKey: string | null; at: number };
 type WSLike = { send(s: string): void; close(): void; readyState: number; onopen: any; onmessage: any; onclose: any; onerror: any };
 type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
+/** The navigator.locks shape used here (injectable: tests pass a fake). */
+export type LockManagerLike = {
+  request(name: string, opts: { ifAvailable?: boolean; steal?: boolean }, cb: (lock: unknown) => unknown): PromiseLike<unknown>;
+};
 
 export type ConnectionDeps = {
   WebSocketImpl?: typeof WebSocket; now?: () => number; random?: () => number;
   setTimeout?: typeof setTimeout; clearTimeout?: typeof clearTimeout;
   visibility?: { hidden(): boolean; on(fn: () => void): () => void };
-  storage?: StorageLike | null; // sessionStorage by default
+  storage?: StorageLike | null; // device storage by default (deviceStorage(); see SESSION_KEY)
+  locks?: LockManagerLike | null; // navigator.locks by default; null = no tab coordination (the relay's 4005 decides)
   url?: (code: string) => string | null; // relayWsUrl by default
   /** Send a heartbeat at least this often even while poses flow, so the RTT has samples while moving (one ~10-byte message).
    *  0 = only the normal idle beat. Default: 30 s when NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1, else 0 (Phase C switch). */
@@ -83,7 +113,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   const ct = (deps.clearTimeout ?? globalThis.clearTimeout.bind(globalThis)) as (h: any) => void;
   const urlFor = deps.url ?? relayWsUrl;
   const vis = deps.visibility ?? defaultVisibility();
-  const storage = deps.storage === undefined ? safeSessionStorage() : deps.storage;
+  const storage = deps.storage === undefined ? deviceStorage() : deps.storage;
+  const locks = deps.locks === undefined ? defaultLocks() : deps.locks;
   const online = deps.online ?? (() => typeof navigator === 'undefined' || navigator.onLine !== false);
   const rttProbeMs = deps.rttProbeMs ?? (process.env.NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION === '1' ? RTT_PROBE_MS : 0);
 
@@ -116,15 +147,59 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let rtts: number[] = [];
   let reconnects = 0;
   let dropped = false;
+  // Tab ownership (Party rejoin): the Web Lock this page holds while it owns the party, and what the menu should say.
+  let holding: { release: () => void; token: object } | null = null;
+  let acquiring = false;
+  let opGen = 0; // bumped by every join / resume / leave / dispose: a late lock grant for an older request is let go
+  let tab: TabState = null;
+  let lapsed = false;
+  const localSubs = new Set<() => void>();
   const msgSubs = new Set<(m: ServerMsg) => void>();
   const statusSubs = new Set<(s: PartyStatus) => void>();
 
   const setStatus = (s: PartyStatus) => { if (s !== status) { status = s; for (const f of Array.from(statusSubs)) f(s); } };
   const open = () => ws !== null && ws.readyState === 1;
+  const setLocal = (t: TabState, l: boolean) => { if (t !== tab || l !== lapsed) { tab = t; lapsed = l; for (const f of Array.from(localSubs)) f(); } };
+
+  /** Take the holder lock (steal: from another tab), then got(); busy() when another tab holds it (ifAvailable). No Web Locks:
+   *  got() at once. A stolen lock (another tab tapped Use it here) makes this page go quiet (movedAway). */
+  function acquire(steal: boolean, got: () => void, busy: () => void) {
+    if (holding || !locks) { got(); return; }
+    const token = {};
+    let release: () => void = () => {};
+    let decided = false;
+    acquiring = true;
+    let p: PromiseLike<unknown> | null = null;
+    try {
+      p = locks.request(HOLDER_LOCK, steal ? { steal: true } : { ifAvailable: true }, (lock) => {
+        decided = true; acquiring = false;
+        if (!lock) { busy(); return undefined; }
+        const held = new Promise<void>((r) => { release = r; });
+        holding = { release: () => release(), token };
+        got();
+        return held;
+      });
+    } catch { acquiring = false; got(); return; }
+    if (p && typeof p.then === 'function') {
+      p.then(() => { if (holding?.token === token) holding = null; }, () => {
+        if (holding?.token === token) { holding = null; movedAway(); } // stolen (AbortError): another tab owns the party now
+        else if (!decided) { acquiring = false; got(); } // the lock request itself failed: carry on without coordination
+      });
+    }
+  }
+  function releaseLock() { const h = holding; holding = null; if (h) h.release(); }
+  /** Another tab owns the party now: close quietly, keep the stored session (that tab uses it), no reconnect. */
+  function movedAway() {
+    opGen++;
+    clearTimers(); dropSocket(); releaseLock();
+    code = null; resumeToken = null; hostKey = null; last = null; pendingResume = false; resuming = false;
+    setLocal('moved', false);
+    setStatus('idle');
+  }
 
   function readSession(): Session | null {
     try {
-      const raw = storage?.getItem(SESSION_KEY);
+      const raw = storage?.getItem(SESSION_KEY) ?? migrateTabSession(storage);
       if (!raw) return null;
       const s = JSON.parse(raw) as Session;
       if (!s || typeof s.code !== 'string' || typeof s.at !== 'number' || now() - s.at > SESSION_TTL_MS) return null;
@@ -136,6 +211,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     try { storage?.setItem(SESSION_KEY, JSON.stringify({ code, resumeToken, hostKey: hostKey ?? undefined, at: now() })); } catch { /* private mode */ }
   }
   function clearSession() { try { storage?.removeItem(SESSION_KEY); } catch { /* ignore */ } }
+  /** The party is over for this page (left, ended, kicked, refused): forget it and free the holder lock. */
+  function endHere() { clearSession(); releaseLock(); setLocal(null, false); }
 
   function raw(msg: ClientMsg): boolean {
     if (!open()) return false;
@@ -169,7 +246,10 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     w.onopen = () => {
       if (ws !== w) return;
       // Slot 5 is the reserved old animal field: always null. With no name (never from the UI; after a host reset) send the old 5-element Hello = colour name only.
+      // A resume (no name in this page) sends an EMPTY name slot: a live slot resumes as before, a lapsed one is refused (BadName)
+      // instead of becoming a nameless new slot, so the player is asked for the code and name again (Party rejoin).
       const hello: ClientMsg = nick !== null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, nick]
+        : resuming ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, null]
         : [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey];
       raw(hello);
       scheduleBeat();
@@ -185,11 +265,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (beatTimer) { ct(beatTimer); beatTimer = null; }
       const cc = ev && typeof ev.code === 'number' ? ev.code : 0;
       // Terminal close codes (review #15): never reconnect after being kicked, after the party ended, or after another tab took over.
-      if (cc === CLOSE_KICKED || cc === CLOSE_ENDED || cc === CLOSE_REPLACED) {
-        clearTimers(); clearSession();
+      if (cc === CLOSE_REPLACED) { movedAway(); return; } // another tab resumed this slot: it owns the stored session now
+      if (cc === CLOSE_KICKED || cc === CLOSE_ENDED) {
+        clearTimers(); endHere();
         if (cc === CLOSE_KICKED) setStatus('error');
-        else if (cc === CLOSE_ENDED) setStatus('ended');
-        else { code = null; resumeToken = null; hostKey = null; last = null; setStatus('idle'); }
+        else setStatus('ended');
         return;
       }
       if (status === 'live') dropped = true; // an unexpected drop (a hidden-tab close never reaches here)
@@ -203,6 +283,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       resumeToken = m[3];
       you = m[2];
       attempt = 0; resuming = false;
+      setLocal('here', false);
       if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
       writeSession();
@@ -219,14 +300,21 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
         if (rtt >= 0 && rtt < 10000) { rtts.push(rtt); if (rtts.length > RTT_SAMPLES) rtts.shift(); }
       }
     } else if (m[0] === S.Ended) {
-      clearSession();
+      endHere();
       setStatus('ended');
       dropSocket();
     } else if (m[0] === S.Error) {
       const e = m[1];
-      if (e === ErrorCode.Full || e === ErrorCode.NotFound || e === ErrorCode.Expired || e === ErrorCode.Kicked ||
+      if (e === ErrorCode.BadName && resuming) {
+        // A resume Hello carries an empty name slot: the relay refuses it with BadName only when the slot lapsed (a live slot resumes
+        // first). Keep the stored session: the menu offers 'Join with the code' with the code filled in (and the name asked again).
+        resuming = false; clearTimers(); dropSocket(); releaseLock();
+        code = null; resumeToken = null; hostKey = null;
+        setLocal(null, true);
+        setStatus('error');
+      } else if (e === ErrorCode.Full || e === ErrorCode.NotFound || e === ErrorCode.Expired || e === ErrorCode.Kicked ||
         e === ErrorCode.BadVersion || e === ErrorCode.Locked || e === ErrorCode.BadName) {
-        clearSession();
+        endHere();
         setStatus('error');
         dropSocket();
       }
@@ -239,6 +327,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     if (retryTimer) return;
     if (resuming && attempt >= RESUME_ATTEMPTS) {
       resuming = false; if (online()) clearSession();
+      releaseLock(); setLocal(null, false);
       code = null; resumeToken = null; hostKey = null;
       setStatus('error'); return;
     }
@@ -304,12 +393,44 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     return Math.min(dyaw, 256 - dyaw) > YAW_UNITS;
   }
 
+  /** resume() / takeOver(): back into the stored party once this page holds the party (or another tab holds it: tab 'elsewhere'). */
+  function start(opts: { look: Look }, steal: boolean): boolean {
+    if (disposed || code || acquiring || (status !== 'idle' && status !== 'error' && status !== 'ended')) return false;
+    const sess = readSession();
+    if (!sess || !sess.resumeToken) return false;
+    const norm = normalizeCode(sess.code);
+    if (!norm) { clearSession(); return false; }
+    const gen = ++opGen;
+    acquire(steal, () => {
+      if (gen !== opGen || disposed) { if (gen === opGen) releaseLock(); return; }
+      const now2 = readSession(); // another tab may have ended the party while the lock was on its way
+      if (!now2 || !now2.resumeToken || normalizeCode(now2.code) !== norm) { releaseLock(); setLocal(null, false); return; }
+      clearTimers(); dropSocket();
+      code = norm; look = opts.look; nick = null; you = null;
+      hostKey = now2.hostKey ?? null; resumeToken = now2.resumeToken;
+      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
+      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
+      resuming = true;
+      setLocal('here', false);
+      setStatus('reconnecting'); // the 'Reconnecting' note, never 'connecting' (a fresh join)
+      connect();
+    }, () => { if (gen === opGen && !disposed) setLocal('elsewhere', false); });
+    return true;
+  }
+
   const self: PartyConnection = {
     join(c, opts) {
       const norm = normalizeCode(c);
       if (!norm || disposed) { setStatus('error'); return; }
       clearTimers();
       dropSocket();
+      const gen = ++opGen;
+      // An explicit create / join makes this tab the party tab (a tab still in another party goes quiet).
+      if (!holding && locks) {
+        setStatus('connecting');
+        acquire(true, () => { if (gen === opGen && !disposed) self.join(c, opts); else if (gen === opGen) releaseLock(); }, () => {});
+        return;
+      }
       const sess = readSession();
       const same = sess && sess.code === norm;
       code = norm;
@@ -321,26 +442,22 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
       beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false; resuming = false;
       writeSession();
+      setLocal('here', false);
       setStatus('idle'); // reset, then connecting
       connect();
     },
-    resume(opts) {
-      if (disposed || code || (status !== 'idle' && status !== 'error' && status !== 'ended')) return false;
-      const sess = readSession();
-      if (!sess || !sess.resumeToken) return false;
-      const norm = normalizeCode(sess.code);
-      if (!norm) { clearSession(); return false; }
-      clearTimers(); dropSocket();
-      code = norm; look = opts.look; nick = null; you = null;
-      hostKey = sess.hostKey ?? null; resumeToken = sess.resumeToken;
-      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
-      beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
-      resuming = true;
-      setStatus('reconnecting'); // the 'Reconnecting' note, never 'connecting' (a fresh join)
-      connect();
-      return true;
-    },
+    resume(opts) { return start(opts, false); },
+    takeOver(opts) { return start(opts, true); },
     hasSession() { return readSession() !== null; },
+    storedParty() {
+      const s = readSession();
+      const c = s ? normalizeCode(s.code) : null;
+      return s && c ? { code: c, host: typeof s.hostKey === 'string' && s.hostKey.length > 0 } : null;
+    },
+    forget() { if (!code) { clearSession(); setLocal(null, false); } },
+    get tab() { return tab; },
+    get lapsed() { return lapsed; },
+    onLocal(fn) { localSubs.add(fn); return () => { localSubs.delete(fn); }; },
     onBeforeBeat(fn) { beforeBeat = fn; },
     sendPose(body, nowMs) {
       // Hidden (away) is sent like any flag change (once); while hidden, emotes and pings stay off.
@@ -374,9 +491,10 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     },
     leave() {
       if (open()) raw([C.Leave]);
+      opGen++; acquiring = false;
       clearTimers();
       dropSocket();
-      clearSession();
+      endHere();
       code = null; resumeToken = null; hostKey = null; nick = null; pendingResume = false; last = null; resuming = false;
       setStatus('idle');
     },
@@ -392,10 +510,12 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     get reconnects() { return reconnects; },
     dispose() {
       if (disposed) return;
+      opGen++;
       clearTimers();
       dropSocket();
+      releaseLock(); // the stored session stays (the next page resumes it)
       offVis();
-      msgSubs.clear(); statusSubs.clear();
+      msgSubs.clear(); statusSubs.clear(); localSubs.clear();
       disposed = true;
     },
   };
@@ -413,6 +533,22 @@ function defaultVisibility() {
   };
 }
 
-function safeSessionStorage(): StorageLike | null {
-  try { return typeof sessionStorage === 'undefined' ? null : sessionStorage; } catch { return null; }
+/** The device's storage for the one party session key (SESSION_KEY). The only persistent storage lib/multiplayer touches
+ *  (tests/mp-client.cjs checks it): never the first name, never anything else. */
+function deviceStorage(): StorageLike | null {
+  try { return typeof localStorage === 'undefined' ? null : localStorage; } catch { return null; }
+}
+/** A session stored per tab by an older build (sessionStorage) moves to the device key once. */
+function migrateTabSession(storage: StorageLike | null | undefined): string | null {
+  try {
+    if (!storage || typeof sessionStorage === 'undefined') return null;
+    const old = sessionStorage.getItem(OLD_TAB_KEY);
+    if (!old) return null;
+    sessionStorage.removeItem(OLD_TAB_KEY);
+    storage.setItem(SESSION_KEY, old);
+    return old;
+  } catch { return null; }
+}
+function defaultLocks(): LockManagerLike | null {
+  try { return typeof navigator !== 'undefined' && (navigator as any).locks && typeof (navigator as any).locks.request === 'function' ? (navigator as any).locks : null; } catch { return null; }
 }

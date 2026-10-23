@@ -68,6 +68,9 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-bug-pill-v1
  'fi2-swim-lesson-v1','fi2-water-firsts-v1',
  // Play with friends (Oct 22 2026): the analytics "first party / first hosted party on this device" flags (lib/analytics/partyFirsts.ts).
  'fi2-mp-firsts-v1',
+ // Party rejoin (Oct 22 2026): the active party's {code, resume token, host key, time} so a player who closed the tab can get back
+ // in (lib/multiplayer/connection.ts SESSION_KEY). Cleared when the party ends / is left, 12 h cap; never the first name; never synced.
+ 'fi2-party-session-v1',
  // The sea (Oct 15 2026): the once-per-device shark ("Uh oh!") and manta/whale-shark ride lesson toasts.
  'fi2-shark-lesson-v1','fi2-ride-lesson-v1','fi2-ride-steer-hint-v1','fi2-dive-hint-v1',
  // Diving spots (Oct 16 2026): the once-per-device breath (pace) lesson toast.

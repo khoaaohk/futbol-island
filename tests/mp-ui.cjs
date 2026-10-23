@@ -30,7 +30,7 @@ t('party persistence: resume on mount (no gate, no name prompt), "The party ende
  const i=host.indexOf('connection.resume(');assert(i>0,'resume on mount');
  const eff=host.slice(host.lastIndexOf('useEffect',i),host.indexOf('\n',i));
  assert(!/getNick|parentGatePassed|setView\('gate'\)|setView\('menu'\)/.test(eff),'the resume needs no name and no grown-up gate');
- assert(/resumed\.current[\s\S]{0,200}text\('The party ended'\)/.test(host),'a failed resume says The party ended');
+ assert(/resumed\.current[\s\S]{0,200}text\(manual \? 'That party ended' : 'The party ended'\)/.test(host),'a failed resume says The party ended (That party ended after a Rejoin tap)');
  assert(!/return \(\) => \{?[^\n]*\.leave\(/.test(host),'no Leave in any unmount cleanup');
  const town=read('components/Town.tsx');assert(!/partyConnection\(\)\.(leave|dispose)\(/.test(town),'Town never leaves / closes the shared connection');
 });
@@ -157,17 +157,17 @@ t('gate -> party card state machine (regression: the dialog closed after a corre
  assert(/if \('error' in r\) \{ setBusy\(false\); setView\('menu'\); text\(/.test(host),'a create error returns to the menu with the toast');
  assert(/join\(r\.code[\s\S]{0,160}setView\('sheet'\); setBusy\(false\)/.test(host),'busy stays on until the join has started (no bounce to the menu)');
  assert(/setView\(liveRef\.current \? 'sheet' : 'menu'\)/.test(host),'HUD button opens the party card while live');
- assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/\{state\.isHost && \(\s*<div role="tabpanel" id="party-panel-code"/.test(host),'code block is host-only inside the Code tab');
+ assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/<div role="tabpanel" id="party-panel-code"/.test(host)&&/host=\{state\.isHost\}/.test(host),'code block inside the Code tab, for host and guests (guests read-only, Oct 22 2026)');
  assert(/Tap the friends button to manage your party/.test(host)&&/manageHint/.test(host),'one-time manage hint after Done');
  assert(/data-party-badge/.test(read('components/IslandSettings.tsx')),'HUD button shows a live count badge');
 });
 t('party card tabs: Code | List toggle, a11y, host/guest split, new code + close actions',()=>{
- assert(/role="tablist"/.test(host)&&/role="tab"/.test(host)&&/aria-selected=\{activeTab === t\}/.test(host)&&/role=\{state\.isHost \? 'tabpanel'/.test(host)&&/aria-controls=/.test(host)&&/aria-labelledby="party-tab-code"/.test(host),'tablist / tab / tabpanel wiring');
+ assert(/role="tablist"/.test(host)&&/role="tab"/.test(host)&&/aria-selected=\{activeTab === t\}/.test(host)&&/<div role="tabpanel" id="party-panel-party"/.test(host)&&/aria-controls=/.test(host)&&/aria-labelledby="party-tab-code"/.test(host),'tablist / tab / tabpanel wiring');
  assert(/ArrowRight/.test(host)&&/ArrowLeft/.test(host)&&/Home/.test(host)&&/tabRefs\.current\[order\[n\]\]\?\.focus\(\)/.test(host)&&/tabIndex=\{activeTab === t \? 0 : -1\}/.test(host),'arrow keys switch tabs and keep focus (roving tabindex)');
  assert(/\(\{state\.members\.length\}\)/.test(host)&&/List <span key=\{state\.members\.length\}/.test(host)&&/'Code'/.test(host),'tab labels Code and List (N), count remounts to pop');
- assert(/useState<'code' \| 'party'>\('code'\)/.test(host)&&/if \(!live\) \{ setKickPrompt\(false\); setTab\('code'\); \}/.test(host)&&/state\.isHost \? tab : 'party'/.test(host),'default Code, remembered per party, guests only get Party');
- assert(/Only the host has the code/.test(host)&&/\{state\.isHost && \(\s*<div className=\{styles\.tabs\}/.test(host),'guests have no Code tab');
- assert(/onNewCode=\{\(\) => \{ connection\.host\.rotate\(\); text\('New code ready'\)/.test(host)&&/The old code stops working right away\. People already here stay\./.test(invite),'primary New code replaces the old one with a toast and helper');
+ assert(/useState<'code' \| 'party'>\('code'\)/.test(host)&&/if \(!live\) \{ setKickPrompt\(false\); setTab\('code'\); \}/.test(host)&&/const activeTab = tab;/.test(host),'default Code, remembered per party, the same two tabs for guests');
+ assert(!/Only the host has the code/.test(host)&&!/\{state\.isHost && \(\s*<div className=\{styles\.tabs\}/.test(host),'guests get the Code tab too');
+ assert(/onNewCode=\{state\.isHost \? \(\) => \{ connection\.host\.rotate\(\); text\('New code ready'\)/.test(host)&&/The old code stops working right away\. People already here stay\./.test(invite),'primary New code replaces the old one with a toast and helper');
  assert(/Closed to new friends/.test(invite)&&/Open to new friends/.test(invite)&&/aria-pressed=\{locked\}/.test(invite)&&/onToggleLock/.test(host),'Close to new friends toggle shows its state');
  assert(/codeFresh/.test(invite)&&/prefers-reduced-motion[\s\S]*codeFresh/.test(read('components/party/party.module.css')),'new code animates in; reduced motion calm');
  {
@@ -281,5 +281,25 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   b.add(['F']);b.cancel();await new Promise(r=>setTimeout(r,70));assert.equal(got.length,2,'cancel drops pending names');
   n++;
  }
+ t('guests see the code (Party rejoin, Oct 22 2026): read-only Code tab with Share, no New code / Close; the relay sends S.Code to all',()=>{
+  assert(/host = true/.test(invite)&&/host \? 'Your party code' : 'Party code'/.test(invite),'guest label');
+  const guest=invite.slice(invite.indexOf(': <>'),invite.indexOf('{locked &&'));
+  assert(/data-party-share/.test(guest)&&/Share link/.test(guest)&&/Copy link/.test(guest),'guest Share / Copy link');
+  assert(!/data-party-new-code|New code<|onNewCode/.test(guest),'no New code for guests');
+  assert(/Only the host can make a new code/.test(guest),'guest note');
+  assert(/\{host && <div className=\{`\$\{styles\.stack\} \$\{styles\.codeActions\}`\} data-party-code-actions>/.test(invite),'Close to new friends is host only');
+  assert(/Share only with friends you know/.test(invite)&&/Works for \$\{left\} more/.test(invite),'safety line + expiry for everyone');
+  assert(/onNewCode=\{state\.isHost \?/.test(host)&&/onToggleLock=\{state\.isHost \?/.test(host)&&/kickPrompt && state\.isHost && kickBlock/.test(host),'host controls unchanged');
+  const core=read('multiplayer/relay/src/roomCore.ts');assert(/this\.broadcast\(\[S\.Code, code, this\.codeExpiresAt\], null\)/.test(core),'Rotate tells every member');
+ });
+ t('Play with friends menu: Rejoin your party / open in another tab / Use it here (Party rejoin)',()=>{
+  assert(/Rejoin your party/.test(host)&&/data-party-rejoin-btn/.test(host)&&/connection\.resume\(\{ look: look\(\) \}\)/.test(host),'Rejoin your party tries resume');
+  assert(/Your party is open in another tab\./.test(host)&&/Your party moved to another tab/.test(host)&&/Use it here/.test(host)&&/connection\.takeOver\(/.test(host),'another tab: Use it here takes over');
+  assert(/That party ended/.test(host)&&/connection\.forget\(\)/.test(host),'an ended party is forgotten with a note');
+  assert(/checkParty\(code\)[\s\S]{0,200}setJoinCode\(code\); setJoinMsg\('Your spot timed out\. Type your first name to join again\.'\)[\s\S]{0,60}setView\('join'\)/.test(host),'lapsed slot -> Join with the code, pre-filled');
+  assert(/own\.host && own\.code === normalizeCode\(code\)/.test(host),'the returning host may pass a closed party (relay host key rule)');
+  assert(/addEventListener\('storage'/.test(host)&&!/setInterval/.test(host),'another tab is noticed by the storage event, never a poll');
+  assert(!/localStorage/.test(host)&&!/sessionStorage\./.test(host),'PartyHost never touches storage itself (the connection owns the one key)');
+ });
  console.log(`mp-ui: ${n} checks passed`);
 })().catch(e=>{console.error(e);process.exit(1);});

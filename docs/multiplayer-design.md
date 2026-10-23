@@ -145,6 +145,40 @@ Owner rule: once a party is on, nothing the player does ends it for them. It end
   sockets normally keep it awake); the resume then becomes a fresh colour-only join (new slot). Away longer than 10 min, or a plain
   drop over 60 s, likewise rejoins as a new colour-only slot (no name, privacy rule: names are memory only).
 
+### 2.6.1 Party rejoin (Oct 22 2026, branch `party-rejoin`, not pushed)
+Owner (verbatim): "yeah let's do both so host can get back in no matter the tab and also guest can see the code to help others".
+Supersedes the per-tab parts of 2.6 (the resume itself is unchanged).
+- **Device, not tab:** the stored session moved from `sessionStorage` (`fi-party-session`, lost with the tab) to `localStorage`
+  `fi2-party-session-v1` (`connection.ts SESSION_KEY`), same fields `{code, resumeToken, hostKey, at}`, same 12 h cap. An old per-tab
+  session is moved over once. Device-only: a DEVICE key in `lib/saves/snapshot.ts` (never in a save code / restore), never read by
+  analytics (`tests/mp-isolation.cjs`). The token and host key go only to the relay (in Hello); the UI sees `storedParty()` =
+  `{code, host: boolean}`. The first name is never stored (not even here). Cleared by Leave, End / Ended, Kicked (error or 4003),
+  4004, a join error, or a resume refused online. **Not** cleared by 4005 (another tab took the slot: it owns the session now).
+- **One tab holds the party:** a Web Lock `fi2-party-holder` (`navigator.locks`) is held while a page owns the party. A page load
+  with a stored session and no holder auto-resumes as before. If another tab holds it, the resume does not connect: `tab =
+  'elsewhere'` and the Play with friends menu says "Your party is open in another tab" with **Use it here** (`takeOver()` steals the
+  lock; the old tab sees its lock aborted, closes without Leave, keeps the session, says "Your party moved to another tab" and stays
+  quiet: no reconnect, and its own later resume sees the new holder). A create / join in a tab also takes the lock. No Web Locks:
+  the relay's 4005 decides (newest tab wins; the old one goes quiet the same way). The menu re-reads the stored party on the
+  `storage` event (another tab started or ended a party), never by polling.
+- **Rejoin your party:** shown in the menu when a session is stored but this tab is not in the party (auto-resume failed, offline,
+  or the slot lapsed). It tries the resume. A resume Hello now carries an empty name slot (7 elements, name `null`): a live slot
+  resumes exactly as before, but a lapsed one (60 s plain / 10 min announced grace) is refused with `BadName` instead of becoming a
+  nameless new slot (the client parser now accepts Error 9). The client keeps the session (`lapsed`), asks `/check` for the code: still
+  running -> **Join with a code** opens with the code filled in ("Your spot timed out. Type your first name to join again."; a new
+  slot, the name typed again); a host whose role has moved on joins as a normal member (the relay gives the role back only when the
+  host slot is empty); a returning host may pass a closed party (host key rule). Ended -> the session is forgotten and the note
+  "That party ended". On a page load a lapse stays quiet: the menu shows Rejoin your party.
+- **Guests see the code:** the live-party card has Code | List for everyone. Guests see the code read-only with "Works for X more",
+  Share link / Copy link and "Share only with friends you know"; New code and Close to new friends stay host only ("Only the host can
+  make a new code"). Host controls are unchanged. The relay now broadcasts `S.Code` after Rotate to every member (was host only), so
+  guests always show the current code and their stored session / reconnects use it; old clients already handled `S.Code` (they only
+  received it as host), so the change is backward compatible.
+- **Checks:** `tests/mp-client.cjs` (device key, TTL, clearing rules incl. 4005 keeps, lapsed resume, fake Web Locks: elsewhere /
+  Use it here / moved / auto-resume with no holder), `tests/mp-ui.cjs` (guest Code tab, menu states), `tests/mp-room-core.cjs` (S.Code
+  to all), `tests/mp-protocol.cjs` (Error 9 parses), `tests/game-saves.cjs` (key classified), `tests/mp-isolation.cjs`,
+  `scripts/check-party-rejoin.cjs` (headless: closed tab -> new page auto-resumes as host, two tabs, guest code, End clears).
+
 ### 2.9 Party size 20 (22 Oct 2026, branch `party-cap-20`, not pushed)
 
 Owner: "can we make it also 20 people area allowed to be on one island?" The cap goes from 6 to **20** (`PARTY_MAX`, protocol `types.ts`). Nothing else about the design changes: private invite-only parties, no chat, no accounts.
@@ -334,7 +368,7 @@ export type SPoses   = [S.Poses, tick: number, ...flat: number[]];
 export type SEmote   = [S.Emote, id: MemberId, emote: Emote];
 export type SPing    = [S.Ping, id: MemberId, kind: PingKind, x_dm: number, z_dm: number];
 export type SHost    = [S.Host, id: MemberId];
-export type SCode    = [S.Code, code: string, codeExpiresAt: number];  // sent to host only (after Rotate)
+export type SCode    = [S.Code, code: string, codeExpiresAt: number];  // sent to every member after Rotate (host only before Oct 22 2026; Party rejoin)
 export type SEnded   = [S.Ended, reason: EndReason];
 export type SError   = [S.Error, code: ErrorCode];
 export type SBeat    = [S.Beat, t: number];

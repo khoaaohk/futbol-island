@@ -38,4 +38,11 @@ t('nick.ts is memory only',()=>{
   assert.ok(!/Storage|cookie|indexedDB|fetch\(|console/.test(src));
   for(const m of src.matchAll(importRe))assert.ok(/multiplayer\/protocol/.test(m[1]),`nick.ts imports ${m[1]}`);
 });
+t('party rejoin: the stored party session never reaches analytics (Oct 22 2026)',()=>{
+  const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):/\.tsx?$/.test(e.name)?[path.join(d,e.name)]:[]);
+  for(const f of walk(path.join(ROOT,'lib/analytics'))){const src=fs.readFileSync(f,'utf8');
+    assert.ok(!/fi2-party-session|storedParty|resumeToken|hostKey|lib\/multiplayer\/connection/.test(src),path.relative(ROOT,f)+' reads the party session');}
+  const conn=fs.readFileSync(path.join(ROOT,'lib/multiplayer/connection.ts'),'utf8');
+  assert.ok(/storedParty\(\) \{[\s\S]{0,200}host: typeof s\.hostKey === 'string'/.test(conn),'the UI gets a host flag, never the key or token');
+});
 console.log(`mp-isolation: ${n} checks passed over ${list.length} files`);
