@@ -89,7 +89,12 @@
 /* Oct 23 2026 (owner: "only show coins and energy" on phones; docs/ui/HUD_STACK.md "Top row on phones"): on phones, portrait
    (<= 430px wide) and landscape (<= 430px tall), the bar shows only coins and the fuel bolt. Fish and fruit stay in the button's
    aria-label and in the island pocket the bar opens (one tap). Desktop and tablet keep all four counters. */
-@media(max-width:430px),(max-height:430px) and (orientation:landscape){.wallet[data-job-wallet] .basketOnly{display:none}.wallet[data-job-wallet]{gap:4px;padding:4px 8px}.wallet[data-job-wallet] .basketCount{padding:3px}}
+/* Oct 23 2026 (real iPhone report): the phone breakpoint was 430px, but the iPhone 16/17 Pro Max are 440 CSS px wide (440 tall in
+   landscape), so they got the full desktop bar. Phones are now <= 480px wide (or <= 480px tall in landscape), plus
+   max-device-width:480px for an iPhone whose layout viewport is wider than its screen (Request desktop site, zoomed-out page).
+   Owner layout on phones: Paths + Play with friends on the left, the slim bar right-aligned immediately left of Settings, the
+   bar <-> Settings gap equal to the Paths <-> friends gap (--island-hud-pair-gap, the triggers' flex gap). Not centred. */
+@media(max-width:480px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.wallet[data-job-wallet] .basketOnly{display:none}.wallet[data-job-wallet]{gap:4px;padding:4px 8px;left:auto;right:calc(18px + env(safe-area-inset-right,0px) + var(--btn-icon,44px) + var(--island-hud-pair-gap,8px));transform:none}.wallet[data-job-wallet] .basketCount{padding:3px}}
 /* A 4- or 5-digit balance on a narrow phone: the count steps down a size so the slim bar still clears Play with friends (8px). */
 @media(max-width:380px){.wallet[data-job-wallet]{gap:3px;padding:4px 6px}}
 @media(max-width:400px){.wallet[data-job-wallet][data-coin-digits="4"] b{font-size:17px}.wallet[data-job-wallet][data-coin-digits="5"] b{font-size:15px}}

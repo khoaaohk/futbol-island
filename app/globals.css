@@ -581,7 +581,7 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 }
 /* Island top HUD row (Paths · coins wallet · Settings): one 44px row, 20px down on desktop, 16px on phones, below the notch.
    The wallet (IslandJobs.module.css) sits in it; ride prompts (Hop off / Land on truck) hang a clear gap below it. */
-:root{--island-hud-row-top:calc(20px + env(safe-area-inset-top,0px));--island-hud-row-height:var(--btn-height);--island-hud-row-gap:14px}
+:root{--island-hud-row-top:calc(20px + env(safe-area-inset-top,0px));--island-hud-row-height:var(--btn-height);--island-hud-row-gap:14px;--island-hud-pair-gap:8px}
 @media(max-width:600px),(pointer:coarse){:root{--island-hud-row-top:calc(16px + env(safe-area-inset-top,0px))}}
 /* Tactile gold controls shared by island and pitch HUDs. */
 /* One coin look everywhere (Oct 13 2026, user): the Kit Shop's CoinPill coin. Face + rim used by every coin icon. */

@@ -411,7 +411,7 @@ Owner: "what if we just made the coins bar smaller width wise and only show coin
 info needed." With the multiplayer flag on, the row is **Paths · Play with friends · coins bar · Settings**, and the full bar
 (coins, fish, fruit, bolt) collided with the friends button on phones (UI_AUDIT_OCT22).
 
-- **Phones** (`max-width:430px`, or `max-height:430px` in landscape): the bar shows **coins + the fuel bolt** only. Fish and fruit
+- **Phones** (`max-width:480px`, or `max-height:480px` in landscape, or `max-device-width:480px`; was 430px, see below): the bar shows **coins + the fuel bolt** only. Fish and fruit
   (`.basketOnly`, `data-wallet-basket`) are hidden; they stay in the button's aria-label and one tap on the bar opens the island
   pocket, which lists fish, fruit, veggies and beach finds with counts. Desktop and tablet keep all four counters.
 - The phone bar is a little tighter (gap 4px, padding 4px 8px; 3px / 6px at ≤ 380px). On ≤ 400px a 4-digit balance steps down to
@@ -432,6 +432,21 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   bar ↔ Settings ≥ 61px). At ≤ 340px a centred bar cannot keep 8px beside Paths + friends, so the existing rule keeps the friends
   button under Paths there; the bar still centres (41px each side at 320). Desktop (1280×800) and touch tablet (768×1024) are not
   phone breakpoints: all four counters show and the bar stays centred (also checked by the script).
+- **Superseded (owner, final, 23 Oct): phone bar right-aligned next to Settings.** On phones the row is two groups: **left** =
+  Paths + Play with friends (side by side at the left edge), **right** = the coins + energy bar immediately followed by Settings
+  (flush right). The bar <-> Settings gap equals the Paths <-> friends gap: both read `--island-hud-pair-gap` (8px, `globals.css`;
+  the triggers' flex gap in `IslandSettings.module.css`; the bar's `right:calc(18px + safe-area + var(--btn-icon) + var(--island-hud-pair-gap))`
+  in `IslandJobs.module.css`). The free space sits in the middle and is >= the pair gap at 320-440px with 5-digit coins and
+  low / empty fuel, so no extra shrinking was needed beyond the existing digit steps. Desktop (1280x800) and tablet (768x1024)
+  are unchanged: all four counters, centred, same rect as before (pinned in `check-hud-row.cjs`).
+- **Why fish / fruit still showed on the real iPhone**: the phone breakpoint was `max-width:430px`, but the iPhone 16 / 17 Pro Max
+  are **440 CSS px** wide (440 tall in landscape), so they got the desktop bar (reproduced on production with Playwright WebKit and
+  the 'iPhone 17 Pro Max' descriptor: fish / fruit `display:flex`, bar left edge touching the friends button). Phones are now
+  `max-width:480px`, landscape `max-height:480px`, or `max-device-width:480px` (an iPhone whose layout viewport is wider than its
+  screen, e.g. Request desktop site). No service worker is involved; the deployed CSS did contain the old rule.
+- `scripts/check-hud-row.cjs` now measures 320, 360, 375, 390, 393, 430, 440 portrait and 844x390 landscape, plus a
+  WebKit pass with the 'iPhone 15', 'iPhone 17 Pro Max' and 'iPhone 17 Pro Max landscape' device descriptors; given a relay URL it starts a party with three
+  scripted friends (badge 4) first. The friends box includes the party badge.
 
 ## Pocket keeps the coins bar (23 October 2026)
 
