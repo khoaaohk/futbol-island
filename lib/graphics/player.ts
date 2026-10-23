@@ -21,6 +21,9 @@ import {jobPoseTarget,netGrip,NET_SNEAK_CROUCH,JAR_POSES,type PoseTarget,type Ga
 import type {JobPose} from '../town/jobs/jobMoves';
 import type {ZipRigPose} from '../town/zipline';
 import {createSwimPoser,type SwimRigPose} from './swimPose';
+import {createDribbleFeel,resetDribbleFeel,stepDribbleFeel,DRIBBLE} from '../town/dribbleStop';
+const DRIBBLE_SOLE_BACK=DRIBBLE.soleBack;
+import {effectiveTier} from './heatTier';
 import {copyTrickPose,createTrickPose,solveTrickLeg,type TrickPose,type TrickLegAngles} from './trickPose';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
@@ -319,6 +322,11 @@ export type PlayerRig = {
   root: T.Group;
   ballContact: (side:-1|1,out:T.Vector3) => T.Vector3;
   dribbleContact: (out:T.Vector3) => T.Vector3;
+  /** Realistic close control (lib/town/dribbleStop.ts): touch rhythm, sole stop, drag-back turn. Off by default (the quiet fixed
+   *  lane other scenes and tests rely on); the island player, friends' avatars and match NPCs switch it on. */
+  setDribbleFeel?: (on:boolean) => void;
+  /** 0..1 while a sole presses on the ball (a small squash for the host's ball mesh). */
+  readonly dribblePress?: number;
   handPositions: (left:T.Vector3,right:T.Vector3) => void;
   setAppearance: (value: CharacterCustomization) => void;
   /** Applies group scales once (no new geometry) and stores the motion multipliers. */
@@ -478,6 +486,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   const supportFeet=[new T.Vector3(),new T.Vector3()],shownFeet=[new T.Vector3(),new T.Vector3()],footTarget=new T.Vector3(),inversePelvis=new T.Quaternion();
   const ankleParent=new T.Quaternion(),soleTarget=new T.Quaternion(),soleEuler=new T.Euler();
   let dribbleLead=.6;
+  const feel=createDribbleFeel();let feelOn=false,feelLive=false;
   const spineResponse=new Float64Array(36);
   const bodyResponse=new Float64Array(132),supportResponse=new Float64Array(4);
   const strike:StrikePose={forward:0,height:.075,open:0,pitch:0,load:0,drive:0,follow:0};
@@ -937,7 +946,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       delta = Math.atan2(Math.sin(target-yaw), Math.cos(target-yaw));
       if (discontinuity || dt===0 || motion?.samplePose) yaw = target;
       // The body turns over a planted boot: while the plant boot is still reaching in, the turn waits.
-      else yaw += delta * (1-Math.exp(-dt*(motion?.turnSmoothing??10)*(plantSide!==0&&replant[plantSide<0?0:1]>0?.3:1)));
+      else yaw += delta * (1-Math.exp(-dt*(motion?.turnSmoothing??10)*(plantSide!==0&&replant[plantSide<0?0:1]>0?.3:1)*(feelLive?feel.yawScale:1)));
     }
     turn = T.MathUtils.damp(turn, discontinuity ? 0 : delta, 9, dt);
     const localForward=distance>.00001?(dx*Math.sin(yaw)+dz*Math.cos(yaw))/distance:1;
@@ -1091,6 +1100,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     else pivotSide=0;
     if(oldPivotSide&&oldPivotSide!==pivotSide){const i=oldPivotSide<0?0:1;replant[i]=replantTotal[i]=.18;replantAnchors[i].copy(shownFeet[i]);}
     const hardReset=discontinuity||!!sample||rideBase||reduced;
+    // Dribble footwork (sole stop / drag-back / touch rhythm): stepped from this rig's own speed, yaw and gait phase.
+    if(feelOn&&dribbleActive&&!sample&&!rideBase){if(!feelLive||discontinuity)resetDribbleFeel(feel,yaw,phase);else if(!frozen)stepDribbleFeel(feel,dt,speed,yaw,previousYaw+delta,phase,reduced||effectiveTier()>=3);feelLive=true;}else feelLive=false;
     const flowingBody=!rideBase&&!reduced&&motion?.juggle===undefined&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat;
     const resetBody=hardReset||!flowingBody||!bodyResponseActive;
     const nextBodyMode=(action>0?1:0)+(receive>.05?2:0)+(jockey>.3?4:0)+(brake>.3?8:0)+(backpedal>.4?16:0)+(opening>.1?32:0)+(motion?.keeperReach&&motion.keeperReach>.1?64:0);
@@ -1332,6 +1343,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Close-control steps approach the central ball lane rather than dragging
       // the ball sideways toward the wider ordinary running gait.
       if(motion?.dribbling)footX-=side*.055*amount*(1-action)*(1-receive)*(1-backpedal)*(1-shuffle);
+      // The rolling touch: the boot due to touch reaches through the ball (dribbleStop accent; across / out for a cut).
+      if(feelLive&&side===feel.accSide&&action===0){footZ+=feel.accFwd*gaitFwd;footX+=side*feel.accX;lift+=feel.accLift;}
       // Ready stance: staggered feet, weight on the balls of the feet.
       const still=readyBlend*(1-amount);
       footZ+=side*staggerSide*.09*still;
@@ -1443,6 +1456,15 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         replant[index]=Math.max(0,replant[index]-dt);
         if(replant[index]===0)liftOff[index]=false;
       }
+      // Sole on the ball (a stop or a drag-back): the ankle sits just behind the ball centre, the sole on its top.
+      const soleW=feelLive&&side===feel.foot&&action===0?feel.footW:0;
+      if(soleW>0){
+        const la=feel.ballYaw-yaw,cs=Math.cos(la),sn=Math.sin(la),d=feel.ballDist-DRIBBLE_SOLE_BACK;
+        // Height leads: the boot rises before it travels over the ball and leaves it before it sets down (never through it).
+        const wh=soleW<.25?0:(soleW-.25)/.75,wy=Math.min(1,soleW*2.5),h=wh*wh*(3-2*wh);
+        footX+=(sn*d+cs*feel.ballSide-side*.108-pelvis.position.x-footX)*h;footZ+=(cs*d-sn*feel.ballSide-pelvis.position.z-footZ)*h;
+        footY+=(.075-pelvis.position.y+feel.footLift-footY)*wy;
+      }
       // Reaction leg targets (thigh raised to cushion; slide lead leg long, trail leg tucked) blend in last,
       // from wherever the boot is, before the reach clamp.
       let reactToe=0;
@@ -1500,7 +1522,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         hip.quaternion.slerp(contactHip,1-action);knee.quaternion.slerp(contactKnee,1-action);
       }
       // Flat sole under a pitched pelvis; toe-first backpedal steps and heels up in the ready stance.
-      const toe=(1-action)*(1-receive)*(backpedal*(stance?.06:.3*swing)+.14*still)+reactToe;
+      const toe=(1-action)*(1-receive)*(backpedal*(stance?.06:.3*swing)+.14*still)+reactToe+soleW*feel.footToe;
       ankle.rotation.x = -hipAngle-kneeAngle-pelvisPitch + (stance ? 0 : -.12*swing*effort) + toe;
       // Cancel the whole parent rotation, not only its sagittal angles. Abducted hips and
       // banking otherwise tip the support boot onto its edge (especially in a wide jockey).
@@ -1885,12 +1907,18 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     dribbleLead=hardReset?nextLead:frozen?dribbleLead:T.MathUtils.damp(dribbleLead,nextLead,12,dt);
     previousX = x; previousZ = z; initialized = true;
   };
-  const dribbleContact=(out:T.Vector3)=>{
+  // The quiet fixed lane: lessons' authored contacts (ballContact) always use it, so the footwork never moves a lesson's ball.
+  const laneContact=(out:T.Vector3)=>{
     const scale=Math.abs(root.scale.x);
     return out.set(root.position.x+Math.sin(yaw)*dribbleLead*scale,root.position.y+.19,root.position.z+Math.cos(yaw)*dribbleLead*scale);
   };
+  const dribbleContact=(out:T.Vector3)=>{
+    if(!feelLive)return laneContact(out);
+    const scale=Math.abs(root.scale.x),a=feel.ballYaw,c=Math.cos(a),s=Math.sin(a),d=feel.ballDist*scale,l=feel.ballSide*scale;
+    return out.set(root.position.x+s*d+c*l,root.position.y+.19,root.position.z+c*d-s*l);
+  };
   // Bean skin hook (lane A, lib/graphics/beanSkin.ts): hides the classic meshes and attaches the bean in 'bean' style.
   // Lane E (lib/graphics/beanCostumes.ts) wraps the skinned rig for bean-fitted costumes; a no-op in classic style.
-  return attachBeanCostumes(attachBeanSkin({ root, update, dribbleContact, ballContact:(side:-1|1,out:T.Vector3)=>{if(dribbleActive)return dribbleContact(out);root.updateWorldMatrix(true,true);legs[side===-1?0:1].ankle.localToWorld(out.copy(contactOffsets[side===-1?0:1]).divideScalar(P.legs));const forward=(out.x-root.position.x)*Math.sin(yaw)+(out.z-root.position.z)*Math.cos(yaw);if(forward<contactLead){out.x+=Math.sin(yaw)*(contactLead-forward);out.z+=Math.cos(yaw)*(contactLead-forward);}
+  return attachBeanCostumes(attachBeanSkin({ root, update, dribbleContact, setDribbleFeel:(on:boolean)=>{feelOn=on;if(!on)feelLive=false;}, get dribblePress(){return feelLive?feel.press:0;}, ballContact:(side:-1|1,out:T.Vector3)=>{if(dribbleActive)return laneContact(out);root.updateWorldMatrix(true,true);legs[side===-1?0:1].ankle.localToWorld(out.copy(contactOffsets[side===-1?0:1]).divideScalar(P.legs));const forward=(out.x-root.position.x)*Math.sin(yaw)+(out.z-root.position.z)*Math.cos(yaw);if(forward<contactLead){out.x+=Math.sin(yaw)*(contactLead-forward);out.z+=Math.cos(yaw)*(contactLead-forward);}
  out.y=Math.max(root.position.y+.19,out.y);return out;}, get juggleHead(){return juggleHead;}, get headTop(){const b=root.userData.beanBody as {attach:{headTop:{y:number}}}|undefined;return b?(.88+(P.legs-1)*.83+b.attach.headTop.y+.03)*Math.abs(root.scale.y):undefined;}, get rideTurnRoll(){return rideTurnRoll;}, get bikeRoll(){return bikeRoll;}, get profileScale(){return profileScale;}, get profile(){return P;}, setAppearance, setProfile, setShirtNumber:shirtNumber.set, setBeanLook:(look:BeanLook,outfit:Outfit)=>{void look;void outfit;}, setExpression:(e:BeanExpression)=>{void e;}, handPositions:(left:T.Vector3,right:T.Vector3)=>{root.updateWorldMatrix(true,true);arms[0].elbow.localToWorld(left.set(0,-.265,0));arms[1].elbow.localToWorld(right.set(0,-.265,0));}, dispose: () => { clubCostume?.dispose();shirtNumber.dispose();spineSurfaces.dispose();geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); root.removeFromParent(); } },{root,pelvis,torso,lumbar,chest,head,arms,legs},id,team,articulatedHands,characterStyle()));
 }
