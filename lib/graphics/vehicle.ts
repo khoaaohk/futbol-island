@@ -320,5 +320,7 @@ export function createVehicle() {
   /** True when the rider wears lib/graphics/backpack.ts: its morph replaces the classic jet pack (Oct 20 2026). */
   setBackpackJet(on:boolean){backpackJet=on;},
   get beanFit(){return !!beanFit;},
+  /** Forces the bean / classic placement without a rig (lib/graphics/remoteRides.ts bakes friends' rides from both). */
+  setFit(bean:boolean){applyFit(bean);},
   dispose(){root.removeFromParent();flightExtras.dispose();geometries.forEach(g=>g.dispose());harness.forEach(h=>h.belts.forEach(b=>b.geometry.dispose()));[metal,rubber,paint,cream,exhaustMaterial,carAccent].forEach(m=>m.dispose());}};
 }

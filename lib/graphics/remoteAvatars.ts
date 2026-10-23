@@ -34,6 +34,7 @@ import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
+import {RIDE_SCALE,createRemoteRides,rideKindFor} from './remoteRides';import {beanShapeOf} from './beanGearFit';
 import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {createBumpReact,type BumpReact} from '../town/friendBump';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
@@ -125,6 +126,8 @@ type Entry={
  bx:number;by:number;bz:number;bOn:boolean;bq:T.Quaternion;
  /** A friend bump's cosmetic reaction (friendBump.ts; made once on upsert). */
  bump:BumpReact;
+ /** Their ride (remoteRides.ts): the bean seat fit (set with the look) and the rolled distance that spins the wheels. */
+ rb:boolean;ra:number;
 };
 
 // Live feel (Oct 23 2026): the old 256 x 64 canvas at 27 px drawn 1.5 m wide made a name ~0.16 m tall, unreadable from the phone's
@@ -243,6 +246,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
  const jets=createRemoteJets();root.add(jets.root);
  const bumps=createFriendBumps(root);
+ // Friends' scooters / bikes / mopeds under the shown rigs only (same cap as the bodies): instanced, baked on the first friend ride.
+ const rides=createRemoteRides(BATCH_CAPACITY);root.add(rides.root);
  // Friends' balls: BALL_MAX plain meshes sharing ONE geometry + material (the island ball's, via setBallLook; a plain one until then).
  let ownBallGeo:T.BufferGeometry|null=new T.SphereGeometry(BALL_RADIUS,16,12),ownBallMat:T.Material|null=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});
  const ballMeshes:T.Mesh[]=[];
@@ -290,7 +295,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const rig=createPlayer('remote-'+e.id,'home');
   const c=wireToLook(e.look);rig.setAppearance(c);rig.setBeanLook(beanLookFor(c),playerOutfit(c));
   releaseHiddenClassic(rig.root);rig.root.scale.setScalar(BODY_SCALE);
-  e.rig=rig;e.admitted=true;
+  e.rig=rig;e.rb=!!beanShapeOf(rig.root);e.admitted=true;
  }
  function ensureLabel(e:Entry){
   if(e.label||disposed)return;
@@ -379,11 +384,11 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
-shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact()};
+shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
-   if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);}}
+   if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);e.rb=!!beanShapeOf(e.rig.root);}}
   },
   remove(id){
    const e=byId.get(id);if(!e)return;
@@ -399,7 +404,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    if(list.length===0){
     // The batch's instanced bodies hold last frame's count until begin()/end() clear them: the last friend leaving (timeout, Leave)
     // must empty it here too, or their body stays drawn forever (ghost, Oct 23 2026) while the field, ring and label are gone.
-    batch.begin();batch.end();
+    batch.begin();batch.end();rides.begin();rides.end();
     shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);bumps.detect(dt,list,poses,null,reduced,true);bumps.update(dt);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
@@ -414,7 +419,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    recheck+=dt;
    if(recheck>=ADMIT_RECHECK){const step=recheck;recheck=0;if(!saver)recheckCaps(step,reduced,poses,local);}
    bumps.detect(dt,list,poses,local,reduced,saver);/* friend bumps: last frame's shown states, before the pass that applies them */
-   batch.begin();fields.begin();let shown=0;
+   batch.begin();fields.begin();let shown=0;rides.begin();
    for(let i=0;i<list.length;i++){
     const e=list[i];
     // A demoted friend's body shrinks away (before every early-out, so an off-screen one still finishes), then the rig is released.
@@ -489,6 +494,9 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     else if(e.flOn){root3.rotation.x=0;root3.rotation.z=0;e.flOn=false;}
     if(e.bump.on&&applyBump(root3,e.bump,reduced,BODY_SCALE*k*e.out))e.flOn=true;/* a friend bump: cosmetic, gone with the reaction */
     batch.draw(root3);e.shown=true;shown++;
+    // Their ride under them (none inside the force field: the pose drops the ride there too); it follows the root, so flourishes and bump wobbles / skids carry it.
+    const rk=shield?-1:rideKindFor(pose.mode);
+    if(rk>=0){e.ra+=Math.min(dt,.1)*pose.speed;if(e.ra>1e5)e.ra=0;rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra);}
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
     ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
     placeLabel(e,pose,k,reduced);
@@ -503,7 +511,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    jets.end(dt,reduced);candJet.length=0;
    drawBalls(poses,balls??null);
    if(local&&saverFade>0)addLocalRing(local,camPos);
-   ringsEnd();fields.end(dt,reduced);bumps.update(dt);
+   ringsEnd();fields.end(dt,reduced);bumps.update(dt);rides.end();
    batch.end();shownCount=shown;
    // The batch makes its meshes lazily and defaults them to casting: friends never cast (no shadow registration anywhere).
    for(let i=0;i<drawn.children.length;i++)drawn.children[i].castShadow=false;
@@ -511,7 +519,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();rides.dispose();
    for(const m of ballMeshes)m.removeFromParent();ownBallGeo?.dispose();ownBallMat?.dispose();ownBallGeo=null;ownBallMat=null;
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
