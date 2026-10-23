@@ -102,4 +102,11 @@ const uw=e.load('lib/town/fishing/underwater.ts'),cat=e.load('lib/town/fishing/f
  ok(/shWorld\.mode!=='nibble'&&shWorld\.mode!=='bite'\)overlay\.mark\('wake',fx-mx\*\.55\*L/.test(vis),'the wake trails the same anchor and stays off at the hook');
  const models=src('lib/town/fishing/fishModels.ts');ok(/function shark\(/.test(models)&&/fin\(b,L,\{t0:o\.dorsalT\?\?\.36/.test(models),'the shark species model carries its dorsal fin on the body');}
 
+// Back vs Play with friends (landscape audit Oct 23, every size, portrait too): with the friends button in the HUD row, Back sits right
+// of it (Paths slot + gap + friends + badge + gap) and the phone bar starts after Back; <= 340 px (friends under Paths) Back keeps the Paths slot.
+{const css=src('components/FishingHost.module.css'),jobs=src('components/IslandJobs.module.css');
+ ok(/:global\(\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.back\{--fish-back-left:calc\(var\(--btn-icon,44px\) \* 2 \+ var\(--island-hud-pair-gap,8px\) \* 2 \+ 1px\)/.test(css),'Back moves right of the friends button');
+ ok(/@media\(max-width:340px\)\{:global\(\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.back\{left:calc\(18px \+ env\(safe-area-inset-left,0px\)\)\}\}/.test(css),'narrow phones keep the Paths slot');
+ ok(/\.town-app\[data-fishing\]:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.wallet\[data-job-wallet\]\{max-width:none;left:calc\(18px \+ env\(safe-area-inset-left,0px\) \+ var\(--btn-icon,44px\) \* 2 \+ var\(--island-hud-pair-gap,8px\) \* 3 \+ 1px \+ var\(--btn-nav-width,76px\)\)/.test(jobs),'phone bar starts after the moved Back pill');}
+
 console.log(`PASS fishing polish: heat-gated sway / life / particles, shader hooks, overlay sleeps at rest, fewer draws, seabed ≤ +15 %, continuous biter, shark fin on the body (${checks} checks)`);

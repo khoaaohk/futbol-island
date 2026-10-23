@@ -34,4 +34,13 @@ for(const level of [1,4]){const {g,s,i}=fresh(level);Object.assign(s.players[0],
  for(let n=0;n<180&&s.ball.owner<0;n++)g.step(1/60,i);assert.equal(s.ball.owner,2);assert.equal(s.focus,1,'switch of play counted');assert.match(s.message,/Switched play/);}
 // Pass preview warns when a defender sits in the lane.
 {const {g,s,i}=fresh(1);Object.assign(s.players[0],{x:-10,z:0});Object.assign(s.players[1],{x:0,z:0});Object.assign(s.players[2],{x:-10,z:12,stun:9});Object.assign(s.players[4],{x:-5,z:0,stun:9});i.x=1;g.step(1/60,i);assert(s.passRisk>.3,'risky lane flagged');}
+// Landscape phones (docs/LANDSCAPE_AUDIT_OCT23.md batch 1): the start card stays on screen (bottom <= innerHeight), scrolling inside
+// itself, above the idle touch buttons, with 44 px Team shape / Round pickers. Measured live by scripts/audit-landscape.cjs batch1.
+{const css=fs.readFileSync('components/LiveArcadeMatch.module.css','utf8').replace(/\s+/g,' ');
+ const land=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:landscape\)\{(.*?)\}\}/g)].map(m=>m[1]).join('}');
+ assert(/\.overlay>\.card\{max-height:calc\(100dvh - 90px - env\(safe-area-inset-bottom,0px\)\);overflow:auto/.test(land),'landscape card: max-height under the viewport + overflow auto');
+ assert(/\.card \.shape select,\.card \.inline select\{min-height:44px/.test(land),'landscape pickers are 44 px tall');
+ assert(/\.overlay\{z-index:6\}/.test(land),'card sits above the touch buttons in landscape');
+ // Card bottom <= innerHeight on each landscape phone: header (>= 56 px) + overlay padding 8 + card cap stays inside the viewport.
+ for(const [w,h,inset] of [[667,375,0],[852,393,21],[932,430,21]]){const cap=h-90-inset,top=Math.min(70,h*.2)+8;assert(top+cap<=h,`card bottom ${top+cap} <= ${h} at ${w}x${h}`);}}
 console.log('PASS Strikers polish: keeper dive/catch/distribute, overhit and near miss, hit-stop celebration, round-gated interception, pressure+cover, focus habit, lane risk at 30/60/120Hz');

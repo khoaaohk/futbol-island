@@ -295,4 +295,13 @@ assert.equal(Q.quizFeedbackText('Look again: the defender has moved toward the b
  assert(!/>Coming soon<\/span><h3>Coaches Board/.test(read('components/CoachesCentre.tsx')),'the Coaches Board card uses the neutral label');
  assert(!/'COMING SOON'/.test(read('lib/town/world.ts')),'no COMING SOON sign in the world');
 }
+// Pick your player in phone landscape (docs/LANDSCAPE_AUDIT_OCT23.md batch 1): two columns (preview beside the form) in short
+// landscape, and the paths showcase hides on every landscape phone up to 480 px tall (the 440 px Pro Max included).
+{const css=read('components/IslandOnboarding.module.css').replace(/\s+/g,' ');
+ const land=css.slice(css.indexOf('@media(max-height:500px) and (orientation:landscape){ .dialog[open]>.card.welcome'));
+ assert(land.length>100,'short-landscape welcome block exists');
+ assert(/\.welcome \.content\{display:grid;grid-template-columns:minmax\(0,1fr\) minmax\(0,1\.15fr\)/.test(land)&&/\.welcome \.preview\{grid-column:1;grid-row:1\/-1/.test(land),'preview in its own column beside the form');
+ assert(/\.welcome \.eyebrow,\.welcome \.copy,\.welcome \.shuffleRow,\.welcome \.choicesLayout,\.welcome \.saved\{grid-column:2\}/.test(land),'copy, Shuffle and Male/Female in the second column');
+ assert(/width:min\(720px,calc\(100vw - 36px - env\(safe-area-inset-left,0px\) - env\(safe-area-inset-right,0px\)\)\)!important;left:50%!important;translate:-50% 0/.test(land),'wider centred card inside the safe areas');
+ assert(/@media\(max-height:430px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\) and \(orientation:landscape\)\{\.showcase\{display:none\}/.test(css),'showcase hides on landscape phones up to 480 px tall');}
 console.log('PASS new-player flow: prod-gated preview/testCoins/labs, gated donations, one first path (7v7) + Continue, full quiz feedback, resumed first-try runs, daily bonus on rides, fast travel on foot, welcome back once a day, six Explore items + save evidence, lesson goals, opening-soon labels');
