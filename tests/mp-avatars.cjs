@@ -339,4 +339,19 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert(/const FS=opts\.fieldScale\?\?1;/.test(ra)&&/FS\*\(shield\?/.test(ra),'field scale option, default 1');
  assert(/fieldScale: ROOM_FIELD_SCALE/.test(rp)&&/ROOM_FIELD_SCALE = 0\.8 \/ 1\.15/.test(rp),'rooms pass 0.8 / 1.15');
 }
+// 5. E2E finding (Oct 22 2026, scripts/check-mp-e2e.cjs): the island walking camera sits ~35 m behind the player, so a label range
+// measured from the CAMERA never showed a friend's name next to you. With the local player known, the 25 m range is from the player.
+{
+ const h=harness(),look=new Array(12).fill(0);
+ const labelsOf=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-name');
+ h.avatars.upsert(1,look,'Near',{hex:'#D62828'});h.avatars.upsert(2,look,'Far',{hex:'#0072B2'});
+ h.poses.clear();h.poses.set(1,{x:0,y:0,z:2.5,yaw:0,speed:0,mode:13,zone:0,fade:1});h.poses.set(2,{x:0,y:0,z:-30,yaw:0,speed:0,mode:13,zone:0,fade:1});
+ h.camera.position.set(0,23,36);h.camera.lookAt(0,0,0);h.camera.updateMatrixWorld();
+ h.avatars.update(.016,h.poses,h.camera,false,{x:0,y:0,z:0,hex:'#009E73',mode:0,pitch:0,yaw:0});
+ const [near,far]=labelsOf();
+ assert.equal(near.visible,true,'a friend 2.5 m from me is labelled although the camera is 36 m away');
+ assert.equal(far.visible,false,'a friend 30 m from me is not labelled');
+ h.avatars.update(.016,h.poses,h.camera,false,null);
+ assert.equal(labelsOf()[0].visible,false,'no local player (busy / hidden): the camera distance still applies');
+}
 console.log('mp-avatars ok');

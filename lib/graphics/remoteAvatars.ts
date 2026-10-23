@@ -96,7 +96,7 @@ type Entry={
  hf:number;
  /** A Pass it / Juggle with me routine this friend's body plays (picked locally; no ball on their side), made on the first ball emote. */
  ball:PassBallOut|null;
- acc:number;slot:number;needResume:boolean;d2:number;
+ acc:number;slot:number;needResume:boolean;d2:number;/** squared horizontal distance from the LOCAL player (the label range; d2 is from the camera, ~35 m back on the island) */ld2:number;
  /** Presence: inside the force field now; field 0..1 (eased), door 1..0 (indoors fade), shake / ripple of a ball hit, the status sprite + its line. */
  shield:boolean;field:number;door:number;shake:number;ripple:number;hx:number;hy:number;hz:number;status:T.Sprite|null;statusKey:string;
 };
@@ -203,9 +203,9 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const candL:Entry[]=[],candB:Entry[]=[];
  /** Label + emote bubble placement. Both are only CANDIDATES here: the nearest LABEL_MAX labels (within LABEL_RANGE) and BUBBLE_MAX bubbles are made visible by pickVisible after the pass. */
  function placeLabel(e:Entry,pose:RemotePose,k:number,reduced:boolean){
-  const label=e.label!,bubble=e.bubble!,d2=e.d2;
+  const label=e.label!,bubble=e.bubble!,d2=e.d2,ld2=e.ld2;
   label.visible=false;bubble.visible=false;
-  if(d2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+2.35*k,pose.z);(label.material as T.SpriteMaterial).opacity=k;candL.push(e);}
+  if(ld2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+2.35*k,pose.z);(label.material as T.SpriteMaterial).opacity=k;candL.push(e);}
   // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
   // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
   if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE;e.status.visible=show;
@@ -219,8 +219,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  }
  /** Shows only the nearest `max` candidates (insertion sort by squared distance; no allocation). Label candidates drive `label`, bubble candidates `bubble`. */
  function pickVisible(c:Entry[],max:number){
-  for(let i=1;i<c.length;i++){const x=c[i];let j=i-1;while(j>=0&&c[j].d2>x.d2){c[j+1]=c[j];j--;}c[j+1]=x;}
   const isLabel=c===candL;
+  for(let i=1;i<c.length;i++){const x=c[i];let j=i-1;while(j>=0&&(isLabel?c[j].ld2>x.ld2:c[j].d2>x.d2)){c[j+1]=c[j];j--;}c[j+1]=x;}
   for(let i=0;i<c.length&&i<max;i++){const e=c[i];if(isLabel)e.label!.visible=true;else e.bubble!.visible=true;}
  }
  const labels=new T.Group();labels.name='remote-avatar-labels';root.add(labels);
@@ -273,7 +273,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,d2:0,
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:''};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
@@ -326,7 +326,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     sphere.center.set(pose.x,pose.y+1,pose.z);sphere.radius=2;
     if(!frustum.intersectsSphere(sphere)){hideEntry(e);continue;}
     const k=Math.max(.001,pose.fade*saverFade*e.door);
-    e.d2=d2;
+    e.d2=d2;e.ld2=local?(pose.x-local.x)*(pose.x-local.x)+(pose.z-local.z)*(pose.z-local.z):d2;
     // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
     if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,FS*(shield?.86+.14*e.field:1+(1-e.field)*.28),reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
