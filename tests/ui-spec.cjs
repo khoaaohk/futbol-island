@@ -118,5 +118,31 @@ for(const f of ['components/CharacterCustomizer.module.css','components/CoachesC
  ok(/\.dialog\.dialog::backdrop\{backdrop-filter:none/.test(read(f)),f+': full-screen dialog backdrop never blurs');
 ok(read('components/GrownUps.module.css').includes('.panel>header h2{font-size:'+TITLE+'}'),'For grown-ups title uses the one title clamp');
 
+// 9 Oct 22 2026 UI consistency audit (docs/ui/UI_AUDIT_OCT22.md): multiplayer, rooms, emote wheel, title Join friends, admin tabs
+ok(/:root\{\s*--btn-font:Arial,Helvetica,sans-serif;--font-body:var\(--btn-font\);/.test(g)&&(g.match(/--font-body:/g)||[]).length===1,'--font-body is defined once (it was used in 15 font shorthands but never defined, which dropped their weight and size)');
+{
+ const pc=read('components/party/party.module.css');
+ ok(!/system-ui/.test(pc),'party UI: every font is the island button font (no system-ui)');
+ for(const {sel,body} of rules(pc)){
+  if(/focus-visible/.test(sel)&&/outline:\s*\d+px\s+solid/.test(body))ok(false,`party.module.css: "${sel.slice(-60)}" paints a hard-coded focus outline`);
+  if(/:active/.test(sel)&&/translateY\(3px\)|translate:0 3px/.test(body))ok(false,`party.module.css: "${sel.slice(-60)}" presses by a literal 3px; use var(--btn-press)`);
+ }
+ ok(/\.roomEmote\{[^}]*var\(--btn-grain\)/.test(pc),'room Emote button has the textured gold face like the other round gold buttons');
+ ok(/\.tab::before\{content:"";position:absolute;inset:-6px 0\}/.test(pc),'Code | List tabs keep a 44px hit height on phones');
+ ok(/\.toast\{[^}]*animation:partyIn \.3s ease\}/.test(pc)&&/:global\(\.hud-stack\)>\.toast\{position:static/.test(pc),'party note: one toast timing, and it sits in the HUD stack on the island');
+ ok(/\.roomSheet\{[^}]*animation:partyIn \.26s ease-out/.test(pc),'room roster opens with the modal fade timing');
+ const host=read('components/party/PartyHost.tsx'),town=read('components/Town.tsx');
+ ok(/<HudSlot><p className=\{styles\.toast\}[^>]*data-hud-slot="toast"/.test(host),'PartyHost notes portal into the HUD stack');
+ ok(town.indexOf('<PartyHost ')>0&&town.indexOf('<PartyHost ')<town.indexOf('</HudStackContext.Provider>'),'PartyHost renders inside the HUD stack provider');
+ ok(/useLayoutEffect\(\(\) => \{[\s\S]{0,200}getBoundingClientRect\(\)[\s\S]{0,300}style\.translate/.test(read('components/party/RoomPartyChip.tsx')),'room wheel / roster are kept inside the screen');
+ const wheel=g.slice(g.indexOf('.emote-wheel-btn{'),g.indexOf('.emote-wheel-btn{')+600);
+ ok(!/#fff2cd|#244d40|#b8923f/.test(wheel.split('}')[0]+wheel.split('}')[1]),'emote wheel buttons use the --btn-* tokens');
+ ok(/\.emote-wheel-arrow\{[^}]*font:700 24px\/1 var\(--btn-font\)/.test(g),'emote wheel arrows use the button font');
+ const jf=read('components/landing/JoinFriends.module.css');
+ ok(!/outline:3px solid/.test(jf)&&!/system-ui/.test(jf)&&!/\.go\{|\.cancel\{/.test(jf),'title Join friends: token focus ring and font, no dead card rules');
+ ok(/@media\(max-width:600px\),\(pointer:coarse\)\{\.header\{padding:calc\(16px \+ env\(safe-area-inset-top,0px\)\) calc\(var\(--phone-gutter\)/.test(read('components/MuseumRoom.module.css')),'museum header uses the phone gutter like the Konbini');
+ ok(!/\.tab\{flex:1 1 0;min-width:0/.test(read('app/admin/SponsorOverview.module.css')),'admin phone tabs size to their labels (no squeezed, overlapping labels)');
+}
+
 console.log(`ui-spec: ${passed} passed, ${failed} failed`);
 process.exit(failed?1:0);
