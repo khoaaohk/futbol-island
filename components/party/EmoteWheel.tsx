@@ -1,7 +1,8 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LOCAL_EMOTES, wheelEmotesFor } from '@/lib/town/emoteReact';
-import { ctxWheelFor, type EmoteContext } from '@/lib/town/emoteContexts';
+import { ctxWheelFor, sharedBlocked, type EmoteContext, type EmoteReach } from '@/lib/town/emoteContexts';
+type SharedReach = Partial<Pick<EmoteReach, 'friendNear' | 'friendFlyingNear' | 'friendSwimmingNear'>>;
 import type { NpcSetKind } from '@/lib/town/npcEmoteSets';
 import { moveWheel } from '@/lib/town/moveEmotes';
 import { arrowState, arrowTarget, emotePages, type ArrowState } from '@/lib/town/emoteBar';
@@ -17,7 +18,9 @@ export const EMOTES = LOCAL_EMOTES;
 /** Pass it (6) and Juggle with me (3) on the ground wheel: greyed while the nearest friend said No twice in a row (relay v1.4 asks). */
 const ASK_IDS = new Set([3, 6]);
 const SAME = (a: ArrowState, b: ArrowState) => a.single === b.single && a.left === b.left && a.right === b.right && a.page === b.page && a.pages === b.pages;
-export default function EmoteWheel({ onPick, onClose, ride = 'walk', ctx = 'ground', npcKind = '', askBlocked = false }: { onPick: (e: number) => void; onClose: () => void; ride?: string; ctx?: EmoteContext; npcKind?: NpcSetKind | ''; askBlocked?: boolean }) {
+/** `friends`: who is near in which context (the store's flags): the flying / swimming / ride versions of Pass it and Juggle with me are
+ *  two-person emotes and grey out without a friend near in the same context (lib/town/emoteContexts.ts sharedBlocked). */
+export default function EmoteWheel({ onPick, onClose, ride = 'walk', ctx = 'ground', npcKind = '', askBlocked = false, friends }: { onPick: (e: number) => void; onClose: () => void; ride?: string; ctx?: EmoteContext; npcKind?: NpcSetKind | ''; askBlocked?: boolean; friends?: SharedReach }) {
   const strip = useRef<HTMLDivElement>(null);
   const list = ctx === 'move' ? moveWheel() : ctx !== 'ground' ? ctxWheelFor(ctx) : wheelEmotesFor(ride);
   const pages = emotePages(list);
@@ -41,8 +44,8 @@ export default function EmoteWheel({ onPick, onClose, ride = 'walk', ctx = 'grou
       <div className="emote-wheel-strip" ref={strip}>
         {pages.map((pg, i) => (
           <div key={i} className="emote-wheel-page" role="presentation">
-            {pg.map((x) => { const off = askBlocked && ctx === 'ground' && !npcKind && ASK_IDS.has(x.emote); return (
-              <button key={x.emote} type="button" className="emote-wheel-btn" aria-label={x.label} title={off ? 'Try again in a bit' : x.label} aria-disabled={off || undefined}
+            {pg.map((x) => { const lonely = !!friends && sharedBlocked(x.emote, friends), off = lonely || (askBlocked && ctx === 'ground' && !npcKind && ASK_IDS.has(x.emote)); return (
+              <button key={x.emote} type="button" className="emote-wheel-btn" aria-label={x.label} title={lonely ? 'Needs a friend nearby' : off ? 'Try again in a bit' : x.label} aria-disabled={off || undefined}
                 disabled={off} data-ask-blocked={off ? '' : undefined} style={off ? { opacity: .42, filter: 'grayscale(1)' } : undefined} onClick={() => { if (off) return; onPick(x.emote); onClose(); }}>
                 <Glyph name={x.icon} size={26} />
               </button>); })}

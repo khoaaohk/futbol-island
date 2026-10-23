@@ -17,7 +17,7 @@ const proto=read('multiplayer/protocol/types.ts');
 t('wire modes match the multiplayer protocol and every ctx emote maps to an existing wire value 0..9',()=>{
  const mode=k=>Number(new RegExp(k+':\\s*(\\d+)').exec(proto)[1]);
  assert.equal(C.WIRE_MODE.Jetpack,mode('Jetpack'));assert.equal(C.WIRE_MODE.Parachute,mode('Parachute'));assert.equal(C.WIRE_MODE.Swim,mode('Swim'));
- for(const s of C.CTX_SCRIPTS){assert(s.wire>=0&&s.wire<=9,s.label);assert(s.emote>=20&&s.emote<=34);}
+ for(const s of C.CTX_SCRIPTS){assert(s.wire>=0&&s.wire<=9,s.label);assert(s.emote>=20&&s.emote<=39);}
 });
 t('Emote button rule: HIDDEN (cell reserved) unless someone can answer; flying needs a FLYING friend (ground NPCs / walking friends do not count), swimming a swimming friend',()=>{
  const R=(o)=>C.emoteButtonState({flying:false,swimming:false,npcNear:false,friendNear:false,friendFlyingNear:false,friendSwimmingNear:false,...o});
@@ -27,9 +27,10 @@ t('Emote button rule: HIDDEN (cell reserved) unless someone can answer; flying n
  assert.equal(R({swimming:true,npcNear:true,friendNear:true}).hidden,true,'swimming: only a swimming friend');
  assert.equal(R({swimming:true,friendSwimmingNear:true}).hidden,false);assert.equal(R({swimming:true,friendSwimmingNear:true}).ctx,'swim');
  for(const o of [{},{flying:true},{swimming:true},{npcNear:true}])assert.equal(R(o).disabled,false,'never a greyed button: it is shown or hidden');
- assert.equal(C.ctxWheelFor('fly').length,5);assert.equal(C.ctxWheelFor('swim').length,5);assert.equal(C.ctxWheelFor('ground').length,0);
+ assert.equal(C.ctxWheelFor('fly').length,10);assert.equal(C.ctxWheelFor('swim').length,10);assert.equal(C.ctxWheelFor('ground').length,0);
  const labels=[...C.ctxWheelFor('fly'),...C.ctxWheelFor('swim')].map(s=>s.label);
- for(const l of ['Barrel roll','Wing wave','Loop-de-loop','Fly-by high five','Side-by-side glide','Splash wave','Water spray cheer','Duck-dive pop-up','Back float','Tread & laugh'])assert(labels.includes(l),l);
+ for(const l of ['Barrel roll','Wing wave','Loop-de-loop','Fly-by high five','Thank-you glide','Star pass','Comet keepy-ups','Jetpack salute','Upside-down giggle','Sky dance',
+  'Splash wave','Water spray cheer','Duck-dive pop-up','Thank-you float','Tread & laugh','Splash high five','Splash pass','Bubble keepy-ups','Seal clap','Tread dance'])assert(labels.includes(l),l);
  assert.equal(C.isFlying('jetpack','idle'),true);assert.equal(C.isFlying('walk','idle'),false);assert.equal(C.isFlying('walk','parachute'),true);
  // the store only notifies on a change
  let calls=0;const off=C.emoteCtxStore.subscribe(()=>calls++);C.emoteCtxStore.set({npcNear:true});C.emoteCtxStore.set({npcNear:true});C.emoteCtxStore.set({npcNear:false});off();assert.equal(calls,2);
@@ -43,9 +44,57 @@ t('nearest flying friend within 40 m (3D); walkers and far flyers do not count',
  assert.equal(C.nearestFlyingFriend(me,[],out),-1);
 });
 t('a friend avatar picks the flourish from the SENDER mode; ground modes keep the ordinary emote',()=>{
- assert.equal(C.flourishForWire(1,5).emote,C.CTX_EMOTE.BarrelRoll);assert.equal(C.flourishForWire(8,6).emote,C.CTX_EMOTE.Loop);
+ assert.equal(C.flourishForWire(1,5).emote,C.CTX_EMOTE.BarrelRoll);assert.equal(C.flourishForWire(4,6).emote,C.CTX_EMOTE.Loop);assert.equal(C.flourishForWire(8,6).emote,C.CTX_EMOTE.SkyDance);
  assert.equal(C.flourishForWire(0,8).emote,C.CTX_EMOTE.SplashWave);assert.equal(C.flourishForWire(7,8).emote,C.CTX_EMOTE.TreadLaugh);
- assert.equal(C.flourishForWire(1,0),undefined);assert.equal(C.flourishForWire(3,5),undefined);
+ assert.equal(C.flourishForWire(1,0),undefined);assert.equal(C.flourishForWire(3,5).emote,C.CTX_EMOTE.CometKeepyUp);assert.equal(C.flourishForWire(6,8).emote,C.CTX_EMOTE.SplashPass);
+ for(let w=0;w<10;w++)for(const m of [0,1])assert.equal(C.flourishForWire(w,m),undefined,'on foot: the ordinary emote');
+});
+// TEN per context (owner, Oct 23 2026): flying, swimming and each ride offer the standard ten meanings in the standard wheel order.
+const ORDER=[0,2,1,6,3,5,7,8,9,4];
+const R=load('lib/town/rideEmotes.ts');
+const contexts=()=>[['fly',C.ctxWheelFor('fly'),5],['swim',C.ctxWheelFor('swim'),8],...['scooter','bike','moped'].map((r,i)=>[r,R.rideWheelFor(r),2+i])];
+t('every context has exactly ten distinct scripts, one per standard wire value, in the standard wheel order; the wire mapping round-trips',()=>{
+ for(const [name,list,mode] of contexts()){
+  assert.equal(list.length,10,name);assert.equal(JSON.stringify(list.map(s=>s.wire)),JSON.stringify(ORDER),name+' order');
+  for(const k of ['emote','label','icon','emoji'])assert.equal(new Set(list.map(s=>s[k])).size,10,name+' distinct '+k);
+  for(const s of list){const f=C.flourishForWire(s.wire,mode);assert(f&&f.emote===s.emote,name+' '+s.label+': a friend in this mode plays the same script');}
+  for(const s of list)assert(s.seconds>=2.5&&s.seconds<=4,name+' '+s.label+' lasts about 3-4 s');
+ }
+ assert.equal(C.WIRE_MODE.Scooter,2);assert.equal(C.WIRE_MODE.Bike,3);assert.equal(C.WIRE_MODE.Moped,4);
+ assert.equal(new Set(C.CTX_SCRIPTS.map(s=>s.emote)).size,20);for(const s of C.CTX_SCRIPTS)assert(s.ctx==='fly'?C.isFlyEmote(s.emote):C.isSwimEmote(s.emote));
+ // the old ids keep their meaning on the wire where it fitted (old wires still valid: any 0..9 value plays the matching script)
+ assert.equal(C.ctxScriptFor(20).wire,0);assert.equal(C.ctxScriptFor(21).wire,1);assert.equal(C.ctxScriptFor(23).wire,2);assert.equal(C.ctxScriptFor(30).wire,0);assert.equal(C.ctxScriptFor(31).wire,1);assert.equal(C.ctxScriptFor(34).wire,7);
+});
+t('flying / swimming flourishes look different from each other (roll / pitch / lift / arm over time)',()=>{
+ const o={roll:0,pitch:0,yaw:0,lift:0,ripple:0},sig=s=>{const v=[];for(let i=0;i<10;i++){C.flourishAt(s.emote,s.seconds*(i+.5)/10,s.seconds,o,1);v.push(Math.sin(o.roll),1-Math.cos(o.roll),Math.sin(o.pitch),1-Math.cos(o.pitch),o.lift,s.arm>=0&&s.seconds*(i+.5)/10>=s.armFrom?(s.arm+1)/7:0);}return v;};
+ for(const list of [C.ctxWheelFor('fly'),C.ctxWheelFor('swim')]){let best=Infinity,pair='';
+  for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++){const a=sig(list[i]),b=sig(list[j]);let s=0;for(let k=0;k<a.length;k++)s+=(a[k]-b[k])**2;const rms=Math.sqrt(s/a.length);if(rms<best){best=rms;pair=list[i].label+' / '+list[j].label;}assert(rms>.04,list[i].label+' vs '+list[j].label+' '+rms.toFixed(3));}
+  console.log(`  closest ${list[0].ctx} pair: ${pair} RMS ${best.toFixed(3)}`);}
+ // every new flourish actually moves the body
+ for(const s of C.CTX_SCRIPTS){let peak=0;for(let a=0;a<=s.seconds;a+=.05){C.flourishAt(s.emote,a,s.seconds,o,1);peak=Math.max(peak,Math.abs(o.roll),Math.abs(o.pitch),Math.abs(o.lift));}assert(peak>.06,s.label+' moves');}
+});
+t('two-person meanings (Pass it / Juggle with me) are ball-free context versions that need a friend near in the SAME context; instant, one-way',()=>{
+ const shared=[...C.ctxWheelFor('fly'),...C.ctxWheelFor('swim'),...R.rideWheelFor('bike'),...R.rideWheelFor('scooter'),...R.rideWheelFor('moped')].filter(s=>C.isSharedWire(s.wire));
+ assert.equal(shared.length,10,'two per context');
+ for(const s of shared){
+  const fly=C.isFlyEmote(s.emote),swim=C.isSwimEmote(s.emote);
+  assert.equal(C.sharedBlocked(s.emote,{}),true,s.label+' alone: blocked');
+  assert.equal(C.sharedBlocked(s.emote,{friendNear:true,friendFlyingNear:!fly,friendSwimmingNear:!swim}),fly||swim,s.label+': a friend in another context does not count');
+  assert.equal(C.sharedBlocked(s.emote,{friendNear:!fly&&!swim,friendFlyingNear:fly,friendSwimmingNear:swim}),false,s.label+' with a friend in the same context');
+ }
+ for(const e of [0,3,6,20,21,30,60,75])assert.equal(C.sharedBlocked(e,{}),false,'ordinary emotes are never blocked: '+e);
+ const town=read('components/Town.tsx'),ew=read('components/party/EmoteWheel.tsx'),ec=read('components/EmoteControl.tsx'),ra=read('lib/graphics/remoteAvatars.ts');
+ assert(/if\(sharedBlocked\(pickIn,emoteCtxStore\.get\(\)\)\)return;/.test(town),'Town refuses a lonely shared pick');
+ assert(/const ballPick=cs\|\|rs\?-1:pick;/.test(town)&&/const ballEmote=ballPick===EMOTE\.PassBall\|\|ballPick===EMOTE\.JuggleWithMe;/.test(town),'no ball, no Join card ask (askFriend) for the context versions');
+ assert(/sharedBlocked\(x\.emote, friends\)/.test(ew)&&/friends=\{view\}/.test(ec),'the wheel greys them without a friend');
+ assert(/if\(!ms&&!fl&&\(em===Emote\.PassBall/.test(ra),'a friend avatar never picks a ball routine for a flourish');
+});
+t('no per-frame allocation in the flourish / ride samplers; the shared ride buffer is reused',()=>{
+ const src=read('lib/town/emoteContexts.ts'),fa=src.slice(src.indexOf('export function flourishAt'),src.indexOf('export const ctxStillValid'));
+ assert(!/new [A-Z]\w*\(|\[\s*\.\.\.|=>\s*\(\{|\{\s*\w+:\s*[^}]*\}\s*;/.test(fa.replace(/\/\/.*$/gm,'')),'flourishAt allocates nothing');
+ assert(/rideBuf = new Float32Array\(RT_CH\)/.test(src)&&/sampleRideTrick\(emote, age, rideBuf\)/.test(src));
+ const rs=read('lib/town/rideEmotes.ts'),st=rs.slice(rs.indexOf('export function sampleRideTrick'),rs.indexOf('export interface V3'));
+ assert(!/new [A-Z]\w*\(/.test(st),'sampleRideTrick allocates nothing (WAVE / FIST tuples are the pre-existing pattern)');
 });
 t('flourishes are visual only: bounded, start and end at zero, different from each other, a loop turns fully',()=>{
  const o={roll:0,pitch:0,yaw:0,lift:0,ripple:0};

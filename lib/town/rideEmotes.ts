@@ -4,17 +4,24 @@
 // (BRAKE: 0.4-0.8 s, about a metre), then the trick plays on the spot (wheelies, hops, spins, a burnout donut, sways) and control comes straight
 // back. The trick never moves the ride: it is a visual offset of the rider + vehicle (sampleRideTrick, trickRootOffset) that stays inside
 // EMOTE_BOUNDS (lib/town/emoteBounds.ts), so the emote camera frames the rider tightly and nothing leaves the frame.
-// Five tricks per vehicle, each built from what that vehicle really does (a pedal bike, a kick scooter, a moped with an engine).
-// Local ids 60-74; friends receive an existing protocol value (`wire`, 1..9, never 0 = Wave, never 3 / 6 = the ball emotes) and their avatar
-// picks the same trick from the SENDER'S ride mode (emoteContexts.ts flourishForWire), so old clients still see a bubble.
+// Ten tricks per vehicle, each built from what that vehicle really does (a pedal bike, a kick scooter, a moped with an engine).
+// TEN per vehicle (owner, Oct 23 2026: "every emote context must offer ten emotes"): one in-place trick for each of the standard ten wheel
+// meanings, in the standard wheel order (Wave, High five, Cheer, Pass it, Juggle with me, Well played, Laugh, Dance, Thanks, Show off).
+// Local ids 60-74 (the first five per vehicle) + 75-89 (the other five per vehicle); friends receive the standard protocol value of that
+// meaning (`wire`, 0..9, one per vehicle and value) and their avatar picks the same trick from the SENDER'S ride mode (emoteContexts.ts
+// flourishForWire), so old clients still see the standing emote's bubble. Pass it / Juggle with me become ball-free two-person versions
+// (a handlebar five, a keepy-up mime): instant, one-way, only with a party friend near (emoteContexts.ts sharedBlocked). docs/emotes-ten-per-context.md.
 export const RIDE_EMOTE = {
   MopedRev: 60, MopedDonut: 61, MopedWheelie: 62, MopedSalute: 63, MopedHorn: 64,
   ScooterTailWhip: 65, ScooterHop180: 66, ScooterOneFoot: 67, ScooterKick: 68, ScooterPivot: 69,
   BikeBell: 70, BikeWheelie: 71, BikeBunnyHop: 72, BikeStoppie: 73, BikeNoHands: 74,
+  MopedWave: 75, MopedFive: 76, MopedHeaders: 77, MopedThumbs: 78, MopedShimmy: 79,
+  ScooterWave: 80, ScooterJumpCheer: 81, ScooterLowFive: 82, ScooterKneeUps: 83, ScooterBow: 84,
+  BikeWave: 85, BikeSideFive: 86, BikePedalUps: 87, BikeClap: 88, BikeGiggle: 89,
 } as const;
 export type RideEmote = (typeof RIDE_EMOTE)[keyof typeof RIDE_EMOTE];
 export type RideKind = 'moped' | 'scooter' | 'bike';
-export const isRideEmote = (e: number): e is RideEmote => e >= 60 && e <= 74;
+export const isRideEmote = (e: number): e is RideEmote => e >= 60 && e <= 89;
 
 /** Braking before the trick: a rolling ride stops in `minS`..`maxS` seconds (speed eases out as (1 - t/T)^2, so it travels v0 * T / 3 m); below `still` m/s it is already stopped. */
 export const BRAKE = {minS: .4, maxS: .8, stopDist: 1, still: .3} as const;
@@ -57,9 +64,29 @@ export const RIDE_SCRIPTS: readonly RideScript[] = [
   S(RIDE_EMOTE.BikeBunnyHop, 'bike', 'Bunny hop', 'ride-bunny', '\u{1F430}', 2.8, 2, 1),
   S(RIDE_EMOTE.BikeStoppie, 'bike', 'Stoppie', 'ride-stoppie', '\u{1F6D1}', 2.8, 8, 1),
   S(RIDE_EMOTE.BikeNoHands, 'bike', 'No hands!', 'ride-nohands', '\u{1F64C}', 3.2, 1, 1),
+  // The other five per vehicle (Oct 23 2026, ten each): the wire value = the standard meaning (0 Wave, 6 Pass it, 3 Juggle, 5 Well played, ...).
+  S(RIDE_EMOTE.MopedWave, 'moped', 'Cruiser wave', 'hand', '\u{1F44B}', 3.4, 0, 0),
+  S(RIDE_EMOTE.MopedFive, 'moped', 'Handlebar five', 'pass', '\u{1F91A}', 3.2, 6, 0),
+  S(RIDE_EMOTE.MopedHeaders, 'moped', 'Header nods', 'juggle-air', '\u{1F938}', 3.4, 3, 1),
+  S(RIDE_EMOTE.MopedThumbs, 'moped', 'Thumbs-up rev', 'thumb', '\u{1F44D}', 3.2, 5, 0, [{at: .3, cue: 'rev'}]),
+  S(RIDE_EMOTE.MopedShimmy, 'moped', 'Seat shimmy', 'music', '\u{1F57A}', 3.6, 8, 1),
+  S(RIDE_EMOTE.ScooterWave, 'scooter', 'Deck wave', 'hand', '\u{1F44B}', 3.4, 0, 0),
+  S(RIDE_EMOTE.ScooterJumpCheer, 'scooter', 'Jump cheer', 'star', '\u{1F389}', 3.2, 1, 1),
+  S(RIDE_EMOTE.ScooterLowFive, 'scooter', 'Low five', 'pass', '\u{1F91A}', 3.2, 6, 0),
+  S(RIDE_EMOTE.ScooterKneeUps, 'scooter', 'Knee keepy-ups', 'juggle-air', '\u{1F9B5}', 3.4, 3, 1),
+  S(RIDE_EMOTE.ScooterBow, 'scooter', 'Thank-you bow', 'thanks', '\u{1F64F}', 3.4, 9, 0),
+  S(RIDE_EMOTE.BikeWave, 'bike', 'Back-pedal wave', 'hand', '\u{1F44B}', 3.4, 0, 0),
+  S(RIDE_EMOTE.BikeSideFive, 'bike', 'Side five', 'pass', '\u{1F91A}', 3.2, 6, 0),
+  S(RIDE_EMOTE.BikePedalUps, 'bike', 'Pedal keepy-ups', 'juggle-air', '\u{1F938}', 3.4, 3, 1),
+  S(RIDE_EMOTE.BikeClap, 'bike', 'No-hands clap', 'heart', '\u{1F44F}', 3.2, 5, 1),
+  S(RIDE_EMOTE.BikeGiggle, 'bike', 'Wobble giggle', 'smile', '\u{1F602}', 3.2, 7, 0),
 ];
 export const rideScriptFor = (emote: number): RideScript | undefined => RIDE_SCRIPTS.find(s => s.emote === emote);
 export const rideScriptsFor = (ride: string): RideScript[] => RIDE_SCRIPTS.filter(s => s.ride === ride);
+/** The standard wheel order by wire value (lib/town/emoteReact.ts LOCAL_EMOTES): Wave, High five, Cheer, Pass it, Juggle, Well played, Laugh, Dance, Thanks, Show off. */
+export const WHEEL_WIRE_ORDER = [0, 2, 1, 6, 3, 5, 7, 8, 9, 4] as const;
+/** A vehicle's ten tricks in the standard wheel order (empty when `ride` is not a scooter / bike / moped). */
+export const rideWheelFor = (ride: string): RideScript[] => rideScriptsFor(ride).length ? WHEEL_WIRE_ORDER.map(w => RIDE_SCRIPTS.find(s => s.ride === ride && s.wire === w)!) : [];
 /** The trick a friend on `ride` plays for the protocol value `wire` (undefined = their ordinary emote). */
 export const rideScriptForWire = (ride: string, wire: number): RideScript | undefined => RIDE_SCRIPTS.find(s => s.ride === ride && s.wire === wire);
 /** Vehicle length (m, nose to tail, at the island's 1.12 scale): the emote camera adds this footprint to the rider (emoteCameraMath.ts rideWideFor). */
@@ -212,6 +239,100 @@ export function sampleRideTrick(emote: number, t: number, o: Float32Array): Floa
       const k = hold(t, .3, T - .2, .3), p = Math.sin(t * 7);
       arm(o, true, -2.55 - .2 * p, .55, -.15 - .25 * Math.max(0, p), k); arm(o, false, -2.55 + .2 * p, .55, -.15 - .25 * Math.max(0, -p), k);
       o[RT.ROLL] = .08 * Math.sin(t * 2.4) * k; o[RT.CX] = -.3 * k; o[RT.HX] = -.25 * k; o[RT.HW] = k;
+      break;
+    }
+    // ---- the other five per vehicle (Oct 23 2026) ----
+    case RIDE_EMOTE.MopedWave: { // lean back on the seat, a big slow overhead rainbow wave, a gentle suspension sway
+      const k = hold(t, .2, T - .15, .35), a = Math.sin(t * 3);
+      o[RT.CX] = -.22 * k; o[RT.CZ] = -.1 * a * k; o[RT.HY] = .35 * k; o[RT.HW] = k; o[RT.ROLL] = .05 * Math.sin(t * 2.4) * k; o[RT.LIFT] = .03 * Math.abs(Math.sin(t * 2.4)) * k;
+      arm(o, true, -2.75 + .25 * Math.abs(a), .35 + .75 * a, -.15, hold(t, .35, T - .1, .25));
+      break;
+    }
+    case RIDE_EMOTE.MopedFive: { // the handlebar five: lean over, palm out to the side, slap, then a fist pump
+      const reach = hold(t, .3, 1.6, .3), slap = arch(t, 1.05, 1.35);
+      o[RT.ROLL] = .07 * reach; o[RT.CZ] = .14 * reach; o[RT.HY] = .55 * reach; o[RT.HW] = hold(t, .2, T - .1, .3);
+      arm(o, true, -.35 - .3 * slap, 1.55, -.1 - .4 * slap, reach);
+      if (t > 1.6) { const fi = FIST(t); arm(o, true, fi[0], fi[1], fi[2], hold(t, 1.75, T, .2)); }
+      break;
+    }
+    case RIDE_EMOTE.MopedHeaders: { // keepy-up headers with an imaginary ball: head nods, chest pops, a bounce on the seat, then "your turn"
+      const k = hold(t, .2, T - .2, .3), b = Math.max(0, Math.sin(t * 7.5));
+      o[RT.HX] = -.4 * b * k; o[RT.HW] = k; o[RT.CX] = -.12 * b * k; o[RT.LIFT] = .06 * b * k; o[RT.PITCH] = -.03 * b * k;
+      arm(o, true, -1.2, .3, -1.6 + .5 * Math.max(0, Math.sin(t * 5)), hold(t, 2.2, T, .25)); // beckon: come and play
+      break;
+    }
+    case RIDE_EMOTE.MopedThumbs: { // one happy rev (a puff), then a thumbs-up held out and two nods: well played!
+      const rev = arch(t, .3, .8);
+      o[RT.PUFF] = rev > .2 ? 1 : 0; o[RT.WHEEL] = 8 * rev; o[RT.ROLL] = .03 * Math.sin(t * 38) * rev;
+      arm(o, true, -1.35, .55, -1.75, hold(t, .9, T - .1, .25)); o[RT.HX] = .25 * arch(t, 1.4, 2) + .25 * arch(t, 2, 2.6); o[RT.HW] = hold(t, .1, T - .1, .3); o[RT.CX] = .1 * hold(t, .9, T - .1, .3);
+      break;
+    }
+    case RIDE_EMOTE.MopedShimmy: { // a seated dance: shoulders shimmy side to side, head bob, "raise the roof" with the free hand
+      const k = hold(t, .2, T - .2, .35), s = Math.sin(t * 6.3);
+      o[RT.CZ] = .22 * s * k; o[RT.ROLL] = .05 * s * k; o[RT.HX] = .15 * Math.abs(s) * k; o[RT.HY] = -.2 * s * k; o[RT.HW] = k; o[RT.LIFT] = .04 * Math.abs(s) * k;
+      arm(o, true, -2.4 - .35 * Math.sin(t * 12.6), .65, -1.1 + .4 * Math.sin(t * 12.6), hold(t, .4, T - .3, .3));
+      break;
+    }
+    case RIDE_EMOTE.ScooterWave: { // knees bob on the deck, a wave and a head tilt
+      const k = hold(t, .2, T - .2, .3), b = Math.abs(Math.sin(t * 4));
+      leg(o, false, -.25, .05, .45 * b, k); leg(o, true, -.25, .05, .45 * b, k); o[RT.ROLL] = .03 * Math.sin(t * 4) * k;
+      const w = WAVE(t); arm(o, true, w[0], w[1], w[2], hold(t, .3, T - .1, .25)); o[RT.HX] = -.1 * k; o[RT.HY] = .3 * k; o[RT.HW] = k;
+      break;
+    }
+    case RIDE_EMOTE.ScooterJumpCheer: { // crouch, a small jump with both arms up in a V, land soft
+      const crouch = arch(t, .25, .85) + .7 * arch(t, 1.45, 1.95), h = arch(t, .8, 1.5), lw = clamp01(crouch + h);
+      o[RT.LIFT] = .38 * h; leg(o, false, -.5, .05, 1.1 * crouch + .6 * h, lw); leg(o, true, -.5, .05, 1.1 * crouch + .6 * h, lw);
+      const v = hold(t, .85, T - .15, .25), p = Math.sin(t * 8);
+      arm(o, true, -2.6 - .2 * p, .6, -.15, v); arm(o, false, -2.6 + .2 * p, .6, -.15, v); o[RT.CX] = .2 * crouch - .15 * v; o[RT.HX] = -.2 * v; o[RT.HW] = v;
+      break;
+    }
+    case RIDE_EMOTE.ScooterLowFive: { // crouch low, a low five down by the deck, pop up with a fist
+      const low = hold(t, .25, 1.9, .35), slap = arch(t, 1.3, 1.6);
+      leg(o, false, -.45, .05, 1.2 * low, low); leg(o, true, -.45, .05, 1.2 * low, low); o[RT.CX] = .35 * low; o[RT.HY] = .45 * low; o[RT.HX] = .25 * low; o[RT.HW] = hold(t, .2, T - .1, .3);
+      arm(o, true, -.6 + .25 * slap, 1.05, -.15 - .3 * slap, low);
+      if (t > 1.9) { const fi = FIST(t); arm(o, true, fi[0], fi[1], fi[2], hold(t, 2.05, T, .2)); }
+      break;
+    }
+    case RIDE_EMOTE.ScooterKneeUps: { // keepy-ups on the knee (no ball on a scooter): the back knee pops up in rhythm, eyes on the "ball", arm out for balance
+      const k = hold(t, .2, T - .2, .3), up = Math.max(0, Math.sin(t * 6.8));
+      leg(o, true, -1.1 * up, .1, 1.5 * up, k); o[RT.HX] = (.35 - .15 * up) * k; o[RT.HW] = k; o[RT.CX] = .1 * k; o[RT.ROLL] = -.04 * up * k;
+      arm(o, true, -.3, .9, -.2, .7 * k);
+      break;
+    }
+    case RIDE_EMOTE.ScooterBow: { // hand on the heart, then a little bow over the bars
+      const k = hold(t, .2, T - .2, .3), bow = hold(t, 1, 2.4, .4);
+      arm(o, true, -.75, -.25, -2.25, k); o[RT.CX] = .55 * bow; o[RT.HX] = .05 * k + .45 * bow; o[RT.HW] = k;
+      leg(o, false, -.15, .05, .5 * bow, bow); leg(o, true, -.15, .05, .5 * bow, bow);
+      break;
+    }
+    case RIDE_EMOTE.BikeWave: { // back-pedalling (the freewheel clicks, the bike stays put) and a wave
+      const k = hold(t, .2, T - .2, .3), c = t * 5;
+      leg(o, false, -.55 + .35 * Math.sin(c), .05, .95 + .45 * Math.cos(c), k); leg(o, true, -.55 - .35 * Math.sin(c), .05, .95 - .45 * Math.cos(c), k);
+      const w = WAVE(t); arm(o, true, w[0], w[1], w[2], hold(t, .35, T - .1, .25)); o[RT.HY] = .3 * k; o[RT.HW] = k;
+      break;
+    }
+    case RIDE_EMOTE.BikeSideFive: { // lean out, arm straight out at shoulder height, the slap, hold it, back to the bars
+      const reach = hold(t, .3, 2.4, .3), slap = arch(t, 1.25, 1.55);
+      o[RT.ROLL] = .08 * reach; o[RT.CZ] = .15 * reach; o[RT.HY] = .6 * reach; o[RT.HW] = reach;
+      arm(o, true, -.25 - .35 * slap, 1.45 - .2 * slap, -.05 - .5 * slap, reach);
+      break;
+    }
+    case RIDE_EMOTE.BikePedalUps: { // stand on the pedals and bounce, heading an imaginary ball, rocking in a track stand
+      const k = hold(t, .2, T - .2, .3), b = Math.max(0, Math.sin(t * 7));
+      leg(o, false, -.2, .05, .25 + .35 * b, k); leg(o, true, -.2, .05, .25 + .35 * b, k); o[RT.RLIFT] = (.12 - .05 * b) * k;
+      o[RT.HX] = -.4 * b * k; o[RT.HW] = k; o[RT.PITCH] = .04 * Math.sin(t * 3.5) * k; o[RT.CX] = .15 * k;
+      break;
+    }
+    case RIDE_EMOTE.BikeClap: { // both hands off the bars for a round of applause, a balancing wobble
+      const k = hold(t, .3, T - .2, .3), c = Math.abs(Math.sin(t * 7));
+      arm(o, true, -1.35, .15 + .35 * c, -.7, k); arm(o, false, -1.35, .15 + .35 * c, -.7, k);
+      o[RT.ROLL] = .05 * Math.sin(t * 2.2) * k; o[RT.HX] = .12 * k; o[RT.HW] = k; o[RT.CX] = -.1 * k;
+      break;
+    }
+    case RIDE_EMOTE.BikeGiggle: { // head back, shoulders shaking with the giggles, a hand on the tummy, the bike wobbles
+      const k = hold(t, .2, T - .2, .3), sh = Math.sin(t * 16);
+      o[RT.HX] = -.35 * k; o[RT.HW] = k; o[RT.CX] = (-.2 + .08 * sh) * k; o[RT.ROLL] = .06 * Math.sin(t * 5) * k; o[RT.LIFT] = .03 * Math.abs(sh) * k;
+      arm(o, true, -.9, -.15, -2 + .15 * sh, hold(t, .5, T - .2, .3));
       break;
     }
   }

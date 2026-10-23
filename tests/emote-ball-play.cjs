@@ -159,7 +159,7 @@ t('source: wired for you, the townsperson and friends; no per-frame allocation; 
  assert(/actorMotion\(a,/.test(npcs),'the townsperson\'s half');
  assert(/friendBallMotion\(/.test(fr),'a friend plays a solo routine body');
  assert(!fs.existsSync(path.join(ROOT,'lib/graphics/passBall.ts')),'no second ball mesh');
- assert(/pick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town)&&/if\(!passOnBall\|\|emoteFx\.kind<0\|\|reduced\)return NOPASS/.test(town),'reduced motion: bubble + one pass, no body routine');
+ assert(/ballPick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town)&&/if\(!passOnBall\|\|emoteFx\.kind<0\|\|reduced\)return NOPASS/.test(town),'reduced motion: bubble + one pass, no body routine');
  assert(/emote-ball-play\.cjs/.test(read('package.json')),'in the test chain');
 });
 console.log(`emote-ball-play: ${n} checks passed`);
