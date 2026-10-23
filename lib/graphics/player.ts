@@ -1004,7 +1004,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     // cross-fades a new one over the old, so a pose never snaps.
     const reactOK=!rideBase&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat&&motion?.shotStep===undefined&&motion?.juggle===undefined;
     const nextReaction=reactOK?motion?.reaction:undefined;
-    if(nextReaction||reactKind||prevKind){
+    if(nextReaction||reactKind||prevKind)(()=>{
       const nextP=T.MathUtils.clamp(motion?.reactionProgress??0,0,1);
       if(nextReaction&&(nextReaction!==reactKind||nextP<reactP-.3)){
         if(reactKind&&reactFade>0){prevKind=reactKind;prevP=reactP;prevSide=reactSide;prevFade=reactFade;}
@@ -1020,7 +1020,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       if(prevKind)reactionPose(prevKind,prevP,smooth(prevFade)*amp,prevSide,react);
       reacting=!!(reactKind||prevKind);
       if(!reacting)react.fill(0);
-    }
+    })();
     // Airborne (dive from the push-off until back on the feet; jump from take-off to landing): both boots are
     // free, so no gait stance, brake, plant or kick-support lock may hold either of them to the pitch.
     // Signature leg moves and keeper footwork write into the same channels (a move over a reaction adds to it).
@@ -1126,7 +1126,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     // PLANT: a hard cut (or the sim's impulse) locks the outside foot toward the old
     // travel direction while the body banks into the new one; heavy bodies dwell longer.
     const plantRequest=T.MathUtils.clamp(Math.max(motion?.plant??0,Math.abs(cutPreparation)*.65,opening*.6),0,1),yawSpeed=Math.abs(yawRate),cutSpeed=Math.abs(travelRate);
-    if(plantSide===0&&anticipates&&!busy&&(speed>1.5&&cutSpeed>2.2||plantRequest>.3&&speed>.6||defensive>.5&&speed>.3&&cutSpeed>2.2)){
+    if(plantSide===0&&anticipates&&!busy&&(speed>1.5&&cutSpeed>2.2||plantRequest>.3&&speed>.6||defensive>.5&&speed>.3&&cutSpeed>2.2))(()=>{
       plantSide=Math.abs(cutPreparation)>.3?-Math.sign(cutPreparation):opening>.2?-openingSide:cutSpeed>.5?-Math.sign(travelRate):yawSpeed>.5?-Math.sign(yawRate):staggerSide;plantTotal=plantTimer=.04+(.12+.05*plantRequest)*P.weight/P.agility;
       const i=plantSide<0?0:1;
       // A boot out of place reaches into the plant with a short arc (no one-frame snap); the dwell starts on landing.
@@ -1138,7 +1138,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         replantTotal[i]=reachTime;replant[i]=reachTime;plantTotal=plantTimer+=reachTime;
       }
       else{footLocked[i]=true;lockBlend[i]=1;}
-    }
+    })();
     // A lock never outlasts leg reach: once the hips carry past it the boot steps on instead of being dragged.
     for(let i=0;i<2;i++)if(footLocked[i]&&!(kickHold&&i===supportIndex)&&Math.hypot(supportFeet[i].x-x,supportFeet[i].z-z)>(plantSide!==0?.5:.62)*P.legs*ws){
       if(plantSide!==0&&i===(plantSide<0?0:1))plantTimer=0;else releaseFoot(i);
@@ -1171,7 +1171,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Still carrying momentum: a boot the hips have passed chops through to become the new front foot.
       for(let i=0;i<2;i++)if(footAhead(i,x,z,yaw)*gaitFwd+footAcross(i,x,z,yaw)*gaitSide<-.4){predictStop(x,z,travelX,travelZ,frontReach);brakeFront=i;stepFoot(i,stopX,stopZ,yaw,(i===0?-1:1)*.128+frontReach*gaitSide,frontReach*gaitFwd,brakeStep);break;}
     }
-    if(kickHold){
+    if(kickHold)(()=>{
       const i=supportIndex,side=i===0?-1:1,lead=Math.min(speed,8)*.09;kickSupport=i;
       // (Skill moves lane) Plant foot up beside the ball, not left behind: the kick starts with a short step of the
       // support boot to ~.3 m beside the ball and ~.4 m behind its centre (.46 for a loft), toe by the ball.
@@ -1184,7 +1184,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       // Once the hips carry past it, the support boot steps along instead of being dragged.
       }else if(replant[i]===0&&speed>.3&&(footAhead(i,x,z,yaw)<-.24||Math.hypot(supportFeet[i].x-x,supportFeet[i].z-z)>.5*P.legs*ws))
         stepFoot(i,x+travelX*lead*ws,z+travelZ*lead*ws,yaw,side*.14,.2,.09);
-    }
+    })();
     for(let i=0;i<2;i++)if(footLocked[i])lockBlend[i]=Math.min(1,lockBlend[i]+dt/.035);
     if(rideBase)for(const leg of legs)leg.hip.rotation.order='XYZ';
     const referenceRun=reduced||rideBase?0:amount*run*(1-backpedal)*(1-shuffle)*(1-action)*.18;
@@ -1295,7 +1295,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if (!rideBase) {
     inversePelvis.copy(pelvis.quaternion).invert();
     const pelvisPitch=pelvis.rotation.x,cosYaw=Math.cos(yaw),sinYaw=Math.sin(yaw);
-    for (let index = 0; index < legs.length; index++) {
+    // The leg pass is its own function (as are the big mode blocks below): update() was ~93 KB of bytecode, past V8's 60 KB
+    // optimising limit, so it never left the baseline tier and boxed every float (~20 KB of garbage per rig per frame). Heat QA, Oct 22 2026.
+    const legPass=(index:number)=>{
       const { hip, knee, ankle } = legs[index];
       const side = index === 0 ? -1 : 1;
       const cycle = ((phase/(Math.PI*2)+index*.5)%1+1)%1;
@@ -1561,7 +1563,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         inertialResponse(bodyResponse,armChannel+2,arm.shoulder.rotation.z,dt,30,resetBody,transitionBody));
       arm.elbow.rotation.x=inertialResponse(bodyResponse,armChannel+3,arm.elbow.rotation.x,dt,34,resetBody,transitionBody);
 
-    }
+    };
+    for (let index = 0; index < legs.length; index++) legPass(index);
     if(motion?.juggle!==undefined){
       const tap=Math.max(0,1-(motion.juggle%1)/.32),kind=motion.juggleTouch??'foot';
       if(kind==='shoulder'){torso.rotation.z-=kickSide*.15*tap;arms[kickSide===-1?0:1].shoulder.rotation.z+=kickSide*.22*tap;head.rotation.z=kickSide*.12*tap;}
@@ -1585,7 +1588,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       inertialResponse(bodyResponse,11,head.rotation.x,dt,36,resetBody,transitionBody),
       inertialResponse(bodyResponse,12,head.rotation.y,dt,36,resetBody,transitionBody),
       inertialResponse(bodyResponse,13,head.rotation.z,dt,36,resetBody,transitionBody));
-    if (motion?.travelMode && motion.travelMode !== 'walk' && motion.travelMode !== 'jetpack') {
+    if (motion?.travelMode && motion.travelMode !== 'walk' && motion.travelMode !== 'jetpack') (()=>{
       const scooter=motion.travelMode==='scooter', bicycle=motion.travelMode==='bike';
       const suspension=reduced?0:Math.sin(ridePhase*2)*.018*amount;
       pelvis.position.set(0,(scooter?1.04:1.0)+suspension,scooter?0:-.12);
@@ -1617,8 +1620,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         const shoulder=Math.atan2(-az,-ay)+Math.acos(T.MathUtils.clamp((.28**2+length**2-.255**2)/(2*.28*length),-1,1));
         arm.shoulder.rotation.set(shoulder,0,0);arm.elbow.rotation.x=elbow;
       }
-    }
-    if(motion?.truckRiding){
+    })();
+    if(motion?.truckRiding)(()=>{
       const currentSpeed=motion.truckSpeed??0,moving=Math.min(1,Math.abs(currentSpeed)/12);
       const speedChange=wasTruckRiding&&dt>0?(currentSpeed-truckPreviousSpeed)/dt:0;
       truckPreviousSpeed=currentSpeed;wasTruckRiding=true;
@@ -1629,7 +1632,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       }else{truckLean=0;truckSway=0;}
       pelvis.position.set(0,.44,-.28);pelvis.rotation.set(0,0,0);torso.rotation.set(.1+truckLean,0,truckSway);head.rotation.set(-.1-truckLean*.5,0,-truckSway*.45);
       for(let i=0;i<2;i++){const side=i===0?-1:1;legs[i].hip.rotation.set(-1.4,0,side*.1);legs[i].knee.rotation.x=1.35;legs[i].ankle.rotation.x=.05;arms[i].shoulder.rotation.set(-.4,0,side*.18);arms[i].elbow.rotation.x=-.65;}
-    }
+    })();
     if(!motion?.truckRiding){wasTruckRiding=false;truckPreviousSpeed=0;truckLean=0;truckSway=0;truckPhase=0;}
     if(motion?.travelMode==='moped'&&(motion.mopedStand??0)>0){
       // The bean's round body and noodle legs sit ~17 cm lower on the saddle than the classic legs: lift further.
@@ -1649,7 +1652,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     const freeFlight=motion?.travelMode==='jetpack'&&!motion.parachute&&!motion.rocketboard&&!motion.flyingCar&&!motion.rooftopPose;
     if(!freeFlight){flightActive=false;flightClock=0;}
-    if(motion?.travelMode==='jetpack'){
+    if(motion?.travelMode==='jetpack')(()=>{
       const flight=motion.flight,compress=flight?.compression??0,p=flight?.progress??1;
       const takeoff=flight?.phase==='takeoff',landing=flight?.phase==='landing';
       const air=takeoff?smooth(p/.5):landing?1-smooth((p-.4)/.5):1;
@@ -1685,7 +1688,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         if(freeFlight)arm.hand.rotation.set(follow(n+9,flightChannel(st,FC.handX,side,-drive*.16+lag*.6),4),0,follow(n+10,side*.08+steer*.12,4));
       }
       flightActive=freeFlight;
-    }
+    })();
     if(motion?.travelMode==='jetpack'&&motion.rocketboard){
       pelvis.position.set(0,.96,0);pelvis.rotation.set(0,.35,0);torso.rotation.set(.04,-.2,0);
       for(let i=0;i<2;i++){const side=i===0?-1:1;legs[i].hip.rotation.set(side*.15,0,side*.3);legs[i].knee.rotation.x=.23;legs[i].ankle.rotation.x=-.2;arms[i].shoulder.rotation.set(-.2,0,side*.6);arms[i].elbow.rotation.x=-.3;}
@@ -1700,7 +1703,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       for(let i=0;i<2;i++){const side=i===0?-1:1,stride=Math.sin(phase+i*Math.PI);legs[i].hip.rotation.x=stride*.42;legs[i].knee.rotation.x=.15+Math.max(0,-stride)*.45;legs[i].ankle.rotation.x=-Math.max(0,-stride)*.15;arms[i].shoulder.rotation.set(-stride*.3,0,side*.25);arms[i].elbow.rotation.x=-.35;}
     }
     if(!motion?.parachute)parachutePhase=0;
-    if(motion?.parachute&&!motion.zipline){
+    if(motion?.parachute&&!motion.zipline)(()=>{
       if(!reduced)parachutePhase+=dt*2.8;
       const spin=reduced?0:T.MathUtils.clamp(motion.parachuteSpin??0,0,1);
       const juggle=motion.parachuteJuggle;
@@ -1726,9 +1729,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
           legs[i].ankle.rotation.x=-.12-spin*.04+tap*.2;
         }
       }
-    }
+    })();
     if(motion?.zipline)poseZipBody(motion.zipline);
-    if(motion?.rooftopPose){
+    if(motion?.rooftopPose)(()=>{
       const pose=motion.rooftopPose, frantic=pose==='hang'||pose==='fall', dizzy=pose==='dizzy';
       const wobble=reduced?0:Math.sin(time*5)*.18;
       pelvis.position.set(0,.93,0);pelvis.rotation.set(0,0,0);
@@ -1742,10 +1745,10 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         arms[i].shoulder.rotation.set(frantic?-.4+cycle*.55:0,0,side*(dizzy?.55:2.3)+(frantic&&!reduced?cycle*.28:0));
         arms[i].elbow.rotation.x=frantic?-.7:-.25;
       }
-    }
+    })();
     // In the sea (Oct 15 2026): the swim shapes over the solved body; also runs with no `swim` so a finished swim fades out.
     if(swimming||swimPoser.active)swimPoser.apply(motion?.swim,dt,reduced,turn);
-    if(motion?.stunAge!==undefined){
+    if(motion?.stunAge!==undefined)(()=>{
       const age=motion.stunAge,weight=smooth(age/.08)*(1-smooth((age-3.2)/.4)),down=age<1.15?1:1-smooth((age-1.15)/.7),flail=reduced?0:Math.exp(-age*1.7),dizzy=reduced?0:Math.sin(age*8)*.15;
       torso.rotation.x+=(.16*down+.08*(reduced?0:Math.sin(age*5)))*weight;head.rotation.z=dizzy*weight;head.rotation.x=.12*weight;
       for(let i=0;i<2;i++){const side=i===0?-1:1,flutter=Math.sin(age*21+i*2.4)*flail;
@@ -1754,7 +1757,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         legs[i].hip.rotation.x=(-.55*down+flutter*.45)*weight;legs[i].hip.rotation.z=side*.2*down*weight;
         legs[i].knee.rotation.x=(.85*down+Math.cos(age*17+i)*flail*.25)*weight;legs[i].ankle.rotation.x=(-.18*down-flutter*.15)*weight;
       }
-    }
+    })();
     if(motion?.job||jobW>0)poseJob(motion?.job,dt,time,reduced,amount,sprint);
     if(motion?.wallSplat){pelvis.position.set(0,.94,0);pelvis.rotation.set(0,0,0);torso.rotation.set(0,0,0);head.rotation.set(0,0,0);for(let i=0;i<2;i++){const side=i===0?-1:1;arms[i].shoulder.rotation.set(0,0,side*2);arms[i].elbow.rotation.x=-.12;legs[i].hip.rotation.set(0,0,side*.5);legs[i].knee.rotation.x=.1;legs[i].ankle.rotation.x=0;}}
     // Gait-specific spine coupling. The carrier still owns balance/action lean;
@@ -1784,7 +1787,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(netGripW>0&&jobW>0)poseNetGrip(reduced);
     // "To me!": the receiver raises the ball-side arm high and waves it; the rig eases in and out.
     const calledTarget=reactOK?T.MathUtils.clamp(motion?.called??0,0,1):0;
-    if(calledTarget>0||calledBlend>0){
+    if(calledTarget>0||calledBlend>0)(()=>{
       if(calledBlend<.02&&calledTarget>0){
         const bx=(motion?.lookX??x)-x,bz=(motion?.lookZ??z)-z,local=bx*Math.cos(yaw)-bz*Math.sin(yaw);
         calledSide=Math.abs(local)>.05?(local<0?-1:1):1;
@@ -1805,8 +1808,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         off.shoulder.rotation.z+=(-s*.35-off.shoulder.rotation.z)*k*.5;
         torso.rotation.z-=s*.05*k;head.rotation.z+=s*.04*k;
       }
-    }
-    if(reacting){
+    })();
+    if(reacting)(()=>{
       head.rotation.x+=react[REACT.headPitch];head.rotation.y+=react[REACT.headYaw];head.rotation.z+=react[REACT.headRoll];
       for(let i=0;i<2;i++){
         const b=REACT.arm+i*4,w=react[b];if(w<=1e-5)continue;
@@ -1817,7 +1820,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         arm.elbow.rotation.x+=(react[b+3]/w-arm.elbow.rotation.x)*k;
         arm.elbow.rotation.y*=1-k;
       }
-    }
+    })();
     // Dive / jump over the finished pose, then the ground guard (also for the slide and the stumble).
     if(diving)poseDive(dt,reduced,discontinuity);
     if(jumping)poseJump(dt,reduced,discontinuity,!reacting);
@@ -1861,7 +1864,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     }
     // Bean neck: overlap spring (target = momentum: lag back accelerating, tip forward braking, nod after a landing
     // squash), ζ ≈ .4 so a hard stop overshoots once and settles. Reduced motion, rides and seeks keep it still.
-    {
+    (()=>{ // its own function: keeps update() under V8's optimising-compiler size limit (heat QA, Oct 22 2026)
       const springy=flowingBody&&!hardReset&&!frozen;
       const neckTarget=springy?T.MathUtils.clamp(-.11*Math.max(0,drive)*smooth(speed/1.2)+.1*brake+.06*plantBlend-.5*Math.min(0,squashX),-.12,.16):0;
       if(!springy){neckX=neckV=0;neckActive=false;}
@@ -1874,7 +1877,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       const bobble=springy?.035*Math.cos(phase*2-1.15)*effort*(1-brake):0;
       beanGaze[0]=T.MathUtils.clamp(.4*head.rotation.x+neckX+bobble,-.4,.45);
       beanGaze[1]=T.MathUtils.clamp(.7*head.rotation.y,-.5,.5);
-    }
+    })();
     root.position.set(x, 0, z); root.rotation.y = yaw;
     // A rolling ball follows a quiet forward lane; the feet meet that lane.
     // Do not feed IK corrections back into the ball's trajectory.

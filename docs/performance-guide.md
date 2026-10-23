@@ -1,5 +1,43 @@
 # Performance reference for future Futbol Island updates
 
+## Heat QA: rig update back in V8's optimising tier, Arcade hub and Kit Shop sleep (Oct 22 2026, local, not deployed)
+Measured first (headless Chrome, production build with the multiplayer flag, desktop 1280x800, a dev relay + bots; rAF callbacks,
+rendered frames, CDP TaskDuration and a heap *sampling* profile that counts collected objects too). Script: /tmp/qa-heat-scripts.
+- **Top offender, every scene: the player rig's `update()` (lib/graphics/player.ts) had grown to ~93 KB of bytecode.** V8 never
+  optimises a function over 60 KB, so every rig (you, townsfolk, visitors, shoppers, party friends) ran in the baseline tier and
+  boxed every float: ~25 KB of garbage per rig per frame. **Change:** the leg pass (`legPass`) and the big mode blocks (reactions,
+  plant, kick hold, ride modes, truck, jetpack, parachute, rooftop, stun, called, reacting, gaze) are now inner functions, so
+  update() is ~50 KB and reaches TurboFan (`%GetOptimizationStatus`). Pure refactor: **bit-identical poses** (every node matrix, 25
+  motion scenarios x 600 frames, original vs new). Node, fresh process per scenario: 25-55 % less time per update in every
+  scenario (walk 13.1 -> 9.6 us, dance-style called+jump 15.4 -> 10.5, skill 16.4 -> 12.1); garbage ~25 KB -> ~5 KB per update.
+  Browser, rig update allocation: island idle 11.6 -> 4.4 MB/s, island + 6 friends 14.2 -> 3.6, during a Wave 25.6 -> 5.4,
+  Arcade at 15 fps 1.5 -> 0.15 MB/s. Whole-page allocation: island + 6 friends 49 -> 39 MB/s; emotes 32-69 -> 27-42 MB/s
+  (Cheer 62 -> 31, Dance 66 -> 34, Well played 63 -> 32). CPU % in SwiftShader stayed within noise (other agents were running).
+  Guard: `tests/rig-optimizable.cjs` (child node with natives syntax: optimised tier + < 12 KB per update).
+- **Arcade hub sleeps** (`lib/arcade/arcadeRest.ts`): it ran 60 fps for 12 s after every input and on entry, then 15 fps forever
+  (60 rAF/s, never asleep). Now: full rate while you move + 4 s tail (entry 1.5 s); 15 fps ambient life while you are around;
+  **12 s** without input the visitors start no new walk (one under way ends at a cabinet: `crowd.setCalm`); after **20 s** the loop
+  stops at the first frame no visitor walks *in view* (`crowd.walkerIn(frustum)`, no allocation) and nothing of yours animates
+  (emote, bubble, ball effect, knocked visitor, sparks, glitch, held shot). Asleep: 0 rAF; the cabinet motifs keep playing from one
+  1.3 s timer (cleared on wake / hidden / covered / dispose). Any input, a friend's pose (`wakeRemote`), an emote or the tab coming
+  back wakes it. Measured: entry 0-6 s 60 -> 22 rendered fps, 9.7 -> 1.8 MB/s; idle 63-75 s **60 rAF/s + 15 fps -> 0 / 0**, CPU
+  2.0 % -> 0.1 %; desktop slept 38 s after the last input, phone 30 s; input wakes at once (60 / 30 fps). Visitor reaction keys
+  are made once (were template strings per visitor per frame). Tradeoff: after 20 s idle the attract screens and visitors hold their
+  last frame until you touch the screen.
+- **Kit Shop:** it already slept between shopper walks; the idle rest (no new walks) now starts **20 s** after input (was 60 s), the
+  hub's rule. Measured: 0 rAF at 63-75 s, ~3 frames/s average while shoppers still walk (17-23 s).
+- **Emote camera** (`lib/town/emoteCamClear.ts`): the slab test built a closure per ray x solid; now a module scratch
+  (`Float64Array(2)`), no `Math.hypot` (it boxes its arguments).
+- **Friend layer** (`remoteAvatars.ts`): a busy / away friend's status line was rebuilt (string concat) every frame; now only when
+  the presence or activity changes.
+- **Checked, unchanged (already right):** connection beat 5 s with no extra timer, hidden-tab close, no retry while hidden, the tab
+  lock waits in `navigator.locks` (no polling); party analytics accrue from frames / visibility timestamps (no interval); emote
+  bubbles pool sprites and cache textures; Konbini / Museum / Shop with the flag on and no party: 0 rAF at rest (measured).
+  With friends walking in a room, frames follow their motion by design (20 fps phones).
+- **Left (outside this lane, measured):** `lib/town/obstacleGrid.ts` `query()` makes a Set, string keys and an array per call
+  (~3 MB/s on the island); `lib/town/fieldRuntime.ts` `update()` (~2.3 MB/s) and the match sim's `integrate` (~1.8 MB/s) look like
+  the same oversized-function pattern. **Not measured on an iPhone**: reduced work, not a measured cooling.
+
 ## Friend rig cap, re-checked during a party (Oct 22 2026, local, not deployed)
 - **Problem (end-to-end test, Medium):** the friend rig cap (`remoteCap` 5/5/3/1/0 by heat tier on phones, desktop 5) applied only when a
   friend was first admitted. A phone that heated up mid-party kept drawing every friend it already showed; only Battery saver cleared them.
@@ -5909,7 +5947,7 @@ everything else with the island while this is running", and "the room's backgrou
 - **Measured (headless Chrome, `scripts/check-mp-rooms-shop.cjs`, 1 friend):** desktop layer update 0.04-0.06 ms, render with vs
   without the friend within noise (0.15-0.3 ms), draw calls 29 -> 36 (batch groups + ring + label + bubble); idle 0 frames in 2 s
   with the friend standing; phone (touch emulation) remote-only 20 fps, 22 draw calls. Reduced work, not an iPhone temperature.
-- **Arcade hub (rooms Phase 3, `scripts/check-mp-rooms-arcade.cjs`, 1 friend):** the hub never sleeps (15 fps floor), so friends
+- **Arcade hub (rooms Phase 3, `scripts/check-mp-rooms-arcade.cjs`, 1 friend):** the hub never slept then (15 fps floor; since the Oct 22 heat QA it sleeps 20 s after your last input, see the top section), so friends
   cost only their update + draw: layer update 0.02-0.04 ms (desktop) / 0.01-0.03 ms (phone ctx), render 0.16-0.3 ms total; a friend's
   motion lifts the cadence to 20 fps on phones / 30 desktop for 300 ms only (measured 18-20 fps phone friends-only). Rig count does
   not rise: each drawn friend sends one crowd NPC out (hidden, parked, no rig update); Battery saver / cap 0 draws no friend and keeps

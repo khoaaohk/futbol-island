@@ -48,7 +48,7 @@ export {SHOP_STATIONS} from './shopLayout';
  * shadows, the held boot and, near a station, its floor ring). Nothing renders at rest: frames run while you walk, the camera
  * settles, a door slides or a person moves; when only the shoppers move the loop drops to 20 fps; a still room schedules no
  * frame at all (the next shopper's walk is a timer, not a loop). Phones: the heat tier's pixel-ratio cap (≤ 1.5) and 30 fps.
- * Idle rest (Oct 13 2026, heat audit): after IDLE_REST s with no input from you the shoppers stop starting walks (one already
+ * Idle rest (Oct 13 2026, heat audit; 60 s -> 20 s in the heat QA of Oct 22 2026, the Arcade hub's rule): after IDLE_REST s with no input from you the shoppers stop starting walks (one already
  * walking finishes its leg), no walk timer is set, and the room reaches 0 rAF like the Museum; any input (a key, the stick, a tap,
  * a studio or chat closing, a tap anywhere on the room's UI through poke()) wakes it and they resume.
  * setCovered (a studio, My kit or a chat) stops everything; dispose() frees every geometry, material, texture and the context.
@@ -347,7 +347,7 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
  /** One shopper walks at a time, and the shop rests WALK_GAP seconds between walks: a still room is a sleeping room. */
  const WALK_GAP=12;let walker:Actor|null=null,nextWalkAt=born+5;
  /** No input from you for IDLE_REST s: the shoppers rest (no new walks, no walk timer), so the room sleeps at 0 rAF. */
- const IDLE_REST=60;let lastInput=born;
+ const IDLE_REST=20;let lastInput=born;
  const resting=()=>clock()-lastInput>IDLE_REST;
  /** Any input: the idle clock restarts, and a resting room wakes so the shoppers resume. */
  function poke(){const was=resting();lastInput=clock();if(was)wake();}

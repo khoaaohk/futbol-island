@@ -6,16 +6,18 @@ export interface Solid {x: number; z: number; w: number; d: number; floor: numbe
 export const EYE_CLEAR = .6;
 /** Heights (m above the feet) the rays aim at: feet, chest, head, raised hands. */
 const HEIGHTS = [.2, 1, 1.7, 2.3];
+/** The slab test's running [t0, t1] (module scratch: the old per-call `slab` closure boxed both on every ray x solid; heat QA, Oct 22 2026). */
+const T01 = new Float64Array(2);
+function slab(a: number, d: number, lo: number, hi: number): boolean {
+  if (Math.abs(d) < 1e-9) return a >= lo && a <= hi;
+  let u = (lo - a) / d, v = (hi - a) / d;
+  if (u > v) { const s = u; u = v; v = s; }
+  T01[0] = Math.max(T01[0], u); T01[1] = Math.min(T01[1], v);
+  return T01[0] <= T01[1];
+}
 /** Segment a -> b against an axis-aligned box padded by `pad`. */
 export function segHitsSolid(ax: number, ay: number, az: number, bx: number, by: number, bz: number, o: Solid, pad = 0): boolean {
-  let t0 = 0, t1 = 1;
-  const slab = (a: number, d: number, lo: number, hi: number) => {
-    if (Math.abs(d) < 1e-9) return a >= lo && a <= hi;
-    let u = (lo - a) / d, v = (hi - a) / d;
-    if (u > v) { const s = u; u = v; v = s; }
-    t0 = Math.max(t0, u); t1 = Math.min(t1, v);
-    return t0 <= t1;
-  };
+  T01[0] = 0; T01[1] = 1;
   return slab(ax, bx - ax, o.x - o.w / 2 - pad, o.x + o.w / 2 + pad) && slab(az, bz - az, o.z - o.d / 2 - pad, o.z + o.d / 2 + pad) && slab(ay, by - ay, o.floor - pad, o.top + pad);
 }
 /** Is the eye inside a solid, or closer than `pad` to one? */
@@ -31,8 +33,8 @@ function seesCharacter(solids: readonly Solid[], ex: number, ey: number, ez: num
     for (let h = 0; h < HEIGHTS.length; h++) for (let w = -1; w <= 1; w++) {
       if (w !== 0 && h !== 1) continue; // sideways rays at chest height only
       const tx = cx + rx * .5 * w, tz = cz + rz * .5 * w, ty = cy + HEIGHTS[h];
-      const dx = tx - sx, dy = ty - ey, dz = tz - sz, len = Math.hypot(dx, dy, dz) || 1, k = Math.max(0, 1 - .25 / len); // stop 25 cm short of the body
-      for (const o of solids) if (segHitsSolid(sx, ey, sz, sx + dx * k, ey + dy * k, sz + dz * k, o)) return false;
+      const dx = tx - sx, dy = ty - ey, dz = tz - sz, len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1, k = Math.max(0, 1 - .25 / len); // stop 25 cm short of the body
+      for (let i = 0; i < solids.length; i++) if (segHitsSolid(sx, ey, sz, sx + dx * k, ey + dy * k, sz + dz * k, solids[i])) return false;
     }
   }
   return true;
