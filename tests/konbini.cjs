@@ -402,7 +402,7 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(/const actionsOn=ready&&!failed&&!zoom&&!overlay&&!reveal&&!preview&&!packReveal&&!talking&&!walkingOut&&!leaving;/.test(room),'buttons hidden zoomed, in dialogs, reveal/preview and the exit walk');
   assert(/\{actionsOn&&<div className=\{`travel-actions \$\{styles\.ballActions\}`\}/.test(room)&&/className="touch-shoot"/.test(room)&&/className="touch-juggle"/.test(room),'the island’s round action buttons');
   // Owner, Oct 22 2026: keep-up above kick on the right edge, the Emote button immediately left of kick, all three one --action-size; the header chip drops its emote button.
-  assert(/<RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/>/.test(room)&&/<RoomEmoteDock party=\{party\}/.test(room),'the Konbini chip has no emote button; the Emote button lives in the action cluster');
+  assert(/<RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/>/.test(room)&&/<RoomEmoteDock party=\{party\} near=\{emoteNear\}/.test(room),'the Konbini chip has no emote button; the Emote button lives in the action cluster');
   const kcss=fs.readFileSync(path.join(__dirname,'../components/KonbiniRoom.module.css'),'utf8');
   assert(/:global\(\.touch-juggle\)\{grid-column:2;grid-row:1\}/.test(kcss)&&/:global\(\.touch-shoot\)\{grid-column:2;grid-row:2\}/.test(kcss)&&/:global\(\.touch-emote\)\{grid-column:1;grid-row:2/.test(kcss),'keep-up above kick, Emote left of kick');
   assert(!/touch-shoot\)\{--action-size/.test(kcss),'kick, keep-up and Emote share one --action-size');
@@ -512,5 +512,18 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(/data-konbini-stamp-shop=\{s\}/.test(card)&&/\{SHOP_NAMES\[s\]\}/.test(card)&&/<small aria-hidden="true">\{m\.title\}<\/small>/.test(card)&&!/'SQ'|'CAY'/.test(card),'stamps grouped by shop name and labelled by magazine (no SQ/CAY)');
   assert(/data-konbini-stamp-go onClick=\{onShowMagazines\}/.test(card)&&/zoomToPoi\('magazines'\)/.test(room),'a "show me the magazine table" hint that takes you there');
   console.log('konbini stamp card: slide-out, steps, labelled stamps');}
+ {// Emote button rule (owner, Oct 22 2026): only with a friend (or a non-cashier NPC) near; the cashier never counts.
+  const R=require('../lib/konbini/emoteRule.ts'),o={live:true};
+  assert.equal(R.emoteCandidate(0,0,[{x:3,z:4}],null,o),true,'friend within 8 m');assert.equal(R.emoteCandidate(0,0,[{x:6,z:7}],null,o),false,'friend beyond 8 m');
+  assert.equal(R.emoteCandidate(0,0,[{x:1,z:1,busy:true}],null,o),false,'busy friend does not count');assert.equal(R.emoteCandidate(0,0,[],[],o),false,'nobody');
+  assert.equal(R.emoteCandidate(0,0,[{x:1,z:1}],null,{live:false}),false,'no party: friends do not count');assert.equal(R.emoteCandidate(0,0,[{x:1,z:1}],null,{live:true,batterySaver:true}),false,'battery saver: undrawn friends do not count');
+  assert.equal(R.emoteCandidate(0,0,null,[{x:1,z:1,id:'konbini-cashier'}],{live:false}),false,'cashier id never counts');assert.equal(R.emoteCandidate(0,0,null,[{x:1,z:1,role:'cashier'}],o),false,'cashier role never counts');
+  assert.equal(R.emoteCandidate(0,0,null,[{x:1,z:1,id:'shopper-1'}],{live:false}),true,'a customer NPC counts, even without a party');assert.equal(R.emoteCandidate(0,0,null,[{x:1,z:1,role:'cashier'},{x:20,z:0,id:'s'}],o),false);
+  for(const k of Object.keys(K.CASHIERS||{}))assert(R.isCashier(K.CASHIERS[k]),'content clerk '+k+' is recognised');
+  const sc=fs.readFileSync('lib/konbini/konbiniScene.ts','utf8'),kcss=fs.readFileSync('components/KonbiniRoom.module.css','utf8'),rc=fs.readFileSync('components/party/RoomPartyChip.tsx','utf8'),room=fs.readFileSync('components/KonbiniRoom.tsx','utf8');
+  assert(/EMOTE_CHECK_HZ/.test(sc)&&/onEmoteNear/.test(sc)&&/onEmoteNear:setEmoteNear/.test(room),'scene samples the rule at ~4 Hz and pushes it to the dock');
+  assert(/data-emote-near=\{near\?'1':'0'\}/.test(rc.replace(/ /g,'').replace(/data-emote-near=\{near\?'1':'0'\}/,"data-emote-near={near?'1':'0'}"))&&/\[data-emote-near="0"\]\{opacity:0;visibility:hidden/.test(kcss)&&/\.18s/.test(kcss),'hidden = faded, cell kept');
+  assert(/grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/.test(kcss)&&/hudWallet\{grid-column:2/.test(kcss)&&/\[data-konbini-done\]\{grid-column:3/.test(kcss),'header: chip left, coins centred, Done right');
+  console.log('konbini emote rule');}
  console.log('KONBINI_PASS',JSON.stringify({items:F.FOOD_MENU.length,main:F.shopMenu('main').length,cay:F.shopMenu('cay').length,total,days,maxDay,rewardsTotal,spends}));
 })().catch(e=>{console.error(e);process.exit(1);});

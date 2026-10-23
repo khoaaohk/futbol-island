@@ -349,7 +349,7 @@ t('Konbini wiring: layer in the loop, 20 fps remote frames on phones, one ring, 
   assert.ok(/if\(settle>0\|\|leaving\|\|remoteKeep\)frame=requestAnimationFrame\(tick\)/.test(sc), 'sleeps when friends settle');
   assert.ok(!/multiplayer/.test(sc.replace(/\/\/.*$|\/\*\*[\s\S]*?\*\//gm, '').split('\n').filter((l) => /^import/.test(l)).join('\n')), 'the scene imports no multiplayer code');
   assert.ok(kr.indexOf('useRoomParty(room,konbiniRoom(shop)') > 0 && kr.indexOf('useRoomParty(room') < kr.indexOf("import('@/lib/konbini/konbiniScene')"), 'hook declared before the scene effect (disposed first)');
-  assert.ok(/\{party&&<RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/>\}/.test(kr), 'chip in the header (count + roster only, the Emote button is in the action cluster), hidden while covered / zoomed');
+  assert.ok(/\{party&&<span className=\{styles\.hudParty\}><RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/><\/span>\}/.test(kr), 'chip in the header (count + roster only, the Emote button is in the action cluster), hidden while covered / zoomed');
   const hook = read('components/party/useRoomParty.ts');
   assert.ok(/conn\.resume\(\{ look: partyLook\(\) \}\)/.test(hook) && !/useEffect\(\(\) => \(\) => [^\n]*leave/.test(hook), 'resume on load, never leave on unmount');
   const rp = read('lib/multiplayer/roomParty.ts');
