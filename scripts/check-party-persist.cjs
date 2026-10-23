@@ -105,7 +105,7 @@ require('fs').mkdirSync(out, { recursive: true });
   }
   // Explicit ending still works: End party for everyone (tap twice) clears the stored session; a reload does not bring it back.
   await p.click('[data-party-open]'); await p.waitForSelector('[data-party-sheet]'); await p.click('#party-tab-party').catch(() => {}); await p.waitForTimeout(500);
-  await p.click('[data-party-end]'); await p.waitForTimeout(300); await p.click('[data-party-end]'); await p.waitForTimeout(2000);
+  await p.click('[data-party-end]'); await p.waitForTimeout(600); await p.click('[data-confirm="end"] [data-confirm-yes]'); await p.waitForTimeout(2000);
   const ended = await state();
   console.log('end-party    ', JSON.stringify({ live: ended.live, stored: !!ended.code }));
   if (ended.live || ended.code) bad('End party did not end / clear the stored session');

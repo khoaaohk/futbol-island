@@ -144,7 +144,7 @@ const PHONE = { width: 390, height: 844 }, DESK = { width: 1280, height: 800 };
 
   // ---- 5. End party clears the stored session (host and guest) ----
   await openMenu(a3); await a3.click('[data-party-tab="party"]').catch(() => {}); await a3.waitForTimeout(400);
-  await a3.click('[data-party-end]'); await a3.waitForTimeout(300); await a3.click('[data-party-end]');
+  await a3.click('[data-party-end]'); await a3.waitForTimeout(600); await a3.click('[data-confirm="end"] [data-confirm-yes]');
   okIf(await waitFor(a3, async () => !(await session(a3)), 10000), 'host: session gone after End party');
   okIf(await waitFor(g, async () => !(await session(g)), 10000), 'guest: session gone after the party ended');
 

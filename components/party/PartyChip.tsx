@@ -43,6 +43,8 @@ const GLYPHS: Record<string, string> = {
   'move-strut': 'M3 9h18M5 9l1 3.6a2.8 2.8 0 0 0 5-.8L11.6 9M12.4 9l.6 2.8a2.8 2.8 0 0 0 5 .8L19 9M10.5 11h3M8 17c2.5 1.5 5.5 1.5 8 0',
   'move-five': 'M11 12V5.5a1.5 1.5 0 0 1 3 0V11m0-5a1.5 1.5 0 0 1 3 0v6m-6 0-1.3-1.6a1.5 1.5 0 0 0-2.3 1.9L11 17c1 2.5 2 4 4.5 4 2.8 0 4.5-2 4.5-5.5V9a1.5 1.5 0 0 0-3 0M2 9h4M2 13h3M3 17h3',
   wind: 'M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7a2.5 2.5 0 1 1-2.5 2.5',
+  // Change name (Your party > List, own row).
+  pencil: 'M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4',
 };
 export function Glyph({ name, size = 22 }: { name: string; size?: number }) {
   const d = GLYPHS[name];

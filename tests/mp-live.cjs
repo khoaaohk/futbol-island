@@ -55,7 +55,7 @@ function room(){
 }
 t('relay: S.Caps after every Welcome; an old client (no C.Caps) keeps getting exactly S.Poses at 5 Hz',()=>{
  const R=room(),a=R.join(),b=R.join(Cap.Live|Cap.Ball);
- assert.deepEqual(a.of(S.Caps),[[32,3]],'the relay offers its caps right after Welcome');
+ assert.deepEqual(a.of(S.Caps),[[32,P.CAPS_ALL]],'the relay offers its caps right after Welcome');
  assert.equal(a.got.findIndex(m=>m[0]===S.Caps),a.got.findIndex(m=>m[0]===S.Welcome)+1);
  R.clock.adv(100);R.send(b,pose(100,100));R.core.halfTick();
  assert.equal(a.of(S.Poses).length+a.of(S.Live).length,0,'half ticks never reach an old client');

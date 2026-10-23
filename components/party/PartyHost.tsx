@@ -1,10 +1,10 @@
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { SESSION_KEY, bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
+import { SESSION_KEY, bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, setNick, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createJoinBuffer, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { ErrorCode, PARTY_MAX, Zone, normalizeCode, type Look } from '../../multiplayer/protocol';
@@ -14,6 +14,8 @@ import PartyInvite from './PartyInvite';
 import FadeScroll from './FadeScroll';
 import { presenceIcon, presenceText } from '@/lib/multiplayer/presence';
 import NickField from './NickField';
+import OwnNameRow from './OwnNameRow';
+import ConfirmStep from './ConfirmStep';
 import { DoneButton } from '@/components/DoneButton';
 import HudSlot from '@/components/HudStack';
 import styles from './party.module.css';
@@ -143,6 +145,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const [queue, setQueue] = useState<Note[]>([]);
   const [shown, setShown] = useState<string | null>(null);
   const [kickPrompt, setKickPrompt] = useState(false);
+  // Remove asks first: the member being confirmed (null = none), when the confirm opened (the red Remove arms after KICK_ARM_MS).
+  const [confirmKick, setConfirmKick] = useState<number | null>(null);
+  const askKick = (id: number) => { setConfirmLeave(false); setConfirmEnd(false); setConfirmKick(id); };
+  const cancelKick = (id: number) => {
+    setConfirmKick(null);
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-remove-open][data-member="${id}"]`)?.focus({ preventScroll: true }));
+  };
+  const [confirmLeave, setConfirmLeave] = useState(false); // Leave party asks first too (ConfirmStep)
+  const askEnd = () => { setConfirmKick(null); setConfirmEnd(true); };
   const [tab, setTab] = useState<'code' | 'party'>('code'); // remembered while this party lives; a new party starts on Code
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const everLive = useRef(false);
@@ -253,6 +264,27 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (added.length) (joinBuf.current ??= createJoinBuffer((names) => note({ kind: 'join', names }))).add(added);
   }, [state.members, state.status, state.you, note]);
   useEffect(() => () => joinBuf.current?.cancel(), []);
+  // A friend changed their first name (relay v1.3 C.Rename, re-announced as Joined for the same id): one short note. A host reset
+  // (back to the colour name) is not news here; the host already saw 'Name reset'.
+  const prevNicks = useRef<Map<number, string | null> | null>(null);
+  useEffect(() => {
+    if (state.status !== 'live') { if (state.status === 'idle') prevNicks.current = null; return; }
+    const before = prevNicks.current, next = new Map<number, string | null>();
+    for (const m of state.members) {
+      next.set(m.id, m.nick);
+      const was = before?.get(m.id);
+      if (before && before.has(m.id) && m.id !== state.you && m.nick && was !== m.nick) text(`${was || m.name} is now ${m.nick}`);
+    }
+    prevNicks.current = next;
+  }, [state.members, state.status, state.you, text]);
+  // Self rename (Your party > List): the join form's rules; memory only (nick.ts + the connection, so every reconnect and a later
+  // rejoin use it). An old relay (no Cap.Rename) cannot pass it on: only this device shows it, and the note says so.
+  const renameSelf = useCallback((n: string) => {
+    const r = connection.rename(n);
+    if (!r) { text('Could not change your name'); return; }
+    setNick(n); setNamed(true); partyStore.setOwnNick(n);
+    text(r === 'sent' ? `You are now ${n}` : `You are now ${n} on this device. Friends see it after the next update.`);
+  }, [connection, text]);
   useEffect(() => {
     const was = prevStatus.current;
     prevStatus.current = state.status;
@@ -348,6 +380,11 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     const next = new Set(set); if (!next.delete(id)) next.add(id); apply?.(next); cb?.(next);
   };
   const friends: Member[] = state.members.filter((m) => m.id !== state.you);
+  // A confirm for someone who already left, or after losing host, or once the card closes, goes away by itself.
+  useEffect(() => { if (view !== 'sheet' || state.isHost) setConfirmLeave(false); }, [view, state.isHost]);
+  useEffect(() => {
+    if (confirmKick !== null && (!state.isHost || view !== 'sheet' || !state.members.some((m) => m.id === confirmKick))) setConfirmKick(null);
+  }, [confirmKick, state.isHost, state.members, view]);
   const me = state.members.find((m) => m.id === state.you);
   const kickBlock = (
     <div className={styles.stack} data-party-kick-prompt>
@@ -462,28 +499,42 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             <div role="tabpanel" id="party-panel-party" aria-labelledby="party-tab-party" aria-hidden={activeTab !== 'party'} {...inertIf(activeTab !== 'party')} data-active={activeTab === 'party'} className={styles.panel} data-party-panel="party">
               <FadeScroll>
             <ul className={styles.members}>
-              {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
-              {friends.map((m) => (
-                <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} data-presence={m.presence} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}${memberActivityLine(m) ? ', ' + presenceText(m.presence, m.activity).toLowerCase() : ''}`}>
+              {me && <OwnNameRow me={me} locked={connection.nameLocked} onSave={renameSelf} onRejected={() => track.current?.('name_bad')} />}
+              {friends.map((m) => (<Fragment key={m.id}>
+                <li className={styles.member} data-acts="1" data-away={m.away ? '1' : undefined} data-presence={m.presence} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}${memberActivityLine(m) ? ', ' + presenceText(m.presence, m.activity).toLowerCase() : ''}`}>
                   <span className={styles.zone} role="img" aria-label={ZONE_LABEL[m.zone] ?? 'on the island'}><Icon name={ZONE_ICON[m.zone] ?? 'home'} size={18} /></span>
                   <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}>{displayName(m)}{memberActivityLine(m) && <small className={styles.activity} data-party-activity aria-hidden="true">{memberActivityLine(m)}</small>}</span>
                   {m.isHost && <span className={styles.badge}>Host</span>}
-                  <button type="button" className={styles.mini} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={20} /></button>
-                  <button type="button" className={styles.mini} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={20} /></button>
-                  {state.isHost && m.nick && <button type="button" className={styles.mini} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); track.current?.('name_reset'); }}><Icon name="rotate" size={20} /></button>}
-                  {state.isHost && <button type="button" className={styles.mini} aria-label={`Remove ${displayName(m)}`} onClick={() => { connection.host.kick(m.id); setKickPrompt(true); track.current?.('kick'); }}><Icon name="close" size={20} /></button>}
+                  {/* Every icon carries a visible word (owner, Oct 23 2026): Hide / Mute for everyone; Reset name / Remove for the host. */}
+                  <span className={styles.rowActions} data-row-actions>
+                    <button type="button" className={styles.act} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={18} /><span data-act-label>{hidden.has(m.id) ? 'Show' : 'Hide'}</span></button>
+                    <button type="button" className={styles.act} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={18} /><span data-act-label>{muted.has(m.id) ? 'Unmute' : 'Mute'}</span></button>
+                    {state.isHost && m.nick && <button type="button" className={styles.act} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); track.current?.('name_reset'); }}><Icon name="rotate" size={18} /><span data-act-label>Reset name</span></button>}
+                    {state.isHost && <button type="button" className={styles.act} data-danger data-remove-open data-member={m.id} aria-label={`Remove ${displayName(m)}`} aria-expanded={confirmKick === m.id} onClick={() => askKick(m.id)}><Icon name="close" size={18} /><span data-act-label>Remove</span></button>}
+                  </span>
                 </li>
-              ))}
+                {/* Remove asks first (owner, Oct 23 2026): never a single tap (ConfirmStep: Cancel focused, armed red button). */}
+                {state.isHost && confirmKick === m.id && (
+                  <ConfirmStep as="li" kind="remove" question={`Remove ${displayName(m)} from the party?`} yes="Remove"
+                    onYes={() => { setConfirmKick(null); connection.host.kick(m.id); setKickPrompt(true); track.current?.('kick'); }}
+                    onCancel={() => cancelKick(m.id)} />
+                )}
+              </Fragment>))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
             </ul>
             {kickPrompt && state.isHost && kickBlock}
               </FadeScroll>
               {/* Pinned footer: outside the scrolling area, so End / Leave is always in view while the list scrolls under it. */}
               <div className={styles.panelFoot} data-party-foot>
+              {/* End (host) and Leave (guest) share the destructive red (.endLink) and both ask first (ConfirmStep). */}
               {state.isHost && (confirmEnd
-                ? <button type="button" className={styles.endLink} data-party-end onClick={() => { track.current?.('end'); trackHealth(); connection.host.end(); setConfirmEnd(false); }}>Tap again to end for everyone</button>
-                : <button type="button" className={styles.endLink} data-party-end onClick={() => setConfirmEnd(true)}>End party for everyone</button>)}
-              {!state.isHost && <button type="button" className={styles.footLeave} onClick={leave}>Leave party</button>}
+                ? <ConfirmStep kind="end" question="End the party for everyone?" yes="End party"
+                    onYes={() => { track.current?.('end'); trackHealth(); connection.host.end(); setConfirmEnd(false); }}
+                    onCancel={() => setConfirmEnd(false)} />
+                : <button type="button" className={styles.endLink} data-party-end onClick={askEnd}>End party for everyone</button>)}
+              {!state.isHost && (confirmLeave
+                ? <ConfirmStep kind="leave" question="Leave the party?" yes="Leave" onYes={() => { setConfirmLeave(false); leave(); }} onCancel={() => setConfirmLeave(false)} />
+                : <button type="button" className={styles.endLink} data-party-leave onClick={() => setConfirmLeave(true)}>Leave party</button>)}
               </div>
             </div>
             </div>

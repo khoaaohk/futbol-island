@@ -62,6 +62,13 @@ export const partyStore = {
     if (status === state.status && c === state.code) return;
     set({ ...state, status, code: c });
   },
+  /** Self rename (Your party > List): show my new first name right away (the relay's S.Joined echo confirms it; an old relay never
+   *  sends one, so this is all the old-relay fallback has). Memory only. */
+  setOwnNick(nick: string): void {
+    const you = state.you;
+    if (you === null || !state.members.some((x) => x.id === you && x.nick !== nick)) return;
+    set({ ...state, members: state.members.map((x) => (x.id === you ? { ...x, nick } : x)) });
+  },
   apply(m: ServerMsg, nowMs: number): void {
     switch (m[0]) {
       case S.Welcome: {

@@ -11,6 +11,7 @@ import EmoteWheel from './EmoteWheel';
 import { Glyph } from './PartyChip';
 import type { RoomPartyHandle } from './useRoomParty';
 import styles from './party.module.css';
+import ConfirmStep from './ConfirmStep';
 
 const ZONE_LINE: Record<number, string> = { [Zone.Main]: 'On the island', [Zone.Cay]: 'At Coral Cay', [Zone.Summit]: 'At the Summit', [Zone.Sea]: 'In the sea' };
 /** As PartyHost's memberActivityLine (not imported: the room bundle stays free of the island's party sheet). */
@@ -88,9 +89,10 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
             ))}
             {!others.length && <li className={styles.small}>No friends in the party right now.</li>}
           </ul>
+          {/* Same confirm step and destructive red as the island card (End party / Leave party); the pill keeps its size. */}
           {confirmLeave
-            ? <div className={styles.row}><button type="button" className={styles.secondary} onClick={() => setConfirmLeave(false)}>Stay</button><button type="button" className={styles.primary} data-room-leave-confirm onClick={leave}>Yes, leave</button></div>
-            : <button type="button" className={styles.secondary} data-room-leave onClick={() => setConfirmLeave(true)}>Leave party</button>}
+            ? <ConfirmStep kind="room-leave" question="Leave the party?" yes="Leave" onYes={leave} onCancel={() => setConfirmLeave(false)} />
+            : <button type="button" className={`${styles.secondary} ${styles.dangerText}`} data-room-leave onClick={() => setConfirmLeave(true)}>Leave party</button>}
           <p className={styles.small}>Invite, codes and host buttons are on the island.</p>
         </section>
       )}

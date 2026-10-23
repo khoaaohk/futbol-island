@@ -39,6 +39,13 @@ export interface PartyConnection {
   /** The capability bits agreed with the relay (0 = an old relay: 5 Hz poses, no ball). */
   readonly caps: number;
   sendEmote(e: Emote): boolean;
+  /** Change MY OWN first name mid-party (Your party > List). n goes through normalizeNick (the join form's rules); memory only, like the
+   *  join name: every later reconnect Hello carries it. 'sent': a v1.3 relay (Cap.Rename) gets C.Rename now (or the next resume Hello)
+   *  and re-announces me to friends. 'local': an old relay (no Cap.Rename): only this device shows it until a resume reaches a v1.3 relay.
+   *  null: not a valid name, not in a party, or the host reset my name (it stays reset for this party, kid safety). */
+  rename(n: string): 'sent' | 'local' | null;
+  /** The host reset my typed name in this party: no Change name until the next party. */
+  readonly nameLocked: boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
   host: { resetName(id: MemberId): void; kick(id: MemberId): void; lock(on: boolean): void; rotate(): void; end(): void };
   leave(): void;
@@ -133,6 +140,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let look: Look = [];
   let hostKey: string | null = null;
   let nick: string | null = null; // in memory only; cleared if the host resets it, so a reconnect never sends it back
+  let nameLocked = false; // the host reset my name: no self rename for the rest of this party
+  let renamePending = false; // a rename made while the socket was down: sent after the next S.Caps
   let you: number | null = null;
   let resumeToken: string | null = null;
   let ws: WSLike | null = null;
@@ -305,8 +314,9 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     } else if (m[0] === S.Caps) {
       caps = m[1] & CAPS_ALL;
       if (caps) raw([C.Caps, caps]);
+      if (renamePending && nick !== null && (caps & Cap.Rename) && !nameLocked && raw([C.Rename, nick])) renamePending = false;
     } else if (m[0] === S.Renamed) {
-      if (m[1] === you) nick = null; // the host reset my name: never send it again on a reconnect
+      if (m[1] === you) { nick = null; nameLocked = true; } // the host reset my name: never send it again on a reconnect
     } else if (m[0] === S.Code) {
       // Rotate: the room now lives under a new code. Every later reconnect (and the stored session) must use it (review #1).
       code = m[1];
@@ -455,6 +465,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       code = norm;
       look = opts.look;
       nick = normalizeNick(opts.nick ?? null);
+      if (!same) nameLocked = false; // a new party: the old host's reset does not carry over
+      renamePending = false;
       you = null;
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;
       resumeToken = same ? sess!.resumeToken : null;
@@ -504,6 +516,16 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (raw([C.Ball, st, qx, qy, qz])) { ballSt = st; ballX = qx; ballY = qy; ballZ = qz; ballAt = nowMs; }
     },
     get caps() { return caps; },
+    get nameLocked() { return nameLocked; },
+    rename(n) {
+      const v = normalizeNick(n);
+      if (v === null || nameLocked || code === null || status === 'idle' || status === 'ended' || status === 'error') return null;
+      nick = v;
+      if (!(caps & Cap.Rename)) return 'local';
+      // Not connected right now: sent right after the next S.Caps (a resume Hello never renames).
+      renamePending = !(open() && status === 'live' && raw([C.Rename, v]));
+      return 'sent';
+    },
     sendEmote(e) {
       const t = now();
       if (localHidden || !open() || t - lastEmoteAt < EMOTE_GAP_MS) return false;
@@ -528,7 +550,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       clearTimers();
       dropSocket();
       endHere();
-      code = null; resumeToken = null; hostKey = null; nick = null; pendingResume = false; last = null; resuming = false;
+      code = null; resumeToken = null; hostKey = null; nick = null; nameLocked = false; renamePending = false; pendingResume = false; last = null; resuming = false;
       setStatus('idle');
     },
     onMessage(fn) { msgSubs.add(fn); return () => { msgSubs.delete(fn); }; },

@@ -109,6 +109,13 @@ export function parseClient(raw: string): ClientMsg | null {
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ClientMsg) : null;
     case C.Caps:
       return a.length === 2 && inRange(a[1], 0, 255) ? (a as ClientMsg) : null;
+    case C.Rename: {
+      if (a.length !== 2) return null;
+      const n = normalizeNick(a[1]);
+      if (n === null) return null;
+      a[1] = n;
+      return a as ClientMsg;
+    }
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
     default:
