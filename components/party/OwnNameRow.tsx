@@ -7,9 +7,9 @@ import { NickInput } from './NickField';
 import styles from './party.module.css';
 
 /**
- * Your party > List: the local player's own row. A small pencil opens an inline first-name editor with the join form's rules
+ * Your party > List: the local player's own row. A plain 'Change name' button opens an inline first-name editor with the join form's rules
  * (the NickField box itself, NickInput: letters only, 2 to 12, filterNickInput while typing; normalizeNick on Save). Save / Cancel; Enter saves.
- * `locked`: the host reset this player's name, so there is no Change name for the rest of this party (kid safety).
+ * `locked`: the host locked this player's name (relay v1.5): the button shows 'Name locked' (disabled, lock mark) until the host unlocks it.
  * `onSave` gets the normalised name; the name stays in memory only (lib/multiplayer/nick.ts), never stored.
  */
 export default function OwnNameRow({ me, locked, onSave, onRejected }: { me: Member; locked: boolean; onSave: (nick: string) => void; onRejected?: () => void }) {
@@ -29,14 +29,16 @@ export default function OwnNameRow({ me, locked, onSave, onRejected }: { me: Mem
   const canSave = valid !== null && valid !== me.nick;
   const save = () => { if (!canSave) return; onSave(valid); setEditing(false); };
   const row = (
-    <li className={styles.member} data-party-self data-acts={!locked && !editing ? '1' : undefined} aria-label={`You, ${name}, ${colourName(me.colourIdx).toLowerCase()}`}>
+    <li className={styles.member} data-party-self data-acts={!editing ? '1' : undefined} aria-label={`You, ${name}, ${colourName(me.colourIdx).toLowerCase()}`}>
       <span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" />
       <span className={styles.mname}>You ({name})</span>
       {me.isHost && <span className={styles.badge}>Host</span>}
-      {!locked && !editing && (
+      {!editing && (
         <span className={styles.rowActions}>
-          <button ref={pencil} type="button" className={styles.act} data-rename-open aria-label="Change name" title="Change name"
-            onClick={() => { setText(me.nick ?? ''); setEditing(true); }}><Glyph name="pencil" size={18} /><span data-act-label>Rename</span></button>
+          {locked
+            ? <button type="button" className={styles.act} data-name-locked disabled aria-label="Name locked by the host"><Glyph name="lock" size={16} />Name locked</button>
+            : <button ref={pencil} type="button" className={styles.act} data-rename-open
+                onClick={() => { setText(me.nick ?? ''); setEditing(true); }}>Change name</button>}
         </span>
       )}
     </li>

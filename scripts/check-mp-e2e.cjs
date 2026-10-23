@@ -7,7 +7,7 @@
 //   3 emotes (75 degree cone, wave / high five / dance / show off / pass it / juggle with me, moving emotes, framing)
 //   4 jetpack (ring tilt, flying emote set only with a friend flying)       5 busy (Settings: force field + line, ball bounce, emote ignored)
 //   6 rooms (Konbini, Museum, Arcade + a game, Kit Shop through the doors) 7 recovery (reload, new context, second tab, guest code, device C)
-//   8 host controls (New code, Close, Reset name, Remove C + 60 s block, End party)  9 island keep-ups (count, wall kick, hold for higher)
+//   8 host controls (New code, Close, Lock name, Remove C + 60 s block, End party)  9 island keep-ups (count, wall kick, hold for higher)
 //   10 heat (bots on the island and in a room: frame time, draw calls, caps 5/5/3/1/0)  11 privacy sweep (storage + analytics beats, every step)
 // Needs: a dev relay   MP_PORT=<relay port> MP_DEV=1 node multiplayer/dev-relay/server.mjs
 //        a production build of the game with NEXT_PUBLIC_MULTIPLAYER=1 NEXT_PUBLIC_MULTIPLAYER_URL=<relay url> FI_VISITS_LOCAL=1
@@ -644,14 +644,14 @@ async function step8() {
   await shot(D.p, 's8-d-closed');
   await D.ctx.close(); delete devices.D;
   await openMenu(a); await a.click('[data-party-tab="code"]').catch(() => {}); await a.click('[data-party-lock]'); await a.waitForTimeout(600); await closeCard(a); // open again
-  // Reset name (B).
+  // Lock name (B): relay v1.5 (Reset name was replaced by Lock name, Oct 23 2026).
   await listTab(a);
-  const reset = await a.$(`[data-party-sheet] li:has-text("${NAMES.B}") [data-reset-name]`);
-  const resetLabel = reset ? await reset.getAttribute('aria-label') : null;
-  if (reset) { await reset.click(); await a.waitForTimeout(1500); }
-  const rowsAfter = await listRows(a);
-  rec(!!reset && !rowsAfter.some((x) => x.text.includes(NAMES.B)), 'Reset name: B shown by a colour name, not the typed name', JSON.stringify({ resetLabel, rows: rowsAfter.map((x) => x.text.slice(0, 24)) }));
-  await shot(a, 's8-a-reset-name');
+  const lockBtn = await a.$(`[data-party-sheet] li:has-text("${NAMES.B}") [data-name-lock]`);
+  if (lockBtn) { await lockBtn.click(); await a.waitForTimeout(1500); }
+  const lockLabel = lockBtn ? (await lockBtn.textContent()) : null;
+  const bNote = await toastOf(b).catch(() => '');
+  rec(!!lockBtn && /Unlock name/.test(lockLabel || ''), 'Lock name: the host button flips to Unlock name', JSON.stringify({ lockLabel, bNote }));
+  await shot(a, 's8-a-lock-name');
   // Remove C.
   const rm = await a.$(`[data-party-sheet] button[aria-label^="Remove ${NAMES.C}"]`);
   await rm?.click(); await a.waitForTimeout(600); await a.click('[data-party-sheet] [data-confirm="remove"] [data-confirm-yes]').catch(() => {}); await a.waitForTimeout(800);

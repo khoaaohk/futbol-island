@@ -450,19 +450,16 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const none = peer(); hello(room, none);
   assert.equal(welcome(none)[7].find((m) => m[0] === welcome(none)[2])[5], null, 'old Hello -> null');
   const idg = welcome(g)[2], idh = welcome(host)[2];
-  // ResetName: host only, never on itself, broadcast to all
+  // ResetName is retired (Oct 23 2026, replaced by NameLock): an old client's frame is ignored by everyone's relay, never an error
+  const errsBefore = errs(g).length;
   send(room, g, [C.ResetName, idh]);
-  assert.deepEqual(errs(g).slice(-1), [ErrorCode.NotHost], 'a guest cannot reset');
-  assert.equal(host.of(S.Renamed).length, 0);
+  assert.equal(errs(g).length, errsBefore, 'a guest ResetName is ignored, not NotHost');
   clock.t += 2000;
-  send(room, host, [C.ResetName, idh]);
-  assert.equal(host.of(S.Renamed).length, 0, 'host cannot reset itself (no-op)');
   send(room, host, [C.ResetName, idg]);
-  assert.deepEqual(g.of(S.Renamed)[0], [S.Renamed, idg, null], 'target hears Renamed');
-  assert.deepEqual(host.of(S.Renamed)[0], [S.Renamed, idg, null], 'host hears Renamed');
-  assert.deepEqual(bad.of(S.Renamed)[0], [S.Renamed, idg, null], 'everyone hears Renamed');
+  assert.equal(g.of(S.Renamed).length + host.of(S.Renamed).length + bad.of(S.Renamed).length, 0, 'no Renamed is ever sent');
+  assert.equal(g.closed, null, 'never counted as a bad frame');
   const late = peer(); hello(room, late);
-  assert.equal(welcome(late)[7].find((m) => m[0] === idg)[5], null, 'the reset sticks for later joiners');
+  assert.equal(welcome(late)[7].find((m) => m[0] === idg)[5], 'Élodie', 'the name is unchanged');
   // resume keeps the nick; a resume Hello cannot rename
   const tok = welcome(host)[3];
   host.msgs.length = 0; room.disconnect(host);

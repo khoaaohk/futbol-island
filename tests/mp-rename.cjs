@@ -1,4 +1,4 @@
-// Self rename (Oct 23 2026, relay v1.3): C.Rename protocol shape + validation, RoomCore rename / resume rename / host-reset lock,
+// Self rename (Oct 23 2026, relay v1.3): C.Rename protocol shape + validation, RoomCore rename / resume rename / host name lock (relay v1.5),
 // the client connection's rename() on a new relay (Cap.Rename) and an old relay (local only), the store's own-nick patch, and the
 // Your party List wiring (OwnNameRow). No network.
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path'), vm = require('node:vm'), ts = require('typescript');
@@ -12,8 +12,8 @@ const j = (a) => JSON.stringify(a);
 
 // ---- protocol ----
 t('protocol: C.Rename / Cap.Rename shapes', () => {
-  assert.equal(C.Rename, 13); assert.equal(Cap.Rename, 4); assert.equal(CAPS_ALL, 15);
-  assert.equal(CAPS_ALL & (Cap.Live | Cap.Ball | Cap.Rename | Cap.EmoteAsk), CAPS_ALL);
+  assert.equal(C.Rename, 13); assert.equal(Cap.Rename, 4); assert.equal(CAPS_ALL, 31);
+  assert.equal(Cap.Live | Cap.Ball | Cap.Rename | Cap.EmoteAsk | Cap.NameLock, CAPS_ALL);
   assert.deepEqual(P.parseClient(j([C.Rename, 'Sam'])), [13, 'Sam']);
   assert.deepEqual(P.parseClient(j([C.Rename, ' sAM '])), [13, 'Sam'], 'normalised like the join name');
   assert.deepEqual(P.parseClient(j([C.Rename, 'élodie'])), [13, 'Élodie']);
@@ -22,8 +22,18 @@ t('protocol: C.Rename / Cap.Rename shapes', () => {
   }
   assert.equal(P.parseClient(j([C.Rename])), null); assert.equal(P.parseClient(j([C.Rename, 'Sam', 1])), null);
   assert.ok(P.encode([C.Rename, 'Abcdefghijkl']).length < 64);
-  // the old host-reset frame is unchanged: Renamed still carries null only
+  // the old host-reset frame is unchanged (an old relay may still send it): Renamed still carries null only
   assert.ok(P.parseServer(j([S.Renamed, 3, null]))); assert.equal(P.parseServer(j([S.Renamed, 3, 'Sam'])), null);
+  // C.ResetName stays reserved (10) and still parses, so an old host client's frame is never counted as bad
+  assert.equal(C.ResetName, 10); assert.ok(P.parseClient(j([C.ResetName, 3])));
+});
+
+t('protocol: C.NameLock / S.NameLock / Cap.NameLock (relay v1.5)', () => {
+  assert.equal(Cap.NameLock, 16); assert.equal(C.NameLock, 16); assert.equal(S.NameLock, 37);
+  assert.deepEqual(P.parseClient(j([C.NameLock, 3, 1])), [16, 3, 1]); assert.deepEqual(P.parseClient(j([C.NameLock, 3, 0])), [16, 3, 0]);
+  for (const bad of [[C.NameLock, 3], [C.NameLock, 3, 2], [C.NameLock, 32, 1], [C.NameLock, -1, 0], [C.NameLock, '3', 1], [C.NameLock, 3, 1, 1]]) assert.equal(P.parseClient(j(bad)), null, j(bad));
+  assert.ok(P.parseServer(j([S.NameLock, 5, 1]))); assert.ok(P.parseServer(j([S.NameLock, 5, 0])));
+  assert.equal(P.parseServer(j([S.NameLock, 5, true])), null); assert.equal(P.parseServer(j([S.NameLock, 40, 1])), null);
 });
 
 // ---- relay ----
@@ -73,19 +83,75 @@ t('relay: rename is rate limited (4 per minute)', () => {
   assert.equal(host.of(S.Joined).length, 5, 'allowed again after a minute');
 });
 
-t('relay: after a host reset the member cannot rename (C.Rename or a resume Hello)', () => {
-  const { room, clock, hello } = mkRoom();
-  const host = peer(); hello(host, 'Emma', null, room.hostKey);
+function lockParty() {
+  const r = mkRoom(); const { room, hello } = r;
+  const host = peer(); hello(host, 'Emma', null, room.hostKey); room.message(host, j([C.Caps, CAPS_ALL]));
   const g = peer(); hello(g, 'Leo'); room.message(g, j([C.Caps, CAPS_ALL]));
-  const gid = me(g), gt = tok(g);
-  clock.t += 1000; room.message(host, j([C.ResetName, gid]));
-  assert.deepEqual(host.of(S.Renamed)[0], [S.Renamed, gid, null]);
-  host.msgs.length = 0; clock.t += 2000;
+  const old = peer(); hello(old, 'Mia'); room.message(old, j([C.Caps, 15])); // a v1.4 client: no Cap.NameLock
+  return { ...r, host, g, old, hid: me(host), gid: me(g) };
+}
+const clearAll = (...ps) => ps.forEach((p) => { p.msgs.length = 0; });
+
+t('relay: the host locks a name; a locked member cannot rename (C.Rename refused, lock re-sent); unlock allows it again', () => {
+  const { room, clock, host, g, old, gid } = lockParty();
+  assert.ok(g.of(S.Caps)[0][1] & Cap.NameLock, 'the relay announces Cap.NameLock');
+  clearAll(host, g, old); clock.t += 1000;
+  room.message(host, j([C.NameLock, gid, 1]));
+  assert.deepEqual(g.of(S.NameLock), [[S.NameLock, gid, 1]], 'the locked player hears it');
+  assert.deepEqual(host.of(S.NameLock), [[S.NameLock, gid, 1]], 'the host hears it (its button state)');
+  assert.equal(old.msgs.length, 0, 'an old client never gets S.NameLock');
+  clearAll(host, g, old); clock.t += 2000;
   room.message(g, j([C.Rename, 'Sam']));
   assert.equal(host.of(S.Joined).length, 0, 'locked: no rename');
-  const g2 = peer(); hello(g2, 'Sam', gt);
-  assert.equal(g2.of(S.Welcome)[0][7].find((m) => m[0] === gid)[5], null, 'a resume does not bring a name back either');
-  assert.equal(host.of(S.Joined).length, 0);
+  assert.deepEqual(g.msgs, [[S.NameLock, gid, 1]], 'the refused sender is reminded of the lock');
+  clock.t += 1000; room.message(host, j([C.NameLock, gid, 1])); assert.equal(host.of(S.NameLock).length, 0, 'no change: no news');
+  clock.t += 1000; room.message(host, j([C.NameLock, gid, 0]));
+  assert.deepEqual(g.of(S.NameLock).slice(-1)[0], [S.NameLock, gid, 0]);
+  clearAll(host); clock.t += 2000; room.message(g, j([C.Rename, 'Sam']));
+  assert.equal(host.of(S.Joined)[0][1][5], 'Sam', 'unlocked: renames again');
+});
+
+t('relay: name lock is host only; unknown ids and the host itself are no-ops; ResetName is ignored', () => {
+  const { room, clock, host, g, old, hid, gid } = lockParty();
+  clearAll(host, g, old); clock.t += 1000;
+  room.message(g, j([C.NameLock, hid, 1]));
+  assert.deepEqual(g.of(S.Error), [[S.Error, ErrorCode.NotHost]], 'a guest gets NotHost');
+  assert.equal(host.of(S.NameLock).length, 0);
+  clock.t += 1000; room.message(host, j([C.NameLock, 30, 1])); // nobody in slot 30
+  clock.t += 1000; room.message(host, j([C.NameLock, hid, 1])); // the host's own name
+  assert.equal(host.msgs.length + g.msgs.length, 1, 'only the guest error so far');
+  clock.t += 1000; room.message(host, j([C.Rename, 'Zoe'])); assert.equal(g.of(S.Joined)[0][1][5], 'Zoe', 'the host can always rename');
+  clearAll(host, g, old); clock.t += 1000;
+  room.message(old, j([C.ResetName, gid])); room.message(host, j([C.ResetName, gid]));
+  assert.equal(host.msgs.length + g.msgs.length + old.msgs.length, 0, 'the retired ResetName does nothing (no error, no Renamed)');
+  assert.equal(old.closed, null);
+});
+
+t('relay: the lock survives a resume (re-sent after C.Caps), a resume Hello cannot rename, and an eviction (attachment)', () => {
+  const { room, clock, host, g, gid, hello } = lockParty();
+  clock.t += 1000; room.message(host, j([C.NameLock, gid, 1]));
+  room.disconnect(g);
+  const g2 = peer(); hello(g2, 'Sam', tok(g));
+  assert.equal(me(g2), gid); assert.equal(g2.of(S.Welcome)[0][7].find((m) => m[0] === gid)[5], 'Leo', 'a resume Hello cannot rename');
+  assert.equal(g2.of(S.NameLock).length, 0, 'not before C.Caps');
+  room.message(g2, j([C.Caps, CAPS_ALL]));
+  assert.deepEqual(g2.of(S.NameLock), [[S.NameLock, gid, 1]], 'the resumed client learns its lock');
+  const late = peer(); hello(late, 'Ava'); room.message(late, j([C.Caps, CAPS_ALL]));
+  assert.deepEqual(late.of(S.NameLock), [[S.NameLock, gid, 1]], 'a new joiner learns every lock');
+  clearAll(host); clock.t += 2000; room.message(g2, j([C.Rename, 'Sam'])); assert.equal(host.of(S.Joined).length, 0, 'still locked');
+  const att = room.attachmentFor(g2); assert.equal(att.nameLock, 1, 'the attachment keeps the lock');
+  assert.equal(room.attachmentFor(host).nameLock, undefined);
+  const r2 = mkRoom(); const p = peer(); r2.room.restoreMember(p, att);
+  r2.room.message(p, j([C.Caps, CAPS_ALL])); r2.room.message(p, j([C.Rename, 'Sam']));
+  assert.deepEqual(p.of(S.NameLock).slice(-1)[0], [S.NameLock, gid, 1], 'restored after an eviction');
+});
+
+t('relay: a locked member who becomes host is unlocked (the host name is never locked)', () => {
+  const { room, clock, host, g, gid } = lockParty();
+  clock.t += 1000; room.message(host, j([C.NameLock, gid, 1]));
+  clearAll(g); room.message(host, j([C.Leave]));
+  assert.deepEqual(g.of(S.Host)[0], [S.Host, gid]);
+  assert.deepEqual(g.of(S.NameLock).slice(-1)[0], [S.NameLock, gid, 0]);
 });
 
 t('relay: a resume never renames; the slot keeps the C.Rename name across a reload (empty name slot)', () => {
@@ -164,12 +230,40 @@ t('client: an old relay (no Cap.Rename) never gets C.Rename: local only', () => 
   assert.ok(!e2.msgs(s3).some((m) => m[0] === C.Rename));
 });
 
-t('client: a host reset locks rename for this party; leave clears it', () => {
+t('client: S.NameLock locks / unlocks my rename; a v1.5 S.Caps clears it (the relay re-sends locks); legacy Renamed still locks', () => {
   const e = makeEnv();
   e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcomeMsg()); s.recv([S.Caps, CAPS_ALL]);
-  s.recv([S.Renamed, 1, null]);
-  assert.equal(e.c.nameLocked, true); assert.equal(e.c.rename('Sam'), null);
+  s.recv([S.NameLock, 2, 1]); assert.equal(e.c.nameLocked, false, 'someone else');
+  s.recv([S.NameLock, 1, 1]); assert.equal(e.c.nameLocked, true); assert.equal(e.c.rename('Sam'), null);
+  s.recv([S.NameLock, 1, 0]); assert.equal(e.c.nameLocked, false); assert.equal(e.c.rename('Sam'), 'sent');
+  s.recv([S.NameLock, 1, 1]); s.recv([S.Caps, CAPS_ALL]); assert.equal(e.c.nameLocked, false, 'reset; the lock list follows C.Caps');
+  s.recv([S.Renamed, 1, null]); assert.equal(e.c.nameLocked, true, 'an old relay reset');
   e.c.leave(); assert.equal(e.c.nameLocked, false);
+});
+
+t('client: host.nameLock sends C.NameLock only to a v1.5 relay (Cap.NameLock)', () => {
+  const e = makeEnv();
+  e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcomeMsg()); s.recv([S.Caps, 15]);
+  e.c.host.nameLock(2, true); assert.ok(!e.msgs(s).some((m) => m[0] === C.NameLock), 'an old relay never sees it');
+  s.recv([S.Caps, CAPS_ALL]); e.c.host.nameLock(2, true); e.c.host.nameLock(2, false);
+  assert.deepEqual(e.msgs(s).filter((m) => m[0] === C.NameLock), [[C.NameLock, 2, 1], [C.NameLock, 2, 0]]);
+  assert.ok(P.parseClient(s.sent[s.sent.length - 1]));
+  assert.equal(typeof e.c.host.resetName, 'undefined', 'Reset name is gone');
+});
+
+t('store: nameLocks + canLockNames follow S.Caps / S.NameLock; Welcome and Left clear them', () => {
+  st.partyStore.reset();
+  st.partyStore.apply([20, 1, 1, 'tok-abcdefghij012345', 0, 0, 0, [[1, [2, 0], LOOK, 1, null, 'Emma'], [2, [1, 0], LOOK, 0, null, 'Leo']]], 0);
+  assert.equal(st.partyStore.get().canLockNames, false);
+  st.partyStore.apply([S.Caps, 15], 0); assert.equal(st.partyStore.get().canLockNames, false, 'an old relay');
+  st.partyStore.apply([S.Caps, CAPS_ALL], 0); assert.equal(st.partyStore.get().canLockNames, true);
+  st.partyStore.apply([S.NameLock, 2, 1], 0); st.partyStore.apply([S.NameLock, 2, 1], 0); assert.deepEqual([...st.partyStore.get().nameLocks], [2]);
+  st.partyStore.apply([S.NameLock, 2, 0], 0); assert.deepEqual([...st.partyStore.get().nameLocks], []);
+  st.partyStore.apply([S.NameLock, 2, 1], 0); st.partyStore.apply([S.Left, 2, 0], 0); assert.deepEqual([...st.partyStore.get().nameLocks], []);
+  st.partyStore.apply([S.NameLock, 1, 1], 0);
+  st.partyStore.apply([20, 1, 1, 'tok-abcdefghij012345', 0, 0, 0, [[1, [2, 0], LOOK, 1, null, 'Emma']]], 0);
+  assert.deepEqual([...st.partyStore.get().nameLocks], []); assert.equal(st.partyStore.get().canLockNames, false, 'a Welcome waits for S.Caps again');
+  st.partyStore.reset();
 });
 
 t('store: setOwnNick patches only my row; the relay echo (Joined) agrees; friends upsert in place', () => {
@@ -190,30 +284,38 @@ t('UI: own row has Change name with the join form rules; friends rows are not ed
   const row = fs.readFileSync(path.join(ROOT, 'components/party/OwnNameRow.tsx'), 'utf8');
   const host = fs.readFileSync(path.join(ROOT, 'components/party/PartyHost.tsx'), 'utf8');
   const field = fs.readFileSync(path.join(ROOT, 'components/party/NickField.tsx'), 'utf8');
-  assert.match(row, /aria-label="Change name"/); assert.match(row, /<NickInput value=\{text\} onText=\{setText\}/, 'the join form box itself'); assert.match(row, /normalizeNick/);
+  assert.match(row, />Change name<\/button>/); assert.match(row, /<NickInput value=\{text\} onText=\{setText\}/, 'the join form box itself'); assert.match(row, /normalizeNick/);
   assert.doesNotMatch(row, /<input/, 'no second text input (owner rule: code boxes + the NickField box only)');
   assert.match(field, /export function NickInput/); assert.match(field, /<NickInput value=\{text\} onText=\{commit\}/, 'the join form uses it too');
   assert.match(field, /filterNickInput\(raw\)/); assert.match(field, /maxLength=\{NICK_MAX\}/); assert.match(field, /enterKeyHint="done"/);
   assert.match(row, /data-rename-save/); assert.match(row, /data-rename-cancel/);
-  assert.match(host, /<OwnNameRow me=\{me\} locked=\{connection\.nameLocked\}/);
+  assert.match(host, /<OwnNameRow me=\{me\} locked=\{state\.nameLocks\.includes\(me\.id\) \|\| connection\.nameLocked\}/);
   assert.equal((host.match(/<OwnNameRow/g) || []).length, 1, "used once (own row only)");
   assert.match(host, /connection\.rename\(n\)/); assert.match(host, /setNick\(n\)/);
   assert.doesNotMatch(row, /localStorage|sessionStorage|document\.cookie/, 'memory only');
 });
 
 const rd = (f) => fs.readFileSync(path.join(ROOT, f), 'utf8');
-t('UI: every row icon has a visible word (Rename, Hide/Show, Mute/Unmute, Reset name, Remove)', () => {
-  const host = rd('components/party/PartyHost.tsx'), row = rd('components/party/OwnNameRow.tsx');
-  assert.match(row, /<span data-act-label>Rename<\/span>/);
+t('UI: plain text row buttons (Mute emotes / Hide friend / Change name / Lock name / Remove from party), no Reset name', () => {
+  const host = rd('components/party/PartyHost.tsx'), row = rd('components/party/OwnNameRow.tsx'), chip = rd('components/party/RoomPartyChip.tsx');
+  assert.match(row, /disabled aria-label="Name locked by the host"><Glyph name="lock" size=\{16\} \/>Name locked<\/button>/, 'locked: a disabled Name locked with a lock mark');
   const acts = host.slice(host.indexOf('data-row-actions'), host.indexOf('</span>\n                </li>'));
   assert.ok(acts.length > 100, 'found the friend row actions');
-  for (const w of [/\? 'Show' : 'Hide'\}<\/span>/, /\? 'Unmute' : 'Mute'\}<\/span>/, /<span data-act-label>Reset name<\/span>/, /<span data-act-label>Remove<\/span>/]) assert.match(acts, w);
+  for (const w of [/\? 'Emotes muted' : 'Mute emotes'\}<\/button>/, /\? 'Friend hidden' : 'Hide friend'\}<\/button>/, /\? 'Unlock name' : 'Lock name'\}<\/button>/, />Remove from party<\/button>/]) assert.match(acts, w);
   const buttons = acts.match(/<button[\s\S]*?<\/button>/g) || [];
   assert.equal(buttons.length, 4);
-  for (const b of buttons) { assert.match(b, /className=\{styles\.act\}/); assert.match(b, /data-act-label/, 'label: ' + b.slice(0, 80)); }
-  assert.doesNotMatch(host, /className=\{styles\.mini\}[^>]*aria-label=\{`(Hide|Show|Remove|Mute|Unmute|Reset)/, 'no icon-only row button left');
+  for (const b of buttons) { assert.match(b, /className=\{styles\.act\}/); assert.doesNotMatch(b, /<Glyph|<Icon/, 'words only: ' + b.slice(0, 80)); }
+  assert.match(acts, /state\.isHost && state\.canLockNames &&/, 'Lock name: host only, hidden on an old relay');
+  assert.match(acts, /connection\.host\.nameLock\(m\.id, !nl\)/);
+  assert.match(host, /'The host locked your name'/, 'toast to the locked player');
+  assert.match(host, /data-party-help>Mute = no emotes from them\. Hide = hide them from your screen\.<\/p>/);
+  assert.match(chip, /data-party-help>Mute = no emotes from them\. Hide = hide them from your screen\.<\/p>/, 'rooms roster matches');
+  assert.match(chip, /\? 'Emotes muted' : 'Mute emotes'\}<\/button>/); assert.match(chip, /\? 'Friend hidden' : 'Hide friend'\}<\/button>/);
+  for (const src of [host, row, chip]) assert.doesNotMatch(src, /Reset name|resetName|data-reset-name|data-act-label/);
+  assert.doesNotMatch(host + chip, /className=\{styles\.mini\}[^>]*aria-label=\{`(Hide|Show|Remove|Mute|Unmute|Reset)/, 'no icon-only row button left');
   const css = rd('components/party/party.module.css');
-  assert.match(css, /\.act\{[^}]*min-height:44px/, 'labelled buttons keep a 44px tap target');
+  assert.match(css, /\.act\{[^}]*min-height:44px/, 'text buttons keep a 44px tap target');
+  assert.match(css, /\.act\[data-danger\]\{color:var\(--party-danger\)\}/, 'Remove from party in the shared red');
 });
 
 t('UI: Remove, Leave party and End party all go through the one ConfirmStep (Cancel focused, armed red button)', () => {

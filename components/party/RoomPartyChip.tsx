@@ -1,7 +1,7 @@
 'use client';
 // The light party chip for room pages (docs/multiplayer-rooms-design.md 3.3; owner decision 3: LEAVE ONLY in rooms, the host sheet
 // stays on the island). Your colour dot + "2 here", the emote wheel (the same six-plus presets and rate limits as the island), and a
-// tap opens the read-only roster: what each friend is doing, Hide / Mute, and Leave. No invites, codes, kicks, locks or End here.
+// tap opens the read-only roster: what each friend is doing, Mute emotes / Hide friend, and Leave. No invites, codes, kicks, locks or End here.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { displayName, usePartyState, type Member } from '@/lib/multiplayer';
 import { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mutedFriends } from '@/lib/multiplayer/roomParty';
@@ -80,15 +80,19 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
         <section ref={(el) => { pop.current = el; }} className={styles.roomSheet} role="dialog" aria-label="Your party" data-room-roster>
           <ul className={styles.members}>
             {others.map((m) => (
-              <li key={m.id} className={styles.member} data-away={m.away ? '1' : undefined} data-room-member={m.room === party.room ? 'here' : 'away'}>
+              <li key={m.id} className={styles.member} data-acts="1" data-away={m.away ? '1' : undefined} data-room-member={m.room === party.room ? 'here' : 'away'}>
                 <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" />
                 <span className={styles.mname}>{displayName(m)}<small className={styles.activity} data-party-activity>{roomMemberLine(m, party.room)}</small></span>
-                <button type="button" className={styles.mini} aria-pressed={hid.has(m.id)} aria-label={`${hid.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hid, m.id, setHiddenFriends, setHid)}><Glyph name="eyeoff" size={20} /></button>
-                <button type="button" className={styles.mini} aria-pressed={mut.has(m.id)} aria-label={`${mut.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(mut, m.id, setMutedFriends, setMut)}><Glyph name="mute" size={20} /></button>
+                {/* Same plain words as the island card's List (owner, Oct 23 2026). */}
+                <span className={styles.rowActions} data-row-actions>
+                  <button type="button" className={styles.act} data-act="mute" aria-pressed={mut.has(m.id)} aria-label={`${mut.has(m.id) ? 'Emotes muted' : 'Mute emotes'}, ${displayName(m)}`} onClick={() => toggle(mut, m.id, setMutedFriends, setMut)}>{mut.has(m.id) ? 'Emotes muted' : 'Mute emotes'}</button>
+                  <button type="button" className={styles.act} data-act="hide" aria-pressed={hid.has(m.id)} aria-label={`${hid.has(m.id) ? 'Friend hidden' : 'Hide friend'}, ${displayName(m)}`} onClick={() => toggle(hid, m.id, setHiddenFriends, setHid)}>{hid.has(m.id) ? 'Friend hidden' : 'Hide friend'}</button>
+                </span>
               </li>
             ))}
             {!others.length && <li className={styles.small}>No friends in the party right now.</li>}
           </ul>
+          {others.length > 0 && <p className={styles.small} data-party-help>Mute = no emotes from them. Hide = hide them from your screen.</p>}
           {/* Same confirm step and destructive red as the island card (End party / Leave party); the pill keeps its size. */}
           {confirmLeave
             ? <ConfirmStep kind="room-leave" question="Leave the party?" yes="Leave" onYes={leave} onCancel={() => setConfirmLeave(false)} />
