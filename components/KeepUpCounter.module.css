@@ -1,0 +1,14 @@
+/* The keep-ups pill (components/KeepUpCounter.tsx): the Konbini's cream bubble, shared with the island. Look only: each place
+   positions it (KonbiniRoom.module.css .streak above the ball buttons; the island's HUD stack task slot). */
+.pill{margin:0;display:flex;align-items:baseline;gap:6px;width:max-content;padding:8px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--k-paper,#fff4dc) var(--btn-grain) center/128px;background-blend-mode:soft-light;color:var(--k-ink,#244d40);font-weight:800;font-size:15px;box-shadow:0 4px 0 #193f3733,0 8px 18px #0c1f2226;pointer-events:none;animation:keepUpIn .18s ease-out both}
+/* The island's pill sits in the HUD stack's flow (the Konbini's .streak positions its own, absolutely). */
+.island{position:relative;align-self:center}
+.pill b{font:normal 26px/1 KonbiniBrush,IslandBrush,Georgia,serif}.pill small{font-size:11px;color:var(--k-soft,#3f6559)}
+.pill[data-live]{animation:none}.pill:not([data-live]){opacity:.92}
+.newBest{position:relative;color:#d8342c;font-weight:900;font-size:13px}
+.pill[data-best]{border-color:#ffd35c;box-shadow:0 0 0 4px #ffd35c55,0 4px 0 #193f3733}
+.pill[data-best]::before,.pill[data-best]::after{content:'✦';position:absolute;color:#f5c45e;font-size:18px;animation:keepUpSparkle .9s ease-out both}
+.pill[data-best]::before{left:-10px;top:-12px}.pill[data-best]::after{right:-8px;top:-14px;animation-delay:.12s}
+@keyframes keepUpIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes keepUpSparkle{0%{transform:scale(.2) rotate(0);opacity:0}40%{transform:scale(1.4) rotate(40deg);opacity:1}100%{transform:scale(1) rotate(90deg);opacity:.9}}
+@media(prefers-reduced-motion:reduce){.pill,.pill[data-best]::before,.pill[data-best]::after{animation:none}}

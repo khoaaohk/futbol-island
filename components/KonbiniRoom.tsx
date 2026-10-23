@@ -10,6 +10,7 @@ import KonbiniStampCard from './KonbiniStampCard';
 import VendingCardReveal from './VendingCardReveal';
 import {Icon} from './Icon';
 import TravelIcon from './TravelIcon';
+import KeepUpCounter from './KeepUpCounter';
 import {readBallRecord,recordStreak,takeShotTip,keepUpTip,cashierShotLine,SHOT_TIP,type BallEvent} from '@/lib/konbini/konbiniBall';
 import styles from './KonbiniRoom.module.css';
 // The coin balance is a read-only HUD display: the island's cream coin card (IslandJobs), not a gold button.
@@ -308,9 +309,10 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
   {!zoom&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the Konbini"
    onPointerDown={e=>{if(pointer.current!==null||!ready)return;e.preventDefault();pointer.current=e.pointerId;joyRect.current=null;e.currentTarget.setPointerCapture(e.pointerId);move(e);}} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span aria-hidden="true"/></div></div>}
   {actionsOn&&<div className={`travel-actions ${styles.ballActions}`} data-konbini-actions><div className="touch-actions">
-   <button type="button" className="touch-juggle" data-konbini-action="keepups" aria-label={best?`Keep-ups (best ${best})`:'Keep-ups'} title="Keep-ups · J. Tap each time the ball drops back to your foot." onContextMenu={e=>e.preventDefault()}
-    onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();until(e.currentTarget);room.current?.keepUp();haptic();}}
-    onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.keepUp();}}><TravelIcon kind="juggle"/></button>
+   <button type="button" className="touch-juggle" data-konbini-action="keepups" aria-label={best?`Keep-ups (best ${best})`:'Keep-ups'} title="Keep-ups · J. Tap each time the ball drops back to your foot; hold for a higher kick." onContextMenu={e=>e.preventDefault()}
+    onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();until(e.currentTarget);const b=e.currentTarget;try{b.setPointerCapture(e.pointerId);}catch{/* synthetic */}b.dataset.holding='true';room.current?.keepUp();haptic();}}
+    onPointerUp={e=>{delete e.currentTarget.dataset.holding;room.current?.keepUpEnd();}} onPointerCancel={e=>{delete e.currentTarget.dataset.holding;room.current?.keepUpEnd();}} onLostPointerCapture={e=>{delete e.currentTarget.dataset.holding;room.current?.keepUpEnd();}}
+    onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.keepUp();room.current?.keepUpEnd();}}><TravelIcon kind="juggle"/></button>
    <button type="button" className="touch-shoot" data-konbini-action="shoot" aria-label="Shoot" title="Shoot · Space. Hold for a firmer (still gentle) shot." onContextMenu={e=>e.preventDefault()}
     onPointerDown={e=>{if(e.button!==0)return;e.preventDefault();const b=e.currentTarget;until(b);if(room.current?.beginShot()){b.setPointerCapture(e.pointerId);b.dataset.charging='true';haptic();}}}
     onPointerUp={e=>{const b=e.currentTarget;until(b);delete b.dataset.charging;room.current?.endShot();}}
@@ -322,7 +324,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
     onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.kick();}}><TravelIcon kind="shoot"/></button>
   </div>
   {party&&<RoomEmoteDock party={party} near={emoteNear} wheelClass={styles.emoteWheel}/>}</div>}
-  {streak&&actionsOn&&<p key={'streak-'+streak.key} className={styles.streak} data-konbini-streak={streak.n} data-live={streak.live||undefined} data-best={streak.best||undefined} role={streak.live?undefined:'status'}>Keep-ups: <b>{streak.n}</b>{streak.best?<span className={styles.newBest}>★ New best!</span>:best>0?<small>best {best}</small>:null}</p>}
+  {streak&&actionsOn&&<KeepUpCounter key={'streak-'+streak.key} className={styles.streak} newBestClassName={styles.newBest} data-konbini-streak={streak.n} n={streak.n} live={streak.live} best={best} newBest={streak.best}/>}
   {coachTip&&<p className={styles.coachTip} role="status" data-konbini-coach-tip><b>Coach tip</b>{coachTip}</p>}
   {clerkLine&&<aside className={styles.clerkLine} role="status" data-konbini-clerk-line><span>{npc.name}</span><p>{clerkLine}</p></aside>}
   <KonbiniDoorSlide mode={leaving?'leave':'arrive'} key={leaving?'leave':'arrive'} ready={firstFrame||failed}/>

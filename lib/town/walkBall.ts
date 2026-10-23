@@ -27,6 +27,23 @@ export const ISLAND_SHOT={speed:SHOT_SPEED,chargeSpeed:22,lift:3.2,chargeLift:52
 const S=ISLAND_SHOT;
 const JUGGLE_CONTACT=.48,WALL_GRAVITY=26,WALL_KICK_TIME=.22,WALL_RECEIVE_TIME=.14;
 const WALL_HEIGHT_RATIOS=[.45,.72,.9,.6,.95];
+/**
+ * COUNTED keep-ups (Oct 22 2026, owner: "the kickup on the main screen should act just like the one in the kombini where it
+ * counts your kickups … if holding the button the kick is higher in the air"; lib/town/keepUps.ts). `keepUp()` (the island's
+ * juggle button / J) starts a counted juggle: the same routine, arcs, signature styles and wall kicks as `juggle()`, but every
+ * touch after the first needs a press while the ball comes down (the falling half of the flight, KEEPUP_ARM; at a wall: the
+ * back half of the trip out, or the rebound coming back). A press arms the next touch; no press by the touch → the ball drops
+ * ('drop': the shot physics, then the usual recall) and the run ends. `state.streak` is the live count (Town shows the pill).
+ * Holding the press lifts the touch it arms (holdLift: up to 1.6× the arc, flight time × √lift) and the wall kick's height
+ * ratio (still under the wall top − 0.25 m); a lifted foot/knee arc stays at or under KEEPUP_CEILING (the Solar lob's 3.04 m),
+ * so indoor ceilings are unaffected. `juggle()` keeps the old automatic loop (emotes, jobs, tests).
+ */
+const KEEPUP_ARM=.45,KEEPUP_CEILING=3.04;
+/** Hold → lift, ONE curve for the island and the Konbini (re-exported by lib/town/keepUps.ts; it lives here because the Node
+ *  tests load this file on its own): nothing for a tap (< start ms), a linear ramp to maxLift × the rise at full ms, capped. */
+export const KEEPUP_HOLD={start:250,full:600,maxLift:1.6} as const;
+export function holdCharge(heldMs:number){const t=(heldMs-KEEPUP_HOLD.start)/(KEEPUP_HOLD.full-KEEPUP_HOLD.start);return Number.isFinite(t)?Math.max(0,Math.min(1,t)):0;}
+export const holdLift=(heldMs:number)=>1+(KEEPUP_HOLD.maxLift-1)*holdCharge(heldMs);
 export type WallJuggleTarget={x:number;z:number;top?:number};
 type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
@@ -34,9 +51,15 @@ export type JuggleHead={bottom:number;top:number;front:number;width:number};
 export const BALL_SEA_LEVEL=-.43,BALL_FLOAT_TIME=2.1;
 type Environment={sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
- const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
+ const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle'|'drop',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
   /** Seconds a shot has been floating in the sea (0 = not in the water). The ball stays in 'shot' mode while it floats. */
-  floating:0};
+  floating:0,
+  /** Counted keep-ups (keepUp()): on, the live count (0 = no run), the current touch's lift (1 = tap, ≤ 1.6 held). */
+  counted:false,streak:0,keepLift:1};
+ let armed=false,pressing=false,pressUsed=true,keptHold=false,holdAge=0,releaseLift=1,flightAge=0,touchIndex=0;
+ const liftNow=()=>pressing?holdLift(holdAge*1000):releaseLift;
+ const consumeLift=()=>{const l=liftNow();releaseLift=1;return l;};
+ const endRun=()=>{state.counted=false;state.streak=0;state.keepLift=1;armed=false;keptHold=false;};
  let floatFrom=0;
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
  let movingJuggle=false;
@@ -59,22 +82,42 @@ export function createWalkBall(){
   }
   state.y=support+.2;state.vx=state.vy=state.vz=0;
  };
- const reset=(p:Player)=>{state.floating=0;state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
- const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
+ const reset=(p:Player)=>{endRun();state.floating=0;state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
+ const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;endRun();state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
  const beginCharge=(p:Player,yaw:number)=>{if(state.mode==='shot'||state.mode==='windup')return;reset(p);state.mode='charging';state.yaw=yaw;};
  const validWall=(p:Player,target?:WallJuggleTarget)=>{if(!target)return false;const distance=Math.hypot(target.x-p.x,target.z-p.z),facing=distance?((target.x-p.x)*Math.sin(p.yaw)+(target.z-p.z)*Math.cos(p.yaw))/distance:0;return Number.isFinite(distance)&&distance>=.8&&distance<=WALL_JUGGLE_DISTANCE&&facing>=-.1&&(target.top===undefined||Number.isFinite(target.top)&&target.top>p.y+.75);};
- const regularJuggle=()=>{blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;state.mode='juggle';state.wallTarget=null;state.wallAge=state.age=state.kick=0;state.vx=state.vy=state.vz=0;normalTouchCycle=-1;};
+ const regularJuggle=()=>{flightAge=0;state.keepLift=1;blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;state.mode='juggle';state.wallTarget=null;state.wallAge=state.age=state.kick=0;state.vx=state.vy=state.vz=0;normalTouchCycle=-1;};
  const updateWallTarget=(p:Player,target?:WallJuggleTarget)=>{
   if(state.mode!=='juggle'&&state.mode!=='wall-juggle')return;
   nextWall=validWall(p,target)?{...target!}:undefined;
   if(!nextWall){if(state.mode==='wall-juggle')regularJuggle();return;}
-  if(state.mode==='juggle'&&blendAge>=.35&&(state.jugglePhase<.12||state.jugglePhase>.9)){state.mode='wall-juggle';state.wallTarget={...nextWall};state.wallPhase='kick';state.wallAge=0;state.juggleSide=1;}
+  if(state.mode==='juggle'&&blendAge>=.35&&(state.jugglePhase<.12||state.jugglePhase>.9&&(!state.counted||armed))){if(state.counted&&state.jugglePhase>.9){armed=false;state.streak++;state.keepLift=consumeLift();}state.mode='wall-juggle';state.wallTarget={...nextWall};state.wallPhase='kick';state.wallAge=0;state.juggleSide=1;}
  };
  const juggle=(p:Player,target?:WallJuggleTarget)=>{if(state.mode==='juggle'||state.mode==='wall-juggle'){reset(p);return;}reset(p);state.mode='juggle';state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);};
- const recall=()=>{if(state.mode==='shot'){state.mode='return';state.age=0;state.floating=0;}};
+ /** The window where a press arms the next counted touch: the ball coming down (juggle) or heading back from the wall. */
+ const inWindow=()=>state.mode==='juggle'?state.jugglePhase>=KEEPUP_ARM:state.mode==='wall-juggle'&&(state.wallPhase==='returning'||state.wallPhase==='outbound'&&state.wallAge>=wallLegTime*.5);
+ /** A counted touch was missed (or the ball landed): it falls off the foot with the shot physics and comes back as usual. */
+ const dropKeepUp=(p:Player)=>{endRun();state.mode='drop';state.age=0;shotAge=.6;state.charge=0;finishTarget=undefined;state.wallTarget=null;nextWall=undefined;state.kick=state.jugglePhase=0;state.vx=Math.sin(p.yaw)*.8;state.vz=Math.cos(p.yaw)*.8;state.vy=Math.min(state.vy,-1.5);};
+ /**
+  * Press (button down / J down): from the feet (or any non-counted mode) it starts a counted run with the first touch (count 1);
+  * during a run it arms the next touch when the ball is in the window, or arms it later if still held when the window opens.
+  * One press at a time (key auto-repeat is ignored until keepUpRelease).
+  */
+ const keepUp=(p:Player,target?:WallJuggleTarget)=>{
+  if(pressing)return false;pressing=true;holdAge=0;pressUsed=false;keptHold=false;
+  if(state.counted&&(state.mode==='juggle'||state.mode==='wall-juggle')){if(inWindow()){armed=true;pressUsed=true;}return true;}
+  reset(p);state.mode='juggle';state.counted=true;state.streak=1;state.keepLift=1;flightAge=0;touchIndex=0;pressUsed=true;state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);return true;
+ };
+ /** Release: an armed touch (or a held press let go early) keeps the lift this hold reached. */
+ const keepUpRelease=()=>{if(!pressing)return;pressing=false;const lift=holdLift(holdAge*1000);if(armed)releaseLift=lift;
+  // A HELD press let go before the window (kids let go early): it still arms the next touch, with the lift it reached. A tap does not.
+  else if(state.counted&&!pressUsed&&lift>1){keptHold=true;releaseLift=lift;}};
+ const recall=()=>{if(state.mode==='shot'||state.mode==='drop'){state.mode='return';state.age=0;state.floating=0;}};
  function update(dt:number,p:Player,env:Environment){
   state.age+=dt;state.bounce=Math.max(0,state.bounce-dt);impactCooldown=Math.max(0,impactCooldown-dt);
   const impact=()=>{state.bounce=.16;if(impactCooldown<=0){impactCooldown=.09;env.impact(state.x,state.y,state.z);}};
+  if(pressing)holdAge+=dt;
+  if(state.counted&&(pressing||keptHold)&&!pressUsed&&inWindow()){armed=true;pressUsed=true;keptHold=false;}
   if(state.mode==='wall-juggle'){
    if(!validWall(p,nextWall)){regularJuggle();return;}
    state.wallAge+=dt;
@@ -82,7 +125,7 @@ export function createWalkBall(){
    const target=state.wallTarget!,foot={x:p.x+wallDirection.x*.45+wallDirection.z*.108*state.juggleSide,z:p.z+wallDirection.z*.45-wallDirection.x*.108*state.juggleSide};
    if(state.wallPhase==='kick'){
     const top=target.top??p.y+2.4;contactHeight=JUGGLE_CONTACT;const progress=Math.min(1,state.wallAge/WALL_KICK_TIME);state.x=foot.x;state.z=foot.z;state.y=p.y+JUGGLE_CONTACT+(contactHeight-JUGGLE_CONTACT)*Math.sin(progress*Math.PI/2);state.kick=progress*.36;state.jugglePhase=(1-progress)*.25;
-    if(progress>=1){const distance=Math.max(.1,Math.hypot(target.x-foot.x,target.z-foot.z)-.2),apex=Math.min(top-.25,p.y+Math.min(30,Math.max(contactHeight+.06,(top-p.y)*WALL_HEIGHT_RATIOS[wallKickCount%WALL_HEIGHT_RATIOS.length])));wallLegTime=Math.sqrt(2*Math.max(.04,apex-p.y-contactHeight)/WALL_GRAVITY);state.vx=wallDirection.x*distance/wallLegTime;state.vz=wallDirection.z*distance/wallLegTime;state.vy=WALL_GRAVITY*wallLegTime;wallKickCount++;state.wallPhase='outbound';state.wallAge=0;env.strike();}return;
+    if(progress>=1){const distance=Math.max(.1,Math.hypot(target.x-foot.x,target.z-foot.z)-.2),apex=Math.min(top-.25,p.y+Math.min(30,Math.max(contactHeight+.06,(top-p.y)*WALL_HEIGHT_RATIOS[wallKickCount%WALL_HEIGHT_RATIOS.length]*(state.counted?state.keepLift:1))));wallLegTime=Math.sqrt(2*Math.max(.04,apex-p.y-contactHeight)/WALL_GRAVITY);state.vx=wallDirection.x*distance/wallLegTime;state.vz=wallDirection.z*distance/wallLegTime;state.vy=WALL_GRAVITY*wallLegTime;wallKickCount++;state.wallPhase='outbound';state.wallAge=0;env.strike();}return;
    }
    if(state.wallPhase==='receive'){
     const progress=Math.min(1,state.wallAge/WALL_RECEIVE_TIME);state.x=foot.x;state.z=foot.z;state.y=p.y+receiveHeight-(receiveHeight-JUGGLE_CONTACT)*progress;state.vx=state.vy=state.vz=0;state.kick=0;state.jugglePhase=.75+progress*.25;
@@ -98,16 +141,21 @@ export function createWalkBall(){
     else{if(env.blocked(x,z,y)){impact();regularJuggle();return;}state.x=x;state.z=z;state.y=y;}
     if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){impact();regularJuggle();return;}
     const received=(state.x-foot.x)*wallDirection.x+(state.z-foot.z)*wallDirection.z<=.06;
-    if(state.wallPhase==='returning'&&(received||returnAge>=wallLegTime)){receiveHeight=state.y-p.y;state.wallPhase='receive';state.wallAge=0;state.vx=state.vy=state.vz=0;env.receive?.();return;}
-    if(state.y<env.floor(state.x,state.z)+.2){state.y=env.floor(state.x,state.z)+.2;impact();regularJuggle();return;}
+    if(state.wallPhase==='returning'&&(received||returnAge>=wallLegTime)){if(state.counted){if(!armed){dropKeepUp(p);return;}armed=false;state.streak++;state.keepLift=consumeLift();}receiveHeight=state.y-p.y;state.wallPhase='receive';state.wallAge=0;state.vx=state.vy=state.vz=0;env.receive?.();return;}
+    if(state.y<env.floor(state.x,state.z)+.2){state.y=env.floor(state.x,state.z)+.2;impact();if(state.counted)dropKeepUp(p);else regularJuggle();return;}
    }
    if(state.wallAge>2)regularJuggle();return;
   }
   if(state.mode==='charging'){attach(p,env.floor);state.yaw=p.yaw;state.charge=Math.max(0,Math.min(1,(state.age-.18)/1.8));state.kick=0;return;}
   if(state.mode==='attached'){attach(p,env.floor);state.kick=0;return;}
   if(state.mode==='juggle'){
-   if(movingJuggle!==!!env.moving){movingJuggle=!!env.moving;regularJuggle();}
-   attach(p);const style=env.ballStyle,cycle=state.age/(style==='frost'?.8:style==='solar'?1.2:1.05),phase=cycle%1,touch=Math.floor(cycle),side=touch%2?1:-1;
+   // A counted run only re-blends when walking starts / stops (no free touch); the automatic loop restarts as before.
+   if(movingJuggle!==!!env.moving){movingJuggle=!!env.moving;if(state.counted){blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;}else regularJuggle();}
+   attach(p);const style=env.ballStyle,period=style==='frost'?.8:style==='solar'?1.2:1.05;let cycle=state.age/period;
+   if(state.counted){flightAge+=dt;const flight=period*Math.sqrt(state.keepLift);
+    if(flightAge>=flight){if(!armed){dropKeepUp(p);return;}armed=false;flightAge-=flight;touchIndex++;state.streak++;state.keepLift=consumeLift();}
+    cycle=touchIndex+Math.min(.999,flightAge/(period*Math.sqrt(state.keepLift)));}
+   const phase=cycle%1,touch=Math.floor(cycle),side=touch%2?1:-1;
    const routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;
    state.jugglePhase=phase;state.juggleSide=side;state.juggleTouch=movingJuggle?'foot':routine[touch%routine.length];
    const from=juggleContact(state.juggleTouch,side,env.juggleHead,env.headTop),to=juggleContact(movingJuggle?'foot':routine[(touch+1)%routine.length],-side,env.juggleHead,env.headTop),blend=phase*phase*(3-2*phase);
@@ -118,7 +166,8 @@ export function createWalkBall(){
    const orbit=style==='cosmic'&&state.juggleTouch!=='around-world'?.28:0,angle=phase*Math.PI*2;
    const x=from.x+(to.x-from.x)*blend+orbit*side*Math.sin(angle),z=from.z+(to.z-from.z)*blend+orbit*.5*(1-Math.cos(angle));
    state.x=p.x+Math.cos(p.yaw)*x+Math.sin(p.yaw)*z;state.z=p.z-Math.sin(p.yaw)*x+Math.cos(p.yaw)*z;
-   state.y=p.y+from.y+(to.y-from.y)*phase+4*phase*(1-phase)*(state.juggleTouch==='around-world'?.5:style==='solar'?(from.y<1.5?1.6:1):style==='frost'?.5:.7);
+   const arc=state.juggleTouch==='around-world'?.5:style==='solar'?(from.y<1.5?1.6:1):style==='frost'?.5:.7,high=Math.max(from.y,to.y);
+   state.y=p.y+from.y+(to.y-from.y)*phase+4*phase*(1-phase)*(state.counted&&state.keepLift>1?Math.min(arc*state.keepLift,Math.max(arc,KEEPUP_CEILING-high)):arc);
    blendAge+=dt;if(blendAge<.35){const t=blendAge/.35,blend=t*t*(3-2*t);state.x=blendStart.x+(state.x-blendStart.x)*blend;state.y=blendStart.y+(state.y-blendStart.y)*blend;state.z=blendStart.z+(state.z-blendStart.z)*blend;}
    // Keep foot-juggle arcs clear of the plush face.
    if(env.juggleHead){const h=env.juggleHead,cy=(h.top+h.bottom)/2,ry=(h.top-h.bottom)/2+.32,rx=h.width+.32,rz=h.front+.32,dx=state.x-p.x,dz=state.z-p.z;
@@ -166,5 +215,5 @@ export function createWalkBall(){
   if(shotAge>(state.charge>0?S.chargedAge:S.tapAge)||Math.hypot(state.x-p.x,state.z-p.z)>(state.charge>0?360:65)||Math.hypot(state.vx,state.vz)<S.restSpeed&&state.y<=env.floor(state.x,state.z)+S.restHeight)recall();
  }
  const syncDribble=(p:Player,contact:{x:number;z:number},floor:Environment['floor'])=>{if(state.mode==='attached')attach(p,floor,contact);};
- return {state,reset,beginCharge,shoot,juggle,updateWallTarget,recall,update,syncDribble};
+ return {state,reset,beginCharge,shoot,juggle,keepUp,keepUpRelease,get keepUpHeld(){return pressing;},updateWallTarget,recall,update,syncDribble};
 }

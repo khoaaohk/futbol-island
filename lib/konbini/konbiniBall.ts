@@ -1,4 +1,4 @@
-import {SHOT_WINDUP,ISLAND_SHOT,juggleContact} from '../town/walkBall';
+import {SHOT_WINDUP,ISLAND_SHOT,juggleContact,holdLift} from '../town/walkBall';
 /**
  * The Konbini's two ball actions (user, Sep 30 2026: "in the Konbini, add two actions. One is to shoot the ball, and add another
  * action."), pure (no three.js) so tests/konbini.cjs can run them in Node. lib/konbini/konbiniScene.ts steps it only while the ball
@@ -18,6 +18,13 @@ import {SHOT_WINDUP,ISLAND_SHOT,juggleContact} from '../town/walkBall';
  * streak needs its own timing: each touch lifts the ball ~0.65 m above the foot contact (walkBall `juggleContact('foot')`, the
  * same point the island's juggle meets), and the next tap must come while it drops back through the touch window (below
  * KEEPUP.window, falling). Miss it and the ball drops and rolls back to your feet. Walking the ball into a shelf drops it too.
+ *
+ * HOLD FOR HIGHER (Oct 22 2026, owner: "if holding the button the kick is higher in the air"; lib/town/keepUps.ts, the island's
+ * curve): `press` / `pressEnd` wrap `tap`. A press in the window above the foot touches on its release (a tap: at once, the
+ * normal rise) or, still held, when the ball reaches the foot contact; a press at or below the foot touches at once. A press while
+ * the ball is still high or rising used to be ignored ('early'); now, if it is still held when the ball drops through the window,
+ * it touches the same way. The rise is × holdLift(held): up to 1.6× (apex ≈ 1.52 m, the window is unchanged, so the next touch is
+ * still reachable). Released before the window it is the old early tap (no touch). `tap` itself (tests) is unchanged.
  */
 export type BallBox={minX:number;maxX:number;minZ:number;maxZ:number;/** The fixture index (shelf / counter / fridge), −1 for walls. */fi:number};
 export type BallPlayer={x:number;z:number;yaw:number};
@@ -34,11 +41,11 @@ export const KEEPUP={gravity:7.5,contact:.48,rise:.65,window:1.05,floor:.19};
 export const holdPower=(heldMs:number)=>Math.max(0,Math.min(1,(heldMs-180)/1800));
 /** The island's launch for a charge 0..1 (walkBall 'windup' → 'shot'): 38 m/s and a 3.2 m/s hop for a tap, 60 m/s and 55 m/s up at full. */
 export function indoorLaunch(charge:number){const c=Math.max(0,Math.min(1,charge));return {speed:ISLAND_SHOT.speed+ISLAND_SHOT.chargeSpeed*c,lift:ISLAND_SHOT.lift+ISLAND_SHOT.chargeLift*c};}
-const touchSpeed=()=>Math.sqrt(2*KEEPUP.gravity*KEEPUP.rise);
+const touchSpeed=(lift=1)=>Math.sqrt(2*KEEPUP.gravity*KEEPUP.rise*Math.max(1,Math.min(1.6,lift)));
 
 export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>void=()=>{}){
- const s={mode:'feet' as BallMode,x:0,y:.19,z:0,vx:0,vy:0,vz:0,age:0,charge:0,kick:0,yaw:0,streak:0,side:1 as 1|-1,sinceTouch:0,hits:0,shots:0};
- let hitCooldown=0;
+ const s={mode:'feet' as BallMode,x:0,y:.19,z:0,vx:0,vy:0,vz:0,age:0,charge:0,kick:0,yaw:0,streak:0,side:1 as 1|-1,sinceTouch:0,hits:0,shots:0,/** The current keep-up flight's lift (1 = tap). */lift:1};
+ let hitCooldown=0,pressing=false,pending=false,holdAge=0,/** A held press let go before the window: its lift, waiting for the foot (1 = none). */keptLift=1;
  const r=INDOOR_SHOT.radius,WALL:BallBox={minX:0,maxX:0,minZ:0,maxZ:0,fi:-1};
  /** The box (or wall, fi −1) a ball centred at x,z would touch, else null. */
  function blockedAt(x:number,z:number):BallBox|null{
@@ -49,7 +56,8 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
  function footContact(p:BallPlayer){const c=juggleContact('foot',s.side);return {x:p.x+Math.cos(p.yaw)*c.x+Math.sin(p.yaw)*c.z,z:p.z-Math.sin(p.yaw)*c.x+Math.cos(p.yaw)*c.z};}
  function toFeet(){s.mode='feet';s.vx=s.vy=s.vz=0;s.age=0;s.kick=0;s.charge=0;}
  function recall(){if(s.mode==='shot'||s.mode==='drop'){s.mode='return';s.age=0;}}
- function drop(reason:'missed'|'shelf'|'stopped'){const n=s.streak;s.mode='drop';s.age=0;s.vx*=.3;s.vz*=.3;s.streak=0;emit({type:'drop',streak:n,reason});}
+ function touch(lift=1){s.streak++;s.side=s.side===1?-1:1;s.lift=lift;s.vy=touchSpeed(lift)*(s.y<KEEPUP.contact?1+(KEEPUP.contact-s.y)*.4:1);s.sinceTouch=0;emit({type:'touch',streak:s.streak});}
+ function drop(reason:'missed'|'shelf'|'stopped'){pending=false;keptLift=1;const n=s.streak;s.mode='drop';s.age=0;s.vx*=.3;s.vz*=.3;s.streak=0;emit({type:'drop',streak:n,reason});}
  /**
   * Physics step shared by the shot and a dropped keep-up: walkBall's 'shot' step line for line (substeps ≤ ISLAND_SHOT.substep,
   * x then z axis-separated rebounds × wallBounce, gravity, a floor bounce × floorBounce above bounceMinVy, then the frame's drag),
@@ -79,14 +87,25 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
   cancelCharge(){if(s.mode==='charging')toFeet();},
   /** Keep-ups: tap to touch. From the feet it starts a streak; in the air it counts if the ball is dropping through the window. */
   tap(p:BallPlayer){
-   if(s.mode==='feet'){const c=footContact(p);if(blockedAt(c.x,c.z))return false;s.mode='keepup';s.streak=1;s.side=1;s.x=c.x;s.z=c.z;s.y=KEEPUP.contact;s.vy=touchSpeed();s.sinceTouch=0;emit({type:'touch',streak:1});return true;}
+   if(s.mode==='feet'){const c=footContact(p);if(blockedAt(c.x,c.z))return false;s.mode='keepup';s.streak=1;s.side=1;s.lift=1;s.x=c.x;s.z=c.z;s.y=KEEPUP.contact;s.vy=touchSpeed();s.sinceTouch=0;emit({type:'touch',streak:1});return true;}
    if(s.mode!=='keepup')return false;
-   if(s.vy<0&&s.y<=KEEPUP.window){s.streak++;s.side=s.side===1?-1:1;s.vy=touchSpeed()*(s.y<KEEPUP.contact?1+(KEEPUP.contact-s.y)*.4:1);s.sinceTouch=0;emit({type:'touch',streak:s.streak});return true;}
+   if(s.vy<0&&s.y<=KEEPUP.window){touch();return true;}
    emit({type:'early'});return false;},
+  /** Button / J down: a tap, and if it was early, a held touch waiting for the ball (see HOLD FOR HIGHER). */
+  press(p:BallPlayer){pressing=true;holdAge=0;pending=false;keptLift=1;
+   // In the window but still above the foot: the touch waits for the release (a tap: at once, normal rise) or for the ball to reach
+   // the foot while still held (higher), so holding works whenever you press, like the island. At or below the foot: touch now.
+   if(s.mode==='keepup'&&s.vy<0&&s.y<=KEEPUP.window&&s.y>KEEPUP.contact){pending=true;return true;}
+   const ok=this.tap(p);if(!ok&&s.mode==='keepup')pending=true;return ok;},
+  /** Button / J up: a waiting held touch fires now if the ball is in the window; otherwise it was just early. */
+  pressEnd(){if(!pressing)return false;pressing=false;const lift=holdLift(holdAge*1000),fire=pending&&s.mode==='keepup'&&s.vy<0&&s.y<=KEEPUP.window;
+   // A HELD press let go early (kids let go before the ball drops) keeps its touch, waiting at the foot; a tap released early is just early.
+   if(!fire&&pending&&s.mode==='keepup'&&lift>1){keptLift=lift;return false;}pending=false;if(fire)touch(lift);return fire;},
+  get held(){return pressing;},
   /** Stop keep-ups on purpose (walking out, zoom, dialog): the ball simply comes back to the feet, the streak still counts. */
   settle(p:BallPlayer){if(s.mode==='keepup'){const n=s.streak;s.streak=0;emit({type:'drop',streak:n,reason:'stopped'});}if(s.mode==='charging'||s.mode==='windup'||s.mode==='keepup'){toFeet();const f=feetPoint(p);s.x=f.x;s.z=f.z;s.y=r;}else recall();},
   update(dt:number,p:BallPlayer){
-   s.age+=dt;hitCooldown=Math.max(0,hitCooldown-dt);
+   s.age+=dt;hitCooldown=Math.max(0,hitCooldown-dt);if(pressing)holdAge+=dt;
    switch(s.mode){
     case 'feet':return;
     case 'charging':{s.charge=Math.max(0,Math.min(1,(s.age-.18)/1.8));s.yaw=p.yaw;s.kick=0;const f=feetPoint(p,INDOOR_SHOT.lead),k=1-Math.exp(-dt*18);s.x+=(f.x-s.x)*k;s.z+=(f.z-s.z)*k;s.y=r;return;}// the ball stays at the feet while you wind up
@@ -103,11 +122,13 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
      // The ball stays in the aisle: a touch point inside a shelf (walking into it) drops the ball.
      if(blockedAt(c.x,c.z)){s.vx=Math.sin(p.yaw)*-.6;s.vz=Math.cos(p.yaw)*-.6;drop('shelf');return;}
      const k=1-Math.exp(-dt*20);s.x+=(c.x-s.x)*k;s.z+=(c.z-s.z)*k;s.vy-=KEEPUP.gravity*dt;s.y+=s.vy*dt;
+     // A held early press touches when the ball reaches the foot contact, lifted by how long it has been held.
+     if(pending&&(pressing||keptLift>1)&&s.vy<0&&s.y<=KEEPUP.contact){pending=false;const l=pressing?holdLift(holdAge*1000):keptLift;keptLift=1;touch(l);return;}
      if(s.y<=KEEPUP.floor){s.y=KEEPUP.floor;s.vy=-s.vy*.35;s.vx=Math.sin(p.yaw)*.5;s.vz=Math.cos(p.yaw)*.5;drop('missed');}return;}
    }
   },
   /** 0..1 through the current keep-up flight, for the rig's juggle pose (touch at 0). */
-  jugglePhase(){return s.mode==='keepup'?Math.min(1,s.sinceTouch/(2*touchSpeed()/KEEPUP.gravity)):0;},
+  jugglePhase(){return s.mode==='keepup'?Math.min(1,s.sinceTouch/(2*touchSpeed(s.lift)/KEEPUP.gravity)):0;},
   get moving(){return s.mode!=='feet';},
  };
 }

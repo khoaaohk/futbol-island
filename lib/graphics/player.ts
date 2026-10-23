@@ -53,6 +53,8 @@ export type PlayerMotion = {
   /** Repeating keep-up phase, alternating the kicking foot. */
   juggle?: number;
   juggleTouch?: JuggleTouch;
+  /** A held keep-up's lift (1 = tap, up to 1.6; lib/town/keepUps.ts): the touching leg swings higher and further through. */
+  juggleLift?: number;
   stunAge?: number;
   shotCharge?: number;
   /** 0..1 wind-up before a kick (A7, Oct 2026): the support boot plants beside the ball and the kicking leg draws back
@@ -1343,8 +1345,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       }
       if(motion?.juggle!==undefined&&side===kickSide){
         const phase=motion.juggle%1,tap=Math.max(0,1-phase/.32),kind=motion.juggleTouch??'foot';
-        if(kind==='foot'||kind==='around-world'){footZ+=(.32-footZ)*tap;lift+=(.27-lift)*tap;}
-        if(kind==='knee'){footZ+=(.48-footZ)*tap;lift+=(.52-lift)*tap;}
+        const power=Math.max(0,Math.min(1,((motion.juggleLift??1)-1)/.6));// a held (higher) keep-up: a stronger swing
+        if(kind==='foot'||kind==='around-world'){footZ+=(.32+.1*power-footZ)*tap;lift+=(.27+.16*power-lift)*tap;}
+        if(kind==='knee'){footZ+=(.48+.06*power-footZ)*tap;lift+=(.52+.12*power-lift)*tap;}
         if(kind==='around-world'&&!reduced){const arc=Math.sin(Math.PI*phase),angle=phase*Math.PI*2;footX+=side*Math.sin(angle)*.3*arc;footZ+=.4*arc;lift+=arc*(.65+.18*Math.cos(angle));}
       }
       if (receive > 0 && side === kickSide) {

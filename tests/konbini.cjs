@@ -341,7 +341,7 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert.equal(W.ISLAND_SHOT.speed,W.SHOT_SPEED);const lo=B.indoorLaunch(0),hi=B.indoorLaunch(1),over=B.indoorLaunch(5);
   assert.deepEqual([lo.speed,lo.lift],[38,3.2],'a tap: the island’s 38 m/s');assert.deepEqual([hi.speed,hi.lift],[60,55.2],'full charge: the island’s 60 m/s');assert.deepEqual(over,hi);
   const ballSrc0=fs.readFileSync(path.join(__dirname,'../lib/konbini/konbiniBall.ts'),'utf8'),walkSrc=fs.readFileSync(path.join(__dirname,'../lib/town/walkBall.ts'),'utf8');
-  assert(/import \{SHOT_WINDUP,ISLAND_SHOT,juggleContact\} from '\.\.\/town\/walkBall'/.test(ballSrc0)&&/INDOOR_SHOT=\{\.\.\.ISLAND_SHOT,/.test(ballSrc0),'the indoor ball imports the island constants');
+  assert(/import \{SHOT_WINDUP,ISLAND_SHOT,juggleContact,holdLift\} from '\.\.\/town\/walkBall'/.test(ballSrc0)&&/INDOOR_SHOT=\{\.\.\.ISLAND_SHOT,/.test(ballSrc0),'the indoor ball imports the island constants');
   assert(/state\.vx\*=-S\.wallBounce/.test(walkSrc)&&/state\.vy-=S\.gravity\*step/.test(walkSrc)&&/state\.vy=-state\.vy\*S\.floorBounce/.test(walkSrc)&&!/-\.78|\*\.53|13\*step/.test(walkSrc),'the island shot reads the same constants (no stray literals)');
   // Side by side: the SAME tap shot from walkBall (the island) and the Konbini ball, in the same walled room, traces the same path.
   {const shelfA={minX:-1,maxX:1,minZ:2,maxZ:2.8,fi:3},kb=B.createKonbiniBall([shelfA]),wb=W.createWalkBall(),p={x:0,z:0,y:0,yaw:.35};

@@ -339,6 +339,13 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   screen cancel it at once; reduced motion and already-close (room) cameras skip it; trees / buildings in the sight line shrink the
   zoom (or skip it); a new emote extends the zoom; 0.6 s cooldown after it ends. Guarded by `tests/high-five.cjs`.
 
+## Keep-ups pill (22 October 2026)
+
+The island's counted keep-ups show the Konbini's pill (`components/KeepUpCounter.tsx`, "Keep-ups: N  best M") in the **task**
+slot: it is what the player is doing right now, so a toast never pushes it away and it never covers a button. It appears on the
+first touch, stays live while the run lasts and fades ~1.8 s (2.6 s on a new best) after the drop; hidden off foot and in a
+lesson. No animation with reduced motion. It is pointer-transparent like the rest of the column.
+
 ## Room party chip (rooms Phase 1, 22 Oct 2026, `docs/multiplayer-rooms-design.md` 3.3)
 
 - **Where:** the room page's own header slot, NOT the island `.hud-stack`. Konbini header (owner, 22 Oct 2026): a 3-column grid
