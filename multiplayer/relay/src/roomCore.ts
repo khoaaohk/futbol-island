@@ -272,7 +272,9 @@ export class RoomCore {
       this.count('rotates');
       const old = this._code;
       const code = this.rotate();
-      this.send(peer, [S.Code, code, this.codeExpiresAt]);
+      // Every member hears the new code (Party rejoin, Oct 22 2026: guests show it on their Code tab to help a friend in, and their
+      // stored session and reconnects use it). Old clients already handled S.Code (they only ever got it as the host): backward compatible.
+      this.broadcast([S.Code, code, this.codeExpiresAt], null);
       if (this.onRotate) this.onRotate(old, code);
     } else if (msg[0] === C.End) {
       this.end(EndReason.HostEnded);

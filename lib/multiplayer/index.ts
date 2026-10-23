@@ -53,7 +53,11 @@ function bindOnce(conn: PartyConnection, now: () => number): () => void {
   });
   const offStatus = conn.onStatus((s) => partyStore.setStatus(s, conn.code));
   partyStore.setStatus(conn.status, conn.code);
+  // Party rejoin: tab ownership and a lapsed slot (set before the status they come with, so the UI reads both together).
+  const hasLocal = typeof conn.onLocal === 'function'; // a test double may not have it
+  const offLocal = hasLocal ? conn.onLocal(() => partyStore.setLocal(conn.tab ?? null, !!conn.lapsed)) : () => {};
+  if (hasLocal) partyStore.setLocal(conn.tab ?? null, !!conn.lapsed);
   const health = () => ({ rttMs: conn.rttMs ?? null, reconnects: conn.reconnects ?? 0 });
   partyStore.setHealthSource(health);
-  return () => { offMsg(); offStatus(); partyStore.setHealthSource(null); };
+  return () => { offMsg(); offStatus(); offLocal(); partyStore.setHealthSource(null); };
 }

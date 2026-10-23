@@ -146,10 +146,12 @@ t('malformed inputs rejected (server)',()=>{
     j([20,1,0,tok,1,2,0,new Array(21).fill(member)]),j([20,1,0,tok,1,2,0,[[0,[20,0],look,0,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,32],look,0,null]]]),
     j([20,1,0,tok,1,2,0,[[0,[0,0],look,2,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,0],look,0,[1,2]]]]),j([20,1,0,tok,1.5,2,0,[]]),
     j([21]),j([21,[1]]),j([22,1,4]),j([22,32,0]),j([23]),j([23,1,2]),j([23,1,2,...body.slice(1)]),j([23,1,32,...body]),j([23,1.5]),
-    j([24,1,10]),j([25,1,2,0,0]),j([25,1,0,99999,0]),j([26]),j([26,32]),j([27,'k7mq4r',1]),j([27,'K7MQ4O',1]),j([27,'K7M-Q4R',1]),j([27,5,1]),j([28,3]),j([29,9]),j([29,-1]),j([30]),j([30,1.5]),
+    j([24,1,10]),j([25,1,2,0,0]),j([25,1,0,99999,0]),j([26]),j([26,32]),j([27,'k7mq4r',1]),j([27,'K7MQ4O',1]),j([27,'K7M-Q4R',1]),j([27,5,1]),j([28,3]),j([29,10]),j([29,-1]),j([30]),j([30,1.5]),
     'x'.repeat(5000),j([24,1,1,1])];
   assert.ok(bad.length>=30);
   for(const b of bad)assert.equal(P.parseServer(b),null,b.slice(0,80));
+  // Party rejoin (Oct 22 2026): BadName (9) reaches the client (a lapsed slot on a resume is refused with it).
+  assert.deepEqual(P.parseServer(j([29,9])),[29,9]);
 });
 
 t('encode asserts size',()=>{

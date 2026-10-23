@@ -49,7 +49,7 @@ require('fs').mkdirSync(out, { recursive: true });
 
   const state = () => p.evaluate(() => {
     const btn = document.querySelector('[data-party-open]');
-    let s = null; try { s = JSON.parse(sessionStorage.getItem('fi-party-session') || 'null'); } catch { /* none */ }
+    let s = null; try { s = JSON.parse(localStorage.getItem('fi2-party-session-v1') || 'null'); } catch { /* none */ }
     return { live: btn?.getAttribute('data-party-live') === 'true', label: btn?.getAttribute('aria-label') || null, token: s?.resumeToken || null, code: s?.code || null };
   }).catch(() => ({ live: false, label: null, token: null, code: null }));
   const waitLive = async (n = 2, ms = 30000) => {

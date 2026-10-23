@@ -140,7 +140,7 @@ export function parseServer(raw: string): ServerMsg | null {
     case S.Ended:
       return a.length === 2 && inRange(a[1], 0, 2) ? (a as ServerMsg) : null;
     case S.Error:
-      return a.length === 2 && inRange(a[1], 0, 8) ? (a as ServerMsg) : null;
+      return a.length === 2 && inRange(a[1], 0, 9) ? (a as ServerMsg) : null; // 0..BadName (9: a lapsed resume, Party rejoin)
     case S.Beat:
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ServerMsg) : null;
     case S.Renamed:

@@ -2,7 +2,7 @@
 // flag flipping), never because a Poses message arrived.
 import { useSyncExternalStore } from 'react';
 import { S, nameFor, presenceOf, activityOf, roomOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
-import type { PartyStatus } from './connection';
+import type { PartyStatus, TabState } from './connection';
 import { colourHex } from './names';
 import { roomActivity } from './presence';
 
@@ -16,6 +16,9 @@ export type PartyState = {
   status: PartyStatus; code: string | null; codeExpiresAt: number; you: MemberId | null; isHost: boolean; locked: boolean;
   members: Member[]; lastEmote: { id: MemberId; emote: Emote; at: number } | null;
   pings: { id: MemberId; kind: PingKind; x: number; z: number; until: number }[]; error: ErrorCode | null;
+  /** Party rejoin (Oct 22 2026): which tab owns the party ('elsewhere' / 'moved' = another tab of this browser), and whether a
+   *  resume found its slot lapsed (the menu then offers Join with the code filled in). From the connection, local only. */
+  tab: TabState; lapsed: boolean;
 };
 
 /** What to call a friend: their typed first name, else the colour name ('Red'). */
@@ -24,7 +27,7 @@ export const displayName = (m: Pick<Member, 'name' | 'nick'>): string => m.nick 
 export const PING_SHOW_MS = 8000;
 
 const initial = (): PartyState => ({
-  status: 'idle', code: null, codeExpiresAt: 0, you: null, isHost: false, locked: false, members: [], lastEmote: null, pings: [], error: null,
+  status: 'idle', code: null, codeExpiresAt: 0, you: null, isHost: false, locked: false, members: [], lastEmote: null, pings: [], error: null, tab: null, lapsed: false,
 });
 
 /** A friend walking in a room is 'indoors' with no Activity on the wire (the speed byte is the room code): read the room as the
@@ -122,6 +125,8 @@ export const partyStore = {
         return; // Beat
     }
   },
+  /** Party rejoin: the connection's tab / lapsed (emits only on change). */
+  setLocal(tab: TabState, lapsed: boolean): void { if (tab !== state.tab || lapsed !== state.lapsed) set({ ...state, tab, lapsed }); },
   /** Optimistic: the host sees "locked" at once (the relay sends no echo). */
   setLocked(locked: boolean): void { if (state.locked !== locked) set({ ...state, locked }); },
   reset(): void { set(initial()); },
