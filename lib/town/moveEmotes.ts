@@ -323,6 +323,9 @@ export const moveWeight = (age: number, end: number): number => cl(Math.min(age 
 export const moveEndAfter = (age: number, end: number, speed: number): number => speed < MOVE_STOPPED ? Math.min(end, age + MOVE_STOP_FADE) : end;
 
 // ------------------------------------------------------------------------------------------------------------------- bags + rules
+/** A FRIEND'S moving emote end time (remoteAvatars.ts), the same rule as yours: their streamed speed below MOVE_STOPPED shortens it to
+ *  MOVE_STOP_FADE from now (moveEndAfter); off their feet (`onFoot` false: a ride, flying, swimming) it ends now (moveEmoteStop). */
+export const friendMoveEnd = (age: number, end: number, speed: number, onFoot: boolean): number => onFoot ? moveEndAfter(age, end, speed) : Math.min(end, age);
 export interface MoveBag {order: Uint8Array; pos: number; last: number}
 export const createMoveBag = (): MoveBag => ({order: Uint8Array.from([0, 1, 2]), pos: 3, last: -1});
 /** Shuffled bag of three: all three before any repeat, and a new bag never starts with the last one. */

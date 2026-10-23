@@ -23,7 +23,7 @@ import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {DEMOTE_FADE,capGate,planRigs,stepCapGate} from './rigCap';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
+import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {emoteCtxOfMode,flourishAt,flourishForWire,friendFlourishLapsed,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,friendMoveEnd,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
@@ -35,7 +35,7 @@ import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
-import {RIDE_SCALE,createRemoteRides,rideKindFor} from './remoteRides';import {createRiderSpots,type RiderSpots} from './rideSplash';import {beanShapeOf} from './beanGearFit';
+import {RIDE_SCALE,bikeCrankRate,createRemoteRides,rideKindFor} from './remoteRides';import {createRiderSpots,type RiderSpots} from './rideSplash';import {beanShapeOf} from './beanGearFit';
 import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {applyTumbleRoot,createFriendTumbles} from './ballTumble';import {createBumpReact,type BumpReact} from '../town/friendBump';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
@@ -122,6 +122,8 @@ type Entry={
  emote:number;emoteAge:number;hidden:boolean;muted:boolean;
  /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
  lastMode:number;flOn:boolean;
+ /** The sender's mode when the emote arrived: its flourish is picked from this and ends when their context changes (friendFlourishLapsed). */
+ emMode:number;
  /** A moving emote (lib/town/moveEmotes.ts: the sender walked / ran when it arrived): its local id (-1 none), variant (their own bag here), length, and the friend's last speed. */
  mv:number;mvV:number;mvDur:number;spd:number;
  /** Smoothed estimated flight pitch (rad) of a Jetpack friend, for the colour ring. */
@@ -143,6 +145,8 @@ type Entry={
  bump:BumpReact;
  /** Their ride (remoteRides.ts): the bean seat fit (set with the look) and the rolled distance that spins the wheels. */
  rb:boolean;ra:number;
+ /** Their bean bike's crank angle (rad), turned at the rig's pedalling cadence (remoteRides.ts bikeCrankRate). */
+ ca:number;
 };
 
 // Live feel (Oct 23 2026): the old 256 x 64 canvas at 27 px drawn 1.5 m wide made a name ~0.16 m tall, unreadable from the phone's
@@ -290,7 +294,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(show){e.status.position.set(pose.x,pose.y+LABEL_Y*k+.62,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
   if(e.emote>=0){
    if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
-   const fs=e.rig?flourishForWire(e.emote,e.lastMode):undefined;
+   const fs=e.rig?flourishForWire(e.emote,e.emMode):undefined;
    const dur=e.mv>=0?e.mvDur:fs?fs.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote),f=cycleFrame(e.emoteAge,dur,reduced,BF);// pops in, floats up with a sway, dissipates; repeats through the emote
    if(f.visible){bubble.position.set(pose.x+f.dx,pose.y+3.3*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;candB.push(e);}
   }
@@ -416,8 +420,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,du:null,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
-shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0};
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,du:null,lastMode:0,emMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
+shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0,ca:0};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -431,7 +435,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
   bumpField(id,nx,ny,nz){const e=byId.get(id);if(!e||!e.shield)return;e.shake=1;e.ripple=0;e.hx=nx;e.hy=ny;e.hz=nz;},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;const ms=moveForWire(em,e.lastMode,e.spd);e.mv=ms?ms.emote:-1;e.mvDur=ms?ms.seconds:0;if(ms)e.mvV=pickMoveVariant(ms.emote,MOVE_ROLE.Friend);/* walking / running: the moving version over their walk cycle */const fl=flourishForWire(em,e.lastMode);e.hf=!ms&&!fl?highFivePlan(em,false,Math.random,hfBag):-1;if(!ms&&!fl&&(em===Emote.PassBall||em===Emote.JuggleWithMe)){/* flying / swimming / riding: the ball-free version (their flourish), no ball *//* the moving Call for it / Juggle are mimes: no ball */e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;e.emMode=e.lastMode;const ms=moveForWire(em,e.lastMode,e.spd);e.mv=ms?ms.emote:-1;e.mvDur=ms?ms.seconds:0;if(ms)e.mvV=pickMoveVariant(ms.emote,MOVE_ROLE.Friend);/* walking / running: the moving version over their walk cycle */const fl=flourishForWire(em,e.lastMode);e.hf=!ms&&!fl?highFivePlan(em,false,Math.random,hfBag):-1;if(!ms&&!fl&&(em===Emote.PassBall||em===Emote.JuggleWithMe)){/* flying / swimming / riding: the ball-free version (their flourish), no ball *//* the moving Call for it / Juggle are mimes: no ball */e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
   update(dt,poses,camera,reduced,local,balls){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
@@ -460,8 +464,11 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(e.dem){e.out=reduced?0:Math.max(0,e.out-dt/DEMOTE_FADE);if(e.out<=0)dropRig(e);}
     const rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
-    const fs0=e.emote>=0?flourishForWire(e.emote,e.lastMode):undefined;
-    if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.mv>=0?e.mvDur:fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;e.mv=-1;rig?.setExpression('neutral');}}
+    let fs0=e.emote>=0?flourishForWire(e.emote,e.emMode):undefined;
+    // Like yours: a moving emote eases out over MOVE_STOP_FADE once they stop (their streamed speed) and ends off their feet; a flying / swimming /
+    // ride flourish ends when they land, leave the water or get off (the standing emote never restarts: it only ends).
+    if(e.emote>=0){e.emoteAge+=dt;if(e.mv>=0)e.mvDur=friendMoveEnd(e.emoteAge,e.mvDur,e.spd,emoteCtxOfMode(e.lastMode)===0);
+     if((fs0!==undefined&&friendFlourishLapsed(e.emMode,e.lastMode))||e.emoteAge>=(e.mv>=0?e.mvDur:fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;e.mv=-1;fs0=undefined;rig?.setExpression('neutral');}}
     if(e.du&&e.du.on)stepDuet(e,dt,poses,local??null);
     if(!e.label||!e.bubble)continue;
     if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
@@ -535,7 +542,10 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     batch.draw(root3);e.shown=true;shown++;
     // Their ride under them (none inside the force field: the pose drops the ride there too); it follows the root, so flourishes and bump wobbles / skids carry it.
     const rk=shield?-1:rideKindFor(pose.mode);
-    if(rk>=0){e.ra+=Math.min(dt,.1)*pose.speed;if(e.ra>1e5)e.ra=0;rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra);if(riders.n<BATCH_CAPACITY){const j=riders.n++;riders.x[j]=root3.position.x;riders.y[j]=root3.position.y;riders.z[j]=root3.position.z;riders.yaw[j]=root3.rotation.y;riders.speed[j]=pose.speed;}}
+    if(rk>=0){/* a ride trick (their flourish): extra wheel spin, the vehicle alone turning (tail-whip) and back on the deck under a lifted rider */
+     const tr=fs0!==undefined&&!reduced,sdt=Math.min(dt,.1);e.ra+=sdt*(pose.speed+(tr?FL.wheel??0:0));if(e.ra>1e5)e.ra=0;
+     if(rk===1&&e.rb&&!reduced){e.ca+=sdt*bikeCrankRate(pose.speed);if(e.ca>1e4)e.ca-=Math.PI*2*1000;}
+     rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra,e.ca,tr?FL.vyaw??0:0,tr?-(FL.rlift??0)*k:0);if(riders.n<BATCH_CAPACITY){const j=riders.n++;riders.x[j]=root3.position.x;riders.y[j]=root3.position.y;riders.z[j]=root3.position.z;riders.yaw[j]=root3.rotation.y;riders.speed[j]=pose.speed;}}
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
     ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
     placeLabel(e,pose,k,reduced);

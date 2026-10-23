@@ -164,6 +164,26 @@ t('friends: remoteAvatars plays the moving overlay on the friend walk cycle (the
  assert(/if\(!ms&&!fl&&\(em===Emote\.PassBall\|\|em===Emote\.JuggleWithMe\)\)\{/.test(ra),'no ball routine picked for a moving emote');
  assert(/e\.hf<0&&!fs0&&e\.mv<0&&e\.ball&&/.test(ra)&&/reduced\|\|e\.mv>=0\|\|!\(e\.emote===Emote\.PassBall/.test(ra),'no ball body while moving, old ball motion cleared');
 });
+t('friends stop like you: speed under MOVE_STOPPED fades the moving emote over MOVE_STOP_FADE, off their feet it ends now; never lengthened',()=>{
+ const end=M.MOVE_SCRIPTS[0].seconds;
+ assert.equal(M.friendMoveEnd(.5,end,3,true),end,'still moving: full length');
+ assert(Math.abs(M.friendMoveEnd(.5,end,.1,true)-(.5+M.MOVE_STOP_FADE))<1e-9,'stopped: fades out from now');assert.equal(M.MOVE_STOP_FADE,.6);
+ assert.equal(M.friendMoveEnd(.5,end,M.MOVE_STOPPED,true),end,'the local threshold (moveEndAfter): at MOVE_STOPPED still moving');
+ assert.equal(M.friendMoveEnd(end-.1,end,0,true),end,'never lengthened');
+ let a=.5,e2=end;for(let i=0;i<5;i++){a+=.05;e2=M.friendMoveEnd(a,e2,0,true);}assert(Math.abs(e2-(.55+M.MOVE_STOP_FADE))<1e-9,'the fade does not keep sliding while they stand');
+ assert.equal(M.friendMoveEnd(.5,end,3,false),.5,'got on a ride / flew / swam: ends now');
+ assert(M.moveWeight(.55+M.MOVE_STOP_FADE-.01,.55+M.MOVE_STOP_FADE)<.05,'weight is ~0 at the shortened end');
+ // contexts: on foot (walk / run / idle) is one; a flourish ends when it changes
+ assert.equal(Ctx.emoteCtxOfMode(0),0);assert.equal(Ctx.emoteCtxOfMode(1),0);assert.equal(Ctx.emoteCtxOfMode(13),0);
+ assert.equal(Ctx.emoteCtxOfMode(5),Ctx.emoteCtxOfMode(6),'jetpack and parachute are both flying');
+ for(const [a2,b] of [[5,0],[6,13],[8,0],[8,9],[2,0],[3,2],[4,1]])assert(Ctx.friendFlourishLapsed(a2,b),'lapses '+a2+'→'+b);
+ for(const [a2,b] of [[5,6],[8,8],[3,3],[0,1]])assert(!Ctx.friendFlourishLapsed(a2,b),'keeps '+a2+'→'+b);
+ const ra=read('lib/graphics/remoteAvatars.ts');
+ assert(/if\(e\.mv>=0\)e\.mvDur=friendMoveEnd\(e\.emoteAge,e\.mvDur,e\.spd,emoteCtxOfMode\(e\.lastMode\)===0\)/.test(ra),'friends: same fade, every frame (no allocation: numbers only)');
+ assert(/fs0!==undefined&&friendFlourishLapsed\(e\.emMode,e\.lastMode\)/.test(ra),'flourish ends on landing / leaving the water / dismounting');
+ assert(/let fs0=e\.emote>=0\?flourishForWire\(e\.emote,e\.emMode\)/.test(ra)&&/e\.emMode=e\.lastMode;/.test(ra),'the flourish is the one picked when it arrived');
+ assert(/e\.emote=-1;e\.hf=-1;e\.mv=-1;fs0=undefined;/.test(ra),'ending clears the emote: the standing one never restarts');
+});
 t('no analytics imports from the emote / party graphics; ids and labels for the new emotes',()=>{
  const imp=/(?:import[^'"`]*from\s*)['"`]([^'"`]+)['"`]/g;
  for(const f of ['lib/town/moveEmotes.ts','lib/graphics/moveEmotePose.ts','lib/graphics/remoteAvatars.ts','lib/graphics/islandNpcs.ts','components/party/EmoteWheel.tsx'])for(const m of read(f).matchAll(imp))assert(!/analytics/.test(m[1]),f+' imports '+m[1]);

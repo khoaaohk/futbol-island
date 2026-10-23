@@ -14,6 +14,10 @@ type V3=[number,number,number];
  * bike pedals follow the feet, and the packs ride the bean's back surface. `fits` holds both placements of every
  * moved part; the classic body gets exactly the original geometry.
  */
+/** The bean bike's crank axle (bike-group units): the centre of the circle the rig's soles trace. Friends' rides (remoteRides.ts) turn their pedals about it. */
+export const BIKE_CRANK=[0,(.39-BEAN_SOLE_DROP-.012)/1.12,.06/1.12] as const;
+/** The crank arm length and the pedal half-spacing (bike-group units) the friends' crank uses: the rig pedals its ankles round a .15 m circle. */
+export const BIKE_CRANK_ARM=.13,BIKE_PEDAL_X=.1;
 export function createVehicle() {
   const root = new T.Group(); root.name = 'island-vehicle';
   const metal = new T.MeshStandardMaterial({color:'#b4bbb0',roughness:.65});
@@ -51,7 +55,7 @@ export function createVehicle() {
   // Seat top meets the bean's lowest point in the bike/moped pose (≈ .875 m), the scooter deck and the moped footrest
   // meet the boot soles (ankle targets .235 and .36 m minus the sole drop). The crank sits at the centre of the circle
   // the soles trace (the rig pedals its ankles round .39 m, .15 m radius), so the pedals stay on a true crank.
-  const SCOOTER_DROP=.07,SEAT_Y=.735,SEAT_NODE=.76,CRANK:V3=[0,(.39-BEAN_SOLE_DROP-.012)/1.12,.06/1.12],FOOTREST_Y=(.36-BEAN_SOLE_DROP)/1.12-.035;
+  const SCOOTER_DROP=.07,SEAT_Y=.735,SEAT_NODE=.76,CRANK:V3=[BIKE_CRANK[0],BIKE_CRANK[1],BIKE_CRANK[2]],FOOTREST_Y=(.36-BEAN_SOLE_DROP)/1.12-.035;
   const pedals:{pedal:T.Mesh;arm:T.Mesh}[]=[];
   for(const mode of ['scooter','bike','moped'] as const) {
     const group=new T.Group();group.name=mode;groups[mode]=group;root.add(group);
@@ -86,7 +90,7 @@ export function createVehicle() {
       if(mode==='bike')for(let i=0;i<2;i++){
         // Bean fit only: crank arms and pedals follow the feet (placed from the ankles in syncArmor).
         const arm=bar(group,CRANK,[0,CRANK[1]-.13,CRANK[2]],.018,metal),pedal=mesh(group,new T.BoxGeometry(.1,.024,.07),rubber,0,0,0);
-        pedal.name='bike-pedal-'+(i?'right':'left');beanOnly.push(arm,pedal);pedals.push({pedal,arm});
+        pedal.name='bike-pedal-'+(i?'right':'left');arm.name='bike-crank-'+(i?'right':'left');beanOnly.push(arm,pedal);pedals.push({pedal,arm});
       }
     }
     const handleY=mode==='scooter'?1.25:1.13;

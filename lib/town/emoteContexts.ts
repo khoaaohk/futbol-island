@@ -124,8 +124,16 @@ export function flourishForWire(wire: number, mode: number): FlourishScript | un
   return list ? list.find(s => s.wire === wire) : undefined;
 }
 
+/** The emote context of a wire mode: a ride mode (scooter / bike / moped) is its own, Jetpack + Parachute = flying (5), Swim = 8,
+ *  Walk / Run / Idle = on foot (0); any other mode is its own. A friend's flourish or moving emote ends when this changes (as the local one does). */
+export const emoteCtxOfMode = (mode: number): number => RIDE_MODE[mode] ? mode : modeIsFlying(mode) ? WIRE_MODE.Jetpack : mode === 0 || mode === 1 || mode === 13 ? 0 : mode;
+/** A friend's flourish started in `startMode` must end now that they are in `mode` (landed, left the water, got off / changed the ride). */
+export const friendFlourishLapsed = (startMode: number, mode: number): boolean => emoteCtxOfMode(startMode) !== emoteCtxOfMode(mode);
+
 /** The visual offsets of a flourish (rig-root rotations in rad, a lift in m), added after the pose and gone with the emote. */
-export interface Flourish {roll: number; pitch: number; yaw: number; lift: number; ripple: number}
+/** `vyaw` = the vehicle alone turning under the rider (a tail-whip, RT.VYAW) and `rlift` = the part of `lift` that is the rider alone above the
+ *  deck (RT.RLIFT): a friend's ride takes the rig root minus `rlift`, plus `vyaw` (written for ride tricks, zero otherwise). */
+export interface Flourish {roll: number; pitch: number; yaw: number; lift: number; ripple: number; vyaw?: number; rlift?: number; wheel?: number}
 const clamp01 = (v: number) => v < 0 ? 0 : v > 1 ? 1 : v;
 const smooth = (v: number) => { const t = clamp01(v); return t * t * (3 - 2 * t); };
 const fade = (age: number, dur: number) => clamp01(Math.min(age / .3, (dur - age) / .3));
@@ -134,9 +142,9 @@ const TAU = Math.PI * 2, rideBuf = new Float32Array(RT_CH);
 const arch01 = (t: number, a: number, b: number) => t <= a || t >= b ? 0 : Math.sin(Math.PI * (t - a) / (b - a));
 /** `side` = +1 / -1: which way a fly-by leans (toward the friend). Writes `out` (no allocation) and returns it. */
 export function flourishAt(emote: number, age: number, dur: number, out: Flourish, side = 1): Flourish {
-  out.roll = out.pitch = out.yaw = out.lift = out.ripple = 0;
+  out.roll = out.pitch = out.yaw = out.lift = out.ripple = out.vyaw = out.rlift = out.wheel = 0;
   if (isRideEmote(emote)) { // a friend's ride trick on their own rig: pitch (lifted about its axle), roll, hop; the spin is theirs to show
-    const p = sampleRideTrick(emote, age, rideBuf); out.pitch = p[RT.PITCH]; out.roll = p[RT.ROLL]; out.yaw = p[RT.YAW];
+    const p = sampleRideTrick(emote, age, rideBuf); out.pitch = p[RT.PITCH]; out.roll = p[RT.ROLL]; out.yaw = p[RT.YAW]; out.vyaw = p[RT.VYAW]; out.rlift = p[RT.RLIFT]; out.wheel = p[RT.WHEEL];
     out.lift = p[RT.LIFT] + p[RT.PIVOT] * Math.sin(p[RT.PITCH]) + p[RT.PIVY] * (1 - Math.cos(p[RT.PITCH])) + p[RT.RLIFT]; return out; // the axle stays put (rideGround.ts)
   }
   const u = clamp01(age / dur), f = fade(age, dur);
