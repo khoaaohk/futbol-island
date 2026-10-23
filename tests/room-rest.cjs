@@ -29,6 +29,11 @@ ok('2. crowd walkerIn: a walking visitor in the frustum blocks rest, one off scr
  // Over 100 s at 15 fps the hub has moments with nobody walking (rest can happen) and moments with a walk (rest waits).
  let quiet=0,busy=0;for(let f=0;f<1500;f++){crowd.update(1/15,f/15,99,99);if(crowd.walkerIn(all))busy++;else quiet++;}
  assert(quiet>0&&busy>0,`quiet ${quiet} / walking ${busy} frames`);
+ // Calm (HUB_CALM_S without input): nobody starts a walk, the walks under way end at a cabinet, then the crowd stays still for good.
+ crowd.setCalm(true);let settledAt=-1;for(let f=0;f<15*60;f++){crowd.update(1/15,100+f/15,0,10.3);if(settledAt<0&&!crowd.walkerIn(all))settledAt=f/15;}
+ assert(settledAt>=0&&settledAt<45,`a calm hub settles within 45 s (${settledAt.toFixed(1)} s)`);
+ for(let f=0;f<15*60;f++){crowd.update(1/15,200+f/15,0,10.3);assert.equal(crowd.walkerIn(all),false,'a settled calm crowd starts no walk');}
+ crowd.setCalm(false);let walked=false;for(let f=0;f<15*40&&!walked;f++){crowd.update(1/15,300+f/15,0,10.3);walked=crowd.walkerIn(all);}assert(walked,'input again: the visitors walk again');
  const s=src('lib/arcade/arcadeRoomCrowd.ts'),fn=s.slice(s.indexOf('function walkerIn'),s.indexOf('function walkerIn')+400);
  assert(!/new |=>|\[\.\.\./.test(fn.slice(0,fn.indexOf('return false;}')+14)),'walkerIn allocates nothing');
  assert(!/`arcade-visitor-\$\{[ij]\}`/.test(s.slice(s.indexOf('function update('))),'no reaction key strings built per frame');
@@ -40,7 +45,7 @@ ok('3. hub scene: the tick stops (no rAF) on rest, input / friends / the tab wak
  assert(!/activity=12/.test(s),'no 12 s full-rate window any more');
  assert(/if\(hubCanRest\(restIn\)\)\{rests\+\+;last=slot=0;restSoundLater\(\);return;\}\s*frame=requestAnimationFrame\(tick\);/.test(s),'rest returns before scheduling a frame');
  assert(/function wake\(\)\{activity=HUB_ACTIVE_TAIL_S;idle=0;/.test(s),'input restarts the idle clock');
- assert(/time\+=dt;idle\+=dt;/.test(s));
+ assert(/time\+=dt;idle\+=dt;/.test(s));assert(/crowd\.setCalm\(idle>=HUB_CALM_S\);crowd\.update\(/.test(s),'the crowd calms before the rest');
  for(const where of ['function wakeRemote','function wake()','function visibility','setCovered(','dispose(){'])assert(s.slice(s.indexOf(where),s.indexOf(where)+260).includes('clearTimeout(restSound)'),where+' clears the rest sound timer');
  assert(/restSound=setTimeout\(\(\)=>\{restSound=undefined;if\(frame\|\|disposed\|\|covered\|\|document\.hidden\)return;/.test(s),'the sound timer never runs with frames, covered or hidden');
  assert(/restIn\.walkerInView=!restIn\.busy&&idle>=HUB_REST_S&&crowd\.walkerIn\(frustum\)/.test(s),'the frustum test only runs once rest is possible');

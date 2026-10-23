@@ -1,12 +1,15 @@
 // Arcade hub rest (heat QA, Oct 22 2026). The hub used to run 60 fps for 12 s after every input (and on entry), then 15 fps forever
 // (60 rAF callbacks a second, never asleep). Now: full rate while you move plus a short tail, the 15 fps ambient life (crowd walks,
-// attract screens) while you are around, and after HUB_REST_S seconds without input the loop SLEEPS (0 rAF) at the first moment no
-// visitor is walking on screen (a walk in view always finishes first, so nobody freezes mid-step). Any input, a friend's pose, an
+// attract screens) while you are around; HUB_CALM_S seconds without input the visitors stop starting new walks (one under way finishes
+// at a cabinet), and after HUB_REST_S seconds the loop SLEEPS (0 rAF) at the first moment no visitor walks on screen (nobody freezes
+// mid-step; a walk off screen does not hold frames). Any input, a friend's pose, an
 // emote or the tab coming back wakes it. While it sleeps, the cabinet motifs keep playing from a slow timer (no frames).
 /** Seconds of full-rate frames after your last motion / input (was 12 s; your own movement still runs at 60 / 30 fps). */
 export const HUB_ACTIVE_TAIL_S = 4;
 /** Seconds after entry at the full rate (was 12 s: the camera settles in well under a second). */
 export const HUB_ENTRY_ACTIVE_S = 1.5;
+/** No input for this long: visitors stop starting new walks (a walk under way finishes at a cabinet), so the hub can settle. */
+export const HUB_CALM_S = 12;
 /** No input for this long: the hub may sleep (crowd and attract screens hold their last frame). */
 export const HUB_REST_S = 20;
 /** While asleep, the cabinet motifs' sound tick (ms): one timer, no rendering. */

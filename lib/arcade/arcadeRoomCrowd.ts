@@ -25,6 +25,8 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   const entering=i===count-1,entryX=clampX(2),entryZ=clampZ(bounds.maxZ-4);if(entering)shadow.position.set(entryX,.083,entryZ);
   return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive'|'exitAisle'|'exit'|'away',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
  const live=members.map(()=>true);
+ /** Calm (the hub's rest, arcadeRest.ts): nobody starts a new walk; a walk under way finishes at a cabinet. */
+ let calm=false;
  const debugStates=members.map((m,i)=>({id:i,x:m.x,z:m.z,phase:m.phase as string,cabinet:m.cabinet,yielding:false,greeting:false,visits:0,social:false,socialAge:-1,facing:0,attentive:false,away:false}));
  const contact={x:0,z:0},human={x:0,z:0};
  let disposed=false,focusedId:number|null=null,friendSlots=0,restoreWait=0;
@@ -47,7 +49,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   if(disposed||dt<=0)return;dt=Math.min(dt,.1);human.x=playerX;human.z=playerZ;reconcileFriends(dt);
   for(let i=0;i<members.length;i++){
    const m=members[i];if(m.phase==='away')continue;const stunned=reactions?.get(VISITOR_KEYS[i]),station=stations[m.cabinet],engaged=!!stunned||!!m.social||i===focusedId;if(!engaged)m.age+=dt;
-   if(!engaged&&m.phase==='play'&&m.age>m.deadline&&!leaving(m)){station.owner=-1;m.phase='leave';m.age=0;m.tx=station.ax;m.tz=station.az;m.previous=m.cabinet;}
+   if(!engaged&&!calm&&m.phase==='play'&&m.age>m.deadline&&!leaving(m)){station.owner=-1;m.phase='leave';m.age=0;m.tx=station.ax;m.tz=station.az;m.previous=m.cabinet;}
    const playerDistance=Math.hypot(m.x-playerX,m.z-playerZ);m.yielding=playerDistance<1.25;
    m.greet=Math.max(0,m.greet-dt);m.greetCooldown=Math.max(0,m.greetCooldown-dt);
    if(playerDistance<2.6&&!m.playerNearby){m.playerNearby=true;if(m.greetCooldown===0){m.greet=1.4;m.greetCooldown=8;}}
@@ -125,7 +127,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
  function walkerIn(frustum:T.Frustum){for(let i=0;i<members.length;i++){const m=members[i];if(m.phase==="away"||!live[i])continue;walkerSphere.center.set(m.x,1,m.z);if(frustum.intersectsSphere(walkerSphere))return true;}return false;}
  // Initial pose without creating an independent animation clock.
  for(const m of members)m.rig.update(m.x,m.z,0,0,reduced,m.motion);
- return{update,debugStates,walkerIn,jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},
+ return{update,debugStates,walkerIn,setCalm(v:boolean){calm=v;},get calm(){return calm;},jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},
  /** Party friends shown in the hub: that many visitors walk out (nearest the door first) and come back when friends leave. */
  setFriendSlots(n:number){friendSlots=Math.max(0,Math.min(members.length,Math.floor(n)||0));},get friendSlots(){return friendSlots;},reserve(id:number,routine:SocialRoutine){const m=members[id];if(!m||disposed)return false;m.social=routine;m.socialAge=-1;m.vx=m.vz=0;return true;},setSocialAge(id:number,age:number){const m=members[id];if(m)m.socialAge=age;},release(id:number){const m=members[id];if(m){m.social=null;m.socialAge=-1;m.greetCooldown=4;m.greet=0;}},dispose(){if(disposed)return;disposed=true;for(const m of members){m.rig.dispose();m.shadow.removeFromParent();}shadowGeometry.dispose();shadowMaterial.dispose();}};
 }
