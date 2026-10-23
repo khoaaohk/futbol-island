@@ -565,7 +565,7 @@ t('rejoin: the session lives in device storage (fi2-party-session-v1), 12 h cap,
   const g=makeEnv();goLive(g);assert.deepEqual(plain(g.c.storedParty()),{code:'K7MQ4R',host:false});
   // a new tab ~11 h later still resumes; past 12 h nothing is offered
   const r=makeEnv({storage:e.storage});r.clock.advance(11*3600e3);assert.ok(r.c.storedParty());assert.equal(r.c.resume({look:LOOK}),true);
-  const x=makeEnv({storage:e.storage});x.clock.advance(P.PARTY_MAX_MS+60000);assert.equal(x.c.storedParty(),null);assert.equal(x.c.resume({look:LOOK}),false);
+  const x=makeEnv({storage:e.storage});x.clock.advance(P.PARTY_MAX_MS+60000);assert.equal(x.c.storedParty(),null);assert.equal(x.c.resume({look:LOOK}),false);assert.equal(e.storage.getItem(conn.SESSION_KEY),null,'bug sweep Oct 22: an expired session is removed from the device, not just ignored');
 });
 t('rejoin: cleared only on explicit endings; a 4005 (another tab) and a plain drop keep it',()=>{
   const ends=[['leave',e=>e.c.leave()],['ended',e=>e.last().recv([P.S.Ended,P.EndReason.HostEnded])],['expired',e=>e.last().recv([P.S.Ended,P.EndReason.Expired])],
@@ -629,4 +629,21 @@ t('rejoin: store carries tab / lapsed; S.Code updates a guest store too',()=>{
   assert.equal(st.partyStore.get().code,'B8CD2F');assert.equal(st.partyStore.get().codeExpiresAt,7777);st.partyStore.reset();
 });
 
-(async()=>{if(lockTail)await lockTail();console.log(`mp-client: ${n} groups passed`);})().catch(e=>{console.error('FAIL rejoin: lock release',e);process.exit(1);});
+t('bug sweep Oct 22: the party ends / refuses while the tab is hidden: no Reconnecting and no new socket when it comes back',()=>{
+  for(const [n2,fn] of [['ended',s=>s.recv([P.S.Ended,P.EndReason.HostEnded])],['kicked',s=>s.recv([P.S.Error,P.ErrorCode.Kicked])],['expired',s=>s.recv([P.S.Error,P.ErrorCode.Expired])]]){
+    const e=makeEnv();const s=goLive(e);e.setHidden(true);e.clock.advance(5000);fn(s);const st0=e.c.status;
+    e.clock.advance(20000);assert.equal(e.c.status,st0,n2+': the hidden-close timer leaves a finished party alone');
+    e.setHidden(false);e.clock.advance(60000);assert.equal(e.sockets.length,1,n2+': no socket to a finished party');assert.equal(e.c.status,st0,n2);
+  }
+});
+let sweepTail=null;
+t('bug sweep Oct 22: a lock granted after Leave / a newer Join is let go (never held by an idle page)',()=>{
+  // A deferred lock manager: grants arrive later (as navigator.locks does), held until the callback's promise settles.
+  const held=[];const pend=[];const locks={request(name,opts,cb){return{then(a,b){pend.push({cb,a,b});return this;}};}};
+  const grant=()=>{const r=pend.shift();const h=r.cb({name:"fi2-party-holder"});const me={released:false};held.push(me);if(h&&h.then)h.then(()=>{me.released=true;});};
+  const e=makeEnv();const c=conn.createPartyConnection({WebSocketImpl:class{constructor(){this.readyState=0;e.sockets.push(this);}send(){}close(){}},now:e.clock.now,random:()=>0.5,
+    setTimeout:e.clock.setTimeout,clearTimeout:e.clock.clearTimeout,visibility:{hidden:()=>false,on:()=>()=>{}},storage:e.storage,locks});
+  c.join('k7m-q4r',{look:LOOK});assert.equal(e.sockets.length,0,'waits for the lock');c.leave();grant();
+  sweepTail=()=>Promise.resolve().then(()=>Promise.resolve()).then(()=>{assert.equal(held[0].released,true,'the late grant is released');assert.equal(e.sockets.length,0);assert.equal(c.status,'idle');});
+});
+(async()=>{if(lockTail)await lockTail();if(sweepTail)await sweepTail();console.log(`mp-client: ${n} groups passed`);})().catch(e=>{console.error('FAIL rejoin: lock release',e);process.exit(1);});
