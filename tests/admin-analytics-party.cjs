@@ -23,10 +23,10 @@ ok('mp: and em: ids are fixed, well-formed and on the allowlist',()=>{
  assert(MP.length>=70&&EM.length>=44+15,`${MP.length} / ${EM.length}`);
  for(const id of [...MP,...EM]){assert(K.COUNT_KEY_RE.test(id),id);assert(K.isCountId(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);}
  assert.equal(new Set(K.FIXED_COUNT_IDS).size,K.FIXED_COUNT_IDS.length,'no duplicate fixed ids');
- for(const bad of ['mp:madeup','mp:fail_teapot','mp:peak_21','em:e19','em:e25','em:e55','em:e10','em:e18','em:e75',/* ride emotes v2: the travelling rides 10-18 are retired */'em:ctx_car','em:move_15','em:reach_2','mp_party_created','mp:code','em:to_alex',
+ for(const bad of ['mp:madeup','mp:fail_teapot','mp:peak_21','em:e19','em:e25','em:e10','em:e18','em:e75',/* ride emotes v2: the travelling rides 10-18 are retired */'em:ctx_car','em:move_30','em:reach_2','mp_party_created','mp:code','em:to_alex',
   'em:dance_10','em:show_10','em:react_4','em:hf_20','em:wave_6','em:laugh_6','em:keepup_3','em:pass_6','em:juggle_6','mp:ping_here','mp:first_guest'])assert(!K.isCountId(bad),bad);
- for(const id of ['em:e60','em:e74','em:dance_0','em:dance_9','em:hf_19','em:react_3','em:keepup_2','em:e50','em:e54','em:ctx_walk','em:move_0','em:move_14','em:streak','em:cam','em:seen','mp:lesson','mp:quiz','mp:quiz_done','mp:first_party','mp:first_host','mp:name_bad','mp:ping_meet','mp:ping_follow'])assert(K.isCountId(id),id);
- assert.deepEqual(K.EMOTE_WIRE_IDS.length,50,'10 wheel + 15 ride tricks (60-74, v2) + 5 fly + 5 swim + 10 npc + 5 moving');
+ for(const id of ['em:e60','em:e74','em:dance_0','em:dance_9','em:hf_19','em:react_3','em:keepup_2','em:e50','em:e54','em:e59','em:ctx_walk','em:move_0','em:move_14','em:move_29','em:streak','em:cam','em:seen','mp:lesson','mp:quiz','mp:quiz_done','mp:first_party','mp:first_host','mp:name_bad','mp:ping_meet','mp:ping_follow'])assert(K.isCountId(id),id);
+ assert.deepEqual(K.EMOTE_WIRE_IDS.length,55,'10 wheel + 15 ride tricks (60-74, v2) + 5 fly + 5 swim + 10 npc + 10 moving');
  const head=read('lib/analytics/countIds.ts').split('*/')[0];assert(/mp:<event>/.test(head)&&/em:<event>/.test(head),'families documented in the header');
 });
 
