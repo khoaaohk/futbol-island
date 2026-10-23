@@ -27,6 +27,7 @@ import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
+import {createClassicBallGeometry,createClassicBallMaterial} from './ballAppearance';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
 import {BallState,Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
@@ -71,8 +72,6 @@ export interface RemoteAvatars{
  bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
  update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null,balls?:ReadonlyMap<MemberId,RemoteBall>|null):void;
- /** The island's own ball geometry + material for friends' balls (shared, never disposed here). Rooms keep the plain default. */
- setBallLook(geometry:T.BufferGeometry,material:T.Material):void;
  /** Friends' balls drawn last frame, and flying friends with a plume (heat checks / tests). */
  readonly ballsShown:number;readonly jetsShown:number;
  readonly shown:number;
@@ -257,10 +256,11 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const bumps=createFriendBumps(root);
  // Friends' scooters / bikes / mopeds under the shown rigs only (same cap as the bodies): instanced, baked on the first friend ride.
  const rides=createRemoteRides(BATCH_CAPACITY);root.add(rides.root);
- // Friends' balls: BALL_MAX plain meshes sharing ONE geometry + material (the island ball's, via setBallLook; a plain one until then).
- let ownBallGeo:T.BufferGeometry|null=new T.SphereGeometry(BALL_RADIUS,16,12),ownBallMat:T.Material|null=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});
+ // Friends' balls: BALL_MAX meshes sharing ONE geometry + material: the classic island ball (cream + six pentagons baked as
+ // vertex colours, lib/graphics/ballAppearance.ts), on the island and in every room. The wire carries no skin, so never the local skin.
+ const ballGeo=createClassicBallGeometry(BALL_RADIUS),ballMat=createClassicBallMaterial();
  const ballMeshes:T.Mesh[]=[];
- for(let i=0;i<BALL_MAX;i++){const m=new T.Mesh(ownBallGeo!,ownBallMat!);m.name='remote-ball';m.visible=false;m.castShadow=false;m.receiveShadow=false;m.raycast=()=>{};m.frustumCulled=false;root.add(m);ballMeshes.push(m);}
+ for(let i=0;i<BALL_MAX;i++){const m=new T.Mesh(ballGeo,ballMat);m.name='remote-ball';m.visible=false;m.castShadow=false;m.receiveShadow=false;m.raycast=()=>{};m.frustumCulled=false;root.add(m);ballMeshes.push(m);}
  const candBall:Entry[]=[],candJet:Entry[]=[],ballSpot={x:0,y:0,z:0},ballD2=new Float64Array(PARTY_MAX+12);
  let ballsShown=0,jetsShown=0;
  let ringN=0;
@@ -395,11 +395,6 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   get jetsShown(){return jetsShown;},
   get localBump(){return bumps.local;},
   get bumps(){return bumps.fired;},
-  setBallLook(geometry,material){
-   if(disposed)return;
-   for(const m of ballMeshes){m.geometry=geometry;m.material=material;}
-   ownBallGeo?.dispose();(ownBallMat as T.Material|null)?.dispose();ownBallGeo=null;ownBallMat=null;
-  },
   debugEmotes(){return list.map(e=>({id:e.id,emote:e.emote,age:+e.emoteAge.toFixed(2),x:+(e.rig?.root.position.x??NaN).toFixed(2),z:+(e.rig?.root.position.z??NaN).toFixed(2),yaw:+(e.rig?.root.rotation.y??NaN).toFixed(2)}));},
   duet(id,partner,role,emote,seed){const e=byId.get(id);if(!e||e.hidden||e.shield)return false;
    const d=e.du??(e.du={on:false,was:false,partner:-1,role:0,emote:0,seed:0,age:0,dur:0,sx:0,sz:0,px:0,pz:0,started:false,out:createDuetOut(),a:{x:0,y:0,z:0},b:{x:0,y:0,z:0}});
@@ -553,7 +548,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
    list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();rides.dispose();
-   for(const m of ballMeshes)m.removeFromParent();ownBallGeo?.dispose();ownBallMat?.dispose();ownBallGeo=null;ownBallMat=null;
+   for(const m of ballMeshes)m.removeFromParent();ballGeo.dispose();ballMat.dispose();
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
    root.removeFromParent();

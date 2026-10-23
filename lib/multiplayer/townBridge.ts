@@ -47,9 +47,7 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   readonly you: MemberId | null;
   /** Live feel: the local ball for friends (relay v1.2; visual only on their side). state = BallState; metres. Call every frame:
    *  the connection throttles (state changes, a moving Free ball at most 10 Hz). */
-  ball(state: BallState, x: number, y: number, z: number): void;
-  /** Friends' balls use the island ball's geometry + material (shared, never disposed by the party layer). */
-  setBallLook(geometry: THREE.BufferGeometry, material: THREE.Material): void }
+  ball(state: BallState, x: number, y: number, z: number): void }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -207,7 +205,6 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!core.live || conn.status !== 'live') return;
       conn.sendBall(state, x, y, z, now());
     },
-    setBallLook(geometry, material) { avatars.setBallLook(geometry, material); },
     ballVsFields(ball) {
       if (!core.live) return false;
       let hit = false;

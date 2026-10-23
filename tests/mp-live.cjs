@@ -190,10 +190,10 @@ t('posing tier: a friend next to me poses every frame even with the camera 35 m 
 t('balls: at most 4 meshes sharing one geometry + material, Feet at the feet, Free where sent, none when hidden / busy / no state',()=>{
  const {a,mod,camera,scene}=avatars();const poses=new Map(),balls=new Map();
  for(let i=1;i<=6;i++){a.upsert(i,LOOK,'F'+i,{hex:'#E69F00'});poses.set(i,{x:i*2-6,y:0,z:0,yaw:0,speed:0,mode:Mode.Idle,zone:Zone.Main,fade:1});balls.set(i,{state:BallState.Feet,x:0,y:0,z:0});}
- const geo=new T.SphereGeometry(.19,20,16),mat=new T.MeshStandardMaterial();a.setBallLook(geo,mat);
- a.update(.016,poses,camera,false,null,balls);
+  a.update(.016,poses,camera,false,null,balls);
  const meshes=[];scene.traverse(o=>{if(o.name==='remote-ball')meshes.push(o);});
  assert.equal(meshes.length,mod.BALL_MAX);assert.equal(mod.BALL_MAX,4);assert.equal(a.ballsShown,4,'6 friends with balls: the nearest 4');
+ const geo=meshes[0].geometry,mat=meshes[0].material;assert.equal(geo.name,'classic-ball');assert.equal(mat.name,'classic-ball');
  for(const m of meshes){assert.equal(m.geometry,geo);assert.equal(m.material,mat);assert.equal(m.castShadow,false);}
  const out={x:0,y:0,z:0};
  assert.ok(mod.friendBallSpot(BallState.Feet,{x:0,y:0,z:0},{x:1,y:2,z:3,yaw:0,mode:Mode.Run},0,0,out));assert.deepEqual([out.x,+out.y.toFixed(2),+out.z.toFixed(2)],[1,2.19,3.55]);
@@ -203,7 +203,7 @@ t('balls: at most 4 meshes sharing one geometry + material, Feet at the feet, Fr
  balls.get(1).state=BallState.Feet;a.setHidden(new Set([1]));a.update(.016,poses,camera,false,null,balls);assert.equal(a.ballsShown,0,'hidden friend: no ball');
  a.setHidden(new Set());poses.get(1).mode=Mode.Busy;poses.get(1).speed=0;for(let f=0;f<3;f++)a.update(.016,poses,camera,false,null,balls);assert.equal(a.ballsShown,0,'busy (force field): no ball');
  a.update(.016,poses,camera,false,null,null);assert.equal(a.ballsShown,0,'no ball map (rooms / old relay): nothing');
- a.dispose();assert.ok(!scene.getObjectByName('remote-ball'),'meshes removed; the shared island ball look is not disposed');
+ a.dispose();assert.ok(!scene.getObjectByName('remote-ball'),'meshes removed');
 });
 t('jets: a flying friend gets the blue plume from ONE shared pool, at most 3 friends, nothing under reduced motion',()=>{
  const {a,camera,scene}=avatars();const poses=new Map();
@@ -219,9 +219,9 @@ t('jets: a flying friend gets the blue plume from ONE shared pool, at most 3 fri
  const src=read('lib/graphics/remoteJets.ts');assert.equal((src.match(/new T\.InstancedMesh/g)||[]).length,1);
  const end=src.slice(src.indexOf('end(dt, reduced) {'),src.indexOf('dispose()'));assert.ok(!/\bnew\s|=>|\.map\(|\.filter\(/.test(end),'end() allocates nothing');
 });
-t('wiring: Town sends its ball and shares the ball look; the bridge passes balls; the relay steps at 10 Hz',()=>{
+t('wiring: Town sends its ball (friends draw the classic ball); the bridge passes balls; the relay steps at 10 Hz',()=>{
  const town=read('components/Town.tsx'),bridge=read('lib/multiplayer/townBridge.ts'),core=read('lib/multiplayer/roomParty.ts'),idx=read('lib/multiplayer/index.ts');
- assert.match(town,/party\.ball\(/);assert.match(town,/party\?\.setBallLook\(ball\.geometry,ballMaterial\)/);assert.match(town,/groundAt:fieldSurfaceHeight/);
+ assert.match(town,/party\.ball\(/);assert.doesNotMatch(town,/setBallLook/,'friends never borrow the local (skinned) ball');assert.match(town,/groundAt:fieldSurfaceHeight/);
  assert.match(bridge,/avatars\.update\(dt, poses, camera, ctx\.reducedMotion\(\), showRing \? ring : null, core\.balls\)/);
  assert.match(core,/interp\.setDelay\(delay\); ballInterp\.setDelay\(delay\)/);assert.match(idx,/liveClock\.map\(/);
  assert.match(read('multiplayer/relay/src/partyRoom.ts'),/const TICK_MS = 100;[\s\S]*core\.halfTick\(\)/);

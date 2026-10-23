@@ -6,12 +6,34 @@ type BallStyle=CharacterCustomization['ball'];
 /** The walking ball's six dark pentagon patches (components/Town.tsx 'player-ball'), shared with the shop snapshots
  * (components/StorePreviews.tsx) so the vending/backpack pictures show the same ball you dribble. Sized for a
  * SphereGeometry(radius,20,16): the patches sit just inside the true sphere and show through its flat facets. */
+/** The equipped 'classic' skin: createBallAppearance.setStyle('classic') sets BALL_COLORS.classic (kept equal by tests/friend-ball-look.cjs; a literal so stubbed loaders work), no map, no emissive. */
+export const CLASSIC_BALL={color:'#eee4c4',patch:'#344c43',roughness:.7,radius:.19,widthSegments:20,heightSegments:16,patchRadius:.078,patchOffset:.1915} as const;
+const PATCH_DIRECTIONS=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]] as const;
+function placePatch(o:T.Object3D,direction:readonly number[],k:number){const v=new T.Vector3(direction[0],direction[1],direction[2]);o.position.copy(v).multiplyScalar(CLASSIC_BALL.patchOffset*k);// just outside the low-poly sphere's vertices (radius .19): at .187 the facets poked through each patch as a hollow diamond (Sep 30 2026)
+ o.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),v);}
 export function addBallPatches(ball:T.Object3D,radius:number){
- const k=radius/.19,material=new T.MeshStandardMaterial({color:'#344c43',roughness:.8,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),geometry=new T.CircleGeometry(.078*k,5);
- for(const direction of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]){const v=new T.Vector3(...direction as [number,number,number]);const patch=new T.Mesh(geometry,material);patch.position.copy(v.clone().multiplyScalar(.1915*k));// just outside the low-poly sphere's vertices (radius .19): at .187 the facets poked through each patch as a hollow diamond (Sep 30 2026)
-patch.quaternion.setFromUnitVectors(new T.Vector3(0,0,1),v);ball.add(patch);}
+ const k=radius/CLASSIC_BALL.radius,material=new T.MeshStandardMaterial({color:CLASSIC_BALL.patch,roughness:.8,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}),geometry=new T.CircleGeometry(CLASSIC_BALL.patchRadius*k,5);
+ for(const direction of PATCH_DIRECTIONS){const patch=new T.Mesh(geometry,material);placePatch(patch,direction,k);ball.add(patch);}
  return {dispose(){geometry.dispose();material.dispose();}};
 }
+/** The classic island ball (cream sphere + the six dark pentagons of addBallPatches) as ONE vertex-coloured geometry, so
+ * friends' balls (lib/graphics/remoteAvatars.ts) look like the standard island ball at one draw call each. Pair it with
+ * createClassicBallMaterial(). The wire carries no ball skin, so every friend shows this classic ball. */
+export function createClassicBallGeometry(radius:number=CLASSIC_BALL.radius){
+ const k=radius/CLASSIC_BALL.radius,sphere=new T.SphereGeometry(radius,CLASSIC_BALL.widthSegments,CLASSIC_BALL.heightSegments).toNonIndexed(),circle=new T.CircleGeometry(CLASSIC_BALL.patchRadius*k,5).toNonIndexed();
+ const base=new T.Color(CLASSIC_BALL.color),dark=new T.Color(CLASSIC_BALL.patch),dummy=new T.Object3D();
+ const sn=sphere.attributes.position.count,cn=circle.attributes.position.count,total=sn+cn*PATCH_DIRECTIONS.length;
+ const pos=new Float32Array(total*3),nor=new Float32Array(total*3),col=new Float32Array(total*3);
+ pos.set(sphere.attributes.position.array as Float32Array,0);nor.set(sphere.attributes.normal.array as Float32Array,0);
+ for(let i=0;i<sn;i++)base.toArray(col,i*3);
+ const v=new T.Vector3(),nm=new T.Matrix3();let o=sn;
+ for(const direction of PATCH_DIRECTIONS){placePatch(dummy,direction,k);dummy.updateMatrix();nm.getNormalMatrix(dummy.matrix);
+  for(let i=0;i<cn;i++,o++){v.fromBufferAttribute(circle.attributes.position,i).applyMatrix4(dummy.matrix).toArray(pos,o*3);v.fromBufferAttribute(circle.attributes.normal,i).applyMatrix3(nm).normalize().toArray(nor,o*3);dark.toArray(col,o*3);}}
+ sphere.dispose();circle.dispose();
+ const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(nor,3));g.setAttribute('color',new T.BufferAttribute(col,3));g.computeBoundingSphere();g.name='classic-ball';return g;
+}
+/** White base so the vertex colours give the island ball's exact cream + pentagon tones (same roughness as Town's ballMaterial). */
+export function createClassicBallMaterial(){const m=new T.MeshStandardMaterial({color:'#ffffff',roughness:CLASSIC_BALL.roughness,vertexColors:true});m.name='classic-ball';return m;}
 /** Tiny, locally drawn skins shared by the store and equipped ball. Textures are
  * created only when selected, reused for that renderer, and disposed with it. */
 export function createBallAppearance(material:T.MeshStandardMaterial){
