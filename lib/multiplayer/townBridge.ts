@@ -274,8 +274,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     update(dt, nowMs, camera) {
       const live = core.live, meHex = core.meHex;
       // The party is over (or never started): draw one last EMPTY frame so the colour ring and every friend layer disappear at once,
-      // then sleep (the instanced ring mesh keeps its last count until it is told to draw nothing).
-      if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, ctx.reducedMotion(), null); } return; }
+      // then sleep (the instanced ring mesh keeps its last count until it is told to draw nothing). Ghost (owner, Oct 23 2026): the
+      // plume particles, bump bursts and field pops fade over LATER frames, so one frame froze a flying friend's plume on screen for good
+      // (jets live 24 after the host ended): that frame flushes them (reduced = no fade) and the whole friend layer is then hidden.
+      if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
       core.sample(nowMs);
