@@ -12,12 +12,13 @@ export { PartyRoom, RelayStats };
 
 interface Limits { create: TokenBucket; join: TokenBucket; misses: number[]; blockedUntil: number }
 const limits = new Map<string, Limits>();
-let salt = crypto.getRandomValues(new Uint8Array(16));
-let saltDay = Math.floor(Date.now() / 86400000);
+// Cloudflare refuses random values (and any I/O) in the global scope (error 10021 at deploy), so the daily salt is made on the first request.
+let salt: Uint8Array | null = null;
+let saltDay = -1;
 
 async function ipKey(request: Request): Promise<string> {
   const day = Math.floor(Date.now() / 86400000);
-  if (day !== saltDay) { saltDay = day; salt = crypto.getRandomValues(new Uint8Array(16)); limits.clear(); }
+  if (!salt || day !== saltDay) { saltDay = day; salt = crypto.getRandomValues(new Uint8Array(16)); limits.clear(); }
   const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
   const key = await crypto.subtle.importKey('raw', salt, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(ip)));
