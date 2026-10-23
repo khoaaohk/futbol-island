@@ -1,0 +1,6 @@
+.shuffle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 18px;border:3px solid #fff5dc;border-radius:999px;background:#dfd0ad;box-shadow:0 4px 0 #ad9870;color:#244d40;font:700 16px/1.3 var(--font-body),Arial,sans-serif;cursor:pointer;transition:transform .15s,box-shadow .15s,color .2s;-webkit-tap-highlight-color:transparent}
+.shuffle:hover{color:#163b30;background:#e7dab9}
+.shuffle:active{transform:translateY(3px);box-shadow:0 1px 0 #ad9870}
+.shuffle:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.shuffle svg{flex:none}
+@media(prefers-reduced-motion:reduce){.shuffle{transition:none}}

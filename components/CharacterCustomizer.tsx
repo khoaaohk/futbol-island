@@ -1,12 +1,13 @@
 'use client';
 import {CharacterToggle} from './CharacterToggle';
+import {ShuffleButton} from './ShuffleButton';
 import {DoneButton} from './DoneButton';
 import {COIN_QUEST,costumeUnlockBalls} from '@/lib/town/coinQuest';
 import {useCoinProgress} from '@/lib/town/coinProgress';
 import shell from './ModalShell.module.css';
 import {useEffect,useRef,useState} from 'react';
 import type {TravelMode} from '@/lib/town/travelModes';
-import {CUSTOMIZATION_OPTIONS,FACE_STYLES,LOOK_PRESETS,MAIN_PLAYER_NUMBER,SHIRT_NUMBER_ROLES,applyCustomization,applyFace,applyLook,matchingLook,isCustomizationUnlocked,graduateLockNote,type CharacterCustomization,type CustomizationKey} from '@/lib/town/customization';
+import {CUSTOMIZATION_OPTIONS,FACE_STYLES,LOOK_PRESETS,MAIN_PLAYER_NUMBER,SHIRT_NUMBER_ROLES,applyCustomization,applyFace,applyLook,matchingLook,randomCustomization,isCustomizationUnlocked,graduateLockNote,type CharacterCustomization,type CustomizationKey} from '@/lib/town/customization';
 import {positionInfo} from '@/lib/town/playerPositions';
 import {isRideCategory,rideLockedLabel,rideProgressLine,useRideUnlocks} from '@/lib/town/rideUnlocks';
 import styles from './CharacterCustomizer.module.css';
@@ -96,6 +97,7 @@ export default function CharacterCustomizer({open,onOpenChange,value,onChange,co
   <div className={styles.layout} data-tab={tab}><div className={styles.previewColumn}>{tab==='character'?<CharacterPreview open={open} value={value} move={moveIndex}/>:<div className={styles.equipmentPreview} data-equipment-preview={previewItem.id}><StorePreview item={previewItem} src={previews[previewItem.id]}/></div>}
  <div className={styles.summary}><div><strong>{tab==='character'?`${preset==='female'?'Female':'Male'} · No. ${MAIN_PLAYER_NUMBER}`:previewItem.option.label}</strong><small>{tab==='character'?<><span className={styles.dragHint}>Drag the preview to turn. Your choices save automatically.</span>{costumed&&<span data-costume-note> Your island costume is on; choose No costume under More options to take it off.</span>}</>:`${labels[previewCategory]} · Select below to equip and save.`}</small></div></div>
  {tab==='character'&&<MoveArrows index={moveIndex} onChange={setMoveIndex}/>}
+ {tab==='character'&&<ShuffleButton className={styles.shuffle} onShuffle={()=>onChange(randomCustomization(Math.random,value))}/>}
  </div>{tab==='character'
   ?<div className={styles.builder} data-builder>
    {/* Two-column builder (user, Sep 26 2026): dropdowns for text choices, swatches only for skin; the panel matches the preview card's height. */}

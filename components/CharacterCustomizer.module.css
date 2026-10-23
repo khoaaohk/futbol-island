@@ -217,3 +217,6 @@
 /* Heat (Sep 30 2026, UI pass): Make it yours is full-screen and opaque, so its backdrop is a plain tint (the opacity fade above),
    never a live blur held for as long as it is open. */
 .dialog.dialog::backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* Oct 23 2026: Shuffle sits under the preview, re-rolling the whole look. */
+.shuffle{margin-top:12px;width:100%}

@@ -142,6 +142,20 @@ export function sanitizeCustomization(value:unknown,completed=0,total=0):Charact
   BEAN_KEYS.forEach(pick);
   return result;
 }
+/** Options a brand-new player may be rolled into: never locked, earned, graduation or equipment choices. */
+export const isFreeOption=(option:CustomizationOption)=>option.unlock===undefined&&!option.coinReward&&!option.graduate&&!option.equipment;
+/** Random starter look (Oct 23 2026): a random Male/Female character plus random free bean choices. Gear, costume and
+ *  rides come from `base`; kit follows selectCharacter (female coast, male classic) and the legacy face/body follow the
+ *  bean choices, so the result is already sanitised. Pure: pass a seeded `rng` to test. */
+export function randomCustomization(rng:()=>number=Math.random,base:CharacterCustomization=DEFAULT_CUSTOMIZATION):CharacterCustomization{
+  const pick=(key:CustomizationKey)=>{const free=CUSTOMIZATION_OPTIONS[key].filter(isFreeOption);return free[Math.min(free.length-1,Math.floor(rng()*free.length))].id;};
+  const character:'male'|'female'=rng()<.5?'female':'male';
+  const next={...base,character,clothing:character==='female'?'coast':'classic'} as CharacterCustomization;
+  for(const key of BEAN_KEYS)(next as Record<string,string>)[key]=pick(key);
+  return {...next,...legacyFromBean(next)};
+}
 const STORAGE_KEY='futbol-island-customization-v1';
-export function loadCustomization(completed=0,total=0){try{return sanitizeCustomization(JSON.parse(localStorage.getItem(STORAGE_KEY)??'null'),completed,total);}catch{return {...DEFAULT_CUSTOMIZATION};}}
+/** A save is kept exactly as sanitised; with no save at all (a new player) a random starter look is rolled once and saved,
+ *  so it stays the same on reload. Client only: callers run it after mount, and SSR falls back to the default. */
+export function loadCustomization(completed=0,total=0){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw===null){const rolled=randomCustomization();saveCustomization(rolled);return rolled;}return sanitizeCustomization(JSON.parse(raw),completed,total);}catch{return {...DEFAULT_CUSTOMIZATION};}}
 export function saveCustomization(value:CharacterCustomization){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(value));}catch{/* Private browsing still supports this visit. */}}

@@ -7,7 +7,7 @@
 .welcome{height:min(660px,calc(100dvh - 24px))}.welcome .body{display:flex;overflow:hidden}.welcome .content{display:flex;flex-direction:column;width:100%;flex:1;min-height:0}.welcome .copy,.welcome .eyebrow{flex:none}.preview{flex:1;min-height:100px;max-height:340px;margin:14px 0 12px;overflow:hidden;border-radius:14px}.preview>div{height:100%;min-height:0;max-height:none;margin:0;border:0;border-radius:0}
 .footer{flex:none;padding:14px 18px;border-top:1px solid #dfe5d9;display:flex;align-items:center;gap:8px;justify-content:space-between;background:#f7f0db}.dialog button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .highlight{position:fixed;pointer-events:none;box-sizing:border-box;border:3px solid #f3cb7d;border-radius:18px;box-shadow:0 0 0 5px #f3cb7d22,0 0 25px #f3cb7d55}
-@media(max-height:480px) and (min-width:601px){.welcome .content{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}.welcome .preview{grid-column:2;grid-row:1/4;height:100%;max-height:none;margin:0}.welcome .choicesLayout{grid-column:1}}
+@media(max-height:480px) and (min-width:601px){.welcome .content{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:10px}.welcome .preview{grid-column:2;grid-row:1/4;height:100%;max-height:none;margin:0}.welcome .choicesLayout,.welcome .shuffleRow{grid-column:1}.welcome .shuffleRow{margin:0}}
 
 .card{transition:top .45s cubic-bezier(.22,.7,.25,1),left .45s cubic-bezier(.22,.7,.25,1),height .45s cubic-bezier(.22,.7,.25,1),width .45s cubic-bezier(.22,.7,.25,1)}
 .content{animation:tour-content-in .28s ease-out both}
@@ -45,6 +45,7 @@
 .dialog .welcome>.header>h2{font-size:clamp(24px,3vw,38px)}
 
 .choicesLayout{flex:none}
+.shuffleRow{flex:none;display:flex;justify-content:center;margin:10px 0 12px}
 
 /* Step pictures: a row of existing island art (ride icons, fish, fruit, coin, card, book, pack) on the mint note ground. Static. */
 .tour .body{overflow:auto;scrollbar-gutter:auto}
