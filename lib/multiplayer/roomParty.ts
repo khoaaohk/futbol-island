@@ -317,7 +317,8 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
       lastUpdateAt = nowMs;
       const live = core.live;
       if (!live) {
-        if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, ctx.reducedMotion(), null); }
+        if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } // flush every fade (townBridge: ghost plume)
+        avatars.root.visible = false;
         fieldX.length = fieldZ.length = 0; meRingOn = false;
         return false;
       }

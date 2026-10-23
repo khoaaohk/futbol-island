@@ -73,6 +73,25 @@ t('the party ends (empty last frame) with friends still listed: nothing drawn',(
  const h=harness();h.a.upsert(8,LOOK,'G');const poses=new Map([[8,P(0,Mode.Busy)]]);run(h,poses,1.5);
  h.a.remove(8);poses.clear();h.a.update(.016,poses,h.camera,false,null);assert.equal(h.bodies(),0);
 });
+// Ghost plume (owner, Oct 23 2026, build 323ec0b8): a FLYING friend; the party ends; the runtime draws one last empty frame and then
+// sleeps. The plume's particles fade over later frames, so that one frame froze 24 of them on screen for good (scripts/check-mp-ghost-live.cjs).
+const jetsDrawn=h=>{let n=0;h.scene.traverse(o=>{if(o.name==='remote-jet-plumes'&&o.visible)n+=o.count;});return n;};
+const layerDrawn=h=>{let n=0;h.a.root.traverse(o=>{for(let q=o;q;q=q.parent){if(!q.visible)return;if(q===h.a.root)break;}if(o.isInstancedMesh)n+=o.count;else if(o.isMesh||o.isSprite)n++;});return n;};
+t('a flying friend leaves (party still live): body and plume gone once frames go on',()=>{
+ const h=harness();h.a.upsert(9,LOOK,'H',{hex:'#E69F00'});const poses=new Map([[9,P(1,Mode.Jetpack,{y:4,speed:6})]]);
+ run(h,poses,1.5);assert.ok(jetsDrawn(h)>0,'plume while flying');assert.equal(h.bodies(),1);
+ h.a.remove(9);poses.delete(9);run(h,poses,1);assert.equal(h.bodies(),0);assert.equal(jetsDrawn(h),0,'ghost plume after the friend left');
+});
+t('the party ends while a friend flies: the ONE last empty frame (reduced = flush) leaves nothing, and the layer is hidden',()=>{
+ const h=harness();h.a.upsert(10,LOOK,'I');const poses=new Map([[10,P(1,Mode.Jetpack,{y:4,speed:6})]]);run(h,poses,1.5);assert.ok(jetsDrawn(h)>0);
+ h.a.remove(10);poses.clear();h.a.update(.016,poses,h.camera,true,null);
+ assert.equal(h.bodies(),0);assert.equal(jetsDrawn(h),0,'plume frozen by the last frame');assert.equal(layerDrawn(h),0,'any friend layer left drawn');
+ const src=read('lib/multiplayer/townBridge.ts'),room=read('lib/multiplayer/roomParty.ts');
+ for(const [name,s] of [['townBridge',src],['roomParty',room]]){
+  assert.match(s,/avatars\.update\(dt, poses, camera, true, null\)/,name+': the last frame flushes every fade');
+  assert.match(s,/avatars\.root\.visible = false;/,name+': the friend layer is hidden while not in a party');
+ }
+});
 // roomParty only upserts from the roster (a late S.Poses / S.Live frame for a removed id cannot re-create the avatar)
 t('upsert comes from the roster only',()=>{
  const src=read('lib/multiplayer/roomParty.ts')+read('lib/multiplayer/townBridge.ts');

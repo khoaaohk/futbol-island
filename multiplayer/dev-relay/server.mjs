@@ -30,7 +30,9 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
   const reported = new Map(); // room -> members reported live
   const rooms = new Map(); // code -> RoomCore
   const stats = { created: 0, joins: 0, ended: 0 };
-  const clock = { now: () => Date.now() };
+  // MP_DEV=1: POST /dev/advance?ms=N moves the relay clock forward (grace / away timeouts in checks without waiting minutes).
+  let skew = 0;
+  const clock = { now: () => Date.now() + skew };
   const random = (n) => randomFillSync(new Uint8Array(n));
   const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
@@ -67,6 +69,7 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
     cors(req, res);
     if (!originOk(req)) { stat(() => statsCore.inc('rl:origin_refused')); return json(res, 403, { error: 'origin' }); }
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    if (process.env.MP_DEV === '1' && req.method === 'POST' && url.pathname === '/dev/advance') { skew += Math.max(0, Number(url.searchParams.get('ms')) || 0); res.writeHead(200); return res.end(String(skew)); }
     if (req.method === 'POST' && url.pathname === '/party') {
       let code;
       do { code = P.generateCode(random); } while (rooms.has(code));
