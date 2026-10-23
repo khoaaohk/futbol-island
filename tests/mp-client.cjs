@@ -423,6 +423,12 @@ t('islandJump: a teleport on the island sends Warp, fast rides do not (E2E findi
   assert.equal(pr.islandJump(0,0,60,0,5),true,'dt is capped at 1 s: 60 m after a long stall is still a teleport (limit 51 m)');
 });
 const tb=fs.readFileSync(path.join(ROOT,'lib/multiplayer/townBridge.ts'),'utf8');
+t('a guest who taps Leave party reads "You left the party", never "The party ended" (E2E finding Oct 22 2026)',()=>{
+  const ph=fs.readFileSync(path.join(ROOT,'components/party/PartyHost.tsx'),'utf8');
+  assert.ok(/const leave = \(\) => \{ selfLeft\.current = true;/.test(ph),'Leave marks the player\'s own leave first');
+  assert.ok(/&& selfLeft\.current\) text\('You left the party'\)/.test(ph),'the status change after an own Leave keeps the left note');
+  assert.ok(/if \(state\.status === 'live'\) selfLeft\.current = false;/.test(ph),'cleared when a party goes live again');
+});
 t('townBridge arms the Warp on an island jump',()=>{assert.ok(/islandJump\(jumpX, jumpZ, l\.x, l\.z, dt\)\) armEntryWarp\(ew\)/.test(tb));});
 t('townActivity: Town flags -> one Activity (priority: room > quiz > lesson > the rest)',()=>{
   const A=P.Activity,f=pr.townFlags();

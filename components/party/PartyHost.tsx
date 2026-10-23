@@ -155,6 +155,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (h.reconnects > 0) track.current?.('reconnect', String(h.reconnects));
   };
   const joining = useRef<'host' | 'guest' | null>(null);
+  const selfLeft = useRef(false); // this player tapped Leave party: the status change that follows says "You left the party", not "The party ended"
   const joinVia = useRef<'link' | 'typed'>('typed'); // how the code being joined arrived (analytics: a link / the title screen vs typed)
   const prevIds = useRef<Set<number> | null>(null);
   const prevStatus = useRef(state.status);
@@ -256,6 +257,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     prevStatus.current = state.status;
     if (state.status === was) return;
     if (state.status === 'reconnecting') text('Reconnecting');
+    if (state.status === 'live') selfLeft.current = false;
     if (state.status === 'live' && joining.current) {
       track.current?.(joining.current === 'host' ? 'live_host' : 'live_guest', joining.current === 'guest' ? joinVia.current : undefined);
       healthSent.current = false;
@@ -266,7 +268,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       // Another tab of this browser took the party over (Use it here): this one goes quiet; the party goes on there.
       text('Your party moved to another tab'); prevIds.current = null; setView('none'); setConfirmEnd(false);
     } else if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
-      if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); trackHealth(); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
+      if ((was === 'live' || was === 'reconnecting') && selfLeft.current) text('You left the party'); // a guest's own Leave (E2E finding Oct 22 2026: it read 'The party ended')
+      else if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); trackHealth(); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
+      selfLeft.current = false;
       prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.tab, state.members.length, text]);
@@ -384,7 +388,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       <p className={styles.small}>Go back to the party you were in.</p>
     </div>
   );
-  const leave = () => { track.current?.('leave'); trackHealth(); connection.leave(); setView('none'); text('You left the party'); };
+  const leave = () => { selfLeft.current = true; track.current?.('leave'); trackHealth(); connection.leave(); setView('none'); text('You left the party'); };
 
   return (
     <>
