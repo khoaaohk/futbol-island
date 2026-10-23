@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -49,6 +49,12 @@ function isNickField(v: unknown): boolean {
 function isMember(v: unknown): v is MemberInfo {
   return Array.isArray(v) && (v.length === 5 || (v.length === 6 && isNickField(v[5]))) && inRange(v[0], 0, MAX_MEMBER_ID) && isName(v[1]) && isLook(v[2]) && isBit(v[3]) &&
     (v[4] === null || isPose(v[4]));
+}
+
+const MAX_AGE_MS = 60_000;
+/** A ball position (decimetres): inside WORLD_BOUNDS. */
+function isBallXYZ(x: unknown, y: unknown, z: unknown): boolean {
+  return inBoundsXZ(x, z) && inRange(y, WORLD_BOUNDS.minY, WORLD_BOUNDS.maxY);
 }
 
 function inBoundsXZ(x: unknown, z: unknown): boolean {
@@ -101,6 +107,10 @@ export function parseClient(raw: string): ClientMsg | null {
       return a.length === 1 ? (a as ClientMsg) : null;
     case C.Beat:
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ClientMsg) : null;
+    case C.Caps:
+      return a.length === 2 && inRange(a[1], 0, 255) ? (a as ClientMsg) : null;
+    case C.Ball:
+      return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
     default:
       return null;
   }
@@ -145,6 +155,21 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ServerMsg) : null;
     case S.Renamed:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && a[2] === null ? (a as ServerMsg) : null;
+    case S.Caps:
+      return a.length === 2 && inRange(a[1], 0, 255) ? (a as ServerMsg) : null;
+    case S.Live: {
+      if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
+      const p = a[2] as unknown[], b = a[3] as unknown[];
+      if (p.length % LIVE_POSE_STRIDE !== 0 || p.length / LIVE_POSE_STRIDE > PARTY_MAX) return null;
+      if (b.length % LIVE_BALL_STRIDE !== 0 || b.length / LIVE_BALL_STRIDE > PARTY_MAX) return null;
+      for (let i = 0; i < p.length; i += LIVE_POSE_STRIDE) {
+        if (!inRange(p[i], 0, MAX_MEMBER_ID) || !isPose(p.slice(i + 1, i + 9)) || !inRange(p[i + 9], 0, MAX_AGE_MS)) return null;
+      }
+      for (let i = 0; i < b.length; i += LIVE_BALL_STRIDE) {
+        if (!inRange(b[i], 0, MAX_MEMBER_ID) || !inRange(b[i + 1], 0, 3) || !isBallXYZ(b[i + 2], b[i + 3], b[i + 4]) || !inRange(b[i + 5], 0, MAX_AGE_MS)) return null;
+      }
+      return a as ServerMsg;
+    }
     default:
       return null;
   }

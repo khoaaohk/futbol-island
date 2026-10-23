@@ -2,7 +2,7 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Activity, Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, BallState, Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
@@ -27,7 +27,12 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
   readonly meRing: boolean;
   /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
-  readonly shown: number; readonly rigs: number }
+  readonly shown: number; readonly rigs: number;
+  /** Live feel: the local ball for friends (relay v1.2; visual only on their side). state = BallState; metres. Call every frame:
+   *  the connection throttles (state changes, a moving Free ball at most 10 Hz). */
+  ball(state: BallState, x: number, y: number, z: number): void;
+  /** Friends' balls use the island ball's geometry + material (shared, never disposed by the party layer). */
+  setBallLook(geometry: THREE.BufferGeometry, material: THREE.Material): void }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -77,6 +82,8 @@ export function atRoomDoor(m: { room: number; presence: string; activity: number
 
 export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUnitRoots(r: THREE.Object3D[]): void };
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
+  /** The ground height under x, z (flying friends' plumes settle on it). */
+  groundAt?: (x: number, z: number) => number;
   /** A friend's emote was shown (Town counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
   onEmoteSeen?: () => void;
   /** Room doors for the "3 in the Konbini" hint (none = no hint). */
@@ -90,7 +97,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const hints: { d: RoomDoorHint; sprite: T3.Sprite; n: number }[] = [];
   let ready = false; // the core's first sync runs inside createFriendCore (before `avatars` below exists)
-  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen,
+  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen, groundAt: ctx.groundAt,
     admit(id, b) {
       const room = roomOf(b);
       if (room < 0) { const k = lastIsland.get(id); if (k) for (let i = 0; i < 8; i++) k[i] = b[i]; else lastIsland.set(id, b.slice()); return b; }
@@ -160,6 +167,11 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
     friends: () => active.values(),
+    ball(state, x, y, z) {
+      if (!core.live || conn.status !== 'live') return;
+      conn.sendBall(state, x, y, z, now());
+    },
+    setBallLook(geometry, material) { avatars.setBallLook(geometry, material); },
     ballVsFields(ball) {
       if (!core.live) return false;
       let hit = false;
@@ -191,7 +203,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
         const showRing = conn.status === 'live' && meHex !== '' && !l.hidden && l.zone !== Zone.Indoors;
         meRingOn = showRing;
         if (showRing) { ring.x = l.x; ring.y = l.y; ring.z = l.z; ring.hex = meHex; ring.mode = l.mode; ring.pitch = l.pitch ?? 0; ring.yaw = l.facing; }
-        avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null);
+        avatars.update(dt, poses, camera, ctx.reducedMotion(), showRing ? ring : null, core.balls);
         if (hints.length) for (const h of hints) if (h.n > 0) { const dx = h.d.x - camera.position.x, dz = h.d.z - camera.position.z; h.sprite.visible = dx * dx + dz * dz < HINT_RANGE * HINT_RANGE; }
       }
       // Me: one pose per frame into the connection, which applies the 5 Hz / 1 Hz throttle and delta suppression.

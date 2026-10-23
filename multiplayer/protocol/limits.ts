@@ -3,7 +3,8 @@ import { Mode, Zone, type PoseBody } from './types';
 import { RoomCode, roomOf } from './rooms';
 
 export const RATE = {
-  pose: [8, 12],
+  pose: [12, 16], // relay v1.2: 10 Hz near poses (was [8, 12] for 5 Hz)
+  ball: [12, 16],
   emote: [0.5, 2],
   ping: [0.33, 2],
   control: [1, 3],

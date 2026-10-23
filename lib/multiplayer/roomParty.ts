@@ -5,14 +5,15 @@
 // No analytics imports (tests/mp-isolation.cjs): counts leave through callbacks only. No timers or loops of its own: the room's
 // frame loop calls update(), the connection's 5 s beat carries the pose while that loop sleeps.
 import type * as THREE from 'three';
-import { Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { BallState, Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { emoteSeconds } from '../town/emoteReact';
-import { createRemoteAvatars, remoteCap, type RemoteAvatars } from '../graphics/remoteAvatars';
+import { createRemoteAvatars, remoteCap, type RemoteAvatars, type RemoteBall } from '../graphics/remoteAvatars';
 import { batterySaverOn } from '../graphics/heatTier';
 import { loadCustomization } from '../town/customization';
 import { multiplayerEnabled } from './config';
 import { createPartyConnection, type PartyConnection } from './connection';
-import { bindConnection, onPoses } from './index';
+import { bindConnection, onBalls, onPoses } from './index';
+import { liveClock } from './liveClock';
 import { createInterp, type Interp, type RemotePose } from './interp';
 import { lookToWire } from './look';
 import { armEntryWarp, fillRoomBody, roomPoseState, type RoomLocal } from './presence';
@@ -48,6 +49,8 @@ export interface FriendCore {
   readonly interp: Interp;
   /** Sampled friends (preallocated poses), what avatars.update draws. */
   readonly poses: Map<MemberId, RemotePose>;
+  /** Live feel: friends' sampled balls (state None = no ball), on the same timeline as their poses. Relay v1.2 only. */
+  readonly balls: Map<MemberId, RemoteBall>;
   /** Friends outside any force field (what friends() / friendsHere() list). */
   readonly active: Map<MemberId, RemotePose>;
   readonly ids: MemberId[];
@@ -61,6 +64,8 @@ export interface FriendCore {
 }
 export function createFriendCore(ctx: {
   scene: THREE.Scene; phone: boolean; fieldScale?: number;
+  /** The island's ground height under x, z (where a flying friend's plume settles). */
+  groundAt?: (x: number, z: number) => number;
   /** A friend's emote was shown (the page counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
   onEmoteSeen?: () => void;
   /** Any friend's emote arrived (rooms: wake when the sender is here). */
@@ -71,8 +76,13 @@ export function createFriendCore(ctx: {
   onSync?: (live: boolean, welcome: boolean) => void;
 }): FriendCore {
   const conn = partyConnection();
-  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()), fieldScale: ctx.fieldScale });
+  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt });
   const interp = createInterp();
+  // Friends' balls ride their own interpolators (the ball state in the mode slot), sampled at the same render time as the bodies,
+  // so a shot leaves the friend's foot when their kick plays here.
+  const ballInterp = createInterp();
+  const balls = new Map<MemberId, RemoteBall>();
+  const ballBody: PoseBody = [0, 0, 0, 0, 0, Mode.Walk, Zone.Main, 0], ballScratch: RemotePose = { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Walk, zone: Zone.Main, fade: 1 };
   const poses = new Map<MemberId, RemotePose>();
   const spare = new Map<MemberId, RemotePose>(); // one preallocated pose per known friend
   const active = new Map<MemberId, RemotePose>();
@@ -100,7 +110,7 @@ export function createFriendCore(ctx: {
     for (let i = ids.length - 1; i >= 0; i--) {
       const id = ids[i];
       if (known.has(id)) continue;
-      avatars.remove(id); interp.drop(id); poses.delete(id); active.delete(id); spare.delete(id); ids.splice(i, 1);
+      avatars.remove(id); interp.drop(id); ballInterp.drop(id); balls.delete(id); poses.delete(id); active.delete(id); spare.delete(id); ids.splice(i, 1);
     }
     const e = s.lastEmote;
     if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you && avatars.emote(e.id, e.emote)) ctx.onEmoteSeen?.(); if (e.id !== s.you) ctx.onFriendEmote?.(e.id); }
@@ -113,6 +123,11 @@ export function createFriendCore(ctx: {
     if (id === you || !known.has(id)) return;
     const body = ctx.admit(id, b, recvMs);
     if (body) interp.push(id, body, recvMs);
+  });
+  const offBalls = onBalls((id, state, x, y, z, tMs) => {
+    if (id === you || !known.has(id)) return;
+    ballBody[0] = Math.round(x * 10); ballBody[1] = Math.round(y * 10); ballBody[2] = Math.round(z * 10); ballBody[5] = state as PoseBody[5];
+    ballInterp.push(id, ballBody, tMs);
   });
   // A friend who stands still never sends a pose: the Welcome / Joined roster carries everyone's last pose, so seed the interpolators
   // from it (a still friend already in the room shows at once instead of on their first step).
@@ -130,11 +145,13 @@ export function createFriendCore(ctx: {
   applyFilters();
 
   return {
-    conn, avatars, interp, poses, active, ids,
+    conn, avatars, interp, poses, active, ids, balls,
     get live() { return live; },
     get you() { return you; },
     get meHex() { return meHex; },
     sample(nowMs, adapt) {
+      const delay = liveClock.delay(nowMs);
+      interp.setDelay(delay); ballInterp.setDelay(delay);
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = spare.get(id)!;
         if (interp.sample(id, nowMs, p)) {
@@ -142,10 +159,15 @@ export function createFriendCore(ctx: {
           if (!poses.has(id)) poses.set(id, p);
           if (presenceOf(p.mode, p.zone, p.flags ?? 0) === 'active') { if (!active.has(id)) active.set(id, p); } else if (active.has(id)) active.delete(id);
         } else if (poses.has(id)) { poses.delete(id); active.delete(id); }
+        if (ballInterp.sample(id, nowMs, ballScratch) && ballScratch.mode !== BallState.None) {
+          let b = balls.get(id);
+          if (!b) { b = { state: 0, x: 0, y: 0, z: 0 }; balls.set(id, b); }
+          b.state = ballScratch.mode; b.x = ballScratch.x; b.y = ballScratch.y; b.z = ballScratch.z;
+        } else if (balls.has(id)) balls.get(id)!.state = BallState.None;
       }
     },
     dispose() {
-      offStore(); offPoses(); offSeed(); filterSubs.delete(applyFilters); avatars.dispose(); poses.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
+      offStore(); offPoses(); offBalls(); offSeed(); filterSubs.delete(applyFilters); avatars.dispose(); poses.clear(); balls.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
       // The shared connection (and its binding) belongs to the page: it closes on unload and via leave().
       void unbind;
     },

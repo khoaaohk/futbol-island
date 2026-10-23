@@ -41,6 +41,19 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const PoseFlag = { Warp: 1, Hidden: 2 } as const;
 export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
 
+/** Relay v1.2 capability bits (S.Caps / C.Caps). Live = timestamped 10 Hz near poses (S.Live); Ball = friends' balls (C.Ball, in S.Live). */
+export const Cap = { Live: 1, Ball: 2 } as const;
+export const CAPS_ALL = 3;
+/** None: no ball shown. Feet: dribbling / charging (drawn at the friend's feet). Juggle: keepy-ups over the feet. Free: shot / rolling / resting at x,y,z. */
+export const BallState = { None: 0, Feet: 1, Juggle: 2, Free: 3 } as const;
+export type BallState = (typeof BallState)[keyof typeof BallState];
+export const LIVE_POSE_STRIDE = 10;
+export const LIVE_BALL_STRIDE = 6;
+/** Relay v1.2: between two 5 Hz ticks (so 10 Hz) each recipient also gets the nearest LIVE_NEAR friends in its room within LIVE_RANGE_M. */
+export const LIVE_NEAR = 4;
+export const LIVE_RANGE_M = 40;
+/** A friend's ball reaches recipients in the same room within this range (m). */
+export const BALL_RANGE_M = 80;
 export type Look = number[]; // length LOOK_LEN, ints 0..63
 export type MemberId = number; // 0..MAX_MEMBER_ID (31), server-assigned slot
 /** [colour, reserved]: the second slot used to be an animal index; the relay now always sends 0 and receivers ignore it. */
@@ -51,7 +64,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -65,11 +78,18 @@ export type CEnd = [typeof C.End]; // host only
 export type CLeave = [typeof C.Leave];
 export type CBeat = [typeof C.Beat, t: number];
 export type CResetName = [typeof C.ResetName, target: MemberId]; // host only: clears that member's typed name for everyone
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName;
+/** Live feel (relay v1.2, Oct 23 2026): sent ONLY after the relay's S.Caps (an old relay never sends it, so an old relay never sees these
+ *  frames and never counts them as bad). bits = the Cap bits this client understands, ANDed with the relay's. */
+export type CCaps = [typeof C.Caps, bits: number];
+/** The local ball, visual only for friends (never collides, never scores). Island only. state: BallState; x/y/z decimetres (island
+ *  coordinates; ignored by receivers for None / Feet / Juggle, which draw the ball at the friend's own feet). */
+export type CBall = [typeof C.Ball, state: BallState, x_dm: number, y_dm: number, z_dm: number];
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
+  Caps: 32, Live: 33,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -87,4 +107,10 @@ export type SError = [typeof S.Error, code: ErrorCode];
 export type SBeat = [typeof S.Beat, t: number];
 /** The host reset a member's typed name: everyone falls back to the colour name. nick is always null. */
 export type SRenamed = [typeof S.Renamed, id: MemberId, nick: null];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed;
+/** Relay v1.2: sent right after every Welcome. Old clients cannot parse it and ignore it (parseServer -> null). */
+export type SCaps = [typeof S.Caps, bits: number];
+/** Relay v1.2, only to a client that answered C.Caps with Cap.Live: replaces S.Poses for it. t = relay clock (ms);
+ *  poses = flat [id, ...PoseBody, ageMs] (stride LIVE_POSE_STRIDE), balls = flat [id, state, x_dm, y_dm, z_dm, ageMs] (stride LIVE_BALL_STRIDE).
+ *  ageMs = how long before t the relay received that frame, so the receiver can place every snapshot on the sender's timeline. */
+export type SLive = [typeof S.Live, t: number, poses: number[], balls: number[]];
+export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive;

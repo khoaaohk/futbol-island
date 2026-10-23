@@ -105,8 +105,11 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
     conn.onClose(() => room.disconnect(peer));
   });
 
+  let step = 0;
   const timer = setInterval(() => {
+    const half = ++step % 2 === 1; // relay v1.2: 10 Hz steps, the full tick every other step (as the Durable Object)
     for (const room of new Set(rooms.values())) {
+      if (half) { room.halfTick(); continue; }
       room.tick();
       const n = room.ended ? 0 : room.liveMembers, was = reported.get(room) ?? 0;
       if (n !== was && !room.ended) { reported.set(room, n); stat(() => statsCore.players(n - was)); }
@@ -115,7 +118,7 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
         reported.delete(room);
         stat(() => statsCore.ended(sum, rep)); for (const [code, r] of rooms) if (r === room) rooms.delete(code); stats.ended++; }
     }
-  }, 200);
+  }, 100);
   timer.unref();
 
   return new Promise((resolve) => {

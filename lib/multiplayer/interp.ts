@@ -1,4 +1,4 @@
-// Remote pose interpolation: 4-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
+// Remote pose interpolation: 8-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
 // past, extrapolate at most extrapolateMs then ease to a stop. A Warp flag or a >25 m jump fades out/in over 300 ms.
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
 import { activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
@@ -12,9 +12,11 @@ export interface Interp {
   /** renderMs is the current clock (same base as recvMs); the delay is subtracted inside. */
   sample(id: MemberId, renderMs: number, out: RemotePose): boolean;
   drop(id: MemberId): void;
+  /** Live feel: the render delay (ms) from now on (lib/multiplayer/liveClock.ts picks it). */
+  setDelay(ms: number): void;
 }
 
-const SLOTS = 4;
+const SLOTS = 8; // live feel: 10 Hz snapshots behind a delay of up to 500 ms need ~7 (was 4 at 5 Hz)
 const F = 9; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone, flags
 const FADE_HALF_MS = 150;
 const JUMP_M = 25;
@@ -23,7 +25,7 @@ const TAU = Math.PI * 2;
 type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number };
 
 export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }): Interp {
-  const delay = opts?.delayMs ?? 250;
+  let delay = opts?.delayMs ?? 250;
   const cap = opts?.extrapolateMs ?? 250;
   const rings = new Map<MemberId, Ring>();
 
@@ -123,5 +125,5 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
     return true;
   }
 
-  return { push, sample, drop: (id) => { rings.delete(id); } };
+  return { push, sample, drop: (id) => { rings.delete(id); }, setDelay: (ms) => { if (ms > 0 && ms < 2000) delay = ms; } };
 }

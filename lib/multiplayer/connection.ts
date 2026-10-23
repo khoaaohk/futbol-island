@@ -2,7 +2,7 @@
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
-  type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
+  Cap, CAPS_ALL, BallState, WORLD_BOUNDS, type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
 
@@ -33,6 +33,11 @@ export interface PartyConnection {
   /** tab / lapsed changed. */
   onLocal(fn: () => void): () => void;
   sendPose(body: PoseBody, nowMs: number): void;
+  /** Live feel: the local ball (metres; island only). Sent only to a v1.2 relay (Cap.Ball), on a state change, and for a Free ball at
+   *  most every BALL_GAP_MS while it moves. Visual only for friends. */
+  sendBall(state: BallState, x: number, y: number, z: number, nowMs: number): void;
+  /** The capability bits agreed with the relay (0 = an old relay: 5 Hz poses, no ball). */
+  readonly caps: number;
   sendEmote(e: Emote): boolean;
   sendPing(kind: PingKind, x: number, z: number): boolean;
   host: { resetName(id: MemberId): void; kick(id: MemberId): void; lock(on: boolean): void; rotate(): void; end(): void };
@@ -75,7 +80,12 @@ export const MAX_ATTEMPTS = 12;
  *  party is gone. Online at that point, the stored session is cleared (the party ended while away); offline, it is kept for next time. */
 export const RESUME_ATTEMPTS = 4;
 const CLOSE_KICKED = 4003, CLOSE_ENDED = 4004, CLOSE_REPLACED = 4005; // relay close codes (roomCore CLOSE)
-const MOVE_GAP_MS = 200; // 5 Hz
+const MOVE_GAP_MS = 200; // 5 Hz (an old relay: its pose bucket is 8 / s)
+/** Live feel: ~10 Hz while moving once the relay said it is v1.2 (S.Caps with Cap.Live); its pose bucket is 12 / s. */
+export const LIVE_MOVE_GAP_MS = 90; // 90, not 100: on a 60 / 30 fps frame loop the real gap lands on 90-107 / 100 ms (never the 117-133 a 100 ms gap gives)
+/** A free (shot / rolling) ball: at most 10 updates a second, and only when it moved more than BALL_MOVE_DM. */
+export const BALL_GAP_MS = 100;
+const BALL_MOVE_DM = 1;
 const IDLE_GAP_MS = 1000; // 1 Hz
 const EMOTE_GAP_MS = 2000;
 const MOVE_DM = 1.5; // 0.15 m
@@ -140,6 +150,8 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let localHidden = false;
   let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
+  let caps = 0; // agreed with the relay after each Welcome (S.Caps -> C.Caps)
+  let ballSt = -1, ballX = 0, ballY = 0, ballZ = 0, ballAt = -1e12;
   const pingBucket = new TokenBucket(0.33, 2);
   // Health: the last beat sent (its echoed value and local send time), recent round trips, drops recovered.
   let beatOut: { v: number; at: number } | null = null;
@@ -287,8 +299,12 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       setLocal('here', false);
       if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
+      caps = 0; ballSt = -1; // the relay sends S.Caps after every Welcome (an old relay never does)
       writeSession();
       setStatus('live');
+    } else if (m[0] === S.Caps) {
+      caps = m[1] & CAPS_ALL;
+      if (caps) raw([C.Caps, caps]);
     } else if (m[0] === S.Renamed) {
       if (m[1] === you) nick = null; // the host reset my name: never send it again on a reconnect
     } else if (m[0] === S.Code) {
@@ -469,11 +485,25 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       let send = false;
       if (!last) send = true;
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate
-      else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= MOVE_GAP_MS;
+      else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= ((caps & Cap.Live) ? LIVE_MOVE_GAP_MS : MOVE_GAP_MS);
       else if (body.some((v, i) => v !== last![i])) send = nowMs - lastPoseAt >= IDLE_GAP_MS;
       if (!send) return;
       if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body.slice() as PoseBody; lastPoseAt = nowMs; }
     },
+    sendBall(state, x, y, z, nowMs) {
+      if (!(caps & Cap.Ball) || !open() || status !== 'live') return;
+      const st = localHidden ? BallState.None : state;
+      const B = WORLD_BOUNDS, q = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Math.round((Number.isFinite(v) ? v : 0) * 10)));
+      const qx = q(x, B.minX, B.maxX), qy = q(y, B.minY, B.maxY), qz = q(z, B.minZ, B.maxZ);
+      if (nowMs - ballAt < BALL_GAP_MS) return; // a state change waits too (sendBall runs every frame, so it goes out next time)
+      if (st === ballSt) {
+        if (st !== BallState.Free) return;
+        const dx = qx - ballX, dy = qy - ballY, dz = qz - ballZ;
+        if (dx * dx + dy * dy + dz * dz <= BALL_MOVE_DM * BALL_MOVE_DM) return;
+      }
+      if (raw([C.Ball, st, qx, qy, qz])) { ballSt = st; ballX = qx; ballY = qy; ballZ = qz; ballAt = nowMs; }
+    },
+    get caps() { return caps; },
     sendEmote(e) {
       const t = now();
       if (localHidden || !open() || t - lastEmoteAt < EMOTE_GAP_MS) return false;

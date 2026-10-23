@@ -12,7 +12,7 @@ t('constants',()=>{
   assert.equal(P.RESUME_GRACE_MS,60000);assert.equal(P.HOST_GRACE_MS,30000);assert.equal(P.EMPTY_CLOSE_MS,120000);assert.equal(P.MAX_INBOUND_BYTES,512);assert.equal(P.LOOK_LEN,12);
   assert.equal(P.Mode.Idle,13);assert.equal(P.Mode.Swim,8);assert.equal(P.Zone.Indoors,4);assert.equal(P.Emote.WellPlayed,5);assert.equal(P.ErrorCode.Kicked,8);
   assert.equal(P.PoseFlag.Warp,1);assert.equal(P.PoseFlag.Hidden,2);assert.equal(P.C.Beat,9);assert.equal(P.S.Welcome,20);assert.equal(P.S.Beat,30);
-  assert.deepEqual(plain(P.RATE),{pose:[8,12],emote:[0.5,2],ping:[0.33,2],control:[1,3],closeAbovePerSec:30,emotePerMin:10});
+  assert.deepEqual(plain(P.RATE),{pose:[12,16],ball:[12,16],emote:[0.5,2],ping:[0.33,2],control:[1,3],closeAbovePerSec:30,emotePerMin:10});
   assert.deepEqual(plain(P.WORLD_BOUNDS),{minX:-4000,maxX:10000,minZ:-6000,maxZ:6000,minY:-400,maxY:2000});
   const sp=P.MAX_SPEED_MS;assert.equal(sp[P.Mode.Scooter],14);assert.equal(sp[P.Mode.Bike],20);assert.equal(sp[P.Mode.Moped],28);assert.equal(sp[P.Mode.Jetpack],34);assert.equal(sp[P.Mode.Swim],3);assert.equal(sp[P.Mode.Idle],6);
   assert.ok(Math.abs(sp[P.Mode.Walk]-3.7*1.7)<1e-9);

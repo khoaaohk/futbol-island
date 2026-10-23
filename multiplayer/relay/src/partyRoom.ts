@@ -21,7 +21,8 @@ export interface Env { PARTY: DurableObjectNamespace; STATS: DurableObjectNamesp
 
 interface Saved extends RoomSnapshot { name: string; createdAt: number; hostKeyHash: string }
 
-const TICK_MS = 200;
+/** Relay v1.2: the timer steps at 10 Hz; every other step is the full 5 Hz tick, the steps between only send near Live poses + balls. */
+const TICK_MS = 100;
 const ALARM_MS = 5000;
 
 export class PartyRoom {
@@ -216,7 +217,7 @@ export class PartyRoom {
     await this.state.storage.setAlarm(this.alarmAt);
   }
 
-  /** Tick at 5 Hz only while >= 2 sockets are open; the alarm (re-armed after each run) covers the quiet cases. */
+  /** Tick at 5 Hz (+ the 10 Hz half steps) only while >= 2 sockets are open; the alarm (re-armed after each run) covers the quiet cases. */
   private afterEvent(): void {
     const core = this.core;
     if (!core) return;
@@ -228,7 +229,10 @@ export class PartyRoom {
       return;
     }
     const sockets = this.state.getWebSockets().length;
-    if (sockets >= 2 && !this.timer) this.timer = setInterval(() => { core.tick(); if (core.ended || core.stateChanged) this.afterEvent(); }, TICK_MS);
+    if (sockets >= 2 && !this.timer) {
+      let step = 0;
+      this.timer = setInterval(() => { if (++step % 2) core.halfTick(); else core.tick(); if (core.ended || core.stateChanged) this.afterEvent(); }, TICK_MS);
+    }
     else if (sockets < 2 && this.timer) { clearInterval(this.timer); this.timer = null; }
     void this.ensureAlarm();
   }

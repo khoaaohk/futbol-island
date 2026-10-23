@@ -7,6 +7,9 @@
 //    farthest rigs to ring + label (0.4 s shrink, instant under reduced motion, then the rig is released), a recovered tier re-admits
 //    the nearest in range after 10 s at the higher cap (no thrash on a flapping tier); Battery saver fades everyone out;
 //  - a name label is one Sprite per friend with a CanvasTexture made once on upsert; only the nearest 8 on screen within 25 m are visible, and at most 6 emote bubbles at once (big parties);
+//    live feel (Oct 23 2026): the label is as big as the townsfolk's name tags (readable from the phone's island camera);
+//  - friends' balls (relay v1.2): at most BALL_MAX (4) ball meshes, nearest first, sharing the island ball's geometry + material, no shadows;
+//  - flying friends' jet plumes: ONE shared instanced pool (remoteJets.ts) for the nearest 3 flying friends;
 //  - a friend beyond the rig cap (5 on most phones) is not a rig: the colour ring + label only (ring-only, within 90 m), same one ring draw call;
 //  - ONE instanced colour ring (capacity party max + 1 = 21, no shadows, one draw call) lies at each shown friend's feet, and at the local player's
 //    while in a party; the instance colour is the member's name colour, so friends can be told apart from far away;
@@ -26,9 +29,10 @@ import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
-import {Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
+import {BallState,Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
 import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
+import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
@@ -41,6 +45,8 @@ export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
 /** The member's colour (hex): the label's dot and rim and the ground ring. The label text is the first name (or the colour name). */
 export interface MemberStyle{hex:string}
 /** `pitch` (rad, + leans forward) and `yaw` = the local body's real flight pitch / heading: the ring follows the body while flying (Mode.Jetpack). */
+/** A friend's sampled ball (lib/multiplayer/roomParty.ts): state = BallState; x / y / z (m) for a Free ball. */
+export interface RemoteBall{state:number;x:number;y:number;z:number}
 export interface LocalRing{x:number;y:number;z:number;hex:string;mode?:number;pitch?:number;yaw?:number}
 export interface RemoteAvatars{
  readonly root:T.Object3D;
@@ -57,7 +63,11 @@ export interface RemoteAvatars{
  /** The island ball hit this friend's force field: a short damped shake and a ripple from the impact normal (dome space). */
  bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
- update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null):void;
+ update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null,balls?:ReadonlyMap<MemberId,RemoteBall>|null):void;
+ /** The island's own ball geometry + material for friends' balls (shared, never disposed here). Rooms keep the plain default. */
+ setBallLook(geometry:T.BufferGeometry,material:T.Material):void;
+ /** Friends' balls drawn last frame, and flying friends with a plume (heat checks / tests). */
+ readonly ballsShown:number;readonly jetsShown:number;
  readonly shown:number;
  /** Rigs alive (admitted + still shrinking after a demotion): the heat checks' leak counter. */
  readonly rigs:number;
@@ -108,28 +118,38 @@ type Entry={
  shield:boolean;field:number;door:number;shake:number;ripple:number;hx:number;hy:number;hz:number;status:T.Sprite|null;statusKey:string;
  /** The status line, rebuilt only when the presence or activity changes (was a string concat per busy friend per frame). */
  prWas:string;actWas:number;lineWas:string;
+ /** Live feel: this friend's ball last frame (for the roll), whether it was drawn, its spin. */
+ bx:number;by:number;bz:number;bOn:boolean;bq:T.Quaternion;
 };
 
-const LABEL_W=256;
-const labelH=(_style:MemberStyle|null)=>64;
+// Live feel (Oct 23 2026): the old 256 x 64 canvas at 27 px drawn 1.5 m wide made a name ~0.16 m tall, unreadable from the phone's
+// island camera (~35 m back). Now a 512 x 128 canvas at 60 px, drawn LABEL_WORLD_W (3.4 m) wide: the name is ~0.4 m tall, a bit bigger
+// than a townsfolk name tag (43 px on a 3.5 m wide 512 canvas = 0.29 m). Still ONE sprite + ONE texture per friend, made on upsert.
+export const LABEL_W=512,LABEL_H=128,LABEL_FONT_PX=60,LABEL_WORLD_W=3.4,LABEL_Y=2.62;
+/** The label keeps its world size up to LABEL_NEAR_M (m) from the camera (the phone's island view), then grows with the distance up to LABEL_FAR_GROW x. */
+export const LABEL_NEAR_M=34,LABEL_FAR_GROW=1.7;
+const labelH=(_style:MemberStyle|null)=>LABEL_H;
+/** World height (m) of the name's letters (tests compare it with the townsfolk tag). */
+export const labelTextWorldHeight=()=>LABEL_FONT_PX/LABEL_W*LABEL_WORLD_W;
 function makeLabelTexture(text:string,style:MemberStyle|null){
- const H=labelH(style);
- const canvas=document.createElement('canvas');canvas.width=LABEL_W;canvas.height=H;
+ const H=labelH(style),W=LABEL_W,cx=W/2;
+ const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
  const g=canvas.getContext('2d');
  if(g){
   const label=text;
-  g.clearRect(0,0,LABEL_W,H);g.font='700 27px system-ui, sans-serif';g.textAlign='center';g.textBaseline='middle';
-  const dot=style?30:0;
-  let w=Math.min(244,g.measureText(label).width+28+dot);
-  const x0=128-w/2,ph=H-16,cy=32;
-  g.fillStyle='rgba(20,34,46,.72)';g.beginPath();g.roundRect?g.roundRect(x0,8,w,ph,24):g.rect(x0,8,w,ph);g.fill();
+  g.clearRect(0,0,W,H);g.font=`800 ${LABEL_FONT_PX}px system-ui, sans-serif`;g.textAlign='center';g.textBaseline='middle';
+  const dot=style?54:0;
+  let w=Math.min(W-12,g.measureText(label).width+52+dot);
+  const x0=cx-w/2,ph=H-20,cy=H/2;
+  g.fillStyle='rgba(20,34,46,.8)';g.beginPath();g.roundRect?g.roundRect(x0,10,w,ph,ph/2):g.rect(x0,10,w,ph);g.fill();
   if(style){
-   g.lineWidth=3;g.strokeStyle=style.hex;g.stroke(); // coloured rim = the ring colour
-   g.fillStyle=style.hex;g.beginPath();g.arc(x0+22,cy,9,0,Math.PI*2);g.fill();g.lineWidth=2;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
+   g.lineWidth=6;g.strokeStyle=style.hex;g.stroke(); // coloured rim = the ring colour
+   g.fillStyle=style.hex;g.beginPath();g.arc(x0+40,cy,17,0,Math.PI*2);g.fill();g.lineWidth=3;g.strokeStyle='rgba(20,34,46,.9)';g.stroke();
   }
-  g.fillStyle='#ffffff';g.fillText(label,128+dot/2,cy+1,230-dot);
+  g.lineWidth=7;g.lineJoin='round';g.strokeStyle='rgba(10,20,28,.55)';g.strokeText(label,cx+dot/2,cy+2,W-60-dot);
+  g.fillStyle='#ffffff';g.fillText(label,cx+dot/2,cy+2,W-60-dot);
  }
- const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;return texture;
+ const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=2;return texture;
 }
 const iconTextures=new Map<number,T.CanvasTexture>();
 function iconTexture(e:number){
@@ -191,7 +211,22 @@ const ringSizeFor=(mode:number):number=>mode===Mode.Scooter?1.65:mode===Mode.Bik
 
 const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible:false,dx:0,dy:0,scale:1,opacity:0};
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m). */
-export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number}):RemoteAvatars{
+/** Friends' balls: at most BALL_MAX drawn (nearest to the camera), within BALL_DRAW_RANGE; plumes for flying friends within JET_RANGE. */
+export const BALL_MAX=4,BALL_DRAW_RANGE=70,JET_RANGE=70,BALL_RADIUS=.19;
+const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion();
+const onFoot=(mode:number)=>mode===Mode.Walk||mode===Mode.Run||mode===Mode.Idle;
+/** Where a friend's ball is drawn (writes out.x/y/z; false = not drawn): Free at its own spot, Feet in front of their feet, Juggle bobbing over them. Exported for tests. */
+export function friendBallSpot(state:number,b:{x:number;y:number;z:number},pose:{x:number;y:number;z:number;yaw:number;mode:number},clock:number,phase:number,out:{x:number;y:number;z:number}):boolean{
+ if(state===BallState.Free){out.x=b.x;out.y=b.y;out.z=b.z;return true;}
+ if(state!==BallState.Feet&&state!==BallState.Juggle||!onFoot(pose.mode))return false;
+ const fwd=state===BallState.Feet?.55:.32;
+ out.x=pose.x+Math.sin(pose.yaw)*fwd;out.z=pose.z+Math.cos(pose.yaw)*fwd;
+ out.y=state===BallState.Feet?pose.y+BALL_RADIUS:pose.y+.45+Math.abs(Math.sin(clock*5.2+phase*6))*.7;
+ return true;
+}
+/** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m).
+ *  `groundAt`: the island's ground height (m) under x, z, where a flying friend's plume settles (none: it falls 3 m and fades). */
+export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number;groundAt?:(x:number,z:number)=>number}):RemoteAvatars{
  const FS=opts.fieldScale??1;
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
  const drawn=new T.Scene();drawn.name='remote-avatars-batch';root.add(drawn);
@@ -201,6 +236,13 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const rings=new T.InstancedMesh(ringGeo,ringMat,RING_CAPACITY);rings.name='remote-avatar-rings';rings.frustumCulled=false;rings.castShadow=false;rings.receiveShadow=false;rings.count=0;rings.renderOrder=2;
  rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
  const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
+ const jets=createRemoteJets();root.add(jets.root);
+ // Friends' balls: BALL_MAX plain meshes sharing ONE geometry + material (the island ball's, via setBallLook; a plain one until then).
+ let ownBallGeo:T.BufferGeometry|null=new T.SphereGeometry(BALL_RADIUS,16,12),ownBallMat:T.Material|null=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});
+ const ballMeshes:T.Mesh[]=[];
+ for(let i=0;i<BALL_MAX;i++){const m=new T.Mesh(ownBallGeo!,ownBallMat!);m.name='remote-ball';m.visible=false;m.castShadow=false;m.receiveShadow=false;m.raycast=()=>{};m.frustumCulled=false;root.add(m);ballMeshes.push(m);}
+ const candBall:Entry[]=[],candJet:Entry[]=[],ballSpot={x:0,y:0,z:0},ballD2=new Float64Array(PARTY_MAX+12);
+ let ballsShown=0,jetsShown=0;
  let ringN=0;
  function ringAdd(x:number,y:number,z:number,dist:number,c:T.Color,pulse:number,k:number,pitch=0,yaw=0){
   if(ringN>=RING_CAPACITY)return;
@@ -214,16 +256,16 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function placeLabel(e:Entry,pose:RemotePose,k:number,reduced:boolean){
   const label=e.label!,bubble=e.bubble!,d2=e.d2,ld2=e.ld2;
   label.visible=false;bubble.visible=false;
-  if(ld2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+2.35*k,pose.z);(label.material as T.SpriteMaterial).opacity=k;candL.push(e);}
+  if(ld2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+LABEL_Y*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k;candL.push(e);}
   // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
   // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
   if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE;e.status.visible=show;
-   if(show){e.status.position.set(pose.x,pose.y+2.35*k+.3,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
+   if(show){e.status.position.set(pose.x,pose.y+LABEL_Y*k+.62,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
   if(e.emote>=0){
    if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
    const fs=e.rig?flourishForWire(e.emote,e.lastMode):undefined;
    const dur=e.mv>=0?e.mvDur:fs?fs.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote),f=cycleFrame(e.emoteAge,dur,reduced,BF);// pops in, floats up with a sway, dissipates; repeats through the emote
-   if(f.visible){bubble.position.set(pose.x+f.dx,pose.y+2.9*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;candB.push(e);}
+   if(f.visible){bubble.position.set(pose.x+f.dx,pose.y+3.3*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;candB.push(e);}
   }
  }
  /** Shows only the nearest `max` candidates (insertion sort by squared distance; no allocation). Label candidates drive `label`, bubble candidates `bubble`. */
@@ -247,7 +289,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function ensureLabel(e:Entry){
   if(e.label||disposed)return;
   const mat=new T.SpriteMaterial({map:e.labelTexture,transparent:true,depthWrite:false});
-  const label=new T.Sprite(mat);label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
+  const label=new T.Sprite(mat);label.scale.set(LABEL_WORLD_W,LABEL_WORLD_W*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
   const bubble=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false}));bubble.scale.set(.6,.6,1);bubble.visible=false;bubble.raycast=()=>{};bubble.name='remote-emote';labels.add(bubble);e.bubble=bubble;
   const status=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false,sizeAttenuation:false}));status.scale.set(STATUS_SCREEN,STATUS_SCREEN*STATUS_H/STATUS_W,1);status.renderOrder=4;status.visible=false;status.raycast=()=>{};status.name='remote-status';labels.add(status);e.status=status;
  }
@@ -271,7 +313,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  }
  function setLabel(e:Entry){
   e.labelTexture?.dispose();e.labelTexture=makeLabelTexture(e.name,e.style);
-  if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;e.label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);}
+  if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;e.label.scale.set(LABEL_WORLD_W,LABEL_WORLD_W*labelH(e.style)/LABEL_W,1);}
  }
  function release(e:Entry){
   e.rig?.dispose();e.rig=null;e.label?.removeFromParent();(e.label?.material as T.SpriteMaterial|undefined)?.dispose();
@@ -285,6 +327,28 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   e.rp+=(target-e.rp)*(1-Math.exp(-4*dt)); // damped, no allocation
   return ringPitchFor(pose.mode,e.rp);
  }
+ /** Friends' balls (after the friend pass: e.shield / e.door are this frame's). Nearest BALL_MAX on screen within BALL_DRAW_RANGE. */
+ function drawBalls(poses:Map<MemberId,RemotePose>,balls:ReadonlyMap<MemberId,RemoteBall>|null){
+  candBall.length=0;
+  if(balls&&balls.size&&saverFade>0)for(let i=0;i<list.length;i++){
+   const e=list[i];if(e.hidden||e.shield||e.door<1){e.bOn=false;continue;}
+   const b=balls.get(e.id),pose=poses.get(e.id);
+   if(!b||!pose||pose.zone===Zone.Indoors||!friendBallSpot(b.state,b,pose,clock,e.slot,ballSpot)){e.bOn=false;continue;}
+   const dx=ballSpot.x-camPos.x,dz=ballSpot.z-camPos.z,d2=dx*dx+dz*dz;
+   sphere.center.set(ballSpot.x,ballSpot.y,ballSpot.z);sphere.radius=.4;
+   if(d2>BALL_DRAW_RANGE*BALL_DRAW_RANGE||!frustum.intersectsSphere(sphere)){e.bOn=false;continue;}
+   // roll: turn about the horizontal axis across the motion by distance / radius (a fresh ball does not spin from its old spot)
+   if(e.bOn){const mx=ballSpot.x-e.bx,mz=ballSpot.z-e.bz,m=Math.hypot(mx,mz);if(m>1e-4&&m<3){ballAxis.set(mz/m,0,-mx/m);ballSpin.setFromAxisAngle(ballAxis,m/BALL_RADIUS);e.bq.premultiply(ballSpin);}}
+   e.bx=ballSpot.x;e.by=ballSpot.y;e.bz=ballSpot.z;e.bOn=true;
+   ballD2[candBall.length]=d2;candBall.push(e);
+  }
+  // nearest first (insertion sort on the parallel distance array; no allocation)
+  for(let i=1;i<candBall.length;i++){const x=candBall[i],xd=ballD2[i];let j=i-1;while(j>=0&&ballD2[j]>xd){candBall[j+1]=candBall[j];ballD2[j+1]=ballD2[j];j--;}candBall[j+1]=x;ballD2[j+1]=xd;}
+  let n=0;
+  for(;n<candBall.length&&n<BALL_MAX;n++){const e=candBall[n],m=ballMeshes[n];m.position.set(e.bx,e.by,e.bz);m.quaternion.copy(e.bq);m.visible=true;}
+  for(let i=n;i<BALL_MAX;i++)ballMeshes[i].visible=false;
+  ballsShown=n;candBall.length=0;
+ }
  function addLocalRing(l:LocalRing,cam:T.Vector3){
   if(l.hex!==localHex){localHex=l.hex;localColour.set(l.hex);}
   const dx=l.x-cam.x,dz=l.z-cam.z;
@@ -293,6 +357,13 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  return {
   root,labels,
   get shown(){return shownCount;},
+  get ballsShown(){return ballsShown;},
+  get jetsShown(){return jetsShown;},
+  setBallLook(geometry,material){
+   if(disposed)return;
+   for(const m of ballMeshes){m.geometry=geometry;m.material=material;}
+   ownBallGeo?.dispose();(ownBallMat as T.Material|null)?.dispose();ownBallGeo=null;ownBallMat=null;
+  },
   get rigs(){let n=0;for(let i=0;i<list.length;i++)if(list[i].rig)n++;return n;},
   upsert(id,look,name,style){
    if(disposed)return;
@@ -300,7 +371,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
-shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:''};
+shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion()};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -314,11 +385,11 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
   bumpField(id,nx,ny,nz){const e=byId.get(id);if(!e||!e.shield)return;e.shake=1;e.ripple=0;e.hx=nx;e.hy=ny;e.hz=nz;},
   emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;const ms=moveForWire(em,e.lastMode,e.spd);e.mv=ms?ms.emote:-1;e.mvDur=ms?ms.seconds:0;if(ms)e.mvV=pickMoveVariant(ms.emote,MOVE_ROLE.Friend);/* walking / running: the moving version over their walk cycle */e.hf=!ms&&!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;if(!ms&&em===Emote.PassBall||em===Emote.JuggleWithMe){e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
-  update(dt,poses,camera,reduced,local){
+  update(dt,poses,camera,reduced,local,balls){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
    if(list.length===0){
-    shownCount=0;fields.begin();fields.end(dt,reduced);
+    shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
    }
@@ -359,6 +430,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(!frustum.intersectsSphere(sphere)){hideEntry(e);continue;}
     const k=Math.max(.001,pose.fade*saverFade*e.door);
     e.d2=d2;e.ld2=local?(pose.x-local.x)*(pose.x-local.x)+(pose.z-local.z)*(pose.z-local.z):d2;
+    if(pose.mode===Mode.Jetpack&&!shield&&e.door>=1&&d2<JET_RANGE*JET_RANGE&&candJet.length<PARTY_MAX)candJet.push(e);
     // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
     if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,FS*(shield?.86+.14*e.field:1+(1-e.field)*.28),reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
@@ -370,7 +442,9 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const root3=rig.root,motion=e.motion;
     root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k*e.out);
     e.acc+=dt;
-    const period=e.hf>=0&&!reduced?0:d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
+    // Live feel: the tier goes by the distance from the LOCAL player (ld2), not the camera: on the island the camera sits ~35 m back, so a
+    // friend right next to you was posed at 10 Hz (legs stepping in jerks while the body glided). Near friends now pose every frame.
+    const pd=e.ld2,period=e.hf>=0&&!reduced?0:pd>MID_POSE*MID_POSE?1/FARTHER_HZ:pd>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
     const moving=!shield&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
     e.spd=shield?0:pose.speed;
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
@@ -407,6 +481,14 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     placeLabel(e,pose,k,reduced);
    }
    pickVisible(candL,LABEL_MAX);pickVisible(candB,BUBBLE_MAX);
+   // Flying friends' plumes: the nearest REMOTE_JET_MAX (by distance from me) into the one shared pool.
+   jets.begin();jetsShown=0;
+   if(candJet.length&&saverFade>0){
+    for(let i=1;i<candJet.length;i++){const x=candJet[i];let j=i-1;while(j>=0&&candJet[j].ld2>x.ld2){candJet[j+1]=candJet[j];j--;}candJet[j+1]=x;}
+    for(let i=0;i<candJet.length&&i<3;i++){const e=candJet[i],p=poses.get(e.id)!;jets.emit(e.id,p.x,p.y,p.z,p.yaw,opts.groundAt?opts.groundAt(p.x,p.z):p.y-3,p.speed>14);jetsShown++;}
+   }
+   jets.end(dt,reduced);candJet.length=0;
+   drawBalls(poses,balls??null);
    if(local&&saverFade>0)addLocalRing(local,camPos);
    ringsEnd();fields.end(dt,reduced);
    batch.end();shownCount=shown;
@@ -416,7 +498,8 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();
+   for(const m of ballMeshes)m.removeFromParent();ownBallGeo?.dispose();ownBallMat?.dispose();ownBallGeo=null;ownBallMat=null;
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
    root.removeFromParent();

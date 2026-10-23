@@ -186,7 +186,7 @@ function harness(phone=true){
 }
 // source scan: update() allocates nothing per frame (no `new`, no object / array literals, no closures), one extra draw call
 {
- const src=read('lib/graphics/remoteAvatars.ts'),body=src.slice(src.indexOf('update(dt,poses,camera,reduced,local){'),src.indexOf('dispose(){'));
+ const src=read('lib/graphics/remoteAvatars.ts'),body=src.slice(src.indexOf('update(dt,poses,camera,reduced,local,balls){'),src.indexOf('dispose(){'));
  const ring=src.slice(src.indexOf('function ringAdd'),src.indexOf('const labels='));
  assert.ok(body.length>500);
  for(const [what,b] of [['update',body],['ringAdd',ring]]){assert(!/\bnew\s/.test(b),what+' allocates nothing (no new)');assert(!/\.clone\(|\.map\(|\.filter\(|=>\s*\{?[^;]*\}/.test(b.replace(/=>\s*\{\s*\}/g,'')),what+' no closures / array copies');}

@@ -2,7 +2,7 @@
 // Design: docs/multiplayer-design.md 4.4 / 4.5. Time and randomness are injected so tests are deterministic.
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
-  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket,
+  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -64,6 +64,12 @@ interface Member {
   emoteTimes: number[]; bad: number; secStart: number; secCount: number;
   /** Presence (design 4.4.1): last frame heard from this member, and whether the relay itself set the away (Hidden) flag on its pose. */
   heardAt: number; relayAway: boolean;
+  /** Relay v1.2 (live feel, Oct 23 2026). caps: what this client answered to S.Caps (0 = an old client: legacy S.Poses only).
+   *  poseNo / ballNo: room-unique stamps of the current pose / ball; seen / seenBall: the stamp of each friend's pose / ball this
+   *  recipient already has (nothing is ever sent twice, so a 10 Hz near send and the 5 Hz tick never duplicate a snapshot).
+   *  ball: [state, x_dm, y_dm, z_dm] (null = never sent), ballAt: when it arrived. */
+  caps: number; poseNo: number; ballNo: number; seen: Map<number, number>; seenBall: Map<number, number>;
+  ball: number[] | null; ballAt: number; ballBucket: TokenBucket;
 }
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -109,8 +115,9 @@ export class RoomCore {
   private idCursor = 0;
   private tickNo = 0;
   private beaconCount = 0;
+  private stampSeq = 0;
   /** Fan-out counters for the cost model / smoke test: Poses frames sent and pose entries inside them. */
-  stats = { poseFrames: 0, poseEntries: 0 };
+  stats = { poseFrames: 0, poseEntries: 0, ballEntries: 0 };
   private emptySince: number;
   private hostId = -1;
   private hadHost = false;
@@ -242,6 +249,8 @@ export class RoomCore {
         this.broadcast([S.Ping, m.id, msg[1] as PingKind, msg[2] as number, msg[3] as number], m);
         return;
       case C.Beat: this.send(peer, [S.Beat, msg[1] as number]); return;
+      case C.Caps: m.caps = (msg[1] as number) & CAPS_ALL; return;
+      case C.Ball: this.ballMsg(m, msg as number[], now); return;
       case C.Leave: this.remove(m, LeaveReason.Left, CLOSE.Normal); return;
       default: break;
     }
@@ -291,6 +300,13 @@ export class RoomCore {
     m.goneAt = this.clock.now(); // slot kept for RESUME_GRACE_MS; others hear Left/Timeout only when it lapses
   }
 
+  /** Relay v1.2: called between two 5 Hz ticks (the Durable Object steps at 10 Hz): only the nearest LIVE_NEAR friends within
+   *  LIVE_RANGE_M of each Live client, plus balls, go out. Nothing else (timeouts, hosts, away) runs here. */
+  halfTick(): void {
+    if (this.ended) return;
+    this.fanOut(true);
+  }
+
   /** 5 Hz: hello timeouts, grace expiry, host migration, empty / age close, batched dirty poses. */
   tick(): void {
     if (this.ended) return;
@@ -307,53 +323,123 @@ export class RoomCore {
     this.markAway(now);
     this.migrateHost(now);
     if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
-    this.fanOutPoses();
+    this.fanOut(false);
   }
 
   /**
-   * Interest management. Every 5 Hz tick each recipient gets the NEAREST INTEREST_NEAR (12) members whose pose changed this tick (horizontal distance
-   * from the recipient's last pose; ties by id, so it is deterministic). Every BEACON_EVERY-th tick (1 Hz) it gets EVERY member that changed since the
-   * last beacon instead, so far friends still move on the roster / map. Up to 12 near friends is the old behaviour unchanged.
+   * Interest management. Every 5 Hz tick each recipient gets the NEAREST INTEREST_NEAR (12) members whose pose it has not had yet
+   * (horizontal distance from the recipient's last pose; ties by id, so it is deterministic). Every BEACON_EVERY-th tick (1 Hz) it gets
+   * EVERY member whose pose it has not had instead, so far friends still move on the roster / map.
    * Relay v1.1 (rooms design 2.3 item 3): the 5 Hz near set only holds members in the recipient's OWN room (roomOf; island and legacy door
    * poses are room -1), so island players stop hearing room walking and room members stop hearing island running; everyone else arrives on
    * the 1 Hz beacon. A member whose room changed this tick is sent to everyone at once (their door step, so the old room sees them leave).
+   * Relay v1.2 (live feel): halfTick (between two ticks, so 10 Hz) sends a Live client its nearest LIVE_NEAR same-room friends within
+   * LIVE_RANGE_M, and every tick sends a Ball client the balls it has not had (same room, within BALL_RANGE_M). A Live client gets S.Live
+   * (timestamped) instead of S.Poses; an old client gets exactly the old S.Poses at 5 Hz.
    */
-  private fanOutPoses(): void {
-    const beacon = ++this.beaconCount % BEACON_EVERY === 0;
-    const dirty: Member[] = [], far: Member[] = [];
-    this.members.forEach((m) => { if (m.pose) { if (m.dirty) dirty.push(m); if (beacon && m.farDirty) far.push(m); } });
-    const pool = beacon ? far : dirty;
-    if (pool.length) {
-      this.tickNo++;
-      const seg = new Map<Member, string>(); // each pose's JSON text is built once and shared by every recipient (relay CPU)
+  private fanOut(half: boolean): void {
+    const beacon = !half && ++this.beaconCount % BEACON_EVERY === 0;
+    const now = this.clock.now();
+    const posed: Member[] = [];
+    this.members.forEach((m) => { if (m.pose) posed.push(m); });
+    if (posed.length) {
+      const seg = new Map<Member, string>(), live = new Map<Member, string>(), balls = new Map<Member, string>(); // each entry's JSON text is built once (relay CPU)
       const text = (d: Member): string => {
         let t = seg.get(d);
         if (t === undefined) { t = ',' + d.id + ',' + (d.pose as PoseBody).join(','); seg.set(d, t); }
         return t;
       };
+      const liveText = (d: Member): string => {
+        let t = live.get(d);
+        if (t === undefined) { t = d.id + ',' + (d.pose as PoseBody).join(',') + ',' + Math.min(60000, Math.max(0, now - d.poseAt)); live.set(d, t); }
+        return t;
+      };
+      const ballText = (d: Member): string => {
+        let t = balls.get(d);
+        if (t === undefined) { t = d.id + ',' + (d.ball as number[]).join(',') + ',' + Math.min(60000, Math.max(0, now - d.ballAt)); balls.set(d, t); }
+        return t;
+      };
+      let sentAny = false;
       this.members.forEach((r) => {
         if (!r.peer) return;
-        const list = this.interest(r, pool, beacon);
-        if (!list.length) return;
-        let body = '[' + S.Poses + ',' + this.tickNo;
-        for (const d of list) body += text(d);
-        try { r.peer.send(body + ']'); this.stats.poseFrames++; this.stats.poseEntries += list.length; } catch { /* peer already gone */ }
+        const isLive = (r.caps & Cap.Live) !== 0;
+        const list = half ? (isLive ? this.nearLive(r, posed) : []) : this.interest(r, posed, beacon);
+        const bl = (r.caps & Cap.Ball) !== 0 ? this.ballInterest(r, posed) : [];
+        if (!list.length && !bl.length) return;
+        let body: string;
+        if (isLive) {
+          body = '[' + S.Live + ',' + now + ',[';
+          for (let i = 0; i < list.length; i++) body += (i ? ',' : '') + liveText(list[i]);
+          body += '],[';
+          for (let i = 0; i < bl.length; i++) body += (i ? ',' : '') + ballText(bl[i]);
+          body += ']]';
+        } else {
+          if (!list.length) return;
+          if (!sentAny) { this.tickNo++; sentAny = true; }
+          body = '[' + S.Poses + ',' + this.tickNo;
+          for (const d of list) body += text(d);
+          body += ']';
+        }
+        for (const d of list) r.seen.set(d.id, d.poseNo);
+        for (const d of bl) r.seenBall.set(d.id, d.ballNo);
+        try { r.peer.send(body); if (list.length) { this.stats.poseFrames++; this.stats.poseEntries += list.length; } if (bl.length) this.stats.ballEntries += bl.length; } catch { /* peer already gone */ }
       });
     }
-    this.members.forEach((m) => { m.dirty = false; m.flipped = false; if (beacon) m.farDirty = false; });
+    if (!half) this.members.forEach((m) => { m.dirty = false; m.flipped = false; if (beacon) m.farDirty = false; });
   }
 
-  /** Who `r` hears about this tick: never itself; on a beacon tick all changed members; on a normal tick the nearest INTEREST_NEAR of the
-   *  changed members in r's own room, plus anyone who changed room this tick. */
-  private interest(r: Member, pool: Member[], beacon: boolean): Member[] {
-    if (beacon) return pool.filter((d) => d !== r);
+  /** Who `r` hears about this tick: never itself, never a pose it already has; on a beacon tick everyone else; on a normal tick the
+   *  nearest INTEREST_NEAR in r's own room, plus anyone who changed room this tick. */
+  private interest(r: Member, posed: Member[], beacon: boolean): Member[] {
+    // dirty: changed since the last 5 Hz tick; farDirty: since the last beacon (the old pools), and not already sent to r (halfTick).
+    const fresh = (d: Member): boolean => d !== r && (beacon ? d.farDirty : d.dirty) && r.seen.get(d.id) !== d.poseNo;
+    if (beacon) return posed.filter(fresh);
     const out: Member[] = [], flips: Member[] = [];
-    for (const d of pool) { if (d === r) continue; if (d.room === r.room) out.push(d); else if (d.flipped) flips.push(d); }
+    for (const d of posed) { if (!fresh(d)) continue; if (d.room === r.room) out.push(d); else if (d.flipped) flips.push(d); }
     if (out.length <= INTEREST_NEAR) return flips.length ? out.concat(flips) : out;
+    const near = this.nearest(r, out, INTEREST_NEAR);
+    return flips.length ? near.concat(flips) : near;
+  }
+
+  /** halfTick: the nearest LIVE_NEAR friends in r's room within LIVE_RANGE_M whose pose r has not had. */
+  private nearLive(r: Member, posed: Member[]): Member[] {
+    if (!r.pose) return [];
+    const R = LIVE_RANGE_M * 10, ox = r.pose[0], oz = r.pose[2], out: Member[] = [];
+    for (const d of posed) {
+      if (d === r || d.room !== r.room || r.seen.get(d.id) === d.poseNo) continue;
+      const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz;
+      if (dx * dx + dz * dz <= R * R) out.push(d);
+    }
+    return out.length <= LIVE_NEAR ? out : this.nearest(r, out, LIVE_NEAR);
+  }
+
+  /** Balls r has not had: same room, the ball (or, for Feet / Juggle / None, its owner) within BALL_RANGE_M of r. */
+  private ballInterest(r: Member, posed: Member[]): Member[] {
+    const out: Member[] = [];
+    const R = BALL_RANGE_M * 10, ox = r.pose ? r.pose[0] : 0, oz = r.pose ? r.pose[2] : 0;
+    for (const d of posed) {
+      if (d === r || !d.ball || d.room !== r.room || r.seenBall.get(d.id) === d.ballNo) continue;
+      const b = d.ball, p = d.pose as PoseBody, free = b[0] === BallState.Free;
+      const dx = (free ? b[1] : p[0]) - ox, dz = (free ? b[3] : p[2]) - oz;
+      if (!r.pose || dx * dx + dz * dz <= R * R || b[0] === BallState.None) out.push(d);
+    }
+    return out;
+  }
+
+  private nearest(r: Member, out: Member[], n: number): Member[] {
     const ox = r.pose ? r.pose[0] : 0, oz = r.pose ? r.pose[2] : 0;
     const dist = (d: Member): number => { const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz; return dx * dx + dz * dz; };
-    const near = out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, INTEREST_NEAR).map((e) => e.d);
-    return flips.length ? near.concat(flips) : near;
+    return out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, n).map((e) => e.d);
+  }
+
+  /** C.Ball (only ever sent by a client that saw S.Caps): rate limited, island only, ignored inside a force field (shown as no ball). */
+  private ballMsg(m: Member, msg: number[], now: number): void {
+    if (!(m.caps & Cap.Ball) || !m.ballBucket.take(now)) return;
+    const busy = !!m.pose && shielded(presenceOf(m.pose[5], m.pose[6], m.pose[7]));
+    const st = busy || m.room >= 0 ? BallState.None : msg[1];
+    const b = m.ball;
+    if (b && b[0] === st && b[1] === msg[2] && b[2] === msg[3] && b[3] === msg[4]) return;
+    m.ball = [st, msg[2], msg[3], msg[4]]; m.ballAt = now; m.ballNo = ++this.stampSeq;
   }
 
   /** New code for the same room (TTL restarts); the caller retires the old code so it no longer finds the room. */
@@ -425,6 +511,7 @@ export class RoomCore {
     return {
       id, name, nick, look: look.slice(), token, joinSeq,
       peer, goneAt: null, pose: null, poseAt: now, lastSeq: -1, dirty: false, farDirty: false, lastWarpAt: -1e12, room: -1, lastFlipAt: -1e12, flipped: false,
+      caps: 0, poseNo: 0, ballNo: 0, seen: new Map(), seenBall: new Map(), ball: null, ballAt: now, ballBucket: new TokenBucket(RATE.ball[0], RATE.ball[1]),
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
       emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false,
@@ -439,7 +526,7 @@ export class RoomCore {
       const p = m.pose;
       if (!p || m.relayAway || (p[7] & PoseFlag.Hidden) !== 0 || (p[6] === Zone.Indoors && m.room < 0) || now - m.heardAt < AWAY_SILENCE_MS) return;
       const q = p.slice() as PoseBody; q[7] = (q[7] | PoseFlag.Hidden) & ~PoseFlag.Warp;
-      m.pose = q; m.relayAway = true; m.dirty = true; m.farDirty = true;
+      m.pose = q; m.relayAway = true; m.dirty = true; m.farDirty = true; m.poseNo = ++this.stampSeq;
     });
   }
 
@@ -447,7 +534,7 @@ export class RoomCore {
   private unAway(m: Member): void {
     m.relayAway = false;
     if (m.pose && (m.pose[7] & PoseFlag.Hidden) !== 0) {
-      const q = m.pose.slice() as PoseBody; q[7] &= ~PoseFlag.Hidden; m.pose = q; m.dirty = true; m.farDirty = true;
+      const q = m.pose.slice() as PoseBody; q[7] &= ~PoseFlag.Hidden; m.pose = q; m.dirty = true; m.farDirty = true; m.poseNo = ++this.stampSeq;
     }
   }
 
@@ -466,6 +553,11 @@ export class RoomCore {
     const list: MemberInfo[] = [];
     this.members.forEach((x) => list.push(this.memberInfo(x)));
     this.send(m.peer as Peer, [S.Welcome, PROTOCOL_VERSION, m.id, m.token, this.codeExpiresAt, this.partyEndsAt, this.locked ? 1 : 0, list]);
+    // Relay v1.2: the roster carries every pose, so this socket has them all; a fresh socket starts as an old client (caps 0) until it
+    // answers S.Caps (old clients cannot parse S.Caps and ignore it).
+    m.seen.clear(); m.seenBall.clear(); m.caps = 0;
+    this.members.forEach((x) => { if (x !== m && x.pose) m.seen.set(x.id, x.poseNo); });
+    this.send(m.peer as Peer, [S.Caps, CAPS_ALL]);
   }
 
   private memberInfo(m: Member): MemberInfo {
@@ -492,7 +584,7 @@ export class RoomCore {
     } else if (m.pose && !speedOk(m.pose, body, now - m.poseAt)) {
       return; // speed cheat: dropped, never relayed; the last good pose stays
     }
-    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false; m.room = room;
+    m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false; m.room = room; m.poseNo = ++this.stampSeq;
   }
 
   private bad(m: Member): void {
