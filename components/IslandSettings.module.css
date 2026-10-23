@@ -1,4 +1,4 @@
-.triggers{position:absolute;z-index:35;top:calc(20px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;gap:8px}
+.triggers{position:absolute;z-index:35;top:calc(20px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));display:flex;gap:var(--island-hud-pair-gap,8px)}
 .circle{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid #ecdfb5;border-radius:50%;background:#294f43;color:#fff0cc;box-shadow:2px 3px 0 #17352b38;cursor:pointer;transition:background .15s,transform .15s}
 .circle:hover{background:#3c6551;transform:translateY(-1px)}
 .circle:focus-visible,.panel button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}

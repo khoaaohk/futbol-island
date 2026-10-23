@@ -122,13 +122,19 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.equal((jobs.match(/styles\.basketOnly\}`\} data-wallet-basket="(fish|fruit)"/g)||[]).length,2,'fish and fruit are the bar\'s phone-hidden counters');
  assert.match(jobs,/aria-label=\{`Your island pocket: \$\{wallet\.balance\} coins, \$\{fish\} fish, \$\{fruit\} fruit/,'the bar still names fish and fruit for screen readers');
  assert.match(jobs,/onClick=\{onOpenBalances\}/,'one tap opens the pocket, which lists fish and fruit');
- assert.match(jcss,/@media\(max-width:430px\),\(max-height:430px\) and \(orientation:landscape\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones (portrait <= 430 wide, landscape <= 430 tall) show coins + energy only');
+ // Real iPhone (Oct 23 2026): the old 430 px breakpoint missed the 440 px iPhone 16/17 Pro Max; phones are now <= 480 (or a <= 480 device).
+ assert.match(jcss,/@media\(max-width:480px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones (portrait <= 480 wide, landscape <= 480 tall, or a <= 480 px device) show coins + energy only');
+ assert.doesNotMatch(jcss,/max-width:430px\),\(max-height:430px\)/,'no leftover 430 px phone breakpoint');
  assert.doesNotMatch(jcss,/min-width:601px\) and \(pointer:fine\)\{[^\n]*basketOnly\{display:none/,'desktop keeps fish and fruit');
  assert.match(jcss,/data-coin-digits="4"\] b\{font-size:/,'a 4-digit balance steps down a size on narrow phones');
  assert.match(fuel,/@media\(max-width:400px\)\{:global\(\[data-job-wallet\]\) \.word\{display:none!important\}\}/,'the Low / Empty word gives way on narrow phones');
- // Owner (Oct 23 2026, later): Paths + friends left, Settings right, the slim bar in the true screen centre; no phone rule re-anchors it.
- assert.match(jcss,/\.wallet\[data-job-wallet\]\{left:50%;right:auto;[^}]*transform:translateX\(-50%\)/,'the island coins bar is centred on the screen');
- assert.doesNotMatch(jcss.split('\n').filter(l=>/max-width:(430|400|380|350|340)px/.test(l)).join('\n'),/\.wallet\[data-job-wallet\]\{[^}]*(left|right|transform):/,'phone rules never move the bar off the screen centre');
+ // Owner (Oct 23 2026, final): desktop/tablet bar centred; on phones Paths + friends left, the bar right-aligned next to Settings,
+ // bar <-> Settings gap = Paths <-> friends gap (one variable feeds both).
+ assert.match(jcss,/\.wallet\[data-job-wallet\]\{left:50%;right:auto;[^}]*transform:translateX\(-50%\)/,'desktop / tablet: the island coins bar is centred on the screen');
+ assert.match(jcss,/orientation:landscape\),\(max-device-width:480px\)\{[^\n]*\.wallet\[data-job-wallet\]\{[^}]*left:auto;right:calc\(18px \+ env\(safe-area-inset-right,0px\) \+ var\(--btn-icon,44px\) \+ var\(--island-hud-pair-gap,8px\)\);transform:none\}/,'phones: the bar sits one pair-gap left of Settings');
+ assert.match(scss,/^\.triggers\{[^}]*gap:var\(--island-hud-pair-gap,8px\)\}/,'Paths <-> friends uses the same pair gap');
+ assert.match(scss,/@media\(max-width:600px\),\(pointer:coarse\)\{\.triggers\{top:[^}]*right:calc\(18px \+ env\(safe-area-inset-right,0px\)\)\}\}/,'phone Settings sits 18 px from the right edge (the bar rule assumes it)');
+ assert.match(g,/--island-hud-pair-gap:8px/,'the pair gap is one root variable');
  assert.match(scss,/@media\(max-width:340px\)\{\.triggers \[data-party-open\]\{position:absolute!important;left:0;top:calc\(var\(--island-hud-row-height,44px\) \+ 8px\)\}\}/,'<= 340 px: Play with friends drops under Paths');
  assert.match(g,/@media\(max-width:340px\)\{\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\) \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ 2 \* var\(--island-hud-row-height\) \+ 8px \+ var\(--island-hud-row-gap\)\)\}/,'<= 340 px with friends on: the stack starts under the friends button, still centred');}
 // Pocket open (Oct 23 2026): the coins bar stays on screen above the drawer; the stack still hides.
