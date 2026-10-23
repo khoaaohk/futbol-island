@@ -128,3 +128,6 @@
    Share link / New code pair keeps one line per label. */
 .tab{position:relative}.tab::before{content:"";position:absolute;inset:-6px 0}
 @media(max-width:340px){.menuCard .pairRow>button{gap:6px;padding:0 6px;font-size:14px}}
+/* On the island the party's notes sit in the HUD stack under the coins bar (HudSlot, the stack's one toast timing) instead of
+   floating over the coins and the friends button they talk about; rooms (no stack) keep the fixed top note. */
+:global(.hud-stack)>.toast{position:static;left:auto;transform:none;max-width:100%}

@@ -15,6 +15,7 @@ import FadeScroll from './FadeScroll';
 import { presenceIcon, presenceText } from '@/lib/multiplayer/presence';
 import NickField from './NickField';
 import { DoneButton } from '@/components/DoneButton';
+import HudSlot from '@/components/HudStack';
 import styles from './party.module.css';
 
 /** Analytics event names (Oct 22 2026, docs/analytics-multiplayer-plan.md §3). This file never imports analytics: Town.tsx passes
@@ -393,7 +394,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   return (
     <>
       {/* The live-party chip is the HUD Play with friends button (IslandSettings badge); it opens the sheet while a party runs. */}
-      {shown && <p className={styles.toast} role="status" data-party-toast>{shown}</p>}
+      {shown && <HudSlot><p className={styles.toast} role="status" data-hud-slot="toast" data-party-toast>{shown}</p></HudSlot>}
 
       {(view === 'menu' || (view === 'gate' && pending)) && (
         <Card label={view === 'gate' ? 'For grown-ups' : 'Play with friends'} onClose={close} grow from={view === 'gate' && pending?.kind === 'join' ? null : from} onEscape={view === 'gate' ? () => setView(pending?.kind === 'join' ? 'join' : 'menu') : undefined}>
