@@ -10,7 +10,7 @@ const load=(file,stubs={})=>{const mod={exports:{}};
 const EMOTE={Wave:0,Cheer:1,HighFive:2,WellPlayed:5,Thanks:9};
 const HS=load('lib/town/emoteHandshakes.ts',{'./emoteReact':{EMOTE},'./emoteBounds':load('lib/town/emoteBounds.ts')});
 const H=load('lib/town/highFive.ts',{'./emoteReact':{EMOTE},'./emoteHandshakes':HS});
-const M=load('lib/town/emoteCameraMath.ts');
+const M=load('lib/town/emoteCameraMath.ts',{'./rideEmotes':load('lib/town/rideEmotes.ts')});/* the ride footprint (rideWideFor) */
 let n=0;const t=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);throw e;}};
 const V=H.HIGH_FIVES.slice(0,10),N=10,ST=H.HF_STRIDE,CH=HS.CH;
 const seeded=seed=>()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
