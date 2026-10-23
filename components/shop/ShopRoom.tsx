@@ -14,6 +14,7 @@ import {jerseyPrice,validateJersey,JERSEY_BASE_PRICE,type JerseyDesign} from '@/
 import {bootPrice,validateBoots,PRICE as BOOT_PRICE,type BootDesign} from '@/lib/shop/boots';
 import {ballPrice,validateBall,PRICE as BALL_PRICE} from '@/lib/shop/ball';
 import {paintJoystick} from '@/lib/town/joystickFeedback';
+import {stickInput,stickTravel} from '@/lib/town/floatingStick';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import type {NpcDefinition} from '@/lib/town/npcDialogues';
 import type {ShopScene} from '@/lib/shop/shopScene';
@@ -134,7 +135,7 @@ export default function ShopRoom(){
 
  // ---- Joystick (the Museum / Konbini control) ----
  const stop=(e?:{pointerId:number})=>{if(e&&e.pointerId!==pointer.current)return;const id=pointer.current;pointer.current=null;joyRect.current=null;if(id!==null&&joy.current?.hasPointerCapture(id))joy.current.releasePointerCapture(id);room.current?.setStick(0,0);paintJoystick(joy.current,0,0);};
- const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,scale=Math.min(1,36/Math.max(1,Math.hypot(dx,dy))),x=dx*scale,y=dy*scale;room.current?.setStick(x/36,y/36);paintJoystick(joy.current,x,y);};
+ const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,T=stickTravel(r.width),{px:x,py:y}=stickInput(dx,dy,T);room.current?.setStick(x/T,y/T);paintJoystick(joy.current,x,y,T);/* bounds-scaled: same feel at any ring size */};
 
  /** onBuy from a studio: price it from the design module, spend island coins (idempotent per design) and record ownership. */
  const buy=useCallback(async(kind:ShopKind,raw:unknown)=>{
