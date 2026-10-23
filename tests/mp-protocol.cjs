@@ -118,7 +118,7 @@ t('ResetName / Renamed shapes',()=>{
 });
 
 t('NameLock shapes (relay v1.5; ResetName stays reserved)',()=>{
-  assert.equal(P.C.NameLock,16);assert.equal(P.S.NameLock,37);assert.equal(P.Cap.NameLock,16);assert.equal(P.CAPS_ALL,31);
+  assert.equal(P.C.NameLock,16);assert.equal(P.S.NameLock,37);assert.equal(P.Cap.NameLock,16);assert.equal(P.CAPS_ALL,63);
   assert.ok(P.parseClient(JSON.stringify([16,0,1])));assert.ok(P.parseClient(JSON.stringify([16,31,0])));assert.ok(P.parseClient(JSON.stringify([10,3])),'ResetName still parses (ignored by the relay)');
   for(const b of [[16],[16,1],[16,1,2],[16,32,1],[16,1,1,0],[16,'1',1]])assert.equal(P.parseClient(JSON.stringify(b)),null,JSON.stringify(b));
   for(const b of [[37],[37,1],[37,1,null],[37,32,1],[37,1,0,0]])assert.equal(P.parseServer(JSON.stringify(b)),null,JSON.stringify(b));

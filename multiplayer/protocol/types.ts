@@ -46,9 +46,17 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  EmoteAsk (relay v1.4, Oct 23 2026) = shared ball emotes are a REQUEST + ACCEPT (C.EmoteAsk / S.EmoteAsk / C.EmoteAnswer / S.EmoteAnswer /
  *  S.Duet); without it (an old relay) Pass it / Juggle with me stay today's instant one-way emote.
  *  NameLock (relay v1.5, Oct 23 2026) = the host can lock / unlock a member's name (C.NameLock); lock state arrives as S.NameLock. Without
- *  it (an old relay) the host's Lock name button is hidden. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16 } as const;
-export const CAPS_ALL = 31;
+ *  it (an old relay) the host's Lock name button is hidden.
+ *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
+ *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32 } as const;
+export const CAPS_ALL = 63;
+/** Relay v1.6 ball knock-over rules (C.Hit): shooter and victim within HIT_RANGE_M, each shooter at most HIT_RATE_MAX hits per
+ *  HIT_RATE_WINDOW_MS, and the same shooter -> victim pair at most once per HIT_PAIR_COOLDOWN_MS. */
+export const HIT_RANGE_M = 25;
+export const HIT_RATE_MAX = 3;
+export const HIT_RATE_WINDOW_MS = 10_000;
+export const HIT_PAIR_COOLDOWN_MS = 4_000;
 /** The two-player ball emotes that need the friend's yes (relay v1.4). Every other emote stays instant and one-way. */
 export const ASK_EMOTES: readonly Emote[] = [Emote.JuggleWithMe, Emote.PassBall];
 /** S.EmoteAnswer outcomes: No thanks (or the card timed out), Join, or the relay could not ask (old client, busy, too far, too soon). */
@@ -74,7 +82,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -108,12 +116,16 @@ export type CEmoteAnswer = [typeof C.EmoteAnswer, from: MemberId, yes: 0 | 1];
 /** Relay v1.5 (Cap.NameLock), host only: lock (1) or unlock (0) member `target`'s name. A locked member cannot rename (C.Rename is ignored)
  *  for the rest of the party, across a resume. The host's own name can never be locked. */
 export type CNameLock = [typeof C.NameLock, target: MemberId, locked: 0 | 1];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock;
+/** Relay v1.6 (Cap.Hit): my own kicked ball just hit friend `victim` fast enough to knock them over (the SHOOTER's client detects it
+ *  against the friend's drawn pose). dir = the ball's travel direction (0..255 = 0..2 pi, atan2(vx, vz)). The relay checks the rules
+ *  (party, same room, near, outside the force field, rate limit, pair cooldown) and silently drops a refused hit. */
+export type CHit = [typeof C.Hit, victim: MemberId, dir: number];
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
-  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37,
+  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -148,4 +160,7 @@ export type SDuet = [typeof S.Duet, a: MemberId, b: MemberId, emote: Emote, seed
 /** Relay v1.5, only to Cap.NameLock members: member `id`'s name is locked (1) / unlocked (0). Sent to all of them when the host
  *  toggles it, and as a list of [id, 1] frames to a member right after its C.Caps (so a join or resume learns every lock). */
 export type SNameLock = [typeof S.NameLock, id: MemberId, locked: 0 | 1];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock;
+/** Relay v1.6, to every Cap.Hit member of the room (the victim and the shooter included): `shooter`'s ball knocked `victim` over;
+ *  dir = the ball's travel direction (0..255). The victim's own client plays the tumble on its local player, the others on that friend. */
+export type SHit = [typeof S.Hit, shooter: MemberId, victim: MemberId, dir: number];
+export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit;

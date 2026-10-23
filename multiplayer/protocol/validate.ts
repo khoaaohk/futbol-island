@@ -122,6 +122,8 @@ export function parseClient(raw: string): ClientMsg | null {
     case C.EmoteAnswer:
     case C.NameLock:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ClientMsg) : null;
+    case C.Hit:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, 255) ? (a as ClientMsg) : null;
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
     default:
@@ -178,6 +180,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 4 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) && inRange(a[3], 0, 2) ? (a as ServerMsg) : null;
     case S.Duet:
       return a.length === 5 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && isAskEmote(a[3]) && inRange(a[4], 0, 255) ? (a as ServerMsg) : null;
+    case S.Hit:
+      return a.length === 4 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && inRange(a[3], 0, 255) ? (a as ServerMsg) : null;
     case S.Live: {
       if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
       const p = a[2] as unknown[], b = a[3] as unknown[];

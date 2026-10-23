@@ -35,7 +35,7 @@ import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
 import {RIDE_SCALE,createRemoteRides,rideKindFor} from './remoteRides';import {beanShapeOf} from './beanGearFit';
-import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {createBumpReact,type BumpReact} from '../town/friendBump';
+import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {applyTumbleRoot,createFriendTumbles} from './ballTumble';import {createBumpReact,type BumpReact} from '../town/friendBump';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
 export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
@@ -69,6 +69,11 @@ export interface RemoteAvatars{
  endDuet(id:MemberId):void;
  /** The island ball hit this friend's force field: a short damped shake and a ripple from the impact normal (dome space). */
  bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
+ /** Relay v1.6 (Cap.Hit): a friend's ball knocked this friend over: the ~1 s cartoon tumble toward `dir` (rad, atan2(vx, vz)) on their
+  *  rig (lib/graphics/ballTumble.ts); reduced motion = a small wobble. False when not shown here (hidden, inside the force field, unknown). */
+ tumble(id:MemberId,dir:number,reduced:boolean):boolean;
+ /** Friends tumbling right now (tests / headless checks). */
+ readonly tumbling:number;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
  update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null,balls?:ReadonlyMap<MemberId,RemoteBall>|null):void;
  /** The island's own ball geometry + material for friends' balls (shared, never disposed here). Rooms keep the plain default. */
@@ -388,9 +393,12 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const dx=l.x-cam.x,dz=l.z-cam.z;
   ringAdd(l.x,l.y,l.z,0,localColour,ringSizeFor(l.mode??0),1,ringPitchFor(l.mode??0,l.pitch??0),l.yaw??0);/* my own ring never grows with the camera distance: it matches the island's foot ring exactly */
  }
+ const tumbles=createFriendTumbles();// ball knock-overs (relay v1.6): one small state per friend, made on their first knock
  return {
   root,labels,
   get shown(){return shownCount;},
+  get tumbling(){return tumbles.active;},
+  tumble(id,dir,reduced){const e=byId.get(id);if(!e||e.hidden||e.shield||e.door<1)return false;return tumbles.start(id,dir,reduced);},
   get ballsShown(){return ballsShown;},
   get jetsShown(){return jetsShown;},
   get localBump(){return bumps.local;},
@@ -447,7 +455,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    // The cap re-check (once a second; Battery saver keeps its own 1 s fade-out and admits nobody, as before).
    recheck+=dt;
    if(recheck>=ADMIT_RECHECK){const step=recheck;recheck=0;if(!saver)recheckCaps(step,reduced,poses,local);}
-   bumps.detect(dt,list,poses,local,reduced,saver);/* friend bumps: last frame's shown states, before the pass that applies them */
+   tumbles.step(dt);bumps.detect(dt,list,poses,local,reduced,saver);/* friend bumps: last frame's shown states, before the pass that applies them */
    batch.begin();fields.begin();let shown=0;rides.begin();
    for(let i=0;i<list.length;i++){
     const e=list[i];
@@ -526,6 +534,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(fs0&&!reduced){flourishAt(fs0.emote,e.emoteAge,fs0.seconds,FL,1);root3.rotation.order='YXZ';root3.rotation.x=FL.pitch;root3.rotation.z=FL.roll;root3.position.y+=FL.lift*k;e.flOn=true;}
     else if(e.flOn){root3.rotation.x=0;root3.rotation.z=0;e.flOn=false;}
     if(e.bump.on&&applyBump(root3,e.bump,reduced,BODY_SCALE*k*e.out))e.flOn=true;/* a friend bump: cosmetic, gone with the reaction */
+    if(tumbles.active){const tb=tumbles.get(e.id);if(tb&&!shield&&applyTumbleRoot(root3,tb,pose.y))e.flOn=true;}/* a ball knock-over (ballTumble.ts): cosmetic, gone with the tumble */
     batch.draw(root3);e.shown=true;shown++;
     // Their ride under them (none inside the force field: the pose drops the ride there too); it follows the root, so flourishes and bump wobbles / skids carry it.
     const rk=shield?-1:rideKindFor(pose.mode);
@@ -552,7 +561,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();rides.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();rides.dispose();tumbles.clear();
    for(const m of ballMeshes)m.removeFromParent();ownBallGeo?.dispose();ownBallMat?.dispose();ownBallGeo=null;ownBallMat=null;
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();

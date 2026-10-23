@@ -3,6 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
+  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -73,6 +74,8 @@ interface Member {
   /** Relay v1.5 (Oct 23 2026): the host locked this member's name (C.NameLock), so C.Rename is ignored until the host unlocks it. Kept
    *  on the slot, so it survives a resume. renameTimes: recent C.Rename times (RENAME_PER_MIN per minute). */
   nickLocked: boolean; renameTimes: number[];
+  /** Relay v1.6 (Cap.Hit): this member's recent accepted C.Hit times as a shooter, and when its ball last knocked anyone over it. */
+  hitTimes: number[]; knockedAt: number;
 }
 
 /** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
@@ -138,6 +141,8 @@ export class RoomCore {
   countersDirty = false;
   /** Relay v1.4: emote asks by pair key from * 64 + to (never persisted: a restarted relay simply forgets open asks). */
   private asks = new Map<number, AskPair>();
+  /** Relay v1.6: when shooter * 64 + victim last knocked that friend over (pair cooldown; never persisted). */
+  private hitPairs = new Map<number, number>();
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
 
@@ -272,6 +277,7 @@ export class RoomCore {
       case C.Rename: this.rename(m, msg[1] as string, now); return;
       case C.EmoteAsk: this.emoteAsk(m, msg[1] as number, msg[2] as Emote, now); return;
       case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
+      case C.Hit: this.hit(m, msg[1] as number, msg[2] as number, now); return;
       case C.ResetName: return; // retired (Oct 23 2026, replaced by C.NameLock): an old host client's frame is ignored, never an error
       default: break;
     }
@@ -500,6 +506,30 @@ export class RoomCore {
       try { if (r.caps & Cap.EmoteAsk) r.peer.send(duet); else { r.peer.send(oldA); r.peer.send(oldB); } } catch { /* gone */ }
     });
   }
+  /** Relay v1.6 (Cap.Hit): may `a`'s ball knock `b` over now? Both connected Cap.Hit party members on the island (same zone), outside the
+   *  force field (not busy / away / indoors), the victim on foot (never swimming, flying, riding or fishing), within HIT_RANGE_M. */
+  private hitOk(a: Member, b: Member): boolean {
+    if (a === b || !a.peer || !b.peer || !(a.caps & Cap.Hit) || !(b.caps & Cap.Hit) || !a.pose || !b.pose || a.room >= 0 || b.room >= 0) return false;
+    const pa = a.pose, pb = b.pose;
+    if (pa[6] !== pb[6] || pa[6] === Zone.Indoors || shielded(presenceOf(pa[5], pa[6], pa[7])) || shielded(presenceOf(pb[5], pb[6], pb[7])) || !ON_FOOT(pb[5])) return false;
+    const r = HIT_RANGE_M * 10;
+    return (pa[0] - pb[0]) ** 2 + (pa[2] - pb[2]) ** 2 <= r * r;
+  }
+  /** C.Hit [victim, dir]: the shooter's own ball knocked a friend over. Checked (hitOk, the shooter's HIT_RATE_MAX per HIT_RATE_WINDOW_MS,
+   *  the pair's HIT_PAIR_COOLDOWN_MS and the victim's own short cooldown), then S.Hit goes to every Cap.Hit member. A refused hit is
+   *  dropped silently (nobody is told; the shooter's screen never played anything on its own). */
+  private hit(m: Member, victim: number, dir: number, now: number): void {
+    const t = this.members.get(victim);
+    if (!t || !this.hitOk(m, t)) return;
+    m.hitTimes = m.hitTimes.filter((x) => now - x < HIT_RATE_WINDOW_MS);
+    const key = m.id * 64 + t.id, last = this.hitPairs.get(key);
+    if (m.hitTimes.length >= HIT_RATE_MAX || (last !== undefined && now - last < HIT_PAIR_COOLDOWN_MS)) return;
+    if (t.knockedAt > 0 && now - t.knockedAt < HIT_PAIR_COOLDOWN_MS / 2) return; // nobody is knocked over twice in a row by two friends
+    m.hitTimes.push(now); this.hitPairs.set(key, now); t.knockedAt = now;
+    const text = encode([S.Hit, m.id, t.id, dir & 255]);
+    this.members.forEach((r) => { if (r.peer && (r.caps & Cap.Hit) && r.room < 0) { try { r.peer.send(text); } catch { /* gone */ } } });
+  }
+  private forgetHits(id: number): void { this.hitPairs.forEach((_t, k) => { if (Math.floor(k / 64) === id || k % 64 === id) this.hitPairs.delete(k); }); }
   private forgetAsks(id: number): void { this.asks.forEach((_q, k) => { if (Math.floor(k / 64) === id || k % 64 === id) this.asks.delete(k); }); }
 
   /** C.Ball (only ever sent by a client that saw S.Caps): rate limited, island only, ignored inside a force field (shown as no ball). */
@@ -585,7 +615,7 @@ export class RoomCore {
       caps: 0, poseNo: 0, ballNo: 0, seen: new Map(), seenBall: new Map(), ball: null, ballAt: now, ballBucket: new TokenBucket(RATE.ball[0], RATE.ball[1]),
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
-      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [],
+      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [], hitTimes: [], knockedAt: 0,
     };
   }
 
@@ -701,7 +731,7 @@ export class RoomCore {
   }
 
   private remove(m: Member, reason: LeaveReason, closeCode: number | null): void {
-    this.members.delete(m.id); this.forgetAsks(m.id);
+    this.members.delete(m.id); this.forgetAsks(m.id); this.forgetHits(m.id);
     if (m.peer) {
       const p = m.peer;
       this.byPeer.delete(p); m.peer = null;
