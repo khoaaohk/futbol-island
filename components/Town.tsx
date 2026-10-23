@@ -2027,7 +2027,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {guideMounted.current&&<PositionGuide selection={positionSelection} onClose={()=>{setPositionSelection(null);gamesRef.current?.setHoverPaused(null);}}/>}
     <div data-position-tip className="live-position-tip" role="status" hidden/>
     <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay'||destination==='museum'||destination==='summit'||destination==='shop')go(destination);else goField(destination);}}/>
-    </HudStackContext.Provider>
+    {/* Inside the provider (QA Oct 22 2026) so the party's notes join the HUD stack under the coins bar like every other toast. */}
     {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook} onTrack={countParty} onHiddenChange={onHiddenFriends} onMutedChange={onMutedFriends}/>}
+    </HudStackContext.Provider>
   </main>;
 }
