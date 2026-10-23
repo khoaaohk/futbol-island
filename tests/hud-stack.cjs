@@ -115,4 +115,17 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.match(card,/data-welcome-back hidden=\{blocked\}/,'blocked hides the same node');assert.doesNotMatch(card,/\bkey=/,'no key to re-mount it');
  assert.match(css,/\.card\[hidden\]\{display:none\}/,'hidden also outside the stack');
  assert.match(card,/navigator\.webdriver===true/,'e2e against a production build can hold the card; players cannot');}
+// Top row on phones (Oct 23 2026, owner: "only show coins and energy"; docs/ui/HUD_STACK.md "Top row on phones"). Layout is
+// measured headless by scripts/check-hud-row.cjs (5 phone sizes + desktop, flag on, gaps >= 8 px); these pin the CSS it relies on.
+{const R=f=>fs.readFileSync(path.resolve(__dirname,'..',f),'utf8');
+ const jobs=R('components/IslandJobs.tsx'),jcss=R('components/IslandJobs.module.css'),scss=R('components/IslandSettings.module.css'),g=R('app/globals.css'),fuel=R('components/FuelCount.module.css');
+ assert.equal((jobs.match(/styles\.basketOnly\}`\} data-wallet-basket="(fish|fruit)"/g)||[]).length,2,'fish and fruit are the bar\'s phone-hidden counters');
+ assert.match(jobs,/aria-label=\{`Your island pocket: \$\{wallet\.balance\} coins, \$\{fish\} fish, \$\{fruit\} fruit/,'the bar still names fish and fruit for screen readers');
+ assert.match(jobs,/onClick=\{onOpenBalances\}/,'one tap opens the pocket, which lists fish and fruit');
+ assert.match(jcss,/@media\(max-width:430px\),\(max-height:430px\) and \(orientation:landscape\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones (portrait <= 430 wide, landscape <= 430 tall) show coins + energy only');
+ assert.doesNotMatch(jcss,/min-width:601px\) and \(pointer:fine\)\{[^\n]*basketOnly\{display:none/,'desktop keeps fish and fruit');
+ assert.match(jcss,/data-coin-digits="4"\] b\{font-size:/,'a 4-digit balance steps down a size on narrow phones');
+ assert.match(fuel,/@media\(max-width:400px\)\{:global\(\[data-job-wallet\]\) \.word\{display:none!important\}\}/,'the Low / Empty word gives way on narrow phones');
+ assert.match(scss,/@media\(max-width:340px\)\{\.triggers \[data-party-open\]\{position:absolute!important;left:0;top:calc\(var\(--island-hud-row-height,44px\) \+ 8px\)\}\}/,'<= 340 px: Play with friends drops under Paths');
+ assert.match(g,/@media\(max-width:340px\)\{\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\) \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ 2 \* var\(--island-hud-row-height\) \+ 8px \+ var\(--island-hud-row-gap\)\)\}/,'<= 340 px with friends on: the stack starts under the friends button, still centred');}
 console.log('HUD_STACK_PASS');

@@ -7,3 +7,7 @@
 /* Phones: the coins bar sits between Paths and Settings (max-width 100% - 156px). With the fuel counter in it, the word "coins"
    gives way (the coin icon and aria-label still say it), so "Low" / "Empty" always fit. */
 @media(max-width:600px),(pointer:coarse){:global([data-job-wallet]):has(.fuel)>small{display:none}.fuel{gap:2px!important}.word{font-size:9px!important;letter-spacing:0}}
+/* Oct 23 2026 (slim phone coins bar, docs/ui/HUD_STACK.md "Top row on phones"): on phones <= 400px the word gives way so the bar
+   (coins + bolt) clears Play with friends. Low / empty still show without colour: the number itself (e.g. 15, 0), the ring and the
+   hollow bolt; the aria-label keeps the word. */
+@media(max-width:400px){:global([data-job-wallet]) .word{display:none!important}}

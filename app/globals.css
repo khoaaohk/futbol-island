@@ -668,6 +668,10 @@ body:has([data-player-book]:not([data-fading])) .town-scene canvas{visibility:hi
 .hud-stack[hidden],.hud-stack>[hidden]{display:none!important}
 /* A Bug squad shift's top bar (IslandJobs .pillDock) sits under the coins bar: the column starts below it (--bug-bar-h, measured). */
 html[data-bug-bar-on] .hud-stack{top:calc(var(--island-hud-row-top) + var(--island-hud-row-height) + var(--island-hud-row-gap) + var(--bug-bar-h,48px) + 8px)}
+/* Oct 23 2026: on phones <= 340px the Play with friends button sits under Paths (IslandSettings.module.css), so the column starts
+   one button lower there, still centred, and never runs under it. */
+@media(max-width:340px){.town-app:has(nav[data-hud-triggers]>[data-party-open]) .hud-stack{top:calc(var(--island-hud-row-top) + 2 * var(--island-hud-row-height) + 8px + var(--island-hud-row-gap))}
+ html[data-bug-bar-on] .town-app:has(nav[data-hud-triggers]>[data-party-open]) .hud-stack{top:calc(var(--island-hud-row-top) + 2 * var(--island-hud-row-height) + 8px + var(--island-hud-row-gap) + var(--bug-bar-h,48px) + 8px)}}
 /* Each piece keeps its own look; the column owns where it sits. (0,4,0) so the pieces' old absolute placements cannot win. */
 .town-app .hud-stack.hud-stack.hud-stack>*{position:relative;inset:auto;z-index:auto;transform:none;translate:none;margin:0;max-width:100%;box-sizing:border-box;pointer-events:auto}
 .town-app .hud-stack.hud-stack.hud-stack>:is([data-coin-hint],[data-knockout-status]){pointer-events:none}

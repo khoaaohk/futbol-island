@@ -86,6 +86,15 @@
 /* Sep 28 (pm): desktop pocket pill breathes a little more between coins, fish and fruit. */
 @media(min-width:601px) and (pointer:fine){.wallet[data-job-wallet]{gap:8px;padding:4px 14px 4px 10px}.wallet[data-job-wallet] small{margin-right:4px}.wallet[data-job-wallet] .basketCount{gap:5px;padding:3px 8px;margin-left:2px}}
 
+/* Oct 23 2026 (owner: "only show coins and energy" on phones; docs/ui/HUD_STACK.md "Top row on phones"): on phones, portrait
+   (<= 430px wide) and landscape (<= 430px tall), the bar shows only coins and the fuel bolt. Fish and fruit stay in the button's
+   aria-label and in the island pocket the bar opens (one tap). Desktop and tablet keep all four counters. */
+@media(max-width:430px),(max-height:430px) and (orientation:landscape){.wallet[data-job-wallet] .basketOnly{display:none}.wallet[data-job-wallet]{gap:4px;padding:4px 8px}.wallet[data-job-wallet] .basketCount{padding:3px}}
+/* A 4- or 5-digit balance on a narrow phone: the count steps down a size so the slim bar still clears Play with friends (8px). */
+@media(max-width:380px){.wallet[data-job-wallet]{gap:3px;padding:4px 6px}}
+@media(max-width:400px){.wallet[data-job-wallet][data-coin-digits="4"] b{font-size:17px}.wallet[data-job-wallet][data-coin-digits="5"] b{font-size:15px}}
+@media(max-width:380px){.wallet[data-job-wallet][data-coin-digits="4"] b{font-size:14px}.wallet[data-job-wallet][data-coin-digits="5"] b{font-size:12px}.wallet[data-job-wallet]:not([data-coin-digits="1"]):not([data-coin-digits="2"]):not([data-coin-digits="3"]){gap:2px;padding:4px 5px}.wallet[data-job-wallet]:not([data-coin-digits="1"]):not([data-coin-digits="2"]):not([data-coin-digits="3"]) .basketCount{padding:3px 2px}}
+
 /* Sep 30 2026: the offer pill, job panel, job cards and notes are placed by the island HUD stack (globals.css .hud-stack,
    docs/ui/HUD_STACK.md) under the coins bar; the absolute/translate declarations above only apply outside it. */
 

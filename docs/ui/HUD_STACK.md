@@ -404,3 +404,24 @@ lesson. No animation with reduced motion. It is pointer-transparent like the res
   (`.root[data-party]`). Hidden with the whole header while a studio is open, and hidden (popovers closed) under My kit or a chat.
   Island side: "N in the Kit Shop" over the shop's double door (above the canopy, `lib/town/shopDoorHint.ts`); the Party list
   says "In the Kit Shop".
+
+## Top row on phones (23 October 2026)
+
+Owner: "what if we just made the coins bar smaller width wise and only show coins and energy? Those are the two most important
+info needed." With the multiplayer flag on, the row is **Paths · Play with friends · coins bar · Settings**, and the full bar
+(coins, fish, fruit, bolt) collided with the friends button on phones (UI_AUDIT_OCT22).
+
+- **Phones** (`max-width:430px`, or `max-height:430px` in landscape): the bar shows **coins + the fuel bolt** only. Fish and fruit
+  (`.basketOnly`, `data-wallet-basket`) are hidden; they stay in the button's aria-label and one tap on the bar opens the island
+  pocket, which lists fish, fruit, veggies and beach finds with counts. Desktop and tablet keep all four counters.
+- The phone bar is a little tighter (gap 4px, padding 4px 8px; 3px / 6px at ≤ 380px). On ≤ 400px a 4-digit balance steps down to
+  17px (14px at ≤ 380px; 5 digits 15 / 12px) and the fuel word "Low" / "Empty" gives way (the number, the ring and the hollow bolt
+  still show the state; the aria-label keeps the word).
+- **≤ 340px**: the centred bar has no room beside Paths + friends, so the friends button drops under Paths in the left column
+  (8px gap, `IslandSettings.module.css`), and the HUD stack starts one button lower there (`globals.css`, only while the friends
+  button exists). The stack stays centred and under the bar everywhere.
+- Measured by `node scripts/check-hud-row.cjs <url>` (app built with `NEXT_PUBLIC_MULTIPLAYER=1`): every pair of
+  [Paths][friends][bar][Settings] is ≥ 8px apart at 320×568, 360×740, 390×844, 430×932 and 844×390, with 3-, 4- and 5-digit
+  balances and full / low / empty fuel, and on desktop 1280×800 with all four counters. Narrowest margins (friends ↔ bar):
+  360px 11px (4 digits 9px), 390px 23px (4 digits 14.5px), 430px 43px, 320px 43px (friends under Paths).
+  `tests/hud-stack.cjs` pins the CSS it relies on.

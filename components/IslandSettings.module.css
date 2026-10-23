@@ -29,6 +29,10 @@
 .triggers{left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));}
 @media(max-width:600px),(pointer:coarse){.triggers{left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px));}}
 @media(max-width:350px){.triggers{right:calc(10px + env(safe-area-inset-right,0px));}}
+/* Oct 23 2026 (docs/ui/HUD_STACK.md "Top row on phones"): on the narrowest phones (<= 340px) the centred coins bar has no room
+   beside Paths + Play with friends, so the friends button drops under Paths in the left column (8px below it). Absolute inside the
+   nav, so the row itself is unchanged; !important beats the live badge's inline position:relative. The HUD stack starts under it. */
+@media(max-width:340px){.triggers [data-party-open]{position:absolute!important;left:0;top:calc(var(--island-hud-row-height,44px) + 8px)}}
 
 .dialog.fromLeft[open]{justify-content:flex-start;--slide-from:-100%;}
 .fromLeft .panel{border-left:0;border-right:1px solid #fff3d4;box-shadow:10px 0 40px #142e2926;}
