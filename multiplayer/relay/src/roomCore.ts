@@ -70,7 +70,13 @@ interface Member {
    *  ball: [state, x_dm, y_dm, z_dm] (null = never sent), ballAt: when it arrived. */
   caps: number; poseNo: number; ballNo: number; seen: Map<number, number>; seenBall: Map<number, number>;
   ball: number[] | null; ballAt: number; ballBucket: TokenBucket;
+  /** Relay v1.3 (self rename, Oct 23 2026): the host reset this member's typed name, so it never takes a new one (C.Rename) for the
+   *  rest of the party (kid safety). renameTimes: recent C.Rename times (RENAME_PER_MIN per minute). */
+  nickLocked: boolean; renameTimes: number[];
 }
+
+/** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
+const RENAME_PER_MIN = 4;
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 function b64url(bytes: Uint8Array): string {
@@ -252,6 +258,7 @@ export class RoomCore {
       case C.Caps: m.caps = (msg[1] as number) & CAPS_ALL; return;
       case C.Ball: this.ballMsg(m, msg as number[], now); return;
       case C.Leave: this.remove(m, LeaveReason.Left, CLOSE.Normal); return;
+      case C.Rename: this.rename(m, msg[1] as string, now); return;
       default: break;
     }
     // host-only controls: Kick, Lock, Rotate, End, ResetName
@@ -260,7 +267,7 @@ export class RoomCore {
     if (msg[0] === C.ResetName) {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m || t.nick === null) return;
-      t.nick = null;
+      t.nick = null; t.nickLocked = true;
       this.count('nameResets');
       this.broadcast([S.Renamed, t.id, null], null);
     } else if (msg[0] === C.Kick) {
@@ -477,6 +484,7 @@ export class RoomCore {
         // Relay v1.1 (rooms design 2.3 item 5): a resume may carry a new look (a Kit Shop outfit). Only a CHANGED look is re-announced, as
         // S.Joined for the same id: every client store since the first one upserts Joined by id (tests/mp-room-core.cjs checks the old
         // reducer), so the row is replaced, never doubled. An unchanged look keeps the resume invisible to others, as before.
+        // A resume never renames (the slot keeps its name); a self rename is only ever C.Rename (relay v1.3).
         const changed = Array.isArray(look) && (look.length !== m.look.length || look.some((v, i) => v !== m.look[i]));
         if (changed) m.look = look.slice();
         this.welcome(m);
@@ -514,7 +522,7 @@ export class RoomCore {
       caps: 0, poseNo: 0, ballNo: 0, seen: new Map(), seenBall: new Map(), ball: null, ballAt: now, ballBucket: new TokenBucket(RATE.ball[0], RATE.ball[1]),
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
-      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false,
+      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [],
     };
   }
 
@@ -547,6 +555,17 @@ export class RoomCore {
     this.members.forEach((m) => { if (m.goneAt === null && m.peer && (!best || m.joinSeq < best.joinSeq)) best = m; });
     const b = best as Member | null;
     if (b && b.id !== this.hostId) { this.hostId = b.id; this.broadcast([S.Host, b.id], null); }
+  }
+
+  /** C.Rename (relay v1.3): the member's own first name. parseClient already normalised it. Re-announced as S.Joined (same id) to
+   *  everyone including the sender (its confirmation); old clients upsert Joined by id, so they show the new name too. */
+  private rename(m: Member, nick: string, now: number): void {
+    if (m.nickLocked || nick === m.nick || !m.ctlBucket.take(now)) return;
+    m.renameTimes = m.renameTimes.filter((t) => now - t < 60000);
+    if (m.renameTimes.length >= RENAME_PER_MIN) return;
+    m.renameTimes.push(now);
+    m.nick = nick;
+    this.broadcast([S.Joined, this.memberInfo(m)], null);
   }
 
   private welcome(m: Member): void {

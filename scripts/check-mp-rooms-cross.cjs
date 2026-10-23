@@ -126,7 +126,7 @@ const ROOMS = [
   }
 
   // Leave from inside the Kit Shop: chip gone, a note, no avatars left.
-  await p.click('[data-room-party-chip]'); await p.click('[data-room-leave]'); await p.click('[data-room-leave-confirm]');
+  await p.click('[data-room-party-chip]'); await p.click('[data-room-leave]'); await p.waitForTimeout(600); await p.click('[data-confirm="room-leave"] [data-confirm-yes]');
   await p.waitForTimeout(1500);
   const after = await p.evaluate(() => ({ chip: !!document.querySelector('[data-room-party-chip]'), note: document.querySelector('[data-room-party-note]')?.textContent ?? null }));
   const prL = await probe('window.__shop.scene.threeScene');

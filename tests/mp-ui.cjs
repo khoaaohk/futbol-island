@@ -61,7 +61,7 @@ t('first-name field: the only other text input, in the grown-up steps, never on 
  const nf=read('components/party/NickField.tsx');
  const inp=(nf.match(/<input[\s\S]*?\/>/g)||[]);assert.equal(inp.length,1,'one input');
  for(const a of [/maxLength=\{NICK_MAX\}/,/inputMode="text"/,/autoCapitalize="words"/,/autoComplete="off"/,/autoCorrect="off"/,/spellCheck=\{false\}/,/placeholder="Your first name"/])assert(a.test(inp[0]),String(a));
- assert(/aria-label="First name"/.test(nf)&&!/>First name</.test(nf)&&!/optional/i.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
+ assert((/aria-label="First name"/.test(nf)||(/aria-label=\{label\}/.test(nf)&&/label = 'First name'/.test(nf)))&&!/>First name</.test(nf)&&!/optional/i.test(nf)&&/Letters only\. First name only, no last names\./.test(nf),'label and hint');
  assert(/filterNickInput/.test(nf)&&/aria-label="Clear first name"/.test(nf),'live filter and clear button');
  assert(!/localStorage|sessionStorage|document\.cookie|console\.|analytics|lib\/saves/.test(nf.replace(/\/\*[\s\S]*?\*\//g,'')),'memory only, no logging');
  assert(/<NickField onChange/.test(join)&&/<NickField onChange/.test(host),'shown in the join card and the start card');
@@ -177,13 +177,13 @@ t('party card tabs: Code | List toggle, a11y, host/guest split, new code + close
   assert(/styles\.pill/.test(host)&&/\.pill\{[^}]*transition:transform \.22s cubic-bezier\(\.2,\.8,\.2,1\)/.test(css)&&/\.tabs\[data-active=party\] \.pill\{transform:translateX\(100%\)\}/.test(css)&&/\.tab:active\{transform:translateY\(2px\)\}/.test(css)&&/tabPop/.test(css)&&/prefers-reduced-motion:reduce\)\{[^\n]*\.pill/.test(css),'sliding gold pill, press, count pop, reduced motion');
   assert(/#fdf3dc/.test(css.slice(css.indexOf('.pill{')))&&/\.tabs\{[^}]*background:#ddd0ad[^}]*inset 0 3px/.test(css)&&/\.pill\{[^}]*background:#fdf3dc/.test(css)&&/\.tab\{[^}]*font:700 16px/.test(css)&&/\.body\{--tabs-h:48px\}/.test(css),'toggle: recessed sand track, raised cream pill, 20px medium labels, 48px on phones');
  }
- assert(/styles\.endLink[\s\S]{0,80}>End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&/\.endLink\{[^}]*background:transparent;color:rgb\(163 38 28\)/.test(read('components/party/party.module.css'))&&!/End party/.test(host.slice(host.indexOf('id="party-panel-code"'),host.indexOf('id="party-panel-party"'))),'End party is a small red text link at the bottom of the Party tab, never on Code'); assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
+ assert(/styles\.endLink[\s\S]{0,80}>End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&/\.endLink\{[^}]*background:transparent;color:var\(--party-danger\)/.test(read('components/party/party.module.css'))&&/--party-danger:rgb\(163 38 28\)/.test(read('components/party/party.module.css'))&&!/End party/.test(host.slice(host.indexOf('id="party-panel-code"'),host.indexOf('id="party-panel-party"'))),'End party is a small red text link at the bottom of the Party tab, never on Code'); assert(/End party for everyone/.test(host.slice(host.indexOf('id="party-panel-party"')))&&!/Lock party/.test(host),'End party lives on the Party tab; old Lock party wording gone');
  assert(!/max-height:min\(46vh/.test(read('components/party/party.module.css')),'member list scrolls in the card FadeScroll, no separate list scroller');
 });
 t('party sheet rows: coloured dot + name, aria-labels carry the colour',()=>{
- assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(host),'dot for me and friends');
- assert(/colourName\(m\.colourIdx\)/.test(host)&&/colourName\(me\.colourIdx\)/.test(host),'aria-label includes the colour');
- assert(/You \(\{displayName\(me\)\}\)/.test(host),"local row says 'You'");
+ assert(host.split('m.colourHex').length>=2&&/me\.colourHex/.test(read('components/party/OwnNameRow.tsx')),'dot for me and friends');
+ assert(/colourName\(m\.colourIdx\)/.test(host)&&/colourName\(me\.colourIdx\)/.test(read('components/party/OwnNameRow.tsx')),'aria-label includes the colour');
+ assert(/You \(\{name\}\)/.test(read('components/party/OwnNameRow.tsx'))&&/const name = displayName\(me\)/.test(read('components/party/OwnNameRow.tsx')),"local row says 'You'");
  assert(/styles\.badge[^<]*Host/.test(host),'host badge stays');
 });
 t('relay calls: offline / not found behave, nothing thrown',async()=>{});

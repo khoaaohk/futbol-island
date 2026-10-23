@@ -41,9 +41,10 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 export const PoseFlag = { Warp: 1, Hidden: 2 } as const;
 export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
 
-/** Relay v1.2 capability bits (S.Caps / C.Caps). Live = timestamped 10 Hz near poses (S.Live); Ball = friends' balls (C.Ball, in S.Live). */
-export const Cap = { Live: 1, Ball: 2 } as const;
-export const CAPS_ALL = 3;
+/** Relay v1.2 capability bits (S.Caps / C.Caps). Live = timestamped 10 Hz near poses (S.Live); Ball = friends' balls (C.Ball, in S.Live).
+ *  Rename (relay v1.3, Oct 23 2026) = the player may change their own first name mid-party (C.Rename). */
+export const Cap = { Live: 1, Ball: 2, Rename: 4 } as const;
+export const CAPS_ALL = 7;
 /** None: no ball shown. Feet: dribbling / charging (drawn at the friend's feet). Juggle: keepy-ups over the feet. Free: shot / rolling / resting at x,y,z. */
 export const BallState = { None: 0, Feet: 1, Juggle: 2, Free: 3 } as const;
 export type BallState = (typeof BallState)[keyof typeof BallState];
@@ -64,7 +65,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -84,7 +85,11 @@ export type CCaps = [typeof C.Caps, bits: number];
 /** The local ball, visual only for friends (never collides, never scores). Island only. state: BallState; x/y/z decimetres (island
  *  coordinates; ignored by receivers for None / Feet / Juggle, which draw the ball at the friend's own feet). */
 export type CBall = [typeof C.Ball, state: BallState, x_dm: number, y_dm: number, z_dm: number];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall;
+/** Relay v1.3: change MY OWN first name (normalizeNick; the relay re-checks it). Sent ONLY after the relay's S.Caps carried Cap.Rename (an
+ *  old relay never sees it). The relay re-announces the member as S.Joined (same id, new nick) to everyone, the sender included: every client
+ *  store upserts Joined by id, so old clients show the new name too. Ignored after the host reset this member's name (kid safety). */
+export type CRename = [typeof C.Rename, nick: string];
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename;
 
 // server -> client
 export const S = {

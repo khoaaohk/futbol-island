@@ -202,7 +202,7 @@ t('types.ts has no free string fields except tokens/code and the one typed first
   const src=fs.readFileSync(path.join(ROOT,'multiplayer/protocol/types.ts'),'utf8').split('\n');
   const hits=src.filter(l=>!/^\s*\/\//.test(l)&&/\bstring\b/.test(l.replace(/\/\/.*$/,'')));
   assert.ok(hits.length>0);
-  for(const l of hits)assert.match(l,/resumeToken|hostKey|code: string|nick\??: string \| null/,l);
+  for(const l of hits)assert.match(l,/resumeToken|hostKey|code: string|nick\??: string \| null|C\.Rename, nick: string\]/,l); // CRename: the same typed first name (normalizeNick)
 });
 
 t('purity: protocol imports only sibling files, no DOM/Node APIs',()=>{

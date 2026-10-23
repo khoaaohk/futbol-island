@@ -299,7 +299,7 @@ async function step2() {
   await nick(L.p, NAMES.L); await L.p.click('[data-party-join] button:has-text("Join")'); await gate(L.p);
   rec(await waitFor(L.p, () => isLive(L.p)), 'link joiner is in the party');
   await shot(L.p, 's2-link-join');
-  await listTab(L.p); await L.p.click('button:has-text("Leave party")').catch(() => {});
+  await listTab(L.p); await L.p.click('[data-party-leave]').catch(() => {}); await L.p.waitForTimeout(600); await L.p.click('[data-confirm="leave"] [data-confirm-yes]').catch(() => {});
   let lNote = ''; await waitFor(L.p, async () => { lNote = await toastOf(L.p); return /left|ended/.test(lNote); }, 6000, 200); await L.p.waitForTimeout(800);
   rec(!(await isLive(L.p)) && !(await session(L.p)) && /You left the party/.test(lNote), 'link joiner taps Leave party: "You left the party", session cleared', JSON.stringify(lNote));
   await sweep('step2');
@@ -654,7 +654,7 @@ async function step8() {
   await shot(a, 's8-a-reset-name');
   // Remove C.
   const rm = await a.$(`[data-party-sheet] button[aria-label^="Remove ${NAMES.C}"]`);
-  await rm?.click(); await a.waitForTimeout(800);
+  await rm?.click(); await a.waitForTimeout(600); await a.click('[data-party-sheet] [data-confirm="remove"] [data-confirm-yes]').catch(() => {}); await a.waitForTimeout(800);
   const prompt = await a.isVisible('[data-party-kick-prompt]').catch(() => false);
   let cNote = '';
   await waitFor(c, async () => { cNote = await toastOf(c); return /You left the party/.test(cNote); }, 10000, 250);
@@ -679,7 +679,7 @@ async function step8() {
   // End party for everyone.
   // With SKIP_KICK_WAIT=1 C was removed and never rejoined, so C is not in the party any more and gets no 'ended' note.
   const live = Object.values(devices).filter((d) => d.name !== 'A' && !(process.env.SKIP_KICK_WAIT && d.name === 'C'));
-  await listTab(a); await a.click('[data-party-end]'); await a.waitForTimeout(300); await a.click('[data-party-end]');
+  await listTab(a); await a.click('[data-party-end]'); await a.waitForTimeout(600); await a.click('[data-confirm="end"] [data-confirm-yes]');
   const notes = {};
   await Promise.all(live.map(async (d) => { await waitFor(d.p, async () => { notes[d.name] = await toastOf(d.p); return /party ended/.test(notes[d.name]); }, 10000, 250); }));
   rec(live.every((d) => /The party ended/.test(notes[d.name] || '')), 'End party: every guest gets "The party ended"', JSON.stringify(notes));
@@ -776,7 +776,7 @@ async function step10() {
   // since Oct 22 2026: scripts/check-mp-heat-recheck.cjs covers that).
   for (const t of [0, 1, 2, 3, 4]) {
     try {
-      await listTab(b); await b.locator('[data-party-sheet] button:has-text("Leave party")').click({ timeout: 5000 });
+      await listTab(b); await b.locator('[data-party-sheet] [data-party-leave]').click({ timeout: 5000 }); await b.waitForTimeout(600); await b.locator('[data-party-sheet] [data-confirm="leave"] [data-confirm-yes]').click({ timeout: 5000 });
       await waitFor(b, async () => !(await isLive(b)), 8000); await b.waitForTimeout(2500); await clearOverlays(b);
       await b.evaluate((t) => window.__fi2.heat.force(t), t);
       await openMenu(b); await shot(b, `s10-b-tier${t}-menu`); await closeCard(b);

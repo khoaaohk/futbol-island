@@ -98,7 +98,9 @@
 .panel{grid-area:1/1;display:flex;flex-direction:column;min-height:0;min-width:0;opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
 .panel[data-active=false]{opacity:0;visibility:hidden;pointer-events:none;transform:translateX(6px);transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s .15s}
 .panel[data-party-panel=code][data-active=false]{transform:translateX(-6px)}
-.endLink{align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:rgb(163 38 28);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
+/* The destructive party red (End party for everyone, Leave party, Remove, the confirm button): one token, never a second red. */
+.endLink,.confirm,.act,.dangerText,.danger{--party-danger:rgb(163 38 28)}
+.endLink{align-self:center;min-height:44px;padding:0 12px;border:0;background:transparent;color:var(--party-danger);font:700 13px/1 var(--btn-font);text-decoration:underline;text-underline-offset:3px;cursor:pointer;touch-action:manipulation}
 .endLink:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset);border-radius:8px}
 .codeActions{margin-top:4px;align-items:stretch;width:100%}
 /* Same left/right edges as the Code | List track (.tabs is inset 3px inside .body): Share/New code row and the lock button. */
@@ -131,3 +133,23 @@
 /* On the island the party's notes sit in the HUD stack under the coins bar (HudSlot, the stack's one toast timing) instead of
    floating over the coins and the friends button they talk about; rooms (no stack) keep the fixed top note. */
 :global(.hud-stack)>.toast{position:static;left:auto;transform:none;max-width:100%}
+/* Self rename (Your party > List, own row): the inline first-name editor. */
+.renameForm{display:flex;flex-direction:column;gap:6px;padding:6px 0 8px}
+.renameActions{display:flex;gap:8px;justify-content:flex-end}
+.renameActions .primary,.renameActions .secondary{min-width:96px}
+/* Member row actions (Oct 23 2026): every icon has a visible word on a second line under the name, so kids can tell what each does. */
+.member[data-acts]{flex-wrap:wrap;row-gap:4px;padding-bottom:8px;border-bottom:1px solid rgba(25,63,55,.12)}
+.rowActions{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding-left:20px}
+.act{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 12px 0 9px;border:1.5px solid var(--btn-rim);border-radius:999px;background:#fff;color:var(--btn-ink);font:700 13px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
+.act[aria-pressed=true]{background:var(--btn-pink)}
+.act[data-danger]{color:var(--party-danger)}
+.act:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+/* Remove a friend: a confirm step, never a single tap. Cancel sits on the right, under the finger that tapped Remove. */
+.confirm{display:flex;flex-direction:column;gap:8px;margin:0 0 4px;padding:10px 12px;border-radius:14px;background:var(--btn-mint);list-style:none}
+.confirm p{margin:0;font-weight:700;font-size:14px;line-height:1.3}
+.confirmActions{display:flex;gap:8px;justify-content:space-between}
+.confirmActions .primary,.confirmActions .secondary{flex:1 1 0;min-width:0}
+.danger{background:var(--party-danger);box-shadow:0 4px 0 rgba(0,0,0,.28);color:#fff}
+/* Leave party in rooms keeps its pill size; only the text takes the End party red. */
+.dangerText{color:var(--party-danger)}
+.panelFoot .confirm{flex:1;margin:4px 0 0}
