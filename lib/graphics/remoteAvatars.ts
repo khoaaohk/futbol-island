@@ -34,6 +34,7 @@ import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
+import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {createBumpReact,type BumpReact} from '../town/friendBump';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
 export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
@@ -71,6 +72,8 @@ export interface RemoteAvatars{
  readonly shown:number;
  /** Rigs alive (admitted + still shrinking after a demotion): the heat checks' leak counter. */
  readonly rigs:number;
+ /** Friend bumps (friendBump.ts): the local player's cosmetic overlay this frame (Town applies it around the render only) and bumps so far. */
+ readonly localBump:LocalBump;readonly bumps:number;
  dispose():void;
 }
 
@@ -120,6 +123,8 @@ type Entry={
  prWas:string;actWas:number;lineWas:string;
  /** Live feel: this friend's ball last frame (for the roll), whether it was drawn, its spin. */
  bx:number;by:number;bz:number;bOn:boolean;bq:T.Quaternion;
+ /** A friend bump's cosmetic reaction (friendBump.ts; made once on upsert). */
+ bump:BumpReact;
 };
 
 // Live feel (Oct 23 2026): the old 256 x 64 canvas at 27 px drawn 1.5 m wide made a name ~0.16 m tall, unreadable from the phone's
@@ -237,6 +242,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  rings.raycast=()=>{};rings.setColorAt(0,localColour.set('#ffffff'));root.add(rings);
  const fields=createForceFields(PARTY_MAX);root.add(fields.mesh);
  const jets=createRemoteJets();root.add(jets.root);
+ const bumps=createFriendBumps(root);
  // Friends' balls: BALL_MAX plain meshes sharing ONE geometry + material (the island ball's, via setBallLook; a plain one until then).
  let ownBallGeo:T.BufferGeometry|null=new T.SphereGeometry(BALL_RADIUS,16,12),ownBallMat:T.Material|null=new T.MeshStandardMaterial({color:'#f4edd3',roughness:.7});
  const ballMeshes:T.Mesh[]=[];
@@ -359,6 +365,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   get shown(){return shownCount;},
   get ballsShown(){return ballsShown;},
   get jetsShown(){return jetsShown;},
+  get localBump(){return bumps.local;},
+  get bumps(){return bumps.fired;},
   setBallLook(geometry,material){
    if(disposed)return;
    for(const m of ballMeshes){m.geometry=geometry;m.material=material;}
@@ -371,7 +379,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
-shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion()};
+shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact()};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -389,7 +397,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
    if(list.length===0){
-    shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);
+    shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);bumps.detect(dt,list,poses,null,reduced,true);bumps.update(dt);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
    }
@@ -402,6 +410,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    // The cap re-check (once a second; Battery saver keeps its own 1 s fade-out and admits nobody, as before).
    recheck+=dt;
    if(recheck>=ADMIT_RECHECK){const step=recheck;recheck=0;if(!saver)recheckCaps(step,reduced,poses,local);}
+   bumps.detect(dt,list,poses,local,reduced,saver);/* friend bumps: last frame's shown states, before the pass that applies them */
    batch.begin();fields.begin();let shown=0;
    for(let i=0;i<list.length;i++){
     const e=list[i];
@@ -439,7 +448,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      placeLabel(e,pose,k,reduced);continue;
     }
     // Far friends solve their pose at 10 Hz (> 20 m) / 5 Hz (> 60 m); the root still follows every frame.
-    const root3=rig.root,motion=e.motion;
+    const root3=rig.root,motion=e.motion;unBump(root3,e.bump);
     root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k*e.out);
     e.acc+=dt;
     // Live feel: the tier goes by the distance from the LOCAL player (ld2), not the camera: on the island the camera sits ~35 m back, so a
@@ -475,6 +484,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     // A flying / swimming friend's emote (their mode picks it from the same wire value): roll / pitch / lift on the rig root, every frame, gone with the emote.
     if(fs0&&!reduced){flourishAt(fs0.emote,e.emoteAge,fs0.seconds,FL,1);root3.rotation.order='YXZ';root3.rotation.x=FL.pitch;root3.rotation.z=FL.roll;root3.position.y+=FL.lift*k;e.flOn=true;}
     else if(e.flOn){root3.rotation.x=0;root3.rotation.z=0;e.flOn=false;}
+    if(e.bump.on&&applyBump(root3,e.bump,reduced,BODY_SCALE*k*e.out))e.flOn=true;/* a friend bump: cosmetic, gone with the reaction */
     batch.draw(root3);e.shown=true;shown++;
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
     ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
@@ -490,7 +500,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    jets.end(dt,reduced);candJet.length=0;
    drawBalls(poses,balls??null);
    if(local&&saverFade>0)addLocalRing(local,camPos);
-   ringsEnd();fields.end(dt,reduced);
+   ringsEnd();fields.end(dt,reduced);bumps.update(dt);
    batch.end();shownCount=shown;
    // The batch makes its meshes lazily and defaults them to casting: friends never cast (no shadow registration anywhere).
    for(let i=0;i<drawn.children.length;i++)drawn.children[i].castShadow=false;
@@ -498,7 +508,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   dispose(){
    if(disposed)return;disposed=true;
    for(let i=0;i<list.length;i++)release(list[i]);
-   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();
+   list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();
    for(const m of ballMeshes)m.removeFromParent();ownBallGeo?.dispose();ownBallMat?.dispose();ownBallGeo=null;ownBallMat=null;
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
