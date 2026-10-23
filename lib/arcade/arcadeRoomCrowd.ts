@@ -8,6 +8,9 @@ import {defaultBeanLookFor,DEFAULT_CASUAL_OUTFIT} from '../graphics/beanLook';
 export type ArcadeCrowdCabinet={x:number;z:number;yaw:number};
 export type ArcadeCrowdBounds={minX:number;maxX:number;minZ:number;maxZ:number};
 export type ArcadeCrowdOptions={scene:T.Scene;mobile:boolean;reduced?:boolean;cabinets:readonly ArcadeCrowdCabinet[];bounds:ArcadeCrowdBounds;reactions?:BallReactions};
+/** Reaction keys made once (the update read them per visitor per frame as template strings: heat QA, Oct 22 2026). */
+const VISITOR_KEYS=Array.from({length:8},(_,i)=>`arcade-visitor-${i}`);
+const walkerSphere=new T.Sphere(new T.Vector3(),1.1);
 /** Parent owns all scheduling. Room disposal removes every rig and crowd-owned resource. */
 export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bounds,reactions}:ArcadeCrowdOptions){
  const clampX=(x:number)=>T.MathUtils.clamp(x,bounds.minX+.35,bounds.maxX-.35),clampZ=(z:number)=>T.MathUtils.clamp(z,bounds.minZ+.35,bounds.maxZ-.35);
@@ -21,6 +24,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   const arms=['left','right'].map(side=>({shoulder:rig.root.getObjectByName(`${side}-shoulder`)!,elbow:rig.root.getObjectByName(`${side}-elbow`)!}));
   const entering=i===count-1,entryX=clampX(2),entryZ=clampZ(bounds.maxZ-4);if(entering)shadow.position.set(entryX,.083,entryZ);
   return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive'|'exitAisle'|'exit'|'away',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
+ const live=members.map(()=>true);
  const debugStates=members.map((m,i)=>({id:i,x:m.x,z:m.z,phase:m.phase as string,cabinet:m.cabinet,yielding:false,greeting:false,visits:0,social:false,socialAge:-1,facing:0,attentive:false,away:false}));
  const contact={x:0,z:0},human={x:0,z:0};
  let disposed=false,focusedId:number|null=null,friendSlots=0,restoreWait=0;
@@ -33,7 +37,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
  function reconcileFriends(dt:number){
   restoreWait=Math.max(0,restoreWait-dt);
   let out=0;for(const m of members)if(leaving(m))out++;
-  while(out<friendSlots){let pick=-1,best=Infinity;for(let i=0;i<members.length;i++){const m=members[i];if(leaving(m)||m.social||i===focusedId||reactions?.get(`arcade-visitor-${i}`))continue;const d=Math.hypot(m.x-doorX,m.z-doorZ);if(d<best){best=d;pick=i;}}if(pick<0)break;const m=members[pick];if(stations[m.cabinet].owner===pick)stations[m.cabinet].owner=-1;m.previous=m.cabinet;m.phase='exitAisle';m.tx=m.laneX;m.tz=clampZ(m.z);m.detour=null;m.age=0;out++;}
+  while(out<friendSlots){let pick=-1,best=Infinity;for(let i=0;i<members.length;i++){const m=members[i];if(leaving(m)||m.social||i===focusedId||reactions?.get(VISITOR_KEYS[i]))continue;const d=Math.hypot(m.x-doorX,m.z-doorZ);if(d<best){best=d;pick=i;}}if(pick<0)break;const m=members[pick];if(stations[m.cabinet].owner===pick)stations[m.cabinet].owner=-1;m.previous=m.cabinet;m.phase='exitAisle';m.tx=m.laneX;m.tz=clampZ(m.z);m.detour=null;m.age=0;out++;}
   // Returning visitors come back one at a time (1.6 s apart) on their own lane, like the original single entering visitor.
   if(out>friendSlots){let pick=-1;for(let i=members.length-1;i>=0;i--)if(members[i].phase==='exitAisle'||members[i].phase==='exit'){pick=i;break;}if(pick<0&&restoreWait===0)for(let i=members.length-1;i>=0;i--)if(members[i].phase==='away'){pick=i;break;}if(pick>=0){const m=members[pick];
    if(m.phase==='away'){restoreWait=1.6;m.x=m.laneX;m.z=doorZ;m.vx=m.vz=0;m.rig.root.visible=true;m.shadow.visible=true;debugStates[pick].away=false;}
@@ -42,7 +46,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
  function update(dt:number,time:number,playerX:number,playerZ:number){
   if(disposed||dt<=0)return;dt=Math.min(dt,.1);human.x=playerX;human.z=playerZ;reconcileFriends(dt);
   for(let i=0;i<members.length;i++){
-   const m=members[i];if(m.phase==='away')continue;const stunned=reactions?.get(`arcade-visitor-${i}`),station=stations[m.cabinet],engaged=!!stunned||!!m.social||i===focusedId;if(!engaged)m.age+=dt;
+   const m=members[i];if(m.phase==='away')continue;const stunned=reactions?.get(VISITOR_KEYS[i]),station=stations[m.cabinet],engaged=!!stunned||!!m.social||i===focusedId;if(!engaged)m.age+=dt;
    if(!engaged&&m.phase==='play'&&m.age>m.deadline&&!leaving(m)){station.owner=-1;m.phase='leave';m.age=0;m.tx=station.ax;m.tz=station.az;m.previous=m.cabinet;}
    const playerDistance=Math.hypot(m.x-playerX,m.z-playerZ);m.yielding=playerDistance<1.25;
    m.greet=Math.max(0,m.greet-dt);m.greetCooldown=Math.max(0,m.greetCooldown-dt);
@@ -81,7 +85,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
      let blockerX=0,blockerZ=0,nearest=Infinity;
      for(let j=0;j<=members.length;j++){
       const other=members[j];if(j===i||other?.phase==='away')continue;
-      if(other&&!(j<i||other.phase==='play'||other.social||j===focusedId||reactions?.get(`arcade-visitor-${j}`)))continue;
+      if(other&&!(j<i||other.phase==='play'||other.social||j===focusedId||reactions?.get(VISITOR_KEYS[j])))continue;
       const bx=other?other.x:playerX,bz=other?other.z:playerZ,ox=bx-m.x,oz=bz-m.z,along=sx*ox+sz*oz,across=Math.abs(sz*ox-sx*oz);
       if(along>0&&along<Math.min(1.7,distance+.2)&&across<.92&&along<nearest){nearest=along;blockerX=bx;blockerZ=bz;}
      }
@@ -109,17 +113,19 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    const playing=!engaged&&m.phase==='play'&&!moving,cycle=5.4+(i%3)*1.3,beat=(m.age+i*.7)%cycle,pleased=playing&&beat>cycle-1.1?Math.sin((beat-cycle+1.1)/1.1*Math.PI)*(.45+(i%3)*.12):0;
    const greeting=engaged||m.greet>0,hello=greeting?Math.sin(m.greet/1.4*Math.PI)*.8:0;
    m.motion.facing=m.yaw;m.motion.intentHeading=moving?Math.atan2(m.vx,m.vz):undefined;m.motion.ready=playing?(reduced?.28:.32+Math.sin(time*3+i)*.07):0;m.motion.called=reduced?0:Math.max(pleased,hello);
-   const cabinet=cabinets[m.cabinet];m.motion.lookX=greeting?playerX:playing?cabinet.x:m.x+Math.sin(m.yaw)*2;m.motion.lookZ=greeting?playerZ:playing?cabinet.z:m.z+Math.cos(m.yaw)*2;m.motion.lookY=greeting?1.4:1.95;m.rig.setExpression(greeting||pleased>.1?'happy':playing?'focused':'neutral');m.motion.skill=undefined;m.motion.jump=undefined;m.motion.juggle=undefined;m.motion.juggleTouch=undefined;m.motion.kickSide=undefined;if(m.social)m.socialPose(m.motion,m.social,m.socialAge,true,reduced);m.motion.stunAge=stunned?.age;m.motion.rooftopPose=stunned&&stunned.age>1.85?'dizzy':undefined;m.rig.update(m.x,m.z,dt,time,reduced,m.motion);reactions?.apply(`arcade-visitor-${i}`,m.rig.root,reduced);
+   const cabinet=cabinets[m.cabinet];m.motion.lookX=greeting?playerX:playing?cabinet.x:m.x+Math.sin(m.yaw)*2;m.motion.lookZ=greeting?playerZ:playing?cabinet.z:m.z+Math.cos(m.yaw)*2;m.motion.lookY=greeting?1.4:1.95;m.rig.setExpression(greeting||pleased>.1?'happy':playing?'focused':'neutral');m.motion.skill=undefined;m.motion.jump=undefined;m.motion.juggle=undefined;m.motion.juggleTouch=undefined;m.motion.kickSide=undefined;if(m.social)m.socialPose(m.motion,m.social,m.socialAge,true,reduced);m.motion.stunAge=stunned?.age;m.motion.rooftopPose=stunned&&stunned.age>1.85?'dizzy':undefined;m.rig.update(m.x,m.z,dt,time,reduced,m.motion);reactions?.apply(VISITOR_KEYS[i],m.rig.root,reduced);
    // A room-local console reach overlays only upper limbs, leaving native feet/body intact.
    m.consoleBlend+=((playing?1:0)-m.consoleBlend)*(1-Math.exp(-dt*7));
    const reach=(stunned?0:1)*m.consoleBlend*(1-Math.max(pleased,hello));for(let a=0;a<2;a++){const arm=m.arms[a],press=reduced?0:Math.sin(time*(a?4.1+i*.57:1.8+i*.31)+i)*(.025+(i%3)*.012);arm.shoulder.rotation.x+=(-.78+press-arm.shoulder.rotation.x)*reach;arm.elbow.rotation.x+=(-.64-press-arm.elbow.rotation.x)*reach;}
    m.shadow.position.x=m.x;m.shadow.position.z=m.z;
-   const debug=debugStates[i];debug.x=m.x;debug.z=m.z;debug.phase=m.phase;debug.cabinet=m.cabinet;debug.yielding=m.yielding;debug.greeting=greeting;debug.visits=m.visits;debug.social=!!m.social;debug.socialAge=m.socialAge;debug.facing=m.yaw;debug.attentive=engaged;
+   live[i]=moving||m.phase!=="play"||m.greet>0||!!m.social||!!stunned;const debug=debugStates[i];debug.x=m.x;debug.z=m.z;debug.phase=m.phase;debug.cabinet=m.cabinet;debug.yielding=m.yielding;debug.greeting=greeting;debug.visits=m.visits;debug.social=!!m.social;debug.socialAge=m.socialAge;debug.facing=m.yaw;debug.attentive=engaged;
   }
  }
+ /** A visitor walking, greeting or in an exchange inside `frustum` (the hub may not sleep on a half step). No allocation. */
+ function walkerIn(frustum:T.Frustum){for(let i=0;i<members.length;i++){const m=members[i];if(m.phase==="away"||!live[i])continue;walkerSphere.center.set(m.x,1,m.z);if(frustum.intersectsSphere(walkerSphere))return true;}return false;}
  // Initial pose without creating an independent animation clock.
  for(const m of members)m.rig.update(m.x,m.z,0,0,reduced,m.motion);
- return{update,debugStates,jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},
+ return{update,debugStates,walkerIn,jugglePoint(id:number,side:number,out:T.Vector3){const m=members[id];return out.set(m.x+Math.cos(m.yaw)*side*.108+Math.sin(m.yaw)*.45,.48,m.z-Math.sin(m.yaw)*side*.108+Math.cos(m.yaw)*.45);},focus(id:number|null){focusedId=id;},
  /** Party friends shown in the hub: that many visitors walk out (nearest the door first) and come back when friends leave. */
  setFriendSlots(n:number){friendSlots=Math.max(0,Math.min(members.length,Math.floor(n)||0));},get friendSlots(){return friendSlots;},reserve(id:number,routine:SocialRoutine){const m=members[id];if(!m||disposed)return false;m.social=routine;m.socialAge=-1;m.vx=m.vz=0;return true;},setSocialAge(id:number,age:number){const m=members[id];if(m)m.socialAge=age;},release(id:number){const m=members[id];if(m){m.social=null;m.socialAge=-1;m.greetCooldown=4;m.greet=0;}},dispose(){if(disposed)return;disposed=true;for(const m of members){m.rig.dispose();m.shadow.removeFromParent();}shadowGeometry.dispose();shadowMaterial.dispose();}};
 }
