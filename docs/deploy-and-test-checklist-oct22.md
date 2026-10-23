@@ -3,6 +3,9 @@
 Everything here is on the local branch `integrate-dive-bugs-sealife` and NOT pushed. The owner runs the steps marked **OWNER**.
 Order matters: **relay first, then the game, then the switches.**
 
+## Status at the end of Oct 22 night (everything below is merged on `integrate-dive-bugs-sealife`, NOT pushed, NOT deployed)
+Verified headless: full suite, production build, relay smoke (20-bot party), `scripts/check-mp-e2e.cjs` (135 checks, two simulated devices), the four room scripts, rejoin/persistence, presence, island connectivity (every landmark reachable). NOT verified: a real phone (heat over 10 minutes, soft keyboard), the relay deployed on v1.1, legal review, the music credit. Open owner decisions: coins bar vs Play with friends button on phones <= 390 px (docs/ui/UI_AUDIT_OCT22.md), a gap in the South Pier fence (docs/ISLAND_CONNECTIVITY_OCT22.md), the Phase C retention switch (leave OFF until legal sign-off).
+
 ## 0. Before anything
 - [ ] Decide where the two-device test runs: (a) your own machine on the LAN (dev relay + dev server), or (b) a Vercel preview link
       plus the deployed relay. (b) is the real test; (a) needs no deploy.
