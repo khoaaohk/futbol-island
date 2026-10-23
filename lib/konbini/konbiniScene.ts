@@ -378,7 +378,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   if(kb.moving)kb.update(dt,bp());
   const nm=kb.state.mode,shooting=nm==='charging'||nm==='windup'||nm==='shot'&&kb.state.kick>0;
   motion.kick=shooting?kb.state.kick:undefined;motion.shotCharge=nm==='charging'?kb.state.charge:undefined;motion.shotPower=shooting?kb.state.charge:undefined;motion.powerKick=nm==='windup'||nm==='shot'&&kb.state.kick>0;motion.actionKind=shooting?'shot':undefined;
-  motion.juggle=kb.state.mode==='keepup'?kb.jugglePhase():undefined;motion.juggleTouch=kb.state.mode==='keepup'?'foot':undefined;motion.kickSide=shooting?1:kb.state.mode==='keepup'?kb.state.side:undefined;
+  motion.juggle=kb.state.mode==='keepup'?kb.jugglePhase():undefined;motion.juggleTouch=kb.state.mode==='keepup'?'foot':undefined;motion.juggleLift=kb.state.mode==='keepup'?kb.state.lift:undefined;motion.kickSide=shooting?1:kb.state.mode==='keepup'?kb.state.side:undefined;
   stepWobble(dt);
   if(emote){emote.age+=dt;if(emote.age>=emote.dur){emote=null;motion.jump=undefined;if(!eat)motion.called=0;player.setExpression('neutral');}else if(!eat&&!reduced){const b=emoteBody(emote.kind,emote.age,emote.dur);motion.called=b.called;motion.jump=b.jump;}}
   motion.dribbling=!eat&&!emote&&kb.state.mode==='feet';player.update(x,z,dt,time,reduced,motion);playerShadow.position.set(x,.03,z);

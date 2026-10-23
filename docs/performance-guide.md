@@ -1538,6 +1538,11 @@ Two of the island's round action buttons inside both Konbinis (`components/Konbi
   (`components/KeepUpCounter.tsx`, island: HUD stack task slot). Cost: a few scalar ops per frame while juggling, the island
   count is polled on the existing ~150 ms HUD tick (setState only when it changes), the charge ring is a CSS animation (no
   per-frame JS). No new loops, draws or timers beyond the pill's one fade timeout. Tests: `tests/keepup-counter.cjs`.
+  Hold detail: a held press (>= 0.25 s) let go before the ball drops still arms the next touch with the lift it reached (a tap
+  released early stays an early miss); in the Konbini a press in the window above the foot touches on release (tap) or at the
+  foot while held. The touching leg swings higher with the lift (`PlayerMotion.juggleLift`, lib/graphics/player.ts; two scalar
+  ops). Headless (22 Oct, desktop): island peaks tap 1.28/1.52/1.86/2.31 m vs held 1.47/1.80/2.13/2.61 m; Konbini apex tap
+  ~1.40 m vs held up to 2.04 m. Not measured on a real iPhone.
 - **Heat:** no new loops. The ball is stepped only while it's off the feet (`if(kb.moving)`), and `busy` includes the ball and
   the wobble, so the store sleeps again afterwards. No extra draw calls: the ball, shadow and products are existing meshes.
   Measured (scratchpad `konbini/actions/check-actions.cjs`, headless Chrome, muted; phone = 390×844 touch, DPR 3, CPU 4×):

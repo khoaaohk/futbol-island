@@ -46,6 +46,8 @@ function island({hold=50,stopAt=6,wall=false,top=6}={}){const b=W.createWalkBall
  const b=W.createWalkBall();b.keepUp(p);b.keepUpRelease();for(let i=0;i<20;i++)b.update(1/120,p,flat);b.keepUp(p);b.keepUpRelease();let n=0;while(b.state.mode==='juggle'&&n++<400)b.update(1/120,p,flat);assert.equal(b.state.mode,'drop','an early tap does not keep it up');
  const h=W.createWalkBall();h.keepUp(p);h.keepUpRelease();for(let i=0;i<20;i++)h.update(1/120,p,flat);h.keepUp(p);for(let i=0;i<150;i++)h.update(1/120,p,flat);assert.equal(h.state.streak,2,'an early press held into the window arms the touch');assert(h.state.keepLift>1.5,'… lifted by the hold');
  for(let i=0;i<300;i++)h.update(1/120,p,flat);assert.equal(h.state.streak,0,'still held: one touch per press, then it drops');h.keepUpRelease();
+ // A held press let go before the window still arms the next touch (with its lift); kids let go early.
+ {const e=W.createWalkBall();e.keepUp(p);e.keepUpRelease();for(let i=0;i<5;i++)e.update(1/120,p,flat);e.keepUp(p);for(let i=0;i<40;i++)e.update(1/120,p,flat);assert(e.state.jugglePhase<.45,'released before the window');e.keepUpRelease();let g=0;while(e.state.streak===1&&g++<400)e.update(1/120,p,flat);assert.equal(e.state.streak,2,'a held early press still counts');assert(e.state.keepLift>1.1,'… with its lift');}
  // Key auto-repeat: a second press while held is ignored (no reset of the hold).
  const r=W.createWalkBall();r.keepUp(p);assert.equal(r.keepUp(p),false,'auto-repeat ignored');r.keepUpRelease();
  // A shot or reset ends the run; the legacy juggle() stays the automatic loop.
@@ -58,14 +60,19 @@ function island({hold=50,stopAt=6,wall=false,top=6}={}){const b=W.createWalkBall
  const low=island({wall:true,hold:700,top:2.2});assert(Math.max(...low.peaks)<=2.2-.25+.05,'a low wall caps the held kick');
  console.log('wall tap peaks',tap.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '),'| held',held.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '));}
 
-// 5. Konbini: a press in the window touches at once (unchanged); an early press held into the window touches higher at the foot.
+// 5. Konbini: a tap in the window touches on release (normal rise); a press held in (or early into) the window touches higher at the foot.
 {const ev=[],k=B.createKonbiniBall([],e=>ev.push(e)),me={x:0,z:0,yaw:0},step=()=>k.update(1/60,me);
  assert(k.press(me));k.pressEnd();let apexTap=0,g=0;while(!(k.state.vy<0&&k.state.y<=B.KEEPUP.window-.05)&&g++<200){step();apexTap=Math.max(apexTap,k.state.y);}
- assert(k.press(me),'in-window press touches at once');k.pressEnd();assert.equal(k.state.streak,2);
+ assert(k.press(me),'in-window press accepted');assert.equal(k.state.streak,1,'… the touch waits for the release');k.pressEnd();assert.equal(k.state.streak,2,'a tap touches on release');
  g=0;while(k.state.vy>0&&g++<200)step();assert.equal(k.press(me),false,'early press: no touch yet');let apexHeld=0;g=0;while(k.state.streak===2&&g++<400)step();assert.equal(k.state.streak,3,'held into the window: touches at the foot');
  g=0;while(k.state.vy>0&&g++<400){step();apexHeld=Math.max(apexHeld,k.state.y);}k.pressEnd();
  assert(apexHeld>apexTap+.2,'held kick higher: '+apexHeld.toFixed(2)+' vs '+apexTap.toFixed(2));assert(apexHeld<B.KEEPUP.contact+B.KEEPUP.rise*1.6+.25,'capped (still catchable)');
  g=0;while(!(k.state.vy<0&&k.state.y<=B.KEEPUP.window-.05)&&g++<400)step();assert(k.press(me),'the next touch is reachable');k.pressEnd();assert.equal(k.state.streak,4);
+ {const k3=B.createKonbiniBall([]);k3.press(me);k3.pressEnd();let g3=0,top=0;while(!(k3.state.vy<0&&k3.state.y<=B.KEEPUP.window-.05)&&g3++<200)k3.update(1/60,me);
+  k3.press(me);g3=0;while(k3.state.streak===1&&g3++<200)k3.update(1/60,me);assert.equal(k3.state.streak,2,'held in-window press touches at the foot');
+  g3=0;while(k3.state.vy>0&&g3++<400){k3.update(1/60,me);top=Math.max(top,k3.state.y);}k3.pressEnd();assert(top>=apexTap-.01,'held in-window press: not lower ('+top.toFixed(2)+'; the full lift needs ~0.6 s of hold, so press early and hold)');
+  const k4=B.createKonbiniBall([]);k4.press(me);k4.pressEnd();g3=0;while(!(k4.state.vy<0&&k4.state.y<=B.KEEPUP.contact-.05)&&g3++<200)k4.update(1/60,me);assert(k4.press(me)&&k4.state.streak===2,'below the foot: touches at once');k4.pressEnd();}
+ {const k5=B.createKonbiniBall([]);k5.press(me);k5.pressEnd();for(let i=0;i<2;i++)k5.update(1/60,me);k5.press(me);for(let i=0;i<20;i++)k5.update(1/60,me);assert(k5.state.vy>0,'still rising at the release');k5.pressEnd();let g5=0;while(k5.state.streak===1&&g5++<200)k5.update(1/60,me);assert.equal(k5.state.streak,2,'Konbini: a held early press let go still touches at the foot');assert(k5.state.lift>1.05);}
  const e2=[],k2=B.createKonbiniBall([],e=>e2.push(e));k2.tap(me);for(let i=0;i<5;i++)k2.update(1/60,me);k2.press(me);k2.pressEnd();assert.equal(e2.at(-1).type,'early','an early tap released early is still just early');
  console.log('konbini apex tap',apexTap.toFixed(2),'held',apexHeld.toFixed(2));}
 

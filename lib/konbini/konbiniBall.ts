@@ -20,10 +20,11 @@ import {SHOT_WINDUP,ISLAND_SHOT,juggleContact,holdLift} from '../town/walkBall';
  * KEEPUP.window, falling). Miss it and the ball drops and rolls back to your feet. Walking the ball into a shelf drops it too.
  *
  * HOLD FOR HIGHER (Oct 22 2026, owner: "if holding the button the kick is higher in the air"; lib/town/keepUps.ts, the island's
- * curve): `press` / `pressEnd` wrap `tap`. A press in the window still touches at once (a tap, normal rise). A press while the
- * ball is still high or rising used to be ignored ('early'); now, if it is still held when the ball drops through the window, it
- * touches at the foot contact (or on release inside the window) with the rise × holdLift(held): up to 1.6× (apex ≈ 1.52 m, the
- * window is unchanged, so the next touch is still reachable). Released before the window it is the old early tap (no touch).
+ * curve): `press` / `pressEnd` wrap `tap`. A press in the window above the foot touches on its release (a tap: at once, the
+ * normal rise) or, still held, when the ball reaches the foot contact; a press at or below the foot touches at once. A press while
+ * the ball is still high or rising used to be ignored ('early'); now, if it is still held when the ball drops through the window,
+ * it touches the same way. The rise is × holdLift(held): up to 1.6× (apex ≈ 1.52 m, the window is unchanged, so the next touch is
+ * still reachable). Released before the window it is the old early tap (no touch). `tap` itself (tests) is unchanged.
  */
 export type BallBox={minX:number;maxX:number;minZ:number;maxZ:number;/** The fixture index (shelf / counter / fridge), −1 for walls. */fi:number};
 export type BallPlayer={x:number;z:number;yaw:number};
@@ -44,7 +45,7 @@ const touchSpeed=(lift=1)=>Math.sqrt(2*KEEPUP.gravity*KEEPUP.rise*Math.max(1,Mat
 
 export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>void=()=>{}){
  const s={mode:'feet' as BallMode,x:0,y:.19,z:0,vx:0,vy:0,vz:0,age:0,charge:0,kick:0,yaw:0,streak:0,side:1 as 1|-1,sinceTouch:0,hits:0,shots:0,/** The current keep-up flight's lift (1 = tap). */lift:1};
- let hitCooldown=0,pressing=false,pending=false,holdAge=0;
+ let hitCooldown=0,pressing=false,pending=false,holdAge=0,/** A held press let go before the window: its lift, waiting for the foot (1 = none). */keptLift=1;
  const r=INDOOR_SHOT.radius,WALL:BallBox={minX:0,maxX:0,minZ:0,maxZ:0,fi:-1};
  /** The box (or wall, fi −1) a ball centred at x,z would touch, else null. */
  function blockedAt(x:number,z:number):BallBox|null{
@@ -56,7 +57,7 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
  function toFeet(){s.mode='feet';s.vx=s.vy=s.vz=0;s.age=0;s.kick=0;s.charge=0;}
  function recall(){if(s.mode==='shot'||s.mode==='drop'){s.mode='return';s.age=0;}}
  function touch(lift=1){s.streak++;s.side=s.side===1?-1:1;s.lift=lift;s.vy=touchSpeed(lift)*(s.y<KEEPUP.contact?1+(KEEPUP.contact-s.y)*.4:1);s.sinceTouch=0;emit({type:'touch',streak:s.streak});}
- function drop(reason:'missed'|'shelf'|'stopped'){pending=false;const n=s.streak;s.mode='drop';s.age=0;s.vx*=.3;s.vz*=.3;s.streak=0;emit({type:'drop',streak:n,reason});}
+ function drop(reason:'missed'|'shelf'|'stopped'){pending=false;keptLift=1;const n=s.streak;s.mode='drop';s.age=0;s.vx*=.3;s.vz*=.3;s.streak=0;emit({type:'drop',streak:n,reason});}
  /**
   * Physics step shared by the shot and a dropped keep-up: walkBall's 'shot' step line for line (substeps ≤ ISLAND_SHOT.substep,
   * x then z axis-separated rebounds × wallBounce, gravity, a floor bounce × floorBounce above bounceMinVy, then the frame's drag),
@@ -91,9 +92,15 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
    if(s.vy<0&&s.y<=KEEPUP.window){touch();return true;}
    emit({type:'early'});return false;},
   /** Button / J down: a tap, and if it was early, a held touch waiting for the ball (see HOLD FOR HIGHER). */
-  press(p:BallPlayer){pressing=true;holdAge=0;pending=false;const ok=this.tap(p);if(!ok&&s.mode==='keepup')pending=true;return ok;},
+  press(p:BallPlayer){pressing=true;holdAge=0;pending=false;keptLift=1;
+   // In the window but still above the foot: the touch waits for the release (a tap: at once, normal rise) or for the ball to reach
+   // the foot while still held (higher), so holding works whenever you press, like the island. At or below the foot: touch now.
+   if(s.mode==='keepup'&&s.vy<0&&s.y<=KEEPUP.window&&s.y>KEEPUP.contact){pending=true;return true;}
+   const ok=this.tap(p);if(!ok&&s.mode==='keepup')pending=true;return ok;},
   /** Button / J up: a waiting held touch fires now if the ball is in the window; otherwise it was just early. */
-  pressEnd(){if(!pressing)return false;pressing=false;const fire=pending&&s.mode==='keepup'&&s.vy<0&&s.y<=KEEPUP.window;pending=false;if(fire)touch(holdLift(holdAge*1000));return fire;},
+  pressEnd(){if(!pressing)return false;pressing=false;const lift=holdLift(holdAge*1000),fire=pending&&s.mode==='keepup'&&s.vy<0&&s.y<=KEEPUP.window;
+   // A HELD press let go early (kids let go before the ball drops) keeps its touch, waiting at the foot; a tap released early is just early.
+   if(!fire&&pending&&s.mode==='keepup'&&lift>1){keptLift=lift;return false;}pending=false;if(fire)touch(lift);return fire;},
   get held(){return pressing;},
   /** Stop keep-ups on purpose (walking out, zoom, dialog): the ball simply comes back to the feet, the streak still counts. */
   settle(p:BallPlayer){if(s.mode==='keepup'){const n=s.streak;s.streak=0;emit({type:'drop',streak:n,reason:'stopped'});}if(s.mode==='charging'||s.mode==='windup'||s.mode==='keepup'){toFeet();const f=feetPoint(p);s.x=f.x;s.z=f.z;s.y=r;}else recall();},
@@ -116,7 +123,7 @@ export function createKonbiniBall(boxes:readonly BallBox[],emit:(e:BallEvent)=>v
      if(blockedAt(c.x,c.z)){s.vx=Math.sin(p.yaw)*-.6;s.vz=Math.cos(p.yaw)*-.6;drop('shelf');return;}
      const k=1-Math.exp(-dt*20);s.x+=(c.x-s.x)*k;s.z+=(c.z-s.z)*k;s.vy-=KEEPUP.gravity*dt;s.y+=s.vy*dt;
      // A held early press touches when the ball reaches the foot contact, lifted by how long it has been held.
-     if(pending&&pressing&&s.vy<0&&s.y<=KEEPUP.contact){pending=false;touch(holdLift(holdAge*1000));return;}
+     if(pending&&(pressing||keptLift>1)&&s.vy<0&&s.y<=KEEPUP.contact){pending=false;const l=pressing?holdLift(holdAge*1000):keptLift;keptLift=1;touch(l);return;}
      if(s.y<=KEEPUP.floor){s.y=KEEPUP.floor;s.vy=-s.vy*.35;s.vx=Math.sin(p.yaw)*.5;s.vz=Math.cos(p.yaw)*.5;drop('missed');}return;}
    }
   },

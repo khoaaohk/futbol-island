@@ -56,10 +56,10 @@ export function createWalkBall(){
   floating:0,
   /** Counted keep-ups (keepUp()): on, the live count (0 = no run), the current touch's lift (1 = tap, ≤ 1.6 held). */
   counted:false,streak:0,keepLift:1};
- let armed=false,pressing=false,pressUsed=true,holdAge=0,releaseLift=1,flightAge=0,touchIndex=0;
+ let armed=false,pressing=false,pressUsed=true,keptHold=false,holdAge=0,releaseLift=1,flightAge=0,touchIndex=0;
  const liftNow=()=>pressing?holdLift(holdAge*1000):releaseLift;
  const consumeLift=()=>{const l=liftNow();releaseLift=1;return l;};
- const endRun=()=>{state.counted=false;state.streak=0;state.keepLift=1;armed=false;};
+ const endRun=()=>{state.counted=false;state.streak=0;state.keepLift=1;armed=false;keptHold=false;};
  let floatFrom=0;
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
  let movingJuggle=false;
@@ -104,18 +104,20 @@ export function createWalkBall(){
   * One press at a time (key auto-repeat is ignored until keepUpRelease).
   */
  const keepUp=(p:Player,target?:WallJuggleTarget)=>{
-  if(pressing)return false;pressing=true;holdAge=0;pressUsed=false;
+  if(pressing)return false;pressing=true;holdAge=0;pressUsed=false;keptHold=false;
   if(state.counted&&(state.mode==='juggle'||state.mode==='wall-juggle')){if(inWindow()){armed=true;pressUsed=true;}return true;}
   reset(p);state.mode='juggle';state.counted=true;state.streak=1;state.keepLift=1;flightAge=0;touchIndex=0;pressUsed=true;state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);return true;
  };
- /** Release: an armed touch keeps the lift this hold reached. */
- const keepUpRelease=()=>{if(!pressing)return;pressing=false;if(armed)releaseLift=holdLift(holdAge*1000);};
+ /** Release: an armed touch (or a held press let go early) keeps the lift this hold reached. */
+ const keepUpRelease=()=>{if(!pressing)return;pressing=false;const lift=holdLift(holdAge*1000);if(armed)releaseLift=lift;
+  // A HELD press let go before the window (kids let go early): it still arms the next touch, with the lift it reached. A tap does not.
+  else if(state.counted&&!pressUsed&&lift>1){keptHold=true;releaseLift=lift;}};
  const recall=()=>{if(state.mode==='shot'||state.mode==='drop'){state.mode='return';state.age=0;state.floating=0;}};
  function update(dt:number,p:Player,env:Environment){
   state.age+=dt;state.bounce=Math.max(0,state.bounce-dt);impactCooldown=Math.max(0,impactCooldown-dt);
   const impact=()=>{state.bounce=.16;if(impactCooldown<=0){impactCooldown=.09;env.impact(state.x,state.y,state.z);}};
   if(pressing)holdAge+=dt;
-  if(state.counted&&pressing&&!pressUsed&&inWindow()){armed=true;pressUsed=true;}
+  if(state.counted&&(pressing||keptHold)&&!pressUsed&&inWindow()){armed=true;pressUsed=true;keptHold=false;}
   if(state.mode==='wall-juggle'){
    if(!validWall(p,nextWall)){regularJuggle();return;}
    state.wallAge+=dt;
