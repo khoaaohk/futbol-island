@@ -332,6 +332,7 @@ t('RoomPartyChip: Leave only (no invite / code / kick / lock / end / ping), the 
   assert.equal((src.match(/\.leave\(\)/g) || []).length, 1, 'one Leave');
   assert.ok(/<EmoteWheel/.test(src) && /setHiddenFriends/.test(src) && /setMutedFriends/.test(src));
   const chip = load('components/party/RoomPartyChip.tsx', { EmoteWheel: { default: () => null }, PartyChip: { Glyph: () => null }, roomParty: {}, multiplayer: { displayName: (m) => m.nick || m.name, usePartyState: () => ({}) }, react: { useEffect() {}, useState: (v) => [typeof v === 'function' ? v() : v, () => {}] } });
+  assert.ok(/emoteDock/.test(src) && /export function RoomEmoteDock/.test(src) && /!emoteDock && <button/.test(src), 'emoteDock moves the emote button out of the chip (default keeps it there)');
   const line = chip.roomMemberLine;
   assert.equal(line({ presence: 'indoors', activity: 8, room: 8, zone: 4 }, 8), 'Here with you');
   assert.equal(line({ presence: 'indoors', activity: 8, room: 32, zone: 4 }, 8), 'In the other Konbini');
@@ -348,7 +349,7 @@ t('Konbini wiring: layer in the loop, 20 fps remote frames on phones, one ring, 
   assert.ok(/if\(settle>0\|\|leaving\|\|remoteKeep\)frame=requestAnimationFrame\(tick\)/.test(sc), 'sleeps when friends settle');
   assert.ok(!/multiplayer/.test(sc.replace(/\/\/.*$|\/\*\*[\s\S]*?\*\//gm, '').split('\n').filter((l) => /^import/.test(l)).join('\n')), 'the scene imports no multiplayer code');
   assert.ok(kr.indexOf('useRoomParty(room,konbiniRoom(shop)') > 0 && kr.indexOf('useRoomParty(room') < kr.indexOf("import('@/lib/konbini/konbiniScene')"), 'hook declared before the scene effect (disposed first)');
-  assert.ok(/\{party&&<RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\}\/>\}/.test(kr), 'chip in the header, hidden while covered / zoomed');
+  assert.ok(/\{party&&<span className=\{styles\.hudParty\}><RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/><\/span>\}/.test(kr), 'chip in the header (count + roster only, the Emote button is in the action cluster), hidden while covered / zoomed');
   const hook = read('components/party/useRoomParty.ts');
   assert.ok(/conn\.resume\(\{ look: partyLook\(\) \}\)/.test(hook) && !/useEffect\(\(\) => \(\) => [^\n]*leave/.test(hook), 'resume on load, never leave on unmount');
   const rp = read('lib/multiplayer/roomParty.ts');

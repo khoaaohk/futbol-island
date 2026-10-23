@@ -259,3 +259,13 @@ t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays with
  assert(/RIDE_EMOTE\.ScooterGlide/.test(town)&&/ns\.emote===NPC_SET\.SideGlide&&rideRef\.current==='scooter'/.test(town),'both on scooters: the existing scripted glide runs for the player too');
 });
 console.log('emote-contexts: '+n+' tests passed');
+
+// The Emote button needs someone IN FRONT of the player (owner, Oct 22 2026: "when not facing anyone, let's not show the emotes")
+{ const fs=require('fs'),town=fs.readFileSync(require('path').join(__dirname,'..','components/Town.tsx'),'utf8');
+  assert(/facing=\(x:number,z:number\)=>\{const dx=x-me\.x,dz=z-me\.z,d=Math\.hypot\(dx,dz\);return d<1\.6\|\|dx\*faceX\+dz\*faceZ>=d\*\.26;\}/.test(town),'facing cone helper (about 75 degrees, or right beside the player)');
+  assert(/d<=EMOTE_RANGE&&facing\(e\.position\.x,e\.position\.z\)/.test(town)&&/&&facing\(v\.position\.x,v\.position\.z\)/.test(town),'townspeople and field players count only when in front');
+  assert(/if\(!facing\(f\.x,f\.z\)&&!modeIsFlying\(f\.mode\)&&!modeIsSwimming\(f\.mode\)\)continue;fN=true;/.test(town),'party friends count only when in front (flying / swimming friends keep their own rule)');
+  // same cone maths as the helper: 75 degrees
+  const cone=(fx,fz,dx,dz)=>{const d=Math.hypot(dx,dz);return d<1.6||dx*fx+dz*fz>=d*.26;};
+  assert.equal(cone(0,1,0,5),true);assert.equal(cone(0,1,5,0.5),false,'a side-on friend 5 m to the right is not in front');assert.equal(cone(0,1,0,-5),false,'behind is not in front');assert.equal(cone(0,1,3,3),true,'45 degrees counts');assert.equal(cone(0,1,-4,0),false);assert.equal(cone(0,1,1,-1),true,'right beside you counts');
+  console.log('emote-contexts: facing rule ok'); }

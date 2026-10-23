@@ -39,7 +39,7 @@ import {isDrinkItem} from './KonbiniReveal';
 import {isSoundEnabled} from '@/lib/games/sound';
 import type {KonbiniScene,KonbiniPoi,KonbiniSlotView,KonbiniZoomView} from '@/lib/konbini/konbiniScene';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 1): friends in THIS Konbini walk about with you; Leave-only chip.
-import {useRoomParty} from './party/useRoomParty';import RoomPartyChip from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';import RoomPartyChip,{RoomEmoteDock} from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
 const NpcConversation=dynamic(()=>import('./NpcConversation'),{ssr:false});
 
 /**
@@ -87,7 +87,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  useEffect(()=>{if(!coachTip)return;const t=setTimeout(()=>setCoachTip(''),5200);return()=>clearTimeout(t);},[coachTip]);
  useEffect(()=>{if(!clerkLine)return;const t=setTimeout(()=>setClerkLine(''),4200);return()=>clearTimeout(t);},[clerkLine]);
  useEffect(()=>{if(!streak||streak.live)return;const t=setTimeout(()=>setStreak(null),streak.best?2600:1800);return()=>clearTimeout(t);},[streak]);
- const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[near,setNear]=useState<KonbiniPoi|null>(null),[leaving,setLeaving]=useState(false);
+ const [ready,setReady]=useState(false),[failed,setFailed]=useState(false),[near,setNear]=useState<KonbiniPoi|null>(null),[emoteNear,setEmoteNear]=useState(false),[leaving,setLeaving]=useState(false);
  const [zoom,setZoom]=useState<KonbiniZoomView|null>(null),[slots,setSlots]=useState<KonbiniSlotView[]>([]),[selected,setSelected]=useState<Selected>(null);
  const [overlay,setOverlay]=useState<Overlay|null>(null),[talking,setTalking]=useState(false);
  // The stamp card is a slide-out like the cashier chat (KonbiniStampCard, Oct 1 2026), not a centred card.
@@ -135,7 +135,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  const party=useRoomParty(room,konbiniRoom(shop),ready,covered||!!zoom);// before the scene effect: the layer is disposed before the scene on unmount
  useEffect(()=>{if(!canvas.current)return;let canceled=false;const node=canvas.current;
   import('@/lib/konbini/konbiniScene').then(({createKonbiniScene})=>{if(canceled)return;try{
-   const scene=createKonbiniScene(node,shop,{onNear:setNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:v=>{setZoom(v);if(!v)setSelected(null);},onSlots:setSlots,onFirstFrame:()=>{setFirstFrame(true);},onZoomArrive:poi=>konbiniSfx.section(poi),onZoomStep:()=>konbiniSfx.whoosh(),
+   const scene=createKonbiniScene(node,shop,{onNear:setNear,onEmoteNear:setEmoteNear,onArrive:p=>look(p),onExit:()=>leave(),onZoom:v=>{setZoom(v);if(!v)setSelected(null);},onSlots:setSlots,onFirstFrame:()=>{setFirstFrame(true);},onZoomArrive:poi=>konbiniSfx.section(poi),onZoomStep:()=>konbiniSfx.whoosh(),
     onBall:e=>ballEvent.current(e),
     onPrompt:(x,y,visible)=>{const b=promptRef.current;if(b){/* heat: half-pixel rounding + write only on change, like the island's placeEntryPrompt */const half=(b.offsetWidth||160)/2,vw=window.innerWidth,l=`${Math.round(Math.max(half+8,Math.min(vw-half-8,x))*2)/2}px`,t=`${Math.round(y*2)/2}px`,v=visible?'visible':'hidden';if(b.style.left!==l)b.style.left=l;if(b.style.top!==t)b.style.top=t;if(b.style.visibility!==v)b.style.visibility=v;}}});
    room.current=scene;(window as unknown as {__konbini?:unknown}).__konbini=scene;setReady(true);}catch{setFailed(true);}}).catch(()=>!canceled&&setFailed(true));
@@ -272,7 +272,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  return <main onClickCapture={e=>{if(konbiniClickTarget(e.target))konbiniSfx.click();}} aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back className={styles.backLeft} label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}}/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
-   <div className={styles.headerActions}>{party&&<RoomPartyChip party={party} hidden={covered||!!zoom}/>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
+   <div className={styles.headerActions}>{party&&<span className={styles.hudParty}><RoomPartyChip party={party} hidden={covered||!!zoom} emoteDock/></span>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};swipe.current=zoom?{x:e.clientX,y:e.clientY}:null;}}
    onPointerUp={e=>{const p=tap.current,sw=swipe.current;tap.current=null;swipe.current=null;
@@ -322,7 +322,8 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
     onKeyUp={e=>{if(e.code!=='Space')return;e.preventDefault();e.stopPropagation();const b=e.currentTarget;delete b.dataset.charging;until(b,300);room.current?.endShot();}}
     onBlur={e=>{delete e.currentTarget.dataset.charging;room.current?.endShot(true);}}
     onClick={e=>{if(suppressed(e.currentTarget))return;room.current?.kick();}}><TravelIcon kind="shoot"/></button>
-  </div></div>}
+  </div>
+  {party&&<RoomEmoteDock party={party} near={emoteNear} wheelClass={styles.emoteWheel}/>}</div>}
   {streak&&actionsOn&&<KeepUpCounter key={'streak-'+streak.key} className={styles.streak} newBestClassName={styles.newBest} data-konbini-streak={streak.n} n={streak.n} live={streak.live} best={best} newBest={streak.best}/>}
   {coachTip&&<p className={styles.coachTip} role="status" data-konbini-coach-tip><b>Coach tip</b>{coachTip}</p>}
   {clerkLine&&<aside className={styles.clerkLine} role="status" data-konbini-clerk-line><span>{npc.name}</span><p>{clerkLine}</p></aside>}

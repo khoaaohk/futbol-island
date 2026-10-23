@@ -107,20 +107,25 @@
 .tagActions{justify-content:center}
 .tagActions>.small{flex-basis:100%;text-align:center}
 /* The section pill is centred on the screen, not between Back and the (wider) coin display. */
-.header>.section{position:absolute;left:50%;transform:translateX(-50%);max-width:min(46vw,320px);overflow:hidden;text-overflow:ellipsis}
+.header>.section{max-width:min(46vw,320px);overflow:hidden;text-overflow:ellipsis}
 
 /* ---- Ball actions (Sep 30 2026): the island's round Shoot / Keep-ups buttons (global .travel-actions .touch-actions faces,
  * textured by the [data-konbini-room] entries in globals.css), pinned bottom-right; the joystick keeps bottom-left. The
  * repeated class outranks the island's grid layouts for its ride/map cluster, which the Konbini doesn't have. */
-.ballActions.ballActions.ballActions.ballActions{--action-size:64px;--action-gap:14px;position:absolute;z-index:5;display:flex;align-items:flex-end;gap:var(--action-gap);grid-template-columns:none;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));transition:none}
-.ballActions.ballActions.ballActions.ballActions :global(.touch-actions){display:flex;align-items:flex-end;gap:var(--action-gap);position:static;width:auto;height:auto}
+.ballActions.ballActions.ballActions.ballActions{--action-size:64px;--action-gap:14px;position:absolute;z-index:5;display:grid;grid-template-columns:auto auto;grid-auto-rows:var(--action-size);justify-items:end;align-items:end;gap:var(--action-gap);right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));transition:none}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-actions){display:contents}
+/* Owner, Oct 22 2026: keep-up directly above kick on the right edge, the Emote button immediately left of kick (all three the same --action-size). */
+.ballActions.ballActions.ballActions.ballActions :global(.touch-juggle){grid-column:2;grid-row:1}.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){grid-column:2;grid-row:2}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-emote){grid-column:1;grid-row:2;position:relative;display:grid;place-items:center;padding:0;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);touch-action:manipulation}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-emote)[aria-expanded=true]{background-color:#fff0c3!important}
+/* The wheel opens upward from the cluster, right-aligned, clamped to the screen width. */
+.ballActions .emoteWheel{position:absolute;right:0;bottom:calc(100% + 12px);z-index:12;max-width:calc(100vw - 20px)}.ballActions .emoteWheel :global(.emote-wheel){position:static;max-width:100%}.ballActions .emoteWheel :global(.emote-wheel-strip){width:auto;max-width:calc(100vw - 20px - 2*28px - 2*4px - 22px)}
 .ballActions.ballActions.ballActions.ballActions :global(.touch-actions) button{position:relative;inset:auto;width:var(--action-size);height:var(--action-size);min-width:var(--action-size);min-height:var(--action-size);touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
-.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:72px}
-@media(max-width:600px),(pointer:coarse){.ballActions.ballActions.ballActions.ballActions{--action-size:58px;--action-gap:12px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom)}.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:66px}}
-@media(max-width:350px){.ballActions.ballActions.ballActions.ballActions{--action-size:52px;--action-gap:8px;right:calc(10px + env(safe-area-inset-right,0px))}.ballActions.ballActions.ballActions.ballActions :global(.touch-shoot){--action-size:58px}}
+@media(max-width:600px),(pointer:coarse){.ballActions.ballActions.ballActions.ballActions{--action-size:58px;--action-gap:12px;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom)}}
+@media(max-width:350px){.ballActions.ballActions.ballActions.ballActions{--action-size:52px;--action-gap:8px;right:calc(10px + env(safe-area-inset-right,0px))}}
 
 /* Keep-ups counter: a cream bubble above the buttons; a new best gets a one-shot star sparkle (static with reduced motion). */
-.streak{position:absolute;z-index:6;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));margin:0;display:flex;align-items:baseline;gap:6px;padding:8px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--k-paper) var(--btn-grain) center/128px;background-blend-mode:soft-light;color:var(--k-ink);font-weight:800;font-size:15px;box-shadow:0 4px 0 #193f3733,0 8px 18px #0c1f2226;pointer-events:none;animation:streakIn .18s ease-out both}
+.streak{position:absolute;z-index:6;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(24px + 2*64px + 14px + 12px + env(safe-area-inset-bottom,0px));margin:0;display:flex;align-items:baseline;gap:6px;padding:8px 14px;border:3px solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--k-paper) var(--btn-grain) center/128px;background-blend-mode:soft-light;color:var(--k-ink);font-weight:800;font-size:15px;box-shadow:0 4px 0 #193f3733,0 8px 18px #0c1f2226;pointer-events:none;animation:streakIn .18s ease-out both}
 .streak b{font:normal 26px/1 KonbiniBrush,IslandBrush,Georgia,serif}.streak small{font-size:11px;color:var(--k-soft)}
 .streak[data-live]{animation:none}.streak:not([data-live]){opacity:.92}
 .newBest{position:relative;color:#d8342c;font-weight:900;font-size:13px}
@@ -129,7 +134,7 @@
 .streak[data-best]::before{left:-10px;top:-12px}.streak[data-best]::after{right:-8px;top:-14px;animation-delay:.12s}
 @keyframes streakIn{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
 @keyframes sparkle{0%{transform:scale(.2) rotate(0);opacity:0}40%{transform:scale(1.4) rotate(40deg);opacity:1}100%{transform:scale(1) rotate(90deg);opacity:.9}}
-@media(max-width:600px),(pointer:coarse){.streak{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom) + 84px)}}
+@media(max-width:600px),(pointer:coarse){.streak{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom) + 142px)}}
 
 /* A coach tip (first shot ever; keep-up milestones 5/10/20): the greeting bubble's look, wrapping, under the header. */
 .coachTip{position:fixed;z-index:6;top:calc(84px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:max-content;max-width:min(440px,calc(100% - 32px));margin:0;padding:10px 16px;border-radius:18px;background:#fff1d3;color:#1f3d3a;font-weight:700;font-size:14px;line-height:1.4;box-shadow:0 6px 18px #0c1f2233;pointer-events:none;animation:streakIn .2s ease-out both}
@@ -145,4 +150,20 @@
 /* Narrow screens: the coach tip spans the width under the header, so the cashier's line slides in below it. */
 @media(max-width:760px){.clerkLine{top:calc(236px + env(safe-area-inset-top,0px))}}
 /* Coins on the left and Done on the right (user, Sep 30 2026); Back always on the far left (Oct 14 2026, user). */
-.headerActions{order:-1}.backLeft{order:-2}.coins i{right:auto;left:calc(64px + env(safe-area-inset-left,0px))}
+.coins i{right:auto;left:calc(64px + env(safe-area-inset-left,0px))}
+
+/* Header (owner, Oct 22 2026): 'N here' chip on the LEFT edge, the coins pill at the true screen centre, Done on the RIGHT edge.
+ * Three columns `1fr auto 1fr` (the safe-area insets stay in the header padding). Back (shelf zoom) takes the left cell, the section
+ * pill drops to a centred second row so it never meets the coins. <= 380 px the coins pill trims its padding first. */
+.header.header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:8px;row-gap:8px}
+.header.header>.headerActions{display:contents}
+.header.header .hudParty{grid-column:1;grid-row:1;justify-self:start;min-width:0}
+.header.header .hudWallet{grid-column:2;grid-row:1;justify-self:center}
+.header.header>[data-konbini-done]{grid-column:3;grid-row:1;justify-self:end}
+.header.header>.backLeft{grid-column:1;grid-row:1;justify-self:start}
+.header.header>.section{grid-column:1/-1;grid-row:2;justify-self:center}
+@media(max-width:380px){.header.header{column-gap:4px}.header.header .hudWallet.hudWallet{padding-left:8px;padding-right:8px;gap:4px}}
+@media(max-width:380px){.header.header .hudWallet small{display:none}}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-emote){transition:opacity .18s ease,visibility 0s}
+.ballActions.ballActions.ballActions.ballActions :global(.touch-emote)[data-emote-near="0"]{opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility 0s .18s}
+@media(prefers-reduced-motion:reduce){.ballActions.ballActions.ballActions.ballActions :global(.touch-emote),.ballActions.ballActions.ballActions.ballActions :global(.touch-emote)[data-emote-near="0"]{transition:none}}

@@ -27,7 +27,7 @@ export function roomMemberLine(m: Pick<Member, 'presence' | 'activity' | 'room' 
 }
 
 /** `align`: which edge the wheel / roster open from (the chip's side of the header; the Konbini keeps its HUD on the left). */
-export default function RoomPartyChip({ party, hidden = false, align = 'left' }: { party: RoomPartyHandle; hidden?: boolean; align?: 'left' | 'right' }) {
+export default function RoomPartyChip({ party, hidden = false, align = 'left', emoteDock = false }: { party: RoomPartyHandle; hidden?: boolean; align?: 'left' | 'right'; emoteDock?: boolean }) {
   const state = usePartyState();
   const [open, setOpen] = useState<'none' | 'roster' | 'wheel'>('none');
   const [confirmLeave, setConfirmLeave] = useState(false);
@@ -51,10 +51,10 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left' }:
         <span className={styles.dot} style={{ background: me?.colourHex ?? '#fff' }} aria-hidden="true" />
         <b>{here}</b><small>here</small>
       </button>
-      <button type="button" className={styles.roomEmote} data-room-emote aria-label="Emotes" aria-expanded={open === 'wheel'} onClick={() => setOpen(open === 'wheel' ? 'none' : 'wheel')}>
+      {!emoteDock && <button type="button" className={styles.roomEmote} data-room-emote aria-label="Emotes" aria-expanded={open === 'wheel'} onClick={() => setOpen(open === 'wheel' ? 'none' : 'wheel')}>
         <Glyph name="smile" size={24} />
-      </button>
-      {open === 'wheel' && <div className={styles.roomWheel}><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen('none')} /></div>}
+      </button>}
+      {!emoteDock && open === 'wheel' && <div className={styles.roomWheel}><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen('none')} /></div>}
       {open === 'roster' && (
         <section className={styles.roomSheet} role="dialog" aria-label="Your party" data-room-roster>
           <ul className={styles.members}>
@@ -75,5 +75,26 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left' }:
         </section>
       )}
     </div>
+  );
+}
+
+/** The Konbini's Emote button (owner, Oct 22 2026): a full-size round island action button (`.touch-emote`, sized by the parent's
+ *  `--action-size`) in the bottom-right action cluster instead of the header chip (RoomPartyChip `emoteDock`). Shown only while the
+ *  party is live AND `near` (something to emote at: a friend within 8 m, never the cashier; lib/konbini/emoteRule.ts). When not near it
+ *  fades out (0.18 s, instant under reduced motion) but keeps its grid cell, so keep-up / kick never move; the wheel closes with it. */
+export function RoomEmoteDock({ party, hidden = false, near = true, wheelClass }: { party: RoomPartyHandle; hidden?: boolean; near?: boolean; wheelClass?: string }) {
+  const state = usePartyState();
+  const [open, setOpen] = useState(false);
+  const off = hidden || !near;
+  useEffect(() => { if (off) setOpen(false); }, [off]);
+  const live = state.status === 'live' || state.status === 'reconnecting';
+  if (!live || hidden) return null;
+  return (
+    <>
+      <button type="button" className="touch-emote" data-room-emote data-room-emote-dock data-emote-near={near ? '1' : '0'} aria-label="Emotes" title="Emotes" aria-expanded={open} aria-haspopup="true" aria-hidden={!near || undefined} tabIndex={near ? undefined : -1} onClick={() => setOpen((o) => !o)}>
+        <Glyph name="smile" size={28} />
+      </button>
+      {open && near && <div className={wheelClass} data-room-emote-wheel><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen(false)} /></div>}
+    </>
   );
 }
