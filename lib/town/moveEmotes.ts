@@ -1,9 +1,11 @@
-// Moving emotes (user, Oct 22 2026: "do the walking emotes"): while you walk or run on foot the Emote wheel shows FIVE moving emotes that play
+// Moving emotes (user, Oct 22 2026: "do the walking emotes"): while you walk or run on foot the Emote wheel shows the moving emotes that play
 // ON TOP of your locomotion. Pure data + pose functions + rules, no three.js, no DOM, no allocation per frame.
 //  - Mechanics: an upper-body overlay only (arms, torso lean / twist / side bend, head, hip sway, a small bounce on the walk bob). Velocity,
 //    input and the leg cycle are never touched: the legs keep walking / running underneath (lib/graphics/moveEmotePose.ts writes no leg joint).
+//  - Oct 23 2026 (owner: "emotes while walking or running"): all TEN standing emotes now have a moving version (50..59), so the wheel while
+//    moving mirrors the standing wheel; the ball emotes become mimes (no ball while moving), Laugh / Thanks / Well played get their own.
 //  - Each emote has three very different variants drawn from a shuffled bag (you, a friend: their own bag).
-//  - Local ids 50..54 (ground 0..9, rides 10..18, flying / swimming 20..34, townsperson sets 40..49). Friends only get an existing protocol
+//  - Local ids 50..59 (ground 0..9, rides 10..18, flying / swimming 20..34, townsperson sets 40..49). Friends only get an existing protocol
 //    value (`wire`, Emote 0..9): their avatar plays the moving version when the SENDER'S mode is Walk / Run and they are moving (`moveForWire`).
 //    No new wire values: old clients just see the matching standing emote's bubble.
 //  - A townsperson you pass answers without leaving its route (`moveAnswerFor` / `moveAnswerAt`): a wave, a clap, a fist pump, a nod; the
@@ -13,9 +15,9 @@
 // (added to the head) and both arms (NaN in an arm = leave that arm to the walk swing). px / pz / crouch and the legs stay 0: never written.
 import {BC, BODY_CH} from './emoteBody';
 
-export const MOVE_EMOTE = {WaveOnMove: 50, VictoryJog: 51, Skip: 52, Strut: 53, RunByFive: 54} as const;
+export const MOVE_EMOTE = {WaveOnMove: 50, VictoryJog: 51, Skip: 52, Strut: 53, RunByFive: 54, CallForIt: 55, JuggleOnMove: 56, WellPlayedOnMove: 57, LaughOnMove: 58, ThanksOnMove: 59} as const;
 export type MoveEmote = (typeof MOVE_EMOTE)[keyof typeof MOVE_EMOTE];
-export const isMoveEmote = (e: number): e is MoveEmote => e >= 50 && e <= 54;
+export const isMoveEmote = (e: number): e is MoveEmote => e >= 50 && e <= 59;
 /** Protocol Mode values (multiplayer/protocol/types.ts Mode.Walk / Mode.Run), copied so this module stays dependency-free; tests pin them. */
 export const WIRE_WALK = 0, WIRE_RUN = 1;
 /** On foot above this speed (m/s) the wheel shows the moving set; it goes back to the standing set below MOVE_WHEEL_OFF (hysteresis at ~4 Hz). */
@@ -169,6 +171,109 @@ function fiveJump(t: number, o: O) {
   armTo(o, false, point, -1.5, .9, -.05); armTo(o, true, point, -.9, .2, -1.95);
 }
 
+// ------------------------------------------------------------------------------------------------------------------- JUGGLE ON THE MOVE (3.4 s)
+// No ball while moving (the ball emotes need you standing): a mime of keepy-ups that says "juggle with me" without stopping.
+/** Header bounce: nodding imaginary headers twice a second with a big bounce on each, the hands low in front bouncing an imaginary ball in turn. */
+function juggleHeaders(t: number, o: O) {
+  const e = win(t, .05, 3.35, .3), n = pos(sin(TAU * 2 * t)), b = sin(TAU * t);
+  o[BC.hx] = (-.35 + .8 * n) * e; o[BC.pitch] = (-.15 + .3 * n) * e; o[BC.hop] = .16 * n * e; o[BC.side] = .1 * b * e; o[BC.roll] = .05 * b * e;
+  arm(o, true, e, -.35 - .75 * pos(b), .65, -.6); arm(o, false, e, -.35 - .75 * pos(-b), .65, -.6);
+}
+/** Come-juggle beckon: turned back over the LEFT shoulder, the left hand beckoning a friend to come and juggle, the right arm pumping on. */
+function juggleBeckon(t: number, o: O) {
+  const e = win(t, .05, 3.35, .4), c = sin(TAU * 2.4 * t);
+  o[BC.twist] = .55 * e; o[BC.hy] = .9 * e; o[BC.side] = -.12 * e; o[BC.yaw] = .16 * e; o[BC.hx] = (-.05 + .08 * c) * e;
+  o[BC.hop] = .03 * pos(sin(TAU * 2.6 * t)) * e;
+  arm(o, true, e, -1.35, .9, -1.1 - .7 * c); arm(o, false, e, -.6 + .35 * sin(TAU * 1.3 * t), .2, -1.5);
+}
+/** Chest trap: leaning back with arms swept back behind, the chest popping up three times as if killing a ball dead, a proud chin after. */
+function juggleChest(t: number, o: O) {
+  const e = win(t, .05, 3.35, .35), pop = arc(t, .6, .45) + arc(t, 1.5, .45) + arc(t, 2.4, .45);
+  o[BC.pitch] = (-.26 - .2 * pop) * e; o[BC.hx] = (.3 - .35 * pop) * e; o[BC.hop] = .1 * pop * e; o[BC.roll] = .05 * sin(TAU * .9 * t) * e; o[BC.twist] = .1 * sin(TAU * .9 * t) * e;
+  arm(o, true, e, .6 + .25 * pop, .7, -.2); arm(o, false, e, .6 + .25 * pop, .7, -.2);
+}
+
+// ------------------------------------------------------------------------------------------------------------------- WELL PLAYED ON THE MOVE (3.4 s)
+/** Turn-and-clap: twisted toward whoever played well, clapping at chest height, nodding along with a bounce. */
+function wellClap(t: number, o: O) {
+  const e = win(t, .05, 3.35, .3), c = .5 + .5 * sin(TAU * 2.5 * t), n = sin(TAU * 1.25 * t);
+  o[BC.hx] = (.08 + .14 * n) * e; o[BC.pitch] = (.06 + .06 * n) * e; o[BC.twist] = -.5 * e; o[BC.hy] = -.6 * e; o[BC.hop] = .07 * c * e; o[BC.yaw] = -.1 * e; o[BC.hz] = .1 * sin(TAU * .6 * t) * e;
+  arm(o, true, e, -1.35, .05 + .55 * c, -1.15); arm(o, false, e, -1.35, .05 + .55 * c, -1.15);
+}
+/** Double thumbs-up: elbows out wide, both thumbs up at shoulder height, bobbing up and down, the head tilting side to side with a grin. */
+function wellThumbs(t: number, o: O) {
+  const e = win(t, .05, 3.35, .3), b = sin(TAU * 1.6 * t), s = sin(TAU * .8 * t);
+  o[BC.hz] = .3 * s * e; o[BC.side] = .16 * s * e; o[BC.twist] = .2 * s * e; o[BC.hx] = -.08 * e; o[BC.hop] = .05 * pos(b) * e; o[BC.roll] = .05 * s * e;
+  arm(o, true, e, -.9 - .3 * b, 1.25, -1.5 + .3 * b); arm(o, false, e, -.9 - .3 * b, 1.25, -1.5 + .3 * b);
+}
+/** Point and tap: the right arm points out to the side at whoever played well, then pats the chest, twice. */
+function wellPointTap(t: number, o: O) {
+  const e = win(t, .05, 3.35, .35), p = win(t, .25, 1.15, .25) + win(t, 1.75, 2.65, .25), tap = win(t, 1.15, 1.75, .2) + win(t, 2.65, 3.25, .2);
+  o[BC.side] = (-.25 * p + .05 * tap) * e; o[BC.hy] = (-.65 * p) * e; o[BC.hx] = (.25 * tap - .05) * e; o[BC.twist] = (-.3 * p) * e; o[BC.hop] = .05 * tap * e; o[BC.yaw] = -.08 * p * e;
+  arm(o, false, e, -.4, .2, -.2); armTo(o, false, cl(p) * e, -1.45, 1.35, -.05); armTo(o, false, cl(tap) * e, -1.0, -.2, -2.3); free(o, true);
+}
+
+// ------------------------------------------------------------------------------------------------------------------- CALL FOR IT (Pass it, 3.2 s)
+/** Hand up: the LEFT arm straight up calling for the ball, fingers flicking, glancing back at the passer. */
+function passHandUp(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), f = sin(TAU * 3 * t);
+  o[BC.side] = -.22 * e; o[BC.hy] = .55 * e; o[BC.twist] = .25 * e; o[BC.hx] = -.18 * e; o[BC.roll] = -.06 * e; o[BC.hop] = .03 * pos(sin(TAU * 2.6 * t)) * e;
+  arm(o, true, e, -2.95, .25, -.1 - .25 * pos(f)); free(o, false);
+}
+/** Point into space: leaning forward, the right arm jabbing ahead into the space ("there!"), the left hand waving the passer on. */
+function passPoint(t: number, o: O) {
+  const e = win(t, .05, 3.15, .3), j = arc(t, .5, .5) + arc(t, 1.4, .5) + arc(t, 2.3, .5), w = sin(TAU * 2 * t);
+  o[BC.pitch] = (.22 + .08 * j) * e; o[BC.hx] = (-.2 - .1 * j) * e; o[BC.twist] = -.18 * e; o[BC.hop] = .08 * j * e; o[BC.hy] = .1 * w * e; o[BC.roll] = -.05 * e;
+  arm(o, false, e, -1.5 - .1 * j, .05, -.6 + .55 * j); arm(o, true, e, -.6, .55, -1.2 + .6 * w);
+}
+/** Give-and-go: looking back at the passer with both palms out ("give it"), then a sweep pointing ahead with a twist, twice. */
+function passGiveGo(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), sw = win(t, .9, 1.5, .2) + win(t, 2.2, 2.8, .2);
+  o[BC.twist] = (.4 - .8 * sw) * e; o[BC.pitch] = (.1 - .12 * sw) * e; o[BC.hy] = (.6 - 1.0 * sw) * e; o[BC.hx] = (.18 - .15 * sw) * e; o[BC.hop] = .08 * sw * e;
+  arm(o, true, e, -1.25, .75, -.55); arm(o, false, e, -1.25, .75, -.55);
+  armTo(o, false, cl(sw) * e, -1.9, .35, -.05); armTo(o, true, cl(sw) * e, -.3, .25, -1.3);
+}
+
+// ------------------------------------------------------------------------------------------------------------------- LAUGH ON THE MOVE (3.2 s)
+/** Belly laugh: hands on the belly, the body shaking with laughter in quick little bounces, head bobbing. */
+function laughBelly(t: number, o: O) {
+  const e = win(t, .05, 3.15, .3), q = sin(TAU * 5 * t), s = sin(TAU * .7 * t);
+  o[BC.pitch] = (.24 + .08 * q) * e; o[BC.hx] = (.2 + .15 * q) * e; o[BC.hop] = .05 * pos(q) * e; o[BC.side] = .1 * s * e; o[BC.roll] = .06 * s * e;
+  arm(o, true, e, -.45, .3, -1.95); arm(o, false, e, -.45, .3, -1.95);
+}
+/** Head-back roar: head thrown back laughing at the sky, both hands on top of the head, shoulders shaking. */
+function laughHeadBack(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), q = sin(TAU * 4 * t), s = sin(TAU * .9 * t);
+  o[BC.hx] = (-.6 + .1 * q) * e; o[BC.pitch] = (-.24 + .05 * q) * e; o[BC.hz] = .15 * s * e; o[BC.twist] = .15 * s * e; o[BC.hop] = .04 * pos(q) * e; o[BC.roll] = .05 * s * e;
+  arm(o, true, e, -2.2 + .12 * q, .95, -2.4); arm(o, false, e, -2.2 - .12 * q, .95, -2.4);
+}
+/** Point and laugh: the LEFT arm pointing ahead at the joke, the right hand on the belly, bent sideways with laughter. */
+function laughPoint(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), q = sin(TAU * 4.5 * t);
+  o[BC.side] = (-.32 - .06 * q) * e; o[BC.hz] = -.25 * e; o[BC.hx] = (.1 + .12 * q) * e; o[BC.twist] = -.22 * e; o[BC.hop] = .05 * pos(q) * e; o[BC.roll] = -.08 * e;
+  arm(o, true, e, -1.55 + .15 * q, .4, -.1); arm(o, false, e, -.4, .35, -2.0);
+}
+
+// ------------------------------------------------------------------------------------------------------------------- THANKS ON THE MOVE (3.2 s)
+/** Hand on heart: the right hand pressed to the chest, two warm nods, a slight bow. */
+function thanksHeart(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), n = arc(t, .8, .6) + arc(t, 1.9, .6);
+  o[BC.hx] = (.05 + .4 * n) * e; o[BC.pitch] = (.05 + .2 * n) * e; o[BC.hy] = .3 * e; o[BC.twist] = .12 * e; o[BC.hop] = .03 * n * e; o[BC.roll] = .07 * n * e;
+  arm(o, false, e, -.95, -.15, -2.3); free(o, true);
+}
+/** Salute: a crisp salute at the brow, chin up, held, then snapped away with a little hop. */
+function thanksSalute(t: number, o: O) {
+  const e = win(t, .05, 3.15, .3), snap = arc(t, 2.4, .4);
+  o[BC.hx] = (-.22 + .1 * snap) * e; o[BC.pitch] = -.14 * e; o[BC.hy] = -.35 * e; o[BC.twist] = -.15 * e; o[BC.hop] = .1 * snap * e; o[BC.yaw] = -.08 * e;
+  arm(o, false, e, -1.95 + .6 * snap, 1.1, -2.35 + 1.2 * snap); free(o, true);
+}
+/** Prayer bow: both hands together up in front of the face, two deep bows from the waist with a nod each. */
+function thanksPrayer(t: number, o: O) {
+  const e = win(t, .05, 3.15, .35), b = arc(t, .7, .7) + arc(t, 1.8, .7);
+  o[BC.pitch] = (.08 + .45 * b) * e; o[BC.hx] = (.08 + .4 * b) * e; o[BC.hop] = .04 * b * e; o[BC.roll] = .04 * sin(TAU * .8 * t) * e; o[BC.hz] = .1 * sin(TAU * .8 * t) * e;
+  arm(o, true, e, -1.6, -.05, -2.1); arm(o, false, e, -1.6, -.05, -2.1);
+}
+
 const V = (id: string, name: string, pose: MovePoseFn): MoveVariant => ({id, name, pose});
 export const MOVE_SCRIPTS: readonly MoveScript[] = [
   {emote: MOVE_EMOTE.WaveOnMove, label: 'Wave on the move', icon: 'hand', emoji: '\u{1F44B}', seconds: 3.4, wire: 0, hitAt: -1, npcArm: 0, npcSlow: 1, npcNod: 0, npcBubble: 0,
@@ -181,12 +286,24 @@ export const MOVE_SCRIPTS: readonly MoveScript[] = [
     variants: [V('collar', 'Collar pop', strutCollar), V('hair', 'Hair flip', strutHair), V('guns', 'Finger guns', strutGuns)]},
   {emote: MOVE_EMOTE.RunByFive, label: 'Run-by high five', icon: 'move-five', emoji: '\u{1F64C}', seconds: 2.8, wire: 2, hitAt: HIT, npcArm: 2, npcSlow: .35, npcNod: 0, npcBubble: 2,
     variants: [V('side', 'Side high five', fiveSide), V('low', 'Low five', fiveLow), V('jump', 'Jump five', fiveJump)]},
+  {emote: MOVE_EMOTE.CallForIt, label: 'Call for it', icon: 'pass', emoji: '\u{1F64B}', seconds: 3.2, wire: 6, hitAt: -1, npcArm: 0, npcSlow: 1, npcNod: 1, npcBubble: 6,
+    variants: [V('hand-up', 'Hand up', passHandUp), V('point', 'Point into space', passPoint), V('give-go', 'Give-and-go', passGiveGo)]},
+  {emote: MOVE_EMOTE.JuggleOnMove, label: 'Juggle on the move', icon: 'juggle-air', emoji: '\u{1F938}', seconds: 3.4, wire: 3, hitAt: -1, npcArm: 0, npcSlow: 1, npcNod: 1, npcBubble: 3,
+    variants: [V('headers', 'Header bounce', juggleHeaders), V('beckon', 'Come-juggle beckon', juggleBeckon), V('chest', 'Chest trap', juggleChest)]},
+  {emote: MOVE_EMOTE.WellPlayedOnMove, label: 'Well played on the move', icon: 'heart', emoji: '\u{1F44F}', seconds: 3.4, wire: 5, hitAt: -1, npcArm: 5, npcSlow: 1, npcNod: 1, npcBubble: 5,
+    variants: [V('clap', 'Jogging applause', wellClap), V('thumbs', 'Double thumbs-up', wellThumbs), V('point-tap', 'Point and tap', wellPointTap)]},
+  {emote: MOVE_EMOTE.LaughOnMove, label: 'Laugh on the move', icon: 'smile', emoji: '\u{1F602}', seconds: 3.2, wire: 7, hitAt: -1, npcArm: 5, npcSlow: 1, npcNod: 1, npcBubble: 7,
+    variants: [V('belly', 'Belly laugh', laughBelly), V('head-back', 'Head-back roar', laughHeadBack), V('point', 'Point and laugh', laughPoint)]},
+  {emote: MOVE_EMOTE.ThanksOnMove, label: 'Thanks on the move', icon: 'thanks', emoji: '\u{1F64F}', seconds: 3.2, wire: 9, hitAt: -1, npcArm: 0, npcSlow: 1, npcNod: 1, npcBubble: 9,
+    variants: [V('heart', 'Hand on heart', thanksHeart), V('salute', 'Salute', thanksSalute), V('prayer', 'Prayer bow', thanksPrayer)]},
 ];
 export const MOVE_VARIANT_COUNT = 3;
 export const moveScriptFor = (e: number): MoveScript | undefined => MOVE_SCRIPTS.find(s => s.emote === e);
 export const MOVE_EMOTE_EMOJI: Record<number, string> = Object.fromEntries(MOVE_SCRIPTS.map(s => [s.emote, s.emoji]));
-/** The wheel while you walk / run: the five moving emotes, Wave on the move first. */
-export const moveWheel = () => MOVE_SCRIPTS.map(s => ({emote: s.emote as number, icon: s.icon, label: s.label}));
+/** The standing wheel's order by wire value (lib/town/emoteReact.ts LOCAL_EMOTES): Wave, High five, Cheer, Pass it, Juggle, Well played, Laugh, Dance, Thanks, Show off. */
+const WHEEL_WIRE_ORDER = [0, 2, 1, 6, 3, 5, 7, 8, 9, 4] as const;
+/** The wheel while you walk / run: all ten moving emotes in the standing wheel's order, Wave on the move first. */
+export const moveWheel = () => WHEEL_WIRE_ORDER.map(w => MOVE_SCRIPTS.find(s => s.wire === w)!).map(s => ({emote: s.emote as number, icon: s.icon, label: s.label}));
 /** Analytics variant index (countIds.ts EMOTE_VARIANT_COUNTS.move): emote order × 3 + variant. */
 export const moveVariantIndex = (emote: number, v: number): number => { const i = MOVE_SCRIPTS.findIndex(s => s.emote === emote); return i < 0 ? -1 : i * MOVE_VARIANT_COUNT + v; };
 

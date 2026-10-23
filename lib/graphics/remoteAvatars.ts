@@ -392,7 +392,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
   setMuted(ids){for(let i=0;i<list.length;i++){const e=list[i],m=ids.has(e.id);e.muted=m;if(m&&e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}},
   bumpField(id,nx,ny,nz){const e=byId.get(id);if(!e||!e.shield)return;e.shake=1;e.ripple=0;e.hx=nx;e.hy=ny;e.hz=nz;},
-  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;const ms=moveForWire(em,e.lastMode,e.spd);e.mv=ms?ms.emote:-1;e.mvDur=ms?ms.seconds:0;if(ms)e.mvV=pickMoveVariant(ms.emote,MOVE_ROLE.Friend);/* walking / running: the moving version over their walk cycle */e.hf=!ms&&!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;if(!ms&&em===Emote.PassBall||em===Emote.JuggleWithMe){e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
+  emote(id,em){const e=byId.get(id);if(!e||e.muted||e.hidden||e.shield)return false;/* inside the force field: no emotes from them */e.emote=em;e.emoteAge=0;const ms=moveForWire(em,e.lastMode,e.spd);e.mv=ms?ms.emote:-1;e.mvDur=ms?ms.seconds:0;if(ms)e.mvV=pickMoveVariant(ms.emote,MOVE_ROLE.Friend);/* walking / running: the moving version over their walk cycle */e.hf=!ms&&!flourishForWire(em,e.lastMode)?highFivePlan(em,false,Math.random,hfBag):-1;if(!ms&&(em===Emote.PassBall||em===Emote.JuggleWithMe)){/* the moving Call for it / Juggle are mimes: no ball */e.ball??=createPassBallOut();pickBallRoutine(e.ball,em===Emote.PassBall?'pass':'solo');}e.rig?.setExpression('happy');return true;},
   update(dt,poses,camera,reduced,local,balls){
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
@@ -472,9 +472,9 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      if(e.emote>=0&&!reduced){
       const em=e.emote,age=e.emoteAge;
       if(e.hf<0&&!fs0&&e.mv<0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=b.jump;motion.called=b.called;}
-      if(e.hf<0&&!fs0&&e.ball&&(em===Emote.PassBall||em===Emote.JuggleWithMe))friendBallMotion(e.ball,em===Emote.JuggleWithMe,age,pose.yaw,motion);/* the ball routines' body (lib/town/emoteBallPlay.ts) */
+      if(e.hf<0&&!fs0&&e.mv<0&&e.ball&&(em===Emote.PassBall||em===Emote.JuggleWithMe))friendBallMotion(e.ball,em===Emote.JuggleWithMe,age,pose.yaw,motion);/* the ball routines' body (lib/town/emoteBallPlay.ts) */
      }
-     if(e.ball&&(reduced||!(e.emote===Emote.PassBall||e.emote===Emote.JuggleWithMe))&&motion.turnSmoothing!==undefined)clearBallMotion(motion);
+     if(e.ball&&(reduced||e.mv>=0||!(e.emote===Emote.PassBall||e.emote===Emote.JuggleWithMe))&&motion.turnSmoothing!==undefined)clearBallMotion(motion);
      rig.update(pose.x,pose.z,step,clock,reduced,motion);
      if(e.emote>=0&&e.mv>=0&&!reduced)applyMoveEmote(rig.root,e.mv,e.mvV,e.emoteAge,moveWeight(e.emoteAge,e.mvDur));/* a moving emote: layered on their own walk / run cycle */
      else if(e.emote>=0&&!reduced&&e.hf<0&&!fs0&&e.emote!==Emote.JuggleWithMe&&e.emote!==Emote.PassBall)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));

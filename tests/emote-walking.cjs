@@ -1,5 +1,5 @@
-// Moving emotes (user, Oct 22 2026: "do the walking emotes"). While you walk / run on foot the wheel shows five moving emotes layered on the
-// locomotion: never stopping or slowing you, no zoom, legs untouched. Pure checks on lib/town/moveEmotes.ts (sets, variants, bags, overlay
+// Moving emotes (user, Oct 22 2026: "do the walking emotes"). While you walk / run on foot the wheel shows the moving emotes (Oct 23: one per standing
+// emote, ten) layered on the locomotion: never stopping or slowing you, no zoom, legs untouched. Pure checks on lib/town/moveEmotes.ts (sets, variants, bags, overlay
 // bounds, pairwise difference, rules), the writer, the camera rules, plus source scans of the wiring (Town, townsfolk, friends, analytics).
 const assert=require('node:assert'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8');
@@ -19,19 +19,19 @@ const RA=[.05,.12,-.1];
 const pose=(e,v,a)=>Array.from(M.sampleMovePose(e,v,a,new Float32Array(B.BODY_CH)));
 const ALLV=[];for(const s of M.MOVE_SCRIPTS)s.variants.forEach((d,v)=>ALLV.push({s,v,id:s.label+'/'+d.id}));
 
-t('five moving emotes, three named variants each, local ids 50..54, wire values reuse the protocol Emote 0..9',()=>{
- assert.equal(M.MOVE_SCRIPTS.length,5);assert.deepEqual({...M.MOVE_EMOTE},{WaveOnMove:50,VictoryJog:51,Skip:52,Strut:53,RunByFive:54});
- assert.deepEqual(M.MOVE_SCRIPTS.map(s=>s.wire),[0,1,8,4,2],'wave → Wave, jog → Cheer, skip → Dance, strut → ShowOff, run-by five → HighFive');
- assert.equal(new Set(M.MOVE_SCRIPTS.map(s=>s.wire)).size,5,'one wire each, so a friend sees the right one');
+t('ten moving emotes (one per standing emote), three named variants each, local ids 50..59, wire values reuse the protocol Emote 0..9',()=>{
+ assert.equal(M.MOVE_SCRIPTS.length,10);assert.deepEqual({...M.MOVE_EMOTE},{WaveOnMove:50,VictoryJog:51,Skip:52,Strut:53,RunByFive:54,CallForIt:55,JuggleOnMove:56,WellPlayedOnMove:57,LaughOnMove:58,ThanksOnMove:59});
+ assert.deepEqual(M.MOVE_SCRIPTS.map(s=>s.wire),[0,1,8,4,2,6,3,5,7,9],'wave → Wave, jog → Cheer, skip → Dance, strut → ShowOff, run-by five → HighFive, call → PassBall, juggle, well played, laugh, thanks');
+ assert.equal(new Set(M.MOVE_SCRIPTS.map(s=>s.wire)).size,10,'one wire each: every standing emote has a moving version a friend sees');
  const ids=new Set();for(const s of M.MOVE_SCRIPTS){assert.equal(s.variants.length,3,s.label);assert(s.seconds>=2.6&&s.seconds<=4,s.label+' length');for(const d of s.variants){ids.add(s.emote+d.id);assert(d.name.length>3);}}
- assert.equal(ids.size,15);for(let e=50;e<=54;e++)assert(M.isMoveEmote(e));for(const e of [0,9,18,34,49,55])assert(!M.isMoveEmote(e));
+ assert.equal(ids.size,30);for(let e=50;e<=59;e++)assert(M.isMoveEmote(e));for(const e of [0,9,18,34,49,60])assert(!M.isMoveEmote(e));
  const proto=read('multiplayer/protocol/types.ts');assert(/Walk: 0, Run: 1/.test(proto),'Mode.Walk / Mode.Run pinned');assert.equal(M.WIRE_WALK,0);assert.equal(M.WIRE_RUN,1);
  assert(/Emote = \{ Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, ShowOff: 4, WellPlayed: 5, PassBall: 6, Laugh: 7, Dance: 8, Thanks: 9 \}/.test(proto),'no new wire values');
  const R=load('lib/town/emoteReact.ts',{celebrations:{celebrationJump(){}}});for(const s of M.MOVE_SCRIPTS)assert.equal(R.EMOTE_EMOJI[s.emote],s.emoji,'bubble emoji '+s.label);
 });
-t('the moving wheel: five buttons, Wave on the move first; the EmoteWheel picks it for ctx "move"',()=>{
- const w=M.moveWheel();assert.equal(w.length,5);assert.equal(w[0].label,'Wave on the move');assert.equal(w[0].icon,'hand');
- const chip=read('components/party/PartyChip.tsx');for(const x of w)if(x.icon!=='hand')assert(chip.includes(`'${x.icon}':`),'glyph '+x.icon);
+t('the moving wheel: ten buttons in the standing wheel\'s order, Wave on the move first; the EmoteWheel picks it for ctx "move"',()=>{
+ const w=M.moveWheel();assert.equal(w.length,10);const R0=load('lib/town/emoteReact.ts',{celebrations:{celebrationJump(){}}});assert.deepEqual(w.map(x=>M.moveScriptFor(x.emote).wire),R0.LOCAL_EMOTES.map(x=>x.emote),'same order as standing');assert.equal(w[0].label,'Wave on the move');assert.equal(w[0].icon,'hand');
+ const chip=read('components/party/PartyChip.tsx');const std=new Set(R0.LOCAL_EMOTES.map(x=>x.icon));for(const x of w)if(!std.has(x.icon))assert(chip.includes(`'${x.icon}':`),'glyph '+x.icon);
  assert(/ctx === 'move' \? moveWheel\(\)/.test(read('components/party/EmoteWheel.tsx')));
 });
 t('shuffled bag of three: never the same twice in a row, every bag uses all three; you and a friend draw separately',()=>{
@@ -39,7 +39,7 @@ t('shuffled bag of three: never the same twice in a row, every bag uses all thre
  for(let i=0;i<300;i++){const v=M.nextMoveVariant(r,bag);assert(v>=0&&v<3);assert.notEqual(v,last);last=v;seen.push(v);}
  for(let i=0;i<300;i+=3)assert.equal(new Set(seen.slice(i,i+3)).size,3);
  for(const s of M.MOVE_SCRIPTS){let l=-1;for(let i=0;i<30;i++){const v=M.pickMoveVariant(s.emote,M.MOVE_ROLE.Friend,r);assert.notEqual(v,l);l=v;}}
- assert.equal(M.moveVariantIndex(50,0),0);assert.equal(M.moveVariantIndex(54,2),14);assert.equal(M.moveVariantIndex(7,0),-1);
+ assert.equal(M.moveVariantIndex(50,0),0);assert.equal(M.moveVariantIndex(54,2),14);assert.equal(M.moveVariantIndex(59,2),29);assert.equal(M.moveVariantIndex(7,0),-1);
 });
 
 // ---- the overlay: upper body only, inside the bounds ----
@@ -71,7 +71,7 @@ t('whole upper body, not a static arm: torso, head and arms all move; hops or sw
 const UPPER=[C.hop,C.yaw,C.pitch,C.twist,C.side,C.hx,C.hy,C.hz,C.lsx,C.lsz,C.lel,C.rsx,C.rsz,C.rel,C.roll],W=new Array(24).fill(1);W[C.hop]=3;
 const sig=x=>Array.from({length:32},(_,i)=>{const o=pose(x.s.emote,x.v,(i+.5)/32*x.s.seconds);for(let k=C.lsx;k<=C.rel;k++)if(Number.isNaN(o[k]))o[k]=RA[(k-C.lsx)%3];return o;});
 const rms=(A,Bs)=>{let s=0,c=0;for(let i=0;i<A.length;i++)for(const j of UPPER){const e=(A[i][j]-Bs[i][j])*W[j];s+=e*e;c++;}return Math.sqrt(s/c);};
-t('all 15 moving variants differ pairwise (weighted RMS over the upper body, threshold .3 like emote-body)',()=>{
+t('all 30 moving variants differ pairwise (weighted RMS over the upper body, threshold .3 like emote-body)',()=>{
  const l=ALLV.map(x=>({id:x.id,s:sig(x)}));let min=1e9,who='';
  for(let i=0;i<l.length;i++)for(let j=i+1;j<l.length;j++){const d=rms(l[i].s,l[j].s);if(d<min){min=d;who=l[i].id+' / '+l[j].id;}assert(d>=.3,l[i].id+' vs '+l[j].id+' '+d.toFixed(3));}
  console.log('  closest moving pair: '+who+' RMS '+min.toFixed(3));
@@ -111,7 +111,7 @@ t('camera: a moving emote never zooms (emoteCamSkip "move"); the standing "movin
 });
 t('friends: the SENDER walking / running plays the moving version of the wire value; idle or flying keeps the standing / flying one',()=>{
  assert.equal(M.moveForWire(0,0,2).emote,50);assert.equal(M.moveForWire(1,1,5).emote,51);assert.equal(M.moveForWire(8,0,2).emote,52);assert.equal(M.moveForWire(4,0,2).emote,53);assert.equal(M.moveForWire(2,1,4).emote,54);
- assert.equal(M.moveForWire(0,13,0),undefined,'Mode.Idle');assert.equal(M.moveForWire(0,0,.1),undefined,'not moving');assert.equal(M.moveForWire(0,5,8),undefined,'Mode.Jetpack');assert.equal(M.moveForWire(6,0,2),undefined,'Pass it has no moving version');
+ assert.equal(M.moveForWire(0,13,0),undefined,'Mode.Idle');assert.equal(M.moveForWire(0,0,.1),undefined,'not moving');assert.equal(M.moveForWire(0,5,8),undefined,'Mode.Jetpack');for(const [w,e] of [[6,55],[3,56],[5,57],[7,58],[9,59]])assert.equal(M.moveForWire(w,0,2).emote,e,'wire '+w+' has a moving version');
 });
 t('townsfolk you pass: a light answer on their route; only the run-by five slows them, briefly; a seated one turns its head and waves a little',()=>{
  const out={slow:1,arm:-1,armW:0,nod:0,look:0};
@@ -120,7 +120,7 @@ t('townsfolk you pass: a light answer on their route; only the run-by five slows
   if(s.emote===M.MOVE_EMOTE.RunByFive){assert(minSlow<.6,'a brief slow-down');M.moveAnswerAt(a,2.2,out);assert.equal(out.slow,1,'then its own pace');}else assert.equal(minSlow,1,s.label+' never slows');
   M.moveAnswerAt(a,1,out);assert(out.look>.9,'head turned to you');assert(out.armW>.9);
   const st=M.moveAnswerFor(s.emote,true);assert.equal(st.arm,0);assert.equal(st.slow,1);M.moveAnswerAt(st,1,out);assert(out.armW<=.6,'a small wave');}
- assert.equal(M.moveAnswerFor(3,false),null);
+ assert.equal(M.moveAnswerFor(3,false),null);assert.equal(M.moveAnswerFor(60,false),null);
  const npcs=read('lib/graphics/islandNpcs.ts'),pb=npcs.slice(npcs.indexOf('const passBy='),npcs.indexOf('\n',npcs.indexOf('const passBy=')));
  assert(/e\.mx=reduced\?null:\{a,age:0\}/.test(pb)&&!/standUp|emoteStep/.test(pb),'passBy: no stand-up, no step-in; reduced motion = bubble only');
  assert(/if\(entry\.mx&&!reduced&&!stunned\)/.test(npcs)&&/entry\.head\.rotation\.y\+=/.test(npcs),'the head turns, arms answer, never under reduced motion');
@@ -160,11 +160,14 @@ t('friends: remoteAvatars plays the moving overlay on the friend walk cycle (the
  assert(/const ms=moveForWire\(em,e\.lastMode,e\.spd\)/.test(ra)&&/pickMoveVariant\(ms\.emote,MOVE_ROLE\.Friend\)/.test(ra));
  assert(/if\(e\.emote>=0&&e\.mv>=0&&!reduced\)applyMoveEmote\(rig\.root,e\.mv,e\.mvV,e\.emoteAge,moveWeight\(e\.emoteAge,e\.mvDur\)\)/.test(ra),'layered after rig.update, never under reduced motion');
  assert(/e\.hf<0&&!fs0&&e\.mv<0\)\{const b=emoteBody/.test(ra),'no standing hop / called arm on top');
+ // Oct 23: the moving Call for it / Juggle are mimes: a friend's walking avatar never starts the ball routine (it would stop their walk)
+ assert(/if\(!ms&&\(em===Emote\.PassBall\|\|em===Emote\.JuggleWithMe\)\)\{/.test(ra),'no ball routine picked for a moving emote');
+ assert(/e\.hf<0&&!fs0&&e\.mv<0&&e\.ball&&/.test(ra)&&/reduced\|\|e\.mv>=0\|\|!\(e\.emote===Emote\.PassBall/.test(ra),'no ball body while moving, old ball motion cleared');
 });
 t('no analytics imports from the emote / party graphics; ids and labels for the new emotes',()=>{
  const imp=/(?:import[^'"`]*from\s*)['"`]([^'"`]+)['"`]/g;
  for(const f of ['lib/town/moveEmotes.ts','lib/graphics/moveEmotePose.ts','lib/graphics/remoteAvatars.ts','lib/graphics/islandNpcs.ts','components/party/EmoteWheel.tsx'])for(const m of read(f).matchAll(imp))assert(!/analytics/.test(m[1]),f+' imports '+m[1]);
- const K=read('lib/analytics/countIds.ts');assert(/\[50,54\]\]/.test(K)&&/'walk'\] as const/.test(K)&&/move:15\}/.test(K));
+ const K=read('lib/analytics/countIds.ts');assert(/\[50,59\]\]/.test(K)&&/'walk'\] as const/.test(K)&&/move:30\}/.test(K));
  assert(/MOVE_SCRIPTS\)out\[s\.emote\]=\{label:s\.label,group:'walk'\}/.test(read('lib/analytics/emoteLabels.ts')));
  assert(/\['walk','Walking or running/.test(read('app/admin/EmoteSection.tsx')));
  assert(/[Mm]oving emotes/.test(read('docs/ui/HUD_STACK.md')),'HUD_STACK notes');
