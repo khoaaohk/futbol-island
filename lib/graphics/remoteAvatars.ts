@@ -35,7 +35,7 @@ import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
-import {RIDE_SCALE,createRemoteRides,rideKindFor} from './remoteRides';import {beanShapeOf} from './beanGearFit';
+import {RIDE_SCALE,createRemoteRides,rideKindFor} from './remoteRides';import {createRiderSpots,type RiderSpots} from './rideSplash';import {beanShapeOf} from './beanGearFit';
 import {applyBump,createFriendBumps,unBump,type LocalBump} from './friendBump';import {applyTumbleRoot,createFriendTumbles} from './ballTumble';import {createBumpReact,type BumpReact} from '../town/friendBump';
 
 /** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
@@ -86,6 +86,8 @@ export interface RemoteAvatars{
  debugEmotes():{id:MemberId;emote:number;age:number;x:number;z:number;yaw:number}[];
  /** Friend bumps (friendBump.ts): the local player's cosmetic overlay this frame (Town applies it around the render only) and bumps so far. */
  readonly localBump:LocalBump;readonly bumps:number;
+ /** Friends drawn on a ride last frame (rideSplash.ts: the splash in the shallows); preallocated, `n` = how many. */
+ readonly riders:RiderSpots;
  dispose():void;
 }
 
@@ -260,7 +262,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const jets=createRemoteJets();root.add(jets.root);
  const bumps=createFriendBumps(root);
  // Friends' scooters / bikes / mopeds under the shown rigs only (same cap as the bodies): instanced, baked on the first friend ride.
- const rides=createRemoteRides(BATCH_CAPACITY);root.add(rides.root);
+ const rides=createRemoteRides(BATCH_CAPACITY);root.add(rides.root);const riders=createRiderSpots(BATCH_CAPACITY);
  // Friends' balls: BALL_MAX meshes sharing ONE geometry + material: the classic island ball (cream + six pentagons baked as
  // vertex colours, lib/graphics/ballAppearance.ts), on the island and in every room. The wire carries no skin, so never the local skin.
  const ballGeo=createClassicBallGeometry(BALL_RADIUS),ballMat=createClassicBallMaterial();
@@ -395,7 +397,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  }
  const tumbles=createFriendTumbles();// ball knock-overs (relay v1.6): one small state per friend, made on their first knock
  return {
-  root,labels,
+  root,labels,riders,
   get shown(){return shownCount;},
   get tumbling(){return tumbles.active;},
   tumble(id,dir,reduced){const e=byId.get(id);if(!e||e.hidden||e.shield||e.door<1)return false;return tumbles.start(id,dir,reduced);},
@@ -436,7 +438,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    if(list.length===0){
     // The batch's instanced bodies hold last frame's count until begin()/end() clear them: the last friend leaving (timeout, Leave)
     // must empty it here too, or their body stays drawn forever (ghost, Oct 23 2026) while the field, ring and label are gone.
-    batch.begin();batch.end();rides.begin();rides.end();
+    batch.begin();batch.end();rides.begin();rides.end();riders.n=0;
     shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);bumps.detect(dt,list,poses,null,reduced,true);bumps.update(dt);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
@@ -451,7 +453,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    recheck+=dt;
    if(recheck>=ADMIT_RECHECK){const step=recheck;recheck=0;if(!saver)recheckCaps(step,reduced,poses,local);}
    tumbles.step(dt);bumps.detect(dt,list,poses,local,reduced,saver);/* friend bumps: last frame's shown states, before the pass that applies them */
-   batch.begin();fields.begin();let shown=0;rides.begin();
+   batch.begin();fields.begin();let shown=0;rides.begin();riders.n=0;
    for(let i=0;i<list.length;i++){
     const e=list[i];
     // A demoted friend's body shrinks away (before every early-out, so an off-screen one still finishes), then the rig is released.
@@ -533,7 +535,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     batch.draw(root3);e.shown=true;shown++;
     // Their ride under them (none inside the force field: the pose drops the ride there too); it follows the root, so flourishes and bump wobbles / skids carry it.
     const rk=shield?-1:rideKindFor(pose.mode);
-    if(rk>=0){e.ra+=Math.min(dt,.1)*pose.speed;if(e.ra>1e5)e.ra=0;rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra);}
+    if(rk>=0){e.ra+=Math.min(dt,.1)*pose.speed;if(e.ra>1e5)e.ra=0;rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra);if(riders.n<BATCH_CAPACITY){const j=riders.n++;riders.x[j]=root3.position.x;riders.y[j]=root3.position.y;riders.z[j]=root3.position.z;riders.yaw[j]=root3.rotation.y;riders.speed[j]=pose.speed;}}
     // Colour ring at the feet; the emote pulse is skipped under reduced motion.
     ringAdd(pose.x,pose.y,pose.z,Math.sqrt(d2),e.colour,(e.emote>=0&&!reduced?1+.18*Math.sin(e.emoteAge*14):1)*ringSizeFor(pose.mode),k,friendRingPitch(e,pose,dt),pose.yaw);
     placeLabel(e,pose,k,reduced);

@@ -15,6 +15,7 @@ import { displayName, partyStore } from './store';
 import * as T3 from 'three';
 
 // The shared parts (one connection per page, Hide / Mute, the look, the friend core) live in roomParty.ts, used by rooms too.
+import type { RiderSpots } from '../graphics/rideSplash';
 export { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mutedFriends, partyLook } from './roomParty';
 
 /** activity: NOT_BUSY (-1) while playing, else the Activity code (lib/multiplayer/presence.ts townActivity); optional for old callers. */
@@ -30,6 +31,8 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   readonly meRing: boolean;
   /** Friend bumps: the local player's cosmetic overlay this frame (Town applies it around renderer.render only); null when not drawn. */
   readonly localBump: LocalBump | null;
+  /** Friends drawn on a scooter / bike / moped last frame (rideSplash.ts); null when no friend is drawn. */
+  readonly riders: RiderSpots | null;
   /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
   readonly shown: number; readonly rigs: number;
   /** Tests / headless checks only: friends' emote state (remoteAvatars.debugEmotes). */
@@ -221,6 +224,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   return {
     get meRing() { return meRingOn; },
     get localBump() { return core.live && meRingOn ? avatars.localBump : null; },
+    get riders() { return core.live && avatars.root.visible && avatars.riders.n > 0 ? avatars.riders : null; },
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
     get tumbling() { return avatars.tumbling; },
