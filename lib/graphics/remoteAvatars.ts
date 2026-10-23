@@ -449,7 +449,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(!frustum.intersectsSphere(sphere)){hideEntry(e);continue;}
     const k=Math.max(.001,pose.fade*saverFade*e.door);
     e.d2=d2;e.ld2=local?(pose.x-local.x)*(pose.x-local.x)+(pose.z-local.z)*(pose.z-local.z):d2;
-    if(pose.mode===Mode.Jetpack&&!shield&&e.door>=1&&d2<JET_RANGE*JET_RANGE&&candJet.length<PARTY_MAX)candJet.push(e);
+    if(pose.mode===Mode.Jetpack&&e.door>=1&&d2<JET_RANGE*JET_RANGE&&candJet.length<PARTY_MAX)candJet.push(e);
     // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
     if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,FS*(shield?.86+.14*e.field:1+(1-e.field)*.28),reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig){ // beyond the rig cap: colour ring + label (+ emote bubble) only, no body
@@ -469,7 +469,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1);e.acc=0;
      const mode=pose.mode;e.lastMode=mode;
-     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield?undefined:travelFor(mode);
+     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
      motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
      motion.dribbling=!shield&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;

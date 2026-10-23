@@ -1,10 +1,9 @@
 'use client';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
-import {useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
+import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
 import {Icon} from './Icon';
 import IslandOverview,{JETPACK_GLYPH,type MapDestination,type MapFootprint} from './IslandOverview';
-import {farDiveSpotIds,nearestUndiscovered,reefStore} from '@/lib/town/water/reefDiscovery';
 import {FLIGHT_BOUNDS} from '@/lib/town/simulation';
 import {CAY_SHORE} from '@/lib/town/coralCay';
 import {SUMMIT_SHORE} from '@/lib/town/summitIsle';
@@ -26,17 +25,6 @@ const LEGEND:{mark:string;fill:string;label:string;ring?:boolean;tip?:MapMarkKin
  {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
  {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
 function LegendMark({mark,fill,ring}:{mark:string;fill:string;ring?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/>{mark==='jet'?<path d={JETPACK_GLYPH} transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#294f43" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>:<text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text>}</>}</svg>;}
-/** "Nearest reef to explore" (Oct 21 2026, reefDiscovery.ts): one line under the key with the nearest zone not yet explored and how
- *  far it is from where the player stands (flagged "fly there" when it is beyond the swim range). Worked out once per open. */
-function NearestReef({position,open}:{position:{x:number;z:number};open:boolean}){
- const discovered=useSyncExternalStore(reefStore.subscribe,()=>reefStore.get().discovered,()=>null);
- useEffect(()=>{if(open)reefStore.refresh();},[open]);
- if(!discovered)return null;
- const n=nearestUndiscovered(position.x,position.z,discovered);
- if(!n)return <p className={styles.reefHint} data-reef-nearest="all">You have explored every reef. Reef Keeper!</p>;
- const far=farDiveSpotIds().has(n.spot.id),m=Math.max(10,Math.round(n.distance/10)*10);
- return <p className={styles.reefHint} data-reef-nearest={n.spot.id}><LegendMark mark="E" fill="#a9dcf5"/><span><b>Nearest reef to explore:</b> {n.spot.name}, {m} m away{far?'. Too far to swim: fly there':''}</span></p>;
-}
 /** One key tooltip at a time, in dialog px: `x` the mark's centre, `top`/`bottom` its edges (above, or below if no room). */
 type Tip={kind:MapMarkKind;x:number;top:number;bottom:number};
 const TIP_GAP=10,TIP_PAD=8;
@@ -102,7 +90,7 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  const stageStyle:CSSProperties=scale?{width:stageW,height:stageH,transform:`translate3d(${-pan.x}px,${-pan.y}px,0)`}:{visibility:'hidden'};
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="town-dialog-title" onCancel={e=>{e.preventDefault();if(tip){setTip(null);return;}onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'&&tip){e.preventDefault();setTip(null);}}} onKeyUp={e=>e.stopPropagation()}>
  <section className={`${styles.panel} ${shell.shell} ${shell.white}`}><header className={shell.header}><div><h2 id="town-dialog-title">Pick your patch</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
- <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend>{LEGEND.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul><NearestReef position={position} open={open}/><div className={styles.frame} onKeyDown={onKeyDown}>
+ <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend>{LEGEND.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul><div className={styles.frame} onKeyDown={onKeyDown}>
   <div ref={view} className={styles.map} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
    <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect}/></div>
   </div>

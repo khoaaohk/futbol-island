@@ -428,4 +428,10 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.match(src,/label\.renderOrder=3/,'friend name tags draw after the sea');
  assert.match(src,/bubble\.renderOrder=3/,'friend emote bubbles draw after the sea');
 }
+{
+ // Oct 23: an away friend keeps the jetpack backpack and the blue downwash (rides still stand inside the field).
+ const src=read0('lib/graphics/remoteAvatars.ts');
+ assert.match(src,/motion\.travelMode=shield&&mode!==Mode\.Jetpack\?undefined:travelFor\(mode\)/,'away friend keeps the jetpack backpack');
+ assert.match(src,/if\(pose\.mode===Mode\.Jetpack&&e\.door>=1&&d2</,'away friend in the air keeps the jet plume');
+}
 console.log('mp-avatars ok');

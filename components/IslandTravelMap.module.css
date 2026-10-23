@@ -62,7 +62,7 @@
 @media(max-width:600px){
  /* Phones: the side arrows moved from mid-height (they covered the futsal and COACHES labels) to the bottom corners, beside Down. */
  .arrow[data-dir=left],.arrow[data-dir=right]{top:auto;bottom:16px;margin-top:0}
- .legend{gap:4px 10px;font-size:12px}
+ .legend{display:grid;grid-template-columns:repeat(3,max-content);justify-content:center;gap:6px 14px;font-size:12px}
  .dialog .panel>.body{padding:0 var(--phone-gutter) calc(10px + env(safe-area-inset-bottom,0px))}
  .frame{border-width:4px;border-radius:26px 34px 24px 28px}
 }
