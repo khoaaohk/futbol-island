@@ -1,5 +1,25 @@
 # Performance reference for future Futbol Island updates
 
+## Ride splash in the shallows (Oct 23 2026, local, not deployed)
+
+- A scooter / bike / moped rolling through the swash throws two fans of droplets off the wheels, a foam ring behind the rear wheel and a
+  short wake V (`lib/graphics/rideSplash.ts`, colours `RIDE_SPLASH_DROP` / `RIDE_SPLASH_FOAM` in `waterTokens.ts`). The earlier tiny white
+  dots along the beach were the ride dust trail (`rideTrail.ts`, the bike variant's colour), unchanged.
+- Shallow test: the island shore field's CPU copy (`islandShore.ts` IsleCpuField: the 2 m signed drawn-waterline distance + highest ground per
+  cell), the same field the swash shader draws from; wet fades in from -1.4 m to -0.35 m (land side), raised ground (lift >= .38: decks,
+  rocks, the pier) never splashes. Speed: nothing under 2.5 m/s, full at 16 m/s.
+- Cost: ONE InstancedMesh of 2-triangle quads, 56 instances max for the local rider + the 2 nearest riding friends (party `riders`,
+  preallocated in `remoteAvatars.ts`): 1 draw call, <= 112 triangles while visible, one ShaderMaterial (dot / ring drawn in the fragment
+  shader: no texture), depthWrite off, no shadows, one transparent object. Typed-array pool, zero per-frame allocation
+  (`tests/ride-splash.cjs` heap check). Nobody riding in water and no drop alive: Town skips it after three comparisons and the mesh is
+  hidden (0 draw calls, 0 CPU). Off in Battery saver and at heat tier >= 3; tier 2 halves the droplets; reduced motion = foam ring only,
+  half rate. Sound: the existing synthesized 'splash-soft' at gain .22, at most once per 1.3 s (full mode only).
+- Measured (headless Chrome, production build, phone 390x844 @2x, `scripts/check-ride-splash.cjs`: a bike along the main beach's swash,
+  then the same line 6 m up the dry sand): peak 30 live particles; the splash's own CPU (rider() + end(), wrapped with performance.now)
+  0.015-0.020 ms per frame while splashing on a desktop CPU; +1 draw call and <= 112 triangles against a scene of ~60-140 calls / 65-190k
+  triangles; dry sand: 0 particles, 0 draws; the pool empties ~1 s after stopping and the mesh hides. Node heap check: < 64 KB over
+  30k frames (no per-frame garbage). Reduced work only; **no iPhone thermal measurement**.
+
 ## Friends on the map (Oct 23 2026, local, not deployed)
 
 - Party friends draw as coloured initial dots on the travel map and the corner minimap (`components/FriendMapDots.tsx`, rules in `lib/town/friendMarks.ts`). No protocol / relay change and no new messages: positions are the party store's last island spots (`partyStore.spot(id)`, mutated in place in `store.ts` as poses arrive, never emitted).

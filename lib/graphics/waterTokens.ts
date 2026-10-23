@@ -45,3 +45,6 @@ export const ROOM_SHALLOW='#5cc7c4',ROOM_SHALLOW_MIX=[.62,.18] as const;
 export const ROOM_WINDOW='#8fdcdc',ROOM_SHIMMER='#d8fbf6';
 /** The light lines on the sand (the shore's sun-net, moving): colour and peak strength (0 at heat tier 2+ / Battery saver: static). */
 export const ROOM_CAUSTIC='#bff3e6',ROOM_CAUSTIC_K=.34;
+/** Ride splash (rideSplash.ts, Oct 23 2026): the spray droplets thrown off the wheels and the foam ring / wake behind them in the
+ *  shallows (light, with a touch of the shore sheet's turquoise so they read as water over the sand, not as dust). */
+export const RIDE_SPLASH_DROP='#effcff',RIDE_SPLASH_FOAM='#dcf7f6';
