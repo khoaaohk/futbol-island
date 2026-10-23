@@ -27,4 +27,7 @@ assert.equal(r.status,0,r.stderr);
 const {status,bytes}=JSON.parse(line);
 assert(status&(1<<4),`rig.update reaches the optimised tier (status ${status.toString(2)}): keep it under V8's 60 KB bytecode limit`);
 assert(bytes<12000,`rig.update allocates ${bytes.toFixed(0)} B per call (was ~25 KB unoptimised)`);
+// The emote camera's ray test: no closure per ray x solid, no Math.hypot (it boxes its arguments).
+const cam=require('node:fs').readFileSync(path.join(ROOT,'lib/town/emoteCamClear.ts'),'utf8');
+assert(!/const slab = \(/.test(cam)&&/const T01 = new Float64Array\(2\)/.test(cam)&&!/Math\.hypot/.test(cam),'emoteCamClear allocates nothing per ray');
 console.log(`RIG_OPTIMIZABLE_PASS optimised, ${bytes.toFixed(0)} B per update`);

@@ -98,10 +98,10 @@ const C=require('../lib/shop/shopCast.ts');
  assert(/if\(dYou>NEAR_POSE&&bucket===a\.bucket\)/.test(scene)&&/POSE_HZ=15/.test(scene),'far walkers pose at 15 Hz (the island’s far-pose rule)');
  assert(/if\(\(!walker\|\|walker===a\)&&t>=nextWalkAt\)/.test(scene)&&/WALK_GAP=12/.test(scene),'one shopper walks at a time, with a rest between walks');
  assert(/npcOnly\|\|remoteOnly\?Math\.max\(SHOP_REMOTE_FRAME_MS,baseFrameMs\(\)\)/.test(scene)&&/SHOP_REMOTE_FRAME_MS=50;/.test(scene),'only shoppers (or party friends) moving: 20 fps');
- // Idle rest (fix pass Oct 13 2026, heat audit): ~60 s with no input from you and the shoppers stop walking, no walk timer is
+ // Idle rest (fix pass Oct 13 2026, heat audit): ~20 s (was 60 s) with no input from you and the shoppers stop walking, no walk timer is
  // left, so the room reaches 0 rAF (like the Museum); any input or tap (keys, the stick, a tap, walkTo, closing a studio, any
  // pointer or key on the room's UI) restarts the clock and wakes them.
- assert(/const IDLE_REST=60;let lastInput=born;/.test(scene)&&/const resting=\(\)=>clock\(\)-lastInput>IDLE_REST;/.test(scene),'shoppers rest after 60 s without input');
+ assert(/const IDLE_REST=20;let lastInput=born;/.test(scene)&&/const resting=\(\)=>clock\(\)-lastInput>IDLE_REST;/.test(scene),'shoppers rest after 20 s without input (was 60 s; heat QA Oct 22 2026)');
  assert(/if\(resting\(\)\)\{[^}]*\}\s*else if\(\(!walker\|\|walker===a\)&&t>=nextWalkAt\)/.test(scene),'a resting shopper starts no new walk');
  assert(/if\(next<Infinity&&next<lastInput\+IDLE_REST\)npcTimer=setTimeout\(\(\)=>\{npcTimer=undefined;if\(!resting\(\)\)wake\(\);\}/.test(scene),'no walk timer past the rest: a resting room schedules nothing (0 rAF)');
  assert(/function poke\(\)\{const was=resting\(\);lastInput=clock\(\);if\(was\)wake\(\);\}/.test(scene),'any input wakes a resting room');
