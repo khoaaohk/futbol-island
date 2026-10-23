@@ -8,6 +8,7 @@ import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBoun
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
+import type { LocalBump } from '../graphics/friendBump';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, onFriendFilters } from './roomParty';
 import { partyStore } from './store';
 import * as T3 from 'three';
@@ -26,6 +27,8 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   ballVsFields(ball: FieldBall): boolean;
   /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
   readonly meRing: boolean;
+  /** Friend bumps: the local player's cosmetic overlay this frame (Town applies it around renderer.render only); null when not drawn. */
+  readonly localBump: LocalBump | null;
   /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
   readonly shown: number; readonly rigs: number;
   /** Live feel: the local ball for friends (relay v1.2; visual only on their side). state = BallState; metres. Call every frame:
@@ -164,6 +167,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
 
   return {
     get meRing() { return meRingOn; },
+    get localBump() { return core.live && meRingOn ? avatars.localBump : null; },
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
     friends: () => active.values(),

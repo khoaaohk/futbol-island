@@ -5952,3 +5952,10 @@ everything else with the island while this is running", and "the room's backgrou
   motion lifts the cadence to 20 fps on phones / 30 desktop for 300 ms only (measured 18-20 fps phone friends-only). Rig count does
   not rise: each drawn friend sends one crowd NPC out (hidden, parked, no rig update); Battery saver / cap 0 draws no friend and keeps
   the NPCs. During a game nothing renders; the beat sends the Busy pose. Flag off: the party code is not even loaded.
+
+## Friend bumps (Oct 23 2026, local, not deployed)
+
+- Cosmetic bump reactions between party friends (`docs/multiplayer-friend-bumps.md`). Per frame: one O(n^2) pass over <= 9 bodies
+  (local + shown rigs) with early-outs, a fixed 24-slot typed-array pair table, zero allocation (`tests/friend-bump.cjs` checks a flat heap).
+  The burst sprites (<= 15) and canvas textures are made on the first bump only and sleep when no burst is alive. Skipped under Battery
+  saver; reduced motion = one sparkle. No iPhone thermal measurement.
