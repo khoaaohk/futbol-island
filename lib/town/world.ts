@@ -286,8 +286,10 @@ export function* buildTownSteps(scene: T.Scene) {
     [-30,52.5,14,11,6.5,'PROMENADE CAFÉ']
   ];coast.forEach(([x,z,w,d,h,label],i)=>house(x,z,w,d,h+4,label,i));
   street(-16,13.75,102.5);street(48,13.75,102.5);street(21,65,68,false);
-  path(11,43,38,3);path(-6,15,3,64);
-  for(const z of [-14,9,29,48])palm(-6,z,6+(z%3)*.2);
+  // Oct 22 2026 path audit: the north strip stays inside the garage walls (x -3..25; at 38 m it ran out through both walls as two
+  // stubs ending at a wall), and the promenade palms stand beside the 3 m walk (x -9), not in its middle (1 m either side).
+  path(11,43,27.5,3);path(-6,15,3,64);
+  for(const z of [-14,9,29,48])palm(-9,z,6+(z%3)*.2);
   for(const z of [-17.25,2.5,23.5,43.5])palm(-37,z,6.5);
 
   for(const [x,z] of [[-24,-.5],[-26,43]])table(x,z);
@@ -843,7 +845,8 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const side of [-1,1])for(const [dx,dy] of [[0,0],[-1,0],[1,0],[0,1],[0,-1]])box(.34,.34,.09,'#d69b61',78+sx+side*5.7+dx*.35,2.9+dy*.35,.4+sz);
   // Keep the square’s southern landing/runout lane clear; move its corner planter north-east.
   for(const [x,z] of [[165,-109],[215,-109],[165,-89],[218,-95]])planter(x,z);
-  for(const [x,z] of [[177,-96],[213,-100],[212,-92]])table(x,z);
+  // (213,-104) lands at (108,-39) after the hub shift: at (108,-35) the table sat in the middle of the 4 m plaza walk path(112,-35).
+  for(const [x,z] of [[177,-96],[213,-104],[212,-92]])table(x,z);
   for(const x of [181,210])bench(x,-90);
 
 

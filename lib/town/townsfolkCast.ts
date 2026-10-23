@@ -252,7 +252,8 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'The Pier Bakery’s terrace is the best seat on the island. Sit a while!'],
   ['How do you lose well?','Feel sad for a moment: that’s normal. Then shake hands, thank the referee and choose one thing to practise. Every great player has lost many times.',
    'And how do you win well?','Celebrate with your team, then shake hands with the other team too. Never tease them: next week it might be you.']),
- folk('beach','tavita','Tavita','Teen on a rest day','RESTING ON PALM COAST BEACH',-32,123,{ch:'male',skin:6,clothing:'sunset',age:'teen',body:'strong',look:{hair:'curls'}},{pose:'lie',yaw:Math.PI/2},
+ // Tavita lies on the sand (Oct 22 2026 path audit: at (-32, 123) he lay 9 m out at sea, past the Palm Coast shoreline).
+ folk('beach','tavita','Tavita','Teen on a rest day','RESTING ON PALM COAST BEACH',-31,111.5,{ch:'male',skin:6,clothing:'sunset',age:'teen',body:'strong',look:{hair:'curls'}},{pose:'lie',yaw:Math.PI/2},
   'A sixteen-year-old defender who takes his rest days as seriously as his training.',
   'Rest day! Muscles get stronger while you rest, not only while you train.',
   ['Teenagers need about 8 to 10 hours of sleep a night. I aim for nine.',

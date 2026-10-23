@@ -120,7 +120,7 @@ function environment(shared){
   // Litter is only built while the shift is active (jobScene.ts buildProps(), the generic rule every collect job already follows).
   assert.match(fs.readFileSync(path.join(__dirname,'..','lib/town/jobs/jobScene.ts'),'utf8'),/function buildProps\(def:JobDef\)\{/,'props (incl. litter) are built per shift, not at module load');}
  // Signs never crowd each other, the vending machines, the fishing posts or the Clubhouse doorway.
- const vend=[[89.5,-49],[11,-48],[132.8,-69.8],[96,115],[175.26,9],[73.8,-198.5],[434.41,-141.28],[549.5,-169],[665.62,-211.77],[526.1,-177.16],[73.1,-52.16],[74.91,-52.16],[527.91,-177.16]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
+ const vend=[[89.5,-49],[8,-48],[132.8,-69.8],[96,115],[175.26,9],[73.8,-198.5],[434.41,-141.28],[549.5,-169],[665.62,-211.77],[526.1,-177.16],[73.1,-52.16],[74.91,-52.16],[527.91,-177.16]],fish=[[217,212.6],[63,212.6],[237.2,66],[60,-238],[-95.5,24]];
  for(const a of C.JOBS){for(const b of C.JOBS)if(a!==b)assert(Math.hypot(a.board.x-b.board.x,a.board.z-b.board.z)>2*C.BOARD_RANGE,`${a.id} and ${b.id} signs are apart`);
   for(const [x,z] of [...vend,...fish,[81.36,-52.8]])assert(Math.hypot(a.board.x-x,a.board.z-z)>C.BOARD_RANGE+3,`${a.id} sign is clear of (${x},${z})`);}
  /** Plays a Harvest day with its real actions: shake trees and pick up what falls, pull roots in the green, twist, snip. */

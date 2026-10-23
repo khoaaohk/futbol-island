@@ -26,7 +26,10 @@ function landmarks(a){
  tryLoad(a,'lib/town/practiceNpcs.ts',m=>m.PRACTICE_NPCS.forEach(n=>npcs.set(n.id,n)));
  tryLoad(a,'lib/town/courtFreestylers.ts',m=>m.COURT_FREESTYLERS.forEach(n=>npcs.set(n.id,n)));
  // An NPC is placed at the nearest walkable point within 12 m (islandNpcs.ts); the player talks from about 3 m.
- for(const n of npcs.values())add('npc',n.name+' ('+n.id+')',n.x,n.z,3.5,{floor:n.floor});
+ // A posed NPC (seat, lie, work spot) stays exactly where it is authored: the player must reach it within talking range. A walking
+ // one is moved by the placement search to the nearest walkable point within 12 m, so it only needs walkable ground that near.
+ // Boat crews (boat-*) stand on moored boats out at sea and are reached by boat, not on foot.
+ for(const n of npcs.values()){const fixed=!!(n.pose||n.floor||n.seat||n.activity||n.freestyle!==undefined);add(n.id.startsWith('boat-')?'boat-crew':'npc',n.name+' ('+n.id+')',n.x,n.z,fixed?3.5:12,{fixed});}
  tryLoad(a,'lib/town/coinQuest.ts',m=>m.COIN_QUEST.forEach(s=>add('ball-hunt',s.name+' ['+s.id+', '+s.kind+']',s.x,s.z,3,{y:s.y,kind:s.kind})));
  tryLoad(a,'lib/town/eastPier.ts',m=>{add('pier','East Pier fisher spot',m.EAST_PIER_NPC_SPOTS.fisher.x,m.EAST_PIER_NPC_SPOTS.fisher.z,2);add('pier','East Pier kid spot',m.EAST_PIER_NPC_SPOTS.kid.x,m.EAST_PIER_NPC_SPOTS.kid.z,2);add('pier','East Pier kick spot',m.PIER_KICK_SPOT.x,m.PIER_KICK_SPOT.z,2);});
  tryLoad(a,'lib/town/ferryBoarding.ts',m=>{add('ferry','Ferry ramp',m.FERRY_RAMP.x,m.FERRY_RAMP.z,2);add('ferry','Ferry deck',m.FERRY_DECK.x,m.FERRY_DECK.z,4);});
@@ -52,24 +55,38 @@ function checkRoutes(a){const out=[];const m=tryLoad(a,'lib/town/cafeRoutes.ts',
 // Path strips (surfaceAreas kind 'path'): share of the strip reachable, and each short end: is there walkable reachable ground
 // 0.75 m past it (a path that runs into water, a wall or a prop is a dead end).
 function checkPaths(a){const out=[];for(const p of a.world.surfaceAreas.filter(s=>s.kind==='path')){let n=0,r=0;
-  for(let x=p.x-p.w/2+.25;x<p.x+p.w/2;x+=.5)for(let z=p.z-p.d/2+.25;z<p.z+p.d/2;z+=.5){const c=a.idx(x,z);if(c<0)continue;n++;if(a.reach[c])r++;}
+  let covered=0;for(let x=p.x-p.w/2+.25;x<p.x+p.w/2;x+=.5)for(let z=p.z-p.d/2+.25;z<p.z+p.d/2;z+=.5){const c=a.idx(x,z);if(c<0)continue;n++;if(a.reach[c])r++;if(a.floor[c]>1&&!a.summit[c])covered++;}
+  // A ground path drawn under a deck or building (most of it below a surface over 1 m up) is hidden: not walked, not judged.
+  if(n&&covered/n>.5){out.push({x:p.x,z:p.z,w:p.w,d:p.d,cells:n,reached:r,share:r/n,ends:[],pinch:null,hidden:true});continue;}
   const along=p.w>=p.d?'x':'z',ends=[];
   for(const s of [-1,1]){const ex=along==='x'?p.x+s*(p.w/2+.75):p.x,ez=along==='z'?p.z+s*(p.d/2+.75):p.z,half=(along==='x'?p.d:p.w)/2;let open=0,k=0,cause=new Set();
-   for(let u=-half+.25;u<half;u+=.5){k++;const x=along==='x'?ex:ex+u,z=along==='z'?ez:ez+u,c=a.idx(x,z);if(c>=0&&a.reach[c])open++;else if(c<0||!a.land[c])cause.add('water');else if(a.clutter[c]){const o=a.clutterBy.get(c);cause.add('collider '+o.w.toFixed(2)+'x'+o.d.toFixed(2)+' @'+o.x.toFixed(1)+','+o.z.toFixed(1));}else if(a.wallH[c]>a.floor[c]+.35)cause.add('building');else cause.add('unreached');}
-   ends.push({x:+ex.toFixed(2),z:+ez.toFixed(2),open,of:k,cause:[...cause].slice(0,3)});}
-  out.push({x:p.x,z:p.z,w:p.w,d:p.d,cells:n,reached:r,share:n?r/n:1,ends});}
+   for(let u=-half+.25;u<half;u+=.5){k++;const x=along==='x'?ex:ex+u,z=along==='z'?ez:ez+u,c=a.idx(x,z);if(c>=0&&a.reach[c])open++;else if(c<0||!a.land[c])cause.add('water');else if(a.clutter[c]){const o=a.clutterBy.get(c);cause.add('collider '+o.w.toFixed(2)+'x'+o.d.toFixed(2)+' @'+o.x.toFixed(1)+','+o.z.toFixed(1));}else if(a.wallH[c]>a.floor[c]+.35||a.wallH[c]>-1e8&&a.floor[c]>=a.wallH[c]-.01)cause.add('building');else cause.add('unreached');}
+   // A path ending at a building or a hut / house collider (4 m and wider) is a doorstep, not a dead end.
+   const doorstep=!open&&[...cause].every(c=>c==='building'||/^collider (\d+\.\d+)x(\d+\.\d+)/.test(c)&&Math.min(...c.match(/(\d+\.\d+)x(\d+\.\d+)/).slice(1).map(Number))>=4);
+   ends.push({x:+ex.toFixed(2),z:+ez.toFixed(2),open,of:k,cause:[...cause].slice(0,3),doorstep});}
+  // Pinches: along the strip, every 0.5 m cross-section's widest run of reachable ground (a prop in the middle of a walkway).
+  const width=along==='x'?p.d:p.w,len=along==='x'?p.w:p.d;let pinch=null;
+  for(let v=-len/2+.25;v<len/2;v+=.5){let best=0,run=0,cause='';for(let u=-width/2+.25;u<width/2;u+=.5){const x=along==='x'?p.x+v:p.x+u,z=along==='x'?p.z+u:p.z+v,c=a.idx(x,z);if(c>=0&&a.reach[c]){run+=.5;best=Math.max(best,run);}else{run=0;if(c>=0&&a.clutter[c]&&!cause){const o=a.clutterBy.get(c);cause='collider '+o.w.toFixed(2)+'x'+o.d.toFixed(2)+' @'+o.x.toFixed(2)+','+o.z.toFixed(2);}}}
+   if(cause&&best<Math.min(1.5,width*.5)&&(!pinch||best<pinch.open)){const px=along==='x'?p.x+v:p.x,pz=along==='x'?p.z:p.z+v,pc=a.idx(px,pz);pinch={x:+px.toFixed(2),z:+pz.toFixed(2),open:best,width,cause,raised:pc>=0&&a.floor[pc]>a.ground[pc]+1};}}
+  out.push({x:p.x,z:p.z,w:p.w,d:p.d,cells:n,reached:r,share:n?r/n:1,ends,pinch});}
  return out;}
 function checkRoads(a){const out={nodes:0,deadEnds:[],unwalkable:[]};const m=tryLoad(a,'lib/town/roadNetwork.ts',x=>x);if(m.error)return {error:m.error};
- const nodes=m.buildRoadNetwork(a.world.roads);out.nodes=nodes.length;
+ const nodes=m.buildRoadNetwork(a.world.roads);
+ // The Coral Cay ring joins the same graph at runtime (streetTraffic.ts): include it so a lane ending in nothing shows up.
+ try{const cay=a.L('lib/town/cayTraffic.ts').extendRoadNetworkWithCay(nodes);out.cayRing=cay?cay.ring.length:0;}catch(e){out.cayError=e.message;}
+ out.nodes=nodes.length;out.offLand=[];
+ // The causeway link is drawn along CAUSEWAY_PATH (the winding causeway), not the straight chord: check those samples instead.
+ let causeway=null;try{const C=a.L('lib/town/coralCay.ts');causeway={x0:C.CAUSEWAY.roadStart,x1:C.CAUSEWAY_PATH[C.CAUSEWAY_PATH.length-1].x};let off=0,unreached=0;for(const q of C.CAUSEWAY_PATH){const c=a.idx(q.x,q.z);if(c<0||!a.land[c])off++;else if(!a.reach[c]){unreached++;(out.causewayUnreached=out.causewayUnreached||[]).push({x:+q.x.toFixed(1),z:+q.z.toFixed(1),why:a.clutter[c]?'collider '+JSON.stringify(a.clutterBy.get(c)):'h'+a.floor[c]});}}out.causeway={samples:C.CAUSEWAY_PATH.length,offLand:off,unreached};}catch(e){out.causewayError=e.message;}
+ for(const n of nodes)for(const l of n.links){if(l<n.id)continue;const b=nodes[l];if(causeway&&Math.abs(n.z-b.z)<.01&&Math.abs(n.z+159)<.01&&Math.min(n.x,b.x)<=230&&Math.max(n.x,b.x)>=400)continue;const L=Math.hypot(b.x-n.x,b.z-n.z);let bad=0,k=0;for(let t=0;t<=L;t+=1){const c=a.idx(n.x+(b.x-n.x)*t/L,n.z+(b.z-n.z)*t/L);k++;if(c<0||!a.land[c])bad++;}if(bad)out.offLand.push({from:{x:+n.x.toFixed(1),z:+n.z.toFixed(1)},to:{x:+b.x.toFixed(1),z:+b.z.toFixed(1)},offLandM:bad});}
  const seen=new Set(),stack=nodes.length?[nodes[0].id]:[];while(stack.length){const id=stack.pop();if(seen.has(id))continue;seen.add(id);for(const l of nodes[id].links)stack.push(l);}
  out.components=seen.size===nodes.length?1:'split ('+seen.size+' of '+nodes.length+' nodes linked to the first)';
  for(const n of nodes)if(n.links.length<2)out.deadEnds.push({x:n.x,z:n.z,links:n.links.length});
  for(const r of a.world.roads){let k=0,bad=0;for(let t=-.5;t<=.5;t+=.05){const x=r.vertical?r.x:r.x+t*r.w,z=r.vertical?r.z+t*r.d:r.z,c=a.idx(x,z);k++;if(c<0||!a.reach[c])bad++;}if(bad/k>.15)out.unwalkable.push({x:r.x,z:r.z,w:r.w,d:r.d,share:+(1-bad/k).toFixed(2)});}
  return out;}
-function checkTraps(a){// Reached on foot but no walk back to the spawn (a drop into a pit or off a ledge with no way up).
- let n=0;const seenComp=new Set(),list=[];for(let c=0;c<a.N;c++)if(a.reach[c]&&!a.back[c]){n++;}
+function checkTraps(a){const real=c=>a.reach[c]&&!a.back[c]&&a.standable(c);// Reached on foot but no walk back to the spawn (a drop into a pit or off a ledge with no way up).
+ let n=0;const seenComp=new Set(),list=[];for(let c=0;c<a.N;c++)if(real(c))n++;
  // group trap cells coarsely (4 m tiles) for a readable list
- const tiles=new Map();for(let c=0;c<a.N;c++)if(a.reach[c]&&!a.back[c]){const x=a.minX+(c%a.W)*a.cell,z=a.minZ+Math.floor(c/a.W)*a.cell,k=Math.floor(x/8)+':'+Math.floor(z/8);const t=tiles.get(k)||{x,z,n:0,h:a.floor[c]};t.n++;tiles.set(k,t);}
+ const tiles=new Map();for(let c=0;c<a.N;c++)if(real(c)){const x=a.minX+(c%a.W)*a.cell,z=a.minZ+Math.floor(c/a.W)*a.cell,k=Math.floor(x/8)+':'+Math.floor(z/8);const t=tiles.get(k)||{x,z,n:0,h:a.floor[c]};t.n++;tiles.set(k,t);}
  return {cells:n,area:n*a.cell*a.cell,tiles:[...tiles.values()].filter(t=>t.n*a.cell*a.cell>=1).sort((p,q)=>q.n-p.n).slice(0,25).map(t=>({x:t.x,z:t.z,area:t.n*a.cell*a.cell,height:+t.h.toFixed(2)}))};}
 function groundComponents(a,minArea=2){const g=new Map();for(let c=0;c<a.N;c++){const id=a.comp[c];if(id<0)continue;const e=g.get(id)||{n:0,low:0};e.n++;if(a.floor[c]<=a.ground[c]+.5)e.low++;g.set(id,e);}
  const ground=[],roofs=[];for(const c of a.comps){if(c.area<minArea)continue;const e=g.get(c.id);(e.low/e.n>.5?ground:roofs).push(c);}

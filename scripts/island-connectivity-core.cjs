@@ -37,20 +37,19 @@ async function analyse({cell=.5,base=process.cwd()}={}){
  const poly=shore.ISLAND_SHORE;
  function rowCrossings(z){const xs=[];for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.z>z)!==(b.z>z))xs.push((b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x);}return xs;}
  const islandRow=(xs,x)=>{let inside=false;for(const cx of xs)if(x<cx)inside=!inside;return inside;};
- // Coral Cay / Summit / sandbar land only near where a 1.5 m sample grid found some (dilated one sample each way): skips the
- // causeway / sandbar tests (several us each) on open sea. Features narrower than 1.5 m could be missed; none exist (the
- // causeway and sandbar stops are metres wide).
- const CS=1.5,cw=Math.ceil((maxX-minX)/CS)+2,ch=Math.ceil((maxZ-minZ)/CS)+2,coarse=new Uint8Array(cw*ch),near=new Uint8Array(cw*ch),xsLand=(x,z)=>S.onSummitGround(x,z)||C.onCayLand(x,z)||S.onSummitLand(x,z);
+ // Coral Cay / Summit / sandbar land only near where a 3 m sample grid found some (dilated one sample each way): skips the
+ // causeway / sandbar tests (several us each) on open sea. Features narrower than 3 m could be missed; none exist (the
+ // causeway and sandbar stops are many metres wide; the landable decks are always tested).
+ const CS=3,cw=Math.ceil((maxX-minX)/CS)+2,ch=Math.ceil((maxZ-minZ)/CS)+2,coarse=new Uint8Array(cw*ch),near=new Uint8Array(cw*ch),xsLand=(x,z)=>S.onSummitGround(x,z)||C.onCayLand(x,z)||S.onSummitLand(x,z);
  for(let a=0;a<cw;a++){const x=minX+a*CS;if(x<200)continue;for(let b=0;b<ch;b++)if(xsLand(x,minZ+b*CS))coarse[b*cw+a]=1;}
  for(let a=0;a<cw;a++)for(let b=0;b<ch;b++)if(coarse[b*cw+a])for(let da=-1;da<=1;da++)for(let db=-1;db<=1;db++){const aa=a+da,bb=b+db;if(aa>=0&&bb>=0&&aa<cw&&bb<ch)near[bb*cw+aa]=1;}
  const nearCay=(x,z)=>near[Math.floor((z-minZ)/CS+.5)*cw+Math.floor((x-minX)/CS+.5)]===1||near[Math.floor((z-minZ)/CS)*cw+Math.floor((x-minX)/CS)]===1;
  const terrainOpen=(x,z,xs)=>{if(x>=200&&nearCay(x,z)&&xsLand(x,z))return true;if(D.onLandableDeck(x,z))return true;
   return (islandRow(xs,x)||F.onFerryBoarding(x,z))&&x>=B.minX&&x<=B.maxX&&z>=B.minZ&&z<=B.maxZ;};
- const tA=Date.now();for(let k=0;k<3000;k++){const x=minX+Math.random()*(maxX-minX),z=minZ+Math.random()*(maxZ-minZ);if(terrainOpen(x,z,rowCrossings(z))===sim.groundBlocked(x,z,[],RADIUS))throw new Error('scanline land test disagrees with groundBlocked at '+x+','+z);}
- if(process.env.ICPROF)console.log('pre',Date.now()-tA);const tB=Date.now();let tl=0;
+ let seed=12345;const rnd=()=>(seed=(seed*1103515245+12345)%2147483648)/2147483648;for(let k=0;k<1500;k++){const x=minX+rnd()*(maxX-minX),z=minZ+rnd()*(maxZ-minZ);if(terrainOpen(x,z,rowCrossings(z))===sim.groundBlocked(x,z,[],RADIUS))throw new Error('scanline land test disagrees with groundBlocked at '+x+','+z);}
  for(let j=0;j<H;j++){const z=minZ+j*cell,xs=rowCrossings(z);for(let i=0;i<W;i++){const x=minX+i*cell,c=j*W+i;
   if(!terrainOpen(x,z,xs))continue;land[c]=1;
-  summit[c]=onSummitGround(x,z)?1:0;
+  summit[c]=x>=200&&nearCay(x,z)&&onSummitGround(x,z)?1:0;
   const bk=Math.floor((z-minZ)/BK)*bw+Math.floor((x-minX)/BK);
   ground[c]=fieldSurfaceHeight(x,z);floor[c]=raised[bk]||D.onLandableDeck(x,z)?rooftop.surface(x,z):ground[c];
   const list=buckets[bk];if(!list)continue;
@@ -62,13 +61,21 @@ async function analyse({cell=.5,base=process.cwd()}={}){
  const tRaster=Date.now()-t0-tLoad;
  const idx=(x,z)=>{const i=Math.round((x-minX)/cell),j=Math.round((z-minZ)/cell);return i<0||j<0||i>=W||j>=H?-1:j*W+i;};
  // Can a walker standing on cell a (at its floor) move to the neighbour b?
+ // Stairs: treads are 0.45 m deep, so a 0.5 m grid can skip one and see a 0.6 m rise between neighbours. A rise up to 2*STEP is
+ // accepted when the true surface halfway between the two cells is within STEP of both (the tread the grid skipped).
+ const cellX=c=>minX+(c%W)*cell,cellZ=c=>minZ+Math.floor(c/W)*cell;
  function canStep(a,b){if(!land[b])return false;const h=floor[a];
   const elevated=h>ground[a]+1;
   if(clutter[b]&&!elevated)return false;
-  if(wallH[b]>h+STEP)return false;
   const bands=propBands.get(b);if(bands)for(const p of bands)if(h>=p.floor-.2&&h<p.top)return false;
-  if(summit[a]&&summit[b])return true;
-  return floor[b]-h<=STEP;}
+  // Walls are tested at the height the walker has once it has stepped onto b (the game moves in small substeps and lifts the
+  // walker onto each tread as it goes, so the next tread's padded collider is compared with the tread it stands on).
+  const hb=Math.max(h,floor[b]);
+  if(summit[a]&&summit[b]&&wallH[b]<=hb+STEP)return true;
+  if(floor[b]-h<=STEP)return wallH[b]<=hb+STEP;
+  if(floor[b]-h>2*STEP)return false;
+  const hm=rooftop.surface((cellX(a)+cellX(b))/2,(cellZ(a)+cellZ(b))/2);
+  return hm-h<=STEP&&floor[b]-hm<=STEP&&wallH[b]<=hb+STEP;}
  const NB=[1,-1,W,-W];
  function flood(seeds,reverse=false){const seen=new Uint8Array(N),q=new Int32Array(N);let qh=0,qt=0;
   for(const s of seeds)if(s>=0&&land[s]&&!seen[s]){seen[s]=1;q[qt++]=s;}

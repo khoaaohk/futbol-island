@@ -20,7 +20,7 @@ export function buildFarmersMarket({box,cylinder,put,sign,path,obstacles,buildin
  const labels=['GARDEN GREENS','CITRUS & FRUIT','FRESH BREAD','CUT FLOWERS','LOCAL HONEY','HERBS & SEEDS','ISLAND COFFEE','SEASONAL VEG','BERRY BASKETS','HANDMADE GOODS','FARM EGGS','SUNSET JUICE'];
  const colors=['#477c6a','#bd7657','#d6a15d','#739568'];
  // Promenade joins the garden entrance and the existing southern pier approach.
- path(221,100,5,190);path(217,4,13,4);path(219,196,12,4);
+ path(221,100,5,190);path(217,4,13,4);path(221.25,196,7.5,4);/* starts east of the ferry forecourt's bench + planter row (x 212-216.8; Oct 22 2026 path audit) */
  prop('sign',()=>{sign('EAST COAST FARMERS MARKET',18,1.1,221,3.2,98,'#477c6a');
  for(const x of [212.5,229.5])cylinder(.09,3.2,'#9d805b',x,1.6,98);});
  for(const x of [212.5,229.5])obstacles.push({x,z:98,w:.2,d:.2});
