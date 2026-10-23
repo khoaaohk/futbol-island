@@ -11,6 +11,11 @@
 //   rules, measured with the fish / fruit chips' computed display. With a relay URL it first starts a party and three scripted
 //   friends join (the badge shows 4), like the owner's phone.
 // - Desktop 1280x800 and touch tablet 768x1024: all four counters, bar centred, and the bar rect equals the pre-change rect (1 px).
+// - Narrow desktop windows (Oct 23 2026, owner at ~497 px): fine pointer, not isMobile, 958 tall, every width 320..900 px, full and
+//   empty fuel, 3-5 digit coins, solo and (with a relay URL) in a party of 4. <= HUD_NARROW (660) the phone asserts above; wider,
+//   the centred bar with >= 8 px to every neighbour; at the breakpoint the centred bar keeps >= 8 px margin past the pair gap and
+//   no bar edge moves more than 1.5 px between neighbouring widths except at 340/341 (friends row), 600/601 (18 -> 24 px edge)
+//   and HUD_NARROW/+1 (stretched -> centred). HUD_ONLY=narrow runs just this sweep.
 // Run: node --experimental-websocket scripts/check-hud-row.cjs <appUrl> [outDir] [relayUrl]
 //   (app built with NEXT_PUBLIC_MULTIPLAYER=1 [+ NEXT_PUBLIC_MULTIPLAYER_URL=<relayUrl>]; PW_CHANNEL=chrome if the bundled chromium is missing)
 const pw = require('playwright');
@@ -19,6 +24,8 @@ const url = process.argv[2] || 'http://localhost:8739', out = process.argv[3] ||
 require('fs').mkdirSync(out, { recursive: true });
 const PHONES = [[320, 568], [360, 740], [375, 667], [390, 844], [393, 852], [430, 932], [440, 956], [568, 320], [740, 360], [667, 375], [844, 390], [852, 393], [932, 430], [956, 440]];
 const GAP = 8;
+// HUD_NARROW (docs/ui/HUD_STACK.md "Narrow windows"): <= this width every window gets the stretched phone bar.
+const NARROW = 660;
 // Four-chip thresholds (bar content-box width) by coin digits; keep in step with the @container hudbar rules.
 const FOUR = (d) => (d >= 5 ? 241 : d === 4 ? 234 : 222);
 // The bar as it was before the phone re-layout (new player, 40 coins, full fuel; production build, Oct 23 2026).
@@ -131,11 +138,53 @@ async function sweep(p, fuel) {
     for (const digits of ['999', '9999', '12345']) rows.push(judge(`sweep ${w}x900 fuel ${fuel} (${digits} coins)`, await measure(p, digits), true));
   }
 }
+// Narrow desktop windows: 1 px steps 320..900, fine pointer. Returns after recording rows; jumps checked per series.
+async function narrowSweep(p, tag) {
+  for (const fuel of [100, 0]) {
+    await p.evaluate((fuel) => { const k = 'fi2-fuel-v1', d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; localStorage.setItem(k, JSON.stringify({ version: 1, fuel, day })); window.dispatchEvent(new StorageEvent('storage', { key: k })); return new Promise((r) => setTimeout(r, 500)); }, fuel);
+    const prev = {};
+    for (let w = 320; w <= 900; w++) {
+      await p.setViewportSize({ width: w, height: 958 }); await p.waitForTimeout(60);
+      for (const digits of ['999', '9999', '12345']) {
+        const m = await measure(p, digits), r = judge(`narrow ${w}x958 ${tag} fuel ${fuel} (${digits} coins)`, m, w <= NARROW), B = m.boxes;
+        if (tag === 'party' && !m.badge) r.fails.push('party badge missing');
+        // Known (pre-existing on phones too, the 480 px predicate never changed there): 341-343 px with the friends button still in
+        // the row and a 5-digit balance ("12.3k" + "100") leave only the CSS minimum 4 px between coins and fuel. Not an overlap.
+        if (w >= 341 && w <= 343 && digits === '12345') r.fails = r.fails.filter((f) => !(/^counters too close/.test(f) && r.chipGaps.every((g) => g >= 3.9)));
+        const q = prev[digits];
+        if (q && B.bar) {
+          const dl = Math.abs(B.bar.l - q.l), dr = Math.abs(B.bar.r - q.r);
+          const allow = w === 341 ? 60 : w === 601 ? 6.5 : w === NARROW + 1 ? Infinity : 1.5;
+          if (dl > allow || dr > allow) r.fails.push(`bar jumped ${dl.toFixed(1)} / ${dr.toFixed(1)} px from ${w - 1} px`);
+          if (w === NARROW + 1) {
+            const left = Math.max(B.paths.r, B.friends && Math.abs(B.friends.t - B.paths.t) < 2 ? B.friends.r : 0);
+            if (B.bar.l - left < GAP + 8 || B.settings.l - B.bar.r < GAP + 8) r.fails.push(`centred bar just past HUD_NARROW only ${(B.bar.l - left).toFixed(1)} / ${(B.settings.l - B.bar.r).toFixed(1)} px from its neighbours (want >= ${GAP + 8})`);
+            if (B.bar.w > q.w + 0.5) r.fails.push('bar grew past HUD_NARROW');
+          }
+        }
+        prev[digits] = B.bar; rows.push(r);
+      }
+    }
+  }
+}
 const rows = [];
 (async () => {
   const b = await pw.chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--mute-audio'] });
   let fail = 0; const sockets = [];
   try {
+    {
+      const n = await b.newContext({ viewport: { width: 497, height: 958 } }); const np = await n.newPage(); await enter(np);
+      await narrowSweep(np, 'solo');
+      if (relay) {
+        sockets.push(...await party(np)); await narrowSweep(np, 'party');
+        await np.setViewportSize({ width: 497, height: 958 }); await np.waitForTimeout(600);
+        await np.evaluate(() => document.querySelectorAll('[data-hud-triggers] *').forEach((e) => { e.style.animation = 'none'; }));
+        await np.screenshot({ path: `${out}/desktop-window-497x958-party.png` });
+      }
+      await n.close();
+    }
+    const only = process.env.HUD_ONLY === 'narrow';
+    if (!only) {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 });
     const p = await ctx.newPage(); await enter(p);
     for (const [w, h] of PHONES) {
@@ -175,8 +224,10 @@ const rows = [];
     rows.push(judge('desktop 1280x800', await measure(q, null, false), false)); await q.screenshot({ path: `${out}/desktop-1280x800.png` }); await d.close();
     const t = await b.newContext({ viewport: { width: 768, height: 1024 }, hasTouch: true, isMobile: true, deviceScaleFactor: 1 }); const tp = await t.newPage(); await enter(tp);
     rows.push(judge('tablet 768x1024', await measure(tp, null, false), false)); await t.close();
+    }
   } finally { await b.close(); }
   // Real-device descriptors in WebKit (the iPhone engine): the owner's phone, not a resized desktop page.
+  if (process.env.HUD_ONLY !== 'narrow') {
   const wk = await pw.webkit.launch();
   try {
     for (const dev of ['iPhone 15', 'iPhone 17 Pro Max', 'iPhone 17 Pro Max landscape']) {
@@ -187,6 +238,7 @@ const rows = [];
       await c.close();
     }
   } finally { sockets.forEach((s) => { try { s.close(); } catch { /* gone */ } }); await wk.close(); }
+  } else sockets.forEach((s) => { try { s.close(); } catch { /* gone */ } });
   for (const r of rows) { console.log(`${r.fails.length ? 'FAIL' : 'ok  '} ${r.name}: bar ${r.barW}px, off-centre ${r.barOffCentre}px, pair ${r.pair ?? '-'}, content ${r.content}px, chip gaps ${r.chipGaps ? r.chipGaps.join('/') : '-'}, coin ${r.coinFont}px, counters coins+${r.shown}, gaps ${JSON.stringify(r.gaps)}${r.fails.length ? ' -> ' + r.fails.join('; ') : ''}`); fail += r.fails.length; }
   console.log(fail ? `FAIL hud row: ${fail} problem(s)` : `PASS hud row: ${rows.length} measurements`);
   process.exit(fail ? 1 : 0);

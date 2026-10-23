@@ -10,4 +10,5 @@ assert.match(jobs,/aria-label=\{`Your island pocket: \$\{wallet\.balance\} coins
 assert.match(jobs,/styles\.coinShort[^>]*aria-hidden="true">\{shortCoins\(wallet\.balance\)\}/);
 assert.match(css,/\.coinShort\{display:none\}/,'desktop keeps the full number');
 assert.match(css,/\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.coinFull\{display:none\}\.wallet\[data-job-wallet\] \.coinShort\{display:inline\}\}/,'phones show the short number');
+assert.match(css,/@media\(max-width:660px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.coinFull\{display:none\}/,'narrow windows (HUD_NARROW 660 px, the stretched bar) show the short number too');
 console.log('coin-format ok');

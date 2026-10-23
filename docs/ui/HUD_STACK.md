@@ -465,6 +465,29 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   WebKit pass with the 'iPhone 15', 'iPhone 17 Pro Max' and 'iPhone 17 Pro Max landscape' device descriptors; given a relay URL it starts a party with three
   scripted friends (badge 4) first. The friends box includes the party badge.
 
+### Narrow windows: HUD_NARROW = 660px (23 October 2026)
+
+- **Bug (owner):** a desktop browser window at its smallest (~497 x 958 CSS px, fine pointer) still got the centred desktop bar,
+  with a big gap before Settings, because the stretched layout only applied under the phone predicate (<= 480px).
+- **Breakpoint:** the stretched, container-driven bar and the short coin number (`1.2k`) now apply under ONE predicate,
+  `@media(max-width:660px),(max-height:480px) and (orientation:landscape),(max-device-width:480px)` (3 uses in
+  `IslandJobs.module.css`: the bar, the fishing + party start, `.coinFull` / `.coinShort`). The roomy desktop pill
+  (`(min-width:661px) and (pointer:fine)`) and the compact fuel chip (`FuelCount.module.css`, `(max-width:660px),(pointer:coarse)`)
+  moved with it, so the bar's chips measure the same as on phones and the `hudbar` four-chip thresholds stay valid.
+- **Why 660:** measured on the old build (fine pointer, party of 4 with badge, 5-digit coins, fish / fruit 2 digits), the centred
+  bar came closer than the 8px pair gap to Play with friends up to **607px** (full fuel) and **635px** ("0 Empty", the widest);
+  Settings was never the tight side. 660 = 635 + 25px margin; at 661px the centred bar keeps >= 20px each side. The 768x1024
+  tablet and every desktop width above 660 are unchanged (centred, 1280x800 / 768x1024 rects pinned in `check-hud-row.cjs`).
+- **Edge inset:** Paths / Settings sit 24px in on fine-pointer windows over 600px and 18px otherwise; the bar uses one variable,
+  `--island-hud-edge` (`globals.css` `:root`, 24px / 18px under `(max-width:600px),(pointer:coarse)`). So at 600 -> 601px the
+  stretched bar's edges move 6px with the buttons. The pair gap stays `--island-hud-pair-gap` (8px) everywhere; the Back pill
+  (`FishingHost.module.css`) and `.hud-stack` already followed the 600px edge and needed no change.
+- **Check:** `scripts/check-hud-row.cjs` adds a fine-pointer (not isMobile) sweep, every width 320-900 x 958, full / empty fuel,
+  3-5 digit coins, solo and party of 4 (`HUD_ONLY=narrow` runs just this): the phone asserts at <= 660, centred with >= 8px to
+  every neighbour above, >= 16px just past the breakpoint, bar never grows across it, and no bar edge moves > 1.5px between
+  neighbouring widths except 340/341, 600/601 and 660/661. Known: at 341-343px with a 5-digit balance coins and fuel are only the
+  CSS minimum 4px apart (pre-existing on phones; not an overlap).
+
 ## Pocket keeps the coins bar (23 October 2026)
 
 Owner report (phone): tapping the coins bar opened the island pocket and the bar vanished with the column. Now `IslandJobs` gets

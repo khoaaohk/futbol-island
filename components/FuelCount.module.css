@@ -6,7 +6,7 @@
 .word{font-size:10px!important;font-weight:800!important;letter-spacing:.04em;text-transform:uppercase;color:inherit!important;margin:0!important;display:inline!important}
 /* Phones: the coins bar sits between Paths and Settings (max-width 100% - 156px). With the fuel counter in it, the word "coins"
    gives way (the coin icon and aria-label still say it), so "Low" / "Empty" always fit. */
-@media(max-width:600px),(pointer:coarse){:global([data-job-wallet]):has(.fuel)>small{display:none}.fuel{gap:2px!important}.word{font-size:9px!important;letter-spacing:0}}
+@media(max-width:660px),(pointer:coarse){:global([data-job-wallet]):has(.fuel)>small{display:none}.fuel{gap:2px!important}.word{font-size:9px!important;letter-spacing:0}}
 /* Oct 23 2026 (stretched phone coins bar, docs/ui/HUD_STACK.md "Top row on phones"): on phones the word gives way by the bar's own
    width (container queries in IslandJobs.module.css), not the viewport. Low / empty still show without colour: the number itself
    (e.g. 15, 0), the ring and the hollow bolt; the aria-label keeps the word. */

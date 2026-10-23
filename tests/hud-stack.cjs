@@ -125,7 +125,17 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  // Real iPhone (Oct 23 2026): the old 430 px breakpoint missed the 440 px iPhone 16/17 Pro Max; phones are now <= 480 (or a <= 480 device).
  // Owner (Oct 23 2026, stretched bar): phones (portrait <= 480 wide, landscape <= 480 tall, or a <= 480 px device) stretch the bar
  // between Play with friends and Settings and make it a size container; fish / fruit hide only by the bar's own width.
- assert.match(jcss,/@media\(max-width:480px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\]\{--hud-bar-left:[^}]*left:var\(--hud-bar-left\);right:calc\(18px \+ env\(safe-area-inset-right,0px\) \+ var\(--btn-icon,44px\) \+ var\(--island-hud-pair-gap,8px\)\);transform:none;max-width:none;[^}]*container:hudbar \/ inline-size\}/,'phones: the bar spans from the left group to one pair-gap left of Settings, as a size container');
+ // Oct 23 2026 (owner, desktop window at its smallest, ~497 px): the stretched bar is not phone-only. HUD_NARROW = 660 px
+ // (docs/ui/HUD_STACK.md "Narrow windows"): the widest fine-pointer window where the centred bar (5-digit coins, "0 Empty",
+ // party badge) came closer than the pair gap to Play with friends was 635 px; 660 adds a 25 px margin and keeps the 768 tablet centred.
+ const NARROW='@media(max-width:660px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){';
+ assert.equal(jcss.split(NARROW).length-1,3,'one narrow-HUD predicate for the stretched bar, the fishing + party start and the short coin number');
+ assert.doesNotMatch(jcss,/@media\(max-width:480px\),\(max-height:480px\) and \(orientation:landscape\)/,'no leftover phone-only (480 px) stretched-bar predicate');
+ assert.match(jcss,/@media\(max-width:660px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\]\{--hud-bar-left:calc\(var\(--island-hud-edge,18px\) [^}]*left:var\(--hud-bar-left\);right:calc\(var\(--island-hud-edge,18px\) \+ env\(safe-area-inset-right,0px\) \+ var\(--btn-icon,44px\) \+ var\(--island-hud-pair-gap,8px\)\);transform:none;max-width:none;[^}]*container:hudbar \/ inline-size\}/,'narrow windows: the bar spans from the left group to one pair-gap left of Settings, as a size container');
+ assert.match(g,/:root\{[^}]*--island-hud-edge:24px\}/,'the row edge inset is one variable (24 px desktop)');
+ assert.match(g,/@media\(max-width:600px\),\(pointer:coarse\)\{:root\{[^}]*--island-hud-edge:18px\}\}/,'18 px where Paths / Settings sit 18 px in');
+ assert.match(jcss,/@media\(min-width:661px\) and \(pointer:fine\)\{\.wallet\[data-job-wallet\]\{gap:8px/,'the roomy desktop pill only above HUD_NARROW');
+ assert.match(fuel,/@media\(max-width:660px\),\(pointer:coarse\)\{:global\(\[data-job-wallet\]\):has\(\.fuel\)>small\{display:none\}/,'the compact fuel chip up to HUD_NARROW');
  assert.doesNotMatch(jcss,/orientation:landscape\),\(max-device-width:480px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}/,'phones no longer hide fish / fruit by viewport');
  assert.match(jcss,/@container hudbar \(max-width:221\.98px\)\{\.wallet\[data-job-wallet\] \.basketOnly\{display:none\}\}/,'fish / fruit give way below the measured four-chip width');
  assert.match(jcss,/:global\(\.town-app:not\(\[data-fishing\]\):has\(nav\[data-hud-triggers\]>\[data-party-open\] \[data-party-badge\]\)\) \.wallet\[data-job-wallet\]\{left:calc\(var\(--hud-bar-left\) \+ var\(--btn-icon,44px\) \+ 1px \+ var\(--island-hud-pair-gap,8px\)\)\}/,'the party badge (1 px past the circle border box) moves the bar start');
