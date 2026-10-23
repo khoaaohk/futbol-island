@@ -341,8 +341,15 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
 
 ## Room party chip (rooms Phase 1, 22 Oct 2026, `docs/multiplayer-rooms-design.md` 3.3)
 
-- **Where:** the room page's own header slot, NOT the island `.hud-stack`. In the Konbini it is the first item of
-  `.headerActions` (top-left, before the coin card; Done stays top-right; Back takes the far left while zoomed). Future rooms put
+- **Where:** the room page's own header slot, NOT the island `.hud-stack`. Konbini header (owner, 22 Oct 2026): a 3-column grid
+  `minmax(0,1fr) auto minmax(0,1fr)`: the "N here" chip on the LEFT edge, the coins pill at the true screen centre (within 2 px;
+  <= 380 px it trims its padding and drops the "coins" word first), Done on the RIGHT edge; safe-area insets stay in the header
+  padding; Back takes the left cell while zoomed and the section pill drops to a centred second row. No party: coins stay centred.
+  **Konbini Emote button rule:** shown only when something is near to emote at: a live-party friend in the room within 8 m and
+  not busy (force-fielded friends do not count, as on the island). The cashier behind the counter NEVER counts. The Konbini has
+  no customer NPCs besides the clerk, so only friends count (`lib/konbini/emoteRule.ts`, pure; sampled by the scene at ~4 Hz, no
+  allocation, pushed to `RoomEmoteDock` via `onEmoteNear`; Battery saver: friends do not count). Hidden = fade 0.18 s (instant
+  under reduced motion), `visibility:hidden`, grid cell reserved so keep-up / kick never move; an open wheel closes with it. Future rooms put
   it in their header's actions group and pass `align="right"` when that group sits on the right.
 - **What:** `components/party/RoomPartyChip.tsx`: a cream pill (your colour dot + "N here", >= 44 px) and a round gold Emote
   button (44 px). The wheel (`EmoteWheel.tsx`, the island presets) and the read-only roster open as popovers under the chip, from

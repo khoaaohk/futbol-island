@@ -46,7 +46,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     '--room', '8', '--room-after', String(ROOM_AFTER), '--walk', '6000', '--stand', '6000', '--emote-every', '9000'], { stdio: ['ignore', 'pipe', 'ignore'] });
   let botOut = ''; bot.stdout.on('data', (d) => { botOut += d; });
   const botDone = new Promise((r) => bot.on('exit', r));
-  const session = () => p.evaluate(() => { try { return JSON.parse(sessionStorage.getItem('fi-party-session') || 'null'); } catch { return null; } });
+  const session = () => p.evaluate(() => { try { return JSON.parse(localStorage.getItem('fi2-party-session-v1') || 'null'); } catch { return null; } });
   for (let i = 0; i < 40 && !/2 playing/.test((await p.getAttribute('[data-party-open]', 'aria-label').catch(() => '')) || ''); i++) await p.waitForTimeout(500);
   const s0 = await session();
   console.log('island', JSON.stringify({ label: await p.getAttribute('[data-party-open]', 'aria-label').catch(() => null), stored: !!s0 }));
@@ -79,8 +79,21 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   for (let i = 0; i < 24 && !bubble; i++) { bubble = await p.evaluate(() => !!window.__konbini.threeScene.getObjectByName('remote-avatar-labels')?.children.some((c) => c.name === 'remote-emote' && c.visible)); if (!bubble) await p.waitForTimeout(500); }
   console.log('bot wave bubble', bubble); if (!bubble) bad('the bot wave never showed in the Konbini');
   await p.screenshot({ path: `${out}/konbini-desktop.png` });
-  // The player waves back through the room chip (Leave-only chip: no host controls).
-  await p.click('[data-room-emote]'); await p.waitForSelector('.emote-wheel-btn'); await p.click('.emote-wheel-btn >> nth=0'); await p.waitForTimeout(400);
+  // Owner, Oct 22 2026: keep-up above kick on the right edge, Emote immediately left of kick, all three the same size (and look).
+  const cluster = (pg, tag) => pg.evaluate(() => { const r = (sel) => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(), c = getComputedStyle(e); return { x: b.x, y: b.y, w: b.width, h: b.height, border: c.borderTopWidth, shadow: c.boxShadow.replace(/rgba?\([^)]*\)\s*/g, ''), icon: e.querySelector('svg')?.getBoundingClientRect().width ?? null }; };
+    return { keep: r('[data-konbini-action=keepups]'), kick: r('[data-konbini-action=shoot]'), emote: r('[data-room-emote-dock]'), chipEmote: !!document.querySelector('[data-room-party-chip]')?.parentElement?.querySelector('button[data-room-emote]:not([data-room-emote-dock])'), vw: innerWidth }; })
+    .then((c) => { console.log(tag + ' cluster', JSON.stringify(c));
+      if (!c.keep || !c.kick || !c.emote) { bad(tag + ': keep-up / kick / emote dock missing'); return c; }
+      for (const k of ['w', 'h', 'border', 'shadow', 'icon']) if (c.emote[k] !== c.keep[k] || c.kick[k] !== c.keep[k]) bad(`${tag}: emote/keep-up/kick differ in ${k}: ${c.emote[k]} / ${c.keep[k]} / ${c.kick[k]}`);
+      if (!(c.keep.y + c.keep.h <= c.kick.y + 1 && Math.abs(c.keep.x - c.kick.x) < 2)) bad(tag + ': keep-up must sit directly above kick');
+      if (!(c.emote.x + c.emote.w <= c.kick.x + 1 && Math.abs(c.emote.y - c.kick.y) < 2)) bad(tag + ': emote must sit immediately left of kick');
+      if (c.chipEmote) bad(tag + ': no emote button in the header chip'); return c; });
+  const wheelBox = (pg, tag) => pg.evaluate(() => { const w = document.querySelector('[data-room-emote-wheel] .emote-wheel')?.getBoundingClientRect(); const ids = ['[data-konbini-action=keepups]', '[data-konbini-action=shoot]', '[data-room-emote-dock]'].map((q) => document.querySelector(q).getBoundingClientRect());
+    return w ? { l: w.left, r: w.right, t: w.top, b: w.bottom, vw: innerWidth, overlaps: ids.some((i) => !(w.right <= i.left || w.left >= i.right || w.bottom <= i.top || w.top >= i.bottom)) } : null; })
+    .then((w) => { console.log(tag + ' wheel', JSON.stringify(w)); if (!w || w.l < 0 || w.r > w.vw || w.t < 0 || w.overlaps) bad(tag + ': the emote wheel must be on screen and clear of the action buttons'); });
+  await cluster(p, 'desktop');
+  // The player waves back through the Emote button (Leave-only chip: no host controls).
+  await p.click('[data-room-emote]'); await p.waitForSelector('.emote-wheel-btn'); await wheelBox(p, 'desktop'); await p.screenshot({ path: `${out}/konbini-desktop-wheel.png` }); await p.click('.emote-wheel-btn >> nth=0'); await p.waitForTimeout(400);
   const myEmote = (await st()); console.log('my emote plays', JSON.stringify({ emote: await p.evaluate(() => window.__konbini.state.emote) }));
   await p.screenshot({ path: `${out}/konbini-desktop-emote.png` });
   await p.click('[data-room-party-chip]'); await p.waitForSelector('[data-room-roster]');
@@ -101,7 +114,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const tok = await session();
   await p.close();
   const phone = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } });
-  await phone.addInitScript((s) => { try { sessionStorage.setItem('fi-party-session', s); } catch { /* none */ } }, JSON.stringify(tok));
+  await phone.addInitScript((s) => { try { localStorage.setItem('fi2-party-session-v1', s); } catch { /* none */ } }, JSON.stringify(tok));
   const pp = await phone.newPage(); pp.on('pageerror', (e) => errs.push(e.message));
   await pp.goto(url + '/konbini?door=main', { waitUntil: 'domcontentloaded', timeout: 90000 });
   await pp.waitForFunction(() => window.__konbini?.state?.party?.friends?.some((f) => !f.gone && f.fade > .9), null, { timeout: 45000 }).catch(() => bad('phone: the friend is not drawn'));
@@ -115,6 +128,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   console.log('phone remote-only frames', JSON.stringify(fps)); if (!fps || fps.remoteFps > 21) bad('phone remote-only frames should be <= 20 fps');
   await pp.waitForTimeout(500);
   await pp.screenshot({ path: `${out}/konbini-phone.png` });
+  await cluster(pp, 'phone'); await pp.click('[data-room-emote]'); await pp.waitForSelector('.emote-wheel-btn'); await wheelBox(pp, 'phone'); await pp.screenshot({ path: `${out}/konbini-phone-wheel.png` }); await pp.click('[data-room-emote]');
+  const chipPhone = await pp.evaluate(() => { const c = document.querySelector('[data-room-party-chip]')?.getBoundingClientRect(); return c ? { x: c.x, y: c.y, w: c.width } : null; }); console.log('phone chip', JSON.stringify(chipPhone));
 
   // Back to the island through the doors: the bot stays in the Konbini; the island shows the door hint and "In the Konbini".
   await pp.click('[data-konbini-done]').catch(() => {});

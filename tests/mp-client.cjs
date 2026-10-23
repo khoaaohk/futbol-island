@@ -96,7 +96,7 @@ t('reconnect schedule 1,2,4,8,15,15 s with +/-30% jitter bounds',()=>{
 
 t('resume token reuse (reconnect and page reload) and 12 h TTL',()=>{
   const e=makeEnv();const s1=goLive(e,'tok-abcdefghij012345');
-  const sess=JSON.parse(e.storage.getItem('fi-party-session'));
+  const sess=JSON.parse(e.storage.getItem('fi2-party-session-v1'));
   assert.equal(sess.code,'K7MQ4R');assert.equal(sess.resumeToken,'tok-abcdefghij012345');assert.equal(typeof sess.at,'number');
   s1.drop();e.clock.advance(1000);const s2=e.last();assert.notEqual(s2,s1);s2.open();
   assert.equal(e.msgs(s2)[0][3],'tok-abcdefghij012345','Hello after reconnect carries the token');
@@ -107,14 +107,14 @@ t('resume token reuse (reconnect and page reload) and 12 h TTL',()=>{
   const e3=makeEnv({storage:e.storage});e3.c.join('BCDFGH',{look:LOOK});e3.last().open();assert.equal(e3.msgs(e3.last())[0][3],null);
   // hostKey kept in the session
   const e4=makeEnv();e4.c.join('K7MQ4R',{look:LOOK,hostKey:'hostkey-abcdefgh'});e4.last().open();e4.last().recv(welcome('tok-second-0123456789'));
-  assert.equal(JSON.parse(e4.storage.getItem('fi-party-session')).hostKey,'hostkey-abcdefgh');
+  assert.equal(JSON.parse(e4.storage.getItem('fi2-party-session-v1')).hostKey,'hostkey-abcdefgh');
   const e5=makeEnv({storage:e4.storage});e5.c.join('K7MQ4R',{look:LOOK});e5.last().open();assert.deepEqual(e5.msgs(e5.last())[0].slice(3),['tok-second-0123456789','hostkey-abcdefgh']);
   // party persistence: the session lives as long as the party cap (12 h): kept after 31 min, ignored past 12 h
   assert.equal(conn.SESSION_TTL_MS,P.PARTY_MAX_MS);
   const e6=makeEnv({storage:e4.storage});e6.clock.advance(31*60*1000);e6.c.join('K7MQ4R',{look:LOOK});e6.last().open();assert.equal(e6.msgs(e6.last())[0][3],'tok-second-0123456789');
   const e7=makeEnv({storage:e4.storage});e7.clock.advance(P.PARTY_MAX_MS+40*60000);e7.c.join('K7MQ4R',{look:LOOK});e7.last().open();assert.equal(e7.msgs(e7.last())[0][3],null);
   // leave clears the session
-  e.c.leave();assert.equal(e.storage.getItem('fi-party-session'),null);assert.equal(e.c.status,'idle');
+  e.c.leave();assert.equal(e.storage.getItem('fi2-party-session-v1'),null);assert.equal(e.c.status,'idle');
 });
 
 t('hidden tab: close after 15 s, no retry while hidden, resume on visible',()=>{
@@ -180,7 +180,7 @@ t('fatal errors stop retries; Ended clears the session; onMessage fan-out',()=>{
   const e=makeEnv();const seen=[];const off=e.c.onMessage(m=>seen.push(m[0]));
   e.c.join('K7MQ4R',{look:LOOK});e.last().open();e.last().recv([29,2]);
   assert.equal(e.c.status,'error');assert.deepEqual(seen,[29]);e.clock.advance(60000);assert.equal(e.sockets.length,1);
-  const e2=makeEnv();const s=goLive(e2);s.recv([28,0]);assert.equal(e2.c.status,'ended');assert.equal(e2.storage.getItem('fi-party-session'),null);
+  const e2=makeEnv();const s=goLive(e2);s.recv([28,0]);assert.equal(e2.c.status,'ended');assert.equal(e2.storage.getItem('fi2-party-session-v1'),null);
   off();
   // garbage is ignored
   const e3=makeEnv();const s3=goLive(e3);s3.recv('not json');s3.recv([99]);assert.equal(e3.c.status,'live');
@@ -253,7 +253,7 @@ t('bindConnection: messages -> store, Poses -> onPoses (+ store presence flips o
 t('S.Code (Rotate) updates the code, the session and the next reconnect URL (#1)',()=>{
   const e=makeEnv();const s=goLive(e);
   s.recv([27,'B8CD2F',Date.now()+7200000]);
-  assert.equal(e.c.code,'B8CD2F');assert.equal(JSON.parse(e.storage.getItem('fi-party-session')).code,'B8CD2F');
+  assert.equal(e.c.code,'B8CD2F');assert.equal(JSON.parse(e.storage.getItem('fi2-party-session-v1')).code,'B8CD2F');
   s.drop();e.clock.advance(5000);
   assert.equal(e.sockets.length,2);assert.ok(e.last().url.includes('/B8CD2F/ws'),'redial uses the new code: '+e.last().url);
 });
@@ -261,7 +261,8 @@ t('terminal close codes 4003 / 4004 / 4005 never reconnect (#15)',()=>{
   for(const [cc,st] of [[4003,'error'],[4004,'ended'],[4005,'idle']]){
     const e=makeEnv();const s=goLive(e);s.dropWith(cc);
     assert.equal(e.c.status,st,'status for '+cc);e.clock.advance(60000);assert.equal(e.sockets.length,1,'no redial after '+cc);
-    assert.equal(e.storage.getItem('fi-party-session'),null,'session cleared');
+    if(cc===4005){assert.ok(e.storage.getItem('fi2-party-session-v1'),'4005 keeps the session (the other tab owns it)');assert.equal(e.c.tab,'moved');}
+    else assert.equal(e.storage.getItem('fi2-party-session-v1'),null,'session cleared');
   }
   const e=makeEnv();const s=goLive(e);s.dropWith(1006);e.clock.advance(5000);assert.equal(e.sockets.length,2,'an ordinary drop still reconnects');
 });
@@ -359,7 +360,11 @@ t('look round trip: default + 3 presets, bounds, unknown -> 0',()=>{
 t('privacy: no forbidden imports or storage keys in lib/multiplayer',()=>{
   for(const f of fs.readdirSync(path.join(ROOT,'lib/multiplayer'),{recursive:true}).filter(f=>/\.tsx?$/.test(f))){// recursive: lib/multiplayer/rooms/*
     const src=fs.readFileSync(path.join(ROOT,'lib/multiplayer',f),'utf8');
-    assert.ok(!/lib\/saves|lib\/analytics|\.\.\/saves|\.\.\/analytics|deviceMarks|fi2-install-v1|fi2-save-code-v1|localStorage/.test(src),f);}
+    // Party rejoin (Oct 22 2026): connection.ts may name localStorage ONLY in its deviceStorage() accessor (the one party session key).
+    const s2=f==='connection.ts'?src.replace(/typeof localStorage === 'undefined' \? null : localStorage/,''):src;
+    assert.ok(!/lib\/saves|lib\/analytics|\.\.\/saves|\.\.\/analytics|deviceMarks|fi2-install-v1|fi2-save-code-v1|localStorage/.test(s2),f);}
+  const c=fs.readFileSync(path.join(ROOT,'lib/multiplayer/connection.ts'),'utf8');
+  assert.deepEqual([...c.matchAll(/storage\??\.setItem\(([A-Z_]+)/g)].map(m=>m[1]),['SESSION_KEY','SESSION_KEY'],'the only key written is the party session');
 });
 
 
@@ -395,7 +400,8 @@ t('nick module: memory only, normalised, clearable',()=>{
 });
 t('nick is never persisted or logged (source scan)',()=>{
   const files=['lib/multiplayer/nick.ts','lib/multiplayer/connection.ts','lib/multiplayer/store.ts','lib/multiplayer/townBridge.ts','components/party/NickField.tsx','components/party/PartyHost.tsx','components/party/JoinParty.tsx','lib/graphics/remoteAvatars.ts'];
-  for(const f of files){const src=fs.readFileSync(path.join(ROOT,f),'utf8');
+  for(const f of files){let src=fs.readFileSync(path.join(ROOT,f),'utf8');
+    if(f.endsWith('connection.ts'))src=src.replace(/typeof localStorage === 'undefined' \? null : localStorage/,''); // the party session's device accessor (checked above)
     assert.ok(!/localStorage|document\.cookie|indexedDB/.test(src),f+' touches persistent storage');
     assert.ok(!/console\.(log|info|warn|error|debug)/.test(src),f+' logs');
     for(const m of src.matchAll(/(?:session|local)Storage\.setItem\([^)]*\)/g))assert.ok(!/nick/i.test(m[0]),f+' stores the nick');}
@@ -404,7 +410,7 @@ t('nick is never persisted or logged (source scan)',()=>{
   assert.ok(!/setItem\([^)]*nick/.test(c)&&!/JSON\.stringify\(\{[^}]*nick/.test(c));
   const sess=JSON.stringify({code:'K7MQ4R',resumeToken:null,at:1});assert.ok(!/nick/i.test(sess));
   const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});e.last().open();e.last().recv(welcome());
-  assert.ok(!/Emma/.test(e.storage.getItem('fi-party-session')||''),'session storage payload has no nick');
+  assert.ok(!/Emma/.test(e.storage.getItem('fi2-party-session-v1')||''),'session storage payload has no nick');
 });
 
 // ---- presence (design 4.4.1) ----
@@ -479,8 +485,9 @@ t('persistence: auto-resume of the stored session on a fresh page / mount',()=>{
   const r=makeEnv({storage:e.storage});const seen=[];r.c.onStatus(x=>seen.push(x));
   assert.equal(r.c.resume({look:LOOK}),true);assert.equal(r.c.status,'reconnecting','Reconnecting chip, not a fresh join');
   r.last().open();const hello=r.msgs(r.last())[0];
-  assert.deepEqual(hello.slice(3),['tok-keep-0123456789','hostkey-abcdefgh'],'resume token + host key');
-  assert.equal(hello.length,5,'no name on a resume (the relay keeps it on the slot): the old 5-element Hello');
+  assert.deepEqual(hello.slice(3,5),['tok-keep-0123456789','hostkey-abcdefgh'],'resume token + host key');
+  assert.equal(hello.length,7,'a resume sends an EMPTY name slot (the relay keeps the name on a live slot; refuses a lapsed one)');
+  assert.equal(hello[6],null,'no name on a resume');assert.ok(P.parseClient(r.last().sent[0]),'validator accepts it');
   r.last().recv(welcome('tok-keep-0123456789'));assert.equal(r.c.status,'live');assert.deepEqual(seen,['reconnecting','live']);
   assert.equal(r.c.code,'K7MQ4R');
   // resume is a no-op when there is nothing stored or already in a party
@@ -490,24 +497,25 @@ t('persistence: auto-resume of the stored session on a fresh page / mount',()=>{
 t('persistence: unmount / dispose never leaves; only explicit endings clear the session',()=>{
   const e=makeEnv();const s=goLive(e,'tok-keep-0123456789');
   e.c.dispose();assert.ok(!e.msgs(s).some(m=>m[0]===P.C.Leave),'dispose sends no Leave');
-  assert.ok(e.storage.getItem('fi-party-session'),'dispose keeps the stored session');
+  assert.ok(e.storage.getItem('fi2-party-session-v1'),'dispose keeps the stored session');
   // a plain drop / hidden tab keeps it
-  const e2=makeEnv();const s2=goLive(e2);s2.drop();assert.ok(e2.storage.getItem('fi-party-session'),'drop keeps');
-  // explicit: Leave, Ended, Kicked (error + 4003), ended 4004, replaced 4005
-  const l=makeEnv();goLive(l);l.c.leave();assert.equal(l.storage.getItem('fi-party-session'),null);
-  const en=makeEnv();goLive(en).recv([P.S.Ended,P.EndReason.HostEnded]);assert.equal(en.storage.getItem('fi-party-session'),null);
-  const ex=makeEnv();goLive(ex).recv([P.S.Ended,P.EndReason.Expired]);assert.equal(ex.storage.getItem('fi-party-session'),null);
-  const k=makeEnv();goLive(k).recv([P.S.Error,P.ErrorCode.Kicked]);assert.equal(k.storage.getItem('fi-party-session'),null);
-  for(const code of [4003,4004,4005]){const z=makeEnv();goLive(z).dropWith(code);assert.equal(z.storage.getItem('fi-party-session'),null,'close '+code);}
+  const e2=makeEnv();const s2=goLive(e2);s2.drop();assert.ok(e2.storage.getItem('fi2-party-session-v1'),'drop keeps');
+  // explicit: Leave, Ended, Kicked (error + 4003), ended 4004; replaced 4005 KEEPS it (Party rejoin: the other tab owns it now)
+  const l=makeEnv();goLive(l);l.c.leave();assert.equal(l.storage.getItem('fi2-party-session-v1'),null);
+  const en=makeEnv();goLive(en).recv([P.S.Ended,P.EndReason.HostEnded]);assert.equal(en.storage.getItem('fi2-party-session-v1'),null);
+  const ex=makeEnv();goLive(ex).recv([P.S.Ended,P.EndReason.Expired]);assert.equal(ex.storage.getItem('fi2-party-session-v1'),null);
+  const k=makeEnv();goLive(k).recv([P.S.Error,P.ErrorCode.Kicked]);assert.equal(k.storage.getItem('fi2-party-session-v1'),null);
+  for(const code of [4003,4004]){const z=makeEnv();goLive(z).dropWith(code);assert.equal(z.storage.getItem('fi2-party-session-v1'),null,'close '+code);}
+  const rp=makeEnv();goLive(rp).dropWith(4005);assert.ok(rp.storage.getItem('fi2-party-session-v1'),'close 4005 keeps');
 });
 t('persistence: a resume into a gone party gives up (~15 s) and clears; offline keeps it',()=>{
   const e=makeEnv();goLive(e,'tok-keep-0123456789');
   const r=makeEnv({storage:e.storage});r.c.resume({look:LOOK});
   for(let i=0;i<conn.RESUME_ATTEMPTS+1;i++){r.last().drop();r.clock.advance(20000);}
-  assert.equal(r.c.status,'error');assert.equal(r.storage.getItem('fi-party-session'),null,'online: cleared (relay refused the upgrade)');
+  assert.equal(r.c.status,'error');assert.equal(r.storage.getItem('fi2-party-session-v1'),null,'online: cleared (relay refused the upgrade)');
   // the relay answers an ended room with Error Expired + 4004 on a resume
   const e2=makeEnv();goLive(e2,'tok-keep-0123456789');const r2=makeEnv({storage:e2.storage});r2.c.resume({look:LOOK});r2.last().open();
-  r2.last().recv([P.S.Error,P.ErrorCode.Expired]);assert.equal(r2.c.status,'error');assert.equal(r2.storage.getItem('fi-party-session'),null);
+  r2.last().recv([P.S.Error,P.ErrorCode.Expired]);assert.equal(r2.c.status,'error');assert.equal(r2.storage.getItem('fi2-party-session-v1'),null);
 });
 t('persistence: PartyHost resumes on mount and never leaves on unmount (source)',()=>{
   const host=fs.readFileSync(path.join(ROOT,'components/party/PartyHost.tsx'),'utf8');
@@ -519,4 +527,91 @@ t('persistence: PartyHost resumes on mount and never leaves on unmount (source)'
   const disp=bridge.slice(bridge.indexOf('dispose()'));assert.ok(!/conn\.(leave|dispose)\(/.test(disp),'runtime dispose keeps the shared connection');
 });
 
-console.log(`mp-client: ${n} groups passed`);
+
+// ---- party rejoin (Oct 22 2026, docs/multiplayer-design.md "Party rejoin"): device storage, TTL, multi-tab holder ----
+// A fake navigator.locks shared by the "tabs" of one browser: synchronous callbacks and thenables, so the tests stay synchronous.
+let lockTail=null;
+function makeLocks(){const st={holder:null,queue:[]};
+  function request(name,opts,cb){let res,rej;const p={then(a,b){res=a;rej=b;return p;}};
+    if(st.holder&&!opts.steal){if(opts.ifAvailable){cb(null);return{then(a){a&&a();}};}}
+    if(st.holder&&opts.steal){const old=st.holder;st.holder=null;old.rej&&old.rej(new Error('AbortError'));}
+    const me={rej:e=>rej&&rej(e)};st.holder=me;
+    const held=cb({name});if(held&&typeof held.then==='function')held.then(()=>{if(st.holder===me)st.holder=null;res&&res();});
+    return p;}
+  return{request,state:st};}
+t('rejoin: the session lives in device storage (fi2-party-session-v1), 12 h cap, same fields, no name',()=>{
+  assert.equal(conn.SESSION_KEY,'fi2-party-session-v1');assert.equal(conn.SESSION_TTL_MS,P.PARTY_MAX_MS);
+  const src=fs.readFileSync(path.join(ROOT,'lib/multiplayer/connection.ts'),'utf8');
+  assert.ok(/typeof localStorage === 'undefined' \? null : localStorage/.test(src),'default storage = localStorage (device, every tab)');
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,hostKey:'hostkey-abcdefgh',nick:'Emma'});e.last().open();e.last().recv(welcome('tok-keep-0123456789'));
+  const sess=JSON.parse(e.storage.getItem(conn.SESSION_KEY));
+  assert.deepEqual(Object.keys(sess).sort(),['at','code','hostKey','resumeToken']);assert.ok(!/Emma/.test(JSON.stringify(sess)));
+  assert.deepEqual(plain(e.c.storedParty()),{code:'K7MQ4R',host:true},'the menu sees the code and a host flag, never the key');
+  const g=makeEnv();goLive(g);assert.deepEqual(plain(g.c.storedParty()),{code:'K7MQ4R',host:false});
+  // a new tab ~11 h later still resumes; past 12 h nothing is offered
+  const r=makeEnv({storage:e.storage});r.clock.advance(11*3600e3);assert.ok(r.c.storedParty());assert.equal(r.c.resume({look:LOOK}),true);
+  const x=makeEnv({storage:e.storage});x.clock.advance(P.PARTY_MAX_MS+60000);assert.equal(x.c.storedParty(),null);assert.equal(x.c.resume({look:LOOK}),false);
+});
+t('rejoin: cleared only on explicit endings; a 4005 (another tab) and a plain drop keep it',()=>{
+  const ends=[['leave',e=>e.c.leave()],['ended',e=>e.last().recv([P.S.Ended,P.EndReason.HostEnded])],['expired',e=>e.last().recv([P.S.Ended,P.EndReason.Expired])],
+    ['kicked',e=>e.last().recv([P.S.Error,P.ErrorCode.Kicked])],['4003',e=>e.last().dropWith(4003)],['4004',e=>e.last().dropWith(4004)]];
+  for(const [n2,fn] of ends){const e=makeEnv();goLive(e);fn(e);assert.equal(e.storage.getItem(conn.SESSION_KEY),null,n2);assert.equal(e.c.tab,null,n2);}
+  for(const [n2,fn] of [['4005',e=>e.last().dropWith(4005)],['drop',e=>e.last().drop()],['dispose',e=>e.c.dispose()]]){
+    const e=makeEnv();goLive(e);fn(e);assert.ok(e.storage.getItem(conn.SESSION_KEY),n2+' keeps');}
+  const m=makeEnv();goLive(m);m.last().dropWith(4005);assert.equal(m.c.status,'idle');assert.equal(m.c.tab,'moved');m.clock.advance(120000);assert.equal(m.sockets.length,1,'goes quiet');
+});
+t('rejoin: a lapsed slot (BadName on a resume) keeps the session and flags lapsed; a join with the code takes the host key',()=>{
+  const e=makeEnv();e.c.join('k7m-q4r',{look:LOOK,hostKey:'hostkey-abcdefgh',nick:'Emma'});e.last().open();e.last().recv(welcome('tok-keep-0123456789'));
+  const r=makeEnv({storage:e.storage});const seen=[];r.c.onLocal(()=>seen.push([r.c.tab,r.c.lapsed]));r.c.resume({look:LOOK});r.last().open();
+  r.last().recv([P.S.Error,P.ErrorCode.BadName]);
+  assert.equal(r.c.status,'error');assert.equal(r.c.lapsed,true);assert.ok(r.storage.getItem(conn.SESSION_KEY),'kept for Join with the code');
+  assert.deepEqual(plain(r.c.storedParty()),{code:'K7MQ4R',host:true});r.clock.advance(60000);assert.equal(r.sockets.length,1,'no retry');
+  // the menu's Join with the code (name asked again): a fresh Hello WITH the name and the stored host key (host back if the role is free)
+  r.c.join('K7MQ4R',{look:LOOK,nick:'Emma'});r.last().open();const h=r.msgs(r.last())[0];
+  assert.equal(h[4],'hostkey-abcdefgh');assert.equal(h[6],'Emma');assert.equal(r.c.lapsed,false);
+  // BadName on a typed join (not a resume) is still a plain refusal that clears
+  const j=makeEnv();j.c.join('k7m-q4r',{look:LOOK,nick:'Emma'});j.last().open();j.last().recv([P.S.Error,P.ErrorCode.BadName]);assert.equal(j.c.lapsed,false);assert.equal(j.storage.getItem(conn.SESSION_KEY),null);
+  // the party ended: forget() clears (the menu says 'That party ended')
+  r.c.leave();const f=makeEnv({storage:e.storage});goLive(f,'tok-z-0123456789');const f2=makeEnv({storage:f.storage});f2.c.forget();assert.equal(f2.storage.getItem(conn.SESSION_KEY),null);
+});
+t('rejoin: one tab holds the party (fake Web Locks): a second tab sees elsewhere, Use it here moves it, the first goes quiet',()=>{
+  const locks=makeLocks();const storage=(()=>{const m=new Map();return{getItem:k=>m.get(k)??null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k)};})();
+  const mk=()=>{const e=makeEnv({storage});const c=conn.createPartyConnection({WebSocketImpl:class{constructor(u){this.url=u;this.readyState=0;this.sent=[];e.sockets.push(this);}send(x){this.sent.push(x);}close(){this.readyState=3;}open(){this.readyState=1;this.onopen&&this.onopen();}recv(m){this.onmessage&&this.onmessage({data:JSON.stringify(m)});}dropWith(code){this.readyState=3;this.onclose&&this.onclose({code});}},
+    now:e.clock.now,random:()=>0.5,setTimeout:e.clock.setTimeout,clearTimeout:e.clock.clearTimeout,visibility:{hidden:()=>false,on:()=>()=>{}},storage,locks});e.c.dispose();return{...e,c};};
+  const A=mk();A.c.join('k7m-q4r',{look:LOOK,hostKey:'hostkey-abcdefgh',nick:'Emma'});A.last().open();A.last().recv(welcome('tok-keep-0123456789'));
+  assert.equal(A.c.status,'live');assert.equal(A.c.tab,'here');assert.ok(locks.state.holder,'A holds the lock');
+  // tab B opens: auto-resume finds the holder -> no socket, 'elsewhere'
+  const B=mk();assert.equal(B.c.resume({look:LOOK}),true);assert.equal(B.sockets.length,0,'no second connection');assert.equal(B.c.tab,'elsewhere');assert.equal(B.c.status,'idle');
+  // Use it here: steal -> A goes quiet ('moved', session kept, no redial), B resumes the same slot
+  assert.equal(B.c.takeOver({look:LOOK}),true);
+  assert.equal(A.c.tab,'moved');assert.equal(A.c.status,'idle');A.clock.advance(120000);assert.equal(A.sockets.length,1,'A never redials');
+  B.last().open();assert.deepEqual(B.msgs(B.last())[0].slice(3,5),['tok-keep-0123456789','hostkey-abcdefgh'],'same slot + host key');
+  B.last().recv(welcome('tok-keep-0123456789'));assert.equal(B.c.status,'live');assert.equal(B.c.tab,'here');
+  assert.ok(storage.getItem(conn.SESSION_KEY),'session kept through the move');
+  // A cannot silently take it back by a remount: its resume sees the holder
+  assert.equal(A.c.resume({look:LOOK}),true);assert.equal(A.c.tab,'elsewhere');assert.equal(A.sockets.length,1);
+  // B ends the party: lock freed, session gone; a fresh tab has nothing to resume
+  B.last().recv([P.S.Ended,P.EndReason.HostEnded]);assert.equal(storage.getItem(conn.SESSION_KEY),null);
+  const C=mk();assert.equal(C.c.resume({look:LOOK}),false);
+  // the lock is let go when the held promise settles (a microtask): checked in the async tail below
+  lockTail=async()=>{
+    await Promise.resolve();await Promise.resolve();assert.equal(locks.state.holder,null,'End releases the lock');
+    // no live holder: a new tab auto-resumes by itself
+    const D=mk();goLive(D,'tok-d-0123456789');D.c.dispose();await Promise.resolve();await Promise.resolve();
+    assert.equal(locks.state.holder,null,'dispose (page gone) frees the lock');
+    const E=mk();assert.equal(E.c.resume({look:LOOK}),true);assert.equal(E.c.status,'reconnecting');assert.equal(E.c.tab,'here');assert.equal(E.sockets.length,1);
+    n++;
+  };
+});
+t('rejoin: no Web Locks -> graceful (the relay 4005 decides: the newest tab wins, the old one goes quiet)',()=>{
+  const e=makeEnv();goLive(e);assert.equal(e.c.tab,'here');e.last().dropWith(4005);assert.equal(e.c.tab,'moved');assert.ok(e.storage.getItem(conn.SESSION_KEY));
+});
+t('rejoin: store carries tab / lapsed; S.Code updates a guest store too',()=>{
+  st.partyStore.reset();assert.equal(st.partyStore.get().tab,null);assert.equal(st.partyStore.get().lapsed,false);
+  st.partyStore.setLocal('elsewhere',false);assert.equal(st.partyStore.get().tab,'elsewhere');
+  st.partyStore.apply([20,2,2,'tok-abcdefghij012345',5000,9000,0,[[1,[2,3],LOOK,1,null],[2,[0,0],LOOK,0,null]]],1);
+  assert.equal(st.partyStore.get().isHost,false);st.partyStore.apply([P.S.Code,'B8CD2F',7777],2);
+  assert.equal(st.partyStore.get().code,'B8CD2F');assert.equal(st.partyStore.get().codeExpiresAt,7777);st.partyStore.reset();
+});
+
+(async()=>{if(lockTail)await lockTail();console.log(`mp-client: ${n} groups passed`);})().catch(e=>{console.error('FAIL rejoin: lock release',e);process.exit(1);});

@@ -481,6 +481,11 @@ basis noted in docs/analytics-roadmap.md). DNT/GPC still sends nothing. No new r
   - the relay `rl:` counters.
 - Add a pointer to this doc in docs/analytics-roadmap.md.
 
+**Party rejoin note (Oct 22 2026, docs/multiplayer-design.md 2.6.1).** The device now remembers the active party's code, resume
+token and host key in `fi2-party-session-v1` (localStorage, until the party ends or 12 h) so a player can return from any tab. It is a
+device-only key: never an analytics id, never read by `lib/analytics` (`tests/mp-isolation.cjs`), never in a save code. Rejoin and
+"Use it here" add no new `mp:` events; a rejoin that reaches the party is not counted as a new join (no `live_host` / `live_guest`).
+
 ## 10. Phased build plan
 
 ### Phase A: P0 (≈1 agent day, Opus or Sonnet; then a separate verify agent)

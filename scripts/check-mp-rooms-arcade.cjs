@@ -57,7 +57,7 @@ const TENNIS = stand('tennis'), PUZZLE = stand('puzzle');
     '--busy-at', `${TENNIS.x},${TENNIS.z}`, '--busy-after', String(BUSY_AFTER), '--busy-for', String(BUSY_FOR)], { stdio: ['ignore', 'pipe', 'ignore'] });
   let botOut = ''; bot.stdout.on('data', (d) => { botOut += d; });
   const botDone = new Promise((r) => bot.on('exit', r));
-  const session = () => p.evaluate(() => { try { return JSON.parse(sessionStorage.getItem('fi-party-session') || 'null'); } catch { return null; } });
+  const session = () => p.evaluate(() => { try { return JSON.parse(localStorage.getItem('fi2-party-session-v1') || 'null'); } catch { return null; } });
   for (let i = 0; i < 40 && !/2 playing/.test((await p.getAttribute('[data-party-open]', 'aria-label').catch(() => '')) || ''); i++) await p.waitForTimeout(500);
   const s0 = await session();
   console.log('island', JSON.stringify({ label: await p.getAttribute('[data-party-open]', 'aria-label').catch(() => null), stored: !!s0 }));
@@ -123,7 +123,7 @@ const TENNIS = stand('tennis'), PUZZLE = stand('puzzle');
   }
 
   // The player plays Pass Puzzles: the game replaces the hub; the party keeps going (Busy at the Pass Puzzles cabinet).
-  const myId = await p.evaluate(() => { try { return JSON.parse(sessionStorage.getItem('fi-party-session') || 'null')?.you ?? null; } catch { return null; } });
+  const myId = await p.evaluate(() => { try { return JSON.parse(localStorage.getItem('fi2-party-session-v1') || 'null')?.you ?? null; } catch { return null; } });
   await p.click('button[aria-controls="arcade-coins-panel"]'); await p.waitForTimeout(600);
   await p.click('button[aria-label="Play Pass Puzzles"]');
   await p.waitForSelector('[data-arcade-room=playing]', { timeout: 20000 }).catch(() => bad('the game did not start'));
@@ -141,7 +141,7 @@ const TENNIS = stand('tennis'), PUZZLE = stand('puzzle');
   const tok = await session();
   await p.close();
   const phone = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } });
-  await phone.addInitScript((s) => { try { sessionStorage.setItem('fi-party-session', s); } catch { /* none */ } }, JSON.stringify(tok));
+  await phone.addInitScript((s) => { try { localStorage.setItem('fi2-party-session-v1', s); } catch { /* none */ } }, JSON.stringify(tok));
   const pp = await phone.newPage(); pp.on('pageerror', (e) => errs.push(e.message));
   await pp.goto(url + '/arcade', { waitUntil: 'domcontentloaded', timeout: 90000 });
   await pp.waitForFunction(() => window.__arcadeRoom?.state?.party?.friends?.some((f) => !f.gone && f.fade > .9), null, { timeout: 60000 }).catch(() => bad('phone: the friend is not drawn'));

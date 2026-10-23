@@ -111,7 +111,8 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const sc = host.of(S.Code)[0];
   assert.ok(sc && sc[1] !== old && sc[1] === room.code && sc[1].length === 6);
   assert.deepEqual(seen, [old, room.code]);
-  assert.equal(a.of(S.Code).length, 0, 'new code goes to the host only');
+  // Party rejoin (Oct 22 2026): every member hears the new code (guests show it on their Code tab; their reconnects use it)
+  assert.deepEqual(a.of(S.Code), [sc], 'new code goes to every member, the same message');
   assert.equal(room.info().size, 2);
   void ida;
 }

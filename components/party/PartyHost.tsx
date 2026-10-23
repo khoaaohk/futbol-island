@@ -4,10 +4,10 @@ import ParentGate from '@/components/ParentGate';
 import { Icon } from '@/components/Icon';
 import { parentGatePassed } from '@/lib/parentGate';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
+import { SESSION_KEY, bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createJoinBuffer, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
-import { ErrorCode, PARTY_MAX, Zone, type Look } from '../../multiplayer/protocol';
+import { ErrorCode, PARTY_MAX, Zone, normalizeCode, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
@@ -167,6 +167,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   // the stored session is cleared only by End / Leave / Kicked / the party ending or expiring. Unmounting never leaves.
   const resumed = useRef(false);
   useEffect(() => { if (connection.resume({ look: look() })) resumed.current = true; }, [connection]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Party rejoin (Oct 22 2026, docs/multiplayer-design.md "Party rejoin"): the session is kept on this device (every tab), so the menu
+  // offers 'Rejoin your party' when the auto-resume failed or the slot lapsed, and 'Use it here' when another tab has the party.
+  const rejoinTap = useRef(false);
+  const [rejoining, setRejoining] = useState(false);
+  const [, bumpStored] = useState(0); // another tab started / ended a party: re-read the stored party (an event, never a poll)
+  useEffect(() => {
+    const on = (e: StorageEvent) => { if (e.key === SESSION_KEY || e.key === null) bumpStored((n) => n + 1); };
+    window.addEventListener('storage', on); return () => window.removeEventListener('storage', on);
+  }, []);
   // Member slots are reused: a friend who left must not leave their Hide / Mute behind for the next face in that slot.
   useEffect(() => {
     const ids = new Set(state.members.map((m) => m.id));
@@ -183,11 +192,35 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   }), []);
   const text = useCallback((t: string) => note({ kind: 'text', text: t }), [note]);
   useEffect(() => {
-    if (state.status === 'live') { resumed.current = false; return; }
+    if (state.status === 'live') {
+      resumed.current = false;
+      if (rejoinTap.current) { rejoinTap.current = false; setRejoining(false); setView((v) => (v === 'menu' ? 'none' : v)); text('You are back in your party'); }
+      return;
+    }
     // The party ended or expired while this player was away (a room page, a reload): say so once, never a join error.
-    if (state.status !== 'error' || !resumed.current || state.error === ErrorCode.Kicked) return;
-    resumed.current = false; text('The party ended'); prevIds.current = null; setView('none'); setConfirmEnd(false);
-  }, [state.status, state.error, text]);
+    // A lapsed slot is not an ending (the effect below offers Join with the code).
+    if (state.status !== 'error' || !resumed.current || state.error === ErrorCode.Kicked || state.lapsed) return;
+    const manual = rejoinTap.current; rejoinTap.current = false; setRejoining(false);
+    resumed.current = false; text(manual ? 'That party ended' : 'The party ended'); prevIds.current = null; setView('none'); setConfirmEnd(false);
+  }, [state.status, state.error, state.lapsed, text]);
+  // The relay no longer has this player's slot (60 s, or 10 min indoors, ran out) but the party may still run: if it does, Join with the
+  // code filled in (a new slot; the first name is asked again: it is never stored), else 'That party ended' and the session goes.
+  const lapsedFallback = useCallback((code: string) => {
+    setRejoining(true);
+    void checkParty(code).then((info) => {
+      setRejoining(false);
+      if (!info) { connection.forget(); bumpStored((n) => n + 1); text('That party ended'); return; }
+      setJoinCode(code); setJoinMsg('Your spot timed out. Type your first name to join again.'); joinVia.current = 'typed'; setView('join');
+    });
+  }, [connection, text]);
+  useEffect(() => {
+    if (!state.lapsed) return;
+    resumed.current = false;
+    const manual = rejoinTap.current; rejoinTap.current = false; setRejoining(false);
+    const s = connection.storedParty();
+    if (manual && s) lapsedFallback(s.code); // on a page load it stays quiet: the menu shows Rejoin your party
+  }, [state.lapsed, connection, lapsedFallback]);
+  useEffect(() => { if (state.tab === 'elsewhere' && rejoinTap.current) { rejoinTap.current = false; setRejoining(false); } }, [state.tab]);
 
   // ---- one message at a time, through the shared lane (note priority) ----
   const busyLane = useToastLaneBusy('party');
@@ -229,11 +262,14 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       joining.current = null; setBusy(false); setJoinMsg(null);
       setView((v) => (v === 'join' ? 'none' : v));
     }
-    if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
+    if (state.status === 'idle' && state.tab === 'moved' && (was === 'live' || was === 'reconnecting')) {
+      // Another tab of this browser took the party over (Use it here): this one goes quiet; the party goes on there.
+      text('Your party moved to another tab'); prevIds.current = null; setView('none'); setConfirmEnd(false);
+    } else if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
       if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); trackHealth(); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
       prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
-  }, [state.status, state.error, state.members.length, text]);
+  }, [state.status, state.error, state.tab, state.members.length, text]);
   // Analytics: the member count while live (the host's peak and first-friend bands; only a number, never who).
   useEffect(() => { if (state.status === 'live') track.current?.('members', String(state.members.length)); }, [state.status, state.members.length]);
   useEffect(() => {
@@ -289,7 +325,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     const info = await checkParty(code);
     if (!info) { setBusy(false); setJoinMsg("We couldn't find that party"); track.current?.('fail', 'not_found'); return; }
     if (info.full) { setBusy(false); setJoinMsg('This party is full (20/20)'); track.current?.('fail', 'full'); return; }
-    if (!info.open) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('fail', 'closed'); return; }
+    // A host coming back to their own party (its host key is on this device) may pass a closed party, as the relay allows.
+    const own = connection.storedParty();
+    if (!info.open && !(own && own.host && own.code === normalizeCode(code))) { setBusy(false); setJoinMsg('That party is closed or the code has run out'); track.current?.('fail', 'closed'); return; }
     clearPendingParty();
     joining.current = 'guest';
     connection.join(code, { look: look(), nick: getNick() });
@@ -314,7 +352,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       <button type="button" className={styles.ghost} onClick={() => setKickPrompt(false)}>Not now</button>
     </div>
   );
-  const activeTab = state.isHost ? tab : 'party';
+  const activeTab = tab; // Code + List for everyone (guests see the code read-only, Oct 22 2026)
   const onTabKey = (e: ReactKeyboardEvent) => {
     const order = ['code', 'party'] as const; const i = order.indexOf(activeTab);
     let n = -1;
@@ -323,6 +361,29 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     e.preventDefault(); setTab(order[n]); tabRefs.current[order[n]]?.focus();
   };
   useEffect(() => { if (confirmEnd) track.current?.('end_tap'); }, [confirmEnd]); // analytics: the first End tap (asks to confirm)
+  const stored = view === 'menu' && !live ? connection.storedParty() : null;
+  const rejoin = () => {
+    const s = connection.storedParty();
+    if (!s) { bumpStored((n) => n + 1); text('That party ended'); return; }
+    if (state.lapsed) { lapsedFallback(s.code); return; } // the relay already said the slot is gone: straight to the code
+    rejoinTap.current = true; resumed.current = true; setRejoining(true);
+    if (!connection.resume({ look: look() })) { rejoinTap.current = false; resumed.current = false; lapsedFallback(s.code); }
+  };
+  const useHere = () => {
+    rejoinTap.current = true; resumed.current = true; setRejoining(true);
+    if (!connection.takeOver({ look: look() })) { rejoinTap.current = false; resumed.current = false; setRejoining(false); bumpStored((n) => n + 1); text('That party ended'); }
+  };
+  const rejoinBlock = !stored ? null : state.tab === 'elsewhere' || state.tab === 'moved' ? (
+    <div className={styles.stack} data-party-elsewhere>
+      <p className={styles.small} role="status">{state.tab === 'moved' ? 'Your party moved to another tab.' : 'Your party is open in another tab.'}</p>
+      <button type="button" className={styles.primary} data-party-use-here disabled={rejoining} onClick={useHere}><Icon name="people" size={20} /> {rejoining ? 'Moving here' : 'Use it here'}</button>
+    </div>
+  ) : (
+    <div className={styles.stack} data-party-rejoin>
+      <button type="button" className={styles.primary} data-party-rejoin-btn disabled={rejoining || busy} onClick={rejoin}><Icon name="people" size={20} /> {rejoining ? 'Rejoining' : 'Rejoin your party'}</button>
+      <p className={styles.small}>Go back to the party you were in.</p>
+    </div>
+  );
   const leave = () => { track.current?.('leave'); trackHealth(); connection.leave(); setView('none'); text('You left the party'); };
 
   return (
@@ -341,6 +402,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <DoneButton onDone={requestClose} />
             </header>
             <FadeScroll>
+            {rejoinBlock}
             <p className={styles.small}>Friends join your island with a code. Nobody can chat.</p>
             <NickField onChange={(n) => { setNamed(n !== null); if (n !== null) track.current?.('name_ok'); }} onRejected={() => track.current?.('name_bad')} />
             <div className={styles.stack}>
@@ -370,8 +432,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               <DoneButton onDone={requestClose} />
             </header>
             {/* One body: the toggle floats pinned on top, both lists scroll underneath it (and above the pinned footer). */}
-            <div className={styles.body} data-party-body data-tabs={state.isHost ? '1' : undefined}>
-            {state.isHost && (
+            <div className={styles.body} data-party-body data-tabs="1">
               <div className={styles.tabs} role="tablist" aria-label="Party view" data-party-tabs data-active={activeTab} onKeyDown={onTabKey}>
                 <span className={styles.pill} aria-hidden="true" data-party-pill />
                 {(['code', 'party'] as const).map((t) => (
@@ -380,25 +441,21 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
                   </button>
                 ))}
               </div>
-            )}
             {/* One stage: both panels share a grid cell, so the card is always as tall as the taller one and never jumps. */}
             <div className={styles.stage} data-party-stage>
-            {state.isHost && (
               <div role="tabpanel" id="party-panel-code" aria-labelledby="party-tab-code" aria-hidden={activeTab !== 'code'} {...inertIf(activeTab !== 'code')} data-active={activeTab === 'code'} className={styles.panel} data-party-panel="code">
                 <FadeScroll>
                   {state.code
-                    ? <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} locked={state.locked}
-                        onNewCode={() => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); track.current?.('new_code'); }}
-                        onToggleLock={() => { track.current?.(state.locked ? 'unlock' : 'lock'); connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); }}
+                    ? <PartyInvite code={state.code} expiresAt={state.codeExpiresAt} onNote={text} locked={state.locked} host={state.isHost}
+                        onNewCode={state.isHost ? () => { connection.host.rotate(); text('New code ready'); setKickPrompt(false); track.current?.('new_code'); } : undefined}
+                        onToggleLock={state.isHost ? () => { track.current?.(state.locked ? 'unlock' : 'lock'); connection.host.lock(!state.locked); partyStore.setLocked(!state.locked); } : undefined}
                         onShared={(r) => track.current?.(r)} />
-                    : <p className={styles.small} role="status">Making your code...</p>}
-                  {kickPrompt && kickBlock}
+                    : <p className={styles.small} role="status">{state.isHost ? 'Making your code...' : 'Getting the code...'}</p>}
+                  {kickPrompt && state.isHost && kickBlock}
                 </FadeScroll>
               </div>
-            )}
-            <div role={state.isHost ? 'tabpanel' : undefined} id="party-panel-party" aria-labelledby={state.isHost ? 'party-tab-party' : undefined} aria-hidden={state.isHost && activeTab !== 'party'} {...inertIf(state.isHost && activeTab !== 'party')} data-active={!state.isHost || activeTab === 'party'} className={styles.panel} data-party-panel="party">
+            <div role="tabpanel" id="party-panel-party" aria-labelledby="party-tab-party" aria-hidden={activeTab !== 'party'} {...inertIf(activeTab !== 'party')} data-active={activeTab === 'party'} className={styles.panel} data-party-panel="party">
               <FadeScroll>
-            {!state.isHost && <p className={styles.small} data-party-guest-note>Only the host has the code.</p>}
             <ul className={styles.members}>
               {me && <li className={styles.member} aria-label={`You, ${displayName(me)}, ${colourName(me.colourIdx).toLowerCase()}`}><span className={styles.dot} style={{ background: me.colourHex }} aria-hidden="true" /><span className={styles.mname}>You ({displayName(me)})</span>{me.isHost && <span className={styles.badge}>Host</span>}</li>}
               {friends.map((m) => (
