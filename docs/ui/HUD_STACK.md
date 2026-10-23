@@ -425,3 +425,11 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   balances and full / low / empty fuel, and on desktop 1280×800 with all four counters. Narrowest margins (friends ↔ bar):
   360px 11px (4 digits 9px), 390px 23px (4 digits 14.5px), 430px 43px, 320px 43px (friends under Paths).
   `tests/hud-stack.cjs` pins the CSS it relies on.
+
+## Pocket keeps the coins bar (23 October 2026)
+
+Owner report (phone): tapping the coins bar opened the island pocket and the bar vanished with the column. Now `IslandJobs` gets
+`pocketOpen` (Town: `balancesOpen`); while it is set and the jobs UI is otherwise `blocked`, only the coins bar renders
+(`aria-expanded`, `data-pocket-open`, gold ring). The drawer `<dialog>` starts under the HUD row (`--pocket-top` = row top + row height + 8 px),
+its backdrop is transparent, so the bar is neither covered nor dimmed. The bar is inert under the modal; a tap on it (or the backdrop) lands on the
+dialog and closes the pocket, as do Done and Esc. The rest of the column still hides under the pocket (`stackCovered`, and the "held" notes wait).

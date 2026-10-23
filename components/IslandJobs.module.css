@@ -170,3 +170,6 @@
 @keyframes bugCardIn{from{opacity:0;scale:.85}}
 @media (prefers-reduced-motion:reduce){.bugCard{animation:none;transition:opacity .3s}.bugCard[data-out]{translate:none}}
 @media (max-width:600px){.bugCard{bottom:calc(env(safe-area-inset-bottom,0px) + 196px)}}
+
+/* Pocket open (Oct 23 2026): the bar stays and reads as the open handle of the drawer under it. */
+.wallet[data-job-wallet][data-pocket-open]{background:#ffe9ad;border-color:#f4c74e;box-shadow:0 0 0 3px #f4c74e88,0 3px 0 #a8863d}

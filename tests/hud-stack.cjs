@@ -128,4 +128,14 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.match(fuel,/@media\(max-width:400px\)\{:global\(\[data-job-wallet\]\) \.word\{display:none!important\}\}/,'the Low / Empty word gives way on narrow phones');
  assert.match(scss,/@media\(max-width:340px\)\{\.triggers \[data-party-open\]\{position:absolute!important;left:0;top:calc\(var\(--island-hud-row-height,44px\) \+ 8px\)\}\}/,'<= 340 px: Play with friends drops under Paths');
  assert.match(g,/@media\(max-width:340px\)\{\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\) \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ 2 \* var\(--island-hud-row-height\) \+ 8px \+ var\(--island-hud-row-gap\)\)\}/,'<= 340 px with friends on: the stack starts under the friends button, still centred');}
+// Pocket open (Oct 23 2026): the coins bar stays on screen above the drawer; the stack still hides.
+{const R=f=>fs.readFileSync(path.resolve(__dirname,'..',f),'utf8');const jobs=R('components/IslandJobs.tsx'),town=R('components/Town.tsx'),dcss=R('components/IslandBalanceDrawer.module.css');
+ assert.match(town,/<IslandJobs onOpenBalances=\{\(\)=>setBalancesOpen\(true\)\} pocketOpen=\{balancesOpen\}/,'Town tells the jobs UI the pocket is open');
+ assert.match(jobs,/if\(blocked\)return pocketOpen\?walletBtn:null;/,'blocked keeps only the coins bar while the pocket is open');
+ assert.match(jobs,/aria-expanded=\{pocketOpen\} data-pocket-open/,'the bar shows as open');
+ assert.match(dcss,/inset:var\(--pocket-top,0px\) 0 0 0/,'the drawer starts under the HUD row');
+ assert.match(dcss,/--pocket-top:calc\(var\(--island-hud-row-top,16px\) \+ var\(--island-hud-row-height,44px\) \+ 8px\)/,'--pocket-top clears the row');
+ assert.match(dcss,/\.dialog::backdrop\{background:transparent\}/,'the tint never covers the bar');
+ assert.match(dcss,/dialog\[open\]\.dialog\[data-island-balances\]\{inset:var\(--pocket-top\) 0 0 0!important/,'the phone dialog rule (inset:0 !important) is overridden for the pocket');
+ assert.match(town,/hud-stack" data-hud-stack ref=\{setHudStackEl\} hidden=\{stackCovered\}/,'the column itself still hides under the pocket');}
 console.log('HUD_STACK_PASS');
