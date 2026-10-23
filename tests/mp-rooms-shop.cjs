@@ -105,6 +105,12 @@ t('station line (receiver): studio stand "Designing a kit", the till "Talking to
   assert.equal(pres.presenceText('busy', ST.ShopKit), 'Looking at my kit'); assert.ok(pres.presenceIcon('busy', ST.ShopDesign) !== pres.presenceIcon('busy', Activity.None));
   for (const b of D.busy) assert.equal(pres.presenceText('busy', b.station), b.text.replace('Chatting', b.text), b.flag + ' station words');
   for (const k of ['ShopDesign', 'ShopKit', 'ShopClerk']) assert.ok(ST[k] >= 101 && ![101, 102, 103].includes(ST[k]), k + ' is a local code clear of the Konbini');
+  // Verifier, Oct 22 2026: the station table is shared, so the Kit Shop codes must also stay clear of the Museum's lines (>= 110).
+  for (const k of ['ShopDesign', 'ShopKit', 'ShopClerk']) assert.ok(ST[k] < 110, k + ' is clear of the Museum station lines (110+)');
+  assert.match(read('lib/multiplayer/rooms/museum.ts'), /MUSEUM_STATION_BASE=(1[1-9]\d|2\d\d);/, 'Museum lines start at 110+');
+  const museumish = {}; for (let c = 110; c < 256; c++) museumish[c] = ['Looking at an exhibit', 'x'];
+  pres.defineStationLines(museumish); // a Museum visit earlier in the same session
+  assert.equal(pres.presenceText('busy', ST.ShopDesign), 'Designing a kit', 'the Kit Shop words survive a Museum visit');
   assert.equal(pres.roomText(RoomCode.Shop), 'In the Kit Shop'); assert.equal(pres.presenceText('indoors', Activity.Shop), 'In the Kit Shop', 'party list: "In the Kit Shop"');
 });
 

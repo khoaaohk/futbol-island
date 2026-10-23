@@ -112,7 +112,9 @@ export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody):
 /** Busy kinds inside a room: local Activity-like codes (101+), shown over a busy friend's field. Never sent. */
 export const STATION = { Counter: 101, Shelves: 102, Snack: 103,
   // The Kit Shop (Phase 4, lib/multiplayer/rooms/shop.ts registers the words: the clerk's name lives in the shop's cast).
-  ShopDesign: 120, ShopKit: 121, ShopClerk: 122 } as const;
+  // 104..106, below the 110+ range the Museum's defineStationLines fills (MUSEUM_STATION_BASE 120 + exhibit index): at 120..122
+  // a Museum visit overwrote the Kit Shop's words in the shared table (verifier, Oct 22 2026).
+  ShopDesign: 104, ShopKit: 105, ShopClerk: 106 } as const;
 /** A room page adds its own station lines once (local codes >= 110, never on the wire), e.g. the Museum's "Looking at <exhibit>"
  *  (lib/multiplayer/rooms/museum.ts museumStationLines). Codes below 110 are refused (the wire Activities and the Konbini's). */
 export function defineStationLines(lines: Readonly<Record<number, readonly [text: string, icon: string]>>): void {
