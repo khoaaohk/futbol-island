@@ -39,6 +39,10 @@ export interface PartyConnection {
   /** The capability bits agreed with the relay (0 = an old relay: 5 Hz poses, no ball). */
   readonly caps: number;
   sendEmote(e: Emote): boolean;
+  /** Relay v1.4 (Cap.EmoteAsk): ask friend `to` to play a two-player ball emote; false (not sent) on an old relay, away, or not live. */
+  sendEmoteAsk(to: MemberId, e: Emote): boolean;
+  /** Relay v1.4: my answer to `from`'s ask (true = Join). */
+  sendEmoteAnswer(from: MemberId, yes: boolean): boolean;
   /** Change MY OWN first name mid-party (Your party > List). n goes through normalizeNick (the join form's rules); memory only, like the
    *  join name: every later reconnect Hello carries it. 'sent': a v1.3 relay (Cap.Rename) gets C.Rename now (or the next resume Hello)
    *  and re-announces me to friends. 'local': an old relay (no Cap.Rename): only this device shows it until a resume reaches a v1.3 relay.
@@ -532,6 +536,14 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (!raw([C.Emote, e])) return false;
       lastEmoteAt = t;
       return true;
+    },
+    sendEmoteAsk(to, e) {
+      if (!(caps & Cap.EmoteAsk) || localHidden || !open() || status !== 'live') return false;
+      return raw([C.EmoteAsk, to, e]);
+    },
+    sendEmoteAnswer(from, yes) {
+      if (!(caps & Cap.EmoteAsk) || !open() || status !== 'live') return false;
+      return raw([C.EmoteAnswer, from, yes ? 1 : 0]);
     },
     sendPing(kind, x, z) {
       if (localHidden || !open() || !pingBucket.take(now())) return false;

@@ -153,3 +153,11 @@
 /* Leave party in rooms keeps its pill size; only the text takes the End party red. */
 .dangerText{color:var(--party-danger)}
 .panelFoot .confirm{flex:1;margin:4px 0 0}
+/* Relay v1.4: a friend asks to play a ball emote together (EmoteAskCard): the confirm-step card, top centre, with a draining time bar. */
+.askCard{position:fixed;z-index:37;left:0;right:0;margin:0 auto;top:calc(128px + env(safe-area-inset-top,0px));box-sizing:border-box;width:min(340px,calc(100vw - 32px));display:flex;flex-direction:column;gap:10px;padding:12px 14px 14px;overflow:hidden;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:20px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 0 rgba(0,0,0,.12);animation:partyIn .3s ease}
+.askRow{display:flex;align-items:center;gap:10px;text-align:left}
+.askRow p{margin:0;font:600 15px/1.3 var(--btn-font)}
+.askIcon{flex:none;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;background:var(--btn-mint)}
+.askTime{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--btn-green);transform-origin:left;animation:askDrain linear forwards}
+@keyframes askDrain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){.askCard{animation:none}}

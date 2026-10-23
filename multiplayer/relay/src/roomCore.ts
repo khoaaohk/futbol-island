@@ -2,7 +2,7 @@
 // Design: docs/multiplayer-design.md 4.4 / 4.5. Time and randomness are injected so tests are deterministic.
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
-  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState,
+  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -78,6 +78,11 @@ interface Member {
 /** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
 const RENAME_PER_MIN = 4;
 
+/** Relay v1.4 (Cap.EmoteAsk): one sender -> receiver pair's ask state. pendingUntil > 0 = an ask is open until then (+ graceMs);
+ *  declines = No / unanswered asks in a row; blockedUntil = no asks before then. */
+interface AskPair { emote: Emote; pendingUntil: number; lastAskAt: number; declines: number; blockedUntil: number }
+const ON_FOOT = (mode: number) => mode === Mode.Walk || mode === Mode.Run || mode === Mode.Idle;
+
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 function b64url(bytes: Uint8Array): string {
   let out = '';
@@ -131,6 +136,8 @@ export class RoomCore {
   private endedAt = 0;
   /** True when a counter moved since the Durable Object last persisted (it saves them on its 5 s alarm, not per message). */
   countersDirty = false;
+  /** Relay v1.4: emote asks by pair key from * 64 + to (never persisted: a restarted relay simply forgets open asks). */
+  private asks = new Map<number, AskPair>();
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
 
@@ -259,6 +266,8 @@ export class RoomCore {
       case C.Ball: this.ballMsg(m, msg as number[], now); return;
       case C.Leave: this.remove(m, LeaveReason.Left, CLOSE.Normal); return;
       case C.Rename: this.rename(m, msg[1] as string, now); return;
+      case C.EmoteAsk: this.emoteAsk(m, msg[1] as number, msg[2] as Emote, now); return;
+      case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
       default: break;
     }
     // host-only controls: Kick, Lock, Rotate, End, ResetName
@@ -438,6 +447,54 @@ export class RoomCore {
     const dist = (d: Member): number => { const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz; return dx * dx + dz * dz; };
     return out.map((d) => ({ d, k: dist(d) })).sort((a, b) => a.k - b.k || a.d.id - b.d.id).slice(0, n).map((e) => e.d);
   }
+
+  /** Can these two play a ball emote together now? Both connected new clients, on the island, on foot, outside the force field, near. */
+  private duetOk(a: Member, b: Member): boolean {
+    if (!a.peer || !b.peer || !(a.caps & Cap.EmoteAsk) || !(b.caps & Cap.EmoteAsk) || !a.pose || !b.pose || a.room >= 0 || b.room >= 0) return false;
+    for (const m of [a, b]) { const p = m.pose as PoseBody; if (shielded(presenceOf(p[5], p[6], p[7])) || p[6] === Zone.Indoors || !ON_FOOT(p[5])) return false; }
+    const pa = a.pose, pb = b.pose, r = (EMOTE_ASK.rangeM + EMOTE_ASK.slackM) * 10;
+    return Math.abs(pa[1] - pb[1]) <= EMOTE_ASK.yM * 10 && (pa[0] - pb[0]) ** 2 + (pa[2] - pb[2]) ** 2 <= r * r;
+  }
+  /** An unanswered ask that ran out counts as a No (lazily, when the pair is next looked at). */
+  private settleAsk(q: AskPair, now: number): void {
+    if (q.pendingUntil > 0 && now > q.pendingUntil + EMOTE_ASK.graceMs) { q.pendingUntil = 0; this.declined(q, q.lastAskAt + EMOTE_ASK.timeoutMs); }
+  }
+  private declined(q: AskPair, at: number): void {
+    if (++q.declines >= EMOTE_ASK.declinesToBlock) { q.declines = 0; q.blockedUntil = at + EMOTE_ASK.blockMs; }
+  }
+  /** C.EmoteAsk: rate limited like an emote; refused (S.EmoteAnswer Unavailable, so the asker plays it alone at once) unless the two can
+   *  play together and the pair's anti-spam rules allow it (one open ask, a cooldown per pair, a block after repeated Nos). */
+  private emoteAsk(m: Member, to: number, emote: Emote, now: number): void {
+    if (!(m.caps & Cap.EmoteAsk) || !m.emoteBucket.take(now)) return;
+    const t = this.members.get(to), key = m.id * 64 + to;
+    let q = this.asks.get(key);
+    if (q) this.settleAsk(q, now);
+    m.emoteTimes = m.emoteTimes.filter((x) => now - x < 60000);
+    const spam = m.emoteTimes.length >= RATE.emotePerMin || (!!q && (q.pendingUntil > 0 || now < q.blockedUntil || now - q.lastAskAt < EMOTE_ASK.cooldownMs));
+    if (!t || t === m || spam || !this.duetOk(m, t)) { if (m.peer) this.send(m.peer, [S.EmoteAnswer, to, emote, AskReply.Unavailable]); return; }
+    m.emoteTimes.push(now);
+    if (!q) { q = { emote, pendingUntil: 0, lastAskAt: 0, declines: 0, blockedUntil: 0 }; this.asks.set(key, q); }
+    q.emote = emote; q.lastAskAt = now; q.pendingUntil = now + EMOTE_ASK.timeoutMs;
+    this.send(t.peer!, [S.EmoteAsk, m.id, emote]);
+  }
+  /** C.EmoteAnswer from the asked friend: a No goes back to the asker; a Yes (re-checked) starts the duet on every screen. */
+  private emoteAnswer(m: Member, from: number, yes: boolean, now: number): void {
+    if (!m.ctlBucket.take(now)) return;
+    const q = this.asks.get(from * 64 + m.id), a = this.members.get(from);
+    if (!q || q.pendingUntil <= 0 || now > q.pendingUntil + EMOTE_ASK.graceMs) return; // nothing open (or it ran out): ignored
+    q.pendingUntil = 0;
+    if (!a || !a.peer) return;
+    if (!yes) { this.declined(q, now); this.send(a.peer, [S.EmoteAnswer, m.id, q.emote, AskReply.No]); return; }
+    q.declines = 0;
+    if (!this.duetOk(a, m)) { this.send(a.peer, [S.EmoteAnswer, m.id, q.emote, AskReply.Unavailable]); return; }
+    this.send(a.peer, [S.EmoteAnswer, m.id, q.emote, AskReply.Yes]);
+    const duet = encode([S.Duet, a.id, m.id, q.emote, this.random(1)[0]]), oldA = encode([S.Emote, a.id, q.emote]), oldB = encode([S.Emote, m.id, q.emote]);
+    this.members.forEach((r) => {
+      if (!r.peer) return;
+      try { if (r.caps & Cap.EmoteAsk) r.peer.send(duet); else { r.peer.send(oldA); r.peer.send(oldB); } } catch { /* gone */ }
+    });
+  }
+  private forgetAsks(id: number): void { this.asks.forEach((_q, k) => { if (Math.floor(k / 64) === id || k % 64 === id) this.asks.delete(k); }); }
 
   /** C.Ball (only ever sent by a client that saw S.Caps): rate limited, island only, ignored inside a force field (shown as no ball). */
   private ballMsg(m: Member, msg: number[], now: number): void {
@@ -620,7 +677,7 @@ export class RoomCore {
   }
 
   private remove(m: Member, reason: LeaveReason, closeCode: number | null): void {
-    this.members.delete(m.id);
+    this.members.delete(m.id); this.forgetAsks(m.id);
     if (m.peer) {
       const p = m.peer;
       this.byPeer.delete(p); m.peer = null;

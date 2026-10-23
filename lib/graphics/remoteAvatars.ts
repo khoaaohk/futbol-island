@@ -23,7 +23,7 @@ import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {DEMOTE_FADE,capGate,planRigs,stepCapGate} from './rigCap';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyHighFive} from './highFivePose';import {clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
+import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
@@ -62,6 +62,11 @@ export interface RemoteAvatars{
  setMuted(ids:ReadonlySet<MemberId>):void;
  /** Plays a friend's emote; false when it is not shown (muted, hidden, inside a force field, unknown). */
  emote(id:MemberId,e:Emote):boolean;
+ /** Relay v1.4: this friend plays a two-ball duet (lib/town/emoteDuet.ts) with `partner` (another friend's id, or -1 = the local player, whose
+  *  feet come from the `local` ring each frame) as `role` (0 = the asker). Their body and their own ball follow the shared routine (the ball
+  *  is drawn here from the routine, not from the network, so it meets their foot). Ends by itself, or when either one moves away. */
+ duet(id:MemberId,partner:number,role:number,emote:number,seed:number):boolean;
+ endDuet(id:MemberId):void;
  /** The island ball hit this friend's force field: a short damped shake and a ripple from the impact normal (dome space). */
  bumpField(id:MemberId,nx:number,ny:number,nz:number):void;
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
@@ -73,6 +78,8 @@ export interface RemoteAvatars{
  readonly shown:number;
  /** Rigs alive (admitted + still shrinking after a demotion): the heat checks' leak counter. */
  readonly rigs:number;
+ /** Tests / headless checks only (allocates): each friend's emote state and drawn spot. */
+ debugEmotes():{id:MemberId;emote:number;age:number;x:number;z:number;yaw:number}[];
  /** Friend bumps (friendBump.ts): the local player's cosmetic overlay this frame (Town applies it around the render only) and bumps so far. */
  readonly localBump:LocalBump;readonly bumps:number;
  dispose():void;
@@ -80,7 +87,7 @@ export interface RemoteAvatars{
 
 const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
 const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
-const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10,RING_PITCH_LIMIT=1.45,RING_TILT_K=.6,RING_TILT_MAX=.9,RING_BODY_LIFT=.2,RING_BODY_FWD=.05,FRIEND_PITCH_MAX=1.1;
+const BATCH_CAPACITY=8,FAR_POSE=20,MID_POSE=60,FAR_HZ=10,FARTHER_HZ=5,DRAW_RANGE=160,LABEL_RANGE=25,LABEL_MAX=8,BUBBLE_MAX=6,RING_ONLY_RANGE=90,ADMIT_RECHECK=1,SAVER_FADE_SECONDS=1,BODY_SCALE=1.12,DUET_DRIFT=1.5,RING_CAPACITY=PARTY_MAX+1,RING_RADIUS=1,RING_FAR_M=60,RING_MAX_GROW=4,RING_LIFT=.10,RING_PITCH_LIMIT=1.45,RING_TILT_K=.6,RING_TILT_MAX=.9,RING_BODY_LIFT=.2,RING_BODY_FWD=.05,FRIEND_PITCH_MAX=1.1;
 const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'\u{1F389}',[Emote.HighFive]:'\u{1F64C}',[Emote.JuggleWithMe]:'\u{1F939}',[Emote.ShowOff]:'\u{1F31F}',[Emote.WellPlayed]:'\u{1F44F}',[Emote.PassBall]:'\u{26BD}',[Emote.Laugh]:'\u{1F602}',[Emote.Dance]:'\u{1F483}',[Emote.Thanks]:'\u{1F64F}'};
 
 // Released hidden classic geometry (copied from islandNpcs.ts: heat pass 5 + NPC heat fix 2). A friend never takes a costume,
@@ -117,6 +124,8 @@ type Entry={
  hf:number;
  /** A Pass it / Juggle with me routine this friend's body plays (picked locally; no ball on their side), made on the first ball emote. */
  ball:PassBallOut|null;
+ /** A two-ball duet (relay v1.4): partner (-1 = the local player), role, the shared routine's emote / seed, age / length, where both stood, and the reused output. */
+ du:{on:boolean;was:boolean;partner:number;role:number;emote:number;seed:number;age:number;dur:number;sx:number;sz:number;px:number;pz:number;started:boolean;out:DuetOut;a:{x:number;y:number;z:number};b:{x:number;y:number;z:number}}|null;
  acc:number;slot:number;needResume:boolean;d2:number;/** squared horizontal distance from the LOCAL player (the label range; d2 is from the camera, ~35 m back on the island) */ld2:number;
  /** Presence: inside the force field now; field 0..1 (eased), door 1..0 (indoors fade), shake / ripple of a ball hit, the status sprite + its line. */
  shield:boolean;field:number;door:number;shake:number;ripple:number;hx:number;hy:number;hz:number;status:T.Sprite|null;statusKey:string;
@@ -286,7 +295,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   for(let i=0;i<c.length&&i<max;i++){const e=c[i];if(isLabel)e.label!.visible=true;else e.bubble!.visible=true;}
  }
  const labels=new T.Group();labels.name='remote-avatar-labels';root.add(labels);
- const byId=new Map<MemberId,Entry>();const list:Entry[]=[];
+ const byId=new Map<MemberId,Entry>();const list:Entry[]=[];let duets=0;/* entries playing a duet now */
  let localHex='',clock=0,recheck=0,saverFade=1,shownCount=0,disposed=false;
 
  function admit(e:Entry){
@@ -339,14 +348,26 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   e.rp+=(target-e.rp)*(1-Math.exp(-4*dt)); // damped, no allocation
   return ringPitchFor(pose.mode,e.rp);
  }
+ /** A duet's frame (before every early-out, so an off-screen one still ends on time): ages it, ends it when it is over or either player moved
+  *  more than DUET_DRIFT m from where they started (or left / went busy), else samples both bodies and balls into e.du.out. */
+ function stepDuet(e:Entry,dt:number,poses:Map<MemberId,RemotePose>,local:LocalRing|null){
+  const d=e.du!,me=poses.get(e.id),pp=d.partner<0?local:poses.get(d.partner);
+  d.age+=dt;
+  if(d.age>=d.dur||!me||!pp||e.shield||e.hidden||!onFoot(me.mode)){d.on=false;duets--;e.rig?.setExpression('neutral');return;}
+  if(!d.started){d.started=true;d.sx=me.x;d.sz=me.z;d.px=pp.x;d.pz=pp.z;}
+  if(Math.hypot(me.x-d.sx,me.z-d.sz)>DUET_DRIFT||Math.hypot(pp.x-d.px,pp.z-d.pz)>DUET_DRIFT){d.on=false;duets--;e.rig?.setExpression('neutral');return;}
+  const mine=d.role===0?d.a:d.b,theirs=d.role===0?d.b:d.a;mine.x=me.x;mine.y=me.y;mine.z=me.z;theirs.x=pp.x;theirs.y=pp.y;theirs.z=pp.z;
+  duetAt(d.emote,d.seed,d.age,d.a,d.b,d.out);
+ }
  /** Friends' balls (after the friend pass: e.shield / e.door are this frame's). Nearest BALL_MAX on screen within BALL_DRAW_RANGE. */
  function drawBalls(poses:Map<MemberId,RemotePose>,balls:ReadonlyMap<MemberId,RemoteBall>|null){
   candBall.length=0;
-  if(balls&&balls.size&&saverFade>0)for(let i=0;i<list.length;i++){
+  if((balls&&balls.size||duets>0)&&saverFade>0)for(let i=0;i<list.length;i++){
    const e=list[i];if(e.hidden||e.shield||e.door<1){e.bOn=false;continue;}
-   const b=balls.get(e.id),pose=poses.get(e.id);
-   if(!b||!pose||pose.zone===Zone.Indoors||!friendBallSpot(b.state,b,pose,clock,e.slot,ballSpot)){e.bOn=false;continue;}
-   if(b.state===BallState.Feet&&e.rig?.setDribbleFeel&&e.shown&&e.motion.dribbling){e.rig.dribbleContact(feelSpot);ballSpot.x=feelSpot.x;ballSpot.z=feelSpot.z;}/* the ball where their footwork has it */
+   const b=balls?balls.get(e.id):undefined,pose=poses.get(e.id),du=e.du&&e.du.on?e.du:null;
+   if(du){const q=du.out.balls[du.role];ballSpot.x=q.x;ballSpot.y=q.y;ballSpot.z=q.z;}/* a duet: their own ball from the shared routine (the network copy lags it) */
+   else if(!b||!pose||pose.zone===Zone.Indoors||!friendBallSpot(b.state,b,pose,clock,e.slot,ballSpot)){e.bOn=false;continue;}
+   if(!du&&b&&b.state===BallState.Feet&&e.rig?.setDribbleFeel&&e.shown&&e.motion.dribbling){e.rig.dribbleContact(feelSpot);ballSpot.x=feelSpot.x;ballSpot.z=feelSpot.z;}/* the ball where their footwork has it */
    const dx=ballSpot.x-camPos.x,dz=ballSpot.z-camPos.z,d2=dx*dx+dz*dz;
    sphere.center.set(ballSpot.x,ballSpot.y,ballSpot.z);sphere.radius=.4;
    if(d2>BALL_DRAW_RANGE*BALL_DRAW_RANGE||!frustum.intersectsSphere(sphere)){e.bOn=false;continue;}
@@ -379,13 +400,18 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    for(const m of ballMeshes){m.geometry=geometry;m.material=material;}
    ownBallGeo?.dispose();(ownBallMat as T.Material|null)?.dispose();ownBallGeo=null;ownBallMat=null;
   },
+  debugEmotes(){return list.map(e=>({id:e.id,emote:e.emote,age:+e.emoteAge.toFixed(2),x:+(e.rig?.root.position.x??NaN).toFixed(2),z:+(e.rig?.root.position.z??NaN).toFixed(2),yaw:+(e.rig?.root.rotation.y??NaN).toFixed(2)}));},
+  duet(id,partner,role,emote,seed){const e=byId.get(id);if(!e||e.hidden||e.shield)return false;
+   const d=e.du??(e.du={on:false,was:false,partner:-1,role:0,emote:0,seed:0,age:0,dur:0,sx:0,sz:0,px:0,pz:0,started:false,out:createDuetOut(),a:{x:0,y:0,z:0},b:{x:0,y:0,z:0}});
+   d.on=true;d.started=false;d.partner=partner;d.role=role;d.emote=emote;d.seed=seed;d.age=0;d.dur=duetSeconds(emote,seed);e.emote=-1;e.hf=-1;e.mv=-1;e.rig?.setExpression('happy');duets++;return true;},
+  endDuet(id){const e=byId.get(id);if(e?.du?.on){e.du.on=false;duets--;e.rig?.setExpression('neutral');}},
   get rigs(){let n=0;for(let i=0;i<list.length;i++)if(list[i].rig)n++;return n;},
   upsert(id,look,name,style){
    if(disposed)return;
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,du:null,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
@@ -394,6 +420,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
   },
   remove(id){
    const e=byId.get(id);if(!e)return;
+   if(e.du?.on){e.du.on=false;duets--;}
    byId.delete(id);const i=list.indexOf(e);if(i>=0)list.splice(i,1);release(e);
   },
   setHidden(ids){for(let i=0;i<list.length;i++){const e=list[i],h=ids.has(e.id);if(h!==e.hidden){e.hidden=h;if(h){hideEntry(e);if(e.emote>=0){e.emote=-1;e.rig?.setExpression('neutral');}}}}},
@@ -430,6 +457,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
     const fs0=e.emote>=0?flourishForWire(e.emote,e.lastMode):undefined;
     if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.mv>=0?e.mvDur:fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;e.mv=-1;rig?.setExpression('neutral');}}
+    if(e.du&&e.du.on)stepDuet(e,dt,poses,local??null);
     if(!e.label||!e.bubble)continue;
     if(e.hidden){hideEntry(e);continue;} // Hide: no avatar, ring, label or emote bubble
     const pose=poses.get(e.id);
@@ -483,6 +511,8 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
       if(e.hf<0&&!fs0&&e.mv<0&&e.ball&&(em===Emote.PassBall||em===Emote.JuggleWithMe))friendBallMotion(e.ball,em===Emote.JuggleWithMe,age,pose.yaw,motion);/* the ball routines' body (lib/town/emoteBallPlay.ts) */
      }
      if(e.ball&&(reduced||e.mv>=0||!(e.emote===Emote.PassBall||e.emote===Emote.JuggleWithMe))&&motion.turnSmoothing!==undefined)clearBallMotion(motion);
+     {const du=e.du;if(du&&du.on){const pa=du.role===0?du.b:du.a;actorMotion(du.out.actors[du.role],Math.atan2(pa.x-pose.x,pa.z-pose.z),motion);motion.dribbling=false;du.was=true;}/* a duet: the shared routine's body, facing the partner */
+      else if(du&&du.was){du.was=false;clearBallMotion(motion);}}
      rig.update(pose.x,pose.z,step,clock,reduced,motion);
      if(e.emote>=0&&e.mv>=0&&!reduced)applyMoveEmote(rig.root,e.mv,e.mvV,e.emoteAge,moveWeight(e.emoteAge,e.mvDur));/* a moving emote: layered on their own walk / run cycle */
      else if(e.emote>=0&&!reduced&&e.hf<0&&!fs0&&e.emote!==Emote.JuggleWithMe&&e.emote!==Emote.PassBall)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));

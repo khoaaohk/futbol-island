@@ -12,6 +12,19 @@ export const RATE = {
   emotePerMin: 10,
 } as const;
 
+/** Relay v1.4 (Cap.EmoteAsk): the shared ball emotes' request + accept rules (owner, Oct 23 2026). The relay enforces them; the client
+ *  mirrors them (lib/multiplayer/emoteAsk.ts) so a greyed button never sends. Times in ms, distances in m. */
+export const EMOTE_ASK = {
+  /** The friend's card closes itself after this (counts as a No). The relay keeps the ask open a little longer for a late tap. */
+  timeoutMs: 8000, graceMs: 1500,
+  /** At most one ask per sender -> receiver pair every cooldownMs. */
+  cooldownMs: 20000,
+  /** This many No / timed-out answers in a row from the same friend block that sender from asking them for blockMs. */
+  declinesToBlock: 2, blockMs: 120000,
+  /** Ask range (the relay allows rangeM + slackM for interpolation lag); both on the ground within yM of each other. */
+  rangeM: 9, slackM: 3, yM: 4,
+} as const;
+
 /** Decimetres. Contains main island, Cay (612,-160), Summit (640,130) with margin for flight. */
 export const WORLD_BOUNDS = { minX: -4000, maxX: 10000, minZ: -6000, maxZ: 6000, minY: -400, maxY: 2000 } as const;
 

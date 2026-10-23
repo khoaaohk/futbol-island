@@ -155,7 +155,7 @@ t('source: wired for you, the townsperson and friends; no per-frame allocation; 
  assert(ev.length>2000&&!/new |\.map\(|\.filter\(|= \[\]|=> \(\{/.test(ev),'no allocation in the per-frame functions');
  const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts'),fr=read('lib/graphics/remoteAvatars.ts');
  assert(/pickBallRoutine\(passOut,/.test(town),'Town draws the next routine at the start');
- assert(/actorMotion\(passOut\.actors\[0\]/.test(town)&&/passOut\.say/.test(town),'the player\'s half and the keep-up counter bubble');
+ assert(/actorMotion\((duet\.on\?duetOut\.actors\[duet\.role\]:)?passOut\.actors\[0\]/.test(town)&&/passOut\.say/.test(town),'the player\'s half and the keep-up counter bubble');
  assert(/actorMotion\(a,/.test(npcs),'the townsperson\'s half');
  assert(/friendBallMotion\(/.test(fr),'a friend plays a solo routine body');
  assert(!fs.existsSync(path.join(ROOT,'lib/graphics/passBall.ts')),'no second ball mesh');
