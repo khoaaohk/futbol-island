@@ -389,6 +389,9 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    if(disposed)return;
    ringN=0;candL.length=0;candB.length=0;
    if(list.length===0){
+    // The batch's instanced bodies hold last frame's count until begin()/end() clear them: the last friend leaving (timeout, Leave)
+    // must empty it here too, or their body stays drawn forever (ghost, Oct 23 2026) while the field, ring and label are gone.
+    batch.begin();batch.end();
     shownCount=0;fields.begin();fields.end(dt,reduced);jets.begin();jets.end(dt,reduced);jetsShown=0;drawBalls(poses,null);
     if(local&&!batterySaverOn()){camera.updateMatrixWorld();camPos.setFromMatrixPosition(camera.matrixWorld);addLocalRing(local,camPos);}
     ringsEnd();return;
