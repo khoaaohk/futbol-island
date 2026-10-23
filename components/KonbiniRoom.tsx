@@ -39,7 +39,7 @@ import {isDrinkItem} from './KonbiniReveal';
 import {isSoundEnabled} from '@/lib/games/sound';
 import type {KonbiniScene,KonbiniPoi,KonbiniSlotView,KonbiniZoomView} from '@/lib/konbini/konbiniScene';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 1): friends in THIS Konbini walk about with you; Leave-only chip.
-import {useRoomParty} from './party/useRoomParty';import RoomPartyChip,{RoomEmoteDock} from './party/RoomPartyChip';import {konbiniRoom} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});const RoomEmoteDock=dynamic(()=>import('./party/RoomPartyChip').then((m)=>m.RoomEmoteDock),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {konbiniRoom} from '@/lib/multiplayer/roomPos';
 const NpcConversation=dynamic(()=>import('./NpcConversation'),{ssr:false});
 
 /**

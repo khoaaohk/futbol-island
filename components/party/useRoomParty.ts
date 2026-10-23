@@ -9,9 +9,12 @@ import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } fro
 import type * as THREE from 'three';
 import { multiplayerEnabled } from '@/lib/multiplayer/config';
 import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
-import { createRoomParty, partyConnection, partyLook, type RoomParty } from '@/lib/multiplayer/roomParty';
-import { STATION, type RoomLocal } from '@/lib/multiplayer/presence';
+import type { RoomParty } from '@/lib/multiplayer/roomParty';
+import { STATION, type RoomLocal } from '@/lib/multiplayer/presence'; // pure constants (no connection, no three.js)
 import { Emote } from '../../multiplayer/protocol';
+// Flag off, the room pages load NO party code (verifier, Oct 22 2026: the Konbini, Museum and Kit Shop pages shipped the connection,
+// the avatar layer and the chip in their first chunks): the layer is a dynamic import behind multiplayerEnabled(), as in the Arcade.
+const loadLayer = () => import('@/lib/multiplayer/roomParty');
 
 /** What a room scene exposes for its party layer (konbiniScene.ts, museumScene.ts; the Kit Shop through lib/multiplayer/rooms/shopHooks.ts; the Arcade next). */
 export interface RoomPartyHost {
@@ -37,36 +40,48 @@ export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: num
   // Back into the stored party as the page loads (before the scene is ready), and the grown-up switch Off leaves from any room.
   useEffect(() => {
     if (!multiplayerEnabled()) return;
-    const conn = partyConnection();
-    if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return; }
-    conn.resume({ look: partyLook() });
+    let dead = false;
+    loadLayer().then(({ partyConnection, partyLook }) => {
+      if (dead) return;
+      const conn = partyConnection();
+      if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return; }
+      conn.resume({ look: partyLook() });
+    }).catch(() => {});
+    return () => { dead = true; };
   }, [allowed]);
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || !host || !allowed || !multiplayerEnabled()) return;
-    const out: RoomLocal = { x: 0, y: 0, z: 0, facing: 0, speed: 0, busy: false, hidden: false };
-    const layer = createRoomParty({
-      scene: host.threeScene, room, phone: host.phone, reducedMotion: () => host.reduced, wake: host.wakeRemote,
-      local: () => {
-        const l = host.localPose();
-        out.x = l.x; out.z = l.z; out.facing = l.facing; out.speed = l.speed;
-        out.busy = busyRef.current || l.eating || l.zoomed; out.hidden = typeof document !== 'undefined' && document.hidden;
-        return out;
-      },
-      station: host.stationCode ? (x, z) => host.stationCode!(x, z) : (x, z) => { const k = host.stationAt(x, z); return typeof k === 'number' ? k : k === 'counter' ? STATION.Counter : k === 'shelves' ? STATION.Shelves : STATION.Snack; },
-    });
-    if (!layer) return;
-    host.setFriendLayer(layer);
-    host.wakeRemote();
-    setHandle({
-      layer, room,
-      emote(kind) {
-        layer.sendEmote(kind);
-        const l = host.localPose();
-        host.emote(kind, kind === Emote.HighFive ? layer.nearestFriend(l.x, l.z, 3) : null); // friend-pair emotes pick from friendsHere()
-      },
-    });
-    return () => { host.setFriendLayer(null); layer.dispose(); setHandle(null); };
+    let dead = false, layer: RoomParty | null = null;
+    loadLayer().then(({ createRoomParty, partyConnection, partyLook }) => {
+      if (dead) return;
+      // The resume effect's import may land after this one: resume here too (a no-op when already resuming / live).
+      partyConnection().resume({ look: partyLook() });
+      const out: RoomLocal = { x: 0, y: 0, z: 0, facing: 0, speed: 0, busy: false, hidden: false };
+      layer = createRoomParty({
+        scene: host.threeScene, room, phone: host.phone, reducedMotion: () => host.reduced, wake: host.wakeRemote,
+        local: () => {
+          const l = host.localPose();
+          out.x = l.x; out.z = l.z; out.facing = l.facing; out.speed = l.speed;
+          out.busy = busyRef.current || l.eating || l.zoomed; out.hidden = typeof document !== 'undefined' && document.hidden;
+          return out;
+        },
+        station: host.stationCode ? (x, z) => host.stationCode!(x, z) : (x, z) => { const k = host.stationAt(x, z); return typeof k === 'number' ? k : k === 'counter' ? STATION.Counter : k === 'shelves' ? STATION.Shelves : STATION.Snack; },
+      });
+      if (!layer) return;
+      const l0 = layer;
+      host.setFriendLayer(l0);
+      host.wakeRemote();
+      setHandle({
+        layer: l0, room,
+        emote(kind) {
+          l0.sendEmote(kind);
+          const l = host.localPose();
+          host.emote(kind, kind === Emote.HighFive ? l0.nearestFriend(l.x, l.z, 3) : null); // friend-pair emotes pick from friendsHere()
+        },
+      });
+    }).catch(() => {});
+    return () => { dead = true; if (layer) { host.setFriendLayer(null); layer.dispose(); layer = null; } setHandle(null); };
   }, [ready, room, allowed, hostRef]);
   return handle;
 }

@@ -24,7 +24,7 @@ import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shop
 import {enterActivity} from '@/lib/analytics/tracker';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 4): friends in the Kit Shop walk the floor with you; studios, My kit and
 // chats are Busy (a force field at your spot, "Designing a kit" at a studio stand); Leave-only chip.
-import {useRoomParty} from '../party/useRoomParty';import RoomPartyChip from '../party/RoomPartyChip';import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from '../party/useRoomParty';const RoomPartyChip=dynamic(()=>import('../party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {shopRoomHooks} from '@/lib/multiplayer/rooms/shopHooks';
 const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
 
