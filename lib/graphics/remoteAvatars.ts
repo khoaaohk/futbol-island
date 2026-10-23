@@ -221,7 +221,7 @@ const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m). */
 /** Friends' balls: at most BALL_MAX drawn (nearest to the camera), within BALL_DRAW_RANGE; plumes for flying friends within JET_RANGE. */
 export const BALL_MAX=4,BALL_DRAW_RANGE=70,JET_RANGE=70,BALL_RADIUS=.19;
-const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion();
+const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion(),feelSpot=new T.Vector3();
 const onFoot=(mode:number)=>mode===Mode.Walk||mode===Mode.Run||mode===Mode.Idle;
 /** Where a friend's ball is drawn (writes out.x/y/z; false = not drawn): Free at its own spot, Feet in front of their feet, Juggle bobbing over them. Exported for tests. */
 export function friendBallSpot(state:number,b:{x:number;y:number;z:number},pose:{x:number;y:number;z:number;yaw:number;mode:number},clock:number,phase:number,out:{x:number;y:number;z:number}):boolean{
@@ -295,6 +295,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const rig=createPlayer('remote-'+e.id,'home');
   const c=wireToLook(e.look);rig.setAppearance(c);rig.setBeanLook(beanLookFor(c),playerOutfit(c));
   releaseHiddenClassic(rig.root);rig.root.scale.setScalar(BODY_SCALE);
+  rig.setDribbleFeel?.(true);/* their sole stops / drag-backs / touches, derived from the pose stream (lib/town/dribbleStop.ts) */
   e.rig=rig;e.rb=!!beanShapeOf(rig.root);e.admitted=true;
  }
  function ensureLabel(e:Entry){
@@ -345,6 +346,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    const e=list[i];if(e.hidden||e.shield||e.door<1){e.bOn=false;continue;}
    const b=balls.get(e.id),pose=poses.get(e.id);
    if(!b||!pose||pose.zone===Zone.Indoors||!friendBallSpot(b.state,b,pose,clock,e.slot,ballSpot)){e.bOn=false;continue;}
+   if(b.state===BallState.Feet&&e.rig?.setDribbleFeel&&e.shown&&e.motion.dribbling){e.rig.dribbleContact(feelSpot);ballSpot.x=feelSpot.x;ballSpot.z=feelSpot.z;}/* the ball where their footwork has it */
    const dx=ballSpot.x-camPos.x,dz=ballSpot.z-camPos.z,d2=dx*dx+dz*dz;
    sphere.center.set(ballSpot.x,ballSpot.y,ballSpot.z);sphere.radius=.4;
    if(d2>BALL_DRAW_RANGE*BALL_DRAW_RANGE||!frustum.intersectsSphere(sphere)){e.bOn=false;continue;}
@@ -469,6 +471,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      const mode=pose.mode;e.lastMode=mode;
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield?undefined:travelFor(mode);
      motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
+     motion.dribbling=!shield&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
      if(mode===Mode.Swim||mode===Mode.Dive||shield&&pose.zone===Zone.Sea){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
