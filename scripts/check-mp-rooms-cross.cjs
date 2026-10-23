@@ -49,7 +49,8 @@ const ROOMS = [
     ...(room >= 0 ? ['--room', String(room), '--room-after', '2000', '--walk', '6000', '--stand', '6000'] : [])];
   for (const r of [-1, ...ROOMS.map((x) => x.code)]) { bots.push(spawn('node', botArgs(r), { stdio: 'ignore' })); await wait(300); }
   for (let i = 0; i < 40 && !/6 playing/.test((await p.getAttribute('[data-party-open]', 'aria-label').catch(() => '')) || ''); i++) await p.waitForTimeout(500);
-  const session = () => p.evaluate(() => { try { return JSON.parse(sessionStorage.getItem('fi-party-session') || 'null'); } catch { return null; } });
+  const session = () => p.evaluate(() => { try { return JSON.parse(localStorage.getItem('fi2-party-session-v1') || 'null'); } catch { return null; } });
+  await p.waitForTimeout(9000); // the bots walk into their rooms 2 s after joining (+ the relay's 5.5 s entry-warp retry)
   const s0 = await session();
   console.log('party', code.length === 6 ? 'made' : 'MISSING', 'label', await p.getAttribute('[data-party-open]', 'aria-label').catch(() => null));
   const sameSlot = async (where) => { const s = await session(); if (!s || !s0 || s.resumeToken !== s0.resumeToken || s.you !== s0.you) bad(`${where}: slot changed`); };
@@ -59,7 +60,7 @@ const ROOMS = [
   const island = async (label) => {
     await p.waitForTimeout(12000); await p.click('button:has-text("Skip")').catch(() => {}); await p.waitForTimeout(4000);
     await sameSlot('island ' + label);
-    const hints = await p.evaluate(() => { const out = []; window.__fi2?.scene?.traverse((o) => { if (o.name === 'party-door-hint' && o.userData.text) out.push(o.userData.text); }); return out; // hints show only within range: read the text });
+    const hints = await p.evaluate(() => { const out = []; window.__fi2?.scene?.traverse((o) => { if (o.name === 'party-door-hint' && o.userData.text) out.push(o.userData.text); }); return out; }); // hints show only within range: read the text
     const pr = await probe('window.__fi2.scene');
     await p.evaluate(() => document.querySelector('[data-party-open]')?.click()); await p.waitForTimeout(1200); await p.click('#party-tab-party').catch(() => {}); await p.waitForTimeout(600);
     const lines = await p.evaluate(() => [...document.querySelectorAll('[data-party-activity]')].map((e) => e.textContent));

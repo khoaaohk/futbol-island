@@ -34,7 +34,7 @@ function kidSlot(code) {
     const sess = JSON.stringify({ code: made.code, resumeToken: token, at: Date.now() });
     for (const kind of ['desktop', 'phone']) {
       const ctx = await b.newContext(kind === 'phone' ? { ...devices['iPhone 13'], viewport: { width: 390, height: 844 } } : { viewport: { width: 1280, height: 800 } });
-      await ctx.addInitScript((s) => { try { sessionStorage.setItem('fi-party-session', s); } catch { /* none */ } }, sess);
+      await ctx.addInitScript((s) => { try { localStorage.setItem('fi2-party-session-v1', s); } catch { /* none */ } }, sess);
       const pg = await ctx.newPage();
       await pg.goto(url + r.page, { waitUntil: 'domcontentloaded', timeout: 90000 });
       await pg.waitForFunction((ex) => (eval(ex)?.party?.friends ?? []).filter((f) => f.fade > .9).length >= 6, r.st, { timeout: 60000 }).catch(() => {});

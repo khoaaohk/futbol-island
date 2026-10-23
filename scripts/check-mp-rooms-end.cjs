@@ -13,8 +13,8 @@ require('fs').mkdirSync(out, { recursive: true });
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const LOOK = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8];
 const ROOMS = [
-  { name: 'konbini', code: 8, page: '/konbini?door=main', st: 'window.__konbini?.state', sc: 'window.__konbini?.threeScene', end: 'end' },
-  { name: 'museum', code: 6, page: '/museum', st: 'window.__museum?.state', sc: 'window.__museum?.threeScene', end: 'kick' },
+  { name: 'konbini', code: 8, page: '/konbini?door=main', sleeps: true, st: 'window.__konbini?.state', sc: 'window.__konbini?.threeScene', end: 'end' },
+  { name: 'museum', code: 6, page: '/museum', sleeps: true, st: 'window.__museum?.state', sc: 'window.__museum?.threeScene', end: 'kick' },
   { name: 'arcade', code: 5, page: '/arcade', st: 'window.__arcadeRoom?.state', sc: 'window.__arcadeRoom?.threeScene', end: 'end' },
   { name: 'shop', code: 7, page: '/shop', st: 'window.__shop?.scene?.state', sc: 'window.__shop?.scene?.threeScene', end: 'kick' },
 ];
@@ -44,7 +44,7 @@ function sock(code, hostKey) {
     const sess = JSON.stringify({ code: made.code, resumeToken: kid.token, at: Date.now() });
     const open = async (saver, vp) => {
       const ctx = await b.newContext({ viewport: vp ?? { width: 1280, height: 800 } });
-      await ctx.addInitScript(([s, on]) => { try { sessionStorage.setItem('fi-party-session', s); if (on) localStorage.setItem('fi2-battery-saver', 'on'); } catch { /* none */ } }, [sess, saver]);
+      await ctx.addInitScript(([s, on]) => { try { localStorage.setItem('fi2-party-session-v1', s); if (on) localStorage.setItem('fi2-battery-saver', 'on'); } catch { /* none */ } }, [sess, saver]);
       const pg = await ctx.newPage(); pg.on('pageerror', (e) => errs.push(r.name + ': ' + e.message));
       await pg.goto(url + r.page, { waitUntil: 'domcontentloaded', timeout: 90000 });
       await pg.waitForFunction((ex) => !!eval(ex)?.party, r.st, { timeout: 60000 }).catch(() => bad(`${r.name}: no party layer`));
@@ -59,7 +59,9 @@ function sock(code, hostKey) {
       const a = await probe(pg); await pg.waitForTimeout(3000); const c = await probe(pg);
       console.log(r.name, 'saver', JSON.stringify({ shown: c.shown, names: c.names, framesIn3s: c.frames !== null ? c.frames - a.frames : null, drawsIn3s: c.draws !== null ? c.draws - a.draws : null }));
       if (c.names > 0 || c.shown > 0) bad(`${r.name}: friends drawn with Battery saver on`);
-      if (c.frames !== null && c.frames - a.frames > 6) bad(`${r.name}: the room loop runs with Battery saver on (${c.frames - a.frames} frames in 3 s)`);
+      // The Konbini and Museum sleep when still; the Arcade hub (12 s wake window, then 15 fps idle) and the Kit Shop (walking shoppers)
+      // tick with or without a party (measured the same with no party), so only the friends-not-drawn rule applies there.
+      if (r.sleeps && c.frames !== null && c.frames - a.frames > 6) bad(`${r.name}: the room loop runs with Battery saver on (${c.frames - a.frames} frames in 3 s)`);
       await ctx.close(); await wait(500); }
     // (2) Saver off: the friend is drawn; (3) the party ends / the player is kicked inside the room.
     { const { ctx, pg } = await open(false);
@@ -70,7 +72,7 @@ function sock(code, hostKey) {
       const c = await probe(pg); console.log(r.name, 'after ' + r.end, JSON.stringify(c));
       if (c.chip) bad(`${r.name}: chip still shown after ${r.end}`); if (c.names > 0 || c.rings > 0) bad(`${r.name}: avatars or rings left after ${r.end}`);
       if (!c.note) bad(`${r.name}: no note after ${r.end}`);
-      const stored = await pg.evaluate(() => sessionStorage.getItem('fi-party-session'));
+      const stored = await pg.evaluate(() => localStorage.getItem('fi2-party-session-v1'));
       if (stored) bad(`${r.name}: the stored session survived ${r.end}`);
       await pg.screenshot({ path: `${out}/${r.name}-after-${r.end}.png` });
       await ctx.close(); }
