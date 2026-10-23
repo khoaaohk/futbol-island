@@ -1,5 +1,6 @@
 import type {TravelMode} from './travelModes';
 import type {CharacterCustomization} from './customization';
+import {rideGroundLift} from './rideGround';
 export const RIDE_ACTIONS={scooter:['Spin 360','Jump'],bike:['Front wheelie','Back wheelie'],moped:['Stand up','Jump']} as const;
 export const GROUND_SIGNATURES:Record<string,string>={mint:'Smooth carve',stunt:'Double spin hop',comet:'Comet corkscrew',bmx:'Bunny hop',road:'Sprint tuck',mountain:'Trail wheel lift',retro:'Style lean',delivery:'Double delivery bounce',sport:'Power wheelie'};
 export const GROUND_SECONDARY:Record<string,string>={mint:'Glide hop',stunt:'Spin jump',comet:'Star hop',bmx:'Nose manual',road:'Slalom',mountain:'Rock hop',retro:'Parade stand',delivery:'Cargo balance',sport:'Stoppie'};
@@ -40,7 +41,9 @@ export function createRideTricks(){
   else if(mode==='bike'){pose.pitch=(state.action===0?-1:1)*envelope*(reduced?.2:.6);pose.lift=.56*Math.sin(Math.abs(pose.pitch))+.3*(1-Math.cos(pose.pitch));}
   else if(mode==='moped'&&state.action===0)pose.stand=envelope;
   else pose.lift=4*t*(1-t)*(reduced?.16:1.35);
-  if(t>=1)reset();return pose;
+  // The ride pitches / rolls about its root on the ground: lift it so the lowered tyre rests on the ground, never in it (rideGround.ts).
+ if(mode==='scooter'||mode==='bike'||mode==='moped')pose.lift=Math.max(pose.lift,rideGroundLift(mode,pose.pitch,pose.roll)+(pose.pitch||pose.roll?.005:0));
+ if(t>=1)reset();return pose;
  }
  return {state,start,update,reset};
 }

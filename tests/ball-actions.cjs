@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm');
-function load(file){const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math});return mod.exports;}
+function load(file){const mod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,require:id=>load(require('node:path').join(require('node:path').dirname(file),id+'.ts'))});return mod.exports;}
 const {createWalkBall}=load('lib/town/walkBall.ts'),{createRideTricks}=load('lib/town/rideTricks.ts');
 let player={x:0,z:0,y:0,yaw:0},hits=0,strikes=0;const env={floor:()=>0,blocked:(x,z)=>z>3&&z<3.1,impact:()=>hits++,strike:()=>strikes++},ball=createWalkBall();
 for(let i=0;i<300;i++){player.x+=.1;ball.update(1/60,player,env);assert.ok(Math.abs((ball.state.x-player.x)*Math.sin(player.yaw)+(ball.state.z-player.z)*Math.cos(player.yaw)-.56)<1e-9,'dribble stays ahead of stride');}

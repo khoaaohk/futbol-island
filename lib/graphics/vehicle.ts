@@ -141,7 +141,7 @@ export function createVehicle() {
   fitBar(bar(road,[0,.41,.06],[0,.87,.43],.055,paint),[0,.41,.06],[0,.87,.43],[0,CRANK[1]+.02,.06],[0,.87,.43]);
   mesh(road,new T.CylinderGeometry(.045,.045,.19,8),cream,0,.63,.18).rotation.x=.45;
   const mountain=groundVariant('bike','mountain');
-  for(const z of [-.53,.62]){const tire=mesh(mountain,new T.TorusGeometry(.282,.065,6,16),rubber,0,.32,z);tire.rotation.y=Math.PI/2;}
+  for(const z of [-.53,.62]){/* outer radius .32 = the wheel's: the knobbly tyre meets the ground at the wheel's contact (it reached 3 cm under it) */const tire=mesh(mountain,new T.TorusGeometry(.255,.065,6,16),rubber,0,.32,z);tire.rotation.y=Math.PI/2;}
   for(const side of [-1,1]){bar(mountain,[side*.075,.35,.61],[side*.075,.79,.48],.042,cream);bar(mountain,[side*.075,.7,.51],[side*.075,.92,.43],.048,paint);}
   fitBar(bar(mountain,[0,.48,.08],[0,.82,-.08],.07,metal),[0,.48,.08],[0,.82,-.08],[0,.45,.07],[0,SEAT_NODE-.06,-.1]);
   mesh(mountain,new T.BoxGeometry(.18,.035,.4),paint,0,.72,.59).rotation.x=.15;

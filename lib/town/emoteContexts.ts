@@ -103,7 +103,7 @@ export function flourishAt(emote: number, age: number, dur: number, out: Flouris
   out.roll = out.pitch = out.yaw = out.lift = out.ripple = 0;
   if (isRideEmote(emote)) { // a friend's ride trick on their own rig: pitch (lifted about its axle), roll, hop; the spin is theirs to show
     const p = sampleRideTrick(emote, age, rideBuf); out.pitch = p[RT.PITCH]; out.roll = p[RT.ROLL]; out.yaw = p[RT.YAW];
-    out.lift = p[RT.LIFT] + p[RT.PIVOT] * Math.sin(p[RT.PITCH]) + p[RT.RLIFT]; return out;
+    out.lift = p[RT.LIFT] + p[RT.PIVOT] * Math.sin(p[RT.PITCH]) + p[RT.PIVY] * (1 - Math.cos(p[RT.PITCH])) + p[RT.RLIFT]; return out; // the axle stays put (rideGround.ts)
   }
   const u = clamp01(age / dur), f = fade(age, dur);
   switch (emote) {

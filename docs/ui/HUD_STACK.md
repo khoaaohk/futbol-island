@@ -303,6 +303,12 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
   never change, so control comes straight back; it ends at once on ANY real input, a dismount / ride change, a blocked stop (while braking), a car
   within 10 m, water, a ramp or a fall. Every trick's root stays inside `EMOTE_BOUNDS.rootRadius` (worst 0.94 m, the donut) and under `maxHeight`
   (2.74 m). Cues: bell (job sting + spark), horn (`sound.honk`), rev (`sound.boost`).
+  **Tyres on the ground** (owner, 23 Oct 2026: "looks like it's going into the ground too much"): the pitch turns about the real axle (`PIVOT` z and
+  `PIVY` height, snapped by `sampleRideTrick` to the rear axle for nose up, the front axle for nose down; the nose pivot also yaws round that front
+  axle, worst root travel now 1.13 m), so the wheel left down never sinks (was up to 11 cm in the stoppie). The older ride tricks (`rideTricks.ts`)
+  lift by `rideGroundLift` (`lib/town/rideGround.ts`, analytic tyre bottom after roll + pitch); friends' ride tricks lift about the axle too; the
+  landing squash no longer drops the ride 5 cm; the mountain bike's knobbly tyre matches the wheel radius (it sat 3 cm under). Gate:
+  `tests/ride-ground.cjs` (real meshes via `scripts/check-ride-ground.cjs`: every variant, idle + every emote / trick frame, <= 2 cm).
   Camera: the normal solo / pair framing, framed where the ride stops, each character widened by half the vehicle length + 0.45 m trick room
   (`emoteCameraMath.ts rideWideFor`: scooter 1.3, bike 1.8, moped 1.9 m long); it follows the ride's location, not the trick sway. The nearest
   townsperson faces you and waves (calm tricks) or cheers (big ones), stepping to 2.4-3 m from the stop point so the pair fits; farther than

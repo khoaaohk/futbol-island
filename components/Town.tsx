@@ -1588,7 +1588,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Hop landing: the rider crouches into the landing and rises, the ride's body squashes on its springs (a damped bounce,
       // ~0.5 s; bigger for a harder landing). A little stretch while in the air.
       {hopAge+=active?dt:0;const sq=hopAge<.9?hopSquash*Math.exp(-hopAge*7)*Math.cos(hopAge*15)*(reduced?.4:1):0,air=rooftop.state.air&&!reduced?.04:0;
-       if(sq||air){player.root.scale.x*=1+.08*sq;player.root.scale.z*=1+.08*sq;player.root.scale.y*=1-.16*sq+air;player.root.position.y-=.1*sq;if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'){vehicle.root.scale.y*=1-.12*sq;vehicle.root.position.y-=.05*sq;}}}player.root.rotation.z=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.z:0;
+       if(sq||air){player.root.scale.x*=1+.08*sq;player.root.scale.z*=1+.08*sq;player.root.scale.y*=1-.16*sq+air;player.root.position.y-=.1*sq;if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'){vehicle.root.scale.y*=1-.12*sq;/* squashes about its tyres' contact: no drop into the ground (Oct 23 2026) */}}}player.root.rotation.z=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index].group.rotation.z:0;
       if(crash>0&&!reduced){player.root.rotation.z=Math.sin(elapsed*5)*.15*(1-squash);player.root.rotation.x+=Math.cos(elapsed*4)*.1*(1-squash);}
       if(Number.isFinite(spinCrashAge)&&crash>0){player.root.rotation.z+=squash*.8;if(rideRef.current!=='walk')player.root.position.x+=Math.cos(player.root.rotation.y)*squash*.65;}
       fieldBump.pose(player.root,active?dt:0,reduced);

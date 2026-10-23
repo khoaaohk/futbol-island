@@ -78,15 +78,21 @@ export function rideScriptStop(s: {age: number; seconds: number; realInput: bool
 // ---- The trick pose: one Float32Array of channels per frame (no allocation). ----
 /** Whole ride (rider + vehicle, about the root on the ground): pitch (rad, + = nose down), roll, yaw (extra, rad), lift (m);
  *  PIVOT / YPIV = the local z (m, + = forward) the pitch / the yaw turns about (rear axle for a wheelie, front axle for a stoppie or a donut);
- *  VYAW = the vehicle alone (tail-whip), RLIFT = the rider alone above the deck, WHEEL = extra wheel spin (m/s), STAND = moped stand-up 0..1, PUFF = smoke / exhaust 0..1. */
+ *  VYAW = the vehicle alone (tail-whip), RLIFT = the rider alone above the deck, WHEEL = extra wheel spin (m/s), STAND = moped stand-up 0..1, PUFF = smoke / exhaust 0..1.
+ *  PIVY = the height (m) of the axle the pitch turns about: sampleRideTrick snaps PIVOT / PIVY to that ride's real rear / front axle (AXLE),
+ *  so the wheel left on the ground rolls on its own contact and never sinks (owner, Oct 23 2026: "it's going into the ground too much"). */
 export const RT = {PITCH: 0, ROLL: 1, YAW: 2, LIFT: 3, PIVOT: 4, YPIV: 5, VYAW: 6, RLIFT: 7, WHEEL: 8, STAND: 9, PUFF: 10,
   /** Rider joints (targets with a weight; the graphics blend them over the ride pose): right / left shoulder x, z, elbow x and the arm weight. */
   RSX: 11, RSZ: 12, REX: 13, RW: 14, LSX: 15, LSZ: 16, LEX: 17, LW: 18,
   /** Head yaw / pitch (+ = look down) and weight, chest lean (added: x + = forward, z = sideways). */
   HY: 19, HX: 20, HW: 21, CX: 22, CZ: 23,
   /** Legs: hip x (- = forward, + = back), hip z (out to the side), knee bend, weight; left then right. */
-  LHX: 24, LHZ: 25, LKN: 26, LLW: 27, RHX: 28, RHZ: 29, RKN: 30, RLW: 31} as const;
-export const RT_CH = 32;
+  LHX: 24, LHZ: 25, LKN: 26, LLW: 27, RHX: 28, RHZ: 29, RKN: 30, RLW: 31, PIVY: 32} as const;
+export const RT_CH = 33;
+/** Axles as vehicle.ts draws them (rear z, front z, height = tyre radius; vehicle units x the town's 1.12). Same numbers as rideGround.ts
+ *  RIDE_WHEELS (tests/ride-ground.cjs checks); kept here so this pure module stays import-free for its many test loaders. */
+const AXLE: Record<RideKind, readonly [number, number, number]> = {scooter: [-.4, .5, .12], bike: [-.53, .62, .32], moped: [-.53, .62, .24]};
+const axleZ = (ride: RideKind, side: number) => AXLE[ride][side < 0 ? 0 : 1] * 1.12;
 const TAU = Math.PI * 2;
 const smooth = (v: number) => { const t = clamp01(v); return t * t * (3 - 2 * t); };
 /** 0 -> 1 -> 0 over [a, b] (a sine arch). */
@@ -209,6 +215,10 @@ export function sampleRideTrick(emote: number, t: number, o: Float32Array): Floa
       break;
     }
   }
+  // Pitch about the real axle of the wheel that stays down: the rear for nose up (wheelie), the front for nose down (stoppie, nose pivot, a hop's
+  // nose-first landing). A nose pivot also yaws round that front axle.
+  if (o[RT.YPIV] !== 0 && o[RT.YPIV] === o[RT.PIVOT]) o[RT.YPIV] = axleZ(sc.ride, o[RT.YPIV]);
+  if (o[RT.PITCH] !== 0) { o[RT.PIVOT] = axleZ(sc.ride, o[RT.PITCH]); o[RT.PIVY] = AXLE[sc.ride][2] * 1.12; } else o[RT.PIVOT] = 0;
   return o;
 }
 
@@ -216,8 +226,9 @@ export interface V3 {x: number; y: number; z: number}
 /** The world offset of the ride's root for a trick pose at heading `yaw` (rad): the pitch turns about its axle and the yaw about its wheel, so the
  *  wheel on the ground stays put (no root travel apart from that). Writes `out` (x, z on the ground, y = the lift) and returns it. */
 export function trickRootOffset(p: Float32Array, yaw: number, out: V3): V3 {
-  const th = p[RT.PITCH], pz = p[RT.PIVOT], q = p[RT.YPIV], ps = p[RT.YAW], a = yaw + ps;
-  const dy = pz * Math.sin(th), dz = pz * (1 - Math.cos(th));
+  const th = p[RT.PITCH], pz = p[RT.PIVOT], py = p[RT.PIVY], q = p[RT.YPIV], ps = p[RT.YAW], a = yaw + ps;
+  // Root = axle + R(root - axle), axle at (y py, z pz): the axle (and so its tyre's bottom) stays where it was.
+  const dy = pz * Math.sin(th) + py * (1 - Math.cos(th)), dz = pz * (1 - Math.cos(th)) - py * Math.sin(th);
   out.x = q * (Math.sin(yaw) - Math.sin(a)) + Math.sin(a) * dz;
   out.z = q * (Math.cos(yaw) - Math.cos(a)) + Math.cos(a) * dz;
   out.y = p[RT.LIFT] + dy;
