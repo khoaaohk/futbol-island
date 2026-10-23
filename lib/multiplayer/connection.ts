@@ -300,6 +300,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
         if (rtt >= 0 && rtt < 10000) { rtts.push(rtt); if (rtts.length > RTT_SAMPLES) rtts.shift(); }
       }
     } else if (m[0] === S.Ended) {
+      clearTimers(); pendingResume = false; // bug sweep Oct 22: a pending hidden-tab close must not turn 'ended' back into 'reconnecting'
       endHere();
       setStatus('ended');
       dropSocket();
@@ -314,6 +315,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
         setStatus('error');
       } else if (e === ErrorCode.Full || e === ErrorCode.NotFound || e === ErrorCode.Expired || e === ErrorCode.Kicked ||
         e === ErrorCode.BadVersion || e === ErrorCode.Locked || e === ErrorCode.BadName) {
+        clearTimers(); pendingResume = false; resuming = false;
         endHere();
         setStatus('error');
         dropSocket();
@@ -369,7 +371,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (hiddenTimer || status === 'idle' || status === 'ended' || status === 'error') return;
       hiddenTimer = st(() => {
         hiddenTimer = null;
-        if (!vis.hidden()) return;
+        if (!vis.hidden() || status === 'idle' || status === 'ended' || status === 'error') return;
         if (retryTimer) { ct(retryTimer); retryTimer = null; }
         dropSocket();
         pendingResume = true;
@@ -402,7 +404,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     if (!norm) { clearSession(); return false; }
     const gen = ++opGen;
     acquire(steal, () => {
-      if (gen !== opGen || disposed) { if (gen === opGen) releaseLock(); return; }
+      if (gen !== opGen || disposed) { releaseLock(); return; } // a late grant for an older request (Leave / dispose / a newer op since): let it go
       const now2 = readSession(); // another tab may have ended the party while the lock was on its way
       if (!now2 || !now2.resumeToken || normalizeCode(now2.code) !== norm) { releaseLock(); setLocal(null, false); return; }
       clearTimers(); dropSocket();
@@ -428,7 +430,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       // An explicit create / join makes this tab the party tab (a tab still in another party goes quiet).
       if (!holding && locks) {
         setStatus('connecting');
-        acquire(true, () => { if (gen === opGen && !disposed) self.join(c, opts); else if (gen === opGen) releaseLock(); }, () => {});
+        acquire(true, () => { if (gen === opGen && !disposed) self.join(c, opts); else releaseLock(); }, () => {}); // stale grant: let it go
         return;
       }
       const sess = readSession();
