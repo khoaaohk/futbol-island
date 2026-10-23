@@ -72,7 +72,10 @@ const waitFor = async (p, fn, ms = 30000, every = 400) => { const t0 = Date.now(
 async function enter(p, pathQ = '/', fresh = true, reload = false) {
   if (reload) await p.reload({ waitUntil: 'domcontentloaded', timeout: 120000 }); else await p.goto(APP + pathQ, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await p.waitForTimeout(6000);
-  if (fresh) { await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000); }
+  if (fresh) { await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+    // With the save backend on (a checkout that has .env.local with SAVE_LOCAL_FILE, or production) Start is two steps: 'Get my code', then the code card's 'I saved it'. Without a backend neither exists (both optional).
+    await p.click('button:has-text("Get my code")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(2500);
+    await p.click('button:has-text("I saved it")', { timeout: 4000 }).catch(() => {}); await p.waitForTimeout(1500); }
   await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});
   await p.waitForFunction(() => !!window.__fi2?.scene, null, { timeout: 60000 }).catch(() => {});
   await p.waitForTimeout(9000);
@@ -674,7 +677,8 @@ async function step8() {
     rec(await waitFor(c, () => isLive(c), 15000), 'after 60 s C can join again');
   }
   // End party for everyone.
-  const live = Object.values(devices).filter((d) => d.name !== 'A');
+  // With SKIP_KICK_WAIT=1 C was removed and never rejoined, so C is not in the party any more and gets no 'ended' note.
+  const live = Object.values(devices).filter((d) => d.name !== 'A' && !(process.env.SKIP_KICK_WAIT && d.name === 'C'));
   await listTab(a); await a.click('[data-party-end]'); await a.waitForTimeout(300); await a.click('[data-party-end]');
   const notes = {};
   await Promise.all(live.map(async (d) => { await waitFor(d.p, async () => { notes[d.name] = await toastOf(d.p); return /party ended/.test(notes[d.name]); }, 10000, 250); }));
