@@ -120,6 +120,7 @@ export function parseClient(raw: string): ClientMsg | null {
     case C.EmoteAsk:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) ? (a as ClientMsg) : null;
     case C.EmoteAnswer:
+    case C.NameLock:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ClientMsg) : null;
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
@@ -169,6 +170,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && a[2] === null ? (a as ServerMsg) : null;
     case S.Caps:
       return a.length === 2 && inRange(a[1], 0, 255) ? (a as ServerMsg) : null;
+    case S.NameLock:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ServerMsg) : null;
     case S.EmoteAsk:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) ? (a as ServerMsg) : null;
     case S.EmoteAnswer:

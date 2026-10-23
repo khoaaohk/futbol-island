@@ -66,7 +66,7 @@ t('first-name field: the only other text input, in the grown-up steps, never on 
  assert(!/localStorage|sessionStorage|document\.cookie|console\.|analytics|lib\/saves/.test(nf.replace(/\/\*[\s\S]*?\*\//g,'')),'memory only, no logging');
  assert(/<NickField onChange/.test(join)&&/<NickField onChange/.test(host),'shown in the join card and the start card');
  for(const f of fs.readdirSync(path.join(ROOT,'components')).filter(x=>/^landing$/.test(x)).flatMap(d=>fs.readdirSync(path.join(ROOT,'components',d)).map(x=>'components/'+d+'/'+x)).filter(x=>/\.tsx$/.test(x)))assert(!/NickField/.test(read(f)),f+' must not show the name field');
- assert(/Reset name to \$\{m\.name\}/.test(host)&&/host\.resetName\(m\.id\)/.test(host)&&/state\.isHost && m\.nick/.test(host)&&/Name reset/.test(host),'host-only Reset name button with toast');
+ assert(!/Reset name|resetName/.test(host)&&/connection\.host\.nameLock\(m\.id, !nl\)/.test(host)&&/state\.isHost && state\.canLockNames/.test(host)&&/The host locked your name/.test(host),'host-only Lock name (Reset name is gone) with a toast to the locked player');
  assert(!/<small>\{m\.name\}<\/small>/.test(host),'no made-up name line any more');
 });
 t('only the code boxes take text',()=>{
@@ -271,7 +271,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
   assert(/styles\.body/.test(host)&&/\.tabs\{position:absolute/.test(css)&&/padding:calc\(6px \+ var\(--lead,0px\)\)/.test(css)&&/--fade-start/.test(css),'the toggle is pinned over the list; lists scroll under it with a soft top fade');
   assert(/createJoinBuffer/.test(host)&&/cancel\(\)/.test(host),'joins go through the coalescing buffer and it is cancelled on unmount');
   assert(/friend' : 'friends'/.test(chip),'chip label says N friends');
-  assert(/Reset name to/.test(host)&&/Remove \$\{displayName\(m\)\}/.test(host),'Reset name / Remove stay one tap on every row');
+  assert(/'Unlock name' : 'Lock name'/.test(host)&&/>Remove from party<\/button>/.test(host),'Lock name / Remove from party are plain words on every friend row');
   const got=[];const b=I.createJoinBuffer(names=>got.push(names),30);
   b.add(['A']);b.add(['B','C']);b.add(['D']);assert.equal(JSON.stringify(got),'[]','nothing yet inside the window');
   await new Promise(r=>setTimeout(r,70));

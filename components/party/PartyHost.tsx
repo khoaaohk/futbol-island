@@ -7,7 +7,7 @@ import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplay
 import { SESSION_KEY, bindConnection, colourName, displayName, getNick, hasValidNick, multiplayerEnabled, partyStore, setNick, usePartyState, type Member, type PartyConnection } from '@/lib/multiplayer';
 import { PARTY_EVENT, checkParty, clearPendingParty, createJoinBuffer, createParty, joinNote, readPendingParty } from '@/lib/multiplayer/invite';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
-import { ErrorCode, PARTY_MAX, Zone, normalizeCode, type Look } from '../../multiplayer/protocol';
+import { ErrorCode, PARTY_MAX, S, Zone, normalizeCode, type Look } from '../../multiplayer/protocol';
 import JoinParty from './JoinParty';
 import PartyChip, { Glyph } from './PartyChip';
 import PartyInvite from './PartyInvite';
@@ -264,8 +264,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (added.length) (joinBuf.current ??= createJoinBuffer((names) => note({ kind: 'join', names }))).add(added);
   }, [state.members, state.status, state.you, note]);
   useEffect(() => () => joinBuf.current?.cancel(), []);
-  // A friend changed their first name (relay v1.3 C.Rename, re-announced as Joined for the same id): one short note. A host reset
-  // (back to the colour name) is not news here; the host already saw 'Name reset'.
+  // A friend changed their first name (relay v1.3 C.Rename, re-announced as Joined for the same id): one short note.
   const prevNicks = useRef<Map<number, string | null> | null>(null);
   useEffect(() => {
     if (state.status !== 'live') { if (state.status === 'idle') prevNicks.current = null; return; }
@@ -277,6 +276,15 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     }
     prevNicks.current = next;
   }, [state.members, state.status, state.you, text]);
+  // Relay v1.5 name lock: one note to the locked player when the host locks (or unlocks) their name. lockSeen survives a resume, so the
+  // lock list the relay re-sends after every Welcome is not news again.
+  const lockSeen = useRef(false);
+  useEffect(() => connection.onMessage((m) => {
+    if (m[0] !== S.NameLock || m[1] !== partyStore.get().you) return;
+    if (m[2] === 1 && !lockSeen.current) { lockSeen.current = true; text('The host locked your name'); }
+    else if (m[2] === 0 && lockSeen.current) { lockSeen.current = false; text('The host unlocked your name'); }
+  }), [connection, text]);
+  useEffect(() => { if (state.status === 'idle') lockSeen.current = false; }, [state.status]);
   // Self rename (Your party > List): the join form's rules; memory only (nick.ts + the connection, so every reconnect and a later
   // rejoin use it). An old relay (no Cap.Rename) cannot pass it on: only this device shows it, and the note says so.
   const renameSelf = useCallback((n: string) => {
@@ -499,18 +507,22 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
             <div role="tabpanel" id="party-panel-party" aria-labelledby="party-tab-party" aria-hidden={activeTab !== 'party'} {...inertIf(activeTab !== 'party')} data-active={activeTab === 'party'} className={styles.panel} data-party-panel="party">
               <FadeScroll>
             <ul className={styles.members}>
-              {me && <OwnNameRow me={me} locked={connection.nameLocked} onSave={renameSelf} onRejected={() => track.current?.('name_bad')} />}
+              {me && <OwnNameRow me={me} locked={state.nameLocks.includes(me.id) || connection.nameLocked} onSave={renameSelf} onRejected={() => track.current?.('name_bad')} />}
               {friends.map((m) => (<Fragment key={m.id}>
                 <li className={styles.member} data-acts="1" data-away={m.away ? '1' : undefined} data-presence={m.presence} aria-label={`${displayName(m)}, ${colourName(m.colourIdx).toLowerCase()}${memberActivityLine(m) ? ', ' + presenceText(m.presence, m.activity).toLowerCase() : ''}`}>
                   <span className={styles.zone} role="img" aria-label={ZONE_LABEL[m.zone] ?? 'on the island'}><Icon name={ZONE_ICON[m.zone] ?? 'home'} size={18} /></span>
                   <span className={styles.dot} style={{ background: m.colourHex }} aria-hidden="true" /><span className={styles.mname}>{displayName(m)}{memberActivityLine(m) && <small className={styles.activity} data-party-activity aria-hidden="true">{memberActivityLine(m)}</small>}</span>
                   {m.isHost && <span className={styles.badge}>Host</span>}
-                  {/* Every icon carries a visible word (owner, Oct 23 2026): Hide / Mute for everyone; Reset name / Remove for the host. */}
+                  {/* Plain words, no icons (owner, Oct 23 2026: 'keep it simple'): each label says what the tap does, or the state it is in. */}
                   <span className={styles.rowActions} data-row-actions>
-                    <button type="button" className={styles.act} aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Show' : 'Hide'} ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}><Glyph name="eyeoff" size={18} /><span data-act-label>{hidden.has(m.id) ? 'Show' : 'Hide'}</span></button>
-                    <button type="button" className={styles.act} aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Unmute' : 'Mute'} emotes from ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}><Glyph name="mute" size={18} /><span data-act-label>{muted.has(m.id) ? 'Unmute' : 'Mute'}</span></button>
-                    {state.isHost && m.nick && <button type="button" className={styles.act} data-reset-name aria-label={`Reset name to ${m.name}`} onClick={() => { connection.host.resetName(m.id); text('Name reset'); track.current?.('name_reset'); }}><Icon name="rotate" size={18} /><span data-act-label>Reset name</span></button>}
-                    {state.isHost && <button type="button" className={styles.act} data-danger data-remove-open data-member={m.id} aria-label={`Remove ${displayName(m)}`} aria-expanded={confirmKick === m.id} onClick={() => askKick(m.id)}><Icon name="close" size={18} /><span data-act-label>Remove</span></button>}
+                    <button type="button" className={styles.act} data-act="mute" aria-pressed={muted.has(m.id)} aria-label={`${muted.has(m.id) ? 'Emotes muted' : 'Mute emotes'}, ${displayName(m)}`} onClick={() => toggle(muted, m.id, onMutedChange, setMuted)}>{muted.has(m.id) ? 'Emotes muted' : 'Mute emotes'}</button>
+                    <button type="button" className={styles.act} data-act="hide" aria-pressed={hidden.has(m.id)} aria-label={`${hidden.has(m.id) ? 'Friend hidden' : 'Hide friend'}, ${displayName(m)}`} onClick={() => toggle(hidden, m.id, onHiddenChange, setHidden)}>{hidden.has(m.id) ? 'Friend hidden' : 'Hide friend'}</button>
+                    {state.isHost && state.canLockNames && (() => {
+                      const nl = state.nameLocks.includes(m.id);
+                      return <button type="button" className={styles.act} data-act="name-lock" data-name-lock aria-pressed={nl} aria-label={`${nl ? 'Unlock name' : 'Lock name'}, ${displayName(m)}`}
+                        onClick={() => { connection.host.nameLock(m.id, !nl); text(nl ? `${displayName(m)} can change their name` : `${displayName(m)}'s name is locked`); if (!nl) track.current?.('name_reset'); }}>{nl ? 'Unlock name' : 'Lock name'}</button>;
+                    })()}
+                    {state.isHost && <button type="button" className={styles.act} data-danger data-remove-open data-member={m.id} aria-label={`Remove ${displayName(m)} from party`} aria-expanded={confirmKick === m.id} onClick={() => askKick(m.id)}>Remove from party</button>}
                   </span>
                 </li>
                 {/* Remove asks first (owner, Oct 23 2026): never a single tap (ConfirmStep: Cancel focused, armed red button). */}
@@ -522,6 +534,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               </Fragment>))}
               {!friends.length && <li className={styles.small}>Waiting for friends to join.</li>}
             </ul>
+            {friends.length > 0 && <p className={styles.small} data-party-help>Mute = no emotes from them. Hide = hide them from your screen.</p>}
             {kickPrompt && state.isHost && kickBlock}
               </FadeScroll>
               {/* Pinned footer: outside the scrolling area, so End / Leave is always in view while the list scrolls under it. */}

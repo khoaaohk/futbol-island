@@ -89,7 +89,7 @@ try {
     assert.ok(back.msgs.some((m) => m[0] === 20), 'resume through the retired code');
     back.w.close();
   }
-  // first-name nick: normalised in the roster, host can reset it, the relay's log lines never contain it
+  // first-name nick: normalised in the roster, host can lock it, the relay's log lines never contain it
   {
     const p3 = await (await fetch(base + '/party', { method: 'POST' })).json();
     const wsBase = 'ws://127.0.0.1:' + port + '/party/';
@@ -102,10 +102,18 @@ try {
     const gid = g.msgs.find((m) => m[0] === 20)[2];
     assert.equal(g.msgs.find((m) => m[0] === 20)[7].find((m) => m[0] === hid)[5], 'Smokekid', 'roster carries the normalised nick');
     assert.equal(h.msgs.find((m) => m[0] === 21)[1][5], 'Emma');
+    // relay v1.5: Reset name is retired (an old client's ResetName is ignored); the host locks / unlocks a name instead (Cap.NameLock = 16)
+    assert.ok(g.msgs.some((m) => m[0] === 32 && (m[1] & 16)), 'S.Caps carries Cap.NameLock');
+    h.w.send(JSON.stringify([11, 31])); g.w.send(JSON.stringify([11, 31])); await wait(200);
     h.w.send(JSON.stringify([10, gid])); await wait(300);
-    assert.ok(g.msgs.some((m) => m[0] === 31 && m[1] === gid && m[2] === null), 'Renamed broadcast');
-    g.w.send(JSON.stringify([10, hid])); await wait(300);
-    assert.ok(g.msgs.some((m) => m[0] === 29 && m[1] === 6), 'guest ResetName -> NotHost');
+    assert.ok(!g.msgs.some((m) => m[0] === 31) && !g.msgs.some((m) => m[0] === 29), 'old ResetName ignored: no Renamed, no error');
+    h.w.send(JSON.stringify([16, gid, 1])); await wait(300);
+    assert.ok(g.msgs.some((m) => m[0] === 37 && m[1] === gid && m[2] === 1), 'the locked player hears S.NameLock');
+    const joinedBefore = h.msgs.filter((m) => m[0] === 21).length;
+    g.w.send(JSON.stringify([13, 'Sam'])); await wait(300);
+    assert.equal(h.msgs.filter((m) => m[0] === 21).length, joinedBefore, 'a locked member cannot rename');
+    g.w.send(JSON.stringify([16, hid, 1])); await wait(300);
+    assert.ok(g.msgs.some((m) => m[0] === 29 && m[1] === 6), 'guest NameLock -> NotHost');
     // the name is required for new clients: a bad / missing name is refused with BadName (9); an old nick-less Hello still joins (colour only); an old animal wish is ignored
     const bad = await open(p3.code); bad.w.send(JSON.stringify([0, 1, L, null, null, null, 'Emma Lou'])); await wait(300);
     assert.ok(bad.msgs.some((m) => m[0] === 29 && m[1] === 9), 'invalid name -> BadName');

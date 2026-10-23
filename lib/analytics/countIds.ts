@@ -195,7 +195,7 @@ export const PARTY_COUNT_EVENTS=[
  ['in','Sessions that played in a party'],
  ...PARTY_FF_BUCKETS,
  ['share_tap','Share / Copy link tapped'],['share_ok','Link shared'],['copy_ok','Link copied'],['share_fail','Share failed or cancelled'],
- ['new_code','New code'],['lock','Closed to new friends'],['unlock','Opened to new friends'],['kick','Player removed'],['name_reset','Name reset by the host'],
+ ['new_code','New code'],['lock','Closed to new friends'],['unlock','Opened to new friends'],['kick','Player removed'],['name_reset','Name locked by the host'],
  ['hide','Friend hidden'],['mute','Friend’s emotes muted'],['tab_code','Code tab used (once per visit)'],['tab_list','List tab used (once per visit)'],
  ['end_tap','“End party for everyone” tapped'],['end','Party ended by the host'],['leave','Guest left'],['ended','Party ended for me (remotely)'],['kicked','I was removed'],
  ...PARTY_FAIL_REASONS.map(r=>[`fail_${r}`,`Join failed: ${r.replace('_',' ')}`] as const),['fail_create_rate','Create failed: too many parties'],['fail_create_offline','Create failed: party service unreachable'],

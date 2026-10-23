@@ -1,7 +1,7 @@
 // Party state for React. Emits only on membership / status / emote / ping / error changes (and a member's zone or away
 // flag flipping), never because a Poses message arrived.
 import { useSyncExternalStore } from 'react';
-import { S, nameFor, presenceOf, activityOf, roomOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
+import { S, Cap, nameFor, presenceOf, activityOf, roomOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
 import type { PartyStatus, TabState } from './connection';
 import { colourHex } from './names';
 import { roomActivity } from './presence';
@@ -19,6 +19,9 @@ export type PartyState = {
   /** Party rejoin (Oct 22 2026): which tab owns the party ('elsewhere' / 'moved' = another tab of this browser), and whether a
    *  resume found its slot lapsed (the menu then offers Join with the code filled in). From the connection, local only. */
   tab: TabState; lapsed: boolean;
+  /** Relay v1.5 (Oct 23 2026): ids whose name the host locked (S.NameLock; re-sent after every Welcome), and whether this relay
+   *  supports name locks at all (S.Caps carried Cap.NameLock; an old relay => the host's Lock name button is hidden). */
+  nameLocks: MemberId[]; canLockNames: boolean;
 };
 
 /** What to call a friend: their typed first name, else the colour name ('Red'). */
@@ -28,6 +31,7 @@ export const PING_SHOW_MS = 8000;
 
 const initial = (): PartyState => ({
   status: 'idle', code: null, codeExpiresAt: 0, you: null, isHost: false, locked: false, members: [], lastEmote: null, pings: [], error: null, tab: null, lapsed: false,
+  nameLocks: [], canLockNames: false,
 });
 
 /** A friend walking in a room is 'indoors' with no Activity on the wire (the speed byte is the room code): read the room as the
@@ -84,7 +88,7 @@ export const partyStore = {
         spots.clear();
         for (const info of m[7]) if (info[4]) keepSpot(info[0], info[4]);
         const members = m[7].map(toMember);
-        set({ ...state, status: 'live', you: m[2], codeExpiresAt: m[4], locked: m[6] === 1, members, error: null,
+        set({ ...state, status: 'live', you: m[2], codeExpiresAt: m[4], locked: m[6] === 1, members, error: null, nameLocks: [], canLockNames: false,
           isHost: members.some((x) => x.id === m[2] && x.isHost) });
         return;
       }
@@ -97,9 +101,17 @@ export const partyStore = {
       case S.Renamed:
         set({ ...state, members: state.members.map((x) => (x.id === m[1] ? { ...x, nick: null } : x)) });
         return;
+      case S.Caps:
+        set({ ...state, canLockNames: (m[1] & Cap.NameLock) !== 0 });
+        return;
+      case S.NameLock: {
+        const rest = state.nameLocks.filter((x) => x !== m[1]);
+        set({ ...state, nameLocks: m[2] === 1 ? [...rest, m[1]] : rest });
+        return;
+      }
       case S.Left:
         spots.delete(m[1]);
-        set({ ...state, members: state.members.filter((x) => x.id !== m[1]), pings: state.pings.filter((p) => p.id !== m[1]) });
+        set({ ...state, members: state.members.filter((x) => x.id !== m[1]), pings: state.pings.filter((p) => p.id !== m[1]), nameLocks: state.nameLocks.filter((x) => x !== m[1]) });
         return;
       case S.Poses: {
         // Only a zone / away / presence flip is visible state. Nothing changes (and nothing emits) for ordinary movement.

@@ -137,12 +137,14 @@
 .renameForm{display:flex;flex-direction:column;gap:6px;padding:6px 0 8px}
 .renameActions{display:flex;gap:8px;justify-content:flex-end}
 .renameActions .primary,.renameActions .secondary{min-width:96px}
-/* Member row actions (Oct 23 2026): every icon has a visible word on a second line under the name, so kids can tell what each does. */
+/* Member row actions (owner, Oct 23 2026: 'keep it simple'): plain text buttons on a line under the name, two per line on a phone. */
 .member[data-acts]{flex-wrap:wrap;row-gap:4px;padding-bottom:8px;border-bottom:1px solid rgba(25,63,55,.12)}
 .rowActions{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;padding-left:20px}
-.act{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 12px 0 9px;border:1.5px solid var(--btn-rim);border-radius:999px;background:#fff;color:var(--btn-ink);font:700 13px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
+.rowActions .act{flex:1 1 128px;max-width:200px}
+.act{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:4px 10px;text-align:center;border:1.5px solid var(--btn-rim);border-radius:999px;background:#fff;color:var(--btn-ink);font:700 13px/1.15 var(--btn-font);cursor:pointer;touch-action:manipulation}
 .act[aria-pressed=true]{background:var(--btn-pink)}
 .act[data-danger]{color:var(--party-danger)}
+.act:disabled{cursor:default;opacity:.7;background:transparent}
 .act:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 /* Remove a friend: a confirm step, never a single tap. Cancel sits on the right, under the finger that tapped Remove. */
 .confirm{display:flex;flex-direction:column;gap:8px;margin:0 0 4px;padding:10px 12px;border-radius:14px;background:var(--btn-mint);list-style:none}

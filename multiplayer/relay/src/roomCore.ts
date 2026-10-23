@@ -39,7 +39,7 @@ const FAIL_OF: Partial<Record<number, FailReason>> = {
   [ErrorCode.Locked]: 'locked', [ErrorCode.RateLimited]: 'rate_limited',
 };
 /** Per-socket state a hibernating Durable Object keeps with serializeAttachment so members survive an eviction. */
-export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean }
+export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean; nameLock?: 1 }
 
 /** WebSocket close codes the relay uses (4xxx = application range). */
 export const CLOSE = {
@@ -70,8 +70,8 @@ interface Member {
    *  ball: [state, x_dm, y_dm, z_dm] (null = never sent), ballAt: when it arrived. */
   caps: number; poseNo: number; ballNo: number; seen: Map<number, number>; seenBall: Map<number, number>;
   ball: number[] | null; ballAt: number; ballBucket: TokenBucket;
-  /** Relay v1.3 (self rename, Oct 23 2026): the host reset this member's typed name, so it never takes a new one (C.Rename) for the
-   *  rest of the party (kid safety). renameTimes: recent C.Rename times (RENAME_PER_MIN per minute). */
+  /** Relay v1.5 (Oct 23 2026): the host locked this member's name (C.NameLock), so C.Rename is ignored until the host unlocks it. Kept
+   *  on the slot, so it survives a resume. renameTimes: recent C.Rename times (RENAME_PER_MIN per minute). */
   nickLocked: boolean; renameTimes: number[];
 }
 
@@ -190,10 +190,14 @@ export class RoomCore {
     this.members.set(a.id, m); this.byPeer.set(peer, m);
     this.joinSeq = Math.max(this.joinSeq, a.joinSeq + 1);
     if (a.host) { this.hostId = a.id; this.hadHost = true; }
+    if (a.nameLock === 1) m.nickLocked = true; // relay v1.5: the host's name lock survives an eviction (the locked member's next frame syncs it)
   }
   attachmentFor(peer: Peer): MemberAttachment | null {
     const m = this.byPeer.get(peer);
-    return m ? { id: m.id, name: m.name, look: m.look, token: m.token, joinSeq: m.joinSeq, host: m.id === this.hostId } : null;
+    if (!m) return null;
+    const a: MemberAttachment = { id: m.id, name: m.name, look: m.look, token: m.token, joinSeq: m.joinSeq, host: m.id === this.hostId };
+    if (m.nickLocked) a.nameLock = 1;
+    return a;
   }
 
   get code(): string { return this._code; }
@@ -262,23 +266,25 @@ export class RoomCore {
         this.broadcast([S.Ping, m.id, msg[1] as PingKind, msg[2] as number, msg[3] as number], m);
         return;
       case C.Beat: this.send(peer, [S.Beat, msg[1] as number]); return;
-      case C.Caps: m.caps = (msg[1] as number) & CAPS_ALL; return;
+      case C.Caps: this.caps(m, msg[1] as number); return;
       case C.Ball: this.ballMsg(m, msg as number[], now); return;
       case C.Leave: this.remove(m, LeaveReason.Left, CLOSE.Normal); return;
       case C.Rename: this.rename(m, msg[1] as string, now); return;
       case C.EmoteAsk: this.emoteAsk(m, msg[1] as number, msg[2] as Emote, now); return;
       case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
+      case C.ResetName: return; // retired (Oct 23 2026, replaced by C.NameLock): an old host client's frame is ignored, never an error
       default: break;
     }
-    // host-only controls: Kick, Lock, Rotate, End, ResetName
+    // host-only controls: Kick, Lock, Rotate, End, NameLock
     if (!m.ctlBucket.take(now)) { this.send(peer, [S.Error, ErrorCode.RateLimited]); return; }
     if (m.id !== this.hostId) { this.send(peer, [S.Error, ErrorCode.NotHost]); return; }
-    if (msg[0] === C.ResetName) {
+    if (msg[0] === C.NameLock) {
       const t = this.members.get(msg[1] as number);
-      if (!t || t === m || t.nick === null) return;
-      t.nick = null; t.nickLocked = true;
-      this.count('nameResets');
-      this.broadcast([S.Renamed, t.id, null], null);
+      const on = msg[2] === 1;
+      if (!t || t === m || t.nickLocked === on) return; // unknown id, the host's own name, or no change
+      t.nickLocked = on;
+      if (on) this.count('nameResets'); // the counter now counts name locks (kept under its old key for the dashboards)
+      this.lockNews(t);
     } else if (msg[0] === C.Kick) {
       const t = this.members.get(msg[1] as number);
       if (!t || t === m) return;
@@ -611,18 +617,36 @@ export class RoomCore {
     let best: Member | null = null;
     this.members.forEach((m) => { if (m.goneAt === null && m.peer && (!best || m.joinSeq < best.joinSeq)) best = m; });
     const b = best as Member | null;
-    if (b && b.id !== this.hostId) { this.hostId = b.id; this.broadcast([S.Host, b.id], null); }
+    if (b && b.id !== this.hostId) {
+      this.hostId = b.id; this.broadcast([S.Host, b.id], null);
+      if (b.nickLocked) { b.nickLocked = false; this.lockNews(b); } // the host's own name is never locked
+    }
   }
 
   /** C.Rename (relay v1.3): the member's own first name. parseClient already normalised it. Re-announced as S.Joined (same id) to
    *  everyone including the sender (its confirmation); old clients upsert Joined by id, so they show the new name too. */
   private rename(m: Member, nick: string, now: number): void {
-    if (m.nickLocked || nick === m.nick || !m.ctlBucket.take(now)) return;
+    if (m.nickLocked) { if (m.peer && (m.caps & Cap.NameLock)) this.send(m.peer, [S.NameLock, m.id, 1]); return; } // locked: refused
+    if (nick === m.nick || !m.ctlBucket.take(now)) return;
     m.renameTimes = m.renameTimes.filter((t) => now - t < 60000);
     if (m.renameTimes.length >= RENAME_PER_MIN) return;
     m.renameTimes.push(now);
     m.nick = nick;
     this.broadcast([S.Joined, this.memberInfo(m)], null);
+  }
+
+  /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock (a join or a resume). */
+  private caps(m: Member, bits: number): void {
+    m.caps = bits & CAPS_ALL;
+    if (!(m.caps & Cap.NameLock) || !m.peer) return;
+    const peer = m.peer;
+    this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
+  }
+
+  /** Relay v1.5: tell every Cap.NameLock member that `t`'s name lock changed (old clients never see S.NameLock). */
+  private lockNews(t: Member): void {
+    const text = encode([S.NameLock, t.id, t.nickLocked ? 1 : 0]);
+    this.members.forEach((r) => { if (r.peer && (r.caps & Cap.NameLock)) { try { r.peer.send(text); } catch { /* gone */ } } });
   }
 
   private welcome(m: Member): void {
