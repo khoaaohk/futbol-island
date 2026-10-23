@@ -422,4 +422,10 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  h.avatars.update(.016,h.poses,h.camera,false,null);
  assert.equal(labelsOf()[0].visible,false,'no local player (busy / hidden): the camera distance still applies');
 }
+{
+ // Oct 23: a friend's name tag sat behind the transparent sea (renderOrder .5) and was painted over by the waves.
+ const src=read0('lib/graphics/remoteAvatars.ts');
+ assert.match(src,/label\.renderOrder=3/,'friend name tags draw after the sea');
+ assert.match(src,/bubble\.renderOrder=3/,'friend emote bubbles draw after the sea');
+}
 console.log('mp-avatars ok');

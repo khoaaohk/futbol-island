@@ -301,8 +301,8 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function ensureLabel(e:Entry){
   if(e.label||disposed)return;
   const mat=new T.SpriteMaterial({map:e.labelTexture,transparent:true,depthWrite:false});
-  const label=new T.Sprite(mat);label.scale.set(LABEL_WORLD_W,LABEL_WORLD_W*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.name='remote-name';labels.add(label);e.label=label;
-  const bubble=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false}));bubble.scale.set(.6,.6,1);bubble.visible=false;bubble.raycast=()=>{};bubble.name='remote-emote';labels.add(bubble);e.bubble=bubble;
+  const label=new T.Sprite(mat);label.scale.set(LABEL_WORLD_W,LABEL_WORLD_W*labelH(e.style)/LABEL_W,1);label.visible=false;label.raycast=()=>{};label.renderOrder=3;/* after the transparent sea (renderOrder .5): the name must never sit behind the waves */label.name='remote-name';labels.add(label);e.label=label;
+  const bubble=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false}));bubble.scale.set(.6,.6,1);bubble.visible=false;bubble.raycast=()=>{};bubble.renderOrder=3;bubble.name='remote-emote';labels.add(bubble);e.bubble=bubble;
   const status=new T.Sprite(new T.SpriteMaterial({transparent:true,depthWrite:false,depthTest:false,sizeAttenuation:false}));status.scale.set(STATUS_SCREEN,STATUS_SCREEN*STATUS_H/STATUS_W,1);status.renderOrder=4;status.visible=false;status.raycast=()=>{};status.name='remote-status';labels.add(status);e.status=status;
  }
  const capNow=()=>batterySaverOn()?0:opts.maxFor(effectiveTier(),opts.phone);
