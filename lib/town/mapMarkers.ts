@@ -2,7 +2,7 @@
  * Travel-map marks (V vending, F fishing, J jobs, E reefs to explore; was D for dive spots before Oct 20 2026): the map key's tap tooltips and where the J marks sit.
  * The marks on the map are plain drawings (not buttons); the key explains them in general, not per place (tests/map-markers.cjs).
  */
-export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far';
+export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far'|'friend';
 type Point={x:number;z:number};
 
 /** The key's tooltips, one per kind, in words a child can read: shown as "<title>: <text>". */
@@ -13,7 +13,18 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
  dive:{title:'Reefs to explore:',text:'swim out to the flag and explore the shallow coral reef'},
  // Oct 21 2026 (reefDiscovery.ts): the jetpack badge on the E marks whose reef is beyond the 60 m swim range.
  far:{title:'Fly there:',text:'too far to swim, so take your jetpack to these reefs'},
+ // Oct 23 2026: party friends' dots (components/FriendMapDots.tsx), keyed only while a party is live.
+ friend:{title:'Friends:',text:'your party, each in their own colour. Tap a dot to see who it is'},
 };
+/** One entry of the map key. `ring` = the You marker, `friend` = the party dots' mark. */
+export type LegendItem={mark:string;fill:string;label:string;ring?:boolean;friend?:boolean;tip?:MapMarkKind};
+const BASE_LEGEND:readonly LegendItem[]=[
+ {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
+ {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
+const FRIEND_LEGEND:readonly LegendItem[]=[...BASE_LEGEND,{mark:'',fill:'#D62828',label:'Friends',friend:true,tip:'friend'}];
+/** The travel map's key (G-13): "Friends" is listed ONLY while a party is live with someone in it (no party = the key as before).
+ *  Phones lay 6 entries out 3 + 3 and 7 entries 4 + 3 (Fly there, You and Friends share the second row). */
+export const mapLegend=(friends:boolean):readonly LegendItem[]=>friends?FRIEND_LEGEND:BASE_LEGEND;
 export const legendTipText=(kind:MapMarkKind)=>`${LEGEND_TIPS[kind].title} ${LEGEND_TIPS[kind].text}`;
 
 /**

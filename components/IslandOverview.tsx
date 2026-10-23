@@ -19,6 +19,8 @@ import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers} from '@/lib/town/mapMarkers';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
+import FriendMapDots from './FriendMapDots';
+import type {FriendDot} from '@/lib/town/friendMarks';
 // East Jetty (eastPier.ts): the straight stone walkway from the market seawall curling into its spiral, drawn from the same
 // centre-line samples movement uses (every 3rd sample, fixed precision: static string built once).
 const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&&(i%3===0||i===JETTY_PATH.length-1)).map(p=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`).join(' ');
@@ -59,7 +61,9 @@ function ExploreMarks({localMap}:{localMap:boolean}){
 const NONE:ReadonlySet<string>=new Set();
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
 export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit';
-function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void}){
+function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames,friends,onFriendTip}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void;
+ /** Full map: draw the party's friend dots (true only while the travel map is open). The minimap draws them while `active`. */
+ friends?:boolean;onFriendTip?:(dot:FriendDot,text:string,el:Element|null)=>void}){
  // The map is drawn in the browser only (after hydration): its world-space coordinates come from trig, and WebKit and the
  // server's V8 disagree in the last digit, which made React report a hydration mismatch on every Safari load (Sep 30 2026).
  const [mounted,setMounted]=useState(false);useEffect(()=>setMounted(true),[]);
@@ -148,16 +152,17 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect x={MARKET_STAND.x-(localMap?87:126)} y={MARKET_STAND.z-(localMap?7:11)} width={localMap?74:102} height={localMap?14:22} rx="5" fill="#f4c2a4" stroke="#294f43" strokeWidth="1"/>
    <text x={MARKET_STAND.x-(localMap?50:75)} y={MARKET_STAND.z+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:11} fontWeight="800">ROSA’S MARKET</text>
   </g>
-  {!localMap&&markerPosition&&<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>}
- </>,[roads,buildings,onSelect,markerPosition,localMap]);
+ </>,[roads,buildings,onSelect,localMap]);
+ // Friends on the map (Oct 23 2026): the party's dots sit above every mark and below "You" (drawn last, so it stays on top).
+ const you=!localMap&&markerPosition?<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>:null;
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>
   <div ref={layer} className="minimap-layer" data-frame-driven={frames?'true':undefined} style={frames?{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transition:'none'}:{width:`${(w+16)/(radius*2)*100}%`,height:`${(h+16)/(radius*2)*100}%`,transform:`translate(${(b.minX-8-position.x)/(w+16)*100}%, ${(b.minZ-8-position.z)/(h+16)*100}%)`,transitionDuration:jumped?'0ms':undefined}}>
-   <svg viewBox={`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`} width="100%" height="100%" aria-hidden="true"><g className="minimap-terrain">{terrain}</g></svg>
+   <svg viewBox={`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`} width="100%" height="100%" aria-hidden="true"><g className="minimap-terrain">{terrain}</g><FriendMapDots mode="mini" live={active}/></svg>
   </div>
   <svg className="minimap-player" viewBox={view} aria-hidden="true"><g aria-label="Your position"><circle cx={0} cy={0} r="4.5" fill="#314f43"/><circle cx={0} cy={0} r="3" fill="#fff0cf" stroke="#fff0cf" strokeWidth="1"/></g></svg>
  </div>;
  if(!mounted)return null;
- return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}</svg>;
+ return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}{friends!==undefined&&<FriendMapDots mode="full" live={friends} onTip={onFriendTip}/>}{you}</svg>;
 }
 
-export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&a.frames===b.frames&&(b.active===false||a.position===b.position));
+export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&a.frames===b.frames&&a.friends===b.friends&&a.onFriendTip===b.onFriendTip&&(b.active===false||a.position===b.position));

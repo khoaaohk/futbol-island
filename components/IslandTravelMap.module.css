@@ -63,6 +63,8 @@
  /* Phones: the side arrows moved from mid-height (they covered the futsal and COACHES labels) to the bottom corners, beside Down. */
  .arrow[data-dir=left],.arrow[data-dir=right]{top:auto;bottom:16px;margin-top:0}
  .legend{display:grid;grid-template-columns:repeat(3,max-content);justify-content:center;gap:6px 14px;font-size:12px}
+ /* With a live party the key has 7 entries (+ Friends): 4 + 3 (Fly there, You, Friends on the second row) instead of 3 + 3 + 1. */
+ .legend[data-legend-count="7"]{grid-template-columns:repeat(4,max-content);column-gap:10px}
  .dialog .panel>.body{padding:0 var(--phone-gutter) calc(10px + env(safe-area-inset-bottom,0px))}
  .frame{border-width:4px;border-radius:26px 34px 24px 28px}
 }

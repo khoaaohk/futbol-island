@@ -1,5 +1,12 @@
 # Performance reference for future Futbol Island updates
 
+## Friends on the map (Oct 23 2026, local, not deployed)
+
+- Party friends draw as coloured initial dots on the travel map and the corner minimap (`components/FriendMapDots.tsx`, rules in `lib/town/friendMarks.ts`). No protocol / relay change and no new messages: positions are the party store's last island spots (`partyStore.spot(id)`, mutated in place in `store.ts` as poses arrive, never emitted).
+- Nothing subscribes with no party, multiplayer off, the travel map closed or the minimap folded. When live, a pose / roster / Hide change only arms one timer; the dots re-render at most ~3 Hz (full map, 0.5 m steps) or 2 Hz and only for a 1 m step (minimap). No frame loop; allocation only on those flushes.
+- The full map's "You" marker moved out of the memoized terrain (drawn after the friend dots), so the terrain no longer rebuilds when the map's own marker moves.
+- Validation: `tests/friend-map-dots.cjs`, `scripts/check-friend-map-live.cjs` (dev relay, 3 scripted friends, phone). Reduced work only; no iPhone thermal measurement.
+
 ## Heat QA: rig update back in V8's optimising tier, Arcade hub and Kit Shop sleep (Oct 22 2026, local, not deployed)
 Measured first (headless Chrome, production build with the multiplayer flag, desktop 1280x800, a dev relay + bots; rAF callbacks,
 rendered frames, CDP TaskDuration and a heap *sampling* profile that counts collected objects too). Script: /tmp/qa-heat-scripts.

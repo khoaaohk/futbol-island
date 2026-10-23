@@ -1,13 +1,15 @@
 'use client';
 import {DoneButton} from './DoneButton';
 import shell from './ModalShell.module.css';
-import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
+import {useCallback,useEffect,useLayoutEffect,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
 import {Icon} from './Icon';
 import IslandOverview,{JETPACK_GLYPH,type MapDestination,type MapFootprint} from './IslandOverview';
 import {FLIGHT_BOUNDS} from '@/lib/town/simulation';
 import {CAY_SHORE} from '@/lib/town/coralCay';
 import {SUMMIT_SHORE} from '@/lib/town/summitIsle';
-import {LEGEND_TIPS,legendTipText,type MapMarkKind} from '@/lib/town/mapMarkers';
+import {LEGEND_TIPS,legendTipText,mapLegend,type MapMarkKind} from '@/lib/town/mapMarkers';
+import {usePartyHasFriends} from './FriendMapDots';
+import type {FriendDot} from '@/lib/town/friendMarks';
 import styles from './IslandTravelMap.module.css';
 type Props={position:{x:number;z:number};open:boolean;onOpenChange:(open:boolean)=>void;onSelect:(destination:MapDestination)=>void;roads:MapFootprint[];buildings:MapFootprint[]};
 type Direction='up'|'right'|'down'|'left';
@@ -20,13 +22,13 @@ const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(...CAY_SHORE.map(p=>p.
 const ARROWS:{dir:Direction;label:string;rotate:number}[]=[{dir:'up',label:'Move map up',rotate:0},{dir:'right',label:'Move map right',rotate:90},{dir:'down',label:'Move map down',rotate:180},{dir:'left',label:'Move map left',rotate:270}];
 /** Map key (G-13, Sep 30 2026): the same marks the map draws (IslandOverview), so a child can read V / F / J / W at a glance.
  *  The marks on the map are plain drawings; tapping V, F or J here shows what it is (Sep 30 2026, user: "the legend above is
- *  enough"). Rosa's market and "Places: tap to travel" left the key (the market and places keep their labels on the map). */
-const LEGEND:{mark:string;fill:string;label:string;ring?:boolean;tip?:MapMarkKind}[]=[
- {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
- {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
-function LegendMark({mark,fill,ring}:{mark:string;fill:string;ring?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/>{mark==='jet'?<path d={JETPACK_GLYPH} transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#294f43" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>:<text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text>}</>}</svg>;}
+ *  enough"). Rosa's market and "Places: tap to travel" left the key (the market and places keep their labels on the map).
+ *  The entries live in lib/town/mapMarkers.ts mapLegend: "Friends" joins them only while a party is live (Oct 23 2026). */
+function LegendMark({mark,fill,ring,friend}:{mark:string;fill:string;ring?:boolean;friend?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{friend?<><circle cx="15.4" cy="9" r="7" fill="#0072B2" stroke="#294f43" strokeWidth="1.6"/><circle cx="9" cy="14.6" r="7.6" fill={fill} stroke="#fff7db" strokeWidth="1.8"/><circle cx="9" cy="14.6" r="8.6" fill="none" stroke="#294f43" strokeWidth="1.2"/></>:ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/>{mark==='jet'?<path d={JETPACK_GLYPH} transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#294f43" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>:<text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text>}</>}</svg>;}
 /** One key tooltip at a time, in dialog px: `x` the mark's centre, `top`/`bottom` its edges (above, or below if no room). */
-type Tip={kind:MapMarkKind;x:number;top:number;bottom:number};
+type Tip={kind:MapMarkKind;x:number;top:number;bottom:number;
+ /** A friend's dot (kind 'friend' from the map, not the key): their name and where they are, keyed by their id. */
+ friend?:{id:number;name:string;text:string}};
 const TIP_GAP=10,TIP_PAD=8;
 const KEYS:Record<string,Direction>={ArrowUp:'up',ArrowRight:'right',ArrowDown:'down',ArrowLeft:'left'};
 export default function IslandTravelMap({position,open,onOpenChange,onSelect,roads,buildings}:Props){
@@ -40,7 +42,13 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  // Key tooltip: CSS-only motion (one 160 ms fade + rise), placed once per tap; nothing runs while it is open.
  const [tip,setTip]=useState<Tip|null>(null),tipEl=useRef<HTMLDivElement>(null),tipAnchor=useRef<HTMLElement|null>(null);
  const showTip=(kind:MapMarkKind,button:HTMLElement)=>{const r=(button.querySelector('svg')??button).getBoundingClientRect(),d=dialog.current?.getBoundingClientRect();tipAnchor.current=button;
-  setTip(t=>t?.kind===kind?t:{kind,x:r.left+r.width/2-(d?.left??0),top:r.top-(d?.top??0),bottom:r.bottom-(d?.top??0)});};
+  setTip(t=>t?.kind===kind&&!t.friend?t:{kind,x:r.left+r.width/2-(d?.left??0),top:r.top-(d?.top??0),bottom:r.bottom-(d?.top??0)});};
+ // Friends on the map (Oct 23 2026): tapping / focusing / hovering a friend's dot shows their name in the same bubble (el null = the
+ // mouse left the dot). Stable, so the memoized map never re-renders for it.
+ const friendTip=useCallback((dot:FriendDot,text:string,el:Element|null)=>{if(!el){setTip(t=>t?.friend?.id===dot.id?null:t);return;}
+  const r=el.getBoundingClientRect(),d=dialog.current?.getBoundingClientRect();tipAnchor.current=el as HTMLElement;
+  setTip(t=>t?.friend?.id===dot.id&&t.friend.text===text?t:{kind:'friend',x:r.left+r.width/2-(d?.left??0),top:r.top-(d?.top??0),bottom:r.bottom-(d?.top??0),friend:{id:dot.id,name:dot.name,text}});},[]);
+ const legend=mapLegend(usePartyHasFriends(open));
  const needsCenter=useRef(true),drag=useRef<{id:number;sx:number;sy:number;x:number;y:number;last:{x:number;y:number};moved:boolean}|null>(null),swallowClick=useRef(false);
  useEffect(()=>{if(open)return;const d=drag.current;drag.current=null;swallowClick.current=false;stage.current?.removeAttribute('data-dragging');if(d&&view.current?.hasPointerCapture(d.id))view.current.releasePointerCapture(d.id);},[open]);
  const scale=size.w&&size.h?Math.max(size.w/MAP_W,size.h/MAP_H):0,stageW=MAP_W*scale,stageH=MAP_H*scale;
@@ -90,12 +98,12 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  const stageStyle:CSSProperties=scale?{width:stageW,height:stageH,transform:`translate3d(${-pan.x}px,${-pan.y}px,0)`}:{visibility:'hidden'};
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="town-dialog-title" onCancel={e=>{e.preventDefault();if(tip){setTip(null);return;}onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'&&tip){e.preventDefault();setTip(null);}}} onKeyUp={e=>e.stopPropagation()}>
  <section className={`${styles.panel} ${shell.shell} ${shell.white}`}><header className={shell.header}><div><h2 id="town-dialog-title">Pick your patch</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
- <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend>{LEGEND.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul><div className={styles.frame} onKeyDown={onKeyDown}>
+ <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend data-legend-count={legend.length}>{legend.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul><div className={styles.frame} onKeyDown={onKeyDown}>
   <div ref={view} className={styles.map} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
-   <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect}/></div>
+   <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect} friends={open} onFriendTip={friendTip}/></div>
   </div>
   {ARROWS.map(({dir,label,rotate})=><button key={dir} type="button" className={styles.arrow} data-dir={dir} hidden={!scale||hidden(dir)} disabled={!can[dir]} aria-label={label} data-tip={label} onClick={()=>move(dir)}><Icon name="up" size={22} style={rotate?{transform:`rotate(${rotate}deg)`}:undefined}/></button>)}
  </div></div></section>
- {tip&&<div key={tip.kind} ref={tipEl} id="map-tip" role="tooltip" className={styles.tip} data-tip-kind={tip.kind} style={{left:tip.x,'--tip-top':`${tip.top}px`,'--tip-bottom':`${tip.bottom}px`} as CSSProperties}><strong>{LEGEND_TIPS[tip.kind].title}</strong> <span>{LEGEND_TIPS[tip.kind].text}</span></div>}
+ {tip&&<div key={tip.friend?`friend-${tip.friend.id}`:tip.kind} ref={tipEl} id="map-tip" role="tooltip" className={styles.tip} data-tip-kind={tip.kind} style={{left:tip.x,'--tip-top':`${tip.top}px`,'--tip-bottom':`${tip.bottom}px`} as CSSProperties}>{tip.friend?<><strong>{tip.friend.name}</strong> <span>{tip.friend.text}</span></>:<><strong>{LEGEND_TIPS[tip.kind].title}</strong> <span>{LEGEND_TIPS[tip.kind].text}</span></>}</div>}
  </dialog>;
 }

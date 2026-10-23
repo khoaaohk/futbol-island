@@ -34,10 +34,11 @@ assert.equal(M.legendTipText('fishing'),'Fishing spots: catch fish to sell at Ro
 assert.equal(M.legendTipText('job'),'Jobs: help out to earn coins');
 assert.equal(M.legendTipText('dive'),'Reefs to explore: swim out to the flag and explore the shallow coral reef');
 // 3. The key: V, F, J (tap targets with a tooltip) and You; Rosa's market and "Places: tap to travel" are gone.
-{const map=read('components/IslandTravelMap.tsx'),legend=map.slice(map.indexOf('const LEGEND:'),map.indexOf('function LegendMark'));
+{const map=read('components/IslandTravelMap.tsx'),markers=read('lib/town/mapMarkers.ts'),legend=markers.slice(markers.indexOf('const BASE_LEGEND'),markers.indexOf('export const mapLegend'));
  for(const [mark,label,kind] of [['V','Vending','vending'],['F','Fishing','fishing'],['J','Jobs','job'],['E','Explore','dive']])assert(legend.includes(`{mark:'${mark}',`)&&legend.includes(`label:'${label}',tip:'${kind}'`),`${mark} in the key with a tooltip`);
  assert(!/Rosa|Places: tap to travel/.test(legend),'no Rosa’s market or Places entry in the key');
  assert.match(map,/data-legend-tip=\{kind\}/,'key entries are buttons');
+ assert.match(map,/legend\.map\(/,'the key is built from mapLegend');
  assert.match(map,/role="tooltip"/,'one tooltip element');
  // 4. Heat: the tooltip is CSS-only motion; the map adds no loop.
  assert(!/requestAnimationFrame|setInterval/.test(map),'no animation loop in the travel map');
@@ -125,7 +126,7 @@ assert.equal(M.legendTipText('dive'),'Reefs to explore: swim out to the flag and
  assert.match(o,/\{fly&&<g data-jetpack-badge="">/,'jetpack badge on far zones');assert.match(o,/\{done&&<g data-dive-check="">/,'a tiny check on explored zones');
  const R=load('lib/town/water/reefDiscovery.ts');assert.deepEqual([...R.farDiveSpotIds()].sort(),['ball-crate','kelp-trawler','moon-arch'],'the three far zones, from the data');
  assert.equal(M.legendTipText('far'),'Fly there: too far to swim, so take your jetpack to these reefs');
- const map=read('components/IslandTravelMap.tsx');assert(map.includes(`{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'}`),'"Fly there" in the key with a tooltip');
- assert.match(map,/<NearestReef position=\{position\} open=\{open\}\/>/,'the nearest reef line under the key');
- assert.match(map,/nearestUndiscovered\(position\.x,position\.z,discovered\)/);}
+ const map=read('lib/town/mapMarkers.ts');assert(map.includes(`{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'}`),'"Fly there" in the key with a tooltip');
+ // Oct 23 2026 (4fdb298c): the Nearest reef line left the travel map (the map grows into the space).
+ assert(!/NearestReef/.test(read('components/IslandTravelMap.tsx')),'no nearest reef line under the key');}
 console.log('map markers ok');

@@ -41,6 +41,15 @@ function toMember(m: MemberInfo): Member {
 }
 
 let state: PartyState = initial();
+/** Friends on the map (Oct 23 2026): each member's last ISLAND spot in metres (a room pose keeps the spot where they went in, the
+ *  door). Mutated in place as poses arrive, never emitted (no re-render per pose); the maps read it on their own slow timers. */
+export type FriendSpot = { x: number; z: number };
+const spots = new Map<MemberId, FriendSpot>();
+function keepSpot(id: MemberId, body: ArrayLike<number>): void {
+  if (roomOf(body) >= 0) return;
+  const x = (body[0] as number) / 10, z = (body[2] as number) / 10, s = spots.get(id);
+  if (s) { s.x = x; s.z = z; } else spots.set(id, { x, z });
+}
 const scratch: number[] = [0, 0, 0, 0, 0, 0, 0, 0];
 const subs = new Set<() => void>();
 const emit = () => { for (const fn of Array.from(subs)) fn(); };
@@ -72,6 +81,8 @@ export const partyStore = {
   apply(m: ServerMsg, nowMs: number): void {
     switch (m[0]) {
       case S.Welcome: {
+        spots.clear();
+        for (const info of m[7]) if (info[4]) keepSpot(info[0], info[4]);
         const members = m[7].map(toMember);
         set({ ...state, status: 'live', you: m[2], codeExpiresAt: m[4], locked: m[6] === 1, members, error: null,
           isHost: members.some((x) => x.id === m[2] && x.isHost) });
@@ -79,6 +90,7 @@ export const partyStore = {
       }
       case S.Joined: {
         const mem = toMember(m[1]);
+        if (m[1][4]) keepSpot(mem.id, m[1][4]);
         set({ ...state, members: [...state.members.filter((x) => x.id !== mem.id), mem].sort((a, b) => a.id - b.id) });
         return;
       }
@@ -86,6 +98,7 @@ export const partyStore = {
         set({ ...state, members: state.members.map((x) => (x.id === m[1] ? { ...x, nick: null } : x)) });
         return;
       case S.Left:
+        spots.delete(m[1]);
         set({ ...state, members: state.members.filter((x) => x.id !== m[1]), pings: state.pings.filter((p) => p.id !== m[1]) });
         return;
       case S.Poses: {
@@ -94,8 +107,9 @@ export const partyStore = {
         let changed = false;
         for (let i = 2; i + 8 < m.length; i += 9) {
           const id = m[i] as number, zone = m[i + 7] as Zone, flags = m[i + 8] as number, away = (flags & 2) !== 0;
-          scratch[1] = m[i + 2] as number; scratch[4] = m[i + 5] as number; scratch[6] = zone; // roomOf reads y, the speed byte and the zone
+          scratch[0] = m[i + 1] as number; scratch[1] = m[i + 2] as number; scratch[2] = m[i + 3] as number; scratch[4] = m[i + 5] as number; scratch[6] = zone; // roomOf reads y, the speed byte and the zone
           const room = roomOf(scratch);
+          if (room < 0) keepSpot(id, scratch);
           const presence = presenceOf(m[i + 6] as number, zone, flags), activity = activityFor(m[i + 6] as number, m[i + 5] as number, room);
           const cur: Member | undefined = list.find((x) => x.id === id);
           if (cur && (cur.zone !== zone || cur.away !== away || cur.presence !== presence || cur.activity !== activity || cur.room !== room)) {
@@ -136,7 +150,9 @@ export const partyStore = {
   setLocal(tab: TabState, lapsed: boolean): void { if (tab !== state.tab || lapsed !== state.lapsed) set({ ...state, tab, lapsed }); },
   /** Optimistic: the host sees "locked" at once (the relay sends no echo). */
   setLocked(locked: boolean): void { if (state.locked !== locked) set({ ...state, locked }); },
-  reset(): void { set(initial()); },
+  reset(): void { spots.clear(); set(initial()); },
+  /** A member's last island spot (metres), or undefined before their first island pose. Read-only for callers; never emits. */
+  spot(id: MemberId): Readonly<FriendSpot> | undefined { return spots.get(id); },
 };
 
 export function usePartyState(): PartyState {
