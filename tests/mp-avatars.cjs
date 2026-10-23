@@ -217,7 +217,7 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
 // 4. Town.tsx: at most 6 lines of party glue, and the pinned dispose order is intact
 {
  const town=read('components/Town.tsx'),lines=town.split('\n').filter(l=>/createPartyRuntime|partyLocal|\bparty\?\.|PartyHost|townBridge/.test(l));
- assert(lines.length<=8,'Town.tsx party lines: '+lines.length+' (max 8: the PartyHost mount adds the import and the JSX)');
+ assert(lines.length<=9,'Town.tsx party lines: '+lines.length+' (max 9: the PartyHost mount adds the import and the JSX; relay v1.4 duets add the friendAt helper and the duet end)');
  assert(lines.length>=4,'Town.tsx wires import, init, update and dispose');
  assert(town.includes('swimClear.dispose();clearWin.dispose();'),'dispose order kept');
  assert(town.indexOf('party?.update(')<town.indexOf('islandNpcs.update('),'update sits next to islandNpcs.update');

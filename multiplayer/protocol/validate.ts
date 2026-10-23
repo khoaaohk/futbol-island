@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -11,6 +11,7 @@ const MAX_INT = Number.MAX_SAFE_INTEGER;
 const isInt = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n);
 const inRange = (n: unknown, lo: number, hi: number): n is number => isInt(n) && n >= lo && n <= hi;
 const isBit = (n: unknown): n is 0 | 1 => n === 0 || n === 1;
+const isAskEmote = (n: unknown): boolean => n === Emote.JuggleWithMe || n === Emote.PassBall;
 const isToken = (s: unknown): s is string => typeof s === 'string' && TOKEN_RE.test(s);
 const isTokenOrNull = (s: unknown): boolean => s === null || isToken(s);
 
@@ -116,6 +117,10 @@ export function parseClient(raw: string): ClientMsg | null {
       a[1] = n;
       return a as ClientMsg;
     }
+    case C.EmoteAsk:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) ? (a as ClientMsg) : null;
+    case C.EmoteAnswer:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ClientMsg) : null;
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
     default:
@@ -164,6 +169,12 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && a[2] === null ? (a as ServerMsg) : null;
     case S.Caps:
       return a.length === 2 && inRange(a[1], 0, 255) ? (a as ServerMsg) : null;
+    case S.EmoteAsk:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) ? (a as ServerMsg) : null;
+    case S.EmoteAnswer:
+      return a.length === 4 && inRange(a[1], 0, MAX_MEMBER_ID) && isAskEmote(a[2]) && inRange(a[3], 0, 2) ? (a as ServerMsg) : null;
+    case S.Duet:
+      return a.length === 5 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && isAskEmote(a[3]) && inRange(a[4], 0, 255) ? (a as ServerMsg) : null;
     case S.Live: {
       if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
       const p = a[2] as unknown[], b = a[3] as unknown[];

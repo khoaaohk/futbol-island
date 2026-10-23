@@ -51,7 +51,9 @@ export interface EmoteButtonState {hidden: boolean; disabled: boolean; ctx: Emot
 /** What the island can offer right now (written by Town at ~4 Hz): a townsperson that would answer (within 9 m, `npcNear`), a party friend within FLY_RANGE (`friendNear`), flying / swimming friends, and the set of the townsperson you would emote at. */
 export interface EmoteReach {flying: boolean; swimming: boolean; npcNear: boolean; friendNear: boolean; friendFlyingNear: boolean; friendSwimmingNear: boolean;
   /** Walking / running on foot above the wheel threshold (lib/town/moveEmotes.ts moveWheelOn): the wheel shows the MOVING set. */
-  moving?: boolean}
+  moving?: boolean;
+  /** Relay v1.4: the nearest friend said No twice in a row to my ball-emote asks: Pass it / Juggle with me are greyed for a while (lib/multiplayer/emoteAsk.ts). */
+  askBlocked?: boolean}
 /**
  * The Emote button (user, Oct 22 2026: "emote btn only show when there is a npc or friend to interact with"; this reverses the earlier always-on rule):
  * HIDDEN (its grid cell stays reserved) unless there is someone to emote at. Flying: only beside a flying friend (the FLYING set). Swimming: only beside
@@ -128,7 +130,7 @@ export const ctxStillValid = (emote: number, flying: boolean, swimming: boolean)
 
 /** A tiny external store so the React button follows the island without Town re-rendering (written on the HUD tick, only on a change). `npcKind` = the set of the townsperson you would emote at ('' = the ordinary ground wheel). */
 export interface EmoteCtxView extends EmoteReach {npcKind: '' | 'skater' | 'scooter' | 'juggler'}
-const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false, npcNear: false, friendNear: false, friendSwimmingNear: false, moving: false, npcKind: ''};
+const IDLE_CTX: EmoteCtxView = {flying: false, friendFlyingNear: false, swimming: false, npcNear: false, friendNear: false, friendSwimmingNear: false, moving: false, askBlocked: false, npcKind: ''};
 let ctxView: EmoteCtxView = IDLE_CTX;
 const ctxSubs = new Set<() => void>();
 const CTX_KEYS = Object.keys(IDLE_CTX) as (keyof EmoteCtxView)[];

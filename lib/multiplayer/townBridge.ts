@@ -9,12 +9,12 @@ import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJ
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
 import type { LocalBump } from '../graphics/friendBump';
-import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, onFriendFilters } from './roomParty';
-import { partyStore } from './store';
+import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
+import { displayName, partyStore } from './store';
 import * as T3 from 'three';
 
 // The shared parts (one connection per page, Hide / Mute, the look, the friend core) live in roomParty.ts, used by rooms too.
-export { partyConnection, setHiddenFriends, setMutedFriends, partyLook } from './roomParty';
+export { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mutedFriends, partyLook } from './roomParty';
 
 /** activity: NOT_BUSY (-1) while playing, else the Activity code (lib/multiplayer/presence.ts townActivity); optional for old callers. */
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
@@ -31,6 +31,20 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   readonly localBump: LocalBump | null;
   /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
   readonly shown: number; readonly rigs: number;
+  /** Tests / headless checks only: friends' emote state (remoteAvatars.debugEmotes). */
+  debugEmotes(): { id: MemberId; emote: number; age: number; x: number; z: number; yaw: number }[];
+  /** Relay v1.4 two-ball duets: a friend's avatar plays its half with `partner` (-1 = me) as `role` (remoteAvatars.duet). */
+  duet(id: MemberId, partner: number, role: number, emote: number, seed: number): boolean;
+  endDuet(id: MemberId): void;
+  /** A friend's interpolated pose this frame (reused object; null when not drawn / unknown). */
+  friendPose(id: MemberId): RemotePose | null;
+  /** The nearest friend I may ask for a ball emote: active (not busy / away / indoors), on foot, not hidden or muted, within `range` m
+   *  (and 4 m in height) of x, y, z; -1 = none. */
+  nearestAskable(x: number, y: number, z: number, range: number): MemberId;
+  /** A friend's shown name (typed first name, else the colour name). */
+  nameOf(id: MemberId): string;
+  /** My member id in the live party (null when not in one). */
+  readonly you: MemberId | null;
   /** Live feel: the local ball for friends (relay v1.2; visual only on their side). state = BallState; metres. Call every frame:
    *  the connection throttles (state changes, a moving Free ball at most 10 Hz). */
   ball(state: BallState, x: number, y: number, z: number): void;
@@ -89,6 +103,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   groundAt?: (x: number, z: number) => number;
   /** A friend's emote was shown (Town counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
   onEmoteSeen?: () => void;
+  /** Any friend's emote arrived (my character glances at a friend who waves nearby). */
+  onFriendEmote?: (id: MemberId) => void;
   /** Room doors for the "3 in the Konbini" hint (none = no hint). */
   doors?: readonly RoomDoorHint[] }): PartyRuntime | null {
   if (!multiplayerEnabled()) return null;
@@ -100,7 +116,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const hints: { d: RoomDoorHint; sprite: T3.Sprite; n: number }[] = [];
   let ready = false; // the core's first sync runs inside createFriendCore (before `avatars` below exists)
-  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen, groundAt: ctx.groundAt,
+  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen, onFriendEmote: ctx.onFriendEmote, groundAt: ctx.groundAt,
     admit(id, b) {
       const room = roomOf(b);
       if (room < 0) { const k = lastIsland.get(id); if (k) for (let i = 0; i < 8; i++) k[i] = b[i]; else lastIsland.set(id, b.slice()); return b; }
@@ -170,6 +186,22 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get localBump() { return core.live && meRingOn ? avatars.localBump : null; },
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
+    debugEmotes: () => avatars.debugEmotes(),
+    duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
+    endDuet: (id) => avatars.endDuet(id),
+    friendPose: (id) => poses.get(id) ?? null,
+    get you() { return core.you; },
+    nearestAskable(x, y, z, range) {
+      let best = -1, bd = range * range;
+      const hid = hiddenFriends(), mut = mutedFriends();
+      active.forEach((p, id) => {
+        if (hid.has(id) || mut.has(id) || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
+        const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+        if (d <= bd) { bd = d; best = id; }
+      });
+      return best;
+    },
+    nameOf(id) { const m = partyStore.get().members.find((q) => q.id === id); return m ? displayName(m) : 'Your friend'; },
     friends: () => active.values(),
     ball(state, x, y, z) {
       if (!core.live || conn.status !== 'live') return;

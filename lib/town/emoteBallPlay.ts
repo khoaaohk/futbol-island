@@ -54,7 +54,7 @@ export interface ActorPose {
   /** Extra heading (rad) on top of facing the partner: spins, turning the back for a heel pass, skill turns. */
   turn: number;
 }
-const newActor = (): ActorPose => ({windup: undefined, kick: undefined, actionKind: 'pass', receive: 0, receiveProgress: 0, juggle: undefined, juggleTouch: 'foot', side: 1,
+export const newActor = (): ActorPose => ({windup: undefined, kick: undefined, actionKind: 'pass', receive: 0, receiveProgress: 0, juggle: undefined, juggleTouch: 'foot', side: 1,
   skill: undefined, move: undefined, reaction: undefined, reactionProgress: 0, jump: undefined, trick: undefined, ready: 0, called: 0, turn: 0});
 /** Reused sub-objects per actor (assigned into the pose only while active). */
 interface ActorStore {skill: {type: SkillMove; progress: number; side: -1 | 1}; move: {kind: SignatureMove; progress: number; side: -1 | 1; height: number}; jump: {progress: number; height: number}; trick: TrickPose}
@@ -104,7 +104,7 @@ const headJump = (w: Who, h: number) => P(w, .12, 0, 2.04 + h);
 const enum Mode { Hold, Roll, Air, Skill }
 interface Seg {t0: number; t1: number; mode: Mode; p0: Pt; p1: Pt; who: Who; skill: SkillMove; side: -1 | 1; settle: number; contact: boolean}
 const enum Kind { Strike, Receive, Juggle, Skill, Move, React, Trick }
-type TrickId = 'catchBack' | 'bow' | 'neck' | 'armsUp' | 'lunge';
+export type TrickId = 'catchBack' | 'bow' | 'neck' | 'armsUp' | 'lunge';
 interface Act {who: Who; kind: Kind; t0: number; t1: number; tc: number; side: -1 | 1; w: number; k: number; style: 'pass' | 'loft'; touch: Touch; period: number;
   skill: SkillMove; move: SignatureMove; height: number; react: 'chest' | 'thigh' | 'header'; trick: TrickId}
 interface Jump {who: Who; t0: number; t1: number; h: number}
@@ -412,7 +412,7 @@ function ballAt(r: Routine, t: number, out: PassBallOut) {
     } else { out.x = tA.x; out.y = tA.y; out.z = tA.z; }
   }
 }
-const resetActor = (a: ActorPose) => {
+export const resetActor = (a: ActorPose) => {
   a.windup = a.kick = a.juggle = undefined; a.actionKind = 'pass'; a.receive = a.receiveProgress = 0; a.skill = undefined; a.move = undefined;
   a.reaction = undefined; a.reactionProgress = 0; a.jump = undefined; a.trick = undefined; a.ready = 0; a.called = 0; a.turn = 0; a.side = 1;
 };
@@ -430,7 +430,7 @@ const TRICKS: Record<TrickId, (o: TrickPose) => void> = {
 };
 function leg(o: TrickPose, i: number, x: number, z: number) { const l = o.legs[i]; l.x = x; l.y = .075; l.z = z; l.toe = 0; l.w = 1; }
 function arm(o: TrickPose, i: number, sx: number, sz: number, el: number) { const a = o.arms[i]; a.sx = sx; a.sz = sz; a.el = el; a.w = 1; }
-function trickPose(id: TrickId, w: number, o: TrickPose) {
+export function trickPose(id: TrickId, w: number, o: TrickPose) {
   o.pelvisZ = 0; o.pelvisRoll = 0; o.pelvisYaw = 0; o.torsoRoll = 0; o.torsoYaw = 0; o.headYaw = 0;
   TRICKS[id](o); o.w = w; return o;
 }

@@ -42,9 +42,16 @@ export const PoseFlag = { Warp: 1, Hidden: 2 } as const;
 export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
 
 /** Relay v1.2 capability bits (S.Caps / C.Caps). Live = timestamped 10 Hz near poses (S.Live); Ball = friends' balls (C.Ball, in S.Live).
- *  Rename (relay v1.3, Oct 23 2026) = the player may change their own first name mid-party (C.Rename). */
-export const Cap = { Live: 1, Ball: 2, Rename: 4 } as const;
-export const CAPS_ALL = 7;
+ *  Rename (relay v1.3, Oct 23 2026) = the player may change their own first name mid-party (C.Rename).
+ *  EmoteAsk (relay v1.4, Oct 23 2026) = shared ball emotes are a REQUEST + ACCEPT (C.EmoteAsk / S.EmoteAsk / C.EmoteAnswer / S.EmoteAnswer /
+ *  S.Duet); without it (an old relay) Pass it / Juggle with me stay today's instant one-way emote. */
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8 } as const;
+export const CAPS_ALL = 15;
+/** The two-player ball emotes that need the friend's yes (relay v1.4). Every other emote stays instant and one-way. */
+export const ASK_EMOTES: readonly Emote[] = [Emote.JuggleWithMe, Emote.PassBall];
+/** S.EmoteAnswer outcomes: No thanks (or the card timed out), Join, or the relay could not ask (old client, busy, too far, too soon). */
+export const AskReply = { No: 0, Yes: 1, Unavailable: 2 } as const;
+export type AskReply = (typeof AskReply)[keyof typeof AskReply];
 /** None: no ball shown. Feet: dribbling / charging (drawn at the friend's feet). Juggle: keepy-ups over the feet. Free: shot / rolling / resting at x,y,z. */
 export const BallState = { None: 0, Feet: 1, Juggle: 2, Free: 3 } as const;
 export type BallState = (typeof BallState)[keyof typeof BallState];
@@ -65,7 +72,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -89,12 +96,17 @@ export type CBall = [typeof C.Ball, state: BallState, x_dm: number, y_dm: number
  *  old relay never sees it). The relay re-announces the member as S.Joined (same id, new nick) to everyone, the sender included: every client
  *  store upserts Joined by id, so old clients show the new name too. Ignored after the host reset this member's name (kid safety). */
 export type CRename = [typeof C.Rename, nick: string];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename;
+/** Relay v1.4 (Cap.EmoteAsk): ask the friend `to` to play a two-player ball emote (ASK_EMOTES) with me. Sent ONLY after S.Caps carried
+ *  Cap.EmoteAsk. The relay checks both are on the island, on foot, near, outside the force field, and the pair's anti-spam rules. */
+export type CEmoteAsk = [typeof C.EmoteAsk, to: MemberId, emote: Emote];
+/** Relay v1.4: my answer to the ask from `from` (1 = Join, 0 = No thanks / the card timed out). */
+export type CEmoteAnswer = [typeof C.EmoteAnswer, from: MemberId, yes: 0 | 1];
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
-  Caps: 32, Live: 33,
+  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -118,4 +130,11 @@ export type SCaps = [typeof S.Caps, bits: number];
  *  poses = flat [id, ...PoseBody, ageMs] (stride LIVE_POSE_STRIDE), balls = flat [id, state, x_dm, y_dm, z_dm, ageMs] (stride LIVE_BALL_STRIDE).
  *  ageMs = how long before t the relay received that frame, so the receiver can place every snapshot on the sender's timeline. */
 export type SLive = [typeof S.Live, t: number, poses: number[], balls: number[]];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive;
+/** Relay v1.4, to the asked friend only: `from` asks me to play `emote` together (a card with Join / No thanks). */
+export type SEmoteAsk = [typeof S.EmoteAsk, from: MemberId, emote: Emote];
+/** Relay v1.4, to the asker only: what `by` said (AskReply). A Yes is followed by S.Duet. */
+export type SEmoteAnswer = [typeof S.EmoteAnswer, by: MemberId, emote: Emote, reply: AskReply];
+/** Relay v1.4, to every Cap.EmoteAsk member (old clients get one S.Emote per player instead): `a` (the asker) and `b` play `emote`
+ *  together, each with their own ball, now. seed (0..255) picks the routine so every screen plays the same one. */
+export type SDuet = [typeof S.Duet, a: MemberId, b: MemberId, emote: Emote, seed: number];
+export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet;

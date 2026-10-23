@@ -12,8 +12,8 @@ const j = (a) => JSON.stringify(a);
 
 // ---- protocol ----
 t('protocol: C.Rename / Cap.Rename shapes', () => {
-  assert.equal(C.Rename, 13); assert.equal(Cap.Rename, 4); assert.equal(CAPS_ALL, 7);
-  assert.equal(CAPS_ALL & (Cap.Live | Cap.Ball | Cap.Rename), CAPS_ALL);
+  assert.equal(C.Rename, 13); assert.equal(Cap.Rename, 4); assert.equal(CAPS_ALL, 15);
+  assert.equal(CAPS_ALL & (Cap.Live | Cap.Ball | Cap.Rename | Cap.EmoteAsk), CAPS_ALL);
   assert.deepEqual(P.parseClient(j([C.Rename, 'Sam'])), [13, 'Sam']);
   assert.deepEqual(P.parseClient(j([C.Rename, ' sAM '])), [13, 'Sam'], 'normalised like the join name');
   assert.deepEqual(P.parseClient(j([C.Rename, 'élodie'])), [13, 'Élodie']);

@@ -117,6 +117,28 @@ try {
     h.w.close(); g.w.close();
   }
   assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');
+  // relay v1.4 (Cap.EmoteAsk): a ball-emote ask over real sockets: the asked friend gets S.EmoteAsk, Join starts S.Duet on both
+  // (same seed), an old client in the room gets one S.Emote per player instead, and a second ask inside the cooldown is refused
+  {
+    const p5 = await (await fetch(base + '/party', { method: 'POST' })).json();
+    const wsBase = 'ws://127.0.0.1:' + port + '/party/';
+    const open = (c) => new Promise((res, rej) => { const w = new WebSocket(wsBase + c + '/ws'); const msgs = []; w.onmessage = (e) => msgs.push(JSON.parse(e.data)); w.onopen = () => res({ w, msgs }); w.onerror = () => rej(new Error('ws')); });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const L = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const join = async (nick, host, caps) => { const s = await open(p5.code); s.w.send(JSON.stringify([0, 1, L, null, host ? p5.hostKey : null, null, nick])); await wait(250); s.id = s.msgs.find((m) => m[0] === 20)[2]; if (caps) s.w.send(JSON.stringify([11, caps])); s.w.send(JSON.stringify([1, 0, 200, 20, -600, 0, 0, 13, 0, 0])); return s; };
+    const a = await join('Amara', true, 15), b = await join('Bruno', false, 15), c = await join('Chen', false, 3);
+    b.w.send(JSON.stringify([1, 1, 230, 20, -600, 0, 0, 13, 0, 0])); await wait(300);
+    a.w.send(JSON.stringify([14, b.id, 6])); await wait(250);
+    assert.ok(b.msgs.some((m) => m[0] === 34 && m[1] === a.id && m[2] === 6), 'the friend gets the ask');
+    b.w.send(JSON.stringify([15, a.id, 1])); await wait(250);
+    const da = a.msgs.find((m) => m[0] === 36), db = b.msgs.find((m) => m[0] === 36);
+    assert.ok(da && db && da[4] === db[4] && da[1] === a.id && da[2] === b.id, 'Join -> the same S.Duet on both');
+    assert.ok(c.msgs.filter((m) => m[0] === 24).length === 2 && !c.msgs.some((m) => m[0] === 36), 'old client: one S.Emote per player');
+    a.w.send(JSON.stringify([14, b.id, 3])); await wait(250);
+    assert.ok(a.msgs.some((m) => m[0] === 35 && m[1] === b.id && m[3] === 2), 'inside the cooldown: Unavailable');
+    assert.equal(b.msgs.filter((m) => m[0] === 34).length, 1);
+    a.w.close(); b.w.close(); c.w.close();
+  }
   // relay v1.1 rooms (docs/multiplayer-rooms-design.md 2.3): two bots walking in the museum hear each other at 5 Hz; an island bot
   // hears them only on the 1 Hz beacon (and they hear the island bot only on the beacon); an out-of-room pose is dropped, not kicked
   {
