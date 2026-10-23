@@ -108,7 +108,7 @@ meaning the first time each is used; Phase 3's shared kickabout and party jobs t
 | Friends in different zones | Each receives all poses (party is small); a friend more than 160 m away is not drawn, shown as a map/edge pin. |
 | Different time of day | Local only; friends are drawn under your own lighting. |
 | Inside the Arcade/Konbini/Museum/Shop (separate pages) | Page unload closes the socket; friends see "Red is in the Arcade" (zone `indoors` sent just before leaving), the slot is kept 10 min (party persistence, below); coming back resumes it automatically. |
-| Different devices / heat tiers | Remote cap by effective tier at **admission only**: tier 0-1: 5, tier 2: 3, tier 3: 1, tier 4: 0 new (already drawn stay), Battery saver: 0 (fade 1 s). Desktop: 5. Capped friends show as a pin, never vanish. |
+| Different devices / heat tiers | Remote rig cap by effective tier, **re-checked once a second** (Oct 22 2026, `lib/graphics/rigCap.ts`; before, it applied at admission only): tier 0-1: 5, tier 2: 3, tier 3: 1, tier 4: 0, Battery saver: 0 (fade 1 s). Desktop: 5. A drop demotes the farthest rigs to ring + label (0.4 s shrink, instant under reduced motion; the rig is released); a recovery re-admits the nearest in range after the higher cap has held 10 s (a flapping tier does not re-make rigs). Capped friends keep their ring + label, never vanish. |
 | Reduced motion | Emotes use the still pose + an icon bubble, no confetti; arrival ring replaced by a fade. |
 | Slow / offline network | Poses extrapolate up to 250 ms then ease to a stop; after 8 s silent a friend dims; chip shows a dim dot "reconnecting"; the island plays exactly as today. |
 | Joining late | Welcome contains the full roster and last pose of everyone. |
@@ -508,7 +508,9 @@ friends see them away after 12 s, not a vanish. Limit: after 60 s in a room the 
   not drawn beyond 160 m). **No shadow-map casting.** Registered with the view gate (`viewGate.addUnitRoots`, `Town.tsx:736`).
 - Measured analogue (research doc §1.2): ~0.11-0.13 ms CPU per extra character at 4x throttle, ~1 draw. 5 remotes ~ +0.6 ms,
   +5 colour draws max, + up to 5 label sprites.
-- Caps at admission by `effectiveTier()` (`lib/graphics/heatTier.ts:95`): 5/5/3/1/0-new; Battery saver 0. Network messages never
+- Caps by `effectiveTier()` (`lib/graphics/heatTier.ts`): 5/5/3/1/0, re-checked once a second in `remoteAvatars.ts` with the pure
+  decision in `lib/graphics/rigCap.ts` (drop at once, farthest demoted; rise after a 10 s hold, nearest re-admitted; island and the
+  four rooms share it through `createFriendCore`); Battery saver 0 (its own 1 s fade). Network messages never
   wake the sleeping loop and never count as input (research doc §1.3 rule).
 - Validate before Phase 1 ships: two-context browser check + the 19 Oct §7.3 two-iPhone heat run (owner).
 

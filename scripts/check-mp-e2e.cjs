@@ -768,8 +768,8 @@ async function step10() {
   rec(!heat.island.A.error && !heat.island.B.error, `island, ${NBOTS} bots: frame time + draw calls measured`, JSON.stringify({ base: heat.islandBase, bots: heat.island }));
   // Caps by heat tier on the phone (window.__fi2.heat.force): 5 / 5 / 3 / 1 / 0 friends drawn as bodies; desktop always 5. The cap
   const caps = [];
-  // The cap is applied when a friend is ADMITTED (remoteAvatars.ts: a shown friend is never dropped), so B leaves and rejoins under
-  // each forced tier and counts the friends it admits.
+  // B leaves and rejoins under each forced tier and counts the friends it admits (the cap is also re-checked once a second mid-party
+  // since Oct 22 2026: scripts/check-mp-heat-recheck.cjs covers that).
   for (const t of [0, 1, 2, 3, 4]) {
     try {
       await listTab(b); await b.locator('[data-party-sheet] button:has-text("Leave party")').click({ timeout: 5000 });

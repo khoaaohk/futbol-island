@@ -25,7 +25,9 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   /** The island ball against busy friends' force fields: bounces it off (mutates `ball`) and shakes the dome. True on a hit. */
   ballVsFields(ball: FieldBall): boolean;
   /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
-  readonly meRing: boolean }
+  readonly meRing: boolean;
+  /** Heat checks: friends drawn as rigs last frame, and rigs alive (the demote / re-admit leak counter). */
+  readonly shown: number; readonly rigs: number }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -152,6 +154,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
 
   return {
     get meRing() { return meRingOn; },
+    get shown() { return avatars.shown; },
+    get rigs() { return avatars.rigs; },
     friends: () => active.values(),
     ballVsFields(ball) {
       if (!core.live) return false;

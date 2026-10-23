@@ -30,11 +30,12 @@ function load(file,over={},env={}){
  for(const t of [0,1,2,3,4]){assert.equal(remoteCap(t,true,true),0,'saver phone');assert.equal(remoteCap(t,false,true),0,'saver desktop');}
 }
 
-// 2. caps apply at admission only; Battery saver fades everyone out over 1 s
-function harness(){
- const state={tier:0,saver:false,created:0,drawn:0,batchDisposed:false};
+// 2. the cap is RE-CHECKED once a second (rigCap.ts): a drop demotes the farthest rigs (0.4 s shrink, then released), a rise re-admits
+//    the nearest in range after 10 s at the higher cap; Battery saver fades everyone out over 1 s
+function harness(phone=true){
+ const state={tier:0,saver:false,created:0,disposed:0,live:new Set(),drawn:0,batchDisposed:false};
  const over={
-  player:{createPlayer:()=>{state.created++;return {root:new T.Group(),setAppearance(){},setBeanLook(){},setExpression(){},update(){},dispose(){}};}},
+  player:{createPlayer:(name)=>{state.created++;state.live.add(name);return {root:new T.Group(),setAppearance(){},setBeanLook(){},setExpression(){},update(){},dispose(){state.disposed++;state.live.delete(name);}};}},
   playerBatch:{playerBatch:()=>({begin(){state.drawn=0;},draw(){state.drawn++;},end(){},dispose(){state.batchDisposed=true;}})},
   heatTier:{effectiveTier:()=>state.tier,batterySaverOn:()=>state.saver},
   celebrations:{applyCelebrationArms(){},celebrationMotion(){}},emotePose:{applyEmoteArms(){},emoteBody(){return {called:0,jump:undefined};}},
@@ -43,34 +44,86 @@ function harness(){
  };
  const mod=load('lib/graphics/remoteAvatars.ts',over);
  const scene=new T.Scene(),camera=new T.PerspectiveCamera(60,1,.1,500);camera.position.set(0,5,10);camera.lookAt(0,0,0);
- const avatars=mod.createRemoteAvatars(scene,{phone:true,maxFor:(t,p)=>mod.remoteCap(t,p,false)});
+ const avatars=mod.createRemoteAvatars(scene,{phone,maxFor:(t,p)=>mod.remoteCap(t,p,false)});
  const poses=new Map();
  const pose=(i)=>({x:i-2,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1});
  const all=ids=>{poses.clear();for(const i of ids)poses.set(i,pose(i));};
- return {state,avatars,camera,poses,all,mod};
+ // friend i stands i * 2 m in front of the origin (1 nearest), in view
+ const line=ids=>{poses.clear();for(const i of ids)poses.set(i,{x:0,y:0,z:-i*2,yaw:0,speed:0,mode:13,zone:0,fade:1});};
+ const live=()=>[...state.live].map(n=>+n.slice(7)).sort((a,b)=>a-b).join(',');
+ return {state,avatars,camera,poses,all,line,live,mod};
 }
+// 2a. the pure decision (rigCap.ts)
 {
- const h=harness(),look=new Array(12).fill(0);
+ const {capGate,stepCapGate,planRigs,READMIT_HOLD,DEMOTE_FADE}=load('lib/graphics/rigCap.ts');
+ assert.equal(READMIT_HOLD,10);assert.equal(DEMOTE_FADE,.4);
+ // drops at once, rises only after the hold; a flapping tier never rises
+ const g=capGate(5);assert.equal(stepCapGate(g,3,1),3,'a drop applies at once');assert.equal(stepCapGate(g,1,1),1);
+ for(let t=0;t<9;t++)assert.equal(stepCapGate(g,5,1),1,'a rise waits ('+(t+1)+' s)');
+ assert.equal(stepCapGate(g,5,1),5,'a rise applies after 10 s at the higher cap');
+ const f=capGate(1);for(let t=0;t<60;t++)assert.equal(stepCapGate(f,t%2?5:1,1),1,'flapping 1 <-> 5 every second: no rise in 60 s');
+ const f2=capGate(1);for(let t=0;t<30;t++)assert.equal(stepCapGate(f2,t%9===8?1:5,1),1,"a dip back to the cap every 9 s restarts the hold");
+ // monotonic: a lower cap never keeps more rigs, a higher cap never keeps fewer
+ const mk=(ds,adm)=>ds.map((d,i)=>({id:i,pd2:d,admitted:adm[i],plan:0})),order=[];
+ const kept=(s)=>s.filter(x=>x.admitted&&x.plan>=0||x.plan>0).map(x=>x.id).join(',');
+ const ds=[25,4,900,100,1,64];
+ let prev=-1;for(const cap of [0,1,2,3,4,5,6]){const s=mk(ds,[1,1,1,1,1,1]);planRigs(s,order,cap,160*160);const n=kept(s).split(',').filter(Boolean).length;assert.equal(n,cap,'cap '+cap+' keeps '+cap);assert.ok(n>=prev);prev=n;}
+ // farthest demoted first, nearest kept
+ let s=mk(ds,[1,1,1,1,1,0]);assert.equal(planRigs(s,order,3,160*160),2);assert.equal(kept(s),'0,1,4','cap 3: the nearest three drawn (1, 2, 5 m) stay');
+ assert.deepEqual(s.filter(x=>x.plan<0).map(x=>x.id).sort(),[2,3],'the farthest two (30, 10 m) are demoted');
+ // under the cap: the nearest waiting in range are admitted; out of range / Infinity never; a drawn friend is never swapped
+ s=mk([1e6,4,Infinity,100,1,64],[0,0,0,1,0,0]);planRigs(s,order,3,160*160);assert.equal(kept(s),'1,3,4','admits the nearest in range, keeps the far drawn one');
+ s=mk([1e6,Infinity],[0,0]);assert.equal(planRigs(s,order,5,160*160),0,'nothing in range: nothing admitted');
+ s=mk([9,Infinity,4],[1,1,1]);planRigs(s,order,2,160*160);assert.equal(s[1].plan,-1,'hidden / indoors (Infinity) is demoted first');
+ // stable: re-planning the result changes nothing (no churn)
+ s=mk(ds,[1,1,1,1,1,1]);planRigs(s,order,3,160*160);for(const x of s){if(x.plan<0)x.admitted=false;if(x.plan>0)x.admitted=true;}
+ assert.equal(planRigs(s,order,3,160*160),0,'a settled plan stays settled');
+ const src=read('lib/graphics/rigCap.ts');assert(!/\bnew\s|\.map\(|\.filter\(|\.sort\(|import /.test(src),'rigCap.ts: pure, allocation-free (scratch order array)');
+}
+// 2b. the layer: join under a cap, demote on a drop, re-admit after the hold, flapping, reduced motion, Battery saver
+{
+ const h=harness(),look=new Array(12).fill(0),step=(n,dt=1)=>{for(let i=0;i<n;i++)h.avatars.update(dt,h.poses,h.camera,false);};
  h.state.tier=3; // cap 1
  for(const id of [1,2,3])h.avatars.upsert(id,look,'Red');
- assert.equal(h.state.created,1,'tier 3 admits one friend');
- h.state.tier=0; h.all([1,2,3]);
- h.avatars.update(1.1,h.poses,h.camera,false);
- assert.equal(h.state.created,3,'the capped friends are admitted once the cap allows');
- assert.equal(h.avatars.shown,3);
- h.state.tier=4; // cap 0: nobody already shown is removed or hidden
- h.avatars.upsert(4,look,'Blue Fox');h.all([1,2,3,4]);
- h.avatars.update(1.1,h.poses,h.camera,false);
- assert.equal(h.state.created,3,'tier 4 admits no new friend');
- assert.equal(h.avatars.shown,3,'a tier change never hides a friend already shown');
- h.avatars.remove(1);h.state.tier=2;h.all([2,3,4]);
- h.avatars.update(1.1,h.poses,h.camera,false);
- assert.equal(h.state.created,4,'a freed slot admits the waiting friend (tier 2, cap 3)');
- assert.equal(h.avatars.shown,3);
+ assert.equal(h.state.created,1,'tier 3 admits one friend at join');
+ h.state.tier=0;h.line([1,2,3]);step(9);
+ assert.equal(h.state.created,1,'a risen cap waits 10 s before admitting more (hysteresis)');
+ step(1);assert.equal(h.state.created,3,'after 10 s at the higher cap the waiting friends are admitted');step(1,.016);assert.equal(h.avatars.shown,3);
+ for(const id of [4,5,6])h.avatars.upsert(id,look,'Blue');
+ assert.equal(h.state.created,5,'a joiner is admitted at once while below the cap (5)');
+ h.line([1,2,3,4,5,6]);step(1,.016);assert.equal(h.avatars.shown,5,'5 rigs + 1 ring-only');
+ // the drop: tier 2 (cap 3) mid-party: the farthest two shrink 0.4 s, then their rigs are released
+ step(1);h.state.tier=2;h.avatars.update(.9,h.poses,h.camera,false);assert.equal(h.avatars.rigs,5,'no check before 1 s');
+ h.avatars.update(.15,h.poses,h.camera,false);
+ assert.equal(h.avatars.rigs,5,'demoted friends keep their rig while shrinking');assert.equal(h.avatars.shown,5);
+ h.avatars.update(.2,h.poses,h.camera,false);assert.equal(h.avatars.rigs,5,'still shrinking at 0.35 s');
+ h.avatars.update(.1,h.poses,h.camera,false);assert.equal(h.avatars.rigs,3,'released after 0.4 s');assert.equal(h.avatars.shown,3,'drawn rigs follow the new cap');
+ assert.equal(h.live(),'1,2,3','the nearest three keep their rig');assert.equal(h.state.disposed,2,'the demoted rigs are disposed (pool back)');
+ const ring=h.avatars.root.children.find(o=>o.name==='remote-avatar-rings');assert.equal(ring.count,6,'demoted friends keep their colour ring');
+ // tier 3 (cap 1): one more recheck
+ h.state.tier=3;step(1);step(1,.5);assert.equal(h.live(),'1','tier 3: only the nearest');assert.equal(h.avatars.shown,1);
+ // a flapping tier (0 <-> 3 every second for 30 s): no rig made, none released
+ const made=h.state.created,gone=h.state.disposed;
+ for(let t=0;t<30;t++){h.state.tier=t%2?3:0;step(1);}
+ assert.equal(h.state.created,made,'flapping tier: no rig creation');assert.equal(h.state.disposed,gone,'flapping tier: no release');assert.equal(h.live(),'1');
+ // recovery: friend 2 walked 500 m away; after 10 s at tier 0 the nearest IN RANGE are re-admitted (2 stays ring-only)
+ h.state.tier=0;h.poses.get(2).z=-500;step(9);assert.equal(h.live(),'1','not before 10 s');
+ step(1);assert.equal(h.live(),'1,3,4,5,6','re-admitted the nearest in range (friend 2 at 500 m is not)');
+ // a friend who leaves frees a slot: the waiting one is admitted at the next check (no hold: the cap did not rise)
+ h.avatars.remove(3);h.poses.delete(3);h.poses.get(2).z=-4;step(1);assert.equal(h.live(),'1,2,4,5,6','a freed slot admits the waiting friend');
+ // reduced motion: a demotion is instant
+ h.state.tier=4;h.avatars.update(1,h.poses,h.camera,true);assert.equal(h.avatars.rigs,0,'reduced motion: tier 4 releases every rig at once');assert.equal(h.avatars.shown,0);
  // far friends (> 160 m) are not drawn
+ h.state.tier=0;step(11);assert.equal(h.avatars.shown,5);
  h.poses.set(2,{x:500,y:0,z:0,yaw:0,speed:0,mode:13,zone:0,fade:1});h.avatars.update(.016,h.poses,h.camera,false);
- assert.equal(h.avatars.shown,2,'beyond 160 m is not drawn');
- h.avatars.dispose();assert.equal(h.state.batchDisposed,true,'dispose frees the batch');
+ assert.equal(h.avatars.shown,4,'beyond 160 m is not drawn');
+ const before=h.state.created-h.state.disposed;h.avatars.dispose();assert.equal(h.state.batchDisposed,true,'dispose frees the batch');assert.equal(h.state.live.size,0,'dispose releases every rig ('+before+')');
+}
+{
+ // desktop: always 5, a tier change demotes nobody
+ const h=harness(false),look=new Array(12).fill(0);for(const id of [1,2,3,4,5])h.avatars.upsert(id,look,'Red');h.line([1,2,3,4,5]);
+ for(const t of [0,2,3,4]){h.state.tier=t;h.avatars.update(1.1,h.poses,h.camera,false);}h.avatars.update(.5,h.poses,h.camera,false);
+ assert.equal(h.avatars.rigs,5,'desktop keeps 5 at every tier');h.avatars.dispose();
 }
 {
  const h=harness(),look=new Array(12).fill(0);
@@ -80,6 +133,21 @@ function harness(){
  h.avatars.update(.5,h.poses,h.camera,false);assert.equal(h.avatars.shown,1,'still fading at 0.5 s');
  h.avatars.update(.6,h.poses,h.camera,false);assert.equal(h.avatars.shown,0,'faded out after 1 s');
  h.avatars.upsert(2,look,'Blue Fox');assert.equal(h.state.created,1,'saver: cap 0 admits nobody new');
+ for(let i=0;i<5;i++)h.avatars.update(1,h.poses,h.camera,false);assert.equal(h.avatars.shown,0,'saver: everyone stays cleared');
+ h.state.saver=false;for(let i=0;i<2;i++)h.avatars.update(1,h.poses,h.camera,false);assert.equal(h.avatars.shown,1,'saver off: the kept friend fades back');
+}
+// 2c. room layer (Konbini / Museum / Arcade / Kit Shop share createFriendCore -> createRemoteAvatars with the same remoteCap):
+//     a simulated heat-tier sequence in a small room (fieldScale 0.8 / 1.15, six friends within 6 m)
+{
+ const rp=read0('lib/multiplayer/roomParty.ts');
+ assert(/createRemoteAvatars\(ctx\.scene, \{ phone: ctx\.phone, maxFor: \(tier, phone\) => remoteCap\(tier, phone, batterySaverOn\(\)\)/.test(rp),'rooms build the same layer with the same caps (so the same once-a-second recheck)');
+ const h=harness(),look=new Array(12).fill(0),cap=[5,5,3,1,0];
+ h.poses.clear();for(let i=1;i<=6;i++){h.avatars.upsert(i,look,'F'+i);h.poses.set(i,{x:(i%3-1)*1.5,y:0,z:-i,yaw:0,speed:.4,mode:13,zone:0,fade:1});}
+ const seq=[0,1,2,3,4,3,2,0,0],out=[];let t=0;
+ for(const tier of seq){h.state.tier=tier;for(let s=0;s<6;s++){h.avatars.update(1,h.poses,h.camera,false);t++;}h.avatars.update(.5,h.poses,h.camera,false);out.push(h.avatars.shown);
+  assert.ok(h.avatars.shown<=cap[tier],'room, tier '+tier+': drawn '+h.avatars.shown+' <= cap '+cap[tier]);assert.equal(h.avatars.rigs,h.avatars.shown,'no leaked rigs');}
+ assert.deepEqual(out,[5,5,3,1,0,0,3,3,5],'room sequence: drops at once, rises only after 10 s above the cap (tier 3 6 s + tier 2 -> 3; tier 0 after 10 s -> 5) ('+out+')');
+ h.avatars.dispose();assert.equal(h.state.live.size,0);
 }
 
 // 2b. colour rings: ONE instanced mesh, colour per member, hidden with the avatar, local ring only when asked

@@ -1,5 +1,25 @@
 # Performance reference for future Futbol Island updates
 
+## Friend rig cap, re-checked during a party (Oct 22 2026, local, not deployed)
+- **Problem (end-to-end test, Medium):** the friend rig cap (`remoteCap` 5/5/3/1/0 by heat tier on phones, desktop 5) applied only when a
+  friend was first admitted. A phone that heated up mid-party kept drawing every friend it already showed; only Battery saver cleared them.
+- **Change:** `lib/graphics/remoteAvatars.ts` re-checks the cap **once a second** (the existing `ADMIT_RECHECK` slot; no per-frame work,
+  no allocation: one pass over the friends + an insertion sort of a reused scratch array). The decision is pure, in `lib/graphics/rigCap.ts`:
+  - the effective cap **drops at once**; over the cap the **farthest** rigs (from the local player; hidden / indoors count as farthest) are
+    demoted to colour ring + name label: the body shrinks for 0.4 s (instant under reduced motion), then `rig.dispose()` releases it
+    (classic geometry was already released at admission; the batch simply stops drawing it);
+  - the cap **rises only after the higher value has held 10 s**, then the **nearest** waiting friends within 160 m get a rig. A tier
+    flapping between two values never re-makes rigs; a drawn friend is never swapped for a nearer one (no churn).
+  - Battery saver is unchanged (1 s fade-out of everyone, nobody admitted); turning it off resets the hold (a choice, not heat).
+  - Island and all four rooms (Konbini, Museum, Arcade, Kit Shop) share the layer through `createFriendCore`, so all get it. Name labels
+    (nearest 8 within 25 m) and emote bubbles (6) were already chosen every frame, not at admission: unchanged.
+- **Cost:** one cheap check per second while friends exist. Saving: a hot phone sheds rig solves + batch instances down to the tier cap
+  within ~1.4 s. No claim of a lower iPhone temperature: not measured on a real device.
+- **Validation:** `tests/mp-avatars.cjs` (pure cap gate + plan: monotonic, hysteresis, farthest demoted, nearest kept, no churn on a
+  flapping tier; the layer: mid-party drop, 0.4 s release, re-admit after 10 s, reduced motion, Battery saver, desktop, a room tier
+  sequence); `scripts/check-mp-heat-recheck.cjs` (headless phone + 6 bots on the island, tier forced via `__fi2.heat.force`, rigs read
+  from `__fi2.partyHeat()`).
+
 ## Realistic sea turtle (Oct 21 2026, local, not deployed)
 
 - One builder, `lib/graphics/seaTurtle.ts`, for every turtle: the Explore room school (diveRoom.ts), Shelly the friend (in the pickups draw), the surfacing turtles by Turtle Pool (zoneLife.ts), the shore clear-window turtles (clearCreatures.ts → clearWindow.ts) and the Turtle Pool tell (divePreview.ts, low band). Domed lofted carapace with vertex-colour scutes and ridges, plastron, head with beak/eyes/smile, curved front flippers with claw, hind flippers, tail. No textures.

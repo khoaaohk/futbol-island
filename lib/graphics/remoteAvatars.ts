@@ -3,7 +3,9 @@
 //  - the islandNpcs.ts fixes: hidden classic geometry released + detached, far posing at 10 Hz (> 20 m) / 5 Hz (> 60 m),
 //    not drawn beyond 160 m, nothing drawn or solved off screen;
 //  - the batched meshes never cast shadows and nothing here is registered with any shadow culling;
-//  - the cap is applied when a friend is ADMITTED (never removes a friend already shown); Battery saver fades everyone out;
+//  - the cap is RE-CHECKED once a second (rigCap.ts, Oct 22 2026; before, it applied only at admission): a heat-tier drop demotes the
+//    farthest rigs to ring + label (0.4 s shrink, instant under reduced motion, then the rig is released), a recovered tier re-admits
+//    the nearest in range after 10 s at the higher cap (no thrash on a flapping tier); Battery saver fades everyone out;
 //  - a name label is one Sprite per friend with a CanvasTexture made once on upsert; only the nearest 8 on screen within 25 m are visible, and at most 6 emote bubbles at once (big parties);
 //  - a friend beyond the rig cap (5 on most phones) is not a rig: the colour ring + label only (ring-only, within 90 m), same one ring draw call;
 //  - ONE instanced colour ring (capacity party max + 1 = 21, no shadows, one draw call) lies at each shown friend's feet, and at the local player's
@@ -16,6 +18,7 @@ import * as T from 'three';
 import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
+import {DEMOTE_FADE,capGate,planRigs,stepCapGate} from './rigCap';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
 import {applyHighFive} from './highFivePose';import {clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {applyRideEmote} from './celebrations';import {flourishAt,flourishForWire,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
@@ -28,7 +31,7 @@ import {presenceIcon,presenceText} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import type {TravelMode} from '../town/travelModes';
 
-/** Remotes shown at once by effective heat tier at admission: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). */
+/** Remotes drawn as rigs at once by effective heat tier: phones 5/5/3/1/0, desktop 5, Battery saver 0 (design 2.5). Re-checked once a second. */
 export function remoteCap(tier:HeatTier,phone:boolean,saver:boolean):number{
  if(saver)return 0;
  if(!phone)return 5;
@@ -56,6 +59,8 @@ export interface RemoteAvatars{
  /** `local`: the local player's feet + colour while in a live party (ring only); null / omitted = none. */
  update(dt:number,poses:Map<MemberId,RemotePose>,camera:T.Camera,reduced:boolean,local?:LocalRing|null):void;
  readonly shown:number;
+ /** Rigs alive (admitted + still shrinking after a demotion): the heat checks' leak counter. */
+ readonly rigs:number;
  dispose():void;
 }
 
@@ -84,6 +89,8 @@ type Entry={
  id:MemberId;name:string;lookKey:string;look:Look;style:MemberStyle|null;colour:T.Color;
  rig:PlayerRig|null;label:T.Sprite|null;labelTexture:T.CanvasTexture|null;bubble:T.Sprite|null;
  admitted:boolean;shown:boolean;
+ /** Cap recheck (rigCap.ts): priority distance², the planned change, demoting (shrinking, rig still held) and its scale 1..0. */
+ pd2:number;plan:number;dem:boolean;out:number;
  motion:PlayerMotion;swim:SwimPose;
  emote:number;emoteAge:number;hidden:boolean;muted:boolean;
  /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
@@ -229,6 +236,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
 
  function admit(e:Entry){
   if(e.admitted||disposed)return;
+  if(e.rig){e.admitted=true;e.dem=false;e.out=1;return;} // still shrinking from a demotion: keep the same rig
   const rig=createPlayer('remote-'+e.id,'home');
   const c=wireToLook(e.look);rig.setAppearance(c);rig.setBeanLook(beanLookFor(c),playerOutfit(c));
   releaseHiddenClassic(rig.root);rig.root.scale.setScalar(BODY_SCALE);
@@ -243,7 +251,22 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  }
  const capNow=()=>batterySaverOn()?0:opts.maxFor(effectiveTier(),opts.phone);
  const admittedCount=()=>{let n=0;for(let i=0;i<list.length;i++)if(list[i].admitted)n++;return n;};
- function tryAdmit(e:Entry){if(!e.admitted&&admittedCount()<capNow())admit(e);}
+ // The effective cap (rigCap.ts): drops at once, rises after 10 s at the higher value. A joiner is admitted at once while below it.
+ // Battery saver stays outside the gate (its own 1 s fade, nobody admitted); turning it off is a choice, not heat: the gate resets.
+ const tierCap=()=>opts.maxFor(effectiveTier(),opts.phone);
+ const gate=capGate(capNow());const order:Entry[]=[];let saverWas=batterySaverOn();
+ function tryAdmit(e:Entry){if(!e.admitted&&!batterySaverOn()&&admittedCount()<stepCapGate(gate,tierCap(),0))admit(e);} // a drop counts at once, a rise waits
+ /** Demoted: ring + label only. The body shrinks over DEMOTE_FADE s (update), then the rig is released; reduced motion: at once. */
+ function demote(e:Entry,reduced:boolean){if(!e.admitted)return;e.admitted=false;e.dem=true;e.out=1;if(reduced)dropRig(e);}
+ function dropRig(e:Entry){e.rig?.dispose();e.rig=null;e.dem=false;e.out=1;e.flOn=false;e.shown=false;e.needResume=true;}
+ /** Once a second (never per frame): priority = squared distance from the local player (the camera when none); hidden, indoors or
+  *  pose-less friends count as farthest. Demotes beyond the cap (farthest first), admits the nearest waiting within the draw range. */
+ function recheckCaps(dt:number,reduced:boolean,poses:Map<MemberId,RemotePose>,local:LocalRing|null|undefined){
+  const cap=stepCapGate(gate,tierCap(),dt),ox=local?local.x:camPos.x,oz=local?local.z:camPos.z;
+  for(let i=0;i<list.length;i++){const e=list[i],p=poses.get(e.id);e.pd2=!p||e.hidden||p.zone===Zone.Indoors?Infinity:(p.x-ox)*(p.x-ox)+(p.z-oz)*(p.z-oz);}
+  if(planRigs(list,order,cap,DRAW_RANGE*DRAW_RANGE)===0)return;
+  for(let i=0;i<list.length;i++){const e=list[i];if(e.plan<0)demote(e,reduced);else if(e.plan>0)admit(e);}
+ }
  function setLabel(e:Entry){
   e.labelTexture?.dispose();e.labelTexture=makeLabelTexture(e.name,e.style);
   if(e.label){const m=e.label.material as T.SpriteMaterial;m.map=e.labelTexture;m.needsUpdate=true;e.label.scale.set(1.5,1.5*labelH(e.style)/LABEL_W,1);}
@@ -252,7 +275,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   e.rig?.dispose();e.rig=null;e.label?.removeFromParent();(e.label?.material as T.SpriteMaterial|undefined)?.dispose();
   e.bubble?.removeFromParent();(e.bubble?.material as T.SpriteMaterial|undefined)?.dispose();
   e.status?.removeFromParent();(e.status?.material as T.SpriteMaterial|undefined)?.dispose();e.status=null;e.statusKey='';
-  e.labelTexture?.dispose();e.label=e.bubble=null;e.labelTexture=null;e.admitted=false;
+  e.labelTexture?.dispose();e.label=e.bubble=null;e.labelTexture=null;e.admitted=false;e.dem=false;
  }
 
  function friendRingPitch(e:Entry,pose:RemotePose,dt:number):number{
@@ -268,11 +291,12 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  return {
   root,labels,
   get shown(){return shownCount;},
+  get rigs(){let n=0;for(let i=0;i<list.length;i++)if(list[i].rig)n++;return n;},
   upsert(id,look,name,style){
    if(disposed)return;
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
-    e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,
+    e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:''};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
@@ -298,14 +322,19 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    }
    clock+=dt;
    const saver=batterySaverOn();
+   if(saver!==saverWas){saverWas=saver;if(!saver){gate.eff=tierCap();gate.hold=0;}}
    saverFade=saver?Math.max(0,saverFade-dt/SAVER_FADE_SECONDS):Math.min(1,saverFade+dt/SAVER_FADE_SECONDS);
-   recheck+=dt;
-   if(recheck>=ADMIT_RECHECK){recheck=0;if(!saver)for(let i=0;i<list.length;i++)tryAdmit(list[i]);}
    camera.updateMatrixWorld();projection.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(projection);
    camPos.setFromMatrixPosition(camera.matrixWorld);
+   // The cap re-check (once a second; Battery saver keeps its own 1 s fade-out and admits nobody, as before).
+   recheck+=dt;
+   if(recheck>=ADMIT_RECHECK){const step=recheck;recheck=0;if(!saver)recheckCaps(step,reduced,poses,local);}
    batch.begin();fields.begin();let shown=0;
    for(let i=0;i<list.length;i++){
-    const e=list[i],rig=e.rig;
+    const e=list[i];
+    // A demoted friend's body shrinks away (before every early-out, so an off-screen one still finishes), then the rig is released.
+    if(e.dem){e.out=reduced?0:Math.max(0,e.out-dt/DEMOTE_FADE);if(e.out<=0)dropRig(e);}
+    const rig=e.rig;
     // Emote age advances before every early-out (off screen, indoors, far): a hidden friend's emote must not freeze and pop back later.
     const fs0=e.emote>=0?flourishForWire(e.emote,e.lastMode):undefined;
     if(e.emote>=0){e.emoteAge+=dt;if(e.emoteAge>=(e.mv>=0?e.mvDur:fs0?fs0.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote))){e.emote=-1;e.hf=-1;e.mv=-1;rig?.setExpression('neutral');}}
@@ -336,7 +365,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     }
     // Far friends solve their pose at 10 Hz (> 20 m) / 5 Hz (> 60 m); the root still follows every frame.
     const root3=rig.root,motion=e.motion;
-    root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k);
+    root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k*e.out);
     e.acc+=dt;
     const period=e.hf>=0&&!reduced?0:d2>MID_POSE*MID_POSE?1/FARTHER_HZ:d2>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
     const moving=!shield&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
@@ -363,7 +392,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      else if(fs0&&!reduced&&fs0.arm>=0&&e.emoteAge>=fs0.armFrom)applyRideEmote(rig.root,fs0.arm,e.emoteAge,Math.max(0,Math.min(1,(e.emoteAge-fs0.armFrom)/.2,(fs0.seconds-e.emoteAge)/.2)));
      root3.position.set(pose.x,pose.y,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
-     if(e.hf>=0&&!reduced)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k);
+     if(e.hf>=0&&!reduced)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k*e.out);
      e.needResume=false;
     }
     // A flying / swimming friend's emote (their mode picks it from the same wire value): roll / pitch / lift on the rig root, every frame, gone with the emote.
