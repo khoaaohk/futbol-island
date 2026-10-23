@@ -12,13 +12,13 @@ Guarded by `tests/island-connectivity.cjs` (in `npm test`).
 
 ## Summary
 
-| | before fixes | after fixes |
+| | before fixes (Oct 22) | after fixes (incl. the Oct 23 beach gate) |
 |---|---|---|
-| Reachable on foot from the spawn | 232807.3 m² | 232807.3 m² of 244375.0 m² standable |
+| Reachable on foot from the spawn | 232807.3 m² | 234172.0 m² of 244376.3 m² standable |
 | Landmarks checked | 575 | 575 |
 | Landmarks not reached on foot (problems) | 1 | 0 |
 | Landmarks reached another way (by design) | 11 | 11 |
-| Disconnected ground pockets ≥ 2 m² | 3 | 3 |
+| Disconnected ground pockets ≥ 2 m² | 3 | 2 |
 | Path ends that run into water / a prop (not a doorstep) | 0 | 0 |
 | Paths pinched by a prop to 1 m or less | 4 | 0 |
 | Authored NPC route legs through solid geometry | 2 | 0 |
@@ -39,6 +39,17 @@ Groups: destination 20/20, door 8/8, cay 2/2, vending 34/34, field 8/8, job 22/2
 | Hub plaza walk path(112, -35) at (108, -35) | a picnic table sat in the middle of the 4 m walk near the spawn | table moved to (108, -39) |
 | Ferry forecourt path(219, 196) | path started under the forecourt bench + planter (1 m left) | path starts east of them: path(221.25, 196, 7.5, 4) (`lib/town/farmersMarket.ts`) |
 | Tavita, Palm Coast beach (-32, 123) | a lying (posed) townsperson was 9 m out at sea | moved onto the sand at (-31, 111.5) (`lib/town/townsfolkCast.ts`) |
+| South Pier sand strip (x 44-232, z 215-223), Oct 23 2026 | the strip seaward of the boardwalk fence was a 1363.8 m² pocket: a jetpack landing there could only leave by swimming | a 3 m beach gate in the ferry dock's south rail at x 222.5-225.5, z 215 (`DOCK_BEACH_GATE`, `lib/town/world.ts`): two capped gate posts and a sand step pad, static props and colliders only |
+
+### Oct 23 2026: South Pier beach gate
+
+| | before the gate | after the gate |
+|---|---|---|
+| Reachable on foot from the spawn | 232807.3 m² | 234172.0 m² |
+| Disconnected ground pockets ≥ 2 m² | 3 (incl. the 1363.8 m² strip) | 2 |
+| South Pier strip reachable | 0 m² of 1363.8 m² | all of it (no pocket left in x 40-242, z 205-226) |
+
+`tests/island-connectivity.cjs` now asserts the strip is reached (no pocket in its box, cells at its west, middle and east ends and both sides of the gate reached).
 
 ## Still open (need a design call)
 
@@ -47,7 +58,6 @@ No unreachable landmark, dead-end path, pinched path or blocked NPC route remain
 
 Low severity (left as is):
 
-- Ground pocket 1363.8 m² around (146.9, 218.7), box x 44.5..240, z 207.5..223.5: the sand strip seaward of the South Pier boardwalk fence (z 215-223, x 44-232). Fenced off on purpose, but a jetpack landing there can only leave by swimming. Option: a gap in the fence at the east end (x ~228) or mark it no-landing.
 - Ground pocket 4.3 m² around (783.9, 54.6), box x 782.5..785.5, z 53.5..55.5: a tiny Summit Isle hollow between rocks/trees; only enterable by jetpack, leaves by flying.
 - Ground pocket 2.0 m² around (548.0, 26.5), box x 547..548.5, z 26..27: a tiny Summit Isle hollow between rocks/trees; only enterable by jetpack, leaves by flying.
 - Road graph: dead end at (574, -159) (the Coral Cay boulevard spur, by design: cars turn back). Causeway centre line: 210 samples, 0 off land, 7 inside the roundabout island at its end (cars leave at the west arm).
@@ -71,6 +81,6 @@ Low severity (left as is):
 
 ## Heat
 
-Nothing here runs per frame: the fixes move static props, path decals and authored waypoints (no new meshes, colliders or updates). The audit and its test are Node-only.
+Nothing here runs per frame: the fixes move static props, path decals and authored waypoints (no updates; the Oct 23 beach gate removes 3 m of rail and adds two posts and a pad, all static). The audit and its test are Node-only.
 
-Audit time: load 2968 ms, raster 4862 ms, flood 106 ms.
+Audit time: load 2764 ms, raster 4766 ms, flood 103 ms.

@@ -13,9 +13,15 @@ runChecks().then(r=>{const s=summarise(r);
  assert.deepEqual(s.problems.map(l=>`${l.group} ${l.name} (${l.x.toFixed(1)}, ${l.z.toFixed(1)}): ${l.why}`),[],'every landmark is reachable on foot (or listed as reached another way)');
  assert.ok(s.expected.length<=12,'no new landmark only reached by jump / swim / boat ('+s.expected.map(l=>l.name).join('; ')+')');
  for(const group of ['destination','door','field','job','bug-squad','npc','vending','pier','cay','summit','fishing'])assert.ok(r.landmarks.some(l=>l.group===group),'checks the '+group+' landmarks');
- // Known, accepted pockets: the fenced sand strip seaward of the South Pier boardwalk and two Summit hollows under 5 m².
- const known=c=>c.minx>=40&&c.maxx<=242&&c.minz>=205&&c.maxz<=226;
- const fresh=s.groundComps.filter(c=>!known(c)&&c.area>=25);
+ // Oct 23 2026: the sand strip seaward of the South Pier boardwalk fence (x 44-232, z 215-223) is reached on foot through the 3 m
+ // beach gate in the ferry dock's south rail (world.ts DOCK_BEACH_GATE): no pocket there, and its west, middle and east ends are reached.
+ assert.ok(s.reachM2>234000,`the South Pier sand strip counts as walkable (${s.reachM2.toFixed(0)} m²)`);
+ const strip=s.groundComps.filter(c=>c.maxx>=40&&c.minx<=242&&c.maxz>=205&&c.minz<=226);
+ assert.deepEqual(strip.map(c=>`${c.area.toFixed(1)} m² around (${c.cx.toFixed(1)}, ${c.cz.toFixed(1)})`),[],'the South Pier sand strip is not cut off');
+ const cellAt=(x,z)=>Math.round((z-r.a.minZ)/r.a.cell)*r.a.W+Math.round((x-r.a.minX)/r.a.cell);
+ for(const [x,z] of [[52,217],[147,218.7],[224,216],[224,214]])assert.ok(r.a.reach[cellAt(x,z)],`(${x}, ${z}) on the strip / at the gate is reached on foot`);
+ // Known, accepted pockets: two Summit hollows under 5 m².
+ const fresh=s.groundComps.filter(c=>c.area>=25);
  assert.deepEqual(fresh.map(c=>`${c.area.toFixed(1)} m² around (${c.cx.toFixed(1)}, ${c.cz.toFixed(1)})`),[],'no new cut-off ground pocket of 25 m² or more');
  assert.deepEqual(s.deadEnds.map(d=>`path(${d.path.x}, ${d.path.z}) end (${d.end.x}, ${d.end.z}): ${d.end.cause}`),[],'no path runs into water or a prop');
  assert.deepEqual(s.pinches.map(p=>`path(${p.x}, ${p.z}) at (${p.pinch.x}, ${p.pinch.z}): ${p.pinch.cause}`),[],'no prop pinches a path to 1 m or less');

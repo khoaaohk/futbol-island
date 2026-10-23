@@ -37,6 +37,8 @@ import {tintGroundMesh} from '../graphics/groundTint';
 import { Obstacle, trunkCollider } from './simulation';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
+/** Oct 23 2026: x range of the 3 m beach gate in the ferry dock's south rail (z 215), linking the South Pier sand strip to the dock. */
+export const DOCK_BEACH_GATE=[222.5,225.5] as const;
 export function buildTown(scene: T.Scene) {return runSteps(buildTownSteps(scene));}
 export type TownWorld=ReturnType<typeof buildTown>;
 /** Runs a sliced build to the end in one go. */
@@ -998,16 +1000,23 @@ export function* buildTownSteps(scene: T.Scene) {
   for(let i=1;i<dockOutline.length-1;i++){
     const a=dockOutline[i],b=dockOutline[i+1],cuts=[0,1];
     for(const z of [204,207.2])if(z>Math.min(a.z,b.z)&&z<Math.max(a.z,b.z))cuts.push((z-a.z)/(b.z-a.z));
+    // Oct 23 2026 (docs/ISLAND_CONNECTIVITY_OCT22.md): a 3 m beach gate in the south rail near its east end, so the sand strip
+    // seaward of the South Pier fence joins the dock (it could only be left by swimming). Static rail + collider data only.
+    if(i===4)for(const x of DOCK_BEACH_GATE)cuts.push((x-a.x)/(b.x-a.x));
     cuts.sort((a,b)=>a-b);
     for(let k=1;k<cuts.length;k++){
-      const lo=cuts[k-1],hi=cuts[k],mid=a.z+(b.z-a.z)*(lo+hi)/2;
+      const lo=cuts[k-1],hi=cuts[k],mid=a.z+(b.z-a.z)*(lo+hi)/2,midX=a.x+(b.x-a.x)*(lo+hi)/2;
       if(i===2&&mid>204&&mid<207.2)continue;
+      if(i===4&&midX>DOCK_BEACH_GATE[0]&&midX<DOCK_BEACH_GATE[1])continue;
       const start=new T.Vector3(a.x+(b.x-a.x)*lo,1.05,a.z+(b.z-a.z)*lo),end=new T.Vector3(a.x+(b.x-a.x)*hi,1.05,a.z+(b.z-a.z)*hi);
       const n=Math.ceil(start.distanceTo(end)/.55);
       prop('fence',()=>{line(start,end,.055,'#eddfbb');for(let j=0;j<=n;j++){const p=start.clone().lerp(end,j/n);if(j%4===0||j===n)cylinder(.07,1.05,'#9d805b',p.x,.525,p.z);}});
       for(let j=0;j<=n;j++){const p=start.clone().lerp(end,j/n);obstacles.push({x:p.x,z:p.z,w:.24,d:.24});}
     }
   }
+  // The beach gate: two taller gate posts with round caps and a sand step pad on the beach side (shares the rail colliders' end posts).
+  prop('fence',()=>{for(const x of DOCK_BEACH_GATE){cylinder(.11,1.3,'#9d805b',x,.65,215);put(new T.SphereGeometry(.14,8,6),'#eddfbb',x,1.36,215);}});
+  tintGroundMesh(box(DOCK_BEACH_GATE[1]-DOCK_BEACH_GATE[0],.05,1.6,'#d9c08e',(DOCK_BEACH_GATE[0]+DOCK_BEACH_GATE[1])/2,-.02,215.9),'sand');
   // The level paved forecourt meets the dock directly; no bridge or interior rails.
   sign('FERRY DOCK',12,1.8,222,4.2,190.1,'#294f43','#f4cc7c');
   for(const x of [216,228])cylinder(.1,4.4,'#9d805b',x,2.2,190);

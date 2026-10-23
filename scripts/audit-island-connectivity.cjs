@@ -31,7 +31,7 @@ function md(s,r,before){const L=[];const f=n=>Number(n).toFixed(1);
  '- Flood-fills from the spawn (103, -8) with the walking rules of `rooftopTravel.update`: building-like colliders block only when more than 0.35 m above the walker, other colliders block on the ground, a step up is at most 0.35 m (stairs whose 0.45 m treads alias on the grid are checked at the midpoint), drops are allowed. Summit ground has no slope limit (as in `groundBlocked`). Swimming is not counted.',
  '- A reverse flood finds one-way pockets (reached but no walk back). Landmarks count as reached when a reached cell is within their talk / trigger range.','',
  '## Summary','',
- '| | before fixes | after fixes |','|---|---|---|',
+ '| | before fixes (Oct 22) | after fixes (incl. the Oct 23 beach gate) |','|---|---|---|',
  `| Reachable on foot from the spawn | ${before?f(before.reachM2)+' m²':'-'} | ${f(s.reachM2)} m² of ${f(s.standM2)} m² standable |`,
  `| Landmarks checked | ${before?before.landmarks:'-'} | ${s.landmarks} |`,
  `| Landmarks not reached on foot (problems) | ${before?before.problems.length:'-'} | ${s.problems.length} |`,
@@ -52,7 +52,14 @@ function md(s,r,before){const L=[];const f=n=>Number(n).toFixed(1);
  '| Garage north strip path(11, 43) | a 38 m path ran out through both garage walls: two visible stubs ending at a wall | trimmed to 27.5 m, inside the walls |',
  '| Hub plaza walk path(112, -35) at (108, -35) | a picnic table sat in the middle of the 4 m walk near the spawn | table moved to (108, -39) |',
  '| Ferry forecourt path(219, 196) | path started under the forecourt bench + planter (1 m left) | path starts east of them: path(221.25, 196, 7.5, 4) (`lib/town/farmersMarket.ts`) |',
- '| Tavita, Palm Coast beach (-32, 123) | a lying (posed) townsperson was 9 m out at sea | moved onto the sand at (-31, 111.5) (`lib/town/townsfolkCast.ts`) |','');
+ '| Tavita, Palm Coast beach (-32, 123) | a lying (posed) townsperson was 9 m out at sea | moved onto the sand at (-31, 111.5) (`lib/town/townsfolkCast.ts`) |',
+ '| South Pier sand strip (x 44-232, z 215-223), Oct 23 2026 | the strip seaward of the boardwalk fence was a 1363.8 m² pocket: a jetpack landing there could only leave by swimming | a 3 m beach gate in the ferry dock\'s south rail at x 222.5-225.5, z 215 (`DOCK_BEACH_GATE`, `lib/town/world.ts`): two capped gate posts and a sand step pad, static props and colliders only |','');
+ L.push('### Oct 23 2026: South Pier beach gate','',
+ '| | before the gate | after the gate |','|---|---|---|',
+ `| Reachable on foot from the spawn | 232807.3 m² | ${f(s.reachM2)} m² |`,
+ `| Disconnected ground pockets ≥ 2 m² | 3 (incl. the 1363.8 m² strip) | ${s.groundComps.length} |`,
+ `| South Pier strip reachable | 0 m² of 1363.8 m² | all of it (no pocket left in x 40-242, z 205-226) |`,'',
+ '`tests/island-connectivity.cjs` now asserts the strip is reached (no pocket in its box, cells at its west, middle and east ends and both sides of the gate reached).','');
  L.push('## Still open (need a design call)','');
  if(!s.problems.length&&!s.deadEnds.length&&!s.pinches.length&&!s.routes.length)L.push('No unreachable landmark, dead-end path, pinched path or blocked NPC route remains.','');
  for(const l of s.problems)L.push(`- **Landmark** ${l.group} "${l.name}" at (${f(l.x)}, ${f(l.z)}): ${l.why}${l.nearest?`, nearest reachable ground (${f(l.nearest.x)}, ${f(l.nearest.z)}) ${l.nearest.d} m`:''}.`);
@@ -60,13 +67,13 @@ function md(s,r,before){const L=[];const f=n=>Number(n).toFixed(1);
  for(const p of s.pinches)L.push(`- **Pinched path** path(${p.x}, ${p.z}, ${p.w}, ${p.d}) at (${p.pinch.x}, ${p.pinch.z}): ${p.pinch.open} m open of ${p.pinch.width} m (${p.pinch.cause}).`);
  for(const q of s.routes)L.push(`- **NPC route** ${q.id} leg ${q.leg} at (${q.x}, ${q.z}, y ${q.y}): ${q.problem}.`);
  L.push('','Low severity (left as is):','');
- for(const c of s.groundComps)L.push(`- Ground pocket ${f(c.area)} m² around (${f(c.cx)}, ${f(c.cz)}), box x ${c.minx}..${c.maxx}, z ${c.minz}..${c.maxz}: ${c.area>500?'the sand strip seaward of the South Pier boardwalk fence (z 215-223, x 44-232). Fenced off on purpose, but a jetpack landing there can only leave by swimming. Option: a gap in the fence at the east end (x ~228) or mark it no-landing.':c.cx>520?'a tiny Summit Isle hollow between rocks/trees; only enterable by jetpack, leaves by flying.':'small enclosed area.'}`);
+ for(const c of s.groundComps)L.push(`- Ground pocket ${f(c.area)} m² around (${f(c.cx)}, ${f(c.cz)}), box x ${c.minx}..${c.maxx}, z ${c.minz}..${c.maxz}: ${c.area>500?'a large cut-off ground area: check the fences and rails around it.':c.cx>520?'a tiny Summit Isle hollow between rocks/trees; only enterable by jetpack, leaves by flying.':'small enclosed area.'}`);
  L.push(`- Road graph: ${s.roads.deadEnds.map(d=>`dead end at (${d.x}, ${d.z}) (the Coral Cay boulevard spur, by design: cars turn back)`).join('; ')||'no dead ends'}. Causeway centre line: ${s.roads.causeway?s.roads.causeway.samples+' samples, '+s.roads.causeway.offLand+' off land, '+s.roads.causeway.unreached+' inside the roundabout island at its end (cars leave at the west arm)':'n/a'}.`);
  L.push(`- ${s.roofComps} rooftop / raised areas are not reachable on foot (flat roofs reached by jumping, the jetpack or roof ramps on rides). Not a path problem.`);
  L.push(`- ${r.paths.filter(p=>p.hidden).map(p=>`path(${p.x}, ${p.z}, ${p.w}, ${p.d})`).join(', ')||'No path'} lies under a deck (drawn at ground level below the rooftop futsal garage): hidden, not judged.`);
  L.push(`- ${s.doorsteps.length} path ends stop at a building or hut front: doorsteps (house front walks at x 226, Cay hut walks, the Bakery front, the cafe), not dead ends.`,'');
  L.push('## Reached another way (by design)','');for(const l of s.expected)L.push(`- ${l.group} "${l.name}" (${f(l.x)}, ${f(l.z)}): ${classify(l)}.`);
- L.push('','## Heat','','Nothing here runs per frame: the fixes move static props, path decals and authored waypoints (no new meshes, colliders or updates). The audit and its test are Node-only.','');
+ L.push('','## Heat','','Nothing here runs per frame: the fixes move static props, path decals and authored waypoints (no updates; the Oct 23 beach gate removes 3 m of rail and adds two posts and a pad, all static). The audit and its test are Node-only.','');
  L.push(`Audit time: load ${s.timing.load} ms, raster ${s.timing.raster} ms, flood ${s.timing.flood} ms.`);
  return L.join('\n')+'\n';}
 async function main(){const args=process.argv.slice(2),arg=k=>{const i=args.indexOf(k);return i>=0?args[i+1]:null;};
