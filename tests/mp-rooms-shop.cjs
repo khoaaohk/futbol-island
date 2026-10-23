@@ -206,7 +206,7 @@ t('outfits: a friend\'s look is the one from their Hello / roster (no live try-o
 
 // ---- 5. wiring ------------------------------------------------------------------------------------------------------------------
 t('page wiring: the shared hook + Leave-only chip (hidden while covered), the scene stays lazy', () => {
-  assert.match(shopRoom, /import \{useRoomParty\} from '\.\.\/party\/useRoomParty';import RoomPartyChip from '\.\.\/party\/RoomPartyChip';/);
+  assert.match(shopRoom, /import \{useRoomParty\} from '\.\.\/party\/useRoomParty';const RoomPartyChip=dynamic\(\(\)=>import\('\.\.\/party\/RoomPartyChip'\),\{ssr:false\}\);/);
   assert.match(shopRoom, /\{party&&<div className=\{styles\.partySlot\} data-shop-party><RoomPartyChip party=\{party\} hidden=\{covered\}\/><\/div>\}/);
   assert.ok(shopRoom.indexOf('useRoomParty(') < shopRoom.indexOf("import('@/lib/shop/shopScene')"), 'the layer is created before the scene effect (disposed first on unmount)');
   assert.ok(!/PartyHost/.test(shopRoom), 'no island party sheet in the shop (host controls stay on the island)');

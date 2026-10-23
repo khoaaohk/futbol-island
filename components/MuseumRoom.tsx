@@ -27,7 +27,7 @@ import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/exper
 import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
-import {useRoomParty} from './party/useRoomParty';import RoomPartyChip from './party/RoomPartyChip';import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
