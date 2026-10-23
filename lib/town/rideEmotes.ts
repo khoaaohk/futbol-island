@@ -132,13 +132,13 @@ export function sampleRideTrick(emote: number, t: number, o: Float32Array): Floa
     }
     case RIDE_EMOTE.MopedSalute: { // the kickstand: the moped leans onto its stand, the rider stands up and salutes, a nod
       o[RT.ROLL] = -.16 * f; o[RT.STAND] = hold(t, .2, T - .15, .45);
-      arm(o, true, -1.25, 1.2, -2.35, hold(t, .9, T - .35, .25)); o[RT.HX] = .25 * arch(t, 1.6, 2.2); o[RT.HW] = f;
+      arm(o, true, -1.55, 1.3, -1.95, hold(t, .9, T - .35, .25)); o[RT.HX] = .25 * arch(t, 1.6, 2.2); o[RT.HW] = f;
       arm(o, false, -.15, .25, -.1, .6 * hold(t, .5, T - .3, .3)); // the free hand hangs relaxed
       break;
     }
     case RIDE_EMOTE.MopedHorn: { // beep beep: suspension bounce, a happy wiggle, a fist shake
       const b = Math.abs(Math.sin(t * 7)) * f;
-      o[RT.LIFT] = .09 * b; o[RT.ROLL] = .07 * Math.sin(t * 5.5) * f; o[RT.PITCH] = .04 * Math.sin(t * 7) * f; o[RT.PIVOT] = 0;
+      o[RT.LIFT] = .13 * b; o[RT.ROLL] = .07 * Math.sin(t * 5.5) * f; o[RT.PITCH] = .04 * Math.sin(t * 7) * f; o[RT.PIVOT] = 0;
       const fi = FIST(t * 1.4); arm(o, true, fi[0], fi[1], fi[2], hold(t, 1, T, .25));
       o[RT.HY] = .25 * Math.sin(t * 5.5) * f; o[RT.HW] = f; o[RT.CZ] = .1 * Math.sin(t * 5.5) * f;
       break;
@@ -178,10 +178,10 @@ export function sampleRideTrick(emote: number, t: number, o: Float32Array): Floa
       break;
     }
     case RIDE_EMOTE.BikeBell: { // ding-ding, then a look left, a look right, and a wave
-      o[RT.HY] = .9 * arch(t, .85, 1.75) - .9 * arch(t, 1.7, 2.6); o[RT.HW] = f;
+      o[RT.HY] = 1.1 * arch(t, .85, 1.75) - 1.1 * arch(t, 1.7, 2.6); o[RT.HW] = f;
       if (t < 1.2) arm(o, true, -1.05, .05, -1.25, hold(t, .2, .9, .15)); // thumb on the bell
       else { const w = WAVE(t); arm(o, true, w[0], w[1], w[2], hold(t, 2.45, T, .2)); }
-      o[RT.ROLL] = .05 * Math.sin(t * 2.2) * f; o[RT.CZ] = .08 * (arch(t, .85, 1.75) - arch(t, 1.7, 2.6));
+      o[RT.ROLL] = .05 * Math.sin(t * 2.2) * f; o[RT.CZ] = .15 * (arch(t, .85, 1.75) - arch(t, 1.7, 2.6));
       break;
     }
     case RIDE_EMOTE.BikeWheelie: { // a long front-wheel-up wheelie with a balancing wobble

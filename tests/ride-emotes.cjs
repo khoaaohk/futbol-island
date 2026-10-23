@@ -133,7 +133,8 @@ t('camera: the vehicle footprint is framed, the whole trick stays inside a portr
  const cam=read('lib/town/emoteCamera.ts'),town=read('components/Town.tsx');
  assert(/wide = riding \? \(ride \? rideWideFor\(ride\) : EMOTE_CAM\.rideWide\) : 0/.test(cam));
  assert(/camera\.aspect,onRideNow,ballEmote,emoteYaw0,onRideNow\?rideRef\.current:''\)\)countEmoteCam\(\)/.test(town),'Town passes the vehicle');
- assert(/const pe=id\?emoteNpc:null,/.test(town),'pair framing with the townsperson (nothing rides away now)');
+ assert(/const pe=id&&emoteNpc&&\(!rs\|\|Math\.hypot\([^;]*<=EMOTE_BOUNDS\.pairMaxGap\)\?emoteNpc:null,/.test(town),'pair framing with the townsperson when the two fit (nothing rides away now), else solo');
+ assert(/emoteCam\.begin\(emoteCamSync\(\),rs\?rideStop\.x:me\.x,me\.y,rs\?rideStop\.z:me\.z,/.test(town),'framed where the ride stops');
  assert(/emoteCam\.track\(rideScript\.s\?location\.x:pv\.x,pv\.y,rideScript\.s\?location\.z:pv\.z,/.test(town),'the camera follows the ride, not the trick sway');
 });
 
@@ -145,7 +146,7 @@ t('Town wiring: pose on both roots, rider body, stand, wheel spin, smoke, cues, 
  assert(/Math\.hypot\(velocity\.x,velocity\.z\)\+\(rideScript\.on&&!reduced\?rideScript\.pose\[RT\.WHEEL\]:0\)/.test(town)&&/rideScript\.on&&rideScript\.pose\[RT\.PUFF\]>0/.test(town));
  assert(/c==='horn'\)sound\.honk\(\)/.test(town)&&/c==='rev'\)sound\.boost\('forward'\)/.test(town)&&/while\(r\.cue<sc\.cues\.length&&ta>=sc\.cues\[r\.cue\]\.at\)rideCue\(/.test(town));
  assert(/emoteFx\.kind=rs\?rs\.emote:pick;/.test(town)&&/emoteFx\.v=cs\|\|ns\|\|rs\?-1:/.test(town),'a trick runs under its own id: no air five / cheer hop side effects');
- assert(/const npcPick=rs\?rs\.npc:pick;/.test(town)&&/!rs&&Math\.hypot\(velocity\.x,velocity\.z\)<4/.test(town),'townsfolk wave / cheer back, no stepping');
+ assert(/const npcPick=rs\?rs\.npc:pick;/.test(town)&&/reduced,emoteFx\.v,rs\?rideStop:Math\.hypot\(velocity\.x,velocity\.z\)<4\?\{x:me\.x,y:me\.y,z:me\.z\}:undefined,rs\?RIDE_PAIR_GAP:/.test(town)&&/RIDE_PAIR_GAP=\{min:2\.4,max:3\}/.test(town),'townsfolk wave / cheer back, stepping to 2.4-3 m from where the ride stops');
  for(const sc of R.RIDE_SCRIPTS)assert([0,1].includes(sc.npc));
  const K=load('lib/analytics/countIds.ts'),L=load('lib/analytics/emoteLabels.ts').emoteLabels();
  for(const sc of R.RIDE_SCRIPTS){assert(K.EMOTE_WIRE_IDS.includes(sc.emote));assert.equal(L[sc.emote].label,`${sc.label} (${sc.ride})`);assert.equal(L[sc.emote].group,'ride');}
