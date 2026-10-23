@@ -328,7 +328,10 @@ t('museum layer: museum friends only, wake on a changed pose, Battery saver neve
 // ---- 6. UI + wiring (source) ----------------------------------------------------------------------------------------------
 t('RoomPartyChip: Leave only (no invite / code / kick / lock / end / ping), the emote wheel, Hide / Mute, roster lines', () => {
   const src = read('components/party/RoomPartyChip.tsx').replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.ok(!/\.host\.|kick|\block\(|rotate|\.end\(|sendPing|PartyInvite|JoinParty|CodeBoxes|<input/i.test(src), 'no host controls in rooms');
+  assert.ok(!/\.host\.|kick(?!ed)|\block\(|rotate|\.end\(|sendPing|PartyInvite|JoinParty|CodeBoxes|<input/i.test(src), 'no host controls in rooms');
+  // Verifier, Oct 22 2026: End / kick / Leave while in a room said nothing (the chip just vanished): one note, as PartyHost says it.
+  assert.ok(/data-room-party-note/.test(src) && /'You left the party'/.test(src) && /'The party ended'/.test(src) && /ErrorCode\.Kicked/.test(src), 'a note when the party ends in a room');
+  assert.ok(/selfLeft\.current = true; partyConnection\(\)\.leave\(\)/.test(src), 'own Leave says "You left the party"');
   assert.equal((src.match(/\.leave\(\)/g) || []).length, 1, 'one Leave');
   assert.ok(/<EmoteWheel/.test(src) && /setHiddenFriends/.test(src) && /setMutedFriends/.test(src));
   const chip = load('components/party/RoomPartyChip.tsx', { EmoteWheel: { default: () => null }, PartyChip: { Glyph: () => null }, roomParty: {}, multiplayer: { displayName: (m) => m.nick || m.name, usePartyState: () => ({}) }, react: { useEffect() {}, useState: (v) => [typeof v === 'function' ? v() : v, () => {}] } });

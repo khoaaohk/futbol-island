@@ -2,11 +2,11 @@
 // The light party chip for room pages (docs/multiplayer-rooms-design.md 3.3; owner decision 3: LEAVE ONLY in rooms, the host sheet
 // stays on the island). Your colour dot + "2 here", the emote wheel (the same six-plus presets and rate limits as the island), and a
 // tap opens the read-only roster: what each friend is doing, Hide / Mute, and Leave. No invites, codes, kicks, locks or End here.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { displayName, usePartyState, type Member } from '@/lib/multiplayer';
 import { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mutedFriends } from '@/lib/multiplayer/roomParty';
 import { presenceIcon, presenceText, roomText } from '@/lib/multiplayer/presence';
-import { RoomCode, Zone } from '../../multiplayer/protocol';
+import { ErrorCode, RoomCode, Zone } from '../../multiplayer/protocol';
 import EmoteWheel from './EmoteWheel';
 import { Glyph } from './PartyChip';
 import type { RoomPartyHandle } from './useRoomParty';
@@ -34,15 +34,25 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
   const [hid, setHid] = useState<ReadonlySet<number>>(() => hiddenFriends());
   const [mut, setMut] = useState<ReadonlySet<number>>(() => mutedFriends());
   useEffect(() => { if (hidden) { setOpen('none'); setConfirmLeave(false); } }, [hidden]);
+  // The party ends / the player is kicked / leaves while in a room: the chip goes, so say why once (as the island's PartyHost does).
+  const [note, setNote] = useState<string | null>(null);
+  const was = useRef(state.status), selfLeft = useRef(false);
+  useEffect(() => {
+    const prev = was.current; was.current = state.status;
+    if ((prev !== 'live' && prev !== 'reconnecting') || state.status === 'live' || state.status === 'reconnecting' || state.status === 'connecting') return;
+    setNote(selfLeft.current || state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended');
+    selfLeft.current = false;
+  }, [state.status, state.error]);
+  useEffect(() => { if (!note) return; const t = setTimeout(() => setNote(null), 4000); return () => clearTimeout(t); }, [note]);
   const live = state.status === 'live' || state.status === 'reconnecting';
-  if (!live) return null;
+  if (!live) return note ? <p className={styles.toast} role="status" data-room-party-note>{note}</p> : null;
   const me = state.members.find((m) => m.id === state.you);
   const others = state.members.filter((m) => m.id !== state.you);
   const here = others.filter((m) => m.room === party.room && !hid.has(m.id)).length;
   const toggle = (set: ReadonlySet<number>, id: number, apply: (s: ReadonlySet<number>) => void, keep: (s: ReadonlySet<number>) => void) => {
     const next = new Set(set); if (next.has(id)) next.delete(id); else next.add(id); apply(next); keep(next);
   };
-  const leave = () => { partyConnection().leave(); setOpen('none'); setConfirmLeave(false); };
+  const leave = () => { selfLeft.current = true; partyConnection().leave(); setOpen('none'); setConfirmLeave(false); };
   const label = `Party: ${here} ${here === 1 ? 'friend' : 'friends'} here${state.status === 'reconnecting' ? ', reconnecting' : ''}`;
   return (
     <div className={styles.roomParty} data-room-party data-align={align} data-hidden={hidden || undefined} aria-hidden={hidden || undefined}>
