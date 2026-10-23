@@ -163,6 +163,10 @@ await ok('sql: day sessions, players and one player on a throwaway Postgres',asy
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');
 
   const today=psql(`select (now() at time zone 'America/Los_Angeles')::date`),yday=psql(`select (now() at time zone 'America/Los_Angeles')::date - 1`);
+  // Time-of-day guard (Oct 23 2026): the fixtures put 'today' sessions up to 1 h after Pacific midnight with 20 minute beats, so they would lie in the future for
+  // the first ~1 h 30 of the Pacific day. The migration checks above still ran; the day-session fixtures need a later start.
+  const pacificHour=+psql(`select extract(hour from (now() at time zone 'America/Los_Angeles'))`);
+  if(pacificHour<2){console.log('  (skipped the day-session fixtures: it is '+pacificHour+':xx Pacific; they pass after 02:00)');return;}
   const q=s=>`'${s.replace(/'/g,"''")}'`,svc={role:'service_role'};
   const ingest=p=>psql(`select analytics_ingest(${q(JSON.stringify(p))}::jsonb)`,svc);
   const P1='1'.repeat(32),P2='2'.repeat(32);
