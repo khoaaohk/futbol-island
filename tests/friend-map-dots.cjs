@@ -62,5 +62,7 @@ assert.equal(M.mapLegend(true)[6].tip,'friend');assert.match(M.legendTipText('fr
 {const s=read('lib/multiplayer/store.ts');
  assert.match(s,/function keepSpot\(id: MemberId, body: ArrayLike<number>\): void \{\n  if \(roomOf\(body\) >= 0\) return;/);
  assert.match(s,/case S\.Left:\n        spots\.delete\(m\[1\]\);/);
+ assert.match(s,/if \(cur && room < 0\) keepSpot\(id, scratch\);/,'a late pose for a member who already left never brings their map spot back');
+ assert.doesNotMatch(s,/\n\s+if \(room < 0\) keepSpot\(id, scratch\);/);
  assert.match(s,/reset\(\): void \{ spots\.clear\(\);/);}
 console.log('friend map dots ok');

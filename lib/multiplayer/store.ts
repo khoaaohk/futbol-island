@@ -121,9 +121,9 @@ export const partyStore = {
           const id = m[i] as number, zone = m[i + 7] as Zone, flags = m[i + 8] as number, away = (flags & 2) !== 0;
           scratch[0] = m[i + 1] as number; scratch[1] = m[i + 2] as number; scratch[2] = m[i + 3] as number; scratch[4] = m[i + 5] as number; scratch[6] = zone; // roomOf reads y, the speed byte and the zone
           const room = roomOf(scratch);
-          if (room < 0) keepSpot(id, scratch);
           const presence = presenceOf(m[i + 6] as number, zone, flags), activity = activityFor(m[i + 6] as number, m[i + 5] as number, room);
           const cur: Member | undefined = list.find((x) => x.id === id);
+          if (cur && room < 0) keepSpot(id, scratch); // only for members still in the roster: a late pose for someone who left must not bring their map dot back
           if (cur && (cur.zone !== zone || cur.away !== away || cur.presence !== presence || cur.activity !== activity || cur.room !== room)) {
             list = list.map((x) => (x.id === id ? { ...x, zone, away, presence, activity, room } : x));
             changed = true;
