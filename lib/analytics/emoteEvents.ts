@@ -2,7 +2,7 @@
  * Emote analytics (Oct 22 2026, Phase A of docs/analytics-multiplayer-plan.md §5). Called from Town.tsx's emoteBus handler once a
  * pick is accepted (countEmote) and from components/EmoteControl.tsx (countEmoteUi). Each call is a tracker count() (a map
  * increment that rides the next beat): no request, no timer, nothing per frame. Ids: lib/analytics/countIds.ts
- * EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS (the LOCAL emote number: 0–9 the wheel, 10–18 rides, 20–24 flying, 30–34 swimming,
+ * EMOTE_COUNT_EVENTS + EMOTE_WIRE_IDS (the LOCAL emote number: 0–9 the wheel, 60–74 ride tricks, 20–24 flying, 30–34 swimming,
  * 40–49 townsperson sets, 50–54 moving emotes while walking / running). Labels live on the admin side (app/admin/EmoteSection.tsx).
  *
  * Privacy: a preset emote number, where it was played (a fixed context) and what answered (a townsperson, the party, nobody).

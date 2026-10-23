@@ -22,12 +22,12 @@ export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = 
   {emote: EMOTE.Thanks, icon: 'thanks', label: 'Thanks'},
   {emote: EMOTE.ShowOff, icon: 'show-off', label: 'Show off'},
 ];
-/** What the wheel shows: on foot the ten presets; on a scooter, bike or moped (user, Oct 22 2026) Wave, Cheer and the three scripted rides that fit that vehicle (foot-only emotes are hidden). */
+/** What the wheel shows: on foot the ten presets; on a scooter, bike or moped (owner, Oct 22 2026, v2) Wave and the five in-place tricks of THAT vehicle (lib/town/rideEmotes.ts; foot-only emotes are hidden). */
 export interface WheelEmote {emote: number; icon: string; label: string}
 export function wheelEmotesFor(ride: string): WheelEmote[] {
   const scripts = rideScriptsFor(ride);
   if (!scripts.length) return LOCAL_EMOTES;
-  return [{emote: EMOTE.Wave, icon: 'hand', label: 'Wave'}, ...scripts.map(r => ({emote: r.emote, icon: r.icon, label: r.label})), {emote: EMOTE.Cheer, icon: 'star', label: 'Cheer'}];
+  return [{emote: EMOTE.Wave, icon: 'hand', label: 'Wave'}, ...scripts.map(r => ({emote: r.emote, icon: r.icon, label: r.label}))];
 }
 export const EMOTE_EMOJI: Record<number, string> = {...CTX_EMOTE_EMOJI, ...NPC_SET_EMOJI, ...MOVE_EMOTE_EMOJI, ...Object.fromEntries(RIDE_SCRIPTS.map(r => [r.emote, r.emoji])), 0: '\u{1F44B}', 1: '\u{1F389}', 2: '\u{1F64C}', 5: '\u{1F44F}', 3: '\u{1F939}', 4: '\u{1F31F}', 6: '\u{26BD}', 7: '\u{1F602}', 8: '\u{1F483}', 9: '\u{1F64F}'};
 /** Every simple emote lasts about 4 s (user, Oct 22 2026), for you, a friend and a townsperson alike; Pass it ~5.9 s (five passes); a high five with a variation keeps its own length. */

@@ -1,5 +1,6 @@
 // Emote camera: the pure rules (user, Oct 22 2026: "when the emote happens have it animate and zoom in to see it better ... when done zoom
 // back out"). Framing math, start / cancel rules and the numbers. No three.js, no DOM, no allocation (callers pass the output objects).
+import {RIDE_LENGTH, type RideKind} from './rideEmotes';
 export interface V3 {x: number; y: number; z: number}
 
 export const EMOTE_CAM = {
@@ -29,6 +30,13 @@ export const EMOTE_CAM = {
   halfWidth: .85,
 } as const;
 
+/** Ride emotes v2 (owner, Oct 22 2026: the tricks are in place, so the zoom can be tight): each character is widened to half the vehicle's length
+ *  (rideEmotes.ts RIDE_LENGTH: scooter 1.3, bike 1.8, moped 1.9 m) plus `rideTrickRoom` m for the trick's sway / spin about a wheel. Returns the extra
+ *  half width (m) over `halfWidth`; an unknown ride keeps the old flat `rideWide`. */
+export const RIDE_TRICK_ROOM = .45;
+export const rideWideFor = (ride: string): number => {
+  const len = RIDE_LENGTH[ride as RideKind]; return len ? Math.max(0, len / 2 + RIDE_TRICK_ROOM - EMOTE_CAM.halfWidth) : EMOTE_CAM.rideWide;
+};
 const COS_P = Math.cos(EMOTE_CAM.pitch), SIN_P = Math.sin(EMOTE_CAM.pitch);
 /**
  * Framing by screen shape (user, Oct 22 2026: "for mobile and desktop, make sure to have better angles where we can see both characters better").

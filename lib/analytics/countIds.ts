@@ -227,11 +227,11 @@ export const PARTY_RETENTION_IDS:readonly string[]=PARTY_RETENTION_EVENTS.map(([
 /**
  * Emotes (Oct 22 2026, lib/analytics/emoteEvents.ts): which preset emote was played by its LOCAL emote number, where, and what
  * answered. The numeric ranges are repeated here (not imported) so the every-page tracker never loads the emote content;
- * tests/admin-analytics-party.cjs checks them against lib/town/emoteReact.ts EMOTE (0–9), rideEmotes.ts RIDE_EMOTE (10–18),
+ * tests/admin-analytics-party.cjs checks them against lib/town/emoteReact.ts EMOTE (0–9), rideEmotes.ts RIDE_EMOTE (60–74: the in-place vehicle tricks, v2; the old travelling rides 10–18 are retired),
  * emoteContexts.ts CTX_EMOTE (20–24 flying, 30–34 swimming), npcEmoteSets.ts NPC_SET (40–49) and moveEmotes.ts MOVE_EMOTE (50–54,
  * walking / running). Never who it was aimed at.
  */
-export const EMOTE_WIRE_IDS:readonly number[]=[[0,9],[10,18],[20,24],[30,34],[40,49],[50,54]].flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
+export const EMOTE_WIRE_IDS:readonly number[]=[[0,9],[60,74],[20,24],[30,34],[40,49],[50,54]].flatMap(([a,b])=>Array.from({length:b-a+1},(_,i)=>a+i));
 export const EMOTE_CONTEXTS=['ground','scooter','bike','moped','fly','swim','walk'] as const;
 export type EmoteCtx=typeof EMOTE_CONTEXTS[number];
 /** Picks in this session crossed N (each once per tab session). "Emoting sessions" = countSessions('em:reach_1'). */

@@ -4,6 +4,7 @@
 // onBeforeRender, so the pose shows on the bean body, the classic body and costume bodies alike.
 import type * as T from 'three';
 import type {PlayerMotion} from './player';
+import {applyRideTrickBody} from './rideEmotePose';
 
 /** Seconds for one celebration. */
 export const CELEBRATION_SECONDS=2.2;
@@ -54,9 +55,10 @@ export function applyApplause(root:T.Object3D,age:number,w:number){
   const set=(s:T.Object3D,e:T.Object3D,side:number)=>{s.rotation.x+=(sx-s.rotation.x)*k;s.rotation.y*=1-k;s.rotation.z+=(side*sz-s.rotation.z)*k;e.rotation.x+=(el-e.rotation.x)*k;};
   set(j.ls,j.le,-1);set(j.rs,j.re,1);
 }
-/** Emotes on a scooter, bike or moped: ONE arm only (the right), so the left hand stays on the bar and the vehicle keeps its pose.
+/** Emotes on a scooter, bike or moped (60+: the vehicle tricks, posed by rideEmotePose.ts): ONE arm only (the right), so the left hand stays on the bar and the vehicle keeps its pose.
  *  emote 0 Wave (a waving hand), 2 High five (an "air five": hand high), 1 Cheer (fist pump up), 5 Well played / 6 Thumbs up (thumbs-up: forearm up, nodding). */
 export function applyRideEmote(root:T.Object3D,emote:number,age:number,w:number){
+  if(emote>=60){applyRideTrickBody(root,emote,age,w);return;}/* an in-place vehicle trick (lib/town/rideEmotes.ts): the whole rider, both arms where the trick needs them */
   const j=joints(root);if(!j||w<=0)return;
   const k=clamp01(w),wave=Math.sin(age*9);let sx=-1.5,sz=.25,el=-1.4+.15*Math.sin(age*7);
   if(emote===0){sx=-.3;sz=2.62+.2*wave;el=-.2-.1*wave;}

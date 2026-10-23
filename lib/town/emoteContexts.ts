@@ -3,10 +3,11 @@
 //    shows the FLYING set (below). Purely visual flourishes on the flight pose (a roll / tilt / loop of the rig root over ~3-4 s): velocity,
 //    altitude and steering are never touched (the offsets are added after the pose each frame and vanish with the emote).
 //  - SWIMMING: the wheel shows the SWIM set (visual pose / offset on the swim rig plus ripple rings).
-//  - Local ids start at 20 (the ride emotes use 10..18); friends only ever receive an existing protocol value (`wire`, Emote 0..9) and
+//  - Local ids start at 20 (the ride emotes use 60..74, lib/town/rideEmotes.ts); friends only ever receive an existing protocol value (`wire`, Emote 0..9) and
 //    their avatar picks the matching flourish from the SENDER'S MODE (Mode.Jetpack / Parachute = flying, Mode.Swim = swimming). No new wire values.
 // Protocol Mode values (multiplayer/protocol/types.ts), copied so this module stays dependency-free; tests/emote-contexts.cjs pins them.
-export const WIRE_MODE = {Jetpack: 5, Parachute: 6, Swim: 8} as const;
+import {RT, RT_CH, isRideEmote, rideScriptForWire, sampleRideTrick} from './rideEmotes';
+export const WIRE_MODE = {Scooter: 2, Bike: 3, Moped: 4, Jetpack: 5, Parachute: 6, Swim: 8} as const;
 
 export const CTX_EMOTE = {
   WingWave: 20, BarrelRoll: 21, Loop: 22, FlyByFive: 23, SideGlide: 24,
@@ -80,8 +81,13 @@ export function nearestFlyingFriend(me: {x: number; y: number; z: number}, frien
   return found ? best : -1;
 }
 
-/** Which flourish a friend's avatar plays for the protocol value `wire` given the SENDER'S mode (undefined = the ordinary ground emote). */
-export function flourishForWire(wire: number, mode: number): CtxScript | undefined {
+/** What a friend's avatar needs to play a flourish (a flying / swimming one, or a ride trick). */
+export type FlourishScript = Pick<CtxScript, 'emote' | 'seconds' | 'wire' | 'arm' | 'armFrom'>;
+const RIDE_MODE: Record<number, string> = {[WIRE_MODE.Scooter]: 'scooter', [WIRE_MODE.Bike]: 'bike', [WIRE_MODE.Moped]: 'moped'};
+/** Which flourish a friend's avatar plays for the protocol value `wire` given the SENDER'S mode (undefined = the ordinary ground emote).
+ *  On a scooter / bike / moped: that vehicle's in-place trick with this wire value (rideEmotes.ts); Wave (0) stays the ordinary wave. */
+export function flourishForWire(wire: number, mode: number): FlourishScript | undefined {
+  const ride = RIDE_MODE[mode]; if (ride) return rideScriptForWire(ride, wire);
   const list = modeIsFlying(mode) ? FLY_SCRIPTS : modeIsSwimming(mode) ? SWIM_SCRIPTS : null;
   return list ? list.find(s => s.wire === wire) : undefined;
 }
@@ -91,10 +97,14 @@ export interface Flourish {roll: number; pitch: number; yaw: number; lift: numbe
 const clamp01 = (v: number) => v < 0 ? 0 : v > 1 ? 1 : v;
 const smooth = (v: number) => { const t = clamp01(v); return t * t * (3 - 2 * t); };
 const fade = (age: number, dur: number) => clamp01(Math.min(age / .3, (dur - age) / .3));
-const TAU = Math.PI * 2;
+const TAU = Math.PI * 2, rideBuf = new Float32Array(RT_CH);
 /** `side` = +1 / -1: which way a fly-by leans (toward the friend). Writes `out` (no allocation) and returns it. */
 export function flourishAt(emote: number, age: number, dur: number, out: Flourish, side = 1): Flourish {
   out.roll = out.pitch = out.yaw = out.lift = out.ripple = 0;
+  if (isRideEmote(emote)) { // a friend's ride trick on their own rig: pitch (lifted about its axle), roll, hop; the spin is theirs to show
+    const p = sampleRideTrick(emote, age, rideBuf); out.pitch = p[RT.PITCH]; out.roll = p[RT.ROLL]; out.yaw = p[RT.YAW];
+    out.lift = p[RT.LIFT] + p[RT.PIVOT] * Math.sin(p[RT.PITCH]) + p[RT.RLIFT]; return out;
+  }
   const u = clamp01(age / dur), f = fade(age, dur);
   switch (emote) {
     case CTX_EMOTE.WingWave: out.roll = .42 * f * Math.sin(age * 3.1); out.lift = .12 * f * Math.sin(age * 3.1 + 1); break;

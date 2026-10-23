@@ -256,7 +256,7 @@ t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays with
  assert(/entry\.routine\.speed=entry\.baseSpeed\*entry\.ixOut\.slow/.test(npcs)&&/entry\.routine\.speed=entry\.baseSpeed;/.test(npcs),'speed dips and returns; the route is untouched');
  assert(!/freestyle\.(ball|motion)\s*=/.test(npcs),'the freestyle ball logic is not written to');
  assert(/emoteReachTick\(performance\.now\(\)\/1000\)/.test(town)&&/nowS-reach\.at<\.25/.test(town),'the button flag is computed at ~4 Hz');
- assert(/RIDE_EMOTE\.ScooterGlide/.test(town)&&/ns\.emote===NPC_SET\.SideGlide&&rideRef\.current==='scooter'/.test(town),'both on scooters: the existing scripted glide runs for the player too');
+ assert(/rideScriptFor\(RIDE_EMOTE\.ScooterOneFoot\)/.test(town)&&/ns\.emote===NPC_SET\.SideGlide&&rideRef\.current==='scooter'/.test(town),'both on scooters: the player answers with the in-place flamingo wave (ride emotes v2: nothing rides away)');
 });
 console.log('emote-contexts: '+n+' tests passed');
 

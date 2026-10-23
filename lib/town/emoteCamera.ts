@@ -7,7 +7,7 @@
 import type * as T from 'three';
 import {createShotCamera, type Shot} from './shotCamera';
 import {YAW_TRIES, eyeBlocked, viewClear, type Solid} from './emoteCamClear';
-import {EMOTE_CAM, MOVE_NUDGE, YAW_RATE, angleDiff, bestEmoteYaw, emoteCamBlocked, emoteCamSkip, emoteLayout, frameEmote, type EmoteCamState, type V3} from './emoteCameraMath';
+import {EMOTE_CAM, MOVE_NUDGE, YAW_RATE, angleDiff, bestEmoteYaw, emoteCamBlocked, emoteCamSkip, emoteLayout, frameEmote, rideWideFor, type EmoteCamState, type V3} from './emoteCameraMath';
 
 /** The island follow camera's heading (rad): the view the player already has, so the emote view turns as little as it can from it. */
 const FOLLOW_YAW = Math.atan2(16, 33);
@@ -28,13 +28,13 @@ export function createEmoteCamera(makeShot: typeof createShotCamera = createShot
   const stop = () => { if (holding) { holding = false; hold = 0; cooldown = EMOTE_CAM.cooldown; shot.end(); } };
   return {
     /** An emote starts: zoom in (or extend the zoom that is running) for `seconds`. Returns whether the camera is zooming. */
-    begin(s: EmoteCamState, px: number, py: number, pz: number, partner: V3 | null, seconds: number, world: EmoteCamWorld | null, aspect = 1.6, riding = false, ballPass = false, facing?: number): boolean {
+    begin(s: EmoteCamState, px: number, py: number, pz: number, partner: V3 | null, seconds: number, world: EmoteCamWorld | null, aspect = 1.6, riding = false, ballPass = false, facing?: number, ride = ''): boolean {
       if (holding) { // each new emote extends the zoom instead of restarting it
         if (emoteCamBlocked(s)) { stop(); return false; }
         hold = Math.max(hold, seconds); return true;
       }
       if (cooldown > 0 || shot.active || emoteCamSkip(s)) return false;
-      p.x = px; p.y = py; p.z = pz; hasQ = !!partner; wide = riding ? EMOTE_CAM.rideWide : 0; aspectNow = aspect;
+      p.x = px; p.y = py; p.z = pz; hasQ = !!partner; wide = riding ? (ride ? rideWideFor(ride) : EMOTE_CAM.rideWide) : 0; // a rider: + the vehicle's footprint (emoteCameraMath.ts rideWideFor) aspectNow = aspect;
       if (partner) { q.x = partner.x; q.y = partner.y; q.z = partner.z; }
       qw = qGoal = partner ? 1 : 0; axisAng = partner ? Math.atan2(q.x - px, q.z - pz) : 0;
       const wideGap = hasQ && Math.hypot(q.x - px, q.z - pz) > 5, basePitch = emoteLayout(aspect).pitch + (wideGap ? .35 : 0) /* a wide pair (Juggle with me): look down from above the rooftops */, tries = [basePitch, basePitch + .24, basePitch + .54];
