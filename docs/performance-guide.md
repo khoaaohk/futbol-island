@@ -1529,6 +1529,15 @@ Two of the island's round action buttons inside both Konbinis (`components/Konbi
   per frame while it plays, restored exactly afterwards, and skipped under reduced motion.
 - **Keep-ups:** tap-timed touches from walkBall's `juggleContact('foot')` point, with a streak bubble. The best streak is kept in
   `fi2-konbini-ball-v1` (versioned). Walking the ball into a shelf drops it.
+- **Counted keep-ups + hold for higher (22 Oct 2026, island and Konbini):** the island's juggle button now runs the Konbini's
+  counted keep-ups (`walkBall.keepUp` / `keepUpRelease`, `lib/town/keepUps.ts`): a press in the falling half arms the next touch,
+  no press → the ball drops ('drop', the shot physics + recall) and the run ends; the routine, signature styles and **wall kicks
+  stay** (near a wall the keep-up kicks off it; a rebound you touch counts +1, an untouched one drops). Holding the button lifts
+  the armed touch (`holdLift`: tap = 1, 0.25 → 0.6 s ramps to 1.6×; the island arc stays ≤ 3.04 m, the wall kick under the wall
+  top − 0.25 m; the Konbini rise ≤ 1.04 m). One best for both places (`fi2-konbini-ball-v1`, no new key), one pill
+  (`components/KeepUpCounter.tsx`, island: HUD stack task slot). Cost: a few scalar ops per frame while juggling, the island
+  count is polled on the existing ~150 ms HUD tick (setState only when it changes), the charge ring is a CSS animation (no
+  per-frame JS). No new loops, draws or timers beyond the pill's one fade timeout. Tests: `tests/keepup-counter.cjs`.
 - **Heat:** no new loops. The ball is stepped only while it's off the feet (`if(kb.moving)`), and `busy` includes the ball and
   the wobble, so the store sleeps again afterwards. No extra draw calls: the ball, shadow and products are existing meshes.
   Measured (scratchpad `konbini/actions/check-actions.cjs`, headless Chrome, muted; phone = 390×844 touch, DPR 3, CPU 4×):

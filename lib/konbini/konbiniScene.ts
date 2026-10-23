@@ -430,17 +430,19 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   camera.left=-halfW;camera.right=halfW;camera.top=halfH;camera.bottom=-halfH;camera.updateProjectionMatrix();
   targets=zoomTargets(sections,a);if(zoomIndex!==null){zoomIndex=Math.min(zoomIndex,targets.length-1);if(arrived){const c=zoomCam(targets[zoomIndex]);applyCam(c.pos,c.look,c.hw,c.hh);emitSlots();callbacks.onZoom?.(zoomView());}}
   if(draws===0){cameraX=halfW>=8.4?0:T.MathUtils.clamp(x,-8.4+halfW,8.4-halfW);cameraZ=T.MathUtils.clamp(z,-2.2,halfW<halfH?-1.1:2);}wake();}
- function clearInput(){if(shotHeldAt!==null){shotHeldAt=null;kb.cancelCharge();}keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;vx=vz=0;wake();}
+ function clearInput(){if(shotHeldAt!==null){shotHeldAt=null;kb.cancelCharge();}kb.pressEnd();keys.clear();stick.x=stick.z=0;target=null;route=[];arrivePoi=null;vx=vz=0;wake();}
  /** Ball actions work while walking (not zoomed, covered, leaving or eating). */
  const ballFree=()=>!leaving&&!leaveStarted&&!covered&&!disposed&&zoomIndex===null&&!zoom&&!eat;
  function beginShot(){if(!ballFree()||shotHeldAt!==null)return false;sound.unlock();if(kb.state.mode==='keepup')kb.settle(bp());if(!kb.beginCharge(bp()))return false;shotHeldAt=performance.now();wake();return true;}
  function endShot(cancel=false){if(shotHeldAt===null)return false;const held=performance.now()-shotHeldAt;shotHeldAt=null;if(cancel||!ballFree()){kb.cancelCharge();wake();return false;}const ok=kb.release(bp(),held);wake();return ok;}
- function keepUp(){if(!ballFree()||shotHeldAt!==null)return false;sound.unlock();const ok=kb.tap(bp());wake();return ok;}
+ function keepUp(){if(!ballFree()||shotHeldAt!==null)return false;sound.unlock();const ok=kb.press(bp());wake();return ok;}
+ /** Keep-up button / J released: a held early press may touch now, higher (konbiniBall HOLD FOR HIGHER). */
+ function keepUpEnd(){const ok=kb.pressEnd();if(ok)wake();return ok;}
  function key(e:KeyboardEvent){if(leaving||covered)return;
   if(zoomIndex!==null){if(e.type==='keydown'&&!(e.target instanceof HTMLInputElement)){if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();if(!zoom)zoomToIndex(zoomIndex+(e.code==='ArrowLeft'?-1:1),.6);}else if(e.code==='Escape'){e.preventDefault();zoomOut();}}return;}
   // The island's keys: Space = shoot (hold to charge, release to shoot), J = keep-up touch. A focused button handles its own.
   if((e.code==='Space'||e.code==='KeyJ')&&!(e.target instanceof HTMLElement&&e.target.closest('button,a,input,textarea'))){e.preventDefault();
-   if(e.code==='Space'){if(e.type==='keydown'&&!e.repeat)beginShot();else if(e.type==='keyup')endShot();}else if(e.type==='keydown'&&!e.repeat)keepUp();return;}if(!/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code)||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;e.preventDefault();if(e.type==='keydown'){sound.unlock();keys.add(e.code);}else keys.delete(e.code);wake();}
+   if(e.code==='Space'){if(e.type==='keydown'&&!e.repeat)beginShot();else if(e.type==='keyup')endShot();}else if(e.type==='keydown'&&!e.repeat)keepUp();else if(e.type==='keyup')keepUpEnd();return;}if(!/^(Key[WASD]|Arrow(Up|Down|Left|Right))$/.test(e.code)||e.target instanceof HTMLInputElement||e.target instanceof HTMLTextAreaElement)return;e.preventDefault();if(e.type==='keydown'){sound.unlock();keys.add(e.code);}else keys.delete(e.code);wake();}
  function visibility(){if(document.hidden){settleBall();keys.clear();stick.x=stick.z=0;cancelAnimationFrame(frame);frame=0;}else wake();}
  const observer=new ResizeObserver(resize);observer.observe(canvas);window.addEventListener('keydown',key);window.addEventListener('keyup',key);window.addEventListener('blur',clearInput);document.addEventListener('visibilitychange',visibility);
  player.update(x,z,0,0,reduced,{facing:yaw,resumePose:true,travelMode:'walk'});cashier.update(V.cashier.x,V.cashier.z,0,0,reduced,cashierMotion);resize();
@@ -502,7 +504,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    t=performance.now();for(let i=0;i<n;i++)renderer.render(scene,camera);const without=(performance.now()-t)/n,callsWithout=renderer.info.render.calls;friends.update(0,performance.now(),camera,false);
    return {update,renderWith:withF,renderWithout:without,calls,callsWithout};},
   /** The ball actions (the Shoot / Keep-ups buttons and Space / J): press-and-hold shot and a keep-up touch. */
-  beginShot,endShot,keepUp,
+  beginShot,endShot,keepUp,keepUpEnd,
   /** A quick tap shot (a soft pass): press and release at once. */
   kick(){return beginShot()&&endShot();},
   /** Test hook: shoot now at a given charge 0..1 (the release uses the same capped launch). */
