@@ -106,6 +106,8 @@ type Entry={
  acc:number;slot:number;needResume:boolean;d2:number;/** squared horizontal distance from the LOCAL player (the label range; d2 is from the camera, ~35 m back on the island) */ld2:number;
  /** Presence: inside the force field now; field 0..1 (eased), door 1..0 (indoors fade), shake / ripple of a ball hit, the status sprite + its line. */
  shield:boolean;field:number;door:number;shake:number;ripple:number;hx:number;hy:number;hz:number;status:T.Sprite|null;statusKey:string;
+ /** The status line, rebuilt only when the presence or activity changes (was a string concat per busy friend per frame). */
+ prWas:string;actWas:number;lineWas:string;
 };
 
 const LABEL_W=256;
@@ -298,7 +300,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,lastMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
-shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:''};
+shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:''};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
@@ -346,7 +348,8 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const pr=presenceOf(pose.mode,pose.zone,pose.flags??0),shield=shielded(pr);
     if(pose.zone===Zone.Indoors){e.door=reduced?0:Math.max(0,e.door-dt/DOOR_FADE);if(e.door<=0){e.field=0;hideEntry(e);continue;}}else e.door=1;
     if(shield!==e.shield){e.shield=shield;if(shield&&e.emote>=0){e.emote=-1;e.hf=-1;}rig?.setExpression(shield&&pr==='busy'?'focused':'neutral');}
-    const line=pr==='active'?'':presenceIcon(pr,pose.activity??0)+' '+presenceText(pr,pose.activity??0);
+    const act=pose.activity??0;if(pr!==e.prWas||act!==e.actWas){e.prWas=pr;e.actWas=act;e.lineWas=pr==='active'?'':presenceIcon(pr,act)+' '+presenceText(pr,act);}
+    const line=e.lineWas;
     if(line!==e.statusKey&&e.status){e.statusKey=line;if(line){const m=e.status.material as T.SpriteMaterial;m.map=statusTexture(line);m.needsUpdate=true;}}
     e.field=reduced?(shield?1:0):shield?Math.min(1,e.field+dt/FIELD_FADE):Math.max(0,e.field-dt/FIELD_FADE);
     e.shake=Math.max(0,e.shake-dt/SHAKE_SECONDS);e.ripple=Math.min(1,e.ripple+dt/RIPPLE_SECONDS);
