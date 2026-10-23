@@ -5,7 +5,7 @@ import type * as THREE from 'three';
 import { Activity, Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
-import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, localPoseState, roomActivity, roomText } from './presence';
+import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, onFriendFilters } from './roomParty';
@@ -110,6 +110,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const body: PoseBody = [0, 0, 0, 0, 0, Mode.Idle, Zone.Main, 0];
   const ring = { x: 0, y: 0, z: 0, hex: '', mode: 0, pitch: 0, yaw: 0 };
   let drawnLast = false; // the friend layer drew something last frame
+  let jumpX = NaN, jumpZ = NaN; // the local spot last frame: a teleport sends Warp (presence.ts islandJump)
   let lastUpdateAt = -1e12;
   // Door hints: one screen-sized sprite per door, its texture redrawn only when that room's count changes (store emits on room flips).
   function syncHints() {
@@ -172,6 +173,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       core.sample(nowMs);
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();
+      if (jumpX === jumpX && islandJump(jumpX, jumpZ, l.x, l.z, dt)) armEntryWarp(ew);
+      jumpX = l.x; jumpZ = l.z;
       // While I am busy (a lesson's learning view, a quiz, a menu) the island's people are hidden (islandNpcs does the same): so are my
       // friends and my own ring; the friend layer skips its whole update (no posing work behind the lesson).
       const busyMe = (l.activity ?? NOT_BUSY) >= 0;

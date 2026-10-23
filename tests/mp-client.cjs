@@ -415,6 +415,15 @@ t('nick is never persisted or logged (source scan)',()=>{
 
 // ---- presence (design 4.4.1) ----
 const pr=L('presence');
+t('islandJump: a teleport on the island sends Warp, fast rides do not (E2E finding Oct 22 2026)',()=>{
+  assert.equal(pr.islandJump(0,0,9,0,0),false,'9 m in one frame: under the 10 m floor');
+  assert.equal(pr.islandJump(0,0,40,0,1/60),true,'40 m in one 60 Hz frame: a teleport');
+  assert.equal(pr.islandJump(0,0,34*0.5,0,0.5),false,'the jetpack at 34 m/s over a 0.5 s hitch: not a teleport');
+  assert.equal(pr.islandJump(0,0,0,80,0.25),true,'80 m in a 0.25 s frame: a teleport');
+  assert.equal(pr.islandJump(0,0,60,0,5),true,'dt is capped at 1 s: 60 m after a long stall is still a teleport (limit 51 m)');
+});
+const tb=fs.readFileSync(path.join(ROOT,'lib/multiplayer/townBridge.ts'),'utf8');
+t('townBridge arms the Warp on an island jump',()=>{assert.ok(/islandJump\(jumpX, jumpZ, l\.x, l\.z, dt\)\) armEntryWarp\(ew\)/.test(tb));});
 t('townActivity: Town flags -> one Activity (priority: room > quiz > lesson > the rest)',()=>{
   const A=P.Activity,f=pr.townFlags();
   assert.equal(pr.townActivity(f),pr.NOT_BUSY,'playing');assert.equal(pr.isBusy(pr.NOT_BUSY),false);

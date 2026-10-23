@@ -144,6 +144,15 @@ export function roomText(room: number): string {
  *  first pose after a Welcome (door -> room, room -> island) carries Warp, and ONE retry Warp follows ENTRY_RETRY_MS later in case
  *  the first one landed inside a 5 s window and was dropped. */
 export const ENTRY_RETRY_MS = 5500;
+/** Island teleports (E2E finding, Oct 22 2026): Town never set Warp on the island, so a jump (the map, a fast travel, a reset, a test
+ *  hook) failed the relay's speed check, the pose was DROPPED and, standing still afterwards (delta suppression sends nothing), friends
+ *  kept seeing the old spot. A frame-to-frame move longer than ISLAND_JUMP_M + the fastest ride (jetpack 34 m/s, x 1.2) is a teleport:
+ *  the next pose carries Warp (+ the one retry, as after a room page). Pure, for tests/mp-client.cjs. */
+export const ISLAND_JUMP_M = 10;
+export function islandJump(px: number, pz: number, x: number, z: number, dtSec: number): boolean {
+  const dx = x - px, dz = z - pz, lim = ISLAND_JUMP_M + 41 * Math.max(0, Math.min(1, dtSec));
+  return dx * dx + dz * dz > lim * lim;
+}
 export type EntryWarp = { stage: 0 | 1 | 2; retryAt: number };
 export function entryWarp(): EntryWarp { return { stage: 2, retryAt: 0 }; }
 /** Arm on every Welcome (the status turned live). */
