@@ -43,6 +43,9 @@ export interface PartyConnection {
   sendEmoteAsk(to: MemberId, e: Emote): boolean;
   /** Relay v1.4: my answer to `from`'s ask (true = Join). */
   sendEmoteAnswer(from: MemberId, yes: boolean): boolean;
+  /** Relay v1.6 (Cap.Hit): my own kicked ball knocked friend `victim` over (dir 0..255 = travel direction). false (not sent) on an old
+   *  relay, while I am away, or not live. The relay decides; the tumble plays only when S.Hit comes back. */
+  sendHit(victim: MemberId, dir: number): boolean;
   /** Change MY OWN first name mid-party (Your party > List). n goes through normalizeNick (the join form's rules); memory only, like the
    *  join name: every later reconnect Hello carries it. 'sent': a v1.3 relay (Cap.Rename) gets C.Rename now (or the next resume Hello)
    *  and re-announces me to friends. 'local': an old relay (no Cap.Rename): only this device shows it until a resume reaches a v1.3 relay.
@@ -548,6 +551,10 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     sendEmoteAnswer(from, yes) {
       if (!(caps & Cap.EmoteAsk) || !open() || status !== 'live') return false;
       return raw([C.EmoteAnswer, from, yes ? 1 : 0]);
+    },
+    sendHit(victim, dir) {
+      if (!(caps & Cap.Hit) || localHidden || !open() || status !== 'live') return false;
+      return raw([C.Hit, victim, Math.round(dir) & 255]);
     },
     sendPing(kind, x, z) {
       if (localHidden || !open() || !pingBucket.take(now())) return false;

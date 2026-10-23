@@ -2,7 +2,8 @@
 // avatars and sends the local pose. With the flag off createPartyRuntime returns null (Town does nothing); outside a party the
 // per-frame cost is one boolean check; inside, update() allocates nothing (scratch objects below).
 import type * as THREE from 'three';
-import { Activity, BallState, Mode, RoomCode, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, BallState, Cap, Mode, PoseFlag, RoomCode, S, Zone, presenceOf, roomOf, shielded, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { ballTouches, byteToDir, createKnockGate, dirToByte, fastBall, knockable } from '../town/ballKnock';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
 import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
@@ -47,7 +48,16 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   readonly you: MemberId | null;
   /** Live feel: the local ball for friends (relay v1.2; visual only on their side). state = BallState; metres. Call every frame:
    *  the connection throttles (state changes, a moving Free ball at most 10 Hz). */
-  ball(state: BallState, x: number, y: number, z: number): void }
+  ball(state: BallState, x: number, y: number, z: number): void;
+  /** Relay v1.6 (Cap.Hit): MY kicked ball at x, y, z moving vx, vz against my friends' drawn bodies (on foot, outside the force field,
+   *  not hidden). A touch fast enough sends C.Hit (the shooter decides; the tumble plays on every screen only when S.Hit comes back) and
+   *  returns true so the ball bounces off them like off a townsperson. False on an old relay (friends are then never knocked over). */
+  ballVsFriends(x: number, y: number, z: number, vx: number, vz: number): boolean;
+  /** Friends' drawn balls moving fast enough to knock a townsperson over (each screen knocks its OWN townspeople with them).
+   *  cb gets the ball spot and its estimated velocity (from the interpolated samples). No allocation. */
+  eachFastFriendBall(cb: (x: number, y: number, z: number, vx: number, vz: number) => void): void;
+  /** Friends tumbling right now after a ball knock-over (tests / headless checks). */
+  readonly tumbling: number }
 /** A room door on the island (docs/multiplayer-rooms-design.md, owner decision 1): a small "3 in the Konbini" hint over it while party
  *  friends are in THAT room. Client-only, from the roster. */
 export type RoomDoorHint = { room: number; x: number; y: number; z: number };
@@ -104,7 +114,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   /** Any friend's emote arrived (my character glances at a friend who waves nearby). */
   onFriendEmote?: (id: MemberId) => void;
   /** Room doors for the "3 in the Konbini" hint (none = no hint). */
-  doors?: readonly RoomDoorHint[] }): PartyRuntime | null {
+  doors?: readonly RoomDoorHint[];
+  /** Relay v1.6: someone was knocked over by a friend's ball (S.Hit), already checked here: victim -1 = ME (Town plays the local tumble
+   *  overlay; it still checks rides / Battery saver), else that friend (their avatar already tumbles). dir = the wire byte; x, y, z = the spot. */
+  onKnock?: (victim: number, dir: number, x: number, y: number, z: number) => void }): PartyRuntime | null {
   if (!multiplayerEnabled()) return null;
   // The island keeps a friend's last ISLAND spot: a room pose (room-local x / z, design 2.2) is drawn as "indoors at their last island
   // spot", so they fade out where they went in (at the door) as today; a friend first heard inside a room stays roster-only here.
@@ -160,6 +173,32 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   }
   ready = true;
   syncHints();
+
+  // Ball knock-overs (relay v1.6, Cap.Hit; lib/town/ballKnock.ts). The shooter's gate mirrors the relay's cooldowns; friends' balls are
+  // tracked (last sample -> velocity) so every screen can knock its own townspeople with them.
+  const gate = createKnockGate();
+  type BallTrack = { x: number; y: number; z: number; vx: number; vz: number; ok: boolean; fast: boolean };
+  const tracks = new Map<MemberId, BallTrack>();
+  let trackDt = 0;
+  const track = (b: { state: number; x: number; y: number; z: number }, id: MemberId) => {
+    let q = tracks.get(id);
+    if (!q) { q = { x: 0, y: 0, z: 0, vx: 0, vz: 0, ok: false, fast: false }; tracks.set(id, q); }
+    if (b.state !== BallState.Free || hiddenFriends().has(id)) { q.ok = false; q.fast = false; return; }
+    if (q.ok && trackDt > 0) { q.vx = (b.x - q.x) / trackDt; q.vz = (b.z - q.z) / trackDt; q.fast = fastBall(q.vx, q.vz); } else q.fast = false;
+    q.x = b.x; q.y = b.y; q.z = b.z; q.ok = true;
+  };
+  const offHit = conn.onMessage((m) => {
+    if (m[0] !== S.Hit || !core.live) return;
+    const victim = m[2], d = m[3];
+    if (victim === core.you) {
+      const l = ctx.local();
+      if ((l.activity ?? NOT_BUSY) >= 0 || !knockable(l.mode, l.zone, l.hidden ? PoseFlag.Hidden : 0)) return; // busy / riding / swimming now
+      ctx.onKnock?.(-1, d, l.x, l.y, l.z); return;
+    }
+    const p = poses.get(victim);
+    if (!p || hiddenFriends().has(victim) || shielded(presenceOf(p.mode, p.zone, p.flags ?? 0)) || !knockable(p.mode, p.zone, p.flags ?? 0)) return;
+    if (avatars.tumble(victim, byteToDir(d), ctx.reducedMotion())) ctx.onKnock?.(victim, d, p.x, p.y, p.z);
+  });
   const offFilters = onFriendFilters(syncHints);
 
   // Me while the island loop sleeps (Settings, map, a waiting quiz) or the page is leaving for a room: the frame loop is not running,
@@ -184,6 +223,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get localBump() { return core.live && meRingOn ? avatars.localBump : null; },
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
+    get tumbling() { return avatars.tumbling; },
     debugEmotes: () => avatars.debugEmotes(),
     duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
     endDuet: (id) => avatars.endDuet(id),
@@ -205,6 +245,22 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!core.live || conn.status !== 'live') return;
       conn.sendBall(state, x, y, z, now());
     },
+    ballVsFriends(x, y, z, vx, vz) {
+      if (!core.live || conn.status !== 'live' || !(conn.caps & Cap.Hit) || !fastBall(vx, vz)) return false;
+      const hid = hiddenFriends(), t = now();
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i], p = poses.get(id);
+        if (!p || p.fade < .99 || hid.has(id) || !knockable(p.mode, p.zone, p.flags ?? 0) || !ballTouches(x, y, z, p.x, p.y, p.z)) continue;
+        if (!gate.allow(id, t)) return true; // just knocked over: the ball still bounces off them, nothing is sent
+        if (!conn.sendHit(id, dirToByte(vx, vz))) return false;
+        gate.note(id, t); return true;
+      }
+      return false;
+    },
+    eachFastFriendBall(cb) {
+      if (!core.live) return;
+      tracks.forEach((q) => { if (q.fast) cb(q.x, q.y, q.z, q.vx, q.vz); });
+    },
     ballVsFields(ball) {
       if (!core.live) return false;
       let hit = false;
@@ -223,6 +279,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
       core.sample(nowMs);
+      if (core.balls.size) { trackDt = dt; core.balls.forEach(track); }
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();
       if (jumpX === jumpX && islandJump(jumpX, jumpZ, l.x, l.z, dt)) armEntryWarp(ew);
@@ -245,7 +302,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     dispose() {
       for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
-      offFilters(); core.dispose(); lastIsland.clear();
+      offFilters(); offHit(); core.dispose(); lastIsland.clear(); tracks.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
     },
   };

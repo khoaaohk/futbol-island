@@ -122,6 +122,15 @@ try {
     assert.equal(ow[7].find((m) => m[0] === ow[2])[1][1], 0, 'animal wish ignored: reserved slot is 0');
     assert.equal(ow[7].find((m) => m[0] === ow[2])[5], null, 'no name -> colour name only');
     old.w.close(); bad.w.close();
+    // relay v1.6 (Cap.Hit = 32): a friend's kicked ball knocks a party friend over; S.Hit goes to both, a too-soon repeat is dropped
+    assert.ok(g.msgs.some((m) => m[0] === 32 && (m[1] & 32)), 'S.Caps carries Cap.Hit');
+    h.w.send(JSON.stringify([11, 63])); g.w.send(JSON.stringify([11, 63])); await wait(200);
+    h.w.send(JSON.stringify([1, 1, 200, 20, -600, 0, 0, 13, 0, 0])); g.w.send(JSON.stringify([1, 1, 230, 20, -600, 0, 0, 13, 0, 0])); await wait(300);
+    h.w.send(JSON.stringify([17, gid, 64])); await wait(300);
+    assert.ok(g.msgs.some((m) => m[0] === 38 && m[1] === hid && m[2] === gid && m[3] === 64), 'the victim hears S.Hit');
+    assert.ok(h.msgs.some((m) => m[0] === 38 && m[2] === gid), 'the shooter hears S.Hit too');
+    h.w.send(JSON.stringify([17, gid, 64])); await wait(300);
+    assert.equal(g.msgs.filter((m) => m[0] === 38).length, 1, 'pair cooldown: a repeat within 4 s is dropped silently');
     h.w.close(); g.w.close();
   }
   assert.ok(!/smokekid|emma/i.test(srvOut), 'no nick in the relay log');
