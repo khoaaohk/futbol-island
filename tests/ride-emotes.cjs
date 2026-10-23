@@ -18,13 +18,23 @@ const sample=(sc,a)=>R.sampleRideTrick(sc.emote,a,buf);
 /** Points on the ride (local x, y, z; z forward) the bounds and the camera must keep: the rider's head and hands, both wheels, the bars / tail. */
 const pointsFor=sc=>{const L=R.RIDE_LENGTH[sc.ride]/2;return [[0,2.05,0,false],[.45,1.9,0,false],[-.45,1.9,0,false],[0,.35,L,true],[0,.35,-L,true],[0,1.25,L*.7,true],[0,.6,-L,true]];};
 
-t('15 tricks, five per vehicle, ids 60-74, all different names, icons, emoji',()=>{
- assert.equal(R.RIDE_SCRIPTS.length,15);
- for(const r of ['moped','scooter','bike'])assert.equal(R.rideScriptsFor(r).length,5,r);
- assert.equal(JSON.stringify(R.RIDE_SCRIPTS.map(s=>s.emote)),JSON.stringify(Array.from({length:15},(_,i)=>60+i)));
- for(const k of ['label','icon','emoji'])assert.equal(new Set(R.RIDE_SCRIPTS.map(s=>s[k])).size,15,k);
+t('30 tricks, TEN per vehicle (owner, Oct 23 2026), ids 60-89, different names, icons and emoji within each vehicle, all labels distinct',()=>{
+ assert.equal(R.RIDE_SCRIPTS.length,30);
+ for(const r of ['moped','scooter','bike']){const l=R.rideScriptsFor(r);assert.equal(l.length,10,r);for(const k of ['label','icon','emoji'])assert.equal(new Set(l.map(s=>s[k])).size,10,r+' '+k);}
+ assert.equal(JSON.stringify(R.RIDE_SCRIPTS.map(s=>s.emote)),JSON.stringify(Array.from({length:30},(_,i)=>60+i)));
+ assert.equal(new Set(R.RIDE_SCRIPTS.map(s=>s.label)).size,30,'thirty different names');
  const names=R.RIDE_SCRIPTS.map(s=>s.label).join(' | ');
- for(const want of ['Burnout donut','Wheelie pop','Kickstand salute','Rev it up','Beep beep','Tail-whip','Hop 180','Flamingo wave','Kick bounce','Nose pivot','Ring-a-ding','Wheelie','Bunny hop','Stoppie','No hands!'])assert(names.includes(want),want);
+ for(const want of ['Burnout donut','Wheelie pop','Kickstand salute','Rev it up','Beep beep','Tail-whip','Hop 180','Flamingo wave','Kick bounce','Nose pivot','Ring-a-ding','Wheelie','Bunny hop','Stoppie','No hands!',
+  'Cruiser wave','Handlebar five','Header nods','Thumbs-up rev','Seat shimmy','Deck wave','Jump cheer','Low five','Knee keepy-ups','Thank-you bow','Back-pedal wave','Side five','Pedal keepy-ups','No-hands clap','Wobble giggle'])assert(names.includes(want),want);
+});
+t('ten per vehicle: one trick per standard wire value 0..9, in the standard wheel order; wire mapping round-trips',()=>{
+ const ORDER=[0,2,1,6,3,5,7,8,9,4];assert.equal(JSON.stringify([...R.WHEEL_WIRE_ORDER]),JSON.stringify(ORDER));
+ for(const ride of ['moped','scooter','bike']){
+  assert.equal(JSON.stringify(R.rideScriptsFor(ride).map(s=>s.wire).sort((a,b)=>a-b)),"[0,1,2,3,4,5,6,7,8,9]",ride);
+  assert.equal(JSON.stringify(R.rideWheelFor(ride).map(s=>s.wire)),JSON.stringify(ORDER),ride+" wheel order");
+  for(const sc of R.rideScriptsFor(ride))assert.equal(R.rideScriptForWire(ride,sc.wire),sc,'round trip '+sc.label);
+ }
+ assert.equal(R.rideWheelFor("walk").length,0);assert.equal(R.rideWheelFor("jetpack").length,0);
 });
 
 t('in place: every trick keeps its root inside EMOTE_BOUNDS.rootRadius and every point under maxHeight; it starts and ends at rest',()=>{
@@ -68,7 +78,7 @@ function signature(sc){const v=[];for(let i=0;i<FRAMES;i++){const p=sample(sc,sc
  v.push(p[RT.PITCH]*2,p[RT.ROLL]*2,Math.sin(p[RT.YAW]),1-Math.cos(p[RT.YAW]),p[RT.LIFT]*2,Math.sin(p[RT.VYAW]),1-Math.cos(p[RT.VYAW]),p[RT.RLIFT]*2,p[RT.WHEEL]/16,p[RT.STAND],p[RT.PUFF]*.5,
   p[RT.RSX]*p[RT.RW]/3,p[RT.RSZ]*p[RT.RW]/3,p[RT.REX]*p[RT.RW]/3,p[RT.LSX]*p[RT.LW]/3,p[RT.LSZ]*p[RT.LW]/3,p[RT.LEX]*p[RT.LW]/3,p[RT.HY]*p[RT.HW],p[RT.HX],p[RT.CX],p[RT.CZ],
   p[RT.LHX]*p[RT.LLW]/2,p[RT.LHZ]*p[RT.LLW]/2,p[RT.LKN]*p[RT.LLW]/2,p[RT.RHX]*p[RT.RLW]/2,p[RT.RHZ]*p[RT.RLW]/2,p[RT.RKN]*p[RT.RLW]/2);}return v;}
-t('unique: every trick differs from the other 14 (pose + vehicle state over time), within and across vehicles',()=>{
+t('unique: every trick differs from the other 29 (pose + vehicle state over time), within and across vehicles',()=>{
  const sig=R.RIDE_SCRIPTS.map(signature);let best=Infinity,pair='';
  for(let i=0;i<sig.length;i++)for(let j=i+1;j<sig.length;j++){let s=0;for(let k=0;k<sig[i].length;k++)s+=(sig[i][k]-sig[j][k])**2;const rms=Math.sqrt(s/sig[i].length);
   if(rms<best){best=rms;pair=R.RIDE_SCRIPTS[i].label+' / '+R.RIDE_SCRIPTS[j].label;}
@@ -93,13 +103,14 @@ t('each vehicle uses what it really has',()=>{
  assert.equal(R.rideScriptFor(E.BikeBell).cues.map(c=>c.cue).join(),'bell,bell');assert(R.rideScriptFor(E.MopedHorn).cues.every(c=>c.cue==='horn'));
 });
 
-t('friends: the same trick from the sender ride mode, existing wire values only; Wave stays a wave',()=>{
+t('friends: the same trick from the sender ride mode, standard wire values only (0..9); every value has its vehicle version',()=>{
  const M={scooter:2,bike:3,moped:4};const out={roll:0,pitch:0,yaw:0,lift:0,ripple:0};
  for(const sc of R.RIDE_SCRIPTS){
-  assert(![0,3,6].includes(sc.wire),sc.label);const f=CX.flourishForWire(sc.wire,M[sc.ride]);assert(f&&f.emote===sc.emote&&f.arm===sc.emote&&f.seconds===sc.seconds,sc.label);
+  assert(sc.wire>=0&&sc.wire<=9,sc.label);const f=CX.flourishForWire(sc.wire,M[sc.ride]);assert(f&&f.emote===sc.emote&&f.arm===sc.emote&&f.seconds===sc.seconds,sc.label);
   const mid=sc.seconds/2;CX.flourishAt(sc.emote,mid,sc.seconds,out,1);const p=sample(sc,mid);assert.equal(out.pitch,p[RT.PITCH]);assert.equal(out.roll,p[RT.ROLL]);
  }
- for(const m of [2,3,4])assert.equal(CX.flourishForWire(0,m),undefined,'Wave (0) on a ride: the ordinary wave');
+ for(const m of [2,3,4])for(let w=0;w<10;w++)assert(CX.flourishForWire(w,m),'ride mode '+m+' wire '+w);
+ assert.equal(CX.flourishForWire(0,4).emote,R.RIDE_EMOTE.MopedWave);assert.equal(CX.flourishForWire(6,2).emote,R.RIDE_EMOTE.ScooterLowFive);assert.equal(CX.flourishForWire(3,3).emote,R.RIDE_EMOTE.BikePedalUps);
  assert.equal(CX.flourishForWire(1,0),undefined,'on foot: no ride trick');assert(CX.flourishForWire(1,5),'flying flourishes unchanged');
  assert.equal(CX.flourishForWire(4,3).emote,R.RIDE_EMOTE.BikeWheelie);assert.equal(CX.flourishForWire(4,2).emote,R.RIDE_EMOTE.ScooterTailWhip);assert.equal(CX.flourishForWire(4,4).emote,R.RIDE_EMOTE.MopedDonut);
  const proto=read('multiplayer/protocol/types.ts');assert(/Scooter: 2, Bike: 3, Moped: 4/.test(proto),'protocol ride modes');
@@ -145,12 +156,12 @@ t('Town wiring: pose on both roots, rider body, stand, wheel spin, smoke, cues, 
  assert(/mopedStand:Math\.max\(trickPose\.stand,rideScript\.on&&!reduced\?rideScript\.pose\[RT\.STAND\]:0\)/.test(town));
  assert(/Math\.hypot\(velocity\.x,velocity\.z\)\+\(rideScript\.on&&!reduced\?rideScript\.pose\[RT\.WHEEL\]:0\)/.test(town)&&/rideScript\.on&&rideScript\.pose\[RT\.PUFF\]>0/.test(town));
  assert(/c==='horn'\)sound\.honk\(\)/.test(town)&&/c==='rev'\)sound\.boost\('forward'\)/.test(town)&&/while\(r\.cue<sc\.cues\.length&&ta>=sc\.cues\[r\.cue\]\.at\)rideCue\(/.test(town));
- assert(/emoteFx\.kind=rs\?rs\.emote:pick;/.test(town)&&/emoteFx\.v=cs\|\|ns\|\|rs\?-1:/.test(town),'a trick runs under its own id: no air five / cheer hop side effects');
+ assert(/emoteFx\.kind=rs\?rs\.emote:cs&&isSharedWire\(pick\)\?cs\.emote:pick;/.test(town)&&/emoteFx\.v=cs\|\|ns\|\|rs\?-1:/.test(town),'a trick runs under its own id: no air five / cheer hop side effects');
  assert(/const npcPick=rs\?rs\.npc:pick;/.test(town)&&/reduced,emoteFx\.v,rs\?rideStop:Math\.hypot\(velocity\.x,velocity\.z\)<4\?\{x:me\.x,y:me\.y,z:me\.z\}:undefined,rs\?RIDE_PAIR_GAP:/.test(town)&&/RIDE_PAIR_GAP=\{min:2\.4,max:3\}/.test(town),'townsfolk wave / cheer back, stepping to 2.4-3 m from where the ride stops');
  for(const sc of R.RIDE_SCRIPTS)assert([0,1].includes(sc.npc));
  const K=load('lib/analytics/countIds.ts'),L=load('lib/analytics/emoteLabels.ts').emoteLabels();
  for(const sc of R.RIDE_SCRIPTS){assert(K.EMOTE_WIRE_IDS.includes(sc.emote));assert.equal(L[sc.emote].label,`${sc.label} (${sc.ride})`);assert.equal(L[sc.emote].group,'ride');}
  assert(!K.EMOTE_WIRE_IDS.includes(10)&&!K.EMOTE_WIRE_IDS.includes(18),'the retired travelling rides');
- assert(/\['ride','On a ride',60,74\]/.test(read('lib/analytics/sponsor.ts')));
+ assert(/\['ride','On a ride',60,89\]/.test(read('lib/analytics/sponsor.ts')));
 });
 console.log(`ride-emotes: ${n} checks passed`);

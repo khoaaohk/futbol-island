@@ -83,7 +83,7 @@ const PEAK_MID:Record<string,number>={peak_1:1,peak_2:2,peak_3_4:3.5,peak_5_8:6.
 /** ≈ players per party from the size bands (band midpoints), once 5+ parties are in them. */
 export function avgPartySize(c:{counts:Record<string,number>}):number|null{const n=PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0),0);return n>=MIN_PARTIES?PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0)*PEAK_MID[id],0)/n:null;}
 /** The emote groups (countIds.ts EMOTE_WIRE_IDS ranges): key, label, first and last local emote number. */
-const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel','On foot (the wheel)',0,9],['ride','On a ride',60,74],['fly','Flying',20,24],['swim','Swimming',30,34],['npc','With a townsperson',40,49]];
+const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel','On foot (the wheel)',0,9],['ride','On a ride',60,89],['fly','Flying',20,29],['swim','Swimming',30,39],['npc','With a townsperson',40,49]];
 
 const GAME_LABEL:Record<string,string>={live:'Island Strikers',runner:'Breakaway Run',tennis:'Futbol Tennis',pinball:'Futbol Pinball',puzzle:'Pass Puzzles'};
 const SOURCE_LABEL:Record<string,string>={ball:'Hidden ball found',npc:'Islander gift',quiz:'Perfect quiz',explore:'Exploring',journey:'Learning Journey',story:'Story finished',path:'Path finished',pack:'Card pack',starter:'Starter kit'};

@@ -53,7 +53,7 @@ t('ball NPC duets: for every routine both balls start and end with their owners,
 });
 t('non-ball answers: skaters / scooter riders never take a ball; the player plays the ball emotes solo while they answer on their route',()=>{
  for(const k of ['skater','scooter'])assert.equal(NS.npcAnswersFor(k).filter(s=>s.duet).length,0);
- assert(/const soloBall=!emoteNpc\|\|!!ns;/.test(town)&&/pick===EMOTE\.PassBall&&soloBall/.test(town),'pass to the air partner / solo keep-ups');
+ assert(/const soloBall=!emoteNpc\|\|!!ns;/.test(town)&&/ballPick===EMOTE\.PassBall&&soloBall/.test(town),'pass to the air partner / solo keep-ups');
  assert(/if\(entry\.ix\)\{[^]*?entry\.routine\.speed=entry\.baseSpeed\*entry\.ixOut\.slow/.test(npcs),'only the speed dips; the route is untouched');
 });
 console.log('npc-emotes-all: '+n+' tests passed');

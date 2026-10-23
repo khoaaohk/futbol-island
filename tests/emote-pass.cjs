@@ -92,7 +92,7 @@ t('ONE ball: Pass it / Juggle with me move the player\'s own ball; the pooled pa
  assert(/walkBall\.reset\(dribblePlayer\)/.test(town),'a ball that is away is summoned to the feet first');
  assert(/const endBallEmote=\(\)=>\{passOnBall=false/.test(town)&&/emoteFx\.age>=emoteFx\.dur\)\{emoteFx\.kind=-1;endBallEmote\(\)/.test(town),'normal dribble resumes at the feet');
  assert(/\.\.\.passMotionNow\(\)/.test(town)&&/PlayerMotion/.test(town),'the player\'s kick / trap / keep-up poses come from the rig motion');
- assert(/pick===EMOTE\.PassBall&&ecsRide\(\)\)return/.test(town)&&/ballEmote&&\(rideRef\.current!=='walk'\|\|water\.inWater/.test(town),'skipped on rides, flying, swimming');
+ assert(/const ballPick=cs\|\|rs\?-1:pick;/.test(town)&&/ballPick===EMOTE\.PassBall&&ecsRide\(\)\)return/.test(town)&&/ballEmote&&\(rideRef\.current!=='walk'\|\|water\.inWater/.test(town),'skipped on rides, flying, swimming');
  assert(/npcPassMotion\(entry\.pass,entry\.passBall/.test(npcs)&&/spacing\?:\{min:number;max:number\}/.test(npcs),'the townsperson kicks / juggles and steps to the right gap');
  assert(/EMOTE\.JuggleWithMe/.test(read('lib/town/emoteReact.ts'))&&/label: 'Juggle with me'/.test(read('lib/town/emoteReact.ts'))&&!/PassToMe/.test(read('multiplayer/protocol/types.ts')+read('lib/town/emoteReact.ts')),'renamed');
  assert(/JuggleWithMe: 3/.test(read('multiplayer/protocol/types.ts')),'wire value 3 unchanged');
@@ -101,32 +101,33 @@ t('ONE ball: Pass it / Juggle with me move the player\'s own ball; the pooled pa
 t('source: Pass it is wired (bubble, camera hold, cancel on walk, renamed ThumbsUp -> PassBall)',()=>{
  const town=read('components/Town.tsx'),proto=read('multiplayer/protocol/types.ts'),npcs=read('lib/graphics/islandNpcs.ts');
  assert(/PassBall: 6/.test(proto)&&!/ThumbsUp/.test(proto+read('lib/graphics/remoteAvatars.ts')+read('lib/town/emoteReact.ts')),'wire value 6 unchanged, renamed');
- assert(/pick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town),'reduced motion: bubble + one pass');
+ assert(/ballPick===EMOTE\.PassBall&&reduced\)emoteFx\.dur=1\.5/.test(town),'reduced motion: bubble + one pass');
  assert(/emoteFx\.kind===EMOTE\.PassBall\|\|emoteFx\.kind===EMOTE\.JuggleWithMe\)passStep\(\)/.test(town));
  assert(/if\(!onRideNow&&emoteMoving\(\)\)\{emoteFx\.kind=-1;endBallEmote\(\)/.test(town),'walking away cancels');
  assert(/emoteSeconds\(entry\.fx\.kind\)/.test(npcs)&&/applyEmoteArms/.test(npcs),'the townsperson answers every kind for the same length');
  assert(/pass:\s*'/.test(read('components/party/PartyChip.tsx')),'the Pass it glyph exists');
 });
 
-t('ride emotes v2: each vehicle gets Wave + its own five in-place tricks on the wheel; foot-only emotes are hidden on rides',()=>{
+t('ride emotes: each vehicle gets TEN in-place tricks on the wheel (owner, Oct 23 2026), one per standard meaning, in the standard order',()=>{
+ const ORDER=[0,2,1,6,3,5,7,8,9,4];
  for(const ride of ['moped','scooter','bike']){
   const w=E.wheelEmotesFor(ride),labels=w.map(x=>x.label);
-  assert.equal(w.length,6,ride+' wheel: Wave + five tricks');assert.equal(labels[0],'Wave');
-  assert(!labels.some(l=>/Pass it|Dance|Laugh|Thanks|Space|Juggle with me/.test(l)),ride+' hides the foot-only emotes');
-  assert.equal(R.rideScriptsFor(ride).length,5);
+  assert.equal(w.length,10,ride+' wheel: ten tricks');assert(w.every(x=>R.isRideEmote(x.emote)),ride+': every button is that vehicle\'s trick');
+  assert.equal(JSON.stringify(w.map(x=>R.rideScriptFor(x.emote).wire)),JSON.stringify(ORDER),ride+': standard order');
+  assert(!labels.some(l=>/^(Pass it|Juggle with me)$/.test(l)),ride+': the ball emotes become ball-free ride versions');
+  assert.equal(R.rideScriptsFor(ride).length,10);
  }
  assert.equal(E.wheelEmotesFor('walk').length,10);assert.equal(E.wheelEmotesFor('jetpack').length,10);
- assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.label)).size,15,'fifteen different tricks');
- assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.icon)).size,15);assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.emoji)).size,15,'an emoji bubble each');
- const chip=read('components/party/PartyChip.tsx');for(const sc of R.RIDE_SCRIPTS)assert(chip.includes(`'${sc.icon}':`),'glyph for '+sc.icon);
+ assert.equal(new Set(R.RIDE_SCRIPTS.map(x=>x.label)).size,30,'thirty different tricks');
+ const chip=read('components/party/PartyChip.tsx')+read('components/Icon.tsx');for(const sc of R.RIDE_SCRIPTS)assert(new RegExp(`['\\s{,]'?${sc.icon.replace(/-/g,'\\-')}'?\\s*:`).test(chip),'glyph for '+sc.icon);
 });
-t('ride tricks: a few seconds, in place (no speed asked), friends only get existing wire values (never Wave or a ball emote)',()=>{
+t('ride tricks: a few seconds, in place (no speed asked), friends get the standard wire value of the meaning (0..9, one per vehicle)',()=>{
  for(const sc of R.RIDE_SCRIPTS){
   assert(sc.seconds>=2.5&&sc.seconds<=4,sc.label+' lasts a few seconds');assert(!('move' in sc)&&!('maxMag' in sc),sc.label+' never drives the vehicle');
-  assert([1,2,4,5,7,8,9].includes(sc.wire),sc.label+' wire '+sc.wire);assert(sc.emote>=60&&R.isRideEmote(sc.emote));assert.equal(sc.arm,sc.emote);
+  assert(sc.wire>=0&&sc.wire<=9,sc.label+' wire '+sc.wire);assert(sc.emote>=60&&R.isRideEmote(sc.emote));assert.equal(sc.arm,sc.emote);
  }
- for(const ride of ['moped','scooter','bike'])assert.equal(new Set(R.rideScriptsFor(ride).map(s=>s.wire)).size,5,ride+': a different wire value per trick');
- assert(!R.isRideEmote(18)&&!R.isRideEmote(10)&&R.isRideEmote(60)&&R.isRideEmote(74)&&!R.isRideEmote(75));
+ for(const ride of ['moped','scooter','bike'])assert.equal(new Set(R.rideScriptsFor(ride).map(s=>s.wire)).size,10,ride+': a different wire value per trick');
+ assert(!R.isRideEmote(18)&&!R.isRideEmote(10)&&R.isRideEmote(60)&&R.isRideEmote(89)&&!R.isRideEmote(90));
 });
 t('ride tricks: every cancel rule ends it',()=>{
  const base={age:1,seconds:4,realInput:false,rideNow:'moped',rideWas:'moped',blockedAhead:false,trafficNear:false,water:false,crashed:false};

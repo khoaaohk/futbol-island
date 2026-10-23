@@ -283,9 +283,9 @@ Guarded by `tests/calm-hud.cjs` (lane priority / hold / bounded wait, wiring, st
 - **Ride emotes v2: in-place vehicle tricks** (owner, 22 Oct 2026: "go back and fix the emotes for the scooter, bikes, and moped. don't have them
   ride away. it's impacting the zoom and going out of frame. create emotes using the different bike, scooter, and moped types so they are all
   different and unique"; replaces the first version's travelling scripts: Cruise by, Figure eight, Kick & glide, Lean & weave...). `EmoteControl`
-  gets the ride (`rideMode`); on a scooter, bike or moped the wheel (`wheelEmotesFor`) shows **Wave + the five tricks of THAT vehicle** (foot-only
+  gets the ride (`rideMode`); on a scooter, bike or moped the wheel (`wheelEmotesFor`) shows **the TEN tricks of THAT vehicle** (Oct 23 2026: one per standard meaning, standard order; docs/emotes-ten-per-context.md; the five below + Wave, Pass it, Juggle, Well played, Dance / Laugh / Cheer / Thanks versions; foot-only
   emotes hidden; the button rule is unchanged: someone in front within the 75 degree cone, Town `emoteReachTick`). Data, pose math and rules in
-  `lib/town/rideEmotes.ts` (local ids 60-74):
+  `lib/town/rideEmotes.ts` (local ids 60-89):
   - MOPED (an engine): Rev it up (three throttle blips, shudder, exhaust puffs, a wave), Burnout donut (one turn round the front wheel, rear wheel
     spinning, smoke, the left foot dabbed down), Wheelie pop (pop, bounce, drop, a second small pop, fist up), Kickstand salute (leans onto the
     stand, stands up, salutes, nods), Beep beep (two horn honks, suspension bounce, a fist shake).

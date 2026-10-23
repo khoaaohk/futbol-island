@@ -41,7 +41,7 @@ export default function EmoteControl({ ride = 'walk' }: { ride?: string }) {
       <button type="button" className="touch-emote" data-emote-btn data-emote-ctx={state.ctx} aria-label="Emotes" title="Emotes" aria-hidden={hidden || undefined} tabIndex={hidden ? -1 : undefined} data-hidden={hidden ? '' : undefined} aria-expanded={open} aria-haspopup="true" onClick={() => { if (!hidden) setOpen((o) => !o); }}>
         <Glyph name="hand" size={32} />
       </button>
-      {shown && <EmoteWheel ride={ride} ctx={state.ctx} npcKind={view.npcKind} askBlocked={!!view.askBlocked} onPick={(e) => { picked.current = true; emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
+      {shown && <EmoteWheel ride={ride} ctx={state.ctx} npcKind={view.npcKind} askBlocked={!!view.askBlocked} friends={view} onPick={(e) => { picked.current = true; emoteBus.fire(e); }} onClose={() => setOpen(false)} />}
     </span>
   );
 }

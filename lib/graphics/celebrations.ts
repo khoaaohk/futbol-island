@@ -64,5 +64,8 @@ export function applyRideEmote(root:T.Object3D,emote:number,age:number,w:number)
   if(emote===0){sx=-.3;sz=2.62+.2*wave;el=-.2-.1*wave;}
   else if(emote===2){sx=-2.85;sz=.3+.1*wave;el=-.2;}
   else if(emote===1){sx=-2.85-.15*Math.sin(age*8);sz=.42;el=-.25-.3*Math.max(0,Math.sin(age*8));}
+  else if(emote===3){sx=-1.55;sz=1.3;el=-1.95;}/* a salute */
+  else if(emote===4){const s=Math.sin(age*4.5);sx=-1.25-.75*s;sz=.35+.2*s;el=-.35-.25*Math.max(0,-s);}/* a toss / scoop toward the friend (fly star pass, swim splash pass) */
+  else if(emote===6){sx=-.75;sz=-.25;el=-2.25;}/* a hand on the heart: thanks */
   const s=j.rs;s.rotation.x+=(sx-s.rotation.x)*k;s.rotation.y*=1-k;s.rotation.z+=(sz-s.rotation.z)*k;j.re.rotation.x+=(el-j.re.rotation.x)*k;
 }

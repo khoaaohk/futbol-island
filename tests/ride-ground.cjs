@@ -11,7 +11,7 @@ t('meshes: no tyre goes more than 2 cm under the ground (idle, every emote frame
  const rows=measure(),worst={};
  for(const r of rows){assert(r.y>=-MAX_SINK,`${r.mode} ${r.variant} ${r.what} frame ${r.frame}: tyre ${(r.y*100).toFixed(1)} cm into the ground`);if(!worst[r.mode]||r.y<worst[r.mode].y)worst[r.mode]=r;}
  for(const m of ['scooter','bike','moped'])assert(rows.some(r=>r.mode===m&&r.what==='idle'),m);
- assert(rows.filter(r=>r.what.startsWith('emote')).length>15*4*100,'every emote frame measured');
+ assert(rows.filter(r=>r.what.startsWith('emote')).length>30*4*100,'every emote frame measured');
  for(const r of rows.filter(r=>r.what==='idle'))assert(Math.abs(r.y)<.005,`${r.mode} ${r.variant} rests on the ground (${r.y.toFixed(3)})`);
  console.log('  worst tyre:',Object.values(worst).map(r=>`${r.mode} ${(r.y*100).toFixed(2)} cm`).join(', '));
 });
@@ -43,4 +43,4 @@ t('wiring: emotes, tricks, friends and the landing squash keep the tyres up; no 
  assert(/TorusGeometry\(\.255,\.065,6,16\),rubber,0,\.32,z\)/.test(veh),'mountain tyre outer radius = the wheel radius');
  const body=ground.replace(/^\s*\/\/.*$/gm,'').replace(/export const RIDE_WHEELS[\s\S]*?\};/,'');assert(!/new |\[\s*[-\d.]/.test(body),'rideGround.ts allocates nothing per call');
 });
-console.log(`RIDE_GROUND_PASS: ${n} checks (tyres within ${MAX_SINK*100} cm of the ground for idle, all 15 emotes and the tricks, every variant)`);
+console.log(`RIDE_GROUND_PASS: ${n} checks (tyres within ${MAX_SINK*100} cm of the ground for idle, all 30 emotes and the tricks, every variant)`);

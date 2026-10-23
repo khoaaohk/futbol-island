@@ -161,7 +161,7 @@ t('friends: remoteAvatars plays the moving overlay on the friend walk cycle (the
  assert(/if\(e\.emote>=0&&e\.mv>=0&&!reduced\)applyMoveEmote\(rig\.root,e\.mv,e\.mvV,e\.emoteAge,moveWeight\(e\.emoteAge,e\.mvDur\)\)/.test(ra),'layered after rig.update, never under reduced motion');
  assert(/e\.hf<0&&!fs0&&e\.mv<0\)\{const b=emoteBody/.test(ra),'no standing hop / called arm on top');
  // Oct 23: the moving Call for it / Juggle are mimes: a friend's walking avatar never starts the ball routine (it would stop their walk)
- assert(/if\(!ms&&\(em===Emote\.PassBall\|\|em===Emote\.JuggleWithMe\)\)\{/.test(ra),'no ball routine picked for a moving emote');
+ assert(/if\(!ms&&!fl&&\(em===Emote\.PassBall\|\|em===Emote\.JuggleWithMe\)\)\{/.test(ra),'no ball routine picked for a moving emote');
  assert(/e\.hf<0&&!fs0&&e\.mv<0&&e\.ball&&/.test(ra)&&/reduced\|\|e\.mv>=0\|\|!\(e\.emote===Emote\.PassBall/.test(ra),'no ball body while moving, old ball motion cleared');
 });
 t('no analytics imports from the emote / party graphics; ids and labels for the new emotes',()=>{
