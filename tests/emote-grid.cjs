@@ -52,8 +52,8 @@ t('busy rules: riding, driving, sleeping, hidden, stunned, freestyle',()=>{
  for(const bad of [{travel:'scooter'},{travel:'skateboard'},{pose:'lie'},{visible:false},{stunned:true},{freestyle:true}])assert.equal(E.npcBusy({...base,...bad}),true,JSON.stringify(bad));
 });
 t('ten presets, protocol numbers, timing',()=>{
- assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Pass it','Laugh','Dance','Thanks','Juggle with me','Show off']));
- assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.emote)),JSON.stringify([0,2,1,5,6,7,8,9,3,4]));
+ assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.label)),JSON.stringify(['Wave','High five','Cheer','Well played','Pass it','Juggle with me','Laugh','Dance','Thanks','Show off']));
+ assert.equal(JSON.stringify(E.LOCAL_EMOTES.map(x=>x.emote)),JSON.stringify([0,2,1,5,6,3,7,8,9,4]));
  assert.equal(E.EMOTE_SECONDS,4);assert.equal(E.NPC_EMOTE_SECONDS,4);assert.equal(E.emoteSeconds(E.EMOTE.PassBall),E.PASS_SECONDS);assert(E.PASS_SECONDS>=6.5&&E.PASS_SECONDS<=8);assert.equal(E.emoteSeconds(E.EMOTE.Dance),4);assert.equal(E.NPC_EMOTE_RANGE,9);
  assert(E.emoteCalled(E.EMOTE.Wave,.1,4)>0&&E.emoteCalled(E.EMOTE.Wave,0,4)===0&&E.emoteCalled(E.EMOTE.Cheer,.5,4)===0&&E.emoteCalled(E.EMOTE.PassBall,.5,4)===0);
  assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,1,4)-.5)<1e-9&&E.emoteCelebration(E.EMOTE.Wave,.5,4)===-1);assert(Math.abs(E.emoteCelebration(E.EMOTE.Cheer,3,4)-.5)<1e-9,'two cheers back to back fill 4 s');assert.equal(E.emoteCelebration(E.EMOTE.Dance,1,4),-1,'Dance has its own moves');

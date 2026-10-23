@@ -16,10 +16,10 @@ export const LOCAL_EMOTES: {emote: LocalEmote; icon: string; label: string}[] = 
   {emote: EMOTE.Cheer, icon: 'star', label: 'Cheer'},
   {emote: EMOTE.WellPlayed, icon: 'heart', label: 'Well played'},
   {emote: EMOTE.PassBall, icon: 'pass', label: 'Pass it'},
+  {emote: EMOTE.JuggleWithMe, icon: 'juggle-air', label: 'Juggle with me'},
   {emote: EMOTE.Laugh, icon: 'smile', label: 'Laugh'},
   {emote: EMOTE.Dance, icon: 'music', label: 'Dance'},
   {emote: EMOTE.Thanks, icon: 'thanks', label: 'Thanks'},
-  {emote: EMOTE.JuggleWithMe, icon: 'juggle-air', label: 'Juggle with me'},
   {emote: EMOTE.ShowOff, icon: 'show-off', label: 'Show off'},
 ];
 /** What the wheel shows: on foot the ten presets; on a scooter, bike or moped (user, Oct 22 2026) Wave, Cheer and the three scripted rides that fit that vehicle (foot-only emotes are hidden). */
