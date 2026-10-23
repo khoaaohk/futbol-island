@@ -74,7 +74,7 @@ t('Emote button is rendered inside the action cluster, after the action buttons,
 t('always present: not behind multiplayerEnabled() or a live party; sending is gated on a live party',()=>{
  assert(!/multiplayerEnabled|partyStore|usePartyState/.test(ctl),'the button needs no flag');
  assert(/emoteBus\.set\(pickIn=>\{[\s\S]*?multiplayerEnabled\(\)\)\{const conn=partyConnection\(\);if\(conn\.status==='live'\)conn\.sendEmote\(pick as/.test(town),'friends get it only while live');
- assert(/emoteBubbles\.show\(0,cs\?cs\.emote:ns\?ns\.emote:rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs\?rs\.emote:pick;/.test(town),'your own pose + bubble are immediate');
+ assert(/emoteBubbles\.show\(0,cs\?cs\.emote:rs\?rs\.emote:pick,emoteFx\.dur\)/.test(town)&&/emoteFx\.kind=rs\?rs\.emote:pick;/.test(town),'your own pose + bubble are immediate');
  assert(/const npcPick=rs\?rs\.npc:pick;\/\*[^*]*\*\/emoteNpc=islandNpcs\.react\(id,npcPick,reduced,emoteFx\.v,rs\?rideStop:Math\.hypot/.test(town)&&/pickEmoteNpc\(emoteCands,\{x:me\.x,y:me\.y,z:me\.z\},now,undefined,emoteFacing\)/.test(town),'the best free townsperson (nearest, in front) reacts');
  assert(/emoteBubbles\.show\(1,pick,/.test(town),'a bubble over the townsperson');
 });

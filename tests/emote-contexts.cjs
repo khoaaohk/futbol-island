@@ -205,30 +205,42 @@ t('wiring: Town stands a seated townsperson up first, fires the emote when she i
 const NS=load('lib/town/npcEmoteSets.ts');
 t('NPC classes: skateboard / scooter / freestyle (juggler) / field players / lying; walkers and runners stay ordinary',()=>{
  assert.equal(NS.npcEmoteClass({travel:'skateboard'}),'skater');assert.equal(NS.npcEmoteClass({travel:'scooter'}),'scooter');assert.equal(NS.npcEmoteClass({freestyle:0}),'juggler');assert.equal(NS.npcEmoteClass({freestyle:3}),'juggler');
- assert.equal(NS.npcEmoteClass({travel:'run'}),'walker');assert.equal(NS.npcEmoteClass({}),'walker');assert.equal(NS.npcEmoteClass({pose:'lie'}),'lie');assert.equal(NS.npcEmoteClass({},true),'field');
+ assert.equal(NS.npcEmoteClass({travel:'run'}),'walker');assert.equal(NS.npcEmoteClass({}),'walker');assert.equal(NS.npcEmoteClass({pose:'lie'}),'lie');assert.equal(NS.npcEmoteClass({pose:'bench'}),'seated');assert.equal(NS.npcEmoteClass({pose:'sit'}),'seated');assert.equal(NS.npcEmoteClass({},true),'field');
  // the real casts: two skaters, two scooters, four court freestylers
  const npcs=read('lib/town/npcDialogues.ts'),cf=read('lib/town/courtFreestylers.ts');
  assert.equal((npcs.match(/travel:'skateboard'/g)||[]).length,2);assert.equal((npcs.match(/travel:'scooter'/g)||[]).length,2);assert.equal((cf.match(/freestyle:\d/g)||[]).length,4);
 });
-t('NPC sets: skater 3, scooter 3, juggler 4 emotes with distinct labels, existing wire values, short lengths; the wheel follows the class and the ride',()=>{
- assert.deepEqual(['skater','scooter','juggler'].map(k=>NS.npcWheelFor(k).length),[3,3,4]);
- const labels=NS.NPC_SCRIPTS.map(s=>s.label);assert.equal(new Set(labels).size,10);
- for(const l of ['Skate high five','Trick exchange','Wave while gliding','Ride-by wave','Bell ring','Side-by-side glide','Count my keep-ups','Nice header','Catch & bow','Nice touch'])assert(labels.includes(l),l);
- for(const s of NS.NPC_SCRIPTS){assert(s.wire>=0&&s.wire<=9&&s.seconds>=2&&s.seconds<=4&&s.slow>0&&s.slow<=1,s.label);assert(NS.isNpcSetEmote(s.emote));}
- assert.equal(NS.npcSetFor('skater','walk'),'skater');assert.equal(NS.npcSetFor('skater','bike'),'','a rider keeps the ride wheel');assert.equal(NS.npcSetFor('scooter','scooter'),'scooter','both on scooters: the pair set');assert.equal(NS.npcSetFor('scooter','moped'),'');
- assert.equal(NS.npcSetFor('juggler','walk'),'juggler');assert.equal(NS.npcSetFor('walker','walk'),'');assert.equal(NS.npcSetFor('field','walk'),'','field players use the ordinary wheel and refuse');
+t('NPC answers (owner, Oct 23 2026): skater, scooter rider and juggler each answer ALL TEN standard emotes, short, existing wire values; the wheel is the standard one',()=>{
+ for(const k of ['skater','scooter','juggler']){const a=NS.npcAnswersFor(k);assert.equal(a.length,10,k);assert.equal(a.map(s=>s.wire).join(),'0,1,2,3,4,5,6,7,8,9',k+' answers every wire value once');
+  for(const s of a){assert(s.seconds>=2.5&&s.seconds<=4.2&&s.slow>0&&s.slow<=1,s.label);assert.equal(NS.npcScriptFor(k,s.wire),s);assert(s.line.split(/\s+/).length<=6,'short line: '+s.line);}
+  assert.equal(new Set(a.map(s=>s.label)).size,10,k+' distinct labels');}
+ assert.equal(NS.NPC_SCRIPTS.length,30);
+ for(const s of NS.NPC_SCRIPTS.filter(x=>x.kind==='juggler'))assert.equal(s.slow,1,'a juggler never slows: it keeps juggling');
+ assert.equal(NS.npcSetFor('skater','walk'),'skater');assert.equal(NS.npcSetFor('skater','bike'),'','a rider keeps the ride wheel');assert.equal(NS.npcSetFor('scooter','scooter'),'scooter','both on scooters: the rider answers the trick');assert.equal(NS.npcSetFor('scooter','moped'),'');
+ assert.equal(NS.npcSetFor('juggler','walk'),'juggler');assert.equal(NS.npcSetFor('walker','walk'),'');assert.equal(NS.npcSetFor('seated','walk'),'');assert.equal(NS.npcSetFor('field','walk'),'','field players use the ordinary wheel and refuse');
+ const ew=read('components/party/EmoteWheel.tsx');assert(!/npcWheelFor/.test(ew)&&/: wheelEmotesFor\(ride\)/.test(ew),'the wheel never swaps in a short NPC set');
+ assert.equal(NS.setNpcWins(3,-1,-1),true);assert.equal(NS.setNpcWins(3,2,-1),false,'a nearer ordinary townsperson answers');assert.equal(NS.setNpcWins(3,4,2),false,'a nearer field player refuses');assert.equal(NS.setNpcWins(-1,4,5),false);
 });
-t('skater / scooter overlays: the townsperson only slows then resumes its own speed, raises a hand / spins / rings, never moves itself',()=>{
- const o={slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0},S=e=>NS.npcScriptFor(e);
- for(const s of NS.NPC_SCRIPTS){NS.npcIxAt(s,0,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' starts at its own speed');NS.npcIxAt(s,s.seconds,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' resumes its speed');
-  let min=1;for(let a=0;a<=s.seconds;a+=.02){NS.npcIxAt(s,a,o);min=Math.min(min,o.slow);assert(o.slow>0);}assert(Math.abs(min-s.slow)<.02,s.label+' dips to '+s.slow);}
- NS.npcIxAt(S(NS.NPC_SET.SkateFive),1.2,o);assert.equal(o.arm,2);assert(o.armW>.9,'a high five: the hand is up as it rolls past');
- NS.npcIxAt(S(NS.NPC_SET.TrickSwap),2.1,o);assert(o.spin>.95,'a full small spin');NS.npcIxAt(S(NS.NPC_SET.TrickSwap),.2,o);assert.equal(o.spin,0);
- NS.npcIxAt(S(NS.NPC_SET.BellRing),1,o);assert.equal(o.arm,1);NS.npcIxAt(S(NS.NPC_SET.GlideWave),1,o);assert.equal(o.arm,0);
- let sawBow=0;for(let a=0;a<=3;a+=.05){NS.npcIxAt(S(NS.NPC_SET.CatchBow),a,o);sawBow=Math.max(sawBow,o.bow);}assert(sawBow>.9,'a bow');
- let nod=0;for(let a=0;a<=2.4;a+=.02){NS.npcIxAt(S(NS.NPC_SET.NodHeader),a,o);nod=Math.max(nod,o.nod);}assert(nod>.5,'a header nod');
- // juggler overlays never touch the ball: the module has no ball / position outputs, and the NPC code only adds arm / body offsets
- assert.deepEqual(Object.keys(o).sort(),['arm','armW','bow','nod','slow','spin'].sort());
+t('NPC overlays: the townsperson only slows then resumes its own speed, raises a hand / spins / hops / rings, never moves itself',()=>{
+ const o={slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0,hop:0,lean:0,yaw:0},S=(k,w)=>NS.npcScriptFor(k,w);
+ for(const s of NS.NPC_SCRIPTS){NS.npcIxAt(s,0,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' starts at its own speed');NS.npcIxAt(s,s.seconds,o);assert(Math.abs(o.slow-1)<1e-9,s.label+' resumes its speed');assert(Math.abs(o.hop)<1e-9&&Math.abs(o.lean)<1e-9,s.label+' ends level');
+  let min=1,hop=0;for(let a=0;a<=s.seconds;a+=.02){NS.npcIxAt(s,a,o);min=Math.min(min,o.slow);hop=Math.max(hop,o.hop);assert(o.slow>0&&o.hop<=.3&&Math.abs(o.lean)<=.25&&Math.abs(o.yaw)<=.55);}assert(Math.abs(min-s.slow)<.02,s.label+' dips to '+s.slow);if(s.hops)assert(hop>.15,s.label+' hops');}
+ NS.npcIxAt(S('skater',2),1.2,o);assert.equal(o.arm,2);assert(o.armW>.9,'a high five: the hand is up as it rolls past');
+ NS.npcIxAt(S('skater',4),2.1,o);assert(o.spin>.95,'show off: a kick-flip hop and a full spin');NS.npcIxAt(S('skater',4),.2,o);assert.equal(o.spin,0);
+ assert(S('scooter',1).bell&&S('scooter',6).skid&&S('scooter',4).skid&&S('scooter',4).hops&&S('scooter',4).arm===0,'scooter: bell, skid, skid + hop + wave');
+ NS.npcIxAt(S('scooter',1),1,o);assert.equal(o.arm,1);NS.npcIxAt(S('skater',0),1,o);assert.equal(o.arm,0);
+ let yaw=0;for(let a=0;a<=3;a+=.05){NS.npcIxAt(S('scooter',6),a,o);yaw=Math.max(yaw,o.yaw);}assert(yaw>.4,'a skid');
+ let sawBow=0;for(let a=0;a<=3;a+=.05){NS.npcIxAt(S('juggler',9),a,o);sawBow=Math.max(sawBow,o.bow);}assert(sawBow>.9,'a bow');
+ let nod=0;for(let a=0;a<=3;a+=.02){NS.npcIxAt(S('juggler',0),a,o);nod=Math.max(nod,o.nod);}assert(nod>.5,'a nod while juggling');
+ assert.deepEqual(Object.keys(o).sort(),['arm','armW','bow','hop','lean','nod','slow','spin','yaw'].sort(),'pose channels only: no position, no ball');
+});
+t('ball townsfolk (jugglers): Pass it / Juggle with me / Show off / Well played / Dance become a two-ball duet; Wave / Cheer / High five / Laugh / Thanks are reactions',()=>{
+ const J=w=>NS.npcScriptFor('juggler',w),D=read('lib/town/emoteDuet.ts');
+ for(const w of [3,4,5,6,8])assert(J(w).duet&&(J(w).duet.emote===3||J(w).duet.emote===6),'duet: '+J(w).label);
+ for(const w of [0,1,2,7,9])assert(!J(w).duet,'reaction only: '+J(w).label);
+ assert.equal(J(6).duet.emote,6);assert.equal(J(3).duet.emote,3);assert.equal(NS.npcHasBall('juggler'),true);assert.equal(NS.npcHasBall('skater'),false);
+ for(const k of ['skater','scooter'])for(const s of NS.npcAnswersFor(k))assert(!s.duet,k+' has no ball');
+ assert(/DUET_PASS_ROUTINES/.test(D)&&/DUET_JUGGLE_ROUTINES/.test(D),'the party duet routines are reused');
 });
 t('juggler keep-up counter: "7... 8... 9!" counting up one per beat and ending on "!"',()=>{
  const lines=[];for(let a=0;a<4;a+=.05){const l=NS.keepUpLine(a,4,7);if(lines[lines.length-1]!==l)lines.push(l);}
@@ -250,7 +262,7 @@ t('busy field players: ten distinct short lines, a shuffled bag that never repea
 });
 t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays without touching routes or balls, the field players are the rally, the wall practice and the live matches',()=>{
  const town=read('components/Town.tsx'),npcs=read('lib/graphics/islandNpcs.ts'),vb=read('lib/graphics/volleyballGame.ts');
- assert(/islandNpcs\.interact\(id,ns\.emote,reduced\)/.test(town)&&/npcEmoteClass\(e\.definition\)!==ns\.kind/.test(town),'an NPC-set pick targets the nearest townsperson of that class');
+ assert(/islandNpcs\.interact\(id,ns,reduced\)/.test(town)&&/ns=npcScriptFor\(sp\.kind,wireIn\)/.test(town)&&/setNpcWins\(bd,/.test(town),'the nearest skater / scooter / juggler in front answers the standard pick with its own reaction');
  assert(/pickFieldPlayer\(refuse\.list/.test(town)&&/fieldWins\(fp\.d/.test(town)&&/emoteBubbles\.showText\(refuse\.bag\.next\(\)/.test(town),'one refusal bubble from the shuffled bag');
  assert(/volleyballGame\.entries/.test(town)&&/entries/.test(vb),'the rally players');
  {const scan=(town.match(/const fieldScan=\(\)=>\{[\s\S]*?return refuse\.list;\};/)||[''])[0];
@@ -259,9 +271,9 @@ t('wiring: Town routes the sets / refusals, islandNpcs applies the overlays with
   assert((town.match(/fieldScan\(\)/g)||[]).length>=3,'the button reach and both press paths use the same scan');
   assert(/for\(const c of fieldScan\(\)\)\{[^}]*npcNear=true/.test(town),'a field player nearby shows the button');}
  assert(/entry\.routine\.speed=entry\.baseSpeed\*entry\.ixOut\.slow/.test(npcs)&&/entry\.routine\.speed=entry\.baseSpeed;/.test(npcs),'speed dips and returns; the route is untouched');
- assert(!/freestyle\.(ball|motion)\s*=/.test(npcs),'the freestyle ball logic is not written to');
+ assert(!/freestyle\.(ball|motion)\s*=/.test(npcs),'the freestyle ball logic is not replaced');assert(/!entry\.duetBall,reduced,freestyleClock\)/.test(npcs)&&/entry\.freestyle\.ball\.position\.set\(/.test(npcs),'only during a duet: the routine rests and the duet places its own ball');
  assert(/emoteReachTick\(performance\.now\(\)\/1000\)/.test(town)&&/nowS-reach\.at<\.25/.test(town),'the button flag is computed at ~4 Hz');
- assert(/rideScriptFor\(RIDE_EMOTE\.ScooterOneFoot\)/.test(town)&&/ns\.emote===NPC_SET\.SideGlide&&rideRef\.current==='scooter'/.test(town),'both on scooters: the player answers with the in-place flamingo wave (ride emotes v2: nothing rides away)');
+ assert(/wireIn=pickIn>=0&&pickIn<=9\?pickIn:rsIn\?rsIn\.wire:-1/.test(town),'on a scooter the rider answers the ride trick by its wire value (ride emotes v2: nothing rides away)');
 });
 console.log('emote-contexts: '+n+' tests passed');
 

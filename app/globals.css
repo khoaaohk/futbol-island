@@ -877,12 +877,16 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 @media(prefers-reduced-motion:reduce){.town-app .touch-emote,.town-app .touch-emote[data-hidden]{transition:none}}
 @keyframes emoteIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .emote-wheel{align-items:center;gap:4px}
-.emote-wheel-strip{display:flex;gap:8px;width:calc(5 * 52px + 4 * 8px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding:0 0 4px;margin-bottom:-4px}
+.emote-wheel-strip{display:flex;gap:0;width:calc(5 * 52px + 4 * 8px);overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain;padding:0 0 4px;margin-bottom:-4px}
 .emote-wheel-strip::-webkit-scrollbar{display:none}
-.emote-wheel-strip .emote-wheel-btn{flex:0 0 52px;scroll-snap-align:start}
+/* owner, Oct 23 2026: five emotes per page, the strip snaps page by page (lib/town/emoteBar.ts) */
+.emote-wheel-page{flex:0 0 100%;display:flex;align-items:center;gap:8px;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.emote-wheel-strip .emote-wheel-btn{flex:0 0 52px}
 .emote-wheel-arrow{flex:0 0 auto;display:grid;place-items:center;width:28px;height:44px;padding:0 0 3px;border:0;border-radius:14px;background:var(--btn-rim);color:var(--btn-ink);font:700 24px/1 var(--btn-font);cursor:pointer;touch-action:manipulation}
 .emote-wheel-arrow:active{filter:brightness(.94)}
-@media(max-width:600px),(pointer:coarse){.emote-wheel{gap:2px;padding:6px}.emote-wheel-strip{gap:6px;width:calc(5 * 44px + 4 * 6px)}.emote-wheel-strip .emote-wheel-btn{flex-basis:44px;width:44px;height:44px}.emote-wheel-arrow{width:24px}}
+.emote-wheel-arrow[data-off]{opacity:.35;filter:grayscale(1);cursor:default;pointer-events:none}/* at the start / the end: greyed, aria-disabled, no tap */
+@media(max-width:600px),(pointer:coarse){.emote-wheel{gap:2px;padding:6px}.emote-wheel-strip{gap:0;width:calc(5 * 44px + 4 * 6px)}.emote-wheel-page{gap:6px}.emote-wheel-strip .emote-wheel-btn{flex-basis:44px;width:44px;height:44px}.emote-wheel-arrow{width:24px}}
 /* Phones (user, Oct 22 2026: "on mobile make the emotes wider to fill the screen"): the wheel spans the screen width and the emote buttons spread across it. */
-@media(max-width:600px),(pointer:coarse){.town-app .emote-wheel{width:min(calc(100vw - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)),620px);box-sizing:border-box}.town-app .emote-wheel-strip{flex:1 1 auto;width:auto;min-width:0;justify-content:space-between}.town-app .emote-wheel-strip .emote-wheel-btn{flex:0 0 auto;width:min(52px,calc((100vw - 140px) / 7));height:min(52px,calc((100vw - 140px) / 7));min-width:44px;min-height:44px}}
+@media(max-width:600px),(pointer:coarse){.town-app .emote-wheel{width:min(calc(100vw - 32px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)),620px);box-sizing:border-box}.town-app .emote-wheel-strip{flex:1 1 auto;width:auto;min-width:0}.town-app .emote-wheel-page{gap:0}.town-app .emote-wheel-strip .emote-wheel-btn{--eb:max(44px,min(52px,calc((100vw - 150px) / 5)));flex:0 0 var(--eb);width:var(--eb);height:var(--eb);min-width:44px;min-height:44px;margin-inline:calc((20% - var(--eb)) / 2)}}
+/* Phones (owner, Oct 23 2026): exactly FIVE per page, each centred in a fifth of the strip (percent margins = the page width); swipe or the arrows for the rest. */
 @media(prefers-reduced-motion:reduce){.emote-wheel{animation:none}.emote-wheel-btn{transition:none}}
