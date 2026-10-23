@@ -80,19 +80,21 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
 
 /** The Konbini's Emote button (owner, Oct 22 2026): a full-size round island action button (`.touch-emote`, sized by the parent's
  *  `--action-size`) in the bottom-right action cluster instead of the header chip (RoomPartyChip `emoteDock`). Shown only while the
- *  party is live; the wheel opens upward from the cluster (styles: KonbiniRoom.module.css `.emoteWheel`). */
-export function RoomEmoteDock({ party, hidden = false, wheelClass }: { party: RoomPartyHandle; hidden?: boolean; wheelClass?: string }) {
+ *  party is live AND `near` (something to emote at: a friend within 8 m, never the cashier; lib/konbini/emoteRule.ts). When not near it
+ *  fades out (0.18 s, instant under reduced motion) but keeps its grid cell, so keep-up / kick never move; the wheel closes with it. */
+export function RoomEmoteDock({ party, hidden = false, near = true, wheelClass }: { party: RoomPartyHandle; hidden?: boolean; near?: boolean; wheelClass?: string }) {
   const state = usePartyState();
   const [open, setOpen] = useState(false);
-  useEffect(() => { if (hidden) setOpen(false); }, [hidden]);
+  const off = hidden || !near;
+  useEffect(() => { if (off) setOpen(false); }, [off]);
   const live = state.status === 'live' || state.status === 'reconnecting';
   if (!live || hidden) return null;
   return (
     <>
-      <button type="button" className="touch-emote" data-room-emote data-room-emote-dock aria-label="Emotes" title="Emotes" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((o) => !o)}>
+      <button type="button" className="touch-emote" data-room-emote data-room-emote-dock data-emote-near={near ? '1' : '0'} aria-label="Emotes" title="Emotes" aria-expanded={open} aria-haspopup="true" aria-hidden={!near || undefined} tabIndex={near ? undefined : -1} onClick={() => setOpen((o) => !o)}>
         <Glyph name="smile" size={28} />
       </button>
-      {open && <div className={wheelClass} data-room-emote-wheel><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen(false)} /></div>}
+      {open && near && <div className={wheelClass} data-room-emote-wheel><EmoteWheel onPick={(e) => party.emote(e)} onClose={() => setOpen(false)} /></div>}
     </>
   );
 }

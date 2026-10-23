@@ -12,6 +12,8 @@ import {KONBINI_VARIANTS,type Fixture,type KonbiniVariant} from './konbiniVarian
 import {paintKonbiniAtlas,cellRect,DECOR,magazineCell,SIGN_RECT,CAY_SIGN_RECT,POSTER_RECTS,SURFBOARD_RECT,ATLAS_W,ATLAS_H} from './konbiniAtlas';
 import {shopMenu,type KonbiniShop} from './food';
 import {CASHIERS,MAGAZINES,type ShelfId} from './konbiniContent';
+import {emoteCandidate,EMOTE_CHECK_HZ,type EmoteSubject} from './emoteRule';
+import {batterySaverOn} from '../graphics/heatTier';
 import {createKonbiniSound} from './konbiniSound';
 import {createProductCache,hasProduct,stockJitter,PRODUCT_NOMINAL,STOCK,fridgeDoors,riceFacings,gondolaFacings} from './productMeshes';
 import {findFloorPath,createStuckWatch} from './konbiniPath';
@@ -51,7 +53,7 @@ const VERB:Record<ShelfId,string>={rice:'Look',drinks:'Look',snacks:'Look',hot:'
 const LABEL:Record<ShelfId,string>={rice:'Rice case',drinks:'Drinks fridge',snacks:'Snack shelf',hot:'Hot counter',gear:'Toys & gear',beach:'Beach corner',magazines:'Magazines',counter:'Cashier',atm:'ATM & copier'};
 
 export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,callbacks:{
- onNear?:(poi:KonbiniPoi|null)=>void;onPrompt?:(x:number,y:number,visible:boolean)=>void;onArrive?:(poi:KonbiniPoi)=>void;onExit?:()=>void;
+ onNear?:(poi:KonbiniPoi|null)=>void;/** ~4 Hz, on change only: something to emote at is near (a party friend within 8 m, not busy; never the cashier). */onEmoteNear?:(near:boolean)=>void;onPrompt?:(x:number,y:number,visible:boolean)=>void;onArrive?:(poi:KonbiniPoi)=>void;onExit?:()=>void;
  onZoom?:(view:KonbiniZoomView|null)=>void;onSlots?:(slots:KonbiniSlotView[])=>void;onFirstFrame?:()=>void;onZoomArrive?:(poi:ShelfId)=>void;onZoomStep?:()=>void;
  /** The ball actions (lib/konbini/konbiniBall.ts): strikes, shelf hits, keep-up touches, drops, the ball back at the feet. */
  onBall?:(e:BallEvent)=>void;}={}){
@@ -298,7 +300,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  let x=V.doorX,z=4.9,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
  let leaveStarted=0,firstFrameSent=false;
  // Party (rooms Phase 1): the friend layer, remote-only frames, the local emote (lazy bubble), friend frames counted for the heat checks.
- let friends:KonbiniFriendLayer|null=null,remoteOnly=false,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null;
+ const emoteFriend:EmoteSubject[]=[],emoteFriendPt:EmoteSubject={x:0,z:0};let emoteNear=false,emoteClock=0;let friends:KonbiniFriendLayer|null=null,remoteOnly=false,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null;
  const pushPt={x:0,z:0},localOut={x:0,y:0,z:0,facing:0,speed:0,eating:false,zoomed:false};
  const stuck=createStuckWatch(.5);
  let target:{x:number;z:number}|null=null,route:{x:number;z:number}[]=[],arrivePoi:KonbiniPoi|null=null,near:KonbiniPoi|null=null,promptVisible=false,eat:{age:number;sprite:boolean}|null=null;
@@ -403,7 +405,10 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   const hidePlayer=zoomIndex!==null&&(zoom===null||(zoom.to!==null?zoom.t>.35:zoom.t<.6));player.root.visible=playerShadow.visible=ball.visible=ballShadow.visible=!hidePlayer;
   // Friends in this room (zero cost without a party): drawn with the room's camera, hidden with you on the shelf zoom. One ring rule:
   // while the party draws your colour ring, the room's own foot disc hides.
-  const remoteKeep=friends?friends.update(dt,performance.now(),camera,zoomIndex!==null):false;if(friends?.meRing)playerShadow.visible=false;
+  const remoteKeep=friends?friends.update(dt,performance.now(),camera,zoomIndex!==null):false;
+  // Emote button rule (lib/konbini/emoteRule.ts): ~4 Hz, no allocation. The layer's nearestFriend skips busy (force-fielded) friends; the clerk is never listed.
+  emoteClock+=dt;if(emoteClock>=1/EMOTE_CHECK_HZ){emoteClock=0;const nf=friends?friends.nearestFriend(x,z,8):null;emoteFriend.length=0;if(nf){emoteFriendPt.x=nf.x;emoteFriendPt.z=nf.z;emoteFriend.push(emoteFriendPt);}
+   const nx=emoteCandidate(x,z,emoteFriend,null,{live:!!friends,batterySaver:batterySaverOn()});if(nx!==emoteNear){emoteNear=nx;callbacks.onEmoteNear?.(nx);}}if(friends?.meRing)playerShadow.visible=false;
   // A tapped product lifts toward the camera (a magazine keeps coming, then its lesson opens).
   if(highlight){highlight.age+=dt;const h=highlight,k=Math.min(1,h.age/(h.lift?.45:.22)),hop=h.lift||reduced?0:Math.max(0,Math.sin(Math.min(1,h.age/.3)*Math.PI))*.045,toCam=tmpPos.copy(camera.position).sub(h.slot.pos).normalize();
    const pr=h.slot.product;
@@ -476,7 +481,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   /** The three.js scene and camera the friend layer draws into. */
   threeScene:scene,camera,phone:mobile,reduced,
   /** Attach / detach the friend layer (null on Leave or unmount). */
-  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(!layer)remoteOnly=false;},
+  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(!layer){remoteOnly=false;if(emoteNear){emoteNear=false;callbacks.onEmoteNear?.(false);}}},
   wakeRemote,stationAt,
   /** The local player, room-local (one reused object): what the party sends. */
   localPose(){localOut.x=x;localOut.z=z;localOut.facing=yaw;localOut.speed=Math.hypot(vx,vz);localOut.eating=!!eat;localOut.zoomed=zoomIndex!==null;return localOut;},
@@ -511,7 +516,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   debugShotSpots(){const out:{fi:number;x:number;z:number;yaw:number}[]=[];for(const o of obstacles){if(o.fi<0||!bayProducts.get(o.fi)?.length)continue;const cx=(o.minX+o.maxX)/2,cz=(o.minZ+o.maxZ)/2;
    for(const [px,pz] of [[cx,o.maxZ+.9],[cx,o.minZ-.9],[o.maxX+.9,cz],[o.minX-.9,cz]] as const)if(!blocked(px,pz,.35)){out.push({fi:o.fi,x:px,z:pz,yaw:Math.atan2(cx-px,cz-pz)});break;}}return out;},
   debugPlace(px:number,pz:number,a:number){if(leaving)return;x=px;z=pz;yaw=a;vx=vz=0;target=null;route=[];arrivePoi=null;wake();},
-  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id),remoteOnly,remoteFrames,party:friends?{shown:friends.shown??0,meRing:friends.meRing,friends:friends.debugFriends?.()??[]}:null,emote:emote?.kind??-1};},
+  get state(){return {shop,x,z,yaw,ball:{x:ball.position.x,y:ball.position.y,z:ball.position.z,visible:ball.visible,moving:ballMoving||kb.moving,style:custom.ball},action:{mode:kb.state.mode,charge:kb.state.charge,streak:kb.state.streak,shots:kb.state.shots,hits:kb.state.hits,vx:kb.state.vx,vz:kb.state.vz,vy:kb.state.vy,held:shotHeldAt!==null,free:ballFree()},wobble:wobble?.fi??null,wobbles,zoom:zoomView(),zooming:!!zoom,slots:slots.length,highlight:highlight?.slot.key??null,near:near?.id??null,leaving,doorOpen,eating:!!eat,sleeping:frame===0,draws,frames,render:{calls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures},pixelRatio:renderer.getPixelRatio(),frameMs:frameMs(),pois:pois.map(p=>p.id),remoteOnly,remoteFrames,emoteNear,party:friends?{shown:friends.shown??0,meRing:friends.meRing,friends:friends.debugFriends?.()??[]}:null,emote:emote?.kind??-1};},
   dispose(){disposed=true;cancelAnimationFrame(frame);frame=0;friends=null;bubbles?.dispose();bubbles=null;observer.disconnect();window.removeEventListener('keydown',key);window.removeEventListener('keyup',key);window.removeEventListener('blur',clearInput);document.removeEventListener('visibilitychange',visibility);
    sound.dispose();pack?.dispose();player.dispose();cashier.dispose();ballLook.dispose();ballPatches.dispose();const geos=new Set<T.BufferGeometry>(),mats=new Set<T.Material>();scene.traverse(o=>{if(o instanceof T.Mesh){geos.add(o.geometry);(Array.isArray(o.material)?o.material:[o.material]).forEach(mm=>mats.add(mm));}});geos.forEach(g=>g.dispose());mats.forEach(mm=>mm.dispose());products.dispose();atlas.dispose();renderer.dispose();renderer.forceContextLoss();},
  };
