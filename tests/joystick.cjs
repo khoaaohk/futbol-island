@@ -33,8 +33,8 @@ assert.equal(F.clampAnchor(0, 0, { left: 0, top: 0, right: 100, bottom: 400 }, r
 
 // CSS: phone ring size, knob 45%, see-through knob (rest ≈ .45 with the faint resting ring, more while dragging), lighter base.
 const css = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8'), block = css.slice(css.indexOf('/* Movement stick (owner, Oct 23 2026)'));
-assert(block.includes('--stick-size:clamp(132px,calc(100vw - 206px),188px)'), 'portrait phone ring up to 188 px');
-assert(block.includes('--stick-size:min(188px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))'), 'landscape ring fits under the HUD row');
+assert(block.includes('--stick-size:clamp(140px,calc(100vw - 192px),204px)'), 'portrait phone ring up to 204 px');
+assert(block.includes('--stick-size:min(204px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))'), 'landscape ring fits under the HUD row');
 assert(block.includes('.touch-controls .joystick>span{width:45%;height:45%}'), 'knob is 45% of the ring');
 const op = (re) => +block.match(re)[1];
 const knob = op(/\.joystick>span\{opacity:([.\d]+)\}/), active = op(/\.joystick\[data-active=true\]>span\{opacity:([.\d]+)\}/), idle = op(/:not\(\[data-active=true\]\)\{opacity:([.\d]+)\}/);
