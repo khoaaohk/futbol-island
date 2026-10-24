@@ -97,10 +97,10 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
   jobsCss=fs.readFileSync(path.resolve(__dirname,'../components/IslandJobs.module.css'),'utf8');
  assert.match(town,/<div className="hud-stack" data-hud-stack ref=\{setHudStackEl\} hidden=\{stackCovered\} data-job-running=\{jobRunning\|\|undefined\}>/,'Town marks the column while a job runs');
  const land=css.slice(css.indexOf('/* Notes beside a docked job'));
- const rule=land.match(/@media \(orientation:landscape\) and \(max-height:500px\)\{\s*\.town-app \.hud-stack\.hud-stack\.hud-stack\[data-job-running\]>\[data-hud-slot=toast\]\{([^}]*)\}/);
- assert(rule,'landscape: every toast-slot note docks while a job runs');
+ const rule=land.match(/@media \(orientation:landscape\) and \(max-height:500px\)\{\s*\.town-app \.hud-stack\.hud-stack\.hud-stack>\[data-hud-slot=toast\]\{([^}]*)\}/);
+ assert(rule,'landscape: every toast-slot note docks top-right, job or not (Oct 23 2026, landscape audit batch 3)');
  assert.match(rule[1],/position:absolute;top:0;left:auto;right:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-right,0px\)\)/,'docked at the right edge');
- assert.match(rule[1],/max-width:min\(270px,calc\(50vw - 120px\)\)/,'never reaches the centre');assert.match(rule[1],/- 150px\);overflow:auto/,'stops above the action buttons');
+ assert.match(rule[1],/max-width:min\(340px,calc\(50vw - 56px - env\(safe-area-inset-right,0px\)\)\)/,'never reaches the centre band (+-40 px)');assert.match(rule[1],/max-height:18dvh;overflow:auto/,'<= 18% of the height, so it stops above the action buttons');
  assert.match(jobsCss,/>\.hud\[data-job-active\]\{position:absolute;top:0;left:calc\(50% - 50vw \+ 12px \+ env\(safe-area-inset-left,0px\)\);\s*width:min\(270px,calc\(50vw - 120px\)\)/,'the job panel docks left at the same width');
  // Selector specificity: the dock beats the column's generic (0,4,0) "position:relative;inset:auto" rule.
  assert.match(css,/\.town-app \.hud-stack\.hud-stack\.hud-stack>\*\{position:relative;inset:auto/);

@@ -251,10 +251,10 @@
 @media(prefers-reduced-motion:reduce){.pocket[data-spot]::after{animation:none}}
 /* Phones: a slightly smaller viewer card (about 82% of the width, still capped by height) so a free spin never clips the screen
    edges or the top bar. Desktop is unchanged. */
-@media(max-width:600px){.viewer .cardHost>div{--card-w:min(520px,82vw,calc((100dvh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) / 1.52))}}
+@media(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.viewer .cardHost>div{--card-w:min(520px,82vw,calc((100dvh - 104px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)) / 1.52))}}
 /* Phones: the open card sits in the binder page's band (--band-top/--band-gap, measured at lift). Top clears the top bar (68 px +
    safe area); the card's width follows the band height, capped at 82vw, and it stays centred. Desktop is unchanged. */
-@media(max-width:600px){
+@media(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  .viewer[data-band]{--band-y:max(var(--band-top),calc(68px + env(safe-area-inset-top,0px)));padding-top:var(--band-y);padding-bottom:var(--band-gap);align-content:center}
  .viewer[data-band] .cardHost>div{--card-w:min(520px,82vw,calc((100dvh - var(--band-y) - var(--band-gap)) / 1.52))}
 }

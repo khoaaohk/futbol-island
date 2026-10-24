@@ -14,7 +14,8 @@
 .greeting b{color:#ffb79c}
 .hintTouch{display:none}
 @media(pointer:coarse){.hintDesk{display:none}.hintTouch{display:inline}}
-.top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;padding:max(12px,env(safe-area-inset-top)) 20px 0;pointer-events:none}
+.top{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;padding:max(12px,env(safe-area-inset-top)) max(20px,calc(12px + env(safe-area-inset-right,0px))) 0 max(20px,calc(12px + env(safe-area-inset-left,0px)));pointer-events:none}
+/* Oct 23 2026 (landscape audit batch 3): Done / My kit stay inside the notch insets on a landscape phone (were 20px from the edge). */
 .top>*{pointer-events:auto}
 .title{margin:0 auto 0 4px;display:flex;flex-direction:column;line-height:1.05;pointer-events:none;padding:6px 14px;border-radius:14px;background:rgba(250,248,243,.92);box-shadow:0 2px 0 rgba(34,39,43,.1),0 0 0 1px rgba(34,39,43,.06)}
 .title b{white-space:nowrap;font-size:20px;letter-spacing:.14em;color:var(--navy)}
@@ -57,7 +58,7 @@
 @media(prefers-reduced-motion:reduce){.station{transition:none}}
 @media(orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 /* The right inset stays 20px (matching the studio headers): only the left side shrinks, for the title. */
-@media(max-width:420px){.top{gap:8px;padding-left:12px}.title b{font-size:15px;letter-spacing:.08em}.myKitButton{padding:0 12px}}
+@media(max-width:420px){.top{gap:8px;padding-left:max(12px,calc(12px + env(safe-area-inset-left,0px)))}.title b{font-size:15px;letter-spacing:.08em}.myKitButton{padding:0 12px}}
 /* Party chip (rooms Phase 4): a flex item before the coins on wide screens; on phones the header row is full (title, coins, My kit,
    Done), so the chip takes its own row under the title and the clerk's hello / the walk hint move down below it. */
 .partySlot{display:flex;align-items:center}

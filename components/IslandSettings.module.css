@@ -358,3 +358,10 @@
 .musicCredits{margin-top:20px;padding-top:8px;border-top:1px solid #a6ad8970}
 /* The About subtitle sits on the painted backdrop, not the cream card: cream text like the title (contrast on blue/green/yellow). */
 .aboutSubtitle{color:#fff2cd;font-weight:700;text-align:center;text-shadow:0 1px 2px #17352b99}
+/* Landscape phones (Oct 23 2026, landscape audit batch 3): the overlaid header is 68 px tall there (ModalShell), so Paths and the
+   full-canvas pages start their content at 72 px instead of 102 px. */
+@media(max-height:480px) and (orientation:landscape){.pathsModal .panel>div:first-of-type,.fullModal .panel>div:first-of-type{padding-top:72px}}
+/* Settings title (Oct 23 2026, landscape audit batch 3): "Make it your island" wrapped to two lines at 393 px and its second line fell
+   below the header row. Phones (<= 440 px) and landscape phones keep it on ONE line: the size steps down to fit the title column
+   (375: 19 px; 393: 21 px; 440: 24 px) and anything narrower ends in an ellipsis (the dialog keeps its full name via aria-labelledby). */
+@media(max-width:440px),(max-height:480px) and (orientation:landscape){.fullModal .header h2.settingsTitle{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-wrap:nowrap;font-size:clamp(18px,calc((100vw - 206px) / 8.9),24px);line-height:44px}}

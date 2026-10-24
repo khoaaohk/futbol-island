@@ -167,6 +167,35 @@ based, so the closer camera cannot raise them; people in view dropped. Not a the
   centre band (±40 px) clear like `gap-welcome-landscape.spec.ts`; emote pager arrows 44 px (`EmoteWheel` - coordinate with the rework).
 - Pocket/Paths headers compact in landscape; Kit Shop Done inside the right inset; fishing Back vs friends button (portrait too).
 
+**Batch 3 status (Oct 23 2026, polish pass)** - measured with `node --experimental-websocket scripts/audit-landscape.cjs <app> <relay> <out> batch3 se,i15,max,port,pmax`
+(new `batch3` scene, one `b3-*` line per check); source checks in `tests/landscape-polish.cjs` (in the `npm test` chain).
+- DONE **One phone predicate**: `lib/ui/phoneLayout.ts` (`PHONE_LAYOUT_QUERY`, `phoneLayoutQuery(w)`, `isPhoneLayout()`) =
+  `(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px)`, the HUD_NARROW family
+  (docs/ui/HUD_STACK.md). CSS spells the same list literally. Users: `studioSheet.ts` (`phoneLayoutQuery(899)`: Pro Max 932/956 x 430/440
+  now gets the phone sheet, with the four studio CSS files' 899/900 queries matched), `QuestLearningPath.tsx` (warm-up + `<source media>`),
+  `CardCollection.tsx` (search header 699, viewer band + its 2 CSS rules), `CharacterPreview.tsx` (700). Grep found no other JS width-only
+  phone checks (`Town.tsx:2079`, `StoryFilmPlayer`, `StoryCaption`, `floatingStick` already OR in `pointer:coarse` / height).
+- DONE **CSS sweep, top 6 files** (123 -> 110 bare `max-width:600px` rules left in 51 files): extended the phone compaction rules only:
+  `PositionGuide` :24 :34, anatomy `paper` :43 :55 :114, `ArcadeGame3D` :123. Kept width-only on purpose (portrait single-column
+  stacking, or the file already has landscape rules): `IslandJourney` (all 11: arrival 1-column / art / dock), `IslandSettings` (10: phone
+  full-bleed Paths sheet, paddings, masks; landscape gets its own rules below), `PositionGuide` :1 :3 :59, `paper` :31 :83,
+  `PassPuzzleGame` (5, has 3 landscape rules), `ArcadeGame3D` :2 :8 :138 :161. REMAINING: the other 45 files (`IslandStore` 4,
+  `CoachesCentre` 4, `party` 3, `pitchboard/board` 3, `ballon-dor/Experience` 3, `app/admin` 5 is desktop-only ...), file by file.
+- DONE **Travel map**: under `max-height:500px` the map is CONTAINED (`MAP_FIT_QUERY`, whole island to `CONTENT_EAST`, centred,
+  arrows hidden, `data-map-fit`): SE 409x251, 15 438x269, Max 498x306, History Museum pin in view at all three; the key is one row
+  (6 entries) with 44 px V/F/J/E buttons. Portrait unchanged (cover + pan, 2 rows). REMAINING: in the contained map the place pins
+  are small tap targets (futsal 25x16, 7v7 16x22 on the 15); a tap-to-zoom would fix that.
+- DONE **Notes dock top-right** in short landscape for EVERY `[data-hud-slot=toast]` (not only while a job runs): Welcome +40 coins,
+  Pace yourself / Pace your breath, fuel, ride, reef notes; right of the centre band (+-40 px) on SE/15/Max, height 67-68 px =
+  16-18 % of the viewport (compact type, the "kind" line hidden). Portrait unchanged (centred). The welcome-back card keeps its top-left dock.
+- DONE **Emote pager arrows** 44x44 (were 24-28x44); `clamp(24px,(100vw - 300px)/2,44px)` keeps five 44 px fifths on phones narrower than 388 px.
+- DONE **Compact headers**: ModalShell header 68 px in short landscape (was 76; Done stays level with the HUD row): Pocket,
+  Paths, Settings, map; Paths/full pages start content at 72 px (was 102; first Paths card 178 -> ~148 px on the 15). **Party Code / List tabs** 44 px tall in portrait and landscape
+  (56 px track on phones too). **Kit Shop** top bar inside the side insets (Done right edge 781 <= 793 on the 15). **Settings title**
+  "Make it your island" stays on one line at <= 440 px and in landscape (steps down to 19-24 px; ellipsis below ~375 px).
+- REMAINING (not in this pass): Kit Shop door slide still covers Done / My kit at 12 s; Paths "01..04" step numbers clipped (also
+  portrait); iPad Settings day/night segment in the home-bar inset; the emote bar strip still crosses mid-screen (layout owned by the rework).
+
 **Batch 4 - test net (S, ~2 agent-hours, Haiku/Sonnet)**
 - Add `iphone-15-landscape` / `iphone-se-landscape` projects to `playwright.config.ts` (`devices['iPhone 15 landscape']`) and run the
   e2e suite there; add `scripts/audit-landscape.cjs journey,places` to the pre-release checklist (it exits 0; read the defect lines).

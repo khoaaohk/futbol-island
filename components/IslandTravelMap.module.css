@@ -72,5 +72,12 @@
  .dialog .panel>.body{padding:0 max(var(--phone-gutter),env(safe-area-inset-right,0px)) 10px max(var(--phone-gutter),env(safe-area-inset-left,0px))}
  .frame{border-width:4px;border-radius:24px 30px 22px 26px}
  .arrow[data-dir=up]{top:8px}.arrow[data-dir=down]{bottom:10px}
+ /* Landscape phones (Oct 23 2026, landscape audit batch 3): the map is CONTAINED here (MAP_FIT_QUERY in IslandTravelMap.tsx), so the
+    whole island and every pin (History Museum) show without panning. The key stays ONE row when it fits (6 or 7 entries; flex
+    wrap keeps it balanced as 4 + 3 only when it cannot), and its V / F / J buttons are 44 px tall boxes, not 22 px + ::before. */
+ .dialog .panel>.body{gap:2px}
+ .legend{display:flex;flex-wrap:wrap;justify-content:center;gap:0 12px;font-size:12px}
+ .legend li{min-height:44px}
+ .legendTip{min-height:44px}.legendTip::before{inset:0 -5px}
 }
 @media(prefers-reduced-motion:reduce){.entering,.leaving,.tip{animation:none}.stage[data-eased],.arrow{transition:none}}

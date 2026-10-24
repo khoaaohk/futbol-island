@@ -52,3 +52,6 @@
 
 /* The discoverable island badge lives only on the Paths landing screen. */
 .header::before,.header::after{display:none!important}
+/* Landscape phones (Oct 23 2026, landscape audit batch 3): a compact 68 px header row (the 44 px controls stay level with the island HUD
+   row, 16 px down, check-pocket-covers-row.cjs; 8 px below) instead of 76-84 px, so Pocket, Paths, Settings and the map keep ~8-16 px more of a 375-440 px tall screen. */
+@media(max-height:480px) and (orientation:landscape){.shell>.header{min-height:68px!important;padding-bottom:8px!important}}

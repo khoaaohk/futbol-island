@@ -78,7 +78,8 @@ const S=require('../lib/shop/studioSheet.ts');
  assert.match(ctl,/el\.style\.height=`\$\{next\}px`/,'a drag writes the height straight to the element (no React render per move)');
  assert.match(ctl,/data-studio-top=""/);assert.match(ctl,/data-studio-bottom=""/);
  assert.match(css,/\.sheetHandle\{display:none\}/,'no handle on desktop');
- assert.match(css,/@media \(max-width:899px\)\{[\s\S]*?\.sheetResizable\{transition:height \.22s/,'~220ms snap ease, phones only');
+ assert.match(css,/@media\(max-width:899px\),\(max-height:480px\) and \(orientation:landscape\),\(max-device-width:480px\)\{[\s\S]*?\.sheetResizable\{transition:height \.22s/,'~220ms snap ease, phones only (landscape phones too, lib/ui/phoneLayout.ts)');
+ assert.equal(S.SHEET_PHONE_QUERY,'(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px)','the studio sheet uses the shared phone predicate (Pro Max 932 x 430 landscape gets the sheet)');
  assert.match(css,/\.sheetResizable\[data-sheet-dragging\]\{transition:none\}/);
  assert.match(css,/prefers-reduced-motion:reduce\)\{\s*\.sheetResizable,\.sheetHandle::before\{transition:none!important\}/);
  assert.match(css,/\.sheetHandle\{[^}]*height:44px[^}]*touch-action:none/,'a 44px hit area that never scrolls the page');
@@ -105,7 +106,7 @@ const S=require('../lib/shop/studioSheet.ts');
 
 // 6. Desktop (≥ 900px) unchanged; one cream Save; one section-title size on phones.
 {const ball=read('components/shop/BallStudio.module.css'),boot=read('components/shop/BootStudio.module.css'),jer=read('components/shop/JerseyStudio.module.css'),ctl=read('components/shop/StudioControls.module.css');
- assert.match(ball,/@media \(min-width:900px\)\{\s*\.root\{grid-template-columns:minmax\(0,1fr\) 474px;grid-template-rows:auto minmax\(0,1fr\)\}/);
+ assert.match(ball,/@media\(min-width:900px\) and \(min-height:481px\) and \(min-device-width:481px\),\(min-width:900px\) and \(orientation:portrait\) and \(min-device-width:481px\)\{\s*\.root\{grid-template-columns:minmax\(0,1fr\) 474px;grid-template-rows:auto minmax\(0,1fr\)\}/);
  assert.match(ball,/\.sheet\{width:auto;min-width:0;height:auto;margin:20px 20px 20px 14px/);
  assert.match(boot,/\.studio\{grid-template-columns:minmax\(0,1fr\) 488px;grid-template-rows:auto minmax\(0,1fr\)\}/);assert.match(boot,/\.sheet\{height:auto\}/);
  assert.match(jer,/\.sheet\{grid-column:2;grid-row:2;height:auto;margin:20px 20px 20px 14px/);

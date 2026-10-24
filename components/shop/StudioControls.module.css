@@ -52,7 +52,7 @@
 .stepBtn:active{transform:scale(.96)}
 
 /* desktop (≥900px): every studio's stage sits 18/20px in from the shared frame, so the row moves out to match */
-@media (min-width:900px){
+@media(min-width:900px) and (min-height:481px) and (min-device-width:481px),(min-width:900px) and (orientation:portrait) and (min-device-width:481px){
  .iconRow{top:18px;right:18px}
  .modeToggle{top:18px}
  .steps{flex-wrap:wrap;padding:16px 20px 8px}
@@ -62,7 +62,7 @@
  * choose panels and all other section titles. taking up too much space"). Phones: one smaller brush size and tighter margins;
  * the right-hand meta ("32 PANELS") and the subtitles keep sitting on the title's baseline (each studio's own flex rules).
  * Desktop keeps each studio's own size. Doubled class: beats the studios' single-class heading rules wherever they load. */
-@media (max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  .sectionTitle.sectionTitle{font-size:19px;line-height:1.1;margin-top:2px;margin-bottom:7px}
 }
 
@@ -72,7 +72,7 @@
  * motion), and the handle — a full-width 44px strip with the grab bar, touch-action:none so a drag never scrolls the page.
  * Desktop (≥ 900px): no handle and no inline height, the side panel is unchanged. */
 .sheetHandle{display:none}
-@media (max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  /* One sheet look for all three studios (Oct 14 2026, user: "the green is showing on the sides of the corner", "remove that drop
     shadow", "all needs to look the same"): it overlaps the stage by its corner radius so the stage shows behind the rounded
     corners, plain cream, no rim, no shadow. Doubled class to beat each studio's own .sheet rule. */
