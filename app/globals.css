@@ -909,10 +909,10 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .joystick[data-fading=true]{opacity:0}
 .stick-insets{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 @media(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px){
- .touch-controls{--stick-size:clamp(150px,calc(100vw - 186px),220px)}
+ .touch-controls{--stick-size:clamp(132px,calc(100vw - 206px),188px)}
  .touch-controls,.touch-controls .joystick{width:var(--stick-size);height:var(--stick-size)}
  .touch-controls .joystick>span{width:45%;height:45%}
 }
-@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(132px,calc(100vw - 176px),174px)}}
-@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(220px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
+@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(118px,calc(100vw - 196px),150px)}}
+@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(188px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
 @media(prefers-reduced-motion:reduce){.joystick{transition:none}}
