@@ -171,7 +171,7 @@ import {createKnockdownFace,knockdownLift} from '@/lib/graphics/knockdown';
 import {planRoofRamps,planRideRamps,rampSurface,createRampMotion} from '@/lib/town/rideRamps';
 import {createRideRampVisuals} from '@/lib/graphics/rideRamps';
 import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
-import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY} from '@/lib/town/walkBall';
+import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';
 import { createPlayer, profileFor, type PlayerMotion } from '@/lib/graphics/player';
@@ -1005,7 +1005,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // the same ring sits amber at the feet while a big kick charges (red when full). skyCamLift eases the camera back/up so the ball stays in view.
     // Thin ring (owner, Oct 24: "SKINNIER … a little BIGGER"): a 0.09 m band, ~1/3 of the old 0.27; scaled so its outer edge = the
     // catch radius (KEEPUP_SKY.catchRadius, 1.5 m) as the ball lands, bigger while it is still high (shrinks as it nears).
-    const SKY_MARK_OUTER=1.05,SKY_MARK_SCALE=KEEPUP_SKY.catchRadius/SKY_MARK_OUTER,skyMarkGeometry=new T.RingGeometry(SKY_MARK_OUTER-.09,SKY_MARK_OUTER,56),skyMarkMaterial=new T.MeshBasicMaterial({color:0xff2d2d,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const SKY_MARK_OUTER=1.05,SKY_MARK_SCALE=KEEPUP_SKY.catchRadius/SKY_MARK_OUTER,skyMarkGeometry=new T.RingGeometry(SKY_MARK_OUTER-.045,SKY_MARK_OUTER,64),skyMarkMaterial=new T.MeshBasicMaterial({color:0xff2d2d,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     const skyMark=new T.Mesh(skyMarkGeometry,skyMarkMaterial);skyMark.rotation.x=-Math.PI/2;skyMark.visible=false;skyMark.renderOrder=3;skyMark.frustumCulled=false;skyMark.name='keepup-sky-mark';scene.add(skyMark);let skyCamLift=0;
     // Keep-up cues (owner, Oct 24: "very intuitive"): the button's charge ring / state (a CSS var + data attribute written only on
     // change), an edge arrow toward the mark, and first-time hints (max 3 runs, localStorage). No per-frame allocation.
@@ -1813,9 +1813,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const ballSquash=walkingBall&&!reduced?Math.max(Math.sin(walkBall.state.bounce/.16*Math.PI)*.22,walkBall.state.mode==='attached'?(player.dribblePress??0)*.07:0):0;/* + a sole pressing on the ball (dribbleStop) */ball.scale.set((1+ballSquash)*1.0125,(1-ballSquash)*1.0125,(1+ballSquash)*1.0125);
       ballEffects.root.visible=walkingBall&&!fieldMenu.current&&!zipline.active;ballEffects.update(active?dt:0,ball.position,walkingBall&&(walkBall.state.mode==='shot'&&!walkBall.state.floating||walkBall.state.mode==='wall-juggle'||walkBall.state.mode==='juggle'||walkBall.state.mode==='sky'),reduced,camera,walkBall.state.mode==='shot'&&!walkBall.state.floating?walkBall.state.charge:0,walkBall.state.mode==='charging'?walkBall.state.charge:-1,BALL_COLORS[customizationRef.current.ball],customizationRef.current.ball);
       keepUpBusy.current=rideRef.current==='walk'&&walkBall.state.counted;// no talking during keep-ups: hides the Talk prompt + tags
-      {const bs=walkBall.state,sky=walkingBall&&bs.mode==='sky'&&bs.y>bs.skyY+.9&&!fieldMenu.current,charge=walkingBall&&bs.counted&&bs.skyWind>0&&bs.mode!=='sky'&&!fieldMenu.current;
+      {const bs=walkBall.state,sky=walkingBall&&bs.mode==='sky'&&!fieldMenu.current,charge=walkingBall&&bs.counted&&bs.skyWind>0&&bs.mode!=='sky'&&!fieldMenu.current;
        if(skyMark.visible!==(sky||charge))skyMark.visible=sky||charge;
-       if(sky){const near=Math.min(1,bs.skyLeft/3),skyPulse=!reduced&&!batterySaverOn(),s=SKY_MARK_SCALE*(1+.35*near)*(skyPulse?1+.06*Math.sin(elapsed*(7+9*(1-near))):1);skyMark.position.set(bs.skyX,bs.skyY-.2+.04,bs.skyZ);skyMark.scale.set(s,s,1);
+       // Steady ring (owner, Oct 24: "must not vibrate"): no pulse; the point is the locked prediction (moves only on a rebound / new
+       // kick). It stays big while the ball rises, then shrinks smoothly and monotonically with the fall (eased by the share of fall
+       // TIME left) to exactly the catch radius as the ball touches down.
+       if(sky){const s=SKY_MARK_SCALE*(1+.35*skyMarkShrink(bs.vy,bs.y,bs.skyY,bs.skyApexY));skyMark.position.set(bs.skyX,bs.skyY-.2+.04,bs.skyZ);skyMark.scale.set(s,s,1);
         // "Catch now": the ball is coming down and the player stands in the ring → it turns bright green (and the button glows).
         skyMarkMaterial.color.setHex(bs.skyCatch?0x3dff6e:0xff2d2d);skyMarkMaterial.opacity=1;}
        else if(charge){const s=.45+.55*bs.skyWind;skyMark.position.set(visualLocation.x,groundY+.04,visualLocation.z);skyMark.scale.set(s,s,1);skyMarkMaterial.color.setHex(bs.skyWind>=1?0xe53935:0xffb300);skyMarkMaterial.opacity=.75;}

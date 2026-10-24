@@ -35,7 +35,7 @@ assert.equal(M.skyKickTouch(0),'foot');assert.equal(M.skyKickTouch(3),'foot');
 //    UN-PRESSED arrival is trapped with the part for its height (chest / thigh / foot, ~0.35 s cushion) and settles at the feet.
 {const DT=1/60,flat={floor:()=>0,blocked:()=>false,impact(){},strike(){},receive(){}},S=W.KEEPUP_SKY;
  const arrive=press=>{const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};b.keepUp(p);let tapped=false,wind=0,got=null,prev=1;
-  for(let i=0;i<60*7&&!got;i++){if(i===72)b.keepUpRelease();wind=Math.max(wind,b.state.skyWind);
+  for(let i=0;i<60*7&&!got;i++){if(i===102)b.keepUpRelease();wind=Math.max(wind,b.state.skyWind);
    if(b.state.mode==='sky'){const dx=b.state.skyX-p.x,dz=b.state.skyZ-p.z,d=Math.hypot(dx,dz),s=Math.min(d,5*DT);if(d>1e-6){p.x+=dx/d*s;p.z+=dz/d*s;}if(press&&!tapped&&b.state.vy<0&&b.state.y<=S.armHigh){tapped=true;b.keepUp(p);b.keepUpRelease();}}
    const before=b.state.mode;b.update(DT,p,flat);const h=b.state.y-p.y;
    if(before==='sky'&&(b.state.mode==='attached'||b.state.mode==='sky'&&b.state.streak>prev))got={h,mode:b.state.mode,trap:b.state.skyTrap,kick:b.state.skyKick,age:b.state.skyMoveAge};prev=b.state.streak;}
