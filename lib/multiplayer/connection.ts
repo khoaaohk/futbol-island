@@ -5,6 +5,7 @@ import {
   Cap, CAPS_ALL, BallState, WORLD_BOUNDS, type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
+import { commitPose, governPose, poseGovernor, resetPoseGovernor } from './presence';
 
 export type PartyStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'ended' | 'error';
 export interface PartyConnection {
@@ -164,6 +165,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let lastSendAt = -1e12;
   let last: PoseBody | null = null;
   let lastPoseAt = -1e12;
+  const gov = poseGovernor(); // the last pose sent, as the relay's speed check sees it (presence.ts governPose)
   let localHidden = false;
   let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
@@ -448,7 +450,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       clearTimers(); dropSocket();
       code = norm; look = opts.look; nick = null; you = null;
       hostKey = now2.hostKey ?? null; resumeToken = now2.resumeToken;
-      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
+      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false; resetPoseGovernor(gov);
       beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false;
       resuming = true;
       setLocal('here', false);
@@ -481,7 +483,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       you = null;
       hostKey = opts.hostKey ?? (same ? sess!.hostKey : null) ?? null;
       resumeToken = same ? sess!.resumeToken : null;
-      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false;
+      attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false; resetPoseGovernor(gov);
       beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false; resuming = false;
       writeSession();
       setLocal('here', false);
@@ -505,13 +507,14 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       // Hidden (away) is sent like any flag change (once); while hidden, emotes and pings stay off.
       localHidden = (body[7] & 2) !== 0;
       if (!open() || status !== 'live') return;
+      body = governPose(gov, body, nowMs); // relay-safe: in bounds, never faster than the relay keeps (presence.ts governPose)
       let send = false;
       if (!last) send = true;
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate
       else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= ((caps & Cap.Live) ? LIVE_MOVE_GAP_MS : MOVE_GAP_MS);
       else if (body.some((v, i) => v !== last![i])) send = nowMs - lastPoseAt >= IDLE_GAP_MS;
       if (!send) return;
-      if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body.slice() as PoseBody; lastPoseAt = nowMs; }
+      if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body; lastPoseAt = nowMs; commitPose(gov, body, nowMs); }
     },
     sendBall(state, x, y, z, nowMs) {
       if (!(caps & Cap.Ball) || !open() || status !== 'live') return;

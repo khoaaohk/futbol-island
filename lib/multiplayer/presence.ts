@@ -1,6 +1,6 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
-import { Activity, Mode, ROOM_ACTIVITIES, RoomCode, Zone, roomBody, type Presence, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, WORLD_BOUNDS, Zone, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */
 export interface TownFlags {
@@ -152,6 +152,41 @@ export const ISLAND_JUMP_M = 10;
 export function islandJump(px: number, pz: number, x: number, z: number, dtSec: number): boolean {
   const dx = x - px, dz = z - pz, lim = ISLAND_JUMP_M + 41 * Math.max(0, Math.min(1, dtSec));
   return dx * dx + dz * dz > lim * lim;
+}
+/**
+ * Relay-safe poses (owner bug, Oct 24 2026: "when my friend uses boost when flying, he is gone on his screen, but on mine he is
+ * still at the same spot"). The jetpack boost (jetpackActions 'dash') moves 128 m/s for .45 s (58 m) and the sky dive blast climbs
+ * 180 m in 1.05 s (peak ~320 m/s, up to ~210 m high), while the relay (multiplayer/relay/src/roomCore.ts pose(), deployed) keeps
+ * only poses within MAX_SPEED_MS[mode] * 1.5 * dt + 2 m of the last ACCEPTED one (jetpack: 51 m/s), allows one Warp per 5 s,
+ * and counts a y over WORLD_BOUNDS.maxY (200 m) as a bad frame (5 = kicked). Each boosted pose was dropped, the later ones too
+ * (they are compared with the pre-boost spot), and once the flyer slowed or hovered the delta-suppressed sender had nothing new to
+ * send: friends kept the pre-boost spot. This governor sits in front of the socket: it clamps to WORLD_BOUNDS, and a move the relay
+ * would refuse is sent as Warp when one is free (lag > POSE_WARP_LAG_M) or else capped to the relay's speed (with POSE_SAFE margin
+ * for network jitter), so friends see the flyer catch up instead of freezing. Client only: the deployed relay is unchanged.
+ */
+export const POSE_SAFE = 0.75, POSE_WARP_LAG_M = 20, POSE_WARP_GAP_MS = 5300;
+const RELAY_WARP = 1;
+export type PoseGovernor = { has: boolean; x: number; y: number; z: number; at: number; room: number; warpAt: number };
+export function poseGovernor(): PoseGovernor { return { has: false, x: 0, y: 0, z: 0, at: 0, room: -1, warpAt: -1e12 }; }
+/** Forget the last sent pose (a new socket: the relay treats the next pose as the first one). Keeps warpAt (the relay member may resume). */
+export function resetPoseGovernor(g: PoseGovernor): void { g.has = false; }
+const clampI = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Number.isFinite(v) ? Math.round(v) : 0));
+/** The body to send now (a fresh array; `body` is untouched). Pure but for reading `g`; call commitPose(g, out, nowMs) once it is sent. */
+export function governPose(g: PoseGovernor, body: PoseBody, nowMs: number): PoseBody {
+  const B = WORLD_BOUNDS, out = body.slice() as PoseBody;
+  out[0] = clampI(out[0], B.minX, B.maxX); out[1] = clampI(out[1], B.minY, B.maxY); out[2] = clampI(out[2], B.minZ, B.maxZ);
+  if (!g.has || (out[7] & RELAY_WARP) || roomOf(out) !== g.room) return out; // first pose, an explicit Warp, a room flip: no speed check
+  const dx = (out[0] - g.x) / 10, dy = (out[1] - g.y) / 10, dz = (out[2] - g.z) / 10, d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+  const dt = Math.max(0, nowMs - g.at) / 1000, limit = (MAX_SPEED_MS[out[5] as Mode] ?? 6) * 1.5 * POSE_SAFE * dt + 1;
+  if (d <= limit) return out;
+  if (d > POSE_WARP_LAG_M && nowMs - g.warpAt >= POSE_WARP_GAP_MS) { out[7] |= RELAY_WARP; return out; }
+  const k = limit / d; // capped: the furthest point toward the real spot the relay still keeps
+  out[0] = Math.round(g.x + dx * k * 10); out[1] = Math.round(g.y + dy * k * 10); out[2] = Math.round(g.z + dz * k * 10);
+  return out;
+}
+export function commitPose(g: PoseGovernor, out: PoseBody, nowMs: number): void {
+  g.has = true; g.x = out[0]; g.y = out[1]; g.z = out[2]; g.at = nowMs; g.room = roomOf(out);
+  if (out[7] & RELAY_WARP) g.warpAt = nowMs;
 }
 export type EntryWarp = { stage: 0 | 1 | 2; retryAt: number };
 export function entryWarp(): EntryWarp { return { stage: 2, retryAt: 0 }; }
