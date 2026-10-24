@@ -1913,6 +1913,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         for(const v of VENUES){
           // Clip the actual pitch polygon to the screen. A bounding rectangle can
           // overlap the view even after the whole angled field has left it.
+          // Owner (Oct 24 2026): the pitch card only shows while you are standing in that pitch's space, not whenever it is in sight.
+          if(Math.abs(player.root.position.x-v.x)>v.width/2+3||Math.abs(player.root.position.z-v.z)>v.length/2+3)continue;
           const score=pitchVisibility(camera,v.x,.2+(v.elevation??0),v.z,v.width,v.length);
           if(score<bestFieldScore){bestFieldScore=score;visibleVenue=v.id;}
         }
