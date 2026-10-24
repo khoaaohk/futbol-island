@@ -260,7 +260,7 @@
 .slotSave:active,.slotLoad:active,.closeSave:active{translate:0 var(--btn-press)}
 
 /* ---- desktop: boot left, panel right ---- */
-@media (min-width:900px){
+@media(min-width:900px) and (min-height:481px) and (min-device-width:481px),(min-width:900px) and (orientation:portrait) and (min-device-width:481px){
  /* the shared studio frame: stage 20px from the edges and 20px under the header, a 28px gap, a 440px panel */
  .studio{grid-template-columns:minmax(0,1fr) 488px;grid-template-rows:auto minmax(0,1fr)}
  .header{grid-column:1/-1;height:76px;padding:0 20px}
@@ -278,7 +278,7 @@
 /* Phones, Oct 14 2026 (user: "make better use of the space so the items are not as large… apply this to… shoes"): more air
  * between sections, denser tiles — looks 4 across, the shape row ~3.5 cards, stud finishes 5 across, stickers 6, flags 5 —
  * art scaled down to match, 13px labels on at most two lines, tap targets ≥ 44px. Same cards, rims, shadows, selected states. */
-@media (max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  .panel{padding:8px var(--phone-gutter) 18px}
  .section{margin:6px 0 20px}
  .h3{margin-bottom:8px}

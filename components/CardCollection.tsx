@@ -1,4 +1,5 @@
 'use client';
+import {isPhoneLayout,phoneLayoutQuery} from '@/lib/ui/phoneLayout';
 import {memo,startTransition,useEffect,useId,useLayoutEffect,useMemo,useRef,useState} from 'react';
 import type React from 'react';
 import {createPortal} from 'react-dom';
@@ -379,7 +380,7 @@ export default function CardCollection(){
  // Back and Done buttons"), which fades out and goes inert + aria-hidden until search closes. Tablets and desktop keep the header:
  // --floor starts the panel just under it. visualViewport events only, while search is open.
  useEffect(()=>{const vv=typeof window!=='undefined'?window.visualViewport:null,el=searchPanel.current;if(!searchOpen||!vv||!el)return;
-  const header=host?.querySelector<HTMLElement>(':scope > section > header')??null,phone=matchMedia('(max-width: 699px)').matches,wasInert=!!header?.inert;
+  const header=host?.querySelector<HTMLElement>(':scope > section > header')??null,phone=matchMedia(phoneLayoutQuery(699)).matches,wasInert=!!header?.inert;
   if(header&&phone){header.style.transition='opacity .18s ease-out';header.style.opacity='0';header.inert=true;header.setAttribute('aria-hidden','true');}
   // iOS may scroll the page to reveal the focused field; the binder is all fixed, so put it back (the panel follows offsetTop anyway).
   const update=()=>{if((document.scrollingElement?.scrollTop??0)>0)document.scrollingElement!.scrollTop=0;const top=layer.current?.getBoundingClientRect().top??0;
@@ -394,7 +395,7 @@ export default function CardCollection(){
  const liftCard=(name:string,from:HTMLElement)=>{if(lift||turn||performance.now()-swiped.current<350)return;const entry=ENTRY.get(name);if(!entry)return;
   // Phones: the open card fills the same vertical band as the binder page it came from. Measured here, before the flight, so the
   // viewer's layout is final when the flight measures its target.
-  const page=innerWidth<=600?binderRef.current?.getBoundingClientRect():undefined;
+  const page=isPhoneLayout()?binderRef.current?.getBoundingClientRect():undefined;
   const band=page&&page.height>0?{top:Math.round(page.top),gap:Math.max(0,Math.round(innerHeight-page.bottom))}:undefined;
   setLift({name,era:entry.era,got:have.has(name),from,phase:have.has(name)&&!reducedMotion()?'in':'open',band});};
  const cardEl=()=>{const stage=cardHost.current?.firstElementChild as HTMLElement|null;return (stage?.children[0] as HTMLElement|undefined)??null;};

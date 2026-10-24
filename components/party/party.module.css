@@ -83,7 +83,8 @@
 .tab[aria-selected=true]{color:#24543a}
 .tab:active{transform:translateY(2px)}
 .tab:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-@media(max-width:600px){.body{--tabs-h:48px}}
+/* Oct 23 2026 (landscape audit batch 3): the Code | List tabs are 44 px tall boxes everywhere (56 px track - 2 x 6 px padding);
+   phones used a 48 px track (36 px tabs + an invisible strip). */
 .tabCount{display:inline-block;animation:tabPop .2s ease-out}
 @keyframes tabPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 .hdrCount{justify-self:start;display:inline-flex;align-items:center;gap:4px;font:700 14px/1 var(--btn-font);white-space:nowrap}
@@ -131,10 +132,8 @@
 .roomWheel :global(.emote-wheel){position:static;bottom:auto}
 .roomSheet{position:absolute;top:calc(100% + 10px);left:0;z-index:12;display:flex;flex-direction:column;gap:10px;width:min(320px,calc(100vw - 32px));max-height:min(60dvh,420px);overflow:auto;padding:14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 18px var(--btn-cream-edge);animation:partyIn .26s ease-out}
 .roomSheet .secondary,.roomSheet .primary{min-height:44px;border-radius:22px;font:700 15px/1 var(--btn-font);cursor:pointer}
-/* QA Oct 22 2026 (UI consistency): the Code | List tabs are drawn 36px tall on phones (48px track); an invisible strip keeps the
-   44px tap height inside the track's padding (BUTTONS.md: a smaller drawn control keeps a 44px hit area). Narrow phones: the
-   Share link / New code pair keeps one line per label. */
-.tab{position:relative}.tab::before{content:"";position:absolute;inset:-6px 0}
+/* Narrow phones: the Share link / New code pair keeps one line per label (the Code | List tabs are real 44 px boxes since Oct 23). */
+.tab{position:relative}
 @media(max-width:340px){.menuCard .pairRow>button{gap:6px;padding:0 6px;font-size:14px}}
 /* On the island the party's notes sit in the HUD stack under the coins bar (HudSlot, the stack's one toast timing) instead of
    floating over the coins and the friends button they talk about; rooms (no stack) keep the fixed top note. */

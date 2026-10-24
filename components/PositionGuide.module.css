@@ -21,7 +21,7 @@
 .dialog .caption{color:#61705b}
 .dialog .sources{background:#183b34b3;color:#fff1d3;border-radius:18px;padding:12px 16px;margin-top:8px}
 .dialog .sources summary,.dialog .sources a{color:#fff1d3}
-@media(max-width:600px){.dialog .scroll{padding:12px 14px 28px}.dialog .role,.dialog .players,.dialog .profileIntro,.dialog .profile>section{border-radius:24px 34px 22px 22px}}
+@media(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.dialog .scroll{padding:12px 14px 28px}.dialog .role,.dialog .players,.dialog .profileIntro,.dialog .profile>section{border-radius:24px 34px 22px 22px}}
 /* Player detail: the 3D card leads; every section (intro, what to watch, highlights, study) follows. */
 .dialog .cardLayout{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:clamp(18px,3vw,36px);align-items:start}
 .dialog .cardColumn{position:sticky;top:0}
@@ -31,7 +31,7 @@
 .dialog .infoColumn>section{background:#fff1d3;color:#244d40;border:0;border-radius:30px 48px 26px 26px;box-shadow:0 8px 0 #183b3438;padding:clamp(18px,3vw,28px)}
 .dialog .infoColumn>section.study{background:#e8d5ad url('/stories/films/assets/entry-grain.png') repeat;background-size:128px 128px}
 .dialog .infoColumn>section h3{margin-top:0}
-@media(max-width:600px){.dialog .infoColumn>section{border-radius:24px 34px 22px 22px}}
+@media(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.dialog .infoColumn>section{border-radius:24px 34px 22px 22px}}
 /* The card is the focal point: centred hero, then the study panels in a grid below it. */
 .dialog .cardLayout{grid-template-columns:1fr;justify-items:center;gap:26px}
 .dialog .cardColumn{position:static;width:100%;display:grid;justify-items:center}

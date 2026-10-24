@@ -478,6 +478,9 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   bar came closer than the 8px pair gap to Play with friends up to **607px** (full fuel) and **635px** ("0 Empty", the widest);
   Settings was never the tight side. 660 = 635 + 25px margin; at 661px the centred bar keeps >= 20px each side. The 768x1024
   tablet and every desktop width above 660 are unchanged (centred, 1280x800 / 768x1024 rects pinned in `check-hud-row.cjs`).
+- **Same family for every phone layout (Oct 23 2026):** JS code that needs "is this a phone layout" uses `lib/ui/phoneLayout.ts`
+  (`PHONE_LAYOUT_QUERY` = `(max-width:600px),(max-height:480px) and (orientation:landscape),(max-device-width:480px)`, `phoneLayoutQuery(w)`
+  for another width cut, `isPhoneLayout()`), so landscape phones (667-956 px wide) no longer get the desktop branch. CSS spells the list out.
 - **Edge inset:** Paths / Settings sit 24px in on fine-pointer windows over 600px and 18px otherwise; the bar uses one variable,
   `--island-hud-edge` (`globals.css` `:root`, 24px / 18px under `(max-width:600px),(pointer:coarse)`). So at 600 -> 601px the
   stretched bar's edges move 6px with the buttons. The pair gap stays `--island-hud-pair-gap` (8px) everywhere; the Back pill

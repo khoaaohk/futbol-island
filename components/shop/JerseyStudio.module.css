@@ -284,7 +284,7 @@
 
 /* draw step on phones: the tools + colours as swipeable rows so both show without scrolling (the sheet height is the player's
    snap now, Oct 14 2026: no per-step height) */
-@media(max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  /* clears the shared top-right icon row (StudioControls, Oct 13 2026): a narrow phone stage isn't wide enough for a centred
     hint pill to clear 4 round buttons at top:12; the desktop stage is wide enough that top:14/20 never collided */
  .dragHint{top:70px}
@@ -297,7 +297,7 @@
 }
 
 /* ---- tablet / desktop: side panel ---- */
-@media(min-width:900px){
+@media(min-width:900px) and (min-height:481px) and (min-device-width:481px),(min-width:900px) and (orientation:portrait) and (min-device-width:481px){
  .studio{grid-template-columns:minmax(0,1fr) 474px;grid-template-rows:auto minmax(0,1fr)}
  .header{grid-column:1/-1;min-height:76px;padding:18px 20px 14px}
  .title{font-size:38px}
@@ -311,11 +311,11 @@
  .doneTop{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:360px){.tiles4,.tools{grid-template-columns:repeat(3,minmax(0,1fr))}.tiles5{grid-template-columns:repeat(3,minmax(0,1fr))}.patterns{grid-template-columns:repeat(2,minmax(0,1fr))}.sponsors{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-height:700px) and (max-width:899px){.title{font-size:24px}}
+@media(max-height:700px) and (max-width:899px),(max-height:480px) and (orientation:landscape){.title{font-size:24px}}
 /* Phones, Oct 14 2026 (user: "make better use of the space so the items are not as large… apply this to… jerseys"): more air
  * between sections, denser tiles — the design row ~3.5 cards, sleeves 3 across, patterns and kit palettes 4 across — art scaled
  * down to match, 13px labels on at most two lines, tap targets ≥ 44px. Same cards, rims, shadows and selected states. */
-@media(max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  .content{padding:6px var(--phone-gutter) 18px}
  .stepCount{margin:0 var(--phone-gutter) 2px;font-size:11.5px}
  .group{margin:0 0 20px}

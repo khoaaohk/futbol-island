@@ -5,7 +5,7 @@
 //   cut    text clipped (scrollWidth > clientWidth with overflow hidden / ellipsis)   dlg  dialog box taller than the viewport / scrolls
 // Safe areas: Chrome's CDP Emulation.setSafeAreaInsetsOverride, so env(safe-area-inset-*) resolves like an iPhone in landscape.
 // Scenes: journey (title -> onboarding -> island HUD + popups -> party of 4 -> emote ask/bar -> rotate), places (fishing, dive, rooms,
-// Strikers, each with a rotate), perf (same pose landscape vs portrait at 3 spots). Sizes: se, i15, max, ipad (port = rotate target).
+// Strikers, each with a rotate), perf (same pose landscape vs portrait at 3 spots), batch1 / batch3 (the fix passes). Sizes: se, i15, max, ipad (port = rotate target).
 // SHOTS=scene:size,... overrides which screens are saved as PNG.
 // Run: PW_CHANNEL=chrome node --experimental-websocket scripts/audit-landscape.cjs <appUrl> <relayUrl> <outDir> [scene,scene] [size,size]
 //   (production build with NEXT_PUBLIC_MULTIPLAYER=1 NEXT_PUBLIC_MULTIPLAYER_URL=<relayUrl>; dev relay MP_DEV=1; closes only its own browser)
@@ -364,6 +364,51 @@ const SCENES = {
         return { vh: innerHeight, card: `${Math.round(r.top)}..${Math.round(r.bottom)}`, fits: r.bottom <= innerHeight && r.top >= 0, scroll: `${c.clientHeight}/${c.scrollHeight}`, selects: [...c.querySelectorAll('select')].map((s) => Math.round(s.getBoundingClientRect().height)) }; }));
       await A(env, size, 'strikers');
     });
+  },
+  // Batch 3 polish (Oct 23): docked notes (centre band +-40 px, height <= 18 % vh), Pocket / Paths header heights, the travel map
+  // (contained in short landscape: whole island + History Museum pin in view, legend rows + 44 px key buttons), the Settings title
+  // on one line, party Code | List tab heights, Kit Shop Done vs the right inset. One `b3-*` line per check. SHOTS=toast:i15,map:i15.
+  async batch3(env, size) {
+    const p = env.p, log = (k, v) => console.log(`${k.padEnd(18)} ${size.padEnd(5)} ${typeof v === 'string' ? v : JSON.stringify(v)}`);
+    const toastBox = () => p.evaluate(() => { const e = [...document.querySelectorAll('.hud-stack>[data-hud-slot=toast]:not([data-hud-exit])')].find((x) => x.getBoundingClientRect().width); if (!e) return null;
+      const r = e.getBoundingClientRect(), cx = innerWidth / 2, cy = innerHeight / 2, band = r.right > cx - 40 && r.left < cx + 40 && r.bottom > cy - 40 && r.top < cy + 40;
+      return { text: e.textContent.replace(/\s+/g, ' ').trim().slice(0, 30), box: `${Math.round(r.left)},${Math.round(r.top)} ${Math.round(r.width)}x${Math.round(r.height)}`, hPct: Math.round(r.height / innerHeight * 100), centreBand: band, rightGap: Math.round(innerWidth - r.right) }; });
+    const pollToast = async (ms) => { for (let t = 0; t < ms; t += 250) { const b = await toastBox(); if (b) return b; await p.waitForTimeout(250); } return null; };
+    await enter(p);
+    log('b3-toast-start', await pollToast(4000));
+    const header = () => p.evaluate(() => { const d = [...document.querySelectorAll('dialog[open],[role=dialog]')].filter((e) => e.getBoundingClientRect().width).pop(); const h = d && d.querySelector('header'); if (!h) return null; const r = h.getBoundingClientRect(), t = h.querySelector('h2'), tr = t && t.getBoundingClientRect(), lh = t && parseFloat(getComputedStyle(t).lineHeight);
+      return { header: `${Math.round(r.top)}..${Math.round(r.bottom)}`, h2: tr ? `${Math.round(tr.width)}x${Math.round(tr.height)} lines~${lh ? Math.round(tr.height / lh) : '?'}${t.scrollWidth > t.clientWidth + 1 ? ' ELLIPSIS' : ''}` : null }; });
+    await flow(env, size, 'pocket', async () => { await p.click('[aria-label^="Your island pocket"]', { timeout: 4000 }); await p.waitForTimeout(1500); log('b3-pocket', await header()); await A(env, size, 'pocket'); await esc(p); });
+    await flow(env, size, 'paths', async () => { await p.click('[data-tour="quests"]', { timeout: 4000 }); await p.waitForTimeout(2000);
+      log('b3-paths', { ...(await header()), firstCard: await p.evaluate(() => { const d = [...document.querySelectorAll('dialog[open]')].pop(); const b = d && [...d.querySelectorAll('button')].find((x) => x.getBoundingClientRect().top > 60 && x.getBoundingClientRect().height > 60); return b ? Math.round(b.getBoundingClientRect().top) : null; }) });
+      await A(env, size, 'paths'); await esc(p, 2); });
+    await flow(env, size, 'map', async () => { await p.evaluate(() => document.getElementById('corner-map')?.click()); await p.waitForTimeout(2500);
+      log('b3-map', await p.evaluate(() => { const v = document.querySelector('[data-map-legend]')?.closest('dialog')?.querySelector('[role=region]'); if (!v) return null; const vr = v.getBoundingClientRect(), st = v.firstElementChild.getBoundingClientRect();
+        const museum = [...v.querySelectorAll('.map-destination')].find((e) => /MUSEUM/.test(e.textContent)), mr = museum && museum.getBoundingClientRect();
+        const lis = [...document.querySelectorAll('[data-map-legend] li')], rows = new Set(lis.map((l) => Math.round(l.getBoundingClientRect().top))).size, tips = [...document.querySelectorAll('[data-legend-tip]')].map((b) => Math.round(b.getBoundingClientRect().height));
+        const inside = (r) => !!r && r.left >= vr.left - 1 && r.right <= vr.right + 1 && r.top >= vr.top - 1 && r.bottom <= vr.bottom + 1;
+        return { fit: v.hasAttribute('data-map-fit'), view: `${Math.round(vr.width)}x${Math.round(vr.height)}`, stage: `${Math.round(st.left - vr.left)},${Math.round(st.top - vr.top)} ${Math.round(st.width)}x${Math.round(st.height)}`, museumInView: inside(mr), legend: `${lis.length} in ${rows} row(s)`, tipH: tips.join('/'), arrows: [...document.querySelectorAll('[data-dir]')].filter((a) => !a.hidden).length }; }));
+      await A(env, size, 'map'); await esc(p); });
+    await flow(env, size, 'settings', async () => { await p.click('[data-hud-triggers] button[aria-label="Settings"]', { timeout: 4000 }); await p.waitForTimeout(1500); log('b3-settings', await header()); await A(env, size, 'settings'); await esc(p, 2); });
+    await flow(env, size, 'party', async () => {
+      await p.click('button[aria-label="Play with friends"]'); await p.waitForSelector('[role=dialog][aria-label="Play with friends"]', { timeout: 10000 }); await p.waitForTimeout(800);
+      await p.fill('input[aria-label="First name"]', 'Sam'); await p.click('text=Start a party'); await p.waitForSelector('[data-parent-gate-answer]'); await gate(p); await p.waitForSelector('[data-party-code]', { timeout: 10000 }); await p.waitForTimeout(800);
+      log('b3-party-tabs', await p.evaluate(() => [...document.querySelectorAll('[data-party-sheet] [role=tab]')].map((t) => `${t.textContent.trim().slice(0, 8)} ${Math.round(t.getBoundingClientRect().width)}x${Math.round(t.getBoundingClientRect().height)}`).join(' | ')));
+      await p.click('[data-party-sheet] button:has-text("Done")', { timeout: 4000 }).catch(() => esc(p)); await p.waitForTimeout(1000);
+    });
+    await flow(env, size, 'dive', async () => {
+      await p.addInitScript(() => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x: 512, z: -256, yaw: 0, ride: 'walk', flightHeight: 0 })); });
+      await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(4000);
+      for (const dz of [-10, -20, -30, -36]) { await p.evaluate(({ dz }) => { const l = window.__fi2.location; l.x = 512; l.z = -256 + dz; }, { dz }); await p.waitForTimeout(1200); }
+      log('b3-toast-swim', await pollToast(3000));
+      const go = await p.$('[data-dive-go]:not([hidden])'); if (go) await go.tap();
+      const b = await pollToast(6000); log('b3-toast-dive', b);
+      if (b && SHOTS.has(`toast:${size}`)) await p.screenshot({ path: path.join(out, `toast-${size}.png`) });
+    });
+    await flow(env, size, 'shop', async () => { await p.goto(url + '/shop', { waitUntil: 'domcontentloaded', timeout: 120000 }); await p.waitForTimeout(12000); await esc(p, 1);
+      log('b3-shop', await p.evaluate((inset) => { const d = [...document.querySelectorAll('button')].filter((b) => /^(Done|My kit)$/i.test((b.getAttribute('aria-label') || b.textContent).trim()) && b.getBoundingClientRect().width).map((b) => { const r = b.getBoundingClientRect(); return `${(b.getAttribute('aria-label') || b.textContent).trim()} right=${Math.round(r.right)}/${innerWidth - inset.right} top=${Math.round(r.top)}${r.right > innerWidth - inset.right + 1 ? ' IN-INSET' : ''}`; }); return d.join(' | ') || null; }, env.s.inset));
+      await A(env, size, 'shop'); });
   },
 };
 // Pick your player: the scroller inside the card, and each control's box (COVERED / CLIPPED when not fully tappable).

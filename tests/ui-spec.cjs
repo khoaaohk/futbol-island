@@ -128,7 +128,7 @@ ok(/:root\{\s*--btn-font:Arial,Helvetica,sans-serif;--font-body:var\(--btn-font\
   if(/:active/.test(sel)&&/translateY\(3px\)|translate:0 3px/.test(body))ok(false,`party.module.css: "${sel.slice(-60)}" presses by a literal 3px; use var(--btn-press)`);
  }
  ok(/\.roomEmote\{[^}]*var\(--btn-grain\)/.test(pc),'room Emote button has the textured gold face like the other round gold buttons');
- ok(/\.tab::before\{content:"";position:absolute;inset:-6px 0\}/.test(pc),'Code | List tabs keep a 44px hit height on phones');
+ ok(!/--tabs-h:48px/.test(pc)&&/\.body\{[^}]*--tabs-h:56px/.test(pc)&&/\.tabs\{[^}]*height:var\(--tabs-h\);padding:6px/.test(pc),'Code | List tabs are 44px tall boxes in portrait and landscape (56px track - 2 x 6px; Oct 23 2026)');
  ok(/\.toast\{[^}]*animation:partyIn \.3s ease\}/.test(pc)&&/:global\(\.hud-stack\)>\.toast\{position:static/.test(pc),'party note: one toast timing, and it sits in the HUD stack on the island');
  ok(/\.roomSheet\{[^}]*animation:partyIn \.26s ease-out/.test(pc),'room roster opens with the modal fade timing');
  const host=read('components/party/PartyHost.tsx'),town=read('components/Town.tsx');

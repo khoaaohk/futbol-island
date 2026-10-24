@@ -19,6 +19,11 @@ const STEP=.6,DRAG_SLOP=8;
 /** The right pan stops at the easternmost land (Coral Cay's or Summit Isle's shore plus room for its beach and labels), not at the far edge of
  *  the flight area's empty south-east lobe: on a phone the last taps used to push CORAL CAY and HOSTEL off the left edge. */
 const CONTENT_EAST=Math.min(FLIGHT_BOUNDS.maxX+8,Math.max(...CAY_SHORE.map(p=>p.x),...SUMMIT_SHORE.map(p=>p.x))+24);
+/** Short screens (landscape phones, Oct 23 2026 landscape audit batch 3): the frame is ~270 px tall, so "cover" showed about half the
+ *  island and the History Museum pin sat off screen. Under this query the map is CONTAINED instead (the whole island, west rim to
+ *  CONTENT_EAST, centred in the frame) and the pan arrows hide. Keep in step with the max-height:500px block in the CSS. */
+export const MAP_FIT_QUERY='(max-height:500px)';
+const CONTENT_W=CONTENT_EAST-MAP_X;
 const ARROWS:{dir:Direction;label:string;rotate:number}[]=[{dir:'up',label:'Move map up',rotate:0},{dir:'right',label:'Move map right',rotate:90},{dir:'down',label:'Move map down',rotate:180},{dir:'left',label:'Move map left',rotate:270}];
 /** Map key (G-13, Sep 30 2026): the same marks the map draws (IslandOverview), so a child can read V / F / J / W at a glance.
  *  The marks on the map are plain drawings; tapping V, F or J here shows what it is (Sep 30 2026, user: "the legend above is
@@ -37,7 +42,7 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  // Pan state. Heat: no animation loop — arrows/keys set one CSS transform that eases on the compositor; drags write the transform
  // straight to the stage per pointer event; the frame is measured by a ResizeObserver that exists only while the dialog is open.
  const view=useRef<HTMLDivElement>(null),stage=useRef<HTMLDivElement>(null);
- const [size,setSize]=useState({w:0,h:0}),[pan,setPan]=useState({x:0,y:0}),[eased,setEased]=useState(false);
+ const [size,setSize]=useState({w:0,h:0,fit:false}),[pan,setPan]=useState({x:0,y:0}),[eased,setEased]=useState(false);
  const panRef=useRef(pan);panRef.current=pan;
  // Key tooltip: CSS-only motion (one 160 ms fade + rise), placed once per tap; nothing runs while it is open.
  const [tip,setTip]=useState<Tip|null>(null),tipEl=useRef<HTMLDivElement>(null),tipAnchor=useRef<HTMLElement|null>(null);
@@ -51,10 +56,12 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  const legend=mapLegend(usePartyHasFriends(open));
  const needsCenter=useRef(true),drag=useRef<{id:number;sx:number;sy:number;x:number;y:number;last:{x:number;y:number};moved:boolean}|null>(null),swallowClick=useRef(false);
  useEffect(()=>{if(open)return;const d=drag.current;drag.current=null;swallowClick.current=false;stage.current?.removeAttribute('data-dragging');if(d&&view.current?.hasPointerCapture(d.id))view.current.releasePointerCapture(d.id);},[open]);
- const scale=size.w&&size.h?Math.max(size.w/MAP_W,size.h/MAP_H):0,stageW=MAP_W*scale,stageH=MAP_H*scale;
+ const scale=size.w&&size.h?size.fit?Math.min(size.w/Math.min(MAP_W,CONTENT_W),size.h/MAP_H):Math.max(size.w/MAP_W,size.h/MAP_H):0,stageW=MAP_W*scale,stageH=MAP_H*scale;
+ // Contained map: centre the island's drawn width (to CONTENT_EAST) and height in the frame; cover mode never offsets.
+ const offX=size.fit?Math.max(0,Math.round((size.w-Math.min(stageW,CONTENT_W*scale))/2)):0,offY=size.fit?Math.max(0,Math.round((size.h-stageH)/2)):0;
  const maxX=Math.max(0,Math.floor(Math.min(stageW,(CONTENT_EAST-MAP_X)*scale)-size.w)),maxY=Math.max(0,Math.floor(stageH-size.h));
  const clamp=(x:number,y:number)=>({x:Math.round(Math.min(maxX,Math.max(0,x))),y:Math.round(Math.min(maxY,Math.max(0,y)))});
- useEffect(()=>{if(!open){needsCenter.current=true;return;}const el=view.current;if(!el)return;const measure=()=>{const w=el.clientWidth,h=el.clientHeight;setSize(s=>s.w===w&&s.h===h?s:{w,h});};measure();const observer=new ResizeObserver(measure);observer.observe(el);return()=>observer.disconnect();},[open]);
+ useEffect(()=>{if(!open){needsCenter.current=true;return;}const el=view.current;if(!el)return;const measure=()=>{const w=el.clientWidth,h=el.clientHeight,fit=matchMedia(MAP_FIT_QUERY).matches;setSize(s=>s.w===w&&s.h===h&&s.fit===fit?s:{w,h,fit});};measure();const observer=new ResizeObserver(measure);observer.observe(el);return()=>observer.disconnect();},[open]);
  // Open centred on the player; after a resize just keep the view inside the map.
  useLayoutEffect(()=>{if(!open||!scale)return;if(needsCenter.current){needsCenter.current=false;setEased(false);setPan(clamp((position.x-MAP_X)*scale-size.w/2,(position.z-MAP_Z)*scale-size.h/2));}else setPan(p=>{const c=clamp(p.x,p.y);return c.x===p.x&&c.y===p.y?p:c;});},[open,scale,size.w,size.h]);// eslint-disable-line react-hooks/exhaustive-deps
  const move=(dir:Direction)=>{const p=panRef.current,dx=dir==='left'?-1:dir==='right'?1:0,dy=dir==='up'?-1:dir==='down'?1:0;const next=clamp(p.x+dx*size.w*STEP,p.y+dy*size.h*STEP);if(next.x===p.x&&next.y===p.y)return;setEased(true);setPan(next);
@@ -95,11 +102,11 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  useEffect(()=>{if(!tip)return;const down=(e:globalThis.PointerEvent)=>{const t=e.target;if(t instanceof Element&&t.closest('[data-legend-tip]'))return;setTip(null);};
   window.addEventListener('pointerdown',down,true);return()=>window.removeEventListener('pointerdown',down,true);},[tip]);
  const onTipBlur=(e:React.FocusEvent)=>{const next=e.relatedTarget;if(next instanceof Element&&next.closest('[data-legend-tip]'))return;setTip(null);};
- const stageStyle:CSSProperties=scale?{width:stageW,height:stageH,transform:`translate3d(${-pan.x}px,${-pan.y}px,0)`}:{visibility:'hidden'};
+ const stageStyle:CSSProperties=scale?{left:offX,top:offY,width:stageW,height:stageH,transform:`translate3d(${-pan.x}px,${-pan.y}px,0)`}:{visibility:'hidden'};
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="town-dialog-title" onCancel={e=>{e.preventDefault();if(tip){setTip(null);return;}onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'&&tip){e.preventDefault();setTip(null);}}} onKeyUp={e=>e.stopPropagation()}>
  <section className={`${styles.panel} ${shell.shell} ${shell.white}`}><header className={shell.header}><div><h2 id="town-dialog-title">Pick your patch</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
  <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend data-legend-count={legend.length}>{legend.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul><div className={styles.frame} onKeyDown={onKeyDown}>
-  <div ref={view} className={styles.map} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
+  <div ref={view} className={styles.map} data-map-fit={size.fit?'true':undefined} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
    <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect} friends={open} onFriendTip={friendTip}/></div>
   </div>
   {ARROWS.map(({dir,label,rotate})=><button key={dir} type="button" className={styles.arrow} data-dir={dir} hidden={!scale||hidden(dir)} disabled={!can[dir]} aria-label={label} data-tip={label} onClick={()=>move(dir)}><Icon name="up" size={22} style={rotate?{transform:`rotate(${rotate}deg)`}:undefined}/></button>)}

@@ -10,6 +10,7 @@
  *    overlap) is taken off, and a perspective camera fit that centres the model in that box, as large as fits.
  * Desktop (≥ 900px) never calls any of this: its side-panel layout and camera fits are unchanged.
  */
+import {phoneLayoutQuery} from '../ui/phoneLayout';
 
 export type SheetSnap='compact'|'default'|'tall';
 export const SHEET_SNAPS:readonly SheetSnap[]=['compact','default','tall'];
@@ -19,8 +20,9 @@ export const SHEET_KEY='fi2-studio-sheet-v1';
 export const SHEET_FRACTION:Record<SheetSnap,number>={compact:.34,default:.5,tall:.78};
 /** Spoken state for the handle (aria-valuetext). */
 export const SHEET_LABEL:Record<SheetSnap,string>={compact:'Small panel',default:'Medium panel',tall:'Tall panel'};
-/** Phones only: the side panel takes over at 900px. */
-export const SHEET_PHONE_QUERY='(max-width:899px)';
+/** Phones only: the side panel takes over at 900px; landscape phones (Pro Max 932/956 x 430/440) keep the sheet
+ * (lib/ui/phoneLayout.ts, the shared phone predicate; the studio CSS spells the same list). */
+export const SHEET_PHONE_QUERY=phoneLayoutQuery(899);
 /** The sheet never gets shorter than its handle + step pills + Save/Buy footer plus a little content. */
 export const SHEET_MIN_PX=210;
 /** A tall sheet still leaves the header (≈ 68px) and this much stage above it, so the model never disappears. */

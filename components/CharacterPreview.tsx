@@ -1,4 +1,5 @@
 'use client';
+import {phoneLayoutQuery} from '@/lib/ui/phoneLayout';
 import {wearBackpack} from '@/lib/graphics/backpack';
 import {useEffect,useRef,useState} from 'react';
 import * as T from 'three';
@@ -56,7 +57,7 @@ export default function CharacterPreview({open,value,move=0}:{open:boolean;value
   const ball=new T.Mesh(ballGeometry,ballMaterial);ball.castShadow=true;ball.visible=false;ball.name='preview-ball';turntable.add(ball);
   const driver=createPreviewDriver();
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const phone=window.matchMedia('(max-width: 700px)');
+  const phone=window.matchMedia(phoneLayoutQuery(700));
   // Live limbs in the turntable's space, for the touches that follow a boot or the gloves.
   const tmpA=new T.Vector3(),tmpB=new T.Vector3();
   const probe:PreviewProbe={

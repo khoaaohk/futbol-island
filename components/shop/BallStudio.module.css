@@ -271,7 +271,7 @@
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* ---- Desktop & tablets: side panel ---- */
-@media (min-width:900px){
+@media(min-width:900px) and (min-height:481px) and (min-device-width:481px),(min-width:900px) and (orientation:portrait) and (min-device-width:481px){
  .root{grid-template-columns:minmax(0,1fr) 474px;grid-template-rows:auto minmax(0,1fr)}
  .top{grid-column:1/-1;min-height:76px;padding:18px 20px 14px}
  .stage{grid-column:1;grid-row:2;margin:20px 14px 20px 20px;border-radius:28px;box-shadow:0 0 0 3px var(--rim)}
@@ -291,12 +291,12 @@
  .preset{width:auto}
  .burst{top:calc(50% + 30vh - 10px)}
 }
-@media (max-width:899px){.decalBar{left:50%;bottom:36px;transform:translateX(-50%)}@keyframes barIn{from{opacity:0;transform:translate(-50%,8px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.decalBar{left:50%;bottom:36px;transform:translateX(-50%)}@keyframes barIn{from{opacity:0;transform:translate(-50%,8px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
  /* clears the shared top-right icon row (StudioControls, Oct 13 2026): a narrow phone stage isn't wide enough for a centred
     hint pill to clear 5 round buttons at top:12; the desktop stage is wide enough that top:14/20 never collided */
  .hint{top:70px}}
 /* Phone: the draw tools are compact (the sheet height is the player's snap now, Oct 14 2026: no per-step height). */
-@media (max-width:899px){.tools{gap:5px}.tool{min-height:58px;font-size:11px}.tool svg{width:24px;height:24px}
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){.tools{gap:5px}.tool{min-height:58px;font-size:11px}.tool svg{width:24px;height:24px}
  /* the stage controls sit clear of the sheet's rounded top (the sheet overlaps the stage by 22px) */
  /* Kick sits top-left on phones, on the icon row's line, so the ball and the sheet edge stay clear (user, Oct 14). */
  .kickWrap{top:12px;bottom:auto;left:10px;translate:none}.kick{height:44px;gap:4px;padding:0 10px 0 5px}.kick span{width:30px;height:30px}.decalBar{bottom:44px!important}
@@ -309,7 +309,7 @@
  * and denser tiles — the preset row shows ~3.5 cards, the layout / pattern / finish grids go to 4 columns, the sticker and flag
  * trays to 5 — with the art scaled to match, 13px labels on at most two lines, and every tap target still ≥ 44px. Same cream
  * cards, rims, shadows and selected states; desktop untouched. */
-@media (max-width:899px){
+@media(max-width:899px),(max-height:480px) and (orientation:landscape),(max-device-width:480px){
  .body{padding:8px var(--phone-gutter,18px) 18px}
  .fact{margin:14px 0 2px;padding:10px 12px;font-size:12.5px}
  .h3{margin:16px 0 8px;font-size:12px}
