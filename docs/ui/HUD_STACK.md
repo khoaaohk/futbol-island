@@ -488,10 +488,29 @@ info needed." With the multiplayer flag on, the row is **Paths · Play with frie
   neighbouring widths except 340/341, 600/601 and 660/661. Known: at 341-343px with a 5-digit balance coins and fuel are only the
   CSS minimum 4px apart (pre-existing on phones; not an overlap).
 
-## Pocket keeps the coins bar (23 October 2026)
+## Pocket keeps the coins bar (23 October 2026) - SUPERSEDED
+
+Superseded the same day by "Pocket covers the HUD row" below; kept for history.
 
 Owner report (phone): tapping the coins bar opened the island pocket and the bar vanished with the column. Now `IslandJobs` gets
 `pocketOpen` (Town: `balancesOpen`); while it is set and the jobs UI is otherwise `blocked`, only the coins bar renders
 (`aria-expanded`, `data-pocket-open`, gold ring). The drawer `<dialog>` starts under the HUD row (`--pocket-top` = row top + row height + 8 px),
 its backdrop is transparent, so the bar is neither covered nor dimmed. The bar is inert under the modal; a tap on it (or the backdrop) lands on the
 dialog and closes the pocket, as do Done and Esc. The rest of the column still hides under the pocket (`stackCovered`, and the "held" notes wait).
+
+## Pocket covers the HUD row (23 October 2026)
+
+Owner report (real iPhone): the pocket starting under the row left Paths, Play with friends, the coins bar and Settings showing above it,
+and pushed the title and Done down. Reversed: the pocket `<dialog>` is `inset:0` again (no `--pocket-top`), and while it is open
+`.town-app:has(.dialog[open])` hides `nav[data-hud-triggers]` and `[data-job-wallet]` (visibility + pointer-events). `IslandJobs` no longer
+gets `pocketOpen`: `blocked` hides the bar as for every other panel, and the gold "open" ring is gone. The header sits in the row band:
+ModalShell's phone header padding-top is `16px + env(safe-area-inset-top)` (= `--island-hud-row-top`), desktop 20 px, with the side
+insets; the pocket's header is `[title][Done]` (title left on one line, Done 44 px tall where Settings was). Done, Esc and a tap on the tint
+close it; focus returns to the coins bar for keyboard users (pointer users are blurred by the HUD focus rule, `lib/town/hudFocus.ts`).
+
+The rest of the family already covered the row (modal top-layer dialogs, phone `inset:0`, header at the row top): Settings, Paths (and its
+cards / balls pages), the Shellbook, the character / Backpack drawer. Vending hides every other `.town-app` child and draws its own Done
+in the row. The party card ("Your party") is a small centred sheet over a backdrop: left as is. Known: at 393 px "Make it your island"
+(Settings) wraps to two lines, so its second line drops below the row band.
+Check: `node --experimental-websocket scripts/check-pocket-covers-row.cjs <appUrl> <relayUrl> [shotDir]` (393x852, 440x956, 852x393,
+party of 4): every row button's centre hits the drawer panel, title and Done in the row band, row restored on close.

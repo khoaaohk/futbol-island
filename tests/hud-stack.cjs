@@ -152,14 +152,17 @@ const pick=(a,c,ctx=walk,now=0)=>a.choose(c,ctx,now)?.kind??null;
  assert.match(g,/--island-hud-pair-gap:8px/,'the pair gap is one root variable');
  assert.match(scss,/@media\(max-width:340px\)\{\.triggers \[data-party-open\]\{position:absolute!important;left:0;top:calc\(var\(--island-hud-row-height,44px\) \+ 8px\)\}\}/,'<= 340 px: Play with friends drops under Paths');
  assert.match(g,/@media\(max-width:340px\)\{\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\) \.hud-stack\{top:calc\(var\(--island-hud-row-top\) \+ 2 \* var\(--island-hud-row-height\) \+ 8px \+ var\(--island-hud-row-gap\)\)\}/,'<= 340 px with friends on: the stack starts under the friends button, still centred');}
-// Pocket open (Oct 23 2026): the coins bar stays on screen above the drawer; the stack still hides.
-{const R=f=>fs.readFileSync(path.resolve(__dirname,'..',f),'utf8');const jobs=R('components/IslandJobs.tsx'),town=R('components/Town.tsx'),dcss=R('components/IslandBalanceDrawer.module.css');
- assert.match(town,/<IslandJobs onOpenBalances=\{\(\)=>setBalancesOpen\(true\)\} pocketOpen=\{balancesOpen\}/,'Town tells the jobs UI the pocket is open');
- assert.match(jobs,/if\(blocked\)return pocketOpen\?walletBtn:null;/,'blocked keeps only the coins bar while the pocket is open');
- assert.match(jobs,/aria-expanded=\{pocketOpen\} data-pocket-open/,'the bar shows as open');
- assert.match(dcss,/inset:var\(--pocket-top,0px\) 0 0 0/,'the drawer starts under the HUD row');
- assert.match(dcss,/--pocket-top:calc\(var\(--island-hud-row-top,16px\) \+ var\(--island-hud-row-height,44px\) \+ 8px\)/,'--pocket-top clears the row');
- assert.match(dcss,/\.dialog::backdrop\{background:transparent\}/,'the tint never covers the bar');
- assert.match(dcss,/dialog\[open\]\.dialog\[data-island-balances\]\{inset:var\(--pocket-top\) 0 0 0!important/,'the phone dialog rule (inset:0 !important) is overridden for the pocket');
+// Pocket covers the row (Oct 23 2026, supersedes "Pocket keeps the coins bar"): the drawer is inset:0, the HUD row hides while it is open,
+// the coins bar is not rendered (blocked), and the header sits in the row band (ModalShell phone header padding-top = row top).
+{const R=f=>fs.readFileSync(path.resolve(__dirname,'..',f),'utf8');const jobs=R('components/IslandJobs.tsx'),town=R('components/Town.tsx'),dcss=R('components/IslandBalanceDrawer.module.css'),shellCss=R('components/ModalShell.module.css'),g=R('app/globals.css');
+ assert.match(town,/<IslandJobs onOpenBalances=\{\(\)=>setBalancesOpen\(true\)\} blocked=/,'no pocketOpen prop: the bar is not kept while the pocket is open');
+ assert.match(jobs,/if\(blocked\)return null;/,'blocked hides the coins bar too');
+ assert.doesNotMatch(jobs,/pocketOpen|data-pocket-open/,'the pocket-open bar state is gone');
+ assert.doesNotMatch(R('components/IslandJobs.module.css'),/data-pocket-open/,'the gold ring style is gone');
+ assert.match(dcss,/\.dialog\{position:fixed;inset:0;/,'the drawer covers the whole screen, top included');
+ assert.doesNotMatch(dcss,/--pocket-top/,'no offset under the HUD row');
+ assert.match(dcss,/:global\(\.town-app\):has\(\.dialog\[open\]\) :global\(nav\[data-hud-triggers\]\),:global\(\.town-app\):has\(\.dialog\[open\]\) :global\(\[data-job-wallet\]\)\{visibility:hidden!important;pointer-events:none!important\}/,'Paths, friends, Settings and the bar hide under the pocket');
+ assert.match(g,/@media\(max-width:600px\),\(pointer:coarse\)\{:root\{--island-hud-row-top:calc\(16px \+ env\(safe-area-inset-top,0px\)\)/,'phone row top is 16px + safe area');
+ assert.match(shellCss,/\.shell>\.header\{padding:calc\(16px \+ env\(safe-area-inset-top,0px\)\) calc\(var\(--phone-gutter\) \+ env\(safe-area-inset-right,0px\)\)/,'phone drawer header starts at the row top, Done inside the right inset');
  assert.match(town,/hud-stack" data-hud-stack ref=\{setHudStackEl\} hidden=\{stackCovered\}/,'the column itself still hides under the pocket');}
 console.log('HUD_STACK_PASS');
