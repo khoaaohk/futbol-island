@@ -5,7 +5,7 @@
 /** Phones only: coarse pointer and a phone-sized viewport (portrait width or landscape height). Tablets/desktop keep the fixed stick. */
 export const PHONE_STICK_QUERY = '(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px)';
 /** Knob diameter as a share of the ring diameter (CSS: .joystick>span is 45% of --stick-size). */
-export const STICK_KNOB_RATIO = .45;
+export const STICK_KNOB_RATIO = .55;
 /** Max knob travel = ring radius − knob radius. At the old 132 px ring this is ~36 px, the previous fixed value. */
 export const stickTravel = (diameter: number) => diameter * (1 - STICK_KNOB_RATIO) / 2;
 /** Rim-glow threshold as a share of the travel (was 30 of 36 px). */

@@ -6,8 +6,8 @@ const root = path.join(__dirname, '..'), F = load(path.join(root, 'lib/town/floa
 const near = (a, b, e = 1e-9) => Math.abs(a - b) < e, eq = (a, b, m) => assert.deepEqual(JSON.parse(JSON.stringify(a)), b, m);
 
 // Travel = ring radius − knob radius; the old 132 px ring keeps its ~36 px travel.
-assert(near(F.stickTravel(132), 36.3, 1e-6), 'old ring travel ~36 px');
-assert(near(F.stickTravel(220), 220 / 2 - 220 * 0.45 / 2), 'travel is ring radius minus knob radius');
+assert(near(F.stickTravel(132), 29.7, 1e-6), 'ring 132 px travel ~30 px');
+assert(near(F.stickTravel(220), 220 / 2 - 220 * 0.55 / 2), 'travel is ring radius minus knob radius');
 // The same RELATIVE offset gives the same normalised vector (and walk effort) at two ring sizes.
 for (const [fx, fy] of [[0.05, -0.04], [0.2, 0.1], [-0.5, 0.5], [0.9, -1.4]]) {
   const a = F.stickInput(fx * F.stickTravel(132), fy * F.stickTravel(132), F.stickTravel(132)), b = F.stickInput(fx * F.stickTravel(220), fy * F.stickTravel(220), F.stickTravel(220));
@@ -33,9 +33,9 @@ assert.equal(F.clampAnchor(0, 0, { left: 0, top: 0, right: 100, bottom: 400 }, r
 
 // CSS: phone ring size, knob 45%, see-through knob (rest ≈ .45 with the faint resting ring, more while dragging), lighter base.
 const css = fs.readFileSync(path.join(root, 'app/globals.css'), 'utf8'), block = css.slice(css.indexOf('/* Movement stick (owner, Oct 23 2026)'));
-assert(block.includes('--stick-size:clamp(140px,calc(100vw - 192px),204px)'), 'portrait phone ring up to 204 px');
-assert(block.includes('--stick-size:min(204px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))'), 'landscape ring fits under the HUD row');
-assert(block.includes('.touch-controls .joystick>span{width:45%;height:45%}'), 'knob is 45% of the ring');
+assert(block.includes('--stick-size:clamp(123px,calc(100vw - 224px),180px)'), 'portrait phone ring up to 180 px');
+assert(block.includes('--stick-size:min(180px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))'), 'landscape ring fits under the HUD row');
+assert(block.includes('.touch-controls .joystick>span{width:55%;height:55%}'), 'knob is 55% of the ring');
 const op = (re) => +block.match(re)[1];
 const knob = op(/\.joystick>span\{opacity:([.\d]+)\}/), active = op(/\.joystick\[data-active=true\]>span\{opacity:([.\d]+)\}/), idle = op(/:not\(\[data-active=true\]\)\{opacity:([.\d]+)\}/);
 assert(knob * idle >= 0.4 && knob * idle <= 0.55, `resting knob opacity ${knob * idle}`); assert(active > knob && active <= 0.7, 'knob a bit stronger while dragging');

@@ -900,7 +900,7 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 /* Phones (owner, Oct 23 2026): exactly FIVE per page, each centred in a fifth of the strip (percent margins = the page width); swipe or the arrows for the rest. */
 @media(prefers-reduced-motion:reduce){.emote-wheel{animation:none}.emote-wheel-btn{transition:none}}
 /* Movement stick (owner, Oct 23 2026): see-through knob everywhere the shared .joystick is used (island, Konbini, Arcade, Museum, Shop);
-   on phones a bigger ring (--stick-size) whose knob is 45% of it, and on the island a FLOATING base (components/Town.tsx,
+   on phones a bigger ring (--stick-size) whose knob is 55% of it, and on the island a FLOATING base (components/Town.tsx,
    lib/town/floatingStick.ts): a press in the left zone anchors the ring at the thumb; idle, a faint ring rests bottom-left. */
 .joystick{background:#294f4333;border-color:#f7e7bc80;transition:opacity .16s ease-out}
 .joystick>span{opacity:.5}
@@ -909,10 +909,10 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .joystick[data-fading=true]{opacity:0}
 .stick-insets{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 @media(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px){
- .touch-controls{--stick-size:clamp(140px,calc(100vw - 192px),204px)}
+ .touch-controls{--stick-size:clamp(123px,calc(100vw - 224px),180px)}
  .touch-controls,.touch-controls .joystick{width:var(--stick-size);height:var(--stick-size)}
- .touch-controls .joystick>span{width:45%;height:45%}
+ .touch-controls .joystick>span{width:55%;height:55%}
 }
-@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(124px,calc(100vw - 186px),162px)}}
-@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(204px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
+@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(108px,calc(100vw - 219px),142px)}}
+@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(180px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
 @media(prefers-reduced-motion:reduce){.joystick{transition:none}}
