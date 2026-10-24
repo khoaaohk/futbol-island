@@ -11,6 +11,7 @@ export function juggleContact(kind:JuggleTouch,side:number,head?:JuggleHead,head
 
 import type {CharacterCustomization} from './customization';
 import type {FramePoint,FrameHit} from './goalCollisions';
+import {SKY_MOVE,pickSkyKick,pickSkyTrap,skyKickTouch} from './skyKeepUpMoves';
 export const SHOT_WINDUP=.46,SHOT_SPEED=38,WALL_JUGGLE_DISTANCE=8;
 /**
  * The island shot's physics (Town.tsx kick → walkBall 'shot'), ONE source for the island and the Konbini's indoor ball
@@ -44,6 +45,39 @@ const KEEPUP_ARM=.45,KEEPUP_CEILING=3.04;
 export const KEEPUP_HOLD={start:250,full:600,maxLift:1.6} as const;
 export function holdCharge(heldMs:number){const t=(heldMs-KEEPUP_HOLD.start)/(KEEPUP_HOLD.full-KEEPUP_HOLD.start);return Number.isFinite(t)?Math.max(0,Math.min(1,t)):0;}
 export const holdLift=(heldMs:number)=>1+(KEEPUP_HOLD.maxLift-1)*holdCharge(heldMs);
+/**
+ * SKY keep-up (Oct 24 2026, owner: "allow the keep ups to be kicked up way in the air … by holding the btn down. when kicking up
+ * way higher, like above the Konbini store height and a little higher, they can run and see a red mark where the ball is going to
+ * land, to chase it and try to keep the keep-up going"). A counted touch whose press has been held past KEEPUP_SKY.start ms
+ * (the normal lift is already full at KEEPUP_HOLD.full) becomes a sky kick, full at KEEPUP_SKY.full (~1 s): apex from minApex to
+ * apex m over the player's feet (SKY_MAX_APEX: the Konbini roof height, lib/konbini/konbiniDoors.ts KONBINI_BUILDINGS.main.h 4.72 m, + 9 m; anywhere on the island), plain
+ * ballistic flight under `gravity` (softer than 9.81: a full kick hangs ~4.2 s, time to run, under 5 s), drifting 1.5-2 m (minDrift…maxDrift) away
+ * ahead of the player (± sideAngle, alternating) so it never lands back on them (owner follow-up: "lands about 5 feet in front …
+ * the player must run over to chase it down"). predictSkyLanding gives the landing point (Town's red mark). The catch needs the
+ * player AND a press (owner: "be within a small catch radius (~1 m) … then press/tap the keep-up button again"): a press once the
+ * ball is coming down under armHigh over the feet (or a press held into that) arms the catch; it happens when the ball is between
+ * catchLow and catchHigh over the feet within catchRadius: +1 and the run goes on (a press held ~1 s launches the next sky kick). Landing untouched → 'drop' and the run ends, as a miss does.
+ * Exact constant-gravity integration (no drag), so the prediction is the real landing.
+ */
+export const KONBINI_ROOF=4.72;
+/** THE tunable: the full-charge apex over the player's feet, anywhere on the island (owner, Oct 24: "noticeably HIGHER than the
+ *  Konbini … roughly Konbini height + 8-10 m … not crazy, hang under ~5 s"). The Konbini roof is only the height reference. */
+export const SKY_MAX_APEX=KONBINI_ROOF+9;
+export const KEEPUP_SKY={start:650,full:1000,apex:SKY_MAX_APEX,minApex:3.6,gravity:6.2,minDrift:1.5,maxDrift:2,sideAngle:.35,catchRadius:1,catchHigh:1.75,catchLow:.1,armHigh:4.5} as const;
+export function skyCharge(heldMs:number){const t=(heldMs-KEEPUP_SKY.start)/(KEEPUP_SKY.full-KEEPUP_SKY.start);return Number.isFinite(t)&&t>0?Math.min(1,t):0;}
+/** The whole-press charge for the UI ring: 0 … 1 over the full ~1 s (the normal lift fills the first part, the sky kick the rest). */
+export const keepUpChargeRing=(heldMs:number)=>Number.isFinite(heldMs)?Math.max(0,Math.min(1,heldMs/KEEPUP_SKY.full)):0;
+/** Landing headings tried (× sideAngle, on the alternating side): ahead-side, other side, straight, wider; then the same at the short drift. */
+const SKY_TRIES=[1,-1,0,2.5,-2.5,1,-1,0,2.5,-2.5] as const;
+export type SkyLanding={x:number;y:number;z:number;t:number};
+/** Where (and in how many seconds) a ball at x,y,z with velocity vx,vy,vz under `gravity` meets ground(x,z) (ball-centre height). No allocation. */
+export function predictSkyLanding(x:number,y:number,z:number,vx:number,vy:number,vz:number,ground:(x:number,z:number)=>number,out:SkyLanding,gravity:number=KEEPUP_SKY.gravity){
+ let gy=ground(x,z),t=0;
+ for(let i=0;i<5;i++){const disc=vy*vy+2*gravity*(y-gy);t=disc>0?Math.max(0,(vy+Math.sqrt(disc))/gravity):0;const ng=ground(x+vx*t,z+vz*t);if(Math.abs(ng-gy)<1e-4){gy=ng;break;}gy=ng;}
+ out.x=x+vx*t;out.z=z+vz*t;out.y=gy;out.t=t;return out;
+}
+/** The catch zone (the touch also needs an armed press): the ball coming down, between catchLow and catchHigh over the feet, within catchRadius. */
+export function inSkyCatch(bx:number,by:number,bz:number,vy:number,p:{x:number;y:number;z:number}){return vy<0&&by<=p.y+KEEPUP_SKY.catchHigh&&by>=p.y+KEEPUP_SKY.catchLow&&Math.hypot(bx-p.x,bz-p.z)<=KEEPUP_SKY.catchRadius;}
 export type WallJuggleTarget={x:number;z:number;top?:number};
 type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
@@ -51,21 +85,27 @@ export type JuggleHead={bottom:number;top:number;front:number;width:number};
 export const BALL_SEA_LEVEL=-.43,BALL_FLOAT_TIME=2.1;
 type Environment={sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
- const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle'|'drop',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
+ const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle'|'drop'|'sky',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
   /** Seconds a shot has been floating in the sea (0 = not in the water). The ball stays in 'shot' mode while it floats. */
   floating:0,
   /** Counted keep-ups (keepUp()): on, the live count (0 = no run), the current touch's lift (1 = tap, ≤ 1.6 held). */
-  counted:false,streak:0,keepLift:1};
- let armed=false,pressing=false,pressUsed=true,keptHold=false,holdAge=0,releaseLift=1,flightAge=0,touchIndex=0;
- const liftNow=()=>pressing?holdLift(holdAge*1000):releaseLift;
- const consumeLift=()=>{const l=liftNow();releaseLift=1;return l;};
+  counted:false,streak:0,keepLift:1,
+  /** Sky keep-up: the predicted ground landing (ball-centre y) and seconds left; skyRing = the live press charge 0…1 (UI ring). */
+  skyX:0,skyY:0,skyZ:0,skyLeft:0,skyRing:0,
+  /** The rig (lib/town/skyKeepUpMoves.ts): the held sky charge 0…1 (wind-up), the last catch's trap / re-kick and seconds since it (−1 = none). */
+  skyWind:0,skyTrap:0,skyKick:-1,skyTrapSide:1 as -1|1,skyMoveAge:-1};
+ let armed=false,pressing=false,pressUsed=true,keptHold=false,holdAge=0,releaseMs=0,flightAge=0,touchIndex=0,skyAge=0,feetY=0;
+ const skyLand:SkyLanding={x:0,y:0,z:0,t:0};
+ /** The hold (ms) the next touch uses: the live press, or the one let go (armed / kept), then cleared. */
+ const consumeHold=()=>{const ms=pressing?holdAge*1000:releaseMs;releaseMs=0;return ms;};
+ const consumeLift=()=>holdLift(consumeHold());
  const endRun=()=>{state.counted=false;state.streak=0;state.keepLift=1;armed=false;keptHold=false;};
  let floatFrom=0;
  let shotAge=0,impactCooldown=0,wallDirection={x:0,z:1},wallLegTime=.4,contactHeight=.85,returnAge=0,receiveHeight=.85,normalTouchCycle=-1,blendAge=1,wallKickCount=0;
  let movingJuggle=false;
  let finishTarget:{x:number;y:number;z:number}|undefined;
  const frameFrom={x:0,y:0,z:0},frameTo={x:0,y:0,z:0};
- let nextWall:WallJuggleTarget|undefined,blendStart={x:0,y:0,z:0};
+ let nextWall:WallJuggleTarget|undefined;const blendStart={x:0,y:0,z:0};
  const attach=(p:Player,floor?:Environment['floor'],contact?:{x:number;z:number})=>{
   const dx=contact?contact.x-p.x:Math.sin(p.yaw),dz=contact?contact.z-p.z:Math.cos(p.yaw),length=Math.hypot(dx,dz)||1,sx=dx/length,sz=dz/length;let support=p.y;
   const lead=contact?length:state.mode==='attached'?.56:S.lead;
@@ -86,16 +126,16 @@ export function createWalkBall(){
  const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;endRun();state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
  const beginCharge=(p:Player,yaw:number)=>{if(state.mode==='shot'||state.mode==='windup')return;reset(p);state.mode='charging';state.yaw=yaw;};
  const validWall=(p:Player,target?:WallJuggleTarget)=>{if(!target)return false;const distance=Math.hypot(target.x-p.x,target.z-p.z),facing=distance?((target.x-p.x)*Math.sin(p.yaw)+(target.z-p.z)*Math.cos(p.yaw))/distance:0;return Number.isFinite(distance)&&distance>=.8&&distance<=WALL_JUGGLE_DISTANCE&&facing>=-.1&&(target.top===undefined||Number.isFinite(target.top)&&target.top>p.y+.75);};
- const regularJuggle=()=>{flightAge=0;state.keepLift=1;blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;state.mode='juggle';state.wallTarget=null;state.wallAge=state.age=state.kick=0;state.vx=state.vy=state.vz=0;normalTouchCycle=-1;};
+ const regularJuggle=()=>{flightAge=0;state.keepLift=1;blendStart.x=state.x;blendStart.y=state.y;blendStart.z=state.z;blendAge=0;state.mode='juggle';state.wallTarget=null;state.wallAge=state.age=state.kick=0;state.vx=state.vy=state.vz=0;normalTouchCycle=-1;};
  const updateWallTarget=(p:Player,target?:WallJuggleTarget)=>{
   if(state.mode!=='juggle'&&state.mode!=='wall-juggle')return;
   nextWall=validWall(p,target)?{...target!}:undefined;
   if(!nextWall){if(state.mode==='wall-juggle')regularJuggle();return;}
-  if(state.mode==='juggle'&&blendAge>=.35&&(state.jugglePhase<.12||state.jugglePhase>.9&&(!state.counted||armed))){if(state.counted&&state.jugglePhase>.9){armed=false;state.streak++;state.keepLift=consumeLift();}state.mode='wall-juggle';state.wallTarget={...nextWall};state.wallPhase='kick';state.wallAge=0;state.juggleSide=1;}
+  if(state.mode==='juggle'&&blendAge>=.35&&!(state.counted&&skyCharge(pressing?holdAge*1000:releaseMs)>0)&&(state.jugglePhase<.12||state.jugglePhase>.9&&(!state.counted||armed))){if(state.counted&&state.jugglePhase>.9){armed=false;state.streak++;state.keepLift=consumeLift();}state.mode='wall-juggle';state.wallTarget={...nextWall};state.wallPhase='kick';state.wallAge=0;state.juggleSide=1;}
  };
  const juggle=(p:Player,target?:WallJuggleTarget)=>{if(state.mode==='juggle'||state.mode==='wall-juggle'){reset(p);return;}reset(p);state.mode='juggle';state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);};
  /** The window where a press arms the next counted touch: the ball coming down (juggle) or heading back from the wall. */
- const inWindow=()=>state.mode==='juggle'?state.jugglePhase>=KEEPUP_ARM:state.mode==='wall-juggle'&&(state.wallPhase==='returning'||state.wallPhase==='outbound'&&state.wallAge>=wallLegTime*.5);
+ const inWindow=()=>state.mode==='sky'?state.vy<0&&state.y<=feetY+KEEPUP_SKY.armHigh:state.mode==='juggle'?state.jugglePhase>=KEEPUP_ARM:state.mode==='wall-juggle'&&(state.wallPhase==='returning'||state.wallPhase==='outbound'&&state.wallAge>=wallLegTime*.5);
  /** A counted touch was missed (or the ball landed): it falls off the foot with the shot physics and comes back as usual. */
  const dropKeepUp=(p:Player)=>{endRun();state.mode='drop';state.age=0;shotAge=.6;state.charge=0;finishTarget=undefined;state.wallTarget=null;nextWall=undefined;state.kick=state.jugglePhase=0;state.vx=Math.sin(p.yaw)*.8;state.vz=Math.cos(p.yaw)*.8;state.vy=Math.min(state.vy,-1.5);};
  /**
@@ -105,19 +145,69 @@ export function createWalkBall(){
   */
  const keepUp=(p:Player,target?:WallJuggleTarget)=>{
   if(pressing)return false;pressing=true;holdAge=0;pressUsed=false;keptHold=false;
-  if(state.counted&&(state.mode==='juggle'||state.mode==='wall-juggle')){if(inWindow()){armed=true;pressUsed=true;}return true;}
-  reset(p);state.mode='juggle';state.counted=true;state.streak=1;state.keepLift=1;flightAge=0;touchIndex=0;pressUsed=true;state.y=p.y+JUGGLE_CONTACT;updateWallTarget(p,target);return true;
+  if(state.counted&&(state.mode==='juggle'||state.mode==='wall-juggle'||state.mode==='sky')){if(inWindow()){armed=true;pressUsed=true;}return true;}
+  reset(p);state.mode='juggle';state.counted=true;state.streak=1;state.keepLift=1;flightAge=0;touchIndex=0;state.y=p.y+JUGGLE_CONTACT;
+  // The starting press is not spent: a tap still needs a second press, but HOLDING it from the feet arms touch 2 (lifted / a sky kick).
+  pressUsed=false;updateWallTarget(p,target);return true;
  };
  /** Release: an armed touch (or a held press let go early) keeps the lift this hold reached. */
- const keepUpRelease=()=>{if(!pressing)return;pressing=false;const lift=holdLift(holdAge*1000);if(armed)releaseLift=lift;
+ const keepUpRelease=()=>{if(!pressing)return;pressing=false;const ms=holdAge*1000,lift=holdLift(ms);if(armed)releaseMs=ms;
   // A HELD press let go before the window (kids let go early): it still arms the next touch, with the lift it reached. A tap does not.
-  else if(state.counted&&!pressUsed&&lift>1){keptHold=true;releaseLift=lift;}};
+  else if(state.counted&&!pressUsed&&lift>1){keptHold=true;releaseMs=ms;}};
+ const skyGround=(env:Environment)=>(x:number,z:number)=>{const f=env.floor(x,z);return env.sea?.(x,z)==='sea'&&f<=.25?BALL_SEA_LEVEL+.1:f+S.radius;};
+ /** A counted touch held past KEEPUP_SKY.start: the ball goes way up (KEEPUP_SKY), landing 1.5-2 m away for the player to chase.
+  *  Works on any ground: the landing spot is probed (a few headings, then the short drift) and must be dry land, not inside a
+  *  solid and not up on a roof / ledge the player cannot reach; no valid spot → false and the caller plays a normal lifted touch. */
+ const launchSky=(p:Player,env:Environment,ms:number)=>{
+  const K=KEEPUP_SKY,c=skyCharge(ms),g=K.gravity,apex=K.minApex+(K.apex-K.minApex)*c,side=touchIndex%2?1:-1,ground=skyGround(env);
+  const vy=Math.sqrt(2*g*Math.max(.5,p.y+apex-state.y)),flight=(vy+Math.sqrt(vy*vy+2*g*Math.max(0,state.y-p.y-S.radius)))/g;
+  const mode=state.mode;state.mode='sky';
+  for(let i=0;i<SKY_TRIES.length;i++){
+   const drift=i<5?K.minDrift+(K.maxDrift-K.minDrift)*c:K.minDrift,angle=p.yaw+side*K.sideAngle*SKY_TRIES[i];
+   // Aim at a spot `drift` m from the player (not from the ball): it never lands back on them.
+   const vx=(p.x+Math.sin(angle)*drift-state.x)/flight,vz=(p.z+Math.cos(angle)*drift-state.z)/flight;
+   predictSkyLanding(state.x,state.y,state.z,vx,vy,vz,ground,skyLand);
+   const f=env.floor(skyLand.x,skyLand.z);
+   if((env.sea?.(skyLand.x,skyLand.z)??'land')!=='land'||f>p.y+1.1||f<p.y-2.5||env.blocked(skyLand.x,skyLand.z,skyLand.y+.1))continue;
+   skyAge=0;state.keepLift=holdLift(ms);state.yaw=p.yaw;state.kick=.36;armed=false;state.wallTarget=null;state.vx=vx;state.vy=vy;state.vz=vz;
+   state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;env.strike();return true;
+  }
+  state.mode=mode;return false;
+ };
+ const predictSky=(env:Environment)=>{predictSkyLanding(state.x,state.y,state.z,state.vx,state.vy,state.vz,skyGround(env),skyLand);state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;};
+ /** Caught coming down: +1 and back to the counted juggle (or straight into another sky kick if the press is held that long). */
+ const catchSky=(p:Player,env:Environment)=>{
+  state.streak++;touchIndex++;armed=false;keptHold=false;const ms=consumeHold();if(pressing)pressUsed=true;env.receive?.();
+  if(skyCharge(ms)>0&&launchSky(p,env,ms))return;
+  // Trap with the part that fits the height / side, then re-kick (varied, never twice in a row): the ball waits at that part for
+  // the trap (flightAge starts at −trap) and leaves from the matching routine touch.
+  const h=state.y-p.y,lx=(state.x-p.x)*Math.cos(p.yaw)-(state.z-p.z)*Math.sin(p.yaw);state.skyTrapSide=lx>=0?1:-1;state.skyTrap=pickSkyTrap(h);
+  state.skyKick=pickSkyKick(h,state.skyTrapSide,state.streak,state.skyKick);state.skyMoveAge=0;
+  const want=skyKickTouch(state.skyKick),routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;for(let i=0;i<routine.length;i++)if(routine[(touchIndex+i)%routine.length]===want){touchIndex+=i;break;}
+  state.keepLift=holdLift(ms);state.mode='juggle';flightAge=-SKY_MOVE.trap;blendStart.x=state.x;blendStart.y=state.y;blendStart.z=state.z;blendAge=0;state.vx=state.vy=state.vz=0;state.kick=0;normalTouchCycle=-1;
+ };
  const recall=()=>{if(state.mode==='shot'||state.mode==='drop'){state.mode='return';state.age=0;state.floating=0;}};
  function update(dt:number,p:Player,env:Environment){
   state.age+=dt;state.bounce=Math.max(0,state.bounce-dt);impactCooldown=Math.max(0,impactCooldown-dt);
   const impact=()=>{state.bounce=.16;if(impactCooldown<=0){impactCooldown=.09;env.impact(state.x,state.y,state.z);}};
-  if(pressing)holdAge+=dt;
+  if(pressing)holdAge+=dt;feetY=p.y;
+  state.skyRing=state.counted&&pressing?keepUpChargeRing(holdAge*1000):0;state.skyWind=state.counted&&pressing?skyCharge(holdAge*1000):0;
+  if(state.skyMoveAge>=0){state.skyMoveAge+=dt;if(state.skyMoveAge>SKY_MOVE.trap+SKY_MOVE.kick||!state.counted)state.skyMoveAge=-1;}
   if(state.counted&&(pressing||keptHold)&&!pressUsed&&inWindow()){armed=true;pressUsed=true;keptHold=false;}
+  if(state.mode==='sky'){
+   const g=KEEPUP_SKY.gravity;skyAge+=dt;state.kick=skyAge<.3?.36+skyAge/.3*.64:0;state.jugglePhase=0;
+   let x=state.x+state.vx*dt,z=state.z+state.vz*dt;const y=state.y+state.vy*dt-g/2*dt*dt;state.vy-=g*dt;
+   // A wall / building in the way (up or down): it rebounds like a shot off a wall, the run keeps going and the mark moves to the
+   // rebound's landing (re-predicted once per hit, not per frame).
+   if(state.vx||state.vz){let hit=false;if(env.blocked(x,state.z,y)){state.vx*=-S.wallBounce;x=state.x;hit=true;}if(env.blocked(x,z,y)){state.vz*=-S.wallBounce;z=state.z;hit=true;}
+    if(hit){state.x=x;state.z=z;state.y=y;impact();predictSky(env);}}
+   state.x=x;state.z=z;state.y=y;state.skyLeft=Math.max(0,state.skyLeft-dt);
+   if(armed&&inSkyCatch(x,y,z,state.vy,p)){catchSky(p,env);return;}
+   const ground=skyGround(env)(x,z);
+   // Untouched: it lands; the shot physics take it from here (bounce / splash / recall) and the run ends, like any miss.
+   if(y<=ground){state.y=ground+1e-3;endRun();state.mode='drop';state.age=0;shotAge=.6;state.charge=0;state.kick=0;finishTarget=undefined;}
+   return;
+  }
   if(state.mode==='wall-juggle'){
    if(!validWall(p,nextWall)){regularJuggle();return;}
    state.wallAge+=dt;
@@ -141,7 +231,7 @@ export function createWalkBall(){
     else{if(env.blocked(x,z,y)){impact();regularJuggle();return;}state.x=x;state.z=z;state.y=y;}
     if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){impact();regularJuggle();return;}
     const received=(state.x-foot.x)*wallDirection.x+(state.z-foot.z)*wallDirection.z<=.06;
-    if(state.wallPhase==='returning'&&(received||returnAge>=wallLegTime)){if(state.counted){if(!armed){dropKeepUp(p);return;}armed=false;state.streak++;state.keepLift=consumeLift();}receiveHeight=state.y-p.y;state.wallPhase='receive';state.wallAge=0;state.vx=state.vy=state.vz=0;env.receive?.();return;}
+    if(state.wallPhase==='returning'&&(received||returnAge>=wallLegTime)){if(state.counted){if(!armed){dropKeepUp(p);return;}armed=false;state.streak++;touchIndex++;const ms=consumeHold();if(skyCharge(ms)>0&&launchSky(p,env,ms))return;state.keepLift=holdLift(ms);}receiveHeight=state.y-p.y;state.wallPhase='receive';state.wallAge=0;state.vx=state.vy=state.vz=0;env.receive?.();return;}
     if(state.y<env.floor(state.x,state.z)+.2){state.y=env.floor(state.x,state.z)+.2;impact();if(state.counted)dropKeepUp(p);else regularJuggle();return;}
    }
    if(state.wallAge>2)regularJuggle();return;
@@ -150,11 +240,11 @@ export function createWalkBall(){
   if(state.mode==='attached'){attach(p,env.floor);state.kick=0;return;}
   if(state.mode==='juggle'){
    // A counted run only re-blends when walking starts / stops (no free touch); the automatic loop restarts as before.
-   if(movingJuggle!==!!env.moving){movingJuggle=!!env.moving;if(state.counted){blendStart={x:state.x,y:state.y,z:state.z};blendAge=0;}else regularJuggle();}
+   if(movingJuggle!==!!env.moving){movingJuggle=!!env.moving;if(state.counted){blendStart.x=state.x;blendStart.y=state.y;blendStart.z=state.z;blendAge=0;}else regularJuggle();}
    attach(p);const style=env.ballStyle,period=style==='frost'?.8:style==='solar'?1.2:1.05;let cycle=state.age/period;
    if(state.counted){flightAge+=dt;const flight=period*Math.sqrt(state.keepLift);
-    if(flightAge>=flight){if(!armed){dropKeepUp(p);return;}armed=false;flightAge-=flight;touchIndex++;state.streak++;state.keepLift=consumeLift();}
-    cycle=touchIndex+Math.min(.999,flightAge/(period*Math.sqrt(state.keepLift)));}
+    if(flightAge>=flight){if(!armed){dropKeepUp(p);return;}armed=false;flightAge-=flight;touchIndex++;state.streak++;const ms=consumeHold();if(skyCharge(ms)>0&&launchSky(p,env,ms))return;state.keepLift=holdLift(ms);}
+    cycle=touchIndex+Math.min(.999,Math.max(0,flightAge)/(period*Math.sqrt(state.keepLift)));}
    const phase=cycle%1,touch=Math.floor(cycle),side=touch%2?1:-1;
    const routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;
    state.jugglePhase=phase;state.juggleSide=side;state.juggleTouch=movingJuggle?'foot':routine[touch%routine.length];

@@ -24,6 +24,9 @@ import {createSwimPoser,type SwimRigPose} from './swimPose';
 import {createDribbleFeel,resetDribbleFeel,stepDribbleFeel,DRIBBLE} from '../town/dribbleStop';
 const DRIBBLE_SOLE_BACK=DRIBBLE.soleBack;
 import {effectiveTier} from './heatTier';
+import {skyMoveWeights} from '../town/skyKeepUpMoves';
+// Sky keep-up trap / re-kick weights (lib/town/skyKeepUpMoves.ts), filled once per update: no allocation.
+const SKY_W={trap:0,kick:0};
 import {copyTrickPose,createTrickPose,solveTrickLeg,type TrickPose,type TrickLegAngles} from './trickPose';
 
 export const PLAYER_KICK_CONTACT = STRIKE_CONTACT;
@@ -58,6 +61,13 @@ export type PlayerMotion = {
   juggleTouch?: JuggleTouch;
   /** A held keep-up's lift (1 = tap, up to 1.6; lib/town/keepUps.ts): the touching leg swings higher and further through. */
   juggleLift?: number;
+  /** Sky keep-up (lib/town/skyKeepUpMoves.ts, walkBall.state): the held big-kick charge 0…1 (wind-up: lean back, leg drawn back),
+   *  the catch's trap (0 foot, 1 thigh, 2 chest) and re-kick (SKY_KICKS index), the side it was on, seconds since the catch (−1 none). */
+  skyWindup?: number;
+  skyTrap?: number;
+  skyKick?: number;
+  skyTrapSide?: -1|1;
+  skyMoveAge?: number;
   stunAge?: number;
   shotCharge?: number;
   /** 0..1 wind-up before a kick (A7, Oct 2026): the support boot plants beside the ball and the kicking leg draws back
@@ -1308,6 +1318,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const pelvisPitch=pelvis.rotation.x,cosYaw=Math.cos(yaw),sinYaw=Math.sin(yaw);
     // The leg pass is its own function (as are the big mode blocks below): update() was ~93 KB of bytecode, past V8's 60 KB
     // optimising limit, so it never left the baseline tier and boxed every float (~20 KB of garbage per rig per frame). Heat QA, Oct 22 2026.
+    {const age=motion?.skyMoveAge??-1;if(age>=0)skyMoveWeights(age,SKY_W);else SKY_W.trap=SKY_W.kick=0;}
+    const skyAmp=reduced?.5:1,skyWind=reduced?0:Math.max(0,Math.min(1,motion?.skyWindup??0)),skySide=motion?.skyTrapSide??1;
     const legPass=(index:number)=>{
       const { hip, knee, ankle } = legs[index];
       const side = index === 0 ? -1 : 1;
@@ -1365,6 +1377,13 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         if(kind==='knee'){footZ+=(.48+.06*power-footZ)*tap;lift+=(.52+.12*power-lift)*tap;}
         if(kind==='around-world'&&!reduced){const arc=Math.sin(Math.PI*phase),angle=phase*Math.PI*2;footX+=side*Math.sin(angle)*.3*arc;footZ+=.4*arc;lift+=arc*(.65+.18*Math.cos(angle));}
       }
+      // Sky keep-up: trap with the foot / thigh on the ball's side (the chest trap is a body pose below), then the re-kick
+      // (instep lift, laces pop-up, knee flick, outside-foot flick; the header is a body pose); the held big kick draws the leg back.
+      if(side===skySide&&SKY_W.trap>0){const w=SKY_W.trap*skyAmp,tr=motion?.skyTrap??0;if(tr===0){footZ+=(.3-footZ)*w;lift+=(.2-lift)*w;}else if(tr===1){footZ+=(.36-footZ)*w;lift+=(.5-lift)*w;}}
+      if(side===skySide&&SKY_W.kick>0){const w=SKY_W.kick*skyAmp,k=motion?.skyKick??0;
+        if(k===0){footZ+=(.34-footZ)*w;lift+=(.32-lift)*w;}else if(k===1){footZ+=(.5-footZ)*w;lift+=(.22-lift)*w;}
+        else if(k===2){footZ+=(.46-footZ)*w;lift+=(.58-lift)*w;}else if(k===4){footX+=side*.22*w;footZ+=(.28-footZ)*w;lift+=(.26-lift)*w;}}
+      if(side===kickSide&&skyWind>0){const w=skyWind*.8;footZ+=(-.32-footZ)*w;lift+=(.16-lift)*w;}
       if (receive > 0 && side === kickSide) {
         footZ += (.24-.10*smooth(motion?.receiveProgress??.6)-footZ)*receive;
         lift += (.055-lift)*receive;
@@ -1593,6 +1612,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       else head.rotation.z=0;
       if(kind==='head'){head.rotation.x-=.2*tap;pelvis.position.y+=.045*tap;torso.rotation.x-=.07*tap;}
     }else head.rotation.z=reduced?0:-torso.rotation.z*.18;
+    if(SKY_W.trap>0&&motion?.skyTrap===2){const w=SKY_W.trap*skyAmp;torso.rotation.x-=.28*w;pelvis.position.y-=.03*w;arms[0].shoulder.rotation.z-=.3*w;arms[1].shoulder.rotation.z+=.3*w;}
+    if(SKY_W.kick>0&&motion?.skyKick===3){const w=SKY_W.kick*skyAmp;head.rotation.x-=.3*w;pelvis.position.y+=.06*w;torso.rotation.x-=.08*w;}
+    if(skyWind>0)torso.rotation.x-=.16*skyWind;
     }
     // Only involved, nearby actors track the ball. No scene queries or extra loops.
     if (!rideBase && !motion?.parachute && !motion?.rooftopPose && !swimming && motion?.stunAge===undefined && !motion?.juggle && !motion?.powerKick && !reduced && !clubCostume) {
