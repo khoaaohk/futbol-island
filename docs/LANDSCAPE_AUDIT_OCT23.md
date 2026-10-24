@@ -124,6 +124,22 @@ pass-puzzle-challenges-browser, pass-puzzle-arcade, paint-easel, shop-sheet, sum
   it shows **too much world sideways** at half the character size. A landscape dolly-in to ~30 m (player ~30 px) would cut the
   frustum area ~50 % and most of the draw-call gap.
 
+**Batch 2 after (Oct 23 2026, same script/pose, `PERF_SHOTS=1 … perf i15,se,max`)**: phone landscape dollies in
+(`lib/town/walkControl.ts` `cameraDollyFor`: visible width ≈ 2.0× portrait, `maxDolly` 2.4, eased ~0.4 s on rotate) and caps its shadow
+box (`lib/graphics/islandShadows.ts` `shadowAreaCap`). Before = the re-run on 70c55011 (matches the table above).
+
+| Spot | Size | Draw calls before → after (port) | Triangles before → after (port) | People | Shadow box | Player px | Cam dist |
+|---|---|---|---|---|---|---|---|
+| Plaza | 15 land | 203 → **96** (108) | 201k → 146k (156k) | 4 → 0 (2) | 128x124 → 70x78 m | 20 → **48** | 42 → 18 m |
+| Harbour | 15 land | 258 → **147** (133) | 273k → 192k (151k) | 12 → 6 (4) | 128x124 → 70x76 m | 20 → 48 | 42 → 18 m |
+| Old town | 15 land | 314 → **170** (134) = 1.27x | 283k → 161k (94k) | 11 → 2 (3) | 126x124 → 68x76 m | 20 → 48 | 42 → 18 m |
+| Old town | SE land | 290 → **163** (133) = 1.23x | 257k → 111k (89k) | 13 → 2 (3) | 124x106 → 78x66 m | 19 → 38 | 42 → 22 m |
+| Old town | Max land | (not run) → 169 (134) | → 161k (93k) | 2 (3) | 68x76 m | 53 | 18 m |
+
+Portrait rows unchanged (108-134 calls, 42 px, 43 m). Target (landscape ≤ 1.3x portrait draw calls) met at every spot; old-town
+triangles stay 1.7x (the closer camera picks nearer LODs). Friend / NPC caps are distance-based (rigCap, tier caps), not frustum-width
+based, so the closer camera cannot raise them; people in view dropped. Not a thermal measurement.
+
 ## 5. Ranked fix list (batches)
 
 **Batch 1 - blockers (S-M, ~3 agent-hours, Sonnet)**

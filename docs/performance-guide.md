@@ -5986,3 +5986,28 @@ everything else with the island while this is running", and "the room's backgrou
   (local + shown rigs) with early-outs, a fixed 24-slot typed-array pair table, zero allocation (`tests/friend-bump.cjs` checks a flat heap).
   The burst sprites (<= 15) and canvas textures are made on the first bump only and sleep when no burst is alive. Skipped under Battery
   saver; reduced motion = one sparkle. No iPhone thermal measurement.
+
+## Phone landscape camera + shadow fit (batch 2, Oct 23 2026, local, not deployed)
+
+Phone landscape is a supported mode (portrait stays the default). The follow camera keeps its fixed 40° vertical fov, so at the
+portrait distance (~43 m) a landscape phone saw 4.7× the world sideways, the player was 20 px tall and the scene cost 1.6-2.4× the
+draw calls of portrait (docs/LANDSCAPE_AUDIT_OCT23.md §4).
+- **Dolly-in** (`lib/town/walkControl.ts` `cameraDollyFor` + `createDollyEase`, applied once in `components/Town.tsx` after the
+  follow target is built): on a coarse-pointer phone (`isPhoneViewport`: short side ≤ 480 or long side ≤ 960) the follow offset is
+  scaled along the same view line so the visible width is ≈ 2.0× the portrait phone's (`widthRatio` 2, capped at `maxDolly` 2.4):
+  852×393 / 932×430 → 17.8 m (player 48 / 53 px), 667×375 → 22 m (38 px). Walk / swim / dive share the rule; ride / fly take 85 % of
+  the dolly. Portrait, square, tablets and every fine-pointer window (any width) get 1 = unchanged. A rotation eases the dolly with a
+  critically damped spring (ω 14, ~0.4 s, no overshoot, < 2.2 m per 60 fps frame). Emote zoom: landscape framings are 11-13 m, so it
+  still zooms in (the 14 m "close camera" skip never trips).
+- **Shadow cap** (`lib/graphics/islandShadows.ts` `shadowAreaCap`, `setAreaCap` on resize): phone landscape keeps the receiver box
+  ≤ 1.25 × the portrait walk box (116 × 46 m), shrinking toward the near ground (a quarter up from the bottom centre). The dollied walk
+  view is already under it (~70 × 76 m vs 128 × 124 m before); it bites only on raised views (flying, Summit downhill), where the far
+  edge fades. Map size unchanged (1536² tier 0, 1024² tiers 1+): no extra cost at any tier.
+- **Measured** (`PERF_SHOTS=1 node --experimental-websocket scripts/audit-landscape.cjs <app> <relay> <out> perf i15,se,max`, headless
+  Chrome ANGLE/Metal, same pose; landscape / portrait): draw calls plaza 203/109 → **96/108**, harbour 258/135 → **147/133**, old town
+  314/131 → **170/134 (1.27×)**; SE old town 290/131 → 163/133 (1.23×). Triangles old town 283k → 161k (vs 94k portrait: nearer LODs),
+  harbour 273k → 192k, plaza 201k → 146k. People in view 4/12/11 → 0/6/2 (portrait 2/4/3). Shadow box 128×124 → 70×76 m. Draw-call /
+  triangle reduction only; no iPhone temperature measured. Tests: `tests/walk-control.cjs` (aspects .46-2.4, coarse/fine, modes,
+  easing bounds), `tests/quality-pass.cjs` (landscape box ≤ portrait, cap cases), `tests/heat-tiers.cjs` (wiring, no map growth).
+- Tradeoff: landscape now shows ~43 % of portrait's vertical ground (forward look-ahead is shorter; walking lead unchanged), and near
+  props (lamp posts, trees between camera and player) loom larger at 18 m.

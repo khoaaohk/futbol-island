@@ -88,4 +88,11 @@ assert.equal(TIERS[4].frameMs,1000/24);assert.equal(TIERS[3].frameMs,1000/30);as
  let t=0;while(heat.tier<4&&t<600e3){const iv=150;t+=iv;heat.afterRender(t,iv,30,120,'');}assert.equal(heat.tier,4,'severe frames reach the lowest tier');assert.equal(heat.frameMs,1000/24);
  for(let i=0;i<24*120;i++){t+=1000/24;heat.afterRender(t,1000/24,8,120,'');}
  assert(heat.tier<4,`a healthy 24 fps phone steps back up (tier ${heat.tier})`);heat.dispose();H.setGovernorTier(0);}
+// Phone landscape (batch 2, Oct 23 2026): no extra cost at any tier. The landscape fix is the camera dolly + a shadow AREA cap (same map
+// size: the tiers' 1536² / 1024² hold in either orientation); the cap is wired on resize for phones only and never grows the map.
+{const town=read('components/Town.tsx'),sh=read('lib/graphics/islandShadows.ts');
+ assert(/islandShadowFit\.setAreaCap\(shadowAreaCap\(w\/h,isPhoneViewport\(w,h,coarse\)\)\)/.test(town),'resize sets the phone-landscape shadow cap');
+ assert(/landscapeDolly\.update\(cameraDollyFor\(camera\.aspect,isPhoneViewport\(viewportW,viewportH,coarse\)/.test(town),'the follow camera uses the landscape dolly');
+ assert(!/mapSize\.set/.test(sh),'the shadow fit never resizes the map (tiers own the map size)');
+ for(const t of [1,2,3,4])assert.equal(TIERS[t].shadowSize,1024,`landscape tier ${t}: still 1024²`);}
 console.log('PASS heat tiers: cool phone (30 fps or the iPhone\'s ~50 ms flying) stays tier 0, bursts/load changes/gaps ignored, rising trend or severe frames step down one tier at a time, 75 s calm to step up, flaps back off, tier 0 = default quality, Battery saver forces tier 3, no tier hides or flickers anything per frame, adapter applies and restores');

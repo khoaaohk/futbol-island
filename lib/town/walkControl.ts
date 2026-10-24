@@ -25,6 +25,62 @@ export function walkCameraOffset(aspect: number, out: {x: number; z: number}) {
   return out;
 }
 
+/**
+ * Phone landscape framing (batch 2, Oct 23 2026, docs/LANDSCAPE_AUDIT_OCT23.md). The follow camera keeps a fixed 40° VERTICAL fov,
+ * so at the portrait distance (~43 m) a landscape phone saw 4.7× the world sideways with the player 20 px tall (vs 42 px), and
+ * drew 1.6-2.4× the draw calls. On a coarse-pointer phone in landscape the follow offset is scaled by `cameraDollyFor` (< 1 =
+ * closer) along the same view line, so the visible world width is ≈ LANDSCAPE_FRAME.widthRatio × the portrait phone's (aspect .46)
+ * and the player is ~38-49 px tall. The dolly is capped (maxDolly) so the camera stays ≥ ~17.5 m away: the emote zoom
+ * (emoteCameraMath EMOTE_CAM: closeCameraDist 14) still runs and zooms IN. Portrait, tablets and fine-pointer (desktop) windows
+ * of any width get 1 (unchanged). Per mode: ride / fly (faster travel) keep a little more look-ahead (`mode` scale on the dolly).
+ */
+export type FramingMode = 'walk' | 'swim' | 'dive' | 'ride' | 'fly';
+export const LANDSCAPE_FRAME = {
+  /** The portrait phone's aspect the width is compared to (393×852). */
+  portraitAspect: .46,
+  /** Target visible world width in landscape, × the portrait phone's. */
+  widthRatio: 2,
+  /** Largest dolly (distance ÷): 42 m / 2.4 ≈ 17.5 m (aspect ≥ 2.21; 2.17 gets 2.36 ≈ 17.8 m from widthRatio): past the emote zoom's
+   *  "close camera" skip (14 m). Its landscape solo / pair framings sit at ~11-13 m, so they still zoom in; only the blocked-view
+   *  fallbacks (EMOTE_CAM.shrink 1.35 / 1.8: ~15-23 m) can ease a little out, still framed. */
+  maxDolly: 2.4,
+  /** Aspects ramp in smoothly between these (no step at a threshold). */
+  rampFrom: 1, rampTo: 1.3,
+  /** Share of the dolly per mode (1 = full). */
+  mode: {walk: 1, swim: 1, dive: 1, ride: .85, fly: .85} as Record<FramingMode, number>,
+  /** Critically damped ease of the dolly when the screen rotates (rad/s): ~97 % in 0.4 s, starts and ends at rest. */
+  omega: 14,
+} as const;
+
+/** The HUD's phone predicate (a touch screen whose short side is ≤ 480 px or long side ≤ 960 px; iPads stay "tablet"). */
+export function isPhoneViewport(width: number, height: number, coarse: boolean) {
+  return coarse && (Math.min(width, height) <= 480 || Math.max(width, height) <= 960);
+}
+
+/** The follow camera's distance scale for this screen: 1 = the portrait / desktop distance, < 1 = dolly in (phone landscape). */
+export function cameraDollyFor(aspect: number, phone: boolean, mode: FramingMode = 'walk') {
+  if (!phone || !(aspect > LANDSCAPE_FRAME.rampFrom)) return 1;
+  const full = Math.min(LANDSCAPE_FRAME.maxDolly, Math.max(1, aspect / (LANDSCAPE_FRAME.portraitAspect * LANDSCAPE_FRAME.widthRatio)));
+  const u = Math.min(1, (aspect - LANDSCAPE_FRAME.rampFrom) / (LANDSCAPE_FRAME.rampTo - LANDSCAPE_FRAME.rampFrom)), ramp = u * u * (3 - 2 * u);
+  return 1 / (1 + (full - 1) * ramp * (LANDSCAPE_FRAME.mode[mode] ?? 1));
+}
+
+/** Eases the dolly toward its goal (a rotation mid-play, a mode change): critically damped, exact for any dt, never overshoots.
+ *  The first update (and reduced motion) takes the goal at once. */
+export function createDollyEase(omega: number = LANDSCAPE_FRAME.omega) {
+  let x = NaN, v = 0;
+  return {
+    get value() { return Number.isFinite(x) ? x : 1; },
+    update(goal: number, dt: number, snap = false) {
+      if (!Number.isFinite(x) || snap) { x = goal; v = 0; return x; }
+      const t = Math.max(0, Math.min(.25, dt)), k = Math.exp(-omega * t), d = x - goal, tmp = (v + omega * d) * t;
+      v = (v - omega * tmp) * k; x = goal + (d + tmp) * k;
+      if (Math.abs(x - goal) < 1e-5 && Math.abs(v) < 1e-4) { x = goal; v = 0; }
+      return x;
+    },
+  };
+}
+
 /** Seconds of travel the walking camera looks ahead. It roughly cancels the eased follow's lag (rate 4 ⇒ v/4 m), so
  *  turns and sprints keep the player near the centre with a little room ahead instead of trailing a body behind. */
 export const WALK_CAMERA_LEAD = .3, WALK_CAMERA_LEAD_MAX = 2.2;

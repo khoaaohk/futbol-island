@@ -259,6 +259,8 @@ const SCENES = {
       for (const o of [size, 'port']) {
         await rotate(env, o); await p.waitForTimeout(2500);
         console.log(`${('perf-' + spot).padEnd(18)} ${o.padEnd(5)} ${JSON.stringify({ ...(await perf(p)), ...(await inView(p)) })}`);
+        // PERF_SHOTS=1: one plaza screenshot per orientation (camera framing before/after, docs/LANDSCAPE_AUDIT_OCT23.md batch 2).
+        if (process.env.PERF_SHOTS && spot === 'plaza') await p.screenshot({ path: path.join(out, `perf-plaza-${o === 'port' ? 'port' : size}.png`), scale: 'css' });
       }
       await rotate(env, size);
     }

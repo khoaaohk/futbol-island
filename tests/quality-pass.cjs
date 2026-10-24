@@ -43,4 +43,25 @@ const {createIslandShadowFit,fitShadowsToBox}=load('lib/graphics/islandShadows.t
  const geos=B.beanGeometries();for(const name of ['hair','hat']){const g=geos[name],anchor=g.getAttribute('beanAnchor');const styles=new Set();for(let i=0;i<anchor.count;i++)styles.add(Math.round(anchor.getW(i)));
   for(const st of styles){if(st===0)continue;const r=styleIndexRange(g,st);assert(r&&r.count>0&&r.count<g.index.count,`${name} style ${st} is one contiguous range`);}}
  const Q=load('lib/graphics/quality.ts',{process:{env:{NODE_ENV:'production'}}});assert.equal(Q.phoneGraphicsFor(3,true).shadowSize,1536);assert.equal(Q.phoneGraphicsFor(2,false).shadowSize,2048,'desktop unchanged');}
+// Phone landscape (batch 2, Oct 23 2026, docs/LANDSCAPE_AUDIT_OCT23.md): the dollied landscape walk view's shadow box is no bigger
+// than the portrait one (same 1536² map, so the same or finer texels; before: ~3x the area), the area cap is phone-landscape only,
+// and a raised landscape view is capped around the ground under the screen centre (the player keeps sharp shadows).
+{const S=load('lib/graphics/islandShadows.ts'),Wc=load('lib/town/walkControl.ts');
+ assert.equal(S.shadowAreaCap(.46,true),Infinity);assert.equal(S.shadowAreaCap(2.17,false),Infinity,'desktop: no cap');assert.equal(S.shadowAreaCap(1.33,false),Infinity,'tablet: no cap');
+ assert(S.shadowAreaCap(2.17,true)<=S.SHADOW_PORTRAIT_AREA*1.25+1e-9&&S.shadowAreaCap(1.78,true)===S.shadowAreaCap(2.17,true));
+ const box=(aspect,dolly,lift=0,cap=Infinity)=>{const light=new T.DirectionalLight();light.shadow.mapSize.set(1536,1536);const scene=new T.Scene();scene.add(light,light.target);
+  const view=new T.PerspectiveCamera(40,aspect,1,500);view.position.set(18*dolly,23*dolly+lift,30*dolly);view.lookAt(18*dolly-16,23*dolly+lift-23,30*dolly-33);
+  const fit=createIslandShadowFit(light,()=>0);fit.setAreaCap(cap);fit.update(view);const c=light.shadow.camera;return {w:c.right-c.left,h:c.top-c.bottom,c,fit,light};};
+ const port=box(393/852,1),old=box(852/393,1),land=box(852/393,Wc.cameraDollyFor(852/393,true)),se=box(667/375,Wc.cameraDollyFor(667/375,true));
+ assert(old.w*old.h>2*port.w*port.h,`before: landscape box ${old.w}x${old.h} >> portrait ${port.w}x${port.h}`);
+ for(const [n,b] of [['852x393',land],['667x375',se]])assert(b.w*b.h<=1.1*port.w*port.h,`${n} dollied box ${b.w}x${b.h} m <= portrait ${port.w}x${port.h} m`);
+ // a raised view (flying ~25 m above the walk height) in landscape: capped near the portrait area, the player's ground still inside
+ const capArea=S.shadowAreaCap(2.17,true),free=box(2.17,Wc.cameraDollyFor(2.17,true,'fly'),25),capped=box(2.17,Wc.cameraDollyFor(2.17,true,'fly'),25,capArea);
+ assert(free.w*free.h>capArea,'the raised view needs more than the cap');assert(capped.fit.stats.capped>0&&capped.w*capped.h<free.w*free.h&&capped.w*capped.h<=capArea*1.6,`capped ${capped.w}x${capped.h}`);
+ const sb=S.sunBasis();
+ const inside=(v,b)=>{const t=b.light.target.position,x=v.dot(sb.right)-t.dot(sb.right),y=v.dot(sb.up)-t.dot(sb.up);return Math.abs(x)<b.c.right*.92&&Math.abs(y)<b.c.top*.92;};
+ {const view=new T.PerspectiveCamera(40,2.17,1,500),d=Wc.cameraDollyFor(2.17,true,'fly');view.position.set(18*d,23*d+25,30*d);view.lookAt(18*d-16,23*d+25-23,30*d-33);view.updateMatrixWorld();
+  for(const sy of [-1,-.75,-.5,-.25]){const r=new T.Vector3(0,sy,.5).unproject(view).sub(view.position).normalize(),g=view.position.clone().addScaledVector(r,-view.position.y/r.y);assert(inside(g,capped),`capped box keeps the near ground (screen y ${sy})`);}}
+ // the cap never bites the dollied walk view, and the map size (cost) is untouched
+ const lw=box(2.17,Wc.cameraDollyFor(2.17,true),0,capArea);assert.equal(lw.fit.stats.capped,0,'walking landscape is under the cap');assert.equal(lw.light.shadow.mapSize.x,1536);}
 console.log('PASS quality pass: tighter shadow fit covers every visible receiver (2-texel bias), watch view fits its pitch, 4× anisotropy on mipmapped textures, phones 1.75 while cool, ?heat=1 readout, contiguous hair/hat style ranges, 1536² phone shadows while cool');

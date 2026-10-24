@@ -29,7 +29,18 @@ export function sunBasis(){
  return {right,up,depth};
 }
 
-export type ShadowFootprint={minX:number;maxX:number;minY:number;maxY:number;minZ:number;maxZ:number};
+export type ShadowFootprint={minX:number;maxX:number;minY:number;maxY:number;minZ:number;maxZ:number;
+ /** Light-space x / y of the ground a quarter up from the bottom centre of the screen (near the followed player, the nearest, largest receivers): the anchor a capped box shrinks toward. */
+ anchorX?:number;anchorY?:number};
+
+/** Phone landscape shadow cap (batch 2, Oct 23 2026, docs/LANDSCAPE_AUDIT_OCT23.md): the portrait phone's walking box is ~116 × 46 m
+ *  (5 336 m²) at 1536². Phone landscape (aspect > 1.3) keeps its box within SHADOW_LANDSCAPE_AREA_SCALE × that, so its texel density is
+ *  never more than ~12 % coarser than portrait's (before: 128 × 124 m, 3× coarser). The landscape dolly (lib/town/walkControl.ts
+ *  cameraDollyFor) already brings the walking box to ~62-74 × 66-84 m (≤ portrait), so the cap only bites on raised views (flying,
+ *  Summit Isle downhill), where the far edge fades (shadowEdgeFade) instead of the near shadows going soft. Portrait, tablets and
+ *  desktop: no cap (Infinity). The map size is unchanged (no extra cost at any heat tier). */
+export const SHADOW_PORTRAIT_AREA=116*46,SHADOW_LANDSCAPE_AREA_SCALE=1.25;
+export function shadowAreaCap(aspect:number,phone:boolean){return phone&&aspect>1.3?SHADOW_PORTRAIT_AREA*SHADOW_LANDSCAPE_AREA_SCALE:Infinity;}
 /**
  * The receivers the camera can see, in light space (x, y across the shadow map, z = depth away from the sun).
  * Rays through a 9 × 7 grid of the screen are marched over the ground (the real terrain height, so Summit Isle's 0–55 m slopes are
@@ -49,6 +60,7 @@ export function viewShadowFootprint(view:T.PerspectiveCamera,groundAt:(x:number,
  // The reach follows the ground distance at the bottom centre of the view.
  ray.set(0,-1,.5).unproject(view).sub(origin).normalize();
  const nearest=Math.abs(hitDistance(4000)),reach=Math.min(2000,Math.max(SHADOW_REACH,nearest*SHADOW_REACH_SCALE));
+ {ray.set(0,-.5,.5).unproject(view).sub(origin).normalize();const d=Math.abs(hitDistance(reach));p.copy(origin).addScaledVector(ray,d);f.anchorX=p.dot(basis.right);f.anchorY=p.dot(basis.up);}
  for(let i=0;i<9;i++)for(let j=0;j<7;j++){
   ray.set(-1+i/4,-1+j/3,.5).unproject(view).sub(origin).normalize();
   const d=Math.abs(hitDistance(reach));p.copy(origin).addScaledVector(ray,d);column(p.x,p.z);
@@ -75,19 +87,23 @@ export function viewShadowFootprint(view:T.PerspectiveCamera,groundAt:(x:number,
  */
 export function createIslandShadowFit(light:T.DirectionalLight,groundAt:(x:number,z:number)=>number=islandGroundForShadows){
  const basis=sunBasis(),target=new T.Vector3(),last=new T.Vector3(),lastQuat=new T.Quaternion();
- let rel:ShadowFootprint|null=null,halfX=0,halfY=0,nearOff=0,farOff=0,lastAspect=0,lastFov=0,lastZoom=0,lastMap=0,stale=true;
- const stats={refits:0,resizes:0};
+ let rel:ShadowFootprint|null=null,areaCap=Infinity,halfX=0,halfY=0,nearOff=0,farOff=0,lastAspect=0,lastFov=0,lastZoom=0,lastMap=0,stale=true;
+ const stats={refits:0,resizes:0,capped:0};
  let hold=false;
  function update(view:T.PerspectiveCamera){
   view.updateMatrixWorld();
   if(stale||!rel||view.position.distanceToSquared(last)>REFIT_MOVE*REFIT_MOVE||view.quaternion.angleTo(lastQuat)>.01||view.aspect!==lastAspect||view.fov!==lastFov||view.zoom!==lastZoom){
    const f=viewShadowFootprint(view,groundAt,basis),cx=view.position.dot(basis.right),cy=view.position.dot(basis.up),cz=view.position.dot(basis.depth);
    // Stored relative to the camera, so the box follows the camera smoothly between refits (the drift stays inside MARGIN).
-   rel={minX:f.minX-cx,maxX:f.maxX-cx,minY:f.minY-cy,maxY:f.maxY-cy,minZ:f.minZ-cz,maxZ:f.maxZ-cz};
+   rel={minX:f.minX-cx,maxX:f.maxX-cx,minY:f.minY-cy,maxY:f.maxY-cy,minZ:f.minZ-cz,maxZ:f.maxZ-cz,anchorX:(f.anchorX??(f.minX+f.maxX)/2)-cx,anchorY:(f.anchorY??(f.minY+f.maxY)/2)-cy};
    last.copy(view.position);lastQuat.copy(view.quaternion);lastAspect=view.aspect;lastFov=view.fov;lastZoom=view.zoom;stale=false;stats.refits++;
   }
   const cx=view.position.dot(basis.right),cy=view.position.dot(basis.up),cz=view.position.dot(basis.depth);
-  const minX=cx+rel.minX,maxX=cx+rel.maxX,minY=cy+rel.minY,maxY=cy+rel.maxY,minZ=cz+rel.minZ,maxZ=cz+rel.maxZ;
+  let minX=cx+rel.minX,maxX=cx+rel.maxX,minY=cy+rel.minY,maxY=cy+rel.maxY;const minZ=cz+rel.minZ,maxZ=cz+rel.maxZ;
+  // Phone landscape cap (shadowAreaCap): shrink the receiver box toward the near ground (the footprint anchor) until it fits the area.
+  const area=(maxX-minX)*(maxY-minY);
+  if(area>areaCap){const k=Math.sqrt(areaCap/area),ax=Math.min(maxX,Math.max(minX,cx+rel.anchorX!)),ay=Math.min(maxY,Math.max(minY,cy+rel.anchorY!));
+   minX=ax+(minX-ax)*k;maxX=ax+(maxX-ax)*k;minY=ay+(minY-ay)*k;maxY=ay+(maxY-ay)*k;stats.capped++;}
   // Half sizes: the footprint + margin, widened so the edge-fade band lies outside it; 1 m steps; a re-grow takes 10% headroom (few resizes on a climb), shrink after 20% slack.
   const size=(need:number,current:number)=>{need=(need+MARGIN)/(1-2*SHADOW_EDGE_FADE);const q=Math.ceil(need/SIZE_STEP)*SIZE_STEP;if(q>current)return current>0?Math.ceil(need*(hold?HOLD_HEADROOM:1.1)/SIZE_STEP)*SIZE_STEP:q;return q<current*.8&&!hold?q:current;};
   const hx=size((maxX-minX)/2,halfX),hy=size((maxY-minY)/2,halfY),map=light.shadow.mapSize.x;
@@ -114,6 +130,9 @@ export function createIslandShadowFit(light:T.DirectionalLight,groundAt:(x:numbe
  return {stats,update,
   /** Refit on the next update (resize, a watch view handing the light back). */
   invalidate(){stale=true;halfX=halfY=0;},
+  /** The receiver-box area cap (m², light space; shadowAreaCap): Infinity = none. A change refits on the next update. */
+  setAreaCap(cap:number){if(cap!==areaCap){areaCap=cap;stale=true;}},
+  get areaCap(){return areaCap;},
   /** Held (the zipline ride, ~15 s: a fast camera dropping 40 m and a look-around): the box only grows, with more headroom, and
    *  never shrinks until released, so the shadow texels don't change size (every shadow edge re-quantising) a dozen times. */
   hold(on:boolean){hold=on;},
