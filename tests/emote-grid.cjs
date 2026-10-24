@@ -106,7 +106,7 @@ t('townsfolk hold still, face you and step in; the name tag hides; riding emotes
  assert(/entry\.near=entry\.distance<7\|\|entry\.fx\.kind>=0/.test(npcs),'an answering townsperson is "near": the routine stops it and it faces you');
  assert(/npcStepDistance\(d\)/.test(npcs)&&/canTravel\(entry\.position,to\)/.test(npcs)&&/NPC_STEP_SPEED/.test(npcs),'the step needs a clear path');
  assert(/applyEmoteArms\(entry\.rig\.root/.test(npcs)&&/applyApplause/.test(read('lib/graphics/emotePose.ts')),'Well played: townsfolk clap (and every other move through applyEmoteArms)');
- assert(/\|\|emoteCam\.active\);fieldBump/.test(town),'no name tag over the close-up');
+ assert(/\|\|emoteCam\.active(\|\|keepUpBusy\.current)?\);fieldBump/.test(town),'no name tag over the close-up');
  assert(/highFivePlan\(pick,reduced\|\|onRideNow,/.test(town),'on a ride: an air five, no spin / hop / crouch variation');
  assert(/applyRideEmote\(player\.root,k,/.test(town)&&/emoteCam\.begin\([^;]*onRideNow[,)]/.test(town)&&/emoteCam\.track\(/.test(town));
  const cel=read('lib/graphics/celebrations.ts'),ride=cel.slice(cel.indexOf('export function applyRideEmote'));

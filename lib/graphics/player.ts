@@ -1378,11 +1378,12 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
         if(kind==='around-world'&&!reduced){const arc=Math.sin(Math.PI*phase),angle=phase*Math.PI*2;footX+=side*Math.sin(angle)*.3*arc;footZ+=.4*arc;lift+=arc*(.65+.18*Math.cos(angle));}
       }
       // Sky keep-up: trap with the foot / thigh on the ball's side (the chest trap is a body pose below), then the re-kick
-      // (instep lift, laces pop-up, knee flick, outside-foot flick; the header is a body pose); the held big kick draws the leg back.
+      // (foot only: instep lift, laces pop-up, outside-foot flick, toe-poke; the ball sits on lib/town/skyKeepUpMoves skyKickContact);
+      // the held big kick draws the leg back.
       if(side===skySide&&SKY_W.trap>0){const w=SKY_W.trap*skyAmp,tr=motion?.skyTrap??0;if(tr===0){footZ+=(.3-footZ)*w;lift+=(.2-lift)*w;}else if(tr===1){footZ+=(.36-footZ)*w;lift+=(.5-lift)*w;}}
-      if(side===skySide&&SKY_W.kick>0){const w=SKY_W.kick*skyAmp,k=motion?.skyKick??0;
+      if(side===skySide&&SKY_W.kick>0){const w=SKY_W.kick,k=motion?.skyKick??0;/* full even with reduced motion: the boot must reach the ball */
         if(k===0){footZ+=(.34-footZ)*w;lift+=(.32-lift)*w;}else if(k===1){footZ+=(.5-footZ)*w;lift+=(.22-lift)*w;}
-        else if(k===2){footZ+=(.46-footZ)*w;lift+=(.58-lift)*w;}else if(k===4){footX+=side*.22*w;footZ+=(.28-footZ)*w;lift+=(.26-lift)*w;}}
+        else if(k===2){footX+=side*.22*w;footZ+=(.28-footZ)*w;lift+=(.26-lift)*w;}else if(k===3){footZ+=(.44-footZ)*w;lift+=(.14-lift)*w;}}
       if(side===kickSide&&skyWind>0){const w=skyWind*.8;footZ+=(-.32-footZ)*w;lift+=(.16-lift)*w;}
       if (receive > 0 && side === kickSide) {
         footZ += (.24-.10*smooth(motion?.receiveProgress??.6)-footZ)*receive;
@@ -1613,7 +1614,6 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       if(kind==='head'){head.rotation.x-=.2*tap;pelvis.position.y+=.045*tap;torso.rotation.x-=.07*tap;}
     }else head.rotation.z=reduced?0:-torso.rotation.z*.18;
     if(SKY_W.trap>0&&motion?.skyTrap===2){const w=SKY_W.trap*skyAmp;torso.rotation.x-=.28*w;pelvis.position.y-=.03*w;arms[0].shoulder.rotation.z-=.3*w;arms[1].shoulder.rotation.z+=.3*w;}
-    if(SKY_W.kick>0&&motion?.skyKick===3){const w=SKY_W.kick*skyAmp;head.rotation.x-=.3*w;pelvis.position.y+=.06*w;torso.rotation.x-=.08*w;}
     if(skyWind>0)torso.rotation.x-=.16*skyWind;
     }
     // Only involved, nearby actors track the ball. No scene queries or extra loops.

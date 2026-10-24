@@ -25,18 +25,19 @@ function run({hold=1200,env=flat,move=null,tap=false,frames=60*8}={}){
   if(tapAt>=0&&t-tapAt>=.1){b.keepUpRelease();tapAt=-1;}
   move?.(b,p,t);b.update(DT,p,env);const m=b.state.mode;
   if(m==='sky'&&prev!=='sky')log.launch={t,x:b.state.x,y:b.state.y,z:b.state.z,predX:b.state.skyX,predY:b.state.skyY,predZ:b.state.skyZ,predT:b.state.skyLeft,streak:b.state.streak};
-  if(m==='sky')log.apex=Math.max(log.apex,b.state.y);
+  if(m==='sky'&&b.state.y>log.apex){log.apex=b.state.y;log.apexT=t;}
   if(prev==='sky'&&m==='drop'&&!log.land)log.land={t,x:b.state.x,y:b.state.y,z:b.state.z};
   if(prev==='sky'&&m==='attached'){log.traps++;log.trap=b.state.skyTrap;log.trapH=b.state.y-p.y;log.trapStreak=b.state.streak;}
   if(prev==='sky'&&m!=='sky'&&m!=='drop'&&m!=='attached'||prev==='sky'&&m==='sky'&&b.state.streak>prevStreak){log.catches++;log.caughtAt=b.state.streak;log.caughtCounted=b.state.counted;}
   if(m!==prev)log.modes.push(m);prev=m;prevStreak=b.state.streak;}
  return {b,p,log};}
 const chase=(b,p)=>{if(b.state.mode!=='sky')return;const dx=b.state.skyX-p.x,dz=b.state.skyZ-p.z,d=Math.hypot(dx,dz),s=Math.min(d,5*DT);if(d>1e-6){p.x+=dx/d*s;p.z+=dz/d*s;}};
-
+// 2. Apex and hang time: a ~1 s hold → the ball tops out a little over the Konbini roof; the snappier rise (gravity 12, owner Oct 24:
+//    "the ball going UP is too slow") takes ~1.2-1.5 s and the whole hang ~2.8-3.5 s; it lands 2-2.6 m away.
 // 2. Apex and hang time: a ~1 s hold → the ball tops out a little over the Konbini roof and hangs 3+ s; it lands 1.5-2 m away.
 {const {b,log}=run();assert(log.launch,'sky kick launched');assert.equal(log.launch.streak,2,'the sky kick is touch 2');
  assert(log.apex>=K.apex-.05&&log.apex<=K.apex+.05,'apex '+log.apex.toFixed(2)+' ≈ roof + 9 = '+K.apex);
- assert(log.land,'landed');const hang=log.land.t-log.launch.t;assert(hang>=3&&hang<5,'hang time '+hang.toFixed(2)+' s (3-5)');
+ assert(log.land,'landed');const hang=log.land.t-log.launch.t;assert(hang>=2.8&&hang<=3.5,'hang time '+hang.toFixed(2)+' s (2.8-3.5)');const rise=log.apexT-log.launch.t;assert(rise>=1.2&&rise<=1.55,'rise '+rise.toFixed(2)+' s (1.2-1.55)');assert.equal(K.gravity,12);
  // 3. The landing prediction made at launch IS the landing.
  const err=Math.hypot(log.land.x-log.launch.predX,log.land.z-log.launch.predZ);assert(err<.05,'predicted landing = actual ('+err.toFixed(3)+' m)');
  assert(Math.abs(hang-log.launch.predT)<=DT*1.5,'predicted time = actual');const drift=Math.hypot(log.launch.predX,log.launch.predZ);
@@ -76,7 +77,7 @@ function chain(plan,n,{frames=60*400}={}){
    if(want==='tap'&&!tapped&&b.state.vy<0&&b.state.y<=p.y+K.armHigh-.3){b.keepUp(p);tapped=true;tapAt=f;}}
   if(tapAt>=0&&f-tapAt>=6){b.keepUpRelease();tapAt=-1;}
   ringPrev=b.state.skyRing;b.update(DT,p,flat);if(b.state.mode==='sky')apex=Math.max(apex,b.state.y);
-  if(b.state.streak>prevStreak&&prevMode==='sky'){caught.push({mode:b.state.mode,streak:b.state.streak,trap:b.state.skyTrap,how:want,prevApex:apex,ring:ringPrev});apex=b.state.y;tapped=false;}
+  if(b.state.streak>prevStreak&&prevMode==='sky'){caught.push({mode:b.state.mode,streak:b.state.streak,trap:b.state.skyTrap,kick:b.state.skyKick,side:b.state.skyKickSide,pos:{x:b.state.x,y:b.state.y,z:b.state.z},p:{...p},how:want,prevApex:apex,ring:ringPrev});apex=b.state.y;tapped=false;}
   if(b.state.streak===0)break;
   prevStreak=b.state.streak;prevMode=b.state.mode;}
  return {b,p,caught};}
@@ -85,6 +86,15 @@ function chain(plan,n,{frames=60*400}={}){
 {const {caught}=chain(()=>'hold',4);assert.equal(caught.length,4,'held through: 4 catches in a row');
  for(const c of caught){assert.equal(c.mode,'sky','held arrival → kicked straight back up');assert.equal(c.trap,-1,'no trap phase');assert(c.ring>.99,'the charge carried into the catch ('+c.ring.toFixed(2)+')');}
  for(const c of caught.slice(1))assert(c.prevApex>K.apex-.3,'each held re-kick is full power ('+c.prevApex.toFixed(2)+')');}
+// Real foot kicks (owner: "HIGH KICKS ARE REAL KICKS"): every kick-up is instep / laces / outside / toe-poke and leaves from that
+// boot's contact point (left or right by the ball's side); the pressed ball is kicked once it is down at foot reach.
+{const MV=require('../lib/town/skyKeepUpMoves.ts'),o={x:0,y:0,z:0},{caught}=chain(i=>i%2?'tap':'hold',8);assert.equal(caught.length,8);
+ for(const c of caught){assert(['instep','laces','outside','toe'].includes(MV.SKY_KICKS[c.kick]),'foot kick ('+c.kick+')');MV.skyKickContact(c.kick,c.side,o);
+  const cs=Math.cos(c.p.yaw),sn=Math.sin(c.p.yaw),fx=c.p.x+cs*o.x+sn*o.z,fz=c.p.z-sn*o.x+cs*o.z;
+  assert(Math.hypot(c.pos.x-fx,c.pos.z-fz)<1e-6&&Math.abs(c.pos.y-(c.p.y+o.y))<1e-6,'the ball leaves from the kicking boot');}
+ assert(new Set(caught.map(c=>c.side)).size===2||caught.length<2,'both feet get used');assert.equal(K.kickHigh,.95);
+ // From the juggle too: the first sky kick of a run is a foot kick from the boot.
+ const {log}=run();assert(log.launch.y<=.5&&log.launch.y>=.3,'the juggle-touch sky kick leaves from boot height ('+log.launch.y.toFixed(2)+')');}
 // Power = hold time, continuous: a press let go r ms into the flight (kept, as kids let go early) → a kick that rises with r.
 {const apexFor=r=>{const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};b.keepUp(p);let launched=-1,caught=false,apex=0,prev=1;
   for(let f=0;f<60*12;f++){if(b.state.mode==='sky'){chase(b,p);if(launched<0)launched=f;}
@@ -160,6 +170,15 @@ function chain(plan,n,{frames=60*400}={}){
  assert(/const skyMark=new T\.Mesh\(/.test(town),'one pooled mark mesh');assert.equal((town.match(/new T\.Mesh\(skyMarkGeometry/g)||[]).length,1);
  assert(/walkBall\.state\.mode==='sky'/.test(town),'the frame loop reads the sky mode');assert(/skyPulse=!reduced&&!batterySaverOn\(\)/.test(town),'no pulse with reduced motion / Battery saver');
  assert(/nextJuggling=rideRef\.current==='walk'&&\(walkBall\.state\.mode==='juggle'\|\|walkBall\.state\.mode==='wall-juggle'\|\|walkBall\.state\.mode==='sky'\)/.test(town),'the keep-up button stays a keep-up button while the ball is up');}
+// 9. No talking during keep-ups (owner, Oct 24): while a run is on, no Talk prompt / NPC tag, E and tap-to-talk are ignored.
+{const town=read('components/Town.tsx');
+ assert(/keepUpBusy\.current=rideRef\.current==='walk'&&walkBall\.state\.counted;/.test(town),'busy = a counted run on foot');
+ assert(/const next=keepUpBusy\.current\?null:\[/.test(town),'no nearby NPC (Talk prompt) during a run');
+ assert(/const npc=keepUpBusy\.current\?null:islandNpcs\.pick\(characterRay\)/.test(town),'tap on an NPC does not open talk');
+ assert(/&&nearbyNpcRef\.current&&!keepUpBusy\.current&&/.test(town),'E does not open talk');
+ assert(/emoteCam\.active\|\|keepUpBusy\.current\)/.test(town),'NPC tags (LET’S TALK) hidden');
+ // and it ends with the run: a run that ended (counted false) frees talk again.
+ const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};b.keepUp(p);b.keepUpRelease();assert(b.state.counted);for(let i=0;i<60*4;i++)b.update(DT,p,flat);assert(!b.state.counted,'no presses: the run ends, talk comes back');}
 // 8. Cues (owner, Oct 24: "a ring inside that animates …", "very intuitive", "SKINNIER … a little BIGGER"): source pins.
 {const town=read('components/Town.tsx'),css=read('app/globals.css');
  // The thin, bigger mark: a 0.09 m band whose outer edge is scaled to the catch radius as it lands; green on "catch now".
@@ -177,4 +196,4 @@ function chain(plan,n,{frames=60*400}={}){
  assert(/const skyArrowPoint=new T\.Vector3\(\)/.test(town)&&/data-keepup-arrow=""/.test(town),'one pooled arrow');
  assert(/hintRuns<3/.test(town)&&/try\{localStorage\.setItem\('fi2-keepup-sky-hints'/.test(town)&&/try\{hintRuns=/.test(town),'hints: max 3, storage guarded');
  assert(/'Hold to kick it high!'/.test(town)&&/'Run to the red ring, tap to catch!'/.test(town),'hint copy');}
-console.log('keep-up sky: apex roof + 9 m, 3-5 s hang, any ground, wall rebounds, prediction = landing, 2-2.6 m landing, 1.5 m ring, pressed arrival kicks straight back up (power = hold, continuous; held through = full, charge carried), un-pressed arrival traps (count kept), 0.25 s press buffer, 30-catch endless chain, button ring / arrow / hints wiring passed');
+console.log('keep-up sky: apex roof + 9 m, snappier rise (~1.5 s) + ~3 s hang, foot-only kick-ups from the boot, no talking during a run, any ground, wall rebounds, prediction = landing, 2-2.6 m landing, 1.5 m ring, pressed arrival kicks straight back up (power = hold, continuous; held through = full, charge carried), un-pressed arrival traps (count kept), 0.25 s press buffer, 30-catch endless chain, button ring / arrow / hints wiring passed');

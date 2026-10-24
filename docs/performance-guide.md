@@ -1637,6 +1637,8 @@ Two of the island's round action buttons inside both Konbinis (`components/Konbi
   in the catch window), one pooled edge arrow (a single `translate/rotate` string only when its rounded position changes) and a
   first-time hint (max 3 runs, `fi2-keepup-sky-hints`). Cost: a few scalar checks + one projection per frame while a sky ball
   is up; no new meshes, loops or timers. Tests: `tests/keepup-sky.cjs`, `tests/keepup-sky-moves.cjs`. No iPhone measurement.
+  Later Oct 24: gravity 12 (rise ~1.5 s, hang ~3 s, same apex), foot-only kick-ups leaving from the boot, and no NPC Talk
+  prompt / tag / talk input while a run is on (`keepUpBusy`, one boolean per frame).
 - **Heat:** no new loops. The ball is stepped only while it's off the feet (`if(kb.moving)`), and `busy` includes the ball and
   the wobble, so the store sleeps again afterwards. No extra draw calls: the ball, shadow and products are existing meshes.
   Measured (scratchpad `konbini/actions/check-actions.cjs`, headless Chrome, muted; phone = 390×844 touch, DPR 3, CPU 4×):

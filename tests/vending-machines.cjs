@@ -440,7 +440,7 @@ function lockHintChecks(controller){
  assert.match(controller,/setLed\(vendingLockLed\(\{label:item\.label,status:s\},\[\]\)/);
  assert.match(controller,/rideUnlockHint\(s\.category,s\.option\.id,rides\.finished,rides\.total\)/);assert.match(controller,/costumeUnlockHint\(coins,id\)/);
  // The camera on a machine hides NPC name tags (the clipped "…LK" tag of the E2E audit).
- assert.match(read('components/Town.tsx'),/hoveredNpcId,camera,\(rideRef\.current==='jetpack'&&flight\.height>1\.2\)\|\|vending\.focused!==null(\|\|emoteCam\.active)?\)/);
+ assert.match(read('components/Town.tsx'),/hoveredNpcId,camera,\(rideRef\.current==='jetpack'&&flight\.height>1\.2\)\|\|vending\.focused!==null(\|\|emoteCam\.active)?(\|\|keepUpBusy\.current)?\)/);
  assert.match(read('lib/graphics/islandNpcs.ts'),/if\(show&&\(hideTags\|\|/);
 }
 // Oct 1 2026 (user): tapping the coin slot never buys; it shows a fading how-to in the tray. Only the item's button buys.
