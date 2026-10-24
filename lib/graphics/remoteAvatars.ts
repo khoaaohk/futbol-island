@@ -31,7 +31,7 @@ import {createClassicBallGeometry,createClassicBallMaterial} from './ballAppeara
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
 import {BallState,Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
-import {presenceIcon,presenceText} from '../multiplayer/presence';
+import {presenceIconAt,presenceTextAt} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
 import type {TravelMode} from '../town/travelModes';
@@ -478,7 +478,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const pr=presenceOf(pose.mode,pose.zone,pose.flags??0),shield=shielded(pr);
     if(pose.zone===Zone.Indoors){e.door=reduced?0:Math.max(0,e.door-dt/DOOR_FADE);if(e.door<=0){e.field=0;hideEntry(e);continue;}}else e.door=1;
     if(shield!==e.shield){e.shield=shield;if(shield&&e.emote>=0){e.emote=-1;e.hf=-1;}rig?.setExpression(shield&&pr==='busy'?'focused':'neutral');}
-    const act=pose.activity??0;if(pr!==e.prWas||act!==e.actWas){e.prWas=pr;e.actWas=act;e.lineWas=pr==='active'?'':presenceIcon(pr,act)+' '+presenceText(pr,act);}
+    const act=pose.activity??0;if(pr!==e.prWas||act!==e.actWas){e.prWas=pr;e.actWas=act;e.lineWas=pr==='active'?'':presenceIconAt(pr,act,pose.x,pose.z)+' '+presenceTextAt(pr,act,pose.x,pose.z);}
     const line=e.lineWas;
     if(line!==e.statusKey&&e.status){e.statusKey=line;if(line){const m=e.status.material as T.SpriteMaterial;m.map=statusTexture(line);m.needsUpdate=true;}}
     e.field=reduced?(shield?1:0):shield?Math.min(1,e.field+dt/FIELD_FADE):Math.max(0,e.field-dt/FIELD_FADE);

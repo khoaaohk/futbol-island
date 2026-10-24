@@ -1,5 +1,6 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
+import { MARKET_STAND } from '../town/fishing/fishCatalog';
 import { Activity, Mode, ROOM_ACTIVITIES, RoomCode, Zone, roomBody, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */
@@ -62,6 +63,18 @@ export function presenceText(p: Presence, activity: number): string {
   if (p === 'away') return AWAY_TEXT;
   if (p === 'busy' || p === 'indoors') return TEXT[activity] ?? TEXT[Activity.None];
   return '';
+}
+/** Position-aware words (Oct 24 2026, owner): Fishing next to Rosa's market stand is a SALE, not fishing (the stand lives in the fishing flow,
+ *  and the wire has no separate code, so the receiver decides from where the friend stands). */
+const STAND_R2 = 7 * 7;
+export const atRosaStand = (x: number, z: number): boolean => (x - MARKET_STAND.x) ** 2 + (z - MARKET_STAND.z) ** 2 <= STAND_R2;
+export function presenceTextAt(p: Presence, activity: number, x: number, z: number): string {
+  if (p === 'busy' && activity === Activity.Fishing && atRosaStand(x, z)) return `Selling to ${MARKET_STAND.seller}`;
+  return presenceText(p, activity);
+}
+export function presenceIconAt(p: Presence, activity: number, x: number, z: number): string {
+  if (p === 'busy' && activity === Activity.Fishing && atRosaStand(x, z)) return '\u{1F41F}';
+  return presenceIcon(p, activity);
 }
 export function presenceIcon(p: Presence, activity: number): string {
   if (p === 'away') return AWAY_ICON;

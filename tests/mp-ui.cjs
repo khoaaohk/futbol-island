@@ -39,6 +39,7 @@ t('party list: the activity line under a friend\'s name (Taking a lesson / In th
  const fn=/export function memberActivityLine[\s\S]*?\n\}/.exec(host);assert(fn,'memberActivityLine helper');
  const line=new Function('presenceText','presenceIcon','return '+fn[0].replace(/export function memberActivityLine\(m[^)]*\): string/,'function(m)').replace(/^function/,'function'))(pr.presenceText,pr.presenceIcon);
  assert.equal(line({presence:'busy',activity:P.Activity.Lesson}),'\u{1F4D6} Taking a lesson');
+ assert.equal(pr.presenceTextAt('busy',P.Activity.Fishing,230,35),'Selling to Rosa'); assert.equal(pr.presenceTextAt('busy',P.Activity.Fishing,100,35),'Fishing'); assert.equal(pr.presenceTextAt('busy',P.Activity.Lesson,230,35),'Taking a lesson');
  assert.equal(line({presence:'indoors',activity:P.Activity.Museum}),'\u{1F3DB}️ In the museum');
  assert.equal(line({presence:'away',activity:0}),'\u{1F4A4} Away');assert.equal(line({presence:'active',activity:0}),'');
  assert(/<small className=\{styles\.activity\} data-party-activity/.test(host),'rendered as small text inside the name');
