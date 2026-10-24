@@ -62,7 +62,7 @@ export const holdLift=(heldMs:number)=>1+(KEEPUP_HOLD.maxLift-1)*holdCharge(held
 export const KONBINI_ROOF=4.72;
 /** THE tunable: the full-charge apex over the player's feet, anywhere on the island (owner, Oct 24: "noticeably HIGHER than the
  *  Konbini … roughly Konbini height + 8-10 m … not crazy, hang under ~5 s"). The Konbini roof is only the height reference. */
-export const SKY_MAX_APEX=KONBINI_ROOF+9;
+export const SKY_MAX_APEX=KONBINI_ROOF+11;// +2 m (owner, Oct 24: "a little higher"); ~3.2 s hang at gravity 12
 /** Oct 24 (owner: "very intuitive … forgiving for kids"; the red ring "a little bigger … use the ring's outer radius as the catch
  *  radius, ~1.5 m"; "kick power = how long the button is held … continuous"): catchRadius = the mark's outer radius as it lands
  *  (Town skyMark); catchHigh 2.2 m (a wider window); `buffer` = a press up to 0.25 s before the window opens still arms the catch
@@ -75,7 +75,16 @@ export const SKY_MAX_APEX=KONBINI_ROOF+9;
  *  keeps the press window about as long in time. Kick-ups are FOOT kicks (owner: "HIGH KICKS ARE REAL KICKS"): a pressed / held
  *  arrival waits until the ball is down at kickHigh (foot reach) and leaves from the kicking foot (skyKickContact); an
  *  un-pressed one is trapped as soon as it enters catchHigh. */
-export const KEEPUP_SKY={start:650,full:1000,apex:SKY_MAX_APEX,minApex:3.6,gravity:12,minDrift:2,maxDrift:2.6,sideAngle:.35,catchRadius:1.5,catchHigh:2.2,kickHigh:.95,catchLow:.1,armHigh:6,buffer:.25,lowApex:2.6,lowDrift:.45,settle:3} as const;
+/** Charge (owner, Oct 24: "SLOW DOWN the charge … about 1.6 s from empty to full … the extra hold time gives more height"): the
+ *  button ring fills over `full` = 1.6 s (keepUpChargeRing), a held juggle touch turns into a sky kick past `start` = 0.8 s, and a
+ *  press still held (not full) at a juggle touch keeps charging through it (a normal touch, +1) so the next touch gets the
+ *  longer hold. Power stays continuous over the whole hold. */
+export const KEEPUP_SKY={start:800,full:1600,apex:SKY_MAX_APEX,minApex:3.6,gravity:12,minDrift:2,maxDrift:2.6,sideAngle:.35,catchRadius:1.5,catchHigh:2.2,kickHigh:.95,catchLow:.1,armHigh:6,buffer:.25,lowApex:2.6,lowDrift:.45,settle:3} as const;
+/** The landing ring's size 0 (catch radius) … 1 (big): 1 while the ball rises, then eased down with the share of FALL TIME left
+ *  (from the height left between apex and landing), so it shrinks smoothly and monotonically and hits 0 as the ball lands. */
+export function skyMarkShrink(vy:number,y:number,landY:number,apexY:number){
+ if(vy>=0)return 1;const fall=Math.min(1,Math.max(0,(y-landY)/Math.max(.01,apexY-landY))),left=1-Math.sqrt(1-fall);return left*left*(3-2*left);
+}
 export function skyCharge(heldMs:number){const t=(heldMs-KEEPUP_SKY.start)/(KEEPUP_SKY.full-KEEPUP_SKY.start);return Number.isFinite(t)&&t>0?Math.min(1,t):0;}
 /** The whole-press charge for the UI ring: 0 … 1 over the full ~1 s (the normal lift fills the first part, the sky kick the rest). */
 export const keepUpChargeRing=(heldMs:number)=>Number.isFinite(heldMs)?Math.max(0,Math.min(1,heldMs/KEEPUP_SKY.full)):0;
@@ -108,7 +117,9 @@ export function createWalkBall(){
   skyWind:0,skyTrap:-1,skyKick:-1,skyKickSide:1 as -1|1,skyMoveAge:-1,
   /** UI cues: skyCatch = the sky ball is coming down in the window with the player inside the mark ("catch now!"); skyHeld = the
    *  press held now will catch it and kick it back up by itself. skyLaunches counts sky kicks (first-time hints). */
-  skyCatch:false,skyHeld:false,skyLaunches:0};
+  skyCatch:false,skyHeld:false,skyLaunches:0,
+  /** The flight's top (ball-centre y): set at each kick and wall rebound, for the mark's shrink (Town). */
+  skyApexY:0};
  let armed=false,skyBuffer=0,settle=-1,pressing=false,pressUsed=true,keptHold=false,holdAge=0,releaseMs=0,flightAge=0,touchIndex=0,skyAge=0,feetY=0;
  const skyLand:SkyLanding={x:0,y:0,z:0,t:0},kickPoint={x:0,y:0,z:0};
  /** The hold (ms) the next touch uses: the live press, or the one let go (armed / kept), then cleared. */
@@ -202,11 +213,11 @@ export function createWalkBall(){
    // Still held: the press keeps charging for the NEXT kick (from this launch; full long before it comes down) and catches it.
    if(pressing){holdAge=0;pressUsed=false;keptHold=false;}
    state.keepLift=holdLift(ms);state.yaw=p.yaw;state.kick=.36;armed=false;state.wallTarget=null;state.vx=vx;state.vy=vy;state.vz=vz;
-   state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;env.strike();return true;
+   state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;state.skyApexY=state.y+vy*vy/(2*g);env.strike();return true;
   }
   state.mode=mode;return false;
  };
- const predictSky=(env:Environment)=>{predictSkyLanding(state.x,state.y,state.z,state.vx,state.vy,state.vz,skyGround(env),skyLand);state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;};
+ const predictSky=(env:Environment)=>{state.skyApexY=state.y+Math.max(0,state.vy)**2/(2*KEEPUP_SKY.gravity);predictSkyLanding(state.x,state.y,state.z,state.vx,state.vy,state.vz,skyGround(env),skyLand);state.skyX=skyLand.x;state.skyY=skyLand.y;state.skyZ=skyLand.z;state.skyLeft=skyLand.t;};
  /** Caught coming down: +1 and straight back up in one motion (owner, Oct 24: "NO TRAPPING … kicks it straight back up"), the
   *  power from the hold at that moment (a press held through the catch kept charging → a big kick; a tap → a light pop-up). The
   *  re-kick (instep / laces / knee / header / outside, by height and side, never twice in a row) only drives the rig's pose.
@@ -236,7 +247,8 @@ export function createWalkBall(){
   if(state.counted&&(pressing||keptHold)&&!pressUsed&&inWindow()){armed=true;pressUsed=true;keptHold=false;}
   if(skyBuffer>0){if(state.mode==='sky'&&state.counted&&inWindow()){armed=true;skyBuffer=0;}else skyBuffer=Math.max(0,skyBuffer-dt);}
   state.skyHeld=state.mode==='sky'&&state.counted&&(armed||pressing&&!pressUsed);
-  state.skyCatch=state.mode==='sky'&&state.counted&&state.vy<0&&state.y<=p.y+KEEPUP_SKY.armHigh&&Math.hypot(state.skyX-p.x,state.skyZ-p.z)<=KEEPUP_SKY.catchRadius;
+  // Hysteresis (0.15 m) so the green cue never flickers when the player stands on the ring's edge.
+  state.skyCatch=state.mode==='sky'&&state.counted&&state.vy<0&&state.y<=p.y+KEEPUP_SKY.armHigh&&Math.hypot(state.skyX-p.x,state.skyZ-p.z)<=KEEPUP_SKY.catchRadius+(state.skyCatch?.15:0);
   if(state.mode==='sky'){
    const g=KEEPUP_SKY.gravity;skyAge+=dt;state.kick=skyAge<.3?.36+skyAge/.3*.64:0;state.jugglePhase=0;
    let x=state.x+state.vx*dt,z=state.z+state.vz*dt;const y=state.y+state.vy*dt-g/2*dt*dt;state.vy-=g*dt;
@@ -291,7 +303,10 @@ export function createWalkBall(){
    if(movingJuggle!==!!env.moving){movingJuggle=!!env.moving;if(state.counted){blendStart.x=state.x;blendStart.y=state.y;blendStart.z=state.z;blendAge=0;}else regularJuggle();}
    attach(p);const style=env.ballStyle,period=style==='frost'?.8:style==='solar'?1.2:1.05;let cycle=state.age/period;
    if(state.counted){flightAge+=dt;const flight=period*Math.sqrt(state.keepLift);
-    if(flightAge>=flight){if(!armed){dropKeepUp(p);return;}armed=false;flightAge-=flight;touchIndex++;state.streak++;const ms=consumeHold();if(skyCharge(ms)>0&&launchSky(p,env,ms))return;state.keepLift=holdLift(ms);}
+    if(flightAge>=flight){if(!armed){dropKeepUp(p);return;}armed=false;flightAge-=flight;touchIndex++;state.streak++;
+     // Still holding and not full yet: a normal touch, the press keeps charging and arms the next one (more hold = more height).
+     if(pressing&&skyCharge(holdAge*1000)>0&&keepUpChargeRing(holdAge*1000)<1){armed=true;state.keepLift=holdLift(holdAge*1000);}
+     else{const ms=consumeHold();if(skyCharge(ms)>0&&launchSky(p,env,ms))return;state.keepLift=holdLift(ms);}}
     cycle=touchIndex+Math.min(.999,Math.max(0,flightAge)/(period*Math.sqrt(state.keepLift)));}
    const phase=cycle%1,touch=Math.floor(cycle),side=touch%2?1:-1;
    const routine=env.juggleHead?COSTUME_JUGGLE_ROUTINE:JUGGLE_ROUTINE;
