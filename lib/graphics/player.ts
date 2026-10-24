@@ -62,11 +62,11 @@ export type PlayerMotion = {
   /** A held keep-up's lift (1 = tap, up to 1.6; lib/town/keepUps.ts): the touching leg swings higher and further through. */
   juggleLift?: number;
   /** Sky keep-up (lib/town/skyKeepUpMoves.ts, walkBall.state): the held big-kick charge 0…1 (wind-up: lean back, leg drawn back),
-   *  the catch's trap (0 foot, 1 thigh, 2 chest) and re-kick (SKY_KICKS index), the side it was on, seconds since the catch (−1 none). */
+   *  the arrival: trap (0 foot, 1 thigh, 2 chest; −1 = pressed, kicked straight back up) or re-kick (SKY_KICKS index), the side it was on, seconds since the catch (−1 none). */
   skyWindup?: number;
   skyTrap?: number;
   skyKick?: number;
-  skyTrapSide?: -1|1;
+  skyKickSide?: -1|1;
   skyMoveAge?: number;
   stunAge?: number;
   shotCharge?: number;
@@ -1318,8 +1318,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const pelvisPitch=pelvis.rotation.x,cosYaw=Math.cos(yaw),sinYaw=Math.sin(yaw);
     // The leg pass is its own function (as are the big mode blocks below): update() was ~93 KB of bytecode, past V8's 60 KB
     // optimising limit, so it never left the baseline tier and boxed every float (~20 KB of garbage per rig per frame). Heat QA, Oct 22 2026.
-    {const age=motion?.skyMoveAge??-1;if(age>=0)skyMoveWeights(age,SKY_W);else SKY_W.trap=SKY_W.kick=0;}
-    const skyAmp=reduced?.5:1,skyWind=reduced?0:Math.max(0,Math.min(1,motion?.skyWindup??0)),skySide=motion?.skyTrapSide??1;
+    {const age=motion?.skyMoveAge??-1;if(age>=0)skyMoveWeights(age,SKY_W,(motion?.skyTrap??-1)>=0);else SKY_W.trap=SKY_W.kick=0;}
+    const skyAmp=reduced?.5:1,skyWind=reduced?0:Math.max(0,Math.min(1,motion?.skyWindup??0)),skySide=motion?.skyKickSide??1;
     const legPass=(index:number)=>{
       const { hip, knee, ankle } = legs[index];
       const side = index === 0 ? -1 : 1;

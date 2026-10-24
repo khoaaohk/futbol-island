@@ -1628,6 +1628,15 @@ Two of the island's round action buttons inside both Konbinis (`components/Konbi
   foot while held. The touching leg swings higher with the lift (`PlayerMotion.juggleLift`, lib/graphics/player.ts; two scalar
   ops). Headless (22 Oct, desktop): island peaks tap 1.28/1.52/1.86/2.31 m vs held 1.47/1.80/2.13/2.61 m; Konbini apex tap
   ~1.40 m vs held up to 2.04 m. Not measured on a real iPhone.
+- **Sky keep-up hold / catch / cues (24 Oct 2026, island; branch keepup-hold-charge-ring, not deployed):** a pressed (or held, or
+  0.25 s buffered) arrival inside the 1.5 m ring kicks the sky ball straight back up (power = hold time, continuous `lowApex` →
+  roof + 9 m; a press held through the flight keeps charging so the re-kick is full); an un-pressed arrival is trapped
+  (chest / thigh / foot) and waits 3 s for the next press, count kept; endless chain. Cues: the keep-up button's inner charge
+  ring (one `--keepup-charge` CSS var in 1/40 steps + `data-keepup` state, written only on change, conic-gradient; the pulse is a
+  CSS scale animation only while full / catch and off with reduced motion or Battery saver), the thinner pooled red ring (green
+  in the catch window), one pooled edge arrow (a single `translate/rotate` string only when its rounded position changes) and a
+  first-time hint (max 3 runs, `fi2-keepup-sky-hints`). Cost: a few scalar checks + one projection per frame while a sky ball
+  is up; no new meshes, loops or timers. Tests: `tests/keepup-sky.cjs`, `tests/keepup-sky-moves.cjs`. No iPhone measurement.
 - **Heat:** no new loops. The ball is stepped only while it's off the feet (`if(kb.moving)`), and `busy` includes the ball and
   the wobble, so the store sleeps again afterwards. No extra draw calls: the ball, shadow and products are existing meshes.
   Measured (scratchpad `konbini/actions/check-actions.cjs`, headless Chrome, muted; phone = 390×844 touch, DPR 3, CPU 4×):
