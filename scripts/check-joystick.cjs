@@ -64,7 +64,7 @@ const place = (p) => p.evaluate(() => { const d = window.__fi2; d.rideRef.curren
       for (const c of L.controls) if (c.sel !== '[data-emote-wheel]' && overlap(zone, c)) bad(`${s.n}: zone overlaps ${c.name}`);
       if (L.floating !== 'true') bad(`${s.n}: stick is not floating on a phone`);
       if (D < 140 || D > 222) bad(`${s.n}: ring ${D} px`);
-      if (Math.abs(L.knob.width / L.ring.width - 0.55) > 0.02) bad(`${s.n}: knob ${Math.round(L.knob.width)} px is not 55% of the ring`);
+      if (Math.abs(L.knob.width / L.ring.width - 0.62) > 0.02) bad(`${s.n}: knob ${Math.round(L.knob.width)} px is not 62% of the ring`);
       const rest = L.ringOpacity * L.knobOpacity; if (rest < 0.4 || rest > 0.56) bad(`${s.n}: resting knob opacity ${rest.toFixed(2)}`);
       if (zone.right - zone.left < D || zone.bottom - zone.top < D) bad(`${s.n}: zone ${Math.round(zone.right - zone.left)}x${Math.round(zone.bottom - zone.top)} is smaller than the ring`);
       console.log(`${s.n} ${s.w}x${s.h}: ring ${D}px knob ${Math.round(L.knob.width)}px opacity rest ${rest.toFixed(2)} | zone x${Math.round(zone.left)}-${Math.round(zone.right)} y${Math.round(zone.top)}-${Math.round(zone.bottom)} | nearest ${near} ${Math.round(minGap)}px`);

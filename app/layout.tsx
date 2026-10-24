@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ExternalLinkGate from '@/components/ExternalLinkGate';
+import RotateLock from "@/components/RotateLock";
 import VisitTracker from '@/components/VisitTracker';
 /** Vercel Web Analytics was removed on Oct 7 2026 (a paid duplicate, $3 per 100k events): the first-party counter below and
  *  the /admin dashboard now cover visitors, sources, countries and time on site. */
@@ -23,5 +24,5 @@ export const metadata: Metadata = {
 // The IslandBrush font preload lives on the routes that use it at once (lib/islandBrushPreload.ts), not here: the museum warned.
 // suppressHydrationWarning on <html> only: two pre-paint boot scripts set <html data-island-handoff> (the title
 // screen → game hand-off) and <html data-root-view> (`/`: title screen or game, lib/rootView.ts) before React hydrates, which is intended and would otherwise log "Extra attributes from the server".
-export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="en" suppressHydrationWarning><head/><body>{children}<ExternalLinkGate/>{VISITS && <VisitTracker allowLocalhost={process.env.FI_VISITS_LOCAL === '1'}/>}
+export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="en" suppressHydrationWarning><head/><body>{children}<RotateLock/><ExternalLinkGate/>{VISITS && <VisitTracker allowLocalhost={process.env.FI_VISITS_LOCAL === '1'}/>}
   </body></html>; }

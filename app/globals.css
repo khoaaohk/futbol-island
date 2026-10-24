@@ -124,7 +124,7 @@
 
 /* Mobile: movement/actions on the left, ride then map on the right. */
 @media(max-width:600px),(pointer:coarse){
- .touch-controls{left:calc(18px + env(safe-area-inset-left,0px));right:auto;width:134px;height:180px;}
+ .touch-controls{left:calc(24px + env(safe-area-inset-left,0px));right:auto;width:134px;height:180px;}
  .touch-controls .joystick{position:absolute;left:0;bottom:0;margin:0;}
  .touch-controls .touch-actions{position:absolute;left:0;bottom:116px;width:134px;height:58px;}
  .touch-actions .touch-run{left:0;bottom:0;}
@@ -909,10 +909,13 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 .joystick[data-fading=true]{opacity:0}
 .stick-insets{position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
 @media(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px){
- .touch-controls{--stick-size:clamp(123px,calc(100vw - 224px),180px)}
+ .touch-controls{--stick-size:clamp(110px,calc(100vw - 242px),160px)}
  .touch-controls,.touch-controls .joystick{width:var(--stick-size);height:var(--stick-size)}
- .touch-controls .joystick>span{width:55%;height:55%}
+ .touch-controls .joystick>span{width:62%;height:62%}
 }
-@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(108px,calc(100vw - 219px),142px)}}
-@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(180px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
+@media(pointer:coarse) and (max-width:350px){.touch-controls{--stick-size:clamp(96px,calc(100vw - 228px),126px)}}
+@media(pointer:coarse) and (max-height:500px) and (orientation:landscape){.touch-controls{--stick-size:min(160px,calc(100vh - 175px - env(safe-area-inset-bottom,0px)))}}
 @media(prefers-reduced-motion:reduce){.joystick{transition:none}}
+
+/* Plays / lessons (Oct 24 2026): the emote-grid rule above out-ranks `.in-lesson .travel-actions`, so the island action buttons showed over the plays screen. */
+.town-app.in-lesson .travel-actions,.town-app.in-lesson .travel-actions[data-emote-grid]{display:none}
