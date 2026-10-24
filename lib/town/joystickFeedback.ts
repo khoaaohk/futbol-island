@@ -1,2 +1,3 @@
-/** Shared island/arcade thumb feedback, without React updates on pointer movement. */
-export function paintJoystick(element:HTMLElement|null,x:number,y:number){if(!element)return;element.dataset.edge=String(Math.hypot(x,y)>=30);element.style.setProperty('--stick-angle',`${Math.atan2(y,x)*180/Math.PI+90}deg`);const thumb=element.querySelector('span');if(thumb)thumb.style.transform=`translate(${x}px,${y}px)`;}
+/** Shared island/arcade thumb feedback, without React updates on pointer movement. `travel` is the max knob offset in px
+ *  (lib/town/floatingStick.ts stickTravel); the rim glows from 30/36 of it. A non-zero offset marks the stick active (CSS opacity). */
+export function paintJoystick(element:HTMLElement|null,x:number,y:number,travel=36){if(!element)return;const moved=x!==0||y!==0;element.dataset.edge=String(Math.hypot(x,y)>=travel*30/36);if(moved)element.dataset.active='true';else if(!element.dataset.anchored)delete element.dataset.active;element.style.setProperty('--stick-angle',`${Math.atan2(y,x)*180/Math.PI+90}deg`);const thumb=element.querySelector('span');if(thumb)thumb.style.transform=`translate(${x}px,${y}px)`;}

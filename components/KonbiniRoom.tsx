@@ -16,6 +16,7 @@ import styles from './KonbiniRoom.module.css';
 // The coin balance is a read-only HUD display: the island's cream coin card (IslandJobs), not a gold button.
 import jobStyles from './IslandJobs.module.css';
 import {paintJoystick} from '@/lib/town/joystickFeedback';
+import {stickInput,stickTravel} from '@/lib/town/floatingStick';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import {useArcadeWallet,readArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {buyVendingItem,useVending} from '@/lib/town/vendingWallet';
@@ -159,7 +160,7 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
 
  // ---- Joystick (the Arcade room's control) ----
  const stop=(e?:{pointerId:number})=>{if(e&&e.pointerId!==pointer.current)return;const id=pointer.current;pointer.current=null;joyRect.current=null;if(id!==null&&joy.current?.hasPointerCapture(id))joy.current.releasePointerCapture(id);room.current?.setStick(0,0);paintJoystick(joy.current,0,0);};
- const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,scale=Math.min(1,36/Math.max(1,Math.hypot(dx,dy))),x=dx*scale,y=dy*scale;room.current?.setStick(x/36,y/36);paintJoystick(joy.current,x,y);};
+ const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,T=stickTravel(r.width),{px:x,py:y}=stickInput(dx,dy,T);room.current?.setStick(x/T,y/T);paintJoystick(joy.current,x,y,T);/* bounds-scaled: same feel at any ring size */};
 
  // ---- Tapping a product on the zoomed shelf ----
  /**

@@ -173,7 +173,7 @@ const C=require('../lib/shop/shopCast.ts');
  // The room's wiring.
  assert(/createPlayer\('you','home',true,true\)/.test(scene)&&/player\.setBeanLook\(beanLookFor\(custom\),playerOutfit\(custom\)\)/.test(scene),'your own character walks in');
  assert(/npcDress\(def\)/.test(scene)&&/AGE_PROFILES\[age\]/.test(scene)&&/SHOP_SHOPPERS\.slice\(0,SHOP_SHOPPER_CAP\)/.test(scene),'shoppers on the townsfolk rig and looks, capped');
- assert(/className="joystick"[\s\S]{0,300}data-shop-joystick/.test(room)&&/room\.current\?\.setStick\(x\/36,y\/36\)/.test(room),'the joystick walks');
+ assert(/className="joystick"[\s\S]{0,300}data-shop-joystick/.test(room)&&/room\.current\?\.setStick\(x\/T,y\/T\)/.test(room)&&/T=stickTravel\(r\.width\)/.test(room),'the joystick walks (travel scaled to the live ring, Oct 23 2026)');
  assert(/Key\[WASD\]\|Arrow\(Up\|Down\|Left\|Right\)/.test(scene),'WASD and the arrow keys walk');
  assert(/data-shop-prompt=\{near\.id\} onClick=\{\(\)=>act\(near\)\}>\{near\.label\}/.test(room),'the prompt acts on the spot you stand at');
  assert(/\(e\.code==='Enter'\|\|e\.code==='KeyE'\)&&near/.test(room),'E or Enter acts too');

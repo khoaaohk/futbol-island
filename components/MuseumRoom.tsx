@@ -9,6 +9,7 @@ import {Icon} from './Icon';
 import styles from './MuseumRoom.module.css';
 import {useModalFocus} from '@/lib/konbini/useModalFocus';
 import {paintJoystick} from '@/lib/town/joystickFeedback';
+import {stickInput,stickTravel} from '@/lib/town/floatingStick';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import {recordExploreActivity} from '@/lib/town/exploreActivity';
 import {EXHIBITS,UNLOCK_WORDS,exhibitState,galleryOf,nextExhibitToOpen,timelineOrder,type MuseumCounts} from '@/lib/endgame/museum';
@@ -155,7 +156,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
 
  // ---- Joystick (the Konbini/Arcade control) ----
  const stop=(e?:{pointerId:number})=>{if(e&&e.pointerId!==pointer.current)return;const id=pointer.current;pointer.current=null;joyRect.current=null;if(id!==null&&joy.current?.hasPointerCapture(id))joy.current.releasePointerCapture(id);room.current?.setStick(0,0);paintJoystick(joy.current,0,0);};
- const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,scale=Math.min(1,36/Math.max(1,Math.hypot(dx,dy))),x=dx*scale,y=dy*scale;room.current?.setStick(x/36,y/36);paintJoystick(joy.current,x,y);};
+ const move=(e:ReactPointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,T=stickTravel(r.width),{px:x,py:y}=stickInput(dx,dy,T);room.current?.setStick(x/T,y/T);paintJoystick(joy.current,x,y,T);/* bounds-scaled: same feel at any ring size */};
 
  // Every case opens straight onto its full card (Oct 13 2026, user: "for all the exhibits remove this info thing and btn, just have
  // the full thing at the beginning"): eyebrow, title, facts, the hands-on bit, "Take it to your game", sources, Step inside. The
