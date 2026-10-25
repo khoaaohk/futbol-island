@@ -97,6 +97,13 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  const art=read(`${DIR}/TitleArt.tsx`);assert.match(art,/import CAST_SIZES from '@\/public\/splash\/cast\.json';/,'sizes from cast.json, not hardcoded');
  assert.match(art,/const SLOTS=\[\{id:'trick-boy',cls:'boy'\},\{id:'trick-girl',cls:'girl'\}\] as const;/);
  assert.match(art,/pct:SIZES\[c\.id\]\.width\/513\*24/,'one px-per-metre scale');
+ // Oct 24 2026: wide-and-short screens move the cast beside the button stack (boy left, girl right, one ground line); desktops keep the centred cast.
+ {const side=css.match(/@media\(min-width:700px\) and \(max-width:899px\) and \(min-aspect-ratio:1\/1\) and \(max-height:820px\),\(min-width:900px\) and \(min-aspect-ratio:1\/1\) and \(max-height:780px\)\{([^@]*?)\n\}/);
+  assert(side,'side-cast rule: wide (≥ 1:1) AND too short for the cast above the stack only');
+  assert.match(side[1],/\.castBox\{top:auto;bottom:calc\(env\(safe-area-inset-bottom,0px\) \+ 56px\)\}/,'side cast: feet on the stack\'s bottom line, from the viewport (no jump Loading → Play)');
+  assert.match(side[1],/\.boy\{left:auto;right:calc\(50% \+ 190px \+ var\(--side-gap\)\);bottom:0\}/,'boy left of the 380px card column');
+  assert.match(side[1],/\.girl\{right:auto;left:calc\(50% \+ 190px \+ var\(--side-gap\)\);bottom:0\}/,'girl right of it');
+  assert(!/max-height:8[3-9]\d|max-height:9\d\d/.test(side[0]),'1280×800 / 1440×900 desktops stay centred');}
  // Sprite strips: CSS steps() only, paused when calm / hidden, the still under reduced motion.
  // Grid sheets (Oct 9 2026, trick medleys): the picture steps down the rows over the whole loop, the img steps across the columns once per
  // row, so each frame is one whole cell; a one-row strip is rows 1. Every sheet stays ≤ 16384 px and its cells tile it exactly.

@@ -63,6 +63,21 @@
 /* The trick cast on the shared px-per-metre scale (trick-boy ≈24 %, trick-girl ≈25.5 % of the box), feet on one ground line. */
 .boy{left:14%;bottom:4%}
 .girl{right:13%;bottom:4%}
+/* Oct 24 2026 (user: "for wider screens the loading button is covering the characters ... move the two characters to the side of
+   the buttons, left and right"). Wide-and-short screens (a foldable held open, a small landscape tablet, a short laptop window) have
+   no room for the cast between the island and the button stack, so the cast steps out to either side of the stack: the boy left of
+   it, the girl right of it, feet on one ground line level with the bottom of the stack (just above the grown-up links). Sized from
+   the height (boy ≈ 30svh tall) and capped by the free width beside the 380px card column. Positions only depend on the viewport,
+   never on the buttons, so Loading → Play (same pill) never moves them. The rule fires only when the centred layout cannot fit
+   (worked out from the --isle/--cast maths above: ≥ 900px wide the feet reach the 3-button stack below ~764px tall, 700–899px wide
+   below ~818px), so portrait phones and normal desktops (1280×800, 1440×900) keep the centred layout exactly. ≤ 560px tall the
+   cast is hidden anyway (sideways-phone card). */
+@media(min-width:700px) and (max-width:899px) and (min-aspect-ratio:1/1) and (max-height:820px),(min-width:900px) and (min-aspect-ratio:1/1) and (max-height:780px){
+ .screen{--side-gap:clamp(12px,2vw,32px);--cast-w:min(71svh,calc((50vw - 208px - var(--side-gap)) / .263))}
+ .castBox{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 56px)}
+ .boy{left:auto;right:calc(50% + 190px + var(--side-gap));bottom:0}
+ .girl{right:auto;left:calc(50% + 190px + var(--side-gap));bottom:0}
+}
 /* Trick loops as CSS sprites (when cast.json has a strip): a grid sheet (--cols × --rows cells) behind an overflow-hidden box the size
    of one cell. Two steps() transforms: the picture moves down one row per --dur/--rows, the img moves across one column per
    --dur/(--rows × --cols), so every frame shows exactly one whole cell (a one-row strip is --rows 1). The still sits under it until
