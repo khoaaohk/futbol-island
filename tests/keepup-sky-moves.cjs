@@ -46,5 +46,9 @@ assert.equal(M.skyKickTouch(0),'foot');assert.equal(M.skyKickTouch(3),'foot');
  assert(t.n>=19&&t.n<=23,'the trap lasts ~0.35 s ('+t.n+' frames)');}
 // 7. Rig wiring: one module-level weights object, reduced motion halves the poses and drops the wind-up lean.
 {const rig=read('lib/graphics/player.ts');assert(/const SKY_W=\{trap:0,kick:0\};/.test(rig),'pooled weights');assert(/skyAmp=reduced\?\.5:1,skyWind=reduced\?0:/.test(rig),'reduced motion');
- assert(/skyMoveAge:rideRef\.current==='walk'\?walkBall\.state\.skyMoveAge:-1/.test(read('components/Town.tsx')),'Town feeds the rig');}
+ assert(/skyMoveAge:rideRef\.current==='walk'\?walkBall\.state\.skyMoveAge:-1/.test(read('components/Town.tsx')),'Town feeds the rig');
+ // Hold-to-charge (audit Oct 24 P0 #2): the balance pose holds the skyKickSide boot under the stalled ball and cancels the leg draw-back.
+ assert(/skyBalance:rideRef\.current==='walk'\?walkBall\.state\.skyBalance:0/.test(read('components/Town.tsx')),'Town feeds the balance');
+ assert(/const w=skyWind\*\.8\*\(1-skyBal\)/.test(rig)&&/if\(side===skySide&&skyBal>0\)\{footZ\+=\(\.34-footZ\)\*skyBal;lift\+=\(\.32-lift\)\*skyBal;\}/.test(rig),'balance pose: the instep under the ball (skyKickContact kick 0)');
+ const c=M.skyKickContact(0,1,{x:0,y:0,z:0});assert(c.y===.48&&c.z===.45,'the stalled ball sits on the instep contact');}
 console.log('keep-up sky moves: trap by height (un-pressed only), re-kick by height/side/streak (no repeats, no trap when pressed), short poses, catch wiring, rig wiring passed');

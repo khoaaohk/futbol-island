@@ -64,6 +64,8 @@ export type PlayerMotion = {
   /** Sky keep-up (lib/town/skyKeepUpMoves.ts, walkBall.state): the held big-kick charge 0…1 (wind-up: lean back, leg drawn back),
    *  the arrival: trap (0 foot, 1 thigh, 2 chest; −1 = pressed, kicked straight back up) or re-kick (SKY_KICKS index), the side it was on, seconds since the catch (−1 none). */
   skyWindup?: number;
+  /** Hold-to-charge balance 0…1 (walkBall.state.skyBalance): the ball stalled on the skyKickSide boot, that foot held up under it. */
+  skyBalance?: number;
   skyTrap?: number;
   skyKick?: number;
   skyKickSide?: -1|1;
@@ -1319,7 +1321,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     // The leg pass is its own function (as are the big mode blocks below): update() was ~93 KB of bytecode, past V8's 60 KB
     // optimising limit, so it never left the baseline tier and boxed every float (~20 KB of garbage per rig per frame). Heat QA, Oct 22 2026.
     {const age=motion?.skyMoveAge??-1;if(age>=0)skyMoveWeights(age,SKY_W,(motion?.skyTrap??-1)>=0);else SKY_W.trap=SKY_W.kick=0;}
-    const skyAmp=reduced?.5:1,skyWind=reduced?0:Math.max(0,Math.min(1,motion?.skyWindup??0)),skySide=motion?.skyKickSide??1;
+    const skyAmp=reduced?.5:1,skyWind=reduced?0:Math.max(0,Math.min(1,motion?.skyWindup??0)),skySide=motion?.skyKickSide??1,skyBal=Math.max(0,Math.min(1,motion?.skyBalance??0));
     const legPass=(index:number)=>{
       const { hip, knee, ankle } = legs[index];
       const side = index === 0 ? -1 : 1;
@@ -1384,7 +1386,9 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
       if(side===skySide&&SKY_W.kick>0){const w=SKY_W.kick,k=motion?.skyKick??0;/* full even with reduced motion: the boot must reach the ball */
         if(k===0){footZ+=(.34-footZ)*w;lift+=(.32-lift)*w;}else if(k===1){footZ+=(.5-footZ)*w;lift+=(.22-lift)*w;}
         else if(k===2){footX+=side*.22*w;footZ+=(.28-footZ)*w;lift+=(.26-lift)*w;}else if(k===3){footZ+=(.44-footZ)*w;lift+=(.14-lift)*w;}}
-      if(side===kickSide&&skyWind>0){const w=skyWind*.8;footZ+=(-.32-footZ)*w;lift+=(.16-lift)*w;}
+      if(side===kickSide&&skyWind>0){const w=skyWind*.8*(1-skyBal);footZ+=(-.32-footZ)*w;lift+=(.16-lift)*w;}
+      // Balancing the ball on the boot while the kick charges: the instep under it (skyKickContact kick 0).
+      if(side===skySide&&skyBal>0){footZ+=(.34-footZ)*skyBal;lift+=(.32-lift)*skyBal;}
       if (receive > 0 && side === kickSide) {
         footZ += (.24-.10*smooth(motion?.receiveProgress??.6)-footZ)*receive;
         lift += (.055-lift)*receive;

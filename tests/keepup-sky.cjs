@@ -11,8 +11,8 @@ const DT=1/60,flat={floor:()=>0,blocked:()=>false,impact(){},strike(){},receive(
 // 1. Constants: apex = the Konbini roof (konbiniDoors KONBINI_BUILDINGS.main.h) + 3 m; the charge curve.
 {const roof=Number(/main:\{x:71,z:-58,w:10,d:10,h:([0-9.]+)\}/.exec(read('lib/konbini/konbiniDoors.ts'))[1]);
  assert.equal(W.KONBINI_ROOF,roof,'KONBINI_ROOF matches the Konbini building height');assert.equal(K.apex,roof+11,'the one tunable SKY_MAX_APEX: roof + 11 m (+2 m, Oct 24)');assert.equal(W.SKY_MAX_APEX,K.apex);
- assert.equal(W.skyCharge(0),0);assert.equal(W.skyCharge(600),0,'the normal (1.6x) held kick stays a normal keep-up');assert.equal(K.start,800);assert.equal(K.full,1600,'the charge fills over ~1.6 s');assert.equal(W.skyCharge(K.start),0);
- assert.equal(W.skyCharge(1600),1,'full at ~1.6 s');assert(W.skyCharge(1200)>.4&&W.skyCharge(1200)<.6,'half way at 1.2 s');assert.equal(W.skyCharge(5000),1);assert.equal(W.skyCharge(NaN),0);
+ assert.equal(W.skyCharge(0),0);assert.equal(W.skyCharge(150),0,'a tap (< 0.2 s) has no sky charge');assert.equal(K.start,200,'hold-to-charge starts after 0.2 s (audit P0 #2)');assert.equal(K.full,1600,'the charge fills over ~1.6 s');assert.equal(W.skyCharge(K.start),0);
+ assert.equal(W.skyCharge(1600),1,'full at ~1.6 s');assert(Math.abs(W.skyCharge(900)-.5)<1e-9,'half way at 0.9 s');assert.equal(W.skyCharge(5000),1);assert.equal(W.skyCharge(NaN),0);
  assert.equal(W.keepUpChargeRing(800),.5);assert.equal(W.keepUpChargeRing(1600),1);assert(W.keepUpChargeRing(1000)<.7,'not full at 1 s any more');assert.equal(W.keepUpChargeRing(2000),1);}
 
 // A run: the starting press held `hold` ms from the feet (arms touch 2; ≥ ~1 s → a full sky kick). `move(b,p)` steers the player;
@@ -35,7 +35,8 @@ const chase=(b,p)=>{if(b.state.mode!=='sky')return;const dx=b.state.skyX-p.x,dz=
 // 2. Apex and hang time: a ~1 s hold → the ball tops out a little over the Konbini roof; the snappier rise (gravity 12, owner Oct 24:
 //    "the ball going UP is too slow") takes ~1.2-1.5 s and the whole hang ~2.8-3.5 s; it lands 2-2.6 m away.
 // 2. Apex and hang time: a ~1 s hold → the ball tops out a little over the Konbini roof and hangs 3+ s; it lands 1.5-2 m away.
-{const away=(b,p)=>{if(b.state.mode==='sky'&&b.state.vy<0)p.x=8;/* walks off: the ball lands untouched */},{b,log}=run({move:away});assert(log.launch,'sky kick launched');assert.equal(log.launch.streak,3,'held past touch 2 (still charging, a normal touch): the full sky kick is touch 3');
+{const away=(b,p)=>{if(b.state.mode==='sky'&&b.state.vy<0)p.x=8;/* walks off: the ball lands untouched */},{b,log}=run({move:away});assert(log.launch,'sky kick launched');assert.equal(log.launch.streak,2,'held from the first touch: the ball stalls on the boot and the full hold launches it by itself (touch 2)');
+ assert(Math.abs(log.launch.t-K.full/1000)<=DT*1.5,'auto-launch at full ('+log.launch.t.toFixed(2)+' s), not on a later touch');
  assert(log.apex>=K.apex-.05&&log.apex<=K.apex+.05,'apex '+log.apex.toFixed(2)+' ≈ roof + 11 = '+K.apex);
  assert(log.land,'landed');const hang=log.land.t-log.launch.t;assert(hang>=2.9&&hang<=3.6,'hang time '+hang.toFixed(2)+' s (2.9-3.6)');const rise=log.apexT-log.launch.t;assert(rise>=1.3&&rise<=1.75,'rise '+rise.toFixed(2)+' s (1.3-1.75)');assert.equal(K.gravity,12);
  // 3. The landing prediction made at launch IS the landing.
@@ -44,26 +45,26 @@ const chase=(b,p)=>{if(b.state.mode!=='sky')return;const dx=b.state.skyX-p.x,dz=
  // Audit Oct 24 P1 #6: the first easyKicks (3) sky kicks of a run land within easyDrift (1.0 m), inside the 1.5 m ring.
  assert.equal(K.easyKicks,3);assert.equal(K.easyDrift,1);assert(drift>=.9&&drift<=K.easyDrift+.02,'the first sky kick lands within 1 m ('+drift.toFixed(2)+'), never back on the player');assert(drift<K.catchRadius,'inside the ring of a still player');
  assert.equal(b.state.streak,0,'walked off: the ball lands, the run ends');assert(b.state.mode!=='sky');
- const still=run();assert.equal(still.log.traps,1,'a still player gets the first kick (trapped, no press)');assert(still.b.state.counted&&still.b.state.streak===3,'… the count goes on');
+ const still=run();assert.equal(still.log.traps,1,'a still player gets the first kick (trapped, no press)');assert(still.b.state.counted&&still.b.state.streak===2,'… the count goes on');
  console.log('sky: apex',log.apex.toFixed(2),'m, hang',hang.toFixed(2),'s, lands',drift.toFixed(2),'m ahead, catch radius',K.catchRadius,'m');}
 // A short hold stays a normal keep-up (no sky); a partial charge goes less high.
-{const {log}=run({hold:300,frames:200});assert(!log.launch,'a short hold is the normal keep-up');
+{const {log}=run({hold:150,frames:200});assert(!log.launch,'a tap (0.15 s) is the normal keep-up');
  const half=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};half.keepUp(p);let t=0,apex=0,sky=false;for(let i=0;i<60*6;i++){t+=DT;if(Math.abs(t-.1)<DT/2)half.keepUpRelease();if(i===12)half.keepUp(p);if(i===12+50)half.keepUpRelease();half.update(DT,p,flat);if(half.state.mode==='sky'){sky=true;apex=Math.max(apex,half.state.y);}}
  assert(sky,'a ~0.85 s hold: a partial sky kick');assert(apex<K.apex-.3,'a partial charge goes less high ('+apex.toFixed(2)+')');}
 
 // 4. Chase + press (Oct 24 rules): running to the mark AND pressing as it comes down kicks it straight back up (+1, sky → sky, no
 //    trap); arriving with NO press traps it (chest / thigh / foot), the count stays and the next press kicks it up again; from the
 //    4th sky kick of a run a still player misses (the landing is 2-2.6 m away, outside the rings).
-{const {b,log}=run({frames:60*8,move:chase,tap:true});assert.equal(log.catches,1,'ran to the mark + tapped: caught');assert(log.caughtCounted&&log.caughtAt===4,'count 4 and going ('+log.caughtAt+')');
+{const {b,log}=run({frames:60*8,move:chase,tap:true});assert.equal(log.catches,1,'ran to the mark + tapped: caught');assert(log.caughtCounted&&log.caughtAt===3,'count 3 and going ('+log.caughtAt+')');
  assert(!log.modes.slice(log.modes.indexOf('sky')).includes('juggle'),'no trap / juggle between: kicked straight back up ('+log.modes.join('>')+')');
- assert.equal(log.traps,1,'the next ball arrived with no press: trapped');assert.equal(log.trapStreak,4,'the trap keeps the count');
+ assert.equal(log.traps,1,'the next ball arrived with no press: trapped');assert.equal(log.trapStreak,3,'the trap keeps the count');
  const lazy=run({frames:60*6,move:chase});assert.equal(lazy.log.catches,0,'at the mark but no press: no kick');assert.equal(lazy.log.traps,1,'… it is trapped instead');
- assert(lazy.b.state.counted&&lazy.b.state.streak===3&&lazy.b.state.mode==='attached','trapped at the feet, count 3 waiting');
+ assert(lazy.b.state.counted&&lazy.b.state.streak===2&&lazy.b.state.mode==='attached','trapped at the feet, count 2 waiting');
  assert(lazy.log.trap===require('../lib/town/skyKeepUpMoves.ts').pickSkyTrap(lazy.log.trapH),'trap part by height');
  // The next press kicks the trapped ball up again: count 3.
- assert(lazy.b.keepUp(lazy.p));assert.equal(lazy.b.state.streak,4,'press after the trap: the count goes on');assert.equal(lazy.b.state.mode,'juggle');
+ assert(lazy.b.keepUp(lazy.p));assert.equal(lazy.b.state.streak,3,'press after the trap: the count goes on');assert.equal(lazy.b.state.mode,'juggle');
  // Left alone it waits KEEPUP_SKY.settle s, then the run ends there.
- {assert.equal(K.settle,5,'the trap waits 5 s (audit Oct 24 P0 #4: "Tap to keep going!")');const z=run({frames:60*6,move:chase});for(let i=0;i<60*(K.settle-.5);i++)z.b.update(DT,z.p,flat);assert(z.b.state.counted,'still waiting at 4.5 s');for(let i=0;i<60;i++)z.b.update(DT,z.p,flat);assert.equal(z.b.state.streak,0,'no press for '+K.settle+' s: the run ends');assert.equal(z.b.state.mode,'attached');}
+ {assert.equal(K.settle,5,'the trap waits 5 s (audit Oct 24 P0 #4: "Tap to keep going!")');const z=run({frames:312,move:chase});assert.equal(z.log.traps,1,'trapped by 5.2 s');for(let i=0;i<60*(K.settle-.5);i++)z.b.update(DT,z.p,flat);assert(z.b.state.counted,'still waiting at 4.5 s');for(let i=0;i<60;i++)z.b.update(DT,z.p,flat);assert.equal(z.b.state.streak,0,'no press for '+K.settle+' s: the run ends');assert.equal(z.b.state.mode,'attached');}
  const still=run({frames:60*7,tap:true});assert.equal(still.log.catches,1,'pressed without running: the first kicks land within 1 m, kicked back up');
  let upTap=false;const early=run({frames:60*7,move:(b,p)=>{chase(b,p);if(b.state.mode==='sky'&&b.state.vy>0&&!upTap){upTap=true;b.keepUp(p);b.keepUpRelease();}}});assert.equal(early.log.catches,0,'a tap on the way up does not arm the kick');assert.equal(early.log.traps,1);}
 
@@ -121,8 +122,45 @@ function chain(plan,n,{frames=60*400}={}){
  assert.equal(buf(.15),'kick','pressed 0.15 s early: buffered, kicked up');assert.equal(buf(.5),'trap','0.5 s early: too early, trapped');}
 // Endless: 30 catches in a row mixing held and tapped re-kicks, the count never capped or reset.
 {const plan=i=>i%3===0?'hold':'tap',{b,caught}=chain(plan,30);assert.equal(caught.length,30,'30 consecutive catches ('+caught.length+')');
- caught.forEach((c,i)=>assert.equal(c.streak,i+4,'streak counts every catch'));assert(caught.some(c=>c.how==='hold')&&caught.some(c=>c.how==='tap'));
- assert(b.state.counted&&b.state.streak===33,'still going at 33');console.log('endless: 30 mixed held/tapped catches, streak',b.state.streak);}
+ caught.forEach((c,i)=>assert.equal(c.streak,i+3,'streak counts every catch'));assert(caught.some(c=>c.how==='hold')&&caught.some(c=>c.how==='tap'));
+ assert(b.state.counted&&b.state.streak===32,'still going at 32');console.log('endless: 30 mixed held/tapped catches, streak',b.state.streak);}
+
+// 4b. Hold-to-charge (audit Oct 24 P0 #2, the new default): at ANY moment of a juggle run a press held 0.2 s stalls the ball on the
+//     boot (no gravity drop, a gentle bob), the ring fills over 1.6 s, RELEASE launches right then (more hold = higher, continuous),
+//     a full hold launches by itself; a tap is still a normal touch (+1). `taps` normal touches first (one tap per falling half).
+function holdRun(holdMs,{taps=0,frames=60*6}={}){
+ const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0},o={launchT:-1,releaseT:-1,pressT:-1,firstT:0,apex:0,launchStreak:0,stallMinY:1e9,stallMaxY:-1e9,stallVy:0,balance:0,drops:0,streakAtPress:0};
+ b.keepUp(p);let t=0,tapAt=-1,done=0,held=false,lastTap=-1;
+ if(!taps){held=true;o.pressT=0;o.streakAtPress=1;}
+ for(let i=0;i<frames;i++){t+=DT;
+  if(tapAt>=0&&t-tapAt>=.09){b.keepUpRelease();tapAt=-1;}
+  if(!held&&o.pressT<0&&i>6&&b.state.mode==='juggle'&&b.state.jugglePhase>=.6&&b.state.streak!==lastTap&&!b.keepUpHeld&&tapAt<0){lastTap=b.state.streak;if(done<taps){b.keepUp(p);tapAt=t;done++;}else{b.keepUp(p);held=true;o.pressT=t;o.streakAtPress=b.state.streak;}}
+  if(i===5&&taps)b.keepUpRelease();
+  if(held&&o.pressT>=0&&(t-o.pressT)*1000>=holdMs-1e-6&&b.keepUpHeld){b.keepUpRelease();o.releaseT=t;}
+  const m0=b.state.mode;b.update(DT,p,flat);
+  if(b.state.skyBalance>=1&&b.state.mode==='juggle'){o.stallMinY=Math.min(o.stallMinY,b.state.y);o.stallMaxY=Math.max(o.stallMaxY,b.state.y);o.stallVy=Math.max(o.stallVy,Math.abs(b.state.vy));o.balance=1;}
+  if(b.state.mode==='drop')o.drops++;
+  if(m0!=='sky'&&b.state.mode==='sky'&&o.launchT<0){o.launchT=t;o.launchStreak=b.state.streak;o.stillHeld=b.keepUpHeld;}
+  if(b.state.mode==='sky')o.apex=Math.max(o.apex,b.state.y);
+  if(o.launchT>=0&&b.state.mode==='sky'&&b.state.vy<0)break;}
+ return {b,o};}
+{const res={};
+ for(const h of [200,600,1000,1600]){const {o}=holdRun(h+1);assert(o.launchT>=0,h+' ms hold: a sky kick');assert(o.releaseT>=0&&o.launchT-o.releaseT<=DT*1.01+1e-9||h===1600,h+' ms: launched right on release ('+(o.launchT-o.releaseT).toFixed(3)+' s)');
+  assert.equal(o.launchStreak,2,'held from the first touch: the launch is touch 2 (it counts like a touch)');assert.equal(o.drops,0);res[h]=o;}
+ const ap=[200,600,1000,1600].map(h=>res[h].apex);for(let i=1;i<ap.length;i++)assert(ap[i]>ap[i-1]+1,'longer hold → higher apex ('+ap.map(x=>x.toFixed(1)).join(' < ')+')');
+ assert(ap[0]<6,'a light release (0.2 s) is a low kick');assert(ap[3]>K.apex-.1,'full = max apex');
+ // Time to the first sky kick from the first touch with a 1.0 s hold: ≤ 1.3 s (was 2.38 s, on touch 3).
+ const first=res[1000].launchT-res[1000].firstT;assert(first<=1.3,'first sky kick '+first.toFixed(2)+' s after the first touch');
+ // The stall: on the boot, no gravity drop (only the gentle bob), no drop of the run while charging.
+ const {o}=holdRun(1400);assert.equal(o.balance,1,'the ball settles on the boot');assert(o.stallMaxY-o.stallMinY<=2*K.balanceBob+.01,'a gentle bob only ('+(o.stallMaxY-o.stallMinY).toFixed(3)+' m)');assert(o.stallMinY>=.4&&o.stallMaxY<=.65,'hovering just above the boot');assert.equal(o.stallVy,0);
+ // Full hold: it launches by itself at full power, without waiting for a touch, while still held.
+ const full=holdRun(3000);assert(Math.abs(full.o.launchT-K.full/1000)<=DT*1.5,'auto-launch at 1.6 s ('+full.o.launchT.toFixed(2)+')');assert(full.o.stillHeld,'… while the button is still down');assert(full.o.apex>K.apex-.1,'… at full power');
+ // Mid-run: after 2 / 4 normal tap touches, a hold stalls and the release launches right away; the launch counts +1.
+ for(const n of [2,4]){const r=holdRun(1000,{taps:n,frames:60*12});assert(r.o.launchT>=0,'mid-run hold after '+n+' touches: sky kick');assert(r.o.launchT-r.o.releaseT<=DT*1.01+1e-9,'… on release');assert.equal(r.o.launchStreak,r.o.streakAtPress+1,'… counted like a touch '+JSON.stringify(r.o));assert.equal(r.o.drops,0);}
+ // A tap during a charge-less juggle is still a normal touch (+1, no stall, no sky kick).
+ {const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};b.keepUp(p);let tap=-1,sky=false,bal=false;for(let i=0;i<60*4;i++){if(i===5)b.keepUpRelease();if(tap<0&&i>6&&b.state.jugglePhase>=.6&&!b.keepUpHeld&&b.state.streak<4){b.keepUp(p);tap=i;}if(tap>=0&&i-tap>=9){b.keepUpRelease();tap=-1;}b.update(DT,p,flat);sky=sky||b.state.mode==='sky';bal=bal||b.state.skyBalance>0;}
+  assert(!sky&&!bal,'taps: no stall, no sky kick');}
+ console.log('hold-to-charge: apex by hold 0.2/0.6/1.0/1.6 s =',ap.map(x=>x.toFixed(2)).join(' / '),'m; first sky kick',first.toFixed(2),'s after the first touch (1.0 s hold); full hold auto-launch at',full.o.launchT.toFixed(2),'s');}
 
 // 5. Catch zone: the ball falling between catchLow and catchHigh, within the hidden catchReach (2.0 m, audit Oct 24 P1 #7 "almost"
 //    catches) of the feet, while the drawn ring (and its green cue) stays catchRadius 1.5 m; catchHigh 2.2 m.
@@ -151,7 +189,7 @@ function chain(plan,n,{frames=60*400}={}){
  const thin={...flat,blocked:(x,z,y)=>z>.7&&z<.85&&y<30};let preds=[];
  const r=run({env:thin,tap:true,frames:60*7,move:(b,p)=>{if(b.state.mode==='sky'){const last=preds[preds.length-1];if(!last||Math.abs(last.z-b.state.skyZ)>1e-6)preds.push({x:b.state.skyX,z:b.state.skyZ});}chase(b,p);}});
  if(r.log.launch&&r.log.launch.predZ>.85){assert(preds.length>=2,'the mark moved after the rebound');assert(preds[1].z<.7,'… to the near side of the wall');
-  assert.equal(r.log.catches,1,'chased the rebound + tapped: caught');assert.equal(r.log.caughtAt,4,'the streak kept going through the rebound');}
+  assert.equal(r.log.catches,1,'chased the rebound + tapped: caught');assert.equal(r.log.caughtAt,3,'the streak kept going through the rebound');}
  else assert(r.log.launch,'(the probe picked a heading clear of the wall)');
  console.log('rebound: marks',preds.map(q=>q.z.toFixed(2)).join(' → '));}
 {// Rebound landing = prediction after the hit (a still player, no catch).
@@ -217,7 +255,8 @@ function chain(plan,n,{frames=60*400}={}){
  assert(/hintRuns<3/.test(town)&&/try\{localStorage\.setItem\('fi2-keepup-sky-hints'/.test(town)&&/try\{hintRuns=/.test(town),'hints: max 3, storage guarded');
  // Audit Oct 24 P0 #4: the ring hint and the trap hint each have their own count (max 3), storage guarded; copy; 16 px hint, 12 px badge.
  for(const [v,k] of [['ringHints','fi2-keepup-ring-hint'],['trapHints','fi2-keepup-trap-hint']])assert(town.includes(v+'<3')&&town.includes("try{localStorage.setItem('"+k+"'")&&town.includes('try{'+v+'='),v+': own count, max 3, guarded');
- assert(/'Hold to kick it high!'/.test(town)&&/'Run to the ring!'/.test(town)&&/'Tap to keep going!'/.test(town)&&!/tap to catch/i.test(town),'hint copy');
+ assert(/'Hold to power up, let go to kick high!'/.test(town)&&/'Run to the ring!'/.test(town)&&/'Tap to keep going!'/.test(town)&&!/tap to catch/i.test(town),'hint copy');
+ assert(town.includes('nudgeHints<3')&&town.includes("try{localStorage.setItem('fi2-keepup-hold-nudge'")&&town.includes('try{nudgeHints=')&&/!skyMade&&nudgeHints<3&&!hintStep&&bs\.mode==='juggle'&&bs\.skyBalance===0&&bs\.streak===3/.test(town)&&town.includes("localStorage.setItem('fi2-keepup-sky-made','1')"),'hold nudge after the 2nd normal touch until the first sky kick ever (max 3, guarded)');
  assert(town.includes("const trapped=walkingBall&&bs.counted&&bs.mode==='attached'")&&town.includes("hintUntil=now+KEEPUP_SKY.settle*1000;hint.textContent='Tap to keep going!'"),'the trap hint shows while the trapped ball waits');
  assert(/\.keepup-hint\{[^}]*font:800 16px/.test(css)&&/\.keepup-badge\{[^}]*font:800 12px/.test(css),'hint 16 px, badge 12 px');}
 console.log('keep-up sky: apex roof + 11 m, 1.6 s charge, snappy rise (~1.6 s) + ~3.2 s hang, steady shrinking ring, foot-only kick-ups from the boot, no talking during a run, any ground, wall rebounds, prediction = landing, first 3 kicks within 1 m then 2-2.6 m, 1.5 m drawn ring + 2 m hidden reach, 5 s trap wait, pressed arrival kicks straight back up (power = hold, continuous; held through = full, charge carried), un-pressed arrival traps (count kept), 0.25 s press buffer, 30-catch endless chain, button ring / arrow / hints wiring passed');
