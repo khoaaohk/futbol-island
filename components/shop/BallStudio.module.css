@@ -185,6 +185,27 @@
 .stage[data-painting][data-tool='fill'] .canvas,.stage[data-painting][data-tool='stamp'] .canvas{cursor:pointer}
 .cursor{position:absolute;left:0;top:0;z-index:3;border:2.5px solid;border-radius:50%;box-shadow:0 0 0 1.5px #fff9;pointer-events:none;opacity:0;transition:opacity .15s}
 @media (hover:hover){.stage:hover .cursor{opacity:.9}}
+/* Touch: the brush ring shows for 1 s at touch-down (Oct 24 2026 audit P1.2) */
+.cursor[data-ghost]{animation:ghostRing 1s ease-out both}
+@keyframes ghostRing{0%{opacity:.95}65%{opacity:.8}100%{opacity:0}}
+/* Draw step turn arrows (audit P1.1): a ring of four 52 px buttons round the ball, inside the visible box above the sheet
+   (--insT/--insB come from the sheet insets); each tap turns the ball 30° with an ease. They replace the Paint/Spin toggle. */
+.turnPad{position:absolute;inset:0;z-index:4;pointer-events:none}
+.turnBtn{position:absolute;pointer-events:auto;display:grid;place-items:center;width:52px;height:52px;padding:0;border:3px solid var(--btn-rim,#244d40);border-radius:50%;
+ background:#fff8e6e0;color:var(--btn-ink,#244d40);box-shadow:0 4px 0 #0000002e;touch-action:manipulation;transition:translate .12s,box-shadow .12s}
+.turnBtn svg{width:26px;height:26px}
+.turnBtn:active{translate:0 3px;box-shadow:0 1px 0 #0000002e}
+.tLeft,.tRight{top:calc(var(--insT,0px) + (100% - var(--insT,0px) - var(--insB,0px)) / 2 - 26px)}
+.tLeft{left:8px}.tRight{right:8px}
+.tUp,.tDown{left:calc(50% - 26px)}
+.tUp{top:calc(var(--insT,0px) + 6px)}.tDown{bottom:calc(var(--insB,0px) + 6px)}
+/* The one-time Draw intro (audit P1.5) */
+.intro{position:absolute;z-index:6;left:50%;bottom:calc(var(--insB,0px) + 66px);transform:translateX(-50%);width:min(330px,calc(100% - 32px));display:grid;gap:8px;
+ padding:14px 16px;border-radius:22px;background:#244d40f2;color:#fff3d2;box-shadow:0 6px 0 #0003;font-size:14px;font-weight:700;animation:hintIn .35s cubic-bezier(.2,.9,.3,1.3) both}
+.intro p{display:flex;align-items:center;gap:10px;margin:0;line-height:1.25}
+.intro p svg{width:24px;height:24px;flex:none}
+.intro b{color:#ffd65a}
+.introOk{min-height:48px;margin-top:4px;border:3px solid #1a3a30;border-radius:999px;background:#ffd65a;color:#244d40;font-weight:900;font-size:16px;box-shadow:0 4px 0 #0003}
 .burst{position:absolute;z-index:3;left:50%;top:calc(50% + min(31vw,30vh) - 6px);width:0;height:0;pointer-events:none}
 .burst i{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#fff6dc;box-shadow:0 0 0 2px #e9c16b88;transform:rotate(var(--a)) translateX(0) scale(var(--s));animation:puff .65s ease-out forwards}
 @keyframes puff{to{transform:rotate(var(--a)) translateX(calc(46px * var(--s))) scale(.2);opacity:0}}
