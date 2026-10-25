@@ -946,3 +946,6 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 
 /* Plays / lessons (Oct 24 2026): the emote-grid rule above out-ranks `.in-lesson .travel-actions`, so the island action buttons showed over the plays screen. */
 .town-app.in-lesson .travel-actions,.town-app.in-lesson .travel-actions[data-emote-grid]{display:none}
+
+/* Floating stick (Oct 24 2026): on release the knob eases back to the centre while the ring glides home (Town.tsx floatRelease). */
+.joystick[data-gliding=true]>span{transition:transform .26s cubic-bezier(.22,.8,.24,1)}

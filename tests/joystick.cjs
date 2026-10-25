@@ -43,3 +43,9 @@ assert(block.includes('.joystick{background:#294f4333;'), 'lighter ring fill');
 assert.equal(F.PHONE_STICK_QUERY, '(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px)', 'phones only; desktop/tablets keep the fixed stick');
 assert(block.includes('@media(pointer:coarse) and (max-width:600px),(pointer:coarse) and (max-height:500px){'), 'CSS sizes use the same phone query');
 console.log('joystick: OK');
+// Release glides home (Oct 24 2026): ring translate transition + knob transform transition, snapped off on a new press, no transition under reduced motion.
+{ const t = require('fs').readFileSync('components/Town.tsx', 'utf8'), c = require('fs').readFileSync('app/globals.css', 'utf8');
+  assert(/floatRelease=\(\)=>\{[^]*?translate \.32s[^]*?dataset\.gliding='true'/.test(t), 'release glides the ring home');
+  assert(t.includes("el.style.transition='none';delete el.dataset.gliding;"), 'a new press snaps any glide first');
+  assert(t.includes("prefers-reduced-motion: reduce"), 'reduced motion snaps home');
+  assert(c.includes('.joystick[data-gliding=true]>span{transition:transform'), 'knob eases to the centre'); console.log('joystick glide: OK'); }

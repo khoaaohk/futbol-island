@@ -497,7 +497,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
       let hud=0,buttons=innerWidth;for(const n of document.querySelectorAll(STICK_HUD_SELECTOR)){const b=n.getBoundingClientRect().bottom;if(b<=HUD_ROW_MAX&&b>hud&&visible(n))hud=b;}
       for(const n of document.querySelectorAll(STICK_RIGHT_SELECTOR))if(visible(n))buttons=Math.min(buttons,n.getBoundingClientRect().left);
       const zone=stickZone(innerWidth,innerHeight,insets,hud,buttons);if(!inRect(e.clientX,e.clientY,zone))return;
-      clearTimeout(floatFade.current);delete el.dataset.fading;el.style.translate='';
+      clearTimeout(floatFade.current);delete el.dataset.fading;el.style.transition='none';delete el.dataset.gliding;el.style.translate='';/* a glide home may still be running: snap first so the rect below is the true rest spot */
       const home=el.getBoundingClientRect(),r=home.width/2,a=clampAnchor(e.clientX,e.clientY,zone,r);
       el.style.translate=`${a.x-home.left-r}px ${a.y-home.top-r}px`;el.dataset.anchored='true';el.dataset.active='true';
       joystickBounds.current=new DOMRect(a.x-r,a.y-r,r*2,r*2);joystickPointer.current=e.pointerId;if(e.cancelable)e.preventDefault();updateStickRef.current(e);
@@ -507,7 +507,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     return()=>{mq.removeEventListener('change',sync);document.removeEventListener('pointerdown',down);window.removeEventListener('pointermove',move);clearTimeout(floatFade.current);};
   },[ready,failed]);
   /** Release: fade the anchored ring out where the thumb left it, then rest it, faint, at the bottom-left spot. */
-  const floatRelease=()=>{const el=joystick.current;if(!el?.dataset.anchored)return;delete el.dataset.anchored;delete el.dataset.active;el.dataset.fading='true';clearTimeout(floatFade.current);floatFade.current=window.setTimeout(()=>{el.style.translate='';delete el.dataset.fading;},160);};
+  const floatRelease=()=>{const el=joystick.current;if(!el?.dataset.anchored)return;delete el.dataset.anchored;delete el.dataset.active;clearTimeout(floatFade.current);/* Owner (Oct 24 2026): glide the ring back to its rest spot instead of fading and snapping */const calm=window.matchMedia('(prefers-reduced-motion: reduce)').matches;el.style.transition=calm?'none':'translate .32s cubic-bezier(.22,.8,.24,1),opacity .16s ease-out';if(!calm)el.dataset.gliding='true';el.style.translate='';floatFade.current=window.setTimeout(()=>{el.style.transition='';delete el.dataset.gliding;},340);};
   const [mapMounted,setMapMounted]=useState(false);
   useEffect(()=>{if(map){setMapMounted(true);return;}const timer=setTimeout(()=>setMapMounted(false),window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:380);return()=>clearTimeout(timer);},[map]);
   mapRef.current=map||mapMounted;
