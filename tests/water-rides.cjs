@@ -91,6 +91,39 @@ ok('shore stop: land ahead brakes it to a stop (turning still works), the shallo
  assert.equal(ended,'time');near(t,R.RIDE_MAX_TIME,.2,'the ~90 s cap');assert.equal(g.ridden,false);
 });
 
+ok('shore kick-off (Oct 24 2026): the hull probe ends the ride before any of the body reaches the sand, straight / 45° / curved / boosted, and the swim back never beaches it',()=>{
+ const S2=Math.SQRT1_2,shores={
+  straight:S=>[(x,z)=>z>S,{x:30,z:S+10}],
+  diagonal:S=>[(x,z)=>(x+z)*S2>S,{x:S*S2+10,z:S*S2+10}],
+  headland:S=>[(x,z)=>Math.hypot(x-30,z-(S+20))<20,{x:30,z:S+20}],
+  lagoon:S=>[(x,z)=>Math.hypot(x,z)>S,{x:0,z:S+10}]};
+ // The stick aims at a point on / behind the shore, offset by a bearing: 0 = head on, .7 rad = oblique, 1.2 rad = a grazing spiral
+ // (sliding sideways along the shore), weave = swinging ±.7 rad. A constant offset spirals in, so every run reaches the shore.
+ const sticks={head:()=>0,oblique:()=>.7,graze:()=>1.2,weave:t=>.7*Math.sin(t*1.7)};
+ let runs=0;
+ for(const kind of ['whale','manta'])for(const [sn,mk] of Object.entries(shores))for(const S of [40,55,80])for(const [kn,stick] of Object.entries(sticks))for(const boost of [3,R.rideSpeed(kind)*R.DART_MULT])for(const dt of [1/60,1/24]){
+  const [land,aim]=mk(S),f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind],z:0},vel={x:0,z:0},h=R.RIDE_HULL[kind];
+  const okW=(x,z)=>!land(x,z),tag=`${kind} ${sn} S=${S} ${kn} v0=${boost.toFixed(1)} dt=${dt.toFixed(3)}`;
+  const body=()=>{const fx=Math.sin(f.fyaw),fz=Math.cos(f.fyaw),rx=fz,rz=-fx;
+   for(const [a,s] of [[h.bow,0],[h.bow*.5,h.side*.8],[h.bow*.5,-h.side*.8],[0,h.side],[0,-h.side],[-h.tail,0]])if(land(f.fx+fx*a+rx*s,f.fz+fz*a+rz*s))return `(${a},${s})`;return '';};
+  rides.scan(.2,pos.x,pos.z,true);assert.equal(rides.grab(boost).grabbed,kind);
+  let ended='',t=0,ev=null,slow=0;
+  while(!ended&&t<R.RIDE_MAX_TIME-1){const d=(++slow%97===0)?.25:dt;/* now and then a slow frame */const b=Math.atan2(aim.x-f.fx,aim.z-f.fz)+stick(t),e=rides.step(d,pos,vel,{x:Math.sin(b),z:Math.cos(b)},okW,50,land);t+=d;
+   const hit=body();assert.equal(hit,'',`${tag}: body sample ${hit} on land at t=${t.toFixed(2)}`);if(e.ended){ended=e.ended;ev={...e};}}
+  assert.equal(ended,'shore',`${tag}: the ride ends at the shore`);
+  assert(!land(ev.x,ev.z),`${tag}: the rider is in the water`);
+  const nose=h.bow+h.margin*.5;assert(!land(f.fx+Math.sin(f.fyaw)*nose,f.fz+Math.cos(f.fyaw)*nose),`${tag}: kicked off before the nose (+${(h.margin*.5).toFixed(2)} m) reaches the sand`);
+  for(const k of [1,2,3])assert(!land(ev.x+Math.sin(ev.yaw)*k,ev.z+Math.cos(ev.yaw)*k),`${tag}: tossed into the water, not onto land`);
+  assert(ev.speed<=R.RIDE_SHORE_TOSS_V+1e-9,`${tag}: a small toss`);
+  let r=0;while(rides.darting&&r<30){rides.dartStep(dt);r+=dt;if(f.free){const hit2=body();assert.equal(hit2,'',`${tag}: swim back beached at ${hit2} t=${r.toFixed(2)}`);}}
+  runs++;
+ }
+ assert(runs>=2*4*3*4*2*2,'all the runs');
+ // Range edge (not land): no `land` test, the old hold still applies (covered by "shore stop"); a land test that never hits never ends it.
+ const f=circleFriend('whale',30),rides=R.createAnimalRides(()=>[f]),pos={x:36,z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(3);
+ for(let i=0;i<600;i++)assert.equal(rides.step(1/60,pos,vel,STICK,OPEN,50,()=>false).ended,'','open sea: no kick-off');
+});
+
 ok('exit: Let go swims the animal back to its loop and hands over without a pop; the swimmer is untouched',()=>{
  for(const kind of ['manta','whale']){
   const f=circleFriend(kind,30),rides=R.createAnimalRides(()=>[f]),pos={x:30+R.RIDE_BODY[kind],z:0},vel={x:0,z:0};rides.scan(.2,pos.x,pos.z,true);rides.grab(3);
@@ -215,7 +248,7 @@ ok('heat + wiring: the scan on the probe tick only, the ride step only while rid
  assert(!/setTimeout|setInterval|requestAnimationFrame|new T\.|from 'three'/.test(src),'pure: no timers, loops or three.js');
  const town=read('components/Town.tsx');
  assert(/animalRides\.scan\(dt,location\.x,location\.z,water\.inWater&&water\.state\.phase==='swim'\)/.test(town),'the scan runs only while swimming (10 Hz inside)');
- assert(/if\(animalRides\.riding&&water\.swimming&&rideRef\.current==='walk'\)\{rideEnded\(animalRides\.step\(dt,location,velocity,rideSteer,waterWalk\.allow,waterProbe\.d\)\)/.test(town),'the ride drives the movement');
+ assert(/if\(animalRides\.riding&&water\.swimming&&rideRef\.current==='walk'\)\{rideEnded\(animalRides\.step\(dt,location,velocity,rideSteer,waterWalk\.allow,waterProbe\.d,waterProbe\.isLand\)\)/.test(town),'the ride drives the movement (with the dry-land test for the hull probe)');
  assert(/pose\.kind='hold'/.test(town)&&/s\.kind==='hold'/.test(read('lib/graphics/swimPose.ts')),'the hold-on pose');
  assert(/pose\.kind='hold';pose\.effort=rs\.roll;pose\.fast=0;ev\.wake=false;ev\.stroke=0;/.test(town),'the swim strokes\' wake is off while riding (the ride has its own)');
  assert(/RIDE_CAM_LIFT/.test(town),'a slightly higher follow while riding');
