@@ -45,7 +45,7 @@ function island({hold=50,stopAt=6,wall=false,top=6}={}){const b=W.createWalkBall
  // Early taps (rising half) do not arm; a press held into the window does (one touch per press).
  const b=W.createWalkBall();b.keepUp(p);b.keepUpRelease();for(let i=0;i<20;i++)b.update(1/120,p,flat);b.keepUp(p);b.keepUpRelease();let n=0;while(b.state.mode==='juggle'&&n++<400)b.update(1/120,p,flat);assert.equal(b.state.mode,'drop','an early tap does not keep it up');
  const h=W.createWalkBall();h.keepUp(p);h.keepUpRelease();for(let i=0;i<20;i++)h.update(1/120,p,flat);h.keepUp(p);for(let i=0;i<150;i++)h.update(1/120,p,flat);assert.equal(h.state.streak,2,'an early press held into the window arms the touch');assert(h.state.keepLift>1.5,'… lifted by the hold');
- let hs=false;for(let i=0;i<900&&h.state.streak;i++){h.update(1/120,p,flat);hs=hs||h.state.mode==='sky';}assert(hs,'held ~0.9 s through the touch: a sky kick (tests/keepup-sky.cjs)');assert.equal(h.state.streak,0,'still held: one touch per press; the sky ball drifts off a still player, lands, the run ends');h.keepUpRelease();
+ const away={...p};let hs=false;for(let i=0;i<900&&h.state.streak;i++){if(h.state.mode==='sky')away.x=8;h.update(1/120,away,flat);hs=hs||h.state.mode==='sky';}assert(hs,'held ~0.9 s through the touch: a sky kick (tests/keepup-sky.cjs)');assert.equal(h.state.streak,0,'the player walks off: the sky ball lands, the run ends');h.keepUpRelease();
  // A held press let go before the window still arms the next touch (with its lift); kids let go early.
  {const e=W.createWalkBall();e.keepUp(p);e.keepUpRelease();for(let i=0;i<5;i++)e.update(1/120,p,flat);e.keepUp(p);for(let i=0;i<40;i++)e.update(1/120,p,flat);assert(e.state.jugglePhase<.45,'released before the window');e.keepUpRelease();let g=0;while(e.state.streak===1&&g++<400)e.update(1/120,p,flat);assert.equal(e.state.streak,2,'a held early press still counts');assert(e.state.keepLift>1.1,'… with its lift');}
  // Key auto-repeat: a second press while held is ignored (no reset of the hold).
@@ -85,6 +85,38 @@ function island({hold=50,stopAt=6,wall=false,top=6}={}){const b=W.createWalkBall
  assert(/keepUpStep\(hudStreak,walkBall\.state\.streak\)/.test(town)&&/recordStreak\(step\.finished\)/.test(town)&&/readBallRecord\(\)\.best/.test(town),'island: count polled on the HUD tick, best shared with the Konbini');
  assert(/onPointerUp=\{e=>\{keepUpHeld\.current=false;/.test(town)&&/keepUpHeld\.current=true/.test(town),'island: the hold is tracked for touch, pen and mouse');
  assert(/kb\.press\(bp\(\)\)/.test(scene)&&/else if\(e\.type==='keyup'\)keepUpEnd\(\)/.test(scene)&&/room\.current\?\.keepUpEnd\(\)/.test(room),'Konbini: press / release (button and J)');
- assert(/\.touch-juggle\[data-holding="true"\]\{animation:keepup-charge \.6s linear forwards\}/.test(css)&&/steps\(1,end\)/.test(css),'charge ring, reduced-motion safe');
+ assert(/\.touch-juggle\[data-holding="true"\]:not\(\[data-keepup-button\]\)\{animation:keepup-charge \.6s linear forwards\}/.test(css)&&/steps\(1,end\)/.test(css),'Konbini 0.6 s outline fill, reduced-motion safe');
+ // Audit Oct 24 P0 #5: the island button (data-keepup-button) has only its 1.6 s ring, no 0.6 s outline that reads "full" too early.
+ assert(!/\.touch-juggle\[data-holding="true"\]\{/.test(css),'no un-scoped outline fill (island excluded)');
  assert(/prefers-reduced-motion:reduce\)\{\.pill/.test(read('components/KeepUpCounter.module.css')),'pill animations off with reduced motion');}
+// 7. Late-tap grace (audit Oct 24 P0 #1): a press up to KEEPUP_LATE (0.15 s) after the touch moment still counts; 0.2 s drops.
+{assert.equal(W.KEEPUP_LATE,.15);const H=1/120;
+ // The touch frame from a run pressed in time (identical start), then the same run pressed `off` s after that moment.
+ const start=wall=>{const b=W.createWalkBall(),tgt=wall?{x:0,z:3,top:6}:undefined,env=wall?{...flat,blocked:(_x,z)=>z>=3}:flat;b.keepUp(p,tgt);b.keepUpRelease();return {b,tgt,env};};
+ const win=b=>b.state.mode==='juggle'?b.state.jugglePhase>=.6:b.state.mode==='wall-juggle'&&b.state.wallPhase==='returning';
+ const touchFrame=wall=>{const {b,tgt,env}=start(wall);let pressed=false;for(let i=0;i<1200;i++){b.updateWallTarget(p,tgt);if(!pressed&&win(b)){b.keepUp(p,tgt);b.keepUpRelease();pressed=true;}b.update(H,p,env);if(b.state.streak===2)return i;}throw new Error('no touch');};
+ const late=(wall,off)=>{const T=touchFrame(wall),at=T+Math.round(off/H),{b,tgt,env}=start(wall);let dropped=false;
+  for(let i=0;i<=at+2;i++){b.updateWallTarget(p,tgt);if(i===at){b.keepUp(p,tgt);b.keepUpRelease();}b.update(H,p,env);dropped=dropped||b.state.mode==='drop';if(b.state.streak===2)break;}
+  return {b,dropped,tgt,env};};
+ for(const wall of [false,true]){const what=wall?'wall return':'juggle';
+  for(const off of [.05,.1,.14]){const r=late(wall,off);assert.equal(r.b.state.streak,2,what+': a tap '+off+' s late still counts');assert(!r.dropped,what+': no drop');}
+  const r2=late(wall,.2);assert(r2.dropped,what+': 0.2 s late drops the ball');assert.notEqual(r2.b.state.streak,2,what+': 0.2 s late does not count');
+  // and the run goes on after a late touch: the next in-time press counts too.
+  const r=late(wall,.1);let pressed=false;for(let i=0;i<600&&r.b.state.streak===2;i++){r.b.updateWallTarget(p,r.tgt);if(!pressed&&win(r.b)&&r.b.state.streak===2){r.b.keepUp(p,r.tgt);r.b.keepUpRelease();pressed=true;}r.b.update(H,p,r.env);}
+  assert.equal(r.b.state.streak,3,what+': the run goes on after the late touch');}
+ // A late dip stays small (contact − 0.15 m at most) and mashing is unaffected (tests above: one press per window).
+ console.log('late grace: +0.05/0.1/0.14 s count, +0.2 s drops (juggle and wall)');}
+
+// 8. Stray Kick guard (audit Oct 24 P0 #3): Kick / ride presses within 350 ms of a keep-up press during a run are ignored.
+{assert.equal(W.KEEPUP_STRAY_MS,350);const S=W.strayAfterKeepUpPress;
+ assert.equal(S(true,1000+349,1000),true,'349 ms after a keep-up press in a run: ignored');assert.equal(S(true,1000+120,1000),true);
+ assert.equal(S(true,1000+350,1000),false,'350 ms+: a deliberate shot');assert.equal(S(false,1000+100,1000),false,'no run: never ignored');
+ const town=read('components/Town.tsx'),css=read('app/globals.css');
+ assert(/const strayAfterKeepUp=\(\)=>strayAfterKeepUpPress\(keepUpBusy\.current,performance\.now\(\),keepUpPressAt\.current\);/.test(town),'Town: busy = the run, the press time from the keep-up button');
+ assert(/const actionDown=\([^)]*\)=>\{if\(action==='kick'&&strayAfterKeepUp\(\)\)\{e\.preventDefault\(\);return;\}/.test(town)&&/const actionClick=\([^)]*\)=>\{if\(action==='kick'&&strayAfterKeepUp\(\)\)return;/.test(town),'Kick down / click guarded');
+ assert(/onPointerDown=\{e=>travelControlDown\(e,guardedCycleRide\)\} onClick=\{e=>travelControlClick\(e,guardedCycleRide\)\}/.test(town),'ride switch guarded');
+ assert(/keepUpHeld\.current=true;keepUpPressAt\.current=performance\.now\(\);/.test(town),'the keep-up press time is recorded');
+ // Colour: the island keep-up is sky blue (#9fd8ff, dark icon), not the Shoot colour; phones: 20 px between Keep-up and Shoot.
+ assert(/\.town-app \.travel-actions \.touch-juggle\[data-keepup-button\]\{background:#9fd8ff [^}]*color:#17323b!important/.test(css),'sky-blue keep-up');
+ assert(/\.travel-actions\[data-emote-grid\]\{grid-template-columns:var\(--action-size\) var\(--action-size\) calc\(var\(--action-size\) \+ var\(--keepup-shoot-extra,8px\)\)\}/.test(css)&&/\{gap:8px;--keepup-shoot-extra:12px\}/.test(css),'12+8 / 8+12 = 20 px gap');}
 console.log('keep-up counter: hold curve, pill steps + shared best, island counted juggle (drop, lift, wall kicks), Konbini hold, wiring passed');
