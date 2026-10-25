@@ -10,3 +10,6 @@ console.log('lesson-hides-actions: OK');
 // Flying: an Enter button whose building door is off screen is hidden (Oct 24 2026).
 { const t = fs.readFileSync('components/Town.tsx', 'utf8');
   assert(t.includes("rideRef.current==='jetpack'&&(Math.abs(storePromptPoint.x)>1.05||Math.abs(storePromptPoint.y)>1.05)"), 'flying hides Enter when the door is off screen'); console.log('flying-enter: OK'); }
+// Vending machine Go button: only on foot, scooter, bike or moped (not flying or swimming).
+{ const t = fs.readFileSync('components/Town.tsx', 'utf8');
+  assert(t.includes("hidePrompt:hudFocusNow!=='vending'||rideRef.current==='jetpack'||water.inWater"), 'vending Go hidden while flying or swimming'); console.log('vending-go: OK'); }
