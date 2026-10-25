@@ -35,30 +35,30 @@ function island({hold=50,stopAt=6,wall=false,top=6}={}){const b=W.createWalkBall
   if(b.state.streak!==last){seq.push(b.state.streak);last=b.state.streak;peaks.push(0);}
   peaks[peaks.length-1]=Math.max(peaks[peaks.length-1],b.state.y);}
  return {b,seq,peaks,modes,wallKicks};}
-{const tap=island(),held=island({hold:700});
+{const tap=island(),slow=island({hold:150}),held=island({hold:700});
  assert.deepEqual(tap.seq,[1,2,3,4,5,6,0],'counts each touch, then the miss ends the run');assert(tap.modes.has('drop'),'the missed ball drops');assert.equal(tap.b.state.mode,'attached','… and comes back to the feet');
- assert.deepEqual(held.seq,[1,2,3,4,5,6,0],'holding still counts');
- // The same routine touch: held flights go higher, never above the 3.04 m lob ceiling.
- for(let i=1;i<5;i++)assert(held.peaks[i]>tap.peaks[i]+.1,'held touch '+i+' higher: '+held.peaks[i].toFixed(2)+' vs '+tap.peaks[i].toFixed(2));
- assert(Math.max(...held.peaks)<=3.04+1e-6,'capped under the ceiling');
- console.log('island tap peaks',tap.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '),'| held',held.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '));
+ assert.deepEqual(slow.seq,[1,2,3,4,5,6,0],'a slow tap (0.15 s, under the 0.2 s hold-to-charge) is still a normal touch');assert(!slow.modes.has('sky'));
+ // Hold-to-charge (audit Oct 24 P0 #2): a 0.7 s hold mid-run stalls the ball on the boot and the release launches a sky kick, +1.
+ assert(held.modes.has('sky'),'a held press mid-run → a sky kick');assert.deepEqual(held.seq.slice(0,2),[1,2],'the launch counts like a touch');
+ assert(Math.max(...tap.peaks)<=3.04+1e-6,'tap touches under the ceiling');
+ console.log('island tap peaks',tap.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '));
  // Early taps (rising half) do not arm; a press held into the window does (one touch per press).
  const b=W.createWalkBall();b.keepUp(p);b.keepUpRelease();for(let i=0;i<20;i++)b.update(1/120,p,flat);b.keepUp(p);b.keepUpRelease();let n=0;while(b.state.mode==='juggle'&&n++<400)b.update(1/120,p,flat);assert.equal(b.state.mode,'drop','an early tap does not keep it up');
- const h=W.createWalkBall();h.keepUp(p);h.keepUpRelease();for(let i=0;i<20;i++)h.update(1/120,p,flat);h.keepUp(p);for(let i=0;i<150;i++)h.update(1/120,p,flat);assert.equal(h.state.streak,2,'an early press held into the window arms the touch');assert(h.state.keepLift>1.5,'… lifted by the hold');
- const away={...p};let hs=false;for(let i=0;i<900&&h.state.streak;i++){if(h.state.mode==='sky')away.x=8;h.update(1/120,away,flat);hs=hs||h.state.mode==='sky';}assert(hs,'held ~0.9 s through the touch: a sky kick (tests/keepup-sky.cjs)');assert.equal(h.state.streak,0,'the player walks off: the sky ball lands, the run ends');h.keepUpRelease();
+ const h=W.createWalkBall();h.keepUp(p);h.keepUpRelease();for(let i=0;i<20;i++)h.update(1/120,p,flat);h.keepUp(p);for(let i=0;i<150;i++)h.update(1/120,p,flat);assert.equal(h.state.streak,1,'a press held 1.25 s: the ball balances on the boot (no touch, no drop)');assert.equal(h.state.mode,'juggle');assert.equal(h.state.skyBalance,1);
+ const away={...p};let hs=false;for(let i=0;i<900&&h.state.streak;i++){if(h.state.mode==='sky')away.x=8;h.update(1/120,away,flat);if(!hs&&h.state.mode==='sky')assert.equal(h.state.streak,2,'full: it launches by itself, counted');hs=hs||h.state.mode==='sky';}assert(hs,'held to full: a sky kick (tests/keepup-sky.cjs)');assert.equal(h.state.streak,0,'the player walks off: the sky ball lands, the run ends');h.keepUpRelease();
  // A held press let go before the window still arms the next touch (with its lift); kids let go early.
- {const e=W.createWalkBall();e.keepUp(p);e.keepUpRelease();for(let i=0;i<5;i++)e.update(1/120,p,flat);e.keepUp(p);for(let i=0;i<40;i++)e.update(1/120,p,flat);assert(e.state.jugglePhase<.45,'released before the window');e.keepUpRelease();let g=0;while(e.state.streak===1&&g++<400)e.update(1/120,p,flat);assert.equal(e.state.streak,2,'a held early press still counts');assert(e.state.keepLift>1.1,'… with its lift');}
+ {const e=W.createWalkBall();e.keepUp(p);e.keepUpRelease();for(let i=0;i<5;i++)e.update(1/120,p,flat);e.keepUp(p);for(let i=0;i<40;i++)e.update(1/120,p,flat);assert(e.state.skyBalance>0,'held 0.33 s: charging on the boot');e.keepUpRelease();e.update(1/120,p,flat);assert.equal(e.state.mode,'sky','let go: the sky kick right then (low power)');assert.equal(e.state.streak,2,'… counted');}
  // Key auto-repeat: a second press while held is ignored (no reset of the hold).
  const r=W.createWalkBall();r.keepUp(p);assert.equal(r.keepUp(p),false,'auto-repeat ignored');r.keepUpRelease();
  // A shot or reset ends the run; the legacy juggle() stays the automatic loop.
  const s=W.createWalkBall();s.keepUp(p);s.keepUpRelease();s.shoot(p,0);assert.equal(s.state.streak,0);const a=W.createWalkBall();a.juggle(p);for(let i=0;i<1200;i++)a.update(1/120,p,flat);assert.equal(a.state.mode,'juggle','juggle() still loops by itself');assert.equal(a.state.streak,0);}
 
 // 4. Wall kicks still happen in a counted run, a touched rebound counts +1, an untouched one drops; holding kicks higher.
-{const tap=island({wall:true}),held=island({wall:true,hold:700});
+{const tap=island({wall:true}),held=island({wall:true,hold:700}),slow=island({wall:true,hold:150});
  assert(tap.modes.has('wall-juggle')&&tap.wallKicks>=5,'near a wall the keep-up kicks off it ('+tap.wallKicks+' kicks)');assert.deepEqual(tap.seq,[1,2,3,4,5,6,0],'each touched rebound counts, the untouched one ends it');assert(tap.modes.has('drop'));
- const avg=a=>a.slice(1,5).reduce((x,y)=>x+y,0)/4;assert(avg(held.peaks)>avg(tap.peaks)+.3,'held wall kicks go higher');assert(Math.max(...held.peaks)<=6-.25+.05,'under the wall top');
- const low=island({wall:true,hold:700,top:2.2});assert(Math.max(...low.peaks)<=2.2-.25+.05,'a low wall caps the held kick');
- console.log('wall tap peaks',tap.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '),'| held',held.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '));}
+ assert.deepEqual(slow.seq,tap.seq,'a slow tap at the wall is a normal touch');assert(held.modes.has('sky')&&held.seq[1]===2,'a held press at the wall → the sky kick, counted');assert(Math.max(...tap.peaks)<=6-.25+.05,'under the wall top');
+ const low=island({wall:true,top:2.2});assert(Math.max(...low.peaks)<=2.2-.25+.05,'a low wall caps the kick');
+ console.log('wall tap peaks',tap.peaks.slice(1,5).map(v=>v.toFixed(2)).join(' '));}
 
 // 5. Konbini: a tap in the window touches on release (normal rise); a press held in (or early into) the window touches higher at the foot.
 {const ev=[],k=B.createKonbiniBall([],e=>ev.push(e)),me={x:0,z:0,yaw:0},step=()=>k.update(1/60,me);
