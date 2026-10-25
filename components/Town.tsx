@@ -1351,7 +1351,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Float held (lib/town/water): the lazy circle steers instead of the stick, at the circle's slow drift.
       const mx=ix,mz=iz;
       rideSteer.x=ix;rideSteer.z=iz;// the same camera-relative stick / keys / joystick vector the truck reads
-      if(animalRides.riding&&water.swimming&&rideRef.current==='walk'){rideEnded(animalRides.step(dt,location,velocity,rideSteer,waterWalk.allow,waterProbe.d));}// water P1b: the rider steers the animal with the stick like the truck (animalRides.ts)
+      if(animalRides.riding&&water.swimming&&rideRef.current==='walk'){rideEnded(animalRides.step(dt,location,velocity,rideSteer,waterWalk.allow,waterProbe.d,waterProbe.isLand));}/* the hull probe: kicked off before the body reaches the sand (RIDE_HULL) */// water P1b: the rider steers the animal with the stick like the truck (animalRides.ts)
       else if(water.swimming&&rideRef.current==='walk'){
         // Swimming: no obstacles in the sea; momentum, the Swim fast hold, the soft 60 m edge (waterDepth.ts swimStep). The dip and
         // the surfacing hold the body still.

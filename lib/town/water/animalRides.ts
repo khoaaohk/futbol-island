@@ -113,6 +113,18 @@ export function dartBend(t:number){
 }
 /** The proximity tick (s): the water probe's own rate. */
 export const RIDE_TICK=1/WATER_PROBE_HZ;
+/** Oct 24 2026 (user: "it was able to ride it to shore and it was hidden in the sand a bit ... before the head of the whale hits the
+ *  sand, do something that kicks the character off"): the animal's body from its centre (m: nose `bow` ahead, tail `tail` behind,
+ *  half width `side`; RIDE_WAKE_AT's snout / pectorals) and the clear water it keeps from land (`margin`, m: the shelf is
+ *  SHELF_SLOPE × distance deep, so the snout keeps ~.8 m of water under it). The hull probe (`hullLand`) tests the nose, the
+ *  shoulders, the flanks and the tail at RIDE_TICK (or sooner when a slow frame or a quick turn outruns the last probe), each pushed
+ *  `look` = margin + max(this frame's step, the top speed × RIDE_TICK) along the heading, so neither the ride's speed nor the swim
+ *  back's dart (DART_MULT) can carry any part of the body onto the sand before the next probe. Land in it ends the ride ('shore'):
+ *  the rider is tossed off seaward (RIDE_SHORE_TOSS rad off the heading, toward the open side, at most RIDE_SHORE_TOSS_V m/s
+ *  before RIDE_DISMOUNT_CARRY) and the animal shore-brakes, turning away along the shore (RIDE_SHORE_TURN × RET_TURN, at
+ *  most RIDE_SHORE_V × its loop speed) for RIDE_SHORE_T s after the last land it sees, then swims back to its loop. */
+export const RIDE_HULL={manta:{bow:1.7,tail:2.4,side:2.8,margin:1},whale:{bow:6.4,tail:6.6,side:2.6,margin:1.8}} as const;
+export const RIDE_SHORE_TOSS=2,RIDE_SHORE_TOSS_V=3,RIDE_SHORE_TURN=1,RIDE_SHORE_V=1.2,RIDE_SHORE_T=.8,RIDE_HULL_YAW=.08;
 /** The football hook, once per device (the swim lesson's toast). A coaching idea, no fact claim. */
 export const RIDE_LESSON={title:'Ride the wave',text:'A counter-attack is fastest when you move with the play, not against it.',kind:'Coaching idea'} as const;
 export const RIDE_LESSON_KEY='fi2-ride-lesson-v1';
@@ -149,11 +161,30 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   /** The rider's drawn heading (`present`): the animal's drawn heading, plus the grab's leftover turn gliding out. */
   drawYaw:0,
   /** The dart after a ride (DART_*): the animal, the time since letting go, its start / peak speed, the side, the wake clock. */
-  ret:null as RideFriend|null,retT:0,retStart:0,retPeak:0,retSettle:-1,retBend:0,retYaw:0,retBoost:1,rideT:0,dart:null as RideFriend|null,dartT:0,dartStart:0,dartPeak:0,dartSide:1,dartWake:0,darts:0};
+  ret:null as RideFriend|null,retT:0,retStart:0,retPeak:0,retSettle:-1,retBend:0,retYaw:0,retBoost:1,rideT:0,dart:null as RideFriend|null,dartT:0,dartStart:0,dartPeak:0,dartSide:1,dartWake:0,darts:0,
+  /** The hull probe (RIDE_HULL): the host's dry-land test (kept from `step` for the swim back), the time / metres left before the
+   *  next probe and the heading it was taken at; the shore brake's turn side (±1, 0 = none), its time left (s) and whether the
+   *  last probe still saw land ahead (it turns only then). */
+  land:null as ((x:number,z:number)=>boolean)|null,hullAcc:Infinity,hullBudget:0,hullYaw:0,shoreSide:0,shoreT:0,shoreBlock:false};
  const events:RideEvents={grabbed:'',ended:'',kind:'',x:0,z:0,yaw:0,speed:0};
  const clear=()=>{events.grabbed='';events.ended='';};
  function endRet(){const f=state.ret;if(!f)return;f.free=false;f.boost=1;f.bend=0;f.bendYaw=0;state.ret=null;state.retT=0;state.retSettle=-1;}
  function endDart(){const f=state.dart;if(!f)return;f.boost=1;f.bend=0;f.bendYaw=0;state.dart=null;state.dartT=0;}
+ /** Any of the body's samples (nose, shoulders, flanks, tail: RIDE_HULL) `look` m further along heading `yaw` is dry land. */
+ function hullLand(f:RideFriend,yaw:number,look:number,land:(x:number,z:number)=>boolean){
+  const h=RIDE_HULL[f.kind],m=h.margin,fx=Math.sin(yaw),fz=Math.cos(yaw),rx=fz,rz=-fx,x=f.fx+fx*look,z=f.fz+fz*look;
+  const a=h.bow+m,sa=h.bow*.5+m*.7,sw=h.side+m*.5,mw=h.side+m,t=h.tail+m*.5;
+  return land(x+fx*a,z+fz*a)||land(x+fx*sa+rx*sw,z+fz*sa+rz*sw)||land(x+fx*sa-rx*sw,z+fz*sa-rz*sw)
+   ||land(x+rx*mw,z+rz*mw)||land(x-rx*mw,z-rz*mw)||land(f.fx-fx*t,f.fz-fz*t);/* the tail where it is: it swings, it never leads */
+ }
+ /** The open side to turn to (±1): the nose swung a radian each way, the free one; both free (or both land) the current turn's. */
+ function openSide(f:RideFriend,land:(x:number,z:number)=>boolean){
+  const h=RIDE_HULL[f.kind],a=h.bow+h.margin*2,pref=state.turn>=0?1:-1;
+  const l=land(f.fx+Math.sin(f.fyaw+pref)*a,f.fz+Math.cos(f.fyaw+pref)*a),r=land(f.fx+Math.sin(f.fyaw-pref)*a,f.fz+Math.cos(f.fyaw-pref)*a);
+  return l&&!r?-pref:pref;
+ }
+ /** Due a hull probe: the tick is up, this step outruns the metres the last one covered, or the heading swung since. */
+ const hullDue=(yaw:number,ds:number)=>state.hullAcc>=RIDE_TICK-1e-6||ds>state.hullBudget||Math.abs(wrap(yaw-state.hullYaw))>RIDE_HULL_YAW;
  const grip=(f:RideFriend,u:number)=>{loopPoint(f.points,f.lengths,f.total,u,p);const g=RIDE_GRIP[f.kind];p.x+=Math.sin(p.yaw)*g;p.z+=Math.cos(p.yaw)*g;return p;};
  function end(reason:RideEnd){
   const f=state.riding;if(!f)return events;
@@ -166,7 +197,14 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
    else{f.free=false;f.bank=0;}
   }else if(reason!=='gone'&&f.available){endDart();state.dart=f;state.dartT=0;state.dartStart=state.speed;state.dartPeak=Math.max(DART_MULT*f.speed,state.speed*DART_RIDE);
    state.dartSide=state.turn>=0?1:-1;state.dartWake=RIDE_WAKE_STEP[f.kind];state.darts++;f.boost=state.speed/(f.speed||1);}
-  events.ended=reason;events.kind=f.kind;events.x=state.x;events.z=state.z;events.yaw=state.yaw;events.speed=state.speed;state.roll=0;return events;
+  events.ended=reason;events.kind=f.kind;events.x=state.x;events.z=state.z;events.yaw=state.yaw;events.speed=state.speed;state.roll=0;
+  state.hullAcc=Infinity;state.hullBudget=0;state.shoreSide=0;state.shoreT=0;state.shoreBlock=false;
+  if(reason==='shore'&&state.land&&state.ret===f){
+   // The shore brake (RIDE_HULL): the rider is tossed off seaward, the animal turns away along the shore before it swims home.
+   const s=openSide(f,state.land);state.shoreSide=s;state.shoreT=RIDE_SHORE_T;state.shoreBlock=true;
+   events.yaw=wrap(state.yaw+s*RIDE_SHORE_TOSS);events.speed=Math.min(state.speed,RIDE_SHORE_TOSS_V);
+  }
+  return events;
  }
  /** The swim back (free pose chasing a fixed loop point), then the settle blend; a few scalars, no allocation. */
  function retStep(dt:number){
@@ -178,8 +216,26 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   }
   const t=state.retT+=dt;loopPoint(f.points,f.lengths,f.total,f.u,p);
   const dx=p.x-f.fx,dz=p.z-f.fz,dist=Math.hypot(dx,dz),rate=RET_TURN*dt;
-  f.fyaw=wrap(f.fyaw+Math.max(-rate,Math.min(rate,wrap(Math.atan2(dx,dz)-f.fyaw))));
-  const sp=Math.min(Math.max(dartSpeed(t,state.retStart,state.retPeak,f.speed),f.speed*1.4)*(1+t*.12),dist*3+f.speed);
+  const y0=f.fyaw;if(!(state.shoreT>0&&state.land))f.fyaw=wrap(f.fyaw+Math.max(-rate,Math.min(rate,wrap(Math.atan2(dx,dz)-f.fyaw))));// (the shore brake steers instead)
+  let sp=Math.min(Math.max(dartSpeed(t,state.retStart,state.retPeak,f.speed),f.speed*1.4)*(1+t*.12),dist*3+f.speed);
+  // Never into land on the way home (RIDE_HULL): a land hit ahead starts / renews the shore brake (slow, turning to the open side).
+  const land=state.land;state.hullAcc+=dt;
+  if(land){
+   if(state.shoreT>0){state.shoreT-=dt;sp=Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));if(state.shoreBlock)f.fyaw=wrap(f.fyaw+state.shoreSide*RET_TURN*RIDE_SHORE_TURN*dt);}// turn until the way ahead is clear (along the shore), then swim on
+   const ds=sp*dt;
+   if(hullDue(f.fyaw,ds)){
+    const look=Math.max(ds,sp*RIDE_TICK);
+    state.shoreBlock=hullLand(f,f.fyaw,look,land);
+    if(state.shoreBlock){
+     if(state.shoreT<=0)state.shoreSide=openSide(f,land);state.shoreT=RIDE_SHORE_T;
+     // This frame's turn would swing the body (the tail, a flank) into the margin: hold the heading and turn the other way.
+     if(hullLand(f,f.fyaw,0,land)&&!hullLand(f,y0,0,land)){f.fyaw=y0;state.shoreSide=-state.shoreSide;}
+     sp=hullLand(f,f.fyaw,0,land)?0:Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));state.hullBudget=sp>0&&!hullLand(f,f.fyaw,sp*RIDE_TICK,land)?sp*RIDE_TICK:0;
+    }else state.hullBudget=look;
+    state.hullAcc=0;state.hullYaw=f.fyaw;
+   }
+   if(sp*dt>state.hullBudget)sp=Math.max(0,state.hullBudget)/(dt||1);state.hullBudget-=sp*dt;
+  }
   f.fx+=Math.sin(f.fyaw)*sp*dt;f.fz+=Math.cos(f.fyaw)*sp*dt;f.dx=f.fx;f.dz=f.fz;f.dyaw=f.fyaw;f.boost=sp/(f.speed||1);state.dartWake+=dt;
   if(dist<RET_CATCH||t>20){
    // Caught: take over as the loop's own, with the leftover offset (bend) and heading difference blended away.
@@ -215,7 +271,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   /** One frame of the ride: the stick (`inp`, camera-relative world vector, length <= 1) steers the animal and the rider on it; `ok`
    *  is the swimmable-water test (waterProbe.allowed), `clearance` the probe's cached distance to land. Writes the rider's place and
    *  velocity. A few scalars; no allocation. */
-  step(dt:number,pos:{x:number;z:number},vel:{x:number;z:number},inp:{x:number;z:number},ok:(x:number,z:number)=>boolean,clearance:number){
+  step(dt:number,pos:{x:number;z:number},vel:{x:number;z:number},inp:{x:number;z:number},ok:(x:number,z:number)=>boolean,clearance:number,land?:(x:number,z:number)=>boolean){
    clear();const f=state.riding;if(!f)return events;
    if(!f.available)return end('gone');// thinned out by a heat tier, or its island was left behind (a map trip): let go
    dt=Math.max(0,Math.min(dt,.25));// the water step's own clamp: a slow frame still covers its distance
@@ -230,6 +286,12 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
    const target=blocked?0:rideSpeed(f.kind)*(has?1:RIDE_IDLE);state.speed+=(target-state.speed)*(1-Math.exp(-dt*(blocked?RIDE_BRAKE:RIDE_EASE)));
    if(state.speed<.02)state.speed=0;
    const ds=state.speed*dt,nx=f.fx+sy*ds,nz=f.fz+cy*ds;
+   // The hull probe (RIDE_HULL): land within the body + margin + the next probe's travel ends the ride before any of it touches sand.
+   if(land){state.land=land;state.hullAcc+=dt;
+    if(hullDue(f.fyaw,ds)){const look=Math.max(ds,Math.max(state.speed,rideSpeed(f.kind))*RIDE_TICK);
+     if(hullLand(f,f.fyaw,look,land)||hullLand(f,wrap(f.fyaw+state.turn*RIDE_TICK*1.5),look,land))return end('shore');
+     state.hullAcc=0;state.hullBudget=look;state.hullYaw=f.fyaw;}
+    state.hullBudget-=ds;}
    if(ds>0&&ok(nx+sy*g,nz+cy*g)){f.fx=nx;f.fz=nz;state.travelled+=ds;}else if(ds>0)state.speed=0;
    const gk=glideLeft(state.glideT);
    state.yaw=f.fyaw;state.x=f.fx+sy*g+state.gx*gk;state.z=f.fz+cy*g+state.gz*gk;
