@@ -491,9 +491,10 @@
 /* Keep-ups hold-for-higher (Oct 22 2026, lib/town/keepUps.ts): while the keep-up button is held a ring fills from 0.25 s to
    0.6 s (the lift curve), CSS only, no per-frame JS. An outline, because the island buttons pin box-shadow with !important.
    Reduced motion: no fill animation, the ring simply appears at 0.6 s (steps). */
-.touch-juggle[data-holding="true"]{animation:keepup-charge .6s linear forwards}
+/* Konbini only (0.6 s = its full lift); the island button has its own 1.6 s ring (keep-up audit Oct 24 P0 #5). */
+.touch-juggle[data-holding="true"]:not([data-keepup-button]){animation:keepup-charge .6s linear forwards}
 @keyframes keepup-charge{0%,41%{outline:0 solid #fff0cc00;outline-offset:2px}100%{outline:6px solid #fff0cc;outline-offset:2px}}
-@media(prefers-reduced-motion:reduce){.touch-juggle[data-holding="true"]{animation-timing-function:steps(1,end)}}
+@media(prefers-reduced-motion:reduce){.touch-juggle[data-holding="true"]:not([data-keepup-button]){animation-timing-function:steps(1,end)}}
 /* Keep-up charge ring INSIDE the button (Oct 24 2026, owner: "a ring inside that animates to show that it is charging up"):
    Town writes --keepup-charge (0…1, 1/40 steps, only on change) and data-keepup = charging | full | catch from walkBall.state
    (skyRing / skyCatch). A conic-gradient masked to a thin band; amber while charging, red at full, green "Catch!" when the sky
@@ -504,12 +505,12 @@
 .touch-juggle[data-keepup] .keepup-charge-ring{opacity:1}
 .touch-juggle[data-keepup="full"] .keepup-charge-ring{--keepup-ring:#e53935}
 .touch-juggle[data-keepup="catch"] .keepup-charge-ring{--keepup-ring:#2fd35f;--keepup-charge:1}
-.keepup-badge{position:absolute;left:50%;bottom:-4px;translate:-50% 0;padding:1px 6px;border-radius:8px;font:800 10px/1.3 system-ui,sans-serif;letter-spacing:.02em;color:#fff;pointer-events:none;white-space:nowrap;opacity:0}
+.keepup-badge{position:absolute;left:50%;bottom:-4px;translate:-50% 0;padding:1px 6px;border-radius:8px;font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.02em;color:#fff;pointer-events:none;white-space:nowrap;opacity:0}
 .touch-juggle[data-keepup] .keepup-badge{opacity:1}
 .touch-juggle[data-keepup="charging"] .keepup-badge{background:#c27c00}.touch-juggle[data-keepup="charging"] .keepup-badge::before{content:"Hold…"}
 .touch-juggle[data-keepup="full"] .keepup-badge{background:#c62828}.touch-juggle[data-keepup="full"] .keepup-badge::before{content:"Max!"}
 .touch-juggle[data-keepup="catch"] .keepup-badge{background:#1d9b46}.touch-juggle[data-keepup="catch"] .keepup-badge::before{content:"Catch!"}
-.keepup-hint{position:absolute;z-index:3;right:calc(100% + 10px);top:50%;transform:translateY(-50%);width:max-content;max-width:min(170px,44vw);padding:6px 10px;border-radius:12px;background:#fffdf5;color:#17323b;font:800 13px/1.2 system-ui,sans-serif;text-align:center;box-shadow:0 3px 0 #0003;pointer-events:none;white-space:normal}
+.keepup-hint{position:absolute;z-index:3;right:calc(100% + 10px);top:50%;transform:translateY(-50%);width:max-content;max-width:min(170px,44vw);padding:6px 10px;border-radius:12px;background:#fffdf5;color:#17323b;font:800 16px/1.2 system-ui,sans-serif;text-align:center;box-shadow:0 3px 0 #0003;pointer-events:none;white-space:normal}
 .keepup-hint[hidden]{display:none}
 .controls-flipped .keepup-hint{right:auto;left:calc(100% + 10px)}
 .keepup-arrow{position:fixed;left:0;top:0;z-index:6;width:0;height:0;margin:-12px 0 0 -12px;pointer-events:none;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:22px solid #ff2d2d;filter:drop-shadow(0 0 2px #fff) drop-shadow(0 1px 1px #0006)}
@@ -633,6 +634,8 @@ button:is([aria-label^="Close" i],[aria-label^="Dismiss" i],[aria-label="Collaps
 :is(.town-app,[data-arcade-room]) .travel-actions .minimap-toggle{background:#a9cee1 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;box-shadow:0 5px 0 #6d98af,0 0 0 4px #fff2cd40!important}
 :is(.town-app,[data-arcade-room],[data-konbini-room]) .travel-actions .touch-shoot{background:#eea087 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;box-shadow:0 5px 0 #b26a56,0 0 0 4px #fff2cd40!important}
 :is(.town-app,[data-arcade-room],[data-konbini-room]) .travel-actions .touch-juggle{background:#c9b6e2 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;box-shadow:0 5px 0 #9680af,0 0 0 4px #fff2cd40!important}
+/* Island keep-up: sky blue with a dark icon, never the Shoot colour, so a rolling thumb sees two different buttons (keep-up audit Oct 24 P0 #3). */
+.town-app .travel-actions .touch-juggle[data-keepup-button]{background:#9fd8ff url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;color:#17323b!important;box-shadow:0 5px 0 #5f9cc0,0 0 0 4px #fff2cd40!important}
 :is(.town-app,[data-arcade-room],[data-konbini-room]) .travel-actions button:active{box-shadow:0 2px 0 #657e68,0 0 0 4px #fff2cd40!important}
 .joystick>span{background:#a9cee1 url('/stories/films/assets/entry-grain.png')!important;background-blend-mode:soft-light;box-shadow:0 4px 0 #6d98af,0 0 0 4px #fff2cd40!important}
 
@@ -875,12 +878,18 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
  .town-app .travel-actions[data-emote-grid] .touch-emote{grid-column:1;grid-row:2}
  .town-app .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:2;grid-row:2}
  .town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:3;grid-row:2}
+ /* keep-up audit Oct 24 P0 #3: 20 px between Keep-up and Shoot (the grid gap + 8 px, 12 px at ≤ 380 px, on the Shoot column, its buttons pushed to the far side) */
+ .town-app .travel-actions[data-emote-grid]{grid-template-columns:var(--action-size) var(--action-size) calc(var(--action-size) + var(--keepup-shoot-extra,8px))}
+ .town-app .travel-actions[data-emote-grid] .touch-actions .touch-shoot,.town-app .travel-actions[data-emote-grid] .minimap-toggle{justify-self:end}
  /* flipped (left-handed): same cells mirrored in place, Parachute and Sprint stay put, Emote sits to the right of Sprint */
  .controls-flipped .travel-actions[data-emote-grid] .travel-mode{grid-column:1;grid-row:1}
  .controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{grid-column:2;grid-row:1}
  .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-juggle{grid-column:1;grid-row:2}
  .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-shoot{grid-column:2;grid-row:2}
  .controls-flipped .travel-actions[data-emote-grid] .touch-emote{grid-column:3;grid-row:2}
+ .controls-flipped .travel-actions[data-emote-grid]{grid-template-columns:calc(var(--action-size) + var(--keepup-shoot-extra,8px)) var(--action-size) var(--action-size)}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-shoot,.controls-flipped .travel-actions[data-emote-grid] .minimap-toggle{justify-self:center}
+ .controls-flipped .travel-actions[data-emote-grid] .touch-actions .touch-juggle,.controls-flipped .travel-actions[data-emote-grid] .travel-mode{justify-self:start}
  /* the open map: a small calm disc, 14 px above the grid, folds out of the toggle (right-aligned over it) */
  .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 142px);border:1px solid #fff2cdb3;box-shadow:0 2px 10px #203d332e;transform-origin:calc(100% - 29px) 100%}
  .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap.is-minimized{scale:.4;translate:0 28px;transition-duration:.2s}
@@ -888,7 +897,7 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
  .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid] .emote-wheel) .town-minimap{opacity:0;visibility:hidden;pointer-events:none}
 }
 @media(max-width:380px){
- .town-app .travel-actions[data-emote-grid]{gap:8px}
+ .town-app .travel-actions[data-emote-grid]{gap:8px;--keepup-shoot-extra:12px}
  .town-app:not(.in-lesson):has(.travel-actions[data-emote-grid]) .town-minimap:not(.is-collapsed){bottom:calc(var(--control-bottom) + 138px)}
 }
 @media(max-width:350px){
