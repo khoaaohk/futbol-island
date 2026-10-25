@@ -4,8 +4,8 @@
  * ball size (3/4/5) and the futsal variant. Pure data + validation (no DOM, no three.js), so tests/shop-ball.cjs runs it in Node.
  *
  * Storage: one localStorage key, BALL_KEY, holding {v:2,current,slots,art,bought}: the in-progress design (auto-saved), 3 named
- * slots (each with a small thumbnail), and the ART POOL: the kid's drawings (Draw step, lib/shop/ballPaint.ts) as small WebP/PNG
- * data URLs keyed by their hash. Designs only carry the drawing's id (design.art.id), so the shop's bought-items key
+ * slots (each with a small thumbnail), and the ART POOL: the kid's drawings (Draw step, lib/shop/ballPaint.ts) as small data
+ * URLs keyed by their hash (fi-draw since Oct 24 2026, lib/shop/drawCodec.ts; older WebP/PNG ones still load). Designs only carry the drawing's id (design.art.id), so the shop's bought-items key
  * (fi2-shop-owned-v1, up to 36 designs) never holds pixels. v1 stores (no drawings, no thumbnails) load as-is (migrated).
  * The shop syncs BALL_KEY with the save code (lib/saves SYNC_KEYS). Size budget (lib/saves/snapshot.ts: 256 KB per key,
  * 192 KB gzip per save): a drawing ≤ DRAW_MAX_CHARS (16 000 chars ≈ 12 KB), the whole pool ≤ ART_POOL_MAX (64 000 chars),
@@ -22,9 +22,10 @@ export const SLOT_COUNT=3;
 export const NAME_MAX=12;
 /** Drawing budget (characters of a data URL; base64 ≈ 4/3 of the image bytes). */
 export const DRAW_MAX_CHARS=16000,ART_POOL_MAX=64000,THUMB_MAX=6000,BOUGHT_KEEP=4;
-export const DRAW_URL=/^data:image\/(?:webp|png);base64,[A-Za-z0-9+/]+={0,2}$/;
+/** A saved drawing: fi-draw (lib/shop/drawCodec.ts, Oct 24 2026: palette + 2-bit alpha, deflated, 512×256) or an older WebP/PNG. */
+export const DRAW_URL=/^data:(?:application\/x-fi-draw|image\/(?:webp|png));base64,[A-Za-z0-9+/]+={0,2}$/;
 const THUMB_URL=/^data:image\/(?:webp|jpeg|png);base64,[A-Za-z0-9+/]+={0,2}$/;
-/** True when a stored drawing is acceptable: an inline WebP/PNG data URL under the cap (no links, no other formats). */
+/** True when a stored drawing is acceptable: an inline fi-draw/WebP/PNG data URL under the cap (no links, no other formats). */
 export const isDrawUrl=(v:unknown):v is string=>typeof v==='string'&&v.length<=DRAW_MAX_CHARS&&DRAW_URL.test(v);
 /** FNV-1a (two passes) of a string as base36: the id a drawing is stored under. */
 export function artHash(s:string):string{let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}
@@ -281,7 +282,7 @@ export function cleanSlotName(raw:unknown,i:number):string{const n=filterSlotNam
 const cleanThumb=(v:unknown)=>typeof v==='string'&&v.length<=THUMB_MAX&&THUMB_URL.test(v)?v:undefined;
 /**
  * Keep only drawings something still uses, most important first (the current design, the slots, then bought balls, newest
- * first), each checked (a WebP/PNG data URL whose hash is its id), within ART_POOL_MAX. A design whose drawing didn't make it
+ * first), each checked (a fi-draw/WebP/PNG data URL whose hash is its id), within ART_POOL_MAX. A design whose drawing didn't make it
  * loses the id, so the price and the picture always agree.
  */
 function packArt(current:BallDesign,slots:(BallSlot|null)[],bought:string[],pool:Record<string,string>):{art:Record<string,string>;bought:string[]}{

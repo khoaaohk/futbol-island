@@ -17,6 +17,7 @@
  * take a document; tests/shop-ball.cjs runs the rest in Node.
  */
 import {DRAW_MAX_CHARS,DRAW_URL,isDrawUrl} from './ball';
+import {decodeFiDraw,encodeFiDraw,isFiDraw,resizeRgba} from './drawCodec';
 export {DRAW_MAX_CHARS,isDrawUrl,artHash} from './ball';
 export const DRAW_W=1024,DRAW_H=512;
 export type Vec3=[number,number,number];
@@ -182,27 +183,33 @@ export function createPainter(W=DRAW_W,H=DRAW_H){
 }
 
 // ---- Encode / decode (browser) ------------------------------------------------------------------------------------------
-/** Posterise an RGBA buffer to 16 levels (PNG compresses kid art much better; invisible on a ball). */
-function posterise(px:Uint8ClampedArray){for(let i=0;i<px.length;i++)px[i]=Math.round(px[i]/17)*17;}
+/** Box-filter straight-alpha RGBA (w×h) down to dw×dh (premultiplied, so edges don't darken). */
+function shrink(px:Uint8ClampedArray,w:number,h:number,dw:number,dh:number):Uint8ClampedArray{const out=new Uint8ClampedArray(dw*dh*4);
+ for(let y=0;y<dh;y++)for(let x=0;x<dw;x++){const x0=Math.floor(x*w/dw),x1=Math.max(x0+1,Math.floor((x+1)*w/dw)),y0=Math.floor(y*h/dh),y1=Math.max(y0+1,Math.floor((y+1)*h/dh));
+  let r=0,g=0,b=0,a=0,n=0;for(let yy=y0;yy<y1;yy++)for(let xx=x0;xx<x1;xx++){const k=(yy*w+xx)*4,al=px[k+3];r+=px[k]*al;g+=px[k+1]*al;b+=px[k+2]*al;a+=al;n++;}
+  const o=(y*dw+x)*4;if(a>0){out[o]=r/a;out[o+1]=g/a;out[o+2]=b/a;out[o+3]=a/n;}}
+ return out;}
 /**
- * Encode the painter's pixels to a data URL under DRAW_MAX_CHARS: 512×256 WebP at falling quality, then smaller sizes; PNG
- * (posterised) where the browser can't write WebP (Safari). Returns '' for an empty drawing, null when it can't fit at all.
+ * Encode the painter's pixels to a data URL under DRAW_MAX_CHARS (Oct 24 2026, P0.5): the fi-draw format (lib/shop/drawCodec.ts,
+ * palette + 2-bit alpha, deflated) at the full 512×256; only a drawing too busy for that tries WebP (browsers that write it),
+ * then fi-draw at 384×192 and 256×128. Same result on iPhone Safari as on Chrome. Returns '' for an empty drawing, null when
+ * nothing fits. Old WebP/PNG saves still decode (decodeDrawing).
  */
 export function encodeDrawing(p:Painter,doc:Document=document):string|null{
  if(p.empty)return '';
- const half=p.half(),w=p.W/2,h=p.H/2;const c=doc.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d')!;g.putImageData(new ImageData(half,w,h),0,0);
- const tries:[number,number][]=[[1,.82],[1,.62],[1,.45],[.75,.6],[.5,.6],[.375,.5]];
- let webp=true;
- for(const [scale,q] of tries){let src:HTMLCanvasElement=c;
-  if(scale<1){src=doc.createElement('canvas');src.width=Math.round(w*scale);src.height=Math.round(h*scale);const g2=src.getContext('2d')!;g2.imageSmoothingQuality='high';g2.drawImage(c,0,0,src.width,src.height);}
-  let url=webp?src.toDataURL('image/webp',q):'';
-  if(!url.startsWith('data:image/webp')){webp=false;const g3=src.getContext('2d')!;const id=g3.getImageData(0,0,src.width,src.height);posterise(id.data);g3.putImageData(id,0,0);url=src.toDataURL('image/png');}
-  if(url.length<=DRAW_MAX_CHARS&&DRAW_URL.test(url))return url;}
+ const half=p.half(),w=p.W/2,h=p.H/2;const fits=(u:string)=>u.length<=DRAW_MAX_CHARS&&DRAW_URL.test(u);
+ const full=encodeFiDraw(half,w,h);if(!full)return '';if(fits(full))return full;
+ try{const c=doc.createElement('canvas');c.width=w;c.height=h;c.getContext('2d')!.putImageData(new ImageData(half,w,h),0,0);
+  for(const q of [.82,.62,.45]){const url=c.toDataURL('image/webp',q);if(!url.startsWith('data:image/webp'))break;if(fits(url))return url;}
+  c.width=c.height=1;}catch{/* no canvas: fi-draw below */}
+ for(const s of [.75,.5]){const dw=Math.round(w*s/2)*2,dh=dw/2,url=encodeFiDraw(shrink(half,w,h,dw,dh),dw,dh);if(url&&fits(url))return url;}
  return null;
 }
-/** Decode a stored drawing into straight-alpha RGBA at the painter's size (null when it isn't a valid drawing). */
+/** Decode a stored drawing into straight-alpha RGBA at the painter's size (null when it isn't a valid drawing). fi-draw URLs
+ *  decode in JS (DecompressionStream when there is one); old WebP/PNG URLs through an <img>, exactly as before. */
 export function decodeDrawing(url:string,W=DRAW_W,H=DRAW_H,doc:Document=document):Promise<Uint8ClampedArray|null>{
  if(!isDrawUrl(url))return Promise.resolve(null);
+ if(isFiDraw(url))return decodeFiDraw(url).then(r=>r?resizeRgba(r.px,r.w,r.h,W,H):null,()=>null);
  return new Promise(res=>{const img=new Image();img.onload=()=>{
    if(!img.naturalWidth||img.naturalWidth>2048||Math.abs(img.naturalWidth/img.naturalHeight-2)>.05){res(null);return;}
    const c=doc.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d',{willReadFrequently:true})!;g.imageSmoothingQuality='high';g.drawImage(img,0,0,W,H);
