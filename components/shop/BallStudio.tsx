@@ -26,9 +26,10 @@ import {
 import type {BallStage} from '@/lib/shop/ballStage';
 import type {Painter,PaintTool,StampKind,Symmetry} from '@/lib/shop/ballPaint';
 import type {BallSound} from '@/lib/shop/ballSound';
-import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,studioSectionTitle,useStudioSheet} from './StudioControls';
+import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,studioSectionTitle,useStudioSheet} from './StudioControls';
 import type {StageInsets} from '@/lib/shop/studioSheet';
 import {countDesignSave} from '@/lib/analytics/shopEvents';
+import {EDGE_IN,edgeTurnRate} from '@/lib/shop/ballPick';
 
 type Props={onClose():void;onBuy?(design:BallDesign):void};
 const STEPS=[{id:'panels',label:'Start'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'finish',label:'Finish'},{id:'draw',label:'Draw'},{id:'stickers',label:'Stickers'},{id:'done',label:'Done'}] as const;
@@ -37,6 +38,8 @@ const DEFAULT_SIZE:Record<DecalKind,number>={sticker:.2,flag:.17,quote:.15,name:
 type Mods={paint:typeof import('@/lib/shop/ballPaint');panels:typeof import('@/lib/shop/ballPanels')};
 /** One Draw-step undo step: a stroke (pixels), a fill change, or both (Clear). */
 type DrawStep={px:boolean;fills?:{before:string[];after:string[]}};
+/** The Draw intro card shows once per device (a per-device UI hint: unversioned, so it is never part of a save code). */
+const DRAW_INTRO_KEY='fi2-ball-draw-intro';
 
 // ---- history (undo/redo) ----
 type Hist={past:BallDesign[];present:BallDesign;future:BallDesign[]};
@@ -73,6 +76,8 @@ const I={
  shuffle:sv(<path d="M3 7h3.5c4.5 0 6.5 10 11 10H21M3 17h3.5c1.8 0 3.1-1.6 4.3-3.6M21 7h-3.5c-1.8 0-3.1 1.6-4.3 3.6M18 4l3 3-3 3M18 14l3 3-3 3" {...st2} strokeWidth={2.2}/>),
  expand:sv(<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" {...st2}/>),
  spin:sv(<><path d="M20 12a8 8 0 01-14.9 4M4 12a8 8 0 0114.9-4" {...st2}/><path d="M19 3.5V8h-4.5M5 20.5V16h4.5" {...st2}/></>),
+ tl:sv(<path d="M15 5l-7 7 7 7" {...st2} strokeWidth={3.2}/>),tr:sv(<path d="M9 5l7 7-7 7" {...st2} strokeWidth={3.2}/>),
+ tu:sv(<path d="M5 15l7-7 7 7" {...st2} strokeWidth={3.2}/>),td:sv(<path d="M5 9l7 7 7-7" {...st2} strokeWidth={3.2}/>),
  brush:sv(<><path d="M14.5 4.5l5 5-7.8 7.8-5-5z" {...st2} strokeWidth={2.2}/><path d="M6.7 12.3c-2.7.3-3.6 2.6-3.7 7.7 4.6-.2 7.2-1.2 7.7-4" {...st2} strokeWidth={2.2}/></>),
  marker:sv(<><path d="M15 3.5l5.5 5.5L10 19.5H4.5V14z" {...st2} strokeWidth={2.2}/><path d="M12.5 6l5.5 5.5" {...st2} strokeWidth={2.2}/><path d="M3 21.5h9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" opacity=".45"/></>),
  eraser:sv(<><path d="M9 20l-5-5L14.5 4.5l6 6L11 20z" {...st2} strokeWidth={2.2}/><path d="M9 9.5l6 6M9 20h11" {...st2} strokeWidth={2.2}/></>),
@@ -169,14 +174,15 @@ export default function BallStudio({onClose,onBuy}:Props){
  const [stamp,setStamp]=useState<StampKind>('star');
  const [sym,setSym]=useState<Symmetry>('off');
  const [ink,setInk]=useState('#e8423f');
- const [mode,setMode]=useState<'paint'|'spin'>('paint');
+ const [intro,setIntro]=useState(false);// the one-time Draw intro card
  const [,setDrawRev]=useState(0);
  const wallet=useArcadeWallet();
  const canvasRef=useRef<HTMLCanvasElement>(null),stageRef=useRef<BallStage|null>(null),designRef=useRef(design);designRef.current=design;
  const stageElRef=useRef<HTMLDivElement>(null),insetsRef=useRef<StageInsets|null>(null);
  const rootRef=useRef<HTMLDivElement>(null),cursorRef=useRef<HTMLDivElement>(null),soundRef=useRef<BallSound|null>(null);
  const storeRef=useRef<BallStore|null>(null);storeRef.current=store;
- const reduced=useRef(false);
+ const reduced=useRef(false),coarseRef=useRef(false),stepRef=useRef(step);stepRef.current=step;
+ const viewRef=useRef<()=>void>(()=>{});
  const modsRef=useRef<Mods|null>(null),modsP=useRef<Promise<Mods>|null>(null),painterRef=useRef<Painter|null>(null);
  const artMem=useRef<Record<string,string>>({});
  const sess=useRef({artId:'',fillsKey:'',checkpointed:false,loading:0});
@@ -206,12 +212,12 @@ export default function BallStudio({onClose,onBuy}:Props){
  // The stage: three.js loads only now; everything is disposed on close.
  useEffect(()=>{let dead=false;const canvas=canvasRef.current;if(!canvas)return;
   reduced.current=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const coarse=window.matchMedia('(pointer: coarse)').matches||Math.min(window.innerWidth,window.innerHeight)<600;
+  const coarse=window.matchMedia('(pointer: coarse)').matches||Math.min(window.innerWidth,window.innerHeight)<600;coarseRef.current=coarse;
   import('@/lib/shop/ballSound').then(m=>{if(!dead)soundRef.current=m.createBallSound();}).catch(()=>{});
   const onBounce=(v:number)=>{soundRef.current?.kick(v);if(v<1&&!reduced.current){const id=Date.now()+Math.random(),sb=stageRef.current?.screenBall(),top=stageElRef.current?.getBoundingClientRect().top??0;
    setBursts(b=>[...b.slice(-3),{id,s:v,y:sb?sb.y+sb.r-top-6:-1}]);window.setTimeout(()=>setBursts(b=>b.filter(x=>x.id!==id)),700);}};
   import('@/lib/shop/ballStage').then(({createBallStage})=>{if(dead)return;
-   try{const st=createBallStage(canvas,{coarse,reducedMotion:reduced.current,onBounce});stageRef.current=st;st.setDesign(designRef.current);st.setInsets(insetsRef.current);attach();flushDirty();st.preview();setReady(true);
+   try{const st=createBallStage(canvas,{coarse,reducedMotion:reduced.current,onBounce,onView:()=>viewRef.current()});stageRef.current=st;st.setDesign(designRef.current);st.setInsets(insetsRef.current);attach();flushDirty();if(stepRef.current!=='draw')st.preview();setReady(true);
     if(typeof window!=='undefined'&&(process.env.NODE_ENV!=='production'||location.pathname.startsWith('/shop-lab')))(window as unknown as {__fiBallStage?:BallStage}).__fiBallStage=st;}
    catch(err){console.warn('ball studio: no WebGL',err);setFailed(true);}}).catch(()=>setFailed(true));
   return ()=>{dead=true;clearTimeout(encTimer.current);stageRef.current?.dispose();stageRef.current=null;soundRef.current?.close();soundRef.current=null;const w=window as unknown as {__fiBallStage?:BallStage};if(w.__fiBallStage)delete w.__fiBallStage;};},[attach,flushDirty]);
@@ -246,7 +252,8 @@ export default function BallStudio({onClose,onBuy}:Props){
   if(id===designRef.current.art.id)return designRef.current;const d=cloneBall(designRef.current);d.art.id=id;replace(d);return designRef.current;},[say]);
  const scheduleEncode=()=>{encPending.current=true;clearTimeout(encTimer.current);encTimer.current=window.setTimeout(flushEncode,700);};
  const setFills=(f:string[])=>{const d=cloneBall(designRef.current);d.art.fills=f;const v=validateBall(d);sess.current.fillsKey=fillsKey(v.art.fills);designRef.current=v;dispatch({t:'replace',d:v});};
- const drawPush=(e:DrawStep)=>{dUndo.current.push(e);if(dUndo.current.length>60)dUndo.current.shift();dRedo.current=[];checkpointOnce();setDrawRev(r=>r+1);};
+ // The studio keeps the same number of Draw steps as the painter (HISTORY_STEPS), and drops px steps the painter dropped.
+ const drawPush=(e:DrawStep)=>{dUndo.current.push(e);const m=modsRef.current,p=painterRef.current;if(m&&p)m.paint.alignDrawHistory(dUndo.current,p.steps);else if(dUndo.current.length>40)dUndo.current.shift();dRedo.current=[];checkpointOnce();setDrawRev(r=>r+1);};
  const drawUndo=()=>{const e=dUndo.current.pop();if(!e)return;dRedo.current.push(e);if(e.px&&painterRef.current?.undo()){flushDirty();scheduleEncode();}if(e.fills)setFills(e.fills.before);setDrawRev(r=>r+1);};
  const drawRedo=()=>{const e=dRedo.current.pop();if(!e)return;dUndo.current.push(e);if(e.px&&painterRef.current?.redo()){flushDirty();scheduleEncode();}if(e.fills)setFills(e.fills.after);setDrawRev(r=>r+1);};
  const clearDrawing=()=>{const p=painterRef.current,f=designRef.current.art.fills;const px=!!p&&p.clear(),hasF=f.some(Boolean);if(!px&&!hasF){say('Nothing to clear yet. Draw something!');return;}
@@ -262,12 +269,20 @@ export default function BallStudio({onClose,onBuy}:Props){
 
  const goto=(id:StepId)=>{if(step==='draw'&&id!=='draw'){flushEncode();sess.current.checkpointed=false;}
   setStep(id);setVisited(v=>new Set(v).add(id));setPreview(null);if(id!=='stickers')setSel(-1);
-  if(id==='draw')setHint(matchMedia('(pointer: coarse)').matches?'One finger paints · two fingers spin':'Drag to paint · right-drag or Spin to turn');};
+  // Draw: the ball stops at once and never spins by itself here (audit P0.1); the first visit shows the intro card.
+  if(id==='draw'){const st=stageRef.current;if(st){st.grab();st.release(0,0);}
+   let seen=true;try{seen=!!localStorage.getItem(DRAW_INTRO_KEY);}catch{}
+   if(!seen)setIntro(true);else setHint(matchMedia('(pointer: coarse)').matches?'Paint on the ball · arrows turn it':'Drag to paint · arrows or right-drag turn');}
+  else setIntro(false);};
+ const introDone=()=>{setIntro(false);try{localStorage.setItem(DRAW_INTRO_KEY,'1');}catch{}};
+ /** The show-off spin after a preset / Surprise / a loaded slot, except in the Draw step (the ball holds still there). */
+ const spinShow=()=>{if(stepRef.current!=='draw')stageRef.current?.preview();};
  const idx=STEPS.findIndex(x=>x.id===step);
  const decalEditable=step==='stickers';
- const painting=step==='draw'&&mode==='paint'&&!showoff;
+ const painting=step==='draw'&&!showoff;
  // The resizable phone sheet (shared with Boot and Jersey): the ball re-fits to the stage's visible box as it moves.
- const panel=useStudioSheet({stageRef:stageElRef,fitOff:showoff,onInsets:i=>{insetsRef.current=i;stageRef.current?.setInsets(i);}});
+ const panel=useStudioSheet({stageRef:stageElRef,fitOff:showoff,onInsets:i=>{insetsRef.current=i;stageRef.current?.setInsets(i);
+  const el=stageElRef.current;if(el){el.style.setProperty('--insT',`${i?.top??0}px`);el.style.setProperty('--insB',`${i?.bottom??0}px`);}}});// the turn arrows sit in the visible box
  const close=()=>{const d=flushEncode();saveBallCurrent(d,undefined,artMem.current);onClose();};
 
  // ---- decals ----
@@ -297,40 +312,60 @@ export default function BallStudio({onClose,onBuy}:Props){
  const pdist=()=>{const p=[...g.current.pts.values()];return p.length<2?1:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);};
  const pmid=()=>{const p=[...g.current.pts.values()];return p.length<2?{x:0,y:0}:{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2};};
  const strokeOpts=()=>{const st=stageRef.current!,m=modsRef.current!,{right,up}=st.viewAxes();
-  return {tool:tool as Exclude<PaintTool,'fill'>,rgb:rgbOf(ink),size:tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.BRUSH_SIZES[bsize],sym,right,up,stamp};};
+  return {tool:tool as Exclude<PaintTool,'fill'>,rgb:rgbOf(ink),size:tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.brushSizes(coarseRef.current)[bsize],sym,right,up,stamp};};
+ // Edge turn (audit P0.4): while the finger paints in the outer 15% of the ball (or just past the rim), each frame turns the
+ // ball toward it (<= 1.4 rad/s, eased in) and lays ink at the clamped point, so a line goes round the ball. Reduced motion:
+ // no turn, the rim clamp only. Runs inside the stage's capped frame, only while held at the edge.
+ const edge=useRef({on:false,t:0});
+ const edgeFrame=useRef<(dt:number)=>boolean>(()=>false);
+ edgeFrame.current=(dt:number)=>{const G=g.current,st=stageRef.current,p=painterRef.current;if(!st||!p||G.mode!=='paint'||reduced.current)return false;
+  const h=st.pickRim(G.lx,G.ly),now=performance.now();if(!h||h.r<=EDGE_IN){edge.current.on=false;return false;}
+  if(!edge.current.on)edge.current={on:true,t:now};st.turnToward(h.dir,edgeTurnRate(h.r,now-edge.current.t)*dt);
+  const d=st.pickRim(G.lx,G.ly);if(d){if(!G.tapDir)p.jump(d.dir);p.to(d.dir);G.tapDir=d.dir;G.moved=true;flushDirty();}return true;};
+ /** Touch: show the brush ring for a moment at touch-down so the kid sees the size (the ring follows the mouse on desktop). */
+ const ghostRing=(e:React.PointerEvent)=>{const c=cursorRef.current;if(!c||e.pointerType==='mouse')return;const r=e.currentTarget.getBoundingClientRect();
+  c.style.transform=`translate(${e.clientX-r.left}px,${e.clientY-r.top}px)`;c.removeAttribute('data-ghost');void c.offsetWidth;c.setAttribute('data-ghost','');};
  const onDown=(e:React.PointerEvent)=>{const st=stageRef.current;if(!st)return;(e.target as Element).setPointerCapture?.(e.pointerId);const G=g.current;G.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});setHint(null);
   if(G.pts.size===1){G.sx=G.lx=e.clientX;G.sy=G.ly=e.clientY;G.t0=G.lt=performance.now();G.vx=G.vy=0;G.moved=false;G.tapDir=null;
    const dir=st.pick(e.clientX,e.clientY),p=painterRef.current;
-   if(painting&&e.button!==2&&dir&&p&&modsRef.current){
+   if(painting&&e.button!==2&&dir&&p&&modsRef.current){st.grab();// the finger stops the ball at once: no streak from leftover spin
     if(tool==='fill'||tool==='stamp'){G.mode='tap';G.tapDir=dir;return;}
-    G.mode='paint';G.tapDir=dir;p.begin(strokeOpts(),dir);flushDirty();return;}
+    G.mode='paint';G.tapDir=dir;p.begin(strokeOpts(),dir);flushDirty();edge.current.on=false;st.setFrameHook(dt=>edgeFrame.current(dt));ghostRing(e);return;}
    const hit=dir&&decalEditable?st.decalAt(dir):-1;
    if(hit>=0){G.mode='decal';G.di=hit;setSel(hit);const x=designRef.current.decals[hit];G.screenRot=st.screenRot(x.dir,x.rot);G.live=null;}
    else{G.mode='rotate';st.grab();}}
   else if(G.pts.size===2){if(G.mode==='rotate')st.release(0,0);if(G.mode==='decal'&&G.live){dispatch({t:'replace',d:G.live});}
-   if(G.mode==='paint'){painterRef.current?.cancel();flushDirty();}
+   // A palm or a second finger keeps the line (audit P0.2): only a stroke under 150 ms old is dropped (a two-finger start).
+   if(G.mode==='paint'){const p=painterRef.current;st.setFrameHook(null);if(p){if(performance.now()-G.t0<150)p.cancel();else if(p.end()){drawPush({px:true});scheduleEncode();}}flushDirty();}
    G.mode='pinch';G.moved=true;G.d0=pdist();G.zoomRatio=1;G.live=null;const m=pmid();G.mx=m.x;G.my=m.y;st.grab();
    const x=sel>=0&&decalEditable?designRef.current.decals[sel]:null;G.size0=x?.size??.2;}};
  const onMove=(e:React.PointerEvent)=>{const G=g.current,st=stageRef.current;
   if(e.pointerType==='mouse'&&cursorRef.current){const c=cursorRef.current,r=e.currentTarget.getBoundingClientRect();c.style.transform=`translate(${e.clientX-r.left}px,${e.clientY-r.top}px)`;}
   if(!st||!G.pts.has(e.pointerId))return;G.pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(G.mode==='pinch'){const r=pdist()/G.d0,m=pmid();
+  if(G.mode==='pinch'){if(G.pts.size<2)return;const r=pdist()/G.d0,m=pmid();
    if(sel>=0&&decalEditable&&designRef.current.decals[sel]){if(!G.live){dispatch({t:'checkpoint'});G.live=cloneBall(designRef.current);}G.live.decals[sel].size=Math.min(.55,Math.max(.1,G.size0*r));st.setDesign(G.live);}
    else{st.zoomBy(r/G.zoomRatio);G.zoomRatio=r;st.drag(m.x-G.mx,m.y-G.my);}G.mx=m.x;G.my=m.y;return;}
   const dx=e.clientX-G.lx,dy=e.clientY-G.ly,now=performance.now(),dt=Math.max(1,now-G.lt);
-  // Painting: a point off the ball lifts the pen (tapDir=null), so coming back starts a new segment instead of a jump line.
-  if(G.mode==='paint'){const p=painterRef.current;if(!p)return;const dir=st.pick(e.clientX,e.clientY);
-   if(dir){if(!G.tapDir)p.jump(dir);p.to(dir);G.moved=true;}G.tapDir=dir;flushDirty();G.lx=e.clientX;G.ly=e.clientY;G.lt=now;return;}
+  // Painting: every coalesced sample (120 Hz screens, styluses) is used; just past the rim (<= 1.3 R) the point is clamped to
+  // the rim; further out the pen lifts (tapDir=null), so coming back starts a new segment instead of a jump line.
+  if(G.mode==='paint'){const p=painterRef.current;if(!p)return;const ne=e.nativeEvent,co=tool==='line'?[]:ne.getCoalescedEvents?.()??[];let h=null;
+   for(const ev of co.length?co:[ne]){h=st.pickRim(ev.clientX,ev.clientY);const dir=h?.dir??null;if(dir){if(!G.tapDir)p.jump(dir);p.to(dir);G.moved=true;}G.tapDir=dir;}
+   flushDirty();G.lx=e.clientX;G.ly=e.clientY;G.lt=now;if(h&&h.r>EDGE_IN&&!reduced.current)st.wake();return;}
   if(!G.moved&&Math.hypot(e.clientX-G.sx,e.clientY-G.sy)<7)return;G.moved=true;
   if(G.mode==='tap'){G.mode='rotate';st.grab();}
   if(G.mode==='rotate'){st.drag(dx,dy);G.vx=G.vx*.6+dx/dt*1000*.4;G.vy=G.vy*.6+dy/dt*1000*.4;}
   else if(G.mode==='decal'){const dir=st.pick(e.clientX,e.clientY);if(dir){if(!G.live){dispatch({t:'checkpoint'});G.live=cloneBall(designRef.current);}const x=G.live.decals[G.di];if(x){x.dir=dir;x.rot=st.uprightRot(dir,G.screenRot);st.setDesign(G.live);}}}
   G.lx=e.clientX;G.ly=e.clientY;G.lt=now;};
  const onUp=(e:React.PointerEvent)=>{const G=g.current,st=stageRef.current;if(!G.pts.has(e.pointerId))return;G.pts.delete(e.pointerId);if(!st)return;
-  if(G.mode==='pinch'){if(G.pts.size===0){if(G.live)dispatch({t:'replace',d:validateBall(G.live)});G.live=null;G.mode='none';st.release(0,0);}return;}
+  if(G.mode==='pinch'){
+   // One finger left (audit P0.3): it turns the ball from where it is now (no zoom snap, no flip).
+   if(G.pts.size===1){if(G.live)dispatch({t:'replace',d:validateBall(G.live)});G.live=null;const [rest]=[...G.pts.values()];
+    G.mode='rotate';G.lx=rest.x;G.ly=rest.y;G.lt=performance.now();G.vx=G.vy=0;G.moved=true;st.grab();}
+   else if(G.pts.size>=2){G.d0=pdist();G.zoomRatio=1;const m=pmid();G.mx=m.x;G.my=m.y;if(G.live&&sel>=0)G.size0=G.live.decals[sel]?.size??G.size0;}
+   else{if(G.live)dispatch({t:'replace',d:validateBall(G.live)});G.live=null;G.mode='none';st.release(0,0);}return;}
   if(G.pts.size)return;
-  if(G.mode==='paint'){G.mode='none';const p=painterRef.current;if(p&&p.end()){drawPush({px:true});scheduleEncode();}flushDirty();return;}
-  if(G.mode==='tap'){G.mode='none';const dir=G.tapDir,p=painterRef.current;if(!dir||!p)return;
+  if(G.mode==='paint'){G.mode='none';st.setFrameHook(null);st.release(0,0);const p=painterRef.current;if(p&&p.end()){drawPush({px:true});scheduleEncode();}flushDirty();return;}
+  if(G.mode==='tap'){G.mode='none';st.release(0,0);const dir=G.tapDir,p=painterRef.current;if(!dir||!p)return;
    if(tool==='fill')doFill(dir);else{p.begin(strokeOpts(),dir);if(p.end()){drawPush({px:true});scheduleEncode();soundRef.current?.pop(1.3);buzz();}flushDirty();}return;}
   const tap=!G.moved&&performance.now()-G.t0<400;
   if(G.mode==='rotate'){const idle=performance.now()-G.lt>90;st.release(tap||idle?0:G.vx,tap||idle?0:G.vy);}
@@ -369,15 +404,15 @@ export default function BallStudio({onClose,onBuy}:Props){
  const pick=(fn:(d:BallDesign)=>void)=>{setPreview(null);edit(fn);};
  const setColour=(hex:string)=>pick(d=>{d.colors[group]=hex;});
  const setLayout=(d:BallDesign,l:BallLayout)=>{if(d.layout!==l)d.art.fills=[];d.layout=l;if(l==='leather18'&&d.finish!=='leather')d.finish='leather';else if(l!=='leather18'&&d.finish==='leather')d.finish='gloss';};
- const applyPreset=(p:BallDesign)=>{const cur=designRef.current;commit({...cloneBall(p),decals:cur.decals,size:cur.size,futsal:cur.futsal,art:{id:cur.art.id,fills:p.layout===cur.layout?cur.art.fills:[]}});setPreview(null);stageRef.current?.preview();soundRef.current?.pop(.9);};
- const surprise=()=>{commit(randomBall(designRef.current));setPreview(null);stageRef.current?.preview();soundRef.current?.pop(1.2);};
+ const applyPreset=(p:BallDesign)=>{const cur=designRef.current;commit({...cloneBall(p),decals:cur.decals,size:cur.size,futsal:cur.futsal,art:{id:cur.art.id,fills:p.layout===cur.layout?cur.art.fills:[]}});setPreview(null);spinShow();soundRef.current?.pop(.9);};
+ const surprise=()=>{commit(randomBall(designRef.current));setPreview(null);spinShow();soundRef.current?.pop(1.2);};
  const snap=(n:number)=>{try{return stageRef.current?.snapshot(n)??'';}catch{return '';}};
  const openBuy=()=>{flushEncode();setSel(-1);window.setTimeout(()=>setConfirm({thumb:snap(200)}),0);};
  const doBuy=()=>{const d=validateBall(flushEncode());markBallBought(d,undefined,artMem.current);setStore(loadBallStore());setConfirm(null);
   if(onBuy)onBuy(d);stageRef.current?.kick();say(onBuy?'It’s yours! Find it in My kit.':'Ask at the till to buy your ball!');};
  const openSlots=()=>{flushEncode();setSel(-1);setStore(loadBallStore());window.setTimeout(()=>setSheet({thumb:snap(96)}),0);};
  const slotSave=(i:number,name:string)=>{const d=flushEncode();if(saveBallSlot(i,name,d,Date.now(),undefined,artMem.current,sheet?.thumb)){setStore(loadBallStore());say('Saved! Your ball is safe.');soundRef.current?.pop(1.1);countDesignSave('ball');}else say('This browser could not save.');};
- const slotLoad=(i:number)=>{const sl=store?.slots[i];if(!sl)return;commit(sl.design);setSheet(null);setSel(-1);say(`Loaded ${sl.name}`);stageRef.current?.preview();};
+ const slotLoad=(i:number)=>{const sl=store?.slots[i];if(!sl)return;commit(sl.design);setSheet(null);setSel(-1);say(`Loaded ${sl.name}`);spinShow();};
  const enterShow=()=>{flushEncode();setSel(-1);setShowoff(true);setPreview(null);try{const r=rootRef.current;if(r?.requestFullscreen&&!document.fullscreenElement)void r.requestFullscreen().catch(()=>{});}catch{}
   window.setTimeout(()=>{stageRef.current?.resize();stageRef.current?.reset();window.setTimeout(()=>stageRef.current?.spin(6),480);},60);};
  function exitShow(){setShowoff(false);try{if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});}catch{}window.setTimeout(()=>{stageRef.current?.resize();stageRef.current?.reset();},60);}
@@ -400,7 +435,10 @@ export default function BallStudio({onClose,onBuy}:Props){
  const swatchRow=(cur:string,set:(hex:string)=>void,label:string,hov?:(hex:string)=>ReturnType<typeof hover>|object)=><div className={s.swatches} role="group" aria-label={label}>
   {PALETTE.map(c=><button key={c.hex} className={`${s.sw} ${isLight(c.hex)?s.light:''}`} style={{background:c.hex}} aria-label={c.name} title={c.name} aria-pressed={cur===c.hex} onClick={()=>set(c.hex)} {...(hov?hov(c.hex):{})}/>)}
   <label className={`${s.sw} ${s.custom}`} title="Any colour"><span className={s.sr}>Pick any colour</span><input type="color" value={cur} onChange={e=>set(e.target.value)}/></label></div>;
- const brushPx=(()=>{const st=stageRef.current;if(!st)return 20;const R=st.screenBall().r;const m=modsRef.current;const r=m?(tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.BRUSH_SIZES[bsize]):.042;return Math.max(8,r*R*2);})();
+ const brushPxNow=()=>{const st=stageRef.current;if(!st)return 20;const R=st.screenBall().r;const m=modsRef.current;const r=m?(tool==='stamp'?m.paint.STAMP_SIZES[bsize]:m.paint.brushSizes(coarseRef.current)[bsize]):.042;return Math.max(8,r*R*2);};
+ const brushPx=brushPxNow();
+ // The ring follows zoom and resizes (audit P1.6): the stage calls this whenever its camera moves.
+ viewRef.current=()=>{const c=cursorRef.current;if(!c)return;const px=brushPxNow();c.style.width=c.style.height=`${px}px`;c.style.marginLeft=c.style.marginTop=`${-px/2}px`;};
 
  const pane=(()=>{switch(step){
   case 'panels':return <div className={s.pane} key="panels">
@@ -435,7 +473,7 @@ export default function BallStudio({onClose,onBuy}:Props){
    <p className={s.fact}>{I.bulb}<span><b>{F.label}</b>{F.fact}</span></p>{nextCta}</div>;}
   case 'draw':return <div className={s.pane} key="draw" data-draw-pane>
    <h2 className={`${s.h2} ${studioSectionTitle}`}>Draw on your ball</h2>
-   <div className={s.tools} role="group" aria-label="Drawing tools">{TOOLS.map(t=><button key={t.id} className={s.tool} aria-pressed={tool===t.id} onClick={()=>{setTool(t.id);setMode('paint');}} data-tool={t.id}>{t.icon}<span>{t.label}</span></button>)}</div>
+   <div className={s.tools} role="group" aria-label="Drawing tools">{TOOLS.map(t=><button key={t.id} className={s.tool} aria-pressed={tool===t.id} onClick={()=>setTool(t.id)} data-tool={t.id}>{t.icon}<span>{t.label}</span></button>)}</div>
    {tool==='stamp'&&<div className={s.stamps} role="group" aria-label="Stamps">{(['star','heart','circle','bolt'] as StampKind[]).map(k=><button key={k} className={s.stampBtn} aria-pressed={stamp===k} aria-label={`${k==='bolt'?'Lightning':k[0].toUpperCase()+k.slice(1)} stamp`} onClick={()=>setStamp(k)} style={{color:ink}}>{STAMP_ICON[k]}</button>)}</div>}
    <div className={s.drawRow}>
     <div className={s.seg} role="group" aria-label="Size">{[0,1,2].map(i=><button key={i} aria-pressed={bsize===i} aria-label={['Small','Medium','Big'][i]} onClick={()=>setBsize(i)}><i style={{width:8+i*7,height:8+i*7,background:tool==='eraser'?'#fffaf0':ink}}/></button>)}</div>
@@ -479,7 +517,7 @@ export default function BallStudio({onClose,onBuy}:Props){
    </div>
   <div ref={stageElRef} className={s.stage} data-painting={painting?'':undefined} data-tool={painting?tool:undefined} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onContextMenu={e=>{if(step==='draw')e.preventDefault();}}>
    <div className={s.spot}/>
-   <canvas ref={canvasRef} className={s.canvas} aria-label={painting?'Your football. Drag on it to paint; two fingers spin it.':'Your football. Drag to spin it, pinch to zoom, double-tap to reset.'} role="img"/>
+   <canvas ref={canvasRef} className={s.canvas} aria-label={painting?'Your football. Drag on it to paint; drag outside it, two fingers or the arrows turn it.':'Your football. Drag to spin it, pinch to zoom, double-tap to reset.'} role="img"/>
    {painting&&<div ref={cursorRef} className={s.cursor} aria-hidden style={{width:brushPx,height:brushPx,marginLeft:-brushPx/2,marginTop:-brushPx/2,borderColor:tool==='eraser'?'#244d40':ink}}/>}
    {bursts.map(b=><span key={b.id} className={s.burst} style={{'--s':.6+b.s*.8,...(b.y>0?{top:b.y}:null)} as React.CSSProperties} aria-hidden>{Array.from({length:7},(_,i)=><i key={i} style={{'--a':`${i*51+10}deg`} as React.CSSProperties}/>)}</span>)}
    {!showoff&&<StudioIconRow>
@@ -495,9 +533,17 @@ export default function BallStudio({onClose,onBuy}:Props){
    </StudioIconRow>}
    {!ready&&<div className={s.loading}>{failed?<span>This device can’t show the 3D ball, but you can still design it.</span>:<><span className={s.loadBall}/><span>Pumping up your ball…</span></>}</div>}
    {hint&&ready&&!showoff?<div className={s.hint} key={hint}>{I.hand}{hint}</div>:null}
-   {step==='draw'&&!showoff&&<StudioModeToggle label="What your finger does">
-    <button aria-pressed={mode==='paint'} onClick={()=>setMode('paint')}>{I.brush}Paint</button>
-    <button aria-pressed={mode==='spin'} onClick={()=>setMode('spin')}>{I.hand}Spin</button></StudioModeToggle>}
+   {/* Turn arrows (audit P1.1): always there in the Draw step, so a finger on the ball only ever paints. Each tap turns 30°. */}
+   {painting&&<div className={s.turnPad} role="group" aria-label="Turn the ball" onPointerDown={e=>e.stopPropagation()}>
+    <button className={`${s.turnBtn} ${s.tUp}`} aria-label="Turn the ball up" onClick={()=>stageRef.current?.turn(0,-1)} data-ball-turn="up">{I.tu}</button>
+    <button className={`${s.turnBtn} ${s.tDown}`} aria-label="Turn the ball down" onClick={()=>stageRef.current?.turn(0,1)} data-ball-turn="down">{I.td}</button>
+    <button className={`${s.turnBtn} ${s.tLeft}`} aria-label="Turn the ball left" onClick={()=>stageRef.current?.turn(-1,0)} data-ball-turn="left">{I.tl}</button>
+    <button className={`${s.turnBtn} ${s.tRight}`} aria-label="Turn the ball right" onClick={()=>stageRef.current?.turn(1,0)} data-ball-turn="right">{I.tr}</button></div>}
+   {painting&&intro&&ready&&<div className={s.intro} role="dialog" aria-label="How to draw on the ball" onPointerDown={e=>e.stopPropagation()} data-draw-intro>
+    <p>{I.brush}<span><b>Finger on the ball</b> paints. The ball holds still.</span></p>
+    <p>{I.tr}<span><b>Arrows</b>, or drag off the ball, turn it.</span></p>
+    <p>{I.hand}<span><b>Paint to the edge</b> and the ball turns for you.</span></p>
+    <button className={s.introOk} onClick={introDone}>Got it</button></div>}
    {selDecal&&decalEditable&&!showoff&&<div className={s.decalBar} onPointerDown={e=>e.stopPropagation()} role="toolbar" aria-label="Selected sticker">
     <button aria-label="Smaller" onClick={()=>changeSel(x=>{x.size=Math.max(.1,x.size/1.15);})}>{I.minus}</button>
     <button aria-label="Bigger" onClick={()=>changeSel(x=>{x.size=Math.min(.55,x.size*1.15);})}>{I.plus}</button>

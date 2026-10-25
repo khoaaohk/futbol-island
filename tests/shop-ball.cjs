@@ -160,6 +160,63 @@ const B=require('../lib/shop/ball.ts'),P=require('../lib/shop/ballPaint.ts'),PN=
  const half=p.half();assert.equal(half.length,W*H);
  console.log('PASS paint: equirect chart = shader, brush/marker/eraser/line/stamps, mirror + ×5 symmetry, undo/redo per stroke, cancel, clear, capped history');}
 
+// 6c+. Draw step controls (Oct 24 2026, docs/BALL_STUDIO_AUDIT_OCT24.md P0.1–P0.4 + P1): rim clamp, edge turn, undo sync, touch
+// brushes (real runs of the pure modules), and source pins for the gesture code (the stage needs WebGL).
+{const K=require('../lib/shop/ballPick.ts'),cam=[0,0,5],c=[0,0,0],ray=(x,y)=>{const d=[x,y,-5],l=Math.hypot(...d);return d.map(v=>v/l);};
+ const near=(a,b,e=1e-6)=>Math.abs(a-b)<e,len=v=>Math.hypot(...v),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+ // On the ball: the normal hit, r < 1. Just past the rim (≤ 1.3 R): clamped onto the visible rim, not null. Further out: null.
+ const h0=K.pickSphere(cam,ray(0,0),c,K.RIM_MAX);assert.ok(!h0.rim&&near(h0.dir[2],1)&&h0.r<1e-9,'centre hit faces the camera');
+ const h1=K.pickSphere(cam,ray(.5,0),c,K.RIM_MAX);assert.ok(!h1.rim&&h1.r<1&&h1.dir[0]>0,'a hit to the right');
+ assert.equal(K.pickSphere(cam,ray(1.15,0),c,1),null,'plain pick past the rim misses');
+ const h2=K.pickSphere(cam,ray(1.15,0),c,K.RIM_MAX);assert.ok(h2&&h2.rim&&h2.r>1&&h2.r<1.3,'past the rim: clamped, r '+h2?.r);
+ assert.ok(near(len(h2.dir),1)&&h2.dir[0]>.95&&near(h2.dir[1],0),'the rim point is on the ball, on the finger\'s side');
+ assert.ok(dot(h2.dir,[0,0,1])>1/5,'the rim point faces the camera (visible), dot '+dot(h2.dir,[0,0,1]).toFixed(3));
+ assert.equal(K.pickSphere(cam,ray(1.6,0),c,K.RIM_MAX),null,'beyond 1.3 R the pen lifts');
+ // Edge turn speed: 0 inside 0.85 R, eased in over 200 ms, capped at 1.4 rad/s.
+ assert.equal(K.edgeTurnRate(.8,999),0);assert.equal(K.edgeTurnRate(1.2,0),0,'starts at rest');assert.ok(K.edgeTurnRate(1.2,100)<K.edgeTurnRate(1.2,200));
+ assert.ok(near(K.edgeTurnRate(1.2,500),1.4)&&near(K.edgeTurnRate(.925,500),.7),'≤ 1.4 rad/s, scaled by depth in the edge');
+ const t=K.turnTowardAxis([1,0,0],[0,0,1],.1);assert.ok(near(t.angle,.1)&&near(t.axis[1],-1),'turns the rim point toward the camera');
+ assert.equal(K.turnTowardAxis([0,0,1],[0,0,1],.1),null);
+ // Simulation: a finger held 1.12 R right of the ball for 1 s at 30 fps keeps laying ink while the ball turns round under it.
+ const run=(reduced)=>{let B=[[1,0,0],[0,1,0],[0,0,1]];const toBall=w=>B.map(b=>dot(b,w)),pts=[];let held=0;
+  for(let f=0;f<30;f++){const dt=1/30;held+=dt*1000;const h=K.pickSphere(cam,ray(1.15,0),c,K.RIM_MAX);
+   if(!reduced){const tt=K.turnTowardAxis(h.dir,[0,0,1],K.edgeTurnRate(h.r,held)*dt);if(tt)B=B.map(b=>P.rotate(b,tt.axis,tt.angle));}
+   pts.push(toBall(K.pickSphere(cam,ray(1.15,0),c,K.RIM_MAX).dir));}
+  const a=Math.acos(Math.max(-1,Math.min(1,dot(pts[0],pts[pts.length-1]))));return a;};
+ const span=run(false);assert.ok(span>.9&&span<1.45,'the stroke grows ≈ 1 rad round the ball in 1 s: '+span.toFixed(2));
+ assert.ok(run(true)<1e-9,'reduced motion: rim clamp only, the ball never turns');
+ // Touch brushes: bigger on coarse pointers, stamps unchanged.
+ assert.deepEqual([...P.brushSizes(true)],[.035,.065,.11]);assert.deepEqual([...P.brushSizes(false)],[...P.BRUSH_SIZES]);
+ // Undo sync: 45 strokes + fills steps, the studio list never holds more px steps than the painter has patches.
+ const p=P.createPainter(256,128),opts={tool:'brush',rgb:[255,0,0],size:.05,sym:'off',right:[1,0,0],up:[0,1,0]},list=[];
+ for(let i=0;i<45;i++){p.begin(opts,[Math.sin(i/7),0,Math.cos(i/7)]);assert.ok(p.end());list.push({px:true});if(i%9===4)list.push({px:false,fills:{before:[],after:['#fff']}});P.alignDrawHistory(list,p.steps);
+  assert.ok(list.length<=P.HISTORY_STEPS);assert.ok(list.filter(e=>e.px).length<=p.steps,'never more px steps than painter patches, stroke '+i);}
+ let n=0;while(list.length){const e=list.pop();if(e.px)assert.ok(p.undo(),'every px undo does something');n++;}assert.ok(n>0&&n<=P.HISTORY_STEPS);
+ const mixed=[{px:true,fills:{}},{px:true}];P.alignDrawHistory(mixed,1);assert.deepEqual(mixed.map(e=>e.px),[false,true],'a Clear keeps its fills half');
+ // Gesture wiring (static pins: the stage needs WebGL; the browser checks are in the audit's verification plan).
+ const ui=read('components/shop/BallStudio.tsx'),st=read('lib/shop/ballStage.ts'),css=read('components/shop/BallStudio.module.css');
+ assert.match(ui,/if\(painting&&e\.button!==2&&dir&&p&&modsRef\.current\)\{st\.grab\(\);/,'P0.1: a finger on the ball freezes it before painting');
+ assert.match(ui,/if\(G\.mode==='paint'\)\{G\.mode='none';st\.setFrameHook\(null\);st\.release\(0,0\);/,'P0.1: paint up releases with no throw');
+ assert.match(ui,/if\(G\.mode==='tap'\)\{G\.mode='none';st\.release\(0,0\);/);
+ assert.match(ui,/if\(id==='draw'\)\{const st=stageRef\.current;if\(st\)\{st\.grab\(\);st\.release\(0,0\);\}/,'P0.1: entering Draw stops any spin');
+ assert.match(ui,/const spinShow=\(\)=>\{if\(stepRef\.current!=='draw'\)stageRef\.current\?\.preview\(\);\};/,'no auto-spin in Draw');
+ assert.equal((ui.match(/stageRef\.current\?\.preview\(\)/g)||[]).length,1,'every show-off spin goes through spinShow');assert.match(ui,/if\(stepRef\.current!=='draw'\)st\.preview\(\);/);
+ assert.match(ui,/if\(performance\.now\(\)-G\.t0<150\)p\.cancel\(\);else if\(p\.end\(\)\)\{drawPush\(\{px:true\}\);scheduleEncode\(\);\}/,'P0.2: a palm commits the line');
+ assert.match(ui,/if\(G\.mode==='pinch'\)\{if\(G\.pts\.size<2\)return;/,'P0.3: a one-point pinch never zooms');
+ assert.match(ui,/G\.live=null;const \[rest\]=\[\.\.\.G\.pts\.values\(\)\];\s*G\.mode='rotate';G\.lx=rest\.x;G\.ly=rest\.y;G\.lt=performance\.now\(\);G\.vx=G\.vy=0;G\.moved=true;st\.grab\(\);\}/,'P0.3: one finger left turns from fresh positions');
+ assert.match(ui,/getCoalescedEvents\?\.\(\)/,'P1.3: coalesced samples');assert.match(ui,/h=st\.pickRim\(ev\.clientX,ev\.clientY\)/,'P0.4: rim clamp while painting');
+ assert.match(ui,/st\.setFrameHook\(dt=>edgeFrame\.current\(dt\)\)/);assert.match(ui,/G\.mode!=='paint'\|\|reduced\.current\)return false;/,'P0.4: no edge turn under reduced motion');
+ assert.match(st,/if\(frameHook\)\{inHook=true;try\{hookOn=frameHook\(dt\);\}finally\{inHook=false;\}\}else hookOn=false;/);assert.match(st,/function active\(\)\{if\(hookOn\|\|turnAnim\)return true;/,'the hook only keeps the loop while it asks');
+ assert.match(st,/if\(capMs\)\{invalidate\(\);return;\}/,'P1.3: touch uploads in the next capped frame');
+ assert.ok(!ui.includes('StudioModeToggle')&&!/'paint'\|'spin'/.test(ui),'P1.1: the Paint/Spin toggle is gone');
+ for(const d of ['up','down','left','right'])assert.ok(ui.includes(`data-ball-turn="${d}"`),'turn arrow '+d);assert.match(css,/\.turnBtn\{[^}]*width:52px;height:52px/,'52 px arrows');
+ assert.match(st,/turn\(dx,dy\)\{if\(reduced\)\{step\(dx,dy\);return;\}turnAnim=/,'reduced motion: the arrows step at once');
+ assert.match(ui,/m\.paint\.alignDrawHistory\(dUndo\.current,p\.steps\)/,'P1.4: undo caps match');assert.doesNotMatch(ui,/dUndo\.current\.length>60/);
+ assert.match(ui,/try\{seen=!!localStorage\.getItem\(DRAW_INTRO_KEY\);\}catch\{\}/,'P1.5: intro once, storage errors swallowed');assert.match(ui,/try\{localStorage\.setItem\(DRAW_INTRO_KEY,'1'\);\}catch\{\}/);
+ assert.match(css,/\.introOk\{min-height:48px/);
+ assert.match(st,/opts\.onView\?\.\(\);\}/,'P1.6: the camera tells the studio');assert.match(ui,/viewRef\.current=\(\)=>\{const c=cursorRef\.current;/,'P1.6: the ring follows zoom');
+ console.log('PASS draw controls: freeze on touch, palm keeps the line, pinch-lift turns, rim clamp + edge turn (≈ '+span.toFixed(2)+' rad round in 1 s held), turn arrows, touch brushes, undo sync, intro, ring follows zoom');}
+
 // 6d. Fill-a-panel: the JS panel ids mirror the shader's layoutAt() for every layout.
 {const sh=read('lib/shop/ballShader.ts'),g=n=>String(n).replace(/^0\./,'.');
  assert.ok(sh.includes(`const float A=${g(PN.PROPELLER.A)},K=${g(PN.PROPELLER.K)};`),'propeller constants match');
@@ -194,7 +251,7 @@ const B=require('../lib/shop/ball.ts'),P=require('../lib/shop/ballPaint.ts'),PN=
  assert.match(st,/reducedMotion:reduced/);assert.match(st,/preview\(\)\{if\(reduced\)return;/,'reduced motion: no auto-spin');assert.match(st,/kick\(\)\{[^}]*if\(reduced\)\{opts\.onBounce\?\.\(1\);q\.premultiply/,'reduced motion: no bounce');
  assert.doesNotMatch(ui,/from 'three'/,'the UI never imports three statically');
  // Draw layer: dirty-rect uploads, ≤ ~30/s, no mipmaps, created only with a drawing, disposed; the engine loads lazily.
- assert.match(st,/copyTextureToTexture\(drawTex,drawTex,box,dst\)/,'dirty-rect texSubImage2D upload');assert.match(st,/if\(now-lastDrawUp<30\)\{scheduleDraw\(\);return;\}/,'≤ ~30 uploads a second');
+ assert.match(st,/copyTextureToTexture\(drawTex,drawTex,box,dst\)/,'dirty-rect texSubImage2D upload');assert.match(st,/if\(!capMs&&now-lastDrawUp<30\)\{scheduleDraw\(\);return;\}/,'≤ ~30 uploads a second (desktop throttle; touch: the frame cap)');
  assert.match(st,/drawTex\.generateMipmaps=false/);assert.match(st,/drawTex\?\.dispose\(\)/,'dispose: draw texture');assert.match(st,/clearTimeout\(drawTimer\)/);
  assert.match(ui,/import\('@\/lib\/shop\/ballPaint'\)/,'paint engine loads lazily');
  assert.ok(!/^import \{[^}]*\} from '@\/lib\/shop\/ballPaint'/m.test(ui)&&!/^import \{[^}]*\} from '@\/lib\/shop\/ballPanels'/m.test(ui),'only type imports of the paint modules');

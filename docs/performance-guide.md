@@ -6023,3 +6023,14 @@ draw calls of portrait (docs/LANDSCAPE_AUDIT_OCT23.md §4).
   easing bounds), `tests/quality-pass.cjs` (landscape box ≤ portrait, cap cases), `tests/heat-tiers.cjs` (wiring, no map growth).
 - Tradeoff: landscape now shows ~43 % of portrait's vertical ground (forward look-ahead is shorter; walking lead unchanged), and near
   props (lamp posts, trees between camera and player) loom larger at 18 m.
+
+## Ball studio Draw controls (Oct 24 2026, `docs/BALL_STUDIO_AUDIT_OCT24.md` P0.1–P0.4, P1)
+- A finger on the ball freezes it (`grab()`), and the Draw step never auto-spins, so a drawing visit renders only while the finger
+  moves or a turn arrow eases (220 ms). The edge turn (`lib/shop/ballPick.ts`, a stage frame hook) keeps the capped 30 fps loop
+  running only while the finger is held in the outer 15% of the ball or just past the rim; it stops by itself when the finger
+  moves in or lifts. Reduced motion: rim clamp only, no loop.
+- Touch uploads: the extra 30 ms upload throttle is skipped on coarse pointers (the 33 ms frame cap already limits uploads to
+  ≈ 30/s), so ink lag is one capped frame instead of up to two; desktop keeps the 30 ms throttle. Coalesced pointer samples are
+  painted (≈ 0.05 ms each), still one upload per frame.
+- Measured (headless Chrome 390×844 touch, emulation, not iPhone heat): 0 rAF idle in Draw, 0 rAF while a finger rests on the
+  ball right after a flick, 30 dirty-rect uploads in 1 s held past the rim. No iPhone temperature measured.

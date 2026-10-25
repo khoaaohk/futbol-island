@@ -21,11 +21,14 @@ import {BALL_VERT,ballFrag,MAX_FILLS,MAX_SHADER_DECALS} from './ballShader';
 import {decalImage,drawPatternMask,loadDecalFonts} from './ballArt';
 import {QUOTES,type BallDecal,type BallDesign,type BallLayout,type Vec3} from './ball';
 import {frameCapSlot,studioFrameMs} from './studioFrameCap';
+import {pickSphere,turnTowardAxis,RIM_MAX,type V3} from './ballPick';
 import {applyInsetOffset,fitDistance,insetShift,sameInsets,type StageInsets} from './studioSheet';
 
 export type StageOpts={coarse:boolean;reducedMotion:boolean;
  /** Called when the kicked ball leaves the foot (strength 1) and on each bounce (0..1): the studio plays the sound. */
- onBounce?:(strength:number)=>void};
+ onBounce?:(strength:number)=>void;
+ /** The camera moved (zoom ease, resize, sheet insets): the studio re-sizes its brush ring. */
+ onView?:()=>void};
 export type StageStats={renders:number;rafs:number;uploads:number;programs:number;drawUploads:number;drawTexels:number};
 export type DrawRect={x0:number;y0:number;x1:number;y1:number};
 export type BallStage={
@@ -33,6 +36,17 @@ export type BallStage={
  setSelected(i:number):void;
  /** Local (ball-space) unit direction under a client point, or null when the point misses the ball. */
  pick(x:number,y:number):Vec3|null;
+ /** Draw step: like pick, but a point just off the silhouette (≤ 1.3 R) is clamped to the visible rim. r = distance from the
+  *  centre in ball radii (1 = the rim). null further out. */
+ pickRim(x:number,y:number):{dir:Vec3;r:number}|null;
+ /** Turn the ball so ball-space `dir` moves toward the camera by `angle` radians (the Draw step's edge turn). */
+ turnToward(dir:Vec3,angle:number):void;
+ /** Called once per rendered frame with dt (s) before drawing; returning true keeps the loop running (null clears it). */
+ setFrameHook(fn:((dt:number)=>boolean)|null):void;
+ /** Ask for a frame (e.g. so a frame hook starts running). */
+ wake():void;
+ /** Eased 30° turn (220 ms) for the on-screen turn arrows; reduced motion: one instant step. */
+ turn(dx:number,dy:number):void;
  /** Index of the top-most decal under a ball-space direction, or −1. */
  decalAt(dir:Vec3):number;
  /** Decal turn that makes it upright on screen at dir (plus `offset`). */
@@ -117,6 +131,8 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  let resetAnim:{t:number;from:T.Quaternion;z0:number}|null=null;
  const pops:number[]=Array(MAX_SHADER_DECALS).fill(1);let popping=false;
  let stepAcc={x:0,y:0};
+ let turnAnim:{dx:number;dy:number;t:number;e:number}|null=null;// the turn arrows' eased 30° step
+ let frameHook:((dt:number)=>boolean)|null=null,hookOn=false,inHook=false;
  let design:BallDesign|null=null,futsal=false;
  let decals:BallDecal[]=[],aspects:number[]=[],atlasKeys='',patKey='',patTimer=0,atlasTimer=0;
  let insets:StageInsets|null=null;
@@ -129,7 +145,7 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
   const dist=(insets?fitDistance({fov:camera.fov,w,h,insets,halfW:1,halfH:1,fillW:.8,fillH:.86}):1/(t*(w>=h?.3:.31*w/h)*2))/zoom;
   camera.position.set(0,Math.sin(elev)*dist,Math.cos(elev)*dist);camera.lookAt(0,-.04,0);applyInsetOffset(camera,w,h,insets);
   // Fine surface detail (dimples, grain) fades when the ball is small on screen so it never shimmers.
-  uniforms.uDetail.value=Math.min(1,Math.max(.25,h/2/(t*dist)*dpr()/260));}
+  uniforms.uDetail.value=Math.min(1,Math.max(.25,h/2/(t*dist)*dpr()/260));opts.onView?.();}
  function resize(){const w=canvas.clientWidth||1,h=canvas.clientHeight||1;renderer.setPixelRatio(dpr());renderer.setSize(w,h,false);placeCamera();invalidate();}
 
  function render(){holderSync();uploadDraw();renderer.render(scene,camera);stats.renders++;}
@@ -137,18 +153,21 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  let drawTex:T.DataTexture|null=null,drawPending:DrawRect|null=null,drawTimer=0,lastDrawUp=-1e9,drawFirst=true;
  const box=new T.Box2(),dst=new T.Vector2();
  function uploadDraw(){if(!drawTex||!drawPending)return;const now=performance.now();
-  if(now-lastDrawUp<30){scheduleDraw();return;}
+  if(!capMs&&now-lastDrawUp<30){scheduleDraw();return;}
   const r=drawPending;drawPending=null;lastDrawUp=now;stats.drawUploads++;stats.drawTexels+=(r.x1-r.x0)*(r.y1-r.y0);
   if(drawFirst){drawFirst=false;drawTex.needsUpdate=true;stats.uploads++;return;}// the first upload is the whole texture
   box.min.set(r.x0,r.y0);box.max.set(r.x1,r.y1);dst.set(r.x0,r.y0);renderer.copyTextureToTexture(drawTex,drawTex,box,dst);}
- function scheduleDraw(){if(drawTimer||disposed)return;const wait=Math.max(0,33-(performance.now()-lastDrawUp));
+ function scheduleDraw(){if(drawTimer||disposed)return;if(capMs){invalidate();return;}const wait=Math.max(0,33-(performance.now()-lastDrawUp));
   if(wait<1&&!raf){invalidate();return;}drawTimer=window.setTimeout(()=>{drawTimer=0;invalidate();},Math.max(1,wait));}
  function holderSync(){inner.quaternion.copy(q);}
- function active(){return held?false:(omega.lengthSq()>4e-4||preview>0||!!kick||!!resetAnim||Math.abs(zoom-zoomTo)>1e-3||popping);}
+ function active(){if(hookOn||turnAnim)return true;return held?false:(omega.lengthSq()>4e-4||preview>0||!!kick||!!resetAnim||Math.abs(zoom-zoomTo)>1e-3||popping);}
  function tick(now:number){raf=0;stats.rafs++;if(disposed||paused||hidden)return;
   // touch devices: 30 fps (an early vsync is skipped; the chain still ends when nothing moves)
   if(capMs){const next=frameCapSlot(now,slot,capMs);if(next<0){raf=requestAnimationFrame(tick);return;}slot=next;}
   const dt=Math.min(.05,last?(now-last)/1000:1/60);last=now;
+  if(frameHook){inHook=true;try{hookOn=frameHook(dt);}finally{inHook=false;}}else hookOn=false;
+  if(turnAnim){turnAnim.t=Math.min(1,turnAnim.t+dt/.22);const e=1-Math.pow(1-turnAnim.t,3),d=(e-turnAnim.e)*Math.PI/6;turnAnim.e=e;
+   if(turnAnim.dx)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(0,1,0),turnAnim.dx*d));if(turnAnim.dy)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(1,0,0),turnAnim.dy*d));if(turnAnim.t>=1)turnAnim=null;}
   if(preview>0){preview-=dt;const k=Math.max(0,preview)/previewLen,long=previewLen>3;omega.set(.06,long?2*Math.min(1,k*3):3.2*k*k+.05*k,0);if(preview<=0)omega.set(0,0,0);}
   if(!held&&preview<=0){omega.multiplyScalar(Math.exp(-dt*(kick?1.1:2.6)));if(omega.lengthSq()<4e-4)omega.set(0,0,0);}
   const sp=omega.length();if(sp>1e-5){tmpQ.setFromAxisAngle(tmpV.copy(omega).normalize(),sp*dt);q.premultiply(tmpQ);}
@@ -165,7 +184,7 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
   render();
   if(active())raf=requestAnimationFrame(tick);else{last=0;uniforms.uBlur.value=0;}
  }
- function invalidate(){if(!raf&&!disposed&&!paused&&!hidden){last=0;raf=requestAnimationFrame(tick);}}
+ function invalidate(){if(!raf&&!inHook&&!disposed&&!paused&&!hidden){last=0;raf=requestAnimationFrame(tick);}}
  const vis=()=>{hidden=document.hidden;if(hidden){cancelAnimationFrame(raf);raf=0;}else invalidate();};document.addEventListener('visibilitychange',vis);
  const ro=new ResizeObserver(resize);ro.observe(canvas);
  const lost=(e:Event)=>{e.preventDefault();cancelAnimationFrame(raf);raf=0;};canvas.addEventListener('webglcontextlost',lost);
@@ -207,6 +226,13 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  function pick(x:number,y:number):Vec3|null{const r=canvas.getBoundingClientRect();ndc.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
   const c=outer.position,o=ray.ray.origin,d=ray.ray.direction,oc=tmpV.copy(o).sub(c),b=oc.dot(d),cc=oc.lengthSq()-1,disc=b*b-cc;if(disc<0)return null;
   const t=-b-Math.sqrt(disc);const hit=o.clone().addScaledVector(d,t).sub(c).normalize();inv.copy(q).invert();hit.applyQuaternion(inv);return [hit.x,hit.y,hit.z];}
+ const v3=(v:T.Vector3):V3=>[v.x,v.y,v.z];
+ function pickRim(x:number,y:number){const r=canvas.getBoundingClientRect();ndc.set((x-r.left)/r.width*2-1,-((y-r.top)/r.height)*2+1);ray.setFromCamera(ndc,camera);
+  const h=pickSphere(v3(ray.ray.origin),v3(ray.ray.direction),v3(outer.position),RIM_MAX);if(!h)return null;
+  inv.copy(q).invert();const d=tmpV.set(...h.dir).applyQuaternion(inv);return {dir:[d.x,d.y,d.z] as Vec3,r:h.r};}
+ function turnToward(dir:Vec3,angle:number){const w=tmpV.set(...dir).applyQuaternion(q),v=new T.Vector3().copy(camera.position).sub(outer.position).normalize();
+  const t=turnTowardAxis(v3(w),v3(v),angle);if(!t)return;q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(...t.axis),t.angle));invalidate();}
+ function step(dx:number,dy:number){const S=Math.PI/6;if(dx)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(0,1,0),dx*S));if(dy)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(1,0,0),dy*S));invalidate();}
  function decalAt(dir:Vec3){const p=new T.Vector3(...dir);for(let i=Math.min(decals.length,MAX_SHADER_DECALS)-1;i>=0;i--){const d=decals[i],c=chart(p,d.dir,d.rot);if(c.front<.15)continue;const hs=decalHalf(d.size,aspects[i]||1);
    if(Math.abs(c.x)<=hs.w+.03&&Math.abs(c.y)<=hs.h+.03)return i;}return -1;}
  /** Angle of the screen's up direction in the decal's tangent frame at dir (ball space). */
@@ -230,10 +256,13 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  return {
   setDesign,
   setSelected(i){uniforms.uSel.value=i;invalidate();},
-  pick,decalAt,
+  pick,pickRim,turnToward,decalAt,
+  setFrameHook(fn){frameHook=fn;if(!fn)hookOn=false;},
+  wake(){invalidate();},
+  turn(dx,dy){if(reduced){step(dx,dy);return;}turnAnim={dx,dy,t:0,e:0};invalidate();},
   uprightRot(dir,offset=0){return camUpAngle(dir)+offset;},
   screenRot(dir,rot){return rot-camUpAngle(dir);},
-  grab(){held=true;preview=0;omega.set(0,0,0);resetAnim=null;stepAcc={x:0,y:0};},
+  grab(){held=true;preview=0;omega.set(0,0,0);resetAnim=null;turnAnim=null;stepAcc={x:0,y:0};},
   drag(dx,dy){const k=2.9/Math.max(200,canvas.clientHeight);
    if(reduced){stepAcc.x+=dx*k;stepAcc.y+=dy*k;const S=Math.PI/12;let moved=false;
     while(Math.abs(stepAcc.x)>=S){const s=Math.sign(stepAcc.x)*S;q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(0,1,0),s));stepAcc.x-=s;moved=true;}
@@ -254,7 +283,7 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
   setDrawVisible(on){const v=on&&drawTex?1:0;if(uniforms.uDrawOn.value!==v){uniforms.uDrawOn.value=v;invalidate();}},
   viewAxes,snapshot,debugPanelIds,
   spin(seconds){if(reduced)return;preview=previewLen=Math.max(.5,seconds);resetAnim=null;invalidate();},
-  step(dx,dy){const S=Math.PI/6;if(dx)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(0,1,0),dx*S));if(dy)q.premultiply(tmpQ.setFromAxisAngle(tmpV.set(1,0,0),dy*S));invalidate();},
+  step,
   setInsets(i){if(sameInsets(i,insets))return;insets=i?{...i}:null;placeCamera();invalidate();},
   screenBall(){const r=canvas.getBoundingClientRect(),h=canvas.clientHeight||1,t=Math.tan(T.MathUtils.degToRad(camera.fov/2)),dist=camera.position.length();
    return {x:r.left+r.width/2,y:r.top+r.height/2+(insets?insetShift(insets):0),r:h/2/(t*dist)};},

@@ -27,11 +27,23 @@ export type Symmetry='off'|'mirror'|'radial5';
 export type Rect={x0:number;y0:number;x1:number;y1:number};
 /** Brush radii in radians (≈ sphere radii): small, medium, large. */
 export const BRUSH_SIZES=[.02,.042,.08] as const;
+/** Touch (coarse pointers, phones; Oct 24 2026 audit P1.2): a fingertip is ≈ 40 px, so the brushes read at ≈ 9 / 17 / 29 px on
+ *  a phone ball (R ≈ 130 px) instead of 5 / 11 / 21. Stamps keep their sizes. */
+export const TOUCH_BRUSH_SIZES=[.035,.065,.11] as const;
+export const brushSizes=(coarse:boolean):readonly number[]=>coarse?TOUCH_BRUSH_SIZES:BRUSH_SIZES;
 /** Stamp half-sizes (radians) for the same three sizes. */
 export const STAMP_SIZES=[.075,.12,.19] as const;
 export const STAMPS:readonly StampKind[]=['star','heart','circle','bolt'];
 /** History memory cap (bytes of saved pixels) and step cap. */
 export const HISTORY_BYTES=24*1024*1024,HISTORY_STEPS=40;
+/** The studio's Draw-step history (strokes = px steps, panel fills, or both for Clear) kept in step with the painter's own
+ *  (audit P1.4): at most HISTORY_STEPS entries, and when the painter dropped old patches (step or memory cap) the oldest px
+ *  flags go too, so every undo does something. Mutates and returns `list`. */
+export function alignDrawHistory<E extends {px:boolean;fills?:unknown}>(list:E[],painterSteps:number,cap:number=HISTORY_STEPS):E[]{
+ while(list.length>cap)list.shift();
+ let px=0;for(const e of list)if(e.px)px++;
+ for(let i=0;px>painterSteps&&i<list.length;){const e=list[i];if(!e.px){i++;continue;}px--;if(e.fills){e.px=false;i++;}else list.splice(i,1);}
+ return list;}
 
 type Shape={poly:number[][]|null;circle?:number};
 /** Stamp outlines in a [-1,1]² box, y up. */
