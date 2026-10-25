@@ -12,7 +12,7 @@
  *  - Rides (user: "allow to switch to scooter, bike riding, and moped with the net. not flying"): the Bug squad keeps those three;
  *    the jetpack waits until the shift ends. Leaving Summit Isle ends the shift.
  */
-import {BUG_SPECIES,FIREFLY_SET,pickBugsOnMap,bugRotationSeed} from './bugSpecies';
+import {BUG_SPECIES,FIREFLY_SET,pickBugsOnMap,bugRotationSeed,type BugRarity} from './bugSpecies';
 
 /** The first lane's hold-still reach (jobCatalog radius 1.7 m around a bug's spot, i.e. ~1.2 m of real net reach). */
 export const NET_BASE_REACH=1.2;
@@ -131,8 +131,9 @@ export const RECALL={near:40,min:6,wait:1.5,within:90,far:45} as const;
 /** Will a locked swing at a target connect? The target holds still once the swing locks on (swarm.hold), so the hit test at swing
  *  start with its current position is the outcome: in the lunging sweep (LOCKED_SLACK) = a catch. Used to decide whether the swing
  *  plays as the catch stage (a hit) or as the normal swing on the island (a miss). */
-export function predictCatch(px:number,py:number,pz:number,t:{x:number;y:number;z:number}|null,stalk=false){
- if(!t)return false;const c={x:0,y:0,z:0};lungeCentre(px,py,pz,t.x,t.z,c);return inSweep(c,t,stalk,LOCKED_SLACK);}
+const predictC={x:0,y:0,z:0};
+export function predictCatch(px:number,py:number,pz:number,t:{x:number;y:number;z:number}|null,stalk=false,ease=1){
+ if(!t)return false;const c=predictC;lungeCentre(px,py,pz,t.x,t.z,c);return inSweep(c,t,stalk,LOCKED_SLACK*ease);}
 export function nearestUncaught<H extends {x:number;z:number;id:string}>(hits:readonly H[],idOf:(h:H)=>string,homes:readonly {id:string;x:number;z:number}[],got:(id:string)=>boolean,px:number,pz:number):{id:string;x:number;z:number;dist:number;live:boolean}|null{
  let best:{id:string;x:number;z:number;dist:number;live:boolean}|null=null;
  for(const h of hits){const id=idOf(h);if(got(id))continue;const d=Math.hypot(h.x-px,h.z-pz);if(!best||d<best.dist)best={id,x:h.x,z:h.z,dist:d,live:true};}
@@ -171,11 +172,69 @@ export function sweepCentre(px:number,py:number,pz:number,yaw:number,out:{x:numb
 export function inSweep(c:{x:number;y:number;z:number},b:{x:number;y:number;z:number},stalk=false,slack=1){
  const r=NET_SWEEP_RADIUS*(stalk?NET_STALK_REACH:1)*slack;return Math.hypot(b.x-c.x,b.z-c.z)<=r&&Math.abs(b.y-c.y)<=NET_SWEEP_VERTICAL*slack;}
 /** At the hit frame: the bug caught (the locked target if it is still close, else the nearest inside the sweep), or null = a miss. */
-export function swingResult<H extends SwingHit>(hits:readonly H[],c:{x:number;y:number;z:number},locked:string|null,stalk=false):H|null{
- if(locked)for(const h of hits)if(h.id===locked&&inSweep(c,h,stalk,LOCKED_SLACK))return h;
- let best:H|null=null,bd=Infinity;for(const h of hits){if(!inSweep(c,h,stalk))continue;const d=Math.hypot(h.x-c.x,h.z-c.z);if(d<bd){bd=d;best=h;}}
+export function swingResult<H extends SwingHit>(hits:readonly H[],c:{x:number;y:number;z:number},locked:string|null,stalk=false,ease=1):H|null{
+ if(locked)for(const h of hits)if(h.id===locked&&inSweep(c,h,stalk,LOCKED_SLACK*ease))return h;
+ let best:H|null=null,bd=Infinity;for(const h of hits){if(!inSweep(c,h,stalk,ease))continue;const d=Math.hypot(h.x-c.x,h.z-c.z);if(d<bd){bd=d;best=h;}}
  return best;
 }
+// ---- Catch upgrade (Oct 25 2026, docs/BUG_CATCH_UPGRADE_OCT25.md; user: "improve the bug catching job and mechanism ... improve the
+// game play for this"). Pure rules for the gentle difficulty ramp, the aim ring, near-miss hints, the catch streak and the hip jar's
+// tip-in timeline. No coins change: the streak is cheers and sparkles only. ----
+/** Difficulty ramp: the first catches of a shift (and a brand-new squad) get a bigger catch window; rarer species a slightly smaller
+ *  one. The multiplier scales the lock reach (AUTO_AIM_RANGE / TAP_RANGE) and the sweep (inSweep's slack); always in [floor, cap]. */
+export const CATCH_RAMP={early:1.3,steps:4,newSquad:3,newSquadEase:1.15,floor:.9,cap:1.3} as const;
+export const RARITY_EASE:Record<BugRarity,number>={common:1,uncommon:.97,rare:.93,legendary:.9};
+/** The catch window multiplier: `caught` = catches this shift, `squad` = species in the Bug book, `rarity` of the bug (none = 1). */
+export function catchEase(o:{caught:number;squad:number;rarity?:BugRarity|null}){const R=CATCH_RAMP,c=Math.max(0,Math.floor(o.caught)||0);
+ const early=c<R.steps?R.early-(R.early-1)*c/R.steps:1,fresh=(o.squad||0)<R.newSquad?R.newSquadEase:1;
+ return Math.max(R.floor,Math.min(R.cap,Math.max(early,fresh)*(o.rarity?RARITY_EASE[o.rarity]??1:1)));}
+/** Can a swing lock on to a bug this far away (m)? Auto-aim reach, or the screen-tap reach, scaled by the ramp. */
+export const canLock=(dist:number,ease=1,tap=false)=>dist<=(tap?TAP_RANGE:AUTO_AIM_RANGE)*ease;
+/** The aim ring (the bug's halo + the Swing button): 'ready' = a swing now catches it (green), 'near' = a few steps more (gold),
+ *  'far' = keep looking. The ring turns 'near' within AIM_NEAR × the lock reach. */
+export const AIM_NEAR=1.7;
+export type AimState='ready'|'near'|'far';
+export function aimState(px:number,py:number,pz:number,t:{x:number;y:number;z:number}|null,ease=1,stalk=false):AimState{
+ if(!t)return 'far';const d=Math.hypot(t.x-px,t.z-pz);
+ if(canLock(d,ease)&&predictCatch(px,py,pz,t,stalk,ease))return 'ready';
+ return d<=AUTO_AIM_RANGE*ease*AIM_NEAR?'near':'far';}
+/** Near-miss coaching after a swing that caught nothing: how far the nearest bug was (null = none within 10 m) and how high above
+ *  the player's feet. Kid copy, one short line. */
+export type MissKind='close'|'far'|'high'|'none';
+export function missKind(dist:number|null,above:number,ease=1):MissKind{
+ if(dist===null||!(dist<=10))return 'none';
+ if(above>NET_SWEEP_HEIGHT+NET_SWEEP_VERTICAL*LOCKED_SLACK*ease)return 'high';
+ return dist-AUTO_AIM_RANGE*ease<=1.6?'close':'far';}
+/** Steps (≈ 0.75 m each) still to walk before the bug is in reach (at least 1). */
+export const stepsToReach=(dist:number,ease=1)=>Math.max(1,Math.ceil((dist-AUTO_AIM_RANGE*ease)/.75));
+export function missHint(kind:MissKind,steps=1):string{
+ if(kind==='close')return `So close! ${steps<=1?'One more step':`${steps} more steps`} in, then Swing.`;
+ if(kind==='far')return 'Too far away. Walk closer until the ring turns green, then Swing.';
+ if(kind==='high')return 'It is up high! Wait for it to flutter down, then Swing.';
+ return 'No bug close. Tap ➤ to find the nearest one.';}
+/** Catch streak: catches in a row without a miss (a swing with no bug near is only a whoosh: it keeps the streak). Capped so the
+ *  cheer never runs away; no coins (the economy is unchanged), just a cheer, a ding and a bigger sparkle. */
+export const STREAK={cap:5,burst:8,burstPer:2} as const;
+export type SwingOutcome='hit'|'miss'|'whiff';
+export const streakAfter=(s:number,o:SwingOutcome)=>o==='hit'?Math.min(STREAK.cap,(Math.max(0,s)||0)+1):o==='miss'?0:Math.max(0,s)||0;
+/** The cheer for a streak of n (null below 2). Football words: a brace is two goals by one player, a hat-trick three. */
+export function streakCheer(n:number):string|null{
+ if(n<2)return null;if(n===2)return 'Two in a row: a brace!';if(n===3)return 'Hat-trick! Three in a row, like three goals in one match.';
+ return `${Math.min(n,STREAK.cap)} in a row! Calm and patient, like a striker on a roll.`;}
+/** Sparkles for a catch on a streak of n (pooled FX: never more than STREAK.burst + cap × burstPer). */
+export const streakBurst=(n:number)=>STREAK.burst+STREAK.burstPer*Math.max(0,Math.min(STREAK.cap,n)-1);
+/** The hip jar's tip-in after a catch (s): the lid unscrews and lifts, the jar tips toward the net (the bug drops in, a pop), the lid
+ *  goes back on with a screw twist, then a little shake. Pure: `jarTip(t)` gives the lid lift (m), the lid spin (rad), the jar's tip
+ *  (rad) and its shake (rad) into `out` (no allocation per frame); all 0 at t ≤ 0 and t ≥ JAR_TIP.end. */
+export const JAR_TIP={open:.2,tip:.5,close:.72,end:1} as const;
+export type JarTipPose={lift:number;spin:number;tip:number;shake:number;pop:boolean};
+export function jarTip(t:number,out:JarTipPose={lift:0,spin:0,tip:0,shake:0,pop:false}):JarTipPose{const J=JAR_TIP,s=(k:number)=>{const x=Math.max(0,Math.min(1,k));return x*x*(3-2*x);};
+ out.lift=out.spin=out.tip=out.shake=0;out.pop=false;if(!(t>0)||t>=J.end)return out;
+ if(t<J.open){const k=s(t/J.open);out.lift=.12*k;out.spin=-Math.PI*1.5*k;return out;}
+ out.pop=true;
+ if(t<J.tip){const k=(t-J.open)/(J.tip-J.open);out.lift=.12;out.spin=-Math.PI*1.5;out.tip=.55*Math.sin(k*Math.PI);out.pop=k>=.5;return out;}
+ if(t<J.close){const k=s((t-J.tip)/(J.close-J.tip));out.lift=.12*(1-k);out.spin=-Math.PI*1.5*(1-k);return out;}
+ const k=(t-J.close)/(J.end-J.close);out.shake=Math.sin(k*Math.PI*6)*.16*(1-k);return out;}
 /** Where the swing is: 'windup' | 'sweep' | 'recover' | 'done', and the sweep's progress 0..1 (the hoop's arc). */
 export function swingPhase(t:number){
  if(t<SWING.windup)return {phase:'windup' as const,k:t/SWING.windup};

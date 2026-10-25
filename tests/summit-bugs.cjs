@@ -116,7 +116,7 @@ const put=(id,dx,dz,dy=1)=>({id,kind:'bug',x:P0.x+dx,y:P0.y+dy,z:P0.z+dz});
  api.act('net');frames(P0,.8);assert(api.staging);api.skipZoom();assert(!api.zooming,'tap skips to the card');frames(P0,.7);assert(!api.locked&&!api.staging&&rigRoot.parent===world,'and back');frames(P0,1);
  // A miss: nothing within auto-aim range (8 m, all round) → the nearest bug (9 m behind) startles.
  swarm.bugs.forEach(b=>{if(!b.hidden&&b.id!==ids[1])b.hidden=true;if(b.id===ids[1])b.z=P0.z-9;});frames(P0,.1);api.act('net');frames(P0,.7);assert(!api.zooming,'a miss');assert(swarm.startled.includes(ids[1]),'the bug behind startles');
- assert.match(api.getView().active.note,/missed/i);assert(!/missed/i.test(api.getView().active.hint),'notes are a toast, not the pill');
+ /* Oct 25 2026 catch upgrade: the near-miss coaching line (bugCatch.ts missHint) */assert.match(api.getView().active.note,/closer|So close|up high/i);assert(!/closer|So close/i.test(api.getView().active.hint),'notes are a toast, not the pill');
  // Tap near a bug on screen swings at it (even 5 m away: the lunge).
  frames(P0,.7);swarm.bugs.forEach(b=>{b.hidden=b.id!==ids[2];});const b2=swarm.bugs.find(b=>b.id===ids[2]);cam.updateMatrixWorld();const v=new T.Vector3(b2.x,b2.y,b2.z).project(cam);
  assert.equal(api.tapSwing(v.x+.05,v.y,cam),true,'tap near the bug swings');frames(P0,.7);assert(api.zooming,'and catches it');api.skipZoom();frames(P0,.7);assert(!api.staging);

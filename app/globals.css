@@ -748,6 +748,10 @@ html[data-bug-bar-on] .hud-stack{top:calc(var(--island-hud-row-top) + var(--isla
 .travel-actions .job-action svg{width:24px;height:24px;flex:none;}
 .travel-actions .job-action small{display:block;margin:0;max-width:100%;font:700 9px/1.05 system-ui;letter-spacing:0;color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .travel-actions .job-action[aria-disabled=true]{opacity:.5;filter:saturate(.4);}
+/* Bug squad aim ring (Oct 25 2026 catch upgrade): Swing glows green while a swing now would catch the bug; a calm pulse, none with reduced motion. */
+.travel-actions .job-action[data-job-ready]{box-shadow:0 0 0 3px #5fdc83,0 0 14px 2px rgba(95,220,131,.55);animation:job-ready-pulse 1.1s ease-in-out infinite;}
+@keyframes job-ready-pulse{50%{box-shadow:0 0 0 4px #7ef0a0,0 0 20px 4px rgba(95,220,131,.7);}}
+@media (prefers-reduced-motion:reduce){.travel-actions .job-action[data-job-ready]{animation:none;}}
 .town-app[data-job-camera] .travel-actions[data-job-buttons],.town-app[data-job-camera] .travel-actions[data-job-buttons] .touch-actions{visibility:visible;pointer-events:auto;}
 .town-app[data-job-camera] .travel-actions[data-job-buttons] .minimap-toggle{visibility:hidden;pointer-events:none;}
 /* Wall rebounds: points to the off-screen shooting circle (placed on the HUD tick by Town.tsx). */

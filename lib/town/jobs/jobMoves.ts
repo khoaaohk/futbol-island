@@ -17,7 +17,9 @@ import type {JobDef} from './jobCatalog';
 
 // ---------------- Buttons ----------------
 /** `slot`: where it sits in the default cluster (shoot = the big primary, juggle, ride). `key`: its desktop key. */
-export type JobButton={slot:'shoot'|'juggle'|'ride'|'extra';key:'Space'|'J'|'R'|'Q'|'E';id:string;label:string;icon:string;hold?:boolean;enabled:boolean};
+export type JobButton={slot:'shoot'|'juggle'|'ride'|'extra';key:'Space'|'J'|'R'|'Q'|'E';id:string;label:string;icon:string;hold?:boolean;enabled:boolean;
+ /** Bug squad (Oct 25 2026 catch upgrade): a swing now would catch the bug (the aim ring is green): the button glows. */
+ ready?:boolean};
 type SlotDef={ids:string[];label:string;icon:string|Record<string,string>};
 const SLOT_KEYS=[['shoot','Space'],['juggle','J'],['ride','R'],['extra','E']] as const;
 /** Each job's action slots (index 0 = the primary button). Wall rebounds is a football drill: it keeps Juggle / Shoot. */
@@ -73,7 +75,7 @@ export type JobPose={kind:JobPoseKind;progress:number;tug?:number;upper?:boolean
  basket?:boolean;
  /** Held poses at a place (the root being pulled, the leaf pile, the pump): face it and step up to it. */
  target?:{x:number;z:number}};
-export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:.62,netcatch:.9,jarcup:.62,jarcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
+export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:1,netcatch:.9,jarcup:1,jarcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
 /** Which one-shot a job event plays (and at what: `spot` = a target index, `item` = the event's x/z, `deliver` = the drop-off). */
 export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'|'item'|'deliver';basket?:boolean}|null{
  const t=e.type;

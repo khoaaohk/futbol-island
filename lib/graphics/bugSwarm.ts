@@ -156,7 +156,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    if(d>WILD_BUG_RANGE.SIM_M&&b.mode!==Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
    const near=d<WILD_BUG_RANGE.NEAR_M,step=near?dt:farStep?fdt:0;
    if(pinned&&pinned.sl===sl){const a=pinned.at;pinned.t+=dt;b.x=a.x;b.y=a.y;b.z=a.z;b.yaw+=Math.sin(pinned.t*14)*.08;b.roll=Math.sin(pinned.t*19)*.35;b.pitch=Math.sin(pinned.t*11)*.25;b.fade=1;}
-   else if(sl.holdT>0){sl.holdT-=dt;b.vx=b.vy=b.vz=0;}
+   else if(sl.holdT>0){sl.holdT-=dt;b.vx=b.vy=b.vz=0;/* Oct 25 2026 (catch upgrade): the locked bug notices the net, a nervous little tremble (a roll and pitch, never a move: it stays fair to catch) */if(!f.reduced){b.roll=Math.sin(sl.holdT*38)*.22;b.pitch=Math.sin(sl.holdT*29)*.12;}}
    else if(step>0&&stepBug(b,step,ctx))flutter(sl);
    if(b.mode===Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
    if(sl.spawnT>=0){sl.spawnT+=dt;if(sl.spawnT>2.5)sl.spawnT=-1;}

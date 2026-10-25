@@ -66,11 +66,23 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
  const lastMid=new T.Vector3(),sx=new T.Vector3(),sy=new T.Vector3(),sz=new T.Vector3();
  const bx=new T.Vector3(),by=new T.Vector3(),bz=new T.Vector3(),pos=new T.Vector3(),tmpV=new T.Vector3(),hand=new T.Vector3(),mid=new T.Vector3();
  /** Swing angle (rad from straight ahead, + = to the player's right) and hoop height (m above the hands) at swing time t. */
- function swingAim(t:number){const s=swingPhase(t);
-  if(s.phase==='windup'){const e=s.k*s.k*(3-2*s.k);return {a:.4+e*1.6,h:.55+e*.75};}
-  if(s.phase==='sweep'){const e=s.k*s.k*(3-2*s.k);return {a:2-e*3.4,h:1.3-Math.sin(s.k*Math.PI)*1.25-e*.25};}
-  if(s.phase==='recover'){const e=s.k;return {a:-1.4+e*1.5,h:.05+e*.5};}
-  return {a:.1,h:.55};}
+ /* Oct 25 2026 (catch upgrade, docs/BUG_CATCH_UPGRADE_OCT25.md; user: "add more detail to the movements of catching"): the swing
+  * reads in phases. Ready: the hoop dips a little (the knees bend) before it rises. Wind-up: up and back over the right shoulder,
+  * easing into a short cocked hold at the top. Sweep: across the front, low through the hit frame (the swoosh trail). Then the outcome (outcome()):
+  * a catch FLICKS the hoop up and over (the bag twists shut over the rim), a miss FOLLOWS THROUGH further across with a wobble
+  * and recovers. No allocation: one reused result. */
+ const aimOut={a:0,h:0};let outcomeKind:'hit'|'miss'|null=null;
+ function swingAim(t:number){const s=swingPhase(t),o=aimOut;
+  if(s.phase==='windup'){const dip=Math.sin(Math.min(1,s.k/.35)*Math.PI)*(s.k<.35?1:0),u=Math.max(0,(s.k-.15)/.85),e=u*u*(3-2*u),cock=1-(1-e)*(1-e);
+   o.a=.4+cock*1.6;o.h=.55-dip*.18+cock*.75;return o;}
+  if(s.phase==='sweep'){const e=s.k*s.k*(3-2*s.k);const lo=Math.min(1,s.k/.6),dn=lo*lo*(3-2*lo);o.a=2-e*3.4;o.h=1.3-dn*1.25;return o;}/* low through the hit frame, ends where the recovery starts (the old arc jumped 1 m) */
+  if(s.phase==='recover'){const e=s.k*s.k*(3-2*s.k);
+   if(outcomeKind==='hit'){// the flick: the hoop swings up and over to the front, raised high
+    const up=Math.sin(Math.min(1,s.k/.6)*Math.PI*.5);o.a=-1.4+e*1.5;o.h=.05+up*1.35-(s.k>.6?(s.k-.6)/.4*.85:0);return o;}
+   if(outcomeKind==='miss'){// the follow-through overshoots across the body, a little wobble, then back to the carry
+    const over=Math.sin(Math.min(1,s.k/.45)*Math.PI)*.45,wob=Math.sin(s.k*Math.PI*3)*.12*(1-s.k);o.a=-1.4-over+e*1.5+wob;o.h=.05-over*.25+e*.5;return o;}
+   o.a=-1.4+e*1.5;o.h=.05+e*.5;return o;}
+  o.a=.1;o.h=.55;return o;}
  const api={group,swoosh,bag,bagPivot,
   /** Lay the net out in both hands: `l` / `r` = the hand points (world), facing `yaw` (rad, 0 = +z). The pole runs through both
    *  hands (their midpoint, along the hand-to-hand line blended with the carry / swing direction), so neither hand floats off it.
@@ -133,6 +145,10 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
   poleLine(o:{x:number;y:number;z:number},d:{x:number;y:number;z:number}){const e=group.matrix.elements;o.x=e[12];o.y=e[13];o.z=e[14];d.x=e[4];d.y=e[5];d.z=e[6];},
   /** Close the bag over the catch (true) or open it again (false). */
   close(on:boolean){flipWant=on?1:0;},
+  /** The swing's outcome for its recovery (set at the hit frame; null = none yet / reset). A miss also kicks the bag's spring (the
+   *  empty net shakes); a hit closes the bag with the flick. */
+  outcome(kind:'hit'|'miss'|null){outcomeKind=kind;if(kind==='miss')lagV+=4.5;if(kind==='hit')flipWant=1;},
+  get outcomeKind(){return outcomeKind;},
   /** World point in the middle of the bag (where a caught bug wiggles). */
   bagCentre(out:{x:number;y:number;z:number}){return api.bagPoint(.5,out);},
   /** World point `k` of the way down the bag's middle (0 = the hoop's centre, 1 = the bottom of the bag), following the bag's lag
@@ -146,7 +162,7 @@ export function createBugNet(own:<X extends {dispose:()=>void}>(x:X)=>X,night:bo
    *  (bugSwoosh.ts: additive glow at Night, a warm normal-blended stroke on the pale backdrops where additive light vanishes). */
   stageLook(look:'day'|'sunset'|'night'|false){trail.setLook(night||look==='night'?'night':look==='day'?'stage-day':look==='sunset'?'stage-sunset':'island');},
   trail,
-  reset(){lag=lagV=flip=flipWant=0;lastA=0;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;trail.clear();},
+  reset(){lag=lagV=flip=flipWant=0;lastA=0;outcomeKind=null;surge=surgeV=lastVf=0;haveMid=false;follow=1;grip=NET_GRIP_BY_MODE.carry;trail.clear();},
   get swingTime(){return SWING.end;},
  };
  return api;

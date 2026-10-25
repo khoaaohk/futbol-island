@@ -36,9 +36,11 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  // ---- Bug squad catching (Oct 20 2026, catching lane: "the net needs to have a swing") ----
  // Net swing, both hands on the pole: wind-up (torso turned, net raised up and back over the right shoulder, weight on the back
  // foot), the sweep across the front (torso unwinds, arms reach forward and low, a step in: the hit frame is ~0.48), follow-through.
- netswing:[[0,{al:[-.9,.15,-.6],ar:[-1,.05,-.5]}],[.26,{py:.84,pz:-.04,tx:-.12,ty:-.55,hx:-.15,fl:[.12,.07],fr:[-.22,.07],al:[-2.35,.35,-.9],ar:[-2.55,.2,-.7]}],
+ // Oct 25 2026 (catch upgrade): a READY key (knees bend, a small crouch and turn before the wind-up) and a follow-through key
+ // (the weight still forward, settling back), and the pose now lasts about the net's own swing (POSE_TIME 1 s, the hit ~0.5).
+ netswing:[[0,{al:[-.9,.15,-.6],ar:[-1,.05,-.5]}],[.1,{py:.8,pz:-.02,tx:.12,ty:-.2,hx:.05,fl:[.08,.07],fr:[-.12,.07],al:[-1.2,.2,-.7],ar:[-1.3,.1,-.6]}],[.26,{py:.84,pz:-.04,tx:-.12,ty:-.55,hx:-.15,fl:[.12,.07],fr:[-.22,.07],al:[-2.35,.35,-.9],ar:[-2.55,.2,-.7]}],
   [.48,{py:.8,pz:.06,tx:.32,ty:.1,hx:.2,fl:[.24,.07],fr:[-.14,.07],al:[-1.35,.12,-.25],ar:[-1.3,.02,-.2]}],
-  [.68,{py:.79,pz:.08,tx:.38,ty:.55,hx:.25,fl:[.24,.07],fr:[-.14,.07],al:[-1,.05,-.3],ar:[-.95,-.15,-.35]}],[1,{tx:.1,ty:.15,al:[-.9,.15,-.6],ar:[-1,.05,-.5]}]],
+  [.68,{py:.79,pz:.08,tx:.38,ty:.55,hx:.25,fl:[.24,.07],fr:[-.14,.07],al:[-1,.05,-.3],ar:[-.95,-.15,-.35]}],[.84,{py:.82,pz:.04,tx:.22,ty:.35,hx:.15,fl:[.16,.07],fr:[-.1,.07],al:[-.95,.1,-.45],ar:[-.95,-.05,-.45]}],[1,{tx:.1,ty:.15,al:[-.9,.15,-.6],ar:[-1,.05,-.5]}]],
  // The firefly jar's Cup (Oct 21 2026): the body for the scoop (both hands are solved onto the jar by player.ts, jarGrip below):
  // crouch and turn to the right with the jar low, rise up on the toes as it sweeps up and over the firefly, then settle.
  jarcup:[[0,{}],[.26,{py:.76,pz:-.02,tx:.35,ty:-.4,hx:.15,fl:[.14,.07],fr:[-.2,.07],al:[-.6,.15,-.9],ar:[-.5,.1,-.9]}],

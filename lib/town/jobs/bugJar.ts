@@ -24,6 +24,8 @@ export const JAR_RADIUS=.115;
 export const JAR_HEIGHT=.25;
 /** Lid hinge angle when open (rad, swung back over the hinge). */
 export const JAR_LID_OPEN=-2.1;
+/** The lid's screw twist (s, 1.5 turns) after it snaps shut, and the little shake after it is tight (s). */
+export const JAR_SCREW_S=.35,JAR_SHAKE_S=.45;
 const R=JAR_RADIUS,H=JAR_HEIGHT;
 
 export function createBugJar(own:<X extends {dispose:()=>void}>(x:X)=>X){
@@ -54,7 +56,10 @@ export function createBugJar(own:<X extends {dispose:()=>void}>(x:X)=>X){
   {geometry:k(new T.CircleGeometry(.008,6)),matrix:m(0,.0305,R+.05,-Math.PI/2,0,0),color:'#3b0f0c'},
  ]));
  for(const g of tmp)g.dispose();
- const lid=new T.Mesh(lidG,opaqueMat);lid.name='job-jar-lid';lid.frustumCulled=false;
+ // Oct 25 2026 (catch upgrade): the lid screws on and off. Its geometry is centred on its own axis (translated back by R) and it
+ // sits R in front of the hinge, so lid.rotation.y spins it in place (the screw twist) while the hinge swings it open / shut.
+ lidG.translate(0,0,-R);
+ const lid=new T.Mesh(lidG,opaqueMat);lid.name='job-jar-lid';lid.frustumCulled=false;lid.position.set(0,0,R);
  const lidHinge=new T.Group();lidHinge.position.set(0,H/2,-R);lidHinge.add(lid);
  // The glow inside: one additive camera-facing sprite (a radial falloff in the shader, no texture, no light).
  const glowMat=own(new T.ShaderMaterial({transparent:true,depthWrite:false,blending:T.AdditiveBlending,uniforms:{uA:{value:0}},
@@ -63,18 +68,25 @@ export function createBugJar(own:<X extends {dispose:()=>void}>(x:X)=>X){
  const glowG=own(new T.PlaneGeometry(1,1));const glow=new T.Mesh(glowG,glowMat);glow.name='job-jar-glow';glow.frustumCulled=false;glow.scale.setScalar(.5);glow.visible=false;glow.renderOrder=3;
  group.add(glass,trim,lidHinge,glow);
  const trail=createSwoosh(own,.8,1.2,Math.PI*1.1,'job-jar-swoosh'),swoosh=trail.mesh;trail.setLook('night');
- let lidA=JAR_LID_OPEN,lidV=0,flipWant=0,tilt=0,fill=0,haveYaw=false,lastYaw=0,sway=0,swayV=0,clock=0;
+ let lidA=JAR_LID_OPEN,lidV=0,flipWant=0,tilt=0,fill=0,haveYaw=false,lastYaw=0,sway=0,swayV=0,clock=0,screw=0,shake=0;let outcomeKind:'hit'|'miss'|null=null;
  const q=new T.Quaternion(),e=new T.Euler(0,0,0,'YXZ'),one=new T.Vector3(1,1,1),pos=new T.Vector3(),tmpV=new T.Vector3(),sx=new T.Vector3(),sy=new T.Vector3(),sz=new T.Vector3();
  /** The jar's forward tilt (rad, + = the mouth tips forward) through the cup: lowered with the mouth back a little in the wind-up,
   *  swept up and over until the mouth points forward and down (cupping the firefly), then righted as the lid snaps on. */
  function cupTilt(t:number){const s=swingPhase(t),e2=s.k*s.k*(3-2*s.k);
   if(s.phase==='windup')return -.35*e2;if(s.phase==='sweep')return -.35+2.25*e2;if(s.phase==='recover')return 1.9*(1-e2);return 0;}
- function springLid(dt:number,reduced:boolean){const target=flipWant>.5?0:JAR_LID_OPEN;
-  if(reduced||dt<=0){lidA=target;lidV=0;}else{const h=Math.min(dt,1/30);lidV+=((target-lidA)*420-lidV*22)*h;lidA+=lidV*h;if(lidA>.12){lidA=.12;lidV=-Math.abs(lidV)*.3;}}
-  lidHinge.rotation.x=lidA;}
+ /** The lid: closing, the hinge snaps shut first, then the lid screws on (1.5 turns over JAR_SCREW_S) and the jar gives a little
+  *  shake (the firefly inside bumps about); opening, it unscrews first, then the hinge swings back. Reduced motion: no spin, no shake. */
+ function springLid(dt:number,reduced:boolean){const closing=flipWant>.5,target=closing||screw>.02?0:JAR_LID_OPEN;
+  if(reduced||dt<=0){lidA=target;lidV=0;screw=closing?1:0;shake=0;}else{const h=Math.min(dt,1/30);lidV+=((target-lidA)*420-lidV*22)*h;lidA+=lidV*h;if(lidA>.12){lidA=.12;lidV=-Math.abs(lidV)*.3;}
+   const was=screw;if(closing&&lidA>-.2)screw=Math.min(1,screw+dt/JAR_SCREW_S);else if(!closing)screw=Math.max(0,screw-dt/(JAR_SCREW_S*.8));
+   if(was<1&&screw>=1)shake=JAR_SHAKE_S;if(shake>0)shake=Math.max(0,shake-dt);}
+  lidHinge.rotation.x=lidA;lid.rotation.y=screw*Math.PI*3;}
  function place(yaw:number,dt:number,reduced:boolean){
-  e.set(tilt,yaw,sway);q.setFromEuler(e);group.matrix.compose(pos,q,one);group.matrixWorldNeedsUpdate=true;springLid(dt,reduced);
-  clock+=dt;glow.visible=fill>0;if(fill>0){const p=reduced?1:.85+.15*Math.sin(clock*5.3);glowMat.uniforms.uA.value=Math.min(1,.45+.55*fill)*p;glow.scale.setScalar(.34+.22*fill);}
+  const sk=shake>0?shake/JAR_SHAKE_S:0;
+  e.set(tilt+Math.sin(sk*Math.PI*7)*.06*sk,yaw,sway+Math.sin(sk*Math.PI*9)*.14*sk);q.setFromEuler(e);group.matrix.compose(pos,q,one);group.matrixWorldNeedsUpdate=true;springLid(dt,reduced);
+  clock+=dt;glow.visible=fill>0;if(fill>0){const p=reduced?1:.85+.15*Math.sin(clock*5.3);glowMat.uniforms.uA.value=Math.min(1,.45+.55*fill)*p;glow.scale.setScalar(.34+.22*fill);
+   // The firefly flutters about inside the glass (a small Lissajous loop, bigger in the shake): it is alive in there, not a lamp.
+   const f=reduced?0:1+2*sk;glow.position.set(Math.sin(clock*7.3)*.025*f,Math.sin(clock*9.7)*.035*f-.01,Math.cos(clock*6.1)*.025*f);}
   glassMat.emissiveIntensity=fill>0?(.25+.45*fill)*(reduced?1:.85+.15*Math.sin(clock*5.3)):0;}
  const api={group,swoosh,bag:glass,bagPivot:lidHinge,kind:'jar' as const,
   /** Both hands hold the jar at its sides: the jar sits at their midpoint, upright and facing `yaw`, tipped by the cup. Same
@@ -110,9 +122,14 @@ export function createBugJar(own:<X extends {dispose:()=>void}>(x:X)=>X){
   setFill(k:number){fill=Math.max(0,Math.min(1,k));},
   get fill(){return fill;},
   get lidAngle(){return lidA;},
+  /** 0 = unscrewed … 1 = screwed tight; the shake left (s). */
+  get screw(){return screw;},get shaking(){return shake;},
+  /** The cup's outcome (as the net's): a miss wobbles the empty jar, a catch snaps the lid on (screw, shake) until the cup ends. */
+  outcome(kind:'hit'|'miss'|null){outcomeKind=kind;if(kind==='miss')swayV+=5;if(kind==='hit')flipWant=1;},
+  get outcomeKind(){return outcomeKind;},
   stageLook(_look:'day'|'sunset'|'night'|false){trail.setLook('night');},
   trail,
-  reset(){lidA=JAR_LID_OPEN;lidV=0;flipWant=0;tilt=0;sway=swayV=0;haveYaw=false;swoosh.visible=false;},
+  reset(){lidA=JAR_LID_OPEN;lidV=0;flipWant=0;screw=0;shake=0;outcomeKind=null;tilt=0;sway=swayV=0;haveYaw=false;swoosh.visible=false;},
   get swingTime(){return SWING.end;},
  };
  return api;

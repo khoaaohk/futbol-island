@@ -164,6 +164,13 @@
 .chipMain{display:flex;align-items:center;gap:10px;min-height:var(--btn-height,44px);min-width:0;padding:0 4px;border:0;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .chipMain b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:IslandBrush,sans-serif;font-weight:400;font-size:18px;line-height:1.1}
 .chipMain em{flex:none;padding:3px 9px;border-radius:12px;background:#e6efd0;color:#3c6a45;font-style:normal;font-family:IslandBrush,sans-serif;font-weight:400;font-size:18px;line-height:1}
+/* Oct 25 2026 (catch upgrade): today's jar fill meter, a thin bar under the pill's title (and a wider one in the open panel). */
+.chipMain{position:relative}
+.jarMeter,.jarMeterWide{display:block;height:4px;border-radius:2px;background:rgba(60,106,69,.18);overflow:hidden;pointer-events:none}
+.jarMeter{position:absolute;left:6px;right:6px;bottom:4px}
+.jarMeterWide{margin-top:4px}
+.jarMeter span,.jarMeterWide span{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#8fd16a,#ffd36c);transition:width .35s ease-out}
+@media (prefers-reduced-motion:reduce){.jarMeter span,.jarMeterWide span{transition:none}}
 .chipMain:focus-visible,.chipStop:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .chipStop{flex:none;display:grid;place-items:center;width:var(--btn-height,44px);height:var(--btn-height,44px);padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-mint);color:var(--btn-ink);
  box-shadow:0 3px 0 var(--btn-mint-edge);font:700 22px/1 var(--btn-font);cursor:pointer;transition:translate .16s,box-shadow .16s}
