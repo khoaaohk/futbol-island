@@ -20,7 +20,7 @@ export default function FieldPathCard({venue,onPlays,onLaunch}:{venue:Pick<Venue
  const format=venue.id==='futsal'?'Futsal':venue.id;
  return <button data-tour="plays" data-field={venue.id} data-field-lesson={target?.lesson.id} className="meet-coach field-learn-card" data-hud-slot="focus" hidden
   aria-label={say?`${venue.name}, ${format} path: ${say.action}, ${say.name}`:`${venue.name}: watch ${format} plays`}
-  onClick={()=>{if(target)launchPathLesson(venue.id,target.lesson,steps,answers);else onPlays();onLaunch?.();}}>
+  onClick={()=>{if(target)launchPathLesson(venue.id,target.lesson,steps,answers,'pitch');else onPlays();onLaunch?.();}}>
   <span>{venue.name.toUpperCase()} · {say?`${format.toUpperCase()} PATH`:'FREE PLAY'}</span>
   <strong>{say?say.action:<>Watch <span className="field-format">{format}</span> plays</>}</strong>
   <span className="field-go" aria-hidden="true">Go <Icon name="arrow"/></span>

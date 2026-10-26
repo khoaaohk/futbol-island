@@ -52,7 +52,7 @@ const none=new Set(),seven=coreOf('7v7');
  assert.match(qlp,/\.\.\.\(path\.openingStory\?\[\{lesson:core\[0\],story:path\.openingStory,index:-1\}\]:\[\]\)/,'the opening story stays on the map as an optional stop');
  assert.match(onb,/label=\{last\?'Explore':'Next'\}/,'onboarding ends on Explore (Oct 6 2026, user)');assert.doesNotMatch(onb,/launchPathLesson/,'Explore drops into the island, no lesson launch');
  assert.match(town,/\{VENUES\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\}/,'Town renders the pitch cards from FieldPathCard');
- assert.match(card2,/pitchCardTarget\(venue\.id,/);assert.match(card2,/if\(target\)launchPathLesson\(venue\.id,target\.lesson,steps,answers\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
+ assert.match(card2,/pitchCardTarget\(venue\.id,/);assert.match(card2,/if\(target\)launchPathLesson\(venue\.id,target\.lesson,steps,answers,'pitch'\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
  assert.match(quests,/<div ref=\{setLandingSlot\} className=\{journey\.landingSlot\}\/>\n <section className=\{journey\.arrival\}/,'the landing slot sits above the hero art');
  assert.match(qlp,/return landingSlot\?createPortal\(landing,landingSlot\):landing;/,'the landing card renders into that slot');
 }
@@ -85,8 +85,8 @@ const none=new Set(),seven=coreOf('7v7');
  // FieldLearning: the pathRequest branch launches through the usual event; Back to Paths stays as the second button.
  const fl=read('components/FieldLearning.tsx'),qr=read('components/QuizReplay.tsx');
  assert.match(fl,/quizEndNext\(format,chosen\.id,/);assert.match(fl,/if\(exit!=='paths'&&pathNext\?\.kind==='lesson'\)\{launchPathLesson\(pathNext\.format,pathNext\.lesson,/);
- assert.match(fl,/secondaryLabel=\{pathNext\?\.kind==='lesson'\|\|pathNext\?\.kind==='ferry'\?'Back to Paths':undefined\}/);
- assert.match(read('lib/paths/pathLaunch.ts'),/window\.dispatchEvent\(new CustomEvent\(FORMAT_PATH_LAUNCH,\{detail:pathLaunchDetail\(/,'Next lesson uses the usual Paths launch event');
+ assert.match(fl,/secondaryLabel=\{pathNext\?\.kind==='lesson'\|\|pathNext\?\.kind==='ferry'\?lessonCloseLabel\(pathRequest,'back'\):undefined\}/);
+ assert.match(read('lib/paths/pathLaunch.ts'),/window\.dispatchEvent\(new CustomEvent\(FORMAT_PATH_LAUNCH,\{detail:withLaunchSource\(pathLaunchDetail\(/,'Next lesson uses the usual Paths launch event');
  assert.match(qr,/data-quiz-secondary onClick=\{onSecondary\}/);
 }
 
