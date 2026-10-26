@@ -6050,3 +6050,10 @@ draw calls of portrait (docs/LANDSCAPE_AUDIT_OCT23.md §4).
 - Per tick, near the lighthouse only (a box test first, nothing elsewhere): a level-aware floor (≤ 3 levels), the rail projection
   (polar sums, module scratch, no allocation) and the stick assist. The hidden-player check marches ≤ 80 samples, only within
   9 m of the tower. Not measured on an iPhone.
+## Futbol Pinball action camera + thumb pads (Oct 26 2026, local, not deployed)
+See `docs/ARCADE_PINBALL_UPGRADE2_OCT26.md`. Added runtime cost: `lib/games/soccerPinballCamera.ts` composes the camera each
+playing frame from scratch vectors (about 10–25 `Vector3.project` calls; a 7-step zoom bisection only on frames where both table
+ends cannot fit). The home framing is solved on resize only. No new draw calls, lights, loops or per-frame DOM writes: the launch
+charge variable is written only when it changes, and the pads update by attribute on press. A settled launch camera reports
+`moving()=false`, so the waiting table still sleeps. Flipper presses add a throttled 5 ms vibrate (Android). Desktop/headless
+emulation only; no iPhone temperature measured.
