@@ -239,6 +239,7 @@ let hiddenN=0,mutedN=0;
 const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
 const onMutedFriends=(s:ReadonlySet<number>)=>{if(s.size>mutedN)countParty('mute');mutedN=s.size;setMutedFriends(s);};
 import {installHudFocusRule} from '@/lib/town/hudFocus';
+import {installBackCloses} from '@/lib/town/backCloses';
 import {typingTarget} from '@/lib/town/typingTarget';import KeepUpCounter from './KeepUpCounter';import {readBallRecord,recordStreak} from '@/lib/konbini/konbiniBall';import {keepUpStep,keepUpLinger} from '@/lib/town/keepUps';// counted keep-ups + the shared best (lib/town/keepUps.ts)
 /** Party door hints on the island: each Konbini, the Museum and the Kit Shop ("2 in the Kit Shop"; docs/multiplayer-rooms-design.md Phases 1, 2 and 4). */
 const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT] as const;
@@ -345,6 +346,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const onJobCardChange=useRef((open:boolean)=>{jobCardOpen.current=open;setJobCardShown(open);wakeLoopRef.current?.();}).current;
   // Door / post prompts never rise into the stack: its bottom edge is --hud-floor (globals.css). One ResizeObserver on the column
   // (it fires only when a piece appears, goes or rewraps), replacing the old per-toast observer and the :has() offset chains.
+  useEffect(()=>installBackCloses(),[]);/* the phone's back button closes the open sheet instead of leaving the island (lib/town/backCloses.ts) */
   useEffect(()=>installHudFocusRule(),[]);/* pointer presses never leave focus on a HUD button, so Space stays the kick (lib/town/hudFocus.ts) */
   useEffect(()=>{const el=hudStackEl,app=el?.closest<HTMLElement>('.town-app');if(!el||!app||typeof ResizeObserver==='undefined')return;
    const publish=()=>{if(el.hidden)return;const top=app.getBoundingClientRect().top,r=el.getBoundingClientRect();app.style.setProperty('--hud-floor',`${Math.round((r.height>0?r.bottom+10:r.top)-top)}px`);};
