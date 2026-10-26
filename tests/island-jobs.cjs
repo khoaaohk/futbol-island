@@ -435,7 +435,7 @@ function environment(shared){
   assert.match(townSrc,/if\(jobButtonsRef\.current\|\|water\.inWater\)\{input\.current\.kick=input\.current\.juggle=false/,'no kicks or juggles while the job buttons are up (or in the sea, Oct 15 2026)');
   assert.match(fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8'),/a\.actions\.length>0&&!a\.buttons/,'no duplicate action buttons in the job panel');
   // Oct 1 2026 (user): a two-row panel that fades to a chip (title · count, tap to open, round Stop) and still announces progress.
-  {const src=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(src,/PANEL_DWELL_MS=3500/);assert.match(src,/aria-label="Stop job"/,'the chip keeps a Stop job control');
+  {const src=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(src,/PANEL_DWELL_MS=3500/);assert.match(src,/aria-label=\{endAsk\?'Tap again to stop the job':'Stop job'\}/,'the chip keeps a Stop job control (asks once when the shift has progress, Oct 25 2026)');
    assert.match(src,/className=\{styles\.srOnly\} aria-live="polite"/,'progress is announced while the panel is a chip');assert.match(src,/holdOpen=[^;]*act0\.gauge/,'a meter keeps the panel open');assert.doesNotMatch(src,/<small>\{active\.role\}<\/small><b>\{active\.title\}/,'no role eyebrow repeating the title');
    const css=fs.readFileSync(path.join(base,'components/IslandJobs.module.css'),'utf8');assert.match(css,/\.chipStop\{[^}]*width:var\(--btn-height,44px\);height:var\(--btn-height,44px\)/,'Stop is a 44px target');assert.match(css,/prefers-reduced-motion:reduce\)\{\.hud\[data-job-panel=fading\]\{transition:none\}/);}}
 
@@ -592,6 +592,15 @@ async function auditRegressions(){
  let tod='day';const timeFor=j=>j.when==='night'?'night':'day';
  const make=()=>S.createJobScene(new T.Scene(),{storage:null,now:()=>Date.parse('2026-09-30T10:00:00'),timeOfDay:()=>tod});
  const frames=(api,p,seconds,hands)=>{for(let t=0;t<seconds-1e-9;t+=DT){api.update(DT,p,null,true,true,false);if(hands&&api.holding)api.holdProps(hands(),hands(),0);}};
+ // Jobs upgrade (Oct 25 2026): walking off warns once near the edge, and leaving says so (it used to end silently); a quick run of
+ // cones fires the cosmetic rhythm streak in the panel line.
+ {const job=C.jobById('cone-setup'),api=make();frames(api,at(job.board),.5);assert.equal(api.start(job.id),true);
+  const edge={x:job.board.x+R.jobAreaSlack(job,job.board.x,job.board.z)-5,z:job.board.z};frames(api,{x:edge.x,y:floor(edge.x,edge.z),z:edge.z},.2);
+  assert.equal(api.getView().active?.hint,R.JOB_AREA_WARN_NOTE,'near the edge: a warning, the job still runs');
+  frames(api,{x:edge.x+8,y:floor(edge.x+8,edge.z),z:edge.z},.1);const v=api.getView();assert.equal(api.run,null,'left the area: stopped');assert.equal(v.ended?.title,'Job stopped');assert.match(v.ended.text,/walked away from Club Grounds/);
+  const api2=make();frames(api2,at(job.board),.5);assert.equal(api2.start(job.id),true);let seen='';
+  for(let i=0;i<3;i++){const t=job.targets[i];frames(api2,at(t),.1);api2.act('place');frames(api2,at(t),.05);if(/Quick feet/.test(api2.getView().active?.hint??''))seen=api2.getView().active.hint;}
+  assert.match(seen,/^Quick feet! 3 in a row/,'three cones in quick succession: the streak line');assert.equal(api2.run.got.filter(Boolean).length,3,'the streak changes nothing in the run');}
  // A2: a job runs, the player walks to another job's sign inside its area: no offer, `other` names it, start() refuses.
  {const pairs=[];for(const a of C.JOBS)for(const b of C.JOBS)if(a!==b&&!R.outsideJobArea(a,b.board.x,b.board.z))pairs.push([a,b]);
   assert(pairs.length>0,'some signs sit inside another job\'s area (Wall rebounds / Offside)');

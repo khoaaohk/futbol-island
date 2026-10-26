@@ -28,6 +28,7 @@ import {useFuel} from '@/lib/town/fuelStore';
 import {FruitArt} from './PocketArt';
 import {OPEN_MARKET_STAND} from './FishingHost';
 import styles from './IslandJobs.module.css';
+import {parLine,jobPar} from '@/lib/town/jobs/jobCoach';
 import dynamic from 'next/dynamic';
 import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib/town/jobs/bugBook';
 import {countBugStory} from '@/lib/analytics/summitEvents';
@@ -151,10 +152,13 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   const out=setTimeout(()=>setCardOut(true),7000),gone=setTimeout(()=>setBugCard(null),7400);return()=>{clearTimeout(out);clearTimeout(gone);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[view.caught?.nonce,view.zooming]);
- useEffect(()=>{const e=view.ended;if(e)setToast({title:'Bug squad ended',detail:e.text.replace(/^Bug squad ended: /,''),merge:'bug-ended'});
+ useEffect(()=>{const e=view.ended;if(e)setToast({title:e.title??'Bug squad ended',detail:e.text.replace(/^Bug squad ended: /,''),merge:e.title?'job-ended':'bug-ended'});
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[view.ended?.nonce]);
  useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
+ /** Jobs upgrade (Oct 25 2026): Stop job asks once (tap again within 3.5 s) when the shift has progress, so a stray tap on the
+  *  round × never throws away a half-done job; with nothing done yet it stops at once. */
+ const stopJob=()=>{const v=view.active;if(v&&v.value>0&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
  const endJob=()=>{const r=runtime?.run;if(r&&r.def.swing&&r.got.some(Boolean)&&!endAsk){setEndAsk(true);return;}setEndAsk(false);runtime?.quit();};
  // The action cluster's End button (Town.tsx, Oct 21 2026) asks through the same two-tap confirm, and mirrors its state.
  const endRef=useRef(endJob);useEffect(()=>{endRef.current=endJob;});
@@ -227,11 +231,13 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    <span className={styles.srOnly} aria-live="polite">{`${unit} ${count}. ${phaseText()}`}</span>
    {chip?<>
     <button type="button" className={styles.chipMain} aria-expanded={false} aria-label={`Show the job: ${active.title}, ${unit} ${a.value} of ${a.total}`} onClick={()=>setPeek(n=>n+1)}>{tip?<b data-bug-tip>{a.set==='fireflies'?BUG_TIP_NIGHT:BUG_TIP}</b>:<b>{active.title}</b>}{!tip&&<em data-job-count={a.value}>{count}</em>}{a.squad&&!tip&&<i className={styles.jarMeter} data-jar-meter={jarPct} aria-hidden="true"><span style={{width:`${jarPct}%`}}/></i>}</button>
+    {!a.squad&&a.total>0&&<span className={styles.meter} data-chip data-job-meter={Math.round(a.value/a.total*100)} aria-hidden="true"><i style={{width:`${Math.min(100,a.value/a.total*100)}%`}}/></span>}
     {a.guide&&<button type="button" className={styles.chipStop} data-bug-hint data-on={a.guide.on||undefined} aria-label={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} title={a.set==='fireflies'?'Show nearest firefly':'Show nearest bug'} disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}><span aria-hidden="true">➤</span></button>}
     {a.squad?<button type="button" className={styles.chipStop} data-bug-end data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to end the Bug squad job':'End job'} title="End job" onClick={endJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>
-    :<button type="button" className={styles.chipStop} aria-label="Stop job" title="Stop job" onClick={()=>runtime?.quit()}><span aria-hidden="true">×</span></button>}
+    :<button type="button" className={styles.chipStop} data-job-end={endAsk||undefined} aria-label={endAsk?'Tap again to stop the job':'Stop job'} title="Stop job" onClick={stopJob}><span aria-hidden="true">{endAsk?'?':'×'}</span></button>}
    </>:<>
     <div className={styles.head} title={`${active.role} · ${unit}`} onClick={a.squad?()=>setPill('chip'):undefined}><b>{active.title}</b><em key={a.value} className={a.value>0?styles.tick:undefined} data-job-count={a.value} aria-hidden="true">{count}</em></div>
+    {!a.squad&&a.total>0&&<span className={styles.meter} data-job-meter={Math.round(a.value/a.total*100)} aria-hidden="true"><i style={{width:`${Math.min(100,a.value/a.total*100)}%`}}/></span>}
     <p data-job-hint data-open={hintOpen||undefined} onClick={()=>setHintOpen(o=>!o)}>{phaseText()}</p>
     {a.squad&&<p className={styles.bugMeta} data-bug-shift>Today&apos;s jar {a.phase==='deliver'?a.total:a.value}/{a.total} · squad {a.squad.value}/{a.squad.total}{streak>=2?` · ${streak} in a row`:''}<i className={styles.jarMeterWide} data-jar-meter={jarPct} aria-hidden="true"><span style={{width:`${jarPct}%`}}/></i></p>}
     {(a.guide||netChip)&&<div className={styles.taskActions}>{a.guide&&<button type="button" className={styles.secondary} data-bug-hint disabled={!a.guide.ready&&!a.guide.on} onClick={()=>runtime?.hint()}>{a.set==='fireflies'?'➤ Nearest firefly':'➤ Nearest bug'}</button>}{netChip&&<button type="button" className={styles.secondary} data-bug-net={netChip.id} aria-keyshortcuts="E" disabled={!netChip.enabled} onClick={()=>runtime?.act(netChip.id)}>{netChip.label} (E)</button>}</div>}
@@ -240,7 +246,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
     {/* A job with its own action cluster (jobMoves.ts jobButtons) acts from the Kick / Juggle / Ride buttons instead (Town.tsx):
         no duplicate controls in the panel. Wall rebounds keeps the ball buttons and has no panel actions. */}
     {a.actions.length>0&&!a.buttons&&<div className={styles.taskActions}>{a.actions.map(x=><button key={x.id} type="button" data-job-action={x.id} className={x.primary?styles.primary:styles.secondary} {...jobActionProps(x,id=>runtime?.act(id))}>{x.label}</button>)}</div>}
-    <button type="button" className={styles.stop} data-bug-end={a.squad?true:undefined} data-job-end={endAsk||undefined} onClick={a.squad?endJob:()=>runtime?.quit()}>{a.squad?(endAsk?'Tap again to end the job':'End job'):'Stop job'}</button>
+    <button type="button" className={styles.stop} data-bug-end={a.squad?true:undefined} data-job-end={endAsk||undefined} onClick={a.squad?endJob:stopJob}>{a.squad?(endAsk?'Tap again to end the job':'End job'):endAsk?'Tap again to stop':'Stop job'}</button>
    </>}
   </section>;
    return a.squad?<div ref={barRef} className={styles.pillDock} data-pill-dock data-bug-bar={a.set??'bugs'} data-staged={bugBar(a,view)==='staged'||undefined}>{panelEl}</div>:<HudSlot>{panelEl}</HudSlot>;})()}
@@ -265,6 +271,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
    {pay&&pay.goods.length>0&&<p className={styles.note} data-job-share>{def.kind==='garden'?'Gardener':'Farmer'}&apos;s share, now in your basket: {pay.goods.map(g=>`${g.count} ${(g.count>1?goodById(g.id)?.plural:goodById(g.id)?.name)??g.id}`).join(', ')}. {def.kind==='garden'?'Sell them at Rosa\u2019s market, or eat them for fuel.':'Sell them at the farm stand or at Rosa\u2019s market.'}{pay.goods.reduce((n,g)=>n+g.count,0)<pay.offered.reduce((n,g)=>n+g.count,0)?` Your basket was full, so the ${def.kind==='garden'?'garden':'farmer'} kept the rest.`:''}</p>}
    {pay&&<p className={styles.note}>{pay.bonus?`Includes a +${pay.bonus} first-time bonus. `:''}{pay.message}{pay.credited<pay.coins?' Your Training meter is full for today, so extra jobs pay less. Lessons and hidden balls still pay in full.':''}</p>}
    <p className={styles.note}>Your time {time(payday.seconds)}{newBest?' · personal best!':` · best ${time(payday.best!)}`}</p>
+   {parLine(def.id,payday.seconds)&&<p className={styles.note} data-job-par={payday.seconds<=(jobPar(def.id)??0)||undefined}>{parLine(def.id,payday.seconds)}</p>}
    <div className={styles.actions}><button type="button" className={styles.primary} autoFocus onClick={()=>{setPayday(null);runtime?.dismissDone();}}>Nice!</button><button type="button" className={styles.secondary} onClick={()=>start(def.id)}>Work again</button>{isBugJob(def.id)&&<button type="button" className={styles.secondary} data-job-bugbook onClick={openBugBook}>Bug book</button>}</div>
   </section></HudSlot>;})()}
   {/* The garden line rests in the toast slot; a note replaces it while it shows. */}

@@ -680,3 +680,7 @@ hint and end the bug squad, both night and day time"; "remove the end btn in the
   bar" reports: the pill lived inside the HUD stack, which any calm/covered flag (`stackCovered` in Town.tsx, e.g. a stuck vending
   leaving flag) or a stack-wide CSS rule hides as a whole, taking the count, hint and End with it. Tests: tests/firefly-lessons.cjs,
   tests/bug-pill.cjs; browser: scripts/check-bug-bar-browser.cjs (Day + Night, 1288x717 and 390x844).
+
+## 16. Jobs upgrade: coaching, streaks, par, the finish cheer and the body (25 Oct 2026, local, not deployed)
+
+See docs/JOBS_UPGRADE_OCT25.md: the per-job phone audit, the one-line next step between actions (lib/town/jobs/jobCoach.ts), the progress meter, Stop job asks once, the area warning and "Job stopped" toast, the cosmetic rhythm streak and par time (pay unchanged), the finish cheer, and the reworked rake / marker / carry / pick / cone / hammer / pump / flag poses.

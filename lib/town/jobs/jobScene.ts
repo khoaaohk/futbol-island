@@ -22,7 +22,7 @@ import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP,FIREFLY_LOCAL_WANT} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
 import {countBugCatch,countBugShift,countBugBookComplete,countBugSwing,countBugMiss,countBugHint} from '@/lib/analytics/summitEvents';
-import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
+import {STALK,jobAreaSlack,JOB_AREA_WARN,JOB_AREA_WARN_NOTE,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
 import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
 import {jobButtons,type JobButton,type JobPose} from './jobMoves';
@@ -30,6 +30,7 @@ import {createBuildingGlow} from '@/lib/graphics/buildingGlow';
 import {createJobBadges} from './jobBadges';
 import {readJobLedger} from './jobEconomy';
 import {tapHaptic} from '../haptics';
+import {createJobStreak,streakEvent} from './jobCoach';
 import {OFFSIDE_PITCH,toWorld,actorAt,ballAt,secondLastDefender} from './offsideClips';
 import {createShotCamera} from '../shotCamera';
 import {SUMMIT_PEAK,SUMMIT_CENTER,coastRadius} from '../summitIsle';
@@ -65,7 +66,7 @@ export type JobView={
  /** The last catch, for the story card (IslandJobs): name, role, the "Real football fact" (rotating), NEW, squad progress. */
  caught?:{nonce:number;id:string;kind:'bug'|'firefly';name:string;role:string;/** card title (a firefly: its call) */title:string;/** a firefly's coaching idea (the lesson), else '' */idea:string;story:string;source:string;isNew:boolean;count:number;coins:number;squad:number;squadSize:number;squadComplete:boolean;dup:boolean}|null;
  /** The shift ended by itself (left Summit Isle): a short toast. */
- ended?:{text:string;nonce:number}|null;
+ ended?:{text:string;nonce:number;title?:string}|null;
  garden:string;
  pick:{good:string;nonce:number}|null;
  /** On foot at the Coral Cay farm stand with no job running: produce can be sold here too (same market rules as Rosa's). */
@@ -491,10 +492,16 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
    fx.arc((x,y,z)=>flyer.position.set(x,y,z),from,to,.35,.3,()=>{flyer.visible=false;jobCue('thud');fx.burst(to.x,to.y,to.z,col,5,1,1.2,false,.8);
     // The shift is over once the crate is filled: the empty basket is set down (hidden) rather than carried off.
     if(!run&&gear.basket===b)b.visible=false;});});}
+ /** Jobs upgrade (Oct 25 2026, jobCoach.ts): a rhythm streak milestone. Cosmetic only (a line, a chime, a sparkle, a buzz). */
+ function celebrateStreak(line:string){banner=line;bannerAge=1.6;viewKey='';jobCue('streak');tapHaptic();
+  if(!reducedMotion){fx.burst(lastP.x,lastP.y+1.9,lastP.z,'#ffd36c',6,1.2,1.6,true,.8);fx.burst(lastP.x,lastP.y+1.9,lastP.z,'#fff6c8',4,1,1.8,true,.6);}}
  function applyEvents(ev:JobEvent[]){
   if(!run||!ev.length)return;const def=run.def;
   if(eventListeners.size)for(const e of ev){if(skipJarRelease&&e.type==='deliver')continue;eventListeners.forEach(f=>f(e,def));}
   for(const e of ev){
+   // Rhythm streak: items finished close together (offside: right calls in a row).
+   if(streakEvent(def,e.type)){const h=rhythm.hit(run.seconds);if(h.milestone)celebrateStreak(h.line);}
+   else if(def.kind==='offside'&&e.type==='call'){if(run.right){const h=callStreak.hit(run.seconds);if(h.milestone)celebrateStreak(h.line);}else callStreak.reset();}
    if(def.kind==='garden'){
     if(e.type==='pluck'&&e.index!==undefined){const s=GARDEN_SPOTS[e.index];if(!garden)garden=readGarden();saveGarden(markPicked(garden,s,now()));flyFruit(e.index,true);jobCue(isTreeSpot(s)?'pop':'pick');tapHaptic();cue('fi2-path-cue','path-pop');}
     if(e.type==='unripe'||e.type==='wrong')jobCue('nope');
@@ -632,7 +639,8 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  function update(dt:number,p:{x:number;y:number;z:number},ball:BallState|null,active:boolean,visible:boolean,reduced:boolean){
   if(visible!==sceneryShown){sceneryShown=visible;root.visible=visible;}
   if(!active){return;}
-  lastP={x:p.x,y:p.y,z:p.z};reducedMotion=reduced;lastDt=dt;
+  // Jobs upgrade (Oct 25 2026): written in place (was a new object every frame); a fruit flying to the hand follows the player.
+  lastP.x=p.x;lastP.y=p.y;lastP.z=p.z;reducedMotion=reduced;lastDt=dt;
   if(fx.busy)fx.update(dt);
   if(fading)tickFading(dt);
   // A finished job keeps its props for its last animation (≤ 1.2 s), then disposes them.
@@ -644,7 +652,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // User (Oct 20 2026): "it shouldn't end the job unless I start to enter the water or hit end job": no area radius, no trail, slope or
   // ride rule; only stepping into the sea (Town's water state) or leaving the island another way (zipline, ferry, teleport).
   if(run&&run.def.swing){if(wading){endShift(BUG_WATER_NOTE);return;}if(leftSummit(p.x,p.z)){endShift(BUG_LEFT_NOTE);return;}}
-  else if(run&&outsideJobArea(run.def,p.x,p.z)){quit();return;}
+  else if(run){const slack=jobAreaSlack(run.def,p.x,p.z);
+   // Jobs upgrade (Oct 25 2026): leaving used to end the shift silently. Now a warning near the edge, and a toast if it ends.
+   if(slack<0){const place=run.def.place;quit();setView({ended:{title:'Job stopped',text:`You walked away from ${place}. Go back to the sign to start again.`,nonce:++endedNonce}});return;}
+   if(slack<JOB_AREA_WARN){if(!areaWarned){areaWarned=true;note(JOB_AREA_WARN_NOTE);}}else if(slack>JOB_AREA_WARN+8)areaWarned=false;}
   if(run){
    applyEvents(stepRun(run,p,dt,floor));
    if(run&&run.def.kind==='rebound'&&ball){if(ball.wallPhase==='receive'&&lastWallPhase!=='receive'&&ball.mode==='wall-juggle'&&onReboundWall(ball.wallTarget)){lastWallTarget=ball.wallTarget;applyEvents(reboundEvent(run,'pass'));}lastWallPhase=ball.mode==='wall-juggle'?ball.wallPhase:'';if(ball.mode!=='shot')shotCounted=false;
@@ -1083,7 +1094,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   skipJarRelease=cine&&!!R;try{applyEvents(runAction(r,r.def.work!.deliver!.id));}finally{skipJarRelease=false;}}
  function start(id:string){const def=jobVariant(id,timeOfDay());if(!def||!openNow(def))return false;
   // One job at a time (bug A2): starting another never silently ends the running one. Finish it or tap Stop job first.
-  if(run)return false;quit();banner='';if(props)clearProps();dropFading();setStash={};setFade=1;
+  if(run)return false;quit();banner='';areaWarned=false;rhythm.reset();callStreak.reset();if(props)clearProps();dropFading();setStash={};setFade=1;
   // Garden shift: what is pickable this shift (ripe now, plus spots made ripe for the shift if too few are: never a dead end).
   let ripe:boolean[]|undefined;if(def.kind==='garden'){garden=readGarden();ripe=shiftRipeness(garden,now()).ripe;}
   run=startRun(def,1+Math.floor(now()%100000),ripe);if(def.swing)beginBugShift(run,true);if(def.kind==='garden'&&inGarden)paintGarden();viewKey='';lastShooting=false;lastWallPhase='';shotCounted=false;buildProps(def);refreshBadges();setView({done:null,near:null});offerRing.visible=false;publishActive();return true;}
@@ -1117,7 +1128,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(gear.basket&&(run||gear.basket.visible)){const b=gear.basket;b.visible=true;b.position.set(l.x,l.y-.23,l.z);b.rotation.set(gear.basketTilt,yaw,0);}
   if(gear.marker&&gear.marker.visible){gear.marker.position.set(p.x+fx0*.8,floor(p.x+fx0*.8,p.z+fz0*.8),p.z+fz0*.8);gear.marker.rotation.set(0,yaw-Math.PI/2,0);}
  }
- let banner='',bannerAge=0;
+ let banner='',bannerAge=0,areaWarned=false;const rhythm=createJobStreak(),callStreak=createJobStreak(true);
  /** Where the beacon points now (the nearest goal), for the off-screen edge arrow (Town.tsx); copied, no allocation per frame. */
  const arrowGoal={x:0,z:0};let arrowOn=false;
  function note(text:string){if(!run)return;banner=text;bannerAge=0;viewKey='';publishActive();}

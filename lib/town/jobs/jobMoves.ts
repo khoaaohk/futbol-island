@@ -66,7 +66,7 @@ export const RIDE_WAIT_NOTE='Island jobs are on foot. Your rides wait until the 
 
 // ---------------- Poses ----------------
 /** Rig poses (lib/graphics/player.ts PlayerMotion.job). One-shots run for POSE_TIME seconds; held poses come every frame. */
-export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak'|'netshow'|'jarcarry'|'jarsneak'|'jarcup'|'jarcatch'|'jarshow';
+export type JobPoseKind='gpick'|'reachpick'|'headshake'|'carrybasket'|'tipbasket'|'firsttouch'|'pull'|'pop'|'slip'|'twist'|'nope'|'snip'|'pick'|'rake'|'stuff'|'toss'|'scoop'|'carryball'|'throwin'|'carrystack'|'place'|'push'|'mallet'|'drop'|'take'|'carrycard'|'control'|'flaghold'|'flagup'|'flagdown'|'kneel'|'treeshake'|'treekick'|'netswing'|'netcatch'|'netcarry'|'netsneak'|'netshow'|'jarcarry'|'jarsneak'|'jarcup'|'jarcatch'|'jarshow'|'cheer';
 /** Poses that move only the arms, torso and head: the legs keep walking, dribbling or juggling. */
 export const UPPER_POSES=new Set<JobPoseKind>(['netcarry','netsneak','jarcarry','jarsneak','carrybasket','carryball','carrystack','carrycard','push','flaghold','firsttouch']);
 /** `upper`: only the arms, torso and head (the legs keep walking). */
@@ -75,10 +75,13 @@ export type JobPose={kind:JobPoseKind;progress:number;tug?:number;upper?:boolean
  basket?:boolean;
  /** Held poses at a place (the root being pulled, the leaf pile, the pump): face it and step up to it. */
  target?:{x:number;z:number}};
-export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:1,netcatch:.9,jarcup:1,jarcatch:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
+export const POSE_TIME:Partial<Record<JobPoseKind,number>>={gpick:.85,reachpick:.8,headshake:.9,tipbasket:.6,pop:.6,slip:.5,twist:.5,nope:.4,snip:.3,pick:.42,stuff:.45,toss:.6,scoop:.5,throwin:.7,place:.5,mallet:.42,drop:.45,take:.4,control:.35,firsttouch:.4,flagup:.9,flagdown:.7,treeshake:1,treekick:.8,netswing:1,netcatch:.9,jarcup:1,jarcatch:.9,cheer:.9};// treeshake / treekick: Summit Isle foraging and the tree kick (lib/graphics/fruitTrees.ts), not jobs
 /** Which one-shot a job event plays (and at what: `spot` = a target index, `item` = the event's x/z, `deliver` = the drop-off). */
 export function poseForEvent(def:JobDef,e:JobEvent):{kind:JobPoseKind;at?:'spot'|'item'|'deliver';basket?:boolean}|null{
  const t=e.type;
+ // Jobs upgrade (Oct 25 2026): every finished shift ends with a little hop and a fist pump (it waits for the last action's pose to
+ // finish, createJobMoves.start). The Bug squad ends with its own release cinematic instead.
+ if(t==='done')return def.swing||def.id==='bug-scout'?null:{kind:'cheer'};
  // Garden (shift and free picking, Sep 30 2026): crouch-pick from a bed, reach up on tiptoe into a tree, a look and a head shake
  // at a green one (or one the mix does not need), tip the basket into the crate. `free` picks have no basket in the hand.
  if(def.kind==='garden'){const basket=!e.free;
@@ -126,7 +129,7 @@ export function heldPose(r:JobRun|null,clock:number,sinceStroke:number):JobPose|
 /** Poses that need free hands: the player's own ball is set down beside them first. */
 export const HANDS_POSES=new Set<JobPoseKind>(['gpick','reachpick','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','treeshake','treekick','netswing','jarcup','netcatch','jarcatch']);
 /** Poses that hold the player still (they end quickly, or when the button is released). */
-const STILL_POSES=new Set<JobPoseKind>(['gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick','netswing','jarcup','netcatch','jarcatch']);
+const STILL_POSES=new Set<JobPoseKind>(['cheer','gpick','reachpick','headshake','tipbasket','pull','pop','slip','twist','nope','snip','pick','rake','stuff','toss','scoop','throwin','place','mallet','drop','take','kneel','flagup','flagdown','treeshake','treekick','netswing','jarcup','netcatch','jarcatch']);
 /** How close to its target the character steps for a pose (metres, target centre to feet). */
 const STAND_OFF:Partial<Record<JobPoseKind,number>>={gpick:1,reachpick:.55,headshake:1.1,tipbasket:.85,kneel:.6,rake:1.05,pull:.62,twist:.55,nope:.55,snip:.6,scoop:.55,place:.5,mallet:.75,drop:.8,take:.8,stuff:.6,toss:1.1,treeshake:.9};
 
@@ -159,6 +162,8 @@ export const TREE_KICK={standOff:2.2,ballOff:1.6,back:.9,tBack:.32,tIn:.24,tStri
 type Kick={trunk:P;stand:P;ballAt:P;dir:P;age:number;tA:number;tOut:number;tHome:number;phase:'approach'|'back'|'in'|'strike'|'out'|'home'|'control';from:P3;hit:boolean;onHit:()=>void;reduced:boolean;phaseAge:number};
 export function createJobMoves(){
  let pose:{kind:JobPoseKind;age:number;dur:number;target:P|null;basket:boolean;lead:number;stand:P|null;lean:number}|null=null,kick:Kick|null=null;
+ /** The finish cheer waits here while the last action's pose (the toss into the bin, the last cone) plays out. */
+ let queued:{kind:JobPoseKind;dur:number}|null=null;
  /** The player's own ball set down while the hands work (`origin`: where the player stood). */
  let park:{at:P3;origin:P;returning:number;from:P3|null}|null=null;
  const yawTo=(a:P,b:P)=>Math.atan2(b.x-a.x,b.z-a.z);
@@ -174,6 +179,7 @@ export function createJobMoves(){
   *  there with the body leaning `lean` metres further in. */
  function start(kind:JobPoseKind,p:PlayerIn,target:P|null,floor:(x:number,z:number)=>number,reduced:boolean,ball:P3|null=null,basket=false,reach?:{stand:P;lean:number;lead:number}){
   if(kick&&kind!=='pick')return;const dur=(POSE_TIME[kind]??.4)*(reduced?.6:1);
+  if(kind==='cheer'&&pose&&pose.kind!=='cheer'){queued={kind,dur};return;}
   pose={kind,age:0,dur,target,basket,lead:reach?Math.max(0,reach.lead):0,stand:reach?.stand??null,lean:reach?.lean??0};if(HANDS_POSES.has(kind)&&!pose.lead)parkBall(p,floor,ball);
  }
  /** Kick the tree: set the ball on the line to the trunk, step back, strike it in; `onHit` fires when it meets the trunk. */
@@ -211,7 +217,7 @@ export function createJobMoves(){
   else if(pose){pose.age+=dt;const k=Math.min(1,pose.age/pose.dur);out.pose={kind:pose.kind,progress:k,...(pose.basket?{basket:true}:{})};out.still=STILL_POSES.has(pose.kind);
    if(pose.target){out.facing=yawTo(p,pose.target);out.stand=pose.stand??standFor(pose.kind,p,pose.target);}
    if(pose.stand){out.free=true;out.lean=pose.lean*smooth(Math.min(k/.14,(1-k)/.14));}
-   if(k>=1)pose=null;}
+   if(k>=1){pose=null;if(queued){pose={kind:queued.kind,age:0,dur:queued.dur,target:null,basket:false,lead:0,stand:null,lean:0};queued=null;}}}
   else if(held){out.pose=held;out.still=STILL_POSES.has(held.kind)&&!held.upper;if(HANDS_POSES.has(held.kind))parkBall(p,floor,null);
    if(held.target){out.facing=yawTo(p,held.target);out.stand=standFor(held.kind,p,held.target);}}
   if(park){
@@ -223,10 +229,10 @@ export function createJobMoves(){
   return out;
  }
  /** Job over (done, quit, left the area): drop every pose and give the ball back to the feet at once. */
- function reset(){const had=!!(pose||kick||park);pose=null;kick=null;park=null;return had;}
+ function reset(){const had=!!(pose||kick||park||queued);pose=null;kick=null;park=null;queued=null;return had;}
  /** Job over (bug A9, Sep 30 2026): the ball goes back to the feet and a Kick the tree stops, but a one-shot pose already playing
   *  (the last toss, basket tip, throw-in, cone, hammer blow or snack drop) plays to its end instead of being cut off. */
- function end(){kick=null;park=null;if(pose&&POSE_TIME[pose.kind]===undefined)pose=null;}
+ function end(){kick=null;park=null;if(pose&&POSE_TIME[pose.kind]===undefined){pose=null;if(queued){pose={kind:queued.kind,age:0,dur:queued.dur,target:null,basket:false,lead:0,stand:null,lean:0};queued=null;}}}
  return {start,startKick,update,reset,end,parkBall,
   get busy(){return !!kick||!!pose&&STILL_POSES.has(pose.kind);},get kicking(){return !!kick;},get parked(){return !!park;},get posing(){return pose?.kind??null;}};
 }

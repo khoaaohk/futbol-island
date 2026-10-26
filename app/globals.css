@@ -752,6 +752,11 @@ html[data-bug-bar-on] .hud-stack{top:calc(var(--island-hud-row-top) + var(--isla
 .travel-actions .job-action[data-job-ready]{box-shadow:0 0 0 3px #5fdc83,0 0 14px 2px rgba(95,220,131,.55);animation:job-ready-pulse 1.1s ease-in-out infinite;}
 @keyframes job-ready-pulse{50%{box-shadow:0 0 0 4px #7ef0a0,0 0 20px 4px rgba(95,220,131,.7);}}
 @media (prefers-reduced-motion:reduce){.travel-actions .job-action[data-job-ready]{animation:none;}}
+/* Jobs upgrade (Oct 25 2026): an island-job button that has just become ready (you reached the pile, the peg, the bin) gives two
+   quick pops, so a child sees which button to press now. Island jobs only (not the water or zipline actions); reduced motion: none. */
+.travel-actions[data-job-buttons]:not([data-water-actions]):not([data-zipline-actions]) .job-action:not([aria-disabled=true]){animation:jobReady .42s ease-out 2;}
+@keyframes jobReady{0%{scale:1}45%{scale:1.13}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){.travel-actions .job-action{animation:none!important;}}
 .town-app[data-job-camera] .travel-actions[data-job-buttons],.town-app[data-job-camera] .travel-actions[data-job-buttons] .touch-actions{visibility:visible;pointer-events:auto;}
 .town-app[data-job-camera] .travel-actions[data-job-buttons] .minimap-toggle{visibility:hidden;pointer-events:none;}
 /* Wall rebounds: points to the off-screen shooting circle (placed on the HUD tick by Town.tsx). */
