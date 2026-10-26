@@ -43,11 +43,20 @@ float diveBlobQ(vec2 xz,int i){vec4 sp=uDiveSpots[i];vec2 d=xz-sp.xy;float l=len
  * read + the field read, the depth gradient and a soft static foam line; the clock is held too, so the image is static.
  */
 export const SWASH_PERIOD=5.6,SWELL_LENGTH=5.5;
+/**
+ * Wave sets (Oct 26 2026, shore foam pass: "irregular period, a bigger set every few waves"). The swash clock (in waves) is the
+ * plain t / SWASH_PERIOD warped by a slow sine, so wave gaps drift between ~4.5 s and ~7.5 s (never backwards: the warp's rate is
+ * under the base rate). Its period is WATER_WRAP / 112 = 31.25 s, so the wrap stays seamless. Computed ONCE per frame on the CPU
+ * (uSwashClock): every shader reading it saves its own divide. `waveSet(ci)` in SHORE_GLSL makes every seventh-ish wave a set.
+ */
+export const SWASH_WARP={amp:.22,period:31.25,setEvery:7,setBoost:.34} as const;
+export function swashClock(t:number){return t/SWASH_PERIOD+SWASH_WARP.amp*Math.sin(t*2*Math.PI/SWASH_WARP.period);}
 /** The clock wraps here: a whole number of swash cycles (625) and of every scroll (all rates are multiples of 1/500 per second), so the wrap never jumps. */
 export const WATER_WRAP=3500;
 const empty=new T.DataTexture(new Uint8Array([0,0,0,0]),1,1);empty.needsUpdate=true;
 export const WATER_UNIFORMS={
  uWaterTime:{value:0},
+ /** Waves elapsed (swashClock(uWaterTime)), set with the clock. */uSwashClock:{value:0},
  /** 0..2, see above. */uWaterDetail:{value:2},
  /** 0..1 strength of the shore effects (fades in/out with a fishing session). */uShore:{value:0},
  uShoreTex:{value:empty as T.Texture},
@@ -66,7 +75,7 @@ export function setDiveSpots(spots:readonly {x:number;z:number;radius:number;blo
  for(let i=0;i<DIVE_SLOTS;i++){const s=spots[i];if(s){WATER_UNIFORMS.uDiveSpots.value[i].set(s.x,s.z,s.radius,1);WATER_UNIFORMS.uDiveTint.value[i].set(s.tint);WATER_UNIFORMS.uDiveBlob.value[i].fromArray(diveBlobParams(s.blob));}else WATER_UNIFORMS.uDiveSpots.value[i].w=0;}
 }
 /** Advance the shared water clock. Call once per rendered frame; `still` (reduced motion, static-ambience heat tiers) holds it. */
-export function stepWaterTime(dt:number,still:boolean){if(!still&&dt>0)WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;}
+export function stepWaterTime(dt:number,still:boolean){if(!still&&dt>0){const t=WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;WATER_UNIFORMS.uSwashClock.value=swashClock(t);}}
 export function setWaterDetail(level:number){WATER_UNIFORMS.uWaterDetail.value=level;}
 export function setIsleField(texture:T.Texture|null,box:T.Vector4|null){
  WATER_UNIFORMS.uIsleTex.value=texture??empty;if(box)WATER_UNIFORMS.uIsleBox.value.copy(box);WATER_UNIFORMS.uIsle.value=texture?1:0;
@@ -77,7 +86,7 @@ export function setShore(texture:T.Texture|null,box:T.Vector4|null,strength:numb
 
 /** GLSL shared by the ocean and the shoreline strip. `shoreSample(xz)` returns (signed distance m, noise, noise, beach 1 / hard edge 0). */
 export const SHORE_GLSL=/* glsl */`
-uniform float uWaterTime,uWaterDetail,uShore,uIsle;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
+uniform float uWaterTime,uSwashClock,uWaterDetail,uShore,uIsle;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
 const float SWASH_P=${SWASH_PERIOD.toFixed(2)},SWELL_L=${SWELL_LENGTH.toFixed(2)};
 vec4 shoreSample(vec2 xz){return texture2D(uShoreTex,clamp((xz-uShoreBox.xy)/uShoreBox.zw,0.,1.));}
 /** 0 outside the box, rising to 1 a little inside it (no hard edge where the box ends). */
@@ -88,8 +97,10 @@ vec4 isleSample(vec2 xz){vec2 uv=(xz-uIsleBox.xy)/uIsleBox.zw;vec4 s=texture2D(u
  float inside=uIsle*smoothstep(0.,.03,min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y)));return mix(vec4(40.,.5,.5,1.),s,inside);}
 /** The field the ocean uses: the island's, with the sharper fishing field blended in over its box while fishing. */
 vec4 waterField(vec2 xz){vec4 s=isleSample(xz);if(uShore>0.){float k=uShore*shoreEdge(xz);if(k>0.)s=mix(s,shoreSample(xz),k);}return s;}
-/** Swell phase at signed distance d: crests where fract == 0, travelling toward the shore (d decreasing) once per SWASH_P. */
-float swellPhase(float d,float alongNoise){return fract(d/SWELL_L+uWaterTime/SWASH_P+alongNoise*.35);}
+/** Swell phase at signed distance d: crests where fract == 0, travelling toward the shore (d decreasing) once per wave (uSwashClock). */
+float swellPhase(float d,float alongNoise){return fract(d/SWELL_L+uSwashClock+alongNoise*.35);}
+/** Wave ci's size factor: 1, or up to 1+setBoost for the two waves of a set every ~setEvery waves (the set's start drifts). */
+float waveSet(float ci){float s=fract(ci/${SWASH_WARP.setEvery.toFixed(1)}+.31*waterHash(floor(ci/${SWASH_WARP.setEvery.toFixed(1)})));return 1.+${SWASH_WARP.setBoost.toFixed(2)}*smoothstep(.6,.76,s)*(1.-smoothstep(.9,1.,s));}
 `;
 
 /** Ground counts as land where it stands above this (m over WATER_Y = −0.42): the ocean plane (−0.43) meets it right there, so the
@@ -286,8 +297,8 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
       // crest's strength varies wave to wave and along the shore (14 m sets, blended so nothing seams), it breaks into pieces on the
       // 5 m noise and bends with it (less so close in, where it meets the swash in step), and it fades out at sea and close in.
-      float cyc=swellPhase(d,s.g)+(s.b-.5)*.45*smoothstep(1.,9.,d),ph=fract(cyc),wi=floor(d/SWELL_L+uWaterTime/SWASH_P+s.g*.35+.5);
-      float nb=s.g*4.,fb=floor(nb),wset=mix(waterHash(wi*1.7+fb),waterHash(wi*1.7+fb+1.),smoothstep(0.,1.,nb-fb));
+      float cyc=swellPhase(d,s.g)+(s.b-.5)*.45*smoothstep(1.,9.,d),ph=fract(cyc),wi=floor(d/SWELL_L+uSwashClock+s.g*.35+.5);
+      float nb=s.g*4.,fb=floor(nb),wset=mix(waterHash(wi*1.7+fb),waterHash(wi*1.7+fb+1.),smoothstep(0.,1.,nb-fb))*waveSet(wi);
       crest=smoothstep(.8,1.,ph)+1.-smoothstep(0.,.07,ph);
       float reach=smoothstep(22.,8.,d)*smoothstep(.8,3.5,d)*wset*smoothstep(.3,.62,s.b+.45*wset-.2);
       diffuseColor.rgb+=reach*crest*vec3(.1,.14,.12);
