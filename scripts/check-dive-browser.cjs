@@ -30,7 +30,7 @@ const BEACH=shoreFor(FIRST);
  const browser=await chromium.launch({headless:true,args:['--mute-audio','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'],...(exe?{executablePath:exe}:{})});
  const ctx=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
  const page=await ctx.newPage();const errors=[];
- page.on('pageerror',e=>errors.push('pageerror: '+e.message));page.on('console',m=>{if(m.type()==='error'&&!/ResizeObserver loop|Failed to load resource|404/.test(m.text()))errors.push('console: '+m.text().slice(0,200));});
+ page.on('pageerror',e=>errors.push('pageerror: '+e.message));page.on('console',async m=>{if(m.type()==='error'&&!/ResizeObserver loop|Failed to load resource|404/.test(m.text())){const a=await Promise.all(m.args().map(x=>x.jsonValue().catch(()=>'?')));errors.push('console: '+a.map(String).join(' | ').slice(0,700));}});
  await page.addInitScript(({x,z,yaw})=>{sessionStorage.setItem('fi2-in-game','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-save-deleted-v1','device-specs');
   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x,z,yaw,ride:'walk',flightHeight:0}));},BEACH);
  await page.goto(BASE+'/?from=arcade');
@@ -94,6 +94,13 @@ const BEACH=shoreFor(FIRST);
  await swimTo('hidden-ball');await useFind('hidden-ball');await page.waitForSelector('[data-ball-lesson="dive"][open]',{timeout:5000});await page.waitForTimeout(1500);await shot('dive-7-ball-lesson.png');
  for(let i=0;i<12&&await page.locator('[data-ball-lesson="dive"][open]').count();i++){await page.locator('[data-ball-lesson="dive"] [data-lesson-primary]').tap().catch(()=>{});await page.waitForTimeout(700);}
  console.log('ball lesson closed',!(await page.locator('[data-ball-lesson="dive"][open]').count()));
+ // The first explore ball offers a card choice once the lesson is dismissed (cardRewardTriggers.ts): the breath holds meanwhile; pick one.
+ await page.waitForTimeout(1200);const after=await page.evaluate(()=>[...document.querySelectorAll('dialog[open]')].map(d=>String(d.className).slice(0,40)));
+ console.log('after the lesson',JSON.stringify(after));
+ if(after.length){await shot('dive-8-card-choice.png');const b0=await page.evaluate(()=>window.__fi2.dive.session.state.breath);await page.waitForTimeout(3000);const b1=await page.evaluate(()=>window.__fi2.dive.session.state.breath);
+  console.log('breath while the card choice shows',b0.toFixed(3),'->',b1.toFixed(3));if(b1<b0-.005)throw Error('the breath drains behind the card choice');
+  for(let i=0;i<10&&await page.locator('dialog[open]').count();i++){const p=page.locator('dialog[open] [data-primary], dialog[open] [data-choose]').first();if(await p.count())await p.tap().catch(()=>{});else await page.keyboard.press('Escape');await page.waitForTimeout(1200);}
+  console.log('card choice closed',!(await page.locator('dialog[open]').count()));}
  console.log('saved finds',await page.evaluate(()=>localStorage.getItem('fi2-dive-finds-v1')));
  // Seamless Explore: swim out across the zone's edge past the start point's side (way points round the sunken goal and the chest).
  const steer=async(tx,tz,done,ms)=>{const t0=Date.now();const keys=new Set();const set=async want=>{for(const k of ['w','a','d'])if(want.has(k)!==keys.has(k)){if(want.has(k)){await page.keyboard.down(k);keys.add(k);}else{await page.keyboard.up(k);keys.delete(k);}}};
@@ -105,6 +112,9 @@ const BEACH=shoreFor(FIRST);
  await shot('dive-6-edge-out.png');
  const back=await page.evaluate(()=>({player:window.__fi2.player.root.parent===window.__fi2.scene,actions:[...document.querySelectorAll('[data-job-action]')].filter(b=>!b.closest('[hidden]')).map(b=>b.dataset.jobAction)}));
  console.log('back on the island',JSON.stringify(back));if(!back.player)throw Error('the rig did not come back to the island');
+ // Still under after the edge (the duck-dive goes on): Q comes up, so the zone checks below start at the surface (a duck-diver crossing
+ // into a zone's edge goes straight into its reef instead of showing the prompt).
+ if(await page.evaluate(()=>window.__fi2.water.diveActive)){await page.keyboard.press('q');await page.waitForFunction(()=>!window.__fi2.water.diveActive,null,{timeout:6000});}
  // Every zone: swim in from just outside its patch and wait for its own Explore prompt.
  for(const z of ZONES){await page.evaluate(({x,z})=>window.__fi2.teleport(x,z,0),{x:z.x,z:z.z+z.radius*.4});
   await page.waitForFunction(id=>{const d=window.__fi2.dive,b=document.querySelector('[data-dive-go]');return d.session.state.near?.id===id&&b&&!b.hidden&&b.textContent==='Explore';},z.id,{timeout:10000})
