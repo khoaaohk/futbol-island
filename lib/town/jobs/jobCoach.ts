@@ -76,11 +76,11 @@ export function streakEvent(def:{id:string;kind:string;prop:string;swing?:boolea
 }
 
 // ---- Par time ----
-/** The par for a shift (seconds, rounded to 5): the job's own play estimate (jobEconomy JOB_MINUTES). Null for the Bug squad,
+/** The par for a shift (seconds, rounded to 5): 1.5 times the job's own play estimate, so a child who walks still gets there (jobEconomy JOB_MINUTES). Null for the Bug squad,
  *  whose shift length depends on where the swarm is. */
 export function jobPar(id:string):number|null{
  if(id==='bug-scout')return null;const m=(JOB_MINUTES as Record<string,number>)[id as JobId];if(!m)return null;
- return Math.max(15,Math.round(m*60/5)*5);
+ return Math.max(15,Math.round(m*60*1.5/5)*5);
 }
 /** The payday line for the time against par ('' = no par for this job). */
 export function parLine(id:string,seconds:number):string{

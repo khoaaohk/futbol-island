@@ -59,7 +59,7 @@ for(const j of C.JOBS){if(j.swing)continue;const run=R.startRun(j);R.stepRun(run
 
 // ---- 3. Par times ----
 {assert.equal(K.jobPar('bug-scout'),null);for(const j of C.JOBS){if(j.id==='bug-scout')continue;const p=K.jobPar(j.id);assert(p>=15&&p%5===0,`${j.id}: par ${p}`);}
- const p=K.jobPar('leaf-rake');assert.match(K.parLine('leaf-rake',p-1),/^Under par/);assert.match(K.parLine('leaf-rake',p+30),/^Par is 1:10\. Try it again/);assert.equal(K.parLine('bug-scout',30),'');
+ const p=K.jobPar('leaf-rake');assert.match(K.parLine('leaf-rake',p-1),/^Under par/);assert.match(K.parLine('leaf-rake',p+30),/^Par is 1:50\. Try it again/);assert.equal(K.parLine('bug-scout',30),'');
  const hud=fs.readFileSync(path.join(base,'components/IslandJobs.tsx'),'utf8');assert.match(hud,/parLine\(def\.id,payday\.seconds\)/,'the payday card shows the par');
  assert.match(hud,/const stopJob=\(\)=>\{const v=view\.active;if\(v&&v\.value>0&&!endAsk\)\{setEndAsk\(true\);return;\}/,'Stop job asks once when there is progress');
  assert.match(hud,/data-job-meter=/,'a progress meter');const css=fs.readFileSync(path.join(base,'components/IslandJobs.module.css'),'utf8');assert.match(css,/prefers-reduced-motion:reduce\)\{\.meter i\{transition:none\}/);
