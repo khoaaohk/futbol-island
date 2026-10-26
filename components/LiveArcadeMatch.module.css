@@ -161,3 +161,20 @@
  .root .chain{top:64px;left:12px;font-size:11px}
 }
 .root:not([data-phase=playing]) .touchControls{visibility:hidden;pointer-events:none}
+/* Portrait phones, controls clear of Gold's goal mouth (Oct 26 2026, owner). Gold's own goal sits at the bottom centre when Gold attack
+   upward; the three-wide action grid reached into the middle and the coach pill floated over the goal. Upright now: the stick hugs the
+   bottom-left corner, the five buttons fold into a two-column block hugging the bottom-right corner (Shoot spans two rows), the
+   bottom centre stays open, and the coach line is a small right-aligned pill above the buttons that fades after a few seconds
+   (CSS only; React re-keys it when the line changes). strikerScene.ts lifts the pitch a little more on portrait phones to match. */
+@media(pointer:coarse) and (orientation:portrait){
+ .root .movement{left:calc(12px + env(safe-area-inset-left,0px));width:116px;height:116px}
+ .root .movement :global(.joystick){width:116px;height:116px}
+ .root .actions{right:calc(12px + env(safe-area-inset-right,0px));grid-template-columns:54px 54px;grid-template-areas:'pass sprint' 'through shoot' 'switch shoot';gap:8px}
+ .root .actions button{width:54px;min-height:50px;font-size:9px}
+ .root .actions button[data-action=pass]{grid-area:pass}.root .actions button[data-action=through]{grid-area:through}
+ .root .actions button[data-action=switchPlayer]{grid-area:switch}.root .actions button[data-action=sprint]{grid-area:sprint}
+ .root .actions button[data-action=shoot]{grid-area:shoot;min-height:0;height:100%;font-size:11px}
+ .root .footer>p{left:auto;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(var(--control-bottom) + 178px);transform:none;max-width:min(240px,calc(100% - 150px));font-size:11px;text-align:right;animation:tipFade 5s ease-out both}
+}
+@keyframes tipFade{0%,78%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.root .footer>p{animation:none}}
