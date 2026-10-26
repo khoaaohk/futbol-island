@@ -54,7 +54,7 @@ for(const j of C.JOBS){if(j.swing)continue;const run=R.startRun(j);R.stepRun(run
  assert(!K.streakEvent(def('line-painter'),'collect')&&!K.streakEvent(def('ball-pump'),'return')&&!K.streakEvent(def('offside-flag'),'return'),'no streak on the dashes, the pump or replays');
  const src=fs.readFileSync(path.join(base,'lib/town/jobs/jobCoach.ts'),'utf8');assert.doesNotMatch(src,/credit|coins\s*[+=]|wallet/i,'the streak never pays');
  assert.match(fs.readFileSync(path.join(base,'lib/audio/islandSound.ts'),'utf8'),/case 'streak':/,'the streak has its own chime');
- const scene=fs.readFileSync(path.join(base,'lib/town/jobs/jobScene.ts'),'utf8');assert.match(scene,/streakEvent\(def,e\.type\)/);assert.match(scene,/streak\.reset\(\);callStreak\.reset\(\)/,'a new shift starts the streak again');
+ const scene=fs.readFileSync(path.join(base,'lib/town/jobs/jobScene.ts'),'utf8');assert.match(scene,/streakEvent\(def,e\.type\)/);assert.match(scene,/rhythm\.reset\(\);callStreak\.reset\(\)/,'a new shift starts the streak again');
  assert.match(scene,/lastP\.x=p\.x;lastP\.y=p\.y;lastP\.z=p\.z;/,'no new player-position object per frame');}
 
 // ---- 3. Par times ----
