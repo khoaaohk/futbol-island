@@ -72,5 +72,6 @@ export function createBallAppearance(material:T.MeshStandardMaterial){
   material.map=patterned?texture(style):null;material.color.set(patterned?'#ffffff':BALL_COLORS[style]);
   material.emissive.set(special?'#000000':style==='neon'?'#527627':style==='frost'?'#305770':style==='solar'?'#8b5116':style==='cosmic'?'#4b287b':'#000000');
   material.emissiveIntensity=style==='cosmic'?.2:.25;material.roughness=style==='frost'?.4:.7;material.needsUpdate=true;
- },dispose(){for(const map of textures.values())map.dispose();textures.clear();material.map=null;current=undefined;}};
+ },/** Forget the applied style so the next setStyle re-applies it (after the Kit Shop ball skin, lib/graphics/shopBallSkin.ts, took the material). */
+ invalidate(){current=undefined;},dispose(){for(const map of textures.values())map.dispose();textures.clear();material.map=null;current=undefined;}};
 }

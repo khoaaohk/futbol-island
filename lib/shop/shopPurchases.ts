@@ -4,7 +4,8 @@
  * (`shop:<kind>:<hash of the design>`), so a double tap, a retry or buying the same design again can never charge twice.
  *
  * Owned designs live under SHOP_OWNED_KEY (synced with the save code, lib/saves/snapshot.ts): the last bought design of each kind
- * is the one "wearing" (a favourite inside the shop only: user, Oct 12 2026, "Don't show on player". The island never reads it).
+ * is the one "wearing". Owner decision Oct 26 2026 (replacing Oct 12's "Don't show on player"): what you wear shows on the
+ * island player and ball, read only through lib/shop/islandGear.ts. "Take off" clears a kind (wearing[kind] absent).
  * Pure apart from the injected storage and spend, so tests/shop-room.cjs runs it in Node.
  */
 export const SHOP_OWNED_KEY='fi2-shop-owned-v1';
@@ -44,7 +45,11 @@ export function fitOwned(owned:ShopOwned):ShopOwned{
  const wearing:ShopOwned['wearing']={};for(const [k,id] of Object.entries(owned.wearing))if(items.some(x=>x.id===id))(wearing as Record<string,string>)[k]=id as string;
  return {...owned,items,wearing};
 }
-export function writeOwned(owned:ShopOwned,store:KV|null=ls()):boolean{try{store?.setItem(SHOP_OWNED_KEY,JSON.stringify(fitOwned(owned)));return !!store;}catch{return false;}}
+/** Same-tab "what you wear changed" signal for the island (lib/shop/islandGear.ts); storage events only reach other tabs. */
+export const SHOP_GEAR_EVENT='fi-shop-gear';
+export function writeOwned(owned:ShopOwned,store:KV|null=ls()):boolean{try{store?.setItem(SHOP_OWNED_KEY,JSON.stringify(fitOwned(owned)));
+ try{if(typeof window!=='undefined'&&typeof Event!=='undefined')window.dispatchEvent(new Event(SHOP_GEAR_EVENT));}catch{/* no window (tests) */}
+ return !!store;}catch{return false;}}
 export const ownsDesign=(owned:ShopOwned,kind:ShopKind,design:unknown)=>owned.items.some(i=>i.id===purchaseId(kind,design));
 
 export type BuyResult={ok:true;item:OwnedItem;already:boolean}|{ok:false;reason:string};

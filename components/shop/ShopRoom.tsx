@@ -61,7 +61,7 @@ function swatch(item:OwnedItem):string[]{
  const c=d.colors as Record<string,unknown>|undefined;return item.kind==='boots'?pick(c?.toe,c?.mid,c?.soleplate):pick(c?.a,c?.b,c?.c);
 }
 
-function MyKit({owned,onWear,onClose}:{owned:ShopOwned;onWear:(item:OwnedItem)=>void;onClose:()=>void}){
+function MyKit({owned,onWear,onTakeOff,onClose}:{owned:ShopOwned;onWear:(item:OwnedItem)=>void;onTakeOff:(kind:ShopKind)=>void;onClose:()=>void}){
  const ref=useRef<HTMLElement>(null);useModalFocus(ref,onClose);
  return <section ref={ref} tabIndex={-1} className={styles.panel} role="dialog" aria-modal="true" aria-label="My kit" data-shop-mykit>
   <header className={styles.panelHead}><h2>My kit</h2><button type="button" className={styles.close} onClick={onClose} aria-label="Close my kit">×</button></header>
@@ -71,10 +71,10 @@ function MyKit({owned,onWear,onClose}:{owned:ShopOwned;onWear:(item:OwnedItem)=>
     <ul>{items.slice().reverse().map(item=>{const wearing=owned.wearing[kind]===item.id;return <li key={item.id} data-owned={item.id}>
      <span className={styles.swatch} aria-hidden="true">{swatch(item).map((c,i)=><i key={i} style={{background:c}}/>)}</span>
      <span className={styles.itemName}>{item.name}<small>{item.price} coins</small></span>
-     {wearing?<span className={styles.wearing}>Your pick</span>:<button type="button" className={styles.secondary} onClick={()=>onWear(item)}>Pick this</button>}
+     {wearing?<><span className={styles.wearing}>Wearing</span><button type="button" className={styles.secondary} onClick={()=>onTakeOff(kind)} aria-label={`Take off ${item.name}`}>Take off</button></>:<button type="button" className={styles.secondary} onClick={()=>onWear(item)}>Wear this</button>}
     </li>;})}</ul></div>;})}
-  {/* Oct 12 2026 (user: "Don't show on player"): bought kit stays in the shop; nothing on the island reads fi2-shop-owned-v1. */}
-  <p className={styles.note}>Your kit lives here in the Kit Shop and is saved with your save code.</p>
+  {/* Oct 26 2026 (owner): what you wear shows on your island player and ball (lib/shop/islandGear.ts). */}
+  <p className={styles.note}>What you wear shows on your player and your ball on the island. Your kit is saved with your save code.</p>
  </section>;
 }
 
@@ -153,6 +153,7 @@ export default function ShopRoom(){
   }finally{buying.current=false;}
  },[say]);
  const wear=(item:OwnedItem)=>{const next={...owned,wearing:{...owned.wearing,[item.kind]:item.id}};writeOwned(next);setOwned(next);};
+ const takeOff=(kind:ShopKind)=>{const wearing={...owned.wearing};delete wearing[kind];const next={...owned,wearing};writeOwned(next);setOwned(next);};
 
  const Studio=studio?STUDIO[studio]:null,kind=studio?STATIONS.find(s=>s.id===studio)!.kind:null;
  const clerkActions=talking?.id===SHOP_CLERK.def.id?STATIONS.map(s=>({label:SHOW_ME[s.id],onClick:()=>{setTalking(null);room.current?.walkTo(s.id);}})):undefined;
@@ -181,7 +182,7 @@ export default function ShopRoom(){
   {!covered&&!leaving&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the Kit Shop" data-shop-joystick
    onPointerDown={e=>{if(pointer.current!==null||!ready)return;e.preventDefault();pointer.current=e.pointerId;joyRect.current=null;e.currentTarget.setPointerCapture(e.pointerId);move(e);}} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span aria-hidden="true"/></div></div>}
   {Studio&&kind&&<div className={styles.studio} data-shop-studio={studio}><Studio onClose={closeStudio} onBuy={d=>{void buy(kind,d);}}/></div>}
-  {myKit&&<MyKit owned={owned} onWear={wear} onClose={()=>setMyKit(false)}/>}
+  {myKit&&<MyKit owned={owned} onWear={wear} onTakeOff={takeOff} onClose={()=>setMyKit(false)}/>}
   <NpcConversation npc={talking??lastTalk.current} open={!!talking} onOpenChange={o=>{if(!o)setTalking(null);}} practice={false} actions={clerkActions}/>
   {toast&&<p className={styles.toast} data-tone={toast.tone} role="status" data-shop-toast>{toast.text}</p>}
   {failed&&<p className={styles.failed} role="alert">The shop lights didn’t switch on. <button type="button" onClick={leave}>Back to the island</button></p>}

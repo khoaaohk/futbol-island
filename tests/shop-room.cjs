@@ -134,7 +134,7 @@ const C=require('../lib/shop/shopCast.ts');
  assert(/\{shopOpen&&<ShopDoorSlide mode="enter"\/>\}/.test(town)&&/museumOpen\|\|shopOpen\|\|ferryOpen/.test(town),'the doors slide and the island stops');
  assert(/travel\.current==='shop'\?shopExitPoint\(\)/.test(town)&&/destination==='shop'\)go\(destination\)/.test(town),'the map travels to the shop door');
  assert(/\{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT/.test(map),'KIT SHOP on the map');
- // 6. Bought kit stays in the shop (user, Oct 12 2026: "Don't show on player"): only the shop and the save sync touch it.
+ // 6. Only the shop, the save sync and lib/shop/islandGear.ts (owner, Oct 26 2026: worn kit shows on the island) read what you bought.
  {const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):/\.tsx?$/.test(e.name)?[path.join(d,e.name)]:[]);
   const readers=['lib','components','app'].flatMap(walk).filter(f=>/shopPurchases|fi2-shop-owned-v1|SHOP_OWNED_KEY/.test(read(f)));
   assert.deepEqual(readers.filter(f=>!/^(lib\/shop\/|components\/shop\/|lib\/saves\/snapshot\.ts$)/.test(f)),[],'nothing outside the shop reads what you bought');}
