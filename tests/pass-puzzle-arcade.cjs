@@ -15,7 +15,7 @@ async function run(browser,mobile){
  const canvas=page.locator('[data-arcade-kind="pass-puzzle"] canvas');
  await page.waitForTimeout(400);await page.screenshot({path:`${shots}/pass-puzzle-levels-${tag}.png`});
  // Level select → brief → freeze.
- await page.locator('[data-level]').first().click();
+ await page.locator('[data-pack]').first().click();await page.locator('[data-level]').first().click();
  await page.getByRole('button',{name:'Start puzzle'}).waitFor();
  await page.screenshot({path:`${shots}/pass-puzzle-brief-${tag}.png`});
  await page.getByRole('button',{name:'Start puzzle'}).click();
@@ -86,7 +86,7 @@ async function run(browser,mobile){
  await page.getByText('That’s the move!').waitFor({timeout:40000});
  await page.waitForTimeout(1500);const after=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(500);assert.equal(Number(await canvas.getAttribute('data-frames')),after,'sleeps after replay');
  // Back to the list shows the stars.
- await page.getByRole('button',{name:'All puzzles'}).last().click();await page.locator('[data-level]').first().waitFor();
+ await page.getByRole('button',{name:'All puzzles'}).last().click();await page.locator('[data-pack]').first().click();await page.locator('[data-level]').first().waitFor();
  assert.match(await page.locator('[data-level]').first().getAttribute('aria-label'),/[123] of 3 stars/);
  assert.deepEqual(errors,[],'no console errors');
  console.log('PASS_PUZZLE_ARCADE_PASS',JSON.stringify({mobile,aim,loft,threat:threat.threatRings,result:solved.result,stars}));
