@@ -8,8 +8,11 @@ function fixture(){
 }
 for(const mode of ['walk','bike','scooter','moped']){
  const f=fixture(),s=f.q.COIN_QUEST.find(c=>c.id==='market'),p={x:s.x,z:s.z+4},v={x:0,z:0},r=f.createRooftopTravel([],[],p,f.props);r.reset(p.x,p.z,s.y);
- for(let i=0;i<180;i++)r.update(1/60,p,v,{x:0,z:-1,sprint:false},mode);
- assert(p.z>s.z+.65,mode+' must stop before unopened parcel');assert(!r.canLand(s.x,s.z),'kick parcel cannot receive flight landing');
+ // Rides glance off solids since the Oct 15 ride-slope work (they slide round the corner of a small box instead of stopping dead), so
+ // a ride proves the parcel solid by never entering its footprint; on foot the child still stops in front of it (QA 4, Oct 26 2026).
+ const box=f.props.find(c=>c.x===s.x&&c.z===s.z),inside=()=>Math.abs(p.x-box.x)<box.w/2&&Math.abs(p.z-box.z)<box.d/2;
+ for(let i=0;i<180;i++){r.update(1/60,p,v,{x:0,z:-1,sprint:false},mode);assert(!inside(),mode+' never drives through an unopened parcel');}
+ if(mode==='walk')assert(p.z>s.z+.65,mode+' must stop before unopened parcel');assert(!r.canLand(s.x,s.z),'kick parcel cannot receive flight landing');
  assert(f.hunt.hit(s.x,s.y+.4,s.z+.7,0,-4),'kick opens parcel');const c=f.props.find(c=>c.x===s.x&&c.z===s.z);assert.equal(c.w,0);assert.equal(c.d,0);assert.equal(c.top,s.y);assert.equal(r.surface(s.x,s.z),s.y,'live landing surface disappears');assert(r.canLand(s.x,s.z));
  for(let i=0;i<100;i++)r.update(1/60,p,v,{x:0,z:-1,sprint:false},mode);
  assert(p.z<s.z-1,mode+' can pass revealed parcel');f.hunt.dispose();
@@ -29,8 +32,9 @@ console.log('PASS solid parcels: walk/bike/scooter/moped blocked then clear; saf
 // Hidden trunks are solid too; opened props must not leave zero-size blockers.
 for(const mode of ['walk','bike','scooter','moped']){
  const f=fixture(),s=f.q.COIN_QUEST.find(c=>c.id==='store'),p={x:s.x,z:s.z+4},v={x:0,z:0},r=f.createRooftopTravel([],[],p,f.props);r.reset(p.x,p.z,0);
- for(let i=0;i<180;i++)r.update(1/60,p,v,{x:0,z:-1,sprint:true},mode);
- assert(p.z>s.z+.5,'hidden trunk blocks '+mode);f.hunt.dispose();
+ const box=f.props.find(c=>Math.hypot(c.x-s.x,c.z-s.z)<1&&c.w>0),inside=()=>box&&Math.abs(p.x-box.x)<box.w/2&&Math.abs(p.z-box.z)<box.d/2;assert(box,'the hidden trunk is a solid prop');
+ for(let i=0;i<180;i++){r.update(1/60,p,v,{x:0,z:-1,sprint:true},mode);assert(!inside(),'hidden trunk blocks '+mode);}
+ if(mode==='walk')assert(p.z>s.z+.5,'hidden trunk stops a walker');f.hunt.dispose();
 }
 {
  const f=fixture(),s=f.q.COIN_QUEST.find(c=>c.grass);assert(!f.hunt.hit(s.x,.1,s.z,0,-9),'grass hatches cannot be kicked open');f.hunt.land({x:s.x,y:.14,z:s.z});assert(!f.p.readCoinProgress().revealed.includes(s.id),'standing on grass is not a drop');f.hunt.update(.016,{x:s.x,y:5,z:s.z},true,true);f.hunt.land({x:s.x,y:.14,z:s.z});assert(f.p.readCoinProgress().revealed.includes(s.id),'drop opens grass hatch');f.hunt.dispose();
@@ -101,7 +105,7 @@ console.log('PASS ten high spacing targets: long charged shots required, no land
  for(const s of east){const w=s.wall;assert(!f.hunt.hit(w.x+.1,w.y,w.z,8,0),'Wrong direction cannot open '+s.id);assert(f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'East approach opens '+s.id);assert(!f.hunt.hit(w.x+.1,w.y,w.z,-8,0),'No duplicate reveal');f.hunt.update(.7,{x:s.x,y:s.y,z:s.z},true,true);assert(f.p.readCoinProgress().collected.includes(s.id),'Ground ball collectible east of wall');}
  f.hunt.dispose();console.log('PASS nine east targets (incl. the Coral Cay welcome arch): direction, reveal deduplication and ground collection');
 }
-const aerialFixture=fixture(),aerialSpots=aerialFixture.q.COIN_QUEST.filter(s=>s.parachute);aerialFixture.hunt.dispose();assert.equal(aerialSpots.length,7);
+const aerialFixture=fixture(),aerialSpots=aerialFixture.q.COIN_QUEST.filter(s=>s.parachute);aerialFixture.hunt.dispose();assert.equal(aerialSpots.length,10,"every floating ball (10 since the Oct 13-14 Summit Isle update)");
 for(const s of aerialSpots){
  const f=fixture(),p={x:s.x+2,y:s.y+1,z:s.z};
  assert(!f.props.some(c=>c.x===s.x&&c.z===s.z),'floating balls have no solid box');
@@ -110,6 +114,6 @@ for(const s of aerialSpots){
  f.hunt.update(.1,p,true,false,null,true);assert(f.collected.includes(s.id),'open parachute collects with generous clearance');
  f.hunt.update(.1,p,true,false,null,true);assert.equal(f.collected.filter(id=>id===s.id).length,1);f.hunt.dispose();
 }
-console.log('PASS seven parachute-only balls (incl. the Coral Cay sky and buoy): altitude, flight exclusion, generous pickup and no solid props');
+console.log('PASS ten parachute-only balls (incl. the Coral Cay sky and buoy): altitude, flight exclusion, generous pickup and no solid props');
 
 {const f=fixture(),s=f.q.COIN_QUEST.find(s=>s.parachute),p={x:s.x+10,y:s.y+10,z:s.z},g=f.hunt.root.getObjectByName("coin-spot-"+s.id),ring=g.getObjectByName("parachute-ball-highlight");f.hunt.update(.1,p,true,false,null,false);assert(!ring.visible);f.hunt.update(.1,p,true,false,null,true);assert(ring.visible);f.hunt.update(.1,{x:1000,y:s.y,z:1000},true,false,null,true);assert(!ring.visible);f.hunt.dispose();console.log("PASS parachute highlights activate only during nearby descent");}
