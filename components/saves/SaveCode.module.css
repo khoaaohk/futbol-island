@@ -27,6 +27,9 @@
 .footer .secondary,.footer>.primary{padding-inline:14px}
 @media(max-width:400px){.footer .secondary,.footer>.primary{padding-inline:12px;font-size:15px}}
 @media(max-width:360px){.footer{gap:6px}.footer .secondary,.footer>.primary{padding-inline:9px;font-size:13px}}
+/* 320 px phones (QA audit Oct 25 2026, docs/QA_AUDIT_OCT25.md #6): the centred "Print code" (116..204) ran 16 px under "I saved it"
+   (188..292) on the first screen a new player sees. Below 350 px it takes its own centred row above Back / "I saved it". */
+@media(max-width:349px){.footer{flex-wrap:wrap;row-gap:10px}.footerCenter{position:static;order:-1;flex:1 0 100%}}
 
 .primary,.secondary,.quiet{min-height:var(--btn-height);padding:10px 20px;border-radius:var(--btn-radius);font-family:var(--btn-font);font-size:15px;font-weight:700;cursor:pointer;transition:translate .16s,box-shadow .16s;box-sizing:border-box}
 .primary{background:var(--btn-green);color:var(--btn-ink-on-dark);border:var(--btn-rim-width) solid var(--btn-rim);box-shadow:0 4px 0 var(--btn-green-edge)}
