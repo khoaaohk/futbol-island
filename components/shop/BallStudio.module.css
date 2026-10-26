@@ -49,7 +49,7 @@
 /* Stage controls: undo/redo/randomise/show it off/reset view are the shared components/shop/StudioControls.tsx (Oct 13 2026) —
  * same position, size and order as the Boot and Jersey studios (StudioControls.module.css). Kick is Ball's own extra, bottom-
  * centre (the same slot the other studios use for their view chips / mode toggle; Ball has neither, so it's free). */
-.kickWrap{position:absolute;z-index:5;left:50%;bottom:36px;translate:-50% 0}
+.kickWrap{position:absolute;z-index:5;left:10px;top:12px}
 .kick{display:flex;align-items:center;gap:8px;height:var(--btn-height-lg,48px);padding:0 18px 0 8px;border:var(--btn-rim-width,3px) solid var(--rim);border-radius:999px;
  background:#eea087 var(--grain) center/128px 128px;background-blend-mode:soft-light;color:#3b1d12;font-weight:900;font-size:16px;letter-spacing:.3px;box-shadow:0 5px 0 #b26a56,0 0 0 4px #fff2cd40;transition:translate .12s,box-shadow .12s}
 .kick:active{translate:0 3px;box-shadow:0 2px 0 #b26a56,0 0 0 4px #fff2cd40}
@@ -298,7 +298,7 @@
  .stage{grid-column:1;grid-row:2;margin:20px 14px 20px 20px;border-radius:28px;box-shadow:0 0 0 3px var(--rim)}
  .sheet{grid-column:2;grid-row:2}
  .title{font-size:38px}
- .kickWrap{bottom:26px}
+ .kickWrap{top:14px;left:14px}
  .decalBar{left:50%;bottom:26px;transform:translateX(-50%)}
  @keyframes barIn{from{opacity:0;transform:translate(-50%,10px) scale(.94)}to{opacity:1;transform:translateX(-50%)}}
  .sheet{width:auto;min-width:0;height:auto;margin:20px 20px 20px 14px;border-radius:28px;box-shadow:0 8px 0 #0000002e,0 0 0 3px var(--rim)}
