@@ -28,7 +28,7 @@ ok('the reef hint goes once the swimmer is in that zone (or under), and wading i
  h.step(.6,spot.x-60,spot.z,true,false,'',m);assert.equal(R.reefStore.get().hint?.id,spot.id,'kept while still on the way');
  h.step(.6,spot.x,spot.z,true,false,'',m);assert.equal(R.reefStore.get().hint,null,'gone inside the patch');
  R.reefStore.hint(spot,false,0);h.step(.01,spot.x-60,spot.z,false,true,'',m);assert.equal(R.reefStore.get().hint,null,'gone at once when a dive starts');
- assert(read('components/Town.tsx').includes("!dive.diving&&(water.inWater/*"),'wading is eligible');
+ assert(read("components/Town.tsx").includes("&&(water.inWater/* Oct 25 2026: wading in counts too"),"wading is eligible");
  assert(read('components/ReefHintToast.tsx').includes('if(shown&&!hint)setShown(0);'),'the toast frees the lane when cleared');
 });
 
@@ -73,6 +73,14 @@ ok('the surface glide: stick let go while still carrying, the arms reach ahead a
  for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);for(const a of j.arms)assert(a.shoulder.rotation.x< -2.6,'arm ahead: '+a.shoulder.rotation.x);
  pose.glide=0;for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);assert(Math.abs(j.arms[0].shoulder.rotation.x-j.arms[1].shoulder.rotation.x)>.5,'stroking: the arms alternate');
  assert(read('lib/town/water/waterState.ts').includes('pose.glide=0;events.left=true;'),'reset on leaving the water');
+});
+
+ok('breath runs out in a reef: the "Well done" note survives the way up (leave() wiped it), and no reef hint shows over a reef or a zone prompt',()=>{
+ const S=load('lib/town/water/diveSession.ts');let outs=0;const spot=D.diveSpotById('turtle-pool'),rt=mkRuntime({out:()=>{outs++;RT.diveStore.set({note:S.DIVE_OUT_NOTE});}});
+ rt.scan(.2,spot.x,spot.z,true);assert(rt.start());rt.session.state.breath=.001;for(let i=0;i<40&&rt.diving;i++)rt.frame(1/30,{sx:0,sy:-1,lift:0},390,844);
+ assert.equal(rt.diving,false,'floated up');assert.equal(outs,1);assert.equal(RT.diveStore.get().note,S.DIVE_OUT_NOTE,'the note is still there to show');rt.dispose();
+ const town=read('components/Town.tsx');assert(/entered:\(spot,edge\)=>\{[^\n]{0,200}reefStore\.clearHint\(\);/.test(town),'a waiting hint is dropped when a dive starts');
+ assert(town.includes('!dive.diving&&!dive.session.state.near/*'),'no hint while over a zone (its Explore prompt shows)');
 });
 
 console.log(`explore-swim-oct25: ${passed} passed`);

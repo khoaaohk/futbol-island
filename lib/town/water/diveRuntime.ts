@@ -10,7 +10,7 @@
 import * as T from 'three';
 import {createDiveRoom,type DiveRoom} from '../../graphics/diveRoom';
 import type {SwimRigPose} from '../../graphics/swimPose';
-import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
+import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,DIVE_OUT_NOTE,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
 import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
 import {DIVE_BALL_FIND,diveBallNote,diveBallsFound} from './diveBalls';
 import {holdCardOffers} from '../cardOfferHold';
@@ -137,7 +137,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
   if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;session.setSolids(null);}
-  diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();holdCardOffers(DIVE_CARD_HOLD,false);diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
+  diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();holdCardOffers(DIVE_CARD_HOLD,false);diveStore.set({diving:false,card:null,note:reason==='breath'?DIVE_OUT_NOTE:''/* Oct 25 2026: the "Well done" note was wiped here before it could show */,spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;

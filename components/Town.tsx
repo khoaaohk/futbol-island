@@ -205,7 +205,7 @@ import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
 import SwimLessonToast from './SwimLessonToast';
-import RayLessonToast from './RayLessonToast';import ReefHintToast from './ReefHintToast';import {createReefHints} from '@/lib/town/water/reefDiscovery';
+import RayLessonToast from './RayLessonToast';import ReefHintToast from './ReefHintToast';import {createReefHints,reefStore} from '@/lib/town/water/reefDiscovery';
 import DiveHud from './DiveHud';
 import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {divePixelCap,diveRestFrame} from '@/lib/town/water/diveCurrent';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
 import PaintEasel from './PaintEasel';
@@ -1061,7 +1061,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       calm:()=>heat.tier>=3,whale:ev=>{if(ev==='pass'){countDiveWhale();sound.whaleSong();}else{tapHaptic();sound.ui('expand');}},
       emote:(kind,ev,first)=>{if(ev==='start'){if(first)countDiveEmote();tapHaptic();if(kind==='wave')sound.ui('click');}else{sound.ui('path-pop');tapHaptic();}},
       sparkle:()=>{countDiveSparkle();tapHaptic();sound.ui('path-pop');},
-      entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);/* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
+      entered:(spot,edge)=>{if(edge)countDiveEnterEdge();else countDiveStart();music.setDucked(true);sound.move(rideRef.current,0,false);reefStore.clearHint();/* Oct 25 2026: a waiting reef hint never shows over the reef (the hint tick sleeps while under) *//* Explore v2: the island's music and footstep / wind bed stop while under (the reef bed plays) */if(spot.theme.wreck)countDiveWreckVisit();if(water.diveActive)water.surfaceDive(true);water.state.fast=false;velocity.x=velocity.z=0;diveLift.up=diveLift.down=false;
         if(edge){showUnderTint(spot.theme.water);}/* Seamless Explore (diveEdge.ts): swum in under the water across the zone's edge: no splash or plunge, only the soft blend through the zone's water colour (none with reduced motion: an instant swap) */
         else{ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.35,reduced);sound.waterPlunge();showUnderTint(spot.theme.water);tapHaptic();}/* the duck-dive's plunge; the dive frame then feeds sound.swim under (low-pass bed) */
         waterStore.set({reef:true,reefLesson:waterStore.get().reefLesson+1});wakeLoop();},
@@ -1988,7 +1988,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       world.updateSharks(active&&!learning?dt:0,reduced||heat.staticAmbience,camera,location);// Coral Cay sharks: sleep when far/off screen
       openSea.update(active&&!learning?dt:0,reduced||heat.staticAmbience,world.sharks.frustum,location);if(openSea.spot(dt,location.x,location.z,water.inWater)){countRaySpot();const k=openSea.lastSpotted();if(k&&!raysTaught.has(k)){raysTaught.add(k);waterStore.set({rayLesson:++rayLessons,rayKind:k});}}// open-sea whale sharks + rays: capped, far ones at 15 Hz
       // Reef discovery (Oct 21 2026, reefDiscovery.ts): the once-per-zone "Something shimmers over there" hint while flying or swimming, 2 Hz.
-      reefHints.step(active&&!learning?dt:0,location.x,location.z,active&&!learning&&!lessonRef.current&&!fieldMenu.current&&!jobActiveRef.current&&!dive.diving&&(water.inWater/* Oct 25 2026: wading in counts too (the kid is heading out to sea) */||rideRef.current==='jetpack'),dive.diving,dive.diving?diveStore.get().spot:'',camera.matrixWorld.elements);
+      reefHints.step(active&&!learning?dt:0,location.x,location.z,active&&!learning&&!lessonRef.current&&!fieldMenu.current&&!jobActiveRef.current&&!dive.diving&&!dive.session.state.near/* Oct 25 2026: not over another zone's Explore prompt */&&(water.inWater/* Oct 25 2026: wading in counts too (the kid is heading out to sea) */||rideRef.current==='jetpack'),dive.diving,dive.diving?diveStore.get().spot:'',camera.matrixWorld.elements);
       world.updateLighthouse(active&&!learning&&!backgroundFrozen?dt:0,timeRef.current,reduced||heat.staticAmbience||heat.governor.last.state==='slow',camera,location);// East Jetty beam: night/dusk only, sleeps far/off-screen
       // Fuel (docs/economy/FUEL_2026-09-30.md): charge this tick's movement; out of fuel on a ride/jetpack → land and walk.
       // Bug A6: the arrival burst and the opening jetpack hover are scripted, not the player's travel: free until the first move.
