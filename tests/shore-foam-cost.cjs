@@ -35,11 +35,12 @@ ok('cost caps: a 4-slot ring buffer, uniforms only (no mesh, no texture, no draw
 
 ok('strip shader: same texture reads (field + ONE lace fetch), none of the lace past STRIP_FAR, interaction on a uniform branch',()=>{
  const shore=src('lib/graphics/islandShore.ts'),glsl=shore.slice(shore.indexOf('const STRIP_GLSL='),shore.indexOf('/** The island shoreline: call'));
- assert.equal((glsl.match(/isleSample\(/g)||[]).length,1,'one field read');
+ // Tropical water (Oct 26 2026, docs/TROPICAL_WATER_OCT26.md): the field read moved to the vertex shader (vSh), none per fragment.
+ assert.equal((glsl.match(/isleSample\(/g)||[]).length,0,'no field read per fragment');assert(/vSh=vec4\(sh\.gba/.test(shore),'field read once per vertex');
  assert.equal((glsl.match(/texture(2D|Grad)?\(uWaterNoise/g)||[]).length,1,'one lace fetch (four noises in its RGBA)');
- assert(/if\(vFar<\.999\)lz=/.test(glsl),'the lace fetch is skipped far from the camera');
+ assert(/if\(vFar<\.999\)\{?lz=/.test(glsl),'the lace fetch is skipped far from the camera');
  assert(/if\(uFoamFxOn>\.5\)/.test(glsl),'interaction block behind a uniform branch');
- assert(/if\(uWaterDetail>1\.5\)sparkle=/.test(glsl),'sparkle desktop only');
+ assert(/if\(uSunGlitter>0\.\)\{[^}]*sparkle=/.test(glsl),'glints (phone + desktop since the tropical pass) behind the glitter gate, inside the near lace branch');
  assert(/if\(uWaterDetail<\.5\)\{\s*\/\/[^\n]*\n\s*e=-\.25;rush=\.5;/.test(glsl),'detail 0 (reduced motion / hot) keeps the still path with no fetch');
  const {STRIP_FAR}=load('lib/graphics/islandShore.ts');assert(STRIP_FAR.near>=40&&STRIP_FAR.far>STRIP_FAR.near,'far fade starts past the ~40 m island camera');});
 
