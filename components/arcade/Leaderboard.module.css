@@ -2,6 +2,9 @@
    (--btn-* tokens, docs/ui/BUTTONS.md) and IslandBrush headings. Phone first: full screen under 600px, a centred panel above. */
 @font-face{font-family:ArcadeBoardBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
 .dialog{
+ /* QA 4 (Oct 26 2026): a top-layer dialog still inherits from its DOM parent. Summit Kick mounts this inside its click-through
+    HUD (.hud is pointer-events none), which made the whole high-score form untappable: no Save, no Skip, game stuck behind it. */
+ pointer-events:auto;
  --btn-gold:#20243d;--btn-ink:#e8ffff;--btn-rim:#70f5ec;
  --btn-shadow-gold:0 4px 0 #101323,0 0 14px #4debd533;
  --btn-shadow-gold-pressed:0 1px 0 #101323,0 0 18px #4debd54d;
