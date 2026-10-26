@@ -32,7 +32,7 @@ for(const s of manholes){
  for(const o of others.filter(o=>o.truck===undefined))assert(Math.hypot(o.x-s.x,o.z-s.z)>3,`${s.id} stays clear of ${o.id}`);
  const clear=world.roads.some(r=>Math.abs(s.x-r.x)<=r.w/2&&Math.abs(s.z-r.z)<=r.d/2)||causewayCovers.includes(s);assert(clear,`${s.id} sits on the road`);
 }
-assert.equal(others.length,55+19+15,'the original fifty-five stay in place, plus nineteen Coral Cay balls and fifteen Summit Isle balls');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length+20+15);
+assert.equal(others.length,55+19+15+1,'the original fifty-five stay in place, plus nineteen Coral Cay balls, fifteen Summit Isle balls and the East Jetty ball');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length+20+15+1);
 assert(COIN_QUEST.slice(0,55).every(s=>!s.manhole),'new balls are appended after the originals');
 console.log(`PASS ${manholes.length} manhole balls: one at the centre of each of ${townCovers.length} road junctions plus the causeway road cover; total ${COIN_QUEST.length}`);
 

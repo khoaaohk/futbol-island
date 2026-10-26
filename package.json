@@ -14,7 +14,6 @@
     "test:devices:ios": "playwright test --project=iphone-se --project=iphone-15 --project=ipad-gen7 --project=ipad-pro-11"
   },
   "dependencies": {
-    "@babylonjs/core": "^7.54.3",
     "@lucasmarkes/hairline": "^0.3.0",
     "@supabase/supabase-js": "^2.109.0",
     "@vercel/functions": "^3.9.11",
