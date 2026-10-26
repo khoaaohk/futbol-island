@@ -49,6 +49,18 @@ function haptic(pattern:number|number[]){
 function whistle(ctx:AudioContext,v:Voices,now:number,blasts:readonly (readonly [number,number])[],vol:number){
  for(const [at,len] of blasts){tone(ctx,v,'sine',2350,2310,now+at,len,.025*vol);tone(ctx,v,'sine',2440,2400,now+at,len,.018*vol);}
 }
+/** Crowd "ooooh": two vowel formants on filtered noise, sliding down. */
+function ooh(ctx:AudioContext,v:Voices,at:number,vol:number){
+ noise(ctx,v,at,.55,.05*vol,'bandpass',560,380,4);noise(ctx,v,at+.02,.5,.03*vol,'bandpass',1000,760,5);
+}
+/** Crowd roar for a goal: one wide filtered-noise swell (one voice). */
+function roar(ctx:AudioContext,v:Voices,at:number,vol:number,size=1){
+ noise(ctx,v,at,Math.min(.77,.62*size),.055*vol,'bandpass',420,1100,.45); // the cached noise buffer is .8 s
+}
+/** Stadium drum: kick (pitched sine drop) and a hand clap (short bright noise). */
+function drum(ctx:AudioContext,v:Voices,at:number,vol:number,clap=false){
+ tone(ctx,v,'sine',120,46,at,.16,.11*vol);if(clap)noise(ctx,v,at,.06,.05*vol,'bandpass',1600,1200,1.1);
+}
 /** Throttle per cue so the same event arriving from two paths (or a rattle of
  * wall contacts) plays once. */
 function throttled(v:Voices,cue:string,now:number,gap:number){const last=v.last.get(cue)??-9;if(now-last<gap)return true;v.last.set(cue,now);return false;}
@@ -84,6 +96,10 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    const hz=PENTA[step]*.5*jitter(.03);
    tone(ctx,v,'sine',hz*1.6,hz,now,.07,(.05+.07*speed)*vol);
    noise(ctx,v,now,.03,(.025+.04*speed)*vol,'bandpass',1500,900,1.4);
+   // Rally music: each alternating-foot step adds a layer on the off-beat, so a
+   // switching-feet rally builds a groove (2×: kick, 3×: +clap, 4×: +bass note).
+   if(step>=1)drum(ctx,v,now+.11,vol*.8,step>=2);
+   if(step>=3)tone(ctx,v,'triangle',PENTA[step]*.25,PENTA[step]*.25,now+.11,.2,.05*vol);
    break;
   }
   case 'pb-wall':{
@@ -120,6 +136,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    const hit=Math.min(1,(s?.sfx.keeperV??300)/700);
    noise(ctx,v,now,.08,(.06+.06*hit)*vol,'bandpass',1150*jitter(.06),700,1);
    tone(ctx,v,'sine',150,62,now,.13,(.08+.06*hit)*vol);
+   if(hit>.45&&!throttled(v,'ooh',now,1.2))ooh(ctx,v,now+.08,vol);
    break;
   }
   case 'control':tone(ctx,v,'sine',300*jitter(.04),240,now,.08,.05*vol);noise(ctx,v,now,.04,.025*vol,'lowpass',900);break;
@@ -131,13 +148,14 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    // The goal lights up: quick rising arpeggio, the game's musical sting.
    arpeggio(ctx,v,[523.25,659.25,783.99,1046.5],now,.065,.07*vol);break;
   case 'goal':{
+   // Priority order matters under the 14-voice cap: fanfare, crowd, drum line, then the bonus sparkle.
    const corner=s?.cue==='corner',bonus=(s?.lastGoalBonus??0)>0;
    arpeggio(ctx,v,corner?[587.33,739.99,880,1174.66]:[523.25,659.25,783.99,1046.5],now,.085,.085*vol,'triangle',.2);
    tone(ctx,v,'sine',corner?293.66:261.63,corner?293.66:261.63,now+.34,.5,.06*vol);
+   // Crowd roar under the fanfare, then the stadium drum: boom, boom, CLAP.
+   roar(ctx,v,now+.05,vol,corner?1.2:1);
+   drum(ctx,v,now,vol*1.1);drum(ctx,v,now+.62,vol*.85);noise(ctx,v,now+.8,.07,.06*vol,'bandpass',1600,1200,1.1);
    if(bonus)arpeggio(ctx,v,[1318.51,1567.98],now+.42,.07,.04*vol,'sine',.12);
-   // Crowd swell: wide filtered noise rising then falling, under the fanfare.
-   noise(ctx,v,now+.05,.75,.045*vol,'bandpass',500,1400,.5);
-   tone(ctx,v,'sine',130,48,now,.24,.13*vol);
    break;
   }
   case 'level':arpeggio(ctx,v,[392,523.25,659.25,783.99,1046.5],now+.05,.07,.06*vol);break;
@@ -197,7 +215,15 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   // ---- match flow, keeper parry, wall pass and the 2v1 multiball -----------
   case 'pb-parry':
    // Gloves punch it clear: a hard padded slap that flicks upward.
-   noise(ctx,v,now,.06,.09*vol,'bandpass',1500*jitter(.05),2400,1.2);tone(ctx,v,'triangle',260,520,now,.09,.06*vol);break;
+   noise(ctx,v,now,.06,.09*vol,'bandpass',1500*jitter(.05),2400,1.2);tone(ctx,v,'triangle',260,520,now,.09,.06*vol);
+   if(!throttled(v,'ooh',now,1.2))ooh(ctx,v,now+.07,vol);break;
+  case 'pb-streak':{
+   // Switch-feet streak: a rising two-note "o-lé" call over a clap.
+   const four=(s?.combination??3)>=4;
+   arpeggio(ctx,v,four?[783.99,1046.5,1318.51]:[659.25,880],now+.04,.09,.06*vol,'triangle',.14);
+   noise(ctx,v,now+.04,.32,.035*vol,'bandpass',640,820,3);drum(ctx,v,now,vol*.7,true);
+   break;
+  }
   case 'wallPass':arpeggio(ctx,v,[659.25,987.77],now,.07,.065*vol,'triangle',.12);break;
   case 'multiball':
    whistle(ctx,v,now,[[0,.12],[.16,.12]],vol);

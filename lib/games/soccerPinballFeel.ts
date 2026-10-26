@@ -1,4 +1,5 @@
 import {pinballDivision,pinballMinute,plungerPull,pinballReadShow,PERFECT_POINTS,READ_POINTS,WALL_PASS_POINTS,type PinballState} from './soccerPinball';
+import {createPinballCrew,triggerPinballCrew,stepPinballCrew,pinballCrewActive,type PinballCrew} from './soccerPinballCrew';
 import {COACH_TIPS,PINBALL_MODES,TRAINING_GOAL,ladderRung,flagWord,pinballModeInfo,savePinballStars,starCount,type PinballTable} from './soccerPinballTable';
 
 /* Game-feel layer for Futbol Pinball. Pure and allocation-free per frame: it
@@ -29,27 +30,35 @@ export type PinballFeel={
  runBestCombo:number;
  /** Shown after a real drain until the next launch. */
  summary:string;summaryFresh:boolean;
+ /** Keeper/defender reactions to goals, lost balls and saves (soccerPinballCrew). */
+ crew:PinballCrew;
+ /** Bumped for a confetti burst; confettiPower 1 = goal, 2 = big finale. */
+ confettiSerial:number;confettiPower:number;confettiTime:number;
+ /** Highest alternating-foot combo already celebrated this rally. */
+ streakShown:number;
 };
 
 export function createPinballFeel():PinballFeel{
  return{hitStop:0,shake:0,drainFlash:0,rescueFlash:0,ringX:0,ringY:0,ringPower:0,ringSerial:0,
   popups:Array.from({length:PINBALL_POPUPS},()=>({age:PINBALL_POPUP_LIFE,x:0,y:0,text:'',kind:'score' as PinballPopupKind,serial:0})),popupCursor:0,popupSerial:0,
   last:{hitId:0,score:0,wall:0,gate:0,flipper:0,keeper:0,bumper:0,join:0,parry:0,grade:0,phase:'ready',lit:false,level:1,balls:3},
-  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false};
+  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1};
 }
-export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();for(let i=0;i<f.popups.length;i++)Object.assign(f.popups[i],fresh.popups[i]);fresh.popups=f.popups;Object.assign(f,fresh);}
+export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();for(let i=0;i<f.popups.length;i++)Object.assign(f.popups[i],fresh.popups[i]);fresh.popups=f.popups;fresh.confettiSerial=f.confettiSerial;Object.assign(f,fresh);}
 
 /** Hit-stop freezes the simulation outright for a few frames. Flipper taps
  * landed during the freeze are kept by the tap pulse (it decays in sim time),
  * so the freeze doubles as an input buffer rather than eating presses. */
 export function pinballTimeScale(f:PinballFeel){return f.hitStop>0?0:1;}
 
-export function pinballFeelActive(f:PinballFeel){if(f.hitStop>0||f.shake>.005||f.drainFlash>0||f.rescueFlash>0)return true;for(const p of f.popups)if(p.age<PINBALL_POPUP_LIFE)return true;return false;}
+export function pinballFeelActive(f:PinballFeel){if(f.hitStop>0||f.shake>.005||f.drainFlash>0||f.rescueFlash>0||f.confettiTime>0||pinballCrewActive(f.crew))return true;for(const p of f.popups)if(p.age<PINBALL_POPUP_LIFE)return true;return false;}
 
 function popup(f:PinballFeel,x:number,y:number,text:string,kind:PinballPopupKind){
  const p=f.popups[f.popupCursor];f.popupCursor=(f.popupCursor+1)%f.popups.length;
  p.age=0;p.x=x;p.y=y;p.text=text;p.kind=kind;p.serial=++f.popupSerial;
 }
+export const PINBALL_CONFETTI_LIFE=1.7;
+const confetti=(f:PinballFeel,power:number)=>{f.confettiSerial++;f.confettiPower=power;f.confettiTime=PINBALL_CONFETTI_LIFE;};
 function ring(f:PinballFeel,x:number,y:number,power:number){f.ringX=x;f.ringY=y;f.ringPower=power;f.ringSerial++;}
 const stop=(f:PinballFeel,t:number)=>{f.hitStop=Math.max(f.hitStop,t);};
 const kick=(f:PinballFeel,v:number)=>{f.shake=Math.min(1,f.shake+v);};
@@ -63,6 +72,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  f.shake*=Math.exp(-dt*12);if(f.shake<.003)f.shake=0;
  f.drainFlash=Math.max(0,f.drainFlash-dt*1.1);f.rescueFlash=Math.max(0,f.rescueFlash-dt*1.2);
  for(const p of f.popups)if(p.age<PINBALL_POPUP_LIFE)p.age=Math.min(PINBALL_POPUP_LIFE,p.age+dt);
+ stepPinballCrew(f.crew,dt);f.confettiTime=Math.max(0,f.confettiTime-dt);
  const x=s.sfx;
  if(x.wall>L.wall){if(s.phase==='playing')emit(false,'pb-wall');if(x.wallV>500)kick(f,.1);}
  if(x.gate>L.gate)emit(false,'pb-gate');
@@ -80,7 +90,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
   else if(t.grade==='early'){emit(false,'pb-early');popup(f,bx,by-26,'TOO EARLY','warn');}
   else if(t.grade==='late'){emit(false,'pb-late');popup(f,180,520,'TOO LATE','warn');}}
  // Keeper parry: the keeper punches it out wide. Show where, so the rebound is readable.
- if(x.parry>L.parry){emit(false,'pb-parry');kick(f,.2);ring(f,s.keeper,83,1);popup(f,s.keeper,112,'PARRIED!','save');}
+ if(x.parry>L.parry){triggerPinballCrew(f.crew,'save');emit(false,'pb-parry');kick(f,.2);ring(f,s.keeper,83,1);popup(f,s.keeper,112,'PARRIED!','save');}
  // Playfield features: one voice per new event (the audio layer throttles rattles).
  {const n=s.table.sfx,o=f.table;
   if(n.sling>o.sling){emit(false,'pb-sling');kick(f,.08);}
@@ -106,23 +116,27 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(s.hitId!==L.hitId){
   const gained=s.score-L.score;
   if(s.phase==='goal'){
-   f.ball.goals++;stop(f,.1);kick(f,.7);ring(f,s.hitX,s.hitY,1.4);
+   f.ball.goals++;stop(f,.1);kick(f,.7);ring(f,s.hitX,s.hitY,1.4);triggerPinballCrew(f.crew,'goal');confetti(f,1);
    popup(f,180,215,`${s.lastRebound?'REBOUND GOAL':s.cue==='corner'?'CORNER':'GOAL'}! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');
   }else switch(s.cue){
    case 'dazed':f.ball.knockdowns++;stop(f,.06);kick(f,.28);ring(f,s.hitX,s.hitY,1);if(gained>0)popup(f,s.hitX,s.hitY,`+${gained}`,'score');break;
    case 'block':ring(f,s.hitX,s.hitY,.7);if(gained>0)popup(f,s.hitX,s.hitY,`+${gained}`,'score');break;
-   case 'save':if(x.parry===L.parry)popup(f,s.hitX,s.hitY+18,'SAVED','save');break;
-   case 'mbGoal':f.ball.goals++;stop(f,.08);kick(f,.55);ring(f,s.hitX,s.hitY,1.4);popup(f,180,215,`${s.lastRebound?'REBOUND':'2v1'} GOAL! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');break;
+   case 'save':triggerPinballCrew(f.crew,'save');if(x.parry===L.parry)popup(f,s.hitX,s.hitY+18,'SAVED','save');break;
+   case 'mbGoal':f.ball.goals++;triggerPinballCrew(f.crew,'goal');confetti(f,1);stop(f,.08);kick(f,.55);ring(f,s.hitX,s.hitY,1.4);popup(f,180,215,`${s.lastRebound?'REBOUND':'2v1'} GOAL! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');break;
    case 'multiball':stop(f,.06);kick(f,.35);ring(f,180,300,1.8);popup(f,180,260,'2v1 BREAKAWAY!','lit');break;
    case 'mbSave':f.rescueFlash=1;popup(f,180,560,'BACK IN PLAY','rescue');break;
    case 'wallPass':ring(f,s.hitX,s.hitY,1.1);popup(f,s.hitX,s.hitY-18,`WALL PASS +${WALL_PASS_POINTS}`,'lit');break;
    case 'halfTime':popup(f,180,300,"HALF TIME · 45'",'lit');break;
    case 'stoppage':popup(f,180,300,'STOPPAGE TIME!','warn');break;
-   case 'fullTime':ring(f,180,300,2);popup(f,180,280,s.fullTimeBonus>0?`FULL TIME +${formatPinballPoints(s.fullTimeBonus)}`:'FULL TIME','goal');break;
+   case 'fullTime':ring(f,180,300,2);confetti(f,2);popup(f,180,280,s.fullTimeBonus>0?`FULL TIME +${formatPinballPoints(s.fullTimeBonus)}`:'FULL TIME','goal');break;
    case 'attack':popup(f,s.hitX,s.hitY,'SHOT!','warn');break;
    case 'rescue':f.rescueFlash=1;popup(f,180,560,'BALL SAVED','rescue');break;
    case 'nudge':kick(f,.22);break;
-   case 'strike':if(s.combination>1&&gained>0)popup(f,s.hitX,s.hitY-14,`${s.combination}× +${gained}`,'score');break;
+   case 'strike':
+    // Switching feet is the lesson: 3× and 4× get their own call, sting and sparkle (once per rally).
+    if(s.combination>=3&&s.combination>f.streakShown){f.streakShown=s.combination;emit(false,'pb-streak');ring(f,s.hitX,s.hitY,s.combination>=4?1.5:1.1);kick(f,.1);popup(f,s.hitX,s.hitY-14,`${s.combination>=4?'ON FIRE!':'SWITCH FEET!'} ${s.combination}× +${gained}`,'lit');}
+    else if(s.combination>1&&gained>0)popup(f,s.hitX,s.hitY-14,`${s.combination}× +${gained}`,'score');
+    if(s.combination<=1)f.streakShown=1;break;
    case 'drop':popup(f,s.hitX,s.hitY+16,`+${gained}`,'score');break;
    case 'wallDown':ring(f,180,132,1.6);popup(f,180,175,'WALL BROKEN!','lit');break;
    case 'flag':popup(f,s.hitX<180?s.hitX+40:s.hitX-40,s.hitY,flagWord(s.table.flags),'score');break;
@@ -133,11 +147,11 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
    case 'cone':ring(f,s.hitX,s.hitY,.55);break;
    case 'dugout':ring(f,s.hitX,s.hitY,.8);break;
    case 'mode':{const m=pinballModeInfo(s.table);popup(f,180,300,m?m.name+'!':'MODE!','lit');ring(f,306,262,1.3);break;}
-   case 'modeDone':ring(f,180,300,1.6);popup(f,180,300,'MODE COMPLETE +1,500','goal');break;
+   case 'modeDone':ring(f,180,300,1.6);confetti(f,1);popup(f,180,300,'MODE COMPLETE +1,500','goal');break;
    case 'onetwo':ring(f,s.hitX,s.hitY,.9);popup(f,s.hitX,s.hitY,`ONE–TWO ${s.table.modeProgress}/3`,'score');break;
    case 'greatBlock':ring(f,s.hitX,s.hitY,1.3);popup(f,s.hitX,s.hitY-20,'GREAT BLOCK!','goal');break;
    case 'clear':popup(f,180,540,'OFF THE LINE!','rescue');break;
-   case 'final':ring(f,180,60,2);popup(f,180,260,'CUP FINAL!','goal');break;
+   case 'final':ring(f,180,60,2);confetti(f,2);popup(f,180,260,'CUP FINAL!','goal');break;
    case 'finalEnd':popup(f,180,260,'FULL TIME +2,000','goal');break;
   }
  }
@@ -150,7 +164,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(L.phase!=='playing'&&s.phase==='playing')f.summaryFresh=false;
  // A real drain is the only thing that spends a ball (rescues never do).
  if(s.balls<L.balls){
-  f.drainFlash=1;kick(f,.25);if(s.cue!=='concede')emit(false,'pb-drain');
+  f.drainFlash=1;kick(f,.25);triggerPinballCrew(f.crew,'drain');f.streakShown=1;if(s.cue!=='concede')emit(false,'pb-drain');
   const earned=s.score-f.ball.startScore;
   const t=s.table;f.summary=`Ball ${f.ball.number} · +${formatPinballPoints(earned)} · ${plural(f.ball.goals,'goal')}${t.lastBonus>0?` · bonus ${formatPinballPoints(t.lastBonus)}${t.lastBonusX>1?` (×${t.lastBonusX})`:''}`:''}${f.ball.perfect>0?` · ${f.ball.perfect} perfect`:''}${f.ball.bestCombo>1?` · best ${f.ball.bestCombo}× combo`:''}`;
   f.summaryFresh=true;f.ball.number++;f.ball.startScore=s.score;f.ball.goals=0;f.ball.bestCombo=0;f.ball.knockdowns=0;f.ball.perfect=0;
@@ -235,6 +249,8 @@ export function pinballTableMessage(s:PinballState):string|null{
  {const tm=timingMessage(s);if(tm)return tm;}
  // First touches of a run: one plain instruction until the first real strike.
  if(s.sfx.flipper===0&&s.goals===0&&s.balls===3)return 'Kick it back up just as the ball reaches your flipper!';
+ // Second step of the first-ball lesson: after the first kicks, teach switching feet until a combo lands.
+ if(s.goals===0&&s.balls===3&&s.level===1&&s.sfx.flipper<6&&s.combination<2)return 'Nice kick! Now strike with your OTHER foot to build a combo.';
  if(s.extraLive)return `2v1 BREAKAWAY · two balls · goals count double${s.mbSave>0?` · save ${Math.ceil(s.mbSave)}s`:''}`;
  if(s.stoppage>=0)return `STOPPAGE TIME · ${pinballMinute(s)} · score with this ball!`;
  if(t.mode==='final')return `CUP FINAL · ${Math.ceil(t.modeTime)}s · every goal counts double!`;
