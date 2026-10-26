@@ -79,7 +79,10 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  // cone down and gives it a small press (the beat at the bottom), then up again.
  place:[[0,{al:STACK}],[.3,{py:.55,pz:-.03,tx:.72,hx:.45,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.9,.05,-.2]}],[.52,{py:.53,pz:-.03,tx:.78,hx:.5,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.78,.04,-.04]}],
   [.62,{py:.55,pz:-.03,tx:.75,hx:.48,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.82,.04,-.12]}],[.84,{py:.76,tx:.3,hx:.32,fl:[.1,.07],al:STACK,ar:[-.35,.12,-.4]}],[1,{al:STACK}]],
- mallet:[[0,{}],[.25,{py:.84,tx:-.22,hx:-.1,fl:[.18,.07],fr:[-.14,.07],al:[-2.85,.08,-.7],ar:[-2.85,.08,-.7]}],[.55,{py:.76,tx:.55,hx:.3,fl:[.18,.07],fr:[-.14,.07],al:[-.75,.04,-.1],ar:[-.75,.04,-.1]}],[1,{py:.8,tx:.35,hx:.25,al:[-.85,.06,-.3],ar:[-.85,.06,-.3]}]],
+ // Hammer (Jobs upgrade, Oct 25 2026): a wide, stable stance; up over the head with the chest open, down through the peg with the
+ // knees giving, a small recoil off the peg, then back to the ready.
+ mallet:[[0,{}],[.25,{py:.84,tx:-.22,hx:-.1,fl:[.2,.07],fr:[-.16,.07],al:[-2.85,.08,-.7],ar:[-2.85,.08,-.7]}],[.5,{py:.74,tx:.58,hx:.32,fl:[.2,.07],fr:[-.16,.07],al:[-.72,.04,-.08],ar:[-.72,.04,-.08]}],
+  [.62,{py:.76,tx:.48,hx:.3,fl:[.2,.07],fr:[-.16,.07],al:[-1,.05,-.2],ar:[-1,.05,-.2]}],[1,{py:.8,tx:.35,hx:.25,al:[-.85,.06,-.3],ar:[-.85,.06,-.3]}]],
  drop:[[0,{al:CARD,ar:CARD}],[.5,{py:.78,tx:.55,hx:.4,al:[-1.3,.05,-.2],ar:[-1.3,.05,-.2]}],[1,{}]],
  take:[[0,{}],[.5,{py:.78,tx:.5,hx:.4,al:[-1.2,.05,-.3],ar:[-1.2,.05,-.3]}],[1,{al:CARD,ar:CARD}]],
  // First touch on the rebound: the right boot comes up to cushion it, eyes on the ball, arms out for balance.
