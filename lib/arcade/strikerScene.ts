@@ -59,7 +59,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  // Follow cam: on while the match is live (setFollow); phones zoom a touch more because the rigs are smallest there.
  // Portrait phones (Oct 25 2026: the app is portrait-only on phones, so Strikers now plays upright) zoom in further: the
  // whole 54 m pitch spans the short screen width there, so bodies read smallest without it.
- const PORTRAIT_LIFT=.08;
+ const PORTRAIT_LIFT=.1;
  const FOLLOW_ZOOM=stage.mobile?1.28:1.14,FOLLOW_ZOOM_PORTRAIT=stage.mobile?1.5:1.25;let follow=false,followAmount=0,followZoom=FOLLOW_ZOOM;
  // Shot gauge (Oct 10 2026, replaces the single power ring): a 270° arc on the grass round the shooter, opening toward the
  // camera. The track paints the zones the coaching copy names (gold build-up, the cyan clean-strike band, red overhit) so
@@ -137,7 +137,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  function fit(){const camera=stage.camera,w=canvas.clientWidth,h=canvas.clientHeight;stage.renderer.setSize(w,h,false);camera.clearViewOffset();camera.zoom=1;camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();portrait=camera.aspect<.85;followZoom=portrait?FOLLOW_ZOOM_PORTRAIT:FOLLOW_ZOOM;
   // Landscape phones: frame the pitch a little high so the attacked goal sits above the thumb buttons (bottom corners).
   if(stage.mobile&&!portrait){camera.setViewOffset(w,h,0,h*.075,w,h);camera.updateProjectionMatrix();}
-  // Portrait phones: lift the pitch so Gold's own goal clears the thumb buttons along the bottom edge (Oct 26 2026: .055 → .08,
+  // Portrait phones: lift the pitch so Gold's own goal clears the thumb buttons along the bottom edge (Oct 26 2026: .055 → .1,
   // with the buttons folded into the corners, LiveArcadeMatch.module.css, so the goal mouth sits in the open bottom centre).
   if(stage.mobile&&portrait){camera.setViewOffset(w,h,0,h*PORTRAIT_LIFT,w,h);camera.updateProjectionMatrix();}
   const corner=new T.Vector3();let low=10,high=200;for(let i=0;i<24;i++){const d=(low+high)/2;camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();let fits=true;for(const x of [-27,27])for(const z of (stage.mobile?[-14.6,14.6]:[-18,18])){corner.set(x,0,z).project(camera);if(Math.abs(corner.x)>.94||Math.abs(corner.y)>.91)fits=false;}if(fits)high=d;else low=d;}
