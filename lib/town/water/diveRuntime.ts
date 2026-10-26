@@ -148,6 +148,8 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
  return {session,
   get diving(){return session.diving;},get room(){return room;},
+  /** The rig's stroke clock this frame (rad): the reef's muffled stroke whooshes ride it (islandSound.ts, one per π), like the island swim's. */
+  get strokePhase(){return pose.phase;},
   /** Explore v2 (the room's rest cap, Town): nothing is moving that the player made move: no stick, no lift, no ball rolling,
    *  no pickup or formation playing (the fish and plants are shader time only: they keep swimming at the capped rate). */
   get resting(){const st=session.state;return st.phase==='diving'&&emo.kind===''&&st.effort<.05&&st.lift===0&&joy<=0&&formT<0&&ballGoalT<0&&Math.hypot(ball.vx,ball.vy,ball.vz)<.08&&Math.hypot(st.vx,st.vz)<.35;},
