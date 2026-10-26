@@ -6036,3 +6036,12 @@ draw calls of portrait (docs/LANDSCAPE_AUDIT_OCT23.md §4).
   painted (≈ 0.05 ms each), still one upload per frame.
 - Measured (headless Chrome 390×844 touch, emulation, not iPhone heat): 0 rAF idle in Draw, 0 rAF while a finger rests on the
   ball right after a flick, 30 dirty-rect uploads in 1 s held past the rim. No iPhone temperature measured.
+
+## East Jetty lighthouse spiral stair (Oct 26 2026, `docs/LIGHTHOUSE_STAIRS_OCT26.md`, local, not deployed)
+- Static, merged: treads, stringers, rails, balusters, brackets, lamps, slits, the 3.2 m gallery deck and corbel are built once
+  (`lib/town/lighthouseStairsWorld.ts`) as 7 pieces in existing palette colours at the tower's axis, so the batching pass merges
+  them into the plaza chunk's existing paint batch (no new material or draw call; ≈ 17.5k vertices, in that batch's shadow pass).
+  One new canvas sign at the stair's foot (+1 draw call, like every sign); the name board moved.
+- Per tick, near the lighthouse only (a box test first, nothing elsewhere): a level-aware floor (≤ 3 levels), the rail projection
+  (polar sums, module scratch, no allocation) and the stick assist. The hidden-player check marches ≤ 80 samples, only within
+  9 m of the tower. Not measured on an iPhone.
