@@ -2,7 +2,7 @@
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
-  Cap, CAPS_ALL, BallState, WORLD_BOUNDS, type ClientMsg, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
+  Cap, CAPS_ALL, BallState, WORLD_BOUNDS, KIT_GAP_MS, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl } from './config';
 import { commitPose, governPose, poseGovernor, resetPoseGovernor } from './presence';
@@ -47,6 +47,11 @@ export interface PartyConnection {
   /** Relay v1.6 (Cap.Hit): my own kicked ball knocked friend `victim` over (dir 0..255 = travel direction). false (not sent) on an old
    *  relay, while I am away, or not live. The relay decides; the tumble plays only when S.Hit comes back. */
   sendHit(victim: MemberId, dir: number): boolean;
+  /** Relay v1.7 (Cap.Kit): my worn Kit Shop gear (lib/multiplayer/kit.ts kitFromGear; null = none). Call on load and on every change;
+   *  sent only to a v1.7 relay (an old relay never sees C.Kit: friends then see no kit), after each S.Caps and on a change, at most one
+   *  frame per KIT_GAP_MS (a later change waits and the latest wins). A page that never calls it (a room page) sends nothing, so the
+   *  relay keeps the slot's kit. */
+  setKit(kit: Kit | null): void;
   /** Change MY OWN first name mid-party (Your party > List). n goes through normalizeNick (the join form's rules); memory only, like the
    *  join name: every later reconnect Hello carries it. 'sent': a v1.3 relay (Cap.Rename) gets C.Rename now (or the next resume Hello)
    *  and re-announces me to friends. 'local': an old relay (no Cap.Rename): only this device shows it until a resume reaches a v1.3 relay.
@@ -171,6 +176,14 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let lastEmoteAt = -1e12;
   let caps = 0; // agreed with the relay after each Welcome (S.Caps -> C.Caps)
   let ballSt = -1, ballX = 0, ballY = 0, ballZ = 0, ballAt = -1e12;
+  // Relay v1.7 (Cap.Kit): my kit, whether this page set one at all, what this socket last sent (null = nothing since S.Caps), when.
+  let myKit: Kit | null = null, myKitKey = '', kitSet = false, kitSentKey: string | null = null, kitAt = -1e12;
+  function flushKit() {
+    if (!kitSet || kitSentKey === myKitKey || !(caps & Cap.Kit) || !open() || status !== 'live') return;
+    const t = now();
+    if (t - kitAt < KIT_GAP_MS) return; // sendPose (every frame) and the beat retry it
+    if (raw([C.Kit, myKit])) { kitSentKey = myKitKey; kitAt = t; }
+  }
   const pingBucket = new TokenBucket(0.33, 2);
   // Health: the last beat sent (its echoed value and local send time), recent round trips, drops recovered.
   let beatOut: { v: number; at: number } | null = null;
@@ -326,6 +339,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (caps & Cap.NameLock) nameLocked = false; // a v1.5 relay re-sends every current lock right after our C.Caps
       if (caps) raw([C.Caps, caps]);
       if (renamePending && nick !== null && (caps & Cap.Rename) && !nameLocked && raw([C.Rename, nick])) renamePending = false;
+      kitSentKey = null; kitAt = -1e12; flushKit(); // a fresh socket: tell the relay what I wear (it ignores an unchanged kit)
     } else if (m[0] === S.Renamed) {
       if (m[1] === you) { nick = null; nameLocked = true; } // LEGACY (old relay): the host reset my name; never send it again
     } else if (m[0] === S.NameLock) {
@@ -391,6 +405,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       beatTimer = null;
       if (!open()) return;
       if (beforeBeat) { try { beforeBeat(); } catch { /* the bridge must never stop the beat */ } }
+      flushKit(); // a waiting kit change while the frame loop sleeps
       const t = now(), probe = rttProbeMs > 0 && t - lastProbeAt >= rttProbeMs;
       if (t - lastSendAt >= BEAT_MS - 50 || probe) {
         const v = Math.round(t / 1000);
@@ -507,6 +522,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       // Hidden (away) is sent like any flag change (once); while hidden, emotes and pings stay off.
       localHidden = (body[7] & 2) !== 0;
       if (!open() || status !== 'live') return;
+      if (kitSet && kitSentKey !== myKitKey) flushKit(); // a kit change that waited for KIT_GAP_MS (string compare only otherwise)
       body = governPose(gov, body, nowMs); // relay-safe: in bounds, never faster than the relay keeps (presence.ts governPose)
       let send = false;
       if (!last) send = true;
@@ -554,6 +570,13 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     sendEmoteAnswer(from, yes) {
       if (!(caps & Cap.EmoteAsk) || !open() || status !== 'live') return false;
       return raw([C.EmoteAnswer, from, yes ? 1 : 0]);
+    },
+    setKit(kit) {
+      const key = kit ? kit.join(',') : '';
+      kitSet = true;
+      if (key === myKitKey) return;
+      myKit = kit ? kit.slice() : null; myKitKey = key;
+      flushKit();
     },
     sendHit(victim, dir) {
       if (!(caps & Cap.Hit) || localHidden || !open() || status !== 'live') return false;

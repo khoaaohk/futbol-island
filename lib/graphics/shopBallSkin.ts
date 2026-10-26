@@ -3,6 +3,24 @@ import {BALL_SKIN_H,BALL_SKIN_W,FINISH_ROUGHNESS,bakeBallPixels,designHash} from
 import {drawPatternMask} from '../shop/ballArt';
 import {artUrl,loadBallStore,type BallDesign} from '../shop/ball';
 import {decodeFiDrawSync,isFiDraw} from '../shop/drawCodec';
+const scratch=():HTMLCanvasElement=>{const c=document.createElement('canvas');c.width=BALL_SKIN_W;c.height=BALL_SKIN_H;return c;};
+/** The design without the drawing (panels, pattern, filled panels, seams) on one new canvas + CanvasTexture. */
+function bakeBase(d:BallDesign,key:string){
+ let mask:Uint8ClampedArray|null=null;
+ if(d.pattern.kind!=='none'){const m=scratch();drawPatternMask(m,d.pattern.kind,d.pattern.seed);mask=m.getContext('2d')!.getImageData(0,0,BALL_SKIN_W,BALL_SKIN_H).data;m.width=m.height=1;}
+ const canvas=scratch(),g=canvas.getContext('2d')!;
+ g.putImageData(new ImageData(bakeBallPixels(d,mask),BALL_SKIN_W,BALL_SKIN_H),0,0);
+ const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.wrapS=T.RepeatWrapping;map.name='shop-ball-'+key;
+ return {map,g};
+}
+/**
+ * A friend's Kit Shop ball (relay v1.7, lib/multiplayer/kit.ts kitBall: panels, colours, pattern, finish; never their drawing). One
+ * material + texture per design, baked once; lib/graphics/remoteAvatars.ts keeps at most two and disposes the evicted one (map too).
+ */
+export function friendBallMaterial(d:BallDesign,key:string):T.MeshStandardMaterial{
+ const {map}=bakeBase(d,'friend-'+key);
+ const m=new T.MeshStandardMaterial({map,color:'#ffffff',roughness:FINISH_ROUGHNESS[d.finish]??.7});m.name='friend-shop-ball';return m;
+}
 /**
  * The Kit Shop ball on the island's walking ball (Oct 26 2026, lib/shop/islandGear.ts). One small equirect CanvasTexture per
  * design, baked once when the worn ball changes (never per frame), kept in a 2-entry cache so switching back is free, and
@@ -11,13 +29,8 @@ import {decodeFiDrawSync,isFiDraw} from '../shop/drawCodec';
  */
 export function createShopBallSkin(material:T.MeshStandardMaterial){
  const cache=new Map<string,T.CanvasTexture>();let current='',disposed=false;
- const scratch=():HTMLCanvasElement=>{const c=document.createElement('canvas');c.width=BALL_SKIN_W;c.height=BALL_SKIN_H;return c;};
  function bake(d:BallDesign,key:string){
-  let mask:Uint8ClampedArray|null=null;
-  if(d.pattern.kind!=='none'){const m=scratch();drawPatternMask(m,d.pattern.kind,d.pattern.seed);mask=m.getContext('2d')!.getImageData(0,0,BALL_SKIN_W,BALL_SKIN_H).data;m.width=m.height=1;}
-  const canvas=scratch(),g=canvas.getContext('2d')!;
-  g.putImageData(new ImageData(bakeBallPixels(d,mask),BALL_SKIN_W,BALL_SKIN_H),0,0);
-  const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;map.wrapS=T.RepeatWrapping;map.name='shop-ball-'+key;
+  const {map,g}=bakeBase(d,key);
   const url=d.art.id?artUrl(d.art.id,loadBallStore()):'';
   if(url){
    const lay=(src:CanvasImageSource)=>{if(disposed||!cache.has(key))return;g.drawImage(src,0,0,BALL_SKIN_W,BALL_SKIN_H);map.needsUpdate=true;};

@@ -13,8 +13,8 @@ const { C, S, Cap, CAPS_ALL, Mode, Zone, PoseFlag, PROTOCOL_VERSION } = P;
 let n = 0; const t = (name, fn) => { try { fn(); n++; } catch (e) { console.error('FAIL', name); throw e; } };
 const j = (a) => JSON.stringify(a);
 
-t('protocol: Cap.Hit is the next bit (32), CAPS_ALL 63; C.Hit / S.Hit shapes validate', () => {
-  assert.equal(Cap.Hit, 32); assert.equal(CAPS_ALL, 63); assert.equal(C.Hit, 17); assert.equal(S.Hit, 38);
+t('protocol: Cap.Hit is bit 32 (CAPS_ALL 127 since relay v1.7 Cap.Kit); C.Hit / S.Hit shapes validate', () => {
+  assert.equal(Cap.Hit, 32); assert.equal(CAPS_ALL, 127); assert.equal(C.Hit, 17); assert.equal(S.Hit, 38);
   assert.deepEqual(P.parseClient(j([C.Hit, 3, 200])), [17, 3, 200]);
   for (const bad of [[C.Hit, 32, 0], [C.Hit, 3, 256], [C.Hit, 3], [C.Hit, 3, 1, 1], [C.Hit, '3', 1], [C.Hit, 3, -1]]) assert.equal(P.parseClient(j(bad)), null, j(bad));
   assert.ok(P.parseServer(j([S.Hit, 1, 2, 9]))); assert.equal(P.parseServer(j([S.Hit, 2, 2, 9])), null, 'never yourself');
