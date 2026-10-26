@@ -12,7 +12,7 @@ import {createDiveRoom,type DiveRoom} from '../../graphics/diveRoom';
 import type {SwimRigPose} from '../../graphics/swimPose';
 import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
 import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
-import {diveBallNote,diveBallsFound} from './diveBalls';
+import {DIVE_BALL_FIND,diveBallNote,diveBallsFound} from './diveBalls';
 import {holdCardOffers} from '../cardOfferHold';
 import {LEARN_COINS} from '../../economy';
 import {setDiveSpots} from '../../graphics/waterSurface';
@@ -48,6 +48,9 @@ function writeDiveReef(s:DiveReefSave){try{localStorage.setItem(DIVE_REEF_KEY,JS
 /** Explore v2 tuning: the buddy fish's follow / lead (it leads after the diver has hovered DIVE_BUDDY_LEAD_S), the ball's water drag and
  *  sink, the restored reef's football formation (s), the delight wiggle after a find or a pickup (s). */
 export const DIVE_BUDDY_LEAD_S=2,DIVE_BALL={drag:1.1,sink:.7,r:.3,push:1.1},DIVE_FORM_S=8,DIVE_JOY_S=.7;
+/** The secret ball's gentle nudge (Oct 25 2026): said once a dive, when the diver hovers with only the hidden ball left in the zone. */
+export const DIVE_SECRET_NOTE='Dot spins round you: this reef still hides one more secret. Peek inside things!';
+const NO_FINDS:readonly string[]=[];
 export const DIVE_GOAL_CARD={title:'Goal under the sea!',label:'Coaching idea' as const,text:'Water slows the ball, like a soaked pitch. On a rainy day pass a little firmer, so the ball still reaches your teammate.'};
 /** Explore delight: the whale crosses this far (m) ahead of where the diver faces when it starts. */
 const X_AHEAD=5;
@@ -95,7 +98,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  const pose:SwimRigPose={w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0};
  const v=new T.Vector3(),motion={facing:0,swim:pose,turnSmoothing:5};
  // Explore v2: the journey (pickups collected, progress, restore), the buddy fish, the ball, the formation and the delight wiggle.
- let reefSave=readDiveReef(),picks:DivePickup[]=[],got:boolean[]=[],formT=-1,joy=0,pickedThisDive=0,still=0,ballGoalT=-1;
+ let reefSave=readDiveReef(),picks:DivePickup[]=[],got:boolean[]=[],formT=-1,joy=0,pickedThisDive=0,still=0,ballGoalT=-1,secretSaid=false,hasBall=false;
  const form={x:0,y:0,z:0},bud={x:0,y:0,z:0,vx:0,vy:0,vz:0},tgt={x:0,z:0},ball={x:0,y:0,z:0,vx:0,vy:0,vz:0,lz:0};
   const ax=new T.Vector3();
  // Explore delight: the zone friend (home, place, heading), the emote, the whale's pass and today's sparkle spot.
@@ -127,7 +130,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   whale.at=calm?-1:whalePlan(rnd(),rnd(),!!reefSave.whale?.includes(s.id));whale.t=-1;whale.done=whale.stamped=false;
   room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
    friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;session.setSolids(room.solids);/* Explore (Oct 22 2026): solid wreck, rocks, arch, goal, crates */
-  formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
+  formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;secretSaid=false;hasBall=s.finds.some(f=>f.kind==='ball');bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
   room.scene.add(ports.player.root);pose.phase=0;hidePrompt();findPrompt='';
   diveLift.up=diveLift.down=false;diveStore.set({diving:true,card:null,note:`${s.name}: ${s.theme.tagline} Dot the little fish will show you around.`,spot:s.id,banner:edge?diveEdgeEntering(s.name):'',friend:'',hearts:reefSave.hearts?.[s.id]??0});drawProgress(s,false);ports.entered(s,edge);drawBreath(true);
@@ -249,7 +252,13 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    if(formT>=0){formT+=dt;const k=formT<1?formT:formT>DIVE_FORM_S-1.2?Math.max(0,(DIVE_FORM_S-formT)/1.2):1;room.form(k*k*(3-2*k),form.x,form.y,form.z);if(formT>=DIVE_FORM_S){formT=-1;room.form(0,0,0,0);}}
    // The buddy fish: beside the diver, a little ahead; after a hover it swims toward the next thing to visit and back (it leads).
    if(s){const fx=Math.sin(st.yaw),fz=Math.cos(st.yaw);let gx=st.x+fx*.9+fz*.8,gy=st.y+.25+Math.sin(clock*1.3)*.15,gz=st.z+fz*.9-fx*.8;
-    if(still>DIVE_BUDDY_LEAD_S&&nextTarget(s,picks,got,progress(s).found,st.x,st.z,tgt)){const dx=tgt.x-st.x,dz=tgt.z-st.z,d=Math.hypot(dx,dz)||1,u=Math.min(d,1.5+2.5*(.5+.5*Math.sin((still-DIVE_BUDDY_LEAD_S)*1.4-1.57)));gx=st.x+dx/d*u;gz=st.z+dz/d*u;}
+    const hover=still>DIVE_BUDDY_LEAD_S,fd=save.spots[s.id]??NO_FINDS;/* the saved finds (progress(s) built arrays every hover frame) */
+    if(hover&&nextTarget(s,picks,got,fd,st.x,st.z,tgt)){const dx=tgt.x-st.x,dz=tgt.z-st.z,d=Math.hypot(dx,dz)||1,u=Math.min(d,1.5+2.5*(.5+.5*Math.sin((still-DIVE_BUDDY_LEAD_S)*1.4-1.57)));gx=st.x+dx/d*u;gz=st.z+dz/d*u;}
+    else if(hover&&!fd.includes(DIVE_BALL_FIND)&&!st.used.has(DIVE_BALL_FIND)&&hasBall){
+     // Oct 25 2026 (Explore audit): everything else here is done but the secret ball. Dot never leads to it (the secret stays a
+     // secret): it circles the diver once in a while, and the first time this dive a gentle note says there is one more to find.
+     const a=(still-DIVE_BUDDY_LEAD_S)*1.6;gx=st.x+Math.sin(a)*1.3;gz=st.z+Math.cos(a)*1.3;
+     if(!secretSaid&&!diveStore.get().card){secretSaid=true;diveStore.set({note:DIVE_SECRET_NOTE});}}
     const kb=1-Math.exp(-dt*3);bud.vx+=((gx-bud.x)*4-bud.vx)*kb;bud.vy+=((gy-bud.y)*4-bud.vy)*kb;bud.vz+=((gz-bud.z)*4-bud.vz)*kb;
     bud.x+=bud.vx*dt;bud.y+=bud.vy*dt;bud.z+=bud.vz*dt;const sp=Math.hypot(bud.vx,bud.vz);
     room.setBuddy(bud.x,bud.y,bud.z,sp>.15?bud.vx:fx,sp>.15?bud.vy*.5:0,sp>.15?bud.vz:fz,true);}
