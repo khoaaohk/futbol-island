@@ -14,7 +14,7 @@ export function createJobFx(root:T.Object3D){
  let tweens:Tween[]=[];
  const geo=new T.BoxGeometry(.09,.09,.09),mat=new T.MeshBasicMaterial({color:'#ffffff'});
  const parts=new T.InstancedMesh(geo,mat,PARTICLES);parts.name='job-fx-particles';parts.frustumCulled=false;parts.visible=false;root.add(parts);
- const hidden=new T.Matrix4().makeScale(0,0,0),m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),c=new T.Color();
+ const hidden=new T.Matrix4().makeScale(0,0,0),m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),c=new T.Color(),pv=new T.Vector3(),sv=new T.Vector3();
  for(let i=0;i<PARTICLES;i++){parts.setMatrixAt(i,hidden);parts.setColorAt(i,c.set('#ffffff'));}
  type P={x:number;y:number;z:number;vx:number;vy:number;vz:number;age:number;life:number;spin:number;size:number;float:boolean};
  const live:(P|null)[]=new Array(PARTICLES).fill(null);let cursor=0,alive=0;
@@ -32,13 +32,15 @@ export function createJobFx(root:T.Object3D){
  }
  function update(dt:number){
   const step=Math.min(dt,.05);
-  if(tweens.length){const list=tweens;tweens=[];const keep:Tween[]=[];
-   for(const tw of list){tw.t+=step;const k=Math.min(1,tw.t/tw.dur);tw.fn(k);if(k<1)keep.push(tw);else tw.end?.();}
-   tweens=keep.concat(tweens);}
+  // Jobs upgrade (Oct 25 2026): no arrays or vectors made per frame. Tweens added by an `end` callback during the walk land after
+  // `n` and are kept as they are (the same order as before: survivors first, then the new ones).
+  if(tweens.length){const list=tweens,n=list.length;let w=0;
+   for(let i=0;i<n;i++){const tw=list[i];tw.t+=step;const k=Math.min(1,tw.t/tw.dur);tw.fn(k);if(k<1)list[w++]=tw;else tw.end?.();}
+   if(tweens===list){const extra=list.length-n;for(let i=0;i<extra;i++)list[w+i]=list[n+i];list.length=w+extra;}}
   if(alive){for(let i=0;i<PARTICLES;i++){const p=live[i];if(!p)continue;p.age+=step;if(p.age>=p.life){live[i]=null;alive--;parts.setMatrixAt(i,hidden);continue;}
     if(p.float){p.vy-=3*step;p.vx*=.96;p.vz*=.96;if(p.vy<-.8)p.vy=-.8;}else p.vy-=9.8*step;
     p.x+=p.vx*step;p.y+=p.vy*step;p.z+=p.vz*step;const s=p.size*(1-p.age/p.life*.5);
-    m.compose(new T.Vector3(p.x,p.y,p.z),q.setFromEuler(e.set(p.age*p.spin,p.age*p.spin*.7,0)),new T.Vector3(s,p.float?s*.25:s,s));parts.setMatrixAt(i,m);}
+    m.compose(pv.set(p.x,p.y,p.z),q.setFromEuler(e.set(p.age*p.spin,p.age*p.spin*.7,0)),sv.set(s,p.float?s*.25:s,s));parts.setMatrixAt(i,m);}
    parts.instanceMatrix.needsUpdate=true;if(!alive)parts.visible=false;}
  }
  function clear(){for(const tw of tweens)tw.end?.();tweens=[];live.fill(null);alive=0;for(let i=0;i<PARTICLES;i++)parts.setMatrixAt(i,hidden);parts.instanceMatrix.needsUpdate=true;parts.visible=false;}

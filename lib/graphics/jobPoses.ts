@@ -67,12 +67,18 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  twist:[[0,{}],[.3,{py:.8,tx:.45,hx:.4,al:[-1.1,.08,-.45],ar:[-1.25,.02,-.35,.9]}],[.6,{py:.8,tx:.45,hx:.4,al:[-1.1,.08,-.45],ar:[-1.25,.02,-.35,-.9]}],[.85,{py:.84,tx:.12,al:[-.5,.12,-.5],ar:[-.6,.05,-1.6]}],[1,{}]],
  nope:[[0,{}],[.35,{py:.82,tx:.4,hx:.35,ar:[-1.2,.04,-.35,.6]}],[.65,{py:.84,tx:.2,ty:.12,hx:.1,ar:[-.4,.2,-.4]}],[1,{}]],
  snip:[[0,{}],[.35,{py:.8,tx:.5,hx:.4,al:[-1.2,-.05,-.5],ar:[-1.2,-.05,-.5]}],[.65,{py:.8,tx:.5,hx:.4,al:[-1.2,.28,-.3],ar:[-1.2,.28,-.3]}],[1,{py:.82,tx:.4,hx:.3,al:[-1.1,-.05,-.5],ar:[-1.1,-.05,-.5]}]],
- pick:[[0,{}],[.45,{py:.58,pz:-.05,tx:.95,hx:.3,fl:[.14,.07],fr:[-.1,.07],al:[-1,.1,-.1],ar:[-1,.1,-.1]}],[.75,{py:.72,tx:.5,al:[-.8,.1,-.6],ar:[-.8,.1,-.6]}],[1,{}]],
+ // Jobs upgrade (Oct 25 2026): bend from the hips with the knees bent (a squat, not a stiff-legged stoop), grab, rise, and pop it
+ // over the right shoulder into the bag on the back (the hand goes up and back, the torso turns a little with it).
+ pick:[[0,{}],[.36,{py:.58,pz:-.05,tx:.92,hx:.35,fl:[.16,.07],fr:[-.12,.07],al:[-.9,.18,-.2],ar:[-1.05,.06,-.08]}],[.48,{py:.6,pz:-.05,tx:.88,hx:.38,fl:[.16,.07],fr:[-.12,.07],al:[-.85,.18,-.25],ar:[-.95,.06,-.4]}],
+  [.7,{py:.8,tx:.2,ty:-.18,hx:.05,al:[-.5,.25,-.4],ar:[-2.3,.35,-1.55]}],[.84,{py:.84,tx:.08,ty:-.22,al:[-.3,.2,-.35],ar:[-2.55,.3,-1.8]}],[1,{}]],
  stuff:[[0,{}],[.45,{py:.66,tx:.8,hx:.3,fl:[.14,.07],al:[-.95,.15,-.2],ar:[-.95,.15,-.2]}],[.8,{py:.82,tx:.2,ty:-.35,ar:[-.25,.55,-1.1],al:[-.6,.2,-.6]}],[1,{}]],
  toss:[[0,{}],[.35,{py:.82,tx:-.1,ty:.35,fr:[-.2,.07],ar:[.75,.3,-.2],al:[-.5,.3,-.3]}],[.62,{py:.84,tx:.25,ty:-.3,fl:[.2,.07],ar:[-2.05,.2,-.2],al:[-.7,.35,-.3]}],[1,{}]],
  scoop:[[0,{}],[.45,{py:.58,tx:.85,hx:.35,fl:[.16,.07],fr:[-.12,.07],al:[-1.1,.02,-.2],ar:[-1.1,.02,-.2]}],[.8,{py:.8,tx:.3,al:[-1.1,-.02,-1.2],ar:[-1.1,-.02,-1.2]}],[1,{al:CARRY_BALL,ar:CARRY_BALL}]],
  throwin:[[0,{al:CARRY_BALL,ar:CARRY_BALL}],[.4,{py:.84,tx:-.3,hx:-.2,fl:[.26,.07],fr:[-.22,.07],al:[-2.9,.15,-1.7],ar:[-2.9,.15,-1.7]}],[.62,{py:.82,tx:.35,fl:[.26,.07],fr:[-.22,.07],al:[-2.05,.1,-.2],ar:[-2.05,.1,-.2]}],[1,{tx:.12,al:[-1.1,.12,-.3],ar:[-1.1,.12,-.3]}]],
- place:[[0,{al:STACK}],[.5,{py:.56,tx:.72,hx:.35,fl:[.2,.07],fr:[-.15,.07],al:STACK,ar:[-.85,.05,-.1]}],[1,{al:STACK}]],
+ // Cone (Jobs upgrade, Oct 25 2026): a real crouch with the stack held in the left arm, eyes on the mark, the right hand sets the
+ // cone down and gives it a small press (the beat at the bottom), then up again.
+ place:[[0,{al:STACK}],[.3,{py:.55,pz:-.03,tx:.72,hx:.45,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.9,.05,-.2]}],[.52,{py:.53,pz:-.03,tx:.78,hx:.5,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.78,.04,-.04]}],
+  [.62,{py:.55,pz:-.03,tx:.75,hx:.48,fl:[.22,.07],fr:[-.16,.07],al:STACK,ar:[-.82,.04,-.12]}],[.84,{py:.76,tx:.3,hx:.32,fl:[.1,.07],al:STACK,ar:[-.35,.12,-.4]}],[1,{al:STACK}]],
  mallet:[[0,{}],[.25,{py:.84,tx:-.22,hx:-.1,fl:[.18,.07],fr:[-.14,.07],al:[-2.85,.08,-.7],ar:[-2.85,.08,-.7]}],[.55,{py:.76,tx:.55,hx:.3,fl:[.18,.07],fr:[-.14,.07],al:[-.75,.04,-.1],ar:[-.75,.04,-.1]}],[1,{py:.8,tx:.35,hx:.25,al:[-.85,.06,-.3],ar:[-.85,.06,-.3]}]],
  drop:[[0,{al:CARD,ar:CARD}],[.5,{py:.78,tx:.55,hx:.4,al:[-1.3,.05,-.2],ar:[-1.3,.05,-.2]}],[1,{}]],
  take:[[0,{}],[.5,{py:.78,tx:.5,hx:.4,al:[-1.2,.05,-.3],ar:[-1.2,.05,-.3]}],[1,{al:CARD,ar:CARD}]],
@@ -80,7 +86,12 @@ const KEYS:Partial<Record<JobPoseKind,Key[]>>={
  control:[[0,{py:.84,tx:.12,hx:.3,fr:[.14,.12],al:[-.2,.35,-.3],ar:[-.1,.3,-.3]}],[.5,{py:.82,tx:.18,hx:.35,fr:[.32,.2],al:[-.25,.45,-.3],ar:[-.1,.4,-.3]}],[1,{}]],
  // Wall rebounds: the legs keep the juggle's receive; eyes down on the ball, a soft knee-high balance with the arms.
  firsttouch:[[0,{}],[.4,{tx:.2,hx:.4,al:[-.3,.55,-.35],ar:[-.25,.5,-.35]}],[1,{}]],
- flagup:[[0,{}],[.3,{ar:[-3.05,.04,-.05],hx:-.1}],[.85,{ar:[-3.05,.04,-.05],hx:-.1}],[1,{ar:[-3.05,.04,-.05]}]],
+ // Flag up (Jobs upgrade, Oct 25 2026): a sharp, straight arm up, the body rising onto the toes and the free arm out for balance,
+ // the eyes on the line; held while the whistle goes, then lowered.
+ flagup:[[0,{}],[.22,{py:.89,toe:.22,fl:[.03,.09],fr:[-.03,.09],tx:-.05,hx:-.12,hy:.12,al:[-.25,.55,-.35],ar:[-3.05,.04,-.05]}],[.85,{py:.88,toe:.15,fl:[.03,.08],fr:[-.03,.08],hx:-.1,hy:.1,al:[-.2,.45,-.35],ar:[-3.05,.04,-.05]}],[1,{ar:[-3.05,.04,-.05]}]],
+ // Job done (Jobs upgrade, Oct 25 2026): a little crouch with fists in, a hop with both arms up, the landing, a fist pump.
+ cheer:[[0,{}],[.16,{py:.76,pz:-.02,tx:.2,hx:.15,fl:[.06,.07],fr:[-.06,.07],al:[-.55,.3,-1.5],ar:[-.55,.3,-1.5]}],[.38,{py:1,toe:.7,fl:[.04,.2],fr:[-.04,.2],tx:-.12,hx:-.35,al:[-2.85,.5,-.2],ar:[-2.85,.5,-.2]}],
+  [.56,{py:.82,tx:.08,hx:-.05,fl:[.06,.07],fr:[-.06,.07],al:[-2.5,.55,-.5],ar:[-2.5,.55,-.5]}],[.76,{py:.86,tx:-.04,hx:-.2,al:[-.4,.35,-.6],ar:[-2.7,.2,-1.9]}],[.88,{py:.85,tx:-.02,hx:-.15,al:[-.3,.3,-.5],ar:[-2.4,.2,-1.95]}],[1,{}]],
  flagdown:[[0,{}],[.4,{al:[-1.45,.12,-.1],ar:[.1,.1,-.1],tx:.05}],[.8,{al:[-1.3,.35,-.1]}],[1,{}]],
  // Summit Isle foraging (lib/graphics/fruitTrees.ts): a staggered stance, both hands on the trunk, two pushes (elbows bent →
  // arms straight, leaning in) with the eyes up on the canopy; the fruit falls on the second push (TREE_SHAKE_PUSHES).
@@ -184,12 +195,21 @@ function set(p:Partial<Omit<PoseTarget,'upper'>>){
  const fl=p.fl??N.fl,fr=p.fr??N.fr,al=p.al??N.al,ar=p.ar??N.ar;out.fl[0]=fl[0];out.fl[1]=fl[1];out.fr[0]=fr[0];out.fr[1]=fr[1];
  for(let i=0;i<4;i++){out.al[i]=al[i]??0;out.ar[i]=ar[i]??0;}
 }
+/** Blend keyframe a → b by k into `out` (Jobs upgrade, Oct 25 2026: no merged objects per frame; a missing key reads the neutral). */
 function mixKeys(a:Partial<Omit<PoseTarget,'upper'>>,b:Partial<Omit<PoseTarget,'upper'>>,k:number){
- const A={...N,...a},B={...N,...b};
- out.py=lerp(A.py,B.py,k);out.pz=lerp(A.pz,B.pz,k);out.tx=lerp(A.tx,B.tx,k);out.ty=lerp(A.ty,B.ty,k);out.hx=lerp(A.hx,B.hx,k);out.hy=lerp(A.hy,B.hy,k);out.toe=lerp(A.toe,B.toe,k);
- for(let i=0;i<2;i++){out.fl[i]=lerp(A.fl[i],B.fl[i],k);out.fr[i]=lerp(A.fr[i],B.fr[i],k);}
- for(let i=0;i<4;i++){out.al[i]=lerp(A.al[i]??0,B.al[i]??0,k);out.ar[i]=lerp(A.ar[i]??0,B.ar[i]??0,k);}
+ out.py=lerp(a.py??N.py,b.py??N.py,k);out.pz=lerp(a.pz??N.pz,b.pz??N.pz,k);out.tx=lerp(a.tx??N.tx,b.tx??N.tx,k);out.ty=lerp(a.ty??N.ty,b.ty??N.ty,k);
+ out.hx=lerp(a.hx??N.hx,b.hx??N.hx,k);out.hy=lerp(a.hy??N.hy,b.hy??N.hy,k);out.toe=lerp(a.toe??N.toe,b.toe??N.toe,k);
+ const afl=a.fl??N.fl,bfl=b.fl??N.fl,afr=a.fr??N.fr,bfr=b.fr??N.fr,aal=a.al??N.al,bal=b.al??N.al,aar=a.ar??N.ar,bar=b.ar??N.ar;
+ for(let i=0;i<2;i++){out.fl[i]=lerp(afl[i],bfl[i],k);out.fr[i]=lerp(afr[i],bfr[i],k);}
+ for(let i=0;i<4;i++){out.al[i]=lerp(aal[i]??0,bal[i]??0,k);out.ar[i]=lerp(aar[i]??0,bar[i]??0,k);}
 }
+/** Allocation-free writers for the held poses (Jobs upgrade, Oct 25 2026). */
+function neutral(){out.py=N.py;out.pz=N.pz;out.tx=N.tx;out.ty=N.ty;out.hx=N.hx;out.hy=N.hy;out.toe=N.toe;out.fl[0]=N.fl[0];out.fl[1]=N.fl[1];out.fr[0]=N.fr[0];out.fr[1]=N.fr[1];
+ for(let i=0;i<4;i++){out.al[i]=N.al[i]??0;out.ar[i]=N.ar[i]??0;}}
+function arm(a:Arm,sx:number,sz:number,ex:number,hy=0){a[0]=sx;a[1]=sz;a[2]=ex;a[3]=hy;}
+function armOf(a:Arm,b:Arm){a[0]=b[0];a[1]=b[1];a[2]=b[2];a[3]=b[3]??0;}
+/** Idle fidget for the held carry poses: standing still, a slow breath in the chest and a look around (0 while walking). */
+function fidget(g:Gait,time:number,wob:number){const still=(1-Math.max(0,Math.min(1,g.amount)))*wob;out.tx+=.018*Math.sin(time*2.1)*still;out.hy+=.14*Math.sin(time*.55)*still;}
 /** The pose target for `pose` (the same object is reused: copy what you keep). `time` drives the tug / sweep rhythm. */
 /** The firefly jar's held poses use the net's body (the arms are solved onto the jar instead of the pole). */
 const JAR_BODY:Partial<Record<JobPoseKind,JobPoseKind>>={jarcarry:'netcarry',jarsneak:'netsneak',jarshow:'netshow',jarcatch:'netcatch'};
@@ -202,12 +222,17 @@ export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean,gait?:Gai
   // Garden: free picking has no basket, so the left arm balances instead; reduced motion keeps the look but not the shake.
   if(GARDEN_POSES.has(pose.kind)&&!pose.basket)for(let j=0;j<4;j++)out.al[j]=BALANCE[j]??0;
   if(reduced&&pose.kind==='headshake')out.hy=0;
+  if(reduced&&pose.kind==='cheer'){out.py=Math.min(out.py,N.py);out.toe=0;out.fl[1]=out.fr[1]=N.fl[1];}
   return out;}
  switch(kind){
   // Crouch, grip the leaves with both hands and lean back as the meter fills; small tugs in rhythm with it.
   case 'pull':{const t=Math.sin(time*22)*.035*tug*wob;set({py:.6+.06*tug,pz:-.06-.16*tug+t,tx:.45-.73*tug+t*2,hx:.35-.15*tug,fl:[.26,.07],fr:[-.05,.07],al:[-.9+.1*tug,.14,-.12],ar:[-.9+.1*tug,.14,-.12]});break;}
   // Two-handed rake: the torso turns and the arms sweep across in front while Rake is held.
-  case 'rake':{const s=Math.sin(k*Math.PI*2)*wob;set({py:.8,tx:.38+.08*Math.cos(k*Math.PI*4)*wob,ty:.28*s,hx:.3,fl:[.22,.07],fr:[-.16,.07],al:[-.75+.25*s,.25,-.55],ar:[-1.05+.25*s,.05,-.3]});break;}
+  // Jobs upgrade (Oct 25 2026): a real raking stroke. Reach out (arms long, chest over the front boot, the front foot steps in), then
+  // the firmer pull back toward you (elbows bend, weight back), with the sweep turning a little across the pile each stroke.
+  case 'rake':{const a=k*Math.PI*2,r=wob?.5-.5*Math.cos(a):.5,pull=wob?Math.max(0,Math.sin(a)):0,s=Math.sin(a*.5)*wob;neutral();
+   out.py=.8-.03*r;out.pz=-.02+.05*r;out.tx=.3+.24*r;out.ty=.2*s;out.hx=.32+.08*r;out.fl[0]=.18+.08*r;out.fr[0]=-.18+.03*pull;
+   arm(out.al,-.68-.4*r,.22,-.7+.38*r);arm(out.ar,-.92-.38*r,.04,-.45+.3*r);break;}
   // Bug squad net carry (bug-polish, Oct 20 2026): the arms are solved onto the pole by player.ts (netGrip below); these angles are
   // only the fallback. The torso counter-rotates against the walk (the arms no longer swing) and leans a little more with speed.
   case 'netcarry':{const g=gait??IDLE_GAIT,s=Math.sin(g.phase)*g.amount*wob;
@@ -218,14 +243,26 @@ export function jobPoseTarget(pose:JobPose,time:number,reduced:boolean,gait?:Gai
   // tug = the hop of joy (0..1, up on the toes); the arms are solved onto the pole by player.ts (netGrip's show keys).
   case 'netshow':{const r=k,h=tug;set({py:.84+.02*r+.13*h,pz:.02,tx:.1-.16*r,ty:-.08*r,hx:.12-.42*r,hy:.18*r,toe:.5*h,fl:[.12,.07+.13*h],fr:[-.12,.07+.13*h],al:[-1.2-1.2*r,.15,-.6],ar:[-1.1-1.2*r,.1,-.5]});break;}
   case 'netsneak':{const g=gait??IDLE_GAIT,s=Math.sin(g.phase)*g.amount*wob;set({tx:.3,hx:.12,ty:-.05+.04*s,al:[-1.1,.05,-.5],ar:[-.9,.05,-.9]});break;}
-  case 'push':set({tx:.18,hx:.1,al:[-1.05+.25*(1-tug),-.05,-.4],ar:[-1.05+.25*(1-tug),-.05,-.4]});break;
-  case 'carryball':set({tx:.04,al:CARRY_BALL,ar:CARRY_BALL});break;
-  case 'carrycard':set({tx:.04,al:CARD,ar:CARD});break;
-  case 'carrystack':set({al:STACK});break;
-  case 'carrybasket':set({al:BASKET});break;
-  case 'flaghold':set({ar:[-.12,.1,-.2]});break;
+  // Line marker (Jobs upgrade, Oct 25 2026): both hands on the handle at the hips; painting, the body leans into it and the eyes
+  // follow the line down at the wheel; every step gives the handle a small push.
+  case 'push':{const g=gait??IDLE_GAIT,st=Math.sin(g.phase*2)*g.amount*wob,h=tug;neutral();
+   out.tx=.1+.16*h+.025*st;out.hx=.08+.26*h;out.ty=.04*Math.sin(g.phase)*g.amount*wob;
+   arm(out.al,-1.02+.22*(1-h)-.05*st,-.05,-.42+.08*st);arm(out.ar,-1.02+.22*(1-h)-.05*st,-.05,-.42+.08*st);fidget(g,time,wob*(1-h));break;}
+  // Carrying with a load (Jobs upgrade, Oct 25 2026): the body leans back a little against a ball hugged to the chest, the load
+  // bobs with each step, a free arm swings against the stride; standing, a slow breath and a look around.
+  case 'carryball':{const g=gait??IDLE_GAIT,b=Math.cos(g.phase*2)*g.amount*wob;neutral();out.tx=-.02-.05*g.amount+.015*b;out.hx=-.03;
+   arm(out.al,CARRY_BALL[0]+.05*b,CARRY_BALL[1],CARRY_BALL[2]-.06*b);arm(out.ar,CARRY_BALL[0]+.05*b,CARRY_BALL[1],CARRY_BALL[2]-.06*b);fidget(g,time,wob);break;}
+  case 'carrycard':{const g=gait??IDLE_GAIT,b=Math.cos(g.phase*2)*g.amount*wob;neutral();out.tx=.02+.02*g.amount;out.hx=.12;
+   arm(out.al,CARD[0]+.04*b,CARD[1],CARD[2]);arm(out.ar,CARD[0]+.04*b,CARD[1],CARD[2]);fidget(g,time,wob);break;}
+  case 'carrystack':{const g=gait??IDLE_GAIT,sw=Math.sin(g.phase)*g.amount*wob,b=Math.cos(g.phase*2)*g.amount*wob;neutral();out.ty=.06*sw;out.tx=.03*g.amount;
+   arm(out.al,STACK[0]+.04*b,STACK[1],STACK[2]-.04*b);arm(out.ar,.05-.45*sw,.14,-.3-.15*Math.abs(sw));fidget(g,time,wob);break;}
+  case 'carrybasket':{const g=gait??IDLE_GAIT,sw=Math.sin(g.phase)*g.amount*wob;neutral();armOf(out.al,BASKET);out.al[0]+=.06*sw;
+   arm(out.ar,.05-.42*sw,.13,-.3-.12*Math.abs(sw));out.ty=.05*sw;fidget(g,time,wob);break;}
+  // The assistant referee's ready stance: flag held down by the right leg, the free arm relaxed; standing, the eyes keep scanning.
+  case 'flaghold':{const g=gait??IDLE_GAIT;neutral();arm(out.ar,-.12,.1,-.2);fidget(g,time,wob);break;}
   // Kneel at the pump (right knee down), both hands on the handle; each stroke leans in and pushes it down.
-  case 'kneel':set({py:.52,pz:.02,tx:.3+.25*tug,hx:.35,fl:[.32,.07],fr:[-.4,.1],al:[-1.05+.2*tug,.06,-.65+.45*tug],ar:[-1.05+.2*tug,.06,-.65+.45*tug]});break;
+  // Jobs upgrade (Oct 25 2026): each stroke also dips the body onto the handle (a small bounce through the hips).
+  case 'kneel':set({py:.52-.035*tug*wob,pz:.02,tx:.3+.25*tug,hx:.35+.08*tug,fl:[.32,.07],fr:[-.4,.1],al:[-1.05+.2*tug,.06,-.65+.45*tug],ar:[-1.05+.2*tug,.06,-.65+.45*tug]});break;
   default:set({});
  }
  return out;

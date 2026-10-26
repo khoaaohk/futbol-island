@@ -5,6 +5,7 @@ import {REBOUND_WALL,type JobDef,type WorkStep,type HarvestSpot} from './jobCata
 import {OFFSIDE_CLIPS} from './offsideClips';
 import {GARDEN_SPOTS,GARDEN_KIND,isTreeSpot} from './garden';
 import {goodById} from '../market/goods';
+import {coachLine} from './jobCoach';
 export type Vec={x:number;y:number;z:number};
 /** work → (deliver | shots) → done. Task jobs add: `call` (offside: waiting for the flag decision), `explain` (offside: the
  * frozen pass with the line drawn), `pump` (at the pump station, pumping the current ball). */
@@ -127,6 +128,8 @@ export function runGoals(r:JobRun):{x:number;z:number}[]{
  if(d.kind==='offside'||d.kind==='pump')return r.phase==='work'?[d.targets[0]]:[];
  if(d.kind==='carry')return r.carrying>=0&&d.deliver?[d.deliver]:[d.targets[r.next]];
  if(d.kind==='trail')return [d.targets[r.next]];
+ // Jobs upgrade (Oct 25 2026): a pile raked but not bagged yet is the only goal until it is finished (the arrow sends you back).
+ if(d.kind==='collect'&&!d.swing&&(d.work?.target?.length??0)>1){const half=r.stage.findIndex((s,i)=>s>0&&!r.got[i]);if(half>=0)return [d.targets[half]];}
  return d.targets.filter((_,i)=>!r.got[i]);
 }
 const near=(p:Vec,q:{x:number;z:number},qy:number,r:number)=>Math.hypot(p.x-q.x,p.z-q.z)<=r&&Math.abs(p.y-qy)<1.6;
@@ -468,5 +471,6 @@ export function runHint(r:JobRun):string{
   if(r.at===-2&&step)return step.hint;
   if(r.at>=0&&step&&!(d.kind==='carry'&&r.carrying>=0)){const n=step.count??1,spot=d.spotHints?.[r.at];const hint=spot?`${spot} ${step.hint}`:step.hint;return n>1?`${hint} (${Math.round(r.work[r.at]*n)}/${n})`:hint;}
  }
- return '';
+ // Jobs upgrade (Oct 25 2026): between actions, a one-line next step (the next target, the arrow, how many are left).
+ return coachLine(r);
 }
