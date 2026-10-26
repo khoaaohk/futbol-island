@@ -72,6 +72,8 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
  if(cue==='goal'||cue==='level')haptic(cue==='goal'?[18,35,28]:[10,30,10]);
  else if(cue==='dazed'||cue==='save'||cue==='nudge'||cue==='attack'||cue==='pb-wallDown'||cue==='pb-block'||cue==='pb-saver'||cue==='pb-modeDone')haptic(12);
  else if(cue==='pb-perfect'||cue==='pb-read')haptic(8);
+ // Oct 26 2026: a tiny solenoid tick under the thumb on each flipper press (Android; throttled, off for reduced motion).
+ else if(cue==='left'||cue==='right')haptic(5);
  if(!ctx||ctx.state!=='running')return;
  const v=state(ctx),now=ctx.currentTime,vol=volume;
  switch(cue){
