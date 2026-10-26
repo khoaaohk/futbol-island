@@ -12,7 +12,8 @@ import {scanLanes,shutLanes} from '@/lib/passPuzzle/scan';
 import {coachRun} from '@/lib/passPuzzle/coach';
 import {dailyPuzzle} from '@/lib/passPuzzle/daily';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
-import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar} from '@/lib/arcade/passPuzzleAudio';
+import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar,puzzleShotWhoosh,puzzleGoalRoar,puzzleCrowdOoh,puzzleCombo,puzzleStreak} from '@/lib/arcade/passPuzzleAudio';
+import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib/passPuzzle/combo';
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene} from '@/lib/arcade/passPuzzleScene';
@@ -51,10 +52,12 @@ type View='levels'|'brief'|'play'|'result';
 /** Three mastery stars, Cut-the-Rope style skill goals (no first-try pressure): bit 1 solve, 2 the taught move, 4 the bonus. */
 type Outcome={success:boolean;stars:number;mask:number;fresh:number;passes:number;bonus:boolean;move:boolean;reason?:string;attemptsLeft:number;
  /** the coach's takeaway: why the move worked, or why it didn't and what to try */
- why:string[];fix?:string};
+ why:string[];fix?:string;
+ /** first-try solves in a row this visit (session only: never saved, never paid) */
+ streak:number};
 const STAR_SOLVE=1,STAR_MOVE=2,STAR_BONUS=4;const starCount=(m:number)=>(m&1)+(m>>1&1)+(m>>2&1);
 const FORMATS:Format[]=['7v7','9v9','11v11'];
-const RUN_GRAB=1.4,BALL_GRAB=2.2,RESULT_SETTLE_MS=1700,REPLAY_SPEED=.38,HOLD_LOFT_SECONDS=1.1,MIN_STROKE_METRES=1.2;
+const RUN_GRAB=1.4,BALL_GRAB=2.2,RESULT_SETTLE_MS=2900,REPLAY_SPEED=.38,HOLD_LOFT_SECONDS=1.1,MIN_STROKE_METRES=1.2;
 
 function readProgress():Progress{try{const v=JSON.parse(localStorage.getItem(PROGRESS_KEY)??'null');if(v&&typeof v==='object'&&v.stars&&typeof v.stars==='object'){const stars:Record<string,number>={};for(const [k,n] of Object.entries(v.stars))if(typeof n==='number'&&n>=0&&n<=3)stars[k]=Math.round(n);const masks:Record<string,number>={};if(v.masks&&typeof v.masks==='object')for(const [k,n] of Object.entries(v.masks))if(typeof n==='number'&&n>=0&&n<=7)masks[k]=n|0;return{stars,masks,format:FORMATS.includes(v.format)?v.format:undefined,heading:typeof v.heading==='boolean'?v.heading:undefined,scan:typeof v.scan==='boolean'?v.scan:undefined};}}catch{}return{stars:{}};}
 function writeProgress(p:Progress){try{localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}catch{/* Private browsing keeps this visit's stars. */}}
@@ -83,6 +86,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const [levelId,setLevelId]=useState<string>(SCENARIOS[0]?.id??''),[view,setViewState]=useState<View>('levels');
  const [hud,setHud]=useState({attempt:1,attempts:3,passes:0,phase:'aiming' as string});
  const [boardScore,setBoardScore]=useState<number|null>(null),[boardsOpen,setBoardsOpen]=useState(false);
+ /** The name-entry sheet waits for the goal celebration and the stars (Oct 25: it used to cover the goal at once). */
+ const [boardReady,setBoardReady]=useState(false);
+ useEffect(()=>{setBoardReady(false);if(boardScore===null||view!=='result')return;const id=setTimeout(()=>setBoardReady(true),2600);return()=>clearTimeout(id);},[boardScore,view]);
  const [outcome,setOutcome]=useState<Outcome|null>(null),[replaying,setReplaying]=useState(false),[showHint,setShowHint]=useState(false),[error,setError]=useState(false);
  const loftMeter=useRef<HTMLDivElement>(null);
  /** The chosen pack's puzzle grid (scrolled into view when a pack is picked on a phone). */
@@ -115,6 +121,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const unlock=()=>{if(!isSoundEnabled()||getSoundVolume()===0)return;try{audio.current??=new AudioContext();void audio.current.resume();}catch{}};
  // Contact voices distinguish a cushioned header, blocked lane and completed combination.
  const hitStop=useRef(0),chimed=useRef(0),aimSince=useRef(0);
+ /** Live combo callout ("One-two!"), keyed so each one replays its pop; cleared by a short timer. */
+ const [callout,setCallout]=useState<(Callout&{key:number})|null>(null),calloutKey=useRef(0),streak=useRef(0);
+ const shout=useRef((c:Callout)=>{calloutKey.current++;setCallout({...c,key:calloutKey.current});});
+ useEffect(()=>{if(!callout)return;const id=setTimeout(()=>setCallout(c=>c?.key===callout.key?null:c),callout.tier>=3?2400:1700);return()=>clearTimeout(id);},[callout]);
  const handleEvent=useCallback((e:PuzzleEvent)=>{
   sceneRef.current?.onEvent(e);const ctx=audio.current;
   if(replayRef.current){const i=replayKicks.current,inputs=replayInputs.current,line=replayCall(e,numbersRef.current,k=>inputs[k]?.kick.receiver,i,(inputs[i]?.calls??[]).map(c=>c.attacker));if(e.type==='kick')replayKicks.current++;if(line)setReplayLine(line);
@@ -122,10 +132,14 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    if(['intercept','deflect','save','goal','offside'].includes(e.type))replayHold.current=performance.now()+(sceneRef.current?.stage.reduced?350:700);}
   // Contact beats: a hair of hit-stop on the strike and the goal (none with reduced motion).
   if((e.type==='kick'||e.type==='goal')&&!sceneRef.current?.stage.reduced)hitStop.current=performance.now()+(e.type==='goal'?90:45);
-  if(e.type==='kick'){if(((replayRef.current?.world??worldRef.current)?.state.passes??0)===0)chimed.current=0;puzzleStrike(ctx,e.speed??10,e.kind??'pass');if(e.kind==='shot')arcadeFeedback(null,'shot');return;}
-  if(e.type==='receive'){puzzleTouch(ctx,e.touch);const w=replayRef.current?.world??worldRef.current;const n=w?.state.passes??0;if(n>chimed.current)puzzlePassChime(ctx,n);chimed.current=n;return;}
+  if(e.type==='kick'){if(((replayRef.current?.world??worldRef.current)?.state.passes??0)===0)chimed.current=0;puzzleStrike(ctx,e.speed??10,e.kind??'pass');if(e.kind==='shot'){arcadeFeedback(null,'shot');puzzleShotWhoosh(ctx,e.speed??16);}return;}
+  if(e.type==='receive'){puzzleTouch(ctx,e.touch);const w=replayRef.current?.world??worldRef.current;const n=w?.state.passes??0;if(n>chimed.current){puzzlePassChime(ctx,n);
+    // Name the combination as it happens (live play only; replays have their own commentary).
+    if(!replayRef.current&&w&&e.attacker!=null){const c=passCallout(w.state.chain,e.attacker,n);if(c){shout.current(c);if(c.tier>=2)puzzleCombo(ctx,2);}}}chimed.current=n;return;}
   if(e.type==='heavy_touch'){puzzleTouch(ctx,e.touch,true);return;}
   if(e.type==='offside'){puzzleWhistle(ctx);return;}
+  if(e.type==='goal'){const w=replayRef.current?.world??worldRef.current,chain=w?.state.chain??[],passes=w?.state.passes??0;puzzleGoalRoar(ctx,passes);if(!replayRef.current)shout.current(goalCallout(passes,!!chain.at(-1)?.firstTime));}
+  else if(e.type==='intercept'||e.type==='save'||e.type==='parry')puzzleCrowdOoh(ctx);
   const cue=e.type==='goal'?'goal':e.type==='save'||e.type==='parry'?'save':e.type==='intercept'||e.type==='deflect'?'block':'miss';
   arcadeFeedback(ctx,cue);
  },[]);
@@ -142,11 +156,13 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   if(success&&fresh&&!id.startsWith('daily')){const total=boardStars({...progressRef.current.stars,[id]:Math.max(progressRef.current.stars[id]??0,stars)});if(total>0)setBoardScore(total);}
   if(success){setProgress(p=>{const next={...p,stars:{...p.stars,[id]:Math.max(p.stars[id]??0,stars)},masks:{...p.masks,[id]:(p.masks?.[id]??0)|mask}};writeProgress(next);return next;});
    [STAR_SOLVE,STAR_MOVE,STAR_BONUS].filter(b=>mask&b).forEach((_,i)=>puzzleStar(audio.current,i+1,.85+i*.22));}
+  // First try = attempt 1 with no rewind; a fail resets, a later-try solve keeps the streak.
+  streak.current=nextStreak(streak.current,success,s.attempt===1&&!rewound.current);if(success&&streak.current>=2)puzzleStreak(audio.current,streak.current,1.05);
   let why:string[]=[],fix:string|undefined;
   try{const nums=shirtNumbersFor(sc),f=formatRef.current,kept=notes.current.slice(0,world.inputs().length);
    if(success)why=explainSuccess(kept,sc,nums,f,2);
    else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
-  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix});setView('result');stroke.current=null;
+  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,streak:streak.current});setView('result');stroke.current=null;
   // The failure beat: mark where the move was stopped and lean the camera in before the card lands.
   failStop.current=success?null:stopPoint(world,attemptEvents.current);if(failStop.current)sceneRef.current?.showStop(failStop.current.at,failStop.current.kind);
  },[]);
@@ -246,14 +262,14 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  },[finish,handleEvent]);
 
  /** Build the frozen moment for a level: the pitch shows behind the brief card. */
- const loadLevel=(s:Scenario)=>{rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
+ const loadLevel=(s:Scenario)=>{setCallout(null);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
   try{const played=playable(s,headingRef.current);const world=createPuzzle(played);worldRef.current=world;scene.load(played);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);}catch{setError(true);return;}
   setLevelId(s.id);setPackId(s.pack);setOutcome(null);setShowHint(false);syncHud();settleUntil.current=performance.now()+300;wake.current();};
  const openLevel=(s:Scenario)=>{loadLevel(s);setView('brief');};
  const dailyId=`daily-${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
  const openDaily=()=>{const d=todaysDaily();if(d)openLevel(d.scenario);};
  const play=async()=>{unlock();const id=await entry.enter();if(!id)return;setBoardScore(null);beginBoardSession('puzzle');aimSince.current=performance.now();coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');recordExploreActivity('arcade');setView('play');const w=worldRef.current;if(w)sceneRef.current?.setAim(null,w.state);settleUntil.current=performance.now()+1200;wake.current();};
- const retry=async()=>{aimSince.current=performance.now();const worldBefore=worldRef.current;if(!worldBefore)return;if(worldBefore.state.attemptsLeft<=0||worldBefore.state.phase==='success'){const id=await entry.enter();if(!id)return;}rewindPoint.current=null;rewound.current=false;coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');const world=worldRef.current,scene=sceneRef.current;if(!world||!scene)return;replayRef.current=null;setReplaying(false);if(!world.retry()){loadLevel(world.scenario);setView('play');return;}attemptEvents.current=[];notes.current=[];scene.resetActors();scene.update(world.state,0);scene.setAim(null,world.state);scene.setCalls(world.state,null);applyHint.current();applyScan.current();syncHud();setOutcome(null);setShowHint(true);setView('play');settleUntil.current=performance.now()+600;wake.current();};
+ const retry=async()=>{aimSince.current=performance.now();const worldBefore=worldRef.current;if(!worldBefore)return;if(worldBefore.state.attemptsLeft<=0||worldBefore.state.phase==='success'){const id=await entry.enter();if(!id)return;}setCallout(null);rewindPoint.current=null;rewound.current=false;coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');const world=worldRef.current,scene=sceneRef.current;if(!world||!scene)return;replayRef.current=null;setReplaying(false);if(!world.retry()){loadLevel(world.scenario);setView('play');return;}attemptEvents.current=[];notes.current=[];scene.resetActors();scene.update(world.state,0);scene.setAim(null,world.state);scene.setCalls(world.state,null);applyHint.current();applyScan.current();syncHud();setOutcome(null);setShowHint(true);setView('play');settleUntil.current=performance.now()+600;wake.current();};
  const rewindPass=()=>{aimSince.current=performance.now();const world=worldRef.current,scene=sceneRef.current,snapshot=rewindPoint.current;if(!world||!scene||!snapshot||rewound.current)return;cancelDrawing.current();replayRef.current=null;setReplaying(false);world.drain();world.restore(snapshot);rewound.current=true;rewindPoint.current=null;attemptEvents.current=attemptEvents.current.filter(e=>e.tick<snapshot.state.tick);notes.current.length=Math.min(notes.current.length,world.inputs().length);scene.resetActors();scene.setReplayFocus(null);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);applyHint.current();applyScan.current();setOutcome(null);setShowHint(true);syncHud();setView('play');settleUntil.current=performance.now()+600;wake.current();};
  const coachReplay=useRef(false),playerView=useRef(false),[playerCam,setPlayerCam]=useState(false),[replayKind,setReplayKind]=useState<'mine'|'coach'>('mine');
  const togglePlayerView=()=>{playerView.current=!playerView.current;setPlayerCam(playerView.current);if(!playerView.current){sceneRef.current?.followPlayer(null,0);}wake.current();};
@@ -328,6 +344,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    <label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label></div>
   </div>}
   {replaying&&<><div className={styles.replayChip} role="status"><Icon name="play" size={14}/> {replayKind==='coach'?'Coach’s route · 0.6×':'Replay · 0.38×'}{replayLine&&<span className={styles.replayCall} aria-live="polite" data-replay-call>{replayLine}</span>}<button className={styles.camToggle} aria-pressed={playerCam} onClick={togglePlayerView}>{playerCam?'Broadcast view':'Player view'}</button></div><button className={`pixel-btn ${styles.skip}`} onClick={skipReplay}>Skip</button></>}
+  {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b><span>{callout.teach}</span></div>}
   <div ref={loftMeter} className={styles.loft} data-active="false" aria-hidden="true"><i/><span>LIFT</span></div>
 
   {view==='levels'&&<div className={arcade.overlay}><section className={`${arcade.card} ${styles.levels}`}>
@@ -358,6 +375,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    <span className={arcade.badge}>{outcome.success?'PUZZLE SOLVED':outcome.attemptsLeft>0?`${outcome.attemptsLeft} ${outcome.attemptsLeft===1?'TRY':'TRIES'} LEFT`:'OUT OF TRIES'}</span>
    <h3>{outcome.success?(outcome.passes===0?'What a finish!':'That’s the move!'):'Not this time.'}</h3>
    {outcome.success?<><div className={styles.stars} aria-label={`${outcome.stars} of 3 stars`}>{[0,1,2].map(n=>star(n<outcome.stars,n))}</div>
+    {streakLabel(outcome.streak)&&<p className={styles.streak} data-streak={outcome.streak}><b>{streakLabel(outcome.streak)}</b> solved first try in a row</p>}
     <ul className={styles.earned}>{goals(level).map((g,i)=>{const bit=1<<i;return <li key={g} data-on={!!(outcome.mask&bit)} data-new={!!(outcome.fresh&bit)||undefined}>{g}{outcome.fresh&bit?<b className={styles.newStar}> new</b>:null}</li>;})}</ul>
     {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.map(w=><li key={w}>{w}</li>)}</ul></div>}
     <p className={styles.lesson}>{!outcome.move?'You spotted a clear shooting lane. Now try the passing move for the next star.':level.lesson}</p></>
@@ -372,7 +390,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   </section></div>}
 
   {error&&<div className={arcade.overlay}><section className={arcade.card}><span className={arcade.badge}>TAKE A BREATHER</span><h3>The pitch couldn’t load.</h3><p>Return to the arcade and try again.</p><button className={arcade.exit} onClick={onExit}>Back to arcade</button></section></div>}
-  {boardScore!==null&&view==='result'&&<HighScoreEntry game="puzzle" score={boardScore} detail="Your total stars across every puzzle." onClose={()=>setBoardScore(null)}/>}
+  {boardScore!==null&&boardReady&&view==='result'&&<HighScoreEntry game="puzzle" score={boardScore} detail="Your total stars across every puzzle." onClose={()=>setBoardScore(null)}/>}
   {boardsOpen&&<ArcadeBoards game="puzzle" onClose={()=>setBoardsOpen(false)}/>}
  </div>;
 }
