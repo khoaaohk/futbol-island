@@ -1,5 +1,9 @@
 # Performance reference for future Futbol Island updates
 
+## Fishing post variants (Oct 26 2026, local, not deployed)
+
+Each of the 16 shore fishing posts now has its own deterministic look (`lib/town/fishing/fishingKiosk.ts`, seeded by post id: wood tone, awning colour/stripes, roof shape/tilt, counter and ground props, eave hangings, topper, and beach / pier / rocks / river props). Cost: build-time only; parts are transformed copies of ≤ 11 shared low-poly primitives written straight into one geometry per post, still merged into the single `fishing-posts` mesh (one draw + one shadow draw, no new material/texture, nothing per frame). Triangles ≈ 4k → ≈ 9.5k for all posts (cap 720 per post, 600 average). Cabinet and collision footprint unchanged. Pinned by `tests/fishing-kiosk-variants.cjs`. No device measurement.
+
 ## Ride splash in the shallows (Oct 23 2026, local, not deployed)
 
 - A scooter / bike / moped rolling through the swash throws two fans of droplets off the wheels, a foam ring behind the rear wheel and a

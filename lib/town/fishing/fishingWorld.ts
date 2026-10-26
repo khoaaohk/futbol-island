@@ -10,6 +10,7 @@ const VISUALS_PREFETCH=100;
 let visualsModule:typeof import('./fishingVisuals')|null=null,visualsLoading:Promise<void>|null=null;
 const loadFishingVisuals=()=>{visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;});return visualsLoading;};
 import {createFishingCamera} from './fishingCamera';
+import {buildKioskGeometry,kioskVariant} from './fishingKiosk';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
 import {createDeepSeaBoat} from './deepSeaBoat';
@@ -60,7 +61,8 @@ function paint({geometry,color}:Colored){
 }
 const place=(g:T.BufferGeometry,x:number,y:number,z:number,rx=0,ry=0,rz=0,s:[number,number,number]=[1,1,1])=>g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(...s)));
 
-/** A small "fishing post": tackle chest, notice board with a fish emblem, a little roof and two rods (matches the cabinet glow). */
+/** A small "fishing post": tackle chest, notice board with a fish emblem, a little roof and two rods (matches the cabinet glow);
+ *  each post gets its own deterministic look in ./fishingKiosk.ts. */
 /** Where a fishing post's kiosk (the little bait/fish stall) stands: beside the standing spot, square to the cast. */
 function kioskAt(s:FishSpot){if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};}
 /** Solid footprints for every kiosk (Sep 30 2026: players walked straight through them). The cabinet is 1.2 × 0.7 m turned 45°,
@@ -69,26 +71,6 @@ function kioskAt(s:FishSpot){if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt
 export function fishingKioskObstacles():{x:number;z:number;w:number;d:number}[]{
  const c=Math.SQRT1_2,size=(1.2+.7)*c;return FISH_SPOTS.filter(s=>!s.boat).map(s=>{const k=kioskAt(s);return {x:k.x,z:k.z,w:size,d:size};});
 }
-function kioskParts(rocks:boolean):Colored[]{
- const parts:Colored[]=[
-  {geometry:new T.BoxGeometry(1.2,1.25,.7).translate(0,.625,0),color:'#a67d55'},
-  {geometry:new T.BoxGeometry(1.26,.12,.76).translate(0,1.28,0),color:'#7a5a3e'},
-  {geometry:new T.BoxGeometry(.5,.1,.04).translate(0,.95,.37),color:'#e6c477'},
-  {geometry:new T.BoxGeometry(1.12,1.3,.08).translate(0,2.02,-.2),color:'#fff0cf'},
-  {geometry:new T.BoxGeometry(1.22,.1,.12).translate(0,1.38,-.2),color:'#477c6a'},
-  {geometry:new T.BoxGeometry(1.4,.12,.9).translate(0,2.8,.05),color:'#bd7657'},
-  {geometry:place(new T.IcosahedronGeometry(.26,0),0,2.08,-.14,0,0,0,[1.5,.7,.25]),color:'#3f7a78'},
-  {geometry:place(new T.ConeGeometry(.17,.3,3),.5,2.08,-.14,0,0,-Math.PI/2),color:'#3f7a78'},
-  {geometry:place(new T.SphereGeometry(.04,6,4),-.2,2.14,-.08),color:'#fff0cf'},
- ];
- for(const side of [-1,1]){
-  parts.push({geometry:place(new T.CylinderGeometry(.022,.03,2.6,5),side*.42,1.95,.36,.28,0,side*.12),color:'#6e5540'});
-  parts.push({geometry:place(new T.CylinderGeometry(.07,.07,.08,8),side*.42,1.05,.46,Math.PI/2,0,0),color:'#d6a15d'});
- }
- if(rocks)for(const [x,z,r] of [[-1.3,.6,.42],[1.5,.2,.5],[-.6,1.4,.3],[1.1,1.3,.36]] as const)parts.push({geometry:place(new T.IcosahedronGeometry(r,0),x,r*.35,z,0,x,0,[1,.62,1]),color:'#a39a88'});
- return parts;
-}
-
 function signTexture(){
  const c=document.createElement('canvas');c.width=512;c.height=96;const g=c.getContext('2d');
  if(g){g.fillStyle='#294f43';g.fillRect(0,0,512,96);g.strokeStyle='#f4cc7c';g.lineWidth=6;g.strokeRect(5,5,502,86);g.fillStyle='#fff0cf';g.font='bold 40px system-ui,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('ROSA BUYS · FISH · PRODUCE · CARDS',256,50,480);}
@@ -206,7 +188,8 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  // The Deep Sea Boat has no post: its prompt floats over the rod holders (./deepSeaBoatData.ts).
  // One merged, vertex-coloured mesh for every fishing post.
  const all:T.BufferGeometry[]=[];
- for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s);for(const part of kioskParts(s.id==='north-rocks'||s.id==='west-cove')){const g=paint(part);g.applyMatrix4(new T.Matrix4().makeRotationY(Math.PI/4));g.translate(k.x,0,k.z);all.push(g);}}
+ // Each post has its own deterministic look (./fishingKiosk.ts, Oct 26 2026): same cabinet/footprint, still merged into this one mesh.
+ for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s);all.push(buildKioskGeometry(kioskVariant(s.id),k.x,k.z,Math.PI/4));}
  const merged=mergeGeometries(all)!;all.forEach(g=>g.dispose());geometries.push(merged);
  const kioskMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});materials.push(kioskMaterial);
  const kiosks=new T.Mesh(merged,kioskMaterial);kiosks.name='fishing-posts';kiosks.castShadow=true;kiosks.receiveShadow=true;kiosks.matrixAutoUpdate=false;kiosks.updateMatrix();root.add(kiosks);
