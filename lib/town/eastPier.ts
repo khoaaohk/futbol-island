@@ -79,9 +79,9 @@ const EAST=spiralRadius(0);
 export const EAST_PIER_FISHING={x:P.cx+EAST+1.6,z:P.cz,buoy:{x:P.cx+EAST+28.3,z:P.cz}};
 /** Two islanders (lib/town/eastPierNpcs.ts): a fisher by the post and a kid doing keep-ups on the straight. */
 export const EAST_PIER_NPC_SPOTS={fisher:{x:P.cx+EAST-1.2,z:P.cz-3},kid:{x:285,z:97.4}};
-/** The lighthouse at the plaza centre (tower base radius r, 16.6 m to the cap) and the keeper's hut on its east side, clear of
+/** The lighthouse at the plaza centre (tower base radius r, 17.8 m to the cap) and the keeper's hut on its east side, clear of
  *  the walkway, which enters the plaza from the west. */
-export const JETTY_BEACON={x:P.cx,z:P.cz,r:2.3,height:16.6};
+export const JETTY_BEACON={x:P.cx,z:P.cz,r:2.3,height:17.8};// Oct 26 2026: the lantern raised 1 m above the gallery railing
 export const KEEPER_HUT={x:P.cx+4.6,z:P.cz,w:2.4,d:3.2,h:2.3};
 
 /**

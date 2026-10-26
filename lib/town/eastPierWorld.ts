@@ -9,7 +9,7 @@ import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
 import {EAST_PIER,JETTY_PATH,JETTY_BEACON,KEEPER_HUT,PIER_KICK_SPOT,coilAt,jettyOffset,walkwayOffset,jettySide,type JettySample} from './eastPier';
-import {TOWER_FOOT_R} from './lighthouseGallery';
+import {LIGHTHOUSE,TOWER_FOOT_R} from './lighthouseGallery';
 import {buildLighthouseGallery} from './lighthouseGalleryWorld';
 type Mesh=T.Mesh;
 export type PierTools={
@@ -73,7 +73,7 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   const N=72;for(let i=0;i<N;i++){const a0=i/N*Math.PI*2,a1=(i+1)/N*Math.PI*2,am=(a0+a1)/2,r=(P.plazaR+P.plazaEdge)/2,m={x:P.cx+Math.cos(am)*r,z:P.cz+Math.sin(am)*r};
    if(walkwayOffset(m.x,m.z)<=P.walkHalf+.3)continue;
    const seg=box(.4,.22,r*(a1-a0)+.02,KERB,m.x,.11,m.z);seg.rotation.y=-am;}}
- // ---- Lighthouse at the centre (≈16.6 m): stone plinth, tapered white tower in stacked frusta with red bands, a gallery
+ // ---- Lighthouse at the centre (≈17.8 m): stone plinth, tapered white tower in stacked frusta with red bands, a gallery
  // (balcony ring, railing posts), a glazed lantern room in the shared lamp-lens colour (so it glows at night with every lamp)
  // and a red cap with a finial. A keeper's hut stands at its foot, on the east side away from where the walkway comes in.
  // All static paint geometry: it merges into the chunk's paint batch (one existing shadow caster), no new material.
@@ -84,15 +84,20 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   for(const [y0,y1,c] of tiers)put(new T.CylinderGeometry(radiusAt(y1),radiusAt(y0),y1-y0,16),c,x,1+(y0+y1)/2,z);
   // A door and two small windows facing the plaza entrance (west).
   box(.12,1.9,1.1,'#2f4f4a',x-radiusAt(.95)+.02,1.95,z);for(const y of [6.2,10.6])box(.12,.7,.5,'#2f4f4a',x-radiusAt(y-1)+.03,y,z);
-  // The widened gallery (lighthouseGallery.ts / lighthouseGalleryWorld.ts, Oct 26 2026): a flared corbel, a 3.2 m deck you can fly
-  // up to and land on, and a white railing all round except one opening to the west (the way down on foot).
+  // The widened gallery and the ladder (lighthouseGallery.ts / lighthouseLadder.ts / lighthouseGalleryWorld.ts, Oct 26 2026): a
+  // flared corbel, a 3.2 m deck you climb or fly up to, a white railing with a gate, and a slim white ladder up the camera side.
   buildLighthouseGallery(put);
-  cylinder(1.1,.25,IRON,x,13.73,z);put(new T.CylinderGeometry(1.05,1.05,1.5,12),'#ffe8ae',x,14.6,z);// the lit lantern glass
-  for(let k=0;k<6;k++){const a=k/6*Math.PI*2;box(.07,1.5,.07,IRON,x+Math.cos(a)*1.07,14.6,z+Math.sin(a)*1.07);}
-  put(new T.ConeGeometry(1.35,1.3,12),'#bf6658',x,16,z);put(new T.SphereGeometry(.18,8,6),IRON,x,16.72,z);
+  // The lantern stands on a short white watch room, so the lamp (LIGHTHOUSE.lampY, the beam's apex) is 1 m above the railing's
+  // top and the beam never crosses the railing or the deck (lighthouseBeam.ts: it starts at the lamp and drops gently outward).
+  {const lamp=LIGHTHOUSE.lampY;put(new T.CylinderGeometry(1.12,1.12,lamp-.75-LIGHTHOUSE.top,16),'#f3ecdc',x,(LIGHTHOUSE.top+lamp-.75)/2,z);
+   cylinder(1.1,.25,IRON,x,lamp-.87,z);put(new T.CylinderGeometry(1.05,1.05,1.5,12),'#ffe8ae',x,lamp,z);// the lit lantern glass
+   for(let k=0;k<6;k++){const a=k/6*Math.PI*2;box(.07,1.5,.07,IRON,x+Math.cos(a)*1.07,lamp,z+Math.sin(a)*1.07);}
+   put(new T.ConeGeometry(1.35,1.3,12),'#bf6658',x,lamp+1.4,z);put(new T.SphereGeometry(.18,8,6),IRON,x,lamp+2.12,z);}
   // Round footprint (the plinth). The ball and jet dashes use the lighthouse's own solids by height instead (lighthouseGallery.ts
   // lighthouseSolid / isLighthouseTower), so a ball can rest on the gallery.
-  obstacles.push({x,z,w:TOWER_FOOT_R*2,d:TOWER_FOOT_R*2,cornerRadius:TOWER_FOOT_R});assets.push({kind:'beacon',x,z,w:(r+.8)*2,d:(r+.8)*2});
+  obstacles.push({x,z,w:TOWER_FOOT_R*2,d:TOWER_FOOT_R*2,cornerRadius:TOWER_FOOT_R});
+  // The ladder's foot (its two rails): walkers go round it; you get on by pushing into it (lighthouseLadder.ts).
+  obstacles.push({x:x+Math.cos(LIGHTHOUSE.openAt)*LIGHTHOUSE.ladderR,z:z+Math.sin(LIGHTHOUSE.openAt)*LIGHTHOUSE.ladderR,w:.6,d:.6});assets.push({kind:'beacon',x,z,w:(r+.8)*2,d:(r+.8)*2});
   lampSites.push({x,z,ground:.01,region:'east-pier',poolWidth:10,poolDepth:10});
   sign('EAST JETTY LIGHTHOUSE',3,.42,x-r-.85,1.2,z,'#294f43','#f4cc7c',-Math.PI/2);
   // Keeper's hut: whitewashed walls, a red pitched roof, a green door facing the plaza.

@@ -9,6 +9,7 @@ import {TRAVEL_MODES,type TravelMode} from './travelModes';
 import {createRoofJump,planRoofJump,planRoofLaunch} from './rooftopJump';
 import {nearSummit,createHillAssist,climbCoast} from './rideSlope';
 import {LIGHTHOUSE,lighthouseFloor,lighthouseLanding,lighthouseConstrain,nearLighthouse} from './lighthouseGallery';
+import {createLadder} from './lighthouseLadder';
 import {createSlopeHop} from './slopeHop';
 import {SUMMIT_HUTS,HUT_CONE_RADIUS,HUT_LAND_RADIUS,hutRoofSteps} from './summitBalls';
 /** Landing search bounds (findLanding): the arc aimed at the nearest land is ±LANDING_ARC m wide and LANDING_AIM_DEPTH rings
@@ -36,7 +37,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  // Water (Oct 15 2026, lib/town/water): `canSplash` lets a ride launch end over water that is deep enough to splash into
  // (rooftopJump.ts planRoofLaunch); Town installs it with setSplashTest. Walking into the shallows is the `water` argument of update().
  let canSplash:((x:number,z:number)=>boolean)|null=null;
- const hill=createHillAssist(),steerInput={x:0,z:0,sprint:false},hop=createSlopeHop();
+ const hill=createHillAssist(),ladder=createLadder(),steerInput={x:0,z:0,sprint:false},hop=createSlopeHop();
  // Roof-to-roof gap jumps (lib/town/rooftopJump.ts): planned only on the frame an edge fall would start.
  const jump=createRoofJump();
  // Buildings the rider was touching when the fall began (the roof just left) never block the drift; any other building
@@ -56,7 +57,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  // Registered floating decks (landableDecks.ts, e.g. a moored boat) are floors too; 0 when none are registered.
  // The East Jetty lighthouse's gallery (lighthouseGallery.ts): a floor only from its own height or the sky (-Infinity elsewhere).
  const surface=(x:number,z:number,from=-Infinity)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z,from)?.height??0,extraSurface(x,z),landableDeckHeight(x,z),lighthouseFloor(x,z,from));
- function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();hop.reset();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false,air:false,landImpact:0});}
+ function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();hop.reset();ladder.cancel();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false,air:false,landImpact:0});}
  function canLand(x:number,z:number,from=-Infinity){
   // Glazed interiors remain walkable through doors, but are never aerial destinations.
   if(landingExclusions.some(area=>insideObstacle(x,z,area,.8)))return false;
@@ -95,6 +96,9 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
    }
    return;
   }
+  // The lighthouse ladder (lighthouseLadder.ts): getting on at its foot or the gallery's gate, climbing, sliding, stepping off.
+  // While it owns the player the walk below is skipped (a few comparisons anywhere else).
+  if(ladder.step(dt,p,v,input.x,input.z,mode,state.height,state.falling)){state.height=ladder.state.y;state.air=false;return;}
   // A hop's rider is not up on a roof: the trees and props it flies at still stop it.
   const elevated=!state.air&&state.height>fieldSurfaceHeight(p.x,p.z)+1;
   const radius=Math.max(8,Math.max(Math.hypot(v.x,v.z),TRAVEL_MODES[mode].maxSpeed)*dt+2);
@@ -172,5 +176,5 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   for(let r=startRadius;r<=maxRadius;r++){const n=r?Math.min(LANDING_RING_CAP,Math.max(32,Math.ceil(r*2*Math.PI/3))):1;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz,from))return {x:nx,z:nz};}}
   return null;
  }
- return {state,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update,setSplashTest(test:((x:number,z:number)=>boolean)|null){canSplash=test;}};
+ return {state,ladder,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update,setSplashTest(test:((x:number,z:number)=>boolean)|null){canSplash=test;}};
 }

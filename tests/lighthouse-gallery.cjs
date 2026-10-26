@@ -1,8 +1,9 @@
 // East Jetty lighthouse gallery (Oct 26 2026, lib/town/lighthouseGallery.ts + lighthouseGalleryWorld.ts). The spiral stair was
-// removed (owner: too busy); the widened top stays, landing-only. Checks: no stair surface or stair walls at the plaza (a plain
-// tower: walk and ride right round it), the gallery is reached only by flying (jetpack landings land on its ring, never in the
-// tower or on the lantern), walking round the gallery stays on it, the west opening drops you safely to the plaza, the railing is
-// white in the existing palette, the merged geometry is small, the ball's solids, the hunt ball's spot, and the runtime wiring.
+// removed (owner: too busy); the widened top stays, reached by the ladder (tests/lighthouse-ladder-climb.cjs) or by flying.
+// Checks: no stair surface or stair walls at the plaza (a plain tower: walk and ride round it), jetpack landings land on the
+// gallery's ring (never in the tower or on the lantern), walking and riding round the gallery stays on it (the railing is
+// closed to walking, the gate too), the railing is white in the existing palette, the lantern sits above the railing, the merged
+// geometry is small, the ball's solids, the hunt ball's spot, and the runtime wiring.
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
 const loaded=new Map();function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.get(file);const mod={exports:{}};loaded.set(file,mod.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,Map,Set,Uint8Array,Float32Array,Float64Array,Uint16Array,Uint32Array,Int32Array,ArrayBuffer,JSON,console,require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):require(id)});loaded.set(file,mod.exports);return mod.exports;}
@@ -34,22 +35,24 @@ const tower={x:JETTY_BEACON.x,z:JETTY_BEACON.z,w:TOWER_FOOT_R*2,d:TOWER_FOOT_R*2
 ok(isLighthouseTower(tower),'the round tower footprint is recognised');
 const hut={x:KEEPER_HUT.x,z:KEEPER_HUT.z,w:KEEPER_HUT.w+.2,d:KEEPER_HUT.d+.2};
 const benches=[-1,1].map(s=>({x:L.cx-.8,z:L.cz+s*5,w:2,d:.7}));
-const obstacles=[tower,hut,...benches];
+const ladderFoot={x:L.cx+Math.cos(L.openAt)*L.ladderR,z:L.cz+Math.sin(L.openAt)*L.ladderR,w:.6,d:.6};
+const obstacles=[tower,hut,...benches,ladderFoot];
 {const w=src('lib/town/eastPierWorld.ts');
  ok(/bench\(P\.cx-\.8,P\.cz-5,-1\);bench\(P\.cx-\.8,P\.cz\+5,1\)/.test(w),'benches back at 5 m (as before the stair)');
  ok(/obstacles\.push\(\{x,z,w:TOWER_FOOT_R\*2,d:TOWER_FOOT_R\*2,cornerRadius:TOWER_FOOT_R\}\)/.test(w),'round plinth footprint');
+ ok(/obstacles\.push\(\{x:x\+Math\.cos\(LIGHTHOUSE\.openAt\)\*LIGHTHOUSE\.ladderR,z:z\+Math\.sin\(LIGHTHOUSE\.openAt\)\*LIGHTHOUSE\.ladderR,w:\.6,d:\.6\}\)/.test(w),'the ladder foot is a small collider (as in this test)');
  ok(/box\(\.12,1\.9,1\.1,'#2f4f4a',x-radiusAt\(\.95\)\+\.02,1\.95,z\)/.test(w)&&/for\(const y of \[6\.2,10\.6\]\)/.test(w),'door and windows back on the west face');
  ok(/sign\('EAST JETTY LIGHTHOUSE',3,\.42,x-r-\.85,1\.2,z,/.test(w),'name board back at the foot, facing the walkway');
  ok(/buildLighthouseGallery\(put\)/.test(w)&&!/CylinderGeometry\(2\.05,2\.05/.test(w)&&!/TorusGeometry\(1\.95/.test(w),'the widened gallery replaces the old narrow one');
  ok(TOWER_FOOT_R>=L.plinthR&&TOWER_FOOT_R<=JETTY_BEACON.r+.85,'the footprint is the plinth');}
 
 // ---- Walking and riding round the foot of the tower: a plain tower, no wedging, nothing lifts you.
-for(const mode of ['walk','scooter','bike','moped'])for(const dir of [1,-1]){const t=createRooftopTravel([],obstacles,{x:0,z:0}),R0=mode==='walk'?3.8:6.4;// rides go outside the benches (as before the stair)
+for(const mode of ['walk','scooter','bike','moped'])for(const dir of [1,-1]){const t=createRooftopTravel([],obstacles,{x:0,z:0}),R0=mode==='walk'?4.2:6.4;// rides go outside the benches (as before the stair)
  const s0=Math.PI*.75,p={x:L.cx+Math.cos(s0)*R0,z:L.cz+Math.sin(s0)*R0},v={x:0,z:0};t.reset(p.x,p.z,0);let travelled=0,last=s0;
  for(let i=0;i<60*(mode==='walk'?60:20)&&travelled<Math.PI*2;i++){const a=Math.atan2(p.z-L.cz,p.x-L.cx),g=a+dir*.35,b0=Math.atan2(Math.sin(g),Math.cos(g)),R=Math.abs(b0)<.75?6.4:R0;
   t.update(1/60,p,v,{x:L.cx+Math.cos(g)*R-p.x,z:L.cz+Math.sin(g)*R-p.z,sprint:false},mode);
   const b=Math.atan2(p.z-L.cz,p.x-L.cx);let d=b-last;d=Math.atan2(Math.sin(d),Math.cos(d));travelled+=d*dir;last=b;
-  ok(t.state.height<.6&&!t.state.falling&&polar(p).r>=TOWER_FOOT_R,`${mode} stays on the plaza, outside the plinth`);}
+  ok(t.state.height<.6&&!t.state.falling&&!t.ladder.active&&polar(p).r>=TOWER_FOOT_R,`${mode} stays on the plaza, outside the plinth (walking past the ladder never climbs it)`);}
  // A ride (0.8 m radius) cannot squeeze between the keeper's hut and the plaza's edge (as before the stair): round the rest.
  ok(travelled>=(mode==='walk'?Math.PI*2:4.4),`${mode} goes ${mode==='walk'?'all the way':'the plaza side'} round the lighthouse (${dir>0?'clockwise':'anticlockwise'}, ${(travelled/Math.PI*180).toFixed(0)}°)`);}
 
@@ -63,51 +66,54 @@ for(const mode of ['walk','scooter','bike','moped'])for(const dir of [1,-1]){con
  ok(t.canLand(L.cx-6,L.cz,Infinity)&&t.surface(L.cx-6,L.cz,Infinity)===0,'the plaza is still a landing');
  const src0=src('components/Town.tsx');ok(/findLanding:rooftop\.findLanding/.test(src0),'the jetpack lands through rooftop.findLanding (the gallery ring rule)');}
 
-// ---- Up there: walking and riding round the gallery stay on it (railing and lantern hold); the west opening is the way down.
-for(const mode of ['walk','scooter','bike','moped']){const t=createRooftopTravel([],obstacles,{x:0,z:0}),p={x:L.cx+2.2,z:L.cz},v={x:0,z:0};
+// ---- Up there: walking and riding round the gallery stay on it: the railing (gate included) and the lantern hold; the ladder
+//      takes you down (pushing out at the gate is tested in tests/lighthouse-ladder-climb.cjs).
+for(const mode of ['walk','scooter','bike','moped']){const t=createRooftopTravel([],obstacles,{x:0,z:0}),p={x:L.cx-2.2,z:L.cz},v={x:0,z:0};
  t.reset(p.x,p.z,t.surface(p.x,p.z,Infinity));ok(t.state.height===L.top,mode+': a gallery landing stands at 13.6 m');
  let rMin=Infinity,rMax=0,maxSpeed=0;
- for(const dir of [[1,0],[0,1],[0,-1],[1,1],[1,-1],[-.2,1],[-.2,-1]])/* every way but straight at the west opening */for(let i=0;i<60*3;i++){
-  t.update(1/60,p,v,{x:dir[0],z:dir[1],sprint:true},mode);const {r,a}=polar(p);rMin=Math.min(rMin,r);maxSpeed=Math.max(maxSpeed,Math.hypot(v.x,v.z));
-  if(inOpening(a)&&r>L.galleryR-.9)break;// slid round the ring to the opening: fine, tested below
-  ok(t.state.height===L.top&&!t.state.falling,`${mode}: stays on the gallery pushing ${dir} (r ${r.toFixed(2)})`);rMax=Math.max(rMax,r);}
+ for(const dir of [[1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,0],[-.2,1],[-.2,-1],[-1,-1],[-1,1]])for(let i=0;i<60*3;i++){
+  t.update(1/60,p,v,{x:dir[0],z:dir[1],sprint:true},mode);if(mode==='walk'&&t.ladder.active)break;// walked into the gate pushing out: the ladder took over (fine; tested in the ladder test)
+  const {r}=polar(p);rMin=Math.min(rMin,r);rMax=Math.max(rMax,r);maxSpeed=Math.max(maxSpeed,Math.hypot(v.x,v.z));
+  ok(t.state.height===L.top&&!t.state.falling,`${mode}: stays on the gallery pushing ${dir} (r ${r.toFixed(2)})`);}
+ if(mode==='walk')t.ladder.cancel();
  ok(rMin>=L.lanternR+.3-1e-6&&rMax<=L.galleryR-.3+1e-6,`${mode}: between the lantern and the railing (${rMin.toFixed(2)}–${rMax.toFixed(2)})`);
  if(mode!=='walk')ok(maxSpeed<=L.maxRideSpeed*1.12,`${mode}: capped on the gallery (${maxSpeed.toFixed(1)} m/s)`);
- // Walk out of the west opening: a normal roof drop to the plaza (hang, fall, short recovery), on the plaza, never stuck.
- t.reset(L.cx-2,L.cz,L.top);p.x=L.cx-2;p.z=L.cz;v.x=v.z=0;let fell=false,landed=false;
- for(let i=0;i<60*12;i++){t.update(1/60,p,v,{x:-1,z:0,sprint:false},mode);if(t.state.falling||t.jump.active)fell=true;if(fell&&!t.state.falling&&!t.jump.active&&t.state.height<.6){landed=true;break;}}
- ok(fell&&landed,`${mode}: walking out of the opening drops to the plaza (h ${t.state.height.toFixed(2)})`);
- ok(onEastPier(p.x,p.z)&&polar(p).r>=TOWER_FOOT_R-.05,`${mode}: lands on the plaza outside the plinth (${polar(p).r.toFixed(2)} m out)`);}
-// The railing holds at every bearing but the opening; the opening is wide enough for a ride.
-{const v={x:0,z:0};let held=0,open=0;
+ if(mode!=='walk')ok(!t.ladder.active,`${mode}: a ride never gets on the ladder`);}
+// The railing holds at every bearing, the gate too (you leave through it on the ladder); the gate is wide enough to step through.
+{const v={x:0,z:0};let held=0;
  for(let i=0;i<144;i++){const a=i/144*Math.PI*2,from=at(a,L.galleryR-.33),p=at(a,L.galleryR-.32+.1),moved=lighthouseConstrain(from.x,from.z,p,v,L.top,.32),{r}=polar(p);
-  if(!inOpening(a)){ok(moved&&r<=L.galleryR-.32+1e-6,`railing holds at ${(a*180/Math.PI).toFixed(0)}°`);held++;}else if(!moved)open++;}
- ok(held>=130&&open>=3,`railed all round but the opening (${held} held, ${open} open)`);
- ok(2*L.openHalf*L.galleryR>=2*.4+.5,'the opening is wider than a ride');
- const p=at(.5,1),from=at(.5,1.7);lighthouseConstrain(from.x,from.z,p,v,L.top,.32);ok(polar(p).r>=L.lanternR+.32-1e-6,'the lantern wall holds');
- // From the opening's mouth, sideways: back into the opening, never through the railing beside it.
- const m=at(L.openAt+L.openHalf+.15,L.galleryR-.1),f=at(L.openAt+L.openHalf-.15,L.galleryR-.1);lighthouseConstrain(f.x,f.z,m,v,L.top,.32);ok(inOpening(polar(m).a),'sideways from the mouth stays in the opening');}
+  ok(moved&&r<=L.galleryR-.32+1e-6,`railing holds at ${(a*180/Math.PI).toFixed(0)}°`);held++;}
+ ok(held===144,'closed all round to walking');
+ ok(2*L.openHalf*L.galleryR>=.8,'the gate is wide enough to step through');
+ const p=at(.5,1),from=at(.5,1.7);lighthouseConstrain(from.x,from.z,p,v,L.top,.32);ok(polar(p).r>=L.lanternR+.32-1e-6,'the lantern wall holds');}
+// The lantern sits above the railing: the lamp (the beam's apex) is ≥ 0.9 m over the railing's top, its glass entirely above it.
+{ok(L.lampY-.75>=L.top+L.railH+.2&&L.lampY>=L.top+L.railH+.9,`lamp ${L.lampY} m, glass from ${(L.lampY-.75).toFixed(2)} m, railing top ${L.top+L.railH} m`);
+ const w=src('lib/town/eastPierWorld.ts'),wo=src('lib/town/world.ts');
+ ok(/'#ffe8ae',x,lamp,z\)/.test(w)&&/const lamp=LIGHTHOUSE\.lampY/.test(w),'the lantern glass is drawn at LIGHTHOUSE.lampY');
+ ok(/createLighthouseBeam\(scene,\{x:JETTY_BEACON\.x,z:JETTY_BEACON\.z\},LIGHTHOUSE\.lampY\)/.test(wo),'the beam starts at the lamp');
+ ok(JETTY_BEACON.height>=L.capTop-.1&&JETTY_BEACON.height<=18,'the tower height matches the raised lantern (≤ 18 m)');
+ ok(towerSolidRadius(L.top+.5)>=1.1&&towerSolidRadius(L.lampY)>=1.1&&towerSolidRadius(L.capTop-.05)>0,'the watch room, lantern and cap are solid');}
 
 // ---- Geometry: the white railing, deck and corbel in the tower's off-white; small; no stair pieces; railing open at the west.
 const rail=W.buildLighthouseRailingGeometry(),railV=rail.getAttribute('position').count;
 let total=0;{const puts=[];const put=(geo,c,x,y,z)=>{const m=new T.Mesh(geo);m.position.set(x,y,z);puts.push({c,m});total+=geo.getAttribute('position').count;return m;};W.buildLighthouseGallery(put);
- ok(puts.length===3,`3 pieces: railing, deck, corbel (${puts.length})`);
+ ok(puts.length===4,`4 pieces: railing, ladder, deck, corbel (${puts.length})`);
  ok(puts.every(p=>p.c==='#f3ecdc'),'all in the tower\'s off-white #f3ecdc (white railing, existing palette colour)');
  ok(/'#f3ecdc'/.test(src('lib/town/eastPierWorld.ts')),'#f3ecdc is the tower\'s own white (no new colour)');
  ok(puts.every(p=>Math.abs(p.m.position.x-L.cx)<1e-9&&Math.abs(p.m.position.z-L.cz)<1e-9),'all at the tower axis: one chunk');
- ok(total<4000,`gallery under 4k vertices (${total}; the stair + gallery was 17,718)`);
- ok(!/IRON|#384443/.test(src('lib/town/lighthouseGalleryWorld.ts')),'no dark iron on the railing');}
+ ok(total<6000,`gallery + ladder under 6k vertices (${total}; the stair + gallery was 17,718)`);
+ ok(!/IRON|#384443/.test(src('lib/town/lighthouseGalleryWorld.ts')),'no dark iron on the railing or the ladder');}
 {const p=rail.getAttribute('position').array;let inOpen=0;for(let i=0;i<p.length;i+=3){const x=p[i],y=p[i+1],z=p[i+2];ok(Number.isFinite(x+y+z),'finite');
   ok(y>=L.top-1e-6&&y<=L.top+L.railH+1e-6,'railing between the deck and rail height');
   let d=Math.atan2(z,x)-L.openAt;d-=Math.PI*2*Math.round(d/(Math.PI*2));if(Math.abs(d)<L.openHalf-.03)inOpen++;}
- ok(inOpen===0,'nothing across the west opening');}
+ ok(inOpen===0,'nothing across the gate');}
 
 // ---- Ball and jet dash: the tower by height, the gallery holds a ball, the railing stops it (not at the opening).
 {ok(lighthouseSolid(L.cx+1.8,L.cz,5)&&!lighthouseSolid(L.cx+2.2,L.cz,5)&&!lighthouseSolid(L.cx+2,L.cz,L.top+.3),'tower solid at 5 m; the gallery is open above its floor');
  ok(lighthouseSolid(L.cx+1,L.cz,L.top+.5),'the lantern room is solid');
  const g=at(1.5,L.galleryR-.02);ok(lighthouseSolid(g.x,g.z,L.top+.5),'the gallery railing stops a ball');
- const o=at(L.openAt,L.galleryR-.02);ok(!lighthouseSolid(o.x,o.z,L.top+.5),'the opening lets a ball out');
- ok(lighthouseSolid(L.cx+3.4,L.cz,.5)===false&&lighthouseSolid(L.cx+2.9,L.cz,.5),'at the plaza: only the plinth is solid (no stair)');
+ const o=at(L.openAt,L.galleryR-.02);ok(!lighthouseSolid(o.x,o.z,L.top+.5),'the gate lets a ball out (onto the ladder slab)');
+ ok(lighthouseSolid(L.cx-3.4,L.cz,.5)===false&&lighthouseSolid(L.cx+2.9,L.cz,.5),'at the plaza: only the plinth (and the ladder) is solid (no stair)');
  ok(towerSolidRadius(.5)===L.plinthR&&towerSolidRadius(L.top-.1)===L.galleryR,'plinth and gallery deck radii');
  ok(lighthouseFloor(L.cx+2.2,L.cz,L.top+.2-.15,.25)===L.top,'a ball on the gallery keeps it as its floor');
  // The jetty-lighthouse hunt ball is back at its pre-stair spot (5.3 m out), on the plaza, clear of the plinth and benches.
@@ -130,5 +136,5 @@ let total=0;{const puts=[];const put=(geo,c,x,y,z)=>{const m=new T.Mesh(geo);m.p
  ok(/lighthouseSolid\(x,z,flight\.height\)/.test(t),'jet dashes stop at the tower');
  ok(/lighthouseHides\(visualLocation\.x,groundY/.test(t),'the hidden-player marker shows behind the tower');
  ok(!/new T\.|\[\]|=>\{/.test(LG.lighthouseConstrain.toString().replace(/\/\/.*$/gm,'')),'lighthouseConstrain allocates nothing');
- ok(ROOF_RECOVERY_TIME<6,'a drop off the gallery recovers like any roof drop');}
-console.log(`PASS lighthouse gallery: ${checks} checks (no stair, plain tower at the plaza, fly-up landing, gallery walk + west drop, white railing ${total} vertices vs 17,718 with the stair, ball)`);
+ ok(ROOF_RECOVERY_TIME<6,'a fall (a ride switched on mid-ladder) recovers like any roof drop');}
+console.log(`PASS lighthouse gallery: ${checks} checks (no stair, plain tower at the plaza, fly-up landing, gallery walk, white railing + ladder ${total} vertices vs 17,718 with the stair, ball)`);

@@ -1,10 +1,10 @@
 // East Jetty lighthouse gallery, drawn (Oct 26 2026; physics in lighthouseGallery.ts). The spiral stair that first came with it
 // was removed (owner: too busy); this keeps the widened top: a flared corbel under a 3.2 m deck and a WHITE railing (posts, a top
-// rail and a mid rail) all round except one opening to the west. Built once inside buildEastPier with the island's `put`, before
-// the batching pass, in the tower's own off-white ('#f3ecdc'): no new colour or material, it joins the plaza chunk's existing
+// rail and a mid rail) all round except a gate where the straight white ladder (lighthouseLadder.ts) arrives. Built once inside
+// buildEastPier with the island's `put`, before the batching pass, in the tower's own off-white ('#f3ecdc'): no new colour or material, it joins the plaza chunk's existing
 // paint batch (vertex colours, one shared material, the one existing shadow caster). No per-frame work.
 import * as T from 'three';
-import {LIGHTHOUSE as L} from './lighthouseGallery';
+import {LIGHTHOUSE as L,towerSolidRadius} from './lighthouseGallery';
 
 type Put=(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;
 const TAU=Math.PI*2;
@@ -48,10 +48,27 @@ export function buildLighthouseRailingGeometry(){
  return rail.geometry();
 }
 
-/** Puts the gallery (corbel, deck, railing) into the town at the tower's axis. Returns the meshes for tests. */
+/** The ladder's rungs (m above the plaza): every LADDER rung step from 0.3 m to just under the deck. */
+export const LADDER_RUNGS=Array.from({length:Math.floor((L.top-.15)/.3)},(_,i)=>.3*(i+1));
+/** Heights of the stand-off brackets from the rails back to the tower. */
+export const LADDER_BRACKETS=[1.6,4.6,7.6,10.6,12.9] as const;
+/** The ladder (two side rails up to grab handles above the deck, round-ish rungs, stand-off brackets to the tower): one white
+ *  geometry around the tower's axis. Local frame: `out` along the gate's bearing, `side` across it. */
+export function buildLadderGeometry(){
+ const g=new Soup(),ux=Math.cos(L.openAt),uz=Math.sin(L.openAt);
+ const P=(o:number,s:number,y:number)=>[o*ux-s*uz,y,o*uz+s*ux];
+ const box=(o0:number,o1:number,s0:number,s1:number,y0:number,y1:number)=>g.hexa([P(o0,s0,y0),P(o1,s0,y0),P(o1,s1,y0),P(o0,s1,y0),P(o0,s0,y1),P(o1,s0,y1),P(o1,s1,y1),P(o0,s1,y1)]);
+ const R=L.ladderR,H=L.ladderHalf,top=L.top+L.ladderAbove;
+ for(const s of [-H,H])box(R-.03,R+.03,s-.03,s+.03,0,top);// side rails
+ for(const y of LADDER_RUNGS)box(R-.02,R+.02,-H,H,y-.02,y+.02);// rungs
+ for(const y of LADDER_BRACKETS){const inner=towerSolidRadius(y)-.04;for(const s of [-H,H])box(inner,R-.03,s-.018,s+.018,y-.025,y+.025);}// stand-offs
+ return g.geometry();
+}
+
+/** Puts the gallery (corbel, deck, railing) and the ladder into the town at the tower's axis. Returns the meshes for tests. */
 export function buildLighthouseGallery(put:Put){
  const {cx,cz}=L;
  const deck=new T.CylinderGeometry(L.galleryR,L.galleryR,.24,32);
  const corbel=new T.CylinderGeometry(L.galleryR-.05,1.5,1.9,24,1,true);
- return [put(buildLighthouseRailingGeometry(),RAIL_WHITE,cx,0,cz),put(deck,RAIL_WHITE,cx,L.top-.12,cz),put(corbel,RAIL_WHITE,cx,13.36-.95,cz)];
+ return [put(buildLighthouseRailingGeometry(),RAIL_WHITE,cx,0,cz),put(buildLadderGeometry(),RAIL_WHITE,cx,0,cz),put(deck,RAIL_WHITE,cx,L.top-.12,cz),put(corbel,RAIL_WHITE,cx,13.36-.95,cz)];
 }
