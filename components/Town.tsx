@@ -125,6 +125,7 @@ import MuseumHost from './Museum';
 import FerryPreviewHost from './FerryPreview';
 import {createLiveKnockout} from '@/lib/graphics/liveKnockout';
 import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
+import {lighthouseFloor,lighthouseSolid,lighthouseHides,isLighthouseTower,nearLighthouse} from '@/lib/town/lighthouseStairs';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
 import {type MapFootprint} from './IslandOverview';
 import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,type Format} from '@/lib/town/venues';
@@ -740,6 +741,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);
+    // The floor under the rider's own height (the lighthouse's spiral stair overlaps itself: lighthouseStairs.ts), for the ride's
+    // wheel pose; and the ball's floor, which sees the stair level at or just under the ball (plus one tick of a fast fall).
+    const riderSurface=(x:number,z:number)=>rooftop.surface(x,z,rooftop.state.height);
     // The sea (Oct 15 2026): one 10 Hz depth probe (lib/town/water/waterDepth.ts), the wade/swim/splash state machine
     // (waterState.ts), the water test the walker's step reads (the shallows and the swim zone are walkable), and where the
     // ball waits on the sand (decision 3). Ride launches may end over splashable water (rooftopJump.ts canSplash).
@@ -1022,6 +1026,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    const ballFloor=(x:number,z:number)=>Math.max(rooftop.surface(x,z),lighthouseFloor(x,z,walkBall.state.y-.15+Math.max(0,-walkBall.state.vy)/30,.25));
     // Sky keep-up (Oct 24 2026, lib/town/walkBall.ts KEEPUP_SKY): ONE pooled flat red ring (1 draw call, made once, hidden by default)
     // at the predicted landing spot while the ball is way up (shrinks, and pulses unless reduced motion / Battery saver, as it nears);
     // the same ring sits amber at the feet while a big kick charges (red when full). skyCamLift eases the camera back/up so the ball stays in view.
@@ -1269,7 +1274,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(jetActions.state.phase!=='idle'){
           const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
           let scanHeld=keys.has(' ');if(!scanHeld&&jetActions.state.phase==='parachute')for(const hold of heldRidePointers.current.values()){if(hold.action===0){scanHeld=true;break;}}
-          const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:(x,z)=>flightBlocked(x,z)||summitSolid(x,z,flight.height),floor:skySurface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding,splash:canSplashDown});flight.height=result.height;
+          const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:(x,z)=>flightBlocked(x,z)||summitSolid(x,z,flight.height)||lighthouseSolid(x,z,flight.height),floor:skySurface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding,splash:canSplashDown});flight.height=result.height;
           if(phase==='charge'&&jetActions.state.phase==='blast'){sonicBurst.trigger(location.x,flight.height,location.z,0,true,FLIGHT_TRAIL_COLORS[customizationRef.current.jetpack],false,customizationRef.current.jetpack);sound.boost('up');}
           velocity.x=(location.x-oldX)/dt;velocity.z=(location.z-oldZ)/dt;
           if(result.landed&&result.splash){
@@ -1483,13 +1488,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         juggleHead:player.juggleHead,headTop:player.headTop,
         moving:Math.hypot(velocity.x,velocity.z)>.15||Math.hypot(input.current.x,input.current.z)>.1,
         ballStyle:customizationRef.current.ball,
-        floor:rooftop.surface,
+        floor:ballFloor,
         // Out to sea (ballSea.ts): open water no longer stops the ball; only real solids over it (the buoy, any obstacle) do.
         sea:ballGround,splash:(x,y,z)=>{ballEffects.splash(x,y,z);document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'undock'}));const pierNote=pierTarget.splash(x,z,ballPlayer);if(pierNote){seaNoteShown=true;setSeaNote(pierNote);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),6500);return;}if(!seaNoteShown){seaNoteShown=true;setSeaNote(OUT_OF_PLAY_NOTE);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),5000);}},// one tracked timer for both notes (code review finding 10)
         blocked:(x,z,y)=>{if((walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle')&&coinHunt.hit(x,y,z,walkBall.state.vx,walkBall.state.vz))return false;const react=()=>{if(walkBall.state.mode!=='shot'&&walkBall.state.mode!=='wall-juggle')return;const sp=Math.hypot(walkBall.state.vx,walkBall.state.vz);jobs.ballContact(x,y,z,walkBall.state.mode);treeDebris.hit(x,y,z,sp,reduced);forage.ballHit(x,y,z,walkBall.state.vx,walkBall.state.vz);coinHunt.treeHit(x,z,y);const propHit=propReactions.hit(x,y,z,walkBall.state.vx,walkBall.state.vz,reduced);propCue(propHit);
         // Rosa's fish stall: a little water/ice splash off the crates (pooled rings) and one line (the lesson once per device, then Rosa now and then).
         if(propHit==='stall'){if(!reduced)ballEffects.splash(x,Math.max(.6,y),z);const said=stallKickNote(elapsed,stallNote,stallLessonStorage);if(said)forageStore.set({note:said.text,notes:forageStore.get().notes+1,tip:said.tip});}
-        world.umbrellaReaction.hit(x,y,z,sp,reduced);if(vendingKick.kick(vendingKick.hitAt(x,y,z),sp)){document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:'thunk'}));if(!reduced)navigator.vibrate?.(14);}};if(summitSolid(x,z,y)){react();return true;}if(walkBall.state.mode==='shot'&&ballGround(x,z)!=='land'){const hitSolid=coinHunt.buoySolid(x,y,z)||ballObstacleGrid.query(x,z,.19).some(o=>insideObstacle(x,z,o,.19));if(hitSolid)react();return hitSolid;}const collision=blocked(x,z,ballObstacleGrid.query(x,z,.19).filter(o=>!ballAboveBuilding(o,y+.05)),.19)||ballRoofGrid.query(x,z,.19).some(o=>y>o.floor&&y<o.top+.2&&Math.abs(x-o.x)<o.w/2+.19&&Math.abs(z-o.z)<o.d/2+.19);if(collision)react();return collision;},
+        world.umbrellaReaction.hit(x,y,z,sp,reduced);if(vendingKick.kick(vendingKick.hitAt(x,y,z),sp)){document.dispatchEvent(new CustomEvent('fi2-vending-cue',{detail:'thunk'}));if(!reduced)navigator.vibrate?.(14);}};if(summitSolid(x,z,y)||lighthouseSolid(x,z,y)){react();return true;}if(walkBall.state.mode==='shot'&&ballGround(x,z)!=='land'){const hitSolid=coinHunt.buoySolid(x,y,z)||ballObstacleGrid.query(x,z,.19).some(o=>insideObstacle(x,z,o,.19));if(hitSolid)react();return hitSolid;}const collision=blocked(x,z,ballObstacleGrid.query(x,z,.19).filter(o=>!ballAboveBuilding(o,y+.05)&&!isLighthouseTower(o)),.19)||ballRoofGrid.query(x,z,.19).some(o=>y>o.floor&&y<o.top+.2&&Math.abs(x-o.x)<o.w/2+.19&&Math.abs(z-o.z)<o.d/2+.19);if(collision)react();return collision;},
         hit:(x,y,z,vx,vz)=>{if(world.umbrellaReaction.hit(x,y,z,Math.hypot(vx,vz),reduced))return true;if(coinHunt.hit(x,y,z,vx,vz))return true;const target=targets.find(t=>!ballReactions.get(t.id)&&y>=t.y-.1&&y<=t.y+1.9&&Math.hypot(x-t.x,z-t.z)<.9);if(!target)return !!party&&party.ballVsFriends(x,y,z,vx,vz);/* a party friend: C.Hit (relay v1.6); the ball bounces off them */return recordExploreKnockover(ballReactions.hit(target,vx,vz,customizationRef.current.ball,targetMovement(target)));},
         impact:(x,y,z)=>{ballEffects.impact(x,y,z);sound.ball('bounce');},strike:()=>{sound.ball('kick');if(walkBall.state.mode==='shot')ballEffects.launch(walkBall.state.x,walkBall.state.y,walkBall.state.z,walkBall.state.charge);},receive:()=>sound.ball('receive')
       });
@@ -1694,7 +1699,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       else if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&groundY<=fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2){const yaw=player.root.rotation.y,summit=nearSummit(visualLocation.x,visualLocation.z);if(summit)summitGradient(visualLocation.x,visualLocation.z,slopeGrad);rideSlopePose(rideRef.current,visualLocation.x,visualLocation.z,yaw,rideGround,summit?slopeGrad.gx*Math.cos(yaw)-slopeGrad.gz*Math.sin(yaw):0,slopeRidePose);ridePitch=slopeRidePose.pitch;groundY=slopeRidePose.height;slopeRoll=slopeRidePose.roll;
         // Summit Isle's slopes: the drawn ride eases over the ground's kinks and ridges, its pitch easing to the slope (rideSlope.ts).
         if(nearSummit(visualLocation.x,visualLocation.z)){const s=rideSuspension.update(active?dt:0,groundY,ridePitch+hopPitch);groundY=Math.max(s.y,groundY-.02);ridePitch=s.pitch;}else rideSuspension.reset();}else rideSuspension.reset();// ≤ 2 cm into the grass
-      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&rooftop.state.height>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,rooftop.surface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
+      if(rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&!rooftop.state.air&&!rooftop.jump.active&&rooftop.state.height>fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2&&rampMotion.state.phase==='idle'&&streetTraffic.rider.index<0){rideSurfacePose(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,rooftop.state.height,riderSurface,stairRidePose);ridePitch=stairRidePose.pitch;groundY=stairRidePose.height;}
       if(rideRef.current==='jetpack')groundY=active?flightRenderHeight(previousFlightHeight,flight.height,blend):flight.height;
       if(streetTraffic.rider.index>=0){const truck=streetTraffic.cars[streetTraffic.rider.index],bed=streetTraffic.bedPoint(truck.index);groundY=bed.y;ridePitch=truck.group.rotation.x;player.root.position.x=bed.x;player.root.position.z=bed.z;}
       if(water.inWater&&rideRef.current==='walk'&&streetTraffic.rider.index<0&&!rooftop.state.falling){groundY=water.state.rootY;// wading: the feet on the shelf; swimming: the root under the water line
@@ -1945,7 +1950,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // through it, so the view never shows the character (Oct 14 2026, user). Restored exactly as it was on the way out.
       // A7: hidden behind a building: the foot ring draws through it so the player is never lost (~6 Hz probe, no new draw).
       if(water.inWater&&camera.position.y<WATER_LEVEL+.25)camera.position.y=WATER_LEVEL+.25;// never under the opaque ocean plane
-      hiddenMarker.update(rideRef.current==='walk'&&!learningFormat.current&&!fieldMenu.current&&ring.visible&&playerOcclusion.update(dt,visualLocation.x,groundY,visualLocation.z,camera.position.x,camera.position.y,camera.position.z),visualLocation.x,groundY,visualLocation.z,dt,elapsed,reduced);
+      hiddenMarker.update((rideRef.current==='walk'||rideRef.current!=='jetpack'&&nearLighthouse(visualLocation.x,visualLocation.z))&&!learningFormat.current&&!fieldMenu.current&&ring.visible&&(playerOcclusion.update(dt,visualLocation.x,groundY,visualLocation.z,camera.position.x,camera.position.y,camera.position.z)||lighthouseHides(visualLocation.x,groundY,visualLocation.z,camera.position.x,camera.position.y,camera.position.z)),visualLocation.x,groundY,visualLocation.z,dt,elapsed,reduced);
       const learning=learningFormat.current;
       const fullWidth=viewportW,fullHeight=viewportH;
       if(sharkBubbleUntil){const b=uiElement<HTMLElement>('[data-shark-bubble]');if(b){player.root.localToWorld(sharkHead.set(0,2.3,0)).project(camera);const off=performance.now()>=sharkBubbleUntil||sharkHead.z>1||sharkHead.z< -1;if(off){if(performance.now()>=sharkBubbleUntil)sharkBubbleUntil=0;}else placeUI(b,(sharkHead.x+1)*fullWidth/2,(1-sharkHead.y)*fullHeight/2);if(b.hidden!==off)b.hidden=off;}else sharkBubbleUntil=0;}// the sharks' "Uh oh!" (≤ 1.5 s)

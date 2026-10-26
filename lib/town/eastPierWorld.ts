@@ -9,6 +9,8 @@ import type {Obstacle} from './simulation';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {onIsland} from './shoreline';
 import {EAST_PIER,JETTY_PATH,JETTY_BEACON,KEEPER_HUT,PIER_KICK_SPOT,coilAt,jettyOffset,walkwayOffset,jettySide,type JettySample} from './eastPier';
+import {LIGHTHOUSE_STAIRS,TOWER_FOOT_R} from './lighthouseStairs';
+import {buildLighthouseStairs} from './lighthouseStairsWorld';
 type Mesh=T.Mesh;
 export type PierTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>Mesh;
@@ -80,17 +82,24 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   const tiers=[[0,3.4,'#f3ecdc'],[3.4,4.6,'#bf6658'],[4.6,8,'#f3ecdc'],[8,9.2,'#bf6658'],[9.2,12.4,'#f3ecdc']] as const;
   const radiusAt=(y:number)=>r-(r-1.35)*y/12.4;
   for(const [y0,y1,c] of tiers)put(new T.CylinderGeometry(radiusAt(y1),radiusAt(y0),y1-y0,16),c,x,1+(y0+y1)/2,z);
-  // A door and two small windows facing the plaza entrance (west).
-  box(.12,1.9,1.1,'#2f4f4a',x-radiusAt(.95)+.02,1.95,z);for(const y of [6.2,10.6])box(.12,.7,.5,'#2f4f4a',x-radiusAt(y-1)+.03,y,z);
-  put(new T.CylinderGeometry(2.05,2.05,.22,20),'#f3ecdc',x,13.5,z);// gallery deck
-  for(let k=0;k<16;k++){const a=k/16*Math.PI*2;cylinder(.04,.75,IRON,x+Math.cos(a)*1.95,13.98,z+Math.sin(a)*1.95);}
-  put(new T.TorusGeometry(1.95,.045,4,24),IRON,x,14.35,z).rotation.x=Math.PI/2;
+  // The keeper's door, under the stair's second turn (south-south-east, ~6 m of headroom), facing out.
+  {const a=LIGHTHOUSE_STAIRS.theta0-.45,dr=radiusAt(.95)-.02,door=box(.12,1.9,1.1,'#2f4f4a',x+Math.cos(a)*dr,1.95,z+Math.sin(a)*dr);door.rotation.y=-a;}
+  // The spiral stair round the outside up to a widened gallery (lighthouseStairs.ts / lighthouseStairsWorld.ts, Oct 26 2026):
+  // treads, stringers, rails, brackets, lamps, window slits, the 3.2 m gallery deck on its corbel and its railing, merged.
+  buildLighthouseStairs(put);
   cylinder(1.1,.25,IRON,x,13.73,z);put(new T.CylinderGeometry(1.05,1.05,1.5,12),'#ffe8ae',x,14.6,z);// the lit lantern glass
   for(let k=0;k<6;k++){const a=k/6*Math.PI*2;box(.07,1.5,.07,IRON,x+Math.cos(a)*1.07,14.6,z+Math.sin(a)*1.07);}
   put(new T.ConeGeometry(1.35,1.3,12),'#bf6658',x,16,z);put(new T.SphereGeometry(.18,8,6),IRON,x,16.72,z);
-  obstacles.push({x,z,w:(r+.8)*2,d:(r+.8)*2});assets.push({kind:'beacon',x,z,w:(r+.8)*2,d:(r+.8)*2});
+  // Round footprint (the plinth): a square one reached into the stair band at its corners. The ball and jet dashes use the
+  // lighthouse's own solids by height instead (lighthouseStairs.ts lighthouseSolid / isLighthouseTower).
+  obstacles.push({x,z,w:TOWER_FOOT_R*2,d:TOWER_FOOT_R*2,cornerRadius:TOWER_FOOT_R});assets.push({kind:'beacon',x,z,w:(r+.8)*2,d:(r+.8)*2});
   lampSites.push({x,z,ground:.01,region:'east-pier',poolWidth:10,poolDepth:10});
-  sign('EAST JETTY LIGHTHOUSE',3,.42,x-r-.85,1.2,z,'#294f43','#f4cc7c',-Math.PI/2);
+  // Name board on the tower's west face, between the stair's first and second turn (the walkway arrives from the west).
+  sign('EAST JETTY LIGHTHOUSE',2.4,.36,x-radiusAt(3.5)-.06,4.5,z,'#294f43','#f4cc7c',-Math.PI/2);
+  // At the stair's foot: what the climb is for (scanning: look all round before the ball comes, as a captain does from up high).
+  {const a=LIGHTHOUSE_STAIRS.theta0-.35,R=LIGHTHOUSE_STAIRS.rOut+.08,sx=x+Math.cos(a)*R,sz=z+Math.sin(a)*R,tx=-Math.sin(a),tz=Math.cos(a);
+   sign('CLIMB UP • SCAN THE PITCH',2.1,.3,sx+Math.cos(a)*.05,1.25,sz+Math.sin(a)*.05,'#294f43','#f4cc7c',Math.atan2(Math.cos(a),Math.sin(a)));
+   for(const d of [-1,1]){cylinder(.05,1.42,POST,sx+tx*d,.71,sz+tz*d);obstacles.push({x:sx+tx*d,z:sz+tz*d,w:.2,d:.2});}}
   // Keeper's hut: whitewashed walls, a red pitched roof, a green door facing the plaza.
   const h=KEEPER_HUT;box(h.w,h.h,h.d,'#efe6d2',h.x,h.h/2,h.z);
   for(const sd of [-1,1]){const roof=box(h.w+.5,.14,h.d/2+.55,'#bf6658',h.x,h.h+.45,h.z+sd*(h.d/4+.05));roof.rotation.x=sd*.52;}
@@ -121,7 +130,7 @@ export function buildEastPier({box,cylinder,put,sign,obstacles,assets,prop=untag
   for(const dx of [-.75,.75])box(.13,.5,.5,'#385a4e',x+dx,.27,z);});
   obstacles.push({x,z,w:2,d:.7});assets.push({kind:'bench',x,z,w:2,d:.7});
  };
- bench(P.cx-.8,P.cz-5,-1);bench(P.cx-.8,P.cz+5,1);
+ bench(P.cx-.8,P.cz-6.5,-1);bench(P.cx-.8,P.cz+6.5,1);// clear of the lighthouse stair's band (outer edge 4.9 m)
  const bollard=(x:number,z:number)=>{prop('bollard',()=>{cylinder(.17,.5,IRON,x,.47,z);put(new T.SphereGeometry(.19,8,5,0,Math.PI*2,0,Math.PI/2),IRON,x,.72,z);});obstacles.push({x,z,w:.4,d:.4});};
  const lifebuoy=(x:number,z:number,yaw:number)=>{
   prop('lifebuoy',()=>{cylinder(.06,1.5,POST,x,.97,z);const ring=put(new T.TorusGeometry(.34,.085,6,14),'#e0513f',x,1.27,z);ring.rotation.y=yaw;
