@@ -55,3 +55,39 @@ export function puzzleStar(ctx:AudioContext|null,n:number,delay=0){
  if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay,hz=[659,784,1047][Math.min(2,Math.max(0,n-1))];
  tone(ctx,hz,t,.22,v*.05);tone(ctx,hz*2,t+.02,.16,v*.018);
 }
+
+// ── Oct 25 2026 big-moment voices (docs/ARCADE_PASSPUZZLES_UPGRADE_OCT25.md): still one-shots, voice-capped. ──
+/** Filtered noise with its own envelope: a crowd swell, swish or whoosh. The shared buffer loops for long voices. */
+function air(ctx:AudioContext,at:number,dur:number,level:number,type:BiquadFilterType,hz:number,toHz:number,q=.8,attack=.04){
+ const s=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=noiseOf(ctx);s.loop=dur>.24;f.type=type;f.Q.value=q;
+ f.frequency.setValueAtTime(hz,at);f.frequency.exponentialRampToValueAtTime(Math.max(40,toHz),at+dur);
+ g.gain.setValueAtTime(.0001,at);g.gain.linearRampToValueAtTime(level,at+attack);g.gain.exponentialRampToValueAtTime(.0001,at+dur);
+ s.connect(f);f.connect(g);g.connect(ctx.destination);s.start(at);s.stop(at+dur+.03);track(ctx,s,[s,f,g]);
+}
+/** A driven shot cuts the air: a short rising whoosh, louder with speed. */
+export function puzzleShotWhoosh(ctx:AudioContext|null,speed:number){
+ if(!ready(ctx))return;const v=getSoundVolume(),k=Math.min(1,Math.max(0,(speed-10)/20));
+ air(ctx,ctx.currentTime+.02,.22+.1*k,v*(.05+.07*k),'bandpass',700,2600+1600*k,1.4,.03);
+}
+/** Goal: the net swish, then the crowd swells and settles (two noise bands, about 1.6 s) under a little rising fanfare. */
+export function puzzleGoalRoar(ctx:AudioContext|null,passes:number){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime,big=Math.min(1,.55+passes*.15);
+ air(ctx,t,.28,v*.08,'highpass',3200,1800,.6,.01);
+ air(ctx,t+.06,1.6,v*.11*big,'bandpass',520,820,.7,.28);
+ air(ctx,t+.12,1.3,v*.05*big,'bandpass',1500,1100,1.1,.3);
+ tone(ctx,392,t+.2,.18,v*.03,'triangle');tone(ctx,523,t+.32,.18,v*.03,'triangle');tone(ctx,659,t+.44,.34,v*.035,'triangle');
+}
+/** A block or save: the crowd's "ooh", a falling band of noise. */
+export function puzzleCrowdOoh(ctx:AudioContext|null){
+ if(!ready(ctx))return;const v=getSoundVolume();air(ctx,ctx.currentTime+.05,.75,v*.07,'bandpass',620,330,1.6,.12);
+}
+/** A named combination (one-two, first time, tiki-taka): a quick bright sting, higher for a goal. */
+export function puzzleCombo(ctx:AudioContext|null,tier:number){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+.08,root=tier>=3?659:587;
+ tone(ctx,root,t,.09,v*.035,'square');tone(ctx,root*1.26,t+.07,.09,v*.03,'square');tone(ctx,root*1.5,t+.14,.16,v*.03,'triangle');
+}
+/** First-try streak on the result card: one extra note per streak step (capped at 5). */
+export function puzzleStreak(ctx:AudioContext|null,n:number,delay=0){
+ if(!ready(ctx)||n<2)return;const v=getSoundVolume(),t=ctx.currentTime+delay,scale=[523,659,784,988,1175];
+ for(let i=0;i<Math.min(5,n);i++)tone(ctx,scale[i],t+i*.08,.12,v*.03,'triangle');
+}

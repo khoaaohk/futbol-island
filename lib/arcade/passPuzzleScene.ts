@@ -7,6 +7,8 @@ import {matchPlayerDress} from '../town/beanLooks';
 import type {Scenario,PuzzleState,Prediction,Vec2,PuzzleEvent} from '../passPuzzle/types';
 import type {LaneStatus} from '../passPuzzle/explain';
 import {stripedPlaneGeometry} from '../graphics/pitchStripes';
+import {SKILL_MOVES,type SkillMotion} from '../graphics/skillMoves';
+import {celebrationFor} from '../passPuzzle/combo';
 
 /**
  * Pass Puzzles scene: a broadcast view from behind the attack on a sand-framed island pitch.
@@ -150,7 +152,23 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const liveTrail=new T.InstancedMesh(new T.SphereGeometry(1,8,6),new T.MeshBasicMaterial({color:'#70fff0',transparent:true,opacity:.65,depthWrite:false}),24);liveTrail.name='puzzle-flight-trail';liveTrail.frustumCulled=false;liveTrail.count=0;liveTrail.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(liveTrail);
  const trailPoints=new Float32Array(72);let trailHead=0,trailCount=0,trailClock=0,trailLife=0;const trailMaterial=liveTrail.material as T.MeshBasicMaterial;
  const goalRings=['#ff72cb','#73fff1'].map(color=>flatRing(.94,1,color,.8));goalRings.forEach((r,i)=>r.name='puzzle-goal-pulse-'+i);
- const celebrations=Array.from({length:8},(_,i)=>({type:i%2?'thankPasser':'airplane',progress:0,side:1 as const})) as Array<NonNullable<PlayerMotion['skill']>>;
+ // Goal celebrations (Oct 25): one pooled skill motion per attacker, each run over its authored length (combo.ts picks the move).
+ const celebrations:SkillMotion[]=Array.from({length:11},(_,i)=>({type:'thankPasser',progress:0,side:i%2?-1:1}));
+ const CELEBRATE_SECONDS=Math.max(...(['airplane','kneeSlide','highFive','fistBump','thankPasser'] as const).map(k=>SKILL_MOVES[k].seconds));
+ let goalSerial=0,assister=-2,flightReceiver=-1,lastKicker=-1;
+ // The fail beat: the passer and receiver drop their heads, the defender or keeper who won it fist-bumps.
+ const winnerMotion:SkillMotion={type:'fistBump',progress:0,side:1};let failAge=-1,stopBy:{defender:number;keeper:boolean}={defender:-1,keeper:false};
+ // Goal confetti: one pooled instanced mesh (48 paper flecks, instance colours), alive about 2.2 s per goal.
+ const CONFETTI=48,CONFETTI_LIFE=2.2,confettiGeo=new T.PlaneGeometry(.3,.17),confettiMat=new T.MeshBasicMaterial({side:T.DoubleSide,toneMapped:false,fog:false});
+ const confetti=new T.InstancedMesh(confettiGeo,confettiMat,CONFETTI);confetti.name='puzzle-confetti';confetti.frustumCulled=false;confetti.count=0;confetti.instanceMatrix.setUsage(T.DynamicDrawUsage);scene.add(confetti);
+ {const palette=['#ff72cb','#73fff1','#ffe36e','#8cff9e','#fff3d9','#b994ff'].map(c=>new T.Color(c));for(let i=0;i<CONFETTI;i++)confetti.setColorAt(i,palette[i%palette.length]);}
+ const confettiP=new Float32Array(CONFETTI*3),confettiV=new Float32Array(CONFETTI*3),confettiSpin=new Float32Array(CONFETTI);let confettiAge=-1;
+ function launchConfetti(x:number,z:number,width:number){let seed=7+goalSerial*31;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+  for(let i=0;i<CONFETTI;i++){const j=i*3;confettiP[j]=x+(rnd()-.5)*width;confettiP[j+1]=2.2+rnd()*1.2;confettiP[j+2]=z-.6+rnd()*.8;confettiV[j]=(rnd()-.5)*4;confettiV[j+1]=2.5+rnd()*3.5;confettiV[j+2]=-1-rnd()*2.5;confettiSpin[i]=(rnd()-.5)*14;}
+  confettiAge=0;confetti.count=CONFETTI;}
+ // A completed pass: a quick sparkle ring at the receiver's feet.
+ const passPop=flatRing(.6,.78,'#fff3d2',.9);passPop.name='puzzle-pass-pop';let passPopAge=-1;
+ function clearBeats(){confettiAge=-1;confetti.count=0;passPopAge=-1;passPop.visible=false;failAge=-1;assister=-2;flightReceiver=lastKicker=-1;stopBy={defender:-1,keeper:false};}
  const ball=stage.football(BALL_R),ballShadow=new T.Mesh(new T.CircleGeometry(.24,16),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;scene.add(ballShadow);
  let net:{attribute:T.BufferAttribute;rest:Float32Array;hit:number;x:number}|null=null;
  let stripeMaterials:T.MeshStandardMaterial[]=[];
@@ -183,7 +201,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  }
 
  function load(s:Scenario){
-  stop=null;cutMark.scale.setScalar(1);endOut.scale.setScalar(1);cutMark.visible=endOut.visible=false;scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hint=null;hintRing.visible=hintDot.visible=false;setScan(null);goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;buildPitch(s);
+  stop=null;cutMark.scale.setScalar(1);endOut.scale.setScalar(1);cutMark.visible=endOut.visible=false;scenario=s;elapsed=0;flagged=[];calledOffside=-1;reactAge.fill(-1);prevMode.length=0;for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hint=null;hintRing.visible=hintDot.visible=false;setScan(null);goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailHead=trailCount=trailClock=trailLife=0;liveTrail.count=0;clearBeats();buildPitch(s);
   for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.root.removeFromParent();
   attackers=s.attackers.map((_,i)=>newActor(rigFor('attack',i)));defenders=s.defenders.map((_,i)=>newActor(rigFor('defend',i)));keeper=s.keeper?newActor(rigFor('keeper',0)):null;
   for(const t of scene.children.filter(o=>o instanceof T.Sprite&&o.name==='puzzle-tag'))scene.remove(t);
@@ -269,7 +287,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
 
  /** First-time window: a ring around the carrier that shrinks to nothing as the one-touch chance runs out. */
  function setClock(fraction:number|null,state:PuzzleState){const c=state.attackers[state.carrier];clockRing.visible=fraction!==null&&!!c;if(clockRing.visible&&c){clockRing.position.set(c.p.x,.04,c.p.z);clockRing.scale.setScalar(.75+fraction!*.75);(clockRing.material as T.MeshBasicMaterial).opacity=.35+.5*fraction!;}}
- function resetActors(){clearStop();clockRing.visible=false;reactAge.fill(-1);prevMode.length=0;calledOffside=-1;flagged=[];goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailCount=trailHead=trailLife=0;liveTrail.count=0;for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.dive=undefined;a.motion.skill=undefined;a.rig.root.position.y=0;a.motion.resumePose=true;a.rig.root.rotation.z=0;}}
+ function resetActors(){clearStop();clockRing.visible=false;reactAge.fill(-1);prevMode.length=0;calledOffside=-1;flagged=[];goalAge=keeperDiveAge=-1;keeperWasDiving=false;trailCount=trailHead=trailLife=0;liveTrail.count=0;clearBeats();for(const a of [...attackers,...defenders,...(keeper?[keeper]:[])]){a.reactionLeft=a.receiveLeft=a.kickLeft=0;a.dejected=false;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;a.motion.kick=undefined;a.motion.dive=undefined;a.motion.skill=undefined;a.rig.root.position.y=0;a.motion.resumePose=true;a.rig.root.rotation.z=0;a.rig.setExpression('neutral');}}
  function react(actor:Actor|undefined,kind:NonNullable<PlayerMotion['reaction']>,squash=0){if(!actor)return;actor.motion.reaction=kind;actor.reactionTotal=actor.reactionLeft=REACTION_SECONDS[kind];if(squash){actor.motion.squash=squash;actor.motion.squashSerial=(actor.motion.squashSerial??0)+1;}}
  /** Mark where the attempt was stopped (null clears it). kind picks the mark; the camera push eases in update(). */
  function showStop(at:Vec2|null,kind:'cut'|'out'|'save'|'offside'='cut'){clearStop();if(!at)return;
@@ -280,13 +298,17 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  function onEvent(e:PuzzleEvent){
   const att=e.attacker!==undefined?attackers[e.attacker]:undefined,def=e.defender!==undefined?defenders[e.defender]:undefined;
   switch(e.type){
-   case 'kick':trailCount=trailHead=trailClock=0;trailLife=.35;trailMaterial.color.set(e.kind==='shot'?'#ff75cb':e.kind==='header'?'#b994ff':'#70fff0');if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
-   case 'receive':if(att){if(e.touch==='chest')react(att,'chest',-2.6);else if(e.touch==='thigh')react(att,'thigh',-2.2);else if(e.touch==='header')react(att,'header',2.8);else{att.receiveLeft=.45;att.motion.squash=-1.8;att.motion.squashSerial=(att.motion.squashSerial??0)+1;}}break;
+   case 'kick':lastKicker=e.attacker??-1;trailCount=trailHead=trailClock=0;trailLife=.35;trailMaterial.color.set(e.kind==='shot'?'#ff75cb':e.kind==='header'?'#b994ff':'#70fff0');if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
+   case 'receive':if(att){if(e.touch==='chest')react(att,'chest',-2.6);else if(e.touch==='thigh')react(att,'thigh',-2.2);else if(e.touch==='header')react(att,'header',2.8);else{att.receiveLeft=.45;att.motion.squash=-1.8;att.motion.squashSerial=(att.motion.squashSerial??0)+1;}
+    if(!stage.reduced){passPopAge=0;passPop.visible=true;passPop.position.set(e.at.x,.05,e.at.z);}}break;
    case 'heavy_touch':react(att,'stumble',-3);break;
-   case 'intercept':react(def,(e.speed??0)>9?'slide':'deflect',-2.2);break;
-   case 'deflect':react(def,'deflect',-2);break;
-   case 'save':case 'parry':if(keeper){keeperDive.outcome=e.type==='save'?'catch':'parry';if(keeperDiveAge<0){keeperDiveAge=.2;keeperDive.kind='stand';keeperDive.height=Math.min(1,e.at.y/2.5);}keeper.motion.squash=-2.4;keeper.motion.squashSerial=(keeper.motion.squashSerial??0)+1;}break;
-   case 'goal':goalAge=0;scorer=e.attacker??0;for(const r of goalRings)r.position.set(e.at.x,.065,e.at.z-.5);for(const d of defenders){react(d,'dejected');d.dejected=true;}if(keeper){react(keeper,'dejected');}if(net&&!stage.reduced){net.hit=1;net.x=e.at.x;}stage.burst(e.at.x,1,e.at.z,2);break;
+   case 'intercept':react(def,(e.speed??0)>9?'slide':'deflect',-2.2);stopBy={defender:e.defender??-1,keeper:false};break;
+   case 'deflect':react(def,'deflect',-2);stopBy={defender:e.defender??-1,keeper:false};break;
+   case 'save':case 'parry':stopBy={defender:-1,keeper:true};if(keeper){keeperDive.outcome=e.type==='save'?'catch':'parry';if(keeperDiveAge<0){keeperDiveAge=.2;keeperDive.kind='stand';keeperDive.height=Math.min(1,e.at.y/2.5);}keeper.motion.squash=-2.4;keeper.motion.squashSerial=(keeper.motion.squashSerial??0)+1;}break;
+   case 'goal':goalAge=0;goalSerial++;assister=-2;scorer=e.attacker??0;for(const r of goalRings)r.position.set(e.at.x,.065,e.at.z-.5);for(const d of defenders){react(d,'dejected');d.dejected=true;}if(keeper){react(keeper,'dejected');}
+    // A rebound or deflection earlier in the move must not leave an attacker slumped through the celebration.
+    for(const a of attackers){a.dejected=false;a.reactionLeft=0;a.motion.reaction=undefined;a.motion.reactionProgress=undefined;}
+    if(net&&!stage.reduced){net.hit=1;net.x=e.at.x;}stage.burst(e.at.x,1.2,e.at.z,3);if(!stage.reduced)launchConfetti(e.at.x,e.at.z,(scenario?.pitch.goalWidth??6)*.9);break;
    case 'offside':calledOffside=e.attacker??-1;react(att,'dejected');break;
    case 'out':break;
   }
@@ -305,19 +327,41 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
    if((m.called??0)!==a.called){m.called=a.called||undefined;a.callWave=1.4;}if(a.callWave>0){a.callWave=Math.max(0,a.callWave-dt);busy=true;}
    extra(m);a.rig.update(s.p.x,s.p.z,dt,elapsed,reduced,m);m.resumePose=undefined;if(a.tag){a.tag.visible=tagsVisible;a.tag.position.set(s.p.x,2.85,s.p.z);}
   };
+  if(state.flight)flightReceiver=state.flight.receiver??-1;
+  // The assist: whoever played the pass the scorer finished (none for a direct shot or a solo rebound).
+  if(goalAge>=0&&assister===-2){const c=state.chain,last=c[c.length-1],prev=c[c.length-2];assister=last&&last.kicker===scorer&&prev&&prev.kicker!==scorer?prev.kicker:-1;}
+  // The fail beat starts on the first moving frame of a failed attempt (not after a goal that broke a rule).
+  if(state.phase==='fail'&&failAge<0&&dt>0&&goalAge<0){failAge=0;
+   for(const k of new Set([lastKicker,flightReceiver])){const a=attackers[k];if(a&&!a.dejected){react(a,'dejected');a.dejected=true;a.rig.setExpression('beaten');}}
+   const winner=stopBy.keeper?keeper:defenders[stopBy.defender];winner?.rig.setExpression('happy');}
+  else if(failAge>=0&&failAge<2.8)failAge+=dt;
+  if(failAge>=0&&failAge<2.8)busy=true;
+  const winnerLen=SKILL_MOVES.fistBump.seconds;
   state.attackers.forEach((s,i)=>{const a=attackers[i];if(!a)return;pose(a,s,m=>{
    const pending=state.pending&&state.pending.kicker===i?state.pending:null;
    m.shotCharge=0;m.skill=undefined;
    if(pending){const k=pending.kick;m.shotPower=k.power;m.powerKick=k.kind==='shot'&&k.power>.75;m.shotCharge=k.kind==='shot'?(1-pending.left/Math.max(.001,pending.total))*k.power:0;m.actionKind=k.kind==='shot'?'shot':k.loft>.35?'loft':'pass';m.facing=Math.atan2(k.target.x-s.p.x,k.target.z-s.p.z);m.kick=(1-pending.left/Math.max(.001,pending.total))*.5;busy=true;}
    else if(a.kickLeft>0){a.kickLeft=Math.max(0,a.kickLeft-dt);m.kick=a.kickLeft>0?.5+(1-a.kickLeft/.34)*.5:undefined;busy=true;}
    else m.kick=undefined;
-   m.dribbling=false;m.ready=undefined;if(goalAge>=0&&goalAge<1.5){const celebration=celebrations[i%celebrations.length];celebration.type=i===scorer?'airplane':'thankPasser';celebration.progress=Math.min(1,goalAge/1.5);m.skill=celebration;a.rig.setExpression('happy');busy=true;}
+   m.dribbling=false;m.ready=undefined;
+   // Off the ball while the child thinks: heads turn to scan (the carrier looks up longest). Nothing with reduced motion.
+   m.scanYaw=idleThinking&&!reduced&&state.phase==='aiming'?Math.sin(elapsed*(i===state.carrier?.5:.6+i*.13)+i*2.1)*(i===state.carrier?.3:.2):0;
+   if(goalAge>=0&&goalAge<CELEBRATE_SECONDS){
+    // Each move at its authored speed; teammates join a beat later, turned toward the scorer.
+    const c=celebrations[i%celebrations.length];c.type=celebrationFor(i,scorer,assister,goalSerial);const len=SKILL_MOVES[c.type].seconds,age=goalAge-(i===scorer?0:.18+(i%3)*.08);
+    if(age>=0&&age<len){c.progress=age/len;m.skill=c;}
+    if(i!==scorer){const sc=state.attackers[scorer];if(sc)m.facing=Math.atan2(sc.p.x-s.p.x,sc.p.z-s.p.z);}
+    if(goalAge-dt<=0&&(i===scorer||i===assister))a.rig.setExpression('happy');busy=true;}
+   // The intended receiver opens up to the ball while it travels (approach pose, before first contact).
+   else if(state.phase==='flight'&&state.flight?.receiver===i&&a.receiveLeft<=0&&!pending){m.receive=1;m.receiveProgress=0;}
   });});
-  state.defenders.forEach((s,i)=>{const a=defenders[i];if(!a)return;pose(a,s,m=>{m.stance='ready';const scan=idleThinking&&!reduced?Math.sin(elapsed*(.65+i*.11)+i*1.7):0;m.scanYaw=scan*.25;m.ready=s.mode==='intercept'?.4:.65+scan*.12;m.jockey=s.mode==='press'?.6:idleThinking?.35:0;if(idleThinking&&!reduced){const glance=state.attackers[(i+1)%state.attackers.length].p,attention=Math.max(0,Math.sin(elapsed*.55+i)-.45)*.8;m.lookX=ballP.x+(glance.x-ballP.x)*attention;m.lookZ=ballP.z+(glance.z-ballP.z)*attention;}});});
+  state.defenders.forEach((s,i)=>{const a=defenders[i];if(!a)return;pose(a,s,m=>{m.stance='ready';m.skill=undefined;
+   if(stopBy.defender===i&&!stopBy.keeper&&failAge>=.6&&failAge-.6<winnerLen){winnerMotion.progress=(failAge-.6)/winnerLen;m.skill=winnerMotion;}const scan=idleThinking&&!reduced?Math.sin(elapsed*(.65+i*.11)+i*1.7):0;m.scanYaw=scan*.25;m.ready=s.mode==='intercept'?.4:.65+scan*.12;m.jockey=s.mode==='press'?.6:idleThinking?.35:0;if(idleThinking&&!reduced){const glance=state.attackers[(i+1)%state.attackers.length].p,attention=Math.max(0,Math.sin(elapsed*.55+i)-.45)*.8;m.lookX=ballP.x+(glance.x-ballP.x)*attention;m.lookZ=ballP.z+(glance.z-ballP.z)*attention;}});});
   if(keeper&&state.keeper){const k=state.keeper,diving=k.mode==='dive';
    if(diving&&!keeperWasDiving&&keeperDiveAge<0){keeperDiveAge=0;keeperDive.dir=(k.diveDir>0?-1:1);keeperDive.kind=ballP.y<.55?'collapse':ballP.y>1.8?'tip':'side';keeperDive.height=Math.min(1,ballP.y/2.5);keeperDive.outcome='parry';}keeperWasDiving=diving;
    if(keeperDiveAge>=0){keeperDiveAge+=dt;keeperDive.progress=Math.min(1,keeperDiveAge/1.05);busy=true;if(keeperDiveAge>1.2)keeperDiveAge=-1;}
-   pose(keeper,k,m=>{m.keeper=1;m.ready=keeperDiveAge<0?.75:0;m.keeperReach=0;m.dive=keeperDiveAge>=0?keeperDive:undefined;m.scanYaw=idleThinking&&!reduced?Math.sin(elapsed*.7)*.12:0;});
+   pose(keeper,k,m=>{m.keeper=1;m.ready=keeperDiveAge<0?.75:0;m.keeperReach=0;m.dive=keeperDiveAge>=0?keeperDive:undefined;m.scanYaw=idleThinking&&!reduced?Math.sin(elapsed*.7)*.12:0;
+    m.skill=stopBy.keeper&&keeperDiveAge<0&&failAge>=1.3&&failAge-1.3<winnerLen?(winnerMotion.progress=(failAge-1.3)/winnerLen,winnerMotion):undefined;});
    // The native rig owns pelvis roll, near-foot push-off, landing and get-up.
    // Never rotate the whole root or leave it lying sideways after a save.
    keeper.rig.root.rotation.z=0;keeper.rig.root.position.y=0;
@@ -332,6 +376,12 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   liveTrail.count=reduced?0:trailLife>0?trailCount:0;
   for(let i=0;i<liveTrail.count;i++){const index=(trailHead-1-i+24)%24;dummy.position.fromArray(trailPoints,index*3);dummy.scale.setScalar((.04+.14*(1-i/24))*Math.min(1,trailLife/.3));dummy.updateMatrix();liveTrail.setMatrixAt(i,dummy.matrix);}if(liveTrail.count){liveTrail.instanceMatrix.needsUpdate=true;busy=true;}
   for(let i=0;i<goalRings.length;i++){const ring=goalRings[i],age=goalAge-i*.12;ring.visible=!reduced&&goalAge>=0&&age>=0&&age<.9;if(ring.visible){ring.scale.setScalar(1+age*5);ring.material.opacity=(1-age/.9)*.8;busy=true;}}
+  // Confetti: drag-limited fall with a paper flutter, then the mesh hides (count 0) and the loop may sleep.
+  if(confettiAge>=0&&dt>0){confettiAge+=dt;if(confettiAge>=CONFETTI_LIFE||reduced){confettiAge=-1;confetti.count=0;}else{const drag=Math.exp(-dt*1.6),fade=Math.min(1,(CONFETTI_LIFE-confettiAge)/.5);
+   for(let i=0;i<CONFETTI;i++){const j=i*3;confettiV[j+1]-=dt*4.2;confettiV[j]*=drag;confettiV[j+1]*=drag;confettiV[j+2]*=drag;confettiP[j]+=(confettiV[j]+Math.sin(confettiAge*5+i)*.6)*dt;confettiP[j+1]=Math.max(.03,confettiP[j+1]+confettiV[j+1]*dt);confettiP[j+2]+=confettiV[j+2]*dt;
+    dummy.position.set(confettiP[j],confettiP[j+1],confettiP[j+2]);dummy.rotation.set(confettiSpin[i]*confettiAge,i*.7,confettiSpin[i]*confettiAge*.6);dummy.scale.setScalar(fade);dummy.updateMatrix();confetti.setMatrixAt(i,dummy.matrix);}
+   dummy.rotation.set(0,0,0);confetti.instanceMatrix.needsUpdate=true;busy=true;}}
+  if(passPopAge>=0&&dt>0){passPopAge+=dt;const u=passPopAge/.5;if(u>=1){passPopAge=-1;passPop.visible=false;}else{passPop.scale.setScalar(1+u*1.6);(passPop.material as T.MeshBasicMaterial).opacity=.9*(1-u)*(1-u);busy=true;}}
   if(net&&(net.hit>0)){net.hit=Math.max(0,net.hit-dt*.9);const t=1-net.hit,amount=net.hit>0?Math.sin(t*14)*Math.exp(-t*3.8)*.4:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],fall=Math.exp(-((x-(-net.x))**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*fall:0));}net.attribute.needsUpdate=true;busy=true;}
   stage.effects(dt);if(stage.effectsActive())busy=true;
   // The failure beat: the stop mark settles from a pop and the broadcast camera leans in (none with reduced motion).
@@ -353,8 +403,8 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const projected=new T.Vector3();
  function toScreen(x:number,y:number,z:number){const r=canvas.getBoundingClientRect();projected.set(x,y,z).project(camera);return{x:(projected.x+1)/2*r.width,y:(1-projected.y)/2*r.height};}
  /** Test/inspection hook: what the aim overlay is showing right now. */
- function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom,dangerArrows:dangerArrows.filter(a=>a.g.visible).length,cut:cutMark.visible,hint:hintRing.visible,stop:stop?{x:+stop.at.x.toFixed(2),z:+stop.at.z.toFixed(2),age:+stop.age.toFixed(2)}:null,scan:scanLanes.filter(l=>l.g.visible).length,pathColor:'#'+dotMat.color.getHexString()};}
- function dispose(){stripeMaterials.forEach(m=>m.dispose());new Set(Object.values(scanMats)).forEach(m=>m.dispose());scanRingGeo.dispose();Object.values(intentTextures).forEach(t=>t.dispose());Object.values(intentMaterials).forEach(m=>m.dispose());arrowMat.dispose();arrowHeadGeo.dispose();arrowShaftGeo.dispose();dangerMat.dispose();nearMat.dispose();dashTexture.dispose();flagTexture.dispose();flagMaterial.dispose();tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});
+ function debug(){const m=new T.Matrix4(),v=new T.Vector3();let pathDots=0;for(let i=0;i<PATH_DOTS;i++){dots.getMatrixAt(i,m);v.setFromMatrixScale(m);if(v.x>0)pathDots++;}return{keeperDiveAge,goalAge,trailCount:liveTrail.count,keeperRootRoll:keeper?.rig.root.rotation.z??0,strokePoints:0,strokeEnd:null,pathDots,threatRings:threats.filter(r=>r.visible).length+(keeperThreat.visible?1:0),receiverRing:receiverRing.visible,called:attackers.map(a=>a.called),clock:clockRing.visible,arrows:arrows.filter(a=>a.g.visible).length,intents:intents.filter(i=>i.visible).length,sweeperZone:sweeperZone.visible,offsideLine:offsideLine.visible?+offsideLine.position.z.toFixed(2):null,flags:flags.filter(f=>f.visible).length,end:endGoal.visible?'goal':endOut.visible?'out':endRest.visible?'rest':null,zoom:camera.zoom,dangerArrows:dangerArrows.filter(a=>a.g.visible).length,cut:cutMark.visible,hint:hintRing.visible,stop:stop?{x:+stop.at.x.toFixed(2),z:+stop.at.z.toFixed(2),age:+stop.age.toFixed(2)}:null,scan:scanLanes.filter(l=>l.g.visible).length,pathColor:'#'+dotMat.color.getHexString(),confetti:confetti.count,passPop:passPop.visible,failAge:+failAge.toFixed(2),assister,celebrations:goalAge>=0&&goalAge<CELEBRATE_SECONDS?attackers.map(a=>a.motion.skill?.type??null):null};}
+ function dispose(){stripeMaterials.forEach(m=>m.dispose());confettiGeo.dispose();confettiMat.dispose();confetti.dispose();new Set(Object.values(scanMats)).forEach(m=>m.dispose());scanRingGeo.dispose();Object.values(intentTextures).forEach(t=>t.dispose());Object.values(intentMaterials).forEach(m=>m.dispose());arrowMat.dispose();arrowHeadGeo.dispose();arrowShaftGeo.dispose();dangerMat.dispose();nearMat.dispose();dashTexture.dispose();flagTexture.dispose();flagMaterial.dispose();tagTextures.forEach(t=>t.dispose());tagMaterials.forEach(m=>m.dispose());pitch.traverse(o=>{if(o instanceof T.Mesh)o.geometry.dispose();});
  // The stage first, while the pooled rigs are still in the scene: its walk then releases their shared bean geometries from this
  // renderer (a rig's dispose detaches its meshes; disposed after, they kept this game's WebGL context alive, one per visit).
  stage.dispose();for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();}
