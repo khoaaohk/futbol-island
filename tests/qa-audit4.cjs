@@ -12,4 +12,11 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
  const dialog=board.slice(board.indexOf('.dialog{'),board.indexOf('}',board.indexOf('.dialog{')));
  assert.match(dialog,/pointer-events:auto/,'the board dialog takes taps whatever its host');
 }
+// #3 Jersey studio, phone and tablet: the Front/Back chips sat half under the resizable sheet (it overlaps the stage by 22 + 26 px).
+{
+ const css=read('components/shop/JerseyStudio.module.css'),m=css.match(/\.stageWrap>\[data-studio-bottom\]\{bottom:(\d+)px\}/);
+ assert.ok(m,'the jersey chips have their own lift');assert.ok(Number(m[1])>=22+26+8,`chips ${m[1]}px up clear the 48px the sheet laps over the stage`);
+ assert.match(read('components/shop/StudioControls.module.css'),/\.sheetResizable\.sheetResizable\{margin-top:-26px;/,'the sheet still laps 26px (re-check the lift if this changes)');
+ assert.match(css,/\.stage\{position:absolute;inset:0 0 22px;/,'the stage still runs 22px under');
+}
 console.log('qa-audit4 ok');

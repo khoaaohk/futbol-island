@@ -337,8 +337,9 @@
  .crestPreview{width:104px;height:104px}
  .sponsor{min-height:58px}
  .stepNav{margin-top:10px}
- /* the stage runs 22px under the sheet's rounded top: lift the Front/Back chips clear of it (they were half hidden) */
- .stageWrap>[data-studio-bottom]{bottom:32px}
+ /* the stage runs 22px under the sheet, and the resizable sheet (Oct 14) laps 26px more over it: 48px in all, so the Front/Back
+    chips sit 58px up, clear of the sheet's rounded top (QA 4, Oct 26 2026: at 32px they were half hidden again, phone and tablet) */
+ .stageWrap>[data-studio-bottom]{bottom:58px}
 }
 
 @media(prefers-reduced-motion:reduce){
