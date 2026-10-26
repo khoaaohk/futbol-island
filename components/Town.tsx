@@ -125,7 +125,7 @@ import MuseumHost from './Museum';
 import FerryPreviewHost from './FerryPreview';
 import {createLiveKnockout} from '@/lib/graphics/liveKnockout';
 import {createRooftopTravel,ROOF_RECOVERY_TIME} from '@/lib/town/rooftopTravel';
-import {lighthouseFloor,lighthouseSolid,lighthouseHides,isLighthouseTower,nearLighthouse} from '@/lib/town/lighthouseStairs';
+import {lighthouseFloor,lighthouseSolid,lighthouseHides,isLighthouseTower,nearLighthouse} from '@/lib/town/lighthouseGallery';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
 import {type MapFootprint} from './IslandOverview';
 import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,type Format} from '@/lib/town/venues';
@@ -741,8 +741,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);
-    // The floor under the rider's own height (the lighthouse's spiral stair overlaps itself: lighthouseStairs.ts), for the ride's
-    // wheel pose; and the ball's floor, which sees the stair level at or just under the ball (plus one tick of a fast fall).
+    // The floor under the rider's own height (the lighthouse gallery is a floor only from its own height: lighthouseGallery.ts),
+    // for the ride's wheel pose; and the ball's floor, which sees the gallery at or just under the ball (plus one tick of a fast fall).
     const riderSurface=(x:number,z:number)=>rooftop.surface(x,z,rooftop.state.height);
     // The sea (Oct 15 2026): one 10 Hz depth probe (lib/town/water/waterDepth.ts), the wade/swim/splash state machine
     // (waterState.ts), the water test the walker's step reads (the shallows and the swim zone are walkable), and where the

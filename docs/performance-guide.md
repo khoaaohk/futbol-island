@@ -6042,11 +6042,11 @@ draw calls of portrait (docs/LANDSCAPE_AUDIT_OCT23.md §4).
 - Measured (headless Chrome 390×844 touch, emulation, not iPhone heat): 0 rAF idle in Draw, 0 rAF while a finger rests on the
   ball right after a flick, 30 dirty-rect uploads in 1 s held past the rim. No iPhone temperature measured.
 
-## East Jetty lighthouse spiral stair (Oct 26 2026, `docs/LIGHTHOUSE_STAIRS_OCT26.md`, local, not deployed)
-- Static, merged: treads, stringers, rails, balusters, brackets, lamps, slits, the 3.2 m gallery deck and corbel are built once
-  (`lib/town/lighthouseStairsWorld.ts`) as 7 pieces in existing palette colours at the tower's axis, so the batching pass merges
-  them into the plaza chunk's existing paint batch (no new material or draw call; ≈ 17.5k vertices, in that batch's shadow pass).
-  One new canvas sign at the stair's foot (+1 draw call, like every sign); the name board moved.
-- Per tick, near the lighthouse only (a box test first, nothing elsewhere): a level-aware floor (≤ 3 levels), the rail projection
-  (polar sums, module scratch, no allocation) and the stick assist. The hidden-player check marches ≤ 80 samples, only within
-  9 m of the tower. Not measured on an iPhone.
+## East Jetty lighthouse gallery (Oct 26 2026, `docs/LIGHTHOUSE_STAIRS_OCT26.md`, local, not deployed)
+- The spiral stair added earlier the same day was removed (owner: too busy). What stays: the 3.2 m gallery deck, its corbel and a
+  white railing, built once (`lib/town/lighthouseGalleryWorld.ts`) as 3 pieces in the tower's own '#f3ecdc' at the tower's axis,
+  merged into the plaza chunk's existing paint batch (no new material or draw call). Vertices: 17,718 with the stair → 2,718 now
+  (−85%), in that batch's shadow pass. The stair's canvas sign is gone (−1 draw call).
+- Per tick, near the lighthouse only: the gallery floor (one radius test) and, only at the gallery's height, the railing
+  projection (a few sums, no allocation). The stair's level search and stick assist are gone. The hidden-player check marches
+  ≤ 80 samples, only within 9 m of the tower. Not measured on an iPhone.
