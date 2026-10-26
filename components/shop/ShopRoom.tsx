@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState,type PointerEvent as ReactPointerE
 import dynamic from 'next/dynamic';
 import {NavigationButton} from '../DoneButton';
 import CoinPill from './CoinPill';
+import {Icon} from '../Icon';
 import ShopDoorSlide from './ShopDoorSlide';
 import styles from './ShopRoom.module.css';
 import {BallStudio,BootStudio,JerseyStudio,type StudioProps} from './studios';
@@ -175,6 +176,9 @@ export default function ShopRoom(){
    </div>
   </header>}
   {/* The studio cards along the bottom were removed (user, Oct 12 2026: "remove this"): walk to a wall, or ask Femi. */}
+  {/* Ball studio shortcut (Oct 26 2026, owner): on a phone the ball wall (east wall) starts off-screen, so the Ball Studio has its
+   own clearly visible entry at the bottom right, clear of the joystick (bottom left). Walking to the wall or Femi's "Show me" still work. */}
+  {ready&&!covered&&!leaving&&<button type="button" className={styles.ballEntry} data-shop-ball-entry onClick={()=>open('ball')} aria-label="Open the Ball studio"><Icon name="ball"/><span>Ball studio</span></button>}
   {near&&!covered&&!leaving&&<button ref={promptRef} type="button" className={`store-enter-prompt ${styles.prompt}`} data-shop-prompt={near.id} onClick={()=>act(near)}>{near.label}</button>}
   {greeting&&!covered&&<p className={styles.greeting} data-shop-greeting role="status"><b>{SHOP_CLERK.def.name}:</b> {SHOP_CLERK.def.greeting}</p>}
   {!covered&&ready&&hint&&!greeting&&<p className={styles.hint} aria-hidden="true"><span className={styles.hintDesk}>Walk with WASD or the arrow keys · E to design</span><span className={styles.hintTouch}>Walk with the stick · tap a wall or a person</span></p>}
