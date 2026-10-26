@@ -179,3 +179,19 @@
 .boards:active{translate:0 3px;box-shadow:0 1px 0 #193f3766}
 .boards:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 @media(prefers-reduced-motion:reduce){.boards:active{translate:none}}
+
+/* Futbol Tennis upgrade 2 (Oct 26 2026, docs/ARCADE_TENNIS_UPGRADE2_OCT26.md).
+   Coaching tips sit centred above the controls (never in a corner), then fade so the court stays clear.
+   Hold-to-power: the held shot button grows a charge ring (cyan build, gold SWEET band, red overhit) that the
+   game loop fills through --charge; the faint track shows where the gold window is before you reach it. */
+.game[data-arcade-kind=tennis] .message[data-tip]{left:50%;right:auto;transform:translateX(-50%);text-align:center;width:max-content;max-width:min(360px,calc(100% - 32px));box-sizing:border-box;animation:tennisTipFade 4.2s ease-out forwards}
+@keyframes tennisTipFade{0%{opacity:0}7%{opacity:1}80%{opacity:1}100%{opacity:0;visibility:hidden}}
+@media(max-width:600px),(pointer:coarse){.game[data-arcade-kind=tennis] .message[data-tip]{bottom:calc(184px + env(safe-area-inset-bottom,0px));font-size:11px;padding:7px 12px;line-height:1.35}}
+@media(min-width:601px) and (pointer:coarse){.game[data-arcade-kind=tennis] .message[data-tip]{bottom:calc(172px + env(safe-area-inset-bottom,0px))}}
+@media(min-width:601px) and (pointer:fine){.game[data-arcade-kind=tennis] .message[data-tip]{bottom:34px;max-width:min(460px,calc(100% - 520px))}}
+@media(max-height:520px){.game[data-arcade-kind=tennis] .message[data-tip]{bottom:calc(14px + env(safe-area-inset-bottom,0px));max-width:min(320px,calc(100% - 420px));font-size:10px}}
+.game[data-arcade-kind=tennis] .tennisActions button[data-charging]{--charge-fill:#7ff0e4;transform:scale(1.07);z-index:1}
+.game[data-arcade-kind=tennis] .tennisActions button[data-power=sweet]{--charge-fill:#ffd34d;border-color:#ffd34d;box-shadow:0 4px 0 #171827,0 0 0 3px #ffd34d66,0 0 22px #ffd34daa}
+.game[data-arcade-kind=tennis] .tennisActions button[data-power=over]{--charge-fill:#ff6b5b;border-color:#ff6b5b}
+.game[data-arcade-kind=tennis] .tennisActions button[data-charging]::before{content:'';position:absolute;inset:-10px;border-radius:50%;pointer-events:none;background:conic-gradient(var(--charge-fill) 0turn calc(var(--charge,0) * 1turn),transparent 0),conic-gradient(#ffffff2e 0turn .571turn,#ffd34d99 .571turn .714turn,#ff6b5b55 .714turn);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px))}
+@media(prefers-reduced-motion:reduce){.game[data-arcade-kind=tennis] .tennisActions button[data-charging]{transform:none}}
