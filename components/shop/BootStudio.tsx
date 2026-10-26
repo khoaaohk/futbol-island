@@ -120,6 +120,8 @@ export default function BootStudio({onClose,onBuy}:Props){
  const [ready,setReady]=useState(false),[failed,setFailed]=useState(false);
  const [toast,setToast]=useState<{text:string;n:number}|null>(null);
  const [saveOpen,setSaveOpen]=useState(false);
+ // QA round 2 (Oct 25): Buy asks first, like the ball and jersey studios (one tap used to spend the coins straight away).
+ const [buyOpen,setBuyOpen]=useState(false);
  const [nameDraft,setNameDraft]=useState(''),[nameError,setNameError]=useState('');
  const canvasRef=useRef<HTMLCanvasElement|null>(null),sceneRef=useRef<BootScene|null>(null);
  const stageRef=useRef<HTMLDivElement>(null),insetsRef=useRef<StageInsets|null>(null);
@@ -191,8 +193,8 @@ export default function BootStudio({onClose,onBuy}:Props){
  // keyboard: undo / redo / escape
  useEffect(()=>{const k=(e:KeyboardEvent)=>{const t=e.target as HTMLElement|null;if(t&&/INPUT|TEXTAREA/.test(t.tagName))return;
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
-  else if(e.key==='Escape'){if(saveOpen)setSaveOpen(false);else if(selRef.current)setSelected(null);else onClose();}};
-  window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[undo,redo,saveOpen,onClose]);
+  else if(e.key==='Escape'){if(buyOpen)setBuyOpen(false);else if(saveOpen)setSaveOpen(false);else if(selRef.current)setSelected(null);else onClose();}};
+  window.addEventListener('keydown',k);return()=>window.removeEventListener('keydown',k);},[undo,redo,saveOpen,buyOpen,onClose]);
 
  const price=bootPrice(design),lines=bootPriceLines(design);
  const sel=design.decals.find(d=>d.id===selected)??null;
@@ -401,10 +403,16 @@ export default function BootStudio({onClose,onBuy}:Props){
    </div>
    <footer className={styles.actions}>
     <button type="button" className={styles.save} onClick={()=>setSaveOpen(o=>!o)} aria-expanded={saveOpen}><Sym name="save"/><span>Save</span></button>
-    <button type="button" className={styles.buy} onClick={buy}><span>Buy for</span><Coin/><b key={price} className={styles.price}>{price}</b></button>
+    <button type="button" className={styles.buy} data-boot-buy-open onClick={()=>{setSaveOpen(false);setBuyOpen(true);}}><span>Buy for</span><Coin/><b key={price} className={styles.price}>{price}</b></button>
    </footer>
   </section>
 
+  {buyOpen&&<div className={styles.saveLayer} onClick={e=>{if(e.target===e.currentTarget)setBuyOpen(false);}}>
+   <div className={styles.saveCard} role="alertdialog" aria-modal="true" aria-labelledby="boot-buy-title">
+    <h3 id="boot-buy-title">Buy these boots?</h3><p>{design.name?`“${design.name}” cost`:'They cost'} <b>{price}</b> coins. They go in My kit.</p>
+    <div className={styles.buyAsk}><button type="button" className={styles.closeSave} onClick={()=>setBuyOpen(false)}>Not yet</button><button type="button" className={styles.buy} data-boot-buy-confirm onClick={()=>{setBuyOpen(false);buy();}}><span>Buy for</span><Coin/><b>{price}</b></button></div>
+   </div>
+  </div>}
   {saveOpen&&saves&&<div className={styles.saveLayer} onClick={e=>{if(e.target===e.currentTarget)setSaveOpen(false);}}>
    <div className={styles.saveCard} role="dialog" aria-label="Save slots">
     <h3>Your boot locker</h3><p>Keep up to {SLOT_COUNT} designs. Your newest changes are always kept too.</p>
