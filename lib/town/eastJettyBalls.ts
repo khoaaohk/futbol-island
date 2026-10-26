@@ -18,8 +18,7 @@ const round2=(n:number)=>Math.round(n*100)/100;
 /** On the plaza, south-west of the lighthouse's foot (away from the keeper's hut on its east side and the walkway coming in from
  *  the west): `along` metres from the plaza centre at `angle` (radians, 0 = east, +z = south). */
 const plaza=(angle:number,along:number)=>({x:round2(JETTY_BEACON.x+Math.cos(angle)*along),z:round2(JETTY_BEACON.z+Math.sin(angle)*along)});
-// Oct 26 2026: 6 m out (was 5.3), clear of the spiral stair's band (lighthouseStairs.ts, outer edge 4.9 m).
-const LIGHTHOUSE=plaza(2.1,Math.min(EAST_PIER.plazaR-1.55,JETTY_BEACON.r+3.65));
+const LIGHTHOUSE=plaza(2.1,Math.min(EAST_PIER.plazaR-2,JETTY_BEACON.r+3));
 
 export const EAST_JETTY_BALL_SPOTS:CoinSpot[]=[
  {id:'jetty-lighthouse',name:'East Jetty · lighthouse plaza',...LIGHTHOUSE,y:0,kind:'hidden',loose:true,concept:'law8-coin-toss',

@@ -7,8 +7,9 @@ import {landableDeckHeight} from './landableDecks';
 import {insideObstacle,blocked,stepPlayer,pushOutOf,FLIGHT_WATER_MARGIN,type Obstacle} from './simulation';
 import {TRAVEL_MODES,type TravelMode} from './travelModes';
 import {createRoofJump,planRoofJump,planRoofLaunch} from './rooftopJump';
-import {nearSummit,createHillAssist,climbCoast,rideSlopeScale} from './rideSlope';
-import {LIGHTHOUSE_STAIRS,lighthouseFloor,lighthouseLanding,lighthouseConstrain,createLighthouseAssist,nearLighthouse} from './lighthouseStairs';
+import {nearSummit,createHillAssist,climbCoast} from './rideSlope';
+import {LIGHTHOUSE,lighthouseFloor,lighthouseLanding,lighthouseConstrain,nearLighthouse} from './lighthouseGallery';
+import {createLadder} from './lighthouseLadder';
 import {createSlopeHop} from './slopeHop';
 import {SUMMIT_HUTS,HUT_CONE_RADIUS,HUT_LAND_RADIUS,hutRoofSteps} from './summitBalls';
 /** Landing search bounds (findLanding): the arc aimed at the nearest land is ±LANDING_ARC m wide and LANDING_AIM_DEPTH rings
@@ -36,7 +37,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  // Water (Oct 15 2026, lib/town/water): `canSplash` lets a ride launch end over water that is deep enough to splash into
  // (rooftopJump.ts planRoofLaunch); Town installs it with setSplashTest. Walking into the shallows is the `water` argument of update().
  let canSplash:((x:number,z:number)=>boolean)|null=null;
- const hill=createHillAssist(),lighthouseAssist=createLighthouseAssist(),steerInput={x:0,z:0,sprint:false},hop=createSlopeHop();
+ const hill=createHillAssist(),ladder=createLadder(),steerInput={x:0,z:0,sprint:false},hop=createSlopeHop();
  // Roof-to-roof gap jumps (lib/town/rooftopJump.ts): planned only on the frame an edge fall would start.
  const jump=createRoofJump();
  // Buildings the rider was touching when the fall began (the roof just left) never block the drift; any other building
@@ -54,13 +55,13 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
  // A narrow stair (its treads no wider than NARROW_STAIR m: the hostel's outside stair) within a ride's radius.
  const nearSteps=(x:number,z:number)=>{for(const r of surfaceGrid.query(x,z,.8))if(r.stepAccess&&Math.max(r.w,r.d)<=NARROW_STAIR&&insideObstacle(x,z,r,.8))return true;return false;};
  // Registered floating decks (landableDecks.ts, e.g. a moored boat) are floors too; 0 when none are registered.
- // The East Jetty lighthouse's spiral stair and gallery (lighthouseStairs.ts): a level-aware floor (-Infinity anywhere else).
+ // The East Jetty lighthouse's gallery (lighthouseGallery.ts): a floor only from its own height or the sky (-Infinity elsewhere).
  const surface=(x:number,z:number,from=-Infinity)=>Math.max(fieldSurfaceHeight(x,z),roofAt(x,z,from)?.height??0,extraSurface(x,z),landableDeckHeight(x,z),lighthouseFloor(x,z,from));
- function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();hop.reset();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false,air:false,landImpact:0});}
+ function reset(x:number,z:number,height=surface(x,z)){collisionRadius=.32;jump.reset();hop.reset();ladder.cancel();Object.assign(state,{height,verticalSpeed:0,falling:false,hangTime:0,dropStart:height,recovery:0,impact:false,air:false,landImpact:0});}
  function canLand(x:number,z:number,from=-Infinity){
   // Glazed interiors remain walkable through doors, but are never aerial destinations.
   if(landingExclusions.some(area=>insideObstacle(x,z,area,.8)))return false;
-  // The lighthouse: only its gallery ring, from above (lighthouseStairs.ts); never in the tower or on the stair band.
+  // The lighthouse: only its gallery ring, from above (lighthouseGallery.ts); never in the tower or on the lantern.
   const lighthouse=lighthouseLanding(x,z,from);if(lighthouse!==null)return lighthouse;
   // A pitched roof over open ground at or below `from` (from the sky: any): the rider would slide off, so not here.
   if(from>-Infinity)for(const r of steepGrid.query(x,z,0))if(r.height<=from+CANOPY_STEP&&insideObstacle(x,z,r,.3))return false;
@@ -95,6 +96,9 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
    }
    return;
   }
+  // The lighthouse ladder (lighthouseLadder.ts): getting on at its foot or the gallery's gate, climbing, sliding, stepping off.
+  // While it owns the player the walk below is skipped (a few comparisons anywhere else).
+  if(ladder.step(dt,p,v,input.x,input.z,mode,state.height,state.falling)){state.height=ladder.state.y;state.air=false;return;}
   // A hop's rider is not up on a roof: the trees and props it flies at still stop it.
   const elevated=!state.air&&state.height>fieldSurfaceHeight(p.x,p.z)+1;
   const radius=Math.max(8,Math.max(Math.hypot(v.x,v.z),TRAVEL_MODES[mode].maxSpeed)*dt+2);
@@ -111,7 +115,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // wide between the wall and its handrail, exactly a ride's 0.8 m radius each side, so the ride wedged at the top, and its foot
   // beside the wall turned a ride away at the bottom). On the steps or within a ride's radius of them (now or two ticks on).
   if(mode==='walk')collisionRadius=.32;
-  else if(nearLighthouse(p.x,p.z))collisionRadius=Math.min(collisionRadius,RIDE_STAIR_RADIUS);// the 1.6 m stair band
+  else if(state.height>LIGHTHOUSE.top-1&&nearLighthouse(p.x,p.z))collisionRadius=Math.min(collisionRadius,RIDE_STAIR_RADIUS);// the 2 m gallery ring
   else if(nearSteps(p.x,p.z)||nearSteps(p.x+v.x*dt*2,p.z+v.z*dt*2))collisionRadius=Math.min(collisionRadius,RIDE_STAIR_RADIUS);
   else if(collisionRadius<.8&&!blocked(p.x,p.z,barriers,.8))collisionRadius=.8;
   // A wall that turned solid under the rider (a building beside a stair, once a few treads below its roof) pushes it clear first.
@@ -121,13 +125,11 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // a climb steeper than the limit taken across the slope. 1 and four comparisons anywhere else.
   // Arriving fast at a climb, the ride's momentum carries it up and it eases down to its climbing speed (RIDE_CLIMB_COAST).
   let slope=1,coast=0,steer=input;if(mode!=='jetpack'&&nearSummit(p.x,p.z)){const a=hill.steer(mode,p.x,p.z,input.x,input.z);slope=a.scale;coast=climbCoast(p.x,p.z,a.grade,a.x,a.z);steerInput.x=a.x;steerInput.z=a.z;steerInput.sprint=input.sprint;steer=steerInput;}
-  // The lighthouse stair: the stick follows the helix once a direction is chosen; rides slow on the climb and stay under
-  // LIGHTHOUSE_STAIRS.maxRideSpeed (a fast arrival brakes quickly to it).
-  else if(mode!=='jetpack'){const a=lighthouseAssist.steer(p.x,p.z,state.height,input.x,input.z);if(a.on){steerInput.x=a.x;steerInput.z=a.z;steerInput.sprint=input.sprint;steer=steerInput;}
-   if(mode!=='walk'&&state.height>.05&&nearLighthouse(p.x,p.z,.5)){const cap=LIGHTHOUSE_STAIRS.maxRideSpeed/TRAVEL_MODES[mode].maxSpeed;slope=Math.min(a.on?rideSlopeScale(mode,a.grade):1,cap);
-    const sp=Math.hypot(v.x,v.z),most=LIGHTHOUSE_STAIRS.maxRideSpeed*1.1;if(sp>most){const k=Math.max(most/sp,Math.exp(-dt*8));v.x*=k;v.z*=k;}}}
+  // A ride on the lighthouse gallery (a 2 m ring) stays under LIGHTHOUSE.maxRideSpeed (a fast start brakes quickly to it).
+  else if(mode!=='jetpack'&&mode!=='walk'&&state.height>LIGHTHOUSE.top-1&&nearLighthouse(p.x,p.z,.5)){slope=LIGHTHOUSE.maxRideSpeed/TRAVEL_MODES[mode].maxSpeed;
+   const sp=Math.hypot(v.x,v.z),most=LIGHTHOUSE.maxRideSpeed*1.1;if(sp>most){const k=Math.max(most/sp,Math.exp(-dt*8));v.x*=k;v.z*=k;}}
   stepPlayer(p,v,steer,dt,barriers,mode,collisionRadius,water?slope*water.speed:slope,coast,mode==='walk'&&water?water.allow:undefined);
-  // The lighthouse's rails and the stair's side at plaza level (lighthouseStairs.ts; a box test anywhere else).
+  // The lighthouse gallery's railing and lantern wall (lighthouseGallery.ts; a height test anywhere else).
   if(mode!=='jetpack')lighthouseConstrain(fromX,fromZ,p,v,state.height,collisionRadius);
   const floor=surface(p.x,p.z,state.height);
   // Hops off Summit Isle's crests (slopeHop.ts; a few comparisons anywhere else).
@@ -174,5 +176,5 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   for(let r=startRadius;r<=maxRadius;r++){const n=r?Math.min(LANDING_RING_CAP,Math.max(32,Math.ceil(r*2*Math.PI/3))):1;for(let i=0;i<n;i++){const a=i/n*Math.PI*2,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(canLand(nx,nz,from))return {x:nx,z:nz};}}
   return null;
  }
- return {state,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update,setSplashTest(test:((x:number,z:number)=>boolean)|null){canSplash=test;}};
+ return {state,ladder,jump:jump.state,hop:hop.state,spatialStats:groundGrid.stats,surface,canLand,findLanding,reset,update,setSplashTest(test:((x:number,z:number)=>boolean)|null){canSplash=test;}};
 }

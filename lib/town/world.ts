@@ -16,6 +16,7 @@ import {createCayMantas} from '../graphics/cayMantas';
 import {createWhaleShark} from '../graphics/whaleShark';
 import {createLighthouseBeam} from '../graphics/lighthouseBeam';
 import {JETTY_BEACON} from './eastPier';
+import {LIGHTHOUSE} from './lighthouseGallery';
 import {createFarmDecor} from '../graphics/farmDecor';
 import {buildIslandDecals} from './groundDecalSites';
 import {buildFarmersMarket} from './farmersMarket';
@@ -1659,7 +1660,7 @@ export function* buildTownSteps(scene: T.Scene) {
   const groundDecals=buildIslandDecals(town,{obstacles,buildings,roads,surfaceAreas});
   // East Jetty lighthouse beam (lighthouseBeam.ts, Oct 13 2026): a slow rotating sweep + flash, night/dusk only, no scene
   // lights. Added after batching like the sharks/mantas so its two meshes stay separate (they animate every frame it's on).
-  const lighthouseBeam=createLighthouseBeam(scene,{x:JETTY_BEACON.x,z:JETTY_BEACON.z},14.6);
+  const lighthouseBeam=createLighthouseBeam(scene,{x:JETTY_BEACON.x,z:JETTY_BEACON.z},LIGHTHOUSE.lampY);// the lamp, 1 m above the gallery railing
   const nightRoot=new T.Group();nightRoot.name='night-atmosphere';scene.add(nightRoot);
   const nightPools=new T.Group();nightPools.name='night-light-pools';nightPools.visible=false;nightRoot.add(nightPools);
   // One 32px radial texture, generated once, for all selected ground pools.

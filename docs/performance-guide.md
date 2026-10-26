@@ -6057,3 +6057,14 @@ ends cannot fit). The home framing is solved on resize only. No new draw calls, 
 charge variable is written only when it changes, and the pads update by attribute on press. A settled launch camera reports
 `moving()=false`, so the waiting table still sleeps. Flipper presses add a throttled 5 ms vibrate (Android). Desktop/headless
 emulation only; no iPhone temperature measured.
+## East Jetty lighthouse gallery and ladder (Oct 26 2026, `docs/LIGHTHOUSE_STAIRS_OCT26.md`, local, not deployed)
+- The spiral stair added earlier the same day was removed (owner: too busy). What stays or is new: the 3.2 m gallery deck, its
+  corbel, a white railing with a gate, and a slim white ladder, built once (`lib/town/lighthouseGalleryWorld.ts`) as 4 pieces in
+  the tower's own '#f3ecdc' at the tower's axis, merged into the plaza chunk's existing paint batch (no new material or draw call).
+  Vertices: 17,718 with the stair → 4,818 now (−73%), in that batch's shadow pass. The stair's canvas sign is gone (−1 draw call).
+  The lantern was raised 1 m on a white watch room (2 more static pieces in the same batch) so the beam starts above the railing.
+- Per tick: the ladder state machine (`lib/town/lighthouseLadder.ts`) is a few comparisons unless the player is at its foot, its
+  gate or on it; the climbing pose (`lib/graphics/ladderPose.ts`) fills one TrickPose per frame only while climbing. Near the
+  lighthouse: the gallery floor (one radius test) and, only at the gallery's height, the railing projection. No allocation in the
+  ladder step, the pose or the railing (tests check). The hidden-player check marches ≤ 80 samples, only within 9 m of the
+  tower. Not measured on an iPhone.
