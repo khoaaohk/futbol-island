@@ -2172,7 +2172,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: the daily warm-up and live-match Spot it */}
     {/* The welcome's "Earn coins" step rings the coin pocket ([data-job-wallet]), so the pocket stays on screen behind the welcome
         (the modal keeps it inert); job offers and toasts wait until it closes. */}
-    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} cardOfferOpen={cardOfferOpen} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
+    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} cardOfferOpen={cardOfferOpen} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
     {ready&&!failed&&mountWhen('coaches',coachesOpen)&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}
