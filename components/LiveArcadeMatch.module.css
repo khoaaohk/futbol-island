@@ -144,3 +144,5 @@
    scrolls inside itself instead of spilling past the bottom, sits above the (idle) touch buttons so none of them covers its
    pickers or Kick off, and the Team shape / Round pickers keep 44 px targets. */
 @media(pointer:coarse) and (orientation:landscape){.overlay{z-index:6}.overlay>.card{max-height:calc(100dvh - 90px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain}.card .shape select,.card .inline select{min-height:44px;margin:2px 0;padding:6px 10px;box-sizing:border-box}}
+/* QA round 2 (Oct 25): Strikers plays upright on phones now; the start / pause / full-time card shows whenever phase is not 'playing', so the thumb controls hide under it instead of covering Kick off and Leaderboard. */
+.root:not([data-phase=playing]) .touchControls{visibility:hidden;pointer-events:none}
