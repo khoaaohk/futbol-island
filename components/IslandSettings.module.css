@@ -365,3 +365,6 @@
    below the header row. Phones (<= 440 px) and landscape phones keep it on ONE line: the size steps down to fit the title column
    (375: 19 px; 393: 21 px; 440: 24 px) and anything narrower ends in an ellipsis (the dialog keeps its full name via aria-labelledby). */
 @media(max-width:440px),(max-height:480px) and (orientation:landscape){.fullModal .header h2.settingsTitle{display:block;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-wrap:nowrap;font-size:clamp(18px,calc((100vw - 206px) / 8.9),24px);line-height:44px}}
+/* Smallest phones (QA audit Oct 25 2026, docs/QA_AUDIT_OCT25.md #7): at 320-359 px the one-line clamp bottomed out at 18 px and the
+   title read "Make it your…". There it wraps onto two 22 px lines instead, which together fill the 44 px header row exactly. */
+@media(max-width:359px){.fullModal .header h2.settingsTitle{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip;font-size:18px;line-height:22px}}

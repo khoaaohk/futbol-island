@@ -47,7 +47,7 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
   assert.match(town,/renderer\.render\(scene,camera\);renderStats\.rendered\+\+;(heat\.afterRender\([^;]*\);)?positionStore\.frame\(location\.x,location\.z\);(emitIslandFrame\(now\);)?islandFrameAt\.current=performance\.now\(\);if\(stickPaint\.current\)\{paintJoystick\(/,'minimap frame + coalesced thumb paint right after the island render');
   assert.match(town,/const setStick=\(\{x,y\}:\{x:number;y:number\}\)=>\{if\(x===0&&y===0\|\|performance\.now\(\)-islandFrameAt\.current>100\)\{stickPaint\.current=null;paintJoystick\(/,'thumb resets / sleeping island paint at once');
   assert.match(moving,/frames=\{props\.active===false\?undefined:store\.subscribeFrame\}/);
-  {const i=overview.indexOf('style={frames?{'),j=overview.indexOf("transition:'none'}:{",i),branch=overview.slice(i,j);assert(i>0&&j>i&&!branch.includes('transform'),'frame-driven layer has no transition and React leaves its transform alone');}
+  {const i=overview.indexOf('style={frames?{'),j=overview.indexOf("transitionDuration:'0ms'}:{",i)/* Oct 25: 0 ms duration, not the shorthand (React warned: shorthand + transitionDuration on rerender) */,branch=overview.slice(i,j);assert(i>0&&j>i&&!branch.includes('transform'),'frame-driven layer has no transition and React leaves its transform alone');}
   assert.match(overview,/a\.frames===b\.frames/);
 }
 // 4. No backdrop blur over a moving canvas: the transcript panel (over the live 30 fps match) is solid, and every remaining

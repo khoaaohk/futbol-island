@@ -23,6 +23,10 @@ const SIZES = {
   ipad: { w: 1024, h: 768, inset: { top: 0, left: 0, right: 0, bottom: 20 } },
   port: { w: 393, h: 852, inset: { top: 59, left: 0, right: 0, bottom: 34 } },
   pmax: { w: 440, h: 956, inset: { top: 62, left: 0, right: 0, bottom: 34 } },
+  // Oct 25 QA (docs/QA_AUDIT_OCT25.md): the smallest phone, a foldable opened, a portrait tablet.
+  s320: { w: 320, h: 568, inset: { top: 20, left: 0, right: 0, bottom: 0 } },
+  fold: { w: 700, h: 840, inset: { top: 24, left: 0, right: 0, bottom: 0 } },
+  tab: { w: 820, h: 1180, inset: { top: 24, left: 0, right: 0, bottom: 20 } },
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
