@@ -35,6 +35,9 @@ export type SwimRigPose={
  /** The surface glide (Oct 25 2026, waterState.ts GLIDE): 0..1, the stick let go while still carrying: both arms reach ahead together
   *  (a streamline), the flutter kick eases. Optional: 0 when absent. Under the water the crawl's own coast (arms back) applies. */
  glide?:number;
+ /** Catching a breath (Oct 25 2026, waterState.ts GASP): 1 → 0 over two deep breaths after coming up (the chest heaves, the chin
+  *  lifts). Optional: 0 when absent. */
+ gasp?:number;
 };
 export type SwimJoints={pelvis:T.Group;torso:T.Group;head:T.Group;legs:{hip:T.Group;knee:T.Group;ankle:T.Group}[];arms:{shoulder:T.Group;elbow:T.Group;hand:T.Group}[]};
 
@@ -159,6 +162,9 @@ export function createSwimPoser(j:SwimJoints){
    mixT(q,-2.5,wv);mixT(q+1,.95+.35*swing,wv);mixT(q+2,0,wv);mixT(q+3,-.75,wv);
    mixT(q,-2.95,fv);mixT(q+1,.3,fv);mixT(q+2,0,fv);mixT(q+3,-.08,fv);
    target[H_X]+=(-.2)*Math.max(wv,fv);}
+  // Catching a breath: two heaves of the chest (the body lifts a little, the back arches, the chin comes up), fading out.
+  {const gp=Math.max(0,Math.min(1,s.gasp??0));if(gp>0&&!reduced&&(s.kind==='tread'||s.kind==='crawl')&&(s.under??0)<.3){const h=Math.pow(Math.sin(Math.PI*2*(1-gp)),2)*Math.sqrt(gp);
+   target[P_Y]+=.05*h;target[T_X]-=.14*h;target[H_X]-=.3*h;}}
   // The surfacing head-shake on the everyday shapes too (a dive coming back up); the entry shape has its own.
   if(s.kind!=='entry'&&s.shake>0&&!reduced){const sh=s.shake*Math.sin(s.shake*40)*.3;target[H_Y]+=sh;target[H_Z]-=sh*.5;}
  };

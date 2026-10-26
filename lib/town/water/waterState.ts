@@ -56,6 +56,9 @@ export const diveBedRoom=(bed:number)=>{const t=Math.max(0,Math.min(1,(bed-DIVE.
 export const diveShore=(depth:number)=>{const t=Math.max(0,Math.min(1,(depth-(DIVE.minWater-.1))/(DEPTH_MAX-(DIVE.minWater-.1))));return t*t*(3-2*t);};
 /** The surface glide's ease in / out (per s) and how much it slows the stroke clock (the arms hold ahead, the kick eases). */
 export const GLIDE={in:3,out:7,slow:.8} as const;
+/** Catching a breath after coming up (Oct 25 2026): two deep breaths over GASP.time s (the chest heaves, the chin lifts), after a
+ *  duck-dive of at least GASP.minDive s or a reef dive (the host calls gasp()). None with reduced motion. */
+export const GASP={time:1.4,breaths:2,minDive:1.5} as const;
 /** How big a splash-down is by the entry style (× the drop's power): feet first < a belly-flop < a clean dive from high up. */
 export const SPLASH_SCALE={feet:.8,belly:1,clean:1.25} as const;
 /** Time-in-the-water buckets for analytics (upper bounds, seconds; the last is "longer"). */
@@ -110,9 +113,9 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   /** The camera's eased dip offset (m, ≤ 0) and the dip's current depth (m, ≥ 0). */
   camDip:0,dip:0};
  const events:WaterEvents={entered:false,left:false,swimStarted:false,ripple:0,splash:0,surfaced:false,tint:false,swimSeconds:0,dived:false,sped:false,rose:false,bubble:false,stroke:0,wake:false,flew:false};
- const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:0};
+ const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:0,gasp:0};
  const lastLand={x:NaN,z:NaN,y:0,yaw:0};
- let rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
+ let gaspLeft=0,rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
  /** diveBedRoom at (x, z) and DIVE.ahead m along the travel (the slope ahead), the lower; 9 without a seabed. */
  let bedHere=9;const bedRoomAt=(x:number,z:number)=>{if(!seabed)return bedHere=9;let b=seabed(x,z);bedHere=Math.min(9,diveBedRoom(b));const mx=x-lastX,mz=z-lastZ,m=Math.hypot(mx,mz);
   if(m>1e-4&&m<2){const k=DIVE.ahead/m;b=Math.min(b,seabed(x+mx*k,z+mz*k));}return Math.min(9,diveBedRoom(b));};
@@ -120,7 +123,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  /** Drop the dive at once (leaving the swim: the wade blend, a splash-down, the jetpack); `rose` when the body was under. */
  const endDive=()=>{if(state.under>0)events.rose=true;state.diving=false;state.under=0;state.dive=0;state.diveFor=0;state.tilt=0;riseShake=0;bubbleClock=0;pose.under=0;pose.tilt=0;};
  const leaveWater=()=>{if(state.phase==='swim'||state.phase==='surface'||state.phase==='under'){events.swimSeconds=state.swimFor;}
-  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.w=0;pose.glide=0;events.left=true;};
+  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.w=0;pose.glide=0;gaspLeft=0;pose.gasp=0;events.left=true;};
  const enterWater=(x:number,z:number,yaw:number)=>{
   // Park the ball on the last dry spot (decision 3): lead the facing that keeps its 0.56 m lead on land (else turn it round).
   // (No dry spot known yet, e.g. a splash-down straight from the jetpack: the host parks it at the nearest landing.)
@@ -181,13 +184,13 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   if(state.diving){state.diveFor+=dt;if(state.diveFor>=DIVE.maxTime||state.depth<DIVE.minWater-.05||state.bedRoom<DIVE.minRoom){state.diving=false;diveRate=1/DIVE.ease;}}
   const goal=state.diving?1:0,was=state.under;
   if(was!==goal){state.under=goal>was?Math.min(1,was+dt*diveRate):Math.max(0,was-dt*diveRate);
-   if(was>0&&state.under===0){events.rose=true;events.ripple=.3;riseShake=SURFACE_TIME;state.diveFor=0;bubbleClock=0;}}
+   if(was>0&&state.under===0){events.rose=true;events.ripple=.3;riseShake=SURFACE_TIME;if(state.diveFor>=GASP.minDive)gaspLeft=GASP.time;state.diveFor=0;bubbleClock=0;}}
   // The bound eases (deeper slowly, shallower fast) and never passes the drawn seabed: the body glides up the slope to a shore.
   const roomTo=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.room+=(roomTo-state.room)*(1-Math.exp(-dt*(roomTo<state.room?6:4)));
   if(state.room>bedHere)state.room=bedHere;
   const u=state.under,ue=u*u*(3-2*u);state.dive=state.room*ue;
   state.tilt=r||u===goal?0:(goal>u?1:-.8)*DIVE.tilt*Math.sin(Math.PI*u);
-  if(riseShake>0)riseShake=Math.max(0,riseShake-dt);
+  if(riseShake>0)riseShake=Math.max(0,riseShake-dt);if(gaspLeft>0)gaspLeft=Math.max(0,gaspLeft-dt);pose.gasp=r?0:gaspLeft/GASP.time;
   if(state.bob>0)state.bob=Math.max(0,state.bob-dt);
   state.rootY+=(SWIM_ROOT_Y-state.dive-state.rootY)*k;if(state.rootY<SWIM_ROOT_Y-bedHere)state.rootY=SWIM_ROOT_Y-bedHere;
   const moving=input.moving||input.stick>.05;
@@ -255,7 +258,9 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  /** Fly up: the jetpack takes off straight out of the water (the host checks fuel, switches the ride and splashes). Raised on the
   *  next step as `flew`, like the presses; false when not in the water. */
  function takeOff(){if(state.phase==='land')return false;pendFly=true;return true;}
- return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,underNow,edgeWaterAt,
+ /** Back at the surface from a reef dive (Town's surfaced port): the two deep breaths. */
+ function gasp(){if(state.phase!=='land')gaspLeft=GASP.time;}
+ return {state,events,pose,step,splashDown,press,takeOff,canDive,surfaceDive,underNow,edgeWaterAt,gasp,
   get inWater(){return state.phase!=='land';},
   get swimming(){return state.phase==='swim'||state.phase==='under'||state.phase==='surface';},
   /** Swimming (at the surface or settled under, not mid-dive): the 20 fps idle rule may apply once the stick has been still for 4 s

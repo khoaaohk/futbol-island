@@ -72,7 +72,7 @@ ok('the surface glide: stick let go while still carrying, the arms reach ahead a
  const sp=P.createSwimPoser(j),pose={w:1,kind:'crawl',phase:1.2,effort:.4,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:1};
  for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);for(const a of j.arms)assert(a.shoulder.rotation.x< -2.6,'arm ahead: '+a.shoulder.rotation.x);
  pose.glide=0;for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);assert(Math.abs(j.arms[0].shoulder.rotation.x-j.arms[1].shoulder.rotation.x)>.5,'stroking: the arms alternate');
- assert(read('lib/town/water/waterState.ts').includes('pose.glide=0;events.left=true;'),'reset on leaving the water');
+ assert(read('lib/town/water/waterState.ts').includes('pose.glide=0;gaspLeft=0;pose.gasp=0;events.left=true;'),'reset on leaving the water');
 });
 
 ok('breath runs out in a reef: the "Well done" note survives the way up (leave() wiped it), and no reef hint shows over a reef or a zone prompt',()=>{
@@ -81,6 +81,19 @@ ok('breath runs out in a reef: the "Well done" note survives the way up (leave()
  assert.equal(rt.diving,false,'floated up');assert.equal(outs,1);assert.equal(RT.diveStore.get().note,S.DIVE_OUT_NOTE,'the note is still there to show');rt.dispose();
  const town=read('components/Town.tsx');assert(/entered:\(spot,edge\)=>\{[^\n]{0,200}reefStore\.clearHint\(\);/.test(town),'a waiting hint is dropped when a dive starts');
  assert(town.includes('!dive.diving&&!dive.session.state.near/*'),'no hint while over a zone (its Explore prompt shows)');
+});
+
+ok('catching a breath: two deep breaths after a duck-dive of 1.5 s or more, or a reef dive (gasp()); none after a quick dip or with reduced motion',()=>{
+ const W=load('lib/town/water/waterState.ts'),P=load('lib/graphics/swimPose.ts');let reduced=false;const probe={sample:()=>3,isLand:()=>false,allowed:()=>true,reset(){},d:30};const w=W.createWaterState(probe,()=>reduced,()=>9);
+ const go=(n)=>{for(let i=0;i<n;i++)w.step(1/30,0,0,{stick:0,moving:false,speed:0,landY:0,yaw:0,airborne:false});};
+ go(2);assert(w.press('dive','tap'));go(60);w.press('dive','tap');go(40);assert(w.pose.gasp>0,'after a 2 s dive: '+w.pose.gasp);go(45);assert.equal(w.pose.gasp,0,'over by 1.4 s');
+ assert(w.press('dive','tap'));go(12);w.press('dive','tap');go(40);assert.equal(w.pose.gasp,0,'not after a quick dip');
+ w.gasp();go(3);assert(w.pose.gasp>.8,'the reef surfacing');reduced=true;go(1);assert.equal(w.pose.gasp,0,'reduced motion: none');reduced=false;
+ assert(read('components/Town.tsx').includes('water.gasp();/* Oct 25 2026: two deep breaths at the buoy */'));
+ const g=()=>new T.Group(),rig=()=>({pelvis:g(),torso:g(),head:g(),legs:[0,1].map(()=>({hip:g(),knee:g(),ankle:g()})),arms:[0,1].map(()=>({shoulder:g(),elbow:g(),hand:g()}))});
+ const ja=rig(),jb=rig(),pa=P.createSwimPoser(ja),pb=P.createSwimPoser(jb),A={w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,gasp:0},B={...A,gasp:.75};
+ for(let i=0;i<40;i++){pa.apply(A,1/30,false,0);pb.apply(B,1/30,false,0);}
+ assert(jb.pelvis.position.y>ja.pelvis.position.y+.03&&jb.head.rotation.x<ja.head.rotation.x-.2,'the chest heaves, the chin lifts');
 });
 
 console.log(`explore-swim-oct25: ${passed} passed`);
