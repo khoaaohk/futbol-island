@@ -251,7 +251,7 @@ vec3 waterGlitter(vec2 xz,float pxm,float lobe,float clump){
  // A sharp core with a little four-point cross (a glint of sun, not a bubble), clustered in drifting patches (clump: the sea noise + ripple tile),
  // white-gold whatever the sun's tint.
  vec2 o=f-.25-.5*vec2(h2,h3);float l=length(o),g=1.-smoothstep(0.,r*.22,l)+.7*(1.-smoothstep(0.,r*r*.01,abs(o.x*o.y)))*(1.-smoothstep(r*.08,r*.75,l));
- vec3 sunL=directionalLights[0].color*.333;return mix(vec3(dot(sunL,vec3(.3,.59,.11))),sunL,.2)*(g*tw*tw*k*(1.1+2.*lobe));
+ vec3 sunL=directionalLights[0].color*.333;return mix(vec3(dot(sunL,vec3(.3,.59,.11))),sunL,.2)*(g*tw*tw*k*(.55+1.*lobe));
  #else
  return vec3(0.);
  #endif

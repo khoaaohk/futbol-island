@@ -272,7 +272,7 @@ const STRIP_GLSL=/* glsl */`
  diffuseColor=vec4(col,alpha*own);
  // Light: foam glow, glints, the caustic web on the sheet (clear water over sand: strongest at the edge, gone under foam), and a
  // faint sky sheen on freshly wet sand above the waterline.
- float waterLight=(foam*.2+sparkle*.55*max(cover*waterA,foam)+cau*.32*cover*(1.-foam)*clamp(1.2-.7*d,0.,1.))*own;
+ float waterLight=(foam*.2+sparkle*.275*max(cover*waterA,foam)+cau*.32*cover*(1.-foam)*clamp(1.2-.7*d,0.,1.))*own;
  vec3 waterGlow=(waterC*cover*.06+wet*(1.-cover)*vec3(.05,.065,.075))*own;`;
 
 /** The island shoreline: call `bake` once with the renderer (Town, at mount). `group` is a scenery root (world.setVisible). */
