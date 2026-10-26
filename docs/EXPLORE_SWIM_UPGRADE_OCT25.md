@@ -39,6 +39,10 @@ lesson card opens and closes; no page or console errors.
   follow camera sees about 25 m ahead). The minimap markers and the once-per-zone hint (now also on wading) are the only pointers.
   A tappable reef marker on the travel map ("swim there" / "fly there") would make entry obvious; that is a design decision.
 - The secret note's copy ("Peek inside things!") hints at the chest without naming it; the owner may want it plainer or quieter.
+- Dev-only React warning from the minimap (`IslandOverview.tsx` switches its layer style between `transition:'none'` and
+  `transitionDuration`) when the swimmer crosses between island and sea zoom. Harmless in production; `tests/heat-pass3.cjs` pins the
+  shorthand, so it is left for the minimap owner.
+- Checked: the breath holds while the first explore ball's card choice shows (no drain behind the dialog).
 - Disk: the shared 16 GB Mac ran out of disk during the audit (dev caches of several agents, 2.5 to 5 GB each).
 
 ## Files
