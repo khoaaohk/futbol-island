@@ -36,5 +36,5 @@ const C=load('lib/games/soccerPinballCamera.ts');
 for(const [w,h] of [[390,844],[360,740],[430,932],[390,664]])assert.ok(C.pinballCameraLayout(w,h,true).flip<=h-12-120-6,`${w}x${h}: flippers framed above the pads`);
 assert.equal(C.pinballCameraLayout(1440,900,false).landscape,true,'wide screens: the pads sit beside the table (checked in tests/pinball-camera-oct26.cjs)');
 // 5. The tip fades and rides over the drain strip; tennis / runner messages keep their own rules.
-assert.match(block,/\.message\{bottom:calc\(var\(--pb-bottom\) \+ 72px\)[^}]*animation:pinballTip/);assert.match(tsx,/<p key=\{kind==='pinball'\?hud\.message:undefined\}/);
+assert.match(block,/\.message\{bottom:calc\(var\(--pb-bottom\) \+ 72px\)[^}]*animation:pinballTip/);assert.match(tsx,/<p key=\{\(kind==='tennis'\|\|kind==='pinball'\)\?hud\.message:undefined\}/);
 console.log('PASS pinball controls: overlaid 120 px thumb pads + 150x64 launch pill with charge fill, lit by the live flipper, pointerdown multi-touch, no stuck flippers, pinball-scoped CSS, camera/pad band agree, fading tip');

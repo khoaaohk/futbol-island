@@ -61,7 +61,7 @@ for(const [w,h,mobile] of [[1440,900,false],[820,1180,true],[844,390,true]]){con
 const games=fs.readFileSync(path.join(root,'lib/arcade/arcadeGames.ts'),'utf8'),ui=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.module.css'),'utf8');
 assert(/tennisCam\.update\(dt,tennis/.test(games)&&/tennisCam\.fit\(/.test(games),'the tennis stage camera is driven per frame and solved on resize');
 assert(/tennisCam\?\.moving\(\)/.test(games),'the frame loop stays awake while the camera eases');
-assert(/data-tip=\{kind==='tennis'\|\|undefined\}/.test(ui)&&/key=\{kind==='tennis'\?hud\.message:undefined\}/.test(ui),'each new tip remounts (restarts its fade)');
+assert(/data-tip=\{kind==='tennis'\|\|undefined\}/.test(ui)&&/key=\{\(kind==='tennis'\|\|kind==='pinball'\)\?hud\.message:undefined\}/.test(ui),'each new tip remounts (restarts its fade)');
 const tip=css.match(/\.game\[data-arcade-kind=tennis\] \.message\[data-tip\]\{[^}]*\}/)[0];
 assert(/left:50%/.test(tip)&&/translateX\(-50%\)/.test(tip)&&/text-align:center/.test(tip),'tip centred horizontally');assert(/animation:tennisTipFade/.test(tip),'tip fades');
 assert(/@keyframes tennisTipFade\{.*100%\{opacity:0/.test(css),'fades out completely');
