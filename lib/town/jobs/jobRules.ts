@@ -336,11 +336,18 @@ function pumpLeak(r:JobRun,t:number){const task=r.def.task,b=pumpBall(r);if(task
 /** How far outside a job's area the player may wander before the shift ends. */
 export const JOB_AREA_MARGIN=45;
 /** True when (x,z) is more than JOB_AREA_MARGIN outside the box around a job's sign, targets and drop-off (horizontal only). */
-export function outsideJobArea(def:{board:{x:number;z:number};targets?:{x:number;z:number}[];deliver?:{x:number;z:number}|null;areaMargin?:number},x:number,z:number){
- const pts=[def.board,...(def.targets??[]),...(def.deliver?[def.deliver]:[])];let x0=Infinity,x1=-Infinity,z0=Infinity,z1=-Infinity;
- for(const q of pts){x0=Math.min(x0,q.x);x1=Math.max(x1,q.x);z0=Math.min(z0,q.z);z1=Math.max(z1,q.z);}
- const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1);return Math.hypot(dx,dz)>(def.areaMargin??JOB_AREA_MARGIN);
+type AreaDef={board:{x:number;z:number};targets?:{x:number;z:number}[];deliver?:{x:number;z:number}|null;areaMargin?:number};
+export function outsideJobArea(def:AreaDef,x:number,z:number){return jobAreaSlack(def,x,z)<0;}
+/** Jobs upgrade (Oct 25 2026): metres left before leaving the job's area ends the shift (negative = outside). No allocation. */
+export function jobAreaSlack(def:AreaDef,x:number,z:number){
+ let x0=def.board.x,x1=x0,z0=def.board.z,z1=z0;const t=def.targets??[];
+ for(let i=0;i<t.length;i++){const q=t[i];if(q.x<x0)x0=q.x;if(q.x>x1)x1=q.x;if(q.z<z0)z0=q.z;if(q.z>z1)z1=q.z;}
+ const d=def.deliver;if(d){if(d.x<x0)x0=d.x;if(d.x>x1)x1=d.x;if(d.z<z0)z0=d.z;if(d.z>z1)z1=d.z;}
+ const dx=Math.max(x0-x,0,x-x1),dz=Math.max(z0-z,0,z-z1);return (def.areaMargin??JOB_AREA_MARGIN)-Math.hypot(dx,dz);
 }
+/** Within this many metres of the edge, the panel warns once that walking on stops the job. */
+export const JOB_AREA_WARN=12;
+export const JOB_AREA_WARN_NOTE='Turn back to keep your job: it stops if you walk much further.';
 /** The next shooting circle: a new distance (6–14 m) and angle (≤ 55° off square) to the target, on the lawn, at least 3 m from
  *  the last one. Seeded, so a run replays the same circles. */
 export function nextReboundSpot(r:JobRun,prev:{x:number;z:number}|null){

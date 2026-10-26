@@ -21,7 +21,7 @@ import {bugMapCount} from './bugSpecies';
 import {FIREFLY_MAP_CAP,FIREFLY_LOCAL_WANT} from '@/lib/graphics/wildBugsCore';
 import {readTimeOfDay,type TimeOfDay} from '../fishing/timeOfDay';
 import {countBugCatch,countBugShift,countBugBookComplete,countBugSwing,countBugMiss,countBugHint} from '@/lib/analytics/summitEvents';
-import {STALK,outsideJobArea,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
+import {STALK,jobAreaSlack,JOB_AREA_WARN,JOB_AREA_WARN_NOTE,reboundShotStart,reboundShotEnd,startRun,stepRun,reboundEvent,runProgress,runGoals,hitsReboundTarget,onReboundWall,runAction,runActions,runHint,swingCatch,offsideClip,trailOffset,HARVEST,pumpBall,pumpTapsLeft,pumpShown,type JobRun,type JobPhase,type JobEvent,type JobAction} from './jobRules';
 import {createJobFx,wobble,ease,type Tween} from './jobFx';
 import {createHarvestProps} from './harvestScene';
 import {jobButtons,type JobButton,type JobPose} from './jobMoves';
@@ -65,7 +65,7 @@ export type JobView={
  /** The last catch, for the story card (IslandJobs): name, role, the "Real football fact" (rotating), NEW, squad progress. */
  caught?:{nonce:number;id:string;kind:'bug'|'firefly';name:string;role:string;/** card title (a firefly: its call) */title:string;/** a firefly's coaching idea (the lesson), else '' */idea:string;story:string;source:string;isNew:boolean;count:number;coins:number;squad:number;squadSize:number;squadComplete:boolean;dup:boolean}|null;
  /** The shift ended by itself (left Summit Isle): a short toast. */
- ended?:{text:string;nonce:number}|null;
+ ended?:{text:string;nonce:number;title?:string}|null;
  garden:string;
  pick:{good:string;nonce:number}|null;
  /** On foot at the Coral Cay farm stand with no job running: produce can be sold here too (same market rules as Rosa's). */
@@ -651,7 +651,10 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   // User (Oct 20 2026): "it shouldn't end the job unless I start to enter the water or hit end job": no area radius, no trail, slope or
   // ride rule; only stepping into the sea (Town's water state) or leaving the island another way (zipline, ferry, teleport).
   if(run&&run.def.swing){if(wading){endShift(BUG_WATER_NOTE);return;}if(leftSummit(p.x,p.z)){endShift(BUG_LEFT_NOTE);return;}}
-  else if(run&&outsideJobArea(run.def,p.x,p.z)){quit();return;}
+  else if(run){const slack=jobAreaSlack(run.def,p.x,p.z);
+   // Jobs upgrade (Oct 25 2026): leaving used to end the shift silently. Now a warning near the edge, and a toast if it ends.
+   if(slack<0){const place=run.def.place;quit();setView({ended:{title:'Job stopped',text:`You walked away from ${place}. Go back to the sign to start again.`,nonce:++endedNonce}});return;}
+   if(slack<JOB_AREA_WARN){if(!areaWarned){areaWarned=true;note(JOB_AREA_WARN_NOTE);}}else if(slack>JOB_AREA_WARN+8)areaWarned=false;}
   if(run){
    applyEvents(stepRun(run,p,dt,floor));
    if(run&&run.def.kind==='rebound'&&ball){if(ball.wallPhase==='receive'&&lastWallPhase!=='receive'&&ball.mode==='wall-juggle'&&onReboundWall(ball.wallTarget)){lastWallTarget=ball.wallTarget;applyEvents(reboundEvent(run,'pass'));}lastWallPhase=ball.mode==='wall-juggle'?ball.wallPhase:'';if(ball.mode!=='shot')shotCounted=false;
@@ -1058,7 +1061,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   skipJarRelease=cine&&!!R;try{applyEvents(runAction(r,r.def.work!.deliver!.id));}finally{skipJarRelease=false;}}
  function start(id:string){const def=jobVariant(id,timeOfDay());if(!def||!openNow(def))return false;
   // One job at a time (bug A2): starting another never silently ends the running one. Finish it or tap Stop job first.
-  if(run)return false;quit();banner='';streak.reset();callStreak.reset();if(props)clearProps();dropFading();setStash={};setFade=1;
+  if(run)return false;quit();banner='';areaWarned=false;streak.reset();callStreak.reset();if(props)clearProps();dropFading();setStash={};setFade=1;
   // Garden shift: what is pickable this shift (ripe now, plus spots made ripe for the shift if too few are: never a dead end).
   let ripe:boolean[]|undefined;if(def.kind==='garden'){garden=readGarden();ripe=shiftRipeness(garden,now()).ripe;}
   run=startRun(def,1+Math.floor(now()%100000),ripe);if(def.swing)beginBugShift(run,true);if(def.kind==='garden'&&inGarden)paintGarden();viewKey='';lastShooting=false;lastWallPhase='';shotCounted=false;buildProps(def);refreshBadges();setView({done:null,near:null});offerRing.visible=false;publishActive();return true;}
@@ -1092,7 +1095,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   if(gear.basket&&(run||gear.basket.visible)){const b=gear.basket;b.visible=true;b.position.set(l.x,l.y-.23,l.z);b.rotation.set(gear.basketTilt,yaw,0);}
   if(gear.marker&&gear.marker.visible){gear.marker.position.set(p.x+fx0*.8,floor(p.x+fx0*.8,p.z+fz0*.8),p.z+fz0*.8);gear.marker.rotation.set(0,yaw-Math.PI/2,0);}
  }
- let banner='',bannerAge=0;const streak=createJobStreak(),callStreak=createJobStreak(true);
+ let banner='',bannerAge=0,areaWarned=false;const streak=createJobStreak(),callStreak=createJobStreak(true);
  /** Where the beacon points now (the nearest goal), for the off-screen edge arrow (Town.tsx); copied, no allocation per frame. */
  const arrowGoal={x:0,z:0};let arrowOn=false;
  function note(text:string){if(!run)return;banner=text;bannerAge=0;viewKey='';publishActive();}

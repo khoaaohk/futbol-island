@@ -152,7 +152,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
   const out=setTimeout(()=>setCardOut(true),7000),gone=setTimeout(()=>setBugCard(null),7400);return()=>{clearTimeout(out);clearTimeout(gone);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[view.caught?.nonce,view.zooming]);
- useEffect(()=>{const e=view.ended;if(e)setToast({title:'Bug squad ended',detail:e.text.replace(/^Bug squad ended: /,''),merge:'bug-ended'});
+ useEffect(()=>{const e=view.ended;if(e)setToast({title:e.title??'Bug squad ended',detail:e.text.replace(/^Bug squad ended: /,''),merge:e.title?'job-ended':'bug-ended'});
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[view.ended?.nonce]);
  useEffect(()=>{if(!endAsk)return;const t=setTimeout(()=>setEndAsk(false),3500);return()=>clearTimeout(t);},[endAsk]);
