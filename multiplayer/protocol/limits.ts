@@ -12,6 +12,11 @@ export const RATE = {
   emotePerMin: 10,
 } as const;
 
+/** Relay v1.7 (Cap.Kit): the relay forwards at most KIT_RATE[0] kit changes per second per member (burst KIT_RATE[1]); a faster change
+ *  is kept and forwarded on a later tick (the latest kit always wins). The client sends at most one C.Kit per KIT_GAP_MS. */
+export const KIT_RATE = [0.2, 3] as const;
+export const KIT_GAP_MS = 5000;
+
 /** Relay v1.4 (Cap.EmoteAsk): the shared ball emotes' request + accept rules (owner, Oct 23 2026). The relay enforces them; the client
  *  mirrors them (lib/multiplayer/emoteAsk.ts) so a greyed button never sends. Times in ms, distances in m. */
 export const EMOTE_ASK = {

@@ -49,8 +49,21 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32 } as const;
-export const CAPS_ALL = 63;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64 } as const;
+export const CAPS_ALL = 127;
+/** Relay v1.7 (Cap.Kit, Oct 26 2026): a member's worn Kit Shop gear (lib/multiplayer/kit.ts) so friends see it on their avatar and ball.
+ *  A flat array of KIT_LEN integers (never the kid's ball drawing, decals, crest or names):
+ *   0 shirt, 1 shirt trim, 2 shorts, 3 socks, 4 sock tops  (colours 0..0xFFFFFF; jersey worn iff [0] >= 0, then 1..4 are colours too)
+ *   5 shirt number (-1 none, 0..99)
+ *   6 boots colour (-1 = no shop boots)
+ *   7 ball layout (-1 = no shop ball; else an index), 8..10 panel colours a / b / c, 11 pattern kind (index), 12..13 pattern colours,
+ *   14 pattern target (0 all, 1 a, 2 b, 3 c), 15 pattern seed (0..9999), 16 finish (index)
+ *  Indexes are 0..KIT_INDEX_MAX on the wire (the client maps an unknown one to its default), so a new shop option never needs a relay deploy.
+ *  Nothing worn = null. The relay checks the shape and size (KIT_MAX_BYTES), keeps the latest per slot, and forwards it as S.Kit. */
+export const KIT_LEN = 17;
+export const KIT_INDEX_MAX = 63;
+export const KIT_MAX_BYTES = 200;
+export type Kit = number[];
 /** Relay v1.6 ball knock-over rules (C.Hit): shooter and victim within HIT_RANGE_M, each shooter at most HIT_RATE_MAX hits per
  *  HIT_RATE_WINDOW_MS, and the same shooter -> victim pair at most once per HIT_PAIR_COOLDOWN_MS. */
 export const HIT_RANGE_M = 25;
@@ -82,7 +95,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17, Kit: 18 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -120,12 +133,15 @@ export type CNameLock = [typeof C.NameLock, target: MemberId, locked: 0 | 1];
  *  against the friend's drawn pose). dir = the ball's travel direction (0..255 = 0..2 pi, atan2(vx, vz)). The relay checks the rules
  *  (party, same room, near, outside the force field, rate limit, pair cooldown) and silently drops a refused hit. */
 export type CHit = [typeof C.Hit, victim: MemberId, dir: number];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit;
+/** Relay v1.7 (Cap.Kit): my worn Kit Shop gear (Kit, or null = nothing worn). Sent ONLY after S.Caps carried Cap.Kit (an old relay never
+ *  sees it), right after each S.Caps and on a change, at most once per KIT_GAP_MS (lib/multiplayer/connection.ts). */
+export type CKit = [typeof C.Kit, kit: Kit | null];
+export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit | CKit;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
-  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38,
+  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38, Kit: 39,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -163,4 +179,7 @@ export type SNameLock = [typeof S.NameLock, id: MemberId, locked: 0 | 1];
 /** Relay v1.6, to every Cap.Hit member of the room (the victim and the shooter included): `shooter`'s ball knocked `victim` over;
  *  dir = the ball's travel direction (0..255). The victim's own client plays the tumble on its local player, the others on that friend. */
 export type SHit = [typeof S.Hit, shooter: MemberId, victim: MemberId, dir: number];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit;
+/** Relay v1.7, only to Cap.Kit members: member `id` wears `kit` (null = nothing from the Kit Shop). Sent to every other Cap.Kit member
+ *  when it changes, and once per member wearing something to a member right after its C.Caps (a join or a resume learns every kit). */
+export type SKit = [typeof S.Kit, id: MemberId, kit: Kit | null];
+export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;

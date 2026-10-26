@@ -169,7 +169,7 @@ function harness(room, opts = {}) {
     hasSession() { return conn.session; }, resume() { return true; }, leave() { conn.status = 'idle'; for (const f of [...sts]) f('idle'); },
     sendPose(b, now) { if (conn.status === 'live') conn.sent.push({ b: b.slice(), t: now }); }, sendEmote(e) { conn.emotes.push(e); return true; },
     onBeforeBeat(f) { conn.before = f; }, emit(m) { for (const f of [...msg]) f(m); }, live() { conn.status = 'live'; for (const f of [...sts]) f('live'); } };
-  const avatars = { root: new T.Group(), labels: new T.Group(), shown: 0, upsert() {}, remove() {}, setHidden() {}, setMuted() {}, emote: () => true, bumpField() {}, dispose() {},
+  const avatars = { root: new T.Group(), labels: new T.Group(), shown: 0, upsert() {}, setKit() {}, remove() {}, setHidden() {}, setMuted() {}, emote: () => true, bumpField() {}, dispose() {},
     update(dt, poses, cam, red, local) { state.upd.push({ poses: new Map([...poses].map(([k, v]) => [k, { ...v }])), local: local ? { ...local } : null }); } };
   const over = { remoteAvatars: { createRemoteAvatars: () => avatars, remoteCap: () => 5 }, heatTier: { batterySaverOn: () => state.saver },
     customization: { loadCustomization: () => ({}) }, look: { lookToWire: () => LOOK, wireToLook: (l) => l }, config: { multiplayerEnabled: () => true, relayWsUrl: () => null },

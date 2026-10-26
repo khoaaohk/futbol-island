@@ -9,6 +9,9 @@
 //  - a name label is one Sprite per friend with a CanvasTexture made once on upsert; only the nearest 8 on screen within 25 m are visible, and at most 6 emote bubbles at once (big parties);
 //    live feel (Oct 23 2026): the label is as big as the townsfolk's name tags (readable from the phone's island camera);
 //  - friends' balls (relay v1.2): at most BALL_MAX (4) ball meshes, nearest first, sharing the island ball's geometry + material, no shadows;
+//    relay v1.7 (Cap.Kit): a friend's Kit Shop ball (design only, never their drawing) is ONE baked skin per design, at most KIT_SKINS (2)
+//    alive (least recently drawn evicted + disposed), baked on the S.Kit that brings it (shopBallSkin.ts loaded on demand), never per frame;
+//    their jersey colours, number and boot colour go into the rig's own outfit slots (setBeanLook on a change only);
 //  - flying friends' jet plumes: ONE shared instanced pool (remoteJets.ts) for the nearest 3 flying friends;
 //  - a friend beyond the rig cap (5 on most phones) is not a rig: the colour ring + label only (ring-only, within 90 m), same one ring draw call;
 //  - ONE instanced colour ring (capacity party max + 1 = 21, no shadows, one draw call) lies at each shown friend's feet, and at the local player's
@@ -27,10 +30,11 @@ import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
-import {createClassicBallGeometry,createClassicBallMaterial} from './ballAppearance';
+import {CLASSIC_BALL,createClassicBallGeometry,createClassicBallMaterial} from './ballAppearance';
+import {kitBall,kitBallKey,kitKey,kitOutfit} from '../multiplayer/kit';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
-import {BallState,Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Look,type MemberId} from '../../multiplayer/protocol';
+import {BallState,Emote,Mode,Zone,PARTY_MAX,presenceOf,shielded,type Kit,type Look,type MemberId} from '../../multiplayer/protocol';
 import {presenceIconAt,presenceTextAt} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
@@ -57,6 +61,11 @@ export interface RemoteAvatars{
  readonly labels:T.Object3D;
  /** `style` = the member's name colour (hex): drawn on the label and as the ground ring. */
  upsert(id:MemberId,look:Look,name:string,style?:MemberStyle):void;
+ /** Relay v1.7 (Cap.Kit): this friend's worn Kit Shop gear (null = none): shirt / trim / shorts / socks / number / boots on their rig,
+  *  their ball skinned with the design. A no-op when unchanged or unknown (call after upsert). */
+ setKit(id:MemberId,kit:Kit|null):void;
+ /** Friends' Kit Shop ball skins alive (at most KIT_SKINS; tests / heat checks). */
+ readonly kitSkins:number;
  remove(id:MemberId):void;
  /** Local choices (PartyHost Hide / Mute): hidden friends are not drawn at all (avatar, ring, label, emote bubble); muted friends' emotes are not shown. */
  setHidden(ids:ReadonlySet<MemberId>):void;
@@ -114,6 +123,8 @@ function travelFor(mode:number):TravelMode|undefined{
 type SwimPose=NonNullable<PlayerMotion['swim']>;
 type Entry={
  id:MemberId;name:string;lookKey:string;look:Look;style:MemberStyle|null;colour:T.Color;
+ /** Relay v1.7: the worn kit (null none), its key, and its ball part's key ('' = the classic ball). */
+ kit:Kit|null;kitKey:string;ballKey:string;
  rig:PlayerRig|null;label:T.Sprite|null;labelTexture:T.CanvasTexture|null;bubble:T.Sprite|null;
  admitted:boolean;shown:boolean;
  /** Cap recheck (rigCap.ts): priority distance², the planned change, demoting (shrinking, rig still held) and its scale 1..0. */
@@ -240,6 +251,8 @@ const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m). */
 /** Friends' balls: at most BALL_MAX drawn (nearest to the camera), within BALL_DRAW_RANGE; plumes for flying friends within JET_RANGE. */
 export const BALL_MAX=4,BALL_DRAW_RANGE=70,JET_RANGE=70,BALL_RADIUS=.19;
+/** Relay v1.7: friends' Kit Shop ball skins alive at once (each one 256x128 texture + one material). */
+export const KIT_SKINS=2;
 const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion(),feelSpot=new T.Vector3();
 const onFoot=(mode:number)=>mode===Mode.Walk||mode===Mode.Run||mode===Mode.Idle;
 /** Where a friend's ball is drawn (writes out.x/y/z; false = not drawn): Free at its own spot, Feet in front of their feet, Juggle bobbing over them. Exported for tests. */
@@ -309,12 +322,32 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  const byId=new Map<MemberId,Entry>();const list:Entry[]=[];let duets=0;/* entries playing a duet now */
  let localHex='',clock=0,recheck=0,saverFade=1,shownCount=0,disposed=false;
 
+ /** The friend's look on their rig, their Kit Shop kit (relay v1.7) on top of its outfit slots. On a change only. */
+ function dress(e:Entry,rig:PlayerRig){const c=wireToLook(e.look);rig.setAppearance(c);rig.setBeanLook(beanLookFor(c),kitOutfit(playerOutfit(c),e.kit));releaseHiddenClassic(rig.root);}
+ // Friends' Kit Shop balls (relay v1.7): at most KIT_SKINS baked skins, each shared by every friend wearing that design. A skin is made on
+ // the S.Kit that brings a new design (shopBallSkin.ts is imported on demand, so a party without shop balls never loads it); drawing never
+ // bakes. Over the cap, the skin drawn least recently is disposed (its friends fall back to the classic ball until their next change).
+ type Skin={key:string;mat:T.MeshStandardMaterial|null;used:number};
+ const skins:Skin[]=[];let skinGeo:T.SphereGeometry|null=null;
+ function dropSkin(s:Skin){const i=skins.indexOf(s);if(i>=0)skins.splice(i,1);for(const m of ballMeshes)if(m.material===s.mat){m.geometry=ballGeo;m.material=ballMat;}s.mat?.map?.dispose();s.mat?.dispose();s.mat=null;}
+ function wantSkin(key:string,kit:Kit){
+  if(!key||disposed)return;
+  for(let i=0;i<skins.length;i++)if(skins[i].key===key){skins[i].used=clock;return;}
+  while(skins.length>=KIT_SKINS){let old=skins[0];for(const s of skins)if(s.used<old.used)old=s;dropSkin(old);}
+  const s:Skin={key,mat:null,used:clock};skins.push(s);
+  const d=kitBall(kit);if(!d)return;
+  import('./shopBallSkin').then(mod=>{if(disposed||skins.indexOf(s)<0)return;skinGeo??=new T.SphereGeometry(BALL_RADIUS,CLASSIC_BALL.widthSegments,CLASSIC_BALL.heightSegments);s.mat=mod.friendBallMaterial(d,key);}).catch(()=>{/* offline chunk: the classic ball stays */});
+ }
+ function skinFor(key:string):T.MeshStandardMaterial|null{
+  if(!key)return null;
+  for(let i=0;i<skins.length;i++){const s=skins[i];if(s.key===key){if(!s.mat)return null;s.used=clock;return s.mat;}}
+  return null;
+ }
  function admit(e:Entry){
   if(e.admitted||disposed)return;
   if(e.rig){e.admitted=true;e.dem=false;e.out=1;return;} // still shrinking from a demotion: keep the same rig
   const rig=createPlayer('remote-'+e.id,'home');
-  const c=wireToLook(e.look);rig.setAppearance(c);rig.setBeanLook(beanLookFor(c),playerOutfit(c));
-  releaseHiddenClassic(rig.root);rig.root.scale.setScalar(BODY_SCALE);
+  dress(e,rig);rig.root.scale.setScalar(BODY_SCALE);
   rig.setDribbleFeel?.(true);/* their sole stops / drag-backs / touches, derived from the pose stream (lib/town/dribbleStop.ts) */
   e.rig=rig;e.rb=!!beanShapeOf(rig.root);e.admitted=true;
  }
@@ -390,7 +423,9 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   // nearest first (insertion sort on the parallel distance array; no allocation)
   for(let i=1;i<candBall.length;i++){const x=candBall[i],xd=ballD2[i];let j=i-1;while(j>=0&&ballD2[j]>xd){candBall[j+1]=candBall[j];ballD2[j+1]=ballD2[j];j--;}candBall[j+1]=x;ballD2[j+1]=xd;}
   let n=0;
-  for(;n<candBall.length&&n<BALL_MAX;n++){const e=candBall[n],m=ballMeshes[n];m.position.set(e.bx,e.by,e.bz);m.quaternion.copy(e.bq);m.visible=true;}
+  for(;n<candBall.length&&n<BALL_MAX;n++){const e=candBall[n],m=ballMeshes[n],sk=e.ballKey?skinFor(e.ballKey):null;/* relay v1.7: their Kit Shop ball */
+   if(sk&&skinGeo){m.geometry=skinGeo;m.material=sk;}else if(m.material!==ballMat){m.geometry=ballGeo;m.material=ballMat;}
+   m.position.set(e.bx,e.by,e.bz);m.quaternion.copy(e.bq);m.visible=true;}
   for(let i=n;i<BALL_MAX;i++)ballMeshes[i].visible=false;
   ballsShown=n;candBall.length=0;
  }
@@ -419,13 +454,21 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    if(disposed)return;
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
-    e={id,name,lookKey:key,look:look.slice(),style:st,colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
+    e={id,name,lookKey:key,look:look.slice(),style:st,kit:null,kitKey:'',ballKey:'',colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
      motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,du:null,lastMode:0,emMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0,ca:0};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
    if(e.name!==name||(st?.hex!==e.style?.hex)){e.name=name;e.style=st;e.colour.set(st?st.hex:'#ffffff');if(e.labelTexture)setLabel(e);}
-   if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){const c=wireToLook(look);e.rig.setAppearance(c);e.rig.setBeanLook(beanLookFor(c),playerOutfit(c));releaseHiddenClassic(e.rig.root);e.rb=!!beanShapeOf(e.rig.root);}}
+   if(e.lookKey!==key){e.lookKey=key;e.look=look.slice();if(e.rig){dress(e,e.rig);e.rb=!!beanShapeOf(e.rig.root);}}
+  },
+  get kitSkins(){return skins.length;},
+  setKit(id,kit){
+   const e=byId.get(id);if(!e||disposed)return;
+   const key=kitKey(kit);if(key===e.kitKey)return;
+   e.kit=kit?kit.slice():null;e.kitKey=key;e.ballKey=kitBallKey(kit);
+   if(e.rig){dress(e,e.rig);e.rb=!!beanShapeOf(e.rig.root);}
+   if(e.ballKey&&e.kit)wantSkin(e.ballKey,e.kit);
   },
   remove(id){
    const e=byId.get(id);if(!e)return;
@@ -570,6 +613,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
    for(let i=0;i<list.length;i++)release(list[i]);
    list.length=0;byId.clear();batch.dispose();rings.dispose();ringGeo.dispose();ringMat.dispose();fields.dispose();jets.dispose();bumps.dispose();rides.dispose();tumbles.clear();
    for(const m of ballMeshes)m.removeFromParent();ballGeo.dispose();ballMat.dispose();
+   while(skins.length)dropSkin(skins[0]);skinGeo?.dispose();skinGeo=null;
    for(const t of statusTextures.values())t.dispose();statusTextures.clear();
    for(const t of iconTextures.values())t.dispose();iconTextures.clear();
    root.removeFromParent();

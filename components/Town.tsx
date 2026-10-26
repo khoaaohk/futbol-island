@@ -96,6 +96,7 @@ import {useQuizProgress,getQuizProgress} from '@/lib/town/quizProgress';
 import {equippedActions} from '@/lib/town/equipmentActions';
 import {CLASSIC_BALL,addBallPatches,createBallAppearance} from '@/lib/graphics/ballAppearance';
 import {createShopBallSkin} from '@/lib/graphics/shopBallSkin';
+import {kitFromGear} from '@/lib/multiplayer/kit';
 import {NO_GEAR,SHOP_GEAR_EVENT,gearOutfit,isGearStorageKey,readIslandGear,teamOutfitWithBoots,type IslandGear} from '@/lib/shop/islandGear';
 import {DEFAULT_CUSTOMIZATION,loadCustomization,saveCustomization,sanitizeCustomization,BALL_COLORS,beanLookFor,playerOutfit,type CharacterCustomization} from '@/lib/town/customization';
 import {enforceRideUnlocks} from '@/lib/town/rideUnlocks';
@@ -334,7 +335,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [customization,setCustomization]=useState<CharacterCustomization>({...DEFAULT_CUSTOMIZATION}),customizationRef=useRef(customization);customizationRef.current=customization;
   // Kit Shop gear on the island (Oct 26 2026, lib/shop/islandGear.ts): the worn jersey/boots/ball, read on load and on change; the frame loop applies it when the ref changes.
   const gearRef=useRef<IslandGear>(NO_GEAR);
-  useEffect(()=>{const read=()=>{const next=readIslandGear();if(next.key!==gearRef.current.key)gearRef.current=next;};read();const onStorage=(e:StorageEvent)=>{if(isGearStorageKey(e.key))read();};window.addEventListener('storage',onStorage);window.addEventListener(SHOP_GEAR_EVENT,read);return()=>{window.removeEventListener('storage',onStorage);window.removeEventListener(SHOP_GEAR_EVENT,read);};},[]);
+  useEffect(()=>{const read=()=>{const next=readIslandGear();if(next.key!==gearRef.current.key)gearRef.current=next;/* relay v1.7: friends see it too (lib/multiplayer/kit.ts; the connection sends only on a change, never to an old relay) */if(multiplayerEnabled())partyConnection().setKit(kitFromGear(gearRef.current));};read();const onStorage=(e:StorageEvent)=>{if(isGearStorageKey(e.key))read();};window.addEventListener('storage',onStorage);window.addEventListener(SHOP_GEAR_EVENT,read);return()=>{window.removeEventListener('storage',onStorage);window.removeEventListener(SHOP_GEAR_EVENT,read);};},[]);
   useEffect(()=>{const progress=getQuizProgress();setCustomization(enforceVendingOwnership(enforceRideUnlocks(loadCustomization(progress.completed,progress.total))));},[]);
   const changeCustomization=(value:CharacterCustomization)=>{if(isVendingPreview()){customizationRef.current=value;setCustomization(value);return;}const progress=getQuizProgress(),safe=enforceVendingOwnership(enforceRideUnlocks(sanitizeCustomization(value,progress.completed,progress.total)));customizationRef.current=safe;setCustomization(safe);saveCustomization(safe);};
   // Wakes the island's render loop after it slept behind a paused menu (see wakeLoop); runs after every Town render.

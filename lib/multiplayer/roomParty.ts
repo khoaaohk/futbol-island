@@ -5,7 +5,7 @@
 // No analytics imports (tests/mp-isolation.cjs): counts leave through callbacks only. No timers or loops of its own: the room's
 // frame loop calls update(), the connection's 5 s beat carries the pose while that loop sleeps.
 import type * as THREE from 'three';
-import { BallState, Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
+import { BallState, Mode, S, Zone, presenceOf, roomLocalY, roomOf, shielded, type Kit, type Look, type MemberId, type PoseBody } from '../../multiplayer/protocol';
 import { emoteSeconds } from '../town/emoteReact';
 import { createRemoteAvatars, remoteCap, type RemoteAvatars, type RemoteBall } from '../graphics/remoteAvatars';
 import { batterySaverOn } from '../graphics/heatTier';
@@ -88,6 +88,8 @@ export function createFriendCore(ctx: {
   const active = new Map<MemberId, RemotePose>();
   const known = new Set<MemberId>();
   const ids: MemberId[] = [];
+  // Relay v1.7 (Cap.Kit): friends' worn Kit Shop gear from S.Kit (may arrive before the roster lists them); applied on arrival and on sync.
+  const kits = new Map<MemberId, Kit | null>();
   let live = false, you: MemberId | null = null, meHex = '', lastEmoteAt = -1, wasLive = false;
 
   // Membership / status / emotes change rarely: sync here, never per frame.
@@ -106,7 +108,10 @@ export function createFriendCore(ctx: {
       if (!spare.has(m.id)) { spare.set(m.id, { x: 0, y: 0, z: 0, yaw: 0, speed: 0, mode: Mode.Idle, zone: Zone.Main, fade: 1 }); ids.push(m.id); }
       // Label: the typed first name if set, else the made-up colour name.
       avatars.upsert(m.id, m.look, displayName(m), { hex: m.colourHex });
+      avatars.setKit(m.id, kits.get(m.id) ?? null); // a no-op unless it changed
     }
+    if (!live) kits.clear();
+    else if (kits.size > want.length) for (const id of Array.from(kits.keys())) if (!want.some((m) => m.id === id)) kits.delete(id);
     for (let i = ids.length - 1; i >= 0; i--) {
       const id = ids[i];
       if (known.has(id)) continue;
@@ -132,6 +137,7 @@ export function createFriendCore(ctx: {
   // A friend who stands still never sends a pose: the Welcome / Joined roster carries everyone's last pose, so seed the interpolators
   // from it (a still friend already in the room shows at once instead of on their first step).
   const offSeed = conn.onMessage((m) => {
+    if (m[0] === S.Kit) { if (m[1] !== you) { kits.set(m[1], m[2]); if (known.has(m[1])) avatars.setKit(m[1], m[2]); } return; }
     if (m[0] !== S.Welcome && m[0] !== S.Joined) return;
     const list = m[0] === S.Welcome ? m[7] : [m[1]], t = typeof performance !== 'undefined' ? performance.now() : Date.now();
     for (const info of list) {
@@ -167,7 +173,7 @@ export function createFriendCore(ctx: {
       }
     },
     dispose() {
-      offStore(); offPoses(); offBalls(); offSeed(); filterSubs.delete(applyFilters); avatars.dispose(); poses.clear(); balls.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
+      offStore(); offPoses(); offBalls(); offSeed(); filterSubs.delete(applyFilters); avatars.dispose(); kits.clear(); poses.clear(); balls.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
       // The shared connection (and its binding) belongs to the page: it closes on unload and via leave().
       void unbind;
     },

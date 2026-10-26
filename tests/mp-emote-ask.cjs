@@ -13,7 +13,7 @@ let n = 0; const t = (name, fn) => { try { fn(); n++; } catch (e) { console.erro
 const j = (a) => JSON.stringify(a);
 
 t('protocol: Cap.EmoteAsk is the next bit; message shapes validate', () => {
-  assert.equal(Cap.EmoteAsk, 8); assert.equal(CAPS_ALL, 63);
+  assert.equal(Cap.EmoteAsk, 8); assert.equal(CAPS_ALL, 127);
   assert.equal(C.EmoteAsk, 14); assert.equal(C.EmoteAnswer, 15); assert.equal(S.EmoteAsk, 34); assert.equal(S.EmoteAnswer, 35); assert.equal(S.Duet, 36);
   assert.deepEqual(P.parseClient(j([C.EmoteAsk, 3, Emote.PassBall])), [14, 3, 6]);
   assert.deepEqual(P.parseClient(j([C.EmoteAsk, 3, Emote.JuggleWithMe])), [14, 3, 3]);

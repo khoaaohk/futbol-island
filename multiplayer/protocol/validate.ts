@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -51,6 +51,23 @@ function isMember(v: unknown): v is MemberInfo {
   return Array.isArray(v) && (v.length === 5 || (v.length === 6 && isNickField(v[5]))) && inRange(v[0], 0, MAX_MEMBER_ID) && isName(v[1]) && isLook(v[2]) && isBit(v[3]) &&
     (v[4] === null || isPose(v[4]));
 }
+
+/** Relay v1.7: a worn kit (types.ts Kit). Exact length, integers only, every slot in its range, the "worn" groups all-or-nothing,
+ *  and at most KIT_MAX_BYTES as JSON. Exported: the relay re-checks a kit restored from a hibernation attachment with it. */
+export function isKit(v: unknown): boolean {
+  if (!Array.isArray(v) || v.length !== KIT_LEN) return false;
+  const col = (n: unknown) => inRange(n, 0, 0xffffff), idx = (n: unknown) => inRange(n, 0, KIT_INDEX_MAX);
+  const jersey = v[0] !== -1, ball = v[7] !== -1;
+  for (let i = 0; i <= 4; i++) if (jersey ? !col(v[i]) : v[i] !== -1) return false;
+  if (!(jersey ? inRange(v[5], -1, 99) : v[5] === -1)) return false;
+  if (!(v[6] === -1 || col(v[6]))) return false;
+  if (ball) {
+    if (!idx(v[7]) || !col(v[8]) || !col(v[9]) || !col(v[10]) || !idx(v[11]) || !col(v[12]) || !col(v[13]) || !inRange(v[14], 0, 3) || !inRange(v[15], 0, 9999) || !idx(v[16])) return false;
+  } else for (let i = 8; i <= 16; i++) if (v[i] !== -1) return false;
+  if (!jersey && !ball && v[6] === -1) return false; // nothing worn travels as null, never as an all -1 kit
+  return utf8Len(JSON.stringify(v)) <= KIT_MAX_BYTES;
+}
+const isKitOrNull = (v: unknown): boolean => v === null || isKit(v);
 
 const MAX_AGE_MS = 60_000;
 /** A ball position (decimetres): inside WORLD_BOUNDS. */
@@ -124,6 +141,8 @@ export function parseClient(raw: string): ClientMsg | null {
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ClientMsg) : null;
     case C.Hit:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, 255) ? (a as ClientMsg) : null;
+    case C.Kit:
+      return a.length === 2 && isKitOrNull(a[1]) ? (a as ClientMsg) : null;
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
     default:
@@ -182,6 +201,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 5 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && isAskEmote(a[3]) && inRange(a[4], 0, 255) ? (a as ServerMsg) : null;
     case S.Hit:
       return a.length === 4 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && inRange(a[3], 0, 255) ? (a as ServerMsg) : null;
+    case S.Kit:
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isKitOrNull(a[2]) ? (a as ServerMsg) : null;
     case S.Live: {
       if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
       const p = a[2] as unknown[], b = a[3] as unknown[];

@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
-  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS,
+  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -40,7 +40,9 @@ const FAIL_OF: Partial<Record<number, FailReason>> = {
   [ErrorCode.Locked]: 'locked', [ErrorCode.RateLimited]: 'rate_limited',
 };
 /** Per-socket state a hibernating Durable Object keeps with serializeAttachment so members survive an eviction. */
-export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean; nameLock?: 1 }
+export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean; nameLock?: 1;
+  /** Relay v1.7: the worn kit (colours and indexes only), so an eviction keeps it; re-checked with isKit on restore. */
+  kit?: number[] }
 
 /** WebSocket close codes the relay uses (4xxx = application range). */
 export const CLOSE = {
@@ -76,6 +78,8 @@ interface Member {
   nickLocked: boolean; renameTimes: number[];
   /** Relay v1.6 (Cap.Hit): this member's recent accepted C.Hit times as a shooter, and when its ball last knocked anyone over it. */
   hitTimes: number[]; knockedAt: number;
+  /** Relay v1.7 (Cap.Kit): the worn kit (null = none), its join key (change check), and whether a change still waits for kitBucket. */
+  kit: number[] | null; kitKey: string; kitDue: boolean; kitBucket: TokenBucket;
 }
 
 /** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
@@ -196,12 +200,14 @@ export class RoomCore {
     this.joinSeq = Math.max(this.joinSeq, a.joinSeq + 1);
     if (a.host) { this.hostId = a.id; this.hadHost = true; }
     if (a.nameLock === 1) m.nickLocked = true; // relay v1.5: the host's name lock survives an eviction (the locked member's next frame syncs it)
+    if (a.kit && isKit(a.kit)) { m.kit = a.kit.slice(); m.kitKey = m.kit.join(','); } // relay v1.7
   }
   attachmentFor(peer: Peer): MemberAttachment | null {
     const m = this.byPeer.get(peer);
     if (!m) return null;
     const a: MemberAttachment = { id: m.id, name: m.name, look: m.look, token: m.token, joinSeq: m.joinSeq, host: m.id === this.hostId };
     if (m.nickLocked) a.nameLock = 1;
+    if (m.kit) a.kit = m.kit;
     return a;
   }
 
@@ -278,6 +284,7 @@ export class RoomCore {
       case C.EmoteAsk: this.emoteAsk(m, msg[1] as number, msg[2] as Emote, now); return;
       case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
       case C.Hit: this.hit(m, msg[1] as number, msg[2] as number, now); return;
+      case C.Kit: this.kitMsg(m, msg[1] as number[] | null, now); return;
       case C.ResetName: return; // retired (Oct 23 2026, replaced by C.NameLock): an old host client's frame is ignored, never an error
       default: break;
     }
@@ -349,6 +356,7 @@ export class RoomCore {
       }
     }
     this.markAway(now);
+    this.members.forEach((m) => { if (m.kitDue && m.kitBucket.take(now)) { m.kitDue = false; this.kitNews(m); } }); // relay v1.7: a rate-limited kit change
     this.migrateHost(now);
     if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
     this.fanOut(false);
@@ -616,6 +624,7 @@ export class RoomCore {
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
       emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [], hitTimes: [], knockedAt: 0,
+      kit: null, kitKey: '', kitDue: false, kitBucket: new TokenBucket(KIT_RATE[0], KIT_RATE[1]),
     };
   }
 
@@ -665,12 +674,30 @@ export class RoomCore {
     this.broadcast([S.Joined, this.memberInfo(m)], null);
   }
 
-  /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock (a join or a resume). */
+  /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock, a Cap.Kit client every friend's
+   *  worn kit (a join or a resume). */
   private caps(m: Member, bits: number): void {
     m.caps = bits & CAPS_ALL;
-    if (!(m.caps & Cap.NameLock) || !m.peer) return;
+    if (!m.peer) return;
     const peer = m.peer;
-    this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
+    if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
+    if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit) this.send(peer, [S.Kit, x.id, x.kit]); });
+  }
+
+  /** C.Kit (relay v1.7, Cap.Kit): parseClient already checked the shape and size. Kept on the slot (survives a resume and an eviction);
+   *  forwarded to every other Cap.Kit member when it changed, at most KIT_RATE (a faster change goes out on a later tick: latest wins). */
+  private kitMsg(m: Member, kit: number[] | null, now: number): void {
+    if (!(m.caps & Cap.Kit)) return;
+    const key = kit ? kit.join(',') : '';
+    if (key === m.kitKey) return;
+    m.kit = kit ? kit.slice() : null; m.kitKey = key;
+    if (m.kitBucket.take(now)) { m.kitDue = false; this.kitNews(m); } else m.kitDue = true;
+  }
+
+  /** Relay v1.7: tell every other Cap.Kit member what `t` wears now (old clients never see S.Kit). */
+  private kitNews(t: Member): void {
+    const text = encode([S.Kit, t.id, t.kit]);
+    this.members.forEach((r) => { if (r !== t && r.peer && (r.caps & Cap.Kit)) { try { r.peer.send(text); } catch { /* gone */ } } });
   }
 
   /** Relay v1.5: tell every Cap.NameLock member that `t`'s name lock changed (old clients never see S.NameLock). */
