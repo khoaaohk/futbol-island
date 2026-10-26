@@ -7,6 +7,7 @@ import ArcadeCoinsPanel from './ArcadeCoinsPanel';
 import TravelIcon from './TravelIcon';
 import {Icon} from './Icon';
 import {useEffect,useRef,useState,type PointerEvent} from 'react';
+import {installGameGuard} from '@/lib/arcade/gameGuard';
 import {enterActivity} from '@/lib/analytics/tracker';
 import {countArcadeGame} from '@/lib/analytics/sponsorEvents';
 import type {ActivityId} from '@/lib/analytics/islandIds';
@@ -44,6 +45,7 @@ export default function ArcadeRoom(){
  const joyRect=useJoystickBounds(joy,ready&&!game);
  const leave=(destination='/?from=arcade')=>{if(exitingRef.current)return;exitingRef.current=true;room.current?.clearInput();setExiting(true);exitTimer.current=setTimeout(()=>window.location.assign(destination),matchMedia('(prefers-reduced-motion:reduce)').matches?60:360);};
  useEffect(()=>()=>{if(exitTimer.current)clearTimeout(exitTimer.current);},[]);
+ useEffect(()=>installGameGuard(),[]);// no Copy / Search with Google bar, magnifier or pinch zoom while a cabinet is open
  useEffect(()=>{const id=new URLSearchParams(location.search).get('game');if(arcadeCabinets.some(c=>c.id===id))setGame(id as ArcadeCabinetId);setQueryReady(true);},[]);
  useEffect(()=>{if(!queryReady||game||!canvas.current)return;let canceled=false;setReady(false);setFailed(false);setNear(null);setSocialNear(null);const node=canvas.current;import('@/lib/arcade/arcadeRoomScene').then(({createArcadeRoomScene})=>{if(canceled)return;try{const scene=createArcadeRoomScene(node,setNear,position.current,(x,y,visible)=>{const button=machinePrompt.current;if(button){button.style.left=`${x}px`;button.style.top=`${y}px`;button.style.visibility=visible?'visible':'hidden';}},()=>leave(),setSocialNear);room.current=scene;(window as unknown as {__arcadeRoom?:unknown}).__arcadeRoom=scene;setReady(true);}catch{setFailed(true);}}).catch(()=>!canceled&&setFailed(true));return()=>{canceled=true;if(room.current){const s=room.current.state;position.current={x:s.x,z:s.z};room.current.dispose();room.current=null;}delete (window as unknown as {__arcadeRoom?:unknown}).__arcadeRoom;pointer.current=null;joyRect.current=null;};},[game,queryReady]);
  const play=(id:ArcadeCabinetId)=>{if(exitingRef.current)return;setList(false);setGame(id);history.replaceState(null,'',`/arcade?game=${id}`);};

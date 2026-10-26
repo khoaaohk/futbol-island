@@ -971,3 +971,10 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 /* Ball lessons (Oct 25 2026): while a ball lesson card is open (an island ball, or an Explore reef ball over the paused dive), the
    island action buttons and the dive's depth / Say hi buttons are hidden too, as for a field lesson (tests/lesson-hides-actions.cjs). */
 .town-app:has(dialog[data-ball-lesson][open]) .travel-actions,.town-app:has(dialog[data-ball-lesson][open]) .travel-actions[data-emote-grid],.town-app:has(dialog[data-ball-lesson][open]) .dive-depth,.town-app:has(dialog[data-ball-lesson][open]) .dive-emote{display:none}
+
+/* Arcade games (owner, Oct 26 2026): no text selection, no Copy / Search with Google bar, no magnifier, no pinch or double-tap zoom
+   while a cabinet is open (lib/arcade/gameGuard.ts sets the attribute and handles the events CSS can't). Name fields stay editable. */
+html[data-game-guard],html[data-game-guard] *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+html[data-game-guard] input,html[data-game-guard] textarea{-webkit-user-select:text;user-select:text}
+html[data-game-guard],html[data-game-guard] body{touch-action:pan-x pan-y;overscroll-behavior:none}
+html[data-game-guard] canvas{touch-action:none}

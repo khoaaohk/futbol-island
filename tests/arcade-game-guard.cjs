@@ -1,0 +1,12 @@
+const fs=require('fs'),assert=require('assert');
+const r=p=>fs.readFileSync(p,'utf8');
+const g=r('lib/arcade/gameGuard.ts'),css=r('app/globals.css'),room=r('components/ArcadeRoom.tsx');
+for(const ev of ['contextmenu','selectstart','gesturestart','gesturechange'])assert(g.includes(`'${ev}'`),`guard handles ${ev}`);
+assert(/touchmove/.test(g)&&/passive:false/.test(g)&&/touches\.length>1/.test(g),'two-finger touch moves are blocked (pinch zoom)');
+assert(/INPUT/.test(g)&&/TEXTAREA/.test(g),'name fields stay editable');
+assert(/removeAttribute\('data-game-guard'\)/.test(g)&&/removeEventListener\('contextmenu'/.test(g),'cleanup removes the attribute and listeners');
+assert(/html\[data-game-guard\][^{]*\{[^}]*user-select:none[^}]*-webkit-touch-callout:none|html\[data-game-guard\][^{]*\{[^}]*-webkit-touch-callout:none[^}]*user-select:none/.test(css),'CSS: no select, no callout');
+assert(/html\[data-game-guard\][^{]*\{[^}]*touch-action:pan-x pan-y/.test(css),'CSS: no pinch or double-tap zoom');
+assert(/html\[data-game-guard\] input,html\[data-game-guard\] textarea\{[^}]*user-select:text/.test(css),'CSS: inputs selectable');
+assert(/installGameGuard\(\)/.test(room),'ArcadeRoom installs the guard for every cabinet');
+console.log('arcade-game-guard: ok');
