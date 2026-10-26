@@ -71,6 +71,7 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
    tone(ctx,t,'sine',(heavy?135:dull?115:160)*p,(heavy?38:dull?55:62)*p,heavy?.2:.1,(heavy?.24:.17+power*.06)*v*far*jitter(.1));
    noise(ctx,t,dull?.07:.03,(dull?.07:.06)*v*far,dull?'lowpass':'bandpass',dull?700:2600*p,dull?400:1800,dull?.7:1.4);
    if(heavy)noise(ctx,t+.01,.28,.07*v*far,'bandpass',900,2600,.9,.03); // whoosh
+   if(!heavy&&power>.76)noise(ctx,t,.06,Math.min(.1,(power-.7)*.4)*v*far,'highpass',2600,3400,.8); // a wound-up strike cracks louder with its power
   }
   // Perfect chime climbs a whole step per touch of a perfect streak (capped), so rhythm is audible.
   if(side==='you'&&grade==='perfect'){const up=Math.pow(2,Math.min(4,Math.max(0,streak-1))*2/12);tone(ctx,t+.03,'triangle',1046.5*up,1046.5*up,.16,.055*v);tone(ctx,t+.085,'triangle',1568*up,1568*up,.2,.05*v);}
@@ -118,4 +119,26 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
    if(match)for(let i=0;i<12;i++)noise(ctx,t+.2+Math.random()*1.3,.05,.05*v,'bandpass',1800+Math.random()*900,1600,1.5,.002); // applause
   }else{noise(ctx,t,.7,.045*lift*v,'bandpass',700,380,1,.1);if(musicOn())[392,329.63].forEach((hz,i)=>tone(ctx,t+i*.14,'triangle',hz,hz,.2,.035*v));}
  }
+}
+
+/** Hold-to-power wind-up (Oct 26 2026): one triangle voice whose pitch climbs with the charge level, a bright tick
+ * as the charge enters the gold SWEET window, and a fast wobble once it is OVERHIT. Haptics: a light tap on press,
+ * a pulse at the sweet window, a double buzz at overhit and a thump on a sweet release. Lives only while held;
+ * `set` writes AudioParams (no allocation) and `stop` frees the nodes. Muted sound still gives haptics. */
+export function tennisChargeVoice(ctx:AudioContext|null){
+ const volume=getSoundVolume(),on=!!ctx&&ctx.state==='running'&&isSoundEnabled()&&volume>0&&typeof document!=='undefined'&&!document.hidden;
+ let osc:OscillatorNode|null=null,gain:GainNode|null=null,band=0,wobble=0;
+ if(on&&ctx&&claim(ctx)){osc=ctx.createOscillator();gain=ctx.createGain();osc.type='triangle';osc.frequency.value=220;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.linearRampToValueAtTime(.045*volume,ctx.currentTime+.04);osc.connect(gain);gain.connect(ctx.destination);osc.start();}
+ haptic(8);
+ return {
+  set(level:number,dt:number){
+   const next=level>1?2:level>=.8?1:0;
+   if(next!==band){band=next;if(next===1){haptic(14);if(on&&ctx)tone(ctx,ctx.currentTime+.005,'sine',1318.5,1318.5,.09,.05*volume);}else if(next===2){haptic([10,30,10]);if(on&&ctx)tone(ctx,ctx.currentTime+.005,'square',180,120,.12,.025*volume);}}
+   if(!osc||!ctx)return;wobble+=dt;const hz=220*Math.pow(2,Math.min(1,level)*1.25)*(band===2?1+Math.sin(wobble*44)*.035:1);osc.frequency.setTargetAtTime(hz,ctx.currentTime,.02);
+  },
+  stop(released:boolean,grade:string){
+   if(released&&grade==='sweet')haptic([16,20,22]);else if(released&&grade==='over')haptic([10,40,10]);
+   if(!osc||!gain||!ctx)return;const o=osc,g=gain,c=ctx,now=c.currentTime;osc=null;gain=null;g.gain.cancelScheduledValues(now);g.gain.setTargetAtTime(.0001,now,.02);o.stop(now+.09);o.onended=()=>{o.disconnect();g.disconnect();free(c);};
+  },
+ };
 }
