@@ -1,7 +1,8 @@
 import * as T from 'three';
 import {createGlassFloor} from './glassFloor';
 import {createArcadeStage,type ArcadePoseOptions} from './arcadeStage';
-import {STRIKER_GOAL_PAUSE,STRIKER_DIVE,STRIKER_SKILLS,STRIKER_HEAVY_TOUCH,STRIKER_CLEAN,type StrikerMatch} from './strikerMatch';
+import {STRIKER_GOAL_PAUSE,STRIKER_DIVE,STRIKER_SKILLS,STRIKER_HEAVY_TOUCH,STRIKER_CLEAN,STRIKER_PENALTY_X,type StrikerMatch} from './strikerMatch';
+import {strikerCelebration,strikerOutroPose,strikerOutroStar,STRIKER_OUTRO,type StrikerCelebrationRole} from './strikerCelebrate';
 import type {SkillMotion} from '../graphics/skillMoves';
 import {matchPlayerDress} from '../town/beanLooks';
 import {neonColor} from './neonPalette';
@@ -15,6 +16,18 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  for(const z of [-14,14]){stage.box(0,.35,z,52,.7,.35,'#f1ce83');stage.box(0,.04,z,50,.025,.09,'#fff1d5');}
  for(const side of [-1,1]){for(const z of [-9.5,9.5])stage.box(side*25,.35,z,.35,.7,9,'#f1ce83');const goal=stage.goal(side*25,0,9.2);goal.rotation.y=-side*Math.PI/2;goal.scale.y=1.32;const net=goal.children.find(child=>child instanceof T.LineSegments) as T.LineSegments;const attribute=net.geometry.getAttribute('position') as T.BufferAttribute;nets.push({side,attribute,rest:new Float32Array(attribute.array),dirty:false});for(const z of [-5,5])stage.box(side*21,.04,z,8,.025,.09,'#fff1d5');stage.box(side*17,.04,0,.09,.025,10,'#fff1d5');}
  stage.box(0,.04,0,.08,.025,28,'#fff1d5');stage.ring(0,0,4,'#fff1d5');
+ // Arena dressing (Oct 25 2026 upgrade, docs/ARCADE_STRIKERS_UPGRADE_OCT25.md): the marks the set-piece rules use (penalty spots,
+ // corner arcs, centre spot), corner flags that ripple, and four floodlight towers whose beams flare on a goal. 17 small static
+ // meshes on shared geometry/materials; per frame only four flag rotations and one opacity write (skipped under reduced motion).
+ const lineMaterial=new T.MeshBasicMaterial({color:'#fff1d5'}),spotGeometry=new T.CircleGeometry(.17,14),arcGeometry=new T.RingGeometry(.92,1.02,12,1,0,Math.PI/2);
+ for(const x of [-STRIKER_PENALTY_X,0,STRIKER_PENALTY_X]){const spot=new T.Mesh(spotGeometry,lineMaterial);spot.rotation.x=-Math.PI/2;spot.position.set(x,.045,0);stage.scene.add(spot);}
+ const flags:T.Object3D[]=[],flagGeometry=new T.PlaneGeometry(.62,.42),flagMaterials=['#ffe36e','#ff8fc8'].map(color=>new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.35,side:T.DoubleSide,roughness:.8}));
+ for(const sx of [-1,1])for(const sz of [-1,1]){const arc=new T.Mesh(arcGeometry,lineMaterial);arc.rotation.x=-Math.PI/2;arc.rotation.z=-sx>0?(sz>0?0:Math.PI*1.5):(sz>0?Math.PI/2:Math.PI);arc.position.set(sx*24.75,.045,sz*13.75);stage.scene.add(arc);
+  stage.cylinder(sx*24.55,.8,sz*13.55,.035,1.6,'#fff4da');const flag=new T.Group();flag.position.set(sx*24.55,1.42,sz*13.55);const cloth=new T.Mesh(flagGeometry,flagMaterials[sx>0?0:1]);cloth.position.x=.31;cloth.castShadow=false;flag.add(cloth);flag.rotation.y=sx>0?Math.PI:0;flag.userData.base=flag.rotation.y;flag.userData.phase=sx*1.3+sz*.7;stage.scene.add(flag);flags.push(flag);}
+ const beamMaterial=new T.MeshBasicMaterial({color:'#fff3cf',transparent:true,opacity:.035,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide}),beamGeometry=new T.ConeGeometry(4.5,15,18,1,true);beamGeometry.translate(0,-7.5,0);
+ for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*30,z=sz*20.5;stage.cylinder(x,6,z,.22,12,'#324f56');const head=stage.box(x,12.3,z,2.6,1.3,.35,'#fff6d8');head.rotation.y=Math.atan2(-x,-z);head.rotation.x=-.5;head.castShadow=false;const lamp=head.material as T.MeshStandardMaterial;lamp.emissive.set('#fff1c4');lamp.emissiveIntensity=1.4;
+  const beam=new T.Mesh(beamGeometry,beamMaterial);beam.position.set(x,12.1,z);beam.lookAt(sx*12,0,sz*5);beam.rotateX(-Math.PI/2);beam.renderOrder=1;stage.scene.add(beam);}
+ let fireworks=0,fireworkClock=0,fireworkSide=1;
  // Crowd: one instanced draw (was 120 sphere meshes). Fans jump only while
  // the crowd is excited; matrices upload during swells, never at rest.
  const fanColors=['#e8bf65','#91c3bd','#b196c8'],fanCount=120,fanGeometry=new T.SphereGeometry(1,10,6),fans=new T.InstancedMesh(fanGeometry,new T.MeshStandardMaterial({roughness:.65}),fanCount),fanBase=new Float32Array(fanCount*3),fanPhase=new Float32Array(fanCount),fanColor=new T.Color(),fanDummy=new T.Object3D();
@@ -40,10 +53,13 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const passMaterial=new T.MeshBasicMaterial({color:'#fff3d2'}),receiverRing=stage.ring(0,0,1.1,'#fff3d2'),passLine=new T.Mesh(new T.BoxGeometry(1,1,1),passMaterial);passLine.scale.set(.09,.02,1);stage.scene.add(passLine);receiverRing.visible=passLine.visible=false;
  const ballShadow=new T.Mesh(new T.CircleGeometry(.4,20),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;stage.scene.add(ballShadow);
  const ringGold=new T.Color('#ffe36e'),ringReceive=new T.Color('#73fff1'),safeLane=new T.Color('#fff3d2'),riskyLane=new T.Color('#ff7a5c'),aimGood=new T.Color('#ffe36e'),aimOver=new T.Color('#ff5d73'),trailShot=new T.Color('#ffd25e'),trailPass=new T.Color('#7ff6ff');
+ let outroT=0,outroWinner=-1,outroStar=-1;
  const axes={x:0,z:0};let portrait=false,hold=0,focusAmount=0,shotFlash=0,goalFlash=0,punch=0,shake=0,clock=0,pop=0,lastSelected=-1,lastNearMiss=0;
  const cameraHome=new T.Vector3(),cameraFocus=new T.Vector3(),focusTarget=new T.Vector3(),followPan=new T.Vector3();
  // Follow cam: on while the match is live (setFollow); phones zoom a touch more because the rigs are smallest there.
- const FOLLOW_ZOOM=stage.mobile?1.28:1.14;let follow=false,followAmount=0;
+ // Portrait phones (Oct 25 2026: the app is portrait-only on phones, so Strikers now plays upright) zoom in further: the
+ // whole 54 m pitch spans the short screen width there, so bodies read smallest without it.
+ const FOLLOW_ZOOM=stage.mobile?1.28:1.14,FOLLOW_ZOOM_PORTRAIT=stage.mobile?1.5:1.25;let follow=false,followAmount=0,followZoom=FOLLOW_ZOOM;
  // Shot gauge (Oct 10 2026, replaces the single power ring): a 270° arc on the grass round the shooter, opening toward the
  // camera. The track paints the zones the coaching copy names (gold build-up, the cyan clean-strike band, red overhit) so
  // "let go in the cyan band" points at something visible; the fill grows with the charge through drawRange (no rebuild) and
@@ -117,9 +133,11 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   stepFans(dt,1);stage.effects(dt);}
  function screenAxes(x:number,y:number){axes.x=portrait?-y:x;axes.z=portrait?x:y;return axes;}
 
- function fit(){const camera=stage.camera,w=canvas.clientWidth,h=canvas.clientHeight;stage.renderer.setSize(w,h,false);camera.clearViewOffset();camera.zoom=1;camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();portrait=camera.aspect<.85;
+ function fit(){const camera=stage.camera,w=canvas.clientWidth,h=canvas.clientHeight;stage.renderer.setSize(w,h,false);camera.clearViewOffset();camera.zoom=1;camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();portrait=camera.aspect<.85;followZoom=portrait?FOLLOW_ZOOM_PORTRAIT:FOLLOW_ZOOM;
   // Landscape phones: frame the pitch a little high so the attacked goal sits above the thumb buttons (bottom corners).
   if(stage.mobile&&!portrait){camera.setViewOffset(w,h,0,h*.075,w,h);camera.updateProjectionMatrix();}
+  // Portrait phones: lift the pitch so Gold's own goal clears the thumb buttons along the bottom edge.
+  if(stage.mobile&&portrait){camera.setViewOffset(w,h,0,h*.055,w,h);camera.updateProjectionMatrix();}
   const corner=new T.Vector3();let low=10,high=200;for(let i=0;i<24;i++){const d=(low+high)/2;camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();let fits=true;for(const x of [-27,27])for(const z of (stage.mobile?[-14.6,14.6]:[-18,18])){corner.set(x,0,z).project(camera);if(Math.abs(corner.x)>.94||Math.abs(corner.y)>.91)fits=false;}if(fits)high=d;else low=d;}
   camera.position.set(portrait?-high*.52:0,high,portrait?0:high*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();cameraHome.copy(camera.position);const distance=camera.position.length();camera.far=distance+150;
   // Landscape phones reserve the right-hand edge for the action buttons.
@@ -129,7 +147,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  function update(dt:number){if(replay>=0){replay+=dt*.7;replayFrame(dt*.7);return;}const s=match.state,celebrating=s.goalPause>0,elapsed=STRIKER_GOAL_PAUSE-s.goalPause,held=hold>0;hold=Math.max(0,hold-dt);
   if(dt>0&&!held&&!celebrating&&!s.setPiece.kind)record(dt);
   // Hit-stop: the goal frame holds still for a beat before the celebration plays.
-  const anim=s.hitStop>0||held?0:dt*s.timeScale;clock+=dt;
+  const anim=s.hitStop>0||held?0:dt*s.timeScale;clock+=dt;if(!s.finished)outroT=0;else if(outroT>0)outroT=Math.max(0,outroT-dt);
   for(const p of s.players){const rig=rigs[p.id],warning=warnings[p.id],wedge=wedges[p.id],pose=poseOptions[p.id];warning.visible=p.windup>0&&!celebrating;warning.position.set(p.x,.07,p.z);warning.scale.setScalar(.7+Math.max(0,p.windup)/.26*.3);
    wedge.visible=warning.visible&&p.team===1;if(wedge.visible){const dx=p.tackleX-p.x,dz=p.tackleZ-p.z,length=Math.min(3.2,Math.hypot(dx,dz)+.8),grow=1-Math.max(0,p.windup)/.36;wedge.position.set(p.x,.08,p.z);wedge.rotation.set(0,Math.atan2(dx,dz),0);wedge.scale.set(1,1,length*(.45+grow*.55));}
    pose.keeper=p.keeper?1:0;pose.jockey=p.jockey*.8;pose.actionKind=p.strikeKind==='pass'?'pass':'shot';pose.shotPower=p.strikePower;
@@ -141,19 +159,26 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
    // the other side drops its heads.
    const won=celebrating&&p.team===s.ball.lastTeam;pose.celebrate=won?Math.sin(Math.min(1,elapsed/STRIKER_GOAL_PAUSE)*Math.PI):0;pose.reaction=undefined;pose.reactionProgress=undefined;
    if(celebrating&&!won){pose.reaction='dejected';pose.reactionProgress=Math.min(.9,elapsed/1.2);}
-   const near=Math.max(0,1-Math.hypot(s.ball.x-p.x,s.ball.z-p.z)/7);pose.anticipate=p.windup>0||p.id===s.interceptor?.85:!celebrating&&s.ball.owner!==p.id?near*.55:0;
-   const follow=p.strikeKind==='save'?0:p.kick*.8+Math.sin(p.kick*Math.PI)*.25,facing=p.keeper?Math.atan2(s.ball.x-p.x,s.ball.z-p.z):p.kick>0?p.strikeYaw:s.ball.owner===p.id&&s.charge>.18?Math.atan2(27-p.x,s.aim*4.5-p.z):p.yaw;
+   const near=Math.max(0,1-Math.hypot(s.ball.x-p.x,s.ball.z-p.z)/7);pose.anticipate=p.keeper&&s.charge>0&&s.ball.owner>=0&&s.players[s.ball.owner].team!==p.team?1:p.windup>0||p.id===s.interceptor?.85:!celebrating&&s.ball.owner!==p.id?near*.55:0;
+   const follow=p.strikeKind==='save'?0:p.kick*.8+Math.sin(p.kick*Math.PI)*.25;let facing=p.keeper?Math.atan2(s.ball.x-p.x,s.ball.z-p.z):p.kick>0?p.strikeYaw:s.ball.owner===p.id&&s.charge>.18?Math.atan2(27-p.x,s.aim*4.5-p.z):p.yaw;
    // Moves vocabulary: skill moves, keeper roll-out, airplane + knee slide for the scorer, a high five from the nearest teammate,
    // chest/thigh control on high balls, headers and the chip's lofted strike.
    const sk=skillPoses[p.id];pose.skill=undefined;
    if(p.skill>0){const spec=STRIKER_SKILLS[p.skillKind];sk.type=p.skillKind;sk.progress=Math.min(1,1-p.skill/spec.seconds);sk.side=p.skillSide;pose.skill=sk;}
    else if(p.keeper&&s.ball.owner===p.id&&!celebrating){sk.type='keeperRoll';sk.progress=.12+(1-Math.max(0,Math.min(1,p.think/.75)))*.32;sk.side=1;pose.skill=sk;pose.dive=undefined;}
    else if(p.keeper&&p.kick>.05&&p.strikeKind==='pass'){sk.type='keeperRoll';sk.progress=.46+(1-p.kick)*.54;sk.side=1;pose.skill=sk;}
-   else if(celebrating&&s.hitStop<=0&&!stage.reduced&&p.id===s.scorer){if(elapsed<.9){sk.type='airplane';sk.progress=Math.min(.8,elapsed/.9*.8);}else{sk.type='kneeSlide';sk.progress=Math.min(1,(elapsed-.9)/(STRIKER_GOAL_PAUSE-.9));}sk.side=1;pose.skill=sk;pose.celebrate=0;}
-   else if(celebrating&&s.hitStop<=0&&!stage.reduced&&won&&s.scorer>=0&&p.id===(s.scorer%4===0?s.scorer+1:s.scorer-s.scorer%4)&&elapsed>.7){sk.type='highFive';sk.progress=Math.min(1,(elapsed-.7)/(STRIKER_GOAL_PAUSE-.7));sk.side=1;pose.skill=sk;}
+   // Celebrations (Oct 25 2026 upgrade, strikerMoves.ts): an assisted goal ends with the scorer pointing back to thank the passer and
+   // the passer's high five; a solo goal keeps the knee slide; the other outfielders fist-bump in turn.
+   else if(celebrating&&s.hitStop<=0&&!stage.reduced&&won&&s.scorer>=0&&!p.keeper){const role:StrikerCelebrationRole=p.id===s.scorer?'scorer':p.id===s.assister?'assister':s.assister<0&&p.id===(s.scorer%4===0?s.scorer+1:s.scorer-s.scorer%4)?'partner':'mate';
+    const c=strikerCelebration(role,elapsed,s.assister>=0,p.id%4,STRIKER_GOAL_PAUSE);if(c){sk.type=c.type;sk.progress=c.progress;sk.side=1;pose.skill=sk;if(role==='scorer')pose.celebrate=0;
+     if(c.type==='thankPasser'&&s.assister>=0){const a=s.players[s.assister];facing=Math.atan2(a.x-p.x,a.z-p.z);}}}
    if(!pose.skill&&!celebrating){if(p.header>0){pose.reaction='header';pose.reactionProgress=1-p.header/.4;}else if(p.receive>0&&p.receiveHeight>.55){pose.reaction=p.receiveHeight>1.1?'chest':'thigh';pose.reactionProgress=1-p.receive/.22;}}
    if(p.kick>0&&p.strikeKind==='shot'&&s.chip&&p.id===s.lastKicker)pose.actionKind='loft';
-   rig.root.position.set(p.x,0,p.z);rig.pose(anim,Math.hypot(p.vx,p.vz),facing,follow,stage.reduced?0:(pose.celebrate??0)*.12,p.vx*.035,pose);
+   // Full-time reactions (Oct 25 2026): winners celebrate in place, the top scorer airplanes, the losers' heads drop, a draw ends in
+   // fist bumps. Runs only for the short outro after the whistle; bodies stand still (no stride) while it plays.
+   const outroOn=outroT>0&&s.finished;if(outroOn){const o=strikerOutroPose(p.team,p.keeper,p.id===outroStar,outroWinner,STRIKER_OUTRO-outroT,p.id%4);pose.dive=undefined;pose.charge=0;pose.slide=0;pose.stun=0;pose.vx=pose.vz=0;pose.anticipate=0;pose.dribbling=false;pose.celebrate=o.celebrate;pose.reaction=o.reaction||undefined;pose.reactionProgress=o.reaction?o.progress:undefined;
+    if(o.skill){sk.type=o.skill;sk.progress=o.progress;sk.side=1;pose.skill=sk;}else pose.skill=undefined;}
+   rig.root.position.set(p.x,0,p.z);rig.pose(anim,outroOn?0:Math.hypot(p.vx,p.vz),facing,follow,stage.reduced?0:(pose.celebrate??0)*.12,p.vx*.035,pose);
   }
   const owner=s.ball.owner>=0?s.players[s.ball.owner]:null;
   let bx=s.ball.x,bz=s.ball.z,by=s.ball.y;if(owner&&owner.keeper){bx=owner.x+Math.sin(owner.yaw)*.45;bz=owner.z+Math.cos(owner.yaw)*.45;by=1.05;}else if(owner){const speed=Math.min(1,Math.hypot(owner.vx,owner.vz)/5),step=rigs[owner.id].motion.stride,cushion=owner.receive/.22,touch=Math.sin(step*2)*.095*speed*(1-cushion);bx+=(owner.x+owner.receiveX-bx)*cushion*cushion;bz+=(owner.z+owner.receiveZ-bz)*cushion*cushion;bx+=Math.sin(owner.yaw)*touch;bz+=Math.cos(owner.yaw)*touch;by+=Math.max(0,Math.sin(step*2))*.065*speed;}ball.position.set(bx,Math.max(.36,by),bz);ball.rotation.set(s.ball.spin*.7,0,s.ball.spin);
@@ -187,7 +212,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   ballShadow.position.set(bx,.055,bz);ballShadow.scale.setScalar(1+s.ball.y*.16);(ballShadow.material as T.MeshBasicMaterial).opacity=.4/(1+s.ball.y*.35);
   if(anim>0){trailAge+=anim;if(trailAge>.035){trailAge=0;const dot=trail[cursor++%trail.length],speed=Math.hypot(s.ball.vx,s.ball.vz),shot=speed>27,size=s.ball.owner<0&&speed>12&&!stage.reduced?(shot?.2:.12):0;dot.position.copy(ball.position);dot.scale.setScalar(size);dot.visible=size>0;trailMaterial.color.copy(s.teamStrike&&shot?trailSpecial:shot?trailShot:trailPass);}for(const dot of trail)if(dot.visible){dot.scale.multiplyScalar(Math.exp(-anim*4));if(dot.scale.x<.012)dot.visible=false;}}
   if(s.event!==lastEvent){lastEvent=s.event;if(s.eventKind==='shot'&&(s.shotMoment>0||s.cleanStrike)){shotFlash=1;releaseRing.position.set(s.eventX,.08,s.eventZ);releaseRing.material.color.copy(s.cleanStrike?cleanCyan:releaseBase);}if(['shot','goal','hit','post','save'].includes(s.eventKind))stage.burst(s.eventX,.6,s.eventZ,s.eventKind==='goal'?2:1);
-   if(s.eventKind==='goal'){punch=1;shake=.9;goalFlash=1;throwConfetti(s.eventX,s.eventZ);}else if(s.eventKind==='save')punch=Math.max(punch,.25);else if(s.eventKind==='hit')shake=Math.max(shake,.3);}
+   if(s.eventKind==='goal'){punch=1;shake=.9;goalFlash=1;throwConfetti(s.eventX,s.eventZ);fireworks=s.shootout.active?1:3;fireworkClock=0;fireworkSide=Math.sign(s.eventX)||1;}else if(s.eventKind==='save')punch=Math.max(punch,.25);else if(s.eventKind==='hit')shake=Math.max(shake,.3);}
   if(s.nearMiss!==lastNearMiss){lastNearMiss=s.nearMiss;punch=Math.max(punch,.4);shake=Math.max(shake,.35);}
   for(const net of nets){const active=celebrating&&Math.sign(s.eventX)===net.side&&!stage.reduced;if(!active&&!net.dirty)continue;const t=elapsed,amount=active?Math.sin(t*14)*Math.exp(-t*3.8)*.45:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],falloff=Math.exp(-((x-s.eventZ*net.side)**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*falloff:0));}net.attribute.needsUpdate=true;net.dirty=active;}
   // Camera: charge focus on the shooter; a gentle push toward the scorer while celebrating.
@@ -200,11 +225,12 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   const motion=!stage.reduced,focus=motion?focusAmount:0;
   // Follow cam (Oct 9 2026 playtest): in live play the view eases in a little and drifts with the ball, so players and
   // the ball read bigger on phones. It hands over to the charge focus, and snaps back to the whole pitch when play stops
-  // (dt 0: ready, paused, full time). Reduced motion and the rotated portrait view keep the fixed full-pitch camera.
-  const followOn=follow&&motion&&!portrait;followAmount=dt>0?followAmount+((followOn?1:0)-followAmount)*(1-Math.exp(-dt*2.5)):followOn?followAmount:0;
-  if(dt>0){const limX=27*(1-1/FOLLOW_ZOOM)+.6,limZ=14*(1-1/FOLLOW_ZOOM)+.4,k=1-Math.exp(-dt*2.2);const carrier=s.ball.owner>=0?s.players[s.ball.owner]:null,ahead=carrier&&!carrier.keeper?(carrier.team===0?3.2:-2.2):0;followPan.x+=(Math.max(-limX,Math.min(limX,s.ball.x+ahead))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
+  // (dt 0: ready, paused, full time). Reduced motion keeps the fixed full-pitch camera (portrait follows too since Oct 25 2026).
+  const followOn=follow&&motion;followAmount=dt>0?followAmount+((followOn?1:0)-followAmount)*(1-Math.exp(-dt*2.5)):followOn?followAmount:0;
+  if(dt>0){const limX=27*(1-1/followZoom)+.6,limZ=14*(1-1/followZoom)+.4,k=1-Math.exp(-dt*2.2);const carrier=s.ball.owner>=0?s.players[s.ball.owner]:null,ahead=carrier&&!carrier.keeper?(carrier.team===0?3.2:-2.2):0;// Portrait: pan a little past the pitch ends so the attacked goal clears the top HUD and Gold's goal clears the thumb buttons.
+   followPan.x+=(Math.max(-limX-(portrait?2:0),Math.min(limX+(portrait?4:0),s.ball.x+ahead-(portrait?2.2:0)))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
   const lead=followAmount*(1-focus),offsetX=followPan.x*lead+cameraFocus.x*focus,offsetZ=followPan.z*lead+cameraFocus.z*focus;
-  const zoom=1+(FOLLOW_ZOOM-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
+  const zoom=1+(followZoom-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
   stage.camera.position.copy(cameraHome);stage.camera.position.x+=offsetX;stage.camera.position.z+=offsetZ;
   if(motion&&shake>0){stage.camera.position.x+=Math.sin(clock*53)*shake*.35;stage.camera.position.y+=Math.sin(clock*61)*shake*.2;}
   stage.camera.lookAt(offsetX,.8*focus,offsetZ);
@@ -214,6 +240,9 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   shotFlash=Math.max(0,shotFlash-dt*2.8);releaseRing.visible=shotFlash>0&&!stage.reduced;releaseRing.scale.setScalar(1+(1-shotFlash)*7);releaseRing.material.opacity=shotFlash;
   goalFlash=Math.max(0,goalFlash-dt*.8);
   glassFloor.update(dt,s.ball.x,s.ball.z,s.charge,Math.max(shotFlash,stage.reduced?0:goalFlash));
+  // Fireworks over the scoring end: three staggered bursts from the shared particle pool (stage.burst skips reduced motion).
+  if(fireworks>0&&dt>0){fireworkClock+=dt;if(fireworkClock>=.18){fireworkClock=0;fireworks--;stage.burst(fireworkSide*(23+fireworks*1.2),3.2+fireworks*.9,(fireworks-1)*6.5,1.6);}}
+  if(!stage.reduced&&dt>0){for(const f of flags)f.rotation.y=f.userData.base+Math.sin(clock*(3.4+s.crowd*1.4)+f.userData.phase)*.32;const beam=.035+goalFlash*.045+(s.charge>.6?.01:0);if(Math.abs(beamMaterial.opacity-beam)>.002)beamMaterial.opacity=beam;}
   stepFans(dt,s.crowd);stepConfetti(anim>0?dt:0);
   stage.effects(anim>0?dt:0);stage.lighting(s.time);
   // Portrait play attacks upward; controls are transformed into this view.
@@ -221,5 +250,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  overlays.push(ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,gauge,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
  fit();update(0);return{stage,fit,update,screenAxes,rigs,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
   /** Impact hit-stop (strikerFeel.strikerImpact): freeze the bodies for `seconds` and punch the camera by `kick`. */
-  impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;}};
+  impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;},
+  /** Full-time outro: a few seconds of win / lose / draw body language after the whistle. Returns its length (0 = none, reduced motion). */
+  startOutro:(winner:number)=>{if(stage.reduced)return 0;outroWinner=winner;outroStar=strikerOutroStar(match.state.players,match.state.goalsBy,winner);outroT=STRIKER_OUTRO;if(winner===0)throwConfetti(20,0);return STRIKER_OUTRO;},get outroing(){return outroT>0;}};
 }
