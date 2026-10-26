@@ -29,3 +29,9 @@ export function lessonHoldsCards(s:{launching:boolean;chosen:boolean;quiz:boolea
  if(!s.chosen)return s.launching;
  return s.quiz||s.rewatch||s.playing||!s.quizEnded;
 }
+/**
+ * Payday waits behind a "Pick a card" (Oct 26 2026, QA 4): a pending offer always opens first (CardOfferHost has no "later"; an
+ * offer stays pending until a card is chosen), so the payday card shows only once no offer is open or pending. IslandJobs earns
+ * a first job's offer in the same effect that sets payday, so the order is always Pick a card, then payday, with no flash between.
+ */
+export function paydayWaits(s:{offerOpen:boolean;offerPending:boolean}):boolean{return s.offerOpen||s.offerPending;}
