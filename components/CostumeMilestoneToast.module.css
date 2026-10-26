@@ -10,3 +10,12 @@
 
 /* Ride unlock toast list (RideUnlockToast): balanced lines so a ride name never dangles. */
 .toast .list{text-wrap:balance}
+
+/* Water lesson cards (SwimLessonToast, Oct 26 2026, owner; docs/QA_AUDIT_OCT25.md #12): compact (about half the old height) so they
+   no longer cover the top ~100 px of the sea while swimming, and they leave on their own at 4.2 s (the HUD stack's hudStackOut fades
+   them out, globals.css). The small
+   "Coaching idea" kind line is visually folded (it stays in the button's accessible name), like the landscape dock. */
+.toast.water{gap:0;padding:6px 14px;max-width:min(340px,calc(100vw - 2 * var(--phone-gutter)))}
+.toast.water b{font-size:16px}
+.toast.water span{font-size:12px;line-height:1.25}
+.toast.water .kind{display:none}

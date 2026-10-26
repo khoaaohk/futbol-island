@@ -9,6 +9,8 @@ import styles from './CostumeMilestoneToast.module.css';
 import HudSlot from './HudStack';
 import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 
+/** How long a water lesson card stays (ms) before it fades out (HudStack exit). */
+export const WATER_TOAST_MS=4200;
 const readShown=(key:string)=>{try{return localStorage.getItem(key)==='1';}catch{return true;}};
 const saveShown=(key:string)=>{try{localStorage.setItem(key,'1');}catch{}};
 /** The same toast for the sharks' football hook (water P1a, `which="shark"`): its own key, bumped by waterStore.sharkLesson. */
@@ -27,9 +29,12 @@ export default function SwimLessonToast({blocked:held,which='swim'}:{blocked:boo
  useEffect(()=>{if(!due||shown||readShown(L.key))return;toastLane.want(which);if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request(which))return;saveShown(L.key);L.count();setShown(true);},500);
   return ()=>clearTimeout(timer.current);},[due,blocked,shown,L,which]);
- useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(false),5000);return ()=>{clearTimeout(t);toastLane.release(which);};},[shown,which]);
+ // Compact and auto-fading (Oct 26 2026, owner; docs/QA_AUDIT_OCT25.md #12): the card covered the top ~100 px of the sea while
+ // swimming. Now one short card (title + line; the "Coaching idea" label folds into its accessible name) that leaves on its own at
+ // WATER_TOAST_MS, fading out through the HUD stack's exit animation.
+ useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(false),WATER_TOAST_MS);return ()=>{clearTimeout(t);toastLane.release(which);};},[shown,which]);
  if(!shown)return null;
- return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-swim-lesson={which} onClick={()=>setShown(false)}>
-  <b>{L.lesson.title}</b><span className={styles.list}>{L.lesson.text}</span><span>{L.lesson.kind}</span>
+ return <HudSlot><button type="button" className={`${styles.toast} ${styles.water}`} data-hud-slot="toast" role="status" data-swim-lesson={which} aria-label={`${L.lesson.title}. ${L.lesson.text} (${L.lesson.kind})`} onClick={()=>setShown(false)}>
+  <b>{L.lesson.title}</b><span className={styles.list}>{L.lesson.text}</span><span className={styles.kind}>{L.lesson.kind}</span>
  </button></HudSlot>;
 }
