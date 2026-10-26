@@ -37,7 +37,7 @@ export function createIslandArcadePlayer(color:string,reduced:boolean,index:numb
   intent.receive=o?.receive??0;intent.receiveProgress=o?.receiveProgress;
   intent.dive=o?.dive;intent.keeper=o?.keeper??0;intent.jockey=o?.jockey??0;
   jumpPose.progress=o?.jumpProgress??0;jumpPose.height=o?.jumpHeight??0;intent.jump=o?.jumpProgress===undefined?undefined:jumpPose;
-  intent.skill=o?.skill;intent.move=o?.move;
+  intent.skill=o?.skill;intent.move=o?.move;intent.plant=o?.plant;intent.squash=o?.squash;intent.squashSerial=o?.squashSerial;
   rig.setExpression((o?.stun??0)>.1?'beaten':(o?.celebrate??0)>.1?'happy':(o?.charge??0)>.1?'determined':(o?.anticipate??0)>.2||o?.dive?'focused':'neutral');
   intent.reaction=slide>.04?'slide':(o?.stun??0)>.1?'stumble':o?.reaction;intent.reactionProgress=slide>.04?Math.min(.9,slideAge/.75):(o?.stun??0)>.1?(1-(o?.stun??0))*.7:o?.reactionProgress;
   body.position.set(0,0,0);body.rotation.set(0,0,0);body.scale.setScalar(1);
