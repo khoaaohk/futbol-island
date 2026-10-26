@@ -98,7 +98,7 @@ export const JOBS:JobDef[]=[
  // ≥ 1.6 m from them, ≥ 1 m outside the touchline and ≥ 2 m from the sidewalk (tests/job-boards.cjs checks it on the real town).
  // The sign stands on the same grass at the north end of the session, facing the north road the players arrive from.
  {id:'cone-setup',title:'Set out the cones',role:"Coach's assistant",place:'Club Grounds (9v9), beside the pitch',board:{x:185.5,z:-89,yaw:0},color:'#d9772f',kind:'collect',prop:'cone',
-  targets:[{x:183,z:-110},{x:188,z:-110},{x:188,z:-120},{x:183,z:-120},{x:184.5,z:-94},{x:186.5,z:-94},{x:184.5,z:-99.5},{x:186.5,z:-99.5}],radius:1.4,
+  targets:[{x:183,z:-110},{x:188,z:-110},{x:188,z:-120},{x:183,z:-120},{x:184.5,z:-94},{x:186.5,z:-94},{x:184.5,z:-99.5},{x:186.5,z:-99.5}],radius:1.6,/* 1.4 → 1.6 (Oct 25 2026): a forgiving reach on a phone; the nearest mark arms */
   intro:'Tonight\'s session needs a 10 m passing channel and two dribbling gates, set out on the grass beside the pitch, so the match can keep going. Carry the cone stack to each glowing mark and place a cone on it.',howTo:'Carry the cone stack to each mark beside the pitch and place a cone.',unit:'Cones placed',
   work:{target:[{id:'place',label:'Place cone',mode:'tap',hint:'Set the cone down exactly on the mark.'}]},
   lesson:'Coaches set drills with care: a 10 m channel gives passers time on the ball, and narrow gates reward close control. Set up beside the pitch, never on it while a game is being played. The right space makes practice feel like a real match.'},
@@ -133,7 +133,7 @@ export const JOBS:JobDef[]=[
    {start:.15,step:.03,min:.71,max:.99,leak:.06},
    {start:.1,step:.028,min:.75,max:.95,leak:.07}]}},
  {id:'goal-anchor',title:'Anchor the goals',role:'Groundskeeper',place:'Old Town Ground (7v7)',board:{x:22,z:-110.5,yaw:0},color:'#8a6a3c',kind:'collect',prop:'peg',placed:true,
-  targets:[{x:8.55,z:-107.4},{x:11,z:-107.7},{x:13.45,z:-107.4},{x:13.45,z:-52.6},{x:11,z:-52.3},{x:8.55,z:-52.6}],radius:1.2,
+  targets:[{x:8.55,z:-107.4},{x:11,z:-107.7},{x:13.45,z:-107.4},{x:13.45,z:-52.6},{x:11,z:-52.3},{x:8.55,z:-52.6}],radius:1.5,/* 1.2 → 1.5 (Oct 25 2026): the goal frame stands right beside the pegs */
   intro:'Before anyone plays, both goals must be pegged down. Stand at each glowing spot behind the goals and hammer a ground peg in with three hits.',howTo:'Stand at each peg and hammer it down: 3 hits.',unit:'Pegs hammered',
   work:{target:[{id:'hammer',label:'Hammer',mode:'tap',count:3,hint:'Hammer the peg down: three good hits.'}]},
   lesson:'Safety first: Law 1 says goals must be anchored securely to the ground, and portable goals can only be used if they are. A goal that isn\'t pegged down can tip over, so never swing or climb on the crossbar.',lessonSource:'https://www.theifab.com/laws/latest/the-field-of-play/'},

@@ -38,6 +38,7 @@ const floor=()=>0,at=q=>({x:q.x,y:0,z:q.z}),far={x:9999,y:0,z:9999};
 {const job=C.jobById('cone-setup'),run=R.startRun(job);R.stepRun(run,far,.1,floor);assert.match(R.runHint(run),/glowing mark .*8 cones to go/);
  const peg=C.jobById('goal-anchor'),pr=R.startRun(peg);R.stepRun(pr,far,.1,floor);assert.match(R.runHint(pr),/6 pegs to go/);
  const bottle=C.jobById('court-cleanup'),br=R.startRun(bottle);br.got[0]=true;R.stepRun(br,far,.1,floor);assert.match(R.runHint(br),/9 bottles to go/);}
+assert(C.jobById('cone-setup').radius>=1.6&&C.jobById('goal-anchor').radius>=1.5,'forgiving reaches for the cone marks and the goal pegs');
 // Every job (except the Bug squad, which has its own pill) has a hint at the start, so the panel never reads empty.
 for(const j of C.JOBS){if(j.swing)continue;const run=R.startRun(j);R.stepRun(run,far,.1,floor);assert(R.runHint(run).length>0,`${j.id}: a next-step hint at the start`);}
 {const bug=C.JOBS.find(j=>j.swing);if(bug)assert.equal(K.coachLine(R.startRun(bug)),'','the Bug squad keeps its own copy');}
