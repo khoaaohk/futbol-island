@@ -53,5 +53,5 @@ const toast=read('components/ReefHintToast.tsx'),town=read('components/Town.tsx'
 assert.match(toast,/toastLane\.request\('reef'\)/);assert.match(toast,/<HudSlot>/);assert.match(toast,/data-hud-slot="toast"/);
 assert.equal((toast.match(/setTimeout\(/g)||[]).length,2,'one wait + one hide timeout');assert(!/localStorage|setInterval|requestAnimationFrame/.test(toast));
 assert.match(town,/<ReefHintToast blocked=\{toastBlocked\}\/>/);assert.match(town,/const reefHints=createReefHints\(\);/);
-assert.match(town,/reefHints\.step\(active&&!learning\?dt:0,location\.x,location\.z,active&&!learning&&!lessonRef\.current&&!fieldMenu\.current&&!jobActiveRef\.current&&!dive\.diving&&\(water\.swimming\|\|rideRef\.current==='jetpack'\)/,'eligible: flying or swimming, never in a job, lesson, menu or the dive');
+assert.match(town,/reefHints\.step\(active&&!learning\?dt:0,location\.x,location\.z,active&&!learning&&!lessonRef\.current&&!fieldMenu\.current&&!jobActiveRef\.current&&!dive\.diving&&!dive\.session\.state\.near\/\*[^*]*\*\/&&\(water\.inWater\/\*[^*]*\*\/\|\|rideRef\.current==='jetpack'\)/,'eligible: flying, swimming or wading in (Oct 25 2026), never in a job, lesson, menu, the dive or over a zone');
 console.log('reef-discovery ok (far: '+[...R.farDiveSpotIds()].join(', ')+')');
