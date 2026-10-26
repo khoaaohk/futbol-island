@@ -49,7 +49,7 @@ import {frameCapSlot,FRAME_DT_MAX} from '@/lib/town/frameCap';
 import {createIdleRide,IDLE_FOOT_AFTER_MS} from '@/lib/town/idleRide';
 import {createIslandHeat} from '@/lib/graphics/islandHeat';
 import {createFocusMode} from '@/lib/graphics/focusMode';
-import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,setWaterDetail} from '@/lib/graphics/waterSurface';
+import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,setWaterDetail,setSunGlitter,sunGlitterLevel} from '@/lib/graphics/waterSurface';
 import {heatOptions,batterySaverOn} from '@/lib/graphics/heatTier';
 import {applyLambertScenery,sharpenSceneTextures} from '@/lib/graphics/lambertScenery';
 import {emitIslandFrame} from '@/lib/town/islandFrames';
@@ -2005,7 +2005,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(fieldMenu.current||mapRef.current||settingsRef.current&&!onboardingRef.current||lessonRef.current)visibleVenue=null;
 
       world.updateArcade(elapsed,reduced);
-      {const stillWater=reduced||heat.staticAmbience||heat.governor.last.state==='slow';world.updateWater(active&&!learning?dt:0,stillWater);setWaterDetail(stillWater?0:quality.phone?1:2);
+      {const stillWater=reduced||heat.staticAmbience||heat.governor.last.state==='slow';world.updateWater(active&&!learning?dt:0,stillWater);setWaterDetail(stillWater?0:quality.phone?1:2);setSunGlitter(sunGlitterLevel(heat.tier,heat.saver,heat.governor.last.state==='slow',reduced));/* tropical water glitter + shallow caustics (docs/TROPICAL_WATER_OCT26.md) */
        clearWin.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),WATER_UNIFORMS.uShore.value,camera);swimClear.hideBed=clearWin.strength>0;
        divePreview.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),!dive.diving);
        swimClear.update(dt,player.root.position.x,player.root.position.z,player.root.rotation.y,water.inWater?water.pose.w:0,waterProbe.depth,WATER_LEVEL,SWIM_ROOT_DEPTH+water.state.dive,beanSkinOf(player)?.meshes??null,water.state.under);

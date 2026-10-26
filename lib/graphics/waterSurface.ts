@@ -58,6 +58,9 @@ export const WATER_UNIFORMS={
  uWaterTime:{value:0},
  /** Waves elapsed (swashClock(uWaterTime)), set with the clock. */uSwashClock:{value:0},
  /** 0..2, see above. */uWaterDetail:{value:2},
+ /** 0..1 sun glitter + shallow caustic light near the camera (tropical water, Oct 26 2026; docs/TROPICAL_WATER_OCT26.md): 1 cool,
+  *  0 at heat tier >= 2, the governor's "slow" state, Battery saver and reduced motion (the still water path draws none anyway).
+  *  Set by setSunGlitter once per frame (Town); the shaders skip the work on a uniform branch when it is 0. */uSunGlitter:{value:1},
  /** 0..1 strength of the shore effects (fades in/out with a fishing session). */uShore:{value:0},
  uShoreTex:{value:empty as T.Texture},
  /** World rect of the shore texture: minX, minZ, sizeX, sizeZ. */uShoreBox:{value:new T.Vector4(0,0,1,1)},
@@ -77,6 +80,9 @@ export function setDiveSpots(spots:readonly {x:number;z:number;radius:number;blo
 /** Advance the shared water clock. Call once per rendered frame; `still` (reduced motion, static-ambience heat tiers) holds it. */
 export function stepWaterTime(dt:number,still:boolean){if(!still&&dt>0){const t=WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;WATER_UNIFORMS.uSwashClock.value=swashClock(t);}}
 export function setWaterDetail(level:number){WATER_UNIFORMS.uWaterDetail.value=level;}
+/** Glitter / shallow caustics gate (uSunGlitter): off when hot (tier >= 2), slow, in Battery saver or with reduced motion. */
+export function sunGlitterLevel(tier:number,saver:boolean,slow:boolean,reduced:boolean){return saver||slow||reduced||tier>=2?0:1;}
+export function setSunGlitter(level:number){WATER_UNIFORMS.uSunGlitter.value=level;}
 export function setIsleField(texture:T.Texture|null,box:T.Vector4|null){
  WATER_UNIFORMS.uIsleTex.value=texture??empty;if(box)WATER_UNIFORMS.uIsleBox.value.copy(box);WATER_UNIFORMS.uIsle.value=texture?1:0;
 }
@@ -171,7 +177,7 @@ float swimClearAlpha(vec2 xz,float d){float r=distance(xz,uSwimXZ),a=mix(${SWIM_
  * so the seabed, coral and sharks under it show, fading back to opaque over the last CLEAR_WIN.fade of its radius (no edge). Centre .xy (the point the camera looks at), strength in .z
  * (eased; 0 = the window is off), radius in .w (m, set per heat tier and camera height). ONE vec4 uniform. Like the swim disc, only the blended program runs it.
  */
-export const CLEAR_WIN={radius:35,fade:.3,band:[16,26] as const,alpha:[.14,.42] as const} as const;// Oct 19 2026 audit: .16/.5 -> .14/.42, the coral colour reads through
+export const CLEAR_WIN={radius:35,fade:.3,band:[16,26] as const,alpha:[.2,.42] as const} as const;// Oct 19 2026 audit: .16/.5 -> .14/.42, the coral colour reads through; Oct 26 2026 tropical water: .2 at the edge (the lagoon turquoise reads over the tan sand, not olive)
 /**
  * Low-frequency world noise (two octaves, ~90 m and ~140 m, domain-warped sines; GLSL `clearWinW` is the same formula) that
  * gently varies the clear band's outer edge: `clearWinK` scales the shore distance (0.85 = a long smooth bay about 5 m wider,
@@ -208,7 +214,10 @@ float clearWinAlpha(float m,float d){return mix(1.,mix(${CLEAR_WIN.alpha[0].toFi
  *   islandLighting's time of day): warm white by day, honey at sunset, moon-pale and ~a quarter as bright at night.
  */
 export const WATER_GLIMMER_GLSL=/* glsl */`
+uniform float uSunGlitter;
 float glimHash(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+/** Two hashes for the price of ~one (tropical water, Oct 26 2026: the net's cells used two glimHash calls each, 18 per layer). */
+vec2 glimHash2(vec2 p){vec3 q=fract(vec3(p.xyx)*vec3(.1031,.103,.0973));q+=dot(q,q.yzx+33.33);return fract((q.xx+q.yz)*q.zy);}
 /** The point the camera looks at on the water (the view ray through the screen centre). */
 vec2 waterLook(){vec3 fw=-vec3(viewMatrix[0][2],viewMatrix[1][2],viewMatrix[2][2]);return cameraPosition.xz+fw.xz*(max(cameraPosition.y+.43,1.)/max(-fw.y,.15));}
 /** Sun-reflection weight, a wide lobe for a steep (jetpack) camera so it never vanishes. */
@@ -222,20 +231,27 @@ float waterRibbon(vec2 q,float n,float t,float sc,float pxm){
  // Oct 19 2026 (user, "Tide Bound" caustic reference; the warped-sine net read as thick parallel stripes from the jetpack).
  float cs=sc*2.1;vec2 p=q/cs;p+=.18*vec2(sin(p.y*2.1+t*.6+n*3.),sin(p.x*1.9-t*.5-n*3.));
  vec2 c=floor(p),f=p-c;float d1=8.,d2=8.;
- for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(x,y),h=fract(vec2(glimHash(c+o),glimHash(c+o+17.3)));
+ for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(x,y),h=glimHash2(c+o);
   vec2 r=o+.5+.38*sin(t*(.3+.3*h)+6.2832*h)-f;float e=dot(r,r);if(e<d1){d2=d1;d1=e;}else d2=min(d2,e);}
  float w=.034+1.5*pxm/cs;// pxm: the pixel footprint (m), taken outside any branch
  return (1.-smoothstep(0.,w,sqrt(d2)-sqrt(d1)))*min(1.,.045/w*1.6)*(.3+.7*smoothstep(-.4,.9,sin(t*.7+p.x*2.3-p.y*1.7+n*4.)));}
-/** Sparse sun glitter (accent only): additive light, ALU only. */
-vec3 waterGlimmer(vec2 xz,float d,float lobe){
+/** Sun glitter (tropical water, Oct 26 2026, owner: "more light on the water showing sparkles", docs/TROPICAL_WATER_OCT26.md).
+ *  Replaces the blinking specks removed on Oct 20 ("remove those blinking glimmer"): each speck now swells in and out on a smooth
+ *  cosine (0.3-0.65 Hz, far under the 3 Hz flash limit; nothing pops); none on the still path (reduced motion, heat tiers
+ *  3-4). One cell layer (~0.55 m cells, ONE hash, ALU only), denser and brighter toward the sun's reflection (lobe), in drifting
+ *  clumps, coloured by the sun light. Only called inside the light net's near-camera branch, on a uniform gate (uSunGlitter: off
+ *  at heat tier >= 2 / Battery saver), and it fades out before a speck's core gets under ~1.5 px (pxm: pixel footprint, m), so
+ *  far away it costs nothing and on a low-res screen one compare. */
+vec3 waterGlitter(vec2 xz,float pxm,float lobe,float clump){
  #if NUM_DIR_LIGHTS>0
- if(uWaterDetail<.5)return vec3(0.);
- return vec3(0.);// Oct 20 2026 (user: "remove those blinking glimmer"): the sparkle specks are off; the light net is the surface light now
- float pxm=max(length(dFdx(xz)),length(dFdy(xz))),k=(1.-smoothstep(.08,.2,pxm/.75))*smoothstep(1.5,6.,d);if(k<=0.)return vec3(0.);
- vec2 p=xz/.75+uWaterTime*vec2(.07,.03),c=floor(p),f=p-c;float h=glimHash(c),dens=.04+.06*lobe;if(h>dens)return vec3(0.);
- float h2=fract(h*61.7+.13),h3=fract(h*23.3+.37),ph=fract(uWaterTime*(1.25+1.75*h2)+h3),rad=max(.11,1.3*pxm/.75);
- float g=smoothstep(0.,.18,ph)*(1.-smoothstep(.18,.5,ph))*(1.-smoothstep(rad*.4,rad,length(f-.2-.6*vec2(h2,h3))));
- vec3 sunL=directionalLights[0].color*.333;return vec3(1.,.96,.88)*mix(vec3(dot(sunL,vec3(.3,.59,.11))),sunL,.3)*(g*k*lobe*1.1);
+ if(uWaterDetail<.5)return vec3(0.);// the still path (reduced motion, heat tiers 3-4, governor slow): no glitter
+ float k=uSunGlitter*(1.-smoothstep(.055,.11,pxm));if(k<=0.)return vec3(0.);
+ vec2 p=xz*1.8+uWaterTime*vec2(.05,.021),c=floor(p),f=p-c;float h=glimHash(c);if(h>(.03+.2*lobe*lobe)*smoothstep(.3,.75,clump)*1.5)return vec3(0.);
+ float h2=fract(h*61.7+.13),h3=fract(h*23.3+.37),tw=.5-.5*cos(6.2832*(uWaterTime*(.3+.35*h2)+h3)),r=min(max(.6,12.*pxm),.95);
+ // A sharp core with a little four-point cross (a glint of sun, not a bubble), clustered in drifting patches (clump: the sea noise + ripple tile),
+ // white-gold whatever the sun's tint.
+ vec2 o=f-.25-.5*vec2(h2,h3);float l=length(o),g=1.-smoothstep(0.,r*.22,l)+.7*(1.-smoothstep(0.,r*r*.01,abs(o.x*o.y)))*(1.-smoothstep(r*.08,r*.75,l));
+ vec3 sunL=directionalLights[0].color*.333;return mix(vec3(dot(sunL,vec3(.3,.59,.11))),sunL,.2)*(g*tw*tw*k*(1.1+2.*lobe));
  #else
  return vec3(0.);
  #endif
@@ -252,7 +268,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
     if(uShore>.999&&shoreEdge(vWaterXZ)>.999){float cd=shoreSample(vWaterXZ).r;if(cd>.02&&cd<14.9){gl_FragColor=vec4(0.,0.,0.,1.);return;}}
-    float waterStreak=0.,waterLobe=.5;vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
+    float waterStreak=0.,waterLobe=.5;vec3 waterGlim=vec3(0.);vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
     // Dive shoals (water P2; Oct 20 2026 see-through rework): diveK = the shoal's weight here (1 at the heart, dissolving over a wide
     // band broken by low-frequency noise: no rim, no hard line), diveClr = how see-through (uDiveClear, the preview's seabed under it).
     // DIVE_SLOTS (2) nearest zones; a distance reject per slot, the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
@@ -287,11 +303,12 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #endif
     {
      // Depth: pale sandy shallows at the waterline, turquoise over the first metres, back to the open-sea teal by ~24 m.
-     vec3 shallowC=mix(vec3(.17,.56,.57),vec3(.05,.42,.53),smoothstep(.3,5.,dd));
+     // Tropical water (Oct 26 2026): a clearer lagoon turquoise (#3fd8d0-ish) at the edge into a clear aqua, then cerulean (same ops).
+     vec3 shallowC=mix(vec3(.04,.62,.7),vec3(.02,.44,.64),smoothstep(.3,5.,dd));
      float nearK=1.-smoothstep(3.,24.,dd);
      diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
      // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
-     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.02,.19,.4),smoothstep(25.,110.,dd)*.55);
+     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.015,.2,.47),smoothstep(25.,110.,dd)*.55);
      float crest=0.;
      if(uWaterDetail>.5){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
@@ -320,14 +337,16 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       // over the clear window, so they fade to a hint below ~18 m of camera height (the walking / flying views are unchanged).
       // A high (jetpack) camera sees many cells at once: the net eases to ~60% above ~20 m so it never becomes a sheet.
       waterStreak=st*reachS*(.75+.25*waterLobe)*(.2+1.3*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
-      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));
+      // Sun glitter (waterGlitter): near the camera only (this branch), off the strip's swash (dd), on a uniform gate.
+      if(uSunGlitter>0.)waterGlim=waterGlitter(vWaterXZ,pxS,waterLobe,nS+.5*ripple.r)*smoothstep(1.,3.5,dd);}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
      #endif
      // Dive shoals: no tint of their own; the depth colour above already reads dd (the shore's shallows palette).
     }`)
    // Swimming (swimClear.ts) and the clear window (clearWindow.ts): only the blended program (no OPAQUE define, used while either
    // is open) writes an alpha: it follows depth (clearer over the sand, bluer further out) and rises on the light streaks, so they
    // read as ribbons on the surface above the coral (they replace the window's old stretched light bands: one read fewer).
-   .replace('#include <opaque_fragment>',`vec3 waterGlim=waterGlimmer(vWaterXZ,d,waterLobe);
+   .replace('#include <opaque_fragment>',`
     #ifndef OPAQUE
     {float wm=clearWinMask(vWaterXZ,d);outgoingLight+=min(waterStreak,1.2)*max(wm,diveClr)*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
      diffuseColor.a=min(min(swimClearAlpha(vWaterXZ,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d))),mix(1.,clearWinAlpha(1.,dd),diveClr));
@@ -342,6 +361,6 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #endif
     #include <opaque_fragment>`);
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v9';
+ material.customProgramCacheKey=()=>'island-ocean-water-v10';
  material.needsUpdate=true;
 }

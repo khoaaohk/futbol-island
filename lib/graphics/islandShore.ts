@@ -204,27 +204,35 @@ function isleCpuField(dist:Float32Array,high:Float32Array):IsleCpuField{
 // foam tinted see-through aqua, desktop glints, the player/ball interaction block (shoreFoamFx.ts), and no lace fetch far away.
 // Same two texture reads as before (field + one lace fetch, now four noises in it), one fewer far from the camera.
 const STRIP_GLSL=/* glsl */`
- vec4 sh=isleSample(vWaterXZ);float n1=sh.g,n2=sh.b,beach=sh.a;
+ // Tropical water (Oct 26 2026): the field's noises / beach flag and the fishing-box fade come from the vertex shader (vSh: the
+ // 1 m strip grid over a 2 m bilinear field reads the same), so the fragment no longer fetches the field: one texture read and
+ // ~30 ALU ops fewer per strip fragment, which pay for the shallow caustics, glints and wet sheen below.
+ float n1=vSh.x,n2=vSh.y,beach=vSh.z;
  // Inside a fishing box the fishing strip draws the shore instead (same fade, opposite sense).
- float own=1.-uShore*shoreEdge(vWaterXZ);
+ float own=vSh.w;
  // d: the drawn waterline (the flat sand's edge, + sea); dt: the true one. The strip never climbs a deck, a kerb or a rock (high),
  // and past the true waterline it fades into the ocean, whose depth gradient starts from the same drawn line.
- float t=uWaterTime,d=vVis,dt=vTrue,high=1.-smoothstep(.38,.42,vLift),outA=1.-smoothstep(.2,1.7,dt),bandA=1.-smoothstep(1.9,2.5,dt);
- vec3 wetSand=vec3(.5,.36,.17),sheetC=vec3(.36,.78,.86),shallowC=vec3(.04,.46,.6),foamC=vec3(.97,.98,.96);
- vec4 lz=vec4(.5);float lace=.5,e,rush,wet,breaker=0.,mark=0.,markBub=0.,sparkle=0.;
+ float t=uWaterTime,d=vVis,dt=vTrue,high=1.-smoothstep(.38,.42,vLift),outA=vBand.x,bandA=vBand.y;// outA / bandA: per vertex (vBand, smooth over 0.6-1.5 m)
+ vec3 wetSand=vec3(.5,.36,.17),sheetC=vec3(.1,.72,1.),shallowC=vec3(.02,.5,.78),foamC=vec3(.97,.98,.96);
+ vec4 lz=vec4(.5);float lace=.5,e,rush,wet,breaker=0.,mark=0.,markBub=0.,sparkle=0.,cau=0.;
  if(uWaterDetail<.5){
   // Still: the water a little way up the sand, a soft foam band and a damp band behind it.
   e=-.25;rush=.5;wet=smoothstep(-1.4,-.2,d-e)*.5*high;
  }else{
   // One fetch of the four baked noises; none past STRIP_FAR (gradients taken outside the branch, so the mip choice stays right).
   vec2 luv=vWaterXZ*.19+vec2(t*.004,t*.002),gx=dFdx(luv),gy=dFdy(luv);
-  if(vFar<.999)lz=mix(textureGrad(uWaterNoise,luv,gx,gy),vec4(.5),vFar);
+  if(vFar<.999){lz=mix(textureGrad(uWaterNoise,luv,gx,gy),vec4(.5),vFar);
+   // Near the camera, not hot (uSunGlitter): sunlight caustics on the sand under the thin water (the big-lace noise's contour line
+   // at a level that breathes with the bubble noise: a slowly shifting web, no extra read) and soft glints on the sheet and foam
+   // (the cell noise, one slow sine, ~0.4 Hz).
+   if(uSunGlitter>0.){float k=uSunGlitter*(1.-vFar),lv=.5+.17*sin(t*.55+lz.b*4.);cau=k*max(1.-abs(lz.r-lv)*13.,0.);
+    sparkle=k*smoothstep(.76,.95,lz.a)*max(sin(t*2.6+lz.r*31.+lz.b*17.)*4.-3.,0.);}}
   lace=lz.g;
   // The swash cycle, in step with the ocean's swell (same irregular clock, same phase offset n1); each wave runs up a different
   // height (blended between neighbouring noise bands so nothing seams along the beach), and every few waves a set runs further.
   float cyc=uSwashClock+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.32;
   float nb=n2*3.,fb=floor(nb),amp=(.6+.4*mix(waterHash(ci+fb),waterHash(ci+fb+1.),smoothstep(0.,1.,nb-fb)))*waveSet(ci);
-  float reachB=mix(.3,1.5*(.75+.5*n2),beach)*high,reachM=min(reachB*amp,1.95);
+  float reachB=vBand.z*high,reachM=min(reachB*amp,1.95);
   float r=ph<UP?sin(1.5708*ph/UP):pow(1.-(ph-UP)/(1.-UP),1.4);
   e=.1-reachM*r;rush=ph<UP?mix(.5,1.,smoothstep(0.,.1,ph)):.25+.75*r;
   // Wet sand: when did the backwash last uncover this point? Dries over ~2.5 s; a damp band always stays by the water.
@@ -239,16 +247,14 @@ const STRIP_GLSL=/* glsl */`
   // The swell breaking over the slope just before it surges up the sand: a soft white line rolling in, a few small gaps in it
   // (fades out at the cycle's wrap: no seam along the beach).
   float dc=SWELL_L*(1.-ph)-.3,bl=1.-smoothstep(0.,.26+.06*dc,abs(d-dc));breaker=bl*bl*amp*smoothstep(3.2,1.,dc)*smoothstep(-.2,.6,dc)*smoothstep(.22,.5,lace+.08*n1)*.6;
-  // Desktop only: a few glints twinkling on the thin sheet and the foam (one sine, no extra read).
-  if(uWaterDetail>1.5)sparkle=smoothstep(.78,.95,lz.a)*smoothstep(.8,1.,sin(t*2.6+lz.r*31.+lz.b*17.));
  }
  // Soft, slightly irregular edge (5 m noise + the lace), never a jittery line.
- float u=d+(n2-.5)*.32+(lace-.5)*.16,cover=smoothstep(e-.05,e+.07,u),wd=max(u-e,0.);
+ float u=vBand.w+(lace-.5)*.16,cover=smoothstep(e-.05,e+.07,u),wd=max(u-e,0.);
  // Water: a clear sheet over the sand at its edge, turquoise over the sand slope and out to where the ocean takes over.
  vec3 waterC=mix(sheetC,shallowC,smoothstep(-.1,1.1,max(d,0.)+wd*.4));
- float waterA=mix(.5,.95,smoothstep(0.,.8,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
+ float waterA=mix(.66,.95,smoothstep(0.,.8,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
  // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
- waterA*=1.-.55*clearWinMask(vWaterXZ,1.);
+ waterA*=1.-.35*clearWinMask(vWaterXZ,1.);// Oct 26 2026 tropical water: .55 -> .35, the skirt reads lagoon turquoise, not olive
  wet=max(wet,mark*.8);
  vec3 col=mix(wetSand*(1.-.16*mark),waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
  // Foam: a bright soft edge with some body that breaks into lacy patches as the wave slows and slides back (big lace R and the
@@ -262,9 +268,12 @@ const STRIP_GLSL=/* glsl */`
  // The player and the ball (shoreFoamFx.ts): foam parts round the ankles, rings from steps and the ball. Uniform branch: off = free.
  if(uFoamFxOn>.5){vec2 fx=foamFx(vWaterXZ,max(cover,foam));foam=max(foam*(1.-fx.x),fx.y*high*bandA);}
  // Thin foam is see-through and picks up the water's aqua; thick foam is white.
- col=mix(col,mix(vec3(.78,.92,.94),foamC,smoothstep(.15,.75,foam)),foam);alpha=max(alpha,foam*(.6+.35*foam));
+ col=mix(col,mix(vec3(.74,.95,.93),foamC,smoothstep(.15,.75,foam)),foam);alpha=max(alpha,foam*(.6+.35*foam));
  diffuseColor=vec4(col,alpha*own);
- float waterLight=(foam*.2+sparkle*.55*max(cover*waterA,foam))*own;vec3 waterGlow=waterC*cover*.06*own;`;
+ // Light: foam glow, glints, the caustic web on the sheet (clear water over sand: strongest at the edge, gone under foam), and a
+ // faint sky sheen on freshly wet sand above the waterline.
+ float waterLight=(foam*.2+sparkle*.55*max(cover*waterA,foam)+cau*.32*cover*(1.-foam)*clamp(1.2-.7*d,0.,1.))*own;
+ vec3 waterGlow=(waterC*cover*.06+wet*(1.-cover)*vec3(.05,.065,.075))*own;`;
 
 /** The island shoreline: call `bake` once with the renderer (Town, at mount). `group` is a scenery root (world.setVisible). */
 export function createIslandShore(group:T.Group){
@@ -323,13 +332,13 @@ export function createIslandShore(group:T.Group){
    const waterNoise=noise;
    material.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,SHORE_FOAM_UNIFORMS,{uWaterNoise:{value:waterNoise}});
-    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;'+SHORE_PULL_GLSL)
-     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;uniform sampler2D uWaterNoise;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand;'+SHORE_GLSL+SHORE_PULL_GLSL)
+     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);{vec4 sh=isleSample(vWaterXZ);vSh=vec4(sh.gba,1.-uShore*shoreEdge(vWaterXZ));vBand=vec4(1.-smoothstep(.2,1.7,shore),1.-smoothstep(1.9,2.5,shore),mix(.3,1.5*(.75+.5*sh.b),sh.a),vis+(sh.b-.5)*.32);}');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand;uniform sampler2D uWaterNoise;uniform float uSunGlitter;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
      .replace('#include <map_fragment>',STRIP_GLSL)
      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
    };
-   material.customProgramCacheKey=()=>'island-shore-strip-v6';
+   material.customProgramCacheKey=()=>'island-shore-strip-v7';
    for(const tile of tiles.values()){
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(tile.positions,3));g.setAttribute('lift',new T.Float32BufferAttribute(tile.lifts,1));g.setAttribute('shore',new T.Float32BufferAttribute(tile.shores,1));g.setAttribute('vis',new T.Float32BufferAttribute(tile.viss,1));g.setAttribute('open',new T.Float32BufferAttribute(tile.opens,1));
     g.setAttribute('normal',new T.Float32BufferAttribute(new Float32Array(tile.positions.length).map((_,i)=>i%3===1?1:0),3));g.setIndex(tile.indices);g.computeBoundingSphere();geometries.push(g);
