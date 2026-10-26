@@ -54,6 +54,8 @@ export const diveBedRoom=(bed:number)=>{const t=Math.max(0,Math.min(1,(bed-DIVE.
  return Math.max(0,Math.min(bed-SWIM_ROOT_DEPTH-DIVE.body,DIVE.depth*t*t*(3-2*t)));};
 /** The shelf's share of the dive (0 at DIVE.minWater − 0.1 m of water, 1 at the shelf's DEPTH_MAX): the diver rises toward a shore. */
 export const diveShore=(depth:number)=>{const t=Math.max(0,Math.min(1,(depth-(DIVE.minWater-.1))/(DEPTH_MAX-(DIVE.minWater-.1))));return t*t*(3-2*t);};
+/** The surface glide's ease in / out (per s) and how much it slows the stroke clock (the arms hold ahead, the kick eases). */
+export const GLIDE={in:3,out:7,slow:.8} as const;
 /** How big a splash-down is by the entry style (× the drop's power): feet first < a belly-flop < a clean dive from high up. */
 export const SPLASH_SCALE={feet:.8,belly:1,clean:1.25} as const;
 /** Time-in-the-water buckets for analytics (upper bounds, seconds; the last is "longer"). */
@@ -108,7 +110,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   /** The camera's eased dip offset (m, ≤ 0) and the dip's current depth (m, ≥ 0). */
   camDip:0,dip:0};
  const events:WaterEvents={entered:false,left:false,swimStarted:false,ripple:0,splash:0,surfaced:false,tint:false,swimSeconds:0,dived:false,sped:false,rose:false,bubble:false,stroke:0,wake:false,flew:false};
- const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0};
+ const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:0};
  const lastLand={x:NaN,z:NaN,y:0,yaw:0};
  let rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
  /** diveBedRoom at (x, z) and DIVE.ahead m along the travel (the slope ahead), the lower; 9 without a seabed. */
@@ -118,7 +120,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  /** Drop the dive at once (leaving the swim: the wade blend, a splash-down, the jetpack); `rose` when the body was under. */
  const endDive=()=>{if(state.under>0)events.rose=true;state.diving=false;state.under=0;state.dive=0;state.diveFor=0;state.tilt=0;riseShake=0;bubbleClock=0;pose.under=0;pose.tilt=0;};
  const leaveWater=()=>{if(state.phase==='swim'||state.phase==='surface'||state.phase==='under'){events.swimSeconds=state.swimFor;}
-  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.w=0;events.left=true;};
+  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.w=0;pose.glide=0;events.left=true;};
  const enterWater=(x:number,z:number,yaw:number)=>{
   // Park the ball on the last dry spot (decision 3): lead the facing that keeps its 0.56 m lead on land (else turn it round).
   // (No dry spot known yet, e.g. a splash-down straight from the jetpack: the host parks it at the nearest landing.)
@@ -192,7 +194,10 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   pose.w=1;pose.kind=u>0||moving?'crawl':'tread';pose.entry=state.entry;pose.shake=r?0:riseShake/SURFACE_TIME;
   pose.under=ue;pose.tilt=state.tilt;
   pose.effort=u>0?Math.max(.4,Math.min(1,input.speed/SWIM_SPEED)):Math.min(1,input.speed/SWIM_SPEED);pose.fast=state.fast&&moving?1:0;
-  const rate=r?0:pose.kind==='tread'?2.2:pose.fast?9:5.5*(.5+.5*pose.effort)*(u>0?.7:1);
+  // The surface glide (Oct 25 2026, Explore audit): the stick let go while the body still carries (about a second), the arms reach
+  // ahead together and the kick eases instead of the crawl churning on; any push of the stick takes the stroke back at once.
+  const coast=u<.3&&input.moving&&input.stick<.05?1:0,g0=pose.glide??0;pose.glide=g0+(coast-g0)*(1-Math.exp(-dt*(coast?GLIDE.in:GLIDE.out)));if(pose.glide<1e-3)pose.glide=0;
+  const rate=(r?0:pose.kind==='tread'?2.2:pose.fast?9:5.5*(.5+.5*pose.effort)*(u>0?.7:1))*(1-GLIDE.slow*pose.glide);
   pose.phase=(pose.phase+dt*rate)%(Math.PI*2*6);
   if(u>.3){
    // Under: no wake or arm splashes at the surface, only a small bubble ring over the diver now and then (≤ 1 / DIVE.bubble s).

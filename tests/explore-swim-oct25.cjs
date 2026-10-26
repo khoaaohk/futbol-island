@@ -60,4 +60,19 @@ ok('a tab switch or a phone call never leaves Swim fast or ▲ / ▼ held (the r
  w.press('swimfast','down');assert.equal(w.state.fast,true);w.press('swimfast','up');assert.equal(w.state.fast,false);
 });
 
+ok('the surface glide: stick let go while still carrying, the arms reach ahead and the stroke clock slows; a push takes the stroke back',()=>{
+ const W=load('lib/town/water/waterState.ts'),P=load('lib/graphics/swimPose.ts');const probe={sample:()=>3,isLand:()=>false,allowed:()=>true,reset(){},d:30};const w=W.createWaterState(probe,()=>false);
+ const go=(stick,moving,n)=>{for(let i=0;i<n;i++)w.step(1/30,0,0,{stick,moving,speed:moving?2:0,landY:0,yaw:0,airborne:false});};
+ go(1,true,30);assert.equal(w.pose.glide,0,'no glide while stroking');const p0=w.pose.phase;go(1,true,15);const stroking=w.pose.phase-p0;
+ go(0,true,15);assert(w.pose.glide>.7,'gliding after half a second: '+w.pose.glide);const p1=w.pose.phase;go(0,true,15);assert(w.pose.phase-p1<stroking*.5,'the arms hold (the clock slows)');
+ go(1,true,10);assert(w.pose.glide<.15,'a push takes the stroke back quickly: '+w.pose.glide);
+ go(0,false,40);assert.equal(w.pose.kind,'tread');assert(w.pose.glide<.01,'stopped: treading, no glide');
+ // The poser: the glide brings both arms well forward (shoulder x toward −2.8), hands close.
+ const g=()=>new T.Group(),j={pelvis:g(),torso:g(),head:g(),legs:[0,1].map(()=>({hip:g(),knee:g(),ankle:g()})),arms:[0,1].map(()=>({shoulder:g(),elbow:g(),hand:g()}))};
+ const sp=P.createSwimPoser(j),pose={w:1,kind:'crawl',phase:1.2,effort:.4,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:1};
+ for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);for(const a of j.arms)assert(a.shoulder.rotation.x< -2.6,'arm ahead: '+a.shoulder.rotation.x);
+ pose.glide=0;for(let i=0;i<60;i++)sp.apply(pose,1/30,false,0);assert(Math.abs(j.arms[0].shoulder.rotation.x-j.arms[1].shoulder.rotation.x)>.5,'stroking: the arms alternate');
+ assert(read('lib/town/water/waterState.ts').includes('pose.glide=0;events.left=true;'),'reset on leaving the water');
+});
+
 console.log(`explore-swim-oct25: ${passed} passed`);

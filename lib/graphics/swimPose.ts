@@ -32,6 +32,9 @@ export type SwimRigPose={
  /** Explore delight (Oct 21 2026, diveDelight.ts): a friendly WAVE (0..1: the right arm up and out, the hand swinging) or a HIGH FIVE
   *  (0..1: the right arm reaching straight ahead, palm forward) over any shape; `emoteT` the gesture's clock (s). Optional: 0 when absent. */
  wave?:number;five?:number;emoteT?:number;
+ /** The surface glide (Oct 25 2026, waterState.ts GLIDE): 0..1, the stick let go while still carrying: both arms reach ahead together
+  *  (a streamline), the flutter kick eases. Optional: 0 when absent. Under the water the crawl's own coast (arms back) applies. */
+ glide?:number;
 };
 export type SwimJoints={pelvis:T.Group;torso:T.Group;head:T.Group;legs:{hip:T.Group;knee:T.Group;ankle:T.Group}[];arms:{shoulder:T.Group;elbow:T.Group;hand:T.Group}[]};
 
@@ -115,6 +118,12 @@ export function createSwimPoser(j:SwimJoints){
     target[o]=.12+.28*k*(.5+.5*e);target[o+1]=side*.06;target[o+3]=.2+.22*Math.max(0,-k);target[o+4]=-.35;
     const q=ARM+i*4,a=ph+i*Math.PI,rec=Math.max(0,Math.sin(a));
     target[q]=-1.45-1.3*Math.cos(a);target[q+1]=side*(.3+.4*rec);target[q+3]=-.35-.7*rec;}
+   {const gl=Math.max(0,Math.min(1,s.glide??0))*(1-uw);
+    if(gl>0)for(let i=0;i<2;i++){const side=i===0?-1:1,q=ARM+i*4,o=LEG+i*5;
+     // The glide: arms stretched ahead, hands close (shoulder well forward, elbows straight), the kick easing toward a lazy flutter.
+     target[q]+=(-2.8-target[q])*gl;target[q+1]+=(side*.14-target[q+1])*gl;target[q+3]+=(-.08-target[q+3])*gl;
+     target[o]=.12+(target[o]-.12)*(1-.65*gl);target[o+3]+=(.12-target[o+3])*gl*.6;}
+    if(gl>0){target[P_ROLL]*=1-.7*gl;target[T_Y]*=1-.7*gl;}}
    if(uw>.5){// Explore life (Oct 22 2026): under water the body undulates a little with the kick; coasting (the stick let go) the arms
     // sweep back along the body into a streamlined glide and the kick slows (the crawl's arms only turn over while really swimming).
     const g=uw*Math.max(0,1-e*2.2);target[P_PITCH]+=reduced?0:.05*uw*e*Math.sin(ph*1.5);
