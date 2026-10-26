@@ -1914,7 +1914,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       {const f=summitCamera.update(visualLocation.x,visualLocation.z,water.inWater?Math.max(groundY,WATER_LEVEL):groundY,camTarget.x,camTarget.y,camTarget.z,dt);if(f<1){camTarget.x=visualLocation.x+(camTarget.x-visualLocation.x)*f;camTarget.y=groundY+(camTarget.y-groundY)*f;camTarget.z=visualLocation.z+(camTarget.z-visualLocation.z)*f;}camTarget.y+=summitCamera.lift;}
       // Sky keep-up: ease the follow camera back and up (same view direction) while the ball is way up, so ball and player both stay in frame.
       {const bs=walkBall.state,want=rideRef.current==='walk'&&bs.mode==='sky'?Math.min(1,Math.max(0,(bs.y-groundY-3)/(SKY_MAX_APEX-3))):0;skyCamLift+=(want-skyCamLift)*(reduced?1:1-Math.exp(-dt*2.5));if(skyCamLift>.002){camTarget.x+=4*skyCamLift;camTarget.y+=9.75*skyCamLift;camTarget.z+=8.25*skyCamLift;}}
-      moveNudge.restore(camera);emoteCam.restore(camera);
+      moveNudge.restore(camera);emoteCam.restore(camera);jobs.restoreCamera(camera);
       if(!learningFormat.current){camera.position.lerp(camTarget,reduced?1:1-Math.exp(-dt*(mobileTravel?20:flying?14:rampCamera?10:4)));
         // Bound follow lag on phones so boosted rides stay near the center.
         if(mobileTravel){const lag=camera.position.distanceTo(camTarget);if(lag>1.2)camera.position.lerp(camTarget,1-1.2/lag);}
@@ -2172,7 +2172,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: the daily warm-up and live-match Spot it */}
     {/* The welcome's "Earn coins" step rings the coin pocket ([data-job-wallet]), so the pocket stays on screen behind the welcome
         (the modal keeps it inert); job offers and toasts wait until it closes. */}
-    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
+    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} cardOfferOpen={cardOfferOpen} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
     {ready&&!failed&&mountWhen('coaches',coachesOpen)&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}

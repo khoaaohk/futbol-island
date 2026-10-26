@@ -4,6 +4,7 @@
  * while a job runs (instanced, disposed at the end). Garden produce is one InstancedMesh shown only within the garden.
  * Idle cost is one throttled distance check every 0.25 s; nothing animates unless a job is running.
  */
+import {newWorkCam,stepWorkCam} from './workCamera';
 import * as T from 'three';
 import {JOBS,REBOUND_WALL,BOARD_RANGE,jobById,jobOpenAt,jobVariant,bugJobFor,type JobDef} from './jobCatalog';
 import {bugRoster,activeSet,LANTERN_GOAL,type BugSetId,type BugSpot} from './bugScout';
@@ -916,6 +917,14 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  let cs:{t:number;push:number;on:boolean;hit:{id:string;kind:'bug'|'firefly';species:{id:string}|null;call:{id:string}|null;x:number;y:number;z:number};name:string;
   p:{x:number;y:number;z:number};yaw:number;registered:boolean;cardShown:boolean;burst:boolean;flipped:boolean;stage:CatchStage|null;sF:number;sC:number;
   bugAt:{x:number;y:number;z:number};netParent:T.Object3D|null;rigParent:T.Object3D|null;eye:T.Vector3;target:T.Vector3}|null=null;
+ // Work camera (Oct 26 2026, owner; workCamera.ts): while a job action is held the follow camera eases gently toward the player.
+ // Town restores the offset before its follow lerp (restoreCamera), so it never accumulates. Cost: a few vector ops per frame.
+ const workCam=newWorkCam(),workFocus=new T.Vector3(),workOffset=new T.Vector3();let workApplied=false;
+ function workCamera(camera:T.PerspectiveCamera,dt:number,reduced:boolean,busy:boolean){
+  const amount=stepWorkCam(workCam,dt,{active:!!run,holding:!!run?.holding,busy,reduced});if(amount<=0)return;
+  workFocus.set(lastP.x,lastP.y+1,lastP.z);workOffset.subVectors(workFocus,camera.position).multiplyScalar(amount);
+  camera.position.add(workOffset);workApplied=true;
+ }
  const pushCam=createShotCamera(CATCH_STAGE.pushIn,ZOOM.out),followCam=new T.Vector3(),stageL=new T.Vector3(),stageR=new T.Vector3(),bagQ={x:0,y:0,z:0};
  const STAGE_POSE:JobPose={kind:'netcarry',progress:0,upper:true},stageMotion:{facing:number;turnSmoothing:number;job:JobPose}={facing:0,turnSmoothing:30,job:STAGE_POSE};
  let followFov=50,fadeEl:HTMLDivElement|null=null,fadeOut=0,stageRate=1;
@@ -1182,8 +1191,11 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   deliverPoint:()=>run?.def.deliver??null,
   /** Harvest day: the armed orchard tree (the Kick the tree target), or null. */
   armedTree:()=>{const h=run?.harvest,d=run?.def;if(!h||!d||d.task?.type!=='harvest'||run!.phase!=='work')return null;const s=d.task.spots[h.near];return s&&s.action==='shake'?{x:s.x,z:s.z,index:h.near}:null;},
+  /** Undo last frame's work-camera dolly before the follow camera eases (Town, beside moveNudge.restore). */
+  restoreCamera:(camera:T.PerspectiveCamera)=>{if(workApplied){camera.position.sub(workOffset);workApplied=false;}},
+  get workCameraAmount(){return workCam.k;},
   /** Call right after the follow camera is placed (like fishing.applyCamera): the assistant-referee view while flagging. */
-  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{if(!pushCam.active){followCam.copy(camera.position);followFov=camera.fov;}let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(pushCam.active)r=pushCam.apply(camera,dt,reduced)||r;badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{if(!pushCam.active){followCam.copy(camera.position);followFov=camera.fov;}let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(pushCam.active)r=pushCam.apply(camera,dt,reduced)||r;workCamera(camera,dt,reduced,r||refCam.active||relClose.active||relWide.active||pushCam.active);badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
   /** A job runs, or the one that just ended is winding down (its last pose): Town keeps calling holdProps. */
   get holding(){return !!run||ending>0&&!!props;},
   /** Where the current step wants the player (the beacon's targets); read-only, for play-tests. */
