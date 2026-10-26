@@ -1,7 +1,12 @@
 'use client';
 import {useEffect,useSyncExternalStore} from 'react';
-import {diveStore,diveLift} from '@/lib/town/water/diveRuntime';
+import {diveStore,diveLift,DIVE_CARD_HOLD} from '@/lib/town/water/diveRuntime';
 import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
+import {holdCardOffers} from '@/lib/town/cardOfferHold';
+
+/** The find card's holder id (cardOfferHold.ts): a card choice earned by an explore ball waits until its lesson card closes. The
+ *  runtime takes the hold as the card shows (no render race with CardOfferHost); this releases it when the card closes. */
+const CARD_HOLD=DIVE_CARD_HOLD;
 
 /**
  * The dive's HUD (water P2, Oct 16 2026; docs/swimming-research.md "P2 implemented: one spot"): the breath ring (the pace lesson:
@@ -21,7 +26,7 @@ export default function DiveHud(){
  const noteBusy=useToastLaneBusy('dive-note'),card=!!v.card,note=v.note&&!noteBusy&&!card?v.note:'';
  useEffect(()=>{if(!note)return;if(!toastLane.request('dive-note'))return;const t=setTimeout(()=>diveStore.set({note:''}),4000);return ()=>{clearTimeout(t);toastLane.release('dive-note');};},[note]);
  useEffect(()=>{if(!v.note||note)return;toastLane.want('dive-note');const t=setTimeout(()=>{toastLane.cancel('dive-note');diveStore.set({note:''});},6000);return ()=>clearTimeout(t);},[v.note,note]);
- useEffect(()=>{if(!card)return;toastLane.hold('card',true);return ()=>toastLane.hold('card',false);},[card]);
+ useEffect(()=>{if(!card)return;toastLane.hold('card',true);holdCardOffers(CARD_HOLD,true);return ()=>{toastLane.hold('card',false);holdCardOffers(CARD_HOLD,false);};},[card]);
  // Seamless Explore (Oct 21 2026): the edge chip ("Entering: …" / "Leaving the reef") clears itself after its 2.4 s fade.
  // Explore delight (Oct 21 2026, user rule "only one thing at a time"): the chip takes the HUD stack's toast lane while it shows, so the
  // one-time lesson card (SwimLessonToast, same lane) waits for it, and the chip waits for a card already showing. Never both at once.
@@ -60,7 +65,7 @@ export default function DiveHud(){
    {note&&!chip?<p className="dive-note" role="status" data-dive-note>{note}</p>:null}
   </div>:null}
   {v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
-   <small>{v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>
+   <small>{v.card.lesson?`Mini lesson · ${v.card.label}`:v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>
    {v.card.credit?<span className="dive-card-credit">Source: {v.card.credit}</span>:null}
    {v.card.story?<span className="dive-card-story">{v.card.story}</span>:null}
    {v.card.coins>0?<span className="dive-card-coins">+{v.card.coins} coins</span>:null}

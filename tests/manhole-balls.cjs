@@ -128,10 +128,10 @@ console.log('PASS collected manholes: plain cover back in its rim, reduced-motio
  const t=hunt(),s=manholes[2];t.h.update(.05,{x:s.x,y:20,z:s.z},true,true,null,false,true);t.h.land({x:s.x,y:0,z:s.z},true);
  const saved=Object.fromEntries(t.storage);t.h.dispose();
  const again=hunt(saved);assert(again.h.covers.isOpen(manholes.indexOf(s)),'opened cover stays open after reload');assert(!again.h.covers.isOpen(manholes.indexOf(manholes[1])));
- assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,6);again.h.dispose();
+ assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,7);again.h.dispose();
  const ids=COIN_QUEST.map(s=>s.id),first55=ids.slice(0,55);
  const oldComplete=sanitizeCoinProgress({version:3,revealed:first55,collected:first55,hint:null,celebrated:true,rewardUnlocked:false});
- assert.equal(oldComplete.version,6);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 100-ball finale is still ahead');
+ assert.equal(oldComplete.version,7);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 100-ball finale is still ahead');
  const oldPartial=sanitizeCoinProgress({version:3,collected:first55.slice(0,54)});assert.equal(oldPartial.collected.length,54);assert(!allCostumesEarned(oldPartial)&&!coinRewardEarned(oldPartial),'unfinished old saves keep their progress only');
  assert(!allCostumesEarned(sanitizeCoinProgress({version:4,collected:first55})),'new saves need every ball, manholes included');
  assert(allCostumesEarned(sanitizeCoinProgress({version:4,collected:ids})));

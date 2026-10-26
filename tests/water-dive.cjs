@@ -37,7 +37,7 @@ ok('seven data-driven zones (the user’s map circles), each a unique theme id, 
  for(const s of Z){assert(s.radius>=12,'bigger patches (were 9 m)');const c=new T.Color(s.tint),hsl={};c.getHSL(hsl,T.SRGBColorSpace);assert(hsl.l>.55&&hsl.h>.42&&hsl.h<.6,'lighter turquoise '+s.id);
   assert(D.inDiveBlob(s,s.surface.x,s.surface.z),'you come up inside the patch');
   for(const f of s.finds)assert(Math.hypot(f.x,f.z)<D.DIVE_ROOM_R-2,'finds inside the room '+s.id+' '+f.id);
-  assert.equal(JSON.stringify(s.finds.map(f=>f.kind).sort()),JSON.stringify(['ball','burst','clam','relic','treasure']));
+  assert.equal(JSON.stringify(s.finds.map(f=>f.kind).sort()),JSON.stringify(['ball','burst','clam','relic'])/* Oct 25 2026: the chest holds the ball (no coin find) */);
   for(const f of s.finds){assert(['Real football fact','Coaching idea','Island story'].includes(f.label));for(const t of [f.title,f.text,f.credit??'',f.story??'',f.prompt,f.aria])assert(!/https?:|www\.|\.com/.test(t),'no links: '+t);if(f.label==='Real football fact')assert(f.kind==='ball'?/^[A-Z].{3,}$/.test(f.credit):/^Wikipedia/.test(f.credit),'a plain-text credit');}
   for(const f of s.finds)assert((f.coins??0)<=ECON.LEARN_COINS.ball);}
  const paul=spot.finds.find(f=>f.kind==='relic');assert(read('lib/town/fishing/fishCatalog.ts').includes(paul.text),'Paul’s fact is the catalogue’s verified sentence');
@@ -128,13 +128,13 @@ ok('breath: the pace lesson (glide > swim > push), gentler on the shallow reef (
  assert.equal(S.DIVE_LESSON.kind,'Coaching idea');assert.equal(S.DIVE_LESSON_KEY,'fi2-dive-lesson-v1');
 });
 
-ok('each find is credited once (and once ever, by the save); the treasure is a metered `dive:` wallet run',()=>{
+ok('each find is credited once (and once ever, by the save); the chest’s ball is a metered `dive:` wallet run',()=>{
  let save=S.parseDiveFinds(null);const s=S.createDiveSession(D.DIVE_SPOTS,id=>save.spots[id]??[]);s.scan(.2,spot.x,spot.z,true);s.start();
- const treasure=spot.finds.find(f=>f.kind==='treasure'),p=D.diveFindPoint(treasure,undefined,spot.floor);
- s.state.x=p.x;s.state.y=p.y;s.state.z=p.z;s.step(1/30,{sx:0,sy:0,lift:0});assert.equal(s.state.find?.id,'treasure','in reach');
- let e=s.use();assert.equal(e.firstFind,true);assert.equal(e.coins,3);save=S.addDiveFind(save,spot.id,'treasure');e=s.use();assert.equal(e.coins,0,'not twice');
+ const chest=spot.finds.find(f=>f.kind==='ball'),p=D.diveFindPoint(chest,undefined,spot.floor);
+ s.state.x=p.x;s.state.y=p.y;s.state.z=p.z;s.step(1/30,{sx:0,sy:0,lift:0});assert.equal(s.state.find?.id,'hidden-ball','in reach');
+ let e=s.use();assert.equal(e.firstFind,true);assert.equal(e.coins,5);save=S.addDiveFind(save,spot.id,'hidden-ball');e=s.use();assert.equal(e.coins,0,'not twice');
  assert.equal(JSON.stringify(S.parseDiveFinds({spots:{'pauls-grotto':['relic','relic','nope',3],'elsewhere':['x']}})),JSON.stringify({version:1,spots:{'pauls-grotto':['relic']}}),'the save is sanitised');
- const M=load('lib/town/dailyMeter.ts');assert.equal(M.isTrainingRun(S.diveRunId(spot.id,'treasure'),'island'),true,'metered by the Training meter');
+ const M=load('lib/town/dailyMeter.ts');assert.equal(M.isTrainingRun(S.diveRunId(spot.id,'hidden-ball'),'island'),true,'metered by the Training meter');
 });
 
 ok('every zone’s room: rich but bounded by the same caps (draws, triangles, fish), instanced fish with precomputed paths; lite is lighter; cost flat across zones',()=>{

@@ -1,10 +1,10 @@
 import * as T from 'three';
-import {DIVE_BALL_FIND,DIVE_BALL_R,diveBallFor,type DiveBallLook} from '../town/water/diveBalls';
+import {DIVE_BALL_CHEST_Y,DIVE_BALL_FIND,DIVE_BALL_R,diveBallFor,type DiveBallLook} from '../town/water/diveBalls';
 import {diveFloor,type DiveSpot} from '../town/water/diveSpots';
 
 /**
  * The zone's hidden explore ball (Oct 21 2026; lib/town/water/diveBalls.ts): ONE small vertex-coloured mesh per room (one draw, no
- * textures), its look painted per vertex from the zone's `look`. It rests in its nook with a slow roll and a soft shimmer (the
+ * textures), its look painted per vertex from the zone's `look`. It rests in the zone's open treasure chest (Oct 25 2026) with a slow roll and a soft shimmer (the
  * emissive breathes now and then: findable, not obvious; steady in lite / reduced motion), and when picked up it spins up, rises
  * and shrinks away into the bag (≈ 1 s). Nothing is allocated per frame. Built with the room, freed by the room's dispose (its
  * scene traverse), so it costs nothing between dives.
@@ -50,7 +50,7 @@ export function addDiveBall(scene:T.Scene,spot:DiveSpot,o:{found:readonly string
  g.setAttribute('color',new T.BufferAttribute(cols,3));
  const glow=def.look==='moon'?.32:.16,mat=new T.MeshLambertMaterial({vertexColors:true,emissive:'#fff6d8',emissiveIntensity:glow});mat.name='dive-hidden-ball';
  const mesh=new T.Mesh(g,mat);mesh.name='dive-hidden-ball';
- const homeY=diveFloor(def.x,def.z,spot.floor)+DIVE_BALL_R*.92;mesh.position.set(def.x,homeY,def.z);mesh.rotation.set(.4,def.x,.2);scene.add(mesh);
+ const homeY=diveFloor(def.x,def.z,spot.floor)+DIVE_BALL_CHEST_Y;/* in the open treasure chest (diveRoom.ts draws it at the ball's x, z) */mesh.position.set(def.x,homeY,def.z);mesh.rotation.set(.4,def.x,.2);scene.add(mesh);
  const still=o.lite||o.reduced;let upT=-1;
  return {mesh,
   /** One frame: the slow roll and the shimmer (a brief brightening every few seconds), or the pick-up while it plays. */

@@ -17,7 +17,7 @@
  * Labels follow AGENTS.md: a **Real football fact** carries a plain-text credit (no links in kid UI), a *Coaching idea* is a
  * metaphor, and *Island story* is the game's own fiction.
  */
-import {DIVE_BALLS,DIVE_BALL_COINS,DIVE_BALL_FIND,DIVE_BALL_R} from './diveBalls';
+import {DIVE_BALLS,DIVE_BALL_CHEST_Y,DIVE_BALL_COINS,DIVE_BALL_FIND} from './diveBalls';
 
 /** Room-local frame: x right, z toward the camera at the start, y up; the surface at DIVE_SURFACE_Y, the reef crest's sand about
  *  1.5-3 m under it, the rim's sand 4-6 m under it. (Before the Oct 20 2026 shallow reef: the surface 8.4 m over a deep level.) */
@@ -38,7 +38,8 @@ export const DIVE_REST_PROMPT='Catch your breath';
 /** Underwater, a find's prompt shows within this distance of it (m, 3D). */
 export const DIVE_FIND_RANGE=3.2;// Explore delight (Oct 21 2026): 2.6 -> 3.2 m, so a slow drift past a find still shows its prompt
 
-export type DiveFindKind='relic'|'burst'|'clam'|'treasure'|'ball';
+/** (Oct 25 2026: the chest's 'treasure' coin find was removed; the chest now holds the zone's `ball`.) */
+export type DiveFindKind='relic'|'burst'|'clam'|'ball';
 export type DiveLabel='Real football fact'|'Coaching idea'|'Island story';
 export type DiveFind={
  id:string;kind:DiveFindKind;
@@ -156,7 +157,6 @@ const BASE={sand:['#c9b48a','#ead9b0'] as [string,string],rock:['#6f7a78','#94a0
 const find=(id:string,kind:DiveFindKind,x:number,y:number,z:number,o:Omit<DiveFind,'id'|'kind'|'x'|'y'|'z'>):DiveFind=>({id,kind,x,y,z,...o});
 const burst=(x:number,z:number,title:string,text:string)=>find('coral','burst',x,1.1,z,{prompt:'Touch',aria:'Touch the coral',title,label:'Coaching idea',text});
 const clam=(x:number,z:number,title:string,text:string)=>find('clam','clam',x,.55,z,{prompt:'Open',aria:'Open the giant clam',title,label:'Coaching idea',text});
-const coin=(x:number,z:number,title:string,text:string)=>find('treasure','treasure',x,.5,z,{prompt:'Take',aria:'Take the old matchday coin',title,label:'Island story',coins:3,text,story:'Island story. Put into your coins once, on the Training meter.'});
 
 /**
  * The seven zones (Oct 20 2026, the user's circles on the travel map, converted with IslandTravelMap's projection and checked
@@ -167,8 +167,9 @@ const coin=(x:number,z:number,title:string,text:string)=>find('treasure','treasu
  * 309,-291), Paul's Grotto (594,-289 → 512,-296), Ray Meadow (733,-72 → 761,-62), Turtle Pool (812,204 → 842,204).
  */
 export const DIVE_SHORE_CLEAR=30;
-/** Each zone's hidden explore ball (Oct 21 2026; diveBalls.ts): one more find, its own look and a lesson nothing else teaches. */
-const withBalls=(spots:DiveSpot[]):DiveSpot[]=>spots.map(s=>{const b=DIVE_BALLS.find(q=>q.spot===s.id);return b?{...s,finds:[...s.finds,find(DIVE_BALL_FIND,'ball',b.x,DIVE_BALL_R,b.z,{prompt:'Pick up',aria:`Pick up ${b.name.toLowerCase()}`,title:b.title,text:b.text,label:'Real football fact',credit:b.credit,coins:DIVE_BALL_COINS,story:`You found ${b.name.toLowerCase()}!`})]}:s;});
+/** Each zone's explore ball (Oct 21 2026; diveBalls.ts): one more find, its own look and a lesson nothing else teaches. Since
+ *  Oct 25 2026 it sits in the zone's open treasure chest (in place of the old matchday coin find). */
+const withBalls=(spots:DiveSpot[]):DiveSpot[]=>spots.map(s=>{const b=DIVE_BALLS.find(q=>q.spot===s.id);return b?{...s,finds:[...s.finds,find(DIVE_BALL_FIND,'ball',b.x,DIVE_BALL_CHEST_Y,b.z,{prompt:'Pick up',aria:`Pick up ${b.name.toLowerCase()} from the treasure chest`,title:b.title,text:b.text,label:'Real football fact',credit:b.credit,coins:DIVE_BALL_COINS,story:`You found ${b.name.toLowerCase()}!`})]}:s;});
 export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
  {id:'captains-cup',name:'Captain’s Cup Wreck',area:1,x:309,z:-291,radius:19,blob:11,tint:'#63e6d4',near:'causeway-channel',surface:{x:309,z:-288},
   floor:{kind:'dome',cx:-1,cz:-5,rx:16,rz:14,yaw:1.81,bend:2,rim:5.2,crest:1.8,seed:.4},
@@ -183,7 +184,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     story:'Island story: this cup is the island’s own, lost with the old ship. Keep looking, like Pickles did.'}),
    burst(8,6,'Everyone moves together','The whole shoal darts out at once. When your team loses the ball, press together straight away.'),
    clam(-8,8,'Wait for your moment','A clam only opens when the water is calm. A good striker waits for the right moment too, then strikes.'),
-   coin(6,-15,'A captain’s coin','A coin from the old ship’s captain, who tossed it before every match.'),
   ]},
  {id:'pauls-grotto',name:'Paul’s Grotto',area:2,x:512,z:-296,radius:12.5,blob:23,tint:'#5fe3d6',near:'coral-garden',surface:{x:512,z:-293.5},
   floor:{kind:'plateau',cx:0,cz:1,rx:14,rz:12,yaw:0,bend:0,rim:4.8,crest:2.5,seed:1.3},
@@ -198,7 +198,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     credit:'Wikipedia, “Paul the Octopus”',story:'Island story: the octopus under this goal tips over the flag boxes too. A good guess is luck; reading the game is a skill you can practise.'}),
    burst(9,4,'Close the space','The little fish shut every gap at once. Defenders do that too: step up together and the space is gone.'),
    clam(-9,6,'Patience on the ball','A clam opens slowly. Keep the ball calmly and wait for a gap to open.'),
-   coin(4,-10,'An old matchday coin','A coin from the island’s very first beach match, lost overboard on the boat home.'),
   ]},
  {id:'kelp-trawler',name:'Kelp Forest Wreck',area:3,x:812,z:-255,radius:19,blob:37,tint:'#6fe0c0',near:'sharks-beach',surface:{x:812,z:-252},
   floor:{kind:'ridge',cx:1,cz:-7,rx:18,rz:9,yaw:1.39,bend:3,rim:5.4,crest:1.8,seed:2.1},
@@ -213,7 +212,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     text:'Away teams bring a second kit so both teams look different. The referee and your teammates must see who is who in a flash.'}),
    burst(-9,7,'Spread out','The fish fan out to fill the water. In attack, spread wide and make the pitch big.'),
    clam(9,9,'Shield the ball','The clam keeps its pearl safe behind its shell. Keep your body between the ball and the defender.'),
-   coin(-6,-16,'A lucky net float','A float from the trawler’s nets. The crew said it brought them a goal every Saturday.'),
   ]},
  {id:'ray-meadow',name:'Ray Meadow',area:4,x:761,z:-62,radius:12.5,blob:41,tint:'#7ee8c8',near:'farm-beach',surface:{x:761,z:-59.5},
   floor:{kind:'plateau',cx:0,cz:-3,rx:17,rz:15,yaw:.3,bend:1.5,rim:4.4,crest:2.7,seed:3.3},
@@ -227,7 +225,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     text:'Play to the whistle: keep going until the referee blows it, then stop at once. Good players always listen for it.'}),
    burst(-8,6,'First touch','The fish turn at the same instant. A clean first touch turns you away from trouble just as fast.'),
    clam(8,7,'Wait for your moment','A clam only opens when the water is calm. A striker waits for the right moment too.'),
-   coin(5,-14,'A ferry token','A ticket token dropped from the ferry by a fan on the way to a match.'),
   ]},
  {id:'moon-arch',name:'Moon Arch',area:5,x:835,z:-14,radius:13,blob:53,tint:'#8fdcf0',near:'summit-palm',surface:{x:835,z:-11.5},
   floor:{kind:'twin',cx:-10,cz:-5.5,rx:13,rz:9,yaw:0,bend:1,rim:5.2,crest:2,seed:4.7},
@@ -242,7 +239,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     text:'A football boot has studs to grip the grass. Short studs for hard ground, longer ones for soft, muddy pitches.'}),
    burst(-9,8,'Everyone moves together','The shoal darts out at once. Press together when your team loses the ball.'),
    clam(9,8,'Calm under pressure','The clam stays shut until it is safe. Stay calm with the ball, even with players around you.'),
-   coin(-7,-12,'A glowing pebble','A smooth pebble the jellies light up. Island kids rub it before a penalty.'),
   ]},
  {id:'ball-crate',name:'Ball Crate Reef',area:6,x:349,z:222,radius:19,blob:67,tint:'#68e2dc',near:'deep-sea-boat-west',surface:{x:349,z:225},
   floor:{kind:'dome',cx:2,cz:-5,rx:17,rz:14,yaw:-1.79,bend:2.5,rim:5.4,crest:1.6,seed:5.9},
@@ -257,7 +253,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     story:'Island story: these crates held the island league’s new balls.'}),
    burst(-9,6,'Close the space','The fish shut every gap at once. Step up together and the space is gone.'),
    clam(9,8,'Patience on the ball','A clam opens slowly. Keep the ball and wait for a gap.'),
-   coin(-8,-16,'A shipping tag','A brass tag from a ball crate: “Island League, handle with care”.'),
   ]},
  {id:'turtle-pool',name:'Turtle Pool',area:7,x:842,z:204,radius:12.5,blob:79,tint:'#7fe6d8',near:'summit-ledge',surface:{x:842,z:206.5},
   floor:{kind:'ring',cx:0,cz:-3,rx:12,rz:10,yaw:.4,bend:0,rim:4.6,crest:2,seed:7.1},
@@ -271,7 +266,6 @@ export const DIVE_SPOTS:readonly DiveSpot[]=withBalls([
     text:'The captain wears an armband. A good captain talks to the team, stays calm and helps everyone play together.'}),
    burst(-8,6,'Everyone moves together','The shoal darts out at once. Press together when your team loses the ball.'),
    clam(8,7,'Wait for your moment','A clam opens when the water is calm. Wait for the right moment, then strike.'),
-   coin(6,-13,'A turtle-shell token','A token a fan made after watching the turtles: “slow and steady wins the league”.'),
   ]},
 ]);
 

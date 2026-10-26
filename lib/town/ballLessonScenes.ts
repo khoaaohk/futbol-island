@@ -525,6 +525,10 @@ export const SCENES={
   {note:'Corner · they expect a cross',tags:[['a','Waiting']]},
   {note:'Curl it toward the near post',ball:[222,44],bend:{ball:-18},at:{xk:[172,36]}},
   {note:'Straight in · it counts!',ball:[188,24],at:{xk:[158,34]},pulse:[[188,26],'Goal!']}]},
+ 'coin-toss':{cast:{a:[154,124,'Captain'],x1:[176,124,'Captain'],b:[100,186,'Mate'],x2:[230,74]},ball:'b',steps:[
+  {note:'The captains meet before kick-off',tags:[[[165,100],'Coin toss']]},
+  {note:'Your captain wins the toss',at:{a:[150,116]},pulse:['a','Won!'],tags:[[[165,100],'Heads!']]},
+  {note:'Pick a goal · they kick off',at:{a:[132,170],x1:[165,128]},ball:'x1',tags:[[[165,30],'Attack this goal']]}]},
  'kickoff-goal':{cast:{a:[165,132,'You'],b:[140,136,'Mate'],xk:[165,34,'Keeper'],x1:[118,96],x2:[214,96]},ball:'a',steps:[
   {note:'Kick-off · each team in its own half',lines:[['x1','x2']]},
   {note:'Their keeper is far out of goal',at:{xk:[150,72]},tags:[['xk','Far out!']]},

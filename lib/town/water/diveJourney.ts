@@ -32,9 +32,11 @@ export const DIVE_REEF_KEY='fi2-dive-reef-v1';
  *  ({d: local date, m: bitmask by DIVE_SPOTS index}). */
 export type DiveReefSave={version:1;zones:Record<string,number[]>;restored:string[];hearts?:Record<string,number>;whale?:string[];spark?:{d:string;m:number}};
 
-/** The guided path: the start, then the finds in nearest-next order (the buddy fish leads along it). */
+/** The guided path: the start, then the finds in nearest-next order (the pickups lie along it). The treasure chest stays a waypoint
+ *  since its coin became the secret explore ball (Oct 25 2026), so the pickups and the friend keep their places; the buddy still never
+ *  leads to the ball itself (nextTarget only aims at diveTaskFinds). */
 export function journeyPath(spot:DiveSpot){
- const left=diveTaskFinds(spot).map(f=>({x:f.x,z:f.z,id:f.id})),out:{x:number;z:number;id:string}[]=[{x:JOURNEY_START.x,z:JOURNEY_START.z,id:'start'}];
+ const left=spot.finds.map(f=>({x:f.x,z:f.z,id:f.id})),out:{x:number;z:number;id:string}[]=[{x:JOURNEY_START.x,z:JOURNEY_START.z,id:'start'}];
  while(left.length){const c=out[out.length-1];let b=0,bd=Infinity;left.forEach((p,i)=>{const d=Math.hypot(p.x-c.x,p.z-c.z);if(d<bd){bd=d;b=i;}});out.push(left.splice(b,1)[0]);}
  return out;
 }

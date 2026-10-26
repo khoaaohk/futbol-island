@@ -226,7 +226,7 @@ import RideUnlockToast from './RideUnlockToast';
 import FuelToast from './FuelToast';
 import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
-import {earnForBall} from '@/lib/town/cardRewardTriggers';
+import {earnForBall,earnForDiveBall} from '@/lib/town/cardRewardTriggers';
 import {enterActivity,islandFrame} from '@/lib/analytics/tracker';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
@@ -1076,7 +1076,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // Back at the buoy, treading water: a splash and drips from the ring pool, the surfacing plip; the island resumes.
         location.x=previousLocation.x=visualLocation.x=spot.surface.x;location.z=previousLocation.z=visualLocation.z=spot.surface.z;velocity.x=velocity.z=0;
         ballEffects.splashDown(location.x,WATER_LEVEL,location.z,.45,reduced);ballEffects.drips(location.x,WATER_LEVEL,location.z,reduced);playCues(SURFACE_CUES);sound.waterSurface();showUnderTint(spot.theme.water);wakeLoop();},
-      found:(f,first)=>{if(first){countDiveFind();if(f.kind==='relic'&&dive.session.state.spot?.theme.wreck)countDiveWreckFind();if(f.kind==='ball')countDiveBallFind();}tapHaptic();sound.ui('click');if(f.kind==='treasure'||f.kind==='clam'||f.kind==='ball')document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'path-pop'}));},
+      found:(f,first)=>{if(first){countDiveFind();if(f.kind==='relic'&&dive.session.state.spot?.theme.wreck)countDiveWreckFind();if(f.kind==='ball'){countDiveBallFind();const zone=dive.session.state.spot;if(zone)earnForDiveBall(zone,f);/* the card choice; DiveHud holds it until the lesson card closes */}}tapHaptic();sound.ui('click');if(f.kind==='clam'||f.kind==='ball')document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'path-pop'}));},
       credit:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},
       low:()=>diveStore.set({note:DIVE_LOW_NOTE}),out:()=>{countDiveBreathOut();diveStore.set({note:DIVE_OUT_NOTE});},
       crest:()=>countDiveCrest(),fly:()=>flyFromReef(),

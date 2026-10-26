@@ -18,7 +18,7 @@ const world=load('lib/town/world.ts').buildTown(new T.Scene());
 
 // 1. Count, ids, order: 100 balls, the new twenty appended after the original eighty.
 // Oct 15 2026: Summit Isle's fifteen balls follow (tests/summit-balls.cjs), so the Coral Cay twenty are balls 81–100.
-assert.equal(COIN_QUEST.length,115,'the hunt has 115 balls');assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,115,'ids are unique');
+assert.equal(COIN_QUEST.length,116,'the hunt has 116 balls (the East Jetty ball, Oct 25 2026)');assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,116,'ids are unique');
 assert.equal(CORAL_CAY_SPOTS.length,20);assert.deepEqual(COIN_QUEST.slice(80,100).map(s=>s.id),CORAL_CAY_SPOTS.map(s=>s.id),'new balls are appended');
 assert.equal(PRE_CORAL_CAY_IDS.length,80);assert.deepEqual(PRE_CORAL_CAY_IDS,COIN_QUEST.slice(0,80).map(s=>s.id));
 
@@ -105,11 +105,11 @@ console.log(`PASS spacing: every Coral Cay ball is at least 10 m from every othe
 
 // 6. Saved progress: nothing is taken away from players who found all 80 before Coral Cay.
 const old80={version:4,revealed:PRE_CORAL_CAY_IDS,collected:PRE_CORAL_CAY_IDS,hint:null,celebrated:true,rewardUnlocked:false};
-const m=sanitizeCoinProgress(old80);assert.equal(m.version,6);assert(m.rewardUnlocked&&coinRewardEarned(m),'an 80-ball save keeps the Matchday Fox');assert(allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'and every costume');
+const m=sanitizeCoinProgress(old80);assert.equal(m.version,7);assert(m.rewardUnlocked&&coinRewardEarned(m),'an 80-ball save keeps the Matchday Fox');assert(allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'and every costume');
 assert(!m.celebrated,'the new 100-ball finale is still ahead of them');assert.equal(m.collected.length,80);
 const again=sanitizeCoinProgress(JSON.parse(JSON.stringify(m)));assert(again.rewardUnlocked&&again.allCostumesUnlocked,'the grandfathered unlock survives a re-save as version 5');
 assert(!coinRewardEarned(sanitizeCoinProgress({...old80,collected:PRE_CORAL_CAY_IDS.slice(0,79)})),'79 of the old 80 does not unlock the fox');
-assert(!coinRewardEarned(sanitizeCoinProgress({...old80,version:6})),'a new (version 6) save needs all 115');
+assert(!coinRewardEarned(sanitizeCoinProgress({...old80,version:7})),'a new (version 7) save needs all 116');
 const partial=sanitizeCoinProgress({version:4,collected:PRE_CORAL_CAY_IDS.slice(0,60)});assert(!partial.rewardUnlocked&&COSTUME_UNLOCK_ORDER.filter(id=>costumeEarned(partial,id)).length===18,'a 60-ball save keeps its 18 club costumes');
 assert(!costumeEarned(partial,COIN_REWARD_ID));
 console.log('PASS migration: 80-ball saves keep the fox and every costume, finale reset for 100; partial and new saves unchanged');

@@ -41,5 +41,8 @@ export const BALL_HUNT_SOURCES:Record<string,BallHuntSource[]>={
  'summit-lookout-rocks':[IFAB('Law 3 The Players','the-players')],
  'summit-bend':[IFAB('Law 12 Fouls and Misconduct (handling the ball)','fouls-and-misconduct')],
  'summit-sky':[IFAB('Law 13 Free Kicks (indirect free kick signal)','free-kicks')],
+ // East Jetty (Oct 25 2026): the coin toss (Law 8 — the toss winner picks the goal to attack in the first half or the kick-off;
+ // the teams change ends at half-time).
+ 'jetty-lighthouse':[IFAB('Law 8 The Start and Restart of Play (the coin toss)','the-start-and-restart-of-play')],
  'summit-whale-buoy':[{title:'Cruyff turn · Johan Cruyff v Sweden, 1974 FIFA World Cup',url:'https://en.wikipedia.org/wiki/Cruyff_turn'}],
 };

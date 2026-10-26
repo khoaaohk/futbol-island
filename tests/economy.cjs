@@ -59,7 +59,7 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 // 4. Sinks: books stay 100 and the own-everything total is known; the four new books are the only new sink.
 {assert.equal(BOOK_PRICE,100);const before=S.sinkTotal(S.BEFORE),after=S.sinkTotal(S.AFTER_FULL);
  assert.equal(after-before,4*BOOK_PRICE,'Coral Cay adds four 100-coin books and nothing else to buy');
- assert.equal(S.learnPool(S.AFTER_FULL)-S.learnPool(S.BEFORE),115*LEARN_COINS.ball-80*5,'115 balls (100 + 15 on Summit Isle, Oct 14 2026) vs the old 80 at 5');}
+ assert.equal(S.learnPool(S.AFTER_FULL)-S.learnPool(S.BEFORE),116*LEARN_COINS.ball-80*5,'116 balls (100 + 15 on Summit Isle, Oct 14 2026, + the East Jetty ball, Oct 25 2026) vs the old 80 at 5');}
 
 // 5. Pace (5-seed means, 200 days): the expansion does not slow completion, a book is ≤ 2 sessions of saving, no dry spells.
 {const run=(cfg,who)=>S.averaged(cfg,who,200,5);
