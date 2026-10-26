@@ -114,7 +114,7 @@ vec3 uwSurfaceOver(vec3 col,vec2 S,vec4 F,float vy,float L,float h,vec3 lit){
  // (Slightly under the strip's 0.3 so far pieces keep their colour for kids; the sand round them carries the full reflection.)
  col=mix(col,vec3(.2,.42,.47)*lit+vec3(.03,.07,.08),pow(1.-vy,3.)*.24);
  // The swell breaking over the last metres (the strip's breaker band).
- float ph=fract(t/SWASH_P+F.g*.35),dc=SWELL_L*(1.-ph);
+ float ph=fract(uSwashClock+F.g*.35),dc=SWELL_L*(1.-ph);
  float foam=exp(-abs(d-dc)/(.35+.25*dc))*smoothstep(3.4,.6,dc)*smoothstep(.25,.7,lace+.15)*step(-.2,d)*step(d,3.8);
  col=mix(col,vec3(.97,.98,.96)*(lit+.22),clamp(foam,0.,1.)*.8);
  if(uWaterDetail>1.5){float g2=texture2D(uWaterNoise,S*.33-vec2(t*.01,t*.004)).g;col+=smoothstep(.8,.9,min(lace,g2))*smoothstep(1.,4.,d)*(.4+.6*swell)*.9*vec3(1.,.97,.9);}

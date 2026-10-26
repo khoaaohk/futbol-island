@@ -195,7 +195,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // ---- The swash band (near the waterline only: nothing in it reaches past 3.4 m).
    if(d<3.8){
     // Foam lace and the swash cycle, in step with the ocean's swell (same phase offset n1).
-    float cyc=t/SWASH_P+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.3;
+    float cyc=uSwashClock+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.3;
     // The swash itself (front, sheet, wet sand) only runs up the sand and the first metre of water.
     if(d<.9){
      float amp=.62+.38*waterHash(ci+floor(n2*3.));

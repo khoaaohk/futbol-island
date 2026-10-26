@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {SHORE_FOAM_GLSL,SHORE_FOAM_UNIFORMS} from './shoreFoamFx';
 import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
 
 // Self-contained (the fishing shoreline in lib/town/fishing/shoreWater.ts has its own copies and its own owner).
@@ -22,15 +23,25 @@ function valueNoise(n:number,cell:number,seed:number){
   const a=lattice[iy*g+ix],b=lattice[iy*g+ix+1],c=lattice[(iy+1)*g+ix],d=lattice[(iy+1)*g+ix+1];out[y*n+x]=(a*(1-sx)+b*sx)*(1-sy)+(c*(1-sx)+d*sx)*sy;}
  return out;
 }
-/** Tileable 64² foam-lace noise (one channel, RepeatWrapping, mipmapped). */
-function laceNoise(){
- const n=64,a=valueNoise(n,8,3),b=valueNoise(n,3,5),data=new Uint8Array(n*n*4);
+/**
+ * Tileable 64² foam noise, four different noises in one RGBA8 texture (16 KB, RepeatWrapping, mipmapped), all read in ONE fetch:
+ * R big lace patches (8-texel cells: where the foam edge breaks up), G the original lace (8 + 3 texel mix, unchanged look),
+ * B bubbles (2-texel blobs, sharpened: pops in the high-water mark, holes in the trailing foam), A medium cells (sparkle mask).
+ * Oct 26 2026: was the G mix copied into all four channels (three wasted).
+ */
+export function laceNoise(){
+ const n=64,a=valueNoise(n,8,3),b=valueNoise(n,3,5),c=valueNoise(n,2,9),m=valueNoise(n,4,13),data=new Uint8Array(n*n*4);
  const tile=(f:Float32Array,x:number,y:number)=>{const wx=Math.sin(Math.PI*x/n)**2,wy=Math.sin(Math.PI*y/n)**2,h=n/2;
   return (f[y*n+x]*wx+f[y*n+(x+h)%n]*(1-wx))*wy+(f[((y+h)%n)*n+x]*wx+f[((y+h)%n)*n+(x+h)%n]*(1-wx))*(1-wy);};
- for(let y=0;y<n;y++)for(let x=0;x<n;x++){const v=Math.round(Math.min(1,Math.max(0,(tile(a,x,y)*.65+tile(b,x,y)*.35-.2)*1.6))*255),i=(y*n+x)*4;data[i]=data[i+1]=data[i+2]=v;data[i+3]=255;}
+ const byte=(v:number)=>Math.round(Math.min(1,Math.max(0,v))*255),sharp=(v:number,lo:number,hi:number)=>{const t=Math.min(1,Math.max(0,(v-lo)/(hi-lo)));return t*t*(3-2*t);};
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){const i=(y*n+x)*4,ta=tile(a,x,y);
+  data[i]=byte((ta-.5)*1.8+.5);data[i+1]=byte((ta*.65+tile(b,x,y)*.35-.2)*1.6);data[i+2]=byte(sharp(tile(c,x,y),.35,.75));data[i+3]=byte((tile(m,x,y)-.5)*1.8+.5);}
  const t=new T.DataTexture(data,n,n,T.RGBAFormat);t.wrapS=t.wrapT=T.RepeatWrapping;t.magFilter=T.LinearFilter;t.minFilter=T.LinearMipmapLinearFilter;t.generateMipmaps=true;t.needsUpdate=true;t.name='island-shore-lace';
  return t;
 }
+/** View depth (m) over which the strip stops reading the lace noise (it mips to flat grey that far out anyway): full detail nearer
+ *  than `near`, a blend to the flat value, no texture fetch at all past `far` (map view, flight, the far side of a bay). */
+export const STRIP_FAR={near:45,far:65} as const;
 
 /**
  * Island-wide moving shoreline ("tier B", Oct 12 2026; docs/performance-guide.md "Island-wide moving water").
@@ -188,6 +199,10 @@ function isleCpuField(dist:Float32Array,high:Float32Array):IsleCpuField{
  return {distance:(x,z)=>at(dist,x,z,40),lift:(x,z)=>{const fx=Math.floor((x-MIN_X)/STEP),fz=Math.floor((z-MIN_Z)/STEP);return fx<0||fz<0||fx>=TX||fz>=TZ?-.5:high[fz*TX+fx];}};
 }
 
+// Oct 26 2026 shore foam pass (docs/SHORE_FOAM_OCT26.md): wave sets on an irregular clock (uSwashClock, waveSet), a high-water mark
+// (darker damp line + bubbles that pop) after each wave, the foam edge breaking into lacy patches as it slows and slides back, thin
+// foam tinted see-through aqua, desktop glints, the player/ball interaction block (shoreFoamFx.ts), and no lace fetch far away.
+// Same two texture reads as before (field + one lace fetch, now four noises in it), one fewer far from the camera.
 const STRIP_GLSL=/* glsl */`
  vec4 sh=isleSample(vWaterXZ);float n1=sh.g,n2=sh.b,beach=sh.a;
  // Inside a fishing box the fishing strip draws the shore instead (same fade, opposite sense).
@@ -196,26 +211,36 @@ const STRIP_GLSL=/* glsl */`
  // and past the true waterline it fades into the ocean, whose depth gradient starts from the same drawn line.
  float t=uWaterTime,d=vVis,dt=vTrue,high=1.-smoothstep(.38,.42,vLift),outA=1.-smoothstep(.2,1.7,dt),bandA=1.-smoothstep(1.9,2.5,dt);
  vec3 wetSand=vec3(.5,.36,.17),sheetC=vec3(.36,.78,.86),shallowC=vec3(.04,.46,.6),foamC=vec3(.97,.98,.96);
- float lace=.5,e,rush,wet,breaker=0.;
+ vec4 lz=vec4(.5);float lace=.5,e,rush,wet,breaker=0.,mark=0.,markBub=0.,sparkle=0.;
  if(uWaterDetail<.5){
   // Still: the water a little way up the sand, a soft foam band and a damp band behind it.
   e=-.25;rush=.5;wet=smoothstep(-1.4,-.2,d-e)*.5*high;
  }else{
-  lace=texture2D(uWaterNoise,vWaterXZ*.19+vec2(t*.004,t*.002)).g;
-  // The swash cycle, in step with the ocean's swell (same phase offset n1); each wave runs up a different height, blended
-  // between neighbouring noise bands so nothing seams along the beach.
-  float cyc=t/SWASH_P+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.32;
-  float nb=n2*3.,fb=floor(nb),amp=.6+.4*mix(waterHash(ci+fb),waterHash(ci+fb+1.),smoothstep(0.,1.,nb-fb));
-  float reachB=mix(.3,1.5*(.75+.5*n2),beach)*high,reachM=reachB*amp;
+  // One fetch of the four baked noises; none past STRIP_FAR (gradients taken outside the branch, so the mip choice stays right).
+  vec2 luv=vWaterXZ*.19+vec2(t*.004,t*.002),gx=dFdx(luv),gy=dFdy(luv);
+  if(vFar<.999)lz=mix(textureGrad(uWaterNoise,luv,gx,gy),vec4(.5),vFar);
+  lace=lz.g;
+  // The swash cycle, in step with the ocean's swell (same irregular clock, same phase offset n1); each wave runs up a different
+  // height (blended between neighbouring noise bands so nothing seams along the beach), and every few waves a set runs further.
+  float cyc=uSwashClock+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.32;
+  float nb=n2*3.,fb=floor(nb),amp=(.6+.4*mix(waterHash(ci+fb),waterHash(ci+fb+1.),smoothstep(0.,1.,nb-fb)))*waveSet(ci);
+  float reachB=mix(.3,1.5*(.75+.5*n2),beach)*high,reachM=min(reachB*amp,1.95);
   float r=ph<UP?sin(1.5708*ph/UP):pow(1.-(ph-UP)/(1.-UP),1.4);
   e=.1-reachM*r;rush=ph<UP?mix(.5,1.,smoothstep(0.,.1,ph)):.25+.75*r;
   // Wet sand: when did the backwash last uncover this point? Dries over ~2.5 s; a damp band always stays by the water.
   // Uses the mean wave height (not this wave's), so nothing jumps where one wave hands over to the next along the beach.
   float reachW=reachB*.8,x=.1-d,rr=clamp(x/max(reachW,.01),0.,1.),phU=UP+(1.-UP)*(1.-pow(rr,1./1.4)),since=(ph>=phU?ph-phU:ph+1.-phU)*SWASH_P;
   wet=max(smoothstep(reachW+.15,reachW-.15,x)*exp(-since/2.4),smoothstep(reachW+.6,0.,x)*.45)*high;
+  // High-water mark: where this wave topped out stays a darker damp line, edged with bubbles that pop over ~2.5 s; it has faded
+  // before the next wave (no seam at the cycle's wrap).
+  float markA=step(UP,ph)*exp(-max(ph-UP,0.)*SWASH_P/2.2)*(1.-smoothstep(.84,.98,ph))*high,ml=abs(x-reachM+.04+(lz.r-.5)*.14);
+  mark=markA*(1.-smoothstep(.02,.13,ml));
+  markBub=markA*(1.-smoothstep(.04,.3,ml))*smoothstep(.45+.4*(1.-markA),.6+.4*(1.-markA),lz.b);
   // The swell breaking over the slope just before it surges up the sand: a soft white line rolling in, a few small gaps in it
   // (fades out at the cycle's wrap: no seam along the beach).
   float dc=SWELL_L*(1.-ph)-.3,bl=1.-smoothstep(0.,.26+.06*dc,abs(d-dc));breaker=bl*bl*amp*smoothstep(3.2,1.,dc)*smoothstep(-.2,.6,dc)*smoothstep(.22,.5,lace+.08*n1)*.6;
+  // Desktop only: a few glints twinkling on the thin sheet and the foam (one sine, no extra read).
+  if(uWaterDetail>1.5)sparkle=smoothstep(.78,.95,lz.a)*smoothstep(.8,1.,sin(t*2.6+lz.r*31.+lz.b*17.));
  }
  // Soft, slightly irregular edge (5 m noise + the lace), never a jittery line.
  float u=d+(n2-.5)*.32+(lace-.5)*.16,cover=smoothstep(e-.05,e+.07,u),wd=max(u-e,0.);
@@ -224,16 +249,22 @@ const STRIP_GLSL=/* glsl */`
  float waterA=mix(.5,.95,smoothstep(0.,.8,wd))*outA*mix(high,1.,smoothstep(-.2,.3,dt));
  // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
  waterA*=1.-.55*clearWinMask(vWaterXZ,1.);
- vec3 col=mix(wetSand,waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
- // Foam: a bright soft edge with some body, lacy patches trailing behind it, breaking up as the wave slides back.
+ wet=max(wet,mark*.8);
+ vec3 col=mix(wetSand*(1.-.16*mark),waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
+ // Foam: a bright soft edge with some body that breaks into lacy patches as the wave slows and slides back (big lace R and the
+ // bubbles B), lacy patches with bubble holes trailing behind it, and the bubbles left along the high-water mark.
  float fw=mix(.3,.75,rush);
  float edge=smoothstep(e-.1,e+.03,u)*(1.-smoothstep(e+.02,e+.02+fw*.5,u));
- float trail=smoothstep(e,e+.12,u)*(1.-smoothstep(e+fw*.35,e+fw*1.4,u))*smoothstep(.42,.68,lace);
- float foam=max(edge*(.62+.33*rush),trail*.7)*mix(smoothstep(.22,.55,lace+.15),1.,rush);
- foam=clamp(max(foam*high,breaker*cover),0.,1.)*bandA;
- col=mix(col,foamC,foam);alpha=max(alpha,foam*.95);
+ float breakup=smoothstep(mix(.42,-.3,rush),mix(.64,-.08,rush),lz.r*.6+lz.b*.4);
+ float trail=smoothstep(e,e+.12,u)*(1.-smoothstep(e+fw*.35,e+fw*1.4,u))*smoothstep(.42,.68,lace)*smoothstep(.3,.55,lz.b+.2*rush);
+ float foam=max(edge*(.62+.33*rush)*breakup,trail*.7)*mix(smoothstep(.22,.55,lace+.15),1.,rush);
+ foam=clamp(max(max(foam,markBub*.75*(1.-cover))*high,breaker*cover),0.,1.)*bandA;
+ // The player and the ball (shoreFoamFx.ts): foam parts round the ankles, rings from steps and the ball. Uniform branch: off = free.
+ if(uFoamFxOn>.5){vec2 fx=foamFx(vWaterXZ,max(cover,foam));foam=max(foam*(1.-fx.x),fx.y*high*bandA);}
+ // Thin foam is see-through and picks up the water's aqua; thick foam is white.
+ col=mix(col,mix(vec3(.78,.92,.94),foamC,smoothstep(.15,.75,foam)),foam);alpha=max(alpha,foam*(.6+.35*foam));
  diffuseColor=vec4(col,alpha*own);
- float waterLight=foam*.2*own;vec3 waterGlow=waterC*cover*.06*own;`;
+ float waterLight=(foam*.2+sparkle*.55*max(cover*waterA,foam))*own;vec3 waterGlow=waterC*cover*.06*own;`;
 
 /** The island shoreline: call `bake` once with the renderer (Town, at mount). `group` is a scenery root (world.setVisible). */
 export function createIslandShore(group:T.Group){
@@ -291,14 +322,14 @@ export function createIslandShore(group:T.Group){
    material=new T.MeshLambertMaterial({color:'#ffffff',transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
    const waterNoise=noise;
    material.onBeforeCompile=shader=>{
-    Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,{uWaterNoise:{value:waterNoise}});
-    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue;varying vec2 vWaterXZ;'+SHORE_PULL_GLSL)
-     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;shorePull(mvPosition,shore,open);');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue;varying vec2 vWaterXZ;uniform sampler2D uWaterNoise;\n'+SHORE_GLSL+CLEAR_WIN_GLSL)
+    Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,SHORE_FOAM_UNIFORMS,{uWaterNoise:{value:waterNoise}});
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;'+SHORE_PULL_GLSL)
+     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;uniform sampler2D uWaterNoise;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
      .replace('#include <map_fragment>',STRIP_GLSL)
      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
    };
-   material.customProgramCacheKey=()=>'island-shore-strip-v5';
+   material.customProgramCacheKey=()=>'island-shore-strip-v6';
    for(const tile of tiles.values()){
     const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(tile.positions,3));g.setAttribute('lift',new T.Float32BufferAttribute(tile.lifts,1));g.setAttribute('shore',new T.Float32BufferAttribute(tile.shores,1));g.setAttribute('vis',new T.Float32BufferAttribute(tile.viss,1));g.setAttribute('open',new T.Float32BufferAttribute(tile.opens,1));
     g.setAttribute('normal',new T.Float32BufferAttribute(new Float32Array(tile.positions.length).map((_,i)=>i%3===1?1:0),3));g.setIndex(tile.indices);g.computeBoundingSphere();geometries.push(g);
