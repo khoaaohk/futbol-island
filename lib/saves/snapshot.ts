@@ -64,6 +64,8 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-bug-pill-v1
  'fi2-fuel-v1',
  // The Kit Shop studios' phone panel size (Oct 14 2026): a per-device layout preference.
  'fi2-studio-sheet-v1',
+ // Ball Studio (Oct 26 2026): the once-per-device "how to draw on the ball" intro (components/shop/BallStudio.tsx DRAW_INTRO_KEY).
+ 'fi2-ball-draw-intro',
  // The sea (Oct 15 2026): the once-per-device swim lesson toast, and the analytics "first wade / first swim" device flags.
  'fi2-swim-lesson-v1','fi2-water-firsts-v1',
  // Play with friends (Oct 22 2026): the analytics "first party / first hosted party on this device" flags (lib/analytics/partyFirsts.ts).

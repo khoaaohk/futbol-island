@@ -4,7 +4,7 @@ import {useEffect,useId,useLayoutEffect,useRef,useState,type KeyboardEvent} from
 import {COIN_QUEST} from '@/lib/town/coinQuest';
 import {dismissCoinCelebration,useCoinProgress} from '@/lib/town/coinProgress';
 import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE,LANDSCAPE,ballLessonFrame,diagramLayout,type DiagramLayout} from '@/lib/town/ballHuntLessons';
-import {advanceLesson,canFinishLesson,canGoBack,forwardLessonStep,lessonPrimaryLabel,lessonStepKey,previousLessonStep,startLessonStepper} from '@/lib/town/ballLessonStepper';
+import {advanceLesson,canFinishLesson,canGoBack,forwardLessonStep,lessonPrimaryLabel,lessonStepKey,previousLessonStep,resumeLessonStepper} from '@/lib/town/ballLessonStepper';
 import {Icon} from './Icon';
 import BallLessonDiagram from './BallLessonDiagram';
 import navStyles from './DoneButton.module.css';
@@ -23,12 +23,14 @@ export type DiveLessonExtras={story?:string;coins:number;credit?:string};
  * Oct 25 2026 (user: "yes animated lesson cards under water cards"): spot id `dive:<zone>` is an Explore reef ball
  * (lib/town/water/diveBalls.ts + diveBallLessons.ts), shown by DiveHud over the paused dive with `dive` extras.
  */
-export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=false,dive}:{spotId:string;onDismiss:()=>void;replay?:boolean;practice?:boolean;dive?:DiveLessonExtras}){
+// `startStep`/`onStep` (Oct 26 2026, owner): Town's found-ball card reopens at the step saved before a reload and reports each step.
+export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=false,dive,startStep=0,onStep}:{spotId:string;onDismiss:()=>void;replay?:boolean;practice?:boolean;dive?:DiveLessonExtras;startStep?:number;onStep?:(step:number)=>void}){
  const zone=spotId.startsWith('dive:')?spotId.slice(5):'',reef=zone?diveBallFor(zone):undefined;
  const spot=zone?undefined:COIN_QUEST.find(item=>item.id===spotId),lesson=zone?DIVE_BALL_LESSONS[zone]:BALL_HUNT_LESSONS[spotId],stepCount=lesson?.steps?.length??0;
- const dialog=useRef<HTMLDialogElement>(null),primary=useRef<HTMLButtonElement>(null),[stepper,setStepper]=useState(()=>startLessonStepper(stepCount)),[hidden,setHidden]=useState(false),id=useId().replace(/:/g,''),progress=useCoinProgress();
+ const dialog=useRef<HTMLDialogElement>(null),primary=useRef<HTMLButtonElement>(null),[stepper,setStepper]=useState(()=>resumeLessonStepper(stepCount,startStep)),[hidden,setHidden]=useState(false),id=useId().replace(/:/g,''),progress=useCoinProgress();
  useEffect(()=>{const node=dialog.current,previous=document.activeElement as HTMLElement|null;node?.showModal();const visibility=()=>setHidden(document.hidden);visibility();document.addEventListener('visibilitychange',visibility);return()=>{document.removeEventListener('visibilitychange',visibility);node?.close();previous?.focus?.({preventScroll:true});};},[]);
- useEffect(()=>setStepper(startLessonStepper(stepCount)),[spotId,stepCount]);
+ useEffect(()=>setStepper(resumeLessonStepper(stepCount,startStep)),[spotId,stepCount]);
+ useEffect(()=>{onStep?.(stepper.step);},[stepper.step,onStep]);
  // A ball without a lesson renders nothing: leave the queue at once, or Town's stack stays hidden behind an invisible card (the job
  // pill, its hint and End job vanished, Oct 20 2026).
  const missing=!(spot||reef)||!lesson;useEffect(()=>{if(missing)onDismiss();},[missing,onDismiss]);

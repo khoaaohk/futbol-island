@@ -6,7 +6,8 @@ export type FormatPath={format:Format;title:string;openingStory?:StoryId;chapter
 export const FORMAT_PATHS=data as FormatPath[];
 export const FORMAT_PATH_VERSION=1;
 export const FORMAT_PATH_LAUNCH='fi2-format-path-launch';
-export type FormatPathLaunch={format:Format;lessonId:string;step:number;quiz:boolean;question:number;nonce:number};
+/** `from:'pitch'` (Oct 26 2026, owner): launched from a pitch card, so closing the lesson returns to that pitch, not Paths. */
+export type FormatPathLaunch={format:Format;lessonId:string;step:number;quiz:boolean;question:number;nonce:number;from?:'pitch'};
 /**
  * THE path "complete" rule (Paths lock states, card tiers, ride unlocks, the IDP all read it). User, Sep 26 2026: completing a
  * lesson's quiz unlocks the next stop. So a lesson is complete once every quiz question has a saved correct answer (retries

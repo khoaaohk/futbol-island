@@ -68,7 +68,7 @@ const BUSY_NOTE:HudToast={title:'Finish or stop your current job first',detail:'
 
 /** `holdToasts`: the HUD is covered (a dialog, the fishing session): notes wait, their timer paused. `offerAllowed`: the HUD stack
  *  arbiter (lib/ui/hudStack.ts) gave the focus slot to the job sign (a nearer Talk / Enter wins it otherwise). */
-export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,onCardChange,onRequestWalk,onOpenBalances}:{blocked:boolean;holdToasts?:boolean;offerAllowed?:boolean;/** a job card (Start job / Job done) is open: it holds the stack's task slot */onCardChange?:(open:boolean)=>void;onRequestWalk:()=>void;onOpenBalances:()=>void}){
+export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,cardOfferOpen=false,onCardChange,onRequestWalk,onOpenBalances}:{blocked:boolean;holdToasts?:boolean;offerAllowed?:boolean;/** a "Pick a card" offer is open (Town): the payday card waits behind it */cardOfferOpen?:boolean;/** a job card (Start job / Job done) is open: it holds the stack's task slot */onCardChange?:(open:boolean)=>void;onRequestWalk:()=>void;onOpenBalances:()=>void}){
  const view=useJobView(),wallet=useVending(),fish=useBasket('fish'),fruit=useBasket('produce');
  const fuel=useFuel(); // fuel counter in the coins bar (docs/economy/FUEL_2026-09-30.md)
  const [intro,setIntro]=useState<JobId|null>(null),[payday,setPayday]=useState<{id:JobId;seconds:number;pay:JobPayResult|null;best?:number;set?:BugSetId}|null>(null);
@@ -200,7 +200,9 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,o
  const start=(id:JobId)=>{if(view.active&&runtime?.run){busyNote();setIntro(null);return;}onRequestWalk();if(runtime&&!runtime.start(id)){busyNote();setIntro(null);return;}setIntro(null);setPayday(null);};
  const preview=introJob?islandJobWallet.preview(introJob.id):null;
  // One message surface at a time (bugUi.ts): the story card, then payday, then the toast slot.
- const surface=pickSurface({card:!!bugCard,payday:!!payday,toast:!!toast&&!toastHeld});
+ // Oct 26 2026 (owner; docs/JOBS_UPGRADE_OCT25.md open item 2): a fresh save's first job earns a "Pick a card" pick. It shows
+ // first and the payday card waits (kept, not lost) until the pick is closed, instead of sitting covered underneath it.
+ const surface=pickSurface({card:!!bugCard,payday:!!payday&&!cardOfferOpen,toast:!!toast&&!toastHeld&&!cardOfferOpen});
  // The Summit Isle bug jobs run by day (Bug squad) or at night (Firefly floodlights): the card says when to come back.
  const introClosed=!!introJob&&!!runtime&&!runtime.isOpen(introJob.id);
  const phaseText=()=>{if(!active||!view.active)return '';const a=view.active;if(a.hint)return a.hint;

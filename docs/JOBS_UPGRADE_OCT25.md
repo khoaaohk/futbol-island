@@ -41,8 +41,12 @@ Not changed (open questions for the owner):
 
 1. On a phone the camera is far enough out that the character's job poses read small (the rake, the hammer). A short "work
    camera" ease-in during an action would show them off; it is a design decision (and touches the follow camera), so not done.
+   **Done Oct 26 2026 (owner):** lib/town/jobs/workCamera.ts eases the follow camera 28 % toward the player while an action is
+   held (gentle smoothstepped ease, 1.2 s linger, eases out; none with reduced motion), restored each frame by Town.
 2. A fresh save's first finished job opens the "Pick a card" quest reward full screen at once, which covers the finish cheer and
    the payday card (they come after). Maybe let the payday card show first?
+   **Done Oct 26 2026 (owner: Pick a card first):** the payday card waits (kept) while a card offer is open, then shows.
+   Also Oct 26: the leaf piles moved off the 7v7 pitch (behind the north goal line and the east grass band).
 3. Resume: a stopped or abandoned shift starts from zero next time. Keeping a half-done shift for a while is possible (it is all
    in `JobRun`) but changes the save; not done.
 4. Rake the leaves: the piles lie on the 7v7 pitch while NPC matches play on it (seen in the desktop shot).

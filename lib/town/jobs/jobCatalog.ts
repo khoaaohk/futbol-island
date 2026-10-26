@@ -72,12 +72,15 @@ export type JobDef={
  spotHints?:readonly string[];spotNotes?:readonly string[];
 };
 // 7v7 Old Town Ground: centre (11,-80), 34.3 × 52.3.
-const LEAVES:JobPoint[]=[[-1,-60],[8,-57],[21,-62],[3,-70],[16,-72],[-2,-83],[10,-86],[23,-82],[5,-95],[18,-97],[-1,-102],[13,-104]].map(([x,z])=>({x,z}));
+// Oct 26 2026 (owner): the leaf piles lie OFF the 7v7 pitch (x -6.1–28.1, z -106.1–-53.9), where a match is played: blown behind
+// the north goal line and along the open grass band east of the touchline (x 30.5–41), ≥ 1.5 m outside every pitch, off the roads,
+// ≥ 1.6 m from every obstacle and building (tests/job-boards.cjs). Ordered as a walk from the sign down the east band.
+const LEAVES:JobPoint[]=[[4,-49.5],[13,-50],[28,-48],[33,-57],[37,-62],[35,-71],[38,-76],[34,-80],[37,-86],[34,-95],[37,-99],[35,-106]].map(([x,z])=>({x,z}));
 // Eleven Park 11v11: centre (135,100); the centre circle radius is 9.15 m (Law 1). Start where the halfway line meets it.
 const CIRCLE:JobPoint[]=Array.from({length:16},(_,i)=>{const a=Math.PI+i/16*Math.PI*2;return {x:135+Math.cos(a)*9.15,z:100+Math.sin(a)*9.15};});
 export const JOBS:JobDef[]=[
  {id:'leaf-rake',title:'Rake the leaves',role:'Groundskeeper',place:'Old Town Ground (7v7)',board:{x:20.5,z:-49.5,yaw:0},color:'#b8643a',kind:'collect',prop:'leaf',targets:LEAVES,deliver:{x:22.5,z:-49.5,label:'compost bin'},radius:1.5,
-  intro:'Autumn leaves have blown across the pitch. At each pile, hold Rake to sweep it together, then bag it. Empty the full bag in the compost bin by this sign.',howTo:'Walk to a leaf pile, hold Rake, then Bag it.',unit:'Leaf piles raked',
+  intro:'Autumn leaves have blown around the pitch. At each pile, hold Rake to sweep it together, then bag it. Empty the full bag in the compost bin by this sign.',howTo:'Walk to a leaf pile, hold Rake, then Bag it.',unit:'Leaf piles raked',
   work:{target:[{id:'rake',label:'Hold to rake',busy:'Raking…',mode:'hold',time:1.1,hint:'Hold Rake to sweep the leaves into a tight pile.'},{id:'bag',label:'Bag it',mode:'tap',hint:'Tap Bag it to scoop the pile into your bag.'}],deliver:{id:'empty',label:'Empty the bag',mode:'tap',hint:'Tip the leaves into the compost bin.'}},
   lesson:'Groundskeepers clear leaves because wet leaves make the pitch slippery and make a rolling pass skid or stop. A clean, smooth pitch means truer passes and safer footing.'},
  {id:'wall-rebounds',title:'Wall rebounds',role:'Practice partner',place:'Rebound wall, Coaches Centre',board:{x:138.5,z:-26.5,yaw:0},color:'#3f7a8c',kind:'rebound',prop:'ball',targets:[{x:156,z:-25}],radius:1.6,

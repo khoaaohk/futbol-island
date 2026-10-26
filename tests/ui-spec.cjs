@@ -44,7 +44,7 @@ const TOUCHED=[
  'components/IslandStore.module.css','components/KonbiniReveal.module.css','components/KonbiniRoom.module.css',
  'components/MarketCardsSection.module.css','components/PlayerCard.module.css','components/PositionGuide.module.css',
  'components/VendingCardReveal.module.css','components/VendingFace.module.css','components/VisualQuestion.module.css',
- 'components/games/PassPuzzleGame.module.css','components/games/BreakawayRun.module.css','components/games/SoccerTennisGame.module.css',
+ 'components/games/PassPuzzleGame.module.css',// Oct 26 2026: the dead 2D BreakawayRun / SoccerTennisGame were deleted.
  // Sep 30 2026 (UI_SPEC §5 open items, second pass): Pocket, Choose plays, field lesson, island jobs.
  'components/IslandBalanceDrawer.module.css','components/PlaysPicker.module.css','components/FieldLearning.module.css','components/IslandJobs.module.css',
 ];

@@ -36,10 +36,10 @@ console.log('PASS coin quest: 116 locations, sanitization, reveal/collect gating
 
 // Expanding the hunt never takes an already-earned costume away.
 const legacy40={revealed:ids.slice(0,40),collected:ids.slice(0,40),hint:null,celebrated:true};
-const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,7);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
+const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,8);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,collected:ids.slice(0,39)})),'incomplete old save does not unlock');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,version:2,rewardUnlocked:false})),'new players need all fifty');
-const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,7);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
+const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,8);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
 console.log('PASS fifty-ball migration: completed original40 keeps reward, partial40 does not, new saves require50');
 
 assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,49)}));assert(q.allCostumesEarned({...emptyCoinProgress(),collected:ids}));assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,40),rewardUnlocked:true}),'Legacy fox reward does not skip the new all-costume goal');console.log('PASS all costumes unlock at 50; legacy fox remains separate');

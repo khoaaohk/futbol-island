@@ -25,7 +25,7 @@ import styles from './BootStudio.module.css';
  * look" pairs a model with a colourway. The thumbnails are the models' real side silhouettes (lib/shop/bootGlyphs.ts).
  * Heat: the scene draws only when something changes (no loop at rest), see bootScene.ts.
  */
-type Props={onClose():void;onBuy?(design:BootDesign):void};
+type Props={onClose():void;onBuy?(design:BootDesign):void;owned?(design:BootDesign):boolean};
 const STEPS=['Shape','Style','Colours','Pattern','Studs','Stickers & flags','Name','Done'] as const;
 /** Step indices (the Shape step comes first). */
 const ST={shape:0,style:1,colours:2,pattern:3,studs:4,decals:5,name:6,done:7} as const;
@@ -104,7 +104,7 @@ function StudFinishGlyph({f,c,tip}:{f:StudFinish;c:string;tip:string}){
 }
 const STUD_GROUPS:{id:typeof STUDS[number]['group'];label:string}[]=[{id:'grass',label:'Dry grass'},{id:'wet',label:'Wet grass'},{id:'artificial',label:'Artificial pitches'},{id:'indoor',label:'Indoor floors'},{id:'elite',label:'Elite plates'}];
 
-export default function BootStudio({onClose,onBuy}:Props){
+export default function BootStudio({onClose,onBuy,owned}:Props){
  const wallet=useArcadeWallet();
  const [saves,setSaves]=useState<BootSaves|null>(null);
  const [design,setDesignState]=useState<BootDesign>(DEFAULT_BOOTS);
@@ -223,6 +223,8 @@ export default function BootStudio({onClose,onBuy}:Props){
  const renameSlot=(i:number,raw:string)=>{if(!saves)return;const s=saves.slots[i];if(!s)return;const n=cleanName(raw);if(!nameAllowed(n))return;const slots=[...saves.slots];slots[i]={...s,name:n||`Boots ${i+1}`};const next={...saves,slots};setSaves(next);storeBootSaves(next);};
  const loadSlot=(i:number)=>{const s=saves?.slots[i];if(!s)return;commit(s.design);setNameDraft(s.design.name);setSaveOpen(false);say('Loaded');};
  const buy=()=>{const d=validateBoots(design);onBuy?.(d);};
+ // Owned boots (Oct 26 2026, owner): this exact pair is already in My kit, so the price button becomes Owned · Equip (no coins).
+ const isOwned=useMemo(()=>{try{return !!owned?.(validateBoots(design));}catch{return false;}},[owned,design]);
 
  const stepBody=():ReactNode=>{switch(step){
   case ST.shape:return <>
@@ -403,7 +405,8 @@ export default function BootStudio({onClose,onBuy}:Props){
    </div>
    <footer className={styles.actions}>
     <button type="button" className={styles.save} onClick={()=>setSaveOpen(o=>!o)} aria-expanded={saveOpen}><Sym name="save"/><span>Save</span></button>
-    <button type="button" className={styles.buy} data-boot-buy-open onClick={()=>{setSaveOpen(false);setBuyOpen(true);}}><span>Buy for</span><Coin/><b key={price} className={styles.price}>{price}</b></button>
+    {isOwned?<button type="button" className={styles.buy} data-boot-owned onClick={()=>{setSaveOpen(false);buy();}} aria-label="Owned. Equip these boots"><span>Owned</span><b className={styles.price}>Equip</b></button>
+    :<button type="button" className={styles.buy} data-boot-buy-open onClick={()=>{setSaveOpen(false);setBuyOpen(true);}}><span>Buy for</span><Coin/><b key={price} className={styles.price}>{price}</b></button>}
    </footer>
   </section>
 

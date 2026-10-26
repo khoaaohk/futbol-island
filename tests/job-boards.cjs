@@ -41,8 +41,9 @@ for(const job of C.JOBS){const {x,z}=job.board,g=floor(x,z);
 // ≥ 3 m out), off every road and its sidewalks (the road footprint), ≥ 1.6 m from every obstacle and building.
 {const boxGap=(q,o)=>Math.hypot(Math.max(0,Math.abs(q.x-o.x)-o.w/2),Math.max(0,Math.abs(q.z-o.z)-o.d/2));
  assert(world.roads.length>10&&world.obstacles.length>100,'the fixture returns the real roads and obstacles');
- const kid=C.jobById('ball-kid'),cones=C.jobById('cone-setup');
- const spots=[...cones.targets.map(q=>[q,'cone mark',1]),[cones.board,'cone sign',1],...kid.targets.map(q=>[q,'loose ball',3]),[kid.deliver,'ball box',3]];
+ const kid=C.jobById('ball-kid'),cones=C.jobById('cone-setup'),leaves=C.jobById('leaf-rake');
+ // Oct 26 2026 (owner): the leaf piles were ON the 7v7 pitch; now around it, ≥ 1.5 m out.
+ const spots=[...leaves.targets.map(q=>[q,'leaf pile',1.5]),...cones.targets.map(q=>[q,'cone mark',1]),[cones.board,'cone sign',1],...kid.targets.map(q=>[q,'loose ball',3]),[kid.deliver,'ball box',3]];
  for(const [q,what,out] of spots){
   for(const v of V.VENUES)assert(Math.abs(q.x-v.x)>v.width/2+out||Math.abs(q.z-v.z)>v.length/2+out,`${what} (${q.x}, ${q.z}) is ≥ ${out} m outside the ${v.name} pitch`);
   for(const r of world.roads)assert(boxGap(q,r)>=1,`${what} (${q.x}, ${q.z}) is ≥ 1 m off the road and sidewalk at (${r.x}, ${r.z})`);

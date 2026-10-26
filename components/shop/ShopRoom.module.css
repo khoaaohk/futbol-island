@@ -67,3 +67,9 @@
  .root[data-party] .greeting,.root[data-party] .hint{top:calc(max(12px,env(safe-area-inset-top)) + 118px)}
 }
 
+/* Ball studio shortcut (Oct 26 2026): bottom right, clear of the joystick (bottom left) and the hint; 48 px tall tap target. */
+.ballEntry{position:absolute;z-index:5;right:max(16px,calc(12px + env(safe-area-inset-right,0px)));bottom:calc(max(16px,env(safe-area-inset-bottom)) + 24px);display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 18px 0 14px;border:0;border-radius:999px;background:var(--accent);color:#fff;font:800 15px/1 inherit;letter-spacing:.03em;box-shadow:0 10px 24px -10px rgba(239,90,47,.7);cursor:pointer}
+.ballEntry svg{width:22px;height:22px}
+.ballEntry:hover{background:#d94b22}
+.ballEntry:focus-visible{outline:3px solid var(--navy);outline-offset:3px}
+@media(min-width:721px) and (pointer:fine){.ballEntry{bottom:calc(max(16px,env(safe-area-inset-bottom)) + 56px)}}

@@ -16,6 +16,7 @@
  */
 import dynamic from 'next/dynamic';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
+import {registerBackCloser} from '@/lib/town/backCloses';
 import {fishSellValue} from '@/lib/economy';
 import {fishingSession,finishFishingTutorial,useFishingPrefs} from '@/lib/town/fishing/fishingStore';
 import {sizeCompare} from '@/lib/town/fishing/fishingCard';
@@ -93,6 +94,9 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const [toast,setToast]=useState<{title:string;text:string;key:number}|null>(null),[expanded,setExpanded]=useState(false);
  // Card offers and other pop-ups wait while fishing, the Fishbook or the stand is open.
  useEffect(()=>{onOpenChange(view.active||stand||book);},[view.active,stand,book,onOpenChange]);
+ // The phone's back button stops live fishing like Back does (Oct 26 2026, owner; lib/town/backCloses.ts). The stand and the
+ // Fishbook are dialogs, which back already closes first.
+ useEffect(()=>view.active?registerBackCloser(()=>fishingSession.stop()):undefined,[view.active]);
  // Only the dialogs pause the island; live fishing keeps the existing world loop running.
  useEffect(()=>{fishingSession.pause(stand||book||paused);onDialogChange?.(stand||book);return()=>fishingSession.pause(false);},[stand,book,paused,onDialogChange]);
  useEffect(()=>{const open=(e:Event)=>{const d=(e as CustomEvent<{tab?:Tab;place?:Place}>).detail;setPlace(d?.place==='farm'?'farm':'rosa');setTab(d?.tab);setLoaded(l=>({...l,stand:true}));setStand(true);};window.addEventListener(OPEN_MARKET_STAND,open);return()=>window.removeEventListener(OPEN_MARKET_STAND,open);},[]);

@@ -32,7 +32,8 @@ import {createPositionStore} from '@/lib/town/positionStore';
 import {MovingIslandOverview,MovingIslandTravelMap} from './MovingIslandMap';
 import {createHiddenTransformGate} from '@/lib/graphics/hiddenTransformGate';
 import {Icon} from './Icon';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {readCoinProgress,setPendingBallLesson} from '@/lib/town/coinProgress';
 import {createIslandSound} from '@/lib/audio/islandSound';
 import type {WaterSoundFrame} from '@/lib/audio/islandSound';
 const REEF_TINT_MS=650;// the reef dive's soft blend through the zone's water colour (app/globals.css .water-under.is-reef)
@@ -220,6 +221,7 @@ import CardOfferHost from './CardOfferHost';
 // Lane 2 endgame (Sep 30 2026): graduations, certificates, the live Ferry/Museum/Coaches Board (docs/endgame-2026-09-30.md).
 import GraduationHost from './GraduationHost';
 import FieldPathCard from './FieldPathCard';
+import {lessonCloseTarget} from '@/lib/paths/lessonReturn';
 import {ENDGAME_OPEN,GRADUATIONS_CHANGED,readGraduations,type EndgameOpen} from '@/lib/endgame/graduationStore';
 import {ferryUnlocked} from '@/lib/endgame/graduationModel';
 import LearningHost from './LearningHost';
@@ -241,7 +243,7 @@ let hiddenN=0,mutedN=0;
 const onHiddenFriends=(s:ReadonlySet<number>)=>{if(s.size>hiddenN)countParty('hide');hiddenN=s.size;setHiddenFriends(s);};
 const onMutedFriends=(s:ReadonlySet<number>)=>{if(s.size>mutedN)countParty('mute');mutedN=s.size;setMutedFriends(s);};
 import {installHudFocusRule} from '@/lib/town/hudFocus';
-import {installBackCloses} from '@/lib/town/backCloses';
+import {installBackCloses,registerBackCloser} from '@/lib/town/backCloses';
 import {typingTarget} from '@/lib/town/typingTarget';import KeepUpCounter from './KeepUpCounter';import {readBallRecord,recordStreak} from '@/lib/konbini/konbiniBall';import {keepUpStep,keepUpLinger} from '@/lib/town/keepUps';// counted keep-ups + the shared best (lib/town/keepUps.ts)
 /** Party door hints on the island: each Konbini, the Museum and the Kit Shop ("2 in the Kit Shop"; docs/multiplayer-rooms-design.md Phases 1, 2 and 4). */
 const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT] as const;
@@ -444,6 +446,15 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
   const [ready,setReady]=useState(false);
+  // Found-ball lessons survive a reload (Oct 26 2026, owner): the card on screen is saved (ball id + step, lib/town/coinQuest.ts
+  // pendingLesson) and reopened at that step once the island is ready; Got it clears it.
+  const ballResumed=useRef(false),ballResume=useRef<{id:string;step:number}|null>(null),ballFront=ballLessons[0];
+  useEffect(()=>{if(!ready)return;
+   if(!ballResumed.current){ballResumed.current=true;const p=readCoinProgress().pendingLesson;if(p&&!ballFront){ballResume.current=p;setBallLessons([p.id]);return;}}
+   if(ballResume.current&&ballResume.current.id!==ballFront)ballResume.current=null;
+   setPendingBallLesson(ballFront?{id:ballFront,step:ballResume.current?.id===ballFront?ballResume.current.step:0}:null);
+  },[ready,ballFront]);
+  const ballStep=useCallback((step:number)=>{if(ballFront)setPendingBallLesson({id:ballFront,step});},[ballFront]);
   // Tan hand-off from the title screen (preload pass, Oct 9 2026): the plain tan sheet starts its 0.5 s cross-fade at once (IslandLoading
   // CSS), so the arrival starts with it and the HUD arrives as it ends, instead of the art loader's 1.5 s / 2.05 s choreography.
   useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:tanHandoff()?600:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
@@ -1910,7 +1921,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       {const f=summitCamera.update(visualLocation.x,visualLocation.z,water.inWater?Math.max(groundY,WATER_LEVEL):groundY,camTarget.x,camTarget.y,camTarget.z,dt);if(f<1){camTarget.x=visualLocation.x+(camTarget.x-visualLocation.x)*f;camTarget.y=groundY+(camTarget.y-groundY)*f;camTarget.z=visualLocation.z+(camTarget.z-visualLocation.z)*f;}camTarget.y+=summitCamera.lift;}
       // Sky keep-up: ease the follow camera back and up (same view direction) while the ball is way up, so ball and player both stay in frame.
       {const bs=walkBall.state,want=rideRef.current==='walk'&&bs.mode==='sky'?Math.min(1,Math.max(0,(bs.y-groundY-3)/(SKY_MAX_APEX-3))):0;skyCamLift+=(want-skyCamLift)*(reduced?1:1-Math.exp(-dt*2.5));if(skyCamLift>.002){camTarget.x+=4*skyCamLift;camTarget.y+=9.75*skyCamLift;camTarget.z+=8.25*skyCamLift;}}
-      moveNudge.restore(camera);emoteCam.restore(camera);
+      moveNudge.restore(camera);emoteCam.restore(camera);jobs.restoreCamera(camera);
       if(!learningFormat.current){camera.position.lerp(camTarget,reduced?1:1-Math.exp(-dt*(mobileTravel?20:flying?14:rampCamera?10:4)));
         // Bound follow lag on phones so boosted rides stay near the center.
         if(mobileTravel){const lag=camera.position.distanceTo(camTarget);if(lag>1.2)camera.position.lerp(camTarget,1-1.2/lag);}
@@ -2139,6 +2150,14 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
   useEffect(()=>{if(fishingOpen)releaseStick();},[fishingOpen]);// eslint-disable-line react-hooks/exhaustive-deps
   // The "calm moment" rule (GraduationHost's blocked list): no ceremony over a menu, lesson, shop door or card offer. QA11: the
   // welcome-back card and costume/ride toasts reuse it and also wait for the graduation ceremony and settings/Paths.
+  const closeFieldLesson=()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){const back=lessonCloseTarget(formatPathRequest);setFormatPathRequest(null);setLearningRequest(null);if(back==='paths'){setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}};
+  // Back closes non-dialog states too (Oct 26 2026, owner; lib/town/backCloses.ts): a pitch lesson, the coach lesson and the
+  // expanded corner minimap on a phone. Fishing registers its own (FishingHost). Refs keep each closer current without re-registering.
+  const backClose=useRef({field:closeFieldLesson,lesson:()=>requestLesson('exit')});backClose.current={field:closeFieldLesson,lesson:()=>requestLesson('exit')};
+  const fieldOpen=!!fieldCatalog,coachLessonOpen=!!lesson;
+  useEffect(()=>fieldOpen?registerBackCloser(()=>backClose.current.field()):undefined,[fieldOpen]);
+  useEffect(()=>coachLessonOpen?registerBackCloser(()=>backClose.current.lesson()):undefined,[coachLessonOpen]);
+  useEffect(()=>{if(!ready||minimapCollapsed||!window.matchMedia('(max-width:600px),(pointer:coarse)').matches)return;return registerBackCloser(()=>setMinimapCollapsed(true));},[ready,minimapCollapsed]);
   const calmBlocked=learningOpen||grownUpsOpen||cardOfferOpen||vendingLeaving||fishingOpen||ballLessons.length>0||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||shopOpen||ferryOpen||map||!!positionSelection||!!fieldCatalog||!!lesson||!!konbiniDoor;
   const toastBlocked=calmBlocked||graduationOpen||settingsOpen;
   /* Calm HUD (Oct 21 2026): one card under the coins bar. While an action prompt shows (Talk, a job sign, Hop off, Land on truck,
@@ -2160,7 +2179,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: the daily warm-up and live-match Spot it */}
     {/* The welcome's "Earn coins" step rings the coin pocket ([data-job-wallet]), so the pocket stays on screen behind the welcome
         (the modal keeps it inert); job offers and toasts wait until it closes. */}
-    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
+    {ready&&!failed&&<IslandJobs onOpenBalances={()=>setBalancesOpen(true)} blocked={(settingsRef.current&&!onboardingOpen)||map||!!fieldCatalog||!!lesson} cardOfferOpen={cardOfferOpen} holdToasts={stackCovered||onboardingOpen} offerAllowed={hudFocus==='job-offer'&&!onboardingOpen} onCardChange={onJobCardChange} onRequestWalk={()=>{if(rideRef.current!=='walk')selectRide('walk');}}/>}
     {ready&&!failed&&<FerryPreview open={ferryOpen} onOpenChange={setFerryOpen}/>}
     {ready&&!failed&&<Museum open={museumOpen} onOpenChange={setMuseumOpen}/>}
     {ready&&!failed&&mountWhen('coaches',coachesOpen)&&<CoachesCentre open={coachesOpen} onOpenChange={setCoachesOpen}/>}
@@ -2209,8 +2228,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<GraduationHost blocked={calmBlocked} onOpenChange={setGraduationOpen}/>}
     {ready&&!failed&&<CardOfferHost blocked={graduationOpen||vendingLeaving||fishingOpen||ballLessons.length>0||!!lesson||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||shopOpen||ferryOpen||map||!!positionSelection} onOpenChange={setCardOfferOpen}/>}
     {ready&&!failed&&<CostumeMilestoneToast blocked={toastBlocked}/>}{ready&&!failed&&<RideUnlockToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="shark"/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="ride"/>}{ready&&!failed&&<RayLessonToast blocked={toastBlocked}/>}{ready&&!failed&&<ReefHintToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="dive"/>}{ready&&!failed&&<DiveHud/>}{ready&&!failed&&<FuelToast blocked={stackCovered/* also waits under the island pocket (bug A3) */}/>}{ready&&!failed&&<WelcomeBack blocked={toastBlocked||jobRunning||jobCardShown||actionFocus} held={stackCovered}/>}
-    {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
-    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} onPickerChange={setPlaysPickerOpen} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying||cardOfferOpen} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){setFormatPathRequest(null);setLearningRequest(null);setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}/>}
+    {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} startStep={ballResume.current?.id===ballLessons[0]?ballResume.current.step:0} onStep={ballStep} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
+    {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} onPickerChange={setPlaysPickerOpen} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying||cardOfferOpen} onClose={closeFieldLesson}/>}
     {lesson&&<CoachLesson phase={lesson} open={laneOpen} feedback={coachFeedback} onWatch={()=>requestLesson('watch')} onPractice={()=>requestLesson('practice')} onPass={()=>{input.current.kick=true;}} onExit={()=>requestLesson('exit')} format={passFormat} onFormat={choosePassFormat} attempts={passAttempts} aimStatus={aimStatus} onStraight={()=>lessonAim.current?.straight()} onPlay={()=>lessonAim.current?.play()} onCancel={()=>lessonAim.current?.cancel()} onReplay={()=>lessonAim.current?.replay()}/>}
     {!ready&&!failed&&(returningFromArcade?<IslandReturnLoading exiting={loadingComplete}/>:<IslandLoading exiting={loadingComplete}/>)}
     {failed&&<div className="town-loading"><h2>The island needs WebGL.</h2><p>Enable hardware acceleration in your browser, then reload.</p><button className="pixel-button" onClick={()=>window.location.reload()}>TRY AGAIN</button></div>}
