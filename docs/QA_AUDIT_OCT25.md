@@ -57,4 +57,7 @@ foldable and tablet journey screens (only the title rendered before the server d
 15. Kit Shop and Museum rooms load (doors open, NPC greeting, Done/My kit reachable).
 16. Layout sweeps (audit-landscape journey + places) at 393x852, 320x568, 700x840, 820x1180: title, welcome, save code, tutorial, island, pocket, Paths, lesson, minimap, map, settings.
 17. 5-minute soak wandering on all rides with keep-ups and Settings open/close (heap, DOM nodes, listeners, three.js geometries/textures).
+18. Offline after load: riding still works; Settings while offline (#13); navigating to a room offline (browser offline page, expected).
+19. Desktop 1280x800: Arcade, Kit Shop, Museum rooms.
+20. 320x568 save-code footer and Settings title, before and after the fixes (#6, #7).
 
