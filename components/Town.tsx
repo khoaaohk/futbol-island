@@ -190,7 +190,7 @@ import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
-import {createWaterProbe,canSplashDown,swimStep,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED} from '@/lib/town/water/waterDepth';
+import {createWaterProbe,canSplashDown,swimStep,swimEdgePush,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED} from '@/lib/town/water/waterDepth';
 import {createSwimClear,SWIM_DIVE_CLEAR} from '@/lib/graphics/swimClear';
 import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clearWindow';
 import {UW_SURFACE} from '@/lib/town/fishing/underwater';
@@ -199,7 +199,7 @@ import {beanSkinOf} from '@/lib/graphics/beanSkin';
 import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
-import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
+import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,SWIM_EDGE_TITLE,SWIM_EDGE_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
 import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
@@ -725,7 +725,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // ball waits on the sand (decision 3). Ride launches may end over splashable water (rooftopJump.ts canSplash).
     const clearWin=createClearWindow(scene,()=>world.islandShore.field);// the clear water window over the shallows (lib/town/water/clearWindow.ts)
     const swimClear=createSwimClear(scene);// the swimmer's clear disc + seabed shadow + underwater body tint (lib/graphics/swimClear.ts)
-    const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}),/* the dive keeps the body above the drawn seabed (Oct 19 2026, diving to a shore lost the diver in the bed) */waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};
+    const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}),/* the dive keeps the body above the drawn seabed (Oct 19 2026, diving to a shore lost the diver in the bed) */waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};let swimEdgeHold=0,swimEdgeQuiet=0;
     // Water P1a (lib/town/water/sharks.ts): sharks circle a swimmer; the "Uh oh!" bubble, the sting, the lesson, a camera nudge.
     const sharkCircle=createSharkCircle(onLand,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}/* the drawn seabed: orbiting sharks stay above it (Oct 20 2026) */),sharkHead=new T.Vector3();let sharkBubbleUntil=0;world.sharks.attend(sharkCircle);
     const sharkEvents=(se:SharkEvents)=>{if(se.ended)countSharksEscape();if(!se.started)return;countSharksCircle();sharkBubbleUntil=performance.now()+SHARK_BUBBLE_S*1000;
@@ -1359,6 +1359,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // Swimming: no obstacles in the sea; momentum, the Swim fast hold, the soft 60 m edge (waterDepth.ts swimStep). The dip and
         // the surfacing hold the body still.
         if(water.state.phase==='swim')swimStep(location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz},water.state.fast,dt,waterWalk.allow,onLand,waterProbe.d);else velocity.x=velocity.z=0;
+        // QA Oct 25: pushing into the edge of the swimmable sea said nothing (the swimmer just stopped): after ~1 s of pushing, a note; again after 20 s.
+        swimEdgeHold=water.state.phase==='swim'&&!holdStill&&swimEdgePush(location.x,location.z,{x:mx,z:mz},waterWalk.allow,onLand)?swimEdgeHold+dt:0;swimEdgeQuiet=Math.max(0,swimEdgeQuiet-dt);if(swimEdgeHold>1&&swimEdgeQuiet===0){swimEdgeQuiet=20;fuelStore.say(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE);}
       }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);}
       // A fall, a rooftop jump or a ride launch that ends over splashable water (decision 4): a water landing, not a knockdown.
       if(rooftop.jump.fall)launchFall=true;
@@ -1969,7 +1971,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           // overlap the view even after the whole angled field has left it.
           // Owner (Oct 24 2026): the pitch card only shows while you are standing in that pitch's space, not whenever it is in sight.
           if(Math.abs(player.root.position.x-v.x)>v.width/2+3||Math.abs(player.root.position.z-v.z)>v.length/2+3)continue;
-          const score=pitchVisibility(camera,v.x,.2+(v.elevation??0),v.z,v.width,v.length);
+          // QA Oct 25: on Eleven Park a corner sits behind the camera from mid-pitch, so the projection says Infinity; standing in the pitch still counts.
+          const score=Math.min(pitchVisibility(camera,v.x,.2+(v.elevation??0),v.z,v.width,v.length),1e3);
           if(score<bestFieldScore){bestFieldScore=score;visibleVenue=v.id;}
         }
       }

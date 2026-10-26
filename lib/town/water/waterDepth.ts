@@ -150,6 +150,12 @@ export function createWaterProbe(distance:(x:number,z:number)=>number=distanceTo
  * swimmer: the top speed fades to SWIM_EDGE_KEEP of itself over the last SWIM_EDGE_FADE m, and `allowed` is the soft wall at
  * the range itself (the step slides along it). No allocation.
  */
+/** QA Oct 25 2026: the stick pushes a swimmer into the soft wall (the swim range or the world's edge): the point `reach` m
+ *  ahead along the stick is neither swimmable nor land. Town shows SWIM_EDGE_NOTE once the push lasts a moment. No allocation. */
+export function swimEdgePush(x:number,z:number,input:{x:number;z:number},allowed:(x:number,z:number)=>boolean,land:(x:number,z:number)=>boolean,reach=1.5){
+ const len=Math.hypot(input.x,input.z);if(len<.5)return false;
+ const ax=x+input.x/len*reach,az=z+input.z/len*reach;return !allowed(ax,az)&&!land(ax,az);
+}
 export const SWIM_EDGE_FADE=6,SWIM_EDGE_KEEP=.35;
 export function swimStep(position:{x:number;z:number},velocity:{x:number;z:number},input:{x:number;z:number},fast:boolean,dt:number,allowed:(x:number,z:number)=>boolean,land:(x:number,z:number)=>boolean,distanceOut=0){
  dt=Math.max(0,Math.min(dt,.25));

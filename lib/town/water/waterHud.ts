@@ -28,6 +28,8 @@ export const DIVE_BUTTON:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Dive:
 export const SURFACE_BUTTON:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Swim back up',icon:'surface',enabled:true};
 export const DIVE_SHALLOW:JobButton={slot:'juggle',key:'Q',id:'dive',label:'Dive: swim out to deeper water first',icon:'dive',enabled:false};
 /** The hint a tap of the greyed Dive shows (the job note lane). */
+/** The note when a swimmer keeps pushing into the edge of the swimmable sea (waterDepth.ts swimEdgePush). */
+export const SWIM_EDGE_TITLE='Far enough!',SWIM_EDGE_NOTE='The sea is too big to swim across. Swim back to the island, or fly to the far reefs.';
 export const DIVE_SHALLOW_NOTE='Too shallow to dive here. Swim out a little deeper.';
 export const WATER_BUTTONS:readonly JobButton[]=[SPRINT,DIVE_BUTTON,RIDE_SWIM_NO_FUEL] as const;
 export const WATER_BUTTONS_FLY:readonly JobButton[]=[SPRINT,DIVE_BUTTON,RIDE_SWIM] as const;
