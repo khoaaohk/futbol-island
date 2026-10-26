@@ -6,7 +6,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typ
 const src=fs.readFileSync(path.join(__dirname,'../lib/town/backCloses.ts'),'utf8');
 const town=fs.readFileSync(path.join(__dirname,'../components/Town.tsx'),'utf8');
 assert.equal((town.match(/installBackCloses\(\)/g)||[]).length,1,'Town installs the back guard once');
-assert.match(town,/import \{installBackCloses\} from '@\/lib\/town\/backCloses'/);
+assert.match(town,/import \{installBackCloses,registerBackCloser\} from '@\/lib\/town\/backCloses'/);
 assert(!/setTimeout|setInterval|requestAnimationFrame/.test(src.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/.*$/gm,'')),'no timers or polling');
 
 // Fake window / history / dialogs.
@@ -49,6 +49,21 @@ under.open=false;
 // 5. A sheet that ignores Escape keeps the island (no trap: it has its own Done) and the guard stays.
 const stubborn=new El('stubborn');dialogs.push(stubborn);history.back();assert.equal(stubborn.open,true);assert.equal(index,1,'guard back on');
 stubborn.open=false;
+// 5b. Non-dialog states (Oct 26 2026, owner): the minimap, a lesson, fishing register closers; back closes the newest first, a
+// dialog still goes before any of them, and an unregistered state no longer catches back.
+const closed=[];const offMap=B.registerBackCloser(()=>closed.push('minimap')),offLesson=B.registerBackCloser(()=>closed.push('lesson'));
+const offFish=B.registerBackCloser(()=>{closed.push('fishing');offFish();});
+assert.equal(B.backCloserCount(),3);
+const over2=new El('over2',{onKey:(e,d)=>{d.open=false;}});dialogs.push(over2);
+history.back();assert.equal(over2.open,false,'a dialog closes before any state');assert.deepEqual(closed,[]);assert.equal(index,1);
+history.back();assert.deepEqual(closed,['fishing'],'newest state first (fishing)');assert.equal(index,1,'guard back on');
+history.back();assert.deepEqual(closed,['fishing','lesson']);offLesson();
+history.back();assert.deepEqual(closed,['fishing','lesson','minimap']);offMap();assert.equal(B.backCloserCount(),0);
+offMap();assert.equal(B.backCloserCount(),0,'unregister twice is harmless');
+// Wiring: Town registers the pitch lesson, the coach lesson and the phone minimap; FishingHost registers live fishing.
+const fishing=fs.readFileSync(path.join(__dirname,'../components/FishingHost.tsx'),'utf8');
+assert.ok(town.includes('fieldOpen?registerBackCloser(')&&town.includes('coachLessonOpen?registerBackCloser(')&&town.includes('registerBackCloser(()=>setMinimapCollapsed(true))'),'Town registers lesson + minimap closers');
+assert.ok(fishing.includes('view.active?registerBackCloser(()=>fishingSession.stop())'),'fishing stops on back');
 // 6. Nothing open: back leaves as before (past the guard and the island's own entry).
 entries.unshift({prev:true});index++;
 history.back();

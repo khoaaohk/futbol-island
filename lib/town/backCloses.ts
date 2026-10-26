@@ -8,7 +8,20 @@
  *  - a dialog is open → the topmost one gets the Escape it already closes on, and the guard goes back on;
  *  - nothing is open → the back carries on exactly as before (one more history.back()).
  * No timers: one popstate listener.
+ *
+ * Non-dialog states (Oct 26 2026, owner): the expanded minimap, a pitch lesson and live fishing are not dialogs, so each registers a
+ * closer while it is open (registerBackCloser). Back closes the topmost dialog first, then the newest registered state, and only
+ * then leaves the island.
  */
+const closers: Array<() => void> = [];
+/** While a non-dialog state is open, back runs `close` (newest first) instead of leaving. Returns the unregister function. */
+export function registerBackCloser(close: () => void): () => void {
+  const entry = () => close();
+  closers.push(entry);
+  return () => { const i = closers.lastIndexOf(entry); if (i >= 0) closers.splice(i, 1); };
+}
+/** How many non-dialog states are registered (tests). */
+export const backCloserCount = () => closers.length;
 export const BACK_GUARD_KEY = 'fi2BackGuard';
 const DIALOGS = '[role=dialog],[role=alertdialog],dialog[open],[aria-modal=true]';
 
@@ -53,8 +66,9 @@ export function installBackCloses(win: Window = window): () => void {
     if (guarded()) return; // forward onto the guard again
     if (win.location.href !== home) return; // some other page's entry (a soft navigation): never chain further back
     const d = topDialog(doc);
-    if (!d) { h.back(); return; }
-    closeLikeEscape(d, doc);
+    if (d) closeLikeEscape(d, doc);
+    else if (closers.length) closers[closers.length - 1]();
+    else { h.back(); return; }
     // The guard goes straight back on: a sheet that animates shut, or one that ignores Escape (closed with its own Done), keeps
     // the next back press for the island too. (Oct 25: a 220 ms "did it close?" check misread closing animations as ignored.)
     push();
