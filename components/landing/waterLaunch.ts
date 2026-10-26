@@ -61,6 +61,15 @@ const bounceAway=(el:SVGElement|HTMLElement,delay:number)=>{el.style.transformBo
  return el.animate([{transform:'scale(1)',opacity:1},{transform:'translateY(-5px) scale(1.13)',opacity:1,offset:.28},{transform:'translateY(2px) scale(.94)',opacity:1,offset:.48},{transform:'translateY(5px) scale(0)',opacity:0}],{
   delay,duration:340,easing:'ease-in-out',fill:'forwards'});};
 
+/** Slow networks (QA 4, Oct 26 2026): the full tan sheet can wait 20-30 s for the game's code on slow 3G with nothing moving. A loading
+ *  track (the island loader's own, darker for the tan, where IslandLoading's sits) fades in after 2.5 s; a normal load is gone by then.
+ *  It lives in the title screen, so it leaves with it. */
+export function lateTanTrack(screen:HTMLElement,reduced=false){
+ const t=document.createElement('span');t.className='island-loading-track';t.setAttribute('aria-hidden','true');t.dataset.tanTrack='';
+ const bar=document.createElement('span');bar.style.background='#8a6a2c';t.appendChild(bar);
+ Object.assign(t.style,{position:'fixed',zIndex:'41',left:'50%',top:'calc(30% + 47px)',width:'180px',height:'6px',margin:'0 0 0 -90px',background:'#a8853f40',opacity:'0',pointerEvents:'none'});
+ screen.appendChild(t);t.animate([{opacity:0},{opacity:1}],{duration:reduced?1:400,delay:2500,fill:'forwards'});
+}
 /** Steps 3: resolves when the screen is fully tan (a fixed tan sheet covers it). */
 export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduced=false}={}):Promise<void>{
  const q=<E extends Element=HTMLElement>(s:string)=>screen.querySelector<E>(s),qa=(s:string)=>[...screen.querySelectorAll<HTMLElement>(s)];
@@ -71,7 +80,7 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  const vw=innerWidth,vh=innerHeight;
  if(reduced||!land){
   Object.assign(sheet.style,{inset:'0',width:'100%',height:'100%',background:TAN,opacity:'0'});screen.appendChild(sheet);
-  await sheet.animate([{opacity:0},{opacity:1}],{duration:reduced?240:400,fill:'forwards'}).finished.catch(()=>{});return;}
+  await sheet.animate([{opacity:0},{opacity:1}],{duration:reduced?240:400,fill:'forwards'}).finished.catch(()=>{});lateTanTrack(screen,reduced);return;}
  if(pill)pill.animate([{opacity:1,transform:'none'},{opacity:0,transform:'scale(.94)'}],{duration:260,easing:'ease-in',fill:'forwards'});
  // Pink slides down and away; the far hills and the sky's sun / star / sea glints leave.
  // The dark hills ride down WITH the pink (same move): the hill band has a flat bottom that only the pink covers, so it must never
@@ -103,4 +112,5 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  const cx=r.left+r.width/2,cy=r.top+r.height/2,sx=2*Math.max(cx,vw-cx)/(r.width*.7),sy=2*Math.max(cy,vh-cy)/(r.height*.7),k=Math.max(sx,sy);
  await sheet.animate([{transform:'none'},{transform:`scale(${k})`}],
   {duration:700,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).finished.catch(()=>{});
+ lateTanTrack(screen);
 }

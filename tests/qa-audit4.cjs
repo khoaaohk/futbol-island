@@ -25,6 +25,10 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
  assert.match(css,/:global\(html\[data-island-handoff=tan\]\) \.screen>\*\{visibility:hidden\}/,'tan mode hides the art (the reason)');
  assert.match(css,/:global\(html\[data-island-handoff=tan\]\) \.screen:not\(\.exiting\) :global\(\.island-loading-track\)\{visibility:visible;[^}]*animation:tanTrackIn \.4s 2\.5s both\}/,'the track shows after 2.5 s');
  assert.match(css,/@keyframes tanTrackIn\{from\{opacity:0\}to\{opacity:1\}\}/);
+ const water=read('components/landing/waterLaunch.ts');
+ assert.match(water,/export function lateTanTrack\(screen:HTMLElement,reduced=false\)\{/,'the title tan sheet has its own late track (the sheet waits for the game code)');
+ assert.equal((water.match(/lateTanTrack\(screen(,reduced)?\);/g)||[]).length,2,'both tan exits (reduced and full) add it');
+ assert.match(water,/delay:2500,fill:'forwards'/);
  assert.match(read('components/IslandLoading.tsx'),/<span className="island-loading-track" aria-hidden="true"><span\/><\/span>/,'the track is in the loader');
 }
 console.log('qa-audit4 ok');
