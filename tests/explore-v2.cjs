@@ -61,7 +61,7 @@ ok('swim feel: the glide carries, no Dart (removed Oct 21/22 2026 by user decisi
 });
 
 ok('the reef journey: 8 pickups per zone on the path, on the sand, inside the room; progress, next target, restore, saves',()=>{
- for(const z of D.DIVE_SPOTS){const p=J.journeyPickups(z);assert.equal(p.length,8,z.id);assert.equal(J.journeyTotal(z),12);
+ for(const z of D.DIVE_SPOTS){const p=J.journeyPickups(z);assert.equal(p.length,8,z.id);assert.equal(J.journeyTotal(z),11);/* 8 pickups + relic, coral, clam (Oct 25 2026: the chest's coin became the secret ball) */
   assert.equal(p.filter(q=>q.kind==='litter').length,4);for(const q of p){assert(Math.hypot(q.x,q.z)<=D.DIVE_ROOM_R-1.99,'inside '+z.id);assert(Math.abs(q.y-(D.diveFloor(q.x,q.z,z.floor)+.28))<1e-9,'on the sand');assert(q.y<D.DIVE_SURFACE_Y-.5);}
   assert.equal(new Set(p.map(q=>q.x.toFixed(2)+','+q.z.toFixed(2))).size,8,'no two in one place');
   const got=p.map(()=>false);assert.equal(J.reach(p,got,p[3].x,p[3].y,p[3].z),3);got[3]=true;assert.notEqual(J.reach(p,got,p[3].x,p[3].y,p[3].z),3);
@@ -83,9 +83,9 @@ ok('the runtime: swim through a pickup collects it, finishing the zone restores 
  const st=rt.session.state;
  for(const p of rt.pickups){st.x=p.x;st.z=p.z;st.y=p.y+.2;st.depthT=1;rt.frame(1/30,{sx:0,sy:0,lift:0},390,844);st.breath=1;}
  assert.equal(rt.got.filter(Boolean).length,8,'every pickup collected by swimming through');assert.equal(events.filter(e=>e.startsWith('pick')).length,8);
- assert.equal(RT.diveStore.get().reef,'8/12');
+ assert.equal(RT.diveStore.get().reef,'8/11');
  for(const f of D.diveTaskFinds(spot)){const p=D.diveFindPoint(f,{x:0,y:0,z:0},spot.floor);st.x=p.x;st.z=p.z;st.y=p.y;rt.session.state.find=f;rt.use();st.breath=1;}/* the hidden explore ball is not a reef task (diveBalls.ts) */
- assert(events.includes('restored'),'restored at 12/12');assert(credits.some(([id,c])=>id==='dive:pauls-grotto:reef'&&c===3),'the restore pays once');
+ assert(events.includes('restored'),'restored at 11/11');assert(credits.some(([id,c])=>id==='dive:pauls-grotto:reef'&&c===3),'the restore pays once');
  assert.equal(RT.diveStore.get().restored,true);assert.equal(RT.diveStore.get().card.id,'reef');
  // The ball: put it just in front of the goal line, moving through it.
  const room=rt.room;assert(room.ball&&room.goal,'the pitch zone has a ball');

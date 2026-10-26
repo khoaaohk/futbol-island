@@ -1,4 +1,4 @@
-// Ball Hunt lessons (Sep 28 2026 curriculum, 100 since the Sep 29 2026 Coral Cay balls, 115 since the Oct 15 2026 Summit Isle balls): 115 different key football ideas, each with its own three-step scene.
+// Ball Hunt lessons (Sep 28 2026 curriculum, 100 since the Sep 29 2026 Coral Cay balls, 115 since the Oct 15 2026 Summit Isle balls, 116 since the Oct 25 2026 East Jetty ball): 116 different key football ideas, each with its own three-step scene.
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const root=path.resolve(__dirname,'..'),cache=new Map();
 function load(file){const abs=path.resolve(root,file.endsWith('.ts')?file:file+'.ts');if(cache.has(abs))return cache.get(abs).exports;const mod={exports:{}};cache.set(abs,mod);
@@ -8,15 +8,15 @@ const {COIN_QUEST}=load('lib/town/coinQuest.ts'),{BALL_HUNT_LESSONS,BALL_HUNT_PR
 const words=s=>s.trim().split(/\s+/).length,title=s=>s.teaching.slice(0,s.teaching.indexOf('.'));
 
 // 1. Coverage and distinct concepts: one lesson per ball, one concept (scene kind) per lesson, every scene used once.
-assert.equal(Object.keys(BALL_HUNT_LESSONS).length,COIN_QUEST.length);assert.equal(COIN_QUEST.length,115);
+assert.equal(Object.keys(BALL_HUNT_LESSONS).length,COIN_QUEST.length);assert.equal(COIN_QUEST.length,116);
 const kinds=COIN_QUEST.map(s=>BALL_HUNT_LESSONS[s.id]?.kind);
 assert(kinds.every(Boolean),'every ball has a lesson');
-assert.equal(new Set(kinds).size,115,'no two balls teach the same concept');
+assert.equal(new Set(kinds).size,116,'no two balls teach the same concept');
 assert.deepEqual([...kinds].sort(),Object.keys(SCENES).sort(),'every scene is used by exactly one ball');
-assert.equal(new Set(COIN_QUEST.map(title)).size,115,'every card title is different');
-const allSteps=Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps);assert.equal(new Set(allSteps).size,345,'no step text is reused');
-assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.join('|'))).size,115);
-console.log('PASS 115 balls → 115 different concepts, 115 scenes, 115 titles, 345 different steps');
+assert.equal(new Set(COIN_QUEST.map(title)).size,116,'every card title is different');
+const allSteps=Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps);assert.equal(new Set(allSteps).size,348,'no step text is reused');
+assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.join('|'))).size,116);
+console.log('PASS 116 balls → 116 different concepts, 116 scenes, 116 titles, 348 different steps');
 
 // 2. Levels follow how hard the ball is to find; words follow the age table (docs/quiz-design.md §5: 7v7 → 9v9 → 11v11).
 const expectedLevel=s=>s.parachute||s.ramp||s.id.startsWith('high-')||s.id==='wall-community'?3:s.summit?2/* Summit Isle: a far island, found through trees, the telescope, huts, caves and riddles */:(s.y===0&&!s.wall?.high&&!s.manhole&&!s.grass&&s.truck===undefined?1:2);
@@ -29,9 +29,9 @@ for(const s of COIN_QUEST){const l=BALL_HUNT_LESSONS[s.id];count[l.level]++;
  assert(s.teaching.length>=90&&title(s).length>=8&&title(s).length<=48,`${s.id} teaching title + explanation`);
  assert(typeof BALL_HUNT_PRACTICE[s.id]==='string'&&BALL_HUNT_PRACTICE[s.id].length>30,`${s.id} practice prompt`);
  if(l.level===1)assert(!/half-space|overload|goal-side|transition|compact/i.test(l.steps.join(' ')),`${s.id} level-1 words stay everyday`);}
-assert.deepEqual(count,{1:32,2:61,3:22});
-assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,115,'115 different practice prompts');
-console.log('PASS levels: 32 easy (7v7 words ≤16), 61 medium (≤18), 22 hardest (≤22); short actions; 115 practice prompts');
+assert.deepEqual(count,{1:33,2:61,3:22});
+assert.equal(new Set(Object.values(BALL_HUNT_PRACTICE)).size,116,'116 different practice prompts');
+console.log('PASS levels: 33 easy (7v7 words ≤16), 61 medium (≤18), 22 hardest (≤22); short actions; 116 practice prompts');
 
 // 3. Space-and-time core: most balls are about creating space, timing or shape; other key families all present.
 const fam={};for(const l of Object.values(BALL_HUNT_LESSONS))fam[l.family]=(fam[l.family]||0)+1;
@@ -88,7 +88,7 @@ for(let i=0;i<keys.length;i++)for(let j=i+1;j<keys.length;j++){const A=shapes.ge
  assert(!same,`${keys[i]} and ${keys[j]} are near-identical scenes (layout ${layout.map(c=>c.toFixed(1))})`);}
 {const A=shapes.get('go-wide'),B=A.map(s=>({...s,pts:s.pts.map(([x,y,r])=>[x+9,y-7,r])}));assert([0,1,2].every(s=>matchCost(A[s].pts,B[s].pts)<24),'the detector catches a shifted copy of a scene');}
 }
-console.log(`PASS ${115*114/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
+console.log(`PASS ${116*115/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
 
 // 6. Semantics of key ideas.
 for(const layout of LAYOUTS){const M=pitchMap(layout).map,GOAL=M([165,234]),s1=Math.min(1,pitchMap(layout).sx);

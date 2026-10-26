@@ -25,17 +25,17 @@ const {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,SCENES}=load('lib/town/ballHuntLesso
 const spots=SB.SUMMIT_BALL_SPOTS,first=COIN_QUEST.slice(0,100);
 
 // ---- 1. Count, ids, order, saves.
-assert.equal(spots.length,15,'fifteen Summit Isle balls');assert.equal(COIN_QUEST.length,115,'the hunt has 115 balls');
-assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,115,'ids are unique');
-assert.deepEqual(COIN_QUEST.slice(100).map(s=>s.id),SB.SUMMIT_BALL_IDS,'the new balls are appended, so saved ids keep their order');
+assert.equal(spots.length,15,'fifteen Summit Isle balls');assert.equal(COIN_QUEST.length,116,'the hunt has 116 balls (115 + the East Jetty ball, Oct 25 2026)');
+assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,116,'ids are unique');
+assert.deepEqual(COIN_QUEST.slice(100,115).map(s=>s.id),SB.SUMMIT_BALL_IDS,'the new balls are appended, so saved ids keep their order');
 assert.deepEqual(PRE_SUMMIT_IDS,first.map(s=>s.id));assert(spots.every(s=>s.summit),'every new ball is marked as a Summit Isle ball');
 assert.equal(COIN_STORAGE_KEY,'fi2-matchday-coins-v1','the same save key (no new key to classify)');
 {const old={version:5,revealed:PRE_SUMMIT_IDS,collected:PRE_SUMMIT_IDS,hint:null,celebrated:true,rewardUnlocked:false};
- const m=sanitizeCoinProgress(old);assert.equal(m.version,6);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 100-ball save keeps the fox and every costume');
+ const m=sanitizeCoinProgress(old);assert.equal(m.version,7);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 100-ball save keeps the fox and every costume');
  assert(!m.celebrated,'the 115-ball finale is still ahead');assert(sanitizeCoinProgress(JSON.parse(JSON.stringify(m))).rewardUnlocked,'and keeps it after a re-save');
  assert(!coinRewardEarned(sanitizeCoinProgress({...old,collected:PRE_SUMMIT_IDS.slice(0,99)})),'99 of the old 100 does not unlock the fox');
- assert(!coinRewardEarned(sanitizeCoinProgress({...old,version:6})),'a version 6 save needs all 115');
- const all=sanitizeCoinProgress({version:6,collected:COIN_QUEST.map(s=>s.id)});assert(coinRewardEarned(all),'all 115 earn the fox');}
+ assert(!coinRewardEarned(sanitizeCoinProgress({...old,version:6})),'a version 6 save needs all 115 (and a version 7 save all 116)');
+ const all=sanitizeCoinProgress({version:6,collected:COIN_QUEST.map(s=>s.id)});assert(coinRewardEarned(all),'every ball earns the fox');}
 console.log('PASS 15 Summit Isle balls appended (115 in all), unique ids, same save key; 100-ball saves keep the fox and costumes');
 
 // ---- 2. One new concept per ball, no overlap with the first 100.

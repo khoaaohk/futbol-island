@@ -29,13 +29,13 @@ ok('seven zones, exactly one ball each: unique names and looks, the shared find 
   assert(b[0].coins>0&&b[0].coins<=ECON.LEARN_COINS.ball);assert.equal(b[0].label,'Real football fact');assert.equal(b[0].prompt,'Pick up');}
 });
 
-ok('each ball hides on the sand in swimmable water, clear of the buoy, start, finds, pickups, friend, sparkle and every solid piece',()=>{
+ok('each ball sits in its zone’s treasure chest in swimmable water, clear of the buoy, start, finds, pickups, friend, sparkle and every solid piece',()=>{
  for(const s of D.DIVE_SPOTS){const b=balls(s)[0],L=LY.diveLayout(s),d=p=>Math.hypot(p.x-b.x,p.z-b.z),p=D.diveFindPoint(b,undefined,s.floor),r=D.diveDepthRange(b.x,b.z,s.floor);
-  assert(Math.hypot(b.x,b.z)<D.DIVE_ROOM_R-4,'inside the room '+s.id);assert(LY.diveLayoutFree(L,s,b.x,b.z,.4,{lanes:false,finds:false}),'inside the footprint, off the wreck / pitch / arch '+s.id);
+  assert(Math.hypot(b.x,b.z)<D.DIVE_ROOM_R-4,'inside the room '+s.id);assert(LY.diveLayoutFree(L,s,b.x,b.z,.4,{lanes:false,finds:false,keep:1}),'inside the footprint, off the wreck / pitch / arch '+s.id);/* keep 1: the chest keeps the old coin's spot (Kelp Forest's is near the rim) */
   assert(Math.hypot(b.x,b.z)>5,'not by the buoy '+s.id);assert(d(L.start)>6,'not by the start / come-up point '+s.id);
   assert(p.y<D.DIVE_SURFACE_Y-1&&r.min<p.y+D.DIVE_FIND_RANGE,'under water and reachable by swimming '+s.id);
   assert(Math.min(...D.diveTaskFinds(s).map(d))>=3.6,'clear of the other finds '+s.id);
-  assert(Math.min(...J.journeyPickups(s).map(d))>=3.5,'clear of the journey pickups '+s.id);assert(d(DL.friendHome(s))>=3,'clear of the zone friend '+s.id);
+  assert(Math.min(...J.journeyPickups(s).map(d))>=1.5,'clear of the journey pickups (the chest is a path waypoint, as the coin was) '+s.id);assert(d(DL.friendHome(s))>=3,'clear of the zone friend '+s.id);
   for(let k=0;k<40;k++)assert(d(SP.sparkleSpot(s,SP.localDate(new Date(2026,9,1+k))))>=2.5,'clear of the sparkle '+s.id);
   for(const c of L.clusters)assert(d(c)>c.r+.5,'not inside coral '+s.id);for(const k of L.rocks)assert(d(k)>k.s+.5,'not inside a rock '+s.id);
   for(const c of L.crates)assert(d(c)>1.2,'not inside a crate '+s.id);for(const lb of L.balls)assert(d(lb)>1.5,'apart from the spilled balls '+s.id);
@@ -43,11 +43,12 @@ ok('each ball hides on the sand in swimmable water, clear of the buoy, start, fi
  assert.equal(new Set(D.DIVE_SPOTS.map(s=>{const b=balls(s)[0];return b.x+','+b.z;})).size,7,'seven different spots');
 });
 
-ok('the layout is unchanged by the ball (it joins the finds last) and the reef journey never leads to it',()=>{
- for(const s of D.DIVE_SPOTS){const plain={...s,finds:D.diveTaskFinds(s)},a=LY.buildLayout(s),b=LY.buildLayout(plain);
+ok('the chest’s ball keeps the old coin’s place in the layout (nothing moved) and the reef journey never leads to it',()=>{
+ for(const s of D.DIVE_SPOTS){const b0=balls(s)[0],coin={...s,finds:s.finds.map(f=>f.kind==='ball'?{...f,id:'treasure',kind:'treasure'}:f)},a=LY.buildLayout(s),b=LY.buildLayout(coin);
   for(const k of ['clusters','rocks','grass','kelp','crates','balls'])assert.equal(JSON.stringify(a[k]),JSON.stringify(b[k]),k+' '+s.id);
+  assert.equal(B.diveBallFor(s.id).x,b0.x);assert.equal(b0.y,B.DIVE_BALL_CHEST_Y,'in the chest, over the sand');assert(!s.finds.some(f=>f.kind==='treasure'),'no coin find left '+s.id);
   assert(a.finds.some(f=>f.id===B.DIVE_BALL_FIND),'later placements keep off it '+s.id);
-  assert(!J.journeyPath(s).some(p=>p.id===B.DIVE_BALL_FIND),'not on the guided path '+s.id);assert.equal(J.journeyTotal(s),J.journeyPickups(s).length+4);
+  assert(J.journeyPath(s).some(p=>p.id===B.DIVE_BALL_FIND),'the chest stays a waypoint (the pickups keep their places) '+s.id);assert.equal(J.journeyTotal(s),J.journeyPickups(s).length+3,'relic, coral, clam (the chest holds the secret ball)');
   const p=J.journeyPickups(s),out={x:0,z:0};assert.equal(J.nextTarget(s,p,p.map(()=>true),D.diveTaskFinds(s).map(f=>f.id),0,13,out),null,'the buddy does not lead to the hidden ball');}
 });
 
@@ -108,7 +109,7 @@ ok('the room: one small vertex-coloured mesh (no texture) until found, the pick-
 ok('analytics: wa:dive_ball_find registered, counted on a first ball find and on the Water admin tile',()=>{
  const C=load('lib/analytics/countIds.ts');assert(C.WATER_COUNT_EVENTS.some(([e])=>e==='dive_ball_find'));assert.equal(C.isCountId('wa:dive_ball_find'),true);
  assert(read('lib/analytics/waterEvents.ts').includes(`'wa:dive_ball_find'`));assert(read('app/admin/WaterSection.tsx').includes(`'wa:dive_ball_find'`));
- assert(/if\(f\.kind==='ball'\)countDiveBallFind\(\)/.test(read('components/Town.tsx')));
+ assert(/if\(f\.kind==='ball'\)\{countDiveBallFind\(\);/.test(read('components/Town.tsx')));
 });
 
 if(failed){console.log(`explore-balls: ${failed} failed`);process.exit(1);}console.log('explore-balls: all passed');

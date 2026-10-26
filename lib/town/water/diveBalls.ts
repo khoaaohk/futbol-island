@@ -6,8 +6,9 @@
  *
  * Pure data (no three.js, no DOM). diveSpots.ts turns each row into the zone's `ball` find (the finds store, the prompt, the card,
  * coins once through the Training meter); lib/graphics/diveBall.ts draws it (one mesh, no textures). Positions are room-local
- * metres, chosen against the zone's layout (lib/town/water/diveLayout.ts): on the sand in a nook beside coral, rock, kelp, crates
- * or the arch, clear of the buoy, the start / come-up point, the other finds, the wreck and every solid piece.
+ * metres. Oct 25 2026 (user: "instead of the pearl in the treasure chest. have it be a ball ... when collected give a mini lesson
+ * and allow to choose a card"): each ball now sits in its zone's treasure chest (the chest is drawn at the ball find's x, z, where
+ * the old matchday coin was), and the first pick-up also earns a card choice (cardRewardTriggers.ts earnForDiveBall).
  *
  * Kid card rules (AGENTS.md): a **Real football fact** with a plain-text credit (the URL stays in `source`, never in the kid UI).
  */
@@ -25,43 +26,46 @@ export type DiveBall={
  topic:readonly string[];
 };
 
-/** Coins for a ball, once ever (≤ a hidden island ball's LEARN_COINS.ball; more than the old matchday coin's 3). */
+/** Coins for a ball, once ever (≤ a hidden island ball's LEARN_COINS.ball). */
 export const DIVE_BALL_COINS=5;
-/** How high the ball's middle sits over the sand (m): its radius, nestled in. */
+/** The ball's radius (m). */
 export const DIVE_BALL_R=.22;
+/** How high the ball's middle sits over the sand (m): in the open treasure chest (its body's top is ≈ .35 m up), so it shows
+ *  over the rim from the prompt range (Oct 25 2026: the ball replaced the matchday coin in the chest). */
+export const DIVE_BALL_CHEST_Y=.5;
 
 export const DIVE_BALLS:readonly DiveBall[]=[
- {spot:'captains-cup',name:'The patched leather ball',look:'leather',x:-7.9,z:-6.8,hide:'In the coral garden, tucked against a coral head off the old galleon’s side',
+ {spot:'captains-cup',name:'The patched leather ball',look:'leather',x:6,z:-15,hide:'In the treasure chest past the old galleon’s stern, the lid propped open',
   title:'The world’s oldest football',
   text:'The oldest football ever found was hidden behind wooden panels in Stirling Castle, Scotland. It was made around 1540 to 1570 from leather stitched round a pig’s bladder full of air. It has patches, so someone really played with it!',
   credit:'Stirling Smith Art Gallery and Museum, “The World’s Oldest Football”',source:'https://www.smithmuseum.scot/?p=648',
   topic:['Stirling','oldest football ever found']},
- {spot:'pauls-grotto',name:'The striped pitch ball',look:'classic',x:-7.7,z:-7.5,hide:'Behind the sunken goal, in the shade of a rock off the old pitch',
+ {spot:'pauls-grotto',name:'The striped pitch ball',look:'classic',x:4,z:-10,hide:'In the treasure chest behind the old pitch, the lid propped open',
   title:'White posts, no rope',
   text:'Goalposts and the crossbar must be white, and no thicker than 12 cm. If the crossbar breaks in a match, play stops until it is fixed. A rope is not allowed instead, and if the bar cannot be fixed, the match is called off.',
   credit:'The FA, Laws of the Game, Law 1',source:'https://www.thefa.com/football-rules-governance/lawsandrules/laws/football-11-11/law-1---the-field-of-play',
   topic:['crossbar breaks','rope is not allowed','must be white']},
- {spot:'kelp-trawler',name:'The barnacle ball',look:'barnacle',x:-15,z:-2,hide:'Between two tall kelp stands on the reef slope, far from the trawler',
+ {spot:'kelp-trawler',name:'The barnacle ball',look:'barnacle',x:-6,z:-16,hide:'In the treasure chest on the reef slope past the trawler, the lid propped open',
   title:'The fourth official',
   text:'Big matches have a fourth official beside the team benches. Before kick-off they help check the match balls and the players’ equipment. During the game they help with substitutes, and in some competitions they take over if the referee gets hurt.',
   credit:'IFAB, Laws of the Game, Law 6',source:'https://www.theifab.com/laws/latest/the-other-match-officials/',
   topic:['fourth official']},
- {spot:'ray-meadow',name:'The seagrass ball',look:'meadow',x:-12.8,z:-8.9,hide:'Half hidden in a seagrass patch, out where the rays glide',
+ {spot:'ray-meadow',name:'The seagrass ball',look:'meadow',x:5,z:-14,hide:'In the treasure chest at the far edge of the seagrass, the lid propped open',
   title:'Lamps that grow grass',
   text:'Seagrass needs sunlight, and so does a pitch. Where a stadium’s roof and stands shade the grass, groundstaff wheel huge lamp rigs over it, so the grass keeps growing even in the dark days of winter.',
   credit:'Pitchcare, “Lights keep grass pitches in summer condition in depths of winter”',source:'https://pitchcare.com/blogs/news/lights-keep-grass-pitches-in-summer-condition-in-depths-of-winter',
   topic:['lamp rig','stadium’s roof and stands shade']},
- {spot:'moon-arch',name:'The moonlight ball',look:'moon',x:-14,z:-4.5,hide:'Tucked against a boulder just past the rock arch, on the side away from the boot',
+ {spot:'moon-arch',name:'The moonlight ball',look:'moon',x:-7,z:-12,hide:'In the treasure chest past the rock arch, the lid propped open',
   title:'Cuju: a goal up high',
   text:'Over 2,000 years ago in China, people played cuju, a kicking game. In one version the goal was a net hung high between two tall poles, with a round hole in the middle, and players aimed to kick the ball through that hole.',
   credit:'FIFA Museum, “Origins: cuju in China”',source:'https://editorial.fifamuseum.com/en/read/origins-cuju-in-china/',
   topic:['cuju','net hung high']},
- {spot:'ball-crate',name:'The hand-stitched ball',look:'stitched',x:8.2,z:-4.4,hide:'Among the spilled crates, just past the one that broke open',
+ {spot:'ball-crate',name:'The hand-stitched ball',look:'stitched',x:-8,z:-16,hide:'In the treasure chest beyond the spilled crates, the lid propped open',
   title:'The football city',
   text:'Most of the world’s hand-stitched footballs come from one city: Sialkot in Pakistan. Skilled stitchers sew the panels together by hand, and the official ball of the 2026 World Cup was made in Sialkot too.',
   credit:'LUMS, “Stitching the World’s Game: Inside Sialkot’s Football Industry”',source:'https://lce.lums.edu.pk/stitching-the-worlds-game-inside-sialkots-football-industry/',
   topic:['Sialkot']},
- {spot:'turtle-pool',name:'The turtle-shell ball',look:'shell',x:5.5,z:-1,hide:'Inside the turtles’ pool, nestled against a coral head on its far rim',
+ {spot:'turtle-pool',name:'The turtle-shell ball',look:'shell',x:6,z:-13,hide:'In the treasure chest on the turtles’ pool rim, the lid propped open',
   title:'A picture made of fans',
   text:'A tifo is a giant picture made by fans in the stands. Thousands of people hold up coloured cards or flags at the same moment, and together they make one huge image, the way many small plates make one turtle shell.',
   credit:'Wikipedia, “Tifo”',source:'https://en.wikipedia.org/wiki/Tifo',

@@ -134,6 +134,8 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  "summit-beach-hut":ball2('disguise-pass','You look at one teammate. The defender follows your eyes.','The defender steps across to block that pass.','Turn your hips late and pass to your other teammate.','Look one way','Pass the other'),
  "summit-hill-cave":rules2('shin-guards','Before the game you forgot your shin guards and kept a watch on.','Put shin guards on under your socks. Take off every bracelet and watch.','Now a knock on the shin is safe. Play on!','Pads on','Jewellery off'),
  "summit-sea-cave":set2('corner-goal','A corner kick to your team. Everyone waits for a cross.','Curl it toward the goal. Nobody touches it on the way.','It curls straight in. A goal from a corner counts!','Curl it in','Score from the corner'),
+ // East Jetty (Oct 25 2026, eastJettyBalls.ts): the lighthouse plaza at the spiral's end. IFAB Law 8 (the coin toss).
+ "jetty-lighthouse":rules1('coin-toss','Before kick-off, both captains meet the referee in the middle.','The referee tosses a coin. Your captain calls it and wins!','You pick which goal to attack first. They kick off. At half-time, swap ends.','Call the toss','Swap ends at half-time'),
  "summit-cairn":rules2('kickoff-goal','Kick-off. Everyone stands in their own half.','Look up. Their keeper is standing far out of the goal.','Shoot straight from the kick-off. A goal like that counts!','Spot the keeper','Shoot from the start'),
  "summit-lookout-rocks":rules2('eleven-players','Each team has up to eleven players, and one is the goalkeeper.','If players get hurt or sent off, the team gets smaller.','With fewer than seven players, the match cannot carry on.','Count your team','Know the minimum'),
  "summit-bend":rules2('handball-arms','A shot is coming. You jump to block with your arms out wide.','The ball hits your arm. Handball, and maybe a penalty!','Block again with your arms tucked in. It hits your body.','Arms out is risky','Tuck your arms in'),
@@ -254,6 +256,7 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'summit-hill-cave':'Before a match, what must you put on and what must you take off?',
  'summit-sea-cave':'Can a corner kick go straight into the goal and count?',
  'summit-cairn':'At kick-off, their keeper is far out. Could you shoot straight away?',
+ 'jetty-lighthouse':'Your captain wins the coin toss. Which goal would you choose to attack first, and why?',
  'summit-lookout-rocks':'How many players does an 11-a-side team have, and what is the fewest allowed?',
  'summit-bend':'You jump to block a shot. Where should your arms be?',
  'summit-kick-bonus':'Which part of your foot gives the most accurate pass, and where does your standing foot go?',

@@ -4,15 +4,17 @@
 // Flow (the seven zones of Oct 20 2026, read from lib/town/water/diveSpots.ts): seed a save and stand on Coral Cay's north shore
 // facing Paul's Grotto (shot 1: the buoy and the lighter patch), swim into the patch (shot 2: the Dive prompt), dive (shot 3: the
 // reef and the schools), swim to the relic and the coral and use them (shot 4: a find), Surface with the button, catch a breath,
-// dive again, swim to the clam and the treasure, surface with Escape; then swim into every other zone and check its Dive prompt.
+// dive again, swim to the clam and the chest's explore ball, surface with Escape; then swim into every other zone and check its Dive prompt.
 // Asserts zero page / console errors, the room's draws, that the island stops rendering while under and resumes after, and that
 // the room is disposed.
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),ts=require('typescript');
 const OUT=process.env.DIVE_SHOTS||path.join(__dirname,'..','docs','water');fs.mkdirSync(OUT,{recursive:true});
 const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:3000';
-const ZONES=(()=>{const m={exports:{}};new Function('exports','module',ts.transpileModule(fs.readFileSync(path.join(__dirname,'..','lib/town/water/diveSpots.ts'),'utf8'),
- {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m);return m.exports.DIVE_SPOTS;})();
+// diveSpots.ts imports ./diveBalls (Oct 21 2026): a tiny loader for its relative TS imports.
+const ZONES=(()=>{const load=file=>{const m={exports:{}};new Function('exports','module','require',ts.transpileModule(fs.readFileSync(file,'utf8'),
+ {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m.exports,m,id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id)+'.ts'):require(id));return m.exports;};
+ return load(path.join(__dirname,'..','lib/town/water/diveSpots.ts')).DIVE_SPOTS;})();
 const FIRST=ZONES.find(z=>z.id==='pauls-grotto'),SPOT={x:FIRST.x,z:FIRST.z},BEACH={x:FIRST.x,z:-256};
 (async()=>{
  const exe=[process.env.PW_EXE,'/opt/pw-browsers/chromium'].filter(Boolean).find(p=>{try{return fs.statSync(p).isFile();}catch{return false;}});
@@ -77,7 +79,7 @@ const FIRST=ZONES.find(z=>z.id==='pauls-grotto'),SPOT={x:FIRST.x,z:FIRST.z},BEAC
  await page.waitForFunction(()=>{const b=document.querySelector('[data-dive-go]');return b&&!b.hidden&&b.textContent==='Dive';},null,{timeout:6000});
  await page.locator('[data-dive-go]').tap();await page.waitForFunction(()=>window.__fi2.dive.diving,null,{timeout:5000});await page.waitForTimeout(800);
  await swimTo('clam');await useFind('clam');await page.waitForTimeout(700);
- await swimTo('treasure');await useFind('treasure');await page.waitForTimeout(900);
+ await swimTo('hidden-ball');await page.waitForTimeout(600);await shot('dive-5-chest-ball.png');await useFind('hidden-ball');await page.waitForTimeout(900);
  const saved=await page.evaluate(()=>localStorage.getItem('fi2-dive-finds-v1'));console.log('saved finds',saved);
  await page.keyboard.press('Escape');await page.waitForFunction(()=>!window.__fi2.dive.diving,null,{timeout:5000});await page.waitForTimeout(800);
  st=await state();console.log('surfaced (Escape)',JSON.stringify(st));if(st.room)throw Error('room still allocated after surfacing');

@@ -13,6 +13,7 @@ import type {SwimRigPose} from '../../graphics/swimPose';
 import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
 import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
 import {diveBallNote,diveBallsFound} from './diveBalls';
+import {holdCardOffers} from '../cardOfferHold';
 import {setDiveSpots} from '../../graphics/waterSurface';
 import {WATER_LEVEL} from './waterDepth';
 import {DIVE_REEF_KEY,REEF_RESTORE_CARD,REEF_RESTORE_COINS,addPickup,journeyPickups,markRestored,nextTarget,parseDiveReef,reach,reefColour,reefHealth,reefRunId,type DivePickup,type DiveReefSave} from './diveJourney';
@@ -23,7 +24,11 @@ import {SPARKLE,localDate,markSparkle,sparkleCardTitle,sparkleDone,sparkleReach,
 import {diveEdgeDepthT,diveEdgeSpotAt,diveEdgeToIsland,diveEdgeToRoom,type DiveEdgeExit,type DiveEdgeWater} from './diveEdge';
 
 /** The find card and the calm notes (components/DiveHud.tsx); written only when one changes. */
-export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string};
+/** `lesson`: the explore ball's card (Oct 25 2026), shown as a mini lesson; its card choice waits until it is closed (DiveHud). */
+/** The find card's card-offer hold (cardOfferHold.ts): taken here the moment a card shows (before Town's found port can earn an
+ *  explore ball's card choice), released by DiveHud when the child closes the card, and on surfacing. */
+export const DIVE_CARD_HOLD='dive-card';
+export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string;lesson?:boolean};
 /** `reef`: the zone's journey progress ("5/12"), `restored`: the zone is fully restored (Explore v2). */
 /** `banner`: Seamless Explore's soft chip at the zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); it fades by itself. */
 /** Explore delight: `friend` the zone friend's name while it is within EMOTE.range (the Wave / High five buttons show), `hearts` its
@@ -126,13 +131,13 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
  }
  function leave(reason:SurfaceReason,spot:DiveSpot){
   if(room){ports.scene.add(ports.player.root);ports.player.root.rotation.x=0;ports.player.root.rotation.z=0;room.dispose();room=null;session.setSolids(null);}
-  diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
+  diveLift.up=diveLift.down=false;diveLift.emote='';friend=null;spark=null;hidePrompt();holdCardOffers(DIVE_CARD_HOLD,false);diveStore.set({diving:false,card:null,note:'',spot:'',banner:reason==='edge'?DIVE_EDGE_LEAVING:'',friend:'',hearts:0});ports.surfaced(spot,reason);drawBreath(true);
  }
  function use(){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;
-  room.use(f,clock*(ports.reduced()?.4:1));
+  room.use(f,clock*(ports.reduced()?.4:1));holdCardOffers(DIVE_CARD_HOLD,true);
   if(ev.firstFind){save=addDiveFind(save,s.id,f.id);writeDiveFinds(save);if(ev.coins>0)ports.credit(diveRunId(s.id,f.id),ev.coins,f.kind==='ball'?`Explore ball · ${s.name}`:`Dive treasure · ${s.name}`);}
-  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.kind==='ball'?`${f.story} ${diveBallNote(diveBallsFound(save.spots))}.`:f.story,coins:ev.coins}});
+  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.kind==='ball'?`${f.story} ${diveBallNote(diveBallsFound(save.spots))}.`:f.story,coins:ev.coins,lesson:f.kind==='ball'}});
   ports.found(f,ev.firstFind);joy=DIVE_JOY_S;drawProgress(s,true);return true;
  }
  const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
