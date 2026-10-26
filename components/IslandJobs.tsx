@@ -29,6 +29,10 @@ import {FruitArt} from './PocketArt';
 import {OPEN_MARKET_STAND} from './FishingHost';
 import styles from './IslandJobs.module.css';
 import {parLine,jobPar} from '@/lib/town/jobs/jobCoach';
+import {useCardOffers} from '@/lib/town/cardRewardStore';
+import {paydayWaits} from '@/lib/town/cardOfferHold';
+import {earnForExplore} from '@/lib/town/cardRewardTriggers';
+import {exploreActivityNow} from '@/lib/town/exploreActivity';
 import dynamic from 'next/dynamic';
 import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib/town/jobs/bugBook';
 import {countBugStory} from '@/lib/analytics/summitEvents';
@@ -69,6 +73,7 @@ const BUSY_NOTE:HudToast={title:'Finish or stop your current job first',detail:'
 /** `holdToasts`: the HUD is covered (a dialog, the fishing session): notes wait, their timer paused. `offerAllowed`: the HUD stack
  *  arbiter (lib/ui/hudStack.ts) gave the focus slot to the job sign (a nearer Talk / Enter wins it otherwise). */
 export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,cardOfferOpen=false,onCardChange,onRequestWalk,onOpenBalances}:{blocked:boolean;holdToasts?:boolean;offerAllowed?:boolean;/** a "Pick a card" offer is open (Town): the payday card waits behind it */cardOfferOpen?:boolean;/** a job card (Start job / Job done) is open: it holds the stack's task slot */onCardChange?:(open:boolean)=>void;onRequestWalk:()=>void;onOpenBalances:()=>void}){
+ const offerPending=useCardOffers().length>0; // a pending pick always opens before anything else (CardOfferHost); payday waits behind it
  const view=useJobView(),wallet=useVending(),fish=useBasket('fish'),fruit=useBasket('produce');
  const fuel=useFuel(); // fuel counter in the coins bar (docs/economy/FUEL_2026-09-30.md)
  const [intro,setIntro]=useState<JobId|null>(null),[payday,setPayday]=useState<{id:JobId;seconds:number;pay:JobPayResult|null;best?:number;set?:BugSetId}|null>(null);
@@ -169,7 +174,12 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,c
   const best=readJobLedger(Date.now(),true).best[def.id];// fresh: another tab may have finished a shift
   setPayday({id:def.id,seconds:done.seconds,pay:null,best,set:done.set});
   creditConceptTick(conceptForJob(def.id),`job:${def.id}`); // Lane 3: a job whose lesson maps to a Paths lesson ticks it (evidence only)
-  void islandJobWallet.payJob(def.id,def.title,done.seconds,done.bag).then(pay=>{setPayday(p=>p&&p.id===def.id?{...p,pay}:p);try{document.dispatchEvent(new CustomEvent('fi2-story-cue',{detail:'finish'}));}catch{}});},[view.done]);
+  // Pick a card, then payday, never a flash (Oct 26 2026, QA 4): payJob writes the ledger synchronously, which ticks the Explore
+  // "Finish an island job" item. The first ever shift earns its card offer here, in this same effect, so the offer is in the store
+  // before payday's first paint (paydayWaits below); CardOfferHost's watcher then finds it already paid (earnCardOffer is once ever).
+  const firstJob=!exploreActivityNow().job,paying=islandJobWallet.payJob(def.id,def.title,done.seconds,done.bag);
+  if(firstJob&&exploreActivityNow().job)earnForExplore('island-job');
+  void paying.then(pay=>{setPayday(p=>p&&p.id===def.id?{...p,pay}:p);try{document.dispatchEvent(new CustomEvent('fi2-story-cue',{detail:'finish'}));}catch{}});},[view.done]);
  // Garden pick notes: the first pick of each produce this session teaches its lesson.
  useEffect(()=>{const pick=view.pick;if(!pick)return;const g=goodById(pick.good);if(!g)return;const first=!seenGoods.has(g.id);seenGoods.add(g.id);
   const basket=basketCount(islandMarket.read()),retitle=(n:number)=>`+${n} ${g.name} · basket ${basket}/${BASKET_LIMIT}`;
@@ -202,7 +212,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,c
  // One message surface at a time (bugUi.ts): the story card, then payday, then the toast slot.
  // Oct 26 2026 (owner; docs/JOBS_UPGRADE_OCT25.md open item 2): a fresh save's first job earns a "Pick a card" pick. It shows
  // first and the payday card waits (kept, not lost) until the pick is closed, instead of sitting covered underneath it.
- const surface=pickSurface({card:!!bugCard,payday:!!payday&&!cardOfferOpen,toast:!!toast&&!toastHeld&&!cardOfferOpen});
+ const surface=pickSurface({card:!!bugCard,payday:!!payday&&!paydayWaits({offerOpen:cardOfferOpen,offerPending:offerPending}),toast:!!toast&&!toastHeld&&!cardOfferOpen});
  // The Summit Isle bug jobs run by day (Bug squad) or at night (Firefly floodlights): the card says when to come back.
  const introClosed=!!introJob&&!!runtime&&!runtime.isOpen(introJob.id);
  const phaseText=()=>{if(!active||!view.active)return '';const a=view.active;if(a.hint)return a.hint;

@@ -1,4 +1,4 @@
-// Pass Puzzles arcade browser check (lane E). Needs the dev server on :8092.
+// Pass Puzzles arcade browser check (lane E). Needs a dev server: PORT (default 8092), or FUTBOL_BASE_URL for a full origin.
 // node tests/pass-puzzle-arcade.cjs [--mobile]   (both viewports run when no flag is given)
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
@@ -10,7 +10,7 @@ async function run(browser,mobile){
  await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-pass-puzzles-v1');
   // Puzzles cost 3 coins from the shared wallet: seed earned coins the same way the book/vending checks do.
   if(!localStorage.getItem('ppa-coins-seeded')){localStorage.setItem('ppa-coins-seeded','1');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:10},(_,i)=>['ppa-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));}});
- await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/arcade?game=puzzle',{waitUntil:'domcontentloaded',timeout:120000});
+ await page.goto((process.env.FUTBOL_BASE_URL||`http://localhost:${process.env.PORT||8092}`)+'/arcade?game=puzzle',{waitUntil:'domcontentloaded',timeout:120000});
  await page.waitForFunction(()=>window.__passPuzzle?.world,null,{timeout:120000});
  const canvas=page.locator('[data-arcade-kind="pass-puzzle"] canvas');
  await page.waitForTimeout(400);await page.screenshot({path:`${shots}/pass-puzzle-levels-${tag}.png`});

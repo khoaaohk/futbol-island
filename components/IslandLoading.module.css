@@ -125,6 +125,11 @@
 :global(html[data-island-handoff=tan]) .screen{background:#dfc587}
 :global(html[data-island-handoff=tan]) .screen::before{display:none}
 :global(html[data-island-handoff=tan]) .screen>*{visibility:hidden}
+/* Slow networks (QA 4, Oct 26 2026): on a slow-3G cold start the tan sheet stayed plain for 20-30 s with nothing moving, which reads as
+   stuck. After 2.5 s the loading track fades in at its usual place (darker, for the tan); a normal load is gone long before that. */
+:global(html[data-island-handoff=tan]) .screen:not(.exiting) :global(.island-loading-track){visibility:visible;background:#a8853f40;animation:tanTrackIn .4s 2.5s both}
+:global(html[data-island-handoff=tan]) .screen:not(.exiting) :global(.island-loading-track)>span{background:#8a6a2c}
+@keyframes tanTrackIn{from{opacity:0}to{opacity:1}}
 /* Tan mode has no art to clear first: the sheet cross-fades into the island as soon as its first frame is drawn (preload pass, Oct 9
    2026: the old .95 s delay only held a finished island behind tan). Town restarts the arrival as the fade starts. */
 :global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .5s .05s ease-in-out both}

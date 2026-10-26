@@ -1,6 +1,6 @@
 import '../scripts/register-local-ts.mjs';
 import assert from 'node:assert/strict';
-import {createTennis,resetTennis,beginTennis,tickTennis,requestTennisKick,TENNIS_COURTS,tennisLanding,setTennisTarget} from '../lib/games/soccerTennis.ts';
+const {createTennis,resetTennis,beginTennis,tickTennis,requestTennisKick,TENNIS_COURTS,tennisLanding,setTennisTarget}=await import('../lib/games/soccerTennis.ts');
 const advance=(s,seconds,hz=120)=>{for(let i=0;i<Math.round(seconds*hz);i++)tickTennis(s,1/hz);};
 const run=createTennis();
 for(let level=1;level<=TENNIS_COURTS.length;level++){

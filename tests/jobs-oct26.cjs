@@ -22,7 +22,7 @@ assert.ok(scene.includes('stepWorkCam(workCam,dt,{active:!!run,holding:!!run?.ho
 assert.ok(town.includes('moveNudge.restore(camera);emoteCam.restore(camera);jobs.restoreCamera(camera);'),'Town undoes the dolly before its follow lerp');
 // 2. Pick a card first: the payday card (and the toast) wait while a card offer is open.
 const jobs=read('components/IslandJobs.tsx');
-assert.ok(jobs.includes('pickSurface({card:!!bugCard,payday:!!payday&&!cardOfferOpen,'),'payday waits behind the card offer');
+assert.ok(jobs.includes('pickSurface({card:!!bugCard,payday:!!payday&&!paydayWaits({offerOpen:cardOfferOpen,offerPending:offerPending}),'),'payday waits behind the card offer (open or pending: tests/payday-after-pick.cjs)');
 assert.ok(town.includes('cardOfferOpen={cardOfferOpen}'),'Town passes the card offer state');
 // 3. Leaf piles off the 7v7 pitch (≥ 1.5 m outside its rectangle).
 const cat=read('lib/town/jobs/jobCatalog.ts'),leaves=JSON.parse(cat.match(/const LEAVES:JobPoint\[\]=(\[\[[^;]*?\]\])\.map/)[1]);

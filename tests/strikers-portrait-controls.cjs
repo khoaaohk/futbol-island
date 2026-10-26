@@ -19,6 +19,6 @@ assert.match(acts,/grid-template-areas:'pass sprint' 'through shoot' 'switch sho
 const tip=rule('.root .footer>p');assert.match(tip,/left:auto;right:/,'tip is right-aligned');assert.match(tip,/animation:tipFade/,'tip fades');
 assert.match(tip,/max-width:min\(220px,calc\(100% - 170px\)\)/);
 assert.match(css,/@keyframes tipFade\{0%,78%\{opacity:1\}100%\{opacity:0\}\}/);
-assert.ok(match.includes('<footer className={styles.footer}><p key={view.message}>'),'a new coach line shows again');
+assert.ok(match.includes("<footer className={styles.footer}><p key={(phase==='playing'?'play:':'')+view.message}>"),'a new coach line shows again, and the first one restarts its fade at kick-off (QA 4)');
 assert.match(scene,/const PORTRAIT_LIFT=\.1;/);assert.ok(scene.includes('camera.setViewOffset(w,h,0,h*PORTRAIT_LIFT,w,h)'));
 console.log('strikers-portrait-controls ok');
