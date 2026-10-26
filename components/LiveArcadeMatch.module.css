@@ -160,3 +160,4 @@
  .root .direction{padding:4px 12px 6px;border-radius:14px;background:#0b10248c}
  .root .chain{top:64px;left:12px;font-size:11px}
 }
+.root:not([data-phase=playing]) .touchControls{visibility:hidden;pointer-events:none}

@@ -320,3 +320,5 @@
 @media (prefers-reduced-motion:reduce){
  .studio,.studio *,.studio *::before,.studio *::after{animation:none!important;transition:none!important}
 }
+/* Buy confirmation (QA round 2, Oct 25) */
+.buyAsk{display:flex;align-items:center;gap:10px;margin-top:12px}.buyAsk .closeSave{width:auto;flex:0 0 auto;padding:0 18px}
