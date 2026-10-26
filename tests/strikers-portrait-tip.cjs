@@ -11,9 +11,9 @@ assert.match(stageSrc,/new T\.PerspectiveCamera\(38,1,/,'fov 38');
 assert.match(scene,/const PORTRAIT_LIFT=\.1;/);
 assert.match(scene,/FOLLOW_ZOOM_PORTRAIT=stage\.mobile\?1\.5:/);
 assert.ok(scene.includes('const limX=27*(1-1/followZoom)+.6,limZ=14*(1-1/followZoom)+.4'),'pan limits');
-assert.ok(scene.includes('Math.max(-limX-(portrait?2:0),Math.min(limX+(portrait?4:0),'),'portrait pan overshoot');
+assert.ok(scene.includes('const panX=wide?limX*LANDSCAPE_PAN:limX;')&&scene.includes('Math.max(-panX-(portrait?2:0),Math.min(panX+(portrait?4:0),'),'portrait pan overshoot (portrait is never `wide`)');
 assert.ok(scene.includes('camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78)'),'portrait camera angle');
-assert.ok(scene.includes('(stage.mobile?[-14.6,14.6]:[-18,18])')&&scene.includes('Math.abs(corner.x)>.94||Math.abs(corner.y)>.91'),'fit bounds');
+assert.ok(scene.includes('(stage.mobile?[-14.6,14.6]:[-18,18])')&&scene.includes('Math.abs(corner.x)>(wide?LANDSCAPE_X:.94)||Math.abs(corner.y)>.91'),'fit bounds');
 assert.ok(scene.includes('for(const z of [-5,5])stage.box(side*21,.04,z,8,')&&scene.includes('stage.box(side*17,.04,0,.09,.025,10,'),'box lines x 17..25, z -5..5');
 // The pill rule (last portrait block): right-aligned, vertically centred at a share of the root height plus a header share.
 const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
