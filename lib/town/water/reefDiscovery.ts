@@ -8,7 +8,7 @@
  *    classified again on its own. Today: Kelp Forest Wreck (~90 m), Ball Crate Reef (~89 m), Moon Arch (~69 m).
  *  - DISCOVERED: read from the existing dive saves, no new key: a zone with a saved find (fi2-dive-finds-v1) or a collected pickup /
  *    restore (fi2-dive-reef-v1) has been explored. Entering a zone this visit also counts (markReefDiscovered, Town.tsx at the HUD tick).
- *  - HINT: while flying or swimming (never in a job, lesson, room or the dive itself), the first time per visit the player comes
+ *  - HINT: while flying, swimming or wading in (Oct 25 2026; never in a job, lesson, room or the dive itself), the first time per visit the player comes
  *    within REEF_HINT_RANGE m of an undiscovered zone's edge, ONE short toast (components/ReefHintToast.tsx, the shared toast lane)
  *    points at it. Checked at REEF_HINT_HZ (a few distance tests, no allocation).
  * tests/reef-discovery.cjs pins all of this; tests/map-markers.cjs the map badges.
@@ -81,7 +81,9 @@ export function createReefHints(spots:readonly DiveSpot[]=DIVE_SPOTS){
   if(diving&&diveSpot&&!reefStore.get().discovered.has(diveSpot))reefStore.mark(diveSpot);
   if(diving!==wasDiving){wasDiving=diving;if(!diving)reefStore.refresh();}
   const h=reefStore.get().hint;aimAcc+=dt;
-  if(h&&aimAcc>=1/REEF_HINT_HZ){aimAcc=0;for(const s of spots)if(s.id===h.id)reefStore.aim(aimAt(m,s.x-x,s.z-z));}
+  // Oct 25 2026 (Explore audit): once the swimmer is in that zone's patch (its Explore prompt shows) or under the water, "Follow the
+  // arrow" is done: the hint goes, so it never sits over the Explore prompt or fades over the reef.
+  if(h&&(diving||aimAcc>=1/REEF_HINT_HZ)){aimAcc=0;for(const s of spots)if(s.id===h.id){if(diving||inDiveBlob(s,x,z))reefStore.clearHint();else reefStore.aim(aimAt(m,s.x-x,s.z-z));}}
   if(acc+dt>=1/REEF_HINT_HZ)reefStore.ensure();
   const s=tick(dt,x,z,eligible,reefStore.get().discovered);
   if(s)reefStore.hint(s,farDiveSpotIds().has(s.id),aimAt(m,s.x-x,s.z-z));

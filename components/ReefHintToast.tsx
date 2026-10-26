@@ -24,6 +24,8 @@ export default function ReefHintToast({blocked:held}:{blocked:boolean}){
   timer.current=setTimeout(()=>{if(!toastLane.request('reef'))return;done.current=hint.n;since.current=0;setShown(hint.n);},400);
   return ()=>clearTimeout(timer.current);},[hint,blocked,shown]);
  useEffect(()=>{if(!shown)return;const t=setTimeout(()=>setShown(0),REEF_HINT_MS);return ()=>{clearTimeout(t);toastLane.release('reef');reefStore.clearHint();};},[shown]);
+ // Oct 25 2026: the hint was cleared while it showed (the swimmer reached that zone, or a dive began): free the lane at once.
+ useEffect(()=>{if(shown&&!hint)setShown(0);},[shown,hint]);
  if(!shown||!hint||hint.n!==shown)return null;
  return <HudSlot><button type="button" className={styles.toast} data-hud-slot="toast" role="status" data-reef-hint={hint.id} data-reef-far={hint.far?'':undefined} onClick={()=>setShown(0)}>
   <b><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" style={{verticalAlign:'-4px',marginRight:6,transform:`rotate(${angle.toFixed(2)}rad)`,transition:'transform .4s ease'}}><path d="M12 3l7 9h-4.5v9h-5v-9H5z" fill="currentColor"/></svg>{REEF_HINT_TITLE}</b>
