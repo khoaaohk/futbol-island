@@ -2,6 +2,12 @@
 .lock p{margin:0;max-width:16em}
 .phone{width:34px;height:60px;border:4px solid #f7e7bc;border-radius:9px;flex:0 0 auto;transform:rotate(90deg);animation:turn 1.8s ease-in-out infinite}
 @keyframes turn{0%,35%{transform:rotate(90deg)}65%,100%{transform:rotate(0deg)}}
-@media(prefers-reduced-motion:reduce){.phone{animation:none;transform:rotate(0deg)}}
+/* Landscape mode (Island Strikers, lib/orientationMode.ts): the inverse card for upright phones, stacked, the phone tips sideways. */
+.lock[data-mode=landscape]{flex-direction:column;padding:max(16px,env(safe-area-inset-top)) 24px max(16px,env(safe-area-inset-bottom))}
+.lock[data-mode=landscape] .phone{transform:rotate(0deg);animation-name:turnSideways}
+@keyframes turnSideways{0%,35%{transform:rotate(0deg)}65%,100%{transform:rotate(90deg)}}
+@media(prefers-reduced-motion:reduce){.phone{animation:none;transform:rotate(0deg)}.lock[data-mode=landscape] .phone{animation:none;transform:rotate(90deg)}}
 /* phones held sideways: touch screen, short side */
-@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock{display:flex}}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock[data-mode=portrait]{display:flex}}
+/* landscape mode, phones held upright: touch screen, narrow side */
+@media(pointer:coarse) and (orientation:portrait) and (max-width:500px){.lock[data-mode=landscape]{display:flex}}

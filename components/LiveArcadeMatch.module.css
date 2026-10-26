@@ -183,3 +183,76 @@
    projects both boxes with the scene's own camera maths and checks the pill clears them on 360-820 px wide portrait screens. */
 @keyframes tipFade{0%,78%{opacity:1}100%{opacity:0}}
 @media(prefers-reduced-motion:reduce){.root .footer>p{animation:none}}
+
+/* ===== Start card, simplified (owner, Oct 26 2026, docs/STRIKERS_LANDSCAPE_OCT26.md): one tap to play. Round name + best stars,
+   three star-goal chips, a big Kick off, Options (match type, round, team shape as segmented buttons, 48 px) and Leaderboard. */
+.start{display:flex;flex-direction:column;gap:8px;width:min(460px,100%);box-sizing:border-box}
+.start>small{letter-spacing:.12em}
+.start .startTitle{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0;font-size:30px}
+.start .best{font:700 18px/1 Arial,sans-serif;letter-spacing:.12em;color:#fff08a;white-space:nowrap}
+.goals{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.goals li{padding:5px 10px;border:1px solid #446776;border-radius:999px;background:#151c35;color:#bdeaf2;font-size:12px;font-weight:700;line-height:1.25}
+.goals li::before{content:'☆ ';color:#fff08a}
+.howTo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0;padding:0;list-style:none}
+.howTo li{display:grid;gap:1px;padding:5px 8px;border:1px solid #446776;border-radius:12px;background:#151c35;font-size:11px;line-height:1.25;color:#bdeaf2}
+.howTo b{font:16px/1 IslandBrush,Arial,sans-serif;color:#fff08a}
+.start .bracket{margin:0}
+.root .start>.primary.primary{position:static;margin:4px 0 0;min-height:56px;font-size:20px;box-shadow:var(--btn-shadow-gold)}
+.startRow{display:flex;gap:8px}
+.startRow>button{flex:1}
+.root .startRow>.optionsToggle,.root .startRow>.boards{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;min-height:48px;padding:8px 14px;border:2px solid #81fbed66;border-radius:999px;background:#151c35;color:#e8ffff;font-size:14px;font-weight:800;box-shadow:0 3px 0 #0b1024}
+.root .startRow>.optionsToggle[aria-expanded=true]{border-color:#fff08a;color:#fff08a}
+.coins{margin:0!important;font-size:11px!important;text-align:center;opacity:.8}
+.options{display:grid;gap:8px;padding-top:8px;border-top:1px solid #ffffff22}
+.seg{display:flex;gap:6px}
+.root .seg>button{flex:1;min-width:0;display:grid;place-items:center;align-content:center;min-height:48px;padding:4px 6px;border:2px solid #81fbed55;border-radius:12px;background:#151c35;color:#e8ffff;box-shadow:0 3px 0 #0b1024;font-size:13px;font-weight:800;line-height:1.15;opacity:.8}
+.root .seg>button small{display:block;font-size:10px;font-weight:600;letter-spacing:.06em;opacity:.85}
+.root .seg>button[aria-pressed=true]{opacity:1;border-color:#fff08a;background:#2b2a4a;color:#fff08a}
+.root .seg>button:disabled{opacity:.45;cursor:not-allowed}
+.optNote{margin:0!important;font-size:12px!important;line-height:1.35!important;opacity:.85}
+.start>.instructions{font-size:11px!important;line-height:1.5;margin:4px 0 0!important}
+@media(pointer:coarse),(max-height:560px){.start>.instructions{display:none}}
+@media(max-height:500px){.start{gap:6px;width:min(520px,100%)}.start .startTitle{font-size:24px!important}.goals li{font-size:11px;padding:4px 9px}.root .start>.primary.primary{min-height:52px;font-size:18px}.start>small{font-size:9px}}
+.root .overlay>.start{max-height:calc(100% - 4px);overflow:auto;overscroll-behavior:contain}
+/* Short landscape screens: Options open as a second column beside the card instead of making it scroll. */
+@media(max-height:500px) and (min-width:600px){.root .overlay>.start[data-options]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px;align-content:start;width:min(800px,100%);max-width:none}.start[data-options]>*{grid-column:1}.start[data-options]>.howTo{display:none}.start[data-options]>.options{grid-column:2;grid-row:1/span 9;align-content:start;padding:0 0 0 14px;border-top:0;border-left:1px solid #ffffff22}}
+@media(max-height:400px){.root .overlay>.start{padding:10px 16px;gap:5px}.howTo li{padding:3px 7px}.howTo b{font-size:14px}.root .start>.primary.primary{min-height:48px;margin-top:2px}.start .startTitle{font-size:22px!important}}
+
+/* ===== Landscape phones (owner, Oct 26 2026, docs/STRIKERS_LANDSCAPE_OCT26.md). Strikers is the app's one landscape screen
+   (lib/orientationMode.ts). Slim header, meters under the score, the coach pill between the two thumb clusters, a FLOATING stick whose
+   zone is the left ~45% of the pitch, and five big action buttons on a right-thumb arc round Hold / Shoot (the biggest, in the corner).
+   Button centres are offsets from Shoot's centre (--x/--y) so tests/strikers-landscape-controls.cjs can check gaps and sizes. */
+.stickZone{display:none}
+@media(pointer:coarse),(max-width:700px){
+ .root .stickZone{display:block;position:absolute;left:0;top:calc(72px + env(safe-area-inset-top,0px));bottom:0;width:45%;box-sizing:border-box;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));pointer-events:auto;touch-action:none;-webkit-touch-callout:none;user-select:none}
+ .root .movement,.root .movement :global(.joystick){pointer-events:none}
+ .root .movement :global(.joystick){touch-action:none}
+ .root .movement :global(.joystick):not([data-active=true]){opacity:.55}
+ .root .movement :global(.joystick)[data-active=true]{opacity:1}
+ .root:is([data-phase=ready],[data-phase=paused]) .footer>p{visibility:hidden}
+ .root .actions button[data-pressed]{filter:brightness(1.25);transform:translateY(3px) scale(.96);box-shadow:0 1px 0 #101629,0 0 18px #81fbed55}
+}
+@media(pointer:coarse) and (orientation:landscape){
+ .root{--control-bottom:calc(10px + env(safe-area-inset-bottom,0px));--stick:clamp(132px,calc(100vh - 230px),164px);--cluster-w:284px;--cluster-h:180px}
+ .root>.header.header{padding:calc(6px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 4px calc(16px + env(safe-area-inset-left,0px))}
+ .root .footer{height:0;min-height:0;padding:0;border:0;overflow:visible;background:transparent}
+ .root .stickZone{top:calc(56px + env(safe-area-inset-top,0px))}
+ .root .meters{position:absolute;z-index:2;top:calc(56px + env(safe-area-inset-top,0px));bottom:auto;left:50%;transform:translateX(-50%);width:max-content;margin:0;padding:3px 12px;gap:14px!important;border-radius:12px;font-size:10px!important;font-weight:700;pointer-events:none}
+ .root .meters meter{width:56px!important;height:7px}
+ .root .direction{top:30px;display:flex;align-items:center;gap:8px;padding:3px 10px;border-radius:12px;background:#0b10248c}
+ .root .direction .focus{margin-top:0}
+ .root .chain{top:30px;left:calc(12px + env(safe-area-inset-left,0px))}
+ .root .footer>p{position:absolute;z-index:2;left:calc(var(--stick) + 30px + env(safe-area-inset-left,0px));right:calc(var(--cluster-w) + 24px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));top:auto;transform:none;width:auto;max-width:none;min-height:0;margin:0 auto;padding:5px 12px;border-radius:14px;background:#0b1024cc;color:#e9fbff;font-size:12px;line-height:1.3;text-align:center;pointer-events:none;max-height:3.9em;overflow:hidden;animation:tipFade 5s ease-out both}
+ .root .footer>p:empty{display:none}
+ .root .movement{left:calc(20px + env(safe-area-inset-left,0px));bottom:var(--control-bottom);width:var(--stick);height:var(--stick)}
+ .root .movement :global(.joystick){width:var(--stick);height:var(--stick)}
+ .root .movement :global(.joystick)>span{width:62%;height:62%}
+ .root .actions{display:block;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--control-bottom);width:var(--cluster-w);height:var(--cluster-h);max-width:none;gap:0;pointer-events:none}
+ .root .actions button[data-action]{--d:66px;--x:0px;--y:0px;position:absolute;left:calc(var(--cluster-w) - 46px + var(--x) - var(--d) / 2);top:calc(var(--cluster-h) - 46px + var(--y) - var(--d) / 2);width:var(--d);height:var(--d);min-width:0;min-height:0;padding:2px;border-radius:50%;font-size:13px;font-weight:800;line-height:1.1;pointer-events:auto;touch-action:none}
+ .root .actions button[data-action=shoot]{--d:92px;font-size:15px}
+ .root .actions button[data-action=pass]{--d:76px;--x:-106px;--y:4px}
+ .root .actions button[data-action=through]{--x:-140px;--y:-80px}
+ .root .actions button[data-action=sprint]{--x:-56px;--y:-96px}
+ .root .actions button[data-action=switchPlayer]{--x:-200px;--y:8px}
+ .root .actions .hold{font-size:10px;margin-top:2px}
+}

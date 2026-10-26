@@ -60,6 +60,10 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  // Portrait phones (Oct 25 2026: the app is portrait-only on phones, so Strikers now plays upright) zoom in further: the
  // whole 54 m pitch spans the short screen width there, so bodies read smallest without it.
  const PORTRAIT_LIFT=.1;
+ // Landscape phones (Oct 26 2026, owner: Strikers plays sideways, docs/STRIKERS_LANDSCAPE_OCT26.md): the pitch is sized inside a
+ // .9-wide band (clear of the notch insets), then lifted so both goal mouths sit above the stick's rest spot and the button arc in
+ // the bottom corners; the follow cam pans only 40% as far toward either goal so the attacked goal stays right of the tall buttons.
+ const LANDSCAPE_LIFT=.16,LANDSCAPE_X=.9,LANDSCAPE_PAN=.4;let wide=false;
  const FOLLOW_ZOOM=stage.mobile?1.28:1.14,FOLLOW_ZOOM_PORTRAIT=stage.mobile?1.5:1.25;let follow=false,followAmount=0,followZoom=FOLLOW_ZOOM;
  // Shot gauge (Oct 10 2026, replaces the single power ring): a 270° arc on the grass round the shooter, opening toward the
  // camera. The track paints the zones the coaching copy names (gold build-up, the cyan clean-strike band, red overhit) so
@@ -135,13 +139,13 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  function screenAxes(x:number,y:number){axes.x=portrait?-y:x;axes.z=portrait?x:y;return axes;}
 
  function fit(){const camera=stage.camera,w=canvas.clientWidth,h=canvas.clientHeight;stage.renderer.setSize(w,h,false);camera.clearViewOffset();camera.zoom=1;camera.aspect=w/Math.max(1,h);camera.updateProjectionMatrix();portrait=camera.aspect<.85;followZoom=portrait?FOLLOW_ZOOM_PORTRAIT:FOLLOW_ZOOM;
-  // Landscape phones: frame the pitch a little high so the attacked goal sits above the thumb buttons (bottom corners).
-  if(stage.mobile&&!portrait){camera.setViewOffset(w,h,0,h*.075,w,h);camera.updateProjectionMatrix();}
+  // Landscape phones: frame the pitch high so both goal mouths sit above the thumb controls (bottom corners); see LANDSCAPE_LIFT.
+  wide=stage.mobile&&!portrait;
   // Portrait phones: lift the pitch so Gold's own goal clears the thumb buttons along the bottom edge (Oct 26 2026: .055 → .1,
   // with the buttons folded into the corners, LiveArcadeMatch.module.css, so the goal mouth sits in the open bottom centre).
   if(stage.mobile&&portrait){camera.setViewOffset(w,h,0,h*PORTRAIT_LIFT,w,h);camera.updateProjectionMatrix();}
-  const corner=new T.Vector3();let low=10,high=200;for(let i=0;i<24;i++){const d=(low+high)/2;camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();let fits=true;for(const x of [-27,27])for(const z of (stage.mobile?[-14.6,14.6]:[-18,18])){corner.set(x,0,z).project(camera);if(Math.abs(corner.x)>.94||Math.abs(corner.y)>.91)fits=false;}if(fits)high=d;else low=d;}
-  camera.position.set(portrait?-high*.52:0,high,portrait?0:high*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();cameraHome.copy(camera.position);const distance=camera.position.length();camera.far=distance+150;
+  const corner=new T.Vector3();let low=10,high=200;for(let i=0;i<24;i++){const d=(low+high)/2;camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78);camera.lookAt(0,0,0);camera.updateMatrixWorld();let fits=true;for(const x of [-27,27])for(const z of (stage.mobile?[-14.6,14.6]:[-18,18])){corner.set(x,0,z).project(camera);if(Math.abs(corner.x)>(wide?LANDSCAPE_X:.94)||Math.abs(corner.y)>.91)fits=false;}if(fits)high=d;else low=d;}
+  camera.position.set(portrait?-high*.52:0,high,portrait?0:high*.78);camera.lookAt(0,0,0);if(wide){camera.setViewOffset(w,h,0,h*LANDSCAPE_LIFT,w,h);camera.updateProjectionMatrix();}camera.updateMatrixWorld();cameraHome.copy(camera.position);const distance=camera.position.length();camera.far=distance+150;
   // Landscape phones reserve the right-hand edge for the action buttons.
   // Centre the actual pitch; controls sit at the edges of the screen.
   camera.updateProjectionMatrix();const fog=stage.scene.fog as T.Fog;fog.near=distance+35;fog.far=distance+115;
@@ -230,7 +234,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   // (dt 0: ready, paused, full time). Reduced motion keeps the fixed full-pitch camera (portrait follows too since Oct 25 2026).
   const followOn=follow&&motion;followAmount=dt>0?followAmount+((followOn?1:0)-followAmount)*(1-Math.exp(-dt*2.5)):followOn?followAmount:0;
   if(dt>0){const limX=27*(1-1/followZoom)+.6,limZ=14*(1-1/followZoom)+.4,k=1-Math.exp(-dt*2.2);const carrier=s.ball.owner>=0?s.players[s.ball.owner]:null,ahead=carrier&&!carrier.keeper?(carrier.team===0?3.2:-2.2):0;// Portrait: pan a little past the pitch ends so the attacked goal clears the top HUD and Gold's goal clears the thumb buttons.
-   followPan.x+=(Math.max(-limX-(portrait?2:0),Math.min(limX+(portrait?4:0),s.ball.x+ahead-(portrait?2.2:0)))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
+   const panX=wide?limX*LANDSCAPE_PAN:limX;followPan.x+=(Math.max(-panX-(portrait?2:0),Math.min(panX+(portrait?4:0),s.ball.x+ahead-(portrait?2.2:0)))-followPan.x)*k;followPan.z+=(Math.max(-limZ,Math.min(limZ,s.ball.z))-followPan.z)*k;}
   const lead=followAmount*(1-focus),offsetX=followPan.x*lead+cameraFocus.x*focus,offsetZ=followPan.z*lead+cameraFocus.z*focus;
   const zoom=1+(followZoom-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
   stage.camera.position.copy(cameraHome);stage.camera.position.x+=offsetX;stage.camera.position.z+=offsetZ;

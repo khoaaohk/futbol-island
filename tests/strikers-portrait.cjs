@@ -6,10 +6,13 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const match=read('components/LiveArcadeMatch.tsx'),css=read('components/LiveArcadeMatch.module.css'),lock=read('components/RotateLock.module.css');
-assert.match(lock,/orientation:landscape/,'RotateLock still blocks sideways phones');
+assert.match(lock,/orientation:landscape/,'RotateLock still blocks sideways phones (outside Strikers)');
+// Oct 26 2026 (owner): Strikers now plays SIDEWAYS on phones (tests/strikers-landscape-orientation.cjs); upright phones see RotateLock's
+// "turn sideways" card. Upright play stays for tall tablets (wider than 500 px), so the portrait rules below still matter.
 assert(!/innerHeight\s*>\s*window\.innerWidth/.test(match),'Strikers no longer blocks portrait touch screens');
 assert(!/setRotate\(/.test(match),'nothing turns the rotate prompt on');
 assert.match(match,/data-phase=\{phase\}/,'root exposes the phase for the CSS rule');
-assert.match(match,/phase!=='playing'&&!outroOn&&<div className=\{styles\.overlay\}/,'the card shows whenever phase is not playing');
+assert.match(match,/\{phase==='ready'&&!failed&&<div className=\{styles\.overlay\}>/,'the start card shows before kick-off');
+assert.match(match,/phase!=='playing'&&!outroOn&&\(phase!=='ready'\|\|failed\)&&<div className=\{styles\.overlay\}/,'the pause / full-time card shows otherwise');
 assert.match(css,/\.root:not\(\[data-phase=playing\]\) \.touchControls\{visibility:hidden;pointer-events:none\}/,'thumb controls hide under the card');
 console.log('strikers-portrait: ok');
