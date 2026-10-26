@@ -686,7 +686,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
     const ballMaterial=new T.MeshStandardMaterial({color:CLASSIC_BALL.color,roughness:CLASSIC_BALL.roughness});const ballAppearance=createBallAppearance(ballMaterial),shopBallSkin=createShopBallSkin(ballMaterial);let shopBallOn=false;const ball=new T.Mesh(new T.SphereGeometry(CLASSIC_BALL.radius,CLASSIC_BALL.widthSegments,CLASSIC_BALL.heightSegments),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
     addBallPatches(ball,.19);const ballPatches=ball.children.slice();// six dark pentagons (hidden under a Kit Shop ball, whose skin has its own panels); the shop snapshots (StorePreviews) add the same ones
-    const ring=new T.Mesh(new T.RingGeometry(.48,.54,48),new T.MeshBasicMaterial({color:'#fff0b7',transparent:true,opacity:.8,side:T.DoubleSide}));ring.name='player-foot-ring';ring.rotation.x=-Math.PI/2;scene.add(ring);const hiddenMarker=createHiddenPlayerMarker(ring);scene.add(hiddenMarker.root);
+    const ring=new T.Mesh(new T.RingGeometry(.48,.54,48),new T.MeshBasicMaterial({color:'#fff0b7',transparent:true,opacity:.8,side:T.DoubleSide}));ring.name='player-foot-ring';ring.rotation.x=-Math.PI/2;scene.add(ring);const ringNormal=new T.Vector3(0,1,0),ringFace=new T.Vector3(0,0,1);const hiddenMarker=createHiddenPlayerMarker(ring);scene.add(hiddenMarker.root);
     const rideChange=createRideChange();scene.add(rideChange.root);
     const guideMaterial=new T.LineDashedMaterial({color:'#e79e6b',dashSize:.35,gapSize:.22,depthTest:false});
     const guide=new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(11,.16,21),new T.Vector3(11,.16,9)]),guideMaterial);guide.renderOrder=2;guide.visible=false;scene.add(guide);
@@ -1913,7 +1913,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }else if(!groundRolling){ball.rotation.x+=orb.vz*ballDt/.19;ball.rotation.z-=orb.vx*ballDt/.19;}
       rideChange.update(active?dt:0,visualLocation.x,groundY,visualLocation.z,reduced);if(fieldMenu.current)rideChange.root.visible=false;
       ring.position.set(visualLocation.x,.10+groundY,visualLocation.z);
-      const ringSize=({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1} as const)[rideRef.current];ring.scale.setScalar(reduced?ringSize:T.MathUtils.lerp(ring.scale.x,ringSize,1-Math.exp(-dt*10))); 
+      const ringSize=({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1} as const)[rideRef.current];ring.scale.setScalar(reduced?ringSize:T.MathUtils.lerp(ring.scale.x,ringSize,1-Math.exp(-dt*10)));
+      // Slopes (user, Oct 26 2026: "fix the circles so it shows better when going down hill"): the flat ring sank into the rising ground and showed as an arc.
+      // On open terrain it now lies in the ground's own plane (slope from four height reads across the ring) and sits a hair higher; on roofs, ramps and in the air it stays flat.
+      if(rideRef.current!=='jetpack'&&groundY<=fieldSurfaceHeight(visualLocation.x,visualLocation.z)+.2){const R=.54*ring.scale.x,hx=(fieldSurfaceHeight(visualLocation.x+R,visualLocation.z)-fieldSurfaceHeight(visualLocation.x-R,visualLocation.z))/(2*R),hz=(fieldSurfaceHeight(visualLocation.x,visualLocation.z+R)-fieldSurfaceHeight(visualLocation.x,visualLocation.z-R))/(2*R),sl=Math.min(1.2,Math.hypot(hx,hz));
+       if(sl>.02){ringNormal.set(-hx,1,-hz).normalize();ring.quaternion.setFromUnitVectors(ringFace,ringNormal);ring.position.y+=.05+R*sl*.25;}else ring.rotation.set(-Math.PI/2,0,0);}else ring.rotation.set(-Math.PI/2,0,0); 
       const current=location.x>25?'coast':districtAt(location.z);if(current!==lastDistrict){lastDistrict=current;setDistrict(current);}
       // One fixed golden sunset treatment across every neighborhood.
       
