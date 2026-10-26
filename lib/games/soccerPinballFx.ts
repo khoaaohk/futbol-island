@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {PINBALL_POPUP_LIFE,type PinballFeel,type PinballPopupKind} from './soccerPinballFeel';
+import {PINBALL_POPUP_LIFE,PINBALL_CONFETTI_LIFE,type PinballFeel,type PinballPopupKind} from './soccerPinballFeel';
 import {pinballReadShow,PINBALL_READ_DOTS,type PinballState} from './soccerPinball';
 
 /* Futbol Pinball visual juice, built once and pooled:
@@ -12,6 +12,11 @@ import {pinballReadShow,PINBALL_READ_DOTS,type PinballState} from './soccerPinba
  *    receiving bat's colour (yellow left, pink right, coral = the centre
  *    gap) that closes in as the ball arrives — fully closed = strike now —
  *    plus up to 8 path dots in one instanced draw (early divisions only);
+ *  - one pooled confetti burst (a single instanced draw, 28 pieces on phones,
+ *    44 on desktop) for goals, completed modes and full time; off under
+ *    reduced motion; hidden the moment it lands;
+ *  - a hot-ball halo: the gold tracker ring turns orange and breathes while
+ *    an alternating-foot combo of 3+ is alive;
  *  - the 2v1 multiball's second football: a clone of the game ball (shared
  *    geometry and materials), drawn only while that ball is live.
  * Idle pieces are hidden, so the steady-state cost is the insert's single
@@ -60,6 +65,22 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
  const dotMaterial=new T.MeshBasicMaterial({color:READ_COLORS[0],transparent:true,opacity:0,depthWrite:false,toneMapped:false});
  const readDots=new T.InstancedMesh(new T.CircleGeometry(.075,10),dotMaterial,PINBALL_READ_DOTS);readDots.name='pinball-read-dots';readDots.count=0;readDots.visible=false;readDots.frustumCulled=false;readDots.renderOrder=6;scene.add(readDots);
  const dot=new T.Object3D();dot.rotation.x=-Math.PI/2;let readDrawn=-1;
+ // Confetti: one instanced mesh, colours set once, motion in preallocated arrays.
+ const CONFETTI=mobile?28:44,cp=new Float32Array(CONFETTI*3),cv=new Float32Array(CONFETTI*3),cr=new Float32Array(CONFETTI*2);
+ const confettiMaterial=new T.MeshBasicMaterial({color:'#ffffff',side:T.DoubleSide,toneMapped:false});
+ const confetti=new T.InstancedMesh(new T.PlaneGeometry(mobile?.27:.2,mobile?.15:.11),confettiMaterial,CONFETTI);confetti.name='pinball-confetti';confetti.visible=false;confetti.frustumCulled=false;confetti.renderOrder=7;
+ {const tint=new T.Color(),colours=['#ffe86d','#73fff1','#ff62c2','#fff0cf','#8dff9e','#ff7a6b'];for(let i=0;i<CONFETTI;i++)confetti.setColorAt(i,tint.set(colours[i%colours.length]));}
+ scene.add(confetti);let confettiSerial=0,confettiAge=PINBALL_CONFETTI_LIFE;const piece=new T.Object3D();
+ const hot=new T.Color('#ff9a3d');
+ function burst(power:number){
+  // Goal mouth for a goal; the whole upper table for a finale.
+  const wide=power>1;
+  for(let i=0;i<CONFETTI;i++){const j=i*3,a=Math.random()*Math.PI*2,r=Math.random();
+   cp[j]=px(wide?60+Math.random()*240:150+Math.random()*60);cp[j+1]=.6+Math.random()*.4;cp[j+2]=pz(wide?120+Math.random()*160:58+Math.random()*20);
+   cv[j]=Math.cos(a)*(1.2+r*2.2);cv[j+1]=3.2+Math.random()*2.6*(wide?1.2:1);cv[j+2]=Math.sin(a)*(1+r*1.6)+(wide?0:1.6);
+   cr[i*2]=Math.random()*6.28;cr[i*2+1]=(Math.random()*2-1)*12;}
+  confettiAge=0;
+ }
 
  function paint(p:typeof popups[number],text:string,kind:PinballPopupKind){
   const g=p.canvas.getContext('2d');if(!g)return;const w=p.canvas.width,h=p.canvas.height;g.clearRect(0,0,w,h);
@@ -83,9 +104,23 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
    p.mesh.quaternion.copy(camera.quaternion);
    p.material.opacity=t<.6?1:1-(t-.6)/.4;
   }
-  // Ball tracker ring: follows the main ball while it is in play; coral while it is heading for the centre gap.
+  // Ball tracker ring: follows the main ball while it is in play; coral while it is heading for the centre gap,
+  // orange and breathing while a 3+ alternating-foot combo is alive (the "on fire" read).
   {const b=s.ball,on=s.phase==='playing'||s.phase==='ready';halo.visible=on;
-   if(on){halo.position.set(px(b.x),.045,pz(b.y));const danger=s.phase==='playing'&&s.read.live&&s.read.side<0&&b.vy>0;haloMaterial.color.copy(danger?coral:gold);haloMaterial.opacity=s.phase==='ready'?.45:.75;}}
+   if(on){halo.position.set(px(b.x),.045,pz(b.y));const danger=s.phase==='playing'&&s.read.live&&s.read.side<0&&b.vy>0;
+    const fire=!danger&&s.phase==='playing'&&s.combination>=3&&s.time-s.lastStrikeAt<6;
+    haloMaterial.color.copy(danger?coral:gold);if(fire)haloMaterial.color.copy(hot);haloMaterial.opacity=s.phase==='ready'?.45:fire?.92:.75;
+    halo.scale.setScalar(fire&&!reduced?1.25+.18*Math.sin(s.time*14):1);}}
+  // Confetti burst: spawn on a new serial, fall with flutter, hide on landing.
+  if(f.confettiSerial!==confettiSerial){confettiSerial=f.confettiSerial;if(!reduced)burst(f.confettiPower);}
+  if(confettiAge<PINBALL_CONFETTI_LIFE){
+   confettiAge+=dt;const step=Math.min(.05,dt),drag=Math.exp(-step*1.8),fade=Math.max(0,1-Math.max(0,confettiAge-PINBALL_CONFETTI_LIFE+.35)/.35);
+   for(let i=0;i<CONFETTI;i++){const j=i*3;
+    cv[j]*=drag;cv[j+2]*=drag;cv[j+1]=Math.max(-1.6,cv[j+1]-9*step);
+    cp[j]+=cv[j]*step+Math.sin(cr[i*2]*1.3)*.012;cp[j+1]=Math.max(.03,cp[j+1]+cv[j+1]*step);cp[j+2]+=cv[j+2]*step;cr[i*2]+=cr[i*2+1]*step;
+    piece.position.set(cp[j],cp[j+1],cp[j+2]);piece.rotation.set(cr[i*2],cr[i*2]*.7,cr[i*2]*.4);piece.scale.setScalar(fade);piece.updateMatrix();confetti.setMatrixAt(i,piece.matrix);}
+   confetti.instanceMatrix.needsUpdate=true;confetti.visible=confettiAge<PINBALL_CONFETTI_LIFE;
+  }else confetti.visible=false;
   // Neon hit rings.
   if(f.ringSerial!==ringSerial){ringSerial=f.ringSerial;if(!reduced){const r=rings[ringCursor];ringCursor=(ringCursor+1)%rings.length;r.age=0;r.power=f.ringPower;r.mesh.position.set(px(f.ringX),.06,pz(f.ringY));}}
   for(const r of rings){

@@ -9,6 +9,7 @@ import {createTennisFeel} from './tennisFeel';
 import {createPinballState,stepPinball,launchPinball,nudgePinball,tapPinballFlipper,pinballDivision,pinballDefenders,pinballFlippers,pinballReadyFoot,plungerPull,pinballMinute} from '@/lib/games/soccerPinball';
 import {createPinballFeel,resetPinballFeel,stepPinballFeel,pinballTimeScale,pinballFeelActive,pinballFeelMessage} from '@/lib/games/soccerPinballFeel';
 import {createPinballFx} from '@/lib/games/soccerPinballFx';
+import {pinballCrewPose} from '@/lib/games/soccerPinballCrew';
 import {createPinballTableView} from '@/lib/games/soccerPinballTableView';
 import {mergePinballStatic} from '@/lib/games/soccerPinballMerge';
 import {pinballStarTotal} from '@/lib/games/soccerPinballTable';
@@ -239,7 +240,8 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
    const keeperPose=pinballPose[0],incoming=pinball.phase==='playing'&&b.vy<-100&&b.y<290;
    keeperPose.vx=pinball.phase==='playing'?pinball.keeperVelocity/30:0;keeperPose.anticipate=incoming?Math.max(0,1-(b.y-83)/220):0;keeperPose.stun=0;
    keeperPose.keeper=1;pinballDive.progress=1-pinball.keeperCommit/.65;pinballDive.dir=pinball.keeperDirection<0?-1:1;pinballStandingSave.progress=.3+(1-pinballSave/.4)*.7;keeperPose.dive=pinball.keeperCommit>0?pinballDive:pinballSave>0?pinballStandingSave:undefined;
-   players[0].root.position.set(px(pinball.keeper),0,pz(83));players[0].pose(dt,Math.abs(keeperPose.vx)*2.4,0,0,0,0,keeperPose);
+   const keeperHop=pinballCrewPose(pinballFeel.crew,pinball,0,keeperPose,stage.reduced);// goal/drain/save reactions + kick-off set
+   players[0].root.position.set(px(pinball.keeper),0,pz(83));players[0].pose(dt,Math.abs(keeperPose.vx)*2.4,0,0,keeperHop,0,keeperPose);
    const impacts=pinball.sfx.wall+pinball.sfx.bumper+pinball.sfx.flipper+pinball.sfx.keeper;
    if(dt>0){if(impacts>pinballImpactEvents)pinballImpact=Math.min(1,pinballImpact+.35+Math.min(1,b.contact)*.4);pinballImpactEvents=impacts;pinballImpact*=Math.exp(-dt*15);pinballImpactClock+=dt;}
    const shake=stage.reduced?0:pinballFeel.shake;canvas.style.transform=shake>.005?`translate(${Math.sin(pinballImpactClock*107)*shake*2.5}px,${Math.cos(pinballImpactClock*91)*shake*1.6}px) rotate(${Math.sin(pinballImpactClock*73)*shake*.12}deg)`:'';
@@ -250,7 +252,8 @@ export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSoun
     pose.actionKind=pinball.cue==='attack'?'shot':'pass';pose.shotPower=pinball.cue==='attack'?.65:.2;
     pose.receive=pinball.possession===i?Math.max(0,(pinball.possessionTime-.4)/.32):0;pose.receiveProgress=1-pose.receive;
     pose.anticipate=pinball.possession===i?Math.min(1,1-pinball.possessionTime/.72):pinball.phase==='playing'?Math.max(0,1-Math.hypot(b.x-p.x,b.y-p.y)/100)*.6:0;pose.stun=ai.dazed>0?Math.min(1,ai.dazed):0;pose.strikeZ=.6/rig.root.scale.x;
-    rig.root.position.set(x,0,z);rig.pose(dt,Math.min(7,Math.hypot(pose.vx,pose.vz)*3),ai.block>0||pinball.possession===i?ai.aim:Math.hypot(pose.vx,pose.vz)>.08?Math.atan2(pose.vx,pose.vz):Math.atan2(ball.position.x-x,ball.position.z-z),ai.dazed>0?0:kick,0,pose.vx*.12,pose);
+    const hop=pinballCrewPose(pinballFeel.crew,pinball,i+1,pose,stage.reduced);
+    rig.root.position.set(x,0,z);rig.pose(dt,Math.min(7,Math.hypot(pose.vx,pose.vz)*3),ai.block>0||pinball.possession===i?ai.aim:Math.hypot(pose.vx,pose.vz)>.08?Math.atan2(pose.vx,pose.vz):Math.atan2(ball.position.x-x,ball.position.z-z),ai.dazed>0?0:kick,ai.dazed>0?0:hop,pose.vx*.12,pose);
     if(ai.dazed>0){const fall=Math.min(1,(2-ai.dazed)/.13,ai.dazed/.4);rig.root.rotation.y=ai.fallYaw;rig.body.rotation.x=-fall*1.4;rig.body.position.y+=fall*.15;rig.legs[0].knee.rotation.x+=fall*.5;rig.legs[1].knee.rotation.x+=fall*.8;ring.visible=false;
      rig.finalizePose();stars.visible=true;rig.head.getWorldPosition(stars.position);stars.position.y+=.35;
      for(let j=0;j<3;j++){const star=stars.children[j],a=j*Math.PI*2/3+(stage.reduced?0:pinball.time*3);star.position.set(Math.cos(a)*.4,stage.reduced?0:Math.sin(a*2)*.07,Math.sin(a)*.22);star.rotation.set(-.65,0,stage.reduced?0:pinball.time*1.5+j);star.scale.setScalar(Math.min(1,ai.dazed/.25));}
