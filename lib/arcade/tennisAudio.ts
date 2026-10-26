@@ -30,6 +30,15 @@ function noise(ctx:AudioContext,at:number,dur:number,vol:number,type:BiquadFilte
  gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(vol,at+attack);gain.gain.exponentialRampToValueAtTime(.0001,at+dur);
  src.connect(filter);filter.connect(gain);gain.connect(ctx.destination);src.start(at,Math.random()*.6,dur+.05);src.onended=()=>{free(ctx);src.disconnect();filter.disconnect();gain.disconnect();};
 }
+/** A short voiced "hup!" (a buzzy source through one vowel formant): power shots get a little effort sound. */
+function voice(ctx:AudioContext,at:number,f0:number,f1:number,formant:number,dur:number,vol:number){
+ if(vol<=0||!claim(ctx))return;const osc=ctx.createOscillator(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();osc.type='sawtooth';
+ osc.frequency.setValueAtTime(f0,at);osc.frequency.exponentialRampToValueAtTime(f1,at+dur);filter.type='bandpass';filter.Q.value=4;filter.frequency.setValueAtTime(formant,at);filter.frequency.exponentialRampToValueAtTime(formant*.75,at+dur);
+ gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(vol,at+.012);gain.gain.exponentialRampToValueAtTime(.0001,at+dur);
+ osc.connect(filter);filter.connect(gain);gain.connect(ctx.destination);osc.start(at);osc.stop(at+dur+.02);osc.onended=()=>{free(ctx);osc.disconnect();filter.disconnect();gain.disconnect();};
+}
+/** Rally pad chords (A minor family), one per 4 touches from the 8th: the long rally gets its own music. */
+const PAD=[[220,261.63,329.63],[196,246.94,293.66],[174.61,220,261.63],[164.81,207.65,246.94]];
 function haptic(pattern:number|number[]){
  const now=performance.now();if(now-lastHaptic<150||typeof navigator.vibrate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;lastHaptic=now;navigator.vibrate(pattern);
 }
@@ -40,7 +49,9 @@ function haptic(pattern:number|number[]){
  *  tennis:bounce:<intensity>:<half> · tennis:net:<net|over|back>
  *  tennis:point:<winner>:<rally>:<kind> · tennis:match:<winner>:<rally>:<kind>
  *  tennis:hold (a pressed kick waits for the ball) · tennis:coach (aim nudge)
- *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> · tennis:tire */
+ *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> · tennis:tire
+ *  Oct 25: tennis:bounce:<i>:<half>:<sand|hard>:<rally> · tennis:skid:<side> · tennis:matchpoint:<you|rival|both>
+ *  tennis:streak:<n> · tennis:comeback */
 export function tennisSound(ctx:AudioContext|null,cue:string){
  if(typeof document==='undefined'||document.hidden||!isSoundEnabled())return;
  const volume=getSoundVolume();if(volume<=0)return;
@@ -68,12 +79,23 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
   if(side==='you'&&volley)noise(ctx,t,.035,.05*v,'highpass',3200,3200,.9);
   // Adaptive rally bassline: the exchange itself plays the music, and it climbs as the rally grows.
   if(rally>=3&&musicOn()){const step=(rally-3)%BASS.length,octave=rally>=11?2:1;tone(ctx,t,'triangle',BASS[step]*octave,BASS[step]*octave,.26,.05*v,.02);if(rally>=8)tone(ctx,t+.01,'sine',BASS[step]*octave*1.5,BASS[step]*octave*1.5,.22,.022*v,.02);}
+  // Effort voice on power shots and a rising whoosh under a lob (the ball climbs, so does the sound).
+  if(c!=='drop'&&(power>.78||shot==='slam'||shot==='scissor'||shot==='bicycle'||shot==='shark'))voice(ctx,t+.005,(side==='rival'?190:250)*p,(side==='rival'?150:200)*p,side==='rival'?650:800,.11,.045*v*far);
+  if(shot==='lob')noise(ctx,t+.02,.5,.035*v*far,'bandpass',450,1700,1.3,.12);
+  // Pad chord every 4th touch from the 8th: a slow swell under the bassline.
+  if(rally>=8&&rally%4===0&&musicOn()){const chord=PAD[(rally/4-2)%PAD.length];chord.forEach((hz,i)=>tone(ctx,t+i*.02,'sine',hz,hz,1.3,.016*v,.18));}
   // Crowd leans in as the rally gets long.
   if(rally>=6)noise(ctx,t+.05,.55,Math.min(.05,.012+(rally-6)*.004)*v,'bandpass',550+Math.min(rally,20)*12,700,.7,.18);
   if(rally>=5&&rally%5===0)noise(ctx,t+.08,.8,.06*v,'bandpass',420,760,1.1,.25); // "ooooh"
   return;
  }
- if(kind==='bounce'){const i=Math.max(.2,Number(a)||.4),far=b==='rival'?.7:1;if(c==='sand'){tone(ctx,t,'sine',70*jitter(.08),45,.09,.08*i*v*far);noise(ctx,t,.12,.05*i*v*far,'lowpass',900,300,.6);return;}tone(ctx,t,'sine',95*jitter(.08),55,.07,.1*i*v*far);noise(ctx,t,.025,.03*i*v*far,'highpass',1500);return;}
+ if(kind==='bounce'){const i=Math.max(.2,Number(a)||.4),far=b==='rival'?.7:1,rally=Number(d)||0;
+  if(rally>=6&&musicOn())noise(ctx,t+.01,.035,(rally>=12?.03:.022)*v,'highpass',7000,7000,.7,.002);/* hi-hat on the bounce: the rally keeps the beat */if(c==='sand'){tone(ctx,t,'sine',70*jitter(.08),45,.09,.08*i*v*far);noise(ctx,t,.12,.05*i*v*far,'lowpass',900,300,.6);return;}tone(ctx,t,'sine',95*jitter(.08),55,.07,.1*i*v*far);noise(ctx,t,.025,.03*i*v*far,'highpass',1500);return;}
+ if(kind==='skid'){const far=a==='rival'?.6:1,q=jitter(.08);tone(ctx,t,'sine',1900*q,2700*q,.06,.028*v*far,.004);tone(ctx,t+.05,'sine',2600*q,1800*q,.07,.022*v*far,.004);noise(ctx,t,.09,.03*v*far,'bandpass',2400,1600,1.6,.004);return;} // court-shoe squeak
+ if(kind==='matchpoint'){for(const at of[0,.8])for(const k of[0,.22])tone(ctx,t+at+k,'sine',62,40,.14,(k?.09:.13)*v,.01); // heartbeat
+  noise(ctx,t,.9,.03*v,'highpass',2600,1800,.6,.15);if(musicOn())tone(ctx,t+.1,'triangle',a==='rival'?311.13:440,a==='rival'?311.13:440,1.1,.025*v,.3);return;} // the crowd hushes
+ if(kind==='streak'){const n=Math.min(6,Number(a)||3),up=Math.pow(2,(n-3)/12);if(musicOn())[523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i)=>tone(ctx,t+i*.055,'triangle',hz*up,hz*up,i===4?.4:.14,.045*v));noise(ctx,t+.05,1,.07*v,'bandpass',1200,1700,.5,.06);return;}
+ if(kind==='comeback'){if(musicOn()){tone(ctx,t+.25,'triangle',392,392,.18,.035*v,.02);tone(ctx,t+.42,'triangle',523.25,523.25,.3,.035*v,.02);}return;} // warm 'you've got this' after the point sound
  if(kind==='trap'){const far=a==='rival'?.7:1;tone(ctx,t,'sine',(b==='chest'?110:150)*jitter(.05),70,.12,.12*v*far,.015);noise(ctx,t,.08,.04*v*far,'lowpass',500,250,.6,.01);return;} // soft cushion
  if(kind==='goldready'){if(musicOn())[523.25,659.25,783.99,1046.5].forEach((hz,i)=>tone(ctx,t+i*.07,'triangle',hz,hz,.22,.045*v));return;}
  if(kind==='golden'){tone(ctx,t,'triangle',1318.5,1318.5,.35,.05*v,.01);tone(ctx,t+.04,'sine',1975.5,1975.5,.4,.035*v,.01);noise(ctx,t,.4,.05*v,'highpass',3000,5000,.7,.02);return;}
