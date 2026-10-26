@@ -7,14 +7,17 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  *   gain/filter follow attack energy from the existing game loop.
  * - Stadium drums are scheduled from the same loop (lookahead), only during big attacks and only
  *   with music on.
+ * - Oct 25 2026 upgrade: a quiet island groove (marimba bass + pluck, C-Am-F-G) rides the same lookahead while a match plays
+ *   with music on, brightening as attacks build; an "Olé" chant for long passing moves; claps after a goal; call-out and
+ *   full-time win / lose / draw stings. Still no files, timers or always-on nodes.
  * - Voices are capped; every node disconnects when it ends.
  */
-export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band';
+export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band'|'ole'|'cheer'|'win'|'lose'|'draw';
 const MAX_VOICES=14;
 export function createStrikerAudio(){
  let ctx:AudioContext|null=null,out:GainNode|null=null,noise:AudioBuffer|null=null,voices=0;
  let crowd:{src:AudioBufferSourceNode;filter:BiquadFilterNode;gain:GainNode}|null=null,crowdTarget=-1;
- let nextBeat=0,beat=0,music=true;
+ let nextBeat=0,beat=0,drum=0,music=true;
  const jitter=(amount:number)=>1+(Math.random()*2-1)*amount;
  const musicOn=()=>{try{return localStorage.getItem('fi2-music-enabled')!=='false';}catch{return true;}};
  function attach(next:AudioContext|null){if(!next||next===ctx)return;ctx=next;out=next.createGain();out.gain.value=1;out.connect(next.destination);
@@ -52,7 +55,9 @@ export function createStrikerAudio(){
    case 'board':tone(at,135*j,68,.1,v*.22);hiss(at,.06,v*.08,'lowpass',420);break;
    case 'goal':whistle(at,.32,v*.09);hiss(at,2.4,v*.24,'bandpass',480,1100,.7,.22);hiss(at+.05,1.8,v*.1,'highpass',2400,3400,.5,.3);
     // Short brass-like stinger (the only "music" a goal needs): a rising triad through a lowpass.
-    [[233,0],[294,.09],[349,.18],[466,.3]].forEach(([hz,d])=>tone(at+d,hz,hz*1.01,.5,v*.06,'sawtooth',1500));break;
+    [[233,0],[294,.09],[349,.18],[466,.3]].forEach(([hz,d])=>tone(at+d,hz,hz*1.01,.5,v*.06,'sawtooth',1500));
+    // The stands clap it in: three claps once the roar peaks.
+    for(const d of [1,1.32,1.64])hiss(at+d,.06,v*.1,'bandpass',1700*jitter(.08),1400,1.1,.002);break;
    case 'concede':whistle(at,.28,v*.08);vowel(at+.1,1.3,v*.12,300,700,.8);break;
    case 'intercept':tone(at,210*j,110,.07,v*.2);vowel(at+.05,.7,v*.07,320,760,.85);break;
    case 'focus':tone(at,880,885,.12,v*.07);tone(at+.08,1320,1325,.18,v*.06);break;
@@ -76,15 +81,32 @@ export function createStrikerAudio(){
    case 'call':tone(at,700*j,940,.08,v*.07,'square',2000);break;
    // Pass chain (Oct 9 2026): each completed Gold pass in a move rings one step higher on a major pentatonic, so a
    // passing move is heard building. power = passes in the chain (2..); the scale tops out after six.
+   // "Olé!": the crowd's two-vowel chant for a long passing move (four or more passes in a row).
+   case 'ole':vowel(at,.32,v*.13,500,1000,1.05);vowel(at+.3,.62,v*.15,560,1700,.92);break;
+   // Goal call-out (brace, hat-trick, equaliser...): a brass fanfare climbing a major triad over a bigger roar.
+   case 'cheer':[[392,.35],[494,.45],[587,.55],[784,.68]].forEach(([hz,d])=>tone(at+d,hz,hz*1.005,.42,v*.055,'sawtooth',1800));hiss(at+.3,1.4,v*.12,'bandpass',700,1300,.7,.15);break;
+   // Full-time stings: a bright rising run for a win, a soft falling pair for a loss (kind, not mocking), a level two-note for a draw.
+   case 'win':[[523,1.3],[659,1.42],[784,1.54],[1046,1.7],[1318,1.86]].forEach(([hz,d])=>tone(at+d,hz,hz*1.005,.34,v*.06,'triangle'));tone(at+1.86,262,262,.6,v*.07,'triangle',900);break;
+   case 'lose':tone(at+1.3,392,370,.5,v*.05,'triangle');tone(at+1.75,330,311,.8,v*.05,'triangle');break;
+   case 'draw':tone(at+1.3,440,440,.35,v*.05,'triangle');tone(at+1.6,440,442,.55,v*.05,'triangle');break;
    case 'chain':{const step=Math.max(0,Math.min(5,Math.round(power)-2)),hz=[523,587,659,784,880,1047][step];tone(at,hz,hz*1.005,.16,v*.06,'triangle');if(step>=2)tone(at+.05,hz*1.5,hz*1.505,.2,v*.035,'sine');break;}
   }}
+ /** Island groove, one step: a syncopated marimba bass on the bar's root and a pentatonic pluck that joins as play heats up.
+  * Quiet under the crowd (about a third of the drums) so cues stay readable. Four bars: C, A minor, F, G. */
+ const ROOTS=[130.81,110,87.31,98],PLUCK=[523.25,587.33,659.25,783.99,880];
+ function groove(at:number,step:number,energy:number,v:number){if(voices>=MAX_VOICES-4)return;const s16=step%16,root=ROOTS[Math.floor(step/16)%4];
+  if(s16===0||s16===3||s16===6||s16===8||s16===11||s16===14)tone(at,s16===6||s16===14?root*1.5:root,root*.99,.22,v*.045,'triangle',900);
+  if(energy>.25&&(s16===2||s16===10||(energy>.8&&(s16===5||s16===13)))){const hz=PLUCK[(step*3+Math.floor(step/16))%5];tone(at,hz,hz*.995,.13,v*.022,'sine');}
+  if(energy>.45&&s16%4===2)hiss(at,.03,v*.025,'highpass',7000,7000,.7,.002);}
  /** Start the crowd bed when play starts; stop it on pause, hide or full time. */
  function startCrowd(){const c=live();if(!c||crowd||!noise)return;const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=true;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=.0001;src.connect(filter);filter.connect(gain);gain.connect(out!);src.start();crowd={src,filter,gain};crowdTarget=-1;music=musicOn();}
  function stopCrowd(){if(!crowd)return;const c=ctx!,{src,filter,gain}=crowd;crowd=null;try{gain.gain.setTargetAtTime(.0001,c.currentTime,.12);src.stop(c.currentTime+.5);}catch{}src.onended=()=>{for(const n of [src,filter,gain])try{n.disconnect();}catch{}};}
  /** Called from the game loop only while playing: energy 0..1.6. Starts the bed lazily once the context is running; writes automation only when the level changes. */
  function setCrowd(energy:number){const c=live();if(!c)return;if(!crowd)startCrowd();if(!crowd)return;const v=getSoundVolume();
   // Stadium drums join only when an attack builds; a short lookahead from the game loop, no timer.
-  if(energy>.55&&music){if(nextBeat<c.currentTime)nextBeat=c.currentTime+.05;while(nextBeat<c.currentTime+.25){if([1,0,1,0,1,1,1,0][beat%8])tone(nextBeat,98*jitter(.03),46,.2,v*.16*Math.min(1,energy));if(beat%8===6)hiss(nextBeat,.07,v*.05,'bandpass',1500,1400,1.2);nextBeat+=.2;beat++;}}else beat=0;
+  // One 0.2 s step sequencer (150 bpm eighths): the groove always while music is on, the drums on top in a big attack.
+  if(music){if(nextBeat<c.currentTime)nextBeat=c.currentTime+.05;while(nextBeat<c.currentTime+.25){groove(nextBeat,beat,energy,v);
+   if(energy>.55){if([1,0,1,0,1,1,1,0][drum%8])tone(nextBeat,98*jitter(.03),46,.2,v*.16*Math.min(1,energy));if(drum%8===6)hiss(nextBeat,.07,v*.05,'bandpass',1500,1400,1.2);drum++;}else drum=0;nextBeat+=.2;beat++;}}
   const target=v*(.016+Math.min(1.6,energy)*.05);if(Math.abs(target-crowdTarget)<.003)return;crowdTarget=target;
   crowd.gain.gain.setTargetAtTime(target,c.currentTime,energy>1?.08:.35);crowd.filter.frequency.setTargetAtTime(430+Math.min(1.6,energy)*420,c.currentTime,.3);}
  function dispose(){stopCrowd();try{out?.disconnect();}catch{}ctx=null;out=null;noise=null;voices=0;}

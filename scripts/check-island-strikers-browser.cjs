@@ -1,3 +1,4 @@
+// Oct 25 2026: phones play Strikers upright (portrait); no rotation step.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
@@ -10,7 +11,7 @@ const assert=require('node:assert/strict');
  await page.waitForFunction(()=>window.__fi2Live);
  const framing=await page.evaluate(()=>{const {camera,scene}=window.__fi2Live,d=camera.position.length(),p=camera.position.clone();let extent=0;for(const x of [-26,26])for(const z of [-14,14]){p.set(x,2,z).project(camera);extent=Math.max(extent,Math.abs(p.x),Math.abs(p.y));}return{extent,d,far:camera.far,fogNear:scene.fog.near};});
  assert(framing.extent<=.94,'whole stadium fits');assert(framing.fogNear>framing.d+25&&framing.far>framing.d+30,'pitch stays visible on portrait screens');
- if(mobile){await page.getByRole('heading',{name:'Turn sideways to play'}).waitFor();await page.setViewportSize({width:844,height:390});await page.getByRole('heading',{name:'Turn sideways to play'}).waitFor({state:'hidden'});}await page.getByRole('button',{name:'Kick off',exact:true}).click();
+ await page.getByRole('button',{name:'Kick off',exact:true}).click();
  await page.waitForFunction(()=>window.__fi2Live.getElapsed()>.2);
  await page.evaluate(()=>window.__fi2Live.match.reset());
  if(mobile){const box=await page.getByRole('button',{name:'Hold / Shoot',exact:true}).boundingBox(),cdp=await page.context().newCDPSession(page);await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:box.x+box.width/2,y:box.y+box.height/2,id:1}]});
@@ -18,8 +19,8 @@ const assert=require('node:assert/strict');
  }else{await page.keyboard.down('KeyK');await page.waitForFunction(()=>window.__fi2Live.sim.charge>.85);await page.keyboard.up('KeyK');}
  await page.waitForFunction(()=>window.__fi2Live.sim.eventKind==='shot');
  const shot=await page.evaluate(()=>{const s=window.__fi2Live.sim;return{owner:s.ball.owner,speed:Math.hypot(s.ball.vx,s.ball.vz)};});assert.equal(shot.owner,-1);assert(shot.speed>27);
- if(mobile){await page.setViewportSize({width:390,height:844});await page.getByRole('heading',{name:'Turn sideways to play'}).waitFor();}else await page.getByRole('button',{name:'Pause',exact:true}).click();await page.waitForTimeout(200);const frames=await canvas.getAttribute('data-frames'),time=await page.evaluate(()=>window.__fi2Live.getElapsed());await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),frames);assert.equal(await page.evaluate(()=>window.__fi2Live.getElapsed()),time);
- if(mobile)await page.setViewportSize({width:844,height:390});await page.getByRole('button',{name:'Resume match',exact:true}).click();await page.waitForFunction(t=>window.__fi2Live.getElapsed()>t,time);
+ await page.getByRole('button',{name:'Pause',exact:true}).click();await page.waitForTimeout(200);const frames=await canvas.getAttribute('data-frames'),time=await page.evaluate(()=>window.__fi2Live.getElapsed());await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),frames);assert.equal(await page.evaluate(()=>window.__fi2Live.getElapsed()),time);
+ await page.getByRole('button',{name:'Resume match',exact:true}).click();await page.waitForFunction(t=>window.__fi2Live.getElapsed()>t,time);
  // Deterministic keeper fixture: an actual collision must use hands, with the bean rig visible.
  await page.evaluate(()=>{const s=window.__fi2Live.sim,p=s.players[7];s.ball.owner=-1;Object.assign(s.ball,{x:p.x-.25,z:p.z,y:1,vx:8,vz:0,vy:0,lock:0});});
  await page.waitForFunction(()=>window.__fi2Live.sim.players[7].strikeKind==='save'&&window.__fi2Live.sim.players[7].kick>.2);

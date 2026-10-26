@@ -45,7 +45,7 @@ assert.equal(passLine(3,5),'3/5');assert.equal(passLine(0,0),'0');
 // Wiring: chain cue, follow camera (off under reduced motion), hint attributes, concede line on the banner.
 const ui=fs.readFileSync('components/LiveArcadeMatch.tsx','utf8'),scene=fs.readFileSync('lib/arcade/strikerScene.ts','utf8'),audio=fs.readFileSync('lib/arcade/strikerAudio.ts','utf8'),css=fs.readFileSync('components/LiveArcadeMatch.module.css','utf8');
 assert.match(audio,/case 'chain':/,'pass chain has its own rising cue');assert.match(ui,/cue\('chain',chain\)/);
-assert.match(scene,/followOn=follow&&motion&&!portrait/,'follow cam respects reduced motion and portrait');assert.match(ui,/visual\.setFollow\(active&&!match\.state\.finished\)/,'follow cam only while playing');
+assert.match(scene,/followOn=follow&&motion;/,'follow cam respects reduced motion (portrait phones follow too)');assert.match(ui,/visual\.setFollow\(active&&!match\.state\.finished\)/,'follow cam only while playing');
 assert.match(ui,/STRIKER_CONCEDE_LINES\[s\.concedeCause\]/);assert.match(ui,/data-hint=\{view\.hint==='shoot'\|\|undefined\}/);
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.bump,\.chain,\.prompt,\.starList li\[data-done\]\{animation:none\}/,'new UI motion stops under reduced motion');
 console.log('PASS Strikers feedback: player pass stat, concede causes, context hints, coach grammar, chain/follow/hint wiring at 30/60/120Hz');
