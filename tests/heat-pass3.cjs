@@ -55,7 +55,7 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
 {
   const panel=read('components/FieldTranscript.module.css').match(/\.panel\{[^}]*\}/)[0];
   assert(!/backdrop-filter:\s*blur/.test(panel),'FieldTranscript panel must not blur the live match');
-  const allowed={'globals.css':6,'Arcade.module.css':1,'CharacterCustomizer.module.css':3,'CoachesCentre.module.css':1,'IslandJourney.module.css':1,'IslandMapFrame.module.css':0,'IslandSettings.module.css':4,'IslandStore.module.css':1,'IslandTravelMap.module.css':2,'NpcConversation.module.css':3,'PositionGuide.module.css':1,'BreakawayRun.module.css':4,'SoccerPinballGame.module.css':1,'SoccerTennisGame.module.css':1};
+  const allowed={'globals.css':6,'Arcade.module.css':1,'CharacterCustomizer.module.css':3,'CoachesCentre.module.css':1,'IslandJourney.module.css':1,'IslandMapFrame.module.css':0,'IslandSettings.module.css':4,'IslandStore.module.css':1,'IslandTravelMap.module.css':2,'NpcConversation.module.css':3,'PositionGuide.module.css':1};
   const files=['app/globals.css',...fs.readdirSync('components').filter(f=>f.endsWith('.css')).map(f=>'components/'+f),...fs.readdirSync('components/games').filter(f=>f.endsWith('.css')).map(f=>'components/games/'+f)];
   for(const f of files){const n=[...read(f).matchAll(/[^{}]*\{[^{}]*backdrop-filter\s*:\s*(?!none)[^;}]*/g)].length,name=f.split('/').pop();
     assert(n<=(allowed[name]??0),`${f}: ${n} backdrop-filter rules (allowed ${allowed[name]??0}). A new blur over the moving island costs a re-blur every frame on iOS: use a solid or semi-opaque background, or only blur a paused view.`);}

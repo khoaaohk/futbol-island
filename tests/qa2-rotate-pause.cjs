@@ -14,6 +14,6 @@ assert.match(tsx,/if \(mq\.matches\) window\.dispatchEvent\(new Event\('blur'\)\
 assert.match(tsx,/removeEventListener\?\.\('change', change\)/,'listener cleaned up');
 assert(!/setInterval|setTimeout|requestAnimationFrame/.test(tsx),'no polling');
 // The games that run behind it pause on window blur.
-for(const f of ['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','components/games/SoccerTennisGame.tsx','components/games/PassPuzzleGame.tsx'])
+for(const f of ['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','components/games/PassPuzzleGame.tsx'])
  assert.match(read(f),/addEventListener\('blur',/,f+' listens for blur');
 console.log('qa2-rotate-pause: ok');
