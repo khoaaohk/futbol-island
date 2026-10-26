@@ -52,4 +52,12 @@ ok('the secret ball: once only it is left, Dot circles and a gentle note shows o
  const src=read('lib/town/water/diveJourney.ts');assert(/for\(const f of diveTaskFinds\(spot\)\)/.test(src),'the lead (nextTarget) only knows the reef tasks, never the ball');
 });
 
+ok('a tab switch or a phone call never leaves Swim fast or ▲ / ▼ held (the release never arrives): blur lets go of them',()=>{
+ const town=read('components/Town.tsx'),b=town.indexOf('    const blur=()=>{'),line=town.slice(b,town.indexOf('\n',b));
+ assert(line.includes("water.press('swimfast','up')")&&line.includes('diveLift.up=diveLift.down=false'));
+ const W=load('lib/town/water/waterState.ts');const probe={sample:()=>3,isLand:()=>false,allowed:()=>true,reset(){},d:30};const w=W.createWaterState(probe,()=>false);
+ w.step(.1,0,0,{stick:0,moving:false,speed:0,landY:0,yaw:0,airborne:false});w.step(.1,0,0,{stick:0,moving:false,speed:0,landY:0,yaw:0,airborne:false});
+ w.press('swimfast','down');assert.equal(w.state.fast,true);w.press('swimfast','up');assert.equal(w.state.fast,false);
+});
+
 console.log(`explore-swim-oct25: ${passed} passed`);
