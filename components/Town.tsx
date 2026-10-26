@@ -32,7 +32,8 @@ import {createPositionStore} from '@/lib/town/positionStore';
 import {MovingIslandOverview,MovingIslandTravelMap} from './MovingIslandMap';
 import {createHiddenTransformGate} from '@/lib/graphics/hiddenTransformGate';
 import {Icon} from './Icon';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import {readCoinProgress,setPendingBallLesson} from '@/lib/town/coinProgress';
 import {createIslandSound} from '@/lib/audio/islandSound';
 import type {WaterSoundFrame} from '@/lib/audio/islandSound';
 const REEF_TINT_MS=650;// the reef dive's soft blend through the zone's water colour (app/globals.css .water-under.is-reef)
@@ -440,6 +441,15 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
   const [ready,setReady]=useState(false);
+  // Found-ball lessons survive a reload (Oct 26 2026, owner): the card on screen is saved (ball id + step, lib/town/coinQuest.ts
+  // pendingLesson) and reopened at that step once the island is ready; Got it clears it.
+  const ballResumed=useRef(false),ballResume=useRef<{id:string;step:number}|null>(null),ballFront=ballLessons[0];
+  useEffect(()=>{if(!ready)return;
+   if(!ballResumed.current){ballResumed.current=true;const p=readCoinProgress().pendingLesson;if(p&&!ballFront){ballResume.current=p;setBallLessons([p.id]);return;}}
+   if(ballResume.current&&ballResume.current.id!==ballFront)ballResume.current=null;
+   setPendingBallLesson(ballFront?{id:ballFront,step:ballResume.current?.id===ballFront?ballResume.current.step:0}:null);
+  },[ready,ballFront]);
+  const ballStep=useCallback((step:number)=>{if(ballFront)setPendingBallLesson({id:ballFront,step});},[ballFront]);
   // Tan hand-off from the title screen (preload pass, Oct 9 2026): the plain tan sheet starts its 0.5 s cross-fade at once (IslandLoading
   // CSS), so the arrival starts with it and the HUD arrives as it ends, instead of the art loader's 1.5 s / 2.05 s choreography.
   useEffect(()=>{if(!loadingComplete)return;const timer=window.setTimeout(()=>setReady(true),window.matchMedia('(prefers-reduced-motion: reduce)').matches?60:returningFromArcade?1050:tanHandoff()?600:2050);return()=>window.clearTimeout(timer);},[loadingComplete,returningFromArcade]);
@@ -2203,7 +2213,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&<GraduationHost blocked={calmBlocked} onOpenChange={setGraduationOpen}/>}
     {ready&&!failed&&<CardOfferHost blocked={graduationOpen||vendingLeaving||fishingOpen||ballLessons.length>0||!!lesson||conversationOpen||onboardingOpen||customizerOpen||storeOpen||arcadeOpen||coachesOpen||museumOpen||shopOpen||ferryOpen||map||!!positionSelection} onOpenChange={setCardOfferOpen}/>}
     {ready&&!failed&&<CostumeMilestoneToast blocked={toastBlocked}/>}{ready&&!failed&&<RideUnlockToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="shark"/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="ride"/>}{ready&&!failed&&<RayLessonToast blocked={toastBlocked}/>}{ready&&!failed&&<ReefHintToast blocked={toastBlocked}/>}{ready&&!failed&&<SwimLessonToast blocked={toastBlocked} which="dive"/>}{ready&&!failed&&<DiveHud/>}{ready&&!failed&&<FuelToast blocked={stackCovered/* also waits under the island pocket (bug A3) */}/>}{ready&&!failed&&<WelcomeBack blocked={toastBlocked||jobRunning||jobCardShown||actionFocus} held={stackCovered}/>}
-    {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
+    {ballLessons.length>0&&<BallHuntLesson key={ballLessons[0]} spotId={ballLessons[0]} startStep={ballResume.current?.id===ballLessons[0]?ballResume.current.step:0} onStep={ballStep} onDismiss={()=>setBallLessons(queue=>queue.slice(1))}/>}
     {fieldCatalog&&<FieldLearning pathRequest={formatPathRequest??undefined} learningId={learningRequest?.id} onResetQuizView={()=>resetQuizView.current()} onResizeSound={()=>soundRef.current?.ui('hover')} onWake={()=>wakeLoopRef.current()} onLivePause={paused=>gamesRef.current?.setPaused(fieldCatalog,paused)} onPickerChange={setPlaysPickerOpen} readMatch={()=>gamesRef.current?.getView(fieldCatalog)??null} cameraAngle={learningAngle} key={formatPathRequest?.nonce??learningRequest?.nonce??fieldCatalog} format={fieldCatalog} session={fieldSession} voiceEnabled={voiceEnabled} coachVoice={coachVoice} narrationPaused={arcadeOpen||settingsOpen||map||conversationOpen||videoPlaying||cardOfferOpen} onClose={()=>{fieldSession.current=null;setFieldCatalog(null);if(learningRequest||formatPathRequest){const back=lessonCloseTarget(formatPathRequest);setFormatPathRequest(null);setLearningRequest(null);if(back==='paths'){setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}}}}/>}
     {lesson&&<CoachLesson phase={lesson} open={laneOpen} feedback={coachFeedback} onWatch={()=>requestLesson('watch')} onPractice={()=>requestLesson('practice')} onPass={()=>{input.current.kick=true;}} onExit={()=>requestLesson('exit')} format={passFormat} onFormat={choosePassFormat} attempts={passAttempts} aimStatus={aimStatus} onStraight={()=>lessonAim.current?.straight()} onPlay={()=>lessonAim.current?.play()} onCancel={()=>lessonAim.current?.cancel()} onReplay={()=>lessonAim.current?.replay()}/>}
     {!ready&&!failed&&(returningFromArcade?<IslandReturnLoading exiting={loadingComplete}/>:<IslandLoading exiting={loadingComplete}/>)}

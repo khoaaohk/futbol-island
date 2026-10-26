@@ -105,7 +105,7 @@ console.log(`PASS spacing: every Coral Cay ball is at least 10 m from every othe
 
 // 6. Saved progress: nothing is taken away from players who found all 80 before Coral Cay.
 const old80={version:4,revealed:PRE_CORAL_CAY_IDS,collected:PRE_CORAL_CAY_IDS,hint:null,celebrated:true,rewardUnlocked:false};
-const m=sanitizeCoinProgress(old80);assert.equal(m.version,7);assert(m.rewardUnlocked&&coinRewardEarned(m),'an 80-ball save keeps the Matchday Fox');assert(allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'and every costume');
+const m=sanitizeCoinProgress(old80);assert.equal(m.version,8);assert(m.rewardUnlocked&&coinRewardEarned(m),'an 80-ball save keeps the Matchday Fox');assert(allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'and every costume');
 assert(!m.celebrated,'the new 100-ball finale is still ahead of them');assert.equal(m.collected.length,80);
 const again=sanitizeCoinProgress(JSON.parse(JSON.stringify(m)));assert(again.rewardUnlocked&&again.allCostumesUnlocked,'the grandfathered unlock survives a re-save as version 5');
 assert(!coinRewardEarned(sanitizeCoinProgress({...old80,collected:PRE_CORAL_CAY_IDS.slice(0,79)})),'79 of the old 80 does not unlock the fox');

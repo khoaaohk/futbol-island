@@ -122,8 +122,21 @@ export const COIN_QUEST:CoinSpot[]=[
  ...EAST_JETTY_BALL_SPOTS,
 ];
 const CORAL_CAY_IDS=new Set(CORAL_CAY_SPOTS.map(spot=>spot.id)),SUMMIT_IDS=new Set(SUMMIT_BALL_SPOTS.map(spot=>spot.id)),JETTY_IDS=new Set(EAST_JETTY_BALL_SPOTS.map(spot=>spot.id));
-export type CoinProgress={version:7;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean};
-export const emptyCoinProgress=():CoinProgress=>({version:7,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false});
+/**
+ * `pendingLesson` (version 8, Oct 26 2026, owner): the found-ball lesson card still open (ball id + the step on screen), so a reload
+ * mid-lesson reopens it at that step (Town). Older saves migrate to null; an id that is not a collected ball, or a bad step, is dropped.
+ */
+export type PendingBallLesson={id:string;step:number};
+export const COIN_SAVE_VERSION=8;
+export type CoinProgress={version:8;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean;pendingLesson:PendingBallLesson|null};
+export const emptyCoinProgress=():CoinProgress=>({version:8,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false,pendingLesson:null});
+/** A saved pending lesson, or null when it is missing, malformed, or not a collected ball. Steps are clamped by the card itself. */
+export function sanitizePendingLesson(raw:unknown,collected:readonly string[]):PendingBallLesson|null{
+ if(!raw||typeof raw!=='object')return null;const p=raw as Partial<PendingBallLesson>;
+ if(typeof p.id!=='string'||!ids.has(p.id)||!collected.includes(p.id))return null;
+ const step=Number.isInteger(p.step)&&(p.step as number)>=0&&(p.step as number)<64?p.step as number:0;
+ return {id:p.id,step};
+}
 const ids=new Set(COIN_QUEST.map(c=>c.id));
 // The original forty IDs stay in their original order. Old completed saves keep their earned outfit.
 const originalRewardIds=COIN_QUEST.slice(0,40).map(spot=>spot.id);
@@ -144,7 +157,7 @@ export function sanitizeCoinProgress(raw:unknown):CoinProgress{
  const version=r.version??1,collected=clean(r.collected),legacyReward=version<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=version<4&&preManholeIds.every(id=>collected.includes(id)),legacyEighty=version<5&&PRE_CORAL_CAY_IDS.every(id=>collected.includes(id)),legacyHundred=version<6&&PRE_SUMMIT_IDS.every(id=>collected.includes(id)),legacy115=version<7&&PRE_JETTY_IDS.every(id=>collected.includes(id));
  const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||collected.length===COIN_QUEST.length;
  const allCostumesUnlocked=r.allCostumesUnlocked===true||(version<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||collected.length===COIN_QUEST.length;
- return{version:7,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length};
+ return{version:8,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length,pendingLesson:sanitizePendingLesson(r.pendingLesson,collected)};
 }
 export const coinRewardEarned=(s:CoinProgress)=>s.rewardUnlocked===true||s.collected.length===COIN_QUEST.length;
 export function applyCoinEvent(s:CoinProgress,id:string,kind:'reveal'|'collect'):CoinProgress{if(!ids.has(id))return s;const spot=COIN_QUEST.find(c=>c.id===id)!;if(kind==='collect'&&spot.kind!=='hidden'&&!s.revealed.includes(id))return s;if(s[kind==='collect'?'collected':'revealed'].includes(id))return s;return{...s,revealed:[...new Set([...s.revealed,id])],collected:kind==='collect'?[...s.collected,id]:s.collected,hint:kind==='collect'&&s.hint===id?null:s.hint};}

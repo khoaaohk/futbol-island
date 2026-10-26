@@ -4,6 +4,8 @@ export type LessonStepKey='primary'|'previous'|'forward'|null;
 
 /** A lesson with no steps still shows one (empty) frame, so there is always something to finish. */
 export function startLessonStepper(stepCount:number):LessonStepper{return {step:0,played:0,count:Math.max(1,Math.floor(stepCount)||0)};}
+/** Reopens a lesson at a saved step (a reload mid-lesson, Oct 26 2026): every step up to it counts as played; clamped to the lesson. */
+export function resumeLessonStepper(stepCount:number,step=0):LessonStepper{const s=startLessonStepper(stepCount),at=Math.max(0,Math.min(s.count-1,Math.floor(step)||0));return {...s,step:at,played:at};}
 export const isLastStep=(s:LessonStepper)=>s.step>=s.count-1;
 /** Got it is only reachable once the final step has been played and is on screen. */
 export const canFinishLesson=(s:LessonStepper)=>s.played>=s.count-1&&isLastStep(s);

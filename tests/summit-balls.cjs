@@ -31,7 +31,7 @@ assert.deepEqual(COIN_QUEST.slice(100,115).map(s=>s.id),SB.SUMMIT_BALL_IDS,'the 
 assert.deepEqual(PRE_SUMMIT_IDS,first.map(s=>s.id));assert(spots.every(s=>s.summit),'every new ball is marked as a Summit Isle ball');
 assert.equal(COIN_STORAGE_KEY,'fi2-matchday-coins-v1','the same save key (no new key to classify)');
 {const old={version:5,revealed:PRE_SUMMIT_IDS,collected:PRE_SUMMIT_IDS,hint:null,celebrated:true,rewardUnlocked:false};
- const m=sanitizeCoinProgress(old);assert.equal(m.version,7);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 100-ball save keeps the fox and every costume');
+ const m=sanitizeCoinProgress(old);assert.equal(m.version,8);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 100-ball save keeps the fox and every costume');
  assert(!m.celebrated,'the 115-ball finale is still ahead');assert(sanitizeCoinProgress(JSON.parse(JSON.stringify(m))).rewardUnlocked,'and keeps it after a re-save');
  assert(!coinRewardEarned(sanitizeCoinProgress({...old,collected:PRE_SUMMIT_IDS.slice(0,99)})),'99 of the old 100 does not unlock the fox');
  assert(!coinRewardEarned(sanitizeCoinProgress({...old,version:6})),'a version 6 save needs all 115 (and a version 7 save all 116)');

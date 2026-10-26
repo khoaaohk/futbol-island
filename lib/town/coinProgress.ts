@@ -1,6 +1,6 @@
 'use client';
 import {useSyncExternalStore} from 'react';
-import {COIN_QUEST,COIN_STORAGE_KEY,applyCoinEvent,emptyCoinProgress,sanitizeCoinProgress,coinRewardEarned,type CoinProgress} from './coinQuest';
+import {COIN_QUEST,COIN_STORAGE_KEY,applyCoinEvent,emptyCoinProgress,sanitizeCoinProgress,sanitizePendingLesson,coinRewardEarned,type CoinProgress,type PendingBallLesson} from './coinQuest';
 export {COIN_STORAGE_KEY,coinRewardEarned,sanitizeCoinProgress} from './coinQuest';
 const server=emptyCoinProgress();let state=server,loaded=false;const listeners=new Set<()=>void>();
 export function readCoinProgress(){if(!loaded&&typeof window!=='undefined'){loaded=true;try{state=sanitizeCoinProgress(JSON.parse(localStorage.getItem(COIN_STORAGE_KEY)??'null'));}catch{state=emptyCoinProgress();}}return state;}
@@ -13,3 +13,6 @@ function save(next:CoinProgress){state=next;try{localStorage.setItem(COIN_STORAG
 export function recordCoin(id:string,kind:'reveal'|'collect'){const before=merged(),next=applyCoinEvent(before,id,kind);if(next===before)return false;save(next);return true;}
 export function setCoinHint(id:string|null){save(sanitizeCoinProgress({...merged(),hint:id}));}
 export function dismissCoinCelebration(){const s=merged();if(s.collected.length===COIN_QUEST.length)save({...s,celebrated:true});}
+/** The found-ball lesson card on screen (Town): saved on open and on every step, cleared on Got it, so a reload resumes it. */
+export function setPendingBallLesson(p:PendingBallLesson|null){const s=merged(),next=p?sanitizePendingLesson(p,s.collected):null;
+ if((s.pendingLesson?.id??null)===(next?.id??null)&&(s.pendingLesson?.step??0)===(next?.step??0))return;save({...s,pendingLesson:next});}
