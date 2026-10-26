@@ -19,4 +19,12 @@ const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
  assert.match(read('components/shop/StudioControls.module.css'),/\.sheetResizable\.sheetResizable\{margin-top:-26px;/,'the sheet still laps 26px (re-check the lift if this changes)');
  assert.match(css,/\.stage\{position:absolute;inset:0 0 22px;/,'the stage still runs 22px under');
 }
+// #4 Slow 3G: the title's tan hand-off sheet hid everything, so a slow island load showed 20-30 s of plain tan. The track fades in late.
+{
+ const css=read('components/IslandLoading.module.css');
+ assert.match(css,/:global\(html\[data-island-handoff=tan\]\) \.screen>\*\{visibility:hidden\}/,'tan mode hides the art (the reason)');
+ assert.match(css,/:global\(html\[data-island-handoff=tan\]\) \.screen:not\(\.exiting\) :global\(\.island-loading-track\)\{visibility:visible;[^}]*animation:tanTrackIn \.4s 2\.5s both\}/,'the track shows after 2.5 s');
+ assert.match(css,/@keyframes tanTrackIn\{from\{opacity:0\}to\{opacity:1\}\}/);
+ assert.match(read('components/IslandLoading.tsx'),/<span className="island-loading-track" aria-hidden="true"><span\/><\/span>/,'the track is in the loader');
+}
 console.log('qa-audit4 ok');
