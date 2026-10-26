@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..'),cache=new Map();
 function load(file){const abs=path.resolve(root,file.endsWith('.ts')?file:file+'.ts');if(cache.has(abs))return cache.get(abs).exports;const mod={exports:{}};cache.set(abs,mod);
  const code=ts.transpileModule(fs.readFileSync(abs,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
  new Function('exports','module','require',code)(mod.exports,mod,id=>id.startsWith('.')?load(path.relative(root,path.resolve(path.dirname(abs),id))):require(id));return mod.exports;}
-const {COIN_QUEST}=load('lib/town/coinQuest.ts'),{BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap}=load('lib/town/ballHuntLessons.ts');
+const {COIN_QUEST}=load('lib/town/coinQuest.ts'),{BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE,SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap}=load('lib/town/ballHuntLessons.ts');
 const words=s=>s.trim().split(/\s+/).length,title=s=>s.teaching.slice(0,s.teaching.indexOf('.'));
 
 // 1. Coverage and distinct concepts: one lesson per ball, one concept (scene kind) per lesson, every scene used once.
@@ -12,7 +12,16 @@ assert.equal(Object.keys(BALL_HUNT_LESSONS).length,COIN_QUEST.length);assert.equ
 const kinds=COIN_QUEST.map(s=>BALL_HUNT_LESSONS[s.id]?.kind);
 assert(kinds.every(Boolean),'every ball has a lesson');
 assert.equal(new Set(kinds).size,116,'no two balls teach the same concept');
-assert.deepEqual([...kinds].sort(),Object.keys(SCENES).sort(),'every scene is used by exactly one ball');
+// Oct 25 2026: the seven Explore reef balls (lib/town/water/diveBallLessons.ts) add seven scenes of their own.
+const diveKinds=Object.values(DIVE_BALL_LESSONS).map(l=>l.kind);assert.equal(diveKinds.length,7);
+assert.deepEqual([...kinds,...diveKinds].sort(),Object.keys(SCENES).sort(),'every scene is used by exactly one ball (island or reef)');
+{const islandSteps=new Set(Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps));
+ for(const [zone,l] of Object.entries(DIVE_BALL_LESSONS)){assert.equal(l.level,2,zone);assert.equal(new Set(l.steps).size,3);assert.equal(l.actions.length,2);
+  for(const step of l.steps){assert(words(step)>=5&&words(step)<=18,`${zone} step "${step}" is ${words(step)} words`);assert(step.length<=140);assert(!islandSteps.has(step),`${zone} step reused`);}
+  for(const a of l.actions)assert(words(a)<=5&&a.length<=28,`${zone} action "${a}" is short`);
+  assert(typeof DIVE_BALL_PRACTICE[zone]==='string'&&DIVE_BALL_PRACTICE[zone].length>30,`${zone} practice prompt`);
+  for(const t of [...l.steps,...l.actions,DIVE_BALL_PRACTICE[zone]])assert(!/https?:|www\./.test(t),'no links in kid UI');}
+ assert.equal(new Set(Object.values(DIVE_BALL_LESSONS).flatMap(l=>l.steps)).size,21,'21 different reef steps');}
 assert.equal(new Set(COIN_QUEST.map(title)).size,116,'every card title is different');
 const allSteps=Object.values(BALL_HUNT_LESSONS).flatMap(l=>l.steps);assert.equal(new Set(allSteps).size,348,'no step text is reused');
 assert.equal(new Set(Object.values(BALL_HUNT_LESSONS).map(l=>l.kind+'|'+l.steps.join('|'))).size,116);
@@ -88,7 +97,7 @@ for(let i=0;i<keys.length;i++)for(let j=i+1;j<keys.length;j++){const A=shapes.ge
  assert(!same,`${keys[i]} and ${keys[j]} are near-identical scenes (layout ${layout.map(c=>c.toFixed(1))})`);}
 {const A=shapes.get('go-wide'),B=A.map(s=>({...s,pts:s.pts.map(([x,y,r])=>[x+9,y-7,r])}));assert([0,1,2].every(s=>matchCost(A[s].pts,B[s].pts)<24),'the detector catches a shifted copy of a scene');}
 }
-console.log(`PASS ${116*115/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
+console.log(`PASS ${Object.keys(SCENES).length*(Object.keys(SCENES).length-1)/2} scene pairs × ${LAYOUTS.length} layouts checked: no near-identical layout + movement`);
 
 // 6. Semantics of key ideas.
 for(const layout of LAYOUTS){const M=pitchMap(layout).map,GOAL=M([165,234]),s1=Math.min(1,pitchMap(layout).sx);

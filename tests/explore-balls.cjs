@@ -64,7 +64,8 @@ ok('found state: saved in the dive finds store, kept on reload, credited once, t
 });
 
 // Every other content file a kid can meet text from: the game's code, data and docs, minus this feature's own files.
-const OWN=new Set(['lib/town/water/diveBalls.ts','lib/graphics/diveBall.ts','docs/explore-ball-lessons.md','tests/explore-balls.cjs']);
+// diveBallLessons.ts (Oct 25 2026) is the seven balls' animated lessons: their own text, checked below so each topic stays in its own lesson.
+const OWN=new Set(['lib/town/water/diveBalls.ts','lib/town/water/diveBallLessons.ts','lib/graphics/diveBall.ts','docs/explore-ball-lessons.md','tests/explore-balls.cjs']);
 function walk(dir,out){for(const e of fs.readdirSync(path.join(base,dir),{withFileTypes:true})){const rel=path.join(dir,e.name);
  if(e.isDirectory()){if(!['node_modules','.next','designs'].includes(e.name)&&!e.name.startsWith('.next'))walk(rel,out);}
  else if(/\.(ts|tsx|json|md)$/.test(e.name)&&!OWN.has(rel)&&fs.statSync(path.join(base,rel)).size<3e6)out.push(rel);}return out;}
@@ -88,6 +89,16 @@ ok('new and unrelated: no topic word is shared between the seven, and none appea
   assert(norm(b.text+' '+b.title).includes(n),'the topic word is in its own lesson: '+k);
   const re=new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])');assert(!re.test(corpus),'topic “'+k+'” already appears in other game content');}
  for(const b of B.DIVE_BALLS)for(const o of B.DIVE_BALLS)if(o!==b)for(const k of o.topic)assert(!norm(b.text).includes(norm(k).trim()),b.spot+' touches '+o.spot+'’s topic');
+});
+
+ok('the animated lessons (diveBallLessons.ts, excluded from the corpus above) keep each topic in its own ball’s lesson, and hold nothing but the seven',()=>{
+ const DL=load('lib/town/water/diveBallLessons.ts'),zones=[...B.DIVE_BALLS.map(b=>b.spot)].sort();
+ assert.deepEqual(Object.keys(DL.DIVE_BALL_LESSONS).sort(),zones);assert.deepEqual(Object.keys(DL.DIVE_BALL_PRACTICE).sort(),zones);
+ assert.deepEqual(Object.values(DL.DIVE_BALL_LESSONS).map(l=>l.kind).sort(),Object.keys(DL.DIVE_BALL_SCENES).sort(),'one scene per ball, no extras');
+ const text=b=>{const l=DL.DIVE_BALL_LESSONS[b.spot],sc=DL.DIVE_BALL_SCENES[l.kind];return norm([...l.steps,...l.actions,DL.DIVE_BALL_PRACTICE[b.spot],JSON.stringify(sc)].join(' '));};
+ for(const b of B.DIVE_BALLS)for(const o of B.DIVE_BALLS)if(o!==b)for(const k of o.topic){const n=norm(k).trim();assert(!new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])').test(text(b)),b.spot+'’s lesson touches '+o.spot+'’s topic “'+k+'”');}
+ // And the lesson file is the only new home of the topics: the shared scene engine only spreads it in.
+ assert(/\.\.\.DIVE_BALL_SCENES,/.test(read('lib/town/ballLessonScenes.ts')));
 });
 
 ok('no shared 6-word phrase with any other lesson, fact or story in the game (and not with the zone’s own finds)',()=>{

@@ -962,3 +962,7 @@ html[data-catch-stage] .town-app>*:not(.town-scene):not([data-job-skip]):not([da
 
 /* Floating stick (Oct 24 2026): on release the knob eases back to the centre while the ring glides home (Town.tsx floatRelease). */
 .joystick[data-gliding=true]>span{transition:transform .26s cubic-bezier(.22,.8,.24,1)}
+
+/* Ball lessons (Oct 25 2026): while a ball lesson card is open (an island ball, or an Explore reef ball over the paused dive), the
+   island action buttons and the dive's depth / Say hi buttons are hidden too, as for a field lesson (tests/lesson-hides-actions.cjs). */
+.town-app:has(dialog[data-ball-lesson][open]) .travel-actions,.town-app:has(dialog[data-ball-lesson][open]) .travel-actions[data-emote-grid],.town-app:has(dialog[data-ball-lesson][open]) .dive-depth,.town-app:has(dialog[data-ball-lesson][open]) .dive-emote{display:none}

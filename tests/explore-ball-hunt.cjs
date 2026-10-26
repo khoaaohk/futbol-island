@@ -72,4 +72,47 @@ ok('East Jetty lesson: a new idea with its scene, practice prompt and source; pl
  assert(read('lib/town/exploreChecklist.ts').includes("id:'walk-jetty'"),'the jetty is an Explore checklist place');
 });
 
+ok('reef ball coins: the dive’s 5 AND an island ball’s learning coins, once ever per ball (learn:ball:dive:<zone>), even with card rewards off',()=>{
+ const pays=[];let active=false;
+ const stubs={'./cardRewardStore':{earnCardOffer:()=>'offered',cardRewardsActive:()=>active},
+  './cardRewards':{TIER_TEACHING_LINE:'',themeFromText:t=>t},'../paths/formatPaths':{FORMAT_PATHS:[]},'./quizProgress':{CARD_QUIZ_FIRST_TRY:true,hasCorrectQuizAnswer:()=>false,quizCardEligible:()=>false},
+  './exploreChecklist':{EXPLORE_ITEMS:[]},'./learningJourneys':{journeyById:()=>null},'../paths/stories':{STORY_CARDS:[]},'../paths/upcomingStories':{UPCOMING_STORIES:{}},
+  '../arcade/arcadeWallet':{creditOnce:()=>Promise.resolve(0)},'./learnCoins':{createLearnCoins:()=>({pay:(kind,id,reason)=>{pays.push({kind,id,reason});return Promise.resolve(0);}}),LEARN_COINS_EARNED:'x'}};
+ const TR=loader(stubs)('lib/town/cardRewardTriggers.ts'),spot=D.diveSpotById('ray-meadow'),ball=spot.finds.find(f=>f.kind==='ball');
+ assert.equal(TR.earnForDiveBall(spot,ball),'off');assert.deepEqual(pays,[{kind:'ball',id:'dive:ray-meadow',reason:'You found an explore ball'}],'paid as an island ball even when card rewards are off');
+ active=true;TR.earnForBall({id:'store',teaching:'A tip. More.'});assert.equal(pays[1].kind,'ball');assert.notEqual(pays[1].id,pays[0].id,'island and reef ids never collide');
+ // The real learning-coin rules: run id learn:ball:dive:<zone>, LEARN_COINS.ball, creditOnce pays it once ever, never metered.
+ const LC=load('lib/town/learnCoins.ts'),ECON=load('lib/economy.ts'),M=load('lib/town/dailyMeter.ts'),wallet=new Map(),toasts=[];
+ const lc=LC.createLearnCoins({creditOnce:(id,game,amount)=>{if(wallet.has(id))return Promise.resolve(0);wallet.set(id,amount);return Promise.resolve(amount);},notify:d=>toasts.push(d)});
+ return Promise.all([lc.pay('ball','dive:ray-meadow','x'),lc.pay('ball','dive:ray-meadow','x')]).then(([a,b])=>{
+  assert.equal(a,ECON.LEARN_COINS.ball);assert.equal(b,0,'once ever');assert.deepEqual([...wallet.keys()],['learn:ball:dive:ray-meadow']);assert.equal(toasts.length,1);
+  assert(!M.isTrainingRun('learn:ball:dive:ray-meadow','learn'),'learning coins are never metered (like an island ball)');});
+});
+
+ok('reef ball runtime: the card shows the dive coins plus the learning coins on a first find, opens the animated lesson, and the dive holds still under it',()=>{
+ const rt=read('lib/town/water/diveRuntime.ts');
+ assert(/coins:ev\.coins\+\(ev\.firstFind&&f\.kind==='ball'\?LEARN_COINS\.ball:0\),lesson:f\.kind==='ball',zone:f\.kind==='ball'\?s\.id:undefined/.test(rt),'card coins = dive + learning, the zone for the lesson');
+ assert(/if\(diveStore\.get\(\)\.card\?\.lesson\)dt=0;/.test(rt),'the dive pauses (breath, swim) while the lesson shows');
+ const hud=read('components/DiveHud.tsx');
+ assert(/v\.card\?\.lesson&&v\.card\.zone\?<BallHuntLesson key=\{v\.card\.zone\} spotId=\{`dive:\$\{v\.card\.zone\}`\}/.test(hud),'DiveHud shows BallHuntLesson for an explore ball');
+ assert(/onDismiss=\{closeCard\}/.test(hud)&&/const closeCard=\(\)=>diveStore\.set\(\{card:null\}\)/.test(hud),'dismissing clears the card (which releases the card-offer hold and resumes the dive)');
+ const comp=read('components/BallHuntLesson.tsx');
+ assert(/spotId\.startsWith\('dive:'\)/.test(comp)&&/DIVE_BALL_LESSONS\[zone\]/.test(comp),'BallHuntLesson reads the reef lesson for dive:<zone>');
+ assert(/data-dive-lesson-extras/.test(comp)&&/Source: \{credit\}/.test(comp),'the find note (N of 7), coins and the plain-text credit show on the card');
+});
+
+ok('reef ball lessons: seven animated scenes in the island format, facts true to the credited text, no links in kid UI',()=>{
+ const L=load('lib/town/ballHuntLessons.ts'),DL=load('lib/town/water/diveBallLessons.ts');
+ assert.equal(Object.keys(L.DIVE_BALL_LESSONS).length,7);
+ for(const b of B.DIVE_BALLS){const l=L.DIVE_BALL_LESSONS[b.spot];assert(l,'a lesson for '+b.spot);assert(L.SCENES[l.kind]&&DL.DIVE_BALL_SCENES[l.kind],'its scene is in SCENES '+b.spot);
+  assert.equal(L.ballLessonFrames(l.kind).length,3);assert(L.DIVE_BALL_PRACTICE[b.spot].length>30);
+  const kid=[...l.steps,...l.actions,L.DIVE_BALL_PRACTICE[b.spot],...L.ballLessonFrames(l.kind).flatMap(f=>[f.note,...f.tags.map(t=>t.text),...f.zones.map(z=>z.label),...f.nodes.map(n=>n.label),f.pulse?.text??''])];
+  for(const t of kid)assert(!/https?:|www\.|\.com|\.org/.test(t),'no links: '+t);
+  // Accuracy: every number the lesson shows is one the credited fact states (no new dates or sizes).
+  const nums=t=>(t.match(/\d[\d,]*/g)??[]).map(n=>n.replace(/,/g,'')),fact=new Set(nums(b.text));
+  for(const t of kid)for(const n of nums(t))assert(fact.has(n),`${b.spot}: “${n}” in “${t}” is not in the credited fact`);
+  // The lesson keeps the fact's own topic words (it teaches the same thing as the credited text).
+  assert(b.topic.some(k=>l.steps.join(' ').toLowerCase().replace(/[’]/g,"'").includes(k.toLowerCase().replace(/[’]/g,"'").split(' ')[0])),'the steps teach '+b.spot+'’s topic');}
+});
+
 if(failed){console.log(`explore-ball-hunt: ${failed} failed`);process.exit(1);}console.log('explore-ball-hunt: all passed');

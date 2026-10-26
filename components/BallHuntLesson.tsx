@@ -3,7 +3,7 @@ import {pathText} from '@/lib/paths/pathText';
 import {useEffect,useId,useLayoutEffect,useRef,useState,type KeyboardEvent} from 'react';
 import {COIN_QUEST} from '@/lib/town/coinQuest';
 import {dismissCoinCelebration,useCoinProgress} from '@/lib/town/coinProgress';
-import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,LANDSCAPE,ballLessonFrame,diagramLayout,type DiagramLayout} from '@/lib/town/ballHuntLessons';
+import {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE,LANDSCAPE,ballLessonFrame,diagramLayout,type DiagramLayout} from '@/lib/town/ballHuntLessons';
 import {advanceLesson,canFinishLesson,canGoBack,forwardLessonStep,lessonPrimaryLabel,lessonStepKey,previousLessonStep,startLessonStepper} from '@/lib/town/ballLessonStepper';
 import {Icon} from './Icon';
 import BallLessonDiagram from './BallLessonDiagram';
@@ -11,20 +11,27 @@ import navStyles from './DoneButton.module.css';
 import styles from './BallHuntLesson.module.css';
 import {ballLessonLink,splitLessonKey} from '@/lib/learning/conceptMap';
 import {creditConceptTick} from '@/lib/learning/reviewStore';
+import {diveBallFor} from '@/lib/town/water/diveBalls';
+
+/** An Explore reef ball's card extras (DiveHud): the find line with the "Explore balls found: N of 7" note, the coins, the credit. */
+export type DiveLessonExtras={story?:string;coins:number;credit?:string};
 
 /**
  * A found ball's lesson card. The child plays every diagram step with the bottom button before "Got it" replaces it,
  * so the play is watched, not skipped. Escape never dismisses (as before); each step is one press, so the card is
  * never a keyboard trap. Previous/arrow keys revisit steps already played.
+ * Oct 25 2026 (user: "yes animated lesson cards under water cards"): spot id `dive:<zone>` is an Explore reef ball
+ * (lib/town/water/diveBalls.ts + diveBallLessons.ts), shown by DiveHud over the paused dive with `dive` extras.
  */
-export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=false}:{spotId:string;onDismiss:()=>void;replay?:boolean;practice?:boolean}){
- const spot=COIN_QUEST.find(item=>item.id===spotId),lesson=BALL_HUNT_LESSONS[spotId],stepCount=lesson?.steps?.length??0;
+export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=false,dive}:{spotId:string;onDismiss:()=>void;replay?:boolean;practice?:boolean;dive?:DiveLessonExtras}){
+ const zone=spotId.startsWith('dive:')?spotId.slice(5):'',reef=zone?diveBallFor(zone):undefined;
+ const spot=zone?undefined:COIN_QUEST.find(item=>item.id===spotId),lesson=zone?DIVE_BALL_LESSONS[zone]:BALL_HUNT_LESSONS[spotId],stepCount=lesson?.steps?.length??0;
  const dialog=useRef<HTMLDialogElement>(null),primary=useRef<HTMLButtonElement>(null),[stepper,setStepper]=useState(()=>startLessonStepper(stepCount)),[hidden,setHidden]=useState(false),id=useId().replace(/:/g,''),progress=useCoinProgress();
  useEffect(()=>{const node=dialog.current,previous=document.activeElement as HTMLElement|null;node?.showModal();const visibility=()=>setHidden(document.hidden);visibility();document.addEventListener('visibilitychange',visibility);return()=>{document.removeEventListener('visibilitychange',visibility);node?.close();previous?.focus?.({preventScroll:true});};},[]);
  useEffect(()=>setStepper(startLessonStepper(stepCount)),[spotId,stepCount]);
  // A ball without a lesson renders nothing: leave the queue at once, or Town's stack stays hidden behind an invisible card (the job
  // pill, its hint and End job vanished, Oct 20 2026).
- const missing=!spot||!lesson;useEffect(()=>{if(missing)onDismiss();},[missing,onDismiss]);
+ const missing=!(spot||reef)||!lesson;useEffect(()=>{if(missing)onDismiss();},[missing,onDismiss]);
  // Previous and Next grow to fit the longer label (≈22 px each side, 128 px minimum) and stay the same width (docs/ui/BUTTONS.md);
  // if that is wider than the room, both take the room and the labels wrap onto two balanced lines. Measured on label or size change.
  const footer=useRef<HTMLElement>(null),measure=useRef<CanvasRenderingContext2D|null>(),primaryText=lesson?lessonPrimaryLabel(stepper,lesson.actions):'';
@@ -48,9 +55,10 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
  // Lane 3: the ball's idea links to its Paths lesson (lib/learning/conceptMap.ts); finishing the steps ticks that lesson once.
  const link=lesson?ballLessonLink(lesson.kind,lesson.level):null,linked=useRef(false);
  useEffect(()=>{if(link&&!linked.current&&stepper.count>0&&canFinishLesson(stepper)){linked.current=true;creditConceptTick(link.concept,`ball:${spotId}`,splitLessonKey(link.lesson).format);}},[link,stepper,spotId]);
- if(!spot||!lesson)return null;
+ if(!(spot||reef)||!lesson)return null;
  const step=Math.min(stepper.step,stepper.count-1),finished=canFinishLesson(stepper),frame=ballLessonFrame(lesson.kind,step,layout),caption=lesson.steps?.[step]??'';
- const title=spot.teaching.slice(0,spot.teaching.indexOf('.')),tip=spot.teaching.slice(spot.teaching.indexOf('.')+1).trim(),complete=!replay&&progress.collected.length===COIN_QUEST.length&&!progress.celebrated;
+ const title=reef?reef.title:spot!.teaching.slice(0,spot!.teaching.indexOf('.')),tip=reef?reef.text:spot!.teaching.slice(spot!.teaching.indexOf('.')+1).trim(),complete=!reef&&!replay&&progress.collected.length===COIN_QUEST.length&&!progress.celebrated;
+ const practiceText=reef?DIVE_BALL_PRACTICE[zone]:BALL_HUNT_PRACTICE[spotId],credit=reef?(dive?.credit??reef.credit):'';
  const dismiss=()=>{if(!finished)return;if(complete)dismissCoinCelebration();onDismiss();};
  const pressPrimary=()=>{if(finished)dismiss();else setStepper(advanceLesson);};
  const previous=()=>{const next=previousLessonStep(stepper);setStepper(next);if(!canGoBack(next))primary.current?.focus({preventScroll:true});};
@@ -61,17 +69,18 @@ export default function BallHuntLesson({spotId,onDismiss,replay=false,practice=f
   event.preventDefault();
   if(action==='primary')pressPrimary();else if(action==='previous'){if(canGoBack(stepper))previous();}else setStepper(forwardLessonStep);
  };
- return <dialog ref={dialog} className={styles.dialog} aria-labelledby={`${id}-title`} onCancel={event=>{event.preventDefault();event.stopPropagation();}} onClose={()=>{/* QA Oct 16 2026: Chrome's close-watcher lets a second Escape close the dialog despite onCancel, which left the island asleep (settingsRef) with no UI. A native close finishes the lesson if it is done, otherwise re-opens it. */const node=dialog.current;if(!node)return;if(finished)dismiss();else if(!node.open)node.showModal();}} onKeyDown={keys} data-hidden={hidden}>
+ return <dialog ref={dialog} className={styles.dialog} data-ball-lesson={reef?'dive':'island'} aria-labelledby={`${id}-title`} onCancel={event=>{event.preventDefault();event.stopPropagation();}} onClose={()=>{/* QA Oct 16 2026: Chrome's close-watcher lets a second Escape close the dialog despite onCancel, which left the island asleep (settingsRef) with no UI. A native close finishes the lesson if it is done, otherwise re-opens it. */const node=dialog.current;if(!node)return;if(finished)dismiss();else if(!node.open)node.showModal();}} onKeyDown={keys} data-hidden={hidden}>
   <section className={styles.panel}>
-   <header className={styles.header}><p>{practice?'Practice idea':replay?'Ball hunt tip':'Ball found'} · {progress.collected.length}/{COIN_QUEST.length}</p><h2 id={`${id}-title`}>{title}</h2></header>
+   <header className={styles.header}><p>{reef?(practice?'Practice idea · Explore ball':'Mini lesson · Real football fact'):<>{practice?'Practice idea':replay?'Ball hunt tip':'Ball found'} · {progress.collected.length}/{COIN_QUEST.length}</>}</p><h2 id={`${id}-title`}>{title}</h2></header>
    <div className={styles.body}>
-    <p className={styles.tip}>{pathText(practice?BALL_HUNT_PRACTICE[spotId]:tip)}</p>
+    <p className={styles.tip}>{pathText(practice?practiceText:tip)}</p>
     <div ref={illustration} className={styles.illustration}>
-     <div className={styles.diagramHeading}><span>{practice?'Predict, then reveal':`${lesson.family} · level ${lesson.level}`}</span><span className={styles.counter} data-step-counter="">{step+1} / {stepper.count}</span></div>
+     <div className={styles.diagramHeading}><span>{practice?'Predict, then reveal':reef?`${lesson.family} · Explore ball`:`${lesson.family} · level ${lesson.level}`}</span><span className={styles.counter} data-step-counter="">{step+1} / {stepper.count}</span></div>
      <BallLessonDiagram frame={frame} step={step} id={id} title={title} desc={pathText(caption)}/>
-     <div className={styles.legend}>● Teammates <span>● Opponents</span> <b>▰ Open space</b> <i>- - run  — pass</i></div>
+     {reef?null:<div className={styles.legend}>● Teammates <span>● Opponents</span> <b>▰ Open space</b> <i>- - run  — pass</i></div>}
      <p className={styles.caption} aria-live="polite">{pathText(caption)}</p>
     </div>
+    {reef&&!practice?<div className={styles.reef} data-dive-lesson-extras="">{dive?.story?<p>{dive.story}</p>:null}{dive&&dive.coins>0?<p className={styles.reefCoins}>+{dive.coins} coins</p>:null}{credit?<p className={styles.reefCredit}>Source: {credit}</p>:null}</div>:null}
     {complete&&finished&&<p className={styles.reward}><strong>All {COIN_QUEST.length} balls found!</strong> All costumes are unlocked. Find them in the vending machines and keep exploring.</p>}
    </div>
    <footer ref={footer} className={styles.footer}>

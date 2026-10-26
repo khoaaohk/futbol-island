@@ -5,7 +5,9 @@
 import {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap,type DiagramKind,type DiagramFrame,type DiagramLayout,type DiagramNode} from './ballLessonScenes';
 export {SCENES,LANDSCAPE,ballLessonFrame,ballLessonFrames,diagramLayout,motionPoint,pitchMap};
 export type {DiagramKind,DiagramFrame,DiagramLayout,DiagramNode};
-export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping'|'Rules of the game'|'Player health'|'Beach soccer'|'Teamwork';
+// Explore reef balls (Oct 25 2026): their lessons, keyed by reef zone; BallHuntLesson shows them for spot ids `dive:<zone>`.
+export {DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE} from './water/diveBallLessons';
+export type LessonFamily='Creating space'|'Timing'|'Team shape'|'Breaking lines'|'Zones and thirds'|'Final third'|'Transitions'|'Defending space'|'On the ball'|'Set pieces'|'Goalkeeping'|'Rules of the game'|'Player health'|'Beach soccer'|'Teamwork'|'Football history'|'Football world';
 export type BallLesson={kind:DiagramKind;family:LessonFamily;level:1|2|3;steps:[string,string,string];actions:[string,string]};
 const L=(level:1|2|3,family:LessonFamily)=>(kind:DiagramKind,a:string,b:string,c:string,x:string,y:string):BallLesson=>({kind,family,level,steps:[a,b,c],actions:[x,y]});
 const space1=L(1,'Creating space'),time1=L(1,'Timing'),shape1=L(1,'Team shape'),ball1=L(1,'On the ball'),final1=L(1,'Final third'),trans1=L(1,'Transitions'),def1=L(1,'Defending space');

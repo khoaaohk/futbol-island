@@ -14,6 +14,7 @@ import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BR
 import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
 import {diveBallNote,diveBallsFound} from './diveBalls';
 import {holdCardOffers} from '../cardOfferHold';
+import {LEARN_COINS} from '../../economy';
 import {setDiveSpots} from '../../graphics/waterSurface';
 import {WATER_LEVEL} from './waterDepth';
 import {DIVE_REEF_KEY,REEF_RESTORE_CARD,REEF_RESTORE_COINS,addPickup,journeyPickups,markRestored,nextTarget,parseDiveReef,reach,reefColour,reefHealth,reefRunId,type DivePickup,type DiveReefSave} from './diveJourney';
@@ -28,7 +29,9 @@ import {diveEdgeDepthT,diveEdgeSpotAt,diveEdgeToIsland,diveEdgeToRoom,type DiveE
 /** The find card's card-offer hold (cardOfferHold.ts): taken here the moment a card shows (before Town's found port can earn an
  *  explore ball's card choice), released by DiveHud when the child closes the card, and on surfacing. */
 export const DIVE_CARD_HOLD='dive-card';
-export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string;lesson?:boolean};
+/** `lesson` (an explore ball): DiveHud shows the animated BallHuntLesson card for `zone` (spot id `dive:<zone>`) instead of the plain
+ *  find card, and the dive pauses (breath, swim, room clock) until it is dismissed. */
+export type DiveCard={title:string;text:string;label:string;credit?:string;story?:string;coins:number;id:string;lesson?:boolean;zone?:string};
 /** `reef`: the zone's journey progress ("5/12"), `restored`: the zone is fully restored (Explore v2). */
 /** `banner`: Seamless Explore's soft chip at the zone's edge ("Entering: Turtle Pool" / "Leaving the reef"); it fades by itself. */
 /** Explore delight: `friend` the zone friend's name while it is within EMOTE.range (the Wave / High five buttons show), `hearts` its
@@ -137,7 +140,9 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   const ev=session.use(),s=session.state.spot;if(!ev.find||!s||!room)return false;const f=s.finds.find(q=>q.id===ev.find)!;
   room.use(f,clock*(ports.reduced()?.4:1));holdCardOffers(DIVE_CARD_HOLD,true);
   if(ev.firstFind){save=addDiveFind(save,s.id,f.id);writeDiveFinds(save);if(ev.coins>0)ports.credit(diveRunId(s.id,f.id),ev.coins,f.kind==='ball'?`Explore ball · ${s.name}`:`Dive treasure · ${s.name}`);}
-  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.kind==='ball'?`${f.story} ${diveBallNote(diveBallsFound(save.spots))}.`:f.story,coins:ev.coins,lesson:f.kind==='ball'}});
+  diveStore.set({card:{id:f.id,title:f.title,text:f.text,label:f.label,credit:f.credit,story:f.kind==='ball'?`${f.story} ${diveBallNote(diveBallsFound(save.spots))}.`:f.story,
+   /* a first reef ball also pays an island ball's learning coins (earnForDiveBall, Oct 25 2026): the card shows both */
+   coins:ev.coins+(ev.firstFind&&f.kind==='ball'?LEARN_COINS.ball:0),lesson:f.kind==='ball',zone:f.kind==='ball'?s.id:undefined}});
   ports.found(f,ev.firstFind);joy=DIVE_JOY_S;drawProgress(s,true);return true;
  }
  const toRoom={x:0,z:0,yaw:0},exitPt:DiveEdgeExit={x:0,z:0,yaw:0,under:true},anyWater=():DiveEdgeWater=>'dive';
@@ -182,6 +187,8 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   /** One dive frame instead of the island's: the swim, the breath, the room, the rig, the find prompt, one render. */
   frame(dt:number,input:DiveInput,width:number,height:number){
    if(!room)return;const s=session.state.spot;
+   // An explore ball's lesson card is open (a modal over the dive): the dive holds still (no breath used, no swim) until it closes.
+   if(diveStore.get().card?.lesson)dt=0;
    input.lift=Math.max(-1,Math.min(1,input.lift+(diveLift.up?1:0)-(diveLift.down?1:0)));
    const ask=diveLift.emote;diveLift.emote='';
    // Explore delight: the nearest thing still to collect (pickups, unfound finds, today's sparkle) slows the glide (diveSession findSlow).

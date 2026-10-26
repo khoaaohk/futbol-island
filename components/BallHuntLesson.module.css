@@ -24,6 +24,8 @@
 .caption{font-size:14px;line-height:1.45;margin:0 0 14px;min-height:61px;color:#365748}
 .footer{flex:none;display:flex;flex-direction:column;gap:12px;padding:14px 28px max(18px,env(safe-area-inset-bottom));border-top:1px solid #e2e7dc;background:#fff}
 .reward{padding:13px;background:#edf3e5;border-radius:12px;font-size:13px;line-height:1.5}.reward strong{display:block}
+/* Explore reef balls (Oct 25 2026): the find line ("Explore balls found: N of 7"), the coins and the plain-text credit, under the diagram. */
+.reef{margin-top:14px;padding:12px 14px;background:#e6f3f1;border:1px solid #cfe5e0;border-radius:14px;font-size:13px;line-height:1.45;color:#2f5a52}.reef p{margin:0}.reef p+p{margin-top:5px}.reefCoins{font-weight:800;color:#8a6a1f}.reefCredit{font-size:12px;color:#5d7a72}
 .dialog[data-hidden=true],.dialog[data-hidden=true] *,.dialog[data-hidden=true]::backdrop{animation-play-state:paused!important;transition:none!important}
 @keyframes arrive{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}@keyframes fade{from{opacity:0}to{opacity:1}}@keyframes ballSettle{from{transform:translateY(-9px) scale(.8)}to{transform:translateY(0) scale(1)}}
 @media(max-width:600px){.dialog{border-radius:21px}.header{padding:18px 20px 15px}.header h2{font-size:26px}.body{padding:16px 19px}.tip{font-size:14px;margin-bottom:14px}.illustration{padding:13px 12px}.footer{padding:12px 20px max(14px,env(safe-area-inset-bottom))}.caption{font-size:13px;min-height:57px}.field{height:clamp(166px,27dvh,230px)}}

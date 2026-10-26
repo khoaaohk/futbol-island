@@ -55,6 +55,8 @@ const vending=req('lib/town/vendingCatalog.ts');
 const books=req('lib/books/catalog.ts');
 const readyBooks=req('lib/books/registry.ids.generated.ts').READY_BOOKS;
 const quest=req('lib/town/coinQuest.ts');
+/** The seven Explore reef balls (Oct 25 2026: each also pays a hidden ball's learning coins, once ever, ids learn:ball:dive:<zone>). */
+const diveBalls=req('lib/town/water/diveBalls.ts');
 const rides=req('lib/town/rideUnlocks.ts');
 const cards=req('lib/town/cardCollection.ts');
 const tiers=req('lib/town/cardTiers.ts');
@@ -84,6 +86,7 @@ const NO_CARD_EXPLORE=new Set(['knock-characters','visit-futsal','visit-7v7','vi
 const CONTENT={
  cards:CARD_LIST.length,
  balls:quest.COIN_QUEST.length,
+ diveBalls:diveBalls.DIVE_BALLS.length,
  lessons:Object.values(QUIZZES).reduce((n,q)=>n+Object.keys(q).length,0),
  coreLessons:FORMAT_PATHS.map(p=>p.chapters.flatMap(c=>c.lessons).length),
  paths:FORMAT_PATHS.length,
@@ -141,14 +144,14 @@ const CURRENT={
   scooter:vending.VENDING_PRICES.scooter,bike:vending.VENDING_PRICES.bike,moped:vending.VENDING_PRICES.moped,jetpack:vending.VENDING_PRICES.jetpack,
   costume:vending.VENDING_PRICES.costume,book:books.BOOK_PRICE},
  packsPerDay:packs.PACKS_PER_DAY,packRule:'relaxed', // pack top-ups (vendingLedger.packFreshness) + 3 a day
- jobIds:jobs.JOB_IDS,balls:CONTENT.balls,excludeBooks:[],fishSpots:fish.FISH_SPOTS,costumeBalls:quest.costumeUnlockBalls,
+ jobIds:jobs.JOB_IDS,balls:CONTENT.balls,diveBalls:CONTENT.diveBalls,excludeBooks:[],fishSpots:fish.FISH_SPOTS,costumeBalls:quest.costumeUnlockBalls,
  /** Harvest day's farmer's share (30 Sep 2026): produce into the basket, sold through the market cap + Training meter. */
  jobShare:harvestShare.jobShare,
 };
 /** The game on 28 Sep 2026, before Coral Cay: 9 jobs, 80 hidden balls (fox at 80), 32 books, shore fishing only. */
 const BEFORE={
  ...CURRENT,name:'before',jobShare:null,learn:{...CURRENT.learn,ball:5},
- jobIds:jobs.JOB_IDS.filter(id=>!SEP29.jobs.includes(id)&&id!==SEP30_GARDEN.job),balls:SEP29.ballsBefore,excludeBooks:SEP29.books,fishSpots:fish.SHORE_SPOTS,
+ jobIds:jobs.JOB_IDS.filter(id=>!SEP29.jobs.includes(id)&&id!==SEP30_GARDEN.job),balls:SEP29.ballsBefore,diveBalls:0,excludeBooks:SEP29.books,fishSpots:fish.SHORE_SPOTS,
  costumeBalls:id=>{if(id===quest.COIN_REWARD_ID)return SEP29.ballsBefore;const i=quest.COSTUME_UNLOCK_ORDER.indexOf(id);return i<0?SEP29.ballsBefore:Math.min(SEP29.ballsBefore,(Math.floor(i/3)+1)*10);},
 };
 /** CURRENT plus the second Coral Cay farm job (Match-day snacks), which is still being added: the full 29 Sep game. */
@@ -380,7 +383,7 @@ function sinkTable(cfg){
 }
 const sinkTotal=cfg=>sinkTable(cfg).reduce((n,x)=>n+x.total,0);
 /** Coins one full learning run pays (every lesson, ball, story, stage, explore item and path once), at the assumed perfect rate. */
-function learnPool(cfg){const L=cfg.learn;return Math.round(CONTENT.lessons*(L.lesson+L.perfect*ASSUME.perfectFirstTry)+cfg.balls*L.ball+CONTENT.stories*L.story+CONTENT.journeyStages*L.journey+CONTENT.exploreCards*L.explore+CONTENT.paths*L.path);}
+function learnPool(cfg){const L=cfg.learn;return Math.round(CONTENT.lessons*(L.lesson+L.perfect*ASSUME.perfectFirstTry)+(cfg.balls+(cfg.diveBalls||0))*L.ball+CONTENT.stories*L.story+CONTENT.journeyStages*L.journey+CONTENT.exploreCards*L.explore+CONTENT.paths*L.path);}
 /**
  * The most a player can earn from island jobs in one day (the "daily ceiling" question: does every new job add 2 more full-pay
  * shifts?). Raw = every job's 2 full + 2 half shifts, no Training meter; metered = the same shifts through dailyMeter.trainingPay

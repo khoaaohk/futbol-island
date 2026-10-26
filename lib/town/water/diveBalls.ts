@@ -26,7 +26,9 @@ export type DiveBall={
  topic:readonly string[];
 };
 
-/** Coins for a ball, once ever (≤ a hidden island ball's LEARN_COINS.ball). */
+/** The dive's coins for a ball, once ever through the Training meter (≤ a hidden island ball's LEARN_COINS.ball). Since Oct 25 2026
+ *  (user: "yes pay") the first find also pays an island ball's learning coins on top (LEARN_COINS.ball, once ever, never metered:
+ *  earnForDiveBall in lib/town/cardRewardTriggers.ts, wallet run `learn:ball:dive:<zone>`). */
 export const DIVE_BALL_COINS=5;
 /** The ball's radius (m). */
 export const DIVE_BALL_R=.22;

@@ -3,6 +3,7 @@ import {useEffect,useSyncExternalStore} from 'react';
 import {diveStore,diveLift,DIVE_CARD_HOLD} from '@/lib/town/water/diveRuntime';
 import {toastLane,useToastLaneBusy} from '@/lib/ui/toastLane';
 import {holdCardOffers} from '@/lib/town/cardOfferHold';
+import BallHuntLesson from './BallHuntLesson';
 
 /** The find card's holder id (cardOfferHold.ts): a card choice earned by an explore ball waits until its lesson card closes. The
  *  runtime takes the hold as the card shows (no render race with CardOfferHost); this releases it when the card closes. */
@@ -18,6 +19,7 @@ const CARD_HOLD=DIVE_CARD_HOLD;
 let edgeChipSeen=false;
 /** When the Say hi button last waved (a second tap within 2 s is the high five). */
 let lastWave=0;
+const closeCard=()=>diveStore.set({card:null});
 export default function DiveHud(){
  const v=useSyncExternalStore(diveStore.subscribe,diveStore.get,diveStore.server);
  // Calm HUD (Oct 21 2026, user: "only show one at a time"): the note takes the one toast lane too (a lesson card or the edge chip
@@ -64,7 +66,11 @@ export default function DiveHud(){
    {chip?<p className="dive-edge-chip" role="status" data-dive-edge key={chip}>{chip}</p>:null}
    {note&&!chip?<p className="dive-note" role="status" data-dive-note>{note}</p>:null}
   </div>:null}
-  {v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
+  {/* An explore ball (Oct 25 2026, user: "yes animated lesson cards under water cards"): the island's animated BallHuntLesson card
+      instead of the plain find card. The dive holds still while it shows (diveRuntime frame) and the card choice waits for it
+      (the CARD_HOLD above, released when it is dismissed and the card clears). */}
+  {v.card?.lesson&&v.card.zone?<BallHuntLesson key={v.card.zone} spotId={`dive:${v.card.zone}`} dive={{story:v.card.story,coins:v.card.coins,credit:v.card.credit}} onDismiss={closeCard}/>
+  :v.card?<button type="button" className="dive-card" data-dive-card={v.card.id} onClick={()=>diveStore.set({card:null})}>
    <small>{v.card.lesson?`Mini lesson · ${v.card.label}`:v.card.label}</small><b>{v.card.title}</b><span>{v.card.text}</span>
    {v.card.credit?<span className="dive-card-credit">Source: {v.card.credit}</span>:null}
    {v.card.story?<span className="dive-card-story">{v.card.story}</span>:null}

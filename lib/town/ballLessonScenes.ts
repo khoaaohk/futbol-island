@@ -11,6 +11,7 @@
  * Pitch: 330 x 248 view box, playing area x 14..316, y 22..234; we always attack toward the top. Upright phones draw the
  * same scenes on a taller view box through pitchMap (see Layouts below).
  */
+import {DIVE_BALL_SCENES} from './water/diveBallLessons';
 type P=[number,number];
 type Ref=string|P;
 export type Pitch='full'|'attack'|'defend';
@@ -553,6 +554,8 @@ export const SCENES={
   {note:'Arm raised: an indirect free kick',tags:[[[118,104],'Ref: arm up']]},
   {note:'Pass it short first',ball:'b',lanes:[['t','b',1]]},
   {note:'Second touch · shoot · it counts',ball:[212,26],at:{xk:[150,32]},pulse:[[212,28],'Goal!']}]},
+ // The seven Explore reef balls (Oct 25 2026): their scenes live with their lessons (lib/town/water/diveBallLessons.ts).
+ ...DIVE_BALL_SCENES,
 } satisfies Record<string,Scene>;
 export type DiagramKind=keyof typeof SCENES;
 

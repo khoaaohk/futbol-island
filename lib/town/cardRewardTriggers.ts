@@ -29,8 +29,11 @@ export function earnForBall(spot:{id:string;teaching:string}):EarnResult{
 
 /** An Explore reef zone's ball (lib/town/water/diveBalls.ts) was taken from the treasure chest for the first time (Town's dive
  *  `found` port, Oct 25 2026): the same card choice as an island ball (kind 'ball', so the child picks a card), once per ball ever.
- *  Its coins are the dive's own DIVE_BALL_COINS (the Training meter), so no learning coins are paid here on top. */
+ *  Coins (user, Oct 25 2026: "yes pay"): the dive's own DIVE_BALL_COINS (the Training meter) AND, on top, the same learning coins
+ *  as an island ball (LEARN_COINS.ball, once ever per ball: run id `learn:ball:dive:<zone>`, never metered or capped, paid even
+ *  when card rewards are off, exactly like earnForBall). */
 export function earnForDiveBall(spot:{id:string},ball:{title:string}):EarnResult{
+ payLearning('ball',`dive:${spot.id}`,'You found an explore ball');
  if(!cardRewardsActive())return 'off';
  return earnCardOffer({kind:'ball',id:`dive:${spot.id}`,reason:`You found an explore ball: “${ball.title}”.`,theme:themeFromText(ball.title)});
 }

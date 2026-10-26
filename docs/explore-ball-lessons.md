@@ -6,12 +6,26 @@ Each Explore reef zone hides ONE football (`lib/town/water/diveBalls.ts`; drawn 
 
 **Oct 25 2026 (user: "instead of the pearl in the treasure chest. have it be a ball ... when collected give a mini lesson and allow to choose a card"; audit: `docs/EXPLORE_BALL_HUNT_AUDIT_OCT25.md`).** The chest's matchday-coin find was removed; each zone's ball now sits in its open treasure chest (the old coin's spot, so the layout and pickups did not move; the "hidden spot" column below is historical). The first pick-up shows the card headed **Mini lesson** and earns a card choice (`earnForDiveBall`, kind `ball`, id `dive:<zone>`), which opens after the card is closed. The East Jetty, the one Explore place without a hunt ball, got `jetty-lighthouse` (the coin toss before kick-off, IFAB Law 8), a regular island hunt ball with its own BallHuntLesson scene.
 
+**Oct 25 2026, later (user: "yes pay and yes animated lesson cards under water cards").**
+- **Coins.** A first reef ball now pays the dive's +5 (Training meter, `dive:<zone>:hidden-ball`) AND, on top, the same learning coins as a hidden island ball (`LEARN_COINS.ball`, 12 today): `earnForDiveBall` calls `payLearning('ball','dive:<zone>')`, so the wallet run is `learn:ball:dive:<zone>`, paid once ever through `creditOnce`, never metered or capped (the rule for every learning coin, lib/town/dailyMeter.ts), and paid even when card rewards are off, exactly like `earnForBall`. The lesson card shows the sum (+17). Balls found before this change are not paid retroactively (their first find already happened). The economy sim counts the seven in the learning pool (`CONTENT.diveBalls`, tests/economy.cjs).
+- **Animated lessons.** Each fact got an island-style BallHuntLesson scene: three steps, a step button each, a practice prompt (`lib/town/water/diveBallLessons.ts`; the scenes are merged into `SCENES`, so the same renderer, portrait layouts and tests draw them). Picking up a reef ball opens that card over the dive (DiveHud, spot id `dive:<zone>`) instead of the plain find card. The header reads **Mini lesson · Real football fact**; under the diagram sit the find line with "Explore balls found: N of 7", the coins and the plain-text credit. The dive holds still while it shows (no breath used), the action / depth / Say hi buttons are hidden, and the card choice waits (cardOfferHold) until the lesson is dismissed with Got it. The steps only restate the credited text (a test checks every number shown is in the fact); sources stay in `diveBalls.ts` / this doc, never in kid UI.
+
+| Zone | Scene | Steps (one line each) |
+|---|---|---|
+| Captain's Cup Wreck | `oldest-ball` | hidden behind panels in Stirling Castle · leather round an air-filled pig's bladder, 1540-1570 · patched: really played; the oldest ever found |
+| Paul's Grotto | `white-posts` | white, ≤ 12 cm · the crossbar breaks: play stops until fixed · no rope; not fixable: called off |
+| Kelp Forest Wreck | `fourth-official` | beside the benches · checks balls and equipment before kick-off · substitutes; in some competitions replaces a hurt referee |
+| Ray Meadow | `lamp-rigs` | roof and stands shade the grass · groundstaff wheel lamp rigs over it · it keeps growing in winter |
+| Moon Arch | `cuju-net` | cuju in China over 2,000 years ago · a net hung high between two poles · kick it through the round hole |
+| Ball Crate Reef | `stitch-city` | most hand-stitched balls come from Sialkot · stitched by hand · the 2026 World Cup ball was made there |
+| Turtle Pool | `tifo-picture` | fans in the stands make a tifo · cards or flags held up at once · one huge picture, like a turtle shell's plates |
+
 ## How the lessons were checked
 
 1. **Inventory.** Every lesson, fact, story, tip and quiz a kid can meet was listed: ball hunt lessons (island, Summit, Coral Cay), the 51 bug stories, fish and sea legends, the dive finds, sparkle facts and reef card, museum exhibits and experiences, World Cup ball facts, townsfolk and shop lines, curriculum and coaching ideas, books, arcade and job tips, docs lesson tables (about 3,000 items).
 2. **Topics.** For each candidate topic the codebase was searched (lib, components, app, docs). Rejected because the game already teaches them: first floodlit match (Bramall Lane), goal nets (Brodie), shin guards (Widdowson), vanishing spray, goal-line technology, the penalty kick (McCrum), pitch mowing stripes, altitude (La Paz), ball sizes, the dropped ball, scoring straight from the kick-off, drinks breaks, Dick, Kerr Ladies, blind / walking / amputee / powerchair football, the first radio commentary, a World Cup ball in space.
 3. **Facts.** Each lesson was checked against the source below; anything that sources disagree on was left out (for example the year the Stirling ball was found).
-4. **Test.** `tests/explore-balls.cjs` checks that each lesson's topic words appear nowhere else in the game's kid-facing code and data (lib, components, app) or the docs' lesson tables, that no 6-word phrase is shared with any other text, and that no two of the seven share a topic.
+4. **Test.** `tests/explore-balls.cjs` checks (the animated lessons in `diveBallLessons.ts` count as this feature's own text: a separate check keeps each topic inside its own ball's lesson) that each lesson's topic words appear nowhere else in the game's kid-facing code and data (lib, components, app) or the docs' lesson tables, that no 6-word phrase is shared with any other text, and that no two of the seven share a topic.
 
 ## The seven
 
