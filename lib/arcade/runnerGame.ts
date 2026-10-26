@@ -69,6 +69,8 @@ export function createRunnerGame(){return{runId:++runSerial,time:0,distance:0,x:
  /** Personal best to beat this run (set by the presentation layer from the arcade record; 0 = none yet) and
   * whether it has been passed. */
  bestToBeat:0,newBest:false,
+ /** Times a save/miss dropped the multiplier a tier (presentation + audio cue only). */
+ comboDrops:0,
  coach:'' as ''|'lane'|'jump'|'skill'|'shoot',coachPrompt:'',coachButton:'' as ''|'left'|'right'|'jump'|'skill'|'shoot',coachWord:'',coachScale:1,coachCount:0,
  /* Mission counters. */
  skills:0,perfectSkills:0,beatScores:0,shotsFired:0,lastBeatAt:-99,cleanStage:1,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
@@ -91,6 +93,9 @@ export const RUNNER_BEAT_SCORE_WINDOW=4;
 export const RUNNER_WAVE_LANES=[1,-1,0,-1,1,0] as const;
 export function runnerMultiplier(s:RunnerGame){return Math.min(3,1+Math.floor(s.combo/6));}
 function cleanPlay(s:RunnerGame){s.combo++;s.bestCombo=Math.max(s.bestCombo,s.combo);}
+/** A save or a missed goal costs ONE multiplier tier (×3 → ×2, ×2 → ×1), not the whole streak (Oct 25 2026): a
+ * kid who misses one lane keeps most of the reward they built. Only a tackle (loseChance) resets the combo. */
+export function dropTier(s:RunnerGame){const tier=runnerMultiplier(s);s.combo=Math.max(0,(tier-2)*6);if(tier>1)s.comboDrops++;}
 /** Pace: smooth ramp to 18 m/s by stage 5, then a gentle climb to 20 m/s. */
 export function runnerPace(distance:number){return 13+Math.min(5,distance/360*1.1)+Math.min(2,Math.max(0,distance-1636)/1000);}
 // Patterns are authored in metres: every challenge leaves a visible open lane,
@@ -270,16 +275,16 @@ function shotAtGoal(s:RunnerGame,shot:RunnerShot,target:RunnerObject){
  target.hitX=shot.x;
  if(!target.keeper){
   if(Math.abs(shot.x-target.openLane*2.4)<1.05)scoreGoal(s,target,shot.x,shot.power,!!shot.precision,shot.precision?'PERFECT FINISH':'GOAL');
-  else{target.reaction=.5;s.streak=0;s.combo=0;feedback(s,'save',shot.x,target.z,'Saved! Find the golden opening and shoot again.');}
+  else{target.reaction=.5;s.streak=0;dropTier(s);feedback(s,'save',shot.x,target.z,'Saved! Find the golden opening and shoot again.');}
   return;}
  const gap=Math.abs(shot.x-(target.kx??0)),inside=Math.abs(shot.x)<3.5;
  if(target.cross){if(shot.volley&&inside){s.headers++;scoreGoal(s,target,shot.x,shot.power,true,'VOLLEYED THE CROSS');}else{target.reaction=.5;s.streak=0;feedback(s,'save',shot.x,target.z,'Cleared! Attack the cross: jump, then shoot in the air.');}return;}
  if(shot.chip){if(inside&&(target.kout??0)>.3){s.chips++;scoreGoal(s,target,shot.x,false,true,'CHIPPED IT');}else{target.reaction=.5;s.streak=0;feedback(s,'save',shot.x,target.z,inside?'Caught! A chip works when the keeper rushes off the line.':'Over the bar!');}return;}
- if((target.kout??0)>.35){target.reaction=.5;s.streak=0;s.combo=0;feedback(s,'save',shot.x,target.z,'Smothered! Keeper rushing out? Chip it (Skill) or go round him.');return;}
+ if((target.kout??0)>.35){target.reaction=.5;s.streak=0;dropTier(s);feedback(s,'save',shot.x,target.z,'Smothered! Keeper rushing out? Chip it (Skill) or go round him.');return;}
  if(inside&&gap>=(shot.power?RUNNER_KEEPER.powerGap:RUNNER_KEEPER.placedGap)){
   const corner=gap>=RUNNER_KEEPER.cornerGap;if(corner)s.cornerGoals++;
   scoreGoal(s,target,shot.x,shot.power,corner,corner?'INTO THE CORNER':shot.power?'POWER PAST HIM':'PLACED IT');}
- else{target.reaction=.5;s.streak=0;s.combo=0;feedback(s,'save',shot.x,target.z,'Keeper saved! Watch which way he moves, then shoot the other side.');}
+ else{target.reaction=.5;s.streak=0;dropTier(s);feedback(s,'save',shot.x,target.z,'Keeper saved! Watch which way he moves, then shoot the other side.');}
 }
 export function tickRunner(s:RunnerGame,dt:number){
  if(s.lives<=0)return;dt=Math.max(0,Math.min(dt,.05));s.time+=dt;s.moveBuffer=Math.max(0,s.moveBuffer-dt);s.shotBuffer=Math.max(0,s.shotBuffer-dt);if(s.charging)s.charge=Math.min(1,s.charge+dt/1.1);s.hurt=Math.max(0,s.hurt-dt);s.slide=Math.max(0,s.slide-dt);s.boost=Math.max(0,s.boost-dt);if(s.boost<=0)s.shield=false;s.kick=Math.max(0,s.kick-dt);s.shotCooldown=Math.max(0,s.shotCooldown-dt);s.celebrate=Math.max(0,s.celebrate-dt);s.recover=Math.max(0,s.recover-dt);s.cutAge+=dt;s.mud=Math.max(0,s.mud-dt);s.burst=Math.max(0,s.burst-dt);s.skillCooldown=Math.max(0,s.skillCooldown-dt);
@@ -411,7 +416,7 @@ export function tickRunner(s:RunnerGame,dt:number){
   const crossing=Math.max(0,Math.min(1,(travel-o.z)/Math.max(.00001,travel))),contactX=previousX+(s.x-previousX)*crossing,defenderX=(o.x??o.lane*2.4)-(o.vx??0)*dt*(1-crossing),contactY=Math.max(0,previousY+previousVy*dt*crossing-21*dt*dt*crossing*crossing);
   const same=Math.abs(contactX-defenderX)<(reach?.x??.85),slip=defender&&s.slide>0&&(o.role??'jockey')!=='tackler',evaded=contactY>=.9||slip,invincible=!RUNNER_TUNING.powerShield&&s.boost>0;
   if(!defender)o.passed=true;
-  if(o.kind==='goal'){s.streak=0;s.combo=0;s.message=o.keeper?'Shoot before reaching the keeper. Look up early!':'Shoot before reaching the goal. Look up early!';}
+  if(o.kind==='goal'){s.streak=0;dropTier(s);s.message=o.keeper?'Shoot before reaching the keeper. Look up early!':'Shoot before reaching the goal. Look up early!';}
   else if(same&&o.kind==='coin'){const full=s.balls===5;s.score+=25*runnerMultiplier(s);cleanPlay(s);if(!o.link)s.energy++;s.balls=Math.min(5,s.balls+1);s.collected++;feedback(s,'collect',s.x,o.z,o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: shoot to use them`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
    if(s.energy>=RUNNER_TUNING.powerTouches){s.energy=0;s.boost=RUNNER_TUNING.powerSeconds;s.shield=RUNNER_TUNING.powerShield;s.message=RUNNER_TUNING.powerShield?'Clean touches! Burst of pace: you can ride one tackle.':'Five clean touches. Break away! Shoot for a power goal.';}}
   else if(defender&&o.beaten){/* Wrong-footed by a skill move or one-two: no tackle. */}

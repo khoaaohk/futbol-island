@@ -6,6 +6,9 @@ export type ArcadePoseOptions={vx?:number;vz?:number;charge?:number;slide?:numbe
  keeper?:number;jockey?:number;dive?:import('../graphics/player').PlayerMotion['dive'];jumpProgress?:number;jumpHeight?:number;
  reaction?:import('../graphics/player').PlayerMotion['reaction'];reactionProgress?:number;
  skill?:import('../graphics/player').PlayerMotion['skill'];move?:import('../graphics/player').PlayerMotion['move'];
+ /** Optional body impulses passed straight to the island rig (Oct 25 2026, Breakaway): a hard outside-foot plant on a cut
+  * (0..1) and a squash-stretch spring applied once per `squashSerial` change (− squash on landing/tackle, + stretch on a strike). */
+ plant?:number;squash?:number;squashSerial?:number;
 };
 export function createArcadePlayerMotion(){return{initialized:false,yaw:0,stride:0,effort:0,hit:0,slide:0,ready:0,charge:0,stun:0,celebrate:0,bank:0,pitch:0,vx:0,vz:0,bodyY:0,bodyX:0,bodyZ:0,chestY:0,headY:0,scaleX:1,scaleY:1,hips:new Float64Array(2),knees:new Float64Array(2),ankles:new Float64Array(2),rolls:new Float64Array(2),arms:new Float64Array(2),elbows:new Float64Array(2)};}
 export type ArcadePlayerMotion=ReturnType<typeof createArcadePlayerMotion>;

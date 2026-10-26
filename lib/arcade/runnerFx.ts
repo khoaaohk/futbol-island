@@ -1,6 +1,6 @@
 import * as T from 'three';
 import type {ArcadeStage} from './arcadeStage';
-import {RUNNER_DEFENDER_REACH,RUNNER_SKILLS,RUNNER_SKILL_WINDOW,runnerContactTime,type RunnerGame,type RunnerObject} from './runnerGame';
+import {RUNNER_DEFENDER_REACH,RUNNER_SKILLS,RUNNER_SKILL_WINDOW,runnerContactTime,runnerMultiplier,type RunnerGame,type RunnerObject} from './runnerGame';
 import {skillBall,skillFrame,type SkillMove} from '../graphics/skillMoves';
 import {sideGameDress} from '../town/beanLooks';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
@@ -26,7 +26,7 @@ export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
  let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0;
- const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,state:null as RunnerGame|null};
+ const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null};
 
  /* ---------- speed lines: one quad buffer, side streaks only ---------- */
  const linePos=new Float32Array(LINES*12),lineSeed=new Float32Array(LINES*4);
@@ -154,6 +154,33 @@ export function createRunnerFx(stage:ArcadeStage){
   if(g){g.lineJoin='round';g.lineCap='round';for(const [y,a] of[[70,1],[140,.75],[210,.5]] as const){g.globalAlpha=a;g.strokeStyle='#1a1036';g.lineWidth=30;g.beginPath();g.moveTo(18,y);g.lineTo(64,y-46);g.lineTo(110,y);g.stroke();g.strokeStyle='#ffe07a';g.lineWidth=18;g.stroke();}}
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;openSide.material.map=t;}
  let openX=0;
+ /* ---------- Oct 25 2026: combo aura and crowd camera flashes (pooled, hidden when idle) ---------- */
+ // Combo aura: one additive disc under the runner while the clean-play multiplier is ×2 (cyan) or ×3 (gold), so kids
+ // can SEE the reward they are building. One draw call, only while a multiplier is live.
+ const auraMaterial=new T.MeshBasicMaterial({color:'#7ff0e2',transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
+ const auraCyan=new T.Color('#7ff0e2'),auraGold=new T.Color('#ffd36e');
+ if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
+  if(g){const r=g.createRadialGradient(32,32,2,32,32,32);r.addColorStop(0,'rgba(255,255,255,0)');r.addColorStop(.5,'rgba(255,255,255,.35)');r.addColorStop(.8,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);}
+  const t=new T.CanvasTexture(c);auraMaterial.map=t;}
+ const aura=new T.Mesh(new T.PlaneGeometry(2,2),auraMaterial);aura.name='runner-combo-aura';aura.rotation.x=-Math.PI/2;aura.position.y=.035;aura.renderOrder=1;aura.visible=false;scene.add(aura);
+ let auraTier=1,auraFlash=0,pendingTier=0;
+ // Camera flashes in the stands on a goal or a new best: one instanced draw (24 quads), staggered over ~1 s, riding the
+ // visible stand. Skipped under reduced motion (no flashing lights).
+ const FLASHES=24;
+ const flashes=new T.InstancedMesh(new T.PlaneGeometry(.34,.34),new T.MeshBasicMaterial({color:'#fffbe8',transparent:true,opacity:.95,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}),FLASHES);
+ flashes.name='runner-crowd-flashes';flashes.instanceMatrix.setUsage(T.DynamicDrawUsage);flashes.frustumCulled=false;flashes.visible=false;scene.add(flashes);
+ const flashDelay=new Float32Array(FLASHES),flashLife=new Float32Array(FLASHES),flashPos=new Float32Array(FLASHES*3);let flashSeed=7;
+ const flashRand=()=>{flashSeed=(flashSeed*16807)%2147483647;return flashSeed/2147483647;};
+ function photoFlashes(count:number){
+  if(reduced)return;let placed=0;
+  for(const stand of stands){if(!stand.mesh.visible||stand.z<-58||stand.z>2)continue;
+   for(let i=0;i<FLASHES&&placed<count;i++){if(flashLife[i]>0)continue;const side=flashRand()<.5?-1:1,r=Math.floor(flashRand()*ROWS)%ROWS,j=i*3;
+    flashPos[j]=side*(5.55+r*.78);flashPos[j+1]=.92+r*.42;flashPos[j+2]=stand.z+(flashRand()-.5)*(STAND_LENGTH-1);flashDelay[i]=flashRand()*1.1;flashLife[i]=.14;placed++;}}
+  if(placed)flashes.visible=true;
+ }
+ // Keeper personality: a fist pump after a save (seconds left), and character body impulses for the runner.
+ let keeperCheer=0;
+ const body={state:null as RunnerGame|null,cuts:0,landings:0,event:0,serial:0,plant:0,at:0};
  const skillOut={x:0,y:0,z:0},frameOut={x:0,z:0,heading:0};
  const skillMotion={type:'stepover' as SkillMove,progress:0,side:1 as -1|1};
  /** Skill moves and the one-two on the runner: rig skill pose and the ball's path. */
@@ -164,6 +191,14 @@ export function createRunnerFx(stage:ArcadeStage){
   ball.children.forEach((child,i)=>{if(child instanceof T.Mesh){if(!child.userData.baseMaterial)child.userData.baseMaterial=child.material;child.material=skin.id==='classic'?child.userData.baseMaterial:mats![i===0?0:1];}});}
  function player(s:RunnerGame,pose:ArcadePoseOptions,ball:T.Object3D){
   skinBall(ball);
+  // Body impulses (Oct 25 2026): lane cuts plant the outside boot; landings and tackles squash the body, strikes and goals
+  // stretch it. The island rig owns the spring (one impulse per serial change, softened under reduced motion).
+  const bodyDt=Math.max(0,Math.min(.05,elapsed-body.at));body.at=elapsed;
+  if(body.state!==s){body.state=s;body.cuts=s.cuts;body.landings=s.landings;body.event=s.event;body.plant=0;}
+  if(s.cuts!==body.cuts){body.cuts=s.cuts;body.plant=1;}
+  if(s.landings!==body.landings){body.landings=s.landings;pose.squash=-2.4;pose.squashSerial=++body.serial;}
+  if(s.event!==body.event){body.event=s.event;const k=s.eventKind,sq=k==='hit'?-3.4:k==='shot'?(s.lastBlast>=.8?3.6:2.2):k==='goal'?2.8:k==='shield'?-2:k==='skillmove'?1.6:0;if(sq){pose.squash=sq;pose.squashSerial=++body.serial;}}
+  body.plant=Math.max(0,body.plant-bodyDt*7);pose.plant=body.plant;
   if(s.skill&&s.skill!=='chipShot'){const spec=RUNNER_SKILLS[s.skill],p=Math.min(1,s.skillT/spec.seconds);skillMotion.type=s.skill as SkillMove;skillMotion.progress=p;skillMotion.side=s.skillSide;pose.skill=skillMotion;pose.dribbling=false;
    const b=skillBall(skillMotion.type,p,skillMotion.side,skillOut),f=skillFrame(skillMotion.type,p,skillMotion.side,frameOut);
    if(b&&ball.visible){ball.position.set(s.x-(b.x-f.x)*1.15,b.y*1.15,-Math.max(-.3,Math.min(1.5,b.z-f.z))*1.15);}}
@@ -175,12 +210,19 @@ export function createRunnerFx(stage:ArcadeStage){
   const goal=s.objects.find(o=>o.kind==='goal'&&o.keeper&&o.z<1.5&&!(o.scored&&(o.goalBurst??0)>1.1));
   keeper.root.visible=!!goal;
   if(goal){const out=goal.kout??0,z=goal.z+.55+out*7;keeper.root.position.set(goal.kx??0,0,z);
-   const saving=(goal.reaction??0)>0;keeperPose.vx=goal.vx??0;keeperPose.vz=out>0&&out<1?7:0;keeperPose.anticipate=saving?0:.6;
-   if(saving){keeperDive.progress=1-(goal.reaction??0)/.5;keeperDive.dir=(goal.hitX??0)>(goal.kx??0)?-1:1;keeperPose.dive=keeperDive;}else keeperPose.dive=undefined;
+   const saving=(goal.reaction??0)>0;keeperPose.vx=goal.vx??0;keeperPose.vz=out>0&&out<1?7:0;
+   // Set position (Oct 25 2026): the keeper sinks lower and readier as the runner closes in, the cue to shoot early.
+   const near=1-clamp01((-goal.z-10)/30);keeperPose.anticipate=saving||goal.scored?0:.45+.55*near;keeperPose.celebrate=0;
+   if(saving){keeperDive.progress=1-(goal.reaction??0)/.5;keeperDive.dir=(goal.hitX??0)>(goal.kx??0)?-1:1;keeperPose.dive=keeperDive;}
+   // Beaten: a late dive toward the ball's side that arrives after it (kids see WHY it went in: he was the other way).
+   else if(goal.scored){keeperDive.progress=Math.min(.94,.12+(goal.goalBurst??0)/1.05);keeperDive.dir=(goal.hitX??0)>(goal.kx??0)?-1:1;keeperPose.dive=keeperDive;}
+   else{keeperPose.dive=undefined;if(keeperCheer>0&&keeperCheer<.9)keeperPose.celebrate=Math.sin(keeperCheer/.9*Math.PI);}
    keeper.pose(dt,Math.abs(goal.vx??0)+(out>0&&out<1?7:0),Math.atan2((s.x-(goal.kx??0))*.3,Math.max(4,-z)),0,0,(goal.vx??0)*.08,keeperPose);}
   // Teammates and the one-two ball
   let m=0;for(const o of s.objects){if(o.kind!=='mate'||o.z>3||m>=mates.length)continue;const mate=mates[m++];mate.rig.root.visible=true;mate.rig.root.position.set(o.x??o.lane*4.3,0,o.z);
    const kicking=s.pass.phase==='out'&&s.pass.t>.22||s.pass.phase==='back'&&s.pass.t<.18;mate.pose.anticipate=o.passed?.2:.6;
+   // "To me!": the free teammate raises an arm and calls for the ball until the pass is played (teaches calling for it).
+   mate.pose.celebrate=!o.passed&&o.z>-30&&o.z<-2?.85:0;
    mate.rig.pose(dt,0,Math.atan2(s.x-(o.x??0),Math.max(3,-o.z))+(o.passed?0:0),kicking&&o.passed?.7:0,0,0,mate.pose);
    if(!o.passed&&o.z>-26&&o.z<-3){callout.visible=s.lane===o.lane;callout.position.set(o.x??0,.04,o.z);callout.scale.setScalar(reduced?1:1+Math.sin(elapsed*7)*.1);}}
   for(;m<mates.length;m++)mates[m].rig.root.visible=false;
@@ -232,7 +274,7 @@ export function createRunnerFx(stage:ArcadeStage){
  /* ---------- per-frame ---------- */
  function update(dt:number,s:RunnerGame){
   elapsed+=dt;
-  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;}
+  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);}
   // Counters → one-shot juice. Nothing here allocates.
   if(s.cuts!==seen.cuts){seen.cuts=s.cuts;puff(s.x-s.cutDir*.25,.1,3,.9,.45);}
   if(s.landings!==seen.landings){seen.landings=s.landings;puff(s.x,0,4,1.1,.5);}
@@ -252,15 +294,23 @@ export function createRunnerFx(stage:ArcadeStage){
     // The goal moment: a breath of slow motion as the net bursts, a camera punch-in and the word itself.
     trauma=Math.min(1,trauma+.32);hitstop=reduced?.06:.3;hitstopScale=reduced?.3:.35;celebrate(s.eventX,s.eventZ);hype=1;punch=1;
     const beatFirst=s.beatScores!==seen.beatScores;seen.beatScores=s.beatScores;
+    photoFlashes(stage.mobile?14:22);
     pop('GOAL!','#ffe07a',5.2,1.5,beatFirst?'Beat the tackle, found the goal!':s.streak>1?`${Math.min(3,s.streak)} in a row!`:'');}
-   else if(kind==='save')pop('SAVED!','#ff9bd2',3.2,.9,'Shoot where the keeper is not');
+   else if(kind==='save'){keeperCheer=1.4;const dropped=s.comboDrops!==seen.drops;pop('SAVED!','#ff9bd2',3.2,.9,dropped?`Combo now ×${runnerMultiplier(s)}. Shoot where the keeper is not`:'Shoot where the keeper is not');}
    else if(kind==='onetwo')pop('ONE-TWO!','#ffe07a',3.8,1);
    else if(kind==='boss'&&s.boss===0&&s.lives>0&&/BEATEN/.test(s.message))pop('BACK LINE BEATEN!','#ffe07a',4.6,1.2);
    else if(kind==='shield')pop('RODE IT!','#9ff6ff',3.4,.9);
    else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
-   else if(kind==='best'){pop('NEW BEST!','#7ff0e2',4.6,1.4,'Keep going!');hype=1;lineFlash=Math.max(lineFlash,.8);}
+   else if(kind==='best'){pop('NEW BEST!','#7ff0e2',4.6,1.4,'Keep going!');hype=1;photoFlashes(stage.mobile?10:16);lineFlash=Math.max(lineFlash,.8);}
    else if(kind==='shot'&&s.lastBlast>=.8)trauma=Math.min(1,trauma+.28);
   }
+  seen.drops=s.comboDrops;keeperCheer=Math.max(0,keeperCheer-dt);
+  // Combo aura and the tier-up word (queued behind a bigger word such as GOAL! so neither is lost).
+  const tier=s.lives>0?runnerMultiplier(s):1;if(tier>auraTier){pendingTier=tier;auraFlash=1;}auraTier=tier;
+  if(pendingTier&&(!word.visible||wordAge>wordLife*.65)){pop(`COMBO ×${pendingTier}!`,pendingTier>2?'#ffd36e':'#7ff0e2',3.8,1.1,pendingTier>2?'Top multiplier! Every point counts ×3':'Clean touches build your multiplier');pendingTier=0;}
+  auraFlash=Math.max(0,auraFlash-dt*2.2);const auraWant=tier>1?(tier>2?.6:.4):0;
+  auraMaterial.opacity+=(Math.min(.9,auraWant+auraFlash*.35)-auraMaterial.opacity)*(1-Math.exp(-dt*8));aura.visible=auraMaterial.opacity>.02;
+  if(aura.visible){if(auraWant>0)auraMaterial.color.copy(tier>2?auraGold:auraCyan);const k=(reduced?1:1+Math.sin(elapsed*(tier>2?9:6))*.06)*(1+(reduced?0:auraFlash*.6));aura.scale.setScalar(.9*k);aura.position.set(s.x,.035,-.15);}
   if(s.slide>.15&&s.lives>0){slideDust-=dt;if(slideDust<=0){slideDust=.07;puff(s.x+.2,.25,1,.5,.35);}}
   hitstop=Math.max(0,hitstop-dt);trauma=Math.max(0,trauma-dt*2.4);lineFlash=Math.max(0,lineFlash-dt*2.5);punch=Math.max(0,punch-dt*1.6);stepWord(dt,s);
   const travel=s.speed*dt*(s.lives>0||s.outro>0?1:0);
@@ -283,6 +333,11 @@ export function createRunnerFx(stage:ArcadeStage){
    dummy.position.fromArray(confPos,j);dummy.rotation.set(confSpin[j]+elapsed*confSpin[j+2],confSpin[j+1]+elapsed*2,elapsed*confSpin[j+2]*.5);dummy.scale.setScalar(confLife[i]>0?Math.min(1,confLife[i]*3):0);dummy.updateMatrix();confetti.setMatrixAt(i,dummy.matrix);}
    confetti.instanceMatrix.needsUpdate=true;confetti.visible=alive;}
 
+  if(flashes.visible){let alive=false;for(let i=0;i<FLASHES;i++){const j=i*3;let k=0;
+    if(flashLife[i]>0){alive=true;flashPos[j+2]+=travel;if(flashDelay[i]>0)flashDelay[i]-=dt;else{flashLife[i]-=dt;k=Math.max(0,flashLife[i]/.14);}}
+    dummy.position.fromArray(flashPos,j);dummy.rotation.set(0,0,k*.8);dummy.scale.setScalar(k>0?.4+k*.9:0);dummy.updateMatrix();flashes.setMatrixAt(i,dummy.matrix);}
+   flashes.instanceMatrix.needsUpdate=true;flashes.visible=alive;}
+
   // Crowd: recycle stands at the far end; bob harder through a goal approach.
   const goalNear=s.objects.some(o=>o.kind==='goal'&&!o.passed&&o.z>-75&&o.z<-6);
   hype+=((goalNear?.6:s.boost>0?.35:.1)-hype)*(1-Math.exp(-dt*(hype>.6?.8:2)));
@@ -294,6 +349,7 @@ export function createRunnerFx(stage:ArcadeStage){
   // Replay hook: the record to beat is read once per run (no per-frame storage reads).
   s.bestToBeat=typeof localStorage==='undefined'?0:readArcadeRecord('runner').best;s.newBest=false;
   trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
+  flashLife.fill(0);flashDelay.fill(0);flashes.visible=aura.visible=false;auraMaterial.opacity=auraFlash=0;auraTier=1;pendingTier=0;keeperCheer=0;body.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;
   for(const stand of stands){stand.z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;stand.mesh.position.z=stand.z;fillStand(stand,s.distance,false);}
  }
@@ -325,8 +381,8 @@ export function createRunnerFx(stage:ArcadeStage){
   /** Simulation time scale for hit-stop: brief freezes on impact, a breath of slow-mo on near misses. */
   timeScale:()=>hitstop>0?hitstopScale:1,
   /** Any effect still animating keeps frames coming briefly after play stops. */
-  active:()=>dust.visible||confetti.visible||trauma>0||hitstop>0||word.visible,
-  debug:()=>({word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
+  active:()=>dust.visible||confetti.visible||flashes.visible||trauma>0||hitstop>0||word.visible,
+  debug:()=>({aura:aura.visible?auraMaterial.opacity:0,auraTier,flashes:flashes.visible,keeperCheer,plant:body.plant,squashSerial:body.serial,word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
  };
 }
 export type RunnerFx=ReturnType<typeof createRunnerFx>;
