@@ -6,16 +6,6 @@
 .lowOverlay{place-items:end center;padding-bottom:calc(20px + env(safe-area-inset-bottom));background:linear-gradient(#254c4900 35%,#254c4955)}
 
 /* Level select */
-.levels{width:min(640px,100%);max-height:calc(100dvh - 120px);overflow:auto;overscroll-behavior:contain}
-.levels>p{margin:0 0 14px}
-.formats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
-/* Format choice is the shared chip family (docs/ui/BUTTONS.md): bright-gold pill, pink when chosen. */
-.formats>.format.format{min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-gold-bright-edge);transition:translate .16s,box-shadow .16s}
-.formats>.format.format[aria-pressed=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
-.formats>.format.format:active{translate:0 var(--btn-press);box-shadow:0 2px 0 var(--btn-gold-bright-edge)}
-.pack{margin:0 0 16px}
-.pack h4{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 8px;font:22px/1.2 IslandBrush,Arial,sans-serif}
-.pack h4 small{font:700 11px/1 var(--font-body),Arial,sans-serif;letter-spacing:.08em;color:#587265}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:10px}
 .level{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:2px 10px;align-items:center;text-align:left;padding:10px 12px;min-height:64px;border:1px solid #244b4322;border-radius:12px;background:#fff9e9;color:#244b43;box-shadow:0 3px 0 #244b4322}
 .level:not(:disabled):active{transform:translateY(var(--btn-press));box-shadow:0 1px 0 #244b4322}
@@ -50,30 +40,20 @@
 .replayChip{position:absolute;top:84px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;background:#244b43;color:#fff3d9;font-size:12px;font-weight:700;letter-spacing:.06em;z-index:3}
 .skip{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));z-index:3}
 
-@media(max-width:600px){.replayChip{top:77px}.levels{padding:20px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stars{font-size:34px}}
-@media(max-height:520px){.levels{max-height:calc(100dvh - 30px)}.lowOverlay{place-items:center}}
-@media(prefers-reduced-motion:reduce){.loft,.formats>.format.format,.row>.secondary.secondary,.skip.skip{transition:none}}
+@media(max-width:600px){.replayChip{top:77px}.stars{font-size:34px}}
+@media(max-height:520px){.lowOverlay{place-items:center}}
+@media(prefers-reduced-motion:reduce){.loft,.row>.secondary.secondary,.skip.skip{transition:none}}
 .blurb{font-size:12px!important;color:#587265;margin:-4px 0 8px!important;line-height:1.4!important}
 
 /* Navigation stays above cards, including the chooser and result overlays. */
 .header{z-index:6;grid-template-columns:84px 1fr 118px}
 .navigation{display:flex;justify-content:flex-end;gap:6px;pointer-events:auto}
 .navigation>button{min-height:44px;padding:8px 10px;border:3px solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-mint-edge);font-size:12px}
-.formatChoice{margin:12px 0 20px;padding:0;border:0;text-align:left}
-.formatChoice legend{font-weight:800;font-size:15px}
-.formatChoice>p{font-size:12px!important;margin:5px 0 10px!important;line-height:1.4!important;color:#587265}
-.formats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0}
-.formats>.format.format{padding:8px;min-width:0;text-align:center}
-.format span{display:block;font-size:10px;margin-top:4px}
-.topics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
-.topics button{min-height:44px;border:2px solid #d9cbaa;border-radius:16px;background:#fff9e9;color:#244b43;padding:8px;font-size:13px}
-.topics button[aria-pressed=true]{background:#bdd8cd;border-color:#658d7b;box-shadow:0 3px 0 #658d7b}
 .game canvas{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-@media(max-width:600px){.header{grid-template-columns:76px 1fr 112px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 12px calc(18px + env(safe-area-inset-left,0px));gap:5px}.header h2{font-size:23px}.navigation>button{padding:7px;font-size:11px}.levels{max-height:calc(100dvh - 110px)}}
+@media(max-width:600px){.header{grid-template-columns:76px 1fr 112px;padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 12px calc(18px + env(safe-area-inset-left,0px));gap:5px}.header h2{font-size:23px}.navigation>button{padding:7px;font-size:11px}}
 
-.game .pack h4 small,.game .blurb,.game .formatChoice>p{color:#b5c7dc!important}
+.game .blurb{color:#b5c7dc!important}
 .game .level{background:#202b40;color:#edf8ff;border-color:#466478}
-.game .format{--btn-pink:#703d6b;--btn-pink-edge:#35233e;color:#eff8ff}
 .game .navigation button{color:#eff8ff;background:#24334b;border-color:#76e4df}
 
 .game .rewind{display:block;width:100%;min-height:44px;margin-top:12px;border:2px solid #8cfff0;border-radius:18px;background:#183c44;color:#efffff;font-size:14px;font-weight:700;font-family:inherit}.game .rewindNote{display:block;color:#b5c7dc;font-size:11px;margin:8px 0;line-height:1.5}
@@ -106,22 +86,9 @@
 @media(prefers-reduced-motion:no-preference){.earned li[data-new=true]{animation:puzzleStarPop .4s 1s both}}
 @keyframes puzzleStarPop{from{transform:scale(.85);opacity:.3}to{transform:scale(1);opacity:1}}
 
-/* Daily puzzle: one wide card above the pack map. */
-.game .daily{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;width:100%;min-height:56px;margin:0 0 14px;padding:10px 14px;border:2px solid #76e4df;border-radius:16px;background:#183c44;color:#efffff;text-align:left;font:inherit;cursor:pointer}
-.game .daily span{display:grid;gap:2px}.game .daily b{font-size:15px}.game .daily small{font-size:11px;color:#b5c7dc}.game .daily em{font-style:normal}
 
-/* Pack map: a numbered path of packs; each opens with stars earned anywhere (skill, never coins). */
-.packMap{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;counter-reset:pack}
-.packMap li{position:relative}
-.packMap button{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;width:100%;min-height:52px;padding:7px 10px;border:2px solid #466478;border-radius:14px;background:#202b40;color:#edf8ff;text-align:left;font:inherit;cursor:pointer}
-.packMap button b{grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#efc776;color:#244b43;font-size:13px}
-.packMap button span{font-size:13px;font-weight:700;line-height:1.2}.packMap button small{font-size:11px;color:#b5c7dc}
-.packMap button[aria-pressed=true]{border-color:#76e4df;background:#193c46;box-shadow:0 3px 0 #10212d}
-.packMap li[data-open=false] button{opacity:.72}.packMap li[data-open=false] b{background:#3a4a5e;color:#b5c7dc}
-.packMap li[data-done=true] b{background:#ffe36e}
 .game .gate{font-size:12px!important;color:#ffcf8a;margin:0 0 8px!important}
 .pips{display:block;font-style:normal;font-size:9px;letter-spacing:2px;color:#9fd8ff;margin-top:2px}
-@media(max-width:380px){.packMap{grid-template-columns:1fr}}
 
 /* Level modifiers (wind, wet pitch, counter clock, trap, hunter, sweeper keeper). */
 .modifiers{position:absolute;top:84px;left:50%;transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:6px;width:min(520px,calc(100% - 32px));margin:0;padding:0;list-style:none;z-index:3;pointer-events:none}
@@ -132,8 +99,6 @@
 @media(max-width:600px){.modifiers{top:77px}}
 /* The lesson takeaway reads on the dark result card (it was cream text-on-cream). */
 .game .lesson{background:#10192c;color:#eef8ff;border-left-color:#e8bc58}
-.game .packMap small,.game .daily small{border:0;padding:0;margin:0;display:block;line-height:1.3}
-.game .daily em{display:flex;gap:2px;font-size:15px}
 
 /* Short landscape phones: one compact control strip at the bottom edge, no tip, so the pitch stays visible. */
 @media(max-height:520px) and (orientation:landscape){
@@ -220,3 +185,62 @@
 @keyframes puzzleStarPop{0%{opacity:0;transform:scale(.3) rotate(-25deg)}70%{opacity:1;transform:scale(1.25) rotate(6deg)}100%{transform:scale(1) rotate(0)}}
 .game .streak{margin:0 0 8px;font-size:13px;color:#dfedff}.game .streak b{color:#ffe36e;font-size:16px;margin-right:4px}
 @media(max-height:520px){.callout{top:calc(58px + env(safe-area-inset-top))}.callout b{font-size:18px}.callout[data-tier="3"] b{font-size:22px}}
+
+/* Oct 26 simple start menu (owner: "way too complex"): title + one line, one big Play (continue), a compact daily tile and the
+   pack grid; team size + heading live behind the gear. Everything fits a 390x844 phone and an 844x390 landscape phone without
+   scrolling; every tap target is at least 48px. */
+.menuOverlay{padding-top:calc(84px + env(safe-area-inset-top,0px))}
+.levels{width:min(640px,100%);max-height:calc(100dvh - 100px);overflow:auto;overscroll-behavior:contain;padding:18px 18px 20px;text-align:left}
+.menuTop{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.menuTitle{flex:1;min-width:0}
+.game .menuTitle h3{margin:0;font-size:32px;line-height:1.05}
+.game .menuTitle p{margin:4px 0 0;font-size:14px;line-height:1.3;color:#b5c7dc}
+.game .menuTitle p[data-first-run]{color:#ffe36e;font-weight:700}
+.chip{position:relative;flex:none;display:grid;place-items:center;width:48px;height:48px;padding:0;border:2px solid #466478;border-radius:16px;background:#202b40;color:#edf8ff;cursor:pointer;touch-action:manipulation}
+.chip:active{translate:0 var(--btn-press)}
+.chip:focus-visible,.playBig:focus-visible,.daily:focus-visible,.packMap button:focus-visible,.seg button:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+/* A soft dot invites a first look at the settings (never a blocking question). */
+.chip[data-unset]::after{content:'';position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#ff72cb;box-shadow:0 0 0 2px #151a30}
+.game .menuNote{margin:0 0 8px;font-size:13px;color:#ffcf8a}
+.game .playBig{box-shadow:var(--btn-shadow-gold),0 0 22px #68eddf38;display:flex;align-items:center;justify-content:center;gap:12px;min-height:72px;margin:0 0 10px;padding:10px 16px;font:inherit;cursor:pointer;touch-action:manipulation}
+.playBig span{display:grid;text-align:left;min-width:0}
+.playBig b{font:30px/1 IslandBrush,Arial,sans-serif}
+.playBig small{font-size:12px!important;font-weight:700;line-height:1.25;padding:2px 0 0!important;border:0!important;color:inherit!important;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game .daily{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:0 0 10px;padding:6px 14px;border:2px solid #76e4df;border-radius:16px;background:#183c44;color:#efffff;text-align:left;font:inherit;cursor:pointer;touch-action:manipulation}
+.game .daily b{flex:1;font-size:15px}.game .daily .starOff{color:#ffffff38}.game .daily em{display:flex;gap:2px;font-style:normal;font-size:15px}
+.packMap{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.packMap button{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:8px;align-items:center;width:100%;min-height:52px;padding:5px 10px;border:2px solid #466478;border-radius:14px;background:#202b40;color:#edf8ff;text-align:left;font:inherit;cursor:pointer;touch-action:manipulation}
+.packMap button b{grid-row:span 2;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#efc776;color:#244b43;font-size:13px}
+.packMap button span{font-size:13px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game .packMap button small{display:block;margin:0;padding:0;border:0;font-size:11px;line-height:1.3;color:#b5c7dc}
+.packMap li[data-current] button{border-color:#ffe36e;background:#2b2a3f;box-shadow:0 0 0 2px #ffe36e40}
+.packMap li[data-open=false] button{opacity:.62}.packMap li[data-open=false] b{background:#3a4a5e;color:#b5c7dc;font-size:12px}
+.packMap li[data-done=true] b{background:#ffe36e}
+/* One pack's puzzles and the settings sheet replace the home view inside the same card. */
+.sheetHead{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+.sheetHead h4{flex:1;margin:0;font:24px/1.1 IslandBrush,Arial,sans-serif}
+.game .sheetHead small{border:0;padding:0;margin:0;font-size:12px;font-weight:700;color:#b5c7dc}
+.pack{margin:0}
+.game .ask{margin:0 0 8px;padding:8px 12px;border-radius:12px;background:#2c2649;color:#ffb4e4;font-size:13px;font-weight:700}
+.seg{margin:0 0 12px;padding:0;border:0}
+.seg legend{padding:0;margin:0 0 6px;font-weight:800;font-size:15px}
+.seg>div{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:18px;background:#0e1424;border:1px solid #35415c}
+.seg button{display:grid;place-items:center;align-content:center;min-height:52px;padding:4px 6px;border:0;border-radius:14px;background:transparent;color:#dfedff;font:inherit;font-weight:800;font-size:16px;cursor:pointer;touch-action:manipulation}
+.seg button small{display:block;border:0!important;padding:0!important;margin:0;font-size:11px!important;font-weight:600;color:inherit!important;opacity:.8}
+.seg button[aria-pressed=true]{background:#68eddf;color:#112a33;box-shadow:0 3px 0 #2b8f86}
+.game .seg>p{margin:6px 2px 0;font-size:12px;line-height:1.35;color:#b5c7dc}
+.game .done{margin-top:4px}
+@media(max-width:600px){.levels{padding:16px 14px 16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.game .menuTitle h3{font-size:29px}}
+/* Short landscape phones: the start column (title, Play, daily) on the left, the pack grid on the right; nothing scrolls. */
+@media(max-height:520px) and (orientation:landscape){
+ .game .menuOverlay{padding:10px max(16px,env(safe-area-inset-right)) 10px max(112px,env(safe-area-inset-left))}
+ .game .levels{width:min(760px,100%);max-width:none;max-height:calc(100dvh - 20px);padding:12px 14px}
+ .levels[data-menu=home]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:auto auto auto 1fr;column-gap:14px;align-items:start}
+ .levels[data-menu=home]>*{grid-column:1}
+ .levels[data-menu=home]>.packMap{grid-column:2;grid-row:1/-1;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .levels[data-menu=home] .packMap button{min-height:48px;padding:3px 8px}
+ .game .menuTitle h3{font-size:26px;margin:0}
+ .game .playBig{min-height:64px}
+ .settings{display:grid;grid-template-columns:1fr 1fr;column-gap:14px}.settings>.sheetHead,.settings>.ask,.settings>.done{grid-column:1/-1}
+ .levels[data-menu=pack] .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}

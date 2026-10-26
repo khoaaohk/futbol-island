@@ -7,7 +7,7 @@ import {BackButton} from '../BackButton';
 import {Icon} from '../Icon';
 import {createPuzzle,readStroke,predict,replay as replayAttempt,type Scenario,type Format,type PuzzleWorld,type PuzzleEvent,type StrokePoint,type Kick,type Prediction,type Replay} from '@/lib/passPuzzle';
 import {youthScenario,usesHeading,YOUTH_PACK_BLURB} from '@/lib/passPuzzle/youth';
-import {ALL_SCENARIOS,ALL_PACKS,ALL_SOLUTIONS,DAILY_TEMPLATES,routeFor,packGateOpen,pips,nextOnMap} from '@/lib/passPuzzle/catalog';
+import {ALL_SCENARIOS,ALL_PACKS,ALL_SOLUTIONS,DAILY_TEMPLATES,MAP_ORDER,routeFor,packGateOpen,pips,nextOnMap} from '@/lib/passPuzzle/catalog';
 import {scanLanes,shutLanes} from '@/lib/passPuzzle/scan';
 import {coachRun} from '@/lib/passPuzzle/coach';
 import {dailyPuzzle} from '@/lib/passPuzzle/daily';
@@ -91,8 +91,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{setBoardReady(false);if(boardScore===null||view!=='result')return;const id=setTimeout(()=>setBoardReady(true),2600);return()=>clearTimeout(id);},[boardScore,view]);
  const [outcome,setOutcome]=useState<Outcome|null>(null),[replaying,setReplaying]=useState(false),[showHint,setShowHint]=useState(false),[error,setError]=useState(false);
  const loftMeter=useRef<HTMLDivElement>(null);
- /** The chosen pack's puzzle grid (scrolled into view when a pack is picked on a phone). */
- const packList=useRef<HTMLDivElement>(null);
+ /** Oct 26 simple start menu: 'home' (Play, daily, packs), one pack's puzzles, or the small settings sheet. */
+ const [menu,setMenu]=useState<'home'|'pack'|'settings'>('home');
+ /** One-tap Play skips the brief card, so the level's brief rides in the tip until the first pass. */
+ const [briefTip,setBriefTip]=useState(false);
  /** Live warning while drawing (only changes re-render): the predicted receiver would be offside. */
  const [aimWarn,setAimWarn]=useState<null|'offside'>(null),aimWarnRef=useRef<null|'offside'>(null);
  const warn=(w:null|'offside')=>{if(aimWarnRef.current!==w){aimWarnRef.current=w;setAimWarn(w);}if(!w)lane(null);};
@@ -116,6 +118,8 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{const p=readProgress();setProgress(p);setFormat(p.format??childFormat()??'9v9');},[]);
  const chooseFormat=(f:Format)=>{setFormat(f);setProgress(p=>{const next={...p,format:f};writeProgress(next);return next;});};
  const chooseHeading=(on:boolean)=>setProgress(p=>{const next={...p,heading:on};writeProgress(next);return next;});
+ /** Done in the settings sheet: the shown defaults become the child's remembered choice (asked once, never again). */
+ const saveSettings=()=>{setProgress(p=>{const next={...p,format,heading:headingAllowed(p,format)};writeProgress(next);return next;});setMenu('home');};
 
  // ── sound: short gesture-unlocked blips like the other arcade games, no sustained source ──
  const unlock=()=>{if(!isSoundEnabled()||getSoundVolume()===0)return;try{audio.current??=new AudioContext();void audio.current.resume();}catch{}};
@@ -262,7 +266,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  },[finish,handleEvent]);
 
  /** Build the frozen moment for a level: the pitch shows behind the brief card. */
- const loadLevel=(s:Scenario)=>{setCallout(null);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
+ const loadLevel=(s:Scenario)=>{setCallout(null);setBriefTip(false);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
   try{const played=playable(s,headingRef.current);const world=createPuzzle(played);worldRef.current=world;scene.load(played);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);}catch{setError(true);return;}
   setLevelId(s.id);setPackId(s.pack);setOutcome(null);setShowHint(false);syncHud();settleUntil.current=performance.now()+300;wake.current();};
  const openLevel=(s:Scenario)=>{loadLevel(s);setView('brief');};
@@ -310,6 +314,14 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const totalStars=Object.values(progress.stars).reduce((a,b)=>a+b,0);
  /** "Next puzzle" follows the pack map (not the file order), and stops at a pack that is still closed. */
  const next=level?nextOnMap(level.id,totalStars):null,nextLevel=next&&'scenario' in next?next.scenario:undefined;
+ /** Play = continue: the first unsolved puzzle along the pack map in an open pack (level 1 on a first run),
+  *  then the first one still missing stars, so the big button never asks a question first. */
+ const packOpen=(s:Scenario)=>{const p=packInfo(s.pack);return !p||packGateOpen(p,totalStars);};
+ const continueLevel=MAP_ORDER.find(s=>packOpen(s)&&!(progress.stars[s.id]>0))??MAP_ORDER.find(s=>packOpen(s)&&(progress.stars[s.id]??0)<3)??MAP_ORDER[0];
+ const continueNumber=continueLevel?MAP_ORDER.filter(s=>s.pack===continueLevel.pack).indexOf(continueLevel)+1:1;
+ const firstRun=totalStars===0;
+ const quickPlay=()=>{if(!continueLevel)return;loadLevel(continueLevel);setBriefTip(true);void play();};
+ const openPack=(id:string)=>{setPackId(id);setMenu('pack');};
 
  /** The three star goals in words, for the brief and result cards. */
  const goals=(s:Scenario)=>['Solve the puzzle',s.require.minPasses===0?'Score with a clean shot':`Use the move: ${s.require.minPasses} pass${s.require.minPasses===1?'':'es'} first`,`Bonus: ${s.bonus?.label??'Finish first time'}`];
@@ -328,14 +340,15 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  // Escape like the other machines' cards: the puzzle map leaves for the arcade, a brief goes back to the map. Not while drawing/playing,
  // and not under the board dialogs (they keep their own keys).
  const exitRef=useRef(onExit);exitRef.current=onExit;
- useEffect(()=>{if(view!=='levels'&&view!=='brief')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||e.defaultPrevented||boardsOpen||boardScore!==null||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();if(view==='brief')setView('levels');else{cancelDrawing.current();exitRef.current();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[view,boardsOpen,boardScore]);
+ useEffect(()=>{if(view!=='levels'&&view!=='brief')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||e.defaultPrevented||boardsOpen||boardScore!==null||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();if(view==='levels'&&menu!=='home'){setMenu('home');return;}if(view==='brief')setView('levels');else{cancelDrawing.current();exitRef.current();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[view,boardsOpen,boardScore,menu]);
+ const levelTitle=(s:Scenario)=>heading||!usesHeading(s.id)?s.title:youthScenario(s).title;
 
  return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
   <header className={`${arcade.header} ${styles.header}`}><BackButton label="Arcade" title="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}}/>{view!=='levels'?<div className={`${arcade.headerScore} ${styles.passScore}`} aria-live="polite" data-met={progressHud.met||undefined}><strong>{progressHud.count}</strong><span>{progressHud.label} · try {hud.attempt}/{hud.attempts}</span></div>:<span/>}
-   {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={showHint} data-hint-level={showHint?spotHint?2:1:0} aria-label={!showHint?'Show hint':!spotHint?'Show me where':'Hide hint'} data-tip={!showHint?'Hint':!spotHint?'Show me where':'Hide hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
+   {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={showHint} data-hint-level={showHint?spotHint?2:1:0} aria-label={!showHint?'Show hint':!spotHint?'Show me where':'Hide hint'} data-tip={!showHint?'Hint':!spotHint?'Show me where':'Hide hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
   </header>
-  {inPlay&&hud.phase==='aiming'&&<p className={`${arcade.message} ${styles.tip}`} data-warn={aimWarn??undefined} data-lane={laneRead?.status}>{laneRead?laneRead.text:aimWarn==='offside'?'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.':showHint&&spotHint&&hintNote?hintNote:controlMode==='shoot'?'Choose height and power. Drag toward either corner, then release.':showHint?hintText:usesRuns&&hud.passes===0?'Drag from a teammate to send their run. Drag from the ball to pass.':scanOn&&hud.passes===0?'Scan is on: green lanes are open, red lanes are shut. Draw your pass.':progressHud.met&&level?.require.finish==='goal'?'That’s the move! Now finish it: drag toward the goal.':hud.passes>0?'Nice touch. Draw the next one.':controlMode==='lift'?'Drag to a teammate or space. Your pass will lift over the ground.':controlMode==='ground'?'Drag into feet or space for a grounded pass.':'Drag to pass or shoot. Hold the tip to lift, or choose below.'}</p>}
+  {inPlay&&hud.phase==='aiming'&&<p className={`${arcade.message} ${styles.tip}`} data-warn={aimWarn??undefined} data-lane={laneRead?.status}>{laneRead?laneRead.text:aimWarn==='offside'?'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.':showHint&&spotHint&&hintNote?hintNote:controlMode==='shoot'?'Choose height and power. Drag toward either corner, then release.':showHint?hintText:briefTip&&hud.passes===0&&hud.attempt===1&&briefText?briefText:usesRuns&&hud.passes===0?'Drag from a teammate to send their run. Drag from the ball to pass.':scanOn&&hud.passes===0?'Scan is on: green lanes are open, red lanes are shut. Draw your pass.':progressHud.met&&level?.require.finish==='goal'?'That’s the move! Now finish it: drag toward the goal.':hud.passes>0?'Nice touch. Draw the next one.':controlMode==='lift'?'Drag to a teammate or space. Your pass will lift over the ground.':controlMode==='ground'?'Drag into feet or space for a grounded pass.':'Drag to pass or shoot. Hold the tip to lift, or choose below.'}</p>}
   {inPlay&&modifiers(level).length>0&&<ul className={styles.modifiers} aria-label="This pitch">{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}
   {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls}>
    <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div>
@@ -347,27 +360,37 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b><span>{callout.teach}</span></div>}
   <div ref={loftMeter} className={styles.loft} data-active="false" aria-hidden="true"><i/><span>LIFT</span></div>
 
-  {view==='levels'&&<div className={arcade.overlay}><section className={`${arcade.card} ${styles.levels}`}>
-   <span className={arcade.badge}>FREEZE · DRAW · PLAY</span><h3>Pass Puzzles</h3>
-   <p>Find the open teammate. Draw a pass, then watch your idea play out.</p>
-   <fieldset className={styles.formatChoice}><legend>How do you play football?</legend><p>This changes the coaching words, not the difficulty.</p><div className={styles.formats}>{FORMATS.map((f,i)=><button key={f} className={`pixel-btn ${styles.format}`} aria-pressed={format===f} onClick={()=>chooseFormat(f)}><b>{f}</b><span>{['Small-sided','Growing teams','Full pitch'][i]}</span></button>)}</div></fieldset>
-   <fieldset className={styles.formatChoice} data-heading-choice><legend>Heading the ball</legend><p>US youth rule: no heading at 10 and under. With heading off, crosses are chested down and finished.</p><div className={styles.formats} data-two>{[false,true].map(on=><button key={String(on)} className={`pixel-btn ${styles.format}`} aria-pressed={heading===on} onClick={()=>chooseHeading(on)}><b>{on?'Heading on':'No heading'}</b><span>{on?'Ages 11+':'Ages 10 and under'}</span></button>)}</div></fieldset>
-   <button className={styles.daily} data-daily onClick={openDaily}><Icon name="clock" size={18}/><span><b>Daily puzzle</b><small>A new twist on a move you know, every day</small></span><em>{[0,1,2].map(n=>star(n<(progress.stars[dailyId]??0),n))}</em></button>
-   <button type="button" className={arcade.boards} onClick={()=>setBoardsOpen(true)}>Leaderboard · {boardStars(progress.stars)} ★</button>
-   {/* The pack map: a path of packs, each opened by stars earned anywhere (skill unlocks, never coins). */}
-   <ol className={styles.packMap} role="group" aria-label="Choose a puzzle topic">{PACKS.map((p,i)=>{const list=packs.find(([id])=>id===p.id)?.[1]??[],got=list.reduce((n,s)=>n+(progress.stars[s.id]??0),0),open=packGateOpen(p,totalStars);
-    return <li key={p.id} data-open={open} data-done={got===list.length*3||undefined}><button aria-label={p.title} aria-pressed={packId===p.id} onClick={()=>{setPackId(p.id);requestAnimationFrame(()=>packList.current?.scrollIntoView({block:'nearest',behavior:sceneRef.current?.stage.reduced?'auto':'smooth'}));}}><b>{i+1}</b><span>{p.title}</span><small>{open?`${got}/${list.length*3} ★`:`🔒 ${p.gate} ★`}</small></button></li>;})}</ol>
-   {packs.filter(([pack])=>pack===packId).map(([pack,list])=>{const info=packInfo(pack),open=!info||packGateOpen(info,totalStars);return <div key={pack} className={styles.pack} ref={packList}><h4>{info?.title??pack}<small>{list.reduce((n,s)=>n+(progress.stars[s.id]??0),0)}/{list.length*3} ★</small></h4>{info?.blurb&&<p className={styles.blurb}>{pack==='in-the-air'&&!heading?YOUTH_PACK_BLURB:info.blurb}</p>}{!open&&<p className={styles.gate} role="status">Earn {info!.gate-totalStars} more ★ in earlier packs to open this one.</p>}<div className={styles.grid}>
-    {list.map((s,i)=>{const lvl=open&&unlocked(s,list),got=progress.stars[s.id]??0,title=heading||!usesHeading(s.id)?s.title:youthScenario(s).title,d=pips(s.id);return <button key={s.id} className={styles.level} disabled={!lvl} onClick={()=>openLevel(s)} data-level={s.id} aria-label={`${i+1}. ${title}${lvl?`, ${got} of 3 stars, difficulty ${d} of 3`:', locked'}`}><b>{i+1}</b><span>{title}</span><em>{[0,1,2].map(n=>star(n<got,n))}<i className={styles.pips} data-pips={d} aria-hidden="true">{'●'.repeat(d)}{'○'.repeat(3-d)}</i></em></button>;})}
+  {view==='levels'&&<div className={`${arcade.overlay} ${styles.menuOverlay}`}><section className={`${arcade.card} ${styles.levels}`} data-menu={menu}>
+   {menu==='home'&&<>
+    <div className={styles.menuTop}><div className={styles.menuTitle}><h3>Pass Puzzles</h3><p data-first-run={firstRun||undefined}>{firstRun?'Draw a pass to the open teammate.':`${totalStars} ★ collected`}</p></div>
+     <button type="button" className={styles.chip} onClick={()=>setBoardsOpen(true)} aria-label={`Leaderboard, ${boardStars(progress.stars)} stars`} data-boards><Icon name="chart" size={20}/></button>
+     <button type="button" className={styles.chip} onClick={()=>setMenu('settings')} aria-label="Settings: team size and heading" data-settings data-unset={progress.format===undefined||undefined}><Icon name="settings" size={20}/></button></div>
+    {entry.message&&<p role="status" className={styles.menuNote}>{entry.message}</p>}
+    {continueLevel&&<button className={`${arcade.primary} ${styles.playBig}`} data-play disabled={entry.pending} onClick={quickPlay}><Icon name="play" size={26}/><span><b>Play</b><small>{packInfo(continueLevel.pack)?.title} · {continueNumber}. {levelTitle(continueLevel)}</small></span></button>}
+    <button className={styles.daily} data-daily onClick={openDaily}><Icon name="clock" size={18}/><b>Daily puzzle</b><em>{[0,1,2].map(n=>star(n<(progress.stars[dailyId]??0),n))}</em></button>
+    {/* The pack map: each pack opens with stars earned anywhere (skill unlocks, never coins). */}
+    <ol className={styles.packMap} role="group" aria-label="Puzzle packs">{PACKS.map((p,i)=>{const list=packs.find(([id])=>id===p.id)?.[1]??[],got=list.reduce((n,s)=>n+(progress.stars[s.id]??0),0),open=packGateOpen(p,totalStars);
+     return <li key={p.id} data-open={open} data-done={got===list.length*3||undefined} data-current={continueLevel?.pack===p.id||undefined}><button data-pack={p.id} aria-label={`${p.title}, ${open?`${got} of ${list.length*3} stars`:`locked, needs ${p.gate} stars`}`} onClick={()=>openPack(p.id)}><b>{open?i+1:'🔒'}</b><span>{p.title}</span><small>{open?`${got}/${list.length*3} ★`:`${p.gate} ★`}</small></button></li>;})}</ol>
+   </>}
+   {menu==='pack'&&packs.filter(([pack])=>pack===packId).map(([pack,list])=>{const info=packInfo(pack),open=!info||packGateOpen(info,totalStars);return <div key={pack} className={styles.pack}>
+    <div className={styles.sheetHead}><button type="button" className={styles.chip} onClick={()=>setMenu('home')} aria-label="Back to all packs"><Icon name="back" size={20}/></button><h4>{info?.title??pack}</h4><small>{list.reduce((n,s)=>n+(progress.stars[s.id]??0),0)}/{list.length*3} ★</small></div>
+    {info?.blurb&&<p className={styles.blurb}>{pack==='in-the-air'&&!heading?YOUTH_PACK_BLURB:info.blurb}</p>}{!open&&<p className={styles.gate} role="status">Earn {info!.gate-totalStars} more ★ to open this pack.</p>}<div className={styles.grid}>
+    {list.map((s,i)=>{const lvl=open&&unlocked(s,list),got=progress.stars[s.id]??0,title=levelTitle(s),d=pips(s.id);return <button key={s.id} className={styles.level} disabled={!lvl} onClick={()=>openLevel(s)} data-level={s.id} aria-label={`${i+1}. ${title}${lvl?`, ${got} of 3 stars, difficulty ${d} of 3`:', locked'}`}><b>{i+1}</b><span>{title}</span><em>{[0,1,2].map(n=>star(n<got,n))}<i className={styles.pips} data-pips={d} aria-hidden="true">{'●'.repeat(d)}{'○'.repeat(3-d)}</i></em></button>;})}
    </div></div>;})}
-   <small>{totalStars} stars collected · saved on this device</small>
+   {menu==='settings'&&<div className={styles.settings} data-settings-sheet>
+    <div className={styles.sheetHead}><button type="button" className={styles.chip} onClick={()=>setMenu('home')} aria-label="Close settings"><Icon name="back" size={20}/></button><h4>Settings</h4></div>
+    {progress.format===undefined&&<p className={styles.ask} data-ask-once>How do you play? Pick once, we remember.</p>}
+    <fieldset className={styles.seg} data-format-choice><legend>Team size</legend><div>{FORMATS.map(f=><button key={f} type="button" aria-pressed={format===f} onClick={()=>chooseFormat(f)}>{f}</button>)}</div><p>Changes the coach’s words, not the difficulty.</p></fieldset>
+    <fieldset className={styles.seg} data-heading-choice><legend>Heading</legend><div>{[false,true].map(on=><button key={String(on)} type="button" aria-pressed={heading===on} onClick={()=>chooseHeading(on)}>{on?'Heading on':'No heading'}<small>{on?'11+':'10 & under'}</small></button>)}</div><p>US youth rule: no heading at 10 and under. Off = crosses are chested down.</p></fieldset>
+    <button className={`${arcade.primary} ${styles.done}`} onClick={saveSettings}>Done</button>
+   </div>}
   </section></div>}
 
   {view==='brief'&&level&&<div className={`${arcade.overlay} ${styles.lowOverlay}`}><section className={arcade.card}>
    <span className={arcade.badge}>{format.toUpperCase()} BRIEF · {level.require.minPasses} PASS{level.require.minPasses===1?'':'ES'} IN THE ROUTE</span><h3>{level.title}</h3>{modifiers(level).length>0&&<ul className={styles.modifiers} data-inline>{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}<p>{briefText}</p>{level.require.finish==='goal'&&<p className={styles.directHint}>See a clear shooting lane? You can also score directly from the opening ball.</p>}
    {showHint?<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>:<button className={`${arcade.exit} ${styles.briefHint}`} onClick={()=>setShowHint(true)}>Show a hint</button>}
    <ul className={styles.goals} aria-label="Star goals">{goals(level).map((g,i)=><li key={g} data-on={!!((progress.masks?.[level.id]??0)&1<<i)}>{g}</li>)}</ul>
-   <p className={styles.coinNote}>Free to play · a first solve earns 5 coins, plus 1 per new best star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>setView('levels')}>All puzzles</button>
+   <p className={styles.coinNote}>Free to play · a first solve earns 5 coins, plus 1 per new best star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>{setMenu('pack');setView('levels');}}>All puzzles</button>
    {(level.pack==='first-passes'||totalStars<6)&&<small>Drag to a teammate or open grass, then release. Curve your line to bend the pass. Hold the tip to lift it. Red rings warn of defenders.</small>}
   </section></div>}
 
@@ -382,11 +405,11 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}{/* the level's hint teaches the move, so it stays for move failures; a missed finish keeps just its specific fix */}{(!outcome.fix||outcome.reason==='intercept'||outcome.reason==='too-few-passes')&&<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>}</>}
    {outcome.success&&next&&'locked' in next&&<p className={styles.nextNote} role="status" data-next-locked>Next up: <b>{next.locked.title}</b>. Earn {next.need} more ★ to open it. Replay a puzzle for its missing stars.</p>}
    {outcome.success&&next&&'scenario' in next&&next.newPack&&<p className={styles.nextNote} data-next-pack>Pack complete! Next up: <b>{packInfo(next.scenario.pack)?.title}</b>.</p>}
-   {outcome.success?(nextLevel?<button className={`${arcade.primary} ${styles.go}`} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)setPackId(next.locked.id);setView('levels');}}>All puzzles</button>)
+   {outcome.success?(nextLevel?<button className={`${arcade.primary} ${styles.go}`} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)openPack(next.locked.id);else setMenu('home');setView('levels');}}>All puzzles</button>)
     :<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={retry}>{outcome.attemptsLeft>0?'Try again':'Start over'}</button>}
    {!outcome.success&&rewindPoint.current&&!rewound.current&&<><button className={styles.rewind} onClick={rewindPass}>Rewind last pass</button><small className={styles.rewindNote}>Try a different angle from that moment. One rewind per try.</small></>}
    <div className={styles.row}><button className={`pixel-btn ${styles.secondary}`} onClick={watchAgain}><Icon name="play" size={16}/> Watch again</button>{!outcome.success&&!spotHint&&outcome.attemptsLeft>0&&<button className={`pixel-btn ${styles.secondary}`} data-spot-hint onClick={()=>{setShowHint(true);setSpotHint(true);}}><Icon name="target" size={16}/> Show me where</button>}{(outcome.success||outcome.attemptsLeft===0)&&<button className={`pixel-btn ${styles.secondary}`} onClick={watchCoach}><Icon name="book" size={16}/> Coach’s route</button>}{outcome.success&&<button className={`pixel-btn ${styles.secondary}`} disabled={entry.pending} onClick={retry}><Icon name="reset" size={16}/> Replay level · free</button>}</div>
-   {entry.message&&view==='result'&&<p role="status">{entry.message}</p>}<button className={arcade.exit} onClick={()=>setView('levels')}>All puzzles</button>
+   {entry.message&&view==='result'&&<p role="status">{entry.message}</p>}<button className={arcade.exit} onClick={()=>{setMenu('home');setView('levels');}}>All puzzles</button>
   </section></div>}
 
   {error&&<div className={arcade.overlay}><section className={arcade.card}><span className={arcade.badge}>TAKE A BREATHER</span><h3>The pitch couldn’t load.</h3><p>Return to the arcade and try again.</p><button className={arcade.exit} onClick={onExit}>Back to arcade</button></section></div>}
