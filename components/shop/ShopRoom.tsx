@@ -10,7 +10,7 @@ import {BallStudio,BootStudio,JerseyStudio,type StudioProps} from './studios';
 import {useModalFocus} from '@/lib/konbini/useModalFocus';
 import {useArcadeWallet,spendArcadeCoins} from '@/lib/arcade/arcadeWallet';
 import {refreshShopDeparture,SHOP_RETURN_URL} from '@/lib/shop/shopDoors';
-import {buyDesign,loadOwned,writeOwned,KIND_LABEL,SHOP_KINDS,SHOP_OWNED_KEY,type OwnedItem,type ShopKind,type ShopOwned} from '@/lib/shop/shopPurchases';
+import {buyDesign,ownsDesign,loadOwned,writeOwned,KIND_LABEL,SHOP_KINDS,SHOP_OWNED_KEY,type OwnedItem,type ShopKind,type ShopOwned} from '@/lib/shop/shopPurchases';
 import {jerseyPrice,validateJersey,JERSEY_BASE_PRICE,type JerseyDesign} from '@/lib/shop/jersey';
 import {bootPrice,validateBoots,PRICE as BOOT_PRICE,type BootDesign} from '@/lib/shop/boots';
 import {ballPrice,validateBall,PRICE as BALL_PRICE} from '@/lib/shop/ball';
@@ -153,6 +153,8 @@ export default function ShopRoom(){
    say({tone:'ok',text:result.already?`You already own ${kind==='boots'?'these boots':`this ${KIND_LABEL[kind].toLowerCase()}`}. ${kind==='boots'?'They’re':'It’s'} your pick again.`:`Bought for ${price} coins! Find it in My kit.`});
   }finally{buying.current=false;}
  },[say]);
+ /** Is this studio design already in My kit? Validated the same way buy() prices it, so the hash matches the purchase id. */
+ const ownsOwned=(kind:ShopKind,raw:unknown)=>{try{const d=kind==='jersey'?validateJersey(raw).design:kind==='boots'?validateBoots(raw):validateBall(raw);return ownsDesign(owned,kind,d);}catch{return false;}};
  const wear=(item:OwnedItem)=>{const next={...owned,wearing:{...owned.wearing,[item.kind]:item.id}};writeOwned(next);setOwned(next);};
 
  const Studio=studio?STUDIO[studio]:null,kind=studio?STATIONS.find(s=>s.id===studio)!.kind:null;
@@ -184,7 +186,7 @@ export default function ShopRoom(){
   {!covered&&ready&&hint&&!greeting&&<p className={styles.hint} aria-hidden="true"><span className={styles.hintDesk}>Walk with WASD or the arrow keys · E to design</span><span className={styles.hintTouch}>Walk with the stick · tap a wall or a person</span></p>}
   {!covered&&!leaving&&<div className="touch-controls"><div className="joystick" data-edge="false" ref={joy} draggable={false} onDragStart={e=>e.preventDefault()} onContextMenu={e=>e.preventDefault()} role="group" aria-label="Move around the Kit Shop" data-shop-joystick
    onPointerDown={e=>{if(pointer.current!==null||!ready)return;e.preventDefault();pointer.current=e.pointerId;joyRect.current=null;e.currentTarget.setPointerCapture(e.pointerId);move(e);}} onPointerMove={move} onPointerUp={stop} onPointerCancel={stop} onLostPointerCapture={stop}><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span aria-hidden="true"/></div></div>}
-  {Studio&&kind&&<div className={styles.studio} data-shop-studio={studio}><Studio onClose={closeStudio} onBuy={d=>{void buy(kind,d);}}/></div>}
+  {Studio&&kind&&<div className={styles.studio} data-shop-studio={studio}><Studio onClose={closeStudio} onBuy={d=>{void buy(kind,d);}} owned={d=>ownsOwned(kind,d)}/></div>}
   {myKit&&<MyKit owned={owned} onWear={wear} onClose={()=>setMyKit(false)}/>}
   <NpcConversation npc={talking??lastTalk.current} open={!!talking} onOpenChange={o=>{if(!o)setTalking(null);}} practice={false} actions={clerkActions}/>
   {toast&&<p className={styles.toast} data-tone={toast.tone} role="status" data-shop-toast>{toast.text}</p>}
