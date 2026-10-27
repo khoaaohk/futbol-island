@@ -63,7 +63,7 @@ export default function ArcadeGame3D({kind,onExit}:{kind:ArcadeKind;onExit:()=>v
  const [touchDevice,setTouchDevice]=useState(false);
  useEffect(()=>{setTouchDevice(matchMedia('(pointer:coarse)').matches);},[]);
  // Breakaway Run plays sideways on phones like Strikers (owner, Oct 27 2026); RotateLock asks upright phones to turn.
- useEffect(()=>kind==='runner'||kind==='tennis'?requestLandscape():undefined,[kind]);
+ useEffect(()=>kind==='runner'?requestLandscape():undefined,[kind]);
  const touchHelp={tennis:'Left thumb: move. Right thumb: tap Kick, Lob or Drop for a normal shot, or HOLD to wind up and let go as the ring turns gold for a sweet strike (too long = overhit). Push the stick as you let go to place it: sideways for the open space, up = deeper, down = shorter. 5 perfect touches = a Golden Touch.',pinball:'Hold Launch, then let go. Tap the left or right half of the screen to kick with that flipper. Strike as the ball reaches the ring. Nudge rescues a falling ball.',runner:'Left thumb: push the stick (or swipe) to change lanes. Tap Shoot for a quick kick. Hold and release for a power blast. Jump then Shoot for an aerial volley, or Slide past defenders. The Skill button names the move that beats the defender ahead: tap it when they are close. Shoot beside a teammate for a one-two.'}[kind];
  // Futbol Tennis hold-to-power (Oct 26 2026): one held shot at a time (finger, mouse or key). The sim owns the
  // charge level; this layer paints the button ring, plays the wind-up voice + haptics, and releases or cancels.

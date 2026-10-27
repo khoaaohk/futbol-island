@@ -34,8 +34,8 @@ assert.match(live,/useEffect\(\(\)=>requestLandscape\(\),\[\]\);/,'Strikers asks
 assert.match(live,/addEventListener\('blur',blur\)/,'the wrong-orientation card pauses Strikers (blur)');
 assert.match(live,/addEventListener\('orientationchange',release\)/,'turning the phone lets go of held thumbs');
 const users=require('node:child_process').execSync("grep -rl 'requestLandscape' components app lib",{cwd:root,encoding:'utf8'}).trim().split('\n').sort();
-// Oct 27 2026: Futbol Tennis and Breakaway Run (ArcadeGame3D, kind-gated) also play sideways; tests/tennis-landscape-clean.cjs and breakaway-clean-ui-oct27.cjs pin them.
-assert.deepEqual(users,['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'],'only Strikers, Tennis and Breakaway change orientation');
+// Oct 27 2026: Breakaway Run (ArcadeGame3D, kind==='runner' only) also plays sideways (tests/breakaway-clean-ui-oct27.cjs); Tennis stays portrait.
+assert.deepEqual(users,['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'],'only Strikers and Breakaway change orientation');
 // The landscape camera: a .9-wide fit (clear of notch insets), lifted so the goal mouths clear the corner controls.
 const scene=read('lib/arcade/strikerScene.ts');
 assert.match(scene,/const LANDSCAPE_LIFT=\.16,LANDSCAPE_X=\.9,LANDSCAPE_PAN=\.4;/);

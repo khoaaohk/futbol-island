@@ -13,27 +13,15 @@ function load(file){file=path.resolve(root,file);if(cache.has(file))return cache
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:1,target:7}}).outputText,{exports:m.exports,module:m,Math,Number,JSON,Array,Object,String,Float32Array,Float64Array,Set,Map,WeakMap,Proxy,Promise,console,document,localStorage,screen,navigator:{vibrate:()=>true},performance,matchMedia:()=>({matches:false}),
   require:id=>stubs[id]??(id.startsWith('.')||id.startsWith('@/')?load(resolve(file,id)):require(id))});return m.exports;}
 
-// 1. Landscape requested: the tennis kind asks while mounted (and releases on unmount); the other 3D games stay portrait.
+// 1. Tennis stays PORTRAIT (owner, Oct 27 2026: "football tennis should not play horizontal"): it never asks for landscape; only Breakaway does.
 const game3d=read('components/games/ArcadeGame3D.tsx');
-assert.match(game3d,/import \{requestLandscape\} from '@\/lib\/orientationMode';/);
-assert.match(game3d,/useEffect\(\(\)=>kind==='runner'\|\|kind==='tennis'\?requestLandscape\(\):undefined,\[kind\]\);/,'only the tennis kind asks for landscape; the cleanup releases it');
-const orient=load('lib/orientationMode.ts');
-assert.equal(orient.getOrientationMode(),'portrait');
-const releaseTennis=orient.requestLandscape();
-assert.equal(orient.getOrientationMode(),'landscape','tennis mounted: landscape');assert.equal(dataset.orientation,'landscape');assert.equal(locks.at(-1),'landscape');
-assert.equal(orient.wrongOrientationQuery('landscape'),orient.LANDSCAPE_ONLY_QUERY,'upright phones get RotateLock "Turn your phone sideways"');
-releaseTennis();assert.equal(orient.getOrientationMode(),'portrait','leaving tennis restores portrait-only');assert.equal(dataset.orientation,undefined);
-// The game pauses on the RotateLock blur, like Strikers.
-assert.match(game3d,/window\.addEventListener\('blur',pause\)/);
-// CSS: sideways phone layout + the 4:3 frame for tall windows (same queries as Strikers), clean-court hides.
+assert.match(game3d,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefined,\[kind\]\);/,'only the runner kind asks for landscape');
+assert.doesNotMatch(game3d,/kind==='tennis'\?requestLandscape/,'tennis does not ask for landscape');
 const css=read('components/games/ArcadeGame3D.module.css');
-assert.match(css,/@media\(pointer:coarse\) and \(orientation:landscape\) and \(max-height:500px\)\{\n \.game\[data-arcade-kind=tennis\]/,'sideways phone thumb layout');
-const frame=css.indexOf('@media(pointer:fine) and (orientation:portrait),(pointer:coarse) and (orientation:portrait) and (min-width:501px){\n .game[data-arcade-kind=tennis]{');
-assert(frame>0,'tall windows letterbox a landscape frame');
-assert.match(css.slice(frame,frame+600),/height:75vw;max-height:100dvh;margin-top:max\(0px,calc\(50dvh - 37\.5vw\)\)/,'a centred 4:3 frame');
+assert.doesNotMatch(css,/Sideways phones: stick on the left thumb/,'no sideways tennis layout');
+assert.doesNotMatch(css,/height:75vw;max-height:100dvh[^}]*\n[^}]*tennis|tennis\]\{isolation:isolate;height:75vw/,'no 4:3 tennis frame');
 assert.match(css,/\.game\[data-arcade-kind=tennis\] \.headerScore span,\.game\[data-arcade-kind=tennis\] \.message,\.game\[data-arcade-kind=tennis\] \[data-tennis-chips\]\{display:none\}/,'no tips, captions or chips over the court');
-// Pinball and runner never ask for landscape (only the tennis branch does).
-assert.equal((game3d.match(/requestLandscape\(/g)||[]).length,1);
+assert.match(game3d,/window\.addEventListener\('blur',pause\)/);
 
 // 2. No crowd in the tennis scene, on desktop or phone (fewer draws): only paint, floodlights, two pools and confetti.
 const arenaSrc=read('lib/arcade/tennisArena.ts');
@@ -71,4 +59,4 @@ const node=(x={})=>({connect(){},disconnect(){},...x}),ac={state:'running',curre
  createOscillator(){made++;return node({type:'',frequency:param(),start(){},stop(){}});},createBufferSource(){made+=100;return node({buffer:null,start(){},stop(){}});},
  createGain:()=>node({gain:param()}),createBiquadFilter:()=>node({type:'',Q:{value:0},frequency:param()}),createBuffer:(c,n)=>({getChannelData:()=>new Float32Array(n)})};
 for(const cue of['tennis:match:you:12','tennis:point:rival:3','tennis:matchpoint:you','tennis:tire']){made=0;audio.tennisSound(ac,cue);assert(made<100,`${cue}: no crowd noise layer`);}
-console.log('PASS tennis landscape + clean court: landscape requested (Strikers path), no crowd meshes or crowd sounds, only the point line over the court');
+console.log('PASS tennis clean court: stays portrait, no crowd meshes or crowd sounds, only the point line over the court');
