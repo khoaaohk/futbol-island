@@ -113,6 +113,12 @@ export function dartBend(t:number){
 }
 /** The proximity tick (s): the water probe's own rate. */
 export const RIDE_TICK=1/WATER_PROBE_HZ;
+/** The longest step any ride movement takes (s): the ride, the dart and the swim back (QA audit 4 #5, Oct 26 2026: a stalled page
+ *  once moved the whale shark and its rider ~80 m in one frame). The host steps at a fixed 1/60 s tick, so this never slows a
+ *  normal frame; a paused / resumed / throttled frame (or a host handing over its wall-clock gap) moves at most this much time's
+ *  worth (whale ~.4 m), never a jump. */
+export const RIDE_DT_MAX=.05;
+const rideDt=(dt:number)=>dt>0?Math.min(dt,RIDE_DT_MAX):0;// NaN / negative / Infinity-safe
 /** Oct 24 2026 (user: "it was able to ride it to shore and it was hidden in the sand a bit ... before the head of the whale hits the
  *  sand, do something that kicks the character off"): the animal's body from its centre (m: nose `bow` ahead, tail `tail` behind,
  *  half width `side`; RIDE_WAKE_AT's snout / pectorals) and the clear water it keeps from land (`margin`, m: the shelf is
@@ -209,7 +215,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
  /** The swim back (free pose chasing a fixed loop point), then the settle blend; a few scalars, no allocation. */
  function retStep(dt:number){
   const f=state.ret;if(!f)return;if(!f.available||f.ridden){endRet();return;}
-  dt=Math.max(0,Math.min(dt,.25));f.bank*=Math.exp(-dt*4);
+  dt=rideDt(dt);f.bank*=Math.exp(-dt*4);
   if(state.retSettle>=0){
    const t=state.retSettle+=dt,k=Math.min(1,t/RET_SETTLE),e=1-k*k*(3-2*k);
    f.bend=state.retBend*e;f.bendYaw=state.retYaw*e;f.boost=1+(state.retBoost-1)*e;state.dartWake+=dt;if(k>=1)endRet();return;
@@ -230,6 +236,9 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
      if(state.shoreT<=0)state.shoreSide=openSide(f,land);state.shoreT=RIDE_SHORE_T;
      // This frame's turn would swing the body (the tail, a flank) into the margin: hold the heading and turn the other way.
      if(hullLand(f,f.fyaw,0,land)&&!hullLand(f,y0,0,land)){f.fyaw=y0;state.shoreSide=-state.shoreSide;}
+     // Already inside the margin both ways (stopped, turning on the spot): re-read the open side every probe, so a turn that
+     // started towards the land (a headland's curve) swings back out instead of sweeping the nose onto the sand.
+     else if(hullLand(f,f.fyaw,0,land)){const s=openSide(f,land);if(s!==state.shoreSide){state.shoreSide=s;f.fyaw=y0;}}
      sp=hullLand(f,f.fyaw,0,land)?0:Math.min(sp,Math.max(2,f.speed*RIDE_SHORE_V));state.hullBudget=sp>0&&!hullLand(f,f.fyaw,sp*RIDE_TICK,land)?sp*RIDE_TICK:0;
     }else state.hullBudget=look;
     state.hullAcc=0;state.hullYaw=f.fyaw;
@@ -239,8 +248,9 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   f.fx+=Math.sin(f.fyaw)*sp*dt;f.fz+=Math.cos(f.fyaw)*sp*dt;f.dx=f.fx;f.dz=f.fz;f.dyaw=f.fyaw;f.boost=sp/(f.speed||1);state.dartWake+=dt;
   if(dist<RET_CATCH||t>20){
    // Caught: take over as the loop's own, with the leftover offset (bend) and heading difference blended away.
-   const rx=f.fx-p.x,rz=f.fz-p.z,ts=Math.sin(p.yaw),tc=Math.cos(p.yaw);
-   f.u=((f.u+rx*ts+rz*tc)%f.total+f.total)%f.total;loopPoint(f.points,f.lengths,f.total,f.u,p);
+   // The loop point NEAREST the animal (QA audit 4 #5): its offset is all sideways (bend), so the hand-over draws the animal exactly
+   // where it is even after the 20 s give-up far off the loop (the old along-track projection jumped on a curved loop).
+   f.u=nearestLoopU(f.points,f.lengths,f.fx,f.fz);loopPoint(f.points,f.lengths,f.total,f.u,p);
    state.retBend=(f.fx-p.x)*Math.cos(p.yaw)-(f.fz-p.z)*Math.sin(p.yaw);state.retYaw=wrap(f.fyaw-p.yaw);state.retBoost=Math.min(DART_MULT,Math.max(1,f.boost));
    f.free=false;f.bank=0;f.bend=state.retBend;f.bendYaw=state.retYaw;state.retSettle=0;
   }
@@ -274,7 +284,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   step(dt:number,pos:{x:number;z:number},vel:{x:number;z:number},inp:{x:number;z:number},ok:(x:number,z:number)=>boolean,clearance:number,land?:(x:number,z:number)=>boolean){
    clear();const f=state.riding;if(!f)return events;
    if(!f.available)return end('gone');// thinned out by a heat tier, or its island was left behind (a map trip): let go
-   dt=Math.max(0,Math.min(dt,.25));// the water step's own clamp: a slow frame still covers its distance
+   dt=rideDt(dt);// RIDE_DT_MAX: a stalled / resumed frame never teleports the rider or the animal
    state.rideT+=dt;state.px=f.fx;state.pz=f.fz;state.pyaw=f.fyaw;state.glideT+=dt;
    // Steer: the turn rate follows the stick's bearing, limited, and eased (smooth heading).
    const len=Math.hypot(inp.x,inp.z),has=len>.15;
@@ -308,7 +318,7 @@ export function createAnimalRides(friends:()=>readonly RideFriend[]){
   dartStep(dt:number){
    if(state.ret){retStep(dt);return;}
    const f=state.dart;if(!f)return;if(!f.available||f.ridden){endDart();return;}
-   dt=Math.max(0,Math.min(dt,.25));const t0=state.dartT,t=state.dartT=t0+dt;if(t>=DART_TIME){endDart();return;}
+   dt=rideDt(dt);const t0=state.dartT,t=state.dartT=t0+dt;if(t>=DART_TIME){endDart();return;}
    const speed=dartSpeed(t,state.dartStart,state.dartPeak,f.speed),B=DART_BEND[f.kind]*state.dartSide,bend=B*dartBend(t);
    f.boost=speed/(f.speed||1);f.bendYaw=dt>0?Math.atan2((bend-B*dartBend(t0))/dt,speed):0;f.bend=bend;state.dartWake+=dt;
   },

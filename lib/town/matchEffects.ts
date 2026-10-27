@@ -20,7 +20,7 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
  let lastGold=0,lastBlue=0,celebration=9,lastPasses=0,lastShots=0,lastTurnovers=0,sequence=0,lastCombo=0,lastNote=0,lastSwitches=0,lastOffside=0;
  // The goal-mouth ring sits on the scoring end: along the pitch's long axis, turned with the venue (the beach court runs east–west).
  const yaw=venue.yaw??0,endX=Math.sin(yaw)*venue.length/2,endZ=Math.cos(yaw)*venue.length/2;
- const events:MatchEvent[]=[];const announce=(sim:MatchSim,text:string)=>{events.push({id:++sequence,time:sim.stats.time,text});if(events.length>80)events.shift();};
+ const events:MatchEvent[]=[];const announce=(sim:MatchSim,text:string)=>{events.push({id:++sequence,time:sim.matchTime,text});if(events.length>80)events.shift();};
  const stats={passes:0,shots:0,goals:0,trailVertices:0};
  const ringGeometry=new T.RingGeometry(.85,1,40),ringMaterial=new T.MeshBasicMaterial({color:'#efbb54',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide,toneMapped:false});
  const rings=[new T.Mesh(ringGeometry,ringMaterial),new T.Mesh(ringGeometry,ringMaterial.clone())];rings.forEach(r=>{r.rotation.x=-Math.PI/2;root.add(r);});

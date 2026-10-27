@@ -87,7 +87,7 @@ ok('shore stop: land ahead brakes it to a stop (turning still works), the shallo
  for(let i=0;i<120;i++)rides.step(1/60,pos,vel,{x:-1,z:0},ok2,50);assert(Math.hypot(vel.x,vel.z)>2,'turned away and swims off again');
  assert.equal(rides.step(1/60,pos,vel,STICK,ok2,R.RIDE_SHORE_D-.1).ended,'shore','clearance under the swim depth ends the ride');
  const g=circleFriend('manta'),r2=R.createAnimalRides(()=>[g]),p2={x:32.6,z:0};r2.scan(.2,p2.x,p2.z,true);r2.grab(1);let ended='',t=0;
- while(!ended&&t<200){ended=r2.step(.1,p2,vel,{x:Math.sin(g.fyaw),z:Math.cos(g.fyaw)},OPEN,50).ended;t+=.1;if(g.fx*g.fx>1e12)break;}
+ while(!ended&&t<200){ended=r2.step(R.RIDE_DT_MAX,p2,vel,{x:Math.sin(g.fyaw),z:Math.cos(g.fyaw)},OPEN,50).ended;t+=R.RIDE_DT_MAX;if(g.fx*g.fx>1e12)break;}
  assert.equal(ended,'time');near(t,R.RIDE_MAX_TIME,.2,'the ~90 s cap');assert.equal(g.ridden,false);
 });
 
