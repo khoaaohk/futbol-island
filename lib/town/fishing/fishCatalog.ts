@@ -13,7 +13,7 @@ import {SPECIAL_FISH} from './fishSpecials';
 import {DEEP_SEA_FISH} from './deepSeaFish';
 import {NIGHT_FISH} from './nightFish';
 import {LEGEND_FISH} from './legendary';
-import {BOAT_DECK_Y,BOAT_SPOT_IDS,DEEP_SEA_BOATS} from './deepSeaBoatData';
+import {BOAT_SPOT_IDS,DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {EAST_PIER_FISHING} from '../eastPier';
 import {beachPoint} from '../summitIsle';
 export type FishId=string;
@@ -209,7 +209,7 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  // rise from the deep (DEEP_BITE_DELAY), so coins per minute stay close to the shore's (docs/economy.md, tests/economy.cjs).
  ...DEEP_SEA_BOATS.map((b,i)=>({id:b.spotId,name:i?'Summit Deep Boat':'Deep Sea Boat',deep:true,x:b.stand.x,z:b.stand.z,buoy:{x:b.buoy.x,z:b.buoy.z},
   reef:i?'abyss-green':'blue-abyss',weights:{},story:i?'A second little fishing boat, moored in the deep channel west of Summit Isle. Green, deep water where tuna, sailfish and marlin hunt the bait balls.':'A little fishing boat moored far out in the deep blue bay, north of the East Jetty. Squid, marlin and stranger things swim far below.',
-  camera:{lift:1.6,out:4,look:.5},boat:{floor:BOAT_DECK_Y,prompt:b.prompt},shallowFactor:.5,rarityBoost:DEEP_BOOST,biteDelay:DEEP_BITE_DELAY}) as FishSpot&{id:SpotId}),
+  camera:{lift:1.6,out:4,look:.5},boat:{floor:b.deckY,prompt:b.prompt},shallowFactor:.5,rarityBoost:DEEP_BOOST,biteDelay:DEEP_BITE_DELAY}) as FishSpot&{id:SpotId}),
  // East Jetty (Sep 29 2026 as the East Pier; spiral jetty Sep 30, lib/town/eastPier.ts): the outer east curve of the spiral off the farmers market. No specials of its
  // own: a table between the shore and the deep sea, built from species already in the game (the four shared commons, herring,
  // cod and haddock, plus the odd tuna or octopus that swims in from deeper water). Mean catch ≈ 4.05 coins (shore ≈ 4.0).

@@ -221,7 +221,7 @@ for(const f of ['lib/town/fishing/fishingOverlay.ts','lib/town/fishing/deepSeaBo
  const boat=src('lib/town/fishing/deepSeaBoat.ts');
  ok(/let bob=riding\|\|d<BOB_RANGE/.test(boat)&&/frustum\.intersectsSphere/.test(boat)&&/boatSettled\(ride\)/.test(boat),'the boat moves only near and on screen (or while fished from), and sleeps once settled');
  ok(/fw\.y=\$\{WATERLINE_Y/.test(boat)&&/foam>\.5/.test(boat),'the foam collar is pinned to the sea in the vertex shader (no new draw)');
- ok(/deck\.height=BOAT_DECK_Y\+m\.heave/.test(boat),'the deck floor (and the angler on it) rides the heave');
+ ok(/deck\.height=deckY\+m\.heave/.test(boat),'the deck floor (and the angler on it) rides the heave');
  const world=src('lib/town/fishing/fishingWorld.ts');ok(/liveBoat\(\)\?\.kick\(\)/.test(world)&&/liveBoat\(\)\?\.lean\(/.test(world)&&/cam\.ride\(liveBoat\(\)\?\.motion\.heave\?\?0\)/.test(world),'a cast rocks it, a run leans it, the camera rides along');}
 
 // ---- 6. Oct 15 2026 (user): see-through reel + spin trail, the float takes the lure's colour live, the Easy reel is gone ----

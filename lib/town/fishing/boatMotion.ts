@@ -27,12 +27,13 @@ export const createBoatRide=():BoatRide=>({rollKick:0,rollV:0,lean:0,tug:0,mix:0
  * One step. `t` the shared water clock (s), `seed` a per-boat phase, `fishing` the player fishes on this boat, `lean` the
  * fight's pull (-1..1, a run) and `kick` a cast this frame. Returns the pose to apply (heave in m, angles in radians).
  */
-export function stepBoatMotion(r:BoatRide,dt:number,t:number,seed:number,o:{fishing:boolean;reduced:boolean;lean?:number;kick?:boolean}):BoatMotion{
+export function stepBoatMotion(r:BoatRide,dt:number,t:number,seed:number,o:{fishing:boolean;reduced:boolean;lean?:number;kick?:boolean;swell?:number}):BoatMotion{
  const step=Math.max(0,Math.min(dt,.05));
  // Ease between the idle and the fishing swell (no jump when a session starts or ends).
  r.mix+=((o.fishing?1:0)-r.mix)*Math.min(1,step*1.2);
  if(o.reduced){r.rollKick=r.rollV=r.lean=r.tug=0;const a=BOAT_SWELL.reduced;return {heave:Math.sin((t/SWELL_P+seed)*Math.PI*2)*a.heave,pitch:0,roll:0,yaw:0};}
- const A=BOAT_SWELL.idle,B=BOAT_SWELL.fishing,k=r.mix,heaveA=A.heave+(B.heave-A.heave)*k,pitchA=A.pitch+(B.pitch-A.pitch)*k,rollA=A.roll+(B.roll-A.roll)*k;
+ // `swell`: the boat's own size factor (BoatLook.swell, a smaller boat rides a little livelier); the limits below still clamp.
+ const A=BOAT_SWELL.idle,B=BOAT_SWELL.fishing,k=r.mix,sw=o.swell??1,heaveA=(A.heave+(B.heave-A.heave)*k)*sw,pitchA=(A.pitch+(B.pitch-A.pitch)*k)*sw,rollA=(A.roll+(B.roll-A.roll)*k)*sw;
  const ph=(t/SWELL_P+seed)*Math.PI*2,chop=Math.sin(ph*2.3+1.1)*.15;
  if(o.kick&&o.fishing)r.rollV+=CAST_ROCK*ROCK_SPRING*.55;
  // The cast's rock: a damped spring on the roll (settles in about two seconds).

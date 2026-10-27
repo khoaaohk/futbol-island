@@ -367,8 +367,8 @@ assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.co
   const bow=b.toWorld(1,0),star=b.toWorld(0,1);assert(bow.z<m.z-.99&&star.x>m.x+.99,`${id}: bow north, you cast east`);
   assert(Math.hypot(boat.x-m.x,boat.z-m.z)<4,`${id}: the spot is on the boat`);
   const deck=b.deck;assert(deck.id===id&&deck.height<1.2&&deck.height>.4,`${id}: deck floor height counts as on foot`);
-  for(const [u,v] of [[-1,-1],[-1,1],[1,-1],[1,1]]){const c=b.toWorld(-2.4+u*deck.w/2,v*deck.d/2);assert(b.onHull(c.x,c.z)&&data.onBoatHull(c.x,c.z),`${id}: deck lies inside the hull`);}
-  {const sl=b.toLocal(boat.x,boat.z);assert(Math.abs(sl.x+2.4)<=deck.w/2&&Math.abs(sl.z)<=deck.d/2,`${id}: the fishing stand is on the deck`);}
+  for(const [u,v] of [[-1,-1],[-1,1],[1,-1],[1,1]]){const c=b.toWorld(b.standLocal.x+u*deck.w/2,v*deck.d/2);assert(b.onHull(c.x,c.z)&&data.onBoatHull(c.x,c.z),`${id}: deck lies inside the hull`);}
+  {const sl=b.toLocal(boat.x,boat.z);assert(Math.abs(sl.x-b.standLocal.x)<=deck.w/2&&Math.abs(sl.z)<=deck.d/2,`${id}: the fishing stand is on the deck`);}
   assert(!land.onLand(boat.x,boat.z),`${id}: no floor before the boat is built`);
   const off=decks.registerLandableDeck({...deck});assert(land.onLand(boat.x,boat.z)&&decks.landableDeckHeight(boat.x,boat.z)===deck.height,`${id}: registered deck is land at deck height`);off();
   // Float and shadows stay off the hull; the cast clears the rail (the fix earlier this week: a shoreless deep spot never throws).
@@ -395,7 +395,7 @@ assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.co
  {const book=fs.readFileSync(path.join(ROOT,'components/Fishbook.tsx'),'utf8');assert(/'Deep sea specials'/.test(book)&&/f\.deepSea\?'Deep sea · ':''/.test(book)&&/both deep-sea boats/.test(book),'Fishbook: a Deep sea specials section and a "Deep sea" tag');}
  // Heat: one shared merged boat mesh, no shadow casting, no timers or frame loops, built/dropped by distance, bob gated.
  const src=fs.readFileSync(path.join(ROOT,'lib/town/fishing/deepSeaBoat.ts'),'utf8');
- assert(/mergeGeometries\(parts\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1&&/let shared:/.test(src),'the boats share one merged mesh');
+ assert(/mergeGeometries\(parts\)/.test(src)&&(src.match(/new T\.Mesh\(/g)||[]).length===1&&/geometries\.get\(look\.key\)/.test(src)&&/let material:/.test(src),'one merged mesh per boat, one cached geometry per look, one shared material (tests/fishing-boat-variants.cjs)');
  assert(/castShadow=false/.test(src)&&!/requestAnimationFrame|setInterval|setTimeout/.test(src),'no shadow draw, no timers');
  assert(/BUILD_RANGE=\d+,DROP_RANGE=\d+,BOB_RANGE=\d+/.test(src)&&/frustum\.intersectsSphere/.test(src),'lazy build, bob only near and on screen');}
 
