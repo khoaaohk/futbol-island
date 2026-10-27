@@ -18,7 +18,8 @@ assert.match(ret,/data-arcade-pause onClick=\{onPause\} disabled=\{!canPause\} a
 assert.doesNotMatch(ret,/detail|tries|attempt/,'no second detail line');
 assert.match(bar,/pauseLabel='Pause game',resumeLabel='Resume game'/,'default aria labels as before');
 assert.match(barCss,/env\(safe-area-inset-top,0px\)/,'safe-area top inset');assert.match(barCss,/env\(safe-area-inset-left,0px\)/);assert.match(barCss,/env\(safe-area-inset-right,0px\)/);
-assert.match(barCss,/@media \(max-height:520px\)\{\n \.bar\.bar\{padding:calc\(6px/,'slim bar on short landscape');
+assert.match(barCss,/padding:calc\(var\(--arcade-edge-top,14px\) \+ env\(safe-area-inset-top,0px\)\) calc\(var\(--arcade-edge-x,18px\)/,'bar gutters from the arcade tokens');
+assert.match(barCss,/@media \(max-height:520px\)\{\n \.bar\.bar\{padding-bottom:4px\}/,'slim bar on short landscape (tokens step down to 6 / 16 px)');
 // The pause card: Paused, optional score, ONE big Resume, small Arcade (+ extra) + Restart row, keycaps on fine pointers only.
 assert.match(card,/<h2 className=\{styles\.title\}>Paused<\/h2>/);
 assert.equal((card.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');

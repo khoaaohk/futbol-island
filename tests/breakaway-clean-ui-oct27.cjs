@@ -28,7 +28,7 @@ assert.match(padCss,/@media \(pointer:fine\)\{\.zone,\.movement\.movement,\.clus
  assert.equal(runnerSteer(s,.4,1),0,'between off and on: keeps state, no step');assert.equal(runnerSteer(s,.1,1.1),0,'back to centre re-arms');
  assert.equal(runnerSteer(s,-.9,1.2),-1,'push left: one lane');assert.equal(runnerSteer(s,.9,1.25),1,'flick across: immediate');}
 // Cluster geometry: every button >= 64 px, no two overlap (centres are offsets from Shoot's centre).
-{const btn=n=>{const r=padCss.match(new RegExp(`\\.${n}\\.${n}\\{([^}]*)\\}`))[1];const v=k=>{const x=r.match(new RegExp(`--${k}:(-?\\d+)px`));return x?Number(x[1]):0;};return{n,d:v('d'),x:v('x'),y:v('y')};};
+{const R=require('./fixtures/arcadeTokens.cjs').resolve(padCss,'short');const btn=n=>{const r=R.match(new RegExp(`\\.${n}\\.${n}\\{([^}]*)\\}`))[1];const v=k=>{const x=r.match(new RegExp(`--${k}:(-?\\d+)px`));return x?Number(x[1]):0;};return{n,d:v('d'),x:v('x'),y:v('y')};};
  const all=['shoot','jump','slide','skill'].map(btn);for(const b of all)assert(b.d>=64,`${b.n} is ${b.d}px`);
  assert(all[0].d>=90&&all.every(b=>b.d<=all[0].d),'Shoot is the biggest');
  for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const a=all[i],b=all[j],gap=Math.hypot(a.x-b.x,a.y-b.y)-(a.d+b.d)/2;assert(gap>=12,`${a.n}/${b.n} gap ${gap.toFixed(1)}px`);}}
@@ -50,7 +50,7 @@ assert.match(game,/\{phase==='paused'&&!error&&<ArcadePauseCard game=\{kind\}[^>
 assert.match(pause,/<h2 className=\{styles\.title\}>Paused<\/h2>/);assert.equal((pause.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');
 assert.match(pause,/>Resume<\/button>/);assert.match(pause,/>Arcade<\/button>/);assert.match(pause,/onClick=\{onRestart\}[^>]*>Restart<\/button>/);
 assert.match(pauseCss,/@media \(pointer:coarse\)\{\.keys\.keys\{display:none\}\}/,'keycaps on desktop only');
-assert.match(pauseCss,/\.resume\.resume\{[^}]*min-height:56px/,'Resume is the big button');
+assert.match(pauseCss,/\.resume\.resume\{[^}]*min-height:var\(--arcade-primary-h,56px\)/,'Resume is the big button (56 px, 48 px sideways)');
 assert.match(game,/const restart=\(\)=>\{change\('ready'\);void start\(\);\};/,'Restart begins a fresh run');
 
 // 4. Landscape.

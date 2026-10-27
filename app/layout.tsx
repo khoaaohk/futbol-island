@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import '@/components/arcade/arcadeChrome.css';
 import ExternalLinkGate from '@/components/ExternalLinkGate';
 import RotateLock from "@/components/RotateLock";
 import VisitTracker from '@/components/VisitTracker';

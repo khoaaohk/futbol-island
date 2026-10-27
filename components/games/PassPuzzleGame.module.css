@@ -38,7 +38,7 @@
 
 /* Replay */
 .replayChip{position:absolute;top:84px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;background:#244b43;color:#fff3d9;font-size:12px;font-weight:700;letter-spacing:.06em;z-index:3}
-.skip{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:calc(22px + env(safe-area-inset-bottom));z-index:3}
+.skip{position:absolute;right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:calc(22px + env(safe-area-inset-bottom));z-index:3}
 
 @media(max-width:600px){.replayChip{top:77px}.stars{font-size:34px}}
 @media(max-height:520px){.lowOverlay{place-items:center}}
@@ -230,9 +230,9 @@
 }
 /* ── Round 3 (Oct 26): bigger in-game targets, Undo, counter clock, hint nudge, Expert tier, seasonal daily ── */
 .game .passModes button,.game .scanToggle{min-height:52px}
-.undo{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:calc(var(--pp-controls,214px) + env(safe-area-inset-bottom));z-index:3;display:grid;place-items:center;gap:0;width:64px;height:64px;padding:4px 0 2px;border:3px solid #76e4df;border-radius:20px;background:#24334b;color:#eff8ff;font:inherit;font-weight:800;font-size:11px;line-height:1;box-shadow:0 4px 0 #0c1424;cursor:pointer;touch-action:manipulation;pointer-events:auto}
+.undo{position:absolute;left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));bottom:calc(var(--pp-controls,214px) + env(safe-area-inset-bottom));z-index:3;display:grid;place-items:center;gap:0;width:64px;height:64px;padding:4px 0 2px;border:3px solid #76e4df;border-radius:20px;background:#24334b;color:#eff8ff;font:inherit;font-weight:800;font-size:11px;line-height:1;box-shadow:0 4px 0 #0c1424;cursor:pointer;touch-action:manipulation;pointer-events:auto}
 .undo:active{translate:0 3px;box-shadow:0 1px 0 #0c1424}
-.clockChip{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:calc(var(--pp-controls,214px) + env(safe-area-inset-bottom));z-index:3;display:grid;place-items:center;min-width:72px;height:44px;padding:0 12px;box-sizing:border-box;border:2px solid #70fff0;border-radius:22px;background:#10192cef;color:#efffff;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;pointer-events:none}
+.clockChip{position:absolute;right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:calc(var(--pp-controls,214px) + env(safe-area-inset-bottom));z-index:3;display:grid;place-items:center;min-width:72px;height:44px;padding:0 12px;box-sizing:border-box;border:2px solid #70fff0;border-radius:22px;background:#10192cef;color:#efffff;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums;pointer-events:none}
 .clockChip::before{content:'⏱ ' attr(data-left)}
 .clockChip[data-low=true]{border-color:#ff6a4d;color:#ffd9cf}
 @media(prefers-reduced-motion:no-preference){.clockChip[data-low=true]{animation:ppTick .5s ease-in-out infinite alternate}}
@@ -263,6 +263,6 @@
 /* Shared arcade score bar + pause card (docs/ARCADE_CHROME_OCT27.md). The bar sits above the brief / result cards (Back stays
    reachable); the hint button docks under Pause on the right, the same round gold button as before. */
 .game>.topBar.topBar{z-index:6}
-.hintDock{position:absolute;z-index:5;top:calc(72px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px));pointer-events:auto}
+.hintDock{position:absolute;z-index:5;top:calc(var(--arcade-bar-clear) + 8px + env(safe-area-inset-top,0px));right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));pointer-events:auto}
 .game .hintDock>button{min-height:48px;min-width:48px}
-@media(max-height:520px){.hintDock{top:calc(56px + env(safe-area-inset-top,0px));right:calc(16px + env(safe-area-inset-right,0px))}}
+@media(max-height:520px){.hintDock{top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px))}}

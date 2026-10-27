@@ -1,6 +1,6 @@
 /* Futbol Tennis card + court picker (round 3, Oct 26 2026). Scoped under the tennis card so other cabinets are untouched. */
-.card{padding:22px 20px 18px!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.title{margin:2px 0 14px!important;font-size:32px!important}
+.card{padding:var(--arcade-card-pad)!important;border-radius:var(--arcade-card-r)!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.title{margin:2px 0 14px!important;font-size:var(--arcade-card-title)!important}
 .picker{display:grid;gap:8px;margin:0 0 12px;text-align:left}
 .row{display:flex;gap:6px;justify-content:center;align-items:center}
 .chip{flex:0 0 auto;width:48px;height:56px;display:grid;place-items:center;align-content:center;gap:1px;padding:0;border:2px solid #35415c;border-radius:14px;background:#1b2340;color:#f0fffb;font:inherit;cursor:pointer;touch-action:manipulation;transition:transform .12s,border-color .12s}
@@ -24,10 +24,10 @@
 .hint{margin:0 0 10px!important;padding:8px 10px;border-radius:12px;background:#2a2148;color:#fff6c8;font-size:14px!important;line-height:1.35!important}
 .hint b{color:#ffc93c}
 .status{margin:0 0 8px!important;font-size:13px!important}
-.play{display:flex!important;align-items:center;justify-content:center;gap:10px;width:100%;min-height:64px;font-size:24px;font-weight:900;letter-spacing:.02em}
+.play{display:flex!important;align-items:center;justify-content:center;gap:10px;width:100%;min-height:var(--arcade-primary-h);font-size:24px;font-weight:900;letter-spacing:.02em}
 .play small{display:inline!important;font-size:12px!important;font-weight:700;opacity:.75;padding:0!important;border:0!important;margin-left:4px}
 .smallRow{display:flex;justify-content:center;gap:10px;margin-top:12px}
-.iconBtn{display:grid;place-items:center;gap:2px;min-width:64px;min-height:56px;padding:6px 8px;border:2px solid #35415c;border-radius:16px;background:#1b2340;color:#e9fbff;font:inherit;font-size:11px;font-weight:800;cursor:pointer;touch-action:manipulation}
+.iconBtn{display:grid;place-items:center;gap:2px;min-width:64px;min-height:var(--arcade-small-h);padding:6px 8px;border:2px solid #35415c;border-radius:16px;background:#1b2340;color:#e9fbff;font:inherit;font-size:11px;font-weight:800;cursor:pointer;touch-action:manipulation}
 .iconBtn:active{transform:translateY(2px)}
 .iconBtn:focus-visible{outline:3px solid #fff08a;outline-offset:2px}
 .how{display:grid;gap:8px;margin:0 0 12px;text-align:left}
@@ -70,4 +70,4 @@
 @media(prefers-reduced-motion:reduce){.earned i[data-on]{animation:none}.chip{transition:none}.rallyChip{animation:none}}
 @media(min-width:900px){.chips{top:96px}}
 @media(max-width:360px){.chip{width:42px;height:52px}.touches{grid-template-columns:1fr}}
-@media(max-height:520px){.title{font-size:24px!important;margin:0 0 8px!important}.chip{height:46px}.play{min-height:52px}.iconBtn{min-height:48px}.bigScore{font-size:34px!important}.earned{font-size:30px!important}.chips{top:52px}}
+@media(max-height:520px){.title{margin:0 0 8px!important}.chip{height:46px}.bigScore{font-size:34px!important}.earned{font-size:30px!important}.chips{top:52px}}

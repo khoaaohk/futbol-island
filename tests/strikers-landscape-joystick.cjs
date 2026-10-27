@@ -16,13 +16,13 @@ assert.match(live,/paintJoystick\(joy\.current,stickPaint\.current\.x,stickPaint
 // The zone: left 45%, below the header, own touch surface; the ring itself ignores pointers (the zone owns them).
 const zoneRule=css.match(/\.root \.stickZone\{display:block;position:absolute;left:0;top:([^;]+);bottom:0;width:45%;[^}]*touch-action:none/);
 assert.ok(zoneRule,'zone covers the left 45%, touch-action none');
-assert.match(css,/\.root \.stickZone\{top:calc\(56px \+ env\(safe-area-inset-top,0px\)\)\}/,'landscape: zone starts under the slim header (the Arcade button stays tappable)');
+assert.match(css,/\.root \.stickZone\{top:calc\(var\(--arcade-bar-clear\) \+ env\(safe-area-inset-top,0px\)\)\}/,'landscape: zone starts under the slim header (the Arcade button stays tappable)');
 assert.match(css,/\.root \.movement,\.root \.movement :global\(\.joystick\)\{pointer-events:none\}/);
 assert.match(live,/className=\{styles\.stickZone\} aria-hidden="true" onPointerDown=\{stickDown\} onPointerMove=\{moveStick\} onPointerUp=\{releaseStick\} onPointerCancel=\{releaseStick\} onLostPointerCapture=\{releaseStick\}/);
 // Bigger ring in landscape (island phones: up to 160 px) and a faint rest / full active look with a fade.
-const stick=css.match(/--stick:clamp\((\d+)px,calc\(100vh - (\d+)px\),(\d+)px\)/);assert.ok(stick);
-const ring=vh=>Math.min(+stick[3],Math.max(+stick[1],vh-+stick[2]));
-assert.ok(ring(390)>=150&&ring(375)>=132&&ring(430)>=160,`ring ${ring(375)}-${ring(430)} px on phones`);
+// One ring size for every arcade stick (consistency audit, Oct 27 2026): --arcade-stick in components/arcade/arcadeChrome.css.
+assert.match(css,/--stick:var\(--arcade-stick\)/);const ring=require('./fixtures/arcadeTokens.cjs').stick;
+assert.ok(ring(390)>=150&&ring(375)>=132&&ring(430)>=150,`ring ${ring(375)}-${ring(430)} px on phones`);
 assert.match(css,/\.root \.movement :global\(\.joystick\):not\(\[data-active=true\]\)\{opacity:\.55\}/);
 assert.match(live,/translate \.32s cubic-bezier\(\.22,\.8,\.24,1\),opacity \.2s ease-out/,'glides home and fades like the island stick');
 assert.match(live,/prefers-reduced-motion: reduce/,'reduced motion snaps home');

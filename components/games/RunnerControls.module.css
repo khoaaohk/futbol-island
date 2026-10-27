@@ -1,27 +1,27 @@
 /* Breakaway Run touch pad (Oct 27 2026): Island Strikers' floating stick on the left, a round thumb cluster on the right
    (same geometry idea as LiveArcadeMatch.module.css "Landscape phones": button centres are offsets from Shoot's centre). */
-.pad{--bottom:calc(16px + env(safe-area-inset-bottom,0px));--stick:clamp(124px,calc(100dvh - 240px),160px);--cw:214px;--ch:204px;position:absolute;inset:0;z-index:3;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.zone{position:absolute;left:0;top:calc(64px + env(safe-area-inset-top,0px));bottom:0;width:45%;box-sizing:border-box;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
-.movement.movement{position:absolute;left:calc(20px + env(safe-area-inset-left,0px));right:auto;bottom:var(--bottom);width:var(--stick);height:var(--stick);margin:0;pointer-events:none}
+.pad{--bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px));--stick:var(--arcade-stick);--cw:214px;--ch:204px;position:absolute;inset:0;z-index:3;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.zone{position:absolute;left:0;top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px));bottom:0;width:45%;box-sizing:border-box;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+.movement.movement{position:absolute;left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));right:auto;bottom:var(--bottom);width:var(--stick);height:var(--stick);margin:0;pointer-events:none}
 .movement :global(.joystick){width:var(--stick);height:var(--stick);pointer-events:none;touch-action:none}
 .movement :global(.joystick)>span{width:62%;height:62%}
 .movement :global(.joystick):not([data-active=true]){opacity:.55}
 .movement :global(.joystick)[data-active=true]{opacity:1}
 .movement :global(.joystick)[data-coach]{opacity:1;border-color:#ffe36b;box-shadow:0 0 0 4px #fff2cd,0 0 22px #ffe36b}
-.cluster{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--bottom);width:var(--cw);height:var(--ch);pointer-events:none;touch-action:none}
-.btn.btn{--d:72px;--x:0px;--y:0px;position:absolute;left:calc(var(--cw) - 50px + var(--x) - var(--d) / 2);top:calc(var(--ch) - 50px + var(--y) - var(--d) / 2);
+.cluster{position:absolute;right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:var(--bottom);width:var(--cw);height:var(--ch);pointer-events:none;touch-action:none}
+.btn.btn{--d:var(--arcade-btn);--x:0px;--y:0px;position:absolute;left:calc(var(--cw) - 46px + var(--x) - var(--d) / 2);top:calc(var(--ch) - 46px + var(--y) - var(--d) / 2);
  box-sizing:border-box;display:grid;place-items:center;align-content:center;gap:0;width:var(--d);min-width:0;height:var(--d);min-height:0;margin:0;padding:3px;border:3px solid #fff2d3;border-radius:50%;
  font:800 13px/1.05 system-ui,sans-serif;letter-spacing:.01em;color:#e8ffff;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;
  box-shadow:0 4px 0 var(--base),0 0 12px #4debd52e;background:var(--paper);transition:transform .07s ease,box-shadow .07s ease}
 .btn.btn:active{transform:translateY(3px) scale(.96);filter:brightness(1.25);box-shadow:0 1px 0 var(--base),0 0 18px #81fbed55}
 .btn.btn b{display:block;font-size:22px;line-height:1;font-weight:900}
 .btn.btn span{display:block;font-size:12px}
-.shoot.shoot{--d:96px;--paper:#402340;--base:#201428;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 var(--base),0 0 14px #ff62c22b}
+.shoot.shoot{--d:var(--arcade-btn-main);--paper:#402340;--base:#201428;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 var(--base),0 0 14px #ff62c22b}
 .shoot.shoot b{font-size:30px}
 .shoot.shoot span{font-size:14px}
-.jump.jump{--d:76px;--x:-8px;--y:-104px;--paper:#302744;--base:#101629;border-color:#bf9aff}
-.slide.slide{--d:76px;--x:-110px;--y:6px;--paper:#21334b;--base:#101629;border-color:#8bcbff}
-.skill.skill{--d:68px;--x:-104px;--y:-94px;--paper:#193441;--base:#101629;border-color:#81fbed;font-size:11px}
+.jump.jump{--d:var(--arcade-btn);--x:-8px;--y:-104px;--paper:#302744;--base:#101629;border-color:#bf9aff}
+.slide.slide{--d:var(--arcade-btn);--x:-110px;--y:6px;--paper:#21334b;--base:#101629;border-color:#8bcbff}
+.skill.skill{--d:var(--arcade-btn-sm);--x:-104px;--y:-94px;--paper:#193441;--base:#101629;border-color:#81fbed;font-size:11px}
 .skill.skill span{font-size:11px;line-height:1.05;white-space:normal;overflow-wrap:normal;hyphens:manual;max-width:60px;text-align:center}
 .skill.skill[data-ready]{--paper:#fff1a8;--base:#b99b2f;color:#2a1d00;border-color:#ffe36b;box-shadow:0 5px 0 var(--base),0 0 0 4px #fff2cd80,0 0 16px #ffe36b}
 /* First-run coach: the one button to press glows (the coach line itself is gone while playing). */
@@ -32,7 +32,7 @@
 @keyframes runnerFlash{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}22%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.btn.btn{transition:none}.flash{animation:none}}
 /* Short landscape phones: header is slimmer, cluster scales down from the corner so it clears the top bar. */
-@media (max-height:520px){.pad{--stick:clamp(116px,calc(100dvh - 220px),150px)}.zone{top:calc(56px + env(safe-area-inset-top,0px))}.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}}
+@media (max-height:520px){.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}}
 @media (max-height:380px){.cluster{transform:scale(.86);transform-origin:100% 100%}}
 /* Mouse windows: keyboard only (A/D or ←/→ lanes, W/↑ jump, S/↓ slide, Space shoot, E skill); the pause card shows the keys. */
 @media (pointer:fine){.zone,.movement.movement,.cluster{display:none}}

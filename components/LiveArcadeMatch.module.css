@@ -24,13 +24,8 @@
 /* iOS long-press guard (tests/device-guards.cjs check 1): no "Save image / Copy / Share" callout or text selection on held controls. */
 .stage,.stage *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
 
-/* Button families (docs/ui/BUTTONS.md): Pause is the round gold icon control used by every arcade game, Kick off /
-   Resume match / Play again is the shared gold primary pill. The touch action buttons stay the arcade exception. */
-.root .header>.pause.pause{display:grid;place-items:center;width:var(--btn-icon);height:var(--btn-icon);min-height:0;padding:0;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:50%;background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);background-blend-mode:soft-light}
-/* Animated press like the other games' Pause (ArcadeGame3D .pause). */
-.root .header>.pause.pause{transition:translate .16s,box-shadow .16s}
-@media(prefers-reduced-motion:reduce){.root .header>.pause.pause{transition:none}}
-.root .header>.pause.pause:not(:disabled):active{transform:none;translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
+/* Button families (docs/ui/BUTTONS.md): Kick off / Resume match / Play again is the shared gold primary pill. The touch action
+   buttons stay the arcade exception. Back / Pause live in the shared ArcadeTopBar (components/arcade). */
 .root .card>.primary.primary{min-height:var(--btn-height-lg);padding:10px 22px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold) var(--btn-grain) center/128px 128px;color:var(--btn-ink);font:700 16px/1.2 var(--btn-font);box-shadow:var(--btn-shadow-gold);background-blend-mode:soft-light}
 .root .card>.primary.primary:active{transform:none;translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)}
 .root :is(.pause,.primary):focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
@@ -55,9 +50,9 @@
 
 .card select {display:block;width:100%;margin:8px 0 18px;padding:12px;border:1px solid #65eedd;border-radius:12px;background:#151c35;color:#f0fffb;font:inherit;}
 
-/* UI audit (Sep 27): shared Back/Pause anchors — desktop 24/20, phone 18/16, plus safe areas. */
-.root>.header.header{padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px))}
-@media(max-width:700px),(pointer:coarse){.root>.header.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 10px calc(18px + env(safe-area-inset-left,0px))}}
+/* Back / Pause anchors: the shared ArcadeTopBar (components/arcade/ArcadeTopBar.module.css) with the arcade tokens in
+   components/arcade/arcadeChrome.css (consistency audit, Oct 27 2026). The old Strikers-only header paddings were removed:
+   nothing carries that class since the shared bar landed, so they only hid where the real numbers come from. */
 
 /* Oct 4 polish: round focus chip, goal/kickoff banner, full-time recap. */
 .root .direction .focus{display:inline-block;margin-top:6px;padding:3px 10px;border:1px solid #81fbed66;border-radius:999px;background:#151b32d9;color:#cef7ff;font-size:10px;font-weight:700;letter-spacing:.04em;animation:focusPop .45s ease-out 1}
@@ -233,10 +228,9 @@
  .root .actions button[data-pressed]{filter:brightness(1.25);transform:translateY(3px) scale(.96);box-shadow:0 1px 0 #101629,0 0 18px #81fbed55}
 }
 @media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){
- .root{--control-bottom:calc(10px + env(safe-area-inset-bottom,0px));--stick:clamp(132px,calc(100vh - 230px),164px);--cluster-w:284px;--cluster-h:180px}
- .root>.header.header{padding:calc(6px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 4px calc(16px + env(safe-area-inset-left,0px))}
+ .root{--control-bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px));--stick:var(--arcade-stick);--cluster-w:284px;--cluster-h:180px}
  .root .footer{height:0;min-height:0;padding:0;border:0;overflow:visible;background:transparent}
- .root .stickZone{top:calc(56px + env(safe-area-inset-top,0px))}
+ .root .stickZone{top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px))}
  .root .meters{position:absolute;z-index:2;top:calc(56px + env(safe-area-inset-top,0px));bottom:auto;left:50%;transform:translateX(-50%);width:max-content;margin:0;padding:3px 12px;gap:14px!important;border-radius:12px;font-size:10px!important;font-weight:700;pointer-events:none}
  .root .meters meter{width:56px!important;height:7px}
  .root .direction{top:30px;display:flex;align-items:center;gap:8px;padding:3px 10px;border-radius:12px;background:#0b10248c}
@@ -244,13 +238,13 @@
  .root .chain{top:30px;left:calc(12px + env(safe-area-inset-left,0px))}
  .root .footer>p{position:absolute;z-index:2;left:calc(var(--stick) + 30px + env(safe-area-inset-left,0px));right:calc(var(--cluster-w) + 24px + env(safe-area-inset-right,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));top:auto;transform:none;width:auto;max-width:none;min-height:0;margin:0 auto;padding:5px 12px;border-radius:14px;background:#0b1024cc;color:#e9fbff;font-size:12px;line-height:1.3;text-align:center;pointer-events:none;max-height:3.9em;overflow:hidden;animation:tipFade 5s ease-out both}
  .root .footer>p:empty{display:none}
- .root .movement{left:calc(20px + env(safe-area-inset-left,0px));bottom:var(--control-bottom);width:var(--stick);height:var(--stick)}
+ .root .movement{left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));bottom:var(--control-bottom);width:var(--stick);height:var(--stick)}
  .root .movement :global(.joystick){width:var(--stick);height:var(--stick)}
  .root .movement :global(.joystick)>span{width:62%;height:62%}
- .root .actions{display:block;position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--control-bottom);width:var(--cluster-w);height:var(--cluster-h);max-width:none;gap:0;pointer-events:none}
- .root .actions button[data-action]{--d:66px;--x:0px;--y:0px;position:absolute;left:calc(var(--cluster-w) - 46px + var(--x) - var(--d) / 2);top:calc(var(--cluster-h) - 46px + var(--y) - var(--d) / 2);width:var(--d);height:var(--d);min-width:0;min-height:0;padding:2px;border-radius:50%;font-size:13px;font-weight:800;line-height:1.1;pointer-events:auto;touch-action:none}
- .root .actions button[data-action=shoot]{--d:92px;font-size:15px}
- .root .actions button[data-action=pass]{--d:76px;--x:-106px;--y:4px}
+ .root .actions{display:block;position:absolute;right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:var(--control-bottom);width:var(--cluster-w);height:var(--cluster-h);max-width:none;gap:0;pointer-events:none}
+ .root .actions button[data-action]{--d:var(--arcade-btn-sm);--x:0px;--y:0px;position:absolute;left:calc(var(--cluster-w) - 46px + var(--x) - var(--d) / 2);top:calc(var(--cluster-h) - 46px + var(--y) - var(--d) / 2);width:var(--d);height:var(--d);min-width:0;min-height:0;padding:2px;border-radius:50%;font-size:13px;font-weight:800;line-height:1.1;pointer-events:auto;touch-action:none}
+ .root .actions button[data-action=shoot]{--d:var(--arcade-btn-main);font-size:15px}
+ .root .actions button[data-action=pass]{--d:var(--arcade-btn);--x:-106px;--y:4px}
  .root .actions button[data-action=through]{--x:-140px;--y:-80px}
  .root .actions button[data-action=sprint]{--x:-56px;--y:-96px}
  .root .actions button[data-action=switchPlayer]{--x:-200px;--y:8px}
@@ -267,7 +261,6 @@
  .backdrop{display:block;position:fixed;inset:0;z-index:139;background:radial-gradient(120% 60% at 50% 50%,#1b1f45 0%,#080b1b 62%,#04050d 100%);touch-action:none}
  .root.root{inset:auto 0;top:calc(50dvh - 37.5vw);height:75vw;border-block:2px solid #81fbed55;box-shadow:0 0 40px #4debd522}
  .root .overlay{position:fixed;inset:0;z-index:6;background:#04050dcc}
- .root>.header.header{padding:8px calc(14px + env(safe-area-inset-right,0px)) 6px calc(14px + env(safe-area-inset-left,0px))}
  .root .direction>span{display:none}
 }
 @media(pointer:fine) and (orientation:portrait){
@@ -322,3 +315,10 @@
 .root[data-phase=playing] .footer>p,.root[data-phase=playing] .meters{display:none}
 .root[data-phase=playing] .meters[data-charging]{display:flex}
 .root[data-phase=playing] .meters label:not(:nth-child(2)){display:none}
+
+/* Consistency audit (Oct 27 2026, docs/ARCADE_CHROME_OCT27.md): start / full-time cards take the shared card metrics. */
+.root .overlay>.start.start{padding:var(--arcade-card-pad);border-radius:var(--arcade-card-r)}
+.root .overlay>.start.start:not([data-options]){width:min(var(--arcade-card-wide),100%)}
+.root .overlay>.start.start>.primary.primary{min-height:var(--arcade-primary-h)}
+.root .overlay>.start.start>.startRow>button{min-height:var(--arcade-small-h)}
+.root .overlay>.start.start .startTitle{font-size:var(--arcade-card-title)!important}

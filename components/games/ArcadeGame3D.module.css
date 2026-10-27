@@ -205,13 +205,33 @@
    the overlay, as before. */
 .game[data-card]>.topBar.topBar{z-index:auto}
 .game[data-card]>.topBar.topBar>button:first-child{position:relative;z-index:5}
+/* ===== Consistency audit (Oct 27 2026, docs/ARCADE_CHROME_OCT27.md): Tennis' stick and thumb buttons take the arcade tokens
+   (components/arcade/arcadeChrome.css), like Strikers and Breakaway: stick ring --arcade-stick at the shared side gutter (it used to
+   inherit the island's 148 px .touch-controls size), buttons --arcade-btn-sm with the Serve / Kick as the big target, all on the
+   shared bottom gutter plus the home-bar inset. */
+@media(max-width:600px),(pointer:coarse){
+ .game[data-arcade-kind=tennis]{--control-bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px))}
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement{left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));right:auto;bottom:var(--control-bottom);width:var(--arcade-stick);height:var(--arcade-stick)}
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement :global(.joystick){width:var(--arcade-stick);height:var(--arcade-stick)}
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement :global(.joystick)>span{width:62%;height:62%}
+ .game[data-arcade-kind=tennis] .tennisActions.tennisActions{right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));grid-template-columns:var(--arcade-btn-sm) var(--arcade-btn-sm);grid-template-rows:repeat(3,var(--arcade-btn-sm));gap:16px}
+ .game[data-arcade-kind=tennis] .tennisActions.tennisActions button{width:var(--arcade-btn-sm);height:var(--arcade-btn-sm);min-height:var(--arcade-btn-sm)}
+ .game[data-arcade-kind=tennis] .tennisActions.tennisActions [data-tennis-action=kick]{width:calc(var(--arcade-btn-sm) + 20px);height:calc(var(--arcade-btn-sm) + 20px);min-height:calc(var(--arcade-btn-sm) + 20px);margin:-10px}
+}
+@media(min-width:601px) and (pointer:fine){
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement{left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px));width:var(--arcade-stick);height:var(--arcade-stick)}
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement :global(.joystick){width:var(--arcade-stick);min-width:var(--arcade-stick);height:var(--arcade-stick);min-height:var(--arcade-stick)}
+ .game[data-arcade-kind=tennis] .tennisMovement.tennisMovement :global(.joystick)>span{width:62%;height:62%}
+ .game[data-arcade-kind=tennis] .tennisActions.tennisActions{right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px));grid-template-columns:repeat(5,var(--arcade-btn));grid-auto-columns:var(--arcade-btn);grid-template-rows:var(--arcade-btn);gap:var(--arcade-btn-gap)}
+ .game[data-arcade-kind=tennis] .tennisActions.tennisActions button{width:var(--arcade-btn);height:var(--arcade-btn);min-width:var(--arcade-btn);min-height:var(--arcade-btn)}
+}
 /* Futbol Pinball full-screen cabinet (Oct 26 2026, docs/ARCADE_PINBALL_UPGRADE2_OCT26.md): the table fills the screen
    (lib/games/soccerPinballCamera.ts frames it) and the controls float over the drain strip below the flippers as
    translucent thumb pads: two big flipper pads in the lower corners and a wide Launch / Nudge pill between them with a
    charge fill (--charge, written by the frame loop; transform only). [data-held] mirrors the live flipper, so the
    half-screen touch zones and keys light the pads too. Pad height must match pinballCameraLayout(). */
-.game[data-arcade-kind=pinball]{--pb-pad-h:120px;--pb-gap:10px;--pb-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
-.game[data-arcade-kind=pinball] .controls{position:absolute;inset:auto 0 0 0;max-width:none;margin:0;padding:0 max(var(--pb-gap),env(safe-area-inset-right,0px)) var(--pb-bottom) max(var(--pb-gap),env(safe-area-inset-left,0px));display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,168px) minmax(0,1fr);align-items:end;gap:var(--pb-gap);pointer-events:none;touch-action:none}
+.game[data-arcade-kind=pinball]{--pb-pad-h:120px;--pb-gap:10px;--pb-bottom:calc(var(--arcade-edge-bottom) + env(safe-area-inset-bottom,0px))}
+.game[data-arcade-kind=pinball] .controls{position:absolute;inset:auto 0 0 0;max-width:none;margin:0;padding:0 calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px)) var(--pb-bottom) calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,168px) minmax(0,1fr);align-items:end;gap:var(--pb-gap);pointer-events:none;touch-action:none}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-pad],.game[data-arcade-kind=pinball] .controls>button[data-pinball-launch]{position:relative;box-sizing:border-box;width:100%;min-width:0;margin:0;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;overflow:hidden;background-image:none;transition:transform .06s ease-out,background-color .06s,box-shadow .06s,opacity .2s}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{height:var(--pb-pad-h);min-height:110px;border-radius:30px;border:2px solid #fff08a99;background:#35332329;color:#fff8bbd9;box-shadow:inset 0 0 0 1px #fff08a22,0 0 14px #fff08a1f;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-pad=right]{border-color:#ff83d399;background:#40234029;color:#ffe5f6d9;box-shadow:inset 0 0 0 1px #ff83d322,0 0 14px #ff62c21f}
@@ -237,6 +257,6 @@
 @keyframes pinballTip{0%,72%{opacity:1}100%{opacity:0}}
 @media(min-width:601px){.game[data-arcade-kind=pinball]{--pb-gap:16px}.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,260px) 168px minmax(0,260px);justify-content:space-between}}
 @media(pointer:fine) and (min-width:601px){.game[data-arcade-kind=pinball]{--pb-pad-h:96px}.game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{min-height:96px}}
-@media(max-height:520px){.game[data-arcade-kind=pinball]{--pb-pad-h:96px;--pb-bottom:calc(10px + env(safe-area-inset-bottom,0px))}.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,200px) 150px minmax(0,200px);justify-content:space-between}.game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{min-height:96px}.game[data-arcade-kind=pinball] .message{bottom:calc(var(--pb-bottom) + 64px)}}
+@media(max-height:520px){.game[data-arcade-kind=pinball]{--pb-pad-h:96px}.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,200px) 150px minmax(0,200px);justify-content:space-between}.game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{min-height:96px}.game[data-arcade-kind=pinball] .message{bottom:calc(var(--pb-bottom) + 64px)}}
 @media(max-width:370px){.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,1fr) 140px minmax(0,1fr)}.game[data-arcade-kind=pinball] .controls>button[data-pinball-launch]{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .controls>button{transition:none}.game[data-arcade-kind=pinball] .message{animation-duration:6s}}

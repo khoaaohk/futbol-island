@@ -1,0 +1,37 @@
+/* Arcade chrome tokens (owner, Oct 27 2026: "make sure all the modals, buttons, joystick position and size are all consistent";
+   docs/ARCADE_CHROME_OCT27.md "Consistency audit"). The ONE place the five arcade games (Island Strikers, Breakaway Run, Futbol
+   Tennis, Futbol Pinball, Pass Puzzles) take their edge gutters, score-bar size, stick and thumb-button sizes and card metrics from.
+   Every gutter is added to the matching env(safe-area-inset-*) at the point of use, so notches and the home bar are always cleared.
+   Global (imported once in app/layout.tsx) because CSS modules cannot declare :root custom properties. Static values: no animation. */
+:root{
+ /* Edges: the score bar, the stick and the thumb cluster share one side gutter, so Back sits over the stick and Pause over Shoot. */
+ --arcade-edge-x:18px;
+ --arcade-edge-top:14px;
+ --arcade-edge-bottom:12px;
+ /* Score bar: Back / Pause are 44 px; anything under the bar starts at --arcade-bar-clear (plus the top inset). */
+ --arcade-bar-h:44px;
+ --arcade-bar-clear:calc(var(--arcade-edge-top) + var(--arcade-bar-h) + 6px);
+ /* Floating stick ring (Strikers, Breakaway, Tennis). */
+ --arcade-stick:clamp(132px,calc(100dvh - 238px),152px);
+ /* Thumb buttons: the one primary (Shoot / Serve), the main secondaries, the small extras; never under 56 px on touch. */
+ --arcade-btn-main:92px;
+ --arcade-btn:72px;
+ --arcade-btn-sm:64px;
+ --arcade-btn-gap:10px;
+ /* Cards: pause card width, start / full-time card width, radius, padding, title, primary and small-row button heights. */
+ --arcade-card-w:380px;
+ --arcade-card-wide:440px;
+ --arcade-card-r:20px;
+ --arcade-card-pad:20px 22px;
+ --arcade-card-title:32px;
+ --arcade-primary-h:56px;
+ --arcade-small-h:48px;
+}
+/* Short landscape (phones sideways, ~390 px tall) and short frames: slimmer bar and cards, same parts. */
+@media (max-height:520px){
+ :root{--arcade-edge-x:16px;--arcade-edge-top:6px;--arcade-card-pad:14px 18px;--arcade-card-title:26px;--arcade-primary-h:48px;--arcade-small-h:44px}
+}
+/* Very narrow phones (320-350 px upright): the stick and the small buttons step down so both thumbs' clusters still fit side by side. */
+@media (max-width:350px){
+ :root{--arcade-stick:clamp(112px,calc(100vw - 214px),128px);--arcade-btn-sm:56px}
+}

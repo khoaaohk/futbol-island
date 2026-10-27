@@ -8,9 +8,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),live=read('components/LiveArcadeMatch.tsx');
 const i=css.indexOf('@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){\n .root{--control-bottom');assert.ok(i>0,'the landscape block');
-const block=css.slice(i,css.indexOf('\n}',i));
+const T=require('./fixtures/arcadeTokens.cjs');
+// Sizes and gutters come from the arcade tokens (components/arcade/arcadeChrome.css); phones sideways use the short values.
+const block=T.resolve(css.slice(i,css.indexOf('\n}',i)),'short');
 const num=(re,src=block)=>{const m=src.match(re);assert.ok(m,String(re));return Number(m[1]);};
-const CW=num(/--cluster-w:(\d+)px/),CH=num(/--cluster-h:(\d+)px/),RIGHT=14,BOTTOM=10;
+const CW=num(/--cluster-w:(\d+)px/),CH=num(/--cluster-h:(\d+)px/),RIGHT=T.px('short','arcade-edge-x'),BOTTOM=T.px('short','arcade-edge-bottom'),EDGE=T.px('short','arcade-edge-x');
 const base=block.match(/\.root \.actions button\[data-action\]\{([^}]*)\}/)[1];
 assert.match(base,/font-size:13px;font-weight:800/,'labels 13 px bold');assert.match(base,/touch-action:none/);assert.match(base,/border-radius:50%/);
 const D0=num(/--d:(\d+)px/,base);
@@ -29,12 +31,12 @@ for(let m=0;m<names.length;m++)for(let n=m+1;n<names.length;n++){const p=c(btn[n
 for(const a of ['pass','through','sprint','switchPlayer']){const d=Math.hypot(btn[a].x,btn[a].y);assert.ok(d>=90&&d<=210,`${a} on the arc (${d|0} px)`);}
 const ang=a=>(Math.atan2(-btn[a].y,btn[a].x)*180/Math.PI+360)%360;assert.ok(ang('pass')>ang('through')&&ang('through')>ang('sprint')&&ang('sprint')>=90,'round the arc: Pass (left) → Through → Sprint (above)');
 // Layout on phones: nothing collides with the stick's rest spot, the coach pill or the meters bar.
-const stick=css.match(/--stick:clamp\((\d+)px,calc\(100vh - (\d+)px\),(\d+)px\)/).slice(1).map(Number);
-assert.match(block,/\.root \.movement\{left:calc\(20px \+ env\(safe-area-inset-left,0px\)\);bottom:var\(--control-bottom\)/);
+assert.match(block,/--stick:var\(--arcade-stick\)/,'stick ring from the arcade tokens');
+assert.match(block,/\.root \.movement\{left:calc\(\d+px \+ env\(safe-area-inset-left,0px\)\);bottom:var\(--control-bottom\)/);
 assert.match(block,/\.root \.footer>p\{position:absolute;z-index:2;left:calc\(var\(--stick\) \+ 30px [^;]+;right:calc\(var\(--cluster-w\) \+ 24px /,'coach pill sits between the stick and the arc');
 assert.match(block,/\.root \.meters\{position:absolute;z-index:2;top:calc\(56px \+ env\(safe-area-inset-top,0px\)\);bottom:auto;left:50%/,'meters: a slim bar under the score');
-for(const [Wd,H] of [[667,375],[844,390],[932,430]]){const ring=Math.min(stick[2],Math.max(stick[0],H-stick[1]));
- const clusterLeft=Wd-RIGHT-CW,stickRight=20+ring;assert.ok(clusterLeft-stickRight>=150,`${Wd}x${H}: ${clusterLeft-stickRight} px between stick and buttons for the coach pill`);
+for(const [Wd,H] of [[667,375],[844,390],[932,430]]){const ring=T.stick(H);
+ const clusterLeft=Wd-RIGHT-CW,stickRight=EDGE+ring;assert.ok(clusterLeft-stickRight>=150,`${Wd}x${H}: ${clusterLeft-stickRight} px between stick and buttons for the coach pill`);
  assert.ok(H-BOTTOM-CH>56+20+60,`${Wd}x${H}: the arc top (${H-BOTTOM-CH}) stays well below the header and meters`);}
 // Pressed feedback + optional haptic; the old portrait grid stays for tall tablets.
 assert.match(css,/\.root \.actions button\[data-pressed\]\{/);assert.match(live,/import \{tapHaptic\} from '@\/lib\/town\/haptics';/);
