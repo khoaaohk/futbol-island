@@ -7,7 +7,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),live=read('components/LiveArcadeMatch.tsx');
-const i=css.indexOf('@media(pointer:coarse) and (orientation:landscape){\n .root{--control-bottom');assert.ok(i>0,'the landscape block');
+const i=css.indexOf('@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){\n .root{--control-bottom');assert.ok(i>0,'the landscape block');
 const block=css.slice(i,css.indexOf('\n}',i));
 const num=(re,src=block)=>{const m=src.match(re);assert.ok(m,String(re));return Number(m[1]);};
 const CW=num(/--cluster-w:(\d+)px/),CH=num(/--cluster-h:(\d+)px/),RIGHT=14,BOTTOM=10;

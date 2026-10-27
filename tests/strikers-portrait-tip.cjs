@@ -16,7 +16,7 @@ assert.ok(scene.includes('camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.
 assert.ok(scene.includes('(stage.mobile?[-14.6,14.6]:[-18,18])')&&scene.includes('Math.abs(corner.x)>(wide?LANDSCAPE_X:.94)||Math.abs(corner.y)>.91'),'fit bounds');
 assert.ok(scene.includes('for(const z of [-5,5])stage.box(side*21,.04,z,8,')&&scene.includes('stage.box(side*17,.04,0,.09,.025,10,'),'box lines x 17..25, z -5..5');
 // The pill rule (last portrait block): right-aligned, vertically centred at a share of the root height plus a header share.
-const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
+const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
 const last=blocks[blocks.length-1],i=last.lastIndexOf('.root .footer>p{'),pill=last.slice(i,last.indexOf('}',i));
 const top=pill.match(/top:calc\(([\d.]+)% \+ (\d+)px/);assert.ok(top,'pill top is calc(% + px)');assert.match(pill,/bottom:auto;transform:translateY\(-50%\)/);
 assert.match(pill,/max-height:4em;overflow:hidden/,'three lines at most');assert.match(pill,/font-size:11px/);

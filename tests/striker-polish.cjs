@@ -37,7 +37,7 @@ for(const level of [1,4]){const {g,s,i}=fresh(level);Object.assign(s.players[0],
 // Landscape phones (docs/LANDSCAPE_AUDIT_OCT23.md batch 1): the start card stays on screen (bottom <= innerHeight), scrolling inside
 // itself, above the idle touch buttons, with 44 px Team shape / Round pickers. Measured live by scripts/audit-landscape.cjs batch1.
 {const css=fs.readFileSync('components/LiveArcadeMatch.module.css','utf8').replace(/\s+/g,' ');
- const land=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:landscape\)\{(.*?)\}\}/g)].map(m=>m[1]).join('}');
+ const land=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:landscape\),\(pointer:coarse\) and \(min-width:501px\)\{(.*?)\}\}/g)].map(m=>m[1]).join('}');
  assert(/\.overlay>\.card\{max-height:calc\(100dvh - 90px - env\(safe-area-inset-bottom,0px\)\);overflow:auto/.test(land),'landscape card: max-height under the viewport + overflow auto');
  assert(/\.card \.shape select,\.card \.inline select\{min-height:44px/.test(land),'landscape pickers are 44 px tall');
  assert(/\.overlay\{z-index:6\}/.test(land),'card sits above the touch buttons in landscape');

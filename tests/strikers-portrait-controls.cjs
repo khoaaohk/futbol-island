@@ -4,7 +4,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),match=read('components/LiveArcadeMatch.tsx'),scene=read('lib/arcade/strikerScene.ts');
-const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
+const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
 const last=blocks[blocks.length-1];assert.ok(last,'a portrait block');
 const rule=sel=>{const i=last.lastIndexOf(sel+'{');assert.ok(i>=0,sel);return last.slice(i,last.indexOf('}',i));};
 // Measured on a 390 px phone with the follow cam zoomed in (Oct 26 screenshot): the posts sit at about x 112 and 262.

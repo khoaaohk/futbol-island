@@ -24,5 +24,5 @@ export default function RotateLock() {
     if (switched.current) change(); switched.current = true;
     mq.addEventListener?.('change', change); return () => mq.removeEventListener?.('change', change);
   }, [mode]);
-  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" />{mode === 'landscape' ? <><p className={styles.turn}>Turn your phone sideways to play</p><p className={styles.wide}>Make this window wider to play</p></> : <p>Turn your phone upright to play</p>}</div>;
+  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" /><p>{mode === 'landscape' ? 'Turn your phone sideways to play' : 'Turn your phone upright to play'}</p></div>;
 }

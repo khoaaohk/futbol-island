@@ -9,9 +9,9 @@ export type OrientationMode = 'portrait' | 'landscape';
 export const PORTRAIT_ONLY_QUERY = '(pointer:coarse) and (orientation:landscape) and (max-height:500px)';
 /** Phones held upright (touch, narrow side): Strikers shows "Turn your phone sideways". Tall tablets (wider than 500 px) still
  *  play upright with the portrait tuning. */
-/** Narrow, tall mouse windows count too (owner, Oct 26 2026: on localhost the match still played upright in a narrow desktop window):
- *  a mouse-and-keyboard window up to 700 px wide held portrait shows "Make this window wider to play" instead. */
-export const LANDSCAPE_ONLY_QUERY = '(pointer:coarse) and (orientation:portrait) and (max-width:500px), (pointer:fine) and (orientation:portrait) and (max-width:700px)';
+/** Narrow, tall mouse windows and upright tablets never see a card (round 3, Oct 26 2026, docs/ARCADE_STRIKERS_R3_OCT26.md): Strikers
+ *  letterboxes a landscape game frame there instead (LiveArcadeMatch.module.css "Landscape frame"), so the pitch is always sideways. */
+export const LANDSCAPE_ONLY_QUERY = '(pointer:coarse) and (orientation:portrait) and (max-width:500px)';
 
 /** The media query that shows the wrong-orientation card in a mode. */
 export const wrongOrientationQuery = (mode: OrientationMode) => mode === 'landscape' ? LANDSCAPE_ONLY_QUERY : PORTRAIT_ONLY_QUERY;

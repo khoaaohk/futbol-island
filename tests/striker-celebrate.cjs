@@ -46,7 +46,7 @@ const read=f=>fs.readFileSync(f,'utf8'),scene=read('lib/arcade/strikerScene.ts')
 
 // Wiring.
 assert(!/setRotate/.test(ui)&&/requestLandscape\(\)/.test(ui),'no in-game gate: the app-wide RotateLock shows the sideways card (Oct 26 2026 landscape exception)');
-assert(/@media\(pointer:coarse\) and \(orientation:portrait\)\{/.test(css),'portrait phone layout');
+assert(/@media\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)\{/.test(css),'portrait phone layout');
 assert(/followOn=follow&&motion;/.test(scene)&&/FOLLOW_ZOOM_PORTRAIT/.test(scene),'portrait follow cam');
 assert(/startOutro:/.test(scene)&&/visual\.startOutro\(winner\)/.test(ui)&&/!outroOn&&\(phase!=='ready'\|\|failed\)&&<div className=\{styles\.overlay\}>/.test(ui),'outro plays before the result card');
 assert(/phaseRef\.current==='playing'\|\|visual\.outroing\)frame=requestAnimationFrame/.test(ui),'loop sleeps once the outro ends');
