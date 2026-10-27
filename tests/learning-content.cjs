@@ -77,6 +77,8 @@ for(const fmt of FORMATS){
    const text=[q.q,...(q.options??[]),...(q.choiceExplanations??[])].join(' ');
    // Format rules (IFAB Futsal Laws: no offside, kick-ins, goal clearance throws; US Soccer: no heading at U10 and younger).
    if(fmt==='futsal'){check(!/\boffside\b/i.test(text)||/no offside/i.test(text),`${w}: futsal has no offside`);check(!/\bthrow-?ins?\b/i.test(text)||/not a throw-?in/i.test(text),`${w}: futsal restarts from the touchline are kick-ins`);}
+   // Futsal path audit (Oct 27 2026): "Set between carrier and goal" read like a typo to kids; options say the action plainly.
+   check(!(q.options??[]).some(o=>/^Set between\b/i.test(o)),`${w}: option starts with "Set between" (say "Get between …")`);
    if(fmt==='7v7')check(!/\bhead(er|ers|ing)?\b(?! (up|start|toward|towards|for|to|back|down|across|forward|into|away|over|off|inside|outside|wide|out))/i.test(text),`${w}: no heading coaching in 7v7 (US Soccer heading guideline)`);
   });
   for(const s of l.steps){const t=s.say??s.desc;if(fmt==='futsal'){check(!/\boffside\b/i.test(t)||/no offside/i.test(t),`${where}: futsal step mentions offside: "${t}"`);check(!/\bthrow-?ins?\b/i.test(t)||/not a throw-?in/i.test(t),`${where}: futsal step says throw-in: "${t}"`);}}
