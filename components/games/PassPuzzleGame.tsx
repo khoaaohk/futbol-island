@@ -19,7 +19,7 @@ import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene} from '@/lib/arcade/passPuzzleScene';
-import {laneStatus,laneWords,noteFor,explainSuccess,explainFail,replayCall,type LaneStatus,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
+import {laneStatus,noteFor,explainSuccess,explainFail,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
 import {isCall,type Step} from '@/lib/passPuzzle/packs';
 import {stopPoint,passProgress} from '@/lib/passPuzzle/feel';
 import {frameCapSlot} from '@/lib/town/frameCap';
@@ -105,14 +105,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const loftMeter=useRef<HTMLDivElement>(null);
  /** Oct 26 simple start menu: 'home' (Play, daily, packs), one pack's puzzles, or the small settings sheet. */
  const [menu,setMenu]=useState<'home'|'pack'|'settings'|'expert'>('home');
- /** One-tap Play skips the brief card, so the level's brief rides in the tip until the first pass. */
- const [briefTip,setBriefTip]=useState(false);
- /** Live warning while drawing (only changes re-render): the predicted receiver would be offside. */
- const [aimWarn,setAimWarn]=useState<null|'offside'>(null),aimWarnRef=useRef<null|'offside'>(null);
- const warn=(w:null|'offside')=>{if(aimWarnRef.current!==w){aimWarnRef.current=w;setAimWarn(w);}if(!w)lane(null);};
- /** The coach's live read of the drawn pass (clear / tight / blocked …), re-rendered only when it changes. */
- const [laneRead,setLaneRead]=useState<{status:LaneStatus;text:string}|null>(null),laneRef=useRef('');
- const lane=(v:{status:LaneStatus;text:string}|null)=>{const key=v?v.status+v.text:'';if(laneRef.current!==key){laneRef.current=key;setLaneRead(v);}};
+ /** Live warning while drawing: the predicted receiver would be offside. Clean pitch (owner, Oct 27 2026): no in-play text,
+  *  so the lane read and the offside warning show only on the pitch (the aim's lane colour and the flagged teammate). */
+ const aimWarnRef=useRef<null|'offside'>(null);
+ const warn=(w:null|'offside')=>{aimWarnRef.current=w;};
  /** One note per kick of this attempt (what the release looked like), for the takeaway. */
  const notes=useRef<PassNote[]>([]),numbersRef=useRef<Numbers>({attackers:[],defenders:[],keeper:1}),formatRef=useRef<Format>('9v9');
  /** Replay commentary: the current call and the inputs it reads receivers and runs from. */
@@ -152,7 +148,8 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   if(e.type==='kick'){if(((replayRef.current?.world??worldRef.current)?.state.passes??0)===0)chimed.current=0;puzzleStrike(ctx,e.speed??10,e.kind??'pass');if(e.kind==='shot'){arcadeFeedback(null,'shot');puzzleShotWhoosh(ctx,e.speed??16);}return;}
   if(e.type==='receive'){puzzleTouch(ctx,e.touch);const w=replayRef.current?.world??worldRef.current;const n=w?.state.passes??0;if(n>chimed.current){puzzlePassChime(ctx,n);
     // Name the combination as it happens (live play only; replays have their own commentary).
-    if(!replayRef.current&&w&&e.attacker!=null){const c=passCallout(w.state.chain,e.attacker,n);if(c){shout.current(c);if(c.tier>=2)puzzleCombo(ctx,2);}}}chimed.current=n;return;}
+    // Clean pitch (owner, Oct 27 2026): mid-play combos are heard, not captioned; only the result gets a word.
+    if(!replayRef.current&&w&&e.attacker!=null){const c=passCallout(w.state.chain,e.attacker,n);if(c&&c.tier>=2)puzzleCombo(ctx,2);}}chimed.current=n;return;}
   if(e.type==='heavy_touch'){puzzleTouch(ctx,e.touch,true);return;}
   if(e.type==='offside'){puzzleWhistle(ctx);return;}
   if(e.type==='goal'){const w=replayRef.current?.world??worldRef.current,chain=w?.state.chain??[],passes=w?.state.passes??0;puzzleGoalRoar(ctx,passes);if(!replayRef.current)shout.current(goalCallout(passes,!!chain.at(-1)?.firstTime));}
@@ -220,7 +217,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     if(state.phase==='success'||state.phase==='fail'){syncHud();settleUntil.current=now+900;const ok=state.phase==='success';
      // The result beat: a push-in on the scorer (goal) or on the defender who stopped it, then the card.
      if(ok){const sc=state.attackers[state.chain.at(-1)?.kicker??state.carrier]?.p??b;cine.play('goal',(sc.x+b.x)/2,(sc.z+b.z)/2);}
-     else{cine.skip();const st=stopPoint(world,attemptEvents.current);failStop.current=st;if(st){scene.showStop(st.at,st.kind);stopShown.current=true;}shout.current({text:'So close!',teach:'Look at the red mark, then try a new pass.',tier:1});}
+     else{cine.skip();const st=stopPoint(world,attemptEvents.current);failStop.current=st;if(st){scene.showStop(st.at,st.kind);stopShown.current=true;}shout.current({text:'So close!',teach:'',tier:1});}
      finishAt.current=scene.stage.reduced?now+1:now+(ok?950:750);}
    }else if(state.phase==='aiming'){
     // One-touch window: a shrinking ring around the new carrier while a first-time finish still counts.
@@ -230,7 +227,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     if(st&&st.run!==undefined){scene.setCalls(state,{from:st.run,to:st.points.at(-1)!});busy=true;}
     else if(st){const tail=st.points.at(-1)!,held=now/1000-st.lastMove;
      if(now-st.predictionAt>=80&&(st.dirty||held>.2&&held<1.2)){st.predictionAt=now;st.dirty=false;const points=held>.02?[...st.points,{x:tail.x,z:tail.z,t:now/1000}]:st.points;try{st.kick=points.length>1?readStroke(points,world,controls.current):null;st.prediction=st.kick?predict(world,st.kick):null;}catch{st.kick=null;st.prediction=null;}warn(st.prediction?.end==='offside'?'offside':null);
-      const status=laneStatus(st.prediction);lane(status&&st.prediction?{status,text:laneWords(status,st.prediction,numbersRef.current,formatRef.current)}:null);
+      const status=laneStatus(st.prediction);
       scene.setAim({prediction:st.prediction,receiver:st.kick?.receiver,loft:st.kick?.loft??0,stroke:st.points,status:status??undefined},state);}
      if(controls.current.power===undefined&&st.kick&&powerSlider.current)powerSlider.current.value=String(Math.round(st.kick.power*100/5)*5);
      const loft=st.kick?.loft??0,meter=loftMeter.current;if(meter){meter.style.setProperty('--loft',String(loft));meter.dataset.active=String(controls.current.mode==='auto'&&held>.12&&!!st.kick);}
@@ -294,7 +291,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
 
  /** Build the frozen moment for a level: the pitch shows behind the brief card. */
  const resetCine=()=>{clockText.current='';const chip=clockChip.current,cl=worldRef.current?.scenario.require.clock;if(chip&&cl){chip.dataset.left=`${cl.toFixed(1)} s`;chip.dataset.low='false';}finishAt.current=0;stopShown.current=false;arrived.current=false;cine.skip();cine.resetBudget();sceneRef.current?.setReplayFocus(null);};
- const loadLevel=(s:Scenario)=>{resetCine();setCallout(null);setBriefTip(false);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
+ const loadLevel=(s:Scenario)=>{resetCine();setCallout(null);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
   try{const played=playable(s,headingRef.current);const world=createPuzzle(played);worldRef.current=world;scene.load(played);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);}catch{setError(true);return;}
   setLevelId(s.id);setPackId(s.pack);setOutcome(null);setShowHint(false);syncHud();settleUntil.current=performance.now()+300;wake.current();};
  const openLevel=(s:Scenario)=>{loadLevel(s);setView('brief');};
@@ -316,20 +313,19 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const reshowStop=()=>{const f=failStop.current;if(f&&worldRef.current?.state.result?.outcome==='fail')sceneRef.current?.showStop(f.at,f.kind);};
  /** Tier-2 hint: the next pass of the coach's route from here (and the run to call first), if the
   *  child's move still matches the route; otherwise null and the words say to start again. */
- const [hintNote,setHintNote]=useState(''),hintKey=useRef('');
+ const hintKey=useRef('');
  applyHint.current=()=>{const scene=sceneRef.current,world=worldRef.current;if(!scene)return;
   if(!spotHintRef.current||!world||world.state.phase!=='aiming'||replayRef.current){scene.setHint(null);return;}
-  const s=world.state,id=world.scenario.id,route:Step[]=id.startsWith('daily-')?todaysDaily()?.solution??[]:routeFor(id,headingRef.current),done=world.inputs().length,nums=numbersRef.current;
+  const s=world.state,id=world.scenario.id,route:Step[]=id.startsWith('daily-')?todaysDaily()?.solution??[]:routeFor(id,headingRef.current),done=world.inputs().length;
   let k=0,expect=world.scenario.carrier,calls:{attacker:number;to:{x:number;z:number}}[]=[];
   for(const st of route){if(isCall(st)){calls.push(st.call);continue;}
    if(k===done){if(s.carrier!==expect)break;const g=world.scenario.pitch,hg=g.goalWidth/2-.4;
     const spot=st.kind==='shot'?{x:Math.max(-hg,Math.min(hg,st.target.x)),z:g.length/2}:(st.kind==='pass-feet'||st.kind==='header')&&st.receiver!=null&&s.attackers[st.receiver]?{...s.attackers[st.receiver].p}:{...st.target};
     const run=calls.find(c=>!s.attackers[c.attacker]?.call);
     const hk=`${s.attempt}:${done}:${spot.x.toFixed(1)},${spot.z.toFixed(1)}`;if(hk!==hintKey.current){hintKey.current=hk;cine.play('hint',spot.x,spot.z);}
-    scene.setHint({spot,run:run&&s.attackers[run.attacker]?{from:s.attackers[run.attacker].p,to:run.to}:undefined});
-    setHintNote(run?`Hint: first drag #${nums.attackers[run.attacker]} along the mint arrow, then pass to the glowing spot.`:st.kind==='shot'?'Hint: shoot at the glowing spot.':'Hint: pass to the glowing spot.');return;}
+    scene.setHint({spot,run:run&&s.attackers[run.attacker]?{from:s.attackers[run.attacker].p,to:run.to}:undefined});return;}
    expect=st.kind==='shot'?expect:(st.receiver??expect);calls=[];k++;}
-  scene.setHint(null);setHintNote('Your move went a different way. Try again from the start to see the spot.');};
+  scene.setHint(null);};
  /** "Look up": the Scan lights every simple pass on the frozen pitch (green open, amber tight, red shut). */
  const scanOn=progress.scan??SCAN_FIRST.has(level?.pack??''),scanRef=useRef(scanOn);scanRef.current=scanOn;
  applyScan.current=()=>{const scene=sceneRef.current,world=worldRef.current;if(!scene)return;
@@ -337,8 +333,8 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   try{scene.setScan(lanesNow(world));}catch{scene.setScan(null);}};
  const toggleScan=()=>{cancelDrawing.current();const on=!scanRef.current;scanRef.current=on;setProgress(p=>{const next={...p,scan:on};writeProgress(next);return next;});applyScan.current();settleUntil.current=performance.now()+120;wake.current();};
  useEffect(()=>{applyHint.current();applyScan.current();wake.current();},[spotHint,view,heading,scanOn]);
- /** The hint button steps through the tiers: the words, then the spot, then hides them. */
- const cycleHint=()=>{if(!showHint){setShowHint(true);return;}if(!spotHint){setSpotHint(true);return;}setShowHint(false);setSpotHint(false);};
+ /** The hint button shows the glowing spot (and the run arrow) on the pitch, then hides it: no hint words in play (owner, Oct 27 2026). */
+ const cycleHint=()=>{if(!spotHint){setShowHint(true);setSpotHint(true);return;}setShowHint(false);setSpotHint(false);};
  useEffect(()=>{if(!replaying&&outcome&&view==='play'&&!replayRef.current&&worldRef.current?.state.result)setView('result');},[replaying,outcome,view]);
 
  const unlocked=(s:Scenario,list:Scenario[])=>{const i=list.indexOf(s);return i<=0||(progress.stars[list[i-1].id]??0)>0||(progress.stars[s.id]??0)>0;};
@@ -353,7 +349,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const continueLevel=MAP_ORDER.find(s=>packOpen(s)&&!(progress.stars[s.id]>0))??MAP_ORDER.find(s=>packOpen(s)&&(progress.stars[s.id]??0)<3)??MAP_ORDER[0];
  const continueNumber=continueLevel?MAP_ORDER.filter(s=>s.pack===continueLevel.pack).indexOf(continueLevel)+1:1;
  const firstRun=totalStars===0;
- const quickPlay=()=>{if(!continueLevel)return;loadLevel(continueLevel);setBriefTip(true);void play();};
+ const quickPlay=()=>{if(!continueLevel)return;loadLevel(continueLevel);void play();};
  const openPack=(id:string)=>{setPackId(id);setMenu('pack');};
 
  /** The three star goals in words, for the brief and result cards. */
@@ -366,10 +362,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   if(s.weather?.wet)m.push('Wet pitch: the ball skids');if(s.require.clock)m.push(`Counter: score within ${s.require.clock} s of play`);
   if(s.defenders.some(d=>d.trap))m.push('Offside trap: the line steps up');if(s.defenders.some(d=>d.hunt))m.push('Hunter: presses every pass');
   if(s.defenders.some(d=>d.recover))m.push('Defenders sprint back');if(s.keeper?.sweeper)m.push('Keeper rushes out');return m;};
- const usesRuns=!!level&&(level.pack==='timing'||(ALL_SOLUTIONS[level.id]?.solution??[]).some(st=>'call' in st));
  const inPlay=view==='play'&&!replaying;
  const [nudge,setNudge]=useState(false);
- useEffect(()=>{setNudge(false);if(!inPlay||hud.phase!=='aiming'||showHint)return;const id=setTimeout(()=>setNudge(true),hud.attempt>1?6000:14000);return()=>clearTimeout(id);},[inPlay,hud.phase,hud.attempt,hud.passes,showHint]);
+ useEffect(()=>{setNudge(false);if(!inPlay||hud.phase!=='aiming'||spotHint)return;const id=setTimeout(()=>setNudge(true),hud.attempt>1?6000:14000);return()=>clearTimeout(id);},[inPlay,hud.phase,hud.attempt,hud.passes,spotHint]);
  const expertIdea=level&&isExpertPack(level.pack)?EXPERT_CONCEPTS[level.concept]:undefined;
  /** Progress toward the taught move, always on screen (the brief card is gone once play starts). */
  const progressHud=passProgress(hud.passes,level?.require.minPasses??0);
@@ -382,12 +377,11 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
   <header className={`${arcade.header} ${styles.header}`}><BackButton label="Arcade" title="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}}/>{view!=='levels'?<div className={`${arcade.headerScore} ${styles.passScore}`} aria-live="polite" data-met={progressHud.met||undefined}><strong>{progressHud.count}</strong><span>{progressHud.label} · try {hud.attempt}/{hud.attempts}</span></div>:<span/>}
-   {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={showHint} data-hint-level={showHint?spotHint?2:1:0} data-nudge={nudge||undefined} aria-label={!showHint?'Show hint':!spotHint?'Show me where':'Hide hint'} data-tip={!showHint?'Hint':!spotHint?'Show me where':'Hide hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
+   {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={spotHint} data-hint-level={spotHint?2:0} data-nudge={nudge||undefined} aria-label={spotHint?'Hide hint':'Show me where'} data-tip={spotHint?'Hide hint':'Hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
   </header>
-  {inPlay&&hud.phase==='aiming'&&<p className={`${arcade.message} ${styles.tip}`} data-warn={aimWarn??undefined} data-lane={laneRead?.status}>{laneRead?laneRead.text:aimWarn==='offside'?'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.':showHint&&spotHint&&hintNote?hintNote:controlMode==='shoot'?'Choose height and power. Drag toward either corner, then release.':showHint?hintText:briefTip&&hud.passes===0&&hud.attempt===1&&briefText?briefText:expertIdea&&hud.passes===0?`Big idea: ${expertIdea}`:usesRuns&&hud.passes===0?'Drag from a teammate to send their run. Drag from the ball to pass.':scanOn&&hud.passes===0?'Scan is on: green lanes are open, red lanes are shut. Draw your pass.':progressHud.met&&level?.require.finish==='goal'?'That’s the move! Now finish it: drag toward the goal.':hud.passes>0?'Nice touch. Draw the next one.':controlMode==='lift'?'Drag to a teammate or space. Your pass will lift over the ground.':controlMode==='ground'?'Drag into feet or space for a grounded pass.':'Drag to pass or shoot. Hold the tip to lift, or choose below.'}</p>}
+  {/* Clean pitch (owner, Oct 27 2026): no tip, hint, lesson or modifier text while playing; the start and result cards teach. */}
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
   {inPlay&&hud.phase==='aiming'&&rewindPoint.current&&!rewound.current&&<button type="button" className={styles.undo} data-undo onClick={rewindPass} aria-label="Undo the last pass (once per try)"><Icon name="reset" size={22}/><span>Undo</span></button>}
-  {inPlay&&modifiers(level).length>0&&<ul className={styles.modifiers} aria-label="This pitch">{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}
   {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls}>
    <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div>
    {controlMode==='shoot'&&<label className={`${styles.powerControl} ${styles.shotHeight}`}><span>Height <b>{shotHeight===0?'Low':shotHeight===100?'Top bins':`${shotHeight}%`}</b></span><input aria-label="Shot height" aria-valuetext={shotHeight===0?'Low shot':shotHeight===100?'Top bins':`${shotHeight}% goal height`} type="range" min="0" max="100" step="5" value={shotHeight} onChange={e=>{const value=Number(e.target.value);controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" onClick={()=>{const value=shotHeight===100?0:100;controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}>{shotHeight===100?'Low':'Top bins'}</button></label>}
@@ -395,7 +389,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    <label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label></div>
   </div>}
   {replaying&&<><div className={styles.replayChip} role="status"><Icon name="play" size={14}/> {replayKind==='coach'?`Coach’s route · ${progress.replay==='1x'?'1':'0.6'}×`:`Replay · ${progress.replay==='1x'?'1':'0.38'}×`}{replayLine&&<span className={styles.replayCall} aria-live="polite" data-replay-call>{replayLine}</span>}<button className={styles.camToggle} aria-pressed={playerCam} onClick={togglePlayerView}>{playerCam?'Broadcast view':'Player view'}</button><button className={styles.camToggle} data-replay-speed={progress.replay??'slow'} aria-label={progress.replay==='1x'?'Replay speed: normal. Tap for slow motion':'Replay speed: slow motion. Tap for normal'} onClick={()=>{const next:'slow'|'1x'=progress.replay==='1x'?'slow':'1x';progressRef.current={...progressRef.current,replay:next};setProgress(p=>{const n={...p,replay:next};writeProgress(n);return n;});if(replayKind==='coach')watchCoach();else watchAgain();}}>{progress.replay==='1x'?'1×':'Slow'}</button></div><button className={`pixel-btn ${styles.skip}`} onClick={skipReplay}>Skip</button></>}
-  {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b><span>{callout.teach}</span></div>}
+  {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b></div>}
   <div ref={loftMeter} className={styles.loft} data-active="false" aria-hidden="true"><i/><span>LIFT</span></div>
 
   {view==='levels'&&<div className={`${arcade.overlay} ${styles.menuOverlay}`}><section className={`${arcade.card} ${styles.levels}`} data-menu={menu}>
