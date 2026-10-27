@@ -15,7 +15,9 @@ export type TennisCameraLayout={width:number;length:number;top:number;bottom:num
 /** Layout per screen class. Portrait phones get a tighter court frame (10.5 m for the 10 m court). */
 export function tennisCameraLayout(w:number,h:number,mobile:boolean):TennisCameraLayout{
  const portrait=h>w*1.15,short=h<520;
- if(short)return {width:10.8,length:17.2,top:56,bottom:96,rallyTilt:.95,serveTilt:1.15,limitX:.97,zoom:1.12};
+ // Sideways phones (Tennis is landscape-only on phones since Oct 27 2026): the far baseline clears the score bar; the thumbs sit
+ // beside the court, so the bottom band is small.
+ if(short)return {width:10.8,length:17.2,top:74,bottom:40,rallyTilt:.95,serveTilt:1.15,limitX:.97,zoom:1.12};
  if(mobile&&portrait&&w>600)return {width:10.8,length:17.2,top:80,bottom:212,rallyTilt:.5,serveTilt:.82,limitX:.97,zoom:1.18}; // tablets: the court is already big
  if(mobile&&portrait)return {width:10.5,length:17,top:66,bottom:192,rallyTilt:.42,serveTilt:.8,limitX:.99,zoom:1.32};
  if(portrait)return {width:10.8,length:17.2,top:80,bottom:170,rallyTilt:.5,serveTilt:.82,limitX:.96,zoom:1.24};
