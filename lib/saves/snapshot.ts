@@ -48,7 +48,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-dive-reef-v1',// Explore v2 (Oct 21 2026, lib/town/water/diveJourney.ts): each zone's collected pickups and the restored zones (the reward pays once ever)// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
- 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-tennis-stars-v1',
+ 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-runner-routes-v1','fi2-tennis-stars-v1',
  'fi2-pinball-stars-v1','fi2-pass-puzzles-v1','fi.game.runner.best',
  // Grown-ups & IDP (the IDP with its free text removed: stripIdpText). fi2-idp-v2 (Oct 9 2026) holds ids, dates and picture
  // choices only; its typed words live in the device key fi2-idp-text-v1 (DEVICE_KEYS), which never syncs.
@@ -56,7 +56,7 @@ export const SYNC_KEYS:readonly string[]=[
 ];
 export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,24}){0,2}-v1$/;
 /** Doc §4.1 table B: each device keeps its own. */
-export const DEVICE_KEYS:readonly string[]=['fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
+export const DEVICE_KEYS:readonly string[]=['fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),

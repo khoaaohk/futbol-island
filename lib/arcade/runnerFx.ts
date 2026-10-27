@@ -8,6 +8,9 @@ import {readRunnerProgress,runnerBallFor} from './runnerMissions';
 import {readArcadeRecord} from './arcadeRecords';
 import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
 import {createRunnerTrack} from './runnerTrack';
+import {createRunnerCinema,CINEMA,type CinemaKind} from './runnerCinema';
+import {createRunnerScenery} from './runnerWeather';
+import {TERRAINS} from '../../components/games/runnerRoute';
 
 /**
  * Breakaway Run presentation layer: speed lines, plant dust, goal confetti,
@@ -26,7 +29,12 @@ export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
  let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0;
- const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null};
+ const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null,
+  /* round 3 */bigAirs:0,doubleJumps:0,graceSaves:0,heartsBack:0,inputs:0,boost:false,rollers:0};
+ /* Round 3 cinematic beats (runnerCinema.ts) and the dynamic chase camera's smoothed offsets. */
+ const cinema=createRunnerCinema(reduced);let camX=0,camY=0,camZ=0,camPitch=0,introPending=true,lastDuel:RunnerObject|null=null;const pending={heart:false};
+ /** Slow-motion beats never run under the first-run coach's own slow motion. */
+ const beat=(kind:CinemaKind,s:RunnerGame)=>{if(s.coachScale<1&&kind!=='power')return;cinema.trigger(kind);};
 
  /* ---------- speed lines: one quad buffer, side streaks only ---------- */
  const linePos=new Float32Array(LINES*12),lineSeed=new Float32Array(LINES*4);
@@ -209,7 +217,7 @@ export function createRunnerFx(stage:ArcadeStage){
   // Keeper
   const goal=s.objects.find(o=>o.kind==='goal'&&o.keeper&&o.z<1.5&&!(o.scored&&(o.goalBurst??0)>1.1));
   keeper.root.visible=!!goal;
-  if(goal){const out=goal.kout??0,z=goal.z+.55+out*7;keeper.root.position.set(goal.kx??0,0,z);
+  if(goal){const out=goal.kout??0,z=goal.z+.55+out*7;keeper.root.position.set(goal.kx??0,0,z);keeper.root.scale.setScalar(goal.final?1.45:1.12);
    const saving=(goal.reaction??0)>0;keeperPose.vx=goal.vx??0;keeperPose.vz=out>0&&out<1?7:0;
    // Set position (Oct 25 2026): the keeper sinks lower and readier as the runner closes in, the cue to shoot early.
    const near=1-clamp01((-goal.z-10)/30);keeperPose.anticipate=saving||goal.scored?0:.45+.55*near;keeperPose.celebrate=0;
@@ -274,12 +282,25 @@ export function createRunnerFx(stage:ArcadeStage){
  /* ---------- per-frame ---------- */
  function update(dt:number,s:RunnerGame){
   elapsed+=dt;
-  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);}
+  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);
+   seen.bigAirs=s.bigAirs;seen.doubleJumps=s.doubleJumps;seen.graceSaves=s.graceSaves;seen.heartsBack=s.heartsBack;seen.inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;seen.boost=s.boost>0;seen.rollers=s.rollersJumped;}
+  // Any input skips a running cinematic beat (never the goal-line duel or the finish replay).
+  const inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;if(inputs!==seen.inputs){seen.inputs=inputs;const k=cinema.kind();if(k&&k!=='duel'&&k!=='finish')cinema.skip();}
+  // Stadium run-in: the first played frame of a run starts the camera sweep from high and wide.
+  if(introPending&&s.time>0){introPending=false;cinema.trigger('intro');}
   // Counters → one-shot juice. Nothing here allocates.
   if(s.cuts!==seen.cuts){seen.cuts=s.cuts;puff(s.x-s.cutDir*.25,.1,3,.9,.45);}
   if(s.landings!==seen.landings){seen.landings=s.landings;puff(s.x,0,4,1.1,.5);}
-  if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;lineFlash=1;hitstop=.11;hitstopScale=.45;pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
-  if(s.hurdles!==seen.hurdles){seen.hurdles=s.hurdles;pop('HURDLED!','#7ff0e2',3.4,.8);}
+  if(s.nearMisses!==seen.nearMisses){lineFlash=1;hitstop=.11;hitstopScale=.45;pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
+  if(s.hurdles!==seen.hurdles){seen.hurdles=s.hurdles;pop('HURDLED!','#7ff0e2',3.4,.8);beat('hurdle',s);}
+  if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;beat('dodge',s);}
+  if(s.bigAirs!==seen.bigAirs){seen.bigAirs=s.bigAirs;beat('bigair',s);pop('BIG AIR!','#9ff6ff',3.4,.8);}
+  if(s.doubleJumps!==seen.doubleJumps){seen.doubleJumps=s.doubleJumps;puff(s.x,-.1,4,1,.6);pop('DOUBLE JUMP!','#9ff6ff',3,.7);}
+  if(s.graceSaves!==seen.graceSaves){seen.graceSaves=s.graceSaves;pop('JUST IN TIME!','#7ff0e2',3.2,.8);}
+  if(s.heartsBack!==seen.heartsBack){seen.heartsBack=s.heartsBack;pending.heart=true;}
+  if(s.rollersJumped!==seen.rollers){seen.rollers=s.rollersJumped;pop('OVER IT!','#7ff0e2',3,.7);}
+  // Power run starting = a power-up: speed-line flare and a small pull-back.
+  if((s.boost>0)!==seen.boost){seen.boost=s.boost>0;if(seen.boost){lineFlash=1;beat('power',s);}}
   // First-run coach: the one action, in one big word, while time slows (runnerCoach.ts).
   if(s.coachCount!==seen.coach){seen.coach=s.coachCount;if(s.coachWord)pop(s.coachWord,'#ffe07a',4.4,1.8,'Time slows down. You try!',1.5);}
   depth(dt,s);
@@ -303,6 +324,13 @@ export function createRunnerFx(stage:ArcadeStage){
    else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
    else if(kind==='best'){pop('NEW BEST!','#7ff0e2',4.6,1.4,'Keep going!');hype=1;photoFlashes(stage.mobile?10:16);lineFlash=Math.max(lineFlash,.8);}
    else if(kind==='shot'&&s.lastBlast>=.8)trauma=Math.min(1,trauma+.28);
+   // Round 3 words and beats: terrain zones, the final hill, combos, power-ups, the goal line.
+   if(kind==='terrain')pop(TERRAINS[s.terrain].name,'#ffe07a',3.6,1.4,TERRAINS[s.terrain].tip);
+   else if(kind==='finalhill')pop(s.bossTries?'ANOTHER GO!':'FINAL HILL!','#ffd36e',4.4,1.4,s.bossKeeper?'Beat the boss keeper':'Run to the goal line');
+   else if(kind==='combo')pop('JUMP + SLIDE!','#ffd36e',4,1.3,'Jump the tackles, then slide');
+   else if(kind==='power'){pop('MAGNET!','#ff9bd2',4,1.1,'Footballs fly to you');lineFlash=1;beat('power',s);}
+   if(kind==='goal'){if(s.won){beat('finish',s);pop(s.bossKeeper?'BOSS BEATEN!':'GOAL LINE!','#ffe07a',5.4,2,'Route complete!');photoFlashes(stage.mobile?14:22);}else beat('goal',s);if(pending.heart){pending.heart=false;}}
+   else if(kind==='save'&&lastDuel&&!lastDuel.scored)beat('save',s);
   }
   seen.drops=s.comboDrops;keeperCheer=Math.max(0,keeperCheer-dt);
   // Combo aura and the tier-up word (queued behind a bigger word such as GOAL! so neither is lost).
@@ -313,12 +341,17 @@ export function createRunnerFx(stage:ArcadeStage){
   if(aura.visible){if(auraWant>0)auraMaterial.color.copy(tier>2?auraGold:auraCyan);const k=(reduced?1:1+Math.sin(elapsed*(tier>2?9:6))*.06)*(1+(reduced?0:auraFlash*.6));aura.scale.setScalar(.9*k);aura.position.set(s.x,.035,-.15);}
   if(s.slide>.15&&s.lives>0){slideDust-=dt;if(slideDust<=0){slideDust=.07;puff(s.x+.2,.25,1,.5,.35);}}
   hitstop=Math.max(0,hitstop-dt);trauma=Math.max(0,trauma-dt*2.4);lineFlash=Math.max(0,lineFlash-dt*2.5);punch=Math.max(0,punch-dt*1.6);stepWord(dt,s);
+  if(pending.heart&&(!word.visible||wordAge>wordLife*.65)){pending.heart=false;pop('♥ +1 HEART','#ff9bd2',3.8,1.1,'Goals win hearts back');}
+  // Goal-line duel: as the boss keeper comes into shooting range, a low hero shot and slow motion across the decision.
+  if(s.lives>0&&!s.finished&&s.balls>0){let duel:RunnerObject|null=null;for(const o of s.objects)if(o.kind==='goal'&&o.final&&o.keeper&&!o.passed&&!o.scored&&o.z>-26&&o.z<-12){duel=o;break;}
+   if(duel&&duel!==lastDuel){lastDuel=duel;beat('duel',s);}}
+  cinema.step(dt);scenery.update(dt,s);
   const travel=s.speed*dt*(s.lives>0||s.outro>0?1:0);
 
   // Speed lines: invisible at kick-off pace, building with speed, boost and near misses.
   // Descents add streaks: the slope is doing the work, so speed reads as the ground falls away.
   descent+=(clamp01((-routeGrade(s.distance)-.025)/.07)*(s.lives>0?1:0)-descent)*(1-Math.exp(-dt*4));
-  const strength=reduced?0:Math.min(.75,clamp01((s.speed-13.4)/4.6)*.32+(s.boost>0?.32:0)+lineFlash*.4+descent*.36);
+  const strength=reduced?0:Math.min(.8,clamp01((s.speed-13.4)/4.6)*.32+(s.boost>0?.32:0)+lineFlash*.4+descent*.36+cinema.flare()*.45+(s.magnet>0?.12:0));
   lineMaterial.opacity=strength;lines.visible=strength>.015;
   if(lines.visible){const stretch=.6+s.speed/9;for(let i=0;i<LINES;i++){const k=i*4;lineSeed[k+2]+=travel*1.7;if(lineSeed[k+2]>8)lineSeed[k+2]-=70;const x=lineSeed[k],y=lineSeed[k+1],z=lineSeed[k+2],len=lineSeed[k+3]*stretch,w=.022+(i%3)*.008,j=i*12;
    linePos[j]=x-w;linePos[j+1]=y;linePos[j+2]=z;linePos[j+3]=x+w;linePos[j+4]=y;linePos[j+5]=z;linePos[j+6]=x+w;linePos[j+7]=y;linePos[j+8]=z+len;linePos[j+9]=x-w;linePos[j+10]=y;linePos[j+11]=z+len;}
@@ -348,7 +381,7 @@ export function createRunnerFx(stage:ArcadeStage){
  function reset(s:RunnerGame){
   // Replay hook: the record to beat is read once per run (no per-frame storage reads).
   s.bestToBeat=typeof localStorage==='undefined'?0:readArcadeRecord('runner').best;s.newBest=false;
-  trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
+  trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;cinema.reset();scenery.reset();camX=camY=camZ=camPitch=0;introPending=true;lastDuel=null;pending.heart=false;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
   flashLife.fill(0);flashDelay.fill(0);flashes.visible=aura.visible=false;auraMaterial.opacity=auraFlash=0;auraTier=1;pendingTier=0;keeperCheer=0;body.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;
   for(const stand of stands){stand.z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;stand.mesh.position.z=stand.z;fillStand(stand,s.distance,false);}
@@ -370,19 +403,35 @@ export function createRunnerFx(stage:ArcadeStage){
   for(const g of defenders)if(g.userData.bendDirty){g.userData.bendDirty=false;track.patch(g);}
   if(reduced){if(stage.mobile&&cam.aspect>1.45)cam.updateMatrixWorld();if(cam.fov!==baseFov){cam.fov=baseFov;cam.updateProjectionMatrix();}track.pose(cam);return;}
   follow+=(s.x*.2-follow)*(1-Math.exp(-dt*5));cam.position.x+=follow;
+  // Dynamic chase camera (round 3): pulls back with speed, swings wide on bends, rises on climbs (to see over the
+  // crest) and pulls back on descents, dips for slides and lifts for jumps; cinematic beats add a low hero shot,
+  // a rise or a push-in. Every offset is damped (no jitter, capped speed), there is no roll, pitch stays within ±.06 rad.
+  {const live=s.lives>0||s.outro>0,g=live?routeGrade(s.distance):0,sp=clamp01((s.speed-13)/7);
+   const wx=live?Math.max(-1.1,Math.min(1.1,-s.curve*s.speed*s.speed*.9)):0;
+   // Climbs: rise up to .8 m to see over the crest, pitched down by the same angle so the runner stays put on screen.
+   // Descents: pull back and look down the hill.
+   const climb=Math.max(0,Math.min(.8,g*6)),wy=sp*.35+climb+Math.max(-.6,g*4)*(g<0?1:0)-s.slidePose*.55+s.y*.28+cinema.lift()-cinema.low();
+   const wz=sp*1.3+Math.min(1.4,Math.max(0,-g)*8)+cinema.back()-cinema.low()*.4;
+   const wp=Math.max(-.06,Math.min(.02,(g<0?g*.4:0)-climb/16))-cinema.low()*.02;
+   const k=1-Math.exp(-dt*3.2),kf=1-Math.exp(-dt*6);camX+=(wx-camX)*k;camY+=(wy-camY)*kf;camZ+=(wz-camZ)*kf;camPitch+=(wp-camPitch)*k;
+   cam.position.x+=camX;cam.position.y+=camY;cam.position.z+=camZ;cam.rotateX(camPitch);}
   if(trauma>0){const shake=trauma*trauma*.2;cam.position.x+=Math.sin(elapsed*71.3)*shake;cam.position.y+=Math.sin(elapsed*53.1+1.7)*shake*.7;}
-  const target=baseFov+clamp01((s.speed-13)/5)*2.6+(s.boost>0?2.2:0)+lineFlash*1.2+descent*1.6-Math.sin(Math.min(1,punch)*Math.PI)*5;
+  // FOV stays within ±12 % of the base (comfort), and a cinematic punch-in narrows it by at most CINEMA.maxFov.
+  const raw=baseFov+clamp01((s.speed-13)/5)*2.6+(s.boost>0?2.2:0)+lineFlash*1.2+descent*1.6-Math.sin(Math.min(1,punch)*Math.PI)*5;
+  const target=Math.max(baseFov*(1-CINEMA.maxFov),Math.min(baseFov*(1+CINEMA.maxFov),raw)*(1-cinema.zoom()*CINEMA.maxFov*.8));
   if(!fov)fov=baseFov;fov+=(target-fov)*(1-Math.exp(-dt*4));if(Math.abs(cam.fov-fov)>.01){cam.fov=fov;cam.updateProjectionMatrix();}
   cam.updateMatrixWorld();track.pose(cam);
  }
  // The winding route: built last so every runner mesh above is bent too.
- const track=createRunnerTrack(stage);
+ const scenery=createRunnerScenery(stage);
+ const track=createRunnerTrack(stage);scenery.attach(track);
  return{update,reset,camera,defender,prepareDefender,player,track,dispose:track.dispose,
   /** Simulation time scale for hit-stop: brief freezes on impact, a breath of slow-mo on near misses. */
-  timeScale:()=>hitstop>0?hitstopScale:1,
+  timeScale:()=>Math.min(hitstop>0?hitstopScale:1,cinema.timeScale()),
+  cinema,scenery,
   /** Any effect still animating keeps frames coming briefly after play stops. */
-  active:()=>dust.visible||confetti.visible||flashes.visible||trauma>0||hitstop>0||word.visible,
-  debug:()=>({aura:aura.visible?auraMaterial.opacity:0,auraTier,flashes:flashes.visible,keeperCheer,plant:body.plant,squashSerial:body.serial,word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
+  active:()=>dust.visible||confetti.visible||flashes.visible||trauma>0||hitstop>0||word.visible||cinema.active()||scenery.active(),
+  debug:()=>({cinema:cinema.debug(),scenery:scenery.debug(),cam:{x:camX,y:camY,z:camZ,pitch:camPitch,fov},aura:aura.visible?auraMaterial.opacity:0,auraTier,flashes:flashes.visible,keeperCheer,plant:body.plant,squashSerial:body.serial,word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
  };
 }
 export type RunnerFx=ReturnType<typeof createRunnerFx>;

@@ -1,5 +1,6 @@
 import {RUNNER_SKILLS,RUNNER_SKILL_FOR,RUNNER_SKILL_WINDOW,runnerContactTime,runnerMultiplier,runnerOver,runnerSkillTarget,type RunnerGame} from './runnerGame';
 import {runnerMissionSummary} from './runnerMissions';
+import {RUNNER_MODES} from './runnerModes';
 import {routeCurve,routeGrade,ROUTE_BEND_MIN,ROUTE_STEEP} from '../../components/games/runnerRoute';
 
 /** Breakaway Run heads-up display: one short status line, one coaching line and the
@@ -17,8 +18,15 @@ const ROLE_TIP={
  jockey:'PURPLE DEFENDER · change lane, or STEP-OVER',
 } as const;
 /** Chances as hearts: a child reads ♥♥♡ faster than "2 chances". */
-export const runnerHearts=(lives:number)=>'♥'.repeat(Math.max(0,Math.min(3,lives)))+'♡'.repeat(Math.max(0,3-Math.max(0,lives)));
-const FRESH=new Set(['best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit']);
+export const runnerHearts=(lives:number,max=3)=>'♥'.repeat(Math.max(0,Math.min(max,lives)))+'♡'.repeat(Math.max(0,max-Math.max(0,lives)));
+const FRESH=new Set(['best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power']);
+/** Round 3: one line about the route for the full-time card. */
+export function runnerFinishLine(r:RunnerGame){
+ const m=RUNNER_MODES[r.mode];if(!m.finish)return '';
+ if(r.won)return m.bossKeeper?`${m.name}: BOSS KEEPER BEATEN!`:`${m.name}: goal-line finish!`;
+ if(r.finished)return `${m.name}: you reached the goal line!`;
+ return `${m.name}: ${Math.floor(r.distance)} of ${m.finish} m`;
+}
 /** One short after-run takeaway about the game's lesson: beat the tackle, then find the goal. */
 export function runnerLessonTakeaway(r:RunnerGame){
  if(r.beatScores>0)return `Beat the tackle, then scored: ${r.beatScores}×!`;
@@ -49,17 +57,28 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
  const threat=runner.objects.find(o=>o.kind==='defender'&&!o.passed&&!o.beaten&&o.z> -24&&Math.abs(runner.x-(o.x??o.lane*2.4))<1.4);
  const mate=runner.objects.find(o=>o.kind==='mate'&&!o.passed&&o.z>-26&&o.z<-4);
  const fork=runner.objects.find(o=>o.kind==='fork'&&!o.passed&&o.z>-80);
- const status=runner.boost>0?(runner.shield?'POWER RUN + SHIELD':'POWER RUN'):runner.boss>0?'BACK LINE!':runner.route==='wing'?'WING ROUTE':runner.route==='middle'?'GOALS ×2':`Stage ${runner.level}`;
+ const finalGoal=runner.finishPhase==='keeper'?runner.objects.find(o=>o.kind==='goal'&&o.final&&!o.passed):undefined;
+ const gauntlet=runner.objects.find(o=>o.gauntlet&&!o.passed&&o.z>-40);
+ const roller=runner.objects.find(o=>o.kind==='roller'&&!o.passed&&o.z>-30);
+ const magnet=runner.objects.find(o=>o.kind==='magnet'&&!o.passed&&o.z>-30);
+ const drifting=runner.objects.find(o=>o.kind==='defender'&&o.drift!==undefined&&!o.passed&&o.z>-45);
+ const status=runner.finishPhase==='hill'?'HILL!':runner.finishPhase==='keeper'?(runner.bossKeeper?'BOSS!':'GOAL!'):runner.magnet>0?'MAGNET':runner.boost>0?(runner.shield?'POWER RUN + SHIELD':'POWER RUN'):runner.boss>0?'BACK LINE!':runner.route==='wing'?'WING ROUTE':runner.route==='middle'?'GOALS ×2':`Stage ${runner.level}`;
  const lesson=over?runnerLessonTakeaway(runner):'';
  // Full time: one fact per line (the card breaks on \n) instead of one long run-on sentence a child will not read.
- const detail=over?`${runner.newBest?'NEW PERSONAL BEST!\n':''}${runner.goals} goal${runner.goals===1?'':'s'} · ${Math.floor(runner.distance)} m · stage ${runner.level}\n${runnerMissionSummary(runner)}\n${lesson?lesson+'\n':''}${runnerRouteTakeaway(runner)}`:
+ const finishLine=over?runnerFinishLine(runner):'';
+ const detail=over?`${finishLine?finishLine+'\n':''}${runner.newBest?'NEW PERSONAL BEST!\n':''}${runner.goals} goal${runner.goals===1?'':'s'} · ${Math.floor(runner.distance)} m · stage ${runner.level}\n${runnerMissionSummary(runner)}\n${lesson?lesson+'\n':''}${runnerRouteTakeaway(runner)}`:
   // Two short lines for the phone header pill (its text column is ~130 px): what you HAVE (chances, balls, combo),
   // then WHERE you are (distance, stage or the live route/power state). Distance never swaps out (no jitter); the
   // stage's lesson name is announced on the coaching line when the stage starts, not crammed in here.
-  `${runnerHearts(runner.lives)} · ⚽ ${runner.balls}/5${runnerMultiplier(runner)>1?` · ×${runnerMultiplier(runner)}`:''}\n${Math.floor(runner.distance)} m · ${status}`;
+  `${runnerHearts(runner.lives,runner.maxLives)} · ⚽ ${runner.balls}/5${runnerMultiplier(runner)>1?` · ×${runnerMultiplier(runner)}`:''}\n${runner.finish?`${Math.max(0,Math.ceil(runner.finish-runner.distance))} m to go`:`${Math.floor(runner.distance)} m`} · ${status}`;
  // Teaching moments (skill names, one-twos, missions, goals) stay on screen briefly before tips return.
  const fresh=runner.time-runner.eventAt<1.3&&FRESH.has(runner.eventKind);
  const message=runner.coachPrompt&&!over?runner.coachPrompt:fresh?runner.message:runner.shots.some(p=>p.active&&(p.returner||p.returning))?'RETURN BALL · jump or change lanes'
+  :finalGoal&&finalGoal.z>-30?(finalGoal.keeper?`BOSS KEEPER ${(finalGoal.vx??0)>.3?'MOVING RIGHT':(finalGoal.vx??0)<-.3?'MOVING LEFT':'SET'} · shoot the other side`:'GOAL LINE · centre lane, then SHOOT!')
+  :gauntlet?(gauntlet.role==='tackler'?'COMBO · JUMP the slide tackles, then SLIDE':'NOW SLIDE · under the line (or jump again)')
+  :roller?'LOOSE BALL ROLLING · JUMP it'
+  :drifting?'MOVING DEFENDER · watch where they stop'
+  :magnet?'MAGNET ORB · grab it: balls fly to you'
   :runner.charging?(runner.charge>=.8?'BLAST READY · release to break through':`HOLD TO CHARGE · ${Math.round(runner.charge*100)}%`)
   :runner.pass.phase?'ONE-TWO · keep running, it is coming back'
   :fork&&fork.z<-20?'FORK · LEFT = wing (safer, cross) · CENTRE/RIGHT = middle (goals ×2)'

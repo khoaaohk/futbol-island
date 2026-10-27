@@ -50,8 +50,8 @@ assert(runnerSlopeFactor(.08)<1&&runnerSlopeFactor(-.08)>1);assert.equal(runnerS
 {let start=0;for(let d=400;d<3000;d++)if(Math.abs(routeCurve(d))>ROUTE_BEND_MIN&&!Math.abs(routeCurve(d-1)>ROUTE_BEND_MIN)&&Math.abs(routeCurve(d-1))<=ROUTE_BEND_MIN){start=d;break;}
  const dir=runnerInsideLane(routeCurve(start+5));assert(dir!==0);
  const inside=fresh({distance:start-20,lane:dir,x:dir*2.4,prevLane:dir}),outside=fresh({distance:start-20,lane:-dir,x:-dir*2.4,prevLane:-dir});
- for(let i=0;i<60*8;i++){tickRunner(inside,1/60);tickRunner(outside,1/60);}
- assert(inside.bends>=1&&inside.insideCuts>=1,'inside line rewarded');assert.match(inside.message+inside.eventKind,/inside|CUT INSIDE/);assert(inside.energy>=1,'feeds the power run');
+ let said=false;for(let i=0;i<60*8;i++){tickRunner(inside,1/60);tickRunner(outside,1/60);if(/CUT INSIDE/.test(inside.message))said=true;}
+ assert(inside.bends>=1&&inside.insideCuts>=1,'inside line rewarded');assert(said,"the inside cut is announced");assert(inside.energy>=1,'feeds the power run');
  assert.equal(outside.insideCuts,0,'the outside lane is the long way round');assert.equal(outside.bends,inside.bends);
  assert.equal(outside.score+30*inside.insideCuts<=inside.score,true);}
 

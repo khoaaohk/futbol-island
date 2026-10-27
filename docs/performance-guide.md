@@ -6087,3 +6087,5 @@ the chase. Headless measurement only; no iPhone temperature measured.
 - Per frame: the cinematic beat (`lib/arcade/tennisCinema.ts`) is a few smoothsteps on one pooled state object; slow-mo is
   capped (≤ 0.7 s real, one per 6 s) and the loop still sleeps (`active()` false once settled). Floodlight glow writes opacity
   only on a > 0.004 change. Wind adds one term to the flight model (no extra predictions). Not measured on an iPhone.
+## Breakaway Run round 3 (Oct 26 2026)
+Terrain zones are one shader on the existing terrain mesh (which was back-face culled before and is now drawn; the sky behind it is depth-rejected). New scenery is pooled and hidden when idle: classic steady play adds 0 draw calls; Storm adds 1 (rain buffer, 70 streaks on phones), the goal-line arch 4 only in its last 150 m. Cinematic beats and the chase camera allocate nothing per frame and are off under reduced motion. Details and the eyeball list: [ARCADE_BREAKAWAY_R3_OCT26.md](ARCADE_BREAKAWAY_R3_OCT26.md). Desktop emulation only; no iPhone thermal claim.

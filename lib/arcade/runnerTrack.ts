@@ -1,6 +1,63 @@
 import * as T from 'three';
 import type {ArcadeStage} from './arcadeStage';
-import {routeBendTable,routeCurve,routeGrade,routeHeadingAhead,ROUTE_BEND_MIN} from '../../components/games/runnerRoute';
+import {routeBendTable,routeCurve,routeGrade,routeHeadingAhead,routeHeight,terrainAt,terrainOfZone,terrainZoneAt,TERRAINS,TERRAIN_ZONE,ROUTE_BEND_MIN,type TerrainId} from '../../components/games/runnerRoute';
+
+/* ---- terrain zones (round 3): one shader on the one terrain mesh, no extra draws ----
+ * The road and land colours, the surface pattern (pitch stripes, sand ripples, cobbles, snow sparkle, mud,
+ * neon grid, roof tiles, bridge planks) and a height tint (green valleys, rocky ridges, snowy peaks) are
+ * computed per fragment from the absolute route distance and height. Off the road, far land rolls into
+ * hills and valleys (vertex offset only beyond the prop band, so houses never float). Two zones at most
+ * are visible (zone 240 m > the 180 m window), so two colour sets and one boundary are enough. */
+const terrainUniforms={uTerr:{value:new T.Vector4()},uZone:{value:new T.Vector4(1e9,0,0,0)},
+ uRoadA:{value:new T.Color()},uLandA:{value:new T.Color()},uRoadB:{value:new T.Color()},uLandB:{value:new T.Color()}};
+const TERRAIN_VERT_PARS=/* glsl */`uniform vec4 uTerr;varying float vAlong;varying float vSide;varying float vTH;`;
+const TERRAIN_VERT_BEGIN=/* glsl */`#include <begin_vertex>
+{float ax=abs(transformed.x);
+ // Rolling hills off the road: grows from 22 m out (past every prop), scrolls with the route.
+ float sAbs=uTerr.x-transformed.z,k=clamp((ax-22.)/40.,0.,1.);
+ transformed.y+=k*(3.2*sin(sAbs*.045+transformed.x*.07)+1.8*sin(sAbs*.11-transformed.x*.05)+2.2)*(1.+k);}`;
+const TERRAIN_VERT_PROJECT=/* glsl */`#include <project_vertex>
+vAlong=-transformed.z;vSide=transformed.x;
+vTH=uTerr.y+(rbW.y-transformed.y)+uTerr.z*vAlong+uTerr.w*max(0.,vAlong)*max(0.,vAlong);`;
+const TERRAIN_FRAG_PARS=/* glsl */`uniform vec4 uTerr;uniform vec4 uZone;uniform vec3 uRoadA,uLandA,uRoadB,uLandB;varying float vAlong;varying float vSide;varying float vTH;
+float rbHash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}`;
+const TERRAIN_FRAG=/* glsl */`#include <color_fragment>
+{float s=uTerr.x+vAlong,side=abs(vSide),tB=smoothstep(uZone.x-7.,uZone.x+7.,s),pat=tB<.5?uZone.y:uZone.z;
+ vec3 road=mix(uRoadA,uRoadB,tB),land=mix(uLandA,uLandB,tB),col;
+ if(side<=4.5){col=road;
+  if(pat<.5)col*=.9+.1*step(.5,fract(s/6.));
+  else if(pat<1.5)col*=.92+.08*sin(s*2.1+sin(vSide*1.3)*2.);
+  else if(pat<2.5){vec2 c=vec2(vSide*1.5+floor(s*1.5)*.5,s*1.5),f=fract(c);float e=min(min(f.x,1.-f.x),min(f.y,1.-f.y));col*=mix(.55,1.,smoothstep(.03,.14,e))*(.9+.2*rbHash(floor(c)));}
+  else if(pat<3.5)col+=vec3(.22)*step(.975,rbHash(floor(vec2(vSide,s)*7.)));
+  else if(pat<4.5)col*=.72+.38*smoothstep(.35,.75,sin(s*.7+vSide*1.1)*.5+.5);
+  else if(pat<5.5){float g=max(step(.94,fract(s/3.)),step(.95,fract(vSide/2.4+.5)));col=mix(col,vec3(.45,1.,.95),g*.55);}
+  else if(pat<6.5)col*=1.-.32*step(.88,fract(s*1.2))-.12*step(.9,fract(vSide*.8));
+  else col*=1.-.42*step(.9,fract(s*1.6));}
+ else if(side<=5.4)col=mix(road,land,.5)*.75;
+ else{col=land;
+  // Height tint: green valleys, rocky ridges, snowy peaks (absolute route height in metres).
+  col=mix(col,vec3(.13,.32,.2),smoothstep(-2.,-7.,vTH)*.6);
+  col=mix(col,vec3(.36,.35,.42),smoothstep(5.,10.,vTH)*.75);
+  col=mix(col,vec3(.9,.93,.97),smoothstep(12.,18.,vTH)*.85);
+  col=mix(col,col*.5,clamp((side-5.4)/40.,0.,1.));}
+ diffuseColor.rgb*=col;}`;
+function terrainShader(m:T.Material){
+ m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,terrainUniforms);
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TERRAIN_VERT_PARS).replace('#include <begin_vertex>',TERRAIN_VERT_BEGIN).replace('#include <project_vertex>',TERRAIN_VERT_PROJECT);
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+TERRAIN_FRAG_PARS).replace('#include <color_fragment>',TERRAIN_FRAG);};
+ m.customProgramCacheKey=()=>'runner-terrain-zones-1';
+}
+/** Prop colours per terrain: [house, roof, trim glow, leaves, pole]. */
+const PROP_PALETTE:Record<TerrainId,readonly [string,string,string,string,string]>={
+ grass:['#2f3f3a','#3f8a52','#ffe07a','#2f6b3e','#40545a'],
+ sand:['#c9a36a','#e8c879','#ff9b5e','#3c8f55','#7a5a3a'],
+ cobbles:['#5a3d3a','#8a3f35','#ffd36e','#2b3c5e','#343052'],
+ snow:['#dfe7f2','#ffffff','#9ff6ff','#e9f2fb','#8fa3bd'],
+ mud:['#4a3526','#6b4a2f','#ffb36e','#3d4a2a','#3b2a1e'],
+ neon:['#292841','#8749bc','#ff62c2','#2b3c5e','#324f56'],
+ rooftop:['#5a4050','#7a3b35','#73fff1','#3a4a5e','#58505e'],
+ bridge:['#3c5a78','#9a6b42','#ffd36e','#2b3c5e','#c9d6ff'],
+};
 
 /**
  * Breakaway Run winding route (Oct 9 2026).
@@ -133,23 +190,27 @@ export function createRunnerTrack(stage:ArcadeStage){
  scene.traverse(o=>{const m=o as T.Mesh;if(!m.isMesh)return;const g=m.geometry as T.PlaneGeometry;
   if((o.name==='glass-surface'||o.name==='neon-court-spill')&&g.parameters&&g.parameters.heightSegments===1){const p=g.parameters,spill=o.name==='neon-court-spill';
    // The spill's glowing rim marked a hard "end of the road": stretch it past the fog line instead.
-   m.geometry=new T.PlaneGeometry(p.width,p.height*(spill?2.3:1),1,Math.ceil(p.height/2.5));g.dispose();}});
+   m.geometry=new T.PlaneGeometry(p.width,p.height*(spill?2.3:1),1,Math.ceil(p.height/2.5));g.dispose();
+   // Round 3: the ground is now visible (terrain zones), so the spill glazes it lightly instead of tinting it.
+   if(spill)(m.material as T.MeshBasicMaterial).opacity*=.4;}});
 
  /* ---- terrain + road: one tessellated mesh in the straight frame, bent by the shader ---- */
  const XS=[-160,-90,-55,-32,-22,-15,-10,-7,-5.4,-4.5,-2.4,0,2.4,4.5,5.4,7,10,15,22,32,55,90,160],Z0=36,Z1=-144,ROW=3,rows=Math.round((Z0-Z1)/ROW)+1;
- const road=new T.Color('#192b43'),verge=new T.Color('#141c38'),land=new T.Color('#0c0f25'),far=new T.Color('#121033'),c=new T.Color();
+ // Vertex colours stay white: the terrain shader paints road, verge and land per zone (see terrainShader).
+ const road=new T.Color('#ffffff'),verge=new T.Color('#ffffff'),land=new T.Color('#ffffff'),far=new T.Color('#ffffff'),c=new T.Color();
  const pos:number[]=[],col:number[]=[],uv:number[]=[],idx:number[]=[];
  for(let r=0;r<rows;r++){const z=Z0-r*ROW;for(const x of XS){const ax=Math.abs(x);
   if(ax<=4.5)c.copy(road);else if(ax<=5.4)c.copy(verge);else c.copy(land).lerp(far,Math.min(1,(ax-5.4)/30));
   pos.push(x,-.005,z);col.push(c.r,c.g,c.b);uv.push(x/6,-z/6);}}
- const W=XS.length;for(let r=0;r<rows-1;r++)for(let i=0;i<W-1;i++){const a=r*W+i,b=a+W;idx.push(a,b,a+1,a+1,b,b+1);}
+ const W=XS.length;for(let r=0;r<rows-1;r++)for(let i=0;i<W-1;i++){const a=r*W+i,b=a+W;idx.push(a,a+1,b,a+1,b+1,b);}
  const terrainGeo=new T.BufferGeometry();terrainGeo.setAttribute('position',new T.Float32BufferAttribute(pos,3));terrainGeo.setAttribute('color',new T.Float32BufferAttribute(col,3));terrainGeo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));terrainGeo.setIndex(idx);terrainGeo.computeVertexNormals();
  // Mowing stripes (with the stage paper grain) scroll with the route, so flat ground still reads as speed.
  const stripeCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;let stripes:T.Texture|null=null;
  if(stripeCanvas){stripeCanvas.width=stripeCanvas.height=64;const g=stripeCanvas.getContext('2d');if(g){g.fillStyle='#ffffff';g.fillRect(0,0,64,64);g.fillStyle='#d9dbe8';g.fillRect(0,32,64,32);for(let i=0;i<700;i++){g.fillStyle=`rgba(40,40,70,${.04+((i*37)%10)/200})`;g.fillRect((i*29)%64,(i*53)%64,1,1);}}
   stripes=new T.CanvasTexture(stripeCanvas);stripes.wrapS=stripes.wrapT=T.RepeatWrapping;stripes.colorSpace=T.SRGBColorSpace;}
  else stripes=grain;
- const terrain=new T.Mesh(terrainGeo,new T.MeshLambertMaterial({vertexColors:true,map:stripes}));terrain.name='runner-terrain';terrain.receiveShadow=true;terrain.frustumCulled=false;scene.add(terrain);
+ const terrainMaterial=new T.MeshLambertMaterial({vertexColors:true,map:stripes});terrainShader(terrainMaterial);
+ const terrain=new T.Mesh(terrainGeo,terrainMaterial);terrain.name='runner-terrain';terrain.receiveShadow=true;terrain.frustumCulled=false;scene.add(terrain);
  // Neon edge rails along the road, segmented so they follow the bends.
  const railPos:number[]=[],railIdx:number[]=[];
  for(const side of[-1,1]){const base=railPos.length/3;for(let r=0;r<rows;r++){const z=Z0-r*ROW;railPos.push(side*4.4-.07,.03,z,side*4.4+.07,.03,z);}for(let r=0;r<rows-1;r++){const a=base+r*2;railIdx.push(a,a+2,a+1,a+1,a+2,a+3);}}
@@ -206,16 +267,21 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   const box=(x:number,y:number,s:number,w:number,h:number,d:number,hex:string)=>{if(nb<PER.box)put(boxes,slot*PER.box,nb++,x,y,s,w,h,d,hex);};
   const glow=(x:number,y:number,s:number,w:number,h:number,d:number,hex:string)=>{if(ng<PER.glow)put(glows,slot*PER.glow,ng++,x,y,s,w,h,d,hex);};
   const s0=chunk*CHUNK,curve=routeCurve(s0+CHUNK/2),bend=Math.abs(curve)>ROUTE_BEND_MIN*.8,outside=curve>0?-1:1;
-  for(const side of[-1,1]){const k=hash(chunk,side);
+  const tid=terrainAt(s0+CHUNK/2),pal=PROP_PALETTE[tid];
+ // Bridge: railings and cable posts both sides instead of houses. Rooftops: chimneys and vents close by.
+ if(tid==='bridge'){for(const side of[-1,1]){for(let p=0;p<3;p++)box(side*5.6,.55,s0+p*10+2,.12,1.1,.12,pal[4]);box(side*5.6,1.1,s0+15,.08,.08,30,pal[1]);glow(side*5.6,1.16,s0+15,.05,.05,30,pal[2]);}
+  if(hash(chunk,9)<.5)for(const side of[-1,1]){box(side*7.5,4,s0+15,.3,8,.3,pal[4]);glow(side*7.5,8.1,s0+15,.4,.2,.4,pal[2]);}}
+ else for(const side of[-1,1]){const k=hash(chunk,side);
+  if(tid==='rooftop'&&k<.5){const x=side*(7+hash(chunk,side+3)*4),s=s0+5+k*16;box(x,.7,s,1.1,1.4,1.1,pal[0]);box(x,1.5,s,.5,.5,.5,pal[4]);glow(x,1.8,s,.3,.06,.3,pal[2]);box(side*(6.2),.25,s0+15,.2,.5,30,pal[1]);continue;}
    if(bend&&side===outside){
     // Flags line the outside of every bend: they mark the curve early and wave as you pass.
     for(let f=0;f<4&&nf<PER.flag;f++){const s=s0+3+f*7.5,x=side*6.1;box(x,1.3,s,.07,2.6,.07,'#c9d6ff');put(flags,slot*PER.flag,nf++,x,2.25,s,1,1,1,FLAG_COLOURS[(chunk+f)%FLAG_COLOURS.length],side<0?Math.PI:0);}
     continue;}
    const s=s0+4+k*20;
-   if(k<.34){const x=side*(13+hash(chunk,side+5)*5);box(x,1.3,s,3.6,2.6,3.2,'#292841');box(x,2.72,s,3.9,.24,3.5,'#8749bc');glow(x,2.5,s-1.62,3.4,.1,.08,'#ff62c2');
+   if(k<.34){const x=side*(13+hash(chunk,side+5)*5);box(x,1.3,s,3.6,2.6,3.2,pal[0]);box(x,2.72,s,3.9,.24,3.5,pal[1]);glow(x,2.5,s-1.62,3.4,.1,.08,pal[2]);
      for(const dz of[-.8,.8])glow(x-side*1.82,1.45,s+dz,.06,.5,.55,'#73fff1');}
-   else if(k<.67){for(const dz of[0,8]){const x=side*(9.5+hash(chunk+dz,side)*4);box(x,1.3,s+dz,.24,2.6,.24,'#343052');if(nl<PER.leaf)put(leaves,slot*PER.leaf,nl++,x,3,s+dz,1.5,.9,1.5,dz?'#263454':'#2b3c5e');}}
-   else if(k<.9){const x=side*8.8;box(x,2.2,s,.12,4.4,.12,'#324f56');glow(x,4.45,s,.42,.24,.42,'#ff62c2');}
+   else if(k<.67){for(const dz of[0,8]){const x=side*(9.5+hash(chunk+dz,side)*4);box(x,1.3,s+dz,.24,2.6,.24,pal[4]);if(nl<PER.leaf)put(leaves,slot*PER.leaf,nl++,x,3,s+dz,1.5,.9,1.5,pal[3]);}}
+   else if(k<.9){const x=side*8.8;box(x,2.2,s,.12,4.4,.12,pal[4]);glow(x,4.45,s,.42,.24,.42,pal[2]);}
   }
   for(;nb<PER.box;nb++)boxes.setMatrixAt(slot*PER.box+nb,zero);for(;nl<PER.leaf;nl++)leaves.setMatrixAt(slot*PER.leaf+nl,zero);
   for(;ng<PER.glow;ng++)glows.setMatrixAt(slot*PER.glow+ng,zero);for(;nf<PER.flag;nf++)flags.setMatrixAt(slot*PER.flag+nf,zero);
@@ -225,7 +291,7 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
  bendTree(scene);
 
  /* ---- per frame ---- */
- let yaw=0,viewSlope=0,lean=0,pitch=0,heading=0,lastS=NaN,patchClock=0,elapsed=0;
+ let yaw=0,viewSlope=0,lean=0,pitch=0,heading=0,lastS=NaN,patchClock=0,elapsed=0,zoneShown=-1;
  const player=scene.getObjectByName('runner-player'),body=player?.getObjectByName('arcade-body-offset');
  const bendOptions={d0:BEND_D0,step:BEND_STEP,n:BEND_N,yaw:0,viewSlope:0,drop:.0006};
  /** Yaw that centres the route point LOOK m ahead, measured from the last table (a damped feedback loop). */
@@ -234,13 +300,18 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   elapsed+=dt;activeRenderer=stage.renderer;bendCfg.w=1;
   const d=s.distance;
   const jump=Number.isNaN(lastS)||Math.abs(d-lastS)>40;
-  if(jump){lastS=d;viewSlope=(reduced?.6:.35)*routeGrade(d);yaw=0;for(let i=0;i<4;i++){bendOptions.yaw=yaw;routeBendTable(d,bendData,bendOptions);yaw=lookTarget();}}
+  if(jump){lastS=d;viewSlope=(reduced?.6:.2)*routeGrade(d);yaw=0;for(let i=0;i<4;i++){bendOptions.yaw=yaw;routeBendTable(d,bendData,bendOptions);yaw=lookTarget();}}
   heading+=routeHeadingAhead(lastS,d-lastS);lastS=d;
   // Look-ahead: keep the road 40 m ahead (where the next defenders are read) centred on screen, so a
   // bend never carries a challenge out of a narrow portrait view. Reduced motion: same framing, slower turn.
   yaw=smoothTo(yaw,lookTarget(),reduced?1.2:2.6,dt);
-  viewSlope=smoothTo(viewSlope,(reduced?.6:.35)*routeGrade(d),reduced?1.5:3,dt);
+  // Round 3: a smaller horizon correction so climbs and descents read clearly (the chase camera rises/pulls back instead).
+  viewSlope=smoothTo(viewSlope,(reduced?.6:.2)*routeGrade(d),reduced?1.5:3,dt);
   bendOptions.yaw=yaw;bendOptions.viewSlope=viewSlope;routeBendTable(d,bendData,bendOptions);
+  // Terrain zones: the boundary in view (or the next one) and its two looks.
+  const zone=terrainZoneAt(d),start=zone*TERRAIN_ZONE,behind=zone>0&&d-start<40,za=behind?zone-1:zone,a=TERRAINS[terrainOfZone(za)],b=TERRAINS[terrainOfZone(za+1)];
+  terrainUniforms.uTerr.value.set(d,routeHeight(d),viewSlope,bendOptions.drop);terrainUniforms.uZone.value.set((za+1)*TERRAIN_ZONE,a.pattern,b.pattern,elapsed);
+  if(zoneShown!==za){zoneShown=za;terrainUniforms.uRoadA.value.set(a.road);terrainUniforms.uLandA.value.set(a.land);terrainUniforms.uRoadB.value.set(b.road);terrainUniforms.uLandB.value.set(b.land);}
   skyUniforms.uYaw.value=heading+yaw;
   props.position.z=d;farDashes.position.z=d%4;
   const first=Math.floor((d-36)/CHUNK),last=Math.floor((d+146)/CHUNK);
@@ -260,13 +331,16 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   sky.position.copy(cam.position);
   const fog=scene.fog as T.Fog,len=cam.position.length();fog.color.copy(fogColor);fog.near=len+30;fog.far=len+115;
  }
- function reset(){lastS=NaN;heading=0;lean=pitch=0;slotChunk.fill(-99999);}
+ function reset(){lastS=NaN;heading=0;lean=pitch=0;slotChunk.fill(-99999);zoneShown=-1;}
  // Fill the table before the first (ready-screen) render, or every vertex would sit on the origin line.
  update(0,{distance:0,speed:13,lives:3},0);
  /** Teardown (Oct 9 2026 QA): drop the module-level hold on this game's renderer (it kept the last Breakaway Run's WebGL
   * context reachable after leaving), unless a newer runner has already taken over. */
  function dispose(){if(activeRenderer===stage.renderer)activeRenderer=null;}
  return{update,pose,reset,dispose,patch:bendTree,
+  /** Sky and fog colours, retinted per route sky and terrain by runnerWeather (mutated in place, no allocation). */
+  sky:skyUniforms,fogColor,
+  /** Current camera pitch smoothing of the route grade (for the cinematic camera). */viewSlope:()=>viewSlope,
   debug:()=>({yaw,viewSlope,lean,pitch,heading,table:Array.from(bendData.slice(0,8))}),
   /** Exposed for tests/debug: where a straight-frame point is drawn. */
   bendPoint(x:number,y:number,z:number,out:T.Vector3){const f=Math.max(0,Math.min(BEND_N-1.001,(-z-BEND_D0)/BEND_STEP)),i=Math.floor(f),t=f-i,j=i*4,
