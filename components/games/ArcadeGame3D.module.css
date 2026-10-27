@@ -216,6 +216,8 @@
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-launch=nudge]{height:52px;min-height:52px;font-size:14px;background:#18333f8c}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-launch][data-held]{transform:translateY(2px) scale(.98);border-color:#ffe86d;box-shadow:0 2px 0 #101729,0 0 22px #ffe86d66!important}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-launch]:disabled{opacity:.28}
+/* Round 3: the nudge is optional (card options); switched off, the pill is hidden in play but keeps its grid cell. */
+.game[data-arcade-kind=pinball] .controls>button[data-pinball-launch][data-off]{visibility:hidden}
 .game[data-arcade-kind=pinball] .controls>button:active{transform:none}
 .game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]:active{transform:scale(.965)}
 /* The tip rides above the Launch pill, over the drain strip (never the flippers), and fades after a few seconds. */

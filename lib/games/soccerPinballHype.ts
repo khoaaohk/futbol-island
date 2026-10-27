@@ -18,7 +18,7 @@ export function createPinballHype(scene:T.Scene,px:(x:number)=>number,pz:(y:numb
  // Top row on the goal-line rails, either side of the goal frame.
  for(let i=0;i<N_TOP;i++){const k=N_SIDE*2+i,x=i<3?36+i*26:274+(i-3)*20;pos[k*2]=x;pos[k*2+1]=45;}
  const lampMat=new T.MeshBasicMaterial({color:'#ffffff',toneMapped:false,transparent:true,opacity:.95,depthWrite:false});lampMat.userData.arcadeSpill=true;
- const lamps=new T.InstancedMesh(new T.CircleGeometry(.13,mobile?10:14),lampMat,N);lamps.name='pinball-chase-lights';lamps.frustumCulled=false;
+ const lamps=new T.InstancedMesh(new T.CircleGeometry(.19,mobile?10:14),lampMat,N);lamps.name='pinball-chase-lights';lamps.frustumCulled=false;
  const dummy=new T.Object3D();dummy.rotation.x=-Math.PI/2;
  for(let i=0;i<N;i++){dummy.position.set(px(pos[i*2]),.05,pz(pos[i*2+1]));dummy.updateMatrix();lamps.setMatrixAt(i,dummy.matrix);lamps.setColorAt(i,new T.Color('#24425a'));}
  lamps.instanceMatrix.needsUpdate=true;lamps.instanceColor!.setUsage(T.DynamicDrawUsage);scene.add(lamps);
