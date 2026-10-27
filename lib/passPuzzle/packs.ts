@@ -7,6 +7,8 @@
 import type {Scenario,Kick,KickKind,Vec2} from './types';
 
 export type Pack={id:string;order:number;title:string;blurb:string;
+  /** Expert tier (round 3): hard packs shown behind the Expert tile on the start menu. */
+  tier?:'expert';
   /** Stars (all packs) needed to open this pack on the pack map. */
   gate:number};
 /** A route step: a drawn kick, or a run called for a teammate (drag from them) before the next kick. */
