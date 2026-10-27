@@ -190,7 +190,9 @@ export function createRunnerTrack(stage:ArcadeStage){
  scene.traverse(o=>{const m=o as T.Mesh;if(!m.isMesh)return;const g=m.geometry as T.PlaneGeometry;
   if((o.name==='glass-surface'||o.name==='neon-court-spill')&&g.parameters&&g.parameters.heightSegments===1){const p=g.parameters,spill=o.name==='neon-court-spill';
    // The spill's glowing rim marked a hard "end of the road": stretch it past the fog line instead.
-   m.geometry=new T.PlaneGeometry(p.width,p.height*(spill?2.3:1),1,Math.ceil(p.height/2.5));g.dispose();}});
+   m.geometry=new T.PlaneGeometry(p.width,p.height*(spill?2.3:1),1,Math.ceil(p.height/2.5));g.dispose();
+   // Round 3: the ground is now visible (terrain zones), so the spill glazes it lightly instead of tinting it.
+   if(spill)(m.material as T.MeshBasicMaterial).opacity*=.4;}});
 
  /* ---- terrain + road: one tessellated mesh in the straight frame, bent by the shader ---- */
  const XS=[-160,-90,-55,-32,-22,-15,-10,-7,-5.4,-4.5,-2.4,0,2.4,4.5,5.4,7,10,15,22,32,55,90,160],Z0=36,Z1=-144,ROW=3,rows=Math.round((Z0-Z1)/ROW)+1;
@@ -200,7 +202,7 @@ export function createRunnerTrack(stage:ArcadeStage){
  for(let r=0;r<rows;r++){const z=Z0-r*ROW;for(const x of XS){const ax=Math.abs(x);
   if(ax<=4.5)c.copy(road);else if(ax<=5.4)c.copy(verge);else c.copy(land).lerp(far,Math.min(1,(ax-5.4)/30));
   pos.push(x,-.005,z);col.push(c.r,c.g,c.b);uv.push(x/6,-z/6);}}
- const W=XS.length;for(let r=0;r<rows-1;r++)for(let i=0;i<W-1;i++){const a=r*W+i,b=a+W;idx.push(a,b,a+1,a+1,b,b+1);}
+ const W=XS.length;for(let r=0;r<rows-1;r++)for(let i=0;i<W-1;i++){const a=r*W+i,b=a+W;idx.push(a,a+1,b,a+1,b+1,b);}
  const terrainGeo=new T.BufferGeometry();terrainGeo.setAttribute('position',new T.Float32BufferAttribute(pos,3));terrainGeo.setAttribute('color',new T.Float32BufferAttribute(col,3));terrainGeo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));terrainGeo.setIndex(idx);terrainGeo.computeVertexNormals();
  // Mowing stripes (with the stage paper grain) scroll with the route, so flat ground still reads as speed.
  const stripeCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;let stripes:T.Texture|null=null;
@@ -298,12 +300,13 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   elapsed+=dt;activeRenderer=stage.renderer;bendCfg.w=1;
   const d=s.distance;
   const jump=Number.isNaN(lastS)||Math.abs(d-lastS)>40;
-  if(jump){lastS=d;viewSlope=(reduced?.6:.35)*routeGrade(d);yaw=0;for(let i=0;i<4;i++){bendOptions.yaw=yaw;routeBendTable(d,bendData,bendOptions);yaw=lookTarget();}}
+  if(jump){lastS=d;viewSlope=(reduced?.6:.2)*routeGrade(d);yaw=0;for(let i=0;i<4;i++){bendOptions.yaw=yaw;routeBendTable(d,bendData,bendOptions);yaw=lookTarget();}}
   heading+=routeHeadingAhead(lastS,d-lastS);lastS=d;
   // Look-ahead: keep the road 40 m ahead (where the next defenders are read) centred on screen, so a
   // bend never carries a challenge out of a narrow portrait view. Reduced motion: same framing, slower turn.
   yaw=smoothTo(yaw,lookTarget(),reduced?1.2:2.6,dt);
-  viewSlope=smoothTo(viewSlope,(reduced?.6:.35)*routeGrade(d),reduced?1.5:3,dt);
+  // Round 3: a smaller horizon correction so climbs and descents read clearly (the chase camera rises/pulls back instead).
+  viewSlope=smoothTo(viewSlope,(reduced?.6:.2)*routeGrade(d),reduced?1.5:3,dt);
   bendOptions.yaw=yaw;bendOptions.viewSlope=viewSlope;routeBendTable(d,bendData,bendOptions);
   // Terrain zones: the boundary in view (or the next one) and its two looks.
   const zone=terrainZoneAt(d),start=zone*TERRAIN_ZONE,behind=zone>0&&d-start<40,za=behind?zone-1:zone,a=TERRAINS[terrainOfZone(za)],b=TERRAINS[terrainOfZone(za+1)];

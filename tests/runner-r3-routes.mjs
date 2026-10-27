@@ -47,7 +47,7 @@ assert.equal(TERRAIN_ZONE,240);assert(TERRAIN_BLEND>=10);
  assert.equal(c.lives,3);assert.equal(c.paceMul,1);assert.equal(c.finish,0);assert.equal(c.seed,47,'classic keeps its authored seed');
  assert.equal(n.level,3);assert.equal(st.level,4);assert(n.paceMul>1&&st.paceMul>n.paceMul&&st.gapMul<n.gapMul&&n.gapMul<1,'hard routes are faster and tighter');
  assert(n.moving>0&&n.doubleJump&&n.hazards&&n.bossKeeper&&!n.combos&&st.combos,'hard modifiers');
- assert.match(H.runnerHud(w).detail,/♥♥♥♥♥/,'five hearts on the Warm-up');assert.match(H.runnerHud(n).detail,/\/1500 m/,'route progress on finite routes');}
+ assert.match(H.runnerHud(w).detail,/♥♥♥♥♥/,'five hearts on the Warm-up');assert.match(H.runnerHud(n).detail,/1500 m to go/,'route progress on finite routes');}
 
 // 4. Gentle refills: a goal after a lost chance wins a heart back on the Warm-up (every 3 goals on the classic run).
 {const s=game('warmup',{spawn:99,nextGoal:1e6,lives:4,refillCount:0});s.objects=[{kind:'goal',lane:0,z:-14,passed:false,openLane:0}];runnerShoot(s);run(s,1);

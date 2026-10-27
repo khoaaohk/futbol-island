@@ -62,7 +62,7 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
  const roller=runner.objects.find(o=>o.kind==='roller'&&!o.passed&&o.z>-30);
  const magnet=runner.objects.find(o=>o.kind==='magnet'&&!o.passed&&o.z>-30);
  const drifting=runner.objects.find(o=>o.kind==='defender'&&o.drift!==undefined&&!o.passed&&o.z>-45);
- const status=runner.finishPhase==='hill'?'FINAL HILL':runner.finishPhase==='keeper'?(runner.bossKeeper?'BOSS KEEPER':'GOAL LINE'):runner.magnet>0?'MAGNET':runner.boost>0?(runner.shield?'POWER RUN + SHIELD':'POWER RUN'):runner.boss>0?'BACK LINE!':runner.route==='wing'?'WING ROUTE':runner.route==='middle'?'GOALS ×2':`Stage ${runner.level}`;
+ const status=runner.finishPhase==='hill'?'HILL!':runner.finishPhase==='keeper'?(runner.bossKeeper?'BOSS!':'GOAL!'):runner.magnet>0?'MAGNET':runner.boost>0?(runner.shield?'POWER RUN + SHIELD':'POWER RUN'):runner.boss>0?'BACK LINE!':runner.route==='wing'?'WING ROUTE':runner.route==='middle'?'GOALS ×2':`Stage ${runner.level}`;
  const lesson=over?runnerLessonTakeaway(runner):'';
  // Full time: one fact per line (the card breaks on \n) instead of one long run-on sentence a child will not read.
  const finishLine=over?runnerFinishLine(runner):'';
@@ -70,7 +70,7 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
   // Two short lines for the phone header pill (its text column is ~130 px): what you HAVE (chances, balls, combo),
   // then WHERE you are (distance, stage or the live route/power state). Distance never swaps out (no jitter); the
   // stage's lesson name is announced on the coaching line when the stage starts, not crammed in here.
-  `${runnerHearts(runner.lives,runner.maxLives)} · ⚽ ${runner.balls}/5${runnerMultiplier(runner)>1?` · ×${runnerMultiplier(runner)}`:''}\n${Math.floor(runner.distance)}${runner.finish?`/${runner.finish}`:''} m · ${status}`;
+  `${runnerHearts(runner.lives,runner.maxLives)} · ⚽ ${runner.balls}/5${runnerMultiplier(runner)>1?` · ×${runnerMultiplier(runner)}`:''}\n${runner.finish?`${Math.max(0,Math.ceil(runner.finish-runner.distance))} m to go`:`${Math.floor(runner.distance)} m`} · ${status}`;
  // Teaching moments (skill names, one-twos, missions, goals) stay on screen briefly before tips return.
  const fresh=runner.time-runner.eventAt<1.3&&FRESH.has(runner.eventKind);
  const message=runner.coachPrompt&&!over?runner.coachPrompt:fresh?runner.message:runner.shots.some(p=>p.active&&(p.returner||p.returning))?'RETURN BALL · jump or change lanes'

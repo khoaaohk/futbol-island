@@ -408,9 +408,11 @@ export function createRunnerFx(stage:ArcadeStage){
   // a rise or a push-in. Every offset is damped (no jitter, capped speed), there is no roll, pitch stays within ±.06 rad.
   {const live=s.lives>0||s.outro>0,g=live?routeGrade(s.distance):0,sp=clamp01((s.speed-13)/7);
    const wx=live?Math.max(-1.1,Math.min(1.1,-s.curve*s.speed*s.speed*.9)):0;
-   const wy=sp*.35+Math.max(-.7,Math.min(1.5,g*9))-s.slidePose*.55+s.y*.28+cinema.lift()-cinema.low();
-   const wz=sp*1.3+Math.min(1.3,Math.max(0,-g)*7)+cinema.back()-cinema.low()*.4;
-   const wp=Math.max(-.06,Math.min(.05,g*.45))-cinema.low()*.02;
+   // Climbs: rise up to .8 m to see over the crest, pitched down by the same angle so the runner stays put on screen.
+   // Descents: pull back and look down the hill.
+   const climb=Math.max(0,Math.min(.8,g*6)),wy=sp*.35+climb+Math.max(-.6,g*4)*(g<0?1:0)-s.slidePose*.55+s.y*.28+cinema.lift()-cinema.low();
+   const wz=sp*1.3+Math.min(1.4,Math.max(0,-g)*8)+cinema.back()-cinema.low()*.4;
+   const wp=Math.max(-.06,Math.min(.02,(g<0?g*.4:0)-climb/16))-cinema.low()*.02;
    const k=1-Math.exp(-dt*3.2),kf=1-Math.exp(-dt*6);camX+=(wx-camX)*k;camY+=(wy-camY)*kf;camZ+=(wz-camZ)*kf;camPitch+=(wp-camPitch)*k;
    cam.position.x+=camX;cam.position.y+=camY;cam.position.z+=camZ;cam.rotateX(camPitch);}
   if(trauma>0){const shake=trauma*trauma*.2;cam.position.x+=Math.sin(elapsed*71.3)*shake;cam.position.y+=Math.sin(elapsed*53.1+1.7)*shake*.7;}

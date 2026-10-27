@@ -62,7 +62,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
    {!paused&&<p className={styles.lineMode}>{m.line}{m.finish?` · ${m.finish} m`:''}</p>}
    {hint&&phase==='ready'&&<p className={styles.hint}>👆 Swipe or tap the arrows to change lane. Big pink button = shoot!</p>}
    {message&&<p className={styles.status} role="status">{message}</p>}
-   <button className={styles.play} disabled={pending} onClick={play} data-runner-play>{paused?'▶ Resume':phase==='over'?`▶ ${nextLabel??'Play again'}`:'▶ Play'}</button>
+   <button className={styles.play} disabled={pending} onClick={play} data-runner-play><span aria-hidden="true">▶ </span>{paused?'Resume':phase==='over'?(nextLabel??'Play again'):'Play'}</button>
    <div className={styles.row}>
     {!paused&&<button className={styles.small} aria-expanded={panel==='missions'} onClick={()=>setPanel(p=>p==='missions'?'':'missions')} aria-label="Missions"><span aria-hidden="true">⭐</span><small>Missions</small></button>}
     <button className={styles.small} aria-expanded={panel==='help'} onClick={()=>setPanel(p=>p==='help'?'':'help')} aria-label="How to play"><span aria-hidden="true">?</span><small>Help</small></button>

@@ -228,3 +228,5 @@
 @media(max-height:520px){.game[data-arcade-kind=pinball]{--pb-pad-h:96px;--pb-bottom:calc(10px + env(safe-area-inset-bottom,0px))}.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,200px) 150px minmax(0,200px);justify-content:space-between}.game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{min-height:96px}.game[data-arcade-kind=pinball] .message{bottom:calc(var(--pb-bottom) + 64px)}}
 @media(max-width:370px){.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,1fr) 140px minmax(0,1fr)}.game[data-arcade-kind=pinball] .controls>button[data-pinball-launch]{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .controls>button{transition:none}.game[data-arcade-kind=pinball] .message{animation-duration:6s}}
+/* Breakaway Run round 3: the coaching line sits under the header, clear of the runner and the taller kid pad. */
+.game[data-arcade-kind=runner] .message{top:calc(80px + env(safe-area-inset-top,0px));bottom:auto;max-width:calc(100% - 28px)}
