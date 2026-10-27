@@ -65,7 +65,11 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   mesh.renderOrder=20;mesh.visible=false;mesh.frustumCulled=false;scene.add(mesh);
   return{mesh,ctx,tex,text:'',age:0,life:0,x:0,y:0,z:0,rise:0,w,h,size:1,pill:false};
  }
+ /** Clean court (owner, Oct 27 2026): no in-play text over the court (no grade, intent, coach, tempo, wind or milestone
+  * labels). The only label that may draw is the short point / match line (no sub-line), opened with pointLine. */
+ let pointLine=false;
  function draw(l:Label,text:string,color:string,sub=''){
+  if(!pointLine)return;sub='';
   if(l.text===text+sub)return;l.text=text+sub;const {ctx}=l,W=ctx.canvas.width,H=ctx.canvas.height;ctx.clearRect(0,0,W,H);
   if(l.pill){ctx.fillStyle='rgba(8,18,34,.62)';ctx.beginPath();ctx.roundRect(W*.06,H*.06,W*.88,H*.88,H*.3);ctx.fill();}
   ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
@@ -76,7 +80,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    while(ctx.measureText(sub).width>W*.94&&subSize>9){subSize-=1;ctx.font=`800 ${subSize}px system-ui,-apple-system,Segoe UI,sans-serif`;} /* long fixes shrink to fit instead of clipping */ctx.lineWidth=6;ctx.strokeText(sub,W/2,H*.78);ctx.fillStyle='#fff6df';ctx.fillText(sub,W/2,H*.78);}
   l.tex.needsUpdate=true;
  }
- function show(l:Label,x:number,y:number,z:number,life:number,rise:number,size=1){l.x=x;l.y=y;l.z=z;l.age=0;l.life=life;l.rise=rise;l.size=size;l.mesh.visible=true;}
+ function show(l:Label,x:number,y:number,z:number,life:number,rise:number,size=1){if(!pointLine)return;l.x=x;l.y=y;l.z=z;l.age=0;l.life=life;l.rise=rise;l.size=size;l.mesh.visible=true;}
  // Far-court labels are drawn larger so perspective doesn't shrink the rival's cues.
  const touch=label(3.3,.95,512),intent=label(3.2,.74,512),banner=label(6.6,1.8,768);banner.pill=true;
  touch.mesh.name='tennis-touch-label';intent.mesh.name='tennis-intent-label';banner.mesh.name='tennis-banner';
@@ -189,7 +193,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    // Streaks and comebacks: three in a row is ON FIRE; three behind gets a warm "you can come back".
    if(you){youRun++;rivalRun=0;}else{rivalRun++;youRun=0;}
    const fire=you&&!over&&youRun>=TENNIS_STREAK_CALL,gap=s.score.rival-s.score.you,comeback=!you&&!over&&(gap===TENNIS_COMEBACK_GAP||gap===TENNIS_COMEBACK_GAP+2);
-   draw(banner,over?(drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:'GOOD GAME!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(drill?`${s.drillHits} targets · best ${starText(best)}`:`${TENNIS_COURTS[s.level-1].sets?`Sets ${s.sets.you} : ${s.sets.rival}`:`${s.score.you} : ${s.score.rival}`} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,2.3,-1.5,over?2.2:1.35,.2);
+   pointLine=true;draw(banner,over?(drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:'GOOD GAME!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(drill?`${s.drillHits} targets · best ${starText(best)}`:`${TENNIS_COURTS[s.level-1].sets?`Sets ${s.sets.you} : ${s.sets.rival}`:`${s.score.you} : ${s.score.rival}`} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,2.3,-1.5,over?2.2:1.35,.2);pointLine=false;
    if(fire)emit(`tennis:streak:${youRun}`);else if(comeback)emit('tennis:comeback');
    emit(`tennis:${over?'match':'point'}:${s.pointWinner}:${s.rally}:${s.pointKind}`);touch.life=Math.min(touch.life,touch.age+.15);intent.life=0;intent.mesh.visible=false;
   }

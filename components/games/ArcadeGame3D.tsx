@@ -23,6 +23,7 @@ import {RunnerMenu} from './RunnerMenu';
 import styles from './ArcadeGame3D.module.css';
 import dynamic from 'next/dynamic';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
+import {requestLandscape} from '@/lib/orientationMode';
 // Leaderboards (docs/arcade-leaderboards.md): lazy, loaded only after a scored game ends or when Leaderboard is tapped.
 const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
 const ArcadeBoards=dynamic(()=>import('../arcade/ArcadeBoards'),{ssr:false});
@@ -139,6 +140,8 @@ export default function ArcadeGame3D({kind,onExit}:{kind:ArcadeKind;onExit:()=>v
  // card still resumes). Not while typing or with a select open.
  // The tutorial hint goes for good with the first launch.
  useEffect(()=>{if(pinballTutorial&&phase==='playing'&&!hud.ready){markPinballTutorialSeen();setPinballTutorial(false);}},[pinballTutorial,phase,hud.ready]);
+ // Landscape (owner, Oct 27 2026, like Strikers): Futbol Tennis plays sideways on phones; leaving restores portrait-only.
+ useEffect(()=>kind==='tennis'?requestLandscape():undefined,[kind]);
  const exitRef=useRef(onExit);exitRef.current=onExit;
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||(!error&&phaseRef.current!=='ready'&&phaseRef.current!=='over'))return;
    if(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea'))return;e.preventDefault();release();exitRef.current();};

@@ -94,6 +94,32 @@
  .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=trap]{grid-column:6}
 }
 
+/* ===== Tennis landscape + clean court (owner, Oct 27 2026, like Strikers). ArcadeGame3D asks for landscape for tennis (lib/orientationMode.ts), so upright
+   phones see RotateLock's "Turn your phone sideways" card. Clean court: in play only the score, the controls and the short point line
+   drawn on the court (lib/arcade/tennisFeel.ts); no tips, rally/wind/set chips or charge captions over the court. */
+.game[data-arcade-kind=tennis] .headerScore span,.game[data-arcade-kind=tennis] .message,.game[data-arcade-kind=tennis] [data-tennis-chips]{display:none}
+/* Sideways phones: stick on the left thumb, Kick/Lob/Drop on the right thumb, both hugging the bottom corners clear of the court. */
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){
+ .game[data-arcade-kind=tennis]{--control-bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+ .game[data-arcade-kind=tennis] .tennisActions{right:calc(16px + env(safe-area-inset-right,0px));grid-template-columns:54px 54px;grid-template-rows:repeat(3,54px);gap:12px}
+ .game[data-arcade-kind=tennis] .tennisActions button{width:54px;height:54px;min-height:54px}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{width:72px;height:72px;min-height:72px;margin:-9px}
+ .game[data-arcade-kind=tennis] .tennisMovement{left:calc(16px + env(safe-area-inset-left,0px))}
+}
+/* Tall windows (narrow mouse windows, upright tablets): the court is always sideways, letterboxed in a centred 4:3 frame on a dark
+   backdrop; the controls sit inside the frame and menus open over the whole window. */
+@media(pointer:fine) and (orientation:portrait),(pointer:coarse) and (orientation:portrait) and (min-width:501px){
+ .game[data-arcade-kind=tennis]{isolation:isolate;height:75vw;max-height:100dvh;margin-top:max(0px,calc(50dvh - 37.5vw));border-block:2px solid #81fbed55;box-sizing:border-box}
+ .game[data-arcade-kind=tennis]::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(120% 60% at 50% 50%,#1b1f45 0%,#080b1b 62%,#04050d 100%);pointer-events:none}
+ .game[data-arcade-kind=tennis] .overlay{position:fixed;inset:0;z-index:6}
+ .game[data-arcade-kind=tennis] .tennisMovement,.game[data-arcade-kind=tennis] .tennisActions{position:absolute;bottom:14px}
+ .game[data-arcade-kind=tennis] .header{padding:8px 14px 6px}
+}
+@media(pointer:fine) and (orientation:portrait) and (max-width:600px){
+ .game[data-arcade-kind=tennis] .tennisActions{right:10px;grid-template-columns:44px 44px;grid-template-rows:repeat(3,44px);gap:8px}
+ .game[data-arcade-kind=tennis] .tennisActions button{width:44px;height:44px;min-height:44px;font-size:10px}
+ .game[data-arcade-kind=tennis] .tennisActions [data-tennis-action=kick]{width:58px;height:58px;min-height:58px;margin:-7px;font-size:12px}
+}
 
 /* Retro cabinet world: restrained surfaces, luminous play information. */
 .game{background:#080b1b;color:#e9f5ff;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}

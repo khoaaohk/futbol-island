@@ -5,7 +5,7 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  * disconnects itself when it ends. Layers:
  * - a touch sound for each contact grade (perfect rings, an early or late touch sounds dull);
  * - bounce, net thud and net-cord (tape) ping;
- * - a crowd that grows with rally length (murmur, gasp, cheer, applause);
+ * - no crowd (Oct 27 2026: the court is the focus; no murmur, gasp, cheer or applause);
  * - an adaptive bassline: from the 3rd touch, each touch plays the next note. */
 const noiseBuffers=new WeakMap<AudioContext,AudioBuffer>(),voices=new WeakMap<AudioContext,number>();
 const MAX_VOICES=14;
@@ -85,39 +85,35 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
   if(shot==='lob')noise(ctx,t+.02,.5,.035*v*far,'bandpass',450,1700,1.3,.12);
   // Pad chord every 4th touch from the 8th: a slow swell under the bassline.
   if(rally>=8&&rally%4===0&&musicOn()){const chord=PAD[(rally/4-2)%PAD.length];chord.forEach((hz,i)=>tone(ctx,t+i*.02,'sine',hz,hz,1.3,.016*v,.18));}
-  // Crowd leans in as the rally gets long.
-  if(rally>=6)noise(ctx,t+.05,.55,Math.min(.05,.012+(rally-6)*.004)*v,'bandpass',550+Math.min(rally,20)*12,700,.7,.18);
-  if(rally>=5&&rally%5===0)noise(ctx,t+.08,.8,.06*v,'bandpass',420,760,1.1,.25); // "ooooh"
   return;
  }
  if(kind==='bounce'){const i=Math.max(.2,Number(a)||.4),far=b==='rival'?.7:1,rally=Number(d)||0;
   if(rally>=6&&musicOn())noise(ctx,t+.01,.035,(rally>=12?.03:.022)*v,'highpass',7000,7000,.7,.002);/* hi-hat on the bounce: the rally keeps the beat */if(c==='sand'){tone(ctx,t,'sine',70*jitter(.08),45,.09,.08*i*v*far);noise(ctx,t,.12,.05*i*v*far,'lowpass',900,300,.6);return;}tone(ctx,t,'sine',95*jitter(.08),55,.07,.1*i*v*far);noise(ctx,t,.025,.03*i*v*far,'highpass',1500);return;}
  if(kind==='skid'){const far=a==='rival'?.6:1,q=jitter(.08);tone(ctx,t,'sine',1900*q,2700*q,.06,.028*v*far,.004);tone(ctx,t+.05,'sine',2600*q,1800*q,.07,.022*v*far,.004);noise(ctx,t,.09,.03*v*far,'bandpass',2400,1600,1.6,.004);return;} // court-shoe squeak
  if(kind==='matchpoint'){for(const at of[0,.8])for(const k of[0,.22])tone(ctx,t+at+k,'sine',62,40,.14,(k?.09:.13)*v,.01); // heartbeat
-  noise(ctx,t,.9,.03*v,'highpass',2600,1800,.6,.15);if(musicOn())tone(ctx,t+.1,'triangle',a==='rival'?311.13:440,a==='rival'?311.13:440,1.1,.025*v,.3);return;} // the crowd hushes
+  if(musicOn())tone(ctx,t+.1,'triangle',a==='rival'?311.13:440,a==='rival'?311.13:440,1.1,.025*v,.3);return;}
  if(kind==='streak'){const n=Math.min(6,Number(a)||3),up=Math.pow(2,(n-3)/12);if(musicOn())[523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i)=>tone(ctx,t+i*.055,'triangle',hz*up,hz*up,i===4?.4:.14,.045*v));noise(ctx,t+.05,1,.07*v,'bandpass',1200,1700,.5,.06);return;}
  if(kind==='comeback'){if(musicOn()){tone(ctx,t+.25,'triangle',392,392,.18,.035*v,.02);tone(ctx,t+.42,'triangle',523.25,523.25,.3,.035*v,.02);}return;} // warm 'you've got this' after the point sound
  if(kind==='trap'){const far=a==='rival'?.7:1;tone(ctx,t,'sine',(b==='chest'?110:150)*jitter(.05),70,.12,.12*v*far,.015);noise(ctx,t,.08,.04*v*far,'lowpass',500,250,.6,.01);return;} // soft cushion
  if(kind==='goldready'){if(musicOn())[523.25,659.25,783.99,1046.5].forEach((hz,i)=>tone(ctx,t+i*.07,'triangle',hz,hz,.22,.045*v));return;}
  if(kind==='golden'){tone(ctx,t,'triangle',1318.5,1318.5,.35,.05*v,.01);tone(ctx,t+.04,'sine',1975.5,1975.5,.4,.035*v,.01);noise(ctx,t,.4,.05*v,'highpass',3000,5000,.7,.02);return;}
  if(kind==='out'){tone(ctx,t,'sine',660,520,.14,.04*v,.01);tone(ctx,t+.15,'sine',520,392,.18,.035*v,.01);return;} // a gentle 'uh-oh': it is going long
- if(kind==='tire'){noise(ctx,t,.7,.05*v,'bandpass',480,760,1,.2);tone(ctx,t+.05,'sine',392,262,.38,.03*v,.04);return;} // the crowd 'ooh' as the rival tires
+ if(kind==='tire'){tone(ctx,t+.05,'sine',392,262,.38,.03*v,.04);return;} // a falling note as the rival tires
  if(kind==='fake'){noise(ctx,t,.18,.05*v,'bandpass',600,1400,1.2,.02);return;} // a scuff of the sole on the ball
  if(kind==='hold'){tone(ctx,t,'sine',210,150,.05,.05*v,.003);noise(ctx,t,.03,.025*v,'lowpass',900,500,.7);return;} // feet plant: the press is heard at once while the touch waits for the ball
  if(kind==='coach'){tone(ctx,t,'triangle',659.25,659.25,.12,.035*v);tone(ctx,t+.1,'triangle',880,880,.16,.035*v);return;} // the coach's two-note 'look here'
  if(kind==='target'){tone(ctx,t,'triangle',880,880,.16,.06*v);tone(ctx,t+.08,'triangle',1318.5,1318.5,.22,.05*v);return;}
  if(kind==='tempo'){const step=Number(a)||1;if(musicOn())tone(ctx,t,'triangle',BASS[0]*(1+step*.25),BASS[0]*(1+step*.25),.3,.05*v,.02);noise(ctx,t+.05,.6,.04*v,'bandpass',500,800,.9,.2);return;}
  if(kind==='net'){
-  if(a==='net'){tone(ctx,t,'sine',80,45,.14,.13*v);noise(ctx,t,.22,.06*v,'lowpass',900,300,.7);noise(ctx,t+.12,.6,.035*v,'bandpass',380,300,1,.12);} // thud, then a disappointed murmur
-  else{tone(ctx,t,'sine',1318,1290,.13,.06*v);tone(ctx,t+.005,'triangle',1976,1950,.09,.03*v);noise(ctx,t+.06,.7,.055*v,'bandpass',360,680,1.2,.2);} // tape "tick", crowd gasp
+  if(a==='net'){tone(ctx,t,'sine',80,45,.14,.13*v);noise(ctx,t,.22,.06*v,'lowpass',900,300,.7);} // net thud
+  else{tone(ctx,t,'sine',1318,1290,.13,.06*v);tone(ctx,t+.005,'triangle',1976,1950,.09,.03*v);} // tape "tick"
   return;
  }
  if(kind==='point'||kind==='match'){
-  const you=a==='you',rally=Number(b)||0,match=kind==='match',lift=Math.min(1,.45+rally*.05);
-  if(you){noise(ctx,t,match?1.6:.9,(match?.1:.07)*lift*v,'bandpass',1100,1500,.5,.08);
+  const you=a==='you',match=kind==='match';
+  if(you){
    const notes=match?[523.25,659.25,783.99,1046.5]:[523.25,659.25,783.99];if(musicOn())notes.forEach((hz,i)=>tone(ctx,t+i*.09,'triangle',hz,hz,match&&i===notes.length-1?.5:.18,.05*v));
-   if(match)for(let i=0;i<12;i++)noise(ctx,t+.2+Math.random()*1.3,.05,.05*v,'bandpass',1800+Math.random()*900,1600,1.5,.002); // applause
-  }else{noise(ctx,t,.7,.045*lift*v,'bandpass',700,380,1,.1);if(musicOn())[392,329.63].forEach((hz,i)=>tone(ctx,t+i*.14,'triangle',hz,hz,.2,.035*v));}
+  }else{if(musicOn())[392,329.63].forEach((hz,i)=>tone(ctx,t+i*.14,'triangle',hz,hz,.2,.035*v));}
  }
 }
 

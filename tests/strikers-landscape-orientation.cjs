@@ -34,7 +34,8 @@ assert.match(live,/useEffect\(\(\)=>requestLandscape\(\),\[\]\);/,'Strikers asks
 assert.match(live,/addEventListener\('blur',blur\)/,'the wrong-orientation card pauses Strikers (blur)');
 assert.match(live,/addEventListener\('orientationchange',release\)/,'turning the phone lets go of held thumbs');
 const users=require('node:child_process').execSync("grep -rl 'requestLandscape' components app lib",{cwd:root,encoding:'utf8'}).trim().split('\n').sort();
-assert.deepEqual(users,['components/LiveArcadeMatch.tsx','lib/orientationMode.ts'],'no other screen changes orientation');
+// Oct 27 2026: Futbol Tennis (ArcadeGame3D, tennis kind only) also plays sideways; tests/tennis-landscape-clean.cjs pins it.
+assert.deepEqual(users,['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'],'only Strikers and Tennis change orientation');
 // The landscape camera: a .9-wide fit (clear of notch insets), lifted so the goal mouths clear the corner controls.
 const scene=read('lib/arcade/strikerScene.ts');
 assert.match(scene,/const LANDSCAPE_LIFT=\.16,LANDSCAPE_X=\.9,LANDSCAPE_PAN=\.4;/);

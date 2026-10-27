@@ -1,4 +1,4 @@
-// Futbol Tennis Oct 25 upgrade: arena dressing (court paint, light pools, confetti, desktop crowd + umpire),
+// Futbol Tennis Oct 25 upgrade: arena dressing (court paint, light pools, confetti; no crowd since Oct 27),
 // celebrations / plant / ready-bounce pose overlays, streak + comeback + match-point calls, and the new sound cues.
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
 const T=require('three'),root=path.resolve(__dirname,'..');
@@ -18,10 +18,7 @@ const game=load('lib/games/soccerTennis.ts'),arenaMod=load('lib/arcade/tennisAre
 // 1. Pure reads.
 const marks=arenaMod.tennisCourtMarks();assert.equal(marks.length,5,'service lines x2, centre service line, two baseline centre marks');
 for(const [x0,z0,x1,z1] of marks){assert(x0<x1&&z0<z1,'marks are proper rectangles');assert(Math.abs(x0)<=5&&Math.abs(x1)<=5&&Math.abs(z0)<=8&&Math.abs(z1)<=8,'paint stays inside the court lines');}
-assert.equal(arenaMod.tennisFanCount(),32);
-assert.equal(arenaMod.tennisFanLift(0,0,1,0,0,1),0,'a calm crowd sits still');
-let peak=0;for(let t=0;t<2;t+=.01)peak=Math.max(peak,arenaMod.tennisFanLift(1,0,t,0,0,1));assert(peak>.2&&peak<=.26,'a cheer bounces fans up to ~a quarter metre');
-const along=[-4,-2,0,2,4].map(z=>arenaMod.tennisFanLift(0,1,1.3,0,z,1));assert(Math.max(...along)>Math.min(...along)+.1,'the wave lifts some seats and not others (it travels)');
+assert.equal(arenaMod.tennisFanCount,undefined,'no crowd (Oct 27 2026): the fan helpers are gone');assert.equal(arenaMod.tennisFanLift,undefined);
 // Round 3: court 1 is a gentle first to 5; court 2 keeps first to 7.
 assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:2},level:2}),'you');assert.equal(feelMod.tennisMatchPoint({score:{you:3,rival:6},level:2}),'rival');
 assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:6},level:2}),'both');assert.equal(feelMod.tennisMatchPoint({score:{you:5,rival:5},level:2}),'');
@@ -30,14 +27,13 @@ assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:0},level:3}),'','the t
 assert(feelMod.tennisCelebrateLift(.25,false)>.15&&feelMod.tennisCelebrateLift(.6,false)===0,'a point gets one hop');
 assert(feelMod.tennisCelebrateLift(.31,true)>.15&&feelMod.tennisCelebrateLift(.93,true)>.15&&feelMod.tennisCelebrateLift(2,true)===0,'a match win gets bouncy hops that end');
 
-// 2. Feel + arena on a stub stage (desktop: crowd on; phone: no crowd).
+// 2. Feel + arena on a stub stage (no crowd on any screen since Oct 27 2026).
 function setup(mobile,reduced=false){const scene=new T.Scene(),bursts=[];const stage={scene,camera:new T.PerspectiveCamera(),reduced,mobile,burst:(x,y,z,p)=>bursts.push(p)};
  const s=game.createTennis(47,1),cues=[];const feel=feelMod.createTennisFeel(stage,s,c=>cues.push(c));return{scene,stage,s,feel,cues,bursts};}
 const desk=setup(false),phone=setup(true);
 const count=(scene,name)=>{let n=0;scene.traverse(o=>{if(o.name===name)n++;});return n;};
 for(const name of['tennis-court-paint','tennis-floodlights','tennis-pool-you','tennis-pool-rival','tennis-confetti'])assert.equal(count(desk.scene,name),1,name);
-assert.equal(count(desk.scene,'tennis-crowd'),1);assert.equal(count(phone.scene,'tennis-crowd'),0,'phones skip the crowd (off-frame on the top-down phone camera)');
-const crowd=desk.scene.getObjectByName('tennis-crowd');assert.equal(crowd.count,33,'32 fans + the umpire');
+for(const name of['tennis-crowd','tennis-crowd-heads','tennis-stands'])assert.equal(count(desk.scene,name)+count(phone.scene,name),0,`${name}: no crowd on desktop or phone`);
 let meshes=0;phone.scene.traverse(o=>{if(o.isMesh)meshes++;});assert(meshes<=12,`phone arena adds few meshes (${meshes})`);
 
 // Point flow: three in a row = ON FIRE + streak cue + confetti; the winner hops, the loser droops.
@@ -58,7 +54,7 @@ assert(cues.some(c=>c==='tennis:matchpoint:you'),'match point call for you');con
 assert.equal(cues.filter(c=>c.startsWith('tennis:matchpoint')).length,mpCount,'said once per point');
 // Match win: arms up and bouncy hops, then everything settles so the loop can sleep.
 s.rally=4;point('you');run(.3);const winPose={};const lift=feel.pose(0,winPose,false);assert.equal(winPose.celebrate,1,'match winner throws both arms up');assert(lift>.1,'and jumps');
-run(4);assert.equal(feel.active(),false,'celebrations, confetti and the crowd settle: the game can sleep');
+run(4);assert.equal(feel.active(),false,'celebrations and confetti settle: the game can sleep');
 
 // Plant: a hard stop from a sprint crouches, squeaks and puffs dust (once, then cools down).
 const plant=setup(false);plant.s.phase='rally';plant.s.ball.last='you';Object.assign(plant.s.you,{vx:7,vy:0});plant.feel.sync(1/30,0);
@@ -89,4 +85,4 @@ const tick=()=>new Promise(r=>setTimeout(r,2));
  assert(made-before<=60,'new cues stay light');
  for(let i=0;i<6;i++)audio.tennisSound(ac,'tennis:matchpoint:both');assert(live<=14,'a burst of cues never passes the voice cap');
  await tick();assert.equal(live,0,'every voice frees itself');
- console.log('PASS tennis arena + feel: court paint, pools, confetti, desktop crowd, celebrations, plant + ready bounce, streak/comeback/match-point calls, new sound cues');})().catch(e=>{console.error(e);process.exit(1);});
+ console.log('PASS tennis arena + feel: court paint, pools, confetti, no crowd, celebrations, plant + ready bounce, streak/comeback/match-point calls, new sound cues');})().catch(e=>{console.error(e);process.exit(1);});
