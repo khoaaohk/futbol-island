@@ -106,4 +106,11 @@ const none=new Set(),seven=coreOf('7v7');
  const css=read('components/PathWarmUpRow.module.css');assert.doesNotMatch(css,/#(?:e0|f0|ff)[0-4][0-4][0-4][0-4]\b|\bred\b|animation/i,'no red alarms and no animation loop');
  assert.doesNotMatch(read('components/PathWarmUpRow.tsx'),/setInterval|setTimeout|requestAnimationFrame/,'no timers');
 }
+// ---- Path audit 9v9 (Oct 27 2026): story stop labels read "Story: Not yet is a starting point. Completed, replay" (no "..") ----
+{
+ const qlp=read('components/QuestLearningPath.tsx');
+ assert.match(qlp,/`Story: \$\{card\.title\.replace\(\/\\\.\$\/,''\)\}\$\{done\?'\. Completed, replay':''\}`/,'story stop label drops the title\'s own full stop');
+ const titles=[...read('lib/paths/stories.ts').matchAll(/title:'([^']+)'/g)].map(m=>m[1]);assert.ok(titles.some(t=>t.endsWith('.')),'some story titles end in a full stop');
+ for(const t of titles)assert.doesNotMatch(`Story: ${t.replace(/\.$/,'')}. Completed, replay`,/\.\./,t);
+}
 console.log('PASS clear path: one first step (HUD card = Start here = lesson 1; onboarding ends on Explore), Next lesson at the quiz end (graduate / next path / Ferry), Warm-up row states');
