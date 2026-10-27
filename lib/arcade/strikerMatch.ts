@@ -88,7 +88,7 @@ export const STRIKER_TUNING={
 export const STRIKER_ASSIST={speed:-.25,tackleWindup:.05,tackleThink:.25,keeperReact:.03,keeperDive:-.7,interceptSkill:.85};
 export function createStrikerMatch(){
  const players:StrikerPlayer[]=Array.from({length:8},(_,id)=>({id,team:(id<4?0:1) as 0|1,keeper:id%4===3,x:0,z:0,vx:0,vz:0,yaw:id<4?Math.PI/2:-Math.PI/2,stamina:1,receive:0,receiveX:0,receiveZ:0,kick:0,stun:0,tackle:0,cooldown:0,think:.6+id*.13,run:0,windup:0,keeperAim:0,tackleX:0,tackleZ:0,jockey:0,strikeYaw:0,strikeKind:'pass',strikePower:.35,saveSide:1,saveHeight:0,saveWide:false,dive:0,react:0,caught:false,skill:0,skillKind:'stepover',skillSide:1,skillCount:0,skillAt:-9,skillYaw:0,heavy:0,touchCycle:1,receiveHeight:0,header:0,wall:0,callRun:0,callKind:'behind',strikeCharge:0}));
- const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,queuedX:0,queuedZ:0,passTarget:-1,aim:0,timeScale:1,shotMoment:0,passes:[0,0],shots:[0,0],passChain:0,lastPasser:-1,
+ const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,queuedX:0,queuedZ:0,passTarget:-1,aim:0,timeScale:1,/** Cinematic slow-mo from the match loop (lib/arcade/strikerCinema.ts), 0.3..1; the sim runs at the slower of this and the charge slow-mo. */cinemaScale:1,shotMoment:0,passes:[0,0],shots:[0,0],passChain:0,lastPasser:-1,
   /** Goal moment: frozen frames, who scored (-1 own goal), crowd energy 0..1.6 for sound and stands. */
   hitStop:0,scorer:-1,assister:-1,goalsBy:[0,0,0,0,0,0,0,0],headline:'' as StrikerHeadline,crowd:0,lastKicker:-1,
   /** Coach eased this round after a loss or draw (transparent, one notch, cleared on a win). */
@@ -344,7 +344,7 @@ export function createStrikerMatch(){
   // Tackles can still interrupt a wind-up; there is no invulnerability.
   state.shotMoment=Math.max(0,state.shotMoment-dt);
   const focus=clamp((state.charge-.18)/.65,0,1);
-  state.timeScale=state.shotMoment>0?.35:1-focus*.65;
+  state.timeScale=Math.min(state.shotMoment>0?.35:1-focus*.65,clamp(state.cinemaScale,.3,1));
   dt*=state.timeScale;
   const count=Math.ceil(dt/(1/120)),h=dt/count;
   for(let tick=0;tick<count;tick++){

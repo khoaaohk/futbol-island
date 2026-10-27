@@ -8,6 +8,7 @@ import {matchPlayerDress} from '../town/beanLooks';
 import {neonColor} from './neonPalette';
 import {stripedPlaneGeometry} from '../graphics/pitchStripes';
 import {strikerGaugeZone,STRIKER_OVERHIT} from './strikerFeel';
+import {createStrikerCinema} from './strikerCinema';
 export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const stage=createArcadeStage(canvas);stage.scenery.visible=false;const nets:{side:number;attribute:T.BufferAttribute;rest:Float32Array;dirty:boolean}[]=[];
  stage.box(0,-.09,0,52,.16,30,'#427f6c').castShadow=false;
@@ -56,6 +57,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  let outroT=0,outroWinner=-1,outroStar=-1;
  const axes={x:0,z:0};let portrait=false,hold=0,focusAmount=0,shotFlash=0,goalFlash=0,punch=0,shake=0,clock=0,pop=0,lastSelected=-1,lastNearMiss=0;
  const cameraHome=new T.Vector3(),cameraFocus=new T.Vector3(),focusTarget=new T.Vector3(),followPan=new T.Vector3();
+ const cinema=createStrikerCinema({reduced:stage.reduced}),cinemaLook=new T.Vector4(0,0,0,0);
  // Follow cam: on while the match is live (setFollow); phones zoom a touch more because the rigs are smallest there.
  // Portrait phones (Oct 25 2026: the app is portrait-only on phones, so Strikers now plays upright) zoom in further: the
  // whole 54 m pitch spans the short screen width there, so bodies read smallest without it.
@@ -238,9 +240,21 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   const lead=followAmount*(1-focus),offsetX=followPan.x*lead+cameraFocus.x*focus,offsetZ=followPan.z*lead+cameraFocus.z*focus;
   const zoom=1+(followZoom-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
   stage.camera.position.copy(cameraHome);stage.camera.position.x+=offsetX;stage.camera.position.z+=offsetZ;
+  // Cinematic beats (round 3, lib/arcade/strikerCinema.ts): blend the look point toward the beat's subject and its goal side, dolly a
+  // capped distance toward it, lower the camera for a 3/4 behind-the-shoulder angle, glide sideways for kick-off / full time. Damped,
+  // no roll, zoom within ±12%; the look point stays between the player and the goal so neither leaves the frame. Reduced motion: off.
+  let lookX=offsetX,lookY=.8*focus,lookZ=offsetZ,cinemaZoom=1;const ca=motion?cinema.amount:0;
+  if(ca>0||(motion&&cinema.sweep)){const k=dt>0?1-Math.exp(-dt*6):0,cx=cinema.tx*.55+cinema.gx*.45,cz=cinema.tz*.55+cinema.gz*.45;
+   if(cinemaLook.w<=0){cinemaLook.set(cx,cz,0,1);}else{cinemaLook.x+=(cx-cinemaLook.x)*k;cinemaLook.y+=(cz-cinemaLook.y)*k;}
+   lookX+=(cinemaLook.x-lookX)*ca;lookZ+=(cinemaLook.y-lookZ)*ca;lookY+=(.9-lookY)*ca;
+   const cam=stage.camera.position,side=Math.sign(cinema.gx-cinema.tx)||1,dist=cam.y;
+   cam.x+=(lookX-cam.x)*cinema.dolly*.55;cam.z+=(lookZ-cam.z)*cinema.dolly*.55;cam.y-=cam.y*cinema.dolly*.3;
+   cam.y-=cam.y*.28*cinema.low;cam.x-=side*dist*.14*cinema.low;
+   cam.x+=cinema.sweep*9;lookX+=cinema.sweep*3;cinemaZoom=cinema.zoom;}
+  else cinemaLook.w=0;
   if(motion&&shake>0){stage.camera.position.x+=Math.sin(clock*53)*shake*.35;stage.camera.position.y+=Math.sin(clock*61)*shake*.2;}
-  stage.camera.lookAt(offsetX,.8*focus,offsetZ);
-  if(Math.abs(stage.camera.zoom-zoom)>.0001){stage.camera.zoom=zoom;stage.camera.updateProjectionMatrix();}
+  stage.camera.lookAt(lookX,lookY,lookZ);
+  const zoomed=zoom*cinemaZoom;if(Math.abs(stage.camera.zoom-zoomed)>.0001){stage.camera.zoom=zoomed;stage.camera.updateProjectionMatrix();}
   gauge.visible=aiming&&!celebrating;{const c=s.charge,clean=c>=STRIKER_CLEAN[0]&&c<=STRIKER_CLEAN[1];if(aiming&&clean&&!(targetMaterial.color.equals(aimOver))){aimMaterial.color.copy(cleanCyan);targetMaterial.color.copy(cleanCyan);}
    if(gauge.visible){gauge.position.set(p.x,.07,p.z);gauge.rotation.y=Math.atan2(stage.camera.position.x-p.x,stage.camera.position.z-p.z);gauge.scale.setScalar(gaugeScale*(1+(clean&&!stage.reduced?Math.sin(clock*18)*.035:0)));gaugeFillGeometry.setDrawRange(0,Math.min(GAUGE_SEG,Math.ceil(c*GAUGE_SEG))*6);gaugeFillMaterial.color.copy(gaugeZoneColor[strikerGaugeZone(c)]);}}
   shotFlash=Math.max(0,shotFlash-dt*2.8);releaseRing.visible=shotFlash>0&&!stage.reduced;releaseRing.scale.setScalar(1+(1-shotFlash)*7);releaseRing.material.opacity=shotFlash;
@@ -254,7 +268,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   // Portrait play attacks upward; controls are transformed into this view.
  }
  overlays.push(ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,gauge,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
- fit();update(0);return{stage,fit,update,screenAxes,rigs,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
+ fit();update(0);return{stage,fit,update,screenAxes,rigs,cinema,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
   /** Impact hit-stop (strikerFeel.strikerImpact): freeze the bodies for `seconds` and punch the camera by `kick`. */
   impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;},
   /** Full-time outro: a few seconds of win / lose / draw body language after the whistle. Returns its length (0 = none, reduced motion). */
