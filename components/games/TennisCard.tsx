@@ -39,12 +39,6 @@ export function TennisCard(p:Props){
   <button className={`${p.primaryClass} ${styles.play}`} disabled={p.pending} onClick={play}><Icon name="play" size={26}/>Play<small>3 coins</small></button>
   {small}
  </section>;
- if(p.phase==='paused')return <section className={`${p.cardClass} ${styles.card}`} data-tennis-card="paused">
-  <h3 className={styles.title}>Time out</h3>
-  <p className={styles.pauseScore}>{p.hud.score}{p.hud.tennisSets?<small>{p.hud.tennisSets}</small>:null}</p>
-  <button className={`${p.primaryClass} ${styles.play}`} onClick={p.onStart}><Icon name="play" size={26}/>Resume</button>
-  {small}
- </section>;
  // Full time: result, stars earned, three stat chips, one primary button.
  const earned=t?t.stars:0,unlockedNow=won&&t!.level<TENNIS_COURTS.length;
  return <section className={`${p.cardClass} ${styles.card}`} data-tennis-card="over" data-won={won||undefined}>

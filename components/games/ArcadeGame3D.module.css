@@ -225,6 +225,10 @@
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=tennis] .tennisActions button[data-charging]{transform:none}}
 /* Breakaway Run round 3: the coaching line sits under the header, clear of the runner and the taller kid pad. */
 .game[data-arcade-kind=runner] .message{top:calc(80px + env(safe-area-inset-top,0px));bottom:auto;max-width:calc(100% - 28px)}
+/* Shared score bar (components/arcade/ArcadeTopBar, docs/ARCADE_CHROME_OCT27.md): under a start / full-time card only Back stays above
+   the overlay, as before. */
+.game[data-card]>.topBar.topBar{z-index:auto}
+.game[data-card]>.topBar.topBar>button:first-child{position:relative;z-index:5}
 /* Futbol Pinball full-screen cabinet (Oct 26 2026, docs/ARCADE_PINBALL_UPGRADE2_OCT26.md): the table fills the screen
    (lib/games/soccerPinballCamera.ts frames it) and the controls float over the drain strip below the flippers as
    translucent thumb pads: two big flipper pads in the lower corners and a wide Launch / Nudge pill between them with a

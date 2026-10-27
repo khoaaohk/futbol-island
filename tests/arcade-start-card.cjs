@@ -9,11 +9,12 @@ const assert=require('node:assert/strict'),fs=require('fs'),path=require('path')
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const comp=read('components/games/ArcadeGame3D.tsx'),css=read('components/games/ArcadeGame3D.module.css');
 assert.match(comp,/data-card=\{card\|\|undefined\}/,'the game marks when a card is up');
-assert.match(comp,/\{card&&<div className=\{styles\.overlay\}>/,'same condition as the overlay');
-assert.match(comp,/<header className=\{styles\.header\}><BackButton onBack=\{onExit\} label="Arcade"\/>/,'the Arcade NavigationButton is still the header\'s first child');
+assert.match(comp,/\{card&&!\(phase==='paused'&&!error\)&&<div className=\{styles\.overlay\}>/,'same condition as the overlay (the pause card is the shared ArcadePauseCard)');
+assert.match(comp,/<ArcadeTopBar game=\{kind\} className=\{styles\.topBar\} onBack=\{onExit\}/,'the shared bar (Back first) is the header');
+assert.match(read('components/arcade/ArcadeTopBar.tsx'),/data-overlay=\{overlay\|\|undefined\}>\n  <BackButton label="Arcade"/,'the Arcade NavigationButton is still the header\'s first child');
 assert.match(css,/\.overlay\{position:absolute;inset:0;z-index:4/,'overlay z 4');
-assert.match(css,/\.game\[data-card\]>\.header\{z-index:auto\}/,'header stops being a stacking context under a card');
-const lift=css.match(/\.game\[data-card\]>\.header>button:first-child\{([^}]*)\}/);
+assert.match(css,/\.game\[data-card\]>\.topBar\.topBar\{z-index:auto\}/,'header stops being a stacking context under a card');
+const lift=css.match(/\.game\[data-card\]>\.topBar\.topBar>button:first-child\{([^}]*)\}/);
 assert.ok(lift,'the Arcade button is lifted');
 assert.match(lift[1],/z-index:5/,'above the overlay');
 assert.ok(!/background|border|color|height|width|shadow/.test(lift[1]),'without restyling the NavigationButton');

@@ -13,6 +13,6 @@ assert(!/innerHeight\s*>\s*window\.innerWidth/.test(match),'Strikers no longer b
 assert(!/setRotate\(/.test(match),'nothing turns the rotate prompt on');
 assert.match(match,/data-phase=\{phase\}/,'root exposes the phase for the CSS rule');
 assert.match(match,/\{phase==='ready'&&!failed&&<div className=\{styles\.overlay\}>/,'the start card shows before kick-off');
-assert.match(match,/phase!=='playing'&&!outroOn&&\(phase!=='ready'\|\|failed\)&&<div className=\{styles\.overlay\}/,'the pause / full-time card shows otherwise');
+assert.match(match,/\(phase==='finished'\|\|failed\)&&!outroOn&&<div className=\{styles\.overlay\}/,'the full-time card shows otherwise');
 assert.match(css,/\.root:not\(\[data-phase=playing\]\) \.touchControls\{visibility:hidden;pointer-events:none\}/,'thumb controls hide under the card');
 console.log('strikers-portrait: ok');

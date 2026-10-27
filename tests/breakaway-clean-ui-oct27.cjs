@@ -7,7 +7,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm');
 const read=f=>fs.readFileSync(f,'utf8');
 const pad=read('components/games/RunnerControls.tsx'),padCss=read('components/games/RunnerControls.module.css'),hook=read('lib/arcade/useFloatingStick.ts');
-const game=read('components/games/ArcadeGame3D.tsx'),bar=read('components/games/RunnerTopBar.tsx'),menu=read('components/games/RunnerMenu.tsx'),menuCss=read('components/games/RunnerMenu.module.css');
+const game=read('components/games/ArcadeGame3D.tsx'),bar=read('components/arcade/ArcadeTopBar.tsx'),pause=read('components/arcade/ArcadePauseCard.tsx'),pauseCss=read('components/arcade/ArcadePauseCard.module.css');
 const hud=read('lib/arcade/runnerHud.ts'),fx=read('lib/arcade/runnerFx.ts');
 
 // 1. Joystick present, lane buttons gone.
@@ -43,17 +43,15 @@ assert.match(hud,/return r\.eventKind==='goal'\?'GOAL!':r\.eventKind==='hit'\?'T
 assert.match(fx,/export const RUNNER_WORD_POPS:boolean=false;/,'floating caption words are off');
 assert.match(fx,/if\(!RUNNER_WORD_POPS\|\|!wordCtx/,'pop() honours the switch');
 
-// 3. Header and pause card.
-assert.match(game,/\{kind==='runner'\?<RunnerTopBar score=\{hud\.score\}/,'runner top bar replaces the shared header');
-assert.match(bar,/<BackButton[^>]*label="Arcade"\/>\s*<p className=\{styles\.pill\}[^>]*><b[^>]*>\{score\}<\/b><span>pts<\/span><\/p>\s*<button className=\{pauseClass\}/,'Back · one points pill · Pause');
+// 3. Header and pause card: the shared arcade bar and pause card (docs/ARCADE_CHROME_OCT27.md; tests/arcade-chrome-shared.cjs).
+assert.match(game,/<ArcadeTopBar game=\{kind\}[^>]*value=\{hud\.score\} word=\{kind==='tennis'\?undefined:'pts'\}/,'runner: Back · one points pill · Pause');
 assert.doesNotMatch(bar.slice(bar.indexOf(' return <header')),/detail/,'no second detail line');
-assert.match(menu,/if\(paused\)return <div className=\{styles\.overlay\} data-runner-menu="paused">/,'dedicated pause card');
-{const p=menu.slice(menu.indexOf('if(paused)return'),menu.indexOf(' return <div className={styles.overlay} data-runner-menu={phase}>'));
- assert.match(p,/<h2 className=\{styles\.pauseTitle\}>Paused<\/h2>/);assert.equal((p.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');
- assert.match(p,/>Resume<\/button>/);assert.match(p,/>Arcade<\/button>/);assert.match(p,/onClick=\{onRestart\}[^>]*>Restart<\/button>/);
- assert.match(p,/\{!touch&&<ul className=\{styles\.keys\}/,'keycaps on desktop only');assert.doesNotMatch(p,/routes|Missions|Leaderboard/,'nothing else on the pause card');}
-assert.match(menuCss,/\.resume\{[^}]*min-height:56px/,'Resume is the big button');
-assert.match(game,/onRestart=\{\(\)=>\{change\('ready'\);void start\(\);\}\}/,'Restart begins a fresh run');
+assert.match(game,/\{phase==='paused'&&!error&&<ArcadePauseCard game=\{kind\}[^>]*onRestart=\{restart\}/,'shared pause card with Restart');
+assert.match(pause,/<h2 className=\{styles\.title\}>Paused<\/h2>/);assert.equal((pause.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');
+assert.match(pause,/>Resume<\/button>/);assert.match(pause,/>Arcade<\/button>/);assert.match(pause,/onClick=\{onRestart\}[^>]*>Restart<\/button>/);
+assert.match(pauseCss,/@media \(pointer:coarse\)\{\.keys\.keys\{display:none\}\}/,'keycaps on desktop only');
+assert.match(pauseCss,/\.resume\.resume\{[^}]*min-height:56px/,'Resume is the big button');
+assert.match(game,/const restart=\(\)=>\{change\('ready'\);void start\(\);\};/,'Restart begins a fresh run');
 
 // 4. Landscape.
 assert.match(game,/useEffect\(\(\)=>kind==='runner'\|\|kind==='tennis'\?requestLandscape\(\):undefined,\[kind\]\);/,'Breakaway asks for landscape on phones');

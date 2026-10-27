@@ -42,8 +42,6 @@
 .starsHow{margin:0!important;font-size:12px!important;line-height:1.35!important;color:#ffe084}
 .how small{font-size:11px!important;line-height:1.4!important;padding:0!important;border:0!important}
 /* Pause + full time */
-.pauseScore{margin:0 0 14px!important;font-size:34px!important;font-weight:900;font-variant-numeric:tabular-nums}
-.pauseScore small{display:block!important;font-size:13px!important;padding:0!important;border:0!important}
 .result{display:inline-block;padding:6px 14px;border-radius:999px;background:#2c2649;color:#ffb4e4;font-size:13px;font-weight:900;letter-spacing:.14em}
 .card[data-won] .result{background:#3b3214;color:#ffe084;box-shadow:0 0 18px #ffc93c44}
 .bigScore{margin:10px 0 2px!important;font-size:46px!important;line-height:1!important;font-weight:900;font-variant-numeric:tabular-nums;color:#f0fffb}

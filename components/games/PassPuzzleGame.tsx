@@ -3,7 +3,8 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import type {PuzzleSnapshot} from '@/lib/passPuzzle/types';
 import {appendStroke,createPointerFilter,filterPointer,type PointerFilter} from '@/lib/passPuzzle/drawing';
 import type {PassControlMode} from '@/lib/passPuzzle/stroke';
-import {BackButton} from '../BackButton';
+import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
+import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {Icon} from '../Icon';
 import {createPuzzle,readStroke,predict,replay as replayAttempt,type Scenario,type Format,type PuzzleWorld,type PuzzleEvent,type StrokePoint,type Kick,type Prediction,type Replay} from '@/lib/passPuzzle';
 import {youthScenario,usesHeading,YOUTH_PACK_BLURB} from '@/lib/passPuzzle/youth';
@@ -114,6 +115,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Replay commentary: the current call and the inputs it reads receivers and runs from. */
  const [replayLine,setReplayLine]=useState(''),replayInputs=useRef<{kick:Kick;calls?:{attacker:number}[]}[]>([]),replayKicks=useRef(0),replayHold=useRef(0);
  /** Hints in tiers: 1 = the words, 2 = a glowing spot on the pitch for the next pass of the coach's route. */
+ const [paused,setPaused]=useState(false),pausedRef=useRef(false);
  const [spotHint,setSpotHint]=useState(false),spotHintRef=useRef(false);spotHintRef.current=spotHint;const applyHint=useRef(()=>{}),applyScan=useRef(()=>{});
  const heading=headingAllowed(progress,format),headingRef=useRef(heading);headingRef.current=heading;formatRef.current=format;
  const baseLevel=useMemo(()=>levelById(levelId)??SCENARIOS[0],[levelId]);
@@ -199,6 +201,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   let frame=0,last=0,slot=0,disposed=false,thinkingUntil=0;const interval=1000/(scene.stage.mobile?30:60);
   const draw=(now:number)=>{frame=0;if(disposed||document.hidden)return;const next=frameCapSlot(now,slot,viewRef.current==='play'&&worldRef.current?.state.phase==='aiming'&&!stroke.current&&!cine.active?1000/15:interval);if(next<0){frame=requestAnimationFrame(draw);return;}slot=next;const dt=last?Math.min((now-last)/1000,.05):1/60;last=now;
    const world=worldRef.current;if(!world){scene.render();return;}
+   if(pausedRef.current){last=0;slot=0;return;}// paused: sleep until Resume wakes the loop
    let busy=false,state=world.state;const rep=replayRef.current;
    if(rep){for(const e of rep.advance(now<hitStop.current||now<replayHold.current?0:dt))handleEvent(e);state=rep.world.state;
     const key=attemptEvents.current.filter(e=>e.type!=='kick'&&e.type!=='receive').at(-1)??attemptEvents.current.at(-1);
@@ -248,7 +251,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   const visibility=()=>{if(!document.hidden)wake.current();else{cancelAnimationFrame(frame);frame=0;last=0;slot=0;}};
   const observer=new ResizeObserver(()=>{cancelDrawing.current();scene.fit();wake.current();});observer.observe(el);document.addEventListener('visibilitychange',visibility);
   // Pointer: a stroke always starts at the ball, so a small thumb never misses it.
-  const down=(e:PointerEvent)=>{/* a tap during a beat only skips it (it never also fires a pass) */if(cine.active||finishAt.current){e.preventDefault();skipCine.current();return;}const world=worldRef.current;if(e.button!==0||!world||replayRef.current||viewRef.current!=='play'||world.state.phase!=='aiming'||stroke.current)return;const bounds=el.getBoundingClientRect(),p=scene.pick(e.clientX,e.clientY,bounds);if(!p)return;e.preventDefault();unlock();el.setPointerCapture(e.pointerId);const b=world.state.ball.p,t=performance.now()/1000;
+  const down=(e:PointerEvent)=>{if(pausedRef.current)return;/* a tap during a beat only skips it (it never also fires a pass) */if(cine.active||finishAt.current){e.preventDefault();skipCine.current();return;}const world=worldRef.current;if(e.button!==0||!world||replayRef.current||viewRef.current!=='play'||world.state.phase!=='aiming'||stroke.current)return;const bounds=el.getBoundingClientRect(),p=scene.pick(e.clientX,e.clientY,bounds);if(!p)return;e.preventDefault();unlock();el.setPointerCapture(e.pointerId);const b=world.state.ball.p,t=performance.now()/1000;
    // Starting on a teammate (away from the ball) drags their run instead of a pass: movement first, then the pass.
    let run:number|undefined,best=RUN_GRAB;if(Math.hypot(p.x-b.x,p.z-b.z)>BALL_GRAB)world.state.attackers.forEach((a,i)=>{const d=Math.hypot(a.p.x-p.x,a.p.z-p.z);if(i!==world.state.carrier&&d<best){best=d;run=i;}});
    const from=run!==undefined?world.state.attackers[run].p:b;
@@ -368,6 +371,17 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const expertIdea=level&&isExpertPack(level.pack)?EXPERT_CONCEPTS[level.concept]:undefined;
  /** Progress toward the taught move, always on screen (the brief card is gone once play starts). */
  const progressHud=passProgress(hud.passes,level?.require.minPasses??0);
+ // Pause (shared arcade pause card): the draw loop sleeps (no frames at all) and the pitch ignores touches until Resume.
+ const setPause=(on:boolean)=>{if(on){cancelDrawing.current();}pausedRef.current=on;setPaused(on);if(!on)wake.current();};
+ const toPuzzles=()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();};
+ // Restart: this puzzle again from its first try (Pass Puzzles is free to play; the entry just opens a fresh run).
+ const restartPuzzle=async()=>{const w=worldRef.current;if(!w)return;setPause(false);replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);loadLevel(w.scenario);await play();};
+ useEffect(()=>{if(view!=='play'&&pausedRef.current){pausedRef.current=false;setPaused(false);}},[view]);
+ // Escape / P pause and resume while playing, like the other arcade machines.
+ useEffect(()=>{if(view!=='play')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'&&e.code!=='KeyP')return;if(e.defaultPrevented||boardsOpen||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();setPause(!pausedRef.current);};
+  window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[view,boardsOpen]);
  // Escape like the other machines' cards: the puzzle map leaves for the arcade, a brief goes back to the map. Not while drawing/playing,
  // and not under the board dialogs (they keep their own keys).
  const exitRef=useRef(onExit);exitRef.current=onExit;
@@ -376,9 +390,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
 
  return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
-  <header className={`${arcade.header} ${styles.header}`}><BackButton label="Arcade" title="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}}/>{view!=='levels'?<div className={`${arcade.headerScore} ${styles.passScore}`} aria-live="polite" data-met={progressHud.met||undefined}><strong>{progressHud.count}</strong><span>{progressHud.label} · try {hud.attempt}/{hud.attempts}</span></div>:<span/>}
-   {view!=='levels'?<div className={styles.navigation}><button onClick={()=>{cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();}}>Puzzles</button>{view==='play'&&!replaying?<button className={arcade.pause} onClick={cycleHint} aria-pressed={spotHint} data-hint-level={spotHint?2:0} data-nudge={nudge||undefined} aria-label={spotHint?'Hide hint':'Show me where'} data-tip={spotHint?'Hide hint':'Hint'}><Icon name="book" size={22}/></button>:null}</div>:<span/>}
-  </header>
+  {/* The shared arcade score bar (docs/ARCADE_CHROME_OCT27.md): the pass count toward the move; tries live on the brief / result cards. */}
+  <ArcadeTopBar game="pass-puzzle" className={styles.topBar} backTitle="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}} value={view!=='levels'?progressHud.count:undefined} word={progressHud.label} live met={progressHud.met} pillHidden={view==='brief'||view==='result'} paused={paused} canPause={view==='play'} onPause={()=>setPause(!pausedRef.current)} pauseLabel="Pause puzzle" resumeLabel="Resume puzzle"/>
+  {view==='play'&&!replaying&&!paused&&<div className={styles.hintDock}><button className={arcade.pause} onClick={cycleHint} aria-pressed={spotHint} data-hint-level={spotHint?2:0} data-nudge={nudge||undefined} aria-label={spotHint?'Hide hint':'Show me where'} data-tip={spotHint?'Hide hint':'Hint'}><Icon name="book" size={22}/></button></div>}
+  {paused&&view==='play'&&<ArcadePauseCard game="pass-puzzle" score={`${progressHud.count} ${progressHud.label} · try ${hud.attempt}/${hud.attempts}`} onResume={()=>setPause(false)} onExit={()=>{cancelDrawing.current();onExit();}} extra={{label:'Puzzles',onClick:()=>{setPause(false);toPuzzles();}}} onRestart={()=>{void restartPuzzle();}} restartDisabled={entry.pending}/>}
   {/* Clean pitch (owner, Oct 27 2026): no tip, hint, lesson or modifier text while playing; the start and result cards teach. */}
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
   {inPlay&&hud.phase==='aiming'&&rewindPoint.current&&!rewound.current&&<button type="button" className={styles.undo} data-undo onClick={rewindPass} aria-label="Undo the last pass (once per try)"><Icon name="reset" size={22}/><span>Undo</span></button>}

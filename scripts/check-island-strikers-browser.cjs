@@ -20,7 +20,7 @@ const assert=require('node:assert/strict');
  await page.waitForFunction(()=>window.__fi2Live.sim.eventKind==='shot');
  const shot=await page.evaluate(()=>{const s=window.__fi2Live.sim;return{owner:s.ball.owner,speed:Math.hypot(s.ball.vx,s.ball.vz)};});assert.equal(shot.owner,-1);assert(shot.speed>27);
  await page.getByRole('button',{name:'Pause',exact:true}).click();await page.waitForTimeout(200);const frames=await canvas.getAttribute('data-frames'),time=await page.evaluate(()=>window.__fi2Live.getElapsed());await page.waitForTimeout(350);assert.equal(await canvas.getAttribute('data-frames'),frames);assert.equal(await page.evaluate(()=>window.__fi2Live.getElapsed()),time);
- await page.getByRole('button',{name:'Resume match',exact:true}).click();await page.waitForFunction(t=>window.__fi2Live.getElapsed()>t,time);
+ await page.locator('[data-arcade-resume]').click();await page.waitForFunction(t=>window.__fi2Live.getElapsed()>t,time);
  // Deterministic keeper fixture: an actual collision must use hands, with the bean rig visible.
  await page.evaluate(()=>{const s=window.__fi2Live.sim,p=s.players[7];s.ball.owner=-1;Object.assign(s.ball,{x:p.x-.25,z:p.z,y:1,vx:8,vz:0,vy:0,lock:0});});
  await page.waitForFunction(()=>window.__fi2Live.sim.players[7].strikeKind==='save'&&window.__fi2Live.sim.players[7].kick>.2);

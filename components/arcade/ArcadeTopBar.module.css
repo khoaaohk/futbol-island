@@ -1,0 +1,31 @@
+/* The one arcade score bar (docs/ARCADE_CHROME_OCT27.md): Back · centre pill · Pause. Same metrics in every game. Doubled class
+   selectors (.bar.bar) so host game sheets (ArcadeGame3D, LiveArcadeMatch, PassPuzzleGame) can never restyle it by accident. */
+.bar.bar{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;width:100%;margin:0;
+ padding:calc(14px + env(safe-area-inset-top,0px)) calc(18px + env(safe-area-inset-right,0px)) 8px calc(18px + env(safe-area-inset-left,0px));
+ background:transparent;border:0;pointer-events:none;z-index:3;font-family:var(--font-body),Arial,sans-serif;color:#eff8ff}
+.bar.bar[data-overlay]{position:absolute;top:0;left:0;right:0}
+.bar.bar>*{pointer-events:auto}
+.bar.bar>:first-child{justify-self:start}
+.pill.pill{justify-self:center;display:flex;align-items:baseline;gap:8px;width:max-content;max-width:100%;box-sizing:border-box;margin:0;padding:7px 16px;min-height:0;
+ border-radius:20px;background:#26223d;color:#eeebff;border:1px solid #65dfda;box-shadow:0 0 16px #4debd520;pointer-events:none;white-space:nowrap;text-shadow:none}
+.pill b{font-size:26px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;color:#fff08a}
+.pill span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#b5c7dc}
+.pill b[data-side=blue]{color:#83dfff}
+.pill time{align-self:center;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;color:#eeebff;padding:0 2px}
+.pill[data-met]{border-color:#ffe36e;box-shadow:0 0 14px #ffe36e40}
+.pill[data-hidden]{visibility:hidden}
+.pause.pause{justify-self:end;display:grid;place-items:center;width:var(--btn-icon,44px);height:var(--btn-icon,44px);min-width:0;min-height:0;margin:0;padding:0;
+ border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:50%;background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ color:var(--btn-ink,#e9f5ff);box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;transition:translate .16s,box-shadow .16s;touch-action:manipulation}
+.pause.pause:not(:disabled):active{transform:none;translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #121329)}
+.pause.pause:disabled{opacity:.5;cursor:default}
+.pause.pause:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.bump{display:inline-block;animation:arcadeBarBump .28s ease-out}
+@keyframes arcadeBarBump{from{transform:scale(1.25)}to{transform:scale(1)}}
+/* Short landscape (phones sideways, 390 px tall) and the framed 4:3 game window: a slimmer bar, same parts. */
+@media (max-height:520px){
+ .bar.bar{padding:calc(6px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 4px calc(16px + env(safe-area-inset-left,0px))}
+ .pill.pill{padding:5px 14px}.pill b{font-size:22px}
+}
+@media (max-width:360px){.pill.pill{gap:6px;padding:6px 10px}.pill b{font-size:22px}.pill span{font-size:10px;letter-spacing:.04em}}
+@media (prefers-reduced-motion:reduce){.bump{animation:none}.pause.pause{transition:none}}

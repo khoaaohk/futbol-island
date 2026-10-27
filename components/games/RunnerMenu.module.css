@@ -45,20 +45,3 @@
  .play,.row{grid-column:1/3}
  .title{font-size:24px;margin:6px 0}
 }
-/* Pause card (Oct 27 2026): Island Strikers' pause card (LiveArcadeMatch "Pause + full-time cards"): neon cabinet card,
-   Paused title, one score line, ONE big Resume, a small Arcade / Restart row, keycaps on mouse windows only. */
-.card.pause{display:flex;flex-direction:column;gap:8px;width:min(460px,100%);padding:18px 20px;border:2px solid #ef64c5;border-top-width:2px;background:#151a30;color:#eff8ff;box-shadow:0 0 32px #d849b320;text-align:left}
-.eyebrow{font:700 11px/1.2 system-ui,sans-serif;letter-spacing:.12em;color:#b5c7dc}
-.pauseTitle{margin:0;font:30px/1.1 IslandBrush,Arial,sans-serif;color:#eff8ff}
-.pauseScore{margin:0;font:800 16px/1.3 system-ui,sans-serif;letter-spacing:.04em;color:#cef7ff}
-.resume{min-height:56px;margin:4px 0 0;padding:10px 22px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:var(--btn-radius,999px);background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#e9f5ff);font:700 20px/1.2 var(--btn-font,Arial),sans-serif;box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;touch-action:manipulation}
-.resume:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #121329)}
-.pauseRow{display:flex;gap:8px}
-.pauseSmall{flex:1;display:flex;align-items:center;justify-content:center;min-height:48px;margin:0;padding:8px 14px;border:2px solid #81fbed66;border-radius:999px;background:#151c35;color:#e8ffff;font:800 14px/1 system-ui,sans-serif;box-shadow:0 3px 0 #0b1024;cursor:pointer;touch-action:manipulation}
-.pauseSmall:disabled{opacity:.5;cursor:default}
-.keys{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;margin:2px 0 0;padding:0;list-style:none;font-size:12px;font-weight:700;color:#bdeaf2}
-.keys li{display:flex;align-items:center;gap:5px;white-space:nowrap}
-.keys kbd{display:inline-block;min-width:18px;padding:1px 7px;border:1px solid #81fbed;border-bottom-width:3px;border-radius:6px;background:#151c35;color:#fff08a;font:800 11px/1.5 var(--font-body,Arial),sans-serif;text-align:center}
-@media (pointer:coarse){.keys{display:none}}
-@media (max-height:560px) and (min-width:640px){.card.pause{display:flex;width:min(460px,100%)}}
-@media (prefers-reduced-motion:reduce){.resume:active{translate:none}}
