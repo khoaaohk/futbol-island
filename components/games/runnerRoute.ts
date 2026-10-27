@@ -32,7 +32,9 @@ export function visibleBlock(z: number) { return z >= -30 && z <= 100; }
 export const ROUTE_SEGMENT = 60;
 /** Peak heading change (rad) and rise (m) per segment for stages 1..8+: difficulty ramps with curvature and steepness. */
 export const ROUTE_TURN = [.32, .42, .54, .64, .72, .8, .86, .9] as const;
-export const ROUTE_RISE = [1.6, 2.4, 3.2, 4, 4.6, 5.2, 5.6, 6] as const;
+export const ROUTE_RISE = [2.2, 3, 3.8, 4.6, 5.2, 5.8, 6.2, 6.4] as const;
+/** Steepest rise any profile may use per segment (m): grade stays under ~22 % so slopes read clearly but stay fair. */
+export const ROUTE_RISE_CAP = 8.6;
 /** Curvature (1/m) above which a stretch counts as a bend for the inside-line rule. */
 export const ROUTE_BEND_MIN = .0045;
 /** Grade above which the HUD calls a climb or a descent. */
@@ -57,18 +59,80 @@ const gentle = (i: number) => (i <= 0 ? 0 : i === 1 ? .45 : goalSegment(i) ? .35
 function turnOf(i: number) {
   const k = gentle(i); if (!k) return 0;
   const stage = stageOf(i);
+  if (finishSegment(i) >= 0) return finishSegment(i) === 0 ? 0 : sign01(i) * ROUTE_TURN[stage] * .35 * profile.turn;
   if (hash(i, 1) < (stage === 0 ? .2 : .12)) return 0;
   const sign = (i % 2 ? 1 : -1) * (hash(i, 2) < .25 ? -1 : 1);
-  return sign * ROUTE_TURN[stage] * (.55 + .45 * hash(i, 3)) * k;
+  return sign * ROUTE_TURN[stage] * (.55 + .45 * hash(i, 3)) * k * profile.turn;
 }
 /** Height change of segment i (m). Climbs and descents alternate so crests and dips follow each other. */
 function riseOf(i: number) {
   const k = gentle(i); if (!k) return 0;
   const stage = stageOf(i);
-  if (hash(i, 5) < .18) return 0;
-  const sign = (i % 2 ? -1 : 1) * (hash(i, 6) < .2 ? -1 : 1);
-  return sign * ROUTE_RISE[stage] * (.5 + .5 * hash(i, 4)) * k;
+  // Finite routes end on a long climb to the goal line, then a flat finishing segment.
+  const f = finishSegment(i);
+  if (f === 0) return 0;
+  if (f > 0) return Math.min(ROUTE_RISE_CAP, ROUTE_RISE[stage] * profile.rise * (f === 1 ? .7 : 1));
+  if (hash(i + profile.salt, 5) < .18) return 0;
+  const sign = (i % 2 ? -1 : 1) * (hash(i + profile.salt, 6) < .2 ? -1 : 1);
+  return sign * Math.min(ROUTE_RISE_CAP, ROUTE_RISE[stage] * profile.rise * (.5 + .5 * hash(i + profile.salt, 4))) * k;
 }
+const sign01 = (i: number) => (i % 2 ? 1 : -1);
+/** For finite routes: 0 = the finishing segment, 1..3 = the final hill segments before it, -1 otherwise. */
+function finishSegment(i: number) {
+  if (!profile.finish) return -1;
+  const last = routeSegmentAt(profile.finish), back = last - i;
+  return back >= 0 && back <= 3 ? back : -1;
+}
+/* ------------------------------------------------------------------------------------------
+ * Route profile (Oct 26 2026, round 3): hard routes scale the hills and bends, finite routes end on
+ * a final hill to the goal line, and each route has its own sequence of terrain zones. The default
+ * profile is the classic endless route, so every existing rule and test is unchanged.
+ * ---------------------------------------------------------------------------------------- */
+export type RouteProfile = { rise: number; turn: number; finish: number; salt: number; terrains: readonly TerrainId[] };
+export const DEFAULT_TERRAINS: readonly TerrainId[] = ['grass', 'cobbles', 'neon', 'sand', 'bridge', 'rooftop'];
+const DEFAULT_PROFILE: RouteProfile = { rise: 1, turn: 1, finish: 0, salt: 0, terrains: DEFAULT_TERRAINS };
+let profile: RouteProfile = DEFAULT_PROFILE;
+/** Select the route profile (called when a run starts). Clears the segment memo and height cache. */
+export function setRouteProfile(p: Partial<RouteProfile> = {}) {
+  profile = { ...DEFAULT_PROFILE, ...p };
+  memoI.fill(NaN); heightCache.length = 1;
+}
+export const routeProfile = () => profile;
+
+/* ---- terrain zones: one look, one surface feel, one sound per zone ---- */
+export type TerrainId = 'grass' | 'sand' | 'cobbles' | 'snow' | 'mud' | 'neon' | 'rooftop' | 'bridge';
+/** Ground look (road, land, pattern id for the terrain shader), surface feel and the footstep sound.
+ * speed: pace multiplier; grip: lane-change spring multiplier (lower = slidier). Both stay within ±8 % so
+ * every read window holds. The tip says the football lesson of the surface in a child's words. */
+export const TERRAINS: Record<TerrainId, { name: string; tip: string; road: string; land: string; pattern: number; speed: number; grip: number; step: 'grass' | 'sand' | 'hard' | 'snow' | 'mud' | 'wood' }> = {
+  grass: { name: 'GRASS PITCH', tip: 'Fast and true: pass and move', road: '#2f7a4c', land: '#123524', pattern: 0, speed: 1, grip: 1, step: 'grass' },
+  sand: { name: 'SAND BEACH', tip: 'Soft sand slows you: lift your knees', road: '#d8b878', land: '#8f7449', pattern: 1, speed: .95, grip: .92, step: 'sand' },
+  cobbles: { name: 'COBBLED STREET', tip: 'Bumpy ball: keep your touches small', road: '#7a7488', land: '#2c2838', pattern: 2, speed: 1, grip: .96, step: 'hard' },
+  snow: { name: 'SNOW', tip: 'Slippy! Change lanes a little early', road: '#e6eef8', land: '#9fb3cc', pattern: 3, speed: .95, grip: .84, step: 'snow' },
+  mud: { name: 'WET MUD', tip: 'Heavy pitch: jump the puddles', road: '#5b4330', land: '#2c2016', pattern: 4, speed: .93, grip: .88, step: 'mud' },
+  neon: { name: 'NEON STADIUM', tip: 'Fast floor: look up early', road: '#1d2a52', land: '#0c0f25', pattern: 5, speed: 1.04, grip: 1, step: 'hard' },
+  rooftop: { name: 'ROOFTOPS', tip: 'High up! Keep your eyes on the next line', road: '#8a4f45', land: '#3a2430', pattern: 6, speed: 1.02, grip: 1, step: 'hard' },
+  bridge: { name: 'THE BRIDGE', tip: 'Wooden boards: stay in your lane', road: '#9a6b42', land: '#16304a', pattern: 7, speed: 1, grip: .96, step: 'wood' },
+};
+export const TERRAIN_IDS = Object.keys(TERRAINS) as TerrainId[];
+/** Metres per terrain zone, and the blend at each change (look and feel ease across it). */
+export const TERRAIN_ZONE = 240;
+export const TERRAIN_BLEND = 14;
+/** Zone index at distance s (zone 0 starts at kick-off). */
+export const terrainZoneAt = (s: number) => Math.floor(Math.max(0, s) / TERRAIN_ZONE);
+/** Terrain of a zone index in the current profile. */
+export const terrainOfZone = (zone: number) => profile.terrains[((zone % profile.terrains.length) + profile.terrains.length) % profile.terrains.length];
+export const terrainAt = (s: number) => terrainOfZone(terrainZoneAt(s));
+/** Surface feel at s, blended across the zone change so speed and grip never jump. */
+export function terrainFeel(s: number, out: { speed: number; grip: number }) {
+  const zone = terrainZoneAt(s), a = TERRAINS[terrainOfZone(zone)], into = s - zone * TERRAIN_ZONE;
+  if (zone > 0 && into < TERRAIN_BLEND) {
+    const b = TERRAINS[terrainOfZone(zone - 1)], t = smooth(Math.max(0, into) / TERRAIN_BLEND);
+    out.speed = b.speed + (a.speed - b.speed) * t; out.grip = b.grip + (a.grip - b.grip) * t;
+  } else { out.speed = a.speed; out.grip = a.grip; }
+  return out;
+}
+
 // Tiny memo: the per-frame bend table reads the same few segments ~150 times.
 const memoI = new Float64Array(32).fill(NaN), memoT = new Float64Array(32), memoR = new Float64Array(32);
 const memo = (i: number) => { const k = i & 31; if (memoI[k] !== i) { memoI[k] = i; memoT[k] = turnOf(i); memoR[k] = riseOf(i); } return k; };
@@ -81,6 +145,17 @@ const at = (s: number) => { const i = routeSegmentAt(s); return { i, u: (s + L /
 export function routeCurve(s: number) { const { i, u } = at(s); return routeTurn(i) * dsmooth(u) / L; }
 /** Grade at distance s (dH/ds: + = uphill). */
 export function routeGrade(s: number) { const { i, u } = at(s); return routeRise(i) * dsmooth(u) / L; }
+/** Rate of change of grade (1/m): negative over a crest, positive in a dip. */
+export function routeGradeChange(s: number) { const { i, u } = at(s); return routeRise(i) * (6 - 12 * u) / (L * L); }
+// Prefix sums of segment rises from segment 0 (grown on demand, reset with the profile).
+const heightCache: number[] = [0];
+/** Absolute ground height at distance s (m, kick-off = 0): one cheap function of route position. */
+export function routeHeight(s: number) {
+  const { i, u } = at(s);
+  if (i <= 0) return i < 0 ? 0 : routeRise(0) * smooth(u);
+  while (heightCache.length <= i) { const j = heightCache.length; heightCache.push(heightCache[j - 1] + routeRise(j - 1)); }
+  return heightCache[i] + routeRise(i) * smooth(u);
+}
 
 /** Heading and height at s relative to the start of segment `base` (bounded loop: the window spans a few segments). */
 function local(s: number, base: number, out: { h: number; H: number }) {

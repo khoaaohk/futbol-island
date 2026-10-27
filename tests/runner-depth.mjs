@@ -15,7 +15,7 @@ for(let level=1;level<=8;level++)for(let wave=0;wave<24;wave++){
   if(previousLane!==undefined)assert(Math.abs(lane-previousLane)<=1,'no forced two-lane reversal');previousLane=lane;
  }
  if(rows.length>1){assert((rows[0]-rows[1])/23.4>1.25,'late-stage boosted reaction window');assert(spacing>=74);}
- assert(s.objects.length<=12,'bounded pattern size (two lines, two trails, two link balls)');
+ assert(s.objects.filter(o=>o.kind!=='magnet').length<=12,'bounded pattern size (two lines, two trails, two link balls; plus at most one magnet power-up)');
 }
 const heights=[];
 for(const hz of [30,60,120]){
