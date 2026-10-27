@@ -56,17 +56,16 @@
 .stats li{display:grid;gap:1px;padding:8px 4px;border-radius:12px;background:#1b2340}
 .stats b{font-size:22px;color:#88ffef;font-variant-numeric:tabular-nums}
 .stats span{font-size:11px;font-weight:800;color:#b5c7dc;text-transform:uppercase;letter-spacing:.06em}
-.tip{margin:0 0 12px!important;font-size:14px!important;line-height:1.35!important;color:#fff6c8}
+.card{text-align:center}
+.coach{margin:0 0 12px!important;padding:8px 10px;border-radius:12px;background:#2a2148;border-left:4px solid #ffe86d;text-align:left;font-size:13px!important;line-height:1.35!important;color:#fff6c8}
+.tip{margin:0 0 8px!important;font-size:14px!important;line-height:1.35!important;color:#fff6c8}
 .pb{margin-top:8px;font-size:11px!important;padding:0!important;border:0!important}
 /* In-play HUD chips (pointer-events none: never steal a touch) */
-.chips{position:absolute;z-index:3;left:50%;top:calc(env(safe-area-inset-top) + 88px);translate:-50% 0;display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
+.chips{position:absolute;z-index:3;left:calc(14px + env(safe-area-inset-left));top:calc(env(safe-area-inset-top) + 86px);display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
 .chips>span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:#13192ee6;border:1px solid #416b86;color:#dffcff;font-size:12px;font-weight:800}
 .chips b{font-size:15px;font-variant-numeric:tabular-nums}
 .rallyChip{animation:chipPop .35s ease-out}
 .rallyChip[data-hot]{border-color:#ffc93c!important;color:#ffe084!important;box-shadow:0 0 12px #ffc93c55}
-.goldChip i{width:7px;height:7px;border-radius:50%;background:#3a4366}
-.goldChip i[data-on]{background:#ffc93c;box-shadow:0 0 6px #ffc93c}
-.goldChip[data-full]{border-color:#ffc93c!important}
 .windChip{color:#bfe9ff!important}
 .setChip{color:#ffb4e4!important}
 @keyframes chipPop{from{transform:scale(1.35)}to{transform:none}}

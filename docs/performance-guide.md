@@ -6068,3 +6068,12 @@ emulation only; no iPhone temperature measured.
   lighthouse: the gallery floor (one radius test) and, only at the gallery's height, the railing projection. No allocation in the
   ladder step, the pose or the railing (tests check). The hidden-player check marches ≤ 80 samples, only within 9 m of the
   tower. Not measured on an iPhone.
+
+## Futbol Tennis round 3: hard courts, cinematic beats, bounce spot (Oct 26 2026, `docs/ARCADE_TENNIS_R3_OCT26.md`, local, not deployed)
+
+- Draws: +1 bounce-spot decal only while a rival ball is in the air; milestone streamers reuse the confetti pool (+1 only while
+  alive). Surfaces (clay/neon/grass) are material swaps on the two court halves; the ball trail is the same single instanced draw
+  on an unlit additive material (cheaper than the lit spheres). Rally view: 49–52 calls on a 390×844 phone, 88 on desktop.
+- Per frame: the cinematic beat (`lib/arcade/tennisCinema.ts`) is a few smoothsteps on one pooled state object; slow-mo is
+  capped (≤ 0.7 s real, one per 6 s) and the loop still sleeps (`active()` false once settled). Floodlight glow writes opacity
+  only on a > 0.004 change. Wind adds one term to the flight model (no extra predictions). Not measured on an iPhone.

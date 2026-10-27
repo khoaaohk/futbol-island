@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {TENNIS_COURTS,type TennisState} from '@/lib/games/soccerTennis';
+import {TENNIS_COURTS,tennisTakeaway,type TennisState} from '@/lib/games/soccerTennis';
 import {readTennisStars} from '@/lib/arcade/tennisFeel';
 import type {ArcadeHUD} from '@/lib/arcade/arcadeGames';
 import {Icon} from '../Icon';
@@ -57,6 +57,7 @@ export function TennisCard(p:Props){
    <li><b>{t.sweetShots}</b><span>sweet</span></li>
   </ul>}
   <p className={styles.tip}>{unlockedNow?`Next up: court ${t!.level+1}, ${TENNIS_COURTS[t!.level].name}${TENNIS_COURTS[t!.level].hard?' (HARD)':''}`:won?(earned<3?`3rd ★: ${court.star3}`:'All 3 stars. You are the champion!'):`So close! Best here ${tennisStarText(readSafe(t?.level??1))}`}</p>
+  {t&&!drill&&<p className={styles.coach}>{tennisTakeaway(t)}</p>}
   {p.status&&<p role="status" className={styles.status}>{p.status}</p>}
   <button className={`${p.primaryClass} ${styles.play}`} disabled={p.pending} onClick={p.onStart}><Icon name={won?'arrow':'rotate'} size={26}/>{p.hud.nextLabel??'Play again'}</button>
   {small}
@@ -65,11 +66,10 @@ export function TennisCard(p:Props){
 }
 /** In-play chips under the score: live rally count (glows at 5/10/15…), wind arrows, sets, and the Golden Touch meter. */
 export function TennisHudChips({hud}:{hud:ArcadeHUD}){
- const rally=hud.tennisRally??0,gold=hud.tennisGold??0;
- if(!rally&&!hud.tennisWind&&!hud.tennisSets&&!gold)return null;
+ const rally=hud.tennisRally??0; // the Golden Touch meter already lives in the header line
+ if(rally<2&&!hud.tennisWind&&!hud.tennisSets)return null;
  return <div className={styles.chips} aria-hidden="true" data-tennis-chips>
   {rally>=2&&<span className={styles.rallyChip} data-hot={rally>=10||undefined} key={rally>=5&&rally%5===0?'m'+rally:'r'}>Rally <b>{rally}</b></span>}
-  {gold>0&&<span className={styles.goldChip} data-full={gold>=5||undefined}>{[0,1,2,3,4].map(i=><i key={i} data-on={i<gold||undefined}/>)}</span>}
   {hud.tennisWind&&<span className={styles.windChip}>Wind <b>{hud.tennisWind}</b></span>}
   {hud.tennisSets&&<span className={styles.setChip}>{hud.tennisSets}</span>}
  </div>;

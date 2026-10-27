@@ -11,7 +11,7 @@
  *   scale never below slowScale, and every curve is a smoothstep (bounded camera speed, no roll, no FOV punch: the
  *   push is a ≤ pushMax dolly toward the subject).
  * - Reduced motion: no slow-mo, no close-up, no push; a beat becomes a short `flash` (0..1) for a light flare only. */
-export const TENNIS_BEAT={slowScale:.3,slowMin:.4,slowMax:.7,rampIn:.07,rampOut:.35,slowGap:6,pushGap:2.5,pushTime:.9,pushMax:.1,close:.62,serveClose:.42,flashTime:.35} as const;
+export const TENNIS_BEAT={slowScale:.3,slowMin:.4,slowMax:.7,rampIn:.1,rampOut:.35,slowGap:6,pushGap:2.5,pushTime:.9,pushMax:.1,close:.62,serveClose:.42,flashTime:.35} as const;
 export type TennisBeatKind=''|'strike'|'push';
 export type TennisBeatState={scale:number;close:number;follow:number;push:number;flash:number;kind:TennisBeatKind};
 const smooth=(a:number,b:number,t:number)=>{const x=Math.max(0,Math.min(1,(t-a)/Math.max(1e-6,b-a)));return x*x*(3-2*x);};
@@ -23,7 +23,7 @@ export function createTennisCinema(reduced:boolean){
   * beat started (false = capped or reduced motion: the caller keeps its plain hit-stop). */
  function strike(strength:number){
   if(reduced){flashAge=0;return false;}
-  if(clock-lastSlow<TENNIS_BEAT.slowGap)return push(strength*.7);
+  if(clock-lastSlow<TENNIS_BEAT.slowGap){push(strength*.7);return false;} // capped: a push-in at most
   kind='strike';age=0;skipped=false;power=Math.max(0,Math.min(1,strength));hold=TENNIS_BEAT.slowMin+(TENNIS_BEAT.slowMax-TENNIS_BEAT.slowMin)*power;lastSlow=clock;return true;}
  /** A short push-in + settle (match point, ace, save, long rally). Capped; ignored during a strike beat. */
  function push(strength=1){
