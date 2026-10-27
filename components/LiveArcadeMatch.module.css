@@ -275,3 +275,31 @@
  .root .footer{padding:3px 10px 5px}
  .root .meters{margin:2px 0;gap:10px}.root .meters meter{width:52px}
 }
+
+/* ===== Round 3 menus (Oct 26 2026, docs/ARCADE_STRIKERS_R3_OCT26.md): pause + full-time cards reuse the start card (.start): result,
+   big stars, one primary, small Arcade / More / Leaderboard; details under More. Keycaps for keyboard players; hard-round chips. */
+.end{text-align:center}
+.end>small{text-align:left}
+.end .result{margin:2px 0 0;font-size:44px;line-height:1}
+.endScore{margin:0!important;font-size:16px!important;font-weight:800;letter-spacing:.04em;color:#cef7ff}
+.endLine{margin:0!important;font-size:14px!important;line-height:1.35!important;color:#eff8ff}
+.bigStars{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0!important;font-size:40px!important;line-height:1!important;color:#5d6a8c}
+.bigStars span[data-on]{color:#fff08a;text-shadow:0 0 14px #ffd25e88;animation:starPop .5s cubic-bezier(.2,1.6,.4,1) both}
+.bigStars span:nth-child(2){animation-delay:.18s}.bigStars span:nth-child(3){animation-delay:.36s}
+.bigStars .newBest{font-size:12px;margin-left:6px;color:#ff8fc8;letter-spacing:.06em;text-transform:uppercase}
+.end .options{text-align:left}
+.end .stats{margin:0}
+.end .starList{margin:0}
+.root .end>.startRow>button{flex:1}
+@media(max-height:500px){.root .end>.result.result{font-size:34px!important;margin:0!important;line-height:1!important}.bigStars{font-size:30px!important}.endLine{font-size:12px!important}}
+@media(prefers-reduced-motion:reduce){.bigStars span[data-on]{animation:none}}
+.keys{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;margin:2px 0 0;padding:0;list-style:none;font-size:12px;font-weight:700;color:#bdeaf2}
+.keys li{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.keys kbd{display:inline-block;min-width:18px;padding:1px 7px;border:1px solid #81fbed;border-bottom-width:3px;border-radius:6px;background:#151c35;color:#fff08a;font:800 11px/1.5 var(--font-body,Arial),sans-serif;text-align:center}
+.keysHint{position:absolute;z-index:3;left:50%;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:8px 14px;border:1px solid #81fbed88;border-radius:16px;background:#0b1024e6;pointer-events:none;animation:keysHint 8s ease-out both}
+@keyframes keysHint{0%{opacity:0;transform:translate(-50%,8px)}5%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.keysHint{animation:none}}
+@media(pointer:coarse){.keys,.keysHint{display:none}}
+.goals li[data-mod]{border-color:#ff83d3;color:#ffe5f6}.goals li[data-mod]::before{content:'⚡ ';color:#ff83d3}
+.root .seg>button[data-hard]:not(:disabled){border-color:#ff83d388}
+.root .seg>button[data-hard]::after{content:'HARD';display:block;font-size:8px;font-weight:900;letter-spacing:.1em;color:#ff83d3}

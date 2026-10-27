@@ -1,11 +1,14 @@
 /** Compact arcade football: fixed-step ball contact and acceleration, no island simulation. */
 export const STRIKER_HALF_X=25,STRIKER_HALF_Z=14,STRIKER_SECONDS=180;
-export const STRIKER_ROUNDS=['Find Space','Beat the Press','Break the Block','Neon Final'] as const;
+export const STRIKER_ROUNDS=['Find Space','Beat the Press','Break the Block','Neon Final','Storm Press','Island Legends'] as const;
+/** Hard rounds (round 3, Oct 26 2026): 5 Storm Press plays in rain (the ball skids) against a faster, smarter press; 6 Island Legends
+ *  plays to small goals against the sharpest block and keeper. Same economy and star rules as rounds 1-4. */
+export const STRIKER_ROUND_MODS:readonly {rain?:boolean;small?:boolean}[]=[{},{},{},{},{rain:true},{small:true}];
 /** Each round counts one real football habit. Praised live, recapped at full time. */
-export const STRIKER_FOCUS=['Pass to a free teammate','Beat the press with a one-two','Switch play across the pitch','Pass early, before pressure arrives'] as const;
+export const STRIKER_FOCUS=['Pass to a free teammate','Beat the press with a one-two','Switch play across the pitch','Pass early, before pressure arrives','Pass early, before pressure arrives','Switch play across the pitch'] as const;
 export const STRIKER_FOCUS_GOAL=3;
 /** Third star per round: one football challenge that matches the round's idea. */
-export const STRIKER_CHALLENGES=['Win with a clean sheet','Score a first-time goal','Score after switching play','Win by two goals'] as const;
+export const STRIKER_CHALLENGES=['Win with a clean sheet','Score a first-time goal','Score after switching play','Win by two goals','Score from a set piece','Win with a clean sheet'] as const;
 /** Seconds a habit keeps "counting" toward a goal (switch then score, one-two then score). */
 export const STRIKER_HABIT_GOAL_WINDOW=7;
 /** One-touch window: the last part of a pass's travel where a buffered Pass or Shoot is "perfect". */
@@ -47,10 +50,10 @@ export const STRIKER_CONCEDE_LINES:Record<StrikerConcede,string>={
 export const STRIKER_CONCEDE_WINDOW=8;
 export const STRIKER_RUNS:Record<StrikerRun,string>={behind:'Run in behind! Play it into space ahead of them.',overlap:'Overlap! Your teammate runs round the outside.',check:'Check to the ball! They come short to get free.'};
 /** Team spirit: earned by good football (passes, habits, perfect touches, beaten tackles). Full = one Team Strike. */
-export const STRIKER_SPIRIT={pass:.035,habit:.12,perfect:.08,beat:.08,steal:.1,intercept:.05,run:.08,bluePass:.06,blueIntercept:.12,blueTackle:.08,blueScale:[.3,.5,.7,.85]};
+export const STRIKER_SPIRIT={pass:.035,habit:.12,perfect:.08,beat:.08,steal:.1,intercept:.05,run:.08,bluePass:.06,blueIntercept:.12,blueTackle:.08,blueScale:[.3,.5,.7,.85,.9,1]};
 /** Blue Team Strike charge-ups allowed per match, by round (Oct 9 2026). Bot sims showed 4.6-5.4 per match in rounds 3-4,
  * which turned the special into background noise; one (R1-2) or two (R3-4) keeps it a big moment the player must answer. */
-export const STRIKER_BLUE_STRIKES=[1,1,2,2];
+export const STRIKER_BLUE_STRIKES=[1,1,2,2,2,3];
 /** Clean strike: releasing Shoot inside this band of the charge is a controlled, low, accurate finish (keeper reads it
  * a beat later). Teaches placement over power: the meter's sweet spot sits below the overhit zone. */
 export const STRIKER_CLEAN:[number,number]=[.6,.86];
@@ -81,14 +84,19 @@ export type StrikerPlayer={id:number;team:0|1;keeper:boolean;x:number;z:number;v
  * knobs only creep up a small, even step so their effects cannot stack into a spike.
  * Sim lock: tests/striker-curve.cjs. */
 export const STRIKER_TUNING={
- speed:[6.6,6.75,6.9,7.05],tackleWindup:[.36,.35,.34,.33],tackleThink:[1.65,1.6,1.54,1.48],carrierThink:[.95,.9,.85,.8],
- keeperReact:[.21,.2,.19,.18],keeperDive:[7.2,7.6,7.9,8.2],interceptSkill:[0,.62,.67,.72],interceptRead:[1,.28,.25,.22],
- receiverPress:[false,true,false,true],cover:[false,false,true,true],block:[false,false,true,true]};
+ speed:[6.6,6.75,6.9,7.05,7.2,7.32],tackleWindup:[.36,.35,.34,.33,.31,.3],tackleThink:[1.65,1.6,1.54,1.48,1.4,1.34],carrierThink:[.95,.9,.85,.8,.74,.7],
+ keeperReact:[.21,.2,.19,.18,.17,.16],keeperDive:[7.2,7.6,7.9,8.2,8.5,8.8],interceptSkill:[0,.62,.67,.72,.77,.82],interceptRead:[1,.28,.25,.22,.2,.18],
+ receiverPress:[false,true,false,true,true,true],cover:[false,false,true,true,true,true],block:[false,false,true,true,true,true]};
+/** Gentle first minute (round 3): a first-ever Round 1 eases Blue for the opening 45 s (slower, later tackles, slower keeper), fading out
+ *  to the normal Round 1 by 45 s. Adaptive match flow: Blue eases a notch while Gold trails by 2+ and pushes a notch while Gold leads
+ *  by 3+ (state.adapt, -1..1, damped), so a struggling kid gets back into it and a dominant one stays challenged. */
+export const STRIKER_GENTLE_SECONDS=45,STRIKER_GENTLE={speed:-.7,tackleThink:.6,keeperReact:.05,interceptSkill:.6};
+export const STRIKER_ADAPT={speed:.18,tackleThink:-.15,keeperReact:-.015};
 /** Eased retry after a loss or draw, one notch only and said out loud on the ready card. */
 export const STRIKER_ASSIST={speed:-.25,tackleWindup:.05,tackleThink:.25,keeperReact:.03,keeperDive:-.7,interceptSkill:.85};
 export function createStrikerMatch(){
  const players:StrikerPlayer[]=Array.from({length:8},(_,id)=>({id,team:(id<4?0:1) as 0|1,keeper:id%4===3,x:0,z:0,vx:0,vz:0,yaw:id<4?Math.PI/2:-Math.PI/2,stamina:1,receive:0,receiveX:0,receiveZ:0,kick:0,stun:0,tackle:0,cooldown:0,think:.6+id*.13,run:0,windup:0,keeperAim:0,tackleX:0,tackleZ:0,jockey:0,strikeYaw:0,strikeKind:'pass',strikePower:.35,saveSide:1,saveHeight:0,saveWide:false,dive:0,react:0,caught:false,skill:0,skillKind:'stepover',skillSide:1,skillCount:0,skillAt:-9,skillYaw:0,heavy:0,touchCycle:1,receiveHeight:0,header:0,wall:0,callRun:0,callKind:'behind',strikeCharge:0}));
- const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,queuedX:0,queuedZ:0,passTarget:-1,aim:0,timeScale:1,/** Cinematic slow-mo from the match loop (lib/arcade/strikerCinema.ts), 0.3..1; the sim runs at the slower of this and the charge slow-mo. */cinemaScale:1,shotMoment:0,passes:[0,0],shots:[0,0],passChain:0,lastPasser:-1,
+ const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,queuedX:0,queuedZ:0,passTarget:-1,aim:0,gentle:false,adapt:0,timeScale:1,/** Cinematic slow-mo from the match loop (lib/arcade/strikerCinema.ts), 0.3..1; the sim runs at the slower of this and the charge slow-mo. */cinemaScale:1,shotMoment:0,passes:[0,0],shots:[0,0],passChain:0,lastPasser:-1,
   /** Goal moment: frozen frames, who scored (-1 own goal), crowd energy 0..1.6 for sound and stands. */
   hitStop:0,scorer:-1,assister:-1,goalsBy:[0,0,0,0,0,0,0,0],headline:'' as StrikerHeadline,crowd:0,lastKicker:-1,
   /** Coach eased this round after a loss or draw (transparent, one notch, cleared on a win). */
@@ -121,9 +129,10 @@ export function createStrikerMatch(){
   goalStory:{chain:0,habit:false,firstTime:false,teamStrike:false,chip:false,curled:false,setPiece:false,clean:false,at:-1}};
  const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
  const b0=()=>state.ball;
- const T=STRIKER_TUNING,A=STRIKER_ASSIST,lv=()=>clamp(state.level,1,4)-1,eased=()=>state.assist&&state.assistLevel===state.level;
- const tune={speed:()=>T.speed[lv()]+(eased()?A.speed:0),windup:()=>T.tackleWindup[lv()]+(eased()?A.tackleWindup:0),think:()=>T.tackleThink[lv()]+(eased()?A.tackleThink:0),
-  react:()=>T.keeperReact[lv()]+(eased()?A.keeperReact:0),dive:()=>T.keeperDive[lv()]+(eased()?A.keeperDive:0),skill:()=>T.interceptSkill[lv()]*(eased()?A.interceptSkill:1)};
+ const T=STRIKER_TUNING,A=STRIKER_ASSIST,lv=()=>clamp(state.level,1,STRIKER_ROUNDS.length)-1,eased=()=>state.assist&&state.assistLevel===state.level;
+ const warm=()=>state.gentle&&state.time<STRIKER_GENTLE_SECONDS?1-state.time/STRIKER_GENTLE_SECONDS:0,G=STRIKER_GENTLE,D=STRIKER_ADAPT;
+  const tune={speed:()=>T.speed[lv()]+(eased()?A.speed:0)+warm()*G.speed+state.adapt*D.speed,windup:()=>T.tackleWindup[lv()]+(eased()?A.tackleWindup:0),think:()=>T.tackleThink[lv()]+(eased()?A.tackleThink:0)+warm()*G.tackleThink+state.adapt*D.tackleThink,
+  react:()=>T.keeperReact[lv()]+(eased()?A.keeperReact:0)+warm()*G.keeperReact+state.adapt*D.keeperReact,dive:()=>T.keeperDive[lv()]+(eased()?A.keeperDive:0),skill:()=>T.interceptSkill[lv()]*(eased()?A.interceptSkill:1)*(1-warm()*(1-G.interceptSkill))};
  const emit=(kind:string,x:number,z:number,message:string)=>{state.event++;state.eventKind=kind;state.eventX=x;state.eventZ=z;state.message=message;};
  function addSpirit(team:0|1,amount:number){const before=state.spirit[team],gain=(team===1?amount*T2.blueScale[lv()]:amount)*(state.mods.spirit?2:1);state.spirit[team]=Math.min(1,before+gain);
   if(before<1&&state.spirit[team]>=1){state.spiritEvent++;state.spiritTeam=team;}}
@@ -135,7 +144,7 @@ export function createStrikerMatch(){
    const k:StrikerRun=behind?'overlap':marked?'check':'behind',value=(k==='behind'?3:k==='overlap'?2:1)+(q.x-p.x)*forward*.05;if(value>score){score=value;pick=q;kind=k;}}
   if(!pick)return;pick.callRun=2.4;pick.callKind=kind;pick.run=0;state.calls++;emit('call',pick.x,pick.z,STRIKER_RUNS[kind]);}
  function kickoff(team=0){for(const p of players){const side=p.team===0?-1:1,i=p.id%4;p.x=side*(p.keeper?22:i===0?7:12);p.z=i===1?-8:i===2?8:0;if(p.team===0&&!p.keeper){if(state.shape==='wide'&&i>0)p.z*=1.35;if(state.shape==='solid'&&i===2){p.x=-15;p.z=3;}}p.receive=p.receiveX=p.receiveZ=0;p.vx=p.vz=p.stun=p.tackle=p.kick=p.cooldown=p.run=p.windup=p.keeperAim=p.tackleX=p.tackleZ=p.jockey=p.dive=p.react=0;p.caught=false;p.skill=p.heavy=p.header=p.receiveHeight=p.wall=p.callRun=p.strikeCharge=0;p.skillCount=0;p.touchCycle=.9+p.id%3*.17;p.yaw=-side*Math.PI/2;p.strikeYaw=p.yaw;p.strikeKind='pass';p.strikePower=.35;p.saveSide=1;p.saveHeight=0;p.saveWide=false;p.stamina=1;p.think=.8+p.id*.1;}const owner=team===0?0:4;Object.assign(state.ball,{owner,x:players[owner].x,z:0,y:.25,vx:0,vz:0,vy:0,lock:.2,lastTeam:team});state.selected=0;state.charge=0;state.queuedPass=0;state.timeScale=1;state.shotMoment=0;state.passTarget=-1;state.lastPasser=-1;state.passChain=0;state.assister=-1;state.hitStop=0;state.scorer=-1;state.lastKicker=-1;state.firstTime=state.quickPass=state.overhit=false;state.holdTime=0;state.interceptor=-1;state.passRisk=0;state.presser=state.cover=-1;state.queuedShot=0;state.queuedPerfect=false;state.touchWindow=0;state.touchEta=-1;state.curlTime=0;state.chip=false;state.firstTimeShot=false;state.setPiece.kind='';state.setPieceShot=false;}
- function reset(advance=false){if(advance&&state.finished){const won=state.score[0]>state.score[1];if(won){state.level=Math.min(4,state.level+1);state.assist=false;}else{state.assist=true;state.assistLevel=state.level;}}if(state.assistLevel!==state.level)state.assist=false;state.score[0]=state.score[1]=0;state.goalsBy.fill(0);state.headline='';state.time=0;state.finished=false;state.goalPause=0;state.message='Pass, move, receive. Pull the defence apart.';state.passes[0]=state.passes[1]=state.shots[0]=state.shots[1]=0;state.aim=0;state.focus=0;state.crowd=0;state.habitAt=-99;state.habitGoals=state.firstTimeGoals=state.perfect=state.setPieceGoals=0;state.fouls[0]=state.fouls[1]=0;state.spirit[0]=state.spirit[1]=0;state.calls=state.runPasses=0;state.safePasses=state.riskyPasses=state.blueStrikes=state.cleanStrikes=0;state.userPasses=state.userPassesDone=0;state.userPassLive=false;state.lostKind='';state.lostAt=state.bluePieceAt=-99;state.concedeCause='shot';state.cleanStrike=false;state.goalStory.at=-1;state.extra=state.goldenWin=false;state.duration=state.baseDuration;const so=state.shootout;so.active=false;so.turn=0;so.kicks[0]=so.kicks[1]=so.goals[0]=so.goals[1]=0;so.wait=-1;so.winner=-1;kickoff();}
+ function reset(advance=false){if(advance&&state.finished){const won=state.score[0]>state.score[1];if(won){state.level=Math.min(STRIKER_ROUNDS.length,state.level+1);state.assist=false;}else{state.assist=true;state.assistLevel=state.level;}}if(state.assistLevel!==state.level)state.assist=false;state.score[0]=state.score[1]=0;state.goalsBy.fill(0);state.headline='';state.time=0;state.finished=false;state.goalPause=0;state.message='Pass, move, receive. Pull the defence apart.';state.passes[0]=state.passes[1]=state.shots[0]=state.shots[1]=0;state.aim=0;state.adapt=0;state.focus=0;state.crowd=0;state.habitAt=-99;state.habitGoals=state.firstTimeGoals=state.perfect=state.setPieceGoals=0;state.fouls[0]=state.fouls[1]=0;state.spirit[0]=state.spirit[1]=0;state.calls=state.runPasses=0;state.safePasses=state.riskyPasses=state.blueStrikes=state.cleanStrikes=0;state.userPasses=state.userPassesDone=0;state.userPassLive=false;state.lostKind='';state.lostAt=state.bluePieceAt=-99;state.concedeCause='shot';state.cleanStrike=false;state.goalStory.at=-1;state.extra=state.goldenWin=false;state.duration=state.baseDuration;const so=state.shootout;so.active=false;so.turn=0;so.kicks[0]=so.kicks[1]=so.goals[0]=so.goals[1]=0;so.wait=-1;so.winner=-1;kickoff();}
  function release(p:StrikerPlayer,dx:number,dz:number,speed:number,lift:number,kind:string){const b=state.ball,n=Math.hypot(dx,dz)||1;state.userPassLive=false;if(kind==='save')state.lastPasser=-1;if(kind==='pass')state.passAge=0;state.interceptor=-1;state.lastKicker=p.id;p.yaw=Math.atan2(dx,dz);p.strikeYaw=p.yaw;p.strikeKind=kind==='save'?'save':kind==='shot'?'shot':'pass';p.strikePower=clamp((speed-19)/23,.15,1);p.kick=1;p.receive=0;b.owner=-1;b.x=p.x+dx/n*.9;b.z=p.z+dz/n*.9;b.y=.3;b.vx=dx/n*speed;b.vz=dz/n*speed;b.vy=lift;b.lock=.18;b.lastTeam=p.team;emit(kind,b.x,b.z,kind==='shot'?'Follow your shot for the rebound!':'Move after the pass. Make another angle.');}
  // Over-hitting (the last few % of the charge) adds lift: from range it can sail over.
  // Teaches placement over power without making a full charge useless up close.
@@ -300,6 +309,7 @@ export function createStrikerMatch(){
  }
  function step(dt:number,input:StrikerInput){if(dt<=0||state.finished)return;dt=Math.min(dt,.05);if(state.shootout.active){shootoutStep(dt,input);return;}
   state.time=Math.min(state.duration,state.time+dt);
+  {const diff=state.score[0]-state.score[1],want=diff<=-2?-1:diff>=3?1:0;state.adapt+=(want-state.adapt)*Math.min(1,dt*.25);}
   if(state.time>=state.duration&&state.mods.golden&&state.score[0]===state.score[1]&&state.goalPause<=0){
    if(!state.extra){state.extra=true;state.duration+=STRIKER_EXTRA_TIME;emit('golden',0,0,'Golden goal! The next goal wins.');}
    else{startShootout();return;}}
@@ -467,8 +477,8 @@ export function createStrikerMatch(){
       if(ranIn)state.message='Great run! You played it into the run you called.';
       if(completed&&p.team===0){
        // The round's habit, measured on the completed pass.
-       const free=!players.some(q=>q.team===1&&!q.keeper&&Math.hypot(q.x-p.x,q.z-p.z)<3.2),habit=[free,state.firstTime,Math.abs(p.z-state.passFromZ)>=9,state.quickPass][state.level-1];
-       if(habit){state.focus++;state.focusEvent++;state.habitAt=state.time;addSpirit(0,T2.habit);state.message=['Found space! No defender near your receiver.','Beat the press! The one-two got you through.','Switched play! The block can\'t cover both sides.','Early pass! You moved it before the pressure arrived.'][state.level-1];}
+       const free=!players.some(q=>q.team===1&&!q.keeper&&Math.hypot(q.x-p.x,q.z-p.z)<3.2),habit=[free,state.firstTime,Math.abs(p.z-state.passFromZ)>=9,state.quickPass,state.quickPass,Math.abs(p.z-state.passFromZ)>=9][state.level-1];
+       if(habit){state.focus++;state.focusEvent++;state.habitAt=state.time;addSpirit(0,T2.habit);state.message=['Found space! No defender near your receiver.','Beat the press! The one-two got you through.','Switched play! The block can\'t cover both sides.','Early pass! You moved it before the pressure arrived.','Early pass! Quick and firm beats the storm press.','Switched play! Even the legends can\'t cover both sides.'][state.level-1];}
        // Directional first touch: a held direction pushes the ball into space.
        const n=Math.hypot(input.x,input.z);if(n>.5&&state.queuedPass<=0){p.vx+=input.x/n*2.6;p.vz+=input.z/n*2.6;p.receiveX+=input.x/n*.35;p.receiveZ+=input.z/n*.35;if(!habit)state.message='Good first touch, into space!';}
       }
@@ -482,22 +492,22 @@ export function createStrikerMatch(){
   }
  }
  reset();/** Island Cup: set length and modifiers before reset(). Rounds mode uses the defaults. */
- function configure(o:{duration?:number;mods?:Partial<StrikerMods>}){state.baseDuration=o.duration??STRIKER_SECONDS;Object.assign(state.mods,{rain:false,small:false,golden:false,spirit:false},o.mods??{});state.goalHalf=state.mods.small?STRIKER_SMALL_GOAL_HALF:STRIKER_GOAL_HALF;}
+ function configure(o:{duration?:number;mods?:Partial<StrikerMods>;gentle?:boolean}){state.gentle=!!o.gentle;state.baseDuration=o.duration??STRIKER_SECONDS;Object.assign(state.mods,{rain:false,small:false,golden:false,spirit:false},o.mods??{});state.goalHalf=state.mods.small?STRIKER_SMALL_GOAL_HALF:STRIKER_GOAL_HALF;}
  return{state,step,reset,configure};
 }
 export type StrikerMatch=ReturnType<typeof createStrikerMatch>;
 /** Who won: 0 Gold, 1 Blue, -1 draw. Counts golden goals and penalty shootouts. */
 export function strikerWinner(s:{score:number[];shootout:{winner:number}}){return s.score[0]>s.score[1]?0:s.score[1]>s.score[0]?1:s.shootout.winner;}
 /** Up to three stars per round, each earned on its own: win, the round habit 3/3, the round challenge. */
-export function strikerStars(s:{level:number;score:number[];focus:number;habitGoals:number;firstTimeGoals:number}){
- const win=s.score[0]>s.score[1],habit=s.focus>=STRIKER_FOCUS_GOAL,challenge=[win&&s.score[1]===0,s.firstTimeGoals>0,s.habitGoals>0,s.score[0]-s.score[1]>=2][Math.max(1,Math.min(4,s.level))-1];
+export function strikerStars(s:{level:number;score:number[];focus:number;habitGoals:number;firstTimeGoals:number;setPieceGoals?:number}){
+ const win=s.score[0]>s.score[1],habit=s.focus>=STRIKER_FOCUS_GOAL,challenge=[win&&s.score[1]===0,s.firstTimeGoals>0,s.habitGoals>0,s.score[0]-s.score[1]>=2,(s.setPieceGoals??0)>0,win&&s.score[1]===0][Math.max(1,Math.min(STRIKER_ROUNDS.length,s.level))-1];
  return{win,habit,challenge,count:Number(win)+Number(habit)+Number(challenge)};
 }
 /** Replay caption: how the goal was built, in a 7v7 kid's words (passes first, then the finish). */
 export function strikerGoalStory(g:{chain:number;habit:boolean;firstTime:boolean;teamStrike:boolean;chip:boolean;curled:boolean;setPiece:boolean;clean:boolean},level:number){
  const parts:string[]=[];
  if(g.setPiece)parts.push('Set piece');else if(g.chain>=2)parts.push(`${g.chain} passes`);else if(g.chain===1)parts.push('One pass');else parts.push('Solo run');
- if(g.habit)parts.push(STRIKER_FOCUS[Math.max(1,Math.min(4,level))-1].toLowerCase());
+ if(g.habit)parts.push(STRIKER_FOCUS[Math.max(1,Math.min(STRIKER_ROUNDS.length,level))-1].toLowerCase());
  parts.push(g.teamStrike?'Team Strike':g.chip?'chip over the keeper':g.firstTime?'first-time finish':g.curled?'curled finish':g.clean?'clean strike':'finish');
  return parts.join(' · ');}
 /** Goal call-out (Oct 25 2026 upgrade): the football word for this goal, or ''. Brace = two by one player, hat-trick = three;

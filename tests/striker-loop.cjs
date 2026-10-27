@@ -3,12 +3,12 @@ const fs=require('fs'),vm=require('vm'),ts=require('typescript'),assert=require(
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/arcade/strikerMatch.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:m,exports:m.exports,Math});
 const {createStrikerMatch,strikerInput,strikerStars,STRIKER_TUNING:T,STRIKER_ASSIST:A,STRIKER_CHALLENGES}=m.exports;
 // 1. One idea per round: the tactical flags, and generic knobs that creep in small even steps.
-assert.deepEqual([...T.receiverPress],[false,true,false,true],'press is round 2 and the final');
-assert.deepEqual([...T.cover],[false,false,true,true],'cover arrives with the block in round 3');
+assert.deepEqual([...T.receiverPress],[false,true,false,true,true,true],'press is round 2, the final and the hard rounds 5-6 (round 3)');
+assert.deepEqual([...T.cover],[false,false,true,true,true,true],'cover arrives with the block in round 3');
 const steps={speed:.2,tackleWindup:.02,tackleThink:.08,carrierThink:.06,keeperReact:.02,keeperDive:.45,interceptSkill:.08};
 for(const [k,max] of Object.entries(steps))for(let i=k==="interceptSkill"?2:1;i<4;i++){const d=Math.abs(T[k][i]-T[k][i-1]);assert(d<=max+1e-9,`${k} step ${i} is ${d}, too steep`);}
 for(let i=1;i<4;i++){assert(T.speed[i]>=T.speed[i-1]&&T.keeperDive[i]>=T.keeperDive[i-1]&&T.keeperReact[i]<=T.keeperReact[i-1]&&T.tackleWindup[i]<=T.tackleWindup[i-1],'never easier as rounds rise');}
-assert(T.tackleWindup[3]>.3,'the final still telegraphs a tackle for 0.3 s');assert.equal(STRIKER_CHALLENGES.length,4);
+assert(T.tackleWindup[3]>.3,'the final still telegraphs a tackle for 0.3 s');assert.equal(STRIKER_CHALLENGES.length,6);
 // 2. Eased retry: a loss or draw eases the same round one notch; a win or a new round clears it.
 {const g=createStrikerMatch(),s=g.state;s.level=3;g.reset();
  const windup=()=>{Object.assign(s.players[0],{x:0,z:0});Object.assign(s.ball,{owner:0,x:.82,z:0,lock:0});Object.assign(s.players[4],{x:2.6,z:0,think:0,windup:0});s.selected=0;g.step(1/120,strikerInput());return s.players[4].windup;};
