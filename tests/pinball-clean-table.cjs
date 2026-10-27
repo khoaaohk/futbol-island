@@ -3,7 +3,7 @@
 // pop on the table after a goal. Start and end cards are unchanged. Same pattern as Strikers (commit 8f3cd15c).
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const tsx=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8'),card=fs.readFileSync('components/games/PinballCard.tsx','utf8'),fx=fs.readFileSync('lib/games/soccerPinballFx.ts','utf8');
-const play=tsx.slice(tsx.indexOf("{phase==='playing'&&<>"),tsx.indexOf('{card&&<div className={styles.overlay}>'));
+const play=tsx.slice(tsx.indexOf("{phase==='playing'&&kind!=='runner'&&<>"),tsx.indexOf('{card&&<div className={styles.overlay}>'));
 assert.ok(play.length>500,'in-play markup found');
 // 1. No tip / coach / status line for pinball: the message <p> is gated off for pinball.
 assert.match(play,/\{kind!=='pinball'&&<p [^>]*className=\{styles\.message\}/,'message line skipped for pinball');

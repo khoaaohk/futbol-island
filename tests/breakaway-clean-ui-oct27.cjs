@@ -56,5 +56,5 @@ assert.match(menuCss,/\.resume\{[^}]*min-height:56px/,'Resume is the big button'
 assert.match(game,/onRestart=\{\(\)=>\{change\('ready'\);void start\(\);\}\}/,'Restart begins a fresh run');
 
 // 4. Landscape.
-assert.match(game,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefined,\[kind\]\);/,'Breakaway asks for landscape on phones');
+assert.match(game,/useEffect\(\(\)=>kind==='runner'\|\|kind==='tennis'\?requestLandscape\(\):undefined,\[kind\]\);/,'Breakaway asks for landscape on phones');
 console.log('PASS breakaway clean UI: floating stick, round thumb cluster, flash-only play, Strikers bar + pause card, landscape');

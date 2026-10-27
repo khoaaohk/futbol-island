@@ -16,7 +16,7 @@ function load(file){file=path.resolve(root,file);if(cache.has(file))return cache
 // 1. Landscape requested: the tennis kind asks while mounted (and releases on unmount); the other 3D games stay portrait.
 const game3d=read('components/games/ArcadeGame3D.tsx');
 assert.match(game3d,/import \{requestLandscape\} from '@\/lib\/orientationMode';/);
-assert.match(game3d,/useEffect\(\(\)=>kind==='tennis'\?requestLandscape\(\):undefined,\[kind\]\);/,'only the tennis kind asks for landscape; the cleanup releases it');
+assert.match(game3d,/useEffect\(\(\)=>kind==='runner'\|\|kind==='tennis'\?requestLandscape\(\):undefined,\[kind\]\);/,'only the tennis kind asks for landscape; the cleanup releases it');
 const orient=load('lib/orientationMode.ts');
 assert.equal(orient.getOrientationMode(),'portrait');
 const releaseTennis=orient.requestLandscape();
