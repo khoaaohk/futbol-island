@@ -1,28 +1,38 @@
-/* Breakaway Run touch pad (round 3). Doubled class selectors win over the shared `.controls button` sizes. */
-.lanes,.arc{pointer-events:auto;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.lanes{display:flex;gap:10px;align-self:flex-end}
-.arc{display:grid;grid-template-columns:64px 88px;grid-template-rows:64px 88px;gap:10px;align-items:end;justify-items:end}
-.btn.btn{box-sizing:border-box;display:grid;place-items:center;align-content:center;gap:0;margin:0;padding:4px;border:3px solid #fff2d3;border-radius:22px;
- font:800 13px/1.05 system-ui,sans-serif;letter-spacing:.01em;color:#22322f;touch-action:none;-webkit-tap-highlight-color:transparent;
- box-shadow:0 5px 0 var(--base),0 0 0 4px #fff2cd40;background:var(--paper);transition:transform .07s ease,box-shadow .07s ease}
-.btn.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--base),0 0 0 4px #fff2cd40}
+/* Breakaway Run touch pad (Oct 27 2026): Island Strikers' floating stick on the left, a round thumb cluster on the right
+   (same geometry idea as LiveArcadeMatch.module.css "Landscape phones": button centres are offsets from Shoot's centre). */
+.pad{--bottom:calc(16px + env(safe-area-inset-bottom,0px));--stick:clamp(124px,calc(100dvh - 240px),160px);--cw:214px;--ch:204px;position:absolute;inset:0;z-index:3;pointer-events:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.zone{position:absolute;left:0;top:calc(64px + env(safe-area-inset-top,0px));bottom:0;width:45%;box-sizing:border-box;padding:12px 0 calc(8px + env(safe-area-inset-bottom,0px)) calc(8px + env(safe-area-inset-left,0px));pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+.movement.movement{position:absolute;left:calc(20px + env(safe-area-inset-left,0px));right:auto;bottom:var(--bottom);width:var(--stick);height:var(--stick);margin:0;pointer-events:none}
+.movement :global(.joystick){width:var(--stick);height:var(--stick);pointer-events:none;touch-action:none}
+.movement :global(.joystick)>span{width:62%;height:62%}
+.movement :global(.joystick):not([data-active=true]){opacity:.55}
+.movement :global(.joystick)[data-active=true]{opacity:1}
+.movement :global(.joystick)[data-coach]{opacity:1;border-color:#ffe36b;box-shadow:0 0 0 4px #fff2cd,0 0 22px #ffe36b}
+.cluster{position:absolute;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--bottom);width:var(--cw);height:var(--ch);pointer-events:none;touch-action:none}
+.btn.btn{--d:72px;--x:0px;--y:0px;position:absolute;left:calc(var(--cw) - 50px + var(--x) - var(--d) / 2);top:calc(var(--ch) - 50px + var(--y) - var(--d) / 2);
+ box-sizing:border-box;display:grid;place-items:center;align-content:center;gap:0;width:var(--d);min-width:0;height:var(--d);min-height:0;margin:0;padding:3px;border:3px solid #fff2d3;border-radius:50%;
+ font:800 13px/1.05 system-ui,sans-serif;letter-spacing:.01em;color:#e8ffff;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;
+ box-shadow:0 4px 0 var(--base),0 0 12px #4debd52e;background:var(--paper);transition:transform .07s ease,box-shadow .07s ease}
+.btn.btn:active{transform:translateY(3px) scale(.96);filter:brightness(1.25);box-shadow:0 1px 0 var(--base),0 0 18px #81fbed55}
 .btn.btn b{display:block;font-size:22px;line-height:1;font-weight:900}
 .btn.btn span{display:block;font-size:12px}
-.lane.lane{--paper:#a9cee1;--base:#6d98af;width:72px;min-width:72px;height:72px;min-height:72px;border-radius:24px}
-.jump.jump{--paper:#c9b6e2;--base:#9680af;width:64px;min-width:64px;height:64px;min-height:64px;grid-column:2;grid-row:1;justify-self:center}
-.slide.slide{--paper:#9ecdc0;--base:#5f9488;width:64px;min-width:64px;height:64px;min-height:64px;grid-column:1;grid-row:2;align-self:center}
-.skill.skill{--paper:#bfe7a6;--base:#78a55f;width:64px;min-width:64px;height:64px;min-height:64px;grid-column:1;grid-row:1;border-radius:50%;font-size:11px}
-.skill.skill span{font-size:11px;line-height:1.05;white-space:normal;overflow-wrap:normal;hyphens:manual;max-width:58px;text-align:center}
-.skill.skill[data-ready]{--paper:#fff1a8;--base:#b99b2f;box-shadow:0 5px 0 var(--base),0 0 0 4px #fff2cd80,0 0 16px #ffe36b}
-.shoot.shoot{--paper:#402340;--base:#1c142b;color:#ffe5f6;border-color:#ff83d3;width:88px;min-width:88px;height:88px;min-height:88px;border-radius:50%;grid-column:2;grid-row:2;
- box-shadow:0 5px 0 var(--base),0 0 0 4px #ff83d340,0 0 16px #ff62c240}
-.shoot.shoot b{font-size:28px}
+.shoot.shoot{--d:96px;--paper:#402340;--base:#201428;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 var(--base),0 0 14px #ff62c22b}
+.shoot.shoot b{font-size:30px}
 .shoot.shoot span{font-size:14px}
-/* Coach highlight keeps the shared runner rule (data-coach) readable on these colours. */
+.jump.jump{--d:76px;--x:-8px;--y:-104px;--paper:#302744;--base:#101629;border-color:#bf9aff}
+.slide.slide{--d:76px;--x:-110px;--y:6px;--paper:#21334b;--base:#101629;border-color:#8bcbff}
+.skill.skill{--d:68px;--x:-104px;--y:-94px;--paper:#193441;--base:#101629;border-color:#81fbed;font-size:11px}
+.skill.skill span{font-size:11px;line-height:1.05;white-space:normal;overflow-wrap:normal;hyphens:manual;max-width:60px;text-align:center}
+.skill.skill[data-ready]{--paper:#fff1a8;--base:#b99b2f;color:#2a1d00;border-color:#ffe36b;box-shadow:0 5px 0 var(--base),0 0 0 4px #fff2cd80,0 0 16px #ffe36b}
+/* First-run coach: the one button to press glows (the coach line itself is gone while playing). */
 .btn.btn[data-coach]{--paper:#fff1a8;--base:#b99b2f;color:#2a1d00;border-color:#ffe36b}
-@media (prefers-reduced-motion:reduce){.btn.btn{transition:none}}
-/* Short landscape screens (desktop windows, tablets on their side): slightly smaller, still >= 56 px. */
-@media (max-height:520px){.lane.lane{width:60px;min-width:60px;height:60px;min-height:60px}
- .arc{grid-template-columns:56px 72px;grid-template-rows:56px 72px;gap:8px}
- .jump.jump,.slide.slide,.skill.skill{width:56px;min-width:56px;height:56px;min-height:56px}
- .shoot.shoot{width:72px;min-width:72px;height:72px;min-height:72px}}
+/* The one in-play text: a short GOAL! / Tackled! flash, centred under the top bar. */
+.flash{position:absolute;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;padding:8px 20px;border-radius:16px;background:#fff1a8;color:#2a1d00;
+ font:900 22px/1 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;box-shadow:0 4px 0 #b99b2f;pointer-events:none;animation:runnerFlash 1.3s ease-out both}
+@keyframes runnerFlash{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}22%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.btn.btn{transition:none}.flash{animation:none}}
+/* Short landscape phones: header is slimmer, cluster scales down from the corner so it clears the top bar. */
+@media (max-height:520px){.pad{--stick:clamp(116px,calc(100dvh - 220px),150px)}.zone{top:calc(56px + env(safe-area-inset-top,0px))}.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}}
+@media (max-height:380px){.cluster{transform:scale(.86);transform-origin:100% 100%}}
+/* Mouse windows: keyboard only (A/D or ←/→ lanes, W/↑ jump, S/↓ slide, Space shoot, E skill); the pause card shows the keys. */
+@media (pointer:fine){.zone,.movement.movement,.cluster{display:none}}

@@ -14,9 +14,9 @@ const starRow=(n:number)=>'★'.repeat(n)+'☆'.repeat(3-n);
  * Breakaway, Night Derby, Storm Final) with stars and locks, and small icon buttons for missions, help,
  * leaderboard and back. Missions and help open in place (one at a time), so nothing scrolls on a 390×844 phone.
  */
-export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,pending,message,touch,onStart,onPreview,onBoards,onExit}:{
+export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,pending,message,touch,onStart,onPreview,onBoards,onExit,onRestart}:{
  phase:Phase;score:string;detail:string;nextLabel?:string;state?:RunnerGame;best:number;recordStage:number;pending:boolean;message?:string;touch:boolean;
- onStart:()=>void;onPreview:()=>void;onBoards:()=>void;onExit:()=>void}){
+ onStart:()=>void;onPreview:()=>void;onBoards:()=>void;onExit:()=>void;onRestart:()=>void}){
  const [mode,setMode]=useState<RunnerModeId>(()=>selectedRunnerMode().id);
  const [panel,setPanel]=useState<''|'missions'|'help'>('');
  const [hint,setHint]=useState(false);
@@ -37,6 +37,19 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
  const stars=readRunnerRoutes().stars,m=RUNNER_MODES[mode];
  const lines=phase==='over'?detail.split('\n').filter(Boolean).slice(0,3):[];
  const paused=phase==='paused';
+ // Pause card (owner, Oct 27 2026: "same consistent pause modal"): Island Strikers' pause card. Small route line, Paused title,
+ // one score line, ONE big Resume, a small Arcade / Restart row, and the keys as keycaps on desktop only.
+ if(paused)return <div className={styles.overlay} data-runner-menu="paused">
+  <section className={`${styles.card} ${styles.pause}`} aria-label="Breakaway Run paused" data-runner-pause>
+   <small className={styles.eyebrow}>BREAKAWAY RUN · {m.name.toUpperCase()}</small>
+   <h2 className={styles.pauseTitle}>Paused</h2>
+   <p className={styles.pauseScore}>{score} pts{state?` · ${Math.floor(state.distance)} m`:''}</p>
+   {message&&<p className={styles.status} role="status">{message}</p>}
+   <button className={styles.resume} onClick={onStart} data-runner-resume>Resume</button>
+   <div className={styles.pauseRow}><button type="button" className={styles.pauseSmall} onClick={onExit}>Arcade</button><button type="button" className={styles.pauseSmall} disabled={pending} onClick={onRestart} data-runner-restart>Restart</button></div>
+   {!touch&&<ul className={styles.keys} aria-label="Keyboard controls"><li><kbd>A D</kbd>lane</li><li><kbd>W</kbd>jump</li><li><kbd>S</kbd>slide</li><li><kbd>Space</kbd>hold, let go: shoot</li><li><kbd>E</kbd>skill</li><li><kbd>Esc</kbd>pause</li></ul>}
+  </section>
+ </div>;
  return <div className={styles.overlay} data-runner-menu={phase}>
   <section className={styles.card} aria-label="Breakaway Run menu">
    <div className={styles.top}>
@@ -60,7 +73,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
      </button>;})}
    </div>}
    {!paused&&<p className={styles.lineMode}>{m.line}{m.finish?` · ${m.finish} m`:''}</p>}
-   {hint&&phase==='ready'&&<p className={styles.hint}>👆 Swipe or tap the arrows to change lane. Big pink button = shoot!</p>}
+   {hint&&phase==='ready'&&<p className={styles.hint}>👆 Left thumb: push the stick to change lane. Big pink button = shoot!</p>}
    {message&&<p className={styles.status} role="status">{message}</p>}
    <button className={styles.play} disabled={pending} onClick={play} data-runner-play><span aria-hidden="true">▶ </span>{paused?'Resume':phase==='over'?(nextLabel??'Play again'):'Play'}</button>
    <div className={styles.row}>
@@ -71,7 +84,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
    </div>
    {panel==='missions'&&<RunnerMissionCard state={state} phase={phase}/>}
    {panel==='help'&&<ul className={styles.help}>
-    {touch?<><li>⬅ ➡ or swipe: change lane</li><li>⤒ Jump · ⤓ Slide (swipe up / down)</li><li>⚽ Tap to shoot · hold for a power blast</li><li>Skill names the trick that beats the defender</li></>
+    {touch?<><li>Left thumb stick (or swipe): change lane</li><li>⤒ Jump · ⤓ Slide (swipe up / down)</li><li>⚽ Tap to shoot · hold for a power blast</li><li>Skill names the trick that beats the defender</li></>
      :<><li>A / D or ← →: change lane</li><li>W / ↑ jump · S / ↓ slide</li><li>Space: hold and let go to shoot</li><li>E: skill move</li></>}
    </ul>}
    {!paused&&!panel&&<p className={styles.coins}>3 coins per play</p>}

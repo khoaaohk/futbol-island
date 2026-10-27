@@ -6,7 +6,13 @@ import {routeCurve,routeGrade,ROUTE_BEND_MIN,ROUTE_STEEP} from '../../components
 /** Breakaway Run heads-up display: one short status line, one coaching line and the
  * Skill button's live label (it names the real move that beats the defender ahead). */
 export type RunnerHud={score:string;detail:string;message:string;over:boolean;ready:boolean;skillLabel:string;skillReady:boolean;
- /** First-run coach: the one button to light ('' = none). */coach:string};
+ /** First-run coach: the one button to light ('' = none). */coach:string;
+ /** Clean in-play UI (Oct 27 2026): the only text while playing, a short word after a goal or a tackle ('' = none). */flash:string;flashId:number};
+/** One short word for the moments worth a flash; everything else stays off screen while playing. */
+export function runnerFlash(r:RunnerGame){
+ if(r.time-r.eventAt>=1.3||runnerOver(r))return '';
+ return r.eventKind==='goal'?'GOAL!':r.eventKind==='hit'?'Tackled!':'';
+}
 // Action first, in a 7-year-old's words: what to do, then the named skill that also works.
 const ROLE_TIP={
  presser:'GREEN PRESSER runs at you · move early, or ROULETTE',
@@ -91,5 +97,5 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
   :mate&&runner.balls>0?(runner.lane===mate.lane?'TEAMMATE · Shoot to pass: ONE-TWO':`TEAMMATE ON THE ${mate.lane<0?'LEFT':'RIGHT'} · move over for a one-two`)
   :goal&&!goal.keeper&&goal.z> -22&&goal.z< -8&&Math.abs(runner.x-goal.openLane*2.4)<.65?'FINISH NOW · timed shots earn +150'
   :(!goal&&routeTip(runner))||runner.message;
- return{score:String(runner.score),detail,message,over,ready:false,skillLabel,skillReady,coach:over?'':runner.coachButton};
+ return{score:String(runner.score),detail,message,over,ready:false,skillLabel,skillReady,coach:over?'':runner.coachButton,flash:runnerFlash(runner),flashId:runner.event};
 }
