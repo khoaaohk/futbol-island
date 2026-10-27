@@ -61,12 +61,3 @@ export function PinballCard({phase,score,detail,takeaway,best,unlocked,pending,s
   <p className={styles.foot}>{status??(paused?'':`3 coins per play${best>0?` · Best ${best.toLocaleString('en-US')}`:''}`)}</p>
  </section>;
 }
-
-/** First-time hint, shown once ever over the waiting table: which half of the screen kicks which flipper (the tip
- * line above the Launch pill already says how to launch). */
-export function PinballTutorial(){
- return <div className={styles.tutorial} data-pinball-tutorial aria-hidden="true">
-  <span data-side="left"><b>Tap</b>left kick</span>
-  <span data-side="right"><b>Tap</b>right kick</span>
- </div>;
-}

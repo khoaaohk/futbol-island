@@ -94,7 +94,9 @@ export function createPinballFx(scene:T.Scene,camera:T.Camera,px:(x:number)=>num
   for(let i=0;i<popups.length;i++){
    const p=popups[i],src=f.popups[i];
    if(src.serial!==p.serial){p.serial=src.serial;paint(p,src.text,src.kind);}
-   const alive=src.age<PINBALL_POPUP_LIFE&&src.serial>0;p.mesh.visible=alive;if(!alive)continue;
+   // Clean screen (owner, Oct 27 2026): only the goal call (GOAL! +points) shows on the table; hit points, combos, timing
+   // grades, commentary and warnings stay in the feel state (sound, rings, shake) but are not drawn.
+   const alive=src.age<PINBALL_POPUP_LIFE&&src.serial>0&&src.kind==='goal'&&/GOAL! \+/.test(src.text);p.mesh.visible=alive;if(!alive)continue;
    const t=src.age/PINBALL_POPUP_LIFE,big=src.kind==='goal'?2.1:src.kind==='lit'||src.kind==='rescue'?1.6:1;
    const pop=reduced?1:t<.14?1.18*Math.sin(t/.14*Math.PI*.5):1+.18*Math.exp(-(t-.14)*14);
    const height=.6*big*(mobile?1.15:1)*pop,rise=reduced?0:1-(1-t)*(1-t);
