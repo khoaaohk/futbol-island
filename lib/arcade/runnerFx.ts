@@ -9,7 +9,7 @@ import {readArcadeRecord} from './arcadeRecords';
 import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
 import {createRunnerTrack} from './runnerTrack';
 import {createRunnerCinema,CINEMA,type CinemaKind} from './runnerCinema';
-import {createRunnerScenery} from './runnerScenery';
+import {createRunnerScenery} from './runnerWeather';
 import {TERRAINS} from '../../components/games/runnerRoute';
 
 /**

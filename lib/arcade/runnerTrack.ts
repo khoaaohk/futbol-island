@@ -338,7 +338,7 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   * context reachable after leaving), unless a newer runner has already taken over. */
  function dispose(){if(activeRenderer===stage.renderer)activeRenderer=null;}
  return{update,pose,reset,dispose,patch:bendTree,
-  /** Sky and fog colours, retinted per route sky and terrain by runnerScenery (mutated in place, no allocation). */
+  /** Sky and fog colours, retinted per route sky and terrain by runnerWeather (mutated in place, no allocation). */
   sky:skyUniforms,fogColor,
   /** Current camera pitch smoothing of the route grade (for the cinematic camera). */viewSlope:()=>viewSlope,
   debug:()=>({yaw,viewSlope,lean,pitch,heading,table:Array.from(bendData.slice(0,8))}),

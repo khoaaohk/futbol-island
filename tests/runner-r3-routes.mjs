@@ -131,7 +131,7 @@ for(const id of ['night','storm','warmup']){const s=game(id,{lives:1e6});let mos
 {const css=fs.readFileSync('components/games/RunnerControls.module.css','utf8');for(const [cls,px] of [['lane',72],['jump',64],['slide',64],['skill',64],['shoot',88]])assert(new RegExp(`\\.${cls}\\.${cls}\\{[^}]*width:${px}px`).test(css),`${cls} is ${px}px`);
  assert(/touch-action:none/.test(css));const g=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8');assert(/<RunnerControls /.test(g)&&/<RunnerMenu /.test(g));
  const menu=fs.readFileSync('components/games/RunnerMenu.module.css','utf8');assert(/\.play\{[^}]*min-height:64px/.test(menu)&&/\.small\{[^}]*min-height:52px/.test(menu)&&/\.route\{[^}]*min-height:60px/.test(menu));
- const scen=fs.readFileSync('lib/arcade/runnerScenery.ts','utf8');const upd=scen.slice(scen.indexOf('function update('),scen.indexOf('function reset('));assert(!/new T\.|`/.test(upd),'scenery update allocates nothing');
+ const scen=fs.readFileSync('lib/arcade/runnerWeather.ts','utf8');const upd=scen.slice(scen.indexOf('function update('),scen.indexOf('function reset('));assert(!/new T\.|`/.test(upd),'scenery update allocates nothing');
  const cin=fs.readFileSync('lib/arcade/runnerCinema.ts','utf8');assert(!/new |\[\]|\{\}/.test(cin.slice(cin.indexOf('function step('),cin.indexOf('function reset('))),'cinema step allocates nothing');}
 selectRunnerMode('classic');
 console.log('PASS runner r3 routes: height field, terrain table, route ladder, refills, coyote/lane grace, double jump, gauntlet, drifting defenders, magnet, rollers, boss keeper finish, seeded shuffle, stars/unlocks, cinematic beats, kid pad');

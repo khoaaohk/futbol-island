@@ -57,7 +57,7 @@ the keeper leaves, small touches on cobbles, change lane early on snow).
 - Land tint by height: green valleys, rocky ridges, snowy peaks; far land rolls into hills beyond 22 m (vertex
   offset only past every prop). Horizon correction lowered (.35 -> .2 of the grade) so hills read clearly.
 
-### Graphics and camera - `lib/arcade/runnerFx.ts`, `lib/arcade/runnerScenery.ts`, `lib/arcade/runnerCinema.ts`
+### Graphics and camera - `lib/arcade/runnerFx.ts`, `lib/arcade/runnerWeather.ts`, `lib/arcade/runnerCinema.ts`
 - Stadium run-in: KICK-OFF gate at 8 m and a camera sweep from high and wide (1.6 s, skippable).
 - Goal line: GOAL LINE arch with a chequered line; boss keeper drawn 1.45x with a gold ring.
 - Skies per route (night darker, storm grey-blue with rain streaks and lightning flicker + thunder); the horizon glow
