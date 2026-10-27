@@ -18,7 +18,7 @@ export const EXPERT_CONCEPTS:Record<string,string>={
   'switch-then-through':'Move the ball across, then go forward where it is free.',
   'one-two-on-the-clock':'Pass and run: a one-two is the fastest way to goal.',
   'trap-and-hunter':'Pass early to the runner from deep, before the trap and the hunter close.',
-  'four-pass-move':'Four good passes in a row: keep the ball moving and find the free friend.',
+  'four-pass-move':'Four quick passes in a row, then find the free friend.',
   'set-and-switch':'Bounce it off the striker, then switch it to the far side.',
 };
 
