@@ -40,4 +40,10 @@ export const DIFFICULTY:Record<string,number>={
   'ss-set-and-go':42,
   'ss-third-runner':53,
   'ss-up-back-through':70,
+  'ex-trap-and-hunter':45,
+  'ex-chain-under-press':82,
+  'ex-one-two-clock':90,
+  'ex-switch-then-through':61,
+  'ex-four-pass-move':74,
+  'ex-set-and-switch':79,
 };

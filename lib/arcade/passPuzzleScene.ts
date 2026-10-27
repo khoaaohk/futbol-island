@@ -122,7 +122,8 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const cutMark=new T.Group();{const m=new T.MeshBasicMaterial({color:'#ff6a4d',depthWrite:false,transparent:true});for(const a of [1,-1]){const bar=new T.Mesh(new T.BoxGeometry(1.25,.05,.26),m);bar.rotation.y=a*Math.PI/4;cutMark.add(bar);}}cutMark.visible=false;cutMark.name='puzzle-cut-mark';cutMark.renderOrder=5;scene.add(cutMark);
  // Hint spot: where the next pass of the coach's route goes (tier-2 hint), with its run arrow when one is needed.
  const hintRing=flatRing(.78,1,'#70fff0',.95);hintRing.name='puzzle-hint-spot';const hintDot=flatRing(0,.32,'#70fff0',.7);hintDot.name='puzzle-hint-dot';let hint:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null=null;
- function setHint(h:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null){hint=h;hintRing.visible=hintDot.visible=!!h;if(h){hintRing.position.set(h.spot.x,.05,h.spot.z);hintRing.scale.setScalar(1.3);hintDot.position.set(h.spot.x,.05,h.spot.z);}placeArrow(5,h?.run?.from??null,h?.run?.to??null);}
+ let hintAge=-1;const HINT_REVEAL=.8;
+ function setHint(h:{spot:Vec2;run?:{from:Vec2;to:Vec2}}|null){const fresh=!!h&&(!hint||hint.spot.x!==h.spot.x||hint.spot.z!==h.spot.z);hint=h;if(fresh)hintAge=stage.reduced?HINT_REVEAL:0;hintRing.visible=hintDot.visible=!!h;if(h){hintRing.position.set(h.spot.x,.05,h.spot.z);hintRing.scale.setScalar(1.3);hintDot.position.set(h.spot.x,.05,h.spot.z);}placeArrow(5,h?.run?.from??null,h?.run?.to??null);}
  // "Look up" scan: a translucent lane from the ball to each teammate, green (open), amber (tight) or red
  // (shut), with a ring at their feet. Pooled (5), placed once per aim on request; static, so no frames.
  const scanMats:Record<string,T.MeshBasicMaterial>={clear:new T.MeshBasicMaterial({color:'#8cff9e',transparent:true,opacity:.66,depthWrite:false,toneMapped:false}),tight:new T.MeshBasicMaterial({color:'#ffc457',transparent:true,opacity:.62,depthWrite:false,toneMapped:false}),blocked:new T.MeshBasicMaterial({color:'#ff6a4d',transparent:true,opacity:.58,depthWrite:false,toneMapped:false})};
@@ -385,7 +386,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   if(net&&(net.hit>0)){net.hit=Math.max(0,net.hit-dt*.9);const t=1-net.hit,amount=net.hit>0?Math.sin(t*14)*Math.exp(-t*3.8)*.4:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],fall=Math.exp(-((x-(-net.x))**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*fall:0));}net.attribute.needsUpdate=true;busy=true;}
   stage.effects(dt);if(stage.effectsActive())busy=true;
   // The failure beat: the stop mark settles from a pop and the broadcast camera leans in (none with reduced motion).
-  if(stop&&dt>0&&stop.age<STOP_PUSH){stop.age=Math.min(STOP_PUSH,stop.age+dt);const u=stop.age/STOP_PUSH,e=u*u*(3-2*u);stop.mark.scale.setScalar(1+.7*(1-u)*(1-u));setReplayFocus({x:stop.at.x,z:stop.at.z},e*.7);busy=true;}
+  if(stop&&dt>0&&stop.age<STOP_PUSH){stop.age=Math.min(STOP_PUSH,stop.age+dt);const u=stop.age/STOP_PUSH,e=u*u*(3-2*u);stop.mark.scale.setScalar(1+.7*(1-u)*(1-u));setReplayFocus({x:stop.at.x,z:stop.at.z},e*.65);busy=true;}
   if(state.phase!=='aiming'){carrierRing.visible=false;}
   // The line shows while the pass is being chosen and struck (defenders shift during the wind-up).
   const line=scenario?.require.offside&&(state.phase==='aiming'||state.phase==='windup')?lineOf(state):-1;
@@ -395,7 +396,11 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   if(state.phase!=='aiming'){for(let i=0;i<arrows.length;i++)arrows[i].g.visible=false;hintRing.visible=hintDot.visible=false;
    // Replay: an arrow on each called or scripted run while the runner is still going.
    if(replayRuns){let n=0;state.attackers.forEach((a,i)=>{if(n>=4)return;const to=a.call&&a.call.startAt!=null?a.call.to:a.mode==='run'?(scenario?.attackers[i]?.run?.path.at(-1)??null):null;if(to&&Math.hypot(to.x-a.p.x,to.z-a.p.z)>1.2)placeArrow(n++,a.p,to);});}
-  }else if(hint){hintRing.visible=hintDot.visible=true;}
+  }else if(hint){hintRing.visible=hintDot.visible=true;
+   // Round 3: the best-pass hint is revealed slowly: a dot rolls from the ball to the spot and the ring opens.
+   if(hintAge>=0&&hintAge<HINT_REVEAL){hintAge=Math.min(HINT_REVEAL,hintAge+dt);const u=hintAge/HINT_REVEAL,e=u*u*(3-2*u);
+    hintDot.position.set(ballP.x+(hint.spot.x-ballP.x)*e,.06,ballP.z+(hint.spot.z-ballP.z)*e);hintRing.scale.setScalar(.2+1.1*e);busy=true;}
+   else{hintDot.position.set(hint.spot.x,.05,hint.spot.z);hintRing.scale.setScalar(1.3);}}
   return busy;
  }
  const ray=new T.Raycaster(),ndc=new T.Vector2(),ground=new T.Plane(new T.Vector3(0,1,0),0),hit=new T.Vector3();
