@@ -314,4 +314,4 @@
 /* Tall mouse windows (landscape frame): the keycaps sit in the free space under the frame for the whole match; the one-time strip
    over the pitch is not needed there. */
 .keysDock{display:none}
-@media(pointer:fine) and (orientation:portrait){.keysDock{display:block;position:fixed;left:0;right:0;top:calc(50dvh + 37.5vw + 18px);padding:0 16px;pointer-events:none}.keysHint{display:none}}
+@media(pointer:fine) and (orientation:portrait){.keysDock{display:block;position:fixed;left:0;right:0;top:calc(50dvh + 37.5vw + 18px);padding:env(safe-area-inset-top,0px) calc(16px + env(safe-area-inset-right,0px)) 0 calc(16px + env(safe-area-inset-left,0px));pointer-events:none}.keysHint{display:none}}
