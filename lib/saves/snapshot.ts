@@ -75,6 +75,7 @@ export const DEVICE_KEYS:readonly string[]=['fi2-music-enabled','fi2-bug-pill-v1
  'fi2-party-session-v1',
  // The sea (Oct 15 2026): the once-per-device shark ("Uh oh!") and manta/whale-shark ride lesson toasts.
  'fi2-shark-lesson-v1','fi2-ride-lesson-v1','fi2-ride-steer-hint-v1','fi2-dive-hint-v1',
+ 'fi2-tennis-r3-hint-v1', // Futbol Tennis first-time "hold, let go on gold" hint (round 3, Oct 26 2026)
  // Diving spots (Oct 16 2026): the once-per-device breath (pace) lesson toast.
  'fi2-dive-lesson-v1',
  // Summit Isle tree kick (Oct 15 2026): the once-per-device strike lesson.
