@@ -74,7 +74,7 @@ const sat=new Date(2026,9,31),mon=new Date(2026,10,2);assert(C.hardDailyDay(sat,
 /* 6. wiring in the game (source checks) */
 const src=fs.readFileSync(path.join(__dirname,'..','components','games','PassPuzzleGame.tsx'),'utf8'),css=fs.readFileSync(path.join(__dirname,'..','components','games','PassPuzzleGame.module.css'),'utf8');
 assert(/world\.step\(now<hitStop\.current\?0:dt\*cine\.timeScale\)/.test(src),'live sim runs at the beat time scale');
-assert(/if\(cine\.active\|\|finishAt\.current\)skipCine\.current\(\)/.test(src),'any tap skips a beat');
+assert(/if\(cine\.active\|\|finishAt\.current\)\{e\.preventDefault\(\);skipCine\.current\(\);return;\}/.test(src),'any tap skips a beat, and only skips (never fires a pass)');
 assert(/cine\.play\('strike'/.test(src)&&/cine\.play\('arrive'/.test(src)&&/cine\.play\('goal'/.test(src)&&/cine\.play\('hint'/.test(src)&&/cine\.intro\(/.test(src),'strike, arrive, goal, hint and intro beats');
 assert(/e\.type==='kick'&&!replayRef\.current\)\{arrived\.current=false;cine\.play/.test(src),'beats are live-only (replays keep their own camera)');
 assert(/data-undo onClick=\{rewindPass\}/.test(src),'Undo in play');assert(/data-nudge=/.test(src)&&/ppNudge/.test(css),'hint nudge');

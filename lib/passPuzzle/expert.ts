@@ -9,7 +9,7 @@ import type {Pack,PackSolution,Step} from './packs';
 
 export const EXPERT_PACKS:Pack[]=[
   {id:'expert-combos',order:6,title:'Expert Combos',blurb:'Hunters, traps and the clock. Think two passes ahead.',gate:50,tier:'expert'},
-  {id:'expert-final',order:6.5,title:'Expert Final',blurb:'Long moves of three and four passes. Keep every pass quick.',gate:66,tier:'expert'},
+  {id:'expert-final',order:6.5,title:'Expert Final',blurb:'Switch it, bounce it, four in a row. Keep every pass quick.',gate:66,tier:'expert'},
 ];
 
 /** One short, kid-friendly line per new expert idea (shown on the brief tip and the pack sheet). */
@@ -29,7 +29,7 @@ const same=(a:string,b:string,c:string)=>({'7v7':a,'9v9':b,'11v11':c});
 const req=(minPasses:number,extra:Partial<Scenario['require']>={}):Scenario['require']=>({minPasses,finish:'goal',offside:true,...extra});
 
 export const EXPERT_SCENARIOS:Scenario[]=[
-  /* ───────────── Expert Combos (teaching order = measured difficulty 51 → 81) ───────────── */
+  /* ───────────── Expert Combos (teaching order = measured difficulty 51 → 83) ───────────── */
   {id:'ex-trap-and-hunter',pack:'expert-combos',title:'Trap and Hunter',concept:'trap-and-hunter',
     brief:same('The line steps up and a hunter chases. Pass to the runner from behind, fast!',
       'An offside trap and a hunter at once. Release the deep runner quickly, before both close in.',
@@ -41,18 +41,6 @@ export const EXPERT_SCENARIOS:Scenario[]=[
     defenders:[{x:-5,z:14.5,trap:3},{x:6,z:14.5,trap:3},{x:3,z:7,hunt:true}],keeper:{x:0,z:24},
     attempts:3,require:req(1,{clock:5}),bonus:{kind:'scorer',scorer:2,label:'The deep runner scores'},
     lesson:'Against a trap and a press, pass early to the runner from deep.'},
-  {id:'ex-switch-then-through',pack:'expert-combos',title:'Switch and Go',concept:'switch-then-through',
-    brief:same('The defenders crowd one side. Pass across, then send the runner to goal!',
-      'One side is packed. Switch it to the free side, then play the runner in behind on the clock.',
-      'They overload the ball side. Switch play, then hit the through ball before the line recovers.'),
-    hint:same('Pass to the middle friend. They pass to the far friend. Then go!',
-      'Two passes move it across. The far friend has space to play the runner.',
-      'Circulate through the pivot to the weak side, then release the run in behind.'),
-    pitch:{halfWidth:25,length:60,goalWidth:7.32},carrier:0,
-    attackers:[{x:-4,z:4},{x:-3,z:12},{x:8.5,z:15.5,run:{delay:1.2,path:[P(6,20.5)]}}],
-    defenders:[{x:-5,z:16},{x:3,z:10},{x:-8,z:7,hunt:true}],keeper:{x:0,z:29},
-    attempts:3,require:req(2,{clock:7}),bonus:{kind:'scorer',scorer:2,label:'The runner scores'},
-    lesson:'Move the ball to the free side, then go forward fast.'},
   {id:'ex-chain-under-press',pack:'expert-combos',title:'Pass Around the Press',concept:'chain-under-press',
     brief:same('A hunter chases every pass. Pass left, pass right, then find the striker!',
       'A hunter presses each receiver and the clock is on. Move it left, switch it right, then play the striker in.',
@@ -64,7 +52,31 @@ export const EXPERT_SCENARIOS:Scenario[]=[
     defenders:[{x:2.5,z:2,hunt:true},{x:-1.5,z:8.5},{x:8,z:15},{x:-6,z:12,recover:true}],keeper:{x:0,z:24},
     attempts:3,require:req(3,{clock:9}),bonus:{kind:'scorer',scorer:3,label:'The striker scores'},
     lesson:'Quick passes away from a hunter keep the ball. Then the forward pass is open.'},
-  /* ───────────── Expert Final (80 → 83) ───────────── */
+  {id:'ex-one-two-clock',pack:'expert-combos',title:'Fast One-Two',concept:'one-two-on-the-clock',
+    brief:same('Quick! Pass, get it back, then find the free friend. A defender runs back.',
+      'The clock is on and a defender sprints back. Play the one-two, then square it to the free player.',
+      'On the clock with a recovering defender: one-two around the presser, then square it for the spare man.'),
+    hint:same('Pass left. Run and get it back. Then pass right.',
+      'Your friend on the left plays it back into your run. Then the right side is free.',
+      'Give and go, then one more pass: the recovering defender can only cover one of you.'),
+    pitch:{halfWidth:25,length:50,goalWidth:6},carrier:0,
+    attackers:[{x:0,z:11,run:{delay:.05,afterPass:true,path:[P(2,14),P(2,19)]}},{x:-6,z:14.5},{x:9,z:19.5}],
+    defenders:[{x:.5,z:14,press:true},{x:0,z:22},{x:-9,z:9,recover:true}],keeper:{x:0,z:24},
+    attempts:3,require:req(3,{clock:6}),bonus:{kind:'scorer',scorer:2,label:'The free friend scores'},
+    lesson:'A fast one-two beats a defender. One more pass finds the free friend.'},
+  /* ───────────── Expert Final (56 → 81) ───────────── */
+  {id:'ex-switch-then-through',pack:'expert-final',title:'Switch and Go',concept:'switch-then-through',
+    brief:same('The defenders crowd one side. Pass across, then send the runner to goal!',
+      'One side is packed. Switch it to the free side, then play the runner in behind on the clock.',
+      'They overload the ball side. Switch play, then hit the through ball before the line recovers.'),
+    hint:same('Pass to the middle friend. They pass to the far friend. Then go!',
+      'Two passes move it across. The far friend has space to play the runner.',
+      'Circulate through the pivot to the weak side, then release the run in behind.'),
+    pitch:{halfWidth:25,length:60,goalWidth:7.32},carrier:0,
+    attackers:[{x:-4,z:4},{x:-3,z:12},{x:8.5,z:15.5,run:{delay:1.2,path:[P(6,20.5)]}}],
+    defenders:[{x:-5,z:16},{x:3,z:10},{x:-8,z:7,hunt:true}],keeper:{x:0,z:29},
+    attempts:3,require:req(2,{clock:7}),bonus:{kind:'scorer',scorer:2,label:'The runner scores'},
+    lesson:'Move the ball to the free side, then go forward fast.'},
   {id:'ex-four-pass-move',pack:'expert-final',title:'Four in a Row',concept:'four-pass-move',
     brief:same('Make four passes, then score. Each friend is free for just a moment.',
       'Four passes before the finish. Bounce it off the striker, find the runner, and keep it moving.',
@@ -87,18 +99,6 @@ export const EXPERT_SCENARIOS:Scenario[]=[
     defenders:[{x:-1.8,z:16.4,mark:1},{x:4.8,z:6.9},{x:-5,z:18},{x:-9,z:13},{x:6,z:1,hunt:true}],keeper:{x:0,z:24},
     attempts:3,require:req(3,{clock:6}),bonus:{kind:'scorer',scorer:3,label:'The far runner scores'},
     lesson:'Up, back and through still works under pressure if every pass is quick.'},
-  {id:'ex-one-two-clock',pack:'expert-final',title:'Fast One-Two',concept:'one-two-on-the-clock',
-    brief:same('Quick! Pass, get it back, then find the free friend. A defender runs back.',
-      'The clock is on and a defender sprints back. Play the one-two, then square it to the free player.',
-      'On the clock with a recovering defender: one-two around the presser, then square it for the spare man.'),
-    hint:same('Pass left. Run and get it back. Then pass right.',
-      'Your friend on the left plays it back into your run. Then the right side is free.',
-      'Give and go, then one more pass: the recovering defender can only cover one of you.'),
-    pitch:{halfWidth:25,length:50,goalWidth:6},carrier:0,
-    attackers:[{x:0,z:11,run:{delay:.05,afterPass:true,path:[P(2,14),P(2,19)]}},{x:-6,z:14.5},{x:9,z:19.5}],
-    defenders:[{x:.5,z:14,press:true},{x:0,z:22},{x:-9,z:9,recover:true}],keeper:{x:0,z:24},
-    attempts:3,require:req(3,{clock:6}),bonus:{kind:'scorer',scorer:2,label:'The free friend scores'},
-    lesson:'A fast one-two beats a defender. One more pass finds the free friend.'},
 ];
 
 const K=(kind:KickKind,x:number,z:number,o:Partial<Kick>={}):Kick=>({kind,target:{x,z},curl:0,loft:0,power:.5,...o});

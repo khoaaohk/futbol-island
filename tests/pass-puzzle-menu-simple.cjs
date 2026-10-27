@@ -38,7 +38,7 @@ assert.match(home,/data-unset=\{progress\.format===undefined\|\|undefined\}/,'a 
 
 // 4. Nothing hidden blocks a first play: Play is rendered on the home view unconditionally (apart from a level existing),
 //    and the menu opens on home.
-assert.match(tsx,/useState<'home'\|'pack'\|'settings'>\('home'\)/,'menu opens on home');
+assert.match(tsx,/useState<'home'\|'pack'\|'settings'(\|'expert')?>\('home'\)/,'menu opens on home');
 assert.match(home,/\{continueLevel&&<button className=\{`\$\{arcade\.primary\} \$\{styles\.playBig\}`\}/,'Play only waits for a level');
 
 // 5. Economy, stars, unlocks, saves and the free replay are untouched.
