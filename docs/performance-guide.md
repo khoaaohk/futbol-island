@@ -1,5 +1,9 @@
 # Performance reference for future Futbol Island updates
 
+## Deep-sea boat looks (Oct 26 2026, local, not deployed)
+
+The two deep-sea boats now differ (`BOAT_LOOKS` in `lib/town/fishing/deepSeaBoatData.ts`, fixed data, no randomness): the Deep Sea Boat is the full-size family boat (cream hull, gold stripe, teal trim, clay roof, flag + outriggers, cooler, bow number 11); the Summit Deep Boat is 0.8 × length, 0.9 × beam and freeboard (sea-blue hull, cream stripe, yellow trim, teal roof under a red/cream sun top, pennant, fish boxes + net, number 10). Hull footprint, `onHull`, afloat box, deck rect + height, stand, captain point, prompt and the swell factor (1.15 on the small boat, still clamped by `BOAT_LIMITS`) all derive from `look.scale`. Cost: one merged mesh per boat as before; one cached geometry per look (≈1.8k / 1.9k triangles) instead of one shared, one shared material, no new draws, nothing per frame (scale is baked into the geometry at build). Pinned by `tests/fishing-boat-variants.cjs`. No device measurement.
+
 ## Fishing post variants (Oct 26 2026, local, not deployed)
 
 Each of the 16 shore fishing posts now has its own deterministic look (`lib/town/fishing/fishingKiosk.ts`, seeded by post id: wood tone, awning colour/stripes, roof shape/tilt, counter and ground props, eave hangings, topper, and beach / pier / rocks / river props). Cost: build-time only; parts are transformed copies of ≤ 11 shared low-poly primitives written straight into one geometry per post, still merged into the single `fishing-posts` mesh (one draw + one shadow draw, no new material/texture, nothing per frame). Triangles ≈ 4k → ≈ 9.5k for all posts (cap 720 per post, 600 average). Cabinet and collision footprint unchanged. Pinned by `tests/fishing-kiosk-variants.cjs`. No device measurement.

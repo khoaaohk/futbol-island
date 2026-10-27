@@ -1,5 +1,5 @@
 import type {NpcDefinition} from '../npcDialogues';
-import {BOAT_DECK_Y,DEEP_SEA_BOATS} from './deepSeaBoatData';
+import {DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {landableDeckHeight} from '../landableDecks';
 import {LEGEND_INFO,legendId} from './legendary';
 
@@ -41,19 +41,20 @@ import {LEGEND_INFO,legendId} from './legendary';
  *  - Plymouth Argyle's crest and the Mayflower, 1620: https://en.wikipedia.org/wiki/Plymouth_Argyle_F.C.
  * Coaching comparisons (reading the water, patience, teamwork) are phrased as advice, not facts.
  */
-/** Boat-local standing point (bow +x, starboard +z): the forward end of the aft deck, port side, by the wheelhouse door. */
-export const CAPTAIN_LOCAL={x:-.15,z:-1.1};
+/** Each boat's captain stands at its `captainLocal` (deepSeaBoatData.ts, bow +x, starboard +z): the forward end of the aft deck,
+ *  port side, by the wheelhouse door, scaled with the boat's size (Oct 26 2026 boat looks). */
 const HOW_TO_GREETING='Welcome aboard! Out here the water is deep, so bigger fish swim below, but they take longer to rise to your float. Look for diving gulls or a bait ball: cast there and land in new water each time.';
 const FIGHT_ANSWER='Drag on the water to aim, let go to cast, then watch the float. Wait for the real plunge, not the nibbles. Spin the reel round and round to wind in, ease off when the line strains, and stop spinning when a fish runs.';
 const legendLine=(spot:string)=>{const L=LEGEND_INFO[legendId(spot)];return L?`${L.clue} Help the islanders with their fishing requests and you will hear more about it. Catch it once, then let it go.`:'';};
-const floorAt=(x:number,z:number)=>()=>{const h=landableDeckHeight(x,z);return h>0?h:BOAT_DECK_Y;};
+const floorAt=(x:number,z:number,rest:number)=>()=>{const h=landableDeckHeight(x,z);return h>0?h:rest;};
 const [B0,B1]=DEEP_SEA_BOATS;
-const P0=B0.toWorld(CAPTAIN_LOCAL.x,CAPTAIN_LOCAL.z),P1=B1.toWorld(CAPTAIN_LOCAL.x,CAPTAIN_LOCAL.z);
+const captainAt=(b:typeof B0)=>b.toWorld(b.captainLocal.x,b.captainLocal.z);
+const P0=captainAt(B0),P1=captainAt(B1);
 /** Facing the open aft deck and the angler (boat-local +x is the bow: face aft and a little to starboard). */
-const faceAft=(b:typeof B0)=>{const a=b.toWorld(-2.4,.5),p=b.toWorld(CAPTAIN_LOCAL.x,CAPTAIN_LOCAL.z);return Math.atan2(a.x-p.x,a.z-p.z);};
+const faceAft=(b:typeof B0)=>{const a=b.toWorld(b.standLocal.x,b.standLocal.z),p=captainAt(b);return Math.atan2(a.x-p.x,a.z-p.z);};
 
 export const BOAT_CAPTAINS:NpcDefinition[]=[
- {id:'boat-captain-marina',name:'Captain Marina',role:'Deep Sea Boat captain',pursuit:'CAPTAIN OF THE DEEP SEA BOAT',x:P0.x,z:P0.z,floor:floorAt(P0.x,P0.z),workYaw:faceAft(B0),
+ {id:'boat-captain-marina',name:'Captain Marina',role:'Deep Sea Boat captain',pursuit:'CAPTAIN OF THE DEEP SEA BOAT',x:P0.x,z:P0.z,floor:floorAt(P0.x,P0.z,B0.deckY),workYaw:faceAft(B0),
   character:'female',face:'deep',clothing:'coast',body:'strong',age:'adult',look:{skin:5,hair:'bun',headwear:'cap',headwearColor:'#1f3f63',top:'#2b5d8c'},
   persona:'The Deep Sea Boat\'s captain: a former goalkeeper who has fished the deep blue bay for years and loves a football story.',
   greeting:HOW_TO_GREETING,
@@ -75,7 +76,7 @@ export const BOAT_CAPTAINS:NpcDefinition[]=[
    {id:'legend',question:'Is there a legend out here?',answer:legendLine(B0.spotId),
     followUp:{question:'Why let it go?',answer:'Catch and release keeps the sea\'s biggest fish swimming for everyone. Respect the sea like you respect the other team.'}},
   ]},
- {id:'boat-skipper-kofi',name:'Skipper Kofi',role:'Summit Deep Boat skipper',pursuit:'SKIPPER OF THE SUMMIT DEEP BOAT',x:P1.x,z:P1.z,floor:floorAt(P1.x,P1.z),workYaw:faceAft(B1),
+ {id:'boat-skipper-kofi',name:'Skipper Kofi',role:'Summit Deep Boat skipper',pursuit:'SKIPPER OF THE SUMMIT DEEP BOAT',x:P1.x,z:P1.z,floor:floorAt(P1.x,P1.z,B1.deckY),workYaw:faceAft(B1),
   character:'male',face:'deep',clothing:'sunset',body:'balanced',age:'adult',look:{skin:6,hair:'crop',headwear:'bucket',headwearColor:'#c9b27a',top:'#3f7a5c'},
   persona:'The Summit Deep Boat\'s skipper: a patient fisher who coaches a kids\' team on Summit Isle and compares everything to football.',
   greeting:HOW_TO_GREETING.replace('Welcome aboard!','Hello, and welcome to my boat!'),

@@ -112,12 +112,12 @@ for(const id of ['record','derby_start','derby_done','photo','lure'])ok(!CID.isC
 {const npcs=require('../lib/town/npcDialogues.ts').NPC_DIALOGUES,B=require('../lib/town/fishing/deepSeaBoatData.ts'),C=require('../lib/town/fishing/boatCaptains.ts');
  ok(C.BOAT_CAPTAINS.length===2&&C.BOAT_CAPTAINS.every(c=>npcs.includes(c)),'a captain on each boat, in the shared townsfolk list');
  ok(new Set(C.BOAT_CAPTAINS.map(c=>c.name)).size===2,'two different characters');
- C.BOAT_CAPTAINS.forEach((c,i)=>{const b=B.DEEP_SEA_BOATS[i],p=b.toLocal(c.x,c.z),dk=b.deck,stand=b.stand,local={x:p.x+2.4,z:p.z};
+ C.BOAT_CAPTAINS.forEach((c,i)=>{const b=B.DEEP_SEA_BOATS[i],p=b.toLocal(c.x,c.z),dk=b.deck,stand=b.stand,local={x:p.x-b.standLocal.x,z:p.z};
   ok(Math.abs(local.x)<=dk.w/2-.3&&Math.abs(local.z)<=dk.d/2-.3,c.name+': stands on the open aft deck');
   ok(Math.hypot(c.x-stand.x,c.z-stand.z)>=2.2,c.name+': clear of the fishing stand (Fish wins the prompt there)');
   ok(p.z<0,c.name+': on the port side, away from the starboard cast, the camera and the float');
-  ok(p.x>B.BOAT_HULL.x0+2.5,c.name+': away from the stern foam');
-  ok(typeof c.floor==='function'&&Math.abs(c.floor()-B.BOAT_DECK_Y)<1e-9,c.name+': stands on the deck floor');
+  ok(p.x>b.hull.x0+2.5,c.name+': away from the stern foam');
+  ok(typeof c.floor==='function'&&Math.abs(c.floor()-b.deckY)<1e-9,c.name+': stands on the deck floor');
   ok(c.lines.length>=8&&c.lines.length<=12&&c.lines.every(l=>kidText(l)&&l.length<=220),c.name+': 8–12 short fish-and-football lines');
   ok(/deep/i.test(c.greeting)&&/hotspot|gulls|bait ball/i.test(c.greeting+c.topics.map(t=>t.answer).join(' ')),c.name+': the first chat explains the boat');
   ok(c.topics.some(t=>/Spin the reel/.test(t.followUp.answer)&&!/Easy reel/.test(t.followUp.answer)),c.name+': explains the spin fight');
