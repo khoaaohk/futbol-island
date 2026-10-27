@@ -34,7 +34,8 @@ assert.ok(M.STRIKER_GENTLE.speed<0&&M.STRIKER_GENTLE.tackleThink>0&&M.STRIKER_GE
 const store={};const local={getItem:k=>store[k]??null,setItem:(k,v)=>{store[k]=String(v);}};
 const S=load('lib/arcade/strikerStars.ts',{localStorage:local});store['fi2-strikers-stars-v1']=JSON.stringify([3,2,1,0]);
 assert.equal(JSON.stringify(S.readStrikerStars()),'[3,2,1,0,0,0]','old saves keep every star');assert.equal(JSON.stringify(S.saveStrikerStars(6,2)),'[3,2,1,0,0,2]');
-assert.match(read('lib/arcade/arcadeRecords.ts'),/Math\.min\(6,Math\.floor\(value\.unlocked\)\)/);
+assert.match(read('lib/arcade/arcadeRecords.ts'),/Math\.min\(cap,Math\.floor\(value\.unlocked\)\)/);// Tennis made the cap per game (9 courts); every other cabinet, Strikers included, stays at 6
+assert.match(read('lib/arcade/arcadeRecords.ts'),/arcadeUnlockCap/);
 // UI: the component configures rounds with their modifier, eases a first-ever Round 1, caps by the round count, marks HARD rounds.
 const live=read('components/LiveArcadeMatch.tsx');
 assert.match(live,/const roundOpts=\(level:number\)=>\(\{mods:STRIKER_ROUND_MODS\[level-1\]\?\?\{\},gentle:level===1&&\(readStrikerStars\(\)\[0\]\?\?0\)===0\}\)/);
