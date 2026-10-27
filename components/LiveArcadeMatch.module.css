@@ -315,3 +315,10 @@
    over the pitch is not needed there. */
 .keysDock{display:none}
 @media(pointer:fine) and (orientation:portrait){.keysDock{display:block;position:fixed;left:0;right:0;top:calc(50dvh + 37.5vw + 18px);padding:env(safe-area-inset-top,0px) calc(16px + env(safe-area-inset-right,0px)) 0 calc(16px + env(safe-area-inset-left,0px));pointer-events:none}.keysHint{display:none}}
+
+/* Clean pitch (owner, Oct 27 2026), every layout: while playing only the score bar, the stick and the thumb buttons stay on screen.
+   The direction line is gone from the markup; the coach line and the Sprint / Team spirit meters are hidden; the shot-power meter
+   shows only while Shoot is held. Cards and the GOAL! banner are unchanged. */
+.root[data-phase=playing] .footer>p,.root[data-phase=playing] .meters{display:none}
+.root[data-phase=playing] .meters[data-charging]{display:flex}
+.root[data-phase=playing] .meters label:not(:nth-child(2)){display:none}
