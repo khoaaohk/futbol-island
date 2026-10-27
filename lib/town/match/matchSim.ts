@@ -349,8 +349,15 @@ export class MatchSim {
   /** Beach match clock: period 1–3, 4 = extra time, 5 = penalties / full time. */
   period = 1;
   private periodEnd = BEACH_PERIOD;
-  private fullTime = 0; // > 0: the full-time beat before the next game
+  private fullTime = 0; // > 0: the full-time beat before the next game (real seconds)
   private gameStart = 0;
+  /** The match clock in REAL seconds (QA audit 4 #7, Oct 26 2026: the beach clock ran at ~0.5x wall time because periods and the
+   *  feed's times were read from stats.time, the SIM clock, which the host steps at liveGameSpeed (beach .48) of real time). Each
+   *  step's sim dt is divided by windupScale (= liveGameSpeed; 0 = no playback speed, sim time is real time). Periods, extra time,
+   *  the full-time beat, the match arc and the feed's m:ss all read this. */
+  clock = 0;
+  /** Seconds into the current game on the match clock (beach: since the last kick-off of period 1; elsewhere the whole clock). */
+  get matchTime() { return this.beach ? Math.max(0, this.clock - this.gameStart) : this.clock; }
   /** Teaching commentary from the sim itself (beach rules, periods): matchEffects announces each new serial. */
   note = { serial: 0, text: "", reason: "" };
   /** Games finished on this court and how the last one ended (read by tests and the live panel). */
@@ -848,21 +855,21 @@ export class MatchSim {
   /** Beach match clock (periods, extra time, penalties, the full-time beat). Returns true when it owned this step. */
   private beachClock(dt: number): boolean {
     if (this.fullTime > 0) {
-      this.fullTime -= dt; this.msgT -= dt;
+      this.fullTime -= this.realDt; this.msgT -= dt;
       this.ball.vx = 0; this.ball.vy = 0; this.ball.height = Math.max(0, this.ball.height - dt * 2);
       this.ball.owner = null; this.ball.target = null; this.ball.intBy = null; this.ballIsShot = false; this.shotIsGoal = false; this.windup = null;
       for (const id of this.ids) { const p = this.players[id]; if (p.kick > 0) p.kick = Math.max(0, p.kick - dt / 0.45); this.targets[id] = { x: p.hx, y: p.team === "gold" ? Math.max(214, p.hy) : Math.min(186, p.hy) }; }
       this.presserId = null; this.chaserIds.clear();
       this.integrate(dt);
       if (this.fullTime <= 0) {
-        this.score.gold = 0; this.score.blue = 0; this.period = 1; this.gameStart = this.stats.time; this.periodEnd = this.stats.time + BEACH_PERIOD;
+        this.score.gold = 0; this.score.blue = 0; this.period = 1; this.gameStart = this.clock; this.periodEnd = this.clock + BEACH_PERIOD;
         this.stageKickoff(this.results.length % 2 ? "blue" : "gold");
         this.teach("New game on Sharks Beach", "Five a side including the keeper, all barefoot on the sand");
       }
       return true;
     }
     // The whistle waits for a goal celebration and for a shot already on its way (the referee lets it finish).
-    if (this.goalHold > 0 || this.stats.time < this.periodEnd || this.shotActive) return false;
+    if (this.goalHold > 0 || this.clock < this.periodEnd || this.shotActive) return false;
     const level = this.score.gold === this.score.blue;
     if (this.period < 3) {
       this.period++; this.periodEnd += BEACH_PERIOD;
@@ -1441,8 +1448,10 @@ export class MatchSim {
     while (dt > 0.034) { this.stepOnce(0.034); dt -= 0.034; }
     if (dt > 0) this.stepOnce(dt);
   }
+  /** This step's real seconds (the match clock's share of the sim dt). */
+  private realDt = 0;
   private stepOnce(dt: number) {
-    this.stats.time += dt;
+    this.stats.time += dt;this.realDt = this.windupScale > 0 ? dt / this.windupScale : dt;this.clock += this.realDt;
     if (this.beach && this.beachClock(dt)) return;
     if (this.windup && (this.restart || this.goalHold > 0)) this.windup = null;
     const combination=this.combination;
@@ -1504,7 +1513,7 @@ export class MatchSim {
     // legsMul only nudges AI top speed a few percent, and tired legs also bias the
     // decision-making toward safer passes (see ballLogic).
     // (beach: the 180 s game — three periods — is stretched over the same 240 s arc)
-    const mt = this.beach ? Math.min(239, (this.stats.time - this.gameStart) * 4 / 3) : this.stats.time % 240;
+    const mt = this.beach ? Math.min(239, (this.clock - this.gameStart) * 4 / 3) : this.stats.time % 240;
     this.fatigue = mt / 240;
     const closeGame = Math.abs(this.score.gold - this.score.blue) <= 1;
     let arc = 1;

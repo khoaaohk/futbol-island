@@ -65,11 +65,12 @@ const DT=1/30,run=(sim,seconds)=>{for(let i=Math.round(seconds/DT);i>0;i--)sim.s
  // …while the same strike from an outfield player counts.
  const s2=new MatchSim(5,'beach');s2.restart=null;s2.goalHold=0;s2.windupScale=0;const st=s2.players.st;Object.assign(st,{x:135,y:60});for(const id of s2.blueIds)Object.assign(s2.players[id],{x:250,y:380,vx:0,vy:0});
  s2.ball.owner='st';s2.possession='gold';s2.launch('st',135,0,320,.3,null);let g=false;for(let t=0;t<90&&!g;t++){s2.step(DT);g=s2.score.gold===1;}assert(g,'an outfield strike scores');}
-{// Periods: three 60 s periods, then full time (or extra time when level), then a new game from 0-0.
- const sim=new MatchSim(11,'beach');run(sim,BEACH_PERIOD+2);assert(sim.period===2,'period 2 after 60 s');run(sim,BEACH_PERIOD);assert(sim.period===3);
- run(sim,BEACH_PERIOD+BEACH_EXTRA+6);assert(sim.results.length===1,'one game finished');const r=sim.results[0];
+{// Periods: three 60 s periods of REAL time (the match clock; the sim steps at windupScale × real time), then full time (or
+ // extra time when level), then a new game from 0-0. `real` converts real seconds to the sim dt the host hands over.
+ const sim=new MatchSim(11,'beach'),real=(s,sec)=>run(s,sec*s.windupScale);real(sim,BEACH_PERIOD+2);assert(sim.period===2,'period 2 after 60 s');real(sim,BEACH_PERIOD);assert(sim.period===3);
+ real(sim,BEACH_PERIOD+BEACH_EXTRA+6);assert(sim.results.length===1,'one game finished');const r=sim.results[0];
  if(r.gold===r.blue)assert(r.extra&&r.pens&&r.pens.gold!==r.pens.blue,'a level game goes to extra time and a shoot-out: always a winner');
- run(sim,4);assert.equal(sim.period,1,'a new game kicks off');
+ real(sim,4);assert.equal(sim.period,1,'a new game kicks off');
  let pens=0,extra=0;for(let i=0;i<5;i++){const s=run(new MatchSim(11+i*17,'beach'),400);for(const x of s.results){if(x.extra)extra++;if(x.pens){pens++;assert(x.pens.gold>=3||x.pens.blue>=3||x.pens.gold+x.pens.blue>=5);}}assert(s.results.length>=2);}
  assert(extra>0,'some games go to extra time');}
 
@@ -78,7 +79,10 @@ const seen=new Set();
 {let goals=0,gold=0,blue=0,switches=0,oneSided=0,margin=0,first=0;const SEEDS=24,MIN=3;
  for(let i=0;i<SEEDS;i++){const sim=new MatchSim(11+i*17,'beach');let prev=sim.possession,n=0;
   for(let t=0;t<MIN*60/DT;t++){sim.step(DT);if(sim.possession!==prev){switches++;prev=sim.possession;}if(sim.note.serial!==n){n=sim.note.serial;seen.add(sim.note.text.replace(/\d+/g,'#'));}}
-  goals+=sim.score.gold+sim.score.blue;gold+=sim.score.gold;blue+=sim.score.blue;margin+=Math.abs(sim.score.gold-sim.score.blue);if(Math.abs(sim.score.gold-sim.score.blue)>=3)oneSided++;first+=sim.stats.firstTime;}
+  // The window is 3 SIM minutes (the balance was tuned on it); since the match clock counts real seconds (QA audit 4 #7) that
+  // spans ~2 games, so the window's goals are the finished games' plus the live score.
+  const g=sim.results.reduce((a,r)=>a+r.gold,sim.score.gold),bl=sim.results.reduce((a,r)=>a+r.blue,sim.score.blue);
+  goals+=g+bl;gold+=g;blue+=bl;margin+=Math.abs(g-bl);if(Math.abs(g-bl)>=3)oneSided++;first+=sim.stats.firstTime;}
  const gpg=goals/SEEDS,spm=switches/(SEEDS*MIN);
  assert(gpg>=2&&gpg<=4.3,`goals per 3-minute game ${gpg}`);assert(spm>=9&&spm<=17,`possession switches per minute ${spm}`);
  assert(oneSided<=SEEDS*.25,`one-sided games ${oneSided}/${SEEDS}`);assert(margin/SEEDS<=1.8,`mean margin ${margin/SEEDS}`);
