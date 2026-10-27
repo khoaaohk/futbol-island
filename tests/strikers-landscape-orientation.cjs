@@ -20,12 +20,12 @@ release();assert.equal(M.getOrientationMode(),'landscape','a release is idempote
 second();assert.equal(M.getOrientationMode(),'portrait','last release restores portrait-only');assert.equal(html.dataset.orientation,undefined);assert.equal(locks.at(-1),'portrait');assert.equal(calls,2);
 off();M.requestLandscape()();assert.equal(calls,2,'unsubscribed');
 assert.equal(M.wrongOrientationQuery('portrait'),M.PORTRAIT_ONLY_QUERY);assert.equal(M.wrongOrientationQuery('landscape'),M.LANDSCAPE_ONLY_QUERY);
-assert.match(M.LANDSCAPE_ONLY_QUERY,/\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)/,'upright PHONES only: tall tablets still play upright');
+assert.match(M.LANDSCAPE_ONLY_QUERY,/\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)/,'upright PHONES: tall tablets still play upright');assert.match(M.LANDSCAPE_ONLY_QUERY,/\(pointer:fine\) and \(orientation:portrait\) and \(max-width:700px\)/,'narrow tall mouse windows too');
 
 // RotateLock follows the mode: card text, CSS rule per mode, blur on the wrong-orientation query (also right after a mode switch).
 const lock=read('components/RotateLock.tsx'),css=read('components/RotateLock.module.css');
 assert.match(lock,/useSyncExternalStore\(subscribeOrientationMode, getOrientationMode, serverMode\)/);
-assert.match(lock,/data-mode=\{mode\}/);assert.match(lock,/'Turn your phone sideways to play' : 'Turn your phone upright to play'/);
+assert.match(lock,/data-mode=\{mode\}/);assert.match(lock,/Turn your phone sideways to play/);assert.match(lock,/Turn your phone upright to play/);assert.match(lock,/Make this window wider to play/,'a narrow mouse window is told to widen, not to turn');
 assert.match(lock,/if \(switched\.current\) change\(\);/,'leaving Strikers while sideways pauses whatever is behind the portrait card');
 assert.match(css,/\.lock\[data-mode=landscape\] \.phone\{transform:rotate\(0deg\);animation-name:turnSideways\}/,'the inverse animation');
 // Strikers holds landscape only while mounted; nothing else asks for it.
