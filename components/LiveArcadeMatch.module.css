@@ -310,3 +310,8 @@
 @media(prefers-reduced-motion:reduce){.caption{animation:captionFade 1.4s linear both}}
 @keyframes captionFade{0%,80%{opacity:1}100%{opacity:0}}
 @media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.caption{top:86px;font-size:13px}}
+
+/* Tall mouse windows (landscape frame): the keycaps sit in the free space under the frame for the whole match; the one-time strip
+   over the pitch is not needed there. */
+.keysDock{display:none}
+@media(pointer:fine) and (orientation:portrait){.keysDock{display:block;position:fixed;left:0;right:0;top:calc(50dvh + 37.5vw + 18px);padding:0 16px;pointer-events:none}.keysHint{display:none}}
