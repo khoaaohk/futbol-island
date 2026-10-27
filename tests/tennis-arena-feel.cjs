@@ -22,8 +22,10 @@ assert.equal(arenaMod.tennisFanCount(),32);
 assert.equal(arenaMod.tennisFanLift(0,0,1,0,0,1),0,'a calm crowd sits still');
 let peak=0;for(let t=0;t<2;t+=.01)peak=Math.max(peak,arenaMod.tennisFanLift(1,0,t,0,0,1));assert(peak>.2&&peak<=.26,'a cheer bounces fans up to ~a quarter metre');
 const along=[-4,-2,0,2,4].map(z=>arenaMod.tennisFanLift(0,1,1.3,0,z,1));assert(Math.max(...along)>Math.min(...along)+.1,'the wave lifts some seats and not others (it travels)');
-assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:2},level:1}),'you');assert.equal(feelMod.tennisMatchPoint({score:{you:3,rival:6},level:1}),'rival');
-assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:6},level:1}),'both');assert.equal(feelMod.tennisMatchPoint({score:{you:5,rival:5},level:1}),'');
+// Round 3: court 1 is a gentle first to 5; court 2 keeps first to 7.
+assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:2},level:2}),'you');assert.equal(feelMod.tennisMatchPoint({score:{you:3,rival:6},level:2}),'rival');
+assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:6},level:2}),'both');assert.equal(feelMod.tennisMatchPoint({score:{you:5,rival:5},level:2}),'');
+assert.equal(feelMod.tennisMatchPoint({score:{you:4,rival:1},level:1}),'you','court 1: first to 5');
 assert.equal(feelMod.tennisMatchPoint({score:{you:6,rival:0},level:3}),'','the target drill has no match point');
 assert(feelMod.tennisCelebrateLift(.25,false)>.15&&feelMod.tennisCelebrateLift(.6,false)===0,'a point gets one hop');
 assert(feelMod.tennisCelebrateLift(.31,true)>.15&&feelMod.tennisCelebrateLift(.93,true)>.15&&feelMod.tennisCelebrateLift(2,true)===0,'a match win gets bouncy hops that end');
@@ -40,7 +42,7 @@ let meshes=0;phone.scene.traverse(o=>{if(o.isMesh)meshes++;});assert(meshes<=12,
 
 // Point flow: three in a row = ON FIRE + streak cue + confetti; the winner hops, the loser droops.
 const {s,feel,cues,scene}=desk;const pose={};
-function point(winner){s.score[winner]++;s.pointWinner=winner;s.phase=s.score[winner]>=7?'over':'point';s.phaseTime=0;if(s.phase==='over')s.winner=winner;feel.sync(1/30,0);}
+function point(winner){s.score[winner]++;s.pointsPlayed++;s.pointWinner=winner;s.phase=s.score[winner]>=7?'over':'point';s.phaseTime=0;if(s.phase==='over')s.winner=winner;feel.sync(1/30,0);}
 function run(seconds){for(let t=0;t<seconds;t+=1/30){s.phaseTime+=1/30;feel.sync(1/30,0);}}
 point('you');point('you');run(.1);point('you');
 assert(cues.includes('tennis:streak:3'),'three points in a row plays the streak fanfare');
@@ -70,7 +72,7 @@ const ready=setup(false);ready.s.phase='rally';ready.s.ball.last='rival';let max
 assert(maxReady>.015&&maxReady<.04,`ready bounce is small (${maxReady})`);
 const calm=setup(false,true);calm.s.phase='rally';calm.s.ball.last='rival';let calmMax=0;for(let i=0;i<40;i++){calm.s.clock+=1/30;calm.feel.sync(1/30,0);calmMax=Math.max(calmMax,calm.feel.pose(0,{},false));}
 assert.equal(calmMax,0,'reduced motion: no bounce');
-calm.s.score.you=1;calm.s.pointWinner='you';calm.s.phase='point';calm.feel.sync(1/30,0);assert.equal(calm.scene.getObjectByName('tennis-confetti').visible,false,'reduced motion: no confetti');
+calm.s.score.you=1;calm.s.pointsPlayed++;calm.s.pointWinner='you';calm.s.phase='point';calm.feel.sync(1/30,0);assert.equal(calm.scene.getObjectByName('tennis-confetti').visible,false,'reduced motion: no confetti');
 
 // Dispose removes every arena mesh.
 desk.feel.dispose();for(const name of['tennis-court-paint','tennis-floodlights','tennis-pool-you','tennis-confetti','tennis-crowd','tennis-stands'])assert.equal(count(desk.scene,name),0,`${name} removed`);

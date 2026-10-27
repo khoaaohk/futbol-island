@@ -1,6 +1,6 @@
 import * as T from 'three';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
-import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
+import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,TENNIS_RALLY_MILESTONES,tennisPointsToWin,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
 import {MOVE_PHASE,type PlayerMotion} from '@/lib/graphics/player';
 import {createTennisArena} from './tennisArena';
 
@@ -45,8 +45,13 @@ export const TENNIS_STREAK_CALL=3,TENNIS_COMEBACK_GAP=3;
 /** Plant / skid read: a hard stop from at least `from` m/s down to `ratio` of the recent peak speed. */
 export const TENNIS_PLANT={from:4,ratio:.35,decay:4,cool:.7,life:.28};
 /** Match-point call: whoever needs one more point. '' when nobody is on match point (or on the drill). */
-export function tennisMatchPoint(s:Pick<TennisState,'score'|'level'>,win=7):'you'|'rival'|'both'|''{
- if(TENNIS_COURTS[s.level-1]?.style==='drill')return '';const y=s.score.you>=win-1,r=s.score.rival>=win-1;return y&&r?'both':y?'you':r?'rival':'';}
+export function tennisMatchPoint(s:Pick<TennisState,'score'|'level'>&{sets?:{you:number;rival:number}},win=tennisPointsToWin(s.level)):'you'|'rival'|'both'|''{
+ const c=TENNIS_COURTS[s.level-1];if(!c||c.style==='drill')return '';
+ // Best-of-3: only a point that would win the last set is a match point.
+ const sets=c.sets&&s.sets?s.sets:null,yOk=!sets||sets.you>=c.sets-1,rOk=!sets||sets.rival>=c.sets-1;
+ const y=yOk&&s.score.you>=win-1,r=rOk&&s.score.rival>=win-1;return y&&r?'both':y?'you':r?'rival':'';}
+/** Wind arrows for the call-outs and HUD: ◀ / ◀◀ (or ▶), '' when calm. + wind pushes toward +x (screen right). */
+export function tennisWindArrow(wind:number){const a=Math.abs(wind);return a<.2?'':(wind<0?'◀':'▶').repeat(a>1.1?2:1);}
 /** Celebration jump (metres) for the point winner: one hop for a point, three bouncy hops for the match. */
 export function tennisCelebrateLift(age:number,over:boolean){if(over)return age<1.9?Math.abs(Math.sin(age*Math.PI/.62))*.2:0;return age<.5?Math.sin(Math.PI*age/.5)*.18:0;}
 
@@ -78,7 +83,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  // Ball drop-line: a thin vertical stalk joins a high ball to its shadow, so height reads from above.
  const stalk=new T.Mesh(new T.CylinderGeometry(.018,.018,1,6,1,true),new T.MeshBasicMaterial({color:'#fff6c8',transparent:true,opacity:.35,depthWrite:false}));stalk.visible=false;stalk.name='tennis-drop-line';scene.add(stalk);
  const net=scene.getObjectByName('tennis-net'),tape=scene.getObjectByName('tennis-tape');
- let kickSeen=tennis.kickCount,bounceSeen=tennis.bounceEvents,netSeen=tennis.netEvents,pointSeen=tennis.score.you+tennis.score.rival,planSeen=false;
+ let kickSeen=tennis.kickCount,bounceSeen=tennis.bounceEvents,netSeen=tennis.netEvents,pointSeen=tennis.pointsPlayed,planSeen=false,setSeen=tennis.setEvents,windSeen=-1;
  let hitStop=0,realDt=0,wrongSeen=tennis.wrongFooted,netWobble=0,netAge=0,netAmp=0,lastRallyCall=0;
  let holdSeen=tennis.pressCount,nudges=0,nudgeSeen=0,nudgeLevel=tennis.level,outSeen=tennis.outEvents,trapSeen=tennis.trapEvents,targetSeen=tennis.targetEvents,goldSeen=false,fakeSeen=false,fakeAge=1,tempoSeen=0,introLevel=0,surfaceLevel=0;
  // Pooled move poses (no per-frame allocation): bicycle, shark (airborne scissor), rival sole-roll fake, flick-up serve wind-up.
@@ -98,12 +103,18 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  space.rotation.x=-Math.PI/2;space.position.set(0,.045,-5.2);space.name='tennis-open-space';space.visible=false;space.renderOrder=3;scene.add(space);let spaceAge=0,tireSeen=false,spaceSide=0;
  const halves:T.Mesh[]=[];scene.traverse(o=>{if(o.name==='tennis-court-half'&&(o as T.Mesh).isMesh)halves.push(o as T.Mesh);});
  const hardMats=halves.map(h=>h.material);const sandMat=new T.MeshStandardMaterial({color:'#c99448',roughness:1,emissive:'#4a2e0c',emissiveIntensity:.35});
- function surface(){if(surfaceLevel===tennis.level)return;surfaceLevel=tennis.level;const sand=TENNIS_COURTS[tennis.level-1].surface==='sand';halves.forEach((h,i)=>{h.material=sand?sandMat:hardMats[i];});}
+ // Round 3 surfaces: shared materials swapped onto the two court halves (no new draws). Clay = terracotta, neon = a
+ // glowing purple bounce floor, grass = striped-looking two-tone green (one shade per half).
+ const surfMats:Record<string,T.Material[]>={sand:[sandMat,sandMat],
+  clay:[new T.MeshStandardMaterial({color:'#c56a3e',roughness:.95,emissive:'#4a1a08',emissiveIntensity:.3}),new T.MeshStandardMaterial({color:'#bb6238',roughness:.95,emissive:'#4a1a08',emissiveIntensity:.3})],
+  neon:[new T.MeshStandardMaterial({color:'#3a2b84',roughness:.35,metalness:.2,emissive:'#6a32ff',emissiveIntensity:.42}),new T.MeshStandardMaterial({color:'#33287a',roughness:.35,metalness:.2,emissive:'#ff3fb4',emissiveIntensity:.28})],
+  grass:[new T.MeshStandardMaterial({color:'#3f9a4c',roughness:.9,emissive:'#0d3315',emissiveIntensity:.25}),new T.MeshStandardMaterial({color:'#37894a',roughness:.9,emissive:'#0d3315',emissiveIntensity:.25})]};
+ function surface(){if(surfaceLevel===tennis.level)return;surfaceLevel=tennis.level;const set=surfMats[TENNIS_COURTS[tennis.level-1].surface];halves.forEach((h,i)=>{h.material=set?set[i]:hardMats[i];});}
  const hop=new Float32Array(2),hopAge=new Float32Array([1,1]);
  const arena=createTennisArena(stage,tennis);
  // Plant / skid reads and celebrations (pooled scalars, no allocation).
  const plantAge=new Float32Array([1,1]),peakSpeed=new Float32Array(2),plantCool=new Float32Array(2);let cheerAge=9,youRun=0,rivalRun=0,matchSeen=-1;
- function reset(){kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.score.you+tennis.score.rival;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
+ function reset(){kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
   trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;surface();nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
   for(const l of[touch,intent,banner]){l.mesh.visible=false;l.life=0;}arena.reset();plantAge.fill(1);peakSpeed.fill(0);plantCool.fill(0);cheerAge=9;youRun=rivalRun=0;matchSeen=-1;stalk.visible=false;spot.visible=false;spotKick=-1;space.visible=false;spaceAge=0;spaceSide=0;tireSeen=false;outSeen=tennis.outEvents;if(net)net.position.z=0;if(tape)tape.position.z=0;}
  /** Scales the simulation step: returns 0 while a hit-stop holds the contact frame. */
@@ -129,7 +140,9 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    emit(`tennis:kick:${side}:${grade||'serve'}:${s.lastShot}:${s.rally}:${kicker.kickPower.toFixed(2)}:${side==='you'?s.perfectStreak:0}:${s.touchVolley?1:0}`);
    // Rally milestones and tempo steps share one banner: when both land on the same touch, say both.
    const tempoNow=tennisTempo(s);if(s.rally<lastRallyCall)lastRallyCall=0; // a new point: milestones count again
-   if(s.rally>=5&&s.rally%5===0&&s.rally!==lastRallyCall){lastRallyCall=s.rally;draw(banner,`${s.rally}-TOUCH RALLY!`,'#ffe084',tempoNow>tempoSeen?'Tempo up · the ball is faster':'Keep moving into position');show(banner,0,2.3,-1.5,1.1,.25);if(tempoNow>tempoSeen){tempoSeen=tempoNow;emit(`tennis:tempo:${tempoNow}`);}}
+   if(s.rally>=5&&s.rally%5===0&&s.rally!==lastRallyCall){lastRallyCall=s.rally;const reward=s.rallyMilestone===s.rally&&TENNIS_COURTS[s.level-1].style!=='drill';
+    draw(banner,`RALLY ${s.rally}!`,s.rally>=15?'#ffc93c':'#ffe084',reward?(s.goldReady?'+1 gold · GOLDEN TOUCH READY':`+1 gold · ${tempoNow>tempoSeen?'tempo up!':'keep it going!'}`):tempoNow>tempoSeen?'Tempo up · the ball is faster':'Keep moving into position');show(banner,0,2.3,-1.5,1.1,.25);
+    if(reward){arena.roar(s.rally);emit(`tennis:streak:${Math.min(9,Math.floor(s.rally/5)+2)}`);}if(tempoNow>tempoSeen){tempoSeen=tempoNow;emit(`tennis:tempo:${tempoNow}`);}}
    // Long rally on an early court: the rival tires and is slow to recover. Say where that leaves space.
    if(s.rally<=1)tireSeen=false;else if(!tireSeen&&side==='you'&&tennisRivalTire(s)>0){tireSeen=true;draw(banner,'RIVAL IS TIRING!','#ff9fc8','Aim into the open space');show(banner,0,2.3,-1.5,1.4,.25);emit('tennis:tire');}
   }
@@ -157,13 +170,18 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(introLevel!==s.level&&s.phase==='rally'&&s.rally===1){introLevel=s.level;const c=TENNIS_COURTS[s.level-1],best=readTennisStars()[s.level-1]??0;draw(intent,c.rival,'#ffc0e8');show(intent,s.rival.x,3.1,s.rival.y,1.6,.15,1.35);if(c.style==='drill'){draw(banner,'YELLOW RING ON GOLD','#ffc93c','Drop = short · Kick = middle · Lob = deep');show(banner,0,2.3,1.6,2,.2);/* on your side: the rings it names stay visible */}
    else if(best){draw(banner,`BEST ${starText(best)}`,'#ffe084',`3rd star: ${c.star3}`);show(banner,0,2.3,-1.5,1.4,.2);}}
   // Match point: said once per point on its first touch (never during the idle serve, so the serve can sleep).
-  {const mp=s.phase==='rally'&&s.rally===1?tennisMatchPoint(s):'',total=s.score.you+s.score.rival;
+  {const mp=s.phase==='rally'&&s.rally===1?tennisMatchPoint(s):'',total=s.pointsPlayed;
    if(mp&&matchSeen!==total&&introLevel===s.level){matchSeen=total;draw(banner,'MATCH POINT!',mp==='rival'?'#ff9fc8':'#ffe084',mp==='you'?'One more point wins the court!':mp==='rival'?'Stay calm · one ball at a time':'Next point wins it all!');show(banner,0,2.3,-1.5,1.5,.2);emit(`tennis:matchpoint:${mp}`);}}
+  // Windy courts: name the wind on each point's first touch (a call-out over your side, never during the idle serve).
+  if(s.wind&&s.phase==='rally'&&s.rally===1&&windSeen!==s.pointsPlayed&&introLevel===s.level){windSeen=s.pointsPlayed;const arrow=tennisWindArrow(s.wind);if(arrow){draw(intent,`WIND ${arrow}`,'#bfe9ff',`Aim a little ${s.wind<0?'right ▶':'◀ left'}`);show(intent,s.you.x,3.3,s.you.y,1.3,.15,1.2);}}
   if(s.netEvents!==netSeen){netSeen=s.netEvents;netAge=0;netAmp=Math.min(.09,.03+s.netPace*.006);netWobble=.6;emit(`tennis:net:${s.netKind}`);}
   // The rival commits before contact; on the first two courts we say it out loud.
   if(s.rivalPlan&&!planSeen&&s.phase==='rally'){planSeen=true;if(s.level<=2&&s.rally>1){draw(intent,tennisIntentLabel(s.rivalPlan,s.rivalPlanX),'#ffc0e8');show(intent,s.rival.x,3.1,s.rival.y,1.4,.15,1.35);if(touch.mesh.visible&&s.lastKicker==='rival')touch.mesh.visible=false;}}
-  const points=s.score.you+s.score.rival;
+  const points=s.pointsPlayed;
   if(points!==pointSeen){pointSeen=points;const you=s.pointWinner==='you',over=s.phase==='over';
+   // Best-of-3: a set won is its own moment (the score has just reset to 0 : 0).
+   if(s.setEvents!==setSeen&&!over){setSeen=s.setEvents;const mine=s.setWinner==='you';cheerAge=0;arena.cheer(mine?'you':'rival',mine);if(mine){youRun++;rivalRun=0;}else{rivalRun++;youRun=0;}
+    draw(banner,mine?'SET TO YOU!':'SET TO RIVAL',mine?'#ffc93c':'#ff9fc8',`Sets ${s.sets.you} : ${s.sets.rival} · ${mine?'one more set wins the cup':'win the next set to level it'}`);show(banner,0,2.3,-1.5,2,.2);emit(`tennis:${mine?'streak:3':'comeback'}`);emit(`tennis:point:${s.pointWinner}:${s.rally}:${s.pointKind}`);return;}
    const sub=s.pointKind==='space'?(you?'Into the open space':'It found the open space'):s.pointKind==='letgo'?(you?'The rival let it go':'Never let it go'):s.pointKind==='net'?(you?'The rival hit the net':'Lift it over the net'):s.pointKind==='out'?(you?(s.incomingOut?'Good leave: you judged it out':'The rival hit it out'):'Aim inside the lines'):'Get it over the net';
    const drill=TENNIS_COURTS[s.level-1].style==='drill',best=over?saveTennisStars(s.level,s.stars):0;
    if(s.pointWinner&&(!drill||over)){cheerAge=0;arena.cheer(s.pointWinner,over&&(!drill||s.winner==='you'));}
@@ -171,7 +189,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    // Streaks and comebacks: three in a row is ON FIRE; three behind gets a warm "you can come back".
    if(you){youRun++;rivalRun=0;}else{rivalRun++;youRun=0;}
    const fire=you&&!over&&youRun>=TENNIS_STREAK_CALL,gap=s.score.rival-s.score.you,comeback=!you&&!over&&(gap===TENNIS_COMEBACK_GAP||gap===TENNIS_COMEBACK_GAP+2);
-   draw(banner,over?(drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:'GOOD GAME!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(drill?`${s.drillHits} targets · best ${starText(best)}`:`${s.score.you} : ${s.score.rival} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,2.3,-1.5,over?2.2:1.35,.2);
+   draw(banner,over?(drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:'GOOD GAME!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(drill?`${s.drillHits} targets · best ${starText(best)}`:`${TENNIS_COURTS[s.level-1].sets?`Sets ${s.sets.you} : ${s.sets.rival}`:`${s.score.you} : ${s.score.rival}`} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,2.3,-1.5,over?2.2:1.35,.2);
    if(fire)emit(`tennis:streak:${youRun}`);else if(comeback)emit('tennis:comeback');
    emit(`tennis:${over?'match':'point'}:${s.pointWinner}:${s.rally}:${s.pointKind}`);touch.life=Math.min(touch.life,touch.age+.15);intent.life=0;intent.mesh.visible=false;
   }
@@ -235,6 +253,8 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   return Math.max(jump,hop[i],ready);
  }
  function active(){return arena.active()||plantAge[0]<1||plantAge[1]<1||cheerAge<2.6&&(tennis.phase==='point'||tennis.phase==='over')||fakeAge<1||hitStop>0||netWobble>0||touch.mesh.visible||intent.mesh.visible||banner.mesh.visible||hopAge[0]<1||hopAge[1]<1;}
- function dispose(){arena.dispose();sandMat.dispose();target.geometry.dispose();target.material.dispose();target.removeFromParent();halves.forEach((h,i)=>{h.material=hardMats[i];});for(const l of[touch,intent,banner]){l.tex.dispose();l.mesh.geometry.dispose();l.mesh.material.dispose();l.mesh.removeFromParent();}stalk.geometry.dispose();stalk.material.dispose();stalk.removeFromParent();spot.geometry.dispose();spot.material.dispose();spot.removeFromParent();space.geometry.dispose();space.material.dispose();space.removeFromParent();}
- return{scale,sync,pose,reset,active,dispose,heat:()=>tennisRallyHeat(tennis),spaceSide:()=>spaceSide};
+ function dispose(){arena.dispose();for(const k of['clay','neon','grass'])for(const m of surfMats[k])m.dispose();sandMat.dispose();target.geometry.dispose();target.material.dispose();target.removeFromParent();halves.forEach((h,i)=>{h.material=hardMats[i];});for(const l of[touch,intent,banner]){l.tex.dispose();l.mesh.geometry.dispose();l.mesh.material.dispose();l.mesh.removeFromParent();}stalk.geometry.dispose();stalk.material.dispose();stalk.removeFromParent();spot.geometry.dispose();spot.material.dispose();spot.removeFromParent();space.geometry.dispose();space.material.dispose();space.removeFromParent();}
+ return{scale,sync,pose,reset,active,dispose,
+  /** Reduced-motion stand-in for a cinematic beat: your light pool flares (no camera move, no slow-mo). */
+  flare(level:number){if(level>.9)arena.flash(0);},heat:()=>tennisRallyHeat(tennis),spaceSide:()=>spaceSide};
 }

@@ -18,6 +18,8 @@ export function tennisFanLift(cheer:number,wave:number,time:number,phase:number,
  const crest=wave>0?Math.max(0,Math.sin(time*3.2-z*.75*side-(side<0?2.6:0))):0;
  return Math.max(bounce,wave*crest*crest*.3);
 }
+/** Floodlight warm-up (extra pool opacity) for a rally of `rally` touches: 0 below 4, up to 0.2 at 20+. */
+export const tennisRallyGlow=(rally:number)=>Math.max(0,Math.min(.2,(rally-3)*.0118));
 const hash=(i:number)=>((Math.imul(i+11,2654435761)>>>0)%1000)/1000;
 
 export function createTennisArena(stage:Stage,tennis:TennisState){
@@ -39,7 +41,7 @@ export function createTennisArena(stage:Stage,tennis:TennisState){
  for(const [cx,cz] of [[-4.6,-7.4],[4.6,-7.4],[-4.6,7.4],[4.6,7.4]])for(let k=0;k<(fi?.count??0);k++){const v=fi!.getX(k);floodPos.push(cx+fp.getX(v)*5.2,0,cz-fp.getY(v)*5.2);floodUv.push(fu.getX(v),fu.getY(v));}
  flood.dispose();
  const floodGeo=new T.BufferGeometry();floodGeo.setAttribute('position',new T.Float32BufferAttribute(floodPos,3));floodGeo.setAttribute('uv',new T.Float32BufferAttribute(floodUv,2));
- const floodlights=add(new T.Mesh(floodGeo,glowMat('#ffd9a0',.16)));floodlights.position.y=.036;floodlights.name='tennis-floodlights';floodlights.renderOrder=1;
+ const floodMat=glowMat('#ffd9a0',.16),floodlights=add(new T.Mesh(floodGeo,floodMat));let glowLevel=0,roarFlash=0,floodOpacity=.16;floodlights.position.y=.036;floodlights.name='tennis-floodlights';floodlights.renderOrder=1;
  // Player pools: a soft yellow light under you, pink under the rival, so both read from straight above.
  const poolGeo=new T.PlaneGeometry(2.3,2.3);poolGeo.rotateX(-Math.PI/2);
  const pools=[add(new T.Mesh(poolGeo,glowMat('#ffe084',.38))),add(new T.Mesh(poolGeo,glowMat('#ff83d3',.34)))];
@@ -98,11 +100,14 @@ export function createTennisArena(stage:Stage,tennis:TennisState){
  /** Per-frame (only while the game loop runs): pools follow the players, confetti flies, the crowd watches. */
  function sync(dt:number){time+=dt;
   for(let i=0;i<2;i++){const p=i?tennis.rival:tennis.you,pool=pools[i];pool.position.x=p.x;pool.position.z=p.y;
-   if(flash[i]>0)flash[i]=Math.max(0,flash[i]-dt);(pool.material as T.MeshBasicMaterial).opacity=poolBase[i]+(reduced?0:flash[i]*1.6);}
+   if(flash[i]>0)flash[i]=Math.max(0,flash[i]-dt);(pool.material as T.MeshBasicMaterial).opacity=poolBase[i]+flash[i]*(reduced?.6:1.6);}
   stepConfetti(dt);
   if(cheer>0)cheer=Math.max(0,cheer-dt/TENNIS_ARENA.cheer);
   const waving=!reduced&&tennis.phase==='rally'&&tennis.rally>=TENNIS_ARENA.wave;wave=Math.max(0,Math.min(1,wave+(waving?dt:-dt)*1.5));
   if(fans){crowdAcc+=dt;if(crowdAcc>=1/TENNIS_ARENA.crowdHz||crowdDirty){crowdAcc=0;placeCrowd();}}
+  // Round 3: the floodlights warm up as a rally grows (and flare on a milestone roar), then settle between points.
+  const want=tennis.phase==='rally'?tennisRallyGlow(tennis.rally):0;glowLevel+=(want-glowLevel)*Math.min(1,dt*2.5);if(roarFlash>0)roarFlash=Math.max(0,roarFlash-dt);
+  const fo=.16+(reduced?glowLevel*.5:glowLevel+roarFlash*.35);if(Math.abs(fo-floodOpacity)>.004){floodOpacity=fo;floodMat.opacity=fo;}
  }
  return{
   sync,
@@ -113,8 +118,10 @@ export function createTennisArena(stage:Stage,tennis:TennisState){
    if(winner==='you'){const p=tennis.you;if(over)for(let k=0;k<4;k++)burstConfetti((k-1.5)*2.6,2.5+(k%2)*2.5,10,2.4,6.5);else burstConfetti(p.x,p.y,14,1.6);}},
   /** A hard plant or change of direction: a small dust puff at the feet. */
   plant(x:number,z:number){stage.burst?.(x,.06,z,.25);},
-  active(){return cAlive>0||cheer>0||wave>0||flash[0]>0||flash[1]>0;},
-  reset(){cheer=0;wave=0;flash.fill(0);cLife.fill(0);cAlive=0;confetti.visible=false;crowdDirty=true;placeCrowd();},
+  /** Rally milestone: the crowd roars (louder for longer rallies), the lights flare, a few streamers fly on 10+. */
+  roar(rally:number){cheer=Math.min(1,.45+rally/30);cheerKind='you';crowdDirty=true;roarFlash=reduced?0:.6;if(rally>=10)burstConfetti(0,0,Math.min(16,6+rally/2),2.2,5);},
+  active(){return cAlive>0||cheer>0||wave>0||flash[0]>0||flash[1]>0||roarFlash>0||Math.abs(glowLevel-(tennis.phase==='rally'?tennisRallyGlow(tennis.rally):0))>.01;},
+  reset(){cheer=0;wave=0;roarFlash=0;glowLevel=0;floodOpacity=.16;floodMat.opacity=.16;flash.fill(0);cLife.fill(0);cAlive=0;confetti.visible=false;crowdDirty=true;placeCrowd();},
   dispose(){for(const o of owned){o.removeFromParent();const m=o as T.Mesh;m.geometry?.dispose();const mat=m.material as T.Material|undefined;mat?.dispose();}glow.dispose();owned.length=0;},
  };
 }

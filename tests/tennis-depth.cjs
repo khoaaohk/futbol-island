@@ -6,9 +6,9 @@ const t=load('lib/games/soccerTennis.ts');
 const advance=(s,seconds,hz=120)=>{for(let i=0;i<Math.round(seconds*hz);i++)t.tickTennis(s,1/hz);};
 function rally(level,ball,you={},extra={}){const s=t.createTennis(47,level);s.phase='rally';s.rally=3;s.aiReaction=99;Object.assign(s,extra);Object.assign(s.you,{x:0,y:5.3,targetX:0,targetY:5.3,vx:0,vy:0},you);Object.assign(s.ball,{vx:0,vy:0,vz:0,wx:0,wy:0,wz:0,last:'rival',crossed:true,bounces:0},ball);return s;}
 
-// 1. The ladder: six stops, each with a surface/rule, a personality and a counter to learn.
-const C=t.TENNIS_COURTS;assert.equal(C.length,6);
-assert.equal(C.map(c=>c.style).join(),'steady,baseliner,drill,rusher,trickster,champion');
+// 1. The ladder: six stops, each with a surface/rule, a personality and a counter to learn, then three HARD courts (round 3).
+const C=t.TENNIS_COURTS;assert.equal(C.length,9);
+assert.equal(C.map(c=>c.style).join(),'steady,baseliner,drill,rusher,trickster,champion,champion,champion,champion');
 assert.equal(C[0].aerial,false,'court 1 keeps the controls simple');assert(C.slice(1).every(c=>c.aerial));
 assert.equal(C[1].surface,'sand');assert(C.some(c=>c.touches===2));
 for(let i=1;i<C.length;i++)assert(C[i].tier>=C[i-1].tier,'difficulty never steps back');
