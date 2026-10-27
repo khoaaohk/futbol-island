@@ -50,7 +50,7 @@ const dsmooth = (u: number) => 6 * u * (1 - u);
 const L = ROUTE_SEGMENT;
 export const routeSegmentAt = (s: number) => Math.floor((s + L / 2) / L);
 /** Stage index (0..7) of a segment, from its centre distance. */
-const stageOf = (i: number) => Math.min(ROUTE_TURN.length - 1, Math.floor(Math.max(0, i * L) / 360));
+const stageOf = (i: number) => Math.min(ROUTE_TURN.length - 1, Math.floor(Math.max(0, i * L) / 360) + profile.stage);
 /** Goals appear at 90 + 180k m and stand 60 m ahead: their segments stay gentle so finishing reads cleanly. */
 const goalSegment = (i: number) => i >= 3 && (i - 3) % 3 === 0;
 const gentle = (i: number) => (i <= 0 ? 0 : i === 1 ? .45 : goalSegment(i) ? .35 : 1);
@@ -88,9 +88,9 @@ function finishSegment(i: number) {
  * a final hill to the goal line, and each route has its own sequence of terrain zones. The default
  * profile is the classic endless route, so every existing rule and test is unchanged.
  * ---------------------------------------------------------------------------------------- */
-export type RouteProfile = { rise: number; turn: number; finish: number; salt: number; terrains: readonly TerrainId[] };
+export type RouteProfile = { rise: number; turn: number; finish: number; salt: number; stage: number; terrains: readonly TerrainId[] };
 export const DEFAULT_TERRAINS: readonly TerrainId[] = ['grass', 'cobbles', 'neon', 'sand', 'bridge', 'rooftop'];
-const DEFAULT_PROFILE: RouteProfile = { rise: 1, turn: 1, finish: 0, salt: 0, terrains: DEFAULT_TERRAINS };
+const DEFAULT_PROFILE: RouteProfile = { rise: 1, turn: 1, finish: 0, salt: 0, stage: 0, terrains: DEFAULT_TERRAINS };
 let profile: RouteProfile = DEFAULT_PROFILE;
 /** Select the route profile (called when a run starts). Clears the segment memo and height cache. */
 export function setRouteProfile(p: Partial<RouteProfile> = {}) {

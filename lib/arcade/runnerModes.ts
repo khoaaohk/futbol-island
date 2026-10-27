@@ -46,7 +46,7 @@ let selected:RunnerModeId='classic';
 export function selectRunnerMode(id:RunnerModeId){selected=id in RUNNER_MODES?id:'classic';applyRunnerRoute(selected);}
 export const selectedRunnerMode=()=>RUNNER_MODES[selected];
 /** Route shape for a mode (hills, bends, finish, terrain zones). */
-export function applyRunnerRoute(id:RunnerModeId){const m=RUNNER_MODES[id];setRouteProfile({rise:m.rise,turn:m.turn,finish:m.finish,salt:SALT[id],terrains:m.terrains});}
+export function applyRunnerRoute(id:RunnerModeId){const m=RUNNER_MODES[id];setRouteProfile({rise:m.rise,turn:m.turn,finish:m.finish,salt:SALT[id],stage:m.startLevel-1,terrains:m.terrains});}
 
 /* ---- stars and unlocks: their own key, written only when a run ends ---- */
 export type RunnerRouteSave={v:1;mode:RunnerModeId;stars:Record<RunnerModeId,number>;played:number};

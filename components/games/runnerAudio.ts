@@ -53,6 +53,13 @@ type SoundtrackState = {
   coachCount?: number; coachScale?: number;
   /** Body rhythm (Oct 25 2026): stride phase (radians), height, slide, balls held and combo tier drops. */
   stride?: number; y?: number; slide?: number; balls?: number; comboDrops?: number;
+  /** Round 3 (Oct 26 2026): terrain under the boots, finished route, won route, thunder claps, hearts back. */
+  terrain?: string; finished?: boolean; won?: boolean; thunder?: number; heartsBack?: number;
+};
+/** Footstep colour per terrain: [thud Hz, crunch filter Hz, crunch level, extra click]. */
+const STEP_SOUND: Record<string, readonly [number, number, number, number]> = {
+  grass: [88, 1300, 0.018, 0], sand: [70, 900, 0.03, 0], cobbles: [110, 2600, 0.016, 1], snow: [80, 2200, 0.028, 0],
+  mud: [62, 500, 0.035, 0], neon: [120, 3400, 0.012, 1], rooftop: [105, 2400, 0.014, 1], bridge: [96, 1700, 0.02, 1],
 };
 const BASS = [65.41, 49, 55, 43.65]; // C G A F (I V vi IV), kid-bright and loopable
 const CHORDS = [[261.63, 329.63, 392], [246.94, 293.66, 392], [261.63, 329.63, 440], [261.63, 349.23, 440]];
@@ -73,7 +80,7 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
   let ctx: AudioContext | null = null, sfx: GainNode | null = null, music: GainNode | null = null, noise: AudioBuffer | null = null;
   let voices = 0, nextStep = 0, step = 0, prefClock = 99, soundOn = true, sfxVolume = 0.5, musicOn = true, musicVolume = 0.04;
   let hype = 0, seen: SoundtrackState | null = null;
-  const last = { foot: 0, drops: 0, jumps: 0, slides: 0, landings: 0, cuts: 0, nearMisses: 0, event: 0, collected: 0, level: 1, multiplier: 1, coach: 0 };
+  const last = { foot: 0, drops: 0, jumps: 0, slides: 0, landings: 0, cuts: 0, nearMisses: 0, event: 0, collected: 0, level: 1, multiplier: 1, coach: 0, thunder: 0, hearts: 0 };
   let seed = 90127;
   const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const jitter = (amount: number) => 1 + (rand() * 2 - 1) * amount;
@@ -188,10 +195,11 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
     // other step while dribbling. Silent in the air, while sliding and after full time. About three steps a second.
     if (s.stride !== undefined) {
       const foot = Math.floor(s.stride / Math.PI);
-      if (foot !== last.foot && s.lives > 0 && (s.y ?? 0) < 0.05 && (s.slide ?? 0) < 0.1) {
-        const side = foot % 2 ? 0.18 : -0.18;
-        tone(sfx, now, 88 * jitter(0.1), s.boost > 0 ? 0.06 : 0.045, 0.06, "sine", 52, side);
-        hiss(sfx, now, 0.05, 0.018 * jitter(0.3), "lowpass", 1300, 500, 0.6, 0.003, side);
+      if (foot !== last.foot && s.lives > 0 && !s.finished && (s.y ?? 0) < 0.05 && (s.slide ?? 0) < 0.1) {
+        const side = foot % 2 ? 0.18 : -0.18, step = STEP_SOUND[s.terrain ?? "grass"] ?? STEP_SOUND.grass;
+        tone(sfx, now, step[0] * jitter(0.1), s.boost > 0 ? 0.06 : 0.045, 0.06, "sine", step[0] * 0.6, side);
+        hiss(sfx, now, 0.05, step[2] * jitter(0.3), "lowpass", step[1], step[1] * 0.4, 0.6, 0.003, side);
+        if (step[3] && foot % 2) tone(sfx, now + 0.005, 1800 * jitter(0.1), 0.012, 0.02, "square", 1200, side);
         if (foot % 2 === 0 && (s.balls ?? 1) > 0 && !s.charging) tone(sfx, now + 0.015, 330 * jitter(0.05), 0.022, 0.04, "triangle", 250, side * 0.5);
       }
       last.foot = foot;
@@ -201,6 +209,10 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
     if (multiplier > last.multiplier) PENTA.slice(1, 4).forEach((hz, i) => tone(sfx!, now + i * 0.06, hz * multiplier / 2, 0.045, 0.18, "triangle"));
     // New stage: the crowd lifts.
     if (s.level > last.level) roar(now, 0.08, 1.4);
+    // Storm: a low rolling thunder (noise through a low-pass), never loud.
+    if ((s.thunder ?? 0) > last.thunder) { hiss(sfx, now, 1.6, 0.07, "lowpass", 260, 80, 0.5, 0.08); tone(sfx, now, 48, 0.06, 1.2, "sine", 36); }
+    // A heart back: a warm two-note lift.
+    if ((s.heartsBack ?? 0) > last.hearts) { tone(sfx, now + 0.3, 659, 0.05, 0.12, "sine"); tone(sfx, now + 0.42, 988, 0.05, 0.25, "sine"); }
     if (s.event !== last.event) {
       const kind = s.eventKind;
       if (kind === "shot") { const blast = s.lastBlast >= 0.8; tone(sfx, now, (blast ? 120 : 175) * jitter(0.08), blast ? 0.2 : 0.12, blast ? 0.28 : 0.12, "sine", blast ? 38 : 70); hiss(sfx, now, 0.05, 0.09, "highpass", 2500); if (blast) whoosh(now + 0.02, 0.09, 0.4, 0, 1600); }
@@ -210,6 +222,8 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
         // Net swish, then a short bright fanfare on the music bus (silent when music is off).
         hiss(sfx, now + 0.02, 0.32, 0.08, "highpass", 5200, 2400, 0.7, 0.01);
         if (music) [523.25, 659.25, 783.99, 1046.5].forEach((hz, i) => tone(music!, now + 0.08 + i * 0.09, hz, i === 3 ? 0.11 : 0.08, i === 3 ? 0.5 : 0.14, "triangle"));
+        // Route won at the goal line: the whistle, then a longer victory phrase on the effects bus (heard even with music off).
+        if (s.won) { whistle(now + 1.2); [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((hz, i) => tone(sfx!, now + 0.7 + i * 0.13, hz, 0.06, i === 4 ? 0.8 : 0.18, "triangle")); }
       }
       else if (kind === "save") { tone(sfx, now, 170 * jitter(0.06), 0.13, 0.1, "sine", 70); hiss(sfx, now, 0.07, 0.07, "lowpass", 700, 300); hiss(sfx, now + 0.05, 0.9, 0.08, "bandpass", 900, 380, 1.2, 0.12); } // glove thump + // crowd "ooh"
       else if (kind === "block") tone(sfx, now, 140 * jitter(0.06), 0.12, 0.12, "triangle", 80);
@@ -237,9 +251,13 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       // Cut inside a bend: a short whoosh panned to the inside plus a bright two-note lift.
       else if (kind === "inside") { whoosh(now, 0.06, 0.35, s.lane < 0 ? -0.6 : 0.6, 2200); tone(sfx, now + 0.04, 587, 0.05, 0.1, "triangle", 880); }
       else if (kind === "best") { roar(now, 0.1, 1.4); PENTA.slice(2, 6).forEach((hz, i) => tone(sfx!, now + i * 0.07, hz, 0.05, 0.2, "triangle")); }
+      else if (kind === "terrain") { whoosh(now, 0.05, 0.45, 0, 1500); tone(sfx, now + 0.05, 440, 0.035, 0.18, "triangle", 660); }
+      else if (kind === "finalhill") { roar(now, 0.1, 1.6); [392, 523.25, 659.25].forEach((hz, i) => tone(sfx!, now + i * 0.12, hz, 0.05, 0.2, "triangle")); }
+      else if (kind === "combo") { tone(sfx, now, 330, 0.05, 0.1, "square", 330); tone(sfx, now + 0.12, 494, 0.05, 0.14, "square", 494); }
+      else if (kind === "power") { whoosh(now, 0.08, 0.5, 0, 3000); PENTA.slice(0, 4).forEach((hz, i) => tone(sfx!, now + i * 0.05, hz, 0.045, 0.15, "triangle")); }
       else if (kind === "mission") { tone(sfx, now, 784, 0.06, 0.12, "sine", 784); tone(sfx, now + 0.1, 988, 0.06, 0.12, "sine", 988); tone(sfx, now + 0.2, 1319, 0.07, 0.3, "sine", 1319); }
     }
-    last.drops = s.comboDrops ?? 0; last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.event = s.event; last.coach = s.coachCount ?? 0;
+    last.drops = s.comboDrops ?? 0; last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.event = s.event; last.thunder = s.thunder ?? 0; last.hearts = s.heartsBack ?? 0; last.coach = s.coachCount ?? 0;
   }
 
   return {
@@ -247,14 +265,14 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
     frame(dt: number, s: SoundtrackState) {
       refreshPrefs(dt);
       const context = ensure();
-      if (seen !== s) { seen = s; Object.assign(last, { foot: Math.floor((s.stride ?? 0) / Math.PI), drops: s.comboDrops ?? 0, coach: s.coachCount ?? 0, jumps: s.jumps, slides: s.slides, landings: s.landings, cuts: s.cuts, nearMisses: s.nearMisses, event: s.event, collected: s.collected, level: s.level, multiplier: Math.min(3, 1 + Math.floor(s.combo / 6)) }); }
+      if (seen !== s) { seen = s; Object.assign(last, { foot: Math.floor((s.stride ?? 0) / Math.PI), drops: s.comboDrops ?? 0, coach: s.coachCount ?? 0, jumps: s.jumps, slides: s.slides, landings: s.landings, cuts: s.cuts, nearMisses: s.nearMisses, event: s.event, collected: s.collected, level: s.level, multiplier: Math.min(3, 1 + Math.floor(s.combo / 6)), thunder: s.thunder ?? 0, hearts: s.heartsBack ?? 0 }); }
       if (!context || !soundOn) { nextStep = 0; return; }
       const now = context.currentTime;
       // Crowd anticipation builds through a goal approach and settles after.
       const approach = s.objects.some(o => o.kind === "goal" && !o.passed && o.z > -60 && o.z < -6) ? 0.55 : 0;
       hype += ((Math.max(approach, s.boost > 0 ? 0.35 : 0)) - hype) * (1 - Math.exp(-dt * (hype > approach ? 0.9 : 2)));
       events(s, now);
-      if (s.lives <= 0 || !musicOn || musicVolume <= 0) { nextStep = 0; return; }
+      if (s.lives <= 0 || s.finished || !musicOn || musicVolume <= 0) { nextStep = 0; return; }
       // Tempo follows running pace: ~100 BPM at kick-off, ~128 at top speed.
       const drive = Math.min(1, Math.max(0, (s.speed - 13) / 5)), bpm = (100 + drive * 28) * (0.55 + 0.45 * (s.coachScale ?? 1)), sixteenth = 60 / bpm / 4;
       if (nextStep < now) { nextStep = now + 0.05; }
