@@ -303,3 +303,10 @@
 .goals li[data-mod]{border-color:#ff83d3;color:#ffe5f6}.goals li[data-mod]::before{content:'⚡ ';color:#ff83d3}
 .root .seg>button[data-hard]:not(:disabled){border-color:#ff83d388}
 .root .seg>button[data-hard]::after{content:'HARD';display:block;font-size:8px;font-weight:900;letter-spacing:.1em;color:#ff83d3}
+
+/* Commentator captions (round 3): one short pill under the direction line, pops and fades in 1.4 s (opacity/transform only). */
+.caption{position:absolute;z-index:2;left:50%;top:64px;margin:0;padding:5px 14px;transform:translateX(-50%);border:1px solid #fff08a99;border-radius:999px;background:#151b32e8;color:#fff08a;font:800 15px/1.2 var(--font-body,Arial),sans-serif;letter-spacing:.03em;white-space:nowrap;pointer-events:none;animation:captionPop 1.4s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes captionPop{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.06)}25%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-4px)}}
+@media(prefers-reduced-motion:reduce){.caption{animation:captionFade 1.4s linear both}}
+@keyframes captionFade{0%,80%{opacity:1}100%{opacity:0}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.caption{top:86px;font-size:13px}}

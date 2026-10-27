@@ -40,4 +40,11 @@ const live=read('components/LiveArcadeMatch.tsx');
 assert.match(live,/const roundOpts=\(level:number\)=>\(\{mods:STRIKER_ROUND_MODS\[level-1\]\?\?\{\},gentle:level===1&&\(readStrikerStars\(\)\[0\]\?\?0\)===0\}\)/);
 assert.match(live,/data-hard=\{i>=4\|\|undefined\}/);assert.doesNotMatch(live,/Math\.min\(4,/,'no hard-coded 4-round caps left');
 assert.equal((live.match(/ROUND_TIPS=\[([^\]]*)\]/)[1].match(/','|^'|'$/g)||[]).length>=5,true);
+// Match events: one at a time, not in a first-ever match, not before 25 s; a power zone fills the first runner's sprint; wind drifts a loose ball.
+{const g=M.createStrikerMatch(),s=g.state,i=M.strikerInput();g.configure({});g.reset();
+ s.time=30;s.eventClock=999;s.nextEvent=0;g.step(1/30,i);assert.ok(s.windT>0||s.zoneT>0,'an event starts');assert.ok(['wind','zone'].includes(s.eventKind));
+ s.windT=0;s.zoneT=M.STRIKER_ZONE_SECONDS;s.zoneX=10;s.zoneZ=0;const p=s.players[1];p.x=10;p.z=0;p.stamina=.2;g.step(1/30,i);assert.equal(s.zoneT,0);assert.equal(s.eventKind,'zonegot');assert.ok(p.stamina>.95||s.players.some(q=>q.stamina===1));
+ s.zoneT=0;s.windT=5;s.windZ=1.6;Object.assign(s.ball,{owner:-1,x:0,z:0,vx:0,vz:0,y:.25,lock:0});const before=s.ball.vz;g.step(1/30,i);assert.ok(s.ball.vz>before,'wind drifts the loose ball');
+ const h=M.createStrikerMatch();h.configure({gentle:true});h.reset();h.state.time=30;h.state.eventClock=999;h.state.nextEvent=0;h.step(1/30,i);assert.equal(h.state.windT+h.state.zoneT,0,'no events in a first-ever match');
+ const e=M.createStrikerMatch();e.configure({});e.reset();e.state.time=10;e.state.eventClock=999;e.state.nextEvent=0;e.step(1/30,i);assert.equal(e.state.windT+e.state.zoneT,0,'not in the first 25 s');}
 console.log('strikers-r3-levels ok');

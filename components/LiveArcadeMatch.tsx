@@ -57,7 +57,7 @@ export default function LiveArcadeMatch({onExit}:{onExit:()=>void}){
  const modeRef=useRef<'rounds'|'cup'>('rounds'),cupRef=useRef(0),shapeRef=useRef<StrikerShape>('balanced'),setup=useRef(()=>{}),throughTimer=useRef<number|null>(null),throughCalled=useRef(false);
  const [unlocked,setUnlocked]=useState(1),cupOpen=unlocked>=CUP_UNLOCK_ROUND||cup.trophies>0||cup.best>0,chooseRound=useRef((level:number)=>{}),roundRef=useRef(1);
  const entry=useArcadeEntry('live');
- const cinemaKick=useRef(false),[moreOpen,setMoreOpen]=useState(false),[keysHint,setKeysHint]=useState(false),[optionsOpen,setOptionsOpen]=useState(false),[firstTime,setFirstTime]=useState(false);
+ const [caption,setCaption]=useState<{key:number;text:string}|null>(null),cinemaKick=useRef(false),[moreOpen,setMoreOpen]=useState(false),[keysHint,setKeysHint]=useState(false),[optionsOpen,setOptionsOpen]=useState(false),[firstTime,setFirstTime]=useState(false);
  // Landscape exception (owner, Oct 26 2026, lib/orientationMode.ts): Strikers plays sideways on phones; leaving restores portrait-only.
  useEffect(()=>requestLandscape(),[]);
  useEffect(()=>{try{setFirstTime(!localStorage.getItem(HOWTO_SEEN_KEY));}catch{}},[]);
@@ -118,6 +118,8 @@ export default function LiveArcadeMatch({onExit}:{onExit:()=>void}){
     beats(s);
     {const h=strikerHint(s);if(h){hint=h;hintUntil=now+650;}else if(now>hintUntil||s.goalPause>0||s.setPiece.kind)hint='';}
     if(s.event!==lastEvent){lastEvent=s.event;const kind=s.eventKind;
+     // Commentator captions (round 3): a short pop for saves, posts, Gold tackles, interceptions and steals.
+     {const line=kind==='save'?'What a save!':kind==='post'?'Off the post!':kind==='steal'?'Stolen!':(kind==='tackle'||kind==='intercept')&&s.ball.owner>=0&&s.players[s.ball.owner].team===0?(kind==='tackle'?'Big tackle!':'Read it! Intercepted.'):'';if(line)setCaption({key:s.event,text:line});}
      {const im=strikerImpact(kind,{clean:s.cleanStrike,special:s.teamStrike,hardShot:s.time-lastShotAt<1.2});if(kind==='shot')lastShotAt=s.time;if(im.hold>0)visual.impact(Math.min(STRIKER_MAX_HOLD,im.hold),im.kick);}
      if(kind==='goal'){{const sc=s.scorer>=0?s.players[s.scorer]:null,side=Math.sign(s.eventX)||1;visual.cinema.trigger('goal',sc?sc.x:s.eventX,sc?sc.z:s.eventZ,side*25,0);}const ours=s.ball.lastTeam===0,call=ours&&s.headline?STRIKER_HEADLINES[s.headline]:null;replayGoal=ours&&!s.shootout.active&&!visual.stage.reduced;cue(ours?'goal':'concede');if(call)sfx.current?.cue('cheer');
       // Goal call-outs (Oct 25 2026): brace, hat-trick, equaliser, go-ahead and golden goals name the football word; the replay keeps the build-up story.
@@ -130,6 +132,9 @@ export default function LiveArcadeMatch({onExit}:{onExit:()=>void}){
      // Set pieces: whistle plus a banner that names the kick and how to take it.
      else if(kind==='freekick'||kind==='penalty'||kind==='corner'){const ours=s.setPiece.team===0;cue(kind==='corner'?'kickoff':'foul');if(ours)visual.cinema.trigger('setpiece',s.ball.x,s.ball.z,25,0);
       showBanner(kind==='penalty'?'PENALTY!':kind==='corner'?'CORNER':'FREE KICK',ours?(kind==='penalty'?'Pick a corner. Low and hard.':kind==='corner'?'Q picks the post · Pass crosses · tap Shoot to head':'Curl it: hold ↑/↓ after you strike'):(kind==='penalty'?'Hold ↑ or ↓ to dive as they kick':'Hold your shape'),ours?'kickoff':'concede',2000);}
+     else if(kind==='wind'){cue('call');showBanner('Gust of wind!','Short, firm passes','kickoff',1600);}
+     else if(kind==='zone'){cue('spirit');showBanner('Power zone!','Run into the pink circle','kickoff',1600);}
+     else if(kind==='zonegot'){cue(s.players.some(p=>p.team===0&&Math.hypot(p.x-s.eventX,p.z-s.eventZ)<2.2)?'perfect':'tackle');}
      else if(kind==='behind')cue('tackle');
      else if(kind==='call')cue('call');
      else if(kind==='bluecharge'){cue('special');showBanner('Close them down!','Blue is charging a Team Strike','concede',1500);}
@@ -193,6 +198,7 @@ export default function LiveArcadeMatch({onExit}:{onExit:()=>void}){
  return <><div className={styles.backdrop} aria-hidden="true"/><section className={styles.root} data-fullscreen-game data-phase={phase} aria-label="Island Strikers arcade match">
   <header className={styles.header}><BackButton label="Arcade" onBack={()=>{release();onExit();}}/><div className={styles.score}><span>GOLD <b key={'g'+view.gold} className={styles.bump}>{view.gold}</b></span><time>{view.pens||clock}</time><span><b key={'b'+view.blue} className={styles.bump}>{view.blue}</b> BLUE</span></div><button className={styles.pause} aria-label={phase==='paused'?'Resume':'Pause'} data-tip={phase==='paused'?'Resume':'Pause'} disabled={phase==='ready'||phase==='finished'||failed} onClick={()=>changePhase(phase==='playing'?'paused':'playing')}><Icon name={phase==='paused'?'play':'pause'} size={22}/></button></header>
   <div className={styles.body}><div className={styles.direction}>{portrait?'GOLD ATTACKS ↑':'GOLD ATTACKS →'}<span>{ROUND_TIPS[view.level-1]}</span>{phase==='playing'&&<b key={view.focusPulse} className={styles.focus} data-done={view.focus>=STRIKER_FOCUS_GOAL||undefined}>{STRIKER_FOCUS[view.level-1]} · {Math.min(view.focus,STRIKER_FOCUS_GOAL)}/{STRIKER_FOCUS_GOAL}{view.focus>=STRIKER_FOCUS_GOAL?' ★':''}</b>}</div><div className={styles.stage} ref={host} tabIndex={-1} onPointerDown={()=>{host.current?.focus({preventScroll:true});if(phaseRef.current==='playing'){skipReplay.current=true;skipCinema.current=true;}else if(outroTimer.current)endOutro();}}/>
+   {phase==='playing'&&caption&&!banner&&<p key={'cap'+caption.key} className={styles.caption} aria-hidden="true" onAnimationEnd={()=>setCaption(null)}>{caption.text}</p>}
    {phase==='playing'&&keysHint&&!touchDevice&&<div className={styles.keysHint} role="note">{KEYS}</div>}
    {phase==='playing'&&view.chain>=2&&<p key={'c'+view.chain} className={styles.chain} data-hot={view.chain>=4||undefined} role="status"><b>{view.chain}</b> passes in a row{view.chain>=4?'!':''}</p>}
    {phase==='playing'&&!touchDevice&&view.hint&&<p key={view.hint} className={styles.prompt} data-hint={view.hint} aria-hidden="true">{view.hint==='shoot'?<><kbd>Hold K</kbd> Shoot! Let go in the cyan band</>:view.hint==='tackle'?<><kbd>Space</kbd> Tackle now! The ball is off their foot</>:<><kbd>Space</kbd> Pass to a cyan ring</>}</p>}
