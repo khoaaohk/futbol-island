@@ -100,7 +100,8 @@ for(const k of SLINGS){const nx=k.ax<180?1:-1,s=active((k.ax+k.cx)/2+nx*14,(k.ay
 // 10. Stars: division ladder, objective and block/mode bits; saved best-of merge.
 {const s=createPinballState();for(let n=0;n<2;n++){launchPinball(s);Object.assign(s.ball,{x:180,y:49,vx:0,vy:-400});advance(s,.05);advance(s,1.6);}
  assert.equal(s.level,2);assert.equal(s.table.stars[0]&1,1,'leaving a division earns its goals star');
- const saved=Tb.savePinballStars([5,0,0,0]);same(saved,[5,0,0,0]);same(Tb.savePinballStars([2,1,0,0]),[7,1,0,0],'stars merge, never lost');same(Tb.loadPinballStars(),[7,1,0,0]);}
+ // Round 3: six divisions (two hard ones); a 4-entry save from before still merges, padded (tests/pinball-r3-oct26.cjs).
+ const saved=Tb.savePinballStars([5,0,0,0]);same(saved,[5,0,0,0,0,0]);same(Tb.savePinballStars([2,1,0,0]),[7,1,0,0,0,0],'stars merge, never lost');same(Tb.loadPinballStars(),[7,1,0,0,0,0]);}
 
 // 11. Cup Final: two goals in the last division start it; no ball can be lost.
 {const s=createPinballState();s.goals=7;s.level=4;launchPinball(s);Object.assign(s.ball,{x:180,y:49,vx:0,vy:-400});advance(s,.05);assert.equal(s.table.mode,'final');const pts=s.lastGoalPoints;

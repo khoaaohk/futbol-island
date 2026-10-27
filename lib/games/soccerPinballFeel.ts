@@ -21,7 +21,7 @@ export type PinballFeel={
  /** Neon ring pulses: table x/y of the latest big hit, serial bumps per spawn. */
  ringX:number;ringY:number;ringPower:number;ringSerial:number;
  popups:PinballPopup[];popupCursor:number;popupSerial:number;
- last:{hitId:number;score:number;wall:number;gate:number;flipper:number;keeper:number;bumper:number;join:number;parry:number;grade:number;phase:PinballState['phase'];lit:boolean;level:number;balls:number};
+ last:{tip:number;sweeper:number;hitId:number;score:number;wall:number;gate:number;flipper:number;keeper:number;bumper:number;join:number;parry:number;grade:number;phase:PinballState['phase'];lit:boolean;level:number;balls:number};
  ball:{number:number;startScore:number;goals:number;bestCombo:number;knockdowns:number;perfect:number};
  /** Last seen playfield feature counters (diffed like the sim's sfx). */
  table:PinballTable['sfx'];
@@ -41,8 +41,8 @@ export type PinballFeel={
 export function createPinballFeel():PinballFeel{
  return{hitStop:0,shake:0,drainFlash:0,rescueFlash:0,ringX:0,ringY:0,ringPower:0,ringSerial:0,
   popups:Array.from({length:PINBALL_POPUPS},()=>({age:PINBALL_POPUP_LIFE,x:0,y:0,text:'',kind:'score' as PinballPopupKind,serial:0})),popupCursor:0,popupSerial:0,
-  last:{hitId:0,score:0,wall:0,gate:0,flipper:0,keeper:0,bumper:0,join:0,parry:0,grade:0,phase:'ready',lit:false,level:1,balls:3},
-  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1};
+  last:{tip:0,sweeper:0,hitId:0,score:0,wall:0,gate:0,flipper:0,keeper:0,bumper:0,join:0,parry:0,grade:0,phase:'ready',lit:false,level:1,balls:3},
+  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1};
 }
 export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();for(let i=0;i<f.popups.length;i++)Object.assign(f.popups[i],fresh.popups[i]);fresh.popups=f.popups;fresh.confettiSerial=f.confettiSerial;Object.assign(f,fresh);}
 
@@ -80,6 +80,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(x.bumper>L.bumper)kick(f,.18);
  if(x.keeper>L.keeper){kick(f,.32);if(x.keeperV>300){stop(f,.05);ring(f,s.keeper,83,.8);}}
  if(x.join>L.join)emit(false,'pb-whistle');
+ if(x.tip>L.tip){popup(f,s.ball.x,500,'OOH! SO CLOSE!','warn');kick(f,.1);}
  // Timing coach: every strike is graded by where in its swing the bat met
  // the ball. PERFECT gets a tiny freeze + sparkle (the "sweet spot" feel);
  // EARLY/LATE get a soft, honest label, never a penalty sound.
@@ -118,11 +119,13 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
   if(s.phase==='goal'){
    f.ball.goals++;stop(f,.1);kick(f,.7);ring(f,s.hitX,s.hitY,1.4);triggerPinballCrew(f.crew,'goal');confetti(f,1);
    popup(f,180,215,`${s.lastRebound?'REBOUND GOAL':s.cue==='corner'?'CORNER':'GOAL'}! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');
+   popup(f,180,160,pinballCommentary(s),'lit');
   }else switch(s.cue){
    case 'dazed':f.ball.knockdowns++;stop(f,.06);kick(f,.28);ring(f,s.hitX,s.hitY,1);if(gained>0)popup(f,s.hitX,s.hitY,`+${gained}`,'score');break;
    case 'block':ring(f,s.hitX,s.hitY,.7);if(gained>0)popup(f,s.hitX,s.hitY,`+${gained}`,'score');break;
-   case 'save':triggerPinballCrew(f.crew,'save');if(x.parry===L.parry)popup(f,s.hitX,s.hitY+18,'SAVED','save');break;
-   case 'mbGoal':f.ball.goals++;triggerPinballCrew(f.crew,'goal');confetti(f,1);stop(f,.08);kick(f,.55);ring(f,s.hitX,s.hitY,1.4);popup(f,180,215,`${s.lastRebound?'REBOUND':'2v1'} GOAL! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');break;
+   case 'save':triggerPinballCrew(f.crew,'save');if(x.parry===L.parry)popup(f,s.hitX,s.hitY+18,x.sweeper>L.sweeper?'SWEEPER SAVE!':'SAVED','save');break;
+   case 'mbGoal':f.ball.goals++;triggerPinballCrew(f.crew,'goal');confetti(f,1);stop(f,.08);kick(f,.55);ring(f,s.hitX,s.hitY,1.4);popup(f,180,215,`${s.lastRebound?'REBOUND':'2v1'} GOAL! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');popup(f,180,160,pinballCommentary(s),'lit');break;
+   case 'hotZone':ring(f,s.hitX,s.hitY,1.2);kick(f,.12);popup(f,s.hitX,s.hitY-20,`IN THE SPACE! +${gained}`,'lit');break;
    case 'multiball':stop(f,.06);kick(f,.35);ring(f,180,300,1.8);popup(f,180,260,'2v1 BREAKAWAY!','lit');break;
    case 'mbSave':f.rescueFlash=1;popup(f,180,560,'BACK IN PLAY','rescue');break;
    case 'wallPass':ring(f,s.hitX,s.hitY,1.1);popup(f,s.hitX,s.hitY-18,`WALL PASS +${WALL_PASS_POINTS}`,'lit');break;
@@ -134,7 +137,9 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
    case 'nudge':kick(f,.22);break;
    case 'strike':
     // Switching feet is the lesson: 3× and 4× get their own call, sting and sparkle (once per rally).
-    if(s.combination>=3&&s.combination>f.streakShown){f.streakShown=s.combination;emit(false,'pb-streak');ring(f,s.hitX,s.hitY,s.combination>=4?1.5:1.1);kick(f,.1);popup(f,s.hitX,s.hitY-14,`${s.combination>=4?'ON FIRE!':'SWITCH FEET!'} ${s.combination}× +${gained}`,'lit');}
+    if(s.combination>=3&&s.combination>f.streakShown){f.streakShown=s.combination;emit(false,'pb-streak');ring(f,s.hitX,s.hitY,s.combination>=4?1.5:1.1);kick(f,.1);popup(f,s.hitX,s.hitY-14,`${s.combination>=4?'ON FIRE!':'SWITCH FEET!'} ${s.combination}× +${gained}`,'lit');
+     // Crowd caption: the stands react as the passing move grows.
+     if(s.combination>=4)popup(f,180,250,'THE CROWD IS ON ITS FEET!','score');}
     else if(s.combination>1&&gained>0)popup(f,s.hitX,s.hitY-14,`${s.combination}× +${gained}`,'score');
     if(s.combination<=1)f.streakShown=1;break;
    case 'drop':popup(f,s.hitX,s.hitY+16,`+${gained}`,'score');break;
@@ -170,9 +175,19 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
   f.summaryFresh=true;f.ball.number++;f.ball.startScore=s.score;f.ball.goals=0;f.ball.bestCombo=0;f.ball.knockdowns=0;f.ball.perfect=0;
  }
  if(L.phase!=='over'&&s.phase==='over'){emit(false,'pb-over');f.savedStars=savePinballStars(s.table.stars);}
- L.hitId=s.hitId;L.score=s.score;L.wall=x.wall;L.gate=x.gate;L.flipper=x.flipper;L.keeper=x.keeper;L.bumper=x.bumper;L.join=x.join;L.parry=x.parry;L.grade=x.grade;L.phase=s.phase;L.lit=lit;L.level=s.level;L.balls=s.balls;
+ L.tip=x.tip;L.sweeper=x.sweeper;L.hitId=s.hitId;L.score=s.score;L.wall=x.wall;L.gate=x.gate;L.flipper=x.flipper;L.keeper=x.keeper;L.bumper=x.bumper;L.join=x.join;L.parry=x.parry;L.grade=x.grade;L.phase=s.phase;L.lit=lit;L.level=s.level;L.balls=s.balls;
 }
 
+/** One short commentator line for a goal: names the football idea that made it (reading age ~8). */
+export function pinballCommentary(s:PinballState):string{
+ if(s.lastRush)return 'BEAT THE CLOCK!';
+ if(s.lastChallengeBonus>0)return 'CHALLENGE DONE!';
+ if(s.lastRebound)return 'FOLLOWED IT UP!';
+ if(s.cue==='corner')return 'INTO THE CORNER!';
+ if(s.lastGoalBonus>0)return 'WHAT A MOVE!';
+ if(s.extraLive||s.cue==='mbGoal')return 'TWO ON ONE!';
+ return 'WHAT A FINISH!';
+}
 /** HUD line override for the moments the feel layer owns, else null. */
 export function pinballFeelMessage(f:PinballFeel,s:PinballState):string|null{
  if(!f.summaryFresh)return pinballTableMessage(s);

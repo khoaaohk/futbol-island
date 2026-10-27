@@ -195,6 +195,8 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    tone(ctx,v,'sine',hz,hz,now,.16,.06*vol);tone(ctx,v,'sine',hz*2,hz*2,now+.01,.08,.02*vol);break;
   }
   case 'pb-word':arpeggio(ctx,v,[587.33,739.99,880,1174.66],now,.07,.065*vol);break;
+  // Round 3 hot zone ("in the space"): a quick rising three-note chime.
+  case 'hotZone':[784,987.8,1318.5].forEach((hz,i)=>tone(ctx,v,'triangle',hz,hz,now+i*.06,.12,.05*vol));break;
   case 'pb-lane':if(!throttled(v,cue,now,.1))tone(ctx,v,'sine',1046.5*jitter(.02),1046.5,now,.07,.04*vol);break;
   case 'pb-crest':arpeggio(ctx,v,[783.99,987.77,1174.66],now,.06,.06*vol,'sine');break;
   case 'pb-skill':arpeggio(ctx,v,[659.25,783.99,1046.5,1318.51,1567.98],now,.05,.06*vol);break;

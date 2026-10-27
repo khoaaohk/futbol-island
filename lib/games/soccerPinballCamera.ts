@@ -1,5 +1,6 @@
 import * as T from 'three';
 import type {PinballState} from './soccerPinball';
+import {cinemaShot,cinemaWeight,type PinballCinema} from './soccerPinballCinema';
 
 /* Futbol Pinball action camera (Oct 26 2026, docs/ARCADE_PINBALL_UPGRADE2_OCT26.md).
  *
@@ -25,7 +26,7 @@ export function pinballCameraLayout(w:number,h:number,mobile:boolean){
  return {top,flip,safeTop:top-6,safeBottom:flip+18,edge:8,pitchMin:landscape?.84:.74,pitchMax:landscape?1.05:1.3,landscape};
 }
 
-export type PinballShot={k:number;ax:number;ay:number;az:number;tilt:number;name:'launch'|'wide'|'flippers'|'goal'|'play'|'multiball'|'celebrate'};
+export type PinballShot={k:number;ax:number;ay:number;az:number;tilt:number;name:'launch'|'wide'|'flippers'|'goal'|'play'|'multiball'|'celebrate'|'cinema'};
 const wx=(x:number)=>(x-180)/30,wz=(y:number)=>(y-310)/30;
 const smooth=(a:number,b:number,v:number)=>{const t=Math.min(1,Math.max(0,(v-a)/(b-a)));return t*t*(3-2*t);};
 /** The shot the camera wants this frame. Pure; writes into `out`. */
@@ -95,7 +96,7 @@ export function createPinballCamera(camera:T.PerspectiveCamera,mobile:boolean,re
    // Every shot but the flipper push and the goal celebration keeps the whole table: if no pan can fit both lines,
    // back the zoom off to the largest k that does (bisection, only on those frames). On tall phones there is room for
    // the goal push; on height-limited screens it shrinks instead of hiding the flippers.
-   if(cur.k>0&&want.name!=='flippers'&&want.name!=='celebrate'){
+   if(cur.k>0&&want.name!=='flippers'&&want.name!=='celebrate'&&want.name!=='cinema'){
     const saved=cur.panZ;let fits=false;
     for(let i=0;i<2&&!fits;i++){fits=lines();if(!fits){keep(0,-8.8,false,2.1);compose();keep(0,8.9,true,.3);compose();}}
     if(!lines()){let lo=0,hi=cur.k;for(let i=0;i<7;i++){cur.k=(lo+hi)/2;cur.panZ=saved;compose();keep(0,-8.8,false,2.1);compose();keep(0,8.9,true,.3);compose();if(lines())lo=cur.k;else hi=cur.k;}cur.k=lo;cur.panZ=saved;compose();keep(0,-8.8,false,2.1);compose();keep(0,8.9,true,.3);compose();}
@@ -112,17 +113,21 @@ export function createPinballCamera(camera:T.PerspectiveCamera,mobile:boolean,re
    if(!moved)break;compose();}
  }
  const step=(value:number,target:number,lambda:number,rate:number,dt:number)=>{const next=T.MathUtils.damp(value,target,lambda,dt),cap=rate*dt;return value+Math.max(-cap,Math.min(cap,next-value));};
- function update(dt:number,s:PinballState){
+ /** `cine`: round 3 cinematic beats (soccerPinballCinema) blend into the shot; while one runs the zoom/pan caps are a
+  * little higher (1.5/s, 18 u/s) so a short push can land, still damped and capped. Never under reduced motion. */
+ function update(dt:number,s:PinballState,cine?:PinballCinema){
   pinballShot(s,want,reduced);
+  const beat=!reduced&&cine?cinemaWeight(cine):0;if(beat>0&&cine)cinemaShot(cine,want);
   const before=cur.k+cur.ax+cur.ay+cur.az+cur.tilt+cur.panX+cur.panZ;
   if(dt>0){
-   cur.k=step(cur.k,want.k,3,.62,dt);cur.ax=step(cur.ax,want.ax,4.5,12,dt);cur.az=step(cur.az,want.az,4.5,12,dt);cur.ay=step(cur.ay,want.ay,4.5,4,dt);cur.tilt=step(cur.tilt,want.tilt,2.6,.32,dt);
+   const zoomCap=beat>0?1.5:.62,panCap=beat>0?18:12;
+   cur.k=step(cur.k,want.k,beat>0?6:3,zoomCap,dt);cur.ax=step(cur.ax,want.ax,4.5,panCap,dt);cur.az=step(cur.az,want.az,4.5,panCap,dt);cur.ay=step(cur.ay,want.ay,4.5,4,dt);cur.tilt=step(cur.tilt,want.tilt,2.6,.32,dt);
    // Safety pans relax back to home during play; on the plunger they hold so the waiting table can sleep.
    if(s.phase==='playing'||s.phase==='goal'||s.phase==='lost'){const fade=Math.exp(-dt*1.6);cur.panX*=fade;cur.panZ*=fade;if(Math.abs(cur.panX)<.002)cur.panX=0;if(Math.abs(cur.panZ)<.002)cur.panZ=0;}
   }
   compose();safety(s);
   const after=cur.k+cur.ax+cur.ay+cur.az+cur.tilt+cur.panX+cur.panZ;
-  settled=Math.abs(after-before)<1e-4&&Math.abs(cur.k-want.k)<.003&&Math.abs(cur.tilt-want.tilt)<.002&&(cur.k<.003||Math.abs(cur.ax-want.ax)+Math.abs(cur.az-want.az)<.01);
+  settled=beat===0&&Math.abs(after-before)<1e-4&&Math.abs(cur.k-want.k)<.003&&Math.abs(cur.tilt-want.tilt)<.002&&(cur.k<.003||Math.abs(cur.ax-want.ax)+Math.abs(cur.az-want.az)<.01);
  }
  /** Jump straight to the shot (new game / resize), no easing. */
  function snap(s:PinballState){pinballShot(s,want,reduced);cur.k=want.k;cur.ax=want.ax;cur.ay=want.ay;cur.az=want.az;cur.tilt=want.tilt;cur.panX=cur.panZ=0;compose();for(let i=0;i<3;i++)safety(s);settled=true;}
