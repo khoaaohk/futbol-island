@@ -106,4 +106,12 @@ const none=new Set(),seven=coreOf('7v7');
  const css=read('components/PathWarmUpRow.module.css');assert.doesNotMatch(css,/#(?:e0|f0|ff)[0-4][0-4][0-4][0-4]\b|\bred\b|animation/i,'no red alarms and no animation loop');
  assert.doesNotMatch(read('components/PathWarmUpRow.tsx'),/setInterval|setTimeout|requestAnimationFrame/,'no timers');
 }
+// 7v7 path audit (Oct 27 2026): stop labels never read "Carry or Pass?. Completed" or "unfair.. Completed" to a screen reader.
+{
+ const T=lib('lib/paths/pathText.ts');
+ assert.equal(T.endStop('Carry or Pass?'),'');assert.equal(T.endStop('When the game feels unfair.'),'');assert.equal(T.endStop('Meet Your Team'),'.');
+ const src=read('components/QuestLearningPath.tsx');
+ assert.match(src,/Story: \$\{card\.title\}\$\{done\?`\$\{endStop\(card\.title\)\} Completed, replay`/,'story stop label uses endStop');
+ assert.match(src,/\$\{stop\.lesson\.name\}\$\{endStop\(stop\.lesson\.name\)\} /,'lesson stop label uses endStop');
+}
 console.log('PASS clear path: one first step (HUD card = Start here = lesson 1; onboarding ends on Explore), Next lesson at the quiz end (graduate / next path / Ferry), Warm-up row states');
