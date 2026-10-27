@@ -10,6 +10,7 @@
  */
 import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,wadeRootY,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
 import type {SwimRigPose,EntryStyle} from '../../graphics/swimPose';
+import {bankFor,buoyancyRate,climbPitch,diveArcPitch,pitchToward,strokeRate,surfaceBob,wrapAngle} from './swimMotion';
 
 export type WaterPhase='land'|'wade'|'swim'|'under'|'surface';
 /** Where a splash-down came from (analytics ids wa:splash_<source>, lib/analytics/waterEvents.ts). */
@@ -113,7 +114,10 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   /** The camera's eased dip offset (m, ≤ 0) and the dip's current depth (m, ≥ 0). */
   camDip:0,dip:0};
  const events:WaterEvents={entered:false,left:false,swimStarted:false,ripple:0,splash:0,surfaced:false,tint:false,swimSeconds:0,dived:false,sped:false,rose:false,bubble:false,stroke:0,wake:false,flew:false};
- const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:0,gasp:0};
+ const pose:SwimRigPose={w:0,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,under:0,tilt:0,glide:0,gasp:0,bob:0,bank:0};
+ /** Natural swimming (Oct 27 2026, swimMotion.ts): the bob's clock (s), the last facing and the smoothed turn rate (rad/s) for the bank,
+  *  the last root height for the climb pitch. */
+ let bobT=0,lastYaw=NaN,yawRate=0,lastRootY=NaN;
  const lastLand={x:NaN,z:NaN,y:0,yaw:0};
  let gaspLeft=0,rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
  /** diveBedRoom at (x, z) and DIVE.ahead m along the travel (the slope ahead), the lower; 9 without a seabed. */
@@ -121,9 +125,9 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   if(m>1e-4&&m<2){const k=DIVE.ahead/m;b=Math.min(b,seabed(x+mx*k,z+mz*k));}return Math.min(9,diveBedRoom(b));};
  const clear=()=>{events.entered=events.left=events.swimStarted=events.surfaced=events.tint=events.dived=events.sped=events.rose=events.bubble=events.wake=events.flew=false;events.ripple=events.splash=events.swimSeconds=events.stroke=0;};
  /** Drop the dive at once (leaving the swim: the wade blend, a splash-down, the jetpack); `rose` when the body was under. */
- const endDive=()=>{if(state.under>0)events.rose=true;state.diving=false;state.under=0;state.dive=0;state.diveFor=0;state.tilt=0;riseShake=0;bubbleClock=0;pose.under=0;pose.tilt=0;};
+ const endDive=()=>{if(state.under>0)events.rose=true;state.diving=false;state.under=0;state.dive=0;state.diveFor=0;state.tilt=0;riseShake=0;bubbleClock=0;pose.under=0;pose.tilt=0;lastRootY=NaN;};
  const leaveWater=()=>{if(state.phase==='swim'||state.phase==='surface'||state.phase==='under'){events.swimSeconds=state.swimFor;}
-  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.w=0;pose.glide=0;gaspLeft=0;pose.gasp=0;events.left=true;};
+  state.phase='land';state.zone='none';state.depth=0;state.fast=false;endDive();state.park=null;state.swimFor=0;state.wet=0;state.bob=0;state.dip=0;state.tintLeft=0;pose.bob=0;pose.bank=0;yawRate=0;lastYaw=NaN;pose.w=0;pose.glide=0;gaspLeft=0;pose.gasp=0;events.left=true;};
  const enterWater=(x:number,z:number,yaw:number)=>{
   // Park the ball on the last dry spot (decision 3): lead the facing that keeps its 0.56 m lead on land (else turn it round).
   // (No dry spot known yet, e.g. a splash-down straight from the jetpack: the host parks it at the nearest landing.)
@@ -183,13 +187,18 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   state.bedRoom=bedRoomAt(x,z);lastX=x;lastZ=z;
   if(state.diving){state.diveFor+=dt;if(state.diveFor>=DIVE.maxTime||state.depth<DIVE.minWater-.05||state.bedRoom<DIVE.minRoom){state.diving=false;diveRate=1/DIVE.ease;}}
   const goal=state.diving?1:0,was=state.under;
-  if(was!==goal){state.under=goal>was?Math.min(1,was+dt*diveRate):Math.max(0,was-dt*diveRate);
+  // Natural swimming (Oct 27 2026): buoyancy brings the body up briskly from the bottom of the dive and eases as the head nears the top.
+  if(was!==goal){state.under=goal>was?Math.min(1,was+dt*diveRate):Math.max(0,was-dt*diveRate*buoyancyRate(was));
    if(was>0&&state.under===0){events.rose=true;events.ripple=.3;riseShake=SURFACE_TIME;if(state.diveFor>=GASP.minDive)gaspLeft=GASP.time;state.diveFor=0;bubbleClock=0;}}
   // The bound eases (deeper slowly, shallower fast) and never passes the drawn seabed: the body glides up the slope to a shore.
   const roomTo=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.room+=(roomTo-state.room)*(1-Math.exp(-dt*(roomTo<state.room?6:4)));
   if(state.room>bedHere)state.room=bedHere;
   const u=state.under,ue=u*u*(3-2*u);state.dive=state.room*ue;
-  state.tilt=r||u===goal?0:(goal>u?1:-.8)*DIVE.tilt*Math.sin(Math.PI*u);
+  // The pitch (Oct 27 2026): the dive's arc (head down in, head up on the way back) plus the body following a climb or a dip of the
+  // drawn seabed while under, rate-limited (swimMotion pitchToward) so it never snaps; flat when settled. Reduced motion: none.
+  {const vy=Number.isFinite(lastRootY)&&dt>0?(SWIM_ROOT_Y-state.dive-lastRootY)/dt:0;lastRootY=SWIM_ROOT_Y-state.dive;
+   const want=(u===goal?0:diveArcPitch(u,goal>u,DIVE.tilt))+(u>0&&u===goal&&Math.abs(vy)>.08?climbPitch(vy)*ue*.6:0);
+   state.tilt=r?0:Math.abs(want)<1e-4&&Math.abs(state.tilt)<.01?0:pitchToward(state.tilt,want,dt);}
   if(riseShake>0)riseShake=Math.max(0,riseShake-dt);if(gaspLeft>0)gaspLeft=Math.max(0,gaspLeft-dt);pose.gasp=r?0:gaspLeft/GASP.time;
   if(state.bob>0)state.bob=Math.max(0,state.bob-dt);
   state.rootY+=(SWIM_ROOT_Y-state.dive-state.rootY)*k;if(state.rootY<SWIM_ROOT_Y-bedHere)state.rootY=SWIM_ROOT_Y-bedHere;
@@ -200,8 +209,14 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   // The surface glide (Oct 25 2026, Explore audit): the stick let go while the body still carries (about a second), the arms reach
   // ahead together and the kick eases instead of the crawl churning on; any push of the stick takes the stroke back at once.
   const coast=u<.3&&input.moving&&input.stick<.05?1:0,g0=pose.glide??0;pose.glide=g0+(coast-g0)*(1-Math.exp(-dt*(coast?GLIDE.in:GLIDE.out)));if(pose.glide<1e-3)pose.glide=0;
-  const rate=(r?0:pose.kind==='tread'?2.2:pose.fast?9:5.5*(.5+.5*pose.effort)*(u>0?.7:1))*(1-GLIDE.slow*pose.glide);
+  // The stroke clock (Oct 27 2026, swimMotion strokeRate): a light stick is a slow, lazy stroke, a full stick a brisk one, slower under.
+  const rate=(r?0:strokeRate(input.stick,input.speed/SWIM_SPEED,pose.fast>0,u,pose.kind==='tread'))*(1-GLIDE.slow*pose.glide);
   pose.phase=(pose.phase+dt*rate)%(Math.PI*2*6);
+  // The surface bob and the bank into a turn (Oct 27 2026, swimMotion.ts): the bob fades out going under; the bank follows the facing's
+  // turn rate (smoothed) and the speed. Pose numbers only (the root and the camera stay level). Reduced motion: neither.
+  bobT=(bobT+dt)%1000;pose.bob=r?0:surfaceBob(bobT,Math.min(1,input.speed/SWIM_SPEED),pose.phase)*(1-ue);
+  {const yr=Number.isFinite(lastYaw)&&dt>0?wrapAngle(input.yaw-lastYaw)/dt:0;lastYaw=input.yaw;yawRate+=(Math.max(-6,Math.min(6,yr))-yawRate)*(1-Math.exp(-dt*6));
+   const b0=pose.bank??0,bt=r?0:bankFor(yawRate,Math.min(1,input.speed/SWIM_SPEED),.28,2.4);pose.bank=b0+(bt-b0)*(1-Math.exp(-dt*5));}
   if(u>.3){
    // Under: no wake or arm splashes at the surface, only a small bubble ring over the diver now and then (≤ 1 / DIVE.bubble s).
    wakeClock=0;rippleClock=0;bubbleClock+=dt;if(bubbleClock>=DIVE.bubble){bubbleClock=0;events.bubble=true;}

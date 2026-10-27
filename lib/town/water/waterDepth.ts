@@ -14,6 +14,7 @@
 import {diveSpotAt} from './diveSpots';
 import {onLand,distanceToLand} from '../landmass';
 import {flightBlocked} from '../simulation';
+import {SWIM_MOTION,swimVelocity} from './swimMotion';
 
 /** The ocean plane (lib/town/world.ts, ballSea.ts SEA_LEVEL; tests/water-depth.cjs pins them equal). */
 export const WATER_LEVEL=-.43;
@@ -157,15 +158,17 @@ export function swimEdgePush(x:number,z:number,input:{x:number;z:number},allowed
  const ax=x+input.x/len*reach,az=z+input.z/len*reach;return !allowed(ax,az)&&!land(ax,az);
 }
 export const SWIM_EDGE_FADE=6,SWIM_EDGE_KEEP=.35;
-export function swimStep(position:{x:number;z:number},velocity:{x:number;z:number},input:{x:number;z:number},fast:boolean,dt:number,allowed:(x:number,z:number)=>boolean,land:(x:number,z:number)=>boolean,distanceOut=0){
+/** Natural swimming (Oct 27 2026, swimMotion.ts): `surge` the stroke's pull multiplier (strokeSurge; 1 = none) and `under` the
+ *  duck-dive's 0..1 (a let-go stick glides further under: the drag × SWIM_MOTION.drag.glide). The heading turns at a limited rate
+ *  (an arc, never a snap round) and a hard turn sheds a little speed (swimVelocity). */
+export function swimStep(position:{x:number;z:number},velocity:{x:number;z:number},input:{x:number;z:number},fast:boolean,dt:number,allowed:(x:number,z:number)=>boolean,land:(x:number,z:number)=>boolean,distanceOut=0,surge=1,under=0){
  dt=Math.max(0,Math.min(dt,.25));
  let ix=input.x,iz=input.z;let len=Math.hypot(ix,iz);
  if(len>1){ix/=len;iz/=len;len=1;}
- const edge=Math.max(0,Math.min(1,(SWIM_RANGE-distanceOut)/SWIM_EDGE_FADE));
- const top=(fast?SWIM_SPRINT:SWIM_SPEED)*len*(SWIM_EDGE_KEEP+(1-SWIM_EDGE_KEEP)*edge);
- const targetX=len>0?ix/len*top:0,targetZ=len>0?iz/len*top:0;
- const blend=1-Math.exp(-dt*(len>0?(fast?SWIM_FAST_ACCEL:SWIM_ACCEL):SWIM_BRAKE));
- velocity.x+=(targetX-velocity.x)*blend;velocity.z+=(targetZ-velocity.z)*blend;
+ const edge=Math.max(0,Math.min(1,(SWIM_RANGE-distanceOut)/SWIM_EDGE_FADE)),full=fast?SWIM_SPRINT:SWIM_SPEED;
+ const top=full*len*(SWIM_EDGE_KEEP+(1-SWIM_EDGE_KEEP)*edge)*(len>0?surge:1);
+ const brake=SWIM_BRAKE*(1-(1-SWIM_MOTION.drag.glide)*Math.max(0,Math.min(1,under)));
+ swimVelocity(velocity,len>0?ix/len:0,len>0?iz/len:0,len>0?top:0,fast?SWIM_FAST_ACCEL:SWIM_ACCEL,brake,full,dt);
  const nx=position.x+velocity.x*dt,nz=position.z+velocity.z*dt;
  const ok=(x:number,z:number)=>allowed(x,z)||land(x,z);
  if(ok(nx,nz)){position.x=nx;position.z=nz;}

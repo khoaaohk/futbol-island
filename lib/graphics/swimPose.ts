@@ -38,6 +38,10 @@ export type SwimRigPose={
  /** Catching a breath (Oct 25 2026, waterState.ts GASP): 1 → 0 over two deep breaths after coming up (the chest heaves, the chin
   *  lifts). Optional: 0 when absent. */
  gasp?:number;
+ /** Natural swimming (Oct 27 2026, lib/town/water/swimMotion.ts): the surface bob (m, + = up; the slow rise and fall plus a heave
+  *  with each stroke, 0 under the water and with reduced motion) and the bank into a turn (rad, from the heading's turn rate and the
+  *  speed: the body rolls about the swim axis into the arc). Optional: 0 when absent. */
+ bob?:number;bank?:number;
 };
 export type SwimJoints={pelvis:T.Group;torso:T.Group;head:T.Group;legs:{hip:T.Group;knee:T.Group;ankle:T.Group}[];arms:{shoulder:T.Group;elbow:T.Group;hand:T.Group}[]};
 
@@ -84,7 +88,7 @@ export function createSwimPoser(j:SwimJoints){
  };
  /** Fill `target` for the pose. `rollTurn` is the smoothed lean into a turn (rad). */
  const shape=(s:SwimRigPose,reduced:boolean,rollTurn:number)=>{
-  const ph=reduced?0:s.phase;
+  const ph=reduced?0:s.phase,bank=reduced||s.kind!=='tread'&&s.kind!=='crawl'?0:s.bank??0;rollTurn+=bank;
   target[P_X]=0;target[P_ROLL]=0;
   for(let i=0;i<2;i++){target[LEG+i*5+2]=0;target[ARM+i*4+2]=0;}
   if(s.kind==='tread'){
@@ -162,6 +166,8 @@ export function createSwimPoser(j:SwimJoints){
    mixT(q,-2.5,wv);mixT(q+1,.95+.35*swing,wv);mixT(q+2,0,wv);mixT(q+3,-.75,wv);
    mixT(q,-2.95,fv);mixT(q+1,.3,fv);mixT(q+2,0,fv);mixT(q+3,-.08,fv);
    target[H_X]+=(-.2)*Math.max(wv,fv);}
+  // Natural swimming (Oct 27 2026): the surface bob on the everyday shapes, the bank rolls the pelvis into the turn (crawl).
+  if(s.kind==='tread'||s.kind==='crawl'){target[P_Y]+=reduced?0:s.bob??0;if(s.kind==='crawl')target[P_ROLL]+=bank*.6;}
   // Catching a breath: two heaves of the chest (the body lifts a little, the back arches, the chin comes up), fading out.
   {const gp=Math.max(0,Math.min(1,s.gasp??0));if(gp>0&&!reduced&&(s.kind==='tread'||s.kind==='crawl')&&(s.under??0)<.3){const h=Math.pow(Math.sin(Math.PI*2*(1-gp)),2)*Math.sqrt(gp);
    target[P_Y]+=.05*h;target[T_X]-=.14*h;target[H_X]-=.3*h;}}

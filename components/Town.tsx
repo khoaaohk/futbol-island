@@ -198,6 +198,7 @@ import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
+import {strokeSurge,fovKick,easeFov} from '@/lib/town/water/swimMotion';// Natural swimming (Oct 27 2026, docs/SWIM_NATURAL_OCT27.md)
 import {createWaterProbe,canSplashDown,swimStep,swimEdgePush,WATER_LEVEL,BALL_STAYS_ON_SAND,SWIM_ROOT_DEPTH,SWIM_SPEED as SEA_SWIM_SPEED} from '@/lib/town/water/waterDepth';
 import {createSwimClear,SWIM_DIVE_CLEAR} from '@/lib/graphics/swimClear';
 import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clearWindow';
@@ -573,7 +574,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const jobs=createJobScene(scene,{timeOfDay:()=>timeRef.current,bugs:()=>wildBugs,tier:()=>heat.tier});// the Bug squad catches from the swarm (catching lane)// island jobs + Community Garden (docs/island-jobs.md)
     const wildBugs=createWildBugs(scene);// Summit Isle bug swarm (Oct 20 2026, lib/graphics/bugSwarm.ts): the 20 species at their homes, fireflies at night
     let suppressInitialArrival=returningFromArcade;const characterArrival=createCharacterArrival(scene);arrivalRestartRef.current=()=>{suppressInitialArrival=false;characterArrival.restart();wakeLoopRef.current();};
-    const camera=new T.PerspectiveCamera(40,1,1,500);if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
+    const camera=new T.PerspectiveCamera(40,1,1,500);let swimFovOff=0,swimFovBase=40;/* Oct 27 2026: the Swim fast FOV ease (swimMotion.ts fovKick) */if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
     const hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0);scene.add(hemi);
     const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12*2048/quality.shadowSize;/* bias scales with the texel: 1024² phones would show acne stripes on flat roofs at .12 (heat pass 4) */sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
     try{const saved=localStorage.getItem('fi2-time-of-day');if(saved==='day'||saved==='sunset'||saved==='night'){timeRef.current=saved;setTimeOfDay(saved);}}catch{}
@@ -1390,7 +1391,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       else if(water.swimming&&rideRef.current==='walk'){
         // Swimming: no obstacles in the sea; momentum, the Swim fast hold, the soft 60 m edge (waterDepth.ts swimStep). The dip and
         // the surfacing hold the body still.
-        if(water.state.phase==='swim')swimStep(location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz},water.state.fast,dt,waterWalk.allow,onLand,waterProbe.d);else velocity.x=velocity.z=0;
+        if(water.state.phase==='swim')swimStep(location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz},water.state.fast,dt,waterWalk.allow,onLand,waterProbe.d,reduced||water.pose.kind!=='crawl'?1:strokeSurge(water.pose.phase,water.pose.effort),water.state.under);/* Oct 27 2026 (swimMotion.ts): the stroke's surge, the glide under */else velocity.x=velocity.z=0;
         // QA Oct 25: pushing into the edge of the swimmable sea said nothing (the swimmer just stopped): after ~1 s of pushing, a note; again after 20 s.
         swimEdgeHold=water.state.phase==='swim'&&!holdStill&&swimEdgePush(location.x,location.z,{x:mx,z:mz},waterWalk.allow,onLand)?swimEdgeHold+dt:0;swimEdgeQuiet=Math.max(0,swimEdgeQuiet-dt);if(swimEdgeHold>1&&swimEdgeQuiet===0){swimEdgeQuiet=20;fuelStore.say(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE);}
       }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);}
@@ -1975,6 +1976,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       quizView.restore();
       renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);
       if(Math.abs(camera.aspect-viewportWidth/viewportHeight)>.0001){camera.aspect=viewportWidth/viewportHeight;camera.updateProjectionMatrix();}
+      // Natural swimming (Oct 27 2026, swimMotion.ts): Swim fast eases the FOV open a little (≤ 3°) and back; no roll. Off with reduced
+      // motion, heat tier 2+, Battery saver, the slow governor (waterFxOn) and in a lesson. At rest no projection update at all.
+      {const sp=Math.hypot(velocity.x,velocity.z),want=!learning&&water.swimming&&water.state.fast&&!animalRides.riding?fovKick(Math.max(0,Math.min(1,(sp/SEA_SWIM_SPEED-1)/.7)),waterFxOn()):0;
+       if(want!==swimFovOff){if(swimFovOff===0)swimFovBase=camera.fov;swimFovOff=easeFov(swimFovOff,want,dt);camera.fov=swimFovBase+swimFovOff;camera.updateProjectionMatrix();}}
       if(learning){learningView.update(camera,venueById(learning),fieldSession.current,dt,reduced,learningAngle.current,{width:viewportWidth,height:viewportHeight,mobile:fullWidth<=600||coarse});quizView.apply([fieldSession.current?.lesson.id,fieldSession.current?.quiz,fieldSession.current?.question,learningAngle.current].join(':'),learningView.target,dt,reduced);}
       else if(wasLearning){camera.up.set(0,1,0);camera.zoom=1;camera.updateProjectionMatrix();learningView.reset();camera.position.set(location.x+18,23+groundY,location.z+30);camera.lookAt(location.x+2,groundY,location.z-3);}
       if(Boolean(learning)!==wasLearning){

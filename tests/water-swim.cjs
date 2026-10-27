@@ -172,7 +172,7 @@ ok('Town wiring: the cluster swap, the parked ball, no kicks in the sea, the spl
  assert.match(town,/rooftop\.setSplashTest\(canSplashDown\)/,'ride launches may end over splashable water');
  assert.match(town,/if\(waterKey\(e,true\)\)return;/);assert.match(town,/if\(waterKey\(e,false\)\)return;/);
  assert.match(town,/groundBlocked\(bx,bz,\[\],0\)&&!\(rideRef\.current==='walk'&&waterProbe\.allowed\(bx,bz\)\)\)sound\.boundary\(\)/,'the boundary sound stays on land');
- assert.match(town,/swimStep\(location,velocity,\{x:holdStill\?0:mx,z:holdStill\?0:mz\},water\.state\.fast,dt,waterWalk\.allow,onLand,waterProbe\.d\)/,'the swim step');
+ assert.match(town,/swimStep\(location,velocity,\{x:holdStill\?0:mx,z:holdStill\?0:mz\},water\.state\.fast,dt,waterWalk\.allow,onLand,waterProbe\.d,reduced\|\|water\.pose\.kind!=='crawl'\?1:strokeSurge\(water\.pose\.phase,water\.pose\.effort\),water\.state\.under\)/,'the swim step (Oct 27 2026: + the stroke surge and the glide under)');
  assert.match(town,/rideRef\.current==='walk'\?waterWalk:undefined\)/,'wading passes the water test to the walker only');
  assert.match(town,/groundY=water\.state\.rootY;/,'the root lowers onto the shelf / the swim line');
  assert.match(town,/swim:water\.pose\.w>0\?water\.pose:undefined/,'the rig gets the swim pose');

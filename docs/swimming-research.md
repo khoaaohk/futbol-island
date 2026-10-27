@@ -699,3 +699,9 @@ bottom right", "the same size ... same style". tests/explore-life.cjs; heat in d
   everywhere and you tire, like a midfielder." (no longer repeats the swim lesson).
 - **Room buttons:** see docs/ui/HUD_STACK.md "Explore room layout".
 - Not done: iPhone heat; the friend creatures' own idle polish; per-zone signature animation polish.
+
+## 14. Natural swimming (Oct 27 2026)
+
+Momentum turns (arcs, not snaps), the stroke surge and a stick-paced stroke clock, the surface bob and bank, a rate-limited dive pitch and
+buoyancy, the reef's turn momentum, near-coral precision, current push and soft scrape, a small FOV ease on bursts. Pure maths in
+`lib/town/water/swimMotion.ts`; details, constants and heat notes in [SWIM_NATURAL_OCT27.md](SWIM_NATURAL_OCT27.md).

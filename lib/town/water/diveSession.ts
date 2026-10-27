@@ -16,6 +16,8 @@ import {DIVE_BODY,divePushOut,divePushOutLevel,type DiveSolidWorld} from './dive
 import {DIVE_FIND_RANGE,DIVE_ROOM_R,DIVE_SURFACE_Y,diveFindPoint,diveDepthRange,diveOnCrest,diveSpotAt,type DiveFind,type DiveSpot,DIVE_SPOTS} from './diveSpots';
 import {WATER_PROBE_HZ} from './waterDepth';
 import {DIVE_EDGE,diveEdgeBeyond,diveEdgeRim} from './diveEdge';
+import {DIVE_CURRENT,diveSwell} from './diveCurrent';
+import {SWIM_MOTION,bankFor,climbPitch,pitchToward,reefCurrent,reefNear,reefYawRate,slideAlong} from './swimMotion';
 
 /** One full breath at an easy swim (s), and how fast it drains: gliding (stick still), an easy swim, the stick pushed all the way.
  *  (45 s before the Oct 20 2026 shallow reef: the reef is shallow and for young kids, so the breath lasts longer.) */
@@ -117,6 +119,8 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   near:null as DiveSpot|null,acc:Infinity,
   /** Room-local diver: position, velocity, facing (rig yaw: forward = (sin, cos)), pitch (rad, + nose down), roll, lift offset. */
   x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,roll:0,lift:0,liftHeld:0,lift0:0,topHold:0,
+  /** Natural swimming (Oct 27 2026, swimMotion.ts): the turn rate (rad/s, angular momentum) and how near the reef bed (0..1, reefNear). */
+  yawV:0,nearReef:0,
   /** Breath 0..1 (refills at the surface), the last value the UI drew, its clock; whether the low note fired this dive. */
   breath:1,uiBreath:1,uiAcc:0,lowSaid:false,
   /** The find in reach (3D, DIVE_FIND_RANGE) and its distance; finds used this dive; the rising fade (s). */
@@ -145,8 +149,10 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
   let mx=dx/n,my=dy/n,mz=dz/n,hit=false;cp.x=x0;cp.y=y0+DIVE_BODY.cy;cp.z=z0;
   for(let i=0;i<n;i++){cp.x+=mx;cp.y+=my;cp.z+=mz;
    if(divePushOut(solids,cp,DIVE_BODY.r,cn)>0){hit=true;const l=Math.hypot(cn.x,cn.y,cn.z)||1,nx=cn.x/l,ny=cn.y/l,nz=cn.z/l;
-    const vn=state.vx*nx+state.vz*nz;if(vn<0){state.vx-=nx*vn;state.vz-=nz*vn;}
+    slideAlong(state,nx,nz,1);
     const mn=mx*nx+my*ny+mz*nz;if(mn<0){mx-=nx*mn;my-=ny*mn;mz-=nz*mn;}}}
+  // A soft scrape (Oct 27 2026): sliding along a solid keeps SWIM_MOTION.contact.keep of the speed along it (once per move, not per sub-step).
+  if(hit){state.vx*=SWIM_MOTION.contact.keep;state.vz*=SWIM_MOTION.contact.keep;}
   state.x=cp.x;state.y=cp.y-DIVE_BODY.cy;state.z=cp.z;return hit;}
  const events:DiveEvents={started:false,surfaced:'',low:false,out:false,find:'',firstFind:false,coins:0,breathUi:false,crest:false};
  const clear=()=>{events.started=events.low=events.out=events.firstFind=events.breathUi=events.crest=false;events.surfaced='';events.find='';events.coins=0;};
@@ -206,18 +212,24 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    state.time+=dt;
    // Steering: stick left / right turns, forward / back swims along the facing (the follow camera stays behind).
    const sx=Math.max(-1,Math.min(1,input.sx)),fwd=Math.max(-1,Math.min(1,-input.sy)),stick=Math.min(1,Math.hypot(sx,fwd));
-   state.yaw+=-sx*DIVE_TURN*dt*(.45+.55*Math.min(1,Math.abs(fwd)+.3));
+   // Natural swimming (Oct 27 2026, swimMotion.ts): the turn has angular momentum (the rate eases in and out, no snap), quicker and the
+   // swim slower and thicker low over the reef bed (reefNear, from last frame's depth range): precise where the coral is.
+   const near=reefNear(state.y-range.min);state.nearReef=near;
+   state.yawV=reefYawRate(state.yawV,-sx*DIVE_TURN*(.45+.55*Math.min(1,Math.abs(fwd)+.3)),near,dt);state.yaw+=state.yawV*dt;
    const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw);
    // Explore delight: near something still to collect the water is a little thicker (findSlow: more drag, a lower top speed).
-   const slow=findSlow(input.near??Infinity),thick=1+(FIND_SLOW.drag-1)*slow;state.slow=slow;
-   const top=1-FIND_SLOW.speed*slow,target=fwd*DIVE_SPEED*(fwd<0?.5:1)*top;
+   const slow=findSlow(input.near??Infinity),thick=(1+(FIND_SLOW.drag-1)*slow)*(1+SWIM_MOTION.reefNear.drag*near);state.slow=slow;
+   const top=1-Math.max(FIND_SLOW.speed*slow,SWIM_MOTION.reefNear.speed*near),target=fwd*DIVE_SPEED*(fwd<0?.5:1)*top;
    const along=state.vx*fx+state.vz*fz,k=1-Math.exp(-dt*(Math.abs(target)>Math.abs(along)?DIVE_ACCEL:(stick<.08?DIVE_GLIDE_DRAG:DIVE_DRAG)*thick));
    const nextAlong=along+(target-along)*k,side=(state.vx*fz-state.vz*fx)*Math.exp(-dt*3);
    state.vx=fx*nextAlong+fz*side;state.vz=fz*nextAlong-fx*side;
    // Seamless Explore (diveEdge.ts): the rim (the zone's blob outline in room metres) is a doorway. DIVE_EDGE.exitOut m past it the
    // diver leaves for the island (still under: the duck-dive); while the edge waits after a crossing it holds there like a wall.
    if(state.edgeCd>0)state.edgeCd=Math.max(0,state.edgeCd-dt);
-   const px0=state.x,py0=state.y,pz0=state.z;let nx=state.x+state.vx*dt,nz=state.z+state.vz*dt;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
+   // The reef's gentle current (Oct 27 2026): while swimming, a slow push along the room's current (diveCurrent.ts), × the effort, so a
+   // diver at rest never drifts (no creep to the edge, the rest frame holds).
+   const cur=reefCurrent(diveSwell(state.time,state.x,state.z))*state.effort*dt;
+   const px0=state.x,py0=state.y,pz0=state.z;let nx=state.x+state.vx*dt+DIVE_CURRENT.dir[0]*cur,nz=state.z+state.vz*dt+DIVE_CURRENT.dir[1]*cur;const r=Math.hypot(nx,nz),lim=Math.min(DIVE_ROOM_R,diveEdgeRim(state.spot!,Math.atan2(nz,nx))+DIVE_EDGE.exitOut);
    if(r>=lim&&state.edgeCd<=0){state.x=nx;state.z=nz;state.phase='surface';state.hold=DIVE_REARM_S;state.edgeCd=DIVE_EDGE.cooldown;state.spot=null;state.find=null;state.findDist=Infinity;state.ducking=true;events.surfaced='edge';return events;}
    if(r>lim){nx*=lim/r;nz*=lim/r;const n=(state.vx*nx+state.vz*nz)/(lim||1);if(n>0){state.vx-=nx/lim*n;state.vz-=nz/lim*n;}}
    state.x=nx;state.z=nz;
@@ -240,8 +252,9 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    if(!state.onCrest&&diveOnCrest(state.x,state.z,fl)){state.onCrest=true;events.crest=true;}
    // The body pitches with the climb / dive and rolls a little into turns (auto-level: both ease back to flat).
    const speed=Math.hypot(state.vx,state.vz);state.effort+=(stick-state.effort)*(1-Math.exp(-dt*4));
-   state.pitch+=(Math.max(-.5,Math.min(.5,-state.vy*.35))-state.pitch)*(1-Math.exp(-dt*3));
-   state.roll+=(Math.max(-DIVE_BANK,Math.min(DIVE_BANK,sx*DIVE_BANK*Math.min(1,.25+speed/DIVE_SPEED)))-state.roll)*(1-Math.exp(-dt*3));
+   // Oct 27 2026 (swimMotion.ts): the pitch is rate-limited (pitchToward) and the bank follows the real turn rate (bankFor), not the stick.
+   state.pitch=pitchToward(state.pitch,climbPitch(state.vy),dt);
+   state.roll+=(bankFor(state.yawV,speed/DIVE_SPEED,DIVE_BANK,DIVE_TURN)-state.roll)*(1-Math.exp(-dt*4));
    // Breath: the pace lesson. Glide slow, it lasts; push the stick all the way, it goes fast; at the top, a sip of air refills it.
    // No depth penalty: the whole reef is shallow.
    const base=Math.max(stick,Math.abs(input.lift)*.6);
@@ -277,7 +290,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
  };
  function begin(s:DiveSpot,x:number,z:number,yaw:number,speed:number,depthT:number){
   state.phase='diving';state.spot=s;state.x=x;state.z=z;state.yaw=yaw;state.vx=Math.sin(yaw)*speed;state.vz=Math.cos(yaw)*speed;state.vy=0;
-  state.pitch=state.roll=state.lift=0;state.liftHeld=state.lift0=state.topHold=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
+  state.pitch=state.roll=state.lift=state.yawV=state.nearReef=0;state.liftHeld=state.lift0=state.topHold=0;state.depthT=depthT;state.atTop=false;state.onCrest=false;
   diveDepthRange(state.x,state.z,s.floor,range);state.y=heightFor(state.depthT);state.find=null;state.findDist=Infinity;state.used.clear();for(const f of s.finds)if(f.kind==='ball'&&found(s.id).includes(f.id))state.used.add(f.id);state.rise=0;state.time=0;state.effort=0;state.dives++;
   events.started=true;events.breathUi=true;state.uiBreath=state.breath;
  }

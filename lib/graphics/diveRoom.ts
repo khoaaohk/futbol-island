@@ -12,6 +12,7 @@ import type {DivePickup} from '../town/water/diveJourney';
 import type {DiveFriendKind} from '../town/water/diveDelight';
 import {SPARKLE} from '../town/water/diveSparkle';
 import {seaTurtleFriendParts,seaTurtleModel} from './seaTurtle';
+import {easeFov,fovKick} from '../town/water/swimMotion';
 import {diveClearFrac,diveSolidBar,diveSolidBox,diveSolidRound,diveSolidWorld,type DiveSolid} from '../town/water/diveSolids';
 const SPARKLE_SEE=SPARKLE.see;
 export {diveWreckSize};
@@ -195,6 +196,9 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
  scene.background=fog.color;const deepC=new T.Color(th.water),shallowC=new T.Color(ROOM_SHALLOW);fog.color.copy(deepC).lerp(shallowC,ROOM_SHALLOW_MIX[0]);
  const hemi=new T.HemisphereLight(th.light[0],th.light[1],th.light[2]*.78);/* shallow reef: softer, so the sand is not washed out (water audit #5) */scene.add(hemi);
  const camera=new T.PerspectiveCamera(58,1,.1,th.fog[1]+6);camera.name='dive-camera';
+ // Natural swimming (Oct 27 2026, swimMotion.ts): a burst (a full kick, a held ▲ rise) eases the FOV open ≤ 3° and back. Off when lite
+ // (heat tier 2+ / Battery saver), calm or reduced motion; no projection update while it holds still.
+ const FOV0=58,fovOn=!(opt.reduced||opt.lite||opt.calm);let fovOff=0;
  const uTime={value:0};
  const fp={x:0,y:0,z:0};const findPt=(id:string)=>{const f=spot.finds.find(q=>q.id===id);return f?diveFindPoint(f,{x:0,y:0,z:0},fl):null;};
  const wk=th.wreck,wreckHalf=wk?(wk.style==='galleon'?7:wk.style==='cargo'?8.5:4.8):0;
@@ -606,7 +610,9 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   /** Draws (VISIBLE meshes and points in the room: the hidden pearl is not drawn; not counting the diver's rig) and triangles, for the budget test and the docs. */
   stats(){let draws=0;scene.traverse(o=>{if(((o as T.Mesh).isMesh||(o as T.Points).isPoints)&&o.visible&&o.name.startsWith('dive-'))draws++;});return {draws,triangles:triangles(),fish:fishMeshes.reduce((n,m)=>n+((m.geometry as T.InstancedBufferGeometry).instanceCount||0),0)-(burst.geometry as T.InstancedBufferGeometry).instanceCount};},
   /** One frame: the time uniform (fish, sway, bubbles), the bubbles' origin, the camera, and the lid / ball while they animate. */
-  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number}){hiddenBall?.frame(t,dt);
+  frame(t:number,dt:number,diver:{x:number;y:number;z:number;yaw:number;effort?:number;vx?:number;vy?:number;vz?:number}){hiddenBall?.frame(t,dt);
+   if(fovOn){const sp=Math.hypot(diver.vx??0,diver.vy??0,diver.vz??0),want=fovKick(Math.max(0,Math.min(1,(sp/3.2/* diveSession DIVE_SPEED */-.85)/.5)),true);
+    if(want!==fovOff){fovOff=easeFov(fovOff,want,dt);camera.fov=FOV0+fovOff;camera.updateProjectionMatrix();}}
    uTime.value=t;uPlayer.value.set(diver.x+Math.sin(diver.yaw)*.55,diver.y-.05,diver.z+Math.cos(diver.yaw)*.55);follow(dt,diver);
    // Explore v2: the fish and plants feel the diver, the water's colour. (The Dart's trail and FOV kick went with the Dart, Oct 21/22 2026.)
    uDiver.value.set(diver.x,diver.y+.3,diver.z,.5);uCam.value.copy(camera.position);

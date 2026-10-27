@@ -32,7 +32,7 @@ ok('findSlow: an eased curve (0 beyond 4 m, 1 within 1.4 m), and the swim near a
  const swim=(near)=>{const s=S.createDiveSession();s.scan(.2,spot.x,spot.z,true);assert(s.start());for(let i=0;i<90;i++)s.step(1/30,{sx:0,sy:-1,lift:0,near});
   const top=Math.hypot(s.state.vx,s.state.vz);  const x0=s.state.x,z0=s.state.z;for(let i=0;i<45;i++)s.step(1/30,{sx:0,sy:0,lift:0,near});return {top,coast:Math.hypot(s.state.x-x0,s.state.z-z0),slow:s.state.slow};};
  const far=swim(undefined),inf=swim(Infinity),close=swim(1);
- assert.equal(far.top,inf.top,'nothing near: the swim is exactly as before');assert(Math.abs(far.top-S.DIVE_SPEED)<.05,'full speed far away');
+ assert.equal(far.top,inf.top,'nothing near: the swim is exactly as before');/* Oct 27 2026 (swimMotion.ts reefNear): low over Ray Meadow's rising reef the swim is a little slower (at most reefNear.speed) */assert(far.top<=S.DIVE_SPEED+.05&&far.top>S.DIVE_SPEED*(1-.2)-.05,'full speed far away (less a little low over the reef): '+far.top.toFixed(2));
  assert(Math.abs(close.top-S.DIVE_SPEED*(1-S.FIND_SLOW.speed))<.08,'top speed eased down 25% by a find: '+close.top.toFixed(2));assert.equal(close.slow,1);
  assert(close.coast<far.coast*.75,'the glide stops sooner by a find (thicker water): '+close.coast.toFixed(2)+' vs '+far.coast.toFixed(2));
  assert(D.DIVE_FIND_RANGE>=3.2&&J.PICKUP_RANGE>=1.6,'the find prompt and the pickup reach are a little larger, so slow drifting still gets them');
