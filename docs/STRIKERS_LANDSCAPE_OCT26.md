@@ -9,8 +9,8 @@ menu was too complex. Changes:
 - `components/RotateLock.tsx` reads the mode (`useSyncExternalStore`). In landscape mode an UPRIGHT phone
   (`(pointer:coarse) and (orientation:portrait) and (max-width:500px)`) sees "Turn your phone sideways to play" (inverse phone
   animation). The same window `blur` pauses the match. A mode switch while held the wrong way also blurs, so leaving Strikers
-  sideways pauses the island behind the portrait card. Tall tablets (wider than 500 px) still play upright with the Oct 25/26
-  portrait tuning. Installed apps also get `screen.orientation.lock()` where the browser allows it.
+  sideways pauses the island behind the portrait card. Superseded for tall tablets and narrow desktop windows by round 3
+  (docs/ARCADE_STRIKERS_R3_OCT26.md): they now letterbox a landscape game frame instead of playing upright. Installed apps also get `screen.orientation.lock()` where the browser allows it.
 - No manifest orientation exists, so nothing else changes.
 
 ## Camera (lib/arcade/strikerScene.ts)

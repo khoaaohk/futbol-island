@@ -3,7 +3,7 @@ const fs=require('fs'),vm=require('vm'),ts=require('typescript'),assert=require(
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/arcade/strikerMatch.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:m,exports:m.exports,Math});
 const {createStrikerMatch,strikerInput,STRIKER_FOCUS,STRIKER_GOAL_PAUSE,STRIKER_HIT_STOP}=m.exports;
 const fresh=(level=1)=>{const g=createStrikerMatch(),s=g.state;s.level=level;g.reset();return {g,s,i:strikerInput()};};
-assert.equal(STRIKER_FOCUS.length,4);assert(STRIKER_GOAL_PAUSE<2,'restart stays inside the two-second restart contract');
+assert.equal(STRIKER_FOCUS.length,6);assert(STRIKER_GOAL_PAUSE<2,'restart stays inside the two-second restart contract');
 for(const hz of [30,60,120]){
  // Keeper reads a corner shot after the reaction delay and dives toward the crossing point.
  {const {g,s,i}=fresh(1),k=s.players[7];for(const p of s.players)if(!p.keeper)p.stun=9;Object.assign(k,{x:22.4,z:0});const sx=12,sz=-2,dx=27-sx,dz=3.8-sz,l=Math.hypot(dx,dz);
@@ -37,7 +37,7 @@ for(const level of [1,4]){const {g,s,i}=fresh(level);Object.assign(s.players[0],
 // Landscape phones (docs/LANDSCAPE_AUDIT_OCT23.md batch 1): the start card stays on screen (bottom <= innerHeight), scrolling inside
 // itself, above the idle touch buttons, with 44 px Team shape / Round pickers. Measured live by scripts/audit-landscape.cjs batch1.
 {const css=fs.readFileSync('components/LiveArcadeMatch.module.css','utf8').replace(/\s+/g,' ');
- const land=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:landscape\)\{(.*?)\}\}/g)].map(m=>m[1]).join('}');
+ const land=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:landscape\),\(pointer:coarse\) and \(min-width:501px\)\{(.*?)\}\}/g)].map(m=>m[1]).join('}');
  assert(/\.overlay>\.card\{max-height:calc\(100dvh - 90px - env\(safe-area-inset-bottom,0px\)\);overflow:auto/.test(land),'landscape card: max-height under the viewport + overflow auto');
  assert(/\.card \.shape select,\.card \.inline select\{min-height:44px/.test(land),'landscape pickers are 44 px tall');
  assert(/\.overlay\{z-index:6\}/.test(land),'card sits above the touch buttons in landscape');

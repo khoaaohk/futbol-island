@@ -1,13 +1,14 @@
 import * as T from 'three';
 import {createGlassFloor} from './glassFloor';
 import {createArcadeStage,type ArcadePoseOptions} from './arcadeStage';
-import {STRIKER_GOAL_PAUSE,STRIKER_DIVE,STRIKER_SKILLS,STRIKER_HEAVY_TOUCH,STRIKER_CLEAN,STRIKER_PENALTY_X,type StrikerMatch} from './strikerMatch';
+import {STRIKER_GOAL_PAUSE,STRIKER_DIVE,STRIKER_SKILLS,STRIKER_HEAVY_TOUCH,STRIKER_CLEAN,STRIKER_PENALTY_X,STRIKER_ZONE_RADIUS,type StrikerMatch} from './strikerMatch';
 import {strikerCelebration,strikerOutroPose,strikerOutroStar,STRIKER_OUTRO,type StrikerCelebrationRole} from './strikerCelebrate';
 import type {SkillMotion} from '../graphics/skillMoves';
 import {matchPlayerDress} from '../town/beanLooks';
 import {neonColor} from './neonPalette';
 import {stripedPlaneGeometry} from '../graphics/pitchStripes';
 import {strikerGaugeZone,STRIKER_OVERHIT} from './strikerFeel';
+import {createStrikerCinema} from './strikerCinema';
 export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const stage=createArcadeStage(canvas);stage.scenery.visible=false;const nets:{side:number;attribute:T.BufferAttribute;rest:Float32Array;dirty:boolean}[]=[];
  stage.box(0,-.09,0,52,.16,30,'#427f6c').castShadow=false;
@@ -56,6 +57,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  let outroT=0,outroWinner=-1,outroStar=-1;
  const axes={x:0,z:0};let portrait=false,hold=0,focusAmount=0,shotFlash=0,goalFlash=0,punch=0,shake=0,clock=0,pop=0,lastSelected=-1,lastNearMiss=0;
  const cameraHome=new T.Vector3(),cameraFocus=new T.Vector3(),focusTarget=new T.Vector3(),followPan=new T.Vector3();
+ const cinema=createStrikerCinema({reduced:stage.reduced}),cinemaLook=new T.Vector4(0,0,0,0);
  // Follow cam: on while the match is live (setFollow); phones zoom a touch more because the rigs are smallest there.
  // Portrait phones (Oct 25 2026: the app is portrait-only on phones, so Strikers now plays upright) zoom in further: the
  // whole 54 m pitch spans the short screen width there, so bodies read smallest without it.
@@ -78,6 +80,8 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const gaugeLayer=(geometry:T.BufferGeometry,color:T.Color,opacity:number,order:number)=>{const m=new T.Mesh(geometry,new T.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:T.DoubleSide}));m.renderOrder=order;m.frustumCulled=false;return m;};
  const gaugeScale=stage.mobile?1.12:1,gauge=new T.Group(),gaugeFillGeometry=gaugeArc(1.48,1.74,0,1),gaugeFill=gaugeLayer(gaugeFillGeometry,gaugeZoneColor.build.clone(),.95,5),gaugeFillMaterial=gaugeFill.material as T.MeshBasicMaterial;
  gauge.add(gaugeLayer(gaugeArc(1.4,1.82,0,1),gaugeZoneColor.build,.28,3),gaugeLayer(gaugeArc(1.4,1.82,STRIKER_CLEAN[0],STRIKER_CLEAN[1]),gaugeZoneColor.clean,.7,4),gaugeLayer(gaugeArc(1.4,1.82,STRIKER_OVERHIT,1),gaugeZoneColor.over,.75,4),gaugeFill);gauge.visible=false;stage.scene.add(gauge);
+ // Power zone (round 3 match event, strikerMatch matchEvents): one pink ring, hidden unless a zone is live. One draw while shown.
+ const zoneRing=stage.ring(0,0,STRIKER_ZONE_RADIUS,'#ff83d3');zoneRing.visible=false;{const fill=new T.Mesh(new T.CircleGeometry(STRIKER_ZONE_RADIUS,32),new T.MeshBasicMaterial({color:'#ff83d3',transparent:true,opacity:.28,depthWrite:false,side:T.DoubleSide}));zoneRing.add(fill);}
  const releaseRing=stage.ring(0,0,1,'#9cecf2'),releaseBase=releaseRing.material.color.clone();releaseRing.visible=false;releaseRing.material.transparent=true;releaseRing.material.depthWrite=false;
  // Interception read: the spot a defender is racing to, so a risky pass is visible as it happens.
  const interceptRing=stage.ring(0,0,.9,'#ff7a5c');interceptRing.visible=false;
@@ -217,7 +221,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   const presser=s.presser>=0?s.players[s.presser]:null,cover=s.cover>=0?s.players[s.cover]:null;coverLine.visible=!!presser&&!!cover&&s.level>=3&&!celebrating;if(presser&&cover&&coverLine.visible){const dx=cover.x-presser.x,dz=cover.z-presser.z;coverLine.position.set((cover.x+presser.x)/2,.05,(cover.z+presser.z)/2);coverLine.scale.z=Math.hypot(dx,dz);coverLine.rotation.y=Math.atan2(dx,dz);}
   ballShadow.position.set(bx,.055,bz);ballShadow.scale.setScalar(1+s.ball.y*.16);(ballShadow.material as T.MeshBasicMaterial).opacity=.4/(1+s.ball.y*.35);
   if(anim>0){trailAge+=anim;if(trailAge>.035){trailAge=0;const dot=trail[cursor++%trail.length],speed=Math.hypot(s.ball.vx,s.ball.vz),shot=speed>27,size=s.ball.owner<0&&speed>12&&!stage.reduced?(shot?.2:.12):0;dot.position.copy(ball.position);dot.scale.setScalar(size);dot.visible=size>0;trailMaterial.color.copy(s.teamStrike&&shot?trailSpecial:shot?trailShot:trailPass);}for(const dot of trail)if(dot.visible){dot.scale.multiplyScalar(Math.exp(-anim*4));if(dot.scale.x<.012)dot.visible=false;}}
-  if(s.event!==lastEvent){lastEvent=s.event;if(s.eventKind==='shot'&&(s.shotMoment>0||s.cleanStrike)){shotFlash=1;releaseRing.position.set(s.eventX,.08,s.eventZ);releaseRing.material.color.copy(s.cleanStrike?cleanCyan:releaseBase);}if(['shot','goal','hit','post','save'].includes(s.eventKind))stage.burst(s.eventX,.6,s.eventZ,s.eventKind==='goal'?2:1);
+  if(s.event!==lastEvent){lastEvent=s.event;if(s.eventKind==='shot'&&(s.shotMoment>0||s.cleanStrike)){shotFlash=1;releaseRing.position.set(s.eventX,.08,s.eventZ);releaseRing.material.color.copy(s.cleanStrike?cleanCyan:releaseBase);}if(['shot','goal','hit','post','save'].includes(s.eventKind))stage.burst(s.eventX,.6,s.eventZ,s.eventKind==='goal'?2:1);else if(s.eventKind==='tackle'||s.eventKind==='steal'||s.eventKind==='zonegot')stage.burst(s.eventX,.2,s.eventZ,.5);
    if(s.eventKind==='goal'){punch=1;shake=.9;goalFlash=1;throwConfetti(s.eventX,s.eventZ);fireworks=s.shootout.active?1:3;fireworkClock=0;fireworkSide=Math.sign(s.eventX)||1;}else if(s.eventKind==='save')punch=Math.max(punch,.25);else if(s.eventKind==='hit')shake=Math.max(shake,.3);}
   if(s.nearMiss!==lastNearMiss){lastNearMiss=s.nearMiss;punch=Math.max(punch,.4);shake=Math.max(shake,.35);}
   for(const net of nets){const active=celebrating&&Math.sign(s.eventX)===net.side&&!stage.reduced;if(!active&&!net.dirty)continue;const t=elapsed,amount=active?Math.sin(t*14)*Math.exp(-t*3.8)*.45:0;for(let i=0;i<net.rest.length;i+=3){const x=net.rest[i],y=net.rest[i+1],z=net.rest[i+2],falloff=Math.exp(-((x-s.eventZ*net.side)**2+(y-.8)**2)*.45);net.attribute.setZ(i/3,z+(z<-.1?-amount*falloff:0));}net.attribute.needsUpdate=true;net.dirty=active;}
@@ -238,11 +242,24 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   const lead=followAmount*(1-focus),offsetX=followPan.x*lead+cameraFocus.x*focus,offsetZ=followPan.z*lead+cameraFocus.z*focus;
   const zoom=1+(followZoom-1)*lead+focus*1.65+(motion?Math.sin(Math.min(1,punch)*Math.PI*.5)*punch*.16:0);
   stage.camera.position.copy(cameraHome);stage.camera.position.x+=offsetX;stage.camera.position.z+=offsetZ;
+  // Cinematic beats (round 3, lib/arcade/strikerCinema.ts): blend the look point toward the beat's subject and its goal side, dolly a
+  // capped distance toward it, lower the camera for a 3/4 behind-the-shoulder angle, glide sideways for kick-off / full time. Damped,
+  // no roll, zoom within ±12%; the look point stays between the player and the goal so neither leaves the frame. Reduced motion: off.
+  let lookX=offsetX,lookY=.8*focus,lookZ=offsetZ,cinemaZoom=1;const ca=motion?cinema.amount:0;
+  if(ca>0||(motion&&cinema.sweep)){const k=dt>0?1-Math.exp(-dt*6):0,cx=cinema.tx*.55+cinema.gx*.45,cz=cinema.tz*.55+cinema.gz*.45;
+   if(cinemaLook.w<=0){cinemaLook.set(cx,cz,0,1);}else{cinemaLook.x+=(cx-cinemaLook.x)*k;cinemaLook.y+=(cz-cinemaLook.y)*k;}
+   lookX+=(cinemaLook.x-lookX)*ca;lookZ+=(cinemaLook.y-lookZ)*ca;lookY+=(.9-lookY)*ca;
+   const cam=stage.camera.position,side=Math.sign(cinema.gx-cinema.tx)||1,dist=cam.y;
+   cam.x+=(lookX-cam.x)*cinema.dolly*.55;cam.z+=(lookZ-cam.z)*cinema.dolly*.55;cam.y-=cam.y*cinema.dolly*.3;
+   cam.y-=cam.y*.28*cinema.low;cam.x-=side*dist*.14*cinema.low;
+   cam.x+=cinema.sweep*9;lookX+=cinema.sweep*3;cinemaZoom=cinema.zoom;}
+  else cinemaLook.w=0;
   if(motion&&shake>0){stage.camera.position.x+=Math.sin(clock*53)*shake*.35;stage.camera.position.y+=Math.sin(clock*61)*shake*.2;}
-  stage.camera.lookAt(offsetX,.8*focus,offsetZ);
-  if(Math.abs(stage.camera.zoom-zoom)>.0001){stage.camera.zoom=zoom;stage.camera.updateProjectionMatrix();}
+  stage.camera.lookAt(lookX,lookY,lookZ);
+  const zoomed=zoom*cinemaZoom;if(Math.abs(stage.camera.zoom-zoomed)>.0001){stage.camera.zoom=zoomed;stage.camera.updateProjectionMatrix();}
   gauge.visible=aiming&&!celebrating;{const c=s.charge,clean=c>=STRIKER_CLEAN[0]&&c<=STRIKER_CLEAN[1];if(aiming&&clean&&!(targetMaterial.color.equals(aimOver))){aimMaterial.color.copy(cleanCyan);targetMaterial.color.copy(cleanCyan);}
    if(gauge.visible){gauge.position.set(p.x,.07,p.z);gauge.rotation.y=Math.atan2(stage.camera.position.x-p.x,stage.camera.position.z-p.z);gauge.scale.setScalar(gaugeScale*(1+(clean&&!stage.reduced?Math.sin(clock*18)*.035:0)));gaugeFillGeometry.setDrawRange(0,Math.min(GAUGE_SEG,Math.ceil(c*GAUGE_SEG))*6);gaugeFillMaterial.color.copy(gaugeZoneColor[strikerGaugeZone(c)]);}}
+  zoneRing.visible=s.zoneT>0&&!celebrating;if(zoneRing.visible){zoneRing.position.set(s.zoneX,.07,s.zoneZ);zoneRing.scale.setScalar(stage.reduced?1:1+Math.sin(clock*6)*.08);}
   shotFlash=Math.max(0,shotFlash-dt*2.8);releaseRing.visible=shotFlash>0&&!stage.reduced;releaseRing.scale.setScalar(1+(1-shotFlash)*7);releaseRing.material.opacity=shotFlash;
   goalFlash=Math.max(0,goalFlash-dt*.8);
   glassFloor.update(dt,s.ball.x,s.ball.z,s.charge,Math.max(shotFlash,stage.reduced?0:goalFlash));
@@ -253,8 +270,8 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   stage.effects(anim>0?dt:0);stage.lighting(s.time);
   // Portrait play attacks upward; controls are transformed into this view.
  }
- overlays.push(ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,gauge,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
- fit();update(0);return{stage,fit,update,screenAxes,rigs,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
+ overlays.push(zoneRing,ring,marker,aim,target,receiverRing,passLine,interceptRing,touchRing,heavyRing,runRing,gauge,releaseRing,coverLine,...scanRings,...warnings,...wedges,...trail);
+ fit();update(0);return{stage,fit,update,screenAxes,rigs,cinema,startReplay,stopReplay,setFollow:(on:boolean)=>{follow=on;},
   /** Impact hit-stop (strikerFeel.strikerImpact): freeze the bodies for `seconds` and punch the camera by `kick`. */
   impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;},
   /** Full-time outro: a few seconds of win / lose / draw body language after the whistle. Returns its length (0 = none, reduced motion). */

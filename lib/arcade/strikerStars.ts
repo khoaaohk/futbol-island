@@ -1,6 +1,6 @@
 /** Island Strikers mastery stars: best stars per round (0..3), kept on this device. No streaks, no timers. */
 const KEY='fi2-strikers-stars-v1';
-export const STRIKER_STAR_ROUNDS=4;
+export const STRIKER_STAR_ROUNDS=6;
 export function readStrikerStars():number[]{
  try{const value=JSON.parse(localStorage.getItem(KEY)??'[]');return Array.from({length:STRIKER_STAR_ROUNDS},(_,i)=>{const n=Number(Array.isArray(value)?value[i]:0);return Number.isFinite(n)?Math.max(0,Math.min(3,Math.floor(n))):0;});}
  catch{return Array(STRIKER_STAR_ROUNDS).fill(0);}

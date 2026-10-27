@@ -1,14 +1,14 @@
 const fs=require('fs'),vm=require('vm'),ts=require('typescript'),assert=require('node:assert/strict'),m={exports:{}};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/arcade/strikerMatch.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{module:m,exports:m.exports,Math});
 const {createStrikerMatch,strikerInput,STRIKER_ROUNDS}=m.exports;
-assert.equal(STRIKER_ROUNDS.length,4);
+assert.equal(STRIKER_ROUNDS.length,6);
 for(const hz of [30,60,120]){
  const g=createStrikerMatch(),s=g.state,i=strikerInput();
  g.reset(true);assert.equal(s.level,1,'cannot skip a live match');
  s.finished=true;s.score[1]=1;g.reset(true);assert.equal(s.level,1,'loss retries same round');
  s.finished=true;g.reset(true);assert.equal(s.level,1,'draw retries same round');
- for(let round=2;round<=5;round++){s.finished=true;s.score[0]=2;s.score[1]=1;g.reset(true);assert.equal(s.level,Math.min(4,round),'win advances with bounded finale');assert.deepEqual(Array.from(s.score),[0,0]);assert.equal(s.time,0);assert(!s.finished);}
- g.reset();assert.equal(s.level,4,'restart preserves chosen difficulty');
+ for(let round=2;round<=7;round++){s.finished=true;s.score[0]=2;s.score[1]=1;g.reset(true);assert.equal(s.level,Math.min(6,round),'win advances with bounded finale');assert.deepEqual(Array.from(s.score),[0,0]);assert.equal(s.time,0);assert(!s.finished);}
+ g.reset();assert.equal(s.level,6,'restart preserves chosen difficulty');
  const p=s.players[4];Object.assign(s.players[0],{x:0,z:0});Object.assign(s.ball,{owner:0,x:.82,z:0,lock:0});Object.assign(p,{x:2.6,z:0,think:0});
  g.step(1/hz,i);assert(p.windup>0,'defender telegraphs');const aim=[p.tackleX,p.tackleZ];
  s.players[0].z=6;s.ball.z=6;

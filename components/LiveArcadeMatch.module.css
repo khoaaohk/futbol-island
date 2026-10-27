@@ -12,10 +12,10 @@
 
 .rotate{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:24px;background:#afcfd2;text-align:center}.rotate>div{max-width:320px}.rotate h2{font:32px/1.15 IslandBrush,sans-serif;margin:15px 0}.rotate p{font-size:14px;line-height:1.6}.rotate small{font-size:12px;font-weight:700}.rotatePhone{width:80px;height:80px;transform:rotate(90deg);animation:turnPhone 1.2s ease-in-out 1}.root button:active{transform:translateY(var(--btn-press));box-shadow:0 1px 0 #a38a55}.root button{touch-action:none;user-select:none;-webkit-touch-callout:none}.joystick{user-select:none;-webkit-touch-callout:none}
 @keyframes turnPhone{0%,20%{transform:rotate(0)}100%{transform:rotate(90deg)}}
-@media(pointer:coarse) and (orientation:landscape){.touchControls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));align-items:flex-end}.actions{max-width:255px}.actions button{min-height:44px;font-size:11px}.actions button[data-action=shoot]{min-height:94px}.joystick{width:88px;height:88px;background:#fff1d3b8;border-color:#fff1d3}.meters{top:59px;font-size:9px}.direction{top:8px}.direction span{display:none}.footer>p{max-width:calc(100% - 440px);margin:auto;min-height:18px}.card{box-sizing:border-box;max-width:430px;padding:15px 22px}.card h2{font-size:28px}.card p{font-size:12px;margin:10px 0}.overlay{padding:8px}.header{padding:6px 14px}.score time{padding:7px 12px}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.touchControls{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));align-items:flex-end}.actions{max-width:255px}.actions button{min-height:44px;font-size:11px}.actions button[data-action=shoot]{min-height:94px}.joystick{width:88px;height:88px;background:#fff1d3b8;border-color:#fff1d3}.meters{top:59px;font-size:9px}.direction{top:8px}.direction span{display:none}.footer>p{max-width:calc(100% - 440px);margin:auto;min-height:18px}.card{box-sizing:border-box;max-width:430px;padding:15px 22px}.card h2{font-size:28px}.card p{font-size:12px;margin:10px 0}.overlay{padding:8px}.header{padding:6px 14px}.score time{padding:7px 12px}}
 @media(prefers-reduced-motion:reduce){.rotatePhone{animation:none}}
 
-@media(pointer:coarse) and (orientation:landscape){.meters{top:78px;padding:3px 10px;margin:0}.direction{top:4px}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.meters{top:78px;padding:3px 10px;margin:0}.direction{top:4px}}
 
 /* Match the main island's printed action buttons and gold joystick. */
 .actions button{--control-paper:#b8d9b5;--control-base:#75966f;border:3px solid #fff2cd;border-radius:999px;color:#244d40;font-weight:600;background:var(--control-paper) url('/stories/films/assets/entry-grain.png') center/128px 128px;background-blend-mode:soft-light;box-shadow:0 5px 0 var(--control-base),0 0 0 3px #fff2cd40}
@@ -44,7 +44,7 @@
  .root .actions button{width:58px;min-height:58px;padding:3px;font-size:10px}
  .root .actions button[data-action=shoot]{min-height:128px;font-size:12px}
 }
-@media(pointer:coarse) and (orientation:landscape){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.root{--control-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
 
 .root{background:#080b1b;color:#eff8ff;--btn-ink:#ecfbff;--btn-gold:#24223e;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
 .root .stage{background:#080b1b}.root .header,.root .footer{background:#080b1b;color:#eff8ff}.root .score time{background:#26223d;color:#eeebff}.root .score b{color:#fff08a}.root .score span:last-child b{color:#83dfff}
@@ -80,7 +80,7 @@
 @media(max-width:700px),(pointer:coarse){.banner strong{font-size:44px}.banner[data-tone=goal] strong{font-size:64px}.banner[data-tone=concede] strong{font-size:40px}}
 /* Phone landscape: keep the whole card on screen and the meters clear of the direction line. */
 @media(max-height:500px){.card{padding:12px 18px}.card h2{font-size:22px;margin:2px 0}.card p{margin:5px 0;font-size:12px}.card select{margin:4px 0 6px;padding:7px 10px}.card .result{font-size:22px;margin:0}.stats{margin:5px 0}.stats li{padding:4px}.stats li b{font-size:16px}.card .lesson{display:none}}
-@media(pointer:coarse) and (orientation:landscape){.root .meters{top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px))}.root .direction .focus{margin-top:3px}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.root .meters{top:auto;bottom:calc(30px + env(safe-area-inset-bottom,0px))}.root .direction .focus{margin-top:3px}}
 
 /* Mastery stars (G1, Oct 4): best stars on the ready card, earned stars at full time, coach-eased retry note. */
 .starsLine{font-size:12px!important;line-height:1.4!important;margin:6px 0!important}.starsLine b{color:#fff08a;letter-spacing:.12em;margin-right:6px;font-size:15px}
@@ -141,11 +141,11 @@
 /* Landscape phones are a supported mode (docs/LANDSCAPE_AUDIT_OCT23.md, batch 1): the start / result card stays inside the screen and
    scrolls inside itself instead of spilling past the bottom, sits above the (idle) touch buttons so none of them covers its
    pickers or Kick off, and the Team shape / Round pickers keep 44 px targets. */
-@media(pointer:coarse) and (orientation:landscape){.overlay{z-index:6}.overlay>.card{max-height:calc(100dvh - 90px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain}.card .shape select,.card .inline select{min-height:44px;margin:2px 0;padding:6px 10px;box-sizing:border-box}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.overlay{z-index:6}.overlay>.card{max-height:calc(100dvh - 90px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain}.card .shape select,.card .inline select{min-height:44px;margin:2px 0;padding:6px 10px;box-sizing:border-box}}
 /* Portrait phones (Oct 25 2026, docs/ARCADE_STRIKERS_UPGRADE_OCT25.md). The app is portrait-only on phones (RotateLock, Oct 24), and
    Strikers used to demand landscape, so a phone could not play it at all. Upright play: the canvas runs to the bottom edge, the coach
    line floats as a pill above the thumb buttons, the meters sit in one row under them, and the idle buttons hide behind the card. */
-@media(pointer:coarse) and (orientation:portrait){
+@media(pointer:coarse) and (orientation:portrait) and (max-width:500px){
  .root{--control-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
  .root .footer{height:0;min-height:0;padding:0;border:0;overflow:visible;background:transparent}
  .root .footer>p{position:absolute;z-index:2;left:50%;bottom:calc(var(--control-bottom) + 140px);transform:translateX(-50%);width:max-content;max-width:calc(100% - 48px);min-height:0;margin:0;padding:5px 12px;border-radius:14px;background:#0b1024cc;color:#e9fbff;font-size:12px;line-height:1.3;text-align:center;pointer-events:none}
@@ -166,7 +166,7 @@
    bottom-left corner, the five buttons fold into a two-column block hugging the bottom-right corner (Shoot spans two rows), the
    bottom centre stays open, and the coach line is a small right-aligned pill above the buttons that fades after a few seconds
    (CSS only; React re-keys it when the line changes). strikerScene.ts lifts the pitch a little more on portrait phones to match. */
-@media(pointer:coarse) and (orientation:portrait){
+@media(pointer:coarse) and (orientation:portrait) and (max-width:500px){
  .root .movement{left:calc(8px + env(safe-area-inset-left,0px));width:104px;height:104px}
  .root .movement :global(.joystick){width:104px;height:104px}
  .root .actions{right:calc(8px + env(safe-area-inset-right,0px));grid-template-columns:50px 50px;grid-template-areas:'pass sprint' 'through shoot' 'switch shoot';gap:6px}
@@ -232,7 +232,7 @@
  .root:is([data-phase=ready],[data-phase=paused]) .footer>p{visibility:hidden}
  .root .actions button[data-pressed]{filter:brightness(1.25);transform:translateY(3px) scale(.96);box-shadow:0 1px 0 #101629,0 0 18px #81fbed55}
 }
-@media(pointer:coarse) and (orientation:landscape){
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){
  .root{--control-bottom:calc(10px + env(safe-area-inset-bottom,0px));--stick:clamp(132px,calc(100vh - 230px),164px);--cluster-w:284px;--cluster-h:180px}
  .root>.header.header{padding:calc(6px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 4px calc(16px + env(safe-area-inset-left,0px))}
  .root .footer{height:0;min-height:0;padding:0;border:0;overflow:visible;background:transparent}
@@ -256,3 +256,62 @@
  .root .actions button[data-action=switchPlayer]{--x:-200px;--y:8px}
  .root .actions .hold{font-size:10px;margin-top:2px}
 }
+
+/* ===== Landscape frame (round 3, Oct 26 2026, docs/ARCADE_STRIKERS_R3_OCT26.md). Strikers is ALWAYS a sideways pitch. Upright phones
+   see RotateLock's "Turn your phone sideways" card; every other tall window (a narrow desktop window, an upright tablet) letterboxes a
+   4:3 game frame (header + a ~16:9 pitch + footer) centred on a dark backdrop. Upright tablets get the landscape thumb layout inside the
+   frame (the coarse landscape blocks above also match coarse >= 501 px); mouse windows hide the touch buttons and use the keyboard.
+   Menus (start / pause / full time) open over the whole window, so the card never has to squeeze into the frame. */
+.backdrop{display:none}
+@media(pointer:fine) and (orientation:portrait),(pointer:coarse) and (orientation:portrait) and (min-width:501px){
+ .backdrop{display:block;position:fixed;inset:0;z-index:139;background:radial-gradient(120% 60% at 50% 50%,#1b1f45 0%,#080b1b 62%,#04050d 100%);touch-action:none}
+ .root.root{inset:auto 0;top:calc(50dvh - 37.5vw);height:75vw;border-block:2px solid #81fbed55;box-shadow:0 0 40px #4debd522}
+ .root .overlay{position:fixed;inset:0;z-index:6;background:#04050dcc}
+ .root>.header.header{padding:8px calc(14px + env(safe-area-inset-right,0px)) 6px calc(14px + env(safe-area-inset-left,0px))}
+ .root .direction>span{display:none}
+}
+@media(pointer:fine) and (orientation:portrait){
+ .root .touchControls{display:none}
+ .root .footer{padding:3px 10px 5px}
+ .root .meters{margin:2px 0;gap:10px}.root .meters meter{width:52px}
+}
+
+/* ===== Round 3 menus (Oct 26 2026, docs/ARCADE_STRIKERS_R3_OCT26.md): pause + full-time cards reuse the start card (.start): result,
+   big stars, one primary, small Arcade / More / Leaderboard; details under More. Keycaps for keyboard players; hard-round chips. */
+.end{text-align:center}
+.end>small{text-align:left}
+.end .result{margin:2px 0 0;font-size:44px;line-height:1}
+.endScore{margin:0!important;font-size:16px!important;font-weight:800;letter-spacing:.04em;color:#cef7ff}
+.endLine{margin:0!important;font-size:14px!important;line-height:1.35!important;color:#eff8ff}
+.bigStars{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0!important;font-size:40px!important;line-height:1!important;color:#5d6a8c}
+.bigStars span[data-on]{color:#fff08a;text-shadow:0 0 14px #ffd25e88;animation:starPop .5s cubic-bezier(.2,1.6,.4,1) both}
+.bigStars span:nth-child(2){animation-delay:.18s}.bigStars span:nth-child(3){animation-delay:.36s}
+.bigStars .newBest{font-size:12px;margin-left:6px;color:#ff8fc8;letter-spacing:.06em;text-transform:uppercase}
+.end .options{text-align:left}
+.end .stats{margin:0}
+.end .starList{margin:0}
+.root .end>.startRow>button{flex:1}
+@media(max-height:500px){.root .end>.result.result{font-size:34px!important;margin:0!important;line-height:1!important}.bigStars{font-size:30px!important}.endLine{font-size:12px!important}}
+@media(prefers-reduced-motion:reduce){.bigStars span[data-on]{animation:none}}
+.keys{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 12px;margin:2px 0 0;padding:0;list-style:none;font-size:12px;font-weight:700;color:#bdeaf2}
+.keys li{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.keys kbd{display:inline-block;min-width:18px;padding:1px 7px;border:1px solid #81fbed;border-bottom-width:3px;border-radius:6px;background:#151c35;color:#fff08a;font:800 11px/1.5 var(--font-body,Arial),sans-serif;text-align:center}
+.keysHint{position:absolute;z-index:3;left:50%;bottom:14px;transform:translateX(-50%);width:max-content;max-width:calc(100% - 24px);padding:8px 14px;border:1px solid #81fbed88;border-radius:16px;background:#0b1024e6;pointer-events:none;animation:keysHint 8s ease-out both}
+@keyframes keysHint{0%{opacity:0;transform:translate(-50%,8px)}5%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.keysHint{animation:none}}
+@media(pointer:coarse){.keys,.keysHint{display:none}}
+.goals li[data-mod]{border-color:#ff83d3;color:#ffe5f6}.goals li[data-mod]::before{content:'⚡ ';color:#ff83d3}
+.root .seg>button[data-hard]:not(:disabled){border-color:#ff83d388}
+.root .seg>button[data-hard]::after{content:'HARD';display:block;font-size:8px;font-weight:900;letter-spacing:.1em;color:#ff83d3}
+
+/* Commentator captions (round 3): one short pill under the direction line, pops and fades in 1.4 s (opacity/transform only). */
+.caption{position:absolute;z-index:2;left:50%;top:64px;margin:0;padding:5px 14px;transform:translateX(-50%);border:1px solid #fff08a99;border-radius:999px;background:#151b32e8;color:#fff08a;font:800 15px/1.2 var(--font-body,Arial),sans-serif;letter-spacing:.03em;white-space:nowrap;pointer-events:none;animation:captionPop 1.4s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes captionPop{0%{opacity:0;transform:translate(-50%,6px) scale(.8)}15%{opacity:1;transform:translate(-50%,0) scale(1.06)}25%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-4px)}}
+@media(prefers-reduced-motion:reduce){.caption{animation:captionFade 1.4s linear both}}
+@keyframes captionFade{0%,80%{opacity:1}100%{opacity:0}}
+@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){.caption{top:86px;font-size:13px}}
+
+/* Tall mouse windows (landscape frame): the keycaps sit in the free space under the frame for the whole match; the one-time strip
+   over the pitch is not needed there. */
+.keysDock{display:none}
+@media(pointer:fine) and (orientation:portrait){.keysDock{display:block;position:fixed;left:0;right:0;top:calc(50dvh + 37.5vw + 18px);padding:env(safe-area-inset-top,0px) calc(16px + env(safe-area-inset-right,0px)) 0 calc(16px + env(safe-area-inset-left,0px));pointer-events:none}.keysHint{display:none}}

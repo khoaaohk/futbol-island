@@ -10,7 +10,4 @@
 /* phones held sideways: touch screen, short side */
 @media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock[data-mode=portrait]{display:flex}}
 /* landscape mode, phones held upright: touch screen, narrow side */
-@media(pointer:coarse) and (orientation:portrait) and (max-width:500px),(pointer:fine) and (orientation:portrait) and (max-width:700px){.lock[data-mode=landscape]{display:flex}}
-/* the card's wording follows the device: a phone turns, a mouse window widens */
-.lock .wide{display:none}
-@media(pointer:fine){.lock .turn{display:none}.lock .wide{display:block}}
+@media(pointer:coarse) and (orientation:portrait) and (max-width:500px){.lock[data-mode=landscape]{display:flex}}

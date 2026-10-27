@@ -7,7 +7,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),live=read('components/LiveArcadeMatch.tsx');
-const i=css.indexOf('@media(pointer:coarse) and (orientation:landscape){\n .root{--control-bottom');assert.ok(i>0,'the landscape block');
+const i=css.indexOf('@media(pointer:coarse) and (orientation:landscape),(pointer:coarse) and (min-width:501px){\n .root{--control-bottom');assert.ok(i>0,'the landscape block');
 const block=css.slice(i,css.indexOf('\n}',i));
 const num=(re,src=block)=>{const m=src.match(re);assert.ok(m,String(re));return Number(m[1]);};
 const CW=num(/--cluster-w:(\d+)px/),CH=num(/--cluster-h:(\d+)px/),RIGHT=14,BOTTOM=10;
@@ -48,7 +48,7 @@ assert.ok(!/Fast feet\. Big finishes\./.test(live),'no headline + paragraph');
 assert.match(start,/<button className=\{styles\.primary\}[^\n]*?>Kick off<\/button>/,"one big Kick off");
 assert.match(start,/aria-expanded=\{optionsOpen\} aria-controls="strikers-options"/,'Options is a disclosure, closed by default');
 assert.match(live,/\[optionsOpen,setOptionsOpen\]=useState\(false\)/);
-assert.match(start,/className=\{styles\.goals\} aria-label="Star goals"><li>Win<\/li>/,'star goals as three chips');
+assert.match(start,/className=\{styles\.goals\} aria-label="Star goals">[^\n]*?<li>Win<\/li>/,'star goals as three chips (hard rounds add a modifier chip first, round 3)');
 assert.match(start,/\{firstTime&&<ol className=\{styles\.howTo\}/,'how-to strip only for first-timers');
 assert.match(live,/localStorage\.setItem\(HOWTO_SEEN_KEY,'1'\)/,'hidden once they have kicked off');
 assert.match(start,/3 coins per match/);assert.match(start,/Leaderboard/);assert.match(start,/disabled=\{!cupOpen\}/,'Island Cup unlock state kept');
@@ -57,5 +57,5 @@ assert.match(css,/\.root \.seg>button\{flex:1;min-width:0;display:grid;place-ite
 assert.match(css,/\.root \.startRow>\.optionsToggle,\.root \.startRow>\.boards\{[^}]*min-height:48px/);
 assert.match(css,/@media\(max-height:500px\) and \(min-width:600px\)\{\.root \.overlay>\.start\[data-options\]\{display:grid;grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/,'landscape: Options open beside the card, no scroll');
 // The best unlocked round is pre-selected (unchanged), and the shape choice is remembered (unchanged).
-assert.match(live,/match\.state\.level=Math\.min\(4,saved\.unlocked\)/);assert.match(live,/saveStrikerShape\(next\)/);
+assert.match(live,/match\.state\.level=Math\.min\(LAST_ROUND,saved\.unlocked\)/);assert.match(live,/saveStrikerShape\(next\)/);
 console.log(`strikers-landscape-controls ok (min gap ${minGap.toFixed(1)} px)`);
