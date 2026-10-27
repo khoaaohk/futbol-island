@@ -29,6 +29,10 @@ export const SLINGS=[{ax:40,ay:392,bx:40,by:436,cx:74,cy:470},{ax:318,ay:392,bx:
 /* Cone triangle chosen by sim (launchdrain.mjs): it sends launch rebounds
  * back up-table or out to the right rail instead of straight down the middle. */
 export const CONES=[{x:276,y:94},{x:320,y:94},{x:298,y:130}] as const, CONE_R=10;
+/** Rondo cones (hard tier): the three cones turn slowly around their centre like a passing drill. */
+const CONE_CX=298,CONE_CY=106;
+export const coneX=(t:Pick<PinballTable,'coneSpin'>,i:number)=>t.coneSpin===0?CONES[i].x:CONE_CX+(CONES[i].x-CONE_CX)*Math.cos(t.coneSpin)-(CONES[i].y-CONE_CY)*Math.sin(t.coneSpin);
+export const coneY=(t:Pick<PinballTable,'coneSpin'>,i:number)=>t.coneSpin===0?CONES[i].y:CONE_CY+(CONES[i].x-CONE_CX)*Math.sin(t.coneSpin)+(CONES[i].y-CONE_CY)*Math.cos(t.coneSpin);
 export const SPINNER={x0:20,x1:52,y:210} as const;
 export const DUGOUT={x:306,y:262,r:9} as const;
 export const SAVER={x:180,y:576,half:28} as const;
@@ -61,7 +65,9 @@ export type PinballTable={
  mbPending:boolean;
  ballBonus:number;lastBonus:number;lastBonusX:number;
  ballClock:number;quickDrains:number;assist:boolean;
- blocks:number;stars:[number,number,number,number];
+ blocks:number;stars:number[];
+ /** Rondo cone rotation (radians), hard tier only. */
+ coneSpin:number;
  prevLeft:boolean;prevRight:boolean;
  sfx:{sling:number;drop:number;wallDown:number;wallUp:number;flag:number;word:number;lane:number;crest:number;skill:number;cone:number;spin:number;dugout:number;mode:number;modeDone:number;modeEnd:number;block:number;saver:number;final:number};
 };
@@ -73,7 +79,7 @@ export function createPinballTable():PinballTable{return{
  training:0,dugoutLit:false,hold:0,holdTip:0,ejectCool:0,
  mode:'none',modeTime:0,modeProgress:0,modesDone:0,nextMode:0,oneTwo:0,finalPlayed:false,mbPending:false,
  ballBonus:0,lastBonus:0,lastBonusX:1,ballClock:0,quickDrains:0,assist:false,
- blocks:0,stars:[0,0,0,0],prevLeft:false,prevRight:false,
+ blocks:0,stars:[0,0,0,0,0,0],coneSpin:0,prevLeft:false,prevRight:false,
  sfx:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0}};}
 
 /** Seconds the goal stays lit after the wall falls, and the pause before the
@@ -101,7 +107,7 @@ function completeMode(s:PinballState){
 }
 function startMode(s:PinballState){
  const t=s.table;let i=t.nextMode;for(let k=0;k<3&&t.modesDone&1<<i;k++)i=(i+1)%3;
- const m=PINBALL_MODES[i];t.mode=m.id;t.modeTime=m.time;t.modeProgress=0;t.oneTwo=0;t.dugoutLit=false;t.training=0;
+ const m=PINBALL_MODES[i];t.mode=m.id;t.modeTime=s.level>=5?Math.round(m.time*.75):m.time;t.modeProgress=0;t.oneTwo=0;t.dugoutLit=false;t.training=0;
  if(m.id==='freekick'){t.wallLit=0;t.wallReset=0;}
  // Pinball FX convention: a mode never starts with a cheap drain.
  s.openingRescue=true;s.launchGrace=Math.max(s.launchGrace,3);
@@ -148,7 +154,7 @@ export function tableGoal(s:PinballState,lit:boolean){
 }
 /** Division ladder: the division just left earns its "two goals" star. */
 /** Two goals in the last division: its star, then the Cup Final (once per run). */
-export function tableDivisionCleared(s:PinballState){const t=s.table;t.stars[3]|=1;if(!t.finalPlayed&&t.mode!=='final')startFinal(s);}
+export function tableDivisionCleared(s:PinballState){const t=s.table;t.stars[s.level-1]|=1;if(!t.finalPlayed&&t.mode!=='final')startFinal(s);}
 export function tableLevelUp(s:PinballState,from:number){s.table.stars[from-1]|=1;}
 export function tableChallenge(s:PinballState){s.table.stars[s.level-1]|=2;}
 /** A real drain: pays the end-of-ball bonus x crest multiplier, tracks quick
@@ -172,6 +178,7 @@ export function tableTimers(s:PinballState,dt:number,left:boolean,right:boolean)
  for(let i=0;i<3;i++){t.laneCool[i]=Math.max(0,t.laneCool[i]-dt);t.laneFlash[i]=Math.max(0,t.laneFlash[i]-dt*2);t.coneCool[i]=Math.max(0,t.coneCool[i]-dt);t.coneFlash[i]=Math.max(0,t.coneFlash[i]-dt*4);}
  for(let i=0;i<2;i++){t.slingCool[i]=Math.max(0,t.slingCool[i]-dt);t.slingFlash[i]=Math.max(0,t.slingFlash[i]-dt*5);}
  t.ejectCool=Math.max(0,t.ejectCool-dt);t.oneTwo=Math.max(0,t.oneTwo-dt);
+ if(s.level>=5)t.coneSpin=(t.coneSpin+dt*(s.level>=6?.8:.5))%(Math.PI*2);
  // Spinner: free-wheels down; every half turn is one touch.
  if(t.spinOmega!==0){
   const before=Math.floor(t.spinAngle/Math.PI);t.spinAngle+=t.spinOmega*dt;t.spinOmega*=Math.exp(-dt*1.6);if(Math.abs(t.spinOmega)<.4)t.spinOmega=0;
@@ -261,10 +268,10 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number,extra=f
   }
  }
  // Training cones: active pop bumpers.
- if(b.y<160&&b.x>260){
-  for(let i=0;i<3;i++){const k=CONES[i],c=H.contact(b,k.x,k.y,k.x,k.y,CONE_R);if(!c)continue;touched=true;
+ if(b.y<170&&b.x>255){
+  for(let i=0;i<3;i++){const kx=coneX(t,i),ky=coneY(t,i),c=H.contact(b,kx,ky,kx,ky,CONE_R);if(!c)continue;touched=true;
    const a=H.resolve(b,c.nx,c.ny,0,0,.6,.1);
-   if(a>15&&t.coneCool[i]===0){t.coneCool[i]=.09;t.coneFlash[i]=1;b.vx+=c.nx*260;b.vy+=c.ny*260;t.sfx.cone++;addTraining(s,1);oneTwoTarget(s,k.x,k.y);award(s,k.x,k.y,10,'cone',1.2);}
+   if(a>15&&t.coneCool[i]===0){t.coneCool[i]=.09;t.coneFlash[i]=1;b.vx+=c.nx*260;b.vy+=c.ny*260;t.sfx.cone++;addTraining(s,1);oneTwoTarget(s,kx,ky);award(s,kx,ky,10,'cone',1.2);}
   }
  }
  // Dribble gate: a crossing trigger; spin follows the ball's speed through it.
@@ -291,12 +298,15 @@ export const tableCounterMode=(s:PinballState)=>s.table.mode==='counter';
 
 // ---- local mastery stars (kid-safe: no streaks, never lost) -----------------
 const STAR_KEY='fi2-pinball-stars-v1';
-export function loadPinballStars():[number,number,number,number]{
- try{const raw=JSON.parse(localStorage.getItem(STAR_KEY)||'null');if(Array.isArray(raw)&&raw.length===4)return raw.map(v=>Number(v)&7) as [number,number,number,number];}catch{}
- return[0,0,0,0];
+/** Six divisions since round 3 (Oct 26 2026). Saves written before it hold four entries: they load as-is, padded
+ * with two empty hard divisions, and are rewritten as six only when a run earns something new. Nothing is lost. */
+export const PINBALL_STAR_DIVS=6;
+export function loadPinballStars():number[]{
+ try{const raw=JSON.parse(localStorage.getItem(STAR_KEY)||'null');if(Array.isArray(raw)&&(raw.length===4||raw.length===PINBALL_STAR_DIVS)){const out=raw.map(v=>Number(v)&7);while(out.length<PINBALL_STAR_DIVS)out.push(0);return out;}}catch{}
+ return[0,0,0,0,0,0];
 }
 export function savePinballStars(run:readonly number[]){
- const best=loadPinballStars();let changed=false;for(let i=0;i<4;i++){const merged=best[i]|(run[i]&7);if(merged!==best[i]){best[i]=merged;changed=true;}}
+ const best=loadPinballStars();let changed=false;for(let i=0;i<PINBALL_STAR_DIVS;i++){const merged=best[i]|(run[i]&7);if(merged!==best[i]){best[i]=merged;changed=true;}}
  if(changed)try{localStorage.setItem(STAR_KEY,JSON.stringify(best));}catch{}
  return best;
 }

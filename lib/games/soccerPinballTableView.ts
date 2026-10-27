@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {GOAL_LEFT,GOAL_RIGHT,pinballCounterLane,pinballMinute,pinballWillPass,type PinballState} from './soccerPinball';
-import {CREST_POSTS,CREST_TOP,CREST_BOT,CREST_LANES,WALL_Y,WALL_X,WALL_HALF,FLAGS,FLAG_LETTERS,SLINGS,CONES,CONE_R,SPINNER,DUGOUT,SAVER,PINBALL_MODES,TRAINING_GOAL} from './soccerPinballTable';
+import {CREST_POSTS,CREST_TOP,CREST_BOT,CREST_LANES,WALL_Y,WALL_X,WALL_HALF,FLAGS,FLAG_LETTERS,SLINGS,CONE_R,coneX,coneY,SPINNER,DUGOUT,SAVER,PINBALL_MODES,TRAINING_GOAL} from './soccerPinballTable';
 
 /* Futbol Pinball playfield pieces, built once:
  *   wall players (2 instanced draws), posts + corner-flag poles + saver post
@@ -57,10 +57,10 @@ export function createPinballTableView(scene:T.Scene,px:(x:number)=>number,pz:(y
  // Training cones (pop bumpers) and their light skirts.
  const cones=own(new T.InstancedMesh(new T.ConeGeometry(1,1,14),solid('#ff8a2a',.25),3),'pinball-training-cones') as T.InstancedMesh;
  const skirts=own(new T.InstancedMesh(new T.RingGeometry(.72,1,24),new T.MeshBasicMaterial({color:'#ffffff',toneMapped:false,side:T.DoubleSide}),3),'pinball-cone-skirts') as T.InstancedMesh;
- const coneDrawn=[-1,-1,-1];
- function drawCone(i:number,flash:number){const c=CONES[i],squash=reduced?0:flash*.22,r=CONE_R*W*1.05;
-  dummy.position.set(px(c.x),.32*(1-squash),pz(c.y));dummy.rotation.set(0,0,0);dummy.scale.set(r*(1+squash*.5),.64*(1-squash),r*(1+squash*.5));dummy.updateMatrix();cones.setMatrixAt(i,dummy.matrix);
-  dummy.position.set(px(c.x),.03,pz(c.y));dummy.rotation.set(-Math.PI/2,0,0);dummy.scale.setScalar(r*1.45*(1+(reduced?0:flash*.25)));dummy.updateMatrix();skirts.setMatrixAt(i,dummy.matrix);
+ const coneDrawn=[-1,-1,-1],coneAt={coneSpin:0};let spinDrawn=0;
+ function drawCone(i:number,flash:number){const cx=coneX(coneAt,i),cy=coneY(coneAt,i),squash=reduced?0:flash*.22,r=CONE_R*W*1.05;
+  dummy.position.set(px(cx),.32*(1-squash),pz(cy));dummy.rotation.set(0,0,0);dummy.scale.set(r*(1+squash*.5),.64*(1-squash),r*(1+squash*.5));dummy.updateMatrix();cones.setMatrixAt(i,dummy.matrix);
+  dummy.position.set(px(cx),.03,pz(cy));dummy.rotation.set(-Math.PI/2,0,0);dummy.scale.setScalar(r*1.45*(1+(reduced?0:flash*.25)));dummy.updateMatrix();skirts.setMatrixAt(i,dummy.matrix);
   skirts.setColorAt(i,tmp.copy(LIT.dim).lerp(LIT.gold,Math.min(1,.25+flash)));
   cones.instanceMatrix.needsUpdate=skirts.instanceMatrix.needsUpdate=true;skirts.instanceColor!.needsUpdate=true;coneDrawn[i]=flash;}
  for(let i=0;i<3;i++)drawCone(i,0);
@@ -151,7 +151,9 @@ export function createPinballTableView(scene:T.Scene,px:(x:number)=>number,pz:(y
   const t=s.table,time=s.time,blinkOn=reduced||Math.sin(time*Math.PI*5)>0,slow=reduced||Math.sin(time*Math.PI*2.4)>0;live=false;
   // Wall players sink and pop back up.
   for(let i=0;i<3;i++){const goal=t.wall[i];if(wallAnim[i]!==goal){wallAnim[i]=reduced?goal:goal>wallAnim[i]?Math.min(goal,wallAnim[i]+dt*6):Math.max(goal,wallAnim[i]-dt*9);live=true;}if(wallDrawn[i]!==wallAnim[i])drawWall(i,wallAnim[i]);}
-  for(let i=0;i<3;i++){const f=Math.round(t.coneFlash[i]*20)/20;if(f!==coneDrawn[i])drawCone(i,f);if(f>0)live=true;}
+  // Rondo cones (hard tier) turn: redraw all three only when the angle moved.
+  const spun=t.coneSpin!==spinDrawn;if(spun){spinDrawn=coneAt.coneSpin=t.coneSpin;live=live||s.phase==='playing';}
+  for(let i=0;i<3;i++){const f=Math.round(t.coneFlash[i]*20)/20;if(spun||f!==coneDrawn[i])drawCone(i,f);if(f>0)live=true;}
   for(let i=0;i<2;i++){const f=Math.round(t.slingFlash[i]*20)/20;if(f!==rubberCache[i]){rubberCache[i]=f;rubbers.setColorAt(i,lerp(LIT.pink,LIT.white,f));rubbers.instanceColor!.needsUpdate=true;}if(f>0)live=true;}
   if(spinner.rotation.x!==t.spinAngle){spinner.rotation.x=t.spinAngle;live=live||t.spinOmega!==0;}
   setSaver(t.saver);

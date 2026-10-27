@@ -6061,6 +6061,12 @@ ends cannot fit). The home framing is solved on resize only. No new draw calls, 
 charge variable is written only when it changes, and the pads update by attribute on press. A settled launch camera reports
 `moving()=false`, so the waiting table still sleeps. Flipper presses add a throttled 5 ms vibrate (Android). Desktop/headless
 emulation only; no iPhone temperature measured.
+## Futbol Pinball round 3: hard divisions, cinematic beats, living table (Oct 26 2026, local, not deployed)
+See `docs/ARCADE_PINBALL_R3_OCT26.md`. +1 draw call in divisions 1–4 (26 chase lamps in one instanced mesh), +1 while a hot zone
+is lit, +~4 for the sweeper-keeper rig only in Champions Night (hidden below). Per playing frame: 26 instance colours, the
+hot-zone ring transform, and the hard tier's 3 cone matrices only when they move; the beat watcher diffs counters. No allocation,
+lights or loops; the waiting table still sleeps. Cinematic slow-mo lowers sim work per frame; reduced motion disables beats and
+the chase. Headless measurement only; no iPhone temperature measured.
 ## East Jetty lighthouse gallery and ladder (Oct 26 2026, `docs/LIGHTHOUSE_STAIRS_OCT26.md`, local, not deployed)
 - The spiral stair added earlier the same day was removed (owner: too busy). What stays or is new: the 3.2 m gallery deck, its
   corbel, a white railing with a gate, and a slim white ladder, built once (`lib/town/lighthouseGalleryWorld.ts`) as 4 pieces in

@@ -1,0 +1,46 @@
+/* Futbol Pinball start / pause / full-time card (round 3, Oct 26 2026). Neon arcade card, one primary button.
+   Sized to fit a 390x844 phone (and 844x390 / desktop) without scrolling; every tap target >= 48px. */
+.card{box-sizing:border-box;width:min(400px,100%);padding:20px 18px 14px;border-radius:28px;background:#151a30;color:#eff8ff;border:2px solid #ef64c5;box-shadow:0 0 32px #d849b333,0 10px 0 #0b0f1f;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.card[data-hard]{border-color:#ff8a2a;box-shadow:0 0 34px #ff8a2a40,0 10px 0 #0b0f1f}
+.top{display:grid;justify-items:center;gap:6px}
+.badge{display:inline-block;padding:5px 12px;border-radius:999px;background:#2c2649;color:#ffb4e4;font-size:11px;font-weight:900;letter-spacing:.14em}
+.title{margin:4px 0 0;font-size:30px;line-height:1.05;color:#fff6dc;font-family:var(--btn-font,inherit)}
+.line{margin:0;font-size:15px;line-height:1.3;color:#cfe3f5;max-width:320px}
+.score{font-size:46px;line-height:1;color:#ffe86d;font-variant-numeric:tabular-nums;text-shadow:0 0 18px #ffe86d55}
+.tip{margin:4px 0 0;padding:8px 12px;border-radius:12px;background:#2a2148;color:#fff6c8;border-left:4px solid #ffe86d;font-size:14px;line-height:1.35;text-align:left}
+/* The ladder: six round chips in one row; 5 and 6 sit on an orange HARD rail. */
+.ladder{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:16px 0 4px;padding-top:14px}
+.card .ladder button{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-width:0;min-height:56px;padding:4px 0;border-radius:16px;border:2px solid #35415c;background:#1d2440;color:#eff8ff;font:inherit;cursor:pointer;touch-action:manipulation}
+.card .ladder button em{font-style:normal;font-size:20px;font-weight:900;line-height:1}
+.card .ladder button[data-hard]{border-color:#7a3d1c;background:#2a1a24}
+.card .ladder button[data-on]{border-color:#ffe86d;background:#3a3420;box-shadow:0 0 0 2px #ffe86d55,0 0 14px #ffe86d44}
+.card .ladder button[data-hard][data-on]{border-color:#ffb067;background:#4a2614;box-shadow:0 0 0 2px #ff8a2a66,0 0 16px #ff8a2a55}
+.card .ladder button:disabled{opacity:.45;cursor:default}
+.card .ladder button:focus-visible{outline:3px solid #73fff1;outline-offset:2px}
+.hardTag{position:absolute;top:0;right:0;width:calc(33.3% - 2px);font-size:10px;font-weight:900;letter-spacing:.16em;color:#ffb067;border-top:2px solid #ff8a2a;padding-top:1px;line-height:1}
+.stars{font-style:normal;font-size:10px;letter-spacing:-.5px;color:#ffe86d;line-height:1}
+.stars b{font-weight:inherit;color:#3c4766}
+.card .play{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:80px;margin:14px 0 0;border:3px solid #fff2cd;border-radius:24px;background:linear-gradient(180deg,#ffe57a,#f2bd3c);color:#2a2310;font:inherit;font-size:28px;font-weight:900;letter-spacing:.02em;box-shadow:0 6px 0 #a8863d,0 0 22px #ffe86d44;cursor:pointer;touch-action:manipulation}
+.card[data-hard] .play{background:linear-gradient(180deg,#ffc58a,#ff8a2a);box-shadow:0 6px 0 #a5521d,0 0 22px #ff8a2a55}
+.play:not(:disabled):active{translate:0 4px;box-shadow:0 2px 0 #a8863d}
+.play:disabled{opacity:.6}
+.play:focus-visible,.card .row button:focus-visible{outline:3px solid #73fff1;outline-offset:3px}
+.row{display:flex;justify-content:center;gap:14px;margin-top:14px}
+.card .row button{display:grid;place-items:center;width:52px;height:52px;border-radius:16px;border:2px solid #35415c;background:#1d2440;color:#eff8ff;cursor:pointer;touch-action:manipulation}
+.card .row button[aria-expanded=true]{border-color:#73fff1}
+.options{margin-top:12px;padding:10px 12px;border-radius:14px;background:#1d2440;text-align:left}
+.options label{display:flex;align-items:center;gap:10px;min-height:48px;font-size:15px;font-weight:800}
+.options input{width:26px;height:26px;accent-color:#73fff1}
+.options small{display:block;font-size:12px;line-height:1.4;color:#b5c7dc}
+.foot{margin:10px 0 0;font-size:12px;color:#9fb3cc;min-height:14px}
+@media(max-height:520px){.card{padding:12px 16px 10px;width:min(560px,100%)}.title{font-size:22px}.score{font-size:32px}.line{font-size:13px}.ladder{margin-top:8px}.card .ladder button{min-height:48px}.play{min-height:56px;font-size:22px;margin-top:8px}.row{margin-top:8px}.tip{font-size:12px;padding:6px 10px}}
+@media(prefers-reduced-motion:reduce){.play:active{translate:none}}
+
+/* First-time hint over the waiting table (shown once ever): two half-screen labels. */
+.tutorial{position:absolute;inset:0;z-index:3;pointer-events:none}
+.tutorial span{position:absolute;display:grid;gap:2px;padding:10px 14px;border-radius:16px;background:#0b1024d9;border:2px solid #73fff1;color:#eff8ff;font-size:14px;font-weight:700;text-align:center;animation:pbHint .8s ease-in-out 4 alternate}
+.tutorial b{font-size:18px;color:#ffe86d}
+.tutorial span[data-side=left]{left:6%;top:52%}
+.tutorial span[data-side=right]{right:6%;top:52%;border-color:#ff83d3}
+@keyframes pbHint{from{opacity:.75}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.tutorial span{animation:none}}
