@@ -90,7 +90,7 @@ for(const [k,b] of Object.entries(Ci.CINEMA_BEATS)){assert.ok(b.dur<=1.6&&b.k<=.
  assert.equal((card.match(/className=\{styles\.play\}/g)||[]).length,1,'one primary button');
  assert.match(card,/role="radiogroup" aria-label="Start division"/);assert.match(card,/PINBALL_DIVISIONS\.map/);assert.match(card,/aria-label="Options"/);assert.match(card,/Nudge button/);
  assert.match(card,/fi2-pinball-tutorial-v1/);assert.match(css,/\.ladder button\{[^}]*min-height:56px/);assert.match(css,/\.play\{[^}]*min-height:80px/);assert.match(css,/\.row button\{[^}]*width:52px;height:52px/);
- assert.match(tsx,/\{card&&<div className=\{styles\.overlay\}>\{kind==='pinball'&&!error\?<PinballCard /,'pinball gets its own card; tennis/runner keep theirs');
+ assert.match(tsx,/\{card&&<div className=\{styles\.overlay\}>\{kind==='tennis'&&!error\?<TennisCard [\s\S]*?\/>:kind==='pinball'&&!error\?<PinballCard /,'pinball gets its own card; tennis/runner keep theirs');
  assert.match(tsx,/beginPinballRun\(game\.current\.state\.pinball,\{level:pinballSetup\.current\?\.level/);assert.match(tsx,/pinballUnlockReach\(runtime\.state\.pinball\)/);
  assert.match(games,/dt\*pinballTimeScale\(pinballFeel\)\*cinemaTimeScale\(pinballCine\)/,'slow-mo applied to the pinball sim only');
  assert.match(games,/if\(input\.left\|\|input\.right\)skipCinema\(pinballCine\)/,'held flippers skip the slow-mo');assert.match(games,/if\(id===0\|\|id===1\)\{skipCinema\(pinballCine\)/,'taps skip it too');}
