@@ -32,7 +32,7 @@ import {createRunnerFx} from './runnerFx';
 import {createRunnerSoundtrack} from '../../components/games/runnerAudio';
 export type ArcadeKind='tennis'|'pinball'|'runner';
 export type ArcadeInput={x:number;y:number;left:boolean;right:boolean;charge:boolean};
-export type ArcadeHUD={score:string;detail:string;message:string;over:boolean;ready:boolean;headerReady?:boolean;scissorReady?:boolean;tennisAerial?:boolean;tennisTrap?:boolean;trapReady?:boolean;bicycleReady?:boolean;tennisCall?:string;tennisButton?:string;leftReady?:boolean;rightReady?:boolean;nudgeReady?:boolean;nudgeOff?:boolean;nextLabel?:string;skillLabel?:string;skillReady?:boolean;coach?:string;
+export type ArcadeHUD={score:string;detail:string;message:string;over:boolean;ready:boolean;headerReady?:boolean;scissorReady?:boolean;tennisAerial?:boolean;tennisTrap?:boolean;trapReady?:boolean;bicycleReady?:boolean;tennisCall?:string;tennisButton?:string;leftReady?:boolean;rightReady?:boolean;nudgeReady?:boolean;nudgeOff?:boolean;nextLabel?:string;skillLabel?:string;skillReady?:boolean;coach?:string;flash?:string;flashId?:number;
  /** Futbol Tennis round 3 HUD chips: live rally count, wind arrows ('' calm), sets line ('' on one-game courts). */
  tennisRally?:number;tennisWind?:string;tennisSets?:string};
 export function createArcadeGame(canvas:HTMLCanvasElement,kind:ArcadeKind,onSound:(goal:boolean,cue?:string)=>void,audioContext:()=>AudioContext|null=()=>null){

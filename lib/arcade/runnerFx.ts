@@ -11,6 +11,8 @@ import {createRunnerTrack} from './runnerTrack';
 import {createRunnerCinema,CINEMA,type CinemaKind} from './runnerCinema';
 import {createRunnerScenery} from './runnerWeather';
 import {TERRAINS} from '../../components/games/runnerRoute';
+/** Floating in-world caption words (see pop()). Off since the clean in-play UI pass (Oct 27 2026). */
+export const RUNNER_WORD_POPS:boolean=false;
 
 /**
  * Breakaway Run presentation layer: speed lines, plant dust, goal confetti,
@@ -260,10 +262,12 @@ export function createRunnerFx(stage:ArcadeStage){
  const wordMaterial=new T.MeshBasicMaterial({transparent:true,opacity:0,depthTest:false,depthWrite:false,toneMapped:false,side:T.DoubleSide});
  const word=new T.Mesh(new T.PlaneGeometry(1,WORD_H/WORD_W),wordMaterial);word.name='runner-pop-word';word.visible=false;word.renderOrder=20;word.frustumCulled=false;word.rotation.x=-.32;scene.add(word);
  if(typeof document!=='undefined'){wordCanvas=document.createElement('canvas');wordCanvas.width=WORD_W;wordCanvas.height=WORD_H;wordCtx=wordCanvas.getContext('2d');wordTexture=new T.CanvasTexture(wordCanvas);wordTexture.colorSpace=T.SRGBColorSpace;wordMaterial.map=wordTexture;}
+ // Clean in-play UI (owner, Oct 27 2026): the floating caption words (DODGED!, terrain names, coach words, sub-lines) are off;
+ // the one in-play text is the short GOAL! / Tackled! flash in RunnerControls. Flip RUNNER_WORD_POPS to bring them back.
  let wordAge=0,wordLife=0,wordSize=1,wordX=0,wordText='',wordLift=0;
  /** Show a word (and an optional short line under it). `size` is the world width at full scale. */
  function pop(text:string,fill:string,size:number,life:number,sub='',lift=0){
-  if(!wordCtx||!wordTexture)return;
+  if(!RUNNER_WORD_POPS||!wordCtx||!wordTexture)return;
   const g=wordCtx;g.clearRect(0,0,WORD_W,WORD_H);g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';
   let px=118;g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;const fit=WORD_W-40;const w=g.measureText(text).width;if(w>fit){px=Math.floor(px*fit/w);g.font=`${px}px Impact, "Arial Black", Arial, sans-serif`;}
   const y=sub?72:WORD_H/2;g.lineWidth=Math.max(8,px*.16);g.strokeStyle='#1a1036';g.strokeText(text,WORD_W/2,y);g.fillStyle=fill;g.fillText(text,WORD_W/2,y);

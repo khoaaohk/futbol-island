@@ -128,7 +128,9 @@ for(const id of ['night','storm','warmup']){const s=game(id,{lives:1e6});let mos
  assert(s.finished,`${id}: the route reaches full time`);assert(most<34,`${id}: bounded objects (${most})`);assert(s.terrainChanges>=2,`${id}: terrain zones change along the route`);}
 
 // 15. Source contract: kid pad sizes, the menu replaces the shared card for the runner, no per-frame allocation hints.
-{const css=fs.readFileSync('components/games/RunnerControls.module.css','utf8');for(const [cls,px] of [['lane',72],['jump',64],['slide',64],['skill',64],['shoot',88]])assert(new RegExp(`\\.${cls}\\.${cls}\\{[^}]*width:${px}px`).test(css),`${cls} is ${px}px`);
+{const css=fs.readFileSync('components/games/RunnerControls.module.css','utf8');for(const [cls,px] of [['jump',76],['slide',76],['skill',68],['shoot',96]])assert(new RegExp(`\\.${cls}\\.${cls}\\{[^}]*--d:${px}px`).test(css),`${cls} is ${px}px`);
+ // Oct 27 2026: the lane buttons became Strikers' floating stick; the only in-play text is the GOAL! / Tackled! flash.
+ {const f=game('classic',{spawn:99,nextGoal:1e6});assert.equal(H.runnerFlash(f),'');f.eventKind='goal';f.eventAt=f.time;assert.equal(H.runnerFlash(f),'GOAL!');f.eventKind='hit';assert.equal(H.runnerFlash(f),'Tackled!');f.eventKind='terrain';assert.equal(H.runnerFlash(f),'','terrain names never flash');f.eventKind='goal';f.time+=1.4;assert.equal(H.runnerFlash(f),'','the flash expires');}
  assert(/touch-action:none/.test(css));const g=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8');assert(/<RunnerControls /.test(g)&&/<RunnerMenu /.test(g));
  const menu=fs.readFileSync('components/games/RunnerMenu.module.css','utf8');assert(/\.play\{[^}]*min-height:64px/.test(menu)&&/\.small\{[^}]*min-height:52px/.test(menu)&&/\.route\{[^}]*min-height:60px/.test(menu));
  const scen=fs.readFileSync('lib/arcade/runnerWeather.ts','utf8');const upd=scen.slice(scen.indexOf('function update('),scen.indexOf('function reset('));assert(!/new T\.|`/.test(upd),'scenery update allocates nothing');
