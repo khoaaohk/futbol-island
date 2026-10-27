@@ -149,3 +149,11 @@ export function waterButtonsFor(v:Pick<WaterView,'inWater'|'swimming'|'flyOk'>&{
  */
 export const SWIM_LESSON={title:'Pace yourself',text:'Swim smooth and steady: a calm rhythm lasts, like a team keeping its shape all match.',kind:'Coaching idea'} as const;
 export const SWIM_LESSON_KEY='fi2-swim-lesson-v1';
+/**
+ * Oct 26 2026 (QA: "Pace yourself" showed while riding the whale shark): the swim card is about swimming under your own steam, so
+ * it never shows (and a showing one leaves) while an animal ride is on; it waits until the rider is swimming again. Other water
+ * cards (shark, ride, dive) are not held by this.
+ */
+export const waterLessonHeld=(which:'swim'|'shark'|'ride'|'dive',v:Pick<WaterView,'riding'>)=>which==='swim'&&v.riding;
+/** Whether a swim start should queue the swim card: not when the "swim" is the water state under an animal ride. */
+export const swimLessonDue=(riding:boolean)=>!riding;

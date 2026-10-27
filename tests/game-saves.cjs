@@ -641,6 +641,19 @@ await ok('client flow',async()=>{
   assert.equal(ls.getItem('fi2-save-code-v1'),null,'no code is remembered');
   const ui=read('components/saves/SaveCodeCreate.tsx');assert.match(ui,/data-still-working/);assert.match(ui,/data-create-retry/);
   assert(!/<[a-z]+[^<>]*\sinert(?=[\s>]|=\{true\})/.test(ui)&&/\{inert:''\}/.test(ui),'no boolean inert prop (React 18 warns): the string form');}
+ // Oct 26 2026 (docs/QA_AUDIT4_OCT26.md #6): a code made on device A and loaded at once on device B brought an empty island,
+ // because A's first milestone (the starter kit, granted as the island opens) landed during A's start check and was dropped
+ // until the page hid. The milestone now saves as soon as the check settles, so B's restore carries the starter kit.
+ {const fresh={'fi2-music-volume':'0.5'};const N=device('N',fresh);
+  const made=await N.client.createSave();assert(made.ok,'code made on an empty island');
+  const boot=N.client.bootCheck();// the island opens: the start check is in flight…
+  N.ls.setItem('fi2-player-cards-v1',JSON.stringify(['Marta','Kerr','Bronze']));// …and the starter kit lands meanwhile
+  const ms=N.client.syncNow('milestone');
+  assert.equal(await boot,'same');assert.equal(await ms,'saved','the milestone during the start check is saved, not dropped');
+  assert.equal(N.client.getSyncState().rev,2,'one save on top of the code\'s first copy');
+  const M=device('M',{});const got=await M.client.restoreSave(made.code);assert(got.ok,'restored on device B');
+  assert.equal(got.summary.cards,3,'device B gets the starter kit at once: '+JSON.stringify(got.summary));
+  M.client.applyRestoredSave(got);assert.equal(M.ls.getItem('fi2-player-cards-v1'),N.ls.getItem('fi2-player-cards-v1'),'B\'s island is hydrated from the loaded copy');}
  // Heat: no timers or loops in the always-mounted code.
  for(const f of ['lib/saves/client.ts','components/saves/SaveSync.tsx'])assert(!/setTimeout|setInterval|requestAnimationFrame/.test(read(f)),'no timers: '+f);
 });

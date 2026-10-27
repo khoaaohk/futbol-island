@@ -10,7 +10,7 @@ import {createStuckWatch} from '../konbini/konbiniPath';
 import {frameCapSlot} from '../town/frameCap';
 import {tierSettings} from '../graphics/heatTier';
 import {ROOM,DOOR,COUNTER,CLERK,CLERK_ZONE,PODIUMS,BENCH,PLANTS,SHOP_STATIONS,shopObstacles,shopBlocked,shopCollide,findShopPath,stationPois,clerkPoi,segPoint,
- NEAR_STATION,NEAR_NPC,type ShopPoi,type ShopStation} from './shopLayout';
+ NEAR_STATION,NEAR_NPC,WALL_SIGNS,type ShopPoi,type ShopStation} from './shopLayout';
 import type {NpcDefinition} from '../town/npcDialogues';
 import {SHOP_CLERK,SHOP_SHOPPERS,SHOP_SHOPPER_CAP,type ShopSpot} from './shopCast';
 import {emoteBody,applyEmoteArms} from '../graphics/emotePose';
@@ -233,11 +233,8 @@ export function createShopScene(canvas:HTMLCanvasElement,callbacks:ShopSceneCall
   for(let i=0;i<uv.count;i++)uv.setXY(i,(px+uv.getX(i)*pw)/1024,1-(py+(1-uv.getY(i))*ph)/512);
   print.push(place(g,p));
  }
- sign(SIGN.jersey,4.4,{x:-4,y:4.12,z:ROOM.back+.03});
- sign(SIGN.boots,4.4,{x:3.95,y:4.12,z:ROOM.back+.03});
- sign(SIGN.ball,3.8,{x:ROOM.halfW-.03,y:3.95,z:-3,ry:-Math.PI/2});
- sign(SIGN.logo,5.2,{x:-ROOM.halfW+.03,y:3.95,z:-3.4,ry:Math.PI/2});
- sign(SIGN.tagline,4.4,{x:-ROOM.halfW+.03,y:3.25,z:-3.4,ry:Math.PI/2});
+ {const W=WALL_SIGNS,at=(k:keyof typeof W,ry?:number)=>sign(SIGN[k],W[k].width,{x:W[k].x,y:W[k].y,z:W[k].z,...(ry===undefined?{}:{ry})});
+  at('jersey');at('boots');at('ball',-Math.PI/2);at('logo',Math.PI/2);at('tagline',Math.PI/2);}
  // Podium screens lie on the tilted graphite top (normal 0, .94, .34 before the podium's turn).
  for(const s of SHOP_STATIONS)sign(SIGN[`${s}Screen` as const],.74,{y:1.03+.03*.94,z:.03*.34,rx:-Math.PI/2+.35,parent:podiumFrame(s)});
  sign(SIGN.till,.44,{x:1.6,y:1.165,z:COUNTER.z-.325,rx:-.25});

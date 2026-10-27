@@ -163,7 +163,11 @@ export function syncNow(reason:'hide'|'milestone'|'manual'='manual'):Promise<Sav
  const now=Date.now();
  // Going away: note when (for the check on coming back) and when this island last changed (for "newest wins").
  if(reason==='hide'){hiddenAt=now;localPlayed(currentSnapshot(now),now);}
- if(booting)return booting.then(()=>saveStatus());
+ // A save asked for while the start check runs is not dropped (Oct 26 2026, docs/QA_AUDIT4_OCT26.md #6): the island's first
+ // milestone (the starter kit's cards, granted as the island opens) used to land during the check and wait for the page to hide,
+ // so a code loaded at once on a second device brought an empty island. It now runs as soon as the check settles (unless the
+ // check swapped the island in and is reloading).
+ if(booting)return booting.then(()=>suspended?saveStatus():syncNow(reason==='milestone'?'manual':reason));
  if(inFlight)return inFlight;
  if(reason==='milestone'&&now-lastAttempt<MILESTONE_GAP_MS)return Promise.resolve(saveStatus());
  const state=getSyncState();if(!state)return Promise.resolve(saveStatus());

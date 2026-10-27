@@ -56,7 +56,8 @@ async function run(browser,mobile){
  // A pass straight at a defender is cut out: tries left + the hint, then Try again.
  const naive=await page.evaluate(async()=>{const g=window.__passPuzzle,w=g.world,d=w.state.defenders[0].p,k={kind:'pass-space',target:{x:d.x,z:d.z},curl:0,loft:0,power:.5};const ok=g.kick(k);if(!ok)return {why:JSON.stringify({k,phase:w.state.phase})};const start=performance.now();while(w.state.phase!=='success'&&w.state.phase!=='fail'&&performance.now()-start<20000)await new Promise(r=>setTimeout(r,40));return w.state.result??{phase:w.state.phase,ev:w.drain().map(e=>e.type),tick:w.state.tick};});
  assert.equal(naive.outcome,'fail','the naive option fails: '+JSON.stringify(naive));
- await page.getByText('Not this time.').waitFor();await page.getByText(/2 TRIES LEFT/).waitFor();
+ // The fail card's heading has been "So close!" since Pass Puzzles r3 (the "So close" beat); it was "Not this time." before.
+ await page.getByText('So close!').waitFor();await page.getByText(/2 TRIES LEFT/).waitFor();
  assert(await page.locator('[class*="hint"]').count()>0,'fail card shows the hint');
  assert.match(await page.locator('[data-why]').first().textContent(),/#\d+|defender|keeper/i,'the fail card says who stopped it');
  // Tier-2 hint: "Show me where" marks the next pass of the coach's route on the pitch for the next try.
@@ -72,6 +73,10 @@ async function run(browser,mobile){
   const start=performance.now();while(w.state.phase!=='success'&&w.state.phase!=='fail'&&performance.now()-start<20000)await new Promise(r=>setTimeout(r,50));return{phase:w.state.phase,result:w.state.result};});
  assert.equal(solved.phase,'success','the solution completes the level');
  await page.getByText('That’s the move!').waitFor();await page.waitForTimeout(300);
+ // A first solve makes this device's top 10: the arcade's "New high score!" dialog (components/arcade/HighScoreEntry.tsx) opens
+ // over the card. Skip it (this check is about the puzzle card, tests/arcade-leaderboard.cjs covers the boards).
+ {const board=page.getByRole('dialog',{name:'New high score'});
+  if(await board.waitFor({timeout:4000}).then(()=>true,()=>false)){await board.getByRole('button',{name:'Skip'}).first().click();await board.waitFor({state:'hidden'});}}
  assert(await page.locator('[data-why] li').count()>0,'the success card explains why the pass worked');
  await page.screenshot({path:`${shots}/pass-puzzle-success-${tag}.png`});
  const stars=await page.evaluate(()=>JSON.parse(localStorage.getItem('fi2-pass-puzzles-v1')).stars);assert(Object.values(stars)[0]>=1,'stars saved');
@@ -88,7 +93,8 @@ async function run(browser,mobile){
  // Back to the list shows the stars.
  await page.getByRole('button',{name:'All puzzles'}).last().click();await page.locator('[data-pack]').first().click();await page.locator('[data-level]').first().waitFor();
  assert.match(await page.locator('[data-level]').first().getAttribute('aria-label'),/[123] of 3 stars/);
- assert.deepEqual(errors,[],'no console errors');
+ // A dev server without the scores store answers the boards with 503 (by design: boards "unavailable"); that is not a page error.
+ assert.deepEqual(errors.filter(e=>!/status of 503 \(Service Unavailable\)/.test(e)),[],'no console errors');
  console.log('PASS_PUZZLE_ARCADE_PASS',JSON.stringify({mobile,aim,loft,threat:threat.threatRings,result:solved.result,stars}));
  await page.close();
 }

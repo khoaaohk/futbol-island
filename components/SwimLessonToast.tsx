@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
-import {SWIM_LESSON,SWIM_LESSON_KEY,waterStore} from '@/lib/town/water/waterHud';
+import {SWIM_LESSON,SWIM_LESSON_KEY,waterStore,waterLessonHeld} from '@/lib/town/water/waterHud';
 import {SHARK_LESSON,SHARK_LESSON_KEY} from '@/lib/town/water/sharks';
 import {RIDE_LESSON,RIDE_LESSON_KEY} from '@/lib/town/water/animalRides';
 import {DIVE_LESSON,DIVE_LESSON_KEY} from '@/lib/town/water/diveSession';
@@ -23,9 +23,13 @@ const LESSONS={swim:{lesson:SWIM_LESSON,key:SWIM_LESSON_KEY,count:countSwimLesso
  * waterStore.lesson when a swim starts (components/Town.tsx); no timers run at rest.
  */
 export default function SwimLessonToast({blocked:held,which='swim'}:{blocked:boolean;which?:'swim'|'shark'|'ride'|'dive'}){
- const L=LESSONS[which],busy=useToastLaneBusy(which),blocked=held||busy;
+ const riding=useSyncExternalStore(waterStore.subscribe,()=>waterStore.get().riding,()=>false);
+ const rideHeld=waterLessonHeld(which,{riding});
+ const L=LESSONS[which],busy=useToastLaneBusy(which),blocked=held||busy||rideHeld;
  const due=useSyncExternalStore(waterStore.subscribe,()=>which==='shark'?waterStore.get().sharkLesson:which==='ride'?waterStore.get().rideLesson:which==='dive'?waterStore.get().reefLesson:waterStore.get().lesson,()=>0);
  const [shown,setShown]=useState(false),timer=useRef<ReturnType<typeof setTimeout>>();
+ // An animal ride hides a showing swim card at once (it is about swimming, not riding); a pending one waits for the dismount.
+ useEffect(()=>{if(rideHeld&&shown)setShown(false);},[rideHeld,shown]);
  useEffect(()=>{if(!due||shown||readShown(L.key))return;toastLane.want(which);if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request(which))return;saveShown(L.key);L.count();setShown(true);},500);
   return ()=>clearTimeout(timer.current);},[due,blocked,shown,L,which]);

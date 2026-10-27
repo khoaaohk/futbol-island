@@ -26,6 +26,21 @@ export const PLANTS:readonly [number,number][]=[[-7.2,3.7],[7.2,3.4]];
 export const SHELVES_WEST={minX:-ROOM.halfW,maxX:-7.55,minZ:-6.15,maxZ:-.65} as const;
 export const CUBBIES_EAST={minX:7.45,maxX:ROOM.halfW,minZ:-6.25,maxZ:.25} as const;
 export const BACK_FACE=ROOM.back+.55;
+/**
+ * Wall signs (world units; `aspect` = atlas height / width, see SIGN in shopScene.ts). The west wall's KIT SHOP wordmark and the
+ * DESIGN YOUR OWN KIT strip above the shirt shelves used to share the same plane AND overlap by ~0.3 m (z-fighting, the wordmark's
+ * plate covering the strip's lettering). They now stack with a clear gap, under the ceiling and above the top shirt stacks;
+ * tests/shop-signs.cjs keeps it that way.
+ */
+export const WALL_SIGNS={
+ jersey:{width:4.4,aspect:96/512,x:-4,y:4.12,z:ROOM.back+.03},
+ boots:{width:4.4,aspect:96/512,x:3.95,y:4.12,z:ROOM.back+.03},
+ ball:{width:3.8,aspect:96/512,x:ROOM.halfW-.03,y:3.95,z:-3},
+ logo:{width:4.6,aspect:150/640,x:-ROOM.halfW+.03,y:4.0,z:-3.4},
+ tagline:{width:4.2,aspect:96/512,x:-ROOM.halfW+.03,y:2.92,z:-3.4},
+} as const;
+/** Top of the folded-shirt stacks on the west shelves (top shelf 2.25 + three 0.075 m layers). */
+export const SHELF_STACK_TOP=2.25+.06+2*.075+.035;
 
 export type Box={minX:number;maxX:number;minZ:number;maxZ:number};
 const rect=(x:number,z:number,w:number,d:number):Box=>({minX:x-w/2,maxX:x+w/2,minZ:z-d/2,maxZ:z+d/2});

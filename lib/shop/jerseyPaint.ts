@@ -177,6 +177,22 @@ function paintSponsor(ctx:Ctx,d:JerseyDesign,cx:number,cy:number,w:number,outlin
  ctx.restore();
 }
 
+/** WCAG contrast ratio between two hex colours (1 … 21). */
+export function contrastRatio(a:string,b:string):number{const la=luminance(a),lb=luminance(b);return (Math.max(la,lb)+.05)/(Math.min(la,lb)+.05);}
+/** Below this the back name gets an automatic rim in the shirt's opposite tone. */
+export const BACK_NAME_MIN_CONTRAST=3;
+/**
+ * The name across the shoulders (metres on the back panel). It used to be a 4.2 cm cap with no rim, which on the 3D kit read as a
+ * faint smudge; now it is a 6.4 cm cap, sits a touch lower (clear of the neck sign-off), and when the text colour is close to the
+ * shirt (contrast under BACK_NAME_MIN_CONTRAST) it gets a dark/light rim, so it always reads. Texture-only: no extra draws.
+ */
+export function backNamePrint(d:Pick<JerseyDesign,'primary'|'accent'|'textColor'|'outline'>){
+ const own=d.outline?d.accent===d.textColor?shade(d.textColor,-.5):d.accent:null;
+ const weak=contrastRatio(d.textColor,d.primary)<BACK_NAME_MIN_CONTRAST;
+ const outline=weak?(luminance(d.primary)>.4?'#15171a':'#f7f3ea'):own;
+ return {y:.585,cap:.064,maxW:.4,tracking:.06,outline};
+}
+
 // ---- panels ---------------------------------------------------------------------------------------------------------------
 type Face='front'|'back';
 /** Paints one torso face into `r` (pixels): pattern in world metres, then the prints upright. kpx = pixels per metre. */
@@ -192,7 +208,7 @@ function paintTorso(ctx:Ctx,d:JerseyDesign,face:Face,r:Rect,kpx:number,opts:{pri
    if(d.frontNumber&&d.number!=null){const [nx,ny]=at(-.1,.53);printText(ctx,String(d.number),nx,ny,.07*kpx,d.font,d.textColor,outline,.12*kpx);}
    const [sx,sy]=at(0,.4);paintSponsor(ctx,d,sx,sy,.3*kpx,outline);
   }else{
-   if(d.name.trim()){const [x,y]=at(0,.6);printText(ctx,d.name.trim().toUpperCase(),x,y,.042*kpx,d.font,d.textColor,outline,.34*kpx,.08);}
+   if(d.name.trim()){const n=backNamePrint(d);const [x,y]=at(0,n.y);printText(ctx,d.name.trim().toUpperCase(),x,y,n.cap*kpx,d.font,d.textColor,n.outline,n.maxW*kpx,n.tracking);}
    if(d.number!=null){const [x,y]=at(0,.4);printText(ctx,String(d.number),x,y,.22*kpx,d.font,d.textColor,outline,.34*kpx,.02);}
   }
  }

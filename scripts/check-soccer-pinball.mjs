@@ -1,6 +1,8 @@
 import './register-local-ts.mjs';
 import assert from 'node:assert/strict';
-const {createPinballState,launchPinball,stepPinball,pinballDefenders,PINBALL_STEP}=await import('../lib/games/soccerPinball.ts');
+const {createPinballState,launchPinball,stepPinball,pinballDefenders,PINBALL_STEP,PERFECT_POINTS,READ_POINTS}=await import('../lib/games/soccerPinball.ts');
+/** Points the timing coach (gradeStrike: perfect streak, reads) added on the last strike, so a combo check counts only the combo. */
+const coachPoints=s=>(s.timing.grade==='perfect'?PERFECT_POINTS*s.timing.streak:0)+(s.timing.read?READ_POINTS:0);
 const idle={left:false,right:false};
 function advance(s,seconds,input=idle){for(let i=0;i<Math.round(seconds/PINBALL_STEP);i++)stepPinball(s,input,PINBALL_STEP);}
 function active(x,y,vx,vy){const s=createPinballState();launchPinball(s);Object.assign(s.ball,{x,y,vx,vy});return s;}
@@ -33,7 +35,7 @@ console.log('Pinball placement bonus, keeper acceleration and 480 Hz pose, reuse
 
 const grazing=active(27,250,-4,400);advance(grazing,.006);assert.ok(Math.abs(grazing.ball.omega)<1,'a grazing rail contact cannot invent spin beyond its friction impulse');
 
-const combination=active(145,540,0,100);advance(combination,.075,{left:true,right:false});assert.equal(combination.combination,1);advance(combination,.15);Object.assign(combination.ball,{x:215,y:540,vx:0,vy:100});const beforeCombination=combination.score;advance(combination,.075,{left:false,right:true});assert.equal(combination.combination,2);assert.equal(combination.score-beforeCombination,50,'alternating flippers earns a combination reward');advance(combination,.15);Object.assign(combination.ball,{x:215,y:540,vx:0,vy:100});advance(combination,.075,{left:false,right:true});assert.equal(combination.combination,1,'same-foot return restarts the combination');
+const combination=active(145,540,0,100);advance(combination,.075,{left:true,right:false});assert.equal(combination.combination,1);advance(combination,.15);Object.assign(combination.ball,{x:215,y:540,vx:0,vy:100});const beforeCombination=combination.score;advance(combination,.075,{left:false,right:true});assert.equal(combination.combination,2);assert.equal(combination.score-beforeCombination-coachPoints(combination),50,'alternating flippers earns a combination reward');advance(combination,.15);Object.assign(combination.ball,{x:215,y:540,vx:0,vy:100});advance(combination,.075,{left:false,right:true});assert.equal(combination.combination,1,'same-foot return restarts the combination');
 
 const built=active(145,540,0,100);advance(built,.075,{left:true,right:false});assert.equal(built.moveTime,0);advance(built,.15);Object.assign(built.ball,{x:215,y:540,vx:0,vy:100});advance(built,.075,{left:false,right:true});assert.ok(built.moveTime>13,'two feet open a finishing window');Object.assign(built.ball,{x:118,y:49,vx:0,vy:-400});advance(built,.05);assert.equal(built.lastGoalBonus,750);assert.equal(built.lastGoalPoints,1400);assert.equal(built.moves,1);assert.equal(built.moveTime,0,'scoring consumes the chance');
 const expired=active(180,49,0,-400);expired.moveTime=.001;advance(expired,.05);assert.equal(expired.lastGoalBonus,0,'expired chance cannot score a bonus');assert.equal(expired.lastGoalPoints,500);

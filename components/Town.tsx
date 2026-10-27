@@ -207,7 +207,7 @@ import {beanSkinOf} from '@/lib/graphics/beanSkin';
 import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
-import {waterStore,waterActions,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,SWIM_EDGE_TITLE,SWIM_EDGE_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
+import {waterStore,waterActions,swimLessonDue,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,SWIM_EDGE_TITLE,SWIM_EDGE_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
 import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
@@ -1433,7 +1433,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // The water step (lib/town/water/waterState.ts): zones with hysteresis, the ball parked on the sand, ripples, the splash events.
       {const speed=Math.hypot(velocity.x,velocity.z),ev=water.step(dt,location.x,location.z,{stick:Math.min(1,moveLength),moving:speed>.15,speed,landY:rooftop.state.height,yaw:player.root.rotation.y,airborne:rooftop.state.falling||rooftop.jump.active||rooftop.state.air||rampStep.owns||streetTraffic.rider.index>=0});
         if(ev.entered){countWade();rooftop.state.recovery=0;rooftop.state.impact=false;/* the sea takes over from any knockdown (a fall outside the splash test still lands in water) */if(!water.state.park){const p=rooftop.findLanding(location.x,location.z);if(p)water.state.park={x:p.x,z:p.z,y:rooftop.surface(p.x,p.z),yaw:player.root.rotation.y};}}
-        if(ev.swimStarted){countSwimStart();waterStore.set({lesson:waterStore.get().lesson+1});}
+        if(ev.swimStarted){countSwimStart();if(swimLessonDue(animalRides.riding))waterStore.set({lesson:waterStore.get().lesson+1});}
         if(ev.swimSeconds>0)countSwimTime(ev.swimSeconds);
         if(ev.sped)countSwimFast();
         // Dive (waterState.ts DIVE): a soft splash going under, drips + the plip + the head-shake coming up, a small bubble ring over

@@ -90,7 +90,8 @@ const animate=town.slice(town.indexOf('function animate('),town.indexOf('\n    }
 assert(animate.length>1000&&!/updateAim\(|predictLessonPass\(|readLessonStroke\(/.test(animate),'no stroke reading or prediction inside the frame loop');
 assert(/const aimMove=[\s\S]{0,400}?updateAim\(\)/.test(town),'prediction updates on pointer move');
 assert(/aimWaiting=[^;]*lessonRef\.current==='aim'/.test(town)&&/aim:\$\{aimRevision\}/.test(town),'frozen aiming lets the render loop sleep until the stroke changes');
-assert(/called:lessonRef\.current==='aim'\?1/.test(town),'the receiver waves (PlayerMotion.called) while the child aims');
+// (Since the emote work the emote / move-nudge waves come first: `called:(emote…)||(move…)||(lessonRef.current==='aim'?1:…)`.)
+assert(/called:[^\n]{0,240}?\(?lessonRef\.current==='aim'\?1/.test(town),'the receiver waves (PlayerMotion.called) while the child aims');
 assert(/ready:1/.test(town),'the marker shows a ready stance while the pass is on');
 assert(/replayLessonPass\(last\.start,last\.inputs,REPLAY_SPEED\)/.test(town),'Watch again replays the recorded attempt through the engine');
 assert(/Watch again in slow motion/.test(coach)&&/Watch it again in slow motion/.test(coach),'slow-motion replay offered after a miss and after success');
