@@ -1,4 +1,5 @@
 'use client';
+import {ARCADE_EXIT_EVENT} from './RotateLock';
 import dynamic from 'next/dynamic';
 import ArcadeGameLoading from './ArcadeGameLoading';
 import {NavigationButton} from './DoneButton';
@@ -50,6 +51,7 @@ export default function ArcadeRoom(){
  useEffect(()=>{if(!queryReady||game||!canvas.current)return;let canceled=false;setReady(false);setFailed(false);setNear(null);setSocialNear(null);const node=canvas.current;import('@/lib/arcade/arcadeRoomScene').then(({createArcadeRoomScene})=>{if(canceled)return;try{const scene=createArcadeRoomScene(node,setNear,position.current,(x,y,visible)=>{const button=machinePrompt.current;if(button){button.style.left=`${x}px`;button.style.top=`${y}px`;button.style.visibility=visible?'visible':'hidden';}},()=>leave(),setSocialNear);room.current=scene;(window as unknown as {__arcadeRoom?:unknown}).__arcadeRoom=scene;setReady(true);}catch{setFailed(true);}}).catch(()=>!canceled&&setFailed(true));return()=>{canceled=true;if(room.current){const s=room.current.state;position.current={x:s.x,z:s.z};room.current.dispose();room.current=null;}delete (window as unknown as {__arcadeRoom?:unknown}).__arcadeRoom;pointer.current=null;joyRect.current=null;};},[game,queryReady]);
  const play=(id:ArcadeCabinetId)=>{if(exitingRef.current)return;setList(false);setGame(id);history.replaceState(null,'',`/arcade?game=${id}`);};
  const back=()=>{setGame(null);history.replaceState(null,'','/arcade');};
+ useEffect(()=>{const leave=()=>back();window.addEventListener(ARCADE_EXIT_EVENT,leave);return()=>window.removeEventListener(ARCADE_EXIT_EVENT,leave);},[]);
  useEffect(()=>{if(game)return;const key=(e:KeyboardEvent)=>{if((e.code==='Enter'||e.code==='KeyE')&&near&&!(e.target instanceof HTMLButtonElement)){e.preventDefault();play(near);}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[game,near]);
  const stop=(e?:{pointerId:number})=>{if(e&&e.pointerId!==pointer.current)return;const id=pointer.current;pointer.current=null;joyRect.current=null;if(id!==null&&joy.current?.hasPointerCapture(id))joy.current.releasePointerCapture(id);room.current?.setStick(0,0);paintJoystick(joy.current,0,0);};
  const move=(e:PointerEvent<HTMLDivElement>)=>{if(pointer.current!==e.pointerId)return;e.preventDefault();const r=joyRect.current??(joyRect.current=e.currentTarget.getBoundingClientRect()),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2,T=stickTravel(r.width),{px:x,py:y}=stickInput(dx,dy,T);room.current?.setStick(x/T,y/T);paintJoystick(joy.current,x,y,T);/* bounds-scaled: same feel at any ring size */};

@@ -9,6 +9,8 @@ import styles from './RotateLock.module.css';
  *  while it is open the card flips: an UPRIGHT phone sees "Turn your phone sideways to play". */
 /** Same query as the CSS rule in RotateLock.module.css that shows the portrait-only card (tests/qa2-rotate-pause.cjs keeps them equal). */
 export const ROTATE_LOCK_QUERY = PORTRAIT_ONLY_QUERY;
+/** Sent by the "Back to arcade" button on the landscape-game card; ArcadeRoom leaves the open game (owner, Oct 27 2026). */
+export const ARCADE_EXIT_EVENT = 'fi:arcade-exit';
 const serverMode = () => 'portrait' as const;
 export default function RotateLock() {
   const mode = useSyncExternalStore(subscribeOrientationMode, getOrientationMode, serverMode);
@@ -24,5 +26,5 @@ export default function RotateLock() {
     if (switched.current) change(); switched.current = true;
     mq.addEventListener?.('change', change); return () => mq.removeEventListener?.('change', change);
   }, [mode]);
-  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" /><p>{mode === 'landscape' ? 'Turn your phone sideways to play' : 'Turn your phone upright to play'}</p></div>;
+  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" /><p>{mode === 'landscape' ? 'Turn your phone sideways to play' : 'Turn your phone upright to play'}</p>{mode === 'landscape' && <button type="button" className={styles.leave} onClick={() => window.dispatchEvent(new Event(ARCADE_EXIT_EVENT))}>Back to arcade</button>}</div>;
 }

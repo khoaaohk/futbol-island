@@ -11,3 +11,7 @@
 @media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock[data-mode=portrait]{display:flex}}
 /* landscape mode, phones held upright: touch screen, narrow side */
 @media(pointer:coarse) and (orientation:portrait) and (max-width:500px){.lock[data-mode=landscape]{display:flex}}
+
+/* Back to arcade on the "turn sideways" card (owner, Oct 27 2026): a way out for someone who opened a sideways game upright. */
+.leave{margin-top:6px;min-height:48px;padding:0 26px;border:3px solid #f7e7bc;border-radius:999px;background:#fff3d1;color:#244d40;font:800 17px/1 system-ui,sans-serif;cursor:pointer}
+.leave:active{transform:translateY(2px)}
