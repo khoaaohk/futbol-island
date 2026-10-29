@@ -101,6 +101,25 @@ for(const p of FORMAT_PATHS){
  assert.equal(L('7v7',p.chapters[0].lessons[0],new Set(['7v7:a:0','7v7:a:1']),new Set()).complete,true);
  assert.equal(api.paths.pathLessonLocked(p,p.chapters[0].lessons[1],new Set(['7v7:a:0','7v7:a:1']),new Set()),false);}
 
+// Tapping Next (Oct 28 2026, owner): steps left by tapping forward count as watched, so the stop label counts them and resume
+// reopens on the furthest step reached; skipping never completes a lesson (completion is the quiz only).
+{
+ reset();const p=FORMAT_PATHS[0],l=core(p)[0];assert.ok(l.questions>0&&l.steps>=4,'first lesson has a quiz and 4+ steps');
+ for(let i=0;i<3;i++)api.quest.recordStepsPassed(p.format,l.id,i,i+1); // Next, Next, Next: now on step 3
+ api=loader();let e=evidence(),s=api.paths.lessonEvidence(p.format,l,e.steps,e.answers);
+ assert.equal(s.watched,3,'three steps tapped past count as watched');assert.equal(s.step,3,'resume reopens on the step the child reached');
+ assert.equal(s.complete,false,'skipping does not complete a quiz lesson');assert.equal(s.quiz,false,'not yet through the play');
+ api.quest.recordStepsPassed(p.format,l.id,1,2);api.quest.recordStepsPassed(p.format,l.id,3,2);e=evidence();
+ assert.equal(api.paths.lessonEvidence(p.format,l,e.steps,e.answers).watched,3,'Back then Next again, or a backward seek, adds nothing new');
+ api.quest.recordStepsPassed(p.format,l.id,3,l.steps-1);e=evidence();s=api.paths.lessonEvidence(p.format,l,e.steps,e.answers);
+ assert.equal(s.step,l.steps-1,'tapped to the last step: resume there');assert.equal(s.complete,false,'still needs the quiz');
+ assert.equal(api.paths.pathLessonLocked(p,core(p)[1],e.steps,e.answers),true,'skipping through does not unlock the next stop');
+ // Old saves (autoplay-only step keys) still load unchanged.
+ reset();storage.set(api.quest.QUEST_STORAGE_KEY,JSON.stringify({visits:[],steps:[`${p.format}:${l.id}:0`],equipment:false}));api=loader();e=evidence();
+ assert.equal(api.paths.lessonEvidence(p.format,l,e.steps,e.answers).step,1,'old save resumes as before');
+ assert.match(fs.readFileSync(path.join(root,'components/FieldLearning.tsx'),'utf8'),/if\(to>s\.step\)recordStepsPassed\(s\.format,s\.lesson\.id,s\.step,to\)/,'Next records the steps it passes');
+ reset();
+}
 // Wiring: every consumer reads the one rule; path unlocking never uses the card first-try rule.
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const field=read('components/FieldLearning.tsx');

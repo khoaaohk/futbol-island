@@ -21,4 +21,9 @@ export function recordQuestEvent(event:QuestEvent){
 }
 export const recordQuestVisit=(format:string)=>recordQuestEvent({type:'visit',format});
 export const recordQuestStep=(format:string,lessonId:string,step:number)=>recordQuestEvent({type:'step',format,lessonId,step});
+/** Tapping Next (Oct 28 2026, owner): every step the child leaves by tapping forward counts as watched, the same saved key autoplay
+ *  writes, so the Paths "x/y play steps" label counts it and resume (lessonEvidence: first unwatched step) reopens on the furthest step
+ *  reached. The step they land on is not counted until it plays out or they tap past it, so resume never skips it. Completion is
+ *  unchanged: every path lesson has a quiz and completes on the quiz only. */
+export function recordStepsPassed(format:string,lessonId:string,from:number,to:number){for(let i=Math.max(0,from);i<to;i++)recordQuestStep(format,lessonId,i);}
 export function useQuestEvidence(){const value=useSyncExternalStore(subscribe,()=>{read();return snapshot;},()=>emptySnapshot);return useMemo(()=>sanitizeQuestEvidence(JSON.parse(value)),[value]);}

@@ -26,7 +26,7 @@ import {journeyById,stageVariant,type LearningId} from '@/lib/town/learningJourn
 import {isLearningPreview,learningPreviewToken,endLearningPreview,readLearning,saveLearningCursor,exposeLearning,answerLearning,completeLearningStage} from '@/lib/town/learningProgress';
 import {journeyLesson,journeyHint} from '@/lib/town/learningJourneyLessons';
 import {venueById,type Format} from '@/lib/town/venues';
-import {useQuestEvidence} from '@/lib/town/questProgress';
+import {recordStepsPassed,useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {openEndgame,useGraduations} from '@/lib/endgame/graduationStore';
 import {quizEndNext} from '@/lib/paths/pathContinue';
@@ -70,7 +70,7 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  useEffect(()=>{if(!pickerOpen||!session.current)return;const current=session.current,wasPlaying=current.playing;current.playing=false;setPlaying(false);return()=>{if(session.current===current){current.playing=wasPlaying;setPlaying(wasPlaying);}};},[pickerOpen,session]);
  // Oct 1 2026 (user): no "You'll learn" opener card; a lesson picked from the list goes straight into the play and plays.
  const select=(lesson:FieldLesson)=>{countLessonOpened(lesson.id);setQuizEnded(false);setRewatch(null);setLivePaused(false);onLivePause?.(false);voice.prime();setChosen(lesson);setStep(0);setPlaying(true);setQuiz(false);setQuestion(0);setAnswer(null);session.current={format,lesson,step:0,progress:0,playing:true,quiz:false,question:0,answer:null,voicePending:voice.enabled,cameraMode:'guided',onPlaying:setPlaying,onStep:setStep};setPickerOpen(false);};
- const seek=(n:number)=>{setQuizEnded(false);if(learningId&&!preview.current&&n>0)exposeLearning(learningId,stageVariant(learningId,stage),'solution');const s=session.current;if(!s)return;s.quiz=false;setQuiz(false);s.answer=null;setAnswer(null);s.step=Math.max(0,Math.min(s.lesson.steps.length-1,n));s.progress=0;s.voicePending=voice.enabled;s.playing=false;setPlaying(false);setStep(s.step);};
+ const seek=(n:number)=>{setQuizEnded(false);if(learningId&&!preview.current&&n>0)exposeLearning(learningId,stageVariant(learningId,stage),'solution');const s=session.current;if(!s)return;s.quiz=false;setQuiz(false);s.answer=null;setAnswer(null);const to=Math.max(0,Math.min(s.lesson.steps.length-1,n));if(to>s.step)recordStepsPassed(s.format,s.lesson.id,s.step,to);s.step=to;s.progress=0;s.voicePending=voice.enabled;s.playing=false;setPlaying(false);setStep(s.step);};
  // Card rewards (docs/quiz-design.md): this quiz run's answers. A quiz of MIN_CARD_QUIZ_QUESTIONS+ questions, all correct under
  // quizRunAllCorrect (retries count unless CARD_QUIZ_FIRST_TRY), offers one card pick; quizCardEligible is the single rule.
  const correctRun=useRef<QuizRun>(newQuizRun(''));
