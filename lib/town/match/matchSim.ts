@@ -55,9 +55,9 @@ export interface SimPlayer {
 const WINDUP_LEAD_TURN = Math.PI / 3;
 const WINDUP_FINISH: Record<string, number> = { futsal: 1.75, "7v7": 1.3, "9v9": 1.45, "11v11": 1.15, beach: 1 };
 // ---- beach soccer (FIFA Beach Soccer Laws 2024-25; the Coral Cay live match) ----
-// Attract-mode clock: three 60 s periods (the real game: 3 × 12 min), a 15 s extra time when level (3 min), then a
+// Attract-mode clock: three 2-minute periods of REAL time, ~6 min a game and ~3 goals typical (Oct 29 2026; the real game: 3 × 12 min), a 15 s extra time when level (3 min), then a
 // penalty shoot-out (5 kicks each, then sudden death); a short full-time beat, then a fresh game kicks off.
-export const BEACH_PERIOD = 60, BEACH_EXTRA = 15, BEACH_FULL_TIME = 3;
+export const BEACH_PERIOD = 120, BEACH_EXTRA = 15, BEACH_FULL_TIME = 3;
 /** Sand: a rolling ball dies ~30 % quicker (air drag is unchanged, so lifted passes and throws keep their flight). */
 const BEACH_GROUND_FRICTION = 2.2 * 1.3;
 /** Sand legs: every player runs a little slower (running on sand costs ~1.6× the energy of firm ground). */

@@ -307,6 +307,9 @@ export function createShirtNumber(jersey:T.Mesh,shirt:T.MeshStandardMaterial,fem
 // ---------------------------------------------------------------- bean back placement
 /** Bean skin (beanSkin.ts): the number sits on the bean's back at this fraction of the bean height, digits this tall. */
 export const BEAN_NUMBER_U=.42, BEAN_DIGIT_HEIGHT=.17;
+/** The own player's back name (backNameTexture.ts): box centre at this fraction of the bean height (above the number, below the
+ * collar band at .585), box width/height and text cap in metres. */
+export const BEAN_NAME_U=.541, BEAN_NAME_W=.3, BEAN_NAME_H=.07, BEAN_NAME_CAP=.048;
 /**
  * The same digit layout as the jersey panel, as a GLSL function for other surfaces (the bean back is shaded
  * in the bean body shader, so its number costs no extra draw). `p` is in metres as seen from BEHIND

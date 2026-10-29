@@ -65,9 +65,9 @@ const DT=1/30,run=(sim,seconds)=>{for(let i=Math.round(seconds/DT);i>0;i--)sim.s
  // …while the same strike from an outfield player counts.
  const s2=new MatchSim(5,'beach');s2.restart=null;s2.goalHold=0;s2.windupScale=0;const st=s2.players.st;Object.assign(st,{x:135,y:60});for(const id of s2.blueIds)Object.assign(s2.players[id],{x:250,y:380,vx:0,vy:0});
  s2.ball.owner='st';s2.possession='gold';s2.launch('st',135,0,320,.3,null);let g=false;for(let t=0;t<90&&!g;t++){s2.step(DT);g=s2.score.gold===1;}assert(g,'an outfield strike scores');}
-{// Periods: three 60 s periods of REAL time (the match clock; the sim steps at windupScale × real time), then full time (or
+{// Periods: three 2-minute periods of REAL time (the match clock; the sim steps at windupScale × real time), then full time (or
  // extra time when level), then a new game from 0-0. `real` converts real seconds to the sim dt the host hands over.
- const sim=new MatchSim(11,'beach'),real=(s,sec)=>run(s,sec*s.windupScale);real(sim,BEACH_PERIOD+2);assert(sim.period===2,'period 2 after 60 s');real(sim,BEACH_PERIOD);assert(sim.period===3);
+ const sim=new MatchSim(11,'beach'),real=(s,sec)=>run(s,sec*s.windupScale);real(sim,BEACH_PERIOD+2);assert(sim.period===2,'period 2 after one period');real(sim,BEACH_PERIOD);assert(sim.period===3);
  real(sim,BEACH_PERIOD+BEACH_EXTRA+6);assert(sim.results.length===1,'one game finished');const r=sim.results[0];
  if(r.gold===r.blue)assert(r.extra&&r.pens&&r.pens.gold!==r.pens.blue,'a level game goes to extra time and a shoot-out: always a winner');
  real(sim,4);assert.equal(sim.period,1,'a new game kicks off');

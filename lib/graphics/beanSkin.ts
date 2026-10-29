@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {LUMBAR_HEIGHT,CHEST_HEIGHT} from './spineSurface';
-import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT} from './shirtNumbers';
+import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT,BEAN_NAME_U,BEAN_NAME_W,BEAN_NAME_H,BEAN_NAME_CAP} from './shirtNumbers';
 import {styleIndexRange} from './playerBatch';
 import {WATER_UNIFORMS} from './waterSurface';
 import {BEAN_EYES,BEAN_MOUTHS,BEAN_EXPRESSIONS,defaultBeanLookFor,defaultOutfitForTeam,
@@ -499,6 +499,9 @@ ${ROW_ACCESS}`;
 const BODY_FRAG_PARS=/* glsl */`
 uniform sampler2D beanFace;
 uniform sampler2D beanDigits;
+#ifdef BEAN_NAME
+uniform sampler2D beanName;
+#endif
 flat varying float vBeanRow;
 varying float vBeanU;
 varying vec4 vBeanSC;
@@ -527,6 +530,21 @@ const BODY_FRAG=/* glsl */`
    col=mix(col,mix(dark,white?vec3(1.):dark,cov.r),alpha*fade);
   }
  }
+ #ifdef BEAN_NAME
+ // The own player's back name (backNameTexture.ts; only this rig's body material has BEAN_NAME): one cached coverage texture,
+ // inked like the number, above it on the shirt; fades out when the letters are too small on screen to read.
+ {vec2 pn=vec2(vBeanBack.x,vBeanSC.w-(${g(Y0)}+${g(BEAN_NAME_U)}*span));
+  if(abs(pn.x)<${g(BEAN_NAME_W/2)}&&abs(pn.y)<${g(BEAN_NAME_H/2)}){
+   float nfade=smoothstep(4.,6.,${g(BEAN_NAME_CAP)}*vBeanPx);
+   if(nfade>0.){
+    vec2 nk=vec2(${g(1/BEAN_NAME_W)},-${g(1/BEAN_NAME_H)});
+    vec2 cov=textureGrad(beanName,vec2(pn.x,-pn.y)*abs(nk)+.5,bdx*nk,bdy*nk).rg;
+    bool white=bt(${BD.shirt}).w>.5;vec3 dark=vec3(.01681,.01681,.02315);
+    float alpha=white?max(cov.r,cov.g*.5):cov.r;
+    col=mix(col,mix(dark,white?vec3(1.):dark,cov.r),alpha*nfade);
+   }
+  }}
+ #endif
  if(fr<1.08){
   vec4 sk=bt(${BD.skin});vec3 panel=sk.rgb;
   vec3 pc=mix(panel*1.12+.02,panel,smoothstep(0.,.85,length(fp-vec2(-.17,.24))));
@@ -629,7 +647,7 @@ function patchVertex(src:string,kind:BeanKind,depth:boolean){
  if(!depth)src=src.replace('#include <common>','#include <common>\nvarying vec3 vBeanW;').replace('#include <project_vertex>','#include <project_vertex>\n'+BEAN_WORLD_VERTEX);
  return src.replace('#include <project_vertex>','#include <project_vertex>\n'+lod);
 }
-type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};
+type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};beanName:{value:T.Texture|null};
  /** 0..1 underwater look below the water line (swimClear.ts; the swimming player only, 0 = no-op for every other bean). */beanUnder:{value:number};uWaterTime:{value:number}};
 const EMPTY_ROW=new Float32Array(BD.size*4);
 /** A rig's row wrapped as a texture handle: identifies the row for code that clones bean materials; never uploaded. */
@@ -644,7 +662,7 @@ const isBatchTexture=(source:RowSource)=>!!source&&!(source instanceof Float32Ar
  * frame re-uploads only the small dynamic texture.
  */
 function uniformsFor(kind:BeanKind,row:Float32Array|null,texture:T.Texture|null):BeanUniforms{
- return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
+ return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanName:{value:null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
 }
 /** Clay MeshStandardMaterial for one bean part; clones (playerBatch) keep the shader with their own data texture. */
 export class BeanMaterial extends T.MeshStandardMaterial{
@@ -946,6 +964,8 @@ export type BeanSkin={
  setLook:(look:BeanLook,outfit:Outfit)=>void;
  setExpression:(e:BeanExpression)=>void;
  setNumber:(n:number|null)=>void;
+ /** The own player's back name (backNameTexture.ts), or null: sets this rig's body material once (a define + one texture). */
+ setBackName:(texture:T.Texture|null)=>void;
  /** Refreshes spine rotations, limb control points and end frames from the joints (needs current world matrices). */
  sync:()=>void;
  dispose:()=>void;
@@ -1025,6 +1045,8 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
   setLook(l,o){look={...l};outfit={...o};if(o.number!==undefined)number=o.number===null||!Number.isFinite(o.number)||o.number<1?null:Math.min(99,Math.round(o.number));writeStatic();},
   setExpression(e){if(e===expression||!BEXPR[e])return;expression=e;writeStatic();},
   setNumber(n){number=n===null||!Number.isFinite(n)||n<1?null:Math.min(99,Math.round(n));writeStatic();},
+  setBackName(texture){const m=bodyBase as BeanMaterial;if(m.beanUniforms.beanName.value===texture)return;m.beanUniforms.beanName.value=texture;
+   const on=!!texture,had=m.defines?.BEAN_NAME!==undefined;if(on===had)return;const d={...(m.defines??{})};if(on)d.BEAN_NAME='';else delete d.BEAN_NAME;m.defines=d;m.needsUpdate=true;},
   sync,
   dispose(){for(const m of meshes)m.removeFromParent();materials.forEach(m=>m.dispose());handle.dispose();delete j.root.userData.beanSync;delete j.root.userData.beanBody;},
  };

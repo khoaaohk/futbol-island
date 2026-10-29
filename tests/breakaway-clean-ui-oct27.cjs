@@ -42,6 +42,12 @@ assert.doesNotMatch(pad.slice(pad.indexOf(' return <div')),/hud\.message|hold to
 assert.match(hud,/return r\.eventKind==='goal'\?'GOAL!':r\.eventKind==='hit'\?'Tackled!':'';/,'flash only after a goal or a tackle');
 assert.match(fx,/export const RUNNER_WORD_POPS:boolean=false;/,'floating caption words are off');
 assert.match(fx,/if\(!RUNNER_WORD_POPS\|\|!wordCtx/,'pop() honours the switch');
+// Oct 29 2026 (owner): no WING / MIDDLE words in the world at the route fork; the fork keeps its plain coloured arches
+// (no canvas texture, no label planes).
+{const forkSrc=fx.slice(fx.indexOf("fork.name='runner-fork'"),fx.indexOf('// Back line (boss)'));
+ assert.doesNotMatch(fx,/label\('WING'|label\('MIDDLE'|'safer · cross'|'busy · goals ×2'/,'no fork text signs');
+ assert.doesNotMatch(forkSrc,/createElement\('canvas'\)|CanvasTexture|PlaneGeometry/,'the fork builds no textures or sign planes');
+ assert.equal((forkSrc.match(/stage\.box\(/g)||[]).length,3,'the fork keeps its arches (posts + two coloured bars)');}
 
 // 3. Header and pause card: the shared arcade bar and pause card (docs/ARCADE_CHROME_OCT27.md; tests/arcade-chrome-shared.cjs).
 assert.match(game,/<ArcadeTopBar game=\{kind\}[^>]*value=\{hud\.score\} word=\{kind==='tennis'\?undefined:'pts'\}/,'runner: Back · one points pill · Pause');

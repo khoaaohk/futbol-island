@@ -31,4 +31,19 @@ const base={primary:'#1d3a8a',accent:'#f2c14e',textColor:'#ffffff',outline:false
  assert(/const n=backNamePrint\(d\);[^\n]*printText\(ctx,d\.name\.trim\(\)\.toUpperCase\(\),x,y,n\.cap\*kpx,d\.font,d\.textColor,n\.outline/.test(src),'back name painted from backNamePrint');
  assert(!/\.042\*kpx/.test(src),'the old 4.2 cm cap is gone');
  assert(!/new T\.|three/.test(src.split('\n').filter(l=>!/^\s*(\*|\/\/|\/\*)/.test(l)).join('\n')),'jerseyPaint stays 2D (no meshes)');}
+// 4. In-game kit (owner, Oct 29 2026): the own player's bean shows the worn jersey's back name. One cached coverage texture painted
+//    when the name/font changes (never per frame), sampled only under BEAN_NAME on the own rig's body material, placed between the
+//    number and the collar band; batched players (other players, NPCs) never get the define.
+{const tex=read('lib/graphics/backNameTexture.ts'),skin=read('lib/graphics/beanSkin.ts'),nums=read('lib/graphics/shirtNumbers.ts'),town=read('components/Town.tsx'),paint=read('lib/shop/jerseyPaint.ts');
+ assert(/if\(cached\?\.key===key\)return cached\.texture;/.test(tex),'name texture cached by name+font');
+ assert(/cached\?\.texture\.dispose\(\)/.test(tex),'the previous name texture is disposed');
+ assert(/export function paintBackNameCoverage[\s\S]*?backNamePrint\(/.test(paint),'coverage uses the studio print (same tracking)');
+ assert(/#ifdef BEAN_NAME[\s\S]*?textureGrad\(beanName/.test(skin),'body shader samples the name only under BEAN_NAME');
+ assert(/setBackName\(texture\)\{[^\n]*beanName\.value===texture\)return;/.test(skin),'setBackName is a no-op when unchanged');
+ const m=nums.match(/BEAN_NAME_U=([\d.]+), BEAN_NAME_W=([\d.]+), BEAN_NAME_H=([\d.]+), BEAN_NAME_CAP=([\d.]+)/),[U,,H]=[+m[1],+m[2],+m[3]];
+ const span=.86+.13,num=+nums.match(/BEAN_NUMBER_U=([\d.]+)/)[1],digit=+nums.match(/BEAN_DIGIT_HEIGHT=([\d.]+)/)[1];
+ assert((U-num)*span-H/2>=digit/2-.005,'name box sits above the number');assert((U*span+H/2)<.585*span,'and below the collar band');
+ const at=town.indexOf('setBackName(backNameTexture(appliedGear.jersey?.name,appliedGear.jersey?.font))');assert(at>0,'Town wires the worn jersey name');
+ const line=town.slice(town.lastIndexOf('\n',at),town.indexOf('\n',at));assert(/if\(customizationChanged\)\{/.test(line),'only when the kit changes');
+ assert(!/setBackName/.test(read('lib/graphics/playerBatch.ts')),'batched players never get a name');}
 console.log('jersey-back-name: ok');

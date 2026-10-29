@@ -144,17 +144,11 @@ export function createRunnerFx(stage:ArcadeStage){
  // Puddles: one instanced draw for up to four flat patches.
  const MUD=4,mud=new T.InstancedMesh(new T.CircleGeometry(1,20),new T.MeshBasicMaterial({color:'#6b4a2f',transparent:true,opacity:.82,depthWrite:false}),MUD);
  mud.name='runner-mud';mud.rotation.x=0;mud.frustumCulled=false;mud.visible=false;mud.renderOrder=1;scene.add(mud);
- // Route fork: two arches with painted labels (built once).
+ // Route fork: two coloured arches, no words (owner, Oct 29 2026: the WING / MIDDLE text signs are gone; the lanes, the
+ // arch colours and the route flash still tell the fork). Plain boxes only: no canvas textures, two fewer draw calls.
  const fork=new T.Group();fork.name='runner-fork';fork.visible=false;scene.add(fork);
- function label(text:string,sub:string,bg:string){const c=document.createElement('canvas');c.width=256;c.height=96;const g=c.getContext('2d');if(g){g.fillStyle=bg;g.fillRect(0,0,256,96);g.fillStyle='#ffffff';g.font='bold 40px Arial';g.textAlign='center';g.fillText(text,128,46);g.font='bold 20px Arial';g.fillText(sub,128,80);}
-  const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return new T.Mesh(new T.PlaneGeometry(2.2,.82),new T.MeshBasicMaterial({map:t,toneMapped:false,side:T.DoubleSide}));}
- if(typeof document!=='undefined'){
-  const wing=label('WING','safer · cross','#2a7f9e'),middle=label('MIDDLE','busy · goals ×2','#a8406f');
-  wing.position.set(-2.4,2.6,0);middle.position.set(1.2,2.6,0);middle.scale.set(1.5,1,1);fork.add(wing,middle);
-  for(const x of[-3.6,-1.2,3.6])stage.box(x,1.3,0,.14,2.6,.14,x===-1.2?'#ffe084':'#fff3d9',fork).castShadow=false;
-  stage.box(-2.4,2.6,-.05,2.5,.12,.12,'#7ff0e2',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.12,.12,'#ff7aa8',fork).castShadow=false;
-  fork.children.forEach(c=>{if(c.parent!==fork){c.parent?.remove(c);fork.add(c);}});
- }
+ for(const x of[-3.6,-1.2,3.6])stage.box(x,1.3,0,.14,2.6,.14,x===-1.2?'#ffe084':'#fff3d9',fork).castShadow=false;
+ stage.box(-2.4,2.6,-.05,2.5,.12,.12,'#7ff0e2',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.12,.12,'#ff7aa8',fork).castShadow=false;
  // Back line (boss): gold chevrons painted in the lane the line leaves open. The boss is the run's biggest test (a
  // kid-like bot lost ~80% of its chances there) and its lesson is "attack the side they leave open", so show the side.
  // One plane + one canvas texture drawn once; hidden (no draw call) unless a back line is ahead. Fades while it shifts.

@@ -205,6 +205,7 @@ import {createClearWindow,clearBedDepthAt,CLEAR_BED} from '@/lib/town/water/clea
 import {UW_SURFACE} from '@/lib/town/fishing/underwater';
 import {uwDepthAt} from '@/lib/town/fishing/underwater';
 import {beanSkinOf} from '@/lib/graphics/beanSkin';
+import {backNameTexture} from '@/lib/graphics/backNameTexture';
 import {onLand} from '@/lib/town/landmass';
 import {createWaterState,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
@@ -1670,7 +1671,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       visualLocation.x=active?T.MathUtils.lerp(previousLocation.x,location.x,blend):location.x;visualLocation.z=active?T.MathUtils.lerp(previousLocation.z,location.z,blend):location.z;
       animalRides.present(active?blend:1,visualLocation);// riding (Oct 20 2026, "not together"): the animal's drawn pose and the rider's seat on it, from ONE interpolation
       const customizationChanged=appliedCustomization!==customizationRef.current||appliedGear!==gearRef.current;
-      if(customizationChanged){appliedCustomization=customizationRef.current;appliedGear=gearRef.current;const ownOutfit=gearOutfit(playerOutfit(appliedCustomization),appliedGear);player.setAppearance(appliedCustomization);player.setBeanLook(beanLookFor(appliedCustomization),ownOutfit);vehicle.setCustomization(appliedCustomization);backpack.setKit(ownOutfit);
+      if(customizationChanged){appliedCustomization=customizationRef.current;appliedGear=gearRef.current;const ownOutfit=gearOutfit(playerOutfit(appliedCustomization),appliedGear);player.setAppearance(appliedCustomization);player.setBeanLook(beanLookFor(appliedCustomization),ownOutfit);beanSkinOf(player)?.setBackName(backNameTexture(appliedGear.jersey?.name,appliedGear.jersey?.font));/* the worn jersey's back name, painted once per name/font change (backNameTexture.ts), own player only */vehicle.setCustomization(appliedCustomization);backpack.setKit(ownOutfit);
        // Kit Shop ball first (lib/graphics/shopBallSkin.ts); none worn = the backpack/vending ball style as before.
        const shopBall=shopBallSkin.setDesign(appliedGear.ball);if(!shopBall&&shopBallOn)ballAppearance.invalidate();if(!shopBall)ballAppearance.setStyle(appliedCustomization.ball);if(shopBall!==shopBallOn){shopBallOn=shopBall;for(const patch of ballPatches)patch.visible=!shopBall;}}
       // Team colours for the player's own character while the draw-the-pass lesson or rooftop knockout is on (lib/town/beanLooks mainPlayerDress); own look restored after.
