@@ -126,6 +126,20 @@ function printText(ctx:Ctx,text:string,cx:number,cy:number,cap:number,font:FontI
  ctx.restore();
 }
 
+/**
+ * The back name as COVERAGE for the in-game bean kit (lib/graphics/backNameTexture.ts, Oct 29 2026): R = fill, G = outline (includes
+ * the fill), black elsewhere, the same encoding as the shirt digit atlas, so the bean shader inks the name exactly like the number
+ * (white with a dark rim on dark shirts, dark on light ones). Same type and squeeze as the studio print; centred on a w×h canvas.
+ */
+export function paintBackNameCoverage(ctx:Ctx,name:string,font:FontId,w:number,h:number,cap:number){
+ const text=name.trim().toUpperCase(),n=backNamePrint({primary:'#000000',accent:'#000000',textColor:'#ffffff',outline:false});
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#000000';ctx.fillRect(0,0,w,h);
+ if(text){const maxW=w*.94;
+  ctx.globalCompositeOperation='source-over';printText(ctx,text,w/2,h/2,cap,font,'#00ff00','#00ff00',maxW,n.tracking);
+  ctx.globalCompositeOperation='lighter';printText(ctx,text,w/2,h/2,cap,font,'#ff0000',null,maxW,n.tracking);}
+ ctx.restore();
+}
+
 // ---- crest ------------------------------------------------------------------------------------------------------------------
 function crestPath(ctx:Ctx,shape:JerseyCrest['shape'],s:number){
  ctx.beginPath();

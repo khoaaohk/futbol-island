@@ -20,11 +20,18 @@ const host=(sim,format,realSeconds,fps=60)=>{for(let i=Math.round(realSeconds*fp
   near(sim.clock,24,.05,`${fps} fps: the clock counts real seconds`);near(sim.matchTime,24,.05,`${fps} fps: 24 s into the game`);
   near(sim.stats.time,24*.48,.05,'the sim itself still plays at the beach pace');}}
 
-{// Periods are 60 REAL seconds: period 2 just after a minute of watching, period 3 after two, a result after ~3 (+ extra time).
- const sim=new MatchSim(11,'beach');host(sim,'beach',BEACH_PERIOD-2);assert.equal(sim.period,1,'still period 1 at 0:58');
- host(sim,'beach',6);assert.equal(sim.period,2,'period 2 at 1:04');host(sim,'beach',BEACH_PERIOD);assert.equal(sim.period,3,'period 3 at 2:04');
- host(sim,'beach',BEACH_PERIOD+BEACH_EXTRA+8);assert.equal(sim.results.length,1,'one game finished within ~3:30 of real time');
+{// Periods are 2 REAL minutes (Oct 29 2026, owner: a beach game is ~6 real minutes, it was cut to ~3): period 2 just after two
+ // minutes of watching, period 3 after four, a result after ~6 (+ extra time).
+ assert.equal(BEACH_PERIOD,120,'a period is 2 real minutes');
+ const sim=new MatchSim(11,'beach');host(sim,'beach',BEACH_PERIOD-2);assert.equal(sim.period,1,'still period 1 at 1:58');
+ host(sim,'beach',6);assert.equal(sim.period,2,'period 2 at 2:04');host(sim,'beach',BEACH_PERIOD);assert.equal(sim.period,3,'period 3 at 4:04');
+ host(sim,'beach',BEACH_PERIOD+BEACH_EXTRA+8);assert.equal(sim.results.length,1,'one game finished within ~6:30 of real time');
  host(sim,'beach',5);assert.equal(sim.period,1,'the 3 s full-time beat is real too: a new game');assert(sim.matchTime<BEACH_EXTRA+BEACH_PERIOD/2&&sim.clock-sim.matchTime>=3*BEACH_PERIOD,`the new game's clock restarted after a 3-period game (${sim.matchTime.toFixed(1)} of ${sim.clock.toFixed(1)})`);}
+
+{// ~3 goals in a typical game (measured Oct 29: 3.3 a game over seeds 1-10 at 2-minute periods, 1.6 at the old 60 s).
+ let goals=0;const N=6;for(let seed=1;seed<=N;seed++){const sim=new MatchSim(seed,'beach');for(let i=0;i<(3*BEACH_PERIOD+BEACH_EXTRA+60)*30&&!sim.results.length;i++)sim.step(liveGameSpeed('beach')/30);
+  const r=sim.results[0];assert(r,'seed '+seed+' finished');goals+=r.gold+r.blue;}
+ assert(goals/N>=2&&goals/N<=4.5,`about 3 goals a game (${(goals/N).toFixed(2)})`);}
 
 {// The feed (matchEffects → BeachMatchGuide / FieldTranscript m:ss) stamps events with the match clock, not the sim clock.
  const src=fs.readFileSync('lib/town/matchEffects.ts','utf8');assert(/time:sim\.matchTime/.test(src),'events carry sim.matchTime');assert(!/time:sim\.stats\.time/.test(src));}
