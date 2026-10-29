@@ -26,10 +26,10 @@
    "q": "True or false? The striker should start the channel run as the midfielder releases the pass.",
    "options": ["True", "False"],
    "correct": 0,
-   "explain": "Right, it's true. Running on the release keeps you onside and meets the ball in the channel.",
+   "explain": "Right, it's true. Running on the release meets the ball in the channel.",
    "choiceExplanations": [
-    "Right, it's true. Running on the release keeps you onside and meets the ball in the channel.",
-    "Leaving early risks offside or arriving before the pass; leaving late lets defenders close the channel."
+    "Right, it's true. Running on the release meets the ball in the channel.",
+    "Leaving early means arriving before the pass; leaving late lets defenders close the channel."
    ],
    "visual": {
     "kind": "trueFalse",
