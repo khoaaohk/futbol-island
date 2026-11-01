@@ -127,7 +127,7 @@ export const PART_8:Record<string,NpcFresh>={
  'folk-kavya':{
   topics:[
    t('line-width','How wide are the white pitch lines?',"No wider than 12 centimetres, and all of them must be the same width. I measure them with a ruler, which makes the players giggle.",'Why do they all match?',"So the pitch looks fair and clear from every side. Wonky lines confuse everybody."),
-   t('white-posts','Can goalposts be painted any colour?',"No, the rules say the posts and crossbar must be white. They also have to be the same width and depth as each other.",'Why white?',"White stands out against grass, sky and nets, so players and referees can judge the goal easily."),
+   t('white-posts','Can goalposts be painted any colour?',"No, the rules say the posts and crossbar are always painted white. They also have to be the same width and depth as each other.",'Why white?',"White stands out against grass, sky and nets, so players and referees can judge the goal easily."),
    t('centre-circle','Why is there a circle in the middle?',"At kick-off, the other team must stay outside it until the ball is kicked. It gives the kicking team room to start.",'How big is that circle?',"On a full-size pitch it measures 9.15 metres from the centre spot to the edge."),
    t('pitch-length','Are all full-size pitches the same length?',"No! The rules let a full-size pitch be between 90 and 120 metres long. The touchlines must always be longer than the goal lines, though.",'Does a longer pitch change the game?',"Yes. A big pitch gives more running space, and a short one makes games tighter."),
    t('rain','What happens to a pitch after heavy rain?',"Puddles make the ball stop dead and players slip. Sometimes a game is delayed until the pitch is safe again.",'Who decides if it is safe?',"The referee checks the pitch before kick-off and makes the call."),
@@ -326,7 +326,7 @@ export const PART_8:Record<string,NpcFresh>={
  },
  'folk-rohan':{
   topics:[
-   t('fourth-official','Who holds up the board with numbers?',"That is the fourth official, beside the benches. They help with substitutions and show how many minutes are added on.",'Can they give out cards?',"No, but they can tell the referee what they saw. The referee makes the final decision."),
+   t('board-holder','Who holds up the board with numbers?',"That is a match official standing beside the benches. They help with substitutions and show how many minutes are added on.",'Can they give out cards?',"No, but they can tell the referee what they saw. The referee makes the final decision."),
    t('back-line','Why do defenders step up together?',"Moving as one line keeps the team compact and can leave attackers offside. If one defender stays back, the trap fails.",'Who tells them when to move?',"Often a centre-back or the keeper calls it."),
    t('press-trigger','When does a team start pressing?',"Teams often press when a pass goes backwards or someone takes a heavy touch. Those are signals to chase together.",'Should everyone press?',"Yes, together, or the other team finds a free player."),
    t('keeper-watch','What should I watch the keeper do?',"Watch how they move as the ball moves. Good keepers shuffle their feet to stay between the ball and the goal."),
